@@ -5,6 +5,17 @@
 
 ## [Unreleased]
 
+### 🗄️ Added — 2026-10-05 (گام ۳: Infrastructure.Persistence)
+- `ClinicProDbContext` با ۸۷ DbSet، فیلتر پرس‌وجوی سراسری حذف نرم، رفتار NoAction همه کلیدهای خارجی، RowVersion همزمانی، ۱۵ سکانس SQL Server
+- ۸۷ فایل Configuration با کامنت فارسی جدول و ستون + ایندکس‌های یکتای فیلترشده + دقت اعشار + مقادیر پیش‌فرض سکانسی (MRN/APT/RCP/VST/RX/INV/PAY/JE)
+- Migration اولیه (۵۰۱۷ خط — ۸۷ جدول) با dotnet-ef 8.0.11
+- `Repository<T>` عمومی + ریپازیتوری‌های تخصصی بیمار/پزشک/نوبت/لایسنس
+- `UnitOfWork` با کش ریپازیتوری و انتشار رویدادهای دامنه از طریق MediatR
+- اینترسپتورهای `AuditableEntityInterceptor` و `SoftDeleteInterceptor`
+- ۶ بذر داده اولیه: نقش‌ها (۸)، دسترسی‌ها (۱۵۰=۲۵ ماژول×۶ عملیات)، ادمین (admin/Admin@123)، تخصص‌ها (۱۴)، ICD-10 (۲۳)، بیمه‌ها (۸)، ماژول‌ها (۲۳)، قالب پیامک (۵)، سرفصل‌های حسابداری
+- `CurrentUserService` برای HttpContext و `ICurrentUserService` در Application
+
+
 ### 🧬 Added — 2026-10-05 (گام ۲: Domain Layer)
 - کلاس‌های پایه: `BaseEntity` (کلید + رویدادهای دامنه)، `AuditableEntity` (حسابرسی + حذف نرم + BranchId + RowVersion)، `Result<T>`، `Error`، `ValueObject`
 - ۸۰ موجودیت دامنه در ۱۵ پوشه ماژولار (People/Scheduling/Clinical/Billing/Accounting/Paraclinical/Pharmacy/Personnel/Security/Communication/Infrastructure/Licensing/Integration/Reporting)

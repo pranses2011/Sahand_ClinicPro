@@ -3,14 +3,14 @@
 > فایل مدیریت پروژه — چک‌لیست ۳۱ گام پیاده‌سازی در ۹ فاز
 > منبع: `docs/prompts/prompt-part3.html` (بخش ۸: ترتیب پیاده‌سازی)
 
-## 🎯 پیشرفت کلی: 6% (2/31 گام)
+## 🎯 پیشرفت کلی: 10% (3/31 گام)
 
 ---
 
 ## 📦 فاز ۱: راه‌اندازی و زیرساخت
 - [x] گام ۱: Solution Setup (ایجاد پروژه‌ها + NuGet Packages + DI Configuration) ✅ 2026-10-05
 - [x] گام ۲: Domain Layer (BaseEntity + ۸۰ Entity + ۸۹ Enum + Value Objects + Interfaces) ✅ 2026-10-05
-- [ ] گام ۳: Infrastructure - Persistence (DbContext + Configurations + Migrations + Seeders)
+- [x] گام ۳: Infrastructure.Persistence — DbContext + ۸۷ Configuration + Migration اولیه (۵۰۱۷ خط) + ۶ Seeder + Repository/UnitOfWork/Interceptors ✅ 2026-10-05
 - [ ] گام ۴: Infrastructure - Identity (Auth Service + JWT + Password Hasher + RBAC)
 
 ## 🎯 فاز ۲: ماژول‌های هسته‌ای
@@ -66,6 +66,7 @@
 ---
 
 ## 📝 لاگ تغییرات اخیر:
+- **2026-10-05**: گام ۳ کامل شد — ClinicProDbContext با ۸۷ DbSet و فیلتر حذف نرم سراسری و ۱۵ SQL Sequence؛ ۸۷ فایل Configuration تولیدشده با کامنت فارسی جدول/ستون + ایندکس‌های فیلترشده؛ Migration اولیه (۵۰۱۷ خط، ۸۷ جدول)؛ Repository عمومی + ۴ تخصصی؛ UnitOfWork با انتشار رویدادهای دامنه؛ اینترسپتورهای حسابرسی/حذف نرم؛ ۶ بذر (نقش‌ها/دسترسی‌ها/ادمین/داده پایه/سرفصل حسابداری). ابزار dotnet-ef 8.0.11 محلی شد.
 - **2026-10-05**: گام ۲ کامل شد — لایه دامنه کامل: ۸ موجودیت پایه (BaseEntity/AuditableEntity/Result/ValueObject)، ۸۰ موجودیت در ۱۵ پوشه ماژولار، ۸۹ شمارشی، ۴ شیء ارزشی (کد ملی/موبایل/پول/آدرس)، ۶ استثنا، ۶ اینترفیس ریپازیتوری، ۱۲ رویداد دامنه. Build سبز + تست‌ها سبز.
 - **2026-10-05**: گام ۱ کامل شد — Solution یازده‌پروژه‌ای با نام‌گذاری Sahand.ClinicPro.*، مدیریت مرکزی پکیج‌ها (CPM)، اسکلت DI دو لایه، Program.cs با Serilog/Swagger فارسی، پروژه WPF دست‌نویس + ۶ تست دودی سبز. شاخه: feature/phase-01-foundation
 - **2026-10-05**: راه‌اندازی ریپازیتوری، استخراج ۹ فایل مستندات (۶ طراحی + ۳ پرامپت)، ایجاد فایل‌های مدیریتی. آماده شروع گام ۱.

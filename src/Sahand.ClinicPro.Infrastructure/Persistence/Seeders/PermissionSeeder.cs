@@ -1,0 +1,58 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.Domain.Entities.Security;
+
+namespace Sahand.ClinicPro.Infrastructure.Persistence.Seeders;
+
+/// <summary>
+/// بذر دسترسی‌ها — مجوزهای اتمی بر اساس ماژول و عملیات
+/// </summary>
+public class PermissionSeeder : IDataSeeder
+{
+    private readonly ClinicProDbContext _context;
+
+    /// <summary>ترتیب اجرای بذر</summary>
+    public int Order => 20;
+
+    /// <summary>سازنده با تزریق کانتکست</summary>
+    public PermissionSeeder(ClinicProDbContext context) => _context = context;
+
+    /// <summary>ایجاد دسترسی‌های ماژول‌های اصلی</summary>
+    public async Task SeedAsync(CancellationToken cancellationToken = default)
+    {
+        var modules = new[]
+        {
+            "patients", "doctors", "appointments", "receptions", "visits", "prescriptions",
+            "invoices", "payments", "accounting", "insurance", "lab", "imaging", "dental",
+            "eye", "physiotherapy", "pharmacy", "sms", "reports", "users", "roles",
+            "settings", "backup", "auditlogs", "license", "dashboard"
+        };
+        var actions = new[] { "view", "create", "edit", "delete", "print", "export" };
+        var persianActions = new Dictionary<string, string>
+        {
+            ["view"] = "مشاهده", ["create"] = "ایجاد", ["edit"] = "ویرایش",
+            ["delete"] = "حذف", ["print"] = "چاپ", ["export"] = "خروجی"
+        };
+
+        foreach (var module in modules)
+        {
+            foreach (var action in actions)
+            {
+                var name = $"{module}.{action}";
+                var exists = await _context.Permissions.AnyAsync(p => p.Name == name, cancellationToken);
+                if (!exists)
+                {
+                    _context.Permissions.Add(new Permission
+                    {
+                        Name = name,
+                        Module = module,
+                        Action = action,
+                        Category = "ماژول اصلی",
+                        Description = $"{persianActions[action]} ماژول {module}"
+                    });
+                }
+            }
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+}
