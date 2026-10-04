@@ -1,0 +1,51 @@
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Sahand.ClinicPro.API.Filters;
+using Sahand.ClinicPro.Application.DTOs.Accounting;
+using Sahand.ClinicPro.Application.Features.Accounting;
+
+namespace Sahand.ClinicPro.API.Controllers;
+
+/// <summary>
+/// کنترلر حسابداری دوبل — درخت سرفصل و اسناد
+/// مسیرها: /api/v1/accounting
+/// </summary>
+[ApiController]
+[Route("api/v1/accounting")]
+[Authorize]
+public class AccountingController : ApiBaseController
+{
+    private readonly IMediator _mediator;
+
+    /// <summary>سازنده با تزریق میانجی</summary>
+    public AccountingController(IMediator mediator) => _mediator = mediator;
+
+    /// <summary>درخت سرفصل‌های چهارسطحی — گروه و کل و معین و تفصیلی</summary>
+    [HttpGet("accounts")]
+    [HasPermission("accounting.view")]
+    public async Task<IActionResult> GetChart()
+    {
+        var result = await _mediator.Send(new GetChartOfAccountsQuery());
+        return ToResponse(result);
+    }
+
+    /// <summary>فهرست اسناد حسابداری</summary>
+    [HttpGet("entries")]
+    [HasPermission("accounting.view")]
+    public async Task<IActionResult> GetEntries([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var result = await _mediator.Send(new GetJournalEntriesQuery(page, pageSize));
+        return ToResponse(result);
+    }
+
+    /// <summary>ثبت سند دستی — توازن بدهکار و بستانکار الزامی</summary>
+    [HttpPost("entries")]
+    [HasPermission("accounting.create")]
+    public async Task<IActionResult> CreateEntry([FromBody] CreateJournalEntryDto dto)
+    {
+        var result = await _mediator.Send(new CreateJournalEntryCommand(dto));
+        if (result.IsSuccess)
+            return CreatedResponse(result, "GetEntries", new { }, "سند حسابداری ثبت شد");
+        return ToResponse(result);
+    }
+}
