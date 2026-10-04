@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <!-- ═══════════════════════════════════════════════════════════════
+       کلاینت دسکتاپ (Desktop) — WPF + Material Design با الگوی MVVM
+       نکته: این پروژه به‌صورت دستی ساخته شده است زیرا قالب WPF
+       روی محیط لینوکسی CI موجود نیست. ویژگی EnableWindowsTargeting
+       (در Directory.Build.props) ساخت آن را روی لینوکس ممکن می‌کند.
+       راه‌اندازی کامل (تم، فونت وزیرمتن، ناوبری) در گام ۱۰ انجام می‌شود.
+       ═══════════════════════════════════════════════════════════════ -->
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- TFM بدون شماره نسخه = پشتیبانی از ویندوز ۷ به بالا؛
+         مناسب سیستم‌های قدیمی محیط درمانی که هنوز روی ویندوز ۷/۱۰ هستند -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- کتابخانه رابط کاربری Material Design (MD3) -->
+    <PackageReference Include="MaterialDesignThemes" />
+    <!-- MVVM مدرن با Source Generator (ObservableObject، RelayCommand و...) -->
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- دسترسی به DTOها و قراردادهای مشترک (ارتباط با API از طریق REST) -->
+    <ProjectReference Include="..\Sahand.ClinicPro.Application\Sahand.ClinicPro.Application.csproj" />
+    <ProjectReference Include="..\Sahand.ClinicPro.Shared\Sahand.ClinicPro.Shared.csproj" />
+  </ItemGroup>
+</Project>

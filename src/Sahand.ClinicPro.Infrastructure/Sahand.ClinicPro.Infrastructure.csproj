@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <!-- ═══════════════════════════════════════════════════════════════
+       لایه زیرساخت (Infrastructure Layer) — پیاده‌سازی‌های فنی
+       شامل: EF Core (DbContext، ریپازیتوری، UnitOfWork، Migration)،
+       امنیت (JWT، BCrypt، AES-256)، پیامک، اتصال به سامانه‌های دولتی،
+       کارهای پس‌زمینه Hangfire و سرویس لایسنس
+       ═══════════════════════════════════════════════════════════════ -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ORM مطابق مستندات: EF Core 8 + SQL Server 2022 -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <!-- هش رمز عبور BCrypt با Work Factor 12 (گام ۴) -->
+    <PackageReference Include="BCrypt.Net-Next" />
+    <!-- کارهای پس‌زمینه: صف پیامک، یادآوری نوبت، بکاپ، Heartbeat لایسنس -->
+    <PackageReference Include="Hangfire.Core" />
+    <PackageReference Include="Hangfire.SqlServer" />
+    <!-- انتزاع‌های مورد نیاز متد الحاقی AddInfrastructure -->
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <!-- احراز هویت JWT Bearer -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <!-- دسترسی به HttpContext برای سرویس کاربر فعلی -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- وابستگی به لایه کاربرد (و از آن طریق به لایه دامنه) -->
+    <ProjectReference Include="..\Sahand.ClinicPro.Application\Sahand.ClinicPro.Application.csproj" />
+  </ItemGroup>
+</Project>

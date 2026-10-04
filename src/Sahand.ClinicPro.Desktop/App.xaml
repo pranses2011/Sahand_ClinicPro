@@ -1,0 +1,23 @@
+﻿<Application x:Class="Sahand.ClinicPro.Desktop.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             StartupUri="MainWindow.xaml">
+    <!-- ═══════════════════════════════════════════════════════════
+         نقطه ورود کلاینت دسکتاپ درمانگاه سهند (گام ۱ — اسکلت)
+         پوسته Material Design 3 با تم روشن؛ تم تیره/روشن قابل
+         تغییر و فونت وزیرمتن در گام ۱۰ اضافه می‌شود.
+         ═══════════════════════════════════════════════════════════ -->
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- تم اصلی Material Design — رنگ سازمانی: فیروزه‌ای/نیلی -->
+                <materialDesign:BundledTheme BaseTheme="Light"
+                                             PrimaryColor="Teal"
+                                             SecondaryColor="Indigo" />
+                <!-- سبک‌های پیش‌فرض MD3 برای همه کنترل‌ها -->
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
