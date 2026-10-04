@@ -48,7 +48,8 @@ public partial class MainWindowViewModel : ObservableObject
         INavigationService navigation,
         DashboardViewModel dashboard,
         PatientsViewModel patients,
-        AppointmentsViewModel appointments)
+        AppointmentsViewModel appointments,
+        ReceptionsViewModel receptions)
     {
         _api = api;
         _tokens = tokens;
@@ -64,7 +65,8 @@ public partial class MainWindowViewModel : ObservableObject
         {
             ["dashboard"] = () => dashboard,
             ["patients"] = () => patients,
-            ["appointments"] = () => appointments
+            ["appointments"] = () => appointments,
+            ["receptions"] = () => receptions
         };
 
         // آیتم‌های ناوبری — فعال بودن از لایسنس کنترل می‌شود
@@ -73,7 +75,7 @@ public partial class MainWindowViewModel : ObservableObject
             new() { Title = "داشبورد", PageKey = "dashboard", Icon = "ViewDashboard" },
             new() { Title = "بیماران", PageKey = "patients", Icon = "AccountGroup" },
             new() { Title = "نوبت‌دهی", PageKey = "appointments", Icon = "CalendarClock" },
-            new() { Title = "پذیرش", PageKey = "receptions", Icon = "Reception", Enabled = false },
+            new() { Title = "پذیرش", PageKey = "receptions", Icon = "Reception" },
             new() { Title = "ویزیت و معاینه", PageKey = "visits", Icon = "Stethoscope", Enabled = false },
             new() { Title = "نسخه‌نویسی", PageKey = "prescriptions", Icon = "Prescription", Enabled = false },
             new() { Title = "مالی و صندوق", PageKey = "billing", Icon = "CashMultiple", Enabled = false },

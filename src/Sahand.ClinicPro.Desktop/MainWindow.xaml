@@ -24,6 +24,9 @@
         <DataTemplate DataType="{x:Type vm:AppointmentsViewModel}">
             <views:AppointmentsView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ReceptionsViewModel}">
+            <views:ReceptionsView />
+        </DataTemplate>
     </Window.Resources>
 
     <!-- ═══════════════════════════════════════════════════════════

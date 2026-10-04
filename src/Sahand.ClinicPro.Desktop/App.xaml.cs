@@ -82,5 +82,6 @@ public partial class App : System.Windows.Application
         services.AddTransient<DashboardViewModel>();
         services.AddTransient<PatientsViewModel>();
         services.AddTransient<AppointmentsViewModel>();
+        services.AddTransient<ReceptionsViewModel>();
     }
 }
