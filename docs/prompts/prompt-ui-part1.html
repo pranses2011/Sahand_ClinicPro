@@ -1,66 +1,10 @@
-<!DOCTYPE html>
-<html dir="rtl" lang="fa">
-<head>
-<meta charset="UTF-8">
-<title>🖥️ ClinicPro - پرامپت مکمل UI بخش ۱</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;900&display=swap');
-:root{--p:#1a73e8;--s:#34a853;--a:#ea4335;--bg:#f0f2f5;--c:#fff;--t:#202124;--b:#dadce0;--sh:0 2px 8px rgba(0,0,0,.1);--r:12px}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t);line-height:1.8;font-size:13px}
-.ct{max-width:1200px;margin:0 auto;padding:20px}
-header{background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;padding:40px 20px;text-align:center;border-radius:0 0 30px 30px;margin-bottom:25px}
-header h1{font-size:2em;font-weight:900}
-header p{opacity:.9}
-.nav{background:#fff;padding:12px;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
-.nav a{padding:7px 14px;background:#f0f2f5;border-radius:8px;text-decoration:none;color:var(--t);font-size:11px;font-weight:600}
-.nav a:hover,.nav a.active{background:#0891b2;color:#fff}
-.prompt-section{background:#1e1e1e;color:#d4d4d4;border-radius:var(--r);padding:25px;margin-bottom:20px;font-family:'Courier New',monospace;font-size:12px;line-height:1.8;direction:rtl;text-align:right;white-space:pre-wrap;word-wrap:break-word;overflow-x:auto}
-.prompt-section .h1{color:#4ec9b0;font-weight:bold;font-size:16px}
-.prompt-section .h2{color:#569cd6;font-weight:bold;font-size:14px}
-.prompt-section .h3{color:#ce9178;font-weight:bold;font-size:13px}
-.prompt-section .h4{color:#dcdcaa;font-weight:bold;font-size:12px}
-.prompt-section .note{color:#6a9955;font-style:italic}
-.prompt-section .important{color:#f44747;font-weight:bold}
-.prompt-section .code{color:#9cdcfe}
-.prompt-section .val{color:#b5cea8}
-.prompt-section .str{color:#ce9178}
-.prompt-section .key{color:#569cd6}
-.prompt-section .field{color:#dcdcaa}
-.prompt-section .ui{color:#c586c0}
-.copy-btn{background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;border:none;padding:10px 25px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px}
-.info{background:#e0f2fe;border-right:4px solid #0891b2;padding:15px;border-radius:0 8px 8px 0;margin:15px 0;font-size:12px}
-footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#fff;border-radius:var(--r);margin-top:20px}
-</style>
-</head>
-<body>
-<header>
-<h1>🖥️ پرامپت مکمل: جزئیات فرم‌ها و UI</h1>
-<p>بخش ۱ از ۴: Login، Dashboard، بیماران، پزشکان</p>
-</header>
-<div class="ct">
-<nav class="nav">
-<a href="prompt-ui-part1.html" class="active">🖥️ UI بخش ۱</a>
-<a href="prompt-ui-part2.html">🖥️ UI بخش ۲</a>
-<a href="prompt-ui-part3.html">🖥️ UI بخش ۳</a>
-<a href="prompt-ui-part4.html">🖥️ UI بخش ۴</a>
-</nav>
 
-<div class="info">
-<strong>⚠️ مهم:</strong> این فایل‌ها <strong>مکمل</strong> فایل‌های prompt-part1 تا prompt-part3 هستند. ابتدا آن ۳ فایل را بخوان، سپس این ۴ فایل مکمل را. این فایل‌ها جزئیات دقیق تمام فرم‌ها، عناصر UI، عملکردها و رفتارها را مشخص می‌کنند.
-<br><br>
-<strong>نام پروژه:</strong> Sahand_ClinicPro (همان پروژه قبلی - ادامه کار)
-</div>
-
-<button class="copy-btn" onclick="copyAll()">📋 کپی کل پرامپت UI بخش ۱</button>
-
-<div class="prompt-section" id="prompt-ui1">
-<span class="h1">════════════════════════════════════════════════════════════════════
+════════════════════════════════════════════════════════════════════
 🖥️ Sahand_ClinicPro - پرامپت مکمل UI
 بخش ۱ از ۴: فرم‌های ورود، داشبورد، بیماران، پزشکان
-════════════════════════════════════════════════════════════════════</span>
+════════════════════════════════════════════════════════════════════
 
-<span class="important">⚠️ توجه مهم: این فایل مکمل prompt-part1 تا prompt-part3 است.
+⚠️ توجه مهم: این فایل مکمل prompt-part1 تا prompt-part3 است.
 از اول شروع نکن! این فقط جزئیات صفحات و فرم‌های WPF را
 تکمیل می‌کند. معماری، دیتابیس و API همان است که قبلاً خواندی.
 
@@ -69,18 +13,18 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 ⚠️ Material Design in XAML Toolkit استفاده شود.
 ⚠️ همه صفحات RTL و FlowDirection="RightToLeft".
 ⚠️ فونت Vazirmatn.
-⚠️ هر View یک ViewModel متناظر دارد.</span>
+⚠️ هر View یک ViewModel متناظر دارد.
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🖥️ قوانین کلی ساخت فرم‌های WPF (اعمال به همه فرم‌ها)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="note">// این قوانین باید در تمام فرم‌ها بدون استثنا رعایت شوند</span>
+// این قوانین باید در تمام فرم‌ها بدون استثنا رعایت شوند
 
-<span class="h3">── Layout و ساختار کلی ──</span>
+── Layout و ساختار کلی ──
 
-<span class="key">۱. ساختار اصلی پنجره (MainWindow.xaml):</span>
+۱. ساختار اصلی پنجره (MainWindow.xaml):
    • چیدمان: Grid دو ستونه
    • ستون اول (Width="220"): Sidebar منوی ناوبری
    • ستون دوم (Width="*"): محتوای صفحات
@@ -96,7 +40,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
      - نام و آواتار کاربر فعلی
    • Content Area: ContentControl با Binding به CurrentView
 
-<span class="key">۲. استایل‌های عمومی همه فرم‌ها:</span>
+۲. استایل‌های عمومی همه فرم‌ها:
    • فونت: Vazirmatn (Size 13 عادی، Size 14 عناوین، Size 12 جزئیات)
    • Margin/Padding عمومی: Margin="10" Padding="8"
    • Corner Radius دکمه‌ها و کادرها: CornerRadius="8"
@@ -104,9 +48,9 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    • Shadow برای Card ها: Effect="DropShadowEffect"
    • Transition/Animation: MaterialDesign Ripple Effect روی دکمه‌ها
 
-<span class="key">۳. عناصر تکرارشونده در همه فرم‌ها:</span>
+۳. عناصر تکرارشونده در همه فرم‌ها:
 
-<span class="ui">الف) نوار عنوان صفحه (Page Header):</span>
+الف) نوار عنوان صفحه (Page Header):
    ┌──────────────────────────────────────────────────────────┐
    │ [آیکون] عنوان صفحه                     [Badge تعداد] │
    │ توضیح کوتاه صفحه به فارسی                              │
@@ -115,7 +59,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    - توضیح: TextBlock FontSize="12" Foreground="Gray"
    - Badge: عدد کل رکوردها مثل "کل: ۱٬۲۵۴ نفر"
 
-<span class="ui">ب) نوار ابزار (Toolbar):</span>
+ب) نوار ابزار (Toolbar):
    ┌──────────────────────────────────────────────────────────┐
    │ [➕ جدید] [📥 Excel] [📤 خروجی] [🖨️ چاپ] │ 🔍 [جستجو...]  │ [فیلترها ▼] │
    └──────────────────────────────────────────────────────────┘
@@ -124,7 +68,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    - فیلترها: ComboBox های فیلتر (بسته به صفحه)
    - Debounce جستجو: ۳۰۰ms بعد از تایپ
 
-<span class="ui">ج) جدول اطلاعات (DataGrid):</span>
+ج) جدول اطلاعات (DataGrid):
    - DataGrid با AutoGenerateColumns="False"
    - Header فارسی برای هر ستون
    - CanUserSortColumns="True"
@@ -136,7 +80,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    - Checkbox ستون اول برای انتخاب چندتایی
    - HorizontalScrollBarVisibility="Auto"
 
-<span class="ui">د) صفحه‌بندی (Pagination):</span>
+د) صفحه‌بندی (Pagination):
    ┌──────────────────────────────────────────────────────────┐
    │ نمایش ۱ تا ۲۰ از ۱٬۲۵۴ ردیف    │ [◀ قبلی] [1][2][3]...[63] [بعدی ▶] │
    └──────────────────────────────────────────────────────────┘
@@ -145,7 +89,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    - دکمه‌های صفحه با Highlight روی صفحه فعال
    - ComboBox تعداد رکورد در صفحه: 10/20/50/100
 
-<span class="ui">ه) نوار وضعیت پایین (StatusBar):</span>
+ه) نوار وضعیت پایین (StatusBar):
    ┌──────────────────────────────────────────────────────────┐
    │ ✅ آماده │ 📅 ۱۴۰۴/۰۴/۰۱ │ 👤 منشی رحیمی │ 🔑 لایسنس فعال │ 📡 متصل │
    └──────────────────────────────────────────────────────────┘
@@ -155,7 +99,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    - وضعیت لایسنس
    - تاریخ شمسی
 
-<span class="key">۴. رفتارهای عمومی:</span>
+۴. رفتارهای عمومی:
    • Loading: نمایش ProgressRing هنگام بارگذاری داده از API
    • خطا: نمایش Snackbar قرمز با پیام فارسی
    • موفقیت: نمایش Snackbar سبز
@@ -167,15 +111,15 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    • AutoFocus: فیلد اول فرم هنگام باز شدن فوکوس بگیرد
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🔐 فرم ۱: صفحه ورود (LoginView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> LoginViewModel.cs
+ViewModel: LoginViewModel.cs
 
-<span class="h3">── ساختار بصری ──</span>
+── ساختار بصری ──
 
-<span class="ui">چیدمان کلی:</span>
+چیدمان کلی:
    • پنجره مستقل (Window نه UserControl)
    • سایز: 500×600 (ثابت، غیرقابل تغییر اندازه)
    • WindowStartupLocation="CenterScreen"
@@ -183,7 +127,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    • WindowStyle="None" (بدون Title Bar ویندوز - طراحی سفارشی)
    • Background: Gradient آبی-سبز
 
-<span class="ui">المان‌ها از بالا به پایین:</span>
+المان‌ها از بالا به پایین:
 
 ┌────────────────────────────────────────────────┐
 │                                                │
@@ -226,9 +170,9 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │                                                │
 └────────────────────────────────────────────────┘
 
-<span class="h3">── عناصر و ویژگی‌های دقیق ──</span>
+── عناصر و ویژگی‌های دقیق ──
 
-<span class="field">۱. فیلد نام کاربری (Username):</span>
+۱. فیلد نام کاربری (Username):
    نوع: TextBox با materialDesign:HintAssist
    Binding: {Binding Username, UpdateSourceTrigger=PropertyChanged}
    Validation: 
@@ -240,7 +184,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    TabIndex: 0
    AutoFocus: True (هنگام باز شدن فرم)
 
-<span class="field">۲. فیلد رمز عبور (Password):</span>
+۲. فیلد رمز عبور (Password):
    نوع: PasswordBox با materialDesign:PasswordBoxAssist
    Binding: از طریق Attached Behavior (PasswordBox مستقیم Bind نمی‌شود)
    Validation:
@@ -253,18 +197,18 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    MaxLength: 100
    TabIndex: 1
 
-<span class="field">۳. چک‌باکس "مرا به خاطر بسپار" (RememberMe):</span>
+۳. چک‌باکس "مرا به خاطر بسپار" (RememberMe):
    نوع: CheckBox
    Binding: {Binding RememberMe}
    عملکرد: ذخیره Username در Local Settings (نه رمز!)
    TabIndex: 2
 
-<span class="field">۴. لینک "فراموشی رمز عبور":</span>
+۴. لینک "فراموشی رمز عبور":
    نوع: TextBlock با Cursor="Hand"
    عملکرد: فعلاً غیرفعال (آینده: ارسال SMS ریست رمز)
    ToolTip: "در صورت فراموشی رمز با مدیر سیستم تماس بگیرید"
 
-<span class="field">۵. دکمه ورود (LoginButton):</span>
+۵. دکمه ورود (LoginButton):
    نوع: Button Style="MaterialDesignRaisedButton"
    Command: {Binding LoginCommand}
    Content: "🔓 ورود به سیستم"
@@ -278,19 +222,19 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    IsEnabled: {Binding IsNotBusy} (غیرفعال هنگام بارگذاری)
    TabIndex: 3
 
-<span class="field">۶. دکمه فعال‌سازی لایسنس:</span>
+۶. دکمه فعال‌سازی لایسنس:
    نوع: Button Style="MaterialDesignFlatButton"
    Command: {Binding ActivateLicenseCommand}
    Content: "🔑 فعال‌سازی لایسنس"
    Visibility: فقط وقتی لایسنس فعال نیست نمایش داده شود
    عملکرد: باز کردن LicenseActivationDialog
 
-<span class="h3">── ViewModel Login (جزئیات) ──</span>
+── ViewModel Login (جزئیات) ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// ویومدل صفحه ورود به سیستم
 /// مسئولیت‌ها: احراز هویت کاربر، مدیریت توکن، بررسی لایسنس
-/// &lt;/summary&gt;
+/// </summary>
 public class LoginViewModel : BaseViewModel
 {
     // ── Properties ──
@@ -339,18 +283,18 @@ public class LoginViewModel : BaseViewModel
         //    - اگر بله: تلاش برای Auto-Login
         // ۳. بارگذاری Username ذخیره شده (RememberMe)
     }
-}</span>
+}
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 📊 فرم ۲: داشبورد اصلی (DashboardView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> DashboardViewModel.cs
+ViewModel: DashboardViewModel.cs
 
-<span class="h3">── ساختار بصری ──</span>
+── ساختار بصری ──
 
-<span class="ui">چیدمان کلی (ScrollViewer عمودی):</span>
+چیدمان کلی (ScrollViewer عمودی):
 
 ┌────────────────────────────────────────────────────────────────┐
 │ 📊 داشبورد مدیریتی                                            │
@@ -403,9 +347,9 @@ public class LoginViewModel : BaseViewModel
 │                                                                │
 └────────────────────────────────────────────────────────────────┘
 
-<span class="h3">── عناصر و ویژگی‌های دقیق ──</span>
+── عناصر و ویژگی‌های دقیق ──
 
-<span class="field">۱. کارت‌های آماری (StatCards) - ردیف ۱:</span>
+۱. کارت‌های آماری (StatCards) - ردیف ۱:
    نوع: UniformGrid Columns="4"
    هر کارت:
      - Border با CornerRadius="10" و Shadow
@@ -416,7 +360,7 @@ public class LoginViewModel : BaseViewModel
    Binding: {Binding TodayStats.TotalPatients}
    به‌روزرسانی: هر ۶۰ ثانیه (Timer) یا SignalR
 
-<span class="field">۲. نمودار درآمد (RevenueChart):</span>
+۲. نمودار درآمد (RevenueChart):
    نوع: LiveCharts2 CartesianChart
    محورها:
      - X: روزهای هفته (شمسی: شنبه تا جمعه)
@@ -429,7 +373,7 @@ public class LoginViewModel : BaseViewModel
    Binding: {Binding RevenueChartData}
    API: GET /api/v1/dashboard/revenue-chart?days=7
 
-<span class="field">۳. لیست نوبت‌های پیش‌رو (UpcomingAppointments):</span>
+۳. لیست نوبت‌های پیش‌رو (UpcomingAppointments):
    نوع: ListBox با ItemTemplate سفارشی
    هر آیتم:
      - Ellipse با شماره صف (Background: Primary)
@@ -441,23 +385,23 @@ public class LoginViewModel : BaseViewModel
    API: GET /api/v1/dashboard/appointments-today
    به‌روزرسانی: SignalR Real-time
 
-<span class="field">۴. جدول فعالیت‌های اخیر (RecentActivities):</span>
+۴. جدول فعالیت‌های اخیر (RecentActivities):
    نوع: DataGrid (ReadOnly, 10 ردیف آخر)
    ستون‌ها: ساعت | کاربر | عملیات (Badge رنگی) | جزئیات
    Binding: {Binding RecentActivities}
    API: GET /api/v1/dashboard/recent-activities?limit=10
    به‌روزرسانی: SignalR Push
 
-<span class="h3">── ViewModel Dashboard ──</span>
+── ViewModel Dashboard ──
 
-<span class="code">/// &lt;summary&gt;ویومدل داشبورد - بارگذاری آمار و نمودارها&lt;/summary&gt;
+/// <summary>ویومدل داشبورد - بارگذاری آمار و نمودارها</summary>
 public class DashboardViewModel : BaseViewModel
 {
     // ── Properties ──
     DashboardStatsDto TodayStats          // آمار امروز (بیمار/ویزیت/درآمد)
-    ObservableCollection&lt;ChartDataPoint&gt; RevenueChartData  // داده نمودار
-    ObservableCollection&lt;AppointmentQueueDto&gt; UpcomingAppointments // نوبت‌ها
-    ObservableCollection&lt;ActivityLogDto&gt; RecentActivities   // فعالیت‌ها
+    ObservableCollection<ChartDataPoint> RevenueChartData  // داده نمودار
+    ObservableCollection<AppointmentQueueDto> UpcomingAppointments // نوبت‌ها
+    ObservableCollection<ActivityLogDto> RecentActivities   // فعالیت‌ها
     string WelcomeMessage                 // پیام خوش‌آمد
     string TodayDateShamsi                // تاریخ شمسی امروز
     
@@ -480,16 +424,16 @@ public class DashboardViewModel : BaseViewModel
     // ── Auto Refresh (هر ۶۰ ثانیه) ──
     // Timer برای به‌روزرسانی آمار
     // SignalR برای نوبت‌ها و فعالیت‌ها
-}</span>
+}
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 👤 فرم ۳: لیست بیماران (PatientListView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> PatientListViewModel.cs
+ViewModel: PatientListViewModel.cs
 
-<span class="h3">── ساختار بصری ──</span>
+── ساختار بصری ──
 
 ┌────────────────────────────────────────────────────────────────┐
 │ 👤 لیست بیماران                              [کل: ۱٬۲۵۴ نفر]│
@@ -521,14 +465,14 @@ public class DashboardViewModel : BaseViewModel
 │                                                                │
 └────────────────────────────────────────────────────────────────┘
 
-<span class="h3">── ستون‌های DataGrid (دقیق) ──</span>
+── ستون‌های DataGrid (دقیق) ──
 
-<span class="field">ستون ۱: CheckBox (انتخاب چندتایی)</span>
+ستون ۱: CheckBox (انتخاب چندتایی)
    Width: 40
    Header: CheckBox (انتخاب/حذف همه)
    Binding: {Binding IsSelected}
 
-<span class="field">ستون ۲: شماره پرونده (MedicalRecordNo)</span>
+ستون ۲: شماره پرونده (MedicalRecordNo)
    Width: 90
    Header: "پرونده"
    Binding: {Binding MedicalRecordNo}
@@ -536,7 +480,7 @@ public class DashboardViewModel : BaseViewModel
    FontFamily: Monospace
    Foreground: Primary Color
 
-<span class="field">ستون ۳: نام و نام‌خانوادگی (FullName)</span>
+ستون ۳: نام و نام‌خانوادگی (FullName)
    Width: 200
    Header: "نام و نام‌خانوادگی"
    CellTemplate: StackPanel Horizontal
@@ -545,19 +489,19 @@ public class DashboardViewModel : BaseViewModel
    FontWeight: SemiBold
    CanUserSort: True
 
-<span class="field">ستون ۴: کد ملی (NationalCode)</span>
+ستون ۴: کد ملی (NationalCode)
    Width: 110
    Header: "کد ملی"
    Binding: {Binding NationalCode}
    FontFamily: Monospace
 
-<span class="field">ستون ۵: موبایل (Mobile)</span>
+ستون ۵: موبایل (Mobile)
    Width: 120
    Header: "موبایل"
    Binding: {Binding Mobile}
    FontFamily: Monospace
 
-<span class="field">ستون ۶: بیمه (InsuranceName)</span>
+ستون ۶: بیمه (InsuranceName)
    Width: 100
    Header: "بیمه"
    CellTemplate: Border با رنگ پس‌زمینه + TextBlock
@@ -567,19 +511,19 @@ public class DashboardViewModel : BaseViewModel
      - آزاد: خاکستری
    Binding: {Binding InsuranceName}
 
-<span class="field">ستون ۷: سن (Age)</span>
+ستون ۷: سن (Age)
    Width: 50
    Header: "سن"
    Binding: {Binding Age} (محاسباتی از BirthDate)
    HorizontalAlignment: Center
 
-<span class="field">ستون ۸: آخرین مراجعه (LastVisitDate)</span>
+ستون ۸: آخرین مراجعه (LastVisitDate)
    Width: 110
    Header: "آخرین مراجعه"
    Binding: {Binding LastVisitDateShamsi}
    Converter: GregorianToShamsiConverter
 
-<span class="field">ستون ۹: عملیات (Actions)</span>
+ستون ۹: عملیات (Actions)
    Width: 160
    Header: "عملیات"
    CellTemplate: StackPanel Horizontal
@@ -596,7 +540,7 @@ public class DashboardViewModel : BaseViewModel
        Visibility: بر اساس Permission "Patients.Delete"
    هر دکمه: IconButton 28×28 با CornerRadius="5"
 
-<span class="h3">── رفتارهای صفحه لیست ──</span>
+── رفتارهای صفحه لیست ──
 
    ✅ Double-Click روی ردیف → باز شدن جزئیات بیمار
    ✅ Right-Click → ContextMenu (مشاهده, ویرایش, نوبت, حذف, چاپ کارت)
@@ -609,22 +553,22 @@ public class DashboardViewModel : BaseViewModel
    ✅ Export Excel: ClosedXML → فایل xlsx با Header فارسی
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 ➕ فرم ۴: ثبت/ویرایش بیمار (PatientFormView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> PatientFormViewModel.cs
+ViewModel: PatientFormViewModel.cs
 
-<span class="h3">── ساختار بصری (TabControl با ۵ تب) ──</span>
+── ساختار بصری (TabControl با ۵ تب) ──
 
-<span class="ui">تب‌ها:</span>
+تب‌ها:
    [📋 اطلاعات اصلی] [🏥 اطلاعات بیمه] [💊 سوابق پزشکی] [👨‍👩‍👧 تماس اضطراری] [📎 اسناد]
 
-<span class="h4">── تب ۱: اطلاعات اصلی ──</span>
+── تب ۱: اطلاعات اصلی ──
 
-<span class="ui">چیدمان: Grid دو ستونه (فیلدهای چپ و راست)</span>
+چیدمان: Grid دو ستونه (فیلدهای چپ و راست)
 
-<span class="field">ستون راست:</span>
+ستون راست:
 
 ۱. کد ملی (NationalCode):
    نوع: TextBox
@@ -690,7 +634,7 @@ public class DashboardViewModel : BaseViewModel
    Items: ["مجرد","متأهل","بیوه","مطلقه"]
    اختیاری
 
-<span class="field">ستون چپ:</span>
+ستون چپ:
 
 ۹. موبایل (Mobile):
    نوع: TextBox
@@ -744,7 +688,7 @@ public class DashboardViewModel : BaseViewModel
    Items: ["زیردیپلم","دیپلم","کاردانی","کارشناسی","کارشناسی‌ارشد","دکتری","حوزوی"]
    اختیاری
 
-<span class="field">ردیف زیر هر دو ستون (Full Width):</span>
+ردیف زیر هر دو ستون (Full Width):
 
 ۱۷. آدرس (Address):
    نوع: TextBox MultiLine (Rows=2)
@@ -752,7 +696,7 @@ public class DashboardViewModel : BaseViewModel
    MaxLength: 500
    اختیاری
 
-<span class="h4">── تب ۲: اطلاعات بیمه ──</span>
+── تب ۲: اطلاعات بیمه ──
 
 ۱۸. بیمه اصلی (InsuranceCompanyId):
    نوع: ComboBox (قابل جستجو)
@@ -785,7 +729,7 @@ public class DashboardViewModel : BaseViewModel
    Label: "شناسه سپاس"
    نمایش: اگر بیمار قبلاً در سپاس ثبت شده
 
-<span class="h4">── تب ۳: سوابق پزشکی ──</span>
+── تب ۳: سوابق پزشکی ──
 
 ۲۳. آلرژی‌ها (Allergies):
    نوع: TagInput (ورودی تگی - هر آلرژی یک تگ)
@@ -809,13 +753,13 @@ public class DashboardViewModel : BaseViewModel
    نوع: TextBox MultiLine (Rows=3)
    Label: "سوابق بیماری در خانواده"
 
-<span class="h4">── تب ۴: تماس اضطراری ──</span>
+── تب ۴: تماس اضطراری ──
 
 ۲۷-۲۹. EmergencyContactName, Phone, Relation:
    نوع: TextBox × ۳
    Labels: "نام تماس اضطراری", "تلفن", "نسبت"
 
-<span class="h4">── تب ۵: اسناد و تصاویر ──</span>
+── تب ۵: اسناد و تصاویر ──
 
 ۳۰. عکس پروفایل (ProfilePicture):
    نوع: Image + دکمه آپلود
@@ -832,23 +776,23 @@ public class DashboardViewModel : BaseViewModel
    دکمه: [📤 آپلود سند جدید]
    Drag & Drop: پشتیبانی از کشیدن فایل روی محل
 
-<span class="h3">── دکمه‌های پایین فرم ──</span>
+── دکمه‌های پایین فرم ──
 
 ┌────────────────────────────────────────────────────────────────┐
 │ [← انصراف]                    [💾 ذخیره موقت] [✅ ذخیره (Ctrl+S)] [💾 ذخیره و نوبت] │
 └────────────────────────────────────────────────────────────────┘
 
-<span class="field">دکمه انصراف:</span>
+دکمه انصراف:
    Style: MaterialDesignOutlinedButton
    Command: CancelCommand
    رفتار: اگر تغییری شده → "تغییرات ذخیره نشده. خارج شوید؟" [بله][خیر]
 
-<span class="field">دکمه ذخیره موقت:</span>
+دکمه ذخیره موقت:
    Style: MaterialDesignOutlinedButton
    Command: SaveDraftCommand
    ToolTip: "ذخیره بدون اعتبارسنجی کامل"
 
-<span class="field">دکمه ذخیره (Ctrl+S):</span>
+دکمه ذخیره (Ctrl+S):
    Style: MaterialDesignRaisedButton Background=Green
    Command: SaveCommand
    IsDefault: True
@@ -859,17 +803,17 @@ public class DashboardViewModel : BaseViewModel
      ۴. نمایش Snackbar "بیمار با موفقیت ثبت شد" یا "ویرایش شد"
      ۵. بازگشت به لیست بیماران
 
-<span class="field">دکمه ذخیره و نوبت:</span>
+دکمه ذخیره و نوبت:
    Style: MaterialDesignRaisedButton Background=Primary
    Command: SaveAndBookCommand
    رفتار: ذخیره + باز کردن فرم نوبت‌دهی با PatientId
 
-<span class="h3">── ViewModel PatientForm ──</span>
+── ViewModel PatientForm ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// ویومدل فرم ثبت/ویرایش بیمار
 /// حالت‌ها: IsEditMode (true=ویرایش, false=ثبت جدید)
-/// &lt;/summary&gt;
+/// </summary>
 public class PatientFormViewModel : BaseViewModel
 {
     // ── Properties ──
@@ -878,12 +822,12 @@ public class PatientFormViewModel : BaseViewModel
     string PageTitle                      // "ثبت بیمار جدید" یا "ویرایش بیمار"
     string CalculatedAge                  // "سن: ۴۵ سال" (محاسباتی)
     string InsuranceVerificationResult    // نتیجه استعلام بیمه
-    ObservableCollection&lt;InsuranceCompanyDto&gt; InsuranceCompanies // لیست بیمه‌ها
-    ObservableCollection&lt;ProvinceDto&gt; Provinces  // استان‌ها
-    ObservableCollection&lt;CityDto&gt; Cities          // شهرها (وابسته)
-    ObservableCollection&lt;DocumentDto&gt; Documents   // اسناد آپلود شده
-    ObservableCollection&lt;string&gt; Allergies        // تگ‌های آلرژی
-    ObservableCollection&lt;string&gt; ChronicDiseases  // تگ‌های بیماری مزمن
+    ObservableCollection<InsuranceCompanyDto> InsuranceCompanies // لیست بیمه‌ها
+    ObservableCollection<ProvinceDto> Provinces  // استان‌ها
+    ObservableCollection<CityDto> Cities          // شهرها (وابسته)
+    ObservableCollection<DocumentDto> Documents   // اسناد آپلود شده
+    ObservableCollection<string> Allergies        // تگ‌های آلرژی
+    ObservableCollection<string> ChronicDiseases  // تگ‌های بیماری مزمن
     bool HasUnsavedChanges                // تغییرات ذخیره‌نشده
     
     // ── Commands ──
@@ -915,16 +859,16 @@ public class PatientFormViewModel : BaseViewModel
         //    - PageTitle = "ثبت بیمار جدید"
         //    - فوکوس روی فیلد کد ملی
     }
-}</span>
+}
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 👁️ فرم ۵: جزئیات بیمار (PatientDetailView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> PatientDetailViewModel.cs
+ViewModel: PatientDetailViewModel.cs
 
-<span class="h3">── ساختار بصری ──</span>
+── ساختار بصری ──
 
 ┌────────────────────────────────────────────────────────────────┐
 │ ← بازگشت                                 [✏️ ویرایش] [🖨️ چاپ]│
@@ -960,63 +904,63 @@ public class PatientFormViewModel : BaseViewModel
 │                                                                │
 └────────────────────────────────────────────────────────────────┘
 
-<span class="h3">── تب‌های جزئیات (هر کدام) ──</span>
+── تب‌های جزئیات (هر کدام) ──
 
-<span class="field">تب سوابق ویزیت:</span>
+تب سوابق ویزیت:
    API: GET /api/v1/patients/{id}/visits
    ستون‌ها: تاریخ شمسی | پزشک | تشخیص اصلی | نوع ویزیت | وضعیت | عملیات(مشاهده)
 
-<span class="field">تب نسخه‌ها:</span>
+تب نسخه‌ها:
    API: GET /api/v1/patients/{id}/prescriptions
    ستون‌ها: تاریخ | پزشک | نوع (داخلی/الکترونیک) | تعداد اقلام | وضعیت | کد رهگیری
 
-<span class="field">تب آزمایش‌ها:</span>
+تب آزمایش‌ها:
    API: GET /api/v1/patients/{id}/lab-orders
    ستون‌ها: تاریخ | شماره درخواست | تست‌ها | وضعیت | عملیات(مشاهده جواب)
 
-<span class="field">تب فاکتورها:</span>
+تب فاکتورها:
    API: GET /api/v1/patients/{id}/invoices
    ستون‌ها: شماره | تاریخ | مبلغ | سهم بیمه | سهم بیمار | وضعیت پرداخت
 
-<span class="field">تب اسناد:</span>
+تب اسناد:
    API: GET /api/v1/patients/{id}/documents
    نمایش: Grid تصاویر + لیست فایل‌ها | دکمه دانلود/حذف
 
-<span class="field">تب نوبت‌ها:</span>
+تب نوبت‌ها:
    API: GET /api/v1/patients/{id}/appointments
    ستون‌ها: تاریخ | ساعت | پزشک | وضعیت | عملیات
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 👨‍⚕️ فرم ۶: لیست پزشکان (DoctorListView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> DoctorListViewModel.cs
+ViewModel: DoctorListViewModel.cs
 
-<span class="h3">── مشابه لیست بیماران ولی با ستون‌های متفاوت ──</span>
+── مشابه لیست بیماران ولی با ستون‌های متفاوت ──
 
-<span class="field">ستون‌های DataGrid:</span>
+ستون‌های DataGrid:
    ☐ | شماره نظام | نام و نام‌خانوادگی | تخصص | فوق‌تخصص |
    حق ویزیت (تومان) | مدت ویزیت (دقیقه) | درصد سهم |
    وضعیت (فعال/غیرفعال) | امتیاز (ستاره) | عملیات
 
-<span class="field">دکمه‌های اضافی نسبت به لیست بیماران:</span>
+دکمه‌های اضافی نسبت به لیست بیماران:
    [📅 برنامه کاری] → باز کردن فرم تنظیم شیفت‌ها
    [📊 آمار عملکرد] → نمایش آمار ویزیت/درآمد پزشک
    [💰 کارانه] → نمایش محاسبه کارانه
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 👨‍⚕️ فرم ۷: ثبت/ویرایش پزشک (DoctorFormView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> DoctorFormViewModel.cs
+ViewModel: DoctorFormViewModel.cs
 
-<span class="h3">── تب‌ها ──</span>
+── تب‌ها ──
 
-<span class="h4">── تب ۱: اطلاعات پایه ──</span>
+── تب ۱: اطلاعات پایه ──
 
-<span class="field">فیلدها:</span>
+فیلدها:
    ۱. پرسنل مرتبط (EmployeeId): ComboBox - انتخاب از لیست پرسنل
    ۲. شماره نظام پزشکی (MedicalLicenseNo): TextBox - الزامی - یکتا
    ۳. کد نظام پزشکی (NezamPezeshkiCode): TextBox - الزامی - یکتا
@@ -1025,7 +969,7 @@ public class PatientFormViewModel : BaseViewModel
    ۶. مرتبه علمی (AcademicRank): ComboBox [عمومی/متخصص/فوق‌تخصص/فلوشیپ/استادیار/دانشیار/استاد]
    ۷. بیوگرافی (Biography): TextBox MultiLine
 
-<span class="h4">── تب ۲: تنظیمات ویزیت ──</span>
+── تب ۲: تنظیمات ویزیت ──
 
    ۸. حق ویزیت (ConsultationFee): TextBox عددی با جداکننده هزارگان
       Label: "حق ویزیت (ریال)"
@@ -1036,7 +980,7 @@ public class PatientFormViewModel : BaseViewModel
    ۱۲. پذیرش بیمار جدید (AcceptsNewPatients): ToggleSwitch
    ۱۳. نوبت‌دهی آنلاین (OnlineBookingEnabled): ToggleSwitch
 
-<span class="h4">── تب ۳: امضا و مهر ──</span>
+── تب ۳: امضا و مهر ──
 
    ۱۴. تصویر امضا (SignatureImage): Image + دکمه آپلود
        سایز: 300×100
@@ -1044,9 +988,9 @@ public class PatientFormViewModel : BaseViewModel
    ۱۵. تصویر مهر (StampImage): Image + دکمه آپلود
        سایز: 150×150
 
-<span class="h4">── تب ۴: برنامه کاری (DoctorSchedule) ──</span>
+── تب ۴: برنامه کاری (DoctorSchedule) ──
 
-<span class="ui">جدول شیفت‌بندی هفتگی:</span>
+جدول شیفت‌بندی هفتگی:
 ┌──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
 │          │ شروع    │ پایان   │ استراحت  │ اتاق    │ ظرفیت   │
 ├──────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
@@ -1071,7 +1015,7 @@ public class PatientFormViewModel : BaseViewModel
 
    دکمه شیفت فوق‌العاده: باز کردن دیالوگ برای تاریخ خاص
 
-<span class="h4">── تب ۵: غیبت‌ها و مرخصی ──</span>
+── تب ۵: غیبت‌ها و مرخصی ──
 
    DataGrid غیبت‌های ثبت شده:
    تاریخ | از ساعت | تا ساعت | نوع (مرخصی/جلسه/سفر/بیماری) | تایید
@@ -1086,24 +1030,6 @@ public class PatientFormViewModel : BaseViewModel
    اگر نوبت وجود دارد: "۵ نوبت رزرو شده وجود دارد. لغو شوند؟ [بله/خیر]"
 
 
-<span class="h1">════════════════════════════════════════════════════════════════════
+════════════════════════════════════════════════════════════════════
 📌 پایان بخش ۱ از ۴ - ادامه در prompt-ui-part2.html
-════════════════════════════════════════════════════════════════════</span>
-</div>
-
-<footer>
-<p>📄 پرامپت مکمل UI - بخش ۱ از ۴ | <strong>Login, Dashboard, Patients, Doctors</strong></p>
-<p><a href="prompt-ui-part2.html" style="color:#0891b2">بخش ۲ (نوبت‌دهی، پذیرش، ویزیت، نسخه) →</a></p>
-</footer>
-</div>
-
-<script>
-function copyAll(){
-const t=document.getElementById('prompt-ui1').innerText;
-navigator.clipboard.writeText(t).then(()=>alert('✅ پرامپت UI بخش ۱ کپی شد!')).catch(()=>{
-const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('✅ کپی شد!');
-});
-}
-</script>
-</body>
-</html>
+════════════════════════════════════════════════════════════════════
