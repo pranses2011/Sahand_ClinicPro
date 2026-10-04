@@ -90,9 +90,3 @@ public class ChangeAppointmentStatusCommandHandler : IRequestHandler<ChangeAppoi
     }
 }
 
-/// <summary>پوشش سرویس کاربر فعلی برای جلوگیری از وابستگی مستقیم به Application.Interfaces</summary>
-public interface ICurrentUserService
-{
-    /// <summary>شناسه کاربر فعلی</summary>
-    long? UserId { get; }
-}
