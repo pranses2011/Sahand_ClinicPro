@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.Common.Models;
 using Sahand.ClinicPro.Application.DTOs.Doctors;
@@ -24,13 +23,11 @@ public record GetDoctorsQuery(PagedRequest? Page = null, long? SpecialtyId = nul
 public class GetDoctorsQueryHandler : IRequestHandler<GetDoctorsQuery, Result<PagedResponse<DoctorListDto>>>
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
 
     /// <summary>سازنده با تزریق واحد کار و نقشه</summary>
-    public GetDoctorsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public GetDoctorsQueryHandler(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
 
     /// <summary>اجرای پرس‌وجو</summary>

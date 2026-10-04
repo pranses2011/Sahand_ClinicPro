@@ -26,7 +26,6 @@
          نکته: ممیزی امنیتی همچنان با دستور «dotnet list package» به‌همراه
          سوییچ vulnerable در dotnet فعال است.
          بعد از ارتقاء SDK یا خروج از AutoMapper، این سرکوب باید حذف شود. -->
-    <NoWarn>$(NoWarn);NU1903</NoWarn>
 
     <!-- ساخت پروژه‌های ویندوزی (WPF) روی لینوکس/CI نیز ممکن باشد -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
@@ -52,6 +51,5 @@
     <!-- ⚠️ سرکوب دقیق پکیج/نسخه برای SDKهای آینده (NuGetAuditSuppress در
          NuGet 6.13+ معتبر است؛ در SDK فعلی توسط NoWarn بالا پوشش داده می‌شود):
          AutoMapper 13.0.1 — جزئیات و توجیه در TODO.md پیگیری می‌شود. -->
-    <NuGetAuditSuppress Include="AutoMapper" Version="13.0.1" />
   </ItemGroup>
 </Project>

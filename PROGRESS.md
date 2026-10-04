@@ -63,6 +63,38 @@
 - همه ۱۱ آیتم ناوبری دسکتاپ فعال شد
 - شاخه feature/phase-10-desktop — ۱۰ کامیت
 
+
+---
+
+## 📊 گزارش چرخه دوم — فاز C+D: پنل لایسنس و یکپارچه‌سازی (2026-10-05)
+
+### گام V9 — پنل لایسنس Blazor واقعی:
+- چیدمان RTL فارسی با ستون کنار + ۴ صفحه: داشبورد آماری، مدیریت لایسنس‌ها، درخواست‌های فعال‌سازی، لاگ اعتبارسنجی
+- سرویس LicenseAdminService: صدور با کلید تصادفی SCPRO-XXXXX-XXXXX-XXXXX + امضای RSA اختیاری + تمدید + ابطال (حذف نرم)
+- کاتالوگ ۲۳ ماژول قابل انتخاب هنگام صدور
+
+### گام V10 — استعلام برخط بیمه (فعال‌سازی هوک گام ۲۴):
+- IInsuranceEligibilityService + پیاده‌سازی HTTP به ApiEndpoint بیمه
+- سه تلاش با وقفه نمایی + کش ۳۰ دقیقه‌ای + سقوط برون‌خط به قرارداد محلی + ثبت ApiCallLog
+- گرداننده ثبت استعلام به سرویس واقعی متصل شد (Response/ApprovalCode/ValidUntil ذخیره می‌شود)
+
+### گام V11 — مهاجرت AutoMapper → Mapperly:
+- PatientMapper + DoctorMapper تولیدشده در زمان کامپایل (Riok.Mapperly 3.6.0)
+- هشدار امنیتی GHSA-rvv3-g6hj-g44x با حذف کامل AutoMapper بسته شد
+- سرکوب‌های NU1903/NuGetAudit از Directory.Build.props حذف شدند
+- API نسخه 3.6: `[MapperRequiredMapping(RequiredMappingStrategy.Target)]` روی متدها
+
+### گام V12 — تست یکپارچه‌سازی جریان کامل + نهایی‌سازی:
+- تست سرتاسری: ورود ادمین → ثبت بیمار → جستجو → نوبت → پذیرش → ویزیت SOAP → نسخه → فاکتور روی EF InMemory
+- **کشف و رفع باگ تولیدی**: cast ریپازیتوری عمومی به IAppointmentRepository در ثبت نوبت (در محیط واقعی هم هرگز کار نمی‌کرد)
+- تشخیص خودکار InMemory در سازنده DbContext از options.Extensions (دسترسی به Database.ProviderName مدل را پیش از مقداردهی پرچم می‌ساخت)
+- یکسان‌سازی کارخانه‌های تست روی پایه InMemory (کش مدل EF per-type) + غیرفعال‌سازی موازی‌سازی مجموعه‌ها (انجماد Serilog)
+- نتیجه نهایی: **۵۰/۵۰ تست سبز** | کل Solution بدون خطا
+
+### وضعیت نهایی چرخه دوم:
+- ۱۲/۱۲ گام TODO-v1.1 کامل | برچسب v1.0.0-alpha → v1.1.0-alpha
+- کلاینت دسکتاپ: ۱۱ ماژول فعال | پنل لایسنس: کامل | بیمه برخط: متصل
+
 ## 💬 یادداشت‌ها:
 - معماری: Clean Architecture + CQRS + Repository + Unit of Work
 - نام‌گذاری: پروژه‌ها/فضای‌نام‌ها `Sahand.ClinicPro.*` — نام کلاس‌های مستندشده حفظ شد (مثل ClinicProDbContext)

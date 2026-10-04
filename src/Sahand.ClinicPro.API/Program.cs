@@ -102,7 +102,7 @@ try
         });
     });
 
-    // لایه کاربرد: MediatR + رفتارها + AutoMapper + FluentValidation
+    // لایه کاربرد: MediatR + رفتارها + نگاشتگر Mapperly + FluentValidation
     builder.Services.AddApplication();
 
     // لایه زیرساخت: DbContext + ریپازیتوری + سرویس‌ها + بذرها

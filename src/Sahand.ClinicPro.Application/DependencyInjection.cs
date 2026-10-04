@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +14,7 @@ public static class DependencyInjection
 {
     /// <summary>
     /// ثبت سرویس‌های لایه کاربرد شامل MediatR (الگوی CQRS)،
-    /// AutoMapper (نگاشت اشیاء)، FluentValidation (اعتبارسنجی)
+    /// نگاشتگر‌های Mapperly (تولید کد زمان کامپایل)، FluentValidation (اعتبارسنجی)
     /// و چهار رفتار خط لوله (لاگ، عملکرد، اعتبارسنجی، تراکنش).
     /// </summary>
     /// <param name="services">کالکشن سرویس‌های برنامه</param>
@@ -39,8 +39,9 @@ public static class DependencyInjection
             cfg.AddOpenBehavior(typeof(TransactionBehavior<,>));
         });
 
-        // ثبت AutoMapper — پروفایل‌های نگاشت DTO و موجودیت
-        services.AddAutoMapper(assembly);
+        // ثبت نگاشتگر‌های Mapperly — تولید کد در زمان کامپایل (گام V11)
+        services.AddScoped<Common.Mappings.PatientMapper>();
+        services.AddScoped<Common.Mappings.DoctorMapper>();
 
         // ثبت FluentValidation — اعتبارسنج‌های فارسی برای هر Command/Query
         services.AddValidatorsFromAssembly(assembly);

@@ -14,11 +14,11 @@ namespace Sahand.ClinicPro.API.IntegrationTests;
 [Collection("Api")]
 public class ControllersTests
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly InMemoryApiFactory _factory;
     private readonly JsonSerializerOptions _json = new() { PropertyNameCaseInsensitive = true };
 
     /// <summary>سازنده تست — تزریق کارخانه مشترک</summary>
-    public ControllersTests(WebApplicationFactory<Program> factory)
+    public ControllersTests(InMemoryApiFactory factory)
     {
         _factory = factory;
     }

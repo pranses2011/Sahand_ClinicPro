@@ -7,7 +7,7 @@
        ۱) پکیج‌های مایکروسافتی هماهنگ با .NET 8 → خانواده 8.0.x
        ۲) EF Core مطابق مستندات → 8.0.31 (آخرین پچ 8.x)
        ۳) MediatR → 12.x (آخرین نسخه با مجوز رایگان Apache-2.0)
-       ۴) FluentValidation → 11.x و AutoMapper → 13.x (آخرین نسخه‌های
+       ۴) FluentValidation → 11.x و Riok.Mapperly → 3.x (نگاشتگر source-generated — گام V11؛
           کاملاً رایگان؛ نسخه‌های جدیدتر مجوز تجاری دارند)
        ═══════════════════════════════════════════════════════════════ -->
 
@@ -25,7 +25,7 @@
     <PackageVersion Include="FluentValidation" Version="11.12.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.12.0" />
     <!-- نگاشت اشیاء — آخرین نسخه رایگان MIT (نسخه ۱۵+ تجاری است) -->
-    <PackageVersion Include="AutoMapper" Version="13.0.1" />
+    <PackageVersion Include="Riok.Mapperly" Version="3.6.0" />
     <!-- انتزاع‌های DI برای کلاس‌های کتابخانه‌ای -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />

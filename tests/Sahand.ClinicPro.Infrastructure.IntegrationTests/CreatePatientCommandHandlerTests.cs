@@ -24,8 +24,8 @@ public class CreatePatientCommandHandlerTests
             .UseInMemoryDatabase($"TestDb_{Guid.NewGuid():N}")
             .Options;
 
-        var context = new ClinicProDbContext(options) { IsInMemory = true };
-        var mediator = new Mock<MediatR.IMediator>().Object;
+        var context = new ClinicProDbContext(options);
+                var mediator = new Mock<MediatR.IMediator>().Object;
 
         return (new UnitOfWork(context, mediator), context);
     }
@@ -48,14 +48,7 @@ public class CreatePatientCommandHandlerTests
         // آماده‌سازی
         var (uow, context) = CreateUnitOfWork();
         var handler = new CreatePatientCommandHandler(
-            uow, new Mock<AutoMapper.IMapper>().Object,
-            new Mock<Microsoft.Extensions.Logging.ILogger<CreatePatientCommandHandler>>().Object);
-
-        // نقشه واقعی لازم است — AutoMapper با پروفایل واقعی
-        var mapperConfig = new AutoMapper.MapperConfiguration(cfg =>
-            cfg.AddProfile<Sahand.ClinicPro.Application.Common.Mappings.PatientProfile>());
-        var mapper = mapperConfig.CreateMapper();
-        handler = new CreatePatientCommandHandler(uow, mapper,
+            uow, new Sahand.ClinicPro.Application.Common.Mappings.PatientMapper(),
             new Mock<Microsoft.Extensions.Logging.ILogger<CreatePatientCommandHandler>>().Object);
 
         // عملیات: ثبت بیمار
@@ -78,9 +71,7 @@ public class CreatePatientCommandHandlerTests
         // توجه: یکتایی کد ملی در Validator با MustAsync بررسی می‌شود نه در Handler؛
         // این تست رفتار Handler را مستقل از اعتبارسنجی نشان می‌دهد
         var (uow, context) = CreateUnitOfWork();
-        var mapperConfig = new AutoMapper.MapperConfiguration(cfg =>
-            cfg.AddProfile<Sahand.ClinicPro.Application.Common.Mappings.PatientProfile>());
-        var mapper = mapperConfig.CreateMapper();
+        var mapper = new Sahand.ClinicPro.Application.Common.Mappings.PatientMapper();
         var handler = new CreatePatientCommandHandler(uow, mapper,
             new Mock<Microsoft.Extensions.Logging.ILogger<CreatePatientCommandHandler>>().Object);
 

@@ -70,6 +70,11 @@ public static class DependencyInjection
         // ── سامانه لایسنس سمت کلاینت ──
         services.AddScoped<Application.Interfaces.ILicenseService, Services.License.LicenseService>();
 
+        // استعلام برخط بیمه — گام V10 (کش TTL + سه تلاش + fallback برون‌خط)
+        services.AddHttpClient("insurance-eligibility");
+        services.AddScoped<Application.Interfaces.IInsuranceEligibilityService,
+            Services.Insurance.OnlineInsuranceEligibilityService>();
+
         // ── کارهای پس‌زمینه Hangfire — فقط وقتی دیتابیس واقعی در دسترس است ──
         // در محیط تست/CI با نبود SQL Server مقدار Jobs:Enabled=false می‌ماند
         if (configuration.GetValue("Jobs:Enabled", false))

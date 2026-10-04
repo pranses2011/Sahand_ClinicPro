@@ -7,9 +7,8 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <!-- نکته AutoMapper 13.0.1 و هشدار NU1903: سرکوب دقیق در سطح Solution
-         با NuGetAuditSuppress در Directory.Build.props انجام شده است؛
-         جزئیات و توجیه آن در همان فایل و در TODO.md ثبت شده است. -->
+    <!-- نکته Mapperly (گام V11): نگاشت source-generated جایگزین AutoMapper شد؛
+         هشدار امنیتی GHSA-rvv3-g6hj-g44x با حذف کامل پکیج بسته شد. -->
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,8 +17,8 @@
     <!-- اعتبارسنجی با پیام‌های فارسی -->
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
-    <!-- نگاشت موجودیت‌ها به DTO و برعکس -->
-    <PackageReference Include="AutoMapper" />
+    <!-- نگاشت موجودیت‌ها به DTO و برعکس — source-generated (بسته تحلیلی) -->
+    <PackageReference Include="Riok.Mapperly" PrivateAssets="all" />
     <!-- انتزاع‌های DI برای نوشتن متد الحاقی AddApplication -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <!-- برای ILogger در رفتار لاگ‌گذاری (گام ۵) -->
