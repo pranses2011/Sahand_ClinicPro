@@ -20,6 +20,10 @@
     <PackageReference Include="MaterialDesignThemes" />
     <!-- MVVM مدرن با Source Generator (ObservableObject، RelayCommand و...) -->
     <PackageReference Include="CommunityToolkit.Mvvm" />
+    <!-- تزریق وابستگی و پیکربندی سمت کلاینت -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
   </ItemGroup>
 
   <ItemGroup>
