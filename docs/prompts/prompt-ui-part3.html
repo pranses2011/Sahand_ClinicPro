@@ -1,69 +1,19 @@
-<!DOCTYPE html>
-<html dir="rtl" lang="fa">
-<head>
-<meta charset="UTF-8">
-<title>🖥️ ClinicPro - پرامپت مکمل UI بخش ۳</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;900&display=swap');
-:root{--p:#1a73e8;--s:#34a853;--a:#ea4335;--bg:#f0f2f5;--c:#fff;--t:#202124;--b:#dadce0;--sh:0 2px 8px rgba(0,0,0,.1);--r:12px}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t);line-height:1.8;font-size:13px}
-.ct{max-width:1200px;margin:0 auto;padding:20px}
-header{background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;padding:40px 20px;text-align:center;border-radius:0 0 30px 30px;margin-bottom:25px}
-header h1{font-size:2em;font-weight:900}
-header p{opacity:.9}
-.nav{background:#fff;padding:12px;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
-.nav a{padding:7px 14px;background:#f0f2f5;border-radius:8px;text-decoration:none;color:var(--t);font-size:11px;font-weight:600}
-.nav a:hover,.nav a.active{background:#0891b2;color:#fff}
-.prompt-section{background:#1e1e1e;color:#d4d4d4;border-radius:var(--r);padding:25px;margin-bottom:20px;font-family:'Courier New',monospace;font-size:12px;line-height:1.8;direction:rtl;text-align:right;white-space:pre-wrap;word-wrap:break-word;overflow-x:auto}
-.prompt-section .h1{color:#4ec9b0;font-weight:bold;font-size:16px}
-.prompt-section .h2{color:#569cd6;font-weight:bold;font-size:14px}
-.prompt-section .h3{color:#ce9178;font-weight:bold;font-size:13px}
-.prompt-section .h4{color:#dcdcaa;font-weight:bold;font-size:12px}
-.prompt-section .note{color:#6a9955;font-style:italic}
-.prompt-section .important{color:#f44747;font-weight:bold}
-.prompt-section .code{color:#9cdcfe}
-.prompt-section .field{color:#dcdcaa}
-.prompt-section .ui{color:#c586c0}
-.prompt-section .key{color:#569cd6}
-.copy-btn{background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;border:none;padding:10px 25px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px}
-.info{background:#e0f2fe;border-right:4px solid #0891b2;padding:15px;border-radius:0 8px 8px 0;margin:15px 0;font-size:12px}
-footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#fff;border-radius:var(--r);margin-top:20px}
-</style>
-</head>
-<body>
-<header>
-<h1>🖥️ پرامپت مکمل UI - بخش ۳</h1>
-<p>صندوق، حسابداری دوبل، بیمه، آزمایشگاه، داروخانه، دندانپزشکی، چشم‌پزشکی</p>
-</header>
-<div class="ct">
-<nav class="nav">
-<a href="prompt-ui-part1.html">🖥️ UI ۱</a>
-<a href="prompt-ui-part2.html">🖥️ UI ۲</a>
-<a href="prompt-ui-part3.html" class="active">🖥️ UI ۳</a>
-<a href="prompt-ui-part4.html">🖥️ UI ۴</a>
-</nav>
 
-<div class="info"><strong>⚠️ مکمل:</strong> ادامه فایل‌های قبلی. فرم‌های مالی، پاراکلینیک و تخصصی.</div>
-
-<button class="copy-btn" onclick="copyAll()">📋 کپی کل بخش ۳</button>
-
-<div class="prompt-section" id="prompt-ui3">
-<span class="h1">════════════════════════════════════════════════════════════════════
+════════════════════════════════════════════════════════════════════
 🖥️ Sahand_ClinicPro - پرامپت مکمل UI
 بخش ۳ از ۴: مالی، حسابداری، بیمه، آزمایشگاه، داروخانه، تخصصی
-════════════════════════════════════════════════════════════════════</span>
+════════════════════════════════════════════════════════════════════
 
-<span class="important">⚠️ مکمل فایل‌های قبلی - از اول شروع نکن!</span>
+⚠️ مکمل فایل‌های قبلی - از اول شروع نکن!
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 💰 فرم ۱۴: صدور فاکتور (InvoiceView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> InvoiceViewModel.cs
+ViewModel: InvoiceViewModel.cs
 
-<span class="h3">── ساختار بصری (Grid دو ستونه: ۲fr فاکتور + ۱fr خلاصه) ──</span>
+── ساختار بصری (Grid دو ستونه: ۲fr فاکتور + ۱fr خلاصه) ──
 
 ┌──────────────────────────────────────────────────────────────┐
 │ 💰 صندوق - صدور فاکتور                                      │
@@ -126,9 +76,9 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │ └──────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="h3">── عناصر دقیق ──</span>
+── عناصر دقیق ──
 
-<span class="field">۱. DataGrid اقلام فاکتور:</span>
+۱. DataGrid اقلام فاکتور:
    ستون‌ها:
    - کد خدمت (ServiceCode): TextBlock Monospace
    - شرح خدمت (ServiceName): TextBlock
@@ -142,7 +92,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    فوتر DataGrid:
    - ردیف جمع: مجموع هر ستون عددی (Bold)
 
-<span class="field">۲. پنل خلاصه مالی (SummaryPanel):</span>
+۲. پنل خلاصه مالی (SummaryPanel):
    هر مقدار: Label + TextBlock
    تخفیف: دو فیلد (مبلغ ریالی + درصد)
      - تغییر یکی → محاسبه خودکار دیگری
@@ -152,7 +102,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    مالیات: از SystemSettings (معمولاً ۰ یا ۹٪)
    قابل پرداخت: برجسته (FontSize=20, Bold, قرمز)
    
-<span class="field">۳. روش پرداخت (PaymentMethod):</span>
+۳. روش پرداخت (PaymentMethod):
    ComboBox:
      💵 نقد → فقط مبلغ دریافتی
      💳 کارت‌خوان → مبلغ + شماره ارجاع + شماره ترمینال
@@ -168,7 +118,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    │ [➕ افزودن پرداخت]                │
    └────────────────────────────────────┘
 
-<span class="field">۴. دکمه ثبت و چاپ:</span>
+۴. دکمه ثبت و چاپ:
    Command: SaveAndPrintCommand
    عملیات:
      ۱. Validation: مبلغ دریافتی ≥ قابل پرداخت (یا اقساطی)
@@ -180,13 +130,13 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
      ۷. SMS تایید پرداخت به بیمار (اختیاری)
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 💰 فرم ۱۵: مدیریت صندوق (CashRegisterView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> CashRegisterViewModel.cs
+ViewModel: CashRegisterViewModel.cs
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
 ┌──────────────────────────────────────────────────────────────┐
 │ 💰 مدیریت صندوق                                             │
@@ -216,7 +166,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │                                                              │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="field">دیالوگ بستن صندوق:</span>
+دیالوگ بستن صندوق:
    ┌── بستن صندوق ──────────────────────────────────────┐
    │                                                      │
    │ 📊 خلاصه صندوق                                      │
@@ -240,18 +190,18 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    └──────────────────────────────────────────────────────┘
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 📊 فرم ۱۶: حسابداری دوبل (AccountingView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> AccountingViewModel.cs
+ViewModel: AccountingViewModel.cs
 
-<span class="h3">── ساختار (TabControl اصلی) ──</span>
+── ساختار (TabControl اصلی) ──
 
-<span class="ui">تب‌ها:</span>
+تب‌ها:
    [📒 دفتر روزنامه] [📚 دفتر کل] [📑 سرفصل‌ها] [⚖️ تراز] [💹 سود/زیان] [📅 سال مالی]
 
-<span class="h4">── تب ۱: دفتر روزنامه (JournalEntryList) ──</span>
+── تب ۱: دفتر روزنامه (JournalEntryList) ──
 
    Toolbar:
      [➕ سند جدید] [✅ تایید دسته‌ای] 
@@ -263,7 +213,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
      ☐ | شماره سند | تاریخ شمسی | شرح | مرجع (فاکتور/پرداخت) |
      جمع بدهکار | جمع بستانکار | وضعیت (Badge) | عملیات
 
-<span class="h4">── فرم سند حسابداری (JournalEntryForm - Dialog) ──</span>
+── فرم سند حسابداری (JournalEntryForm - Dialog) ──
 
 ┌── سند حسابداری #JE-2024-1156 ──────────────────────────────┐
 │                                                              │
@@ -296,14 +246,14 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │        [انصراف] [💾 پیش‌نویس] [✅ تایید نهایی]               │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="field">فیلد کد حساب (AccountCode):</span>
+فیلد کد حساب (AccountCode):
    نوع: AutoCompleteBox
    API: GET /api/v1/accounting/accounts?search={text}
    Dropdown: کد حساب + عنوان
    فقط حساب‌های تفصیلی (IsDetail=true) قابل انتخاب
    بعد از انتخاب: پر شدن خودکار عنوان حساب
 
-<span class="field">Validation سند:</span>
+Validation سند:
    ✅ حداقل ۲ سطر
    ✅ SUM(Debit) == SUM(Credit) (اجباری - قانون طلایی)
    ✅ هر سطر: حداقل یکی از بدهکار/بستانکار > ۰
@@ -312,7 +262,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    ✅ حساب الزامی
    ❌ اگر نامتوازن: دکمه تایید Disabled + هشدار قرمز
 
-<span class="h4">── تب ۲: دفتر کل (GeneralLedger) ──</span>
+── تب ۲: دفتر کل (GeneralLedger) ──
 
    انتخاب حساب: AutoCompleteBox (کد یا نام)
    بازه: از تاریخ - تا تاریخ
@@ -320,7 +270,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
      تاریخ | شماره سند | شرح | بدهکار | بستانکار | مانده | نوع مانده (بد/بس)
    فوتر: جمع بدهکار | جمع بستانکار | مانده نهایی
 
-<span class="h4">── تب ۳: سرفصل حساب‌ها (AccountTree) ──</span>
+── تب ۳: سرفصل حساب‌ها (AccountTree) ──
 
    نوع: TreeView (درختی ۴ سطحی)
    سطوح: گروه → کل → معین → تفصیلی
@@ -348,7 +298,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
      حساب والد: TreeView Selector
      مانده افتتاحیه: NumericTextBox
 
-<span class="h4">── تب ۴: تراز آزمایشی (TrialBalance) ──</span>
+── تب ۴: تراز آزمایشی (TrialBalance) ──
 
    بازه زمانی: از تاریخ - تا تاریخ
    DataGrid:
@@ -357,7 +307,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    فوتر: جمع کل (باید متوازن باشد)
    دکمه: [📥 Excel] [📄 PDF] [🖨️ چاپ]
 
-<span class="h4">── تب ۵: صورت سود و زیان (IncomeStatement) ──</span>
+── تب ۵: صورت سود و زیان (IncomeStatement) ──
 
    بازه: سال مالی / از تاریخ - تا تاریخ
    نمایش: گزارش ساختاریافته
@@ -384,17 +334,17 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    └──────────────────────────────────┘
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🧪 فرم ۱۷: آزمایشگاه (LabView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> LabViewModel.cs
+ViewModel: LabViewModel.cs
 
-<span class="h3">── ساختار (TabControl) ──</span>
+── ساختار (TabControl) ──
 
    [📋 درخواست‌ها] [🧪 در حال انجام] [✅ نتایج آماده] [📚 آرشیو] [🧪 کاتالوگ تست‌ها]
 
-<span class="h4">── تب درخواست‌ها (LabOrderList) ──</span>
+── تب درخواست‌ها (LabOrderList) ──
 
    DataGrid:
      شماره درخواست | بیمار | پزشک | تست‌ها (Tags) | اولویت (Badge) |
@@ -403,7 +353,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    وضعیت‌ها:
      ⬜ ثبت شده → 🟡 نمونه‌گیری → 🔵 در حال انجام → ✅ آماده → 📤 تحویل شده
 
-<span class="h4">── فرم درخواست آزمایش جدید (LabOrderForm - Dialog) ──</span>
+── فرم درخواست آزمایش جدید (LabOrderForm - Dialog) ──
 
 ┌── درخواست آزمایش ──────────────────────────────────────────┐
 │                                                              │
@@ -430,7 +380,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │               [انصراف] [✅ ثبت درخواست و صدور فاکتور]        │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="h4">── فرم ثبت نتایج (LabResultForm) ──</span>
+── فرم ثبت نتایج (LabResultForm) ──
 
 ┌── ثبت نتایج LAB-10234 ──────────────────────────────────────┐
 │ بیمار: علی رضایی | پزشک: دکتر احمدی | تاریخ: ۱۴۰۴/۰۴/۰۱   │
@@ -464,7 +414,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │   [📱 SMS جواب آماده] [🖨️ چاپ جواب]                         │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="field">هر فیلد نتیجه:</span>
+هر فیلد نتیجه:
    TextBox عدد → بعد از وارد کردن:
      مقایسه خودکار با NormalRange
      تغییر رنگ ردیف و Badge وضعیت
@@ -472,17 +422,17 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    محدوده نرمال: بر اساس جنسیت بیمار (Male/Female)
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 💊 فرم ۱۸: داروخانه (PharmacyView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> PharmacyViewModel.cs
+ViewModel: PharmacyViewModel.cs
 
-<span class="h3">── ساختار (TabControl) ──</span>
+── ساختار (TabControl) ──
 
    [📥 تحویل نسخه] [📦 موجودی] [📥 ورود کالا] [📋 سفارش خرید] [📊 انبارگردانی]
 
-<span class="h4">── تب ۱: تحویل نسخه (DispenseView) ──</span>
+── تب ۱: تحویل نسخه (DispenseView) ──
 
 ┌── تحویل نسخه ────────────────────────────────────────────────┐
 │                                                                │
@@ -514,19 +464,19 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │       [انصراف] [🖨️ چاپ قبض] [✅ تایید تحویل و صدور فاکتور]  │
 └────────────────────────────────────────────────────────────────┘
 
-<span class="field">موجودی Badge:</span>
+موجودی Badge:
    🟢 موجود (Quantity ≥ تجویز)
    🟡 ناکافی (Quantity < تجویز ولی > 0) → تحویل جزئی
    🔴 ناموجود (Quantity = 0) → غیرقابل تحویل
    ⏰ نزدیک انقضا (ExpiryDate < 30 روز) → هشدار زرد
 
-<span class="field">ستون تحویل:</span>
+ستون تحویل:
    NumericUpDown: تعداد واقعی تحویلی
    پیش‌فرض: مقدار تجویز (اگر موجود)
    Max: مقدار تجویز
    اگر < تجویز → تحویل جزئی + ثبت دلیل
 
-<span class="h4">── تب ۲: موجودی (InventoryList) ──</span>
+── تب ۲: موجودی (InventoryList) ──
 
    Toolbar:
      [🔍 جستجو] [فیلتر: همه/موجودی‌کم/نزدیک‌انقضا ▼]
@@ -540,7 +490,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    ردیف‌های نزدیک انقضا: Background نارنجی
    ردیف‌های ناموجود: Background قرمز کم‌رنگ
 
-<span class="h4">── تب ۳: ورود کالا (StockIn) ──</span>
+── تب ۳: ورود کالا (StockIn) ──
 
    فرم ورود:
      تامین‌کننده: ComboBox [لیست Suppliers]
@@ -553,30 +503,30 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    
    [➕ افزودن ردیف] [✅ ثبت ورود کالا]
 
-<span class="h4">── تب ۴: سفارش خرید ──</span>
+── تب ۴: سفارش خرید ──
    لیست سفارش‌ها + فرم سفارش جدید
    پیشنهاد خودکار بر اساس الگوریتم ۱۰ (موجودی کم)
 
-<span class="h4">── تب ۵: انبارگردانی ──</span>
+── تب ۵: انبارگردانی ──
    لیست داروها + ستون "تعداد واقعی" Editable
    مقایسه سیستمی vs واقعی + گزارش اختلاف
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🏦 فرم ۱۹: مدیریت بیمه (InsuranceView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> InsuranceViewModel.cs
+ViewModel: InsuranceViewModel.cs
 
-<span class="h3">── تب‌ها ──</span>
+── تب‌ها ──
 
    [🏦 شرکت‌های بیمه] [💲 تعرفه‌ها] [📋 مطالبات] [🔍 استعلامات]
 
-<span class="h4">── لیست بیمه‌ها ──</span>
+── لیست بیمه‌ها ──
    DataGrid: نام | کد | نوع (پایه/تکمیلی) | درصد پوشش |
             قرارداد | اعتبار تا | API فعال | وضعیت | عملیات
 
-<span class="h4">── فرم بیمه ──</span>
+── فرم بیمه ──
    نام: TextBox
    کد: TextBox (Unique)
    نوع: ComboBox [پایه/تکمیلی]
@@ -591,26 +541,26 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    پشتیبانی نسخه الکترونیک: ToggleSwitch
    [✅ تست اتصال] → بررسی ارتباط با API بیمه
 
-<span class="h4">── تب تعرفه‌ها ──</span>
+── تب تعرفه‌ها ──
    فیلتر: سال | بیمه | دسته خدمت
    DataGrid: کد خدمت | نام خدمت | قیمت آزاد | قیمت بیمه |
             درصد بیمه | سقف | ضریب K | عملیات
    [📥 ورود از Excel] → بارگذاری تعرفه‌ها از فایل Excel
    [➕ تعرفه جدید] → Dialog فرم تعرفه
 
-<span class="h4">── تب مطالبات ──</span>
+── تب مطالبات ──
    DataGrid: شماره مطالبه | بیمه | دوره | مبلغ ارسال | مبلغ تایید |
             مبلغ رد شده | مبلغ دریافت | وضعیت | عملیات
    [➕ ایجاد مطالبه جدید] [📤 ارسال به بیمه]
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🦷 فرم ۲۰: دندانپزشکی (DentalView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> DentalViewModel.cs
+ViewModel: DentalViewModel.cs
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
 ┌──────────────────────────────────────────────────────────────┐
 │ 🦷 پرونده دندانپزشکی - زهرا نوری                            │
@@ -648,7 +598,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │ └──────────────────────────┘ └─────────────────────────────┘ │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="field">DentalChart Control (سفارشی):</span>
+DentalChart Control (سفارشی):
    نوع: UserControl با Canvas
    هر دندان: Button مربعی (40×40)
    کلیک: انتخاب دندان → پر شدن فرم جزئیات
@@ -656,18 +606,18 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    FDI Numbering: شماره‌گذاری بین‌المللی
    ToolTip: "دندان ۱۶ - آسیاب اول بالا راست - وضعیت: پوسیدگی"
 
-<span class="field">سطح دندان (Surface):</span>
+سطح دندان (Surface):
    ۵ CheckBox: M (مزیال) | D (دیستال) | O (اکلوزال) | B (باکال) | L (لینگوال)
    انتخاب چندتایی مجاز
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 👁️ فرم ۲۱: چشم‌پزشکی (EyeExamView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> EyeExamViewModel.cs
+ViewModel: EyeExamViewModel.cs
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
 ┌──────────────────────────────────────────────────────────────┐
 │ 👁️ معاینه چشم - علی رضایی                                   │
@@ -700,7 +650,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │ [💾 ذخیره] [🖨️ چاپ نسخه عینک]                               │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="field">فیلدهای عددی چشم:</span>
+فیلدهای عددی چشم:
    Sphere: NumericUpDown (Step=0.25, Range=-20 to +20)
    Cylinder: NumericUpDown (Step=0.25, Range=-8 to 0)
    Axis: NumericUpDown (Step=5, Range=0 to 180)
@@ -713,17 +663,17 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
              20/60, 20/80, 20/100, 20/200, CF, HM, LP, NLP]
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🏃 فرم ۲۲: فیزیوتراپی (PhysiotherapyView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> PhysiotherapyViewModel.cs
+ViewModel: PhysiotherapyViewModel.cs
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
    [📋 بیماران] [📅 جلسات امروز] [📊 طرح‌های درمانی]
 
-<span class="h4">── فرم جلسه فیزیوتراپی (SessionForm) ──</span>
+── فرم جلسه فیزیوتراپی (SessionForm) ──
 
    بیمار: [انتخاب بیمار]
    شماره جلسه: [۳] از [۱۰] (خودکار)
@@ -750,17 +700,17 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    [💾 ذخیره جلسه]
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 📷 فرم ۲۳: تصویربرداری (ImagingView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> ImagingViewModel.cs
+ViewModel: ImagingViewModel.cs
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
    [📋 درخواست‌ها] [📷 در حال انجام] [✅ گزارش‌شده] [📚 آرشیو]
 
-<span class="h4">── فرم درخواست تصویربرداری ──</span>
+── فرم درخواست تصویربرداری ──
 
    بیمار: AutoCompleteBox
    پزشک درخواست‌کننده: ComboBox
@@ -771,7 +721,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    اولویت: RadioButton [عادی/فوری]
    [✅ ثبت درخواست]
 
-<span class="h4">── فرم ثبت گزارش ──</span>
+── فرم ثبت گزارش ──
 
    رادیولوژیست/سونوگرافیست: ComboBox
    تکنیک: TextBox MultiLine
@@ -789,25 +739,6 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    [💾 ذخیره] [✅ تایید نهایی] [🖨️ چاپ گزارش]
 
 
-<span class="h1">════════════════════════════════════════════════════════════════════
+════════════════════════════════════════════════════════════════════
 📌 پایان بخش ۳ از ۴ - ادامه در prompt-ui-part4.html
-════════════════════════════════════════════════════════════════════</span>
-</div>
-
-<footer>
-<p>📄 پرامپت مکمل UI - بخش ۳ از ۴</p>
-<p><strong>صندوق، حسابداری دوبل، بیمه، آزمایشگاه، داروخانه، دندان، چشم، فیزیوتراپی، تصویربرداری</strong></p>
-<p><a href="prompt-ui-part2.html" style="color:#0891b2">← بخش ۲</a> | <a href="prompt-ui-part4.html" style="color:#0891b2">بخش ۴ (تنظیمات، کاربران، گزارش، لایسنس، SMS) →</a></p>
-</footer>
-</div>
-
-<script>
-function copyAll(){
-const t=document.getElementById('prompt-ui3').innerText;
-navigator.clipboard.writeText(t).then(()=>alert('✅ پرامپت UI بخش ۳ کپی شد!')).catch(()=>{
-const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('✅ کپی شد!');
-});
-}
-</script>
-</body>
-</html>
+════════════════════════════════════════════════════════════════════
