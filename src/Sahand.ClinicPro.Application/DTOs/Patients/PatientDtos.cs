@@ -1,0 +1,114 @@
+﻿using Sahand.ClinicPro.Domain.Enums;
+
+namespace Sahand.ClinicPro.Application.DTOs.Patients;
+
+/// <summary>
+/// آیتم فهرست بیماران — سبک برای شبکه و گرید WPF
+/// </summary>
+public class PatientListDto
+{
+    /// <summary>شناسه بیمار</summary>
+    public long Id { get; set; }
+
+    /// <summary>شماره پرونده پزشکی</summary>
+    public string MedicalRecordNo { get; set; } = string.Empty;
+
+    /// <summary>نام</summary>
+    public string FirstName { get; set; } = string.Empty;
+
+    /// <summary>نام خانوادگی</summary>
+    public string LastName { get; set; } = string.Empty;
+
+    /// <summary>کد ملی</summary>
+    public string NationalCode { get; set; } = string.Empty;
+
+    /// <summary>جنسیت</summary>
+    public Gender Gender { get; set; }
+
+    /// <summary>موبایل</summary>
+    public string Mobile { get; set; } = string.Empty;
+
+    /// <summary>نام بیمه اصلی</summary>
+    public string? InsuranceName { get; set; }
+
+    /// <summary>تاریخ آخرین مراجعه شمسی</summary>
+    public string? LastVisitDateShamsi { get; set; }
+}
+
+/// <summary>
+/// جزئیات کامل بیمار برای صفحه پرونده
+/// </summary>
+public class PatientDetailDto
+{
+    /// <summary>شناسه بیمار</summary>
+    public long Id { get; set; }
+
+    /// <summary>شماره پرونده پزشکی</summary>
+    public string MedicalRecordNo { get; set; } = string.Empty;
+
+    /// <summary>کد ملی</summary>
+    public string NationalCode { get; set; } = string.Empty;
+
+    /// <summary>نام</summary>
+    public string FirstName { get; set; } = string.Empty;
+
+    /// <summary>نام خانوادگی</summary>
+    public string LastName { get; set; } = string.Empty;
+
+    /// <summary>نام پدر</summary>
+    public string? FatherName { get; set; }
+
+    /// <summary>جنسیت</summary>
+    public Gender Gender { get; set; }
+
+    /// <summary>تاریخ تولد شمسی</summary>
+    public string? BirthDateShamsi { get; set; }
+
+    /// <summary>سن محاسبه‌شده</summary>
+    public int? Age { get; set; }
+
+    /// <summary>گروه خونی</summary>
+    public string? BloodType { get; set; }
+
+    /// <summary>موبایل</summary>
+    public string Mobile { get; set; } = string.Empty;
+
+    /// <summary>تلفن ثابت</summary>
+    public string? Phone { get; set; }
+
+    /// <summary>ایمیل</summary>
+    public string? Email { get; set; }
+
+    /// <summary>آدرس</summary>
+    public string? Address { get; set; }
+
+    /// <summary>شهر</summary>
+    public string? City { get; set; }
+
+    /// <summary>استان</summary>
+    public string? Province { get; set; }
+
+    /// <summary>بیمه اصلی — شناسه</summary>
+    public long? InsuranceCompanyId { get; set; }
+
+    /// <summary>نام بیمه اصلی</summary>
+    public string? InsuranceName { get; set; }
+
+    /// <summary>شماره دفترچه بیمه</summary>
+    public string? InsuranceNumber { get; set; }
+
+    /// <summary>بیمه تکمیلی — شناسه</summary>
+    public long? SupplementaryInsuranceId { get; set; }
+
+    /// <summary>آلرژی‌ها</summary>
+    public string? Allergies { get; set; }
+
+    /// <summary>بیماری‌های مزمن</summary>
+    public string? ChronicDiseases { get; set; }
+
+    /// <summary>داروهای فعلی</summary>
+    public string? CurrentMedications { get; set; }
+
+    /// <summary>تاریخ ثبت‌نام شمسی</summary>
+    public string? RegistrationDateShamsi { get; set; }
+}
