@@ -1,70 +1,19 @@
-<!DOCTYPE html>
-<html dir="rtl" lang="fa">
-<head>
-<meta charset="UTF-8">
-<title>🖥️ ClinicPro - پرامپت مکمل UI بخش ۴</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;900&display=swap');
-:root{--p:#1a73e8;--s:#34a853;--a:#ea4335;--bg:#f0f2f5;--c:#fff;--t:#202124;--b:#dadce0;--sh:0 2px 8px rgba(0,0,0,.1);--r:12px}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t);line-height:1.8;font-size:13px}
-.ct{max-width:1200px;margin:0 auto;padding:20px}
-header{background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;padding:40px 20px;text-align:center;border-radius:0 0 30px 30px;margin-bottom:25px}
-header h1{font-size:2em;font-weight:900}
-header p{opacity:.9}
-.nav{background:#fff;padding:12px;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
-.nav a{padding:7px 14px;background:#f0f2f5;border-radius:8px;text-decoration:none;color:var(--t);font-size:11px;font-weight:600}
-.nav a:hover,.nav a.active{background:#0891b2;color:#fff}
-.prompt-section{background:#1e1e1e;color:#d4d4d4;border-radius:var(--r);padding:25px;margin-bottom:20px;font-family:'Courier New',monospace;font-size:12px;line-height:1.8;direction:rtl;text-align:right;white-space:pre-wrap;word-wrap:break-word;overflow-x:auto}
-.prompt-section .h1{color:#4ec9b0;font-weight:bold;font-size:16px}
-.prompt-section .h2{color:#569cd6;font-weight:bold;font-size:14px}
-.prompt-section .h3{color:#ce9178;font-weight:bold;font-size:13px}
-.prompt-section .h4{color:#dcdcaa;font-weight:bold;font-size:12px}
-.prompt-section .note{color:#6a9955;font-style:italic}
-.prompt-section .important{color:#f44747;font-weight:bold}
-.prompt-section .code{color:#9cdcfe}
-.prompt-section .field{color:#dcdcaa}
-.prompt-section .ui{color:#c586c0}
-.prompt-section .key{color:#569cd6}
-.copy-btn{background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;border:none;padding:10px 25px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px}
-.info{background:#e0f2fe;border-right:4px solid #0891b2;padding:15px;border-radius:0 8px 8px 0;margin:15px 0;font-size:12px}
-.success{background:#e6f4ea;border-right:4px solid var(--s);padding:15px;border-radius:0 8px 8px 0;margin:15px 0;font-size:12px}
-footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#fff;border-radius:var(--r);margin-top:20px}
-</style>
-</head>
-<body>
-<header>
-<h1>🖥️ پرامپت مکمل UI - بخش ۴ (آخر)</h1>
-<p>تنظیمات، کاربران، گزارش‌ساز، لایسنس، پیامک، پرسنل، بکاپ</p>
-</header>
-<div class="ct">
-<nav class="nav">
-<a href="prompt-ui-part1.html">🖥️ UI ۱</a>
-<a href="prompt-ui-part2.html">🖥️ UI ۲</a>
-<a href="prompt-ui-part3.html">🖥️ UI ۳</a>
-<a href="prompt-ui-part4.html" class="active">🖥️ UI ۴</a>
-</nav>
 
-<div class="info"><strong>⚠️ مکمل:</strong> بخش آخر فرم‌ها. شامل فرم‌های سیستمی، اداری و مدیریتی.</div>
-
-<button class="copy-btn" onclick="copyAll()">📋 کپی کل بخش ۴</button>
-
-<div class="prompt-section" id="prompt-ui4">
-<span class="h1">════════════════════════════════════════════════════════════════════
+════════════════════════════════════════════════════════════════════
 🖥️ Sahand_ClinicPro - پرامپت مکمل UI
 بخش ۴ از ۴ (آخر): تنظیمات، کاربران، گزارش، لایسنس، SMS، پرسنل
-════════════════════════════════════════════════════════════════════</span>
+════════════════════════════════════════════════════════════════════
 
-<span class="important">⚠️ آخرین فایل مکمل - با اتمام این فایل، تمام فرم‌ها تکمیل شده‌اند.</span>
+⚠️ آخرین فایل مکمل - با اتمام این فایل، تمام فرم‌ها تکمیل شده‌اند.
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 👥 فرم ۲۴: مدیریت کاربران (UserListView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> UserListViewModel.cs
+ViewModel: UserListViewModel.cs
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
 ┌──────────────────────────────────────────────────────────────┐
 │ 👥 مدیریت کاربران                           [کل: ۱۸ کاربر]│
@@ -80,14 +29,14 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │ karimi   │ حسابدار   │[حسابدار]  │۰۳/۳۰ ۰۹:۰۰│🔴قفل│[👁✏🔑🔓🗑]│
 └──────────────────────────────────────────────────────────────┘
 
-<span class="field">دکمه‌های عملیات هر ردیف:</span>
+دکمه‌های عملیات هر ردیف:
    👁️ مشاهده جزئیات
    ✏️ ویرایش اطلاعات
    🔑 ریست رمز عبور → Dialog: "رمز جدید تولید شود؟" → نمایش رمز جدید + کپی
    🔒 قفل اکانت / 🔓 آزاد کردن
    🗑️ حذف (غیرفعال‌سازی)
 
-<span class="h3">── فرم ثبت/ویرایش کاربر (UserFormView - Dialog) ──</span>
+── فرم ثبت/ویرایش کاربر (UserFormView - Dialog) ──
 
 ┌── ثبت کاربر جدید ────────────────────────────────────────────┐
 │                                                                │
@@ -154,19 +103,19 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │                      [انصراف] [✅ ذخیره کاربر]                │
 └────────────────────────────────────────────────────────────────┘
 
-<span class="field">Password Strength Meter:</span>
+Password Strength Meter:
    ۵ سطحی: خیلی‌ضعیف(۱) | ضعیف(۲) | متوسط(۳) | قوی(۴) | خیلی‌قوی(۵)
    بررسی: طول + حروف بزرگ + کوچک + عدد + علامت + عدم تکرار
    نمایش: ProgressBar با رنگ متغیر + متن فارسی
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🔖 فرم ۲۵: مدیریت نقش‌ها (RolePermissionView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> RolePermissionViewModel.cs
+ViewModel: RolePermissionViewModel.cs
 
-<span class="h3">── ساختار (Grid دو ستونه) ──</span>
+── ساختار (Grid دو ستونه) ──
 
 ┌──────────────────────────────────────────────────────────────┐
 │ 🔖 مدیریت نقش‌ها و دسترسی‌ها                                 │
@@ -215,7 +164,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │ └────────────────────────────┘ └───────────────────────────┘ │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="field">لیست کامل ماژول‌ها و دسترسی‌ها (Permission Groups):</span>
+لیست کامل ماژول‌ها و دسترسی‌ها (Permission Groups):
 
    📁 بیماران: View, ViewDetail, Create, Edit, Delete, Export, Print
    📁 پزشکان: View, Create, Edit, Delete, Schedule, Absence
@@ -245,17 +194,17 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    📁 لایسنس: View, Activate
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 📱 فرم ۲۶: مدیریت پیامک (SmsView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> SmsViewModel.cs
+ViewModel: SmsViewModel.cs
 
-<span class="h3">── تب‌ها ──</span>
+── تب‌ها ──
 
    [📤 ارسال پیامک] [📋 تاریخچه] [📝 تمپلیت‌ها] [⚙️ پنل‌ها] [📊 آمار]
 
-<span class="h4">── تب ۱: ارسال پیامک ──</span>
+── تب ۱: ارسال پیامک ──
 
 ┌── ارسال پیامک ─────────────────────────────────────────────┐
 │                                                              │
@@ -295,14 +244,14 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │ [📤 ارسال دسته‌ای] (تایید: "آیا ارسال به ۴۲ نفر مطمئنید؟") │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="h4">── تب ۲: تاریخچه ──</span>
+── تب ۲: تاریخچه ──
 
    فیلتر: از تاریخ | تا تاریخ | وضعیت | پنل | نوع
    DataGrid:
      گیرنده | نام بیمار | متن (خلاصه) | پنل | ارسال | تحویل |
      وضعیت (✅ارسال شد / ⏳انتظار / ❌خطا) | هزینه | عملیات(بازارسال)
 
-<span class="h4">── تب ۳: تمپلیت‌ها ──</span>
+── تب ۳: تمپلیت‌ها ──
 
    DataGrid: نام | کد | نوع | محتوا | متغیرها | وضعیت | عملیات
    
@@ -323,7 +272,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
      [{ساعت نوبت}] [{کد پیگیری}] [{نام درمانگاه}] [{آدرس}]
      [{شماره پرونده}] [{مبلغ}] [{شماره فاکتور}]
 
-<span class="h4">── تب ۴: تنظیمات پنل‌ها ──</span>
+── تب ۴: تنظیمات پنل‌ها ──
 
    DataGrid: نام پنل | کد | شماره ارسال | موجودی | اولویت |
             پیش‌فرض | وضعیت | عملیات
@@ -342,7 +291,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
      [🔗 تست اتصال] → ارسال SMS تستی → نمایش نتیجه
      [💰 بررسی موجودی] → نمایش موجودی اعتبار
 
-<span class="h4">── تب ۵: آمار ──</span>
+── تب ۵: آمار ──
 
    کارت‌های آماری:
      [📤 ارسال شده: ۱٬۲۳۴] [✅ تحویل: ۱٬۲۰۰] [❌ خطا: ۳۴]
@@ -352,13 +301,13 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    نمودار: درصد موفقیت هر پنل - PieChart
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 📊 فرم ۲۷: گزارش‌ساز (ReportBrowserView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> ReportBrowserViewModel.cs
+ViewModel: ReportBrowserViewModel.cs
 
-<span class="h3">── ساختار (Grid: Sidebar دسته‌ها + Content گزارش) ──</span>
+── ساختار (Grid: Sidebar دسته‌ها + Content گزارش) ──
 
 ┌──────────────────────────────────────────────────────────────┐
 │ 📊 گزارش‌ها                                                  │
@@ -405,7 +354,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │ └──────────────────────┘ └────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="field">لیست گزارش‌های آماده (Report Catalog):</span>
+لیست گزارش‌های آماده (Report Catalog):
 
    💰 مالی:
      - daily-revenue: درآمد روزانه (تاریخ، پزشک، بیمه)
@@ -451,7 +400,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
      - expiry-report: نزدیک انقضا
      - top-medications: پرمصرف‌ترین داروها
 
-<span class="field">هر گزارش شامل:</span>
+هر گزارش شامل:
    - عنوان و توضیحات فارسی
    - پارامترهای ورودی (Dynamic بر اساس نوع)
    - خروجی Stimulsoft Report (.mrt)
@@ -460,15 +409,15 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    - قابلیت زمان‌بندی ارسال خودکار
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 ⚙️ فرم ۲۸: تنظیمات سیستم (SettingsView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> SettingsViewModel.cs
+ViewModel: SettingsViewModel.cs
 
-<span class="h3">── ساختار (Grid: Sidebar منو + Content) ──</span>
+── ساختار (Grid: Sidebar منو + Content) ──
 
-<span class="ui">منوی تنظیمات (Sidebar):</span>
+منوی تنظیمات (Sidebar):
    🏥 اطلاعات درمانگاه
    🧩 ماژول‌ها
    👥 کاربران و نقش‌ها → صفحه جداگانه
@@ -483,7 +432,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    🔑 لایسنس
    📋 لاگ عملیات → صفحه جداگانه
 
-<span class="h4">── بخش: اطلاعات درمانگاه ──</span>
+── بخش: اطلاعات درمانگاه ──
 
    نام درمانگاه: TextBox (الزامی)
    نام انگلیسی: TextBox
@@ -502,7 +451,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    تاریخ تاسیس: PersianDatePicker
    [💾 ذخیره تغییرات]
 
-<span class="h4">── بخش: ماژول‌ها ──</span>
+── بخش: ماژول‌ها ──
 
    نمایش لیست تمام ماژول‌ها با وضعیت لایسنس:
    ┌──────────────────────────────────────────────────────────┐
@@ -520,7 +469,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    مجاز ولی غیرفعال: ToggleSwitch برای فعال/غیرفعال
    ندارد: قفل + دکمه "خرید ماژول" (لینک به License Portal)
 
-<span class="h4">── بخش: سامانه‌های دولتی ──</span>
+── بخش: سامانه‌های دولتی ──
 
    هر سامانه یک Card:
    ┌── سامانه سپاس ──────────────────────────────────────┐
@@ -536,7 +485,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    
    مشابه برای: سیب، ناب، سینا، بیمه سلامت، تامین اجتماعی
 
-<span class="h4">── بخش: چاپگر و چاپ ──</span>
+── بخش: چاپگر و چاپ ──
 
    چاپگر پیش‌فرض: ComboBox (لیست چاپگرهای نصب شده)
    چاپگر فاکتور: ComboBox (می‌تواند جداگانه باشد)
@@ -548,7 +497,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    تعداد نسخه چاپ: NumericUpDown [1-5]
    [🖨️ تست چاپ]
 
-<span class="h4">── بخش: تم و ظاهر ──</span>
+── بخش: تم و ظاهر ──
 
    تم رنگی: RadioButton با Preview
      ○ روشن (Light) ← پیش‌نمایش رنگ‌ها
@@ -562,7 +511,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    ☐ حالت فشرده (Compact Mode)
    زبان: ComboBox [فارسی 🇮🇷] (انگلیسی قفل - آینده)
 
-<span class="h4">── بخش: امنیت ──</span>
+── بخش: امنیت ──
 
    حداقل طول رمز عبور: NumericUpDown [6-20] (پیش‌فرض: ۸)
    ☑ الزام حروف بزرگ + کوچک
@@ -576,13 +525,13 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    ☑ رمزنگاری داده‌های حساس بیمار
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 💾 فرم ۲۹: بکاپ و بازیابی (BackupView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> BackupViewModel.cs
+ViewModel: BackupViewModel.cs
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
 ┌──────────────────────────────────────────────────────────────┐
 │ 💾 بکاپ و بازیابی                                           │
@@ -637,13 +586,13 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 └──────────────────────────────────────────────────────────────┘
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 📋 فرم ۳۰: لاگ عملیات (AuditLogView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> AuditLogViewModel.cs
+ViewModel: AuditLogViewModel.cs
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
    Toolbar فیلترها:
      📅 از تاریخ | 📅 تا تاریخ
@@ -679,13 +628,13 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
      └──────────────────────────────────────────────────┘
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🔑 فرم ۳۱: فعال‌سازی لایسنس (LicenseView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> LicenseViewModel.cs
+ViewModel: LicenseViewModel.cs
 
-<span class="h3">── ساختار (در تنظیمات و Dialog مستقل) ──</span>
+── ساختار (در تنظیمات و Dialog مستقل) ──
 
 ┌── وضعیت لایسنس ──────────────────────────────────────────────┐
 │                                                                │
@@ -729,56 +678,56 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │                                                                │
 └────────────────────────────────────────────────────────────────┘
 
-<span class="field">ProgressBar محدودیت‌ها:</span>
+ProgressBar محدودیت‌ها:
    نمایش: {مصرف شده} / {حداکثر}
-   رنگ: سبز (&lt;70%) | زرد (70-90%) | قرمز (&gt;90%)
+   رنگ: سبز (<70%) | زرد (70-90%) | قرمز (>90%)
    ToolTip: "۷ کاربر از ۱۰ مجاز استفاده شده"
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 👔 فرم ۳۲: مدیریت پرسنل (EmployeeView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> EmployeeViewModel.cs
+ViewModel: EmployeeViewModel.cs
 
-<span class="h3">── ساختار (TabControl) ──</span>
+── ساختار (TabControl) ──
 
    [👤 لیست پرسنل] [⏱️ حضور و غیاب] [💰 حقوق و دستمزد] [🏖️ مرخصی] [📄 قراردادها]
 
-<span class="h4">── لیست پرسنل ──</span>
+── لیست پرسنل ──
    DataGrid: کد پرسنلی | نام | بخش | سمت | نوع قرارداد |
             تاریخ استخدام | حقوق پایه | وضعیت | عملیات
 
-<span class="h4">── فرم ثبت پرسنل (۴ تب) ──</span>
+── فرم ثبت پرسنل (۴ تب) ──
    تب ۱ - اطلاعات شخصی: نام، نام‌خانوادگی، کد ملی، موبایل، آدرس، ...
    تب ۲ - اطلاعات شغلی: بخش، سمت، نوع استخدام، تاریخ استخدام، حقوق
    تب ۳ - اطلاعات بانکی: بانک، شماره حساب، شبا
    تب ۴ - اسناد: آپلود مدارک (کپی شناسنامه، مدرک تحصیلی، ...)
 
-<span class="h4">── حضور و غیاب ──</span>
+── حضور و غیاب ──
    ماه نمایشی: PersianDatePicker (ماه)
    DataGrid: تاریخ | ورود | خروج | ساعت کاری | اضافه‌کاری | وضعیت
    وضعیت: ✅حاضر | 🟡مرخصی | 🔴غیبت | 🟣ماموریت
 
-<span class="h4">── حقوق و دستمزد ──</span>
+── حقوق و دستمزد ──
    انتخاب دوره: سال/ماه
    DataGrid: پرسنل | حقوق پایه | اضافه‌کاری | کسورات | بیمه | مالیات | خالص
    [📊 محاسبه حقوق ماه] [💳 ثبت واریز] [🖨️ فیش حقوقی]
 
-<span class="h4">── مرخصی ──</span>
+── مرخصی ──
    DataGrid: پرسنل | نوع | از تاریخ | تا تاریخ | روز | وضعیت | تایید
    [➕ ثبت مرخصی] → Dialog: نوع + تاریخ + دلیل
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🏥 فرم ۳۳: پنل لایسنس وب (LicensePortal - Blazor)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="note">// این فرم‌ها Blazor Server هستند (نه WPF)
+// این فرم‌ها Blazor Server هستند (نه WPF)
 // پنل وب جداگانه برای فروشنده نرم‌افزار
-// از Material Design Blazor (MudBlazor) استفاده شود</span>
+// از Material Design Blazor (MudBlazor) استفاده شود
 
-<span class="h4">── صفحات License Portal ──</span>
+── صفحات License Portal ──
 
    ۱. Dashboard: آمار لایسنس‌ها، درآمد، نمودار فروش
    ۲. Customers: CRUD مشتریان (درمانگاه‌ها)
@@ -795,9 +744,9 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    ۹. Settings: تنظیمات Portal + کلید RSA
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 📝 فرم ۳۴: نظرسنجی (SurveyView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
    [📋 لیست نظرسنجی‌ها] [📊 نتایج و آمار]
    
@@ -807,7 +756,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    نتایج: میانگین امتیاز هر پزشک + نمودار + لیست نظرات
 
 
-<span class="h1">════════════════════════════════════════════════════════════════════
+════════════════════════════════════════════════════════════════════
 🎉 پایان تمام فایل‌های پرامپت مکمل UI (۴ بخش)
 ════════════════════════════════════════════════════════════════════
 
@@ -835,47 +784,4 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 ⚠️ LicensePortal فرم‌ها Blazor Server با MudBlazor
 ⚠️ کامنت‌های فارسی مفصل در همه View ها و ViewModel ها
 
-════════════════════════════════════════════════════════════════════</span>
-</div>
-
-<div class="success">
-<strong>🎉 تبریک! تمام فایل‌های پرامپت تکمیل شدند!</strong>
-<br><br>
-<strong>📂 لیست کامل فایل‌ها (۱۳ فایل):</strong>
-<ol style="margin:10px 25px;font-size:12px">
-<li><code>01-overview.html</code> - تحلیل نیازمندی‌ها + معماری</li>
-<li><code>02-database.html</code> - دیتابیس ۹۰+ جدول</li>
-<li><code>03-flowcharts.html</code> - فلوچارت‌ها و ارتباطات</li>
-<li><code>04-wireframes.html</code> - وایرفریم ۱۶ صفحه</li>
-<li><code>05-security-timeline.html</code> - امنیت + زمان‌بندی</li>
-<li><code>06-license-integration.html</code> - لایسنس + الگوریتم‌ها</li>
-<li><code>prompt-part1.html</code> - پرامپت: معماری + DB</li>
-<li><code>prompt-part2.html</code> - پرامپت: API + WPF</li>
-<li><code>prompt-part3.html</code> - پرامپت: امنیت + دستورات</li>
-<li><code>prompt-ui-part1.html</code> - UI: Login + Dashboard + بیمار + پزشک</li>
-<li><code>prompt-ui-part2.html</code> - UI: نوبت + پذیرش + ویزیت + نسخه</li>
-<li><code>prompt-ui-part3.html</code> - UI: مالی + آزمایشگاه + دارو + تخصصی</li>
-<li><code>prompt-ui-part4.html</code> - UI: تنظیمات + کاربران + گزارش + لایسنس</li>
-</ol>
-<br>
-<strong>📋 فایل‌های اضافه به ZIP:</strong>
-<br>هر ۴ فایل prompt-ui را به فایل ZIP اضافه کنید و پرامپت اولیه GitHub را هم به‌روز کنید.
-</div>
-
-<footer>
-<p>📄 پرامپت مکمل UI - بخش ۴ از ۴ (آخر)</p>
-<p><strong>کاربران، نقش‌ها، SMS، گزارش‌ساز، تنظیمات، بکاپ، لاگ، لایسنس، پرسنل</strong></p>
-<p>🏥 <strong>Sahand_ClinicPro Documentation - Complete!</strong></p>
-</footer>
-</div>
-
-<script>
-function copyAll(){
-const t=document.getElementById('prompt-ui4').innerText;
-navigator.clipboard.writeText(t).then(()=>alert('✅ پرامپت UI بخش ۴ کپی شد!')).catch(()=>{
-const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('✅ کپی شد!');
-});
-}
-</script>
-</body>
-</html>
+════════════════════════════════════════════════════════════════════
