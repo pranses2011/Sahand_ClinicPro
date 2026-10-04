@@ -14,12 +14,12 @@ namespace Sahand.ClinicPro.API.IntegrationTests;
 [Collection("Api")]
 public class HealthEndpointTests
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly InMemoryApiFactory _factory;
 
     /// <summary>
     /// سازنده تست — تزریق کارخانه مشترک بین تست‌های این کلاس.
     /// </summary>
-    public HealthEndpointTests(WebApplicationFactory<Program> factory)
+    public HealthEndpointTests(InMemoryApiFactory factory)
     {
         _factory = factory;
     }

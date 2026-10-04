@@ -1,0 +1,369 @@
+﻿using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
+using FluentAssertions;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Sahand.ClinicPro.Domain.Entities.Clinical;
+using Sahand.ClinicPro.Domain.Entities.Licensing;
+using Sahand.ClinicPro.Domain.Entities.People;
+using Sahand.ClinicPro.Domain.Entities.Personnel;
+using Sahand.ClinicPro.Infrastructure.Persistence;
+using Xunit;
+
+namespace Sahand.ClinicPro.API.IntegrationTests;
+
+/// <summary>
+/// کارخانه پایه تست API با دیتابیس درون‌حافظه‌ای — گام V12
+/// </summary>
+/// <remarks>
+/// نکته مهم: کش مدل EF بر اساس نوع Context مشترک است؛ بنابراین همه
+/// کارخانه‌های تست باید InMemory باشند تا مدل با مولد MRN ساخته شود.
+/// </remarks>
+public class InMemoryApiFactory : WebApplicationFactory<Program>
+{
+    /// <summary>نام دیتابیس درون‌حافظه‌ای — در کلاس‌های مشتق قابل‌بازنویسی</summary>
+    protected virtual string DatabaseName => "InMemoryApiTestsDb";
+
+    /// <summary>پیکربندی میزبان تست — دیتابیس درون‌حافظه‌ای</summary>
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Development");
+
+        builder.ConfigureServices(services =>
+        {
+            // حذف پیکربندی SQL Server موجود و جایگزینی با InMemory
+            // نکته: IDbContextOptionsConfiguration در EF8 داخلی است — با اسکن بازتابی حذف می‌شود
+            var stale = services.Where(d =>
+                d.ServiceType == typeof(DbContextOptions<ClinicProDbContext>) ||
+                (d.ServiceType.IsGenericType &&
+                 d.ServiceType.Name.StartsWith("IDbContextOptionsConfiguration"))).ToList();
+            foreach (var descriptor in stale)
+                services.Remove(descriptor);
+
+            services.AddDbContext<ClinicProDbContext>(options =>
+                options.UseInMemoryDatabase(DatabaseName)
+                    // تراکنش‌های رفتار MediatR روی InMemory پشتیبانی نمی‌شوند — نادیده
+                    .ConfigureWarnings(w =>
+                        w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning)));
+        });
+    }
+}
+
+/// <summary>
+/// کارخانه تست جریان کامل — بذرهای راه‌اندازی + داده‌های مکمل
+/// </summary>
+/// <remarks>
+/// گام V12: بذر داده‌های موردنیاز جریان (پزشک + دارو + لایسنس معتبر)
+/// پس از اجرای بذرهای اصلی برنامه روی InMemory.
+/// </remarks>
+public class FlowApiFactory : InMemoryApiFactory
+{
+    /// <summary>نام دیتابیس اختصاصی جریان</summary>
+    protected override string DatabaseName => "PatientJourneyFlowDb";
+
+    /// <summary>بذر داده‌های مکمل جریان — پزشک و دارو و لایسنس</summary>
+    public async Task<long> SeedFlowDataAsync()
+    {
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+
+        if (!context.Doctors.Any())
+        {
+            var employee = new Employee
+            {
+                FirstName = "پزشک",
+                LastName = "آزمایشی",
+                NationalCode = "0011122233",
+                Mobile = "09120000000",
+                IsActive = true
+            };
+            context.Employees.Add(employee);
+            await context.SaveChangesAsync();
+
+            var doctor = new Doctor
+            {
+                EmployeeId = employee.Id,
+                NezamPezeshkiCode = "TEST-123",
+                ConsultationFee = 500000m,
+                VisitDuration = 15,
+                IsActive = true
+            };
+            context.Doctors.Add(doctor);
+            await context.SaveChangesAsync();
+        }
+
+        if (!context.Medications.Any())
+        {
+            context.Medications.Add(new Medication
+            {
+                GenericName = "Acetaminophen",
+                GenericNameFa = "استامینوفن",
+                Form = "قرص",
+                Strength = "500mg",
+                IsActive = true
+            });
+            await context.SaveChangesAsync();
+        }
+
+        if (!context.ClinicLicense.Any())
+        {
+            // لایسنس آزمایشی — همه ماژول‌ها فعال و بدون انقضا (دائمی)
+            context.ClinicLicense.Add(new ClinicLicense
+            {
+                LicenseKey = "SCPRO-TEST0-00000-00000",
+                MaxUsers = 100,
+                MaxDoctors = 100,
+                MaxPatients = 1_000_000,
+                EnabledModules = System.Text.Json.JsonSerializer.Serialize(new[]
+                {
+                    "Patients", "Appointments", "Receptions", "Visits",
+                    "Prescriptions", "Billing", "Dashboard"
+                })
+            });
+            await context.SaveChangesAsync();
+        }
+
+        var doctorId = await context.Doctors.Select(d => d.Id).FirstAsync();
+        return doctorId;
+    }
+}
+
+/// <summary>مجموعه تست جریان — کارخانه اختصاصی جدا از مجموعه Api</summary>
+[CollectionDefinition("Flow")]
+public class FlowCollectionFixture : ICollectionFixture<FlowApiFactory>
+{
+}
+
+/// <summary>
+/// تست جریان سرتاسری بیمار — گام V12
+/// ورود ادمین → ثبت بیمار → نوبت → پذیرش → ویزیت → نسخه → فاکتور
+/// </summary>
+/// <remarks>
+/// پوشش یکپارچه‌سازی واقعی: احراز هویت + مجوزها + میدلور لایسنس +
+/// اعتبارسنجی‌ها + CQRS + EF InMemory + انتشار رویداد دامنه.
+/// </remarks>
+[Collection("Flow")]
+public class PatientJourneyFlowTests
+{
+    private readonly FlowApiFactory _factory;
+    private static readonly JsonSerializerOptions Json = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
+    /// <summary>سازنده تست — تزریق کارخانه</summary>
+    public PatientJourneyFlowTests(FlowApiFactory factory)
+    {
+        _factory = factory;
+    }
+
+    /// <summary>
+    /// جریان کامل بیمار از ثبت تا فاکتور باید بدون خطا طی شود
+    /// </summary>
+    [Fact]
+    public async Task Full_Patient_Journey_Should_Succeed()
+    {
+        // ── آماده‌سازی: بذر پزشک/دارو/لایسنس و ورود ادمین ──
+        var doctorId = await _factory.SeedFlowDataAsync();
+        var client = _factory.CreateClient();
+
+        var loginResponse = await client.PostAsJsonAsync("/api/v1/auth/login",
+            new { usernameOrEmail = "admin", password = "Admin@123" });
+        loginResponse.StatusCode.Should().Be(HttpStatusCode.OK,
+            because: "بذر ادمین باید ورود را ممکن کند");
+
+        var login = await ReadAsync<LoginPacket>(loginResponse);
+        login.Data.AccessToken.Should().NotBeNullOrEmpty();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", login.Data.AccessToken);
+
+        // ── گام ۱: ثبت بیمار جدید ──
+        var createPatient = await client.PostAsJsonAsync("/api/v1/patients", new
+        {
+            firstName = "زهرا",
+            lastName = "محمدی",
+            nationalCode = "0061457892",
+            mobile = "09121234567",
+            gender = 2,
+            birthDateShamsi = "1370/05/15"
+        });
+        createPatient.StatusCode.Should().Be(HttpStatusCode.Created,
+            because: "داده بیمار معتبر است");
+        var patient = await ReadAsync<EntityPacket>(createPatient);
+        patient.Data.Id.Should().BeGreaterThan(0);
+        patient.Data.NationalCode.Should().Be("0061457892");
+
+        // ── گام ۲: جستجوی بیمار ثبت‌شده ──
+        var search = await client.GetAsync("/api/v1/patients/search?term=0061457892");
+        search.StatusCode.Should().Be(HttpStatusCode.OK);
+        var searchResult = await ReadAsync<ListPacket<EntityDto>>(search);
+        searchResult.Data.Should().Contain(p => p.NationalCode == "0061457892");
+
+        // ── گام ۳: ثبت نوبت برای فردا ──
+        var tomorrowShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper
+            .ToShamsi(DateTime.UtcNow.AddDays(1));
+        var createAppointment = await client.PostAsJsonAsync("/api/v1/appointments", new
+        {
+            patientId = patient.Data.Id,
+            doctorId,
+            dateShamsi = tomorrowShamsi,
+            time = "10:30",
+            type = 1,
+            source = 1
+        });
+        createAppointment.StatusCode.Should().Be(HttpStatusCode.Created,
+            because: "نوبت با ظرفیت آزاد و بدون تداخل است");
+        var appointment = await ReadAsync<EntityPacket>(createAppointment);
+        appointment.Data.Id.Should().BeGreaterThan(0);
+
+        // ── گام ۴: ثبت پذیرش مرتبط با نوبت ──
+        var createReception = await client.PostAsJsonAsync("/api/v1/receptions", new
+        {
+            patientId = patient.Data.Id,
+            doctorId,
+            appointmentId = appointment.Data.Id
+        });
+        createReception.StatusCode.Should().Be(HttpStatusCode.Created,
+            because: "پذیرش با نوبت معتبر ثبت می‌شود");
+
+        // ── گام ۵: ذخیره پیش‌نویس ویزیت (SOAP تدریجی) ──
+        var saveVisit = await client.PostAsJsonAsync("/api/v1/visits", new
+        {
+            patientId = patient.Data.Id,
+            doctorId,
+            type = 1,
+            chiefComplaint = "سردرد از دو روز پیش",
+            soapSubjective = "درد ضربان‌دار پیشانی",
+            soapObjective = "تب ۳۷.۸ درجه",
+            complete = false
+        });
+        saveVisit.StatusCode.Should().Be(HttpStatusCode.Created,
+            because: "ذخیره تدریجی ویزیت بدون تشخیص مجاز است");
+        var visit = await ReadAsync<LongPacket>(saveVisit);
+        visit.Data.Should().BeGreaterThan(0, because: "شناسه ویزیت باید برگردد");
+
+        // ── گام ۶: صدور نسخه با یک قلم دارو ──
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+            var medicationId = await context.Medications.Select(m => m.Id).FirstAsync();
+
+            var createPrescription = await client.PostAsJsonAsync("/api/v1/prescriptions", new
+            {
+                patientId = patient.Data.Id,
+                doctorId,
+                visitId = visit.Data,
+                type = 1,
+                isElectronic = false,
+                items = new[]
+                {
+                    new
+                    {
+                        medicationId,
+                        orderIndex = 1,
+                        dosage = "500mg",
+                        frequency = "هر ۸ ساعت",
+                        duration = "۵ روز",
+                        quantity = 15m,
+                        unit = "قرص"
+                    }
+                }
+            });
+            createPrescription.StatusCode.Should().Be(HttpStatusCode.Created,
+                because: "نسخه بدون تداخل ممنوع مصرف صادر می‌شود");
+        }
+
+        // ── گام ۷: صدور فاکتور ویزیت ──
+        var createInvoice = await client.PostAsJsonAsync("/api/v1/invoices", new
+        {
+            patientId = patient.Data.Id,
+            visitId = visit.Data,
+            type = 1,
+            taxPercent = 0m,
+            items = new[]
+            {
+                new
+                {
+                    description = "حق ویزیت",
+                    quantity = 1m,
+                    unitPrice = 500000m,
+                    discountPercent = 0m
+                }
+            }
+        });
+        createInvoice.StatusCode.Should().Be(HttpStatusCode.Created,
+            because: "فاکتور با قلم معتبر صادر می‌شود");
+
+        // ── گام ۸: فهرست فاکتورها باید فاکتور جدید را نشان دهد ──
+        var invoices = await client.GetAsync("/api/v1/invoices?page=1&pageSize=10");
+        invoices.StatusCode.Should().Be(HttpStatusCode.OK);
+        var invoiceList = await ReadAsync<PagedPacket<EntityDto>>(invoices);
+        invoiceList.Data.Data.Should().NotBeEmpty(
+            because: "فاکتور صادرشده باید در فهرست باشد");
+    }
+
+    /// <summary>خواندن پاسخ و نگاشت به پاکت</summary>
+    private static async Task<T> ReadAsync<T>(HttpResponseMessage response)
+    {
+        var json = await response.Content.ReadAsStringAsync();
+        var result = JsonSerializer.Deserialize<T>(json, Json);
+        result.Should().NotBeNull(because: "پاسخ باید JSON معتبر باشد");
+        return result!;
+    }
+
+    /// <summary>پاکت شناسه عددی — برای فرمان‌های Result&lt;long&gt;</summary>
+    private sealed class LongPacket
+    {
+        public long Data { get; set; }
+    }
+
+    /// <summary>پاکت ورود</summary>
+    private sealed class LoginPacket
+    {
+        public TokenDto Data { get; set; } = new();
+    }
+
+    /// <summary>توکن</summary>
+    private sealed class TokenDto
+    {
+        public string AccessToken { get; set; } = string.Empty;
+    }
+
+    /// <summary>پاکت موجودیت با شناسه</summary>
+    private sealed class EntityPacket
+    {
+        public EntityDto Data { get; set; } = new();
+    }
+
+    /// <summary>موجودیت</summary>
+    private sealed class EntityDto
+    {
+        public long Id { get; set; }
+        public string NationalCode { get; set; } = string.Empty;
+    }
+
+    /// <summary>پاکت فهرست</summary>
+    private sealed class ListPacket<T>
+    {
+        public List<T> Data { get; set; } = new();
+    }
+
+    /// <summary>پاکت صفحه‌بندی‌شده — پاسخ GetInvoices نتیجه PagedResponse را دوباره می‌پوشاند</summary>
+    private sealed class PagedPacket<T>
+    {
+        public PagedInner<T> Data { get; set; } = new();
+    }
+
+    /// <summary>لایه داخلی صفحه‌بندی</summary>
+    private sealed class PagedInner<T>
+    {
+        public int TotalCount { get; set; }
+        public List<T> Data { get; set; } = new();
+    }
+}

@@ -317,6 +317,12 @@ public class ClinicProDbContext : DbContext
 
     public ClinicProDbContext(DbContextOptions<ClinicProDbContext> options) : base(options)
     {
+        // تشخیص خودکار حالت درون‌حافظه‌ای — برای مولد مقدار MRN در تست‌ها.
+        // نکته حیاتی: از options.Extensions خوانده می‌شود نه Database.ProviderName؛
+        // چون دسترسی به Database مدل را همین‌جا می‌سازد و پرچم هنوز مقدار نگرفته است.
+        // نام نوع extension بدون ارجاع پکیج InMemory مقایسه می‌شود (نوع داخلی است).
+        IsInMemory = options.Extensions.Any(e =>
+            string.Equals(e.GetType().Name, "InMemoryOptionsExtension", StringComparison.Ordinal));
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

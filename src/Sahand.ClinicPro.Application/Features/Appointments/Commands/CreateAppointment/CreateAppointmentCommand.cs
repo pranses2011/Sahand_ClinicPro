@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Application.DTOs.Appointments;
@@ -80,9 +81,14 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
                 new Error("DOCTOR_ABSENT", "پزشک در این تاریخ مرخصی دارد"));
 
         // کنترل ظرفیت — سقف بیمار در هر شیفت
-        var appointmentRepo = (IAppointmentRepository)_unitOfWork.Repository<Appointment>();
-        var activeCount = await appointmentRepo.CountActiveByDoctorAndDateAsync(
-            dto.DoctorId, date, cancellationToken);
+        // اصلاح گام V12: شمارش مستقیم با ریپازیتوری عمومی — cast به ریپازیتوری تخصصی
+        // در UnitOfWork مبتنی بر Activator هرگز معتبر نیست (باگ تولیدیِ کشف‌شده با تست جریان)
+        var activeCount = await _unitOfWork.Repository<Appointment>()
+            .QueryableNoTracking
+            .CountAsync(a => a.DoctorId == dto.DoctorId
+                && a.AppointmentDate == date
+                && a.Status != AppointmentStatus.Cancelled
+                && a.Status != AppointmentStatus.NoShow, cancellationToken);
         if (doctor.MaxPatientsPerShift.HasValue && activeCount >= doctor.MaxPatientsPerShift.Value)
             return Result<AppointmentDetailDto>.Failure(
                 new Error("CAPACITY_FULL", "ظرفیت نوبت این پزشک در این تاریخ تکمیل است"));
