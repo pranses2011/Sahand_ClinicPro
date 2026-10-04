@@ -36,6 +36,10 @@ try
     builder.Host.UseSerilog((context, loggerConfiguration) =>
         loggerConfiguration.ReadFrom.Configuration(context.Configuration));
 
+    // فشرده‌سازی پاسخ JSON
+    builder.Services.AddResponseCompression(options =>
+        options.MimeTypes = new[] { "application/json", "text/plain" });
+
     // کنترلرها با نام‌گذاری camelCase فارسی‌پسند
     builder.Services.AddControllers();
 
@@ -148,6 +152,9 @@ try
     // مدیریت سراسری خطاها به پاسخ استاندارد فارسی
     app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+    // سرآیندهای امنیتی استاندارد وب
+    app.UseMiddleware<SecurityHeadersMiddleware>();
+
     // داشبورد Hangfire — فقط با فعال‌بودن کارهای پس‌زمینه
     if (app.Configuration.GetValue("Jobs:Enabled", false))
     {
@@ -177,12 +184,19 @@ try
     }
 
     app.UseHttpsRedirection();
+
+    // فشرده‌سازی پاسخ — کاهش پهنای‌باند برای کلاینت WPF
+    app.UseResponseCompression();
+
     app.UseRateLimiter();
     app.UseAuthentication();
     app.UseAuthorization();
 
     // اعتبارسنجی لایسنس — پس از احراز هویت روی مسیرهای ماژول‌محور
     app.UseMiddleware<LicenseValidationMiddleware>();
+
+    // لاگ عملیات — همه نوشتن‌های API ثبت ردگیری می‌شوند
+    app.UseMiddleware<AuditLogMiddleware>();
 
     app.MapControllers();
 

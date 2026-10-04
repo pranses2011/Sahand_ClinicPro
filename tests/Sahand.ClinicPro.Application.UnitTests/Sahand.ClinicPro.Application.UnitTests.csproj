@@ -19,6 +19,7 @@
     <PackageReference Include="coverlet.collector">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
   </ItemGroup>
 
   <ItemGroup>

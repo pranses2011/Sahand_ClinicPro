@@ -1,4 +1,4 @@
-using Hangfire.Dashboard;
+﻿using Hangfire.Dashboard;
 
 namespace Sahand.ClinicPro.API;
 
@@ -8,10 +8,11 @@ namespace Sahand.ClinicPro.API;
 /// </summary>
 public class HangfireDashboardAuthFilter : IDashboardAuthorizationFilter
 {
-    /// <summary>اجازه فقط برای کاربر احراز هویت‌شده</summary>
+    /// <summary>اجازه فقط برای مدیران — نقش Admin</summary>
     public bool Authorize(DashboardContext context)
     {
         var http = context.GetHttpContext();
-        return http.User.Identity?.IsAuthenticated ?? false;
+        return http.User.Identity?.IsAuthenticated == true
+               && http.User.IsInRole("Admin");
     }
 }
