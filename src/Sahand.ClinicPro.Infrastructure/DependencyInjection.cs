@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Hangfire;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sahand.ClinicPro.Application.Interfaces;
@@ -57,6 +58,37 @@ public static class DependencyInjection
         services.AddScoped<IDoctorRepository, DoctorRepository>();
         services.AddScoped<IAppointmentRepository, AppointmentRepository>();
         services.AddScoped<ILicenseRepository, LicenseRepository>();
+
+        // ── یکپارچه‌سازی سامانه‌های دولتی — سپاس + نسخه الکترونیک ──
+        services.AddHttpClient<Services.Government.SepasService>();
+        services.AddHttpClient<Services.Government.ElectronicPrescriptionService>();
+        services.AddScoped<Application.Interfaces.ISepasService>(sp =>
+            sp.GetRequiredService<Services.Government.SepasService>());
+        services.AddScoped<Application.Interfaces.IElectronicPrescriptionService>(sp =>
+            sp.GetRequiredService<Services.Government.ElectronicPrescriptionService>());
+
+        // ── سامانه لایسنس سمت کلاینت ──
+        services.AddScoped<Application.Interfaces.ILicenseService, Services.License.LicenseService>();
+
+        // ── کارهای پس‌زمینه Hangfire — فقط وقتی دیتابیس واقعی در دسترس است ──
+        // در محیط تست/CI با نبود SQL Server مقدار Jobs:Enabled=false می‌ماند
+        if (configuration.GetValue("Jobs:Enabled", false))
+        {
+            services.AddHangfire(config => config
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UseSqlServerStorage(connectionString));
+            services.AddHangfireServer();
+        }
+
+        // ── سامانه پیامک — کارخانه پنل‌ها + زنجیره جایگزینی ──
+        services.AddHttpClient<Services.SMS.Providers.KavenegarProvider>();
+        services.AddScoped<Application.Interfaces.ISmsProvider>(sp =>
+            sp.GetRequiredService<Services.SMS.Providers.KavenegarProvider>());
+        services.AddScoped<Services.SMS.SmsProviderFactory>();
+        services.AddScoped<Application.Interfaces.ISmsService, Services.SMS.SmsService>();
+        services.AddScoped<Services.SMS.SmsQueueProcessor>();
 
         // سرویس‌های انتزاعی Application پیاده‌سازی‌شده در زیرساخت
         services.AddScoped<ITransactionManager, TransactionManager>();
