@@ -1,0 +1,135 @@
+﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.InvoiceFormWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="صدور فاکتور"
+        Height="720" Width="860"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+    <!-- ═══════════════════════════════════════════════════════════
+         فرم صدور فاکتور — گام V5
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="صدور فاکتور جدید" Style="{StaticResource SectionTitle}" />
+
+        <!-- بیمار و تنظیمات -->
+        <Grid Grid.Row="1" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="180" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                <TextBox materialDesign:HintAssist.Hint="جستجوی بیمار: نام یا کد ملی *"
+                         Text="{Binding PatientSearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0,0,0,6">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding SearchPatientCommand}" />
+                    </TextBox.InputBindings>
+                </TextBox>
+                <ListBox ItemsSource="{Binding PatientResults}"
+                         SelectedItem="{Binding SelectedPatient}"
+                         Height="96"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" />
+                                <TextBlock Text="{Binding Detail}" FontSize="11" Opacity="0.75" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Margin="10,0">
+                <ComboBox materialDesign:HintAssist.Hint="نوع فاکتور"
+                          SelectedIndex="{Binding TypeIndex}"
+                          Margin="0,0,0,6">
+                    <ComboBoxItem Content="ویزیت" />
+                    <ComboBoxItem Content="آزمایشگاه" />
+                    <ComboBoxItem Content="تصویربرداری" />
+                    <ComboBoxItem Content="داروخانه" />
+                    <ComboBoxItem Content="دندانپزشکی" />
+                </ComboBox>
+                <ComboBox materialDesign:HintAssist.Hint="بیمه"
+                          ItemsSource="{Binding InsuranceCompanies}"
+                          DisplayMemberPath="Name"
+                          SelectedIndex="{Binding InsuranceIndex}"
+                          Margin="0,0,0,6" />
+                <TextBox materialDesign:HintAssist.Hint="شناسه ویزیت مرتبط (اختیاری)"
+                         Text="{Binding VisitId, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0,0,0,6" />
+                <TextBox materialDesign:HintAssist.Hint="درصد مالیات"
+                         Text="{Binding TaxPercent, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                <TextBlock Text="سهم بیمه و بیمار به‌صورت خودکار بر اساس قرارداد بیمه محاسبه و سند حسابداری خودکار ثبت می‌شود"
+                           TextWrapping="Wrap" FontSize="11" Opacity="0.7" />
+            </StackPanel>
+        </Grid>
+
+        <!-- اقلام -->
+        <DockPanel Grid.Row="2" Margin="0,0,0,10">
+            <Button DockPanel.Dock="Left"
+                    Command="{Binding AddItemCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Content="افزودن قلم" Margin="0,0,10,0" />
+            <Button DockPanel.Dock="Left"
+                    Command="{Binding RemoveItemCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="حذف قلم" Margin="0,0,10,0" />
+            <TextBlock VerticalAlignment="Center" FontSize="13">
+                <Run Text="جمع اقلام: " />
+                <Run Text="{Binding ItemsTotal, Mode=OneWay, StringFormat=N0}" FontWeight="Bold" />
+                <Run Text=" ریال" />
+            </TextBlock>
+        </DockPanel>
+
+        <!-- جدول اقلام -->
+        <DataGrid Grid.Row="3"
+                  ItemsSource="{Binding Items}"
+                  SelectedItem="{Binding SelectedItem}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  SelectionMode="Single"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  materialDesign:DataGridAssist.CellPadding="6,4">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="شرح خدمت" Binding="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Width="3*" />
+                <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Width="80" />
+                <DataGridTextColumn Header="مبلغ واحد (ریال)" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged}" Width="150" />
+                <DataGridTextColumn Header="تخفیف %" Binding="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged}" Width="80" />
+                <DataGridTextColumn Header="جمع قلم" Binding="{Binding LineTotal, Mode=OneWay, StringFormat=N0}" Width="140" IsReadOnly="True" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- پاورقی -->
+        <StackPanel Grid.Row="4" Margin="0,12,0,0">
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{DynamicResource MaterialDesign.Brush.Error}"
+                       FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" />
+            <UniformGrid Columns="2">
+                <Button Command="{Binding SaveCommand}"
+                        Style="{StaticResource MaterialDesignFilledButton}"
+                        Content="صدور فاکتور" Height="42" Margin="4" />
+                <Button Command="{Binding CancelCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Content="انصراف" Height="42" Margin="4" />
+            </UniformGrid>
+            <ProgressBar IsIndeterminate="True" Height="4" Margin="0,14,0,0"
+                         Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+        </StackPanel>
+    </Grid>
+</Window>

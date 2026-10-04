@@ -1,0 +1,63 @@
+﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.PaymentWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="ثبت پرداخت"
+        Height="520" Width="480"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+    <!-- ═══════════════════════════════════════════════════════════
+         فرم ثبت پرداخت — گام V5
+         ═══════════════════════════════════════════════════════════ -->
+    <StackPanel Margin="28">
+        <TextBlock Text="ثبت پرداخت فاکتور" Style="{StaticResource SectionTitle}" />
+
+        <TextBlock FontSize="13" Opacity="0.8" Margin="0,0,0,12">
+            <Run Text="مبلغ باقیمانده فاکتور: " />
+            <Run Text="{Binding RemainingAmount, Mode=OneWay, StringFormat=N0}" FontWeight="Bold" />
+            <Run Text=" ریال" />
+        </TextBlock>
+
+        <TextBox materialDesign:HintAssist.Hint="مبلغ پرداخت (ریال) *"
+                 Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged}"
+                 Margin="0,0,0,12" />
+
+        <ComboBox materialDesign:HintAssist.Hint="روش پرداخت"
+                  SelectedIndex="{Binding MethodIndex}"
+                  Margin="0,0,0,12">
+            <ComboBoxItem Content="نقدی" />
+            <ComboBoxItem Content="کارتخوان" />
+            <ComboBoxItem Content="آنلاین" />
+            <ComboBoxItem Content="چک" />
+            <ComboBoxItem Content="حساب به حساب" />
+        </ComboBox>
+
+        <TextBox materialDesign:HintAssist.Hint="شماره پیگیری / مرجع"
+                 Text="{Binding ReferenceNumber, UpdateSourceTrigger=PropertyChanged}"
+                 Margin="0,0,0,12" />
+
+        <TextBox materialDesign:HintAssist.Hint="چهار رقم آخر کارت"
+                 Text="{Binding CardNumber, UpdateSourceTrigger=PropertyChanged}"
+                 MaxLength="4"
+                 Margin="0,0,0,16" />
+
+        <TextBlock Text="{Binding ErrorMessage}"
+                   Foreground="{DynamicResource MaterialDesign.Brush.Error}"
+                   FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" />
+
+        <UniformGrid Columns="2">
+            <Button Command="{Binding SaveCommand}"
+                    Style="{StaticResource MaterialDesignFilledButton}"
+                    Content="ثبت پرداخت" Height="42" Margin="4" />
+            <Button Command="{Binding CancelCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Content="انصراف" Height="42" Margin="4" />
+        </UniformGrid>
+
+        <ProgressBar IsIndeterminate="True" Height="4" Margin="0,16,0,0"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+    </StackPanel>
+</Window>
