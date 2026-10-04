@@ -1,27 +1,119 @@
 ﻿@page "/"
-@using System.Globalization
+@using Sahand.ClinicPro.LicensePortal.Services
+@inject LicenseAdminService Admin
 
-<PageTitle>سامانه لایسنس درمانگاه سهند</PageTitle>
+<PageTitle>داشبورد — پنل لایسنس سهند</PageTitle>
 
-<div class="hero" dir="rtl">
-    <h1>🏥 سامانه مدیریت لایسنس سهند کلینیک‌پرو</h1>
-    <p>
-        پنل مدیریت مشتریان، صدور لایسنس (اشتراکی و دائمی)، پرداخت‌ها و
-        کاتالوگ ماژول‌ها — پیاده‌سازی کامل در گام ۲۵ انجام می‌شود.
-    </p>
-    <p class="hint">
-        Sahand ClinicPro License Portal — نسخه ۱.۰.۰ (گام ۱: راه‌اندازی Solution)
-    </p>
-</div>
+<h1 class="page-title">📊 داشبورد مدیریت لایسنس</h1>
+<p class="page-desc">نمای کلی وضعیت لایسنس‌های صادرشده و اعتبارسنجی‌های اخیر درمانگاه‌ها</p>
 
-<style>
-    .hero {
-        text-align: center;
-        padding: 4rem 1rem;
+@if (_stats is null)
+{
+    <div class="loading">در حال بارگذاری…</div>
+}
+else
+{
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">@_stats.Total</div>
+            <div class="stat-label">کل لایسنس‌ها</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-value">@_stats.Active</div>
+            <div class="stat-label">فعال</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-value">@_stats.PendingActivation</div>
+            <div class="stat-label">در انتظار فعال‌سازی</div>
+        </div>
+        <div class="stat-card red">
+            <div class="stat-value">@_stats.Expired</div>
+            <div class="stat-label">منقضی‌شده</div>
+        </div>
+        <div class="stat-card teal">
+            <div class="stat-value">@_stats.Subscription</div>
+            <div class="stat-label">اشتراکی</div>
+        </div>
+        <div class="stat-card indigo">
+            <div class="stat-value">@_stats.Perpetual</div>
+            <div class="stat-label">دائمی</div>
+        </div>
+    </div>
+
+    <div class="two-col">
+        <div class="panel">
+            <h3>🧾 آخرین لایسنس‌ها</h3>
+            @if (_recent.Count == 0)
+            {
+                <div class="empty">هنوز لایسنسی صادر نشده است</div>
+            }
+            else
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>کلید</th>
+                            <th>نوع</th>
+                            <th>انقضا</th>
+                            <th>وضعیت</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in _recent)
+                        {
+                            <tr>
+                                <td class="mono">@row.LicenseKey</td>
+                                <td>@row.TypeText</td>
+                                <td>@row.ExpiryText</td>
+                                <td><span class="badge" style="background:@row.StatusColor">@row.StatusText</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+
+        <div class="panel">
+            <h3>📜 اعتبارسنجی‌های اخیر</h3>
+            @if (_checks.Count == 0)
+            {
+                <div class="empty">لاگی ثبت نشده است</div>
+            }
+            else
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>زمان</th>
+                            <th>نتیجه</th>
+                            <th>برخط</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in _checks)
+                        {
+                            <tr>
+                                <td>@(log.CheckDate?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "—")</td>
+                                <td>@log.ResultText</td>
+                                <td>@(log.IsOnline ? "بله" : "خیر")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private PortalStatsDto? _stats;
+    private List<LicenseRowDto> _recent = new();
+    private List<CheckLogRow> _checks = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _stats = await Admin.GetStatsAsync();
+        _recent = (await Admin.ListAsync()).Take(8).ToList();
+        _checks = await Admin.RecentChecksAsync(10);
     }
-
-    .hint {
-        opacity: .6;
-        font-size: .85rem;
-    }
-</style>
+}
