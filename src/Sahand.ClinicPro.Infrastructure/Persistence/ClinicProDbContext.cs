@@ -17,6 +17,13 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence;
 /// </remarks>
 public class ClinicProDbContext : DbContext
 {
+    /// <summary>
+    /// حالت دیتابیس درون‌حافظه‌ای برای تست‌ها — مقدار پیش‌فرض SQL (سکانس) اجرا نمی‌شود؛
+    /// برای ستون‌های الزامی سکانسی مولد سمت کاربر جایگزین می‌شود.
+    /// تصمیم معماری گام V6+ مستند در remarks کلاس.
+    /// </summary>
+    public bool IsInMemory { get; init; }
+
     /// <summary>مجموعه AccountingAccounts</summary>
     public DbSet<AccountingAccount> AccountingAccounts { get; set; }
 
@@ -318,6 +325,16 @@ public class ClinicProDbContext : DbContext
 
         // اعمال همه پیکربندی‌های موجودیت از این اسمبلی
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ClinicProDbContext).Assembly);
+
+        // در حالت درون‌حافظه‌ای — سکانس SQL کار نمی‌کند؛ مولد سمت کاربر برای ستون الزامی
+        if (IsInMemory)
+        {
+            var mrn = modelBuilder.Entity<Patient>()
+                .Property(p => p.MedicalRecordNo);
+            mrn.HasDefaultValueSql(null);
+            mrn.HasValueGenerator<MrnInMemoryValueGenerator>();
+            mrn.Metadata.ValueGenerated = Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.OnAdd;
+        }
 
         // روابط صریح موارد چند‌ناوبری — بیمار دو بیمه و پزشک دو تخصص دارد
         modelBuilder.Entity<Patient>()

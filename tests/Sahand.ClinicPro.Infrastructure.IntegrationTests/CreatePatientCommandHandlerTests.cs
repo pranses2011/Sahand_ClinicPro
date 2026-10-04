@@ -24,7 +24,7 @@ public class CreatePatientCommandHandlerTests
             .UseInMemoryDatabase($"TestDb_{Guid.NewGuid():N}")
             .Options;
 
-        var context = new ClinicProDbContext(options);
+        var context = new ClinicProDbContext(options) { IsInMemory = true };
         var mediator = new Mock<MediatR.IMediator>().Object;
 
         return (new UnitOfWork(context, mediator), context);
