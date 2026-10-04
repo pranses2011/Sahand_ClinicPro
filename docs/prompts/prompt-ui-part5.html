@@ -1,75 +1,21 @@
-<!DOCTYPE html>
-<html dir="rtl" lang="fa">
-<head>
-<meta charset="UTF-8">
-<title>🖥️ ClinicPro - پرامپت مکمل UI بخش ۵</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;900&display=swap');
-:root{--p:#1a73e8;--s:#34a853;--a:#ea4335;--bg:#f0f2f5;--c:#fff;--t:#202124;--b:#dadce0;--sh:0 2px 8px rgba(0,0,0,.1);--r:12px}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t);line-height:1.8;font-size:13px}
-.ct{max-width:1200px;margin:0 auto;padding:20px}
-header{background:linear-gradient(135deg,#dc2626,#f59e0b);color:#fff;padding:40px 20px;text-align:center;border-radius:0 0 30px 30px;margin-bottom:25px}
-header h1{font-size:2em;font-weight:900}
-header p{opacity:.9}
-.nav{background:#fff;padding:12px;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
-.nav a{padding:7px 14px;background:#f0f2f5;border-radius:8px;text-decoration:none;color:var(--t);font-size:11px;font-weight:600}
-.nav a:hover,.nav a.active{background:#dc2626;color:#fff}
-.prompt-section{background:#1e1e1e;color:#d4d4d4;border-radius:var(--r);padding:25px;margin-bottom:20px;font-family:'Courier New',monospace;font-size:12px;line-height:1.8;direction:rtl;text-align:right;white-space:pre-wrap;word-wrap:break-word;overflow-x:auto}
-.prompt-section .h1{color:#4ec9b0;font-weight:bold;font-size:16px}
-.prompt-section .h2{color:#569cd6;font-weight:bold;font-size:14px}
-.prompt-section .h3{color:#ce9178;font-weight:bold;font-size:13px}
-.prompt-section .h4{color:#dcdcaa;font-weight:bold;font-size:12px}
-.prompt-section .note{color:#6a9955;font-style:italic}
-.prompt-section .important{color:#f44747;font-weight:bold}
-.prompt-section .code{color:#9cdcfe}
-.prompt-section .field{color:#dcdcaa}
-.prompt-section .ui{color:#c586c0}
-.prompt-section .key{color:#569cd6}
-.copy-btn{background:linear-gradient(135deg,#dc2626,#f59e0b);color:#fff;border:none;padding:10px 25px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px}
-.info{background:#fef3c7;border-right:4px solid #f59e0b;padding:15px;border-radius:0 8px 8px 0;margin:15px 0;font-size:12px}
-.success{background:#e6f4ea;border-right:4px solid var(--s);padding:15px;border-radius:0 8px 8px 0;margin:15px 0;font-size:12px}
-footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#fff;border-radius:var(--r);margin-top:20px}
-</style>
-</head>
-<body>
-<header>
-<h1>🖥️ پرامپت مکمل UI - بخش ۵ (تکمیلی)</h1>
-<p>شعبه‌ها، اعلان‌ها، سپاس، تعرفه، نسخه الکترونیک، DICOM، چاپ، Sync، Seed Data، Multi-Tenancy</p>
-</header>
-<div class="ct">
-<nav class="nav">
-<a href="prompt-ui-part1.html">UI ۱</a>
-<a href="prompt-ui-part2.html">UI ۲</a>
-<a href="prompt-ui-part3.html">UI ۳</a>
-<a href="prompt-ui-part4.html">UI ۴</a>
-<a href="prompt-ui-part5.html" class="active">UI ۵ (تکمیلی)</a>
-</nav>
 
-<div class="info">
-<strong>⚠️ مکمل نهایی:</strong> این فایل ۱۰ مورد مهم و متوسطی را که در بررسی از قلم افتاده بودند، پوشش می‌دهد. بعد از این فایل، پروژه ۱۰۰٪ کامل است.
-</div>
-
-<button class="copy-btn" onclick="copyAll()">📋 کپی کل بخش ۵</button>
-
-<div class="prompt-section" id="prompt-ui5">
-<span class="h1">════════════════════════════════════════════════════════════════════
+════════════════════════════════════════════════════════════════════
 🖥️ Sahand_ClinicPro - پرامپت مکمل نهایی
 بخش ۵: موارد تکمیلی (۱۰ فرم + Seed Data + فنی)
-════════════════════════════════════════════════════════════════════</span>
+════════════════════════════════════════════════════════════════════
 
-<span class="important">⚠️ این فایل مکمل ۴ فایل قبلی UI است.
-تمام قوانین قبلی (کامنت فارسی، MVVM، Material Design، RTL) پابرجاست.</span>
+⚠️ این فایل مکمل ۴ فایل قبلی UI است.
+تمام قوانین قبلی (کامنت فارسی، MVVM، Material Design، RTL) پابرجاست.
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🏢 فرم ۳۵: مدیریت شعبه‌ها (BranchListView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> BranchListViewModel.cs
-<span class="key">API:</span> /api/v1/branches
+ViewModel: BranchListViewModel.cs
+API: /api/v1/branches
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
 ┌──────────────────────────────────────────────────────────────┐
 │ 🏢 مدیریت شعبه‌ها                          [کل: ۱ شعبه]    │
@@ -83,7 +29,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │               │       │        │          │ فعال  │     │     │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="h3">── فرم ثبت/ویرایش شعبه (BranchFormView - Dialog) ──</span>
+── فرم ثبت/ویرایش شعبه (BranchFormView - Dialog) ──
 
 ┌── ثبت شعبه جدید ────────────────────────────────────────────┐
 │                                                                │
@@ -116,7 +62,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │                      [انصراف] [✅ ذخیره شعبه]                 │
 └────────────────────────────────────────────────────────────────┘
 
-<span class="field">رفتارهای خاص:</span>
+رفتارهای خاص:
    ✅ اگر فقط ۱ شعبه فعال باشد → ComboBox شعبه در TopBar مخفی
    ✅ اگر ۲+ شعبه → ComboBox شعبه در TopBar نمایش داده شود
    ✅ تغییر شعبه → فیلتر خودکار همه داده‌ها بر اساس BranchId
@@ -124,14 +70,14 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    ✅ BranchId در Global Query Filter EF Core اعمال شود
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🔔 فرم ۳۶: مرکز اعلان‌ها (NotificationListView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> NotificationListViewModel.cs
-<span class="key">API:</span> /api/v1/notifications
+ViewModel: NotificationListViewModel.cs
+API: /api/v1/notifications
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
    دسترسی: از آیکون 🔔 در TopBar (با Badge تعداد خوانده‌نشده)
 
@@ -162,7 +108,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │ [بارگذاری بیشتر...]                                          │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="field">هر آیتم اعلان شامل:</span>
+هر آیتم اعلان شامل:
    - آیکون رنگی بر اساس نوع:
      🔴 Critical (بحرانی): موجودی صفر، لایسنس منقضی، خطای سرور
      🟡 Warning (هشدار): موجودی کم، انقضای نزدیک، بدهی بالا
@@ -175,13 +121,13 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    - دکمه "مشاهده" → هدایت به صفحه مرتبط (Link Property)
    - دکمه "خوانده شد" → PATCH /api/v1/notifications/{id}/read
 
-<span class="field">SignalR Real-time:</span>
+SignalR Real-time:
    Hub: NotificationHub
    Method: ReceiveNotification(NotificationDto)
    Client: Badge شمارنده + Toast popup + صدا (اختیاری)
    Group: هر کاربر فقط اعلان‌های خودش
 
-<span class="field">Popup Toast (هنگام دریافت اعلان جدید):</span>
+Popup Toast (هنگام دریافت اعلان جدید):
    ┌─────────────────────────────────────┐
    │ 🔴 هشدار فوری                       │
    │ موجودی آتورواستاتین به صفر رسید!   │
@@ -192,18 +138,18 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    انیمیشن: Slide-in از چپ
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🏛️ فرم ۳۷: یکپارچه‌سازی سپاس (SepasIntegrationView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> SepasIntegrationViewModel.cs
-<span class="key">API:</span> /api/v1/integration/sepas
+ViewModel: SepasIntegrationViewModel.cs
+API: /api/v1/integration/sepas
 
-<span class="h3">── ساختار (TabControl) ──</span>
+── ساختار (TabControl) ──
 
    [📊 وضعیت کلی] [📤 تراکنش‌های ارسالی] [📥 داده‌های دریافتی] [⚙️ تنظیمات] [📋 لاگ API]
 
-<span class="h4">── تب ۱: وضعیت کلی ──</span>
+── تب ۱: وضعیت کلی ──
 
 ┌── وضعیت اتصال به سامانه سپاس ────────────────────────────────┐
 │                                                                │
@@ -226,7 +172,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │ └──────────────────────────────────────────────────────────┘  │
 └────────────────────────────────────────────────────────────────┘
 
-<span class="h4">── تب ۲: تراکنش‌های ارسالی ──</span>
+── تب ۲: تراکنش‌های ارسالی ──
 
    فیلتر: از تاریخ | تا تاریخ | نوع | وضعیت
    DataGrid:
@@ -245,13 +191,13 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
      [👁️ مشاهده جزئیات] → نمایش Request/Response JSON
      [📋 کپی کد ارجاع]
 
-<span class="h4">── تب ۳: داده‌های دریافتی ──</span>
+── تب ۳: داده‌های دریافتی ──
 
    DataGrid:
      تاریخ دریافت | نوع | بیمار | شناسه سپاس | خلاصه | عملیات
    مثال: دریافت سوابق بیمار از بیمارستان دیگر
 
-<span class="h4">── تب ۴: تنظیمات ──</span>
+── تب ۴: تنظیمات ──
 
    آدرس API سپاس: [https://api.sepas.behdasht.gov.ir/v2    ]
    Client ID:     [clinic_12345                              ]
@@ -269,7 +215,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    
    [🔗 تست اتصال] [💾 ذخیره]
 
-<span class="h4">── تب ۵: لاگ API ──</span>
+── تب ۵: لاگ API ──
 
    DataGrid (از جدول ApiCallLogs):
      زمان | Endpoint | Method | Status Code | مدت (ms) | موفق |
@@ -288,14 +234,14 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
      └──────────────────────────────────────────────┘
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 💲 فرم ۳۸: مدیریت تعرفه‌ها (TariffManagementView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> TariffManagementViewModel.cs
-<span class="key">API:</span> /api/v1/tariffs
+ViewModel: TariffManagementViewModel.cs
+API: /api/v1/tariffs
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
 ┌──────────────────────────────────────────────────────────────┐
 │ 💲 مدیریت تعرفه‌ها                                           │
@@ -333,14 +279,14 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │ [💾 ذخیره تغییرات]                                            │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="field">دکمه "کپی از سال قبل":</span>
+دکمه "کپی از سال قبل":
    Dialog:
      "آیا تعرفه‌های سال ۱۴۰۳ برای سال ۱۴۰۴ کپی شوند؟"
      ☑ افزایش سراسری: [۱۰] ٪
      "قیمت‌ها با ۱۰٪ افزایش کپی خواهند شد"
      [✅ تایید و کپی]
 
-<span class="field">دکمه "اعمال افزایش سراسری":</span>
+دکمه "اعمال افزایش سراسری":
    Dialog:
      "درصد افزایش برای تمام تعرفه‌های انتخاب شده:"
      [۱۰] ٪
@@ -349,7 +295,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
      ☑ همه
      [✅ اعمال]
 
-<span class="field">ورود از Excel:</span>
+ورود از Excel:
    فرمت مورد انتظار فایل Excel:
      ستون A: کد خدمت
      ستون B: نام خدمت
@@ -358,14 +304,14 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    [📥 انتخاب فایل] → Preview → [✅ تایید و ورود]
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 💻 فرم ۳۹: نسخه‌های الکترونیکی (EPrescriptionView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> EPrescriptionViewModel.cs
-<span class="key">API:</span> /api/v1/e-prescriptions
+ViewModel: EPrescriptionViewModel.cs
+API: /api/v1/e-prescriptions
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
 ┌──────────────────────────────────────────────────────────────┐
 │ 💻 مدیریت نسخه‌های الکترونیکی                                │
@@ -390,7 +336,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │ [👁️ جزئیات] [🔄 ارسال مجدد] [❌ لغو] [📋 کپی کد رهگیری]    │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="field">Dialog جزئیات نسخه الکترونیکی:</span>
+Dialog جزئیات نسخه الکترونیکی:
    ┌── جزئیات نسخه الکترونیکی EPR-12347 ────────────────────┐
    │                                                          │
    │ سامانه: بیمه سلامت                                      │
@@ -410,7 +356,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    │ [🔄 ارسال مجدد] [❌ لغو نسخه] [📱 SMS به بیمار]          │
    └──────────────────────────────────────────────────────────┘
 
-<span class="field">رفتارهای خودکار:</span>
+رفتارهای خودکار:
    ✅ بعد از ثبت نسخه الکترونیک در PrescriptionView:
       → ارسال خودکار به سامانه بیمه (Background Job)
       → ثبت در ElectronicPrescriptions
@@ -421,14 +367,14 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
       → اگر ۳ بار خطا → اعلان بحرانی
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 📷 فرم ۴۰: DICOM Viewer (DicomViewerView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> DicomViewerViewModel.cs
-<span class="key">کتابخانه:</span> fo-DICOM یا Evil DICOM (NuGet)
+ViewModel: DicomViewerViewModel.cs
+کتابخانه: fo-DICOM یا Evil DICOM (NuGet)
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
 ┌──────────────────────────────────────────────────────────────┐
 │ 📷 نمایشگر تصاویر پزشکی - علی رضایی - سونوگرافی شکم        │
@@ -458,7 +404,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │ └──────────────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="field">قابلیت‌ها:</span>
+قابلیت‌ها:
    ✅ Zoom In/Out (اسکرول ماوس)
    ✅ Pan (کشیدن با ماوس)
    ✅ Window/Level (تنظیم روشنایی/کنتراست - راست‌کلیک+درگ)
@@ -471,20 +417,20 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    ✅ Export به JPEG/PNG
    ✅ Print
 
-<span class="field">نکته فنی:</span>
+نکته فنی:
    - از fo-DICOM برای خواندن فایل‌های DICOM استفاده شود
    - رندر تصویر با WriteableBitmap در WPF
    - تصاویر بزرگ: Lazy Loading + Thumbnail
    - فرمت‌های پشتیبانی: DICOM (.dcm), JPEG, PNG, BMP, TIFF
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🖨️ فرم ۴۱: مدیریت قالب‌های چاپ (PrintTemplateView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> PrintTemplateViewModel.cs
+ViewModel: PrintTemplateViewModel.cs
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
 ┌──────────────────────────────────────────────────────────────┐
 │ 🖨️ مدیریت قالب‌های چاپ                                      │
@@ -519,7 +465,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │ [💾 ذخیره تنظیمات] [🖨️ تست چاپ همه]                          │
 └──────────────────────────────────────────────────────────────┘
 
-<span class="field">ویرایش قالب:</span>
+ویرایش قالب:
    با کلیک ✏️ → باز شدن Stimulsoft Report Designer
    فایل قالب: .mrt
    متغیرهای قابل استفاده در هر قالب:
@@ -531,13 +477,13 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
              {NormalRanges}, {AbnormalFlags}
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🔄 فرم ۴۲: همگام‌سازی داده (DataSyncView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> DataSyncViewModel.cs
+ViewModel: DataSyncViewModel.cs
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
 ┌──────────────────────────────────────────────────────────────┐
 │ 🔄 همگام‌سازی داده‌ها                                        │
@@ -578,15 +524,15 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 └──────────────────────────────────────────────────────────────┘
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🌐 فرم ۴۳: انتخاب شعبه (Multi-Tenancy UI)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">محل:</span> MainWindow.xaml (TopBar)
+محل: MainWindow.xaml (TopBar)
 
-<span class="h3">── تغییرات در MainWindow ──</span>
+── تغییرات در MainWindow ──
 
-<span class="field">افزودن ComboBox شعبه در TopBar (سمت چپ):</span>
+افزودن ComboBox شعبه در TopBar (سمت چپ):
 
    ┌── TopBar ──────────────────────────────────────────────┐
    │ 🏠 > داشبورد          │ 🏢 [شعبه مرکزی ▼] │ 📅 ۰۴/۰۱ │
@@ -606,7 +552,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
        ۳. بارگذاری مجدد داده‌های صفحه فعلی
        ۴. فیلتر EF Core Global Query Filter
 
-<span class="field">API Header:</span>
+API Header:
    هر درخواست HTTP شامل Header:
      X-Branch-Id: 1
    Middleware در API:
@@ -614,30 +560,30 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
      → ذخیره در ICurrentUserService.BranchId
      → EF Core Global Filter: WHERE BranchId = @currentBranchId
 
-<span class="field">EF Core Global Query Filter:</span>
-   modelBuilder.Entity&lt;Patient&gt;()
+EF Core Global Query Filter:
+   modelBuilder.Entity<Patient>()
        .HasQueryFilter(p => !p.IsDeleted && 
            (p.BranchId == _currentBranchId || _currentBranchId == null));
    // Admin با BranchId=null همه شعبه‌ها را می‌بیند
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🌱 بخش ۴۴: Seed Data کامل (داده‌های اولیه)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="note">// ⚠️ این بخش بسیار مهم است - بدون Seed Data سیستم قابل استفاده نیست
+// ⚠️ این بخش بسیار مهم است - بدون Seed Data سیستم قابل استفاده نیست
 // تمام Seeder ها در Infrastructure/Persistence/Seeders/ قرار دارند
-// هر Seeder باید Idempotent باشد (اجرای مکرر مشکلی ایجاد نکند)</span>
+// هر Seeder باید Idempotent باشد (اجرای مکرر مشکلی ایجاد نکند)
 
-<span class="h3">── ۴۴.۱ نقش‌های پیش‌فرض (RoleSeeder) ──</span>
+── ۴۴.۱ نقش‌های پیش‌فرض (RoleSeeder) ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// داده‌های اولیه نقش‌های سیستم
 /// ۱۲ نقش پیش‌فرض با دسترسی‌های مشخص
-/// &lt;/summary&gt;
+/// </summary>
 public static class RoleSeeder
 {
-    public static readonly List&lt;Role&gt; DefaultRoles = new()
+    public static readonly List<Role> DefaultRoles = new()
     {
         new() { Name = "SystemAdmin",    Description = "مدیر سیستم - دسترسی کامل" },
         new() { Name = "ClinicManager",  Description = "مدیر درمانگاه" },
@@ -652,26 +598,26 @@ public static class RoleSeeder
         new() { Name = "Physiotherapist",Description = "فیزیوتراپیست" },
         new() { Name = "Nurse",          Description = "پرستار" },
     };
-}</span>
+}
 
-<span class="h3">── ۴۴.۲ کاربر Admin پیش‌فرض (AdminSeeder) ──</span>
+── ۴۴.۲ کاربر Admin پیش‌فرض (AdminSeeder) ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// ایجاد کاربر مدیر سیستم پیش‌فرض
 /// ⚠️ رمز عبور باید در اولین ورود تغییر کند
-/// &lt;/summary&gt;
+/// </summary>
 Username: "admin"
 Password: "Admin@1234"  // BCrypt Hash شده
 FullName: "مدیر سیستم"
 Role: SystemAdmin
-MustChangePassword: true  // اجبار تغییر رمز در اولین ورود</span>
+MustChangePassword: true  // اجبار تغییر رمز در اولین ورود
 
-<span class="h3">── ۴۴.۳ دسترسی‌های پیش‌فرض (PermissionSeeder) ──</span>
+── ۴۴.۳ دسترسی‌های پیش‌فرض (PermissionSeeder) ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// ۱۲۰+ دسترسی پیش‌فرض - گروه‌بندی شده بر اساس ماژول
 /// هر نقش پیش‌فرض، مجموعه‌ای از این دسترسی‌ها را دارد
-/// &lt;/summary&gt;
+/// </summary>
 // مثال نقش Doctor:
 //   Patients.View, Patients.ViewDetail
 //   Appointments.View (فقط خودش)
@@ -687,14 +633,14 @@ MustChangePassword: true  // اجبار تغییر رمز در اولین ورو
 //   Appointments.View, Appointments.Create, Appointments.Edit, Appointments.Cancel
 //   Receptions.View, Receptions.Create, Receptions.Edit
 //   Insurance.Inquiry
-//   SMS.Send</span>
+//   SMS.Send
 
-<span class="h3">── ۴۴.۴ استان‌ها و شهرها (LocationSeeder) ──</span>
+── ۴۴.۴ استان‌ها و شهرها (LocationSeeder) ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// ۳۱ استان و ۱۰۰۰+ شهر ایران
 /// از فایل JSON یا XML بارگذاری شود
-/// &lt;/summary&gt;
+/// </summary>
 // منبع: فایل iran-locations.json
 // ساختار:
 // { "provinces": [
@@ -703,14 +649,14 @@ MustChangePassword: true  // اجبار تغییر رمز در اولین ورو
 //   ...
 // ]}
 // بارگذاری: در اولین اجرا از JSON به DB
-// جدول: Provinces (31) + Cities (1000+)</span>
+// جدول: Provinces (31) + Cities (1000+)
 
-<span class="h3">── ۴۴.۵ کدهای ICD-10 (ICD10Seeder) ──</span>
+── ۴۴.۵ کدهای ICD-10 (ICD10Seeder) ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// کدهای تشخیص ICD-10 - حداقل ۱۰۰۰ کد پرکاربرد
 /// منبع: فایل icd10-fa.csv
-/// &lt;/summary&gt;
+/// </summary>
 // نمونه:
 // A00 - وبا
 // A01 - حصبه
@@ -723,14 +669,14 @@ MustChangePassword: true  // اجبار تغییر رمز در اولین ورو
 // ...
 // بارگذاری: از CSV به جدول ICD10Codes
 // فیلدها: Code, Description (انگلیسی), DescriptionFa (فارسی),
-//          ParentCode, Category, Chapter</span>
+//          ParentCode, Category, Chapter
 
-<span class="h3">── ۴۴.۶ داروها (MedicationSeeder) ──</span>
+── ۴۴.۶ داروها (MedicationSeeder) ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// لیست داروهای ایران - حداقل ۵۰۰۰ قلم
 /// منبع: فایل irc-medications.csv (از سازمان غذا و دارو)
-/// &lt;/summary&gt;
+/// </summary>
 // فیلدها: IRCCode, GenericName, GenericNameFa, BrandName,
 //          ATCCode, Form (قرص/کپسول/آمپول/شربت/پماد/قطره/...),
 //          Strength, Manufacturer, Country (داخلی/خارجی),
@@ -740,37 +686,37 @@ MustChangePassword: true  // اجبار تغییر رمز در اولین ورو
 // 12345, Metformin HCl, متفورمین, Glucophage, A10BA02,
 //        قرص, 500mg, Merck, خارجی, false, false, false
 // 12346, Atorvastatin, آتورواستاتین, Lipitor, C10AA05,
-//        قرص, 20mg, Pfizer, خارجی, false, false, false</span>
+//        قرص, 20mg, Pfizer, خارجی, false, false, false
 
-<span class="h3">── ۴۴.۷ تست‌های آزمایشگاهی (LabTestSeeder) ──</span>
+── ۴۴.۷ تست‌های آزمایشگاهی (LabTestSeeder) ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// کاتالوگ تست‌های آزمایشگاهی - حداقل ۲۰۰ تست
-/// &lt;/summary&gt;
+/// </summary>
 // نمونه:
 // CBC, شمارش کامل خون, Hematology, خون کامل, 4.5-11.0, ×10³/μL, 500000
 // FBS, قند خون ناشتا, Biochemistry, سرم, 70-100, mg/dL, 200000
 // HbA1c, هموگلوبین گلیکوزیله, Biochemistry, خون کامل, 4.0-5.6, %, 800000
 // TSH, هورمون محرک تیروئید, Hormone, سرم, 0.4-4.0, mIU/L, 600000
-// U/A, آنالیز ادرار, Urinalysis, ادرار, -, -, 150000</span>
+// U/A, آنالیز ادرار, Urinalysis, ادرار, -, -, 150000
 
-<span class="h3">── ۴۴.۸ خدمات و تعرفه پایه (ServiceTariffSeeder) ──</span>
+── ۴۴.۸ خدمات و تعرفه پایه (ServiceTariffSeeder) ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// لیست خدمات درمانی + تعرفه پایه سال جاری
-/// &lt;/summary&gt;
+/// </summary>
 // دسته‌بندی: ویزیت, پاراکلینیک, آزمایشگاه, تصویربرداری,
 //           جراحی, دندانپزشکی, فیزیوتراپی, داروخانه
 // نمونه:
 // K-900001, ویزیت متخصص, ویزیت, 3000000, 70%, 0, 0
 // K-900002, ویزیت فوق‌تخصص, ویزیت, 4500000, 70%, 0, 0
-// K-900120, الکتروکاردیوگرام, پاراکلینیک, 800000, 70%, 0, 0</span>
+// K-900120, الکتروکاردیوگرام, پاراکلینیک, 800000, 70%, 0, 0
 
-<span class="h3">── ۴۴.۹ شرکت‌های بیمه (InsuranceSeeder) ──</span>
+── ۴۴.۹ شرکت‌های بیمه (InsuranceSeeder) ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// لیست شرکت‌های بیمه ایران
-/// &lt;/summary&gt;
+/// </summary>
 // 1, سلامت ایرانیان, SALAMAT, پایه, ihio.gov.ir
 // 2, تامین اجتماعی, TAMIN, پایه, tamin.ir
 // 3, نیروهای مسلح, MOSALAH, پایه, bsi.ir
@@ -780,14 +726,14 @@ MustChangePassword: true  // اجبار تغییر رمز در اولین ورو
 // 7, بیمه آسیا, ASIA, تکمیلی, bimehasia.com
 // 8, بیمه البرز, ALBORZ, تکمیلی, alborzinsurance.ir
 // 9, بیمه پارسیان, PARSIAN, تکمیلی, parsianinsurance.ir
-// 10, بیمه پاسارگاد, PASARGAD, تکمیلی, bpi.ir</span>
+// 10, بیمه پاسارگاد, PASARGAD, تکمیلی, bpi.ir
 
-<span class="h3">── ۴۴.۱۰ تخصص‌های پزشکی (SpecialtySeeder) ──</span>
+── ۴۴.۱۰ تخصص‌های پزشکی (SpecialtySeeder) ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// لیست تخصص‌ها و فوق‌تخصص‌های پزشکی
 /// ساختار درختی (Parent-Child)
-/// &lt;/summary&gt;
+/// </summary>
 // عمومی
 // داخلی ← فوق‌تخصص غدد, فوق‌تخصص قلب, فوق‌تخصص گوارش, ...
 // اطفال ← فوق‌تخصص نوزادان, فوق‌تخصص خون کودکان, ...
@@ -801,13 +747,13 @@ MustChangePassword: true  // اجبار تغییر رمز در اولین ورو
 // رادیولوژی
 // بیهوشی
 // پاتولوژی
-// دندانپزشکی ← ارتودنسی, اندودانتیکس, پروتز, ...</span>
+// دندانپزشکی ← ارتودنسی, اندودانتیکس, پروتز, ...
 
-<span class="h3">── ۴۴.۱۱ سرفصل‌های حسابداری (AccountingSeeder) ──</span>
+── ۴۴.۱۱ سرفصل‌های حسابداری (AccountingSeeder) ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// کدینگ حسابداری استاندارد درمانگاه (۴ سطحی)
-/// &lt;/summary&gt;
+/// </summary>
 // ۱ - دارایی‌ها
 //   ۱۰ - دارایی‌های جاری
 //     ۱۰۱ - نقد و بانک
@@ -849,46 +795,46 @@ MustChangePassword: true  // اجبار تغییر رمز در اولین ورو
 //     ۵۰۶ - هزینه آب و برق
 //     ۵۰۷ - هزینه تعمیر و نگهداری
 //   ۵۱ - هزینه‌های اداری
-//   ۵۲ - هزینه‌های مالی</span>
+//   ۵۲ - هزینه‌های مالی
 
-<span class="h3">── ۴۴.۱۲ تداخلات دارویی (DrugInteractionSeeder) ──</span>
+── ۴۴.۱۲ تداخلات دارویی (DrugInteractionSeeder) ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// تداخلات دارویی رایج - حداقل ۵۰۰ مورد
 /// منبع: پایگاه داده Lexicomp / Drugs.com
-/// &lt;/summary&gt;
+/// </summary>
 // Warfarin + Aspirin → Severe → افزایش خطر خونریزی
 // Metformin + Contrast Dye → Severe → خطر لاکتیک اسیدوز
 // Simvastatin + Erythromycin → Severe → خطر رابدومیولیز
 // Methotrexate + NSAIDs → Moderate → افزایش سمیت
 // Ciprofloxacin + Theophylline → Moderate → افزایش سطح تئوفیلین
-// ...</span>
+// ...
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🔧 بخش ۴۵: جزئیات فنی تکمیلی
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="h3">── ۴۵.۱ EF Core Interceptors ──</span>
+── ۴۵.۱ EF Core Interceptors ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// اینترسپتور پر کردن خودکار فیلدهای Audit
 /// هنگام SaveChanges: CreatedAt, CreatedBy, UpdatedAt, UpdatedBy
-/// &lt;/summary&gt;
+/// </summary>
 public class AuditableInterceptor : SaveChangesInterceptor
 {
     private readonly ICurrentUserService _currentUser;
     
-    public override ValueTask&lt;InterceptionResult&lt;int&gt;&gt; SavingChangesAsync(
+    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData, 
-        InterceptionResult&lt;int&gt; result,
+        InterceptionResult<int> result,
         CancellationToken ct = default)
     {
         var context = eventData.Context;
         var now = DateTime.UtcNow;
         var userId = _currentUser.UserId;
         
-        foreach (var entry in context.ChangeTracker.Entries&lt;AuditableEntity&gt;())
+        foreach (var entry in context.ChangeTracker.Entries<AuditableEntity>())
         {
             switch (entry.State)
             {
@@ -906,14 +852,14 @@ public class AuditableInterceptor : SaveChangesInterceptor
     }
 }
 
-/// &lt;summary&gt;
+/// <summary>
 /// اینترسپتور حذف نرم - تبدیل Delete به Update (IsDeleted=true)
-/// &lt;/summary&gt;
+/// </summary>
 public class SoftDeleteInterceptor : SaveChangesInterceptor
 {
-    public override ValueTask&lt;InterceptionResult&lt;int&gt;&gt; SavingChangesAsync(...)
+    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(...)
     {
-        foreach (var entry in context.ChangeTracker.Entries&lt;ISoftDeletable&gt;())
+        foreach (var entry in context.ChangeTracker.Entries<ISoftDeletable>())
         {
             if (entry.State == EntityState.Deleted)
             {
@@ -924,13 +870,13 @@ public class SoftDeleteInterceptor : SaveChangesInterceptor
         }
         return base.SavingChangesAsync(...);
     }
-}</span>
+}
 
-<span class="h3">── ۴۵.۲ Value Objects ──</span>
+── ۴۵.۲ Value Objects ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// شیء ارزشی کد ملی - با اعتبارسنجی الگوریتم رقم کنترلی
-/// &lt;/summary&gt;
+/// </summary>
 public record NationalCode
 {
     public string Value { get; }
@@ -942,12 +888,12 @@ public record NationalCode
         Value = value;
     }
     
-    /// &lt;summary&gt;
+    /// <summary>
     /// الگوریتم اعتبارسنجی کد ملی ایرانی
     /// ۱. طول باید ۱۰ رقم باشد
     /// ۲. همه ارقام یکسان نباشند (مثل ۱۱۱۱۱۱۱۱۱۱)
     /// ۳. رقم کنترل (رقم دهم) باید صحیح باشد
-    /// &lt;/summary&gt;
+    /// </summary>
     public static bool IsValid(string code)
     {
         if (string.IsNullOrEmpty(code) || code.Length != 10) return false;
@@ -955,22 +901,22 @@ public record NationalCode
         if (code.Distinct().Count() == 1) return false;
         
         int sum = 0;
-        for (int i = 0; i &lt; 9; i++)
+        for (int i = 0; i < 9; i++)
             sum += (code[i] - '0') * (10 - i);
         
         int remainder = sum % 11;
         int checkDigit = code[9] - '0';
         
-        return (remainder &lt; 2 && checkDigit == remainder) ||
-               (remainder &gt;= 2 && checkDigit == 11 - remainder);
+        return (remainder < 2 && checkDigit == remainder) ||
+               (remainder >= 2 && checkDigit == 11 - remainder);
     }
     
     public static implicit operator string(NationalCode nc) => nc.Value;
 }
 
-/// &lt;summary&gt;
+/// <summary>
 /// شیء ارزشی شماره تلفن - اعتبارسنجی فرمت ایرانی
-/// &lt;/summary&gt;
+/// </summary>
 public record PhoneNumber
 {
     public string Value { get; }
@@ -982,48 +928,48 @@ public record PhoneNumber
             throw new DomainException("شماره تلفن معتبر نیست");
         Value = value;
     }
-}</span>
+}
 
-<span class="h3">── ۴۵.۳ Domain Events ──</span>
+── ۴۵.۳ Domain Events ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// رویداد ثبت بیمار جدید - پس از ذخیره موفق
 /// Handler ها: ارسال SMS خوش‌آمد، ثبت در AuditLog، ارسال به سپاس
-/// &lt;/summary&gt;
+/// </summary>
 public record PatientCreatedEvent(long PatientId) : IDomainEvent;
 
-/// &lt;summary&gt;
+/// <summary>
 /// رویداد تکمیل ویزیت - ارسال خودکار به سپاس + نسخه الکترونیک
-/// &lt;/summary&gt;
+/// </summary>
 public record VisitCompletedEvent(long VisitId) : IDomainEvent;
 
-/// &lt;summary&gt;
+/// <summary>
 /// رویداد پرداخت فاکتور - تولید سند حسابداری خودکار
-/// &lt;/summary&gt;
+/// </summary>
 public record InvoicePaidEvent(long InvoiceId, decimal Amount) : IDomainEvent;
 
-/// &lt;summary&gt;
+/// <summary>
 /// رویداد تحویل دارو - به‌روزرسانی موجودی + هشدار کمبود
-/// &lt;/summary&gt;
+/// </summary>
 public record MedicationDispensedEvent(long InventoryId, decimal Qty) : IDomainEvent;
 
 // Dispatch: در UnitOfWork.SaveChangesAsync()
-// بعد از SaveChanges → بررسی DomainEvents → ارسال به MediatR</span>
+// بعد از SaveChanges → بررسی DomainEvents → ارسال به MediatR
 
-<span class="h3">── ۴۵.۴ SignalR Hub ──</span>
+── ۴۵.۴ SignalR Hub ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// هاب SignalR برای اعلان‌های لحظه‌ای
 /// متدها:
 /// - ReceiveNotification: ارسال اعلان به کاربر
 /// - QueueUpdated: به‌روزرسانی صف پزشک
 /// - DashboardUpdated: به‌روزرسانی آمار داشبورد
 /// - AppointmentStatusChanged: تغییر وضعیت نوبت
-/// &lt;/summary&gt;
+/// </summary>
 [Authorize]
 public class NotificationHub : Hub
 {
-    /// &lt;summary&gt;اتصال کاربر - عضویت در گروه شخصی&lt;/summary&gt;
+    /// <summary>اتصال کاربر - عضویت در گروه شخصی</summary>
     public override async Task OnConnectedAsync()
     {
         var userId = Context.UserIdentifier;
@@ -1031,27 +977,27 @@ public class NotificationHub : Hub
         await base.OnConnectedAsync();
     }
     
-    /// &lt;summary&gt;ارسال اعلان به کاربر خاص&lt;/summary&gt;
+    /// <summary>ارسال اعلان به کاربر خاص</summary>
     public async Task SendToUser(string userId, NotificationDto notification)
     {
         await Clients.Group($"user_{userId}")
             .SendAsync("ReceiveNotification", notification);
     }
     
-    /// &lt;summary&gt;به‌روزرسانی صف برای همه کاربران یک پزشک&lt;/summary&gt;
-    public async Task UpdateQueue(long doctorId, List&lt;QueueItemDto&gt; queue)
+    /// <summary>به‌روزرسانی صف برای همه کاربران یک پزشک</summary>
+    public async Task UpdateQueue(long doctorId, List<QueueItemDto> queue)
     {
         await Clients.Group($"doctor_{doctorId}")
             .SendAsync("QueueUpdated", queue);
     }
-}</span>
+}
 
-<span class="h3">── ۴۵.۵ Serilog Configuration ──</span>
+── ۴۵.۵ Serilog Configuration ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// تنظیمات Serilog در Program.cs
 /// Sinks: Console + File + Seq (اختیاری) + Database (AuditLog)
-/// &lt;/summary&gt;
+/// </summary>
 builder.Host.UseSerilog((ctx, config) => config
     .ReadFrom.Configuration(ctx.Configuration)
     .Enrich.FromLogContext()
@@ -1065,11 +1011,11 @@ builder.Host.UseSerilog((ctx, config) => config
         retainedFileCountLimit: 30,
         fileSizeLimitBytes: 10_000_000)
     .WriteTo.Seq("http://localhost:5341") // اختیاری
-);</span>
+);
 
-<span class="h3">── ۴۵.۶ Docker (اختیاری) ──</span>
+── ۴۵.۶ Docker (اختیاری) ──
 
-<span class="code"># Dockerfile برای API Server
+# Dockerfile برای API Server
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 80 443
@@ -1093,10 +1039,10 @@ ENTRYPOINT ["dotnet", "Sahand.ClinicPro.API.dll"]
 # services:
 #   api: build: . ports: ["5000:80"]
 #   db: image: mcr.microsoft.com/mssql/server:2022-latest
-#   seq: image: datalust/seq:latest</span>
+#   seq: image: datalust/seq:latest
 
 
-<span class="h1">════════════════════════════════════════════════════════════════════
+════════════════════════════════════════════════════════════════════
 🎉 پایان نهایی - پروژه ۱۰۰٪ کامل شد!
 ════════════════════════════════════════════════════════════════════
 
