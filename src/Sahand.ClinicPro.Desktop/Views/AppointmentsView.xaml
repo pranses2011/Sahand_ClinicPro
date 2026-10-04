@@ -1,0 +1,99 @@
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.AppointmentsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══════════════════════════════════════════════════════════
+         نوبت‌دهی — گام V1
+         فیلتر تاریخ/پزشک/وضعیت + جدول نوبت‌ها + عملیات وضعیت
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- سربرگ -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <Button DockPanel.Dock="Right"
+                    Command="{Binding NewAppointmentCommand}"
+                    Style="{StaticResource MaterialDesignFilledButton}"
+                    Content="نوبت جدید" />
+            <TextBlock Text="نوبت‌دهی"
+                       Style="{StaticResource SectionTitle}"
+                       VerticalAlignment="Center" />
+        </DockPanel>
+
+        <!-- فیلترها -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+            <TextBox materialDesign:HintAssist.Hint="تاریخ شمسی (1404/01/15)"
+                     Text="{Binding DateShamsi, UpdateSourceTrigger=PropertyChanged}"
+                     Width="170" Margin="0,0,12,0">
+                <TextBox.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding LoadCommand}" />
+                </TextBox.InputBindings>
+            </TextBox>
+            <ComboBox materialDesign:HintAssist.Hint="پزشک"
+                      ItemsSource="{Binding Doctors}"
+                      DisplayMemberPath="Name"
+                      SelectedIndex="{Binding DoctorFilterIndex}"
+                      Width="220" Margin="0,0,12,0" />
+            <ComboBox materialDesign:HintAssist.Hint="وضعیت"
+                      ItemsSource="{Binding StatusLabels}"
+                      SelectedIndex="{Binding StatusFilterIndex}"
+                      Width="140" Margin="0,0,12,0" />
+            <Button Command="{Binding LoadCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Content="بازخوانی" />
+        </StackPanel>
+
+        <!-- عملیات وضعیت روی نوبت انتخاب‌شده -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
+            <Button Command="{Binding ConfirmCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="تأیید" Margin="0,0,8,0" />
+            <Button Command="{Binding CancelCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="لغو نوبت" Margin="0,0,8,0" />
+            <Button Command="{Binding NoShowCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="ثبت غیبت" Margin="0,0,8,0" />
+            <Button Command="{Binding CompleteCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="اتمام" Margin="0,0,8,0" />
+            <TextBlock Text="عملیات روی نوبت انتخاب‌شده اعمال می‌شود"
+                       VerticalAlignment="Center" Opacity="0.7" FontSize="12" />
+        </StackPanel>
+
+        <!-- پیام خطا -->
+        <TextBlock Grid.Row="2" Text="{Binding ErrorMessage}"
+                   Foreground="{DynamicResource MaterialDesign.Brush.Error}"
+                   FontSize="12" TextWrapping="Wrap"
+                   HorizontalAlignment="Right" VerticalAlignment="Center"
+                   MaxWidth="360" />
+
+        <!-- جدول نوبت‌ها -->
+        <DataGrid Grid.Row="3"
+                  ItemsSource="{Binding Appointments}"
+                  SelectedItem="{Binding SelectedAppointment}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  CanUserAddRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  materialDesign:DataGridAssist.CellPadding="8,6">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="کد نوبت" Binding="{Binding Code}" Width="110" />
+                <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName}" Width="*" />
+                <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName}" Width="*" />
+                <DataGridTextColumn Header="ساعت" Binding="{Binding Time}" Width="80" />
+                <DataGridTextColumn Header="نوبت" Binding="{Binding QueueNumber}" Width="60" />
+                <DataGridTextColumn Header="نوع" Binding="{Binding TypeText}" Width="90" />
+                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText}" Width="110" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

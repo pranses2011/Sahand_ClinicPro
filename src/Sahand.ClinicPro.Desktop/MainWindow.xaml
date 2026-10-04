@@ -21,6 +21,9 @@
         <DataTemplate DataType="{x:Type vm:PatientsViewModel}">
             <views:PatientsView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AppointmentsViewModel}">
+            <views:AppointmentsView />
+        </DataTemplate>
     </Window.Resources>
 
     <!-- ═══════════════════════════════════════════════════════════

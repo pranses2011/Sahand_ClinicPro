@@ -47,7 +47,8 @@ public partial class MainWindowViewModel : ObservableObject
         IThemeService theme,
         INavigationService navigation,
         DashboardViewModel dashboard,
-        PatientsViewModel patients)
+        PatientsViewModel patients,
+        AppointmentsViewModel appointments)
     {
         _api = api;
         _tokens = tokens;
@@ -62,7 +63,8 @@ public partial class MainWindowViewModel : ObservableObject
         _pages = new Dictionary<string, Func<ViewModelBase>>
         {
             ["dashboard"] = () => dashboard,
-            ["patients"] = () => patients
+            ["patients"] = () => patients,
+            ["appointments"] = () => appointments
         };
 
         // آیتم‌های ناوبری — فعال بودن از لایسنس کنترل می‌شود
@@ -70,7 +72,7 @@ public partial class MainWindowViewModel : ObservableObject
         {
             new() { Title = "داشبورد", PageKey = "dashboard", Icon = "ViewDashboard" },
             new() { Title = "بیماران", PageKey = "patients", Icon = "AccountGroup" },
-            new() { Title = "نوبت‌دهی", PageKey = "appointments", Icon = "CalendarClock", Enabled = false },
+            new() { Title = "نوبت‌دهی", PageKey = "appointments", Icon = "CalendarClock" },
             new() { Title = "پذیرش", PageKey = "receptions", Icon = "Reception", Enabled = false },
             new() { Title = "ویزیت و معاینه", PageKey = "visits", Icon = "Stethoscope", Enabled = false },
             new() { Title = "نسخه‌نویسی", PageKey = "prescriptions", Icon = "Prescription", Enabled = false },
