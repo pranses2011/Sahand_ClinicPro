@@ -1,212 +1,145 @@
-# 🏥 Sahand ClinicPro — سامانه جامع مدیریت درمانگاه
-
-> **Sahand_ClinicPro** — سامانه یکپارچه و جامع مدیریت درمانگاه با معماری **Clean Architecture**، تحت شبکه Client-Server با API مرکزی، آماده توسعه به چند شعبه و موبایل (.NET MAUI).
+# 🏥 سامانه جامع مدیریت درمانگاه سهند — Sahand ClinicPro
 
 <div dir="rtl">
 
-## 📊 وضعیت پروژه
+سامانه یکپارچه مدیریت درمانگاه برای محیط ایران: نوبت‌دهی، پذیرش، ویزیت با الگوی SOAP، نسخه الکترونیک، مالی با حسابداری دوبل، پاراکلینیک، داروخانه، پیامک و اتصال به سامانه‌های دولتی.
 
-![Status](https://img.shields.io/badge/وضعیت-فاز%20صفر%20(راه‌اندازی)-orange)
-![Progress](https://img.shields.io/badge/پیشرفت-0%25%20(0%2F31%20گام)-lightgrey)
-![.NET](https://img.shields.io/badge/.NET-8.0%20LTS-blueviolet)
-![C#](https://img.shields.io/badge/C%23-12-blue)
-![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-red)
-![License](https://img.shields.io/badge/License-MIT-green)
+</div>
 
-| شاخص | مقدار |
-|---|---|
-| 🧩 ماژول‌ها | ۳۵+ ماژول کامل |
-| 🗄️ جداول دیتابیس | ۹۰+ جدول در ۱۲ گروه |
-| 🔐 لایه‌های امنیتی | ۱۴ لایه (HIPAA-Oriented) |
-| 📋 گام‌های پیاده‌سازی | ۳۱ گام در ۹ فاز |
-| 👥 ظرفیت هدف | ۱۰ کاربر همزمان، ۵۰۰ بیمار/روز |
-| 🔗 یکپارچه‌سازی | سپاس، سیب، ناب، سینا، نسخه الکترونیک، ۱۰+ پنل پیامک، بیمه‌ها |
-
----
-
-## 🛠️ پشته فناوری (Tech Stack)
-
-| بخش | تکنولوژی | نسخه / توضیح |
-|---|---|---|
-| زبان برنامه‌نویسی | C# | C# 12 |
-| Backend API | ASP.NET Core Web API | .NET 8 LTS (REST) |
-| Desktop Client | WPF + Material Design in XAML | الگوی MVVM، RTL کامل |
-| License Portal | Blazor Server | .NET 8 |
-| Mobile (آینده) | .NET MAUI | Cross-platform |
-| Database | SQL Server 2022 | Standard Edition |
-| ORM | Entity Framework Core 8 | Code-First + Fluent API |
-| احراز هویت | JWT + Refresh Token | Access ۱۵min / Refresh 7day |
-| هش رمز | BCrypt.Net-Next | Work Factor 12 |
-| رمزنگاری داده حساس | AES-256-GCM | فیلدهای پزشکی حساس |
-| Validation | FluentValidation | با پیام‌های فارسی |
-| Object Mapping | AutoMapper | MappingProfile مرکزی |
-| Reporting | Stimulsoft Reports | خروجی PDF/Excel/Word |
-| Logging | Serilog + Seq | Structured Logging |
-| Background Jobs | Hangfire | پیامک، بکاپ، Heartbeat |
-| Real-time | SignalR | صف انتظار و نوتیفیکیشن |
-| Testing | xUnit + Moq + FluentAssertions | Unit + Integration |
-| CI/CD | GitHub Actions | Pipeline خودکار |
-
----
-
-## 🏗️ معماری (Clean Architecture)
+## 🧱 معماری
 
 ```
-┌─────────────────────────────────────────────────┐
-│  🖥️ Presentation: WPF (MVVM) + Blazor Portal    │
-└──────────────────────┬──────────────────────────┘
-           HTTP/HTTPS REST API
-┌──────────────────────▼──────────────────────────┐
-│  🌐 API Layer: ASP.NET Core 8 Web API           │
-│  Controllers + Middleware + JWT + RateLimit     │
-└──────────────────────┬──────────────────────────┘
-┌──────────────────────▼──────────────────────────┐
-│  ⚙️ Application Layer: CQRS + MediatR           │
-│  Use Cases + DTOs + Behaviors + Validators      │
-└──────────────────────┬──────────────────────────┘
-┌──────────────────────▼──────────────────────────┐
-│  🧬 Domain Layer (هسته - بدون وابستگی)           │
-│  Entities + Value Objects + Domain Events       │
-└──────────────────────┬──────────────────────────┘
-┌──────────────────────▼──────────────────────────┐
-│  🔧 Infrastructure: EF Core + Repositories      │
-│  UoW + SMS Providers + Sepas + License + ...    │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│  Clients:  WPF Desktop (MaterialDesign/RTL)  │  License │
+│                       ↓ REST /api/v1                    │
+│  API: ASP.NET Core 8 — 24 controller groups             │
+│                       ↓ MediatR (CQRS + 4 Behaviors)    │
+│  Application: Features × 12 modules, Validators (FA)    │
+│                       ↓                                 │
+│  Domain: 87 entities, 89 enums, ValueObjects, Events    │
+│                       ↑ IRepository/IUnitOfWork         │
+│  Infrastructure: EF Core 8 (SQL Server), Identity (JWT),│
+│  SMS chain, Government (Sepas/eRx), License (RSA)       │
+└─────────────────────────────────────────────────────────┘
 ```
 
-**الگوهای طراحی:** Clean Architecture، CQRS + MediatR، Repository + Unit of Work، Strategy، Factory، Adapter، Decorator
+- **Clean Architecture** + CQRS (Commands/Queries per folder) + Repository/UnitOfWork
+- **Soft delete** سراسری با Query Filter و اینترسپتورهای حسابرسی
+- **SQL Server 2022** با ۸۷ جدول، ۱۵ Sequence (MRN/APT/RCP/VST/RX/INV/...)
+- کد انگلیسی / کامنت XML فارسی در تمام لایه‌ها
 
-**قواعد طلایی معماری:**
-- ✅ Domain هیچ وابستگی خارجی ندارد
-- ✅ Application فقط به Domain وابسته است
-- ✅ Infrastructure به Application و Domain وابسته است
-- ✅ API به Application وابسته است (نه مستقیم به Infrastructure)
-- ✅ تمام کامنت‌ها و XML Summaryها به زبان فارسی مفصل
-- ✅ تمام کدها به انگلیسی استاندارد (PascalCase/camelCase)
+## 🚀 راه‌اندازی سریع
 
----
+### پیش‌نیازها
+- .NET 8 SDK
+- SQL Server 2022 (مستقیم یا Docker)
+- (برای کلاینت) ویندوز 7+ با .NET 8 Desktop Runtime
 
-## 🧩 ماژول‌های اصلی
-
-- **🏥 هسته‌ای:** بیماران، نوبت‌دهی (تقویم شمسی)، پذیرش، ویزیت (SOAP)، نسخه‌نویسی (داخلی + الکترونیک)
-- **💰 مالی:** صندوق و فاکتور، بیمه (استعلام آنلاین)، حسابداری دوبل (چهارسطحی ایرانی)، تعرفه‌ها، کارانه پزشکان
-- **🔬 پاراکلینیک:** آزمایشگاه، تصویربرداری، دندانپزشکی (چارت FDI)، چشم‌پزشکی، فیزیوتراپی
-- **💊 داروخانه:** موجودی بچ‌محور، تحویل با اسکن نسخه، تاریخ انقضا، انبارگردانی، هشدار موجودی
-- **📞 ارتباطات:** ۱۰+ پنل پیامک (Kavenegar، ملی‌پیامک، ...)، صف ارسال، یادآوری خودکار نوبت
-- **👥 اداری:** پرسنل، حضور و غیاب، حقوق، کاربران و RBAC گرانولار
-- **📊 گزارش:** داشبورد مدیریتی، گزارش‌ساز Stimulsoft، ۱۰+ گزارش آماده
-- **⚙️ زیرساخت:** بکاپ ۳سطحی خودکار، Audit Log کامل، تنظیمات، مدیریت اسناد
-
----
-
-## 🔗 یکپارچه‌سازی سامانه‌های دولتی
-
-| سامانه | کاربرد | پروتکل |
-|---|---|---|
-| 🏥 **سپاس** (ihio.gov.ir) | پرونده الکترونیک سلامت، ارسال ویزیت | REST + OAuth2 + HL7 FHIR |
-| 💊 **نسخه الکترونیک سلامت** | ارسال نسخه، کد رهگیری، استعلام تداخل | SOAP + REST |
-| 💊 **نسخه الکترونیک تأمین اجتماعی** | ثبت و تایید نسخه | REST + OAuth2 |
-| 🩺 **سیب** | مکانیزاسیون مراقبت‌های سطح یک | REST |
-| 🏥 **ناب / سینا** | اتوماسیون بهداشتی، نظام ارجاع | REST |
-| 🏦 **بیمه‌ها (۸+)** | استعلام، تایید، تسویه، مطالبات | REST/SOAP + Plugin |
-
----
-
-## 🔐 سامانه لایسنس اختصاصی
-
-- **License Portal (Blazor Server):** پنل فروشنده با دیتابیس مجزا — صدور آنلاین/آفلاین، کنترل ماژول و ظرفیت
-- **License Client (در نرم‌افزار):** فعال‌سازی با Hardware Fingerprint، اعتبارسنجی امضای RSA (SHA256withRSA)، Heartbeat روزانه
-- **انواع لایسنس:** اشتراکی (ماهانه تا سالانه) و دائمی
-- **مدیریت ماژولار:** ۷ ماژول پایه رایگان + ۱۶+ ماژول اختیاری قابل فعال‌سازی
-
----
-
-## 📁 ساختار ریپازیتوری
-
-```
-Sahand_ClinicPro/
-├── 📄 README.md                    # این فایل - معرفی پروژه
-├── 📄 TODO.md                      # چک‌لیست ۳۱ گام پیاده‌سازی
-├── 📄 PROGRESS.md                  # وضعیت لحظه‌ای پروژه
-├── 📄 CHANGELOG.md                 # تاریخچه تغییرات
-├── 📄 .gitignore                   # قواعد Visual Studio / .NET
-├── 📄 LICENSE                      # MIT
-│
-├── 📁 docs/
-│   ├── 📁 design/                  # مستندات طراحی (۶ فایل HTML)
-│   │   ├── 01-overview.html        # تحلیل نیازمندی‌ها و معماری
-│   │   ├── 02-database.html        # طراحی دیتابیس (۹۰+ جدول)
-│   │   ├── 03-flowcharts.html      # فلوچارت‌ها و نمودارها
-│   │   ├── 04-wireframes.html      # وایرفریم ۱۶ صفحه
-│   │   ├── 05-security-timeline.html  # امنیت ۱۴ لایه + زمان‌بندی
-│   │   └── 06-license-integration.html # لایسنس + یکپارچه‌سازی
-│   ├── 📁 prompts/                 # پرامپت‌های پیاده‌سازی AI
-│   │   ├── prompt-part1.html       # معرفی + معماری + دیتابیس
-│   │   ├── prompt-part2.html       # ماژول‌ها + API + WPF
-│   │   └── prompt-part3.html       # امنیت + لایسنس + دستورات نهایی
-│   ├── 📁 api/                     # مستندات API (پس از پیاده‌سازی)
-│   └── 📁 guides/                  # راهنماهای کاربری
-│
-├── 📁 src/                         # کدهای اصلی (از گام ۱)
-├── 📁 tests/                       # تست‌ها (از گام ۳۰)
-├── 📁 scripts/                     # اسکریپت‌ها (setup-db.sql، deploy.ps1)
-└── 📁 .github/workflows/           # GitHub Actions (CI)
-```
-
----
-
-## 📋 مدیریت پروژه
-
-- **`TODO.md`** — چک‌لیست کامل ۳۱ گام در ۹ فاز (به‌روزرسانی پس از هر گام)
-- **`PROGRESS.md`** — وضعیت لحظه‌ای، گام فعلی، آخرین Commit
-- **`CHANGELOG.md`** — تاریخچه تغییرات هر نسخه
-
-### 🔄 گردش کار Git
+### ۱) API
 
 ```bash
-# برای هر فاز یک Branch و در پایان Merge به main
-git checkout -b feature/phase-1-infrastructure
-# ... کدنویسی + Commit مکرر ...
-git checkout main && git merge feature/phase-1-infrastructure
+cd src/Sahand.ClinicPro.API
+dotnet ef database update --project ../Sahand.ClinicPro.Infrastructure
+dotnet run
 ```
 
-### 📝 قالب Commit Message
+- Swagger: `http://localhost:5000/swagger`
+- سلامت: `http://localhost:5000/health`
+- بذرهای خودکار: ۸ نقش، ۱۵۰ دسترسی، ادمین، ۱۴ تخصص، ۲۳ کد ICD-10، ۸ بیمه، ۲۳ ماژول
+
+### ۲) ورود اول
+
+<div dir="rtl">
+
+| فیلد | مقدار |
+|------|-------|
+| نام کاربری | `admin` |
+| رمز عبور | `Admin@123` |
+
+⚠️ **الزامی**: تغییر رمز پس از نخستین ورود (MustChangePassword فعال است)
+
+</div>
+
+### ۳) کلاینت WPF
+
+```bash
+cd src/Sahand.ClinicPro.Desktop
+dotnet build   # روی ویندوز: dotnet run
+```
+
+نشانی API در `appsettings.json` کلاینت → `ApiSettings:BaseUrl`
+
+## ⚙️ پیکربندی کلیدی (appsettings.json)
+
+| کلید | توضیح |
+|------|-------|
+| `ConnectionStrings:DefaultConnection` | رشته اتصال SQL Server |
+| `Jwt:SecretKey` | ⚠️ در تولید از متغیر محیطی/KeyVault |
+| `Jobs:Enabled` | فعال‌سازی Hangfire (نیازمند DB در دسترس) |
+| `Sms:Kavenegar:ApiKey` | کلید پنل پیامک |
+| `Government:Sepas` | نشانی و توکن سامانه سپاس |
+| `License:RsaPublicKey` | کلید عمومی بررسی امضای لایسنس |
+
+## 🧩 وضعیت ماژول‌ها
+
+| ماژول | API | CQRS | نکات |
+|-------|-----|------|------|
+| احراز هویت | ✅ | ✅ | JWT + قفل ۵ تلاشی + چرخش RefreshToken |
+| بیماران | ✅ | ✅ | کد ملی checksum + MRN خودکار |
+| پزشکان | ✅ | ✅ | |
+| نوبت‌دهی | ✅ | ✅ | ظرفیت/غیبت/تداخل |
+| پذیرش | ✅ | ✅ | صف پویا + زمان انتظار |
+| ویزیت (SOAP) | ✅ | ✅ | ICD-10 الزامی برای تکمیل |
+| نسخه | ✅ | ✅ | رد تداخل ممنوع مصرف |
+| فاکتور/پرداخت | ✅ | ✅ | سند حسابداری خودکار دوبل |
+| حسابداری | ✅ | ✅ | چهارسطحی + قانون توازن |
+| بیمه | ✅ | ✅ | مطالبه دوره‌ای خودکار |
+| آزمایشگاه | ✅ | ✅ | جریان وضعیت + رویداد پیامک |
+| داروخانه | ✅ | ✅ | تحویل FEFO + هشدار موجودی |
+| پاراکلینیک | ✅ | ✅ | تصویربرداری/دندان/چشم/فیزیوتراپی |
+| پیامک | ✅ | ✅ | زنجیره جایگزینی + صف Hangfire |
+| سپاس + نسخه الکترونیک | ✅ | ✅ | لاگ کامل ApiCallLog |
+| لایسنس | ✅ | ✅ | سه‌مرحله‌ای + میدلور ماژول |
+| گزارش‌ها | ✅ | ✅ | درآمد روزانه + عملکرد پزشکان |
+| منابع انسانی | ✅ | ✅ | پرسنل + مرخصی |
+| تنظیمات/بکاپ/لاگ | ✅ | ✅ | |
+| داشبورد | ✅ | — | آمار روزانه |
+| WPF Client | 🖥️ | — | ورود/داشبورد/بیماران — توسعه ماژول‌های بعدی ادامه دارد |
+
+## 🧪 تست‌ها
+
+```bash
+dotnet test Sahand.ClinicPro.sln
+```
+
+۴۳+ تست سبز: تقویم شمسی (۱۷)، اشیاء ارزشی (۲۰)، گرداننده ثبت بیمار با EF InMemory، اعتبارسنج‌ها، یکپارچگی API (۶)
+
+## 📂 ساختار
 
 ```
-<emoji> [Step N]: <توضیح>
-
-✨ feat: ویژگی جدید      🐛 fix: رفع باگ
-📝 docs: مستندات         ♻️ refactor: بازنویسی
-✅ test: تست             🔧 config: تنظیمات
-🗄️ db: دیتابیس           🔐 security: امنیت
-🚀 deploy: استقرار       📦 build: ساخت
+src/
+├── Sahand.ClinicPro.Domain          # ۸۷ موجودیت — بدون وابستگی
+├── Sahand.ClinicPro.Application     # CQRS × ۱۲ ماژول + Behaviors
+├── Sahand.ClinicPro.Infrastructure  # EF Core + Identity + SMS + Gov + License
+├── Sahand.ClinicPro.API             # ۲۰+ کنترلر + ۵ میدلور
+├── Sahand.ClinicPro.Desktop         # WPF (MVVM, RTL, MaterialDesign)
+├── Sahand.ClinicPro.LicensePortal   # پنل وب لایسنس (اسکلت)
+└── Sahand.ClinicPro.Shared          # قراردادهای مشترک
+tests/                                # ۴ پروژه تست
+docs/                                 # مستندات طراحی و راهنما
+scripts/                              # مولدهای بازتولید کد (Python)
 ```
 
-**نمونه:** `✨ [Step 7]: افزودن موجودیت بیمار با کامنت‌های فارسی`
+## 🔐 امنیت
 
----
-
-## 🚀 نقشه راه (۹ فاز / ۳۱ گام)
-
-| فاز | عنوان | گام‌ها | وضعیت |
-|---|---|---|---|
-| ۰ | راه‌اندازی ریپازیتوری | — | ✅ کامل |
-| ۱ | راه‌اندازی و زیرساخت | ۱–۴ | ⬜ |
-| ۲ | ماژول‌های هسته‌ای | ۵–۹ | ⬜ |
-| ۳ | Desktop Client | ۱۰–۱۲ | ⬜ |
-| ۴ | ماژول‌های درمانی | ۱۳–۱۶ | ⬜ |
-| ۵ | مالی و حسابداری | ۱۷–۱۹ | ⬜ |
-| ۶ | پاراکلینیک و داروخانه | ۲۰–۲۲ | ⬜ |
-| ۷ | ارتباطات و یکپارچه‌سازی | ۲۳–۲۵ | ⬜ |
-| ۸ | گزارش و اداری | ۲۶–۲۸ | ⬜ |
-| ۹ | نهایی‌سازی | ۲۹–۳۱ | ⬜ |
-
-جزئیات کامل هر گام در فایل [`TODO.md`](./TODO.md) و دستورات اجرایی در `docs/prompts/prompt-part3.html`.
-
----
+- BCrypt ضریب ۱۲ + سیاست رمز + تاریخچه ۵ رمز
+- قفل حساب ۳۰ دقیقه پس از ۵ تلاش ناموفق
+- Rate limit: عمومی ۱۰۰/دقیقه، ورود ۵/دقیقه
+- مجوزدهی پویا `PERMISSION:x` با نقش Admin همه‌دسترس
+- رمزنگاری AES-256-GCM سرویس داده‌های حساس
+- سرآیندهای امنیتی + لاگ عملیات با پاک‌سازی فیلدهای حساس
+- میدلور لایسنس با کدهای ۴۰۳ استاندارد
 
 ## 📄 مجوز
 
-این پروژه تحت مجوز **MIT** منتشر می‌شود — جهت مشاهده جزئیات به فایل [LICENSE](./LICENSE) مراجعه کنید.
-
-</div>
+MIT — جزئیات در [LICENSE](LICENSE)
