@@ -11,12 +11,9 @@ namespace Sahand.ClinicPro.API.IntegrationTests;
 /// صحت راه‌اندازی کامل خط لوله (Serilog، DI، Swagger، مسیریابی)
 /// را از بیرون شبیه‌سازی‌شده بررسی می‌کند.
 /// </summary>
-public class HealthEndpointTests : IClassFixture<WebApplicationFactory<Program>>
+[Collection("Api")]
+public class HealthEndpointTests
 {
-    /// <summary>
-    /// کارخانه میزبان آزمایشی — برنامه API را در حافظه اجرا می‌کند
-    /// بدون نیاز به پورت واقعی یا دیتابیس خارجی.
-    /// </summary>
     private readonly WebApplicationFactory<Program> _factory;
 
     /// <summary>

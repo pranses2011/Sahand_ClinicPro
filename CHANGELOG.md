@@ -5,6 +5,23 @@
 
 ## [Unreleased]
 
+### 🎯 Added — 2026-10-05 (فاز ۲: گام‌های ۶ تا ۹ — ماژول‌های هسته‌ای)
+- **Auth**: چهار فرمان CQRS ورود/تمدید/خروج/تغییر رمز با اعتبارسنجی فارسی و محدودیت ۵ درخواست در دقیقه
+- **Patients**: CRUD کامل + جستجوی صفحه‌بندی‌شده + اعتبارسنجی رقم کنترلی کد ملی + یکتایی غیرهمگام + سکانس MRN + رویداد دامنه پیامک خوش‌آمدگویی
+- **Doctors**: CRUD + فیلتر تخصص + جستجو با نام پرسنل
+- **API**: ExceptionHandlingMiddleware فارسی، HasPermission پویا (PERMISSION:x)، RateLimiter سراسری ۱۰۰/دقیقه و ورود ۵/دقیقه، Swagger با پشتیبانی JWT، پاسخ استاندارد برای خطاهای ModelState، سه کنترلر /api/v1
+- **تست‌ها**: ۲۸ تست سبز (۱۷ تقویم + ۶ API + ۲ زیرساخت + ۲ دامنه + ۱ سلامت)
+
+
+### ⚙️ Added — 2026-10-05 (گام ۵: Application.Common)
+- چهار Behavior خط لوله MediatR: Logging، Performance (آستانه ۵۰۰ms)، Validation، Transaction (فقط برای Commandها)
+- `ApiResponse<T>` و `PagedResponse<T>` و `PagedRequest` — فرمت استاندارد همه endpointها
+- `PersianDateHelper` — تبدیل دوطرفه جلالی/میلادی بدون وابستگی + سن + ارقام فارسی (۱۷ تست سبز)
+- `AppValidationException` با دیکشنری فیلد→پیام فارسی
+- اینترفیس‌های `ITransactionManager`، `IEncryptionService`، `IDateTimeService`
+- پیاده‌سازی زیرساخت: `TransactionManager`، `EncryptionService` (AES-256-GCM)، `DateTimeService` (منطقه ایران)
+
+
 ### 🔐 Added — 2026-10-05 (گام ۴: Infrastructure.Identity)
 - `IdentityService`: احراز هویت با نام کاربری/ایمیل، قفل حساب ۳۰ دقیقه بعد از ۵ تلاش ناموفق، ثبت نشست کاربر
 - چرخش توکن تازه‌سازی (Rotation) هنگام تمدید + ابطال هنگام خروج

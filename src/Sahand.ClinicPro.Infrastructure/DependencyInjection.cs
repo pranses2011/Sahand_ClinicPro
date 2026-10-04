@@ -11,6 +11,7 @@ using Sahand.ClinicPro.Infrastructure.Persistence;
 using Sahand.ClinicPro.Infrastructure.Persistence.Interceptors;
 using Sahand.ClinicPro.Infrastructure.Persistence.Repositories;
 using Sahand.ClinicPro.Infrastructure.Persistence.Seeders;
+using Sahand.ClinicPro.Infrastructure.Services;
 
 namespace Sahand.ClinicPro.Infrastructure;
 
@@ -56,6 +57,11 @@ public static class DependencyInjection
         services.AddScoped<IDoctorRepository, DoctorRepository>();
         services.AddScoped<IAppointmentRepository, AppointmentRepository>();
         services.AddScoped<ILicenseRepository, LicenseRepository>();
+
+        // سرویس‌های انتزاعی Application پیاده‌سازی‌شده در زیرساخت
+        services.AddScoped<ITransactionManager, TransactionManager>();
+        services.AddSingleton<IDateTimeService, Services.DateTimeService>();
+        services.AddSingleton<IEncryptionService, Services.Security.EncryptionService>();
 
         // بذرهای داده اولیه
         services.AddTransient<IDataSeeder, RoleSeeder>();

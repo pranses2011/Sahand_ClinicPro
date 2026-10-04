@@ -1,0 +1,84 @@
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══════════════════════════════════════════════════════════
+         داشبورد مدیریت — گام ۱۱
+         چهار کارت آمار امروز + وضعیت سامانه
+         ═══════════════════════════════════════════════════════════ -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+        <StackPanel>
+            <TextBlock Text="وضعیت امروز درمانگاه"
+                       Style="{StaticResource SectionTitle}" />
+
+            <!-- چهار کارت آمار -->
+            <UniformGrid Columns="4" Rows="1">
+                <materialDesign:Card Style="{StaticResource StatCard}">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="AccountPlus"
+                                                 Width="36" Height="36"
+                                                 Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
+                        <TextBlock Text="{Binding NewPatients}"
+                                   FontSize="30" FontWeight="Bold" Margin="0,10,0,2" />
+                        <TextBlock Text="بیمار جدید امروز" Opacity="0.7" />
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <materialDesign:Card Style="{StaticResource StatCard}">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="CalendarClock"
+                                                 Width="36" Height="36"
+                                                 Foreground="{DynamicResource MaterialDesign.Brush.Secondary}" />
+                        <TextBlock Text="{Binding TodayAppointments}"
+                                   FontSize="30" FontWeight="Bold" Margin="0,10,0,2" />
+                        <TextBlock Text="نوبت‌های امروز" Opacity="0.7" />
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <materialDesign:Card Style="{StaticResource StatCard}">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="Stethoscope"
+                                                 Width="36" Height="36"
+                                                 Foreground="#43A047" />
+                        <TextBlock Text="{Binding TodayVisits}"
+                                   FontSize="30" FontWeight="Bold" Margin="0,10,0,2" />
+                        <TextBlock Text="ویزیت‌های انجام‌شده" Opacity="0.7" />
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <materialDesign:Card Style="{StaticResource StatCard}">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="CashMultiple"
+                                                 Width="36" Height="36"
+                                                 Foreground="#FB8C00" />
+                        <TextBlock Text="{Binding TodayRevenueText}"
+                                   FontSize="24" FontWeight="Bold" Margin="0,14,0,4" />
+                        <TextBlock Text="درآمد امروز (ریال)" Opacity="0.7" />
+                    </StackPanel>
+                </materialDesign:Card>
+            </UniformGrid>
+
+            <!-- تاریخ سرور و وضعیت اتصال -->
+            <materialDesign:Card UniformCornerRadius="14" Padding="20" Margin="6,16,6,6">
+                <DockPanel>
+                    <materialDesign:PackIcon Kind="Server" Width="26" Height="26"
+                                             VerticalAlignment="Center" />
+                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock FontSize="14" FontWeight="SemiBold">
+                            <Run Text="تاریخ امروز: " />
+                            <Run Text="{Binding TodayDateShamsi, Mode=OneWay}" />
+                        </TextBlock>
+                        <TextBlock FontSize="12" Opacity="0.7"
+                                   Text="{Binding ConnectionStatus}" />
+                    </StackPanel>
+                </DockPanel>
+            </materialDesign:Card>
+
+            <!-- پیام خطا در نبود سرور -->
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{DynamicResource MaterialDesign.Brush.Error}"
+                       TextWrapping="Wrap" Margin="6,12,6,0" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

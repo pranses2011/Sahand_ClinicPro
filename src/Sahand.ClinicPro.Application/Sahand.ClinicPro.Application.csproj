@@ -24,6 +24,8 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <!-- برای ILogger در رفتار لاگ‌گذاری (گام ۵) -->
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+      <!-- پرس‌وجوهای LINQ صفحه‌بندی در Handlerها -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
   </ItemGroup>
 
   <ItemGroup>

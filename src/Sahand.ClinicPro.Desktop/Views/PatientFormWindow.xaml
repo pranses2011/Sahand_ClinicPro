@@ -1,0 +1,87 @@
+﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.PatientFormWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="{Binding FormTitle}"
+        Height="640" Width="560"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+    <!-- ═══════════════════════════════════════════════════════════
+         فرم ثبت و ویرایش بیمار — گام ۱۲
+         فیلدهای الزامی با اعتبارسنجی سمت سرور و نمایش پیام فارسی
+         ═══════════════════════════════════════════════════════════ -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="28">
+            <TextBlock Text="{Binding FormTitle}"
+                       Style="{StaticResource SectionTitle}" />
+
+            <TextBox materialDesign:HintAssist.Hint="نام *"
+                     Text="{Binding FirstName, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,0,12" />
+            <TextBox materialDesign:HintAssist.Hint="نام خانوادگی *"
+                     Text="{Binding LastName, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,0,12" />
+            <TextBox materialDesign:HintAssist.Hint="کد ملی * (۱۰ رقم)"
+                     Text="{Binding NationalCode, UpdateSourceTrigger=PropertyChanged}"
+                     MaxLength="10"
+                     Margin="0,0,0,12" />
+            <TextBox materialDesign:HintAssist.Hint="موبایل * (09XXXXXXXXX)"
+                     Text="{Binding Mobile, UpdateSourceTrigger=PropertyChanged}"
+                     MaxLength="11"
+                     Margin="0,0,0,12" />
+            <TextBox materialDesign:HintAssist.Hint="نام پدر"
+                     Text="{Binding FatherName, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,0,12" />
+            <TextBox materialDesign:HintAssist.Hint="تاریخ تولد شمسی (مثال 1370/05/15)"
+                     Text="{Binding BirthDateShamsi, UpdateSourceTrigger=PropertyChanged}"
+                     MaxLength="10"
+                     Margin="0,0,0,12" />
+
+            <ComboBox materialDesign:HintAssist.Hint="جنسیت"
+                      SelectedIndex="{Binding GenderIndex}"
+                      Margin="0,0,0,12">
+                <ComboBoxItem Content="مرد" />
+                <ComboBoxItem Content="زن" />
+            </ComboBox>
+
+            <TextBox materialDesign:HintAssist.Hint="آدرس"
+                     Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="False"
+                     Margin="0,0,0,12" />
+
+            <TextBox materialDesign:HintAssist.Hint="شهر"
+                     Text="{Binding City, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,0,12" />
+
+            <ComboBox materialDesign:HintAssist.Hint="بیمه اصلی"
+                      ItemsSource="{Binding InsuranceCompanies}"
+                      DisplayMemberPath="Name"
+                      SelectedValuePath="Id"
+                      SelectedValue="{Binding InsuranceCompanyId}"
+                      Margin="0,0,0,20" />
+
+            <!-- پیام خطا -->
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{DynamicResource MaterialDesign.Brush.Error}"
+                       FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" />
+
+            <!-- دکمه‌ها -->
+            <UniformGrid Columns="2">
+                <Button Command="{Binding SaveCommand}"
+                        Style="{StaticResource MaterialDesignFilledButton}"
+                        Content="ذخیره" Height="42" Margin="4" />
+                <Button Command="{Binding CancelCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Content="انصراف" Height="42" Margin="4" />
+            </UniformGrid>
+
+            <ProgressBar IsIndeterminate="True" Height="4" Margin="0,16,0,0"
+                         Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+        </StackPanel>
+    </ScrollViewer>
+</Window>
