@@ -1,0 +1,1035 @@
+
+════════════════════════════════════════════════════════════════════
+🖥️ Sahand_ClinicPro - پرامپت مکمل UI
+بخش ۱ از ۴: فرم‌های ورود، داشبورد، بیماران، پزشکان
+════════════════════════════════════════════════════════════════════
+
+⚠️ توجه مهم: این فایل مکمل prompt-part1 تا prompt-part3 است.
+از اول شروع نکن! این فقط جزئیات صفحات و فرم‌های WPF را
+تکمیل می‌کند. معماری، دیتابیس و API همان است که قبلاً خواندی.
+
+⚠️ تمام View ها WPF (XAML) هستند با MVVM Pattern.
+⚠️ تمام کامنت‌ها فارسی.
+⚠️ Material Design in XAML Toolkit استفاده شود.
+⚠️ همه صفحات RTL و FlowDirection="RightToLeft".
+⚠️ فونت Vazirmatn.
+⚠️ هر View یک ViewModel متناظر دارد.
+
+
+═══════════════════════════════════════════════════════
+🖥️ قوانین کلی ساخت فرم‌های WPF (اعمال به همه فرم‌ها)
+═══════════════════════════════════════════════════════
+
+// این قوانین باید در تمام فرم‌ها بدون استثنا رعایت شوند
+
+── Layout و ساختار کلی ──
+
+۱. ساختار اصلی پنجره (MainWindow.xaml):
+   • چیدمان: Grid دو ستونه
+   • ستون اول (Width="220"): Sidebar منوی ناوبری
+   • ستون دوم (Width="*"): محتوای صفحات
+   • Sidebar شامل:
+     - لوگو و نام درمانگاه (بالا)
+     - منوی درختی ماژول‌ها (وسط - ScrollViewer)
+     - اطلاعات کاربر + دکمه خروج (پایین)
+   • بالای ستون دوم: نوار بالایی (TopBar)
+     - Breadcrumb (مسیر صفحه فعلی)
+     - تاریخ و ساعت شمسی (لحظه‌ای)
+     - آیکون نوتیفیکیشن (با شمارنده Badge)
+     - آیکون تغییر تم (Dark/Light)
+     - نام و آواتار کاربر فعلی
+   • Content Area: ContentControl با Binding به CurrentView
+
+۲. استایل‌های عمومی همه فرم‌ها:
+   • فونت: Vazirmatn (Size 13 عادی، Size 14 عناوین، Size 12 جزئیات)
+   • Margin/Padding عمومی: Margin="10" Padding="8"
+   • Corner Radius دکمه‌ها و کادرها: CornerRadius="8"
+   • رنگ‌ها از Resource Dictionary (Light/Dark Theme)
+   • Shadow برای Card ها: Effect="DropShadowEffect"
+   • Transition/Animation: MaterialDesign Ripple Effect روی دکمه‌ها
+
+۳. عناصر تکرارشونده در همه فرم‌ها:
+
+الف) نوار عنوان صفحه (Page Header):
+   ┌──────────────────────────────────────────────────────────┐
+   │ [آیکون] عنوان صفحه                     [Badge تعداد] │
+   │ توضیح کوتاه صفحه به فارسی                              │
+   └──────────────────────────────────────────────────────────┘
+   - عنوان: TextBlock FontSize="20" FontWeight="Bold"
+   - توضیح: TextBlock FontSize="12" Foreground="Gray"
+   - Badge: عدد کل رکوردها مثل "کل: ۱٬۲۵۴ نفر"
+
+ب) نوار ابزار (Toolbar):
+   ┌──────────────────────────────────────────────────────────┐
+   │ [➕ جدید] [📥 Excel] [📤 خروجی] [🖨️ چاپ] │ 🔍 [جستجو...]  │ [فیلترها ▼] │
+   └──────────────────────────────────────────────────────────┘
+   - دکمه‌ها: materialDesign:PackIcon + Text
+   - جستجو: TextBox با آیکون ذره‌بین + PlaceholderText
+   - فیلترها: ComboBox های فیلتر (بسته به صفحه)
+   - Debounce جستجو: ۳۰۰ms بعد از تایپ
+
+ج) جدول اطلاعات (DataGrid):
+   - DataGrid با AutoGenerateColumns="False"
+   - Header فارسی برای هر ستون
+   - CanUserSortColumns="True"
+   - CanUserResizeColumns="True"
+   - AlternatingRowBackground (رنگ یک‌درمیان)
+   - RowDetailsTemplate برای جزئیات بیشتر
+   - ستون آخر: دکمه‌های عملیات (👁️ مشاهده, ✏️ ویرایش, 🗑️ حذف)
+   - هر دکمه عملیاتی: ToolTip فارسی + Command Binding
+   - Checkbox ستون اول برای انتخاب چندتایی
+   - HorizontalScrollBarVisibility="Auto"
+
+د) صفحه‌بندی (Pagination):
+   ┌──────────────────────────────────────────────────────────┐
+   │ نمایش ۱ تا ۲۰ از ۱٬۲۵۴ ردیف    │ [◀ قبلی] [1][2][3]...[63] [بعدی ▶] │
+   └──────────────────────────────────────────────────────────┘
+   - StackPanel Horizontal
+   - TextBlock برای اطلاعات صفحه
+   - دکمه‌های صفحه با Highlight روی صفحه فعال
+   - ComboBox تعداد رکورد در صفحه: 10/20/50/100
+
+ه) نوار وضعیت پایین (StatusBar):
+   ┌──────────────────────────────────────────────────────────┐
+   │ ✅ آماده │ 📅 ۱۴۰۴/۰۴/۰۱ │ 👤 منشی رحیمی │ 🔑 لایسنس فعال │ 📡 متصل │
+   └──────────────────────────────────────────────────────────┘
+   - StatusBar با چندین StatusBarItem
+   - وضعیت اتصال (سبز=متصل، قرمز=قطع)
+   - نام کاربر فعلی
+   - وضعیت لایسنس
+   - تاریخ شمسی
+
+۴. رفتارهای عمومی:
+   • Loading: نمایش ProgressRing هنگام بارگذاری داده از API
+   • خطا: نمایش Snackbar قرمز با پیام فارسی
+   • موفقیت: نمایش Snackbar سبز
+   • تایید حذف: DialogHost با پیام "آیا مطمئن هستید؟"
+   • Validation Error: نمایش زیر فیلد با رنگ قرمز (فارسی)
+   • Empty State: نمایش تصویر + متن "موردی یافت نشد" وقتی لیست خالی
+   • Keyboard Navigation: Tab بین فیلدها، Enter برای تایید
+   • Escape: بستن دیالوگ/فرم
+   • AutoFocus: فیلد اول فرم هنگام باز شدن فوکوس بگیرد
+
+
+═══════════════════════════════════════════════════════
+🔐 فرم ۱: صفحه ورود (LoginView.xaml)
+═══════════════════════════════════════════════════════
+
+ViewModel: LoginViewModel.cs
+
+── ساختار بصری ──
+
+چیدمان کلی:
+   • پنجره مستقل (Window نه UserControl)
+   • سایز: 500×600 (ثابت، غیرقابل تغییر اندازه)
+   • WindowStartupLocation="CenterScreen"
+   • ResizeMode="NoResize"
+   • WindowStyle="None" (بدون Title Bar ویندوز - طراحی سفارشی)
+   • Background: Gradient آبی-سبز
+
+المان‌ها از بالا به پایین:
+
+┌────────────────────────────────────────────────┐
+│                                                │
+│        ┌─────────────────────┐                 │
+│        │                     │                 │
+│        │    ┌──────────┐     │                 │
+│        │    │   🏥     │     │  ← لوگو دایره‌ای │
+│        │    │  آیکون   │     │     70×70px      │
+│        │    └──────────┘     │                 │
+│        │                     │                 │
+│        │   ClinicPro         │  ← نام سیستم    │
+│        │   سامانه مدیریت     │     FontSize=22  │
+│        │    درمانگاه         │     FontWeight=900│
+│        │                     │                 │
+│        │ ┌────────────────┐  │                 │
+│        │ │ 👤 نام کاربری  │  │  ← TextBox      │
+│        │ │                │  │   md:HintAssist  │
+│        │ └────────────────┘  │   .Hint="نام کاربری"│
+│        │                     │                 │
+│        │ ┌────────────────┐  │                 │
+│        │ │ 🔒 رمز عبور   │  │  ← PasswordBox   │
+│        │ │           [👁️]│  │   + دکمه نمایش رمز│
+│        │ └────────────────┘  │                 │
+│        │                     │                 │
+│        │ ☐ مرا به خاطر بسپار│  ← CheckBox      │
+│        │         فراموشی رمز؟│  ← TextBlock Link│
+│        │                     │                 │
+│        │ ┌────────────────┐  │                 │
+│        │ │  🔓 ورود به    │  │  ← Button Primary│
+│        │ │    سیستم       │  │   Width="100%"   │
+│        │ └────────────────┘  │   Height="45"    │
+│        │                     │                 │
+│        │ ── یا ──            │                 │
+│        │                     │                 │
+│        │ [🔑 فعال‌سازی لایسنس]│  ← Button Link  │
+│        │                     │                 │
+│        │  نسخه ۱.۰.۰        │  ← Version       │
+│        │  © ۱۴۰۴ ClinicPro  │                 │
+│        └─────────────────────┘                 │
+│                                                │
+└────────────────────────────────────────────────┘
+
+── عناصر و ویژگی‌های دقیق ──
+
+۱. فیلد نام کاربری (Username):
+   نوع: TextBox با materialDesign:HintAssist
+   Binding: {Binding Username, UpdateSourceTrigger=PropertyChanged}
+   Validation: 
+     - NotEmpty → "نام کاربری را وارد کنید"
+     - MinLength(3) → "نام کاربری حداقل ۳ کاراکتر"
+   رویداد: با فشردن Enter → فوکوس به PasswordBox
+   آیکون: PackIcon Kind="Account" در سمت راست
+   MaxLength: 50
+   TabIndex: 0
+   AutoFocus: True (هنگام باز شدن فرم)
+
+۲. فیلد رمز عبور (Password):
+   نوع: PasswordBox با materialDesign:PasswordBoxAssist
+   Binding: از طریق Attached Behavior (PasswordBox مستقیم Bind نمی‌شود)
+   Validation:
+     - NotEmpty → "رمز عبور را وارد کنید"
+   رویداد: با فشردن Enter → اجرای LoginCommand
+   آیکون: PackIcon Kind="Lock" در سمت راست
+   دکمه چشم: ToggleButton برای نمایش/مخفی کردن رمز
+     - وقتی فعال: تبدیل به TextBox با محتوای رمز
+     - ToolTip: "نمایش رمز عبور" / "مخفی کردن رمز عبور"
+   MaxLength: 100
+   TabIndex: 1
+
+۳. چک‌باکس "مرا به خاطر بسپار" (RememberMe):
+   نوع: CheckBox
+   Binding: {Binding RememberMe}
+   عملکرد: ذخیره Username در Local Settings (نه رمز!)
+   TabIndex: 2
+
+۴. لینک "فراموشی رمز عبور":
+   نوع: TextBlock با Cursor="Hand"
+   عملکرد: فعلاً غیرفعال (آینده: ارسال SMS ریست رمز)
+   ToolTip: "در صورت فراموشی رمز با مدیر سیستم تماس بگیرید"
+
+۵. دکمه ورود (LoginButton):
+   نوع: Button Style="MaterialDesignRaisedButton"
+   Command: {Binding LoginCommand}
+   Content: "🔓 ورود به سیستم"
+   IsDefault: True (با Enter فعال می‌شود)
+   Background: Primary Color
+   Width: Stretch (100% عرض کارت)
+   Height: 45
+   FontSize: 15
+   FontWeight: Bold
+   CanExecute: وقتی هر دو فیلد پر باشند
+   IsEnabled: {Binding IsNotBusy} (غیرفعال هنگام بارگذاری)
+   TabIndex: 3
+
+۶. دکمه فعال‌سازی لایسنس:
+   نوع: Button Style="MaterialDesignFlatButton"
+   Command: {Binding ActivateLicenseCommand}
+   Content: "🔑 فعال‌سازی لایسنس"
+   Visibility: فقط وقتی لایسنس فعال نیست نمایش داده شود
+   عملکرد: باز کردن LicenseActivationDialog
+
+── ViewModel Login (جزئیات) ──
+
+/// <summary>
+/// ویومدل صفحه ورود به سیستم
+/// مسئولیت‌ها: احراز هویت کاربر، مدیریت توکن، بررسی لایسنس
+/// </summary>
+public class LoginViewModel : BaseViewModel
+{
+    // ── Properties ──
+    string Username          // نام کاربری
+    string Password          // رمز عبور (از Attached Behavior)
+    bool RememberMe          // مرا به خاطر بسپار
+    bool IsPasswordVisible   // نمایش/مخفی رمز
+    string ErrorMessage      // پیام خطا (نمایش زیر دکمه ورود)
+    bool ShowError           // نمایش/مخفی پیام خطا
+    bool IsBusy              // حالت بارگذاری (نمایش Spinner روی دکمه)
+    
+    // ── Commands ──
+    IRelayCommand LoginCommand           // دکمه ورود
+    IRelayCommand ActivateLicenseCommand // دکمه فعال‌سازی لایسنس
+    IRelayCommand TogglePasswordCommand  // دکمه نمایش/مخفی رمز
+    
+    // ── Login Logic ──
+    async Task LoginAsync()
+    {
+        // ۱. Validation اولیه (Not Empty)
+        // ۲. نمایش Loading روی دکمه
+        // ۳. فراخوانی POST /api/v1/auth/login
+        // ۴. اگر موفق:
+        //    - ذخیره Access Token و Refresh Token
+        //    - ذخیره اطلاعات کاربر
+        //    - ذخیره Permissions
+        //    - اگر RememberMe: ذخیره Username
+        //    - باز کردن MainWindow
+        //    - بستن LoginWindow
+        // ۵. اگر خطا:
+        //    - نمایش ErrorMessage فارسی
+        //    - اگر 429 (Rate Limit): "تعداد تلاش‌ها بیش از حد مجاز"
+        //    - اگر Account Locked: "اکانت قفل شده - X دقیقه"
+        //    - اگر Invalid: "نام کاربری یا رمز عبور اشتباه است"
+        //    - اگر License Invalid: نمایش دکمه فعال‌سازی لایسنس
+        //    - اگر Network Error: "خطا در اتصال به سرور"
+        // ۶. پنهان کردن Loading
+    }
+    
+    // ── هنگام بارگذاری فرم ──
+    async Task OnLoadedAsync()
+    {
+        // ۱. بررسی لایسنس (آیا نرم‌افزار فعال شده؟)
+        //    - اگر نه: نمایش LicenseActivationDialog
+        // ۲. بررسی وجود Refresh Token ذخیره شده
+        //    - اگر بله: تلاش برای Auto-Login
+        // ۳. بارگذاری Username ذخیره شده (RememberMe)
+    }
+}
+
+
+═══════════════════════════════════════════════════════
+📊 فرم ۲: داشبورد اصلی (DashboardView.xaml)
+═══════════════════════════════════════════════════════
+
+ViewModel: DashboardViewModel.cs
+
+── ساختار بصری ──
+
+چیدمان کلی (ScrollViewer عمودی):
+
+┌────────────────────────────────────────────────────────────────┐
+│ 📊 داشبورد مدیریتی                                            │
+│ خلاصه وضعیت امروز درمانگاه                                     │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│ 💡 خوش آمدید! امروز ۴۲ بیمار در لیست نوبت‌دهی قرار دارند.    │ ← Notification Bar
+│                                                                │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐          │
+│ │ 👤 ۴۲    │ │ ✅ ۲۸    │ │ ⏳ ۱۴   │ │ 💰۱۲.۴M │          │ ← ردیف ۱: آمار اصلی
+│ │ بیماران  │ │ ویزیت‌شده│ │ در انتظار│ │ درآمد   │          │   (۴ کارت رنگی)
+│ │ ↑۱۲٪    │ │ ۶۷٪     │ │ میانگین  │ │ ↑۸٪     │          │   هر کارت: عدد + عنوان
+│ │          │ │          │ │ ۲۰ دقیقه │ │          │          │   + مقایسه با دیروز
+│ └──────────┘ └──────────┘ └──────────┘ └──────────┘          │
+│                                                                │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐                        │
+│ │ 🚨 ۷    │ │ 📋 ۳۶   │ │ 🧪 ۱۹   │                        │ ← ردیف ۲: آمار فرعی
+│ │ موجودی  │ │ نسخه‌ها  │ │ آزمایش‌ها│                        │   (۳ کارت)
+│ │ کم دارو │ │ امروز   │ │ امروز   │                        │
+│ └──────────┘ └──────────┘ └──────────┘                        │
+│                                                                │
+│ ┌──────────────────────────────┐ ┌────────────────────────┐    │
+│ │  📊 نمودار درآمد ۷ روز      │ │  ⏰ نوبت‌های پیش‌رو    │    │ ← ردیف ۳
+│ │                              │ │                        │    │   ۲ ستونه (2fr 1fr)
+│ │  [نمودار میله‌ای/خطی]       │ │  ┌────────────────┐    │    │
+│ │                              │ │  │ #14 علی رضایی  │    │    │   نمودار: LiveCharts2
+│ │  [📥 دانلود PDF]            │ │  │ ⏰ ۱۰:۳۰       │    │    │   یا OxyPlot
+│ │                              │ │  │ 🔵 در حال      │    │    │
+│ │  شنبه|یک|دو|سه|چهار|پنج|جمعه│ │  └────────────────┘    │    │   لیست نوبت‌ها:
+│ │                              │ │  ┌────────────────┐    │    │   ListBox + DataTemplate
+│ │                              │ │  │ #15 مریم محمدی │    │    │
+│ │                              │ │  │ ⏰ ۱۰:۴۵       │    │    │
+│ │                              │ │  │ 🟡 انتظار      │    │    │
+│ │                              │ │  └────────────────┘    │    │
+│ │                              │ │  ┌────────────────┐    │    │
+│ │                              │ │  │ #16 حسین کریمی │    │    │
+│ │                              │ │  │ ⏰ ۱۱:۰۰       │    │    │
+│ │                              │ │  │ 🟡 انتظار      │    │    │
+│ │                              │ │  └────────────────┘    │    │
+│ └──────────────────────────────┘ └────────────────────────┘    │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐   │
+│ │  🎯 فعالیت‌های اخیر                                      │   │ ← ردیف ۴
+│ │ ─────────────────────────────────────────────────────── │   │   DataGrid آخرین
+│ │  ساعت  │  کاربر        │  عملیات      │  جزئیات       │   │   ۱۰ فعالیت
+│ │  ۱۰:۲۰ │ منشی رحیمی   │ 🟢 پذیرش    │ بیمار رضایی  │   │
+│ │  ۱۰:۱۵ │ دکتر احمدی   │ 🔵 ویزیت    │ نوری تکمیل شد│   │
+│ │  ۱۰:۱۰ │ صندوقدار     │ 🟣 پرداخت   │ فاکتور ۱۰۲۳ │   │
+│ └──────────────────────────────────────────────────────────┘   │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+
+── عناصر و ویژگی‌های دقیق ──
+
+۱. کارت‌های آماری (StatCards) - ردیف ۱:
+   نوع: UniformGrid Columns="4"
+   هر کارت:
+     - Border با CornerRadius="10" و Shadow
+     - BorderLeft رنگی (آبی/سبز/زرد/بنفش)
+     - TextBlock عنوان (FontSize=11, Gray)
+     - TextBlock عدد (FontSize=28, FontWeight=Black)
+     - TextBlock مقایسه: "↑ ۱۲٪ نسبت به دیروز" (سبز=افزایش, قرمز=کاهش)
+   Binding: {Binding TodayStats.TotalPatients}
+   به‌روزرسانی: هر ۶۰ ثانیه (Timer) یا SignalR
+
+۲. نمودار درآمد (RevenueChart):
+   نوع: LiveCharts2 CartesianChart
+   محورها:
+     - X: روزهای هفته (شمسی: شنبه تا جمعه)
+     - Y: مبلغ (تومان با جداکننده هزارگان)
+   سری‌ها:
+     - ColumnSeries: درآمد روزانه (آبی Gradient)
+     - LineSeries: روند (خط‌چین)
+   ToolTip: نمایش مبلغ دقیق هنگام Hover
+   دکمه دانلود: Export به PDF/PNG
+   Binding: {Binding RevenueChartData}
+   API: GET /api/v1/dashboard/revenue-chart?days=7
+
+۳. لیست نوبت‌های پیش‌رو (UpcomingAppointments):
+   نوع: ListBox با ItemTemplate سفارشی
+   هر آیتم:
+     - Ellipse با شماره صف (Background: Primary)
+     - نام بیمار (FontWeight=Bold)
+     - نام پزشک + ساعت (FontSize=11, Gray)
+     - Badge وضعیت: 🔵آبی=درحال | 🟡زرد=انتظار | 🟢سبز=تمام
+   رفتار: کلیک روی آیتم → باز شدن جزئیات نوبت
+   Binding: {Binding UpcomingAppointments}
+   API: GET /api/v1/dashboard/appointments-today
+   به‌روزرسانی: SignalR Real-time
+
+۴. جدول فعالیت‌های اخیر (RecentActivities):
+   نوع: DataGrid (ReadOnly, 10 ردیف آخر)
+   ستون‌ها: ساعت | کاربر | عملیات (Badge رنگی) | جزئیات
+   Binding: {Binding RecentActivities}
+   API: GET /api/v1/dashboard/recent-activities?limit=10
+   به‌روزرسانی: SignalR Push
+
+── ViewModel Dashboard ──
+
+/// <summary>ویومدل داشبورد - بارگذاری آمار و نمودارها</summary>
+public class DashboardViewModel : BaseViewModel
+{
+    // ── Properties ──
+    DashboardStatsDto TodayStats          // آمار امروز (بیمار/ویزیت/درآمد)
+    ObservableCollection<ChartDataPoint> RevenueChartData  // داده نمودار
+    ObservableCollection<AppointmentQueueDto> UpcomingAppointments // نوبت‌ها
+    ObservableCollection<ActivityLogDto> RecentActivities   // فعالیت‌ها
+    string WelcomeMessage                 // پیام خوش‌آمد
+    string TodayDateShamsi                // تاریخ شمسی امروز
+    
+    // ── Commands ──
+    IRelayCommand RefreshCommand          // بارگذاری مجدد (F5)
+    IRelayCommand ViewAllAppointmentsCommand // رفتن به صفحه نوبت‌ها
+    IRelayCommand ExportChartCommand      // خروجی نمودار
+    
+    // ── بارگذاری ──
+    async Task LoadAsync()
+    {
+        // ۱. GET /api/v1/dashboard/summary → TodayStats
+        // ۲. GET /api/v1/dashboard/revenue-chart?days=7 → RevenueChartData
+        // ۳. GET /api/v1/dashboard/appointments-today → UpcomingAppointments
+        // ۴. GET /api/v1/dashboard/recent-activities → RecentActivities
+        // ۵. GET /api/v1/dashboard/alerts → Alerts (موجودی کم و...)
+        // ۶. اتصال به SignalR Hub برای دریافت به‌روزرسانی لحظه‌ای
+    }
+    
+    // ── Auto Refresh (هر ۶۰ ثانیه) ──
+    // Timer برای به‌روزرسانی آمار
+    // SignalR برای نوبت‌ها و فعالیت‌ها
+}
+
+
+═══════════════════════════════════════════════════════
+👤 فرم ۳: لیست بیماران (PatientListView.xaml)
+═══════════════════════════════════════════════════════
+
+ViewModel: PatientListViewModel.cs
+
+── ساختار بصری ──
+
+┌────────────────────────────────────────────────────────────────┐
+│ 👤 لیست بیماران                              [کل: ۱٬۲۵۴ نفر]│
+│ مدیریت و جستجوی بیماران ثبت شده در سیستم                      │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│ [➕ بیمار جدید (F3)] [📥 ورود Excel] [📤 خروجی Excel] [🖨️ چاپ]│
+│                                                                │
+│ 🔍 [جستجو با نام، کد ملی، موبایل...          ]               │
+│ فیلتر: [همه بیمه‌ها ▼] [همه جنسیت‌ها ▼] [فعال/غیرفعال ▼]     │
+│                                                                │
+│ ┌─────┬────────┬──────────────────┬───────────┬─────────────┐ │
+│ │ ☐   │ پرونده │ نام و نام‌خانوادگی│ کد ملی    │ موبایل      │ │
+│ ├─────┼────────┼──────────────────┼───────────┼─────────────┤ │
+│ │ ☐   │ ۱۰۰۲۳ │ 👤 علی رضایی    │ ۰۰۱۲۳...  │ ۰۹۱۲...     │ │
+│ │ ☐   │ ۱۰۰۲۲ │ 👤 مریم محمدی   │ ۰۰۹۸۷...  │ ۰۹۱۲...     │ │
+│ │ ☐   │ ۱۰۰۲۱ │ 👤 حسین کریمی   │ ۰۰۵۵۶...  │ ۰۹۳۳...     │ │
+│ └─────┴────────┴──────────────────┴───────────┴─────────────┘ │
+│                                                                │
+│     ┌──────┬────────┬───────────────┬───────────────────┐      │
+│ ... │ بیمه │ سن    │ آخرین مراجعه  │ عملیات            │  ... │
+│     ├──────┼────────┼───────────────┼───────────────────┤      │
+│     │🔵تامین│ ۴۵   │ ۱۴۰۴/۰۳/۲۸  │ [👁️][✏️][📅][🗑️] │      │
+│     │🟢سلامت│ ۳۲   │ ۱۴۰۴/۰۳/۲۵  │ [👁️][✏️][📅][🗑️] │      │
+│     │⚪آزاد │ ۲۸   │ ۱۴۰۴/۰۳/۲۲  │ [👁️][✏️][📅][🗑️] │      │
+│     └──────┴────────┴───────────────┴───────────────────┘      │
+│                                                                │
+│ نمایش ۱ تا ۲۰ از ۱٬۲۵۴     [◀][1][2][3]...[63][▶]  [۲۰ ▼]  │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+
+── ستون‌های DataGrid (دقیق) ──
+
+ستون ۱: CheckBox (انتخاب چندتایی)
+   Width: 40
+   Header: CheckBox (انتخاب/حذف همه)
+   Binding: {Binding IsSelected}
+
+ستون ۲: شماره پرونده (MedicalRecordNo)
+   Width: 90
+   Header: "پرونده"
+   Binding: {Binding MedicalRecordNo}
+   IsReadOnly: True
+   FontFamily: Monospace
+   Foreground: Primary Color
+
+ستون ۳: نام و نام‌خانوادگی (FullName)
+   Width: 200
+   Header: "نام و نام‌خانوادگی"
+   CellTemplate: StackPanel Horizontal
+     - PackIcon Kind="Account" (16px)
+     - TextBlock: {Binding FullName}
+   FontWeight: SemiBold
+   CanUserSort: True
+
+ستون ۴: کد ملی (NationalCode)
+   Width: 110
+   Header: "کد ملی"
+   Binding: {Binding NationalCode}
+   FontFamily: Monospace
+
+ستون ۵: موبایل (Mobile)
+   Width: 120
+   Header: "موبایل"
+   Binding: {Binding Mobile}
+   FontFamily: Monospace
+
+ستون ۶: بیمه (InsuranceName)
+   Width: 100
+   Header: "بیمه"
+   CellTemplate: Border با رنگ پس‌زمینه + TextBlock
+     - تامین: آبی
+     - سلامت: سبز
+     - مسلح: بنفش
+     - آزاد: خاکستری
+   Binding: {Binding InsuranceName}
+
+ستون ۷: سن (Age)
+   Width: 50
+   Header: "سن"
+   Binding: {Binding Age} (محاسباتی از BirthDate)
+   HorizontalAlignment: Center
+
+ستون ۸: آخرین مراجعه (LastVisitDate)
+   Width: 110
+   Header: "آخرین مراجعه"
+   Binding: {Binding LastVisitDateShamsi}
+   Converter: GregorianToShamsiConverter
+
+ستون ۹: عملیات (Actions)
+   Width: 160
+   Header: "عملیات"
+   CellTemplate: StackPanel Horizontal
+     - 👁️ مشاهده: Button → ViewPatientCommand(Id)
+       ToolTip: "مشاهده جزئیات بیمار"
+     - ✏️ ویرایش: Button → EditPatientCommand(Id)
+       ToolTip: "ویرایش اطلاعات بیمار"
+       Visibility: بر اساس Permission "Patients.Edit"
+     - 📅 نوبت: Button → BookAppointmentCommand(Id)
+       ToolTip: "رزرو نوبت برای این بیمار"
+     - 🗑️ حذف: Button → DeletePatientCommand(Id)
+       ToolTip: "حذف بیمار"
+       Foreground: Red
+       Visibility: بر اساس Permission "Patients.Delete"
+   هر دکمه: IconButton 28×28 با CornerRadius="5"
+
+── رفتارهای صفحه لیست ──
+
+   ✅ Double-Click روی ردیف → باز شدن جزئیات بیمار
+   ✅ Right-Click → ContextMenu (مشاهده, ویرایش, نوبت, حذف, چاپ کارت)
+   ✅ Ctrl+Click → انتخاب چندتایی
+   ✅ Ctrl+A → انتخاب همه
+   ✅ Delete Key → حذف انتخاب‌شده‌ها (با تایید)
+   ✅ F5 → بارگذاری مجدد
+   ✅ F3 → فرم بیمار جدید
+   ✅ Ctrl+F → فوکوس روی Search Box
+   ✅ Export Excel: ClosedXML → فایل xlsx با Header فارسی
+
+
+═══════════════════════════════════════════════════════
+➕ فرم ۴: ثبت/ویرایش بیمار (PatientFormView.xaml)
+═══════════════════════════════════════════════════════
+
+ViewModel: PatientFormViewModel.cs
+
+── ساختار بصری (TabControl با ۵ تب) ──
+
+تب‌ها:
+   [📋 اطلاعات اصلی] [🏥 اطلاعات بیمه] [💊 سوابق پزشکی] [👨‍👩‍👧 تماس اضطراری] [📎 اسناد]
+
+── تب ۱: اطلاعات اصلی ──
+
+چیدمان: Grid دو ستونه (فیلدهای چپ و راست)
+
+ستون راست:
+
+۱. کد ملی (NationalCode):
+   نوع: TextBox
+   Label: "کد ملی *"
+   Binding: {Binding Patient.NationalCode, ValidatesOnDataErrors=True}
+   MaxLength: 10
+   InputScope: Number
+   Validation: 
+     - الزامی → "کد ملی الزامی است"
+     - ۱۰ رقم → "کد ملی باید ۱۰ رقم باشد"
+     - فقط عدد → "کد ملی فقط شامل اعداد است"
+     - الگوریتم رقم کنترل → "کد ملی معتبر نیست"
+     - یکتا (Async) → "بیماری با این کد ملی قبلاً ثبت شده"
+   رفتار ویژه: بعد از وارد کردن ۱۰ رقم:
+     - بررسی خودکار وجود در DB
+     - اگر موجود: نمایش دیالوگ "بیمار قبلاً ثبت شده. مشاهده؟"
+     - اگر جدید: فوکوس به فیلد نام
+   رنگ حاشیه: سبز=معتبر, قرمز=نامعتبر
+
+۲. نام (FirstName):
+   نوع: TextBox
+   Label: "نام *"
+   MaxLength: 50
+   Validation: الزامی + حداکثر ۵۰ کاراکتر
+   AutoCapitalize: First Letter
+
+۳. نام خانوادگی (LastName):
+   نوع: TextBox
+   Label: "نام خانوادگی *"
+   MaxLength: 50
+   Validation: الزامی + حداکثر ۵۰ کاراکتر
+
+۴. نام پدر (FatherName):
+   نوع: TextBox
+   Label: "نام پدر"
+   MaxLength: 50
+   اختیاری
+
+۵. جنسیت (Gender):
+   نوع: ComboBox (DropDown)
+   Label: "جنسیت *"
+   Items: [{Value:1, Text:"مرد"}, {Value:2, Text:"زن"}]
+   Validation: الزامی
+   SelectedValuePath: "Value"
+   DisplayMemberPath: "Text"
+
+۶. تاریخ تولد (BirthDate):
+   نوع: PersianDatePicker (کنترل سفارشی)
+   Label: "تاریخ تولد"
+   خروجی: DateTime (میلادی) + string (شمسی)
+   بعد از انتخاب: محاسبه خودکار سن و نمایش "سن: ۴۵ سال"
+   تقویم: شمسی/جلالی با انتخاب سال-ماه-روز
+
+۷. گروه خونی (BloodType):
+   نوع: ComboBox
+   Label: "گروه خونی"
+   Items: ["A+","A-","B+","B-","AB+","AB-","O+","O-","نامشخص"]
+   اختیاری
+
+۸. وضعیت تأهل (MaritalStatus):
+   نوع: ComboBox
+   Label: "وضعیت تأهل"
+   Items: ["مجرد","متأهل","بیوه","مطلقه"]
+   اختیاری
+
+ستون چپ:
+
+۹. موبایل (Mobile):
+   نوع: TextBox
+   Label: "شماره موبایل *"
+   MaxLength: 11
+   Placeholder: "۰۹XXXXXXXXX"
+   Validation:
+     - الزامی → "شماره موبایل الزامی است"
+     - فرمت → "فرمت: ۰۹XXXXXXXXX"
+   InputScope: TelephoneNumber
+
+۱۰. تلفن ثابت (Phone):
+   نوع: TextBox
+   Label: "تلفن ثابت"
+   Placeholder: "۰۲۱XXXXXXXX"
+   اختیاری
+
+۱۱. ایمیل (Email):
+   نوع: TextBox
+   Label: "ایمیل"
+   Validation: فرمت ایمیل (اگر پر شده)
+   اختیاری
+
+۱۲. استان (Province):
+   نوع: ComboBox (قابل جستجو)
+   Label: "استان"
+   Items: لیست ۳۱ استان ایران
+   رفتار: با انتخاب استان → لیست شهرها به‌روز شود
+
+۱۳. شهر (City):
+   نوع: ComboBox (قابل جستجو)
+   Label: "شهر"
+   Items: وابسته به استان انتخاب شده
+   ItemsSource: {Binding Cities}
+
+۱۴. کد پستی (PostalCode):
+   نوع: TextBox
+   Label: "کد پستی"
+   MaxLength: 10
+   InputScope: Number
+   اختیاری
+
+۱۵. شغل (Occupation):
+   نوع: TextBox (یا ComboBox Editable)
+   Label: "شغل"
+   اختیاری
+
+۱۶. تحصیلات (Education):
+   نوع: ComboBox
+   Label: "تحصیلات"
+   Items: ["زیردیپلم","دیپلم","کاردانی","کارشناسی","کارشناسی‌ارشد","دکتری","حوزوی"]
+   اختیاری
+
+ردیف زیر هر دو ستون (Full Width):
+
+۱۷. آدرس (Address):
+   نوع: TextBox MultiLine (Rows=2)
+   Label: "آدرس کامل"
+   MaxLength: 500
+   اختیاری
+
+── تب ۲: اطلاعات بیمه ──
+
+۱۸. بیمه اصلی (InsuranceCompanyId):
+   نوع: ComboBox (قابل جستجو)
+   Label: "شرکت بیمه اصلی"
+   Items: از API → GET /api/v1/insurance/companies
+   رفتار: با انتخاب بیمه:
+     - اگر پشتیبانی از استعلام آنلاین → دکمه "استعلام" فعال شود
+     - فیلدهای مرتبط نمایش داده شوند
+
+۱۹. شماره بیمه (InsuranceNumber):
+   نوع: TextBox
+   Label: "شماره دفترچه / بیمه"
+   + دکمه [🔗 استعلام آنلاین]
+   رفتار دکمه: فراخوانی POST /api/v1/insurance/inquiry
+     - موفق: نمایش "✅ بیمه تایید شد - اعتبار تا ..."
+     - خطا: نمایش "❌ بیمه نامعتبر" + دلیل
+
+۲۰. نوع بیمه (InsuranceType):
+   نوع: ComboBox
+   Items: ["اصلی","تبعی ۱","تبعی ۲"]
+
+۲۱. بیمه تکمیلی (SupplementaryInsuranceId):
+   نوع: ComboBox
+   Label: "بیمه تکمیلی"
+   Items: بیمه‌های تکمیلی
+   اختیاری
+
+۲۲. شناسه سپاس (SepasPatientId):
+   نوع: TextBox (ReadOnly)
+   Label: "شناسه سپاس"
+   نمایش: اگر بیمار قبلاً در سپاس ثبت شده
+
+── تب ۳: سوابق پزشکی ──
+
+۲۳. آلرژی‌ها (Allergies):
+   نوع: TagInput (ورودی تگی - هر آلرژی یک تگ)
+   Label: "آلرژی‌های شناخته شده"
+   رفتار: تایپ + Enter → اضافه شدن تگ | × روی تگ → حذف
+   تگ‌ها رنگ قرمز (هشدار)
+   ذخیره: JSON Array در DB
+   نمایش: هنگام ویزیت و نسخه‌نویسی هشدار داده شود
+
+۲۴. بیماری‌های مزمن (ChronicDiseases):
+   نوع: TagInput (مشابه آلرژی ولی رنگ نارنجی)
+   Label: "بیماری‌های مزمن"
+   پیشنهاد: AutoComplete از لیست ICD-10 رایج
+
+۲۵. داروهای فعلی (CurrentMedications):
+   نوع: TagInput (رنگ آبی)
+   Label: "داروهای در حال مصرف"
+   پیشنهاد: AutoComplete از لیست داروها
+
+۲۶. سوابق خانوادگی (FamilyHistory):
+   نوع: TextBox MultiLine (Rows=3)
+   Label: "سوابق بیماری در خانواده"
+
+── تب ۴: تماس اضطراری ──
+
+۲۷-۲۹. EmergencyContactName, Phone, Relation:
+   نوع: TextBox × ۳
+   Labels: "نام تماس اضطراری", "تلفن", "نسبت"
+
+── تب ۵: اسناد و تصاویر ──
+
+۳۰. عکس پروفایل (ProfilePicture):
+   نوع: Image + دکمه آپلود
+   سایز پیش‌نمایش: 120×120
+   فرمت‌های مجاز: jpg, png, bmp
+   حداکثر سایز: 2MB
+   دکمه‌ها: [📷 انتخاب عکس] [🗑️ حذف]
+
+۳۱. اسناد پزشکی (Documents):
+   نوع: ListView با دکمه آپلود
+   هر سند: نام فایل, نوع, سایز, تاریخ آپلود, دکمه دانلود/حذف
+   فرمت‌ها: pdf, jpg, png, doc, docx
+   حداکثر سایز هر فایل: 10MB
+   دکمه: [📤 آپلود سند جدید]
+   Drag & Drop: پشتیبانی از کشیدن فایل روی محل
+
+── دکمه‌های پایین فرم ──
+
+┌────────────────────────────────────────────────────────────────┐
+│ [← انصراف]                    [💾 ذخیره موقت] [✅ ذخیره (Ctrl+S)] [💾 ذخیره و نوبت] │
+└────────────────────────────────────────────────────────────────┘
+
+دکمه انصراف:
+   Style: MaterialDesignOutlinedButton
+   Command: CancelCommand
+   رفتار: اگر تغییری شده → "تغییرات ذخیره نشده. خارج شوید؟" [بله][خیر]
+
+دکمه ذخیره موقت:
+   Style: MaterialDesignOutlinedButton
+   Command: SaveDraftCommand
+   ToolTip: "ذخیره بدون اعتبارسنجی کامل"
+
+دکمه ذخیره (Ctrl+S):
+   Style: MaterialDesignRaisedButton Background=Green
+   Command: SaveCommand
+   IsDefault: True
+   رفتار:
+     ۱. اعتبارسنجی کامل همه فیلدهای الزامی
+     ۲. اگر حالت ثبت: POST /api/v1/patients
+     ۳. اگر حالت ویرایش: PUT /api/v1/patients/{id}
+     ۴. نمایش Snackbar "بیمار با موفقیت ثبت شد" یا "ویرایش شد"
+     ۵. بازگشت به لیست بیماران
+
+دکمه ذخیره و نوبت:
+   Style: MaterialDesignRaisedButton Background=Primary
+   Command: SaveAndBookCommand
+   رفتار: ذخیره + باز کردن فرم نوبت‌دهی با PatientId
+
+── ViewModel PatientForm ──
+
+/// <summary>
+/// ویومدل فرم ثبت/ویرایش بیمار
+/// حالت‌ها: IsEditMode (true=ویرایش, false=ثبت جدید)
+/// </summary>
+public class PatientFormViewModel : BaseViewModel
+{
+    // ── Properties ──
+    PatientFormDto Patient                // اطلاعات بیمار (Bindable)
+    bool IsEditMode                       // حالت ویرایش
+    string PageTitle                      // "ثبت بیمار جدید" یا "ویرایش بیمار"
+    string CalculatedAge                  // "سن: ۴۵ سال" (محاسباتی)
+    string InsuranceVerificationResult    // نتیجه استعلام بیمه
+    ObservableCollection<InsuranceCompanyDto> InsuranceCompanies // لیست بیمه‌ها
+    ObservableCollection<ProvinceDto> Provinces  // استان‌ها
+    ObservableCollection<CityDto> Cities          // شهرها (وابسته)
+    ObservableCollection<DocumentDto> Documents   // اسناد آپلود شده
+    ObservableCollection<string> Allergies        // تگ‌های آلرژی
+    ObservableCollection<string> ChronicDiseases  // تگ‌های بیماری مزمن
+    bool HasUnsavedChanges                // تغییرات ذخیره‌نشده
+    
+    // ── Commands ──
+    IRelayCommand SaveCommand             // ذخیره
+    IRelayCommand SaveDraftCommand        // ذخیره موقت
+    IRelayCommand SaveAndBookCommand      // ذخیره و نوبت
+    IRelayCommand CancelCommand           // انصراف
+    IRelayCommand VerifyInsuranceCommand   // استعلام بیمه
+    IRelayCommand UploadPhotoCommand       // آپلود عکس
+    IRelayCommand UploadDocumentCommand    // آپلود سند
+    IRelayCommand RemoveDocumentCommand    // حذف سند
+    IRelayCommand AddAllergyCommand        // افزودن آلرژی
+    IRelayCommand RemoveAllergyCommand     // حذف آلرژی
+    IRelayCommand CheckNationalCodeCommand // بررسی کد ملی (خودکار)
+    IRelayCommand SelectedProvinceChangedCommand // تغییر استان → به‌روز شهرها
+    
+    // ── Initialization ──
+    async Task InitializeAsync(long? patientId = null)
+    {
+        // ۱. بارگذاری لیست بیمه‌ها
+        // ۲. بارگذاری لیست استان‌ها
+        // ۳. اگر patientId != null (ویرایش):
+        //    - GET /api/v1/patients/{id}
+        //    - پر کردن فرم با اطلاعات موجود
+        //    - IsEditMode = true
+        //    - PageTitle = "ویرایش بیمار: نام بیمار"
+        // ۴. اگر null (ثبت جدید):
+        //    - IsEditMode = false
+        //    - PageTitle = "ثبت بیمار جدید"
+        //    - فوکوس روی فیلد کد ملی
+    }
+}
+
+
+═══════════════════════════════════════════════════════
+👁️ فرم ۵: جزئیات بیمار (PatientDetailView.xaml)
+═══════════════════════════════════════════════════════
+
+ViewModel: PatientDetailViewModel.cs
+
+── ساختار بصری ──
+
+┌────────────────────────────────────────────────────────────────┐
+│ ← بازگشت                                 [✏️ ویرایش] [🖨️ چاپ]│
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  ┌──────┐                                                      │
+│  │ 👤   │  علی رضایی                     #MRN-10023           │ ← اطلاعات خلاصه
+│  │ عکس  │  کد ملی: ۰۰۱۲۳۴۵۶۷۸                                │   Header Card
+│  │      │  موبایل: ۰۹۱۲۱۲۳۴۵۶۷           سن: ۴۵ سال         │
+│  └──────┘  بیمه: تامین اجتماعی             گروه خون: O+       │
+│                                                                │
+│  ⚠️ آلرژی: [پنی‌سیلین] [آسپرین]                               │ ← هشدار آلرژی
+│  🏥 بیماری مزمن: [دیابت نوع ۲] [فشار خون]                     │   (برجسته قرمز/نارنجی)
+│  💊 داروهای فعلی: [متفورمین ۵۰۰] [آتورواستاتین ۲۰]            │
+│                                                                │
+│  [📋 سوابق ویزیت (۱۲)] [💊 نسخه‌ها (۸)] [🧪 آزمایش (۵)]       │ ← TabControl ساب‌پیج‌ها
+│  [💰 فاکتورها (۱۵)] [📎 اسناد (۳)] [📅 نوبت‌ها (۲۰)]          │
+│                                                                │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │ محتوای تب انتخاب شده (DataGrid/ListView)                │  │
+│  │                                                          │  │ ← Content Area
+│  │ مثلاً لیست ویزیت‌ها:                                     │  │   هر تب یک DataGrid
+│  │ تاریخ | پزشک | تشخیص | وضعیت | عملیات                   │  │   یا ListView
+│  │ ۱۴۰۴/۰۳/۲۸ | دکتر احمدی | دیابت | تکمیل | [👁️]       │  │
+│  │ ۱۴۰۴/۰۲/۱۵ | دکتر احمدی | فشار خون | تکمیل | [👁️]   │  │
+│  │                                                          │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│  ┌────────────────────────────────────────┐                    │
+│  │ دکمه‌های سریع:                        │                    │ ← Quick Actions
+│  │ [📅 رزرو نوبت] [📋 پذیرش] [📱 ارسال SMS] [🖨️ کارت]     │   StackPanel Horizontal
+│  └────────────────────────────────────────┘                    │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+
+── تب‌های جزئیات (هر کدام) ──
+
+تب سوابق ویزیت:
+   API: GET /api/v1/patients/{id}/visits
+   ستون‌ها: تاریخ شمسی | پزشک | تشخیص اصلی | نوع ویزیت | وضعیت | عملیات(مشاهده)
+
+تب نسخه‌ها:
+   API: GET /api/v1/patients/{id}/prescriptions
+   ستون‌ها: تاریخ | پزشک | نوع (داخلی/الکترونیک) | تعداد اقلام | وضعیت | کد رهگیری
+
+تب آزمایش‌ها:
+   API: GET /api/v1/patients/{id}/lab-orders
+   ستون‌ها: تاریخ | شماره درخواست | تست‌ها | وضعیت | عملیات(مشاهده جواب)
+
+تب فاکتورها:
+   API: GET /api/v1/patients/{id}/invoices
+   ستون‌ها: شماره | تاریخ | مبلغ | سهم بیمه | سهم بیمار | وضعیت پرداخت
+
+تب اسناد:
+   API: GET /api/v1/patients/{id}/documents
+   نمایش: Grid تصاویر + لیست فایل‌ها | دکمه دانلود/حذف
+
+تب نوبت‌ها:
+   API: GET /api/v1/patients/{id}/appointments
+   ستون‌ها: تاریخ | ساعت | پزشک | وضعیت | عملیات
+
+
+═══════════════════════════════════════════════════════
+👨‍⚕️ فرم ۶: لیست پزشکان (DoctorListView.xaml)
+═══════════════════════════════════════════════════════
+
+ViewModel: DoctorListViewModel.cs
+
+── مشابه لیست بیماران ولی با ستون‌های متفاوت ──
+
+ستون‌های DataGrid:
+   ☐ | شماره نظام | نام و نام‌خانوادگی | تخصص | فوق‌تخصص |
+   حق ویزیت (تومان) | مدت ویزیت (دقیقه) | درصد سهم |
+   وضعیت (فعال/غیرفعال) | امتیاز (ستاره) | عملیات
+
+دکمه‌های اضافی نسبت به لیست بیماران:
+   [📅 برنامه کاری] → باز کردن فرم تنظیم شیفت‌ها
+   [📊 آمار عملکرد] → نمایش آمار ویزیت/درآمد پزشک
+   [💰 کارانه] → نمایش محاسبه کارانه
+
+
+═══════════════════════════════════════════════════════
+👨‍⚕️ فرم ۷: ثبت/ویرایش پزشک (DoctorFormView.xaml)
+═══════════════════════════════════════════════════════
+
+ViewModel: DoctorFormViewModel.cs
+
+── تب‌ها ──
+
+── تب ۱: اطلاعات پایه ──
+
+فیلدها:
+   ۱. پرسنل مرتبط (EmployeeId): ComboBox - انتخاب از لیست پرسنل
+   ۲. شماره نظام پزشکی (MedicalLicenseNo): TextBox - الزامی - یکتا
+   ۳. کد نظام پزشکی (NezamPezeshkiCode): TextBox - الزامی - یکتا
+   ۴. تخصص (SpecialtyId): ComboBox - الزامی - از API
+   ۵. فوق‌تخصص (SubSpecialtyId): ComboBox - اختیاری - فیلتر شده بر اساس تخصص
+   ۶. مرتبه علمی (AcademicRank): ComboBox [عمومی/متخصص/فوق‌تخصص/فلوشیپ/استادیار/دانشیار/استاد]
+   ۷. بیوگرافی (Biography): TextBox MultiLine
+
+── تب ۲: تنظیمات ویزیت ──
+
+   ۸. حق ویزیت (ConsultationFee): TextBox عددی با جداکننده هزارگان
+      Label: "حق ویزیت (ریال)"
+      Converter: RialToCurrencyConverter (نمایش: ۳٬۰۰۰٬۰۰۰)
+   ۹. مدت هر ویزیت (VisitDuration): NumericUpDown [5/10/15/20/30/45/60 دقیقه]
+   ۱۰. حداکثر بیمار در شیفت (MaxPatientsPerShift): NumericUpDown
+   ۱۱. درصد سهم پزشک (DoctorPercentage): NumericUpDown [0-100]%
+   ۱۲. پذیرش بیمار جدید (AcceptsNewPatients): ToggleSwitch
+   ۱۳. نوبت‌دهی آنلاین (OnlineBookingEnabled): ToggleSwitch
+
+── تب ۳: امضا و مهر ──
+
+   ۱۴. تصویر امضا (SignatureImage): Image + دکمه آپلود
+       سایز: 300×100
+       فرمت: PNG (شفاف)
+   ۱۵. تصویر مهر (StampImage): Image + دکمه آپلود
+       سایز: 150×150
+
+── تب ۴: برنامه کاری (DoctorSchedule) ──
+
+جدول شیفت‌بندی هفتگی:
+┌──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+│          │ شروع    │ پایان   │ استراحت  │ اتاق    │ ظرفیت   │
+├──────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
+│ ☐ شنبه   │ [08:00] │ [14:00] │ [11-11:30]│ [اتاق ۱▼]│ [۲۰]   │
+│ ☑ یک‌شنبه│ [08:00] │ [14:00] │ [11-11:30]│ [اتاق ۱▼]│ [۲۰]   │
+│ ☑ دوشنبه │ [08:00] │ [14:00] │ [11-11:30]│ [اتاق ۲▼]│ [۲۰]   │
+│ ☑ سه‌شنبه│ [16:00] │ [20:00] │ [-]      │ [اتاق ۳▼]│ [۱۵]   │
+│ ☑ چهارشنبه│[08:00] │ [14:00] │ [11-11:30]│ [اتاق ۱▼]│ [۲۰]   │
+│ ☐ پنج‌شنبه│ [-]    │ [-]     │ [-]      │ [-]      │ [-]     │
+│ ☐ جمعه   │ [-]    │ [-]     │ [-]      │ [-]      │ [-]     │
+└──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
+   [➕ افزودن شیفت فوق‌العاده]
+
+   هر ردیف:
+   - CheckBox فعال/غیرفعال روز
+   - TimePicker شروع (Persian AM/PM)
+   - TimePicker پایان
+   - TimePicker شروع استراحت (اختیاری)
+   - TimePicker پایان استراحت
+   - ComboBox اتاق ویزیت (از ExaminationRooms)
+   - NumericUpDown ظرفیت حداکثر
+
+   دکمه شیفت فوق‌العاده: باز کردن دیالوگ برای تاریخ خاص
+
+── تب ۵: غیبت‌ها و مرخصی ──
+
+   DataGrid غیبت‌های ثبت شده:
+   تاریخ | از ساعت | تا ساعت | نوع (مرخصی/جلسه/سفر/بیماری) | تایید
+   
+   [➕ ثبت غیبت جدید] → دیالوگ:
+     - انتخاب تاریخ (PersianDatePicker)
+     - از ساعت - تا ساعت (یا کل روز)
+     - نوع غیبت (ComboBox)
+     - دلیل (TextBox)
+   
+   ⚠️ هنگام ثبت غیبت: بررسی نوبت‌های رزرو شده در آن بازه
+   اگر نوبت وجود دارد: "۵ نوبت رزرو شده وجود دارد. لغو شوند؟ [بله/خیر]"
+
+
+════════════════════════════════════════════════════════════════════
+📌 پایان بخش ۱ از ۴ - ادامه در prompt-ui-part2.html
+════════════════════════════════════════════════════════════════════
