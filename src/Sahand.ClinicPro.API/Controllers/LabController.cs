@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Application.Features.Laboratory;
+using Sahand.ClinicPro.Application.Features.Lookups;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Enums;
 
@@ -28,6 +29,16 @@ public class LabController : ApiBaseController
         [FromQuery] long? patientId)
     {
         var result = await _mediator.Send(new GetLabOrdersQuery(status, patientId));
+        return ToResponse(result);
+    }
+
+    /// <summary>جزئیات درخواست آزمایش با اقلام — برای ثبت نتیجه</summary>
+    /// <param name="id">شناسه درخواست</param>
+    [HttpGet("orders/{id:long}")]
+    [HasPermission("lab.view")]
+    public async Task<IActionResult> GetById(long id)
+    {
+        var result = await _mediator.Send(new GetLabOrderByIdQuery(id));
         return ToResponse(result);
     }
 

@@ -1,0 +1,95 @@
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.PharmacyView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══════════════════════════════════════════════════════════
+         داروخانه — گام V6
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <Button DockPanel.Dock="Right"
+                    Command="{Binding StockInCommand}"
+                    Style="{StaticResource MaterialDesignFilledButton}"
+                    Content="ورود دارو" />
+            <TextBlock Text="داروخانه"
+                       Style="{StaticResource SectionTitle}"
+                       VerticalAlignment="Center" />
+        </DockPanel>
+
+        <!-- فیلتر -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+            <CheckBox Content="فقط کالاهای کم‌موجود"
+                      IsChecked="{Binding LowStockOnly}"
+                      VerticalAlignment="Center" Margin="0,0,12,0" />
+            <Button Command="{Binding LoadCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Content="بازخوانی" Margin="0,0,8,0" />
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{DynamicResource MaterialDesign.Brush.Error}"
+                       FontSize="12" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- جدول موجودی -->
+        <DataGrid Grid.Row="2"
+                  ItemsSource="{Binding Inventory}"
+                  SelectedItem="{Binding SelectedRow}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  CanUserAddRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  materialDesign:DataGridAssist.CellPadding="8,6">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="دارو" Binding="{Binding MedicationName}" Width="2*" />
+                <DataGridTextColumn Header="بچ" Binding="{Binding BatchNumber}" Width="110" />
+                <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity}" Width="90" />
+                <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel}" Width="100" />
+                <DataGridTextColumn Header="انقضا" Binding="{Binding ExpiryDate}" Width="100" />
+                <DataGridTextColumn Header="وضعیت" Binding="{Binding LowStockText}" Width="120" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- پنل تحویل نسخه -->
+        <materialDesign:Card Grid.Row="3" Padding="16" Margin="0,14,0,0" UniformCornerRadius="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="220" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,14,0">
+                    <TextBlock Text="تحویل نسخه" FontWeight="Bold" Margin="0,0,0,6" />
+                    <TextBox materialDesign:HintAssist.Hint="شناسه نسخه"
+                             Text="{Binding PrescriptionId, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="0,0,0,6">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding LoadPrescriptionCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+                    <Button Command="{Binding LoadPrescriptionCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Content="بارگذاری نسخه" Margin="0,0,0,6" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="0,0,14,0">
+                    <TextBlock Text="{Binding DispensePatient}" FontWeight="Bold" Opacity="0.9" Margin="0,0,0,4" />
+                    <ListBox ItemsSource="{Binding DispenseItems}" Height="72"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                </StackPanel>
+                <Button Grid.Column="2"
+                        Command="{Binding DispenseCommand}"
+                        VerticalAlignment="Bottom"
+                        Style="{StaticResource MaterialDesignFilledButton}"
+                        Content="تحویل" Height="42" Width="120" />
+            </Grid>
+        </materialDesign:Card>
+    </Grid>
+</UserControl>

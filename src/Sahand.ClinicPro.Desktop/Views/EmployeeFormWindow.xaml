@@ -1,0 +1,56 @@
+﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.EmployeeFormWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="ثبت پرسنل"
+        Height="480" Width="460"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+    <!-- ═══════════════════════════════════════════════════════════
+         فرم ثبت پرسنل — گام V8
+         ═══════════════════════════════════════════════════════════ -->
+    <StackPanel Margin="28">
+        <TextBlock Text="ثبت پرسنل جدید" Style="{StaticResource SectionTitle}" />
+
+        <TextBox materialDesign:HintAssist.Hint="نام *"
+                 Text="{Binding FirstName, UpdateSourceTrigger=PropertyChanged}"
+                 Margin="0,0,0,12" />
+        <TextBox materialDesign:HintAssist.Hint="نام خانوادگی *"
+                 Text="{Binding LastName, UpdateSourceTrigger=PropertyChanged}"
+                 Margin="0,0,0,12" />
+        <TextBox materialDesign:HintAssist.Hint="کد ملی *"
+                 Text="{Binding NationalCode, UpdateSourceTrigger=PropertyChanged}"
+                 MaxLength="10" Margin="0,0,0,12" />
+        <TextBox materialDesign:HintAssist.Hint="موبایل *"
+                 Text="{Binding Mobile, UpdateSourceTrigger=PropertyChanged}"
+                 MaxLength="11" Margin="0,0,0,12" />
+
+        <ComboBox materialDesign:HintAssist.Hint="نوع استخدام"
+                  SelectedIndex="{Binding EmploymentTypeIndex}"
+                  Margin="0,0,0,16">
+            <ComboBoxItem Content="تمام‌وقت" />
+            <ComboBoxItem Content="پاره‌وقت" />
+            <ComboBoxItem Content="قراردادی" />
+            <ComboBoxItem Content="کارآموز" />
+        </ComboBox>
+
+        <TextBlock Text="{Binding ErrorMessage}"
+                   Foreground="{DynamicResource MaterialDesign.Brush.Error}"
+                   FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" />
+
+        <UniformGrid Columns="2">
+            <Button Command="{Binding SaveCommand}"
+                    Style="{StaticResource MaterialDesignFilledButton}"
+                    Content="ثبت" Height="42" Margin="4" />
+            <Button Command="{Binding CancelCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Content="انصراف" Height="42" Margin="4" />
+        </UniformGrid>
+
+        <ProgressBar IsIndeterminate="True" Height="4" Margin="0,16,0,0"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+    </StackPanel>
+</Window>

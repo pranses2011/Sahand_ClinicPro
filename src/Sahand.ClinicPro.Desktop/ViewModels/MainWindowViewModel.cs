@@ -47,7 +47,16 @@ public partial class MainWindowViewModel : ObservableObject
         IThemeService theme,
         INavigationService navigation,
         DashboardViewModel dashboard,
-        PatientsViewModel patients)
+        PatientsViewModel patients,
+        AppointmentsViewModel appointments,
+        ReceptionsViewModel receptions,
+        VisitsViewModel visitsVm,
+        PrescriptionsViewModel prescriptionsVm,
+        BillingViewModel billingVm,
+        LabViewModel labVm,
+        PharmacyViewModel pharmacyVm,
+        ReportsViewModel reportsVm,
+        AdminViewModel adminVm)
     {
         _api = api;
         _tokens = tokens;
@@ -62,7 +71,16 @@ public partial class MainWindowViewModel : ObservableObject
         _pages = new Dictionary<string, Func<ViewModelBase>>
         {
             ["dashboard"] = () => dashboard,
-            ["patients"] = () => patients
+            ["patients"] = () => patients,
+            ["appointments"] = () => appointments,
+            ["receptions"] = () => receptions,
+            ["visits"] = () => visitsVm,
+            ["prescriptions"] = () => prescriptionsVm,
+            ["billing"] = () => billingVm,
+            ["lab"] = () => labVm,
+            ["pharmacy"] = () => pharmacyVm,
+            ["reports"] = () => reportsVm,
+            ["settings"] = () => adminVm
         };
 
         // آیتم‌های ناوبری — فعال بودن از لایسنس کنترل می‌شود
@@ -70,15 +88,15 @@ public partial class MainWindowViewModel : ObservableObject
         {
             new() { Title = "داشبورد", PageKey = "dashboard", Icon = "ViewDashboard" },
             new() { Title = "بیماران", PageKey = "patients", Icon = "AccountGroup" },
-            new() { Title = "نوبت‌دهی", PageKey = "appointments", Icon = "CalendarClock", Enabled = false },
-            new() { Title = "پذیرش", PageKey = "receptions", Icon = "Reception", Enabled = false },
-            new() { Title = "ویزیت و معاینه", PageKey = "visits", Icon = "Stethoscope", Enabled = false },
-            new() { Title = "نسخه‌نویسی", PageKey = "prescriptions", Icon = "Prescription", Enabled = false },
-            new() { Title = "مالی و صندوق", PageKey = "billing", Icon = "CashMultiple", Enabled = false },
-            new() { Title = "آزمایشگاه", PageKey = "lab", Icon = "TestTube", Enabled = false },
-            new() { Title = "داروخانه", PageKey = "pharmacy", Icon = "Pill", Enabled = false },
-            new() { Title = "گزارش‌ها", PageKey = "reports", Icon = "FileChart", Enabled = false },
-            new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog", Enabled = false }
+            new() { Title = "نوبت‌دهی", PageKey = "appointments", Icon = "CalendarClock" },
+            new() { Title = "پذیرش", PageKey = "receptions", Icon = "Reception" },
+            new() { Title = "ویزیت و معاینه", PageKey = "visits", Icon = "Stethoscope" },
+            new() { Title = "نسخه‌نویسی", PageKey = "prescriptions", Icon = "Prescription" },
+            new() { Title = "مالی و صندوق", PageKey = "billing", Icon = "CashMultiple" },
+            new() { Title = "آزمایشگاه", PageKey = "lab", Icon = "TestTube" },
+            new() { Title = "داروخانه", PageKey = "pharmacy", Icon = "Pill" },
+            new() { Title = "گزارش‌ها", PageKey = "reports", Icon = "FileChart" },
+            new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog" }
         };
 
         NavigateToPage("dashboard");

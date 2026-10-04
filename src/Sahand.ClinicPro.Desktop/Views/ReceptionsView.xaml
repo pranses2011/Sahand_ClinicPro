@@ -1,0 +1,89 @@
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.ReceptionsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══════════════════════════════════════════════════════════
+         پذیرش — گام V2
+         صف امروز با زمان انتظار + جریان وضعیت پذیرش
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- سربرگ -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <Button DockPanel.Dock="Right"
+                    Command="{Binding NewReceptionCommand}"
+                    Style="{StaticResource MaterialDesignFilledButton}"
+                    Content="پذیرش جدید" />
+            <TextBlock Text="پذیرش بیماران — امروز"
+                       Style="{StaticResource SectionTitle}"
+                       VerticalAlignment="Center" />
+        </DockPanel>
+
+        <!-- فیلتر پزشک + بازخوانی -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+            <ComboBox materialDesign:HintAssist.Hint="پزشک"
+                      ItemsSource="{Binding Doctors}"
+                      DisplayMemberPath="Name"
+                      SelectedIndex="{Binding DoctorFilterIndex}"
+                      Width="230" Margin="0,0,12,0" />
+            <Button Command="{Binding LoadCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Content="بازخوانی" />
+        </StackPanel>
+
+        <!-- عملیات وضعیت -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
+            <Button Command="{Binding QueueCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="به صف" Margin="0,0,8,0" />
+            <Button Command="{Binding StartVisitCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="شروع ویزیت" Margin="0,0,8,0" />
+            <Button Command="{Binding VisitDoneCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="پایان ویزیت" Margin="0,0,8,0" />
+            <Button Command="{Binding DischargeCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="ترخیص" Margin="0,0,8,0" />
+            <Button Command="{Binding CancelCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="لغو پذیرش" Margin="0,0,8,0" />
+        </StackPanel>
+
+        <!-- پیام خطا -->
+        <TextBlock Grid.Row="2" Text="{Binding ErrorMessage}"
+                   Foreground="{DynamicResource MaterialDesign.Brush.Error}"
+                   FontSize="12" TextWrapping="Wrap"
+                   HorizontalAlignment="Right" VerticalAlignment="Center"
+                   MaxWidth="360" />
+
+        <!-- جدول صف -->
+        <DataGrid Grid.Row="3"
+                  ItemsSource="{Binding Receptions}"
+                  SelectedItem="{Binding SelectedReception}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  CanUserAddRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  materialDesign:DataGridAssist.CellPadding="8,6">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="شماره" Binding="{Binding Number}" Width="100" />
+                <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName}" Width="*" />
+                <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName}" Width="*" />
+                <DataGridTextColumn Header="ساعت" Binding="{Binding Time}" Width="110" />
+                <DataGridTextColumn Header="بیمه" Binding="{Binding InsuranceName}" Width="120" />
+                <DataGridTextColumn Header="انتظار" Binding="{Binding WaitingText}" Width="90" />
+                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText}" Width="110" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

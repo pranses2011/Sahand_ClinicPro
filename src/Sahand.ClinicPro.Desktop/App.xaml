@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:local="clr-namespace:Sahand.ClinicPro.Desktop"
+             xmlns:converters="clr-namespace:Sahand.ClinicPro.Desktop.Converters"
              ShutdownMode="OnMainWindowClose">
     <!-- ═══════════════════════════════════════════════════════════
          نقطه ورود کلاینت دسکتاپ درمانگاه سهند — گام ۱۰
@@ -34,6 +35,9 @@
                 <Setter Property="Margin" Value="0,4,0,12" />
                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
             </Style>
+
+            <!-- مبدل شیء غیرتهی به فعال بودن دکمه -->
+            <converters:NotNullToBoolConverter x:Key="NotNullToBool" />
 
             <!-- سبک کارت آمار داشبورد -->
             <Style x:Key="StatCard" TargetType="materialDesign:Card">

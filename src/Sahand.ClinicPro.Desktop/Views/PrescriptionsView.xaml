@@ -1,0 +1,98 @@
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.PrescriptionsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══════════════════════════════════════════════════════════
+         نسخه‌نویسی — گام V4
+         فهرست صفحه‌بندی‌شده + فیلتر وضعیت + جستجو
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- سربرگ -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <Button DockPanel.Dock="Right"
+                    Command="{Binding NewPrescriptionCommand}"
+                    Style="{StaticResource MaterialDesignFilledButton}"
+                    Content="صدور نسخه" />
+            <TextBlock Text="نسخه‌نویسی"
+                       Style="{StaticResource SectionTitle}"
+                       VerticalAlignment="Center" />
+        </DockPanel>
+
+        <!-- فیلترها -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+            <TextBox materialDesign:HintAssist.Hint="جستجو: کد نسخه یا نام بیمار"
+                     Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                     Width="240" Margin="0,0,12,0">
+                <TextBox.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+                </TextBox.InputBindings>
+            </TextBox>
+            <ComboBox materialDesign:HintAssist.Hint="وضعیت"
+                      ItemsSource="{Binding StatusLabels}"
+                      SelectedIndex="{Binding StatusFilterIndex}"
+                      Width="150" Margin="0,0,12,0" />
+            <Button Command="{Binding ViewDetailsCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Content="مشاهده جزئیات" Margin="0,0,8,0" />
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{DynamicResource MaterialDesign.Brush.Error}"
+                       FontSize="12" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- جدول -->
+        <DataGrid Grid.Row="2"
+                  ItemsSource="{Binding Prescriptions}"
+                  SelectedItem="{Binding SelectedPrescription}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  CanUserAddRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  materialDesign:DataGridAssist.CellPadding="8,6">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="کد نسخه" Binding="{Binding Code}" Width="110" />
+                <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName}" Width="*" />
+                <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName}" Width="*" />
+                <DataGridTextColumn Header="تاریخ" Binding="{Binding Date}" Width="100" />
+                <DataGridTextColumn Header="نوع" Binding="{Binding TypeText}" Width="100" />
+                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText}" Width="110" />
+                <DataGridTextColumn Header="رسانه" Binding="{Binding MediaText}" Width="90" />
+            </DataGrid.Columns>
+            <DataGrid.InputBindings>
+                <MouseBinding MouseAction="LeftDoubleClick"
+                              Command="{Binding ViewDetailsCommand}" />
+            </DataGrid.InputBindings>
+        </DataGrid>
+
+        <!-- صفحه‌بندی -->
+        <DockPanel Grid.Row="3" Margin="0,12,0,0">
+            <Button DockPanel.Dock="Right"
+                    Command="{Binding NextPageCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="صفحه بعد" />
+            <Button DockPanel.Dock="Right"
+                    Command="{Binding PrevPageCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="صفحه قبل"
+                    Margin="0,0,8,0" />
+            <TextBlock VerticalAlignment="Center" FontSize="13" Opacity="0.8">
+                <Run Text="صفحه " />
+                <Run Text="{Binding PageNumber, Mode=OneWay}" />
+                <Run Text=" از " />
+                <Run Text="{Binding TotalPages, Mode=OneWay}" />
+                <Run Text=" — جمع: " />
+                <Run Text="{Binding TotalCount, Mode=OneWay}" />
+                <Run Text=" نسخه" />
+            </TextBlock>
+        </DockPanel>
+    </Grid>
+</UserControl>

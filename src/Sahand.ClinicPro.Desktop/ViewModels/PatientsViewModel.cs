@@ -230,7 +230,11 @@ public partial class PatientFormViewModel : ObservableObject
     /// <summary>بارگذاری بیمه‌ها و در ویرایش داده بیمار</summary>
     private async Task InitializeAsync()
     {
-        // فهرست بیمه‌ها — endpoint عمومی در گام‌های بعد؛ فعلاً خالی می‌ماند
+        // فهرست بیمه‌ها از داده مرجع — گام V2
+        var companies = await _api.GetAsync<LookupCompanies>("lookups/insurance-companies");
+        if (companies?.Data is not null)
+            foreach (var c in companies.Data)
+                InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name));
         if (_patientId.HasValue)
         {
             var patient = await _api.GetAsync<PatientDetail>($"patients/{_patientId}");
@@ -302,6 +306,20 @@ public partial class PatientFormViewModel : ObservableObject
     /// <summary>انصراف</summary>
     [RelayCommand]
     private void Cancel() => CloseRequested?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>پاسخ بیمه‌های مرجع</summary>
+    public sealed class LookupCompanies
+    {
+        public bool IsSuccess { get; set; }
+        public List<LookupCompany>? Data { get; set; }
+    }
+
+    /// <summary>DTO شرکت بیمه مرجع</summary>
+    public sealed class LookupCompany
+    {
+        public long Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
 
     /// <summary>DTO جزئیات بیمار — منطبق بر سرور</summary>
     public sealed class PatientDetail

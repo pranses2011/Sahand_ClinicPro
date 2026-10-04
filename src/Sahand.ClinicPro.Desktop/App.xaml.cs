@@ -81,5 +81,14 @@ public partial class App : System.Windows.Application
         services.AddSingleton<MainWindowViewModel>();
         services.AddTransient<DashboardViewModel>();
         services.AddTransient<PatientsViewModel>();
+        services.AddTransient<AppointmentsViewModel>();
+        services.AddTransient<ReceptionsViewModel>();
+        services.AddTransient<VisitsViewModel>();
+        services.AddTransient<PrescriptionsViewModel>();
+        services.AddTransient<BillingViewModel>();
+        services.AddTransient<LabViewModel>();
+        services.AddTransient<PharmacyViewModel>();
+        services.AddTransient<ReportsViewModel>();
+        services.AddTransient<AdminViewModel>();
     }
 }

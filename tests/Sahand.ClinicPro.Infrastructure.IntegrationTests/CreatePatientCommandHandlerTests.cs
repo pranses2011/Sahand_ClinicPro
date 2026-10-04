@@ -24,7 +24,7 @@ public class CreatePatientCommandHandlerTests
             .UseInMemoryDatabase($"TestDb_{Guid.NewGuid():N}")
             .Options;
 
-        var context = new ClinicProDbContext(options);
+        var context = new ClinicProDbContext(options) { IsInMemory = true };
         var mediator = new Mock<MediatR.IMediator>().Object;
 
         return (new UnitOfWork(context, mediator), context);
@@ -53,7 +53,7 @@ public class CreatePatientCommandHandlerTests
 
         // نقشه واقعی لازم است — AutoMapper با پروفایل واقعی
         var mapperConfig = new AutoMapper.MapperConfiguration(cfg =>
-            cfg.AddProfile<Common.Mappings.PatientProfile>());
+            cfg.AddProfile<Sahand.ClinicPro.Application.Common.Mappings.PatientProfile>());
         var mapper = mapperConfig.CreateMapper();
         handler = new CreatePatientCommandHandler(uow, mapper,
             new Mock<Microsoft.Extensions.Logging.ILogger<CreatePatientCommandHandler>>().Object);
@@ -79,7 +79,7 @@ public class CreatePatientCommandHandlerTests
         // این تست رفتار Handler را مستقل از اعتبارسنجی نشان می‌دهد
         var (uow, context) = CreateUnitOfWork();
         var mapperConfig = new AutoMapper.MapperConfiguration(cfg =>
-            cfg.AddProfile<Common.Mappings.PatientProfile>());
+            cfg.AddProfile<Sahand.ClinicPro.Application.Common.Mappings.PatientProfile>());
         var mapper = mapperConfig.CreateMapper();
         var handler = new CreatePatientCommandHandler(uow, mapper,
             new Mock<Microsoft.Extensions.Logging.ILogger<CreatePatientCommandHandler>>().Object);

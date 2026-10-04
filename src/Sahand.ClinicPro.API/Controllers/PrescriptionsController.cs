@@ -21,6 +21,24 @@ public class PrescriptionsController : ApiBaseController
     /// <summary>سازنده با تزریق میانجی</summary>
     public PrescriptionsController(IMediator mediator) => _mediator = mediator;
 
+    /// <summary>فهرست صفحه‌بندی‌شده نسخه‌ها — با فیلتر بیمار و وضعیت</summary>
+    /// <param name="page">شماره صفحه</param>
+    /// <param name="pageSize">اندازه صفحه</param>
+    /// <param name="patientId">فیلتر بیمار</param>
+    /// <param name="status">فیلتر وضعیت</param>
+    /// <param name="search">جستجوی کد نسخه یا نام بیمار</param>
+    [HttpGet]
+    [HasPermission("prescriptions.view")]
+    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20,
+        [FromQuery] long? patientId = null, [FromQuery] Domain.Enums.PrescriptionStatus? status = null,
+        [FromQuery] string? search = null)
+    {
+        var result = await _mediator.Send(new Application.Features.Prescriptions.Queries.GetPrescriptionsQuery(
+            new Application.Common.Models.PagedRequest { PageNumber = page, PageSize = pageSize, Search = search },
+            patientId, status));
+        return ToResponse(result);
+    }
+
     /// <summary>نسخه‌های یک ویزیت</summary>
     /// <param name="visitId">شناسه ویزیت</param>
     [HttpGet("visit/{visitId:long}")]
