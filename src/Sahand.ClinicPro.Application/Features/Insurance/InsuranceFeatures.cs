@@ -6,6 +6,7 @@ using Sahand.ClinicPro.Application.DTOs.Insurance;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Billing;
 using Sahand.ClinicPro.Domain.Enums;
+using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Interfaces;
 
 namespace Sahand.ClinicPro.Application.Features.Insurance;
@@ -125,22 +126,43 @@ public record RecordInquiryCommand(InsuranceInquiryDto Dto) : IRequest<Result<lo
 public class RecordInquiryCommandHandler : IRequestHandler<RecordInquiryCommand, Result<long>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IInsuranceEligibilityService _eligibility;
 
-    /// <summary>سازنده با تزریق واحد کار</summary>
-    public RecordInquiryCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    /// <summary>سازنده با تزریق واحد کار و سرویس استعلام برخط</summary>
+    public RecordInquiryCommandHandler(IUnitOfWork unitOfWork,
+        IInsuranceEligibilityService eligibility)
+    {
+        _unitOfWork = unitOfWork;
+        _eligibility = eligibility;
+    }
 
-    /// <summary>اجرای ثبت استعلام — فعلاً ثبت محلی</summary>
+    /// <summary>
+    /// اجرای ثبت استعلام — گام V10: اتصال واقعی به سامانه بیمه با سقوط برون‌خط
+    /// </summary>
     public async Task<Result<long>> Handle(RecordInquiryCommand request, CancellationToken cancellationToken)
     {
         var dto = request.Dto;
+
+        var patient = await _unitOfWork.Repository<Domain.Entities.People.Patient>()
+            .QueryableNoTracking
+            .FirstOrDefaultAsync(p => p.Id == dto.PatientId, cancellationToken);
+
+        if (patient is null)
+            return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
+
+        var eligibility = await _eligibility.CheckAsync(new InsuranceEligibilityRequest(
+            dto.PatientId, dto.InsuranceCompanyId, patient.NationalCode, dto.InsuranceNumber),
+            cancellationToken);
 
         var inquiry = new InsuranceInquiry
         {
             PatientId = dto.PatientId,
             InsuranceCompanyId = dto.InsuranceCompanyId,
             InquiryDate = DateTime.UtcNow,
-            IsValid = false,
-            Response = "استعلام برخط در گام ۲۴ به سامانه بیمه متصل می‌شود"
+            IsValid = eligibility.IsEligible,
+            Response = eligibility.Message,
+            ApprovalCode = eligibility.ApprovalCode,
+            ValidUntil = eligibility.ValidUntil
         };
 
         await _unitOfWork.Repository<InsuranceInquiry>().AddAsync(inquiry, cancellationToken);
