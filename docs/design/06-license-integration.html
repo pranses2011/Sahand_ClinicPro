@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>🔑 ClinicPro - لایسنس، یکپارچه‌سازی و الگوریتم‌ها</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+:root{--p:#1a73e8;--pd:#1557b0;--s:#34a853;--a:#ea4335;--w:#fbbc04;--bg:#f0f2f5;--c:#fff;--t:#202124;--b:#dadce0;--sh:0 2px 8px rgba(0,0,0,.1);--r:12px;--g:linear-gradient(135deg,#1a73e8,#34a853)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t);line-height:1.7;font-size:13px}
+.ct{max-width:1500px;margin:0 auto;padding:20px}
+header{background:var(--g);color:#fff;padding:40px 20px;text-align:center;border-radius:0 0 30px 30px;margin-bottom:25px}
+header h1{font-size:2em;font-weight:900;margin-bottom:8px}
+header p{font-size:1em;opacity:.9}
+.nav{background:#fff;padding:12px;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.nav a{padding:7px 14px;background:#f0f2f5;border-radius:8px;text-decoration:none;color:var(--t);font-size:11px;font-weight:600}
+.nav a:hover,.nav a.active{background:var(--p);color:#fff}
+section{background:var(--c);border-radius:var(--r);padding:25px;box-shadow:var(--sh);margin-bottom:20px}
+section h2{color:var(--p);font-size:1.4em;margin-bottom:15px;padding-bottom:8px;border-bottom:3px solid var(--p)}
+section h3{color:var(--pd);font-size:1.1em;margin:15px 0 10px}
+section h4{color:#333;margin:10px 0 6px;font-size:13px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:15px}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.ib{background:#e8f0fe;border-right:4px solid var(--p);padding:12px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px}
+.wb{background:#fef7e0;border-right:4px solid var(--w);padding:12px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px}
+.gn{background:#e6f4ea;border-right:4px solid var(--s);padding:12px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px}
+.sb{text-align:center;padding:15px;background:var(--g);color:#fff;border-radius:var(--r)}
+.sb .n{font-size:1.8em;font-weight:900}.sb .l{font-size:.85em;opacity:.9}
+.cd{background:#f8f9fa;border-radius:10px;padding:15px;border:1px solid var(--b)}
+.cd h4{color:var(--p);margin-bottom:5px}
+.cb{background:#1e1e1e;color:#d4d4d4;padding:14px;border-radius:8px;font-family:'Courier New',monospace;font-size:11px;direction:ltr;text-align:left;overflow-x:auto;margin:10px 0;line-height:1.6}
+.kw{color:#569cd6}.st{color:#ce9178}.cm{color:#6a9955}.tp{color:#4ec9b0}.nu{color:#b5cea8}.me{color:#dcdcaa}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+th{background:var(--p);color:#fff;padding:8px 6px;text-align:right;font-weight:600}
+td{padding:6px;border-bottom:1px solid var(--b);vertical-align:top}
+tr:hover{background:#f8f9fa}
+.algo-box{background:linear-gradient(135deg,#f8fafc,#e2e8f0);border-radius:10px;padding:18px;margin:12px 0;border-right:4px solid var(--p)}
+.algo-title{color:var(--p);font-weight:700;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.algo-steps{list-style:decimal;padding-right:25px;margin:5px 0;font-size:12px}
+.algo-steps li{padding:4px 0;color:#334155}
+.algo-complexity{display:inline-block;background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:10px;font-weight:600;margin:2px}
+.int-card{background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;border-radius:12px;padding:20px;margin:10px 0}
+.int-card h4{color:#60a5fa;margin-bottom:8px;display:flex;align-items:center;gap:8px;font-size:14px}
+.int-card p{font-size:11px;opacity:.85;line-height:1.6}
+.int-card .ab{display:inline-block;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:3px 10px;margin:2px;font-size:10px}
+.flow-wrap{background:#f8f9fa;border-radius:var(--r);padding:20px;overflow-x:auto;margin:12px 0;border:1px solid var(--b)}
+.flow{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:500px}
+.node{padding:8px 16px;border-radius:8px;color:#fff;font-weight:600;font-size:11px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.15);min-width:160px;max-width:350px}
+.n-start{background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:50px}
+.n-end{background:linear-gradient(135deg,#ef4444,#dc2626);border-radius:50px}
+.n-proc{background:linear-gradient(135deg,#3b82f6,#2563eb)}
+.n-cond{background:linear-gradient(135deg,#f59e0b,#d97706);transform:rotate(45deg);padding:16px;width:110px;height:110px;display:flex;align-items:center;justify-content:center;margin:20px 0}
+.n-cond span{transform:rotate(-45deg);display:block;max-width:80px;font-size:10px}
+.n-ext{background:linear-gradient(135deg,#ec4899,#db2777);border-radius:20px}
+.arrow{width:2px;height:20px;background:#64748b}
+.branch{display:flex;gap:30px;justify-content:center;align-items:flex-start;margin-top:8px}
+.branch-item{display:flex;flex-direction:column;align-items:center;gap:4px}
+footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#fff;border-radius:var(--r);margin-top:20px}
+.license-type{background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:10px;padding:15px;border:2px solid var(--p);margin:10px 0}
+.license-type h4{color:var(--p);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.price-tag{background:var(--p);color:#fff;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700}
+.module-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px;margin-top:10px}
+.module-item{background:#fff;padding:8px 12px;border-radius:6px;border:1px solid var(--b);font-size:11px;display:flex;align-items:center;gap:8px}
+.module-item.core{background:#fef3c7;border-color:#f59e0b}
+.module-item.incl{background:#dcfce7;border-color:#22c55e}
+.module-item .ic{font-size:16px}
+@media(max-width:768px){.g2,.g3,.g4{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<h1>🔑 لایسنس، یکپارچه‌سازی و الگوریتم‌ها</h1>
+<p>فایل ۶: سامانه لایسنس، سامانه‌های دولتی ایران، الگوریتم‌های کلیدی</p>
+</header>
+
+<div class="ct">
+<nav class="nav">
+<a href="01-overview.html">1️⃣ تحلیل و معماری</a>
+<a href="02-database.html">2️⃣ دیتابیس</a>
+<a href="03-flowcharts.html">3️⃣ فلوچارت</a>
+<a href="04-wireframes.html">4️⃣ وایرفریم</a>
+<a href="05-security-timeline.html">5️⃣ امنیت و زمان‌بندی</a>
+<a href="06-license-integration.html" class="active">6️⃣ لایسنس و یکپارچه‌سازی</a>
+<a href="prompt.html">🤖 پرامپت AI</a>
+</nav>
+
+<!-- =============== PART 1: LICENSE SYSTEM =============== -->
+<section>
+<h2>🔑 بخش اول: سامانه جامع لایسنس</h2>
+
+<div class="g4" style="margin-bottom:15px">
+<div class="sb"><div class="n">۲</div><div class="l">مدل فروش</div></div>
+<div class="sb"><div class="n">۲</div><div class="l">نوع فعال‌سازی</div></div>
+<div class="sb"><div class="n">RSA</div><div class="l">امضای دیجیتال</div></div>
+<div class="sb"><div class="n">AES-256</div><div class="l">رمزنگاری</div></div>
+</div>
+
+<div class="ib">
+<strong>🎯 معماری سامانه لایسنس:</strong> سیستم شامل دو بخش است:
+<ul style="margin:5px 20px">
+<li><strong>License Portal</strong> (Blazor Server Web App): پنل وب جداگانه برای فروشنده جهت صدور، مدیریت و تمدید لایسنس</li>
+<li><strong>License Client</strong> (داخل نرم‌افزار): بخش فعال‌سازی و اعتبارسنجی در خود WPF App و API Server</li>
+</ul>
+<strong>امنیت:</strong> امضای دیجیتال RSA 2048-bit + رمزنگاری AES-256 + Hardware Fingerprint
+</div>
+
+<h3>🏗️ معماری کلی سامانه لایسنس</h3>
+<div class="cb">
+<span class="cm">┌─────────────────────────────────────────────────────────────────┐</span>
+<span class="cm">│                   🔑 LICENSE PORTAL (Web)                        │</span>
+<span class="cm">│                     Blazor Server App                            │</span>
+<span class="cm">│  ─────────────────────────────────────────────────────          │</span>
+<span class="cm">│   • پنل فروشنده (Admin Dashboard)                               │</span>
+<span class="cm">│   • مدیریت مشتریان و لایسنس‌ها                                  │</span>
+<span class="cm">│   • صدور لایسنس (آنلاین/آفلاین)                                 │</span>
+<span class="cm">│   • مدیریت ماژول‌ها و قیمت‌گذاری                                │</span>
+<span class="cm">│   • گزارش فروش و مطالبات                                        │</span>
+<span class="cm">│                                                                   │</span>
+<span class="cm">│         [License Database (SQL Server)]                          │</span>
+<span class="cm">│         • Customers • Licenses • Payments                        │</span>
+<span class="cm">│         • ValidationLogs • ModuleCatalog                         │</span>
+<span class="cm">└──────────────────────────┬──────────────────────────────────────┘</span>
+                           ↕ HTTPS REST API
+                     (RSA Signed Payloads)
+<span class="cm">┌──────────────────────────┴──────────────────────────────────────┐</span>
+<span class="cm">│              🏥 ClinicPro Client (Each Clinic)                   │</span>
+<span class="cm">│  ─────────────────────────────────────────────────────          │</span>
+<span class="cm">│   🖥️ WPF Desktop App                                            │</span>
+<span class="cm">│   ├── License Activation Wizard                                 │</span>
+<span class="cm">│   ├── Online/Offline Activation                                 │</span>
+<span class="cm">│   └── Hardware Fingerprint Collector                            │</span>
+<span class="cm">│                                                                   │</span>
+<span class="cm">│   🌐 ASP.NET Core API                                           │</span>
+<span class="cm">│   ├── LicenseValidationMiddleware                               │</span>
+<span class="cm">│   ├── Daily Heartbeat Service                                   │</span>
+<span class="cm">│   ├── Module Enabler/Disabler                                   │</span>
+<span class="cm">│   └── RSA Signature Verifier                                    │</span>
+<span class="cm">│                                                                   │</span>
+<span class="cm">│   💾 Local DB (Encrypted License Table)                         │</span>
+<span class="cm">│   └── ClinicLicense Table                                       │</span>
+<span class="cm">└──────────────────────────────────────────────────────────────────┘</span>
+</div>
+
+<h3>💳 مدل‌های فروش لایسنس</h3>
+<div class="g2">
+<div class="license-type">
+<h4>📅 Subscription (اشتراکی) <span class="price-tag">ماهانه / سالانه</span></h4>
+<ul style="font-size:11px;padding-right:20px;margin:5px 0">
+<li>پرداخت دوره‌ای (ماهانه، ۳ ماهه، ۶ ماهه، سالانه)</li>
+<li>شامل آپدیت‌های رایگان و پشتیبانی</li>
+<li>مناسب برای درمانگاه‌های کوچک و متوسط</li>
+<li>قابل لغو با یک کلیک</li>
+<li>Validation روزانه آنلاین</li>
+<li>نمایش هشدار ۳۰، ۱۵، ۷ روز قبل از انقضا</li>
+</ul>
+<p style="margin-top:8px;color:#1e40af;font-size:11px"><strong>💡 نمونه قیمت:</strong> ۲٬۰۰۰٬۰۰۰ تومان/ماه برای ۱۰ کاربر</p>
+</div>
+
+<div class="license-type" style="background:linear-gradient(135deg,#faf5ff,#e9d5ff);border-color:#8b5cf6">
+<h4 style="color:#7c3aed">♾️ Perpetual (دائمی) <span class="price-tag" style="background:#7c3aed">یکبار خرید</span></h4>
+<ul style="font-size:11px;padding-right:20px;margin:5px 0">
+<li>پرداخت یکباره - استفاده مادام‌العمر</li>
+<li>آپدیت‌های امنیتی رایگان</li>
+<li>آپدیت‌های نسخه بزرگ پولی</li>
+<li>مناسب برای درمانگاه‌های بزرگ</li>
+<li>Validation هفتگی آنلاین (یا آفلاین)</li>
+<li>بدون محدودیت زمانی</li>
+</ul>
+<p style="margin-top:8px;color:#7c3aed;font-size:11px"><strong>💡 نمونه قیمت:</strong> ۸۰٬۰۰۰٬۰۰۰ تومان یکبار برای ۱۰ کاربر</p>
+</div>
+</div>
+
+<h3>🧩 ماژول‌ها و قیمت‌گذاری</h3>
+<div class="ib">
+<strong>ماژول‌های اصلی (Core):</strong> همیشه در همه لایسنس‌ها فعال هستند
+<strong>ماژول‌های اختیاری:</strong> هنگام فروش انتخاب می‌شوند
+</div>
+<div class="module-grid">
+<div class="module-item core"><span class="ic">👤</span>بیماران (اصلی) <strong style="margin-right:auto">رایگان</strong></div>
+<div class="module-item core"><span class="ic">👨‍⚕️</span>پزشکان (اصلی) <strong style="margin-right:auto">رایگان</strong></div>
+<div class="module-item core"><span class="ic">🔐</span>کاربران (اصلی) <strong style="margin-right:auto">رایگان</strong></div>
+<div class="module-item core"><span class="ic">📅</span>نوبت‌دهی (اصلی) <strong style="margin-right:auto">رایگان</strong></div>
+<div class="module-item core"><span class="ic">📋</span>پذیرش (اصلی) <strong style="margin-right:auto">رایگان</strong></div>
+<div class="module-item core"><span class="ic">🩺</span>ویزیت (اصلی) <strong style="margin-right:auto">رایگان</strong></div>
+<div class="module-item core"><span class="ic">💰</span>صندوق (اصلی) <strong style="margin-right:auto">رایگان</strong></div>
+<div class="module-item"><span class="ic">💊</span>نسخه‌نویسی <strong style="margin-right:auto">+5M</strong></div>
+<div class="module-item"><span class="ic">📊</span>حسابداری دوبل <strong style="margin-right:auto">+15M</strong></div>
+<div class="module-item"><span class="ic">🏦</span>مدیریت بیمه <strong style="margin-right:auto">+10M</strong></div>
+<div class="module-item"><span class="ic">🧪</span>آزمایشگاه <strong style="margin-right:auto">+10M</strong></div>
+<div class="module-item"><span class="ic">📷</span>تصویربرداری <strong style="margin-right:auto">+10M</strong></div>
+<div class="module-item"><span class="ic">💊</span>داروخانه <strong style="margin-right:auto">+12M</strong></div>
+<div class="module-item"><span class="ic">🦷</span>دندانپزشکی <strong style="margin-right:auto">+8M</strong></div>
+<div class="module-item"><span class="ic">👁️</span>چشم‌پزشکی <strong style="margin-right:auto">+5M</strong></div>
+<div class="module-item"><span class="ic">🏃</span>فیزیوتراپی <strong style="margin-right:auto">+5M</strong></div>
+<div class="module-item"><span class="ic">📱</span>پیامک پیشرفته <strong style="margin-right:auto">+3M</strong></div>
+<div class="module-item"><span class="ic">🔗</span>سپاس <strong style="margin-right:auto">+8M</strong></div>
+<div class="module-item"><span class="ic">💻</span>نسخه الکترونیک <strong style="margin-right:auto">+10M</strong></div>
+<div class="module-item"><span class="ic">👔</span>مدیریت پرسنل/HR <strong style="margin-right:auto">+8M</strong></div>
+<div class="module-item"><span class="ic">📊</span>گزارش‌ساز پیشرفته <strong style="margin-right:auto">+10M</strong></div>
+<div class="module-item"><span class="ic">🧠</span>BI و تحلیل داده <strong style="margin-right:auto">+20M</strong></div>
+<div class="module-item"><span class="ic">🏥</span>چند شعبه‌ای <strong style="margin-right:auto">+15M</strong></div>
+<div class="module-item"><span class="ic">📞</span>مرکز تلفن (VoIP) <strong style="margin-right:auto">+12M</strong></div>
+</div>
+
+<h3>⚙️ ساختار کلید لایسنس (License Key Format)</h3>
+<div class="cb">
+<span class="cm">// فرمت کلید لایسنس (قابل خواندن توسط انسان)</span>
+<span class="st">CLINIC-XXXXX-XXXXX-XXXXX-XXXXX</span>
+      │       │     │     │     │
+      │       │     │     │     └─ Checksum (کنترل خطا)
+      │       │     │     └─────── Date Hash (تاریخ صدور)
+      │       │     └───────────── Modules Hash (ماژول‌های فعال)
+      │       └─────────────────── Customer ID
+      └─────────────────────────── Product Prefix
+
+<span class="cm">// نمونه:</span>
+<span class="st">CLINIC-A1B2C-D3E4F-G5H6I-J7K8L</span>
+
+<span class="cm">// محتوای کامل فایل لایسنس (JSON امضا شده با RSA)</span>
+{
+  "<span class="st">licenseKey</span>": "<span class="st">CLINIC-A1B2C-D3E4F-G5H6I-J7K8L</span>",
+  "<span class="st">customerId</span>": "<span class="st">CUST-00123</span>",
+  "<span class="st">clinicName</span>": "<span class="st">درمانگاه تخصصی سلامت</span>",
+  "<span class="st">clinicNationalId</span>": "<span class="st">14001234567</span>",
+  "<span class="st">licenseType</span>": "<span class="st">Subscription</span>", <span class="cm">// Perpetual, Subscription</span>
+  "<span class="st">maxUsers</span>": <span class="nu">10</span>,
+  "<span class="st">maxDoctors</span>": <span class="nu">15</span>,
+  "<span class="st">maxPatients</span>": <span class="nu">5000</span>,
+  "<span class="st">maxBranches</span>": <span class="nu">1</span>,
+  "<span class="st">enabledModules</span>": [
+    "<span class="st">Patients</span>", "<span class="st">Appointments</span>", "<span class="st">Reception</span>",
+    "<span class="st">Visits</span>", "<span class="st">Prescriptions</span>", "<span class="st">Billing</span>",
+    "<span class="st">Accounting</span>", "<span class="st">Pharmacy</span>", "<span class="st">LabModule</span>",
+    "<span class="st">Insurance</span>", "<span class="st">Sepas</span>", "<span class="st">SMS</span>"
+  ],
+  "<span class="st">issuedDate</span>": "<span class="st">2025-06-22T10:30:00Z</span>",
+  "<span class="st">expiryDate</span>": "<span class="st">2026-06-22T23:59:59Z</span>",
+  "<span class="st">hardwareFingerprint</span>": "<span class="st">SHA256:a3f5c8d9e2b1...</span>",
+  "<span class="st">activationType</span>": "<span class="st">Online</span>", <span class="cm">// Online, Offline, Both</span>
+  "<span class="st">isOfflineAllowed</span>": <span class="kw">true</span>,
+  "<span class="st">heartbeatInterval</span>": <span class="nu">86400</span>, <span class="cm">// seconds (1 day)</span>
+  "<span class="st">signature</span>": "<span class="st">[RSA-2048 Signature - 512 chars base64]</span>",
+  "<span class="st">signatureAlgorithm</span>": "<span class="st">SHA256withRSA</span>",
+  "<span class="st">publicKeyFingerprint</span>": "<span class="st">SHA256:1a2b3c4d...</span>"
+}
+</div>
+
+<h3>🔐 الگوریتم Hardware Fingerprint</h3>
+<div class="cb">
+<span class="kw">public static class</span> <span class="tp">HardwareFingerprint</span>
+{
+    <span class="kw">public static string</span> Generate()
+    {
+        <span class="kw">var</span> components = <span class="kw">new</span> <span class="tp">List</span>&lt;<span class="kw">string</span>&gt;();
+        
+        <span class="cm">// 1. CPU ID</span>
+        components.Add(GetCpuId());
+        
+        <span class="cm">// 2. Motherboard Serial</span>
+        components.Add(GetMotherboardSerial());
+        
+        <span class="cm">// 3. BIOS Serial</span>
+        components.Add(GetBiosSerial());
+        
+        <span class="cm">// 4. HDD Serial (first disk)</span>
+        components.Add(GetDiskSerial());
+        
+        <span class="cm">// 5. MAC Address (first physical adapter)</span>
+        components.Add(GetMacAddress());
+        
+        <span class="cm">// 6. Windows Product ID (optional)</span>
+        components.Add(GetWindowsProductId());
+        
+        <span class="cm">// Combine and hash with SHA-256</span>
+        <span class="kw">var</span> combined = <span class="kw">string</span>.Join(<span class="st">"|"</span>, components);
+        <span class="kw">using var</span> sha = <span class="tp">SHA256</span>.Create();
+        <span class="kw">var</span> hash = sha.ComputeHash(<span class="tp">Encoding</span>.UTF8.GetBytes(combined));
+        <span class="kw">return</span> <span class="tp">Convert</span>.ToBase64String(hash);
+    }
+    
+    <span class="kw">private static string</span> GetCpuId()
+    {
+        <span class="kw">using var</span> mc = <span class="kw">new</span> <span class="tp">ManagementClass</span>(<span class="st">"Win32_Processor"</span>);
+        <span class="kw">foreach</span> (<span class="tp">ManagementObject</span> mo <span class="kw">in</span> mc.GetInstances())
+            <span class="kw">return</span> mo.Properties[<span class="st">"ProcessorId"</span>].Value?.ToString() ?? <span class="st">""</span>;
+        <span class="kw">return</span> <span class="st">""</span>;
+    }
+    <span class="cm">// ... other methods</span>
+}
+</div>
+
+<h3>🔄 فلوچارت کامل فعال‌سازی لایسنس</h3>
+<div class="g2">
+<div>
+<h4 style="color:var(--p)">🌐 فعال‌سازی آنلاین (پیشنهادی)</h4>
+<div class="flow-wrap">
+<div class="flow">
+<div class="node n-start">▶ اولین اجرا</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>لایسنس فعال؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#22c55e;font-size:10px;font-weight:bold">✅ بله</div>
+<div class="node n-end">ورود به سیستم</div>
+</div>
+<div class="branch-item">
+<div style="color:#f59e0b;font-size:10px;font-weight:bold">❌ خیر</div>
+<div class="node n-proc">📋 فرم فعال‌سازی</div>
+<div class="arrow"></div>
+<div class="node n-proc">🔑 ورود کد لایسنس</div>
+<div class="arrow"></div>
+<div class="node n-proc">🖥️ محاسبه HW Fingerprint</div>
+<div class="arrow"></div>
+<div class="node n-ext">🔗 ارسال به License Server</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>معتبر؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#ef4444;font-size:10px;font-weight:bold">❌ خیر</div>
+<div class="node n-end" style="background:#ef4444">❌ خطا</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-size:10px;font-weight:bold">✅ بله</div>
+<div class="node n-proc">📥 دریافت فایل JSON</div>
+<div class="arrow"></div>
+<div class="node n-proc">🔐 Verify RSA Signature</div>
+<div class="arrow"></div>
+<div class="node n-proc">💾 رمزنگاری AES و ذخیره</div>
+<div class="arrow"></div>
+<div class="node n-end">✅ فعال شد</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div>
+<h4 style="color:var(--p)">📴 فعال‌سازی آفلاین</h4>
+<div class="flow-wrap">
+<div class="flow">
+<div class="node n-start">▶ انتخاب آفلاین</div>
+<div class="arrow"></div>
+<div class="node n-proc">🖥️ محاسبه HW Fingerprint</div>
+<div class="arrow"></div>
+<div class="node n-proc">📄 تولید فایل .req</div>
+<div class="arrow"></div>
+<div class="node n-proc">📤 ارسال به فروشنده</div>
+<div class="arrow"></div>
+<div class="node n-proc">👨‍💻 فروشنده: آپلود در پنل</div>
+<div class="arrow"></div>
+<div class="node n-proc">🔐 تولید فایل .lic امضا شده</div>
+<div class="arrow"></div>
+<div class="node n-proc">📥 بارگذاری فایل .lic</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>Verify موفق؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#ef4444;font-size:10px;font-weight:bold">❌ خیر</div>
+<div class="node n-end" style="background:#ef4444">❌ خطا</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-size:10px;font-weight:bold">✅ بله</div>
+<div class="node n-proc">💾 ذخیره در DB</div>
+<div class="arrow"></div>
+<div class="node n-end">✅ فعال شد</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<h3>🔐 الگوریتم امضا و تایید RSA</h3>
+<div class="cb">
+<span class="cm">// در License Portal (Server-Side) - تولید فایل لایسنس</span>
+<span class="kw">public class</span> <span class="tp">LicenseGenerator</span>
+{
+    <span class="kw">private readonly</span> <span class="tp">RSA</span> _rsa; <span class="cm">// Private Key (در Portal)</span>
+    
+    <span class="kw">public</span> <span class="tp">LicenseFile</span> Generate(<span class="tp">LicenseRequest</span> req)
+    {
+        <span class="kw">var</span> license = <span class="kw">new</span> <span class="tp">LicenseFile</span>
+        {
+            LicenseKey = GenerateKey(),
+            CustomerId = req.CustomerId,
+            ClinicName = req.ClinicName,
+            LicenseType = req.LicenseType,
+            MaxUsers = req.MaxUsers,
+            MaxDoctors = req.MaxDoctors,
+            EnabledModules = req.EnabledModules,
+            IssuedDate = <span class="tp">DateTime</span>.UtcNow,
+            ExpiryDate = req.ExpiryDate,
+            HardwareFingerprint = req.HardwareFingerprint,
+        };
+        
+        <span class="cm">// Serialize to JSON (sorted keys for consistent hash)</span>
+        <span class="kw">var</span> json = <span class="tp">JsonSerializer</span>.Serialize(license, 
+            <span class="kw">new</span> <span class="tp">JsonSerializerOptions</span> { WriteIndented = <span class="kw">false</span> });
+        <span class="kw">var</span> dataBytes = <span class="tp">Encoding</span>.UTF8.GetBytes(json);
+        
+        <span class="cm">// Sign with RSA Private Key (SHA-256)</span>
+        <span class="kw">var</span> signature = _rsa.SignData(dataBytes, 
+            <span class="tp">HashAlgorithmName</span>.SHA256, 
+            <span class="tp">RSASignaturePadding</span>.Pkcs1);
+        
+        license.Signature = <span class="tp">Convert</span>.ToBase64String(signature);
+        <span class="kw">return</span> license;
+    }
+}
+
+<span class="cm">// در Client (نرم‌افزار درمانگاه) - بررسی لایسنس</span>
+<span class="kw">public class</span> <span class="tp">LicenseVerifier</span>
+{
+    <span class="kw">private readonly</span> <span class="tp">RSA</span> _rsa; <span class="cm">// Public Key (در Client - Embedded)</span>
+    
+    <span class="kw">public bool</span> Verify(<span class="tp">LicenseFile</span> license)
+    {
+        <span class="cm">// 1. Check Hardware Fingerprint</span>
+        <span class="kw">var</span> currentFingerprint = <span class="tp">HardwareFingerprint</span>.Generate();
+        <span class="kw">if</span> (license.HardwareFingerprint != currentFingerprint)
+            <span class="kw">return false</span>; <span class="cm">// سخت‌افزار تغییر کرده</span>
+        
+        <span class="cm">// 2. Check Expiry</span>
+        <span class="kw">if</span> (license.ExpiryDate.HasValue && 
+            license.ExpiryDate &lt; <span class="tp">DateTime</span>.UtcNow)
+            <span class="kw">return false</span>; <span class="cm">// منقضی شده</span>
+        
+        <span class="cm">// 3. Verify RSA Signature</span>
+        <span class="kw">var</span> signature = <span class="tp">Convert</span>.FromBase64String(license.Signature);
+        <span class="kw">var</span> licenseCopy = license.Clone();
+        licenseCopy.Signature = <span class="kw">null</span>; <span class="cm">// حذف قبل از verify</span>
+        <span class="kw">var</span> json = <span class="tp">JsonSerializer</span>.Serialize(licenseCopy);
+        <span class="kw">var</span> dataBytes = <span class="tp">Encoding</span>.UTF8.GetBytes(json);
+        
+        <span class="kw">return</span> _rsa.VerifyData(dataBytes, signature, 
+            <span class="tp">HashAlgorithmName</span>.SHA256, 
+            <span class="tp">RSASignaturePadding</span>.Pkcs1);
+    }
+}
+</div>
+
+<h3>⏰ سرویس Heartbeat (بررسی دوره‌ای)</h3>
+<div class="cb">
+<span class="cm">// Hangfire Job - اجرا هر ۲۴ ساعت</span>
+<span class="kw">public class</span> <span class="tp">LicenseHeartbeatJob</span>
+{
+    <span class="kw">private readonly</span> <span class="tp">ILicenseClient</span> _client;
+    <span class="kw">private readonly</span> <span class="tp">IUnitOfWork</span> _uow;
+    
+    [<span class="tp">AutomaticRetry</span>(Attempts = <span class="nu">3</span>)]
+    <span class="kw">public async</span> <span class="tp">Task</span> ExecuteAsync()
+    {
+        <span class="kw">var</span> license = <span class="kw">await</span> _uow.Licenses.GetActiveAsync();
+        
+        <span class="cm">// 1. Check expiry locally</span>
+        <span class="kw">if</span> (license.ExpiryDate.HasValue)
+        {
+            <span class="kw">var</span> daysLeft = (license.ExpiryDate.Value - <span class="tp">DateTime</span>.UtcNow).Days;
+            <span class="kw">if</span> (daysLeft &lt;= <span class="nu">30</span> && daysLeft &gt; <span class="nu">0</span>)
+                <span class="kw">await</span> NotifyAdmin(<span class="st">$"لایسنس تا {daysLeft} روز دیگر منقضی می‌شود"</span>);
+        }
+        
+        <span class="cm">// 2. Online validation (if internet available)</span>
+        <span class="kw">try</span>
+        {
+            <span class="kw">var</span> result = <span class="kw">await</span> _client.ValidateAsync(license.LicenseKey);
+            
+            <span class="kw">if</span> (!result.IsValid)
+            {
+                <span class="cm">// فروشنده لایسنس را revoke کرده</span>
+                license.Status = <span class="tp">LicenseStatus</span>.Suspended;
+                <span class="kw">await</span> _uow.SaveChangesAsync();
+                <span class="kw">await</span> NotifyAdmin(<span class="st">"لایسنس توسط فروشنده معلق شده است"</span>);
+            }
+            
+            license.LastValidatedAt = <span class="tp">DateTime</span>.UtcNow;
+            <span class="kw">await</span> _uow.SaveChangesAsync();
+        }
+        <span class="kw">catch</span> (<span class="tp">HttpRequestException</span>)
+        {
+            <span class="cm">// آفلاین - اگر بیش از ۳۰ روز offline، لایسنس invalid می‌شود</span>
+            <span class="kw">var</span> daysOffline = (<span class="tp">DateTime</span>.UtcNow - license.LastValidatedAt).Days;
+            <span class="kw">if</span> (daysOffline &gt; <span class="nu">30</span> && !license.IsOfflineAllowed)
+                <span class="kw">throw new</span> <span class="tp">LicenseException</span>(<span class="st">"نیاز به اتصال به سرور"</span>);
+        }
+    }
+}
+</div>
+
+<h3>🛡️ Middleware بررسی لایسنس (API)</h3>
+<div class="cb">
+<span class="kw">public class</span> <span class="tp">LicenseValidationMiddleware</span>
+{
+    <span class="kw">private readonly</span> <span class="tp">RequestDelegate</span> _next;
+    <span class="kw">private readonly</span> <span class="tp">ILicenseService</span> _license;
+    
+    <span class="kw">public async</span> <span class="tp">Task</span> InvokeAsync(<span class="tp">HttpContext</span> context)
+    {
+        <span class="cm">// Skip for license endpoints</span>
+        <span class="kw">if</span> (context.Request.Path.StartsWithSegments(<span class="st">"/api/license"</span>))
+        {
+            <span class="kw">await</span> _next(context);
+            <span class="kw">return</span>;
+        }
+        
+        <span class="cm">// Check license validity</span>
+        <span class="kw">var</span> status = <span class="kw">await</span> _license.GetStatusAsync();
+        
+        <span class="kw">if</span> (!status.IsValid)
+        {
+            context.Response.StatusCode = <span class="nu">403</span>;
+            <span class="kw">await</span> context.Response.WriteAsJsonAsync(<span class="kw">new</span> {
+                Error = <span class="st">"License Invalid"</span>,
+                Reason = status.Reason,
+                Code = <span class="st">"LICENSE_INVALID"</span>
+            });
+            <span class="kw">return</span>;
+        }
+        
+        <span class="cm">// Check concurrent users</span>
+        <span class="kw">var</span> activeUsers = <span class="kw">await</span> _license.GetActiveUserCountAsync();
+        <span class="kw">if</span> (activeUsers &gt; status.MaxUsers)
+        {
+            context.Response.StatusCode = <span class="nu">403</span>;
+            <span class="kw">await</span> context.Response.WriteAsJsonAsync(<span class="kw">new</span> {
+                Error = <span class="st">"User Limit Exceeded"</span>,
+                Code = <span class="st">"USER_LIMIT_EXCEEDED"</span>
+            });
+            <span class="kw">return</span>;
+        }
+        
+        <span class="cm">// Check module access</span>
+        <span class="kw">var</span> module = ExtractModuleFromPath(context.Request.Path);
+        <span class="kw">if</span> (module != <span class="kw">null</span> && !status.EnabledModules.Contains(module))
+        {
+            context.Response.StatusCode = <span class="nu">403</span>;
+            <span class="kw">await</span> context.Response.WriteAsJsonAsync(<span class="kw">new</span> {
+                Error = <span class="st">$"Module '{module}' not licensed"</span>,
+                Code = <span class="st">"MODULE_NOT_LICENSED"</span>
+            });
+            <span class="kw">return</span>;
+        }
+        
+        <span class="kw">await</span> _next(context);
+    }
+}
+</div>
+
+<h3>🔒 اقدامات ضد تقلب (Anti-Piracy)</h3>
+<div class="g3">
+<div class="cd"><h4>🧩 Code Obfuscation</h4><p style="font-size:11px">استفاده از Dotfuscator یا ConfuserEx برای درهم‌ریختن کد و دشوار کردن Reverse Engineering</p></div>
+<div class="cd"><h4>🔐 Signed Assemblies</h4><p style="font-size:11px">همه DLLها با Strong Name امضا می‌شوند تا جلوگیری از تعویض شوند</p></div>
+<div class="cd"><h4>🖥️ Hardware Binding</h4><p style="font-size:11px">لایسنس به سخت‌افزار خاص گره خورده - تعویض سخت‌افزار نیاز به reactivation دارد</p></div>
+<div class="cd"><h4>⏰ Time Tampering Detection</h4><p style="font-size:11px">بررسی تغییرات زمان سیستم. اگر زمان به عقب برگردانده شد، لایسنس غیرفعال می‌شود</p></div>
+<div class="cd"><h4>📡 Online Heartbeat</h4><p style="font-size:11px">چک آنلاین دوره‌ای. فروشنده می‌تواند لایسنس را از راه دور Revoke کند</p></div>
+<div class="cd"><h4>🧬 Integrity Check</h4><p style="font-size:11px">در زمان اجرا، hash فایل‌های اصلی چک می‌شود تا تغییر پیدا نکرده باشند</p></div>
+</div>
+</section>
+
+<!-- =============== PART 2: GOVERNMENT INTEGRATION =============== -->
+<section>
+<h2>🏛️ بخش دوم: یکپارچه‌سازی با سامانه‌های دولتی ایران</h2>
+
+<div class="ib">
+<strong>🎯 استراتژی یکپارچه‌سازی:</strong> هر سامانه دولتی دارای <strong>Service Interface</strong> جداگانه است (Strategy Pattern). این باعث می‌شود:
+<ul style="margin:5px 20px">
+<li>تغییر API سامانه‌ها بدون تاثیر بر بقیه کد</li>
+<li>Mock شدن آسان برای تست</li>
+<li>اضافه کردن سامانه جدید بدون تغییر کد موجود</li>
+<li>مدیریت Retry و Circuit Breaker با Polly</li>
+</ul>
+</div>
+
+<h3>🏥 ۱. سامانه سپاس (پرونده الکترونیک سلامت ایران)</h3>
+<div class="int-card">
+<h4>🏥 Sepas Integration (ihio.gov.ir)</h4>
+<p><strong>متولی:</strong> وزارت بهداشت، درمان و آموزش پزشکی | <strong>هدف:</strong> یکپارچه‌سازی داده‌های بالینی و پرونده الکترونیک سلامت در سطح ملی</p>
+<div style="margin-top:10px">
+<span class="ab">REST API</span>
+<span class="ab">OAuth 2.0</span>
+<span class="ab">JSON / XML</span>
+<span class="ab">HL7 FHIR</span>
+<span class="ab">Rate Limited</span>
+</div>
+<div style="background:rgba(255,255,255,.05);padding:10px;border-radius:6px;margin-top:10px;font-size:11px">
+<strong>عملیات اصلی:</strong>
+<ul style="padding-right:20px;margin:5px 0">
+<li>ارسال ویزیت‌های انجام شده (Submit Encounter)</li>
+<li>ارسال نسخه‌های تجویز شده</li>
+<li>دریافت پرونده بیمار از سایر مراکز</li>
+<li>ارسال نتایج آزمایش و تصویربرداری</li>
+<li>گزارش بیماری‌های واگیر</li>
+<li>مدیریت نظام ارجاع</li>
+</ul>
+</div>
+</div>
+
+<div class="cb">
+<span class="cm">// Interface در Application Layer</span>
+<span class="kw">public interface</span> <span class="tp">ISepasService</span>
+{
+    <span class="tp">Task</span>&lt;<span class="tp">SepasResult</span>&gt; SubmitEncounterAsync(<span class="tp">EncounterDto</span> encounter);
+    <span class="tp">Task</span>&lt;<span class="tp">PatientRecordDto</span>&gt; GetPatientRecordAsync(<span class="kw">string</span> nationalCode);
+    <span class="tp">Task</span>&lt;<span class="tp">SepasResult</span>&gt; SubmitPrescriptionAsync(<span class="tp">PrescriptionDto</span> rx);
+    <span class="tp">Task</span>&lt;<span class="tp">SepasResult</span>&gt; SubmitLabResultsAsync(<span class="tp">LabResultDto</span> lab);
+    <span class="tp">Task</span>&lt;<span class="kw">string</span>&gt; GetAccessTokenAsync();
+}
+
+<span class="cm">// Implementation در Infrastructure Layer</span>
+<span class="kw">public class</span> <span class="tp">SepasService</span> : <span class="tp">ISepasService</span>
+{
+    <span class="kw">private readonly</span> <span class="tp">HttpClient</span> _httpClient;
+    <span class="kw">private readonly</span> <span class="tp">ILogger</span> _logger;
+    <span class="kw">private readonly</span> <span class="tp">SepasConfig</span> _config;
+    
+    <span class="kw">public async</span> <span class="tp">Task</span>&lt;<span class="tp">SepasResult</span>&gt; SubmitEncounterAsync(<span class="tp">EncounterDto</span> enc)
+    {
+        <span class="kw">var</span> token = <span class="kw">await</span> GetAccessTokenAsync();
+        _httpClient.DefaultRequestHeaders.Authorization = 
+            <span class="kw">new</span> <span class="tp">AuthenticationHeaderValue</span>(<span class="st">"Bearer"</span>, token);
+        
+        <span class="cm">// Convert to HL7 FHIR format</span>
+        <span class="kw">var</span> fhirBundle = <span class="tp">FhirMapper</span>.ToEncounter(enc);
+        
+        <span class="cm">// Call Sepas API with retry policy</span>
+        <span class="kw">var</span> response = <span class="kw">await</span> _retryPolicy.ExecuteAsync(<span class="kw">async</span> () =&gt;
+            <span class="kw">await</span> _httpClient.PostAsJsonAsync(
+                _config.BaseUrl + <span class="st">"/api/v2/encounters"</span>, fhirBundle));
+        
+        <span class="cm">// Log all calls</span>
+        <span class="kw">await</span> _apiLogger.LogAsync(<span class="st">"Sepas"</span>, response);
+        
+        <span class="kw">return</span> response.IsSuccessStatusCode
+            ? <span class="kw">await</span> response.Content.ReadFromJsonAsync&lt;<span class="tp">SepasResult</span>&gt;()
+            : <span class="tp">SepasResult</span>.Failure(response.ReasonPhrase);
+    }
+}
+
+<span class="cm">// Dependency Injection</span>
+services.AddHttpClient&lt;<span class="tp">ISepasService</span>, <span class="tp">SepasService</span>&gt;(client =&gt;
+{
+    client.BaseAddress = <span class="kw">new</span> <span class="tp">Uri</span>(configuration[<span class="st">"Sepas:BaseUrl"</span>]);
+    client.Timeout = <span class="tp">TimeSpan</span>.FromSeconds(<span class="nu">30</span>);
+})
+.AddPolicyHandler(GetRetryPolicy())
+.AddPolicyHandler(GetCircuitBreakerPolicy());
+</div>
+
+<h3>💊 ۲. سامانه نسخه الکترونیک</h3>
+<div class="g2">
+<div class="int-card">
+<h4>💚 بیمه سلامت (eprsc.behdasht.gov.ir)</h4>
+<p>سامانه نسخه‌نویسی و نسخه‌پیچی الکترونیکی بیمه سلامت ایرانیان</p>
+<div style="margin-top:10px">
+<span class="ab">SOAP + REST</span>
+<span class="ab">WebService</span>
+<span class="ab">Token-based</span>
+</div>
+<p style="font-size:11px;margin-top:10px"><strong>عملیات:</strong> ارسال نسخه، استعلام تداخل، دریافت کد رهگیری، لغو نسخه</p>
+</div>
+<div class="int-card">
+<h4>💙 تامین اجتماعی (eprsc.tamin.ir)</h4>
+<p>سامانه نسخه الکترونیک سازمان تامین اجتماعی برای درمانگاه‌های طرف قرارداد</p>
+<div style="margin-top:10px">
+<span class="ab">REST API</span>
+<span class="ab">OAuth 2.0</span>
+<span class="ab">JSON</span>
+</div>
+<p style="font-size:11px;margin-top:10px"><strong>عملیات:</strong> ثبت نسخه، استعلام بیمه‌شده، تایید نهایی، گزارش روزانه</p>
+</div>
+</div>
+
+<h3>🌾 ۳. سامانه‌های سطح یک وزارت بهداشت</h3>
+<div class="g3">
+<div class="int-card">
+<h4>🌱 سامانه سیب</h4>
+<p>سامانه یکپارچه بهداشت - مکانیزاسیون مراقبت‌های بهداشتی اولیه</p>
+<p style="font-size:11px;margin-top:8px"><strong>آدرس:</strong> sib.behdasht.gov.ir</p>
+<p style="font-size:11px"><strong>کاربرد:</strong> پایش بیماری، واکسیناسیون، مراقبت مادر و کودک</p>
+</div>
+<div class="int-card">
+<h4>⚕️ سامانه ناب</h4>
+<p>نرم‌افزار اتوماسیون بهداشتی - ثبت خدمات بهداشتی و درمانی سطح یک</p>
+<p style="font-size:11px;margin-top:8px"><strong>کاربرد:</strong> ثبت ویزیت، ارجاع، نسخه الکترونیک سطح یک</p>
+</div>
+<div class="int-card">
+<h4>🏥 سامانه سینا</h4>
+<p>سامانه یکپارچه نظام ارجاع - مدیریت ارجاع بین سطوح درمانی</p>
+<p style="font-size:11px;margin-top:8px"><strong>کاربرد:</strong> صدور کد ارجاع، پیگیری ارجاع، گزارش‌دهی</p>
+</div>
+</div>
+
+<h3>🏦 ۴. سامانه‌های بیمه (استعلام و تسویه)</h3>
+<table>
+<tr><th>بیمه</th><th>آدرس</th><th>نوع API</th><th>عملیات پشتیبانی</th></tr>
+<tr><td>💚 سلامت ایرانیان</td><td>ihio.gov.ir</td><td>REST + SOAP</td><td>استعلام، تایید، تسویه، نسخه الکترونیک</td></tr>
+<tr><td>💙 تامین اجتماعی</td><td>eservices.tamin.ir</td><td>REST</td><td>استعلام بیمه‌شده، تایید دفترچه، نسخه</td></tr>
+<tr><td>🛡️ نیروهای مسلح</td><td>bsi.ir</td><td>REST</td><td>استعلام، تایید</td></tr>
+<tr><td>💼 خدمات درمانی</td><td>bimehsalamat.ir</td><td>SOAP</td><td>استعلام، تسویه</td></tr>
+<tr><td>🏢 بیمه ایران</td><td>iraninsurance.ir</td><td>REST</td><td>بیمه تکمیلی، استعلام</td></tr>
+<tr><td>🏦 بیمه دانا</td><td>dana-insurance.com</td><td>REST</td><td>بیمه تکمیلی</td></tr>
+<tr><td>🏦 بیمه آسیا</td><td>bimehasia.com</td><td>REST</td><td>بیمه تکمیلی</td></tr>
+<tr><td>➕ سایر بیمه‌ها</td><td>-</td><td>قابل افزودن</td><td>Plugin Architecture</td></tr>
+</table>
+
+<h3>📱 ۵. پنل‌های پیامک (۱۰ پنل)</h3>
+<div class="cb">
+<span class="cm">// Interface مشترک برای همه پنل‌ها</span>
+<span class="kw">public interface</span> <span class="tp">ISmsProvider</span>
+{
+    <span class="kw">string</span> ProviderName { <span class="kw">get</span>; }
+    <span class="tp">Task</span>&lt;<span class="tp">SmsResult</span>&gt; SendAsync(<span class="kw">string</span> number, <span class="kw">string</span> message);
+    <span class="tp">Task</span>&lt;<span class="tp">SmsResult</span>&gt; SendPatternAsync(<span class="kw">string</span> number, 
+        <span class="kw">string</span> patternCode, <span class="tp">Dictionary</span>&lt;<span class="kw">string</span>, <span class="kw">string</span>&gt; vars);
+    <span class="tp">Task</span>&lt;<span class="kw">decimal</span>&gt; GetBalanceAsync();
+    <span class="tp">Task</span>&lt;<span class="tp">DeliveryStatus</span>&gt; CheckDeliveryAsync(<span class="kw">string</span> messageId);
+}
+
+<span class="cm">// Implementations برای هر پنل</span>
+<span class="kw">public class</span> <span class="tp">KavenegarProvider</span>     : <span class="tp">ISmsProvider</span> { ... }
+<span class="kw">public class</span> <span class="tp">MelliPayamakProvider</span>  : <span class="tp">ISmsProvider</span> { ... }
+<span class="kw">public class</span> <span class="tp">SmsIrProvider</span>         : <span class="tp">ISmsProvider</span> { ... }
+<span class="kw">public class</span> <span class="tp">FarazSmsProvider</span>      : <span class="tp">ISmsProvider</span> { ... }
+<span class="kw">public class</span> <span class="tp">IPPanelProvider</span>       : <span class="tp">ISmsProvider</span> { ... }
+<span class="kw">public class</span> <span class="tp">NegarProvider</span>         : <span class="tp">ISmsProvider</span> { ... }
+<span class="kw">public class</span> <span class="tp">SabanovinProvider</span>     : <span class="tp">ISmsProvider</span> { ... }
+<span class="kw">public class</span> <span class="tp">MedianaProvider</span>       : <span class="tp">ISmsProvider</span> { ... }
+<span class="kw">public class</span> <span class="tp">TrezProvider</span>          : <span class="tp">ISmsProvider</span> { ... }
+<span class="kw">public class</span> <span class="tp">PayamakPanelProvider</span>  : <span class="tp">ISmsProvider</span> { ... }
+
+<span class="cm">// Factory + Strategy Pattern</span>
+<span class="kw">public class</span> <span class="tp">SmsProviderFactory</span>
+{
+    <span class="kw">private readonly</span> <span class="tp">IServiceProvider</span> _services;
+    <span class="kw">private readonly</span> <span class="tp">IUnitOfWork</span> _uow;
+    
+    <span class="kw">public async</span> <span class="tp">Task</span>&lt;<span class="tp">ISmsProvider</span>&gt; GetDefaultAsync()
+    {
+        <span class="kw">var</span> config = <span class="kw">await</span> _uow.SmsProviders
+            .FirstAsync(p =&gt; p.IsDefault && p.IsActive);
+        <span class="kw">return</span> GetByName(config.ProviderCode);
+    }
+    
+    <span class="kw">public</span> <span class="tp">ISmsProvider</span> GetByName(<span class="kw">string</span> name) =&gt; name <span class="kw">switch</span>
+    {
+        <span class="st">"kavenegar"</span>     =&gt; _services.GetRequiredService&lt;<span class="tp">KavenegarProvider</span>&gt;(),
+        <span class="st">"mellipayamak"</span>  =&gt; _services.GetRequiredService&lt;<span class="tp">MelliPayamakProvider</span>&gt;(),
+        <span class="st">"smsir"</span>         =&gt; _services.GetRequiredService&lt;<span class="tp">SmsIrProvider</span>&gt;(),
+        <span class="cm">// ... سایر پنل‌ها</span>
+        _ =&gt; <span class="kw">throw new</span> <span class="tp">NotSupportedException</span>(<span class="st">$"Provider '{name}' not supported"</span>)
+    };
+}
+
+<span class="cm">// Fallback Strategy - اگر پنل اصلی خطا داد، پنل بعدی را امتحان کن</span>
+<span class="kw">public class</span> <span class="tp">SmsService</span>
+{
+    <span class="kw">public async</span> <span class="tp">Task</span>&lt;<span class="tp">SmsResult</span>&gt; SendWithFallbackAsync(<span class="kw">string</span> number, <span class="kw">string</span> msg)
+    {
+        <span class="kw">var</span> providers = <span class="kw">await</span> GetActiveProvidersByPriorityAsync();
+        
+        <span class="kw">foreach</span> (<span class="kw">var</span> provider <span class="kw">in</span> providers)
+        {
+            <span class="kw">try</span>
+            {
+                <span class="kw">var</span> result = <span class="kw">await</span> provider.SendAsync(number, msg);
+                <span class="kw">if</span> (result.IsSuccess) <span class="kw">return</span> result;
+            }
+            <span class="kw">catch</span> (<span class="tp">Exception</span> ex)
+            {
+                _logger.LogWarning(ex, <span class="st">$"SMS failed via {provider.ProviderName}"</span>);
+                <span class="kw">continue</span>; <span class="cm">// امتحان پنل بعدی</span>
+            }
+        }
+        
+        <span class="kw">return</span> <span class="tp">SmsResult</span>.AllProvidersFailed();
+    }
+}
+</div>
+
+<h3>🔌 الگوی عمومی ارتباط با سامانه‌ها</h3>
+<div class="g2">
+<div class="cd">
+<h4>🛡️ Resilience Patterns</h4>
+<ul style="font-size:11px;padding-right:20px">
+<li><strong>Retry Policy (Polly):</strong> ۳ بار تلاش با Exponential Backoff</li>
+<li><strong>Circuit Breaker:</strong> بعد از ۵ خطای متوالی، ۳۰ ثانیه قطع</li>
+<li><strong>Timeout:</strong> ۳۰ ثانیه برای هر درخواست</li>
+<li><strong>Fallback:</strong> در صورت عدم دسترسی، صف محلی</li>
+<li><strong>Bulkhead:</strong> محدودیت درخواست‌های همزمان</li>
+</ul>
+</div>
+<div class="cd">
+<h4>📊 Monitoring & Logging</h4>
+<ul style="font-size:11px;padding-right:20px">
+<li>ثبت همه فراخوانی‌ها در <code>ApiCallLogs</code></li>
+<li>Response Time برای هر API</li>
+<li>Alerting در صورت Downtime</li>
+<li>Dashboard سلامت سامانه‌ها</li>
+<li>تاریخچه Request/Response (برای Debug)</li>
+</ul>
+</div>
+</div>
+</section>
+
+<!-- =============== PART 3: KEY ALGORITHMS =============== -->
+<section>
+<h2>⚙️ بخش سوم: الگوریتم‌های کلیدی</h2>
+
+<div class="ib">در این بخش مهم‌ترین الگوریتم‌های کسب‌وکار سیستم که نیاز به تحلیل دقیق دارند، شرح داده شده‌اند.</div>
+
+<div class="algo-box">
+<div class="algo-title">📅 الگوریتم ۱: محاسبه Slot‌های نوبت‌دهی موجود</div>
+<p style="font-size:12px;color:#64748b;margin-bottom:8px">با توجه به برنامه پزشک، نوبت‌های رزرو شده و غیبت‌ها، لیست ساعت‌های آزاد را محاسبه می‌کند.</p>
+<ol class="algo-steps">
+<li>دریافت ورودی: <code>DoctorId</code>, <code>Date</code>, <code>SlotDuration</code> (مثلاً ۱۵ دقیقه)</li>
+<li>بارگذاری <code>DoctorSchedule</code> برای روز هفته (مثلاً دوشنبه)</li>
+<li>بررسی <code>DoctorAbsences</code> برای تاریخ خاص (مرخصی، جلسه، ...)</li>
+<li>ساخت لیست کامل Slot‌های نظری (مثلاً از ۸:۰۰ تا ۱۴:۰۰ هر ۱۵ دقیقه)</li>
+<li>حذف Slot‌هایی که در <code>BreakTime</code> هستند</li>
+<li>دریافت نوبت‌های رزرو شده (<code>Appointments</code>) برای این تاریخ و پزشک</li>
+<li>حذف Slot‌های رزرو شده از لیست</li>
+<li>برگشت لیست Slot‌های آزاد به همراه ظرفیت باقیمانده</li>
+</ol>
+<div style="margin-top:8px">
+<span class="algo-complexity">⏱️ O(n)</span>
+<span class="algo-complexity">📦 Cache 1 hour</span>
+<span class="algo-complexity">🔒 Thread-safe</span>
+</div>
+</div>
+
+<div class="algo-box">
+<div class="algo-title">💰 الگوریتم ۲: محاسبه سهم بیمه و بیمار (فرانشیز)</div>
+<p style="font-size:12px;color:#64748b;margin-bottom:8px">محاسبه دقیق سهم بیمه اصلی، بیمه تکمیلی و بیمار بر اساس تعرفه و قوانین</p>
+<ol class="algo-steps">
+<li>دریافت ورودی: <code>ServiceId</code>, <code>Quantity</code>, <code>InsuranceCompanyId</code>, <code>SupplementaryInsuranceId</code></li>
+<li>دریافت تعرفه خدمت از <code>Tariffs</code> برای <code>InsuranceCompanyId</code> و سال جاری</li>
+<li>اگر تعرفه بیمه موجود نبود، تعرفه آزاد استفاده شود</li>
+<li>محاسبه قیمت کل: <code>Price = Tariff.Price × Quantity</code></li>
+<li>اگر <code>IsK</code> فعال، محاسبه با فرمول K: <code>Price = Tariff.KValue × GlobalK × Quantity</code></li>
+<li>محاسبه سهم بیمه اصلی: <code>InsuranceShare = Price × (Tariff.InsuranceShare / 100)</code></li>
+<li>اعمال سقف پوشش بیمه: <code>if InsuranceShare > Ceiling then InsuranceShare = Ceiling</code></li>
+<li>محاسبه سهم باقیمانده: <code>Remaining = Price - InsuranceShare</code></li>
+<li>اگر بیمه تکمیلی وجود دارد: <code>SuppShare = Remaining × SuppPercent</code></li>
+<li>محاسبه سهم نهایی بیمار: <code>PatientShare = Remaining - SuppShare</code></li>
+<li>اعمال تخفیف نهایی (اگر وجود دارد)</li>
+<li>برگشت ساختار کامل محاسبات</li>
+</ol>
+<div style="margin-top:8px">
+<span class="algo-complexity">⏱️ O(1)</span>
+<span class="algo-complexity">💾 نیاز به دیتابیس</span>
+</div>
+</div>
+
+<div class="algo-box">
+<div class="algo-title">⚠️ الگوریتم ۳: بررسی تداخل دارویی (Drug Interaction Check)</div>
+<p style="font-size:12px;color:#64748b;margin-bottom:8px">هنگام نسخه‌نویسی، تداخلات بین داروهای جدید و قبلی را شناسایی می‌کند.</p>
+<ol class="algo-steps">
+<li>دریافت لیست داروهای نسخه فعلی: <code>CurrentMedications[]</code></li>
+<li>دریافت داروهای فعلی بیمار (قبل‌ها): <code>PatientActiveMedications[]</code></li>
+<li>ترکیب هر دو لیست: <code>AllMeds = Current ∪ PatientActive</code></li>
+<li>برای هر جفت دارو <code>(Med1, Med2)</code> در <code>AllMeds</code>:</li>
+<li class="s">جستجو در <code>DrugInteractions</code>: <code>WHERE (Med1Id = @m1 AND Med2Id = @m2) OR (Med1Id = @m2 AND Med2Id = @m1)</code></li>
+<li>اگر تداخل پیدا شد، به لیست نتایج اضافه کن</li>
+<li>مرتب‌سازی نتایج بر اساس Severity (Severe → Moderate → Mild)</li>
+<li>بررسی آلرژی‌های بیمار (<code>PatientAllergies</code>) با مواد تشکیل‌دهنده داروها</li>
+<li>اگر تداخل Severe یا آلرژی وجود دارد، نیاز به تایید پزشک</li>
+<li>بازگشت گزارش کامل تداخلات به UI</li>
+</ol>
+<div style="margin-top:8px">
+<span class="algo-complexity">⏱️ O(n²) worst case</span>
+<span class="algo-complexity">📦 Index در DrugInteractions</span>
+<span class="algo-complexity">🧠 Cache</span>
+</div>
+</div>
+
+<div class="algo-box">
+<div class="algo-title">📒 الگوریتم ۴: تولید خودکار سند حسابداری دوبل</div>
+<p style="font-size:12px;color:#64748b;margin-bottom:8px">هر رویداد مالی (فاکتور، پرداخت، حقوق) به صورت خودکار سند حسابداری دوبل تولید می‌کند.</p>
+<ol class="algo-steps">
+<li>دریافت ورودی: <code>EventType</code> (Invoice/Payment/Salary), <code>EventData</code></li>
+<li>بارگذاری قوانین حسابداری بر اساس <code>EventType</code> از جدول Rules</li>
+<li>برای هر قانون:
+<ul style="padding-right:20px;margin:3px 0">
+<li>تعیین <code>DebitAccountId</code> و <code>CreditAccountId</code></li>
+<li>محاسبه <code>Amount</code> بر اساس فرمول (معمولاً Direct Mapping)</li>
+</ul>
+</li>
+<li>ایجاد <code>JournalEntry</code> اصلی با:
+<ul style="padding-right:20px;margin:3px 0">
+<li><code>EntryNumber</code> = Auto-generated</li>
+<li><code>EntryDate</code> = Today</li>
+<li><code>Description</code> = از Template</li>
+<li><code>ReferenceType</code> = Invoice/Payment/...</li>
+<li><code>ReferenceId</code> = ID رویداد</li>
+</ul>
+</li>
+<li>ایجاد <code>JournalEntryLines</code> برای هر طرف:
+<ul style="padding-right:20px;margin:3px 0">
+<li>سطر بدهکار: <code>AccountId, Debit=Amount, Credit=0</code></li>
+<li>سطر بستانکار: <code>AccountId, Debit=0, Credit=Amount</code></li>
+</ul>
+</li>
+<li>بررسی قانون طلایی: <code>SUM(Debit) == SUM(Credit)</code></li>
+<li>اگر نامتوازن، <code>throw AccountingException</code></li>
+<li>ثبت در Transaction و SaveChanges</li>
+<li>به‌روزرسانی <code>CurrentBalance</code> حساب‌های درگیر</li>
+<li>برگشت <code>EntryId</code> به فراخواننده</li>
+</ol>
+
+<div style="background:#fff;padding:10px;border-radius:5px;margin-top:10px;font-size:11px">
+<strong>💡 نمونه قوانین:</strong>
+<table style="margin:5px 0">
+<tr><th>رویداد</th><th>بدهکار</th><th>بستانکار</th></tr>
+<tr><td>فاکتور صادر شد (آزاد)</td><td>حساب‌های دریافتنی</td><td>درآمد خدمات</td></tr>
+<tr><td>فاکتور (بیمه)</td><td>طلب از بیمه + سهم بیمار</td><td>درآمد خدمات</td></tr>
+<tr><td>دریافت نقد</td><td>صندوق</td><td>حساب‌های دریافتنی</td></tr>
+<tr><td>دریافت کارت‌خوان</td><td>بانک</td><td>حساب‌های دریافتنی</td></tr>
+<tr><td>پرداخت حقوق</td><td>هزینه حقوق</td><td>بانک</td></tr>
+</table>
+</div>
+<div style="margin-top:8px">
+<span class="algo-complexity">⏱️ O(k) k=rules</span>
+<span class="algo-complexity">🔒 Transaction</span>
+<span class="algo-complexity">⚠️ Critical</span>
+</div>
+</div>
+
+<div class="algo-box">
+<div class="algo-title">📊 الگوریتم ۵: مدیریت صف انتظار پویا</div>
+<p style="font-size:12px;color:#64748b;margin-bottom:8px">مدیریت هوشمند صف بیماران با در نظر گرفتن اولویت، نوبت رزرو شده و تاخیر پزشک</p>
+<ol class="algo-steps">
+<li>دریافت لیست پذیرش‌های امروز برای پزشک <code>DoctorId</code></li>
+<li>برای هر پذیرش، محاسبه Priority Score:
+<ul style="padding-right:20px;margin:3px 0">
+<li>بیماران اورژانسی: +۱۰۰۰</li>
+<li>VIP: +۵۰۰</li>
+<li>بیمه کارمند: +۱۰۰</li>
+<li>تاخیر زمان نوبت: +۱۰ به ازای هر ۱۵ دقیقه</li>
+<li>مراجعه مجدد: +۵۰</li>
+</ul>
+</li>
+<li>مرتب‌سازی بر اساس: <code>(ArrivedAt ASC, PriorityScore DESC)</code></li>
+<li>تخصیص شماره صف پویا</li>
+<li>محاسبه زمان تخمینی ویزیت:
+<ul style="padding-right:20px;margin:3px 0">
+<li><code>EstimatedWait = (QueuePosition × AvgVisitDuration) - ElapsedTime</code></li>
+</ul>
+</li>
+<li>به‌روزرسانی Real-time با <strong>SignalR</strong> به کلاینت‌ها</li>
+<li>اگر بیمار بیش از ۳۰ دقیقه در صف است، نوتیفیکیشن به منشی</li>
+</ol>
+<div style="margin-top:8px">
+<span class="algo-complexity">⏱️ O(n log n)</span>
+<span class="algo-complexity">📡 SignalR</span>
+<span class="algo-complexity">🔄 Real-time</span>
+</div>
+</div>
+
+<div class="algo-box">
+<div class="algo-title">📱 الگوریتم ۶: ارسال خودکار پیامک یادآوری نوبت</div>
+<p style="font-size:12px;color:#64748b;margin-bottom:8px">Hangfire Job روزانه برای ارسال پیامک یادآوری به بیماران فردا</p>
+<ol class="algo-steps">
+<li>اجرای Job هر روز ساعت ۱۰ صبح</li>
+<li>دریافت لیست نوبت‌های فردا با وضعیت <code>Scheduled</code></li>
+<li>فیلتر نوبت‌هایی که قبلاً پیامک ارسال نشده (<code>ReminderSent = false</code>)</li>
+<li>برای هر نوبت:
+<ul style="padding-right:20px;margin:3px 0">
+<li>بارگذاری Template پیامک "یادآوری نوبت"</li>
+<li>جایگزینی متغیرها: <code>{PatientName}, {DoctorName}, {Date}, {Time}, {Address}</code></li>
+<li>افزودن به <code>SmsQueue</code> با اولویت متوسط</li>
+</ul>
+</li>
+<li>Hangfire Worker دیگر هر ۱ دقیقه <code>SmsQueue</code> را پردازش می‌کند</li>
+<li>انتخاب پنل پیامک پیش‌فرض</li>
+<li>ارسال با Retry Policy (۳ بار)</li>
+<li>به‌روزرسانی <code>SmsMessages</code>: <code>Status, SentAt, Cost, ProviderMessageId</code></li>
+<li>به‌روزرسانی <code>Appointments.ReminderSent = true</code></li>
+<li>پیگیری Delivery Status بعد از ۵ دقیقه</li>
+</ol>
+<div style="margin-top:8px">
+<span class="algo-complexity">⏰ Hangfire Daily</span>
+<span class="algo-complexity">🔁 Retry 3x</span>
+<span class="algo-complexity">📊 Queued</span>
+</div>
+</div>
+
+<div class="algo-box">
+<div class="algo-title">💾 الگوریتم ۷: بکاپ‌گیری خودکار Multi-Tier</div>
+<p style="font-size:12px;color:#64748b;margin-bottom:8px">سیستم بکاپ ۳ سطحی: Full روزانه، Differential ۶ ساعته، Transaction Log هر ساعت</p>
+<ol class="algo-steps">
+<li>Hangfire Jobs با زمان‌بندی:
+<ul style="padding-right:20px;margin:3px 0">
+<li><strong>Full Backup:</strong> هر روز ۳:۰۰ بامداد</li>
+<li><strong>Differential:</strong> هر ۶ ساعت</li>
+<li><strong>Transaction Log:</strong> هر ۱ ساعت</li>
+</ul>
+</li>
+<li>برای Full Backup:
+<ul style="padding-right:20px;margin:3px 0">
+<li>اجرای T-SQL: <code>BACKUP DATABASE ... TO DISK WITH COMPRESSION, CHECKSUM</code></li>
+<li>نام فایل: <code>ClinicPro_Full_{Timestamp}.bak</code></li>
+<li>رمزنگاری فایل با AES-256 و کلید اختصاصی</li>
+</ul>
+</li>
+<li>آپلود به ذخیره‌سازی ثانویه (در صورت فعال بودن):
+<ul style="padding-right:20px;margin:3px 0">
+<li>Cloud: Azure Blob / AWS S3 / آروان‌کلاد</li>
+<li>FTP: به سرور دیگر</li>
+<li>External Drive</li>
+</ul>
+</li>
+<li>سیاست نگهداری (Retention Policy):
+<ul style="padding-right:20px;margin:3px 0">
+<li>Full: ۳۰ روز اخیر + ۱ بکاپ هر ماه (۱۲ ماه)</li>
+<li>Diff: ۷ روز اخیر</li>
+<li>Log: ۴۸ ساعت اخیر</li>
+</ul>
+</li>
+<li>حذف خودکار بکاپ‌های قدیمی</li>
+<li>تست Integrity هر بکاپ: <code>RESTORE VERIFYONLY</code></li>
+<li>ثبت در <code>BackupHistory</code></li>
+<li>در صورت خطا: ارسال نوتیفیکیشن اضطراری</li>
+<li>گزارش ماهانه بکاپ به مدیر سیستم</li>
+</ol>
+<div style="margin-top:8px">
+<span class="algo-complexity">⏰ Hangfire</span>
+<span class="algo-complexity">🔐 AES-256</span>
+<span class="algo-complexity">☁️ Multi-tier</span>
+</div>
+</div>
+
+<div class="algo-box">
+<div class="algo-title">🔍 الگوریتم ۸: جستجوی سریع بیماران (Full-Text + Fuzzy)</div>
+<p style="font-size:12px;color:#64748b;margin-bottom:8px">جستجوی هوشمند با تحمل خطا در تایپ، فارسی/عربی، و اولویت‌دهی هوشمند</p>
+<ol class="algo-steps">
+<li>دریافت ورودی جستجو: <code>SearchTerm</code> (می‌تواند نام، کد ملی، موبایل، شماره پرونده باشد)</li>
+<li>تشخیص نوع ورودی با Regex:
+<ul style="padding-right:20px;margin:3px 0">
+<li><code>^\d{10}$</code> → کد ملی (جستجوی دقیق)</li>
+<li><code>^09\d{9}$</code> → موبایل (جستجوی دقیق)</li>
+<li><code>^\d{5,8}$</code> → شماره پرونده</li>
+<li>سایر → نام (Fuzzy)</li>
+</ul>
+</li>
+<li>نرمال‌سازی متن:
+<ul style="padding-right:20px;margin:3px 0">
+<li>تبدیل ی/ك عربی به ی/ک فارسی</li>
+<li>حذف فاصله‌های اضافی</li>
+<li>تبدیل اعداد فارسی/عربی به انگلیسی</li>
+</ul>
+</li>
+<li>برای نام: استفاده از <code>SQL Server Full-Text Index</code> با <code>CONTAINS</code> و <code>FORMSOF(INFLECTIONAL)</code></li>
+<li>اضافه کردن Fuzzy Search با <code>SOUNDEX</code> یا <code>DIFFERENCE</code> برای غلط‌های املایی</li>
+<li>اولویت‌بندی نتایج:
+<ul style="padding-right:20px;margin:3px 0">
+<li>+۱۰۰ اگر نام کامل Match</li>
+<li>+۵۰ اگر نام خانوادگی Match</li>
+<li>+۳۰ اگر نام Match</li>
+<li>+۱۰۰ اگر مراجعه در ماه اخیر</li>
+</ul>
+</li>
+<li>Pagination با limit ۵۰ نتیجه</li>
+<li>Highlight کردن متن Match شده در UI</li>
+<li>Cache نتیجه برای ۵ دقیقه</li>
+</ol>
+<div style="margin-top:8px">
+<span class="algo-complexity">⏱️ O(log n) با Index</span>
+<span class="algo-complexity">🔎 Full-Text</span>
+<span class="algo-complexity">💡 Fuzzy</span>
+</div>
+</div>
+
+<div class="algo-box">
+<div class="algo-title">📊 الگوریتم ۹: محاسبه کارانه پزشک</div>
+<p style="font-size:12px;color:#64748b;margin-bottom:8px">محاسبه خودکار سهم پزشک از ویزیت‌ها، آزمایش‌ها، نسخه‌ها و اعمال پاداش/کسر</p>
+<ol class="algo-steps">
+<li>دریافت ورودی: <code>DoctorId</code>, <code>PeriodStart</code>, <code>PeriodEnd</code></li>
+<li>دریافت تمام فاکتورهای پرداخت‌شده (<code>PaymentStatus = Paid</code>) این پزشک در این دوره</li>
+<li>برای هر <code>InvoiceItem</code> از این پزشک:
+<ul style="padding-right:20px;margin:3px 0">
+<li>محاسبه <code>DoctorShare = (Price × DoctorSharePercent) / 100</code></li>
+<li>افزودن به <code>GrossAmount</code></li>
+</ul>
+</li>
+<li>کسر مالیات (<code>Tax = GrossAmount × TaxRate</code>)</li>
+<li>کسر بیمه (در صورت وجود)</li>
+<li>کسر وام‌ها و پیش‌پرداخت‌ها</li>
+<li>افزودن پاداش (در صورت وجود)</li>
+<li>محاسبه نهایی: <code>NetAmount = Gross - Tax - Insurance - Loans + Bonus</code></li>
+<li>ذخیره در <code>DoctorPayments</code></li>
+<li>تولید سند حسابداری:
+<ul style="padding-right:20px;margin:3px 0">
+<li>بدهکار: حساب هزینه کارانه پزشکان</li>
+<li>بستانکار: حساب بانک / پرداختنی</li>
+</ul>
+</li>
+<li>تولید PDF فیش حقوقی</li>
+<li>ارسال SMS اطلاع واریز</li>
+</ol>
+<div style="margin-top:8px">
+<span class="algo-complexity">⏱️ O(n)</span>
+<span class="algo-complexity">📒 Auto Journal</span>
+<span class="algo-complexity">📊 Monthly</span>
+</div>
+</div>
+
+<div class="algo-box">
+<div class="algo-title">⚠️ الگوریتم ۱۰: هشدار موجودی کم داروخانه</div>
+<p style="font-size:12px;color:#64748b;margin-bottom:8px">تحلیل روزانه موجودی و پیش‌بینی نیاز سفارش بر اساس مصرف تاریخی</p>
+<ol class="algo-steps">
+<li>Hangfire Job روزانه ساعت ۸ صبح</li>
+<li>برای هر آیتم در <code>PharmacyInventory</code>:
+<ul style="padding-right:20px;margin:3px 0">
+<li>بررسی موجودی فعلی: <code>Quantity</code></li>
+<li>محاسبه میانگین مصرف ۳۰ روز گذشته: <code>AvgDailyUsage</code></li>
+<li>پیش‌بینی مدت باقیمانده: <code>DaysLeft = Quantity / AvgDailyUsage</code></li>
+</ul>
+</li>
+<li>طبقه‌بندی:
+<ul style="padding-right:20px;margin:3px 0">
+<li><strong>Critical (قرمز):</strong> <code>Quantity < MinStock</code> یا <code>DaysLeft < 3</code></li>
+<li><strong>Low (زرد):</strong> <code>Quantity < ReorderLevel</code> یا <code>DaysLeft < 7</code></li>
+<li><strong>OK (سبز):</strong> سایر موارد</li>
+</ul>
+</li>
+<li>بررسی تاریخ انقضا:
+<ul style="padding-right:20px;margin:3px 0">
+<li>اگر <code>ExpiryDate < Now + 30 days</code> → هشدار</li>
+<li>اگر <code>ExpiryDate < Now</code> → بلاک تحویل</li>
+</ul>
+</li>
+<li>تولید سفارش خرید پیشنهادی برای آیتم‌های Critical/Low:
+<ul style="padding-right:20px;margin:3px 0">
+<li><code>SuggestedOrder = MaxStock - Quantity</code></li>
+<li>انتخاب تامین‌کننده با آخرین خرید / بهترین قیمت</li>
+</ul>
+</li>
+<li>ارسال گزارش به داروساز و مدیر</li>
+<li>نمایش در داشبورد با تعداد موارد Critical/Low</li>
+</ol>
+<div style="margin-top:8px">
+<span class="algo-complexity">⏰ Hangfire Daily</span>
+<span class="algo-complexity">📊 Predictive</span>
+<span class="algo-complexity">🔔 Alerts</span>
+</div>
+</div>
+
+<div class="algo-box">
+<div class="algo-title">🖨️ الگوریتم ۱۱: تولید شماره‌های یکتا (Invoice, MRN, ...)</div>
+<p style="font-size:12px;color:#64748b;margin-bottom:8px">تولید Sequential شماره‌های یکتا با پیشوند و Thread-Safe</p>
+<ol class="algo-steps">
+<li>تعریف Pattern برای هر نوع شماره:
+<ul style="padding-right:20px;margin:3px 0">
+<li>فاکتور: <code>INV-{YYYY}-{SeqNo:D6}</code> مثلاً <code>INV-2024-000123</code></li>
+<li>پرونده: <code>MRN-{SeqNo:D6}</code> مثلاً <code>MRN-010234</code></li>
+<li>نسخه: <code>RX-{YYYYMM}-{SeqNo:D5}</code></li>
+<li>سند حسابداری: <code>JE-{YYYY}-{SeqNo:D5}</code></li>
+</ul>
+</li>
+<li>استفاده از SQL Server Sequence (کارآمدترین روش):
+<ul style="padding-right:20px;margin:3px 0">
+<li><code>CREATE SEQUENCE InvoiceSeq START WITH 1 INCREMENT BY 1</code></li>
+<li>فراخوانی: <code>SELECT NEXT VALUE FOR InvoiceSeq</code></li>
+</ul>
+</li>
+<li>فرمت نهایی با C# String Format</li>
+<li>بررسی تکراری نبودن قبل از Insert</li>
+<li>در صورت تکراری بودن (edge case)، retry با شماره جدید</li>
+<li>ثبت در Audit Log</li>
+</ol>
+<div style="margin-top:8px">
+<span class="algo-complexity">⏱️ O(1)</span>
+<span class="algo-complexity">🔒 Thread-safe</span>
+<span class="algo-complexity">⚡ SQL Sequence</span>
+</div>
+</div>
+
+<div class="algo-box">
+<div class="algo-title">📅 الگوریتم ۱۲: تبدیل تقویم شمسی ↔ میلادی</div>
+<p style="font-size:12px;color:#64748b;margin-bottom:8px">تبدیل دقیق تاریخ‌ها با پشتیبانی از سال کبیسه و فرمت‌های مختلف</p>
+<ol class="algo-steps">
+<li>استفاده از <code>System.Globalization.PersianCalendar</code> در .NET</li>
+<li>کلاس Helper مخصوص <code>PersianDateHelper</code>:
+<ul style="padding-right:20px;margin:3px 0">
+<li><code>ToShamsi(DateTime gregorian): string</code></li>
+<li><code>ToGregorian(string shamsi): DateTime</code></li>
+<li><code>GetShamsiMonthName(int month): string</code></li>
+<li><code>GetShamsiDayName(DayOfWeek day): string</code></li>
+<li><code>IsLeapYear(int year): bool</code></li>
+</ul>
+</li>
+<li>Validation قوی: <code>1300 &lt;= Year &lt;= 1500</code>, <code>1 &lt;= Month &lt;= 12</code>, <code>1 &lt;= Day &lt;= 31</code></li>
+<li>WPF Control مخصوص: <code>PersianDatePicker</code> با Material Design</li>
+<li>Converter برای XAML Binding: <code>GregorianToShamsiConverter</code></li>
+<li>ذخیره در DB به صورت دو فیلد:
+<ul style="padding-right:20px;margin:3px 0">
+<li><code>CreatedAt (datetime2)</code> - میلادی برای مرتب‌سازی و محاسبات</li>
+<li><code>CreatedAtShamsi (nvarchar(10))</code> - شمسی برای نمایش سریع</li>
+</ul>
+</li>
+<li>قابل Localization برای چندزبانه در آینده</li>
+</ol>
+<div style="margin-top:8px">
+<span class="algo-complexity">⏱️ O(1)</span>
+<span class="algo-complexity">📅 PersianCalendar</span>
+<span class="algo-complexity">🌐 i18n Ready</span>
+</div>
+</div>
+
+<h3 style="margin-top:20px">🔧 سایر الگوریتم‌های مهم (فهرست)</h3>
+<div class="g2">
+<ul style="font-size:12px;padding-right:20px">
+<li><strong>13.</strong> اعتبارسنجی کد ملی ایرانی (الگوریتم رقم کنترلی)</li>
+<li><strong>14.</strong> اعتبارسنجی شماره شبا بانکی (الگوریتم MOD 97)</li>
+<li><strong>15.</strong> تولید QR Code برای نسخه الکترونیک</li>
+<li><strong>16.</strong> فشرده‌سازی و بهینه‌سازی عکس‌های پرونده</li>
+<li><strong>17.</strong> خروجی Excel از گزارش‌ها (با ClosedXML)</li>
+<li><strong>18.</strong> تولید PDF فارسی با QuestPDF</li>
+<li><strong>19.</strong> Rate Limiting با Token Bucket</li>
+<li><strong>20.</strong> Session Management با Sliding Expiration</li>
+</ul>
+<ul style="font-size:12px;padding-right:20px">
+<li><strong>21.</strong> Caching هوشمند با Invalidation</li>
+<li><strong>22.</strong> Pagination بهینه با Keyset Pagination</li>
+<li><strong>23.</strong> Soft Delete با Global Query Filter</li>
+<li><strong>24.</strong> Concurrency Control با RowVersion</li>
+<li><strong>25.</strong> محاسبه BMI و تفسیر</li>
+<li><strong>26.</strong> محاسبه سن از تاریخ تولد</li>
+<li><strong>27.</strong> پیش‌بینی زمان ویزیت با Machine Learning (آینده)</li>
+<li><strong>28.</strong> Encryption/Decryption داده‌های حساس</li>
+</ul>
+</div>
+</section>
+
+<footer>
+<p>📄 فایل ۶ از ۶ | <strong>سامانه لایسنس + یکپارچه‌سازی + ۲۸ الگوریتم کلیدی</strong></p>
+<p style="margin-top:10px">🎉 <strong>تمام مستندات طراحی تکمیل شد!</strong> حالا می‌توانید فایل <strong>prompt.html</strong> را مشاهده کنید.</p>
+</footer>
+
+</div>
+</body>
+</html>

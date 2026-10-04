@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>🗄️ ClinicPro - طراحی دیتابیس (ERD)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+:root{--p:#1a73e8;--pd:#1557b0;--s:#34a853;--a:#ea4335;--w:#fbbc04;--bg:#f0f2f5;--c:#fff;--t:#202124;--b:#dadce0;--sh:0 2px 8px rgba(0,0,0,.1);--r:12px;--g:linear-gradient(135deg,#1a73e8,#34a853)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t);line-height:1.7;font-size:12px}
+.ct{max-width:1500px;margin:0 auto;padding:20px}
+header{background:var(--g);color:#fff;padding:40px 20px;text-align:center;border-radius:0 0 30px 30px;margin-bottom:25px}
+header h1{font-size:2em;font-weight:900;margin-bottom:8px}
+header p{font-size:1em;opacity:.9}
+.nav{background:#fff;padding:12px;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.nav a{padding:7px 14px;background:#f0f2f5;border-radius:8px;text-decoration:none;color:var(--t);font-size:11px;font-weight:600}
+.nav a:hover,.nav a.active{background:var(--p);color:#fff}
+section{background:var(--c);border-radius:var(--r);padding:20px;box-shadow:var(--sh);margin-bottom:18px}
+section h2{color:var(--p);font-size:1.3em;margin-bottom:12px;padding-bottom:8px;border-bottom:3px solid var(--p)}
+section h3{color:var(--pd);font-size:1.05em;margin:12px 0 8px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:12px}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.sb{text-align:center;padding:12px;background:var(--g);color:#fff;border-radius:var(--r)}
+.sb .n{font-size:1.8em;font-weight:900}.sb .l{font-size:.8em;opacity:.9}
+.ib{background:#e8f0fe;border-right:4px solid var(--p);padding:10px;border-radius:0 8px 8px 0;margin:8px 0;font-size:12px}
+.eg{border:2px solid var(--p);border-radius:var(--r);padding:14px;margin:12px 0;position:relative}
+.eg::before{content:attr(data-t);position:absolute;top:-11px;right:15px;background:var(--p);color:#fff;padding:2px 12px;border-radius:20px;font-weight:700;font-size:11px}
+.eg.gr{border-color:var(--s)}.eg.gr::before{background:var(--s)}
+.eg.rd{border-color:var(--a)}.eg.rd::before{background:var(--a)}
+.eg.yl{border-color:#e37400}.eg.yl::before{background:#e37400}
+.eg.pr{border-color:#7c3aed}.eg.pr::before{background:#7c3aed}
+.eg.tl{border-color:#0d9488}.eg.tl::before{background:#0d9488}
+.eg.pk{border-color:#ec4899}.eg.pk::before{background:#ec4899}
+.eg.in{border-color:#4f46e5}.eg.in::before{background:#4f46e5}
+.eg.or{border-color:#f97316}.eg.or::before{background:#f97316}
+.eg.cy{border-color:#06b6d4}.eg.cy::before{background:#06b6d4}
+.eg.gy{border-color:#64748b}.eg.gy::before{background:#64748b}
+.et{background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.1);margin:6px 0}
+.eth{background:linear-gradient(135deg,#2d3748,#4a5568);color:#fff;padding:7px 10px;font-weight:700;font-size:12px;display:flex;justify-content:space-between;align-items:center}
+.eth .ic{font-size:14px}
+table{width:100%;border-collapse:collapse;margin:0;font-size:11px}
+.et th{padding:4px 6px;font-size:10px;background:#4a5568;color:#fff;text-align:right}
+.et td{padding:3px 6px;border-bottom:1px solid #f0f0f0;vertical-align:top}
+.et tr:hover{background:#f8f9fa}
+.pk{color:#ea4335;font-weight:700}.fk{color:#1a73e8;font-weight:600}.uq{color:#34a853;font-weight:600;font-size:9px}
+.nn{color:#e37400;font-size:9px}.idx{color:#7c3aed;font-size:9px}
+.bg{display:inline-block;padding:2px 8px;border-radius:12px;font-size:9px;font-weight:600}
+.bg-b{background:#e8f0fe;color:#1a73e8}.bg-g{background:#e6f4ea;color:#34a853}.bg-r{background:#fce8e6;color:#ea4335}
+.cb{background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:8px;font-family:'Courier New',monospace;font-size:11px;direction:ltr;text-align:left;overflow-x:auto;margin:8px 0;line-height:1.5}
+.kw{color:#569cd6}.st{color:#ce9178}.cm{color:#6a9955}.tp{color:#4ec9b0}
+footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#fff;border-radius:var(--r);margin-top:20px}
+@media(max-width:768px){.g2,.g3,.g4{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<h1>🗄️ طراحی دیتابیس ClinicPro</h1>
+<p>فایل ۲: ERD کامل - ۹۰+ جدول در ۱۲ گروه</p>
+</header>
+
+<div class="ct">
+<nav class="nav">
+<a href="01-overview.html">1️⃣ تحلیل و معماری</a>
+<a href="02-database.html" class="active">2️⃣ دیتابیس</a>
+<a href="03-flowcharts.html">3️⃣ فلوچارت</a>
+<a href="04-wireframes.html">4️⃣ وایرفریم</a>
+<a href="05-security-timeline.html">5️⃣ امنیت و زمان‌بندی</a>
+<a href="06-license-integration.html">6️⃣ لایسنس و یکپارچه‌سازی</a>
+<a href="prompt.html">🤖 پرامپت AI</a>
+</nav>
+
+<section>
+<h2>📊 خلاصه دیتابیس</h2>
+<div class="g4">
+<div class="sb"><div class="n">۹۰+</div><div class="l">جدول</div></div>
+<div class="sb"><div class="n">۱۲</div><div class="l">گروه</div></div>
+<div class="sb"><div class="n">۲۰۰+</div><div class="l">رابطه</div></div>
+<div class="sb"><div class="n">۸۰+</div><div class="l">ایندکس</div></div>
+<div class="sb"><div class="n">۳۰+</div><div class="l">View</div></div>
+<div class="sb"><div class="n">۲۰+</div><div class="l">Stored Procedure</div></div>
+</div>
+
+<div class="ib">
+<strong>📌 قراردادهای طراحی:</strong>
+<ul style="margin:5px 20px;line-height:1.8">
+<li><strong>PK:</strong> همه کلیدهای اصلی <code>bigint IDENTITY(1,1)</code></li>
+<li><strong>Soft Delete:</strong> فیلد <code>IsDeleted bit</code> در همه جداول</li>
+<li><strong>Audit:</strong> فیلدهای <code>CreatedAt, CreatedBy, UpdatedAt, UpdatedBy</code></li>
+<li><strong>Encryption:</strong> فیلدهای حساس بیماران با AES-256 رمزنگاری می‌شوند</li>
+<li><strong>Collation:</strong> <code>SQL_Latin1_General_CP1_CI_AS</code> با پشتیبانی nvarchar</li>
+<li><strong>تاریخ شمسی:</strong> در کنار datetime، فیلد string nvarchar(10) ذخیره می‌شود</li>
+<li><strong>Multi-tenancy:</strong> فیلد <code>BranchId</code> در جداول آماده برای چند شعبه‌ای</li>
+<li><strong>Row Version:</strong> فیلد <code>RowVersion timestamp</code> برای Concurrency Control</li>
+</ul>
+</div>
+
+<h3>🎯 Base Entity (جد مشترک همه موجودیت‌ها)</h3>
+<div class="cb">
+<span class="kw">public abstract class</span> <span class="tp">BaseEntity</span>
+{
+    <span class="kw">public long</span> Id { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public</span> <span class="tp">DateTime</span> CreatedAt { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public long</span>? CreatedBy { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public</span> <span class="tp">DateTime</span>? UpdatedAt { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public long</span>? UpdatedBy { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public bool</span> IsDeleted { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public</span> <span class="kw">byte</span>[] RowVersion { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public long</span>? BranchId { <span class="kw">get</span>; <span class="kw">set</span>; } <span class="cm">// برای Multi-Branch</span>
+}
+</div>
+</section>
+
+<!-- ============ GROUP 1: Core - Patients & Doctors ============ -->
+<section>
+<h2>🏥 گروه ۱: هسته - بیماران، پزشکان، تخصص‌ها</h2>
+
+<div class="eg" data-t="👤 بیماران">
+<div class="g2">
+<div class="et"><div class="eth"><span>👤 Patients - بیماران</span><span class="ic">⭐ مرکزی</span></div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th><th>توضیح</th></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="pk">PK</span></td><td>شناسه</td></tr>
+<tr><td>MedicalRecordNo</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td><td>شماره پرونده</td></tr>
+<tr><td>NationalCode</td><td>nvarchar(10)</td><td><span class="uq">UQ</span> <span class="idx">IX</span></td><td>کد ملی</td></tr>
+<tr><td>FirstName</td><td>nvarchar(50)</td><td><span class="nn">NN</span></td><td>نام</td></tr>
+<tr><td>LastName</td><td>nvarchar(50)</td><td><span class="nn">NN</span> <span class="idx">IX</span></td><td>نام خانوادگی</td></tr>
+<tr><td>FatherName</td><td>nvarchar(50)</td><td></td><td>نام پدر</td></tr>
+<tr><td>Gender</td><td>tinyint</td><td><span class="nn">NN</span></td><td>1=مرد, 2=زن</td></tr>
+<tr><td>BirthDate</td><td>date</td><td></td><td>تاریخ تولد میلادی</td></tr>
+<tr><td>BirthDateShamsi</td><td>nvarchar(10)</td><td></td><td>تاریخ تولد شمسی</td></tr>
+<tr><td>BloodType</td><td>nvarchar(5)</td><td></td><td>A+/O-/...</td></tr>
+<tr><td>MaritalStatus</td><td>tinyint</td><td></td><td>مجرد/متأهل</td></tr>
+<tr><td>Mobile</td><td>nvarchar(11)</td><td><span class="nn">NN</span> <span class="idx">IX</span></td><td>موبایل</td></tr>
+<tr><td>Phone</td><td>nvarchar(15)</td><td></td><td>تلفن ثابت</td></tr>
+<tr><td>Email</td><td>nvarchar(100)</td><td></td><td>ایمیل</td></tr>
+<tr><td>Address</td><td>nvarchar(500)</td><td></td><td>آدرس</td></tr>
+<tr><td>City</td><td>nvarchar(50)</td><td></td><td>شهر</td></tr>
+<tr><td>Province</td><td>nvarchar(50)</td><td></td><td>استان</td></tr>
+<tr><td>PostalCode</td><td>nvarchar(10)</td><td></td><td>کد پستی</td></tr>
+<tr><td>EmergencyContactName</td><td>nvarchar(100)</td><td></td><td>تماس اضطراری</td></tr>
+<tr><td>EmergencyContactPhone</td><td>nvarchar(11)</td><td></td><td>تلفن اضطراری</td></tr>
+<tr><td>EmergencyContactRelation</td><td>nvarchar(50)</td><td></td><td>نسبت</td></tr>
+<tr><td>InsuranceCompanyId</td><td>bigint</td><td><span class="fk">FK</span></td><td>شرکت بیمه</td></tr>
+<tr><td>InsuranceNumber</td><td>nvarchar(50)</td><td></td><td>شماره بیمه</td></tr>
+<tr><td>InsuranceType</td><td>nvarchar(50)</td><td></td><td>نوع بیمه</td></tr>
+<tr><td>SupplementaryInsuranceId</td><td>bigint</td><td><span class="fk">FK</span></td><td>بیمه تکمیلی</td></tr>
+<tr><td>SepasPatientId</td><td>nvarchar(50)</td><td></td><td>شناسه سپاس</td></tr>
+<tr><td>Occupation</td><td>nvarchar(100)</td><td></td><td>شغل</td></tr>
+<tr><td>Education</td><td>tinyint</td><td></td><td>تحصیلات</td></tr>
+<tr><td>Nationality</td><td>nvarchar(50)</td><td></td><td>ملیت</td></tr>
+<tr><td>PatientType</td><td>tinyint</td><td></td><td>عادی/VIP/کارمند</td></tr>
+<tr><td>Allergies</td><td>nvarchar(max)</td><td></td><td>آلرژی‌ها (JSON)</td></tr>
+<tr><td>ChronicDiseases</td><td>nvarchar(max)</td><td></td><td>بیماری‌های مزمن</td></tr>
+<tr><td>CurrentMedications</td><td>nvarchar(max)</td><td></td><td>داروهای فعلی</td></tr>
+<tr><td>FamilyHistory</td><td>nvarchar(max)</td><td></td><td>سابقه خانوادگی</td></tr>
+<tr><td>ProfilePicture</td><td>nvarchar(500)</td><td></td><td>مسیر عکس</td></tr>
+<tr><td>EncryptedData</td><td>varbinary(max)</td><td></td><td>داده‌های حساس AES</td></tr>
+<tr><td>RegistrationDate</td><td>datetime2</td><td></td><td>تاریخ ثبت</td></tr>
+<tr><td>LastVisitDate</td><td>datetime2</td><td></td><td>آخرین مراجعه</td></tr>
+<tr><td>IsActive</td><td>bit</td><td>Default 1</td><td>فعال</td></tr>
+<tr><td>+ Audit Fields</td><td>...</td><td></td><td>Created/Updated</td></tr>
+</table></div>
+
+<div>
+<div class="et"><div class="eth">👨‍⚕️ Doctors - پزشکان</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>DoctorId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>EmployeeId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>MedicalLicenseNo</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>NezamPezeshkiCode</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>SpecialtyId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>SubSpecialtyId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>AcademicRank</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Biography</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>ConsultationFee</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>VisitDuration</td><td>int</td><td>Default 15</td></tr>
+<tr><td>MaxPatientsPerShift</td><td>int</td><td></td></tr>
+<tr><td>DoctorPercentage</td><td>decimal(5,2)</td><td></td></tr>
+<tr><td>SignatureImage</td><td>varbinary(max)</td><td></td></tr>
+<tr><td>StampImage</td><td>varbinary(max)</td><td></td></tr>
+<tr><td>OnlineBookingEnabled</td><td>bit</td><td></td></tr>
+<tr><td>AcceptsNewPatients</td><td>bit</td><td></td></tr>
+<tr><td>Rating</td><td>decimal(3,2)</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🏷️ Specialties - تخصص‌ها</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>SpecialtyId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Name</td><td>nvarchar(100)</td><td><span class="nn">NN</span></td></tr>
+<tr><td>NameEn</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Code</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>ParentId</td><td>bigint</td><td><span class="fk">FK</span> Self</td></tr>
+<tr><td>Description</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>IconPath</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📋 PatientHistories</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>HistoryId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>HistoryType</td><td>tinyint</td><td></td></tr>
+<tr><td>Title</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>Description</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>RecordedDate</td><td>datetime2</td><td></td></tr>
+<tr><td>RecordedBy</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+</table></div>
+</div>
+</div>
+</div>
+
+<div class="ib">
+<strong>🔗 روابط گروه ۱:</strong>
+<ul style="margin:5px 20px">
+<li>Patients ─(N:1)─ InsuranceCompanies</li>
+<li>Doctors ─(N:1)─ Employees | Specialties | SubSpecialties</li>
+<li>Specialties ─(1:N)─ Specialties (Self-Referencing برای زیرتخصص)</li>
+<li>PatientHistories ─(N:1)─ Patients</li>
+</ul>
+</div>
+</section>
+
+<!-- ============ GROUP 2: Appointments & Reception ============ -->
+<section>
+<h2>📅 گروه ۲: نوبت‌دهی، پذیرش، شیفت و صف</h2>
+
+<div class="eg gr" data-t="📅 نوبت و پذیرش">
+<div class="g3">
+<div class="et"><div class="eth">📅 Appointments - نوبت‌ها</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>AppointmentId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>AppointmentCode</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>DoctorId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>SpecialtyId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>AppointmentDate</td><td>date</td><td><span class="nn">NN</span></td></tr>
+<tr><td>AppointmentDateShamsi</td><td>nvarchar(10)</td><td></td></tr>
+<tr><td>AppointmentTime</td><td>time</td><td><span class="nn">NN</span></td></tr>
+<tr><td>Duration</td><td>int</td><td>Default 15</td></tr>
+<tr><td>Status</td><td>tinyint</td><td><span class="nn">NN</span></td></tr>
+<tr><td>AppointmentType</td><td>tinyint</td><td></td></tr>
+<tr><td>RoomId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>QueueNumber</td><td>int</td><td></td></tr>
+<tr><td>Source</td><td>tinyint</td><td></td></tr>
+<tr><td>IsFirstVisit</td><td>bit</td><td></td></tr>
+<tr><td>Priority</td><td>tinyint</td><td></td></tr>
+<tr><td>EstimatedFee</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>CancellationReason</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>CancelledAt</td><td>datetime2</td><td></td></tr>
+<tr><td>CancelledBy</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ReminderSent</td><td>bit</td><td></td></tr>
+<tr><td>Notes</td><td>nvarchar(max)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📋 Receptions - پذیرش</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ReceptionId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ReceptionNumber</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>AppointmentId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>DoctorId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ReceptionDate</td><td>datetime2</td><td><span class="nn">NN</span></td></tr>
+<tr><td>ReceptionDateShamsi</td><td>nvarchar(10)</td><td></td></tr>
+<tr><td>InsuranceCompanyId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>InsuranceVerified</td><td>bit</td><td></td></tr>
+<tr><td>InsuranceApprovalCode</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>SupplementaryInsuranceCode</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>ReferralCode</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>ReferringDoctor</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>ReceptionistId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>EnterTime</td><td>datetime2</td><td></td></tr>
+<tr><td>ExitTime</td><td>datetime2</td><td></td></tr>
+<tr><td>WaitingTime</td><td>int</td><td></td></tr>
+<tr><td>Notes</td><td>nvarchar(max)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">⏰ DoctorSchedules - برنامه پزشکان</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ScheduleId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>DoctorId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>DayOfWeek</td><td>tinyint</td><td><span class="nn">NN</span></td></tr>
+<tr><td>StartTime</td><td>time</td><td><span class="nn">NN</span></td></tr>
+<tr><td>EndTime</td><td>time</td><td><span class="nn">NN</span></td></tr>
+<tr><td>BreakStart</td><td>time</td><td></td></tr>
+<tr><td>BreakEnd</td><td>time</td><td></td></tr>
+<tr><td>RoomId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>MaxPatients</td><td>int</td><td></td></tr>
+<tr><td>SlotDuration</td><td>int</td><td>15</td></tr>
+<tr><td>ValidFrom</td><td>date</td><td></td></tr>
+<tr><td>ValidTo</td><td>date</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">🏠 ExaminationRooms - اتاق ویزیت</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>RoomId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>RoomNumber</td><td>nvarchar(10)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>RoomName</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>DepartmentId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Floor</td><td>int</td><td></td></tr>
+<tr><td>Capacity</td><td>int</td><td>Default 1</td></tr>
+<tr><td>RoomType</td><td>tinyint</td><td></td></tr>
+<tr><td>Equipment</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🔄 Shifts - شیفت‌ها</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ShiftId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ShiftName</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>ShiftCode</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>StartTime</td><td>time</td><td></td></tr>
+<tr><td>EndTime</td><td>time</td><td></td></tr>
+<tr><td>ShiftType</td><td>tinyint</td><td></td></tr>
+<tr><td>IsNightShift</td><td>bit</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📊 Queues - صف انتظار</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>QueueId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ReceptionId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>DoctorId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>QueueDate</td><td>date</td><td></td></tr>
+<tr><td>QueueNumber</td><td>int</td><td><span class="nn">NN</span></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>Priority</td><td>tinyint</td><td></td></tr>
+<tr><td>ArrivedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>CalledAt</td><td>datetime2</td><td></td></tr>
+<tr><td>EnteredAt</td><td>datetime2</td><td></td></tr>
+<tr><td>CompletedAt</td><td>datetime2</td><td></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">📆 DoctorAbsences - غیبت پزشکان</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>AbsenceId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>DoctorId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>AbsenceDate</td><td>date</td><td></td></tr>
+<tr><td>FromTime/ToTime</td><td>time</td><td></td></tr>
+<tr><td>AbsenceType</td><td>tinyint</td><td></td></tr>
+<tr><td>Reason</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>ApprovedBy</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🏢 Departments - بخش‌ها</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>DepartmentId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Name</td><td>nvarchar(100)</td><td><span class="nn">NN</span></td></tr>
+<tr><td>Code</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>ManagerEmployeeId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ParentDepartmentId</td><td>bigint</td><td><span class="fk">FK</span> Self</td></tr>
+<tr><td>Floor</td><td>int</td><td></td></tr>
+<tr><td>Phone</td><td>nvarchar(15)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🏥 Branches - شعبه‌ها</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>BranchId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>BranchName</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>BranchCode</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>Address</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>City/Province</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Phone</td><td>nvarchar(15)</td><td></td></tr>
+<tr><td>IsMain</td><td>bit</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+</div>
+</div>
+</section>
+
+<!-- ============ GROUP 3: Visit & Prescription ============ -->
+<section>
+<h2>🩺 گروه ۳: ویزیت، معاینه، نسخه‌نویسی</h2>
+
+<div class="eg rd" data-t="🩺 ویزیت و نسخه">
+<div class="g2">
+<div class="et"><div class="eth">🩺 Visits - ویزیت‌ها</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>VisitId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>VisitCode</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>ReceptionId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>DoctorId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>VisitDate</td><td>datetime2</td><td><span class="nn">NN</span></td></tr>
+<tr><td>VisitDateShamsi</td><td>nvarchar(10)</td><td></td></tr>
+<tr><td>VisitType</td><td>tinyint</td><td></td></tr>
+<tr><td>ChiefComplaint</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>HistoryOfPresentIllness</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>PastMedicalHistory</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>FamilyHistory</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>SocialHistory</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>ReviewOfSystems</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>PhysicalExamination</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>SOAP_Subjective</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>SOAP_Objective</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>SOAP_Assessment</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>SOAP_Plan</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>PrimaryDiagnosisId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>SecondaryDiagnoses</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>TreatmentPlan</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>FollowUpDate</td><td>date</td><td></td></tr>
+<tr><td>FollowUpInstructions</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>StartTime</td><td>datetime2</td><td></td></tr>
+<tr><td>EndTime</td><td>datetime2</td><td></td></tr>
+<tr><td>Duration</td><td>int</td><td></td></tr>
+<tr><td>VisitFee</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>SepasReferenceCode</td><td>nvarchar(50)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">💓 VitalSigns - علائم حیاتی</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>VitalSignId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>VisitId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>MeasuredAt</td><td>datetime2</td><td></td></tr>
+<tr><td>Temperature</td><td>decimal(4,1)</td><td></td></tr>
+<tr><td>BloodPressureSystolic</td><td>int</td><td></td></tr>
+<tr><td>BloodPressureDiastolic</td><td>int</td><td></td></tr>
+<tr><td>HeartRate</td><td>int</td><td></td></tr>
+<tr><td>RespiratoryRate</td><td>int</td><td></td></tr>
+<tr><td>OxygenSaturation</td><td>int</td><td></td></tr>
+<tr><td>Weight</td><td>decimal(5,2)</td><td></td></tr>
+<tr><td>Height</td><td>decimal(5,2)</td><td></td></tr>
+<tr><td>BMI</td><td>decimal(4,2)</td><td></td></tr>
+<tr><td>BloodSugar</td><td>int</td><td></td></tr>
+<tr><td>HeadCircumference</td><td>decimal(5,2)</td><td></td></tr>
+<tr><td>MeasuredBy</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">💊 Prescriptions - نسخه‌ها</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>PrescriptionId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>PrescriptionCode</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>VisitId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>DoctorId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PrescriptionDate</td><td>datetime2</td><td></td></tr>
+<tr><td>Type</td><td>tinyint</td><td></td></tr>
+<tr><td>IsElectronic</td><td>bit</td><td></td></tr>
+<tr><td>ElectronicTrackingCode</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>InsuranceSystemType</td><td>tinyint</td><td></td></tr>
+<tr><td>InsuranceApprovalCode</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>ValidUntil</td><td>date</td><td></td></tr>
+<tr><td>IsNarcotic</td><td>bit</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>Notes</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>PrintedCount</td><td>int</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">💊 PrescriptionItems</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ItemId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>PrescriptionId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>MedicationId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>OrderIndex</td><td>int</td><td></td></tr>
+<tr><td>Dosage</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Frequency</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Duration</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Route</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Quantity</td><td>decimal(10,2)</td><td></td></tr>
+<tr><td>Unit</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>Instructions</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>IsSOS</td><td>bit</td><td></td></tr>
+<tr><td>IsDelivered</td><td>bit</td><td></td></tr>
+<tr><td>DeliveredAt</td><td>datetime2</td><td></td></tr>
+<tr><td>DeliveredQuantity</td><td>decimal(10,2)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">💉 Medications - داروها</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>MedicationId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>IRCCode</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>GenericName</td><td>nvarchar(200)</td><td><span class="nn">NN</span></td></tr>
+<tr><td>GenericNameFa</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>BrandName</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>ATCCode</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>Form</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Strength</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Manufacturer</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Country</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Barcode</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Category</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>IsOTC</td><td>bit</td><td></td></tr>
+<tr><td>IsNarcotic</td><td>bit</td><td></td></tr>
+<tr><td>IsRefrigerated</td><td>bit</td><td></td></tr>
+<tr><td>SideEffects</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Contraindications</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">🏥 ICD10Codes - کدهای تشخیص</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ICD10CodeId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Code</td><td>nvarchar(10)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>Description</td><td>nvarchar(500)</td><td><span class="nn">NN</span></td></tr>
+<tr><td>DescriptionFa</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>ParentCode</td><td>nvarchar(10)</td><td></td></tr>
+<tr><td>Category</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Chapter</td><td>nvarchar(10)</td><td></td></tr>
+<tr><td>Block</td><td>nvarchar(10)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">⚠️ DrugInteractions - تداخلات</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>InteractionId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Medication1Id</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Medication2Id</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Severity</td><td>tinyint</td><td></td></tr>
+<tr><td>Description</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Mechanism</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>Recommendation</td><td>nvarchar(500)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📝 PrescriptionTemplates</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>TemplateId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>DoctorId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>TemplateName</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Category</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Items</td><td>nvarchar(max)</td><td>JSON</td></tr>
+<tr><td>UsageCount</td><td>int</td><td></td></tr>
+</table></div>
+</div>
+</div>
+</section>
+
+<!-- ============ GROUP 4: Financial ============ -->
+<section>
+<h2>💰 گروه ۴: مالی و حسابداری دوبل</h2>
+
+<div class="eg yl" data-t="💰 فاکتور و پرداخت">
+<div class="g2">
+<div class="et"><div class="eth">🧾 Invoices - فاکتورها</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>InvoiceId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>InvoiceNumber</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ReceptionId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>VisitId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>InvoiceDate</td><td>datetime2</td><td><span class="nn">NN</span></td></tr>
+<tr><td>InvoiceDateShamsi</td><td>nvarchar(10)</td><td></td></tr>
+<tr><td>InvoiceType</td><td>tinyint</td><td></td></tr>
+<tr><td>InsuranceCompanyId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>SupplementaryInsuranceId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>SubTotal</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>DiscountAmount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>DiscountPercent</td><td>decimal(5,2)</td><td></td></tr>
+<tr><td>InsuranceDiscount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>SupplementaryDiscount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Tax</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>TotalAmount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>PaidAmount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>RemainingAmount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>PaymentStatus</td><td>tinyint</td><td></td></tr>
+<tr><td>CashierId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>CashRegisterId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Description</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>IsPrinted</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📝 InvoiceItems</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ItemId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>InvoiceId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ServiceId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Description</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>Quantity</td><td>decimal(10,2)</td><td></td></tr>
+<tr><td>UnitPrice</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>DiscountAmount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>DiscountPercent</td><td>decimal(5,2)</td><td></td></tr>
+<tr><td>InsuranceShare</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>InsurancePercent</td><td>decimal(5,2)</td><td></td></tr>
+<tr><td>SupplementaryShare</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>PatientShare</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>TotalPrice</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>DoctorId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>DoctorShareAmount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>DoctorSharePercent</td><td>decimal(5,2)</td><td></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">💳 Payments - پرداخت‌ها</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>PaymentId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>PaymentNumber</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>InvoiceId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Amount</td><td>decimal(18,0)</td><td><span class="nn">NN</span></td></tr>
+<tr><td>PaymentMethod</td><td>tinyint</td><td></td></tr>
+<tr><td>PaymentDate</td><td>datetime2</td><td></td></tr>
+<tr><td>ReferenceNumber</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>CardNumber</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>BankName</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>TerminalId</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>TraceNumber</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>CashierId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>CashRegisterId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>IsReturned</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">💰 CashRegisters</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>CashRegisterId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>RegisterName</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>CashierId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>OpenedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>ClosedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>OpeningBalance</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>ClosingBalance</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>TotalCash</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>TotalCard</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>TotalOnline</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Difference</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🏦 InsuranceCompanies</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>InsuranceCompanyId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Name</td><td>nvarchar(100)</td><td><span class="nn">NN</span></td></tr>
+<tr><td>Code</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>Type</td><td>tinyint</td><td></td></tr>
+<tr><td>LogoPath</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>ContractNumber</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>ContractStartDate</td><td>date</td><td></td></tr>
+<tr><td>ContractEndDate</td><td>date</td><td></td></tr>
+<tr><td>DefaultPatientShare</td><td>decimal(5,2)</td><td></td></tr>
+<tr><td>DefaultInsuranceShare</td><td>decimal(5,2)</td><td></td></tr>
+<tr><td>ApiEndpoint</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>ApiUsername</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>ApiPasswordEncrypted</td><td>varbinary(max)</td><td></td></tr>
+<tr><td>ApiToken</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>SupportsOnlineInquiry</td><td>bit</td><td></td></tr>
+<tr><td>SupportsElectronicRx</td><td>bit</td><td></td></tr>
+<tr><td>ContactPhone</td><td>nvarchar(15)</td><td></td></tr>
+<tr><td>Address</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">💲 Tariffs - تعرفه‌ها</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>TariffId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ServiceId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>InsuranceCompanyId</td><td>bigint</td><td><span class="fk">FK</span> NULL=آزاد</td></tr>
+<tr><td>Year</td><td>int</td><td></td></tr>
+<tr><td>Price</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>InsuranceShare</td><td>decimal(5,2)</td><td></td></tr>
+<tr><td>PatientShare</td><td>decimal(5,2)</td><td></td></tr>
+<tr><td>InsuranceCeiling</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>IsK</td><td>bit</td><td>مبلغ K</td></tr>
+<tr><td>KValue</td><td>decimal(10,2)</td><td></td></tr>
+<tr><td>ValidFrom</td><td>date</td><td></td></tr>
+<tr><td>ValidTo</td><td>date</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🏷️ Services - خدمات</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ServiceId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ServiceCode</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>ServiceName</td><td>nvarchar(200)</td><td><span class="nn">NN</span></td></tr>
+<tr><td>ServiceNameEn</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>CategoryId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ServiceType</td><td>tinyint</td><td></td></tr>
+<tr><td>Unit</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>DefaultPrice</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>KCoefficient</td><td>decimal(10,2)</td><td></td></tr>
+<tr><td>NationalCode</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>RequiresAuthorization</td><td>bit</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🏷️ ServiceCategories</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>CategoryId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Name</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Code</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>ParentCategoryId</td><td>bigint</td><td><span class="fk">FK</span> Self</td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+</div>
+
+<h3 style="margin-top:15px;color:#e37400">📊 جداول حسابداری دوبل</h3>
+<div class="g3">
+<div class="et"><div class="eth">📊 AccountingAccounts</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>AccountId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>AccountCode</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>AccountName</td><td>nvarchar(200)</td><td><span class="nn">NN</span></td></tr>
+<tr><td>AccountType</td><td>tinyint</td><td>1-5 نوع حساب</td></tr>
+<tr><td>ParentAccountId</td><td>bigint</td><td><span class="fk">FK</span> Self</td></tr>
+<tr><td>Level</td><td>tinyint</td><td>گروه/کل/معین/تفصیلی</td></tr>
+<tr><td>IsDetail</td><td>bit</td><td>قابل سند شدن</td></tr>
+<tr><td>Nature</td><td>tinyint</td><td>بدهکار/بستانکار</td></tr>
+<tr><td>OpeningBalance</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>CurrentBalance</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📒 JournalEntries</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>EntryId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>EntryNumber</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>EntryDate</td><td>date</td><td><span class="nn">NN</span></td></tr>
+<tr><td>EntryDateShamsi</td><td>nvarchar(10)</td><td></td></tr>
+<tr><td>Description</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>ReferenceType</td><td>tinyint</td><td>فاکتور/پرداخت/دستی</td></tr>
+<tr><td>ReferenceId</td><td>bigint</td><td></td></tr>
+<tr><td>TotalDebit</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>TotalCredit</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td>پیش‌نویس/تایید‌شده</td></tr>
+<tr><td>FiscalYearId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ApprovedBy</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ApprovedAt</td><td>datetime2</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📒 JournalEntryLines</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>LineId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>EntryId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>LineNumber</td><td>int</td><td></td></tr>
+<tr><td>AccountId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Debit</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Credit</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Description</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>CostCenterId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ProjectId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">📅 FiscalYears</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>FiscalYearId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Year</td><td>int</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>StartDate</td><td>date</td><td></td></tr>
+<tr><td>EndDate</td><td>date</td><td></td></tr>
+<tr><td>IsClosed</td><td>bit</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🏢 CostCenters</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>CostCenterId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Name</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Code</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>DepartmentId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">👨‍⚕️ DoctorPayments - کارانه پزشک</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>DoctorPaymentId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>DoctorId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PeriodStart/End</td><td>date</td><td></td></tr>
+<tr><td>TotalVisits</td><td>int</td><td></td></tr>
+<tr><td>GrossAmount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>DeductionAmount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>NetAmount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>PaidAt</td><td>datetime2</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+</table></div>
+</div>
+
+<h3 style="margin-top:15px;color:#e37400">💼 بیمه و استعلامات</h3>
+<div class="g3">
+<div class="et"><div class="eth">📋 InsuranceClaims</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ClaimId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ClaimNumber</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>InsuranceCompanyId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PeriodStart/End</td><td>date</td><td></td></tr>
+<tr><td>TotalAmount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>ApprovedAmount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>RejectedAmount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>ReceivedAmount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>SubmittedAt</td><td>datetime2</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🔍 InsuranceInquiries</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>InquiryId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>InsuranceCompanyId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>InquiryDate</td><td>datetime2</td><td></td></tr>
+<tr><td>Response</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>IsValid</td><td>bit</td><td></td></tr>
+<tr><td>ApprovalCode</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>ValidUntil</td><td>date</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">💵 Expenses - هزینه‌ها</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ExpenseId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ExpenseNumber</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>CategoryId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ExpenseDate</td><td>date</td><td></td></tr>
+<tr><td>Amount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Description</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>PaymentMethod</td><td>tinyint</td><td></td></tr>
+<tr><td>ReceiptImage</td><td>varbinary(max)</td><td></td></tr>
+<tr><td>ApprovedBy</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+</table></div>
+</div>
+</div>
+</section>
+
+<!-- ============ GROUP 5: Paraclinical ============ -->
+<section>
+<h2>🔬 گروه ۵: پاراکلینیک</h2>
+
+<div class="eg pr" data-t="🧪 آزمایشگاه و تصویربرداری">
+<h3>🧪 آزمایشگاه</h3>
+<div class="g3">
+<div class="et"><div class="eth">🧪 LabOrders</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>LabOrderId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>OrderNumber</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>VisitId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>DoctorId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>OrderDate</td><td>datetime2</td><td></td></tr>
+<tr><td>Priority</td><td>tinyint</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>ClinicalInfo</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>SampleCollectedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>SampleCollectedBy</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ResultReadyAt</td><td>datetime2</td><td></td></tr>
+<tr><td>VerifiedBy</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>DeliveredAt</td><td>datetime2</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🧪 LabOrderItems</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ItemId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>LabOrderId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>TestId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Result</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>ResultNumeric</td><td>decimal(18,4)</td><td></td></tr>
+<tr><td>NormalRange</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Unit</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>IsAbnormal</td><td>bit</td><td></td></tr>
+<tr><td>AbnormalFlag</td><td>nvarchar(5)</td><td>H/L/HH/LL</td></tr>
+<tr><td>Comment</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🧪 LabTests - کاتالوگ</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>TestId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>TestCode</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>TestName</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>TestNameEn</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>Category</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>SampleType</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>ContainerType</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>NormalRangeMale</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>NormalRangeFemale</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Unit</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>Price</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>TurnAroundTime</td><td>int</td><td>ساعت</td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+</div>
+
+<h3 style="margin-top:12px">📷 تصویربرداری</h3>
+<div class="g3">
+<div class="et"><div class="eth">📷 ImagingOrders</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ImagingOrderId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>OrderNumber</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>VisitId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ReferringDoctorId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>RadiologistId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ImagingType</td><td>tinyint</td><td>سونو/رادیو/MRI/CT</td></tr>
+<tr><td>BodyPart</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>ClinicalInfo</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Technique</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>Findings</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Impression</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Recommendation</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Priority</td><td>tinyint</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>ScheduledAt</td><td>datetime2</td><td></td></tr>
+<tr><td>PerformedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>ReportedAt</td><td>datetime2</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📷 ImagingFiles</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>FileId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ImagingOrderId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>FileName</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>FilePath</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>FileType</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>FileSize</td><td>bigint</td><td></td></tr>
+<tr><td>IsDicom</td><td>bit</td><td></td></tr>
+<tr><td>ThumbnailPath</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>UploadedAt</td><td>datetime2</td><td></td></tr>
+</table></div>
+</div>
+
+<h3 style="margin-top:12px">🦷 دندانپزشکی</h3>
+<div class="g3">
+<div class="et"><div class="eth">🦷 DentalRecords</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>DentalRecordId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>VisitId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>DentistId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ToothNumber</td><td>int</td><td>FDI numbering</td></tr>
+<tr><td>Surface</td><td>nvarchar(20)</td><td>M/D/O/B/L</td></tr>
+<tr><td>Condition</td><td>tinyint</td><td></td></tr>
+<tr><td>ProcedureId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ProcedureDate</td><td>date</td><td></td></tr>
+<tr><td>MaterialUsed</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Notes</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Price</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🦷 DentalTreatmentPlans</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>PlanId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>DentistId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>CreatedDate</td><td>date</td><td></td></tr>
+<tr><td>TotalCost</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>EstimatedSessions</td><td>int</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>PlanDetails</td><td>nvarchar(max)</td><td>JSON</td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🦷 DentalProcedures</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ProcedureId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Name</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>Code</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>Category</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>DefaultPrice</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Duration</td><td>int</td><td>دقیقه</td></tr>
+</table></div>
+</div>
+
+<h3 style="margin-top:12px">👁️ چشم‌پزشکی و فیزیوتراپی</h3>
+<div class="g2">
+<div class="et"><div class="eth">👁️ EyeExamRecords</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>EyeExamId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>VisitId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>RightSphere/Cylinder/Axis</td><td>decimal(4,2)</td><td></td></tr>
+<tr><td>LeftSphere/Cylinder/Axis</td><td>decimal(4,2)</td><td></td></tr>
+<tr><td>RightVisualAcuity</td><td>nvarchar(10)</td><td></td></tr>
+<tr><td>LeftVisualAcuity</td><td>nvarchar(10)</td><td></td></tr>
+<tr><td>RightIOP</td><td>int</td><td>فشار داخل چشم</td></tr>
+<tr><td>LeftIOP</td><td>int</td><td></td></tr>
+<tr><td>PupilDistance</td><td>decimal(4,1)</td><td></td></tr>
+<tr><td>ColorVision</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>VisualField</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Findings</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Prescription</td><td>nvarchar(max)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🏃 PhysiotherapySessions</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>SessionId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>TreatmentPlanId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>TherapistId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>SessionDate</td><td>datetime2</td><td></td></tr>
+<tr><td>SessionNumber</td><td>int</td><td></td></tr>
+<tr><td>Treatments</td><td>nvarchar(max)</td><td>JSON</td></tr>
+<tr><td>Duration</td><td>int</td><td></td></tr>
+<tr><td>PainScore</td><td>tinyint</td><td>0-10</td></tr>
+<tr><td>ProgressNote</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+</table></div>
+</div>
+</div>
+</section>
+
+<!-- ============ GROUP 6: Pharmacy ============ -->
+<section>
+<h2>💊 گروه ۶: داروخانه و انبار</h2>
+<div class="eg tl" data-t="💊 داروخانه">
+<div class="g3">
+<div class="et"><div class="eth">📦 PharmacyInventory</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>InventoryId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>MedicationId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>BatchNumber</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Quantity</td><td>decimal(10,2)</td><td></td></tr>
+<tr><td>MinStock</td><td>decimal(10,2)</td><td></td></tr>
+<tr><td>MaxStock</td><td>decimal(10,2)</td><td></td></tr>
+<tr><td>ReorderLevel</td><td>decimal(10,2)</td><td></td></tr>
+<tr><td>ManufactureDate</td><td>date</td><td></td></tr>
+<tr><td>ExpiryDate</td><td>date</td><td><span class="idx">IX</span></td></tr>
+<tr><td>PurchasePrice</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>SellPrice</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Location</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>SupplierId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>LastPurchaseDate</td><td>date</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📥 PharmacyTransactions</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>TransactionId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>TransactionNumber</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>InventoryId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>TransactionType</td><td>tinyint</td><td>ورود/خروج/برگشت</td></tr>
+<tr><td>Quantity</td><td>decimal(10,2)</td><td></td></tr>
+<tr><td>UnitPrice</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>TotalPrice</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>TransactionDate</td><td>datetime2</td><td></td></tr>
+<tr><td>ReferenceType</td><td>tinyint</td><td></td></tr>
+<tr><td>ReferenceId</td><td>bigint</td><td></td></tr>
+<tr><td>PrescriptionId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>UserId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Notes</td><td>nvarchar(500)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🏢 Suppliers</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>SupplierId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>CompanyName</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>Code</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>SupplierType</td><td>tinyint</td><td></td></tr>
+<tr><td>ContactPerson</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Phone/Mobile</td><td>nvarchar(15)</td><td></td></tr>
+<tr><td>Email</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Address</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>EconomicCode</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>NationalId</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>BankAccount</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">📝 PurchaseOrders</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>OrderId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>OrderNumber</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>SupplierId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>OrderDate</td><td>date</td><td></td></tr>
+<tr><td>ExpectedDate</td><td>date</td><td></td></tr>
+<tr><td>ReceivedDate</td><td>date</td><td></td></tr>
+<tr><td>TotalAmount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📝 PurchaseOrderItems</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ItemId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>OrderId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>MedicationId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Quantity</td><td>decimal(10,2)</td><td></td></tr>
+<tr><td>UnitPrice</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>TotalPrice</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>ReceivedQuantity</td><td>decimal(10,2)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📋 StockTakings - انبارگردانی</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>StockTakingId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>TakingDate</td><td>date</td><td></td></tr>
+<tr><td>PerformedBy</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>Notes</td><td>nvarchar(max)</td><td></td></tr>
+</table></div>
+</div>
+</div>
+</section>
+
+<!-- ============ GROUP 7: HR & Users ============ -->
+<section>
+<h2>👥 گروه ۷: پرسنل، کاربران و دسترسی‌ها</h2>
+
+<div class="eg pk" data-t="👥 منابع انسانی">
+<div class="g3">
+<div class="et"><div class="eth">👤 Employees - پرسنل</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>EmployeeId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>PersonnelCode</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>NationalCode</td><td>nvarchar(10)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>FirstName/LastName</td><td>nvarchar(50)</td><td><span class="nn">NN</span></td></tr>
+<tr><td>FatherName</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Gender/BirthDate</td><td></td><td></td></tr>
+<tr><td>MaritalStatus</td><td>tinyint</td><td></td></tr>
+<tr><td>Mobile/Phone</td><td>nvarchar(15)</td><td></td></tr>
+<tr><td>Email</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Address</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>DepartmentId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PositionId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>EmploymentType</td><td>tinyint</td><td></td></tr>
+<tr><td>HireDate</td><td>date</td><td></td></tr>
+<tr><td>ContractType</td><td>tinyint</td><td></td></tr>
+<tr><td>ContractStart/End</td><td>date</td><td></td></tr>
+<tr><td>BaseSalary</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>BankName</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>BankAccount</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Sheba</td><td>nvarchar(26)</td><td></td></tr>
+<tr><td>EducationLevel</td><td>tinyint</td><td></td></tr>
+<tr><td>FieldOfStudy</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>EmergencyContact</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>EmergencyPhone</td><td>nvarchar(15)</td><td></td></tr>
+<tr><td>ProfilePicture</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">💼 Positions - سمت‌ها</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>PositionId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Title</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Code</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>DepartmentId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Description</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>MinSalary</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>MaxSalary</td><td>decimal(18,0)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">⏱️ EmployeeAttendance</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>AttendanceId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>EmployeeId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>AttendanceDate</td><td>date</td><td></td></tr>
+<tr><td>CheckIn/CheckOut</td><td>time</td><td></td></tr>
+<tr><td>ShiftId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>WorkedHours</td><td>decimal(5,2)</td><td></td></tr>
+<tr><td>OvertimeHours</td><td>decimal(5,2)</td><td></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">💰 EmployeeSalaries</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>SalaryId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>EmployeeId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PeriodYear/Month</td><td>int</td><td></td></tr>
+<tr><td>BaseSalary</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Overtime</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Bonus</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Deductions</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Insurance</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Tax</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>NetAmount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>PaidAt</td><td>datetime2</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🏖️ EmployeeLeaves</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>LeaveId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>EmployeeId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>LeaveType</td><td>tinyint</td><td></td></tr>
+<tr><td>FromDate/ToDate</td><td>date</td><td></td></tr>
+<tr><td>Days</td><td>decimal(4,1)</td><td></td></tr>
+<tr><td>Reason</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>ApprovedBy</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📄 Contracts - قراردادها</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ContractId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>EmployeeId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ContractNumber</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>ContractType</td><td>tinyint</td><td></td></tr>
+<tr><td>StartDate/EndDate</td><td>date</td><td></td></tr>
+<tr><td>Salary</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Terms</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>DocumentPath</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+</table></div>
+</div>
+
+<h3 style="margin-top:12px">🔐 کاربران، نقش‌ها، دسترسی‌ها (RBAC)</h3>
+<div class="g3">
+<div class="et"><div class="eth">🔐 Users</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>UserId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>EmployeeId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Username</td><td>nvarchar(50)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>Email</td><td>nvarchar(100)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>PasswordHash</td><td>nvarchar(500)</td><td>BCrypt</td></tr>
+<tr><td>SecurityStamp</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>TwoFactorEnabled</td><td>bit</td><td></td></tr>
+<tr><td>TwoFactorSecret</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>PhoneNumber</td><td>nvarchar(15)</td><td></td></tr>
+<tr><td>EmailConfirmed</td><td>bit</td><td></td></tr>
+<tr><td>PhoneConfirmed</td><td>bit</td><td></td></tr>
+<tr><td>FailedLoginAttempts</td><td>int</td><td></td></tr>
+<tr><td>LockoutEnd</td><td>datetime2</td><td></td></tr>
+<tr><td>LastLoginAt</td><td>datetime2</td><td></td></tr>
+<tr><td>LastLoginIP</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>PasswordChangedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>MustChangePassword</td><td>bit</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🔖 Roles</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>RoleId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Name</td><td>nvarchar(50)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>NormalizedName</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Description</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>IsSystem</td><td>bit</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🔑 Permissions</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>PermissionId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Name</td><td>nvarchar(100)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>Category</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Module</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Action</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Description</td><td>nvarchar(200)</td><td></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">🔗 UserRoles (M:N)</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>UserId</td><td>bigint</td><td><span class="pk">PK</span> <span class="fk">FK</span></td></tr>
+<tr><td>RoleId</td><td>bigint</td><td><span class="pk">PK</span> <span class="fk">FK</span></td></tr>
+<tr><td>AssignedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>AssignedBy</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🔗 RolePermissions (M:N)</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>RoleId</td><td>bigint</td><td><span class="pk">PK</span> <span class="fk">FK</span></td></tr>
+<tr><td>PermissionId</td><td>bigint</td><td><span class="pk">PK</span> <span class="fk">FK</span></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🔄 RefreshTokens</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>TokenId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>UserId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Token</td><td>nvarchar(500)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>JwtId</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>IsRevoked</td><td>bit</td><td></td></tr>
+<tr><td>CreatedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>ExpiresAt</td><td>datetime2</td><td></td></tr>
+<tr><td>DeviceInfo</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>IpAddress</td><td>nvarchar(50)</td><td></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">📜 UserSessions</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>SessionId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>UserId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>SessionToken</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>LoginAt</td><td>datetime2</td><td></td></tr>
+<tr><td>LogoutAt</td><td>datetime2</td><td></td></tr>
+<tr><td>LastActivityAt</td><td>datetime2</td><td></td></tr>
+<tr><td>IpAddress</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>UserAgent</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>DeviceType</td><td>tinyint</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🔒 PasswordHistory</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>HistoryId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>UserId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PasswordHash</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>ChangedAt</td><td>datetime2</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🛡️ UserModulePermissions</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>Id</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>UserId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ModuleId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>CanView/CanAdd</td><td>bit</td><td></td></tr>
+<tr><td>CanEdit/CanDelete</td><td>bit</td><td></td></tr>
+<tr><td>CanPrint/CanExport</td><td>bit</td><td></td></tr>
+</table></div>
+</div>
+</div>
+</section>
+
+<!-- ============ GROUP 8: Communication ============ -->
+<section>
+<h2>📞 گروه ۸: ارتباطات (پیامک، تماس، نظرسنجی)</h2>
+<div class="eg in" data-t="📞 ارتباطات">
+<div class="g3">
+<div class="et"><div class="eth">💬 SmsMessages</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>SmsId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Recipient</td><td>nvarchar(11)</td><td><span class="nn">NN</span></td></tr>
+<tr><td>RecipientType</td><td>tinyint</td><td></td></tr>
+<tr><td>RecipientId</td><td>bigint</td><td></td></tr>
+<tr><td>Message</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>TemplateId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Provider</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>ProviderMessageId</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>SentAt</td><td>datetime2</td><td></td></tr>
+<tr><td>DeliveredAt</td><td>datetime2</td><td></td></tr>
+<tr><td>Cost</td><td>decimal(10,2)</td><td></td></tr>
+<tr><td>ErrorMessage</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>MessageType</td><td>tinyint</td><td></td></tr>
+<tr><td>ReferenceType</td><td>tinyint</td><td></td></tr>
+<tr><td>ReferenceId</td><td>bigint</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📝 SmsTemplates</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>TemplateId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Name</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Code</td><td>nvarchar(50)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>TemplateType</td><td>tinyint</td><td></td></tr>
+<tr><td>Content</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Variables</td><td>nvarchar(max)</td><td>JSON</td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">⚙️ SmsProviders</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ProviderId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ProviderName</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>ProviderCode</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>ApiUrl</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>ApiKey</td><td>varbinary(max)</td><td>Encrypted</td></tr>
+<tr><td>Username</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>PasswordEncrypted</td><td>varbinary(max)</td><td></td></tr>
+<tr><td>SenderNumber</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>Priority</td><td>int</td><td></td></tr>
+<tr><td>Balance</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>IsDefault</td><td>bit</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">📞 PhoneCalls</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>CallId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>CallerNumber</td><td>nvarchar(15)</td><td></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>UserId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>CallDirection</td><td>tinyint</td><td></td></tr>
+<tr><td>CallStart/End</td><td>datetime2</td><td></td></tr>
+<tr><td>Duration</td><td>int</td><td></td></tr>
+<tr><td>CallResult</td><td>tinyint</td><td></td></tr>
+<tr><td>Notes</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>RecordingPath</td><td>nvarchar(500)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📊 Surveys</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>SurveyId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Title</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>Description</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>SurveyType</td><td>tinyint</td><td></td></tr>
+<tr><td>Questions</td><td>nvarchar(max)</td><td>JSON</td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📊 SurveyResponses</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ResponseId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>SurveyId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>VisitId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>DoctorId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Rating</td><td>tinyint</td><td>1-5</td></tr>
+<tr><td>Answers</td><td>nvarchar(max)</td><td>JSON</td></tr>
+<tr><td>Comments</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>SubmittedAt</td><td>datetime2</td><td></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">📬 Notifications</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>NotificationId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>UserId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Title</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>Message</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Type</td><td>tinyint</td><td></td></tr>
+<tr><td>Priority</td><td>tinyint</td><td></td></tr>
+<tr><td>Link</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>IsRead</td><td>bit</td><td></td></tr>
+<tr><td>ReadAt</td><td>datetime2</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📨 SmsQueue - صف ارسال</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>QueueId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Recipient</td><td>nvarchar(11)</td><td></td></tr>
+<tr><td>Message</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>ScheduledAt</td><td>datetime2</td><td></td></tr>
+<tr><td>ProcessedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>Attempts</td><td>int</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>Priority</td><td>tinyint</td><td></td></tr>
+</table></div>
+</div>
+</div>
+</section>
+
+<!-- ============ GROUP 9: Infrastructure ============ -->
+<section>
+<h2>⚙️ گروه ۹: زیرساخت (اسناد، بکاپ، لاگ، تنظیمات)</h2>
+<div class="eg gy" data-t="⚙️ زیرساخت">
+<div class="g3">
+<div class="et"><div class="eth">📎 Documents - اسناد</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>DocumentId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Title</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>Description</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>CategoryId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ReferenceType</td><td>tinyint</td><td></td></tr>
+<tr><td>ReferenceId</td><td>bigint</td><td></td></tr>
+<tr><td>FileName</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>FilePath</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>FileType</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>FileSize</td><td>bigint</td><td></td></tr>
+<tr><td>MimeType</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Hash</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>IsEncrypted</td><td>bit</td><td></td></tr>
+<tr><td>Tags</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>UploadedBy</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>UploadedAt</td><td>datetime2</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📂 DocumentCategories</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>CategoryId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Name</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Code</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>ParentCategoryId</td><td>bigint</td><td><span class="fk">FK</span> Self</td></tr>
+<tr><td>IconPath</td><td>nvarchar(200)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">💾 BackupHistory</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>BackupId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>BackupType</td><td>tinyint</td><td>Full/Diff/Log</td></tr>
+<tr><td>FilePath</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>FileSize</td><td>bigint</td><td></td></tr>
+<tr><td>StartedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>CompletedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>IsAutomatic</td><td>bit</td><td></td></tr>
+<tr><td>StorageType</td><td>tinyint</td><td>Local/Cloud</td></tr>
+<tr><td>ErrorMessage</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>PerformedBy</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">📋 AuditLogs</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>AuditLogId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>UserId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Username</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>ActionType</td><td>tinyint</td><td>Create/Update/Delete/View</td></tr>
+<tr><td>EntityName</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>EntityId</td><td>bigint</td><td></td></tr>
+<tr><td>OldValues</td><td>nvarchar(max)</td><td>JSON</td></tr>
+<tr><td>NewValues</td><td>nvarchar(max)</td><td>JSON</td></tr>
+<tr><td>ChangedFields</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>IpAddress</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>UserAgent</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>Timestamp</td><td>datetime2</td><td></td></tr>
+<tr><td>Module</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Severity</td><td>tinyint</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🐛 ErrorLogs</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ErrorLogId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Timestamp</td><td>datetime2</td><td></td></tr>
+<tr><td>Level</td><td>tinyint</td><td>Error/Warning/Info</td></tr>
+<tr><td>Source</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>Message</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Exception</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>StackTrace</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>UserId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>RequestUrl</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>Resolved</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">⚙️ SystemSettings</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>SettingId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Category</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Key</td><td>nvarchar(100)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>Value</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>DataType</td><td>tinyint</td><td></td></tr>
+<tr><td>Description</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>IsEncrypted</td><td>bit</td><td></td></tr>
+<tr><td>IsSystem</td><td>bit</td><td></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">🏥 ClinicInfo</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ClinicInfoId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ClinicName</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>ClinicNameEn</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>LogoPath</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>LicenseNumber</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>EconomicCode</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>NationalId</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>Address</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>Phone/Fax</td><td>nvarchar(15)</td><td></td></tr>
+<tr><td>Email/Website</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>ManagerName</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>FoundationDate</td><td>date</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🧩 Modules</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ModuleId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>Name</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Code</td><td>nvarchar(50)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>Category</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Description</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>IconPath</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>SortOrder</td><td>int</td><td></td></tr>
+<tr><td>IsCore</td><td>bit</td><td>اصلی</td></tr>
+<tr><td>IsEnabled</td><td>bit</td><td>فعال‌شده با لایسنس</td></tr>
+<tr><td>Version</td><td>nvarchar(20)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📊 PerformanceMetrics</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>MetricId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>MetricType</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>MetricName</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Value</td><td>decimal(18,4)</td><td></td></tr>
+<tr><td>Unit</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>Timestamp</td><td>datetime2</td><td></td></tr>
+<tr><td>Context</td><td>nvarchar(max)</td><td></td></tr>
+</table></div>
+</div>
+</div>
+</section>
+
+<!-- ============ GROUP 10: License ============ -->
+<section>
+<h2>🔑 گروه ۱۰: سامانه لایسنس (پنل وب و کلاینت)</h2>
+<div class="eg or" data-t="🔑 لایسنس">
+<div class="g2">
+<div class="et"><div class="eth">🔑 Licenses (در پنل وب)</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>LicenseId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>LicenseKey</td><td>nvarchar(100)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>ActivationCode</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>CustomerId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ClinicName</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>ClinicNationalId</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>ClinicEconomicCode</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>LicenseType</td><td>tinyint</td><td>Perpetual/Subscription</td></tr>
+<tr><td>MaxUsers</td><td>int</td><td>تعداد کاربر همزمان</td></tr>
+<tr><td>MaxDoctors</td><td>int</td><td></td></tr>
+<tr><td>MaxPatients</td><td>int</td><td></td></tr>
+<tr><td>MaxBranches</td><td>int</td><td></td></tr>
+<tr><td>EnabledModules</td><td>nvarchar(max)</td><td>JSON</td></tr>
+<tr><td>IssuedDate</td><td>date</td><td></td></tr>
+<tr><td>ExpiryDate</td><td>date</td><td>NULL=نامحدود</td></tr>
+<tr><td>HardwareFingerprint</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>MacAddress</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td>Active/Suspended/Expired</td></tr>
+<tr><td>Price</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>IsOffline</td><td>bit</td><td>فعال‌سازی آفلاین</td></tr>
+<tr><td>Notes</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>ActivatedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>LastValidatedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>SignatureData</td><td>varbinary(max)</td><td>امضای دیجیتال</td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🏢 Customers - مشتریان</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>CustomerId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>CompanyName</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>ContactPerson</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Mobile</td><td>nvarchar(11)</td><td></td></tr>
+<tr><td>Phone</td><td>nvarchar(15)</td><td></td></tr>
+<tr><td>Email</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>NationalCode</td><td>nvarchar(10)</td><td></td></tr>
+<tr><td>Address</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>City/Province</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>RegistrationDate</td><td>datetime2</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">📜 LicenseValidationLogs</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>LogId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>LicenseId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ValidationDate</td><td>datetime2</td><td></td></tr>
+<tr><td>Result</td><td>tinyint</td><td></td></tr>
+<tr><td>IpAddress</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>HardwareInfo</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>ErrorMessage</td><td>nvarchar(500)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">💳 LicensePayments</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>PaymentId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>LicenseId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>PaymentNumber</td><td>nvarchar(20)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>Amount</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>PaymentMethod</td><td>tinyint</td><td></td></tr>
+<tr><td>PaymentDate</td><td>datetime2</td><td></td></tr>
+<tr><td>ReferenceNumber</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>PeriodStart/End</td><td>date</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📋 ModuleCatalog</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ModuleCatalogId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ModuleCode</td><td>nvarchar(50)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>ModuleName</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Category</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>BasePrice</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>MonthlyPrice</td><td>decimal(18,0)</td><td></td></tr>
+<tr><td>Description</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>IsCoreModule</td><td>bit</td><td></td></tr>
+</table></div>
+</div>
+
+<h3 style="margin-top:12px">🔒 جدول کلاینت (در دیتابیس خود درمانگاه)</h3>
+<div class="g2">
+<div class="et"><div class="eth">🔒 ClinicLicense (کلاینت)</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>Id</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>LicenseKey</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>ActivationCode</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>LicenseType</td><td>tinyint</td><td></td></tr>
+<tr><td>MaxUsers</td><td>int</td><td></td></tr>
+<tr><td>MaxDoctors</td><td>int</td><td></td></tr>
+<tr><td>MaxPatients</td><td>int</td><td></td></tr>
+<tr><td>MaxBranches</td><td>int</td><td></td></tr>
+<tr><td>EnabledModules</td><td>nvarchar(max)</td><td>JSON Encrypted</td></tr>
+<tr><td>IssuedDate/ExpiryDate</td><td>date</td><td></td></tr>
+<tr><td>HardwareFingerprint</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>SignatureData</td><td>varbinary(max)</td><td>امضای RSA</td></tr>
+<tr><td>LastValidatedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>IsOfflineActivation</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📅 LicenseCheckLog</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>Id</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>CheckDate</td><td>datetime2</td><td></td></tr>
+<tr><td>Result</td><td>tinyint</td><td></td></tr>
+<tr><td>IsOnlineCheck</td><td>bit</td><td></td></tr>
+<tr><td>Message</td><td>nvarchar(500)</td><td></td></tr>
+</table></div>
+</div>
+</div>
+</section>
+
+<!-- ============ GROUP 11: Government Integration ============ -->
+<section>
+<h2>🏛️ گروه ۱۱: یکپارچه‌سازی سامانه‌های دولتی</h2>
+<div class="eg cy" data-t="🏛️ سامانه‌های دولتی">
+<div class="g3">
+<div class="et"><div class="eth">🏛️ SepasTransactions</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>TransactionId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>VisitId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>TransactionType</td><td>tinyint</td><td></td></tr>
+<tr><td>SepasReferenceId</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>RequestData</td><td>nvarchar(max)</td><td>JSON</td></tr>
+<tr><td>ResponseData</td><td>nvarchar(max)</td><td>JSON</td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>ErrorMessage</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>SentAt</td><td>datetime2</td><td></td></tr>
+<tr><td>RespondedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>RetryCount</td><td>int</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">💊 ElectronicPrescriptions</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>Id</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>PrescriptionId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>SystemType</td><td>tinyint</td><td>سلامت/تامین</td></tr>
+<tr><td>TrackingCode</td><td>nvarchar(50)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>RegistrationCode</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>Response</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>SentAt</td><td>datetime2</td><td></td></tr>
+<tr><td>IsSuccess</td><td>bit</td><td></td></tr>
+<tr><td>ErrorCode</td><td>nvarchar(20)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📋 SibSystemRecords</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>Id</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>SibRecordId</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>ServiceType</td><td>tinyint</td><td></td></tr>
+<tr><td>ReferralType</td><td>tinyint</td><td></td></tr>
+<tr><td>Data</td><td>nvarchar(max)</td><td>JSON</td></tr>
+<tr><td>SyncStatus</td><td>tinyint</td><td></td></tr>
+<tr><td>SyncedAt</td><td>datetime2</td><td></td></tr>
+</table></div>
+</div>
+
+<div class="g3" style="margin-top:10px">
+<div class="et"><div class="eth">🔄 ApiCallLogs</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>LogId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ServiceName</td><td>nvarchar(50)</td><td>سپاس/سیب/ناب/...</td></tr>
+<tr><td>Endpoint</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>Method</td><td>nvarchar(10)</td><td></td></tr>
+<tr><td>RequestBody</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>ResponseBody</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>StatusCode</td><td>int</td><td></td></tr>
+<tr><td>Duration</td><td>int</td><td>ms</td></tr>
+<tr><td>CalledAt</td><td>datetime2</td><td></td></tr>
+<tr><td>IsSuccess</td><td>bit</td><td></td></tr>
+<tr><td>UserId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🔑 ApiCredentials</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>CredentialId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ServiceName</td><td>nvarchar(50)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>Username</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>PasswordEncrypted</td><td>varbinary(max)</td><td></td></tr>
+<tr><td>ApiKey</td><td>varbinary(max)</td><td></td></tr>
+<tr><td>Token</td><td>nvarchar(1000)</td><td></td></tr>
+<tr><td>TokenExpiresAt</td><td>datetime2</td><td></td></tr>
+<tr><td>Endpoint</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">🏥 ReferralSystem</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ReferralId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>PatientId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ReferringDoctorId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ReferralCode</td><td>nvarchar(50)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>ReferralType</td><td>tinyint</td><td></td></tr>
+<tr><td>DestinationType</td><td>nvarchar(100)</td><td></td></tr>
+<tr><td>Reason</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Status</td><td>tinyint</td><td></td></tr>
+<tr><td>ValidUntil</td><td>date</td><td></td></tr>
+</table></div>
+</div>
+</div>
+</section>
+
+<!-- ============ GROUP 12: Reports ============ -->
+<section>
+<h2>📊 گروه ۱۲: گزارش‌ها و View ها</h2>
+<div class="eg" data-t="📊 گزارش‌ها">
+<div class="g3">
+<div class="et"><div class="eth">📊 ReportDefinitions</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ReportId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ReportName</td><td>nvarchar(200)</td><td></td></tr>
+<tr><td>Code</td><td>nvarchar(50)</td><td><span class="uq">UQ</span></td></tr>
+<tr><td>Category</td><td>nvarchar(50)</td><td></td></tr>
+<tr><td>Description</td><td>nvarchar(500)</td><td></td></tr>
+<tr><td>ReportFile</td><td>varbinary(max)</td><td>.mrt/.frx</td></tr>
+<tr><td>SqlQuery</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>Parameters</td><td>nvarchar(max)</td><td>JSON</td></tr>
+<tr><td>RequiredPermission</td><td>nvarchar(100)</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📊 ReportExecutions</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ExecutionId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ReportId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>UserId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>ExecutedAt</td><td>datetime2</td><td></td></tr>
+<tr><td>Parameters</td><td>nvarchar(max)</td><td>JSON</td></tr>
+<tr><td>Duration</td><td>int</td><td>ms</td></tr>
+<tr><td>ExportFormat</td><td>nvarchar(20)</td><td></td></tr>
+<tr><td>RowCount</td><td>int</td><td></td></tr>
+</table></div>
+
+<div class="et"><div class="eth">📅 ReportSchedules</div><table>
+<tr><th>ستون</th><th>نوع</th><th>قید</th></tr>
+<tr><td>ScheduleId</td><td>bigint</td><td><span class="pk">PK</span></td></tr>
+<tr><td>ReportId</td><td>bigint</td><td><span class="fk">FK</span></td></tr>
+<tr><td>Frequency</td><td>tinyint</td><td></td></tr>
+<tr><td>ScheduleTime</td><td>time</td><td></td></tr>
+<tr><td>Recipients</td><td>nvarchar(max)</td><td></td></tr>
+<tr><td>NextRun</td><td>datetime2</td><td></td></tr>
+<tr><td>LastRun</td><td>datetime2</td><td></td></tr>
+<tr><td>IsActive</td><td>bit</td><td></td></tr>
+</table></div>
+</div>
+</div>
+
+<h3>👁️ Views کلیدی</h3>
+<div class="cb">
+<span class="cm">-- View: VW_PatientSummary</span>
+<span class="kw">CREATE VIEW</span> VW_PatientSummary <span class="kw">AS</span>
+<span class="kw">SELECT</span> p.PatientId, p.MedicalRecordNo, p.FullName, p.NationalCode,
+       p.Mobile, p.Age, ic.Name <span class="kw">AS</span> InsuranceName,
+       (<span class="kw">SELECT COUNT</span>(*) <span class="kw">FROM</span> Visits <span class="kw">WHERE</span> PatientId=p.PatientId) <span class="kw">AS</span> TotalVisits,
+       (<span class="kw">SELECT MAX</span>(VisitDate) <span class="kw">FROM</span> Visits <span class="kw">WHERE</span> PatientId=p.PatientId) <span class="kw">AS</span> LastVisit,
+       (<span class="kw">SELECT SUM</span>(RemainingAmount) <span class="kw">FROM</span> Invoices <span class="kw">WHERE</span> PatientId=p.PatientId) <span class="kw">AS</span> Debt
+<span class="kw">FROM</span> Patients p <span class="kw">LEFT JOIN</span> InsuranceCompanies ic <span class="kw">ON</span> p.InsuranceCompanyId=ic.InsuranceCompanyId
+<span class="kw">WHERE</span> p.IsDeleted = 0;
+
+<span class="cm">-- View: VW_DailyRevenue</span>
+<span class="kw">CREATE VIEW</span> VW_DailyRevenue <span class="kw">AS</span>
+<span class="kw">SELECT CAST</span>(InvoiceDate <span class="kw">AS DATE</span>) <span class="kw">AS</span> Date,
+       <span class="kw">COUNT</span>(*) <span class="kw">AS</span> InvoiceCount, <span class="kw">SUM</span>(TotalAmount) <span class="kw">AS</span> Total,
+       <span class="kw">SUM</span>(PaidAmount) <span class="kw">AS</span> Paid, <span class="kw">SUM</span>(RemainingAmount) <span class="kw">AS</span> Remaining
+<span class="kw">FROM</span> Invoices <span class="kw">WHERE</span> IsDeleted = 0
+<span class="kw">GROUP BY CAST</span>(InvoiceDate <span class="kw">AS DATE</span>);
+
+<span class="cm">-- + VW_DoctorPerformance, VW_InventoryLow, VW_AppointmentToday, VW_InsuranceClaimSummary ...</span>
+</div>
+
+<h3>🔍 ایندکس‌های کلیدی</h3>
+<div class="cb">
+<span class="cm">-- Patients</span>
+<span class="kw">CREATE UNIQUE INDEX</span> IX_Patients_NationalCode <span class="kw">ON</span> Patients(NationalCode) <span class="kw">WHERE</span> IsDeleted=0;
+<span class="kw">CREATE INDEX</span> IX_Patients_Mobile <span class="kw">ON</span> Patients(Mobile);
+<span class="kw">CREATE INDEX</span> IX_Patients_LastName <span class="kw">ON</span> Patients(LastName);
+
+<span class="cm">-- Appointments</span>
+<span class="kw">CREATE INDEX</span> IX_Appointments_Date_Doctor <span class="kw">ON</span> Appointments(AppointmentDate, DoctorId);
+<span class="kw">CREATE INDEX</span> IX_Appointments_Patient <span class="kw">ON</span> Appointments(PatientId);
+<span class="kw">CREATE INDEX</span> IX_Appointments_Status <span class="kw">ON</span> Appointments(Status) <span class="kw">INCLUDE</span>(AppointmentDate);
+
+<span class="cm">-- Visits</span>
+<span class="kw">CREATE INDEX</span> IX_Visits_Patient_Date <span class="kw">ON</span> Visits(PatientId, VisitDate <span class="kw">DESC</span>);
+<span class="kw">CREATE INDEX</span> IX_Visits_Doctor_Date <span class="kw">ON</span> Visits(DoctorId, VisitDate);
+
+<span class="cm">-- Invoices</span>
+<span class="kw">CREATE INDEX</span> IX_Invoices_Date <span class="kw">ON</span> Invoices(InvoiceDate <span class="kw">DESC</span>);
+<span class="kw">CREATE INDEX</span> IX_Invoices_Patient <span class="kw">ON</span> Invoices(PatientId);
+<span class="kw">CREATE INDEX</span> IX_Invoices_Status <span class="kw">ON</span> Invoices(PaymentStatus);
+
+<span class="cm">-- AuditLogs</span>
+<span class="kw">CREATE INDEX</span> IX_AuditLogs_User_Time <span class="kw">ON</span> AuditLogs(UserId, Timestamp <span class="kw">DESC</span>);
+<span class="kw">CREATE INDEX</span> IX_AuditLogs_Entity <span class="kw">ON</span> AuditLogs(EntityName, EntityId);
+
+<span class="cm">-- Pharmacy</span>
+<span class="kw">CREATE INDEX</span> IX_PharmacyInventory_Expiry <span class="kw">ON</span> PharmacyInventory(ExpiryDate);
+<span class="kw">CREATE INDEX</span> IX_PharmacyInventory_LowStock <span class="kw">ON</span> PharmacyInventory(Quantity) <span class="kw">WHERE</span> Quantity &lt; ReorderLevel;
+</div>
+</section>
+
+<footer>
+<p>📄 فایل ۲ از ۶ | <strong>طراحی کامل دیتابیس</strong> | ۹۰+ جدول در ۱۲ گروه</p>
+</footer>
+
+</div>
+</body>
+</html>

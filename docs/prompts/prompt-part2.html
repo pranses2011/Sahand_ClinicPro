@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>🤖 ClinicPro - پرامپت AI بخش ۲</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;900&display=swap');
+:root{--p:#1a73e8;--s:#34a853;--a:#ea4335;--bg:#f0f2f5;--c:#fff;--t:#202124;--b:#dadce0;--sh:0 2px 8px rgba(0,0,0,.1);--r:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t);line-height:1.8;font-size:13px}
+.ct{max-width:1200px;margin:0 auto;padding:20px}
+header{background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;padding:40px 20px;text-align:center;border-radius:0 0 30px 30px;margin-bottom:25px}
+header h1{font-size:2em;font-weight:900}
+header p{opacity:.9}
+.nav{background:#fff;padding:12px;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.nav a{padding:7px 14px;background:#f0f2f5;border-radius:8px;text-decoration:none;color:var(--t);font-size:11px;font-weight:600}
+.nav a:hover,.nav a.active{background:#7c3aed;color:#fff}
+.prompt-section{background:#1e1e1e;color:#d4d4d4;border-radius:var(--r);padding:25px;margin-bottom:20px;font-family:'Courier New',monospace;font-size:12px;line-height:1.7;direction:rtl;text-align:right;white-space:pre-wrap;word-wrap:break-word;overflow-x:auto}
+.prompt-section .h1{color:#4ec9b0;font-weight:bold;font-size:16px}
+.prompt-section .h2{color:#569cd6;font-weight:bold;font-size:14px}
+.prompt-section .h3{color:#ce9178;font-weight:bold;font-size:13px}
+.prompt-section .note{color:#6a9955;font-style:italic}
+.prompt-section .important{color:#f44747;font-weight:bold}
+.prompt-section .code{color:#9cdcfe}
+.prompt-section .val{color:#b5cea8}
+.prompt-section .str{color:#ce9178}
+.prompt-section .key{color:#569cd6}
+.prompt-section .title{color:#dcdcaa;font-weight:bold;font-size:14px}
+.copy-btn{background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;border:none;padding:10px 25px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.info{background:#e8f0fe;border-right:4px solid var(--p);padding:15px;border-radius:0 8px 8px 0;margin:15px 0;font-size:12px}
+footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#fff;border-radius:var(--r);margin-top:20px}
+</style>
+</head>
+<body>
+<header>
+<h1>🤖 پرامپت حرفه‌ای - بخش ۲</h1>
+<p>ماژول‌ها، API Endpoints، WPF Views و MVVM</p>
+</header>
+<div class="ct">
+<nav class="nav">
+<a href="prompt-part1.html">🤖 پرامپت ۱</a>
+<a href="prompt-part2.html" class="active">🤖 پرامپت ۲</a>
+<a href="prompt-part3.html">🤖 پرامپت ۳</a>
+</nav>
+
+<div class="info">
+<strong>📋 این بخش شامل:</strong> جزئیات هر ماژول، تمام API Endpoints، نمونه کد‌های CQRS، ساختار WPF و MVVM، و فرمت پاسخ‌های API.
+<br>همه کامنت‌ها به <strong>فارسی کامل و مفصل</strong>.
+</div>
+
+<button class="copy-btn" onclick="copyAll()">📋 کپی کل پرامپت بخش ۲</button>
+
+<div class="prompt-section" id="prompt2">
+<span class="h1">════════════════════════════════════════════════════════════════
+🏥 ClinicPro - بخش ۲ از ۳
+ماژول‌ها، API Endpoints، نمونه کدها و WPF
+════════════════════════════════════════════════════════════════</span>
+
+<span class="h2">═══════════════════════════════════════
+🌐 ۱. فرمت استاندارد پاسخ API (همه Endpoint ها)
+═══════════════════════════════════════</span>
+
+<span class="note">// ⚠️ تمام API ها باید از این فرمت استاندارد استفاده کنند
+// هیچ Endpoint نباید خارج از این فرمت پاسخ دهد
+// پیام‌های خطا باید فارسی باشند</span>
+
+<span class="code">/// &lt;summary&gt;
+/// پاسخ استاندارد API - تمام درخواست‌ها با این فرمت برگشت داده می‌شوند
+/// &lt;/summary&gt;
+/// &lt;typeparam name="T"&gt;نوع داده برگشتی&lt;/typeparam&gt;
+public class ApiResponse&lt;T&gt;
+{
+    /// &lt;summary&gt;آیا عملیات موفق بوده یا خیر&lt;/summary&gt;
+    public bool IsSuccess { get; set; }
+    
+    /// &lt;summary&gt;کد وضعیت HTTP (200, 201, 400, 404, 500, ...)&lt;/summary&gt;
+    public int StatusCode { get; set; }
+    
+    /// &lt;summary&gt;پیام فارسی برای نمایش به کاربر&lt;/summary&gt;
+    public string Message { get; set; }
+    
+    /// &lt;summary&gt;داده اصلی برگشتی (در صورت موفقیت)&lt;/summary&gt;
+    public T? Data { get; set; }
+    
+    /// &lt;summary&gt;لیست خطاها (در صورت شکست)&lt;/summary&gt;
+    public List&lt;string&gt;? Errors { get; set; }
+    
+    /// &lt;summary&gt;شناسه یکتا درخواست برای پیگیری&lt;/summary&gt;
+    public string TraceId { get; set; }
+    
+    /// &lt;summary&gt;زمان پاسخ (میلی‌ثانیه)&lt;/summary&gt;
+    public long ElapsedMs { get; set; }
+
+    // نمونه موفقیت:
+    // { "isSuccess": true, "statusCode": 200, "message": "بیمار با موفقیت ثبت شد", "data": {...} }
+    
+    // نمونه خطا:
+    // { "isSuccess": false, "statusCode": 400, "message": "خطا در اعتبارسنجی", "errors": ["کد ملی معتبر نیست", "نام الزامی است"] }
+}
+
+/// &lt;summary&gt;
+/// پاسخ صفحه‌بندی - برای لیست‌های طولانی با Pagination
+/// &lt;/summary&gt;
+public class PagedResponse&lt;T&gt; : ApiResponse&lt;List&lt;T&gt;&gt;
+{
+    /// &lt;summary&gt;شماره صفحه فعلی (از ۱ شروع)&lt;/summary&gt;
+    public int PageNumber { get; set; }
+    
+    /// &lt;summary&gt;تعداد آیتم در هر صفحه&lt;/summary&gt;
+    public int PageSize { get; set; }
+    
+    /// &lt;summary&gt;تعداد کل رکوردها&lt;/summary&gt;
+    public int TotalCount { get; set; }
+    
+    /// &lt;summary&gt;تعداد کل صفحات&lt;/summary&gt;
+    public int TotalPages { get; set; }
+    
+    /// &lt;summary&gt;آیا صفحه بعدی وجود دارد&lt;/summary&gt;
+    public bool HasNext { get; set; }
+    
+    /// &lt;summary&gt;آیا صفحه قبلی وجود دارد&lt;/summary&gt;
+    public bool HasPrevious { get; set; }
+}</span>
+
+
+<span class="h2">═══════════════════════════════════════
+🔌 ۲. تمام API Endpoints (کنترلرها)
+═══════════════════════════════════════</span>
+
+<span class="note">// ⚠️ قوانین API:
+// ۱. همه مسیرها: /api/v1/{resource}
+// ۲. از Versioning استفاده شود (v1, v2, ...)
+// ۳. همه endpoint ها [Authorize] هستند مگر Login و Register
+// ۴. CRUD استاندارد: GET, POST, PUT, DELETE
+// ۵. جستجو و فیلتر از Query String
+// ۶. صفحه‌بندی: ?page=1&amp;pageSize=20&amp;sortBy=LastName&amp;sortDir=asc
+// ۷. همه پاسخ‌ها ApiResponse&lt;T&gt;
+// ۸. Swagger فعال با توضیحات فارسی
+// ۹. Rate Limiting: 100 req/min (عادی) , 5 req/min (login)
+// ۱۰. هر Controller کامنت XML فارسی کامل داشته باشد</span>
+
+<span class="h3">── ۲.۱ احراز هویت (AuthController) ──</span>
+
+<span class="code">/// &lt;summary&gt;
+/// کنترلر احراز هویت - ورود، خروج، تمدید توکن
+/// مسیر پایه: /api/v1/auth
+/// &lt;/summary&gt;
+[ApiController]
+[Route("api/v1/auth")]
+public class AuthController : ControllerBase
+{
+    /// &lt;summary&gt;ورود به سیستم با نام کاربری و رمز عبور&lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// Rate Limit: 5 بار در دقیقه
+    /// بعد از 5 تلاش ناموفق اکانت 30 دقیقه قفل می‌شود
+    /// &lt;/remarks&gt;
+    [HttpPost("login")]          // POST /api/v1/auth/login
+    [AllowAnonymous]
+    // Input: { username, password }
+    // Output: ApiResponse&lt;LoginResponseDto&gt; { accessToken, refreshToken, user, permissions }
+    
+    /// &lt;summary&gt;تمدید توکن دسترسی با Refresh Token&lt;/summary&gt;
+    [HttpPost("refresh-token")]  // POST /api/v1/auth/refresh-token
+    [AllowAnonymous]
+    // Input: { refreshToken }
+    // Output: ApiResponse&lt;LoginResponseDto&gt;
+    
+    /// &lt;summary&gt;خروج از سیستم و باطل کردن Refresh Token&lt;/summary&gt;
+    [HttpPost("logout")]         // POST /api/v1/auth/logout
+    // Input: { refreshToken }
+    
+    /// &lt;summary&gt;تغییر رمز عبور کاربر فعلی&lt;/summary&gt;
+    [HttpPost("change-password")] // POST /api/v1/auth/change-password
+    // Input: { currentPassword, newPassword, confirmPassword }
+    
+    /// &lt;summary&gt;دریافت اطلاعات کاربر فعلی (پروفایل)&lt;/summary&gt;
+    [HttpGet("me")]              // GET /api/v1/auth/me
+    // Output: ApiResponse&lt;UserProfileDto&gt;
+}</span>
+
+<span class="h3">── ۲.۲ بیماران (PatientsController) ──</span>
+
+<span class="code">/// &lt;summary&gt;
+/// کنترلر مدیریت بیماران - CRUD کامل با جستجو و فیلتر
+/// مسیر پایه: /api/v1/patients
+/// &lt;/summary&gt;
+[ApiController]
+[Route("api/v1/patients")]
+[Authorize]
+public class PatientsController : ControllerBase
+{
+    /// &lt;summary&gt;دریافت لیست بیماران با صفحه‌بندی و فیلتر&lt;/summary&gt;
+    [HttpGet]                           // GET /api/v1/patients?page=1&amp;pageSize=20&amp;search=علی&amp;insuranceId=1&amp;gender=1
+    [HasPermission("Patients.View")]
+    // Query: page, pageSize, search, gender, insuranceId, sortBy, sortDir, isActive
+    // Output: PagedResponse&lt;PatientListDto&gt;
+    
+    /// &lt;summary&gt;دریافت اطلاعات کامل یک بیمار با شناسه&lt;/summary&gt;
+    [HttpGet("{id:long}")]              // GET /api/v1/patients/123
+    [HasPermission("Patients.View")]
+    // Output: ApiResponse&lt;PatientDetailDto&gt; (شامل سوابق، آلرژی‌ها، ...)
+    
+    /// &lt;summary&gt;جستجوی سریع بیمار با کد ملی&lt;/summary&gt;
+    [HttpGet("by-national-code/{code}")] // GET /api/v1/patients/by-national-code/0012345678
+    [HasPermission("Patients.View")]
+    // Output: ApiResponse&lt;PatientDto&gt;
+    
+    /// &lt;summary&gt;جستجوی سریع بیمار با شماره موبایل&lt;/summary&gt;
+    [HttpGet("by-mobile/{mobile}")]     // GET /api/v1/patients/by-mobile/09121234567
+    [HasPermission("Patients.View")]
+    
+    /// &lt;summary&gt;جستجوی هوشمند (نام، کد ملی، موبایل، شماره پرونده)&lt;/summary&gt;
+    [HttpGet("search")]                 // GET /api/v1/patients/search?q=علی رضایی&amp;limit=10
+    [HasPermission("Patients.View")]
+    // Output: ApiResponse&lt;List&lt;PatientSearchResultDto&gt;&gt;
+    
+    /// &lt;summary&gt;ثبت بیمار جدید&lt;/summary&gt;
+    [HttpPost]                          // POST /api/v1/patients
+    [HasPermission("Patients.Create")]
+    // Input: CreatePatientDto
+    // Output: ApiResponse&lt;PatientDto&gt; (201 Created)
+    
+    /// &lt;summary&gt;ویرایش اطلاعات بیمار&lt;/summary&gt;
+    [HttpPut("{id:long}")]              // PUT /api/v1/patients/123
+    [HasPermission("Patients.Edit")]
+    // Input: UpdatePatientDto
+    // Output: ApiResponse&lt;PatientDto&gt;
+    
+    /// &lt;summary&gt;حذف نرم بیمار (Soft Delete)&lt;/summary&gt;
+    [HttpDelete("{id:long}")]           // DELETE /api/v1/patients/123
+    [HasPermission("Patients.Delete")]
+    // Output: ApiResponse&lt;bool&gt;
+    
+    /// &lt;summary&gt;دریافت تاریخچه ویزیت‌های بیمار&lt;/summary&gt;
+    [HttpGet("{id:long}/visits")]        // GET /api/v1/patients/123/visits
+    [HasPermission("Patients.View")]
+    // Output: PagedResponse&lt;VisitSummaryDto&gt;
+    
+    /// &lt;summary&gt;دریافت سوابق نسخه‌های بیمار&lt;/summary&gt;
+    [HttpGet("{id:long}/prescriptions")] // GET /api/v1/patients/123/prescriptions
+    
+    /// &lt;summary&gt;دریافت فاکتورهای بیمار&lt;/summary&gt;
+    [HttpGet("{id:long}/invoices")]      // GET /api/v1/patients/123/invoices
+    
+    /// &lt;summary&gt;دریافت اسناد و فایل‌های بیمار&lt;/summary&gt;
+    [HttpGet("{id:long}/documents")]     // GET /api/v1/patients/123/documents
+    
+    /// &lt;summary&gt;آپلود سند برای بیمار&lt;/summary&gt;
+    [HttpPost("{id:long}/documents")]    // POST /api/v1/patients/123/documents (multipart/form-data)
+    
+    /// &lt;summary&gt;خروجی Excel لیست بیماران&lt;/summary&gt;
+    [HttpGet("export/excel")]            // GET /api/v1/patients/export/excel
+    [HasPermission("Patients.Export")]
+}</span>
+
+<span class="h3">── ۲.۳ پزشکان (DoctorsController) ──</span>
+
+<span class="code">[Route("api/v1/doctors")]
+    [HttpGet]                           // لیست پزشکان
+    [HttpGet("{id:long}")]              // جزئیات پزشک
+    [HttpPost]                          // ثبت پزشک جدید
+    [HttpPut("{id:long}")]              // ویرایش پزشک
+    [HttpDelete("{id:long}")]           // حذف نرم
+    [HttpGet("{id:long}/schedules")]    // برنامه کاری پزشک
+    [HttpPost("{id:long}/schedules")]   // ثبت برنامه کاری
+    [HttpPut("{id:long}/schedules/{scheduleId}")] // ویرایش برنامه
+    [HttpGet("{id:long}/absences")]     // غیبت‌های پزشک
+    [HttpPost("{id:long}/absences")]    // ثبت غیبت
+    [HttpGet("{id:long}/available-slots")] // GET /api/v1/doctors/5/available-slots?date=2025-06-22
+                                        // خروجی: لیست ساعت‌های آزاد (الگوریتم ۱)
+    [HttpGet("{id:long}/statistics")]   // آمار عملکرد پزشک
+    [HttpGet("{id:long}/payments")]     // کارانه پزشک</span>
+
+<span class="h3">── ۲.۴ نوبت‌دهی (AppointmentsController) ──</span>
+
+<span class="code">[Route("api/v1/appointments")]
+    [HttpGet]                           // لیست نوبت‌ها (فیلتر: date, doctorId, status)
+    [HttpGet("{id:long}")]              // جزئیات نوبت
+    [HttpPost]                          // رزرو نوبت جدید
+    // ⚠️ بررسی: تداخل زمانی، ظرفیت، غیبت پزشک
+    [HttpPut("{id:long}")]              // ویرایش نوبت
+    [HttpDelete("{id:long}")]           // لغو نوبت
+    [HttpPost("{id:long}/confirm")]     // تایید حضور بیمار
+    [HttpPost("{id:long}/cancel")]      // لغو با ثبت دلیل
+    // Input: { cancellationReason }
+    [HttpGet("today")]                  // نوبت‌های امروز
+    // GET /api/v1/appointments/today?doctorId=5
+    [HttpGet("calendar")]              // تقویم نوبت‌ها (برای UI تقویم)
+    // GET /api/v1/appointments/calendar?doctorId=5&amp;year=1404&amp;month=4
+    // Output: Dictionary&lt;string, int&gt; (تاریخ → تعداد نوبت)
+    [HttpPost("bulk-cancel")]          // لغو دسته‌ای (مثلاً غیبت پزشک)
+    [HttpGet("statistics")]            // آمار نوبت‌دهی</span>
+
+<span class="h3">── ۲.۵ پذیرش (ReceptionsController) ──</span>
+
+<span class="code">[Route("api/v1/receptions")]
+    [HttpGet]                           // لیست پذیرش‌ها (امروز، فیلتر)
+    [HttpGet("{id:long}")]              // جزئیات پذیرش
+    [HttpPost]                          // ثبت پذیرش جدید
+    // ⚠️ عملیات: استعلام بیمه → محاسبه سهم → صدور فاکتور → صدور شماره صف
+    [HttpPut("{id:long}")]              // ویرایش پذیرش
+    [HttpPost("{id:long}/complete")]    // تکمیل پذیرش
+    [HttpGet("queue/{doctorId:long}")]  // صف پزشک (الگوریتم ۵)
+    // Output: List&lt;QueueItemDto&gt; (شماره صف، نام، وضعیت، زمان تخمینی)
+    [HttpPost("queue/{id:long}/call")] // فراخوانی بیمار بعدی از صف
+    [HttpGet("today/statistics")]      // آمار پذیرش امروز</span>
+
+<span class="h3">── ۲.۶ ویزیت (VisitsController) ──</span>
+
+<span class="code">[Route("api/v1/visits")]
+    [HttpGet]                           // لیست ویزیت‌ها
+    [HttpGet("{id:long}")]              // جزئیات کامل ویزیت (شامل SOAP، علائم حیاتی، تشخیص)
+    [HttpPost]                          // ثبت ویزیت جدید (شروع ویزیت)
+    [HttpPut("{id:long}")]              // ویرایش/تکمیل ویزیت
+    [HttpPost("{id:long}/complete")]    // پایان ویزیت و ذخیره نهایی
+    [HttpPost("{id:long}/vital-signs")] // ثبت علائم حیاتی
+    // Input: VitalSignDto { temperature, systolic, diastolic, heartRate, spo2, weight, height }
+    // ⚠️ BMI خودکار محاسبه شود: weight / (height/100)²
+    [HttpGet("{id:long}/vital-signs")]  // دریافت علائم حیاتی
+    [HttpGet("today/{doctorId:long}")]  // ویزیت‌های امروز پزشک
+    [HttpGet("icd10/search")]          // جستجوی کد ICD-10
+    // GET /api/v1/visits/icd10/search?q=دیابت&amp;limit=10</span>
+
+<span class="h3">── ۲.۷ نسخه‌نویسی (PrescriptionsController) ──</span>
+
+<span class="code">[Route("api/v1/prescriptions")]
+    [HttpGet]                                // لیست نسخه‌ها
+    [HttpGet("{id:long}")]                   // جزئیات نسخه
+    [HttpPost]                               // ایجاد نسخه جدید
+    [HttpPut("{id:long}")]                   // ویرایش نسخه
+    [HttpPost("{id:long}/items")]            // افزودن دارو به نسخه
+    [HttpPut("{id:long}/items/{itemId}")]    // ویرایش قلم دارو
+    [HttpDelete("{id:long}/items/{itemId}")] // حذف قلم از نسخه
+    [HttpPost("{id:long}/check-interactions")] // بررسی تداخل دارویی (الگوریتم ۳)
+    // Output: List&lt;DrugInteractionDto&gt; { drug1, drug2, severity, description }
+    [HttpPost("{id:long}/submit-electronic")] // ارسال به سامانه بیمه (نسخه الکترونیک)
+    // Output: { trackingCode, approvalCode, status }
+    [HttpPost("{id:long}/print")]            // چاپ نسخه (تولید PDF)
+    [HttpGet("medications/search")]          // جستجوی دارو
+    // GET /api/v1/prescriptions/medications/search?q=متفورمین&amp;limit=10
+    [HttpGet("templates")]                   // لیست تمپلیت‌های نسخه پزشک
+    [HttpPost("templates")]                  // ذخیره تمپلیت جدید
+    [HttpPost("from-template/{templateId}")] // ایجاد نسخه از تمپلیت</span>
+
+<span class="h3">── ۲.۸ صندوق و فاکتور (InvoicesController + PaymentsController) ──</span>
+
+<span class="code">[Route("api/v1/invoices")]
+    [HttpGet]                           // لیست فاکتورها
+    [HttpGet("{id:long}")]              // جزئیات فاکتور
+    [HttpPost]                          // صدور فاکتور جدید
+    // ⚠️ عملیات:
+    // ۱. افزودن خدمات → دریافت تعرفه → محاسبه سهم بیمه (الگوریتم ۲)
+    // ۲. محاسبه تخفیف
+    // ۳. محاسبه مالیات
+    // ۴. صدور سند حسابداری خودکار (الگوریتم ۴)
+    [HttpPut("{id:long}")]              // ویرایش فاکتور
+    [HttpPost("{id:long}/items")]       // افزودن خدمت به فاکتور
+    [HttpPost("{id:long}/calculate")]   // محاسبه مجدد مبالغ (الگوریتم ۲)
+    [HttpPost("{id:long}/print")]       // چاپ فاکتور
+    [HttpGet("{id:long}/accounting")]   // مشاهده سند حسابداری مرتبط
+    [HttpGet("daily-report")]           // گزارش صندوق روزانه
+    // GET /api/v1/invoices/daily-report?date=2025-06-22
+
+[Route("api/v1/payments")]
+    [HttpGet]                           // لیست پرداخت‌ها
+    [HttpPost]                          // ثبت پرداخت
+    // Input: { invoiceId, amount, paymentMethod, referenceNumber }
+    // ⚠️ تولید سند حسابداری خودکار
+    [HttpPost("{id:long}/refund")]      // برگشت وجه
+
+[Route("api/v1/cash-registers")]
+    [HttpPost("open")]                  // باز کردن صندوق
+    [HttpPost("close")]                 // بستن صندوق
+    [HttpGet("current")]                // صندوق فعلی</span>
+
+<span class="h3">── ۲.۹ حسابداری دوبل (AccountingController) ──</span>
+
+<span class="code">[Route("api/v1/accounting")]
+    // سرفصل حساب‌ها
+    [HttpGet("accounts")]               // لیست سرفصل‌ها (درختی)
+    [HttpGet("accounts/{id:long}")]     // جزئیات حساب
+    [HttpPost("accounts")]              // ایجاد سرفصل
+    [HttpPut("accounts/{id:long}")]     // ویرایش سرفصل
+    
+    // اسناد حسابداری
+    [HttpGet("journal-entries")]        // لیست اسناد (فیلتر: از تاریخ، تا تاریخ، وضعیت)
+    [HttpGet("journal-entries/{id:long}")] // جزئیات سند
+    [HttpPost("journal-entries")]       // ایجاد سند دستی
+    // ⚠️ Validation: SUM(Debit) == SUM(Credit) (قانون طلایی)
+    [HttpPut("journal-entries/{id:long}")] // ویرایش سند
+    [HttpPost("journal-entries/{id:long}/approve")] // تایید سند
+    
+    // گزارش‌ها
+    [HttpGet("trial-balance")]          // تراز آزمایشی
+    [HttpGet("balance-sheet")]          // ترازنامه
+    [HttpGet("income-statement")]       // صورت سود و زیان
+    [HttpGet("ledger/{accountId:long}")] // دفتر کل حساب
+    [HttpGet("general-journal")]        // دفتر روزنامه
+    
+    // سال مالی
+    [HttpGet("fiscal-years")]           // لیست سال‌های مالی
+    [HttpPost("fiscal-years")]          // ایجاد سال مالی
+    [HttpPost("fiscal-years/{id:long}/close")] // بستن سال مالی</span>
+
+<span class="h3">── ۲.۱۰ بیمه (InsuranceController) ──</span>
+
+<span class="code">[Route("api/v1/insurance")]
+    [HttpGet("companies")]              // لیست شرکت‌های بیمه
+    [HttpPost("companies")]             // ثبت بیمه جدید
+    [HttpPut("companies/{id:long}")]    // ویرایش بیمه
+    [HttpPost("inquiry")]               // استعلام آنلاین بیمه بیمار
+    // Input: { patientId, insuranceCompanyId, nationalCode }
+    // Output: { isValid, approvalCode, coveragePercent, validUntil }
+    [HttpGet("claims")]                 // لیست مطالبات
+    [HttpPost("claims")]                // ایجاد مطالبه بیمه
+    [HttpPost("claims/{id:long}/submit")] // ارسال اسناد به بیمه
+    [HttpGet("claims/{id:long}/status")] // پیگیری وضعیت مطالبه</span>
+
+<span class="h3">── ۲.۱۱ آزمایشگاه (LabController) ──</span>
+
+<span class="code">[Route("api/v1/lab")]
+    [HttpGet("orders")]                 // لیست درخواست‌ها
+    [HttpGet("orders/{id:long}")]       // جزئیات
+    [HttpPost("orders")]                // ثبت درخواست آزمایش جدید
+    [HttpPost("orders/{id:long}/collect-sample")] // ثبت نمونه‌گیری
+    [HttpPost("orders/{id:long}/results")]  // ثبت نتایج
+    // ⚠️ بررسی خودکار مقادیر غیرطبیعی (IsAbnormal, AbnormalFlag)
+    [HttpPost("orders/{id:long}/verify")]   // تایید توسط مسئول فنی
+    [HttpPost("orders/{id:long}/print")]    // چاپ جواب
+    [HttpPost("orders/{id:long}/notify")]   // ارسال SMS آماده بودن جواب
+    [HttpGet("tests")]                  // کاتالوگ تست‌ها
+    [HttpPost("tests")]                 // ثبت تست جدید</span>
+
+<span class="h3">── ۲.۱۲ داروخانه (PharmacyController) ──</span>
+
+<span class="code">[Route("api/v1/pharmacy")]
+    // موجودی
+    [HttpGet("inventory")]              // لیست موجودی (فیلتر: low-stock, expiring)
+    [HttpGet("inventory/{id:long}")]    // جزئیات آیتم
+    [HttpPost("inventory")]             // ثبت آیتم جدید
+    [HttpPut("inventory/{id:long}")]    // ویرایش
+    
+    // تحویل نسخه
+    [HttpPost("dispense")]              // تحویل دارو با اسکن نسخه
+    // Input: { prescriptionId } یا { prescriptionCode } یا { trackingCode }
+    // ⚠️ عملیات: بررسی موجودی → محاسبه قیمت → صدور فاکتور → کسر موجودی → هشدار موجودی کم
+    [HttpGet("dispense/by-prescription/{prescriptionId:long}")] // اطلاعات نسخه برای تحویل
+    
+    // سفارش خرید
+    [HttpGet("purchase-orders")]        // لیست سفارش‌ها
+    [HttpPost("purchase-orders")]       // ثبت سفارش خرید
+    [HttpPost("purchase-orders/{id:long}/receive")] // دریافت کالا
+    
+    // انبارگردانی
+    [HttpPost("stock-taking")]          // شروع انبارگردانی
+    
+    // تامین‌کنندگان
+    [HttpGet("suppliers")]              // لیست تامین‌کنندگان
+    [HttpPost("suppliers")]             // ثبت تامین‌کننده
+    
+    // هشدارها
+    [HttpGet("alerts/low-stock")]       // داروهای موجودی کم (الگوریتم ۱۰)
+    [HttpGet("alerts/expiring")]        // داروهای نزدیک انقضا</span>
+
+<span class="h3">── ۲.۱۳ تصویربرداری، دندان، چشم، فیزیو ──</span>
+
+<span class="code">[Route("api/v1/imaging")]              // ImagingController - درخواست، گزارش، فایل
+[Route("api/v1/dental")]               // DentalController - چارت دندان، طرح درمان
+[Route("api/v1/eye")]                  // EyeController - معاینه چشم، نمره
+[Route("api/v1/physiotherapy")]        // PhysiotherapyController - جلسات
+
+// هر کدام CRUD استاندارد + عملیات خاص ماژول</span>
+
+<span class="h3">── ۲.۱۴ پیامک (SmsController) ──</span>
+
+<span class="code">[Route("api/v1/sms")]
+    [HttpPost("send")]                  // ارسال پیامک تکی
+    [HttpPost("send-bulk")]             // ارسال دسته‌ای
+    [HttpGet("history")]                // تاریخچه پیامک‌ها
+    [HttpGet("templates")]              // لیست تمپلیت‌ها
+    [HttpPost("templates")]             // ثبت تمپلیت
+    [HttpGet("providers")]              // لیست پنل‌های پیامک
+    [HttpPost("providers/{id:long}/test")] // تست پنل
+    [HttpGet("providers/{id:long}/balance")] // موجودی پنل
+    [HttpGet("queue")]                  // صف ارسال
+    [HttpGet("statistics")]             // آمار ارسال</span>
+
+<span class="h3">── ۲.۱۵ گزارش‌ها (ReportsController) ──</span>
+
+<span class="code">[Route("api/v1/reports")]
+    [HttpGet("categories")]             // دسته‌بندی گزارش‌ها
+    [HttpGet("{reportCode}/execute")]   // اجرای گزارش با پارامتر
+    // GET /api/v1/reports/daily-revenue/execute?fromDate=1404/04/01&amp;toDate=1404/04/30&amp;doctorId=5
+    [HttpGet("{reportCode}/export/{format}")] // خروجی (pdf, excel, word)
+    // GET /api/v1/reports/daily-revenue/export/excel?fromDate=...
+    
+    // گزارش‌های آماده:
+    // daily-revenue          - درآمد روزانه
+    // monthly-revenue        - درآمد ماهانه
+    // doctor-performance     - عملکرد پزشکان
+    // patient-statistics     - آمار بیماران
+    // insurance-claims       - مطالبات بیمه
+    // pharmacy-inventory     - موجودی داروخانه
+    // appointment-statistics - آمار نوبت‌دهی
+    // cashier-daily          - گزارش صندوق
+    // top-services           - پرمصرف‌ترین خدمات
+    // top-doctors            - فعال‌ترین پزشکان</span>
+
+<span class="h3">── ۲.۱۶ کاربران و نقش‌ها ──</span>
+
+<span class="code">[Route("api/v1/users")]
+    [HttpGet] [HttpGet("{id}")] [HttpPost] [HttpPut("{id}")] [HttpDelete("{id}")]
+    [HttpGet("{id:long}/roles")]          // نقش‌های کاربر
+    [HttpPost("{id:long}/roles")]         // تخصیص نقش
+    [HttpDelete("{id:long}/roles/{roleId}")] // حذف نقش
+    [HttpPost("{id:long}/reset-password")] // ریست رمز عبور
+    [HttpPost("{id:long}/lock")]          // قفل اکانت
+    [HttpPost("{id:long}/unlock")]        // آزاد کردن اکانت
+
+[Route("api/v1/roles")]
+    [HttpGet] [HttpPost] [HttpPut("{id}")] [HttpDelete("{id}")]
+    [HttpGet("{id:long}/permissions")]     // دسترسی‌های نقش
+    [HttpPost("{id:long}/permissions")]    // تخصیص دسترسی
+    
+[Route("api/v1/permissions")]
+    [HttpGet]                              // لیست همه دسترسی‌ها (گروه‌بندی شده)</span>
+
+<span class="h3">── ۲.۱۷ تنظیمات و سیستم ──</span>
+
+<span class="code">[Route("api/v1/settings")]
+    [HttpGet]                           // تمام تنظیمات (گروه‌بندی شده)
+    [HttpGet("{key}")]                  // یک تنظیم خاص
+    [HttpPut("{key}")]                  // ویرایش تنظیم
+    [HttpGet("clinic-info")]            // اطلاعات درمانگاه
+    [HttpPut("clinic-info")]            // ویرایش اطلاعات درمانگاه
+    [HttpGet("modules")]                // لیست ماژول‌ها (فعال/غیرفعال)
+
+[Route("api/v1/backup")]
+    [HttpPost("create")]                // ایجاد بکاپ دستی
+    [HttpGet("history")]                // تاریخچه بکاپ‌ها
+    [HttpPost("restore/{backupId}")]    // بازیابی از بکاپ
+    [HttpGet("settings")]               // تنظیمات بکاپ خودکار
+    [HttpPut("settings")]               // ویرایش تنظیمات بکاپ
+
+[Route("api/v1/audit-logs")]
+    [HttpGet]                           // لیست لاگ‌ها (فیلتر: user, entity, action, date)
+    [HttpGet("{id:long}")]              // جزئیات لاگ
+
+[Route("api/v1/license")]
+    [HttpGet("status")]                 // وضعیت لایسنس فعلی
+    [HttpPost("activate")]              // فعال‌سازی آنلاین
+    [HttpPost("activate-offline")]      // فعال‌سازی آفلاین (آپلود فایل .lic)
+    [HttpGet("request-file")]           // تولید فایل .req برای آفلاین
+    [HttpGet("modules")]                // ماژول‌های فعال با لایسنس
+
+[Route("api/v1/dashboard")]
+    [HttpGet("summary")]                // خلاصه داشبورد (آمار امروز)
+    [HttpGet("revenue-chart")]          // نمودار درآمد (۷/۳۰ روز)
+    [HttpGet("appointments-today")]     // نوبت‌های امروز
+    [HttpGet("queue-status")]           // وضعیت صف
+    [HttpGet("recent-activities")]      // فعالیت‌های اخیر
+    [HttpGet("alerts")]                 // هشدارها (موجودی کم، انقضا، ...)</span>
+
+
+<span class="h2">═══════════════════════════════════════
+🔨 ۳. نمونه کد CQRS + MediatR (الگو)
+═══════════════════════════════════════</span>
+
+<span class="note">// ⚠️ از این الگو برای همه ماژول‌ها استفاده کن
+// هر Command/Query یک پوشه جداگانه دارد
+// هر Handler کامنت فارسی کامل دارد</span>
+
+<span class="code">// ───── CreatePatientCommand.cs ─────
+/// &lt;summary&gt;
+/// فرمان ایجاد بیمار جدید در سیستم
+/// این فرمان اطلاعات ورودی بیمار را دریافت و پردازش می‌کند
+/// &lt;/summary&gt;
+public record CreatePatientCommand : IRequest&lt;Result&lt;PatientDto&gt;&gt;
+{
+    /// &lt;summary&gt;کد ملی بیمار - ۱۰ رقم - الزامی - باید یکتا باشد&lt;/summary&gt;
+    public string NationalCode { get; init; } = null!;
+    
+    /// &lt;summary&gt;نام بیمار - حداکثر ۵۰ کاراکتر - الزامی&lt;/summary&gt;
+    public string FirstName { get; init; } = null!;
+    
+    /// &lt;summary&gt;نام خانوادگی بیمار - حداکثر ۵۰ کاراکتر - الزامی&lt;/summary&gt;
+    public string LastName { get; init; } = null!;
+    
+    /// &lt;summary&gt;جنسیت: Male=1, Female=2&lt;/summary&gt;
+    public Gender Gender { get; init; }
+    
+    /// &lt;summary&gt;شماره موبایل - فرمت 09XXXXXXXXX - الزامی&lt;/summary&gt;
+    public string Mobile { get; init; } = null!;
+    
+    // ... سایر فیلدها
+}
+
+// ───── CreatePatientCommandValidator.cs ─────
+/// &lt;summary&gt;
+/// اعتبارسنج فرمان ایجاد بیمار
+/// تمام قوانین اعتبارسنجی ورودی‌ها در اینجا تعریف می‌شوند
+/// پیام‌های خطا همگی فارسی هستند
+/// &lt;/summary&gt;
+public class CreatePatientCommandValidator : AbstractValidator&lt;CreatePatientCommand&gt;
+{
+    /// &lt;summary&gt;تعریف قوانین اعتبارسنجی&lt;/summary&gt;
+    public CreatePatientCommandValidator(IUnitOfWork uow)
+    {
+        RuleFor(x => x.NationalCode)
+            .NotEmpty().WithMessage("کد ملی الزامی است")
+            .Length(10).WithMessage("کد ملی باید ۱۰ رقم باشد")
+            .Matches(@"^\d{10}$").WithMessage("کد ملی فقط شامل اعداد است")
+            .Must(NationalCodeValidator.IsValid).WithMessage("کد ملی معتبر نیست")
+            .MustAsync(async (code, ct) => 
+                !await uow.Patients.AnyAsync(p => p.NationalCode == code && !p.IsDeleted, ct))
+            .WithMessage("بیماری با این کد ملی قبلاً ثبت شده است");
+            
+        RuleFor(x => x.FirstName)
+            .NotEmpty().WithMessage("نام بیمار الزامی است")
+            .MaximumLength(50).WithMessage("نام بیمار حداکثر ۵۰ کاراکتر");
+            
+        RuleFor(x => x.LastName)
+            .NotEmpty().WithMessage("نام خانوادگی الزامی است")
+            .MaximumLength(50).WithMessage("نام خانوادگی حداکثر ۵۰ کاراکتر");
+            
+        RuleFor(x => x.Mobile)
+            .NotEmpty().WithMessage("شماره موبایل الزامی است")
+            .Matches(@"^09\d{9}$").WithMessage("فرمت موبایل معتبر نیست (09XXXXXXXXX)");
+            
+        RuleFor(x => x.Gender)
+            .IsInEnum().WithMessage("جنسیت معتبر نیست");
+    }
+}
+
+// ───── CreatePatientCommandHandler.cs ─────
+/// &lt;summary&gt;
+/// پردازشگر فرمان ایجاد بیمار
+/// عملیات:
+/// ۱. اعتبارسنجی (توسط Pipeline Behavior انجام شده)
+/// ۲. بررسی تکراری نبودن کد ملی
+/// ۳. تولید شماره پرونده خودکار (MRN)
+/// ۴. رمزنگاری داده‌های حساس
+/// ۵. ذخیره در دیتابیس
+/// ۶. ارسال پیامک خوش‌آمدگویی
+/// ۷. ثبت رویداد دامنه
+/// &lt;/summary&gt;
+public class CreatePatientCommandHandler 
+    : IRequestHandler&lt;CreatePatientCommand, Result&lt;PatientDto&gt;&gt;
+{
+    private readonly IUnitOfWork _uow;
+    private readonly IMapper _mapper;
+    private readonly IEncryptionService _encryption;
+    private readonly ISmsService _sms;
+    private readonly ILogger&lt;CreatePatientCommandHandler&gt; _logger;
+    
+    /// &lt;summary&gt;سازنده - تزریق وابستگی‌ها&lt;/summary&gt;
+    public CreatePatientCommandHandler(
+        IUnitOfWork uow, IMapper mapper, 
+        IEncryptionService encryption, ISmsService sms,
+        ILogger&lt;CreatePatientCommandHandler&gt; logger)
+    {
+        _uow = uow;
+        _mapper = mapper;
+        _encryption = encryption;
+        _sms = sms;
+        _logger = logger;
+    }
+    
+    /// &lt;summary&gt;پردازش فرمان ایجاد بیمار&lt;/summary&gt;
+    /// &lt;param name="request"&gt;اطلاعات بیمار جدید&lt;/param&gt;
+    /// &lt;param name="cancellationToken"&gt;توکن لغو عملیات&lt;/param&gt;
+    /// &lt;returns&gt;نتیجه عملیات شامل اطلاعات بیمار ثبت شده&lt;/returns&gt;
+    public async Task&lt;Result&lt;PatientDto&gt;&gt; Handle(
+        CreatePatientCommand request, 
+        CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("شروع ثبت بیمار جدید با کد ملی: {NationalCode}", 
+            request.NationalCode);
+        
+        // ۱. نگاشت DTO به Entity
+        var patient = _mapper.Map&lt;Patient&gt;(request);
+        
+        // ۲. تولید شماره پرونده خودکار
+        patient.MedicalRecordNo = await GenerateMrnAsync(cancellationToken);
+        
+        // ۳. تاریخ شمسی ثبت
+        patient.RegistrationDate = DateTime.UtcNow;
+        patient.BirthDateShamsi = PersianDateHelper.ToShamsi(request.BirthDate);
+        
+        // ۴. رمزنگاری داده‌های حساس
+        if (!string.IsNullOrEmpty(patient.Address))
+        {
+            patient.EncryptedData = _encryption.Encrypt(
+                JsonSerializer.Serialize(new { patient.Address, patient.Allergies }));
+        }
+        
+        // ۵. ذخیره در دیتابیس
+        await _uow.Patients.AddAsync(patient);
+        await _uow.SaveChangesAsync(cancellationToken);
+        
+        // ۶. ارسال پیامک خوش‌آمدگویی (در پس‌زمینه)
+        _ = _sms.SendAsync(patient.Mobile, 
+            $"سلام {patient.FirstName} عزیز، پرونده شما در درمانگاه با شماره {patient.MedicalRecordNo} ایجاد شد.");
+        
+        // ۷. ثبت رویداد دامنه
+        patient.AddDomainEvent(new PatientCreatedEvent(patient.Id));
+        
+        _logger.LogInformation("بیمار جدید با شناسه {PatientId} و شماره پرونده {MRN} ثبت شد", 
+            patient.Id, patient.MedicalRecordNo);
+        
+        // ۸. برگشت نتیجه
+        var dto = _mapper.Map&lt;PatientDto&gt;(patient);
+        return Result&lt;PatientDto&gt;.Success(dto, "بیمار با موفقیت ثبت شد");
+    }
+    
+    /// &lt;summary&gt;تولید شماره پرونده یکتا با فرمت MRN-XXXXXX&lt;/summary&gt;
+    private async Task&lt;string&gt; GenerateMrnAsync(CancellationToken ct)
+    {
+        // استفاده از SQL Server Sequence
+        var seq = await _uow.ExecuteSqlRawAsync&lt;long&gt;(
+            "SELECT NEXT VALUE FOR PatientMRNSequence", ct);
+        return $"MRN-{seq:D6}";
+    }
+}</span>
+
+
+<span class="h2">═══════════════════════════════════════
+🖥️ ۴. ساختار WPF Desktop Client (MVVM)
+═══════════════════════════════════════</span>
+
+<span class="note">// ⚠️ نکات مهم WPF:
+// ۱. MVVM Pattern (View → ViewModel → Service → API)
+// ۲. Material Design in XAML Toolkit
+// ۳. کامل RTL (FlowDirection="RightToLeft")
+// ۴. تقویم شمسی (کنترل PersianDatePicker سفارشی)
+// ۵. فونت Vazirmatn در تمام اپلیکیشن
+// ۶. Dark/Light Theme Toggle
+// ۷. کلیدهای میانبر (F1-F12, Ctrl+S, Ctrl+P, ...)
+// ۸. جستجوی سریع (F2) در همه جا
+// ۹. Toast Notifications (Snackbar)
+// ۱۰. Loading Indicators
+// ۱۱. Confirmation Dialogs
+// ۱۲. Responsive برای رزولوشن‌های مختلف (1366×768 تا 4K)
+// ۱۳. Dependency Injection در ViewModels
+// ۱۴. INavigationService برای جابجایی بین صفحات
+// ۱۵. همه کامنت‌ها فارسی و مفصل</span>
+
+<span class="h3">── ۴.۱ ساختار اصلی ──</span>
+
+<span class="code">ClinicPro.Desktop/
+├── App.xaml                    // تنظیمات کلی اپ (Theme, Fonts, DI)
+├── App.xaml.cs                 // نقطه شروع + DI Configuration
+├── MainWindow.xaml             // پنجره اصلی (Sidebar + Content Area)
+├── MainWindow.xaml.cs
+│
+├── Views/                      // صفحات XAML
+│   ├── Login/
+│   │   └── LoginView.xaml      // صفحه ورود
+│   ├── Dashboard/
+│   │   └── DashboardView.xaml  // داشبورد اصلی
+│   ├── Patients/
+│   │   ├── PatientListView.xaml      // لیست بیماران
+│   │   ├── PatientFormView.xaml      // فرم ثبت/ویرایش بیمار
+│   │   └── PatientDetailView.xaml    // جزئیات بیمار
+│   ├── Appointments/
+│   │   ├── AppointmentListView.xaml  // لیست نوبت‌ها
+│   │   └── AppointmentBookView.xaml  // رزرو نوبت + تقویم شمسی
+│   ├── Reception/
+│   │   └── ReceptionView.xaml        // صفحه پذیرش
+│   ├── Visits/
+│   │   ├── VisitQueueView.xaml       // صف بیماران پزشک
+│   │   └── VisitFormView.xaml        // فرم ویزیت (SOAP + علائم حیاتی)
+│   ├── Prescriptions/
+│   │   └── PrescriptionView.xaml     // نسخه‌نویسی
+│   ├── Billing/
+│   │   ├── InvoiceView.xaml          // صدور فاکتور
+│   │   └── CashRegisterView.xaml     // صندوق
+│   ├── Accounting/
+│   │   ├── JournalEntryView.xaml     // سند حسابداری
+│   │   ├── AccountTreeView.xaml      // درخت سرفصل‌ها
+│   │   └── TrialBalanceView.xaml     // تراز آزمایشی
+│   ├── Lab/
+│   │   └── LabOrderView.xaml         // آزمایشگاه
+│   ├── Pharmacy/
+│   │   ├── InventoryView.xaml        // موجودی داروخانه
+│   │   └── DispenseView.xaml         // تحویل نسخه
+│   ├── Dental/
+│   │   └── DentalChartView.xaml      // چارت دندانپزشکی
+│   ├── Reports/
+│   │   └── ReportBrowserView.xaml    // مرورگر گزارش‌ها
+│   ├── Users/
+│   │   ├── UserListView.xaml         // مدیریت کاربران
+│   │   └── RolePermissionView.xaml   // نقش‌ها و دسترسی‌ها
+│   ├── Settings/
+│   │   └── SettingsView.xaml         // تنظیمات
+│   └── License/
+│       └── LicenseActivationView.xaml // فعال‌سازی لایسنس
+│
+├── ViewModels/                 // MVVM ViewModels
+│   ├── BaseViewModel.cs        // کلاس پایه (INotifyPropertyChanged, IsBusy, ...)
+│   ├── MainViewModel.cs        // ویومدل اصلی (Navigation, User, Theme)
+│   ├── Login/
+│   │   └── LoginViewModel.cs
+│   ├── Dashboard/
+│   │   └── DashboardViewModel.cs
+│   ├── Patients/
+│   │   ├── PatientListViewModel.cs   // لیست + جستجو + صفحه‌بندی + Export
+│   │   ├── PatientFormViewModel.cs   // فرم + Validation + Save
+│   │   └── PatientDetailViewModel.cs // جزئیات + تاریخچه
+│   └── ... (هر صفحه یک ViewModel)
+│
+├── Services/                   // سرویس‌های کلاینت
+│   ├── ApiClient.cs            // HttpClient wrapper (JWT, Refresh, Base URL)
+│   ├── AuthService.cs          // ورود/خروج/تمدید توکن
+│   ├── TokenManager.cs         // ذخیره و مدیریت توکن‌ها
+│   ├── NavigationService.cs    // جابجایی بین صفحات
+│   ├── DialogService.cs        // نمایش دیالوگ‌ها
+│   ├── ToastService.cs         // نمایش نوتیفیکیشن
+│   ├── ThemeService.cs         // تغییر تم (Dark/Light)
+│   ├── ShortcutService.cs      // مدیریت کلیدهای میانبر
+│   └── PrintService.cs         // چاپ
+│
+├── Controls/                   // کنترل‌های سفارشی
+│   ├── PersianDatePicker.xaml  // انتخاب تاریخ شمسی
+│   ├── PersianCalendar.xaml    // تقویم شمسی
+│   ├── SearchBox.xaml          // جعبه جستجوی سریع
+│   ├── LoadingOverlay.xaml     // نمایش بارگذاری
+│   ├── PagedDataGrid.xaml      // DataGrid با صفحه‌بندی
+│   ├── PatientQuickSearch.xaml // جستجوی سریع بیمار
+│   └── DentalChart.xaml        // چارت دندانی گرافیکی
+│
+├── Converters/
+│   ├── GregorianToShamsiConverter.cs      // تبدیل تاریخ
+│   ├── BoolToVisibilityConverter.cs
+│   ├── EnumToDescriptionConverter.cs      // نمایش فارسی Enum
+│   ├── RialToCurrencyConverter.cs         // نمایش مبلغ (۱٬۲۳۴٬۵۶۷ ریال)
+│   ├── GenderToStringConverter.cs         // 1→مرد, 2→زن
+│   └── StatusToBadgeConverter.cs          // وضعیت به رنگ Badge
+│
+├── Themes/
+│   ├── LightTheme.xaml         // تم روشن
+│   ├── DarkTheme.xaml          // تم تاریک
+│   └── SharedStyles.xaml       // استایل‌های مشترک
+│
+└── Resources/
+    ├── Fonts/
+    │   └── Vazirmatn/          // فونت وزیر متن (Regular, Bold, Black)
+    ├── Icons/                  // آیکون‌ها (Material Design Icons)
+    └── Strings/
+        ├── fa-IR.resx          // رشته‌های فارسی
+        └── en-US.resx          // رشته‌های انگلیسی (آینده)</span>
+
+<span class="h3">── ۴.۲ نمونه ViewModel با کامنت فارسی ──</span>
+
+<span class="code">/// &lt;summary&gt;
+/// ویومدل لیست بیماران
+/// مسئولیت‌ها:
+/// - بارگذاری لیست بیماران از API
+/// - جستجو و فیلتر بیماران
+/// - صفحه‌بندی (Pagination)
+/// - مرتب‌سازی (Sorting)
+/// - عملیات CRUD (ایجاد، مشاهده، ویرایش، حذف)
+/// - خروجی Excel
+/// &lt;/summary&gt;
+public class PatientListViewModel : BaseViewModel
+{
+    private readonly IApiClient _api;
+    private readonly INavigationService _nav;
+    private readonly IDialogService _dialog;
+    
+    /// &lt;summary&gt;لیست بیماران نمایش داده شده در DataGrid&lt;/summary&gt;
+    public ObservableCollection&lt;PatientListDto&gt; Patients { get; set; }
+    
+    /// &lt;summary&gt;متن جستجو - با تغییر این فیلد جستجو انجام می‌شود&lt;/summary&gt;
+    private string _searchText;
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            SetProperty(ref _searchText, value);
+            // جستجو با تاخیر ۳۰۰ میلی‌ثانیه (Debounce)
+            _searchDebouncer.Debounce(300, async () => await LoadPatientsAsync());
+        }
+    }
+    
+    /// &lt;summary&gt;صفحه فعلی در صفحه‌بندی&lt;/summary&gt;
+    public int CurrentPage { get; set; } = 1;
+    
+    /// &lt;summary&gt;تعداد کل رکوردها&lt;/summary&gt;
+    public int TotalCount { get; set; }
+    
+    /// &lt;summary&gt;فرمان ایجاد بیمار جدید - کلید میانبر: F3&lt;/summary&gt;
+    public IRelayCommand AddPatientCommand { get; }
+    
+    /// &lt;summary&gt;فرمان مشاهده جزئیات بیمار انتخاب شده&lt;/summary&gt;
+    public IRelayCommand&lt;PatientListDto&gt; ViewPatientCommand { get; }
+    
+    /// &lt;summary&gt;فرمان ویرایش بیمار انتخاب شده&lt;/summary&gt;
+    public IRelayCommand&lt;PatientListDto&gt; EditPatientCommand { get; }
+    
+    /// &lt;summary&gt;فرمان حذف بیمار (با تایید کاربر)&lt;/summary&gt;
+    public IRelayCommand&lt;PatientListDto&gt; DeletePatientCommand { get; }
+    
+    /// &lt;summary&gt;فرمان خروجی Excel&lt;/summary&gt;
+    public IRelayCommand ExportExcelCommand { get; }
+    
+    /// &lt;summary&gt;فرمان رزرو نوبت برای بیمار انتخاب شده&lt;/summary&gt;
+    public IRelayCommand&lt;PatientListDto&gt; BookAppointmentCommand { get; }
+    
+    /// &lt;summary&gt;
+    /// سازنده ویومدل - تزریق وابستگی‌ها و تعریف فرمان‌ها
+    /// &lt;/summary&gt;
+    public PatientListViewModel(
+        IApiClient api, INavigationService nav, IDialogService dialog)
+    {
+        _api = api;
+        _nav = nav;
+        _dialog = dialog;
+        
+        Patients = new ObservableCollection&lt;PatientListDto&gt;();
+        
+        // تعریف فرمان‌ها با بررسی قابلیت اجرا
+        AddPatientCommand = new RelayCommand(
+            () => _nav.NavigateTo&lt;PatientFormView&gt;(),
+            () => HasPermission("Patients.Create"));
+            
+        ViewPatientCommand = new RelayCommand&lt;PatientListDto&gt;(
+            patient => _nav.NavigateTo&lt;PatientDetailView&gt;(patient.Id));
+            
+        DeletePatientCommand = new RelayCommand&lt;PatientListDto&gt;(
+            async patient =>
+            {
+                // تایید کاربر قبل از حذف
+                var confirmed = await _dialog.ConfirmAsync(
+                    "حذف بیمار",
+                    $"آیا از حذف بیمار «{patient.FullName}» اطمینان دارید؟",
+                    "حذف", "انصراف");
+                    
+                if (confirmed)
+                {
+                    IsBusy = true;
+                    var result = await _api.DeleteAsync&lt;bool&gt;($"patients/{patient.Id}");
+                    IsBusy = false;
+                    
+                    if (result.IsSuccess)
+                    {
+                        Patients.Remove(patient);
+                        _dialog.ShowToast("بیمار با موفقیت حذف شد", ToastType.Success);
+                    }
+                    else
+                    {
+                        _dialog.ShowToast(result.Message, ToastType.Error);
+                    }
+                }
+            },
+            patient => HasPermission("Patients.Delete"));
+    }
+    
+    /// &lt;summary&gt;
+    /// بارگذاری لیست بیماران از API با صفحه‌بندی و فیلتر
+    /// این متد هنگام ورود به صفحه و تغییر فیلترها فراخوانی می‌شود
+    /// &lt;/summary&gt;
+    public async Task LoadPatientsAsync()
+    {
+        IsBusy = true;
+        
+        var response = await _api.GetPagedAsync&lt;PatientListDto&gt;("patients", new
+        {
+            page = CurrentPage,
+            pageSize = 20,
+            search = SearchText,
+            sortBy = "LastName",
+            sortDir = "asc"
+        });
+        
+        if (response.IsSuccess)
+        {
+            Patients.Clear();
+            foreach (var p in response.Data)
+                Patients.Add(p);
+                
+            TotalCount = response.TotalCount;
+        }
+        
+        IsBusy = false;
+    }
+}</span>
+
+<span class="h3">── ۴.۳ نمونه ApiClient (سرویس ارتباط با API) ──</span>
+
+<span class="code">/// &lt;summary&gt;
+/// سرویس ارتباط با API سرور
+/// مسئولیت‌ها:
+/// - مدیریت خودکار JWT Token در Header
+/// - تمدید خودکار Access Token با Refresh Token
+/// - مدیریت خطاهای شبکه
+/// - Retry در صورت خطای موقت
+/// - Logging همه درخواست‌ها
+/// &lt;/summary&gt;
+public class ApiClient : IApiClient
+{
+    private readonly HttpClient _http;
+    private readonly ITokenManager _tokenManager;
+    
+    /// &lt;summary&gt;
+    /// ارسال درخواست GET و دریافت پاسخ
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name="T"&gt;نوع داده مورد انتظار در پاسخ&lt;/typeparam&gt;
+    /// &lt;param name="endpoint"&gt;آدرس endpoint بدون /api/v1/&lt;/param&gt;
+    /// &lt;returns&gt;پاسخ API استاندارد&lt;/returns&gt;
+    public async Task&lt;ApiResponse&lt;T&gt;&gt; GetAsync&lt;T&gt;(string endpoint)
+    {
+        await EnsureValidTokenAsync(); // تمدید خودکار توکن
+        
+        var response = await _http.GetAsync($"api/v1/{endpoint}");
+        
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            // توکن منقضی شده - تلاش برای Refresh
+            var refreshed = await RefreshTokenAsync();
+            if (refreshed)
+            {
+                response = await _http.GetAsync($"api/v1/{endpoint}");
+            }
+            else
+            {
+                // Refresh هم نشد - برگشت به Login
+                NavigateToLogin();
+                return ApiResponse&lt;T&gt;.Failure("نشست شما منقضی شده. لطفاً مجدداً وارد شوید.");
+            }
+        }
+        
+        return await response.Content.ReadFromJsonAsync&lt;ApiResponse&lt;T&gt;&gt;();
+    }
+    
+    // ... PostAsync, PutAsync, DeleteAsync, GetPagedAsync مشابه
+}</span>
+
+
+<span class="h2">═══════════════════════════════════════
+⌨️ ۵. کلیدهای میانبر اپلیکیشن
+═══════════════════════════════════════</span>
+
+F1   → باز کردن راهنما
+F2   → جستجوی سریع (فوکوس به Search Box)
+F3   → ثبت بیمار جدید
+F4   → رزرو نوبت جدید
+F5   → بارگذاری مجدد (Refresh)
+F7   → داشبورد
+F8   → لیست بیماران
+F9   → نوبت‌دهی
+F10  → پذیرش
+F11  → تمام صفحه (Full Screen)
+F12  → تنظیمات
+
+Ctrl+S    → ذخیره فرم فعلی
+Ctrl+P    → چاپ
+Ctrl+N    → آیتم جدید (در هر ماژول)
+Ctrl+F    → جستجو
+Ctrl+Q    → خروج از برنامه
+Ctrl+Z    → بازگشت (Undo)
+Ctrl+Enter → تایید و ذخیره نهایی
+
+Escape    → بستن دیالوگ / انصراف
+Tab       → جابجایی بین فیلدها
+Enter     → تایید / رفتن به فیلد بعدی
+
+
+<span class="h1">════════════════════════════════════════════════════════════════
+📌 پایان بخش ۲ از ۳ - ادامه در prompt-part3.html
+════════════════════════════════════════════════════════════════</span>
+</div>
+
+<footer>
+<p>📄 پرامپت بخش ۲ از ۳ | <strong>ماژول‌ها + API + WPF + MVVM</strong></p>
+<p><a href="prompt-part1.html" style="color:var(--p)">← بخش ۱</a> | <a href="prompt-part3.html" style="color:var(--p)">بخش ۳ →</a></p>
+</footer>
+</div>
+
+<script>
+function copyAll(){
+const t=document.getElementById('prompt2').innerText;
+navigator.clipboard.writeText(t).then(()=>alert('✅ پرامپت بخش ۲ کپی شد!')).catch(()=>{
+const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('✅ کپی شد!');
+});
+}
+</script>
+</body>
+</html>

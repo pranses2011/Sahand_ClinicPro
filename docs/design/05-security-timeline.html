@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>🔐 ClinicPro - امنیت و زمان‌بندی</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+:root{--p:#1a73e8;--pd:#1557b0;--s:#34a853;--a:#ea4335;--w:#fbbc04;--bg:#f0f2f5;--c:#fff;--t:#202124;--b:#dadce0;--sh:0 2px 8px rgba(0,0,0,.1);--r:12px;--g:linear-gradient(135deg,#1a73e8,#34a853)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t);line-height:1.7;font-size:13px}
+.ct{max-width:1500px;margin:0 auto;padding:20px}
+header{background:var(--g);color:#fff;padding:40px 20px;text-align:center;border-radius:0 0 30px 30px;margin-bottom:25px}
+header h1{font-size:2em;font-weight:900;margin-bottom:8px}
+header p{font-size:1em;opacity:.9}
+.nav{background:#fff;padding:12px;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.nav a{padding:7px 14px;background:#f0f2f5;border-radius:8px;text-decoration:none;color:var(--t);font-size:11px;font-weight:600}
+.nav a:hover,.nav a.active{background:var(--p);color:#fff}
+section{background:var(--c);border-radius:var(--r);padding:25px;box-shadow:var(--sh);margin-bottom:20px}
+section h2{color:var(--p);font-size:1.4em;margin-bottom:15px;padding-bottom:8px;border-bottom:3px solid var(--p)}
+section h3{color:var(--pd);font-size:1.1em;margin:15px 0 10px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:15px}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.ib{background:#e8f0fe;border-right:4px solid var(--p);padding:12px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px}
+.wb{background:#fef7e0;border-right:4px solid var(--w);padding:12px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px}
+.gn{background:#e6f4ea;border-right:4px solid var(--s);padding:12px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px}
+.rb{background:#fce8e6;border-right:4px solid var(--a);padding:12px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px}
+.sb{text-align:center;padding:15px;background:var(--g);color:#fff;border-radius:var(--r)}
+.sb .n{font-size:1.8em;font-weight:900}.sb .l{font-size:.85em;opacity:.9}
+
+/* Security Cards */
+.sec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:15px}
+.sec-card{background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;border-radius:12px;padding:20px;border-right:4px solid var(--s);box-shadow:0 4px 12px rgba(0,0,0,.15);transition:.3s}
+.sec-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.sec-card.red{border-color:#ef4444}
+.sec-card.yellow{border-color:#f59e0b}
+.sec-card.blue{border-color:#3b82f6}
+.sec-card.purple{border-color:#8b5cf6}
+.sec-card.pink{border-color:#ec4899}
+.sec-card h4{color:#60a5fa;margin-bottom:8px;display:flex;align-items:center;gap:8px;font-size:14px}
+.sec-card p{font-size:11px;opacity:.85;line-height:1.6}
+.sec-icon{font-size:28px;margin-bottom:10px;display:block}
+.sec-code{background:rgba(255,255,255,.08);padding:8px;border-radius:5px;margin-top:8px;font-family:'Courier New',monospace;font-size:10px;color:#86efac;direction:ltr;text-align:left;overflow-x:auto}
+.cb{background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:8px;font-family:'Courier New',monospace;font-size:11px;direction:ltr;text-align:left;overflow-x:auto;margin:10px 0;line-height:1.5}
+.kw{color:#569cd6}.st{color:#ce9178}.cm{color:#6a9955}.tp{color:#4ec9b0}.nu{color:#b5cea8}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+th{background:var(--p);color:#fff;padding:8px 6px;text-align:right;font-weight:600}
+td{padding:6px;border-bottom:1px solid var(--b)}
+tr:hover{background:#f8f9fa}
+
+/* Timeline */
+.timeline-container{position:relative;padding:20px 0}
+.timeline-container::before{content:'';position:absolute;right:50%;top:0;bottom:0;width:4px;background:var(--g);border-radius:2px;transform:translateX(50%)}
+.tl-item{position:relative;width:46%;padding:18px;background:var(--c);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:20px;transition:.3s}
+.tl-item:hover{transform:scale(1.02)}
+.tl-item:nth-child(odd){margin-right:54%}
+.tl-item:nth-child(even){margin-left:54%}
+.tl-item::before{content:'';position:absolute;width:20px;height:20px;background:var(--p);border:4px solid #fff;border-radius:50%;top:25px;box-shadow:0 0 0 3px var(--p);z-index:1}
+.tl-item:nth-child(odd)::before{left:-50px}
+.tl-item:nth-child(even)::before{right:-50px}
+.tl-item.phase1{border-right:5px solid #ef4444}.tl-item.phase1::before{background:#ef4444;box-shadow:0 0 0 3px #ef4444}
+.tl-item.phase2{border-right:5px solid #f59e0b}.tl-item.phase2::before{background:#f59e0b;box-shadow:0 0 0 3px #f59e0b}
+.tl-item.phase3{border-right:5px solid #eab308}.tl-item.phase3::before{background:#eab308;box-shadow:0 0 0 3px #eab308}
+.tl-item.phase4{border-right:5px solid #22c55e}.tl-item.phase4::before{background:#22c55e;box-shadow:0 0 0 3px #22c55e}
+.tl-item.phase5{border-right:5px solid #3b82f6}.tl-item.phase5::before{background:#3b82f6;box-shadow:0 0 0 3px #3b82f6}
+.tl-item.phase6{border-right:5px solid #8b5cf6}.tl-item.phase6::before{background:#8b5cf6;box-shadow:0 0 0 3px #8b5cf6}
+.phase-badge{display:inline-block;padding:4px 14px;border-radius:20px;font-weight:700;font-size:12px;color:#fff;margin-bottom:8px}
+.phase-badge.p1{background:#ef4444}.phase-badge.p2{background:#f59e0b}.phase-badge.p3{background:#eab308}
+.phase-badge.p4{background:#22c55e}.phase-badge.p5{background:#3b82f6}.phase-badge.p6{background:#8b5cf6}
+.tl-title{font-size:16px;font-weight:700;color:var(--t);margin-bottom:5px}
+.tl-duration{color:#64748b;font-size:11px;margin-bottom:8px}
+.tl-list{list-style:none;padding:0;margin:8px 0;font-size:11px}
+.tl-list li{padding:3px 0 3px 15px;position:relative;color:#475569}
+.tl-list li::before{content:'▸';position:absolute;right:0;color:var(--p)}
+.tl-stats{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.tl-stat{background:#f1f5f9;padding:3px 10px;border-radius:12px;font-size:10px;color:#475569;font-weight:600}
+
+/* Gantt */
+.gantt-container{background:#f8fafc;border-radius:var(--r);padding:15px;overflow-x:auto;margin:15px 0;border:1px solid var(--b)}
+.gantt-header{display:grid;grid-template-columns:200px repeat(12,1fr);gap:0;background:var(--p);color:#fff;padding:0;border-radius:6px 6px 0 0;overflow:hidden;min-width:1000px}
+.gantt-header div{padding:8px;text-align:center;font-weight:700;font-size:11px;border-left:1px solid rgba(255,255,255,.2)}
+.gantt-row{display:grid;grid-template-columns:200px 1fr;gap:0;border-bottom:1px solid var(--b);background:#fff;min-width:1000px;align-items:center}
+.gantt-row:hover{background:#f8fafc}
+.gantt-label{padding:8px 12px;font-size:11px;font-weight:600;color:#334155;border-left:2px solid var(--b)}
+.gantt-track{position:relative;height:30px;background:repeating-linear-gradient(to left,#f8fafc 0,#f8fafc calc(100%/12 - 1px),#e2e8f0 calc(100%/12 - 1px),#e2e8f0 calc(100%/12))}
+.gantt-bar{position:absolute;top:5px;height:20px;border-radius:4px;display:flex;align-items:center;padding:0 8px;color:#fff;font-size:10px;font-weight:700;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.g-red{background:linear-gradient(90deg,#ef4444,#dc2626)}
+.g-orange{background:linear-gradient(90deg,#f59e0b,#d97706)}
+.g-yellow{background:linear-gradient(90deg,#eab308,#ca8a04)}
+.g-green{background:linear-gradient(90deg,#22c55e,#16a34a)}
+.g-blue{background:linear-gradient(90deg,#3b82f6,#2563eb)}
+.g-purple{background:linear-gradient(90deg,#8b5cf6,#7c3aed)}
+.g-pink{background:linear-gradient(90deg,#ec4899,#db2777)}
+.g-teal{background:linear-gradient(90deg,#06b6d4,#0891b2)}
+
+/* Risk Matrix */
+.risk-matrix{display:grid;grid-template-columns:120px repeat(5,1fr);gap:3px;margin:15px 0}
+.rm-header{background:var(--p);color:#fff;padding:8px;text-align:center;font-weight:700;font-size:11px;border-radius:4px}
+.rm-cell{padding:10px;text-align:center;font-size:11px;font-weight:600;border-radius:4px;cursor:pointer}
+.rm-label{background:#f1f5f9;padding:10px;font-weight:700;text-align:center;font-size:11px;color:#334155;border-radius:4px;display:flex;align-items:center;justify-content:center}
+.rm-low{background:#dcfce7;color:#166534}
+.rm-medium{background:#fef3c7;color:#92400e}
+.rm-high{background:#fed7aa;color:#9a3412}
+.rm-critical{background:#fee2e2;color:#991b1b}
+.rm-extreme{background:#991b1b;color:#fff}
+
+footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#fff;border-radius:var(--r);margin-top:20px}
+@media(max-width:768px){.g2,.g3,.g4,.sec-grid{grid-template-columns:1fr}.tl-item{width:85%!important;margin:0 0 20px 10%!important}.tl-item::before{right:-30px!important;left:auto!important}.timeline-container::before{right:0}}
+</style>
+</head>
+<body>
+<header>
+<h1>🔐 امنیت و برنامه‌ریزی زمانی</h1>
+<p>فایل ۵: استراتژی امنیت، فازبندی توسعه، گانت چارت، تحلیل ریسک</p>
+</header>
+
+<div class="ct">
+<nav class="nav">
+<a href="01-overview.html">1️⃣ تحلیل و معماری</a>
+<a href="02-database.html">2️⃣ دیتابیس</a>
+<a href="03-flowcharts.html">3️⃣ فلوچارت</a>
+<a href="04-wireframes.html">4️⃣ وایرفریم</a>
+<a href="05-security-timeline.html" class="active">5️⃣ امنیت و زمان‌بندی</a>
+<a href="06-license-integration.html">6️⃣ لایسنس و یکپارچه‌سازی</a>
+<a href="prompt.html">🤖 پرامپت AI</a>
+</nav>
+
+<!-- =================== SECURITY =================== -->
+<section>
+<h2>🔐 بخش اول: استراتژی جامع امنیت</h2>
+<div class="g4" style="margin-bottom:15px">
+<div class="sb"><div class="n">۱۴+</div><div class="l">لایه امنیتی</div></div>
+<div class="sb"><div class="n">AES-256</div><div class="l">رمزنگاری</div></div>
+<div class="sb"><div class="n">BCrypt</div><div class="l">پسورد</div></div>
+<div class="sb"><div class="n">HIPAA</div><div class="l">استاندارد</div></div>
+</div>
+
+<div class="ib">
+<strong>🎯 اصول امنیتی پروژه:</strong> ClinicPro بر اساس استاندارد <strong>HIPAA</strong> و <strong>Defense in Depth</strong> طراحی شده. امنیت در همه لایه‌ها (Presentation، API، Application، Database) اعمال می‌شود و از اصل <strong>Zero Trust</strong> پیروی می‌کند: هیچ درخواستی بدون اعتبارسنجی قبول نمی‌شود.
+</div>
+
+<h3>🛡️ ۱۴ لایه امنیتی اصلی</h3>
+<div class="sec-grid">
+<div class="sec-card">
+<span class="sec-icon">🔐</span>
+<h4>۱. Password Hashing</h4>
+<p>همه رمزهای عبور با <strong>BCrypt (Work Factor=12)</strong> هش می‌شوند. هیچ رمز plain text ذخیره نمی‌شود. Salt منحصر به فرد برای هر کاربر.</p>
+<div class="sec-code">BCrypt.HashPassword(password, 12);</div>
+</div>
+
+<div class="sec-card blue">
+<span class="sec-icon">🎫</span>
+<h4>۲. JWT Authentication</h4>
+<p><strong>Access Token:</strong> ۱۵ دقیقه اعتبار | <strong>Refresh Token:</strong> ۷ روز با Rotation | امضا با <strong>HMAC-SHA256</strong></p>
+<div class="sec-code">[Authorize]
+public IActionResult Secure(){...}</div>
+</div>
+
+<div class="sec-card purple">
+<span class="sec-icon">🔄</span>
+<h4>۳. Refresh Token Rotation</h4>
+<p>با هر بار استفاده از Refresh Token، توکن جدید صادر و قدیمی باطل می‌شود. تشخیص سوءاستفاده از توکن سرقت‌شده و قطع تمام نشست‌ها.</p>
+</div>
+
+<div class="sec-card yellow">
+<span class="sec-icon">👤</span>
+<h4>۴. RBAC (Role-Based Access Control)</h4>
+<p>سیستم ۳ سطحی: <strong>User → Role → Permission</strong>. دسترسی گرانولار به هر <strong>Module</strong> و <strong>Action</strong>. قابل تعریف در Runtime.</p>
+<div class="sec-code">[HasPermission("Patients.Delete")]</div>
+</div>
+
+<div class="sec-card red">
+<span class="sec-icon">🔒</span>
+<h4>۵. HTTPS/TLS اجباری</h4>
+<p>همه ارتباطات با <strong>TLS 1.3</strong>. HTTP → HTTPS Redirect خودکار. <strong>HSTS Header</strong> فعال. Certificate Pinning در کلاینت.</p>
+</div>
+
+<div class="sec-card">
+<span class="sec-icon">💉</span>
+<h4>۶. SQL Injection Prevention</h4>
+<p>استفاده از <strong>EF Core Parameterized Queries</strong>. هرگز String Concatenation. <strong>Input Validation</strong> در سطح DTO با FluentValidation.</p>
+<div class="sec-code">// ❌ db.Query($"SELECT * FROM Users WHERE Id={id}");
+// ✅ db.Users.Where(u => u.Id == id);</div>
+</div>
+
+<div class="sec-card pink">
+<span class="sec-icon">✅</span>
+<h4>۷. Input Validation</h4>
+<p><strong>FluentValidation</strong> در Application Layer. XSS Prevention با <strong>HTML Encoding</strong>. فیلترینگ کاراکترهای خطرناک. طول و فرمت در همه فیلدها.</p>
+</div>
+
+<div class="sec-card blue">
+<span class="sec-icon">⚡</span>
+<h4>۸. Rate Limiting</h4>
+<p><strong>5 Login/دقیقه</strong> برای هر IP. <strong>100 Request/دقیقه</strong> برای کاربر عادی. <strong>1000 Request/دقیقه</strong> برای Admin. با AspNetCoreRateLimit.</p>
+</div>
+
+<div class="sec-card purple">
+<span class="sec-icon">📋</span>
+<h4>۹. Audit Log جامع</h4>
+<p>ثبت همه عملیات CUD (Create/Update/Delete) + View‌های حساس. ذخیره IP، UserAgent، OldValues/NewValues (JSON). غیرقابل حذف.</p>
+</div>
+
+<div class="sec-card red">
+<span class="sec-icon">🔐</span>
+<h4>۱۰. Data Encryption at Rest</h4>
+<p>داده‌های حساس بیماران (<strong>SSN, Phone, Address, Medical Records</strong>) با <strong>AES-256-GCM</strong> رمزنگاری. کلیدها در <strong>Azure Key Vault</strong> یا DPAPI.</p>
+<div class="sec-code">var encrypted = aes.Encrypt(sensitiveData, key);</div>
+</div>
+
+<div class="sec-card yellow">
+<span class="sec-icon">💾</span>
+<h4>۱۱. Automatic Backup</h4>
+<p>بکاپ خودکار روزانه (ساعت ۳ صبح). <strong>Transaction Log Backup</strong> هر ساعت. ذخیره محلی + Cloud. رمزنگاری فایل بکاپ.</p>
+</div>
+
+<div class="sec-card">
+<span class="sec-icon">⚖️</span>
+<h4>۱۲. HIPAA Compliance</h4>
+<p>رعایت استانداردهای حفظ حریم بیماران: <strong>Access Control</strong>، <strong>Audit Trails</strong>، <strong>Encryption</strong>، <strong>Data Integrity</strong>، <strong>Transmission Security</strong>.</p>
+</div>
+
+<div class="sec-card pink">
+<span class="sec-icon">⏱️</span>
+<h4>۱۳. Session Timeout</h4>
+<p><strong>Idle Timeout:</strong> ۲۰ دقیقه | <strong>Absolute Timeout:</strong> ۸ ساعت | <strong>Auto-lock Screen</strong> در WPF Client. نمایش هشدار ۲ دقیقه قبل.</p>
+</div>
+
+<div class="sec-card red">
+<span class="sec-icon">🔒</span>
+<h4>۱۴. Account Lockout</h4>
+<p>بعد از <strong>۵ تلاش ناموفق</strong>: قفل اکانت به مدت <strong>۳۰ دقیقه</strong>. اعلام به مدیر. ارسال SMS به کاربر در صورت فعال بودن 2FA.</p>
+</div>
+</div>
+
+<h3 style="margin-top:20px">🔑 جزئیات تکنیکال امنیت</h3>
+<div class="g2">
+<div>
+<h4 style="color:var(--p)">🔐 Password Policy</h4>
+<table>
+<tr><th>قانون</th><th>مقدار</th></tr>
+<tr><td>حداقل طول</td><td>۸ کاراکتر</td></tr>
+<tr><td>حرف بزرگ</td><td>الزامی (A-Z)</td></tr>
+<tr><td>حرف کوچک</td><td>الزامی (a-z)</td></tr>
+<tr><td>عدد</td><td>الزامی (0-9)</td></tr>
+<tr><td>کاراکتر خاص</td><td>الزامی (!@#$%^&*)</td></tr>
+<tr><td>تاریخ انقضا</td><td>۹۰ روز</td></tr>
+<tr><td>تاریخچه</td><td>۵ رمز قبلی ممنوع</td></tr>
+<tr><td>تلاش ناموفق</td><td>۵ بار → قفل</td></tr>
+</table>
+</div>
+
+<div>
+<h4 style="color:var(--p)">🎫 JWT Configuration</h4>
+<div class="cb">
+<span class="cm">// appsettings.json</span>
+{
+  "<span class="st">Jwt</span>": {
+    "<span class="st">Issuer</span>": "<span class="st">ClinicPro.API</span>",
+    "<span class="st">Audience</span>": "<span class="st">ClinicPro.Desktop</span>",
+    "<span class="st">SecretKey</span>": "<span class="st">[256-bit key]</span>",
+    "<span class="st">AccessTokenMinutes</span>": <span class="nu">15</span>,
+    "<span class="st">RefreshTokenDays</span>": <span class="nu">7</span>,
+    "<span class="st">Algorithm</span>": "<span class="st">HS256</span>"
+  }
+}
+</div>
+</div>
+</div>
+
+<h3>🔐 الگوی RBAC در عمل</h3>
+<div class="cb">
+<span class="cm">// Permission Attribute</span>
+[<span class="tp">AttributeUsage</span>(<span class="tp">AttributeTargets</span>.Method)]
+<span class="kw">public class</span> <span class="tp">HasPermissionAttribute</span> : <span class="tp">AuthorizeAttribute</span>
+{
+    <span class="kw">public</span> HasPermissionAttribute(<span class="kw">string</span> permission)
+    {
+        Policy = <span class="st">$"Permission.{permission}"</span>;
+    }
+}
+
+<span class="cm">// Usage in Controller</span>
+[<span class="tp">HttpDelete</span>(<span class="st">"{id}"</span>)]
+[<span class="tp">HasPermission</span>(<span class="st">"Patients.Delete"</span>)]
+<span class="kw">public async</span> <span class="tp">Task</span>&lt;<span class="tp">IActionResult</span>&gt; Delete(<span class="kw">long</span> id)
+{
+    <span class="kw">await</span> _mediator.Send(<span class="kw">new</span> DeletePatientCommand(id));
+    <span class="kw">return</span> NoContent();
+}
+
+<span class="cm">// Permissions Categories (نمونه)</span>
+<span class="kw">public static class</span> Permissions
+{
+    <span class="kw">public static class</span> Patients {
+        <span class="kw">public const string</span> View = <span class="st">"Patients.View"</span>;
+        <span class="kw">public const string</span> Create = <span class="st">"Patients.Create"</span>;
+        <span class="kw">public const string</span> Edit = <span class="st">"Patients.Edit"</span>;
+        <span class="kw">public const string</span> Delete = <span class="st">"Patients.Delete"</span>;
+        <span class="kw">public const string</span> Export = <span class="st">"Patients.Export"</span>;
+    }
+    <span class="kw">public static class</span> Visits {...}
+    <span class="kw">public static class</span> Prescriptions {...}
+    <span class="kw">public static class</span> Billing {...}
+    <span class="cm">// ... 40+ permission categories</span>
+}
+</div>
+
+<h3>🛡️ معماری Defense in Depth</h3>
+<div class="cb">
+<span class="cm">┌─────────────────────────────────────────────────────────────┐</span>
+<span class="cm">│                   🌐 Internet / Network                      │</span>
+<span class="cm">└──────────────┬──────────────────────────────────────────────┘</span>
+               ↓
+<span class="cm">┌─────────────────────────────────────────────────────────────┐</span>
+<span class="cm">│  🔥 Layer 1: Firewall + DDoS Protection                     │</span>
+<span class="cm">└──────────────┬──────────────────────────────────────────────┘</span>
+               ↓
+<span class="cm">┌─────────────────────────────────────────────────────────────┐</span>
+<span class="cm">│  🔒 Layer 2: HTTPS/TLS 1.3 (Certificate + HSTS)             │</span>
+<span class="cm">└──────────────┬──────────────────────────────────────────────┘</span>
+               ↓
+<span class="cm">┌─────────────────────────────────────────────────────────────┐</span>
+<span class="cm">│  ⚡ Layer 3: Rate Limiting + IP Whitelisting                │</span>
+<span class="cm">└──────────────┬──────────────────────────────────────────────┘</span>
+               ↓
+<span class="cm">┌─────────────────────────────────────────────────────────────┐</span>
+<span class="cm">│  🎫 Layer 4: JWT Authentication                             │</span>
+<span class="cm">└──────────────┬──────────────────────────────────────────────┘</span>
+               ↓
+<span class="cm">┌─────────────────────────────────────────────────────────────┐</span>
+<span class="cm">│  👤 Layer 5: RBAC Authorization                             │</span>
+<span class="cm">└──────────────┬──────────────────────────────────────────────┘</span>
+               ↓
+<span class="cm">┌─────────────────────────────────────────────────────────────┐</span>
+<span class="cm">│  ✅ Layer 6: Input Validation (FluentValidation)            │</span>
+<span class="cm">└──────────────┬──────────────────────────────────────────────┘</span>
+               ↓
+<span class="cm">┌─────────────────────────────────────────────────────────────┐</span>
+<span class="cm">│  💼 Layer 7: Business Logic (Application Services)          │</span>
+<span class="cm">└──────────────┬──────────────────────────────────────────────┘</span>
+               ↓
+<span class="cm">┌─────────────────────────────────────────────────────────────┐</span>
+<span class="cm">│  🗄️  Layer 8: Repository + EF Core (Parameterized)          │</span>
+<span class="cm">└──────────────┬──────────────────────────────────────────────┘</span>
+               ↓
+<span class="cm">┌─────────────────────────────────────────────────────────────┐</span>
+<span class="cm">│  🔐 Layer 9: Data Encryption (AES-256-GCM)                  │</span>
+<span class="cm">└──────────────┬──────────────────────────────────────────────┘</span>
+               ↓
+<span class="cm">┌─────────────────────────────────────────────────────────────┐</span>
+<span class="cm">│  💾 Layer 10: SQL Server (TDE + Backup Encryption)          │</span>
+<span class="cm">└─────────────────────────────────────────────────────────────┘</span>
+</div>
+
+<h3>⚠️ ماتریس ریسک‌های امنیتی و اقدامات</h3>
+<table>
+<tr><th>ریسک</th><th>احتمال</th><th>تأثیر</th><th>سطح</th><th>اقدام متقابل</th></tr>
+<tr><td>SQL Injection</td><td>متوسط</td><td>شدید</td><td><span style="background:#fed7aa;padding:3px 8px;border-radius:12px;font-size:11px">بالا</span></td><td>EF Core Parameterized، Code Review</td></tr>
+<tr><td>XSS</td><td>متوسط</td><td>متوسط</td><td><span style="background:#fef3c7;padding:3px 8px;border-radius:12px;font-size:11px">متوسط</span></td><td>HTML Encoding، CSP Header</td></tr>
+<tr><td>CSRF</td><td>کم</td><td>متوسط</td><td><span style="background:#dcfce7;padding:3px 8px;border-radius:12px;font-size:11px">کم</span></td><td>Anti-Forgery Token، SameSite Cookie</td></tr>
+<tr><td>Brute Force Login</td><td>بالا</td><td>بالا</td><td><span style="background:#fee2e2;padding:3px 8px;border-radius:12px;font-size:11px">بحرانی</span></td><td>Rate Limit، Account Lockout، 2FA</td></tr>
+<tr><td>Data Breach</td><td>کم</td><td>بسیار شدید</td><td><span style="background:#fed7aa;padding:3px 8px;border-radius:12px;font-size:11px">بالا</span></td><td>AES-256، TDE، Access Control</td></tr>
+<tr><td>Session Hijacking</td><td>کم</td><td>شدید</td><td><span style="background:#fef3c7;padding:3px 8px;border-radius:12px;font-size:11px">متوسط</span></td><td>HTTPS، Short Token Expiry، IP Binding</td></tr>
+<tr><td>Privilege Escalation</td><td>کم</td><td>شدید</td><td><span style="background:#fef3c7;padding:3px 8px;border-radius:12px;font-size:11px">متوسط</span></td><td>RBAC، Audit Log، Permission Check</td></tr>
+<tr><td>Insider Threat</td><td>متوسط</td><td>شدید</td><td><span style="background:#fed7aa;padding:3px 8px;border-radius:12px;font-size:11px">بالا</span></td><td>Audit Log، Separation of Duties</td></tr>
+<tr><td>Ransomware</td><td>کم</td><td>بسیار شدید</td><td><span style="background:#fed7aa;padding:3px 8px;border-radius:12px;font-size:11px">بالا</span></td><td>Backup Offline، Antivirus، Patch</td></tr>
+<tr><td>License Bypass</td><td>متوسط</td><td>متوسط</td><td><span style="background:#fef3c7;padding:3px 8px;border-radius:12px;font-size:11px">متوسط</span></td><td>Code Obfuscation، RSA Signature، Hardware ID</td></tr>
+</table>
+
+<h3>📋 چک‌لیست امنیتی قبل از Deploy</h3>
+<div class="g2">
+<div>
+<h4 style="color:var(--s)">✅ موارد اجباری</h4>
+<ul class="tl-list">
+<li>همه رمزها BCrypt هش شده‌اند</li>
+<li>HTTPS فعال و HTTP ریدایرکت می‌شود</li>
+<li>JWT با کلید قوی (256-bit)</li>
+<li>Audit Log فعال است</li>
+<li>بکاپ خودکار تنظیم شده</li>
+<li>Rate Limiting روی API فعال</li>
+<li>Firewall قوانین مشخص دارد</li>
+<li>همه کاربران تست پاک شده‌اند</li>
+<li>Secrets در Environment Variables هستند</li>
+<li>appsettings.Production.json بررسی شده</li>
+<li>Error Pages اطلاعات حساس نشان نمی‌دهند</li>
+<li>CORS فقط برای دامنه مجاز فعال است</li>
+</ul>
+</div>
+<div>
+<h4 style="color:var(--w)">⚠️ موارد توصیه‌شده</h4>
+<ul class="tl-list">
+<li>Penetration Testing انجام شود</li>
+<li>Security Scan (OWASP ZAP) اجرا شود</li>
+<li>Code Review کامل انجام شود</li>
+<li>Dependencies به‌روز باشند</li>
+<li>Log Monitoring (Seq/ELK) راه‌اندازی</li>
+<li>Health Check Endpoints فعال</li>
+<li>SSL Certificate از CA معتبر</li>
+<li>Database در Private Subnet</li>
+<li>DR Plan (Disaster Recovery) تهیه شود</li>
+<li>Incident Response Plan آماده</li>
+</ul>
+</div>
+</div>
+</section>
+
+<!-- =================== TIMELINE =================== -->
+<section>
+<h2>📅 بخش دوم: برنامه‌ریزی زمانی (۱۲ ماه)</h2>
+
+<div class="g4" style="margin-bottom:15px">
+<div class="sb"><div class="n">۱۲</div><div class="l">ماه کل</div></div>
+<div class="sb"><div class="n">۶</div><div class="l">فاز</div></div>
+<div class="sb"><div class="n">۴-۶</div><div class="l">نفر تیم</div></div>
+<div class="sb"><div class="n">۲۰۰۰+</div><div class="l">نفر-ساعت</div></div>
+</div>
+
+<div class="ib">
+<strong>🎯 استراتژی توسعه:</strong> Agile + Scrum با اسپرینت‌های ۲ هفته‌ای. هر فاز شامل Planning، Design، Development، Testing، Deployment و Review است. MVP در پایان فاز ۲ آماده می‌شود.
+</div>
+
+<h3>👥 ترکیب تیم پیشنهادی</h3>
+<div class="g3">
+<div style="background:#f8fafc;padding:15px;border-radius:10px;border-right:4px solid #ef4444"><h4 style="color:#ef4444">👔 Project Manager (۱ نفر)</h4><p style="font-size:11px">مدیریت پروژه، ارتباط با مشتری، برنامه‌ریزی</p></div>
+<div style="background:#f8fafc;padding:15px;border-radius:10px;border-right:4px solid #3b82f6"><h4 style="color:#3b82f6">🧑‍💻 Senior Backend Developer (۱ نفر)</h4><p style="font-size:11px">معماری، API، Database، Clean Architecture</p></div>
+<div style="background:#f8fafc;padding:15px;border-radius:10px;border-right:4px solid #22c55e"><h4 style="color:#22c55e">👨‍💻 Backend Developer (۱-۲ نفر)</h4><p style="font-size:11px">پیاده‌سازی ماژول‌ها، سرویس‌ها</p></div>
+<div style="background:#f8fafc;padding:15px;border-radius:10px;border-right:4px solid #f59e0b"><h4 style="color:#f59e0b">🎨 WPF/UI Developer (۱ نفر)</h4><p style="font-size:11px">طراحی WPF، XAML، MVVM، UI/UX</p></div>
+<div style="background:#f8fafc;padding:15px;border-radius:10px;border-right:4px solid #8b5cf6"><h4 style="color:#8b5cf6">🗄️ Database Developer (0.5 نفر)</h4><p style="font-size:11px">طراحی DB، Stored Procedures، Optimization</p></div>
+<div style="background:#f8fafc;padding:15px;border-radius:10px;border-right:4px solid #ec4899"><h4 style="color:#ec4899">🧪 QA/Tester (۱ نفر)</h4><p style="font-size:11px">Manual + Automation Testing، Bug Report</p></div>
+</div>
+
+<h3 style="margin-top:20px">🚀 فازبندی توسعه</h3>
+<div class="timeline-container">
+
+<div class="tl-item phase1">
+<span class="phase-badge p1">فاز ۱: زیرساخت و هسته</span>
+<div class="tl-title">🏗️ راه‌اندازی و ماژول‌های اصلی</div>
+<div class="tl-duration">⏱️ ماه ۱-۲ (۸ هفته) | 🎯 اولویت: بحرانی</div>
+<ul class="tl-list">
+<li>راه‌اندازی Solution با Clean Architecture</li>
+<li>طراحی دیتابیس و EF Core Migrations</li>
+<li>سیستم Authentication (JWT + Refresh)</li>
+<li>سیستم RBAC و User Management</li>
+<li>ماژول بیماران (CRUD + جستجو)</li>
+<li>ماژول پزشکان و تخصص‌ها</li>
+<li>ماژول تنظیمات سیستم</li>
+<li>Audit Log و Error Logging</li>
+<li>UI Framework (WPF + Material Design)</li>
+<li>Login Screen و Dashboard اولیه</li>
+</ul>
+<div class="tl-stats"><span class="tl-stat">🧑‍💻 ۴ نفر</span><span class="tl-stat">📊 ۳۰٪ کد</span><span class="tl-stat">🧪 ۱۵٪ تست</span></div>
+</div>
+
+<div class="tl-item phase2">
+<span class="phase-badge p2">فاز ۲: ماژول‌های درمانی</span>
+<div class="tl-title">🩺 نوبت‌دهی، پذیرش، ویزیت، نسخه</div>
+<div class="tl-duration">⏱️ ماه ۳-۴ (۸ هفته) | 🎯 اولویت: بحرانی | 🎉 MVP آماده</div>
+<ul class="tl-list">
+<li>ماژول نوبت‌دهی (تقویم شمسی، شیفت‌بندی)</li>
+<li>ماژول پذیرش بیمار</li>
+<li>سیستم صف و مدیریت صف</li>
+<li>ماژول ویزیت (SOAP Note، علائم حیاتی)</li>
+<li>ماژول نسخه‌نویسی (داخلی + Template)</li>
+<li>ICD-10 و دیتابیس داروها</li>
+<li>چک تداخل دارویی</li>
+<li>ماژول صندوق و فاکتور (ساده)</li>
+<li>گزارش‌های پایه</li>
+<li>🎉 <strong>انتشار MVP برای تست کاربر</strong></li>
+</ul>
+<div class="tl-stats"><span class="tl-stat">🧑‍💻 ۵ نفر</span><span class="tl-stat">📊 ۵۵٪ کد</span><span class="tl-stat">🧪 ۴۰٪ تست</span></div>
+</div>
+
+<div class="tl-item phase3">
+<span class="phase-badge p3">فاز ۳: مالی و بیمه</span>
+<div class="tl-title">💰 حسابداری دوبل، بیمه، تعرفه‌ها</div>
+<div class="tl-duration">⏱️ ماه ۵-۶ (۸ هفته) | 🎯 اولویت: بالا</div>
+<ul class="tl-list">
+<li>سیستم حسابداری دوبل کامل</li>
+<li>سرفصل‌های حساب (۴ سطحی)</li>
+<li>اسناد حسابداری خودکار</li>
+<li>دفتر روزنامه، کل، معین</li>
+<li>ترازنامه و سود/زیان</li>
+<li>مدیریت بیمه‌ها (همه بیمه‌ها)</li>
+<li>استعلام آنلاین بیمه</li>
+<li>تعرفه‌های دینامیک</li>
+<li>کارانه و حقوق پزشکان</li>
+<li>گزارش‌های مالی تخصصی (Stimulsoft)</li>
+<li>سیستم تخفیف و بدهی</li>
+</ul>
+<div class="tl-stats"><span class="tl-stat">🧑‍💻 ۵ نفر</span><span class="tl-stat">📊 ۷۰٪ کد</span><span class="tl-stat">🧪 ۶۰٪ تست</span></div>
+</div>
+
+<div class="tl-item phase4">
+<span class="phase-badge p4">فاز ۴: پاراکلینیک و داروخانه</span>
+<div class="tl-title">🔬 آزمایشگاه، تصویربرداری، داروخانه</div>
+<div class="tl-duration">⏱️ ماه ۷-۸ (۸ هفته) | 🎯 اولویت: بالا</div>
+<ul class="tl-list">
+<li>ماژول آزمایشگاه (درخواست + جواب)</li>
+<li>کاتالوگ تست‌ها و مقادیر طبیعی</li>
+<li>ماژول تصویربرداری</li>
+<li>آپلود و مشاهده DICOM</li>
+<li>ماژول داروخانه کامل</li>
+<li>مدیریت موجودی و انبار</li>
+<li>تحویل دارو با اسکن QR نسخه</li>
+<li>ماژول دندانپزشکی + چارت دندان</li>
+<li>ماژول چشم‌پزشکی</li>
+<li>ماژول فیزیوتراپی</li>
+<li>سفارش خرید و انبارگردانی</li>
+</ul>
+<div class="tl-stats"><span class="tl-stat">🧑‍💻 ۵ نفر</span><span class="tl-stat">📊 ۸۵٪ کد</span><span class="tl-stat">🧪 ۷۵٪ تست</span></div>
+</div>
+
+<div class="tl-item phase5">
+<span class="phase-badge p5">فاز ۵: یکپارچه‌سازی و ارتباطات</span>
+<div class="tl-title">🔗 سامانه‌های دولتی، پیامک، لایسنس</div>
+<div class="tl-duration">⏱️ ماه ۹-۱۰ (۸ هفته) | 🎯 اولویت: متوسط</div>
+<ul class="tl-list">
+<li>اتصال به سپاس (پرونده الکترونیک)</li>
+<li>نسخه الکترونیک سلامت + تامین</li>
+<li>اتصال به سامانه سیب</li>
+<li>اتصال به ناب و سینا</li>
+<li>یکپارچه‌سازی ۱۰+ پنل پیامک</li>
+<li>سیستم Template پیامک</li>
+<li>یادآوری خودکار نوبت</li>
+<li>ماژول اسناد و فایل</li>
+<li>سیستم بکاپ و بازیابی خودکار</li>
+<li>سیستم لایسنس (Portal + Client)</li>
+<li>فعال‌سازی آنلاین و آفلاین</li>
+</ul>
+<div class="tl-stats"><span class="tl-stat">🧑‍💻 ۴ نفر</span><span class="tl-stat">📊 ۹۵٪ کد</span><span class="tl-stat">🧪 ۸۵٪ تست</span></div>
+</div>
+
+<div class="tl-item phase6">
+<span class="phase-badge p6">فاز ۶: تست، بهینه و تحویل</span>
+<div class="tl-title">🚀 Final Testing، Documentation، Deployment</div>
+<div class="tl-duration">⏱️ ماه ۱۱-۱۲ (۸ هفته) | 🎯 اولویت: بحرانی</div>
+<ul class="tl-list">
+<li>تست‌های End-to-End جامع</li>
+<li>Performance Testing (Load/Stress)</li>
+<li>Security Testing (OWASP + Pentest)</li>
+<li>Bug Fixing و بهینه‌سازی</li>
+<li>بهبود UI/UX بر اساس بازخورد</li>
+<li>داشبورد مدیریتی پیشرفته و BI</li>
+<li>ماژول نظرسنجی</li>
+<li>مستندات کامل (دولوپر + کاربر)</li>
+<li>آموزش ویدیویی برای کاربران</li>
+<li>MSI Installer و اسکریپت نصب</li>
+<li>Deploy در محیط Production</li>
+<li>Go-Live و پشتیبانی اولیه</li>
+<li>🎉 <strong>تحویل نسخه ۱.۰</strong></li>
+</ul>
+<div class="tl-stats"><span class="tl-stat">🧑‍💻 ۶ نفر</span><span class="tl-stat">📊 ۱۰۰٪ کد</span><span class="tl-stat">🧪 ۱۰۰٪ تست</span></div>
+</div>
+
+</div>
+
+<h3>📊 نمودار گانت کامل پروژه</h3>
+<div class="gantt-container">
+<div class="gantt-header">
+<div>فعالیت / ماه</div>
+<div>۱</div><div>۲</div><div>۳</div><div>۴</div><div>۵</div><div>۶</div><div>۷</div><div>۸</div><div>۹</div><div>۱۰</div><div>۱۱</div><div>۱۲</div>
+</div>
+
+<div class="gantt-row">
+<div class="gantt-label">🏗️ راه‌اندازی و معماری</div>
+<div class="gantt-track"><div class="gantt-bar g-red" style="right:0;width:16.6%">فاز ۱</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">🗄️ طراحی و پیاده‌سازی دیتابیس</div>
+<div class="gantt-track"><div class="gantt-bar g-red" style="right:0;width:16.6%">DB Design</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">🔐 Auth + RBAC + Users</div>
+<div class="gantt-track"><div class="gantt-bar g-red" style="right:8.3%;width:12%">Identity</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">👤 ماژول بیماران و پزشکان</div>
+<div class="gantt-track"><div class="gantt-bar g-red" style="right:8.3%;width:14%">Patients/Doctors</div></div>
+</div>
+
+<div class="gantt-row">
+<div class="gantt-label">📅 ماژول نوبت‌دهی</div>
+<div class="gantt-track"><div class="gantt-bar g-orange" style="right:16.6%;width:12%">Appointments</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">📋 ماژول پذیرش</div>
+<div class="gantt-track"><div class="gantt-bar g-orange" style="right:20%;width:10%">Reception</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">🩺 ماژول ویزیت</div>
+<div class="gantt-track"><div class="gantt-bar g-orange" style="right:25%;width:14%">Visits</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">💊 ماژول نسخه‌نویسی</div>
+<div class="gantt-track"><div class="gantt-bar g-orange" style="right:28%;width:10%">Rx</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">💰 صندوق و فاکتور (ساده)</div>
+<div class="gantt-track"><div class="gantt-bar g-orange" style="right:30%;width:8%">Cashier</div></div>
+</div>
+<div class="gantt-row" style="background:#dcfce7">
+<div class="gantt-label" style="font-weight:900;color:#166534">🎉 MVP Release</div>
+<div class="gantt-track"><div class="gantt-bar g-green" style="right:33%;width:2%">v0.9</div></div>
+</div>
+
+<div class="gantt-row">
+<div class="gantt-label">📊 حسابداری دوبل</div>
+<div class="gantt-track"><div class="gantt-bar g-yellow" style="right:33.3%;width:16.6%">Accounting</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">🏦 بیمه و استعلام</div>
+<div class="gantt-track"><div class="gantt-bar g-yellow" style="right:38%;width:12%">Insurance</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">💲 تعرفه و کارانه</div>
+<div class="gantt-track"><div class="gantt-bar g-yellow" style="right:42%;width:8%">Tariffs</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">📊 گزارش‌های مالی (Stimulsoft)</div>
+<div class="gantt-track"><div class="gantt-bar g-yellow" style="right:45%;width:8%">Reports</div></div>
+</div>
+
+<div class="gantt-row">
+<div class="gantt-label">🧪 آزمایشگاه</div>
+<div class="gantt-track"><div class="gantt-bar g-green" style="right:50%;width:10%">Lab</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">📷 تصویربرداری</div>
+<div class="gantt-track"><div class="gantt-bar g-green" style="right:52%;width:10%">Imaging</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">💊 داروخانه</div>
+<div class="gantt-track"><div class="gantt-bar g-green" style="right:55%;width:14%">Pharmacy</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">🦷 دندان + 👁️ چشم + 🏃 فیزیو</div>
+<div class="gantt-track"><div class="gantt-bar g-green" style="right:58%;width:10%">Specialties</div></div>
+</div>
+
+<div class="gantt-row">
+<div class="gantt-label">🔗 سپاس + سیب + ناب + سینا</div>
+<div class="gantt-track"><div class="gantt-bar g-blue" style="right:66.6%;width:12%">Gov APIs</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">💊 نسخه الکترونیک</div>
+<div class="gantt-track"><div class="gantt-bar g-blue" style="right:70%;width:10%">E-Rx</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">📱 پنل‌های پیامک (۱۰+)</div>
+<div class="gantt-track"><div class="gantt-bar g-blue" style="right:72%;width:8%">SMS</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">💾 بکاپ خودکار</div>
+<div class="gantt-track"><div class="gantt-bar g-blue" style="right:75%;width:6%">Backup</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">🔑 سامانه لایسنس (Portal + Client)</div>
+<div class="gantt-track"><div class="gantt-bar g-blue" style="right:77%;width:10%">License</div></div>
+</div>
+
+<div class="gantt-row">
+<div class="gantt-label">🧪 تست End-to-End</div>
+<div class="gantt-track"><div class="gantt-bar g-purple" style="right:83%;width:12%">E2E Testing</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">⚡ Performance Testing</div>
+<div class="gantt-track"><div class="gantt-bar g-purple" style="right:85%;width:8%">Load Test</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">🔐 Security Testing (Pentest)</div>
+<div class="gantt-track"><div class="gantt-bar g-purple" style="right:87%;width:8%">Security</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">🐛 Bug Fixing و بهینه‌سازی</div>
+<div class="gantt-track"><div class="gantt-bar g-purple" style="right:88%;width:10%">Bugfix</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">📊 داشبورد و BI پیشرفته</div>
+<div class="gantt-track"><div class="gantt-bar g-purple" style="right:88%;width:8%">BI</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">📝 مستندات و آموزش</div>
+<div class="gantt-track"><div class="gantt-bar g-pink" style="right:90%;width:8%">Docs</div></div>
+</div>
+<div class="gantt-row">
+<div class="gantt-label">📦 Deployment + MSI Installer</div>
+<div class="gantt-track"><div class="gantt-bar g-pink" style="right:94%;width:4%">Deploy</div></div>
+</div>
+<div class="gantt-row" style="background:#dcfce7">
+<div class="gantt-label" style="font-weight:900;color:#166534">🎉 Go-Live نسخه ۱.۰</div>
+<div class="gantt-track"><div class="gantt-bar g-teal" style="right:98%;width:2%">v1.0</div></div>
+</div>
+</div>
+
+<h3>📈 نقاط عطف (Milestones) کلیدی</h3>
+<table>
+<tr><th>#</th><th>Milestone</th><th>تاریخ</th><th>خروجی</th></tr>
+<tr><td>۱</td><td>🏗️ تکمیل زیرساخت</td><td>پایان ماه ۲</td><td>Architecture، Database، Auth، Patients، Doctors</td></tr>
+<tr><td>۲</td><td>🎉 MVP (نسخه ۰.۹)</td><td>پایان ماه ۴</td><td>قابل استفاده برای عملیات اصلی درمانگاه</td></tr>
+<tr><td>۳</td><td>💰 سیستم مالی کامل</td><td>پایان ماه ۶</td><td>حسابداری دوبل، بیمه، گزارش‌های مالی</td></tr>
+<tr><td>۴</td><td>🔬 ماژول‌های پاراکلینیک</td><td>پایان ماه ۸</td><td>آزمایشگاه، تصویربرداری، داروخانه</td></tr>
+<tr><td>۵</td><td>🔗 یکپارچه‌سازی کامل</td><td>پایان ماه ۱۰</td><td>سامانه‌های دولتی، پیامک، لایسنس</td></tr>
+<tr><td>۶</td><td>🚀 Release نسخه ۱.۰</td><td>پایان ماه ۱۲</td><td>تحویل نهایی به مشتری</td></tr>
+</table>
+
+<h3>⚠️ تحلیل ریسک پروژه (Risk Matrix)</h3>
+<div class="risk-matrix">
+<div></div>
+<div class="rm-header">خیلی کم</div>
+<div class="rm-header">کم</div>
+<div class="rm-header">متوسط</div>
+<div class="rm-header">زیاد</div>
+<div class="rm-header">خیلی زیاد</div>
+
+<div class="rm-label">تأثیر خیلی زیاد</div>
+<div class="rm-cell rm-medium">متوسط</div>
+<div class="rm-cell rm-high">بالا</div>
+<div class="rm-cell rm-critical">بحرانی</div>
+<div class="rm-cell rm-extreme">خطرناک</div>
+<div class="rm-cell rm-extreme">خطرناک</div>
+
+<div class="rm-label">تأثیر زیاد</div>
+<div class="rm-cell rm-low">کم</div>
+<div class="rm-cell rm-medium">متوسط</div>
+<div class="rm-cell rm-high">بالا</div>
+<div class="rm-cell rm-critical">بحرانی</div>
+<div class="rm-cell rm-extreme">خطرناک</div>
+
+<div class="rm-label">تأثیر متوسط</div>
+<div class="rm-cell rm-low">کم</div>
+<div class="rm-cell rm-low">کم</div>
+<div class="rm-cell rm-medium">متوسط</div>
+<div class="rm-cell rm-high">بالا</div>
+<div class="rm-cell rm-critical">بحرانی</div>
+
+<div class="rm-label">تأثیر کم</div>
+<div class="rm-cell rm-low">کم</div>
+<div class="rm-cell rm-low">کم</div>
+<div class="rm-cell rm-low">کم</div>
+<div class="rm-cell rm-medium">متوسط</div>
+<div class="rm-cell rm-high">بالا</div>
+
+<div class="rm-label">تأثیر خیلی کم</div>
+<div class="rm-cell rm-low">کم</div>
+<div class="rm-cell rm-low">کم</div>
+<div class="rm-cell rm-low">کم</div>
+<div class="rm-cell rm-low">کم</div>
+<div class="rm-cell rm-medium">متوسط</div>
+</div>
+
+<h4 style="margin-top:15px;color:var(--p)">📝 ریسک‌های شناسایی شده پروژه</h4>
+<table>
+<tr><th>#</th><th>ریسک</th><th>احتمال</th><th>تأثیر</th><th>سطح</th><th>راهکار</th></tr>
+<tr><td>R1</td><td>تاخیر در تحویل سامانه‌های دولتی</td><td>زیاد</td><td>متوسط</td><td><span style="background:#fed7aa;padding:3px 8px;border-radius:12px;font-size:10px">بالا</span></td><td>شروع زودتر مذاکره، طراحی modular</td></tr>
+<tr><td>R2</td><td>تغییر نیازمندی‌های مشتری</td><td>متوسط</td><td>زیاد</td><td><span style="background:#fed7aa;padding:3px 8px;border-radius:12px;font-size:10px">بالا</span></td><td>Agile، Sprint Review، مستندسازی</td></tr>
+<tr><td>R3</td><td>ترک تیم توسعه</td><td>کم</td><td>زیاد</td><td><span style="background:#fef3c7;padding:3px 8px;border-radius:12px;font-size:10px">متوسط</span></td><td>مستندسازی، Code Review، Knowledge Share</td></tr>
+<tr><td>R4</td><td>مشکلات امنیتی در Production</td><td>کم</td><td>بسیار زیاد</td><td><span style="background:#fed7aa;padding:3px 8px;border-radius:12px;font-size:10px">بالا</span></td><td>Security Testing، Code Review، Pentest</td></tr>
+<tr><td>R5</td><td>عملکرد ضعیف با ۱۰ کاربر همزمان</td><td>کم</td><td>زیاد</td><td><span style="background:#fef3c7;padding:3px 8px;border-radius:12px;font-size:10px">متوسط</span></td><td>Load Testing زودهنگام، Database Tuning</td></tr>
+<tr><td>R6</td><td>تاخیر در اخذ مجوزها</td><td>متوسط</td><td>متوسط</td><td><span style="background:#fef3c7;padding:3px 8px;border-radius:12px;font-size:10px">متوسط</span></td><td>شروع فرآیند زودهنگام</td></tr>
+<tr><td>R7</td><td>عدم پذیرش کاربران</td><td>متوسط</td><td>زیاد</td><td><span style="background:#fed7aa;padding:3px 8px;border-radius:12px;font-size:10px">بالا</span></td><td>UX Testing، آموزش جامع، پشتیبانی</td></tr>
+<tr><td>R8</td><td>نقص در طراحی دیتابیس</td><td>کم</td><td>بسیار زیاد</td><td><span style="background:#fed7aa;padding:3px 8px;border-radius:12px;font-size:10px">بالا</span></td><td>Review توسط DBA، Migration Strategy</td></tr>
+<tr><td>R9</td><td>مشکلات لایسنس (Crack)</td><td>متوسط</td><td>متوسط</td><td><span style="background:#fef3c7;padding:3px 8px;border-radius:12px;font-size:10px">متوسط</span></td><td>Obfuscation، Hardware ID، Online Check</td></tr>
+<tr><td>R10</td><td>عدم انطباق با قوانین HIPAA/داخلی</td><td>کم</td><td>زیاد</td><td><span style="background:#fef3c7;padding:3px 8px;border-radius:12px;font-size:10px">متوسط</span></td><td>مشاوره حقوقی، Audit مستقل</td></tr>
+</table>
+
+<h3>💰 تخمین هزینه‌های اصلی</h3>
+<div class="g2">
+<div style="background:#f8fafc;padding:15px;border-radius:10px">
+<h4 style="color:var(--p)">👥 هزینه نیروی انسانی (۱۲ ماه)</h4>
+<table>
+<tr><th>نقش</th><th>تعداد</th><th>ماهانه (ت)</th><th>کل (ت)</th></tr>
+<tr><td>Project Manager</td><td>۱</td><td>۳۵M</td><td>۴۲۰M</td></tr>
+<tr><td>Senior Backend</td><td>۱</td><td>۵۰M</td><td>۶۰۰M</td></tr>
+<tr><td>Backend Developer</td><td>۲</td><td>۳۵M</td><td>۸۴۰M</td></tr>
+<tr><td>WPF/UI Developer</td><td>۱</td><td>۴۰M</td><td>۴۸۰M</td></tr>
+<tr><td>Database Dev (نیمه‌وقت)</td><td>۰.۵</td><td>۴۰M</td><td>۲۴۰M</td></tr>
+<tr><td>QA Tester</td><td>۱</td><td>۲۵M</td><td>۳۰۰M</td></tr>
+<tr style="font-weight:900;background:#eff6ff"><td colspan="3">جمع نیروی انسانی:</td><td>۲٬۸۸۰M</td></tr>
+</table>
+</div>
+<div style="background:#f8fafc;padding:15px;border-radius:10px">
+<h4 style="color:var(--p)">💻 هزینه‌های نرم‌افزار و زیرساخت</h4>
+<table>
+<tr><th>مورد</th><th>هزینه (ت)</th></tr>
+<tr><td>License Stimulsoft Reports</td><td>۸۰M</td></tr>
+<tr><td>SSL Certificate</td><td>۱۰M</td></tr>
+<tr><td>Panel‌های پیامک (شارژ اولیه)</td><td>۵۰M</td></tr>
+<tr><td>سرور تست و Development</td><td>۴۰M</td></tr>
+<tr><td>Visual Studio Enterprise</td><td>۳۰M</td></tr>
+<tr><td>SQL Server (در صورت نیاز)</td><td>۱۰۰M</td></tr>
+<tr><td>Cloud Backup (12 months)</td><td>۳۰M</td></tr>
+<tr><td>Office + مجوزها</td><td>۲۰M</td></tr>
+<tr><td>آموزش و مشاوره حقوقی</td><td>۵۰M</td></tr>
+<tr><td>متفرقه و پیش‌بینی نشده (۱۰٪)</td><td>۳۲۰M</td></tr>
+<tr style="font-weight:900;background:#eff6ff"><td>جمع هزینه‌های دیگر:</td><td>۷۳۰M</td></tr>
+</table>
+</div>
+</div>
+
+<div class="gn" style="text-align:center;font-size:14px;margin-top:15px">
+<strong>💰 جمع کل تخمینی پروژه: ۳٬۶۱۰٬۰۰۰٬۰۰۰ تومان (۳.۶۱ میلیارد تومان)</strong><br>
+<small>⚠️ این تخمین با شرایط بازار و پیچیدگی ممکن است تا ۲۰٪ نوسان داشته باشد</small>
+</div>
+
+<h3>🎯 معیارهای موفقیت (Success Criteria)</h3>
+<div class="g3">
+<div style="background:#dcfce7;padding:15px;border-radius:10px;border-right:4px solid var(--s)">
+<h4 style="color:#166534">✅ فنی</h4>
+<ul class="tl-list">
+<li>پاسخ API &lt; ۲۰۰ms (۹۵٪ درخواست‌ها)</li>
+<li>Uptime &gt; ۹۹.۵٪</li>
+<li>پوشش تست &gt; ۷۰٪</li>
+<li>صفر Critical Bug در Production</li>
+<li>Zero Downtime Deployment</li>
+</ul>
+</div>
+<div style="background:#dbeafe;padding:15px;border-radius:10px;border-right:4px solid var(--p)">
+<h4 style="color:#1e40af">✅ کسب‌وکار</h4>
+<ul class="tl-list">
+<li>کاهش زمان پذیرش ۵۰٪</li>
+<li>افزایش رضایت کاربر &gt; ۸/۱۰</li>
+<li>کاهش خطای انسانی ۸۰٪</li>
+<li>زمان آموزش کاربر &lt; ۲ روز</li>
+<li>بازگشت سرمایه در ۱۸ ماه</li>
+</ul>
+</div>
+<div style="background:#fef3c7;padding:15px;border-radius:10px;border-right:4px solid var(--w)">
+<h4 style="color:#92400e">✅ کیفیت</h4>
+<ul class="tl-list">
+<li>Clean Code (SonarQube Grade A)</li>
+<li>مستندات کامل (۱۰۰٪)</li>
+<li>API Documentation (Swagger)</li>
+<li>Code Review برای همه PRها</li>
+<li>CI/CD Pipeline خودکار</li>
+</ul>
+</div>
+</div>
+</section>
+
+<footer>
+<p>📄 فایل ۵ از ۶ | <strong>امنیت ۱۴ لایه + برنامه‌ریزی زمانی ۱۲ ماهه</strong></p>
+</footer>
+
+</div>
+</body>
+</html>

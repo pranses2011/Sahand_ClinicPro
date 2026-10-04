@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>🤖 ClinicPro - پرامپت AI بخش ۳</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;900&display=swap');
+:root{--p:#1a73e8;--s:#34a853;--a:#ea4335;--bg:#f0f2f5;--c:#fff;--t:#202124;--b:#dadce0;--sh:0 2px 8px rgba(0,0,0,.1);--r:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t);line-height:1.8;font-size:13px}
+.ct{max-width:1200px;margin:0 auto;padding:20px}
+header{background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;padding:40px 20px;text-align:center;border-radius:0 0 30px 30px;margin-bottom:25px}
+header h1{font-size:2em;font-weight:900}
+header p{opacity:.9}
+.nav{background:#fff;padding:12px;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.nav a{padding:7px 14px;background:#f0f2f5;border-radius:8px;text-decoration:none;color:var(--t);font-size:11px;font-weight:600}
+.nav a:hover,.nav a.active{background:#7c3aed;color:#fff}
+.prompt-section{background:#1e1e1e;color:#d4d4d4;border-radius:var(--r);padding:25px;margin-bottom:20px;font-family:'Courier New',monospace;font-size:12px;line-height:1.7;direction:rtl;text-align:right;white-space:pre-wrap;word-wrap:break-word;overflow-x:auto}
+.prompt-section .h1{color:#4ec9b0;font-weight:bold;font-size:16px}
+.prompt-section .h2{color:#569cd6;font-weight:bold;font-size:14px}
+.prompt-section .h3{color:#ce9178;font-weight:bold;font-size:13px}
+.prompt-section .note{color:#6a9955;font-style:italic}
+.prompt-section .important{color:#f44747;font-weight:bold}
+.prompt-section .code{color:#9cdcfe}
+.prompt-section .val{color:#b5cea8}
+.prompt-section .str{color:#ce9178}
+.prompt-section .key{color:#569cd6}
+.prompt-section .title{color:#dcdcaa;font-weight:bold;font-size:14px}
+.copy-btn{background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;border:none;padding:10px 25px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.info{background:#e8f0fe;border-right:4px solid var(--p);padding:15px;border-radius:0 8px 8px 0;margin:15px 0;font-size:12px}
+.warn{background:#fef7e0;border-right:4px solid #fbbc04;padding:15px;border-radius:0 8px 8px 0;margin:15px 0;font-size:12px}
+.success{background:#e6f4ea;border-right:4px solid var(--s);padding:15px;border-radius:0 8px 8px 0;margin:15px 0;font-size:12px}
+footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#fff;border-radius:var(--r);margin-top:20px}
+</style>
+</head>
+<body>
+<header>
+<h1>🤖 پرامپت حرفه‌ای - بخش ۳ (آخر)</h1>
+<p>امنیت، لایسنس، یکپارچه‌سازی، الگوریتم‌ها و دستورات نهایی</p>
+</header>
+<div class="ct">
+<nav class="nav">
+<a href="prompt-part1.html">🤖 پرامپت ۱</a>
+<a href="prompt-part2.html">🤖 پرامپت ۲</a>
+<a href="prompt-part3.html" class="active">🤖 پرامپت ۳</a>
+</nav>
+
+<div class="info">
+<strong>📋 این بخش شامل:</strong> پیاده‌سازی امنیت کامل، سامانه لایسنس، یکپارچه‌سازی با سامانه‌های دولتی، ۱۲ الگوریتم کلیدی، و دستورات نهایی برای تولید کد.
+</div>
+
+<button class="copy-btn" onclick="copyAll()">📋 کپی کل پرامپت بخش ۳</button>
+
+<div class="prompt-section" id="prompt3">
+<span class="h1">════════════════════════════════════════════════════════════════
+🏥 ClinicPro - بخش ۳ از ۳ (آخر)
+امنیت، لایسنس، یکپارچه‌سازی، الگوریتم‌ها، دستورات نهایی
+════════════════════════════════════════════════════════════════</span>
+
+
+<span class="h2">═══════════════════════════════════════
+🔐 ۱. پیاده‌سازی کامل امنیت (۱۴ لایه)
+═══════════════════════════════════════</span>
+
+<span class="note">// ⚠️ تمام کدهای امنیتی باید کامنت فارسی مفصل داشته باشند
+// هر لایه امنیتی توضیح کامل «چرا» و «چگونه» داشته باشد</span>
+
+<span class="h3">── ۱.۱ هش رمز عبور (BCrypt) ──</span>
+
+<span class="code">/// &lt;summary&gt;
+/// سرویس هش کردن رمز عبور با الگوریتم BCrypt
+/// دلیل انتخاب BCrypt:
+/// - مقاوم در برابر حملات Brute Force (Work Factor قابل تنظیم)
+/// - Salt خودکار و منحصربفرد برای هر رمز
+/// - آهسته بودن عمدی (برخلاف MD5/SHA که سریع هستند)
+/// Work Factor = 12 یعنی 2^12 = 4096 بار تکرار هش
+/// &lt;/summary&gt;
+public class PasswordHasher : IPasswordHasher
+{
+    private const int WorkFactor = 12; // تعداد دور هش - هرچه بیشتر، امن‌تر ولی کندتر
+    
+    /// &lt;summary&gt;هش کردن رمز عبور متنی - خروجی شامل Salt است&lt;/summary&gt;
+    /// &lt;param name="password"&gt;رمز عبور ساده (Plain Text)&lt;/param&gt;
+    /// &lt;returns&gt;رشته هش شده (شامل الگوریتم + Salt + Hash)&lt;/returns&gt;
+    public string Hash(string password)
+        => BCrypt.Net.BCrypt.HashPassword(password, WorkFactor);
+    
+    /// &lt;summary&gt;بررسی صحت رمز عبور با مقایسه هش&lt;/summary&gt;
+    /// &lt;param name="password"&gt;رمز ورودی کاربر&lt;/param&gt;
+    /// &lt;param name="hashedPassword"&gt;هش ذخیره شده در دیتابیس&lt;/param&gt;
+    /// &lt;returns&gt;آیا رمز صحیح است&lt;/returns&gt;
+    public bool Verify(string password, string hashedPassword)
+        => BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+}</span>
+
+<span class="h3">── ۱.۲ JWT Token Service ──</span>
+
+<span class="code">/// &lt;summary&gt;
+/// سرویس تولید و اعتبارسنجی توکن JWT
+/// Access Token: عمر کوتاه (۱۵ دقیقه) - شامل Claims کاربر
+/// Refresh Token: عمر بلند (۷ روز) - فقط برای تمدید Access Token
+/// الگوریتم امضا: HMAC-SHA256 با کلید ۲۵۶ بیتی
+/// &lt;/summary&gt;
+public class JwtTokenService : IJwtTokenService
+{
+    /// &lt;summary&gt;تولید Access Token جدید با Claims کاربر&lt;/summary&gt;
+    /// &lt;param name="user"&gt;اطلاعات کاربر از دیتابیس&lt;/param&gt;
+    /// &lt;param name="roles"&gt;لیست نقش‌های کاربر&lt;/param&gt;
+    /// &lt;param name="permissions"&gt;لیست دسترسی‌های کاربر&lt;/param&gt;
+    /// &lt;returns&gt;رشته JWT Token&lt;/returns&gt;
+    public string GenerateAccessToken(User user, List&lt;string&gt; roles, List&lt;string&gt; permissions)
+    {
+        // Claims شامل: UserId, Username, Roles, Permissions
+        var claims = new List&lt;Claim&gt;
+        {
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.Username),
+            new("FullName", $"{user.Employee.FirstName} {user.Employee.LastName}"),
+            new("BranchId", user.BranchId?.ToString() ?? ""),
+        };
+        
+        // اضافه کردن نقش‌ها
+        foreach (var role in roles)
+            claims.Add(new(ClaimTypes.Role, role));
+        
+        // اضافه کردن دسترسی‌ها
+        foreach (var perm in permissions)
+            claims.Add(new("Permission", perm));
+        
+        var key = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(_config.SecretKey)); // کلید ۲۵۶ بیتی
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        
+        var token = new JwtSecurityToken(
+            issuer: _config.Issuer,      // "ClinicPro.API"
+            audience: _config.Audience,   // "ClinicPro.Desktop"
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(_config.AccessTokenMinutes), // ۱۵ دقیقه
+            signingCredentials: creds
+        );
+        
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+    
+    /// &lt;summary&gt;تولید Refresh Token تصادفی (۶۴ بایت Base64)&lt;/summary&gt;
+    /// &lt;returns&gt;رشته تصادفی امن&lt;/returns&gt;
+    public string GenerateRefreshToken()
+    {
+        var bytes = new byte[64];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(bytes);
+        return Convert.ToBase64String(bytes);
+    }
+}</span>
+
+<span class="h3">── ۱.۳ رمزنگاری AES-256 ──</span>
+
+<span class="code">/// &lt;summary&gt;
+/// سرویس رمزنگاری داده‌های حساس بیماران با AES-256-GCM
+/// استفاده: آدرس، شماره تماس اضطراری، سوابق پزشکی، آلرژی‌ها
+/// کلید رمزنگاری از متغیر محیطی یا DPAPI خوانده می‌شود
+/// هرگز کلید در کد یا appsettings ذخیره نشود
+/// &lt;/summary&gt;
+public class AesEncryptionService : IEncryptionService
+{
+    private readonly byte[] _key; // کلید ۲۵۶ بیتی (۳۲ بایت)
+    
+    /// &lt;summary&gt;رمزنگاری یک رشته متنی&lt;/summary&gt;
+    /// &lt;param name="plainText"&gt;متن ساده (مثلاً آدرس بیمار)&lt;/param&gt;
+    /// &lt;returns&gt;آرایه بایتی رمزنگاری شده (IV + CipherText + Tag)&lt;/returns&gt;
+    public byte[] Encrypt(string plainText)
+    {
+        // IV (Initialization Vector) تصادفی ۱۲ بایت - برای هر رمزنگاری جدید
+        var nonce = new byte[12];
+        RandomNumberGenerator.Fill(nonce);
+        
+        var plainBytes = Encoding.UTF8.GetBytes(plainText);
+        var cipherBytes = new byte[plainBytes.Length];
+        var tag = new byte[16]; // تگ احراز اصالت ۱۶ بایت
+        
+        using var aes = new AesGcm(_key, 16);
+        aes.Encrypt(nonce, plainBytes, cipherBytes, tag);
+        
+        // خروجی: nonce(12) + cipher(N) + tag(16)
+        var result = new byte[nonce.Length + cipherBytes.Length + tag.Length];
+        Buffer.BlockCopy(nonce, 0, result, 0, nonce.Length);
+        Buffer.BlockCopy(cipherBytes, 0, result, nonce.Length, cipherBytes.Length);
+        Buffer.BlockCopy(tag, 0, result, nonce.Length + cipherBytes.Length, tag.Length);
+        
+        return result;
+    }
+    
+    /// &lt;summary&gt;رمزگشایی داده‌های رمزنگاری شده&lt;/summary&gt;
+    /// &lt;param name="encryptedData"&gt;داده رمز شده (IV + Cipher + Tag)&lt;/param&gt;
+    /// &lt;returns&gt;متن ساده اصلی&lt;/returns&gt;
+    public string Decrypt(byte[] encryptedData)
+    {
+        // جداسازی اجزا
+        var nonce = encryptedData[..12];
+        var tag = encryptedData[^16..];
+        var cipherBytes = encryptedData[12..^16];
+        var plainBytes = new byte[cipherBytes.Length];
+        
+        using var aes = new AesGcm(_key, 16);
+        aes.Decrypt(nonce, cipherBytes, tag, plainBytes);
+        
+        return Encoding.UTF8.GetString(plainBytes);
+    }
+}</span>
+
+<span class="h3">── ۱.۴ Rate Limiting ──</span>
+
+<span class="code">/// &lt;summary&gt;
+/// تنظیمات محدودیت درخواست در Program.cs
+/// هدف: جلوگیری از حملات Brute Force و DDoS
+/// &lt;/summary&gt;
+// در Program.cs:
+builder.Services.AddRateLimiter(options =>
+{
+    // سیاست عمومی: ۱۰۰ درخواست در دقیقه برای هر IP
+    options.AddFixedWindowLimiter("General", opt =>
+    {
+        opt.PermitLimit = 100;           // حداکثر ۱۰۰ درخواست
+        opt.Window = TimeSpan.FromMinutes(1); // در هر دقیقه
+        opt.QueueLimit = 10;             // صف انتظار ۱۰ درخواست
+    });
+    
+    // سیاست ورود: ۵ درخواست در دقیقه (ضد Brute Force)
+    options.AddFixedWindowLimiter("Login", opt =>
+    {
+        opt.PermitLimit = 5;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueLimit = 0;              // بدون صف - رد فوری
+    });
+    
+    // پاسخ در صورت رد شدن
+    options.OnRejected = async (context, ct) =>
+    {
+        context.HttpContext.Response.StatusCode = 429; // Too Many Requests
+        await context.HttpContext.Response.WriteAsJsonAsync(new
+        {
+            IsSuccess = false,
+            Message = "تعداد درخواست‌های شما بیش از حد مجاز است. لطفاً کمی صبر کنید.",
+            RetryAfter = "60 ثانیه"
+        });
+    };
+});</span>
+
+<span class="h3">── ۱.۵ Audit Log Middleware ──</span>
+
+<span class="code">/// &lt;summary&gt;
+/// میدلور ثبت خودکار لاگ عملیات
+/// هر درخواست API که تغییری ایجاد کند (POST, PUT, DELETE) لاگ می‌شود
+/// شامل: کاربر، عملیات، آدرس IP، زمان، داده‌های قبل/بعد
+/// &lt;/summary&gt;
+public class AuditLogMiddleware
+{
+    public async Task InvokeAsync(HttpContext context)
+    {
+        // فقط درخواست‌های تغییردهنده لاگ شوند
+        if (IsModifyingRequest(context.Request.Method)) // POST, PUT, DELETE
+        {
+            var auditLog = new AuditLog
+            {
+                UserId = GetCurrentUserId(context),
+                Username = context.User?.Identity?.Name,
+                ActionType = MapMethodToAction(context.Request.Method), // Create/Update/Delete
+                EntityName = ExtractEntityName(context.Request.Path),   // "Patients"
+                IpAddress = context.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = context.Request.Headers.UserAgent,
+                Timestamp = DateTime.UtcNow,
+                Module = ExtractModule(context.Request.Path),
+            };
+            
+            // ذخیره بدنه درخواست (NewValues)
+            context.Request.EnableBuffering();
+            auditLog.NewValues = await ReadRequestBody(context.Request);
+            
+            await _next(context);
+            
+            // ثبت در دیتابیس (در پس‌زمینه - نباید عملکرد اصلی را تحت تاثیر بگذارد)
+            _ = Task.Run(() => _auditRepo.AddAsync(auditLog));
+        }
+        else
+        {
+            await _next(context);
+        }
+    }
+}</span>
+
+<span class="h3">── ۱.۶ Account Lockout ──</span>
+
+<span class="code">/// &lt;summary&gt;
+/// منطق قفل اکانت در AuthService
+/// بعد از ۵ تلاش ناموفق: قفل ۳۰ دقیقه‌ای
+/// ارسال اعلان به مدیر سیستم
+/// ثبت در لاگ امنیتی
+/// &lt;/summary&gt;
+public async Task&lt;Result&lt;LoginResponseDto&gt;&gt; LoginAsync(LoginRequestDto request)
+{
+    var user = await _uow.Users.GetByUsernameAsync(request.Username);
+    
+    if (user == null)
+        return Result.Failure("نام کاربری یا رمز عبور اشتباه است"); // پیام عمومی - نگفتن «کاربر وجود ندارد»
+    
+    // بررسی قفل بودن اکانت
+    if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTime.UtcNow)
+    {
+        var remaining = (user.LockoutEnd.Value - DateTime.UtcNow).Minutes;
+        return Result.Failure($"اکانت شما قفل شده است. {remaining} دقیقه تا آزاد شدن.");
+    }
+    
+    // بررسی رمز عبور
+    if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
+    {
+        // افزایش شمارنده تلاش ناموفق
+        user.FailedLoginAttempts++;
+        
+        if (user.FailedLoginAttempts >= 5) // حداکثر ۵ تلاش
+        {
+            user.LockoutEnd = DateTime.UtcNow.AddMinutes(30); // قفل ۳۰ دقیقه
+            user.FailedLoginAttempts = 0;
+            
+            // ثبت لاگ امنیتی
+            await LogSecurityEvent("ACCOUNT_LOCKED", user.Id, request.IpAddress);
+            
+            // اعلان به مدیر
+            await _notification.NotifyAdminsAsync(
+                $"اکانت کاربر {user.Username} به دلیل ۵ تلاش ناموفق قفل شد.");
+        }
+        
+        await _uow.SaveChangesAsync();
+        return Result.Failure("نام کاربری یا رمز عبور اشتباه است");
+    }
+    
+    // بررسی فعال بودن کاربر
+    if (!user.IsActive)
+        return Result.Failure("اکانت شما غیرفعال شده است. با مدیر سیستم تماس بگیرید.");
+    
+    // ورود موفق - ریست شمارنده
+    user.FailedLoginAttempts = 0;
+    user.LockoutEnd = null;
+    user.LastLoginAt = DateTime.UtcNow;
+    user.LastLoginIP = request.IpAddress;
+    
+    // تولید توکن‌ها
+    var roles = await _uow.UserRoles.GetRolesAsync(user.Id);
+    var permissions = await _uow.RolePermissions.GetPermissionsAsync(user.Id);
+    var accessToken = _jwt.GenerateAccessToken(user, roles, permissions);
+    var refreshToken = _jwt.GenerateRefreshToken();
+    
+    // ذخیره Refresh Token
+    await _uow.RefreshTokens.AddAsync(new RefreshToken
+    {
+        UserId = user.Id,
+        Token = refreshToken,
+        ExpiresAt = DateTime.UtcNow.AddDays(7),
+        DeviceInfo = request.UserAgent,
+        IpAddress = request.IpAddress
+    });
+    
+    await _uow.SaveChangesAsync();
+    
+    return Result.Success(new LoginResponseDto
+    {
+        AccessToken = accessToken,
+        RefreshToken = refreshToken,
+        ExpiresIn = _config.AccessTokenMinutes * 60, // ثانیه
+        User = _mapper.Map&lt;UserDto&gt;(user),
+        Permissions = permissions
+    }, "ورود موفقیت‌آمیز");
+}</span>
+
+<span class="h3">── ۱.۷ Session Timeout و Exception Handling ──</span>
+
+<span class="code">/// &lt;summary&gt;
+/// Session Timeout: ۲۰ دقیقه بی‌فعالیتی → خروج خودکار
+/// در WPF Client با Timer پیاده‌سازی می‌شود
+/// &lt;/summary&gt;
+// IdleTimeout = 20 دقیقه
+// AbsoluteTimeout = 8 ساعت (حداکثر یک شیفت کاری)
+// هشدار ۲ دقیقه قبل از خروج
+
+/// &lt;summary&gt;
+/// مدیریت خطای سراسری - همه خطاها فارسی و ساختارمند
+/// &lt;/summary&gt;
+public class GlobalExceptionHandler : IExceptionHandler
+{
+    public async ValueTask&lt;bool&gt; TryHandleAsync(HttpContext ctx, Exception ex, CancellationToken ct)
+    {
+        var (statusCode, message) = ex switch
+        {
+            NotFoundException e     => (404, e.Message ?? "موردی یافت نشد"),
+            ValidationException e   => (400, "خطا در اعتبارسنجی اطلاعات"),
+            BusinessRuleException e => (422, e.Message),
+            UnauthorizedAccessException => (401, "دسترسی غیرمجاز - لطفاً وارد شوید"),
+            ForbiddenException e    => (403, "شما دسترسی لازم را ندارید"),
+            LicenseException e      => (403, e.Message ?? "لایسنس معتبر نیست"),
+            _ => (500, "خطای داخلی سرور - لطفاً با پشتیبانی تماس بگیرید")
+        };
+        
+        // ثبت خطا در لاگ
+        _logger.LogError(ex, "خطا در پردازش درخواست: {Path}", ctx.Request.Path);
+        
+        // ثبت در ErrorLogs دیتابیس (خطاهای ۵۰۰)
+        if (statusCode == 500)
+            await _errorLogRepo.AddAsync(new ErrorLog { ... });
+        
+        ctx.Response.StatusCode = statusCode;
+        await ctx.Response.WriteAsJsonAsync(new ApiResponse
+        {
+            IsSuccess = false,
+            StatusCode = statusCode,
+            Message = message,
+            Errors = ex is ValidationException ve ? ve.Errors.Select(e => e.ErrorMessage).ToList() : null,
+            TraceId = ctx.TraceIdentifier
+        });
+        
+        return true;
+    }
+}</span>
+
+
+<span class="h2">═══════════════════════════════════════
+🔑 ۲. سامانه لایسنس کامل
+═══════════════════════════════════════</span>
+
+<span class="note">// ⚠️ سامانه لایسنس شامل دو بخش مجزا:
+// ۱. License Portal (Blazor Server) - پنل وب فروشنده - دیتابیس جداگانه
+// ۲. License Client (داخل API Server) - اعتبارسنجی در نرم‌افزار درمانگاه
+//
+// امنیت لایسنس:
+// - امضای دیجیتال RSA-2048 (کلید خصوصی فقط در Portal)
+// - کلید عمومی Embed شده در کلاینت
+// - Hardware Fingerprint (CPU+MB+BIOS+HDD+MAC)
+// - رمزنگاری فایل لایسنس با AES-256
+// - بررسی دوره‌ای آنلاین (Heartbeat هر ۲۴ ساعت)
+// - تشخیص تغییر زمان سیستم (Anti-Tampering)
+// - Code Obfuscation با ConfuserEx</span>
+
+<span class="h3">── ۲.۱ License Portal (Blazor Server) ──</span>
+
+<span class="code">// ساختار License Portal:
+ClinicPro.LicensePortal/
+├── Pages/
+│   ├── Dashboard.razor          // داشبورد فروش (آمار لایسنس‌ها، درآمد)
+│   ├── Customers/
+│   │   ├── CustomerList.razor   // لیست مشتریان (درمانگاه‌ها)
+│   │   └── CustomerForm.razor   // ثبت/ویرایش مشتری
+│   ├── Licenses/
+│   │   ├── LicenseList.razor    // لیست لایسنس‌ها (فعال، منقضی، معلق)
+│   │   ├── IssueLicense.razor   // صدور لایسنس جدید (ویزارد ۴ مرحله‌ای)
+│   │   ├── LicenseDetail.razor  // جزئیات لایسنس + لاگ‌ها
+│   │   └── OfflineActivation.razor // فعال‌سازی آفلاین
+│   ├── Modules/
+│   │   └── ModuleCatalog.razor  // کاتالوگ ماژول‌ها + قیمت‌گذاری
+│   ├── Payments/
+│   │   └── PaymentList.razor    // لیست پرداخت‌ها
+│   └── Reports/
+│       └── SalesReport.razor    // گزارش فروش
+├── Services/
+│   ├── LicenseGeneratorService.cs   // تولید کد لایسنس + امضای RSA
+│   ├── HardwareValidator.cs         // بررسی Hardware Fingerprint
+│   └── LicenseKeyGenerator.cs       // تولید کلید به فرمت XXXXX-XXXXX-XXXXX-XXXXX
+├── Data/
+│   └── LicenseDbContext.cs          // دیتابیس جداگانه License Portal
+└── appsettings.json
+
+// فرآیند صدور لایسنس:
+// مرحله ۱: انتخاب/ثبت مشتری (نام درمانگاه، مدیر، تلفن، آدرس)
+// مرحله ۲: تعیین محدودیت‌ها (کاربر، پزشک، بیمار، شعبه)
+// مرحله ۳: انتخاب ماژول‌ها (Core رایگان + اختیاری‌ها)
+// مرحله ۴: نوع لایسنس + مدت + قیمت + پرداخت + صدور</span>
+
+<span class="h3">── ۲.۲ License Client (Middleware) ──</span>
+
+<span class="code">/// &lt;summary&gt;
+/// میدلور بررسی لایسنس - در هر درخواست API اجرا می‌شود
+/// بررسی‌ها:
+/// ۱. آیا لایسنس فعال است؟
+/// ۲. آیا منقضی نشده؟
+/// ۳. آیا تعداد کاربران همزمان از حد مجاز تجاوز نکرده؟
+/// ۴. آیا ماژول درخواستی در لایسنس فعال است؟
+/// ۵. آیا Hardware Fingerprint تغییر نکرده؟
+/// &lt;/summary&gt;
+// (کد کامل Middleware در فایل 06 ارائه شده)
+
+/// &lt;summary&gt;
+/// سرویس Heartbeat - بررسی دوره‌ای لایسنس با سرور
+/// هر ۲۴ ساعت یکبار اجرا می‌شود (Hangfire)
+/// اگر ۳۰ روز آفلاین باشد و لایسنس آفلاین مجاز نباشد → غیرفعال
+/// &lt;/summary&gt;
+// (کد کامل Heartbeat Job در فایل 06 ارائه شده)
+
+/// &lt;summary&gt;
+/// محاسبه اثر انگشت سخت‌افزاری (Hardware Fingerprint)
+/// از ترکیب ۶ مشخصه سخت‌افزاری:
+/// CPU ID + Motherboard Serial + BIOS Serial + HDD Serial + MAC Address + Windows PID
+/// با SHA-256 هش شده
+/// اگر سخت‌افزار تغییر کند → نیاز به فعال‌سازی مجدد
+/// &lt;/summary&gt;
+// (کد کامل HardwareFingerprint در فایل 06 ارائه شده)
+
+/// &lt;summary&gt;
+/// Mapping مسیر API به نام ماژول (برای بررسی لایسنس)
+/// &lt;/summary&gt;
+private static readonly Dictionary&lt;string, string&gt; ModuleMapping = new()
+{
+    { "patients",       "Patients" },       // ماژول بیماران (Core - همیشه فعال)
+    { "doctors",        "Doctors" },        // ماژول پزشکان (Core)
+    { "appointments",   "Appointments" },   // ماژول نوبت‌دهی (Core)
+    { "receptions",     "Reception" },      // ماژول پذیرش (Core)
+    { "visits",         "Visits" },         // ماژول ویزیت (Core)
+    { "billing",        "Billing" },        // ماژول صندوق (Core)
+    { "prescriptions",  "Prescriptions" },  // نسخه‌نویسی (اختیاری)
+    { "accounting",     "Accounting" },     // حسابداری دوبل (اختیاری)
+    { "insurance",      "Insurance" },      // مدیریت بیمه (اختیاری)
+    { "lab",            "LabModule" },      // آزمایشگاه (اختیاری)
+    { "imaging",        "Imaging" },        // تصویربرداری (اختیاری)
+    { "pharmacy",       "Pharmacy" },       // داروخانه (اختیاری)
+    { "dental",         "Dental" },         // دندانپزشکی (اختیاری)
+    { "eye",            "Eye" },            // چشم‌پزشکی (اختیاری)
+    { "physiotherapy",  "Physiotherapy" },  // فیزیوتراپی (اختیاری)
+    { "sms",            "SMS" },            // پیامک (اختیاری)
+    { "hr",             "HumanResources" }, // منابع انسانی (اختیاری)
+    { "sepas",          "Sepas" },          // سپاس (اختیاری)
+    { "e-prescription", "EPrescription" },  // نسخه الکترونیک (اختیاری)
+};</span>
+
+
+<span class="h2">═══════════════════════════════════════
+🏛️ ۳. یکپارچه‌سازی با سامانه‌های دولتی
+═══════════════════════════════════════</span>
+
+<span class="note">// ⚠️ هر سامانه دولتی یک Interface جداگانه + Implementation دارد
+// از Strategy Pattern + Factory Pattern استفاده شود
+// Polly برای Retry + Circuit Breaker
+// همه فراخوانی‌ها در ApiCallLogs ثبت شوند
+// تنظیمات اتصال (URL, Username, Password) در SystemSettings رمزنگاری شده ذخیره شوند
+// Mock Implementation برای تست</span>
+
+<span class="code">/// &lt;summary&gt;
+/// اینترفیس مشترک سامانه‌های بیمه (Strategy Pattern)
+/// هر شرکت بیمه یک پیاده‌سازی جداگانه دارد
+/// قابل افزودن بدون تغییر کد موجود (Open/Closed Principle)
+/// &lt;/summary&gt;
+public interface IInsuranceService
+{
+    /// &lt;summary&gt;نام بیمه (مثلاً "تامین اجتماعی")&lt;/summary&gt;
+    string InsuranceName { get; }
+    
+    /// &lt;summary&gt;استعلام آنلاین وضعیت بیمه بیمار&lt;/summary&gt;
+    Task&lt;InsuranceInquiryResult&gt; InquireAsync(string nationalCode, string insuranceNumber);
+    
+    /// &lt;summary&gt;ارسال نسخه الکترونیکی به سامانه بیمه&lt;/summary&gt;
+    Task&lt;EPrescriptionResult&gt; SubmitPrescriptionAsync(PrescriptionSubmitDto data);
+    
+    /// &lt;summary&gt;لغو نسخه ارسال شده&lt;/summary&gt;
+    Task&lt;Result&gt; CancelPrescriptionAsync(string trackingCode);
+    
+    /// &lt;summary&gt;ارسال اسناد مالی به بیمه (برای تسویه)&lt;/summary&gt;
+    Task&lt;ClaimSubmitResult&gt; SubmitClaimAsync(InsuranceClaimDto claim);
+    
+    /// &lt;summary&gt;پیگیری وضعیت مطالبه بیمه&lt;/summary&gt;
+    Task&lt;ClaimStatusResult&gt; CheckClaimStatusAsync(string claimNumber);
+}
+
+// پیاده‌سازی‌ها:
+public class SalamatInsuranceService : IInsuranceService { ... }  // بیمه سلامت
+public class TaminInsuranceService : IInsuranceService { ... }   // تامین اجتماعی
+public class MosalahInsuranceService : IInsuranceService { ... } // نیروهای مسلح
+public class GenericInsuranceService : IInsuranceService { ... } // بیمه‌های تکمیلی (عمومی)
+
+/// &lt;summary&gt;
+/// اینترفیس مشترک پنل‌های پیامک
+/// ۱۰ پنل پشتیبانی: Kavenegar, MelliPayamak, SMS.ir, FarazSMS,
+/// IPPanel, Negar, Sabanovin, Mediana, Trez, PayamakPanel
+/// &lt;/summary&gt;
+public interface ISmsProvider
+{
+    string ProviderName { get; }
+    Task&lt;SmsResult&gt; SendAsync(string number, string message);
+    Task&lt;SmsResult&gt; SendPatternAsync(string number, string code, Dictionary&lt;string,string&gt; vars);
+    Task&lt;decimal&gt; GetBalanceAsync();
+    Task&lt;DeliveryStatus&gt; CheckDeliveryAsync(string messageId);
+}
+
+// Fallback Strategy: اگر پنل اصلی خطا داد → پنل بعدی (اولویت‌بندی شده)
+// هر پنل: API Key/Username رمزنگاری شده در دیتابیس ذخیره شود</span>
+
+
+<span class="h2">═══════════════════════════════════════
+⚙️ ۴. الگوریتم‌های کلیدی (خلاصه پیاده‌سازی)
+═══════════════════════════════════════</span>
+
+<span class="note">// ⚠️ هر الگوریتم باید:
+// ۱. کامنت فارسی مفصل داشته باشد (چرا، چگونه، پیچیدگی)
+// ۲. Unit Test کامل داشته باشد
+// ۳. Edge Case ها مدیریت شده باشند
+// ۴. Performance بهینه باشد (Index مناسب روی دیتابیس)</span>
+
+<span class="key">الگوریتم ۱: محاسبه Slot های آزاد نوبت‌دهی</span>
+// ورودی: DoctorId, Date
+// عملیات: دریافت برنامه → حذف غیبت‌ها → حذف استراحت → حذف نوبت‌های رزرو شده
+// خروجی: List&lt;TimeSlot&gt; { Time, IsAvailable, AppointmentId? }
+// پیچیدگی: O(n) | Cache: 1 ساعت
+
+<span class="key">الگوریتم ۲: محاسبه سهم بیمه و بیمار (فرانشیز)</span>
+// ورودی: ServiceId, InsuranceId, Quantity
+// عملیات: تعرفه → درصد بیمه → سقف پوشش → بیمه تکمیلی → تخفیف → مالیات
+// خروجی: { SubTotal, InsuranceShare, SupplementaryShare, PatientShare, Tax, Total }
+// ⚠️ اعداد مالی decimal(18,0) - هرگز float/double
+
+<span class="key">الگوریتم ۳: بررسی تداخل دارویی</span>
+// ورودی: List&lt;MedicationId&gt; (داروهای نسخه + داروهای فعلی بیمار)
+// عملیات: Cross-check هر جفت دارو در DrugInteractions + بررسی آلرژی بیمار
+// خروجی: List&lt;DrugInteractionDto&gt; { Drug1, Drug2, Severity, Description }
+// پیچیدگی: O(n²) worst | Index مرکب روی (Med1Id, Med2Id)
+
+<span class="key">الگوریتم ۴: تولید خودکار سند حسابداری دوبل</span>
+// ورودی: EventType (Invoice/Payment/Salary), EventData
+// عملیات: Mapping قوانین → ایجاد JournalEntry + Lines → بررسی تعادل → ذخیره
+// ⚠️ قانون طلایی: SUM(Debit) == SUM(Credit) - هرگز نامتوازن ذخیره نشود
+// ⚠️ در Transaction اجرا شود
+
+<span class="key">الگوریتم ۵: مدیریت صف انتظار پویا</span>
+// ورودی: DoctorId
+// عملیات: لیست پذیرش‌ها → محاسبه Priority Score → مرتب‌سازی → شماره صف → زمان تخمینی
+// خروجی: List&lt;QueueItem&gt; { QueueNumber, Patient, Status, EstimatedWait }
+// Real-time: SignalR Hub برای به‌روزرسانی آنی
+// Priority: اورژانس(+1000), VIP(+500), تاخیر(+10/15min)
+
+<span class="key">الگوریتم ۶: ارسال خودکار پیامک یادآوری</span>
+// Hangfire Job: هر روز ساعت ۱۰ صبح
+// عملیات: نوبت‌های فردا → فیلتر (ReminderSent=false) → Template → SmsQueue
+// Retry: ۳ بار | Fallback: پنل جایگزین
+
+<span class="key">الگوریتم ۷: بکاپ خودکار Multi-Tier</span>
+// Hangfire Jobs: Full(3AM روزانه) + Diff(هر 6h) + Log(هر 1h)
+// عملیات: BACKUP DATABASE WITH COMPRESSION → AES-256 Encrypt → Cloud Upload → Retention Policy
+// Retention: Full=30 روز + ماهانه(12) | Diff=7 روز | Log=48 ساعت
+// Verify: RESTORE VERIFYONLY
+
+<span class="key">الگوریتم ۸: جستجوی سریع بیماران (Fuzzy)</span>
+// ورودی: SearchTerm (هوشمند: تشخیص کد ملی/موبایل/نام)
+// عملیات: نرمال‌سازی (ی/ک عربی→فارسی) → تشخیص نوع → Full-Text/SOUNDEX → اولویت‌بندی
+// Cache: 5 دقیقه | Pagination: max 50 نتیجه
+
+<span class="key">الگوریتم ۹: محاسبه کارانه پزشک</span>
+// ورودی: DoctorId, PeriodStart, PeriodEnd
+// عملیات: فاکتورهای پرداخت‌شده → DoctorSharePercent × Price → کسر مالیات/بیمه → Net
+// خروجی: DoctorPayment + سند حسابداری خودکار + فیش PDF + SMS
+
+<span class="key">الگوریتم ۱۰: هشدار موجودی کم داروخانه</span>
+// Hangfire Job: هر روز ساعت ۸ صبح
+// عملیات: بررسی Quantity vs MinStock → پیش‌بینی DaysLeft → هشدار Critical/Low
+// اضافی: بررسی تاریخ انقضا (30 روز قبل هشدار)
+
+<span class="key">الگوریتم ۱۱: تولید شماره‌های یکتا</span>
+// SQL Server Sequence: CREATE SEQUENCE InvoiceSeq START WITH 1
+// فرمت: INV-{YYYY}-{SeqNo:D6}, MRN-{SeqNo:D6}, RX-{YYYYMM}-{SeqNo:D5}
+
+<span class="key">الگوریتم ۱۲: تبدیل تقویم شمسی ↔ میلادی</span>
+// System.Globalization.PersianCalendar
+// Helper: ToShamsi(), ToGregorian(), GetMonthName(), IsLeapYear()
+// WPF Control: PersianDatePicker (سفارشی)
+// ذخیره: datetime2 (میلادی) + nvarchar(10) (شمسی)
+
+
+<span class="h2">═══════════════════════════════════════
+📦 ۵. Program.cs (نقطه شروع API)
+═══════════════════════════════════════</span>
+
+<span class="code">/// &lt;summary&gt;
+/// نقطه شروع اپلیکیشن API
+/// ترتیب ثبت سرویس‌ها و میدلورها اهمیت دارد
+/// &lt;/summary&gt;
+var builder = WebApplication.CreateBuilder(args);
+
+// ───── ثبت سرویس‌ها ─────
+
+// ۱. دیتابیس و EF Core
+builder.Services.AddDbContext&lt;ClinicProDbContext&gt;(options =>
+    options.UseSqlServer(connectionString, opt => opt.EnableRetryOnFailure(3)));
+
+// ۲. لایه Domain و Application
+builder.Services.AddApplication(); // MediatR, AutoMapper, FluentValidation, Behaviors
+builder.Services.AddInfrastructure(builder.Configuration); // Repos, UoW, Services
+
+// ۳. احراز هویت JWT
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options => { /* JWT Config */ });
+
+// ۴. مجوزدهی (RBAC)
+builder.Services.AddAuthorization(options =>
+{
+    // ثبت Permission-based Policies
+    foreach (var permission in PermissionsList.All)
+        options.AddPolicy($"Permission.{permission}", 
+            policy => policy.RequireClaim("Permission", permission));
+});
+
+// ۵. Rate Limiting
+builder.Services.AddRateLimiter(/* config */);
+
+// ۶. CORS
+builder.Services.AddCors(options => options.AddPolicy("Desktop", /* config */));
+
+// ۷. Swagger
+builder.Services.AddSwaggerGen(/* config with XML comments */);
+
+// ۸. Hangfire (Background Jobs)
+builder.Services.AddHangfire(/* config */);
+
+// ۹. SignalR (Real-time)
+builder.Services.AddSignalR();
+
+// ۱۰. Serilog (Logging)
+builder.Host.UseSerilog(/* config */);
+
+// ۱۱. Health Checks
+builder.Services.AddHealthChecks()
+    .AddSqlServer(connectionString)
+    .AddCheck&lt;LicenseHealthCheck&gt;("license");
+
+var app = builder.Build();
+
+// ───── میدلورها (ترتیب مهم) ─────
+
+// ۱. مدیریت خطای سراسری (اولین میدلور)
+app.UseExceptionHandler(/* GlobalExceptionHandler */);
+
+// ۲. HTTPS Redirect
+app.UseHttpsRedirection();
+
+// ۳. HSTS
+app.UseHsts();
+
+// ۴. CORS
+app.UseCors("Desktop");
+
+// ۵. بررسی لایسنس (قبل از Auth)
+app.UseMiddleware&lt;LicenseValidationMiddleware&gt;();
+
+// ۶. Rate Limiting
+app.UseRateLimiter();
+
+// ۷. Authentication
+app.UseAuthentication();
+
+// ۸. Authorization
+app.UseAuthorization();
+
+// ۹. Audit Log
+app.UseMiddleware&lt;AuditLogMiddleware&gt;();
+
+// ۱۰. Swagger (فقط Development)
+if (app.Environment.IsDevelopment())
+    app.UseSwagger().UseSwaggerUI();
+
+// ۱۱. Controllers
+app.MapControllers();
+
+// ۱۲. SignalR Hubs
+app.MapHub&lt;NotificationHub&gt;("/hubs/notification");
+
+// ۱۳. Hangfire Dashboard (فقط Admin)
+app.MapHangfireDashboard("/hangfire", new DashboardOptions { Authorization = [new AdminAuth()] });
+
+// ۱۴. Health Check
+app.MapHealthChecks("/health");
+
+// ۱۵. Seed Data (اولین اجرا)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService&lt;ClinicProDbContext&gt;();
+    await db.Database.MigrateAsync();
+    await RoleSeeder.SeedAsync(db);
+    await PermissionSeeder.SeedAsync(db);
+    await AdminSeeder.SeedAsync(db);
+}
+
+// ۱۶. ثبت Hangfire Jobs
+RecurringJob.AddOrUpdate&lt;AppointmentReminderJob&gt;("reminder", j => j.ExecuteAsync(), Cron.Daily(10));
+RecurringJob.AddOrUpdate&lt;BackupJob&gt;("backup-full", j => j.ExecuteFullAsync(), Cron.Daily(3));
+RecurringJob.AddOrUpdate&lt;LicenseHeartbeatJob&gt;("license-check", j => j.ExecuteAsync(), Cron.Daily(6));
+RecurringJob.AddOrUpdate&lt;InventoryAlertJob&gt;("inventory-alert", j => j.ExecuteAsync(), Cron.Daily(8));
+
+app.Run();</span>
+
+
+<span class="h2">═══════════════════════════════════════
+🎯 ۶. دستورات نهایی برای تولید کد
+═══════════════════════════════════════</span>
+
+<span class="important">════════════════════════════════════════════════════════
+⚠️ قوانین اجباری کدنویسی - حتماً رعایت شوند:
+════════════════════════════════════════════════════════</span>
+
+<span class="key">۱. کامنت‌نویسی فارسی:</span>
+   ✅ هر کلاس: XML Summary فارسی با توضیح کامل مسئولیت
+   ✅ هر متد: XML Summary + Param + Returns فارسی
+   ✅ هر Property: XML Summary فارسی (حتی یک خطی)
+   ✅ هر Enum Value: XML Summary فارسی
+   ✅ هر ستون دیتابیس: Comment فارسی در Configuration
+   ✅ هر Validator Rule: WithMessage فارسی
+   ✅ هر Exception: پیام فارسی
+   ✅ منطق پیچیده: کامنت inline فارسی
+   ✅ هر فایل Migration: کامنت بالای فایل
+   ❌ هرگز بدون کامنت کد ننویس
+
+<span class="key">۲. نام‌گذاری:</span>
+   ✅ کلاس‌ها: PascalCase انگلیسی (Patient, DoctorSchedule)
+   ✅ متدها: PascalCase (GetPatientByIdAsync)
+   ✅ متغیرها: camelCase (patientId)
+   ✅ ثابت‌ها: UPPER_CASE (MAX_LOGIN_ATTEMPTS)
+   ✅ اینترفیس‌ها: با I شروع (IPatientRepository)
+   ✅ DTOs: با Dto پایان (PatientDto)
+   ✅ Commands: با Command پایان (CreatePatientCommand)
+   ✅ Queries: با Query پایان (GetPatientByIdQuery)
+   ✅ Handlers: با Handler پایان (CreatePatientCommandHandler)
+   ✅ Validators: با Validator پایان (CreatePatientCommandValidator)
+
+<span class="key">۳. معماری:</span>
+   ✅ Clean Architecture - وابستگی فقط به سمت داخل
+   ✅ Domain هیچ وابستگی خارجی ندارد
+   ✅ Application فقط به Domain وابسته
+   ✅ Infrastructure به Application و Domain وابسته
+   ✅ API به Application وابسته (نه Infrastructure)
+   ✅ Dependency Injection برای همه سرویس‌ها
+   ✅ هرگز new مستقیم برای سرویس‌ها
+
+<span class="key">۴. دیتابیس:</span>
+   ✅ Soft Delete (IsDeleted) در همه جداول
+   ✅ Audit Fields (CreatedAt, UpdatedAt, CreatedBy, UpdatedBy)
+   ✅ RowVersion (timestamp) برای Concurrency
+   ✅ BranchId برای Multi-Branch آینده
+   ✅ Global Query Filter: WHERE IsDeleted = 0
+   ✅ bigint برای همه PK ها
+   ✅ decimal(18,0) برای مبالغ مالی (هرگز float)
+   ✅ nvarchar برای همه رشته‌ها (پشتیبانی فارسی)
+   ✅ Index روی فیلدهای پرجستجو
+   ✅ FK با Cascade: NoAction
+
+<span class="key">۵. API:</span>
+   ✅ ApiResponse&lt;T&gt; استاندارد برای همه Endpoint ها
+   ✅ پیام‌های خطا فارسی
+   ✅ Versioning (v1)
+   ✅ Swagger با توضیحات فارسی
+   ✅ [Authorize] پیش‌فرض + [HasPermission]
+   ✅ Rate Limiting
+   ✅ HTTPS اجباری
+
+<span class="key">۶. WPF Client:</span>
+   ✅ MVVM Pattern (View → ViewModel → Service → API)
+   ✅ Material Design in XAML
+   ✅ RTL کامل (FlowDirection="RightToLeft")
+   ✅ تقویم شمسی
+   ✅ فونت Vazirmatn
+   ✅ Dark/Light Theme
+   ✅ کلیدهای میانبر
+   ✅ Toast Notifications
+   ✅ Loading Indicators
+   ✅ Confirmation Dialogs
+   ✅ جستجوی سریع (F2)
+
+<span class="key">۷. امنیت:</span>
+   ✅ BCrypt (WF=12) برای رمزها
+   ✅ JWT (15 min) + Refresh Token (7 day)
+   ✅ AES-256-GCM برای داده‌های حساس
+   ✅ RBAC Granular (Permission-based)
+   ✅ Audit Log برای همه CUD
+   ✅ Account Lockout (5 fail → 30 min lock)
+   ✅ Rate Limiting (100 req/min)
+   ✅ Session Timeout (20 min idle)
+   ✅ HTTPS + HSTS
+   ✅ Input Validation (FluentValidation)
+   ✅ SQL Injection Prevention (EF Core)
+   ✅ XSS Prevention
+
+<span class="key">۸. تست:</span>
+   ✅ xUnit Framework
+   ✅ هر Service حداقل ۵ Unit Test
+   ✅ هر Validator حداقل ۳ Test (Valid, Invalid, Edge)
+   ✅ Integration Test برای API ها
+   ✅ FluentAssertions برای خوانایی
+   ✅ Moq برای Mock
+
+<span class="key">۹. سایر:</span>
+   ✅ async/await در همه متدهای IO
+   ✅ CancellationToken در همه Handler ها
+   ✅ ILogger در همه Service ها
+   ✅ Structured Logging (Serilog)
+   ✅ Configuration از appsettings.json
+   ✅ Secrets از Environment Variables
+   ✅ Git + GitFlow branching
+
+
+<span class="h2">═══════════════════════════════════════
+📝 ۷. نمونه خروجی مورد انتظار (Template)
+═══════════════════════════════════════</span>
+
+<span class="note">// وقتی می‌گویم «ماژول بیماران را کامل بنویس» انتظار دارم:</span>
+
+<span class="code">// 1. Domain Layer:
+//    - Patient.cs (Entity + کامنت فارسی مفصل)
+//    - PatientHistory.cs
+//    - Gender.cs (Enum)
+//    - IPatientRepository.cs (Interface)
+//    - PatientCreatedEvent.cs
+//    - NationalCode.cs (Value Object + Validation)
+
+// 2. Application Layer:
+//    - PatientDto.cs, PatientListDto.cs, PatientDetailDto.cs
+//    - CreatePatientDto.cs, UpdatePatientDto.cs
+//    - CreatePatientCommand.cs + Handler + Validator
+//    - UpdatePatientCommand.cs + Handler + Validator
+//    - DeletePatientCommand.cs + Handler
+//    - GetPatientByIdQuery.cs + Handler
+//    - GetAllPatientsQuery.cs + Handler (Paged)
+//    - SearchPatientsQuery.cs + Handler
+//    - MappingProfile (Patient section)
+
+// 3. Infrastructure Layer:
+//    - PatientConfiguration.cs (EF Core Fluent API + کامنت ستون‌ها)
+//    - PatientRepository.cs (پیاده‌سازی)
+//    - Migration file
+
+// 4. API Layer:
+//    - PatientsController.cs (همه Endpoints + Swagger + Permission)
+
+// 5. WPF:
+//    - PatientListView.xaml + PatientListViewModel.cs
+//    - PatientFormView.xaml + PatientFormViewModel.cs
+//    - PatientDetailView.xaml + PatientDetailViewModel.cs
+
+// 6. Tests:
+//    - CreatePatientCommandHandlerTests.cs
+//    - CreatePatientCommandValidatorTests.cs
+//    - PatientRepositoryTests.cs</span>
+
+
+<span class="h2">═══════════════════════════════════════
+🚀 ۸. ترتیب پیاده‌سازی (گام به گام)
+═══════════════════════════════════════</span>
+
+<span class="note">// از من بخواه به ترتیب زیر کد بنویسم:</span>
+
+گام ۱:  Solution Setup (ایجاد پروژه‌ها + NuGet Packages + DI Configuration)
+گام ۲:  Domain Layer (BaseEntity + همه Entities + Enums + Value Objects + Interfaces)
+گام ۳:  Infrastructure - Persistence (DbContext + Configurations + Migrations + Seeders)
+گام ۴:  Infrastructure - Identity (Auth Service + JWT + Password Hasher + RBAC)
+گام ۵:  Application - Common (Behaviors + DTOs + Mapping + Helpers)
+گام ۶:  Application - Auth Module (Login + Refresh + ChangePassword)
+گام ۷:  Application - Patients Module (CQRS Commands + Queries)
+گام ۸:  Application - Doctors Module
+گام ۹:  API Layer (Program.cs + Middleware + Controllers: Auth, Patients, Doctors)
+گام ۱۰: WPF Setup (App.xaml + MainWindow + Theme + Fonts + Navigation)
+گام ۱۱: WPF Login + Dashboard
+گام ۱۲: WPF Patient Module (List + Form + Detail)
+گام ۱۳: Application + API + WPF: Appointments Module
+گام ۱۴: Application + API + WPF: Reception Module
+گام ۱۵: Application + API + WPF: Visit Module
+گام ۱۶: Application + API + WPF: Prescription Module
+گام ۱۷: Application + API + WPF: Invoice + Payment Module
+گام ۱۸: Application + API + WPF: Accounting Module
+گام ۱۹: Application + API + WPF: Insurance Module
+گام ۲۰: Application + API + WPF: Lab Module
+گام ۲۱: Application + API + WPF: Pharmacy Module
+گام ۲۲: Paraclinical Modules (Imaging, Dental, Eye, Physio)
+گام ۲۳: SMS Module (10 providers + Templates + Queue)
+گام ۲۴: Government Integration (Sepas, Sib, Nab, Sina, E-Prescription)
+گام ۲۵: License System (Portal + Client + Activation + Heartbeat)
+گام ۲۶: Reports Module (Stimulsoft + Dashboard Charts)
+گام ۲۷: HR Module (Employees + Attendance + Salary)
+گام ۲۸: Backup + Settings + Audit Log
+گام ۲۹: Security Hardening + Performance Optimization
+گام ۳۰: Unit Tests + Integration Tests
+گام ۳۱: Documentation + Deployment Package
+
+
+<span class="h1">════════════════════════════════════════════════════════════════
+🎉 پایان پرامپت - ۳ بخش کامل شد!
+════════════════════════════════════════════════════════════════
+
+📌 خلاصه پروژه:
+   • سامانه جامع مدیریت درمانگاه با ۳۵+ ماژول
+   • معماری Clean Architecture + CQRS + Repository
+   • ASP.NET Core 8 API + WPF Client + Blazor License Portal
+   • SQL Server 2022 با ۹۰+ جدول
+   • ۱۴ لایه امنیتی (JWT + RBAC + AES + BCrypt + ...)
+   • یکپارچه با سپاس، سیب، ناب، سینا، بیمه‌ها
+   • ۱۰+ پنل پیامک
+   • حسابداری دوبل کامل
+   • سامانه لایسنس آنلاین/آفلاین
+   • تقویم شمسی + RTL + Material Design
+   • ۱۲ الگوریتم کلیدی
+   • کامنت‌نویسی فارسی کامل و مفصل
+
+⚡ برای شروع بگو: "گام ۱ را شروع کن"
+════════════════════════════════════════════════════════════════</span>
+</div>
+
+<div class="success">
+<strong>🎉 تبریک! تمام فایل‌های مستندات و پرامپت تکمیل شدند!</strong>
+<br><br>
+<strong>📂 لیست کامل فایل‌ها:</strong>
+<ol style="margin:10px 25px">
+<li><code>01-overview.html</code> - تحلیل نیازمندی‌ها و معماری</li>
+<li><code>02-database.html</code> - طراحی کامل دیتابیس (۹۰+ جدول)</li>
+<li><code>03-flowcharts.html</code> - فلوچارت‌ها و نمودار ارتباطات</li>
+<li><code>04-wireframes.html</code> - وایرفریم ۱۶ صفحه اصلی</li>
+<li><code>05-security-timeline.html</code> - امنیت ۱۴ لایه + زمان‌بندی ۱۲ ماهه</li>
+<li><code>06-license-integration.html</code> - لایسنس + یکپارچه‌سازی + الگوریتم‌ها</li>
+<li><code>prompt-part1.html</code> - پرامپت بخش ۱ (معرفی + معماری + DB)</li>
+<li><code>prompt-part2.html</code> - پرامپت بخش ۲ (ماژول‌ها + API + WPF)</li>
+<li><code>prompt-part3.html</code> - پرامپت بخش ۳ (امنیت + لایسنس + دستورات)</li>
+</ol>
+</div>
+
+<div class="warn">
+<strong>⚡ نحوه استفاده از پرامپت:</strong>
+<ol style="margin:10px 25px">
+<li>ابتدا محتوای <strong>prompt-part1</strong> را کپی و به AI بدهید</li>
+<li>سپس <strong>prompt-part2</strong> را بدهید</li>
+<li>سپس <strong>prompt-part3</strong> را بدهید</li>
+<li>بگویید: <strong>«گام ۱ را شروع کن»</strong></li>
+<li>هر گام را جداگانه بخواهید تا کد کامل و با کیفیت تولید شود</li>
+</ol>
+</div>
+
+<footer>
+<p>📄 پرامپت بخش ۳ از ۳ (آخر) | <strong>امنیت + لایسنس + الگوریتم‌ها + دستورات نهایی</strong></p>
+<p>🏥 <strong>ClinicPro Documentation v1.0</strong> | تمام حقوق محفوظ است</p>
+</footer>
+</div>
+
+<script>
+function copyAll(){
+const t=document.getElementById('prompt3').innerText;
+navigator.clipboard.writeText(t).then(()=>alert('✅ پرامپت بخش ۳ کپی شد!')).catch(()=>{
+const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('✅ کپی شد!');
+});
+}
+</script>
+</body>
+</html>

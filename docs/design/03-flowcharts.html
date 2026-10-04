@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>🔄 ClinicPro - فلوچارت‌ها و ارتباطات</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+:root{--p:#1a73e8;--pd:#1557b0;--s:#34a853;--a:#ea4335;--w:#fbbc04;--bg:#f0f2f5;--c:#fff;--t:#202124;--b:#dadce0;--sh:0 2px 8px rgba(0,0,0,.1);--r:12px;--g:linear-gradient(135deg,#1a73e8,#34a853)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t);line-height:1.7;font-size:13px}
+.ct{max-width:1500px;margin:0 auto;padding:20px}
+header{background:var(--g);color:#fff;padding:40px 20px;text-align:center;border-radius:0 0 30px 30px;margin-bottom:25px}
+header h1{font-size:2em;font-weight:900;margin-bottom:8px}
+header p{font-size:1em;opacity:.9}
+.nav{background:#fff;padding:12px;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.nav a{padding:7px 14px;background:#f0f2f5;border-radius:8px;text-decoration:none;color:var(--t);font-size:11px;font-weight:600}
+.nav a:hover,.nav a.active{background:var(--p);color:#fff}
+section{background:var(--c);border-radius:var(--r);padding:25px;box-shadow:var(--sh);margin-bottom:20px}
+section h2{color:var(--p);font-size:1.4em;margin-bottom:15px;padding-bottom:8px;border-bottom:3px solid var(--p)}
+section h3{color:var(--pd);font-size:1.1em;margin:15px 0 10px}
+.flow-wrap{background:#f8f9fa;border-radius:var(--r);padding:25px;overflow-x:auto;margin:15px 0;border:1px solid var(--b)}
+.flow{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:600px}
+.node{padding:10px 20px;border-radius:8px;color:#fff;font-weight:600;font-size:12px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.15);min-width:180px;max-width:400px}
+.n-start{background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:50px}
+.n-end{background:linear-gradient(135deg,#ef4444,#dc2626);border-radius:50px}
+.n-proc{background:linear-gradient(135deg,#3b82f6,#2563eb)}
+.n-cond{background:linear-gradient(135deg,#f59e0b,#d97706);transform:rotate(45deg);padding:20px;width:140px;height:140px;display:flex;align-items:center;justify-content:center;margin:30px 0}
+.n-cond span{transform:rotate(-45deg);display:block;max-width:100px;font-size:11px}
+.n-doc{background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:0 20px 0 20px}
+.n-sub{background:linear-gradient(135deg,#06b6d4,#0891b2)}
+.n-ext{background:linear-gradient(135deg,#ec4899,#db2777);border-radius:20px}
+.arrow{width:2px;height:25px;background:#64748b;position:relative}
+.arrow::after{content:'';position:absolute;bottom:-5px;left:-5px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #64748b}
+.arrow-label{position:absolute;left:10px;top:50%;transform:translateY(-50%);background:#fff;padding:2px 8px;border-radius:10px;font-size:10px;color:#64748b;font-weight:600;white-space:nowrap;border:1px solid var(--b)}
+.branch{display:flex;gap:40px;justify-content:center;align-items:flex-start;position:relative;margin-top:10px}
+.branch-item{display:flex;flex-direction:column;align-items:center;gap:5px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:15px}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px}
+.cd{background:#f8f9fa;border-radius:10px;padding:15px;border:1px solid var(--b)}
+.cd h4{color:var(--p);margin-bottom:5px}
+.ib{background:#e8f0fe;border-right:4px solid var(--p);padding:12px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px}
+.wb{background:#fef7e0;border-right:4px solid var(--w);padding:12px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px}
+.gn{background:#e6f4ea;border-right:4px solid var(--s);padding:12px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px}
+.tab-c{margin:15px 0}
+.tab-b{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+.tab-btn{padding:8px 18px;border:none;border-radius:8px 8px 0 0;cursor:pointer;font-family:inherit;font-weight:600;background:#e2e8f0;color:var(--t);font-size:12px;transition:.2s}
+.tab-btn.active{background:var(--p);color:#fff}
+.tab-p{display:none;padding:20px;background:#f8f9fa;border-radius:0 var(--r) var(--r) var(--r)}
+.tab-p.active{display:block}
+.relation-diagram{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:var(--r);padding:30px;color:#fff;margin:15px 0;overflow-x:auto}
+.actor-box{background:rgba(255,255,255,.1);border:2px solid rgba(96,165,250,.4);border-radius:10px;padding:15px;margin:8px;display:inline-block;min-width:150px;text-align:center;vertical-align:top}
+.actor-box h4{color:#60a5fa;margin-bottom:8px;font-size:14px}
+.actor-box ul{list-style:none;padding:0;text-align:right;font-size:11px}
+.actor-box li{padding:3px 0;color:#cbd5e1}
+.actor-box li::before{content:'▸ ';color:#60a5fa}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+th{background:var(--p);color:#fff;padding:8px 6px;text-align:right;font-weight:600}
+td{padding:6px;border-bottom:1px solid var(--b)}
+tr:hover{background:#f8f9fa}
+.swim-lane{display:grid;grid-template-columns:150px 1fr;gap:0;margin:10px 0;border:2px solid var(--b);border-radius:8px;overflow:hidden}
+.swim-actor{background:linear-gradient(135deg,#1a73e8,#1557b0);color:#fff;padding:15px;font-weight:700;text-align:center;display:flex;align-items:center;justify-content:center;font-size:12px;writing-mode:horizontal-tb}
+.swim-steps{padding:15px;background:#fff;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.swim-step{background:#e0f2fe;color:#0369a1;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid #7dd3fc}
+.swim-arrow{color:#64748b;font-size:16px}
+footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#fff;border-radius:var(--r);margin-top:20px}
+.seq-diagram{background:#f8f9fa;border-radius:var(--r);padding:20px;overflow-x:auto;border:1px solid var(--b);margin:12px 0}
+.seq-actors{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:10px;min-width:800px}
+.seq-actor{background:var(--p);color:#fff;padding:10px;text-align:center;border-radius:8px;font-weight:600;font-size:12px}
+.seq-messages{min-width:800px}
+.seq-msg{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:8px 0;align-items:center;position:relative}
+.seq-arrow-line{grid-column:span var(--span);background:linear-gradient(90deg,transparent,var(--p) 10%,var(--p) 90%,transparent);height:2px;position:relative;margin:0 10px}
+.seq-arrow-line::after{content:'';position:absolute;left:-5px;top:-4px;width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-right:8px solid var(--p)}
+.seq-label{background:#fff;padding:3px 10px;border-radius:12px;font-size:11px;color:var(--p);font-weight:600;position:absolute;top:-14px;left:50%;transform:translateX(-50%);border:1px solid var(--p);white-space:nowrap}
+@media(max-width:768px){.g2,.g3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<h1>🔄 فلوچارت‌ها و نمودار ارتباطات</h1>
+<p>فایل ۳: فلوچارت فرآیندهای اصلی، نمودار ارتباطات سیستم، Sequence Diagram</p>
+</header>
+
+<div class="ct">
+<nav class="nav">
+<a href="01-overview.html">1️⃣ تحلیل و معماری</a>
+<a href="02-database.html">2️⃣ دیتابیس</a>
+<a href="03-flowcharts.html" class="active">3️⃣ فلوچارت</a>
+<a href="04-wireframes.html">4️⃣ وایرفریم</a>
+<a href="05-security-timeline.html">5️⃣ امنیت و زمان‌بندی</a>
+<a href="06-license-integration.html">6️⃣ لایسنس و یکپارچه‌سازی</a>
+<a href="prompt.html">🤖 پرامپت AI</a>
+</nav>
+
+<!-- ============ RAHNEMA ============ -->
+<section>
+<h2>📖 راهنمای نمادها در فلوچارت</h2>
+<div class="g3">
+<div class="cd"><div style="display:flex;align-items:center;gap:10px"><div class="node n-start" style="min-width:80px">شروع</div><span>نقطه شروع فرآیند</span></div></div>
+<div class="cd"><div style="display:flex;align-items:center;gap:10px"><div class="node n-end" style="min-width:80px">پایان</div><span>نقطه پایان فرآیند</span></div></div>
+<div class="cd"><div style="display:flex;align-items:center;gap:10px"><div class="node n-proc" style="min-width:80px">عملیات</div><span>مراحل اجرایی</span></div></div>
+<div class="cd"><div style="display:flex;align-items:center;gap:10px"><div class="node n-doc" style="min-width:80px">سند/داده</div><span>ذخیره در دیتابیس</span></div></div>
+<div class="cd"><div style="display:flex;align-items:center;gap:10px"><div class="node n-sub" style="min-width:80px">زیرفرآیند</div><span>فراخوانی فرآیند دیگر</span></div></div>
+<div class="cd"><div style="display:flex;align-items:center;gap:10px"><div class="node n-ext" style="min-width:80px">API خارجی</div><span>اتصال به سامانه دولتی</span></div></div>
+</div>
+</section>
+
+<!-- ============ FLOW 1: PATIENT REGISTRATION ============ -->
+<section>
+<h2>🔄 فلوچارت ۱: ثبت بیمار جدید</h2>
+<div class="ib"><strong>هدف:</strong> ثبت بیمار جدید در سیستم با بررسی تکراری نبودن و استعلام بیمه</div>
+<div class="flow-wrap">
+<div class="flow">
+<div class="node n-start">▶ شروع</div>
+<div class="arrow"></div>
+<div class="node n-proc">👤 ورود منشی به ماژول بیماران</div>
+<div class="arrow"></div>
+<div class="node n-proc">📝 دکمه "ثبت بیمار جدید"</div>
+<div class="arrow"></div>
+<div class="node n-proc">📋 نمایش فرم ثبت اطلاعات</div>
+<div class="arrow"></div>
+<div class="node n-proc">⌨️ وارد کردن کد ملی</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>کد ملی معتبر؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#ea4335;font-weight:bold;margin:5px 0">❌ خیر</div>
+<div class="node n-end" style="background:linear-gradient(135deg,#f59e0b,#d97706)">⚠️ نمایش خطا</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">✅ بله</div>
+<div class="node n-sub">🔍 جستجو در DB</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>بیمار موجود است؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#ea4335;font-weight:bold;margin:5px 0">✅ بله (موجود)</div>
+<div class="node n-proc">👁️ نمایش پرونده موجود</div>
+<div class="arrow"></div>
+<div class="node n-end">پایان</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">❌ خیر (جدید)</div>
+<div class="node n-proc">📝 تکمیل اطلاعات شخصی</div>
+<div class="arrow"></div>
+<div class="node n-proc">📞 ثبت موبایل و آدرس</div>
+<div class="arrow"></div>
+<div class="node n-proc">🏥 انتخاب بیمه</div>
+<div class="arrow"></div>
+<div class="node n-ext">🔗 استعلام از سامانه بیمه (API)</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>بیمه معتبر؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#f59e0b;font-weight:bold;margin:5px 0">⚠️ نامعتبر</div>
+<div class="node n-proc">⚠️ هشدار + ادامه آزاد</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">✅ معتبر</div>
+<div class="node n-proc">💾 ذخیره کد تأیید بیمه</div>
+</div>
+</div>
+<div class="arrow"></div>
+<div class="node n-proc">🏥 ثبت بیماری‌های مزمن و آلرژی</div>
+<div class="arrow"></div>
+<div class="node n-sub">🔐 رمزنگاری داده‌های حساس AES-256</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 ذخیره در جدول Patients</div>
+<div class="arrow"></div>
+<div class="node n-doc">📝 ثبت در AuditLog</div>
+<div class="arrow"></div>
+<div class="node n-proc">🆔 تولید شماره پرونده (MRN)</div>
+<div class="arrow"></div>
+<div class="node n-ext">📱 ارسال SMS خوش‌آمدگویی</div>
+<div class="arrow"></div>
+<div class="node n-end">✅ پایان - بیمار ثبت شد</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ FLOW 2: APPOINTMENT & RECEPTION ============ -->
+<section>
+<h2>🔄 فلوچارت ۲: نوبت‌دهی و پذیرش</h2>
+<div class="ib"><strong>هدف:</strong> از رزرو نوبت تا ورود بیمار به اتاق پزشک</div>
+
+<h3>📅 فاز ۱: رزرو نوبت</h3>
+<div class="flow-wrap">
+<div class="flow">
+<div class="node n-start">▶ شروع</div>
+<div class="arrow"></div>
+<div class="node n-proc">👤 منشی: ماژول نوبت‌دهی</div>
+<div class="arrow"></div>
+<div class="node n-proc">🔍 جستجو/انتخاب بیمار</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>بیمار موجود؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#ea4335;font-weight:bold;margin:5px 0">❌ خیر</div>
+<div class="node n-sub">🔀 اجرای فلوچارت ثبت بیمار</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">✅ بله</div>
+<div class="node n-proc">👨‍⚕️ انتخاب پزشک/تخصص</div>
+<div class="arrow"></div>
+<div class="node n-proc">📅 نمایش تقویم شمسی</div>
+<div class="arrow"></div>
+<div class="node n-sub">🔍 بررسی برنامه پزشک + غیبت‌ها</div>
+<div class="arrow"></div>
+<div class="node n-proc">⏰ نمایش slot های آزاد</div>
+<div class="arrow"></div>
+<div class="node n-proc">✓ انتخاب تاریخ و ساعت</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>تداخل زمانی؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#ea4335;font-weight:bold;margin:5px 0">⚠️ بله</div>
+<div class="node n-proc">⚠️ نمایش خطا و انتخاب مجدد</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">✅ خیر</div>
+<div class="node n-doc">💾 ثبت در Appointments</div>
+<div class="arrow"></div>
+<div class="node n-proc">🆔 تولید کد پیگیری</div>
+<div class="arrow"></div>
+<div class="node n-ext">📱 SMS یادآوری نوبت</div>
+<div class="arrow"></div>
+<div class="node n-end">✅ نوبت ثبت شد</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<h3 style="margin-top:20px">📋 فاز ۲: پذیرش روز مراجعه</h3>
+<div class="flow-wrap">
+<div class="flow">
+<div class="node n-start">▶ بیمار مراجعه کرد</div>
+<div class="arrow"></div>
+<div class="node n-proc">🔍 جستجوی نوبت (کد ملی یا کد پیگیری)</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>نوبت موجود؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#f59e0b;font-weight:bold;margin:5px 0">❌ بدون نوبت</div>
+<div class="node n-proc">📅 رزرو نوبت فوری</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">✅ بله</div>
+<div class="node n-proc">✓ تأیید حضور بیمار</div>
+<div class="arrow"></div>
+<div class="node n-ext">🔗 استعلام بیمه آنلاین</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>بیمه فعال؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#f59e0b;font-weight:bold;margin:5px 0">⚠️ نامعتبر</div>
+<div class="node n-proc">💰 محاسبه آزاد</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">✅ معتبر</div>
+<div class="node n-proc">💰 اعمال تعرفه بیمه‌ای</div>
+</div>
+</div>
+<div class="arrow"></div>
+<div class="node n-sub">💳 صدور فاکتور حق ویزیت</div>
+<div class="arrow"></div>
+<div class="node n-proc">💵 دریافت وجه</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 ثبت در Receptions + Payments</div>
+<div class="arrow"></div>
+<div class="node n-proc">🎫 صدور شماره صف</div>
+<div class="arrow"></div>
+<div class="node n-proc">🖨️ چاپ قبض پذیرش</div>
+<div class="arrow"></div>
+<div class="node n-proc">⏳ قرار گرفتن در صف پزشک</div>
+<div class="arrow"></div>
+<div class="node n-end">✅ آماده برای ویزیت</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ FLOW 3: VISIT & PRESCRIPTION ============ -->
+<section>
+<h2>🔄 فلوچارت ۳: ویزیت و نسخه‌نویسی الکترونیکی</h2>
+<div class="ib"><strong>هدف:</strong> از ورود بیمار به اتاق پزشک تا صدور نسخه الکترونیکی</div>
+
+<div class="flow-wrap">
+<div class="flow">
+<div class="node n-start">▶ پزشک وارد سیستم شد</div>
+<div class="arrow"></div>
+<div class="node n-proc">📋 نمایش صف بیماران امروز</div>
+<div class="arrow"></div>
+<div class="node n-proc">🔔 فراخوانی بیمار بعدی (Next)</div>
+<div class="arrow"></div>
+<div class="node n-sub">📂 بارگذاری پرونده الکترونیک بیمار</div>
+<div class="arrow"></div>
+<div class="node n-proc">👁️ نمایش سوابق پزشکی، ویزیت‌های قبلی، آلرژی‌ها</div>
+<div class="arrow"></div>
+<div class="node n-proc">💓 ثبت علائم حیاتی (BP, HR, Temp, SpO2)</div>
+<div class="arrow"></div>
+<div class="node n-proc">📝 ثبت شرح حال (SOAP Note)</div>
+<div class="arrow"></div>
+<div class="node n-proc">🔬 ثبت معاینه فیزیکی</div>
+<div class="arrow"></div>
+<div class="node n-sub">🏥 انتخاب تشخیص از ICD-10</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>نیاز به دستور دارد؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#3b82f6;font-weight:bold;margin:5px 0">💊 دارو</div>
+<div class="node n-sub">📝 شروع نسخه‌نویسی</div>
+</div>
+<div class="branch-item">
+<div style="color:#8b5cf6;font-weight:bold;margin:5px 0">🧪 آزمایش/تصویربرداری</div>
+<div class="node n-sub">📋 درخواست پاراکلینیک</div>
+</div>
+<div class="branch-item">
+<div style="color:#ec4899;font-weight:bold;margin:5px 0">↩️ ارجاع</div>
+<div class="node n-sub">🏥 صدور ارجاع</div>
+</div>
+</div>
+<div class="arrow"></div>
+<div class="node n-proc">💊 افزودن دارو (جستجو/تمپلیت)</div>
+<div class="arrow"></div>
+<div class="node n-sub">⚠️ چک تداخل دارویی</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>تداخل خطرناک؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#ef4444;font-weight:bold;margin:5px 0">🚨 بله</div>
+<div class="node n-proc">⚠️ هشدار و تایید پزشک</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">✅ خیر</div>
+<div class="node n-proc">✓ تایید نسخه</div>
+</div>
+</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>نوع نسخه؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#64748b;font-weight:bold;margin:5px 0">📄 داخلی</div>
+<div class="node n-doc">💾 ثبت در Prescriptions</div>
+<div class="arrow"></div>
+<div class="node n-proc">🖨️ چاپ</div>
+</div>
+<div class="branch-item">
+<div style="color:#1a73e8;font-weight:bold;margin:5px 0">💻 الکترونیکی</div>
+<div class="node n-ext">🔗 ارسال به سامانه بیمه (سلامت/تامین)</div>
+<div class="arrow"></div>
+<div class="node n-proc">📥 دریافت کد رهگیری</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 ذخیره کد رهگیری</div>
+<div class="arrow"></div>
+<div class="node n-ext">📱 SMS کد رهگیری به بیمار</div>
+</div>
+</div>
+<div class="arrow"></div>
+<div class="node n-proc">📅 تعیین زمان ویزیت بعدی</div>
+<div class="arrow"></div>
+<div class="node n-ext">🔗 ارسال اطلاعات ویزیت به سپاس</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 ذخیره نهایی Visit</div>
+<div class="arrow"></div>
+<div class="node n-proc">📝 تولید خلاصه ویزیت</div>
+<div class="arrow"></div>
+<div class="node n-end">✅ ویزیت تمام شد</div>
+</div>
+</div>
+</section>
+
+<!-- ============ FLOW 4: PAYMENT & INVOICE ============ -->
+<section>
+<h2>🔄 فلوچارت ۴: صدور فاکتور و پرداخت</h2>
+<div class="ib"><strong>هدف:</strong> صدور فاکتور با محاسبه سهم بیمه و دریافت وجه + ثبت در حسابداری دوبل</div>
+
+<div class="flow-wrap">
+<div class="flow">
+<div class="node n-start">▶ شروع</div>
+<div class="arrow"></div>
+<div class="node n-proc">💰 صندوقدار: ماژول صدور فاکتور</div>
+<div class="arrow"></div>
+<div class="node n-proc">🔍 انتخاب بیمار یا پذیرش</div>
+<div class="arrow"></div>
+<div class="node n-proc">➕ اضافه کردن خدمات</div>
+<div class="arrow"></div>
+<div class="node n-sub">💲 دریافت تعرفه خدمات</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>بیمه دارد؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#64748b;font-weight:bold;margin:5px 0">❌ آزاد</div>
+<div class="node n-proc">💰 اعمال قیمت کامل</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">✅ بیمه</div>
+<div class="node n-sub">📊 محاسبه سهم بیمه بر اساس درصد</div>
+<div class="arrow"></div>
+<div class="node n-sub">📊 محاسبه سهم بیمار (فرانشیز)</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>بیمه تکمیلی؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#8b5cf6;font-weight:bold;margin:5px 0">✅ بله</div>
+<div class="node n-sub">📊 کسر سهم بیمه تکمیلی</div>
+</div>
+<div class="branch-item">
+<div style="color:#64748b;font-weight:bold;margin:5px 0">❌ خیر</div>
+<div class="node n-proc">⏭️ ادامه</div>
+</div>
+</div>
+</div>
+</div>
+<div class="arrow"></div>
+<div class="node n-proc">💵 اعمال تخفیف (در صورت وجود)</div>
+<div class="arrow"></div>
+<div class="node n-sub">📊 محاسبه مالیات</div>
+<div class="arrow"></div>
+<div class="node n-sub">💰 محاسبه مبلغ نهایی</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 ثبت در Invoices + InvoiceItems</div>
+<div class="arrow"></div>
+<div class="node n-proc">💳 انتخاب روش پرداخت</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>روش پرداخت؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">💵 نقد</div>
+<div class="node n-proc">💵 دریافت نقد</div>
+</div>
+<div class="branch-item">
+<div style="color:#3b82f6;font-weight:bold;margin:5px 0">💳 کارت</div>
+<div class="node n-ext">🔗 اتصال به POS/درگاه</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>موفق؟</span></div>
+</div>
+<div class="branch-item">
+<div style="color:#8b5cf6;font-weight:bold;margin:5px 0">📝 اقساطی</div>
+<div class="node n-proc">📝 ثبت باقیمانده</div>
+</div>
+</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 ثبت در Payments</div>
+<div class="arrow"></div>
+<div class="node n-sub">📒 تولید سند حسابداری خودکار</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 ثبت در JournalEntries + Lines (بدهکار/بستانکار)</div>
+<div class="arrow"></div>
+<div class="node n-proc">🖨️ چاپ فاکتور</div>
+<div class="arrow"></div>
+<div class="node n-ext">📱 SMS تأیید پرداخت</div>
+<div class="arrow"></div>
+<div class="node n-end">✅ فاکتور صادر و پرداخت ثبت شد</div>
+</div>
+</div>
+
+<div class="gn"><strong>💡 نکته حسابداری دوبل:</strong>
+<ul style="margin:5px 20px">
+<li><strong>بدهکار:</strong> حساب صندوق / حساب‌های دریافتنی</li>
+<li><strong>بستانکار:</strong> حساب درآمد خدمات درمانی / حساب مالیات</li>
+<li>همیشه بدهکار = بستانکار (قانون طلایی)</li>
+</ul>
+</div>
+</section>
+
+<!-- ============ FLOW 5: PHARMACY ============ -->
+<section>
+<h2>🔄 فلوچارت ۵: تحویل دارو در داروخانه</h2>
+<div class="flow-wrap">
+<div class="flow">
+<div class="node n-start">▶ بیمار با نسخه مراجعه کرد</div>
+<div class="arrow"></div>
+<div class="node n-proc">💊 داروخانه: اسکن QR نسخه یا ورود کد</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>نسخه موجود؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#ea4335;font-weight:bold;margin:5px 0">❌ خیر</div>
+<div class="node n-ext">🔗 جستجو در سامانه بیمه</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">✅ بله</div>
+<div class="node n-proc">📋 نمایش اقلام نسخه</div>
+<div class="arrow"></div>
+<div class="node n-sub">🔍 بررسی موجودی هر دارو</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>همه موجود؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#f59e0b;font-weight:bold;margin:5px 0">⚠️ ناقص</div>
+<div class="node n-proc">⚠️ اطلاع به بیمار + تحویل جزئی</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">✅ بله</div>
+<div class="node n-sub">💰 محاسبه قیمت با سهم بیمه</div>
+<div class="arrow"></div>
+<div class="node n-sub">💳 صدور فاکتور داروخانه</div>
+<div class="arrow"></div>
+<div class="node n-proc">💵 دریافت وجه</div>
+<div class="arrow"></div>
+<div class="node n-proc">📦 بسته‌بندی و تحویل دارو</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 ثبت PharmacyTransaction (خروج)</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 به‌روزرسانی موجودی</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>موجودی زیر حداقل؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#ef4444;font-weight:bold;margin:5px 0">⚠️ بله</div>
+<div class="node n-ext">🔔 نوتیفیکیشن به مسئول انبار</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">✅ خیر</div>
+<div class="node n-proc">⏭️ ادامه</div>
+</div>
+</div>
+<div class="arrow"></div>
+<div class="node n-ext">📱 SMS تایید تحویل + نحوه مصرف</div>
+<div class="arrow"></div>
+<div class="node n-end">✅ تحویل نهایی</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ FLOW 6: LAB TEST ============ -->
+<section>
+<h2>🔄 فلوچارت ۶: درخواست و جواب‌دهی آزمایش</h2>
+
+<div class="flow-wrap">
+<div class="flow">
+<div class="node n-start">▶ پزشک دستور آزمایش داد</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 ثبت LabOrder + Items</div>
+<div class="arrow"></div>
+<div class="node n-sub">💳 صدور فاکتور آزمایش</div>
+<div class="arrow"></div>
+<div class="node n-proc">💵 پرداخت در صندوق</div>
+<div class="arrow"></div>
+<div class="node n-proc">🧪 بیمار به آزمایشگاه مراجعه می‌کند</div>
+<div class="arrow"></div>
+<div class="node n-proc">📝 ثبت نمونه‌گیری + بارکد</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 به‌روزرسانی وضعیت (نمونه‌گیری شد)</div>
+<div class="arrow"></div>
+<div class="node n-proc">🔬 انجام آزمایش توسط تکنیسین</div>
+<div class="arrow"></div>
+<div class="node n-proc">📊 ثبت نتایج در سیستم</div>
+<div class="arrow"></div>
+<div class="node n-sub">⚠️ بررسی خودکار مقادیر غیرطبیعی</div>
+<div class="arrow"></div>
+<div class="node n-proc">👨‍⚕️ تایید توسط مسئول فنی</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 ثبت نهایی نتایج</div>
+<div class="arrow"></div>
+<div class="node n-ext">📱 SMS آماده بودن جواب</div>
+<div class="arrow"></div>
+<div class="node n-proc">🖨️ چاپ یا دانلود PDF</div>
+<div class="arrow"></div>
+<div class="node n-end">✅ تحویل جواب</div>
+</div>
+</div>
+</section>
+
+<!-- ============ FLOW 7: BACKUP ============ -->
+<section>
+<h2>🔄 فلوچارت ۷: بکاپ‌گیری خودکار</h2>
+<div class="flow-wrap">
+<div class="flow">
+<div class="node n-start">▶ تریگر زمانبندی (Hangfire Job)</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>زمان بکاپ؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#3b82f6;font-weight:bold;margin:5px 0">🌙 شبانه (3 AM)</div>
+<div class="node n-proc">💾 Full Backup</div>
+</div>
+<div class="branch-item">
+<div style="color:#8b5cf6;font-weight:bold;margin:5px 0">⏰ هر ساعت</div>
+<div class="node n-proc">💾 Transaction Log Backup</div>
+</div>
+</div>
+<div class="arrow"></div>
+<div class="node n-sub">🔐 رمزنگاری فایل بکاپ</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 ذخیره در مسیر محلی</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>ذخیره‌سازی Cloud فعال؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">✅ بله</div>
+<div class="node n-ext">☁️ آپلود به Cloud</div>
+</div>
+<div class="branch-item">
+<div style="color:#64748b;font-weight:bold;margin:5px 0">❌ خیر</div>
+<div class="node n-proc">⏭️ ادامه</div>
+</div>
+</div>
+<div class="arrow"></div>
+<div class="node n-sub">🧹 حذف بکاپ‌های قدیمی (طبق سیاست)</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 ثبت در BackupHistory</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>موفقیت‌آمیز؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#ef4444;font-weight:bold;margin:5px 0">❌ خطا</div>
+<div class="node n-ext">📧 ایمیل/SMS به مدیر</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">✅ موفق</div>
+<div class="node n-end">✅ پایان</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ FLOW 8: LICENSE ACTIVATION ============ -->
+<section>
+<h2>🔄 فلوچارت ۸: فعال‌سازی لایسنس (آنلاین + آفلاین)</h2>
+<div class="tab-c">
+<div class="tab-b">
+<button class="tab-btn active" onclick="showTab(this,'tabon')">🌐 آنلاین</button>
+<button class="tab-btn" onclick="showTab(this,'taboff')">📴 آفلاین</button>
+</div>
+
+<div id="tabon" class="tab-p active">
+<div class="flow-wrap">
+<div class="flow">
+<div class="node n-start">▶ اولین اجرای نرم‌افزار</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>لایسنس فعال است؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">✅ بله</div>
+<div class="node n-end">ورود به سیستم</div>
+</div>
+<div class="branch-item">
+<div style="color:#f59e0b;font-weight:bold;margin:5px 0">❌ خیر</div>
+<div class="node n-proc">📋 نمایش فرم فعال‌سازی</div>
+<div class="arrow"></div>
+<div class="node n-proc">🔑 دریافت کد لایسنس از مشتری</div>
+<div class="arrow"></div>
+<div class="node n-sub">🖥️ محاسبه Hardware Fingerprint</div>
+<div class="arrow"></div>
+<div class="node n-ext">🔗 ارسال به License Server</div>
+<div class="arrow"></div>
+<div class="node n-cond"><span>معتبر و فعال؟</span></div>
+<div class="branch">
+<div class="branch-item">
+<div style="color:#ef4444;font-weight:bold;margin:5px 0">❌ خیر</div>
+<div class="node n-end" style="background:#ef4444">❌ خطا</div>
+</div>
+<div class="branch-item">
+<div style="color:#22c55e;font-weight:bold;margin:5px 0">✅ بله</div>
+<div class="node n-proc">📥 دریافت فایل لایسنس (JSON Signed)</div>
+<div class="arrow"></div>
+<div class="node n-sub">🔐 بررسی امضای دیجیتال RSA</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 ذخیره در دیتابیس محلی (Encrypted)</div>
+<div class="arrow"></div>
+<div class="node n-sub">⚙️ فعال‌سازی ماژول‌های مجاز</div>
+<div class="arrow"></div>
+<div class="node n-end">✅ آماده استفاده</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="taboff" class="tab-p">
+<div class="flow-wrap">
+<div class="flow">
+<div class="node n-start">▶ انتخاب فعال‌سازی آفلاین</div>
+<div class="arrow"></div>
+<div class="node n-sub">🖥️ محاسبه Hardware Fingerprint</div>
+<div class="arrow"></div>
+<div class="node n-proc">📄 تولید فایل درخواست (.req)</div>
+<div class="arrow"></div>
+<div class="node n-proc">📤 ارسال فایل به فروشنده (ایمیل/تلگرام)</div>
+<div class="arrow"></div>
+<div class="node n-proc">👨‍💻 فروشنده: آپلود در پنل لایسنس</div>
+<div class="arrow"></div>
+<div class="node n-sub">🔐 تولید فایل لایسنس + امضای RSA</div>
+<div class="arrow"></div>
+<div class="node n-proc">📤 ارسال فایل .lic به مشتری</div>
+<div class="arrow"></div>
+<div class="node n-proc">📥 بارگذاری فایل .lic در نرم‌افزار</div>
+<div class="arrow"></div>
+<div class="node n-sub">🔐 بررسی امضا و Fingerprint</div>
+<div class="arrow"></div>
+<div class="node n-doc">💾 ذخیره در دیتابیس</div>
+<div class="arrow"></div>
+<div class="node n-end">✅ فعال شد</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ SYSTEM ACTORS ============ -->
+<section>
+<h2>👥 نمودار ارتباطات بین کاربران سیستم (Actors)</h2>
+<div class="relation-diagram">
+<h3 style="color:#60a5fa;text-align:center;margin-bottom:20px">🎭 نقش‌ها و تعاملات</h3>
+
+<div style="text-align:center">
+<div class="actor-box">
+<h4>👨‍💼 مدیر سیستم</h4>
+<ul>
+<li>تنظیمات کلی</li>
+<li>مدیریت کاربران</li>
+<li>مشاهده لاگ‌ها</li>
+<li>تعریف نقش‌ها</li>
+<li>بکاپ/بازیابی</li>
+<li>گزارش‌های کامل</li>
+</ul>
+</div>
+
+<div class="actor-box">
+<h4>👨‍⚕️ پزشک</h4>
+<ul>
+<li>مشاهده صف بیماران</li>
+<li>ثبت ویزیت/معاینه</li>
+<li>نسخه‌نویسی</li>
+<li>درخواست پاراکلینیک</li>
+<li>مشاهده سوابق بیمار</li>
+<li>برنامه کاری خود</li>
+</ul>
+</div>
+
+<div class="actor-box">
+<h4>👩‍💼 منشی</h4>
+<ul>
+<li>ثبت بیمار جدید</li>
+<li>رزرو نوبت</li>
+<li>پذیرش بیمار</li>
+<li>استعلام بیمه</li>
+<li>مدیریت صف</li>
+<li>ارسال پیامک</li>
+</ul>
+</div>
+
+<div class="actor-box">
+<h4>💰 صندوقدار</h4>
+<ul>
+<li>صدور فاکتور</li>
+<li>دریافت وجه</li>
+<li>بستن صندوق روزانه</li>
+<li>گزارش صندوق</li>
+<li>برگشت وجه</li>
+</ul>
+</div>
+
+<div class="actor-box">
+<h4>📊 حسابدار</h4>
+<ul>
+<li>اسناد حسابداری</li>
+<li>ترازنامه</li>
+<li>سود و زیان</li>
+<li>مدیریت بیمه</li>
+<li>کارانه پزشکان</li>
+<li>حقوق و دستمزد</li>
+</ul>
+</div>
+
+<div class="actor-box">
+<h4>💊 داروخانه‌دار</h4>
+<ul>
+<li>تحویل دارو</li>
+<li>مدیریت موجودی</li>
+<li>سفارش دارو</li>
+<li>انبارگردانی</li>
+<li>تاریخ انقضا</li>
+</ul>
+</div>
+
+<div class="actor-box">
+<h4>🧪 تکنسین آزمایشگاه</h4>
+<ul>
+<li>دریافت درخواست</li>
+<li>ثبت نمونه‌گیری</li>
+<li>ثبت نتایج</li>
+<li>چاپ جواب</li>
+</ul>
+</div>
+
+<div class="actor-box">
+<h4>📷 رادیولوژیست</h4>
+<ul>
+<li>انجام تصویربرداری</li>
+<li>ثبت گزارش</li>
+<li>آپلود تصاویر</li>
+</ul>
+</div>
+
+<div class="actor-box">
+<h4>🦷 دندانپزشک</h4>
+<ul>
+<li>چارت دندانی</li>
+<li>طرح درمان</li>
+<li>ثبت پروسیجر</li>
+</ul>
+</div>
+
+<div class="actor-box">
+<h4>🏃 فیزیوتراپیست</h4>
+<ul>
+<li>برنامه جلسات</li>
+<li>ثبت تکنیک‌ها</li>
+<li>ارزیابی پیشرفت</li>
+</ul>
+</div>
+
+<div class="actor-box">
+<h4>👔 مدیر درمانگاه</h4>
+<ul>
+<li>داشبورد مدیریتی</li>
+<li>گزارش‌های کلان</li>
+<li>KPI درمانگاه</li>
+<li>تایید نهایی</li>
+</ul>
+</div>
+
+<div class="actor-box" style="background:rgba(236,72,153,.2);border-color:#ec4899">
+<h4>🔑 فروشنده لایسنس</h4>
+<ul>
+<li>مدیریت مشتریان</li>
+<li>صدور لایسنس</li>
+<li>کنترل انقضا</li>
+<li>گزارش فروش</li>
+</ul>
+</div>
+</div>
+</div>
+
+<h3>🔗 ماتریس دسترسی نقش‌ها به ماژول‌ها</h3>
+<table>
+<tr><th>ماژول</th><th>مدیر</th><th>پزشک</th><th>منشی</th><th>صندوقدار</th><th>حسابدار</th><th>داروساز</th><th>آزمایشگاه</th></tr>
+<tr><td>مدیریت بیماران</td><td>✅ کامل</td><td>👁️ مشاهده</td><td>✅ کامل</td><td>👁️ مشاهده</td><td>👁️ مشاهده</td><td>👁️ مشاهده</td><td>👁️ مشاهده</td></tr>
+<tr><td>نوبت‌دهی</td><td>✅ کامل</td><td>👁️ خودش</td><td>✅ کامل</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td>پذیرش</td><td>✅ کامل</td><td>👁️ مشاهده</td><td>✅ کامل</td><td>👁️ مشاهده</td><td>👁️ مشاهده</td><td>❌</td><td>❌</td></tr>
+<tr><td>ویزیت/نسخه</td><td>👁️ مشاهده</td><td>✅ کامل</td><td>👁️ مشاهده</td><td>❌</td><td>❌</td><td>👁️ مشاهده</td><td>👁️ درخواست‌ها</td></tr>
+<tr><td>صندوق/فاکتور</td><td>✅ کامل</td><td>❌</td><td>✏️ ایجاد</td><td>✅ کامل</td><td>✅ کامل</td><td>✏️ داروخانه</td><td>❌</td></tr>
+<tr><td>حسابداری</td><td>✅ کامل</td><td>❌</td><td>❌</td><td>👁️ مشاهده</td><td>✅ کامل</td><td>❌</td><td>❌</td></tr>
+<tr><td>داروخانه</td><td>✅ کامل</td><td>👁️ مشاهده</td><td>❌</td><td>❌</td><td>👁️ مشاهده</td><td>✅ کامل</td><td>❌</td></tr>
+<tr><td>آزمایشگاه</td><td>✅ کامل</td><td>✏️ درخواست</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>✅ کامل</td></tr>
+<tr><td>گزارش‌ها</td><td>✅ کامل</td><td>👁️ خودش</td><td>👁️ محدود</td><td>👁️ صندوق</td><td>✅ کامل</td><td>👁️ موجودی</td><td>👁️ آزمایش‌ها</td></tr>
+<tr><td>تنظیمات</td><td>✅ کامل</td><td>👁️ خودش</td><td>👁️ خودش</td><td>👁️ خودش</td><td>👁️ خودش</td><td>👁️ خودش</td><td>👁️ خودش</td></tr>
+</table>
+<div class="ib">
+<strong>راهنما:</strong> ✅ کامل | ✏️ ایجاد/ویرایش | 👁️ فقط مشاهده | ❌ بدون دسترسی
+</div>
+</section>
+
+<!-- ============ SWIM LANE ============ -->
+<section>
+<h2>🏊 نمودار Swim Lane: فرآیند کامل یک بیمار</h2>
+<div class="ib">نمایش تعامل بین نقش‌های مختلف در یک فرآیند end-to-end</div>
+
+<div class="swim-lane">
+<div class="swim-actor">🧑 بیمار</div>
+<div class="swim-steps">
+<div class="swim-step">📞 تماس برای نوبت</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">🏥 مراجعه حضوری</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">💵 پرداخت ویزیت</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">⏳ انتظار در صف</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">🚪 ورود به اتاق</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">📝 دریافت نسخه</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">💊 دارو/آزمایش</div>
+</div>
+</div>
+
+<div class="swim-lane">
+<div class="swim-actor">👩‍💼 منشی</div>
+<div class="swim-steps">
+<div class="swim-step">📅 ثبت نوبت</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">📱 ارسال SMS</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">✓ پذیرش</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">🔗 استعلام بیمه</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">🎫 صدور شماره صف</div>
+</div>
+</div>
+
+<div class="swim-lane">
+<div class="swim-actor">💰 صندوقدار</div>
+<div class="swim-steps">
+<div class="swim-step">💳 صدور فاکتور</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">💵 دریافت وجه</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">🖨️ چاپ قبض</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">📒 سند حسابداری</div>
+</div>
+</div>
+
+<div class="swim-lane">
+<div class="swim-actor">👨‍⚕️ پزشک</div>
+<div class="swim-steps">
+<div class="swim-step">📋 مشاهده صف</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">🔔 فراخوانی بیمار</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">👁️ مرور سوابق</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">💓 ثبت ویزیت</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">🏥 ثبت تشخیص</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">💊 نسخه الکترونیکی</div>
+</div>
+</div>
+
+<div class="swim-lane">
+<div class="swim-actor">🖥️ سیستم</div>
+<div class="swim-steps">
+<div class="swim-step">💾 ذخیره در DB</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">🔗 سپاس</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">🔗 بیمه</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">📱 SMS یادآوری</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">📝 Audit Log</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">📊 به‌روز داشبورد</div>
+</div>
+</div>
+
+<div class="swim-lane">
+<div class="swim-actor">💊 داروخانه</div>
+<div class="swim-steps">
+<div class="swim-step">📥 دریافت نسخه</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">🔍 بررسی موجودی</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">💰 محاسبه قیمت</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">📦 تحویل دارو</div>
+<span class="swim-arrow">→</span>
+<div class="swim-step">💾 به‌روز موجودی</div>
+</div>
+</div>
+</section>
+
+<!-- ============ SEQUENCE DIAGRAM ============ -->
+<section>
+<h2>⏱️ Sequence Diagram: فرآیند لاگین کاربر</h2>
+<div class="seq-diagram">
+<div class="seq-actors">
+<div class="seq-actor">👤 کاربر</div>
+<div class="seq-actor">🖥️ WPF Client</div>
+<div class="seq-actor">🌐 API Server</div>
+<div class="seq-actor">🔐 Auth Service</div>
+<div class="seq-actor">🗄️ Database</div>
+</div>
+
+<table style="margin-top:15px">
+<tr><th>#</th><th>از</th><th>به</th><th>عملیات</th></tr>
+<tr><td>۱</td><td>کاربر</td><td>WPF Client</td><td>ورود Username و Password</td></tr>
+<tr><td>۲</td><td>WPF Client</td><td>WPF Client</td><td>اعتبارسنجی اولیه (Not Empty)</td></tr>
+<tr><td>۳</td><td>WPF Client</td><td>API Server</td><td>POST /api/auth/login (username, password)</td></tr>
+<tr><td>۴</td><td>API Server</td><td>API Server</td><td>Rate Limiting Check (max 5/min)</td></tr>
+<tr><td>۵</td><td>API Server</td><td>Auth Service</td><td>ValidateUser(username, password)</td></tr>
+<tr><td>۶</td><td>Auth Service</td><td>Database</td><td>SELECT * FROM Users WHERE Username=@u</td></tr>
+<tr><td>۷</td><td>Database</td><td>Auth Service</td><td>برگشت User + PasswordHash</td></tr>
+<tr><td>۸</td><td>Auth Service</td><td>Auth Service</td><td>BCrypt.Verify(password, hash)</td></tr>
+<tr><td>۹</td><td>Auth Service</td><td>Auth Service</td><td>Check: IsActive, LockoutEnd, EmailConfirmed</td></tr>
+<tr><td>۱۰</td><td>Auth Service</td><td>Database</td><td>بارگذاری نقش‌ها و دسترسی‌ها (Roles, Permissions)</td></tr>
+<tr><td>۱۱</td><td>Auth Service</td><td>Auth Service</td><td>تولید JWT Access Token (15 دقیقه)</td></tr>
+<tr><td>۱۲</td><td>Auth Service</td><td>Auth Service</td><td>تولید Refresh Token (7 روز)</td></tr>
+<tr><td>۱۳</td><td>Auth Service</td><td>Database</td><td>INSERT INTO RefreshTokens</td></tr>
+<tr><td>۱۴</td><td>Auth Service</td><td>Database</td><td>UPDATE Users SET LastLoginAt=NOW()</td></tr>
+<tr><td>۱۵</td><td>Auth Service</td><td>Database</td><td>INSERT INTO AuditLogs (Login Success)</td></tr>
+<tr><td>۱۶</td><td>Auth Service</td><td>API Server</td><td>LoginResponse { AccessToken, RefreshToken, User }</td></tr>
+<tr><td>۱۷</td><td>API Server</td><td>WPF Client</td><td>200 OK + Response</td></tr>
+<tr><td>۱۸</td><td>WPF Client</td><td>WPF Client</td><td>ذخیره Tokens در حافظه امن</td></tr>
+<tr><td>۱۹</td><td>WPF Client</td><td>WPF Client</td><td>بارگذاری Dashboard بر اساس نقش کاربر</td></tr>
+<tr><td>۲۰</td><td>WPF Client</td><td>کاربر</td><td>نمایش صفحه اصلی</td></tr>
+</table>
+</div>
+</section>
+
+<!-- ============ SYSTEM INTEGRATION DIAGRAM ============ -->
+<section>
+<h2>🌐 نمودار یکپارچه‌سازی با سیستم‌های خارجی</h2>
+<div class="relation-diagram">
+<div style="text-align:center">
+<div style="background:rgba(26,115,232,.3);border:3px solid #60a5fa;border-radius:15px;padding:25px;margin:20px auto;max-width:500px">
+<h3 style="color:#fff">🏥 ClinicPro Core System</h3>
+<div style="color:#cbd5e1;font-size:12px;margin-top:10px">هسته مرکزی - API Server + Database</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;margin-top:20px">
+<div class="actor-box" style="background:rgba(239,68,68,.2);border-color:#ef4444">
+<h4 style="color:#fca5a5">🏛️ سپاس</h4>
+<ul>
+<li>ارسال داده‌های ویزیت</li>
+<li>پرونده الکترونیک</li>
+<li>SOAP/REST API</li>
+<li>Token-based Auth</li>
+</ul>
+</div>
+<div class="actor-box" style="background:rgba(34,197,94,.2);border-color:#22c55e">
+<h4 style="color:#86efac">💊 سامانه نسخه الکترونیک</h4>
+<ul>
+<li>بیمه سلامت</li>
+<li>تامین اجتماعی</li>
+<li>ارسال نسخه + کد رهگیری</li>
+</ul>
+</div>
+<div class="actor-box" style="background:rgba(59,130,246,.2);border-color:#3b82f6">
+<h4 style="color:#93c5fd">🏦 بیمه‌ها</h4>
+<ul>
+<li>استعلام آنلاین</li>
+<li>ارسال اسناد</li>
+<li>پیگیری مطالبات</li>
+<li>همه بیمه‌ها</li>
+</ul>
+</div>
+<div class="actor-box" style="background:rgba(245,158,11,.2);border-color:#f59e0b">
+<h4 style="color:#fcd34d">📱 پنل‌های SMS</h4>
+<ul>
+<li>Kavenegar</li>
+<li>MelliPayamak</li>
+<li>SMS.ir, IPPanel</li>
+<li>+ ۶ پنل دیگر</li>
+</ul>
+</div>
+<div class="actor-box" style="background:rgba(139,92,246,.2);border-color:#8b5cf6">
+<h4 style="color:#c4b5fd">🩺 سامانه سیب</h4>
+<ul>
+<li>مراقبت بهداشتی اولیه</li>
+<li>ثبت خدمات بهداشت</li>
+<li>REST API</li>
+</ul>
+</div>
+<div class="actor-box" style="background:rgba(236,72,153,.2);border-color:#ec4899">
+<h4 style="color:#f9a8d4">🏥 ناب / سینا</h4>
+<ul>
+<li>مکانیزاسیون مراقبت</li>
+<li>نظام ارجاع</li>
+<li>API یکپارچه</li>
+</ul>
+</div>
+<div class="actor-box" style="background:rgba(6,182,212,.2);border-color:#06b6d4">
+<h4 style="color:#67e8f9">🔑 License Server</h4>
+<ul>
+<li>اعتبارسنجی لایسنس</li>
+<li>Heartbeat روزانه</li>
+<li>فعال‌سازی ماژول</li>
+</ul>
+</div>
+<div class="actor-box" style="background:rgba(249,115,22,.2);border-color:#f97316">
+<h4 style="color:#fdba74">💳 درگاه پرداخت (آینده)</h4>
+<ul>
+<li>زرین‌پال، سداد، پرداخت</li>
+<li>نوبت‌دهی آنلاین</li>
+<li>REST API</li>
+</ul>
+</div>
+<div class="actor-box" style="background:rgba(100,116,139,.2);border-color:#64748b">
+<h4 style="color:#cbd5e1">📞 VoIP (آینده)</h4>
+<ul>
+<li>Elastix / Issabel</li>
+<li>CTI Integration</li>
+<li>SIP Protocol</li>
+</ul>
+</div>
+<div class="actor-box" style="background:rgba(168,85,247,.2);border-color:#a855f7">
+<h4 style="color:#d8b4fe">📧 Email Service</h4>
+<ul>
+<li>SMTP</li>
+<li>یادآوری نوبت</li>
+<li>گزارش‌ها</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+<h3>🔄 الگوی ارتباط با سیستم‌های خارجی</h3>
+<div class="cd">
+<p style="margin-bottom:10px">همه سرویس‌های خارجی از طریق <strong>Service Interface</strong> و <strong>Dependency Injection</strong> پیاده‌سازی می‌شوند:</p>
+<ul style="margin:5px 20px">
+<li><strong>Pattern:</strong> Adapter Pattern + Strategy Pattern</li>
+<li><strong>Retry Policy:</strong> Polly Library برای Retry/Circuit Breaker</li>
+<li><strong>Logging:</strong> همه فراخوانی‌ها در ApiCallLogs ثبت می‌شوند</li>
+<li><strong>Caching:</strong> پاسخ‌های تکراری (مثل لیست داروها) کش می‌شوند</li>
+<li><strong>Async/Await:</strong> همه فراخوانی‌ها غیرهمزمان</li>
+<li><strong>Timeout:</strong> 30 ثانیه با قابلیت تنظیم</li>
+</ul>
+</div>
+</section>
+
+<footer>
+<p>📄 فایل ۳ از ۶ | <strong>فلوچارت‌ها و نمودار ارتباطات</strong></p>
+</footer>
+
+<script>
+function showTab(btn,id){
+const parent=btn.closest('.tab-c');
+parent.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+parent.querySelectorAll('.tab-p').forEach(p=>p.classList.remove('active'));
+btn.classList.add('active');
+document.getElementById(id).classList.add('active');
+}
+</script>
+</div>
+</body>
+</html>

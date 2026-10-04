@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>🎨 ClinicPro - وایرفریم صفحات</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+:root{--p:#1a73e8;--pd:#1557b0;--s:#34a853;--a:#ea4335;--w:#fbbc04;--bg:#f0f2f5;--c:#fff;--t:#202124;--b:#dadce0;--sh:0 2px 8px rgba(0,0,0,.1);--r:12px;--g:linear-gradient(135deg,#1a73e8,#34a853)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t);line-height:1.6;font-size:13px}
+.ct{max-width:1500px;margin:0 auto;padding:20px}
+header{background:var(--g);color:#fff;padding:40px 20px;text-align:center;border-radius:0 0 30px 30px;margin-bottom:25px}
+header h1{font-size:2em;font-weight:900;margin-bottom:8px}
+header p{font-size:1em;opacity:.9}
+.nav{background:#fff;padding:12px;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.nav a{padding:7px 14px;background:#f0f2f5;border-radius:8px;text-decoration:none;color:var(--t);font-size:11px;font-weight:600}
+.nav a:hover,.nav a.active{background:var(--p);color:#fff}
+section{background:var(--c);border-radius:var(--r);padding:25px;box-shadow:var(--sh);margin-bottom:20px}
+section h2{color:var(--p);font-size:1.4em;margin-bottom:15px;padding-bottom:8px;border-bottom:3px solid var(--p)}
+section h3{color:var(--pd);font-size:1.1em;margin:15px 0 10px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:15px}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.ib{background:#e8f0fe;border-right:4px solid var(--p);padding:12px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px}
+.wb{background:#fef7e0;border-right:4px solid var(--w);padding:12px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px}
+.gn{background:#e6f4ea;border-right:4px solid var(--s);padding:12px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px}
+
+/* Wireframe Styles */
+.wf{background:#fff;border:2px solid #1e293b;border-radius:10px;overflow:hidden;margin:15px 0;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.wf-title-bar{background:linear-gradient(135deg,#1e293b,#334155);color:#fff;padding:8px 15px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.wf-title-bar .win-controls{display:flex;gap:5px}
+.wf-title-bar .win-btn{width:12px;height:12px;border-radius:50%}
+.wf-title-bar .r{background:#ef4444}.wf-title-bar .y{background:#eab308}.wf-title-bar .g{background:#22c55e}
+.wf-top-bar{background:#f1f5f9;padding:8px 15px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--b);font-size:11px}
+.wf-top-bar .left,.wf-top-bar .right{display:flex;align-items:center;gap:10px}
+.wf-breadcrumb{color:#64748b}
+.wf-user{display:flex;align-items:center;gap:8px}
+.wf-avatar{width:28px;height:28px;background:var(--p);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.wf-main{display:flex;min-height:450px}
+.wf-sidebar{background:#1e293b;color:#fff;width:200px;padding:12px 0;flex-shrink:0}
+.wf-sb-item{padding:8px 15px;display:flex;align-items:center;gap:10px;font-size:11px;cursor:pointer;color:#cbd5e1;border-right:3px solid transparent}
+.wf-sb-item:hover{background:#334155;color:#fff}
+.wf-sb-item.active{background:#2563eb;color:#fff;border-right-color:#60a5fa}
+.wf-sb-item .ic{font-size:14px;width:20px;text-align:center}
+.wf-sb-group{padding:5px 15px;color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;margin-top:10px}
+.wf-content{flex:1;padding:15px;background:#f8fafc;overflow:auto}
+.wf-page-title{font-size:16px;font-weight:700;color:var(--t);margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.wf-toolbar{background:#fff;padding:10px;border-radius:8px;margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.wf-btn{padding:5px 14px;border-radius:5px;font-size:11px;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;color:#fff;transition:.2s}
+.wf-btn-primary{background:var(--p)}
+.wf-btn-success{background:var(--s)}
+.wf-btn-danger{background:var(--a)}
+.wf-btn-warning{background:#e37400}
+.wf-btn-secondary{background:#64748b}
+.wf-btn-outline{background:transparent;color:var(--p);border:1px solid var(--p)}
+.wf-input{border:1px solid #cbd5e1;border-radius:5px;padding:5px 10px;font-size:11px;font-family:inherit;background:#fff}
+.wf-select{border:1px solid #cbd5e1;border-radius:5px;padding:5px 25px 5px 10px;font-size:11px;background:#fff;cursor:pointer}
+.wf-search{position:relative;flex:1;max-width:300px}
+.wf-search input{width:100%;padding:5px 30px 5px 10px}
+.wf-search::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px}
+.wf-table{width:100%;background:#fff;border-collapse:collapse;font-size:11px;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.wf-table th{background:#f1f5f9;color:#334155;padding:8px;text-align:right;font-weight:700;border-bottom:2px solid var(--b)}
+.wf-table td{padding:7px 8px;border-bottom:1px solid #e2e8f0;color:#475569}
+.wf-table tr:hover{background:#f8fafc}
+.wf-badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:10px;font-weight:600}
+.wf-b-green{background:#dcfce7;color:#166534}
+.wf-b-blue{background:#dbeafe;color:#1e40af}
+.wf-b-yellow{background:#fef3c7;color:#92400e}
+.wf-b-red{background:#fee2e2;color:#991b1b}
+.wf-b-gray{background:#f1f5f9;color:#475569}
+.wf-b-purple{background:#f3e8ff;color:#6b21a8}
+.wf-card{background:#fff;border-radius:8px;padding:15px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:10px}
+.wf-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--b)}
+.wf-card-title{font-weight:700;color:var(--t);font-size:13px}
+.wf-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.wf-stat{background:#fff;padding:12px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);border-right:3px solid var(--p)}
+.wf-stat.g{border-color:var(--s)}
+.wf-stat.r{border-color:var(--a)}
+.wf-stat.y{border-color:var(--w)}
+.wf-stat.p{border-color:#8b5cf6}
+.wf-stat-label{font-size:10px;color:#64748b;margin-bottom:3px}
+.wf-stat-value{font-size:18px;font-weight:900;color:var(--t)}
+.wf-stat-sub{font-size:9px;color:#64748b;margin-top:2px}
+.wf-chart{background:#fff;border-radius:8px;padding:15px;height:160px;display:flex;align-items:flex-end;justify-content:space-around;gap:5px;box-shadow:0 1px 3px rgba(0,0,0,.05);position:relative}
+.wf-chart::before{content:'📊 نمودار درآمد ۷ روز اخیر';position:absolute;top:10px;right:15px;font-size:11px;font-weight:700;color:var(--t)}
+.wf-bar{background:linear-gradient(180deg,var(--p),var(--s));border-radius:4px 4px 0 0;width:30px;position:relative}
+.wf-bar::after{content:attr(data-label);position:absolute;bottom:-20px;right:50%;transform:translateX(50%);font-size:9px;color:#64748b}
+.wf-form-row{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center;margin-bottom:10px}
+.wf-form-label{font-size:11px;color:#475569;font-weight:600}
+.wf-form-label.req::after{content:' *';color:var(--a)}
+.wf-form-input{width:100%;padding:6px 10px;border:1px solid #cbd5e1;border-radius:5px;font-size:11px;font-family:inherit;background:#fff}
+.wf-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.wf-tabs{display:flex;gap:0;border-bottom:2px solid var(--b);margin-bottom:12px}
+.wf-tab{padding:8px 16px;background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:11px;color:#64748b;border-bottom:3px solid transparent;margin-bottom:-2px;font-weight:600}
+.wf-tab.active{color:var(--p);border-bottom-color:var(--p)}
+.wf-notification-bar{background:#f1f5f9;padding:6px 15px;border-right:3px solid var(--p);margin-bottom:10px;font-size:11px;display:flex;align-items:center;gap:8px;color:#475569;border-radius:4px}
+.wf-queue-item{background:#fff;padding:10px 12px;border-radius:6px;margin-bottom:6px;display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;box-shadow:0 1px 2px rgba(0,0,0,.05);border-right:3px solid var(--w)}
+.wf-queue-item.done{border-right-color:var(--s);opacity:.7}
+.wf-queue-item.current{border-right-color:var(--p);background:#eff6ff}
+.wf-queue-num{background:var(--p);color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+.wf-queue-info{font-size:11px}
+.wf-queue-name{font-weight:700;color:var(--t)}
+.wf-queue-time{color:#64748b;font-size:10px}
+.wf-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;background:#fff;padding:10px;border-radius:8px}
+.wf-cal-day{background:#f8fafc;padding:6px 4px;text-align:center;font-size:10px;border-radius:4px;cursor:pointer;min-height:50px}
+.wf-cal-day.header{background:var(--p);color:#fff;font-weight:700;min-height:auto}
+.wf-cal-day.has{background:#dbeafe;border:1px solid var(--p);font-weight:700}
+.wf-cal-day.today{background:var(--p);color:#fff;font-weight:700}
+.wf-cal-day .n{font-size:11px;font-weight:700;display:block}
+.wf-cal-day .c{font-size:8px;color:#64748b}
+.wf-time-slot{display:inline-block;background:#f1f5f9;padding:5px 10px;border-radius:5px;font-size:11px;margin:3px;cursor:pointer;border:1px solid var(--b)}
+.wf-time-slot.available{background:#dcfce7;color:#166534;border-color:#86efac}
+.wf-time-slot.booked{background:#fee2e2;color:#991b1b;border-color:#fca5a5;text-decoration:line-through}
+.wf-time-slot.selected{background:var(--p);color:#fff;border-color:var(--p)}
+.wf-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.wf-info-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed #e2e8f0;font-size:11px}
+.wf-info-label{color:#64748b;font-weight:600}
+.wf-info-value{color:var(--t);font-weight:600}
+.wf-prescription-item{background:#fef3c7;padding:8px 12px;border-radius:6px;margin-bottom:6px;display:grid;grid-template-columns:1fr 100px 100px auto;gap:10px;align-items:center;font-size:11px;border-right:3px solid #e37400}
+.wf-tag{display:inline-block;background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:10px;font-size:10px;margin:2px}
+.wf-icon-btn{background:transparent;border:1px solid var(--b);width:28px;height:28px;border-radius:5px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#64748b;margin:0 2px}
+.wf-icon-btn:hover{background:var(--p);color:#fff;border-color:var(--p)}
+.wf-pagination{display:flex;gap:3px;justify-content:center;margin-top:10px}
+.wf-page-btn{padding:4px 10px;border:1px solid var(--b);background:#fff;border-radius:4px;font-size:11px;cursor:pointer;color:#475569}
+.wf-page-btn.active{background:var(--p);color:#fff;border-color:var(--p)}
+.wf-section-desc{color:#64748b;font-size:12px;margin-bottom:10px;padding:8px;background:#f1f5f9;border-radius:5px}
+.wf-tooth-chart{display:grid;grid-template-columns:repeat(16,1fr);gap:3px;background:#fff;padding:15px;border-radius:8px}
+.wf-tooth{background:#f1f5f9;border:1px solid var(--b);border-radius:3px;padding:6px 2px;text-align:center;font-size:9px;cursor:pointer}
+.wf-tooth.red{background:#fee2e2;border-color:var(--a)}
+.wf-tooth.yellow{background:#fef3c7;border-color:var(--w)}
+.wf-tooth.green{background:#dcfce7;border-color:var(--s)}
+.wf-notification{position:relative}
+.wf-notification::after{content:'3';position:absolute;top:-5px;right:-5px;background:var(--a);color:#fff;width:14px;height:14px;border-radius:50%;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.feature-list{list-style:none;padding:0;margin-top:10px}
+.feature-list li{padding:5px 0;padding-right:20px;position:relative;font-size:12px;color:#475569}
+.feature-list li::before{content:'✓';position:absolute;right:0;color:var(--s);font-weight:700}
+footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#fff;border-radius:var(--r);margin-top:20px}
+@media(max-width:768px){.g2,.g3,.g4{grid-template-columns:1fr}.wf-main{flex-direction:column}.wf-sidebar{width:100%}.wf-stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+<h1>🎨 وایرفریم‌های سامانه ClinicPro</h1>
+<p>فایل ۴: طراحی ۱۵+ صفحه اصلی با Material Design و RTL</p>
+</header>
+
+<div class="ct">
+<nav class="nav">
+<a href="01-overview.html">1️⃣ تحلیل و معماری</a>
+<a href="02-database.html">2️⃣ دیتابیس</a>
+<a href="03-flowcharts.html">3️⃣ فلوچارت</a>
+<a href="04-wireframes.html" class="active">4️⃣ وایرفریم</a>
+<a href="05-security-timeline.html">5️⃣ امنیت و زمان‌بندی</a>
+<a href="06-license-integration.html">6️⃣ لایسنس و یکپارچه‌سازی</a>
+<a href="prompt.html">🤖 پرامپت AI</a>
+</nav>
+
+<!-- UI/UX Guidelines -->
+<section>
+<h2>🎨 اصول طراحی UI/UX</h2>
+<div class="g3">
+<div style="background:#f8fafc;padding:15px;border-radius:10px;border-right:4px solid var(--p)"><h3 style="color:var(--p);margin:0">🔤 تایپوگرافی</h3><ul class="feature-list"><li>فونت اصلی: Vazirmatn</li><li>فونت جایگزین: IRANSans</li><li>سایز بیس: 14px</li><li>Line-height: 1.7</li><li>وزن‌ها: 400, 600, 700, 900</li></ul></div>
+<div style="background:#f8fafc;padding:15px;border-radius:10px;border-right:4px solid var(--s)"><h3 style="color:var(--s);margin:0">🎨 رنگ‌بندی</h3><ul class="feature-list"><li>Primary: #1a73e8 (آبی)</li><li>Success: #34a853 (سبز)</li><li>Danger: #ea4335 (قرمز)</li><li>Warning: #fbbc04 (زرد)</li><li>Dark/Light Theme</li></ul></div>
+<div style="background:#f8fafc;padding:15px;border-radius:10px;border-right:4px solid var(--w)"><h3 style="color:#e37400;margin:0">📐 Layout</h3><ul class="feature-list"><li>کامل RTL</li><li>تقویم شمسی (جلالی)</li><li>Responsive</li><li>Material Design</li><li>Fluid Typography</li></ul></div>
+<div style="background:#f8fafc;padding:15px;border-radius:10px;border-right:4px solid #8b5cf6"><h3 style="color:#8b5cf6;margin:0">⌨️ کلیدهای میانبر</h3><ul class="feature-list"><li>F1: راهنما</li><li>F2: جستجوی سریع</li><li>F3: بیمار جدید</li><li>F4: نوبت جدید</li><li>Ctrl+S: ذخیره</li><li>Ctrl+P: چاپ</li></ul></div>
+<div style="background:#f8fafc;padding:15px;border-radius:10px;border-right:4px solid #ec4899"><h3 style="color:#ec4899;margin:0">♿ دسترسی‌پذیری</h3><ul class="feature-list"><li>Keyboard Navigation</li><li>Focus Indicators</li><li>Color Contrast AA</li><li>Tooltips برای همه آیکون‌ها</li><li>Alt Text برای تصاویر</li></ul></div>
+<div style="background:#f8fafc;padding:15px;border-radius:10px;border-right:4px solid #06b6d4"><h3 style="color:#06b6d4;margin:0">⚡ تجربه کاربری</h3><ul class="feature-list"><li>Loading Indicators</li><li>Toast Notifications</li><li>Confirmation Dialogs</li><li>Undo Actions</li><li>Breadcrumbs</li><li>Autosave</li></ul></div>
+</div>
+</section>
+
+<!-- 1. LOGIN -->
+<section>
+<h2>🔐 صفحه ۱: ورود به سیستم (Login)</h2>
+<div class="wf" style="max-width:600px;margin:0 auto">
+<div class="wf-title-bar"><div><span>🏥</span> ClinicPro - ورود</div><div class="win-controls"><div class="win-btn g"></div><div class="win-btn y"></div><div class="win-btn r"></div></div></div>
+<div style="padding:40px;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);min-height:400px;display:flex;align-items:center;justify-content:center">
+<div style="background:#fff;padding:30px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.1);width:100%;max-width:380px">
+<div style="text-align:center;margin-bottom:20px">
+<div style="width:70px;height:70px;background:var(--g);border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:30px">🏥</div>
+<h3 style="color:var(--p);font-size:20px">ClinicPro</h3>
+<p style="color:#64748b;font-size:11px">سامانه مدیریت درمانگاه</p>
+</div>
+<div class="wf-form-row" style="grid-template-columns:1fr">
+<div><label class="wf-form-label">نام کاربری</label><input class="wf-form-input" placeholder="👤 نام کاربری خود را وارد کنید"/></div>
+</div>
+<div class="wf-form-row" style="grid-template-columns:1fr">
+<div><label class="wf-form-label">رمز عبور</label><input class="wf-form-input" type="password" placeholder="🔒 رمز عبور"/></div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0;font-size:11px">
+<label><input type="checkbox"/> مرا به خاطر بسپار</label>
+<a href="#" style="color:var(--p)">فراموشی رمز؟</a>
+</div>
+<button class="wf-btn wf-btn-primary" style="width:100%;padding:10px;font-size:13px">🔓 ورود به سیستم</button>
+<div style="text-align:center;margin-top:15px;font-size:10px;color:#64748b">نسخه ۱.۰.۰ | © ۱۴۰۴ ClinicPro</div>
+</div>
+</div>
+</div>
+<div class="ib"><strong>ویژگی‌ها:</strong> احراز هویت دومرحله‌ای (2FA)، قفل اکانت بعد از ۵ تلاش ناموفق، نمایش آخرین زمان ورود موفق، فعال‌سازی لایسنس در صورت نیاز، تم Light/Dark</div>
+</section>
+
+<!-- 2. DASHBOARD -->
+<section>
+<h2>📊 صفحه ۲: داشبورد مدیریتی</h2>
+<div class="wf">
+<div class="wf-title-bar"><div><span>🏥</span> ClinicPro - داشبورد اصلی</div><div class="win-controls"><div class="win-btn g"></div><div class="win-btn y"></div><div class="win-btn r"></div></div></div>
+<div class="wf-top-bar">
+<div class="left"><span class="wf-breadcrumb">🏠 خانه › داشبورد</span></div>
+<div class="right">
+<span style="font-size:11px;color:#64748b">📅 دوشنبه ۱۴۰۴/۰۴/۰۱ | 🕐 ۱۰:۲۳</span>
+<span class="wf-notification">🔔</span>
+<div class="wf-user"><div class="wf-avatar">دک</div><span>دکتر احمدی</span></div>
+</div>
+</div>
+<div class="wf-main">
+<aside class="wf-sidebar">
+<div class="wf-sb-item active"><span class="ic">📊</span>داشبورد</div>
+<div class="wf-sb-group">ماژول‌های اصلی</div>
+<div class="wf-sb-item"><span class="ic">👤</span>بیماران</div>
+<div class="wf-sb-item"><span class="ic">📅</span>نوبت‌دهی</div>
+<div class="wf-sb-item"><span class="ic">📋</span>پذیرش</div>
+<div class="wf-sb-item"><span class="ic">🩺</span>ویزیت</div>
+<div class="wf-sb-item"><span class="ic">💊</span>نسخه‌نویسی</div>
+<div class="wf-sb-group">مالی</div>
+<div class="wf-sb-item"><span class="ic">💰</span>صندوق</div>
+<div class="wf-sb-item"><span class="ic">🏦</span>بیمه</div>
+<div class="wf-sb-item"><span class="ic">📊</span>حسابداری</div>
+<div class="wf-sb-group">پاراکلینیک</div>
+<div class="wf-sb-item"><span class="ic">🧪</span>آزمایشگاه</div>
+<div class="wf-sb-item"><span class="ic">📷</span>تصویربرداری</div>
+<div class="wf-sb-item"><span class="ic">💊</span>داروخانه</div>
+<div class="wf-sb-group">سیستم</div>
+<div class="wf-sb-item"><span class="ic">📊</span>گزارش‌ها</div>
+<div class="wf-sb-item"><span class="ic">⚙️</span>تنظیمات</div>
+</aside>
+<div class="wf-content">
+<h3 class="wf-page-title">📊 داشبورد مدیریتی</h3>
+<div class="wf-notification-bar">💡 خوش آمدید! امروز ۴۲ بیمار در لیست نوبت‌دهی قرار دارند.</div>
+<div class="wf-stats">
+<div class="wf-stat"><div class="wf-stat-label">👤 کل بیماران امروز</div><div class="wf-stat-value">۴۲</div><div class="wf-stat-sub">↑ ۱۲٪ نسبت به دیروز</div></div>
+<div class="wf-stat g"><div class="wf-stat-label">✅ ویزیت‌های انجام شده</div><div class="wf-stat-value">۲۸</div><div class="wf-stat-sub">۶۷٪ از کل</div></div>
+<div class="wf-stat y"><div class="wf-stat-label">⏳ در انتظار</div><div class="wf-stat-value">۱۴</div><div class="wf-stat-sub">میانگین انتظار: ۲۰ دقیقه</div></div>
+<div class="wf-stat p"><div class="wf-stat-label">💰 درآمد امروز</div><div class="wf-stat-value">۱۲٬۴۵۰٬۰۰۰</div><div class="wf-stat-sub">تومان | ↑ ۸٪</div></div>
+</div>
+<div class="wf-stats" style="grid-template-columns:repeat(3,1fr)">
+<div class="wf-stat r"><div class="wf-stat-label">🚨 موجودی کم (دارو)</div><div class="wf-stat-value">۷</div></div>
+<div class="wf-stat"><div class="wf-stat-label">📋 نسخه‌های امروز</div><div class="wf-stat-value">۳۶</div></div>
+<div class="wf-stat g"><div class="wf-stat-label">🧪 آزمایش‌های امروز</div><div class="wf-stat-value">۱۹</div></div>
+</div>
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:12px">
+<div class="wf-card">
+<div class="wf-card-header"><div class="wf-card-title">📊 نمودار درآمد ۷ روز اخیر</div><button class="wf-btn wf-btn-outline">📥 دانلود</button></div>
+<div class="wf-chart">
+<div class="wf-bar" style="height:60%" data-label="شنبه"></div>
+<div class="wf-bar" style="height:75%" data-label="یک‌شنبه"></div>
+<div class="wf-bar" style="height:45%" data-label="دوشنبه"></div>
+<div class="wf-bar" style="height:85%" data-label="سه‌شنبه"></div>
+<div class="wf-bar" style="height:70%" data-label="چهارشنبه"></div>
+<div class="wf-bar" style="height:95%" data-label="پنج‌شنبه"></div>
+<div class="wf-bar" style="height:50%" data-label="جمعه"></div>
+</div>
+</div>
+<div class="wf-card">
+<div class="wf-card-header"><div class="wf-card-title">⏰ نوبت‌های پیش‌رو</div></div>
+<div class="wf-queue-item current"><div class="wf-queue-num">۱۴</div><div class="wf-queue-info"><div class="wf-queue-name">علی رضایی</div><div class="wf-queue-time">دکتر احمدی - ۱۰:۳۰</div></div><span class="wf-badge wf-b-blue">در حال</span></div>
+<div class="wf-queue-item"><div class="wf-queue-num">۱۵</div><div class="wf-queue-info"><div class="wf-queue-name">مریم محمدی</div><div class="wf-queue-time">دکتر احمدی - ۱۰:۴۵</div></div><span class="wf-badge wf-b-yellow">انتظار</span></div>
+<div class="wf-queue-item"><div class="wf-queue-num">۱۶</div><div class="wf-queue-info"><div class="wf-queue-name">حسین کریمی</div><div class="wf-queue-time">دکتر احمدی - ۱۱:۰۰</div></div><span class="wf-badge wf-b-yellow">انتظار</span></div>
+<div class="wf-queue-item done"><div class="wf-queue-num">۱۳</div><div class="wf-queue-info"><div class="wf-queue-name">زهرا نوری</div><div class="wf-queue-time">دکتر احمدی - ۱۰:۱۵</div></div><span class="wf-badge wf-b-green">تمام شد</span></div>
+</div>
+</div>
+<div class="wf-card" style="margin-top:12px">
+<div class="wf-card-header"><div class="wf-card-title">🎯 فعالیت‌های اخیر</div></div>
+<table class="wf-table">
+<tr><th>ساعت</th><th>کاربر</th><th>عملیات</th><th>جزئیات</th></tr>
+<tr><td>۱۰:۲۰</td><td>منشی رحیمی</td><td><span class="wf-badge wf-b-green">پذیرش</span></td><td>بیمار علی رضایی پذیرش شد</td></tr>
+<tr><td>۱۰:۱۵</td><td>دکتر احمدی</td><td><span class="wf-badge wf-b-blue">ویزیت</span></td><td>ویزیت زهرا نوری تکمیل شد</td></tr>
+<tr><td>۱۰:۱۰</td><td>صندوقدار محمدی</td><td><span class="wf-badge wf-b-purple">پرداخت</span></td><td>فاکتور #۱۰۲۳ - ۲٬۴۰۰٬۰۰۰ تومان</td></tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 3. PATIENTS LIST -->
+<section>
+<h2>👤 صفحه ۳: لیست بیماران</h2>
+<div class="wf">
+<div class="wf-title-bar"><div><span>🏥</span> مدیریت بیماران</div><div class="win-controls"><div class="win-btn g"></div><div class="win-btn y"></div><div class="win-btn r"></div></div></div>
+<div class="wf-top-bar"><div class="left"><span class="wf-breadcrumb">🏠 › 👤 بیماران</span></div><div class="right"><div class="wf-user"><div class="wf-avatar">من</div><span>منشی رحیمی</span></div></div></div>
+<div class="wf-main">
+<aside class="wf-sidebar">
+<div class="wf-sb-item"><span class="ic">📊</span>داشبورد</div>
+<div class="wf-sb-item active"><span class="ic">👤</span>بیماران</div>
+<div class="wf-sb-item"><span class="ic">📅</span>نوبت‌دهی</div>
+<div class="wf-sb-item"><span class="ic">📋</span>پذیرش</div>
+<div class="wf-sb-item"><span class="ic">🩺</span>ویزیت</div>
+<div class="wf-sb-item"><span class="ic">💰</span>صندوق</div>
+</aside>
+<div class="wf-content">
+<h3 class="wf-page-title">👤 لیست بیماران <span class="wf-badge wf-b-blue">کل: ۱٬۲۵۴ نفر</span></h3>
+<div class="wf-toolbar">
+<button class="wf-btn wf-btn-primary">➕ بیمار جدید (F3)</button>
+<button class="wf-btn wf-btn-success">📥 ورود از Excel</button>
+<button class="wf-btn wf-btn-secondary">📤 خروجی Excel</button>
+<button class="wf-btn wf-btn-outline">🖨️ چاپ</button>
+<div class="wf-search"><input class="wf-input" placeholder="جستجو با نام، کد ملی، موبایل..."/></div>
+<select class="wf-select"><option>همه بیمه‌ها</option><option>تامین اجتماعی</option><option>سلامت</option></select>
+<select class="wf-select"><option>همه جنسیت‌ها</option><option>مرد</option><option>زن</option></select>
+</div>
+<table class="wf-table">
+<tr><th><input type="checkbox"/></th><th>شماره پرونده</th><th>نام و نام خانوادگی</th><th>کد ملی</th><th>موبایل</th><th>بیمه</th><th>سن</th><th>آخرین مراجعه</th><th>عملیات</th></tr>
+<tr><td><input type="checkbox"/></td><td>۱۰۰۲۳</td><td>👤 علی رضایی</td><td>۰۰۱۲۳۴۵۶۷۸</td><td>۰۹۱۲۱۲۳۴۵۶۷</td><td><span class="wf-badge wf-b-blue">تامین</span></td><td>۴۵</td><td>۱۴۰۴/۰۳/۲۸</td><td><button class="wf-icon-btn" title="مشاهده">👁️</button><button class="wf-icon-btn" title="ویرایش">✏️</button><button class="wf-icon-btn" title="نوبت">📅</button></td></tr>
+<tr><td><input type="checkbox"/></td><td>۱۰۰۲۲</td><td>👤 مریم محمدی</td><td>۰۰۹۸۷۶۵۴۳۲</td><td>۰۹۱۲۳۴۵۶۷۸۹</td><td><span class="wf-badge wf-b-green">سلامت</span></td><td>۳۲</td><td>۱۴۰۴/۰۳/۲۵</td><td><button class="wf-icon-btn">👁️</button><button class="wf-icon-btn">✏️</button><button class="wf-icon-btn">📅</button></td></tr>
+<tr><td><input type="checkbox"/></td><td>۱۰۰۲۱</td><td>👤 حسین کریمی</td><td>۰۰۵۵۶۶۷۷۸۸</td><td>۰۹۳۳۴۴۵۵۶۶۶</td><td><span class="wf-badge wf-b-gray">آزاد</span></td><td>۲۸</td><td>۱۴۰۴/۰۳/۲۲</td><td><button class="wf-icon-btn">👁️</button><button class="wf-icon-btn">✏️</button><button class="wf-icon-btn">📅</button></td></tr>
+<tr><td><input type="checkbox"/></td><td>۱۰۰۲۰</td><td>👤 زهرا نوری</td><td>۰۰۱۱۲۲۳۳۴۴</td><td>۰۹۱۷۱۲۳۴۵۶۷</td><td><span class="wf-badge wf-b-purple">نیروهای مسلح</span></td><td>۵۲</td><td>۱۴۰۴/۰۳/۲۰</td><td><button class="wf-icon-btn">👁️</button><button class="wf-icon-btn">✏️</button><button class="wf-icon-btn">📅</button></td></tr>
+<tr><td><input type="checkbox"/></td><td>۱۰۰۱۹</td><td>👤 رضا احمدی</td><td>۰۰۹۹۸۸۷۷۶۶</td><td>۰۹۳۵۱۲۳۴۵۶۷</td><td><span class="wf-badge wf-b-blue">تامین</span></td><td>۳۸</td><td>۱۴۰۴/۰۳/۱۸</td><td><button class="wf-icon-btn">👁️</button><button class="wf-icon-btn">✏️</button><button class="wf-icon-btn">📅</button></td></tr>
+</table>
+<div style="display:flex;justify-content:space-between;margin-top:10px">
+<div style="font-size:11px;color:#64748b">نمایش ۱ تا ۵ از ۱٬۲۵۴ ردیف</div>
+<div class="wf-pagination">
+<button class="wf-page-btn">قبلی</button>
+<button class="wf-page-btn active">۱</button>
+<button class="wf-page-btn">۲</button>
+<button class="wf-page-btn">۳</button>
+<button class="wf-page-btn">...</button>
+<button class="wf-page-btn">۲۵۱</button>
+<button class="wf-page-btn">بعدی</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 4. PATIENT REGISTER -->
+<section>
+<h2>➕ صفحه ۴: ثبت/ویرایش بیمار</h2>
+<div class="wf">
+<div class="wf-title-bar"><div><span>➕</span> ثبت بیمار جدید</div><div class="win-controls"><div class="win-btn g"></div><div class="win-btn y"></div><div class="win-btn r"></div></div></div>
+<div class="wf-top-bar"><div class="left"><span class="wf-breadcrumb">🏠 › 👤 بیماران › ➕ جدید</span></div></div>
+<div style="padding:15px;background:#f8fafc">
+<div class="wf-tabs">
+<button class="wf-tab active">📋 اطلاعات اصلی</button>
+<button class="wf-tab">🏥 اطلاعات بیمه</button>
+<button class="wf-tab">💊 سوابق پزشکی</button>
+<button class="wf-tab">👨‍👩‍👧 تماس اضطراری</button>
+<button class="wf-tab">📎 اسناد و تصاویر</button>
+</div>
+<div class="wf-card">
+<div class="wf-section-desc">📝 اطلاعات هویتی و تماس بیمار را وارد کنید. فیلدهای ستاره‌دار اجباری هستند.</div>
+<div class="wf-form-grid">
+<div>
+<div class="wf-form-row"><label class="wf-form-label req">کد ملی</label><input class="wf-form-input" placeholder="۰۰۱۲۳۴۵۶۷۸" maxlength="10"/></div>
+<div class="wf-form-row"><label class="wf-form-label req">نام</label><input class="wf-form-input" placeholder="علی"/></div>
+<div class="wf-form-row"><label class="wf-form-label req">نام خانوادگی</label><input class="wf-form-input" placeholder="رضایی"/></div>
+<div class="wf-form-row"><label class="wf-form-label">نام پدر</label><input class="wf-form-input" placeholder="محمد"/></div>
+<div class="wf-form-row"><label class="wf-form-label req">جنسیت</label><select class="wf-form-input"><option>مرد</option><option>زن</option></select></div>
+<div class="wf-form-row"><label class="wf-form-label">تاریخ تولد</label><input class="wf-form-input" placeholder="📅 ۱۳۵۸/۰۴/۱۵"/></div>
+<div class="wf-form-row"><label class="wf-form-label">گروه خونی</label><select class="wf-form-input"><option>انتخاب کنید</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
+<div class="wf-form-row"><label class="wf-form-label">وضعیت تاهل</label><select class="wf-form-input"><option>مجرد</option><option>متأهل</option></select></div>
+</div>
+<div>
+<div class="wf-form-row"><label class="wf-form-label req">موبایل</label><input class="wf-form-input" placeholder="۰۹۱۲۱۲۳۴۵۶۷" maxlength="11"/></div>
+<div class="wf-form-row"><label class="wf-form-label">تلفن ثابت</label><input class="wf-form-input" placeholder="۰۲۱۸۸۱۲۳۴۵۶"/></div>
+<div class="wf-form-row"><label class="wf-form-label">ایمیل</label><input class="wf-form-input" type="email" placeholder="example@mail.com"/></div>
+<div class="wf-form-row"><label class="wf-form-label">استان</label><select class="wf-form-input"><option>تهران</option><option>اصفهان</option></select></div>
+<div class="wf-form-row"><label class="wf-form-label">شهر</label><select class="wf-form-input"><option>تهران</option></select></div>
+<div class="wf-form-row"><label class="wf-form-label">کد پستی</label><input class="wf-form-input" placeholder="۱۲۳۴۵۶۷۸۹۰" maxlength="10"/></div>
+<div class="wf-form-row"><label class="wf-form-label">شغل</label><input class="wf-form-input" placeholder="کارمند"/></div>
+<div class="wf-form-row"><label class="wf-form-label">تحصیلات</label><select class="wf-form-input"><option>کارشناسی</option><option>دیپلم</option></select></div>
+</div>
+</div>
+<div class="wf-form-row" style="grid-template-columns:120px 1fr;margin-top:10px"><label class="wf-form-label">آدرس کامل</label><textarea class="wf-form-input" rows="2" placeholder="آدرس پستی"></textarea></div>
+</div>
+<div style="display:flex;justify-content:space-between;background:#fff;padding:12px;border-radius:8px;margin-top:12px">
+<div><button class="wf-btn wf-btn-secondary">← انصراف</button></div>
+<div><button class="wf-btn wf-btn-outline">💾 ذخیره موقت</button> <button class="wf-btn wf-btn-success">✅ ذخیره و ثبت (Ctrl+S)</button> <button class="wf-btn wf-btn-primary">💾 ذخیره و رفتن به نوبت‌دهی</button></div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 5. APPOINTMENT -->
+<section>
+<h2>📅 صفحه ۵: نوبت‌دهی و تقویم</h2>
+<div class="wf">
+<div class="wf-title-bar"><div><span>📅</span> سیستم نوبت‌دهی</div></div>
+<div class="wf-top-bar"><div class="left"><span class="wf-breadcrumb">🏠 › 📅 نوبت‌دهی</span></div></div>
+<div class="wf-main">
+<aside class="wf-sidebar">
+<div class="wf-sb-item"><span class="ic">📊</span>داشبورد</div>
+<div class="wf-sb-item"><span class="ic">👤</span>بیماران</div>
+<div class="wf-sb-item active"><span class="ic">📅</span>نوبت‌دهی</div>
+<div class="wf-sb-item"><span class="ic">📋</span>پذیرش</div>
+</aside>
+<div class="wf-content">
+<h3 class="wf-page-title">📅 رزرو نوبت جدید</h3>
+<div class="wf-toolbar">
+<button class="wf-btn wf-btn-primary">➕ نوبت جدید (F4)</button>
+<button class="wf-btn wf-btn-outline">🔍 جستجوی نوبت</button>
+<button class="wf-btn wf-btn-success">📥 نوبت‌های آنلاین</button>
+<div class="wf-search"><input placeholder="جستجو بیمار..."/></div>
+<select class="wf-select"><option>👨‍⚕️ دکتر احمدی - داخلی</option><option>دکتر محمدی - اطفال</option><option>دکتر کریمی - زنان</option></select>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div class="wf-card">
+<div class="wf-card-header"><div class="wf-card-title">📅 تقویم تیر ۱۴۰۴</div><div><button class="wf-icon-btn">◀</button><button class="wf-icon-btn">▶</button></div></div>
+<div class="wf-calendar">
+<div class="wf-cal-day header">ش</div><div class="wf-cal-day header">ی</div><div class="wf-cal-day header">د</div><div class="wf-cal-day header">س</div><div class="wf-cal-day header">چ</div><div class="wf-cal-day header">پ</div><div class="wf-cal-day header">ج</div>
+<div class="wf-cal-day"><span class="n">۱</span><span class="c">۸ نوبت</span></div>
+<div class="wf-cal-day has"><span class="n">۲</span><span class="c">۱۲ نوبت</span></div>
+<div class="wf-cal-day today"><span class="n">۳</span><span class="c">امروز</span></div>
+<div class="wf-cal-day has"><span class="n">۴</span><span class="c">۶ نوبت</span></div>
+<div class="wf-cal-day"><span class="n">۵</span><span class="c">پر</span></div>
+<div class="wf-cal-day"><span class="n">۶</span></div>
+<div class="wf-cal-day" style="opacity:.5"><span class="n">۷</span></div>
+<div class="wf-cal-day"><span class="n">۸</span></div>
+<div class="wf-cal-day has"><span class="n">۹</span><span class="c">۴ نوبت</span></div>
+<div class="wf-cal-day"><span class="n">۱۰</span></div>
+<div class="wf-cal-day"><span class="n">۱۱</span></div>
+<div class="wf-cal-day has"><span class="n">۱۲</span></div>
+<div class="wf-cal-day"><span class="n">۱۳</span></div>
+<div class="wf-cal-day" style="opacity:.5"><span class="n">۱۴</span></div>
+<div class="wf-cal-day"><span class="n">۱۵</span></div>
+<div class="wf-cal-day"><span class="n">۱۶</span></div>
+<div class="wf-cal-day"><span class="n">۱۷</span></div>
+<div class="wf-cal-day"><span class="n">۱۸</span></div>
+<div class="wf-cal-day"><span class="n">۱۹</span></div>
+<div class="wf-cal-day"><span class="n">۲۰</span></div>
+<div class="wf-cal-day" style="opacity:.5"><span class="n">۲۱</span></div>
+</div>
+</div>
+<div class="wf-card">
+<div class="wf-card-header"><div class="wf-card-title">⏰ ساعت‌های موجود - ۱۴۰۴/۰۴/۰۳</div></div>
+<div style="margin-bottom:10px"><strong style="font-size:11px">صبح:</strong><br>
+<div class="wf-time-slot available">۰۸:۰۰</div>
+<div class="wf-time-slot booked">۰۸:۱۵</div>
+<div class="wf-time-slot booked">۰۸:۳۰</div>
+<div class="wf-time-slot available">۰۸:۴۵</div>
+<div class="wf-time-slot selected">۰۹:۰۰</div>
+<div class="wf-time-slot available">۰۹:۱۵</div>
+<div class="wf-time-slot booked">۰۹:۳۰</div>
+<div class="wf-time-slot available">۰۹:۴۵</div>
+<div class="wf-time-slot available">۱۰:۰۰</div>
+<div class="wf-time-slot available">۱۰:۱۵</div>
+<div class="wf-time-slot booked">۱۰:۳۰</div>
+<div class="wf-time-slot available">۱۰:۴۵</div>
+<div class="wf-time-slot available">۱۱:۰۰</div>
+<div class="wf-time-slot available">۱۱:۱۵</div>
+<div class="wf-time-slot available">۱۱:۳۰</div>
+<div class="wf-time-slot available">۱۱:۴۵</div>
+</div>
+<div><strong style="font-size:11px">عصر:</strong><br>
+<div class="wf-time-slot available">۱۶:۰۰</div>
+<div class="wf-time-slot booked">۱۶:۱۵</div>
+<div class="wf-time-slot available">۱۶:۳۰</div>
+<div class="wf-time-slot available">۱۶:۴۵</div>
+<div class="wf-time-slot booked">۱۷:۰۰</div>
+<div class="wf-time-slot booked">۱۷:۱۵</div>
+<div class="wf-time-slot available">۱۷:۳۰</div>
+<div class="wf-time-slot available">۱۷:۴۵</div>
+</div>
+<div style="margin-top:12px;padding:10px;background:#eff6ff;border-radius:5px;font-size:11px">
+<strong>✓ انتخاب شده:</strong> ۱۴۰۴/۰۴/۰۳ - ساعت ۰۹:۰۰<br>
+<strong>بیمار:</strong> علی رضایی<br>
+<button class="wf-btn wf-btn-success" style="margin-top:8px;width:100%">✅ تایید رزرو</button>
+</div>
+</div>
+</div>
+<div class="wf-card" style="margin-top:12px">
+<div class="wf-card-header"><div class="wf-card-title">📋 نوبت‌های امروز (۱۴۰۴/۰۴/۰۱)</div></div>
+<table class="wf-table">
+<tr><th>#</th><th>ساعت</th><th>بیمار</th><th>موبایل</th><th>پزشک</th><th>وضعیت</th><th>عملیات</th></tr>
+<tr><td>۱</td><td>۰۸:۰۰</td><td>زهرا نوری</td><td>۰۹۱۷۱۲۳۴۵۶۷</td><td>دکتر احمدی</td><td><span class="wf-badge wf-b-green">تمام</span></td><td><button class="wf-icon-btn">👁️</button></td></tr>
+<tr><td>۲</td><td>۱۰:۳۰</td><td>علی رضایی</td><td>۰۹۱۲۱۲۳۴۵۶۷</td><td>دکتر احمدی</td><td><span class="wf-badge wf-b-blue">در حال ویزیت</span></td><td><button class="wf-icon-btn">👁️</button></td></tr>
+<tr><td>۳</td><td>۱۰:۴۵</td><td>مریم محمدی</td><td>۰۹۱۲۳۴۵۶۷۸۹</td><td>دکتر احمدی</td><td><span class="wf-badge wf-b-yellow">در انتظار</span></td><td><button class="wf-icon-btn">👁️</button><button class="wf-icon-btn">✏️</button><button class="wf-icon-btn">❌</button></td></tr>
+<tr><td>۴</td><td>۱۱:۰۰</td><td>حسین کریمی</td><td>۰۹۳۳۴۴۵۵۶۶۶</td><td>دکتر احمدی</td><td><span class="wf-badge wf-b-gray">رزرو شده</span></td><td><button class="wf-icon-btn">👁️</button><button class="wf-icon-btn">✏️</button></td></tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 6. RECEPTION -->
+<section>
+<h2>📋 صفحه ۶: پذیرش بیمار</h2>
+<div class="wf">
+<div class="wf-title-bar"><div><span>📋</span> پذیرش بیمار</div></div>
+<div class="wf-top-bar"><div class="left"><span class="wf-breadcrumb">🏠 › 📋 پذیرش</span></div></div>
+<div style="padding:15px;background:#f8fafc">
+<div class="wf-stats">
+<div class="wf-stat"><div class="wf-stat-label">🧑 در انتظار پذیرش</div><div class="wf-stat-value">۸</div></div>
+<div class="wf-stat g"><div class="wf-stat-label">✅ پذیرش شده امروز</div><div class="wf-stat-value">۳۴</div></div>
+<div class="wf-stat y"><div class="wf-stat-label">⏳ در صف پزشک</div><div class="wf-stat-value">۱۴</div></div>
+<div class="wf-stat p"><div class="wf-stat-label">💰 درآمد پذیرش</div><div class="wf-stat-value">۴٬۲۰۰٬۰۰۰</div></div>
+</div>
+<div class="wf-card">
+<div class="wf-card-header"><div class="wf-card-title">➕ پذیرش جدید</div></div>
+<div class="wf-form-grid">
+<div>
+<div class="wf-form-row"><label class="wf-form-label req">کد ملی بیمار</label><div style="display:flex;gap:5px"><input class="wf-form-input" placeholder="۰۰۱۲۳۴۵۶۷۸"/><button class="wf-btn wf-btn-primary">🔍</button></div></div>
+<div class="wf-form-row"><label class="wf-form-label">نام بیمار</label><input class="wf-form-input" value="علی رضایی" readonly style="background:#f1f5f9"/></div>
+<div class="wf-form-row"><label class="wf-form-label req">پزشک</label><select class="wf-form-input"><option>دکتر احمدی - داخلی</option></select></div>
+<div class="wf-form-row"><label class="wf-form-label">نوع ویزیت</label><select class="wf-form-input"><option>اولیه</option><option>پیگیری</option></select></div>
+</div>
+<div>
+<div class="wf-form-row"><label class="wf-form-label">نوع بیمه</label><select class="wf-form-input"><option>تامین اجتماعی</option><option>سلامت</option><option>آزاد</option></select></div>
+<div class="wf-form-row"><label class="wf-form-label">شماره بیمه</label><div style="display:flex;gap:5px"><input class="wf-form-input" placeholder="۱۲۳۴۵۶۷۸"/><button class="wf-btn wf-btn-success">🔗 استعلام</button></div></div>
+<div class="wf-form-row"><label class="wf-form-label">کد تایید بیمه</label><input class="wf-form-input" value="OK-1234567" readonly style="background:#dcfce7"/></div>
+<div class="wf-form-row"><label class="wf-form-label">کد ارجاع</label><input class="wf-form-input" placeholder="(اختیاری)"/></div>
+</div>
+</div>
+<div style="background:#eff6ff;padding:12px;border-radius:8px;margin-top:12px">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;font-size:12px">
+<div><strong>💰 حق ویزیت:</strong><br>۳٬۰۰۰٬۰۰۰ ریال</div>
+<div><strong>🏥 سهم بیمه:</strong><br>۲٬۱۰۰٬۰۰۰ ریال (۷۰٪)</div>
+<div><strong>👤 سهم بیمار:</strong><br>۹۰۰٬۰۰۰ ریال (۳۰٪)</div>
+<div><strong>💵 قابل پرداخت:</strong><br><span style="color:var(--a);font-size:14px;font-weight:900">۹۰۰٬۰۰۰ ریال</span></div>
+</div>
+</div>
+<div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+<button class="wf-btn wf-btn-secondary">انصراف</button>
+<button class="wf-btn wf-btn-primary">💾 پذیرش و صدور فاکتور</button>
+<button class="wf-btn wf-btn-success">💵 پذیرش و پرداخت نقدی</button>
+</div>
+</div>
+<div class="wf-card" style="margin-top:12px">
+<div class="wf-card-header"><div class="wf-card-title">📋 صف پذیرش امروز</div></div>
+<table class="wf-table">
+<tr><th>#</th><th>شماره صف</th><th>نام بیمار</th><th>زمان پذیرش</th><th>پزشک</th><th>وضعیت</th><th>عملیات</th></tr>
+<tr><td>۱</td><td>۱۴</td><td>علی رضایی</td><td>۱۰:۲۰</td><td>دکتر احمدی</td><td><span class="wf-badge wf-b-blue">در حال ویزیت</span></td><td><button class="wf-icon-btn">👁️</button></td></tr>
+<tr><td>۲</td><td>۱۵</td><td>مریم محمدی</td><td>۱۰:۲۵</td><td>دکتر احمدی</td><td><span class="wf-badge wf-b-yellow">در صف</span></td><td><button class="wf-icon-btn">👁️</button><button class="wf-icon-btn">🖨️</button></td></tr>
+<tr><td>۳</td><td>۱۶</td><td>حسین کریمی</td><td>۱۰:۳۰</td><td>دکتر احمدی</td><td><span class="wf-badge wf-b-yellow">در صف</span></td><td><button class="wf-icon-btn">👁️</button></td></tr>
+</table>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 7. VISIT -->
+<section>
+<h2>🩺 صفحه ۷: ویزیت و معاینه بیمار</h2>
+<div class="wf">
+<div class="wf-title-bar"><div><span>🩺</span> ویزیت بیمار: علی رضایی</div></div>
+<div class="wf-top-bar"><div class="left"><span class="wf-breadcrumb">🏠 › 🩺 ویزیت › علی رضایی</span></div><div class="right"><span class="wf-badge wf-b-blue">🔴 در حال ضبط</span></div></div>
+<div style="padding:15px;background:#f8fafc">
+<div style="display:grid;grid-template-columns:280px 1fr;gap:12px">
+<div class="wf-card">
+<div style="text-align:center;margin-bottom:10px">
+<div style="width:60px;height:60px;background:var(--p);color:#fff;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:24px">👤</div>
+<h4 style="margin-top:8px">علی رضایی</h4>
+<small style="color:#64748b">#MRN-10023</small>
+</div>
+<div class="wf-info-row"><span class="wf-info-label">کد ملی:</span><span class="wf-info-value">۰۰۱۲۳۴۵۶۷۸</span></div>
+<div class="wf-info-row"><span class="wf-info-label">سن:</span><span class="wf-info-value">۴۵ سال</span></div>
+<div class="wf-info-row"><span class="wf-info-label">جنسیت:</span><span class="wf-info-value">مرد</span></div>
+<div class="wf-info-row"><span class="wf-info-label">گروه خونی:</span><span class="wf-info-value">O+</span></div>
+<div class="wf-info-row"><span class="wf-info-label">موبایل:</span><span class="wf-info-value">۰۹۱۲۱۲۳۴۵۶۷</span></div>
+<div class="wf-info-row"><span class="wf-info-label">بیمه:</span><span class="wf-info-value">تامین اجتماعی</span></div>
+<div style="margin-top:10px"><strong style="font-size:11px;color:var(--a)">⚠️ آلرژی‌ها:</strong><br><span class="wf-tag">پنی‌سیلین</span><span class="wf-tag">آسپرین</span></div>
+<div style="margin-top:8px"><strong style="font-size:11px;color:#e37400">🏥 بیماری‌های مزمن:</strong><br><span class="wf-tag">دیابت نوع ۲</span><span class="wf-tag">فشار خون</span></div>
+<div style="margin-top:8px"><strong style="font-size:11px">💊 داروهای فعلی:</strong><br><span class="wf-tag">متفورمین ۵۰۰mg</span><span class="wf-tag">آتورواستاتین ۲۰mg</span></div>
+<hr style="margin:12px 0;border:none;border-top:1px solid var(--b)">
+<button class="wf-btn wf-btn-outline" style="width:100%;margin-bottom:5px">📜 سوابق ویزیت (۱۲)</button>
+<button class="wf-btn wf-btn-outline" style="width:100%;margin-bottom:5px">💊 سوابق نسخه (۸)</button>
+<button class="wf-btn wf-btn-outline" style="width:100%">🧪 سوابق آزمایش (۵)</button>
+</div>
+<div>
+<div class="wf-tabs">
+<button class="wf-tab active">📝 شرح حال</button>
+<button class="wf-tab">💓 علائم حیاتی</button>
+<button class="wf-tab">🔬 معاینه</button>
+<button class="wf-tab">🏥 تشخیص</button>
+<button class="wf-tab">💊 نسخه</button>
+<button class="wf-tab">🧪 آزمایش</button>
+<button class="wf-tab">📷 تصویربرداری</button>
+</div>
+<div class="wf-card">
+<div class="wf-section-desc">💡 الگوی SOAP (Subjective, Objective, Assessment, Plan) - شرح حال بیمار</div>
+<div class="wf-form-row" style="grid-template-columns:150px 1fr"><label class="wf-form-label">🗣️ شکایت اصلی (CC):</label><input class="wf-form-input" placeholder="سردرد از ۳ روز قبل"/></div>
+<div class="wf-form-row" style="grid-template-columns:150px 1fr"><label class="wf-form-label">📖 شرح بیماری فعلی (HPI):</label><textarea class="wf-form-input" rows="3" placeholder="بیمار از ۳ روز قبل دچار سردرد ..."></textarea></div>
+<div class="wf-form-row" style="grid-template-columns:150px 1fr"><label class="wf-form-label">📚 سوابق پزشکی گذشته:</label><textarea class="wf-form-input" rows="2" placeholder="دیابت از سال ۱۳۹۵..."></textarea></div>
+<div class="wf-form-row" style="grid-template-columns:150px 1fr"><label class="wf-form-label">👨‍👩‍👧 سوابق خانوادگی:</label><textarea class="wf-form-input" rows="2" placeholder="پدر: فشار خون..."></textarea></div>
+<div class="wf-form-row" style="grid-template-columns:150px 1fr"><label class="wf-form-label">💓 علائم حیاتی:</label><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+<div><label style="font-size:10px">BP (mmHg)</label><input class="wf-form-input" value="130/85"/></div>
+<div><label style="font-size:10px">HR (bpm)</label><input class="wf-form-input" value="78"/></div>
+<div><label style="font-size:10px">Temp (°C)</label><input class="wf-form-input" value="37.2"/></div>
+<div><label style="font-size:10px">SpO2 (%)</label><input class="wf-form-input" value="98"/></div>
+<div><label style="font-size:10px">Weight</label><input class="wf-form-input" value="82"/></div>
+<div><label style="font-size:10px">Height</label><input class="wf-form-input" value="175"/></div>
+<div><label style="font-size:10px">BMI</label><input class="wf-form-input" value="26.8" readonly style="background:#f1f5f9"/></div>
+<div><label style="font-size:10px">BS</label><input class="wf-form-input" value="140"/></div>
+</div></div>
+</div>
+<div style="display:flex;justify-content:space-between;margin-top:12px">
+<div><button class="wf-btn wf-btn-outline">⏭️ بیمار بعدی</button></div>
+<div><button class="wf-btn wf-btn-outline">💾 ذخیره موقت</button> <button class="wf-btn wf-btn-success">✅ پایان ویزیت و ذخیره (Ctrl+Enter)</button></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 8. PRESCRIPTION -->
+<section>
+<h2>💊 صفحه ۸: نسخه‌نویسی الکترونیکی</h2>
+<div class="wf">
+<div class="wf-title-bar"><div><span>💊</span> نسخه‌نویسی - علی رضایی</div></div>
+<div class="wf-top-bar"><div class="left"><span class="wf-breadcrumb">🏠 › 🩺 ویزیت › 💊 نسخه</span></div></div>
+<div style="padding:15px;background:#f8fafc">
+<div class="wf-notification-bar" style="background:#dcfce7;border-color:var(--s)">
+✅ بیمه بیمار (تامین اجتماعی) تایید شد - کد تایید: TAM-2024-1234567
+</div>
+<div class="wf-card">
+<div class="wf-card-header">
+<div class="wf-card-title">💊 اقلام نسخه</div>
+<div>
+<select class="wf-select"><option>📄 نسخه داخلی</option><option>💻 سلامت (الکترونیک)</option><option>💻 تامین اجتماعی (الکترونیک)</option></select>
+<button class="wf-btn wf-btn-outline">📋 تمپلیت نسخه</button>
+</div>
+</div>
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+<div class="wf-search" style="flex:1"><input placeholder="🔍 جستجوی دارو (نام ژنریک، نام تجاری، بارکد)..."/></div>
+<button class="wf-btn wf-btn-primary">➕ افزودن دارو</button>
+<button class="wf-btn wf-btn-outline">📷 اسکن بارکد</button>
+</div>
+<div class="wf-prescription-item">
+<div><strong>💊 متفورمین ۵۰۰ میلی‌گرم</strong><br><small>قرص - Metformin HCl</small></div>
+<div><input class="wf-form-input" value="۱ قرص - ۲ بار"/></div>
+<div><input class="wf-form-input" value="۳۰ روز"/></div>
+<div><button class="wf-icon-btn">✏️</button><button class="wf-icon-btn">🗑️</button></div>
+</div>
+<div class="wf-prescription-item">
+<div><strong>💊 آتورواستاتین ۲۰ میلی‌گرم</strong><br><small>قرص - Atorvastatin</small></div>
+<div><input class="wf-form-input" value="۱ قرص - شب"/></div>
+<div><input class="wf-form-input" value="۳۰ روز"/></div>
+<div><button class="wf-icon-btn">✏️</button><button class="wf-icon-btn">🗑️</button></div>
+</div>
+<div class="wf-prescription-item">
+<div><strong>💊 لوزارتان ۵۰ میلی‌گرم</strong><br><small>قرص - Losartan</small></div>
+<div><input class="wf-form-input" value="۱ قرص - صبح"/></div>
+<div><input class="wf-form-input" value="۶۰ روز"/></div>
+<div><button class="wf-icon-btn">✏️</button><button class="wf-icon-btn">🗑️</button></div>
+</div>
+<div class="wf-notification-bar" style="background:#fef3c7;border-color:#e37400">
+⚠️ <strong>تداخل دارویی:</strong> هیچ تداخل خطرناکی بین داروهای تجویز شده شناسایی نشد.
+</div>
+<div class="wf-form-row" style="grid-template-columns:120px 1fr;margin-top:10px"><label class="wf-form-label">📝 توضیحات پزشک</label><textarea class="wf-form-input" rows="2" placeholder="رعایت رژیم غذایی کم نمک..."></textarea></div>
+</div>
+<div style="display:flex;justify-content:space-between;background:#fff;padding:12px;border-radius:8px">
+<div style="font-size:12px"><strong>💰 جمع هزینه:</strong> ۴۸۰٬۰۰۰ ریال | <strong>بیمه:</strong> ۳۳۶٬۰۰۰ | <strong>بیمار:</strong> <span style="color:var(--a)">۱۴۴٬۰۰۰ ریال</span></div>
+<div><button class="wf-btn wf-btn-outline">💾 ذخیره</button> <button class="wf-btn wf-btn-success">✅ ارسال به سامانه بیمه</button> <button class="wf-btn wf-btn-primary">🖨️ چاپ</button></div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 9. INVOICE -->
+<section>
+<h2>💰 صفحه ۹: صندوق و صدور فاکتور</h2>
+<div class="wf">
+<div class="wf-title-bar"><div><span>💰</span> صندوق - صدور فاکتور</div></div>
+<div class="wf-top-bar"><div class="left"><span class="wf-breadcrumb">🏠 › 💰 صندوق</span></div><div class="right"><span class="wf-badge wf-b-green">💵 صندوق باز: ۴٬۲۰۰٬۰۰۰ تومان</span></div></div>
+<div style="padding:15px;background:#f8fafc">
+<div class="wf-stats">
+<div class="wf-stat"><div class="wf-stat-label">🧾 فاکتورهای امروز</div><div class="wf-stat-value">۳۴</div></div>
+<div class="wf-stat g"><div class="wf-stat-label">💵 جمع نقدی</div><div class="wf-stat-value">۲٬۸۰۰٬۰۰۰</div></div>
+<div class="wf-stat p"><div class="wf-stat-label">💳 جمع کارت‌خوان</div><div class="wf-stat-value">۸٬۴۰۰٬۰۰۰</div></div>
+<div class="wf-stat r"><div class="wf-stat-label">⏳ معوقه</div><div class="wf-stat-value">۱٬۲۵۰٬۰۰۰</div></div>
+</div>
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+<div class="wf-card">
+<div class="wf-card-header"><div class="wf-card-title">🧾 فاکتور #INV-1024 - علی رضایی</div></div>
+<div class="wf-form-grid">
+<div>
+<div class="wf-form-row"><label class="wf-form-label">تاریخ فاکتور</label><input class="wf-form-input" value="۱۴۰۴/۰۴/۰۱" readonly/></div>
+<div class="wf-form-row"><label class="wf-form-label">بیمار</label><input class="wf-form-input" value="علی رضایی" readonly/></div>
+<div class="wf-form-row"><label class="wf-form-label">پزشک</label><input class="wf-form-input" value="دکتر احمدی" readonly/></div>
+</div>
+<div>
+<div class="wf-form-row"><label class="wf-form-label">بیمه</label><input class="wf-form-input" value="تامین اجتماعی" readonly/></div>
+<div class="wf-form-row"><label class="wf-form-label">کد تایید</label><input class="wf-form-input" value="TAM-123456" readonly/></div>
+<div class="wf-form-row"><label class="wf-form-label">نوع فاکتور</label><select class="wf-form-input"><option>ویزیت</option><option>آزمایش</option><option>داروخانه</option></select></div>
+</div>
+</div>
+<table class="wf-table" style="margin-top:10px">
+<tr><th>کد</th><th>شرح خدمت</th><th>تعداد</th><th>قیمت واحد</th><th>سهم بیمه</th><th>سهم بیمار</th><th>عملیات</th></tr>
+<tr><td>K-900001</td><td>ویزیت متخصص داخلی</td><td>۱</td><td>۳٬۰۰۰٬۰۰۰</td><td>۲٬۱۰۰٬۰۰۰</td><td>۹۰۰٬۰۰۰</td><td><button class="wf-icon-btn">🗑️</button></td></tr>
+<tr><td>K-900120</td><td>الکتروکاردیوگرام</td><td>۱</td><td>۸۰۰٬۰۰۰</td><td>۵۶۰٬۰۰۰</td><td>۲۴۰٬۰۰۰</td><td><button class="wf-icon-btn">🗑️</button></td></tr>
+</table>
+<button class="wf-btn wf-btn-outline" style="margin-top:8px">➕ افزودن خدمت</button>
+</div>
+<div class="wf-card">
+<div class="wf-card-header"><div class="wf-card-title">💰 خلاصه فاکتور</div></div>
+<div class="wf-info-row"><span>جمع کل:</span><span>۳٬۸۰۰٬۰۰۰</span></div>
+<div class="wf-info-row"><span>تخفیف:</span><input class="wf-form-input" style="width:80px" value="۰"/></div>
+<div class="wf-info-row"><span>سهم بیمه:</span><span style="color:var(--s)">۲٬۶۶۰٬۰۰۰ -</span></div>
+<div class="wf-info-row"><span>مالیات (۹٪):</span><span>۰</span></div>
+<div class="wf-info-row" style="background:#fef3c7;padding:8px;border-radius:5px;font-size:13px"><strong>قابل پرداخت:</strong><strong style="color:var(--a);font-size:16px">۱٬۱۴۰٬۰۰۰</strong></div>
+<hr style="margin:10px 0">
+<div class="wf-form-row" style="grid-template-columns:1fr"><label class="wf-form-label">💳 روش پرداخت</label><select class="wf-form-input"><option>💵 نقد</option><option>💳 کارت‌خوان</option><option>🏦 واریز بانکی</option><option>📝 اقساطی</option></select></div>
+<div class="wf-form-row" style="grid-template-columns:1fr"><label class="wf-form-label">مبلغ دریافتی</label><input class="wf-form-input" placeholder="۱٬۱۴۰٬۰۰۰"/></div>
+<div class="wf-form-row" style="grid-template-columns:1fr"><label class="wf-form-label">باقیمانده</label><input class="wf-form-input" value="۰" readonly/></div>
+<button class="wf-btn wf-btn-success" style="width:100%;padding:10px;margin-top:10px">✅ ثبت و چاپ فاکتور</button>
+<button class="wf-btn wf-btn-outline" style="width:100%;margin-top:5px">🖨️ پیش‌نمایش چاپ</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 10. LAB ORDER -->
+<section>
+<h2>🧪 صفحه ۱۰: درخواست و نتایج آزمایشگاه</h2>
+<div class="wf">
+<div class="wf-title-bar"><div><span>🧪</span> آزمایشگاه</div></div>
+<div style="padding:15px;background:#f8fafc">
+<div class="wf-tabs">
+<button class="wf-tab active">📋 درخواست‌های امروز</button>
+<button class="wf-tab">🧪 در حال انجام</button>
+<button class="wf-tab">✅ نتایج آماده</button>
+<button class="wf-tab">📚 آرشیو</button>
+</div>
+<div class="wf-toolbar">
+<button class="wf-btn wf-btn-primary">➕ درخواست جدید</button>
+<button class="wf-btn wf-btn-success">📥 ورود نتیجه</button>
+<div class="wf-search"><input placeholder="جستجو..."/></div>
+<select class="wf-select"><option>همه اولویت‌ها</option><option>فوری</option><option>عادی</option></select>
+</div>
+<table class="wf-table">
+<tr><th>شماره درخواست</th><th>بیمار</th><th>پزشک درخواست‌کننده</th><th>آزمایش‌ها</th><th>اولویت</th><th>تاریخ درخواست</th><th>وضعیت</th><th>عملیات</th></tr>
+<tr><td>LAB-10234</td><td>علی رضایی</td><td>دکتر احمدی</td><td><span class="wf-tag">CBC</span><span class="wf-tag">FBS</span><span class="wf-tag">+۳</span></td><td><span class="wf-badge wf-b-red">فوری</span></td><td>۱۰:۱۵</td><td><span class="wf-badge wf-b-yellow">نمونه‌گیری</span></td><td><button class="wf-icon-btn">👁️</button><button class="wf-icon-btn">📝</button></td></tr>
+<tr><td>LAB-10233</td><td>مریم محمدی</td><td>دکتر کریمی</td><td><span class="wf-tag">TSH</span><span class="wf-tag">T3</span><span class="wf-tag">T4</span></td><td><span class="wf-badge wf-b-blue">عادی</span></td><td>۰۹:۴۵</td><td><span class="wf-badge wf-b-blue">در حال انجام</span></td><td><button class="wf-icon-btn">👁️</button></td></tr>
+<tr><td>LAB-10232</td><td>زهرا نوری</td><td>دکتر احمدی</td><td><span class="wf-tag">U/A</span></td><td><span class="wf-badge wf-b-blue">عادی</span></td><td>۰۹:۰۰</td><td><span class="wf-badge wf-b-green">آماده</span></td><td><button class="wf-icon-btn">👁️</button><button class="wf-icon-btn">🖨️</button><button class="wf-icon-btn">📱</button></td></tr>
+</table>
+<div class="wf-card" style="margin-top:12px">
+<div class="wf-card-header"><div class="wf-card-title">📊 ثبت نتایج آزمایش LAB-10234</div></div>
+<table class="wf-table">
+<tr><th>نام تست</th><th>نتیجه</th><th>واحد</th><th>محدوده طبیعی</th><th>وضعیت</th></tr>
+<tr><td>WBC</td><td><input class="wf-form-input" value="8.5"/></td><td>×10³/μL</td><td>4.0 - 11.0</td><td><span class="wf-badge wf-b-green">طبیعی</span></td></tr>
+<tr><td>RBC</td><td><input class="wf-form-input" value="4.2"/></td><td>×10⁶/μL</td><td>4.5 - 5.9</td><td><span class="wf-badge wf-b-yellow">پایین</span></td></tr>
+<tr><td>Hemoglobin</td><td><input class="wf-form-input" value="13.8"/></td><td>g/dL</td><td>13.5 - 17.5</td><td><span class="wf-badge wf-b-green">طبیعی</span></td></tr>
+<tr><td>FBS</td><td><input class="wf-form-input" value="145"/></td><td>mg/dL</td><td>70 - 100</td><td><span class="wf-badge wf-b-red">بالا</span></td></tr>
+</table>
+<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+<button class="wf-btn wf-btn-outline">💾 ذخیره موقت</button>
+<button class="wf-btn wf-btn-success">✅ تایید نهایی و اطلاع‌رسانی</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 11. PHARMACY -->
+<section>
+<h2>💊 صفحه ۱۱: داروخانه - موجودی و تحویل</h2>
+<div class="wf">
+<div class="wf-title-bar"><div><span>💊</span> داروخانه</div></div>
+<div style="padding:15px;background:#f8fafc">
+<div class="wf-stats">
+<div class="wf-stat"><div class="wf-stat-label">📦 اقلام موجود</div><div class="wf-stat-value">۱٬۲۴۸</div></div>
+<div class="wf-stat r"><div class="wf-stat-label">⚠️ موجودی کم</div><div class="wf-stat-value">۲۳</div></div>
+<div class="wf-stat y"><div class="wf-stat-label">⏰ نزدیک انقضا</div><div class="wf-stat-value">۱۸</div></div>
+<div class="wf-stat g"><div class="wf-stat-label">💰 ارزش کل انبار</div><div class="wf-stat-value">۴۸۰M</div></div>
+</div>
+<div class="wf-tabs">
+<button class="wf-tab active">📥 تحویل نسخه</button>
+<button class="wf-tab">📦 موجودی</button>
+<button class="wf-tab">📥 ورود کالا</button>
+<button class="wf-tab">📋 سفارش خرید</button>
+<button class="wf-tab">📊 انبارگردانی</button>
+</div>
+<div class="wf-card">
+<div class="wf-card-header"><div class="wf-card-title">📥 تحویل نسخه #RX-9823</div></div>
+<div style="display:flex;gap:8px;margin-bottom:12px">
+<input class="wf-form-input" placeholder="🔍 اسکن QR نسخه یا ورود کد رهگیری..." style="flex:1"/>
+<button class="wf-btn wf-btn-primary">🔍 جستجو</button>
+<button class="wf-btn wf-btn-outline">📷 اسکن</button>
+</div>
+<div style="background:#eff6ff;padding:10px;border-radius:5px;margin-bottom:10px;font-size:11px">
+<strong>بیمار:</strong> علی رضایی | <strong>پزشک:</strong> دکتر احمدی | <strong>تاریخ:</strong> ۱۴۰۴/۰۴/۰۱ | <strong>بیمه:</strong> تامین اجتماعی
+</div>
+<table class="wf-table">
+<tr><th>#</th><th>نام دارو</th><th>تعداد تجویز</th><th>موجودی</th><th>قیمت واحد</th><th>سهم بیمه</th><th>سهم بیمار</th><th>تحویل</th></tr>
+<tr><td>۱</td><td>💊 متفورمین ۵۰۰mg</td><td>۶۰</td><td><span class="wf-badge wf-b-green">موجود</span></td><td>۱۲٬۰۰۰</td><td>۵۰۴٬۰۰۰</td><td>۲۱۶٬۰۰۰</td><td><input type="checkbox" checked/></td></tr>
+<tr><td>۲</td><td>💊 آتورواستاتین ۲۰mg</td><td>۳۰</td><td><span class="wf-badge wf-b-green">موجود</span></td><td>۸٬۰۰۰</td><td>۱۶۸٬۰۰۰</td><td>۷۲٬۰۰۰</td><td><input type="checkbox" checked/></td></tr>
+<tr><td>۳</td><td>💊 لوزارتان ۵۰mg</td><td>۶۰</td><td><span class="wf-badge wf-b-yellow">۱۲ عدد</span></td><td>۱۵٬۰۰۰</td><td>۶۳۰٬۰۰۰</td><td>۲۷۰٬۰۰۰</td><td><input type="checkbox"/></td></tr>
+</table>
+<div style="display:flex;justify-content:space-between;margin-top:12px;background:#fef3c7;padding:12px;border-radius:5px">
+<div><strong>💰 جمع:</strong> ۲٬۱۶۰٬۰۰۰ ریال | <strong>سهم بیمار:</strong> <span style="color:var(--a);font-weight:900">۵۵۸٬۰۰۰ ریال</span></div>
+<div><button class="wf-btn wf-btn-outline">🖨️ چاپ قبض</button> <button class="wf-btn wf-btn-success">✅ تایید تحویل</button></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 12. ACCOUNTING -->
+<section>
+<h2>📊 صفحه ۱۲: حسابداری دوبل</h2>
+<div class="wf">
+<div class="wf-title-bar"><div><span>📊</span> حسابداری</div></div>
+<div style="padding:15px;background:#f8fafc">
+<div class="wf-tabs">
+<button class="wf-tab active">📒 دفتر روزنامه</button>
+<button class="wf-tab">📚 دفتر کل</button>
+<button class="wf-tab">📑 سرفصل‌ها</button>
+<button class="wf-tab">⚖️ ترازنامه</button>
+<button class="wf-tab">💹 سود و زیان</button>
+<button class="wf-tab">📅 سال مالی</button>
+</div>
+<div class="wf-toolbar">
+<button class="wf-btn wf-btn-primary">➕ سند جدید</button>
+<button class="wf-btn wf-btn-success">✅ تایید دسته‌ای</button>
+<div class="wf-search"><input placeholder="شماره سند..."/></div>
+<input class="wf-input" placeholder="📅 از تاریخ"/>
+<input class="wf-input" placeholder="📅 تا تاریخ"/>
+<select class="wf-select"><option>همه سال‌ها</option><option>۱۴۰۴</option></select>
+</div>
+<div class="wf-card">
+<div class="wf-card-header"><div class="wf-card-title">📝 سند حسابداری #JE-2024-1156</div><span class="wf-badge wf-b-green">تایید شده</span></div>
+<div class="wf-form-grid">
+<div>
+<div class="wf-form-row"><label class="wf-form-label">شماره سند</label><input class="wf-form-input" value="JE-2024-1156" readonly/></div>
+<div class="wf-form-row"><label class="wf-form-label">تاریخ</label><input class="wf-form-input" value="۱۴۰۴/۰۴/۰۱"/></div>
+</div>
+<div>
+<div class="wf-form-row"><label class="wf-form-label">نوع سند</label><select class="wf-form-input"><option>دستی</option><option>فاکتور</option><option>پرداخت</option></select></div>
+<div class="wf-form-row"><label class="wf-form-label">شرح سند</label><input class="wf-form-input" value="دریافت وجه ویزیت علی رضایی"/></div>
+</div>
+</div>
+<table class="wf-table" style="margin-top:10px">
+<tr><th>#</th><th>کد حساب</th><th>عنوان حساب</th><th>شرح</th><th>بدهکار</th><th>بستانکار</th><th>مرکز هزینه</th><th></th></tr>
+<tr><td>۱</td><td>۱۰۱۰۱</td><td>صندوق درمانگاه</td><td>دریافت نقدی</td><td>۱٬۱۴۰٬۰۰۰</td><td>۰</td><td>پذیرش</td><td><button class="wf-icon-btn">🗑️</button></td></tr>
+<tr><td>۲</td><td>۴۰۱۰۱</td><td>درآمد ویزیت</td><td>فاکتور INV-1024</td><td>۰</td><td>۱٬۱۴۰٬۰۰۰</td><td>کلینیک داخلی</td><td><button class="wf-icon-btn">🗑️</button></td></tr>
+<tr style="background:#eff6ff;font-weight:700"><td colspan="4" style="text-align:left">جمع:</td><td>۱٬۱۴۰٬۰۰۰</td><td>۱٬۱۴۰٬۰۰۰</td><td colspan="2"><span class="wf-badge wf-b-green">✓ متوازن</span></td></tr>
+</table>
+<button class="wf-btn wf-btn-outline" style="margin-top:8px">➕ افزودن سطر</button>
+<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+<button class="wf-btn wf-btn-secondary">انصراف</button>
+<button class="wf-btn wf-btn-outline">💾 ذخیره پیش‌نویس</button>
+<button class="wf-btn wf-btn-success">✅ تایید نهایی سند</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 13. DENTAL -->
+<section>
+<h2>🦷 صفحه ۱۳: چارت دندانپزشکی</h2>
+<div class="wf">
+<div class="wf-title-bar"><div><span>🦷</span> پرونده دندانپزشکی - زهرا نوری</div></div>
+<div style="padding:15px;background:#f8fafc">
+<div class="wf-card">
+<div class="wf-card-header"><div class="wf-card-title">🦷 چارت دندان (FDI Numbering)</div><div><span class="wf-badge wf-b-gray">سفید: سالم</span> <span class="wf-badge wf-b-red">قرمز: پوسیدگی</span> <span class="wf-badge wf-b-yellow">زرد: ترمیم</span> <span class="wf-badge wf-b-green">سبز: درمان شده</span></div></div>
+<div style="text-align:center;margin-bottom:12px"><strong>ماگزیلا (فک بالا)</strong></div>
+<div class="wf-tooth-chart">
+<div class="wf-tooth">18</div><div class="wf-tooth">17</div><div class="wf-tooth red">16</div><div class="wf-tooth">15</div><div class="wf-tooth yellow">14</div><div class="wf-tooth">13</div><div class="wf-tooth">12</div><div class="wf-tooth">11</div>
+<div class="wf-tooth">21</div><div class="wf-tooth">22</div><div class="wf-tooth">23</div><div class="wf-tooth green">24</div><div class="wf-tooth">25</div><div class="wf-tooth">26</div><div class="wf-tooth">27</div><div class="wf-tooth">28</div>
+</div>
+<div style="text-align:center;margin:12px 0"><strong>مندیبل (فک پایین)</strong></div>
+<div class="wf-tooth-chart">
+<div class="wf-tooth">48</div><div class="wf-tooth green">47</div><div class="wf-tooth">46</div><div class="wf-tooth">45</div><div class="wf-tooth">44</div><div class="wf-tooth">43</div><div class="wf-tooth">42</div><div class="wf-tooth">41</div>
+<div class="wf-tooth">31</div><div class="wf-tooth">32</div><div class="wf-tooth red">33</div><div class="wf-tooth">34</div><div class="wf-tooth">35</div><div class="wf-tooth yellow">36</div><div class="wf-tooth">37</div><div class="wf-tooth">38</div>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+<div class="wf-card">
+<div class="wf-card-header"><div class="wf-card-title">📋 طرح درمان</div><button class="wf-btn wf-btn-primary">➕ افزودن</button></div>
+<table class="wf-table">
+<tr><th>دندان</th><th>پروسیجر</th><th>قیمت</th><th>وضعیت</th></tr>
+<tr><td>۱۶</td><td>کشیدن</td><td>۲٬۰۰۰٬۰۰۰</td><td><span class="wf-badge wf-b-yellow">در انتظار</span></td></tr>
+<tr><td>۱۴</td><td>ترمیم کامپوزیت</td><td>۱٬۵۰۰٬۰۰۰</td><td><span class="wf-badge wf-b-yellow">در انتظار</span></td></tr>
+<tr><td>۳۶</td><td>عصب‌کشی</td><td>۵٬۰۰۰٬۰۰۰</td><td><span class="wf-badge wf-b-blue">جلسه ۱/۳</span></td></tr>
+<tr><td>۲۴</td><td>روکش زیرکونیا</td><td>۸٬۰۰۰٬۰۰۰</td><td><span class="wf-badge wf-b-green">تمام شد</span></td></tr>
+</table>
+</div>
+<div class="wf-card">
+<div class="wf-card-header"><div class="wf-card-title">📝 جزئیات دندان ۱۶</div></div>
+<div class="wf-form-row"><label class="wf-form-label">وضعیت</label><select class="wf-form-input"><option>پوسیدگی عمیق</option></select></div>
+<div class="wf-form-row"><label class="wf-form-label">سطح درگیر</label><select class="wf-form-input"><option>M (مزیال)</option></select></div>
+<div class="wf-form-row"><label class="wf-form-label">پروسیجر</label><select class="wf-form-input"><option>کشیدن ساده</option></select></div>
+<div class="wf-form-row"><label class="wf-form-label">قیمت</label><input class="wf-form-input" value="۲٬۰۰۰٬۰۰۰"/></div>
+<div class="wf-form-row"><label class="wf-form-label">یادداشت</label><textarea class="wf-form-input" rows="2"></textarea></div>
+<button class="wf-btn wf-btn-success" style="width:100%;margin-top:8px">💾 ذخیره</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 14. REPORTS -->
+<section>
+<h2>📊 صفحه ۱۴: گزارش‌ساز</h2>
+<div class="wf">
+<div class="wf-title-bar"><div><span>📊</span> گزارش‌ها</div></div>
+<div style="padding:15px;background:#f8fafc">
+<div style="display:grid;grid-template-columns:250px 1fr;gap:12px">
+<div class="wf-card">
+<div class="wf-card-header"><div class="wf-card-title">📚 دسته‌بندی گزارش‌ها</div></div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px 10px;border-radius:5px;margin-bottom:3px;background:#eff6ff">💰 گزارش‌های مالی (۱۲)</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px 10px;border-radius:5px;margin-bottom:3px">👤 گزارش‌های بیماران (۸)</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px 10px;border-radius:5px;margin-bottom:3px">👨‍⚕️ عملکرد پزشکان (۶)</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px 10px;border-radius:5px;margin-bottom:3px">🏦 گزارش‌های بیمه (۵)</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px 10px;border-radius:5px;margin-bottom:3px">💊 داروخانه (۴)</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px 10px;border-radius:5px;margin-bottom:3px">🧪 آزمایشگاه (۳)</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px 10px;border-radius:5px;margin-bottom:3px">📅 نوبت‌دهی (۴)</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px 10px;border-radius:5px;margin-bottom:3px">📊 گزارش‌های BI (۸)</div>
+</div>
+<div>
+<div class="wf-card">
+<div class="wf-card-header"><div class="wf-card-title">💰 گزارش درآمد تفصیلی</div></div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px">
+<input class="wf-form-input" placeholder="📅 از تاریخ: ۱۴۰۴/۰۴/۰۱"/>
+<input class="wf-form-input" placeholder="📅 تا تاریخ: ۱۴۰۴/۰۴/۳۰"/>
+<select class="wf-form-input"><option>همه پزشکان</option></select>
+<select class="wf-form-input"><option>همه بیمه‌ها</option></select>
+</div>
+<div style="display:flex;gap:8px;margin-bottom:10px">
+<button class="wf-btn wf-btn-primary">▶ اجرای گزارش</button>
+<button class="wf-btn wf-btn-success">📥 Excel</button>
+<button class="wf-btn wf-btn-danger">📄 PDF</button>
+<button class="wf-btn wf-btn-outline">🖨️ چاپ</button>
+<button class="wf-btn wf-btn-warning">📧 ارسال ایمیل</button>
+</div>
+<div class="wf-stats">
+<div class="wf-stat"><div class="wf-stat-label">💰 کل درآمد</div><div class="wf-stat-value">۳۴۲M</div></div>
+<div class="wf-stat g"><div class="wf-stat-label">👥 تعداد مراجعین</div><div class="wf-stat-value">۸۷۴</div></div>
+<div class="wf-stat p"><div class="wf-stat-label">📊 میانگین روزانه</div><div class="wf-stat-value">۱۱.۴M</div></div>
+<div class="wf-stat y"><div class="wf-stat-label">⏳ مطالبات</div><div class="wf-stat-value">۴۲M</div></div>
+</div>
+<div class="wf-chart" style="height:200px;margin-top:10px">
+<div class="wf-bar" style="height:50%" data-label="هفته۱"></div>
+<div class="wf-bar" style="height:65%" data-label="هفته۲"></div>
+<div class="wf-bar" style="height:80%" data-label="هفته۳"></div>
+<div class="wf-bar" style="height:70%" data-label="هفته۴"></div>
+</div>
+<table class="wf-table" style="margin-top:10px">
+<tr><th>تاریخ</th><th>تعداد ویزیت</th><th>درآمد ویزیت</th><th>درآمد پاراکلینیک</th><th>سهم بیمه</th><th>سهم بیمار</th><th>کل</th></tr>
+<tr><td>۱۴۰۴/۰۴/۰۱</td><td>۴۲</td><td>۱۲۶M</td><td>۴۵M</td><td>۱۰۸M</td><td>۶۳M</td><td><strong>۱۷۱M</strong></td></tr>
+<tr><td>۱۴۰۴/۰۴/۰۲</td><td>۳۸</td><td>۱۱۴M</td><td>۳۸M</td><td>۹۸M</td><td>۵۴M</td><td><strong>۱۵۲M</strong></td></tr>
+<tr><td>۱۴۰۴/۰۴/۰۳</td><td>۴۵</td><td>۱۳۵M</td><td>۵۲M</td><td>۱۲۰M</td><td>۶۷M</td><td><strong>۱۸۷M</strong></td></tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 15. SETTINGS -->
+<section>
+<h2>⚙️ صفحه ۱۵: تنظیمات سیستم</h2>
+<div class="wf">
+<div class="wf-title-bar"><div><span>⚙️</span> تنظیمات</div></div>
+<div style="padding:15px;background:#f8fafc">
+<div style="display:grid;grid-template-columns:220px 1fr;gap:12px">
+<div class="wf-card">
+<div class="wf-sb-item" style="color:var(--t);padding:8px;border-radius:5px;margin-bottom:3px;background:#eff6ff">🏥 اطلاعات درمانگاه</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px;border-radius:5px;margin-bottom:3px">🧩 ماژول‌ها</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px;border-radius:5px;margin-bottom:3px">👥 کاربران و نقش‌ها</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px;border-radius:5px;margin-bottom:3px">📱 پنل‌های پیامک</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px;border-radius:5px;margin-bottom:3px">🏦 بیمه‌ها</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px;border-radius:5px;margin-bottom:3px">💲 تعرفه‌ها</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px;border-radius:5px;margin-bottom:3px">🔗 سامانه‌های دولتی</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px;border-radius:5px;margin-bottom:3px">🖨️ چاپگر</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px;border-radius:5px;margin-bottom:3px">💾 بکاپ</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px;border-radius:5px;margin-bottom:3px">🎨 تم و زبان</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px;border-radius:5px;margin-bottom:3px">🔐 امنیت</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px;border-radius:5px;margin-bottom:3px">🔑 لایسنس</div>
+<div class="wf-sb-item" style="color:var(--t);padding:8px;border-radius:5px;margin-bottom:3px">📋 لاگ عملیات</div>
+</div>
+<div class="wf-card">
+<div class="wf-card-header"><div class="wf-card-title">🏥 اطلاعات درمانگاه</div></div>
+<div class="wf-form-grid">
+<div>
+<div class="wf-form-row"><label class="wf-form-label req">نام درمانگاه</label><input class="wf-form-input" value="درمانگاه تخصصی سلامت"/></div>
+<div class="wf-form-row"><label class="wf-form-label">نام انگلیسی</label><input class="wf-form-input" value="Salamat Specialty Clinic"/></div>
+<div class="wf-form-row"><label class="wf-form-label">شماره مجوز</label><input class="wf-form-input" value="۱۲۳۴۵۶"/></div>
+<div class="wf-form-row"><label class="wf-form-label">کد اقتصادی</label><input class="wf-form-input" value="۴۱۱۱۲۲۲۳۳۳۴۴"/></div>
+<div class="wf-form-row"><label class="wf-form-label">شناسه ملی</label><input class="wf-form-input" value="۱۲۳۴۵۶۷۸۹۰"/></div>
+<div class="wf-form-row"><label class="wf-form-label">نام مدیر</label><input class="wf-form-input" value="دکتر احمد محمدی"/></div>
+</div>
+<div>
+<div class="wf-form-row"><label class="wf-form-label">تلفن</label><input class="wf-form-input" value="۰۲۱۸۸۱۲۳۴۵۶"/></div>
+<div class="wf-form-row"><label class="wf-form-label">فکس</label><input class="wf-form-input" value="۰۲۱۸۸۱۲۳۴۵۷"/></div>
+<div class="wf-form-row"><label class="wf-form-label">ایمیل</label><input class="wf-form-input" value="info@clinic.ir"/></div>
+<div class="wf-form-row"><label class="wf-form-label">وب‌سایت</label><input class="wf-form-input" value="www.clinic.ir"/></div>
+<div class="wf-form-row"><label class="wf-form-label">استان/شهر</label><div style="display:flex;gap:5px"><select class="wf-form-input"><option>تهران</option></select><select class="wf-form-input"><option>تهران</option></select></div></div>
+<div class="wf-form-row"><label class="wf-form-label">لوگو</label><button class="wf-btn wf-btn-outline">📤 آپلود</button></div>
+</div>
+</div>
+<div class="wf-form-row" style="grid-template-columns:120px 1fr;margin-top:10px"><label class="wf-form-label">آدرس</label><textarea class="wf-form-input" rows="2">خیابان ولیعصر، نرسیده به میدان ونک، پلاک ۱۲۳</textarea></div>
+<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+<button class="wf-btn wf-btn-secondary">انصراف</button>
+<button class="wf-btn wf-btn-success">💾 ذخیره تغییرات</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 16. LICENSE PORTAL -->
+<section>
+<h2>🔑 صفحه ۱۶: پنل مدیریت لایسنس (Blazor Web)</h2>
+<div class="wf">
+<div class="wf-title-bar" style="background:linear-gradient(135deg,#4f46e5,#7c3aed)"><div><span>🔑</span> ClinicPro License Portal</div></div>
+<div class="wf-top-bar"><div class="left"><span class="wf-breadcrumb">🏠 › 🔑 لایسنس‌ها</span></div><div class="right"><div class="wf-user"><div class="wf-avatar" style="background:#7c3aed">AD</div><span>Admin</span></div></div></div>
+<div class="wf-main">
+<aside class="wf-sidebar" style="background:#1e1b4b">
+<div class="wf-sb-item"><span class="ic">📊</span>داشبورد</div>
+<div class="wf-sb-item"><span class="ic">🏢</span>مشتریان</div>
+<div class="wf-sb-item active" style="background:#7c3aed"><span class="ic">🔑</span>لایسنس‌ها</div>
+<div class="wf-sb-item"><span class="ic">💳</span>پرداخت‌ها</div>
+<div class="wf-sb-item"><span class="ic">🧩</span>کاتالوگ ماژول‌ها</div>
+<div class="wf-sb-item"><span class="ic">📊</span>گزارش‌ها</div>
+<div class="wf-sb-item"><span class="ic">⚙️</span>تنظیمات</div>
+</aside>
+<div class="wf-content">
+<h3 class="wf-page-title">🔑 مدیریت لایسنس‌ها</h3>
+<div class="wf-stats">
+<div class="wf-stat"><div class="wf-stat-label">کل لایسنس‌ها</div><div class="wf-stat-value">۱۲۴</div></div>
+<div class="wf-stat g"><div class="wf-stat-label">فعال</div><div class="wf-stat-value">۱۰۸</div></div>
+<div class="wf-stat r"><div class="wf-stat-label">منقضی</div><div class="wf-stat-value">۱۲</div></div>
+<div class="wf-stat y"><div class="wf-stat-label">معلق</div><div class="wf-stat-value">۴</div></div>
+</div>
+<div class="wf-toolbar">
+<button class="wf-btn wf-btn-primary">➕ صدور لایسنس جدید</button>
+<button class="wf-btn wf-btn-success">📥 فعال‌سازی آفلاین</button>
+<div class="wf-search"><input placeholder="جستجو..."/></div>
+<select class="wf-select"><option>همه وضعیت‌ها</option></select>
+</div>
+<table class="wf-table">
+<tr><th>کد لایسنس</th><th>درمانگاه</th><th>مشتری</th><th>نوع</th><th>کاربر</th><th>ماژول‌ها</th><th>انقضا</th><th>وضعیت</th><th>عملیات</th></tr>
+<tr><td style="font-family:monospace;font-size:10px">XYZ-9876-ABCD-1234</td><td>درمانگاه سلامت</td><td>دکتر محمدی</td><td><span class="wf-badge wf-b-blue">یکساله</span></td><td>۱۰</td><td>۸/۱۲</td><td>۱۴۰۴/۰۹/۱۵</td><td><span class="wf-badge wf-b-green">فعال</span></td><td><button class="wf-icon-btn">👁️</button><button class="wf-icon-btn">✏️</button><button class="wf-icon-btn">⏸️</button></td></tr>
+<tr><td style="font-family:monospace;font-size:10px">ABC-1234-WXYZ-5678</td><td>درمانگاه مهر</td><td>آقای رضایی</td><td><span class="wf-badge wf-b-purple">دائمی</span></td><td>۵</td><td>۶/۱۲</td><td>بدون انقضا</td><td><span class="wf-badge wf-b-green">فعال</span></td><td><button class="wf-icon-btn">👁️</button><button class="wf-icon-btn">✏️</button></td></tr>
+<tr><td style="font-family:monospace;font-size:10px">LMN-5555-PQRS-9999</td><td>درمانگاه آبان</td><td>خانم کریمی</td><td><span class="wf-badge wf-b-blue">ماهانه</span></td><td>۳</td><td>۴/۱۲</td><td>۱۴۰۴/۰۴/۱۵</td><td><span class="wf-badge wf-b-yellow">نزدیک انقضا</span></td><td><button class="wf-icon-btn">👁️</button><button class="wf-icon-btn">✏️</button><button class="wf-icon-btn">🔄</button></td></tr>
+<tr><td style="font-family:monospace;font-size:10px">DEF-3333-TUVW-7777</td><td>درمانگاه نگین</td><td>دکتر نوری</td><td><span class="wf-badge wf-b-blue">یکساله</span></td><td>۲</td><td>۳/۱۲</td><td>۱۴۰۳/۱۲/۱۵</td><td><span class="wf-badge wf-b-red">منقضی</span></td><td><button class="wf-icon-btn">👁️</button><button class="wf-icon-btn">🔄</button></td></tr>
+</table>
+</div>
+</div>
+</div>
+
+<h3 style="margin-top:20px">➕ فرم صدور لایسنس جدید</h3>
+<div class="wf" style="margin-top:10px">
+<div class="wf-title-bar" style="background:linear-gradient(135deg,#4f46e5,#7c3aed)"><div>➕ صدور لایسنس جدید</div></div>
+<div style="padding:20px">
+<div class="wf-tabs">
+<button class="wf-tab active">1️⃣ اطلاعات مشتری</button>
+<button class="wf-tab">2️⃣ محدودیت‌ها</button>
+<button class="wf-tab">3️⃣ انتخاب ماژول‌ها</button>
+<button class="wf-tab">4️⃣ پرداخت و صدور</button>
+</div>
+<div class="wf-card">
+<div class="wf-form-grid">
+<div>
+<div class="wf-form-row"><label class="wf-form-label req">نام درمانگاه</label><input class="wf-form-input"/></div>
+<div class="wf-form-row"><label class="wf-form-label">نام مدیر</label><input class="wf-form-input"/></div>
+<div class="wf-form-row"><label class="wf-form-label">موبایل</label><input class="wf-form-input"/></div>
+<div class="wf-form-row"><label class="wf-form-label">شناسه ملی</label><input class="wf-form-input"/></div>
+</div>
+<div>
+<div class="wf-form-row"><label class="wf-form-label req">نوع لایسنس</label><select class="wf-form-input"><option>یکساله (Subscription)</option><option>دائمی (Perpetual)</option><option>ماهانه</option></select></div>
+<div class="wf-form-row"><label class="wf-form-label">تاریخ انقضا</label><input class="wf-form-input" placeholder="📅 ۱۴۰۵/۰۴/۰۱"/></div>
+<div class="wf-form-row"><label class="wf-form-label">نوع فعال‌سازی</label><select class="wf-form-input"><option>آنلاین</option><option>آفلاین</option><option>هر دو</option></select></div>
+<div class="wf-form-row"><label class="wf-form-label">آدرس</label><input class="wf-form-input"/></div>
+</div>
+</div>
+<h4 style="margin-top:15px;color:var(--p)">🧩 محدودیت‌ها و ظرفیت</h4>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px">
+<div><label style="font-size:11px;font-weight:600">کاربر همزمان</label><input class="wf-form-input" value="۱۰"/></div>
+<div><label style="font-size:11px;font-weight:600">تعداد پزشک</label><input class="wf-form-input" value="۱۵"/></div>
+<div><label style="font-size:11px;font-weight:600">تعداد بیمار</label><input class="wf-form-input" value="۵۰۰۰"/></div>
+<div><label style="font-size:11px;font-weight:600">تعداد شعبه</label><input class="wf-form-input" value="۱"/></div>
+</div>
+<h4 style="margin-top:15px;color:var(--p)">✅ ماژول‌های انتخابی</h4>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px">
+<label style="padding:6px;background:#eff6ff;border-radius:5px;font-size:11px"><input type="checkbox" checked disabled/> 👤 بیماران (اصلی)</label>
+<label style="padding:6px;background:#eff6ff;border-radius:5px;font-size:11px"><input type="checkbox" checked disabled/> 📅 نوبت‌دهی (اصلی)</label>
+<label style="padding:6px;background:#eff6ff;border-radius:5px;font-size:11px"><input type="checkbox" checked disabled/> 🩺 ویزیت (اصلی)</label>
+<label style="padding:6px;background:#f8fafc;border-radius:5px;font-size:11px"><input type="checkbox" checked/> 💊 نسخه‌نویسی</label>
+<label style="padding:6px;background:#f8fafc;border-radius:5px;font-size:11px"><input type="checkbox" checked/> 💰 صندوق</label>
+<label style="padding:6px;background:#f8fafc;border-radius:5px;font-size:11px"><input type="checkbox" checked/> 📊 حسابداری دوبل</label>
+<label style="padding:6px;background:#f8fafc;border-radius:5px;font-size:11px"><input type="checkbox" checked/> 🧪 آزمایشگاه</label>
+<label style="padding:6px;background:#f8fafc;border-radius:5px;font-size:11px"><input type="checkbox"/> 📷 تصویربرداری</label>
+<label style="padding:6px;background:#f8fafc;border-radius:5px;font-size:11px"><input type="checkbox"/> 🦷 دندانپزشکی</label>
+<label style="padding:6px;background:#f8fafc;border-radius:5px;font-size:11px"><input type="checkbox"/> 👁️ چشم‌پزشکی</label>
+<label style="padding:6px;background:#f8fafc;border-radius:5px;font-size:11px"><input type="checkbox" checked/> 💊 داروخانه</label>
+<label style="padding:6px;background:#f8fafc;border-radius:5px;font-size:11px"><input type="checkbox" checked/> 📱 پیامک</label>
+</div>
+<div style="background:#fef3c7;padding:12px;border-radius:5px;margin-top:12px">
+<div style="display:flex;justify-content:space-between"><div><strong>💰 قیمت نهایی:</strong></div><div style="font-size:18px;font-weight:900;color:var(--a)">۴۵٬۰۰۰٬۰۰۰ تومان</div></div>
+</div>
+<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+<button class="wf-btn wf-btn-secondary">انصراف</button>
+<button class="wf-btn wf-btn-outline">💾 ذخیره پیش‌نویس</button>
+<button class="wf-btn wf-btn-success">✅ صدور لایسنس و دریافت وجه</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<footer>
+<p>📄 فایل ۴ از ۶ | <strong>وایرفریم ۱۶ صفحه اصلی</strong> | Material Design + RTL</p>
+</footer>
+
+</div>
+</body>
+</html>

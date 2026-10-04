@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>🤖 ClinicPro - پرامپت AI بخش ۱</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;900&display=swap');
+:root{--p:#1a73e8;--s:#34a853;--a:#ea4335;--bg:#f0f2f5;--c:#fff;--t:#202124;--b:#dadce0;--sh:0 2px 8px rgba(0,0,0,.1);--r:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t);line-height:1.8;font-size:13px}
+.ct{max-width:1200px;margin:0 auto;padding:20px}
+header{background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;padding:40px 20px;text-align:center;border-radius:0 0 30px 30px;margin-bottom:25px}
+header h1{font-size:2em;font-weight:900}
+header p{opacity:.9}
+.nav{background:#fff;padding:12px;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.nav a{padding:7px 14px;background:#f0f2f5;border-radius:8px;text-decoration:none;color:var(--t);font-size:11px;font-weight:600}
+.nav a:hover,.nav a.active{background:#7c3aed;color:#fff}
+.prompt-section{background:#1e1e1e;color:#d4d4d4;border-radius:var(--r);padding:25px;margin-bottom:20px;font-family:'Courier New',monospace;font-size:12px;line-height:1.7;direction:rtl;text-align:right;white-space:pre-wrap;word-wrap:break-word;overflow-x:auto}
+.prompt-section .title{color:#dcdcaa;font-weight:bold;font-size:14px}
+.prompt-section .h1{color:#4ec9b0;font-weight:bold;font-size:16px}
+.prompt-section .h2{color:#569cd6;font-weight:bold;font-size:14px}
+.prompt-section .h3{color:#ce9178;font-weight:bold;font-size:13px}
+.prompt-section .note{color:#6a9955;font-style:italic}
+.prompt-section .important{color:#f44747;font-weight:bold}
+.prompt-section .code{color:#9cdcfe}
+.prompt-section .val{color:#b5cea8}
+.prompt-section .str{color:#ce9178}
+.prompt-section .key{color:#569cd6}
+.copy-btn{background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;border:none;padding:10px 25px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.copy-btn:hover{opacity:.9}
+.info{background:#e8f0fe;border-right:4px solid var(--p);padding:15px;border-radius:0 8px 8px 0;margin:15px 0;font-size:12px}
+footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#fff;border-radius:var(--r);margin-top:20px}
+</style>
+</head>
+<body>
+<header>
+<h1>🤖 پرامپت حرفه‌ای برای هوش مصنوعی</h1>
+<p>بخش ۱ از ۳: معرفی پروژه + معماری + دیتابیس</p>
+</header>
+<div class="ct">
+<nav class="nav">
+<a href="01-overview.html">1️⃣ تحلیل</a>
+<a href="02-database.html">2️⃣ دیتابیس</a>
+<a href="03-flowcharts.html">3️⃣ فلوچارت</a>
+<a href="04-wireframes.html">4️⃣ وایرفریم</a>
+<a href="05-security-timeline.html">5️⃣ امنیت</a>
+<a href="06-license-integration.html">6️⃣ لایسنس</a>
+<a href="prompt-part1.html" class="active">🤖 پرامپت ۱</a>
+<a href="prompt-part2.html">🤖 پرامپت ۲</a>
+<a href="prompt-part3.html">🤖 پرامپت ۳</a>
+</nav>
+
+<div class="info">
+<strong>📋 راهنمای استفاده:</strong> محتوای هر بخش پرامپت را کپی کنید و به ترتیب به هوش مصنوعی بدهید. ابتدا بخش ۱، سپس ۲ و در نهایت ۳. هر بخش را می‌توانید جداگانه بدهید و بگویید "بر اساس این مشخصات کد بنویس".
+<br><br>
+<strong>⚠️ نکته مهم:</strong> تمامی کامنت‌ها، توضیحات و نام‌گذاری‌ها باید به زبان <strong>فارسی</strong> باشند. کدها به انگلیسی ولی کامنت‌ها فارسی.
+</div>
+
+<button class="copy-btn" onclick="copyAll()">📋 کپی کل پرامپت بخش ۱</button>
+
+<div class="prompt-section" id="prompt1">
+<span class="h1">════════════════════════════════════════════════════════════════
+🏥 پروژه: سامانه جامع مدیریت درمانگاه (ClinicPro)
+بخش ۱ از ۳: معرفی پروژه، معماری و طراحی دیتابیس
+════════════════════════════════════════════════════════════════</span>
+
+<span class="note">// ⚠️ نکات بسیار مهم برای تولید کد:
+// ۱. تمامی کامنت‌ها به زبان فارسی و مفصل باشند
+// ۲. هر متد، هر کلاس، هر property باید کامنت XML فارسی داشته باشد
+// ۳. جداول دیتابیس کامنت فارسی روی ستون‌ها و جداول داشته باشند
+// ۴. Enum ها توضیحات فارسی داشته باشند
+// ۵. نام‌گذاری متغیرها و کلاس‌ها انگلیسی ولی Summary فارسی
+// ۶. هر فایل Migration کامنت فارسی داشته باشد
+// ۷. هر Validator پیام خطای فارسی داشته باشد
+// ۸. خروجی API پیام‌های فارسی داشته باشد</span>
+
+<span class="h2">═══════════════════════════════════════
+📋 ۱. مشخصات کلی پروژه
+═══════════════════════════════════════</span>
+
+<span class="title">نام پروژه:</span> Sahand ClinicPro - سامانه جامع مدیریت درمانگاه سهند
+<span class="title">نسخه:</span> ۱.۰.۰
+<span class="title">زبان:</span> C# 12
+<span class="title">فریمورک:</span> .NET 8 LTS
+<span class="title">معماری:</span> Clean Architecture (SOLID)
+<span class="title">الگوی طراحی:</span> Repository + Unit of Work + CQRS + MediatR
+<span class="title">دیتابیس:</span> SQL Server 2022
+<span class="title">ORM:</span> Entity Framework Core 8
+<span class="title">API:</span> ASP.NET Core 8 Web API (REST)
+<span class="title">Desktop Client:</span> WPF + Material Design in XAML Toolkit (MVVM)
+<span class="title">License Portal:</span> Blazor Server (.NET 8)
+<span class="title">Mobile (آینده):</span> .NET MAUI
+<span class="title">Authentication:</span> JWT + Refresh Token
+<span class="title">Password:</span> BCrypt (Work Factor 12)
+<span class="title">Encryption:</span> AES-256-GCM (داده‌های حساس)
+<span class="title">Reporting:</span> Stimulsoft Reports
+<span class="title">Logging:</span> Serilog + Seq
+<span class="title">Background Jobs:</span> Hangfire
+<span class="title">Validation:</span> FluentValidation
+<span class="title">Mapping:</span> AutoMapper
+<span class="title">Testing:</span> xUnit + Moq + FluentAssertions
+<span class="title">Source Control:</span> Git + GitFlow
+<span class="title">SMS:</span> ۱۰+ پنل (Kavenegar, MelliPayamak, SMS.ir, FarazSMS, IPPanel, Negar, Sabanovin, Mediana, Trez, PayamakPanel)
+
+<span class="title">ویژگی‌های کلیدی:</span>
+- تحت شبکه (Client-Server)
+- ۱۰ کاربر همزمان
+- ۵۰۰ بیمار در روز
+- ۱۰ اتاق ویزیت
+- ۱۰ پزشک
+- تعداد نامحدود پزشک، منشی، حسابدار، مدیر
+- نسخه‌نویسی الکترونیکی (سلامت + تامین اجتماعی)
+- اتصال به سپاس، سیب، ناب، سینا
+- پشتیبانی از همه بیمه‌ها (قابل افزودن)
+- پیامک یادآوری نوبت
+- حسابداری دوبل (دفترداری کامل)
+- سامانه لایسنس وب مجزا (آنلاین + آفلاین)
+- کنترل ماژول‌ها با لایسنس
+- فعلاً تک شعبه (زیرساخت چند شعبه‌ای آماده)
+- فعلاً فارسی (زیرساخت i18n آماده)
+- On-Premise + Cloud Ready
+- Dark/Light Theme
+- تقویم شمسی (جلالی)
+- RTL کامل
+- فونت Vazirmatn
+- کلیدهای میانبر
+- جستجوی سریع
+
+<span class="h2">═══════════════════════════════════════
+🏗️ ۲. ساختار Solution (Clean Architecture)
+═══════════════════════════════════════</span>
+
+<span class="code">ClinicPro.sln
+├── src/
+│   ├── ClinicPro.Domain/              // لایه دامنه - بدون هیچ وابستگی خارجی
+│   │   ├── Common/
+│   │   │   ├── BaseEntity.cs          // کلاس پایه همه موجودیت‌ها
+│   │   │   ├── AuditableEntity.cs     // موجودیت قابل ردگیری (Created/Updated)
+│   │   │   ├── ISoftDeletable.cs      // اینترفیس حذف نرم
+│   │   │   └── Result.cs             // الگوی Result برای برگشت خطا/موفقیت
+│   │   ├── Entities/                  // موجودیت‌های دامنه
+│   │   │   ├── Patient.cs             // بیمار
+│   │   │   ├── Doctor.cs              // پزشک
+│   │   │   ├── Specialty.cs           // تخصص
+│   │   │   ├── Employee.cs            // پرسنل
+│   │   │   ├── Appointment.cs         // نوبت
+│   │   │   ├── Reception.cs           // پذیرش
+│   │   │   ├── Visit.cs               // ویزیت
+│   │   │   ├── VitalSign.cs           // علائم حیاتی
+│   │   │   ├── Prescription.cs        // نسخه
+│   │   │   ├── PrescriptionItem.cs    // اقلام نسخه
+│   │   │   ├── Medication.cs          // دارو
+│   │   │   ├── DrugInteraction.cs     // تداخل دارویی
+│   │   │   ├── ICD10Code.cs           // کد تشخیص
+│   │   │   ├── Invoice.cs             // فاکتور
+│   │   │   ├── InvoiceItem.cs         // اقلام فاکتور
+│   │   │   ├── Payment.cs             // پرداخت
+│   │   │   ├── InsuranceCompany.cs    // شرکت بیمه
+│   │   │   ├── Tariff.cs              // تعرفه
+│   │   │   ├── Service.cs             // خدمت
+│   │   │   ├── AccountingAccount.cs   // حساب حسابداری
+│   │   │   ├── JournalEntry.cs        // سند حسابداری
+│   │   │   ├── JournalEntryLine.cs    // سطر سند حسابداری
+│   │   │   ├── LabOrder.cs            // درخواست آزمایش
+│   │   │   ├── LabOrderItem.cs        // اقلام آزمایش
+│   │   │   ├── LabTest.cs             // تست آزمایشگاه
+│   │   │   ├── ImagingOrder.cs        // درخواست تصویربرداری
+│   │   │   ├── DentalRecord.cs        // سابقه دندانپزشکی
+│   │   │   ├── EyeExamRecord.cs       // معاینه چشم
+│   │   │   ├── PhysiotherapySession.cs // جلسه فیزیوتراپی
+│   │   │   ├── PharmacyInventory.cs   // موجودی داروخانه
+│   │   │   ├── PharmacyTransaction.cs // تراکنش داروخانه
+│   │   │   ├── User.cs                // کاربر سیستم
+│   │   │   ├── Role.cs                // نقش
+│   │   │   ├── Permission.cs          // دسترسی
+│   │   │   ├── RefreshToken.cs        // توکن تازه‌سازی
+│   │   │   ├── AuditLog.cs            // لاگ عملیات
+│   │   │   ├── SmsMessage.cs          // پیامک
+│   │   │   ├── Notification.cs        // اعلان
+│   │   │   ├── Document.cs            // سند/فایل
+│   │   │   ├── Branch.cs              // شعبه
+│   │   │   ├── Department.cs          // بخش
+│   │   │   ├── ClinicLicense.cs       // لایسنس محلی
+│   │   │   ├── SystemSetting.cs       // تنظیمات سیستم
+│   │   │   └── ... (سایر موجودیت‌ها)
+│   │   ├── ValueObjects/              // اشیاء ارزشی
+│   │   │   ├── NationalCode.cs        // کد ملی (با اعتبارسنجی)
+│   │   │   ├── PhoneNumber.cs         // شماره تلفن
+│   │   │   ├── Money.cs               // مبلغ پولی
+│   │   │   └── Address.cs             // آدرس
+│   │   ├── Enums/                     // شمارشی‌ها
+│   │   │   ├── Gender.cs              // جنسیت (مرد=1, زن=2)
+│   │   │   ├── BloodType.cs           // گروه خونی
+│   │   │   ├── AppointmentStatus.cs   // وضعیت نوبت
+│   │   │   ├── ReceptionStatus.cs     // وضعیت پذیرش
+│   │   │   ├── VisitType.cs           // نوع ویزیت
+│   │   │   ├── PrescriptionType.cs    // نوع نسخه
+│   │   │   ├── PaymentMethod.cs       // روش پرداخت
+│   │   │   ├── InvoiceStatus.cs       // وضعیت فاکتور
+│   │   │   ├── AccountType.cs         // نوع حساب
+│   │   │   ├── SmsStatus.cs           // وضعیت پیامک
+│   │   │   └── ... (۳۰+ enum)
+│   │   ├── Events/                    // رویدادهای دامنه
+│   │   │   ├── PatientCreatedEvent.cs
+│   │   │   ├── AppointmentBookedEvent.cs
+│   │   │   ├── VisitCompletedEvent.cs
+│   │   │   ├── InvoicePaidEvent.cs
+│   │   │   └── ...
+│   │   ├── Interfaces/                // اینترفیس‌های ریپازیتوری
+│   │   │   ├── IRepository.cs         // ریپازیتوری عمومی
+│   │   │   ├── IUnitOfWork.cs         // واحد کار
+│   │   │   ├── IPatientRepository.cs  // ریپازیتوری بیمار (متدهای خاص)
+│   │   │   └── ...
+│   │   ├── Specifications/            // مشخصه‌ها
+│   │   │   ├── PatientByNationalCodeSpec.cs
+│   │   │   └── ...
+│   │   └── Exceptions/                // استثناهای دامنه
+│   │       ├── DomainException.cs
+│   │       ├── NotFoundException.cs
+│   │       └── BusinessRuleException.cs
+│   │
+│   ├── ClinicPro.Application/         // لایه کاربرد - فقط به Domain وابسته
+│   │   ├── Common/
+│   │   │   ├── Behaviors/
+│   │   │   │   ├── ValidationBehavior.cs    // رفتار اعتبارسنجی خودکار
+│   │   │   │   ├── LoggingBehavior.cs       // رفتار لاگ‌گذاری
+│   │   │   │   ├── TransactionBehavior.cs   // رفتار تراکنش
+│   │   │   │   └── PerformanceBehavior.cs   // رفتار عملکرد
+│   │   │   ├── Mappings/
+│   │   │   │   └── MappingProfile.cs        // نقشه AutoMapper
+│   │   │   ├── Models/
+│   │   │   │   ├── PagedResult.cs           // نتیجه صفحه‌بندی
+│   │   │   │   ├── ApiResponse.cs           // پاسخ استاندارد API
+│   │   │   │   └── SearchFilter.cs          // فیلتر جستجو
+│   │   │   └── Helpers/
+│   │   │       ├── PersianDateHelper.cs     // تقویم شمسی
+│   │   │       └── NationalCodeValidator.cs // اعتبارسنجی کد ملی
+│   │   ├── DTOs/                      // اشیاء انتقال داده
+│   │   │   ├── Patient/
+│   │   │   │   ├── PatientDto.cs
+│   │   │   │   ├── PatientListDto.cs
+│   │   │   │   ├── PatientDetailDto.cs
+│   │   │   │   ├── CreatePatientDto.cs
+│   │   │   │   └── UpdatePatientDto.cs
+│   │   │   ├── Appointment/
+│   │   │   ├── Visit/
+│   │   │   ├── Prescription/
+│   │   │   ├── Invoice/
+│   │   │   ├── Auth/
+│   │   │   │   ├── LoginRequestDto.cs
+│   │   │   │   ├── LoginResponseDto.cs
+│   │   │   │   ├── RefreshTokenRequestDto.cs
+│   │   │   │   └── UserDto.cs
+│   │   │   └── ... (هر ماژول)
+│   │   ├── Features/                  // CQRS - هر ماژول یک پوشه
+│   │   │   ├── Patients/
+│   │   │   │   ├── Commands/
+│   │   │   │   │   ├── CreatePatient/
+│   │   │   │   │   │   ├── CreatePatientCommand.cs
+│   │   │   │   │   │   ├── CreatePatientCommandHandler.cs
+│   │   │   │   │   │   └── CreatePatientCommandValidator.cs
+│   │   │   │   │   ├── UpdatePatient/
+│   │   │   │   │   └── DeletePatient/
+│   │   │   │   └── Queries/
+│   │   │   │       ├── GetPatientById/
+│   │   │   │       ├── GetAllPatients/
+│   │   │   │       └── SearchPatients/
+│   │   │   ├── Appointments/
+│   │   │   ├── Receptions/
+│   │   │   ├── Visits/
+│   │   │   ├── Prescriptions/
+│   │   │   ├── Billing/
+│   │   │   ├── Accounting/
+│   │   │   ├── Insurance/
+│   │   │   ├── Laboratory/
+│   │   │   ├── Pharmacy/
+│   │   │   ├── Auth/
+│   │   │   ├── Users/
+│   │   │   ├── Reports/
+│   │   │   ├── SMS/
+│   │   │   ├── Settings/
+│   │   │   └── ... (هر ماژول)
+│   │   ├── Interfaces/                // اینترفیس سرویس‌های خارجی
+│   │   │   ├── ISmsService.cs         // سرویس پیامک
+│   │   │   ├── ISmsProvider.cs        // اینترفیس هر پنل پیامک
+│   │   │   ├── IEncryptionService.cs  // سرویس رمزنگاری
+│   │   │   ├── ISepasService.cs       // سرویس سپاس
+│   │   │   ├── IElectronicPrescriptionService.cs // نسخه الکترونیک
+│   │   │   ├── IInsuranceInquiryService.cs       // استعلام بیمه
+│   │   │   ├── ILicenseService.cs     // سرویس لایسنس
+│   │   │   ├── IReportService.cs      // سرویس گزارش
+│   │   │   ├── IFileStorageService.cs // سرویس فایل
+│   │   │   ├── ICurrentUserService.cs // سرویس کاربر فعلی
+│   │   │   └── IDateTimeService.cs    // سرویس زمان
+│   │   └── Validators/                // اعتبارسنج‌ها
+│   │
+│   ├── ClinicPro.Infrastructure/      // لایه زیرساخت
+│   │   ├── Persistence/
+│   │   │   ├── ClinicProDbContext.cs   // DbContext اصلی
+│   │   │   ├── Configurations/        // EF Core Configurations
+│   │   │   │   ├── PatientConfiguration.cs
+│   │   │   │   ├── DoctorConfiguration.cs
+│   │   │   │   ├── AppointmentConfiguration.cs
+│   │   │   │   ├── VisitConfiguration.cs
+│   │   │   │   ├── InvoiceConfiguration.cs
+│   │   │   │   └── ... (هر Entity یک Configuration)
+│   │   │   ├── Repositories/
+│   │   │   │   ├── Repository.cs      // پیاده‌سازی عمومی
+│   │   │   │   ├── PatientRepository.cs
+│   │   │   │   └── ...
+│   │   │   ├── UnitOfWork.cs
+│   │   │   ├── Migrations/
+│   │   │   ├── Interceptors/
+│   │   │   │   ├── AuditableInterceptor.cs  // پر کردن خودکار Created/Updated
+│   │   │   │   └── SoftDeleteInterceptor.cs // حذف نرم خودکار
+│   │   │   └── Seeders/
+│   │   │       ├── RoleSeeder.cs      // داده اولیه نقش‌ها
+│   │   │       ├── PermissionSeeder.cs// داده اولیه دسترسی‌ها
+│   │   │       ├── AdminSeeder.cs     // ایجاد ادمین پیش‌فرض
+│   │   │       └── ICD10Seeder.cs     // کدهای ICD-10
+│   │   ├── Services/
+│   │   │   ├── SMS/
+│   │   │   │   ├── SmsProviderFactory.cs
+│   │   │   │   ├── SmsService.cs
+│   │   │   │   ├── Providers/
+│   │   │   │   │   ├── KavenegarProvider.cs
+│   │   │   │   │   ├── MelliPayamakProvider.cs
+│   │   │   │   │   ├── SmsIrProvider.cs
+│   │   │   │   │   ├── FarazSmsProvider.cs
+│   │   │   │   │   ├── IPPanelProvider.cs
+│   │   │   │   │   ├── NegarProvider.cs
+│   │   │   │   │   ├── SabanovinProvider.cs
+│   │   │   │   │   ├── MedianaProvider.cs
+│   │   │   │   │   ├── TrezProvider.cs
+│   │   │   │   │   └── PayamakPanelProvider.cs
+│   │   │   │   └── Templates/
+│   │   │   ├── Insurance/
+│   │   │   │   ├── SalamatInsuranceService.cs
+│   │   │   │   ├── TaminInsuranceService.cs
+│   │   │   │   ├── MosalahInsuranceService.cs
+│   │   │   │   └── ...
+│   │   │   ├── Government/
+│   │   │   │   ├── SepasService.cs
+│   │   │   │   ├── SibService.cs
+│   │   │   │   ├── NabService.cs
+│   │   │   │   ├── SinaService.cs
+│   │   │   │   └── ElectronicPrescriptionService.cs
+│   │   │   ├── Security/
+│   │   │   │   ├── EncryptionService.cs     // AES-256
+│   │   │   │   ├── JwtService.cs            // تولید/بررسی JWT
+│   │   │   │   ├── PasswordHasher.cs        // BCrypt
+│   │   │   │   └── HardwareFingerprint.cs   // شناسه سخت‌افزار
+│   │   │   ├── License/
+│   │   │   │   ├── LicenseVerifier.cs       // بررسی لایسنس
+│   │   │   │   ├── LicenseClient.cs         // ارتباط با سرور
+│   │   │   │   └── ModuleManager.cs         // فعال/غیرفعال ماژول
+│   │   │   ├── Reporting/
+│   │   │   │   └── StimulsoftReportService.cs
+│   │   │   ├── FileStorage/
+│   │   │   │   └── LocalFileStorageService.cs
+│   │   │   └── BackgroundJobs/
+│   │   │       ├── SmsQueueProcessor.cs     // پردازش صف پیامک
+│   │   │       ├── AppointmentReminderJob.cs// یادآوری نوبت
+│   │   │       ├── BackupJob.cs             // بکاپ خودکار
+│   │   │       ├── LicenseHeartbeatJob.cs   // بررسی لایسنس
+│   │   │       └── InventoryAlertJob.cs     // هشدار موجودی
+│   │   ├── Identity/
+│   │   │   ├── AuthService.cs
+│   │   │   ├── TokenService.cs
+│   │   │   └── CurrentUserService.cs
+│   │   └── DependencyInjection.cs     // ثبت سرویس‌ها در DI
+│   │
+│   ├── ClinicPro.API/                 // ASP.NET Core Web API
+│   │   ├── Controllers/
+│   │   │   ├── AuthController.cs      // احراز هویت
+│   │   │   ├── PatientsController.cs  // بیماران
+│   │   │   ├── DoctorsController.cs   // پزشکان
+│   │   │   ├── AppointmentsController.cs // نوبت‌ها
+│   │   │   ├── ReceptionsController.cs   // پذیرش
+│   │   │   ├── VisitsController.cs    // ویزیت
+│   │   │   ├── PrescriptionsController.cs // نسخه
+│   │   │   ├── InvoicesController.cs  // فاکتور
+│   │   │   ├── PaymentsController.cs  // پرداخت
+│   │   │   ├── AccountingController.cs// حسابداری
+│   │   │   ├── InsuranceController.cs // بیمه
+│   │   │   ├── LabController.cs       // آزمایشگاه
+│   │   │   ├── ImagingController.cs   // تصویربرداری
+│   │   │   ├── PharmacyController.cs  // داروخانه
+│   │   │   ├── DentalController.cs    // دندانپزشکی
+│   │   │   ├── EyeController.cs       // چشم‌پزشکی
+│   │   │   ├── SmsController.cs       // پیامک
+│   │   │   ├── ReportsController.cs   // گزارش
+│   │   │   ├── SettingsController.cs  // تنظیمات
+│   │   │   ├── UsersController.cs     // کاربران
+│   │   │   ├── RolesController.cs     // نقش‌ها
+│   │   │   ├── LicenseController.cs   // لایسنس
+│   │   │   ├── BackupController.cs    // بکاپ
+│   │   │   └── DashboardController.cs // داشبورد
+│   │   ├── Middleware/
+│   │   │   ├── ExceptionHandlingMiddleware.cs  // مدیریت خطا
+│   │   │   ├── LicenseValidationMiddleware.cs  // بررسی لایسنس
+│   │   │   ├── AuditLogMiddleware.cs           // لاگ عملیات
+│   │   │   └── RateLimitingMiddleware.cs       // محدودیت درخواست
+│   │   ├── Filters/
+│   │   │   ├── HasPermissionAttribute.cs       // فیلتر دسترسی
+│   │   │   └── ValidateModelAttribute.cs       // فیلتر اعتبارسنجی
+│   │   ├── Hubs/
+│   │   │   └── NotificationHub.cs              // SignalR برای Real-time
+│   │   ├── Extensions/
+│   │   │   ├── ServiceCollectionExtensions.cs
+│   │   │   └── ApplicationBuilderExtensions.cs
+│   │   ├── appsettings.json
+│   │   ├── appsettings.Development.json
+│   │   └── Program.cs
+│   │
+│   ├── ClinicPro.Desktop/            // WPF Client
+│   │   ├── Views/ ... (XAML)
+│   │   ├── ViewModels/ ... (MVVM)
+│   │   ├── Services/ ... (API Client)
+│   │   ├── Controls/ ... (Custom Controls)
+│   │   ├── Converters/ ...
+│   │   ├── Themes/ ... (Light/Dark)
+│   │   ├── Resources/
+│   │   │   ├── Fonts/ (Vazirmatn)
+│   │   │   ├── Icons/
+│   │   │   └── Strings/ (i18n)
+│   │   └── App.xaml
+│   │
+│   ├── ClinicPro.LicensePortal/       // Blazor Server
+│   │   └── ...
+│   │
+│   └── ClinicPro.Shared/             // مدل‌های مشترک
+│       └── Contracts/
+│
+├── tests/
+│   ├── ClinicPro.Domain.UnitTests/
+│   ├── ClinicPro.Application.UnitTests/
+│   ├── ClinicPro.Infrastructure.IntegrationTests/
+│   └── ClinicPro.API.IntegrationTests/
+│
+└── docs/</span>
+
+
+<span class="h2">═══════════════════════════════════════
+🗄️ ۳. طراحی کامل دیتابیس (۹۰+ جدول)
+═══════════════════════════════════════</span>
+
+<span class="note">// ⚠️ نکات مهم دیتابیس:
+// ۱. همه جداول دارای فیلدهای زیر هستند (ارث‌بری از BaseEntity):
+//    - Id (bigint IDENTITY PK)
+//    - CreatedAt (datetime2 NOT NULL DEFAULT GETUTCDATE())
+//    - CreatedBy (bigint NULL FK → Users)
+//    - UpdatedAt (datetime2 NULL)
+//    - UpdatedBy (bigint NULL FK → Users)
+//    - IsDeleted (bit NOT NULL DEFAULT 0)
+//    - RowVersion (timestamp) برای Concurrency Control
+//    - BranchId (bigint NULL FK → Branches) برای Multi-Branch آینده
+//
+// ۲. Soft Delete: هیچ رکوردی واقعاً حذف نمی‌شود. Global Query Filter: WHERE IsDeleted = 0
+// ۳. همه FK ها باید Cascade: NoAction باشند (برای Soft Delete)
+// ۴. کد ملی و موبایل Index دارند
+// ۵. فیلدهای حساس بیمار (آدرس، بیماری‌ها) با AES-256 رمزنگاری می‌شوند
+// ۶. Collation: SQL_Latin1_General_CP1_CI_AS
+// ۷. تمام Comment های جداول و ستون‌ها فارسی باشند
+// ۸. از SQL Server Sequence برای شماره‌های یکتا استفاده شود
+// ۹. Index های مناسب روی فیلدهای پرکاربرد ایجاد شوند</span>
+
+<span class="note">// نمونه کامنت‌نویسی فارسی برای Entity:</span>
+<span class="code">/// &lt;summary&gt;
+/// موجودیت بیمار - اطلاعات کامل شخصی، پزشکی و بیمه‌ای بیمار
+/// این جدول مرکزی‌ترین جدول سیستم است و تمام ماژول‌ها به آن وابسته هستند
+/// &lt;/summary&gt;
+/// &lt;remarks&gt;
+/// فیلدهای حساس مانند آدرس و بیماری‌ها با AES-256 رمزنگاری می‌شوند
+/// کد ملی و موبایل دارای Index یکتا هستند
+/// &lt;/remarks&gt;
+public class Patient : AuditableEntity, ISoftDeletable
+{
+    /// &lt;summary&gt;شماره پرونده پزشکی - تولید خودکار با فرمت MRN-XXXXXX&lt;/summary&gt;
+    public string MedicalRecordNo { get; set; }
+    
+    /// &lt;summary&gt;کد ملی ۱۰ رقمی بیمار - یکتا و الزامی - با الگوریتم رقم کنترلی اعتبارسنجی می‌شود&lt;/summary&gt;
+    public string NationalCode { get; set; }
+    
+    /// &lt;summary&gt;نام بیمار - حداکثر ۵۰ کاراکتر - الزامی&lt;/summary&gt;
+    public string FirstName { get; set; }
+    
+    /// &lt;summary&gt;نام خانوادگی بیمار - حداکثر ۵۰ کاراکتر - الزامی - ایندکس شده&lt;/summary&gt;
+    public string LastName { get; set; }
+    
+    /// &lt;summary&gt;نام پدر بیمار - اختیاری&lt;/summary&gt;
+    public string? FatherName { get; set; }
+    
+    /// &lt;summary&gt;جنسیت: ۱=مرد, ۲=زن - الزامی&lt;/summary&gt;
+    public Gender Gender { get; set; }
+    
+    // ... ادامه با همین سبک کامنت‌نویسی
+}</span>
+
+<span class="h3">───────────────────────────────
+گروه ۱: بیماران و پزشکان
+───────────────────────────────</span>
+
+<span class="key">جدول Patients (بیماران):</span>
+PatientId          bigint PK IDENTITY     -- شناسه بیمار
+MedicalRecordNo    nvarchar(20) UQ        -- شماره پرونده (MRN-XXXXXX)
+NationalCode       nvarchar(10) UQ IX     -- کد ملی ۱۰ رقمی
+FirstName          nvarchar(50) NN        -- نام
+LastName           nvarchar(50) NN IX     -- نام خانوادگی
+FatherName         nvarchar(50)           -- نام پدر
+Gender             tinyint NN             -- جنسیت (1=مرد, 2=زن)
+BirthDate          date                   -- تاریخ تولد میلادی
+BirthDateShamsi    nvarchar(10)           -- تاریخ تولد شمسی (1358/04/15)
+BloodType          nvarchar(5)            -- گروه خونی (A+, O-, ...)
+MaritalStatus      tinyint                -- وضعیت تأهل (1=مجرد, 2=متاهل)
+Mobile             nvarchar(11) NN IX     -- شماره موبایل (09XXXXXXXXX)
+Phone              nvarchar(15)           -- تلفن ثابت
+Email              nvarchar(100)          -- ایمیل
+Address            nvarchar(500)          -- آدرس (رمزنگاری AES)
+City               nvarchar(50)           -- شهر
+Province           nvarchar(50)           -- استان
+PostalCode         nvarchar(10)           -- کد پستی
+EmergencyContactName    nvarchar(100)     -- نام تماس اضطراری
+EmergencyContactPhone   nvarchar(11)      -- تلفن اضطراری
+EmergencyContactRelation nvarchar(50)     -- نسبت با بیمار
+InsuranceCompanyId      bigint FK→InsuranceCompanies  -- بیمه اصلی
+InsuranceNumber         nvarchar(50)      -- شماره دفترچه بیمه
+InsuranceType           nvarchar(50)      -- نوع بیمه (اصلی/تبعی)
+SupplementaryInsuranceId bigint FK→InsuranceCompanies -- بیمه تکمیلی
+SepasPatientId          nvarchar(50)      -- شناسه بیمار در سپاس
+Occupation              nvarchar(100)     -- شغل
+Education               tinyint           -- تحصیلات
+Nationality             nvarchar(50) DEFAULT 'ایرانی' -- ملیت
+PatientType             tinyint DEFAULT 1 -- نوع بیمار (1=عادی, 2=VIP, 3=کارمند)
+Allergies               nvarchar(max)     -- آلرژی‌ها (JSON Array) - رمزنگاری
+ChronicDiseases         nvarchar(max)     -- بیماری‌های مزمن (JSON) - رمزنگاری
+CurrentMedications      nvarchar(max)     -- داروهای فعلی (JSON)
+FamilyHistory           nvarchar(max)     -- سوابق خانوادگی - رمزنگاری
+ProfilePicture          nvarchar(500)     -- مسیر عکس پروفایل
+EncryptedData           varbinary(max)    -- داده‌های حساس رمزنگاری شده AES-256
+RegistrationDate        datetime2         -- تاریخ ثبت‌نام
+LastVisitDate           datetime2         -- تاریخ آخرین مراجعه
+IsActive                bit DEFAULT 1     -- فعال/غیرفعال
++ Audit Fields (Created/Updated/IsDeleted/RowVersion/BranchId)
+
+<span class="key">جدول Doctors (پزشکان):</span>
+DoctorId            bigint PK IDENTITY    -- شناسه پزشک
+EmployeeId          bigint FK→Employees   -- ارتباط با جدول پرسنل
+MedicalLicenseNo    nvarchar(20) UQ       -- شماره نظام پزشکی
+NezamPezeshkiCode   nvarchar(20) UQ       -- کد نظام پزشکی
+SpecialtyId         bigint FK→Specialties -- تخصص اصلی
+SubSpecialtyId      bigint FK→Specialties -- فوق تخصص (اختیاری)
+AcademicRank        nvarchar(50)          -- مرتبه علمی (استاد, دانشیار, ...)
+Biography           nvarchar(max)         -- بیوگرافی
+ConsultationFee     decimal(18,0)         -- حق ویزیت (ریال)
+VisitDuration       int DEFAULT 15        -- مدت زمان هر ویزیت (دقیقه)
+MaxPatientsPerShift int                   -- حداکثر بیمار در هر شیفت
+DoctorPercentage    decimal(5,2)          -- درصد سهم پزشک از ویزیت
+SignatureImage      varbinary(max)        -- تصویر امضا
+StampImage          varbinary(max)        -- تصویر مهر
+OnlineBookingEnabled bit DEFAULT 1        -- نوبت‌دهی آنلاین فعال
+AcceptsNewPatients   bit DEFAULT 1        -- پذیرش بیمار جدید
+Rating              decimal(3,2)          -- امتیاز (0.00 تا 5.00)
+IsActive            bit DEFAULT 1         -- فعال
++ Audit Fields
+
+<span class="key">جدول Specialties (تخصص‌ها - Self-Referencing):</span>
+SpecialtyId    bigint PK IDENTITY
+Name           nvarchar(100) NN     -- نام تخصص فارسی
+NameEn         nvarchar(100)        -- نام تخصص انگلیسی
+Code           nvarchar(20) UQ      -- کد تخصص
+ParentId       bigint FK→Specialties-- تخصص والد (برای فوق‌تخصص)
+Description    nvarchar(500)        -- توضیحات
+IconPath       nvarchar(200)        -- آیکون
+IsActive       bit DEFAULT 1
+
+<span class="h3">───────────────────────────────
+گروه ۲: نوبت‌دهی و پذیرش
+───────────────────────────────</span>
+
+<span class="key">جدول Appointments (نوبت‌ها):</span>
+AppointmentId      bigint PK IDENTITY
+AppointmentCode    nvarchar(20) UQ       -- کد پیگیری (APT-XXXXXXXX)
+PatientId          bigint FK→Patients NN -- بیمار
+DoctorId           bigint FK→Doctors NN  -- پزشک
+SpecialtyId        bigint FK→Specialties -- تخصص
+AppointmentDate    date NN IX            -- تاریخ نوبت
+AppointmentDateShamsi nvarchar(10)       -- تاریخ شمسی
+AppointmentTime    time NN               -- ساعت نوبت
+Duration           int DEFAULT 15        -- مدت (دقیقه)
+Status             tinyint NN DEFAULT 1  -- وضعیت:
+                                         -- 1=رزرو شده, 2=تایید شده, 3=حاضر,
+                                         -- 4=در حال ویزیت, 5=تکمیل شده,
+                                         -- 6=لغو شده, 7=عدم مراجعه
+AppointmentType    tinyint DEFAULT 1     -- نوع: 1=اولیه, 2=پیگیری, 3=اورژانس
+RoomId             bigint FK→ExaminationRooms -- اتاق ویزیت
+QueueNumber        int                   -- شماره صف
+Source             tinyint DEFAULT 1     -- منبع: 1=حضوری, 2=تلفنی, 3=آنلاین
+IsFirstVisit       bit                   -- اولین مراجعه
+Priority           tinyint DEFAULT 3     -- اولویت: 1=اورژانس, 2=بالا, 3=عادی
+EstimatedFee       decimal(18,0)         -- تخمین هزینه
+CancellationReason nvarchar(500)         -- دلیل لغو
+CancelledAt        datetime2             -- زمان لغو
+CancelledBy        bigint FK→Users       -- لغو‌کننده
+ReminderSent       bit DEFAULT 0         -- پیامک یادآوری ارسال شده
+Notes              nvarchar(max)         -- توضیحات
++ Audit Fields
+
+<span class="key">جدول Receptions (پذیرش):</span>
+ReceptionId          bigint PK IDENTITY
+ReceptionNumber      nvarchar(20) UQ         -- شماره پذیرش (RCP-XXXXXXXX)
+AppointmentId        bigint FK→Appointments   -- نوبت مرتبط
+PatientId            bigint FK→Patients NN    -- بیمار
+DoctorId             bigint FK→Doctors NN     -- پزشک
+ReceptionDate        datetime2 NN             -- تاریخ و ساعت پذیرش
+ReceptionDateShamsi  nvarchar(10)             -- تاریخ شمسی
+InsuranceCompanyId   bigint FK→InsuranceCompanies -- بیمه استفاده شده
+InsuranceVerified    bit DEFAULT 0            -- تایید بیمه آنلاین
+InsuranceApprovalCode nvarchar(50)            -- کد تایید بیمه
+SupplementaryInsuranceCode nvarchar(50)       -- کد بیمه تکمیلی
+ReferralCode         nvarchar(50)             -- کد ارجاع
+ReferringDoctor      nvarchar(100)            -- پزشک ارجاع‌دهنده
+Status               tinyint DEFAULT 1        -- وضعیت: 1=پذیرش شده, 2=در صف,
+                                              -- 3=در حال ویزیت, 4=ویزیت شده,
+                                              -- 5=ترخیص, 6=لغو
+ReceptionistId       bigint FK→Users          -- منشی پذیرش‌کننده
+EnterTime            datetime2                -- ساعت ورود بیمار
+ExitTime             datetime2                -- ساعت خروج
+WaitingTime          int                      -- زمان انتظار (دقیقه)
+Notes                nvarchar(max)            -- یادداشت
++ Audit Fields
+
+<span class="key">جدول DoctorSchedules (برنامه کاری پزشکان):</span>
+ScheduleId   bigint PK IDENTITY
+DoctorId     bigint FK→Doctors NN    -- پزشک
+DayOfWeek    tinyint NN              -- روز هفته: 0=شنبه...6=جمعه
+StartTime    time NN                 -- ساعت شروع
+EndTime      time NN                 -- ساعت پایان
+BreakStart   time                    -- شروع استراحت
+BreakEnd     time                    -- پایان استراحت
+RoomId       bigint FK→ExaminationRooms -- اتاق
+MaxPatients  int                     -- حداکثر بیمار
+SlotDuration int DEFAULT 15          -- مدت هر slot (دقیقه)
+ValidFrom    date                    -- معتبر از تاریخ
+ValidTo      date                    -- معتبر تا تاریخ
+IsActive     bit DEFAULT 1
+
+<span class="key">جداول کمکی: ExaminationRooms, Shifts, Queues, DoctorAbsences, Departments, Branches</span>
+(مشابه طراحی ارائه شده در فایل 02-database.html)
+
+<span class="h3">───────────────────────────────
+گروه ۳: ویزیت و نسخه‌نویسی
+───────────────────────────────</span>
+
+<span class="key">جدول Visits (ویزیت‌ها):</span>
+VisitId             bigint PK IDENTITY
+VisitCode           nvarchar(20) UQ         -- کد ویزیت (VST-XXXXXXXX)
+ReceptionId         bigint FK→Receptions    -- پذیرش مرتبط
+PatientId           bigint FK→Patients NN   -- بیمار
+DoctorId            bigint FK→Doctors NN    -- پزشک
+VisitDate           datetime2 NN            -- تاریخ و ساعت ویزیت
+VisitDateShamsi     nvarchar(10)            -- تاریخ شمسی
+VisitType           tinyint DEFAULT 1       -- نوع: 1=اولیه, 2=پیگیری, 3=اورژانس, 4=مشاوره
+ChiefComplaint      nvarchar(max)           -- شکایت اصلی (CC)
+HistoryOfPresentIllness nvarchar(max)       -- شرح بیماری فعلی (HPI)
+PastMedicalHistory  nvarchar(max)           -- سوابق پزشکی قبلی (PMH)
+FamilyHistory       nvarchar(max)           -- سوابق خانوادگی (FH)
+SocialHistory       nvarchar(max)           -- سوابق اجتماعی (SH)
+ReviewOfSystems     nvarchar(max)           -- مرور سیستم‌ها (ROS)
+PhysicalExamination nvarchar(max)           -- معاینه فیزیکی (PE)
+SOAP_Subjective     nvarchar(max)           -- الگوی SOAP - ذهنی
+SOAP_Objective      nvarchar(max)           -- الگوی SOAP - عینی
+SOAP_Assessment     nvarchar(max)           -- الگوی SOAP - ارزیابی
+SOAP_Plan           nvarchar(max)           -- الگوی SOAP - برنامه
+PrimaryDiagnosisId  bigint FK→ICD10Codes    -- تشخیص اصلی (ICD-10)
+SecondaryDiagnoses  nvarchar(max)           -- تشخیص‌های ثانویه (JSON Array of ICD10)
+TreatmentPlan       nvarchar(max)           -- برنامه درمانی
+FollowUpDate        date                    -- تاریخ مراجعه بعدی
+FollowUpInstructions nvarchar(max)          -- دستورات پیگیری
+Status              tinyint DEFAULT 1       -- 1=شروع شده, 2=در حال, 3=تکمیل, 4=ذخیره موقت
+StartTime           datetime2               -- ساعت شروع ویزیت
+EndTime             datetime2               -- ساعت پایان ویزیت
+Duration            int                     -- مدت ویزیت (دقیقه) - محاسباتی
+VisitFee            decimal(18,0)           -- هزینه ویزیت
+SepasReferenceCode  nvarchar(50)            -- کد ارجاع سپاس
++ Audit Fields
+
+<span class="key">جدول VitalSigns (علائم حیاتی):</span>
+VitalSignId             bigint PK IDENTITY
+VisitId                 bigint FK→Visits      -- ویزیت مرتبط
+PatientId               bigint FK→Patients    -- بیمار
+MeasuredAt              datetime2             -- زمان اندازه‌گیری
+Temperature             decimal(4,1)          -- دمای بدن (سلسیوس)
+BloodPressureSystolic   int                   -- فشار خون سیستولیک (mmHg)
+BloodPressureDiastolic  int                   -- فشار خون دیاستولیک (mmHg)
+HeartRate               int                   -- ضربان قلب (BPM)
+RespiratoryRate         int                   -- تعداد تنفس (در دقیقه)
+OxygenSaturation        int                   -- اشباع اکسیژن (SpO2 %)
+Weight                  decimal(5,2)          -- وزن (کیلوگرم)
+Height                  decimal(5,2)          -- قد (سانتی‌متر)
+BMI                     decimal(4,2)          -- شاخص توده بدنی (محاسباتی)
+BloodSugar              int                   -- قند خون (mg/dL)
+HeadCircumference       decimal(5,2)          -- دور سر (برای نوزاد)
+MeasuredBy              bigint FK→Users       -- اندازه‌گیری توسط
+
+<span class="key">جدول Prescriptions (نسخه‌ها):</span>
+PrescriptionId        bigint PK IDENTITY
+PrescriptionCode      nvarchar(20) UQ       -- کد نسخه (RX-XXXXXXXX)
+VisitId               bigint FK→Visits      -- ویزیت مرتبط
+PatientId             bigint FK→Patients NN -- بیمار
+DoctorId              bigint FK→Doctors NN  -- پزشک تجویزکننده
+PrescriptionDate      datetime2             -- تاریخ تجویز
+Type                  tinyint DEFAULT 1     -- نوع: 1=دارویی, 2=پاراکلینیک, 3=ترکیبی
+IsElectronic          bit DEFAULT 0         -- الکترونیکی (سامانه بیمه)
+ElectronicTrackingCode nvarchar(50)         -- کد رهگیری الکترونیک
+InsuranceSystemType   tinyint               -- سامانه: 1=سلامت, 2=تامین, 3=مسلح, 4=سایر
+InsuranceApprovalCode nvarchar(50)          -- کد تایید بیمه
+ValidUntil            date                  -- معتبر تا تاریخ
+IsNarcotic            bit DEFAULT 0         -- نسخه مخدر
+Status                tinyint DEFAULT 1     -- 1=صادر شده, 2=ارسال به بیمه,
+                                            -- 3=تایید بیمه, 4=تحویل شده,
+                                            -- 5=لغو, 6=منقضی
+Notes                 nvarchar(max)         -- توضیحات پزشک
+PrintedCount          int DEFAULT 0         -- تعداد چاپ
+
+<span class="key">جدول PrescriptionItems (اقلام نسخه):</span>
+ItemId             bigint PK IDENTITY
+PrescriptionId     bigint FK→Prescriptions NN -- نسخه
+MedicationId       bigint FK→Medications NN   -- دارو
+OrderIndex         int                        -- ترتیب در نسخه
+Dosage             nvarchar(100)              -- دوز (مثلاً: ۱ قرص)
+Frequency          nvarchar(100)              -- تعداد مصرف (مثلاً: ۳ بار در روز)
+Duration           nvarchar(50)               -- مدت (مثلاً: ۷ روز)
+Route              nvarchar(50)               -- مسیر مصرف (خوراکی, تزریقی, ...)
+Quantity           decimal(10,2)              -- تعداد کل
+Unit               nvarchar(20)               -- واحد (عدد, ویال, آمپول)
+Instructions       nvarchar(max)              -- دستورات خاص مصرف
+IsSOS              bit DEFAULT 0              -- در صورت نیاز
+IsDelivered        bit DEFAULT 0              -- تحویل شده از داروخانه
+DeliveredAt        datetime2                  -- تاریخ تحویل
+DeliveredQuantity  decimal(10,2)              -- تعداد تحویل شده
+
+<span class="key">جداول کمکی: Medications, ICD10Codes, DrugInteractions, PrescriptionTemplates</span>
+(مشابه طراحی فایل 02-database.html - همه با کامنت فارسی)
+
+<span class="h3">───────────────────────────────
+گروه ۴: مالی و حسابداری دوبل
+───────────────────────────────</span>
+
+<span class="key">جداول مالی (کامل):</span>
+Invoices             -- فاکتورها (با تمام فیلدهای سهم بیمه/بیمار/تخفیف/مالیات)
+InvoiceItems         -- اقلام فاکتور (خدمت, تعداد, قیمت, سهم‌ها)
+Payments             -- پرداخت‌ها (نقد, کارت, آنلاین + شماره ارجاع)
+CashRegisters        -- صندوق‌ها (باز/بسته, موجودی)
+InsuranceCompanies   -- شرکت‌های بیمه (API Endpoint, Credentials)
+InsuranceClaims      -- مطالبات بیمه (ارسال, تایید, دریافت)
+InsuranceInquiries   -- استعلامات بیمه
+Tariffs              -- تعرفه‌ها (سالانه, بیمه‌ای, آزاد, K)
+Services             -- خدمات (کد, نام, دسته, قیمت)
+ServiceCategories    -- دسته‌بندی خدمات
+Expenses             -- هزینه‌ها (خرید, اداری, ...)
+DoctorPayments       -- کارانه پزشکان
+
+<span class="key">جداول حسابداری دوبل:</span>
+AccountingAccounts   -- سرفصل‌ها (۴ سطح: گروه/کل/معین/تفصیلی)
+JournalEntries       -- اسناد حسابداری (شماره, تاریخ, شرح, وضعیت)
+JournalEntryLines    -- سطرهای سند (حساب, بدهکار, بستانکار)
+FiscalYears          -- سال‌های مالی
+CostCenters          -- مراکز هزینه
+
+<span class="note">// ⚠️ قانون طلایی حسابداری دوبل:
+// در هر سند: SUM(بدهکار) = SUM(بستانکار)
+// هرگز یک سند نامتوازن ذخیره نشود
+// سند حسابداری خودکار برای هر فاکتور و پرداخت تولید شود</span>
+
+<span class="h3">───────────────────────────────
+گروه ۵: پاراکلینیک
+───────────────────────────────</span>
+
+<span class="key">آزمایشگاه:</span> LabOrders, LabOrderItems, LabTests
+<span class="key">تصویربرداری:</span> ImagingOrders, ImagingFiles
+<span class="key">دندانپزشکی:</span> DentalRecords, DentalTreatmentPlans, DentalProcedures
+<span class="key">چشم‌پزشکی:</span> EyeExamRecords
+<span class="key">فیزیوتراپی:</span> PhysiotherapySessions
+
+<span class="h3">───────────────────────────────
+گروه ۶: داروخانه
+───────────────────────────────</span>
+
+<span class="key">داروخانه:</span> PharmacyInventory, PharmacyTransactions, Suppliers, PurchaseOrders, PurchaseOrderItems, StockTakings
+
+<span class="h3">───────────────────────────────
+گروه ۷: پرسنل و RBAC
+───────────────────────────────</span>
+
+<span class="key">پرسنل:</span> Employees, Positions, EmployeeAttendance, EmployeeSalaries, EmployeeLeaves, Contracts
+<span class="key">RBAC:</span> Users, Roles, Permissions, UserRoles (M:N), RolePermissions (M:N), RefreshTokens, UserSessions, PasswordHistory, UserModulePermissions
+
+<span class="h3">───────────────────────────────
+گروه ۸: ارتباطات
+───────────────────────────────</span>
+
+<span class="key">پیامک:</span> SmsMessages, SmsTemplates, SmsProviders, SmsQueue
+<span class="key">تماس:</span> PhoneCalls
+<span class="key">نظرسنجی:</span> Surveys, SurveyResponses
+<span class="key">اعلان:</span> Notifications
+
+<span class="h3">───────────────────────────────
+گروه ۹: زیرساخت
+───────────────────────────────</span>
+
+<span class="key">اسناد:</span> Documents, DocumentCategories
+<span class="key">بکاپ:</span> BackupHistory
+<span class="key">لاگ:</span> AuditLogs, ErrorLogs
+<span class="key">تنظیمات:</span> SystemSettings, ClinicInfo, Modules, PerformanceMetrics
+
+<span class="h3">───────────────────────────────
+گروه ۱۰: لایسنس (پنل وب)
+───────────────────────────────</span>
+
+<span class="key">License Portal DB:</span> Licenses, Customers, LicenseValidationLogs, LicensePayments, ModuleCatalog
+<span class="key">Client DB:</span> ClinicLicense, LicenseCheckLog
+
+<span class="h3">───────────────────────────────
+گروه ۱۱: سامانه‌های دولتی
+───────────────────────────────</span>
+
+<span class="key">یکپارچه‌سازی:</span> SepasTransactions, ElectronicPrescriptions, SibSystemRecords, ApiCallLogs, ApiCredentials, ReferralSystem
+
+<span class="h3">───────────────────────────────
+گروه ۱۲: گزارش‌ها
+───────────────────────────────</span>
+
+<span class="key">گزارش:</span> ReportDefinitions, ReportExecutions, ReportSchedules
+
+
+<span class="h2">═══════════════════════════════════════
+🔗 ۴. روابط اصلی بین جداول (ERD Summary)
+═══════════════════════════════════════</span>
+
+Patient ─(1:N)─ Appointments (یک بیمار چند نوبت دارد)
+Patient ─(1:N)─ Receptions (یک بیمار چند پذیرش دارد)
+Patient ─(1:N)─ Visits (یک بیمار چند ویزیت دارد)
+Patient ─(1:N)─ Prescriptions (یک بیمار چند نسخه دارد)
+Patient ─(1:N)─ Invoices (یک بیمار چند فاکتور دارد)
+Patient ─(N:1)─ InsuranceCompany (هر بیمار یک بیمه اصلی)
+
+Doctor ─(1:N)─ Appointments (یک پزشک چند نوبت دارد)
+Doctor ─(1:N)─ Visits (یک پزشک چند ویزیت انجام می‌دهد)
+Doctor ─(1:N)─ DoctorSchedules (برنامه کاری)
+Doctor ─(N:1)─ Specialty (هر پزشک یک تخصص)
+Doctor ─(N:1)─ Employee (هر پزشک یک پرسنل)
+
+Appointment ─(1:1)─ Reception (هر نوبت حداکثر یک پذیرش)
+Reception ─(1:1)─ Visit (هر پذیرش حداکثر یک ویزیت)
+Visit ─(1:N)─ Prescriptions (یک ویزیت چند نسخه)
+Visit ─(1:N)─ LabOrders (یک ویزیت چند درخواست آزمایش)
+Visit ─(1:N)─ ImagingOrders (یک ویزیت چند درخواست تصویربرداری)
+Visit ─(1:1)─ VitalSign (هر ویزیت یک ست علائم حیاتی)
+Visit ─(N:1)─ ICD10Code (تشخیص اصلی)
+
+Prescription ─(1:N)─ PrescriptionItems (هر نسخه چند قلم دارو)
+PrescriptionItem ─(N:1)─ Medication (هر قلم یک دارو)
+
+Invoice ─(1:N)─ InvoiceItems (هر فاکتور چند قلم خدمت)
+Invoice ─(1:N)─ Payments (هر فاکتور چند پرداخت)
+InvoiceItem ─(N:1)─ Service (هر قلم یک خدمت)
+
+JournalEntry ─(1:N)─ JournalEntryLines (هر سند چند سطر)
+JournalEntryLine ─(N:1)─ AccountingAccount (هر سطر یک حساب)
+
+User ─(N:N)─ Roles (از طریق UserRoles)
+Role ─(N:N)─ Permissions (از طریق RolePermissions)
+User ─(N:1)─ Employee (هر کاربر یک پرسنل)
+User ─(1:N)─ RefreshTokens
+
+
+<span class="h2">═══════════════════════════════════════
+📏 ۵. Index های مهم
+═══════════════════════════════════════</span>
+
+-- بیماران
+CREATE UNIQUE INDEX IX_Patients_NationalCode ON Patients(NationalCode) WHERE IsDeleted=0;
+CREATE INDEX IX_Patients_Mobile ON Patients(Mobile) WHERE IsDeleted=0;
+CREATE INDEX IX_Patients_LastName ON Patients(LastName) WHERE IsDeleted=0;
+CREATE INDEX IX_Patients_MedicalRecordNo ON Patients(MedicalRecordNo) WHERE IsDeleted=0;
+
+-- نوبت‌ها
+CREATE INDEX IX_Appointments_Date_Doctor ON Appointments(AppointmentDate, DoctorId) WHERE IsDeleted=0;
+CREATE INDEX IX_Appointments_Patient ON Appointments(PatientId, AppointmentDate DESC) WHERE IsDeleted=0;
+CREATE INDEX IX_Appointments_Status ON Appointments(Status) INCLUDE(AppointmentDate, DoctorId) WHERE IsDeleted=0;
+
+-- ویزیت‌ها
+CREATE INDEX IX_Visits_Patient_Date ON Visits(PatientId, VisitDate DESC) WHERE IsDeleted=0;
+CREATE INDEX IX_Visits_Doctor_Date ON Visits(DoctorId, VisitDate DESC) WHERE IsDeleted=0;
+
+-- فاکتورها
+CREATE INDEX IX_Invoices_Date ON Invoices(InvoiceDate DESC) WHERE IsDeleted=0;
+CREATE INDEX IX_Invoices_Patient ON Invoices(PatientId) WHERE IsDeleted=0;
+CREATE INDEX IX_Invoices_PaymentStatus ON Invoices(PaymentStatus) WHERE IsDeleted=0;
+
+-- لاگ عملیات
+CREATE INDEX IX_AuditLogs_User_Time ON AuditLogs(UserId, Timestamp DESC);
+CREATE INDEX IX_AuditLogs_Entity ON AuditLogs(EntityName, EntityId);
+
+-- داروخانه
+CREATE INDEX IX_PharmacyInventory_Expiry ON PharmacyInventory(ExpiryDate) WHERE IsDeleted=0;
+CREATE INDEX IX_PharmacyInventory_LowStock ON PharmacyInventory(Quantity) WHERE IsDeleted=0 AND Quantity &lt; ReorderLevel;
+
+
+<span class="h1">════════════════════════════════════════════════════════════════
+📌 پایان بخش ۱ از ۳ - ادامه در prompt-part2.html
+════════════════════════════════════════════════════════════════</span>
+</div>
+
+<footer>
+<p>📄 پرامپت بخش ۱ از ۳ | <strong>معرفی + معماری + دیتابیس</strong></p>
+<p>ادامه: <a href="prompt-part2.html" style="color:var(--p)">بخش ۲ (ماژول‌ها + API + WPF)</a></p>
+</footer>
+</div>
+
+<script>
+function copyAll(){
+const t=document.getElementById('prompt1').innerText;
+navigator.clipboard.writeText(t).then(()=>alert('✅ پرامپت بخش ۱ کپی شد!')).catch(()=>{
+const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('✅ کپی شد!');
+});
+}
+</script>
+</body>
+</html>

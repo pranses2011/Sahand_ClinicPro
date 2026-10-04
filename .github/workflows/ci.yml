@@ -1,0 +1,44 @@
+# ============================================================
+# Sahand_ClinicPro - GitHub Actions CI
+# وضعیت: جایگاه اولیه - در گام‌های پیاده‌سازی تکمیل می‌شود
+#
+# نکته: این Workflow پس از ایجاد پروژه‌های src/ در گام ۱
+#       و با افزودن مراحل Build + Test (گام ۳۰) فعال می‌شود.
+# ============================================================
+
+name: 🏗️ CI - Sahand ClinicPro
+
+# اجرا روی push و pull_request به main و همچنین دستی
+on:
+  push:
+    branches: [main, 'feature/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:      # امکان اجرای دستی
+
+jobs:
+  build:
+    name: 📦 Build & Test
+    runs-on: windows-latest   # ویندوز به دلیل پروژه WPF
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      # ⏳ این مرحله پس از گام ۱ (Solution Setup) فعال می‌شود
+      # - name: 🛠️ Setup .NET 8
+      #   uses: actions/setup-dotnet@v4
+      #   with:
+      #     dotnet-version: 8.0.x
+
+      # - name: 🧩 Restore Dependencies
+      #   run: dotnet restore
+
+      # - name: 🏗️ Build
+      #   run: dotnet build --configuration Release --no-restore
+
+      # - name: ✅ Run Tests
+      #   run: dotnet test --configuration Release --no-build --verbosity normal
+
+      - name: ℹ️ Placeholder
+        run: echo "CI Pipeline پس از پیاده‌سازی گام ۱ (Solution Setup) فعال می‌شود."

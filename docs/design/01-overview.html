@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>📋 ClinicPro - تحلیل و معماری</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+:root{--p:#1a73e8;--pd:#1557b0;--s:#34a853;--a:#ea4335;--w:#fbbc04;--bg:#f0f2f5;--c:#fff;--t:#202124;--b:#dadce0;--sh:0 2px 8px rgba(0,0,0,.1);--r:12px;--g:linear-gradient(135deg,#1a73e8,#34a853)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t);line-height:1.8;font-size:13px}
+.ct{max-width:1400px;margin:0 auto;padding:20px}
+header{background:var(--g);color:#fff;padding:50px 20px;text-align:center;border-radius:0 0 30px 30px;margin-bottom:30px}
+header h1{font-size:2.2em;font-weight:900;margin-bottom:8px}
+header p{font-size:1.1em;opacity:.9}
+.bg{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;margin:2px}
+.bg-b{background:#e8f0fe;color:#1a73e8}.bg-g{background:#e6f4ea;color:#34a853}.bg-r{background:#fce8e6;color:#ea4335}.bg-y{background:#fef7e0;color:#e37400}.bg-p{background:#f3e8fd;color:#7c3aed}
+.nav{background:#fff;padding:15px;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.nav a{padding:8px 16px;background:#f0f2f5;border-radius:8px;text-decoration:none;color:var(--t);font-size:12px;font-weight:600;transition:.2s}
+.nav a:hover{background:var(--p);color:#fff}
+.nav a.active{background:var(--p);color:#fff}
+section{background:var(--c);border-radius:var(--r);padding:25px;box-shadow:var(--sh);margin-bottom:20px}
+section h2{color:var(--p);font-size:1.4em;margin-bottom:15px;padding-bottom:8px;border-bottom:3px solid var(--p)}
+section h3{color:var(--pd);font-size:1.1em;margin:15px 0 8px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:15px}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.cd{background:#f8f9fa;border-radius:10px;padding:15px;border:1px solid var(--b);transition:.2s}
+.cd:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.cd h4{color:var(--p);margin-bottom:5px}
+.ci{font-size:1.8em;margin-bottom:8px}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+th{background:var(--p);color:#fff;padding:7px 6px;text-align:right;font-weight:600}
+td{padding:5px 6px;border-bottom:1px solid var(--b)}
+tr:hover{background:#f8f9fa}
+.sb{text-align:center;padding:15px;background:var(--g);color:#fff;border-radius:var(--r)}
+.sb .n{font-size:2em;font-weight:900}.sb .l{font-size:.85em;opacity:.9}
+.ib{background:#e8f0fe;border-right:4px solid var(--p);padding:12px;border-radius:0 8px 8px 0;margin:8px 0}
+.wb{background:#fef7e0;border-right:4px solid var(--w);padding:12px;border-radius:0 8px 8px 0;margin:8px 0}
+.gn{background:#e6f4ea;border-right:4px solid var(--s);padding:12px;border-radius:0 8px 8px 0;margin:8px 0}
+.cb{background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:8px;font-family:'Courier New',monospace;font-size:11px;direction:ltr;text-align:left;overflow-x:auto;margin:8px 0;line-height:1.5}
+.kw{color:#569cd6}.st{color:#ce9178}.cm{color:#6a9955}.tp{color:#4ec9b0}
+.ad{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:var(--r);padding:25px;color:#fff;margin:12px 0}
+.al{border:2px solid rgba(255,255,255,.2);border-radius:10px;padding:12px;margin:8px 0}
+.al h4{color:#60a5fa;margin-bottom:5px}
+.ab{display:inline-block;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:4px 10px;margin:2px;font-size:11px}
+.tech-tbl{background:#fff;border-radius:8px;overflow:hidden}
+footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#fff;border-radius:var(--r);margin-top:20px}
+@media(max-width:768px){.g2,.g3,.g4{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<h1>🏥 سامانه مدیریت درمانگاه ClinicPro</h1>
+<p>فایل ۱: تحلیل نیازمندی‌ها و معماری نرم‌افزار</p>
+<div style="margin-top:12px">
+<span class="bg bg-b">Clean Architecture</span>
+<span class="bg bg-g">ASP.NET Core 8</span>
+<span class="bg bg-p">WPF Material Design</span>
+<span class="bg bg-y">SQL Server 2022</span>
+<span class="bg bg-r">Client-Server API</span>
+</div>
+</header>
+
+<div class="ct">
+
+<nav class="nav">
+<a href="01-overview.html" class="active">1️⃣ تحلیل و معماری</a>
+<a href="02-database.html">2️⃣ دیتابیس</a>
+<a href="03-flowcharts.html">3️⃣ فلوچارت</a>
+<a href="04-wireframes.html">4️⃣ وایرفریم</a>
+<a href="05-security-timeline.html">5️⃣ امنیت و زمان‌بندی</a>
+<a href="06-license-integration.html">6️⃣ لایسنس و یکپارچه‌سازی</a>
+<a href="prompt.html">🤖 پرامپت AI</a>
+</nav>
+
+<!-- OVERVIEW -->
+<section>
+<h2>📊 نگاه کلی به پروژه</h2>
+<div class="g4" style="margin-bottom:15px">
+<div class="sb"><div class="n">۳۵+</div><div class="l">ماژول</div></div>
+<div class="sb"><div class="n">۱۰</div><div class="l">کاربر همزمان</div></div>
+<div class="sb"><div class="n">۵۰۰</div><div class="l">بیمار/روز</div></div>
+<div class="sb"><div class="n">۸۵+</div><div class="l">جدول دیتابیس</div></div>
+<div class="sb"><div class="n">۶</div><div class="l">فاز توسعه</div></div>
+<div class="sb"><div class="n">۱۲ ماه</div><div class="l">زمان کل</div></div>
+</div>
+
+<div class="ib">
+<strong>🎯 معرفی پروژه:</strong> ClinicPro یک سامانه جامع و یکپارچه مدیریت درمانگاه است با معماری Clean Architecture، تحت شبکه با API مرکزی، قابلیت توسعه به چند شعبه، اتصال به سامانه‌های دولتی ایران (سپاس، سیب، ناب، سینا، بیمه‌ها)، سامانه لایسنس وب جداگانه با قابلیت فعال/غیرفعال کردن ماژول‌ها، و آماده توسعه موبایل با .NET MAUI در آینده.
+</div>
+
+<h3>🎯 اهداف کلیدی</h3>
+<div class="g3">
+<div class="cd"><div class="ci">🏥</div><h4>مدیریت جامع درمانگاه</h4><p>پوشش تمام فرآیندهای درمانی، مالی، اداری، پاراکلینیکی در یک سامانه یکپارچه</p></div>
+<div class="cd"><div class="ci">🌐</div><h4>تحت شبکه و مقیاس‌پذیر</h4><p>Client-Server با REST API | ۱۰ کاربر همزمان | قابل توسعه به چند شعبه</p></div>
+<div class="cd"><div class="ci">📱</div><h4>آماده موبایل</h4><p>زیرساخت API-based برای توسعه آسان .NET MAUI در آینده</p></div>
+<div class="cd"><div class="ci">🔐</div><h4>امنیت سطح بالا</h4><p>AES-256، JWT + Refresh Token، RBAC، Audit Log، HIPAA</p></div>
+<div class="cd"><div class="ci">🔗</div><h4>سامانه‌های دولتی</h4><p>سپاس، سیب، ناب، سینا، بیمه سلامت، تأمین اجتماعی، و همه بیمه‌ها</p></div>
+<div class="cd"><div class="ci">🔑</div><h4>سامانه لایسنس اختصاصی</h4><p>پنل وب مجزا | آنلاین و آفلاین | کنترل ماژول‌ها و محدودیت‌ها</p></div>
+<div class="cd"><div class="ci">💰</div><h4>حسابداری دوبل</h4><p>سرفصل‌های کامل، اسناد حسابداری، ترازنامه، سود و زیان</p></div>
+<div class="cd"><div class="ci">🌍</div><h4>i18n Ready</h4><p>زیرساخت دوزبانه از ابتدا | فارسی اول | انگلیسی در آینده</p></div>
+<div class="cd"><div class="ci">📊</div><h4>گزارش‌ساز قدرتمند</h4><p>Stimulsoft/FastReport | گزارش‌های مالی، آماری، عملکردی</p></div>
+</div>
+</section>
+
+<!-- TECHNOLOGIES -->
+<section>
+<h2>🛠️ تکنولوژی‌ها و ابزارها</h2>
+<table class="tech-tbl">
+<tr><th>بخش</th><th>تکنولوژی</th><th>نسخه / توضیح</th></tr>
+<tr><td><strong>زبان برنامه‌نویسی</strong></td><td>C#</td><td>C# 12</td></tr>
+<tr><td><strong>Backend API</strong></td><td>ASP.NET Core Web API</td><td>.NET 8 LTS</td></tr>
+<tr><td><strong>Desktop App</strong></td><td>WPF + Material Design in XAML</td><td>MVVM Pattern</td></tr>
+<tr><td><strong>License Portal</strong></td><td>Blazor Server</td><td>.NET 8</td></tr>
+<tr><td><strong>Mobile (آینده)</strong></td><td>.NET MAUI</td><td>Cross-platform</td></tr>
+<tr><td><strong>Database</strong></td><td>SQL Server 2022</td><td>Standard Edition</td></tr>
+<tr><td><strong>ORM</strong></td><td>Entity Framework Core</td><td>EF Core 8</td></tr>
+<tr><td><strong>Authentication</strong></td><td>JWT + Refresh Token</td><td>Microsoft.AspNetCore.Authentication.JwtBearer</td></tr>
+<tr><td><strong>Password Hashing</strong></td><td>BCrypt.Net-Next</td><td>Work factor 12</td></tr>
+<tr><td><strong>Encryption</strong></td><td>AES-256-GCM</td><td>برای داده‌های حساس</td></tr>
+<tr><td><strong>Validation</strong></td><td>FluentValidation</td><td>v11</td></tr>
+<tr><td><strong>Object Mapping</strong></td><td>AutoMapper / Mapster</td><td>v12 / v7</td></tr>
+<tr><td><strong>Reporting</strong></td><td>Stimulsoft Reports</td><td>یا FastReport</td></tr>
+<tr><td><strong>Logging</strong></td><td>Serilog</td><td>+ Seq یا ELK</td></tr>
+<tr><td><strong>Caching</strong></td><td>IMemoryCache + Redis</td><td>Redis برای توزیع‌شده</td></tr>
+<tr><td><strong>Background Jobs</strong></td><td>Hangfire</td><td>برای زمان‌بندی و پیامک</td></tr>
+<tr><td><strong>API Documentation</strong></td><td>Swagger / OpenAPI</td><td>Swashbuckle</td></tr>
+<tr><td><strong>Testing</strong></td><td>xUnit + Moq + FluentAssertions</td><td>Unit + Integration</td></tr>
+<tr><td><strong>Source Control</strong></td><td>Git + GitHub/GitLab</td><td>با GitFlow</td></tr>
+<tr><td><strong>CI/CD</strong></td><td>GitHub Actions / Azure DevOps</td><td>Pipeline خودکار</td></tr>
+<tr><td><strong>Dependency Injection</strong></td><td>Microsoft.Extensions.DI</td><td>Built-in</td></tr>
+<tr><td><strong>SMS Panels</strong></td><td>Kavenegar, MelliPayamak, FarazSMS, SMS.ir, IPPanel, Negar, Payamak-Panel, Sabanovin, Mediana, Trez</td><td>۱۰+ پنل</td></tr>
+<tr><td><strong>Barcode/QR</strong></td><td>ZXing.Net</td><td>برای QR و بارکد</td></tr>
+<tr><td><strong>Excel Export</strong></td><td>ClosedXML / EPPlus</td><td>گزارشات اکسل</td></tr>
+<tr><td><strong>PDF Generation</strong></td><td>QuestPDF / iText7</td><td>تولید PDF فارسی</td></tr>
+<tr><td><strong>Calendar</strong></td><td>PersianDate (custom)</td><td>تقویم شمسی</td></tr>
+<tr><td><strong>Deployment</strong></td><td>IIS / Windows Service / Docker</td><td>On-Premise + Cloud</td></tr>
+</table>
+</section>
+
+<!-- FUNCTIONAL REQ -->
+<section>
+<h2>📋 نیازمندی‌های عملکردی (Functional Requirements)</h2>
+
+<h3>🏥 ماژول‌های هسته‌ای (Core Modules)</h3>
+<table>
+<tr><th>کد</th><th>ماژول</th><th>عملکرد</th><th>اولویت</th></tr>
+<tr><td>M-01</td><td>مدیریت بیماران</td><td>ثبت/ویرایش/جستجو، پرونده الکترونیک، تاریخچه مراجعات، آپلود اسناد، سوابق بیمه، آلرژی‌ها، بیماری‌های مزمن</td><td><span class="bg bg-r">بحرانی</span></td></tr>
+<tr><td>M-02</td><td>نوبت‌دهی</td><td>رزرو نوبت، مدیریت صف، شیفت‌بندی پزشکان، نوبت‌دهی آنلاین، لغو و جابجایی، یادآوری پیامکی</td><td><span class="bg bg-r">بحرانی</span></td></tr>
+<tr><td>M-03</td><td>پذیرش</td><td>ثبت ورود بیمار، بررسی و استعلام بیمه، تشکیل پرونده روزانه، ارجاع، چاپ قبض پذیرش</td><td><span class="bg bg-r">بحرانی</span></td></tr>
+<tr><td>M-04</td><td>ویزیت و معاینه</td><td>SOAP Note، شرح حال، سابقه بیماری فعلی، معاینه بالینی، علائم حیاتی، تشخیص (ICD-10)، دستورات پزشکی</td><td><span class="bg bg-r">بحرانی</span></td></tr>
+<tr><td>M-05</td><td>نسخه‌نویسی</td><td>نسخه داخلی + الکترونیکی (سلامت، تأمین اجتماعی)، چک تداخل دارویی، تاریخچه دارویی بیمار، تمپلیت نسخه</td><td><span class="bg bg-r">بحرانی</span></td></tr>
+</table>
+
+<h3>💰 ماژول‌های مالی (Financial Modules)</h3>
+<table>
+<tr><th>کد</th><th>ماژول</th><th>عملکرد</th><th>اولویت</th></tr>
+<tr><td>F-01</td><td>صندوق و فاکتور</td><td>صدور فاکتور، دریافت وجه (نقد/کارت/آنلاین)، تسویه، گزارش صندوق روزانه، چاپ فاکتور</td><td><span class="bg bg-r">بحرانی</span></td></tr>
+<tr><td>F-02</td><td>مدیریت بیمه</td><td>تعریف شرکت‌های بیمه، تعرفه‌های بیمه‌ای، استعلام آنلاین، ارسال اسناد به بیمه، پیگیری مطالبات</td><td><span class="bg bg-y">بالا</span></td></tr>
+<tr><td>F-03</td><td>حسابداری دوبل</td><td>کدینگ حساب‌ها، اسناد حسابداری، دفتر روزنامه/کل/معین، ترازنامه، صورت سود و زیان</td><td><span class="bg bg-y">بالا</span></td></tr>
+<tr><td>F-04</td><td>تعرفه‌ها</td><td>تعریف تعرفه بر اساس بیمه/آزاد، به‌روزرسانی سالانه، تاریخچه تعرفه‌ها، تعرفه ویژه</td><td><span class="bg bg-r">بحرانی</span></td></tr>
+</table>
+
+<h3>🔬 ماژول‌های پاراکلینیک</h3>
+<table>
+<tr><th>کد</th><th>ماژول</th><th>عملکرد</th><th>اولویت</th></tr>
+<tr><td>P-01</td><td>آزمایشگاه</td><td>کاتالوگ تست‌ها، درخواست آزمایش، ثبت نمونه، ثبت نتیجه، چاپ جواب آزمایش، مقادیر طبیعی</td><td><span class="bg bg-y">بالا</span></td></tr>
+<tr><td>P-02</td><td>تصویربرداری</td><td>درخواست سونوگرافی/رادیولوژی/MRI/CT، ثبت گزارش، آپلود تصاویر، DICOM Viewer</td><td><span class="bg bg-y">بالا</span></td></tr>
+<tr><td>P-03</td><td>فیزیوتراپی</td><td>برنامه جلسات، ثبت تکنیک‌های درمانی، ارزیابی پیشرفت</td><td><span class="bg bg-b">متوسط</span></td></tr>
+<tr><td>P-04</td><td>دندانپزشکی</td><td>چارت دندانی گرافیکی، طرح درمان، ثبت پروسیجر برای هر دندان، عکس دندان</td><td><span class="bg bg-b">متوسط</span></td></tr>
+<tr><td>P-05</td><td>چشم‌پزشکی</td><td>ثبت نمره چشم، معاینات تخصصی، فشار داخل چشم، میدان بینایی</td><td><span class="bg bg-b">متوسط</span></td></tr>
+</table>
+
+<h3>💊 داروخانه</h3>
+<table>
+<tr><th>کد</th><th>ماژول</th><th>عملکرد</th><th>اولویت</th></tr>
+<tr><td>D-01</td><td>داروخانه</td><td>مدیریت موجودی، تحویل دارو با اسکن نسخه، تاریخ انقضا، حداقل موجودی، چک تداخل دارویی، انبارگردانی</td><td><span class="bg bg-y">بالا</span></td></tr>
+</table>
+
+<h3>👥 اداری و منابع انسانی</h3>
+<table>
+<tr><th>کد</th><th>ماژول</th><th>عملکرد</th><th>اولویت</th></tr>
+<tr><td>H-01</td><td>مدیریت پرسنل</td><td>اطلاعات کارکنان، قراردادها، شیفت‌بندی، حضور و غیاب، محاسبه حقوق</td><td><span class="bg bg-b">متوسط</span></td></tr>
+<tr><td>H-02</td><td>مدیریت پزشکان</td><td>اطلاعات تخصصی، برنامه کاری، درصد ویزیت، محاسبه کارانه، گزارش عملکرد</td><td><span class="bg bg-r">بحرانی</span></td></tr>
+<tr><td>H-03</td><td>کاربران و دسترسی‌ها</td><td>تعریف کاربر، نقش‌ها، دسترسی‌ها، RBAC، گروه‌های کاربری، تاریخچه ورود</td><td><span class="bg bg-r">بحرانی</span></td></tr>
+</table>
+
+<h3>📞 ارتباطی</h3>
+<table>
+<tr><th>کد</th><th>ماژول</th><th>عملکرد</th><th>اولویت</th></tr>
+<tr><td>C-01</td><td>پیامک</td><td>یادآوری نوبت، اطلاع‌رسانی جواب آزمایش، تبریک، ۱۰+ پنل، صف ارسال، گزارش ارسال</td><td><span class="bg bg-y">بالا</span></td></tr>
+<tr><td>C-02</td><td>مرکز تلفن</td><td>اتصال به VoIP (Elastix/Issabel/FreePBX)، نمایش اطلاعات بیمار هنگام تماس (CTI)</td><td><span class="bg bg-g">آینده</span></td></tr>
+<tr><td>C-03</td><td>نظرسنجی</td><td>نظرسنجی پس از ویزیت، گزارش رضایت‌مندی، نمره‌دهی به پزشکان</td><td><span class="bg bg-b">متوسط</span></td></tr>
+</table>
+
+<h3>📊 گزارش و مدیریت</h3>
+<table>
+<tr><th>کد</th><th>ماژول</th><th>عملکرد</th><th>اولویت</th></tr>
+<tr><td>R-01</td><td>داشبورد مدیریتی</td><td>نمودارها، KPIها، آمار لحظه‌ای درآمد/بیمار/نوبت، مقایسه با قبل</td><td><span class="bg bg-y">بالا</span></td></tr>
+<tr><td>R-02</td><td>گزارش‌ساز</td><td>Stimulsoft، گزارش‌های آماده و قابل سفارشی‌سازی، Export (PDF/Excel/Word)</td><td><span class="bg bg-y">بالا</span></td></tr>
+<tr><td>R-03</td><td>BI و تحلیل</td><td>تحلیل روند، پیش‌بینی درآمد، شناسایی الگوهای بیماری</td><td><span class="bg bg-g">آینده</span></td></tr>
+</table>
+
+<h3>⚙️ زیرساختی</h3>
+<table>
+<tr><th>کد</th><th>ماژول</th><th>عملکرد</th><th>اولویت</th></tr>
+<tr><td>I-01</td><td>مدیریت اسناد</td><td>آپلود، دسته‌بندی، جستجو، نگهداری اسناد پزشکی و اداری</td><td><span class="bg bg-b">متوسط</span></td></tr>
+<tr><td>I-02</td><td>بکاپ و بازیابی</td><td>بکاپ خودکار روزانه، بازیابی، زمان‌بندی، ذخیره در چند مکان</td><td><span class="bg bg-r">بحرانی</span></td></tr>
+<tr><td>I-03</td><td>تنظیمات سیستم</td><td>تنظیمات عمومی، ماژول‌ها، چاپگر، پنل پیامک، تم</td><td><span class="bg bg-r">بحرانی</span></td></tr>
+<tr><td>I-04</td><td>لاگ و مانیتورینگ</td><td>Audit Log کامل، لاگ خطاها، مانیتورینگ عملکرد و دسترسی</td><td><span class="bg bg-r">بحرانی</span></td></tr>
+</table>
+
+<h3>🚀 پیشرفته و آینده</h3>
+<table>
+<tr><th>کد</th><th>ماژول</th><th>عملکرد</th><th>اولویت</th></tr>
+<tr><td>A-01</td><td>نوبت‌دهی آنلاین</td><td>وب‌سایت + اپ موبایل بیمار برای رزرو آنلاین</td><td><span class="bg bg-g">آینده</span></td></tr>
+<tr><td>A-02</td><td>ویزیت از راه دور</td><td>تماس تصویری با پزشک، نسخه الکترونیکی</td><td><span class="bg bg-g">آینده</span></td></tr>
+<tr><td>A-03</td><td>EHR ملی</td><td>یکپارچه‌سازی کامل با سپاس</td><td><span class="bg bg-g">آینده</span></td></tr>
+<tr><td>A-04</td><td>زنجیره تأمین</td><td>مدیریت تأمین‌کنندگان، سفارش دارو/تجهیزات</td><td><span class="bg bg-g">آینده</span></td></tr>
+<tr><td>A-05</td><td>تجهیزات پزشکی</td><td>مدیریت تجهیزات، سرویس و کالیبراسیون، گارانتی</td><td><span class="bg bg-g">آینده</span></td></tr>
+<tr><td>A-06</td><td>آموزش و پژوهش</td><td>پایگاه داده پژوهشی، آمارگیری علمی</td><td><span class="bg bg-g">آینده</span></td></tr>
+<tr><td>A-07</td><td>گردشگری سلامت</td><td>مدیریت بیماران خارجی، ترجمه، ویزا</td><td><span class="bg bg-g">آینده</span></td></tr>
+<tr><td>A-08</td><td>مدیریت بحران</td><td>فعال‌سازی حالت اضطراری، ترایاژ</td><td><span class="bg bg-g">آینده</span></td></tr>
+</table>
+</section>
+
+<!-- NON-FUNCTIONAL -->
+<section>
+<h2>📐 نیازمندی‌های غیرعملکردی</h2>
+<div class="g3">
+<div class="cd"><h4>⚡ عملکرد (Performance)</h4><ul style="margin:5px 20px"><li>پاسخ API زیر ۲۰۰ms</li><li>بارگذاری صفحات زیر ۱s</li><li>پشتیبانی ۵۰۰ بیمار/روز</li><li>۱۰ کاربر همزمان</li></ul></div>
+<div class="cd"><h4>📈 مقیاس‌پذیری</h4><ul style="margin:5px 20px"><li>افزودن شعبه بدون تغییر کد</li><li>افزایش کاربران تا ۱۰۰</li><li>ماژولار و پلاگ‌پذیر</li><li>Horizontal Scaling</li></ul></div>
+<div class="cd"><h4>🔒 امنیت</h4><ul style="margin:5px 20px"><li>AES-256 Encryption</li><li>JWT + Refresh Token</li><li>RBAC Granular</li><li>Audit Log کامل</li><li>HIPAA Compliant</li></ul></div>
+<div class="cd"><h4>🌍 بین‌المللی‌سازی</h4><ul style="margin:5px 20px"><li>i18n از ابتدا</li><li>Resource Files (.resx)</li><li>تقویم شمسی</li><li>RTL کامل</li><li>آماده دوزبانه</li></ul></div>
+<div class="cd"><h4>💾 قابلیت اطمینان</h4><ul style="margin:5px 20px"><li>Uptime ۹۹.۹٪</li><li>بکاپ خودکار</li><li>Transaction Integrity</li><li>Error Recovery</li></ul></div>
+<div class="cd"><h4>🔧 نگهداری</h4><ul style="margin:5px 20px"><li>Clean Architecture</li><li>Unit Test &gt; 70%</li><li>مستندات کامل</li><li>CI/CD Pipeline</li><li>Code Review</li></ul></div>
+<div class="cd"><h4>🎨 کاربرپسندی</h4><ul style="margin:5px 20px"><li>Material Design</li><li>Dark/Light Theme</li><li>Shortcut Keys</li><li>جستجوی سریع</li><li>Responsive</li></ul></div>
+<div class="cd"><h4>🔌 سازگاری</h4><ul style="margin:5px 20px"><li>Windows 10/11</li><li>SQL Server 2019+</li><li>آماده Cloud</li><li>Docker Ready</li></ul></div>
+<div class="cd"><h4>📦 قابلیت استقرار</h4><ul style="margin:5px 20px"><li>On-Premise</li><li>Cloud (Azure/AWS)</li><li>Hybrid</li><li>MSI Installer</li></ul></div>
+</div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section>
+<h2>🏗️ معماری Clean Architecture</h2>
+<div class="ad">
+<h3 style="color:#60a5fa;text-align:center;margin-bottom:15px">🏛️ نمای لایه‌ای معماری</h3>
+
+<div class="al" style="border-color:#ef4444">
+<h4 style="color:#fca5a5">🖥️ Presentation Layer (لایه ارائه)</h4>
+<p style="font-size:12px;margin:5px 0;opacity:.8">واسط کاربری - با API ارتباط دارد</p>
+<span class="ab">WPF Desktop App</span><span class="ab">Material Design</span><span class="ab">MVVM Pattern</span><span class="ab">.NET MAUI (آینده)</span><span class="ab">Blazor License Portal</span>
+</div>
+
+<div style="text-align:center;color:#fbbf24;font-size:18px;margin:10px 0">⬇️ HTTP/HTTPS REST API ⬇️</div>
+
+<div class="al" style="border-color:#f59e0b">
+<h4 style="color:#fcd34d">🌐 API Layer</h4>
+<p style="font-size:12px;margin:5px 0;opacity:.8">ASP.NET Core 8 Web API</p>
+<span class="ab">Controllers</span><span class="ab">Middleware</span><span class="ab">JWT Auth</span><span class="ab">Rate Limiting</span><span class="ab">Swagger</span><span class="ab">CORS</span><span class="ab">Exception Handler</span>
+</div>
+
+<div style="text-align:center;color:#fbbf24;font-size:18px;margin:10px 0">⬇️ Dependency Injection ⬇️</div>
+
+<div class="al" style="border-color:#22c55e">
+<h4 style="color:#86efac">⚙️ Application Layer (لایه کاربرد)</h4>
+<p style="font-size:12px;margin:5px 0;opacity:.8">منطق کاربردی - Use Cases</p>
+<span class="ab">Services</span><span class="ab">DTOs</span><span class="ab">CQRS + MediatR</span><span class="ab">FluentValidation</span><span class="ab">AutoMapper</span><span class="ab">Interfaces</span><span class="ab">Pipeline Behaviors</span>
+</div>
+
+<div style="text-align:center;color:#fbbf24;font-size:18px;margin:10px 0">⬇️ Domain Logic ⬇️</div>
+
+<div class="al" style="border-color:#3b82f6">
+<h4 style="color:#93c5fd">🧬 Domain Layer (هسته - بدون وابستگی)</h4>
+<p style="font-size:12px;margin:5px 0;opacity:.8">قلب کسب‌وکار - منطق دامنه</p>
+<span class="ab">Entities</span><span class="ab">Value Objects</span><span class="ab">Enums</span><span class="ab">Domain Events</span><span class="ab">Repository Interfaces</span><span class="ab">Specifications</span><span class="ab">Domain Services</span><span class="ab">Business Rules</span>
+</div>
+
+<div style="text-align:center;color:#fbbf24;font-size:18px;margin:10px 0">⬇️ Implementation ⬇️</div>
+
+<div class="al" style="border-color:#8b5cf6">
+<h4 style="color:#c4b5fd">🔧 Infrastructure Layer (لایه زیرساخت)</h4>
+<p style="font-size:12px;margin:5px 0;opacity:.8">پیاده‌سازی اینترفیس‌ها + سرویس‌های خارجی</p>
+<span class="ab">EF Core DbContext</span><span class="ab">Repositories</span><span class="ab">Unit of Work</span><span class="ab">SQL Server</span><span class="ab">SMS Providers</span><span class="ab">Sepas API</span><span class="ab">Insurance API</span><span class="ab">File Storage</span><span class="ab">Encryption</span><span class="ab">Email</span><span class="ab">Hangfire</span>
+</div>
+</div>
+
+<h3>📁 ساختار Solution</h3>
+<div class="cb">
+<span class="cm">// ClinicPro.sln - Visual Studio Solution</span>
+📁 ClinicPro/
+├── 📁 <span class="tp">src/</span>
+│   │
+│   ├── 📁 <span class="kw">ClinicPro.Domain</span>              <span class="cm">// بدون هیچ وابستگی خارجی</span>
+│   │   ├── 📁 Entities/                 <span class="cm">// Patient, Doctor, Visit, ...</span>
+│   │   ├── 📁 ValueObjects/             <span class="cm">// NationalCode, Money, PhoneNumber</span>
+│   │   ├── 📁 Enums/                    <span class="cm">// Gender, AppointmentStatus, ...</span>
+│   │   ├── 📁 Events/                   <span class="cm">// Domain Events</span>
+│   │   ├── 📁 Interfaces/               <span class="cm">// IRepository, IUnitOfWork</span>
+│   │   ├── 📁 Specifications/
+│   │   ├── 📁 Exceptions/
+│   │   └── 📁 Common/                   <span class="cm">// BaseEntity, Result&lt;T&gt;</span>
+│   │
+│   ├── 📁 <span class="kw">ClinicPro.Application</span>         <span class="cm">// فقط به Domain وابسته</span>
+│   │   ├── 📁 Common/
+│   │   │   ├── Behaviors/              <span class="cm">// Validation, Logging, Transaction</span>
+│   │   │   └── Mappings/
+│   │   ├── 📁 DTOs/                    <span class="cm">// PatientDto, DoctorDto, ...</span>
+│   │   ├── 📁 Features/                <span class="cm">// CQRS - هر فیچر یک پوشه</span>
+│   │   │   ├── Patients/
+│   │   │   │   ├── Commands/
+│   │   │   │   │   ├── CreatePatient/
+│   │   │   │   │   ├── UpdatePatient/
+│   │   │   │   │   └── DeletePatient/
+│   │   │   │   └── Queries/
+│   │   │   │       ├── GetPatientById/
+│   │   │   │       ├── GetAllPatients/
+│   │   │   │       └── SearchPatients/
+│   │   │   ├── Appointments/
+│   │   │   ├── Visits/
+│   │   │   ├── Prescriptions/
+│   │   │   ├── Billing/
+│   │   │   └── ... (هر ماژول)
+│   │   ├── 📁 Interfaces/              <span class="cm">// ISmsService, IEncryptionService</span>
+│   │   └── 📁 Validators/
+│   │
+│   ├── 📁 <span class="kw">ClinicPro.Infrastructure</span>      <span class="cm">// وابسته به Application + Domain</span>
+│   │   ├── 📁 Persistence/
+│   │   │   ├── ClinicProDbContext.cs
+│   │   │   ├── Configurations/         <span class="cm">// EntityTypeConfiguration</span>
+│   │   │   ├── Migrations/
+│   │   │   ├── Repositories/
+│   │   │   ├── UnitOfWork.cs
+│   │   │   └── Seeders/
+│   │   ├── 📁 Services/
+│   │   │   ├── SMS/
+│   │   │   │   ├── KavenegarService.cs
+│   │   │   │   ├── MelliPayamakService.cs
+│   │   │   │   └── ... (10 provider)
+│   │   │   ├── Insurance/
+│   │   │   │   ├── SalamatInsuranceService.cs
+│   │   │   │   ├── TaminService.cs
+│   │   │   │   └── ...
+│   │   │   ├── Sepas/
+│   │   │   ├── Encryption/
+│   │   │   ├── Reporting/
+│   │   │   ├── FileStorage/
+│   │   │   └── License/
+│   │   ├── 📁 Identity/                <span class="cm">// JWT, RBAC</span>
+│   │   ├── 📁 BackgroundJobs/          <span class="cm">// Hangfire Jobs</span>
+│   │   └── 📁 DependencyInjection.cs
+│   │
+│   ├── 📁 <span class="kw">ClinicPro.API</span>                 <span class="cm">// ASP.NET Core Web API</span>
+│   │   ├── 📁 Controllers/
+│   │   ├── 📁 Middleware/
+│   │   │   ├── ExceptionHandlingMiddleware.cs
+│   │   │   ├── LicenseValidationMiddleware.cs
+│   │   │   └── AuditLogMiddleware.cs
+│   │   ├── 📁 Filters/
+│   │   ├── 📁 Extensions/
+│   │   ├── 📁 Hubs/                    <span class="cm">// SignalR for Real-time</span>
+│   │   ├── appsettings.json
+│   │   └── Program.cs
+│   │
+│   ├── 📁 <span class="kw">ClinicPro.Desktop</span>             <span class="cm">// WPF Client</span>
+│   │   ├── 📁 Views/
+│   │   │   ├── Login/
+│   │   │   ├── Dashboard/
+│   │   │   ├── Patients/
+│   │   │   ├── Appointments/
+│   │   │   ├── Reception/
+│   │   │   ├── Visits/
+│   │   │   ├── Prescriptions/
+│   │   │   ├── Billing/
+│   │   │   └── ...
+│   │   ├── 📁 ViewModels/
+│   │   ├── 📁 Services/                <span class="cm">// API Client, Token Manager</span>
+│   │   ├── 📁 Controls/                <span class="cm">// Custom UserControls</span>
+│   │   ├── 📁 Converters/              <span class="cm">// Value Converters</span>
+│   │   ├── 📁 Themes/                  <span class="cm">// Light/Dark</span>
+│   │   ├── 📁 Resources/
+│   │   │   ├── Fonts/                  <span class="cm">// Vazirmatn, IRANSans</span>
+│   │   │   ├── Icons/
+│   │   │   └── Strings/                <span class="cm">// i18n Resources</span>
+│   │   └── App.xaml
+│   │
+│   ├── 📁 <span class="kw">ClinicPro.LicensePortal</span>       <span class="cm">// Blazor Server Web App</span>
+│   │   ├── 📁 Pages/
+│   │   ├── 📁 Components/
+│   │   ├── 📁 Services/
+│   │   └── 📁 Data/
+│   │
+│   └── 📁 <span class="kw">ClinicPro.Shared</span>              <span class="cm">// Shared Models</span>
+│       └── 📁 Contracts/
+│
+├── 📁 <span class="tp">tests/</span>
+│   ├── 📁 ClinicPro.Domain.UnitTests
+│   ├── 📁 ClinicPro.Application.UnitTests
+│   ├── 📁 ClinicPro.Infrastructure.IntegrationTests
+│   └── 📁 ClinicPro.API.IntegrationTests
+│
+├── 📁 <span class="tp">docs/</span>                             <span class="cm">// مستندات</span>
+│   ├── Architecture.md
+│   ├── API.md
+│   ├── Database.md
+│   └── Deployment.md
+│
+├── 📁 <span class="tp">scripts/</span>                          <span class="cm">// SQL Scripts, Deploy</span>
+│
+├── .gitignore
+├── README.md
+└── ClinicPro.sln
+</div>
+
+<h3>🔄 Repository + Unit of Work Pattern</h3>
+<div class="g2">
+<div class="cd"><h4>📦 IRepository&lt;T&gt;</h4>
+<div class="cb"><span class="kw">public interface</span> <span class="tp">IRepository</span>&lt;T&gt; 
+    <span class="kw">where</span> T : <span class="tp">BaseEntity</span>
+{
+    <span class="tp">Task</span>&lt;T?&gt; GetByIdAsync(<span class="kw">long</span> id);
+    <span class="tp">Task</span>&lt;<span class="tp">IReadOnlyList</span>&lt;T&gt;&gt; GetAllAsync();
+    <span class="tp">Task</span>&lt;T&gt; AddAsync(T entity);
+    <span class="tp">Task</span> UpdateAsync(T entity);
+    <span class="tp">Task</span> DeleteAsync(T entity);
+    <span class="tp">Task</span>&lt;<span class="tp">IReadOnlyList</span>&lt;T&gt;&gt; FindAsync(
+        <span class="tp">Expression</span>&lt;<span class="tp">Func</span>&lt;T,<span class="kw">bool</span>&gt;&gt; p);
+    <span class="tp">Task</span>&lt;<span class="tp">PagedResult</span>&lt;T&gt;&gt; GetPagedAsync(
+        <span class="kw">int</span> page, <span class="kw">int</span> size, 
+        <span class="kw">string</span>? sort = <span class="kw">null</span>);
+    <span class="tp">Task</span>&lt;<span class="kw">bool</span>&gt; ExistsAsync(<span class="kw">long</span> id);
+    <span class="tp">Task</span>&lt;<span class="kw">int</span>&gt; CountAsync();
+}</div></div>
+
+<div class="cd"><h4>🔗 IUnitOfWork</h4>
+<div class="cb"><span class="kw">public interface</span> <span class="tp">IUnitOfWork</span> : <span class="tp">IDisposable</span>
+{
+    <span class="tp">IRepository</span>&lt;<span class="tp">Patient</span>&gt; Patients { <span class="kw">get</span>; }
+    <span class="tp">IRepository</span>&lt;<span class="tp">Doctor</span>&gt; Doctors { <span class="kw">get</span>; }
+    <span class="tp">IRepository</span>&lt;<span class="tp">Appointment</span>&gt; Appointments { <span class="kw">get</span>; }
+    <span class="tp">IRepository</span>&lt;<span class="tp">Reception</span>&gt; Receptions { <span class="kw">get</span>; }
+    <span class="tp">IRepository</span>&lt;<span class="tp">Visit</span>&gt; Visits { <span class="kw">get</span>; }
+    <span class="tp">IRepository</span>&lt;<span class="tp">Prescription</span>&gt; Prescriptions { <span class="kw">get</span>; }
+    <span class="tp">IRepository</span>&lt;<span class="tp">Invoice</span>&gt; Invoices { <span class="kw">get</span>; }
+    <span class="tp">IRepository</span>&lt;<span class="tp">User</span>&gt; Users { <span class="kw">get</span>; }
+    <span class="cm">// ... 40+ repositories</span>
+    
+    <span class="tp">Task</span>&lt;<span class="kw">int</span>&gt; SaveChangesAsync();
+    <span class="tp">Task</span> BeginTransactionAsync();
+    <span class="tp">Task</span> CommitAsync();
+    <span class="tp">Task</span> RollbackAsync();
+}</div></div>
+</div>
+
+<h3>🎯 اصول SOLID در پروژه</h3>
+<div class="g3">
+<div class="cd"><h4>S - Single Responsibility</h4><p>هر کلاس فقط یک مسئولیت دارد. Service‌ها، Repository‌ها، Controller‌ها هر کدام یک وظیفه مشخص.</p></div>
+<div class="cd"><h4>O - Open/Closed</h4><p>سیستم باز برای توسعه (پلاگین SMS Provider جدید) و بسته برای تغییر (Interface‌ها ثابت).</p></div>
+<div class="cd"><h4>L - Liskov Substitution</h4><p>کلاس‌های فرزند جایگزین پدر می‌شوند بدون شکستن کد. مثلاً هر SmsProvider قابل جایگزینی.</p></div>
+<div class="cd"><h4>I - Interface Segregation</h4><p>Interface‌های کوچک و تخصصی. مثلاً IReadRepository و IWriteRepository.</p></div>
+<div class="cd"><h4>D - Dependency Inversion</h4><p>وابستگی به Interface‌ها نه کلاس‌های concrete. DI Container برای Inject.</p></div>
+<div class="cd"><h4>Design Patterns</h4><p>Repository, UoW, CQRS, Mediator, Factory, Strategy, Observer, Decorator</p></div>
+</div>
+</section>
+
+<footer>
+<p>📄 فایل ۱ از ۶ | <strong>ClinicPro Documentation</strong> | طراحی تحلیل و معماری</p>
+<p>برای مشاهده بخش‌های دیگر از منوی بالا استفاده کنید</p>
+</footer>
+
+</div>
+</body>
+</html>
