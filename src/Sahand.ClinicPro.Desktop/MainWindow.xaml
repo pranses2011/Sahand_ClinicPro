@@ -36,6 +36,12 @@
         <DataTemplate DataType="{x:Type vm:BillingViewModel}">
             <views:BillingView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LabViewModel}">
+            <views:LabView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PharmacyViewModel}">
+            <views:PharmacyView />
+        </DataTemplate>
     </Window.Resources>
 
     <!-- ═══════════════════════════════════════════════════════════

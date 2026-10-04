@@ -1,0 +1,196 @@
+﻿using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.Views;
+
+namespace Sahand.ClinicPro.Desktop.ViewModels;
+
+/// <summary>ردیف موجودی داروخانه</summary>
+public record InventoryRow(
+    long Id,
+    string MedicationName,
+    string? BatchNumber,
+    decimal Quantity,
+    decimal ReorderLevel,
+    string? ExpiryDate,
+    bool IsLowStock,
+    bool IsExpiringSoon)
+{
+    /// <summary>متن وضعیت موجودی</summary>
+    public string LowStockText => IsLowStock ? "کمبود موجودی" : IsExpiringSoon ? "نزدیک انقضا" : "نرمال";
+}
+
+/// <summary>
+/// ViewModel داروخانه — موجودی + ورود دارو + تحویل نسخه
+/// </summary>
+public partial class PharmacyViewModel : ViewModelBase
+{
+    private readonly IApiClient _api;
+
+    /// <summary>عنوان صفحه</summary>
+    public override string Title => "داروخانه";
+
+    /// <summary>موجودی</summary>
+    [ObservableProperty]
+    private ObservableCollection<InventoryRow> _inventory = new();
+
+    /// <summary>ردیف انتخاب‌شده</summary>
+    [ObservableProperty]
+    private InventoryRow? _selectedRow;
+
+    /// <summary>فقط کالاهای کمبود</summary>
+    [ObservableProperty]
+    private bool _lowStockOnly;
+
+    /// <summary>شناسه نسخه برای تحویل</summary>
+    [ObservableProperty]
+    private string _prescriptionId = string.Empty;
+
+    /// <summary>نام بیمار نسخه بارگذاری‌شده</summary>
+    [ObservableProperty]
+    private string _dispensePatient = string.Empty;
+
+    /// <summary>اقلام نسخه بارگذاری‌شده</summary>
+    public ObservableCollection<string> DispenseItems { get; } = new();
+
+    /// <summary>شناسه نسخه بارگذاری‌شده</summary>
+    private long? _loadedPrescriptionId;
+
+    /// <summary>سازنده با تزریق کلاینت API</summary>
+    public PharmacyViewModel(IApiClient api)
+    {
+        _api = api;
+        _ = LoadAsync();
+    }
+
+    /// <summary>بارگذاری موجودی</summary>
+    [RelayCommand]
+    public async Task LoadAsync()
+    {
+        IsBusy = true;
+        ErrorMessage = string.Empty;
+
+        var endpoint = "pharmacy/inventory" + (LowStockOnly ? "?lowStock=true" : string.Empty);
+        var response = await _api.GetAsync<InventoryResponse>(endpoint);
+
+        if (response?.Data is not null)
+        {
+            Inventory = new ObservableCollection<InventoryRow>(response.Data.Select(i =>
+                new InventoryRow(i.Id, i.MedicationName, i.BatchNumber, i.Quantity,
+                    i.ReorderLevel, i.ExpiryDateShamsi, i.IsLowStock, i.IsExpiringSoon)));
+        }
+        else
+        {
+            ErrorMessage = _api.LastError ?? "دریافت موجودی ناموفق بود";
+        }
+
+        IsBusy = false;
+    }
+
+    /// <summary>فرم ورود موجودی جدید</summary>
+    [RelayCommand]
+    private void StockIn()
+    {
+        var vm = new StockInFormViewModel(_api);
+        var window = new StockInFormWindow(vm)
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        window.ShowDialog();
+        _ = LoadAsync();
+    }
+
+    /// <summary>بارگذاری نسخه برای تحویل</summary>
+    [RelayCommand]
+    private async Task LoadPrescriptionAsync()
+    {
+        ErrorMessage = string.Empty;
+        DispenseItems.Clear();
+        _loadedPrescriptionId = null;
+        DispensePatient = string.Empty;
+
+        if (!long.TryParse(PrescriptionId.Trim(), out var id) || id <= 0)
+        {
+            ErrorMessage = "شناسه نسخه را به‌صورت عدد وارد کنید";
+            return;
+        }
+
+        var detail = await _api.GetAsync<DispenseDetail>($"prescriptions/{id}");
+        if (detail is null)
+        {
+            ErrorMessage = _api.LastError ?? "نسخه یافت نشد";
+            return;
+        }
+
+        _loadedPrescriptionId = id;
+        DispensePatient = detail.PatientName;
+        foreach (var item in detail.Items ?? new List<DispenseItem>())
+            DispenseItems.Add($"{item.MedicationName} × {item.Quantity} {item.Unit ?? string.Empty}");
+    }
+
+    /// <summary>تحویل نسخه — کاهش FEFO و هشدار کمبود</summary>
+    [RelayCommand]
+    private async Task DispenseAsync()
+    {
+        ErrorMessage = string.Empty;
+
+        if (_loadedPrescriptionId is null)
+        {
+            ErrorMessage = "ابتدا نسخه را بارگذاری کنید";
+            return;
+        }
+
+        IsBusy = true;
+        var ok = await _api.PostAsync($"pharmacy/dispense/{_loadedPrescriptionId}", null);
+        IsBusy = false;
+
+        if (!ok)
+        {
+            ErrorMessage = _api.LastError ?? "تحویل نسخه ناموفق بود";
+            return;
+        }
+
+        DispensePatient = string.Empty;
+        DispenseItems.Clear();
+        PrescriptionId = string.Empty;
+        _loadedPrescriptionId = null;
+        await LoadAsync();
+    }
+
+    /// <summary>پاسخ موجودی</summary>
+    public sealed class InventoryResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<InventoryDto>? Data { get; set; }
+    }
+
+    /// <summary>DTO موجودی</summary>
+    public sealed class InventoryDto
+    {
+        public long Id { get; set; }
+        public string MedicationName { get; set; } = string.Empty;
+        public string? BatchNumber { get; set; }
+        public decimal Quantity { get; set; }
+        public decimal ReorderLevel { get; set; }
+        public string? ExpiryDateShamsi { get; set; }
+        public bool IsLowStock { get; set; }
+        public bool IsExpiringSoon { get; set; }
+    }
+
+    /// <summary>جزئیات نسخه برای تحویل</summary>
+    public sealed class DispenseDetail
+    {
+        public long Id { get; set; }
+        public string PatientName { get; set; } = string.Empty;
+        public List<DispenseItem>? Items { get; set; }
+    }
+
+    /// <summary>قلم نسخه</summary>
+    public sealed class DispenseItem
+    {
+        public string MedicationName { get; set; } = string.Empty;
+        public decimal Quantity { get; set; }
+        public string? Unit { get; set; }
+    }
+}

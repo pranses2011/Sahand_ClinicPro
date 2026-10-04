@@ -52,7 +52,9 @@ public partial class MainWindowViewModel : ObservableObject
         ReceptionsViewModel receptions,
         VisitsViewModel visitsVm,
         PrescriptionsViewModel prescriptionsVm,
-        BillingViewModel billingVm)
+        BillingViewModel billingVm,
+        LabViewModel labVm,
+        PharmacyViewModel pharmacyVm)
     {
         _api = api;
         _tokens = tokens;
@@ -72,7 +74,9 @@ public partial class MainWindowViewModel : ObservableObject
             ["receptions"] = () => receptions,
             ["visits"] = () => visitsVm,
             ["prescriptions"] = () => prescriptionsVm,
-            ["billing"] = () => billingVm
+            ["billing"] = () => billingVm,
+            ["lab"] = () => labVm,
+            ["pharmacy"] = () => pharmacyVm
         };
 
         // آیتم‌های ناوبری — فعال بودن از لایسنس کنترل می‌شود
@@ -85,8 +89,8 @@ public partial class MainWindowViewModel : ObservableObject
             new() { Title = "ویزیت و معاینه", PageKey = "visits", Icon = "Stethoscope" },
             new() { Title = "نسخه‌نویسی", PageKey = "prescriptions", Icon = "Prescription" },
             new() { Title = "مالی و صندوق", PageKey = "billing", Icon = "CashMultiple" },
-            new() { Title = "آزمایشگاه", PageKey = "lab", Icon = "TestTube", Enabled = false },
-            new() { Title = "داروخانه", PageKey = "pharmacy", Icon = "Pill", Enabled = false },
+            new() { Title = "آزمایشگاه", PageKey = "lab", Icon = "TestTube" },
+            new() { Title = "داروخانه", PageKey = "pharmacy", Icon = "Pill" },
             new() { Title = "گزارش‌ها", PageKey = "reports", Icon = "FileChart", Enabled = false },
             new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog", Enabled = false }
         };
