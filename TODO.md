@@ -3,7 +3,7 @@
 > فایل مدیریت پروژه — چک‌لیست ۳۱ گام پیاده‌سازی در ۹ فاز
 > منبع: `docs/prompts/prompt-part3.html` (بخش ۸: ترتیب پیاده‌سازی)
 
-## 🎯 پیشرفت کلی: 29% (9/31 گام)
+## 🎯 پیشرفت کلی: 39% (12/31 گام)
 
 ---
 
@@ -21,9 +21,9 @@
 - [x] گام ۹: API Layer (میدلور خطا + HasPermission + RateLimit 100/5 + Swagger JWT + سه کنترلر + ۶ تست) ✅ 2026-10-05
 
 ## 🖥️ فاز ۳: Desktop Client
-- [ ] گام ۱۰: WPF Setup (App.xaml + MainWindow + Theme + Fonts + Navigation)
-- [ ] گام ۱۱: WPF Login + Dashboard
-- [ ] گام ۱۲: WPF Patient Module (List + Form + Detail)
+- [x] گام ۱۰: WPF Setup (App DI + پوسته ناوبری + Theme روشن/تیره + ApiClient با تمدید خودکار) ✅ 2026-10-05
+- [x] گام ۱۱: WPF Login + Dashboard (پنجره ورود + چهار کارت آمار + DashboardController) ✅ 2026-10-05
+- [x] گام ۱۲: WPF Patient Module (DataGrid + جستجو + صفحه‌بندی سروری + فرم ثبت/ویرایش) ✅ 2026-10-05
 
 ## 🏥 فاز ۴: ماژول‌های درمانی
 - [ ] گام ۱۳: Appointments Module (Application + API + WPF)
@@ -66,6 +66,7 @@
 ---
 
 ## 📝 لاگ تغییرات اخیر:
+- **2026-10-05**: گام‌های ۱۰ تا ۱۲ کامل شد — کلاینت WPF کامل: پوسته ناوبری با ۱۱ ماژول، ApiClient با تمدید خودکار توکن روی ۴۰۱، پنجره ورود با کلید Enter، داشبورد چهارکارته، ماژول بیماران با صفحه‌بندی سروری. فازهای ۲ و ۳ به main ادغام شد. شاخه جدید feature/phase-04-treatment.
 - **2026-10-05**: گام‌های ۶ تا ۹ کامل شد — فاز ۲ بسته شد: ماژول Auth (۴ فرمان CQRS)، ماژول بیماران (CRUD کامل + جستجوی صفحه‌بندی‌شده + سکانس MRN + رویداد پیامک)، ماژول پزشکان، لایه API (میدلور خطای فارسی، مجوزدهی پویا PERMISSION:x، RateLimiter دو‌سیاستی، Swagger با Bearer، ۶ تست یکپارچگی). ۲۸ تست کل سبز.
 - **2026-10-05**: گام ۵ کامل شد — چهار رفتار خط لوله MediatR (لاگ/عملکرد/اعتبارسنجی/تراکنش) با ترتیب صحیح ثبت؛ ApiResponse و PagedResponse و PagedRequest استاندارد؛ PersianDateHelper با الگوریتم جلالی بدون وابستگی (۱۷ تست شامل تاریخ‌های مرجع رسمی و کبیسه و رفت‌وبرگشت ۱۰ ساله)؛ پیاده‌سازی AES-256-GCM و DateTimeService ایران و TransactionManager در زیرساخت.
 - **2026-10-05**: گام ۴ کامل شد — IdentityService کامل (ورود با قفل ۳۰ دقیقه‌ای بعد ۵ تلاش، چرخش توکن تازه‌سازی، تغییر رمز با تاریخچه ۵ رمز)، JwtTokenGenerator (HMAC-SHA256 با ادعاهای نقش/دسترسی)، PasswordHasher (BCrypt ضریب ۱۲ + سیاست رمز)، تنظیم JWT Bearer با پیام فارسی. فاز ۱ کامل شد و feature/phase-01-foundation به main ادغام شد.
