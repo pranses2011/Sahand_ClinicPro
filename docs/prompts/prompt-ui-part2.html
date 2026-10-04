@@ -1,71 +1,19 @@
-<!DOCTYPE html>
-<html dir="rtl" lang="fa">
-<head>
-<meta charset="UTF-8">
-<title>🖥️ ClinicPro - پرامپت مکمل UI بخش ۲</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;900&display=swap');
-:root{--p:#1a73e8;--s:#34a853;--a:#ea4335;--bg:#f0f2f5;--c:#fff;--t:#202124;--b:#dadce0;--sh:0 2px 8px rgba(0,0,0,.1);--r:12px}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t);line-height:1.8;font-size:13px}
-.ct{max-width:1200px;margin:0 auto;padding:20px}
-header{background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;padding:40px 20px;text-align:center;border-radius:0 0 30px 30px;margin-bottom:25px}
-header h1{font-size:2em;font-weight:900}
-header p{opacity:.9}
-.nav{background:#fff;padding:12px;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
-.nav a{padding:7px 14px;background:#f0f2f5;border-radius:8px;text-decoration:none;color:var(--t);font-size:11px;font-weight:600}
-.nav a:hover,.nav a.active{background:#0891b2;color:#fff}
-.prompt-section{background:#1e1e1e;color:#d4d4d4;border-radius:var(--r);padding:25px;margin-bottom:20px;font-family:'Courier New',monospace;font-size:12px;line-height:1.8;direction:rtl;text-align:right;white-space:pre-wrap;word-wrap:break-word;overflow-x:auto}
-.prompt-section .h1{color:#4ec9b0;font-weight:bold;font-size:16px}
-.prompt-section .h2{color:#569cd6;font-weight:bold;font-size:14px}
-.prompt-section .h3{color:#ce9178;font-weight:bold;font-size:13px}
-.prompt-section .h4{color:#dcdcaa;font-weight:bold;font-size:12px}
-.prompt-section .note{color:#6a9955;font-style:italic}
-.prompt-section .important{color:#f44747;font-weight:bold}
-.prompt-section .code{color:#9cdcfe}
-.prompt-section .field{color:#dcdcaa}
-.prompt-section .ui{color:#c586c0}
-.prompt-section .key{color:#569cd6}
-.copy-btn{background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;border:none;padding:10px 25px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px}
-.info{background:#e0f2fe;border-right:4px solid #0891b2;padding:15px;border-radius:0 8px 8px 0;margin:15px 0;font-size:12px}
-footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#fff;border-radius:var(--r);margin-top:20px}
-</style>
-</head>
-<body>
-<header>
-<h1>🖥️ پرامپت مکمل UI - بخش ۲</h1>
-<p>نوبت‌دهی، پذیرش، ویزیت، نسخه‌نویسی</p>
-</header>
-<div class="ct">
-<nav class="nav">
-<a href="prompt-ui-part1.html">🖥️ UI بخش ۱</a>
-<a href="prompt-ui-part2.html" class="active">🖥️ UI بخش ۲</a>
-<a href="prompt-ui-part3.html">🖥️ UI بخش ۳</a>
-<a href="prompt-ui-part4.html">🖥️ UI بخش ۴</a>
-</nav>
 
-<div class="info">
-<strong>⚠️ مکمل:</strong> این فایل ادامه prompt-ui-part1 است. فرم‌های درمانی اصلی شامل نوبت‌دهی (تقویم شمسی)، پذیرش بیمار، ویزیت پزشک (SOAP Note) و نسخه‌نویسی الکترونیکی.
-</div>
-
-<button class="copy-btn" onclick="copyAll()">📋 کپی کل پرامپت UI بخش ۲</button>
-
-<div class="prompt-section" id="prompt-ui2">
-<span class="h1">════════════════════════════════════════════════════════════════════
+════════════════════════════════════════════════════════════════════
 🖥️ Sahand_ClinicPro - پرامپت مکمل UI
 بخش ۲ از ۴: نوبت‌دهی، پذیرش، ویزیت، نسخه‌نویسی
-════════════════════════════════════════════════════════════════════</span>
+════════════════════════════════════════════════════════════════════
 
-<span class="important">⚠️ مکمل فایل‌های قبلی - از اول شروع نکن!</span>
+⚠️ مکمل فایل‌های قبلی - از اول شروع نکن!
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 📅 فرم ۸: نوبت‌دهی و تقویم (AppointmentBookView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> AppointmentBookViewModel.cs
+ViewModel: AppointmentBookViewModel.cs
 
-<span class="h3">── ساختار بصری (Grid دو ستونه) ──</span>
+── ساختار بصری (Grid دو ستونه) ──
 
 ┌────────────────────────────────────────────────────────────────┐
 │ 📅 رزرو نوبت جدید                                             │
@@ -133,19 +81,19 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
 │ └────────────────────────────────────────────────────────┘   │
 └────────────────────────────────────────────────────────────────┘
 
-<span class="h3">── عناصر تقویم شمسی (PersianCalendar Control) ──</span>
+── عناصر تقویم شمسی (PersianCalendar Control) ──
 
-<span class="field">۱. کنترل PersianCalendar (سفارشی - UserControl):</span>
+۱. کنترل PersianCalendar (سفارشی - UserControl):
    نام: PersianCalendarControl.xaml + PersianCalendarControl.xaml.cs
    Properties (DependencyProperty):
      - SelectedDate (DateTime?) - تاریخ انتخابی
      - DisplayMonth (int) - ماه نمایشی
      - DisplayYear (int) - سال نمایشی
-     - MarkedDates (Dictionary&lt;DateTime, int&gt;) - تاریخ‌هایی با نوبت (عدد=تعداد)
-     - DisabledDates (List&lt;DateTime&gt;) - تعطیلات و غیبت‌ها
+     - MarkedDates (Dictionary<DateTime, int>) - تاریخ‌هایی با نوبت (عدد=تعداد)
+     - DisabledDates (List<DateTime>) - تعطیلات و غیبت‌ها
      - MinDate / MaxDate - محدوده مجاز
    Events:
-     - DateSelected (EventHandler&lt;DateTime&gt;)
+     - DateSelected (EventHandler<DateTime>)
      - MonthChanged (EventHandler)
 
    ساختار داخلی:
@@ -169,7 +117,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    • تشخیص تعطیلات رسمی (از جدول Settings یا فایل JSON)
    • نمایش روزهای ماه قبل/بعد با رنگ کم‌رنگ
 
-<span class="field">۲. پنل ساعت‌های آزاد (TimeSlot Grid):</span>
+۲. پنل ساعت‌های آزاد (TimeSlot Grid):
    نوع: WrapPanel با دکمه‌ها
    هر Slot:
      - ToggleButton با Width="65" Height="30"
@@ -186,7 +134,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    API: GET /api/v1/doctors/{id}/available-slots?date=2025-06-22
    گروه‌بندی: صبح (قبل ۱۲) و عصر (بعد ۱۲)
 
-<span class="field">۳. پنل خلاصه و ثبت:</span>
+۳. پنل خلاصه و ثبت:
    نوع: Border با Background متفاوت (آبی روشن)
    محتوا:
      - خلاصه انتخاب (تاریخ + ساعت + پزشک + بیمار + اتاق)
@@ -203,7 +151,7 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
      - تخمین هزینه: TextBlock (ReadOnly - محاسباتی)
      - دکمه ثبت: Button "✅ تایید و ثبت نوبت" (سبز)
 
-<span class="field">۴. بخش جستجوی بیمار (PatientQuickSearch):</span>
+۴. بخش جستجوی بیمار (PatientQuickSearch):
    نوع: AutoCompleteBox سفارشی
    رفتار: تایپ ≥ ۲ کاراکتر → جستجو در API → نمایش Dropdown
    API: GET /api/v1/patients/search?q={text}&limit=10
@@ -215,30 +163,30 @@ footer{text-align:center;padding:20px;color:#5f6368;font-size:11px;background:#f
    انتخاب: پر شدن کارت بیمار بالای فرم
    اگر بیمار نیست: دکمه "➕ ثبت بیمار جدید" ظاهر شود
 
-<span class="h3">── ViewModel AppointmentBook ──</span>
+── ViewModel AppointmentBook ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// ویومدل رزرو نوبت جدید
 /// مسئولیت: جستجوی بیمار، انتخاب پزشک/تاریخ/ساعت، ثبت نوبت
-/// &lt;/summary&gt;
+/// </summary>
 public class AppointmentBookViewModel : BaseViewModel
 {
     // ── Properties ──
     PatientSearchResultDto? SelectedPatient    // بیمار انتخاب شده
     string PatientSearchText                   // متن جستجوی بیمار
-    ObservableCollection&lt;PatientSearchResultDto&gt; PatientSearchResults // نتایج جستجو
+    ObservableCollection<PatientSearchResultDto> PatientSearchResults // نتایج جستجو
     
-    ObservableCollection&lt;DoctorListDto&gt; Doctors // لیست پزشکان
+    ObservableCollection<DoctorListDto> Doctors // لیست پزشکان
     DoctorListDto? SelectedDoctor              // پزشک انتخاب شده
     
     DateTime? SelectedDate                     // تاریخ انتخابی (میلادی)
     string SelectedDateShamsi                  // تاریخ شمسی
     int DisplayMonth                           // ماه نمایشی تقویم
     int DisplayYear                            // سال نمایشی تقویم
-    Dictionary&lt;DateTime, int&gt; CalendarMarkedDates  // تاریخ‌ها با تعداد نوبت
-    List&lt;DateTime&gt; CalendarDisabledDates           // تاریخ‌های غیرفعال
+    Dictionary<DateTime, int> CalendarMarkedDates  // تاریخ‌ها با تعداد نوبت
+    List<DateTime> CalendarDisabledDates           // تاریخ‌های غیرفعال
     
-    ObservableCollection&lt;TimeSlotDto&gt; AvailableSlots // ساعت‌های نمایشی
+    ObservableCollection<TimeSlotDto> AvailableSlots // ساعت‌های نمایشی
     TimeSlotDto? SelectedSlot                  // ساعت انتخابی
     
     AppointmentType SelectedType               // نوع ویزیت (اولیه/پیگیری/...)
@@ -247,21 +195,21 @@ public class AppointmentBookViewModel : BaseViewModel
     decimal EstimatedFee                       // تخمین هزینه
     string SelectedRoom                        // اتاق ویزیت (خودکار از Schedule)
     
-    ObservableCollection&lt;AppointmentListDto&gt; TodayAppointments // نوبت‌های امروز
+    ObservableCollection<AppointmentListDto> TodayAppointments // نوبت‌های امروز
     
     // ── Commands ──
     IRelayCommand SearchPatientCommand         // جستجوی بیمار
-    IRelayCommand&lt;PatientSearchResultDto&gt; SelectPatientCommand // انتخاب بیمار
+    IRelayCommand<PatientSearchResultDto> SelectPatientCommand // انتخاب بیمار
     IRelayCommand CreateNewPatientCommand      // ثبت بیمار جدید
-    IRelayCommand&lt;DoctorListDto&gt; SelectDoctorCommand // انتخاب پزشک
-    IRelayCommand&lt;DateTime&gt; SelectDateCommand  // انتخاب تاریخ از تقویم
+    IRelayCommand<DoctorListDto> SelectDoctorCommand // انتخاب پزشک
+    IRelayCommand<DateTime> SelectDateCommand  // انتخاب تاریخ از تقویم
     IRelayCommand NextMonthCommand             // ماه بعد تقویم
     IRelayCommand PreviousMonthCommand         // ماه قبل تقویم
-    IRelayCommand&lt;TimeSlotDto&gt; SelectSlotCommand // انتخاب ساعت
+    IRelayCommand<TimeSlotDto> SelectSlotCommand // انتخاب ساعت
     IRelayCommand BookAppointmentCommand       // ثبت نوبت نهایی
     IRelayCommand CancelCommand                // انصراف
-    IRelayCommand&lt;long&gt; CancelAppointmentCommand // لغو نوبت از لیست
-    IRelayCommand&lt;long&gt; EditAppointmentCommand   // ویرایش نوبت از لیست
+    IRelayCommand<long> CancelAppointmentCommand // لغو نوبت از لیست
+    IRelayCommand<long> EditAppointmentCommand   // ویرایش نوبت از لیست
     
     // ── Logic ──
     // هنگام انتخاب پزشک:
@@ -278,31 +226,31 @@ public class AppointmentBookViewModel : BaseViewModel
     //   → اگر موفق: Snackbar + نمایش کد پیگیری + ارسال SMS
     //   → اگر تداخل: نمایش خطا "این ساعت رزرو شده"
     //   → به‌روزرسانی لیست نوبت‌های امروز
-}</span>
+}
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 📅 فرم ۹: لیست نوبت‌ها (AppointmentListView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> AppointmentListViewModel.cs
+ViewModel: AppointmentListViewModel.cs
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
    مشابه لیست بیماران با فیلترهای خاص:
    
-<span class="field">فیلترها (Toolbar):</span>
+فیلترها (Toolbar):
    - PersianDatePicker: "از تاریخ" + "تا تاریخ" (پیش‌فرض: امروز)
    - ComboBox: "پزشک" (همه / لیست پزشکان)
    - ComboBox: "وضعیت" (همه/رزرو/تایید/حاضر/ویزیت/تمام/لغو/عدم‌مراجعه)
    - ComboBox: "نوع" (همه/اولیه/پیگیری/اورژانس)
    - ComboBox: "منبع" (همه/حضوری/تلفنی/آنلاین)
    
-<span class="field">ستون‌های DataGrid:</span>
+ستون‌های DataGrid:
    ☐ | کد پیگیری | تاریخ (شمسی) | ساعت | بیمار | موبایل | 
    پزشک | تخصص | نوع | وضعیت (Badge رنگی) | منبع | عملیات
 
-<span class="field">Badges وضعیت:</span>
+Badges وضعیت:
    ⬜ رزرو شده → خاکستری
    ✅ تایید شده → آبی روشن
    🟢 حاضر → سبز روشن
@@ -311,23 +259,23 @@ public class AppointmentBookViewModel : BaseViewModel
    ❌ لغو شده → قرمز
    ⚠️ عدم مراجعه → نارنجی
 
-<span class="field">عملیات هر ردیف:</span>
+عملیات هر ردیف:
    👁️ مشاهده | ✏️ ویرایش | ✓ تایید حضور | 📱 ارسال SMS یادآوری | ❌ لغو
 
-<span class="field">دکمه‌های اضافی Toolbar:</span>
+دکمه‌های اضافی Toolbar:
    [📅 تقویم ماهانه] → نمایش Calendar View
    [📊 آمار نوبت‌ها] → نمایش چارت
    [📱 ارسال SMS دسته‌ای] → یادآوری به همه نوبت‌های فردا
    [❌ لغو دسته‌ای] → لغو نوبت‌های انتخاب شده
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 📋 فرم ۱۰: پذیرش بیمار (ReceptionView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> ReceptionViewModel.cs
+ViewModel: ReceptionViewModel.cs
 
-<span class="h3">── ساختار بصری ──</span>
+── ساختار بصری ──
 
 ┌────────────────────────────────────────────────────────────────┐
 │ 📋 پذیرش بیمار                                                │
@@ -386,9 +334,9 @@ public class AppointmentBookViewModel : BaseViewModel
 │ └──────────────────────────────────────────────────────────┘  │
 └────────────────────────────────────────────────────────────────┘
 
-<span class="h3">── عناصر دقیق فرم پذیرش ──</span>
+── عناصر دقیق فرم پذیرش ──
 
-<span class="field">۱. فیلد جستجوی بیمار (کد ملی یا کد پیگیری نوبت):</span>
+۱. فیلد جستجوی بیمار (کد ملی یا کد پیگیری نوبت):
    نوع: TextBox + Button جستجو
    رفتار:
      - اگر ۱۰ رقم → جستجو با کد ملی
@@ -399,7 +347,7 @@ public class AppointmentBookViewModel : BaseViewModel
      - اگر نوبت فعال دارد → پر شدن خودکار پزشک و ساعت
      - اگر نوبت ندارد → انتخاب دستی پزشک (Walk-in)
 
-<span class="field">۲. دکمه استعلام بیمه (🔗 استعلام):</span>
+۲. دکمه استعلام بیمه (🔗 استعلام):
    Command: VerifyInsuranceCommand
    رفتار:
      - ارسال POST /api/v1/insurance/inquiry
@@ -409,7 +357,7 @@ public class AppointmentBookViewModel : BaseViewModel
      - Timeout (30s): ⚠️ "سامانه بیمه پاسخ نداد - ادامه بصورت آزاد؟"
    Fallback: اگر استعلام نشد → کاربر انتخاب کند آزاد یا دستی
 
-<span class="field">۳. بخش محاسبه هزینه (خودکار):</span>
+۳. بخش محاسبه هزینه (خودکار):
    محاسبه با الگوریتم ۲ (از prompt-part3):
      - حق ویزیت: از تعرفه پزشک
      - سهم بیمه: درصد × قیمت (از استعلام یا تنظیمات بیمه)
@@ -417,7 +365,7 @@ public class AppointmentBookViewModel : BaseViewModel
    نمایش: ۳ سطر اطلاعاتی + مبلغ نهایی برجسته
    به‌روزرسانی: خودکار با تغییر بیمه یا پزشک
 
-<span class="field">۴. دکمه "پذیرش و پرداخت نقدی":</span>
+۴. دکمه "پذیرش و پرداخت نقدی":
    Command: ReceptionAndPayCommand
    عملیات زنجیره‌ای:
      ۱. ثبت Reception (POST /api/v1/receptions)
@@ -429,7 +377,7 @@ public class AppointmentBookViewModel : BaseViewModel
      ۷. نمایش Snackbar "پذیرش موفق - شماره صف: ۱۶"
      ۸. به‌روزرسانی لیست صف
 
-<span class="field">۵. صف پذیرش (QueueList):</span>
+۵. صف پذیرش (QueueList):
    به‌روزرسانی: SignalR Real-time
    ردیف فعلی (در حال ویزیت): پس‌زمینه آبی روشن
    ردیف‌های در صف: پس‌زمینه زرد روشن
@@ -437,13 +385,13 @@ public class AppointmentBookViewModel : BaseViewModel
    کلیک روی ردیف: نمایش جزئیات پذیرش
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 🩺 فرم ۱۱: ویزیت بیمار (VisitFormView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> VisitFormViewModel.cs
+ViewModel: VisitFormViewModel.cs
 
-<span class="h3">── ساختار بصری (Grid دو ستونه: Sidebar + Content) ──</span>
+── ساختار بصری (Grid دو ستونه: Sidebar + Content) ──
 
 ┌────────────────────────────────────────────────────────────────┐
 │ 🩺 ویزیت بیمار: علی رضایی               [🔴 در حال ضبط]     │
@@ -507,15 +455,15 @@ public class AppointmentBookViewModel : BaseViewModel
 │ └──────────────────────────────────────────────────────────┘   │
 └────────────────────────────────────────────────────────────────┘
 
-<span class="h3">── تب‌های فرم ویزیت (جزئیات هر تب) ──</span>
+── تب‌های فرم ویزیت (جزئیات هر تب) ──
 
-<span class="h4">── تب ۱: SOAP Note (📝) ──</span>
+── تب ۱: SOAP Note (📝) ──
    (نمایش داده شده در بالا)
    فیلدها: CC, HPI, PMH, FH, SH, ROS
    هر فیلد: TextBox MultiLine + Label بالای آن
    ToolTip روی Label: توضیح فارسی مختصر فیلد
 
-<span class="h4">── تب ۲: علائم حیاتی (💓) ──</span>
+── تب ۲: علائم حیاتی (💓) ──
 
 ┌────────────────────────────────────────────────────┐
 │ 💓 علائم حیاتی                 📅 ۱۴۰۴/۰۴/۰۱ ۱۰:۳۰│
@@ -555,7 +503,7 @@ public class AppointmentBookViewModel : BaseViewModel
    BMI: محاسبه خودکار = Weight / (Height/100)²
    هشدارها: TextBlock قرمز/نارنجی اگر مقادیر غیرطبیعی
 
-<span class="h4">── تب ۳: معاینه فیزیکی (🔬) ──</span>
+── تب ۳: معاینه فیزیکی (🔬) ──
 
    ۱. TextBox MultiLine بزرگ (Rows=10) برای متن آزاد
    ۲. یا: گروه‌بندی بدن (سر، گردن، قفسه سینه، شکم، اندام‌ها)
@@ -567,7 +515,7 @@ public class AppointmentBookViewModel : BaseViewModel
         ☑ اندام‌ها: نرمال
    ۳. دکمه "استفاده از قالب" → تمپلیت‌های آماده معاینه
 
-<span class="h4">── تب ۴: تشخیص (🏥) ──</span>
+── تب ۴: تشخیص (🏥) ──
 
    ۱. تشخیص اصلی (PrimaryDiagnosis):
       نوع: AutoCompleteBox با جستجو در ICD-10
@@ -590,12 +538,12 @@ public class AppointmentBookViewModel : BaseViewModel
       نوع: TextBox MultiLine (Rows=3)
       مثال: "کنترل قند خون ناشتا بعد از ۲ هفته"
 
-<span class="h4">── تب ۵: نسخه (💊) → هدایت به فرم نسخه‌نویسی ──</span>
-<span class="h4">── تب ۶: آزمایش (🧪) → هدایت به فرم درخواست آزمایش ──</span>
-<span class="h4">── تب ۷: تصویربرداری (📷) → هدایت به فرم درخواست تصویربرداری ──</span>
-<span class="h4">── تب ۸: فایل‌ها (📎) → آپلود اسناد مرتبط با ویزیت ──</span>
+── تب ۵: نسخه (💊) → هدایت به فرم نسخه‌نویسی ──
+── تب ۶: آزمایش (🧪) → هدایت به فرم درخواست آزمایش ──
+── تب ۷: تصویربرداری (📷) → هدایت به فرم درخواست تصویربرداری ──
+── تب ۸: فایل‌ها (📎) → آپلود اسناد مرتبط با ویزیت ──
 
-<span class="h3">── رفتارهای خاص فرم ویزیت ──</span>
+── رفتارهای خاص فرم ویزیت ──
 
    ✅ AutoSave هر ۶۰ ثانیه (ذخیره موقت بدون اعلان)
    ✅ اگر بیمار آلرژی دارد → هشدار دائمی بالای فرم (قرمز)
@@ -605,13 +553,13 @@ public class AppointmentBookViewModel : BaseViewModel
    ✅ Keyboard: Ctrl+Enter = پایان ویزیت | Ctrl+S = ذخیره موقت
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 💊 فرم ۱۲: نسخه‌نویسی (PrescriptionView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> PrescriptionViewModel.cs
+ViewModel: PrescriptionViewModel.cs
 
-<span class="h3">── ساختار بصری ──</span>
+── ساختار بصری ──
 
 ┌────────────────────────────────────────────────────────────────┐
 │ 💊 نسخه‌نویسی - علی رضایی                                     │
@@ -697,9 +645,9 @@ public class AppointmentBookViewModel : BaseViewModel
 │                                                                │
 └────────────────────────────────────────────────────────────────┘
 
-<span class="h3">── عناصر دقیق فرم نسخه ──</span>
+── عناصر دقیق فرم نسخه ──
 
-<span class="field">۱. جستجوی دارو (MedicationSearch):</span>
+۱. جستجوی دارو (MedicationSearch):
    نوع: AutoCompleteBox سفارشی
    API: GET /api/v1/prescriptions/medications/search?q={text}&limit=15
    Debounce: ۳۰۰ms
@@ -712,7 +660,7 @@ public class AppointmentBookViewModel : BaseViewModel
      - کشور سازنده (داخلی/خارجی)
    انتخاب: باز شدن فرم تنظیم دوز (Inline یا Dialog)
 
-<span class="field">۲. فرم تنظیم دوز هر قلم (PrescriptionItemForm):</span>
+۲. فرم تنظیم دوز هر قلم (PrescriptionItemForm):
    
    دوز (Dosage): ComboBox Editable
      Items پیش‌فرض: ["۱ قرص","۲ قرص","نصف قرص","۱ عدد","۵ سی‌سی","۱۰ سی‌سی"]
@@ -744,7 +692,7 @@ public class AppointmentBookViewModel : BaseViewModel
 
    SOS (IsSOS): CheckBox "در صورت نیاز"
 
-<span class="field">۳. بررسی تداخل دارویی (DrugInteractionPanel):</span>
+۳. بررسی تداخل دارویی (DrugInteractionPanel):
    اجرا: خودکار بعد از افزودن/حذف هر دارو
    API: POST /api/v1/prescriptions/{id}/check-interactions
    نمایش نتیجه:
@@ -760,7 +708,7 @@ public class AppointmentBookViewModel : BaseViewModel
    - توصیه
    - دکمه عمل
 
-<span class="field">۴. دکمه "ارسال به سامانه بیمه":</span>
+۴. دکمه "ارسال به سامانه بیمه":
    Command: SubmitElectronicCommand
    ProgressRing: نمایش هنگام ارسال
    عملیات:
@@ -772,7 +720,7 @@ public class AppointmentBookViewModel : BaseViewModel
      - دکمه "📱 ارسال SMS کد رهگیری به بیمار"
      - دکمه "📋 کپی کد رهگیری"
 
-<span class="field">۵. تمپلیت نسخه (PrescriptionTemplate):</span>
+۵. تمپلیت نسخه (PrescriptionTemplate):
    ComboBox یا Popup با لیست تمپلیت‌های پزشک:
      - "نسخه دیابت استاندارد"
      - "نسخه فشار خون"
@@ -783,31 +731,31 @@ public class AppointmentBookViewModel : BaseViewModel
      - نام تمپلیت: TextBox
      - دسته‌بندی: ComboBox
 
-<span class="h3">── ViewModel Prescription ──</span>
+── ViewModel Prescription ──
 
-<span class="code">/// &lt;summary&gt;
+/// <summary>
 /// ویومدل نسخه‌نویسی
 /// عملیات: افزودن/حذف دارو، بررسی تداخل، ارسال الکترونیک، چاپ
-/// &lt;/summary&gt;
+/// </summary>
 public class PrescriptionViewModel : BaseViewModel
 {
     // ── Properties ──
     PrescriptionDto Prescription               // نسخه فعلی
     PatientSummaryDto Patient                  // خلاصه بیمار
-    ObservableCollection&lt;PrescriptionItemDto&gt; Items  // اقلام نسخه
+    ObservableCollection<PrescriptionItemDto> Items  // اقلام نسخه
     
     string MedicationSearchText                // متن جستجوی دارو
-    ObservableCollection&lt;MedicationSearchDto&gt; SearchResults // نتایج جستجو
+    ObservableCollection<MedicationSearchDto> SearchResults // نتایج جستجو
     MedicationSearchDto? SelectedMedication    // دارو انتخابی
     
     PrescriptionType SelectedType              // نوع نسخه (داخلی/الکترونیک)
     string? ElectronicTrackingCode             // کد رهگیری
     
-    ObservableCollection&lt;DrugInteractionDto&gt; Interactions // تداخلات
+    ObservableCollection<DrugInteractionDto> Interactions // تداخلات
     bool HasSevereInteraction                  // وجود تداخل شدید
     bool HasAllergyConflict                    // تداخل با آلرژی بیمار
     
-    ObservableCollection&lt;PrescriptionTemplateDto&gt; Templates // تمپلیت‌ها
+    ObservableCollection<PrescriptionTemplateDto> Templates // تمپلیت‌ها
     
     decimal TotalPrice                         // جمع هزینه
     decimal InsuranceShare                     // سهم بیمه
@@ -815,16 +763,16 @@ public class PrescriptionViewModel : BaseViewModel
     
     // ── Commands ──
     IRelayCommand SearchMedicationCommand      // جستجوی دارو
-    IRelayCommand&lt;MedicationSearchDto&gt; AddMedicationCommand // افزودن دارو
-    IRelayCommand&lt;PrescriptionItemDto&gt; EditItemCommand    // ویرایش قلم
-    IRelayCommand&lt;PrescriptionItemDto&gt; RemoveItemCommand  // حذف قلم
+    IRelayCommand<MedicationSearchDto> AddMedicationCommand // افزودن دارو
+    IRelayCommand<PrescriptionItemDto> EditItemCommand    // ویرایش قلم
+    IRelayCommand<PrescriptionItemDto> RemoveItemCommand  // حذف قلم
     IRelayCommand CheckInteractionsCommand     // بررسی تداخلات
     IRelayCommand SaveCommand                  // ذخیره نسخه
     IRelayCommand SubmitElectronicCommand       // ارسال الکترونیک
     IRelayCommand PrintCommand                 // چاپ
     IRelayCommand SendTrackingCodeSmsCommand    // SMS کد رهگیری
     IRelayCommand SaveAsTemplateCommand         // ذخیره تمپلیت
-    IRelayCommand&lt;PrescriptionTemplateDto&gt; LoadTemplateCommand // بارگذاری تمپلیت
+    IRelayCommand<PrescriptionTemplateDto> LoadTemplateCommand // بارگذاری تمپلیت
     
     // ── Logic ──
     // بعد از افزودن/حذف هر دارو:
@@ -834,16 +782,16 @@ public class PrescriptionViewModel : BaseViewModel
     //
     // بررسی تداخل: الگوریتم ۳ (prompt-part3)
     //   → داروهای نسخه فعلی + داروهای فعلی بیمار + آلرژی‌ها
-}</span>
+}
 
 
-<span class="h2">═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
 ⏳ فرم ۱۳: صف ویزیت پزشک (VisitQueueView.xaml)
-═══════════════════════════════════════════════════════</span>
+═══════════════════════════════════════════════════════
 
-<span class="key">ViewModel:</span> VisitQueueViewModel.cs
+ViewModel: VisitQueueViewModel.cs
 
-<span class="h3">── ساختار ──</span>
+── ساختار ──
 
 ┌────────────────────────────────────────────────────────────────┐
 │ ⏳ صف بیماران - دکتر احمدی                  📅 ۱۴۰۴/۰۴/۰۱   │
@@ -878,7 +826,7 @@ public class PrescriptionViewModel : BaseViewModel
 │                                                                │
 └────────────────────────────────────────────────────────────────┘
 
-<span class="field">هر آیتم صف شامل:</span>
+هر آیتم صف شامل:
    - شماره صف (دایره رنگی)
    - نام بیمار (Bold)
    - ساعت نوبت
@@ -888,7 +836,7 @@ public class PrescriptionViewModel : BaseViewModel
    - دکمه فراخوان (🔔)
    - ToolTip: اطلاعات کامل‌تر + آلرژی‌ها
 
-<span class="field">رفتارها:</span>
+رفتارها:
    ✅ SignalR Real-time: صف خودکار به‌روز شود
    ✅ دکمه "فراخوانی بیمار بعدی" (Space): 
       → تغییر وضعیت صف → باز شدن فرم ویزیت
@@ -899,24 +847,6 @@ public class PrescriptionViewModel : BaseViewModel
    ✅ زمان تخمینی: "تخمین زمان ویزیت شما: ۲۵ دقیقه"
 
 
-<span class="h1">════════════════════════════════════════════════════════════════════
+════════════════════════════════════════════════════════════════════
 📌 پایان بخش ۲ از ۴ - ادامه در prompt-ui-part3.html
-════════════════════════════════════════════════════════════════════</span>
-</div>
-
-<footer>
-<p>📄 پرامپت مکمل UI - بخش ۲ از ۴ | <strong>نوبت‌دهی، پذیرش، ویزیت، نسخه‌نویسی</strong></p>
-<p><a href="prompt-ui-part1.html" style="color:#0891b2">← بخش ۱</a> | <a href="prompt-ui-part3.html" style="color:#0891b2">بخش ۳ (مالی، آزمایشگاه، داروخانه) →</a></p>
-</footer>
-</div>
-
-<script>
-function copyAll(){
-const t=document.getElementById('prompt-ui2').innerText;
-navigator.clipboard.writeText(t).then(()=>alert('✅ پرامپت UI بخش ۲ کپی شد!')).catch(()=>{
-const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('✅ کپی شد!');
-});
-}
-</script>
-</body>
-</html>
+════════════════════════════════════════════════════════════════════
