@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Sahand.ClinicPro.Application.Common.Mappings;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.Common.Models;
@@ -15,10 +15,10 @@ namespace Sahand.ClinicPro.Application.Features.Patients.Queries.GetAllPatients;
 public class GetAllPatientsQueryHandler : IRequestHandler<GetAllPatientsQuery, Result<PagedResponse<PatientListDto>>>
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
+    private readonly PatientMapper _mapper;
 
     /// <summary>سازنده با تزریق واحد کار و نقشه</summary>
-    public GetAllPatientsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public GetAllPatientsQueryHandler(IUnitOfWork unitOfWork, PatientMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
@@ -54,7 +54,7 @@ public class GetAllPatientsQueryHandler : IRequestHandler<GetAllPatientsQuery, R
             .Take(page.PageSize)
             .ToListAsync(cancellationToken);
 
-        var dtos = _mapper.Map<List<PatientListDto>>(items);
+        var dtos = _mapper.ToPatientListDtos(items);
 
         return Result<PagedResponse<PatientListDto>>.Success(
             PagedResponse<PatientListDto>.Create(dtos, page.PageNumber, page.PageSize, totalCount));

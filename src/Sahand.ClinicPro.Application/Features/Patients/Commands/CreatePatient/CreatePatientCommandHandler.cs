@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Sahand.ClinicPro.Application.Common.Mappings;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Sahand.ClinicPro.Application.Common.Helpers;
@@ -16,11 +16,11 @@ namespace Sahand.ClinicPro.Application.Features.Patients.Commands.CreatePatient;
 public class CreatePatientCommandHandler : IRequestHandler<CreatePatientCommand, Result<PatientListDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
+    private readonly PatientMapper _mapper;
     private readonly ILogger<CreatePatientCommandHandler> _logger;
 
     /// <summary>سازنده با تزریق واحد کار و نقشه و لاگر</summary>
-    public CreatePatientCommandHandler(IUnitOfWork unitOfWork, IMapper mapper,
+    public CreatePatientCommandHandler(IUnitOfWork unitOfWork, PatientMapper mapper,
         ILogger<CreatePatientCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
@@ -34,7 +34,7 @@ public class CreatePatientCommandHandler : IRequestHandler<CreatePatientCommand,
     {
         var dto = request.Dto;
 
-        var patient = _mapper.Map<Patient>(dto);
+        var patient = _mapper.ToPatient(dto);
 
         // تاریخ شمسی موازی — الزام مستندات دیتابیس
         patient.BirthDateShamsi = dto.BirthDateShamsi;

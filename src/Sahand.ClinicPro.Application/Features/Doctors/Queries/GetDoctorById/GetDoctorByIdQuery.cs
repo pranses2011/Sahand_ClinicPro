@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Sahand.ClinicPro.Application.Common.Mappings;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.DTOs.Doctors;
@@ -20,10 +20,10 @@ public record GetDoctorByIdQuery(long Id) : IRequest<Result<DoctorDetailDto>>;
 public class GetDoctorByIdQueryHandler : IRequestHandler<GetDoctorByIdQuery, Result<DoctorDetailDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
+    private readonly DoctorMapper _mapper;
 
     /// <summary>سازنده با تزریق واحد کار و نقشه</summary>
-    public GetDoctorByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public GetDoctorByIdQueryHandler(IUnitOfWork unitOfWork, DoctorMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
@@ -42,7 +42,7 @@ public class GetDoctorByIdQueryHandler : IRequestHandler<GetDoctorByIdQuery, Res
         if (doctor is null)
             return Result<DoctorDetailDto>.Failure(Error.NotFound("پزشک", request.Id));
 
-        var dto = _mapper.Map<DoctorDetailDto>(doctor);
+        var dto = _mapper.ToDoctorDetailDto(doctor);
         dto.SpecialtyName = doctor.Specialty?.Name;
         return Result<DoctorDetailDto>.Success(dto);
     }

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Sahand.ClinicPro.Application.Common.Mappings;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.Common.Helpers;
@@ -15,10 +15,10 @@ namespace Sahand.ClinicPro.Application.Features.Patients.Queries.GetPatientById;
 public class GetPatientByIdQueryHandler : IRequestHandler<GetPatientByIdQuery, Result<PatientDetailDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
+    private readonly PatientMapper _mapper;
 
     /// <summary>سازنده با تزریق واحد کار و نقشه</summary>
-    public GetPatientByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public GetPatientByIdQueryHandler(IUnitOfWork unitOfWork, PatientMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
@@ -36,7 +36,7 @@ public class GetPatientByIdQueryHandler : IRequestHandler<GetPatientByIdQuery, R
         if (patient is null)
             return Result<PatientDetailDto>.Failure(Error.NotFound("بیمار", request.Id));
 
-        var dto = _mapper.Map<PatientDetailDto>(patient);
+        var dto = _mapper.ToPatientDetailDto(patient);
         dto.InsuranceName = patient.InsuranceCompany?.Name;
         dto.Age = patient.BirthDate.HasValue
             ? PersianDateHelper.CalculateAge(patient.BirthDate.Value.ToDateTime(TimeOnly.MinValue))

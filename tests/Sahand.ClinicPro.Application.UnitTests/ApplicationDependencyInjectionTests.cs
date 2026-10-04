@@ -8,7 +8,7 @@ namespace Sahand.ClinicPro.Application.UnitTests;
 /// <summary>
 /// تست‌های واحد ثبت سرویس‌های لایه کاربرد — گام ۱.
 /// صحت عملکرد متد AddApplication را بررسی می‌کند؛ این تضمین می‌کند
-/// MediatR، AutoMapper و FluentValidation به‌درستی از اسمبلی
+/// MediatR، نگاشتگرهای Mapperly و FluentValidation به‌درستی از اسمبلی
 /// لایه کاربرد شناسایی و ثبت می‌شوند.
 /// </summary>
 public class ApplicationDependencyInjectionTests
@@ -34,7 +34,7 @@ public class ApplicationDependencyInjectionTests
 
     /// <summary>
     /// ثبت سرویس‌ها نباید خطا بدهد و باید کانتینر قابل ساخت باشد؛
-    /// این تست کشف می‌کند اگر یک پروفایل نگاشت یا Validator خراب باشد.
+    /// این تست کشف می‌کند اگر یک نگاشتگر یا Validator خراب باشد.
     /// </summary>
     [Fact]
     public void AddApplication_Should_Produce_Buildable_Service_Provider()
