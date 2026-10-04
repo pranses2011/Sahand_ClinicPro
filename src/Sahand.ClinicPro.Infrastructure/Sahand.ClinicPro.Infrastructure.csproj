@@ -18,6 +18,7 @@
     <PackageReference Include="BCrypt.Net-Next" />
     <!-- کارهای پس‌زمینه: صف پیامک، یادآوری نوبت، بکاپ، Heartbeat لایسنس -->
     <PackageReference Include="Hangfire.Core" />
+    <PackageReference Include="Hangfire.AspNetCore" />
     <PackageReference Include="Hangfire.SqlServer" />
     <!-- انتزاع‌های مورد نیاز متد الحاقی AddInfrastructure -->
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />

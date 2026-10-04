@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
 using Sahand.ClinicPro.API.Filters;
+using Hangfire;
 using Sahand.ClinicPro.API.Middleware;
 using Sahand.ClinicPro.Application;
 using Sahand.ClinicPro.Infrastructure;
@@ -147,6 +148,23 @@ try
     // مدیریت سراسری خطاها به پاسخ استاندارد فارسی
     app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+    // داشبورد Hangfire — فقط با فعال‌بودن کارهای پس‌زمینه
+    if (app.Configuration.GetValue("Jobs:Enabled", false))
+    {
+        app.UseHangfireDashboard("/jobs", new Hangfire.DashboardOptions
+        {
+            Authorization = new[] { new Sahand.ClinicPro.API.HangfireDashboardAuthFilter() }
+        });
+    }
+
+    // کارهای زمان‌بندی‌شده — فقط وقتی Hangfire فعال است
+    if (app.Configuration.GetValue("Jobs:Enabled", false))
+    {
+        Hangfire.RecurringJob.AddOrUpdate<Sahand.ClinicPro.Infrastructure.Services.SMS.SmsQueueProcessor>(
+            "sms-queue", processor => processor.ProcessQueueAsync(System.Threading.CancellationToken.None),
+            Hangfire.Cron.Minutely());
+    }
+
     // Swagger فقط در محیط توسعه فعال است
     if (app.Environment.IsDevelopment())
     {
@@ -162,6 +180,9 @@ try
     app.UseRateLimiter();
     app.UseAuthentication();
     app.UseAuthorization();
+
+    // اعتبارسنجی لایسنس — پس از احراز هویت روی مسیرهای ماژول‌محور
+    app.UseMiddleware<LicenseValidationMiddleware>();
 
     app.MapControllers();
 
