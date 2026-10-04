@@ -5,6 +5,15 @@
 
 ## [Unreleased]
 
+### ⚙️ Added — 2026-10-05 (گام ۵: Application.Common)
+- چهار Behavior خط لوله MediatR: Logging، Performance (آستانه ۵۰۰ms)، Validation، Transaction (فقط برای Commandها)
+- `ApiResponse<T>` و `PagedResponse<T>` و `PagedRequest` — فرمت استاندارد همه endpointها
+- `PersianDateHelper` — تبدیل دوطرفه جلالی/میلادی بدون وابستگی + سن + ارقام فارسی (۱۷ تست سبز)
+- `AppValidationException` با دیکشنری فیلد→پیام فارسی
+- اینترفیس‌های `ITransactionManager`، `IEncryptionService`، `IDateTimeService`
+- پیاده‌سازی زیرساخت: `TransactionManager`، `EncryptionService` (AES-256-GCM)، `DateTimeService` (منطقه ایران)
+
+
 ### 🔐 Added — 2026-10-05 (گام ۴: Infrastructure.Identity)
 - `IdentityService`: احراز هویت با نام کاربری/ایمیل، قفل حساب ۳۰ دقیقه بعد از ۵ تلاش ناموفق، ثبت نشست کاربر
 - چرخش توکن تازه‌سازی (Rotation) هنگام تمدید + ابطال هنگام خروج

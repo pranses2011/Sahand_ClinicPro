@@ -2,7 +2,7 @@
 
 > این فایل وضعیت لحظه‌ای پروژه را نشان می‌دهد — پس از هر تغییر به‌روزرسانی می‌شود.
 
-## 🎯 فاز ۱ (گام‌های ۱-۴) کامل ✅ → شروع فاز ۲: گام ۵ — Application.Common
+## 🎯 گام ۵ - Application.Common (تکمیل شد ✅) → گام ۶: Auth Module (Login/Refresh/ChangePassword)
 ## 📅 آخرین به‌روزرسانی: 2026-10-05
 ## 🔄 آخرین Commit: 🧬 Step 2: Domain Layer (شاخه feature/phase-02-domain)
 
