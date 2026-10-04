@@ -3,13 +3,13 @@
 > فایل مدیریت پروژه — چک‌لیست ۳۱ گام پیاده‌سازی در ۹ فاز
 > منبع: `docs/prompts/prompt-part3.html` (بخش ۸: ترتیب پیاده‌سازی)
 
-## 🎯 پیشرفت کلی: 3% (1/31 گام)
+## 🎯 پیشرفت کلی: 6% (2/31 گام)
 
 ---
 
 ## 📦 فاز ۱: راه‌اندازی و زیرساخت
 - [x] گام ۱: Solution Setup (ایجاد پروژه‌ها + NuGet Packages + DI Configuration) ✅ 2026-10-05
-- [ ] گام ۲: Domain Layer (BaseEntity + همه Entities + Enums + Value Objects + Interfaces)
+- [x] گام ۲: Domain Layer (BaseEntity + ۸۰ Entity + ۸۹ Enum + Value Objects + Interfaces) ✅ 2026-10-05
 - [ ] گام ۳: Infrastructure - Persistence (DbContext + Configurations + Migrations + Seeders)
 - [ ] گام ۴: Infrastructure - Identity (Auth Service + JWT + Password Hasher + RBAC)
 
@@ -66,6 +66,7 @@
 ---
 
 ## 📝 لاگ تغییرات اخیر:
+- **2026-10-05**: گام ۲ کامل شد — لایه دامنه کامل: ۸ موجودیت پایه (BaseEntity/AuditableEntity/Result/ValueObject)، ۸۰ موجودیت در ۱۵ پوشه ماژولار، ۸۹ شمارشی، ۴ شیء ارزشی (کد ملی/موبایل/پول/آدرس)، ۶ استثنا، ۶ اینترفیس ریپازیتوری، ۱۲ رویداد دامنه. Build سبز + تست‌ها سبز.
 - **2026-10-05**: گام ۱ کامل شد — Solution یازده‌پروژه‌ای با نام‌گذاری Sahand.ClinicPro.*، مدیریت مرکزی پکیج‌ها (CPM)، اسکلت DI دو لایه، Program.cs با Serilog/Swagger فارسی، پروژه WPF دست‌نویس + ۶ تست دودی سبز. شاخه: feature/phase-01-foundation
 - **2026-10-05**: راه‌اندازی ریپازیتوری، استخراج ۹ فایل مستندات (۶ طراحی + ۳ پرامپت)، ایجاد فایل‌های مدیریتی. آماده شروع گام ۱.
 

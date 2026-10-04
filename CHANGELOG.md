@@ -5,6 +5,17 @@
 
 ## [Unreleased]
 
+### 🧬 Added — 2026-10-05 (گام ۲: Domain Layer)
+- کلاس‌های پایه: `BaseEntity` (کلید + رویدادهای دامنه)، `AuditableEntity` (حسابرسی + حذف نرم + BranchId + RowVersion)، `Result<T>`، `Error`، `ValueObject`
+- ۸۰ موجودیت دامنه در ۱۵ پوشه ماژولار (People/Scheduling/Clinical/Billing/Accounting/Paraclinical/Pharmacy/Personnel/Security/Communication/Infrastructure/Licensing/Integration/Reporting)
+- ۸۹ شمارشی (enum) با مقادیر مستند در مستندات دیتابیس
+- اشیاء ارزشی: `NationalCode` (اعتبارسنجی رقم کنترلی)، `PhoneNumber`، `Money`، `Address`
+- استثناهای دامنه: `DomainException`، `BusinessRuleException`، `NotFoundException`، `ConflictException`، `UnbalancedJournalEntryException` (قانون طلایی حسابداری دوبل)
+- اینترفیس‌های ریپازیتوری: `IRepository<T>`، `IUnitOfWork`، `IPatientRepository`، `IDoctorRepository`، `IAppointmentRepository`، `ILicenseRepository`
+- ۱۲ رویداد دامنه (ثبت بیمار، رزرو/لغو نوبت، تکمیل ویزیت، صدور نسخه، فاکتور، پرداخت، هشدار موجودی، لایسنس، نتیجه آزمایش)
+- مولد پایتونی `scripts/step02_*.py` برای بازتولید یکسان فایل‌ها
+
+
 ### 🏗️ Added - 2026-10-05 (گام ۱: Solution Setup)
 - ایجاد `Sahand.ClinicPro.sln` با **۱۱ پروژه** مطابق Clean Architecture (شاخه `feature/phase-01-foundation`):
   - `src/`: Domain، Application، Infrastructure، Shared، API، Desktop (WPF)، LicensePortal (Blazor Server)
