@@ -1,0 +1,97 @@
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.PatientsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══════════════════════════════════════════════════════════
+         فهرست بیماران — گام ۱۲
+         جستجو + جدول + صفحه‌بندی + دکمه بیمار جدید
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- سربرگ: عنوان + دکمه بیمار جدید -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <Button DockPanel.Dock="Right"
+                    Command="{Binding AddPatientCommand}"
+                    Style="{StaticResource MaterialDesignFilledButton}"
+                    Content="بیمار جدید"
+                    VerticalAlignment="Center">
+                <Button.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountPlus" VerticalAlignment="Center" />
+                            <TextBlock Text="بیمار جدید" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+                </Button.ContentTemplate>
+            </Button>
+            <TextBlock Text="مدیریت بیماران"
+                       Style="{StaticResource SectionTitle}"
+                       VerticalAlignment="Center" />
+        </DockPanel>
+
+        <!-- جستجو -->
+        <TextBox Grid.Row="1"
+                 materialDesign:HintAssist.Hint="جستجو: نام یا کد ملی یا موبایل یا شماره پرونده"
+                 Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                 Margin="0,0,0,12">
+            <TextBox.InputBindings>
+                <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+            </TextBox.InputBindings>
+        </TextBox>
+
+        <!-- جدول بیماران -->
+        <DataGrid Grid.Row="2"
+                  ItemsSource="{Binding Patients}"
+                  SelectedItem="{Binding SelectedPatient}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  CanUserAddRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  materialDesign:DataGridAssist.CellPadding="8,6">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="شماره پرونده" Binding="{Binding MedicalRecordNo}" Width="130" />
+                <DataGridTextColumn Header="نام" Binding="{Binding FirstName}" Width="*" />
+                <DataGridTextColumn Header="نام خانوادگی" Binding="{Binding LastName}" Width="*" />
+                <DataGridTextColumn Header="کد ملی" Binding="{Binding NationalCode}" Width="110" />
+                <DataGridTextColumn Header="موبایل" Binding="{Binding Mobile}" Width="120" />
+                <DataGridTextColumn Header="بیمه" Binding="{Binding InsuranceName}" Width="130" />
+            </DataGrid.Columns>
+            <DataGrid.InputBindings>
+                <MouseBinding MouseAction="LeftDoubleClick"
+                              Command="{Binding ViewPatientCommand}" />
+            </DataGrid.InputBindings>
+        </DataGrid>
+
+        <!-- صفحه‌بندی -->
+        <DockPanel Grid.Row="3" Margin="0,12,0,0">
+            <Button DockPanel.Dock="Right"
+                    Command="{Binding NextPageCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="صفحه بعد" />
+            <Button DockPanel.Dock="Right"
+                    Command="{Binding PrevPageCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="صفحه قبل"
+                    Margin="0,0,8,0" />
+            <TextBlock VerticalAlignment="Center"
+                       FontSize="13" Opacity="0.8">
+                <Run Text="صفحه " />
+                <Run Text="{Binding PageNumber, Mode=OneWay}" />
+                <Run Text=" از " />
+                <Run Text="{Binding TotalPages, Mode=OneWay}" />
+                <Run Text=" — جمع: " />
+                <Run Text="{Binding TotalCount, Mode=OneWay}" />
+                <Run Text=" بیمار" />
+            </TextBlock>
+        </DockPanel>
+    </Grid>
+</UserControl>
