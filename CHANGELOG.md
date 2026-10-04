@@ -5,6 +5,14 @@
 
 ## [Unreleased]
 
+### 🎯 Added — 2026-10-05 (فاز ۲: گام‌های ۶ تا ۹ — ماژول‌های هسته‌ای)
+- **Auth**: چهار فرمان CQRS ورود/تمدید/خروج/تغییر رمز با اعتبارسنجی فارسی و محدودیت ۵ درخواست در دقیقه
+- **Patients**: CRUD کامل + جستجوی صفحه‌بندی‌شده + اعتبارسنجی رقم کنترلی کد ملی + یکتایی غیرهمگام + سکانس MRN + رویداد دامنه پیامک خوش‌آمدگویی
+- **Doctors**: CRUD + فیلتر تخصص + جستجو با نام پرسنل
+- **API**: ExceptionHandlingMiddleware فارسی، HasPermission پویا (PERMISSION:x)، RateLimiter سراسری ۱۰۰/دقیقه و ورود ۵/دقیقه، Swagger با پشتیبانی JWT، پاسخ استاندارد برای خطاهای ModelState، سه کنترلر /api/v1
+- **تست‌ها**: ۲۸ تست سبز (۱۷ تقویم + ۶ API + ۲ زیرساخت + ۲ دامنه + ۱ سلامت)
+
+
 ### ⚙️ Added — 2026-10-05 (گام ۵: Application.Common)
 - چهار Behavior خط لوله MediatR: Logging، Performance (آستانه ۵۰۰ms)، Validation، Transaction (فقط برای Commandها)
 - `ApiResponse<T>` و `PagedResponse<T>` و `PagedRequest` — فرمت استاندارد همه endpointها

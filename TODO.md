@@ -3,7 +3,7 @@
 > فایل مدیریت پروژه — چک‌لیست ۳۱ گام پیاده‌سازی در ۹ فاز
 > منبع: `docs/prompts/prompt-part3.html` (بخش ۸: ترتیب پیاده‌سازی)
 
-## 🎯 پیشرفت کلی: 16% (5/31 گام)
+## 🎯 پیشرفت کلی: 29% (9/31 گام)
 
 ---
 
@@ -15,10 +15,10 @@
 
 ## 🎯 فاز ۲: ماژول‌های هسته‌ای
 - [x] گام ۵: Application.Common — ۴ Behavior + ApiResponse/PagedResponse + PersianDateHelper (تست‌شده با ۱۷ تست) + IEncryption/IDateTime/ITransaction ✅ 2026-10-05
-- [ ] گام ۶: Application - Auth Module (Login + Refresh + ChangePassword)
-- [ ] گام ۷: Application - Patients Module (CQRS Commands + Queries)
-- [ ] گام ۸: Application - Doctors Module
-- [ ] گام ۹: API Layer (Program.cs + Middleware + Controllers: Auth, Patients, Doctors)
+- [x] گام ۶: Auth Module (Login + Refresh + Logout + ChangePassword) ✅ 2026-10-05
+- [x] گام ۷: Patients Module (Create/Update/Delete/GetAll/Search + کد ملی اعتبارسنجی) ✅ 2026-10-05
+- [x] گام ۸: Doctors Module (CRUD + فیلتر تخصص + جستجو) ✅ 2026-10-05
+- [x] گام ۹: API Layer (میدلور خطا + HasPermission + RateLimit 100/5 + Swagger JWT + سه کنترلر + ۶ تست) ✅ 2026-10-05
 
 ## 🖥️ فاز ۳: Desktop Client
 - [ ] گام ۱۰: WPF Setup (App.xaml + MainWindow + Theme + Fonts + Navigation)
@@ -66,6 +66,7 @@
 ---
 
 ## 📝 لاگ تغییرات اخیر:
+- **2026-10-05**: گام‌های ۶ تا ۹ کامل شد — فاز ۲ بسته شد: ماژول Auth (۴ فرمان CQRS)، ماژول بیماران (CRUD کامل + جستجوی صفحه‌بندی‌شده + سکانس MRN + رویداد پیامک)، ماژول پزشکان، لایه API (میدلور خطای فارسی، مجوزدهی پویا PERMISSION:x، RateLimiter دو‌سیاستی، Swagger با Bearer، ۶ تست یکپارچگی). ۲۸ تست کل سبز.
 - **2026-10-05**: گام ۵ کامل شد — چهار رفتار خط لوله MediatR (لاگ/عملکرد/اعتبارسنجی/تراکنش) با ترتیب صحیح ثبت؛ ApiResponse و PagedResponse و PagedRequest استاندارد؛ PersianDateHelper با الگوریتم جلالی بدون وابستگی (۱۷ تست شامل تاریخ‌های مرجع رسمی و کبیسه و رفت‌وبرگشت ۱۰ ساله)؛ پیاده‌سازی AES-256-GCM و DateTimeService ایران و TransactionManager در زیرساخت.
 - **2026-10-05**: گام ۴ کامل شد — IdentityService کامل (ورود با قفل ۳۰ دقیقه‌ای بعد ۵ تلاش، چرخش توکن تازه‌سازی، تغییر رمز با تاریخچه ۵ رمز)، JwtTokenGenerator (HMAC-SHA256 با ادعاهای نقش/دسترسی)، PasswordHasher (BCrypt ضریب ۱۲ + سیاست رمز)، تنظیم JWT Bearer با پیام فارسی. فاز ۱ کامل شد و feature/phase-01-foundation به main ادغام شد.
 - **2026-10-05**: گام ۳ کامل شد — ClinicProDbContext با ۸۷ DbSet و فیلتر حذف نرم سراسری و ۱۵ SQL Sequence؛ ۸۷ فایل Configuration تولیدشده با کامنت فارسی جدول/ستون + ایندکس‌های فیلترشده؛ Migration اولیه (۵۰۱۷ خط، ۸۷ جدول)؛ Repository عمومی + ۴ تخصصی؛ UnitOfWork با انتشار رویدادهای دامنه؛ اینترسپتورهای حسابرسی/حذف نرم؛ ۶ بذر (نقش‌ها/دسترسی‌ها/ادمین/داده پایه/سرفصل حسابداری). ابزار dotnet-ef 8.0.11 محلی شد.

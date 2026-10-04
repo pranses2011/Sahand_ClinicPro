@@ -2,7 +2,7 @@
 
 > این فایل وضعیت لحظه‌ای پروژه را نشان می‌دهد — پس از هر تغییر به‌روزرسانی می‌شود.
 
-## 🎯 گام ۵ - Application.Common (تکمیل شد ✅) → گام ۶: Auth Module (Login/Refresh/ChangePassword)
+## 🎯 فاز ۲ (گام‌های ۵-۹) کامل ✅ → شروع فاز ۳: گام ۱۰ — WPF Setup
 ## 📅 آخرین به‌روزرسانی: 2026-10-05
 ## 🔄 آخرین Commit: 🧬 Step 2: Domain Layer (شاخه feature/phase-02-domain)
 
