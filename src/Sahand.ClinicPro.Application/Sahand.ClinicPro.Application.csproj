@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <!-- ═══════════════════════════════════════════════════════════════
+       لایه کاربرد (Application Layer) — فقط به لایه دامنه وابسته است
+       شامل: موارد CQRS (Command/Query)، رفتارهای خط لوله، DTOها،
+       نگاشت‌ها، اعتبارسنج‌ها و اینترفیس سرویس‌های خارجی
+       ═══════════════════════════════════════════════════════════════ -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <!-- نکته AutoMapper 13.0.1 و هشدار NU1903: سرکوب دقیق در سطح Solution
+         با NuGetAuditSuppress در Directory.Build.props انجام شده است؛
+         جزئیات و توجیه آن در همان فایل و در TODO.md ثبت شده است. -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- CQRS: فرستنده و خط لوله Command/Query -->
+    <PackageReference Include="MediatR" />
+    <!-- اعتبارسنجی با پیام‌های فارسی -->
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <!-- نگاشت موجودیت‌ها به DTO و برعکس -->
+    <PackageReference Include="AutoMapper" />
+    <!-- انتزاع‌های DI برای نوشتن متد الحاقی AddApplication -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <!-- برای ILogger در رفتار لاگ‌گذاری (گام ۵) -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- تنها وابستگی مجاز لایه کاربرد: لایه دامنه -->
+    <ProjectReference Include="..\Sahand.ClinicPro.Domain\Sahand.ClinicPro.Domain.csproj" />
+  </ItemGroup>
+</Project>

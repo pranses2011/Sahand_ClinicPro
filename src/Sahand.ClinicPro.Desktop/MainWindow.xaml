@@ -1,0 +1,49 @@
+﻿<Window x:Class="Sahand.ClinicPro.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        Title="سامانه جامع مدیریت درمانگاه سهند"
+        Height="760" Width="1200" MinHeight="600" MinWidth="960"
+        WindowStartupLocation="CenterScreen"
+        FlowDirection="RightToLeft"
+        FontFamily="Vazirmatn, Segoe UI, Tahoma"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="ClearType">
+    <!-- ═══════════════════════════════════════════════════════════
+         پنجره اصلی — اسکلت گام ۱
+         • جریان راست‌به‌چپ (RTL) فعال است
+         • پوسته Material Design از App.xaml اعمال می‌شود
+         پنجره ورود، داشبورد و ناوبری کامل در گام ۱۰ و ۱۱ ساخته می‌شوند.
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid>
+        <StackPanel VerticalAlignment="Center"
+                    HorizontalAlignment="Center">
+            <!-- آیکون برنامه -->
+            <materialDesign:PackIcon Kind="Hospital"
+                                     Width="72" Height="72"
+                                     HorizontalAlignment="Center"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
+            <!-- نام سامانه -->
+            <TextBlock Text="سامانه جامع مدیریت درمانگاه سهند"
+                       FontSize="28" FontWeight="Bold"
+                       HorizontalAlignment="Center"
+                       Margin="0,24,0,8"
+                       Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
+            <!-- شناسه نسخه -->
+            <TextBlock Text="Sahand ClinicPro — نسخه ۱.۰.۰"
+                       FontSize="14"
+                       Opacity="0.72"
+                       HorizontalAlignment="Center" />
+            <!-- نوار پیشرفت نمایشی مسیر ۳۱ گامی -->
+            <ProgressBar Margin="0,32,0,0" Width="280"
+                         IsIndeterminate="False" Value="1" Maximum="31" />
+            <TextBlock Text="گام ۱ از ۳۱: راه‌اندازی Solution کامل شد"
+                       FontSize="12" Margin="0,8,0,0"
+                       Opacity="0.6"
+                       HorizontalAlignment="Center" />
+        </StackPanel>
+    </Grid>
+</Window>

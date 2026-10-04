@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- ═══════════════════════════════════════════════════════════════
+       لایه API — ASP.NET Core 8 Web API (REST)
+       میزبان نهایی برنامه؛ کنترلرها (۲۴ عدد در گام ۹)، میدلورها،
+       فیلترها و Hub سیگنال‌آر در این پروژه قرار می‌گیرند.
+       نسخه‌بندی مسیرها: /api/v1/{resource}
+       ═══════════════════════════════════════════════════════════════ -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- احراز هویت JWT (پیکربندی در گام ۴) -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <!-- لاگ‌گذاری ساختاریافته Serilog + خروجی Seq -->
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Seq" />
+    <!-- مستندسازی Swagger با عنوان فارسی -->
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <!-- داشبورد کارهای پس‌زمینه (فعال‌سازی در گام ۲۳) -->
+    <PackageReference Include="Hangfire.AspNetCore" />
+    <!-- ابزار طراحی EF Core برای ساخت Migration از پروژه میزبان -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- لایه کاربرد برای CQRS و لایه زیرساخت برای پیاده‌سازی‌ها -->
+    <ProjectReference Include="..\Sahand.ClinicPro.Application\Sahand.ClinicPro.Application.csproj" />
+    <ProjectReference Include="..\Sahand.ClinicPro.Infrastructure\Sahand.ClinicPro.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

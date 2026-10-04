@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <!-- ═══════════════════════════════════════════════════════════════
+       تست‌های یکپارچگی لایه زیرساخت — DbContext، ریپازیتوری‌ها و سرویس‌ها
+       (تست‌های اصلی از گام ۳۰ به بعد؛ نیازمند SQL Server محلی)
+       ═══════════════════════════════════════════════════════════════ -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Sahand.ClinicPro.Infrastructure\Sahand.ClinicPro.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

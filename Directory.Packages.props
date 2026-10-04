@@ -1,0 +1,71 @@
+﻿<Project>
+  <!-- ═══════════════════════════════════════════════════════════════
+       مدیریت مرکزی نسخه پکیج‌های NuGet (Central Package Management)
+       پروژه: Sahand ClinicPro - سامانه جامع مدیریت درمانگاه سهند
+
+       قواعد انتخاب نسخه:
+       ۱) پکیج‌های مایکروسافتی هماهنگ با .NET 8 → خانواده 8.0.x
+       ۲) EF Core مطابق مستندات → 8.0.31 (آخرین پچ 8.x)
+       ۳) MediatR → 12.x (آخرین نسخه با مجوز رایگان Apache-2.0)
+       ۴) FluentValidation → 11.x و AutoMapper → 13.x (آخرین نسخه‌های
+          کاملاً رایگان؛ نسخه‌های جدیدتر مجوز تجاری دارند)
+       ═══════════════════════════════════════════════════════════════ -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- پین‌شدن وابستگی‌های غیرمستقیم برای ساخت تکرارپذیر -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ── لایه کاربرد (Application) ── -->
+    <!-- الگوی CQRS — آخرین نسخه رایگان (نسخه ۱۳+ تجاری است) -->
+    <PackageVersion Include="MediatR" Version="12.5.0" />
+    <!-- اعتبارسنجی — آخرین نسخه ۱۱ با مجوز Apache-2.0 -->
+    <PackageVersion Include="FluentValidation" Version="11.12.0" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.12.0" />
+    <!-- نگاشت اشیاء — آخرین نسخه رایگان MIT (نسخه ۱۵+ تجاری است) -->
+    <PackageVersion Include="AutoMapper" Version="13.0.1" />
+    <!-- انتزاع‌های DI برای کلاس‌های کتابخانه‌ای -->
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
+    <!-- پکیج DI کامل (ServiceCollection و BuildServiceProvider) برای تست‌ها -->
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+
+    <!-- ── لایه زیرساخت (Infrastructure) ── -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.31" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.31" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.31" />
+    <!-- هش رمز عبور با Work Factor 12 مطابق مستندات -->
+    <PackageVersion Include="BCrypt.Net-Next" Version="4.2.1" />
+    <!-- کارهای پس‌زمینه (صف پیامک، یادآوری نوبت، بکاپ، Heartbeat) -->
+    <PackageVersion Include="Hangfire.Core" Version="1.8.25" />
+    <PackageVersion Include="Hangfire.SqlServer" Version="1.8.25" />
+    <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.25" />
+
+    <!-- ── لایه API ── -->
+    <!-- احراز هویت JWT — هم‌نسخه با فریمورک -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.31" />
+    <!-- لاگ‌گذاری ساختاریافته + داشبورد Seq -->
+    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageVersion Include="Serilog.Sinks.Seq" Version="9.1.0" />
+    <!-- مستندسازی Swagger با توضیحات فارسی -->
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <!-- تست یکپارچگی API -->
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.31" />
+
+    <!-- ── کلاینت دسکتاپ (Desktop) ── -->
+    <PackageVersion Include="MaterialDesignThemes" Version="5.3.2" />
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+
+    <!-- ── تست‌ها ── -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageVersion Include="xunit" Version="2.9.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.2" />
+    <PackageVersion Include="Moq" Version="4.21.0" />
+    <!-- نسخه ۶ آخرین نسخه کاملاً رایگان (نسخه ۸ تجاری است) -->
+    <PackageVersion Include="FluentAssertions" Version="6.12.2" />
+  </ItemGroup>
+</Project>

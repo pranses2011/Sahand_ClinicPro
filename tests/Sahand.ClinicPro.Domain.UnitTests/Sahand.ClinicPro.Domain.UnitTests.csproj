@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <!-- ═══════════════════════════════════════════════════════════════
+       تست‌های واحد لایه دامنه — موجودیت‌ها، اشیاء ارزشی و قواعد تجاری
+       (تست‌های اصلی از گام ۳۰ به بعد کامل می‌شوند)
+       ═══════════════════════════════════════════════════════════════ -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Sahand.ClinicPro.Domain\Sahand.ClinicPro.Domain.csproj" />
+  </ItemGroup>
+</Project>

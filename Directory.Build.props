@@ -1,0 +1,57 @@
+﻿<Project>
+  <!-- ═══════════════════════════════════════════════════════════════
+       تنظیمات مشترک ساخت برای همه پروژه‌های Solution
+       پروژه: Sahand ClinicPro - سامانه جامع مدیریت درمانگاه سهند
+       این فایل به‌صورت خودکار روی تمام ۱۱ پروژه اعمال می‌شود.
+       ═══════════════════════════════════════════════════════════════ -->
+
+  <PropertyGroup>
+    <!-- زبان C# نسخه ۱۲ روی .NET 8 LTS -->
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- تولید فایل مستندات XML — الزام کامنت XML فارسی برای اعضای عمومی -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- هشدار «کامنت XML ندارد» غیرفعال است تا قالب‌ها هشدار ندهند؛
+         اما قاعده پروژه: هر عضو عمومی حتماً کامنت XML فارسی دارد -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <!-- ⚠️ سرکوب هشدار ممیزی NU1903 در خروجی Build (نظیر به نظیر):
+         AutoMapper 13.0.1 — آسیب‌پذیری GHSA-rvv3-g6hj-g44x (DoS نگاشت گراف عمیق)
+         رفع فقط در نسخه‌های تجاری 15.1.1+/16.1.1+ است. ریسک پذیرفته‌شده است چون:
+         ۱) همه نوع‌های نگاشت توسط تیم تعریف می‌شوند نه مهاجم
+         ۲) ورودی مرزی با FluentValidation و سقف سایز درخواست محدود است
+         ۳) بازبینی و تصمیم مهاجرت (Mapperly یا خرید لایسنس) در گام ۲۹
+         نکته: ممیزی امنیتی همچنان با دستور «dotnet list package» به‌همراه
+         سوییچ vulnerable در dotnet فعال است.
+         بعد از ارتقاء SDK یا خروج از AutoMapper، این سرکوب باید حذف شود. -->
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
+
+    <!-- ساخت پروژه‌های ویندوزی (WPF) روی لینوکس/CI نیز ممکن باشد -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+
+    <!-- اطلاعات اسمبلی -->
+    <Version>1.0.0</Version>
+    <Authors>Sahand ClinicPro Team</Authors>
+    <Company>Sahand</Company>
+    <Product>Sahand ClinicPro</Product>
+    <Description>سامانه جامع مدیریت درمانگاه سهند - Clinic Management System</Description>
+    <Copyright>Copyright © 2026 Sahand ClinicPro</Copyright>
+    <NeutralLanguage>fa-IR</NeutralLanguage>
+    <RepositoryUrl>https://github.com/pranses2011/Sahand_ClinicPro</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <!-- ساخت تکرارپذیر و امن -->
+    <Deterministic>true</Deterministic>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ⚠️ سرکوب دقیق پکیج/نسخه برای SDKهای آینده (NuGetAuditSuppress در
+         NuGet 6.13+ معتبر است؛ در SDK فعلی توسط NoWarn بالا پوشش داده می‌شود):
+         AutoMapper 13.0.1 — جزئیات و توجیه در TODO.md پیگیری می‌شود. -->
+    <NuGetAuditSuppress Include="AutoMapper" Version="13.0.1" />
+  </ItemGroup>
+</Project>
