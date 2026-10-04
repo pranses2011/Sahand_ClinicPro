@@ -55,7 +55,8 @@ public partial class MainWindowViewModel : ObservableObject
         BillingViewModel billingVm,
         LabViewModel labVm,
         PharmacyViewModel pharmacyVm,
-        ReportsViewModel reportsVm)
+        ReportsViewModel reportsVm,
+        AdminViewModel adminVm)
     {
         _api = api;
         _tokens = tokens;
@@ -78,7 +79,8 @@ public partial class MainWindowViewModel : ObservableObject
             ["billing"] = () => billingVm,
             ["lab"] = () => labVm,
             ["pharmacy"] = () => pharmacyVm,
-            ["reports"] = () => reportsVm
+            ["reports"] = () => reportsVm,
+            ["settings"] = () => adminVm
         };
 
         // آیتم‌های ناوبری — فعال بودن از لایسنس کنترل می‌شود
@@ -94,7 +96,7 @@ public partial class MainWindowViewModel : ObservableObject
             new() { Title = "آزمایشگاه", PageKey = "lab", Icon = "TestTube" },
             new() { Title = "داروخانه", PageKey = "pharmacy", Icon = "Pill" },
             new() { Title = "گزارش‌ها", PageKey = "reports", Icon = "FileChart" },
-            new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog", Enabled = false }
+            new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog" }
         };
 
         NavigateToPage("dashboard");
