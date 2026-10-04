@@ -5,6 +5,16 @@
 
 ## [Unreleased]
 
+### 🔐 Added — 2026-10-05 (گام ۴: Infrastructure.Identity)
+- `IdentityService`: احراز هویت با نام کاربری/ایمیل، قفل حساب ۳۰ دقیقه بعد از ۵ تلاش ناموفق، ثبت نشست کاربر
+- چرخش توکن تازه‌سازی (Rotation) هنگام تمدید + ابطال هنگام خروج
+- تغییر رمز عبور با سیاست امنیتی و جلوگیری از تکرار ۵ رمز اخیر
+- `JwtTokenGenerator`: توکن دسترسی با ادعاهای نقش و دسترسی + توکن تازه‌سازی ۲۵۶ بیتی تصادفی
+- `PasswordHasher`: BCrypt ضریب ۱۲ + سیاست حداقل ۸ کاراکتر با حرف و رقم
+- `IdentitySetup`: تنظیم JWT Bearer با پاسخ فارسی توکن منقضی
+- بخش Jwt در appsettings.json
+
+
 ### 🗄️ Added — 2026-10-05 (گام ۳: Infrastructure.Persistence)
 - `ClinicProDbContext` با ۸۷ DbSet، فیلتر پرس‌وجوی سراسری حذف نرم، رفتار NoAction همه کلیدهای خارجی، RowVersion همزمانی، ۱۵ سکانس SQL Server
 - ۸۷ فایل Configuration با کامنت فارسی جدول و ستون + ایندکس‌های یکتای فیلترشده + دقت اعشار + مقادیر پیش‌فرض سکانسی (MRN/APT/RCP/VST/RX/INV/PAY/JE)

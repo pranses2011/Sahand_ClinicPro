@@ -2,7 +2,7 @@
 
 > این فایل وضعیت لحظه‌ای پروژه را نشان می‌دهد — پس از هر تغییر به‌روزرسانی می‌شود.
 
-## 🎯 گام فعلی: گام ۳ - Infrastructure.Persistence (تکمیل شد ✅) → آماده گام ۴: Infrastructure.Identity
+## 🎯 فاز ۱ (گام‌های ۱-۴) کامل ✅ → شروع فاز ۲: گام ۵ — Application.Common
 ## 📅 آخرین به‌روزرسانی: 2026-10-05
 ## 🔄 آخرین Commit: 🧬 Step 2: Domain Layer (شاخه feature/phase-02-domain)
 

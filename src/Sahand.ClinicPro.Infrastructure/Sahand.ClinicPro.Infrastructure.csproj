@@ -23,6 +23,8 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <!-- احراز هویت JWT Bearer -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <!-- دسترسی به HttpContext برای سرویس کاربر فعلی -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>

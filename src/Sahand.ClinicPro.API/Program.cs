@@ -1,6 +1,7 @@
 ﻿using Microsoft.OpenApi.Models;
 using Sahand.ClinicPro.Application;
 using Sahand.ClinicPro.Infrastructure;
+using Sahand.ClinicPro.Infrastructure.Identity;
 using Serilog;
 
 // ═══════════════════════════════════════════════════════════════════
@@ -53,7 +54,8 @@ try
     // لایه زیرساخت: DbContext + ریپازیتوری + سرویس‌ها (گام ۳ و ۴)
     builder.Services.AddInfrastructure(builder.Configuration);
 
-    // 📌 گام ۴: احراز هویت JWT + Refresh Token
+    // احراز هویت JWT Bearer + سرویس‌های امنیتی (گام ۴)
+    builder.Services.AddIdentityServices(builder.Configuration);
     // 📌 گام ۹: میدلورها (خطا، لایسنس، لاگ عملیات، محدودیت درخواست) + SignalR
 
     var app = builder.Build();
