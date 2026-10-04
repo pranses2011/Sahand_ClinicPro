@@ -50,7 +50,8 @@ public partial class MainWindowViewModel : ObservableObject
         PatientsViewModel patients,
         AppointmentsViewModel appointments,
         ReceptionsViewModel receptions,
-        VisitsViewModel visitsVm)
+        VisitsViewModel visitsVm,
+        PrescriptionsViewModel prescriptionsVm)
     {
         _api = api;
         _tokens = tokens;
@@ -68,7 +69,8 @@ public partial class MainWindowViewModel : ObservableObject
             ["patients"] = () => patients,
             ["appointments"] = () => appointments,
             ["receptions"] = () => receptions,
-            ["visits"] = () => visitsVm
+            ["visits"] = () => visitsVm,
+            ["prescriptions"] = () => prescriptionsVm
         };
 
         // آیتم‌های ناوبری — فعال بودن از لایسنس کنترل می‌شود
@@ -79,7 +81,7 @@ public partial class MainWindowViewModel : ObservableObject
             new() { Title = "نوبت‌دهی", PageKey = "appointments", Icon = "CalendarClock" },
             new() { Title = "پذیرش", PageKey = "receptions", Icon = "Reception" },
             new() { Title = "ویزیت و معاینه", PageKey = "visits", Icon = "Stethoscope" },
-            new() { Title = "نسخه‌نویسی", PageKey = "prescriptions", Icon = "Prescription", Enabled = false },
+            new() { Title = "نسخه‌نویسی", PageKey = "prescriptions", Icon = "Prescription" },
             new() { Title = "مالی و صندوق", PageKey = "billing", Icon = "CashMultiple", Enabled = false },
             new() { Title = "آزمایشگاه", PageKey = "lab", Icon = "TestTube", Enabled = false },
             new() { Title = "داروخانه", PageKey = "pharmacy", Icon = "Pill", Enabled = false },
