@@ -61,6 +61,53 @@ public partial class ReportBrowserViewModel : ViewModelBase
     [ObservableProperty]
     private bool _hasDateRange;
 
+    /// <summary>نمایش انتخابگر بیمار — گام P1</summary>
+    [ObservableProperty]
+    private bool _hasPatientParam;
+
+    /// <summary>نمایش فیلد تعداد ماه — گام P1</summary>
+    [ObservableProperty]
+    private bool _hasMonthsParam;
+
+    /// <summary>نمایش فیلد کد ICD — گام P1</summary>
+    [ObservableProperty]
+    private bool _hasIcdParam;
+
+    /// <summary>نمایش فیلد حداقل مبلغ — گام P1</summary>
+    [ObservableProperty]
+    private bool _hasMinAmountParam;
+
+    /// <summary>نمایش فیلد تعداد نتایج — گام P1</summary>
+    [ObservableProperty]
+    private bool _hasTopParam;
+
+    /// <summary>عبارت جستجوی بیمار (نام/کد ملی/موبایل/پرونده) — گام P1</summary>
+    [ObservableProperty]
+    private string? _patientSearchTerm;
+
+    /// <summary>نتایج جستجوی بیمار — گام P1</summary>
+    public ObservableCollection<PatientFormViewModel.PatientDetail> PatientResults { get; } = new();
+
+    /// <summary>بیمار انتخاب‌شده برای گزارش‌های محاسبه‌مرکز بیمار — گام P1</summary>
+    [ObservableProperty]
+    private PatientFormViewModel.PatientDetail? _selectedPatient;
+
+    /// <summary>تعداد ماه برای گزارش‌های بازه ماهانه — گام P1</summary>
+    [ObservableProperty]
+    private int _months = 6;
+
+    /// <summary>کد ICD اختیاری — پیشوند تشخیص (خالی = مجموعه مزمن پیش‌فرض) — گام P1</summary>
+    [ObservableProperty]
+    private string? _icdCode;
+
+    /// <summary>حداقل مبلغ (تومان) برای فیلتر بدهکاران — گام P1</summary>
+    [ObservableProperty]
+    private decimal _minAmount;
+
+    /// <summary>سقف تعداد ردیف‌های نتایج — گام P1</summary>
+    [ObservableProperty]
+    private int _topCount = 20;
+
     /// <summary>از تاریخ</summary>
     [ObservableProperty]
     private DateTime _fromDate = DateTime.Today.AddDays(-30);
@@ -123,6 +170,19 @@ public partial class ReportBrowserViewModel : ViewModelBase
         ReportTitle = value.Title;
         ReportDescription = value.Description;
         HasDateRange = value.ParamsList.Any(p => p.Contains("Date"));
+        // پارامترهای تخصصی گام P1 — بر اساس فهرست paramsList سرور
+        HasPatientParam = value.ParamsList.Contains("patientId");
+        HasMonthsParam = value.ParamsList.Contains("months");
+        HasIcdParam = value.ParamsList.Contains("icd10");
+        HasMinAmountParam = value.ParamsList.Contains("minAmount");
+        HasTopParam = value.ParamsList.Contains("top");
+        PatientResults.Clear();
+        SelectedPatient = null;
+        PatientSearchTerm = null;
+        Months = 6;
+        IcdCode = null;
+        MinAmount = 0;
+        TopCount = 20;
         SummaryCards.Clear();
         Rows.Clear();
         Columns.Clear();
@@ -130,19 +190,58 @@ public partial class ReportBrowserViewModel : ViewModelBase
         IsReportAvailable = true;
     }
 
-    /// <summary>اجرای گزارش انتخاب‌شده</summary>
+    /// <summary>جستجوی بیمار برای گزارش‌های بیمارمرکز — گام P1</summary>
     [RelayCommand]
-    private async Task ExecuteAsync()
+    private async Task SearchPatientsAsync()
     {
-        if (SelectedReport is null) { _snackbar.Info("ابتدا یک گزارش انتخاب کنید"); return; }
+        var term = PatientSearchTerm?.Trim();
+        if (string.IsNullOrEmpty(term)) { _snackbar.Info("نام، کد ملی، موبایل یا شماره پرونده را وارد کنید"); return; }
 
         IsBusy = true;
         try
         {
-            var from = FromDate.ToString("yyyy-MM-dd");
-            var to = ToDate.ToString("yyyy-MM-dd");
+            var response = await _api.GetAsync<PatientFormViewModel.SearchResponse>(
+                $"patients/search?term={Uri.EscapeDataString(term)}");
+            PatientResults.Clear();
+            foreach (var p in (response?.Data ?? new List<PatientFormViewModel.PatientDetail>()).Take(15))
+                PatientResults.Add(p);
+            if (PatientResults.Count == 0) _snackbar.Info("بیماری یافت نشد");
+        }
+        finally { IsBusy = false; }
+    }
+
+    /// <summary>انتخاب بیمار از نتایج — ثبت شناسه برای اجرای گزارش</summary>
+    partial void OnSelectedPatientChanged(PatientFormViewModel.PatientDetail? value)
+    {
+        if (value is not null)
+            _snackbar.Info($"بیمار انتخاب شد: {value.FirstName} {value.LastName} — پرونده {value.MedicalRecordNo}");
+    }
+
+    /// <summary>اجرای گزارش انتخاب‌شده — با پارامترهای داینامیک گام P1</summary>
+    [RelayCommand]
+    private async Task ExecuteAsync()
+    {
+        if (SelectedReport is null) { _snackbar.Info("ابتدا یک گزارش انتخاب کنید"); return; }
+        if (HasPatientParam && SelectedPatient is null)
+        { _snackbar.Error("این گزارش به بیمار نیاز دارد — ابتدا بیمار را جستجو و انتخاب کنید"); return; }
+
+        IsBusy = true;
+        try
+        {
+            // ساخت رشته پرس‌وجو — فقط پارامترهای مرتبط با گزارش جاری ارسال می‌شوند
+            var qs = new List<string>();
+            if (HasDateRange)
+            {
+                qs.Add($"fromDate={FromDate:yyyy-MM-dd}");
+                qs.Add($"toDate={ToDate:yyyy-MM-dd}");
+            }
+            if (HasPatientParam && SelectedPatient is not null) qs.Add($"patientId={SelectedPatient.Id}");
+            if (HasMonthsParam) qs.Add($"months={Months}");
+            if (HasIcdParam && !string.IsNullOrWhiteSpace(IcdCode)) qs.Add($"icd10={Uri.EscapeDataString(IcdCode.Trim())}");
+            if (HasMinAmountParam && MinAmount > 0) qs.Add($"minAmount={MinAmount}");
+            if (HasTopParam) qs.Add($"top={TopCount}");
             var response = await _api.GetAsync<ExecuteResponse>(
-                $"reports/execute/{SelectedReport.Id}?fromDate={from}&toDate={to}");
+                $"reports/execute/{SelectedReport.Id}" + (qs.Count > 0 ? "?" + string.Join("&", qs) : ""));
             var data = response?.Data;
             if (data is null)
             {

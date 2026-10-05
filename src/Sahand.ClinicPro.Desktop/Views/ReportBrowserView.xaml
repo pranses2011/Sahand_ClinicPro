@@ -95,35 +95,91 @@
                     <TextBlock Text="{Binding ReportDescription}" FontSize="11.5" Opacity="0.7" Margin="0,3,0,0" />
                 </StackPanel>
 
-                <!-- پارامترها -->
-                <WrapPanel Grid.Row="1" Margin="2,0,2,10"
-                           Visibility="{Binding IsReportAvailable, Converter={StaticResource BoolToVisibility}}">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,10,6"
-                                Visibility="{Binding HasDateRange, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Text="از: " VerticalAlignment="Center" FontSize="12" />
-                        <DatePicker SelectedDate="{Binding FromDate}" Width="120" FontSize="12" />
-                        <TextBlock Text=" تا: " VerticalAlignment="Center" FontSize="12" Margin="8,0,0,0" />
-                        <DatePicker SelectedDate="{Binding ToDate}" Width="120" FontSize="12" />
+                <!-- پارامترها — گام P1: پویا بر اساس گزارش انتخاب‌شده -->
+                <StackPanel Grid.Row="1" Margin="2,0,2,10"
+                            Visibility="{Binding IsReportAvailable, Converter={StaticResource BoolToVisibility}}">
+                    <WrapPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,10,6"
+                                    Visibility="{Binding HasDateRange, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="از: " VerticalAlignment="Center" FontSize="12" />
+                            <DatePicker SelectedDate="{Binding FromDate}" Width="120" FontSize="12" />
+                            <TextBlock Text=" تا: " VerticalAlignment="Center" FontSize="12" Margin="8,0,0,0" />
+                            <DatePicker SelectedDate="{Binding ToDate}" Width="120" FontSize="12" />
+                        </StackPanel>
+                        <!-- تعداد ماه — گزارش انقضا / بدون مراجعه -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,10,6"
+                                    Visibility="{Binding HasMonthsParam, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="ماه: " VerticalAlignment="Center" FontSize="12" />
+                            <TextBox Text="{Binding Months, UpdateSourceTrigger=PropertyChanged}" Width="56" FontSize="12"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="۶" />
+                        </StackPanel>
+                        <!-- کد ICD — گزارش بیماری مزمن -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,10,6"
+                                    Visibility="{Binding HasIcdParam, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="کد ICD: " VerticalAlignment="Center" FontSize="12" />
+                            <TextBox Text="{Binding IcdCode, UpdateSourceTrigger=PropertyChanged}" Width="90" FontSize="12"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="مثلاً E11" />
+                        </StackPanel>
+                        <!-- حداقل مبلغ — لیست بدهکاران -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,10,6"
+                                    Visibility="{Binding HasMinAmountParam, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="حداقل مبلغ: " VerticalAlignment="Center" FontSize="12" />
+                            <TextBox Text="{Binding MinAmount, UpdateSourceTrigger=PropertyChanged}" Width="110" FontSize="12"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="ریال" />
+                        </StackPanel>
+                        <!-- سقف نتایج -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,10,6"
+                                    Visibility="{Binding HasTopParam, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="تعداد: " VerticalAlignment="Center" FontSize="12" />
+                            <TextBox Text="{Binding TopCount, UpdateSourceTrigger=PropertyChanged}" Width="56" FontSize="12"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="۲۰" />
+                        </StackPanel>
+                        <Button Command="{Binding ExecuteCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,6">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Play" Width="14" Height="14" VerticalAlignment="Center" />
+                                <TextBlock Text="اجرای گزارش" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding ExportExcelCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FileExcel" Width="14" Height="14" VerticalAlignment="Center" />
+                                <TextBlock Text="Excel" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6" ToolTip="چاپ مستقیم نتایج">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Printer" Width="14" Height="14" VerticalAlignment="Center" />
+                                <TextBlock Text="چاپ" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </WrapPanel>
+                    <!-- انتخابگر بیمار — گزارش صورت‌حساب بیمار -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4"
+                                Visibility="{Binding HasPatientParam, Converter={StaticResource BoolToVisibility}}">
+                        <materialDesign:PackIcon Kind="AccountSearch" Width="18" Height="18" VerticalAlignment="Center"
+                                                 Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
+                        <TextBlock Text="بیمار: " VerticalAlignment="Center" FontSize="12" Margin="6,0,6,0" />
+                        <TextBox Text="{Binding PatientSearchTerm, UpdateSourceTrigger=PropertyChanged}" Width="220" FontSize="12"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 materialDesign:HintAssist.Hint="نام / کد ملی / موبایل / شماره پرونده" />
+                        <Button Command="{Binding SearchPatientsCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="6,0,0,0">
+                            <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />
+                        </Button>
+                        <ComboBox ItemsSource="{Binding PatientResults}" SelectedItem="{Binding SelectedPatient}"
+                                  Width="300" Margin="10,0,0,0" FontSize="12" materialDesign:HintAssist.Hint="بیمار یافت‌شده">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft">
+                                        <TextBlock Text="{Binding MedicalRecordNo}" FontFamily="Consolas" FontSize="11" Opacity="0.7" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding FirstName}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding LastName}" Margin="4,0,0,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding NationalCode}" FontFamily="Consolas" FontSize="11" Opacity="0.55" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </StackPanel>
-                    <Button Command="{Binding ExecuteCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,6">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Play" Width="14" Height="14" VerticalAlignment="Center" />
-                            <TextBlock Text="اجرای گزارش" Margin="6,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Command="{Binding ExportExcelCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="FileExcel" Width="14" Height="14" VerticalAlignment="Center" />
-                            <TextBlock Text="Excel" Margin="6,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6" ToolTip="چاپ مستقیم نتایج">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Printer" Width="14" Height="14" VerticalAlignment="Center" />
-                            <TextBlock Text="چاپ" Margin="6,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                </WrapPanel>
+                </StackPanel>
 
                 <!-- پیام گزارش در دسترس نیست -->
                 <Border Grid.Row="2" Padding="14,10" CornerRadius="10" Background="#FFF8E1" Margin="2,0,2,10"
