@@ -166,3 +166,6 @@ _ReSharper*/
 
 # فایل‌های موقت مولد اسکرین‌شات
 scripts/_mockups/
+
+# ═══ چرخه دوازدهم (D2): آرشیو LicensePortal — فقط تاریخچه، بدون بیلد/توسعه ═══
+src/Sahand.ClinicPro.LicensePortal/
