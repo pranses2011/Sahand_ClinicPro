@@ -39,6 +39,23 @@ public class HrController : ApiBaseController
         return ToResponse(result);
     }
 
+    /// <summary>
+    /// ویرایش اطلاعات حقوقی پرسنل — حقوق پایه + درصد حقوق از سود خدمات انجامی
+    /// (چرخه نهم؛ درصد فقط از سود خدمات خود پرسنل اعمال می‌شود نه کل دریافتی)
+    /// </summary>
+    [HttpPut("employees/{id:long}/salary")]
+    [HasPermission("patients.create")]
+    public async Task<IActionResult> UpdateEmployeeSalary(long id,
+        [FromBody] UpdateEmployeeSalaryBody body)
+    {
+        var result = await _mediator.Send(new UpdateEmployeeSalaryCommand(
+            id, body.BaseSalary, body.CommissionPercent));
+        return ToResponse(result);
+    }
+
+    /// <summary>بدنه ویرایش اطلاعات حقوقی پرسنل</summary>
+    public record UpdateEmployeeSalaryBody(decimal BaseSalary, decimal CommissionPercent);
+
     /// <summary>ثبت درخواست مرخصی</summary>
     [HttpPost("leaves")]
     [HasPermission("patients.create")]
