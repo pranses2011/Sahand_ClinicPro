@@ -493,6 +493,11 @@ public partial class InvoiceFormViewModel : ObservableObject
         IsBusy = true;
         var company = InsuranceIndex > 0 ? InsuranceCompanies[InsuranceIndex - 1] : null;
 
+        // پزشک انتخاب‌شده سطح فاکتور — به همه اقلام منتسب می‌شود (چرخه دهم) تا
+        // انتساب خودکار «انجام‌دهنده از پرسنل مرتبط پزشک» در سرور فعال شود و
+        // سود خدمات در فیش حقوقی پزشک (حقوق درصدی) لحاظ گردد
+        var doctor = DoctorIndex >= 0 && DoctorIndex < Doctors.Count ? Doctors[DoctorIndex] : null;
+
         // ۱. ثبت فاکتور
         var invoice = await _api.PostAsync<InvoiceCreateResult>("invoices", new
         {
@@ -509,7 +514,8 @@ public partial class InvoiceFormViewModel : ObservableObject
                 quantity = i.Quantity,
                 unitPrice = i.UnitPrice,
                 discount = 0m,
-                performedById = i.Performer?.Id
+                performedById = i.Performer?.Id,
+                doctorId = doctor?.Id
             }),
             description = $"فاکتور دستی — {Patient.FullName}"
         });
