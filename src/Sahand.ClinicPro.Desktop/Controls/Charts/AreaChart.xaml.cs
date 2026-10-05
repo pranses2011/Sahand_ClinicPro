@@ -96,34 +96,14 @@ public partial class AreaChart : UserControl
         for (var i = 0; i < pts.Count; i++)
             series.Add(new Point(X(i), Y(pts[i].Value)));
 
-        // منحنی نرم با بزیه در نقاط میانی — ظاهر حرفه‌ای بدون کتابخانه بیرونی
-        var figure = new PathFigure { StartPoint = series[0] };
-        if (series.Count == 1)
-        {
-            figure.StartPoint = new Point(series[0].X - 4, series[0].Y);
-            figure.Segments.Add(new LineSegment(new Point(series[0].X + 4, series[0].Y), true));
-        }
-        else
-        {
-            for (var i = 1; i < series.Count; i++)
-            {
-                var prev = series[i - 1];
-                var cur = series[i];
-                var mid = new Point((prev.X + cur.X) / 2, (prev.Y + cur.Y) / 2);
-                figure.Segments.Add(new QuadraticBezierSegment(prev, mid, cur, true));
-            }
-        }
+        // خط سری — قطعات مستقیم برای دقت کامل روی هر نقطه (بدون قله گم‌شده در هموارسازی)
+        var lineFigure = new PathFigure { StartPoint = series[0] };
+        lineFigure.Segments.Add(new PolyLineSegment(series, true));
 
         // مسیر سطح (تا کف و بستن) — گرادیان ملایم
         var areaFigure = new PathFigure { StartPoint = new Point(series[0].X, Y(min)) };
         areaFigure.Segments.Add(new LineSegment(series[0], true));
-        for (var i = 1; i < series.Count; i++)
-        {
-            var prev = series[i - 1];
-            var cur = series[i];
-            var mid = new Point((prev.X + cur.X) / 2, (prev.Y + cur.Y) / 2);
-            areaFigure.Segments.Add(new QuadraticBezierSegment(prev, mid, cur, true));
-        }
+        areaFigure.Segments.Add(new PolyLineSegment(series, true));
         areaFigure.Segments.Add(new LineSegment(new Point(series[^1].X, Y(min)), true));
 
         var grad = new LinearGradientBrush
@@ -144,7 +124,7 @@ public partial class AreaChart : UserControl
         // خط اصلی سری
         PlotCanvas.Children.Add(new Path
         {
-            Data = new PathGeometry(new[] { figure }),
+            Data = new PathGeometry(new[] { lineFigure }),
             Stroke = ChartPalette.Primary,
             StrokeThickness = 2.2,
             StrokeLineJoin = PenLineJoin.Round,

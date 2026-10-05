@@ -111,7 +111,7 @@ public partial class ColumnChart : UserControl
             var lbl = new TextBlock
             {
                 Text = p.Label, FontSize = 9, Opacity = 0.65, Foreground = Foreground,
-                TextTrimming = CharacterEllipsis, Width = slot + 4, TextAlignment = TextAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis, Width = slot + 4, TextAlignment = TextAlignment.Center,
             };
             Canvas.SetLeft(lbl, x + slot / 2 - (slot + 4) / 2);
             Canvas.SetTop(lbl, padT + height + 4);

@@ -2,12 +2,10 @@ using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Sahand.ClinicPro.Desktop.Controls.Charts;
 using Sahand.ClinicPro.Desktop.Services;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
-
-/// <summary>ستون نمودار درآمد داشبورد — ارتفاع میله محاسبه‌شده</summary>
-public record DashboardChartPoint(string Label, decimal Amount, string AmountText, double BarHeight);
 
 /// <summary>ردیف لیست نوبت‌های پیش‌رو</summary>
 public record UpcomingAppointmentRow(
@@ -49,8 +47,8 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private string _connectionStatus = "در حال بارگذاری…";
     [ObservableProperty] private string _errorMessage = string.Empty;
 
-    /// <summary>داده نمودار درآمد ۷ روز</summary>
-    public ObservableCollection<DashboardChartPoint> RevenueChart { get; } = new();
+    /// <summary>داده نمودار درآمد ۷ روز — نمودار سطحی (نوع درست برای روند زمانی)</summary>
+    public ObservableCollection<ChartPointData> RevenueChart { get; } = new();
 
     /// <summary>نوبت‌های پیش‌رو امروز</summary>
     public ObservableCollection<UpcomingAppointmentRow> UpcomingAppointments { get; } = new();
@@ -96,27 +94,18 @@ public partial class DashboardViewModel : ViewModelBase
             PendingLabOrders = alerts.TryGetProperty("pendingLabOrders", out var lab) ? lab.GetInt32() : 0;
         }
 
-        // ۳) نمودار درآمد ۷ روز
+        // ۳) نمودار درآمد ۷ روز — چرخه یازدهم: میله‌ای سطح‌خورده بود؛
+        // برای «روند در طول زمان» نوع درست نمودار، سطحی/خطی است
         var chart = await _api.GetAsync<JsonElement>("dashboard/revenue-chart?days=7");
         RevenueChart.Clear();
         if (chart.ValueKind == JsonValueKind.Array)
         {
-            var points = new List<(string Label, decimal Amount)>();
             foreach (var item in chart.EnumerateArray())
             {
-                points.Add((
-                    item.TryGetProperty("label", out var l) ? l.GetString() ?? "—" : "—",
-                    item.TryGetProperty("amount", out var a) && a.ValueKind != JsonValueKind.Null
-                        ? a.GetDecimal() : 0));
-            }
-
-            // مقیاس‌بندی میله‌ها — بلندترین ۱۱۰ پیکسل
-            var maxAmount = points.Count > 0 ? points.Max(p => p.Amount) : 0;
-            foreach (var (label, amount) in points)
-            {
-                var height = maxAmount > 0 ? (double)amount / (double)maxAmount * 110 : 0;
-                RevenueChart.Add(new DashboardChartPoint(label, amount, amount.ToString("N0"),
-                    Math.Max(amount > 0 ? 3 : 1, height)));
+                var label = item.TryGetProperty("label", out var l) ? l.GetString() ?? "—" : "—";
+                var amount = item.TryGetProperty("amount", out var a) && a.ValueKind != JsonValueKind.Null
+                    ? (double)a.GetDecimal() : 0;
+                RevenueChart.Add(new ChartPointData(label, amount, $"{label}: {amount:N0} ریال"));
             }
         }
 

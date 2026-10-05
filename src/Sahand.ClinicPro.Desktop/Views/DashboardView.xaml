@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+             xmlns:charts="clr-namespace:Sahand.ClinicPro.Desktop.Controls.Charts"
              mc:Ignorable="d"
              FlowDirection="RightToLeft"
              FontFamily="Vazirmatn, Segoe UI, Tahoma">
@@ -172,7 +173,7 @@
                         </Grid.RowDefinitions>
 
                         <DockPanel Grid.Row="0" Margin="0,0,0,4">
-                            <TextBlock Text="نمودار درآمد ۷ روز اخیر"
+                            <TextBlock Text="روند درآمد ۷ روز اخیر"
                                        FontSize="14" FontWeight="Bold"
                                        VerticalAlignment="Center" />
                             <TextBlock Text="(ریال)"
@@ -184,39 +185,10 @@
                         <TextBlock Grid.Row="1" Text="{Binding ConnectionStatus}"
                                    FontSize="10" Opacity="0.6" Margin="0,0,0,8" />
 
-                        <!-- میله‌های نمودار -->
-                        <ItemsControl Grid.Row="2"
-                                      ItemsSource="{Binding RevenueChart}"
-                                      VerticalAlignment="Stretch">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal"
-                                                HorizontalAlignment="Center" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Width="52" Margin="3,0"
-                                                VerticalAlignment="Bottom"
-                                                ToolTip="{Binding AmountText, StringFormat={}{0:N0} ریال}">
-                                        <TextBlock Text="{Binding AmountText}"
-                                                   FontSize="8" Opacity="0.7"
-                                                   HorizontalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" />
-                                        <Border Height="{Binding BarHeight}"
-                                                Background="{DynamicResource MaterialDesign.Brush.Primary}"
-                                                CornerRadius="4,4,0,0"
-                                                VerticalAlignment="Bottom"
-                                                Margin="0,4,0,0"
-                                                Opacity="0.85" />
-                                        <TextBlock Text="{Binding Label}"
-                                                   FontSize="8" Opacity="0.6"
-                                                   HorizontalAlignment="Center"
-                                                   Margin="0,4,0,0" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <!-- نمودار سطحی — نوع درست برای روند زمانی (چرخه یازدهم) -->
+                        <charts:AreaChart Grid.Row="2"
+                                          Points="{Binding RevenueChart}"
+                                          ValueFormat="N0" />
                     </Grid>
                 </materialDesign:Card>
 
