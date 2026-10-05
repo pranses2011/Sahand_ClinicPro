@@ -799,6 +799,16 @@ function ls_db_migrate(): array
             'activation_count'    => 'INT NOT NULL DEFAULT 0',
             'notes'                => 'TEXT NULL',
             'updated_at'           => 'DATETIME NULL',
+            // چرخه دوازدهم — اطلاعات کامل درمانگاه
+            'clinic_manager'       => 'VARCHAR(120) NULL',
+            'clinic_email'         => 'VARCHAR(160) NULL',
+            'clinic_city'          => 'VARCHAR(100) NULL',
+            'clinic_address'       => 'VARCHAR(300) NULL',
+        ],
+        'ls_messages'   => [
+            'delivered_at' => 'DATETIME NULL',
+            'read_at'      => 'DATETIME NULL',
+            'created_by'   => 'INT UNSIGNED NULL',
         ],
         'ls_admins'     => [
             'failed_attempts' => 'INT NOT NULL DEFAULT 0',
@@ -829,4 +839,208 @@ function ls_db_migrate(): array
     }
 
     return $done;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   چرخه دوازدهم — نمودارهای SVG خالص پنل (بدون هیچ وابستگی خارجی)
+   هر تابع: نقاط [label=>عنوان, value=>مقدار] + پالت => SVG کامل RTL
+   ═══════════════════════════════════════════════════════════════════ */
+
+/** پالت ۱۰ رنگی نمودارها — هم‌خوان با پالت دسکتاپ */
+function ls_chart_palette(): array
+{
+    return ['#1565c0', '#00897b', '#f9a825', '#e53935', '#6a1b9a',
+            '#00acc1', '#43a047', '#fb8c00', '#5e35b1', '#d81b60'];
+}
+
+/** نمودار ستونی SVG — برای مقایسه مقوله‌ای */
+function ls_svg_column_chart(array $points, string $unit = ''): string
+{
+    if (count($points) === 0) {
+        return '<div class="chart-empty">داده‌ای برای نمایش نیست</div>';
+    }
+    $w = 640; $h = 220; $pad = 30; $gap = 10;
+    $n = max(1, count($points));
+    $bw = max(14, min(56, (int)(($w - 2 * $pad - ($n - 1) * $gap) / $n)));
+    $maxVal = max(1.0, (float)max(array_column($points, 'value')));
+    $palette = ls_chart_palette();
+    $svg = '<svg viewBox="0 0 ' . $w . ' ' . $h . '" class="chart chart-column" preserveAspectRatio="xMidYMid meet">';
+    $i = 0;
+    $bars = '';
+    foreach ($points as $p) {
+        $x = $pad + $i * ($bw + $gap) + (int)((($w - 2 * $pad - $n * $bw - ($n - 1) * $gap) / 2));
+        $bh = (int)(($h - 2 * $pad) * ((float)$p['value'] / $maxVal));
+        $y = $h - $pad - $bh;
+        $color = $palette[$i % count($palette)];
+        $bars .= '<g class="bar-g">'
+            . '<rect class="bar" x="' . $x . '" y="' . $y . '" width="' . $bw . '" height="' . max(2, $bh) . '" rx="5" fill="' . $color . '"><title>'
+            . ls_e($p['label']) . ': ' . number_format((float)$p['value']) . ' ' . ls_e($unit) . '</title></rect>'
+            . '</g>';
+        // برچسب زیر ستون — کوتاه‌شده برای جا شدن
+        $lbl = mb_substr((string)$p['label'], 0, 8);
+        $bars .= '<text x="' . ($x + $bw / 2) . '" y="' . ($h - $pad + 15) . '" text-anchor="middle" class="chart-label">' . ls_e($lbl) . '</text>';
+        $i++;
+    }
+    // خط پایه
+    $svg .= '<line x1="' . $pad . '" y1="' . ($h - $pad) . '" x2="' . ($w - $pad) . '" y2="' . ($h - $pad) . '" stroke="#e0e6ed" stroke-width="1.5"/>';
+    $svg .= $bars . '</svg>';
+    return $svg;
+}
+
+/** نمودار سطحی/روند SVG — برای روند زمانی (خط + گرادیان زیر منحنی) */
+function ls_svg_area_chart(array $points, string $unit = ''): string
+{
+    $n = count($points);
+    if ($n === 0) {
+        return '<div class="chart-empty">داده‌ای برای نمایش نیست</div>';
+    }
+    $w = 640; $h = 220; $pad = 34;
+    $maxVal = max(1.0, (float)max(array_column($points, 'value')));
+    $step = $n > 1 ? ($w - 2 * $pad) / ($n - 1) : 0;
+    // مسیر خط
+    $d = '';
+    $dots = '';
+    foreach ($points as $i => $p) {
+        $x = $pad + $i * $step;
+        $y = $h - $pad - (($h - 2 * $pad) * ((float)$p['value'] / $maxVal));
+        $d .= ($i === 0 ? 'M' : ' L') . sprintf('%.1f,%.1f', $x, $y);
+        $dots .= '<circle class="dot" cx="' . sprintf('%.1f', $x) . '" cy="' . sprintf('%.1f', $y) . '" r="4">'
+            . '<title>' . ls_e($p['label']) . ': ' . number_format((float)$p['value']) . ' ' . ls_e($unit) . '</title></circle>';
+    }
+    $area = $d . ' L' . sprintf('%.1f', $pad + ($n - 1) * $step) . ',' . ($h - $pad)
+        . ' L' . $pad . ',' . ($h - $pad) . ' Z';
+    $svg = '<svg viewBox="0 0 ' . $w . ' ' . $h . '" class="chart chart-area" preserveAspectRatio="xMidYMid meet">'
+        . '<defs><linearGradient id="ag' . random_int(1000, 9999) . '" x1="0" y1="0" x2="0" y2="1">'
+        . '<stop offset="0%" stop-color="#1565c0" stop-opacity=".38"/><stop offset="100%" stop-color="#1565c0" stop-opacity=".02"/>'
+        . '</linearGradient></defs>'
+        . '<path class="area-fill" d="' . $area . '" fill="url(#ag)" stroke="none"/>'
+        . '<path class="area-line" d="' . $d . '" fill="none" stroke="#1565c0" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'
+        . $dots;
+    // برچسب اول/آخر
+    $first = mb_substr((string)$points[0]['label'], 0, 10);
+    $last = mb_substr((string)$points[$n - 1]['label'], 0, 10);
+    $svg .= '<text x="' . $pad . '" y="' . ($h - $pad + 16) . '" text-anchor="middle" class="chart-label">' . ls_e($first) . '</text>';
+    $svg .= '<text x="' . sprintf('%.1f', $pad + ($n - 1) * $step) . '" y="' . ($h - $pad + 16) . '" text-anchor="middle" class="chart-label">' . ls_e($last) . '</text>';
+    $svg .= '</svg>';
+    return $svg;
+}
+
+/** نمودار دونات SVG — برای سهم از کل (قطاع از بالای حلقه + جمع مرکزی) */
+function ls_svg_doughnut_chart(array $points, string $unit = '', string $centerTop = ''): string
+{
+    // حذف صفرها برای خوانایی
+    $points = array_values(array_filter($points, static fn($p) => (float)$p['value'] > 0));
+    if (count($points) === 0) {
+        return '<div class="chart-empty">داده‌ای برای نمایش نیست</div>';
+    }
+    $total = (float)array_sum(array_column($points, 'value'));
+    if ($total <= 0) {
+        return '<div class="chart-empty">داده‌ای برای نمایش نیست</div>';
+    }
+    $size = 200; $cx = $size / 2; $cy = $size / 2; $r = 78; $sw = 34;
+    $palette = ls_chart_palette();
+    // شروع از بالای حلقه (ساعت ۱۲) — جهت عقربه‌های ساعت
+    $angle = -M_PI / 2;
+    $seg = '';
+    $legend = '';
+    foreach ($points as $i => $p) {
+        $frac = (float)$p['value'] / $total;
+        $a2 = $angle + $frac * 2 * M_PI - 0.02; // شکاف کوچک بین قطاع‌ها
+        $x1 = $cx + $r * cos($angle); $y1 = $cy + $r * sin($angle);
+        $x2 = $cx + $r * cos($a2);   $y2 = $cy + $r * sin($a2);
+        $large = $frac > 0.5 ? 1 : 0;
+        $color = $palette[$i % count($palette)];
+        $seg .= '<path class="seg" d="M' . sprintf('%.1f,%.1f', $x1, $y1)
+            . ' A' . $r . ',' . $r . ' 0 ' . $large . ' 1 ' . sprintf('%.1f,%.1f', $x2, $y2)
+            . '" fill="none" stroke="' . $color . '" stroke-width="' . $sw . '" stroke-linecap="butt">'
+            . '<title>' . ls_e($p['label']) . ': ' . number_format((float)$p['value']) . ' (' . round($frac * 100, 1) . '٪)</title></path>';
+        $legend .= '<span class="lg-item"><i style="background:' . $color . '"></i>' . ls_e($p['label'])
+            . ' <b>' . round($frac * 100, 1) . '٪</b></span>';
+        $angle += $frac * 2 * M_PI;
+    }
+    $center = '<text x="' . $cx . '" y="' . ($cy - 5) . '" text-anchor="middle" class="donut-center">'
+        . ls_e($centerTop !== '' ? $centerTop : ls_fa_num(number_format($total)))
+        . '</text>'
+        . '<text x="' . $cx . '" y="' . ($cy + 17) . '" text-anchor="middle" class="donut-unit">' . ls_e($unit) . '</text>';
+    return '<div class="donut-wrap"><svg viewBox="0 0 ' . $size . ' ' . $size . '" class="chart chart-donut">'
+        . $seg . $center . '</svg><div class="donut-legend">' . $legend . '</div></div>';
+}
+
+/** نمودار میله‌ای افقی SVG — برای رتبه‌بندی (رشد میله از راست به چپ مطابق RTL) */
+function ls_svg_hbar_chart(array $points, string $unit = ''): string
+{
+    $points = array_values(array_filter($points, static fn($p) => (float)$p['value'] > 0));
+    if (count($points) === 0) {
+        return '<div class="chart-empty">داده‌ای برای نمایش نیست</div>';
+    }
+    $rowH = 34; $lblW = 190; $valW = 92; $w = 640;
+    $h = count($points) * $rowH + 16;
+    $maxVal = max(1.0, (float)max(array_column($points, 'value')));
+    $barMax = $w - $lblW - $valW - 40;
+    $palette = ls_chart_palette();
+    $svg = '<svg viewBox="0 0 ' . $w . ' ' . $h . '" class="chart chart-hbar" preserveAspectRatio="xMidYMid meet">';
+    foreach ($points as $i => $p) {
+        $y = 8 + $i * $rowH;
+        $bw = (int)($barMax * ((float)$p['value'] / $maxVal));
+        $color = $palette[$i % count($palette)];
+        // برچسب — سمت راست (شروع RTL)
+        $svg .= '<text x="' . ($w - 12) . '" y="' . ($y + 17) . '" text-anchor="end" class="chart-label">'
+            . ls_e(mb_substr((string)$p['label'], 0, 24)) . '</text>';
+        // میله — از راست به چپ رشد می‌کند
+        $svg .= '<rect class="hbar" x="' . ($w - 12 - $lblW - $bw) . '" y="' . $y . '" width="' . max(4, $bw) . '" height="20" rx="6" fill="' . $color . '">'
+            . '<title>' . ls_e($p['label']) . ': ' . number_format((float)$p['value']) . ' ' . ls_e($unit) . '</title></rect>';
+        // مقدار — انتهای چپ میله
+        $svg .= '<text x="' . ($w - 12 - $lblW - $bw - 8) . '" y="' . ($y + 15) . '" text-anchor="end" class="chart-value">'
+            . ls_fa_num(number_format((float)$p['value'])) . '</text>';
+    }
+    return $svg . '</svg>';
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   چرخه دوازدهم — سامانه پیام مستقیم به داشبورد درمانگاه
+   ═══════════════════════════════════════════════════════════════════ */
+
+/**
+ * پیام‌های در انتظار تحویل یک لایسنس + علامت‌گذاری تحویل‌شده.
+ * در پاسخ activate/heartbeat به کلاینت افزوده می‌شود؛ کلاینت در داشبورد
+ * خود (کارت «پیام‌های پشتیبانی») نمایش می‌دهد.
+ */
+function ls_messages_fetch_and_deliver(int $licenseId): array
+{
+    try {
+        $db = ls_db();
+        $stmt = $db->prepare(
+            'SELECT id, title, body, level, DATE_FORMAT(created_at, "%Y-%m-%d") AS d
+             FROM ls_messages WHERE license_id = ? AND delivered_at IS NULL
+             ORDER BY id ASC LIMIT 10');
+        $stmt->execute([$licenseId]);
+        $rows = $stmt->fetchAll();
+        if (count($rows) === 0) {
+            return [];
+        }
+        $db->prepare('UPDATE ls_messages SET delivered_at = NOW() WHERE license_id = ? AND delivered_at IS NULL')
+            ->execute([$licenseId]);
+        return array_map(static fn($r) => [
+            'id'    => (int)$r['id'],
+            'title' => (string)$r['title'],
+            'body'  => (string)$r['body'],
+            'level' => (string)$r['level'],
+            'date'  => (string)$r['d'],
+        ], $rows);
+    } catch (Throwable $e) {
+        ls_log_error('messages:fetch', $e); // شکست پیام نباید تپ‌قلب را بزند
+        return [];
+    }
+}
+
+/** شمارش پیام‌های تحویل‌نشده یک لایسنس — برای نشان داشبورد پنل */
+function ls_messages_pending_count(int $licenseId): int
+{
+    try {
+        $stmt = ls_db()->prepare('SELECT COUNT(*) c FROM ls_messages WHERE license_id = ? AND delivered_at IS NULL');
+        $stmt->execute([$licenseId]);
+        return (int)$stmt->fetchColumn();
+    } catch (Throwable $e) {
+        return 0;
+    }
 }
