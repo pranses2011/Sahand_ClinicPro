@@ -75,6 +75,9 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IApiClient>(sp =>
             sp.GetRequiredService<ApiClient>());
 
+        // اتصال بلادرنگ SignalR — Hubهای صف و اعلان (گام R1)
+        services.AddSingleton<IRealtimeClient, RealtimeClientService>();
+
         // پنجره‌ها و ViewModelها
         services.AddSingleton<LoginWindow>();
         services.AddSingleton<MainWindow>();

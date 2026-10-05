@@ -2,6 +2,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Sahand.ClinicPro.Application.Common.Behaviors;
 
 namespace Sahand.ClinicPro.Application;
@@ -42,6 +43,9 @@ public static class DependencyInjection
         // ثبت نگاشتگر‌های Mapperly — تولید کد در زمان کامپایل (گام V11)
         services.AddScoped<Common.Mappings.PatientMapper>();
         services.AddScoped<Common.Mappings.DoctorMapper>();
+
+        // اتصال بلادرنگ — پیش‌فرض بی‌اثر؛ در API با SignalRRealtimeNotifier بازنویسی می‌شود (گام R1)
+        services.TryAddScoped<Interfaces.IRealtimeNotifier, Interfaces.NullRealtimeNotifier>();
 
         // ثبت FluentValidation — اعتبارسنج‌های فارسی برای هر Command/Query
         services.AddValidatorsFromAssembly(assembly);

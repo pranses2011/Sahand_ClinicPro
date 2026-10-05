@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
 using Sahand.ClinicPro.Domain.Enums;
@@ -19,9 +20,14 @@ public class UpdateReceptionStatusCommandHandler
     : IRequestHandler<UpdateReceptionStatusCommand, Result>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IRealtimeNotifier _realtime;
 
-    /// <summary>سازنده با تزریق واحد کار</summary>
-    public UpdateReceptionStatusCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    /// <summary>سازنده با تزریق واحد کار و اتصال بلادرنگ صف (گام R1)</summary>
+    public UpdateReceptionStatusCommandHandler(IUnitOfWork unitOfWork, IRealtimeNotifier realtime)
+    {
+        _unitOfWork = unitOfWork;
+        _realtime = realtime;
+    }
 
     /// <summary>اجرای تغییر وضعیت</summary>
     public async Task<Result> Handle(UpdateReceptionStatusCommand request,
@@ -46,6 +52,10 @@ public class UpdateReceptionStatusCommandHandler
         }
 
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        // پخش بلادرنگ — تغییر وضعیت (ترخیص/لغو و...) برای صف زنده شعبه (گام R1)
+        await _realtime.QueueChangedAsync(reason: "status", cancellationToken: cancellationToken);
+
         return Result.Success();
     }
 }

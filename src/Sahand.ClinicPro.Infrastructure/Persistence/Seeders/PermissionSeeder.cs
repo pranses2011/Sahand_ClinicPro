@@ -53,6 +53,27 @@ public class PermissionSeeder : IDataSeeder
             }
         }
 
+        // دسترسی‌های ویژه خارج از الگوی ماژول×عملیات (گام R1 — پرکردن خلأ قبلی همزمان)
+        var specials = new (string Name, string Module, string Action, string Category, string Description)[]
+        {
+            ("sms.bulksend", "sms", "bulksend", "ویژه", "ارسال دسته‌ای پیامک"),
+            ("notifications.manage", "notifications", "manage", "ویژه", "مدیریت و ایجاد اعلان درون‌برنامه‌ای"),
+            ("emr.advanced", "emr", "advanced", "ویژه", "پرونده بالینی پیشرفته (رشد/سابقه خانوادگی/مراقبت مزمن)"),
+            ("payroll.manage", "payroll", "manage", "ویژه", "مدیریت حقوق و فیش حقوقی پرسنل")
+        };
+        foreach (var (name, module, action, category, description) in specials)
+        {
+            var exists = await _context.Permissions.AnyAsync(p => p.Name == name, cancellationToken);
+            if (!exists)
+            {
+                _context.Permissions.Add(new Permission
+                {
+                    Name = name, Module = module, Action = action,
+                    Category = category, Description = description
+                });
+            }
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
     }
 }

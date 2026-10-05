@@ -22,6 +22,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IThemeService _theme;
     private readonly INavigationService _navigation;
     private readonly ISnackbarService _snackbar;
+    private readonly IRealtimeClient _realtime;
 
     /// <summary>تایمر ساعت لحظه‌ای — هر ثانیه به‌روزرسانی</summary>
     private readonly DispatcherTimer _clock = new() { Interval = TimeSpan.FromSeconds(1) };
@@ -106,13 +107,15 @@ public partial class MainWindowViewModel : ObservableObject
         SepasViewModel sepasVm,
         EPrescriptionViewModel erxVm,
         LicenseStatusViewModel licenseVm,
-        ComplementaryViewModel complementaryVm)
+        ComplementaryViewModel complementaryVm,
+        IRealtimeClient realtime)
     {
         _api = api;
         _tokens = tokens;
         _theme = theme;
         _navigation = navigation;
         _snackbar = snackbar;
+        _realtime = realtime;
 
         CurrentUser = tokens.Username ?? "کاربر";
         CurrentDate = PersianDateHelper.ToShamsi(DateTime.Now);
@@ -198,6 +201,35 @@ public partial class MainWindowViewModel : ObservableObject
 
         // اتصال رویداد انقضای نشست — بازگشت به صفحه ورود
         _api.SessionExpired += (_, _) => OnSessionExpired();
+
+        // ═══ اتصال بلادرنگ SignalR — گام R1 ═══
+        // تغییر صف → تازه‌سازی فوری صفحات صف‌دار (پذیرش/ویزیت)
+        _realtime.QueueChanged += async (_, args) =>
+        {
+            var page = CurrentPage;
+            if (page is ReceptionsViewModel receptions)
+                await receptions.LoadAsync();
+            else if (page is VisitsViewModel visits)
+                await visits.LoadAsync();
+        };
+
+        // اعلان جدید → شمارنده زنگ + پیام شناور
+        _realtime.NotificationReceived += (_, args) =>
+        {
+            UnreadCount++;
+            _snackbar.Info($"🔔 {args.Title}");
+        };
+
+        // هشدار سراسری → پیام شناور هشدار
+        _realtime.BroadcastAlert += (_, args) =>
+            _snackbar.Info($"⚠ {args.Title}: {args.Message}");
+
+        // وضعیت اتصال بلادرنگ در StatusBar
+        _realtime.ConnectionStateChanged += (_, _) =>
+            ConnectionStatus = _realtime.IsConnected ? "متصل • بلادرنگ فعال" : "متصل";
+
+        // شروع اتصال پس از ورود — MainWindow فقط با توکن معتبر باز می‌شود
+        _ = _realtime.StartAsync();
     }
 
     /// <summary>فهرست آیتم‌های ناوبری</summary>
@@ -316,10 +348,11 @@ public partial class MainWindowViewModel : ObservableObject
         public string Name { get; set; } = string.Empty;
     }
 
-    /// <summary>خروج از حساب — ابطال توکن و بازگشت به ورود</summary>
+    /// <summary>خروج از حساب — ابطال توکن، قطع بلادرنگ و بازگشت به ورود</summary>
     [RelayCommand]
     private async Task LogoutAsync()
     {
+        await _realtime.StopAsync();
         await _api.LogoutAsync();
         OnSessionExpired();
     }
@@ -331,6 +364,8 @@ public partial class MainWindowViewModel : ObservableObject
     /// <summary>بازگشت به صفحه ورود — بستن پنجره فعلی و باز کردن ورود</summary>
     private void OnSessionExpired()
     {
+        // قطع اتصال بلادرنگ — نشست دیگر معتبر نیست (گام R1)
+        _ = _realtime.StopAsync();
         System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
             var login = App.Services.GetRequiredService(typeof(LoginWindow)) as LoginWindow;
