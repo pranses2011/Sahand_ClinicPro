@@ -16,6 +16,7 @@ namespace Sahand.ClinicPro.API.Controllers;
 [ApiController]
 [Route("api/v1/lookups")]
 [Authorize]
+// عمدتاً عمومی برای همه کاربران واردشده (ممیزی چرخه ۱۲): فهرست‌های مرجع فقط-خواندنی (تخصص/بیمه/دارو/خدمت) — خواندن برای همه فرم‌ها لازم است
 public class LookupsController : ApiBaseController
 {
     private readonly IMediator _mediator;

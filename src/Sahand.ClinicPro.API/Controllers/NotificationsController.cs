@@ -20,6 +20,7 @@ namespace Sahand.ClinicPro.API.Controllers;
 [ApiController]
 [Route("api/v1/notifications")]
 [Authorize]
+// عمدتاً عمومی برای همه کاربران واردشده (ممیزی چرخه ۱۲): اعلان‌های خودِ کاربر واردشده — خودخدمت
 public class NotificationsController : ApiBaseController
 {
     private readonly IUnitOfWork _unitOfWork;

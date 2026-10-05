@@ -20,7 +20,8 @@ public class LicenseController : ApiBaseController
     /// <summary>وضعیت فعلی لایسنس — ماژول‌ها، گنجایش‌ها و اطلاعات پشتیبانی</summary>
     [HttpGet("status")]
     [Authorize]
-    public async Task<IActionResult> GetStatus()
+    // عمدتاً عمومی برای همه کاربران واردشده (ممیزی چرخه ۱۲): وضعیت لایسنس برای همه کاربران برنامه نمایش داده می‌شود
+public async Task<IActionResult> GetStatus()
     {
         var status = await _license.GetStatusAsync();
         var support = await _license.GetSupportInfoAsync();
@@ -98,7 +99,8 @@ public class LicenseController : ApiBaseController
     /// </summary>
     [HttpGet("messages")]
     [Authorize]
-    public async Task<IActionResult> GetSupportMessages()
+    // عمدتاً عمومی برای همه کاربران واردشده (ممیزی چرخه ۱۲): پیام‌های پشتیبانی روی داشبورد همه کاربران
+public async Task<IActionResult> GetSupportMessages()
     {
         var messages = await _license.GetSupportMessagesAsync();
         var response = messages.Select(m => new

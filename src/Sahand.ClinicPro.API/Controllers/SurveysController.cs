@@ -117,7 +117,8 @@ public class SurveysController : ApiBaseController
     /// <summary>ثبت پاسخ نظرسنجی — امتیاز ۱ تا ۵ + نظر آزاد</summary>
     [HttpPost("{id:long}/responses")]
     [Authorize]
-    public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitResponseRequest request)
+    [HasPermission("surveys.view")] // ممیزی چرخه ۱۲ — ثبت پاسخ توسط پرسنل/کیوسک
+public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitResponseRequest request)
     {
         var exists = await _unitOfWork.Repository<Survey>().QueryableNoTracking
             .AnyAsync(s => s.Id == id && s.IsActive);

@@ -105,6 +105,7 @@ public class DoctorsController : ApiBaseController
 
     /// <summary>برنامه کاری هفتگی پزشک — هفت ردیف شنبه تا جمعه</summary>
     [HttpGet("{id:long}/schedule")]
+    [HasPermission("doctors.view")] // ممیزی چرخه ۱۲
     public async Task<IActionResult> GetSchedule(long id)
     {
         var result = await _mediator.Send(new GetDoctorScheduleQuery(id));
@@ -113,6 +114,7 @@ public class DoctorsController : ApiBaseController
 
     /// <summary>ذخیره برنامه کاری هفتگی — جایگزینی کامل</summary>
     [HttpPut("{id:long}/schedule")]
+    [HasPermission("doctors.edit")] // ممیزی چرخه ۱۲
     public async Task<IActionResult> SaveSchedule(long id, [FromBody] SaveScheduleRequest request)
     {
         var result = await _mediator.Send(new SaveDoctorScheduleCommand(id, request));
@@ -121,7 +123,8 @@ public class DoctorsController : ApiBaseController
 
     /// <summary>غیبت‌های آینده پزشک</summary>
     [HttpGet("{id:long}/absences")]
-    public async Task<IActionResult> GetAbsences(long id)
+    [HasPermission("doctors.view")] // ممیزی چرخه ۱۲ — داده حساس برنامه پزشک
+public async Task<IActionResult> GetAbsences(long id)
     {
         var result = await _mediator.Send(new GetDoctorAbsencesQuery(id));
         return ToResponse(result);
@@ -129,7 +132,8 @@ public class DoctorsController : ApiBaseController
 
     /// <summary>ثبت غیبت جدید — با شمارش نوبت‌های درگیر</summary>
     [HttpPost("{id:long}/absences")]
-    public async Task<IActionResult> CreateAbsence(long id, [FromBody] CreateAbsenceRequest request)
+    [HasPermission("doctors.edit")] // ممیزی چرخه ۱۲
+public async Task<IActionResult> CreateAbsence(long id, [FromBody] CreateAbsenceRequest request)
     {
         var result = await _mediator.Send(new CreateDoctorAbsenceCommand(id, request));
         return ToResponse(result);
@@ -137,6 +141,7 @@ public class DoctorsController : ApiBaseController
 
     /// <summary>حذف غیبت</summary>
     [HttpDelete("absences/{absenceId:long}")]
+    [HasPermission("doctors.edit")] // ممیزی چرخه ۱۲
     public async Task<IActionResult> DeleteAbsence(long absenceId)
     {
         var result = await _mediator.Send(new DeleteDoctorAbsenceCommand(absenceId));
@@ -145,6 +150,7 @@ public class DoctorsController : ApiBaseController
 
     /// <summary>آمار عملکرد پزشک — ماه جاری و امروز</summary>
     [HttpGet("{id:long}/performance")]
+    [HasPermission("doctors.view")] // ممیزی چرخه ۱۲
     public async Task<IActionResult> GetPerformance(long id)
     {
         var result = await _mediator.Send(new GetDoctorPerformanceQuery(id));
@@ -156,6 +162,7 @@ public class DoctorsController : ApiBaseController
     /// <param name="year">سال شمسی</param>
     /// <param name="month">ماه شمسی</param>
     [HttpGet("{id:long}/calendar-summary")]
+    [HasPermission("doctors.view")] // ممیزی چرخه ۱۲
     public async Task<IActionResult> GetCalendarSummary(long id, [FromQuery] int year, [FromQuery] int month)
     {
         var result = await _mediator.Send(new GetCalendarSummaryQuery(id, year, month));

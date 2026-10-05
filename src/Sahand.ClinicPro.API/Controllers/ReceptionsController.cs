@@ -68,7 +68,8 @@ public class ReceptionsController : ApiBaseController
 
     /// <summary>آمار روز پذیرش — انتظار/پذیرش‌شده/صف/درآمد</summary>
     [HttpGet("queue-stats")]
-    public async Task<IActionResult> GetQueueStats()
+    [HasPermission("receptions.view")] // ممیزی چرخه ۱۲
+public async Task<IActionResult> GetQueueStats()
     {
         var result = await _mediator.Send(new GetQueueStatsQuery());
         return ToResponse(result);

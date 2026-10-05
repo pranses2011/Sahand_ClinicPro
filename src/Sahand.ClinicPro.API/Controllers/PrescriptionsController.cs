@@ -77,7 +77,8 @@ public class PrescriptionsController : ApiBaseController
 
     /// <summary>جستجوی دارو برای نسخه‌نویسی — نام ژنریک/تجاری/بارکد/IRC</summary>
     [HttpGet("medications/search")]
-    public async Task<IActionResult> SearchMedications([FromQuery] string? q, [FromQuery] int limit = 15)
+    // عمدتاً عمومی برای همه کاربران واردشده (ممیزی چرخه ۱۲): جستجوی مرجع دارو — فقط-خواندنی برای همه فرم‌ها
+public async Task<IActionResult> SearchMedications([FromQuery] string? q, [FromQuery] int limit = 15)
     {
         var result = await _mediator.Send(new SearchMedicationsQuery(q, limit));
         return ToResponse(result);
@@ -85,7 +86,8 @@ public class PrescriptionsController : ApiBaseController
 
     /// <summary>بررسی تداخل دارویی — ۴ سطح + تداخل با آلرژی بیمار</summary>
     [HttpPost("check-interactions")]
-    public async Task<IActionResult> CheckInteractions([FromBody] CheckInteractionsRequest request)
+    [HasPermission("prescriptions.view")] // ممیزی چرخه ۱۲ — لازمِ نسخه‌نویس
+public async Task<IActionResult> CheckInteractions([FromBody] CheckInteractionsRequest request)
     {
         var result = await _mediator.Send(new CheckInteractionsCommand(request));
         return ToResponse(result);
@@ -93,7 +95,8 @@ public class PrescriptionsController : ApiBaseController
 
     /// <summary>ارسال نسخه به سامانه نسخه الکترونیک — کد رهگیری</summary>
     [HttpPost("{id:long}/submit-electronic")]
-    public async Task<IActionResult> SubmitElectronic(long id)
+    [HasPermission("prescriptions.edit")] // ممیزی چرخه ۱۲ — ارسال دولتی
+public async Task<IActionResult> SubmitElectronic(long id)
     {
         var result = await _mediator.Send(new SubmitElectronicCommand(id));
         return ToResponse(result, "نسخه به سامانه بیمه ارسال شد");
@@ -101,7 +104,8 @@ public class PrescriptionsController : ApiBaseController
 
     /// <summary>تمپلیت‌های نسخه</summary>
     [HttpGet("templates")]
-    public async Task<IActionResult> GetTemplates()
+    [HasPermission("prescriptions.view")] // ممیزی چرخه ۱۲
+public async Task<IActionResult> GetTemplates()
     {
         var result = await _mediator.Send(new GetPrescriptionTemplatesQuery());
         return ToResponse(result);
@@ -109,7 +113,8 @@ public class PrescriptionsController : ApiBaseController
 
     /// <summary>ذخیره تمپلیت جدید</summary>
     [HttpPost("templates")]
-    public async Task<IActionResult> SaveTemplate([FromBody] SaveTemplateRequest request)
+    [HasPermission("prescriptions.edit")] // ممیزی چرخه ۱۲
+public async Task<IActionResult> SaveTemplate([FromBody] SaveTemplateRequest request)
     {
         var result = await _mediator.Send(new SavePrescriptionTemplateCommand(request));
         return ToResponse(result, "تمپلیت ذخیره شد");
@@ -117,6 +122,7 @@ public class PrescriptionsController : ApiBaseController
 
     /// <summary>حذف تمپلیت</summary>
     [HttpDelete("templates/{id:long}")]
+    [HasPermission("prescriptions.edit")] // ممیزی چرخه ۱۲
     public async Task<IActionResult> DeleteTemplate(long id)
     {
         var result = await _mediator.Send(new DeletePrescriptionTemplateCommand(id));

@@ -35,6 +35,7 @@ public class PaymentsController : ApiBaseController
 
     /// <summary>خلاصه صندوق امروز — کارت‌های آماری فرم ۱۴</summary>
     [HttpGet("today-summary")]
+    [HasPermission("payments.view")] // ممیزی چرخه ۱۲
     public async Task<IActionResult> GetTodaySummary()
     {
         var result = await _mediator.Send(new GetCashRegisterQuery());
@@ -43,7 +44,8 @@ public class PaymentsController : ApiBaseController
 
     /// <summary>تراکنش‌های امروز صندوق</summary>
     [HttpGet("today")]
-    public async Task<IActionResult> GetTodayTransactions()
+    [HasPermission("payments.view")] // ممیزی چرخه ۱۲
+public async Task<IActionResult> GetTodayTransactions()
     {
         var result = await _mediator.Send(new GetTodayTransactionsQuery());
         return ToResponse(result);

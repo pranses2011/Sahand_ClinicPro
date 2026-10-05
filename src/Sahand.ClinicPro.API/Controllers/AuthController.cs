@@ -78,7 +78,8 @@ public class AuthController : ApiBaseController
     /// </summary>
     [HttpPost("change-password")]
     [Authorize]
-    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
+    // عمدتاً عمومی برای همه کاربران واردشده (ممیزی چرخه ۱۲): تغییر رمزِ خودِ کاربر — نیازمند مجوز جدا نیست
+public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
     {
         var result = await _mediator.Send(new ChangePasswordCommand(
             request.CurrentPassword, request.NewPassword));
