@@ -31,6 +31,7 @@ public class ReferenceDataSeeder : IDataSeeder
         await SeedLabTestsAsync(cancellationToken);
         await SeedDrugInteractionsAsync(cancellationToken);
         await SeedServicesAndTariffsAsync(cancellationToken);
+        await EnrichMedicationRisksAsync(cancellationToken); // چرخه ۱۳ — غنی‌سازی خطر بالینی (idempotent)
         await _context.SaveChangesAsync(cancellationToken);
     }
 
@@ -264,6 +265,49 @@ public class ReferenceDataSeeder : IDataSeeder
                 IsActive = true,
             });
             _context.Services.Add(service);
+        }
+    }
+
+    /// <summary>
+    /// غنی‌سازی خطر بالینی داروها — چرخه ۱۳ (درخواست ۱-۱)
+    /// idempotent: فقط ردیف‌هایی که هنوز غنی‌سازی نشده‌اند (PregnancyCategory=0 و بدون هیچ پرچم)
+    /// به‌روزرسانی می‌شوند؛ تغییرات دسترسی ادمین حفظ می‌شود
+    /// </summary>
+    private async Task EnrichMedicationRisksAsync(CancellationToken ct)
+    {
+        var byGeneric = MedicationRiskSeedData.Rows
+            .GroupBy(r => r.GenericName, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+        // همه فرم‌های هر مولکول (قرص/شربت/آمپول) غنی می‌شوند
+        var candidates = await _context.Medications
+            .Where(m => !m.IsDeleted &&
+                        m.PregnancyCategory == PregnancyCategory.NotRated &&
+                        !m.IsLactationRisk && !m.NeedsPediatricCaution && !m.NeedsGeriatricCaution &&
+                        !m.NeedsRenalCaution && !m.NeedsHepaticCaution && !m.CausesSedation)
+            .ToListAsync(ct);
+
+        var enriched = 0;
+        foreach (var med in candidates)
+        {
+            if (!byGeneric.TryGetValue(med.GenericName, out var row)) continue;
+            med.PregnancyCategory = (PregnancyCategory)row.PregnancyCategory;
+            med.IsLactationRisk = row.LactationRisk;
+            med.NeedsPediatricCaution = row.PediatricCaution;
+            med.NeedsGeriatricCaution = row.GeriatricCaution;
+            med.NeedsRenalCaution = row.RenalCaution;
+            med.NeedsHepaticCaution = row.HepaticCaution;
+            med.MaxDailyDose = row.MaxDailyDose;
+            med.CausesSedation = row.Sedation;
+            med.HasAbusePotential = row.AbusePotential;
+            if (string.IsNullOrWhiteSpace(med.Contraindications))
+                med.Contraindications = row.Contraindications;
+            enriched++;
+        }
+        // ثبت نتیجه در لاگ فقط وقتی چیزی تغییر کرده — صرفه‌جویی SaveChange در SeedAsync
+        if (enriched > 0)
+        {
+            // شمارش از طریق لاگ سرِی لازم نیست؛ کافی است موجودیت‌ها dirty باشند
         }
     }
 }

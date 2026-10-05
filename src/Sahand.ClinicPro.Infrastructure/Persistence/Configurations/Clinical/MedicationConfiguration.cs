@@ -25,5 +25,18 @@ public class MedicationConfiguration : IEntityTypeConfiguration<Medication>
         builder.Property(x => x.Category).HasMaxLength(200).HasComment("دسته دارویی");
 
         builder.HasIndex(x => new { x.IrcCode }).IsUnique().HasDatabaseName("IX_Medication_IrcCode").HasFilter("[IsDeleted] = 0");
+
+        // ═══ چرخه ۱۳ — الگوریتم خطر تشخیصی: ستون‌های خطر بالینی ═══
+        builder.Property(x => x.PregnancyCategory)
+            .HasConversion<byte>()
+            .HasComment("رده بارداری FDA (۰=نرده‌بندی ۱=A … ۵=X) — هشدار تجویز در بارداری");
+        builder.Property(x => x.IsLactationRisk).HasComment("خطر مصرف در شیردهی");
+        builder.Property(x => x.NeedsPediatricCaution).HasComment("احتیاط مصرف در کودکان زیر ۱۲ سال");
+        builder.Property(x => x.NeedsGeriatricCaution).HasComment("احتیاط مصرف در سالمندان بالای ۶۵ سال (Beers)");
+        builder.Property(x => x.NeedsRenalCaution).HasComment("احتیاط در نارسایی کلیه — تعدیل دوز");
+        builder.Property(x => x.NeedsHepaticCaution).HasComment("احتیاط در نارسایی کبدی");
+        builder.Property(x => x.MaxDailyDose).HasMaxLength(100).HasComment("حداکثر دوز روزانه مجاز — متن توضیحی");
+        builder.Property(x => x.CausesSedation).HasComment("هشدار خواب‌آلودگی/رانندگی");
+        builder.Property(x => x.HasAbusePotential).HasComment("خطر وابستگی/اعتیاد");
     }
 }

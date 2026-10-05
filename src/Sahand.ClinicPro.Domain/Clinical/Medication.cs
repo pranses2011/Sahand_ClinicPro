@@ -1,4 +1,6 @@
-﻿namespace Sahand.ClinicPro.Domain.Entities.Clinical;
+﻿﻿using Sahand.ClinicPro.Domain.Enums;
+
+namespace Sahand.ClinicPro.Domain.Entities.Clinical;
 
 /// <summary>
 /// دارو - کاتالوگ مرجع داروها با کد IRC
@@ -52,6 +54,33 @@ public class Medication : AuditableEntity, ISoftDeletable
 
     /// <summary>موارد منع مصرف</summary>
     public string? Contraindications { get; set; }
+
+    /// <summary>رده بارداری FDA — خطر مصرف در دوران بارداری (الگوریتم خطر تشخیصی چرخه ۱۳)</summary>
+    public PregnancyCategory PregnancyCategory { get; set; } = PregnancyCategory.NotRated;
+
+    /// <summary>خطر مصرف در شیردهی — true یعنی احتیاط یا منع</summary>
+    public bool IsLactationRisk { get; set; } = false;
+
+    /// <summary>احتیاط مصرف در کودکان زیر ۱۲ سال</summary>
+    public bool NeedsPediatricCaution { get; set; } = false;
+
+    /// <summary>احتیاط مصرف در سالمندان بالای ۶۵ سال (Beers Criteria)</summary>
+    public bool NeedsGeriatricCaution { get; set; } = false;
+
+    /// <summary>احتیاط در نارسایی کلیه — نیاز به تعدیل دوز</summary>
+    public bool NeedsRenalCaution { get; set; } = false;
+
+    /// <summary>احتیاط در نارسایی کبدی</summary>
+    public bool NeedsHepaticCaution { get; set; } = false;
+
+    /// <summary>حداکثر دوز روزانه مجاز — متن توضیحی مثل ۴ گرم در روز</summary>
+    public string? MaxDailyDose { get; set; }
+
+    /// <summary>هشدار خواب‌آلودگی/رانندگی — داروهای مضع CNS</summary>
+    public bool CausesSedation { get; set; } = false;
+
+    /// <summary>خطر وابستگی/اعتیاد — مواد مخدر و بنزودیازپین‌ها</summary>
+    public bool HasAbusePotential { get; set; } = false;
 
     /// <summary>فعال</summary>
     public bool IsActive { get; set; } = true;

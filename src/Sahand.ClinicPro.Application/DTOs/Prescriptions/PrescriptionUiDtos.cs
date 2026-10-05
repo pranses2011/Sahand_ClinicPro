@@ -11,7 +11,35 @@ public record MedicationSearchResultDto(
     string? Manufacturer,
     string Country);
 
-/// <summary>تداخل شناسایی‌شده — پنل ۴سطحی فرم ۱۲</summary>
+/// <summary>نوع ریسک شناسایی‌شده — الگوریتم خطر تشخیصی چرخه ۱۳</summary>
+public enum RiskKind
+{
+    /// <summary>تداخل دارو با دارو</summary>
+    DrugInteraction = 1,
+
+    /// <summary>تعارض با حساسیت دارویی بیمار</summary>
+    Allergy = 2,
+
+    /// <summary>خطر دوران بارداری (رده D/X)</summary>
+    Pregnancy = 3,
+
+    /// <summary>خطر شیردهی</summary>
+    Lactation = 4,
+
+    /// <summary>احتیاط سنی — کودک/سالمند</summary>
+    AgeCaution = 5,
+
+    /// <summary>احتیاط نارسایی کلیه/کبد</summary>
+    OrganCaution = 6,
+
+    /// <summary>هشدار دوز/عوارض (خواب‌آلودگی/وابستگی/حداکثر دوز)</summary>
+    DoseCaution = 7,
+
+    /// <summary>تعارض با تشخیص‌های زمینه‌ای بیمار</summary>
+    DiseaseConflict = 8
+}
+
+/// <summary>تداخل/خطر شناسایی‌شده — پنل ۴سطحی فرم ۱۲ + ابعاد چرخه ۱۳</summary>
 public record InteractionDto(
     string Medication1Name,
     string Medication2Name,
@@ -21,18 +49,33 @@ public record InteractionDto(
     string? Mechanism,
     string? Recommendation,
     string? Description,
-    bool IsAllergyConflict);
+    bool IsAllergyConflict,
+    RiskKind Kind = RiskKind.DrugInteraction,
+    string KindIcon = "💊",
+    string KindLabel = "تداخل دارویی");
 
-/// <summary>درخواست بررسی تداخل</summary>
+/// <summary>درخواست بررسی تداخل — نسخه چرخه ۱۳: اقلام با مقدار دوز اختیاری</summary>
+public record CheckInteractionsItem(
+    long MedicationId,
+    decimal Quantity = 0,
+    string? Frequency = null);
+
+/// <summary>درخواست بررسی خطر تشخیصی کامل</summary>
 public record CheckInteractionsRequest(
     long PatientId,
-    List<long> MedicationIds);
+    List<long> MedicationIds,
+    List<CheckInteractionsItem>? Items = null,
+    bool IsPregnant = false,
+    bool IsBreastfeeding = false);
 
-/// <summary>نتیجه بررسی تداخل</summary>
+/// <summary>نتیجه بررسی تداخل — چرخه ۱۳ با خلاصه ابعاد خطر</summary>
 public record CheckInteractionsResult(
     List<InteractionDto> Interactions,
     bool HasSevere,
-    bool HasAllergyConflict);
+    bool HasAllergyConflict,
+    bool HasPregnancyRisk = false,
+    bool HasAbsoluteBlock = false,
+    string? PatientAgeShamsi = null);
 
 /// <summary>تمپلیت نسخه پزشک</summary>
 public record PrescriptionTemplateDto(

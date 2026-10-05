@@ -2160,6 +2160,10 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(200)")
                         .HasComment("دسته دارویی");
 
+                    b.Property<bool>("CausesSedation")
+                        .HasColumnType("bit")
+                        .HasComment("هشدار خواب‌آلودگی/رانندگی");
+
                     b.Property<string>("Contraindications")
                         .HasColumnType("nvarchar(max)");
 
@@ -2196,6 +2200,10 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(200)")
                         .HasComment("نام ژنریک فارسی");
 
+                    b.Property<bool>("HasAbusePotential")
+                        .HasColumnType("bit")
+                        .HasComment("خطر وابستگی/اعتیاد");
+
                     b.Property<string>("IrcCode")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)")
@@ -2206,6 +2214,10 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsLactationRisk")
+                        .HasColumnType("bit")
+                        .HasComment("خطر مصرف در شیردهی");
 
                     b.Property<bool>("IsNarcotic")
                         .HasColumnType("bit");
@@ -2220,6 +2232,31 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)")
                         .HasComment("شرکت سازنده");
+
+                    b.Property<string>("MaxDailyDose")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasComment("حداکثر دوز روزانه مجاز — متن توضیحی");
+
+                    b.Property<bool>("NeedsGeriatricCaution")
+                        .HasColumnType("bit")
+                        .HasComment("احتیاط مصرف در سالمندان بالای ۶۵ سال (Beers)");
+
+                    b.Property<bool>("NeedsHepaticCaution")
+                        .HasColumnType("bit")
+                        .HasComment("احتیاط در نارسایی کبدی");
+
+                    b.Property<bool>("NeedsPediatricCaution")
+                        .HasColumnType("bit")
+                        .HasComment("احتیاط مصرف در کودکان زیر ۱۲ سال");
+
+                    b.Property<bool>("NeedsRenalCaution")
+                        .HasColumnType("bit")
+                        .HasComment("احتیاط در نارسایی کلیه — تعدیل دوز");
+
+                    b.Property<byte>("PregnancyCategory")
+                        .HasColumnType("tinyint")
+                        .HasComment("رده بارداری FDA (۰=نرده‌بندی ۱=A … ۵=X) — هشدار تجویز در بارداری");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()

@@ -37,7 +37,7 @@ public partial class PrescriptionItemVM : ObservableObject
     [ObservableProperty] private bool _isSos;
 }
 
-/// <summary>تداخل نمایشی</summary>
+/// <summary>تداخل/خطر نمایشی — چرخه ۱۳ با نوع ریسک</summary>
 public record InteractionRow(
     string Title,
     int Severity,
@@ -45,7 +45,9 @@ public record InteractionRow(
     string SeverityColor,
     string? Mechanism,
     string? Recommendation,
-    bool IsAllergyConflict);
+    bool IsAllergyConflict,
+    string KindIcon = "💊",
+    string KindLabel = "تداخل دارویی");
 
 /// <summary>تمپلیت نمایشی</summary>
 public record TemplateOption(long Id, string Name, string? Category, string TemplateJson);
@@ -105,6 +107,29 @@ public partial class PrescriptionFormViewModel : ObservableObject
     /// <summary>هیچ تداخلی نیست — پیام سبز</summary>
     [ObservableProperty]
     private bool _noInteractions = true;
+
+    /// <summary>خطر بارداری شناسایی‌شده — چرخه ۱۳</summary>
+    [ObservableProperty]
+    private bool _hasPregnancyRisk;
+
+    /// <summary>بیمار باردار است — چک‌باکس چرخه ۱۳</summary>
+    [ObservableProperty]
+    private bool _isPregnant;
+
+    /// <summary>بیمار شیرده است — چک‌باکس چرخه ۱۳</summary>
+    [ObservableProperty]
+    private bool _isBreastfeeding;
+
+    /// <summary>منع مطلق مصرف (شدت ۴) — نیاز به تأیید صریح پزشک با دلیل</summary>
+    [ObservableProperty]
+    private bool _hasAbsoluteBlock;
+
+    /// <summary>دلیل تأیید ادامه نسخه با وجود منع مصرف</summary>
+    [ObservableProperty]
+    private string? _overrideReason;
+
+    partial void OnIsPregnantChanged(bool value) => _ = CheckInteractionsAsync();
+    partial void OnIsBreastfeedingChanged(bool value) => _ = CheckInteractionsAsync();
 
     /// <summary>نمایه نوع نسخه</summary>
     [ObservableProperty]
@@ -284,7 +309,7 @@ public partial class PrescriptionFormViewModel : ObservableObject
 
     /* ═══════════ بررسی تداخل خودکار ═══════════ */
 
-    /// <summary>بررسی تداخل — بعد از هر افزودن/حذف خودکار</summary>
+    /// <summary>بررسی خطر تشخیصی جامع — بعد از هر افزودن/حذف/تغییر بارداری-شیردهی خودکار (چرخه ۱۳)</summary>
     private async Task CheckInteractionsAsync()
     {
         if (Patient is null || Items.Count == 0)
@@ -293,13 +318,18 @@ public partial class PrescriptionFormViewModel : ObservableObject
             NoInteractions = true;
             HasSevereInteraction = false;
             HasAllergyConflict = false;
+            HasPregnancyRisk = false;
+            HasAbsoluteBlock = false;
             return;
         }
 
         var response = await _api.PostAsync<CheckResponse>("prescriptions/check-interactions", new
         {
             patientId = Patient.Id,
-            medicationIds = Items.Select(i => i.MedicationId).ToList()
+            medicationIds = Items.Select(i => i.MedicationId).ToList(),
+            items = Items.Select(i => new { medicationId = i.MedicationId, quantity = i.Quantity }).ToList(),
+            isPregnant = IsPregnant,
+            isBreastfeeding = IsBreastfeeding
         });
 
         Interactions.Clear();
@@ -311,13 +341,17 @@ public partial class PrescriptionFormViewModel : ObservableObject
 
         HasSevereInteraction = response.Data.HasSevere;
         HasAllergyConflict = response.Data.HasAllergyConflict;
+        HasPregnancyRisk = response.Data.HasPregnancyRisk;
+        HasAbsoluteBlock = response.Data.HasAbsoluteBlock;
         NoInteractions = response.Data.Interactions is { Count: 0 };
 
         foreach (var i in response.Data.Interactions ?? new List<InteractionItem>())
             Interactions.Add(new InteractionRow(
                 $"{i.Medication1Name} × {i.Medication2Name}",
                 i.Severity, i.SeverityText, i.SeverityColor,
-                i.Mechanism, i.Recommendation, i.IsAllergyConflict));
+                i.Mechanism, i.Recommendation, i.IsAllergyConflict,
+                string.IsNullOrWhiteSpace(i.KindIcon) ? "💊" : i.KindIcon,
+                string.IsNullOrWhiteSpace(i.KindLabel) ? "تداخل دارویی" : i.KindLabel));
     }
 
     /* ═══════════ تمپلیت‌ها ═══════════ */
@@ -386,12 +420,19 @@ public partial class PrescriptionFormViewModel : ObservableObject
 
     /* ═══════════ ذخیره و ارسال ═══════════ */
 
-    /// <summary>ذخیره نسخه</summary>
+    /// <summary>ذخیره نسخه — با گیت ایمنی چرخه ۱۳: منع مطلق فقط با دلیل کتبی قابل عبور است</summary>
     [RelayCommand]
     private async Task SaveAsync()
     {
         var error = Validate();
         if (error is not null) { ErrorMessage = error; return; }
+
+        // گیت ایمنی بالینی چرخه ۱۳ — شدت ۴ (منع مصرف/آلرژی/رده X) بدون دلیل کتبی رد می‌شود
+        if (HasAbsoluteBlock && string.IsNullOrWhiteSpace(OverrideReason))
+        {
+            ErrorMessage = "⚠️ این نسخه دارای منع مصرف مطلق (شدت ۴) است — برای ادامه، دلیل تأیید پزشک را در کادر «دلیل تأیید» بنویسید";
+            return;
+        }
 
         IsBusy = true;
         var body = new
@@ -401,7 +442,9 @@ public partial class PrescriptionFormViewModel : ObservableObject
             visitId = (long?)null,
             type = 1,
             isElectronic = ElectronicTrackingCode is not null,
-            notes = DoctorNotes,
+            notes = string.IsNullOrWhiteSpace(OverrideReason)
+                ? DoctorNotes
+                : $"[تأیید پزشک با وجود هشدار: {OverrideReason}] {DoctorNotes}",
             items = Items.Select(i => new
             {
                 medicationId = i.MedicationId,
@@ -536,6 +579,9 @@ public partial class PrescriptionFormViewModel : ObservableObject
         public List<InteractionItem>? Interactions { get; set; }
         public bool HasSevere { get; set; }
         public bool HasAllergyConflict { get; set; }
+        public bool HasPregnancyRisk { get; set; }
+        public bool HasAbsoluteBlock { get; set; }
+        public string? PatientAgeShamsi { get; set; }
     }
 
     public sealed class InteractionItem
@@ -548,6 +594,8 @@ public partial class PrescriptionFormViewModel : ObservableObject
         public string? Mechanism { get; set; }
         public string? Recommendation { get; set; }
         public bool IsAllergyConflict { get; set; }
+        public string? KindIcon { get; set; }
+        public string? KindLabel { get; set; }
     }
 
     public sealed class TemplatesResponse
