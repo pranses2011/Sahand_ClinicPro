@@ -1,95 +1,217 @@
 ﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.PharmacyView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="640" d:DesignWidth="1080"
+             FlowDirection="RightToLeft"
              FontFamily="Vazirmatn, Segoe UI, Tahoma">
-    <!-- ═══════════════════════════════════════════════════════════
-         داروخانه — گام V6
-         ═══════════════════════════════════════════════════════════ -->
-    <Grid Margin="24">
+    <!-- ═══ داروخانه — گام U10 طبق فرم ۱۸: ۵ تب ═══ -->
+    <Grid Margin="16,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <DockPanel Grid.Row="0" Margin="0,0,0,12">
-            <Button DockPanel.Dock="Right"
-                    Command="{Binding StockInCommand}"
-                    Style="{StaticResource MaterialDesignFilledButton}"
-                    Content="ورود دارو" />
-            <TextBlock Text="داروخانه"
-                       Style="{StaticResource SectionTitle}"
-                       VerticalAlignment="Center" />
-        </DockPanel>
-
-        <!-- فیلتر -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
-            <CheckBox Content="فقط کالاهای کم‌موجود"
-                      IsChecked="{Binding LowStockOnly}"
-                      VerticalAlignment="Center" Margin="0,0,12,0" />
-            <Button Command="{Binding LoadCommand}"
-                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                    Content="بازخوانی" Margin="0,0,8,0" />
-            <TextBlock Text="{Binding ErrorMessage}"
-                       Foreground="{DynamicResource MaterialDesign.Brush.Error}"
-                       FontSize="12" VerticalAlignment="Center" />
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="Pill" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                     VerticalAlignment="Center" />
+            <TextBlock Text="داروخانه" FontSize="20" FontWeight="Bold"
+                       Margin="10,0,0,0" VerticalAlignment="Center" />
+            <Button Command="{Binding StockInCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                    Margin="16,0,0,0" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="PackageDown" Width="14" Height="14" VerticalAlignment="Center" />
+                    <TextBlock Text="ورود کالا" Margin="7,0,0,0" />
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding LoadCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Margin="8,0,0,0" VerticalAlignment="Center">
+                <materialDesign:PackIcon Kind="Refresh" Width="14" Height="14" />
+            </Button>
         </StackPanel>
 
-        <!-- جدول موجودی -->
-        <DataGrid Grid.Row="2"
-                  ItemsSource="{Binding Inventory}"
-                  SelectedItem="{Binding SelectedRow}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  SelectionMode="Single"
-                  CanUserAddRows="False"
-                  HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal"
-                  materialDesign:DataGridAssist.CellPadding="8,6">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="دارو" Binding="{Binding MedicationName}" Width="2*" />
-                <DataGridTextColumn Header="بچ" Binding="{Binding BatchNumber}" Width="110" />
-                <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity}" Width="90" />
-                <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel}" Width="100" />
-                <DataGridTextColumn Header="انقضا" Binding="{Binding ExpiryDate}" Width="100" />
-                <DataGridTextColumn Header="وضعیت" Binding="{Binding LowStockText}" Width="120" />
-            </DataGrid.Columns>
-        </DataGrid>
+        <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
 
-        <!-- پنل تحویل نسخه -->
-        <materialDesign:Card Grid.Row="3" Padding="16" Margin="0,14,0,0" UniformCornerRadius="12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="220" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" Margin="0,0,14,0">
-                    <TextBlock Text="تحویل نسخه" FontWeight="Bold" Margin="0,0,0,6" />
-                    <TextBox materialDesign:HintAssist.Hint="شناسه نسخه"
-                             Text="{Binding PrescriptionId, UpdateSourceTrigger=PropertyChanged}"
-                             Margin="0,0,0,6">
-                        <TextBox.InputBindings>
-                            <KeyBinding Key="Enter" Command="{Binding LoadPrescriptionCommand}" />
-                        </TextBox.InputBindings>
-                    </TextBox>
-                    <Button Command="{Binding LoadPrescriptionCommand}"
-                            Style="{StaticResource MaterialDesignOutlinedButton}"
-                            Content="بارگذاری نسخه" Margin="0,0,0,6" />
+        <TabControl Grid.Row="2" Style="{StaticResource MaterialDesignTabControl}">
+            <!-- تب ۱: تحویل نسخه -->
+            <TabItem Header="📥 تحویل نسخه">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8">
+                    <StackPanel MaxWidth="720" HorizontalAlignment="Center">
+                        <TextBlock Text="تحویل نسخه — با ورود کد رهگیری یا شماره نسخه" FontSize="13" Opacity="0.7" Margin="2,0,2,10" />
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" Text="{Binding PrescriptionId, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="🔍 کد رهگیری یا شماره نسخه (مثلاً ۱۰۲۳)">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding LoadPrescriptionCommand}" />
+                                </TextBox.InputBindings>
+                            </TextBox>
+                            <Button Grid.Column="1" Command="{Binding LoadPrescriptionCommand}" Margin="8,0,0,0"
+                                    Style="{StaticResource MaterialDesignRaisedButton}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />
+                                    <TextBlock Text="بارگذاری" Margin="7,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <Border Background="#E3F2FD" CornerRadius="10" Padding="12,8" Margin="0,0,0,10"
+                                Visibility="{Binding DispensePatient, Converter={StaticResource StringToVisibility}}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding DispensePatient, Mode=OneWay}" FontWeight="Bold" FontSize="14" />
+                                <ItemsControl ItemsSource="{Binding DispenseItems}" Margin="0,6,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#FFFFFF" CornerRadius="8" Padding="9,5" Margin="0,0,0,4"
+                                                    BorderBrush="#90CAF9" BorderThickness="1" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding}" FontSize="12" />
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Button Command="{Binding DispenseCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="#2E7D32" BorderBrush="#2E7D32" Height="42"
+                                Visibility="{Binding DispensePatient, Converter={StaticResource StringToVisibility}}">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="CheckCircle" Width="17" Height="17" VerticalAlignment="Center" />
+                                <TextBlock Text="✅ تایید تحویل و صدور فاکتور" Margin="10,0,0,0" FontSize="14" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" FontSize="12" Margin="0,10,0,0"
+                                   Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- تب ۲: موجودی -->
+            <TabItem Header="📦 موجودی">
+                <DataGrid ItemsSource="{Binding Inventory}"
+                          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                          HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="دارو" Binding="{Binding Name}" Width="*" FontWeight="SemiBold" />
+                        <DataGridTextColumn Header="فرم/دوز" Binding="{Binding Form, TargetNullValue=—}" Width="130" />
+                        <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity}" Width="90" FontFamily="Consolas" />
+                        <DataGridTemplateColumn Header="وضعیت موجودی" Width="130" SortMemberPath="IsLowStock">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#C8E6C9" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsLowStock}" Value="True">
+                                                        <Setter Property="Background" Value="#FFEBEE" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock FontSize="11">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="🟢 موجود" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsLowStock}" Value="True">
+                                                            <Setter Property="Text" Value="🔴 کسری" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel}" Width="90" FontFamily="Consolas" />
+                        <DataGridTextColumn Header="انقضا" Binding="{Binding ExpiryDateShamsi, TargetNullValue=—}" Width="100" />
+                        <DataGridTemplateColumn Header="هشدار" Width="110" SortMemberPath="IsExpiringSoon">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="#FFF3E0" CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
+                                            Visibility="{Binding IsExpiringSoon, Converter={StaticResource BoolToVisibility}}">
+                                        <TextBlock Text="⏰ نزدیک انقضا" FontSize="10.5" Foreground="#E65100" />
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <!-- تب ۳: ورود کالا -->
+            <TabItem Header="📥 ورود کالا">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <materialDesign:PackIcon Kind="PackageDown" Width="56" Height="56" Opacity="0.4" HorizontalAlignment="Center" />
+                    <TextBlock Text="فرم ورود کالای دارویی با بچ‌نامبر و تاریخ انقضا" FontSize="13" Opacity="0.7"
+                               Margin="0,10,0,0" HorizontalAlignment="Center" />
+                    <Button Command="{Binding StockInCommand}" Margin="0,14,0,0"
+                            Style="{StaticResource MaterialDesignRaisedButton}" HorizontalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" Width="15" Height="15" VerticalAlignment="Center" />
+                            <TextBlock Text="ثبت ورود کالا" Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
-                <StackPanel Grid.Column="1" Margin="0,0,14,0">
-                    <TextBlock Text="{Binding DispensePatient}" FontWeight="Bold" Opacity="0.9" Margin="0,0,0,4" />
-                    <ListBox ItemsSource="{Binding DispenseItems}" Height="72"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+            </TabItem>
+
+            <!-- تب ۴: سفارش خرید -->
+            <TabItem Header="📋 سفارش خرید">
+                <Grid Margin="4,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="اقلام زیر نقطه سفارش — پیشنهاد سفارش خودکار" FontSize="12.5"
+                               Opacity="0.7" Margin="2,0,2,8" />
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding LowStockItems}"
+                              AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                              HeadersVisibility="Column" FontSize="12"
+                              RowBackground="#FFF8E1">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="دارو" Binding="{Binding Name}" Width="*" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="موجودی فعلی" Binding="{Binding Quantity}" Width="110" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel}" Width="110" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="پیشنهاد سفارش" Width="115">
+                                <DataGridTextColumn.Binding>
+                                    <Binding Path="SuggestedOrder" StringFormat="{}{0:N0}" />
+                                </DataGridTextColumn.Binding>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontFamily" Value="Consolas" />
+                                        <Setter Property="FontWeight" Value="Bold" />
+                                        <Setter Property="Foreground" Value="#E65100" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- تب ۵: انبارگردانی -->
+            <TabItem Header="📊 انبارگردانی">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <materialDesign:PackIcon Kind="ScaleBalance" Width="56" Height="56" Opacity="0.4" HorizontalAlignment="Center" />
+                    <TextBlock Text="ماژول انبارگردانی دوره‌ای در چرخه چهارم فعال می‌شود" FontSize="13" Opacity="0.7"
+                               Margin="0,10,0,0" HorizontalAlignment="Center" />
+                    <TextBlock Text="شمارش فیزیکی + مغایرت‌گیری + اصلاح خودکار موجودی" FontSize="11.5" Opacity="0.55"
+                               Margin="0,6,0,0" HorizontalAlignment="Center" />
                 </StackPanel>
-                <Button Grid.Column="2"
-                        Command="{Binding DispenseCommand}"
-                        VerticalAlignment="Bottom"
-                        Style="{StaticResource MaterialDesignFilledButton}"
-                        Content="تحویل" Height="42" Width="120" />
-            </Grid>
-        </materialDesign:Card>
+            </TabItem>
+        </TabControl>
     </Grid>
 </UserControl>

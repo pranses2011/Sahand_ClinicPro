@@ -1,15 +1,42 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
+using System.Windows.Controls;
+using Sahand.ClinicPro.Desktop.ViewModels;
 
 namespace Sahand.ClinicPro.Desktop.Views;
 
 /// <summary>
-/// کد پشت آزمایشگاه
+/// کد پشت آزمایشگاه — گام U10: تب‌های وضعیت + کاتالوگ
 /// </summary>
 public partial class LabView : UserControl
 {
-    /// <summary>سازنده پیش‌فرض</summary>
-    public LabView()
+    /// <summary>سازنده</summary>
+    public LabView() => InitializeComponent();
+
+    /// <summary>تغییر تب وضعیت → فیلتر خودکار لیست درخواست‌ها</summary>
+    private void OnTabChanged(object sender, SelectionChangedEventArgs e)
     {
-        InitializeComponent();
+        if (e.AddedItems.Count == 0 || DataContext is not LabViewModel vm) return;
+        if (e.AddedItems[0] is not TabItem tab || tab.Tag is not string tag) return;
+        if (!int.TryParse(tag, out var status)) return;
+
+        if (status < 0)
+        {
+            // کاتالوگ تست‌ها — جدول اصلی مخفی و کاتالوگ نمایان
+            OrdersGrid.Visibility = Visibility.Collapsed;
+            _ = vm.LoadCatalogAsync();
+        }
+        else
+        {
+            OrdersGrid.Visibility = Visibility.Visible;
+            vm.StatusFilterIndex = status;
+            _ = vm.LoadAsync();
+        }
+    }
+
+    /// <summary>دابل‌کلیک → ثبت نتیجه</summary>
+    private void OnOrderDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (DataContext is LabViewModel vm && vm.SelectedOrder is not null)
+            vm.RecordResultCommand.Execute(null);
     }
 }

@@ -3,13 +3,10 @@
 namespace Sahand.ClinicPro.Desktop.Views;
 
 /// <summary>
-/// کد پشت داروخانه
+/// کد پشت داروخانه — گام U10
 /// </summary>
 public partial class PharmacyView : UserControl
 {
-    /// <summary>سازنده پیش‌فرض</summary>
-    public PharmacyView()
-    {
-        InitializeComponent();
-    }
+    /// <summary>سازنده</summary>
+    public PharmacyView() => InitializeComponent();
 }

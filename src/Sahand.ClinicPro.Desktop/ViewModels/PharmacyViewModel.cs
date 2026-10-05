@@ -19,6 +19,18 @@ public record InventoryRow(
 {
     /// <summary>متن وضعیت موجودی</summary>
     public string LowStockText => IsLowStock ? "کمبود موجودی" : IsExpiringSoon ? "نزدیک انقضا" : "نرمال";
+
+    /// <summary>نام نمایشی — سازگار با XAML گام U10</summary>
+    public string Name => MedicationName;
+
+    /// <summary>بچ/سری — به‌جای فرم در جدول موجودی</summary>
+    public string? Form => BatchNumber;
+
+    /// <summary>تاریخ انقضا شمسی — سازگار با XAML</summary>
+    public string? ExpiryDateShamsi => ExpiryDate;
+
+    /// <summary>پیشنهاد سفارش — دو برابر نقطه سفارش منهای موجودی</summary>
+    public decimal SuggestedOrder => Math.Max(0, ReorderLevel * 2 - Quantity);
 }
 
 /// <summary>
@@ -192,5 +204,23 @@ public partial class PharmacyViewModel : ViewModelBase
         public string MedicationName { get; set; } = string.Empty;
         public decimal Quantity { get; set; }
         public string? Unit { get; set; }
+    }
+
+    /* ── اقلام زیر نقطه سفارش — تب سفارش خرید گام U10 ── */
+
+    /// <summary>اقلام نیازمند سفارش</summary>
+    [ObservableProperty]
+    private ObservableCollection<InventoryRow> _lowStockItems = new();
+
+    /// <summary>بارگذاری اقلام زیر نقطه سفارش</summary>
+    [RelayCommand]
+    private async Task LoadLowStockAsync()
+    {
+        var response = await _api.GetAsync<InventoryResponse>("pharmacy/inventory");
+        if (response?.Data is null) return;
+        LowStockItems = new ObservableCollection<InventoryRow>(
+            response.Data.Where(i => i.IsLowStock)
+                .Select(i => new InventoryRow(i.Id, i.MedicationName, i.BatchNumber, i.Quantity,
+                    i.ReorderLevel, i.ExpiryDateShamsi, i.IsLowStock, i.IsExpiringSoon)));
     }
 }

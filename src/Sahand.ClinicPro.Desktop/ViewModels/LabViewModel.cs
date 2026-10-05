@@ -176,4 +176,38 @@ public partial class LabViewModel : ViewModelBase
         public int Status { get; set; }
         public int ItemsCount { get; set; }
     }
+
+    /* ── کاتالوگ تست‌ها — تب ۵ گام U10 ── */
+
+    /// <summary>آیتم کاتالوگ تست</summary>
+    public record TestCatalogRow(string Name, string? Category, string? Unit, decimal Price);
+
+    /// <summary>کاتالوگ تست‌های فعال</summary>
+    [ObservableProperty]
+    private ObservableCollection<TestCatalogRow> _testCatalog = new();
+
+    /// <summary>بارگذاری کاتالوگ تست‌ها از داده مرجع</summary>
+    public async Task LoadCatalogAsync()
+    {
+        var response = await _api.GetAsync<CatalogResponse>("lookups/lab-tests");
+        if (response?.Data is null) return;
+        TestCatalog = new ObservableCollection<TestCatalogRow>(
+            response.Data.Select(t => new TestCatalogRow(t.Name, t.Category, t.Unit, t.Price)));
+    }
+
+    /// <summary>پاسخ کاتالوگ آزمایش‌ها</summary>
+    public sealed class CatalogResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<CatalogItem>? Data { get; set; }
+    }
+
+    /// <summary>آیتم آزمایش مرجع</summary>
+    public sealed class CatalogItem
+    {
+        public string Name { get; set; } = string.Empty;
+        public string? Category { get; set; }
+        public string? Unit { get; set; }
+        public decimal Price { get; set; }
+    }
 }
