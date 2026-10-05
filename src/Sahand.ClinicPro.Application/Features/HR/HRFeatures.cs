@@ -13,13 +13,16 @@ namespace Sahand.ClinicPro.Application.Features.HR;
 /// <summary>ردیف فهرست پرسنل</summary>
 public record EmployeeListDto(
     long Id, string? PersonnelCode, string FullName, string? PositionName,
-    string? DepartmentName, string Mobile, EmploymentType Type, bool IsActive);
+    string? DepartmentName, string Mobile, EmploymentType Type, bool IsActive,
+    decimal BaseSalary = 0m, decimal CommissionPercent = 0m);
 
 /// <summary>درخواست ثبت پرسنل</summary>
 public record CreateEmployeeDto(
     string FirstName, string LastName, string NationalCode, string Mobile,
     long? DepartmentId, long? PositionId,
-    EmploymentType EmploymentType = EmploymentType.FullTime);
+    EmploymentType EmploymentType = EmploymentType.FullTime,
+    decimal BaseSalary = 0m,
+    decimal CommissionPercent = 0m);
 
 /// <summary>
 /// فرمان ثبت پرسنل جدید
@@ -37,6 +40,10 @@ public class CreateEmployeeCommandValidator : AbstractValidator<CreateEmployeeCo
         RuleFor(x => x.Dto.NationalCode)
             .Must(Common.Helpers.NationalCodeValidator.IsValid).WithMessage("کد ملی نامعتبر است");
         RuleFor(x => x.Dto.Mobile).Matches("^09\\d{9}$").WithMessage("موبایل معتبر نیست");
+        RuleFor(x => x.Dto.BaseSalary).GreaterThanOrEqualTo(0)
+            .WithMessage("حقوق پایه نمی‌تواند منفی باشد");
+        RuleFor(x => x.Dto.CommissionPercent).InclusiveBetween(0, 100)
+            .WithMessage("درصد حقوق از سود خدمات باید بین صفر تا صد باشد");
     }
 }
 
@@ -67,6 +74,8 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
             DepartmentId = dto.DepartmentId,
             PositionId = dto.PositionId,
             EmploymentType = dto.EmploymentType,
+            BaseSalary = dto.BaseSalary,
+            CommissionPercent = dto.CommissionPercent,
             HireDate = DateOnly.FromDateTime(DateTime.UtcNow),
             IsActive = true
         };
@@ -75,6 +84,54 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
 
         return Result<long>.Success(employee.Id);
+    }
+}
+
+/// <summary>
+/// فرمان ویرایش اطلاعات حقوقی پرسنل — حقوق پایه + درصد از سود خدمات
+/// (قاعده چرخه نهم: درصد فقط از سود خدمات انجامی خود پرسنل اعمال می‌شود)
+/// </summary>
+public record UpdateEmployeeSalaryCommand(
+    long EmployeeId, decimal BaseSalary, decimal CommissionPercent) : IRequest<Result>;
+
+/// <summary>اعتبارسنج ویرایش اطلاعات حقوقی</summary>
+public class UpdateEmployeeSalaryCommandValidator : AbstractValidator<UpdateEmployeeSalaryCommand>
+{
+    /// <summary>قواعد حقوق پایه و درصد</summary>
+    public UpdateEmployeeSalaryCommandValidator()
+    {
+        RuleFor(x => x.EmployeeId).GreaterThan(0).WithMessage("شناسه پرسنل نامعتبر است");
+        RuleFor(x => x.BaseSalary).GreaterThanOrEqualTo(0)
+            .WithMessage("حقوق پایه نمی‌تواند منفی باشد");
+        RuleFor(x => x.CommissionPercent).InclusiveBetween(0, 100)
+            .WithMessage("درصد حقوق از سود خدمات باید بین صفر تا صد باشد");
+    }
+}
+
+/// <summary>گرداننده ویرایش اطلاعات حقوقی پرسنل</summary>
+public class UpdateEmployeeSalaryCommandHandler
+    : IRequestHandler<UpdateEmployeeSalaryCommand, Result>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده با تزریق واحد کار</summary>
+    public UpdateEmployeeSalaryCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>اجرای ویرایش حقوق پایه و درصد سود</summary>
+    public async Task<Result> Handle(UpdateEmployeeSalaryCommand request,
+        CancellationToken cancellationToken)
+    {
+        var employee = await _unitOfWork.Repository<Employee>().QueryableTracking
+            .FirstOrDefaultAsync(e => e.Id == request.EmployeeId && !e.IsDeleted,
+                cancellationToken);
+        if (employee is null)
+            return Result.Failure(Error.NotFound("پرسنل", request.EmployeeId));
+
+        employee.BaseSalary = request.BaseSalary;
+        employee.CommissionPercent = request.CommissionPercent;
+        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        return Result.Success();
     }
 }
 
@@ -154,7 +211,9 @@ public class GetEmployeesQueryHandler : IRequestHandler<GetEmployeesQuery, Resul
                 e.Department != null ? e.Department.Name : null,
                 e.Mobile ?? string.Empty,
                 e.EmploymentType ?? EmploymentType.FullTime,
-                e.IsActive))
+                e.IsActive,
+                e.BaseSalary,
+                e.CommissionPercent))
             .ToListAsync(cancellationToken);
 
         return Result<List<EmployeeListDto>>.Success(items);
