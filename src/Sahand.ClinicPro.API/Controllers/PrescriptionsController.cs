@@ -4,6 +4,10 @@ using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Application.DTOs.Prescriptions;
 using Sahand.ClinicPro.Application.Features.Prescriptions.Commands.CreatePrescription;
 using Sahand.ClinicPro.Application.Features.Prescriptions.Queries;
+using Sahand.ClinicPro.Application.Features.Prescriptions.CheckInteractions;
+using Sahand.ClinicPro.Application.Features.Prescriptions.PrescriptionTemplates;
+using Sahand.ClinicPro.Application.Features.Prescriptions.SearchMedications;
+using Sahand.ClinicPro.Application.Features.Prescriptions.SubmitElectronic;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -69,5 +73,53 @@ public class PrescriptionsController : ApiBaseController
         if (result.IsSuccess)
             return CreatedResponse(result, nameof(GetById), new { id = result.Value }, "نسخه صادر شد");
         return ToResponse(result);
+    }
+
+    /// <summary>جستجوی دارو برای نسخه‌نویسی — نام ژنریک/تجاری/بارکد/IRC</summary>
+    [HttpGet("medications/search")]
+    public async Task<IActionResult> SearchMedications([FromQuery] string? q, [FromQuery] int limit = 15)
+    {
+        var result = await _mediator.Send(new SearchMedicationsQuery(q, limit));
+        return ToResponse(result);
+    }
+
+    /// <summary>بررسی تداخل دارویی — ۴ سطح + تداخل با آلرژی بیمار</summary>
+    [HttpPost("check-interactions")]
+    public async Task<IActionResult> CheckInteractions([FromBody] CheckInteractionsRequest request)
+    {
+        var result = await _mediator.Send(new CheckInteractionsCommand(request));
+        return ToResponse(result);
+    }
+
+    /// <summary>ارسال نسخه به سامانه نسخه الکترونیک — کد رهگیری</summary>
+    [HttpPost("{id:long}/submit-electronic")]
+    public async Task<IActionResult> SubmitElectronic(long id)
+    {
+        var result = await _mediator.Send(new SubmitElectronicCommand(id));
+        return ToResponse(result, "نسخه به سامانه بیمه ارسال شد");
+    }
+
+    /// <summary>تمپلیت‌های نسخه</summary>
+    [HttpGet("templates")]
+    public async Task<IActionResult> GetTemplates()
+    {
+        var result = await _mediator.Send(new GetPrescriptionTemplatesQuery());
+        return ToResponse(result);
+    }
+
+    /// <summary>ذخیره تمپلیت جدید</summary>
+    [HttpPost("templates")]
+    public async Task<IActionResult> SaveTemplate([FromBody] SaveTemplateRequest request)
+    {
+        var result = await _mediator.Send(new SavePrescriptionTemplateCommand(request));
+        return ToResponse(result, "تمپلیت ذخیره شد");
+    }
+
+    /// <summary>حذف تمپلیت</summary>
+    [HttpDelete("templates/{id:long}")]
+    public async Task<IActionResult> DeleteTemplate(long id)
+    {
+        var result = await _mediator.Send(new DeletePrescriptionTemplateCommand(id));
+        return ToResponse(result, "تمپلیت حذف شد");
     }
 }
