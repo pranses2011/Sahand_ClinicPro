@@ -22,6 +22,30 @@ public interface ILicenseService
 
     /// <summary>آیا ماژول خاصی فعال است — توسط میدلور لایسنس استفاده می‌شود</summary>
     Task<bool> IsModuleEnabledAsync(string moduleCode, CancellationToken ct = default);
+
+    /// <summary>
+    /// اطلاعات پشتیبانی محصول — هنگام فعال‌سازی از سرور لایسنس دریافت و در تنظیمات محلی ذخیره می‌شود؛
+    /// هیچ کلاینتی این مقادیر را هاردکد ندارد و همیشه از همین قرارداد می‌خواند
+    /// </summary>
+    Task<SupportInfoDto> GetSupportInfoAsync(CancellationToken ct = default);
+}
+
+/// <summary>
+/// اطلاعات تماس با پشتیبان محصول — منبع یگانه برای سراسر برنامه (صفحه لایسنس، درباره، فوتر و راهنما)
+/// </summary>
+public sealed record SupportInfoDto(
+    string Name,
+    string Company,
+    string Phone,
+    string Mobile,
+    string Email,
+    string Website)
+{
+    /// <summary>نمونه خالی — پیش از فعال‌سازی لایسنس</summary>
+    public static SupportInfoDto Empty { get; } = new("", "", "", "", "", "");
+
+    /// <summary>آیا اطلاعاتی ذخیره شده است</summary>
+    public bool HasData => !string.IsNullOrWhiteSpace(Company) || !string.IsNullOrWhiteSpace(Mobile);
 }
 
 /// <summary>

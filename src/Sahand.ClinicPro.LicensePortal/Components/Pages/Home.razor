@@ -103,6 +103,34 @@ else
             }
         </div>
     </div>
+
+    @* ── اطلاعات پشتیبانی محصول — منبع ارسال به کلاینت‌ها هنگام فعال‌سازی؛ بدون نیاز به استقرار مجدد قابل ویرایش است ── *@
+    <div class="panel" style="margin-top:24px">
+        <h3>🧑‍💻 اطلاعات پشتیبانی محصول</h3>
+        <p class="page-desc" style="margin-bottom:14px">
+            این اطلاعات هنگام <b>فعال‌سازی اولیه</b> به نرم‌افزار کلاینت ارسال و در سراسر برنامه
+            (صفحه لایسنس، درباره برنامه و راهنماها) نمایش داده می‌شود. هیچ مقداری هاردکد نیست و همین‌جا قابل ویرایش است.
+        </p>
+        <EditForm Model="_support" OnValidSubmit="SaveSupportAsync" style="max-width:760px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <label>نام پشتیبان<br><InputText @bind-Value="_support.Name" /></label>
+                <label>نام شرکت<br><InputText @bind-Value="_support.Company" /></label>
+                <label>تلفن ثابت (با کد)<br><InputText @bind-Value="_support.Phone" dir="ltr" /></label>
+                <label>موبایل<br><InputText @bind-Value="_support.Mobile" dir="ltr" /></label>
+                <label>ایمیل<br><InputText @bind-Value="_support.Email" dir="ltr" /></label>
+                <label>وب‌سایت<br><InputText @bind-Value="_support.Website" dir="ltr" /></label>
+            </div>
+            <div style="margin-top:14px;display:flex;align-items:center;gap:12px">
+                <button type="submit" class="btn-primary" disabled="@_supportBusy">
+                    @(_supportBusy ? "در حال ذخیره…" : "💾 ذخیره اطلاعات پشتیبانی")
+                </button>
+                @if (_supportSaved)
+                {
+                    <span style="color:#2e7d32">✅ ذخیره شد — از فعال‌سازی/تپ‌قلب بعدی در کلاینت‌ها اعمال می‌شود.</span>
+                }
+            </div>
+        </EditForm>
+    </div>
 }
 
 @code {
@@ -110,10 +138,31 @@ else
     private List<LicenseRowDto> _recent = new();
     private List<CheckLogRow> _checks = new();
 
+    // اطلاعات پشتیبانی — قابل ویرایش از همین داشبورد؛ هنگام فعال‌سازی به کلاینت ارسال می‌شود
+    private SupportSettingsDto _support = new();
+    private bool _supportSaved;
+    private bool _supportBusy;
+
     protected override async Task OnInitializedAsync()
     {
         _stats = await Admin.GetStatsAsync();
         _recent = (await Admin.ListAsync()).Take(8).ToList();
         _checks = await Admin.RecentChecksAsync(10);
+        _support = await Admin.GetSupportInfoAsync();
+    }
+
+    /// <summary>ذخیره اطلاعات پشتیبانی — بدون نیاز به استقرار مجدد</summary>
+    private async Task SaveSupportAsync()
+    {
+        _supportBusy = true;
+        try
+        {
+            await Admin.SaveSupportInfoAsync(_support);
+            _supportSaved = true;
+        }
+        finally
+        {
+            _supportBusy = false;
+        }
     }
 }

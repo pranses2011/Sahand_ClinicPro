@@ -29,7 +29,7 @@ public class SignalRRealtimeNotifierTests
 
         var notificationProxy = new Mock<IClientProxy>();
         notificationProxy.Setup(p => p.SendCoreAsync(It.IsAny<string>(),
-                It.IsAny<object?[]?>(), It.IsAny<CancellationToken>()))
+                It.IsAny<object?[]>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var queueClients = new Mock<IHubClients>();
@@ -75,7 +75,7 @@ public class SignalRRealtimeNotifierTests
         await notifier.QueueChangedAsync();
 
         queueProxy.Verify(p => p.SendCoreAsync("queue-changed",
-            It.Is<object?[]?>(args => MatchesQueueMessage(args, "update", 30)),
+            It.Is<object?[]>(args => MatchesQueueMessage(args, "update", 30)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -93,7 +93,7 @@ public class SignalRRealtimeNotifierTests
         await notifier.NotifyUserAsync(7, notification);
 
         notificationProxy.Verify(p => p.SendCoreAsync("notification-received",
-            It.Is<object?[]?>(args => MatchesNotificationMessage(args, 45, "نوبت جدید")),
+            It.Is<object?[]>(args => MatchesNotificationMessage(args, 45, "نوبت جدید")),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -106,9 +106,9 @@ public class SignalRRealtimeNotifierTests
         await notifier.BroadcastAlertAsync("هشدار", "متن هشدار");
 
         queueProxy.Verify(p => p.SendCoreAsync("broadcast-alert",
-            It.IsAny<object?[]?>(), It.IsAny<CancellationToken>()), Times.Once);
+            It.Is<object?[]>(_ => true), It.IsAny<CancellationToken>()), Times.Once);
         notificationProxy.Verify(p => p.SendCoreAsync("broadcast-alert",
-            It.IsAny<object?[]?>(), It.IsAny<CancellationToken>()), Times.Once);
+            It.Is<object?[]>(_ => true), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>قرارداد نام گروه‌ها — مشترک بین Hub و پیاده‌سازی پخش</summary>

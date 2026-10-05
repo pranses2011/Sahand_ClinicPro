@@ -99,6 +99,34 @@ public partial class LicenseStatusViewModel : ViewModelBase
     [ObservableProperty]
     private string? _activationKey;
 
+    /// <summary>نام پشتیبان — دریافتی از سرور لایسنس (بدون هاردکد)</summary>
+    [ObservableProperty]
+    private string _supportName = "";
+
+    /// <summary>نام شرکت پشتیبان</summary>
+    [ObservableProperty]
+    private string _supportCompany = "";
+
+    /// <summary>تلفن ثابت پشتیبانی</summary>
+    [ObservableProperty]
+    private string _supportPhone = "";
+
+    /// <summary>موبایل پشتیبانی</summary>
+    [ObservableProperty]
+    private string _supportMobile = "";
+
+    /// <summary>ایمیل پشتیبانی</summary>
+    [ObservableProperty]
+    private string _supportEmail = "";
+
+    /// <summary>وب‌سایت پشتیبانی</summary>
+    [ObservableProperty]
+    private string _supportWebsite = "";
+
+    /// <summary>آیا اطلاعات پشتیبانی دریافت شده</summary>
+    [ObservableProperty]
+    private bool _hasSupport;
+
     /// <summary>سازنده</summary>
     public LicenseStatusViewModel(IApiClient api, ISnackbarService snackbar, IConfiguration configuration)
     {
@@ -145,6 +173,19 @@ public partial class LicenseStatusViewModel : ViewModelBase
                     Title = m.Value,
                     IsEnabled = enabledSet.Contains(m.Key) || enabledSet.Contains(m.Value)
                 });
+
+            // اطلاعات پشتیبانی — دریافتی از سرور لایسنس هنگام فعال‌سازی؛ سراسر برنامه از همین مقادیر استفاده می‌کند
+            var sup = s.SupportInfo;
+            HasSupport = sup is not null;
+            if (sup is not null)
+            {
+                SupportName = sup.Name ?? "";
+                SupportCompany = sup.Company ?? "";
+                SupportPhone = sup.Phone ?? "";
+                SupportMobile = sup.Mobile ?? "";
+                SupportEmail = sup.Email ?? "";
+                SupportWebsite = sup.Website ?? "";
+            }
         }
         finally
         {
@@ -160,7 +201,11 @@ public partial class LicenseStatusViewModel : ViewModelBase
         ["Accounting"] = "حسابداری", ["Insurance"] = "بیمه", ["Lab"] = "آزمایشگاه",
         ["Pharmacy"] = "داروخانه", ["Sms"] = "پیامک", ["Imaging"] = "تصویربرداری",
         ["Dental"] = "دندانپزشکی", ["Eye"] = "چشم‌پزشکی", ["Physiotherapy"] = "فیزیوتراپی",
-        ["Attendance"] = "حضور و غیاب"
+        ["Attendance"] = "حضور و غیاب",
+        // ── ماژول‌های افزودنی نسخه ۱.۶.۰ — هماهنگ با کاتالوگ سرور لایسنس ──
+        ["Survey"] = "نظرسنجی بیماران", ["Payroll"] = "فیش حقوقی",
+        ["Paraclinical"] = "پاراکلینیک", ["EMR"] = "پرونده بالینی پیشرفته",
+        ["Complementary"] = "طب مکمل و قالب چاپ", ["Branches"] = "مدیریت شعبه‌ها",
     };
 
     /// <summary>فعال‌سازی آنلاین با کلید ورودی</summary>
@@ -215,6 +260,18 @@ public partial class LicenseStatusViewModel : ViewModelBase
         public int MaxDoctors { get; set; }
         public int MaxPatients { get; set; }
         public List<string>? EnabledModules { get; set; }
+        public SupportInfoData? SupportInfo { get; set; }
         public string? Message { get; set; }
+    }
+
+    /// <summary>اطلاعات پشتیبانی دریافتی از سرور — هیچ مقدار هاردکدی جایگزین آن نمی‌شود</summary>
+    private sealed class SupportInfoData
+    {
+        public string? Name { get; set; }
+        public string? Company { get; set; }
+        public string? Phone { get; set; }
+        public string? Mobile { get; set; }
+        public string? Email { get; set; }
+        public string? Website { get; set; }
     }
 }

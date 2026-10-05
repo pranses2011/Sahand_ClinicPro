@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.Domain.Entities.Infrastructure;
 using Sahand.ClinicPro.Domain.Entities.Licensing;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Infrastructure.Persistence;
@@ -55,6 +56,28 @@ public record IssueLicenseRequest
 /// <summary>لاگ اعتبارسنجی برای نمایش</summary>
 public record CheckLogRow(DateTime? CheckDate, string ResultText, bool IsOnline, string? Message);
 
+/// <summary>اطلاعات پشتیبانی قابل ویرایش از پنل — منبع ارسال به کلاینت‌ها هنگام فعال‌سازی</summary>
+public class SupportSettingsDto
+{
+    /// <summary>نام پشتیبان</summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>نام شرکت</summary>
+    public string Company { get; set; } = string.Empty;
+
+    /// <summary>تلفن ثابت</summary>
+    public string Phone { get; set; } = string.Empty;
+
+    /// <summary>موبایل</summary>
+    public string Mobile { get; set; } = string.Empty;
+
+    /// <summary>ایمیل</summary>
+    public string Email { get; set; } = string.Empty;
+
+    /// <summary>وب‌سایت</summary>
+    public string Website { get; set; } = string.Empty;
+}
+
 /// <summary>
 /// سرویس مدیریت لایسنس سمت پنل — صدور و تمدید و ابطال
 /// تصمیم معماری: پنل به‌عنوان سامانه صادرکننده مستقیماً از DbContext استفاده می‌کند؛
@@ -77,9 +100,68 @@ public class LicenseAdminService
     {
         "Dashboard", "Patients", "Appointments", "Receptions", "Visits", "Prescriptions",
         "Billing", "Lab", "Pharmacy", "Imaging", "Dental", "Eye", "Physiotherapy",
-        "Accounting", "HR", "Reports", "Sms", "Insurance", "Government", "Settings",
-        "Backup", "Audit", "Users"
+        "Accounting", "HR", "Attendance", "Reports", "Sms", "Insurance", "Government", "Settings",
+        "Backup", "Audit", "Users",
+        // ── ماژول‌های افزودنی نسخه ۱.۶.۰ — هماهنگ با سرور PHP و دسکتاپ ──
+        "Survey", "Payroll", "Paraclinical", "EMR", "Complementary", "Branches"
     };
+
+    /// <summary>
+    /// خواندن اطلاعات پشتیبانی از تنظیمات — این مقادیر هنگام فعال‌سازی به کلاینت ارسال و
+    /// سراسر برنامه نمایش داده می‌شوند؛ هیچ مقداری هاردکد نیست
+    /// </summary>
+    public async Task<SupportSettingsDto> GetSupportInfoAsync(CancellationToken ct = default)
+    {
+        var keys = new[] { "Support.Name", "Support.Company", "Support.Phone", "Support.Mobile", "Support.Email", "Support.Website" };
+        var rows = await _db.SystemSettings.AsNoTracking()
+            .Where(s => s.Category == "Support" && keys.Contains(s.Key) && !s.IsDeleted)
+            .ToDictionaryAsync(s => s.Key, s => s.Value ?? "", ct);
+
+        return new SupportSettingsDto
+        {
+            Name = rows.GetValueOrDefault("Support.Name", ""),
+            Company = rows.GetValueOrDefault("Support.Company", ""),
+            Phone = rows.GetValueOrDefault("Support.Phone", ""),
+            Mobile = rows.GetValueOrDefault("Support.Mobile", ""),
+            Email = rows.GetValueOrDefault("Support.Email", ""),
+            Website = rows.GetValueOrDefault("Support.Website", ""),
+        };
+    }
+
+    /// <summary>ذخیره اطلاعات پشتیبانی — ویرایش از پنل بدون نیاز به استقرار مجدد</summary>
+    public async Task SaveSupportInfoAsync(SupportSettingsDto dto, CancellationToken ct = default)
+    {
+        var map = new Dictionary<string, string>
+        {
+            ["Support.Name"] = dto.Name?.Trim() ?? "",
+            ["Support.Company"] = dto.Company?.Trim() ?? "",
+            ["Support.Phone"] = dto.Phone?.Trim() ?? "",
+            ["Support.Mobile"] = dto.Mobile?.Trim() ?? "",
+            ["Support.Email"] = dto.Email?.Trim() ?? "",
+            ["Support.Website"] = dto.Website?.Trim() ?? "",
+        };
+
+        var existing = await _db.SystemSettings
+            .Where(s => s.Category == "Support" && map.Keys.Contains(s.Key))
+            .ToDictionaryAsync(s => s.Key, ct);
+
+        foreach (var (key, value) in map)
+        {
+            if (existing.TryGetValue(key, out var row))
+                row.Value = value;
+            else
+                _db.SystemSettings.Add(new SystemSetting
+                {
+                    Category = "Support",
+                    Key = key,
+                    Value = value,
+                    DataType = SettingDataType.String,
+                    Description = "اطلاعات پشتیبانی محصول — ارسالی به کلاینت‌ها هنگام فعال‌سازی",
+                    IsSystem = false,
+                });
+        }
+        await _db.SaveChangesAsync(ct);
+    }
 
     /// <summary>فهرست لایسنس‌ها با فیلتر وضعیت</summary>
     public async Task<List<LicenseRowDto>> ListAsync(string? filter = null)

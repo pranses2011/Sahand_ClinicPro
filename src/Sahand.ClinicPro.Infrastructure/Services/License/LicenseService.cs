@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Sahand.ClinicPro.Application.Interfaces;
+using Sahand.ClinicPro.Domain.Entities.Infrastructure;
 using Sahand.ClinicPro.Domain.Entities.Licensing;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Infrastructure.Persistence;
@@ -173,6 +174,26 @@ public class LicenseService : ILicenseService
         return status.IsValid
                && (status.EnabledModules.Contains(moduleCode)
                    || status.EnabledModules.Contains("*"));
+    }
+
+    /// <summary>
+    /// خواندن اطلاعات پشتیبانی از تنظیمات محلی — سراسر برنامه (صفحه لایسنس، درباره، فوتر) از همین مسیر می‌خواند؛
+    /// مقادیر هنگام فعال‌سازی/تپ‌قلب از پنل لایسنس دریافت و ذخیره شده‌اند و هیچ هاردکدی وجود ندارد
+    /// </summary>
+    public async Task<SupportInfoDto> GetSupportInfoAsync(CancellationToken ct = default)
+    {
+        var keys = new[] { "Support.Name", "Support.Company", "Support.Phone", "Support.Mobile", "Support.Email", "Support.Website" };
+        var rows = await _context.SystemSettings.AsNoTracking()
+            .Where(s => s.Category == "Support" && keys.Contains(s.Key) && !s.IsDeleted)
+            .ToDictionaryAsync(s => s.Key, s => s.Value ?? "", ct);
+
+        return new SupportInfoDto(
+            rows.GetValueOrDefault("Support.Name", ""),
+            rows.GetValueOrDefault("Support.Company", ""),
+            rows.GetValueOrDefault("Support.Phone", ""),
+            rows.GetValueOrDefault("Support.Mobile", ""),
+            rows.GetValueOrDefault("Support.Email", ""),
+            rows.GetValueOrDefault("Support.Website", ""));
     }
 
     /// <summary>
@@ -387,8 +408,50 @@ public class LicenseService : ILicenseService
             }
         }
 
+        // اطلاعات پشتیبانی محصول — از پنل لایسنس دریافت و در تنظیمات محلی ذخیره می‌شود تا سراسر برنامه استفاده کند
+        if (data.Support is not null)
+            await UpsertSupportInfoAsync(data.Support, ct);
+
         await _context.SaveChangesAsync(ct);
         return license;
+    }
+
+    /// <summary>
+    /// ذخیره اطلاعات پشتیبانی دریافتی از سرور لایسنس در جدول SystemSettings (دسته Support)
+    /// — مقادیر قبلی جایگزین می‌شوند؛ هرگز حذف نمی‌شوند تا در آفلاین هم قابل نمایش بمانند
+    /// </summary>
+    private async Task UpsertSupportInfoAsync(PortalSupportInfo support, CancellationToken ct)
+    {
+        var map = new Dictionary<string, string>
+        {
+            ["Support.Name"] = support.Name ?? "",
+            ["Support.Company"] = support.Company ?? "",
+            ["Support.Phone"] = support.Phone ?? "",
+            ["Support.Mobile"] = support.Mobile ?? "",
+            ["Support.Email"] = support.Email ?? "",
+            ["Support.Website"] = support.Website ?? "",
+        };
+
+        var existing = await _context.SystemSettings
+            .Where(s => s.Category == "Support" && map.Keys.Contains(s.Key))
+            .ToDictionaryAsync(s => s.Key, ct);
+
+        foreach (var (key, value) in map)
+        {
+            if (string.IsNullOrWhiteSpace(value)) continue; // مقدار خالی از سرور — مقدار قبلی نگه داشته می‌شود
+            if (existing.TryGetValue(key, out var row))
+                row.Value = value;
+            else
+                _context.SystemSettings.Add(new SystemSetting
+                {
+                    Category = "Support",
+                    Key = key,
+                    Value = value,
+                    DataType = SettingDataType.String,
+                    Description = "اطلاعات پشتیبانی محصول — دریافتی از سرور لایسنس",
+                    IsSystem = false,
+                });
+        }
     }
 
     /// <summary>تحلیل تاریخ yyyy-MM-dd</summary>
@@ -480,4 +543,29 @@ public sealed class PortalLicensePayload
 
     /// <summary>امضای Base64 — فقط در فایل lic آفلاین داخل همین بدنه است</summary>
     [JsonPropertyName("signature")] public string? Signature { get; set; }
+
+    /// <summary>اطلاعات پشتیبانی محصول — از پنل لایسنس ارسال می‌شود</summary>
+    [JsonPropertyName("support")] public PortalSupportInfo? Support { get; set; }
+}
+
+/// <summary>اطلاعات پشتیبانی دریافتی از سرور لایسنس — قرارداد مشترک با پنل PHP</summary>
+public sealed class PortalSupportInfo
+{
+    /// <summary>نام پشتیبان</summary>
+    [JsonPropertyName("name")] public string? Name { get; set; }
+
+    /// <summary>نام شرکت</summary>
+    [JsonPropertyName("company")] public string? Company { get; set; }
+
+    /// <summary>تلفن ثابت</summary>
+    [JsonPropertyName("phone")] public string? Phone { get; set; }
+
+    /// <summary>موبایل</summary>
+    [JsonPropertyName("mobile")] public string? Mobile { get; set; }
+
+    /// <summary>ایمیل</summary>
+    [JsonPropertyName("email")] public string? Email { get; set; }
+
+    /// <summary>وب‌سایت</summary>
+    [JsonPropertyName("website")] public string? Website { get; set; }
 }
