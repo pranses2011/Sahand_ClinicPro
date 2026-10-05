@@ -11,8 +11,8 @@
 [![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC2927?logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server)
 [![WPF](https://img.shields.io/badge/WPF-MaterialDesign-512BD4?logo=windows&logoColor=white)](https://materialdesigninxaml.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-129%20%E2%9C%85-2EA44F)](#-تست‌ها)
-[![Version](https://img.shields.io/badge/release-v1.4.0-blue)](https://github.com/pranses2011/Sahand_ClinicPro/releases)
+[![Tests](https://img.shields.io/badge/tests-133%20%E2%9C%85-2EA44F)](#-تست‌ها)
+[![Version](https://img.shields.io/badge/release-v1.5.0-blue)](https://github.com/pranses2011/Sahand_ClinicPro/releases)
 
 [✨ امکانات](#-ماژول‌ها--امکانات) · [🖼 تصاویر](#-تصاویر-محیط-نرم‌افزار) · [🚀 نصب](#-راه‌اندازی-سریع) · [🕐 حضور و غیاب](#-ماژول-حضور-و-غیاب--جدید-v130) · [🔐 لایسنس](#%EF%B8%8F-سامانه-لایسنس) · [📚 مستندات](#-مستندات)
 
@@ -32,8 +32,8 @@
 | 📦 پروژه‌های .NET | ۸ پروژه (Domain/Application/Infrastructure/API/Desktop/LicensePortal/Shared) + سرور لایسنس PHP |
 | 🗄 جداول دیتابیس | ۹۴ جدول + ۱۵ ایندکس جدید حضور و غیاب + جدول اقلام انبارگردانی |
 | 🔌 API | ۲۵ کنترلر — ۳۰۰+ endpoint |
-| 🖥 صفحات دسکتاپ | ۲۹ صفحه WPF با Material Design و RTL کامل |
-| 🧪 تست‌های خودکار | **۱۲۹ تست سبز** در ۴ پروژه — بیلد بدون هیچ هشدار |
+| 🖥 صفحات دسکتاپ | ۳۰ صفحه WPF با Material Design و RTL کامل |
+| 🧪 تست‌های خودکار | **۱۳۳ تست سبز** در ۴ پروژه — بیلد بدون هیچ هشدار |
 | 🧩 ماژول‌های لایسنس | ۲۴ ماژول قابل فعال‌سازی جداگانه |
 | 🌐 زبان | فارسی کامل — تقویم جلالی، رقم فارسی، RTL |
 
@@ -116,6 +116,7 @@
 | 🧾 **فیش حقوقی** | قواعد ۱۴۰۴: اضافه‌کاری ۱.۴×، بیمه ۷٪، پلکان مالیات — از حضور واقعی دستگاه |
 | 📈 **گزارش‌ساز** | ۳۱ گزارش کاملاً واقعی (سود و زیان، صورت‌حساب بیمار، بیماری‌های مزمن، الگوی مراجعات و…) + پارامترهای پویا + انتخابگر بیمار + خروجی CSV فارسی |
 | 💬 **پیامک** | زنجیره جایگزینی پنل‌ها، صف Hangfire، تمپلیت، آمار |
+| 📝 **نظرسنجی بیماران** 🆕 | سازنده پویا سوالات (امتیاز/متن/چندگزینه‌ای)، ارسال لینک پیامکی پس از ویزیت، میانگین امتیاز پزشکان و توزیع ستاره |
 | 🏛 **سامانه‌های دولتی** | سپاس، سیب، ناب، سینا، نسخه الکترونیک — همه پشت `IGovIntegrationService` |
 | 👤 **کاربران و نقش‌ها** | RBAC با ۱۵۰+ دسترسی، ماتریس نقش، قفل ۵ تلاشی |
 | 🏘 **چندشعبه‌ای** | فیلتر سراسری شعبه با هدر X-Branch-Id |
@@ -242,11 +243,11 @@ Sahand_ClinicPro/
 │   ├── Sahand.ClinicPro.Application     # CQRS × ۱۹ ماژول + Behaviors
 │   ├── Sahand.ClinicPro.Infrastructure  # EF Core 8 + Identity + SMS + Gov + License + درایورها
 │   ├── Sahand.ClinicPro.API             # ۲۵ کنترلر + SignalR + Hangfire
-│   ├── Sahand.ClinicPro.Desktop         # WPF — ۲۸ صفحه Material Design RTL
+│   ├── Sahand.ClinicPro.Desktop         # WPF — ۳۰ صفحه Material Design RTL
 │   ├── Sahand.ClinicPro.LicensePortal   # پنل وب لایسنس (Blazor)
 │   ├── Sahand.ClinicPro.Shared          # DICOM + WHO رشد + قراردادها
 │   └── LicenseServer.Php                # سرور لایسنس cPanel (PHP 8 + MySQL)
-├── 📁 tests/                            # ۴ پروژه تست — ۱۱۷ تست
+├── 📁 tests/                            # ۴ پروژه تست — ۱۳۳ تست
 ├── 📁 docs/
 │   ├── design/                          # ۷ سند طراحی (معماری تا حضور و غیاب)
 │   ├── screenshots/                     # ۱۴ اسکرین‌شات رتینا
@@ -285,6 +286,7 @@ Sahand_ClinicPro/
 
 | نسخه | تاریخ | جهش اصلی |
 |:---|:---|:---|
+| **v1.5.0** | ۱۴۰۴/۰۷/۱۳ | 📝 ماژول نظرسنجی بیماران (فرم ۳۴/۳۴) + ارسال لینک پیامکی + ۱۳۳ تست |
 | **v1.4.0** | ۱۴۰۴/۰۷/۱۳ | 🏷 انبارگردانی داروخانه + ۳۱/۳۱ گزارش واقعی + بیلد صفر هشدار + ۱۲۹ تست |
 | v1.3.0 | ۱۴۰۴/۰۷/۱۳ | 🕐 ماژول حضور و غیاب + اتصال دستگاه ZKTeco/Hikvision + ۱۱۷ تست |
 | v1.3.0-alpha | ۱۴۰۴/۰۷/۱۳ | ⚡ SignalR بلادرنگ + EMR پیشرفته WHO + فیش حقوقی + DICOM |
