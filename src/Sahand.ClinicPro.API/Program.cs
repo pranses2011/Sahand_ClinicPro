@@ -170,6 +170,11 @@ try
         Hangfire.RecurringJob.AddOrUpdate<Sahand.ClinicPro.Infrastructure.Services.SMS.SmsQueueProcessor>(
             "sms-queue", processor => processor.ProcessQueueAsync(System.Threading.CancellationToken.None),
             Hangfire.Cron.Minutely());
+
+        // تپ قلب روزانه لایسنس — ساعت ۳ بامداد (اعلان حضور به سرور لایسنس + مهلت آفلاین)
+        Hangfire.RecurringJob.AddOrUpdate<Sahand.ClinicPro.Infrastructure.Services.License.LicenseHeartbeatJob>(
+            "license-heartbeat", job => job.RunAsync(System.Threading.CancellationToken.None),
+            Hangfire.Cron.Daily(3));
     }
 
     // Swagger فقط در محیط توسعه فعال است

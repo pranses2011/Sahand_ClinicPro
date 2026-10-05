@@ -1,0 +1,43 @@
+<?php
+/**
+ * کار زمان‌بندی‌شده پاک‌سازی — اجرا از cPanel → Cron Jobs (توصیه: روزانه ۳:۳۰ بامداد)
+ * نمونه دستور در cPanel:
+ *   php /home/USER/public_html/license/cron.php SECRET
+ * مقدار SECRET از فایل data/config.php (LS_CRON_SECRET) خوانده می‌شود.
+ *
+ * کارها: پاک‌سازی سطرهای محدودیت نرخ قدیمی + حذف لاگ‌های بیش از ۹۰ روز
+ *
+ * @license MIT
+ */
+
+declare(strict_types=1);
+
+require __DIR__ . '/inc/functions.php';
+
+// احراز فراخوانی با کلید رمزی
+$secret = (string)($_SERVER['argv'][1] ?? $_GET['secret'] ?? '');
+if (!defined('LS_CRON_SECRET') || $secret === '' || !hash_equals(LS_CRON_SECRET, $secret)) {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
+$db = ls_db();
+
+// ۱) پاک‌سازی پنجره‌های نرخ قدیمی‌تر از ۲۴ ساعت
+$deleted1 = $db->exec('DELETE FROM ls_rate_limits WHERE window_start < ' . (time() - 86400));
+
+// ۲) حذف لاگ‌های اعتبارسنجی کهنسال‌تر از ۹۰ روز
+$deleted2 = $db->exec('DELETE FROM ls_check_logs WHERE created_at < DATE_SUB(NOW(), INTERVAL 90 DAY)');
+
+// ۳) حذف لاگ حسابرسی کهنسال‌تر از ۱۸۰ روز
+$deleted3 = $db->exec('DELETE FROM ls_admin_audit WHERE created_at < DATE_SUB(NOW(), INTERVAL 180 DAY)');
+
+echo json_encode([
+    'ok' => true,
+    'time' => date('c'),
+    'cleaned' => [
+        'rate_limits' => $deleted1,
+        'check_logs'  => $deleted2,
+        'admin_audit' => $deleted3,
+    ],
+], JSON_UNESCAPED_UNICODE) . PHP_EOL;

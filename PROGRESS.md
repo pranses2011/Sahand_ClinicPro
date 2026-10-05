@@ -103,3 +103,31 @@
 - قواعد Commit: `<emoji> [Step N]: <توضیح>` + Push مکرر (حداکثر هر ۳۰ دقیقه)
 - برای هر فاز یک Branch جداگانه: `feature/phase-N-...` سپس Merge به main در پایان فاز
 - توکن GitHub هرگز در فایل‌های ریپازیتوری ذخیره نشود (تنها تنظیمات لوکال)
+
+---
+
+# 📊 چرخه سوم توسعه (v1.2) — بر اساس پرامپت‌های UI + سرور لایسنس cPanel
+
+> شروع: 2026-10-05 | فایل مدیریت: TODO-v1.2.md | منبع: docs/prompts/prompt-ui-part1..5.html (مطالعه کامل ۵ فایل)
+
+## فاز A: سرور لایسنس PHP برای cPanel — ✅ کامل (5/5)
+
+### گام‌های L1-L3 — سرور PHP (شاخه feature/phase-13-license-php):
+- ۱۲ فایل PHP خالص (۲۲۷۴ خط) بدون Composer/فریمورک — فقط pdo_mysql + openssl + json
+- install.php سه‌مرحله‌ای → ۷ جدول MySQL (utf8mb4) + جفت‌کلید RSA-2048 + قفل نصب
+- پنل RTL: داشبورد/صدور/تمدید/ابطال/انتقال/آفلاین .lic/لاگ/تنظیمات + CSRF + قفل ۵ خطا + حسابرسی
+- api.php: activate (bind اولین اثر انگشت) + heartbeat + ping + Rate-Limit 60/10min
+- قرارداد امضا: «کلید|انقضای yyyy-MM-dd|حداکثر کاربر» با SHA256+PKCS1 — بایت‌به‌بایت هم‌ارز دات‌نت
+
+### گام L4 — اتصال واقعی کلاینت .NET:
+- LicenseService بازنویسی شد: HttpClient typed + تحلیل پاسخ JSON + Upsert محدودیت‌ها/ماژول‌ها از سرور
+- ImportPublicKey دوگانه: قالب XML (FromXmlString) و PEM (ImportFromPem)
+- HeartbeatAsync + کار Hangfire روزانه ساعت ۳ بامداد + مهلت آفلاین ۳۰ روزه قابل تنظیم
+- **رفع باگ**: میدلور لایسنس مسیر lab را به "Laboratory" نگاشت می‌کرد ولی کاتالوگ "Lab" است — اصلاح شد
+- ۴ تست سازگاری امضا (بردار تولیدشده با cryptography پایتون = هم‌ارز openssl_sign)
+
+### گام L5 — بسته‌بندی:
+- download/Sahand-LicenseServer-cPanel-v1.0.zip (شامل ۳ فایل htaccess محافظ)
+- README-FA.md: راهنمای گام‌به‌گام cPanel + نکات امنیتی + قرارداد API
+
+### نتیجه فاز: کل Solution سبز (۰ هشدار) | ۵۴/۵۴ تست سبز

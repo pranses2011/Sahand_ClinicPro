@@ -68,7 +68,8 @@ public static class DependencyInjection
             sp.GetRequiredService<Services.Government.ElectronicPrescriptionService>());
 
         // ── سامانه لایسنس سمت کلاینت ──
-        services.AddScoped<Application.Interfaces.ILicenseService, Services.License.LicenseService>();
+        // سرویس لایسنس با HttpClient typed — اتصال به سرور لایسنس PHP/بلزور
+        services.AddHttpClient<Application.Interfaces.ILicenseService, Services.License.LicenseService>();
 
         // استعلام برخط بیمه — گام V10 (کش TTL + سه تلاش + fallback برون‌خط)
         services.AddHttpClient("insurance-eligibility");
