@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              (license_key, license_type, clinic_name, clinic_phone, clinic_manager, clinic_email,
               clinic_city, clinic_address, max_users, max_doctors,
               max_patients, max_branches, enabled_modules, issued_date, expiry_date, notes, created_at, updated_at)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())'
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())'
         )->execute([
             $key, $type,
             mb_substr(trim((string)($_POST['clinic_name'] ?? '')), 0, 200) ?: null,
