@@ -313,6 +313,9 @@ public class ClinicProDbContext : DbContext
     /// <summary>مجموعه StockTakings</summary>
     public DbSet<StockTaking> StockTakings { get; set; }
 
+    /// <summary>مجموعه StockTakingItems — گام P2</summary>
+    public DbSet<StockTakingItem> StockTakingItems { get; set; }
+
     /// <summary>مجموعه Suppliers</summary>
     public DbSet<Supplier> Suppliers { get; set; }
 

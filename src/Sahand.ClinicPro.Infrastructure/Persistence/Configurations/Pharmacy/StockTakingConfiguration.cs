@@ -13,6 +13,10 @@ public class StockTakingConfiguration : IEntityTypeConfiguration<StockTaking>
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Status).HasConversion<byte>().HasComment("وضعیت");
+        builder.Property(x => x.TakingNumber).HasMaxLength(30).HasComment("شماره جلسه انبارگردانی");
+        builder.Property(x => x.ApprovedAt).HasComment("تاریخ تأیید و اعمال مغایرت — گام P2");
 
+        // بارگذاری کامل اقلام جلسه
+        builder.Navigation(x => x.Items).UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

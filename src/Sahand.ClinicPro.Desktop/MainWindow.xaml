@@ -55,6 +55,9 @@
         <DataTemplate DataType="{x:Type vm:PharmacyViewModel}">
             <views:PharmacyView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:StocktakingViewModel}">
+            <views:StocktakingView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:ReportsViewModel}">
             <views:ReportsView />
         </DataTemplate>

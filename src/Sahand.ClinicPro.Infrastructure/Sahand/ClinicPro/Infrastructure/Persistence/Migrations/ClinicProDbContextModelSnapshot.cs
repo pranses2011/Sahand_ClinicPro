@@ -8013,6 +8013,10 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2")
+                        .HasComment("تاریخ تأیید و اعمال مغایرت — گام P2");
+
                     b.Property<long?>("BranchId")
                         .HasColumnType("bigint");
 
@@ -8049,6 +8053,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<DateOnly?>("TakingDate")
                         .HasColumnType("date");
 
+                    b.Property<string>("TakingNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasComment("شماره جلسه انبارگردانی");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -8060,6 +8069,83 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.ToTable("StockTakings", null, t =>
                         {
                             t.HasComment("انبارگردانی - شمارش ادواری موجودی");
+                        });
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Pharmacy.StockTakingItem", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("CountedQuantity")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("مقدار شمارش‌شده");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("InventoryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsCounted")
+                        .HasColumnType("bit")
+                        .HasComment("آیا شمارش شده؟");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasComment("یادداشت شمارنده");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("StockTakingId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("SystemQuantity")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("موجودی سیستم هنگام شروع");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InventoryId");
+
+                    b.HasIndex("StockTakingId");
+
+                    b.HasIndex("StockTakingId", "InventoryId")
+                        .IsUnique();
+
+                    b.ToTable("StockTakingItems", null, t =>
+                        {
+                            t.HasComment("اقلام انبارگردانی - عکس فوری موجودی + شمارش واقعی");
                         });
                 });
 
@@ -10553,6 +10639,25 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Pharmacy.StockTakingItem", b =>
+                {
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.Pharmacy.PharmacyInventory", "Inventory")
+                        .WithMany()
+                        .HasForeignKey("InventoryId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.Pharmacy.StockTaking", "StockTaking")
+                        .WithMany("Items")
+                        .HasForeignKey("StockTakingId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Inventory");
+
+                    b.Navigation("StockTaking");
+                });
+
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Reporting.ReportExecution", b =>
                 {
                     b.HasOne("Sahand.ClinicPro.Domain.Entities.Reporting.ReportDefinition", "Report")
@@ -10996,6 +11101,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Pharmacy.PurchaseOrder", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Pharmacy.StockTaking", b =>
                 {
                     b.Navigation("Items");
                 });
