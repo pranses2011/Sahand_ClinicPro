@@ -1,0 +1,302 @@
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.AccountingView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="640" d:DesignWidth="1080"
+             FlowDirection="RightToLeft"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══ حسابداری دوبل — گام U9 طبق فرم ۱۶: ۵ تب ═══ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="BookOpenPageVariantOutline" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                     VerticalAlignment="Center" />
+            <TextBlock Text="حسابداری دوبل" FontSize="20" FontWeight="Bold"
+                       Margin="10,0,0,0" VerticalAlignment="Center" />
+            <Button Command="{Binding LoadCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Margin="14,0,0,0" VerticalAlignment="Center">
+                <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" />
+            </Button>
+        </StackPanel>
+
+        <TabControl Grid.Row="1" Style="{StaticResource MaterialDesignTabControl}">
+            <!-- تب ۱: دفتر روزنامه -->
+            <TabItem Header="📒 دفتر روزنامه">
+                <Grid Margin="4,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Command="{Binding NewEntryCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
+                                <TextBlock Text="سند جدید" Margin="7,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedEntry}"
+                              AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                              HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="شماره سند" Binding="{Binding EntryNumber, TargetNullValue=—}" Width="110" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi}" Width="95" />
+                            <DataGridTextColumn Header="شرح" Binding="{Binding Description, TargetNullValue=—}" Width="*" />
+                            <DataGridTextColumn Header="جمع بدهکار" Binding="{Binding TotalDebit, StringFormat='{}{0:N0}'}" Width="120" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="جمع بستانکار" Binding="{Binding TotalCredit, StringFormat='{}{0:N0}'}" Width="120" FontFamily="Consolas" />
+                            <DataGridTemplateColumn Header="وضعیت" Width="95">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center"
+                                                Background="{Binding StatusColor}">
+                                            <TextBlock Text="{Binding StatusText}" FontSize="11" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- فرم سند -->
+                    <Border Grid.Row="1" CornerRadius="12" Padding="14" Background="#FAFAFA"
+                            BorderBrush="#B0BEC5" BorderThickness="1"
+                            Visibility="{Binding ShowEntryForm, Converter={StaticResource BoolToVisibility}}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="3*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding EntryDescription, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="شرح سند — الزامی" />
+                                <Button Grid.Column="1" Command="{Binding SaveEntryCommand}" Margin="10,0,0,0"
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        IsEnabled="{Binding IsBalanced}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ContentSaveCheck" Width="15" Height="15" VerticalAlignment="Center" />
+                                        <TextBlock Text="ثبت سند" Margin="7,0,0,0" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <DataGrid Grid.Row="1" ItemsSource="{Binding EntryLines}" AutoGenerateColumns="False"
+                                      CanUserAddRows="False" HeadersVisibility="Column" FontSize="12" MinHeight="120">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="حساب" Width="280">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ComboBox ItemsSource="{Binding DataContext.FlatAccounts, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          SelectedValuePath="Id"
+                                                          SelectedValue="{Binding AccountId, UpdateSourceTrigger=PropertyChanged}"
+                                                          DisplayMemberPath="Display" FontSize="11" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="شرح سطر" Binding="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                                    <DataGridTextColumn Header="بدهکار" Binding="{Binding Debit, UpdateSourceTrigger=PropertyChanged}" Width="120" FontFamily="Consolas" />
+                                    <DataGridTextColumn Header="بستانکار" Binding="{Binding Credit, UpdateSourceTrigger=PropertyChanged}" Width="120" FontFamily="Consolas" />
+                                    <DataGridTemplateColumn Header="" Width="46">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                                        Foreground="#C62828" Padding="3">
+                                                    <materialDesign:PackIcon Kind="Delete" Width="13" Height="13" />
+                                                </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Command="{Binding AddLineCommand}" Style="{StaticResource MaterialDesignOutlinedButton}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" />
+                                        <TextBlock Text="افزودن سطر" Margin="6,0,0,0" />
+                                    </StackPanel>
+                                </Button>
+                                <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontWeight="Bold">
+                                    <Run Text="جمع بدهکار: " /><Run Text="{Binding EntryDebitTotal, Mode=OneWay, StringFormat='{}{0:N0}'}" FontFamily="Consolas" />
+                                    <Run Text="  |  جمع بستانکار: " /><Run Text="{Binding EntryCreditTotal, Mode=OneWay, StringFormat='{}{0:N0}'}" FontFamily="Consolas" />
+                                </TextBlock>
+                                <TextBlock Text="{Binding BalanceStateText, Mode=OneWay}" Foreground="{Binding BalanceStateColor, Mode=OneWay}"
+                                           FontWeight="Bold" Margin="14,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- تب ۲: دفتر کل -->
+            <TabItem Header="📚 دفتر کل">
+                <Grid Margin="4,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                        <ComboBox ItemsSource="{Binding FlatAccounts}"
+                                  SelectedItem="{Binding LedgerAccount}"
+                                  DisplayMemberPath="Display" MinWidth="320" />
+                        <TextBox Text="{Binding LedgerFrom, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="از تاریخ" Width="110" Margin="10,0,0,0" />
+                        <TextBox Text="{Binding LedgerTo, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="تا تاریخ" Width="110" Margin="8,0,0,0" />
+                        <Button Command="{Binding ShowLedgerCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="10,0,0,0">
+                            <TextBlock Text="نمایش" />
+                        </Button>
+                    </StackPanel>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding LedgerRows}" AutoGenerateColumns="False"
+                              CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column" FontSize="12">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi}" Width="110" />
+                            <DataGridTextColumn Header="شماره سند" Binding="{Binding EntryNumber, TargetNullValue=—}" Width="110" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="شرح" Binding="{Binding Description, TargetNullValue=—}" Width="*" />
+                            <DataGridTextColumn Header="بدهکار" Binding="{Binding Debit, StringFormat='{}{0:N0}'}" Width="110" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="بستانکار" Binding="{Binding Credit, StringFormat='{}{0:N0}'}" Width="110" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="مانده" Binding="{Binding Balance, StringFormat='{}{0:N0}'}" Width="115" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="نوع" Binding="{Binding BalanceType}" Width="85" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- تب ۳: سرفصل‌ها -->
+            <TabItem Header="📑 سرفصل‌ها">
+                <Grid Margin="4,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="2*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" CornerRadius="12" Padding="10"
+                            Background="{DynamicResource MaterialDesign.Brush.Background}">
+                        <TreeView ItemsSource="{Binding AccountTree}">
+                            <TreeView.ItemContainerStyle>
+                                <Style TargetType="TreeViewItem">
+                                    <Setter Property="IsExpanded" Value="True" />
+                                    <Setter Property="FontSize" Value="12.5" />
+                                </Style>
+                            </TreeView.ItemContainerStyle>
+                            <TreeView.ItemTemplate>
+                                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                    <TextBlock Text="{Binding Display}" />
+                                </HierarchicalDataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
+                    </Border>
+
+                    <Border Grid.Column="2" CornerRadius="12" Padding="12"
+                            Background="{DynamicResource MaterialDesign.Brush.Background}">
+                        <StackPanel>
+                            <TextBlock Text="➕ حساب جدید" FontWeight="Bold" FontSize="14" Margin="0,0,0,8" />
+                            <TextBlock Text="والد (اختیاری — از درخت انتخاب کنید)" FontSize="10.5" Opacity="0.6" />
+                            <ComboBox ItemsSource="{Binding FlatAccounts}"
+                                      SelectedItem="{Binding SelectedAccount}"
+                                      DisplayMemberPath="Display" FontSize="11" Margin="0,2,0,6" />
+                            <TextBlock Text="کد حساب" FontSize="10.5" Opacity="0.6" />
+                            <TextBox Text="{Binding NewAccountCode, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="مثلاً ۱۰۱۰۳" Margin="0,2,0,6" />
+                            <TextBlock Text="عنوان" FontSize="10.5" Opacity="0.6" />
+                            <TextBox Text="{Binding NewAccountName, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" />
+                            <TextBlock Text="نوع حساب" FontSize="10.5" Opacity="0.6" />
+                            <ComboBox ItemsSource="{Binding AccountTypeLabels}" SelectedIndex="{Binding NewAccountTypeIndex}" Margin="0,2,0,6" />
+                            <TextBlock Text="سطح" FontSize="10.5" Opacity="0.6" />
+                            <ComboBox ItemsSource="{Binding LevelLabels}" SelectedIndex="{Binding NewLevelIndex}" Margin="0,2,0,6" />
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
+                                <RadioButton Content="بدهکار" GroupName="Nature" IsChecked="{Binding NewNatureIsCredit, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}" />
+                                <RadioButton Content="بستانکار" GroupName="Nature" Margin="14,0,0,0" />
+                            </StackPanel>
+                            <Button Command="{Binding SaveAccountCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
+                                <TextBlock Text="ثبت حساب" />
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- تب ۴: تراز -->
+            <TabItem Header="⚖️ تراز">
+                <Grid Margin="4,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBox Text="{Binding IncomeFrom, UpdateSourceTrigger=PropertyChanged}" Width="110"
+                                 materialDesign:HintAssist.Hint="از تاریخ" />
+                        <TextBox Text="{Binding IncomeTo, UpdateSourceTrigger=PropertyChanged}" Width="110" Margin="8,0,0,0"
+                                 materialDesign:HintAssist.Hint="تا تاریخ" />
+                        <Button Command="{Binding RefreshReportsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="10,0,0,0">
+                            <TextBlock Text="به‌روزرسانی" />
+                        </Button>
+                        <TextBlock Text="{Binding TrialTotalText, Mode=OneWay}" FontWeight="Bold" Margin="16,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding TrialRows}" AutoGenerateColumns="False"
+                              CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column" FontSize="12">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="کد" Binding="{Binding Code}" Width="100" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="عنوان" Binding="{Binding Name}" Width="*" />
+                            <DataGridTextColumn Header="مانده اول" Binding="{Binding Opening, StringFormat='{}{0:N0}'}" Width="115" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="بدهکار دوره" Binding="{Binding Debit, StringFormat='{}{0:N0}'}" Width="115" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="بستانکار دوره" Binding="{Binding Credit, StringFormat='{}{0:N0}'}" Width="115" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="مانده پایان" Binding="{Binding Closing, StringFormat='{}{0:N0}'}" Width="115" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="نوع" Binding="{Binding BalanceType}" Width="85" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- تب ۵: سود و زیان -->
+            <TabItem Header="💹 سود/زیان">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                    <Border CornerRadius="12" Padding="18" MaxWidth="560" HorizontalAlignment="Center"
+                            Background="{DynamicResource MaterialDesign.Brush.Background}" Margin="0,8,0,0">
+                        <StackPanel>
+                            <TextBlock Text="📊 صورت سود و زیان" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" />
+                            <TextBlock HorizontalAlignment="Center" FontSize="11" Opacity="0.6" Margin="0,4,0,14">
+                                <Run Text="{Binding IncomeFrom, Mode=OneWay}" /><Run Text=" تا " /><Run Text="{Binding IncomeTo, Mode=OneWay}" />
+                            </TextBlock>
+                            <ItemsControl ItemsSource="{Binding IncomeRows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,3">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Title}" FontSize="13" FontWeight="SemiBold" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Amount, StringFormat='{}{0:N0}'}"
+                                                       FontFamily="Consolas" FontSize="12.5" Margin="24,0,0,0" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

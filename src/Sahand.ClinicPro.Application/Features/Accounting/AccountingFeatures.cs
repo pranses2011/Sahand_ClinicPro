@@ -184,3 +184,270 @@ public class GetJournalEntriesQueryHandler
         return Result<List<JournalEntryListDto>>.Success(items);
     }
 }
+
+/* ═══════════ گزارش‌های گام U9 — دفتر کل و تراز و سود و زیان ═══════════ */
+
+/// <summary>ردیف دفتر کل</summary>
+public record LedgerRowDto(
+    string DateShamsi,
+    string? EntryNumber,
+    string? Description,
+    decimal Debit,
+    decimal Credit,
+    decimal RunningBalance,
+    string BalanceType);
+
+/// <summary>پرس‌وجوی دفتر کل یک حساب — تب ۲ فرم ۱۶</summary>
+public record GetGeneralLedgerQuery(long AccountId, string? FromDateShamsi = null, string? ToDateShamsi = null)
+    : IRequest<Result<List<LedgerRowDto>>>;
+
+/// <summary>گرداننده دفتر کل</summary>
+public class GetGeneralLedgerQueryHandler
+    : IRequestHandler<GetGeneralLedgerQuery, Result<List<LedgerRowDto>>>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده</summary>
+    public GetGeneralLedgerQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>اجرا — گردش حساب با مانده تراکمی</summary>
+    public async Task<Result<List<LedgerRowDto>>> Handle(GetGeneralLedgerQuery request,
+        CancellationToken cancellationToken)
+    {
+        var account = await _unitOfWork.Repository<AccountingAccount>().QueryableNoTracking
+            .FirstOrDefaultAsync(a => a.Id == request.AccountId, cancellationToken);
+        if (account is null)
+            return Result<List<LedgerRowDto>>.Failure(Error.NotFound("حساب", request.AccountId));
+
+        var from = PersianDateHelper.ToGregorian(request.FromDateShamsi);
+        var to = PersianDateHelper.ToGregorian(request.ToDateShamsi);
+
+        var lines = await _unitOfWork.Repository<JournalEntryLine>().QueryableNoTracking
+            .Where(l => l.AccountId == request.AccountId)
+            .Include(l => l.Entry)
+            .ToListAsync(cancellationToken);
+
+        var ordered = lines
+            .Where(l => l.Entry != null &&
+                        (from is null || l.Entry.EntryDate >= DateOnly.FromDateTime(from.Value)) &&
+                        (to is null || l.Entry.EntryDate <= DateOnly.FromDateTime(to.Value)))
+            .OrderBy(l => l.Entry!.EntryDate)
+            .ToList();
+
+        var balance = account.OpeningBalance;
+        var natureSign = account.Nature == AccountNature.Credit ? -1 : 1;
+        var rows = new List<LedgerRowDto> { new(
+            account.OpeningBalance == 0 ? "—" : "مانده اول دوره", null, "مانده افتتاحیه",
+            0, 0, account.OpeningBalance,
+            account.OpeningBalance >= 0 ? "بدهکار" : "بستانکار") };
+
+        foreach (var line in ordered)
+        {
+            balance += natureSign * (line.Debit - line.Credit);
+            rows.Add(new LedgerRowDto(
+                PersianDateHelper.ToShamsi(line.Entry!.EntryDate.ToDateTime(TimeOnly.MinValue)),
+                line.Entry.EntryNumber,
+                line.Description ?? line.Entry.Description,
+                line.Debit, line.Credit, balance,
+                balance >= 0 ? "بدهکار" : "بستانکار"));
+        }
+
+        return Result<List<LedgerRowDto>>.Success(rows);
+    }
+}
+
+/// <summary>ردیف تراز آزمایشی</summary>
+public record TrialBalanceRowDto(
+    long AccountId,
+    string AccountCode,
+    string AccountName,
+    decimal OpeningBalance,
+    decimal PeriodDebit,
+    decimal PeriodCredit,
+    decimal ClosingBalance,
+    string BalanceType);
+
+/// <summary>پرس‌وجوی تراز آزمایشی — تب ۴ فرم ۱۶</summary>
+public record GetTrialBalanceQuery(string? FromDateShamsi = null, string? ToDateShamsi = null)
+    : IRequest<Result<List<TrialBalanceRowDto>>>;
+
+/// <summary>گرداننده تراز</summary>
+public class GetTrialBalanceQueryHandler
+    : IRequestHandler<GetTrialBalanceQuery, Result<List<TrialBalanceRowDto>>>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده</summary>
+    public GetTrialBalanceQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>اجرا — فقط حساب‌های تفصیلی</summary>
+    public async Task<Result<List<TrialBalanceRowDto>>> Handle(GetTrialBalanceQuery request,
+        CancellationToken cancellationToken)
+    {
+        var from = PersianDateHelper.ToGregorian(request.FromDateShamsi);
+        var to = PersianDateHelper.ToGregorian(request.ToDateShamsi);
+
+        var accounts = await _unitOfWork.Repository<AccountingAccount>().QueryableNoTracking
+            .Where(a => a.IsDetail && a.IsActive)
+            .ToListAsync(cancellationToken);
+
+        var lines = await _unitOfWork.Repository<JournalEntryLine>().QueryableNoTracking
+            .Include(l => l.Entry)
+            .ToListAsync(cancellationToken);
+
+        var rows = new List<TrialBalanceRowDto>();
+        foreach (var account in accounts)
+        {
+            var accountLines = lines.Where(l =>
+                l.AccountId == account.Id &&
+                l.Entry != null &&
+                (from is null || l.Entry.EntryDate >= DateOnly.FromDateTime(from.Value)) &&
+                (to is null || l.Entry.EntryDate <= DateOnly.FromDateTime(to.Value))).ToList();
+
+            var debit = accountLines.Sum(l => l.Debit);
+            var credit = accountLines.Sum(l => l.Credit);
+            var natureSign = account.Nature == AccountNature.Credit ? -1 : 1;
+            var closing = account.OpeningBalance + natureSign * (debit - credit);
+
+            if (account.OpeningBalance == 0 && debit == 0 && credit == 0) continue;
+
+            rows.Add(new TrialBalanceRowDto(
+                account.Id, account.AccountCode, account.AccountName,
+                account.OpeningBalance, debit, credit, closing,
+                closing >= 0 ? "بدهکار" : "بستانکار"));
+        }
+
+        return Result<List<TrialBalanceRowDto>>.Success(rows.OrderBy(r => r.AccountCode).ToList());
+    }
+}
+
+/// <summary>ردیف سود و زیان</summary>
+public record IncomeStatementRowDto(string Title, decimal Amount, bool IsHeader, bool IsTotal);
+
+/// <summary>پرس‌وجوی صورت سود و زیان — تب ۵ فرم ۱۶</summary>
+public record GetIncomeStatementQuery(string? FromDateShamsi = null, string? ToDateShamsi = null)
+    : IRequest<Result<List<IncomeStatementRowDto>>>;
+
+/// <summary>گرداننده سود و زیان</summary>
+public class GetIncomeStatementQueryHandler
+    : IRequestHandler<GetIncomeStatementQuery, Result<List<IncomeStatementRowDto>>>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده</summary>
+    public GetIncomeStatementQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>اجرا — درآمد منهای هزینه = سود خالص</summary>
+    public async Task<Result<List<IncomeStatementRowDto>>> Handle(GetIncomeStatementQuery request,
+        CancellationToken cancellationToken)
+    {
+        var from = PersianDateHelper.ToGregorian(request.FromDateShamsi);
+        var to = PersianDateHelper.ToGregorian(request.ToDateShamsi);
+
+        var accounts = await _unitOfWork.Repository<AccountingAccount>().QueryableNoTracking
+            .Where(a => a.IsDetail && a.IsActive &&
+                        (a.AccountType == AccountType.Revenue || a.AccountType == AccountType.Expense))
+            .ToListAsync(cancellationToken);
+
+        var lines = await _unitOfWork.Repository<JournalEntryLine>().QueryableNoTracking
+            .Include(l => l.Entry)
+            .ToListAsync(cancellationToken);
+
+        decimal AmountOf(long accountId)
+        {
+            var account = accounts.First(a => a.Id == accountId);
+            var accountLines = lines.Where(l =>
+                l.AccountId == accountId && l.Entry != null &&
+                (from is null || l.Entry.EntryDate >= DateOnly.FromDateTime(from.Value)) &&
+                (to is null || l.Entry.EntryDate <= DateOnly.FromDateTime(to.Value)));
+            var natureSign = account.Nature == AccountNature.Credit ? -1 : 1;
+            return -natureSign * accountLines.Sum(l => l.Debit - l.Credit);
+        }
+
+        var rows = new List<IncomeStatementRowDto>();
+        var incomes = accounts.Where(a => a.AccountType == AccountType.Revenue).ToList();
+        var expenses = accounts.Where(a => a.AccountType == AccountType.Expense).ToList();
+
+        if (incomes.Count > 0)
+        {
+            rows.Add(new IncomeStatementRowDto("درآمدها", 0, true, false));
+            foreach (var income in incomes)
+            {
+                var amount = AmountOf(income.Id);
+                if (amount != 0)
+                    rows.Add(new IncomeStatementRowDto($"درآمد {income.AccountName}", amount, false, false));
+            }
+            var totalIncome = incomes.Sum(i => AmountOf(i.Id));
+            rows.Add(new IncomeStatementRowDto("جمع درآمدها", totalIncome, false, true));
+        }
+
+        if (expenses.Count > 0)
+        {
+            rows.Add(new IncomeStatementRowDto("هزینه‌ها", 0, true, false));
+            foreach (var expense in expenses)
+            {
+                var amount = AmountOf(expense.Id);
+                if (amount != 0)
+                    rows.Add(new IncomeStatementRowDto($"هزینه {expense.AccountName}", amount, false, false));
+            }
+            var totalExpense = expenses.Sum(e => AmountOf(e.Id));
+            rows.Add(new IncomeStatementRowDto("جمع هزینه‌ها", totalExpense, false, true));
+        }
+
+        var net = incomes.Sum(i => AmountOf(i.Id)) - expenses.Sum(e => AmountOf(e.Id));
+        rows.Add(new IncomeStatementRowDto(net >= 0 ? "سود خالص" : "زیان خالص", net, false, true));
+
+        return Result<List<IncomeStatementRowDto>>.Success(rows);
+    }
+}
+
+/// <summary>درخواست ثبت حساب جدید — تب ۳ فرم ۱۶</summary>
+public record CreateAccountRequest(
+    string AccountCode,
+    string AccountName,
+    int AccountType,
+    int Level,
+    int Nature,
+    long? ParentAccountId,
+    decimal OpeningBalance);
+
+/// <summary>فرمان ثبت حساب</summary>
+public record CreateAccountCommand(CreateAccountRequest Request) : IRequest<Result<long>>;
+
+/// <summary>گرداننده ثبت حساب</summary>
+public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand, Result<long>>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده</summary>
+    public CreateAccountCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>اجرا</summary>
+    public async Task<Result<long>> Handle(CreateAccountCommand request, CancellationToken cancellationToken)
+    {
+        var dto = request.Request;
+        if (string.IsNullOrWhiteSpace(dto.AccountCode))
+            return Result<long>.Failure(new Error("ACCOUNT.CODE", "کد حساب الزامی است"));
+
+        var exists = await _unitOfWork.Repository<AccountingAccount>().QueryableNoTracking
+            .AnyAsync(a => a.AccountCode == dto.AccountCode, cancellationToken);
+        if (exists)
+            return Result<long>.Failure(new Error("ACCOUNT.DUPLICATE", "این کد حساب قبلاً ثبت شده است"));
+
+        var account = new AccountingAccount
+        {
+            AccountCode = dto.AccountCode.Trim(),
+            AccountName = dto.AccountName.Trim(),
+            AccountType = (AccountType)dto.AccountType,
+            Level = (AccountLevel)dto.Level,
+            Nature = (AccountNature)dto.Nature,
+            ParentAccountId = dto.ParentAccountId,
+            IsDetail = dto.Level == 4,
+            OpeningBalance = dto.OpeningBalance,
+            CurrentBalance = dto.OpeningBalance
+        };
+        await _unitOfWork.Repository<AccountingAccount>().AddAsync(account, cancellationToken);
+        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+        return Result<long>.Success(account.Id);
+    }
+}

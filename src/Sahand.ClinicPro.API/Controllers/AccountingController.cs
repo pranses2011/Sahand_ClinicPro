@@ -48,4 +48,43 @@ public class AccountingController : ApiBaseController
             return CreatedResponse(result, "GetEntries", new { }, "سند حسابداری ثبت شد");
         return ToResponse(result);
     }
+
+    /// <summary>دفتر کل یک حساب — گردش و مانده تراکمی</summary>
+    [HttpGet("ledger")]
+    [HasPermission("accounting.view")]
+    public async Task<IActionResult> GetLedger([FromQuery] long accountId,
+        [FromQuery] string? from = null, [FromQuery] string? to = null)
+    {
+        var result = await _mediator.Send(new GetGeneralLedgerQuery(accountId, from, to));
+        return ToResponse(result);
+    }
+
+    /// <summary>تراز آزمایشی — همه حساب‌های تفصیلی</summary>
+    [HttpGet("trial-balance")]
+    [HasPermission("accounting.view")]
+    public async Task<IActionResult> GetTrialBalance([FromQuery] string? from = null,
+        [FromQuery] string? to = null)
+    {
+        var result = await _mediator.Send(new GetTrialBalanceQuery(from, to));
+        return ToResponse(result);
+    }
+
+    /// <summary>صورت سود و زیان ساختاریافته</summary>
+    [HttpGet("income-statement")]
+    [HasPermission("accounting.view")]
+    public async Task<IActionResult> GetIncomeStatement([FromQuery] string? from = null,
+        [FromQuery] string? to = null)
+    {
+        var result = await _mediator.Send(new GetIncomeStatementQuery(from, to));
+        return ToResponse(result);
+    }
+
+    /// <summary>ثبت حساب جدید — درخت چهارسطحی</summary>
+    [HttpPost("accounts")]
+    [HasPermission("accounting.create")]
+    public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request)
+    {
+        var result = await _mediator.Send(new CreateAccountCommand(request));
+        return ToResponse(result, "حساب ثبت شد");
+    }
 }
