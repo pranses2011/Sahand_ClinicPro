@@ -22,7 +22,8 @@ public record InvoiceItemDto(
     decimal UnitPrice,
     decimal DiscountPercent,
     long? DoctorId,
-    decimal DoctorSharePercent);
+    decimal DoctorSharePercent,
+    long? PerformedById = null);
 
 /// <summary>درخواست صدور فاکتور</summary>
 public record CreateInvoiceDto(
