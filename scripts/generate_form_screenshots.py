@@ -242,6 +242,78 @@ def chart_panel(title, data, labels, hi_index=None):
             f'<div class="bars" style="margin-bottom:22px">{bars}</div></div>')
 
 
+
+
+def area_panel(title, data, labels, unit="ریال", sub="۷ روز اخیر — نمودار سطحی روند"):
+    """نمودار سطحی SVG — ماهیت روند زمانی (چرخه ۱۱: نوع درست برای روند)"""
+    import math
+    w, h, pad = 640, 215, 38
+    n = len(data)
+    mx = max(max(data), 1)
+    step = (w - 2 * pad) / max(n - 1, 1)
+    pts = []
+    for i, v in enumerate(data):
+        x = pad + i * step
+        y = h - pad - ((h - 2 * pad) * v / mx)
+        pts.append((x, y))
+    d = " ".join(("M" if i == 0 else "L") + f"{x:.0f},{y:.0f}" for i, (x, y) in enumerate(pts))
+    area = d + f" L{pts[-1][0]:.0f},{h - pad} L{pad},{h - pad} Z"
+    gid = "ag" + str(abs(hash(title)) % 9999)
+    dots = "".join(
+        f'<circle cx="{x:.0f}" cy="{y:.0f}" r="5" fill="#1565C0" stroke="#fff" stroke-width="2"><title>{lb}: {v}</title></circle>'
+        for (x, y), lb, v in zip(pts, labels, data))
+    lbls = (f'<text x="{pts[0][0]:.0f}" y="{h - 12}" font-size="12" fill="#78909C" text-anchor="middle">{labels[0]}</text>'
+            f'<text x="{pts[-1][0]:.0f}" y="{h - 12}" font-size="12" fill="#78909C" text-anchor="middle">{labels[-1]}</text>')
+    return (f'<div class="panel"><div class="ph"><b>{title}</b><small>{sub}</small></div>'
+            f'<svg viewBox="0 0 {w} {h}" style="width:100%;height:225px" direction="ltr">'
+            f'<defs><linearGradient id="{gid}" x1="0" y1="0" x2="0" y2="1">'
+            f'<stop offset="0%" stop-color="#1565C0" stop-opacity=".35"/><stop offset="100%" stop-color="#1565C0" stop-opacity=".02"/></linearGradient></defs>'
+            f'<path d="{area}" fill="url(#{gid})"/>'
+            f'<path d="{d}" fill="none" stroke="#1565C0" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>'
+            f'{dots}{lbls}</svg></div>')
+
+
+def donut_panel(title, segments, unit, center="", sub="سهم از کل — نمودار دونات"):
+    """نمودار دونات SVG — ماهیت سهم از کل (چرخه ۱۱/۱۲)"""
+    import math
+    palette = ["#1565c0", "#00897b", "#f9a825", "#e53935", "#6a1b9a", "#00acc1", "#43a047", "#fb8c00", "#5e35b1", "#d81b60"]
+    total = sum(v for _, v, _ in segments) or 1
+    cx = cy = 110
+    r = 76
+    sw = 32
+    ang = -90.0
+    paths = ""
+    legend = ""
+    for i, (lb, v, _) in enumerate(segments):
+        frac = v / total
+        a2 = ang + frac * 360 - 1.6
+        x1 = cx + r * math.cos(math.radians(ang)); y1 = cy + r * math.sin(math.radians(ang))
+        x2 = cx + r * math.cos(math.radians(a2)); y2 = cy + r * math.sin(math.radians(a2))
+        large = 1 if frac > 0.5 else 0
+        c = palette[i % len(palette)]
+        paths += (f'<path d="M{x1:.1f},{y1:.1f} A{r},{r} 0 {large} 1 {x2:.1f},{y2:.1f}" fill="none" '
+                  f'stroke="{c}" stroke-width="{sw}" stroke-linecap="butt"><title>{lb}: {v:,} ({frac * 100:.1f}%)</title></path>')
+        legend += f'<span class="chip" style="border-right:14px solid {c};padding:3px 10px">{lb} {frac * 100:.0f}%</span>'
+        ang += frac * 360
+    center_html = (f'<text x="{cx}" y="{cy - 4}" text-anchor="middle" font-size="23" font-weight="800" fill="#24313F">{center or f"{total:,}"}</text>'
+                   f'<text x="{cx}" y="{cy + 18}" text-anchor="middle" font-size="11" fill="#78909C">{unit}</text>')
+    return (f'<div class="panel"><div class="ph"><b>{title}</b><small>{sub}</small></div>'
+            f'<div style="display:flex;align-items:center;gap:18px;padding:6px 10px 10px">'
+            f'<svg viewBox="0 0 220 220" style="width:205px;height:205px;flex:none">{paths}{center_html}</svg>'
+            f'<div class="chips" style="flex-direction:column;align-items:flex-start;gap:7px">{legend}</div></div></div>')
+
+
+def msg_card(title, body, level="info"):
+    """کارت پیام‌های پشتیبانی — چرخه دوازدهم: پیام مستقیم از پنل لایسنس روی داشبورد"""
+    colors = {"info": ("#E3F2FD", "#1565C0", "\U0001F4E2"), "success": ("#E8F5E9", "#2E7D32", "\u2705"),
+              "warning": ("#FFF8E1", "#F9A825", "\u26A0\uFE0F"), "danger": ("#FFEBEE", "#C62828", "\U0001F6A8")}
+    bg, bd, ic = colors.get(level, colors["info"])
+    return (f'<div style="background:{bg};border:1.5px solid {bd}22;border-top:4px solid {bd};border-radius:10px;'
+            f'padding:11px 15px;margin-bottom:9px;display:flex;gap:10px;align-items:flex-start">'
+            f'<span style="font-size:17px">{ic}</span><div><b style="font-size:13px;color:{bd}">{title}</b>'
+            f'<div style="font-size:12px;color:#37474F;margin-top:3px;line-height:1.7">{body}</div></div></div>')
+
+
 def form_fields(fields):
     """fields: [(label, value, icon?, hint?)]"""
     out = []
@@ -292,13 +364,19 @@ def win(num, key, title, icon, sub, body):
 
 # ─── ۰۱ داشبورد ───
 view(1, "dashboard", "داشبورد مدیریتی", "📊", "داشبورد",
-     stat_row([("بیماران امروز", "۱۲۸", "▲ ۱۲٪ دیروز", "c1", "🧑‍🤝‍🧑"),
+     msg_card("نسخه ۱.۹.۰ منتشر شد — ۲۱ گزارش نموداری تازه",
+              "از بخش گزارش‌ها دسته «گزارش‌های نموداری» را ببینید. برای به‌روزرسانی با پشتیبانی تماس بگیرید.", "success")
+     + msg_card("یادآوری تمدید لایسنس",
+                "اعتبار لایسنس درمانگاه تا ۱۲ روز آینده است — برای تمدید با ۰۴۱-۳۴۴۳۶۱۴۱ تماس بگیرید.", "warning")
+     + stat_row([("بیماران امروز", "۱۲۸", "▲ ۱۲٪ دیروز", "c1", "🧑‍🤝‍🧑"),
                ("در صف انتظار", "۹", "▲ فراخوان زنده", "c2", "🛎"),
                ("درآمد امروز", "۴۸.۵م ت", "▲ ۸٪ هفته", "c3", "💵"),
                ("نوبت‌های امروز", "۶۷", "▲ ۱۵ ویزیت باقی", "c4", "🗓"),
                ("غیبت پرسنل", "۲", "▼ ۱ نفر کمتر", "c6", "👔")])
      + '<div class="grid2 grow" style="grid-template-columns:1.5fr 1fr">'
-     + chart_panel("مراجعات هفته جاری", [38, 56, 47, 88, 64, 96, 30], ["ش", "ی", "د", "س", "چ", "پ", "ج"], hi_index=[3, 5])
+     + area_panel("روند درآمد ۷ روز اخیر", [52, 64, 47, 73, 58, 86, 95],
+                  ["۰۷/۰۷", "۰۷/۰۸", "۰۷/۰۹", "۰۷/۱۰", "۰۷/۱۱", "۰۷/۱۲", "۰۷/۱۳"],
+                  unit="ریال", sub="نمودار سطحی — ماهیت روند زمانی")
      + '<div class="panel"><div class="ph"><b>🛎 صف زنده سالن</b><small>بلادرنگ</small></div>'
      + queue_rows([("۴۲", "مریم احمدی", "دکتر کریمی — داخلی", B.format("green", "در حال ویزیت")),
                    ("۴۳", "علی رضایی", "دکتر نجفی — عمومی", B.format("blue", "فراخوان")),
@@ -442,11 +520,16 @@ view(11, "payroll", "فیش حقوقی پرسنل", "🧾", "فیش حقوقی",
      toolbar([("صدور فیش ماه", "➕", "pri"), ("پیش‌نمایش چاپ", "🖨", "sec"), ("قواعد ۱۴۰۴", "📜", "sec")])
      + stat_row([("پرسنل حقوق‌بگیر", "۳۸", "▲ ۲ استخدام", "c1", "👔"), ("جمع حقوق مهر", "۸۹۲م ت", "▲ ۴.۲٪", "c2", "💰"),
                  ("حقوق درصدی از سود", "۶۱.۳م ت", "▲ از سود خدمات خود پرسنل", "c3", "📈"), ("کسورات بیمه/مالیات", "۱۰۴م ت", "▲ محاسبه خودکار", "c4", "📉")])
+     + '<div class="grid2" style="grid-template-columns:1.35fr 1fr">'
      + table_panel("فیش‌های حقوقی مهر ۱۴۰۵", ["پرسنل", "سمت", "حقوق پایه", "٪ از سود", "سود خدمات", "حقوق درصدی", "اضافه‌کاری", "بیمه ۷٪", "خالص پرداختی", "وضعیت"],
         [("رضا محمدنژاد", "پرستار", "۲۲م", "۳۰٪", "۴۸.۲م", "۱۴.۵م", "۲.۴م", "۲.۷م", "۳۵.۱م", B.format("green", "صادر شد")),
          ("فاطمه اکبری", "منشی پذیرش", "۱۲م", "—", "—", "—", "۰.۸م", "۰.۹م", "۱۱.۳م", B.format("green", "صادر شد")),
          ("مهدی قلی‌زاده", "آزمایشگاه", "۱۵م", "۲۵٪", "۶۲.۹م", "۱۵.۷م", "۳.۱م", "۲.۴م", "۲۵.۸م", B.format("blue", "در بررسی")),
-         ("زهرا رحیمی", "کارمند مالی", "۱۲م", "۱۰٪", "۱۹.۴م", "۱.۹م", "—", "۱م", "۱۲.۲م", B.format("green", "صادر شد"))]))
+         ("زهرا رحیمی", "کارمند مالی", "۱۲م", "۱۰٪", "۱۹.۴م", "۱.۹م", "—", "۱م", "۱۲.۲م", B.format("green", "صادر شد"))])
+     + donut_panel("سهم پرسنل از حقوق درصدی — مهر ۱۴۰۵",
+        [("محمدنژاد", 14_500_000, ""), ("قلی‌زاده", 15_700_000, ""), ("رحیمی", 1_900_000, ""),
+         ("نوروزی", 9_800_000, ""), ("اکبری تنی", 6_200_000, ""), ("سایر پرسنل", 13_200_000, "")],
+        unit="ریال حقوق درصدی", center="۶۱.۳م", sub="از سود خدماتِ خودِ هر پرسنل"))
 
 # ─── ۱۲ حضور و غیاب ───
 view(12, "attendance", "حضور و غیاب", "🕐", "حضور و غیاب",
@@ -756,20 +839,27 @@ view(32, "notifications", "اعلان‌ها و یادآورها", "🔔", "دا
 
 # ─── ۳۳ مرورگر گزارش ───
 view(33, "report-browser", "مرورگر گزارش", "📑", "گزارش‌ها",
-     '<div class="grid2 grow" style="grid-template-columns:240px 1fr">'
+     '<div class="grid2 grow" style="grid-template-columns:240px 1.9fr">'
      + '<div class="panel"><div class="ph"><b>📂 دسته‌ها</b></div>'
      + queue_rows([("💰", "مالی", "۹ گزارش", B.format("gray", "")),
                    ("🏥", "بالینی", "۷ گزارش", B.format("gray", "")),
                    ("👔", "منابع انسانی", "۶ گزارش", B.format("gray", "")),
-                   ("📈", "مدیریتی", "۵ گزارش", B.format("blue", "باز")),
+                   ("📈", "گزارش‌های نموداری", "۲۱ گزارش", B.format("blue", "باز")),
+                   ("📊", "مدیریتی", "۵ گزارش", B.format("gray", "")),
                    ("🧪", "پاراکلینیک", "۴ گزارش", B.format("gray", ""))])
      + '</div>'
-     + '<div class="panel"><div class="ph"><b>📈 آمار مراجعات ماهانه</b><small>مهر ۱۴۰۵ — پیش‌نمایش</small></div>'
-     + '<div class="bars" style="height:230px;margin-bottom:22px">'
+     + '<div>'
+     + '<div class="panel" style="margin-bottom:12px"><div class="ph"><b>🧾 درآمد ۱۲ ماه اخیر (شمسی)</b><small>نوع: ستونی — مقایسه ماه‌به‌ماه</small></div>'
+     + '<div class="bars" style="height:150px;margin-bottom:14px">'
      + "".join(f'<div class="bar{" hi" if i in (2, 5) else ""}" style="height:{v}%"><span>{n}</span><i>{d}</i></div>'
                for i, (v, n, d) in enumerate(zip([62, 74, 88, 71, 80, 96, 58, 84], ["۱٬۲۴۰", "۱٬۴۸۰", "۱٬۷۶۰", "۱٬۴۲۰", "۱٬۶۰۰", "۱٬۹۲۰", "۱٬۱۶۰", "۱٬۶۸۰"], ["فرو", "ورد", "خرد", "تیر", "مرد", "شهر", "مهر", "آبا"])))
-     + '</div><div class="chips"><span class="chip">بازه: ۶ ماه اخیر</span><span class="chip">تفکیک: شعبه</span>'
-       '<span class="chip">خروجی: اکسل فارسی</span><span class="chip">طرح: ستونی گروهی</span></div></div></div>')
+     + '</div>'
+     + '<div class="chips"><span class="chip">🪙 جمع دوره: ۱۴۸.۶م</span><span class="chip">📅 بازه: ۱۲ ماه شمسی</span>'
+       '<span class="chip">🧩 نوع خودکار: ستونی</span><span class="chip">📗 خروجی CSV/اکسل</span></div></div>'
+     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+     + donut_panel("سهم پزشکان از ویزیت", [("کریمی", 96, ""), ("نجفی", 128, ""), ("احمدی", 64, ""), ("رضایی", 88, ""), ("سایر", 57, "")], "ویزیت", sub="دسته نموداری — نوع: دونات")
+     + area_panel("روند درآمد روزانه", [42, 58, 47, 72, 55, 84, 92], ["۰۷/۰۷", "۰۷/۰۸", "۰۷/۰۹", "۰۷/۱۰", "۰۷/۱۱", "۰۷/۱۲", "۰۷/۱۳"], sub="دسته نموداری — نوع: سطحی")
+     + '</div></div></div>')
 
 # ═══════════════════  ۱۹ پنجره فرم (مودال)  ═══════════════════
 
