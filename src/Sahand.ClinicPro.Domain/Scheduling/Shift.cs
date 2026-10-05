@@ -52,14 +52,19 @@ public class Shift : AuditableEntity, ISoftDeletable
     /// <summary>تخصیص‌های این شیفت به پرسنل</summary>
     public ICollection<EmployeeShiftAssignment> Assignments { get; set; } = new List<EmployeeShiftAssignment>();
 
-    /// <summary>طول شیفت بر حسب دقیقه — در شیفت شب از نیمه‌شب عبور می‌کند</summary>
+    /// <summary>طول شیفت بر حسب دقیقه — در شیفت شب از نیمه‌شب عبور می‌کند؛ شروع و پایان برابر یعنی شبانه‌روزی</summary>
     public int DurationMinutes
     {
         get
         {
             var start = StartTime.ToTimeSpan();
             var end = EndTime.ToTimeSpan();
-            return end >= start
+
+            // شروع و پایان یکسان — شیفت شبانه‌روزی ۲۴ ساعته
+            if (start == end)
+                return 24 * 60;
+
+            return end > start
                 ? (int)(end - start).TotalMinutes
                 : (int)(TimeSpan.FromDays(1) - start + end).TotalMinutes;
         }
