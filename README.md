@@ -4,7 +4,7 @@
 
 <p><img src="docs/assets/ClinicPro.png" width="140" alt="لوگوی درمانگاه سهند"></p>
 
-<h3>Sahand ClinicPro — v1.8.0</h3>
+<h3>Sahand ClinicPro — v1.9.0</h3>
 
 **نخستین سامانه یکپارچه فارسی‌زبان درمانگاه با اتصال مستقیم به دستگاه حضور و غیاب، سامانه‌های دولتی، نسخه الکترونیک و پشتیبانی زنده یکپارچه**
 
@@ -13,8 +13,8 @@
 [![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC2927?logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server)
 [![WPF](https://img.shields.io/badge/WPF-MaterialDesign-512BD4?logo=windows&logoColor=white)](https://materialdesigninxaml.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-158%20%E2%9C%85-2EA44F)](#%EF%B8%8F-تست‌ها)
-[![Version](https://img.shields.io/badge/release-v1.8.0-blue)](https://github.com/pranses2011/Sahand_ClinicPro/releases)
+[![Tests](https://img.shields.io/badge/tests-130%20.NET%20%2B%2019%20E2E%20%E2%9C%85-2EA44F)](#%EF%B8%8F-تست‌ها)
+[![Version](https://img.shields.io/badge/release-v1.9.0-blue)](https://github.com/pranses2011/Sahand_ClinicPro/releases)
 [![Forms](https://img.shields.io/badge/forms-52%20%E2%9C%85-7C3AED)](#%EF%B8%8F-تصاویر-محیط-نرم‌افزار)
 
 [✨ امکانات](#-ماژول‌ها--امکانات) · [🖼 تصاویر](#%EF%B8%8F-تصاویر-محیط-نرم‌افزار) · [🚀 نصب](#-راه‌اندازی-سریع) · [🕐 حضور و غیاب](#-ماژول-حضور-و-غیاب) · [🔐 لایسنس](#%EF%B8%8F-سامانه-لایسنس) · [🧑‍💻 پشتیبانی](#%EF%B8%8F-پشتیبانی-زنده-سهند-سرویس) · [📚 مستندات](#-مستندات)
@@ -360,6 +360,7 @@ Sahand_ClinicPro/
 
 | نسخه | تاریخ | جهش اصلی |
 |:---|:---|:---|
+| **v1.9.0** | ۱۴۰۵/۰۷/۱۴ | 📈 رفع قطعی HTTP 500 سامانه لایسنس (باگ INSERT) + ترمیم خودکار اسکیمای لایسنس + ۴ کنترل نمودار و تغییر نوع نمودارها متناسب با ماهیت داده + ۱۰ گزارش نموداری جدید + دونات سهم پرسنل + سند تحلیل جامع کمبودها (docs/PROJECT-ANALYSIS.md) + ۱۳۰ تست دات‌نت و ۱۹ تست E2E لایسنس |
 | **v1.8.0** | ۱۴۰۵/۰۷/۱۵ | 📊 گزارش تفصیلی «سود و حقوق درصدی هر پرسنل» با خروجی اکسل دو برگ + دکمه ویرایش حقوقی از فهرست پرسنل + حقوق درصدی پزشکان (انتساب خودکار از پرسنل مرتبط) + رفع باگ حیاتی فرمول بازه دوره + ۱۵۸ تست |
 | **v1.7.0** | ۱۴۰۵/۰۷/۱۴ | 💼 حقوق درصدی پرسنل از سود خدمات انجامی خودشان (نه کل فروش) + آیکون رسمی روی exe و همه پنجره‌ها + رفع باگ فونت ۵۲ اسکرین‌شات و بازتولید بروشور + ۱۴۳ تست |
 | **v1.6.0** | ۱۴۰۵/۰۷/۱۳ | 🧑‍💻 پشتیبانی زنده یکپارچه + کاتالوگ ۳۰ ماژولی + اعتبارسنجی کد ملی ویرایش + پوستر/بنر سه‌بعدی + بروشور ۵۲ فرم + راهنمای VS + ۱۳۷ تست |
