@@ -193,8 +193,11 @@ public static class PersianDateHelper
             7 => 9, 8 => 10, 9 => 11, 10 => 12, 11 => 1, _ => 2
         };
 
-        // ۱۴۰۴ شمسی ≈ ۲۰۲۵ میلادی؛ بهمن و اسفند به سال میلادی بعدی تعلق دارند
-        var gregorianYear = jalaliYear - 622;
+        // ⚠️ رفع باگ چرخه نهم: فرمول قبلی «سال − ۶۲۲» سال‌های بی‌معنی (مثلاً ۷۸۲)
+        // تولید می‌کرد و بازه دوره هیچ‌وقت به فاکتورهای واقعی نمی‌رسید.
+        // رابطه درست: ۱ فروردین ۱ شمسی = ۲۲ مارس ۶۲۲ میلادی →
+        // میلادی = شمسی + ۶۲۱ ؛ بهمن/اسفند به سال میلادی بعدی تعلق دارند (+۶۲۲)
+        var gregorianYear = jalaliYear + 621;
         if (jalaliMonth is 11 or 12) gregorianYear++;
 
         var from = new DateOnly(gregorianYear, gregorianMonth, 1);
