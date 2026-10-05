@@ -136,12 +136,41 @@
                               HeadersVisibility="Column"
                               GridLinesVisibility="Horizontal">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode}" Width="110" />
-                            <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName}" Width="*" />
-                            <DataGridTextColumn Header="سمت" Binding="{Binding PositionName}" Width="150" />
-                            <DataGridTextColumn Header="دپارتمان" Binding="{Binding DepartmentName}" Width="150" />
-                            <DataGridTextColumn Header="موبایل" Binding="{Binding Mobile}" Width="120" />
-                            <DataGridTextColumn Header="نوع" Binding="{Binding TypeText}" Width="100" />
+                            <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode}" Width="100" />
+                            <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName}" Width="170" />
+                            <DataGridTextColumn Header="سمت" Binding="{Binding PositionName}" Width="120" />
+                            <DataGridTextColumn Header="دپارتمان" Binding="{Binding DepartmentName}" Width="120" />
+                            <DataGridTextColumn Header="موبایل" Binding="{Binding Mobile}" Width="110" />
+                            <DataGridTextColumn Header="نوع" Binding="{Binding TypeText}" Width="90" />
+                            <DataGridTextColumn Header="حقوق پایه (ریال)" Binding="{Binding BaseSalary, StringFormat='#,0'}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="درصد از سود (٪)" Binding="{Binding CommissionPercent, StringFormat='{}{0:0.##}'}" Width="105">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center" />
+                                        <Setter Property="Foreground" Value="#8E24AA" />
+                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <!-- دکمه ویرایش حقوقی کنار هر ردیف — چرخه دهم -->
+                            <DataGridTemplateColumn Header="عملیات" Width="140">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="✏️ ویرایش حقوقی"
+                                                FontSize="11"
+                                                Padding="10,4"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                Command="{Binding DataContext.EditSalaryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
