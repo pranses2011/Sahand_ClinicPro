@@ -101,7 +101,8 @@ public partial class MainWindowViewModel : ObservableObject
         NotificationsViewModel notificationsVm,
         SettingsViewModel settingsVm,
         BackupViewModel backupVm,
-        AuditLogViewModel auditVm)
+        AuditLogViewModel auditVm,
+        BranchesViewModel branchesVm)
     {
         _api = api;
         _tokens = tokens;
@@ -147,7 +148,8 @@ public partial class MainWindowViewModel : ObservableObject
             ["notifications"] = () => notificationsVm,
             ["settings-full"] = () => settingsVm,
             ["backup"] = () => backupVm,
-            ["audit"] = () => auditVm
+            ["audit"] = () => auditVm,
+            ["branches"] = () => branchesVm
         };
 
         // آیتم‌های ناوبری — فعال بودن از لایسنس کنترل می‌شود
@@ -172,11 +174,15 @@ public partial class MainWindowViewModel : ObservableObject
             new() { Title = "پیامک", PageKey = "sms", Icon = "MessageTextOutline" },
             new() { Title = "پرسنل", PageKey = "personnel", Icon = "AccountTie" },
             new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog" },
+            new() { Title = "شعبه‌ها", PageKey = "branches", Icon = "HomeGroup" },
             new() { Title = "بکاپ و بازیابی", PageKey = "backup", Icon = "DatabaseBackup" },
             new() { Title = "لاگ عملیات", PageKey = "audit", Icon = "FileDocumentEditOutline" }
         };
 
         NavigateToPage("dashboard");
+
+        // بارگذاری شعبه‌ها برای انتخابگر TopBar — گام U17
+        _ = LoadBranchesAsync();
 
         // اتصال رویداد انقضای نشست — بازگشت به صفحه ورود
         _api.SessionExpired += (_, _) => OnSessionExpired();
@@ -241,6 +247,61 @@ public partial class MainWindowViewModel : ObservableObject
     private sealed class UnreadData
     {
         public int Count { get; set; }
+    }
+
+    /// <summary>ردیف شعبه برای انتخابگر TopBar</summary>
+    public sealed class BranchPickerRow
+    {
+        /// <summary>شناسه</summary>
+        public long Id { get; init; }
+
+        /// <summary>نام</summary>
+        public string Name { get; init; } = string.Empty;
+    }
+
+    /// <summary>فهرست شعبه‌های فعال برای انتخابگر TopBar</summary>
+    [ObservableProperty]
+    private System.Collections.ObjectModel.ObservableCollection<BranchPickerRow> _branches = new();
+
+    /// <summary>شعبه انتخاب‌شده — تنظیم هدر X-Branch-Id روی همه درخواست‌ها</summary>
+    [ObservableProperty]
+    private BranchPickerRow? _selectedBranch;
+
+    /// <summary>آیا بیش از یک شعبه فعال است — نمایش انتخابگر</summary>
+    public bool HasMultipleBranches => Branches.Count > 1;
+
+    /// <summary>بارگذاری فهرست شعبه‌ها از سرور</summary>
+    private async Task LoadBranchesAsync()
+    {
+        var response = await _api.GetAsync<BranchesResponse>("branches");
+        var rows = (response?.Data ?? new List<BranchDto>())
+            .Select(b => new BranchPickerRow { Id = b.Id, Name = b.Name })
+            .ToList();
+        Branches = new System.Collections.ObjectModel.ObservableCollection<BranchPickerRow>(rows);
+        SelectedBranch = Branches.FirstOrDefault();
+        OnPropertyChanged(nameof(HasMultipleBranches));
+    }
+
+    /// <summary>بازخورد انتخاب شعبه — اعمال روی کلاینت API</summary>
+    partial void OnSelectedBranchChanged(BranchPickerRow? value)
+    {
+        if (_api is ApiClient concrete)
+            concrete.BranchId = value?.Id;
+        _snackbar.Info(value is null ? "بدون فیلتر شعبه" : $"شعبه فعال: {value.Name}");
+    }
+
+    /// <summary>پاسخ شعبه‌ها</summary>
+    private sealed class BranchesResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<BranchDto>? Data { get; set; }
+    }
+
+    /// <summary>ردیف شعبه</summary>
+    private sealed class BranchDto
+    {
+        public long Id { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 
     /// <summary>خروج از حساب — ابطال توکن و بازگشت به ورود</summary>

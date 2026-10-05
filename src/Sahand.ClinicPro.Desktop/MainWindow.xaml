@@ -85,6 +85,9 @@
         <DataTemplate DataType="{x:Type vm:AuditLogViewModel}">
             <views:AuditLogView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:BranchesViewModel}">
+            <views:BranchesView />
+        </DataTemplate>
     </Window.Resources>
 
     <!-- ═══════════════════════════════════════════════════════════
@@ -197,8 +200,14 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!-- راست: زنگ اعلان با شمارنده + تم -->
+                    <!-- راست: انتخابگر شعبه + زنگ اعلان با شمارنده + تم -->
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <!-- انتخابگر شعبه — فقط وقتی بیش از یک شعبه فعال است (گام U17) -->
+                        <ComboBox ItemsSource="{Binding Branches}" SelectedItem="{Binding SelectedBranch}"
+                                  DisplayMemberPath="Name" MinWidth="130" FontSize="12"
+                                  materialDesign:HintAssist.Hint="شعبه"
+                                  Visibility="{Binding HasMultipleBranches, Converter={StaticResource BoolToVisibility}}"
+                                  Margin="0,0,14,0" VerticalAlignment="Center" />
                         <ToggleButton Command="{Binding ToggleThemeCommand}"
                                       Style="{StaticResource MaterialDesignFlatToggleButton}"
                                       ToolTip="تغییر تم روشن و تاریک"

@@ -105,5 +105,6 @@ public partial class App : System.Windows.Application
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<BackupViewModel>();
         services.AddTransient<AuditLogViewModel>();
+        services.AddTransient<BranchesViewModel>();
     }
 }

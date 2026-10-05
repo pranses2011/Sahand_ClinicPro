@@ -24,6 +24,13 @@ public class ClinicProDbContext : DbContext
     /// </summary>
     public bool IsInMemory { get; init; }
 
+    /// <summary>
+    /// شعبه جاری برای فیلتر سراسری چندشعبه‌ای — گام U17.
+    /// توسط BranchContextMiddleware از هدر X-Branch-Id تنظیم می‌شود.
+    /// تهی یعنی بدون فیلتر شعبه (همه داده‌های بدون شعبه + عمومی)
+    /// </summary>
+    public long? CurrentBranchId { get; set; }
+
     /// <summary>مجموعه AccountingAccounts</summary>
     public DbSet<AccountingAccount> AccountingAccounts { get; set; }
 
@@ -381,13 +388,27 @@ public class ClinicProDbContext : DbContext
         {
             var clrType = entityType.ClrType;
 
-            // فیلتر سراسری حذف نرم — رکوردهای حذف‌شده از پرس‌وجوها پنهان می‌شوند
+            // فیلتر سراسری حذف نرم + شعبه — گام U17:
+            // رکوردهای حذف‌شده پنهان می‌شوند و رکوردهای شعبه‌دار فقط وقتی شعبه جاری
+            // تنظیم شده باشد نمایش داده می‌شوند (رکوردهای بدون شعبه همیشه عمومی‌اند)
             if (typeof(ISoftDeletable).IsAssignableFrom(clrType))
             {
                 var parameter = Expression.Parameter(clrType, "e");
-                var filter = Expression.Lambda(
-                    Expression.Not(Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted))),
-                    parameter);
+                Expression body = Expression.Not(
+                    Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted)));
+
+                var branchProp = clrType.GetProperty(nameof(AuditableEntity.BranchId));
+                if (branchProp is not null)
+                {
+                    // e => !e.IsDeleted && (e.BranchId == null || e.BranchId == ctx.CurrentBranchId)
+                    var ctx = Expression.Constant(this);
+                    var currentBranch = Expression.Property(ctx, nameof(CurrentBranchId));
+                    body = Expression.AndAlso(body, Expression.OrElse(
+                        Expression.Equal(Expression.Property(parameter, branchProp), Expression.Constant(null, branchProp.PropertyType)),
+                        Expression.Equal(Expression.Property(parameter, branchProp), currentBranch)));
+                }
+
+                var filter = Expression.Lambda(body, parameter);
                 modelBuilder.Entity(clrType).HasQueryFilter(filter);
             }
 
