@@ -77,6 +77,80 @@ public class ApiClient : IApiClient
     public async Task<bool> DeleteAsync(string endpoint, CancellationToken ct = default)
         => await SendCommandAsync(HttpMethod.Delete, endpoint, null, ct);
 
+    /// <summary>
+    /// آپلود فایل چندبخشی (multipart) با توکن — گام R4 برای فایل‌های DICOM
+    /// </summary>
+    /// <param name="endpoint">مسیر endpoint</param>
+    /// <param name="fileName">نام نمایشی فایل</param>
+    /// <param name="content">محتوای باینری</param>
+    /// <param name="fields">فیلدهای همراه فرم (مثل orderId)</param>
+    /// <param name="ct">توکن لغو</param>
+    public async Task<T?> PostFileAsync<T>(string endpoint, string fileName, byte[] content,
+        Dictionary<string, string>? fields = null, CancellationToken ct = default)
+    {
+        LastError = null;
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+            using var form = new MultipartFormDataContent();
+
+            if (fields is not null)
+                foreach (var (key, value) in fields)
+                    form.Add(new StringContent(value), key);
+
+            var fileContent = new ByteArrayContent(content);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+            form.Add(fileContent, "file", fileName);
+            request.Content = form;
+
+            if (!string.IsNullOrEmpty(_tokens.AccessToken))
+                if (BranchId is { } bid)
+                    request.Headers.Add("X-Branch-Id", bid.ToString());
+                request.Headers.Authorization =
+                    new AuthenticationHeaderValue("Bearer", _tokens.AccessToken);
+
+            using var response = await _http.SendAsync(request, ct);
+            return await ReadResponseAsync<T>(response, ct);
+        }
+        catch (HttpRequestException ex)
+        {
+            LastError = "ارتباط با سرور برقرار نشد — اتصال شبکه را بررسی کنید";
+            System.Diagnostics.Debug.WriteLine($"خطای آپلود: {ex.Message}");
+            return default;
+        }
+    }
+
+    /// <summary>
+    /// دانلود بایت‌های خام فایل — گام R4 برای گشودن فایل DICOM در نمایشگر
+    /// </summary>
+    public async Task<byte[]?> DownloadFileAsync(string endpoint, CancellationToken ct = default)
+    {
+        LastError = null;
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
+            if (!string.IsNullOrEmpty(_tokens.AccessToken))
+                if (BranchId is { } bid)
+                    request.Headers.Add("X-Branch-Id", bid.ToString());
+                request.Headers.Authorization =
+                    new AuthenticationHeaderValue("Bearer", _tokens.AccessToken);
+
+            using var response = await _http.SendAsync(request, ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                LastError = $"دریافت فایل ناموفق بود ({(int)response.StatusCode})";
+                return null;
+            }
+            return await response.Content.ReadAsByteArrayAsync(ct);
+        }
+        catch (HttpRequestException ex)
+        {
+            LastError = "ارتباط با سرور برقرار نشد";
+            System.Diagnostics.Debug.WriteLine($"خطای دانلود: {ex.Message}");
+            return null;
+        }
+    }
+
     /// <summary>ارسال فرمان و بررسی موفقیت از پاکت ApiResponse</summary>
     private async Task<bool> SendCommandAsync(HttpMethod method, string endpoint,
         object? body, CancellationToken ct)

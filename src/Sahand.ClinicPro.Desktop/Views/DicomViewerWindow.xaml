@@ -1,0 +1,135 @@
+﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.DicomViewerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="نمایشگر DICOM"
+        Width="1050" Height="780" WindowStartupLocation="CenterOwner"
+        FlowDirection="RightToLeft"
+        FontFamily="Vazirmatn, Segoe UI, Tahoma"
+        Background="{DynamicResource MaterialDesign PaperBrush}">
+    <!-- ═══ نمایشگر DICOM — گام R4 ═══ -->
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- نوار عنوان فایل -->
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="Image" Width="22" Height="22" VerticalAlignment="Center"
+                                         Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
+                <TextBlock x:Name="FileTitle" FontSize="15" FontWeight="Bold" Margin="8,0,0,0"
+                           VerticalAlignment="Center" Text="—" />
+            </StackPanel>
+            <Button Grid.Column="1" x:Name="OpenLocalButton" Click="OnOpenLocalClick" Padding="10,4">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="FolderOpen" Width="15" Height="15" VerticalAlignment="Center" />
+                    <TextBlock Text="📂 گشودن فایل..." Margin="6,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- محور اصلی: تصویر + پنل متادیتا -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="13" />
+                <ColumnDefinition Width="270" />
+            </Grid.ColumnDefinitions>
+
+            <!-- بوم تصویر با بزرگ‌نمایی -->
+            <Border Grid.Column="0" Background="#111111" CornerRadius="8" ClipToBounds="True">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                    <Image x:Name="ImageHost" RenderOptions.BitmapScalingMode="NearestNeighbor"
+                           Stretch="None" StretchDirection="Both" />
+                </ScrollViewer>
+            </Border>
+
+            <!-- پنل کنترل و متادیتا -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- کنترل پنجره/سطح -->
+                <Border Grid.Row="0" Background="{DynamicResource MaterialDesign.Card.Background}"
+                        CornerRadius="8" Padding="10" BorderThickness="1"
+                        BorderBrush="{DynamicResource MaterialDesignDivider}">
+                    <StackPanel>
+                        <TextBlock Text="پنجره / سطح (Window/Level)" FontWeight="Bold" FontSize="12.5" Margin="0,0,0,6" />
+                        <TextBlock Text="مرکز (Level)" FontSize="11" Opacity="0.7" />
+                        <Slider x:Name="CenterSlider" Minimum="-1200" Maximum="3200"
+                                ValueChanged="OnWindowChanged" TickFrequency="1" IsSnapToTickEnabled="True" />
+                        <TextBlock x:Name="CenterValue" FontSize="10.5" HorizontalAlignment="Left" Opacity="0.8" />
+                        <TextBlock Text="عرض پنجره (Width)" FontSize="11" Opacity="0.7" Margin="0,7,0,0" />
+                        <Slider x:Name="WidthSlider" Minimum="1" Maximum="4400"
+                                ValueChanged="OnWindowChanged" TickFrequency="1" IsSnapToTickEnabled="True" />
+                        <TextBlock x:Name="WidthValue" FontSize="10.5" HorizontalAlignment="Left" Opacity="0.8" />
+                        <Button x:Name="AutoWindowButton" Click="OnAutoWindowClick" Margin="0,8,0,0"
+                                Content="⚙ پنجره خودکار" FontSize="11.5" Padding="6" />
+                    </StackPanel>
+                </Border>
+
+                <!-- کنترل بزرگ‌نمایی -->
+                <Border Grid.Row="1" Background="{DynamicResource MaterialDesign.Card.Background}"
+                        CornerRadius="8" Padding="10" Margin="0,8,0,0" BorderThickness="1"
+                        BorderBrush="{DynamicResource MaterialDesignDivider}">
+                    <StackPanel>
+                        <TextBlock Text="بزرگ‌نمایی" FontWeight="Bold" FontSize="12.5" Margin="0,0,0,6" />
+                        <Slider x:Name="ZoomSlider" Minimum="20" Maximum="800" Value="100"
+                                ValueChanged="OnZoomChanged" TickFrequency="10" IsSnapToTickEnabled="True" />
+                        <TextBlock x:Name="ZoomValue" Text="۱۰۰٪" FontSize="10.5" Opacity="0.8" />
+                    </StackPanel>
+                </Border>
+
+                <!-- ابعاد و فرمت -->
+                <Border Grid.Row="2" Background="{DynamicResource MaterialDesign.Card.Background}"
+                        CornerRadius="8" Padding="10" Margin="0,8,0,0" BorderThickness="1"
+                        BorderBrush="{DynamicResource MaterialDesignDivider}">
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel>
+                            <TextBlock Text="ابعاد" FontSize="10.5" Opacity="0.65" />
+                            <TextBlock x:Name="DimensionsText" FontSize="14" FontWeight="Bold" Text="—" />
+                        </StackPanel>
+                        <Separator Margin="10,0" />
+                        <StackPanel>
+                            <TextBlock Text="عمق بیتی" FontSize="10.5" Opacity="0.65" />
+                            <TextBlock x:Name="DepthText" FontSize="14" FontWeight="Bold" Text="—" />
+                        </StackPanel>
+                        <Separator Margin="10,0" />
+                        <StackPanel>
+                            <TextBlock Text="نوع" FontSize="10.5" Opacity="0.65" />
+                            <TextBlock x:Name="KindText" FontSize="14" FontWeight="Bold" Text="—" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- متادیتا -->
+                <Border Grid.Row="3" Background="{DynamicResource MaterialDesign.Card.Background}"
+                        CornerRadius="8" Padding="6" Margin="0,8,0,0" BorderThickness="1"
+                        BorderBrush="{DynamicResource MaterialDesignDivider}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="MetadataPanel" />
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- نوار وضعیت -->
+        <Border Grid.Row="2" Margin="0,8,0,0" Padding="10,6" CornerRadius="6"
+                Background="{DynamicResource MaterialDesign.Card.Background}"
+                BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="1">
+            <TextBlock x:Name="StatusText" Text="فایلی بارگذاری نشده — از «گشودن فایل» استفاده کنید یا فایل DICOM را از پاراکلینیک انتخاب کنید"
+                       FontSize="11.5" Opacity="0.85" TextWrapping="Wrap" />
+        </Border>
+    </Grid>
+</Window>
