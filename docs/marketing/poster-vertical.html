@@ -50,12 +50,13 @@ body { font-family:'Vazirmatn','Noto Color Emoji',sans-serif; direction:rtl; col
 
 /* ─── سربرگ ─── */
 .brand-row { display:flex; align-items:center; gap:52px; }
-.logo-3d { width:250px; height:250px; border-radius:56px; position:relative;
-  background:linear-gradient(145deg,#0EA5E9,#0369A1 60%,#065F46);
-  box-shadow:0 34px 70px rgba(2,132,199,.45), inset 0 3px 8px rgba(255,255,255,.35), inset 0 -16px 34px rgba(0,0,0,.35);
-  display:flex; align-items:center; justify-content:center; font-size:120px; }
+.logo-3d { width:250px; height:250px; border-radius:56px; position:relative; overflow:hidden;
+  background:radial-gradient(circle at 50% 22%,#D8F1FF,#BFE4FB 70%);
+  box-shadow:0 34px 70px rgba(2,132,199,.45), inset 0 3px 8px rgba(255,255,255,.35), inset 0 -16px 34px rgba(0,0,0,.22), 0 0 0 10px rgba(255,255,255,.10);
+  display:flex; align-items:center; justify-content:center; }
+.logo-3d img { width:212px; height:212px; object-fit:contain; border-radius:40px; }
 .logo-3d::after { content:''; position:absolute; inset:0; border-radius:56px;
-  background:linear-gradient(160deg,rgba(255,255,255,.30),transparent 42%); }
+  background:linear-gradient(160deg,rgba(255,255,255,.35),transparent 46%); pointer-events:none; }
 .brand-text .en { font-size:46px; letter-spacing:16px; font-weight:600; opacity:.85; direction:ltr; text-align:right; }
 .brand-text .fa { font-size:104px; font-weight:900; margin-top:10px; line-height:1.15;
   text-shadow:0 6px 0 rgba(3,55,120,.55), 0 22px 60px rgba(0,0,0,.45); }
@@ -169,7 +170,7 @@ body { font-family:'Vazirmatn','Noto Color Emoji',sans-serif; direction:rtl; col
 
 <div class="wrap">
   <div class="brand-row">
-    <div class="logo-3d">🏥</div>
+    <div class="logo-3d"><img src="../assets/ClinicPro.png" alt="لوگوی درمانگاه سهند"></div>
     <div class="brand-text">
       <div class="en">SAHAND CLINICPRO</div>
       <div class="fa">درمانگاه سهند</div>
