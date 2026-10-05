@@ -12,332 +12,300 @@
 @font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Black.ttf') format('truetype'); font-weight:900; }
 @page { size:A4 landscape; margin:0; }
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Vazirmatn',sans-serif; color:#1A237E; }
-.slide { width:297mm; height:209mm; padding:14mm 16mm; page-break-after:always;
+body { font-family:'Vazirmatn','Noto Color Emoji',sans-serif; color:#1A237E; }
+.slide { width:297mm; height:209mm; padding:11mm 14mm 9mm; page-break-after:always;
   position:relative; overflow:hidden; background:#fff; }
 .slide:last-child { page-break-after:auto; }
 
-/* ─── جلد ─── */
+/* جلد */
 .cover { background:linear-gradient(135deg,#0D47A1 0%,#1565C0 55%,#00897B 100%); color:#fff; text-align:center; }
-.cover .big-emoji { font-size:110px; margin-top:8mm; }
-.cover h1 { font-size:44px; font-weight:900; margin-top:8mm; }
-.cover h2 { font-size:22px; font-weight:500; opacity:.92; margin-top:4mm; }
+.cover .logo-wrap { width:44mm; height:44mm; margin:6mm auto 0; border-radius:11mm;
+  background:radial-gradient(circle at 50% 25%,#D8F1FF,#BFE4FB 75%);
+  box-shadow:0 6mm 14mm rgba(0,20,50,.4), 0 0 0 2mm rgba(255,255,255,.28);
+  display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.cover .logo-wrap img { width:37mm; height:37mm; object-fit:contain; border-radius:9mm; }
+.cover h1 { font-size:42px; font-weight:900; margin-top:7mm; }
+.cover h2 { font-size:21px; font-weight:500; opacity:.92; margin-top:3.5mm; }
 .cover .tagline { display:inline-block; border:1.5px solid rgba(255,255,255,.5); border-radius:40px;
-  padding:8px 34px; font-size:15px; margin-top:10mm; backdrop-filter:blur(4px); }
-.cover .stats { display:flex; justify-content:center; gap:16mm; margin-top:14mm; }
-.cover .stat { text-align:center; }
-.cover .stat b { display:block; font-size:34px; font-weight:900; }
-.cover .stat span { font-size:12px; opacity:.85; }
-.cover .footer-line { position:absolute; bottom:12mm; right:0; left:0; font-size:11px; opacity:.75; }
+  padding:6px 30px; font-size:14px; margin-top:8mm; backdrop-filter:blur(4px); }
+.cover .stats { display:flex; justify-content:center; gap:13mm; margin-top:11mm; }
+.cover .stat b { display:block; font-size:32px; font-weight:900; }
+.cover .stat span { font-size:11.5px; opacity:.85; }
+.cover .footer-line { position:absolute; bottom:10mm; right:0; left:0; font-size:10.5px; opacity:.8; }
 
-/* ─── عنوان اسلاید ─── */
-.hdr { display:flex; align-items:center; gap:5mm; margin-bottom:7mm; }
-.hdr .ic { width:15mm; height:15mm; border-radius:5mm; background:linear-gradient(135deg,#1565C0,#00897B);
-  color:#fff; display:flex; align-items:center; justify-content:center; font-size:10mm; }
-.hdr h1 { font-size:24px; font-weight:800; color:#0D47A1; }
-.hdr p { font-size:12px; color:#546E7A; margin-top:1mm; }
-.hdr .page-no { margin-right:auto; font-size:11px; color:#90A4AE; }
+/* عنوان اسلاید */
+.hdr { display:flex; align-items:center; gap:4.5mm; margin-bottom:5.5mm; }
+.hdr .ic { width:13mm; height:13mm; border-radius:4.5mm; background:linear-gradient(135deg,#1565C0,#00897B);
+  color:#fff; display:flex; align-items:center; justify-content:center; font-size:8mm; }
+.hdr h1 { font-size:21px; font-weight:800; color:#0D47A1; }
+.hdr p { font-size:11px; color:#546E7A; margin-top:0.8mm; }
+.hdr .page-no { margin-right:auto; font-size:10.5px; color:#90A4AE; }
 
-/* ─── شبکه‌ها و کارت‌ها ─── */
-.grid { display:grid; gap:5mm; }
-.card { background:#F8FAFC; border:1px solid #E0E7F0; border-radius:5mm; padding:5mm 6mm; }
-.card .c-ic { font-size:9mm; }
-.card h3 { font-size:14.5px; font-weight:700; color:#0D47A1; margin:2mm 0 1.5mm; }
-.card p { font-size:10.5px; color:#455A64; line-height:1.75; text-align:right; }
+/* کارت‌ها */
+.grid { display:grid; gap:4.5mm; }
+.card { background:#F8FAFC; border:1px solid #E0E7F0; border-radius:4.5mm; padding:4.5mm 5.5mm; }
+.card .c-ic { font-size:8mm; }
+.card h3 { font-size:13.5px; font-weight:700; color:#0D47A1; margin:1.8mm 0 1.4mm; }
+.card p { font-size:10px; color:#455A64; line-height:1.75; text-align:right; }
 
-.big-num { font-size:52px; font-weight:900; color:#1565C0; line-height:1; }
-.big-num small { font-size:14px; font-weight:600; color:#546E7A; }
+.big-num { font-size:46px; font-weight:900; color:#1565C0; line-height:1; }
+.big-num small { font-size:13px; font-weight:600; color:#546E7A; }
 
-table.cmp { width:100%; border-collapse:collapse; font-size:11px; }
-table.cmp th { background:#0D47A1; color:#fff; padding:3.5mm 4mm; }
-table.cmp td { padding:3mm 4mm; border-bottom:1px solid #E0E7F0; text-align:center; }
+table.cmp { width:100%; border-collapse:collapse; font-size:10.5px; }
+table.cmp th { background:#0D47A1; color:#fff; padding:3mm 3.5mm; }
+table.cmp td { padding:2.6mm 3.5mm; border-bottom:1px solid #E0E7F0; text-align:center; }
 table.cmp td:first-child { text-align:right; font-weight:600; }
 .yes { color:#2E7D32; font-weight:800; } .no { color:#C62828; font-weight:800; }
 
-.shot-frame { border:1px solid #CFD8DC; border-radius:4mm; overflow:hidden;
-  box-shadow:0 4mm 10mm rgba(13,71,161,.14); }
-.shot-cap { text-align:center; font-size:10px; color:#607D8B; margin-top:2mm; }
+/* کارت تور تصویری — دو فرم در هر صفحه */
+.tour { display:grid; grid-template-columns:1fr 1fr; gap:6mm; height:158mm; }
+.form-card { display:flex; flex-direction:column; gap:2.8mm; }
+.form-card .shot-frame { border:1px solid #CFD8DC; border-radius:3.5mm; overflow:hidden;
+  box-shadow:0 3mm 7mm rgba(13,71,161,.13); background:#EFF3F9; }
+.form-card .shot-frame img { width:100%; display:block; }
+.form-card .cap { background:#F8FAFC; border:1px solid #E0E7F0; border-radius:3mm; padding:3mm 4mm; }
+.form-card .cap b { display:block; font-size:12.5px; font-weight:800; color:#0D47A1; }
+.form-card .cap span { display:block; font-size:10px; color:#455A64; line-height:1.75; margin-top:1mm; }
+.form-card .cap .em { font-size:13px; margin-left:1.5mm; }
 
-.modchip { display:flex; align-items:center; gap:2.5mm; background:#F5F8FA; border:1px solid #E0E7F0;
-  border-radius:3mm; padding:2.5mm 4mm; font-size:10.5px; }
-.modchip .m { font-size:5.5mm; }
-.plan { border-radius:5mm; padding:6mm; text-align:center; background:#F8FAFC; border:1.5px solid #E0E7F0; }
+.modchip { display:flex; align-items:center; gap:2.2mm; background:#F5F8FA; border:1px solid #E0E7F0;
+  border-radius:3mm; padding:2.2mm 3.6mm; font-size:10px; }
+.modchip .m { font-size:5mm; }
+.plan { border-radius:5mm; padding:5.5mm; text-align:center; background:#F8FAFC; border:1.5px solid #E0E7F0; }
 .plan.hot { background:linear-gradient(160deg,#0D47A1,#1565C0); color:#fff; border:none; transform:scale(1.04); }
-.plan h3 { font-size:16px; font-weight:800; }
-.plan .price { font-size:13px; margin:2mm 0; opacity:.9; }
-.plan ul { list-style:none; text-align:right; font-size:10.5px; line-height:2; }
+.plan h3 { font-size:15px; font-weight:800; }
+.plan .price { font-size:12.5px; margin:1.8mm 0; opacity:.9; }
+.plan ul { list-style:none; text-align:right; font-size:10px; line-height:2; }
 .cta { background:linear-gradient(90deg,#00897B,#43A047); color:#fff; border-radius:40px;
-  padding:4mm 12mm; font-size:15px; font-weight:700; display:inline-block; }
+  padding:3.5mm 11mm; font-size:14px; font-weight:700; display:inline-block; }
+
+/* نوار تماس واقعی */
+.contact-band { display:flex; align-items:center; justify-content:space-between; gap:8mm;
+  background:linear-gradient(115deg,#0E7C86,#0E9F6E); color:#fff; border-radius:5mm; padding:6mm 10mm;
+  box-shadow:0 4mm 10mm rgba(4,90,80,.35); }
+.contact-band .who b { font-size:16px; font-weight:800; display:block; }
+.contact-band .who span { font-size:11px; opacity:.9; }
+.contact-band .rows { display:flex; gap:9mm; font-size:12.5px; font-weight:700; direction:ltr; }
+.contact-band .rows .em { font-size:12px; }
 </style>
 </head>
 <body>
 
-<!-- ═══════════ اسلاید ۱: جلد ═══════════ -->
+<!-- ═══ اسلاید 1: جلد ═══ -->
 <div class="slide cover">
-  <div class="big-emoji">🏥</div>
+  <div class="logo-wrap"><img src="../assets/ClinicPro.png" alt="لوگوی درمانگاه سهند"></div>
   <h1>سامانه جامع مدیریت درمانگاه سهند</h1>
-  <h2>Sahand ClinicPro — نسخه ۱.۵.۰</h2>
-  <div class="tagline">از پذیرش بیمار تا فیش حقوقی پرسنل — همه‌‌چیز در یک نرم‌افزار فارسی</div>
+  <h2>Sahand ClinicPro — نسخه ۱.۶.۰</h2>
+  <div class="tagline">از پذیرش بیمار تا فیش حقوقی پرسنل — همه‌چیز در یک نرم‌افزار فارسی و جلالی</div>
   <div class="stats">
-    <div class="stat"><b>۲۴</b><span>ماژول یکپارچه</span></div>
+    <div class="stat"><b>۳۰+</b><span>ماژول یکپارچه</span></div>
+    <div class="stat"><b>۵۲</b><span>فرم آماده کار</span></div>
     <div class="stat"><b>۹۴</b><span>جدول دیتابیس</span></div>
-    <div class="stat"><b>۳۰۰+</b><span>رابط برنامه‌نویسی</span></div>
-    <div class="stat"><b>۱۳۳</b><span>تست خودکار سبز</span></div>
+    <div class="stat"><b>۱۳۷</b><span>تست خودکار سبز</span></div>
     <div class="stat"><b>۱۰۰٪</b><span>فارسی و جلالی</span></div>
   </div>
-  <div class="footer-line">کاتالوگ معرفی و بازاریابی — پاییز ۱۴۰۴ | ⭐ جدید این نسخه: نظرسنجی بیماران با ارسال لینک پیامکی + ۳۰ صفحه دسکتاپ کامل</div>
+  <div class="footer-line">کاتالوگ معرفی و بازاریابی — پاییز ۱۴۰۵ | ⭐ تور تصویری کامل هر ۵۲ فرم + نظرسنجی بیماران + پشتیبانی یکپارچه سهند سرویس</div>
 </div>
-
-<!-- ═══════════ اسلاید ۲: چرا سهند؟ ═══════════ -->
+<!-- ═══ اسلاید 2: چرا سهند ═══ -->
 <div class="slide">
-  <div class="hdr"><div class="ic">💎</div><div><h1>چرا درمانگاه سهند؟</h1><p>شش دلیل که مدیریت درمانگاه را متحول می‌کند</p></div><span class="page-no">۰۲</span></div>
-  <div class="grid" style="grid-template-columns:1fr 1fr 1fr; grid-template-rows:1fr 1fr;">
-    <div class="card"><div class="c-ic">🕐</div><h3>اتصال مستقیم دستگاه حضور و غیاب ⭐</h3><p>هدیه‌ی این نسخه: ارتباط بی‌واسط با ZKTeco و Hikvision؛ ضربه‌ها خودکار دریافت، با شیفت تطبیق و تأخیر/اضافه‌کاری محاسبه می‌شود — بدون Import/Export اکسل.</p></div>
-    <div class="card"><div class="c-ic">⚡</div><h3>صف زنده بلادرنگ</h3><p>فراخوان بیمار روی همه رایانه‌ها همان لحظه ظاهر می‌شود؛ دیگر نوبت‌سنج با فریاد و راه‌رویدن نمی‌چرخد. فناوری SignalR مایکروسافت.</p></div>
-    <div class="card"><div class="c-ic">🩺</div><h3>پرونده بالینی استاندارد WHO</h3><p>نمودار رشد با z-score جهانی، سابقه خانوادگی ۱۲ خویشاوندی و طرح مراقبت مزمن — کیفیت بالینی در سطح بیمارستان‌های آموزشی.</p></div>
-    <div class="card"><div class="c-ic">🏛</div><h3>مچ‌شده با سامانه‌های دولتی</h3><p>سپاس، سیب، ناب، سینا و نسخه الکترونیک — ادغام بومی بدون واسطه‌های شکننده؛ گزارش‌ها آماده بازرسی‌ها.</p></div>
-    <div class="card"><div class="c-ic">💵</div><h3>حسابداری واقعی، نه اکسل</h3><p>هر فاکتور خودکار سند دوبل صادر می‌کند؛ تراز آزمایشی همیشه بسته. فیش حقوقی با قواعد ۱۴۰۴ از حضورِ واقعی پرسنل.</p></div>
-    <div class="card"><div class="c-ic">🛡</div><h3>لایسنس و امنیت سازمانی</h3><p>۲۴ ماژول قابل فعال‌سازی جداگانه، قفل سخت‌افزاری، تپ قلب و حالت آفلاین ۳۰ روزه — به‌همراه ۱۶۰ دسترسی ریزبین کنترل کاربران.</p></div>
+  <div class="hdr"><div class="ic">⚡</div><div><h1>چرا درمانگاه سهند؟</h1><p>شش دلیل کلی برای انتخاب — جزئیات کامل در تور تصویری</p></div><div class="page-no">2</div></div>
+  <div class="grid" style="grid-template-columns:1fr 1fr 1fr; grid-auto-rows:1fr;">
+    <div class="card"><div class="c-ic">🛎</div><h3>صف انتظار زنده</h3><p>فراخوان بیمار روی همه رایانه‌ها همان لحظه ظاهر می‌شود؛ نوبت‌سنج دیگر با فریاد و راه‌رویدن نمی‌چرخد. فناوری SignalR مایکروسافت.</p></div>
+    <div class="card"><div class="c-ic">💊</div><h3>نسخه هوشمند و ایمن</h3><p>تداخل‌سنجی خودکار دارو، پایش حساسیت‌ها و ارسال مستقیم به سامانه نسخه الکترونیک — با امضای دیجیتال پزشک.</p></div>
+    <div class="card"><div class="c-ic">🪪</div><h3>ضد جعل از لحظه ثبت</h3><p>کد ملی بیماران با الگوریتم رسمی رقم کنترلی اعتبارسنجی می‌شود؛ کد جعلی یا تکراری هرگز پذیرفته نمی‌شود.</p></div>
+    <div class="card"><div class="c-ic">💵</div><h3>مالی بی‌خطا</h3><p>هر فاکتور خودکار سند دوبل صادر می‌کند؛ تراز آزمایشی همیشه بسته. فیش حقوقی با قواعد ۱۴۰۴ از حضورِ واقعی پرسنل.</p></div>
+    <div class="card"><div class="c-ic">🏛</div><h3>مچ با سامانه‌های دولتی</h3><p>سپاس، سیب، ناب، سینا و نسخه الکترونیک — ادغام بومی با حالت شبیه‌ساز تا روز فعال‌سازی رسمی.</p></div>
+    <div class="card"><div class="c-ic">🧑‍💻</div><h3>پشتیبانی زنده یکپارچه</h3><p>اطلاعات تماس پشتیبانی از سرور لایسنس دریافت و در سراسر برنامه نمایش داده می‌شود — همیشه به‌روز و قابل ویرایش از پنل.</p></div>
   </div>
 </div>
-
-<!-- ═══════════ اسلاید ۳: نقشه ماژول‌ها ═══════════ -->
+<!-- ═══ اسلاید 3: نقشه تور تصویری ═══ -->
 <div class="slide">
-  <div class="hdr"><div class="ic">🧩</div><div><h1>یک نرم‌افزار، بیست‌وچهار ماژول</h1><p>هر ماژول جداگانه قابل فعال‌سازی — پرداخت فقط برای آنچه لازم دارید</p></div><span class="page-no">۰۳</span></div>
-  <div class="grid" style="grid-template-columns:1fr 1fr 1fr 1fr;">
-    <div>
-      <div style="font-weight:800;color:#0D47A1;font-size:12.5px;margin-bottom:2.5mm">🏥 هسته درمانی</div>
-      <div class="modchip"><span class="m">👥</span>بیماران و پرونده الکترونیک</div><br>
-      <div class="modchip"><span class="m">🩺</span>پزشکان و برنامه کاری</div><br>
-      <div class="modchip"><span class="m">📅</span>نوبت‌دهی هوشمند</div><br>
-      <div class="modchip"><span class="m">🛎</span>پذیرش و صف زنده</div><br>
-      <div class="modchip"><span class="m">🩻</span>ویزیت SOAP + ICD-10</div><br>
-      <div class="modchip"><span class="m">❤️</span>پرونده بالینی پیشرفته</div>
-    </div>
-    <div>
-      <div style="font-weight:800;color:#0D47A1;font-size:12.5px;margin-bottom:2.5mm">💊 درمان و پاراکلینیک</div>
-      <div class="modchip"><span class="m">💊</span>نسخه‌نویسی + تداخل‌سنجی</div><br>
-      <div class="modchip"><span class="m">🧪</span>آزمایشگاه و کنترل کیفی</div><br>
-      <div class="modchip"><span class="m">🩻</span>تصویربرداری + نمایشگر DICOM</div><br>
-      <div class="modchip"><span class="m">🦷</span>دندانپزشکی</div><br>
-      <div class="modchip"><span class="m">👁</span>چشم‌پزشکی</div><br>
-      <div class="modchip"><span class="m">🏃</span>فیزیوتراپی</div>
-    </div>
-    <div>
-      <div style="font-weight:800;color:#0D47A1;font-size:12.5px;margin-bottom:2.5mm">💰 مالی و منابع</div>
-      <div class="modchip"><span class="m">💵</span>صندوق و فاکتور</div><br>
-      <div class="modchip"><span class="m">📒</span>حسابداری دوبل</div><br>
-      <div class="modchip"><span class="m">🛡</span>بیمه و مطالبه دوره‌ای</div><br>
-      <div class="modchip"><span class="m">🏥</span>داروخانه FEFO + انبارگردانی</div><br>
-      <div class="modchip"><span class="m">👔</span>پرسنل و قراردادها</div><br>
-      <div class="modchip"><span class="m">🕐</span>حضور و غیاب + دستگاه</div>
-    </div>
-    <div>
-      <div style="font-weight:800;color:#0D47A1;font-size:12.5px;margin-bottom:2.5mm">📊 مدیریت و زیرساخت</div>
-      <div class="modchip"><span class="m">📊</span>گزارش‌ساز ۳۱ گزارشی</div><br>
-      <div class="modchip"><span class="m">💬</span>پیامک هوشمند</div><br>
-      <div class="modchip"><span class="m">🏛</span>سامانه‌های دولتی</div><br>
-      <div class="modchip"><span class="m">🏘</span>چندشعبه‌ای</div><br>
-      <div class="modchip"><span class="m">🛡</span>کاربران و نقش‌ها</div><br>
-      <div class="modchip"><span class="m">⚙️</span>تنظیمات، بکاپ و لاگ</div>
-    </div>
-  </div>
+  <div class="hdr"><div class="ic">🗺</div><div><h1>تور تصویری کامل — ۵۲ فرم برنامه</h1><p>در ۸ حوزه کاری؛ هر فرم با تصویر واقعی و توضیح کاربرد</p></div><div class="page-no">3</div></div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;"><div class="modchip" style="font-size:11.5px;padding:3.5mm 5mm"><span class="m">🛎</span><b>1. پذیرش و بیمار</b><span style="margin-right:auto;color:#546E7A">فرم‌های 1–8 — 8 فرم</span></div><div class="modchip" style="font-size:11.5px;padding:3.5mm 5mm"><span class="m">🩺</span><b>2. درمان و نسخه</b><span style="margin-right:auto;color:#546E7A">فرم‌های 9–18 — 10 فرم</span></div><div class="modchip" style="font-size:11.5px;padding:3.5mm 5mm"><span class="m">🧪</span><b>3. پاراکلینیک و داروخانه</b><span style="margin-right:auto;color:#546E7A">فرم‌های 19–26 — 8 فرم</span></div><div class="modchip" style="font-size:11.5px;padding:3.5mm 5mm"><span class="m">💵</span><b>4. مالی و حسابداری</b><span style="margin-right:auto;color:#546E7A">فرم‌های 27–33 — 7 فرم</span></div><div class="modchip" style="font-size:11.5px;padding:3.5mm 5mm"><span class="m">👔</span><b>5. اداری و منابع انسانی</b><span style="margin-right:auto;color:#546E7A">فرم‌های 34–38 — 5 فرم</span></div><div class="modchip" style="font-size:11.5px;padding:3.5mm 5mm"><span class="m">✉️</span><b>6. ارتباط با بیمار</b><span style="margin-right:auto;color:#546E7A">فرم‌های 39–42 — 4 فرم</span></div><div class="modchip" style="font-size:11.5px;padding:3.5mm 5mm"><span class="m">🛡</span><b>7. امنیت و سیستم</b><span style="margin-right:auto;color:#546E7A">فرم‌های 43–50 — 8 فرم</span></div><div class="modchip" style="font-size:11.5px;padding:3.5mm 5mm"><span class="m">📈</span><b>8. گزارش‌ها</b><span style="margin-right:auto;color:#546E7A">فرم‌های 51–52 — 2 فرم</span></div></div>
+  <div style="margin-top:6mm" class="card"><p style="font-size:11px">
+  📌 تمام تصاویر این کاتالوگ از رابط کاربری واقعی نرم‌افزار (نسخه دسکتاپ ویندوزی، فارسی و راست‌چین) تهیه شده‌اند.
+  برای بزرگ‌نمایی هر تصویر، فایل PDF را با زوم ۱۵۰٪ یا بیشتر ببینید؛ متن‌ها در چاپ اصل نیز کاملاً خوانا هستند.</p></div>
 </div>
-
-<!-- ═══════════ اسلاید ۴: تجربه کاربری ═══════════ -->
+<!-- ═══ اسلاید 4: پذیرش و بیمار — فرم 1 و 2 ═══ -->
 <div class="slide">
-  <div class="hdr"><div class="ic">🖥</div><div><h1>رابط کاربری که کار را لذت می‌کند</h1><p>Material Design مایکروسافت — تمام‌فارسی، راست‌به‌چپ، تقویم جلالی</p></div><span class="page-no">۰۴</span></div>
-  <div class="grid" style="grid-template-columns:1.15fr 1fr 1fr;">
-    <div><div class="shot-frame"><img src="../screenshots/02-dashboard.png" style="width:100%"></div><div class="shot-cap">داشبورد مدیریتی — نمای ۳۶۰ درجه امروز</div></div>
-    <div><div class="shot-frame"><img src="../screenshots/05-receptions.png" style="width:100%"></div><div class="shot-cap">صف زنده سالن با فراخوان بلادرنگ</div></div>
-    <div><div class="shot-frame"><img src="../screenshots/06-prescriptions.png" style="width:100%"></div><div class="shot-cap">نسخه‌نویسی با تداخل‌سنجی خودکار</div></div>
-  </div>
+  <div class="hdr"><div class="ic">🛎</div><div><h1>🛎 حوزه 1: پذیرش و بیمار</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">4</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/01-dashboard.png" alt="داشبورد مدیریتی"></div><div class="cap"><b><span class="em">📊</span>1. داشبورد مدیریتی</b><span>نمای ۳۶۰ درجه امروز درمانگاه: بیماران، صف زنده، درآمد و هشدارها در یک نگاه</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/02-patients.png" alt="مدیریت بیماران"></div><div class="cap"><b><span class="em">🧑‍🤝‍🧑</span>2. مدیریت بیماران</b><span>پرونده الکترونیک با کد ملی اعتبارسنجی‌شده (ضد جعل)، بیمه و سابقه کامل مراجعات</span></div></div></div>
 </div>
-
-<!-- ═══════════ اسلاید ۵: ستاره حضور و غیاب ═══════════ -->
-<div class="slide" style="background:linear-gradient(115deg,#F5FAFF 60%,#E8F5E9)">
-  <div class="hdr"><div class="ic" style="background:linear-gradient(135deg,#00897B,#43A047)">🕐</div><div><h1>حضور و غیاب بی‌واسطه — از دستگاه تا فیش حقوقی</h1><p>پایان عصر اکسل و دوباره‌کاری پرسنل حسابداری</p></div><span class="page-no">۰۵</span></div>
-  <div style="display:flex; gap:8mm;">
-    <div style="flex:1.15">
-      <div class="shot-frame"><img src="../screenshots/10-attendance-today.png" style="width:100%"></div>
-      <div class="shot-cap">تابلوی زنده امروز — وضعیت لحظه‌ای همه پرسنل</div>
-    </div>
-    <div style="flex:1">
-      <div class="grid" style="grid-template-columns:1fr;">
-        <div class="card"><h3>🔌 اتصال مستقیم به دستگاه‌ها</h3><p>ZKTeco با پروتکل رسمی PULL و Hikvision با ISAPI — بدون نصب هیچ نرم‌افزار واسط؛ همگام‌سازی خودکار هر ۵ دقیقه.</p></div>
-        <div class="card"><h3>🧠 موتور محاسبات هوشمند</h3><p>تطبیق ضربه‌ها با شیفت: تحمل تأخیر، کسر استراحت، شیفت شب عبور از نیمه‌شب، اضافه‌کاری با آستانه — ۱۶ سناریو تست‌شده.</p></div>
-        <div class="card"><h3>📝 جریان اصلاح کارت</h3><p>فراموشی ضربه؟ درخواست پرسنل → تأیید سرپرست → اعمال خودکار؛ همه‌چیز ممیزی‌شده.</p></div>
-        <div class="card"><h3>📊 گزارش ماهانه شمسی</h3><p>کارکرد/تأخیر/اضافه‌کاری/غیبت هر پرسنل — ورودی مستقیم فیش حقوقی با قواعد ۱۴۰۴.</p></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════ اسلاید ۶: سلامت دیجیتال ═══════════ -->
+<!-- ═══ اسلاید 5: پذیرش و بیمار — فرم 3 و 4 ═══ -->
 <div class="slide">
-  <div class="hdr"><div class="ic">❤️</div><div><h1>سلامت دیجیتال در سطح بیمارستان‌های آموزشی</h1><p>ابزارهای بالینی که معمولاً فقط در نرم‌افزارهای چند میلیاردی یافت می‌شود</p></div><span class="page-no">۰۶</span></div>
-  <div style="display:flex; gap:7mm;">
-    <div style="flex:1.1">
-      <div class="shot-frame"><img src="../screenshots/07-emr-advanced.png" style="width:100%"></div>
-      <div class="shot-cap">نمودار رشد WHO با z-score رنگی و طرح مراقبت مزمن</div>
-    </div>
-    <div style="flex:1">
-      <div class="grid" style="grid-template-columns:1fr 1fr;">
-        <div class="card" style="text-align:center"><div class="big-num">📊</div><h3>نمودار رشد WHO 2006</h3><p>چهار شاخص × دو جنسیت با درون‌یابی دقیق و طبقه‌بندی چهارسطحی نرمال تا بحرانی</p></div>
-        <div class="card" style="text-align:center"><div class="big-num">🩻</div><h3>نمایشگر DICOM داخلی</h3><p>فایل‌های رادیولوژی بدون نرم‌افزار جانبی — پنجره/سطح تعاملی و متادیتای فارسی</p></div>
-        <div class="card" style="text-align:center"><div class="big-num">👥</div><h3>سابقه خانوادگی</h3><p>۱۲ نسبت خویشاوندی با نشانگر ارثی — پایش ریسک‌های خانوادگی</p></div>
-        <div class="card" style="text-align:center"><div class="big-num">🩺</div><h3>طرح مراقبت مزمن</h3><p>چرخه هدف/اقدام/بازبینی با هشدار نارنجی موعدهای گذشته</p></div>
-      </div>
-    </div>
-  </div>
+  <div class="hdr"><div class="ic">🛎</div><div><h1>🛎 پذیرش و بیمار (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">5</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/04-appointments.png" alt="نوبت‌دهی هوشمند"></div><div class="cap"><b><span class="em">🗓</span>3. نوبت‌دهی هوشمند</b><span>تقویم با ظرفیت لحظه‌ای پزشکان و کانال‌های ثبت حضوری، تلفنی و اینترنتی</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/05-receptions.png" alt="پذیرش و صف زنده"></div><div class="cap"><b><span class="em">🛎</span>4. پذیرش و صف زنده</b><span>فراخوان بلادرنگ بیمار روی همه رایانه‌ها و تلویزیون سالن — با SignalR</span></div></div></div>
 </div>
-
-<!-- ═══════════ اسلاید ۷: مالی ═══════════ -->
+<!-- ═══ اسلاید 6: پذیرش و بیمار — فرم 5 و 6 ═══ -->
 <div class="slide">
-  <div class="hdr"><div class="ic">💵</div><div><h1>مالی شفاف، حسابداری بی‌خطا</h1><p>از صندوق روزانه تا تراز سالانه — همه‌چیز به‌هم متصل</p></div><span class="page-no">۰۷</span></div>
-  <div style="display:flex; gap:7mm;">
-    <div style="flex:1">
-      <div class="grid" style="grid-template-columns:1fr;">
-        <div class="card"><h3>🧾 فاکتور → سند خودکار</h3><p>هر فاکتور بلافاصله سند دوبل حسابداری صادر می‌کند — قانون توازن همیشه برقرار، دفتروجوه فراموش نمی‌شود.</p></div>
-        <div class="card"><h3>🛡 بیمه و سپاس</h3><p>محاسبه خودکار سهم بیمه از تعرفه + ارسال تراکنش به سپاس + پیگیری مطالبات دوره‌ای با بازارسال خودکار.</p></div>
-        <div class="card"><h3>🧾 فیش حقوقی ۱۴۰۴</h3><p>اضافه‌کاری ۱.۴ برابر از حضورِ واقعی دستگاه، بیمه ۷٪، مالیات پلکانی تجمعی — فیش چاپی استاندارد با امضاها.</p></div>
-        <div class="card"><h3>📊 گزارش‌ساز ۳۱گانه کاملاً واقعی</h3><p>از سود و زیان و صورت‌حساب بیمار تا بیماری‌های مزمن ICD-10 و الگوی مراجعات — با خروجی اکسل فارسی.</p></div>
-      </div>
-    </div>
-    <div style="flex:1.1">
-      <div class="shot-frame"><img src="../screenshots/08-billing.png" style="width:100%"></div>
-      <div class="shot-cap">صندوق و فاکتورها با پوشش بیمه و وضعیت تسویه</div>
-      <div style="height:4mm"></div>
-      <div class="shot-frame"><img src="../screenshots/09-payroll.png" style="width:100%"></div>
-      <div class="shot-cap">فیش حقوقی با قواعد ۱۴۰۴</div>
-    </div>
-  </div>
+  <div class="hdr"><div class="ic">🛎</div><div><h1>🛎 پذیرش و بیمار (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">6</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/34-patient-form-win.png" alt="فرم ثبت بیمار"></div><div class="cap"><b><span class="em">📝</span>5. فرم ثبت بیمار</b><span>فرم ثبت با اعتبارسنجی الگوریتمی کد ملی و الگوی موبایل — کد جعلی پذیرفته نمی‌شود</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/35-patient-detail-win.png" alt="پرونده بیمار"></div><div class="cap"><b><span class="em">🗂</span>6. پرونده بیمار</b><span>سابقه کامل مراجعات، نسخه‌ها، آزمایش‌ها و صورتحساب‌های هر بیمار در یک پنجره</span></div></div></div>
 </div>
-
-<!-- ═══════════ اسلاید ۸: امنیت و اتصال دولتی ═══════════ -->
+<!-- ═══ اسلاید 7: پذیرش و بیمار — فرم 7 و 8 ═══ -->
 <div class="slide">
-  <div class="hdr"><div class="ic">🛡</div><div><h1>امنیت سازمانی و اتصال به دولت</h1><p>خیالتان از داده بیماران و گزارش‌های بازرسی راحت</p></div><span class="page-no">۰۸</span></div>
-  <div class="grid" style="grid-template-columns:1fr 1fr 1fr;">
-    <div class="card"><div class="c-ic">🔐</div><h3>احراز هویت چندلایه</h3><p>BCrypt با ضریب ۱۲، سیاست رمز عبور، تاریخچه ۵ رمز اخیر، قفل خودکار پس از ۵ تلاش ناموفق، توکن کوتاه‌عمر با چرخش خودکار.</p></div>
-    <div class="card"><div class="c-ic">🕵</div><h3>ممیزی کامل</h3><p>هر تغییر با Old/New و نام کاربر ثبت می‌شود — ردیابی دقیق برای مسئولیت‌سنجی؛ فیلدهای حساس در لاگ خودکار ماسک می‌شوند.</p></div>
-    <div class="card"><div class="c-ic">🏛</div><h3>سامانه‌های دولتی</h3><p>سپاس، سیب، ناب، سینا و نسخه الکترونیک — همه پشت یک قرارداد واحد با حالت شبیه‌ساز تا روز فعال‌سازی.</p></div>
-    <div class="card"><div class="c-ic">🔑</div><h3>لایسنس منعطف</h3><p>۲۴ ماژول انتخابی، سقف کاربر/پزشک/شعبه، قفل سخت‌افزار، مهلت آفلاین ۳۰ روزه و پنل مدیریت مستقل روی هاست شما.</p></div>
-    <div class="card"><div class="c-ic">💾</div><h3>پشتیبان‌گیری سه‌سطحی</h3><p>روزانه/هفتگی/ماهانه با نگهداری چرخشی و بازیابی دوکلیکی — روی NAS یا مسیر دلخواه.</p></div>
-    <div class="card"><div class="c-ic">🏘</div><h3>آماده رشد</h3><p>معماری چندشعبه‌ای از روز اول — شعبه دوم را بدون مهاجرت اضافه کنید؛ فیلتر سراسری داده‌های هر شعبه.</p></div>
-  </div>
+  <div class="hdr"><div class="ic">🛎</div><div><h1>🛎 پذیرش و بیمار (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">7</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/36-appointment-form-win.png" alt="فرم ثبت نوبت"></div><div class="cap"><b><span class="em">🗓</span>7. فرم ثبت نوبت</b><span>انتخاب پزشک و بازه ساعت با نمایش ظرفیت آزاد لحظه‌ای</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/37-reception-form-win.png" alt="پذیرش حضوری"></div><div class="cap"><b><span class="em">🛎</span>8. پذیرش حضوری</b><span>شماره صف خودکار، بیعانه و روش پرداخت — بلافاصله روی صف سالن ظاهر می‌شود</span></div></div></div>
 </div>
-
-<!-- ═══════════ اسلاید ۹: مقایسه ═══════════ -->
+<!-- ═══ اسلاید 8: درمان و نسخه — فرم 9 و 10 ═══ -->
 <div class="slide">
-  <div class="hdr"><div class="ic">⚖️</div><div><h1>مقایسه شفاف با گزینه‌های رایج</h1><p>انتخاب آگاهانه — نه وعده‌ی تبلیغاتی</p></div><span class="page-no">۰۹</span></div>
-  <table class="cmp">
-    <tr><th style="text-align:right">قابلیت</th><th>نرم‌افزارهای عمومی حسابداری</th><th>سامانه‌های ابری خارجی</th><th>پروژه‌های متفرقه داخلی</th><th style="background:#00897B">درمانگاه سهند</th></tr>
-    <tr><td>ساخته‌شده ویژه درمانگاه ایران</td><td class="no">✗</td><td class="no">✗</td><td class="yes">تا حدی</td><td class="yes">✓ کامل</td></tr>
-    <tr><td>اتصال مستقیم دستگاه حضور و غیاب</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗ نادر</td><td class="yes">✓ ZKTeco + Hikvision</td></tr>
-    <tr><td>پرونده بالینی با نمودار WHO و DICOM</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓ داخلی</td></tr>
-    <tr><td>اتصال سپاس/نسخه الکترونیک</td><td class="no">✗</td><td class="no">محدود</td><td class="no">نادر</td><td class="yes">✓ ۵ سامانه</td></tr>
-    <tr><td>تقویم جلالی و فارسی کامل RTL</td><td class="yes">✓</td><td class="no">معمولاً LTR</td><td class="yes">✓</td><td class="yes">✓ ۱۰۰٪</td></tr>
-    <tr><td>نصب روی سرور خود درمانگاه (داده در کنار شما)</td><td class="yes">✓</td><td class="no">✗ ابری</td><td class="yes">✓</td><td class="yes">✓ + حالت ابری اختیاری</td></tr>
-    <tr><td>صف انتظار بلادرنگ (SignalR)</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
-    <tr><td>حسابداری دوبل خودکار از فاکتور</td><td class="no">دستی</td><td class="no">✗</td><td class="no">ناقص</td><td class="yes">✓ خودکار</td></tr>
-    <tr><td>۱۱۷ تست خودکار + مستندات فارسی کامل</td><td class="no">✗</td><td class="no">؟</td><td class="no">✗</td><td class="yes">✓</td></tr>
-  </table>
-  <div style="text-align:center;margin-top:6mm"><span class="cta">درخواست دموی رایگان ۱۵ روزه 🎁</span></div>
+  <div class="hdr"><div class="ic">🩺</div><div><h1>🩺 حوزه 2: درمان و نسخه</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">8</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/06-visits.png" alt="ویزیت و معاینه"></div><div class="cap"><b><span class="em">📋</span>9. ویزیت و معاینه</b><span>ثبت علائم حیاتی، شرح حال و تشخیص استاندارد ICD-10 برای هر ویزیت</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/07-prescriptions.png" alt="نسخه‌نویسی هوشمند"></div><div class="cap"><b><span class="em">💊</span>10. نسخه‌نویسی هوشمند</b><span>تداخل‌سنجی خودکار داروها و پایش حساسیت‌های بیمار هنگام تجویز</span></div></div></div>
 </div>
-
-<!-- ═══════════ اسلاید ۱۰: پلن‌ها ═══════════ -->
+<!-- ═══ اسلاید 9: درمان و نسخه — فرم 11 و 12 ═══ -->
 <div class="slide">
-  <div class="hdr"><div class="ic">🧩</div><div><h1>پلن‌های لایسنس — ماژولار و منصفانه</h1><p>پرداخت فقط برای ماژول‌های موردنیاز؛ ارتقا در هر زمان بدون از دست رفتن داده</p></div><span class="page-no">۱۰</span></div>
-  <div class="grid" style="grid-template-columns:1fr 1.15fr 1.35fr; gap:8mm; align-items:center; height:78%;">
-    <div class="plan">
-      <h3>🌱 پایه</h3>
-      <div class="price">ویژه درمانگاه‌های تازه‌تأسیس</div>
-      <hr style="border-color:#E0E7F0;margin:3mm 0">
-      <ul>
-        <li>✔ بیماران + نوبت‌دهی + پذیرش</li>
-        <li>✔ ویزیت SOAP + نسخه‌نویسی</li>
-        <li>✔ صندوق و فاکتور ساده</li>
-        <li>✔ ۵ کاربر + ۱ شعبه</li>
-        <li>✔ پشتیبانی ۳ ماهه</li>
-      </ul>
-    </div>
-    <div class="plan hot">
-      <h3>⭐ استاندارد</h3>
-      <div class="price">پرفروش‌ترین انتخاب درمانگاه‌ها</div>
-      <hr style="border-color:rgba(255,255,255,.3);margin:3mm 0">
-      <ul>
-        <li>✔ همه امکانات پایه</li>
-        <li>✔ آزمایشگاه + داروخانه + بیمه</li>
-        <li>✔ حضور و غیاب + دستگاه ⭐</li>
-        <li>✔ فیش حقوقی + حسابداری دوبل</li>
-        <li>✔ پیامک + گزارش‌ساز کامل</li>
-        <li>✔ ۱۵ کاربر + ۲ شعبه + پشتیبانی ۱ ساله</li>
-      </ul>
-    </div>
-    <div class="plan">
-      <h3>🏢 سازمانی</h3>
-      <div class="price">شبکه درمانی و کلینیک‌های زنجیره‌ای</div>
-      <hr style="border-color:#E0E7F0;margin:3mm 0">
-      <ul>
-        <li>✔ همه ماژول‌ها بدون استثنا</li>
-        <li>✔ پرونده بالینی پیشرفته + DICOM</li>
-        <li>✔ سامانه‌های دولتی + چندشعبه نامحدود</li>
-        <li>✔ سرور لایسنس اختصاصی شما</li>
-        <li>✔ کاربر نامحدود + SLA پاسخ ۴ ساعته</li>
-        <li>✔ آموزش حضوری تیم + شخصی‌سازی</li>
-      </ul>
-    </div>
-  </div>
-  <p style="text-align:center;font-size:10.5px;color:#546E7A;margin-top:4mm">فعال‌سازی ماژول‌های تکی روی هر پلن ممکن است — فهرست ۲۴ ماژول و قیمت‌ها را از مشاور فروش بخواهید</p>
+  <div class="hdr"><div class="ic">🩺</div><div><h1>🩺 درمان و نسخه (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">9</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/08-emr-advanced.png" alt="پرونده بالینی پیشرفته"></div><div class="cap"><b><span class="em">❤️</span>11. پرونده بالینی پیشرفته</b><span>نمودار رشد WHO با z-score، سابقه خانوادگی ۱۲ خویشاوندی و طرح مراقبت مزمن</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/26-erx.png" alt="نسخه الکترونیک"></div><div class="cap"><b><span class="em">☁️</span>12. نسخه الکترونیک</b><span>امضای دیجیتال و ارسال مستقیم نسخه به سامانه ملی و داروخانه‌ها</span></div></div></div>
 </div>
-
-<!-- ═══════════ اسلاید ۱۱: مشخصات فنی ═══════════ -->
+<!-- ═══ اسلاید 10: درمان و نسخه — فرم 13 و 14 ═══ -->
 <div class="slide">
-  <div class="hdr"><div class="ic">⚙️</div><div><h1>مشخصات فنی — برای تیم IT شما</h1><p>معماری مدرن مایکروسافت، استقرار آسان روی زیرساخت فعلی</p></div><span class="page-no">۱۱</span></div>
-  <div class="grid" style="grid-template-columns:1fr 1fr;">
-    <div class="card">
-      <h3>🏗 پشته فناوری</h3>
-      <table class="cmp" style="margin-top:3mm">
-        <tr><td style="text-align:right">زبان و چارچوب</td><td style="text-align:right">C# 12 / .NET 8 LTS</td></tr>
-        <tr><td style="text-align:right">کلاینت</td><td style="text-align:right">WPF + Material Design — ویندوز ۱۰+</td></tr>
-        <tr><td style="text-align:right">سرور وب</td><td style="text-align:right">ASP.NET Core 8 — IIS یا سرویس ویندوز</td></tr>
-        <tr><td style="text-align:right">دیتابیس</td><td style="text-align:right">SQL Server 2019/2022 (Express رایگان)</td></tr>
-        <tr><td style="text-align:right">بلادرنگ</td><td style="text-align:right">SignalR + کارهای زمان‌بندی Hangfire</td></tr>
-        <tr><td style="text-align:right">سرور لایسنس</td><td style="text-align:right">PHP 8 + MySQL — هر هاست اشتراکی</td></tr>
-      </table>
-    </div>
-    <div class="card">
-      <h3>📐 معماری و کیفیت</h3>
-      <table class="cmp" style="margin-top:3mm">
-        <tr><td style="text-align:right">الگو</td><td style="text-align:right">Clean Architecture + CQRS</td></tr>
-        <tr><td style="text-align:right">مقیاس کد</td><td style="text-align:right">۹۳ موجودیت دامنه + ۳۰۰+ endpoint</td></tr>
-        <tr><td style="text-align:right">تست خودکار</td><td style="text-align:right">۱۱۷ تست سبز در ۴ لایه</td></tr>
-        <tr><td style="text-align:right">مستندسازی</td><td style="text-align:right">XML فارسی سرتاسری + ۷ سند طراحی</td></tr>
-        <tr><td style="text-align:right">تعویض‌پذیری</td><td style="text-align:right">درایور دستگاه‌ها و سامانه‌های دولتی پشت قرارداد</td></tr>
-        <tr><td style="text-align:right">حریم داده</td><td style="text-align:right">داده بیمار فقط روی سرور خود شما</td></tr>
-      </table>
-    </div>
-  </div>
+  <div class="hdr"><div class="ic">🩺</div><div><h1>🩺 درمان و نسخه (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">10</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/38-visit-window-win.png" alt="پنجره ثبت ویزیت"></div><div class="cap"><b><span class="em">📋</span>13. پنجره ثبت ویزیت</b><span>فرم معاینه با هشدار خودکار حساسیت‌های دارویی بیمار</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/39-prescription-form-win.png" alt="پنجره نسخه‌نویسی"></div><div class="cap"><b><span class="em">💊</span>14. پنجره نسخه‌نویسی</b><span>اقلام نسخه با بررسی لحظه‌ای تداخل و منع مصرف در بارداری</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 11: درمان و نسخه — فرم 15 و 16 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">🩺</div><div><h1>🩺 درمان و نسخه (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">11</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/40-prescription-detail-win.png" alt="مشاهده نسخه"></div><div class="cap"><b><span class="em">🔍</span>15. مشاهده نسخه</b><span>جزئیات کامل نسخه صادره + وضعیت ارسال الکترونیک و چاپ</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/03-doctors.png" alt="پزشکان و تخصص‌ها"></div><div class="cap"><b><span class="em">🩺</span>16. پزشکان و تخصص‌ها</b><span>مدیریت پزشکان، شیفت‌ها، حق‌الویزیت و وضعیت حضور</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 12: درمان و نسخه — فرم 17 و 18 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">🩺</div><div><h1>🩺 درمان و نسخه (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">12</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/41-doctor-form-win.png" alt="فرم ثبت پزشک"></div><div class="cap"><b><span class="em">🩺</span>17. فرم ثبت پزشک</b><span>ثبت تخصص، شماره نظام پزشکی، شیفت و حق‌الویزیت</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/51-doctor-performance-win.png" alt="عملکرد پزشک"></div><div class="cap"><b><span class="em">📈</span>18. عملکرد پزشک</b><span>تحلیل ویزیت، درآمد، رضایت بیمار و روند هفتگی هر پزشک</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 13: پاراکلینیک و داروخانه — فرم 19 و 20 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">🧪</div><div><h1>🧪 حوزه 3: پاراکلینیک و داروخانه</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">13</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/14-paraclinical.png" alt="مرکز پاراکلینیک"></div><div class="cap"><b><span class="em">🧪</span>19. مرکز پاراکلینیک</b><span>فرمان واحد آزمایشگاه و تصویربرداری: سفارش، رزرو و تحویل نتیجه</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/15-lab.png" alt="آزمایشگاه"></div><div class="cap"><b><span class="em">🔬</span>20. آزمایشگاه</b><span>پانل‌های آزمایش با زمان پاسخ (FPR) و پیامک خودکار آماده‌شدن نتیجه</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 14: پاراکلینیک و داروخانه — فرم 21 و 22 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">🧪</div><div><h1>🧪 پاراکلینیک و داروخانه (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">14</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/16-pharmacy.png" alt="داروخانه و انبار"></div><div class="cap"><b><span class="em">💊</span>21. داروخانه و انبار</b><span>مدیریت موجودی با حد بحرانی، هشدار انقضا و گردش انبار</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/17-stocktaking.png" alt="انبارگردانی"></div><div class="cap"><b><span class="em">📦</span>22. انبارگردانی</b><span>شمارش دوره‌ای با ثبت اختلاف کمبود/اضافه و ارزش‌گذاری</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 15: پاراکلینیک و داروخانه — فرم 23 و 24 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">🧪</div><div><h1>🧪 پاراکلینیک و داروخانه (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">15</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/46-lab-order-form-win.png" alt="فرم سفارش آزمایش"></div><div class="cap"><b><span class="em">🧫</span>23. فرم سفارش آزمایش</b><span>انتخاب پانل‌ها و فوریت نمونه‌برداری</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/47-lab-result-window-win.png" alt="ثبت نتیجه آزمایش"></div><div class="cap"><b><span class="em">🔬</span>24. ثبت نتیجه آزمایش</b><span>درج نتایج با بازه نرمال و نشان‌گذاری خودکار بالا/پایین</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 16: پاراکلینیک و داروخانه — فرم 25 و 26 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">🧪</div><div><h1>🧪 پاراکلینیک و داروخانه (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">16</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/48-stockin-form-win.png" alt="رسید ورود انبار"></div><div class="cap"><b><span class="em">📦</span>25. رسید ورود انبار</b><span>ثبت محموله با باتچ‌نامبر و تاریخ انقضا</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/50-dicom-viewer-win.png" alt="نمایشگر DICOM"></div><div class="cap"><b><span class="em">🩻</span>26. نمایشگر DICOM</b><span>مشاهده تصاویر رادیولوژی بدون نرم‌افزار جانبی — پنجره/سطح تعاملی</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 17: مالی و حسابداری — فرم 27 و 28 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">💵</div><div><h1>💵 حوزه 4: مالی و حسابداری</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">17</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/09-billing.png" alt="مالی و صندوق"></div><div class="cap"><b><span class="em">💵</span>27. مالی و صندوق</b><span>فاکتور با محاسبه خودکار سهم بیمه، کارتخوان و بستن روزانه صندوق</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/10-accounting.png" alt="حسابداری دوبل"></div><div class="cap"><b><span class="em">📒</span>28. حسابداری دوبل</b><span>هر فاکتور سند حسابداری خودکار صادر می‌کند — تراز آزمایشی همیشه بسته</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 18: مالی و حسابداری — فرم 29 و 30 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">💵</div><div><h1>💵 مالی و حسابداری (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">18</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/11-payroll.png" alt="فیش حقوقی پرسنل"></div><div class="cap"><b><span class="em">🧾</span>29. فیش حقوقی پرسنل</b><span>با قواعد ۱۴۰۴: اضافه‌کاری ۱.۴ برابر از حضور واقعی، بیمه ۷٪ و مالیات پلکانی</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/13-insurance.png" alt="بیمه و مطالبات"></div><div class="cap"><b><span class="em">🛡</span>30. بیمه و مطالبات</b><span>ارسال تراکنش به بیمه‌ها و پیگیری دوره‌ای مطالبات با بازارسال خودکار</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 19: مالی و حسابداری — فرم 31 و 32 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">💵</div><div><h1>💵 مالی و حسابداری (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">19</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/43-invoice-form-win.png" alt="صدور فاکتور"></div><div class="cap"><b><span class="em">💵</span>31. صدور فاکتور</b><span>اقلام خدمت با تعرفه و تفکیک سهم بیمه/بیمار</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/44-payment-window-win.png" alt="دریافت وجه"></div><div class="cap"><b><span class="em">💰</span>32. دریافت وجه</b><span>تسویه بدهی با صدور خودکار سند دوبل</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 20: مالی و حسابداری — فرم 33 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">💵</div><div><h1>💵 مالی و حسابداری (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">20</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/45-payslip-window-win.png" alt="فیش حقوقی"></div><div class="cap"><b><span class="em">🧾</span>33. فیش حقوقی</b><span>جدول مزایا و کسورات با خالص پرداختی — آماده چاپ امضادار</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 21: اداری و منابع انسانی — فرم 34 و 35 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">👔</div><div><h1>👔 حوزه 5: اداری و منابع انسانی</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">21</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/23-personnel.png" alt="مدیریت پرسنل"></div><div class="cap"><b><span class="em">👔</span>34. مدیریت پرسنل</b><span>پرونده کامل پرسنل: قرارداد، سابقه، شعبه و وضعیت اشتغال</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/12-attendance.png" alt="حضور و غیاب"></div><div class="cap"><b><span class="em">🕐</span>35. حضور و غیاب</b><span>دریافت خودکار ضربه‌ها از دستگاه ZKTeco/Hikvision و تطبیق با شیفت</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 22: اداری و منابع انسانی — فرم 36 و 37 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">👔</div><div><h1>👔 اداری و منابع انسانی (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">22</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/42-employee-form-win.png" alt="فرم ثبت پرسنل"></div><div class="cap"><b><span class="em">👔</span>36. فرم ثبت پرسنل</b><span>ثبت کد ملی، قرارداد، بیمه و شیفت کاری</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/27-branches.png" alt="مدیریت شعبه‌ها"></div><div class="cap"><b><span class="em">🏢</span>37. مدیریت شعبه‌ها</b><span>مقایسه عملکرد شعبه مرکزی و نمایندگی‌ها با آمار زنده</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 23: اداری و منابع انسانی — فرم 38 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">👔</div><div><h1>👔 اداری و منابع انسانی (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">23</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/25-sepas.png" alt="سامانه سپاس"></div><div class="cap"><b><span class="em">🏦</span>38. سامانه سپاس</b><span>ارسال تراکنش، استعلام کد رهگیری و بازارسال خودکار خطاها</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 24: ارتباط با بیمار — فرم 39 و 40 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">✉️</div><div><h1>✉️ حوزه 6: ارتباط با بیمار</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">24</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/21-sms.png" alt="پیامک هوشمند"></div><div class="cap"><b><span class="em">✉️</span>39. پیامک هوشمند</b><span>یادآوری نوبت، اطلاع نتیجه آزمایش و لینک نظرسنجی با قالب‌های پویا</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/22-surveys.png" alt="نظرسنجی بیماران"></div><div class="cap"><b><span class="em">📝</span>40. نظرسنجی بیماران</b><span>سازنده پویا نظرسنجی، ارسال لینک پیامکی و تحلیل توزیع ستاره + میانگین پزشکان</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 25: ارتباط با بیمار — فرم 41 و 42 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">✉️</div><div><h1>✉️ ارتباط با بیمار (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">25</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/32-notifications.png" alt="اعلان‌ها و یادآورها"></div><div class="cap"><b><span class="em">🔔</span>41. اعلان‌ها و یادآورها</b><span>یادآور موعد دارو، هشدار موجودی و رویدادهای سیستم به‌صورت بلادرنگ</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/31-complementary.png" alt="قالب چاپ و طب مکمل"></div><div class="cap"><b><span class="em">🎨</span>42. قالب چاپ و طب مکمل</b><span>۶ قالب چاپی آماده (فاکتور، فیش، نسخه، نتیجه آزمایش و…) + فرم‌های طب مکمل</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 26: امنیت و سیستم — فرم 43 و 44 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">🛡</div><div><h1>🛡 حوزه 7: امنیت و سیستم</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">26</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/19-users.png" alt="مدیریت کاربران"></div><div class="cap"><b><span class="em">👤</span>43. مدیریت کاربران</b><span>سیاست رمز قوی، قفل خودکار پس از ۵ تلاش و ذخیره‌سازی BCrypt</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/20-roles.png" alt="نقش‌ها و دسترسی‌ها"></div><div class="cap"><b><span class="em">🔑</span>44. نقش‌ها و دسترسی‌ها</b><span>۱۶۰ دسترسی ریزبین با ماتریس قابل تنظیم برای هر نقش</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 27: امنیت و سیستم — فرم 45 و 46 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">🛡</div><div><h1>🛡 امنیت و سیستم (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">27</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/29-audit.png" alt="لاگ عملیات (ممیزی)"></div><div class="cap"><b><span class="em">🧾</span>45. لاگ عملیات (ممیزی)</b><span>هر تغییر با مقدار قبلی/جدیدی و نام کاربر ثبت و فیلدهای حساس ماسک می‌شوند</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/28-backup.png" alt="بکاپ و بازیابی"></div><div class="cap"><b><span class="em">💾</span>46. بکاپ و بازیابی</b><span>زمان‌بندی روزانه، چرخش خودکار نسخه‌ها و بازیابی مطمئن</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 28: امنیت و سیستم — فرم 47 و 48 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">🛡</div><div><h1>🛡 امنیت و سیستم (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">28</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/30-license.png" alt="وضعیت لایسنس"></div><div class="cap"><b><span class="em">🔑</span>47. وضعیت لایسنس</b><span>ماژول‌های فعال + کارت پشتیبانی زنده دریافتی از سرور لایسنس</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/24-settings.png" alt="تنظیمات سیستم"></div><div class="cap"><b><span class="em">⚙️</span>48. تنظیمات سیستم</b><span>مشخصات درمانگاه، چاپ، پیامک و اطلاعات پشتیبانی (از سرور لایسنس)</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 29: امنیت و سیستم — فرم 49 و 50 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">🛡</div><div><h1>🛡 امنیت و سیستم (ادامه)</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">29</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/49-user-form-win.png" alt="فرم ثبت کاربر"></div><div class="cap"><b><span class="em">👤</span>49. فرم ثبت کاربر</b><span>ثبت کاربر با نقش، شعبه و سیاست رمز عبور</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/52-login-win.png" alt="صفحه ورود"></div><div class="cap"><b><span class="em">🔐</span>50. صفحه ورود</b><span>ورود امن با نمایش شماره پشتیبانی محصول</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 30: گزارش‌ها — فرم 51 و 52 ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">📈</div><div><h1>📈 حوزه 8: گزارش‌ها</h1><p>تور تصویری کامل — تصویر واقعی رابط کاربری + کاربرد</p></div><div class="page-no">30</div></div>
+  <div class="tour"><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/18-reports.png" alt="گزارش‌ساز پیشرفته"></div><div class="cap"><b><span class="em">📈</span>51. گزارش‌ساز پیشرفته</b><span>۳۱+ گزارش آماده در ۵ حوزه با خروجی اکسل فارسی و زمان‌بندی ارسال</span></div></div><div class="form-card"><div class="shot-frame"><img src="../screenshots/forms/33-report-browser.png" alt="مرورگر گزارش"></div><div class="cap"><b><span class="em">📑</span>52. مرورگر گزارش</b><span>مرور دسته‌ای گزارش‌ها با پیش‌نمایش نموداری قبل از اجرا</span></div></div></div>
+</div>
+<!-- ═══ اسلاید 31: ماژول‌های لایسنس ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">🧩</div><div><h1>۳۰ ماژول قابل فعال‌سازی جداگانه</h1><p>لایسنس انعطاف‌پذیر: هر درمانگاه فقط ماژول‌های موردنیاز را فعال می‌کند — همه ماژول‌های جدید از این پس همزمان به این فهرست اضافه می‌شوند</p></div><div class="page-no">31</div></div>
+  <div class="grid" style="grid-template-columns:repeat(5,1fr)"><div class="modchip"><span class="m">✅</span><b>داشبورد</b></div><div class="modchip"><span class="m">✅</span><b>بیماران</b></div><div class="modchip"><span class="m">✅</span><b>نوبت‌دهی</b></div><div class="modchip"><span class="m">✅</span><b>پذیرش</b></div><div class="modchip"><span class="m">✅</span><b>ویزیت</b></div></div><div class="grid" style="grid-template-columns:repeat(5,1fr)"><div class="modchip"><span class="m">✅</span><b>نسخه‌نویسی</b></div><div class="modchip"><span class="m">✅</span><b>صندوق و فاکتور</b></div><div class="modchip"><span class="m">✅</span><b>آزمایشگاه</b></div><div class="modchip"><span class="m">✅</span><b>داروخانه</b></div><div class="modchip"><span class="m">✅</span><b>تصویربرداری</b></div></div><div class="grid" style="grid-template-columns:repeat(5,1fr)"><div class="modchip"><span class="m">✅</span><b>دندانپزشکی</b></div><div class="modchip"><span class="m">✅</span><b>چشم‌پزشکی</b></div><div class="modchip"><span class="m">✅</span><b>فیزیوتراپی</b></div><div class="modchip"><span class="m">✅</span><b>حسابداری</b></div><div class="modchip"><span class="m">✅</span><b>پرسنل</b></div></div><div class="grid" style="grid-template-columns:repeat(5,1fr)"><div class="modchip"><span class="m">✅</span><b>حضور و غیاب</b></div><div class="modchip"><span class="m">✅</span><b>گزارش‌ها</b></div><div class="modchip"><span class="m">✅</span><b>پیامک</b></div><div class="modchip"><span class="m">✅</span><b>بیمه</b></div><div class="modchip"><span class="m">✅</span><b>سامانه‌های دولتی</b></div></div><div class="grid" style="grid-template-columns:repeat(5,1fr)"><div class="modchip"><span class="m">✅</span><b>تنظیمات</b></div><div class="modchip"><span class="m">✅</span><b>بکاپ</b></div><div class="modchip"><span class="m">✅</span><b>لاگ عملیات</b></div><div class="modchip"><span class="m">✅</span><b>کاربران</b></div><div class="modchip"><span class="m">✅</span><b>نظرسنجی بیماران 🆕</b></div></div><div class="grid" style="grid-template-columns:repeat(5,1fr)"><div class="modchip"><span class="m">✅</span><b>فیش حقوقی 🆕</b></div><div class="modchip"><span class="m">✅</span><b>پاراکلینیک 🆕</b></div><div class="modchip"><span class="m">✅</span><b>پرونده بالینی پیشرفته 🆕</b></div><div class="modchip"><span class="m">✅</span><b>طب مکمل و قالب چاپ 🆕</b></div><div class="modchip"><span class="m">✅</span><b>مدیریت شعبه‌ها 🆕</b></div></div>
   <div class="grid" style="grid-template-columns:1fr 1fr 1fr; margin-top:5mm">
-    <div class="card" style="text-align:center"><div class="big-num" style="font-size:34px">۹۰<small> دقیقه</small></div><p>نصب کامل سرور تا کلاینت‌ها</p></div>
-    <div class="card" style="text-align:center"><div class="big-num" style="font-size:34px">۵<small> دقیقه</small></div><p>همگام‌سازی دوره‌ای دستگاه حضور و غیاب</p></div>
-    <div class="card" style="text-align:center"><div class="big-num" style="font-size:34px">۳۰<small> روز</small></div><p>کارکرد بی‌اینترنت با حالت آفلاین لایسنس</p></div>
+    <div class="card" style="text-align:center"><div class="big-num">🔑 <small>قفل سخت‌افزاری</small></div><p>لایسنس به دستگاه شما قفل می‌شود؛ سرقت کلید بی‌فایده است.</p></div>
+    <div class="card" style="text-align:center"><div class="big-num">⏱ <small>تپ‌قلب روزانه</small></div><p>اعتبارسنجی روزانه با مهلت آفلاین ۳۰ روزه در قطعی اینترنت.</p></div>
+    <div class="card" style="text-align:center"><div class="big-num">🧑‍💻 <small>پنل مستقل</small></div><p>مدیریت لایسنس‌ها و اطلاعات پشتیبانی روی هاست اختصاصی شما.</p></div>
   </div>
 </div>
-
-<!-- ═══════════ اسلاید ۱۲: تماس ═══════════ -->
-<div class="slide cover" style="background:linear-gradient(135deg,#00897B 0%,#2E7D32 100%)">
-  <div class="big-emoji" style="font-size:80px">🤝</div>
-  <h1 style="font-size:36px">آماده‌ی دیجیتال‌شدن درمانگاه شما هستیم</h1>
-  <h2 style="font-size:17px">دموی ۱۵ روزه رایگان با داده آزمایشی + نصب و آموزش در محل</h2>
-  <div style="display:flex;justify-content:center;gap:14mm;margin-top:12mm">
-    <div class="stat"><b style="font-size:20px">📞</b><span style="font-size:13px;display:block;margin-top:2mm">۰۴۱-۳۳۴۵۶۷۸۹</span></div>
-    <div class="stat"><b style="font-size:20px">💬</b><span style="font-size:13px;display:block;margin-top:2mm">۰۹۱۴-۰۰۰-۰۰۰۰</span></div>
-    <div class="stat"><b style="font-size:20px">✉️</b><span style="font-size:13px;display:block;margin-top:2mm">sales@sahand-clinicpro.ir</span></div>
-    <div class="stat"><b style="font-size:20px">🌐</b><span style="font-size:13px;display:block;margin-top:2mm">sahand-clinicpro.ir</span></div>
-  </div>
-  <div class="tagline" style="margin-top:14mm">Sahand ClinicPro v1.5.0 — ساخته‌شده با ❤️ برای درمانگاه‌های ایران</div>
+<!-- ═══ اسلاید 32: مقایسه ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">⚖️</div><div><h1>مقایسه با روش سنتی</h1><p>چرا ادامه کار با کاغذ، اکسل و نرم‌افزارهای تکه‌تکه توجیه‌پذیر نیست</p></div><div class="page-no">32</div></div>
+  <table class="cmp">
+    <tr><th>شاخص</th><th>روش سنتی (کاغذ + اکسل)</th><th>نرم‌افزارهای عمومی</th><th>درمانگاه سهند</th></tr>
+    <tr><td>صف انتظار و فراخوان بیمار</td><td class="no">فریاد و راه‌روی</td><td class="no">ندارد</td><td class="yes">صف زنده بلادرنگ 🛎</td></tr>
+    <tr><td>اعتبارسنجی کد ملی بیمار</td><td class="no">چشمی و خطاخیز</td><td class="no">معمولاً بدون رقم کنترلی</td><td class="yes">الگوریتم رسمی ضد جعل 🪪</td></tr>
+    <tr><td>تداخل دارویی هنگام تجویز</td><td class="no">به حافظه پزشک</td><td class="no">ندارد</td><td class="yes">تداخل‌سنجی خودکار 💊</td></tr>
+    <tr><td>اتصال به سپاس و نسخه الکترونیک</td><td class="no">دستی و پرخطا</td><td class="no">نیازمند واسطه</td><td class="yes">ادغام بومی 🏛</td></tr>
+    <tr><td>حضور و غیاب و فیش حقوقی</td><td class="no">دفترچه و ماشین‌حساب</td><td class="no">جدا از درمانگاه</td><td class="yes">زنجیره یکپارچه 🧾</td></tr>
+    <tr><td>حسابداری دوبل از فاکتور</td><td class="no">ورود دوباره‌کار</td><td class="no">ماژول جدا و پرهزینه</td><td class="yes">سند خودکار ⚖️</td></tr>
+    <tr><td>پشتیبانی و به‌روزرسانی</td><td class="no">وابسته به فرد</td><td class="no">تیکت عمومی</td><td class="yes">سهند سرویس — تماس مستقیم 🧑‍💻</td></tr>
+  </table>
 </div>
-
+<!-- ═══ اسلاید 33: پایانی و تماس ═══ -->
+<div class="slide">
+  <div class="hdr"><div class="ic">🎁</div><div><h1>همین امروز شروع کنید</h1><p>۱۵ روز دموی رایگان — نصب و آموزش توسط سهند سرویس</p></div><div class="page-no">33</div></div>
+  <div class="grid" style="grid-template-columns:1fr 1fr 1fr;">
+    <div class="plan"><h3>🥉 پایه</h3><div class="price">مناسب مطب‌های تک‌پزشک</div>
+      <ul><li>✔️ بیماران + نوبت + پذیرش</li><li>✔️ نسخه‌نویسی + پیامک</li><li>✔️ ۵ کاربر</li></ul></div>
+    <div class="plan hot"><h3>🥇 حرفه‌ای</h3><div class="price">پرطرفدارترین انتخاب</div>
+      <ul><li>✔️ همه ماژول‌های درمان و مالی</li><li>✔️ حضور و غیاب + فیش حقوقی</li><li>✔️ نظرسنجی بیماران + سپاس</li><li>✔️ ۱۵ کاربر + پشتیبانی مستقیم</li></ul></div>
+    <div class="plan"><h3>🏢 سازمانی</h3><div class="price">چندشعبه‌ای‌ها</div>
+      <ul><li>✔️ همه ماژول‌ها + شعبه‌ها</li><li>✔️ اتصال بیمه و سامانه‌های دولتی</li><li>✔️ کاربر نامحدود</li></ul></div>
+  </div>
+  <div style="text-align:center; margin:8mm 0 6mm"><span class="cta">📞 برای دموی رایگان همین حالا تماس بگیرید</span></div>
+  <div class="contact-band">
+    <div class="who"><b>سعید نجفی</b><span>سهند سرویس — پشتیبانی و فروش</span></div>
+    <div class="rows">
+      <div><span class="em">📞</span> 041-34436141</div>
+      <div><span class="em">📱</span> 09144220430</div>
+      <div><span class="em">✉️</span> info@ea-fixer.ir</div>
+      <div><span class="em">🌐</span> ea-fixer.ir</div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
