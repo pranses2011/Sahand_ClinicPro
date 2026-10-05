@@ -16,6 +16,18 @@ ls_session_start();
 $page = (string)($_GET['page'] ?? 'dashboard');
 $admin = ls_admin();
 
+/* ── ترمیم/مهاجرت خودکار اسکیما — یک‌بار در هر نشست مدیر فعال (idempotent و بی‌خطر)
+   ریشه‌یابی: استقرارهایی که با نسخه قدیمی نصب شده‌اند و بانک‌شان ستون/جدول ناقص دارد
+   هنگام صدور لایسنس با HTTP 500 می‌افتادند؛ این بلوک پیش از هر کاری اسکیما را کامل می‌کند. */
+if ($admin !== null && empty($_SESSION['schema_ok'])) {
+    try {
+        ls_db_migrate();
+    } catch (Throwable $e) {
+        ls_log_error('auto-migrate', $e);
+    }
+    $_SESSION['schema_ok'] = 1;
+}
+
 /** هدایت پس از فرم — یا ریدایرکت یا پاسخ JSON برای فرم‌های ایجکس */
 function ls_json_or_redirect(string $to): void
 {
@@ -32,6 +44,9 @@ function ls_json_or_redirect(string $to): void
 /* ═══════════════════════  پردازش فرم‌های POST  ═══════════════════════ */
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+ /* همه فرم‌ها داخل try/catch — به‌جای صفحه سفید HTTP 500، خطا لاگ می‌شود و
+    پیام شفاف فارسی به مدیر نمایش داده می‌شود (پنل مدیریت است و دیدن متن خطا مجاز است). */
+ try {
     ls_csrf_check();
     $act = (string)($_POST['action'] ?? '');
 
@@ -181,6 +196,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    /* ── ترمیم دستی بانک اطلاعاتی — دکمه در صفحه تنظیمات ── */
+    if ($act === 'repair_db') {
+        $done = ls_db_migrate();
+        ls_audit($admin['id'], 'repair_db', 'settings', null,
+            $done ? 'ترمیم ستون‌ها/تنظیمات: ' . implode('، ', $done) : 'اسکیما از قبل سالم بود');
+        $_SESSION['flash'] = $done
+            ? ['success', 'بانک اطلاعاتی ترمیم شد ✅ — موارد اعمال‌شده: ' . implode('، ', $done)]
+            : ['success', 'اسکیمای بانک اطلاعاتی از قبل کامل و سالم بود — نیازی به ترمیم نبود.'];
+        ls_json_or_redirect('index.php?page=settings');
+    }
+
     if ($act === 'save_settings') {
         ls_setting_set('portal_title', mb_substr(trim((string)($_POST['portal_title'] ?? '')), 0, 120));
         ls_setting_set('api_rate_max', (string)max(10, (int)($_POST['api_rate_max'] ?? 60)));
@@ -245,6 +271,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     ls_json_or_redirect('index.php?page=dashboard');
+ } catch (Throwable $e) {
+    ls_log_error('POST:' . (string)($_POST['action'] ?? '?'), $e);
+    $back = 'index.php?page=settings';
+    if (!empty($_SERVER['HTTP_REFERER'])) {
+        $q = parse_url((string)$_SERVER['HTTP_REFERER'], PHP_URL_QUERY);
+        // strpos بجای str_contains — سازگاری با PHP 7.4
+        if (is_string($q) && strpos($q, 'page=') !== false && strpos($q, '://') === false) {
+            $back = 'index.php?' . $q;
+        }
+    }
+    $_SESSION['flash'] = ['danger', 'خطای سرور: ' . $e->getMessage()
+        . ' — جزئیات در data/error.log ثبت شد. اگر اخیراً فایل‌ها را به‌روز کرده‌اید،'
+        . ' از دکمه «🔧 ترمیم بانک اطلاعاتی» در صفحه تنظیمات استفاده کنید.'];
+    ls_json_or_redirect($back);
+ }
 }
 
 /* ═══════════════════════  ورود  ═══════════════════════ */
