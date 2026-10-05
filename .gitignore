@@ -163,3 +163,6 @@ _ReSharper*/
 .claude/
 .agent/
 *.prompt-tmp.md
+
+# فایل‌های موقت مولد اسکرین‌شات
+scripts/_mockups/
