@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sahand.ClinicPro.API.Integr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sahand.ClinicPro.Desktop", "src\Sahand.ClinicPro.Desktop\Sahand.ClinicPro.Desktop.csproj", "{A7EB190C-1DB6-43D0-AEAF-69122A9F2D86}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sahand.ClinicPro.Desktop.UnitTests", "tests\Sahand.ClinicPro.Desktop.UnitTests\Sahand.ClinicPro.Desktop.UnitTests.csproj", "{FC655568-7855-427E-9B8E-98B41C15D63F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -82,6 +84,10 @@ Global
 		{A7EB190C-1DB6-43D0-AEAF-69122A9F2D86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A7EB190C-1DB6-43D0-AEAF-69122A9F2D86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7EB190C-1DB6-43D0-AEAF-69122A9F2D86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC655568-7855-427E-9B8E-98B41C15D63F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC655568-7855-427E-9B8E-98B41C15D63F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC655568-7855-427E-9B8E-98B41C15D63F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC655568-7855-427E-9B8E-98B41C15D63F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C7BF6253-8C7A-4313-9BD5-DEA1816AD7F1} = {583814EB-67CF-4B2E-88B7-35DBB63D5882}
@@ -95,5 +101,6 @@ Global
 		{B82565C6-DA60-46CA-A254-CA97ACD31771} = {017BD829-2A8B-4888-8E6C-B0E6D26A373E}
 		{53071414-9D32-4E92-BF25-0D34D95A6BC8} = {017BD829-2A8B-4888-8E6C-B0E6D26A373E}
 		{A7EB190C-1DB6-43D0-AEAF-69122A9F2D86} = {583814EB-67CF-4B2E-88B7-35DBB63D5882}
+		{FC655568-7855-427E-9B8E-98B41C15D63F} = {017BD829-2A8B-4888-8E6C-B0E6D26A373E}
 	EndGlobalSection
 EndGlobal

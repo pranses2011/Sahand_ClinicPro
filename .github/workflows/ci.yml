@@ -48,3 +48,49 @@ jobs:
           name: test-results
           path: ./TestResults
           retention-days: 7
+
+  # ═══ چرخه دوازدهم (C2 — بند ۴-۹): E2E سرور لایسنس PHP ═══
+  license-e2e:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: testroot
+          MYSQL_DATABASE: lsc12
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -prootpass"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - name: دریافت سورس
+        uses: actions/checkout@v4
+
+      - name: نصب PHP 8.2 + افزونه‌ها
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql, openssl, json, mbstring
+
+      - name: انتظار برای آماده‌شدن MySQL
+        run: |
+          for i in $(seq 1 30); do
+            php -r 'try { new PDO("mysql:host=127.0.0.1;port=3306","root","testroot"); echo "READY"; } catch (Exception $e) { echo "0"; }' | grep -q READY && break
+            sleep 2
+          done
+
+      - name: اجرای ۳۴ تست E2E سرور لایسنس
+        env:
+          MYSQL_ROOT_PASSWORD: testroot
+        run: bash scripts/licsrv-e2e-ci.sh
+
+      - name: شکست در صورت خطای تست
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: licsrv-e2e-logs
+          path: /tmp/lsc12/data/error.log
+          retention-days: 7
