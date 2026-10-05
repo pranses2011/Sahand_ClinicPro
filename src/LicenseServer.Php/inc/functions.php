@@ -694,3 +694,135 @@ function ls_rial($n): string
 {
     return number_format((float)$n);
 }
+
+/* ──────────────────────────  لاگ خطا و مهاجرت/ترمیم اسکیما  ────────────────────────── */
+
+/**
+ * ثبت خطای برنامه در data/error.log — برای ریشه‌یابی خطاهای ۵۰۰ روی هاست
+ * (display_errors در تولید خاموش است؛ این لاگ تنها راه تشخیص است.)
+ * فایل با پسوند .log در htaccess از دسترسی وب مسدود شده است.
+ */
+function ls_log_error(string $context, Throwable $e): void
+{
+    $line = sprintf(
+        "[%s] %s: %s | %s:%d | trace: %s\n",
+        date('Y-m-d H:i:s'),
+        $context,
+        $e->getMessage(),
+        $e->getFile(),
+        $e->getLine(),
+        substr(str_replace("\n", ' | ', $e->getTraceAsString()), 0, 800)
+    );
+    @file_put_contents(LS_DATA_DIR . '/error.log', $line, FILE_APPEND | LOCK_EX);
+    // چرخش دستی وقتی از ۱ مگابایت گذشت
+    $f = LS_DATA_DIR . '/error.log';
+    if (is_file($f) && (int)@filesize($f) > 1048576) {
+        @rename($f, $f . '.old');
+    }
+}
+
+/** خواندن انتهای لاگ خطا برای نمایش در پنل — حداکثر $lines سطر آخر */
+function ls_log_error_tail(int $lines = 20): array
+{
+    $f = LS_DATA_DIR . '/error.log';
+    if (!is_file($f)) {
+        return [];
+    }
+    $all = file($f, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+    return array_slice($all, -$lines);
+}
+
+/** آیا ستونی در جدول موجود است؟ (با information_schema — سازگار با MySQL/MariaDB) */
+function ls_column_exists(PDO $db, string $table, string $column): bool
+{
+    $stmt = $db->prepare(
+        'SELECT COUNT(*) FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+    );
+    $stmt->execute([$table, $column]);
+    return (int)$stmt->fetchColumn() > 0;
+}
+
+/** افزودن ستون در صورت نبود — تعریف کامل ستون (نوع + پیش‌فرض + NULL/NOT NULL) */
+function ls_add_column(PDO $db, string $table, string $column, string $definition): bool
+{
+    if (!ls_column_exists($db, $table, $column)) {
+        $db->exec("ALTER TABLE `" . $table . "` ADD COLUMN `" . $column . "` " . $definition);
+        return true;
+    }
+    return false;
+}
+
+/**
+ * مهاجرت/ترمیم خودکار اسکیمای سرور لایسنس — کاملاً idempotent و بی‌خطر برای داده‌ها:
+ *   ۱) همه جداول با CREATE TABLE IF NOT EXISTS ساخته می‌شوند (روی جداول موجود بی‌اثر).
+ *   ۲) ستون‌های موردانتظار سنجیده و ستون جاافتاده با ALTER TABLE اضافه می‌شود.
+ *   ۳) تنظیمات پیش‌فرضِ گمشده فقط وقتی کلید وجود نداشته باشد درج می‌شود.
+ * ریشه‌یابی: خطای «HTTP 500» هنگام صدور لایسنس در استقرارهایی رخ می‌دهد که بانک
+ * اطلاعاتی‌شان با نسخه قدیمی ساخته شده (ستون/جدول ناقص) ولی فایل‌های PHP به‌روزند.
+ * @return array فهرست اعمال انجام‌شده — برای نمایش در پنل
+ */
+function ls_db_migrate(): array
+{
+    $db = ls_db();
+    $done = [];
+
+    // ۱) جداول پایه — اجرای schema.sql (همه CREATE TABLE IF NOT EXISTS)
+    $sql = (string)@file_get_contents(LS_ROOT . '/inc/schema.sql');
+    if ($sql !== '') {
+        $sql = preg_replace('/^\s*--.*$/m', '', $sql);
+        foreach (array_filter(array_map('trim', explode(';', $sql))) as $stmt) {
+            if ($stmt !== '') {
+                $db->exec($stmt);
+            }
+        }
+    }
+
+    // ۲) ستون‌های موردانتظار هر جدول — [جدول => [ستون => تعریف]]
+    // تعریف‌ها با فایل schema.sql هم‌خوان‌اند؛ DEFAULT برای پر شدن سطرهای موجود
+    $expected = [
+        'ls_licenses'   => [
+            'max_branches'         => 'INT NOT NULL DEFAULT 1',
+            'max_patients'         => 'INT NOT NULL DEFAULT 5000',
+            'max_doctors'          => 'INT NOT NULL DEFAULT 10',
+            'hardware_fingerprint' => 'VARCHAR(150) NULL',
+            'activation_code'      => 'VARCHAR(40) NULL',
+            'is_revoked'           => 'TINYINT(1) NOT NULL DEFAULT 0',
+            'revoked_at'           => 'DATETIME NULL',
+            'revoked_reason'       => 'VARCHAR(255) NULL',
+            'last_heartbeat_at'    => 'DATETIME NULL',
+            'last_validated_at'    => 'DATETIME NULL',
+            'activation_count'    => 'INT NOT NULL DEFAULT 0',
+            'notes'                => 'TEXT NULL',
+            'updated_at'           => 'DATETIME NULL',
+        ],
+        'ls_admins'     => [
+            'failed_attempts' => 'INT NOT NULL DEFAULT 0',
+            'locked_until'    => 'DATETIME NULL',
+            'last_login_at'   => 'DATETIME NULL',
+        ],
+        'ls_settings'   => [
+            'svalue' => 'TEXT NOT NULL',
+        ],
+        'ls_admin_audit' => [
+            'details' => 'VARCHAR(500) NULL',
+        ],
+    ];
+    foreach ($expected as $table => $cols) {
+        foreach ($cols as $col => $def) {
+            if (ls_add_column($db, $table, $col, $def)) {
+                $done[] = $table . '.' . $col;
+            }
+        }
+    }
+
+    // ۳) تنظیمات پیش‌فرض گمشده — بدون بازنویسی مقدار موجود
+    foreach (['api_rate_max' => '60', 'api_rate_window' => '600', 'offline_grace_days' => '30'] as $k => $v) {
+        if (ls_setting($k, '') === '') {
+            ls_setting_set($k, $v);
+            $done[] = 'settings:' . $k;
+        }
+    }
+
+    return $done;
+}
