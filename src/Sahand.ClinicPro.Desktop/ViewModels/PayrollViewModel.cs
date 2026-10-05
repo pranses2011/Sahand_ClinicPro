@@ -75,6 +75,10 @@ public partial class PayrollViewModel : ViewModelBase
     [ObservableProperty]
     private decimal _totalNet;
 
+    /// <summary>جمع حقوق درصدی از سود خدمات دوره — کارت آماری چرخه نهم</summary>
+    [ObservableProperty]
+    private decimal _totalCommission;
+
     /// <summary>شمار کارکنان دوره</summary>
     [ObservableProperty]
     private int _employeeCount;
@@ -91,6 +95,7 @@ public partial class PayrollViewModel : ViewModelBase
             var data = response?.Data ?? new List<SalaryDto>();
             Rows = new ObservableCollection<SalaryRow>(data.Select(ToRow));
             TotalNet = data.Sum(r => r.NetAmount);
+            TotalCommission = data.Sum(r => r.ServiceCommission);
             EmployeeCount = data.Count;
         }
         finally
@@ -102,7 +107,10 @@ public partial class PayrollViewModel : ViewModelBase
     /// <summary>تبدیل DTO به ردیف نمایشی</summary>
     private static SalaryRow ToRow(SalaryDto dto) => new(
         dto.Id, dto.EmployeeId, dto.EmployeeName, dto.PersonnelCode,
-        FormatRial(dto.BaseSalary), FormatRial(dto.Overtime), FormatRial(dto.Bonus),
+        FormatRial(dto.BaseSalary),
+        $"{dto.CommissionPercent:0.##}",
+        FormatRial(dto.ServiceProfitBase), FormatRial(dto.ServiceCommission),
+        FormatRial(dto.Overtime), FormatRial(dto.Bonus),
         FormatRial(dto.Insurance), FormatRial(dto.Tax), FormatRial(dto.Deductions),
         FormatRial(dto.NetAmount), dto.NetAmount,
         StatusText(dto.Status), dto.Status == 3,
@@ -182,7 +190,9 @@ public partial class PayrollViewModel : ViewModelBase
             var window = new Views.PayslipWindow(
                 d.ClinicName, d.EmployeeName, d.PersonnelCode, d.NationalCode,
                 d.PeriodText, MonthNames.ElementAtOrDefault(SelectedMonthIndex) ?? "",
-                d.BaseSalary, d.Overtime, d.Bonus,
+                d.BaseSalary, d.CommissionPercent,
+                d.ServiceProfitBase, d.ServiceCommission,
+                d.Overtime, d.Bonus,
                 d.Insurance, d.Tax, d.Deductions, d.NetAmount);
             window.Owner = System.Windows.Application.Current?.MainWindow;
             window.ShowDialog();
@@ -207,7 +217,9 @@ public partial class PayrollViewModel : ViewModelBase
     /// <summary>ردیف حقوق دوره</summary>
     public sealed record SalaryRow(
         long Id, long EmployeeId, string EmployeeName, string PersonnelCode,
-        string BaseSalary, string Overtime, string Bonus,
+        string BaseSalary, string CommissionPercent,
+        string ServiceProfitBase, string ServiceCommission,
+        string Overtime, string Bonus,
         string Insurance, string Tax, string Deductions,
         string NetAmount, decimal NetAmountRaw,
         string StatusText, bool IsPaid, string StatusColor);
@@ -226,6 +238,9 @@ public partial class PayrollViewModel : ViewModelBase
         public string EmployeeName { get; set; } = string.Empty;
         public string PersonnelCode { get; set; } = string.Empty;
         public decimal BaseSalary { get; set; }
+        public decimal CommissionPercent { get; set; }
+        public decimal ServiceProfitBase { get; set; }
+        public decimal ServiceCommission { get; set; }
         public decimal Overtime { get; set; }
         public decimal Bonus { get; set; }
         public decimal Insurance { get; set; }
@@ -257,6 +272,9 @@ public partial class PayrollViewModel : ViewModelBase
         public string PeriodText { get; set; } = string.Empty;
         public string ClinicName { get; set; } = string.Empty;
         public decimal BaseSalary { get; set; }
+        public decimal CommissionPercent { get; set; }
+        public decimal ServiceProfitBase { get; set; }
+        public decimal ServiceCommission { get; set; }
         public decimal Overtime { get; set; }
         public decimal Bonus { get; set; }
         public decimal Insurance { get; set; }
