@@ -131,3 +131,28 @@
 - README-FA.md: راهنمای گام‌به‌گام cPanel + نکات امنیتی + قرارداد API
 
 ### نتیجه فاز: کل Solution سبز (۰ هشدار) | ۵۴/۵۴ تست سبز
+
+
+## فاز B: زیرساخت UI دسکتاپ — ✅ کامل (گام‌های U0-U2)
+
+### گام U0 — پوسته و کنترل‌های مشترک:
+- ۶ کنترل سفارشی: PersianCalendarControl + PersianDatePicker (+DateShamsiText دوطرفه) + TagInputControl + PaginationBar + StatCard + EmptyState
+- ارتقای MainWindow: TopBar (مسیر/ساعت لحظه‌ای/زنگ/تم) + StatusBar + Snackbar سراسری + SnackbarService + ۵ مبدل
+- رفع باگ طول ماه شمسی (PersianCalendar.GetDaysInMonth)
+
+### گام U1 — ورود و داشبورد:
+- LoginWindow ۵۰۰×۶۰۰ بدون حاشیه + گرادیان + چشم رمز + RememberMe (JSON محلی)
+- DashboardView کامل + ۴ endpoint جدید (revenue-chart/appointments-today/recent-activities/alerts)
+- رفع باگ تداخل نام RevenuePoint با ReportsViewModel
+
+### گام U2 — ماژول بیمار:
+- PatientsView: ۹ ستون + Badge بیمه + ContextMenu + دابل‌کلیک + PaginationBar + EmptyState
+- PatientFormWindow: ۵ تب + اعتبارسنجی زنده کد ملی + بررسی خودکار یکتایی + سه TagInput
+- PatientDetailWindow جدید: کارت سربرگ + هشدار قرمز آلرژی + تب ویزیت/نسخه متصل
+
+## فاز F: داده‌های مرجع — ✅ کامل (گام‌های S1-S3)
+
+- مولدهای پایتونی stepS1/stepS2_reference_data.py → ۶ فایل داده (۷۴۲۰ خط)
+- ۱۱۵۳ ICD-10 | ۵۰۳۴ دارو | ۲۲۹ آزمایش | ۵۲۳ تداخل | ۵۷ تعرفه | ۳۱ استان/۶۳۵ شهر
+- ReferenceDataSeeder (Order 45) با نگاشت کلاس‌های دارویی + تکرارپذیری کامل
+- نتیجه چرخه تا اینجا: **۱۰/۲۸ گام** | ۵۴/۵۴ تست سبز | Solution بدون خطا
