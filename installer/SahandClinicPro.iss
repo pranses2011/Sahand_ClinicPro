@@ -1,11 +1,11 @@
 ; ═══════════════════════════════════════════════════════════════
-; اسکریپت Inno Setup — نصب‌کننده کلاینت درمانگاه سهند v1.4.0
+; اسکریپت Inno Setup — نصب‌کننده کلاینت درمانگاه سهند v1.5.0
 ; فارسی‌سازی پیام‌ها + بررسی پیش‌نیاز .NET 8 Desktop Runtime
 ; ═══════════════════════════════════════════════════════════════
 
 #define MyAppName "سامانه درمانگاه سهند"
 #define MyAppNameEn "Sahand ClinicPro"
-#define MyAppVersion "1.4.0"
+#define MyAppVersion "1.5.0"
 #define MyAppPublisher "Sahand ClinicPro Team"
 #define MyAppURL "https://sahand-clinicpro.ir"
 #define MyAppExeName "Sahand.ClinicPro.Desktop.exe"
