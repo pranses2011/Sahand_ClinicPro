@@ -2,58 +2,254 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>بنر عمودی — درمانگاه سهند</title>
+<title>بنر استند عمودی — درمانگاه سهند</title>
 <style>
 @font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Regular.ttf') format('truetype'); font-weight:400; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Medium.ttf') format('truetype'); font-weight:500; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-SemiBold.ttf') format('truetype'); font-weight:600; }
 @font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Bold.ttf') format('truetype'); font-weight:700; }
 @font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-ExtraBold.ttf') format('truetype'); font-weight:800; }
 @font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Black.ttf') format('truetype'); font-weight:900; }
 * { margin:0; padding:0; box-sizing:border-box; }
-html,body { width:4252px; height:8504px; }
-body { font-family:'Vazirmatn',sans-serif; direction:rtl;
-  background:linear-gradient(170deg,#082B5C 0%,#0D47A1 40%,#1565C0 62%,#00897B 100%);
-  color:#fff; overflow:hidden; position:relative; }
-.deco { position:absolute; border-radius:50%; }
-.d1 { width:3000px; height:3000px; top:-1000px; left:-900px;
-  background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%); }
-.d2 { width:2600px; height:2600px; bottom:-1000px; right:-900px;
-  background:radial-gradient(circle,rgba(0,255,200,.09),transparent 70%); }
-.wrap { position:relative; z-index:5; height:100%; padding:240px 200px;
-  display:flex; flex-direction:column; align-items:center; text-align:center; }
-.logo-circle { width:1100px; height:1100px; border-radius:50%;
-  background:rgba(255,255,255,.13); border:10px solid rgba(255,255,255,.4);
-  display:flex; align-items:center; justify-content:center; font-size:600px;
-  box-shadow:0 80px 200px rgba(0,0,0,.35); }
-.brand-en { font-size:140px; letter-spacing:28px; opacity:.85; font-weight:700; margin-top:100px; direction:ltr; }
-.brand-fa { font-size:280px; font-weight:900; margin-top:20px; }
-h1 { font-size:330px; font-weight:900; line-height:1.4; margin-top:130px;
-  text-shadow:0 30px 90px rgba(0,0,0,.4); }
-h1 .hl { color:#A5F3FC; }
-.sub { font-size:150px; font-weight:500; opacity:.95; margin-top:70px; line-height:1.7; }
-.tag { display:inline-block; margin-top:140px; font-size:190px; font-weight:900;
-  background:linear-gradient(90deg,#FF8F00,#FFB300); color:#3E2723;
-  border-radius:160px; padding:50px 150px; box-shadow:0 40px 100px rgba(255,143,0,.45); }
-.contact { margin-top:auto; width:100%; background:rgba(0,0,0,.30);
-  border-radius:90px; padding:140px 100px; backdrop-filter:blur(6px); }
-.contact .lbl { font-size:150px; font-weight:700; }
-.contact .tel { font-size:340px; font-weight:900; direction:ltr; color:#A5F3FC;
-  margin-top:40px; letter-spacing:8px; }
-.contact .web { font-size:120px; opacity:.9; margin-top:60px; }
+/* قاعده ضد-برش: هیچ عنصری نباید از مرز صفحه بیرون بزند */
+html, body { width:4252px; height:8504px; overflow:hidden; }
+body { font-family:'Vazirmatn','Noto Color Emoji',sans-serif; direction:rtl; color:#fff; position:relative;
+  background:#04102E; }
+
+/* ─── پس‌زمینه — داخل قاب کراپ‌شده ─── */
+.bg { position:absolute; inset:0; overflow:hidden; z-index:0; }
+.bg .grad { position:absolute; inset:0;
+  background:linear-gradient(172deg,#04102E 0%,#0A2A66 26%,#0D4FA0 52%,#0E7C86 80%,#10A37F 100%); }
+.bg .glow1 { position:absolute; top:2%; right:10%; width:2600px; height:2600px; border-radius:50%;
+  background:radial-gradient(circle,rgba(56,189,248,.25),transparent 66%); }
+.bg .glow2 { position:absolute; bottom:6%; left:4%; width:2400px; height:2400px; border-radius:50%;
+  background:radial-gradient(circle,rgba(16,185,129,.20),transparent 66%); }
+.bg .grid { position:absolute; inset:0; opacity:.09;
+  background-image:linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px);
+  background-size:200px 200px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 32%,#000 30%,transparent 80%);
+          mask-image:radial-gradient(ellipse 80% 60% at 50% 32%,#000 30%,transparent 80%); }
+.bg .orb1 { position:absolute; top:1050px; left:290px; width:170px; height:170px; border-radius:50%;
+  background:radial-gradient(circle at 32% 30%,#BFF5FF,#38BDF8 52%,#0369A1);
+  box-shadow:0 36px 90px rgba(56,189,248,.55), inset -18px -24px 46px rgba(2,60,110,.65); }
+.bg .orb2 { position:absolute; top:1500px; left:520px; width:96px; height:96px; border-radius:50%;
+  background:radial-gradient(circle at 32% 30%,#FFE9B8,#F59E0B 55%,#B45309);
+  box-shadow:0 24px 56px rgba(245,158,11,.5), inset -10px -14px 28px rgba(120,53,15,.7); }
+.bg .ring1 { position:absolute; top:760px; left:200px; width:880px; height:880px; border-radius:50%;
+  border:4px solid rgba(165,243,252,.14); }
+
+/* ─── محتوا ─── */
+.wrap { position:relative; z-index:5; height:100%; display:flex; flex-direction:column;
+  padding:200px 230px 180px; }
+
+/* سربرگ */
+.brand-row { display:flex; align-items:center; gap:70px; }
+.logo-3d { width:360px; height:360px; border-radius:86px; position:relative; overflow:hidden;
+  background:radial-gradient(circle at 50% 22%,#D8F1FF,#BFE4FB 70%);
+  box-shadow:0 50px 106px rgba(2,132,199,.45), inset 0 5px 12px rgba(255,255,255,.35), inset 0 -24px 50px rgba(0,0,0,.20), 0 0 0 16px rgba(255,255,255,.10);
+  display:flex; align-items:center; justify-content:center; flex:none; }
+.logo-3d img { width:304px; height:304px; object-fit:contain; border-radius:62px; }
+.logo-3d::after { content:''; position:absolute; inset:0; border-radius:86px;
+  background:linear-gradient(160deg,rgba(255,255,255,.35),transparent 46%); pointer-events:none; }
+.brand-text .en { font-size:66px; letter-spacing:24px; font-weight:600; opacity:.85; direction:ltr; text-align:right; }
+.brand-text .fa { font-size:150px; font-weight:900; margin-top:10px; line-height:1.14;
+  text-shadow:0 9px 0 rgba(3,55,120,.55), 0 34px 90px rgba(0,0,0,.48); }
+
+/* تیتر */
+.hero { margin-top:150px; }
+.hero h1 { font-size:250px; font-weight:900; line-height:1.26;
+  text-shadow:0 7px 0 #062A5E, 0 15px 0 #05234E, 0 21px 0 #041D42, 0 46px 110px rgba(0,0,0,.58); }
+.hero h1 .hl { color:#7DE9F5;
+  text-shadow:0 7px 0 #0A5570, 0 15px 0 #084A63, 0 21px 0 #063F54, 0 46px 110px rgba(0,0,0,.52); }
+.hero .sub { font-size:82px; font-weight:500; opacity:.94; margin-top:48px; line-height:1.7; }
+.badge-new { display:inline-flex; align-items:center; gap:34px; margin-top:80px;
+  background:linear-gradient(135deg,#FFB300,#FF8F00); color:#2E1600;
+  border-radius:120px; padding:34px 90px; font-size:76px; font-weight:900;
+  box-shadow:0 30px 80px rgba(255,143,0,.45), inset 0 5px 9px rgba(255,255,255,.5), inset 0 -14px 34px rgba(120,60,0,.28);
+  text-shadow:0 3px 0 rgba(255,255,255,.35); }
+
+/* قرص‌های قابلیت */
+.pills { display:flex; flex-wrap:wrap; gap:34px; margin-top:96px; }
+.pill { display:flex; align-items:center; gap:26px; border-radius:110px;
+  background:linear-gradient(150deg,rgba(255,255,255,.15),rgba(255,255,255,.05));
+  border:4px solid rgba(255,255,255,.22); backdrop-filter:blur(6px);
+  padding:32px 58px; font-size:62px; font-weight:800;
+  box-shadow:0 26px 60px rgba(1,15,40,.4), inset 0 3px 5px rgba(255,255,255,.16); }
+.pill .em { font-size:70px; filter:drop-shadow(0 12px 22px rgba(0,0,0,.4)); }
+
+/* موکاپ سه‌بعدی داشبورد */
+.stage { height:2450px; margin-top:120px; position:relative; perspective:3800px; perspective-origin:50% 30%; }
+.dash { position:absolute; top:90px; right:0; left:0; margin:auto; width:3480px; height:2050px;
+  border-radius:60px; background:linear-gradient(160deg,#F8FBFF,#E9F2FC);
+  box-shadow:0 84px 170px rgba(1,20,50,.62), 0 32px 66px rgba(1,20,50,.42), 0 0 0 15px rgba(255,255,255,.14);
+  transform:rotateX(15deg) rotateY(-10deg) rotateZ(1deg) translateZ(50px);
+  padding:48px; color:#12325B; direction:rtl; }
+.dash .titlebar { display:flex; align-items:center; gap:20px; padding:4px 14px 26px; }
+.dash .dot { width:36px; height:36px; border-radius:50%; }
+.dash .dot.r { background:#FF5F57; } .dash .dot.y { background:#FEBC2E; } .dash .dot.g { background:#28C840; }
+.dash .addr { flex:1; text-align:left; font-size:37px; color:#6B84A8; direction:ltr; }
+.dash .body { display:flex; gap:38px; height:1750px; }
+.dash .side { width:500px; border-radius:38px; background:linear-gradient(180deg,#0C3B78,#0B5E92);
+  padding:36px 28px; display:flex; flex-direction:column; gap:20px; color:#EAF4FF; }
+.dash .side .it { display:flex; gap:20px; align-items:center; padding:23px 24px; border-radius:22px;
+  font-size:40px; font-weight:600; }
+.dash .side .it.on { background:rgba(255,255,255,.16); box-shadow:inset 0 0 0 3px rgba(255,255,255,.22); }
+.dash .side .ic { font-size:44px; }
+.dash .main { flex:1; display:flex; flex-direction:column; gap:38px; }
+.dash .cards { display:flex; gap:38px; }
+.dash .c { flex:1; border-radius:34px; padding:38px 42px; background:#fff;
+  box-shadow:0 17px 38px rgba(18,50,91,.10), inset 0 0 0 3px #E3ECF7; }
+.dash .c .lb { font-size:35px; color:#5D7BA3; }
+.dash .c .vl { font-size:78px; font-weight:900; color:#0C3B78; margin-top:7px; }
+.dash .c .trend { font-size:32px; font-weight:700; margin-top:10px; color:#0E9F6E; }
+.dash .c.cyan .vl { color:#0E7490; } .dash .c.amber .vl { color:#B45309; } .dash .c.green .vl { color:#047857; }
+.dash .panelrow { display:flex; gap:38px; flex:1; }
+.dash .chart { flex:1.25; border-radius:34px; background:#fff; padding:38px;
+  box-shadow:0 17px 38px rgba(18,50,91,.10), inset 0 0 0 3px #E3ECF7; display:flex; flex-direction:column; }
+.dash .chart .t { font-size:42px; font-weight:800; color:#12325B; }
+.dash .bars { flex:1; display:flex; align-items:flex-end; gap:42px; padding:28px 14px 8px; }
+.dash .bar { flex:1; border-radius:20px 20px 9px 9px; position:relative;
+  background:linear-gradient(180deg,#38BDF8,#0E7490); box-shadow:inset 0 -14px 28px rgba(8,80,110,.25); }
+.dash .bar.hi { background:linear-gradient(180deg,#34D399,#047857); }
+.dash .bar span { position:absolute; top:-60px; width:100%; text-align:center; font-size:35px; font-weight:700; color:#0C3B78; }
+.dash .queue { flex:1; border-radius:34px; background:#fff; padding:38px;
+  box-shadow:0 17px 38px rgba(18,50,91,.10), inset 0 0 0 3px #E3ECF7; }
+.dash .queue .t { font-size:42px; font-weight:800; color:#12325B; margin-bottom:26px; }
+.dash .qrow { display:flex; align-items:center; gap:22px; padding:23px 22px; border-radius:22px; margin-bottom:17px;
+  background:#F2F7FD; font-size:38px; font-weight:600; color:#1E4470; }
+.dash .qrow .n { width:64px; height:64px; border-radius:50%; background:#0E7490; color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:34px; font-weight:800; flex:none; }
+.dash .qrow .st { margin-right:auto; font-size:31px; font-weight:800; color:#0E9F6E; }
+.dash .qrow.wait .st { color:#B45309; }
+
+.chip { position:absolute; display:flex; align-items:center; gap:24px; border-radius:130px;
+  background:rgba(9,32,63,.74); border:4px solid rgba(165,243,252,.35); backdrop-filter:blur(8px);
+  padding:30px 50px; font-size:58px; font-weight:800; color:#E4F7FF;
+  box-shadow:0 36px 84px rgba(1,15,40,.55), inset 0 3px 6px rgba(255,255,255,.18); }
+.chip .em { font-size:66px; }
+.chip.a { top:50px; left:60px; transform:translateZ(190px) rotateZ(-3deg); }
+.chip.b { bottom:120px; left:150px; transform:translateZ(250px) rotateZ(2deg); }
+
+/* آمار */
+.stats { display:flex; justify-content:space-between; margin-top:130px;
+  background:rgba(2,12,32,.44); border:3px solid rgba(255,255,255,.12);
+  border-radius:60px; padding:76px 110px; backdrop-filter:blur(6px);
+  box-shadow:0 40px 100px rgba(1,10,30,.5); }
+.stat { text-align:center; }
+.stat b { display:block; font-size:150px; font-weight:900; color:#7DE9F5;
+  text-shadow:0 7px 0 rgba(6,80,110,.5), 0 30px 76px rgba(0,0,0,.5); }
+.stat span { font-size:52px; opacity:.88; }
+
+/* نوار تماس — اطلاعات واقعی */
+.cta { margin-top:100px; display:flex; align-items:center; justify-content:space-between; gap:70px;
+  background:linear-gradient(115deg,#0E7C86,#0E9F6E); border-radius:60px; padding:100px 130px;
+  box-shadow:0 50px 120px rgba(4,90,80,.5), inset 0 5px 10px rgba(255,255,255,.28), inset 0 -20px 46px rgba(0,50,40,.30); }
+.cta .lead { font-size:92px; font-weight:900; text-shadow:0 5px 0 rgba(0,60,50,.35); }
+.cta .who { font-size:60px; font-weight:700; opacity:.95; margin-top:20px; }
+.cta .contact { display:flex; flex-direction:column; gap:26px; align-items:flex-start; }
+.cta .row { display:flex; align-items:center; gap:28px; font-size:84px; font-weight:900; direction:ltr; }
+.cta .row .em { font-size:78px; }
+.cta .row.sml { font-size:62px; }
 </style>
 </head>
 <body>
-<div class="deco d1"></div><div class="deco d2"></div>
+<div class="bg">
+  <div class="grad"></div><div class="glow1"></div><div class="glow2"></div><div class="grid"></div>
+  <div class="ring1"></div><div class="orb1"></div><div class="orb2"></div>
+</div>
+
 <div class="wrap">
-  <div class="logo-circle">🏥</div>
-  <div class="brand-en">SAHAND CLINICPRO</div>
-  <div class="brand-fa">درمانگاه سهند</div>
-  <h1>مدیریت درمانگاه<br>با <span class="hl">یک نرم‌افزار</span></h1>
-  <div class="sub">پذیرش • نوبت‌دهی • نسخه الکترونیک<br>مالی • حضور و غیاب</div>
-  <div class="tag">⭐ اتصال مستقیم دستگاه حضور و غیاب</div>
-  <div class="contact">
-    <div class="lbl">دموی رایگان 🎁</div>
-    <div class="tel">۰۴۱-۳۳۴۵۶۷۸۹</div>
-    <div class="web">sahand-clinicpro.ir</div>
+  <div class="brand-row">
+    <div class="logo-3d"><img src="../assets/ClinicPro.png" alt="لوگوی درمانگاه سهند"></div>
+    <div class="brand-text">
+      <div class="en">SAHAND CLINICPRO</div>
+      <div class="fa">درمانگاه سهند</div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <h1>مدیریت درمانگاه<br>با <span class="hl">یک نرم‌افزار</span></h1>
+    <div class="sub">از پذیرش بیمار تا فیش حقوقی پرسنل — کاملاً فارسی و جلالی، مچ با سپاس و نسخه الکترونیک</div>
+    <div class="badge-new">⭐ نسخه ۱.۶ — نظرسنجی بیماران</div>
+  </div>
+
+  <div class="pills">
+    <div class="pill"><span class="em">🛎</span> صف زنده</div>
+    <div class="pill"><span class="em">💊</span> نسخه هوشمند</div>
+    <div class="pill"><span class="em">💵</span> مالی بی‌خطا</div>
+    <div class="pill"><span class="em">🏛</span> اتصال به سپاس</div>
+    <div class="pill"><span class="em">🕐</span> حضور و غیاب</div>
+    <div class="pill"><span class="em">📱</span> نظرسنجی پیامکی</div>
+  </div>
+
+  <div class="stage">
+    <div class="dash">
+      <div class="titlebar">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <div class="addr">app.sahand-clinicpro.ir/dashboard</div>
+      </div>
+      <div class="body">
+        <div class="side">
+          <div class="it on"><span class="ic">📊</span> داشبورد</div>
+          <div class="it"><span class="ic">🧑‍🤝‍🧑</span> بیماران</div>
+          <div class="it"><span class="ic">🗓</span> نوبت‌دهی</div>
+          <div class="it"><span class="ic">🛎</span> صف زنده</div>
+          <div class="it"><span class="ic">💊</span> نسخه‌نویسی</div>
+          <div class="it"><span class="ic">💵</span> صندوق</div>
+          <div class="it"><span class="ic">🧪</span> آزمایشگاه</div>
+        </div>
+        <div class="main">
+          <div class="cards">
+            <div class="c"><div class="lb">بیماران امروز</div><div class="vl">۱۲۸</div><div class="trend">▲ ۱۲٪</div></div>
+            <div class="c cyan"><div class="lb">در صف</div><div class="vl">۹</div><div class="trend">▲ زنده</div></div>
+            <div class="c amber"><div class="lb">درآمد</div><div class="vl">۴۸.۵م</div><div class="trend">▲ ۸٪</div></div>
+          </div>
+          <div class="panelrow">
+            <div class="chart">
+              <div class="t">مراجعات هفته</div>
+              <div class="bars">
+                <div class="bar" style="height:38%"><span>ش</span></div>
+                <div class="bar" style="height:56%"><span>ی</span></div>
+                <div class="bar" style="height:47%"><span>د</span></div>
+                <div class="bar hi" style="height:88%"><span>س</span></div>
+                <div class="bar" style="height:64%"><span>چ</span></div>
+                <div class="bar hi" style="height:96%"><span>پ</span></div>
+                <div class="bar" style="height:30%"><span>ج</span></div>
+              </div>
+            </div>
+            <div class="queue">
+              <div class="t">🛎 صف زنده</div>
+              <div class="qrow"><div class="n">۴۲</div> مریم احمدی <div class="st">ویزیت</div></div>
+              <div class="qrow"><div class="n">۴۳</div> علی رضایی <div class="st">فراخوان</div></div>
+              <div class="qrow wait"><div class="n">۴۴</div> نگار کریمی <div class="st">انتظار</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chip a"><span class="em">🔗</span> سپاس و نسخه الکترونیک</div>
+    <div class="chip b"><span class="em">🧾</span> فیش حقوقی ۱۴۰۴</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b>۳۰+</b><span>ماژول یکپارچه</span></div>
+    <div class="stat"><b>۳۰۰+</b><span>قابلیت آماده</span></div>
+    <div class="stat"><b>۵۲</b><span>فرم آماده کار</span></div>
+    <div class="stat"><b>۱۰۰٪</b><span>فارسی و جلالی</span></div>
+  </div>
+
+  <div class="cta">
+    <div>
+      <div class="lead">همین امروز دمو بگیرید 🎁</div>
+      <div class="who">سعید نجفی — سهند سرویس</div>
+    </div>
+    <div class="contact">
+      <div class="row"><span class="em">📞</span> 041-34436141</div>
+      <div class="row"><span class="em">📱</span> 09144220430</div>
+      <div class="row sml"><span class="em">✉️</span> info@ea-fixer.ir</div>
+      <div class="row sml"><span class="em">🌐</span> ea-fixer.ir</div>
+    </div>
   </div>
 </div>
 </body>
