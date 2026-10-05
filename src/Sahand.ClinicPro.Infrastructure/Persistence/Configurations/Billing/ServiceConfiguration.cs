@@ -18,6 +18,7 @@ public class ServiceConfiguration : IEntityTypeConfiguration<Service>
         builder.Property(x => x.ServiceType).HasConversion<byte>().HasComment("نوع خدمت");
         builder.Property(x => x.Unit).HasMaxLength(20).HasComment("واحد سنجش");
         builder.Property(x => x.DefaultPrice).HasPrecision(18, 0).HasComment("قیمت پیش‌فرض");
+        builder.Property(x => x.DefaultCost).HasPrecision(18, 0).HasComment("هزینه تمام‌شده پایه هر واحد — مبنای سود خدمت (سود = قیمت − هزینه)");
         builder.Property(x => x.KCoefficient).HasPrecision(10, 2).HasComment("ضریب K");
         builder.Property(x => x.NationalCode).HasMaxLength(10).HasComment("کد ملی خدمت برای بیمه");
 
