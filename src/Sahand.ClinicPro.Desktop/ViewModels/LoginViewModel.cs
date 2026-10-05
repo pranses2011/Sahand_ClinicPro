@@ -23,8 +23,19 @@ public partial class LoginViewModel : ObservableObject
     [ObservableProperty]
     private bool _isBusy;
 
+    /// <summary>مرا به خاطر بسپار — فقط نام کاربری ذخیره می‌شود نه رمز</summary>
+    [ObservableProperty]
+    private bool _rememberMe;
+
+    /// <summary>آیا دکمه فعال‌سازی لایسنس نمایش داده شود — وقتی لایسنس فعال نیست</summary>
+    [ObservableProperty]
+    private bool _licenseNeedsActivation;
+
     /// <summary>رویداد ورود موفق — پنجره را عوض می‌کند</summary>
     public event EventHandler? LoginSucceeded;
+
+    /// <summary>رویداد درخواست فعال‌سازی لایسنس</summary>
+    public event EventHandler? LicenseActivationRequested;
 
     /// <summary>سازنده با تزریق کلاینت API</summary>
     public LoginViewModel(IApiClient api) => _api = api;
@@ -65,4 +76,11 @@ public partial class LoginViewModel : ObservableObject
     /// <summary>به‌روزرسانی امکان دکمه با تغییر فیلدها</summary>
     partial void OnUsernameChanged(string value) => LoginCommand.NotifyCanExecuteChanged();
     partial void OnPasswordChanged(string value) => LoginCommand.NotifyCanExecuteChanged();
+
+    /// <summary>فعال‌سازی لایسنس — رویداد به پنجره برای باز کردن دیالوگ فعال‌سازی</summary>
+    [RelayCommand]
+    private void ActivateLicense()
+    {
+        LicenseActivationRequested?.Invoke(this, EventArgs.Empty);
+    }
 }

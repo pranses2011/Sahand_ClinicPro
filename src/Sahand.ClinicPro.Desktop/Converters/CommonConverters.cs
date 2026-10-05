@@ -50,12 +50,13 @@ public sealed class ShamsiDateTimeConverter : IValueConverter
 /// </summary>
 public sealed class NullToVisibilityConverter : IValueConverter
 {
-    /// <summary>تهی → مخفی؛ مقدار → نمایان (یا وارونه با پارامتر)</summary>
+    /// <summary>تهی یا صفر یا خالی → مخفی؛ مقدار → نمایان (یا وارونه با پارامتر)</summary>
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         var isNull = value is null
                      || (value is string s && string.IsNullOrWhiteSpace(s))
-                     || (value is System.Collections.ICollection c && c.Count == 0);
+                     || (value is System.Collections.ICollection c && c.Count == 0)
+                     || (value is int i && i == 0);
         var inverse = string.Equals(parameter as string, "Inverse", StringComparison.OrdinalIgnoreCase);
         var visible = inverse ? isNull : !isNull;
         return visible ? Visibility.Visible : Visibility.Collapsed;

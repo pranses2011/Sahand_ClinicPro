@@ -1,0 +1,64 @@
+using System.IO;
+using System.Text.Json;
+
+namespace Sahand.ClinicPro.Desktop.Services;
+
+/// <summary>
+/// ذخیره‌سازی تنظیمات محلی کلاینت — فایل JSON در %AppData%
+/// الگوی مشابه TokenManager — بدون رمز عبور (فقط نام کاربری و تنظیمات ظاهری)
+/// </summary>
+public static class LocalSettingsStore
+{
+    /// <summary>مسیر فایل تنظیمات — %AppData%\ClinicPro\settings.json</summary>
+    private static string SettingsPath
+    {
+        get
+        {
+            var dir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "ClinicPro");
+            Directory.CreateDirectory(dir);
+            return Path.Combine(dir, "settings.json");
+        }
+    }
+
+    /// <summary>خواندن یک مقدار رشته‌ای — تهی در نبود</summary>
+    public static string Get(string key)
+    {
+        try
+        {
+            if (!File.Exists(SettingsPath))
+                return string.Empty;
+            var json = File.ReadAllText(SettingsPath);
+            var doc = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+            return doc is not null && doc.TryGetValue(key, out var value) ? value : string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    /// <summary>نوشتن یک مقدار رشته‌ای — فایل کامل بازنویسی می‌شود</summary>
+    public static void Set(string key, string value)
+    {
+        try
+        {
+            var doc = new Dictionary<string, string>();
+            if (File.Exists(SettingsPath))
+            {
+                var json = File.ReadAllText(SettingsPath);
+                var existing = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+                if (existing is not null)
+                    doc = existing;
+            }
+            doc[key] = value;
+            File.WriteAllText(SettingsPath,
+                JsonSerializer.Serialize(doc, new JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch
+        {
+            // ذخیره تنظیمات محلی نباید جریان برنامه را متوقف کند
+        }
+    }
+}

@@ -4,7 +4,7 @@
 > پیش‌نیاز: تکمیل چرخه اول (TODO.md — v1.0.0-alpha) و چرخه دوم (TODO-v1.1.md — v1.1.0-alpha)
 > منبع مشخصات: `docs/prompts/prompt-ui-part1..5.html` (خوانده‌شده و استخراج‌شده کامل)
 
-## 🎯 پیشرفت کلی: 18% (5/28 گام)
+## 🎯 پیشرفت کلی: 21% (6/28 گام)
 
 ---
 
@@ -35,7 +35,7 @@
 
 > مطابق «قوانین کلی ساخت فرم‌های WPF» در prompt-ui-part1 — پایه همه فرم‌های بعدی
 
-- [ ] گام U0: پوسته و کنترل‌های مشترک:
+- [x] گام U0: پوسته و کنترل‌های مشترک ✅ 2026-10-05 — TopBar کامل + StatusBar + ۶ کنترل سفارشی (PersianCalendar/PersianDatePicker/TagInput/PaginationBar/StatCard/EmptyState) + SnackbarService + ۵ مبدل مشترک
   - ارتقای MainWindow: TopBar کامل (Breadcrumb + ساعت شمسی لحظه‌ای + زنگ اعلان با Badge + تغییر تم + نام/آواتار کاربر + انتخابگر شعبه وقتی ۲+ شعبه) + StatusBar پایین (وضعیت اتصال/لایسنس/کاربر/تاریخ)
   - کنترل‌های سفارشی: `PersianCalendarControl` (UniformGrid ۷×۷ + MarkedDates + DisabledDates + جمعه قرمز)، `PersianDatePicker` (متن شمسی ↔ تاریخ میلادی)، `TagInputControl` (تگ با رنگ + Enter افزودن + × حذف)، `PaginationBar`، `StatCard` (عدد درشت + نوار رنگی + مقایسه)، `StatusBadge`، `EmptyState`
   - سرویس‌ها: `SnackbarService` (سبز/قرمز پایین صفحه)، `ShortcutService` (F3/F5/Ctrl+F/Ctrl+S/Ctrl+Enter)
@@ -43,7 +43,8 @@
 
 ## 🖥️ فاز C: بازسازی UI ماژول‌های اصلی طبق مشخصات دقیق (شاخه feature/phase-15-ui-core)
 
-- [ ] گام U1: LoginView (۵۰۰×۶۰۰ بدون حاشیه + گرادیان آبی-سبز + نشان رمز + RememberMe + دکمه فعال‌سازی لایسنس شرطی) + DashboardView (۴ کارت آماری + ۳ کارت فرعی + نمودار درآمد + نوبت‌های پیش‌رو + فعالیت‌های اخیر + به‌روزرسانی ۶۰ثانیه‌ای)
+- [x] گام U1: LoginView ✅ 2026-10-05 — ۵۰۰×۶۰۰ بدون حاشیه + گرادیان آبی-سبز + دکمه چشم نمایش رمز + RememberMe (ذخیره فقط نام کاربری در JSON محلی) + دکمه فعال‌سازی لایسنس + کشیدن پنجره بدون نوار عنوان
+- [x] گام U1: DashboardView ✅ 2026-10-05 — نوار خوش‌آمد + ۴ کارت اصلی + ۳ کارت فرعی با StatCard + نمودار میله‌ای درآمد ۷ روز + نوبت‌های پیش‌رو با Badge وضعیت + جدول فعالیت‌های اخیر + Timer ۶۰ ثانیه + ۴ endpoint جدید داشبورد (revenue-chart / appointments-today / recent-activities / alerts)
 - [ ] گام U2: PatientListView دقیق (۹ ستون: انتخاب/پرونده/نام/کدملی/موبایل/بیمه Badge/سن/آخرین مراجعه شمسی/عملیات با مجوز + ContextMenu + Ctrl+A + خروجی Excel) + PatientFormView (۵ تب: اصلی/بیمه/سوابق/تماس/اسناد + بررسی خودکار کدملی ۱۰رقمی + آبشار استان↔شهر + TagInput آلرژی/مزمن/دارو + دکمه‌های ذخیره/ذخیره‌موقت/ذخیره‌ونوبت) + PatientDetailView (کارت سربرگ + هشدار آلرژی برجسته + ۶ تب سوابق + اقدامات سریع)
 - [ ] گام U3: DoctorListView (ستون‌های تخصص/حق‌ویزیت/مدت/درصد سهم/امتیاز) + DoctorFormView (۵ تب: پایه/تنظیم ویزیت/امضا و مهر/برنامه کاری هفتگی با جدول شیفت + غیبت‌ها با بررسی نوبت‌های رزروشده)
 - [ ] گام U4: AppointmentBookView (جستجوی سریع بیمار AutoComplete + PersianCalendar با نشانگر تعداد + پنل Slot های سبز/خط‌خورده + خلاصه انتخاب + نوع/اولویت/یادداشت + ثبت) + AppointmentListView (فیلتر تاریخ/پزشک/وضعیت/نوع/منبع + Badge های ۷ وضعیت + SMS دسته‌ای + لغو دسته‌ای)
