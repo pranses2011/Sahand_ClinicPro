@@ -1,7 +1,7 @@
 namespace Sahand.ClinicPro.Application.Common.Helpers;
 
 /// <summary>
-/// ماشین‌حساب حقوق و دستمزد — قواعد ایران ۱۴۰۴ (گام R3)
+/// ماشین‌حساب حقوق و دستمزد — قواعد ایران ۱۴۰۴ (گام R3 + حقوق درصدی چرخه نهم)
 /// </summary>
 /// <remarks>
 /// مفروضات قانونی (قابل تنظیم با ثابت‌های این کلاس):
@@ -12,6 +12,10 @@ namespace Sahand.ClinicPro.Application.Common.Helpers;
 ///    تا ۲۴۰م ریال معاف | ۲۴۰ تا ۳۶۰م: ۱۰٪ | ۳۶۰ تا ۶۰۰م: ۱۵٪ | بالاتر: ۲۰٪
 ///    (پلکان نرخی تجمعی — نه نرخ مؤثر بر کل مبلغ)
 /// ۵. کسور بیمه پیش از محاسبه مالیات از مبنا کسر می‌شود
+/// ۶. حقوق درصدی (کارکرد/پورسانت): فقط از «سود خدمات انجام‌شده توسط خودِ پرسنل»
+///    محاسبه می‌شود — نه از کل فروش و نه از کل دریافتی؛ و چون جزو حقوق
+///    و مزایای مشمول است، در کل مزایای بیمه‌خواه/مالیات‌خواه لحاظ می‌شود.
+///    سود منفی → حقوق درصدی صفر (ضرر دوره بر عهده کارفرماست نه پرسنل)
 /// </remarks>
 public static class PayrollCalculator
 {
@@ -47,11 +51,14 @@ public static class PayrollCalculator
         decimal BaseSalary,
         decimal OvertimeHours = 0m,
         decimal Bonus = 0m,
-        decimal OtherDeductions = 0m);
+        decimal OtherDeductions = 0m,
+        decimal CommissionPercent = 0m,
+        decimal ServiceProfit = 0m);
 
     /// <summary>خروجی محاسبه — همه مبالغ ریال</summary>
     public sealed record PayrollResult(
         decimal OvertimePay,
+        decimal ServiceCommission,
         decimal GrossEarnings,
         decimal Insurance,
         decimal TaxableBase,
@@ -60,7 +67,7 @@ public static class PayrollCalculator
         decimal NetAmount);
 
     /// <summary>
-    /// محاسبه کامل حقوق ماهانه بر اساس قواعد ۱۴۰۴
+    /// محاسبه کامل حقوق ماهانه بر اساس قواعد ۱۴۰۴ + حقوق درصدی از سود خدمات
     /// </summary>
     public static PayrollResult Calculate(PayrollInput input)
     {
@@ -68,8 +75,13 @@ public static class PayrollCalculator
         var hourlyRate = input.BaseSalary / LegalMonthlyHours;
         var overtimePay = Math.Round(hourlyRate * OvertimeMultiplier * input.OvertimeHours, 0);
 
-        // کل مزایای مشمول بیمه و مالیات
-        var gross = input.BaseSalary + overtimePay + input.Bonus;
+        // حقوق درصدی = سود خدمات انجامی خودِ پرسنل × درصد — فقط از سود (نه کل فروش)؛
+        // سود منفی یا درصد صفر → بدون حقوق درصدی
+        var serviceCommission = Math.Round(
+            Math.Max(0m, input.ServiceProfit) * input.CommissionPercent / 100m, 0);
+
+        // کل مزایای مشمول بیمه و مالیات (پورسانت هم جزو مزایای مشمول است)
+        var gross = input.BaseSalary + overtimePay + input.Bonus + serviceCommission;
 
         // بیمه ۷٪ سهم کارمند
         var insurance = Math.Round(gross * EmployeeInsuranceRate, 0);
@@ -83,7 +95,7 @@ public static class PayrollCalculator
         var totalDeductions = insurance + tax + input.OtherDeductions;
         var net = gross - totalDeductions;
 
-        return new PayrollResult(overtimePay, gross, insurance, taxableBase,
+        return new PayrollResult(overtimePay, serviceCommission, gross, insurance, taxableBase,
             tax, totalDeductions, net);
     }
 
