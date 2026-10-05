@@ -1,0 +1,28 @@
+# محافظت فایل‌های سرور لایسنس Sahand ClinicPro
+Options -Indexes
+
+# پوشه‌های حساس از طریق htaccess مخصوص خودشان مسدود شده‌اند:
+#   data/.htaccess  ← کلیدهای RSA + پیکربندی + قفل نصب
+#   inc/.htaccess   ← کتابخانه و اسکیما
+
+# ممنوعیت دانلود مستقیم انواع فایل حساس (مستقل از مسیر نصب)
+<FilesMatch "\.(pem|lock|sql|lic|req|log|bak|md)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# جلوگیری از اجرای مستقیم فایل پیکربندی تولیدی (اگر به data/ دسترسی شد)
+<Files "config.php">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</Files>
