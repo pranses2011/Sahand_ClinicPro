@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>راهنمای نصب و راه‌اندازی شبکه — درمانگاه سهند</title>
+<style>
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Regular.ttf') format('truetype'); font-weight:400; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Medium.ttf') format('truetype'); font-weight:500; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-SemiBold.ttf') format('truetype'); font-weight:600; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Bold.ttf') format('truetype'); font-weight:700; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Black.ttf') format('truetype'); font-weight:900; }
+@page { size:A4; margin:18mm 15mm 20mm 15mm; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Vazirmatn',sans-serif; color:#263238; font-size:10.5pt; line-height:1.9; }
+h1,h2,h3,h4 { font-weight:700; color:#0D47A1; }
+h2 { font-size:16pt; margin:26px 0 12px; padding:10px 14px; background:#E3F2FD; border-radius:10px;
+  border-right:5px solid #1565C0; page-break-after:avoid; }
+h3 { font-size:12.5pt; margin:18px 0 8px; color:#1565C0; page-break-after:avoid; }
+p { margin:6px 0; text-align:justify; }
+ul,ol { margin:6px 22px 6px 0; }
+li { margin:4px 0; }
+code { font-family:Consolas,monospace; background:#ECEFF1; padding:1px 7px; border-radius:5px;
+  font-size:9.5pt; direction:ltr; display:inline-block; color:#B71C1C; }
+pre { background:#263238; color:#ECEFF1; border-radius:10px; padding:13px 16px; margin:10px 0;
+  font-family:Consolas,monospace; font-size:9pt; line-height:1.75; direction:ltr; text-align:left;
+  page-break-inside:avoid; }
+table { width:100%; border-collapse:collapse; margin:10px 0; font-size:9.5pt; page-break-inside:avoid; }
+th { background:#1565C0; color:#fff; padding:7px 10px; text-align:right; font-weight:600; }
+td { padding:6px 10px; border:1px solid #CFD8DC; }
+tr:nth-child(even) td { background:#F5F8FA; }
+.tip { background:#E8F5E9; border:1px solid #A5D6A7; border-right:5px solid #43A047;
+  border-radius:10px; padding:10px 14px; margin:10px 0; page-break-inside:avoid; }
+.warn { background:#FFF8E1; border:1px solid #FFE082; border-right:5px solid #FB8C00;
+  border-radius:10px; padding:10px 14px; margin:10px 0; page-break-inside:avoid; }
+.danger { background:#FDECEA; border:1px solid #F5C6C0; border-right:5px solid #D32F2F;
+  border-radius:10px; padding:10px 14px; margin:10px 0; page-break-inside:avoid; }
+.step { display:flex; gap:12px; margin:14px 0; page-break-inside:avoid; }
+.step .num { width:34px; height:34px; border-radius:50%; background:#1565C0; color:#fff;
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14pt; flex-shrink:0; }
+.step .body { flex:1; padding-top:2px; }
+.shot { width:100%; border:1px solid #CFD8DC; border-radius:10px; margin:10px 0;
+  box-shadow:0 2px 8px rgba(0,0,0,.08); page-break-inside:avoid; }
+.shot-caption { text-align:center; font-size:9pt; color:#607D8B; margin:-4px 0 10px; }
+.kbd { border:1px solid #B0BEC5; border-bottom-width:2.5px; border-radius:5px; padding:0 7px;
+  font-family:Consolas; font-size:9.5pt; background:#FAFAFA; }
+.cover { text-align:center; padding:70px 30px 40px; page-break-after:always; }
+.cover .logo { font-size:64pt; }
+.cover h1 { font-size:26pt; font-weight:900; margin:16px 0 6px; color:#0D47A1; }
+.cover h2 { font-size:14pt; background:none; border:none; padding:0; color:#00897B; margin:0 0 30px; }
+.cover .meta { display:inline-block; background:#F5F8FA; border:1px solid #CFD8DC;
+  border-radius:12px; padding:18px 34px; margin-top:26px; font-size:11pt; text-align:right; }
+.cover .meta td { border:none; padding:4px 14px; }
+.toc { page-break-after:always; }
+.toc h2 { background:none; border:none; padding:0; font-size:18pt; }
+.toc ol { font-size:11pt; }
+.toc li { margin:9px 0; }
+.toc a { color:#263238; text-decoration:none; }
+.diagram { background:#F5F8FA; border:1px solid #CFD8DC; border-radius:12px; padding:16px;
+  margin:12px 0; page-break-inside:avoid; }
+.checklist { margin:10px 0; }
+.checklist td:first-child { font-size:14pt; text-align:center; width:40px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ جلد ═══════════════ -->
+<div class="cover">
+  <div class="logo">🏥</div>
+  <h1>راهنمای کامل نصب و راه‌اندازی شبکه</h1>
+  <h2>سامانه جامع مدیریت درمانگاه سهند — Sahand ClinicPro</h2>
+  <p style="font-size:11pt;color:#546E7A">نصب سرور • پیکربندی شبکه • اتصال دستگاه حضور و غیاب • فعال‌سازی لایسنس</p>
+  <table class="meta">
+    <tr><td>📖 نسخه سند</td><td><b>۱.۰ — مهر ۱۴۰۴</b></td></tr>
+    <tr><td>🏷 نسخه نرم‌افزار</td><td><b>v1.3.0</b></td></tr>
+    <tr><td>👥 مخاطب</td><td><b>مدیر شبکه و ادمین درمانگاه</b></td></tr>
+    <tr><td>⏱ زمان نصب تخمینی</td><td><b>۹۰ تا ۱۲۰ دقیقه</b></td></tr>
+  </table>
+</div>
+
+<!-- ═══════════════ فهرست ═══════════════ -->
+<div class="toc">
+<h2>📖 فهرست مطالب</h2>
+<ol>
+  <li>معرفی و معماری استقرار</li>
+  <li>پیش‌نیازهای سخت‌افزاری و نرم‌افزاری</li>
+  <li>نصب و پیکربندی SQL Server</li>
+  <li>نصب سرور اصلی (API) روی ویندوز</li>
+  <li>نصب کلاینت دسکتاپ روی رایانه‌های کاربران</li>
+  <li>راه‌اندازی سرور لایسنس روی هاست cPanel</li>
+  <li>فعال‌سازی لایسنس در نرم‌افزار</li>
+  <li>پیکربندی شبکه درمانگاه</li>
+  <li>اتصال دستگاه حضور و غیاب ★ جدید</li>
+  <li>پشتیبان‌گیری خودکار</li>
+  <li>رفع اشکال‌های رایج</li>
+  <li>چک‌لیست نهایی نصب</li>
+</ol>
+</div>
+
+<!-- ═══════════════ ۱. معرفی ═══════════════ -->
+<h2>۱️⃣ معرفی و معماری استقرار</h2>
+<p>سامانه درمانگاه سهند با معماری <b>سرور-کلاینت</b> کار می‌کند: یک رایانه مرکزی (سرور) به عنوان میزبان دیتابیس و API عمل می‌کند و رایانه‌های کاربران (کلاینت‌ها) از طریق شبکه محلی به آن متصل می‌شوند. سرور لایسنس جداگانه روی هاست اینترنتی قرار می‌گیرد و دستگاه حضور و غیاب مستقیماً به شبکه محلی متصل است.</p>
+
+<div class="diagram">
+<b style="font-size:11pt">🌐 نقشه کلی استقرار در شبکه درمانگاه:</b>
+<pre style="margin:10px 0 4px">
+                         ☁️ اینترنت
+                            │
+                 ┌──────────┴──────────┐
+                 │ 🌐 سرور لایسنس PHP   │  (هاست cPanel — اختیاری اما توصیه‌شده)
+                 │  license.example.ir  │
+                 └──────────┬──────────┘
+                            │ HTTPS (پورت 443)
+┌───────────────────────────┴───────────────────────────────┐
+│                🏥 شبکه محلی درمانگاه (LAN)                 │
+│                                                           │
+│   ┌─────────────────┐        ┌──────────────────────┐     │
+│   │ 💻 سرور اصلی     │◄──────►│ 🕐 دستگاه حضور و غیاب │     │
+│   │ Windows Server   │ TCP    │ ZKTeco — 192.168.1.201│    │
+│   │ 192.168.1.10     │ 4370   └──────────────────────┘     │
+│   │ • SQL Server     │                                      │
+│   │ • API (IIS/سرویس)│        ┌──────────────────────┐     │
+│   └───┬──────┬───────┘        │ 🖨 پرینتر شبکه        │     │
+│       │      │                └──────────────────────┘     │
+│   ┌───┴──┐ ┌─┴────┐ ┌────────┐ ┌─────────┐                │
+│   │💻پذیرش│ │💻ویزیت│ │💻صندوق │ │💻انبار  │  ← کلاینت‌ها   │
+│   └──────┘ └──────┘ └────────┘ └─────────┘                │
+└───────────────────────────────────────────────────────────┘
+</pre>
+</div>
+
+<div class="tip">💡 <b>نکته:</b> برای درمانگاه‌های تک‌کاربره، می‌توانید سرور و کلاینت را روی یک رایانه نصب کنید؛ اما برای چند کاربره، حتماً رایانه سرور جداگانه داشته باشید.</div>
+
+<!-- ═══════════════ ۲. پیش‌نیازها ═══════════════ -->
+<h2>۲️⃣ پیش‌نیازهای سخت‌افزاری و نرم‌افزاری</h2>
+
+<h3>🖥 رایانه سرور اصلی</h3>
+<table>
+<tr><th>مؤلفه</th><th>حداقل</th><th>توصیه‌شده</th></tr>
+<tr><td>سیستم‌عامل</td><td>Windows 10 Pro 64bit</td><td>Windows Server 2019/2022</td></tr>
+<tr><td>پردازنده</td><td>۴ هسته ۲.۴GHz</td><td>۸ هسته یا Xeon</td></tr>
+<tr><td>حافظه RAM</td><td>۸ گیگابایت</td><td>۱۶ گیگابایت</td></tr>
+<tr><td>دیسک</td><td>SSD ۲۵۶GB</td><td>SSD NVMe ۵۱۲GB + RAID</td></tr>
+<tr><td>شبکه</td><td>کارت گیگابایت</td><td>گیگابایت + UPS</td></tr>
+</table>
+
+<h3>💻 رایانه‌های کلاینت (کاربران)</h3>
+<table>
+<tr><th>مؤلفه</th><th>حداقل</th><th>توصیه‌شده</th></tr>
+<tr><td>سیستم‌عامل</td><td>Windows 10 (64bit)</td><td>Windows 11</td></tr>
+<tr><td>پردازنده و RAM</td><td>۲ هسته + ۴GB</td><td>۴ هسته + ۸GB</td></tr>
+<tr><td>نمایشگر</td><td>۱۳۶۶×۷۶۸</td><td>Full HD ۱۹۲۰×۱۰۸۰</td></tr>
+<tr><td>نرم‌افزار پیش‌نیاز</td><td colspan="2">.NET 8 Desktop Runtime (در بسته نصبی خودکار نصب می‌شود)</td></tr>
+</table>
+
+<h3>💿 نرم‌افزارهای مورد نیاز روی سرور</h3>
+<table>
+<tr><th>نرم‌افزار</th><th>نسخه</th><th>لینک دریافت</th><th>توضیح</th></tr>
+<tr><td>SQL Server</td><td>2019 Express+ / 2022</td><td>microsoft.com/sql-server</td><td>نسخه Express رایگان تا ۱۰GB کافی است</td></tr>
+<tr><td>SQL Server Management Studio</td><td>۱۹ یا بالاتر</td><td>همان صفحه</td><td>مدیریت دیتابیس</td></tr>
+<tr><td>.NET 8 Hosting Bundle</td><td>۸.۰.x</td><td>dotnet.microsoft.com</td><td>اجرا زیر IIS</td></tr>
+<tr><td>نرم‌افزار سهند</td><td>v1.3.0</td><td>رلیز گیت‌هاب</td><td>بسته نصبی سرور</td></tr>
+</table>
+
+<div class="warn">⚠️ <b>هشدار نسخه Express:</b> نسخه Express فقط ۱GB حافظه و ۱.۴GB پردازنده استفاده می‌کند؛ برای بیش از ۱۰ کاربر هم‌زمان نسخه Standard را توصیه می‌کنیم.</div>
+
+<!-- ═══════════════ ۳. SQL Server ═══════════════ -->
+<h2>۳️⃣ نصب و پیکربندی SQL Server</h2>
+
+<div class="step"><div class="num">۱</div><div class="body">
+<b>دانلود و اجرای نصاب:</b> نسخه مناسب را دانلود کنید و نصاب را با دسترسی Administrator اجرا کنید. در صفحه Installation گزینه <span class="kbd">New SQL Server stand-alone installation</span> را انتخاب کنید.
+</div></div>
+
+<div class="step"><div class="num">۲</div><div class="body">
+<b>انتخاب نسخه:</b> گزینه <span class="kbd">Express</span> (رایگان) یا کلید نسخه استاندارد را وارد کنید.
+</div></div>
+
+<div class="step"><div class="num">۳</div><div class="body">
+<b>پیکربندی مهم:</b> در بخش <b>Authentication Mode</b> حتماً گزینه <b>Mixed Mode</b> را انتخاب کنید و رمز قوی برای کاربر <code>sa</code> تعیین کنید (نوشتن رمز در محل امن الزامی است).
+</div></div>
+
+<div class="step"><div class="num">۴</div><div class="body">
+<b>فعال‌سازی TCP/IP:</b> در <b>SQL Server Configuration Manager</b>:
+<ul>
+<li>مسیر: <code>SQL Server Network Configuration → Protocols for MSSQLSERVER</code></li>
+<li>گزینه <b>TCP/IP</b> را <b>Enable</b> کنید</li>
+<li>دکمه <span class="kbd">SQL Server Services</span> → سرویس <b>SQL Server</b> را Restart کنید</li>
+</ul>
+</div></div>
+
+<div class="tip">✅ <b>آزمون موفقیت:</b> روی رایانه کلاینت در SSMS با <code>IPسرور,1433</code> (مثلاً <code>192.168.1.10,1433</code>) و Authentication از نوع SQL Server متصل شوید — اگر اتصال برقرار شد، دیتابیس برای شبکه آماده است.</div>
+
+<!-- ═══════════════ ۴. نصب API ═══════════════ -->
+<h2>۴️⃣ نصب سرور اصلی (API) روی ویندوز</h2>
+
+<div class="step"><div class="num">۱</div><div class="body">
+<b>اجراه بسته نصبی سرور:</b> فایل <code>SahandClinicPro-Setup-v1.3.0.zip</code> را روی رایانه سرور استخراج کنید و <code>INSTALL-SERVER.bat</code> را با دسترسی Administrator اجرا کنید. اسکریپت به‌صورت خودکار:
+<ul>
+<li>پیش‌نیازها را بررسی و دانلود می‌کند</li>
+<li>فایل‌های API را در <code>C:\SahandClinicPro\Server</code> منتشر می‌کند</li>
+<li>سرویس ویندوزی <code>SahandClinicPro.API</code> را با شروع خودکار ثبت می‌کند</li>
+</ul>
+</div></div>
+
+<div class="step"><div class="num">۲</div><div class="body">
+<b>پیکربندی اتصال دیتابیس:</b> فایل <code>appsettings.json</code> در پوشه نصب را ویرایش کنید:
+<pre>
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=192.168.1.10;Database=ClinicProDb;
+                          User Id=sa;Password=رمز‌شما;TrustServerCertificate=True;"
+  },
+  "Jwt": {
+    "SecretKey": "یک-کلید-تصادفی-حداقل-۶۴-کاراکتری-منحصربه‌فرد"
+  }
+}
+</pre>
+<div class="danger">⛔ <b>هرگز</b> از رمز پیش‌فرض یا کلید JWT نمونه در محیط واقعی استفاده نکنید — کلید تصادفی با دستور <code>openssl rand -base64 48</code> یا ابزار Password Generator بسازید.</div>
+</div></div>
+
+<div class="step"><div class="num">۳</div><div class="body">
+<b>ساخت دیتابیس و جداول:</b> در خط فرمان (cmd):
+<pre>
+cd C:\SahandClinicPro\Server
+dotnet Sahand.ClinicPro.API.dll ef database update
+</pre>
+خروجی موفق: پیام <code>Applying migration '20261005101427_AttendanceDeviceModule'</code> — یعنی ۹۳ جدول شامل جداول حضور و غیاب ساخته شده است.
+</div></div>
+
+<div class="step"><div class="num">۴</div><div class="body">
+<b>شروع سرویس و آزمون:</b>
+<pre>
+net start SahandClinicPro.API
+</pre>
+سپس در مرورگر سرور نشانی <code>http://localhost:5000/health</code> را باز کنید — پاسخ <code>{"status":"Healthy"}</code> یعنی سرور زنده است. Swagger روی <code>/swagger</code> و داشبورد کارهای زمان‌بندی روی <code>/hangfire</code> در دسترس‌اند.
+</div></div>
+
+<h3>📸 محیط Swagger سرور</h3>
+<img class="shot" src="../screenshots/14-license.png">
+<p class="shot-caption">نمای ماژول‌های فعال در کلاینت — سرور تمام ۲۴ ماژول را از سرور لایسنس دریافت می‌کند</p>
+
+<!-- ═══════════════ ۵. کلاینت ═══════════════ -->
+<h2>۵️⃣ نصب کلاینت دسکتاپ روی رایانه‌های کاربران</h2>
+
+<div class="step"><div class="num">۱</div><div class="body">
+<b>اجرای نصاب:</b> روی هر رایانه کاربر، فایل <code>SahandClinicPro-Setup-v1.3.0.exe</code> را اجرا کنید. نصاب Inno Setup تمام پیش‌نیازها (شامل .NET 8 Desktop Runtime) را خودکار نصب می‌کند و میان‌بر روی دسکتاپ و منوی استارت می‌سازد.
+</div></div>
+
+<div class="step"><div class="num">۲</div><div class="body">
+<b>نشانی سرور:</b> در نخستین اجرا، پنجره تنظیمات با عنوان <b>«تنظیمات اتصال به سرور»</b> باز می‌شود. نشانی API را وارد کنید:
+<table>
+<tr><th>حالت</th><th>نشانی</th></tr>
+<tr><td>سرور در همان رایانه</td><td><code>http://localhost:5000</code></td></tr>
+<tr><td>سرور روی شبکه محلی</td><td><code>http://192.168.1.10:5000</code></td></tr>
+</table>
+</div></div>
+
+<div class="step"><div class="num">۳</div><div class="body">
+<b>ورود اول:</b> با حساب مدیر وارد شوید — در اولین ورود، تغییر رمز اجباری است.
+</div></div>
+
+<h3>📸 پنجره ورود نرم‌افزار</h3>
+<img class="shot" src="../screenshots/01-login.png">
+<p class="shot-caption">پنجره ورود — پیش از فعال‌سازی لایسنس، هشدار فعال‌سازی نمایش داده می‌شود</p>
+
+<div class="tip">💡 <b>نصب بی‌صدا (Silent) برای نصب گروهی:</b> در خط فرمان: <code>SahandClinicPro-Setup-v1.3.0.exe /SILENT</code> — بدون تعامل کاربر نصب می‌شود؛ مناسب ۲۰ کلاینت با ابزارهای انتقال نرم‌افزار (PDQ/GPO).</div>
+
+</body>
+</html>
+
+<!-- ═══════════════ ۶. سرور لایسنس ═══════════════ -->
+<h2>۶️⃣ راه‌اندازی سرور لایسنس روی هاست cPanel</h2>
+
+<p>سرور لایسنس یک برنامه سبک PHP+MySQL است که روی هر هاست اشتراکی cPanel (بدون Composer و بدون افزونه خاص) نصب می‌شود و مدیریت کلیدها و فعال‌سازی‌های نرم‌افزار را بر عهده دارد.</p>
+
+<div class="step"><div class="num">۱</div><div class="body">
+<b>آپلود بسته:</b> وارد cPanel شوید → <b>File Manager</b> → پوشه <code>public_html</code> یا زیردامنه دلخواه (مثلاً <code>license.yourclinic.ir</code>). فایل <code>Sahand-LicenseServer-cPanel-v1.1.zip</code> را آپلود و با گزینه Extract استخراج کنید.
+</div></div>
+
+<div class="step"><div class="num">۲</div><div class="body">
+<b>ساخت دیتابیس:</b> در cPanel بخش <b>MySQL Database Wizard</b>:
+<ul>
+<li>نام دیتابیس: <code>clinicpro_license</code></li>
+<li>کاربر و رمز قوی بسازید و <b>ALL PRIVILEGES</b> بدهید</li>
+<li>اطلاعات را یادداشت کنید — در مرحله بعد لازم است</li>
+</ul>
+</div></div>
+
+<div class="step"><div class="num">۳</div><div class="body">
+<b>اجرای نصب‌کننده چهار مرحله‌ای:</b> در مرورگر نشانی <code>https://license.yourclinic.ir/install.php</code> را باز کنید:
+<table>
+<tr><th>مرحله</th><th>اقدام</th></tr>
+<tr><td>① بررسی پیش‌نیاز</td><td>PHP 8+ و افزونه‌های پایه — معمولاً همه سبز است</td></tr>
+<tr><td>② اتصال دیتابیس</td><td>مشخصات MySQL مرحله قبل را وارد کنید</td></tr>
+<tr><td>③ ساخت مدیر</td><td>نام کاربری و رمز قوی مدیر لایسنس</td></tr>
+<tr><td>④ پایان</td><td>نصب کامل شد — پوشه install خودکار قفل می‌شود</td></tr>
+</table>
+</div></div>
+
+<div class="warn">🔒 <b>امنیت:</b> حتماً روی دامنه، گواهی SSL (Let's Encrypt رایگان در cPanel) فعال کنید — ارتباط لایسنس حتماً باید HTTPS باشد. پس از نصب، فایل <code>install.php</code> خودکار قفل می‌شود؛ برای نصب مجدد باید دستی آن را در File Manager حذف کنید.</div>
+
+<div class="step"><div class="num">۴</div><div class="body">
+<b>صدور نخستین لایسنس:</b> وارد پنل مدیریت شوید (<code>/index.php</code>) → منوی <b>لایسنس‌ها → صدور لایسنس جدید</b>:
+<ul>
+<li>نام درمانگاه، سقف کاربر/پزشک/بیمار/شعبه را تعیین کنید</li>
+<li>ماژول‌های فعال را علامت بزنید — ماژول‌های اصلی به‌صورت پیش‌فرض فعال‌اند</li>
+<li>ماژول <b>«حضور و غیاب»</b> را برای فعال‌سازی قابلیت دستگاه‌ها علامت بزنید ⭐</li>
+<li>روی <b>🔑 صدور لایسنس</b> کلیک کنید — کلید با قالب <code>SCPRO-XXXXX-XXXXX-XXXXX</code> صادر می‌شود</li>
+</ul>
+</div></div>
+
+<!-- ═══════════════ ۷. فعال‌سازی لایسنس ═══════════════ -->
+<h2>۷️⃣ فعال‌سازی لایسنس در نرم‌افزار</h2>
+
+<div class="step"><div class="num">۱</div><div class="body">
+<b>تنظیم نشانی سرور لایسنس:</b> در کلاینت وارد <b>تنظیمات → لایسنس</b> شوید. در فیلد <b>نشانی سرور لایسنس</b> نشانی کامل پنل را وارد کنید:
+<code>https://license.yourclinic.ir/api.php</code>
+</div></div>
+
+<div class="step"><div class="num">۲</div><div class="body">
+<b>فعال‌سازی برخط:</b> کلید ۲۴ کاراکتری دریافتی از پنل را در کادر <b>کلید فعال‌سازی</b> وارد و روی <b>فعال‌سازی</b> کلیک کنید. پیام موفقیت: «لایسنس با موفقیت فعال شد» — وضعیت همه ماژول‌ها در همان صفحه نمایان می‌شود.
+</div></div>
+
+<div class="step"><div class="num">۳</div><div class="body">
+<b>حالت برون‌خط (در صورت قطعیت اینترنت):</b> از پنل مدیریت لایسنس، فایل <code>.lic</code> مخصوص همین درمانگاه را دانلود و در همین صفحه گزینه <b>بارگذاری فایل لایسنس</b> انتخاب کنید. فایل با امضای RSA است و تا ۳۰ روز آفلاین معتبر می‌ماند.
+</div></div>
+
+<h3>📸 صفحه وضعیت لایسنس در نرم‌افزار</h3>
+<img class="shot" src="../screenshots/14-license.png">
+<p class="shot-caption">کارت لایسنس + نوارهای محدودیت + چیپ ۱۵ ماژول + فعال‌سازی برخط/برون‌خط</p>
+
+<!-- ═══════════════ ۸. شبکه ═══════════════ -->
+<h2>۸️⃣ پیکربندی شبکه درمانگاه</h2>
+
+<h3>📌 تخصیص IP ثابت به سرور</h3>
+<p>روی رایانه سرور یک IP ثابت تنظیم کنید تا کلاینت‌ها همیشه به یک نشانی ثابت متصل شوند:</p>
+<table>
+<tr><th>تنظیم</th><th>مقدار نمونه</th></tr>
+<tr><td>آدرس IP</td><td><code>192.168.1.10</code></td></tr>
+<tr><td>subnet Mask</td><td><code>255.255.255.0</code></td></tr>
+<tr><td>درگاه پیش‌فرض</td><td><code>192.168.1.1</code> (مودم/روتر)</td></tr>
+<tr><td>DNS</td><td><code>178.22.122.100</code> و <code>8.8.8.8</code></td></tr>
+</table>
+<p>مسیر: <code>Settings → Network → Change adapter options → Ethernet → Properties → IPv4</code></p>
+
+<h3>🧱 پورت‌های مورد نیاز و فایروال</h3>
+<table>
+<tr><th>پورت</th><th>پروتکل</th><th>جهت</th><th>کاربرد</th></tr>
+<tr><td><code>1433</code></td><td>TCP</td><td>سرور ⇄ کلاینت</td><td>SQL Server</td></tr>
+<tr><td><code>5000</code></td><td>TCP/HTTP</td><td>سرور ⇄ کلاینت</td><td>API اصلی</td></tr>
+<tr><td><code>4370</code></td><td>TCP</td><td>سرور → دستگاه</td><td>دستگاه ZKTeco حضور و غیاب</td></tr>
+<tr><td><code>80</code></td><td>TCP</td><td>دستگاه Hikvision</td><td>ISAPI دستگاه هایک‌ویژن</td></tr>
+<tr><td><code>443</code></td><td>TCP</td><td>سرور → اینترنت</td><td>سرور لایسنس + سامانه‌های دولتی</td></tr>
+</table>
+
+<div class="step"><div class="num">🧱</div><div class="body">
+<b>ساخت قانون فایروال (روی سرور):</b> در PowerShell با دسترسی Administrator:
+<pre>
+New-NetFirewallRule -DisplayName "Sahand API"     -Direction Inbound -Protocol TCP -LocalPort 5000 -Action Allow
+New-NetFirewallRule -DisplayName "SQL Server"    -Direction Inbound -Protocol TCP -LocalPort 1433 -Action Allow
+New-NetFirewallRule -DisplayName "ZKTeco Pull"   -Direction Outbound -Protocol TCP -RemotePort 4370 -Action Allow
+</pre>
+</div></div>
+
+<div class="tip">💡 اگر شبکه درمانگاه دامنه (Active Directory) دارد، می‌توانید قانون‌ها را با Group Policy یک‌جا روی همه کلاینت‌ها اعمال کنید.</div>
+
+<!-- ═══════════════ ۹. دستگاه حضور و غیاب ═══════════════ -->
+<h2>۹️⃣ اتصال دستگاه حضور و غیاب ⭐ جدید</h2>
+
+<p>از نسخه ۱.۳.۰ نرم‌افزار به‌صورت بومی با دستگاه‌های <b>ZKTeco</b> (پروتکل PULL) و <b>Hikvision</b> (ISAPI) ارتباط برقرار می‌کند — بدون هیچ نرم‌افزار واسط.</p>
+
+<h3>🔧 آماده‌سازی فیزیکی دستگاه ZKTeco (نمونه K40)</h3>
+<div class="step"><div class="num">۱</div><div class="body">
+دستگاه را با کابل شبکه به سوئیچ درمانگاه وصل کنید. منوی دستگاه: <span class="kbd">Menu</span> → <span class="kbd">Comm.</span> → <span class="kbd">Ethernet</span> و IP ثابت بدهید (مثلاً <code>192.168.1.201</code>، درگاه <code>255.255.255.0</code>). پورت پیش‌فرض ۴۳۷۰ است و نیازی به تغییر نیست.
+</div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+اگر دستگاه رمز ادمین دارد، آن را ثبت کنید — در نرم‌افزار فیلد «کلید ارتباطی» همان رمز است.
+</div></div>
+
+<h3>➕ افزودن دستگاه در نرم‌افزار</h3>
+<div class="step"><div class="num">۱</div><div class="body">
+وارد <b>حضور و غیاب → تب دستگاه‌ها</b> شوید و فرم «افزودن دستگاه جدید» را پر کنید:
+<table>
+<tr><th>فیلد</th><th>مقدار نمونه</th></tr>
+<tr><td>نام دستگاه</td><td>ورودی اصلی</td></tr>
+<tr><td>برند</td><td>ZKTeco</td></tr>
+<tr><td>IP / پورت</td><td><code>192.168.1.201</code> / <code>4370</code></td></tr>
+<tr><td>محل نصب</td><td>ورودی ساختمان</td></tr>
+<tr><td>سینک (دقیقه)</td><td>۵</td></tr>
+</table>
+</div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+روی <b>📡 آزمون اتصال</b> کلیک کنید — پیام «اتصال برقرار است — سریال: …» یعنی پروتکل به‌درستی کار می‌کند. سپس <b>💾 ذخیره</b> کنید.
+</div></div>
+<div class="step"><div class="num">۳</div><div class="body">
+<b>نگاشت کاربران:</b> هر پرسنل روی دستگاه یک شناسه عددی (Enroll) دارد — آن را در فرم نگاشت وارد کنید و به پرسنل متصل کنید. برای دیدن شناسه: روی دستگاه <span class="kbd">Menu</span> → <span class="kbd">Users</span> → هر کاربر ID دارد.
+</div></div>
+<div class="step"><div class="num">۴</div><div class="body">
+روی <b>🔄 همگام‌سازی</b> کلیک کنید — همه ضربه‌های ذخیره‌شده دستگاه دریافت و پردازش می‌شوند. از این پس کار زمان‌بندی‌شده هر ۵ دقیقه (قابل تنظیم) خودکار سینک می‌کند.
+</div></div>
+
+<h3>📸 تب مدیریت دستگاه‌ها در نرم‌افزار</h3>
+<img class="shot" src="../screenshots/11-attendance-devices.png">
+<p class="shot-caption">فهرست دستگاه‌ها با وضعیت لحظه‌ای + فرم ویرایش + آزمون اتصال + نگاشت کاربران</p>
+
+<h3>⏰ تعریف شیفت و تخصیص</h3>
+<p>در <b>تب شیفت‌ها</b> شیفت درمانگاه را تعریف کنید (مثال شیفت صبح: ۰۸:۰۰ تا ۱۶:۰۰ با تحمل تأخیر ۱۰ دقیقه) و سپس به هر پرسنل تخصیص دهید. محاسبات تأخیر/تعجیل/اضافه‌کاری خودکار بر اساس همین شیفت انجام می‌شود.</p>
+
+<table>
+<tr><th>وضعیت ضربه</th><th>نمایش در نرم‌افزار</th></tr>
+<tr><td>ورود تا ۱۰ دقیقه دیرتر</td><td>🟢 حاضر — بدون تأخیر (داخل سقف تحمل)</td></tr>
+<tr><td>ورود ۳۰ دقیقه دیرتر</td><td>🟠 تأخیر — ۲۰ دقیقه (۳۰ منهای تحمل ۱۰)</td></tr>
+<tr><td>خروج ۲ ساعت بعد از پایان شیفت</td><td>🟢 حاضر + اضافه‌کاری ۱:۴۵ (با آستانه ۱۵ دقیقه)</td></tr>
+<tr><td>هیچ ضربه‌ای ثبت نشده</td><td>🔴 غایب (مگر مرخصی/تعطیلی ثبت باشد)</td></tr>
+</table>
+
+<h3>📸 تابلوی زنده حضور و غیاب</h3>
+<img class="shot" src="../screenshots/10-attendance-today.png">
+<p class="shot-caption">تابلوی امروز — ۶ کارت آماری + وضعیت لحظه‌ای همه پرسنل با شیفت مؤثر</p>
+
+<!-- ═══════════════ ۱۰. بکاپ ═══════════════ -->
+<h2>🔟 پشتیبان‌گیری خودکار</h2>
+
+<div class="step"><div class="num">۱</div><div class="body">
+در نرم‌افزار وارد <b>تنظیمات → بکاپ و بازیابی</b> شوید.
+</div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+بکاپ خودکار را فعال کنید — سه سطح زمان‌بندی:
+<table>
+<tr><th>سطح</th><th>زمان‌بندی</th><th>نگهداری</th></tr>
+<tr><td>روزانه</td><td>هر شب ساعت ۲ بامداد</td><td>۱۴ نسخه اخیر</td></tr>
+<tr><td>هفتگی</td><td>جمعه‌ها ۳ بامداد</td><td>۸ نسخه اخیر</td></tr>
+<tr><td>ماهانه</td><td>اول هر ماه</td><td>۱۲ نسخه اخیر</td></tr>
+</table>
+</div></div>
+<div class="step"><div class="num">۳</div><div class="body">
+مسیر ذخیره را روی <b>دیسک جداگانه یا NAS</b> (نه همان دیسک دیتابیس!) تنظیم کنید. در صورت رخداد، بازیابی با دو کلیک از فایل بکاپ انجام می‌شود.
+</div></div>
+
+<div class="warn">⚠️ قانون طلایی: «بکاپی که بازیابی آزموده نشده، بکاپ نیست» — هر سه ماه یک‌بار بازیابی را روی ماشین آزمایشی تمرین کنید.</div>
+
+<!-- ═══════════════ ۱۱. رفع اشکال ═══════════════ -->
+<h2>1️⃣1️⃣ رفع اشکال‌های رایج</h2>
+
+<table>
+<tr><th>مشکل</th><th>علت محتمل</th><th>راه‌حل</th></tr>
+<tr><td>کلاینت به سرور وصل نمی‌شود</td><td>فایروال یا IP اشتباه</td><td>آزمون <code>ping 192.168.1.10</code> و قانون پورت ۵۰۰۰؛ نشانی API را در تنظیمات کلاینت بازبینی کنید</td></tr>
+<tr><td>خطای اتصال SQL از کلاینت</td><td>TCP/IP غیرفعال در SQL</td><td>در SQL Configuration Manager پروتکل TCP/IP را فعال و سرویس را ری‌استارت کنید</td></tr>
+<tr><td>«دستگاه پاسخ نداد» در آزمون اتصال</td><td>IP/پورت اشتباه یا کابل</td><td>آزمون <code>ping IPدستگاه</code>؛ پورت ۴۳۷۰ در فایروال سرور باز باشد</td></tr>
+<tr><td>«نگاشت پرسنل یافت نشد» در لاگ‌ها</td><td>شناسه Enroll نگاشت نشده</td><td>در تب دستگاه‌ها → نگاشت، شناسه دستگاه را به پرسنل وصل کنید سپس محاسبه مجدد</td></tr>
+<tr><td>ضربه‌ها دیر نمایش داده می‌شوند</td><td>بازه سینک بزرگ</td><td>بازه سینک دستگاه را به ۱-۵ دقیقه کاهش دهید</td></tr>
+<tr><td>خطای «لایسنس منقضی» هنگام اتصال برقرار</td><td>ساعت سرور اشتباه</td><td>ساعت و منطقه زمانی ویندوز سرور را دقیق کنید؛ تپ قلب روزانه وضعیت را اصلاح می‌کند</td></tr>
+<tr><td>صف پذیرش روی کلاینت‌های دیگر رفرش نمی‌شود</td><td>وب‌سوکت بسته‌شده</td><td>در فایروال/آنتی‌ویروس اتصال SignalR (همان پورت ۵۰۰۰) را آزاد بگذارید</td></tr>
+<tr><td>پیامک ارسال نمی‌شود</td><td>اعتبار/کلید پنل</td><td>در تنظیمات → پیامک، «تست اتصال» پنل را اجرا کنید و شارژ حساب را بررسی کنید</td></tr>
+</table>
+
+<!-- ═══════════════ ۱۲. چک‌لیست ═══════════════ -->
+<h2>1️⃣2️⃣ چک‌لیست نهایی نصب</h2>
+<p>پس از اتمام نصب، این چک‌لیست را تیک بزنید — همه موارد باید ✅ باشند:</p>
+<table class="checklist">
+<tr><th></th><th>مورد</th><th>روش آزمون</th></tr>
+<tr><td>✅</td><td>سرویس API روشن و سالم</td><td><code>/health</code> پاسخ Healthy</td></tr>
+<tr><td>✅</td><td>اتصال دیتابیس از کلاینت</td><td>ورود موفق یک کاربر آزمایشی</td></tr>
+<tr><td>✅</td><td>لایسنس فعال با ماژول‌های خریداری‌شده</td><td>تنظیمات → لایسنس → همه چیپ‌ها روشن</td></tr>
+<tr><td>✅</td><td>ساعت سرور و کلاینت‌ها دقیق</td><td>مقایسه با ساعت رسمی</td></tr>
+<tr><td>✅</td><td>پشتیبان‌گیری خودکار فعال</td><td>یک بکاپ دستی آزمایشی</td></tr>
+<tr><td>✅</td><td>چاپگر فاکتور و نسخه تنظیم‌شده</td><td>چاپ آزمایشی یک فاکتور</td></tr>
+<tr><td>✅</td><td>دستگاه حضور و غیاب متصل</td><td>آزمون اتصال + یک همگام‌سازی</td></tr>
+<tr><td>✅</td><td>شیفت‌ها تعریف و تخصیص‌شده</td><td>حضور و غیاب → تب شیفت‌ها</td></tr>
+<tr><td>✅</td><td>پیامک اطلاع‌رسانی فعال</td><td>ارسال تست به شماره خود</td></tr>
+<tr><td>✅</td><td>کاربران و نقش‌ها با حداقل دسترسی</td><td>کاربران → نقش‌ها بازبینی</td></tr>
+</table>
+
+<div class="tip">📞 <b>پشتیبانی:</b> در صورت برخورد با موردی خارج از این راهنما، لاگ‌های <code>/hangfire</code> و پوشه <code>logs</code> سرور را برای تیم پشتیبانی ارسال کنید — <code>dev@sahand-clinicpro.ir</code></div>
+
+</body>
+</html>
