@@ -171,4 +171,33 @@ public static class PersianDateHelper
         var chars = input.Select(c => char.IsDigit(c) ? persian[c - '0'] : c);
         return new string(chars.ToArray());
     }
+
+    /// <summary>
+    /// بازه تقویمی میلادیِ یک ماه شمسی — [از، تا) برای فیلتر کوئری‌های دوره‌ای
+    /// (تولید حقوق، حضوروغیاب، گزارش سود و حقوق درصدی و ...)
+    /// تقویم شمسی: فروردین از حدود ۲۱ مارس شروع می‌شود؛ تقریب ابتدای ماه میلادی کافی است.
+    /// </summary>
+    /// <param name="jalaliYear">سال شمسی دوره</param>
+    /// <param name="jalaliMonth">ماه شمسی دوره — ۱ تا ۱۲</param>
+    public static (DateOnly From, DateOnly To) MonthRange(int jalaliYear, int jalaliMonth)
+    {
+        if (jalaliYear is < 1300 or > 1600)
+            throw new ArgumentOutOfRangeException(nameof(jalaliYear), "سال شمسی باید بین ۱۳۰۰ تا ۱۶۰۰ باشد");
+        if (jalaliMonth is < 1 or > 12)
+            throw new ArgumentOutOfRangeException(nameof(jalaliMonth), "ماه شمسی باید بین ۱ تا ۱۲ باشد");
+
+        // نگاشت ماه شمسی به ماه میلادی آغازین: فروردین→مارس(3) ... بهمن→ژانویه(1) اسفند→فوریه(2)
+        var gregorianMonth = jalaliMonth switch
+        {
+            1 => 3, 2 => 4, 3 => 5, 4 => 6, 5 => 7, 6 => 8,
+            7 => 9, 8 => 10, 9 => 11, 10 => 12, 11 => 1, _ => 2
+        };
+
+        // ۱۴۰۴ شمسی ≈ ۲۰۲۵ میلادی؛ بهمن و اسفند به سال میلادی بعدی تعلق دارند
+        var gregorianYear = jalaliYear - 622;
+        if (jalaliMonth is 11 or 12) gregorianYear++;
+
+        var from = new DateOnly(gregorianYear, gregorianMonth, 1);
+        return (from, from.AddMonths(1));
+    }
 }

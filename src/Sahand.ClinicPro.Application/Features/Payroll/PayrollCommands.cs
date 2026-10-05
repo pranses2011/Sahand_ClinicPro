@@ -12,12 +12,13 @@ using Sahand.ClinicPro.Domain.Interfaces;
 namespace Sahand.ClinicPro.Application.Features.Payroll.GenerateSalaries;
 
 /// <summary>
-/// فرمان تولید حقوق دوره — گام R3 + حقوق درصدی چرخه نهم
+/// فرمان تولید حقوق دوره — گام R3 + حقوق درصدی چرخه نهم و دهم
 /// برای همه کارکنان فعال (یا یک کارمند مشخص) از قرارداد و حضوروغیاب همان ماه
 /// محاسبه می‌کند و در EmployeeSalary ثبت/به‌روزرسانی می‌کند (idempotent).
-/// حقوق درصدی هر پرسنل از «سود خدمات انجام‌شده توسط خودش» در همان ماه
-/// (اقلام فاکتور منتسب به او با فاکتور معتبر) × درصد پرسنل محاسبه می‌شود —
-/// نه از کل دریافتی درمانگاه و نه از کل فروش.
+/// حقوق درصدی هر پرسنل از «سود خدمات انجام‌شده توسط خودش» در همان ماه محاسبه می‌شود —
+/// نه از کل دریافتی درمانگاه و نه از کل فروش. مسیر انتساب (چرخه دهم):
+/// ۱) اقلامی که انجام‌دهنده صریح آن‌ها خود پرسنل است (PerformedById)
+/// ۲) اقلامی که پزشکِ «متصل به همین رکورد پرسنل» انجام داده (DoctorId → Doctor.EmployeeId)
 /// </summary>
 public sealed record GenerateSalariesCommand(int Year, int Month, long? EmployeeId = null)
     : IRequest<Result<int>>;
@@ -58,9 +59,9 @@ public sealed class GenerateSalariesCommandHandler
             return Result<int>.Failure(new Error("PAYROLL.NO_EMPLOYEE",
                 "کارمند فعالی برای این دوره یافت نشد"));
 
-        // بازه شمسی ماه → بازه میلادی برای جمع اضافه‌کاری حضوروغیاب
+        // بازه شمسی ماه → بازه میلادی برای جمع اضافه‌کاری حضوروغیاب و سود خدمات
         // نام سال/ماه در این سامانه شمسی است؛ بازه تقویمی تقریبی ماه کافی است
-        var (rangeFrom, rangeTo) = MonthRange(request.Year, request.Month);
+        var (rangeFrom, rangeTo) = PersianDateHelper.MonthRange(request.Year, request.Month);
 
         var processed = 0;
         foreach (var employee in employees)
@@ -81,18 +82,31 @@ public sealed class GenerateSalariesCommandHandler
                 .SumAsync(a => (decimal?)a.OvertimeHours, cancellationToken) ?? 0m;
 
             // ═══ حقوق درصدی — مبنا: سود خدمات انجام‌شده توسط خودِ این پرسنل ═══
-            // فقط اقلام فاکتورِ منتسب به او (PerformedById) با فاکتور معتبر
-            // (بدون پیش‌نویس/ابطال/برگشت هزینه) در بازه ماه؛ سود هر قلم =
-            // مبلغ نهایی قلم − (هزینه عکس‌فوری هر واحد × تعداد)
+            // اقلام فاکتورِ منتسب به او در دو مسیر شمرده می‌شوند:
+            // ۱) PerformedById = خود پرسنل (انجام‌دهنده صریح)
+            // ۲) DoctorId = پزشکی که «رکورد پرسنل مرتبط» او همین کارمند است —
+            //    چرخه دهم: حقوق درصدی برای پزشکان هم اعمال می‌شود؛ خدمات ویزیت/درمانی
+            //    که پزشک انجام داده از همین مسیر در فیش حقوقی او لحاظ می‌شود.
+            // فقط فاکتور معتبر (بدون پیش‌نویس/ابطال/برگشت هزینه) در بازه ماه؛
+            // سود هر قلم = مبلغ نهایی قلم − (هزینه عکس‌فوری هر واحد × تعداد)
+            // توجه: اگر یک قلم هم PerformedById او باشد هم DoctorId→او، فقط یک بار شمرده می‌شود.
             var rangeFromDt = rangeFrom.ToDateTime(TimeOnly.MinValue);
             var rangeToDt = rangeTo.ToDateTime(TimeOnly.MinValue);
+
+            var linkedDoctorIds = await _unitOfWork.Repository<Doctor>().QueryableNoTracking
+                .Where(d => d.EmployeeId == employee.Id && !d.IsDeleted)
+                .Select(d => d.Id)
+                .ToListAsync(cancellationToken);
+
             var serviceProfitBase = await _unitOfWork.Repository<InvoiceItem>().QueryableNoTracking
-                .Where(i => i.PerformedById == employee.Id && !i.IsDeleted &&
+                .Where(i => !i.IsDeleted &&
                             i.Invoice != null && !i.Invoice.IsDeleted &&
                             i.Invoice.InvoiceDate >= rangeFromDt && i.Invoice.InvoiceDate < rangeToDt &&
                             (i.Invoice.Status == InvoiceStatus.Issued ||
                              i.Invoice.Status == InvoiceStatus.PartiallyPaid ||
-                             i.Invoice.Status == InvoiceStatus.Paid))
+                             i.Invoice.Status == InvoiceStatus.Paid) &&
+                            (i.PerformedById == employee.Id ||
+                             (i.DoctorId != null && linkedDoctorIds.Contains(i.DoctorId.Value))))
                 .SumAsync(i => (decimal?)(i.TotalPrice - i.UnitCost * i.Quantity),
                     cancellationToken) ?? 0m;
 
@@ -151,29 +165,6 @@ public sealed class GenerateSalariesCommandHandler
 
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
         return Result<int>.Success(processed);
-    }
-
-    /// <summary>
-    /// بازه تقویمی ماه دوره — سال/ماه شمسی به تقریب میلادی برای فیلتر حضوروغیاب
-    /// </summary>
-    private static (DateOnly From, DateOnly To) MonthRange(int year, int month)
-    {
-        // تقویم شمسی: ماه ۱ از حدود ۲۱ مارس شروع می‌شود؛ تقریب ابتدای ماه کافی است
-        var startMonth = month + 2; // فروردین → ژانویه سال میلادی بعدی نیست! (فروردین=مارس)
-        var startYear = year - 622; // ۱۴۰۴ شمسی ≈ ۲۰۲۵ میلادی
-
-        // نگاشت ماه شمسی به ماه میلادی آغازین: فروردین→مارس(3) ... اسفند→فوریه(2)
-        var gregorianMonth = month switch
-        {
-            1 => 3, 2 => 4, 3 => 5, 4 => 6, 5 => 7, 6 => 8,
-            7 => 9, 8 => 10, 9 => 11, 10 => 12, 11 => 1, _ => 2
-        };
-        // اسفند و بهمن به سال میلادی بعدی تعلق دارند
-        if (month is 11 or 12) startYear++;
-
-        var from = new DateOnly(startYear, gregorianMonth, 1);
-        var to = from.AddMonths(1);
-        return (from, to);
     }
 }
 
