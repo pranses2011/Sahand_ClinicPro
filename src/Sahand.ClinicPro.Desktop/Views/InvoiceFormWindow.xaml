@@ -91,6 +91,16 @@
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="کد" Binding="{Binding Code}" Width="85" FontFamily="Consolas" IsReadOnly="True" />
                                     <DataGridTextColumn Header="شرح خدمت" Binding="{Binding Name}" Width="*" IsReadOnly="True" />
+                                    <DataGridTemplateColumn Header="انجام‌دهنده" Width="150">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ComboBox ItemsSource="{Binding DataContext.Performers, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                          SelectedItem="{Binding Performer, UpdateSourceTrigger=PropertyChanged}"
+                                                          DisplayMemberPath="FullName"
+                                                          FontSize="11.5" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                                     <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Width="60" />
                                     <DataGridTextColumn Header="قیمت واحد" Binding="{Binding UnitPrice, StringFormat='{}{0:N0}', Mode=OneWay}" Width="100" IsReadOnly="True" FontFamily="Consolas" />
                                     <DataGridTextColumn Header="سهم بیمه" Binding="{Binding TotalInsurance, StringFormat='{}{0:N0}', Mode=OneWay}" Width="100" IsReadOnly="True" FontFamily="Consolas" />
