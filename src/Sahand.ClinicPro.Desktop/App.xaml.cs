@@ -113,5 +113,6 @@ public partial class App : System.Windows.Application
         services.AddTransient<EPrescriptionViewModel>();
         services.AddTransient<LicenseStatusViewModel>();
         services.AddTransient<ComplementaryViewModel>();
+        services.AddTransient<AdvancedEmrViewModel>();
     }
 }

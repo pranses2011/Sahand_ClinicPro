@@ -58,6 +58,15 @@ public class ClinicProDbContext : DbContext
     /// <summary>مجموعه ClinicInfo</summary>
     public DbSet<ClinicInfo> ClinicInfo { get; set; }
 
+    /// <summary>مجموعه ChronicCarePlans — طرح مراقبت بیمار مزمن (گام R2)</summary>
+    public DbSet<ChronicCarePlan> ChronicCarePlans { get; set; }
+
+    /// <summary>مجموعه FamilyHistories — سابقه پزشکی خانواده (گام R2)</summary>
+    public DbSet<FamilyHistory> FamilyHistories { get; set; }
+
+    /// <summary>مجموعه GrowthMeasurements — اندازه‌گیری رشد کودک (گام R2)</summary>
+    public DbSet<GrowthMeasurement> GrowthMeasurements { get; set; }
+
     /// <summary>مجموعه ClinicLicense</summary>
     public DbSet<ClinicLicense> ClinicLicense { get; set; }
 
