@@ -100,6 +100,32 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
             Description = dto.Description
         };
 
+        // ═══ آماده‌سازی حقوق درصدی پرسنل (چرخه نهم) ═══
+        // اعتبارسنجی همه پرسنل‌های انجام‌دهنده در یک کوئری دسته‌ای
+        var performerIds = dto.Items.Where(i => i.PerformedById.HasValue)
+            .Select(i => i.PerformedById!.Value).Distinct().ToList();
+        if (performerIds.Count > 0)
+        {
+            var validIds = await _unitOfWork.Repository<Employee>().QueryableNoTracking
+                .Where(e => performerIds.Contains(e.Id) && !e.IsDeleted && e.IsActive)
+                .Select(e => e.Id).ToListAsync(cancellationToken);
+            if (validIds.Count != performerIds.Count)
+                return Result<long>.Failure(new Error("BILLING.INVALID_PERFORMER",
+                    "پرسنل انجام‌دهنده انتخاب‌شده معتبر یا فعال نیست"));
+        }
+
+        // عکس‌فوری هزینه تمام‌شده خدمات این فاکتور در لحظه صدور —
+        // سود هر قلم بعداً از همین عکس‌فوری محاسبه می‌شود (حقوق درصدی)
+        var serviceIds = dto.Items.Where(i => i.ServiceId.HasValue)
+            .Select(i => i.ServiceId!.Value).Distinct().ToList();
+        var costById = new Dictionary<long, decimal>();
+        if (serviceIds.Count > 0)
+        {
+            costById = await _unitOfWork.Repository<Service>().QueryableNoTracking
+                .Where(s => serviceIds.Contains(s.Id) && !s.IsDeleted)
+                .ToDictionaryAsync(s => s.Id, s => s.DefaultCost, cancellationToken);
+        }
+
         decimal subTotal = 0, totalDiscount = 0, totalInsuranceShare = 0;
 
         foreach (var item in dto.Items)
@@ -128,7 +154,11 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                 TotalPrice = net,
                 DoctorId = item.DoctorId,
                 DoctorSharePercent = item.DoctorSharePercent,
-                DoctorShareAmount = net * item.DoctorSharePercent / 100m
+                DoctorShareAmount = net * item.DoctorSharePercent / 100m,
+                PerformedById = item.PerformedById,
+                UnitCost = item.ServiceId.HasValue &&
+                           costById.TryGetValue(item.ServiceId.Value, out var unitCost)
+                    ? unitCost : 0m
             });
         }
 
