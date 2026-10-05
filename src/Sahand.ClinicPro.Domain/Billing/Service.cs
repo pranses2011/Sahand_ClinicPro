@@ -28,6 +28,13 @@ public class Service : AuditableEntity, ISoftDeletable
     /// <summary>قیمت پیش‌فرض</summary>
     public decimal DefaultPrice { get; set; } = 0m;
 
+    /// <summary>
+    /// هزینه تمام‌شده پایه هر واحد (ریال) — مبنای محاسبه سود خدمت.
+    /// سود هر واحد = قیمت فروش − این هزینه؛ حقوق درصدی پرسنل از
+    /// همین «سود» محاسبه می‌شود نه از کل مبلغ فروش.
+    /// </summary>
+    public decimal DefaultCost { get; set; } = 0m;
+
     /// <summary>ضریب K</summary>
     public decimal KCoefficient { get; set; } = 0m;
 
