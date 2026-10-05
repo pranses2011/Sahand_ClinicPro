@@ -107,6 +107,7 @@ public static class DependencyInjection
         services.AddTransient<IDataSeeder, AdminSeeder>();
         services.AddTransient<IDataSeeder, BasicDataSeeder>();
         services.AddTransient<IDataSeeder, AccountingAccountSeeder>();
+        services.AddTransient<IDataSeeder, ReferenceDataSeeder>();
 
         return services;
     }

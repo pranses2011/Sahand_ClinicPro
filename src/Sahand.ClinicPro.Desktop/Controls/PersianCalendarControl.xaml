@@ -1,0 +1,63 @@
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Controls.PersianCalendarControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="280" d:DesignWidth="300"
+             FlowDirection="RightToLeft"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- کنترل تقویم شمسی — مشخصات پرامپت UI بخش ۲ (فرم ۸) -->
+    <Border Background="{DynamicResource MaterialDesign.Brush.Background}"
+            BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+            BorderThickness="1" CornerRadius="10" Padding="8">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- سربرگ: ماه قبل | عنوان ماه | ماه بعد -->
+            <Grid Grid.Row="0" Margin="2,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Button x:Name="PrevMonthButton" Grid.Column="0"
+                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                        ToolTip="ماه قبل" Width="34" Height="30">
+                    <materialDesign:PackIcon Kind="ChevronRight" />
+                </Button>
+                <Button x:Name="MonthTitleButton" Grid.Column="1"
+                        Style="{StaticResource MaterialDesignFlatMidButton}"
+                        HorizontalAlignment="Center" FontSize="14" FontWeight="Bold"
+                        ToolTip="ماه و سال نمایشی">
+                    <TextBlock x:Name="MonthTitleText" Text="—" />
+                </Button>
+                <Button x:Name="NextMonthButton" Grid.Column="2"
+                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                        ToolTip="ماه بعد" Width="34" Height="30">
+                    <materialDesign:PackIcon Kind="ChevronLeft" />
+                </Button>
+            </Grid>
+
+            <!-- ردیف نام روزهای هفته: ش ی د س چ پ ج -->
+            <UniformGrid Grid.Row="1" Columns="7" Margin="0,4">
+                <TextBlock Text="ش" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
+                <TextBlock Text="ی" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
+                <TextBlock Text="د" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
+                <TextBlock Text="س" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
+                <TextBlock Text="چ" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
+                <TextBlock Text="پ" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
+                <TextBlock Text="ج" TextAlignment="Center" FontSize="11" FontWeight="Bold"
+                           Foreground="#e53935" />
+            </UniformGrid>
+
+            <!-- شبکه روزها -->
+            <UniformGrid x:Name="DaysGrid" Grid.Row="2" Columns="7" Rows="6" />
+        </Grid>
+    </Border>
+</UserControl>

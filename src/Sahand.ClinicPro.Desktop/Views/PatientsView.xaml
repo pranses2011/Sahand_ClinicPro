@@ -1,97 +1,267 @@
 ﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.PatientsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="560" d:DesignWidth="900"
+             FlowDirection="RightToLeft"
              FontFamily="Vazirmatn, Segoe UI, Tahoma">
     <!-- ═══════════════════════════════════════════════════════════
-         فهرست بیماران — گام ۱۲
-         جستجو + جدول + صفحه‌بندی + دکمه بیمار جدید
+         فهرست بیماران — گام U2 طبق پرامپت UI بخش ۱ (فرم ۳):
+         نوار عنوان با Badge تعداد + نوار ابزار + ۹ ستون DataGrid +
+         منوی راست‌کلیک + دابل‌کلیک + PaginationBar + EmptyState
          ═══════════════════════════════════════════════════════════ -->
-    <Grid Margin="24">
+    <Grid Margin="16,12">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- سربرگ: عنوان + دکمه بیمار جدید -->
-        <DockPanel Grid.Row="0" Margin="0,0,0,12">
-            <Button DockPanel.Dock="Right"
-                    Command="{Binding AddPatientCommand}"
-                    Style="{StaticResource MaterialDesignFilledButton}"
-                    Content="بیمار جدید"
-                    VerticalAlignment="Center">
-                <Button.ContentTemplate>
-                    <DataTemplate>
+        <!-- نوار عنوان صفحه — با Badge تعداد -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="AccountGroup"
+                                         Width="26" Height="26"
+                                         Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                         VerticalAlignment="Center" />
+                <TextBlock Text="لیست بیماران"
+                           FontSize="20" FontWeight="Bold"
+                           Margin="10,0,0,0" VerticalAlignment="Center" />
+                <Border Background="{DynamicResource MaterialDesign.Brush.Primary}"
+                        CornerRadius="10" Padding="10,2" VerticalAlignment="Center"
+                        Margin="12,0,0,0">
+                    <TextBlock Foreground="White" FontSize="11">
+                        <Run Text="کل: " /><Run Text="{Binding TotalCount, Mode=OneWay}" /><Run Text=" نفر" />
+                    </TextBlock>
+                </Border>
+            </StackPanel>
+            <TextBlock Text="مدیریت و جستجوی بیماران ثبت‌شده در سامانه"
+                       FontSize="12" Opacity="0.65" Margin="2,4,0,0" />
+        </StackPanel>
+
+        <!-- نوار ابزار -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource MaterialDesign.Brush.Background}"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                BorderThickness="1" CornerRadius="10"
+                Padding="10,8" Margin="0,0,0,10">
+            <DockPanel>
+                <!-- راست: دکمه‌های عملیات -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Command="{Binding AddPatientCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            ToolTip="ثبت بیمار جدید (F3)" Margin="0,0,8,0">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountPlus" VerticalAlignment="Center" />
-                            <TextBlock Text="بیمار جدید" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            <materialDesign:PackIcon Kind="Plus" Width="16" Height="16" VerticalAlignment="Center" />
+                            <TextBlock Text="بیمار جدید" Margin="6,0,0,0" VerticalAlignment="Center" />
                         </StackPanel>
-                    </DataTemplate>
-                </Button.ContentTemplate>
-            </Button>
-            <TextBlock Text="مدیریت بیماران"
-                       Style="{StaticResource SectionTitle}"
-                       VerticalAlignment="Center" />
-        </DockPanel>
+                    </Button>
+                    <Button Command="{Binding RefreshCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            ToolTip="بارگذاری مجدد (F5)" Margin="0,0,8,0">
+                        <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" />
+                    </Button>
+                    <Button Command="{Binding DeletePatientCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            ToolTip="حذف بیمار انتخاب‌شده"
+                            Foreground="#C62828" Padding="8,6">
+                        <materialDesign:PackIcon Kind="Delete" Width="16" Height="16" />
+                    </Button>
+                </StackPanel>
 
-        <!-- جستجو -->
-        <TextBox Grid.Row="1"
-                 materialDesign:HintAssist.Hint="جستجو: نام یا کد ملی یا موبایل یا شماره پرونده"
-                 Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
-                 Margin="0,0,0,12">
-            <TextBox.InputBindings>
-                <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
-            </TextBox.InputBindings>
-        </TextBox>
+                <!-- چپ: جستجو با آیکون -->
+                <TextBox materialDesign:HintAssist.Hint="🔍 جستجو با نام، کد ملی، موبایل…"
+                         Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                         FontSize="13"
+                         VerticalAlignment="Center"
+                         MinWidth="260">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+                    </TextBox.InputBindings>
+                </TextBox>
+            </DockPanel>
+        </Border>
 
-        <!-- جدول بیماران -->
-        <DataGrid Grid.Row="2"
+        <!-- نوار انتظار -->
+        <ProgressBar Grid.Row="2" IsIndeterminate="True" Height="3"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}"
+                     Margin="0,0,0,6" />
+
+        <!-- جدول اطلاعات — ۹ ستون طبق مشخصات -->
+        <DataGrid Grid.Row="3"
+                  x:Name="PatientsGrid"
                   ItemsSource="{Binding Patients}"
                   SelectedItem="{Binding SelectedPatient}"
                   AutoGenerateColumns="False"
+                  CanUserSortColumns="True"
+                  CanUserResizeColumns="True"
                   IsReadOnly="True"
-                  SelectionMode="Single"
                   CanUserAddRows="False"
+                  AlternatingRowBackground="#F7FAFD"
                   HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal"
-                  materialDesign:DataGridAssist.CellPadding="8,6">
+                  MouseDoubleClick="OnRowDoubleClick"
+                  RowBackground="Transparent"
+                  FontSize="12">
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                    <Setter Property="ContextMenu">
+                        <Setter.Value>
+                            <ContextMenu>
+                                <MenuItem Header="👁️ مشاهده جزئیات" Command="{Binding ViewPatientCommand}" />
+                                <MenuItem Header="✏️ ویرایش" Command="{Binding EditPatientCommand}" />
+                                <MenuItem Header="📅 رزرو نوبت" Command="{Binding BookAppointmentCommand}" />
+                                <Separator />
+                                <MenuItem Header="🗑️ حذف" Command="{Binding DeletePatientCommand}" Foreground="#C62828" />
+                            </ContextMenu>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </DataGrid.RowStyle>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="شماره پرونده" Binding="{Binding MedicalRecordNo}" Width="130" />
-                <DataGridTextColumn Header="نام" Binding="{Binding FirstName}" Width="*" />
-                <DataGridTextColumn Header="نام خانوادگی" Binding="{Binding LastName}" Width="*" />
-                <DataGridTextColumn Header="کد ملی" Binding="{Binding NationalCode}" Width="110" />
-                <DataGridTextColumn Header="موبایل" Binding="{Binding Mobile}" Width="120" />
-                <DataGridTextColumn Header="بیمه" Binding="{Binding InsuranceName}" Width="130" />
+                <!-- ۱. انتخاب چندتایی -->
+                <DataGridCheckBoxColumn Header=""
+                                        Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"
+                                        Width="36" />
+
+                <!-- ۲. شماره پرونده -->
+                <DataGridTextColumn Header="پرونده"
+                                    Binding="{Binding MedicalRecordNo}"
+                                    Width="90"
+                                    FontFamily="Consolas"
+                                    Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
+
+                <!-- ۳. نام و نام‌خانوادگی -->
+                <DataGridTemplateColumn Header="نام و نام‌خانوادگی" Width="190" SortMemberPath="FullName">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Account"
+                                                         Width="15" Height="15"
+                                                         Opacity="0.55"
+                                                         VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding FullName}"
+                                           FontWeight="SemiBold"
+                                           Margin="7,0,0,0"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- ۴. کد ملی -->
+                <DataGridTextColumn Header="کد ملی"
+                                    Binding="{Binding NationalCode}"
+                                    Width="110"
+                                    FontFamily="Consolas" />
+
+                <!-- ۵. موبایل -->
+                <DataGridTextColumn Header="موبایل"
+                                    Binding="{Binding Mobile}"
+                                    Width="115"
+                                    FontFamily="Consolas" />
+
+                <!-- ۶. بیمه — Badge رنگی -->
+                <DataGridTemplateColumn Header="بیمه" Width="105" SortMemberPath="InsuranceName">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#ECEFF1" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding InsuranceName, TargetNullValue=آزاد}" Value="تامین اجتماعی">
+                                                <Setter Property="Background" Value="#BBDEFB" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding InsuranceName}" Value="سلامت">
+                                                <Setter Property="Background" Value="#C8E6C9" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding InsuranceName}" Value="نظام وظیفه">
+                                                <Setter Property="Background" Value="#E1BEE7" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding InsuranceName}" Value="نیروهای مسلح">
+                                                <Setter Property="Background" Value="#E1BEE7" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="{Binding InsuranceName, TargetNullValue=آزاد}"
+                                           FontSize="11" />
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- ۷. سن -->
+                <DataGridTextColumn Header="سن"
+                                    Binding="{Binding Age, TargetNullValue=—}"
+                                    Width="50">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- ۸. آخرین مراجعه (شمسی از سرور) -->
+                <DataGridTextColumn Header="آخرین مراجعه"
+                                    Binding="{Binding LastVisitDateShamsi, TargetNullValue=—}"
+                                    Width="105" />
+
+                <!-- ۹. عملیات -->
+                <DataGridTemplateColumn Header="عملیات" Width="150">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Command="{Binding DataContext.ViewPatientCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="مشاهده جزئیات بیمار" Padding="5">
+                                    <materialDesign:PackIcon Kind="EyeOutline" Width="16" Height="16" />
+                                </Button>
+                                <Button Command="{Binding DataContext.EditPatientCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="ویرایش اطلاعات بیمار" Padding="5">
+                                    <materialDesign:PackIcon Kind="Pencil" Width="16" Height="16" />
+                                </Button>
+                                <Button Command="{Binding DataContext.BookAppointmentCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="رزرو نوبت برای این بیمار" Padding="5">
+                                    <materialDesign:PackIcon Kind="CalendarPlus" Width="16" Height="16" />
+                                </Button>
+                                <Button Command="{Binding DataContext.DeletePatientCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="حذف بیمار"
+                                        Foreground="#C62828" Padding="5">
+                                    <materialDesign:PackIcon Kind="Delete" Width="16" Height="16" />
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
-            <DataGrid.InputBindings>
-                <MouseBinding MouseAction="LeftDoubleClick"
-                              Command="{Binding ViewPatientCommand}" />
-            </DataGrid.InputBindings>
         </DataGrid>
 
-        <!-- صفحه‌بندی -->
-        <DockPanel Grid.Row="3" Margin="0,12,0,0">
-            <Button DockPanel.Dock="Right"
-                    Command="{Binding NextPageCommand}"
-                    Style="{StaticResource MaterialDesignFlatButton}"
-                    Content="صفحه بعد" />
-            <Button DockPanel.Dock="Right"
-                    Command="{Binding PrevPageCommand}"
-                    Style="{StaticResource MaterialDesignFlatButton}"
-                    Content="صفحه قبل"
-                    Margin="0,0,8,0" />
-            <TextBlock VerticalAlignment="Center"
-                       FontSize="13" Opacity="0.8">
-                <Run Text="صفحه " />
-                <Run Text="{Binding PageNumber, Mode=OneWay}" />
-                <Run Text=" از " />
-                <Run Text="{Binding TotalPages, Mode=OneWay}" />
-                <Run Text=" — جمع: " />
-                <Run Text="{Binding TotalCount, Mode=OneWay}" />
-                <Run Text=" بیمار" />
-            </TextBlock>
-        </DockPanel>
+        <!-- حالت خالی -->
+        <controls:EmptyState Grid.Row="3"
+                             Message="موردی یافت نشد — با تغییر عبارت جستجو دوباره تلاش کنید"
+                             IconKind="AccountSearch"
+                             Visibility="{Binding Patients.Count, Converter={StaticResource NullToVisibility}, ConverterParameter=Inverse}" />
+
+        <!-- صفحه‌بندی سروری -->
+        <controls:PaginationBar Grid.Row="4"
+                                PageNumber="{Binding PageNumber, Mode=TwoWay}"
+                                TotalPages="{Binding TotalPages, Mode=OneWay}"
+                                TotalCount="{Binding TotalCount, Mode=OneWay}"
+                                PageSize="{Binding PageSize, Mode=TwoWay}"
+                                PageChangedCommand="{Binding PageChangedCommand}" />
     </Grid>
 </UserControl>

@@ -1,14 +1,19 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MaterialDesignThemes.Wpf;
+using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Desktop.Services;
 using Sahand.ClinicPro.Desktop.Views;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
 /// <summary>
-/// ViewModel پوسته اصلی — مدیریت ناوبری و تم و کاربر و خروج
+/// ViewModel پوسته اصلی — گام U0 (ارتقای طبق قوانین کلی UI):
+/// ناوبری و تم و کاربر و خروج + مسیر صفحه + ساعت شمسی لحظه‌ای +
+/// زنگ اعلان با شمارنده + وضعیت اتصال و لایسنس در StatusBar
 /// </summary>
 public partial class MainWindowViewModel : ObservableObject
 {
@@ -16,6 +21,10 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly ITokenManager _tokens;
     private readonly IThemeService _theme;
     private readonly INavigationService _navigation;
+    private readonly ISnackbarService _snackbar;
+
+    /// <summary>تایمر ساعت لحظه‌ای — هر ثانیه به‌روزرسانی</summary>
+    private readonly DispatcherTimer _clock = new() { Interval = TimeSpan.FromSeconds(1) };
 
     /// <summary>صفحه فعلی به‌عنوان ViewModel</summary>
     [ObservableProperty]
@@ -29,6 +38,14 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private string _currentTitle = "داشبورد";
 
+    /// <summary>مسیر صفحه فعلی (Breadcrumb) — «خانه > داشبورد»</summary>
+    [ObservableProperty]
+    private string _breadcrumb = "خانه > داشبورد";
+
+    /// <summary>ساعت شمسی لحظه‌ای — «۱۴۰۴/۰۴/۰۱ - ۱۰:۳۰:۲۵»</summary>
+    [ObservableProperty]
+    private string _clockText = string.Empty;
+
     /// <summary>نام کاربر واردشده</summary>
     [ObservableProperty]
     private string _currentUser = string.Empty;
@@ -36,6 +53,21 @@ public partial class MainWindowViewModel : ObservableObject
     /// <summary>تاریخ امروز شمسی</summary>
     [ObservableProperty]
     private string _currentDate = string.Empty;
+
+    /// <summary>وضعیت اتصال در StatusBar</summary>
+    [ObservableProperty]
+    private string _connectionStatus = "متصل";
+
+    /// <summary>وضعیت لایسنس در StatusBar</summary>
+    [ObservableProperty]
+    private string _licenseStatus = "لایسنس فعال";
+
+    /// <summary>تعداد اعلان‌های خوانده‌نشده</summary>
+    [ObservableProperty]
+    private int _unreadCount;
+
+    /// <summary>صف ارسال پیام شناور — برای Snackbar سراسری</summary>
+    public SnackbarMessageQueue SnackbarQueue { get; } = new(TimeSpan.FromSeconds(3));
 
     /// <summary>کارخانه صفحات — کلید به ViewModel</summary>
     private readonly Dictionary<string, Func<ViewModelBase>> _pages;
@@ -46,6 +78,7 @@ public partial class MainWindowViewModel : ObservableObject
         ITokenManager tokens,
         IThemeService theme,
         INavigationService navigation,
+        ISnackbarService snackbar,
         DashboardViewModel dashboard,
         PatientsViewModel patients,
         AppointmentsViewModel appointments,
@@ -62,10 +95,19 @@ public partial class MainWindowViewModel : ObservableObject
         _tokens = tokens;
         _theme = theme;
         _navigation = navigation;
+        _snackbar = snackbar;
 
         CurrentUser = tokens.Username ?? "کاربر";
-        CurrentDate = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper
-            .ToShamsi(DateTime.UtcNow);
+        CurrentDate = PersianDateHelper.ToShamsi(DateTime.Now);
+
+        // ساعت لحظه‌ای — هر ثانیه به‌روزرسانی شمسی و ساعت
+        _clock.Tick += (_, _) =>
+            ClockText = $"{PersianDateHelper.ToShamsi(DateTime.Now)} - {DateTime.Now:HH:mm:ss}";
+        _clock.Start();
+        ClockText = $"{PersianDateHelper.ToShamsi(DateTime.Now)} - {DateTime.Now:HH:mm:ss}";
+
+        // اتصال سرویس پیام شناور به صف نمایش
+        _snackbar.MessagePosted += (message, _) => SnackbarQueue.Enqueue(message);
 
         // کارخانه صفحات — صفحات بعدی در گام‌های ۱۳ به بعد اضافه می‌شوند
         _pages = new Dictionary<string, Func<ViewModelBase>>
@@ -127,6 +169,21 @@ public partial class MainWindowViewModel : ObservableObject
 
         CurrentPage = factory();
         CurrentTitle = CurrentPage.Title;
+        Breadcrumb = $"خانه > {CurrentTitle}";
+    }
+
+    /// <summary>آیا اعلان خوانده‌نشده وجود دارد — برای نمایش نشانگر زنگ</summary>
+    public bool HasUnreadNotifications => UnreadCount > 0;
+
+    /// <summary>بازخورد تغییر شمارنده — تازه‌سازی وضعیت نمایش نشانگر</summary>
+    partial void OnUnreadCountChanged(int value)
+        => OnPropertyChanged(nameof(HasUnreadNotifications));
+
+    /// <summary>مشاهده مرکز اعلان‌ها — گام U14 به صفحه واقعی متصل می‌شود</summary>
+    [RelayCommand]
+    private void ShowNotifications()
+    {
+        _snackbar.Info("مرکز اعلان‌ها در گام‌های بعدی متصل می‌شود");
     }
 
     /// <summary>خروج از حساب — ابطال توکن و بازگشت به ورود</summary>

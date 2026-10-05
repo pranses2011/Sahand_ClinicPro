@@ -1,69 +1,164 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
+/// <summary>ستون نمودار درآمد داشبورد — ارتفاع میله محاسبه‌شده</summary>
+public record DashboardChartPoint(string Label, decimal Amount, string AmountText, double BarHeight);
+
+/// <summary>ردیف لیست نوبت‌های پیش‌رو</summary>
+public record UpcomingAppointmentRow(
+    long Id, int? QueueNumber, string Time, string PatientName,
+    string DoctorName, string StatusText, string Status);
+
+/// <summary>ردیف جدول فعالیت‌های اخیر</summary>
+public record RecentActivityRow(string TimeShamsi, string User, string Action, string Entity);
+
 /// <summary>
-/// ViewModel داشبورد — بارگذاری آمار امروز از API
+/// ویومدل داشبورد — گام U1 طبق پرامپت UI بخش ۱ (فرم ۲):
+/// ۴ کارت آمار اصلی + ۳ کارت فرعی + نمودار درآمد + نوبت‌های پیش‌رو + فعالیت‌های اخیر
+/// به‌روزرسانی خودکار هر ۶۰ ثانیه (Timer)
 /// </summary>
 public partial class DashboardViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
+    private readonly ISnackbarService _snackbar;
+    private readonly System.Windows.Threading.DispatcherTimer _refresh =
+        new() { Interval = TimeSpan.FromSeconds(60) };
 
-    /// <summary>عنوان صفحه</summary>
+    /// <summary>عنوان صفحه در هدر</summary>
     public override string Title => "داشبورد";
 
-    [ObservableProperty] private int _newPatients;
-    [ObservableProperty] private int _todayAppointments;
+    /* ── آمار اصلی (ردیف اول) ── */
+    [ObservableProperty] private int _todayPatients;
     [ObservableProperty] private int _todayVisits;
-    [ObservableProperty] private decimal _todayRevenue;
-    [ObservableProperty] private string _todayDateShamsi = string.Empty;
-    [ObservableProperty] private string _connectionStatus = "در حال بررسی اتصال...";
+    [ObservableProperty] private int _waitingCount;
+    [ObservableProperty] private string _todayRevenueText = "0";
 
-    /// <summary>سازنده با تزریق کلاینت API</summary>
-    public DashboardViewModel(IApiClient api)
+    /* ── آمار فرعی (ردیف دوم) ── */
+    [ObservableProperty] private int _lowStockCount;
+    [ObservableProperty] private int _todayPrescriptions;
+    [ObservableProperty] private int _pendingLabOrders;
+
+    /* ── عمومی ── */
+    [ObservableProperty] private string _welcomeMessage = string.Empty;
+    [ObservableProperty] private string _todayDateShamsi = string.Empty;
+    [ObservableProperty] private string _connectionStatus = "در حال بارگذاری…";
+    [ObservableProperty] private string _errorMessage = string.Empty;
+
+    /// <summary>داده نمودار درآمد ۷ روز</summary>
+    public ObservableCollection<DashboardChartPoint> RevenueChart { get; } = new();
+
+    /// <summary>نوبت‌های پیش‌رو امروز</summary>
+    public ObservableCollection<UpcomingAppointmentRow> UpcomingAppointments { get; } = new();
+
+    /// <summary>آخرین فعالیت‌ها</summary>
+    public ObservableCollection<RecentActivityRow> RecentActivities { get; } = new();
+
+    /// <summary>سازنده با تزریق سرویس‌ها</summary>
+    public DashboardViewModel(IApiClient api, ISnackbarService snackbar)
     {
         _api = api;
+        _snackbar = snackbar;
+        _refresh.Tick += async (_, _) => await LoadStatsAsync();
+        _refresh.Start();
         _ = LoadStatsAsync();
     }
 
-    /// <summary>درآمد به‌صورت متنی جدا شده با کاما</summary>
-    public string TodayRevenueText => TodayRevenue.ToString("N0");
-
-    /// <summary>بارگذاری آمار امروز</summary>
+    /// <summary>بارگذاری کامل همه بخش‌ها — طبق LoadAsync پرامپت</summary>
     public async Task LoadStatsAsync()
     {
-        IsBusy = true;
+        WelcomeMessage = $"خوش آمدید! امروز {DateTime.Now:HH:mm} — وضعیت درمانگاه به‌روزرسانی شد.";
+        TodayDateShamsi = Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.Now);
         ErrorMessage = string.Empty;
 
-        var stats = await _api.GetAsync<DashboardStats>("dashboard/stats");
-
-        if (stats is not null)
+        // ۱) آمار خلاصه
+        var stats = await _api.GetAsync<JsonElement>("dashboard/stats");
+        if (stats.ValueKind == JsonValueKind.Object)
         {
-            NewPatients = stats.NewPatients;
-            TodayAppointments = stats.TodayAppointments;
-            TodayVisits = stats.TodayVisits;
-            TodayRevenue = stats.TodayRevenue;
-            TodayDateShamsi = stats.TodayDateShamsi;
-            ConnectionStatus = "اتصال به سرور برقرار است";
-        }
-        else
-        {
-            ConnectionStatus = "اتصال به سرور برقرار نیست";
-            ErrorMessage = _api.LastError ?? "دریافت آمار ناموفق بود";
+            TodayPatients = stats.TryGetProperty("todayAppointments", out var appts) ? appts.GetInt32() : 0;
+            TodayVisits = stats.TryGetProperty("todayVisits", out var visits) ? visits.GetInt32() : 0;
+            WaitingCount = Math.Max(0, TodayPatients - TodayVisits);
+            var revenue = stats.TryGetProperty("todayRevenue", out var rev) && rev.ValueKind != JsonValueKind.Null
+                ? rev.GetDecimal() : 0;
+            TodayRevenueText = revenue.ToString("N0");
+            ConnectionStatus = "آمار به‌روز شد";
         }
 
-        IsBusy = false;
-        OnPropertyChanged(nameof(TodayRevenueText));
+        // ۲) هشدارها (موجودی کم و آزمایش در انتظار)
+        var alerts = await _api.GetAsync<JsonElement>("dashboard/alerts");
+        if (alerts.ValueKind == JsonValueKind.Object)
+        {
+            LowStockCount = alerts.TryGetProperty("lowStock", out var low) ? low.GetInt32() : 0;
+            PendingLabOrders = alerts.TryGetProperty("pendingLabOrders", out var lab) ? lab.GetInt32() : 0;
+        }
+
+        // ۳) نمودار درآمد ۷ روز
+        var chart = await _api.GetAsync<JsonElement>("dashboard/revenue-chart?days=7");
+        RevenueChart.Clear();
+        if (chart.ValueKind == JsonValueKind.Array)
+        {
+            var points = new List<(string Label, decimal Amount)>();
+            foreach (var item in chart.EnumerateArray())
+            {
+                points.Add((
+                    item.TryGetProperty("label", out var l) ? l.GetString() ?? "—" : "—",
+                    item.TryGetProperty("amount", out var a) && a.ValueKind != JsonValueKind.Null
+                        ? a.GetDecimal() : 0));
+            }
+
+            // مقیاس‌بندی میله‌ها — بلندترین ۱۱۰ پیکسل
+            var maxAmount = points.Count > 0 ? points.Max(p => p.Amount) : 0;
+            foreach (var (label, amount) in points)
+            {
+                var height = maxAmount > 0 ? (double)amount / (double)maxAmount * 110 : 0;
+                RevenueChart.Add(new DashboardChartPoint(label, amount, amount.ToString("N0"),
+                    Math.Max(amount > 0 ? 3 : 1, height)));
+            }
+        }
+
+        // ۴) نوبت‌های امروز
+        var appointments = await _api.GetAsync<JsonElement>("dashboard/appointments-today?limit=8");
+        UpcomingAppointments.Clear();
+        if (appointments.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var a in appointments.EnumerateArray())
+            {
+                UpcomingAppointments.Add(new UpcomingAppointmentRow(
+                    a.TryGetProperty("id", out var id) ? id.GetInt64() : 0,
+                    a.TryGetProperty("queueNumber", out var q) && q.ValueKind != JsonValueKind.Null ? q.GetInt32() : null,
+                    a.TryGetProperty("time", out var t) ? t.GetString() ?? "" : "",
+                    a.TryGetProperty("patientName", out var p) ? p.GetString() ?? "" : "",
+                    a.TryGetProperty("doctorName", out var d) ? d.GetString() ?? "" : "",
+                    a.TryGetProperty("statusText", out var s) ? s.GetString() ?? "" : "",
+                    a.TryGetProperty("status", out var st) ? st.GetString() ?? "" : ""));
+            }
+        }
+
+        // ۵) فعالیت‌های اخیر
+        var activities = await _api.GetAsync<JsonElement>("dashboard/recent-activities?limit=10");
+        RecentActivities.Clear();
+        if (activities.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var act in activities.EnumerateArray())
+            {
+                RecentActivities.Add(new RecentActivityRow(
+                    act.TryGetProperty("timeShamsi", out var ts) ? ts.GetString() ?? "" : "",
+                    act.TryGetProperty("user", out var u) ? u.GetString() ?? "" : "",
+                    act.TryGetProperty("action", out var ac) ? ac.GetString() ?? "" : "",
+                    act.TryGetProperty("entity", out var en) ? en.GetString() ?? "" : ""));
+            }
+        }
     }
 
-    /// <summary>ساختار پاسخ آمار داشبورد — منطبق با API</summary>
-    public sealed record DashboardStats(
-        int NewPatients,
-        int TodayAppointments,
-        int ActiveAppointments,
-        int TodayVisits,
-        decimal TodayRevenue,
-        string TodayDateShamsi);
+    /// <summary>بارگذاری مجدد دستی (F5)</summary>
+    [RelayCommand]
+    private async Task RefreshAsync()
+    {
+        await LoadStatsAsync();
+        _snackbar.Success("داشبورد به‌روزرسانی شد");
+    }
 }

@@ -74,4 +74,157 @@ public class DashboardController : ApiBaseController
         return Ok(Application.Common.Models.ApiResponse<object>.Success(stats,
             "آمار امروز دریافت شد"));
     }
+
+    /// <summary>
+    /// نمودار درآمد روزانه — مشخصات پرامپت UI بخش ۱ (فرم ۲)
+    /// خروجی: برچسب شمسی + مبلغ پرداخت‌شده برای N روز اخیر
+    /// </summary>
+    [HttpGet("revenue-chart")]
+    [HasPermission("dashboard.view")]
+    public async Task<IActionResult> GetRevenueChart([FromQuery] int days = 7,
+        CancellationToken ct = default)
+    {
+        days = Math.Clamp(days, 1, 90);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var from = today.AddDays(-(days - 1));
+
+        // واکشی خام + گروه‌بندی سمت کاربر — از ترجمه SQL توابع تاریخ پرهیز می‌شود
+        var fromDateTime = from.ToDateTime(TimeOnly.MinValue);
+        var toDateTime = today.ToDateTime(TimeOnly.MaxValue);
+
+        var rows = await _unitOfWork.Repository<Invoice>()
+            .QueryableNoTracking
+            .Where(i => i.InvoiceDate >= fromDateTime
+                     && i.InvoiceDate <= toDateTime
+                     && i.Status != InvoiceStatus.Cancelled)
+            .Select(i => new { i.InvoiceDate, i.PaidAmount })
+            .ToListAsync(ct);
+
+        var chart = Enumerable.Range(0, days)
+            .Select(offset =>
+            {
+                var day = from.AddDays(offset);
+                var dayStart = day.ToDateTime(TimeOnly.MinValue);
+                var dayEnd = day.ToDateTime(TimeOnly.MaxValue);
+                return new
+                {
+                    label = Application.Common.Helpers.PersianDateHelper.ToShamsi(dayStart),
+                    amount = rows
+                        .Where(r => r.InvoiceDate >= dayStart && r.InvoiceDate <= dayEnd)
+                        .Sum(r => r.PaidAmount),
+                };
+            })
+            .ToList();
+
+        return Ok(Application.Common.Models.ApiResponse<object>.Success(chart,
+            "داده نمودار درآمد دریافت شد"));
+    }
+
+    /// <summary>
+    /// نوبت‌های امروز — مشخصات پرامپت UI بخش ۱ (فرم ۲: نوبت‌های پیش‌رو)
+    /// </summary>
+    [HttpGet("appointments-today")]
+    [HasPermission("dashboard.view")]
+    public async Task<IActionResult> GetAppointmentsToday([FromQuery] int limit = 8,
+        CancellationToken ct = default)
+    {
+        limit = Math.Clamp(limit, 1, 50);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var list = await _unitOfWork.Repository<Appointment>()
+            .QueryableNoTracking
+            .Where(a => a.AppointmentDate == today
+                     && a.Status != AppointmentStatus.Cancelled
+                     && a.Status != AppointmentStatus.NoShow)
+            .OrderBy(a => a.AppointmentTime)
+            .Take(limit)
+            .Select(a => new
+            {
+                id = a.Id,
+                queueNumber = a.QueueNumber,
+                time = a.AppointmentTime.ToString("HH:mm"),
+                patientName = a.Patient != null
+                    ? a.Patient.FirstName + " " + a.Patient.LastName
+                    : "ناشناس",
+                doctorName = a.Doctor != null && a.Doctor.Employee != null
+                    ? a.Doctor.Employee.FirstName + " " + a.Doctor.Employee.LastName
+                    : "پزشک",
+                status = a.Status.ToString(),
+                statusText = a.Status == AppointmentStatus.Completed ? "تمام‌شده"
+                    : a.Status == AppointmentStatus.InProgress ? "در حال ویزیت"
+                    : a.Status == AppointmentStatus.Arrived ? "حاضر"
+                    : a.Status == AppointmentStatus.Confirmed ? "تاییدشده"
+                    : "رزرو شده",
+            })
+            .ToListAsync(ct);
+
+        return Ok(Application.Common.Models.ApiResponse<object>.Success(list,
+            "نوبت‌های امروز دریافت شد"));
+    }
+
+    /// <summary>
+    /// فعالیت‌های اخیر — مشخصات پرامپت UI بخش ۱ (فرم ۲: جدول فعالیت‌ها از AuditLog)
+    /// </summary>
+    [HttpGet("recent-activities")]
+    [HasPermission("dashboard.view")]
+    public async Task<IActionResult> GetRecentActivities([FromQuery] int limit = 10,
+        CancellationToken ct = default)
+    {
+        limit = Math.Clamp(limit, 1, 50);
+
+        var list = await _unitOfWork.Repository<Domain.Entities.Infrastructure.AuditLog>()
+            .QueryableNoTracking
+            .OrderByDescending(l => l.Timestamp)
+            .Take(limit)
+            .Select(l => new
+            {
+                time = l.Timestamp,
+                timeShamsi = Application.Common.Helpers.PersianDateHelper
+                    .ToShamsiWithTime(l.Timestamp),
+                user = l.Username ?? "سیستم",
+                action = l.ActionType.ToString(),
+                entity = l.EntityName ?? string.Empty,
+                entityId = l.EntityId,
+                module = l.Module ?? string.Empty,
+            })
+            .ToListAsync(ct);
+
+        return Ok(Application.Common.Models.ApiResponse<object>.Success(list,
+            "فعالیت‌های اخیر دریافت شد"));
+    }
+
+    /// <summary>
+    /// هشدارهای داشبورد — موجودی کم، نزدیک انقضا، آزمایش در انتظار
+    /// </summary>
+    [HttpGet("alerts")]
+    [HasPermission("dashboard.view")]
+    public async Task<IActionResult> GetAlerts(CancellationToken ct)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var monthAhead = today.AddDays(30);
+
+        var lowStock = await _unitOfWork.Repository<Domain.Entities.Pharmacy.PharmacyInventory>()
+            .QueryableNoTracking
+            .CountAsync(i => i.IsActive
+                           && i.MinStock > 0
+                           && i.Quantity <= i.MinStock, ct);
+
+        var expiringSoon = await _unitOfWork.Repository<Domain.Entities.Pharmacy.PharmacyInventory>()
+            .QueryableNoTracking
+            .CountAsync(i => i.IsActive
+                           && i.ExpiryDate != null
+                           && i.ExpiryDate >= today
+                           && i.ExpiryDate <= monthAhead, ct);
+
+        var pendingLabOrders = await _unitOfWork.Repository<Domain.Entities.Paraclinical.LabOrder>()
+            .QueryableNoTracking
+            .CountAsync(o => o.Status == Domain.Enums.LabOrderStatus.Ordered, ct);
+
+        return Ok(Application.Common.Models.ApiResponse<object>.Success(new
+        {
+            lowStock,
+            expiringSoon,
+            pendingLabOrders,
+        }, "هشدارهای داشبورد دریافت شد"));
+    }
 }

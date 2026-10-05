@@ -1,11 +1,13 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
+using System.Windows.Input;
 using Sahand.ClinicPro.Desktop.ViewModels;
 
 namespace Sahand.ClinicPro.Desktop.Views;
 
 /// <summary>
-/// کد پشت پنجره ورود — اتصال ViewModel و انتقال رمز عبور امن
+/// کد پشت پنجره ورود — گام U1: انتقال امن رمز + کشیدن پنجره بدون حاشیه +
+/// دکمه نمایش/مخفی رمز + ثبت نام کاربری در تنظیمات محلی (RememberMe)
 /// </summary>
 public partial class LoginWindow : Window
 {
@@ -22,12 +24,58 @@ public partial class LoginWindow : Window
         PasswordBox.PasswordChanged += (_, _) => viewModel.Password = PasswordBox.Password;
         viewModel.LoginSucceeded += OnLoginSucceeded;
 
-        Loaded += (_, _) => UsernameBox.Focus();
+        // بازیابی نام کاربری ذخیره‌شده (مرا به خاطر بسپار) — فایل JSON محلی
+        Loaded += (_, _) =>
+        {
+            UsernameBox.Focus();
+            var saved = Services.LocalSettingsStore.Get("SavedUsername");
+            if (!string.IsNullOrWhiteSpace(saved))
+            {
+                UsernameBox.Text = saved;
+                _viewModel.RememberMe = true;
+                PasswordBox.Focus();
+            }
+        };
     }
 
-    /// <summary>پس از ورود موفق — باز کردن پنجره اصلی</summary>
+    /// <summary>کشیدن پنجره بدون نوار عنوان — دکمه ماوس روی پس‌زمینه</summary>
+    private void OnDragWindow(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ButtonState == MouseButtonState.Pressed)
+            DragMove();
+    }
+
+    /// <summary>دکمه بستن پنجره</summary>
+    private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
+
+    /// <summary>کلید Enter داخل رمز عبور → فرمان ورود</summary>
+    private void OnPasswordKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key is Key.Enter or Key.Return)
+        {
+            e.Handled = true;
+            if (_viewModel.LoginCommand.CanExecute(null))
+                _viewModel.LoginCommand.Execute(null);
+        }
+    }
+
+    /// <summary>نمایش یا مخفی کردن رمز عبور — جابه‌جایی PasswordBox و TextBox</summary>
+    private void OnEyeToggled(object sender, RoutedEventArgs e)
+    {
+        var show = EyeToggle.IsChecked == true;
+        PasswordRevealBox.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        PasswordBox.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
+        if (show)
+            PasswordRevealBox.CaretIndex = PasswordRevealBox.Text.Length;
+    }
+
+    /// <summary>پس از ورود موفق — ذخیره نام کاربری در صورت درخواست و باز کردن پنجره اصلی</summary>
     private void OnLoginSucceeded(object? sender, EventArgs e)
     {
+        // فقط نام کاربری ذخیره می‌شود — هرگز رمز عبور
+        Services.LocalSettingsStore.Set("SavedUsername",
+            _viewModel.RememberMe ? _viewModel.Username : string.Empty);
+
         var main = App.Services.GetRequiredService(typeof(MainWindow)) as MainWindow;
         if (main is null) return;
 

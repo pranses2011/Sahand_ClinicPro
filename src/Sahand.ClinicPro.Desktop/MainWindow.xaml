@@ -10,6 +10,7 @@
         Title="سامانه جامع مدیریت درمانگاه سهند"
         Height="780" Width="1280" MinHeight="620" MinWidth="1000"
         WindowStartupLocation="CenterScreen"
+        FlowDirection="RightToLeft"
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
         Background="{DynamicResource MaterialDesign.Brush.Background}"
         FontFamily="Vazirmatn, Segoe UI, Tahoma">
@@ -51,14 +52,13 @@
     </Window.Resources>
 
     <!-- ═══════════════════════════════════════════════════════════
-         پوسته اصلی — گام ۱۰
-         ساختار: ستون کنار (ناوبری) + هدر (کاربر/تم/خروج) + میزکار
-         همه صفحات در ContentControl میانی با DataTemplate نگاشت می‌شوند
+         پوسته اصلی — ارتقای گام U0 (طبق قوانین کلی پرامپت UI بخش ۱)
+         ساختار: ستون کنار ۲۲۰px + TopBar (مسیر/ساعت/زنگ/تم/کاربر) + میزکار + StatusBar
          ═══════════════════════════════════════════════════════════ -->
     <Grid>
         <Grid.ColumnDefinitions>
-            <!-- ستون کنار راست — ناوبری (RTL) -->
-            <ColumnDefinition Width="240" />
+            <!-- ستون کنار راست — ناوبری (RTL) طبق مشخصات: Width=220 -->
+            <ColumnDefinition Width="220" />
             <!-- میزکار اصلی -->
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
@@ -68,12 +68,15 @@
                 Background="{DynamicResource MaterialDesign.Brush.Primary.Container}">
             <Grid>
                 <Grid.RowDefinitions>
+                    <!-- لوگو و نام درمانگاه (بالا) -->
                     <RowDefinition Height="Auto" />
+                    <!-- منوی درختی ماژول‌ها (وسط - با پیمایش) -->
                     <RowDefinition Height="*" />
+                    <!-- اطلاعات کاربر + خروج (پایین) -->
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <!-- نام سامانه -->
+                <!-- لوگو و نام سامانه -->
                 <StackPanel Grid.Row="0" Margin="16,20,16,16">
                     <materialDesign:PackIcon Kind="Hospital"
                                              Width="40" Height="40"
@@ -86,7 +89,7 @@
                                Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
                 </StackPanel>
 
-                <!-- فهرست ناوبری -->
+                <!-- فهرست ناوبری ماژول‌ها -->
                 <ListBox Grid.Row="1"
                          ItemsSource="{Binding NavItems}"
                          SelectedItem="{Binding SelectedNav}"
@@ -108,17 +111,26 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
 
-                <!-- خروج -->
-                <Button Grid.Row="2"
-                        Command="{Binding LogoutCommand}"
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                        Margin="16,8,16,16"
-                        HorizontalAlignment="Stretch">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Logout" VerticalAlignment="Center" />
-                        <TextBlock Text="خروج از حساب" Margin="8,0,0,0" VerticalAlignment="Center" />
+                <!-- اطلاعات کاربر + خروج -->
+                <StackPanel Grid.Row="2" Margin="16,8,16,16">
+                    <StackPanel Orientation="Horizontal" Margin="4,0,4,8">
+                        <materialDesign:PackIcon Kind="AccountCircle"
+                                                 Width="26" Height="26"
+                                                 VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding CurrentUser}"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Margin="8,0,0,0"
+                                   VerticalAlignment="Center" />
                     </StackPanel>
-                </Button>
+                    <Button Command="{Binding LogoutCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            HorizontalAlignment="Stretch">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Logout" VerticalAlignment="Center" />
+                            <TextBlock Text="خروج از حساب" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -127,46 +139,140 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- هدر — عنوان صفحه + کاربر + تم -->
+            <!-- ═══ TopBar — مسیر صفحه + ساعت شمسی لحظه‌ای + زنگ اعلان + تم + کاربر ═══ -->
             <Border Grid.Row="0"
-                    Padding="24,12"
+                    Padding="24,10,24,8"
                     BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
                     BorderThickness="0,0,0,1">
                 <DockPanel>
+                    <!-- چپ: کاربر و آواتار -->
                     <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-                        <TextBlock Text="{Binding CurrentTitle}"
-                                   FontSize="20" FontWeight="Bold"
-                                   VerticalAlignment="Center" />
+                        <materialDesign:PackIcon Kind="AccountCircle"
+                                                 Width="30" Height="30"
+                                                 VerticalAlignment="Center" />
+                        <StackPanel Margin="8,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding CurrentUser}"
+                                       FontWeight="SemiBold" FontSize="13" />
+                            <TextBlock Text="{Binding CurrentDate}"
+                                       FontSize="10" Opacity="0.7" />
+                        </StackPanel>
                     </StackPanel>
 
+                    <!-- راست: زنگ اعلان با شمارنده + تم -->
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
                         <ToggleButton Command="{Binding ToggleThemeCommand}"
                                       Style="{StaticResource MaterialDesignFlatToggleButton}"
-                                      ToolTip="تغییر تم روشن و تیره"
+                                      ToolTip="تغییر تم روشن و تاریک"
                                       Margin="0,0,16,0">
                             <materialDesign:PackIcon Kind="ThemeLightDark" />
                         </ToggleButton>
 
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <materialDesign:PackIcon Kind="AccountCircle"
-                                                     Width="28" Height="28"
-                                                     VerticalAlignment="Center" />
-                            <StackPanel Margin="8,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding CurrentUser}"
-                                           FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding CurrentDate}"
-                                           FontSize="11" Opacity="0.7" />
+                        <!-- زنگ اعلان — با Badge تعداد خوانده‌نشده -->
+                        <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                Command="{Binding ShowNotificationsCommand}"
+                                ToolTip="مرکز اعلان‌ها">
+                            <Grid>
+                                <materialDesign:PackIcon Kind="BellOutline" />
+                                <!-- نشانگر تعداد — فقط وقتی بزرگ‌تر از صفر -->
+                                <Border CornerRadius="8"
+                                        Background="#e53935"
+                                        MinWidth="16" MinHeight="16"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        Margin="-4,-6,0,0"
+                                        Visibility="{Binding HasUnreadNotifications, Converter={StaticResource BoolToVisibility}}">
+                                    <TextBlock Text="{Binding UnreadCount}"
+                                               FontSize="9" Foreground="White"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- میانه: مسیر صفحه (Breadcrumb) + ساعت شمسی لحظه‌ای -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="Home"
+                                                 Width="16" Height="16"
+                                                 Opacity="0.6"
+                                                 VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Breadcrumb}"
+                                   FontSize="12" Opacity="0.75"
+                                   Margin="6,0,0,0"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding CurrentTitle}"
+                                   FontSize="18" FontWeight="Bold"
+                                   Margin="14,0,0,0"
+                                   VerticalAlignment="Center" />
+
+                        <!-- ساعت زنده شمسی -->
+                        <Border CornerRadius="10"
+                                Background="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                                Padding="10,3"
+                                Margin="16,0,0,0"
+                                VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ClockOutline"
+                                                         Width="14" Height="14"
+                                                         VerticalAlignment="Center"
+                                                         Margin="0,0,6,0" />
+                                <TextBlock Text="{Binding ClockText}"
+                                           FontSize="12"
+                                           FontFamily="Consolas"
+                                           VerticalAlignment="Center" />
                             </StackPanel>
-                        </StackPanel>
+                        </Border>
                     </StackPanel>
                 </DockPanel>
             </Border>
 
-            <!-- میزکار صفحات -->
+            <!-- ═══ میزکار صفحات ═══ -->
             <ContentControl Grid.Row="1"
                             Content="{Binding CurrentPage}" />
+
+            <!-- ═══ StatusBar — وضعیت اتصال + کاربر + لایسنس + تاریخ ═══ -->
+            <Border Grid.Row="2"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                    BorderThickness="0,1,0,0"
+                    Padding="16,4">
+                <DockPanel LastChildFill="False">
+                    <!-- راست: وضعیت آماده -->
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Ellipse Width="8" Height="8"
+                                 Fill="#43a047"
+                                 VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding ConnectionStatus}"
+                                   FontSize="11" Opacity="0.8"
+                                   Margin="6,0,0,0"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- چپ: لایسنس + نسخه -->
+                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="Key"
+                                                 Width="13" Height="13"
+                                                 VerticalAlignment="Center"
+                                                 Foreground="#43a047" />
+                        <TextBlock Text="{Binding LicenseStatus}"
+                                   FontSize="11" Opacity="0.8"
+                                   Margin="4,0,16,0"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Text="نسخه ۱.۲.۰"
+                                   FontSize="10" Opacity="0.5"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
         </Grid>
+
+        <!-- ═══ میزبان پیام‌های شناور — سراسری برای همه صفحات ═══ -->
+        <materialDesign:Snackbar MessageQueue="{Binding SnackbarQueue}"
+                                 VerticalAlignment="Bottom"
+                                 HorizontalAlignment="Center"
+                                 Margin="0,0,0,36"
+                                 Grid.Column="1" />
     </Grid>
 </Window>

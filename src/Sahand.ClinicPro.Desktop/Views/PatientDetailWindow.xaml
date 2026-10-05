@@ -1,0 +1,242 @@
+﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.PatientDetailWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        mc:Ignorable="d"
+        Title="پرونده بیمار"
+        Height="680" Width="860"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize" ShowInTaskbar="False"
+        FlowDirection="RightToLeft"
+        TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+        Background="{DynamicResource MaterialDesign.Brush.Background}"
+        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══════════════════════════════════════════════════════════
+         پرونده بیمار — گام U2 طبق پرامپت UI بخش ۱ (فرم ۵):
+         کارت سربرگ + هشدار آلرژی/مزمن/دارو + تب‌های سوابق + اقدامات سریع
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ کارت سربرگ: عکس + مشخصات خلاصه ═══ -->
+        <materialDesign:Card Grid.Row="0" UniformCornerRadius="14" Padding="18" Margin="0,0,0,10">
+            <DockPanel>
+                <!-- چپ: دکمه‌های چاپ و ویرایش -->
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Top">
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                            ToolTip="چاپ کارت بیمار" Margin="0,0,8,0" Padding="8,6">
+                        <materialDesign:PackIcon Kind="Printer" Width="16" Height="16" />
+                    </Button>
+                </StackPanel>
+
+                <!-- راست: عکس پروفایل -->
+                <Border DockPanel.Dock="Right"
+                        Width="72" Height="72" CornerRadius="36"
+                        Background="#E3F2FD" VerticalAlignment="Center" Margin="14,0,0,0">
+                    <materialDesign:PackIcon Kind="Account"
+                                             Width="40" Height="40"
+                                             Foreground="#1565C0"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center" />
+                </Border>
+
+                <!-- میانه: مشخصات -->
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding FullName}"
+                                   FontSize="19" FontWeight="Bold" VerticalAlignment="Center" />
+                        <Border Background="{DynamicResource MaterialDesign.Brush.Primary}"
+                                CornerRadius="8" Padding="8,1" Margin="10,0,0,0"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="{Binding MedicalRecordNo}"
+                                       Foreground="White" FontSize="11"
+                                       FontFamily="Consolas" />
+                        </Border>
+                    </StackPanel>
+
+                    <UniformGrid Columns="4" Margin="0,10,0,0" TextBlock.FontSize="11">
+                        <StackPanel>
+                            <TextBlock Text="کد ملی" Opacity="0.55" />
+                            <TextBlock Text="{Binding NationalCode}" FontFamily="Consolas" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="موبایل" Opacity="0.55" />
+                            <TextBlock Text="{Binding Mobile}" FontFamily="Consolas" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="سن" Opacity="0.55" />
+                            <TextBlock Text="{Binding AgeText}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="جنسیت" Opacity="0.55" />
+                            <TextBlock Text="{Binding GenderText}" />
+                        </StackPanel>
+                        <StackPanel Margin="0,8,0,0">
+                            <TextBlock Text="بیمه" Opacity="0.55" />
+                            <TextBlock Text="{Binding InsuranceName}" />
+                        </StackPanel>
+                        <StackPanel Margin="0,8,0,0">
+                            <TextBlock Text="شماره بیمه" Opacity="0.55" />
+                            <TextBlock Text="{Binding InsuranceNumber}" FontFamily="Consolas" />
+                        </StackPanel>
+                        <StackPanel Margin="0,8,0,0">
+                            <TextBlock Text="گروه خون" Opacity="0.55" />
+                            <TextBlock Text="{Binding BloodType}" />
+                        </StackPanel>
+                        <StackPanel Margin="0,8,0,0">
+                            <TextBlock Text="شهر" Opacity="0.55" />
+                            <TextBlock Text="{Binding City}" />
+                        </StackPanel>
+                    </UniformGrid>
+                </StackPanel>
+            </DockPanel>
+        </materialDesign:Card>
+
+        <!-- ═══ هشدارهای برجسته پزشکی ═══ -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,10">
+            <!-- آلرژی — قرمز -->
+            <Border Background="#FFEBEE" CornerRadius="10" Padding="12,8"
+                    Visibility="{Binding Allergies.Count, Converter={StaticResource NullToVisibility}}">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Alert" Foreground="#C62828"
+                                                 Width="16" Height="16" VerticalAlignment="Center" />
+                        <TextBlock Text="آلرژی‌ها" Foreground="#C62828"
+                                   FontWeight="Bold" FontSize="12" Margin="8,0,0,0"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Allergies}" Margin="0,6,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#C62828" CornerRadius="11"
+                                        Padding="10,2" Margin="0,0,6,4">
+                                    <TextBlock Text="{Binding}" Foreground="White" FontSize="11" />
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- مزمن — نارنجی -->
+            <Border Background="#FFF3E0" CornerRadius="10" Padding="12,8" Margin="0,6,0,0"
+                    Visibility="{Binding ChronicDiseases.Count, Converter={StaticResource NullToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="🏥 بیماری‌های مزمن" Foreground="#E65100"
+                               FontWeight="Bold" FontSize="12" />
+                    <ItemsControl ItemsSource="{Binding ChronicDiseases}" Margin="0,6,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#FB8C00" CornerRadius="11"
+                                        Padding="10,2" Margin="0,0,6,4">
+                                    <TextBlock Text="{Binding}" Foreground="White" FontSize="11" />
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- داروهای فعلی — آبی -->
+            <Border Background="#E3F2FD" CornerRadius="10" Padding="12,8" Margin="0,6,0,0"
+                    Visibility="{Binding CurrentMedications.Count, Converter={StaticResource NullToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="💊 داروهای در حال مصرف" Foreground="#0D47A1"
+                               FontWeight="Bold" FontSize="12" />
+                    <ItemsControl ItemsSource="{Binding CurrentMedications}" Margin="0,6,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#1E88E5" CornerRadius="11"
+                                        Padding="10,2" Margin="0,0,6,4">
+                                    <TextBlock Text="{Binding}" Foreground="White" FontSize="11" />
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- ═══ تب‌های سوابق ═══ -->
+        <TabControl Grid.Row="3" Background="Transparent">
+            <!-- سوابق ویزیت -->
+            <TabItem Header="📋 سوابق ویزیت">
+                <DataGrid ItemsSource="{Binding Visits}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          CanUserAddRows="False" FontSize="12"
+                          HeadersVisibility="Column"
+                          AlternatingRowBackground="#F7FAFD">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi}" Width="110" />
+                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName}" Width="160" />
+                        <DataGridTextColumn Header="شکایت / تشخیص" Binding="{Binding Diagnosis}" Width="*" />
+                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status}" Width="110" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <!-- نسخه‌ها -->
+            <TabItem Header="💊 نسخه‌ها">
+                <DataGrid ItemsSource="{Binding Prescriptions}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          CanUserAddRows="False" FontSize="12"
+                          HeadersVisibility="Column"
+                          AlternatingRowBackground="#F7FAFD">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi}" Width="110" />
+                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName}" Width="160" />
+                        <DataGridTextColumn Header="تعداد اقلام" Binding="{Binding ItemsCount}" Width="100" />
+                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <!-- آزمایش‌ها — گام U10 -->
+            <TabItem Header="🧪 آزمایش‌ها">
+                <controls:EmptyState IconKind="TestTube"
+                                     Message="آزمایش‌های بیمار در گام U10 متصل می‌شود" />
+            </TabItem>
+
+            <!-- فاکتورها — گام U8 -->
+            <TabItem Header="💰 فاکتورها">
+                <controls:EmptyState IconKind="ReceiptText"
+                                     Message="فاکتورهای بیمار در گام U8 متصل می‌شود" />
+            </TabItem>
+
+            <!-- نوبت‌ها — گام U4 -->
+            <TabItem Header="📅 نوبت‌ها">
+                <controls:EmptyState IconKind="CalendarClock"
+                                     Message="نوبت‌های بیمار در گام U4 متصل می‌شود" />
+            </TabItem>
+
+            <!-- اسناد — گام U15 -->
+            <TabItem Header="📎 اسناد">
+                <controls:EmptyState IconKind="FileMultiple"
+                                     Message="اسناد و پیوست‌های بیمار در گام U15 متصل می‌شود" />
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
