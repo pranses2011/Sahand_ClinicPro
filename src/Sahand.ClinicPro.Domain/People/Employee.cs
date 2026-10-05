@@ -67,6 +67,14 @@ public class Employee : AuditableEntity, ISoftDeletable
     /// <summary>حقوق پایه به ریال</summary>
     public decimal BaseSalary { get; set; } = 0m;
 
+    /// <summary>
+    /// درصد حقوق از سود خدمات — اعشار (مثلاً ۳۰ = ۳۰٪)
+    /// این درصد فقط از «سود خدمات انجام‌شده توسط خودِ این پرسنل»
+    /// محاسبه می‌شود؛ نه از کل دریافتی درمانگاه و نه از کل فروش.
+    /// صفر = فقط حقوق پایه (بدون حقوق درصدی)
+    /// </summary>
+    public decimal CommissionPercent { get; set; } = 0m;
+
     /// <summary>نام بانک</summary>
     public string? BankName { get; set; }
 
