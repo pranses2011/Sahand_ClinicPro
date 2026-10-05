@@ -1,0 +1,248 @@
+﻿@page "/licenses"
+@using Sahand.ClinicPro.LicensePortal.Services
+@inject LicenseAdminService Admin
+
+<PageTitle>مدیریت لایسنس‌ها — پنل لایسنس سهند</PageTitle>
+
+<h1 class="page-title">🧾 مدیریت لایسنس‌ها</h1>
+
+<div class="toolbar">
+    <div class="filters">
+        <button class="chip @(Filter is null ? "chip-active" : "")" @onclick="() => SetFilter(null)">همه</button>
+        <button class="chip @(Filter == "active" ? "chip-active" : "")" @onclick='() => SetFilter("active")'>فعال</button>
+        <button class="chip @(Filter == "expired" ? "chip-active" : "")" @onclick='() => SetFilter("expired")'>منقضی</button>
+        <button class="chip @(Filter == "pending" ? "chip-active" : "")" @onclick='() => SetFilter("pending")'>در انتظار</button>
+    </div>
+    <button class="btn-primary" @onclick="OpenIssueForm">＋ صدور لایسنس جدید</button>
+</div>
+
+@if (_rows.Count == 0)
+{
+    <div class="panel"><div class="empty">لایسنسی در این فهرست نیست</div></div>
+}
+else
+{
+    <div class="panel">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>کلید لایسنس</th>
+                    <th>نوع</th>
+                    <th>کاربر</th>
+                    <th>پزشک</th>
+                    <th>بیمار</th>
+                    <th>انقضا</th>
+                    <th>وضعیت</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in _rows)
+                {
+                    <tr>
+                        <td class="mono">@row.LicenseKey</td>
+                        <td>@row.TypeText</td>
+                        <td>@row.MaxUsers</td>
+                        <td>@row.MaxDoctors</td>
+                        <td>@row.MaxPatients</td>
+                        <td>@row.ExpiryText</td>
+                        <td><span class="badge" style="background:@row.StatusColor">@row.StatusText</span></td>
+                        <td class="actions">
+                            <button class="btn-small" @onclick="() => OpenRenew(row)">تمدید</button>
+                            <button class="btn-small danger" @onclick="() => Revoke(row)">ابطال</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (_showIssueForm)
+{
+    <div class="modal-backdrop" @onclick="CloseIssueForm">
+        <div class="modal" @onclick:stopPropagation="true">
+            <h3>صدور لایسنس جدید</h3>
+
+            <div class="form-row">
+                <label>نوع لایسنس</label>
+                <select @bind="_issue.LicenseType">
+                    <option value="1">اشتراکی</option>
+                    <option value="2">دائمی</option>
+                </select>
+            </div>
+
+            @if (_issue.LicenseType == 1)
+            {
+                <div class="form-row">
+                    <label>مدت اشتراک (ماه)</label>
+                    <input type="number" min="1" max="60" @bind="_issue.DurationMonths" />
+                </div>
+            }
+
+            <div class="form-cols">
+                <div class="form-row">
+                    <label>حداکثر کاربر</label>
+                    <input type="number" min="1" @bind="_issue.MaxUsers" />
+                </div>
+                <div class="form-row">
+                    <label>حداکثر پزشک</label>
+                    <input type="number" min="1" @bind="_issue.MaxDoctors" />
+                </div>
+                <div class="form-row">
+                    <label>حداکثر بیمار</label>
+                    <input type="number" min="1" @bind="_issue.MaxPatients" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label>ماژول‌های فعال</label>
+                <div class="modules">
+                    @foreach (var module in LicenseAdminService.ModuleCatalog)
+                    {
+                        <label class="module-chip">
+                            <input type="checkbox" value="@module"
+                                   checked="@_issue.EnabledModules.Contains(module)"
+                                   @onchange="e => ToggleModule(module, e.Value)" />
+                            @module
+                        </label>
+                    }
+                </div>
+            </div>
+
+            @if (_issuedKey is not null)
+            {
+                <div class="issued-key">
+                    کلید صادرشده:
+                    <code>@_issuedKey</code>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <div class="error">@_error</div>
+            }
+
+            <div class="modal-actions">
+                <button class="btn-primary" @onclick="Issue">صدور</button>
+                <button class="btn-ghost" @onclick="CloseIssueForm">بستن</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_renewRow is not null)
+{
+    <div class="modal-backdrop" @onclick="() => _renewRow = null">
+        <div class="modal" @onclick:stopPropagation="true">
+            <h3>تمدید لایسنس @(_renewRow.LicenseKey)</h3>
+            <div class="form-row">
+                <label>مدت تمدید (ماه)</label>
+                <input type="number" min="1" max="60" @bind="_renewMonths" />
+            </div>
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <div class="error">@_error</div>
+            }
+            <div class="modal-actions">
+                <button class="btn-primary" @onclick="Renew">تمدید</button>
+                <button class="btn-ghost" @onclick='() => _renewRow = null'>انصراف</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<LicenseRowDto> _rows = new();
+    private string? Filter;
+    private bool _showIssueForm;
+    private IssueLicenseRequest _issue = new();
+    private string? _issuedKey;
+    private string? _error;
+    private LicenseRowDto? _renewRow;
+    private int _renewMonths = 12;
+
+    protected override async Task OnInitializedAsync() => await ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        _rows = await Admin.ListAsync(Filter);
+    }
+
+    private async Task SetFilter(string? filter)
+    {
+        Filter = filter;
+        await ReloadAsync();
+    }
+
+    private void OpenIssueForm()
+    {
+        _issue = new IssueLicenseRequest
+        {
+            LicenseType = 1,
+            DurationMonths = 12,
+            MaxUsers = 5,
+            MaxDoctors = 10,
+            MaxPatients = 5000,
+            EnabledModules = LicenseAdminService.ModuleCatalog.Take(8).ToList()
+        };
+        _issuedKey = null;
+        _error = null;
+        _showIssueForm = true;
+    }
+
+    private void CloseIssueForm() => _showIssueForm = false;
+
+    private void ToggleModule(string module, object? value)
+    {
+        if (value is true && !_issue.EnabledModules.Contains(module))
+            _issue.EnabledModules.Add(module);
+        else if (value is false)
+            _issue.EnabledModules.Remove(module);
+    }
+
+    private async Task Issue()
+    {
+        _error = null;
+        if (_issue.EnabledModules.Count == 0)
+        {
+            _error = "انتخاب حداقل یک ماژول الزامی است";
+            return;
+        }
+
+        var row = await Admin.IssueAsync(_issue);
+        _issuedKey = row.LicenseKey;
+        await ReloadAsync();
+    }
+
+    private void OpenRenew(LicenseRowDto row)
+    {
+        _renewRow = row;
+        _renewMonths = 12;
+        _error = null;
+    }
+
+    private async Task Renew()
+    {
+        if (_renewRow is null) return;
+        _error = null;
+
+        if (!await Admin.RenewAsync(_renewRow.Id, _renewMonths))
+        {
+            _error = "تمدید ناموفق بود";
+            return;
+        }
+
+        _renewRow = null;
+        await ReloadAsync();
+    }
+
+    private async Task Revoke(LicenseRowDto row)
+    {
+        _error = null;
+        if (await Admin.RevokeAsync(row.Id))
+            await ReloadAsync();
+        else
+            _error = "ابطال ناموفق بود";
+    }
+}

@@ -1,0 +1,48 @@
+﻿@page "/check-logs"
+@using Sahand.ClinicPro.LicensePortal.Services
+@inject LicenseAdminService Admin
+
+<PageTitle>لاگ اعتبارسنجی — پنل لایسنس سهند</PageTitle>
+
+<h1 class="page-title">📜 لاگ اعتبارسنجی لایسنس</h1>
+<p class="page-desc">نتایج بررسی‌های روزانه و برخط درمانگاه‌ها — heartbeat هر ۲۴ ساعت</p>
+
+@if (_logs.Count == 0)
+{
+    <div class="panel"><div class="empty">لاگی ثبت نشده است</div></div>
+}
+else
+{
+    <div class="panel">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>زمان بررسی</th>
+                    <th>نتیجه</th>
+                    <th>برخط</th>
+                    <th>پیام</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in _logs)
+                {
+                    <tr>
+                        <td>@(log.CheckDate?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "—")</td>
+                        <td>@log.ResultText</td>
+                        <td>@(log.IsOnline ? "بله" : "خیر")</td>
+                        <td>@(log.Message ?? "—")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private List<CheckLogRow> _logs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _logs = await Admin.RecentChecksAsync(100);
+    }
+}

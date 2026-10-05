@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- ═══════════════════════════════════════════════════════════════
+       پنل مدیریت لایسنس (License Portal) — Blazor Server در .NET 8
+       سامانه مجزای فروش و مدیریت لایسنس با دیتابیس اختصاصی
+       (مشتریان، لایسنس‌ها، پرداخت‌ها، کاتالوگ ماژول‌ها) — گام ۲۵
+       تعامل Server به‌صورت سراسری فعال است (معادل Blazor Server کلاسیک).
+       ═══════════════════════════════════════════════════════════════ -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- استفاده از امکانات لایه کاربرد (CQRS) و زیرساخت (رمزنگاری/کلید RSA) -->
+    <ProjectReference Include="..\Sahand.ClinicPro.Application\Sahand.ClinicPro.Application.csproj" />
+    <ProjectReference Include="..\Sahand.ClinicPro.Infrastructure\Sahand.ClinicPro.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

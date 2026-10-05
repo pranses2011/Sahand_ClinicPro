@@ -13,6 +13,9 @@
     <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- نکته: ~۶۲ هشدار اطلاع‌رسانی MSB3277 (تعارض نسخه اسمبلی‌های WindowsBase و ...)
+         ناشی از ارجاع مستقیم DLL دسکتاپ است — بی‌ضرر و مورد انتظار؛ تست‌ها سبزند.
+         پروژه‌های سورس بدون هیچ هشدار بیلد می‌شوند. -->
     <!-- خروجی دسکتاپ برای ارجاع HintPath -->
     <DesktopDll>..\..\src\Sahand.ClinicPro.Desktop\bin\$(Configuration)\net8.0-windows\Sahand.ClinicPro.Desktop.dll</DesktopDll>
   </PropertyGroup>

@@ -1,0 +1,40 @@
+﻿@inherits LayoutComponentBase
+
+<div class="shell" dir="rtl">
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="logo">🔑</span>
+            <div>
+                <div class="brand-title">پنل لایسنس سهند</div>
+                <div class="brand-sub">Sahand ClinicPro</div>
+            </div>
+        </div>
+        <nav class="nav">
+            <NavLink class="nav-item" href="/" Match="NavLinkMatch.All">
+                <span class="ico">📊</span> داشبورد
+            </NavLink>
+            <NavLink class="nav-item" href="/licenses">
+                <span class="ico">🧾</span> مدیریت لایسنس‌ها
+            </NavLink>
+            <NavLink class="nav-item" href="/activation-requests">
+                <span class="ico">⏳</span> درخواست‌های فعال‌سازی
+            </NavLink>
+            <NavLink class="nav-item" href="/check-logs">
+                <span class="ico">📜</span> لاگ اعتبارسنجی
+            </NavLink>
+        </nav>
+        <div class="sidebar-foot">
+            نسخه ۱.۱.۰ — گام V9
+        </div>
+    </aside>
+
+    <main class="main">
+        @Body
+    </main>
+</div>
+
+<div id="blazor-error-ui">
+    خطای غیرمنتظره رخ داد.
+    <a href="" class="reload">بازخوانی</a>
+    <a class="dismiss">✕</a>
+</div>

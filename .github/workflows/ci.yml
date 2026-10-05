@@ -24,8 +24,17 @@ jobs:
       - name: ساخت کامل Solution
         run: dotnet build Sahand.ClinicPro.sln --no-restore -c Release
 
-      - name: اجرای تست‌ها
-        run: dotnet test Sahand.ClinicPro.sln --no-build -c Release --logger "trx" --results-directory ./TestResults
+      - name: اجرای تست‌ها + پوشش کد (B4 چرخه ۱۲)
+        run: dotnet test Sahand.ClinicPro.sln --no-build -c Release --logger "trx" --results-directory ./TestResults --collect:"XPlat Code Coverage" --results-directory ./TestResults/Coverage
+
+      - name: خلاصه پوشش
+        if: always()
+        run: |
+          echo "## پوشش کد" >> $GITHUB_STEP_SUMMARY
+          for f in $(find TestResults -name "cobertura.xml" 2>/dev/null); do
+            echo "بیننده: $f" >> $GITHUB_STEP_SUMMARY
+          done
+          find TestResults -name "cobertura.xml" -exec echo "آرتیفکت: {}" \;
 
       - name: تولید سند OpenAPI (چرخه دوازدهم B3)
         run: |
