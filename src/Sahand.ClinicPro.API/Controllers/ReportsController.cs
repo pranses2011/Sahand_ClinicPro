@@ -159,7 +159,19 @@ public partial class ReportsController : ApiBaseController
                 new { id = "chart-payment-methods", title = "سهم روش‌های پرداخت", description = "نمودار دونات تفکیک درآمد نقدی/کارت/آنلاین/…", paramsList = new[] { "fromDate", "toDate" } },
                 new { id = "chart-gender-mix", title = "توزیع جنسیت بیماران", description = "نمودار دونات نسبت مرد/زن کل بیماران", paramsList = Array.Empty<string>() },
                 new { id = "chart-age-brackets", title = "توزیع سنی بیماران", description = "نمودار ستونی رده‌های سنی (کودک تا سالمند)", paramsList = Array.Empty<string>() },
-                new { id = "chart-top-services", title = "پردرآمدترین خدمات", description = "نمودار میله‌ای افقی رتبه‌بندی خدمات", paramsList = new[] { "fromDate", "toDate", "top" } }
+                new { id = "chart-top-services", title = "پردرآمدترین خدمات", description = "نمودار میله‌ای افقی رتبه‌بندی خدمات", paramsList = new[] { "fromDate", "toDate", "top" } },
+                // چرخه دوازدهم — دسته دوم گزارش‌های نموداری (فاز H)
+                new { id = "chart-branch-revenue", title = "درآمد به تفکیک شعبه", description = "نمودار ستونی مقایسه درآمد شعبه‌ها", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-insurance-mix", title = "سهم بیمه‌گران از فاکتورها", description = "نمودار دونات مبلغ فاکتورهای هر بیمه‌گر", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-receivable-aging", title = "سن بدهی مطالبات", description = "نمودار ستونی مانده‌ها در رده‌های ۰-۳۰/۳۱-۶۰/۶۱-۹۰/۹۰+ روز", paramsList = Array.Empty<string>() },
+                new { id = "chart-new-vs-returning", title = "سهم بیمار جدید از نوبت‌ها", description = "نمودار دونات ویزیت اول در برابر بازگشتی", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-new-patients-trend", title = "روند ماهانه بیمار جدید", description = "نمودار سطحی ثبت بیمار جدید به تفکیک ماه شمسی", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-top-debtors", title = "بدهکاران برتر", description = "نمودار میله‌ای افقی بیشترین مانده بدهی بیماران", paramsList = new[] { "fromDate", "toDate", "top" } },
+                new { id = "chart-appointment-status", title = "ترکیب وضعیت نوبت‌ها", description = "نمودار دونات نوبت‌ها به تفکیک وضعیت", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-lab-top-tests", title = "پرتکرارترین آزمون‌ها", description = "نمودار میله‌ای افقی پرتکرارترین تست‌های آزمایشگاه", paramsList = new[] { "fromDate", "toDate", "top" } },
+                new { id = "chart-top-medications", title = "پرمصرف‌ترین داروها", description = "نمودار میله‌ای افقی پرمصرف‌ترین داروهای نسخه", paramsList = new[] { "fromDate", "toDate", "top" } },
+                new { id = "chart-salary-share", title = "سهم پرسنل از حقوق درصدی", description = "نمودار دونات حقوق درصدی پرسنل در آخرین دوره", paramsList = Array.Empty<string>() },
+                new { id = "chart-prescription-trend", title = "روند روزانه صدور نسخه", description = "نمودار سطحی تعداد نسخه در هر روز", paramsList = new[] { "fromDate", "toDate" } }
             }}
         };
 
@@ -232,6 +244,18 @@ public partial class ReportsController : ApiBaseController
             "chart-gender-mix" => await ChartGenderMixAsync(),
             "chart-age-brackets" => await ChartAgeBracketsAsync(),
             "chart-top-services" => await ChartTopServicesAsync(from, to, top),
+            // ── گزارش‌های نموداری دسته دوم — چرخه دوازدهم ──
+            "chart-branch-revenue" => await ChartBranchRevenueAsync(from, to),
+            "chart-insurance-mix" => await ChartInsuranceMixAsync(from, to),
+            "chart-receivable-aging" => await ChartReceivableAgingAsync(),
+            "chart-new-vs-returning" => await ChartNewVsReturningAsync(from, to),
+            "chart-new-patients-trend" => await ChartNewPatientsTrendAsync(from, to),
+            "chart-top-debtors" => await ChartTopDebtorsAsync(from, to, top),
+            "chart-appointment-status" => await ChartAppointmentStatusAsync(from, to),
+            "chart-lab-top-tests" => await ChartLabTopTestsAsync(from, to, top),
+            "chart-top-medications" => await ChartTopMedicationsAsync(from, to, top),
+            "chart-salary-share" => await ChartSalaryShareAsync(),
+            "chart-prescription-trend" => await ChartPrescriptionTrendAsync(from, to),
             _ => Ok(ApiResponse<object>.Success(new
             {
                 available = false,
