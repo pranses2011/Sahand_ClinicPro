@@ -14,6 +14,7 @@ using Sahand.ClinicPro.Application.Features.Doctors.Commands.SaveDoctorSchedule;
 using Sahand.ClinicPro.Application.Features.Doctors.Queries.GetDoctorAbsences;
 using Sahand.ClinicPro.Application.Features.Doctors.Queries.GetDoctorPerformance;
 using Sahand.ClinicPro.Application.Features.Doctors.Queries.GetDoctorSchedule;
+using Sahand.ClinicPro.Application.Features.Appointments.Queries.GetCalendarSummary;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -147,6 +148,17 @@ public class DoctorsController : ApiBaseController
     public async Task<IActionResult> GetPerformance(long id)
     {
         var result = await _mediator.Send(new GetDoctorPerformanceQuery(id));
+        return ToResponse(result);
+    }
+
+    /// <summary>خلاصه تقویم ماهانه پزشک — تعداد نوبت آزاد و تعطیلات</summary>
+    /// <param name="id">شناسه پزشک</param>
+    /// <param name="year">سال شمسی</param>
+    /// <param name="month">ماه شمسی</param>
+    [HttpGet("{id:long}/calendar-summary")]
+    public async Task<IActionResult> GetCalendarSummary(long id, [FromQuery] int year, [FromQuery] int month)
+    {
+        var result = await _mediator.Send(new GetCalendarSummaryQuery(id, year, month));
         return ToResponse(result);
     }
 }
