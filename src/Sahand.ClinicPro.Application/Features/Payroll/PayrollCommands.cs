@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Domain.Common;
+using Sahand.ClinicPro.Domain.Entities.Billing;
 using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Entities.Personnel;
 using Sahand.ClinicPro.Domain.Enums;
@@ -11,9 +12,12 @@ using Sahand.ClinicPro.Domain.Interfaces;
 namespace Sahand.ClinicPro.Application.Features.Payroll.GenerateSalaries;
 
 /// <summary>
-/// فرمان تولید حقوق دوره — گام R3
+/// فرمان تولید حقوق دوره — گام R3 + حقوق درصدی چرخه نهم
 /// برای همه کارکنان فعال (یا یک کارمند مشخص) از قرارداد و حضوروغیاب همان ماه
-/// محاسبه می‌کند و در EmployeeSalary ثبت/به‌روزرسانی می‌کند (idempotent)
+/// محاسبه می‌کند و در EmployeeSalary ثبت/به‌روزرسانی می‌کند (idempotent).
+/// حقوق درصدی هر پرسنل از «سود خدمات انجام‌شده توسط خودش» در همان ماه
+/// (اقلام فاکتور منتسب به او با فاکتور معتبر) × درصد پرسنل محاسبه می‌شود —
+/// نه از کل دریافتی درمانگاه و نه از کل فروش.
 /// </summary>
 public sealed record GenerateSalariesCommand(int Year, int Month, long? EmployeeId = null)
     : IRequest<Result<int>>;
@@ -76,9 +80,28 @@ public sealed class GenerateSalariesCommandHandler
                             a.AttendanceDate >= rangeFrom && a.AttendanceDate < rangeTo)
                 .SumAsync(a => (decimal?)a.OvertimeHours, cancellationToken) ?? 0m;
 
-            // محاسبه با قواعد ۱۴۰۴
+            // ═══ حقوق درصدی — مبنا: سود خدمات انجام‌شده توسط خودِ این پرسنل ═══
+            // فقط اقلام فاکتورِ منتسب به او (PerformedById) با فاکتور معتبر
+            // (بدون پیش‌نویس/ابطال/برگشت هزینه) در بازه ماه؛ سود هر قلم =
+            // مبلغ نهایی قلم − (هزینه عکس‌فوری هر واحد × تعداد)
+            var rangeFromDt = rangeFrom.ToDateTime(TimeOnly.MinValue);
+            var rangeToDt = rangeTo.ToDateTime(TimeOnly.MinValue);
+            var serviceProfitBase = await _unitOfWork.Repository<InvoiceItem>().QueryableNoTracking
+                .Where(i => i.PerformedById == employee.Id && !i.IsDeleted &&
+                            i.Invoice != null && !i.Invoice.IsDeleted &&
+                            i.Invoice.InvoiceDate >= rangeFromDt && i.Invoice.InvoiceDate < rangeToDt &&
+                            (i.Invoice.Status == InvoiceStatus.Issued ||
+                             i.Invoice.Status == InvoiceStatus.PartiallyPaid ||
+                             i.Invoice.Status == InvoiceStatus.Paid))
+                .SumAsync(i => (decimal?)(i.TotalPrice - i.UnitCost * i.Quantity),
+                    cancellationToken) ?? 0m;
+
+            // محاسبه با قواعد ۱۴۰۴ + حقوق درصدی از سود خدمات انجامی
             var result = PayrollCalculator.Calculate(
-                new PayrollCalculator.PayrollInput(baseSalary, overtimeHours));
+                new PayrollCalculator.PayrollInput(
+                    baseSalary, overtimeHours,
+                    CommissionPercent: employee.CommissionPercent,
+                    ServiceProfit: serviceProfitBase));
 
             // ثبت یا به‌روزرسانی — idempotent برای هر کارمند×دوره
             var existing = await _unitOfWork.Repository<EmployeeSalary>().QueryableTracking
@@ -93,6 +116,9 @@ public sealed class GenerateSalariesCommandHandler
                 if (existing.Status == SalaryStatus.Paid) continue;
 
                 existing.BaseSalary = baseSalary;
+                existing.CommissionPercent = employee.CommissionPercent;
+                existing.ServiceProfitBase = serviceProfitBase;
+                existing.ServiceCommission = result.ServiceCommission;
                 existing.Overtime = result.OvertimePay;
                 existing.Deductions = 0m;
                 existing.Insurance = result.Insurance;
@@ -108,6 +134,9 @@ public sealed class GenerateSalariesCommandHandler
                     PeriodYear = request.Year,
                     PeriodMonth = request.Month,
                     BaseSalary = baseSalary,
+                    CommissionPercent = employee.CommissionPercent,
+                    ServiceProfitBase = serviceProfitBase,
+                    ServiceCommission = result.ServiceCommission,
                     Overtime = result.OvertimePay,
                     Deductions = 0m,
                     Insurance = result.Insurance,
