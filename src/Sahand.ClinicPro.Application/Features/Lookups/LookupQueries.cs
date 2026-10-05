@@ -6,6 +6,7 @@ using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Domain.Interfaces;
 using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
+using Sahand.ClinicPro.Domain.Entities.Billing;
 
 namespace Sahand.ClinicPro.Application.Features.Lookups;
 
@@ -361,5 +362,65 @@ public class GetEmployeesQueryHandler : IRequestHandler<GetEmployeesQuery, Resul
             .ToListAsync(cancellationToken);
 
         return Result<List<EmployeeItemDto>>.Success(items);
+    }
+}
+
+
+/// <summary>آیتم خدمت با قیمت تعرفه جاری — برای اقلام فاکتور (گام U8)</summary>
+public record ServiceTariffOptionDto(
+    long ServiceId,
+    string? ServiceCode,
+    string ServiceName,
+    string ServiceTypeName,
+    decimal Price,
+    decimal InsuranceShare,
+    decimal PatientShare);
+
+/// <summary>پرس‌وجوی خدمات فعال با قیمت تعرفه سال جاری</summary>
+public record GetServicesQuery(string? Search = null) : IRequest<Result<List<ServiceTariffOptionDto>>>;
+
+/// <summary>گرداننده خدمات با تعرفه</summary>
+public class GetServicesQueryHandler : IRequestHandler<GetServicesQuery, Result<List<ServiceTariffOptionDto>>>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده</summary>
+    public GetServicesQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>اجرا — خدمت فعال + قیمت تعرفه ۱۴۰۴ یا قیمت پایه</summary>
+    public async Task<Result<List<ServiceTariffOptionDto>>> Handle(GetServicesQuery request,
+        CancellationToken cancellationToken)
+    {
+        var year = 1404;
+        var query = _unitOfWork.Repository<Service>().QueryableNoTracking
+            .Where(x => x.IsActive);
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var term = request.Search.Trim();
+            query = query.Where(x => x.ServiceName.Contains(term) ||
+                                     x.ServiceCode != null && x.ServiceCode.Contains(term));
+        }
+
+        var services = await query.OrderBy(x => x.ServiceName).Take(60).ToListAsync(cancellationToken);
+        var serviceIds = services.Select(x => x.Id).ToList();
+        var tariffs = await _unitOfWork.Repository<Tariff>().QueryableNoTracking
+            .Where(t => serviceIds.Contains(t.ServiceId) && t.InsuranceCompanyId == null && t.IsActive)
+            .ToListAsync(cancellationToken);
+        var tariffByService = tariffs.GroupBy(t => t.ServiceId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(t => t.Year).First());
+
+        var items = new List<ServiceTariffOptionDto>();
+        foreach (var x in services)
+        {
+            var tariff = tariffByService.TryGetValue(x.Id, out var t) ? t : null;
+            items.Add(new ServiceTariffOptionDto(
+                x.Id, x.ServiceCode, x.ServiceName,
+                x.ServiceType.ToString(),
+                tariff is not null ? tariff.Price : x.DefaultPrice,
+                tariff is not null ? tariff.InsuranceShare : 0m,
+                tariff is not null ? tariff.PatientShare : 0m));
+        }
+
+        return Result<List<ServiceTariffOptionDto>>.Success(items);
     }
 }

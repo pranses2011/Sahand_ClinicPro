@@ -85,4 +85,12 @@ public class LookupsController : ApiBaseController
         var result = await _mediator.Send(new GetEmployeesQuery());
         return ToResponse(result);
     }
+
+    /// <summary>فهرست خدمات فعال با قیمت تعرفه — برای اقلام فاکتور</summary>
+    [HttpGet("services")]
+    public async Task<IActionResult> GetServices([FromQuery] string? search)
+    {
+        var result = await _mediator.Send(new GetServicesQuery(search));
+        return ToResponse(result);
+    }
 }

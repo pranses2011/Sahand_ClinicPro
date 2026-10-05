@@ -6,201 +6,548 @@ using Sahand.ClinicPro.Desktop.Views;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
-/// <summary>ردیف فاکتور — منطبق با InvoiceListDto سرور</summary>
+/// <summary>ردیف فاکتور اخیر</summary>
 public record InvoiceRow(
     long Id,
-    string? Number,
+    string InvoiceNumber,
+    string DateShamsi,
     string PatientName,
-    string Date,
-    decimal TotalAmount,
-    decimal PaidAmount,
-    decimal RemainingAmount,
-    string PaymentText,
-    string StatusText);
+    decimal Total,
+    decimal Paid,
+    string PaymentStatusText,
+    string PaymentStatusColor);
+
+/// <summary>تراکنش صندوق امروز</summary>
+public record CashRow(
+    long Id, string? Number, string Time, long? InvoiceId,
+    string PatientName, decimal Amount, string MethodText);
+
+/// <summary>خدمت قابل افزودن به فاکتور</summary>
+public record ServiceOption(
+    long ServiceId, string? ServiceCode, string ServiceName,
+    decimal Price, decimal InsuranceShare, decimal PatientShare);
+
+/// <summary>قلم فاکتور قابل ویرایش</summary>
+public partial class InvoiceItemVM : ObservableObject
+{
+    public long? ServiceId { get; init; }
+    public string Code { get; init; } = "—";
+    public string Name { get; init; } = string.Empty;
+    public decimal BasePrice { get; init; }
+
+    [ObservableProperty] private int _quantity = 1;
+    [ObservableProperty] private decimal _unitPrice;
+    [ObservableProperty] private decimal _insuranceShare;
+    [ObservableProperty] private decimal _patientShare;
+
+    public decimal Total => Quantity * UnitPrice;
+    public decimal TotalInsurance => Quantity * InsuranceShare;
+    public decimal TotalPatient => Quantity * PatientShare;
+    partial void OnQuantityChanged(int value) => RaiseTotals();
+    partial void OnUnitPriceChanged(decimal value) => RaiseTotals();
+    partial void OnInsuranceShareChanged(decimal value) => RaiseTotals();
+    partial void OnPatientShareChanged(decimal value) => RaiseTotals();
+    private void RaiseTotals()
+    {
+        OnPropertyChanged(nameof(Total));
+        OnPropertyChanged(nameof(TotalInsurance));
+        OnPropertyChanged(nameof(TotalPatient));
+    }
+}
 
 /// <summary>
-/// ViewModel مالی و صندوق — فهرست فاکتورها با فیلتر وضعیت پرداخت
+/// ViewModel مالی و صندوق — گام U8 طبق پرامپت UI بخش ۳ (فرم ۱۴ و ۱۵):
+/// کارت‌های آماری صندوق + فرم صدور فاکتور با اقلام K و پنل خلاصه +
+/// روش‌های پرداخت + فاکتورهای اخیر + تراکنش‌های امروز
 /// </summary>
 public partial class BillingViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
-    private const int PageSize = 20;
+    private readonly ISnackbarService _snackbar;
 
-    /// <summary>عنوان صفحه</summary>
+    /// <summary>عنوان</summary>
     public override string Title => "مالی و صندوق";
 
-    /// <summary>فاکتورهای صفحه فعلی</summary>
+    /* ── کارت‌های صندوق ── */
+    [ObservableProperty] private int _invoiceCount;
+    [ObservableProperty] private string _cashTotalDisplay = "۰";
+    [ObservableProperty] private string _cardTotalDisplay = "۰";
+    [ObservableProperty] private string _netTotalDisplay = "۰";
+    [ObservableProperty] private decimal _cashTotal;
+    [ObservableProperty] private decimal _cardTotal;
+    [ObservableProperty] private decimal _netTotal;
+
+    /* ── فاکتورهای اخیر ── */
     [ObservableProperty]
     private ObservableCollection<InvoiceRow> _invoices = new();
 
-    /// <summary>فاکتور انتخاب‌شده</summary>
     [ObservableProperty]
     private InvoiceRow? _selectedInvoice;
 
-    /// <summary>جستجو</summary>
-    [ObservableProperty]
-    private string _searchTerm = string.Empty;
+    /* ── تراکنش‌های امروز ── */
+    public ObservableCollection<CashRow> Transactions { get; } = new();
 
-    /// <summary>شماره صفحه</summary>
-    [ObservableProperty]
-    private int _pageNumber = 1;
-
-    /// <summary>تعداد صفحات</summary>
-    [ObservableProperty]
-    private int _totalPages = 1;
-
-    /// <summary>تعداد کل</summary>
-    [ObservableProperty]
-    private int _totalCount;
-
-    /// <summary>نمایه وضعیت پرداخت فیلتر — صفر یعنی همه</summary>
-    [ObservableProperty]
-    private int _paymentFilterIndex;
-
-    /// <summary>برچسب وضعیت پرداخت</summary>
-    public string[] PaymentLabels { get; } =
-        { "پرداخت‌نشده", "پرداخت جزیی", "پرداخت‌شده", "پرداخت اضافه" };
-
-    /// <summary>سازنده با تزریق کلاینت API</summary>
-    public BillingViewModel(IApiClient api)
+    /// <summary>سازنده</summary>
+    public BillingViewModel(IApiClient api, ISnackbarService snackbar)
     {
         _api = api;
+        _snackbar = snackbar;
         _ = LoadAsync();
     }
 
-    /// <summary>بارگذاری صفحه فعلی</summary>
+    /// <summary>بارگذاری کارت‌ها + فاکتورها + تراکنش‌ها</summary>
     [RelayCommand]
     public async Task LoadAsync()
     {
         IsBusy = true;
         ErrorMessage = string.Empty;
 
-        var endpoint = $"invoices?page={PageNumber}&pageSize={PageSize}" +
-                       (PaymentFilterIndex > 0 ? $"&status={PaymentFilterIndex}" : string.Empty) +
-                       (!string.IsNullOrWhiteSpace(SearchTerm)
-                           ? $"&search={Uri.EscapeDataString(SearchTerm.Trim())}"
-                           : string.Empty);
-
-        var response = await _api.GetAsync<InvoicesPage>(endpoint);
-
-        if (response?.Data is not null)
+        var summary = await _api.GetAsync<SummaryResponse>("payments/today-summary");
+        if (summary?.Data is not null)
         {
-            Invoices = new ObservableCollection<InvoiceRow>(response.Data.Select(MapRow));
-            PageNumber = response.PageNumber;
-            TotalPages = response.TotalPages;
-            TotalCount = response.TotalCount;
+            InvoiceCount = summary.Data.InvoiceCount;
+            CashTotal = summary.Data.CashTotal;
+            CardTotal = summary.Data.CardTotal;
+            NetTotal = summary.Data.NetTotal;
+            CashTotalDisplay = Format(CashTotal);
+            CardTotalDisplay = Format(CardTotal);
+            NetTotalDisplay = Format(NetTotal);
         }
-        else
-        {
-            ErrorMessage = _api.LastError ?? "دریافت فاکتورها ناموفق بود";
-        }
+
+        var invoices = await _api.GetAsync<InvoicesResponse>("invoices?page=1&pageSize=15");
+        if (invoices?.Data?.Items is not null)
+            Invoices = new ObservableCollection<InvoiceRow>(invoices.Data.Items.Select(MapInvoice));
+
+        var tx = await _api.GetAsync<TransactionsResponse>("payments/today");
+        Transactions.Clear();
+        if (tx?.Data is not null)
+            foreach (var t in tx.Data)
+                Transactions.Add(new CashRow(t.PaymentId, t.PaymentNumber, t.Time,
+                    t.InvoiceId, t.PatientName, t.Amount, t.MethodText));
 
         IsBusy = false;
     }
 
-    /// <summary>نگاشت ردیف</summary>
-    private static InvoiceRow MapRow(InvoiceDto i) => new(
-        i.Id, i.InvoiceNumber, i.PatientName, i.DateShamsi,
-        i.TotalAmount, i.PaidAmount, i.RemainingAmount,
-        PaymentTextOf(i.PaymentStatus), StatusTextOf(i.Status));
+    /// <summary>قالب‌بندی فشرده مبالغ — ۳.۸M</summary>
+    private static string Format(decimal v) => v >= 1_000_000
+        ? $"{v / 1_000_000:0.##}M"
+        : v >= 1_000 ? $"{v / 1_000:0.#}K" : v.ToString("N0");
 
-    /// <summary>متن فارسی وضعیت پرداخت</summary>
-    private static string PaymentTextOf(int status) => status is >= 1 and <= 4
-        ? new[] { "پرداخت‌نشده", "پرداخت جزیی", "پرداخت‌شده", "پرداخت اضافه" }[status - 1]
-        : "نامشخص";
-
-    /// <summary>متن فارسی وضعیت فاکتور</summary>
-    private static string StatusTextOf(int status) => status switch
+    /// <summary>نگاشت ردیف فاکتور</summary>
+    private static InvoiceRow MapInvoice(InvoiceDto i)
     {
-        1 => "پیش‌نویس",
-        2 => "صادرشده",
-        3 => "پرداخت جزیی",
-        4 => "پرداخت‌شده",
-        5 => "ابطال‌شده",
-        _ => "نامشخص"
-    };
-
-    /// <summary>جستجو — صفحه اول</summary>
-    [RelayCommand]
-    private async Task SearchAsync()
-    {
-        PageNumber = 1;
-        await LoadAsync();
-    }
-
-    /// <summary>صفحه بعد</summary>
-    [RelayCommand]
-    private async Task NextPageAsync()
-    {
-        if (PageNumber < TotalPages)
+        var status = i.PaymentStatus switch
         {
-            PageNumber++;
-            await LoadAsync();
-        }
+            1 => ("پرداخت‌نشده", "#FFEBEE"),
+            2 => ("پرداخت جزئی", "#FFF3E0"),
+            3 => ("پرداخت‌شده", "#E8F5E9"),
+            _ => ("—", "#ECEFF1")
+        };
+        return new InvoiceRow(i.Id, i.InvoiceNumber ?? i.Id.ToString(),
+            i.DateShamsi, i.PatientName, i.TotalAmount,
+            i.PaidAmount, status.Item1, status.Item2);
     }
 
-    /// <summary>صفحه قبل</summary>
-    [RelayCommand]
-    private async Task PrevPageAsync()
-    {
-        if (PageNumber > 1)
-        {
-            PageNumber--;
-            await LoadAsync();
-        }
-    }
-
-    /// <summary>صدور فاکتور جدید</summary>
+    /// <summary>صدور فاکتور جدید — فرم کامل</summary>
     [RelayCommand]
     private void NewInvoice()
     {
-        var vm = new InvoiceFormViewModel(_api);
-        var window = new InvoiceFormWindow(vm)
-        {
-            Owner = System.Windows.Application.Current.MainWindow
-        };
+        var vm = new InvoiceFormViewModel(_api, _snackbar);
+        var window = new InvoiceFormWindow(vm) { Owner = System.Windows.Application.Current.MainWindow };
         window.ShowDialog();
         _ = LoadAsync();
     }
 
-    /// <summary>ثبت پرداخت برای فاکتور انتخاب‌شده</summary>
+    /// <summary>ثبت پرداخت برای فاکتور انتخابی</summary>
     [RelayCommand]
     private void RecordPayment()
     {
-        if (SelectedInvoice is null) return;
-
+        if (SelectedInvoice is null) { _snackbar.Error("ابتدا یک فاکتور انتخاب کنید"); return; }
         var vm = new PaymentWindowViewModel(_api, SelectedInvoice.Id,
-            SelectedInvoice.RemainingAmount);
-        var window = new PaymentWindow(vm)
-        {
-            Owner = System.Windows.Application.Current.MainWindow
-        };
+            SelectedInvoice.Total - SelectedInvoice.Paid);
+        var window = new PaymentWindow(vm) { Owner = System.Windows.Application.Current.MainWindow };
         window.ShowDialog();
         _ = LoadAsync();
     }
 
-    /// <summary>پاسخ صفحه فاکتورها</summary>
-    public sealed class InvoicesPage
+    /* ─── پاسخ‌های API ─── */
+
+    public sealed class SummaryResponse
     {
         public bool IsSuccess { get; set; }
-        public List<InvoiceDto>? Data { get; set; }
-        public int PageNumber { get; set; }
-        public int PageSize { get; set; }
-        public int TotalCount { get; set; }
-        public int TotalPages { get; set; }
+        public SummaryData? Data { get; set; }
     }
 
-    /// <summary>DTO فاکتور</summary>
+    public sealed class SummaryData
+    {
+        public int InvoiceCount { get; set; }
+        public decimal CashTotal { get; set; }
+        public decimal CardTotal { get; set; }
+        public decimal OnlineTotal { get; set; }
+        public decimal RefundTotal { get; set; }
+        public decimal NetTotal { get; set; }
+    }
+
+    public sealed class TransactionsResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<TransactionDto>? Data { get; set; }
+    }
+
+    public sealed class TransactionDto
+    {
+        public long PaymentId { get; set; }
+        public string? PaymentNumber { get; set; }
+        public string Time { get; set; } = string.Empty;
+        public long? InvoiceId { get; set; }
+        public string PatientName { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public int Method { get; set; }
+        public string MethodText { get; set; } = string.Empty;
+    }
+
+    public sealed class InvoicesResponse
+    {
+        public bool IsSuccess { get; set; }
+        public InvoicesData? Data { get; set; }
+    }
+
+    public sealed class InvoicesData
+    {
+        public List<InvoiceDto>? Items { get; set; }
+    }
+
     public sealed class InvoiceDto
     {
         public long Id { get; set; }
         public string? InvoiceNumber { get; set; }
+        public string? DateShamsi { get; set; }
         public string PatientName { get; set; } = string.Empty;
-        public string DateShamsi { get; set; } = string.Empty;
         public decimal TotalAmount { get; set; }
         public decimal PaidAmount { get; set; }
-        public decimal RemainingAmount { get; set; }
         public int PaymentStatus { get; set; }
-        public int Status { get; set; }
+    }
+}
+
+/// <summary>
+/// ViewModel فرم صدور فاکتور — گام U8 طبق فرم ۱۴:
+/// اقلام خدمت با کد K + خلاصه (تخفیف مبلغ↔درصد + بیمه + مالیات) + ۵ روش پرداخت
+/// </summary>
+public partial class InvoiceFormViewModel : ObservableObject
+{
+    private readonly IApiClient _api;
+    private readonly ISnackbarService _snackbar;
+
+    /// <summary>عنوان</summary>
+    [ObservableProperty]
+    private string _formTitle = "💰 صدور فاکتور";
+
+    /// <summary>جستجوی بیمار</summary>
+    [ObservableProperty]
+    private string _patientSearch = string.Empty;
+
+    /// <summary>بیمار انتخاب‌شده</summary>
+    [ObservableProperty]
+    private QuickPatient? _patient;
+
+    /// <summary>نمایه پزشک — صفر یعنی بدون پزشک</summary>
+    [ObservableProperty]
+    private int _doctorIndex = -1;
+
+    /// <summary>پزشکان</summary>
+    public ObservableCollection<DoctorOption> Doctors { get; } = new();
+
+    /// <summary>نمایه بیمه — صفر یعنی آزاد</summary>
+    [ObservableProperty]
+    private int _insuranceIndex;
+
+    /// <summary>بیمه‌ها</summary>
+    public ObservableCollection<InsuranceOption> InsuranceCompanies { get; } = new();
+
+    /// <summary>خدمات قابل انتخاب</summary>
+    public ObservableCollection<ServiceOption> Services { get; } = new();
+
+    /// <summary>جستجوی خدمت</summary>
+    [ObservableProperty]
+    private string _serviceSearch = string.Empty;
+
+    /// <summary>خدمت انتخاب‌شده برای افزودن</summary>
+    [ObservableProperty]
+    private ServiceOption? _selectedService;
+
+    /// <summary>تعداد خدمت</summary>
+    [ObservableProperty]
+    private int _serviceQuantity = 1;
+
+    /// <summary>اقلام فاکتور</summary>
+    public ObservableCollection<InvoiceItemVM> Items { get; } = new();
+
+    /* ── پنل خلاصه ── */
+    /// <summary>تخفیف ریالی</summary>
+    [ObservableProperty]
+    private decimal _discountAmount;
+
+    /// <summary>درصد تخفیف</summary>
+    [ObservableProperty]
+    private decimal _discountPercent;
+
+    /// <summary>نرخ مالیات</summary>
+    [ObservableProperty]
+    private decimal _taxPercent;
+
+    /// <summary>نمایه روش پرداخت — نقد/کارت/بانکی/اقساطی</summary>
+    [ObservableProperty]
+    private int _paymentMethodIndex;
+
+    /// <summary>مبلغ دریافتی</summary>
+    [ObservableProperty]
+    private decimal _receivedAmount;
+
+    /// <summary>شماره ارجاع — برای کارت</summary>
+    [ObservableProperty]
+    private string? _referenceNumber;
+
+    /// <summary>جمع کل</summary>
+    public decimal GrossTotal => Items.Sum(i => i.Total);
+
+    /// <summary>سهم بیمه</summary>
+    public decimal InsuranceShare => Items.Sum(i => i.TotalInsurance);
+
+    /// <summary>پس از تخفیف</summary>
+    public decimal AfterDiscount => Math.Max(0, GrossTotal - DiscountAmount);
+
+    /// <summary>مالیات</summary>
+    public decimal TaxAmount => Math.Round(AfterDiscount * TaxPercent / 100m);
+
+    /// <summary>قابل پرداخت</summary>
+    public decimal Payable => AfterDiscount + TaxAmount;
+
+    /// <summary>باقیمانده</summary>
+    public decimal Remaining => Math.Max(0, Payable - ReceivedAmount);
+
+    /// <summary>متن‌های نمایشی</summary>
+    public string GrossTotalText => GrossTotal.ToString("N0");
+    public string InsuranceShareText => InsuranceShare.ToString("N0");
+    public string TaxText => TaxAmount.ToString("N0");
+    public string PayableText => Payable.ToString("N0");
+    public string RemainingText => Remaining.ToString("N0");
+
+    /// <summary>در حال ثبت</summary>
+    [ObservableProperty]
+    private bool _isBusy;
+
+    /// <summary>خطا</summary>
+    [ObservableProperty]
+    private string _errorMessage = string.Empty;
+
+    /// <summary>رویداد بستن</summary>
+    public event EventHandler? CloseRequested;
+
+    /// <summary>سازنده</summary>
+    public InvoiceFormViewModel(IApiClient api, ISnackbarService snackbar)
+    {
+        _api = api;
+        _snackbar = snackbar;
+        _ = InitializeAsync();
+    }
+
+    /// <summary>بارگذاری داده مرجع</summary>
+    private async Task InitializeAsync()
+    {
+        var doctors = await _api.GetAsync<AppointmentsViewModel.DoctorsPage>("doctors?page=1&pageSize=200");
+        if (doctors?.Data is not null)
+            foreach (var d in doctors.Data)
+                Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName));
+
+        var companies = await _api.GetAsync<PatientFormViewModel.LookupCompanies>("lookups/insurance-companies");
+        if (companies?.Data is not null)
+            foreach (var c in companies.Data)
+                InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name));
+
+        await LoadServicesAsync(string.Empty);
+    }
+
+    /// <summary>جستجوی خدمات با تعرفه</summary>
+    partial void OnServiceSearchChanged(string value) => _ = LoadServicesAsync(value);
+
+    /// <summary>بارگذاری خدمات</summary>
+    private async Task LoadServicesAsync(string term)
+    {
+        var response = await _api.GetAsync<ServicesResponse>(
+            $"lookups/services?search={Uri.EscapeDataString(term ?? string.Empty)}");
+        Services.Clear();
+        if (response?.Data is null) return;
+        foreach (var s in response.Data)
+            Services.Add(new ServiceOption(s.ServiceId, s.ServiceCode, s.ServiceName,
+                s.Price, s.InsuranceShare, s.PatientShare));
+    }
+
+    /// <summary>جستجوی بیمار با Enter</summary>
+    [RelayCommand]
+    private async Task SearchPatientAsync()
+    {
+        var response = await _api.GetAsync<PatientFormViewModel.SearchResponse>(
+            $"patients/search?term={Uri.EscapeDataString(PatientSearch.Trim())}");
+        var p = response?.Data?.FirstOrDefault();
+        if (p is null) { _snackbar.Error("بیمار یافت نشد"); return; }
+        Patient = new QuickPatient(p.Id, $"{p.FirstName} {p.LastName}", p.NationalCode,
+            p.Mobile, p.InsuranceName, p.Allergies, null);
+        FormTitle = $"💰 صدور فاکتور — {Patient.FullName}";
+    }
+
+    /// <summary>افزودن خدمت به اقلام</summary>
+    [RelayCommand]
+    private void AddService()
+    {
+        if (SelectedService is null) { _snackbar.Error("ابتدا خدمت را انتخاب کنید"); return; }
+        Items.Add(new InvoiceItemVM
+        {
+            ServiceId = SelectedService.ServiceId,
+            Code = SelectedService.ServiceCode ?? "K-—",
+            Name = SelectedService.ServiceName,
+            UnitPrice = SelectedService.Price,
+            InsuranceShare = InsuranceIndex > 0 ? SelectedService.InsuranceShare : 0,
+            PatientShare = InsuranceIndex > 0 ? SelectedService.PatientShare : SelectedService.Price
+        });
+        SelectedService = null;
+        ServiceSearch = string.Empty;
+        RaiseTotals();
+    }
+
+    /// <summary>حذف قلم</summary>
+    [RelayCommand]
+    private void RemoveItem(object? param)
+    {
+        if (param is not InvoiceItemVM item) return;
+        Items.Remove(item);
+        RaiseTotals();
+    }
+
+    /// <summary>تغییر تخفیف مبلغی → درصد خودکار</summary>
+    partial void OnDiscountAmountChanged(decimal value)
+    {
+        if (GrossTotal > 0 && value >= 0)
+        {
+            var percent = Math.Round(value * 100m / GrossTotal, 1);
+            if (Math.Abs(percent - DiscountPercent) > 0.05m)
+                DiscountPercent = percent;
+        }
+        RaiseTotals();
+    }
+
+    /// <summary>تغییر درصد تخفیف → مبلغ خودکار</summary>
+    partial void OnDiscountPercentChanged(decimal value)
+    {
+        if (value >= 0 && value <= 100)
+        {
+            var amount = Math.Round(GrossTotal * value / 100m);
+            if (Math.Abs(amount - DiscountAmount) > 0.5m)
+                DiscountAmount = amount;
+        }
+        RaiseTotals();
+    }
+
+    partial void OnTaxPercentChanged(decimal value) => RaiseTotals();
+    partial void OnReceivedAmountChanged(decimal value) => RaiseTotals();
+
+    /// <summary>بازمحاسبه نمایش‌ها</summary>
+    private void RaiseTotals()
+    {
+        OnPropertyChanged(nameof(GrossTotal));
+        OnPropertyChanged(nameof(InsuranceShare));
+        OnPropertyChanged(nameof(AfterDiscount));
+        OnPropertyChanged(nameof(TaxAmount));
+        OnPropertyChanged(nameof(Payable));
+        OnPropertyChanged(nameof(Remaining));
+        OnPropertyChanged(nameof(GrossTotalText));
+        OnPropertyChanged(nameof(InsuranceShareText));
+        OnPropertyChanged(nameof(TaxText));
+        OnPropertyChanged(nameof(PayableText));
+        OnPropertyChanged(nameof(RemainingText));
+    }
+
+    /// <summary>ثبت و چاپ — زنجیره فاکتور + پرداخت</summary>
+    [RelayCommand]
+    private async Task SaveAndPrintAsync()
+    {
+        if (Patient is null) { ErrorMessage = "ابتدا بیمار را انتخاب کنید"; return; }
+        if (Items.Count == 0) { ErrorMessage = "حداقل یک خدمت به فاکتور اضافه کنید"; return; }
+        if (ReceivedAmount < Payable) { ErrorMessage = "مبلغ دریافتی کمتر از قابل پرداخت است"; return; }
+
+        IsBusy = true;
+        var company = InsuranceIndex > 0 ? InsuranceCompanies[InsuranceIndex - 1] : null;
+
+        // ۱. ثبت فاکتور
+        var invoice = await _api.PostAsync<InvoiceCreateResult>("invoices", new
+        {
+            patientId = Patient.Id,
+            receptionId = (long?)null,
+            visitId = (long?)null,
+            type = 1,
+            insuranceCompanyId = company?.Id,
+            taxPercent = TaxPercent,
+            items = Items.Select(i => new
+            {
+                serviceId = i.ServiceId,
+                serviceName = i.Name,
+                quantity = i.Quantity,
+                unitPrice = i.UnitPrice,
+                discount = 0m
+            }),
+            description = $"فاکتور دستی — {Patient.FullName}"
+        });
+
+        if (invoice?.Data is null or 0)
+        {
+            IsBusy = false;
+            ErrorMessage = _api.LastError ?? "ثبت فاکتور ناموفق بود";
+            return;
+        }
+
+        // ۲. ثبت پرداخت
+        await _api.PostAsync("payments", new
+        {
+            invoiceId = invoice.Data,
+            patientId = Patient.Id,
+            amount = ReceivedAmount,
+            method = PaymentMethodIndex + 1,
+            referenceNumber = string.IsNullOrWhiteSpace(ReferenceNumber) ? null : ReferenceNumber.Trim(),
+            cardNumber = (string?)null
+        });
+
+        IsBusy = false;
+        _snackbar.Success($"فاکتور #{invoice.Data} ثبت شد — چاپ در گام U19 متصل می‌شود");
+        CloseRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>پیش‌نمایش چاپ</summary>
+    [RelayCommand]
+    private void Preview()
+        => _snackbar.Info("پیش‌نمایش چاپ در گام U19 (قالب‌های چاپ) متصل می‌شود");
+
+    /// <summary>بستن</summary>
+    [RelayCommand]
+    private void Close() => CloseRequested?.Invoke(this, EventArgs.Empty);
+
+    public sealed class ServicesResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<ServiceDto>? Data { get; set; }
+    }
+
+    public sealed class ServiceDto
+    {
+        public long ServiceId { get; set; }
+        public string? ServiceCode { get; set; }
+        public string ServiceName { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public decimal InsuranceShare { get; set; }
+        public decimal PatientShare { get; set; }
+    }
+
+    public sealed class InvoiceCreateResult
+    {
+        public bool IsSuccess { get; set; }
+        public long? Data { get; set; }
     }
 }

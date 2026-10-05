@@ -4,16 +4,15 @@ using Sahand.ClinicPro.Desktop.ViewModels;
 namespace Sahand.ClinicPro.Desktop.Views;
 
 /// <summary>
-/// کد پشت فرم صدور فاکتور
+/// پنجره صدور فاکتور — گام U8
 /// </summary>
 public partial class InvoiceFormWindow : Window
 {
-    /// <summary>سازنده با ViewModel فرم</summary>
+    /// <summary>سازنده</summary>
     public InvoiceFormWindow(InvoiceFormViewModel viewModel)
     {
         InitializeComponent();
         DataContext = viewModel;
         viewModel.CloseRequested += (_, _) => Close();
-        viewModel.SaveSucceeded += (_, _) => Close();
     }
 }
