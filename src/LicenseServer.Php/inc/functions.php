@@ -390,6 +390,7 @@ function ls_module_catalog(): array
         'Physiotherapy' => 'فیزیوتراپی',
         'Accounting'    => 'حسابداری',
         'HR'            => 'پرسنل',
+        'Attendance'    => 'حضور و غیاب',
         'Reports'       => 'گزارش‌ها',
         'Sms'           => 'پیامک',
         'Insurance'     => 'بیمه',

@@ -159,7 +159,8 @@ public partial class LicenseStatusViewModel : ViewModelBase
         ["Prescriptions"] = "نسخه‌نویسی", ["Invoices"] = "صندوق و فاکتور",
         ["Accounting"] = "حسابداری", ["Insurance"] = "بیمه", ["Lab"] = "آزمایشگاه",
         ["Pharmacy"] = "داروخانه", ["Sms"] = "پیامک", ["Imaging"] = "تصویربرداری",
-        ["Dental"] = "دندانپزشکی", ["Eye"] = "چشم‌پزشکی", ["Physiotherapy"] = "فیزیوتراپی"
+        ["Dental"] = "دندانپزشکی", ["Eye"] = "چشم‌پزشکی", ["Physiotherapy"] = "فیزیوتراپی",
+        ["Attendance"] = "حضور و غیاب"
     };
 
     /// <summary>فعال‌سازی آنلاین با کلید ورودی</summary>
