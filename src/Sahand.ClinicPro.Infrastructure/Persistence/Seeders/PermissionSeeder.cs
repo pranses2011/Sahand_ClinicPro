@@ -24,7 +24,7 @@ public class PermissionSeeder : IDataSeeder
             "patients", "doctors", "appointments", "receptions", "visits", "prescriptions",
             "invoices", "payments", "accounting", "insurance", "lab", "imaging", "dental",
             "eye", "physiotherapy", "pharmacy", "sms", "reports", "users", "roles",
-            "settings", "backup", "auditlogs", "license", "dashboard"
+            "settings", "backup", "auditlogs", "license", "dashboard", "attendance"
         };
         var actions = new[] { "view", "create", "edit", "delete", "print", "export" };
         var persianActions = new Dictionary<string, string>
@@ -59,7 +59,10 @@ public class PermissionSeeder : IDataSeeder
             ("sms.bulksend", "sms", "bulksend", "ویژه", "ارسال دسته‌ای پیامک"),
             ("notifications.manage", "notifications", "manage", "ویژه", "مدیریت و ایجاد اعلان درون‌برنامه‌ای"),
             ("emr.advanced", "emr", "advanced", "ویژه", "پرونده بالینی پیشرفته (رشد/سابقه خانوادگی/مراقبت مزمن)"),
-            ("payroll.manage", "payroll", "manage", "ویژه", "مدیریت حقوق و فیش حقوقی پرسنل")
+            ("payroll.manage", "payroll", "manage", "ویژه", "مدیریت حقوق و فیش حقوقی پرسنل"),
+            ("attendance.devices", "attendance", "devices", "ویژه", "مدیریت دستگاه‌های حضور و غیاب و همگام‌سازی"),
+            ("attendance.shifts", "attendance", "shifts", "ویژه", "تعریف شیفت‌ها و تخصیص به پرسنل"),
+            ("attendance.approve", "attendance", "approve", "ویژه", "تأیید درخواست‌های اصلاح کارت حضور")
         };
         foreach (var (name, module, action, category, description) in specials)
         {
