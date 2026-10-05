@@ -63,7 +63,9 @@ public class PermissionSeeder : IDataSeeder
             ("attendance.devices", "attendance", "devices", "ویژه", "مدیریت دستگاه‌های حضور و غیاب و همگام‌سازی"),
             ("attendance.shifts", "attendance", "shifts", "ویژه", "تعریف شیفت‌ها و تخصیص به پرسنل"),
             ("attendance.approve", "attendance", "approve", "ویژه", "تأیید درخواست‌های اصلاح کارت حضور"),
-            ("pharmacy.stocktake", "pharmacy", "stocktake", "ویژه", "انبارگردانی داروخانه — شمارش، تکمیل و تأیید مغایرت")
+            ("pharmacy.stocktake", "pharmacy", "stocktake", "ویژه", "انبارگردانی داروخانه — شمارش، تکمیل و تأیید مغایرت"),
+            ("surveys.manage", "surveys", "manage", "ویژه", "مدیریت نظرسنجی‌های رضایت بیماران — ایجاد، ویرایش، فعال‌سازی و ارسال لینک پیامکی"),
+            ("surveys.view", "surveys", "view", "ویژه", "مشاهده فهرست نظرسنجی‌ها و نتایج و آمار آنها")
         };
         foreach (var (name, module, action, category, description) in specials)
         {
