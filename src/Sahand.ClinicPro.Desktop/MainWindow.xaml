@@ -67,6 +67,12 @@
         <DataTemplate DataType="{x:Type vm:RolesViewModel}">
             <views:RolePermissionView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SmsViewModel}">
+            <views:SmsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:NotificationsViewModel}">
+            <views:NotificationsView />
+        </DataTemplate>
     </Window.Resources>
 
     <!-- ═══════════════════════════════════════════════════════════

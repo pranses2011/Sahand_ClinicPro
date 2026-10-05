@@ -99,5 +99,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<UserFormViewModel>();
         services.AddTransient<UserFormWindow>();
         services.AddTransient<RolesViewModel>();
+        services.AddTransient<SmsViewModel>();
+        services.AddTransient<NotificationsViewModel>();
     }
 }

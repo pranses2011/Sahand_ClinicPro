@@ -95,7 +95,9 @@ public partial class MainWindowViewModel : ObservableObject
         ReportsViewModel reportsVm,
         AdminViewModel adminVm,
         UsersViewModel usersVm,
-        RolesViewModel rolesVm)
+        RolesViewModel rolesVm,
+        SmsViewModel smsVm,
+        NotificationsViewModel notificationsVm)
     {
         _api = api;
         _tokens = tokens;
@@ -134,7 +136,9 @@ public partial class MainWindowViewModel : ObservableObject
             ["reports"] = () => reportsVm,
             ["settings"] = () => adminVm,
             ["users"] = () => usersVm,
-            ["roles"] = () => rolesVm
+            ["roles"] = () => rolesVm,
+            ["sms"] = () => smsVm,
+            ["notifications"] = () => notificationsVm
         };
 
         // آیتم‌های ناوبری — فعال بودن از لایسنس کنترل می‌شود
@@ -156,6 +160,7 @@ public partial class MainWindowViewModel : ObservableObject
             new() { Title = "گزارش‌ها", PageKey = "reports", Icon = "FileChart" },
             new() { Title = "کاربران", PageKey = "users", Icon = "AccountKey" },
             new() { Title = "نقش‌ها", PageKey = "roles", Icon = "ShieldAccount" },
+            new() { Title = "پیامک", PageKey = "sms", Icon = "MessageTextOutline" },
             new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog" }
         };
 
@@ -197,11 +202,33 @@ public partial class MainWindowViewModel : ObservableObject
     partial void OnUnreadCountChanged(int value)
         => OnPropertyChanged(nameof(HasUnreadNotifications));
 
-    /// <summary>مشاهده مرکز اعلان‌ها — گام U14 به صفحه واقعی متصل می‌شود</summary>
+    /// <summary>مشاهده مرکز اعلان‌ها — ناوبری به صفحه اعلان‌ها و تازه‌سازی شمارنده</summary>
     [RelayCommand]
-    private void ShowNotifications()
+    private Task ShowNotificationsAsync()
     {
-        _snackbar.Info("مرکز اعلان‌ها در گام‌های بعدی متصل می‌شود");
+        NavigateToPage("notifications");
+        // تازه‌سازی شمارنده خوانده‌نشده از سرور
+        return RefreshUnreadCountAsync();
+    }
+
+    /// <summary>تازه‌سازی شمارنده اعلان خوانده‌نشده از سرور</summary>
+    private async Task RefreshUnreadCountAsync()
+    {
+        var unread = await _api.GetAsync<UnreadResponse>("notifications/unread-count");
+        UnreadCount = unread?.Data?.Count ?? 0;
+    }
+
+    /// <summary>پاسخ شمارنده خوانده‌نشده</summary>
+    private sealed class UnreadResponse
+    {
+        public bool IsSuccess { get; set; }
+        public UnreadData? Data { get; set; }
+    }
+
+    /// <summary>داده شمارنده</summary>
+    private sealed class UnreadData
+    {
+        public int Count { get; set; }
     }
 
     /// <summary>خروج از حساب — ابطال توکن و بازگشت به ورود</summary>
