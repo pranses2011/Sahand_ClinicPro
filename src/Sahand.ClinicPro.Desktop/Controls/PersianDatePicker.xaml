@@ -1,0 +1,57 @@
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Controls.PersianDatePicker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="40" d:DesignWidth="200"
+             FlowDirection="RightToLeft"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma"
+             x:Name="Root">
+    <!-- انتخابگر تاریخ شمسی — جعبه متن فقط-خواندنی + تقویم بازشو -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <!-- نمایش شمسی تاریخ -->
+        <TextBox x:Name="ShamsiBox"
+                 Grid.Column="0"
+                 IsReadOnly="True"
+                 Cursor="Hand"
+                 Text="{Binding SelectedShamsi, ElementName=Root, Mode=OneWay}"
+                 materialDesign:HintAssist.Hint="{Binding Placeholder, ElementName=Root}"
+                 materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
+                 VerticalContentAlignment="Center"
+                 PreviewMouseLeftButtonUp="OpenPopup" />
+
+        <!-- دکمه باز کردن تقویم -->
+        <ToggleButton x:Name="CalendarToggle"
+                      Grid.Column="1"
+                      Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
+                      ToolTip="انتخاب از تقویم شمسی" Width="36" Height="32">
+            <materialDesign:PackIcon Kind="CalendarMonth" />
+        </ToggleButton>
+
+        <!-- پنجره بازشوی تقویم -->
+        <Popup x:Name="CalendarPopup"
+               PlacementTarget="{Binding ElementName=ShamsiBox}"
+               Placement="Bottom"
+               StaysOpen="False"
+               AllowsTransparency="True"
+               PopupAnimation="Fade">
+            <Border Background="{DynamicResource MaterialDesign.Brush.Background}"
+                    CornerRadius="10" Padding="6" Margin="8">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.25" />
+                </Border.Effect>
+                <controls:PersianCalendarControl x:Name="PopupCalendar"
+                                                 Width="300"
+                                                 SelectedDate="{Binding SelectedDate, ElementName=Root, Mode=TwoWay}" />
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

@@ -62,6 +62,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<ITokenManager, TokenManager>();
         services.AddSingleton<IThemeService, ThemeService>();
         services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<ISnackbarService, SnackbarService>();
 
         // HttpClient سفارشی کلاینت API
         services.AddHttpClient<ApiClient>()

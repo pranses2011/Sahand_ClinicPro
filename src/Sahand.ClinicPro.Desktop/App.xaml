@@ -39,6 +39,13 @@
             <!-- مبدل شیء غیرتهی به فعال بودن دکمه -->
             <converters:NotNullToBoolConverter x:Key="NotNullToBool" />
 
+            <!-- مبدل‌های مشترک گام U0 — تاریخ شمسی و دیدپذیری و مبلغ -->
+            <converters:ShamsiDateConverter x:Key="ShamsiDate" />
+            <converters:ShamsiDateTimeConverter x:Key="ShamsiDateTime" />
+            <converters:NullToVisibilityConverter x:Key="NullToVisibility" />
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+            <converters:CurrencyRialConverter x:Key="CurrencyRial" />
+
             <!-- سبک کارت آمار داشبورد -->
             <Style x:Key="StatCard" TargetType="materialDesign:Card">
                 <Setter Property="Padding" Value="20" />
