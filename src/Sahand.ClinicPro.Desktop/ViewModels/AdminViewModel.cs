@@ -45,7 +45,9 @@ public record EmployeeRow(
     string? DepartmentName,
     string Mobile,
     string TypeText,
-    bool IsActive);
+    bool IsActive,
+    decimal BaseSalary = 0m,
+    decimal CommissionPercent = 0m);
 
 /// <summary>ردیف تاریخچه پشتیبان</summary>
 public record BackupRow(string StatusText, string Date, string Mode);
@@ -204,10 +206,32 @@ public partial class AdminViewModel : ViewModelBase
         if (response?.Data is not null)
             Employees = new ObservableCollection<EmployeeRow>(response.Data.Select(e =>
                 new EmployeeRow(e.Id, e.PersonnelCode, e.FullName, e.PositionName,
-                    e.DepartmentName, e.Mobile, TypeTextOf(e.Type), e.IsActive)));
+                    e.DepartmentName, e.Mobile, TypeTextOf(e.Type), e.IsActive,
+                    e.BaseSalary, e.CommissionPercent)));
         else
             ErrorMessage = _api.LastError ?? "دریافت پرسنل ناموفق بود";
         IsBusy = false;
+    }
+
+    /// <summary>
+    /// ویرایش اطلاعات حقوقی پرسنل — از دکمه کنار هر ردیف فهرست (چرخه دهم).
+    /// حقوق پایه + درصد از سود خدمات؛ پس از ذخیره فهرست بازخوانی می‌شود.
+    /// </summary>
+    [RelayCommand]
+    private void EditSalary(EmployeeRow? row)
+    {
+        if (row is null) return;
+
+        var vm = new EmployeeSalaryEditViewModel(_api, row.Id, row.FullName,
+            $"{(string.IsNullOrWhiteSpace(row.PositionName) ? "سمت: —" : $"سمت: {row.PositionName}")} • " +
+            $"{(string.IsNullOrWhiteSpace(row.DepartmentName) ? "بخش: —" : $"بخش: {row.DepartmentName}")}",
+            row.BaseSalary, row.CommissionPercent);
+        var window = new EmployeeSalaryEditWindow(vm)
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        window.ShowDialog();
+        _ = LoadEmployeesAsync();
     }
 
     /// <summary>متن فارسی نوع استخدام</summary>
@@ -324,6 +348,8 @@ public partial class AdminViewModel : ViewModelBase
         public string Mobile { get; set; } = string.Empty;
         public int Type { get; set; }
         public bool IsActive { get; set; }
+        public decimal BaseSalary { get; set; }
+        public decimal CommissionPercent { get; set; }
     }
 
     /// <summary>پاسخ پشتیبان</summary>
