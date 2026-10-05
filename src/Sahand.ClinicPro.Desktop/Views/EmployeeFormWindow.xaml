@@ -3,14 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="ثبت پرسنل"
-        Height="480" Width="460"
+        Height="600" Width="460"
         WindowStartupLocation="CenterOwner"
         FontFamily="Vazirmatn, Segoe UI, Tahoma">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
     <!-- ═══════════════════════════════════════════════════════════
-         فرم ثبت پرسنل — گام V8
+         فرم ثبت پرسنل — گام V8 + اطلاعات حقوقی چرخه نهم
          ═══════════════════════════════════════════════════════════ -->
     <StackPanel Margin="28">
         <TextBlock Text="ثبت پرسنل جدید" Style="{StaticResource SectionTitle}" />
@@ -30,12 +30,31 @@
 
         <ComboBox materialDesign:HintAssist.Hint="نوع استخدام"
                   SelectedIndex="{Binding EmploymentTypeIndex}"
-                  Margin="0,0,0,16">
+                  Margin="0,0,0,14">
             <ComboBoxItem Content="تمام‌وقت" />
             <ComboBoxItem Content="پاره‌وقت" />
             <ComboBoxItem Content="قراردادی" />
             <ComboBoxItem Content="کارآموز" />
         </ComboBox>
+
+        <!-- ═══ اطلاعات حقوقی — چرخه نهم: حقوق پایه + درصد از سود خدمات ═══ -->
+        <Border Background="#F5F9FF" BorderBrush="#CFE2F5" BorderThickness="1"
+                CornerRadius="8" Padding="12,10" Margin="0,0,0,4">
+            <StackPanel>
+                <TextBlock Text="📄 اطلاعات حقوقی" FontSize="13" FontWeight="Bold"
+                           Foreground="#16355E" Margin="0,0,0,10" />
+                <TextBox materialDesign:HintAssist.Hint="حقوق پایه (ریال) — ماهانه"
+                         Text="{Binding BaseSalary, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:TextFieldAssist.PrefixText="﷼"
+                         Margin="0,0,0,12" />
+                <TextBox materialDesign:HintAssist.Hint="درصد حقوق از سود خدمات (٪) — فقط از سود خدمات انجامی خود این پرسنل"
+                         Text="{Binding CommissionPercent, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:TextFieldAssist.SuffixText="٪"
+                         Margin="0,0,0,8" />
+                <TextBlock Text="ℹ️ حقوق درصدی از «سود» خدمت محاسبه می‌شود (مبلغ خدمت منهای هزینه آن)؛ نه از کل فروش. صفر = فقط حقوق پایه."
+                           FontSize="10.5" TextWrapping="Wrap" Foreground="#5B7290" />
+            </StackPanel>
+        </Border>
 
         <TextBlock Text="{Binding ErrorMessage}"
                    Foreground="{DynamicResource MaterialDesign.Brush.Error}"
