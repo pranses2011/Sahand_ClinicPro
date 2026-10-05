@@ -27,6 +27,14 @@ public partial class EmployeeFormViewModel : ObservableObject
     [ObservableProperty]
     private string _mobile = string.Empty;
 
+    /// <summary>حقوق پایه ماهانه (ریال) — متن قابل تبدیل به عدد</summary>
+    [ObservableProperty]
+    private string _baseSalary = "0";
+
+    /// <summary>درصد حقوق از سود خدمات انجامی خود پرسنل (۰ تا ۱۰۰)</summary>
+    [ObservableProperty]
+    private string _commissionPercent = "0";
+
     /// <summary>نمایه نوع استخدام — ۰ تمام‌وقت</summary>
     [ObservableProperty]
     private int _employmentTypeIndex;
@@ -61,6 +69,19 @@ public partial class EmployeeFormViewModel : ObservableObject
             return;
         }
 
+        // ═══ اطلاعات حقوقی چرخه نهم — حقوق پایه + درصد از سود خدمات ═══
+        if (!decimal.TryParse(BaseSalary.Trim(), out var baseSalary) || baseSalary < 0)
+        {
+            ErrorMessage = "حقوق پایه عددی نامعتبر است";
+            return;
+        }
+        if (!decimal.TryParse(CommissionPercent.Trim(), out var commissionPercent)
+            || commissionPercent is < 0 or > 100)
+        {
+            ErrorMessage = "درصد حقوق از سود خدمات باید عددی بین ۰ تا ۱۰۰ باشد";
+            return;
+        }
+
         IsBusy = true;
         var body = new
         {
@@ -70,7 +91,9 @@ public partial class EmployeeFormViewModel : ObservableObject
             mobile = Mobile.Trim(),
             departmentId = (long?)null,
             positionId = (long?)null,
-            employmentType = EmploymentTypeIndex + 1
+            employmentType = EmploymentTypeIndex + 1,
+            baseSalary,
+            commissionPercent
         };
 
         var ok = await _api.PostAsync("hr/employees", body);
