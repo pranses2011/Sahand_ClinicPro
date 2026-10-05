@@ -1,0 +1,136 @@
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.InsuranceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="620" d:DesignWidth="1080"
+             FlowDirection="RightToLeft"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══ مدیریت بیمه — گام U11 طبق فرم ۱۹: ۴ تب ═══ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="ShieldAccount" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="مدیریت بیمه" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+            <Button Command="{Binding LoadCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="14,0,0,0">
+                <materialDesign:PackIcon Kind="Refresh" Width="14" Height="14" />
+            </Button>
+        </StackPanel>
+
+        <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+
+        <TabControl Grid.Row="2" Style="{StaticResource MaterialDesignTabControl}">
+            <TabItem Header="🏦 شرکت‌های بیمه">
+                <DataGrid ItemsSource="{Binding Companies}" AutoGenerateColumns="False" CanUserAddRows="False"
+                          IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="نام شرکت" Binding="{Binding Name}" Width="*" FontWeight="SemiBold" />
+                        <DataGridTextColumn Header="کد" Binding="{Binding Code, TargetNullValue=—}" Width="110" FontFamily="Consolas" />
+                        <DataGridTextColumn Header="درصد پوشش" Width="110">
+                            <DataGridTextColumn.Binding>
+                                <Binding Path="CoveragePercent" StringFormat="{}{0:N0}٪" />
+                            </DataGridTextColumn.Binding>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <TabItem Header="💲 تعرفه‌ها">
+                <DataGrid ItemsSource="{Binding Tariffs}" AutoGenerateColumns="False" CanUserAddRows="False"
+                          IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="کد خدمت" Binding="{Binding Code}" Width="110" FontFamily="Consolas" />
+                        <DataGridTextColumn Header="نام خدمت" Binding="{Binding ServiceName}" Width="*" />
+                        <DataGridTextColumn Header="قیمت آزاد (ریال)" Width="130">
+                            <DataGridTextColumn.Binding><Binding Path="Price" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock"><Setter Property="FontFamily" Value="Consolas" /></Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="سهم بیمه (ریال)" Width="130">
+                            <DataGridTextColumn.Binding><Binding Path="InsuranceShare" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontFamily" Value="Consolas" />
+                                    <Setter Property="Foreground" Value="#2E7D32" />
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="سهم بیمار (ریال)" Width="130">
+                            <DataGridTextColumn.Binding><Binding Path="PatientShare" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontFamily" Value="Consolas" />
+                                    <Setter Property="Foreground" Value="#C62828" />
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <TabItem Header="📋 مطالبات">
+                <Grid Margin="4,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Button Grid.Row="0" Command="{Binding NewClaimCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                            HorizontalAlignment="Left" Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
+                            <TextBlock Text="ایجاد مطالبه دوره‌ای جدید" Margin="7,0,0,0" />
+                        </StackPanel>
+                    </Button>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Claims}" SelectedItem="{Binding SelectedClaim}"
+                              AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                              HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="شماره مطالبه" Binding="{Binding ClaimNumber, TargetNullValue=—}" Width="120" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="بیمه" Binding="{Binding InsuranceName}" Width="150" />
+                            <DataGridTextColumn Header="دوره" Binding="{Binding PeriodText, TargetNullValue=—}" Width="170" />
+                            <DataGridTextColumn Header="مبلغ ارسالی" Width="120">
+                                <DataGridTextColumn.Binding><Binding Path="TotalAmount" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="مبلغ تأییدی" Width="120">
+                                <DataGridTextColumn.Binding><Binding Path="ApprovedAmount" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="دریافتی" Width="120">
+                                <DataGridTextColumn.Binding><Binding Path="ReceivedAmount" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="وضعیت" Width="105">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
+                                                Background="{Binding StatusColor}">
+                                            <TextBlock Text="{Binding StatusText}" FontSize="11" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="🔍 استعلامات">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <materialDesign:PackIcon Kind="CardSearchOutline" Width="56" Height="56" Opacity="0.4" HorizontalAlignment="Center" />
+                    <TextBlock Text="استعلامات برخط از فرم پذیرخ اجرا می‌شود" FontSize="13" Opacity="0.7"
+                               Margin="0,10,0,0" HorizontalAlignment="Center" />
+                    <TextBlock Text="سابقه کامل استعلامات در گام U18 همراه گزارش سامانه بیمه فعال می‌شود"
+                               FontSize="11.5" Opacity="0.55" Margin="0,6,0,0" HorizontalAlignment="Center" />
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>
