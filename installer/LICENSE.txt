@@ -1,0 +1,3 @@
+سامانه جامع مدیریت درمانگاه سهند — Sahand ClinicPro v1.3.0
+مجوز MIT — متن کامل در https://github.com/pranses2011/Sahand_ClinicPro/blob/main/LICENSE
+پشتیبانی: dev@sahand-clinicpro.ir
