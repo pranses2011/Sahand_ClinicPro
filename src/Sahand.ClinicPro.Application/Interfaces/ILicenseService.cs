@@ -17,6 +17,9 @@ public interface ILicenseService
     /// <summary>فعال‌سازی برون‌خط — از فایل lic</summary>
     Task<LicenseStatusReport> ActivateOfflineAsync(string licenseFileContent, CancellationToken ct = default);
 
+    /// <summary>تپ قلب روزانه به سرور لایسنس — با مهلت آفلاین قابل تنظیم</summary>
+    Task<LicenseStatusReport> HeartbeatAsync(CancellationToken ct = default);
+
     /// <summary>آیا ماژول خاصی فعال است — توسط میدلور لایسنس استفاده می‌شود</summary>
     Task<bool> IsModuleEnabledAsync(string moduleCode, CancellationToken ct = default);
 }

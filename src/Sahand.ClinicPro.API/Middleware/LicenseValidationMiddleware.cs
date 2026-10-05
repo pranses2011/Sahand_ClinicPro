@@ -30,7 +30,7 @@ public class LicenseValidationMiddleware
             ["api/v1/payments"] = "Billing",
             ["api/v1/accounting"] = "Accounting",
             ["api/v1/insurance"] = "Insurance",
-            ["api/v1/lab"] = "Laboratory",
+            ["api/v1/lab"] = "Lab",
             ["api/v1/pharmacy"] = "Pharmacy",
             ["api/v1/sms"] = "Sms",
             ["api/v1/reports"] = "Reports"
