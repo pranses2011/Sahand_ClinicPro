@@ -17,4 +17,13 @@ public interface IPatientRepository : IRepository<Patient>
 
     /// <summary>آیا بیماری با این کد ملی ثبت شده است</summary>
     Task<bool> ExistsByNationalCodeAsync(string nationalCode, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// آیا بیمار «دیگری» با این کد ملی ثبت شده است — برای ویرایش؛
+    /// کد ملی خود بیمار مورد بررسی، استثنا می‌شود
+    /// </summary>
+    /// <param name="nationalCode">کد ملی ۱۰ رقمی</param>
+    /// <param name="excludePatientId">شناسه بیمار در حال ویرایش</param>
+    /// <param name="cancellationToken">توکن لغو</param>
+    Task<bool> ExistsByNationalCodeAsync(string nationalCode, long excludePatientId, CancellationToken cancellationToken = default);
 }

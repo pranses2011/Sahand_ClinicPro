@@ -23,4 +23,9 @@ public class PatientRepository : Repository<Patient>, IPatientRepository
     /// <summary>آیا بیماری با این کد ملی ثبت شده است</summary>
     public async Task<bool> ExistsByNationalCodeAsync(string nationalCode, CancellationToken cancellationToken = default)
         => await DbSet.AnyAsync(p => p.NationalCode == nationalCode, cancellationToken);
+
+    /// <summary>آیا بیمار «دیگری» با این کد ملی ثبت شده است — برای ویرایش؛ خود بیمار استثنا می‌شود</summary>
+    public async Task<bool> ExistsByNationalCodeAsync(string nationalCode, long excludePatientId,
+        CancellationToken cancellationToken = default)
+        => await DbSet.AnyAsync(p => p.NationalCode == nationalCode && p.Id != excludePatientId, cancellationToken);
 }

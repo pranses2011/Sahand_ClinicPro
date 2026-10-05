@@ -31,6 +31,7 @@ public class UpdatePatientCommandHandler : IRequestHandler<UpdatePatientCommand,
             return Result.Failure(Error.NotFound("بیمار", request.Id));
 
         var dto = request.Dto;
+        patient.NationalCode = dto.NationalCode;
         patient.FirstName = dto.FirstName;
         patient.LastName = dto.LastName;
         patient.FatherName = dto.FatherName;

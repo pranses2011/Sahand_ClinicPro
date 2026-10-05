@@ -149,6 +149,11 @@ public class CreatePatientCommandHandlerTests
             => _uow.Repository<Domain.Entities.People.Patient>()
                 .AnyAsync(p => p.NationalCode == nationalCode, ct);
 
+        public Task<bool> ExistsByNationalCodeAsync(
+            string nationalCode, long excludePatientId, CancellationToken ct = default)
+            => _uow.Repository<Domain.Entities.People.Patient>()
+                .AnyAsync(p => p.NationalCode == nationalCode && p.Id != excludePatientId, ct);
+
         // ── اعضای عمومی Repository<T> — واگذاری به UnitOfWork ──
         public IQueryable<Domain.Entities.People.Patient> QueryableNoTracking
             => _uow.Repository<Domain.Entities.People.Patient>().QueryableNoTracking;

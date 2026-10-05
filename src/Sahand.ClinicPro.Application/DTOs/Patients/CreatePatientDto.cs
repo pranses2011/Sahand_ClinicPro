@@ -65,6 +65,9 @@ public class CreatePatientDto
 /// </summary>
 public class UpdatePatientDto
 {
+    /// <summary>کد ملی ۱۰ رقمی — با الگوریتم رقم کنترلی اعتبارسنجی می‌شود (ضد جعل)</summary>
+    public string NationalCode { get; set; } = string.Empty;
+
     /// <summary>نام</summary>
     public string FirstName { get; set; } = string.Empty;
 
