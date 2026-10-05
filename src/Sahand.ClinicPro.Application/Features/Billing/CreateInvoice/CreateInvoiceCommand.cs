@@ -114,6 +114,26 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                     "پرسنل انجام‌دهنده انتخاب‌شده معتبر یا فعال نیست"));
         }
 
+        // ═══ انتساب خودکار انجام‌دهنده از پزشک (چرخه دهم — حقوق درصدی پزشکان) ═══
+        // اقلامی که پزشک دارند ولی انجام‌دهنده صریح ندارند: اگر پزشک مربوطه
+        // «رکورد پرسنل مرتبط فعال» داشته باشد، همان پرسنل به‌عنوان انجام‌دهنده
+        // ثبت می‌شود تا سود این خدمت در فیش حقوقی پزشک (حقوق درصدی از سود)
+        // بی‌کم‌کاست لحاظ شود. اولویت با انجام‌دهنده صریح است؛ پزشک بدون
+        // پرسنل مرتبط فقط DoctorId خود را حفظ می‌کند و چیزی از دست نمی‌رود.
+        var doctorIdsNeedingPerformer = dto.Items
+            .Where(i => i.DoctorId.HasValue && !i.PerformedById.HasValue)
+            .Select(i => i.DoctorId!.Value).Distinct().ToList();
+
+        var doctorPerformerById = new Dictionary<long, long>();
+        if (doctorIdsNeedingPerformer.Count > 0)
+        {
+            doctorPerformerById = await _unitOfWork.Repository<Doctor>().QueryableNoTracking
+                .Where(d => doctorIdsNeedingPerformer.Contains(d.Id) && !d.IsDeleted &&
+                            d.EmployeeId != null && d.Employee != null &&
+                            !d.Employee.IsDeleted && d.Employee.IsActive)
+                .ToDictionaryAsync(d => d.Id, d => d.EmployeeId!.Value, cancellationToken);
+        }
+
         // عکس‌فوری هزینه تمام‌شده خدمات این فاکتور در لحظه صدور —
         // سود هر قلم بعداً از همین عکس‌فوری محاسبه می‌شود (حقوق درصدی)
         var serviceIds = dto.Items.Where(i => i.ServiceId.HasValue)
@@ -140,6 +160,14 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
             totalDiscount += discount;
             totalInsuranceShare += insuranceShare;
 
+            // انجام‌دهنده نهایی قلم: انجام‌دهنده صریح اولویت دارد؛
+            // وگرنه انتساب خودکار از پرسنل مرتبطِ پزشک همین قلم (چرخه دهم)
+            var performedById = item.PerformedById ??
+                (item.DoctorId.HasValue &&
+                  doctorPerformerById.TryGetValue(item.DoctorId.Value, out var autoPerformer)
+                    ? autoPerformer
+                    : null);
+
             invoice.Items.Add(new InvoiceItem
             {
                 ServiceId = item.ServiceId,
@@ -155,7 +183,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                 DoctorId = item.DoctorId,
                 DoctorSharePercent = item.DoctorSharePercent,
                 DoctorShareAmount = net * item.DoctorSharePercent / 100m,
-                PerformedById = item.PerformedById,
+                PerformedById = performedById,
                 UnitCost = item.ServiceId.HasValue &&
                            costById.TryGetValue(item.ServiceId.Value, out var unitCost)
                     ? unitCost : 0m
