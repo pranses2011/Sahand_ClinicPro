@@ -51,6 +51,7 @@
             <converters:StringToVisibilityConverter x:Key="StringToVisibility" />
             <converters:InvertBoolConverter x:Key="InvertBool" />
             <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
+            <converters:SectionToVisibilityConverter x:Key="SectionToVisibility" />
             <converters:CurrencyRialConverter x:Key="CurrencyRial" />
 
             <!-- سبک کارت آمار داشبورد -->

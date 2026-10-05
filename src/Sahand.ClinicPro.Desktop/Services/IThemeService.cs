@@ -10,4 +10,7 @@ public interface IThemeService
 
     /// <summary>تغییر تم</summary>
     void ToggleTheme();
+
+    /// <summary>اعمال تم مشخص — گام U15 بخش ظاهر</summary>
+    void SetTheme(bool dark);
 }

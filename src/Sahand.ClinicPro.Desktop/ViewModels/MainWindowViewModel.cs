@@ -97,7 +97,10 @@ public partial class MainWindowViewModel : ObservableObject
         UsersViewModel usersVm,
         RolesViewModel rolesVm,
         SmsViewModel smsVm,
-        NotificationsViewModel notificationsVm)
+        NotificationsViewModel notificationsVm,
+        SettingsViewModel settingsVm,
+        BackupViewModel backupVm,
+        AuditLogViewModel auditVm)
     {
         _api = api;
         _tokens = tokens;
@@ -134,11 +137,15 @@ public partial class MainWindowViewModel : ObservableObject
             ["lab"] = () => labVm,
             ["pharmacy"] = () => pharmacyVm,
             ["reports"] = () => reportsVm,
-            ["settings"] = () => adminVm,
+            ["settings"] = () => settingsVm,
+            ["personnel"] = () => adminVm,
             ["users"] = () => usersVm,
             ["roles"] = () => rolesVm,
             ["sms"] = () => smsVm,
-            ["notifications"] = () => notificationsVm
+            ["notifications"] = () => notificationsVm,
+            ["settings-full"] = () => settingsVm,
+            ["backup"] = () => backupVm,
+            ["audit"] = () => auditVm
         };
 
         // آیتم‌های ناوبری — فعال بودن از لایسنس کنترل می‌شود
@@ -161,7 +168,10 @@ public partial class MainWindowViewModel : ObservableObject
             new() { Title = "کاربران", PageKey = "users", Icon = "AccountKey" },
             new() { Title = "نقش‌ها", PageKey = "roles", Icon = "ShieldAccount" },
             new() { Title = "پیامک", PageKey = "sms", Icon = "MessageTextOutline" },
-            new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog" }
+            new() { Title = "پرسنل", PageKey = "personnel", Icon = "AccountTie" },
+            new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog" },
+            new() { Title = "بکاپ و بازیابی", PageKey = "backup", Icon = "DatabaseBackup" },
+            new() { Title = "لاگ عملیات", PageKey = "audit", Icon = "FileDocumentEditOutline" }
         };
 
         NavigateToPage("dashboard");

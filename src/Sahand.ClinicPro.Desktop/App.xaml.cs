@@ -101,5 +101,8 @@ public partial class App : System.Windows.Application
         services.AddTransient<RolesViewModel>();
         services.AddTransient<SmsViewModel>();
         services.AddTransient<NotificationsViewModel>();
+        services.AddTransient<SettingsViewModel>();
+        services.AddTransient<BackupViewModel>();
+        services.AddTransient<AuditLogViewModel>();
     }
 }

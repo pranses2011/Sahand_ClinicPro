@@ -1,0 +1,104 @@
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.AuditLogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="640" d:DesignWidth="1080"
+             FlowDirection="RightToLeft"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══ لاگ عملیات — گام U15 طبق فرم ۳۰: فیلترها + جدول + جزئیات ═══ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="2*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="FileDocumentEditOutline" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="لاگ عملیات" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding CountText}" FontSize="12" Opacity="0.65" Margin="14,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- نوار فیلترها -->
+        <WrapPanel Grid.Row="1" Margin="0,0,0,8">
+            <TextBox materialDesign:HintAssist.Hint="📦 ماژول / موجودیت"
+                     Text="{Binding EntityFilter, UpdateSourceTrigger=PropertyChanged}"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="170" Margin="0,0,8,6" />
+            <ComboBox materialDesign:HintAssist.Hint="🔧 عملیات"
+                      ItemsSource="{Binding ActionOptions}" SelectedItem="{Binding ActionFilter}"
+                      Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="130" Margin="0,0,8,6" />
+            <Button Command="{Binding LoadCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,6">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" VerticalAlignment="Center" />
+                    <TextBlock Text="اعمال فیلتر" Margin="6,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding PreviousPageCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,4,6">
+                <materialDesign:PackIcon Kind="ChevronRight" Width="14" Height="14" />
+            </Button>
+            <Button Command="{Binding NextPageCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6">
+                <materialDesign:PackIcon Kind="ChevronLeft" Width="14" Height="14" />
+            </Button>
+        </WrapPanel>
+
+        <ProgressBar Grid.Row="2" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+
+        <!-- جدول لاگ -->
+        <DataGrid Grid.Row="3" ItemsSource="{Binding Logs}" SelectedItem="{Binding SelectedLog}"
+                  AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                  HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="زمان" Width="150">
+                    <DataGridTextColumn.Binding>
+                        <Binding Path="CreatedAt" Converter="{StaticResource ShamsiDateTime}" />
+                    </DataGridTextColumn.Binding>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="کاربر" Binding="{Binding Username, TargetNullValue=—}" Width="110" />
+                <DataGridTextColumn Header="IP" Binding="{Binding IpAddress, TargetNullValue=—}" Width="110" FontFamily="Consolas" FontSize="10.5" />
+                <DataGridTextColumn Header="ماژول" Binding="{Binding Module, TargetNullValue=—}" Width="110" />
+                <DataGridTemplateColumn Header="عملیات" Width="110">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding ActionText}" Foreground="{Binding ActionColor}"
+                                       FontSize="11.5" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="موجودیت" Binding="{Binding EntityName, TargetNullValue=—}" Width="120" />
+                <DataGridTextColumn Header="شناسه" Binding="{Binding EntityId, TargetNullValue=—}" Width="70" FontFamily="Consolas" />
+                <DataGridTextColumn Header="شرح" Binding="{Binding Description, TargetNullValue=—}" Width="*" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- ─── جزئیات ردیف انتخاب‌شده — Old/New JSON ─── -->
+        <TextBlock Grid.Row="4" Text="جزئیات تغییرات" FontSize="13.5" FontWeight="Bold" Margin="2,12,0,6" />
+        <Border Grid.Row="5" CornerRadius="10" Padding="12,8" Background="#F7FAFD"
+                BorderBrush="#DCE7F0" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="مقادیر قبلی (Old Values)" FontSize="11.5" FontWeight="SemiBold" Foreground="#C62828" Margin="0,0,0,4" />
+                    <TextBlock Text="{Binding SelectedLog.FormattedOld, TargetNullValue='— ردیفی انتخاب نشده —'}"
+                               FontFamily="Consolas" FontSize="10.5" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="مقادیر جدید (New Values)" FontSize="11.5" FontWeight="SemiBold" Foreground="#2E7D32" Margin="0,0,0,4" />
+                    <TextBlock Text="{Binding SelectedLog.FormattedNew, TargetNullValue='—'}"
+                               FontFamily="Consolas" FontSize="10.5" TextWrapping="Wrap" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

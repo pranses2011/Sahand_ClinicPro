@@ -1,0 +1,150 @@
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.BackupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="640" d:DesignWidth="1000"
+             FlowDirection="RightToLeft"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══ بکاپ و بازیابی — گام U15 طبق فرم ۲۹ ═══ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="DatabaseBackup" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="بکاپ و بازیابی" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="4">
+            <StackPanel Margin="4,4" MaxWidth="960" HorizontalAlignment="Right">
+
+                <!-- ─── وضعیت بکاپ ─── -->
+                <materialDesign:Card Padding="18" Margin="2,4" UniformCornerRadius="14">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="آخرین بکاپ کامل" FontSize="11" Opacity="0.65" />
+                            <TextBlock Text="{Binding LastFullText}" FontSize="13" FontWeight="SemiBold" Margin="0,3,0,0" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="آخرین بکاپ Log" FontSize="11" Opacity="0.65" />
+                            <TextBlock Text="{Binding LastLogText}" FontSize="13" FontWeight="SemiBold" Margin="0,3,0,0" />
+                        </StackPanel>
+                        <Button Grid.Column="2" Command="{Binding RunBackupCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}" Margin="10,0,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="BackupRestore" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="💾 بکاپ فوری" Margin="7,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </materialDesign:Card>
+
+                <!-- ─── تاریخچه بکاپ‌ها ─── -->
+                <TextBlock Text="تاریخچه بکاپ‌ها" FontSize="14.5" FontWeight="Bold" Margin="2,14,2,8" />
+                <DataGrid ItemsSource="{Binding History}" SelectedItem="{Binding SelectedBackup}"
+                          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                          HeadersVisibility="Column" FontSize="12" MaxHeight="220"
+                          AlternatingRowBackground="#F7FAFD">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateText}" Width="140" />
+                        <DataGridTextColumn Header="نوع" Binding="{Binding TypeText}" Width="90" />
+                        <DataGridTemplateColumn Header="وضعیت" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
+                                            Background="{Binding StatusColor}">
+                                        <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="White" />
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="سایز" Binding="{Binding SizeText}" Width="90" FontFamily="Consolas" />
+                        <DataGridTextColumn Header="مسیر" Binding="{Binding FilePath, TargetNullValue=—}" Width="*" FontFamily="Consolas" FontSize="10.5" />
+                        <DataGridTextColumn Header="حالت" Binding="{Binding IsAutomatic}" Width="80" />
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- دکمه بازیابی از انتخابی -->
+                <Button Command="{Binding RestoreCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                        HorizontalAlignment="Left" Margin="2,10,0,4">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Restore" Width="15" Height="15" VerticalAlignment="Center" />
+                        <TextBlock Text="🔄 بازیابی از بکاپ انتخاب‌شده" Margin="7,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <TextBlock Text="{Binding RestoreStatus}" FontSize="11.5" Foreground="#1565C0" Margin="2,4,0,0"
+                           Visibility="{Binding RestoreStatus, Converter={StaticResource StringToVisibility}}"
+                           TextWrapping="Wrap" />
+
+                <!-- ─── تنظیمات بکاپ خودکار ─── -->
+                <Expander Header="⚙️ تنظیمات بکاپ خودکار" FontSize="14" FontWeight="SemiBold" Margin="2,14,2,0">
+                    <Border Padding="12,8" CornerRadius="10" Background="#F7FAFD">
+                        <StackPanel MaxWidth="620" HorizontalAlignment="Right">
+                            <CheckBox Content="بکاپ کامل روزانه در ساعت:" IsChecked="{Binding DailyFullEnabled}" Margin="2,6" />
+                            <TextBox Text="{Binding DailyFullTime}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="Consolas" />
+                            <CheckBox Content="بکاپ Differential هر (ساعت):" IsChecked="{Binding DiffEnabled}" Margin="2,6" />
+                            <TextBox Text="{Binding DiffHours}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="Consolas" />
+                            <CheckBox Content="بکاپ Transaction Log هر (ساعت):" IsChecked="{Binding LogEnabled}" Margin="2,6" />
+                            <TextBox Text="{Binding LogHours}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="Consolas" />
+
+                            <TextBlock Text="مسیر ذخیره محلی:" FontSize="12" Margin="2,10,0,4" />
+                            <TextBox Text="{Binding BackupPath}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     FontFamily="Consolas" FontSize="11.5" />
+
+                            <Grid Margin="2,12,2,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="نگهداری کامل (روز)" FontSize="11" Opacity="0.7" />
+                                    <TextBox Text="{Binding KeepFullDays}" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="Consolas" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="نگهداری Diff (روز)" FontSize="11" Opacity="0.7" />
+                                    <TextBox Text="{Binding KeepDiffDays}" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="Consolas" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="4">
+                                    <TextBlock Text="نگهداری Log (ساعت)" FontSize="11" Opacity="0.7" />
+                                    <TextBox Text="{Binding KeepLogHours}" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="Consolas" />
+                                </StackPanel>
+                            </Grid>
+
+                            <CheckBox Content="رمزنگاری فایل بکاپ (AES-256)" IsChecked="{Binding EncryptBackup}" Margin="2,12,2,6" />
+                            <CheckBox Content="ارسال نوتیفیکیشن در صورت خطا" IsChecked="{Binding NotifyOnError}" Margin="2,6" />
+
+                            <Button Command="{Binding SaveAutoSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                                    HorizontalAlignment="Left" Margin="0,12,0,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                                    <TextBlock Text="💾 ذخیره تنظیمات" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Expander>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
