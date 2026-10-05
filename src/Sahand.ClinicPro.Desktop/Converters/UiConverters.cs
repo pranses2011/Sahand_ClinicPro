@@ -99,3 +99,17 @@ public sealed class StringToVisibilityConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => Binding.DoNothing;
 }
+
+/// <summary>
+/// مبدل معکوس‌کننده مقدار منطقی — برای غیرفعال‌سازی فیلدها در حالت ویرایش (گام U13)
+/// </summary>
+public sealed class InvertBoolConverter : IValueConverter
+{
+    /// <summary>تبدیل true به false و بالعکس</summary>
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is bool b ? !b : value;
+
+    /// <summary>تبدیل معکوس</summary>
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is bool b ? !b : value;
+}

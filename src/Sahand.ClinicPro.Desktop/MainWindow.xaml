@@ -61,6 +61,12 @@
         <DataTemplate DataType="{x:Type vm:AdminViewModel}">
             <views:AdminView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:UsersViewModel}">
+            <views:UsersView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:RolesViewModel}">
+            <views:RolePermissionView />
+        </DataTemplate>
     </Window.Resources>
 
     <!-- ═══════════════════════════════════════════════════════════

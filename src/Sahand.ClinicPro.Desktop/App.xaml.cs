@@ -95,5 +95,9 @@ public partial class App : System.Windows.Application
         services.AddTransient<PharmacyViewModel>();
         services.AddTransient<ReportsViewModel>();
         services.AddTransient<AdminViewModel>();
+        services.AddTransient<UsersViewModel>();
+        services.AddTransient<UserFormViewModel>();
+        services.AddTransient<UserFormWindow>();
+        services.AddTransient<RolesViewModel>();
     }
 }

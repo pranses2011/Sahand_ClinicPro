@@ -49,6 +49,7 @@
             <converters:NullToBoolConverter x:Key="NullToBool" />
             <converters:ZeroToCollapsedConverter x:Key="ZeroToCollapsed" />
             <converters:StringToVisibilityConverter x:Key="StringToVisibility" />
+            <converters:InvertBoolConverter x:Key="InvertBool" />
             <converters:CurrencyRialConverter x:Key="CurrencyRial" />
 
             <!-- سبک کارت آمار داشبورد -->
