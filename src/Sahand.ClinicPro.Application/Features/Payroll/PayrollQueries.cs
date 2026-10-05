@@ -11,7 +11,9 @@ namespace Sahand.ClinicPro.Application.Features.Payroll.PayrollQueries;
 
 /// <summary>ردیف فهرست حقوق دوره</summary>
 public sealed record SalaryListRow(long Id, long EmployeeId, string EmployeeName,
-    string PersonnelCode, decimal BaseSalary, decimal Overtime, decimal Bonus,
+    string PersonnelCode, decimal BaseSalary, decimal CommissionPercent,
+    decimal ServiceProfitBase, decimal ServiceCommission,
+    decimal Overtime, decimal Bonus,
     decimal Insurance, decimal Tax, decimal Deductions, decimal NetAmount,
     int Status, DateTime? PaidAt);
 
@@ -37,7 +39,9 @@ public sealed class GetSalariesQueryHandler : IRequestHandler<GetSalariesQuery, 
                 s.Id, s.EmployeeId,
                 s.Employee!.FirstName + " " + s.Employee.LastName,
                 s.Employee.PersonnelCode ?? "",
-                s.BaseSalary, s.Overtime, s.Bonus,
+                s.BaseSalary, s.CommissionPercent,
+                s.ServiceProfitBase, s.ServiceCommission,
+                s.Overtime, s.Bonus,
                 s.Insurance, s.Tax, s.Deductions, s.NetAmount,
                 (int)s.Status, s.PaidAt))
             .ToListAsync(cancellationToken);
@@ -46,12 +50,14 @@ public sealed class GetSalariesQueryHandler : IRequestHandler<GetSalariesQuery, 
     }
 }
 
-/// <summary>داده کامل فیش حقوقی قابل چاپ — گام R3</summary>
+/// <summary>داده کامل فیش حقوقی قابل چاپ — گام R3 + حقوق درصدی چرخه نهم</summary>
 public sealed record PayslipData(
     long SalaryId, long EmployeeId, string EmployeeName, string PersonnelCode,
     string NationalCode, string Position, string BankAccount,
     int PeriodYear, int PeriodMonth, string PeriodText,
-    decimal BaseSalary, decimal Overtime, decimal Bonus,
+    decimal BaseSalary, decimal CommissionPercent,
+    decimal ServiceProfitBase, decimal ServiceCommission,
+    decimal Overtime, decimal Bonus,
     decimal Insurance, decimal Tax, decimal Deductions,
     decimal GrossEarnings, decimal TotalDeductions, decimal NetAmount,
     int Status, DateTime? PaidAt,
@@ -77,7 +83,9 @@ public sealed class GetPayslipQueryHandler : IRequestHandler<GetPayslipQuery, Re
             .Select(s => new
             {
                 s.Id, s.EmployeeId, s.PeriodYear, s.PeriodMonth,
-                s.BaseSalary, s.Overtime, s.Bonus, s.Insurance, s.Tax, s.Deductions,
+                s.BaseSalary, s.CommissionPercent,
+                s.ServiceProfitBase, s.ServiceCommission,
+                s.Overtime, s.Bonus, s.Insurance, s.Tax, s.Deductions,
                 s.NetAmount, s.Status, s.PaidAt,
                 EmployeeName = s.Employee!.FirstName + " " + s.Employee.LastName,
                 s.Employee.PersonnelCode, s.Employee.NationalCode,
@@ -94,7 +102,8 @@ public sealed class GetPayslipQueryHandler : IRequestHandler<GetPayslipQuery, Re
             .Select(c => new { c.ClinicName, c.EconomicCode, c.Address })
             .FirstOrDefaultAsync(cancellationToken);
 
-        var gross = salary.BaseSalary + salary.Overtime + salary.Bonus;
+        var gross = salary.BaseSalary + salary.ServiceCommission +
+                    salary.Overtime + salary.Bonus;
         var totalDeductions = salary.Insurance + salary.Tax + salary.Deductions;
 
         return Result<PayslipData>.Success(new PayslipData(
@@ -103,7 +112,9 @@ public sealed class GetPayslipQueryHandler : IRequestHandler<GetPayslipQuery, Re
             salary.BankAccount ?? "—",
             salary.PeriodYear, salary.PeriodMonth,
             $"{salary.PeriodYear}/{salary.PeriodMonth:00}",
-            salary.BaseSalary, salary.Overtime, salary.Bonus,
+            salary.BaseSalary, salary.CommissionPercent,
+            salary.ServiceProfitBase, salary.ServiceCommission,
+            salary.Overtime, salary.Bonus,
             salary.Insurance, salary.Tax, salary.Deductions,
             gross, totalDeductions, salary.NetAmount,
             (int)salary.Status, salary.PaidAt,
