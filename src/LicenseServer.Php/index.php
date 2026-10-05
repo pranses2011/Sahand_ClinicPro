@@ -191,6 +191,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ls_json_or_redirect('index.php?page=settings');
     }
 
+    // ذخیره اطلاعات پشتیبانی محصول — منبع حقیقت کلاینت‌ها هنگام فعال‌سازی
+    if ($act === 'save_support') {
+        try {
+            ls_support_info_save($_POST);
+            ls_audit($admin['id'], 'save_support', 'settings', null, 'به‌روزرسانی اطلاعات پشتیبانی محصول');
+            $_SESSION['flash'] = ['success', 'اطلاعات پشتیبانی ذخیره شد — از تپ‌قلب بعدی در کلاینت‌ها به‌روز می‌شود.'];
+        } catch (Throwable $e) {
+            $_SESSION['flash'] = ['error', 'ذخیره ناموفق: ' . $e->getMessage()];
+        }
+        ls_json_or_redirect('index.php?page=settings');
+    }
+
     if ($act === 'change_password') {
         $current = (string)($_POST['current_password'] ?? '');
         $new = (string)($_POST['new_password'] ?? '');

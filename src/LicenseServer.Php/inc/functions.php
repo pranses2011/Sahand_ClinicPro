@@ -250,6 +250,47 @@ function ls_setting_set(string $key, string $value): void
     )->execute([$key, $value]);
 }
 
+/* ──────────────────────────  اطلاعات پشتیبانی محصول  ────────────────────────── */
+
+/**
+ * اطلاعات پشتیبانی — تنها منبع حقیقت برای کلاینت‌ها.
+ * مقادیر از جدول ls_settings خوانده می‌شوند و از پنل مدیریت قابل ویرایش‌اند؛
+ * کلاینت دسکتاپ هنگام فعال‌سازی/تپ‌قلب همین مقادیر را می‌گیرد و سراسر برنامه نمایش می‌دهد.
+ * هیچ کلاینتی این مقادیر را هاردکد ندارد.
+ */
+function ls_support_info(): array
+{
+    return [
+        'name'     => ls_setting('support_name', 'سعید نجفی'),
+        'company'  => ls_setting('support_company', 'سهند سرویس'),
+        'phone'    => ls_setting('support_phone', '041-34436141'),
+        'mobile'   => ls_setting('support_mobile', '09144220430'),
+        'email'    => ls_setting('support_email', 'info@ea-fixer.ir'),
+        'website'  => ls_setting('support_website', 'https://ea-fixer.ir'),
+    ];
+}
+
+/** ذخیره گروهی اطلاعات پشتیبانی با پاک‌سازی — فراخوانی از هندلر پنل */
+function ls_support_info_save(array $post): void
+{
+    $map = [
+        'support_name'    => [2, 100],   // فیلد => [حداقل، حداکثر] طول
+        'support_company' => [2, 120],
+        'support_phone'   => [0, 30],
+        'support_mobile'  => [0, 20],
+        'support_email'   => [0, 120],
+        'support_website' => [0, 200],
+    ];
+    foreach ($map as $key => $lim) {
+        $val = trim((string)($post[$key] ?? ''));
+        $len = mb_strlen($val);
+        if ($len > 0 && $len < $lim[0]) {
+            throw new RuntimeException('مقدار «' . $key . '» بسیار کوتاه است.');
+        }
+        ls_setting_set($key, mb_substr($val, 0, $lim[1]));
+    }
+}
+
 /* ──────────────────────────  احراز هویت مدیر  ────────────────────────── */
 
 /** شروع نشست امن */
@@ -399,6 +440,13 @@ function ls_module_catalog(): array
         'Backup'        => 'بکاپ',
         'Audit'         => 'لاگ عملیات',
         'Users'         => 'کاربران',
+        // ── ماژول‌های افزودنی نسخه ۱.۶.۰ — قاعده: هر ماژول جدید همزمان به این کاتالوگ اضافه می‌شود ──
+        'Survey'        => 'نظرسنجی بیماران',
+        'Payroll'       => 'فیش حقوقی',
+        'Paraclinical'  => 'پاراکلینیک',
+        'EMR'           => 'پرونده بالینی پیشرفته',
+        'Complementary' => 'طب مکمل و قالب چاپ',
+        'Branches'      => 'مدیریت شعبه‌ها',
     ];
 }
 
@@ -511,6 +559,8 @@ function ls_license_payload(array $l): array
         'maxBranches'    => (int)$l['max_branches'],
         'enabledModules' => is_array($modules) ? array_values($modules) : [],
         'daysRemaining'  => ls_days_remaining($l),
+        // اطلاعات پشتیبانی — از پنل قابل ویرایش؛ کلاینت هنگام فعال‌سازی می‌گیرد و سراسر برنامه استفاده می‌کند
+        'support'        => ls_support_info(),
     ];
 }
 

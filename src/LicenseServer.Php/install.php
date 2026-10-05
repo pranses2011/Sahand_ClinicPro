@@ -294,6 +294,21 @@ try {
                  ON DUPLICATE KEY UPDATE svalue = VALUES(svalue)')->execute($s);
         }
 
+        // ۴-ب — اطلاعات پشتیبانی محصول (مقادیر اولیه سهند سرویس — پس از نصب از پنل مدیریت قابل ویرایش است
+        //        و کلاینت دسکتاپ هنگام فعال‌سازی همین مقادیر را دریافت و سراسر برنامه نمایش می‌دهد)
+        $supportDefaults = [
+            ['support_name',    'سعید نجفی'],
+            ['support_company', 'سهند سرویس'],
+            ['support_phone',   '041-34436141'],
+            ['support_mobile',  '09144220430'],
+            ['support_email',   'info@ea-fixer.ir'],
+            ['support_website', 'https://ea-fixer.ir'],
+        ];
+        foreach ($supportDefaults as $s) {
+            $pdo->prepare('INSERT INTO ls_settings (skey, svalue) VALUES (?, ?)
+                 ON DUPLICATE KEY UPDATE svalue = VALUES(svalue)')->execute($s);
+        }
+
         // ۵ — تولید کلیدهای RSA
         inst_generate_keys();
 

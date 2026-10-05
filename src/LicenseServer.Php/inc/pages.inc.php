@@ -369,6 +369,23 @@ if ($page === 'settings') {
         ls_flash($flash);
     }
     echo '<h2>⚙️ تنظیمات پنل</h2>';
+
+    // ── بخش اطلاعات پشتیبانی — منبع حقیقت کلاینت‌ها؛ هنگام فعال‌سازی لایسنس به دسکتاپ ارسال و سراسر برنامه نمایش داده می‌شود ──
+    $sup = ls_support_info();
+    echo '<form method="post" action="index.php?page=settings">' . ls_csrf_field()
+        . '<input type="hidden" name="action" value="save_support">'
+        . '<h3>🧑‍💻 اطلاعات پشتیبانی محصول</h3>'
+        . '<div class="alert alert-info">این اطلاعات هنگام <b>فعال‌سازی اولیه</b> به نرم‌افزار کلاینت ارسال می‌شود و در سراسر برنامه '
+        . '(صفحه لایسنس، درباره برنامه، فوتر و راهنماها) نمایش داده می‌شود. هر تغییر پس از تپ‌قلب بعدی در کلاینت‌ها به‌روز می‌شود.</div>'
+        . '<div class="grid-2">'
+        . '<label>نام پشتیبان<input type="text" name="support_name" value="' . ls_e($sup['name']) . '" required></label>'
+        . '<label>نام شرکت<input type="text" name="support_company" value="' . ls_e($sup['company']) . '" required></label>'
+        . '<label>تلفن ثابت (با کد)<input type="text" name="support_phone" value="' . ls_e($sup['phone']) . '" dir="ltr" placeholder="041-XXXXXXX"></label>'
+        . '<label>موبایل<input type="text" name="support_mobile" value="' . ls_e($sup['mobile']) . '" dir="ltr" placeholder="09XXXXXXXXX"></label>'
+        . '<label>ایمیل<input type="email" name="support_email" value="' . ls_e($sup['email']) . '" dir="ltr"></label>'
+        . '<label>وب‌سایت<input type="text" name="support_website" value="' . ls_e($sup['website']) . '" dir="ltr"></label>'
+        . '</div><button class="btn btn-primary" type="submit">💾 ذخیره اطلاعات پشتیبانی</button></form>';
+
     echo '<form method="post" action="index.php?page=settings">' . ls_csrf_field()
         . '<input type="hidden" name="action" value="save_settings">'
         . '<div class="grid-2">'
