@@ -2,6 +2,7 @@
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Sahand.ClinicPro.Desktop.Controls.Charts;
 using Sahand.ClinicPro.Desktop.Services;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
@@ -133,6 +134,32 @@ public partial class ReportBrowserViewModel : ViewModelBase
     /// <summary>ردیف‌های نتیجه</summary>
     public ObservableCollection<ReportResultRow> Rows { get; } = new();
 
+    /* ── بخش نمودار — چرخه یازدهم: سرور بلاک chart برمی‌گرداند و کلاینت نمودارِ متناسب رندر می‌کند ── */
+
+    /// <summary>گزارش جاری بلاک نمودار دارد؟</summary>
+    [ObservableProperty]
+    private bool _hasChart;
+
+    /// <summary>نوع نمودار سروری: area | column | doughnut | hbar</summary>
+    [ObservableProperty]
+    private string _chartKind = "";
+
+    /// <summary>عنوان نمودار</summary>
+    [ObservableProperty]
+    private string _chartTitle = "";
+
+    /// <summary>واحد محور مقادیر — زیرنویس عنوان</summary>
+    [ObservableProperty]
+    private string _chartUnit = "";
+
+    /// <summary>متن مرکز دونات — جمع کل قالب‌بندی‌شده</summary>
+    [ObservableProperty]
+    private string _chartCenterText = "";
+
+    /// <summary>نقاط نمودار</summary>
+    [ObservableProperty]
+    private IReadOnlyList<ChartPointData>? _chartPoints;
+
     /// <summary>سازنده</summary>
     public ReportBrowserViewModel(IApiClient api, ISnackbarService snackbar)
     {
@@ -186,6 +213,8 @@ public partial class ReportBrowserViewModel : ViewModelBase
         SummaryCards.Clear();
         Rows.Clear();
         Columns.Clear();
+        HasChart = false;
+        ChartPoints = null;
         UnavailableMessage = null;
         IsReportAvailable = true;
     }
@@ -291,6 +320,30 @@ public partial class ReportBrowserViewModel : ViewModelBase
                 }
             }
 
+            // بلاک نمودار — چرخه یازدهم: رندر بر اساس نوع اعلام‌شده سرور
+            HasChart = data.Chart is not null;
+            ChartPoints = null;
+            if (data.Chart is not null)
+            {
+                var c = data.Chart.Value;
+                ChartKind = c.TryGetProperty("type", out var t) ? t.GetString() ?? "column" : "column";
+                ChartTitle = c.TryGetProperty("title", out var ti) ? ti.GetString() ?? "" : "";
+                ChartUnit = c.TryGetProperty("unit", out var u) ? u.GetString() ?? "" : "";
+                var pts = new List<ChartPointData>();
+                if (c.TryGetProperty("points", out var arr) && arr.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var p in arr.EnumerateArray())
+                    {
+                        var label = p.TryGetProperty("label", out var l) ? l.GetString() ?? "—" : "—";
+                        var value = p.TryGetProperty("value", out var v) && v.ValueKind == JsonValueKind.Number
+                            ? v.GetDouble() : 0;
+                        pts.Add(new ChartPointData(label, value, $"{label}: {value:N0} {ChartUnit}"));
+                    }
+                }
+                ChartPoints = pts;
+                ChartCenterText = pts.Count > 0 ? ((decimal)pts.Sum(x => x.Value)).ToString("N0") : "";
+            }
+
             if (data.Available)
                 _snackbar.Success($"گزارش «{SelectedReport.Title}» اجرا شد — {Rows.Count} ردیف");
         }
@@ -361,5 +414,6 @@ public partial class ReportBrowserViewModel : ViewModelBase
         public JsonElement? Summary { get; set; }
         public List<string>? Columns { get; set; }
         public List<JsonElement>? Rows { get; set; }
+        public JsonElement? Chart { get; set; }
     }
 }
