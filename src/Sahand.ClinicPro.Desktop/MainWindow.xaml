@@ -76,6 +76,9 @@
         <DataTemplate DataType="{x:Type vm:SmsViewModel}">
             <views:SmsView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SurveyViewModel}">
+            <views:SurveyView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:NotificationsViewModel}">
             <views:NotificationsView />
         </DataTemplate>

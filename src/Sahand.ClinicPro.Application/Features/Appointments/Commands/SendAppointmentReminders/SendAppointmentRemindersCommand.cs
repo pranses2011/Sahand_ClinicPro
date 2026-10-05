@@ -59,7 +59,13 @@ public class SendAppointmentRemindersCommandHandler
                 $"{a.Doctor.Employee.FirstName} {a.Doctor.Employee.LastName}";
             var message = $"{patientName} عزیز، نوبت شما برای {request.DateShamsi ?? PersianDateHelper.ToShamsi(target)} " +
                           $"ساعت {a.AppointmentTime:HH:mm} با {doctorName} ثبت است. لطفاً ۱۰ دقیقه زودتر حاضر شوید.";
-            await _sms.EnqueueAsync(a.Patient.Mobile, "APPOINTMENT_REMINDER", new Dictionary<string, string>
+
+            // بیمار بدون موبایل معتبر قابل پیامک نیست — این نوبت از شمارش موفق کنار می‌ماند
+            var mobile = a.Patient?.Mobile;
+            if (string.IsNullOrWhiteSpace(mobile))
+                continue;
+
+            await _sms.EnqueueAsync(mobile, "APPOINTMENT_REMINDER", new Dictionary<string, string>
             {
                 ["name"] = patientName,
                 ["date"] = a.AppointmentDateShamsi ?? string.Empty,
