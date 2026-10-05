@@ -40,6 +40,10 @@ public partial class InvoiceItemVM : ObservableObject
     [ObservableProperty] private decimal _insuranceShare;
     [ObservableProperty] private decimal _patientShare;
 
+    /// <summary>پرسنل انجام‌دهنده این خدمت — مبنای حقوق درصدی از سود (چرخه نهم)</summary>
+    [ObservableProperty]
+    private PerformerOption? _performer;
+
     public decimal Total => Quantity * UnitPrice;
     public decimal TotalInsurance => Quantity * InsuranceShare;
     public decimal TotalPatient => Quantity * PatientShare;
@@ -54,6 +58,9 @@ public partial class InvoiceItemVM : ObservableObject
         OnPropertyChanged(nameof(TotalPatient));
     }
 }
+
+/// <summary>گزینه پرسنل انجام‌دهنده خدمت</summary>
+public record PerformerOption(long Id, string FullName);
 
 /// <summary>
 /// ViewModel مالی و صندوق — گام U8 طبق پرامپت UI بخش ۳ (فرم ۱۴ و ۱۵):
@@ -267,6 +274,9 @@ public partial class InvoiceFormViewModel : ObservableObject
     /// <summary>خدمات قابل انتخاب</summary>
     public ObservableCollection<ServiceOption> Services { get; } = new();
 
+    /// <summary>پرسنل انجام‌دهنده — برای انتساب هر قلم و محاسبه حقوق درصدی از سود</summary>
+    public ObservableCollection<PerformerOption> Performers { get; } = new();
+
     /// <summary>جستجوی خدمت</summary>
     [ObservableProperty]
     private string _serviceSearch = string.Empty;
@@ -363,6 +373,12 @@ public partial class InvoiceFormViewModel : ObservableObject
         if (companies?.Data is not null)
             foreach (var c in companies.Data)
                 InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name));
+
+        // پرسنل فعال برای انتخاب انجام‌دهنده هر قلم — چرخه نهم
+        var employees = await _api.GetAsync<EmployeesPage>("hr/employees");
+        if (employees?.Data is not null)
+            foreach (var e in employees.Data.Where(e => e.IsActive))
+                Performers.Add(new PerformerOption(e.Id, e.FullName));
 
         await LoadServicesAsync(string.Empty);
     }
@@ -492,7 +508,8 @@ public partial class InvoiceFormViewModel : ObservableObject
                 serviceName = i.Name,
                 quantity = i.Quantity,
                 unitPrice = i.UnitPrice,
-                discount = 0m
+                discount = 0m,
+                performedById = i.Performer?.Id
             }),
             description = $"فاکتور دستی — {Patient.FullName}"
         });
@@ -549,5 +566,20 @@ public partial class InvoiceFormViewModel : ObservableObject
     {
         public bool IsSuccess { get; set; }
         public long? Data { get; set; }
+    }
+
+    /// <summary>پاسخ فهرست پرسنل (hr/employees)</summary>
+    public sealed class EmployeesPage
+    {
+        public bool IsSuccess { get; set; }
+        public List<EmployeeRow>? Data { get; set; }
+    }
+
+    /// <summary>ردیف پرسنل</summary>
+    public sealed class EmployeeRow
+    {
+        public long Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
     }
 }
