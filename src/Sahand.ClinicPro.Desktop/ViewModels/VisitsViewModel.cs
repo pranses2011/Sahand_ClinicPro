@@ -122,7 +122,7 @@ public partial class VisitsViewModel : ViewModelBase
         WaitingCount = q.WaitingCount;
         AverageDisplay = q.AverageVisitMinutes > 0 ? $"{q.AverageVisitMinutes:0.#} دقیقه" : "—";
         CurrentPatient = q.Current is null ? null : MapQueue(q.Current);
-        Waiting = new ObservableCollection<QueueRow>(q.Waiting.Select(MapQueue));
+        Waiting = new ObservableCollection<QueueRow>((q.Waiting ?? new()).Select(MapQueue));
         Done = new ObservableCollection<DoneRow>((q.Done ?? new List<DoneItem>())
                 .Select(d => new DoneRow(d.VisitId, d.PatientName, d.TimeRange, d.DiagnosisText)));
     }

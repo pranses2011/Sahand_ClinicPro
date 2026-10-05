@@ -115,7 +115,7 @@ public class UsersController : ApiBaseController
         };
 
         await AttachRolesAsync(user, request.RoleIds);
-        _unitOfWork.Repository<User>().AddAsync(user);
+        await _unitOfWork.Repository<User>().AddAsync(user);
         await _unitOfWork.SaveEntitiesAsync();
 
         return Ok(ApiResponse<object>.SuccessMessage($"کاربر {user.Username} ایجاد شد"));

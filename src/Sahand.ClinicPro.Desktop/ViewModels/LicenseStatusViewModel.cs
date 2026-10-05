@@ -24,7 +24,7 @@ public partial class LicenseLimitRow : ObservableObject
     /// <summary>درصد مصرف — ۰ تا ۱۰۰</summary>
     public double Percent => Max <= 0 ? 0 : Math.Min(100, Math.Round(Current * 100.0 / Max, 0));
 
-    /// <summary>رنگ نوار — سبز < ۷۰ | نارنجی < ۹۰ | قرمز ≥ ۹۰</summary>
+    /// <summary>رنگ نوار — سبز زیر ۷۰ | نارنجی زیر ۹۰ | قرمز ۹۰ و بالاتر</summary>
     public string BarColor => Percent >= 90 ? "#C62828" : Percent >= 70 ? "#F9A825" : "#2E7D32";
 
     /// <summary>متن نمایش</summary>

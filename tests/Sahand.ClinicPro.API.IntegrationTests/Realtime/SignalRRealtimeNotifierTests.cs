@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
 using Sahand.ClinicPro.API.Hubs;
@@ -24,7 +24,7 @@ public class SignalRRealtimeNotifierTests
     {
         var queueProxy = new Mock<IClientProxy>();
         queueProxy.Setup(p => p.SendCoreAsync(It.IsAny<string>(),
-                It.IsAny<object?[]?>(), It.IsAny<CancellationToken>()))
+                It.IsAny<object?[]>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var notificationProxy = new Mock<IClientProxy>();
@@ -62,7 +62,7 @@ public class SignalRRealtimeNotifierTests
         await notifier.QueueChangedAsync(branchId: 12, reason: "enqueue");
 
         queueProxy.Verify(p => p.SendCoreAsync("queue-changed",
-            It.Is<object?[]?>(args => MatchesQueueMessage(args, "enqueue", 12)),
+            It.Is<object?[]>(args => MatchesQueueMessage(args, "enqueue", 12)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

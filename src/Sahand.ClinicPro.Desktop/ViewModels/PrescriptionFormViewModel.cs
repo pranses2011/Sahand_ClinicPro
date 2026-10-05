@@ -338,7 +338,7 @@ public partial class PrescriptionFormViewModel : ObservableObject
                 {
                     MedicationId = t.MedicationId,
                     Name = t.Name,
-                    Subtitle = t.Subtitle,
+                    Subtitle = t.Subtitle ?? "",
                     Dosage = t.Dosage,
                     Frequency = t.Frequency,
                     Duration = t.Duration,

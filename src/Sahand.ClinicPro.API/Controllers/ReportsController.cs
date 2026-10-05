@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.API.Filters;
@@ -281,7 +281,7 @@ public class ReportsController : ApiBaseController
         var threshold = minAmount ?? 0m;
         var rows = await _unitOfWork.Repository<Domain.Entities.Billing.Invoice>().QueryableNoTracking
             .Where(i => i.PaymentStatus == Domain.Enums.PaymentStatus.Unpaid && i.Patient != null)
-            .GroupBy(i => new { i.PatientId, Name = i.Patient.FirstName + " " + i.Patient.LastName })
+            .GroupBy(i => new { i.PatientId, Name = i.Patient!.FirstName + " " + i.Patient.LastName })
             .Select(g => new
             {
                 patient = g.Key.Name,
@@ -523,7 +523,7 @@ public class ReportsController : ApiBaseController
     {
         var rows = await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>().QueryableNoTracking
             .Where(v => v.Patient != null)
-            .GroupBy(v => new { v.PatientId, Name = v.Patient.FirstName + " " + v.Patient.LastName })
+            .GroupBy(v => new { v.PatientId, Name = v.Patient!.FirstName + " " + v.Patient.LastName })
             .Select(g => new { patient = g.Key.Name, visits = g.Count(), lastVisit = g.Max(v => v.VisitDate) })
             .OrderByDescending(r => r.visits)
             .Take(Math.Min(top, 100))
@@ -646,10 +646,10 @@ public class ReportsController : ApiBaseController
             .Where(v => v.PrimaryDiagnosis != null && v.Patient != null)
             .Select(v => new
             {
-                code = v.PrimaryDiagnosis.Code,
+                code = v.PrimaryDiagnosis!.Code,
                 title = v.PrimaryDiagnosis.DescriptionFa ?? v.PrimaryDiagnosis.Description,
                 patientId = v.PatientId,
-                patientName = v.Patient.FirstName + " " + v.Patient.LastName,
+                patientName = v.Patient!.FirstName + " " + v.Patient.LastName,
                 date = v.VisitDate
             })
             .ToListAsync();
@@ -773,7 +773,7 @@ public class ReportsController : ApiBaseController
     {
         var rows = await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>().QueryableNoTracking
             .Where(v => v.VisitDate >= from && v.VisitDate <= to && v.Doctor != null)
-            .GroupBy(v => new { v.DoctorId, Name = v.Doctor.Employee != null ? v.Doctor.Employee.FirstName + " " + v.Doctor.Employee.LastName : "پزشک #" + v.DoctorId })
+            .GroupBy(v => new { v.DoctorId, Name = v.Doctor!.Employee != null ? v.Doctor.Employee.FirstName + " " + v.Doctor.Employee.LastName : "پزشک #" + v.DoctorId })
             .Select(g => new { doctor = g.Key.Name, visits = g.Count() })
             .OrderByDescending(r => r.visits)
             .ToListAsync();
@@ -795,7 +795,7 @@ public class ReportsController : ApiBaseController
                         v.StartTime != null && v.EndTime != null && v.Doctor != null)
             .Select(v => new
             {
-                doctor = v.Doctor.Employee != null ? v.Doctor.Employee.FirstName + " " + v.Doctor.Employee.LastName : "پزشک #" + v.DoctorId,
+                doctor = v.Doctor!.Employee != null ? v.Doctor.Employee.FirstName + " " + v.Doctor.Employee.LastName : "پزشک #" + v.DoctorId,
                 minutes = EF.Functions.DateDiffMinute(v.StartTime!.Value, v.EndTime!.Value)
             })
             .ToListAsync();
@@ -887,7 +887,7 @@ public class ReportsController : ApiBaseController
             .OrderBy(i => i.Quantity)
             .Select(i => new
             {
-                medication = i.Medication.BrandName ?? i.Medication.GenericName,
+                medication = i.Medication!.BrandName ?? i.Medication.GenericName,
                 onHand = i.Quantity,
                 reorder = i.ReorderLevel
             })
@@ -912,7 +912,7 @@ public class ReportsController : ApiBaseController
             .OrderBy(i => i.ExpiryDate)
             .Select(i => new
             {
-                medication = i.Medication.BrandName ?? i.Medication.GenericName,
+                medication = i.Medication!.BrandName ?? i.Medication.GenericName,
                 batch = i.BatchNumber,
                 expiry = i.ExpiryDate,
                 onHand = i.Quantity

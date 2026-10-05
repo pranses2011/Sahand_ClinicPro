@@ -247,7 +247,7 @@ public class SmsAdminController : ApiBaseController
     [HasPermission("sms.edit")]
     public async Task<IActionResult> SaveProvider([FromBody] SaveProviderRequest request)
     {
-        SmsProvider entity;
+        SmsProvider? entity;
         if (request.Id is long id)
         {
             entity = await _unitOfWork.Repository<SmsProvider>().QueryableTracking

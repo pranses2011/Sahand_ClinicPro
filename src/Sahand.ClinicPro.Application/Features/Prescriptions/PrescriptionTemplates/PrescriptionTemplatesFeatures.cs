@@ -26,10 +26,10 @@ public class GetPrescriptionTemplatesQueryHandler
     {
         var query = _unitOfWork.Repository<PrescriptionTemplate>().QueryableNoTracking;
         if (request.DoctorId.HasValue)
-            query = query.Where(t => t.DoctorId == request.DoctorId.Value || t.DoctorId == null);
+            query = query.Where(t => t.DoctorId == request.DoctorId.Value);
 
         var items = await query.OrderBy(t => t.TemplateName)
-            .Select(t => new PrescriptionTemplateDto(t.Id, t.TemplateName, t.Category, t.Items))
+            .Select(t => new PrescriptionTemplateDto(t.Id, t.TemplateName, t.Category, t.Items ?? "{}"))
             .ToListAsync(cancellationToken);
 
         return Result<List<PrescriptionTemplateDto>>.Success(items);

@@ -162,7 +162,7 @@ public partial class DoctorsViewModel : ViewModelBase
 
     /// <summary>مشاهده آمار عملکرد — دکمه آمار طبق فرم ۶</summary>
     [RelayCommand]
-    private async Task ShowPerformanceAsync()
+    private void ShowPerformance()
     {
         if (SelectedDoctor is null) { _snackbar.Error("ابتدا یک پزشک انتخاب کنید"); return; }
         var window = new DoctorPerformanceWindow(_api, SelectedDoctor.Id, SelectedDoctor.FullName)

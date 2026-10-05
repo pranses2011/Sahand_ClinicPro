@@ -61,7 +61,7 @@ public partial class LabResultViewModel : ObservableObject
         else
         {
             Header = $"{detail.OrderNumber ?? _orderId.ToString()} — {detail.PatientName}";
-            Items = new ObservableCollection<LabItemRow>(detail.Items.Select(i => new LabItemRow
+            Items = new ObservableCollection<LabItemRow>((detail.Items ?? new()).Select(i => new LabItemRow
             {
                 Id = i.Id,
                 TestName = i.TestName,

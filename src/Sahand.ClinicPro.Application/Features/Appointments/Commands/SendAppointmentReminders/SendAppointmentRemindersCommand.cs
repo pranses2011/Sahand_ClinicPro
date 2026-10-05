@@ -54,7 +54,7 @@ public class SendAppointmentRemindersCommandHandler
         var repo = _unitOfWork.Repository<Appointment>();
         foreach (var a in appointments)
         {
-            var patientName = a.Patient.FirstName;
+            var patientName = a.Patient?.FirstName ?? "";
             var doctorName = a.Doctor?.Employee is null ? "" :
                 $"{a.Doctor.Employee.FirstName} {a.Doctor.Employee.LastName}";
             var message = $"{patientName} عزیز، نوبت شما برای {request.DateShamsi ?? PersianDateHelper.ToShamsi(target)} " +

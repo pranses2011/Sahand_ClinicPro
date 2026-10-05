@@ -60,7 +60,7 @@ public partial class PrescriptionDetailViewModel : ObservableObject
         {
             Header = $"نسخه {detail.PrescriptionCode ?? _prescriptionId.ToString()} — {detail.PatientName}";
             Items = new ObservableCollection<PrescriptionItemView>(
-                detail.Items.Select(i => new PrescriptionItemView(
+                (detail.Items ?? new()).Select(i => new PrescriptionItemView(
                     i.MedicationName, i.Dosage, i.Frequency, i.Duration,
                     i.Quantity, i.Unit, i.Instructions)));
         }

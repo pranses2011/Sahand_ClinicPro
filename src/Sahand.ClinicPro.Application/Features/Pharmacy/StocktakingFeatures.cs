@@ -107,7 +107,7 @@ public class GetStocktakingDetailQueryHandler : IRequestHandler<GetStocktakingDe
     public async Task<Result<StocktakingDetailDto>> Handle(GetStocktakingDetailQuery request, CancellationToken cancellationToken)
     {
         var s = await _unitOfWork.Repository<StockTaking>().QueryableNoTracking
-            .Include(x => x.Items).ThenInclude(i => i.Inventory).ThenInclude(inv => inv.Medication)
+            .Include(x => x.Items).ThenInclude(i => i.Inventory).ThenInclude(inv => inv!.Medication)
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         if (s is null)

@@ -54,7 +54,7 @@ public class SearchAppointmentsQueryHandler : IRequestHandler<SearchAppointments
         {
             var term = f.Search.Trim();
             query = query.Where(a =>
-                (a.Patient.FirstName + " " + a.Patient.LastName).Contains(term) ||
+                (a.Patient!.FirstName + " " + a.Patient.LastName).Contains(term) ||
                 a.Patient.NationalCode.Contains(term) ||
                 a.Patient.Mobile.Contains(term) ||
                 a.AppointmentCode != null && a.AppointmentCode.Contains(term));
@@ -68,7 +68,7 @@ public class SearchAppointmentsQueryHandler : IRequestHandler<SearchAppointments
             .Select(a => new AppointmentSearchItemDto(
                 a.Id,
                 a.AppointmentCode,
-                a.Patient.FirstName + " " + a.Patient.LastName,
+                a.Patient!.FirstName + " " + a.Patient.LastName,
                 a.Patient.Mobile,
                 a.Doctor!.Employee!.FirstName + " " + a.Doctor.Employee.LastName,
                 a.Specialty!.Name,

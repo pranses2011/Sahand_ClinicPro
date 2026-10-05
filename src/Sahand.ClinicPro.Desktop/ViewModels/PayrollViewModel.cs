@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -181,7 +181,7 @@ public partial class PayrollViewModel : ViewModelBase
             var d = response.Data;
             var window = new Views.PayslipWindow(
                 d.ClinicName, d.EmployeeName, d.PersonnelCode, d.NationalCode,
-                d.PeriodText, MonthNames.ElementAtOrDefault(SelectedMonthIndex),
+                d.PeriodText, MonthNames.ElementAtOrDefault(SelectedMonthIndex) ?? "",
                 d.BaseSalary, d.Overtime, d.Bonus,
                 d.Insurance, d.Tax, d.Deductions, d.NetAmount);
             window.Owner = System.Windows.Application.Current?.MainWindow;

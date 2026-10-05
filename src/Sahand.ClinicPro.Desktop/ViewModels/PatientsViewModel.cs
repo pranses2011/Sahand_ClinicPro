@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -169,7 +169,7 @@ public partial class PatientsViewModel : ViewModelBase
 
     /// <summary>رزرو نوبت برای بیمار انتخاب‌شده</summary>
     [RelayCommand]
-    private async Task BookAppointmentAsync()
+    private void BookAppointment()
     {
         if (SelectedPatient is null)
         {
@@ -226,7 +226,7 @@ public partial class PatientsViewModel : ViewModelBase
         _ = LoadAsync(); // بارگذاری مجدد پس از ذخیره احتمالی
     }
 
-    /// <summary>ساختار پاسخ صفحه بیماران — منطبق بر PagedResponse<PatientListDto></summary>
+    /// <summary>ساختار پاسخ صفحه بیماران — منطبق بر PagedResponse از PatientListDto</summary>
     public sealed class PatientsPage
     {
         public bool IsSuccess { get; set; }

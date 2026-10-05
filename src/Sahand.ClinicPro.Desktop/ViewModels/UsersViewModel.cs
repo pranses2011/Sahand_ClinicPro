@@ -164,7 +164,7 @@ public partial class UsersViewModel : ViewModelBase
         if (user is null) { _snackbar.Info("ابتدا یک کاربر انتخاب کنید"); return; }
         var window = _sp.GetRequiredService<UserFormWindow>();
         window.Owner = System.Windows.Application.Current.MainWindow;
-        window.ViewModel.LoadForEdit(user.Id);
+        _ = window.ViewModel.LoadForEdit(user.Id);
         window.ShowDialog();
         _ = LoadAsync();
     }

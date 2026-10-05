@@ -144,7 +144,7 @@ public partial class BillingViewModel : ViewModelBase
             _ => ("—", "#ECEFF1")
         };
         return new InvoiceRow(i.Id, i.InvoiceNumber ?? i.Id.ToString(),
-            i.DateShamsi, i.PatientName, i.TotalAmount,
+            i.DateShamsi ?? "—", i.PatientName, i.TotalAmount,
             i.PaidAmount, status.Item1, status.Item2);
     }
 

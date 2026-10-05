@@ -391,7 +391,6 @@ public class GetServicesQueryHandler : IRequestHandler<GetServicesQuery, Result<
     public async Task<Result<List<ServiceTariffOptionDto>>> Handle(GetServicesQuery request,
         CancellationToken cancellationToken)
     {
-        var year = 1404;
         var query = _unitOfWork.Repository<Service>().QueryableNoTracking
             .Where(x => x.IsActive);
         if (!string.IsNullOrWhiteSpace(request.Search))

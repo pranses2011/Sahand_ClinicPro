@@ -137,7 +137,7 @@ public partial class StocktakingViewModel : ViewModelBase
             SummaryText = $"شمارش‌شده: {d.CountedItems}/{d.TotalItems}  •  مغایرت: {d.DifferenceItems} قلم  •  کسری: {d.TotalShortage:N0}  •  زیادندی: {d.TotalSurplus:N0}";
 
             Items.Clear();
-            foreach (var i in d.Items)
+            foreach (var i in d.Items ?? new())
                 Items.Add(new StockItemRow(
                     i.ItemId, i.MedicationName, i.BatchNumber,
                     i.SystemQuantity.ToString("N0"), i.CountedQuantity.ToString("N0"),

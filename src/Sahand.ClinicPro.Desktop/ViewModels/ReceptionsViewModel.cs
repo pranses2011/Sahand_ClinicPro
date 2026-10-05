@@ -211,7 +211,7 @@ public partial class ReceptionsViewModel : ViewModelBase
                 _snackbar.Error("نوبتی با این کد پیگیری یافت نشد");
                 return;
             }
-            var patient = await FindPatientByNational(appt.PatientMobile);
+            var patient = await FindPatientByNational(appt.PatientMobile ?? "");
             if (patient is null)
             {
                 IsBusy = false;

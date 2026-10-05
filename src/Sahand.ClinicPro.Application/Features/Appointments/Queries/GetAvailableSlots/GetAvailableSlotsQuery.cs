@@ -80,7 +80,7 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
             .Where(a => a.DoctorId == request.DoctorId && a.AppointmentDate == date &&
                         a.Status != AppointmentStatus.Cancelled &&
                         a.Status != AppointmentStatus.NoShow)
-            .Select(a => new { a.AppointmentTime, PatientName = a.Patient.FirstName + " " + a.Patient.LastName })
+            .Select(a => new { a.AppointmentTime, PatientName = a.Patient!.FirstName + " " + a.Patient.LastName })
             .ToListAsync(cancellationToken);
         var bookedMap = booked.ToDictionary(b => b.AppointmentTime, b => b.PatientName);
 
