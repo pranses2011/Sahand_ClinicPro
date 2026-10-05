@@ -93,4 +93,66 @@ public class PersianDateHelperTests
         // نتیجه: سن ۲۹ سال (یک روز تا تولد ۳۰ سالگی مانده)
         age.Should().Be(29);
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // بازه ماه شمسی — چرخه دهم (+ رفع باگ فرمول سال چرخه نهم)
+    // ═══════════════════════════════════════════════════════════
+
+    [Theory]
+    [InlineData(1404, 1, 2025, 3)]  // فروردین → مارس ۲۰۲۵
+    [InlineData(1404, 7, 2025, 9)]  // مهر → سپتامبر ۲۰۲۵
+    [InlineData(1404, 10, 2025, 12)] // دی → دسامبر ۲۰۲۵
+    [InlineData(1404, 11, 2026, 1)] // بهمن → ژانویه سال بعد
+    [InlineData(1403, 12, 2025, 2)] // اسفند ۱۴۰۳ → فوریه ۲۰۲۵
+    public void MonthRange_Should_Map_JalaliMonth_To_GregorianMonth(
+        int jalaliYear, int jalaliMonth, int expectedGYear, int expectedGMonth)
+    {
+        var (from, to) = PersianDateHelper.MonthRange(jalaliYear, jalaliMonth);
+
+        from.Year.Should().Be(expectedGYear,
+            because: $"ماه {jalaliMonth} سال {jalaliYear} شمسی باید در {expectedGYear} میلادی بیفتد");
+        from.Month.Should().Be(expectedGMonth);
+        to.Should().Be(from.AddMonths(1), because: "بازه [از، تا) یک ماه کامل است");
+    }
+
+    [Fact]
+    public void MonthRange_Mehr1404_Should_Cover_September2025()
+    {
+        // مهر ۱۴۰۴ ≈ ۲۳ سپتامبر تا ۲۲ اکتبر ۲۰۲۵ — تقریب ابتدای ماه میلادی
+        var (from, to) = PersianDateHelper.MonthRange(1404, 7);
+
+        from.Should().Be(new DateOnly(2025, 9, 1));
+        to.Should().Be(new DateOnly(2025, 10, 1));
+
+        // فاکتور ۱۵ سپتامبر داخل بازه و ۱۵ اوت خارج از آن است
+        var sample = new DateTime(2025, 9, 15);
+        (sample >= from.ToDateTime(TimeOnly.MinValue) &&
+         sample < to.ToDateTime(TimeOnly.MinValue)).Should().BeTrue();
+    }
+
+    [Fact]
+    public void MonthRange_Should_Produce_SensibleGregorianYears()
+    {
+        // رگرسیون باگ چرخه نهم: فرمول «سال − ۶۲۲» سال ۷۸۲ میلادی می‌ساخت؛
+        // هر سال شمسی معتبر باید به بازه میلادی قرن ۲۱/۲۲ بیفتد
+        for (var year = 1400; year <= 1410; year++)
+        {
+            for (var month = 1; month <= 12; month++)
+            {
+                var (from, _) = PersianDateHelper.MonthRange(year, month);
+                from.Year.Should().BeInRange(2021, 2032,
+                    because: $"بازه {year}/{month} شمسی باید معنادار باشد");
+            }
+        }
+    }
+
+    [Fact]
+    public void MonthRange_InvalidMonthOrYear_Should_Throw()
+    {
+        var act1 = () => PersianDateHelper.MonthRange(1404, 13);
+        var act2 = () => PersianDateHelper.MonthRange(1200, 7);
+
+        act1.Should().Throw<ArgumentOutOfRangeException>(because: "ماه سیزدهم وجود ندارد");
+        act2.Should().Throw<ArgumentOutOfRangeException>(because: "سال خارج از بازه معتبر");
+    }
 }
