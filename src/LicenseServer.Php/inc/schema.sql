@@ -22,6 +22,10 @@ CREATE TABLE IF NOT EXISTS ls_licenses (
     license_type        ENUM('subscription','perpetual') NOT NULL DEFAULT 'subscription',
     clinic_name         VARCHAR(200) NULL,
     clinic_phone        VARCHAR(30)  NULL,
+    clinic_manager      VARCHAR(120) NULL,
+    clinic_email        VARCHAR(160) NULL,
+    clinic_city         VARCHAR(100) NULL,
+    clinic_address      VARCHAR(300) NULL,
     max_users           INT NOT NULL DEFAULT 5,
     max_doctors         INT NOT NULL DEFAULT 10,
     max_patients        INT NOT NULL DEFAULT 5000,
@@ -43,6 +47,22 @@ CREATE TABLE IF NOT EXISTS ls_licenses (
     INDEX idx_expiry (expiry_date),
     INDEX idx_fingerprint (hardware_fingerprint(60)),
     INDEX idx_status (is_revoked)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ─── پیام‌های مستقیم به داشبورد درمانگاه (چرخه دوازدهم) ───
+-- با هر تپ‌قلب کلاینت، پیام‌های تحویل‌نشده ارسال و «تحویل‌شده» علامت می‌خورند
+CREATE TABLE IF NOT EXISTS ls_messages (
+    id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    license_id      BIGINT UNSIGNED NOT NULL,
+    title           VARCHAR(200) NOT NULL,
+    body            TEXT NOT NULL,
+    level           ENUM('info','success','warning','danger') NOT NULL DEFAULT 'info',
+    created_by      INT UNSIGNED NULL,
+    delivered_at    DATETIME NULL,
+    read_at         DATETIME NULL,
+    created_at      DATETIME NOT NULL,
+    FOREIGN KEY (license_id) REFERENCES ls_licenses(id) ON DELETE CASCADE,
+    INDEX idx_pending (license_id, delivered_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS ls_activations (
