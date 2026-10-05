@@ -47,13 +47,21 @@
         </WrapPanel>
 
         <!-- کارت‌های خلاصه دوره -->
-        <UniformGrid Grid.Row="2" Columns="3" Margin="0,0,0,10">
+        <UniformGrid Grid.Row="2" Columns="4" Margin="0,0,0,10">
             <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
                     Padding="14,10" Margin="0,0,8,0" BorderThickness="1"
                     BorderBrush="{DynamicResource MaterialDesignDivider}">
                 <StackPanel>
                     <TextBlock Text="کارکنان دوره" FontSize="11.5" Opacity="0.65" />
                     <TextBlock Text="{Binding EmployeeCount}" FontSize="22" FontWeight="Bold" Foreground="#1E88E5" />
+                </StackPanel>
+            </Border>
+            <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                    Padding="14,10" Margin="0,0,8,0" BorderThickness="1"
+                    BorderBrush="{DynamicResource MaterialDesignDivider}">
+                <StackPanel>
+                    <TextBlock Text="جمع حقوق درصدی از سود (ریال)" FontSize="11.5" Opacity="0.65" />
+                    <TextBlock Text="{Binding TotalCommission, StringFormat='#,0'}" FontSize="22" FontWeight="Bold" Foreground="#8E24AA" />
                 </StackPanel>
             </Border>
             <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
@@ -89,11 +97,20 @@
                 <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode}" />
                 <DataGridTextColumn Header="نام و نام خانوادگی" Binding="{Binding EmployeeName}" />
                 <DataGridTextColumn Header="حقوق پایه" Binding="{Binding BaseSalary}" />
+                <DataGridTextColumn Header="درصد از سود" Binding="{Binding CommissionPercent}" />
+                <DataGridTextColumn Header="سود خدمات دوره" Binding="{Binding ServiceProfitBase}" />
+                <DataGridTextColumn Header="حقوق درصدی" Binding="{Binding ServiceCommission}">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter Property="Foreground" Value="#8E24AA" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
                 <DataGridTextColumn Header="اضافه‌کاری" Binding="{Binding Overtime}" />
                 <DataGridTextColumn Header="پاداش" Binding="{Binding Bonus}" />
                 <DataGridTextColumn Header="بیمه ۷٪" Binding="{Binding Insurance}" />
                 <DataGridTextColumn Header="مالیات" Binding="{Binding Tax}" />
-                <DataGridTextColumn Header="سایر کسورات" Binding="{Binding Deductions}" />
                 <DataGridTextColumn Header="خالص پرداختی" Binding="{Binding NetAmount}">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
