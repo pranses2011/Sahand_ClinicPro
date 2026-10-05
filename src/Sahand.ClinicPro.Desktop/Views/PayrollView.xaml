@@ -43,7 +43,10 @@
                     Content="✅ علامت پرداخت" Margin="0,0,8,0"
                     IsEnabled="{Binding HasSelection}" />
             <Button Command="{Binding ShowPayslipCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
-                    Content="🧾 پیش‌نمایش فیش" IsEnabled="{Binding HasSelection}" />
+                    Content="🧾 پیش‌نمایش فیش" Margin="0,0,8,0" IsEnabled="{Binding HasSelection}" />
+            <!-- گزارش تفصیلی سود و حقوق درصدی — چرخه دهم -->
+            <Button Command="{Binding ShowCommissionReportCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                    Content="📊 گزارش تفصیلی سود" />
         </WrapPanel>
 
         <!-- کارت‌های خلاصه دوره -->

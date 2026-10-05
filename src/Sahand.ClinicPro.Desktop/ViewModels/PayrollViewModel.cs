@@ -203,6 +203,21 @@ public partial class PayrollViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// گزارش تفصیلی سود و حقوق درصدی — باز کردن پنجره گزارش (چرخه دهم).
+    /// خلاصه هر پرسنل + جزئیات اقلام + خروجی اکسل دو برگ.
+    /// </summary>
+    [RelayCommand]
+    private void ShowCommissionReport()
+    {
+        var vm = new CommissionReportViewModel(_api, _snackbar);
+        var window = new Views.CommissionReportWindow(vm)
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+        window.ShowDialog();
+    }
+
     /// <summary>قالب‌بندی ریال با جداکننده هزارگان</summary>
     private static string FormatRial(decimal amount) => amount.ToString("#,0");
 
