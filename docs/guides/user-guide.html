@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>راهنمای کار با نرم‌افزار — درمانگاه سهند</title>
+<style>
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Regular.ttf') format('truetype'); font-weight:400; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Medium.ttf') format('truetype'); font-weight:500; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-SemiBold.ttf') format('truetype'); font-weight:600; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Bold.ttf') format('truetype'); font-weight:700; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Black.ttf') format('truetype'); font-weight:900; }
+@page { size:A4; margin:18mm 15mm 20mm 15mm; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Vazirmatn',sans-serif; color:#263238; font-size:10.5pt; line-height:1.9; }
+h1,h2,h3,h4 { font-weight:700; color:#0D47A1; }
+h2 { font-size:16pt; margin:26px 0 12px; padding:10px 14px; background:#E3F2FD; border-radius:10px;
+  border-right:5px solid #1565C0; page-break-after:avoid; }
+h3 { font-size:12.5pt; margin:18px 0 8px; color:#1565C0; page-break-after:avoid; }
+p { margin:6px 0; text-align:justify; }
+ul,ol { margin:6px 22px 6px 0; }
+li { margin:4px 0; }
+code { font-family:Consolas,monospace; background:#ECEFF1; padding:1px 7px; border-radius:5px;
+  font-size:9.5pt; direction:ltr; display:inline-block; color:#B71C1C; }
+pre { background:#263238; color:#ECEFF1; border-radius:10px; padding:13px 16px; margin:10px 0;
+  font-family:Consolas,monospace; font-size:9pt; line-height:1.75; direction:ltr; text-align:left;
+  page-break-inside:avoid; }
+table { width:100%; border-collapse:collapse; margin:10px 0; font-size:9.5pt; page-break-inside:avoid; }
+th { background:#1565C0; color:#fff; padding:7px 10px; text-align:right; font-weight:600; }
+td { padding:6px 10px; border:1px solid #CFD8DC; }
+tr:nth-child(even) td { background:#F5F8FA; }
+.tip { background:#E8F5E9; border:1px solid #A5D6A7; border-right:5px solid #43A047;
+  border-radius:10px; padding:10px 14px; margin:10px 0; page-break-inside:avoid; }
+.warn { background:#FFF8E1; border:1px solid #FFE082; border-right:5px solid #FB8C00;
+  border-radius:10px; padding:10px 14px; margin:10px 0; page-break-inside:avoid; }
+.danger { background:#FDECEA; border:1px solid #F5C6C0; border-right:5px solid #D32F2F;
+  border-radius:10px; padding:10px 14px; margin:10px 0; page-break-inside:avoid; }
+.step { display:flex; gap:12px; margin:14px 0; page-break-inside:avoid; }
+.step .num { width:34px; height:34px; border-radius:50%; background:#1565C0; color:#fff;
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14pt; flex-shrink:0; }
+.step .body { flex:1; padding-top:2px; }
+.shot { width:100%; border:1px solid #CFD8DC; border-radius:10px; margin:10px 0;
+  box-shadow:0 2px 8px rgba(0,0,0,.08); page-break-inside:avoid; }
+.shot-caption { text-align:center; font-size:9pt; color:#607D8B; margin:-4px 0 10px; }
+.kbd { border:1px solid #B0BEC5; border-bottom-width:2.5px; border-radius:5px; padding:0 7px;
+  font-family:Consolas; font-size:9.5pt; background:#FAFAFA; }
+.cover { text-align:center; padding:70px 30px 40px; page-break-after:always; }
+.cover .logo { font-size:64pt; }
+.cover h1 { font-size:26pt; font-weight:900; margin:16px 0 6px; color:#0D47A1; }
+.cover h2 { font-size:14pt; background:none; border:none; padding:0; color:#00897B; margin:0 0 30px; }
+.cover .meta { display:inline-block; background:#F5F8FA; border:1px solid #CFD8DC;
+  border-radius:12px; padding:18px 34px; margin-top:26px; font-size:11pt; text-align:right; }
+.cover .meta td { border:none; padding:4px 14px; }
+.toc { page-break-after:always; }
+.toc h2 { background:none; border:none; padding:0; font-size:18pt; }
+.toc ol { font-size:11pt; }
+.toc li { margin:9px 0; }
+.toc a { color:#263238; text-decoration:none; }
+.diagram { background:#F5F8FA; border:1px solid #CFD8DC; border-radius:12px; padding:16px;
+  margin:12px 0; page-break-inside:avoid; }
+.checklist { margin:10px 0; }
+.checklist td:first-child { font-size:14pt; text-align:center; width:40px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ جلد ═══════════════ -->
+<div class="cover">
+  <div class="logo">📘</div>
+  <h1>راهنمای کامل کار با نرم‌افزار</h1>
+  <h2>سامانه جامع مدیریت درمانگاه سهند — Sahand ClinicPro</h2>
+  <p style="font-size:11pt;color:#546E7A">از ورود تا تسلط کامل — پذیرش • نوبت‌دهی • ویزیت • نسخه • مالی • حضور و غیاب</p>
+  <table class="meta">
+    <tr><td>📖 نسخه سند</td><td><b>۱.۰ — مهر ۱۴۰۴</b></td></tr>
+    <tr><td>🏷 نسخه نرم‌افزار</td><td><b>v1.3.0</b></td></tr>
+    <tr><td>👥 مخاطب</td><td><b>همه کاربران درمانگاه</b></td></tr>
+    <tr><td>⏱ زمان مطالعه</td><td><b>~۴۵ دقیقه</b></td></tr>
+  </table>
+</div>
+
+<!-- ═══════════════ فهرست ═══════════════ -->
+<div class="toc">
+<h2>📖 فهرست مطالب</h2>
+<ol>
+  <li>شروع کار: ورود و آشنایی با محیط</li>
+  <li>داشبورد مدیریتی</li>
+  <li>مدیریت بیماران: ثبت، جستجو و پرونده</li>
+  <li>نوبت‌دهی هوشمند</li>
+  <li>پذیرش و مدیریت صف انتظار</li>
+  <li>ویزیت و معاینه (SOAP)</li>
+  <li>نسخه‌نویسی و تداخل‌سنجی</li>
+  <li>پرونده بالینی پیشرفته</li>
+  <li>آزمایشگاه و پاراکلینیک</li>
+  <li>مالی: صندوق، فاکتور و پرداخت</li>
+  <li>فیش حقوقی پرسنل</li>
+  <li>حضور و غیاب برای کاربران ⭐ جدید</li>
+  <li>گزارش‌ساز و خروجی‌ها</li>
+  <li>پیامک و مرکز اعلان‌ها</li>
+  <li>تنظیمات شخصی، تم و چاپگر</li>
+  <li>میانبرها، نکات طلایی و پرسش‌های متداول</li>
+</ol>
+</div>
+
+<!-- ═══════════════ ۱. شروع ═══════════════ -->
+<h2>۱️⃣ شروع کار: ورود و آشنایی با محیط</h2>
+
+<h3>🔓 ورود به سامانه</h3>
+<ol>
+<li>روی میان‌بر <b>«درمانگاه سهند»</b> دسکتاپ دوبار کلیک کنید.</li>
+<li>نام کاربری و رمز عبور خود را وارد کنید.</li>
+<li>اگر اولین ورودتان است، سامانه <b>تغییر اجباری رمز</b> را نشان می‌دهد — رمز جدید باید حداقل ۸ نویسه با حروف بزرگ/کوچک و عدد باشد.</li>
+<li>گزینه «مرا به خاطر بسپار» تا ۱۴ روز ورود خودکار را فعال می‌کند (فقط روی رایانه شخصی).</li>
+</ol>
+
+<div class="tip">💡 رمز را هرگز به کسی ندهید — همه عملیات شما در «لاگ عملیات» با نام کاربری‌تان ثبت می‌شود.</div>
+
+<h3>🖥 اجزای صفحه اصلی</h3>
+<table>
+<tr><th>بخش</th><th>شرح</th></tr>
+<tr><td>ستون کنار (راست)</td><td>منوی ۲۸ ماژول نرم‌افزار — با کلیک روی هر آیتم به آن صفحه می‌روید</td></tr>
+<tr><td>نوار بالا</td><td>مسیر فعلی (خانه > صفحه جاری) + تاریخ و ساعت شمسی + زنگ اعلان‌ها + تغییر تم + نام کاربر</td></tr>
+<tr><td>ناحیه میانی</td><td>محتوای صفحه فعال (جداول، فرم‌ها، کارت‌ها)</td></tr>
+<tr><td>نوار وضعیت (پایین)</td><td>وضعیت اتصال سرور + بلادرنگ + وضعیت لایسنس + نسخه نرم‌افزار</td></tr>
+</table>
+
+<h3>📸 پنجره ورود نرم‌افزار</h3>
+<img class="shot" src="../screenshots/01-login.png">
+<p class="shot-caption">پنجره ورود — با فعال‌سازی لایسنس این هشدار برمی‌دارَد</p>
+
+<h3>🎨 تغییر تم روشن/تاریک و زبان اعداد</h3>
+<p>روی آیکون 🌙 در نوار بالا کلیک کنید تا تم تاریک فعال شود؛ از تنظیمات شخصی می‌توانید اعداد را فارسی/انگلیسی انتخاب کنید.</p>
+
+<!-- ═══════════════ ۲. داشبورد ═══════════════ -->
+<h2>۲️⃣ داشبورد مدیریتی</h2>
+<p>نخستین صفحه پس از ورود — نمای ۳۶۰ درجه امروز درمانگاه:</p>
+<table>
+<tr><th>کارت</th><th>معنا</th></tr>
+<tr><td>👥 بیماران امروز</td><td>تعداد مراجعان ثبت‌شده امروز — با مقایسه درصدی با دیروز</td></tr>
+<tr><td>📅 نوبت‌های فعال</td><td>نوبت‌های امروز که هنوز تکمیل نشده‌اند</td></tr>
+<tr><td>🩺 پزشکان حاضر</td><td>پزشکان حاضر امروز (از حضور و غیاب واقعی دستگاه)</td></tr>
+<tr><td>💵 درآمد امروز</td><td>جمع فاکتورهای پرداخت‌شده — ریال</td></tr>
+<tr><td>⏳ صف انتظار</td><td>بیماران در انتظار + میانگین زمان انتظار</td></tr>
+</table>
+<p>بخش <b>نوبت‌های پیش‌رو</b> پنج نوبت بعدی را با شماره صف، پزشک و وضعیت رنگی نشان می‌دهد. داشبورد هر ۶۰ ثانیه خودکار به‌روز می‌شود.</p>
+
+<h3>📸 داشبورد مدیریتی</h3>
+<img class="shot" src="../screenshots/02-dashboard.png">
+<p class="shot-caption">۴ کارت اصلی + ۳ کارت فرعی + نمودار درآمد ۷ روز + نوبت‌های پیش‌رو</p>
+
+<!-- ═══════════════ ۳. بیماران ═══════════════ -->
+<h2>۳️⃣ مدیریت بیماران</h2>
+
+<h3>➕ ثبت بیمار جدید</h3>
+<div class="step"><div class="num">۱</div><div class="body">از منوی کناری <b>بیماران</b> را انتخاب کنید و روی دکمه <b>«➕ بیمار جدید»</b> کلیک کنید.</div></div>
+<div class="step"><div class="num">۲</div><div class="body">فرم را پر کنید — فیلدهای ستاره‌دار الزامی‌اند: نام، نام خانوادگی، <b>کد ملی</b> (سامانه صحت کد ملی را خودکار بررسی می‌کند)، موبایل (قالب ۰۹xxxxxxxxx) و تاریخ تولد.</div></div>
+<div class="step"><div class="num">۳</div><div class="body">گروه خونی، بیمه و حساسیت دارویی را وارد کنید — حساسیت‌ها هنگام نسخه‌نویسی خودکار هشدار می‌دهند.</div></div>
+<div class="step"><div class="num">۴</div><div class="body">ذخیره کنید — <b>شماره پرونده (MRN)</b> به‌صورت خودکار صادر می‌شود (از ۱۰۰۰۰۱).</div></div>
+
+<h3>🔍 جستجو و پرونده</h3>
+<p>در کادر جستجو می‌توانید نام، کد ملی یا شماره پرونده را وارد کنید — نتایج لحظه‌ای فیلتر می‌شوند. با کلیک روی 👁 پرونده کامل بیمار باز می‌شود: سوابق ویزیت، نسخه، آزمایش، تصاویر و فاکتورها.</p>
+
+<h3>📸 فهرست بیماران</h3>
+<img class="shot" src="../screenshots/03-patients.png">
+<p class="shot-caption">جستجوی لحظه‌ای + فیلتر بیمه + وضعیت رنگی + صفحه‌بندی ۳٬۸۴۲ بیمار</p>
+
+<!-- ═══════════════ ۴. نوبت‌دهی ═══════════════ -->
+<h2>۴️⃣ نوبت‌دهی هوشمند</h2>
+<ol>
+<li>وارد ماژول <b>نوبت‌دهی</b> شوید — تقویم هفتگی نمایان می‌شود.</li>
+<li>روی <b>«➕ نوبت جدید»</b> کلیک کنید: بیمار را با کد ملی جستجو و انتخاب کنید.</li>
+<li>پزشک و بازه زمانی را انتخاب کنید — سامانه <b>ظرفیت، تداخل زمانی و غیبت پزشک</b> را همان لحظه بررسی می‌کند.</li>
+<li>نوبت ثبت شد و پیامک یادآوری برای بیمار صف‌بندی می‌شود (در صورت فعال بودن).</li>
+</ol>
+<div class="tip">💡 رنگ خانه‌های تقویم: آبی = ظرفیت آزاد • خاکستری = کامل • بنفش = نوبت اضطراری. با کشیدن‌ورها کردن (Drag) می‌توانید نوبت را به بازه دیگر منتقل کنید.</div>
+
+<h3>📸 تقویم نوبت‌دهی</h3>
+<img class="shot" src="../screenshots/04-appointments.png">
+<p class="shot-caption">نمای هفتگی ۵ روز کاری با وضعیت ظرفیت هر بازه</p>
+
+<!-- ═══════════════ ۵. پذیرش ═══════════════ -->
+<h2>۵️⃣ پذیرش و مدیریت صف انتظار</h2>
+
+<div class="step"><div class="num">۱</div><div class="body">
+<b>پذیرش بیمار:</b> در ماژول <b>پذیرش</b> روی «➕ پذیرش بیمار» کلیک کنید — بیمار روز را انتخاب، نوع خدمت (ویزیت/آزمایش/تصویربرداری) و پزشک را تعیین کنید. شماره صف به‌صورت خودکار صادر می‌شود.
+</div></div>
+
+<div class="step"><div class="num">۲</div><div class="body">
+<b>فراخوان بیمار:</b> با دکمه <b>«🔔 فراخوان»</b> کنار ردیف، نوبت به صفحه نمایش سالن و رایانه پزشک فرستاده می‌شود. تغییر وضعیت‌ها (در صف → رسیده → در ویزیت → تکمیل) <b>همان لحظه روی همه رایانه‌ها بدون رفرش</b> نمایان می‌شود — این کار «بلادرنگ» نام دارد.
+</div></div>
+
+<div class="step"><div class="num">۳</div><div class="body">
+<b>زمان انتظار:</b> ستون «اقدام از پذیرش» زمان انتظار هر بیمار را می‌سنجد — اگر از حد مجاز بیشتر شد با نارنجی هشدار می‌دهد.
+</div></div>
+
+<h3>📸 صف انتظار زنده</h3>
+<img class="shot" src="../screenshots/05-receptions.png">
+<p class="shot-caption">صف زنده سالن — شماره دایره‌ای، وضعیت رنگی، دکمه فراخوان/اعلام</p>
+
+<!-- ═══════════════ ۶. ویزیت ═══════════════ -->
+<h2>۶️⃣ ویزیت و معاینه (SOAP)</h2>
+<p>پرونده بالینی پزشکان با الگوی استاندارد <b>SOAP</b> ثبت می‌شود:</p>
+<table>
+<tr><th>بخش</th><th>محتوا</th><th>نمونه</th></tr>
+<tr><td><b>S</b> — Subjective</td><td>شرح‌حال از زبان بیمار</td><td>«سردرد پیشانی از دو روز پیش، تب خفیف شبانه»</td></tr>
+<tr><td><b>O</b> — Objective</td><td>یافته‌های معاینه و علائم حیاتی</td><td>تب ۳۷.۸، فشار ۱۱۰/۷۰، گلودرد قرمز</td></tr>
+<tr><td><b>A</b> — Assessment</td><td><b>تشخیص با کد ICD-10 الزامی</b></td><td>J06.9 — عفونت حاد تنفسی فوقانی</td></tr>
+<tr><td><b>P</b> — Plan</td><td>طرح درمان و آزمایش‌ها</td><td>آزمایش CBC، نسخه دارویی، بازبینی ۵ روزه</td></tr>
+</table>
+<div class="warn">⚠️ تکمیل ویزیت بدون ثبت کد ICD-10 ممکن نیست — این الزام سامانه‌های دولتی است.</div>
+
+<!-- ═══════════════ ۷. نسخه ═══════════════ -->
+<h2>۷️⃣ نسخه‌نویسی و تداخل‌سنجی</h2>
+
+<div class="step"><div class="num">۱</div><div class="body">در ماژول <b>نسخه‌نویسی</b> بیمار فعلی از ویزیت قبلی به‌صورت خودکار انتخاب است.</div></div>
+<div class="step"><div class="num">۲</div><div class="body">دارو را از نوار جستجو از دیکشنری انتخاب کنید — دوز، بارداری و مدت را تعیین کنید.</div></div>
+<div class="step"><div class="num">۳</div><div class="body">سامانه خودکار <b>تداخل دارویی</b> و <b>حساسیت بیمار</b> را بررسی می‌کند — هشدار نارنجی یعنی تداخل درجه ۲ (قابل صرف‌نظر با توضیح)، قرمز یعنی تداخل ممنوع (رد نسخه).</div></div>
+<div class="step"><div class="num">۴</div><div class="body">با «ثبت و چاپ» نسخه چاپ و در صورت فعال بودن ماژول، <b>نسخه الکترونیک</b> به سامانه دولتی ارسال می‌شود.</div></div>
+
+<h3>📸 نسخه‌نویسی با پنل تداخل‌سنجی</h3>
+<img class="shot" src="../screenshots/06-prescriptions.png">
+<p class="shot-caption">اقلام نسخه + پنل تداخل/حساسیت/الگوی تشخیصی + قالب‌های سریع</p>
+
+<div class="tip">💡 قالب‌های سریع (مثل «سرماخوردگی بزرگسال») نسخه‌های پرتکرار را با یک کلیک می‌سازند — قالب شخصی خودتان را با «➕ قالب جدید» بسازید.</div>
+
+<!-- ═══════════════ ۸. پرونده پیشرفته ═══════════════ -->
+<h2>۸️⃣ پرونده بالینی پیشرفته</h2>
+<p>برای بیماران اطفال و بیماران مزمن، سه ابزار تخصصی در اختیار است:</p>
+<ul>
+<li><b>📊 نمودار رشد WHO:</b> قد/وزن/محیط سر روی منحنی استاندارد جهانی با z-score رنگی — نرمال تا بحرانی</li>
+<li><b>👥 سابقه خانوادگی:</b> ۱۲ نسبت خویشاوندی با نشان ارثی برای پایش ریسک خانوادگی</li>
+<li><b>🩺 طرح مراقبت مزمن:</b> چرخه هدف/اقدام/بازبینی — موارد موعد‌رسیده با نارنجی هشدار می‌دهند</li>
+</ul>
+
+<h3>📸 نمودار رشد WHO</h3>
+<img class="shot" src="../screenshots/07-emr-advanced.png">
+<p class="shot-caption">منحنی میانه و ±۳ انحراف معیار + مسیر واقعی بیمار + جدول z-score</p>
+
+<!-- ═══════════════ ۹. آزمایشگاه ═══════════════ -->
+<h2>۹️⃣ آزمایشگاه و پاراکلینیک</h2>
+<div class="step"><div class="num">۱</div><div class="body"><b>ثبت نتیجه:</b> در ماژول آزمایشگاه، درخواست‌ها بر اساس وضعیت (ثبت‌شده → نمونه‌گیری → در حال آنالیز → آماده) گروه‌بندی می‌شوند. روی ردیف کلیک و «🔬 ثبت نتایج» را بزنید.</div></div>
+<div class="step"><div class="num">۲</div><div class="body"><b>پرچم مقادیر:</b> هر شاخص با بازه طبیعی مقایسه و سبز/قرمز پرچم می‌خورد — مقادیر بحرانی هم برای پزشک اعلان می‌فرستد.</div></div>
+<div class="step"><div class="num">۳</div><div class="body"><b>چاپ و اطلاع‌رسانی:</b> با «آماده» شدن، پیامک به بیمار و اعلان به پزشک ارسال می‌شود. نتیجه چاپی با سربرگ درمانگاه آماده است.</div></div>
+<div class="step"><div class="num">۴</div><div class="body"><b>DICOM:</b> فایل‌های رادیولوژی در تب تصویربرداری آپلود و با نمایشگر داخلی (تنظیم پنجره/سطح + بزرگ‌نمایی) بررسی می‌شوند.</div></div>
+
+<h3>📸 آزمایشگاه</h3>
+<img class="shot" src="../screenshots/12-laboratory.png">
+<p class="shot-caption">جریان درخواست‌ها + ثبت نتیجه با پرچم + نمایشگر DICOM</p>
+
+<!-- ═══════════════ ۱۰. مالی ═══════════════ -->
+<h2>🔟 مالی: صندوق، فاکتور و پرداخت</h2>
+
+<div class="step"><div class="num">۱</div><div class="body"><b>صدور فاکتور:</b> در ماژول «مالی و صندوق» روی «🧾 فاکتور جدید» — بیمار و خدمت‌ها را انتخاب کنید. سهم بیمه و بیمار خودکار از جدول تعرفه محاسبه می‌شود.</div></div>
+<div class="step"><div class="num">۲</div><div class="body"><b>دریافت:</b> روش پرداخت (نقدی/کارت/بیمه) را ثبت کنید — <b>سند حسابداری دوبل خودکار</b> صادر می‌شود؛ نیازی به ثبت دستی دفتروجوه‌ها نیست.</div></div>
+<div class="step"><div class="num">۳</div><div class="body"><b>گزارش شیفت:</b> پایان شیفت، «چاپ گزارش شیفت» گردش، فاکتورها و مانده را چاپ می‌کند — امضای صندوقدار و مدیر مالی.</div></div>
+
+<h3>📸 مالی و صندوق</h3>
+<img class="shot" src="../screenshots/08-billing.png">
+<p class="shot-caption">کارت‌های گردش + فاکتورها با پوشش بیمه و وضعیت تسویه</p>
+
+<!-- ═══════════════ ۱۱. فیش حقوقی ═══════════════ -->
+<h2>1️⃣1️⃣ فیش حقوقی پرسنل</h2>
+<ol>
+<li>در ماژول <b>فیش حقوقی</b> دوره (سال/ماه شمسی) را انتخاب کنید.</li>
+<li>روی <b>«⚙ محاسبه دوره»</b> کلیک کنید — سامانه حقوق همه پرسنل را از قرارداد + اضافه‌کاری <b>واقعی حضور و غیاب</b> محاسبه می‌کند: اضافه‌کاری ۱.۴ برابر نرخ ساعت، بیمه ۷٪، مالیات پلکانی.</li>
+<li>با «✅ علامت پرداخت» ردیف‌ها بسته می‌شوند و با «🧾 پیش‌نمایش فیش» فیش چاپی A4 با سه ناحیه امضا نمایش داده می‌شود.</li>
+</ol>
+
+<h3>📸 فیش حقوقی</h3>
+<img class="shot" src="../screenshots/09-payroll.png">
+<p class="shot-caption">کارت‌های دوره + جدول مزایا/کسورات با Badge وضعیت</p>
+
+<!-- ═══════════════ ۱۲. حضور و غیاب ═══════════════ -->
+<h2>1️⃣2️⃣ حضور و غیاب برای کاربران ⭐</h2>
+
+<h3>📋 تابلوی امروز</h3>
+<p>در ماژول <b>حضور و غیاب</b>، تابلوی امروز وضعیت لحظه‌ای همه پرسنل را نشان می‌دهد: حاضر (سبز)، تأخیر (نارنجی)، غایب (قرمز)، مرخصی (آبی) و مأموریت (بنفش). ساعت ورود/خروج، دقایق تأخیر و شیفت مؤثر هر نفر در جدول پیداست. اگر ردیفی «دستی؟» تیک خورده باشد، یعنی اپراتور آن را دستی ثبت/اصلاح کرده و در ممیزی قابل ردیابی است.</p>
+
+<h3>📝 درخواست اصلاح کارت (فراموشی ضربه)</h3>
+<div class="step"><div class="num">۱</div><div class="body">به تب <b>اصلاح کارت</b> بروید و «ثبت درخواست» را بزنید: تاریخ، فیلد (ورود/خروج)، ساعت درخواستی و <b>دلیل</b> (اجباری) را وارد کنید.</div></div>
+<div class="step"><div class="num">۲</div><div class="body">سرپرست از همان تب با دکمه‌های ✅/❌ تصمیم می‌گیرد — تأیید یعنی اعمال خودکار روی رکورد حضور + ثبت ممیزی.</div></div>
+
+<h3>📊 گزارش ماهانه</h3>
+<p>در تب گزارش ماهانه دوره را انتخاب و «بارگذاری» کنید — کارکرد، تعداد تأخیر و مجموع دقیقه‌ها، اضافه‌کاری و غیبت هر پرسنل + جمع کل دوره در نوار بالا. خروجی این گزارش مبنای فیش حقوقی است.</p>
+
+<h3>📸 تابلوی حضور و غیاب</h3>
+<img class="shot" src="../screenshots/10-attendance-today.png">
+<p class="shot-caption">۶ کارت آماری + وضعیت لحظه‌ای پرسنل + نوار همگام‌سازی خودکار دستگاه</p>
+
+<!-- ═══════════════ ۱۳. گزارش‌ها ═══════════════ -->
+<h2>1️⃣3️⃣ گزارش‌ساز و خروجی‌ها</h2>
+<ol>
+<li>در ماژول <b>گزارش‌ها</b>، ۳۶ گزارش در ۶ دسته (بالینی، مالی، بیماران، حضور و غیاب، انبار، مدیریتی) آماده است.</li>
+<li>گزارش را انتخاب، بازه و پارامترها را تعیین و «اجرا» کنید — کارت‌های خلاصه و جدول نتایج نمایش داده می‌شود.</li>
+<li>با «📄 CSV» خروجی اکسل فارسی (با BOM درست) و با «🖨 چاپ» نسخه چاپی با سربرگ تهیه می‌شود.</li>
+</ol>
+
+<h3>📸 گزارش‌ساز</h3>
+<img class="shot" src="../screenshots/13-reports.png">
+<p class="shot-caption">دسته‌بندی ۳۶ گزارش + پارامترها + کارت‌های خلاصه و جدول</p>
+
+<!-- ═══════════════ ۱۴. پیامک ═══════════════ -->
+<h2>1️⃣4️⃣ پیامک و مرکز اعلان‌ها</h2>
+<ul>
+<li><b>ارسال تکی/دسته‌ای:</b> در ماژول پیامک، مخاطبان هدفمند (بیماران امروز، نوبت‌های فردا، بدهکاران...) را انتخاب کنید.</li>
+<li><b>تمپلیت‌ها:</b> متن‌های آماده با متغیرهای خودکار مثل {نام} {تاریخ} {ساعت}.</li>
+<li><b>مرکز اعلان:</b> زنگ بالای صفحه — نوبت‌های در انتظار، نتایج آماده، موجودی بحرانی دارو، مطالبات معوق.</li>
+</ul>
+
+<!-- ═══════════════ ۱۵. تنظیمات شخصی ═══════════════ -->
+<h2>1️⃣5️⃣ تنظیمات شخصی، تم و چاپگر</h2>
+<table>
+<tr><th>تنظیم</th><th>مسیر</th><th>شرح</th></tr>
+<tr><td>تغییر رمز</td><td>نام کاربر → تغییر رمز</td><td>رمز جدید نباید با ۵ رمز اخیر تکراری باشد</td></tr>
+<tr><td>تم روشن/تاریک</td><td>آیکون 🌙 نوار بالا</td><td>برای همه صفحات ذخیره می‌شود</td></tr>
+<tr><td>چاپگر فاکتور/نسخه</td><td>تنظیمات → چاپگر</td><td>چاپگر جداگانه برای هر نوع سند</td></tr>
+<tr><td>سربرگ درمانگاه</td><td>تنظیمات → اطلاعات درمانگاه</td><td>نام، آدرس، لوگو و شماره‌ها روی همه چاپی‌ها</td></tr>
+</table>
+
+<!-- ═══════════════ ۱۶. میانبرها ═══════════════ -->
+<h2>1️⃣6️⃣ میانبرها، نکات طلایی و پرسش‌های متداول</h2>
+
+<h3>⌨️ میانبرهای صفحه‌کلید</h3>
+<table>
+<tr><th>میانبر</th><th>عمل</th></tr>
+<tr><td><span class="kbd">F1</span></td><td>نمایش همین راهنما</td></tr>
+<tr><td><span class="kbd">F2</span></td><td>جستجوی سریع بیمار (هر جای برنامه)</td></tr>
+<tr><td><span class="kbd">F5</span></td><td>بارگذاری مجدد صفحه فعلی</td></tr>
+<tr><td><span class="kbd">Ctrl + P</span></td><td>چاپ سند فعلی</td></tr>
+<tr><td><span class="kbd">Ctrl + N</span></td><td>ثبت جدید در ماژول فعال (بیمار/نوبت/فاکتور)</td></tr>
+<tr><td><span class="kbd">Esc</span></td><td>بستن فرم/دیالوگ باز</td></tr>
+</table>
+
+<h3>❓ پرسش‌های متداول</h3>
+<table>
+<tr><th>پرسش</th><th>پاسخ</th></tr>
+<tr><td>صفحه‌ها روی رایانه من دیر باز می‌شوند</td><td>اولین باز شدن پس از روشن‌شدن سرور طبیعی است؛ اگر تکرار شد وضعیت شبکه را به ادمین اطلاع دهید</td></tr>
+<tr><td>ضربه حضورم ثبت نشد</td><td>از تب اصلاح کارت درخواست بدهید — سرپرست تأیید می‌کند</td></tr>
+<tr><td>پرینت فاکتور کج چاپ می‌شود</td><td>تنظیمات → چاپگر، اندازه کاغذ A5/A4 را مطابق فرم نسخه تنظیم کنید</td></tr>
+<tr><td>نسخه‌ام ارسال نشد به سامانه دولتی</td><td>اینترنت سرور یا توکن سپاس بررسی شود — نسخه در صف می‌ماند و خودکار بازارسال می‌شود</td></tr>
+<tr><td>داده‌ای که ثبت کردم نمی‌بینم</td><td>فیلترهای بالای جدول (بازه/وضعیت) را پاک‌سازی کنید</td></tr>
+</table>
+
+<div class="tip">📞 <b>راه ارتباطی:</b> برای آموزش حضوری، درخواست قابلیت و گزارش اشکال با تیم پشتیبانی در تماس باشید — <code>dev@sahand-clinicpro.ir</code></div>
+
+</body>
+</html>
