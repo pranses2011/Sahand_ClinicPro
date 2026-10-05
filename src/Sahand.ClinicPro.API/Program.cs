@@ -202,6 +202,12 @@ try
         Hangfire.RecurringJob.AddOrUpdate<Sahand.ClinicPro.Infrastructure.Services.Attendance.AttendanceSyncJob>(
             "attendance-sync", job => job.RunAsync(System.Threading.CancellationToken.None),
             Hangfire.Cron.Minutely());
+
+        // پشتیبان‌گیری خودکار شبانه — ساعت ۲ بامداد + پاک‌سازی نسخه‌های فراتر از
+        // سهمیه نگهداشت (Backup:RetentionCount) — چرخه دوازدهم (بند ۴-۳ سند تحلیل)
+        Hangfire.RecurringJob.AddOrUpdate<Sahand.ClinicPro.Infrastructure.Services.Backup.BackupJob>(
+            "backup-nightly", job => job.RunAsync(System.Threading.CancellationToken.None),
+            Hangfire.Cron.Daily(2));
     }
 
     // Swagger فقط در محیط توسعه فعال است

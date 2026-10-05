@@ -31,11 +31,30 @@ public static class IdentitySetup
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
 
+        /* ── چرخه دوازدهم (بند ۴-۲ سند تحلیل): نگهبان کلید امضا ──
+           کلید پیش‌فرض/کوتاه در «تولید» یعنی هرکسی بتواند توکن جعلی بسازد؛
+           در محیط تولید سرور با پیام روشن بالا نمی‌آید تا نصب‌کننده وادار به
+           تنظیم کلید قوی شود (تولید: متغیر محیطی/Secrets؛ توسعه: user-secrets).
+           حداقل: ۳۲ بایت (۲۵۶ بیت) و نامساوی مقدار پیش‌فرض. */
+        const string DefaultKey = "SahandClinicPro-Development-Fallback-Secret-Key-Must-Change!2026";
+        var isProduction = !string.Equals(
+            configuration["Environment"] ?? configuration["ASPNETCORE_ENVIRONMENT"] ?? "",
+            "Development", StringComparison.OrdinalIgnoreCase);
+        var secret = string.IsNullOrEmpty(jwt.SecretKey) ? DefaultKey : jwt.SecretKey;
+        if (isProduction)
+        {
+            if (string.IsNullOrEmpty(jwt.SecretKey) || jwt.SecretKey == DefaultKey)
+                throw new InvalidOperationException(
+                    "⛔ کلید امضای JWT تنظیم نشده است (Jwt:SecretKey). در تولید، یک کلید تصادفی حداقل ۶۴ کاراکتری " +
+                    "به‌صورت متغیر محیطی یا Secret Manager تنظیم کنید — سرور برای ایمنی شما بالا نمی‌آید.");
+            if (System.Text.Encoding.UTF8.GetBytes(secret).Length < 32)
+                throw new InvalidOperationException(
+                    "⛔ کلید امضای JWT کوتاه‌تر از ۳۲ بایت است (Jwt:SecretKey) — حداقل ۶۴ کاراکتر تصادفی لازم است. " +
+                    "نمونه تولید: openssl rand -base64 48");
+        }
+
         // احراز هویت JWT Bearer — با کلید از تنظیمات
-        var signingKey = System.Text.Encoding.UTF8.GetBytes(
-            string.IsNullOrEmpty(jwt.SecretKey)
-                ? "SahandClinicPro-Development-Fallback-Secret-Key-Must-Change!2026"
-                : jwt.SecretKey);
+        var signingKey = System.Text.Encoding.UTF8.GetBytes(secret);
 
         services.AddAuthentication(options =>
         {
