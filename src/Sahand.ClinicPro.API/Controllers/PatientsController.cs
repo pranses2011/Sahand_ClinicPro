@@ -6,6 +6,7 @@ using Sahand.ClinicPro.Application.DTOs.Patients;
 using Sahand.ClinicPro.Application.Features.Patients.Commands.CreatePatient;
 using Sahand.ClinicPro.Application.Features.Patients.Commands.DeletePatient;
 using Sahand.ClinicPro.Application.Features.Patients.Commands.UpdatePatient;
+using Sahand.ClinicPro.Application.Features.Patients.Queries.GetAbnormalSummary;
 using Sahand.ClinicPro.Application.Features.Patients.Queries.GetAllPatients;
 using Sahand.ClinicPro.Application.Features.Patients.Queries.GetPatientById;
 using Sahand.ClinicPro.Application.Features.Patients.Queries.SearchPatients;
@@ -105,5 +106,18 @@ public class PatientsController : ApiBaseController
     {
         var result = await _mediator.Send(new DeletePatientCommand(id));
         return ToResponse(result, "بیمار حذف شد");
+    }
+
+    /// <summary>
+    /// خلاصه نتایج غیرعادی پاراکلینیک — نوار رنگی بالای پرونده (چرخه ۱۳، درخواست ۱-۴)
+    /// آخرین نتیجه غیرطبیعی هر آزمایش + یافته‌های تصویری هشداردهنده
+    /// </summary>
+    /// <param name="id">شناسه بیمار</param>
+    [HttpGet("{id:long}/abnormal-summary")]
+    [HasPermission("patients.view")]
+    public async Task<IActionResult> GetAbnormalSummary(long id)
+    {
+        var result = await _mediator.Send(new GetAbnormalSummaryQuery(id));
+        return ToResponse(result);
     }
 }

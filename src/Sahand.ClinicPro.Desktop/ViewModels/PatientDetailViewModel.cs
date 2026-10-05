@@ -11,6 +11,16 @@ public record PatientVisitRow(string DateShamsi, string DoctorName, string Diagn
 /// <summary>ردیف نسخه‌های بیمار</summary>
 public record PatientPrescriptionRow(string DateShamsi, string DoctorName, int ItemsCount, string Status);
 
+/// <summary>ردیف نوار نتایج غیرعادی پاراکلینیک — چرخه ۱۳ (درخواست ۱-۴)</summary>
+public record AbnormalResultRow(
+    string Title,
+    string Value,
+    string Range,
+    string FlagText,
+    string FlagColor,
+    string DateShamsi,
+    string Kind);
+
 /// <summary>
 /// ViewModel پرونده بیمار — گام U2 (فرم ۵): کارت سربرگ + هشدار آلرژی برجسته +
 /// تب‌های سوابق (ویزیت/نسخه از endpointهای موجود + پیام گام‌های بعدی برای بقیه)
@@ -48,6 +58,17 @@ public partial class PatientDetailViewModel : ObservableObject
 
     /// <summary>نسخه‌های بیمار — از endpoint prescriptions?patientId=</summary>
     public ObservableCollection<PatientPrescriptionRow> Prescriptions { get; } = new();
+
+    /// <summary>نوار نتایج غیرعادی پاراکلینیک — چرخه ۱۳</summary>
+    public ObservableCollection<AbnormalResultRow> AbnormalResults { get; } = new();
+
+    /// <summary>تعداد نتایج غیرعادی — برای نمایش نوار</summary>
+    [ObservableProperty]
+    private int _abnormalCount;
+
+    /// <summary>متن خلاصه نوار — مثل «۳ آزمایش غیرطبیعی + ۱ یافته تصویری»</summary>
+    [ObservableProperty]
+    private string _abnormalSummaryText = string.Empty;
 
     /// <summary>سازنده با شناسه بیمار</summary>
     public PatientDetailViewModel(IApiClient api, long patientId)
@@ -109,6 +130,36 @@ public partial class PatientDetailViewModel : ObservableObject
                     p.Status ?? "—"));
             }
         }
+
+        // ۴) نوار نتایج غیرعادی پاراکلینیک — چرخه ۱۳ (درخواست ۱-۴)
+        var abnormal = await _api.GetAsync<AbnormalEnvelope>($"patients/{patientId}/abnormal-summary");
+        if (abnormal?.Data is { HasAbnormal: true })
+        {
+            AbnormalCount = abnormal.Data.TotalCount;
+            var parts = new List<string>();
+            if (abnormal.Data.LabCount > 0)
+                parts.Add($"{abnormal.Data.LabCount} آزمایش غیرطبیعی");
+            if (abnormal.Data.ImagingCount > 0)
+                parts.Add($"{abnormal.Data.ImagingCount} یافته تصویری هشدار");
+            AbnormalSummaryText = string.Join(" + ", parts);
+            foreach (var a in abnormal.Data.Items ?? new List<AbnormalItemApi>())
+            {
+                var value = a.Value is not null
+                    ? $"{a.Value}{(string.IsNullOrWhiteSpace(a.Unit) ? "" : " " + a.Unit)}"
+                    : (a.ResultText is { Length: > 46 } ? a.ResultText[..46] + "…" : a.ResultText ?? "—");
+                AbnormalResults.Add(new AbnormalResultRow(
+                    a.Title ?? "—", value,
+                    string.IsNullOrWhiteSpace(a.NormalRange) ? "—" : $"نرمال: {a.NormalRange}",
+                    string.IsNullOrWhiteSpace(a.FlagText) ? "خارج از محدوده" : a.FlagText,
+                    string.IsNullOrWhiteSpace(a.FlagColor) ? "#FFF3E0" : a.FlagColor,
+                    a.DateShamsi ?? "—",
+                    a.Kind == "imaging" ? "🩻 تصویر" : "🧪 آزمایش"));
+            }
+        }
+        else
+        {
+            AbnormalCount = 0;
+        }
     }
 
     /// <summary>پر کردن مجموعه تگ از رشته JSON</summary>
@@ -130,6 +181,37 @@ public partial class PatientDetailViewModel : ObservableObject
     }
 
     /* ── DTOهای سبک ── */
+
+    /// <summary>پاسخ نوار نتایج غیرعادی — چرخه ۱۳</summary>
+    public sealed class AbnormalEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public AbnormalData? Data { get; set; }
+    }
+
+    /// <summary>داده نوار نتایج غیرعادی</summary>
+    public sealed class AbnormalData
+    {
+        public int TotalCount { get; set; }
+        public int LabCount { get; set; }
+        public int ImagingCount { get; set; }
+        public bool HasAbnormal { get; set; }
+        public List<AbnormalItemApi>? Items { get; set; }
+    }
+
+    /// <summary>ردیف نوار نتیجه غیرعادی</summary>
+    public sealed class AbnormalItemApi
+    {
+        public string? Title { get; set; }
+        public decimal? Value { get; set; }
+        public string? ResultText { get; set; }
+        public string? NormalRange { get; set; }
+        public string? Unit { get; set; }
+        public string? FlagText { get; set; }
+        public string? FlagColor { get; set; }
+        public string? DateShamsi { get; set; }
+        public string? Kind { get; set; }
+    }
 
     /// <summary>پاسخ فهرست ویزیت‌های بیمار</summary>
     public sealed class VisitsEnvelope

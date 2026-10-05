@@ -100,6 +100,45 @@
             </DockPanel>
         </materialDesign:Card>
 
+        <!-- ═══ نوار نتایج غیرعادی پاراکلینیک — چرخه ۱۳ (درخواست ۱-۴) ═══ -->
+        <Expander Grid.Row="1" Margin="0,0,0,10" IsExpanded="False"
+                  Visibility="{Binding AbnormalCount, Converter={StaticResource NullToVisibility}}">
+            <Expander.Header>
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="FlaskOutline" Foreground="#E65100" Width="17" Height="17" VerticalAlignment="Center" />
+                    <TextBlock FontWeight="Bold" FontSize="12.5" Margin="7,0,0,0" VerticalAlignment="Center"
+                               Foreground="#E65100">
+                        <Run Text="🧪 نتایج غیرعادی پاراکلینیک: " /><Run Text="{Binding AbnormalSummaryText, Mode=OneWay}" />
+                    </TextBlock>
+                </StackPanel>
+            </Expander.Header>
+            <Border Background="#FFF3E0" CornerRadius="10" Padding="10,8" Margin="0,2,0,0">
+                <ItemsControl ItemsSource="{Binding AbnormalResults}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{Binding FlagColor, Mode=OneWay}" CornerRadius="8"
+                                    Padding="10,6" Margin="0,0,0,5" BorderBrush="#00000022" BorderThickness="0.8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Kind, Mode=OneWay}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Title}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Value}" FontSize="11.5" Foreground="#B71C1C" FontWeight="SemiBold" Margin="10,0,10,0" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="3" Text="{Binding Range, Mode=OneWay}" FontSize="10.5" Opacity="0.7" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="4" Text="{Binding DateShamsi}" FontSize="10.5" Opacity="0.6" VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+        </Expander>
+
         <!-- ═══ هشدارهای برجسته پزشکی ═══ -->
         <StackPanel Grid.Row="1" Margin="0,0,0,10">
             <!-- آلرژی — قرمز -->
