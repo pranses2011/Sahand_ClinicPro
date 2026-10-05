@@ -6,9 +6,10 @@ using Sahand.ClinicPro.Application.Common.Helpers;
 namespace Sahand.ClinicPro.Desktop.Views;
 
 /// <summary>
-/// پنجره فیش حقوقی چاپی — گام R3
+/// پنجره فیش حقوقی چاپی — گام R3 + حقوق درصدی چرخه نهم
 /// سند FlowDocument استاندارد RTL با سربرگ درمانگاه، جدول مزایا/کسورات
-/// و ناحیه امضا؛ چاپ مستقیم با PrintDialog (A4 تک‌صفحه‌ای)
+/// (شامل ردیف حقوق درصدی از سود خدمات) و ناحیه امضا؛
+/// چاپ مستقیم با PrintDialog (A4 تک‌صفحه‌ای)
 /// </summary>
 public partial class PayslipWindow : Window
 {
@@ -16,18 +17,21 @@ public partial class PayslipWindow : Window
     public PayslipWindow(
         string clinicName, string employeeName, string personnelCode, string nationalCode,
         string periodText, string monthName,
-        decimal baseSalary, decimal overtime, decimal bonus,
+        decimal baseSalary, decimal commissionPercent,
+        decimal serviceProfitBase, decimal serviceCommission,
+        decimal overtime, decimal bonus,
         decimal insurance, decimal tax, decimal deductions, decimal net)
     {
         InitializeComponent();
 
-        var gross = baseSalary + overtime + bonus;
+        var gross = baseSalary + serviceCommission + overtime + bonus;
         var totalDeductions = insurance + tax + deductions;
 
         SummaryText.Text = $"فیش حقوقی {employeeName} — دوره {periodText} — خالص: {net:#,0} ریال";
 
         Viewer.Document = BuildDocument(clinicName, employeeName, personnelCode,
-            nationalCode, periodText, monthName, baseSalary, overtime, bonus,
+            nationalCode, periodText, monthName, baseSalary, commissionPercent,
+            serviceProfitBase, serviceCommission, overtime, bonus,
             gross, insurance, tax, deductions, totalDeductions, net);
     }
 
@@ -35,7 +39,9 @@ public partial class PayslipWindow : Window
     private static FlowDocument BuildDocument(
         string clinicName, string employeeName, string personnelCode, string nationalCode,
         string periodText, string monthName,
-        decimal baseSalary, decimal overtime, decimal bonus, decimal gross,
+        decimal baseSalary, decimal commissionPercent,
+        decimal serviceProfitBase, decimal serviceCommission,
+        decimal overtime, decimal bonus, decimal gross,
         decimal insurance, decimal tax, decimal deductions, decimal totalDeductions, decimal net)
     {
         var doc = new FlowDocument
@@ -93,8 +99,11 @@ public partial class PayslipWindow : Window
         var body = new TableRowGroup();
         table.RowGroups.Add(body);
         body.Rows.Add(PairRow("حقوق پایه", baseSalary, "بیمه سهم کارمند (۷٪)", insurance));
-        body.Rows.Add(PairRow("اضافه‌کاری", overtime, "مالیات حقوق", tax));
-        body.Rows.Add(PairRow("پاداش", bonus, "سایر کسورات", deductions));
+        body.Rows.Add(PairRow(
+            $"حقوق درصدی از سود خدمات ({commissionPercent:0.##}٪)",
+            serviceCommission, "مالیات حقوق", tax));
+        body.Rows.Add(PairRow("اضافه‌کاری", overtime, "سایر کسورات", deductions));
+        body.Rows.Add(PairRow("پاداش", bonus, "", null));
         body.Rows.Add(PairRow("جمع مزایا", gross, "جمع کسورات", totalDeductions, bold: true));
 
         // ردیف خالص — تمام‌عرض
@@ -111,7 +120,10 @@ public partial class PayslipWindow : Window
         // ── یادداشت پایه محاسبه ──
         doc.Blocks.Add(new Paragraph(new Run(
             "مبنا: ساعت کار قانونی ۱۹۲ ساعت در ماه؛ اضافه‌کاری ۱/۴ برابر نرخ ساعت عادی؛ " +
-            "بیمه سهم کارمند ۷٪؛ پلکان مالیات حقوق مصوب بودجه ۱۴۰۴. این فیش به‌صورت سیستمی صادر شده است.")
+            "بیمه سهم کارمند ۷٪؛ پلکان مالیات حقوق مصوب بودجه ۱۴۰۴. " +
+            $"حقوق درصدی: {commissionPercent:0.##}٪ از سود خدمات انجام‌شده توسط خودِ این پرسنل در دوره " +
+            $"(مبنای سود خدمات: {serviceProfitBase:#,0} ریال) — نه از کل دریافتی درمانگاه. " +
+            "این فیش به‌صورت سیستمی صادر شده است.")
         {
             FontSize = 9.5,
             Foreground = Brushes.DimGray
@@ -182,13 +194,15 @@ public partial class PayslipWindow : Window
 
     /// <summary>ردیف چهارسلولی مزایا/کسورات</summary>
     private static TableRow PairRow(string earnTitle, decimal earnValue,
-        string deductTitle, decimal deductValue, bool bold = false)
+        string deductTitle, decimal? deductValue, bool bold = false)
     {
         var row = new TableRow();
         row.Cells.Add(Cell(earnTitle, bold: bold));
         row.Cells.Add(AmountCell(earnValue, bold));
         row.Cells.Add(Cell(deductTitle, bold: bold));
-        row.Cells.Add(AmountCell(deductValue, bold));
+        row.Cells.Add(deductValue.HasValue
+            ? AmountCell(deductValue.Value, bold)
+            : Cell("—", bold));
         return row;
     }
 
