@@ -1262,6 +1262,10 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("decimal(5,2)")
                         .HasComment("سهم بیمار");
 
+                    b.Property<long?>("PerformedById")
+                        .HasColumnType("bigint")
+                        .HasComment("شناسه پرسنل انجام‌دهنده خدمت — مبنای حقوق درصدی سود خدمات انجامی همان پرسنل");
+
                     b.Property<decimal>("Quantity")
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)")
@@ -1285,6 +1289,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("decimal(18,0)")
                         .HasComment("قیمت کل قلم");
 
+                    b.Property<decimal>("UnitCost")
+                        .HasPrecision(18)
+                        .HasColumnType("decimal(18,0)")
+                        .HasComment("عکس‌فوری هزینه تمام‌شده هر واحد در لحظه صدور — مبنای سود این قلم");
+
                     b.Property<decimal>("UnitPrice")
                         .HasPrecision(18)
                         .HasColumnType("decimal(18,0)")
@@ -1299,6 +1308,9 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("InvoiceId");
+
+                    b.HasIndex("PerformedById")
+                        .HasDatabaseName("IX_InvoiceItem_PerformedBy");
 
                     b.HasIndex("ServiceId");
 
@@ -1447,6 +1459,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
 
                     b.Property<long?>("CreatedBy")
                         .HasColumnType("bigint");
+
+                    b.Property<decimal>("DefaultCost")
+                        .HasPrecision(18)
+                        .HasColumnType("decimal(18,0)")
+                        .HasComment("هزینه تمام‌شده پایه هر واحد — مبنای سود خدمت (سود = قیمت − هزینه)");
 
                     b.Property<decimal>("DefaultPrice")
                         .HasPrecision(18)
@@ -6110,6 +6127,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<long?>("BranchId")
                         .HasColumnType("bigint");
 
+                    b.Property<decimal>("CommissionPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)")
+                        .HasComment("درصد حقوق از سود خدمات انجامی خود پرسنل (نه کل دریافتی) — صفر = فقط حقوق پایه");
+
                     b.Property<DateOnly?>("ContractEndDate")
                         .HasColumnType("date");
 
@@ -7313,6 +7335,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<long?>("BranchId")
                         .HasColumnType("bigint");
 
+                    b.Property<decimal>("CommissionPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)")
+                        .HasComment("عکس‌فوری درصد حقوق از سود خدمات در لحظه محاسبه");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -7364,6 +7391,16 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
+
+                    b.Property<decimal>("ServiceCommission")
+                        .HasPrecision(18)
+                        .HasColumnType("decimal(18,0)")
+                        .HasComment("حقوق درصدی دوره = سود خدمات × درصد ÷ ۱۰۰");
+
+                    b.Property<decimal>("ServiceProfitBase")
+                        .HasPrecision(18)
+                        .HasColumnType("decimal(18,0)")
+                        .HasComment("جمع سود خدمات انجامی خود پرسنل در دوره — مبنا (نه کل دریافتی)");
 
                     b.Property<byte>("Status")
                         .HasColumnType("tinyint")
@@ -9885,12 +9922,19 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Employee", "Performer")
+                        .WithMany()
+                        .HasForeignKey("PerformedById")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Sahand.ClinicPro.Domain.Entities.Billing.Service", "Service")
                         .WithMany("InvoiceItems")
                         .HasForeignKey("ServiceId")
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Invoice");
+
+                    b.Navigation("Performer");
 
                     b.Navigation("Service");
                 });
