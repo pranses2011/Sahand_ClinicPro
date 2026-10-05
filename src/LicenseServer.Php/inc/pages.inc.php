@@ -395,6 +395,23 @@ if ($page === 'settings') {
         . '<label>مهلت آفلاین کلاینت (روز)<input type="number" name="offline_grace_days" value="' . ls_e(ls_setting('offline_grace_days', '30')) . '" min="0"></label>'
         . '</div><button class="btn btn-primary" type="submit">💾 ذخیره تنظیمات</button></form>';
 
+    echo '<h3>🔧 سلامت و ترمیم بانک اطلاعاتی</h3>';
+    echo '<div class="alert alert-info">اگر هنگام صدور لایسنس یا سایر عملیات با خطای «HTTP 500» روبه‌رو شدید، این دکمه جداول و ستون‌های گمشده را '
+        . 'به‌صورت خودکار می‌سازد (بدون دست‌زدن به داده‌های موجود). پس از به‌روزرسانی دستی فایل‌های سرور روی هاست هم اجرایش توصیه می‌شود.</div>';
+    echo '<form method="post" action="index.php?page=settings">' . ls_csrf_field()
+        . '<input type="hidden" name="action" value="repair_db">'
+        . '<button class="btn btn-primary" type="submit">🔧 بررسی و ترمیم بانک اطلاعاتی</button></form>';
+
+    // آخرین خطاهای ثبت‌شده — ابزار ریشه‌یابی (data/error.log)
+    $errTail = ls_log_error_tail(20);
+    if (count($errTail) > 0) {
+        echo '<h3>🩺 آخرین خطاهای ثبت‌شده (data/error.log)</h3>';
+        echo '<div class="alert alert-warning">این خطاها برای ریشه‌یابی ثبت شده‌اند — اگر خطای تازه‌ای می‌بینید،'
+            . ' همین متن‌ها را برای پشتیبانی ارسال کنید.</div>';
+        echo '<pre class="code" dir="ltr" style="max-height:260px;overflow:auto">'
+            . ls_e(implode("\n", $errTail)) . '</pre>';
+    }
+
     echo '<h3>🔑 کلیدهای RSA</h3><div class="alert alert-warning">کلید عمومی را در فایل <code>appsettings.json</code> کلاینت '
         . '(بخش License → RsaPublicKey) جای‌گذاری کنید. قالب XML برای <code>RSA.FromXmlString</code> و قالب PEM برای '
         . '<code>ImportFromPem</code> هر دو پشتیبانی می‌شوند.</div>';

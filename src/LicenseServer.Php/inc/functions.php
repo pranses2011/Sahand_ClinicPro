@@ -371,16 +371,20 @@ function ls_admin_login(string $username, string $password): array
     return [true, 'خوش آمدید.'];
 }
 
-/** ثبت رویداد در لاگ حسابرسی مدیران */
+/** ثبت رویداد در لاگ حسابرسی مدیران — best-effort: شکست حسابرسی نباید عملیات اصلی (مثل صدور لایسنس) را بزند */
 function ls_audit(int $adminId, string $action, string $entity = '', ?int $entityId = null, string $details = ''): void
 {
-    ls_db()->prepare(
-        'INSERT INTO ls_admin_audit (admin_id, action, entity, entity_id, details, ip_address, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, NOW())'
-    )->execute([
-        $adminId, $action, $entity, $entityId, mb_substr($details, 0, 500),
-        substr((string)($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45),
-    ]);
+    try {
+        ls_db()->prepare(
+            'INSERT INTO ls_admin_audit (admin_id, action, entity, entity_id, details, ip_address, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, NOW())'
+        )->execute([
+            $adminId, $action, $entity, $entityId, mb_substr($details, 0, 500),
+            substr((string)($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45),
+        ]);
+    } catch (Throwable $e) {
+        ls_log_error('audit:' . $action, $e);
+    }
 }
 
 /* ──────────────────────────  محدودسازی نرخ (Rate Limit)  ────────────────────────── */
