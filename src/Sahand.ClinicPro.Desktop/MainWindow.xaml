@@ -88,6 +88,12 @@
         <DataTemplate DataType="{x:Type vm:BranchesViewModel}">
             <views:BranchesView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SepasViewModel}">
+            <views:SepasView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:EPrescriptionViewModel}">
+            <views:EPrescriptionView />
+        </DataTemplate>
     </Window.Resources>
 
     <!-- ═══════════════════════════════════════════════════════════

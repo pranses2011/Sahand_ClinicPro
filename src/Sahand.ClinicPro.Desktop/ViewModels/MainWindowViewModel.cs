@@ -102,7 +102,9 @@ public partial class MainWindowViewModel : ObservableObject
         SettingsViewModel settingsVm,
         BackupViewModel backupVm,
         AuditLogViewModel auditVm,
-        BranchesViewModel branchesVm)
+        BranchesViewModel branchesVm,
+        SepasViewModel sepasVm,
+        EPrescriptionViewModel erxVm)
     {
         _api = api;
         _tokens = tokens;
@@ -149,7 +151,9 @@ public partial class MainWindowViewModel : ObservableObject
             ["settings-full"] = () => settingsVm,
             ["backup"] = () => backupVm,
             ["audit"] = () => auditVm,
-            ["branches"] = () => branchesVm
+            ["branches"] = () => branchesVm,
+            ["sepas"] = () => sepasVm,
+            ["erx"] = () => erxVm
         };
 
         // آیتم‌های ناوبری — فعال بودن از لایسنس کنترل می‌شود
@@ -174,6 +178,8 @@ public partial class MainWindowViewModel : ObservableObject
             new() { Title = "پیامک", PageKey = "sms", Icon = "MessageTextOutline" },
             new() { Title = "پرسنل", PageKey = "personnel", Icon = "AccountTie" },
             new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog" },
+            new() { Title = "سپاس", PageKey = "sepas", Icon = "BankTransfer" },
+            new() { Title = "نسخه الکترونیک", PageKey = "erx", Icon = "CloudUploadOutline" },
             new() { Title = "شعبه‌ها", PageKey = "branches", Icon = "HomeGroup" },
             new() { Title = "بکاپ و بازیابی", PageKey = "backup", Icon = "DatabaseBackup" },
             new() { Title = "لاگ عملیات", PageKey = "audit", Icon = "FileDocumentEditOutline" }
