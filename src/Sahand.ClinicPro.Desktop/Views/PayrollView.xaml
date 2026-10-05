@@ -1,0 +1,118 @@
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.PayrollView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="680" d:DesignWidth="1150"
+             FlowDirection="RightToLeft"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══ حقوق و فیش پرسنل — گام R3 ═══ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- عنوان -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="CashCheck" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="حقوق و فیش پرسنل" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- نوار دوره + دکمه‌ها -->
+        <WrapPanel Grid.Row="1" Margin="0,0,0,10">
+            <TextBlock Text="دوره:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,8,0" />
+            <ComboBox SelectedValue="{Binding SelectedYear}" SelectedValuePath="Content" MinWidth="95" Margin="0,0,8,0">
+                <ComboBoxItem Content="1400" /><ComboBoxItem Content="1401" /><ComboBoxItem Content="1402" />
+                <ComboBoxItem Content="1403" /><ComboBoxItem Content="1404" /><ComboBoxItem Content="1405" />
+            </ComboBox>
+            <ComboBox SelectedIndex="{Binding SelectedMonthIndex}" MinWidth="110" Margin="0,0,14,0">
+                <ComboBoxItem Content="فروردین" /><ComboBoxItem Content="اردیبهشت" /><ComboBoxItem Content="خرداد" />
+                <ComboBoxItem Content="تیر" /><ComboBoxItem Content="مرداد" /><ComboBoxItem Content="شهریور" />
+                <ComboBoxItem Content="مهر" /><ComboBoxItem Content="آبان" /><ComboBoxItem Content="آذر" />
+                <ComboBoxItem Content="دی" /><ComboBoxItem Content="بهمن" /><ComboBoxItem Content="اسفند" />
+            </ComboBox>
+            <Button Command="{Binding GenerateCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                    Content="⚙ محاسبه دوره" Margin="0,0,8,0" />
+            <Button Command="{Binding PayCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                    Content="✅ علامت پرداخت" Margin="0,0,8,0"
+                    IsEnabled="{Binding HasSelection}" />
+            <Button Command="{Binding ShowPayslipCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                    Content="🧾 پیش‌نمایش فیش" IsEnabled="{Binding HasSelection}" />
+        </WrapPanel>
+
+        <!-- کارت‌های خلاصه دوره -->
+        <UniformGrid Grid.Row="2" Columns="3" Margin="0,0,0,10">
+            <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                    Padding="14,10" Margin="0,0,8,0" BorderThickness="1"
+                    BorderBrush="{DynamicResource MaterialDesignDivider}">
+                <StackPanel>
+                    <TextBlock Text="کارکنان دوره" FontSize="11.5" Opacity="0.65" />
+                    <TextBlock Text="{Binding EmployeeCount}" FontSize="22" FontWeight="Bold" Foreground="#1E88E5" />
+                </StackPanel>
+            </Border>
+            <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                    Padding="14,10" Margin="0,0,8,0" BorderThickness="1"
+                    BorderBrush="{DynamicResource MaterialDesignDivider}">
+                <StackPanel>
+                    <TextBlock Text="جمع خالص پرداختی (ریال)" FontSize="11.5" Opacity="0.65" />
+                    <TextBlock Text="{Binding TotalNet, StringFormat='#,0'}" FontSize="22" FontWeight="Bold" Foreground="#43A047" />
+                </StackPanel>
+            </Border>
+            <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                    Padding="14,10" BorderThickness="1"
+                    BorderBrush="{DynamicResource MaterialDesignDivider}">
+                <StackPanel>
+                    <TextBlock Text="دوره فعال" FontSize="11.5" Opacity="0.65" />
+                    <TextBlock Text="{Binding PeriodText}" FontSize="22" FontWeight="Bold" Foreground="#FB8C00" />
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <ProgressBar Grid.Row="2" IsIndeterminate="True" Height="3"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+
+        <TextBlock Grid.Row="2" Text="{Binding ErrorMessage}" Foreground="#D32F2F" FontSize="12"
+                   Margin="8,28,0,0" Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
+
+        <!-- جدول حقوق -->
+        <DataGrid Grid.Row="3" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}"
+                  AutoGenerateColumns="False" IsReadOnly="True"
+                  Style="{StaticResource MaterialDesignDataGrid}"
+                  HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode}" />
+                <DataGridTextColumn Header="نام و نام خانوادگی" Binding="{Binding EmployeeName}" />
+                <DataGridTextColumn Header="حقوق پایه" Binding="{Binding BaseSalary}" />
+                <DataGridTextColumn Header="اضافه‌کاری" Binding="{Binding Overtime}" />
+                <DataGridTextColumn Header="پاداش" Binding="{Binding Bonus}" />
+                <DataGridTextColumn Header="بیمه ۷٪" Binding="{Binding Insurance}" />
+                <DataGridTextColumn Header="مالیات" Binding="{Binding Tax}" />
+                <DataGridTextColumn Header="سایر کسورات" Binding="{Binding Deductions}" />
+                <DataGridTextColumn Header="خالص پرداختی" Binding="{Binding NetAmount}">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontWeight" Value="Bold" />
+                            <Setter Property="Foreground" Value="#2E7D32" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTemplateColumn Header="وضعیت">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="{Binding StatusColor}" CornerRadius="9" Padding="9,2.5"
+                                    HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding StatusText}" Foreground="White" FontSize="10.5" />
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>
