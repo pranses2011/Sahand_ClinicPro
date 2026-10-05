@@ -6728,6 +6728,388 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Personnel.AttendanceCorrection", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("AppliedAttendanceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("ApprovedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ApproverNote")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)")
+                        .HasComment("ملاحظات تأییدکننده");
+
+                    b.Property<DateOnly>("AttendanceDate")
+                        .HasColumnType("date");
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("EmployeeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FieldName")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasComment("فیلد مورد اصلاح");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NewValue")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasComment("مقدار درخواستی");
+
+                    b.Property<string>("OldValue")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasComment("مقدار فعلی");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)")
+                        .HasComment("دلیل اصلاح");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint")
+                        .HasComment("وضعیت درخواست");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_AttendanceCorrections_Status");
+
+                    b.HasIndex("EmployeeId", "AttendanceDate")
+                        .HasDatabaseName("IX_AttendanceCorrections_Employee_Date");
+
+                    b.ToTable("AttendanceCorrections", null, t =>
+                        {
+                            t.HasComment("درخواست اصلاح کارت حضور - جریان تأیید سرپرست");
+                        });
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Personnel.AttendanceDevice", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte>("Brand")
+                        .HasColumnType("tinyint")
+                        .HasComment("برند/پروتکل دستگاه");
+
+                    b.Property<string>("CommunicationKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasComment("کلید ارتباطی");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)")
+                        .HasComment("نشانی IP");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)")
+                        .HasComment("آخرین خطا");
+
+                    b.Property<DateTime?>("LastSyncAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("LastSyncLogCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasComment("محل نصب");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)")
+                        .HasComment("مدل دستگاه");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)")
+                        .HasComment("نام نمایشی دستگاه");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)")
+                        .HasComment("توضیحات");
+
+                    b.Property<int>("Port")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SerialNumber")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)")
+                        .HasComment("شماره سریال");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint")
+                        .HasComment("وضعیت اتصال");
+
+                    b.Property<int>("SyncIntervalMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IpAddress")
+                        .HasDatabaseName("IX_AttendanceDevices_Ip");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_AttendanceDevices_IsActive");
+
+                    b.ToTable("AttendanceDevices", null, t =>
+                        {
+                            t.HasComment("دستگاه‌های حضور و غیاب - اتصال و همگام‌سازی");
+                        });
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Personnel.DeviceRawLog", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("AttendanceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DeviceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("EnrollNumber")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)")
+                        .HasComment("شناسه روی دستگاه");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)")
+                        .HasComment("خطای پردازش");
+
+                    b.Property<byte?>("InOutPort")
+                        .HasColumnType("tinyint");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("ProcessedStatus")
+                        .HasColumnType("tinyint")
+                        .HasComment("وضعیت پردازش");
+
+                    b.Property<byte>("PunchState")
+                        .HasColumnType("tinyint")
+                        .HasComment("نوع ضربه");
+
+                    b.Property<DateTime>("PunchTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte?>("RawStateCode")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid?>("SyncBatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte>("VerifyMode")
+                        .HasColumnType("tinyint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessedStatus", "PunchTime")
+                        .HasDatabaseName("IX_DeviceRawLogs_Status_Time");
+
+                    b.HasIndex("DeviceId", "EnrollNumber", "PunchTime")
+                        .IsUnique()
+                        .HasDatabaseName("IX_DeviceRawLogs_Unique_Punch");
+
+                    b.ToTable("DeviceRawLogs", null, t =>
+                        {
+                            t.HasComment("لاگ خام ضربه‌ها - منبع حقیقت پیش از پردازش");
+                        });
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Personnel.DeviceUserMapping", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DeviceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("EmployeeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("EnrollNumber")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)")
+                        .HasComment("شناسه روی دستگاه");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastVerifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte?>("PreferredVerifyMode")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId")
+                        .HasDatabaseName("IX_DeviceUserMappings_Employee");
+
+                    b.HasIndex("DeviceId", "EnrollNumber")
+                        .IsUnique()
+                        .HasDatabaseName("IX_DeviceUserMappings_Device_Enroll");
+
+                    b.ToTable("DeviceUserMappings", null, t =>
+                        {
+                            t.HasComment("نگاشت شناسه کاربر دستگاه به پرسنل درمانگاه");
+                        });
+                });
+
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Personnel.EmployeeAttendance", b =>
                 {
                     b.Property<long>("Id")
@@ -6760,11 +7142,28 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<long?>("DeletedBy")
                         .HasColumnType("bigint");
 
+                    b.Property<int>("EarlyLeaveMinutes")
+                        .HasColumnType("int")
+                        .HasComment("دقایق تعجیل خروج");
+
                     b.Property<long>("EmployeeId")
                         .HasColumnType("bigint");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsManuallyEdited")
+                        .HasColumnType("bit")
+                        .HasComment("پرچم ویرایش دستی");
+
+                    b.Property<int>("LateMinutes")
+                        .HasColumnType("int")
+                        .HasComment("دقایق تأخیر ورود");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)")
+                        .HasComment("یادداشت");
 
                     b.Property<decimal>("OvertimeHours")
                         .HasPrecision(5, 2)
@@ -6777,6 +7176,9 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("rowversion");
 
                     b.Property<long?>("ShiftId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("SourceDeviceId")
                         .HasColumnType("bigint");
 
                     b.Property<byte>("Status")
@@ -6796,9 +7198,16 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EmployeeId");
+                    b.HasIndex("AttendanceDate")
+                        .HasDatabaseName("IX_EmployeeAttendances_Date");
 
                     b.HasIndex("ShiftId");
+
+                    b.HasIndex("SourceDeviceId");
+
+                    b.HasIndex("EmployeeId", "AttendanceDate")
+                        .IsUnique()
+                        .HasDatabaseName("IX_EmployeeAttendances_Employee_Date_Unique");
 
                     b.ToTable("EmployeeAttendances", null, t =>
                         {
@@ -6978,6 +7387,163 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.ToTable("EmployeeSalaries", null, t =>
                         {
                             t.HasComment("فیش حقوقی - محاسبه ماهانه حقوق پرسنل");
+                        });
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Personnel.EmployeeShiftAssignment", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("EmployeeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateOnly>("FromDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)")
+                        .HasComment("یادداشت");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("Recurrence")
+                        .HasColumnType("tinyint")
+                        .HasComment("الگوی تکرار");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("ShiftId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateOnly?>("ToDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("WeekDaysMask")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShiftId")
+                        .HasDatabaseName("IX_ShiftAssignments_Shift");
+
+                    b.HasIndex("EmployeeId", "FromDate")
+                        .HasDatabaseName("IX_ShiftAssignments_Employee_From");
+
+                    b.ToTable("EmployeeShiftAssignments", null, t =>
+                        {
+                            t.HasComment("تخصیص شیفت به پرسنل با الگوی تکرار");
+                        });
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Personnel.Holiday", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte>("HolidayType")
+                        .HasColumnType("tinyint")
+                        .HasComment("نوع تعطیلی");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRecurring")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("OnCallEmployeeIds")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)")
+                        .HasComment("شناسه‌های پرسنل پوشش‌دهنده جدا با کاما");
+
+                    b.Property<TimeOnly?>("PartialEndTime")
+                        .HasColumnType("time");
+
+                    b.Property<TimeOnly?>("PartialStartTime")
+                        .HasColumnType("time");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)")
+                        .HasComment("عنوان تعطیلی");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date")
+                        .HasDatabaseName("IX_Holidays_Date");
+
+                    b.ToTable("Holidays", null, t =>
+                        {
+                            t.HasComment("تقویم تعطیلات - رسمی و سازمانی");
                         });
                 });
 
@@ -8428,6 +8994,15 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<long?>("BranchId")
                         .HasColumnType("bigint");
 
+                    b.Property<int>("BreakMinutes")
+                        .HasColumnType("int")
+                        .HasComment("استراحت کسرشونده (دقیقه)");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(9)
+                        .HasColumnType("nvarchar(9)")
+                        .HasComment("رنگ تقویمی هگز");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -8440,6 +9015,10 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<long?>("DeletedBy")
                         .HasColumnType("bigint");
 
+                    b.Property<int>("EarlyLeaveGraceMinutes")
+                        .HasColumnType("int")
+                        .HasComment("تحمل تعجیل (دقیقه)");
+
                     b.Property<TimeOnly>("EndTime")
                         .HasColumnType("time");
 
@@ -8451,6 +9030,18 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("IsNightShift")
                         .HasColumnType("bit");
+
+                    b.Property<int>("LateGraceMinutes")
+                        .HasColumnType("int")
+                        .HasComment("تحمل تأخیر (دقیقه)");
+
+                    b.Property<int>("MinMinutesBetweenPunches")
+                        .HasColumnType("int")
+                        .HasComment("حداقل فاصله ضربه‌ها (دقیقه)");
+
+                    b.Property<int>("OvertimeStartAfterMinutes")
+                        .HasColumnType("int")
+                        .HasComment("شروع اضافه‌کاری پس از (دقیقه)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -9785,6 +10376,47 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Navigation("Parent");
                 });
 
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Personnel.AttendanceCorrection", b =>
+                {
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Personnel.DeviceRawLog", b =>
+                {
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.Personnel.AttendanceDevice", "Device")
+                        .WithMany("RawLogs")
+                        .HasForeignKey("DeviceId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Device");
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Personnel.DeviceUserMapping", b =>
+                {
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.Personnel.AttendanceDevice", "Device")
+                        .WithMany("UserMappings")
+                        .HasForeignKey("DeviceId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Device");
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Personnel.EmployeeAttendance", b =>
                 {
                     b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Employee", "Employee")
@@ -9798,9 +10430,16 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasForeignKey("ShiftId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.Personnel.AttendanceDevice", "SourceDevice")
+                        .WithMany()
+                        .HasForeignKey("SourceDeviceId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("Employee");
 
                     b.Navigation("Shift");
+
+                    b.Navigation("SourceDevice");
                 });
 
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Personnel.EmployeeLeave", b =>
@@ -9823,6 +10462,25 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Personnel.EmployeeShiftAssignment", b =>
+                {
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.Scheduling.Shift", "Shift")
+                        .WithMany("Assignments")
+                        .HasForeignKey("ShiftId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Shift");
                 });
 
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Personnel.PersonnelContract", b =>
@@ -10325,6 +10983,13 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Navigation("Doctors");
                 });
 
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Personnel.AttendanceDevice", b =>
+                {
+                    b.Navigation("RawLogs");
+
+                    b.Navigation("UserMappings");
+                });
+
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Pharmacy.PharmacyInventory", b =>
                 {
                     b.Navigation("Transactions");
@@ -10368,6 +11033,8 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Scheduling.Shift", b =>
                 {
+                    b.Navigation("Assignments");
+
                     b.Navigation("Attendances");
                 });
 
