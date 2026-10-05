@@ -51,6 +51,14 @@ public partial class PersianDatePicker : UserControl
         DependencyProperty.Register(nameof(MaxDate), typeof(DateTime?),
             typeof(PersianDatePicker), new PropertyMetadata(null));
 
+    /// <summary>متن شمسی قابل اتصال دوطرفه — «۱۴۰۴/۰۴/۰۱» (برای فرم‌هایی که رشته شمسی ذخیره می‌کنند)</summary>
+    public static readonly DependencyProperty DateShamsiTextProperty =
+        DependencyProperty.Register(nameof(DateShamsiText), typeof(string),
+            typeof(PersianDatePicker),
+            new FrameworkPropertyMetadata(string.Empty,
+                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                (d, _) => ((PersianDatePicker)d).OnDateShamsiTextChanged()));
+
     /* ─────────────  رویدادها  ───────────── */
 
     /// <summary>رویداد تغییر تاریخ انتخاب‌شده</summary>
@@ -93,6 +101,13 @@ public partial class PersianDatePicker : UserControl
         set => SetValue(MaxDateProperty, value);
     }
 
+    /// <summary>متن شمسی دوطرفه</summary>
+    public string DateShamsiText
+    {
+        get => (string)GetValue(DateShamsiTextProperty);
+        set => SetValue(DateShamsiTextProperty, value);
+    }
+
     /* ─────────────  منطق  ───────────── */
 
     /// <summary>باز کردن تقویم با کلیک روی جعبه متن</summary>
@@ -104,6 +119,24 @@ public partial class PersianDatePicker : UserControl
     {
         SyncShamsi();
         DateChanged?.Invoke(this, SelectedDate);
+    }
+
+    /// <summary>ورود متن شمسی از بیرون — تحلیل و تبدیل به تاریخ</summary>
+    private void OnDateShamsiTextChanged()
+    {
+        // جلوگیری از حلقه — اگر متن با وضعیت فعلی هم‌ارز است کاری نکن
+        var text = DateShamsiText;
+        var current = SelectedShamsi;
+        if (string.Equals(text, current, StringComparison.Ordinal))
+            return;
+
+        var parsed = PersianDateHelper.ToGregorian(text);
+        if (parsed is { } date)
+        {
+            SelectedDate = date;
+            SyncShamsi();
+            DateChanged?.Invoke(this, date);
+        }
     }
 
     /// <summary>به‌روزرسانی متن شمسی و تقویم بازشو</summary>
