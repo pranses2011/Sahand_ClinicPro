@@ -1,0 +1,316 @@
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="680" d:DesignWidth="1080"
+             FlowDirection="RightToLeft"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══ تنظیمات سیستم — گام U15 طبق فرم ۲۸: سایدبار + بخش‌ها ═══ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="Cog" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="تنظیمات سیستم" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+
+        <!-- گرید: سایدبار منو + محتوا -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="230" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ═══ سایدبار منوی تنظیمات ═══ -->
+            <Border Grid.Column="0" CornerRadius="10"
+                    Background="{DynamicResource MaterialDesign.Brush.Background.Variant}" Padding="6">
+                <ListBox SelectedIndex="{Binding SectionIndex}" Background="Transparent" BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal" Margin="8,10">
+                            <TextBlock Text="🏥" FontSize="15" VerticalAlignment="Center" />
+                            <TextBlock Text="اطلاعات درمانگاه" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal" Margin="8,10">
+                            <TextBlock Text="🧩" FontSize="15" VerticalAlignment="Center" />
+                            <TextBlock Text="ماژول‌ها" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal" Margin="8,10">
+                            <TextBlock Text="🔗" FontSize="15" VerticalAlignment="Center" />
+                            <TextBlock Text="سامانه‌های دولتی" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal" Margin="8,10">
+                            <TextBlock Text="🖨️" FontSize="15" VerticalAlignment="Center" />
+                            <TextBlock Text="چاپگر و چاپ" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal" Margin="8,10">
+                            <TextBlock Text="🎨" FontSize="15" VerticalAlignment="Center" />
+                            <TextBlock Text="تم و ظاهر" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal" Margin="8,10">
+                            <TextBlock Text="🔐" FontSize="15" VerticalAlignment="Center" />
+                            <TextBlock Text="امنیت" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </ListBoxItem>
+                </ListBox>
+            </Border>
+
+            <!-- ═══ محتوای بخش‌ها — پنل مخفی/نمایان ═══ -->
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" Padding="8,4">
+                <StackPanel>
+
+                <!-- ─── بخش ۰: اطلاعات درمانگاه ─── -->
+                <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=0}" Margin="4,8">
+                    <TextBlock Text="اطلاعات درمانگاه" FontSize="16" FontWeight="Bold" Margin="2,0,0,12" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBox materialDesign:HintAssist.Hint="نام درمانگاه (الزامی)"
+                                     Text="{Binding ClinicName, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                            <TextBox materialDesign:HintAssist.Hint="شماره مجوز"
+                                     Text="{Binding LicenseNumber, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                            <TextBox materialDesign:HintAssist.Hint="کد اقتصادی"
+                                     Text="{Binding EconomicCode, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                            <TextBox materialDesign:HintAssist.Hint="شناسه ملی"
+                                     Text="{Binding NationalId, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBox materialDesign:HintAssist.Hint="نام مدیر"
+                                     Text="{Binding ManagerName, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                            <TextBox materialDesign:HintAssist.Hint="تلفن"
+                                     Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                            <TextBox materialDesign:HintAssist.Hint="ایمیل"
+                                     Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                            <TextBox materialDesign:HintAssist.Hint="آدرس"
+                                     Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     AcceptsReturn="True" Height="70" TextWrapping="Wrap" VerticalContentAlignment="Top" />
+                        </StackPanel>
+                    </Grid>
+                    <Button Command="{Binding SaveClinicInfoCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                            HorizontalAlignment="Left" Margin="0,14,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                            <TextBlock Text="💾 ذخیره تغییرات" Margin="7,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- ─── بخش ۱: ماژول‌ها ─── -->
+                <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}" Margin="4,8">
+                    <TextBlock Text="ماژول‌ها و وضعیت لایسنس" FontSize="16" FontWeight="Bold" Margin="2,0,4,12" />
+                    <DataGrid ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule}"
+                              AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                              HeadersVisibility="Column" FontSize="12" MaxHeight="420" AlternatingRowBackground="#F7FAFD">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ماژول" Binding="{Binding Title}" Width="150" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="وضعیت لایسنس" Binding="{Binding LicenseText}" Width="110" />
+                            <DataGridTemplateColumn Header="فعال در سیستم" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ToggleButton IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                                                      IsEnabled="{Binding IsToggleEnabled}"
+                                                      Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                      HorizontalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="عملیات" Binding="{Binding ActionText}" Width="110" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Text="Core: غیرقابل غیرفعال‌سازی — ماژول بدون لایسنس قفل است و دکمه «خرید ماژول» به License Portal متصل می‌شود"
+                               FontSize="10.5" Opacity="0.6" Margin="2,10,0,0" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <!-- ─── بخش ۲: سامانه‌های دولتی ─── -->
+                <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=2}" Margin="4,8">
+                    <TextBlock Text="سامانه‌های دولتی" FontSize="16" FontWeight="Bold" Margin="2,0,4,12" />
+                    <ItemsControl ItemsSource="{Binding GovSystems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="2,6" Padding="16,12" CornerRadius="12" Background="#F7FAFD"
+                                        BorderBrush="#DCE7F0" BorderThickness="1">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Name}" FontSize="14.5" FontWeight="Bold" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding ConnectedText}" FontSize="11.5" Margin="12,0,0,0" VerticalAlignment="Center" Opacity="0.8" />
+                                        </StackPanel>
+                                        <ToggleButton Grid.Row="0" Grid.Column="1" IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                                                      Style="{StaticResource MaterialDesignSwitchToggleButton}" ToolTip="فعال" />
+                                        <TextBox Grid.Row="1" Grid.ColumnSpan="2" materialDesign:HintAssist.Hint="آدرس API"
+                                                 Text="{Binding ApiUrl, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10,0,8" FontFamily="Consolas" FontSize="11.5" />
+                                        <Grid Grid.Row="2" Grid.ColumnSpan="2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="10" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="نام کاربری"
+                                                     Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                                            <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="رمز عبور (ورود جدید)"
+                                                     Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                                        </Grid>
+                                        <Button Grid.Row="3" Grid.ColumnSpan="2"
+                                                Command="{Binding DataContext.SaveGovSystemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                HorizontalAlignment="Left" Margin="0,10,0,0" Content="💾 ذخیره این سامانه" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- ─── بخش ۳: چاپگر و چاپ ─── -->
+                <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=3}" Margin="4,8" MaxWidth="520" HorizontalAlignment="Right">
+                    <TextBlock Text="چاپگر و چاپ" FontSize="16" FontWeight="Bold" Margin="2,0,0,12" />
+                    <TextBox materialDesign:HintAssist.Hint="چاپگر پیش‌فرض"
+                             Text="{Binding DefaultPrinter, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                    <TextBox materialDesign:HintAssist.Hint="چاپگر فاکتور"
+                             Text="{Binding InvoicePrinter, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                    <TextBox materialDesign:HintAssist.Hint="چاپگر نسخه"
+                             Text="{Binding PrescriptionPrinter, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                    <ComboBox materialDesign:HintAssist.Hint="سایز کاغذ فاکتور"
+                              ItemsSource="{Binding PaperSizes}" SelectedItem="{Binding InvoicePaperSize}"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,12" />
+                    <CheckBox Content="نمایش پیش‌نمایش قبل از چاپ" IsChecked="{Binding ShowPreview}" Margin="2,3" />
+                    <CheckBox Content="چاپ خودکار بعد از ثبت فاکتور" IsChecked="{Binding AutoPrintInvoice}" Margin="2,3" />
+                    <StackPanel Orientation="Horizontal" Margin="2,10">
+                        <TextBlock Text="تعداد نسخه چاپ: " VerticalAlignment="Center" FontSize="12.5" />
+                        <TextBox Text="{Binding PrintCopies, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <Button Command="{Binding SavePrinterSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="ذخیره" Margin="7,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding TestPrintCommand}" Style="{StaticResource MaterialDesignOutlinedButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Printer" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="🖨️ تست چاپ" Margin="7,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- ─── بخش ۴: تم و ظاهر ─── -->
+                <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=4}" Margin="4,8" MaxWidth="520" HorizontalAlignment="Right">
+                    <TextBlock Text="تم و ظاهر" FontSize="16" FontWeight="Bold" Margin="2,0,0,12" />
+                    <StackPanel Orientation="Horizontal" Margin="2,8">
+                        <TextBlock Text="تم رنگی: " VerticalAlignment="Center" FontSize="12.5" />
+                        <RadioButton Content="☀️ روشن" GroupName="Theme" IsChecked="{Binding IsDarkTheme, Converter={StaticResource InvertBool}, Mode=OneWay}" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        <RadioButton Content="🌙 تاریک" GroupName="Theme" IsChecked="{Binding IsDarkTheme}" Margin="10,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <ComboBox materialDesign:HintAssist.Hint="فونت"
+                              ItemsSource="{Binding FontOptions}" SelectedItem="{Binding SelectedFont}"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,10" />
+                    <StackPanel Orientation="Horizontal" Margin="2,8">
+                        <TextBlock Text="سایز فونت پایه: " VerticalAlignment="Center" FontSize="12.5" />
+                        <Slider Minimum="11" Maximum="16" Value="{Binding BaseFontSize}" Width="220"
+                                TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Margin="8,0" />
+                        <TextBlock Text="{Binding BaseFontSize, StringFormat={}{0:0}}" VerticalAlignment="Center"
+                                   FontFamily="Consolas" FontSize="13" />
+                    </StackPanel>
+                    <CheckBox Content="انیمیشن‌ها فعال" IsChecked="{Binding AnimationsEnabled}" Margin="2,10" />
+                    <StackPanel Orientation="Horizontal" Margin="2,8">
+                        <TextBlock Text="زبان: فارسی 🇮🇷 (انگلیسی در نسخه بعدی)" FontSize="12.5" Opacity="0.7" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <Button Command="{Binding ApplyThemeCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" Content="👁️ پیش‌نمایش فوری" />
+                        <Button Command="{Binding SaveThemeSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Content="💾 ذخیره" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- ─── بخش ۵: امنیت ─── -->
+                <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=5}" Margin="4,8" MaxWidth="560" HorizontalAlignment="Right">
+                    <TextBlock Text="امنیت" FontSize="16" FontWeight="Bold" Margin="2,0,0,12" />
+                    <StackPanel Orientation="Horizontal" Margin="2,6">
+                        <TextBlock Text="حداقل طول رمز عبور: " VerticalAlignment="Center" FontSize="12.5" Width="170" />
+                        <TextBox Text="{Binding MinPasswordLength, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
+                    </StackPanel>
+                    <CheckBox Content="الزام حروف بزرگ + کوچک" IsChecked="{Binding RequireMixedCase}" Margin="2,8" />
+                    <CheckBox Content="الزام عدد" IsChecked="{Binding RequireDigit}" Margin="2,8" />
+                    <CheckBox Content="الزام کاراکتر خاص" IsChecked="{Binding RequireSpecialChar}" Margin="2,8" />
+                    <StackPanel Orientation="Horizontal" Margin="2,10">
+                        <TextBlock Text="تلاش ناموفق تا قفل: " VerticalAlignment="Center" FontSize="12.5" Width="170" />
+                        <TextBox Text="{Binding MaxFailedAttempts, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="2,6">
+                        <TextBlock Text="مدت قفل (دقیقه): " VerticalAlignment="Center" FontSize="12.5" Width="170" />
+                        <TextBox Text="{Binding LockoutMinutes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="2,6">
+                        <TextBlock Text="انقضای رمز (روز — ۰ غیرفعال): " VerticalAlignment="Center" FontSize="12.5" Width="170" />
+                        <TextBox Text="{Binding PasswordExpiryDays, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="2,6">
+                        <TextBlock Text="انقضای نشست (دقیقه): " VerticalAlignment="Center" FontSize="12.5" Width="170" />
+                        <TextBox Text="{Binding SessionTimeoutMinutes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
+                    </StackPanel>
+                    <CheckBox Content="ثبت Audit Log برای همه عملیات" IsChecked="{Binding AuditLogEnabled}" Margin="2,10" />
+                    <CheckBox Content="رمزنگاری داده‌های حساس بیمار" IsChecked="True" IsEnabled="False" Margin="2,8" />
+                    <Button Command="{Binding SaveSecuritySettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                            HorizontalAlignment="Left" Margin="0,14,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                            <TextBlock Text="💾 ذخیره تنظیمات امنیت" Margin="7,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

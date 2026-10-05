@@ -28,6 +28,9 @@ public class ApiClient : IApiClient
     /// <summary>آخرین پیام خطای فارسی</summary>
     public string? LastError { get; private set; }
 
+    /// <summary>شناسه شعبه جاری — با هر درخواست در هدر X-Branch-Id ارسال می‌شود (گام U17)</summary>
+    public long? BranchId { get; set; }
+
     /// <summary>رویداد انقضای نشست</summary>
     public event EventHandler? SessionExpired;
 
@@ -86,6 +89,8 @@ public class ApiClient : IApiClient
                 request.Content = new StringContent(
                     JsonSerializer.Serialize(body, Json), Encoding.UTF8, "application/json");
             if (!string.IsNullOrEmpty(_tokens.AccessToken))
+                if (BranchId is { } bid)
+                    request.Headers.Add("X-Branch-Id", bid.ToString());
                 request.Headers.Authorization =
                     new AuthenticationHeaderValue("Bearer", _tokens.AccessToken);
 
@@ -196,6 +201,8 @@ public class ApiClient : IApiClient
             }
 
             if (attachToken && !string.IsNullOrEmpty(_tokens.AccessToken))
+                if (BranchId is { } bid)
+                    request.Headers.Add("X-Branch-Id", bid.ToString());
                 request.Headers.Authorization =
                     new AuthenticationHeaderValue("Bearer", _tokens.AccessToken);
 
@@ -243,6 +250,8 @@ public class ApiClient : IApiClient
         if (attachToken && !string.IsNullOrEmpty(_tokens.AccessToken))
             request.Headers.Authorization =
                 new AuthenticationHeaderValue("Bearer", _tokens.AccessToken);
+        if (BranchId is { } bid)
+            request.Headers.Add("X-Branch-Id", bid.ToString());
         return await _http.SendAsync(request, ct);
     }
 

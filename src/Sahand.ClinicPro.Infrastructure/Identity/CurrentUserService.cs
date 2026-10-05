@@ -38,4 +38,14 @@ public class CurrentUserService : ICurrentUserService
     /// <summary>نشانی IP درخواست جاری</summary>
     public string? IpAddress =>
         _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+
+    /// <summary>شناسه شعبه جاری از هدر X-Branch-Id — گام U17 چندشعبه‌ای</summary>
+    public long? BranchId
+    {
+        get
+        {
+            var value = _httpContextAccessor.HttpContext?.Request?.Headers["X-Branch-Id"].FirstOrDefault();
+            return long.TryParse(value, out var id) ? id : null;
+        }
+    }
 }

@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using Sahand.ClinicPro.Desktop.ViewModels;
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Data;
@@ -96,6 +97,39 @@ public sealed class StringToVisibilityConverter : IValueConverter
         => string.IsNullOrWhiteSpace(value as string) ? Visibility.Collapsed : Visibility.Visible;
 
     /// <summary>معکوس پشتیبانی نمی‌شود</summary>
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => Binding.DoNothing;
+}
+
+/// <summary>
+/// مبدل معکوس‌کننده مقدار منطقی — برای غیرفعال‌سازی فیلدها در حالت ویرایش (گام U13)
+/// </summary>
+public sealed class InvertBoolConverter : IValueConverter
+{
+    /// <summary>تبدیل true به false و بالعکس</summary>
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is bool b ? !b : value;
+
+    /// <summary>تبدیل معکوس</summary>
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is bool b ? !b : value;
+}
+
+/// <summary>
+/// مبدل سلول ردیف نتیجه گزارش — پارامتر ایندکس ستون (گام U16)
+/// </summary>
+public sealed class CellValueConverter : IValueConverter
+{
+    /// <summary>استخراج متن سلول از ردیف با ایندکس</summary>
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is ReportResultRow row && int.TryParse(parameter?.ToString(), out var index)
+            && index >= 0 && index < row.Cells.Count)
+            return row.Cells[index].Text;
+        return "—";
+    }
+
+    /// <summary>بدون پشتیبانی</summary>
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => Binding.DoNothing;
 }

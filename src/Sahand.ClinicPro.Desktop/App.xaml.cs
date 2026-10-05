@@ -94,6 +94,21 @@ public partial class App : System.Windows.Application
         services.AddTransient<LabViewModel>();
         services.AddTransient<PharmacyViewModel>();
         services.AddTransient<ReportsViewModel>();
+        services.AddTransient<ReportBrowserViewModel>();
         services.AddTransient<AdminViewModel>();
+        services.AddTransient<UsersViewModel>();
+        services.AddTransient<UserFormViewModel>();
+        services.AddTransient<UserFormWindow>();
+        services.AddTransient<RolesViewModel>();
+        services.AddTransient<SmsViewModel>();
+        services.AddTransient<NotificationsViewModel>();
+        services.AddTransient<SettingsViewModel>();
+        services.AddTransient<BackupViewModel>();
+        services.AddTransient<AuditLogViewModel>();
+        services.AddTransient<BranchesViewModel>();
+        services.AddTransient<SepasViewModel>();
+        services.AddTransient<EPrescriptionViewModel>();
+        services.AddTransient<LicenseStatusViewModel>();
+        services.AddTransient<ComplementaryViewModel>();
     }
 }

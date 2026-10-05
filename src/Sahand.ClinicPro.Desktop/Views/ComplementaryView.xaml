@@ -1,0 +1,174 @@
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.ComplementaryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="640" d:DesignWidth="1100"
+             FlowDirection="RightToLeft"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══ فرم‌های تکمیلی — گام U19: قالب چاپ + نظرسنجی + همگام‌سازی ═══ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="TuneVertical" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="فرم‌های تکمیلی" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+
+        <TabControl Grid.Row="2" SelectedIndex="{Binding TabIndex}" Style="{StaticResource MaterialDesignTabControl}">
+
+            <!-- ─── تب ۱: قالب‌های چاپ ─── -->
+            <TabItem Header="🖨️ قالب‌های چاپ">
+                <Grid Margin="4,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="290" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- فهرست ۹ قالب -->
+                    <ListBox Grid.Column="0" ItemsSource="{Binding PrintTemplates}" SelectedItem="{Binding SelectedTemplate}"
+                             Background="Transparent" BorderThickness="0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="4,8">
+                                    <TextBlock Text="{Binding Icon}" FontSize="16" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Title}" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- ویرایشگر متن قالب -->
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" FontSize="15" FontWeight="Bold" Margin="2,0,0,8">
+                            <Run Text="ویرایش قالب: " />
+                            <Run Text="{Binding SelectedTemplate.Title, Mode=OneWay, TargetNullValue='— انتخاب کنید —'}"
+                                 Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
+                        </TextBlock>
+                        <TextBox Grid.Row="1" Text="{Binding SelectedTemplate.Body, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 AcceptsReturn="True" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"
+                                 VerticalContentAlignment="Top" IsReadOnly="False" />
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Command="{Binding SaveTemplateCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                                    <TextBlock Text="💾 ذخیره قالب" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="متغیرها: {نام بیمار} {تاریخ} {مبلغ} {نام درمانگاه} {نام پزشک}"
+                                       FontSize="10.5" Opacity="0.6" Margin="12,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- ─── تب ۲: نظرسنجی ─── -->
+            <TabItem Header="📝 نظرسنجی">
+                <Grid Margin="4,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- فرم ثبت سریع -->
+                    <WrapPanel Grid.Row="0" Margin="0,0,0,10">
+                        <TextBox materialDesign:HintAssist.Hint="عنوان نظرسنجی جدید"
+                                 Text="{Binding NewSurveyTitle, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="280" Margin="0,0,8,6" />
+                        <TextBox materialDesign:HintAssist.Hint="توضیح (اختیاری)"
+                                 Text="{Binding NewSurveyDescription, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="240" Margin="0,0,8,6" />
+                        <Button Command="{Binding AddSurveyCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,6">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
+                                <TextBlock Text="ثبت نظرسنجی" Margin="7,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding LoadSurveysCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6">
+                            <materialDesign:PackIcon Kind="Refresh" Width="14" Height="14" />
+                        </Button>
+                    </WrapPanel>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Surveys}" SelectedItem="{Binding SelectedSurvey}"
+                              AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                              HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="عنوان" Binding="{Binding Title}" Width="220" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="توضیح" Binding="{Binding Description, TargetNullValue=—}" Width="*" />
+                            <DataGridTextColumn Header="پاسخ‌ها" Binding="{Binding ResponseCount}" Width="80" FontFamily="Consolas" />
+                            <DataGridTemplateColumn Header="میانگین امتیاز" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding RatingText}" Foreground="{Binding RatingColor}"
+                                                   FontWeight="SemiBold" FontFamily="Consolas"
+                                                   VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="وضعیت" Binding="{Binding ActiveText}" Width="90" />
+                            <DataGridTemplateColumn Header="عملیات" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                                Command="{Binding DataContext.ToggleSurveyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}" ToolTip="فعال/غیرفعال">
+                                            <materialDesign:PackIcon Kind="ToggleSwitch" Width="15" Height="15" />
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Grid.Row="2" Text="ارسال: پس از تکمیل ویزیت، لینک نظرسنجی با پیامک برای بیمار ارسال می‌شود"
+                               FontSize="10.5" Opacity="0.6" Margin="2,8,0,0" />
+                </Grid>
+            </TabItem>
+
+            <!-- ─── تب ۳: همگام‌سازی داده ─── -->
+            <TabItem Header="🔄 همگام‌سازی داده">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="520">
+                    <materialDesign:PackIcon Kind="SyncCircle" Width="64" Height="64" Opacity="0.35"
+                                             HorizontalAlignment="Center" />
+                    <TextBlock Text="همگام‌سازی داده بین شعبه‌ها" FontSize="17" FontWeight="Bold"
+                               Margin="0,14,0,0" HorizontalAlignment="Center" />
+                    <TextBlock Text="ایجاد نقطه همگام‌سازی (Snapshot) برای انتقال داده بین شعبه‌ها — زمان‌بندی خودکار در تنظیمات بکاپ"
+                               FontSize="12" Opacity="0.7" TextWrapping="Wrap" TextAlignment="Center"
+                               Margin="0,8,0,0" HorizontalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" Margin="0,18,0,0" HorizontalAlignment="Center">
+                        <Button Command="{Binding SyncNowCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Sync" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="🔄 همگام‌سازی دستی" Margin="7,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0" HorizontalAlignment="Center">
+                        <TextBlock Text="وضعیت: " FontSize="12" Opacity="0.7" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding SyncStatusText}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <TextBlock Text="آخرین اجرا: " FontSize="12" Opacity="0.7" Margin="20,0,0,0" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding LastSyncText}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using Sahand.ClinicPro.Application.Common.Helpers;
@@ -98,6 +98,36 @@ public sealed class CurrencyRialConverter : IValueConverter
         };
 
     /// <summary>معکوس پشتیبانی نمی‌شود</summary>
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => Binding.DoNothing;
+}
+
+/// <summary>
+/// مبدل معکوس‌کننده منطقی به دیدپذیری — True → مخفی، False → نمایان (گام U14 برای ارسال تکی/دسته‌ای)
+/// </summary>
+public sealed class InverseBoolToVisibilityConverter : IValueConverter
+{
+    /// <summary>معکوس تبدیل منطقی به دیدپذیری</summary>
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is true ? Visibility.Collapsed : Visibility.Visible;
+
+    /// <summary>بدون پشتیبانی</summary>
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => Binding.DoNothing;
+}
+
+/// <summary>
+/// مبدل شاخص بخش به دیدپذیری — پارامتر شماره بخش (گام U15 سایدبار تنظیمات)
+/// </summary>
+public sealed class SectionToVisibilityConverter : IValueConverter
+{
+    /// <summary>مقایسه شاخص با پارامتر</summary>
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is int index && parameter is string str && int.TryParse(str, out var target) && index == target
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+    /// <summary>بدون پشتیبانی</summary>
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => Binding.DoNothing;
 }

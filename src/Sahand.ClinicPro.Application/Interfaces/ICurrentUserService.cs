@@ -17,4 +17,7 @@ public interface ICurrentUserService
 
     /// <summary>نشانی IP درخواست جاری</summary>
     string? IpAddress { get; }
+
+    /// <summary>شناسه شعبه جاری از هدر X-Branch-Id — گام U17 چندشعبه‌ای</summary>
+    long? BranchId { get; }
 }

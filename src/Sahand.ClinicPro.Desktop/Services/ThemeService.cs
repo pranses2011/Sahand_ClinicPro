@@ -14,11 +14,14 @@ public class ThemeService : IThemeService
     public bool IsDarkTheme => _isDark;
 
     /// <summary>تغییر تم روشن و تیره</summary>
-    public void ToggleTheme()
+    public void ToggleTheme() => SetTheme(!_isDark);
+
+    /// <summary>اعمال تم مشخص — گام U15 بخش ظاهر</summary>
+    public void SetTheme(bool dark)
     {
-        _isDark = !_isDark;
+        _isDark = dark;
         var theme = _paletteHelper.GetTheme();
-        theme.SetBaseTheme(_isDark ? BaseTheme.Dark : BaseTheme.Light);
+        theme.SetBaseTheme(dark ? BaseTheme.Dark : BaseTheme.Light);
         _paletteHelper.SetTheme(theme);
     }
 }

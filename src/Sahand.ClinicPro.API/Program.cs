@@ -198,6 +198,7 @@ try
     app.UseAuthorization();
 
     // اعتبارسنجی لایسنس — پس از احراز هویت روی مسیرهای ماژول‌محور
+    app.UseMiddleware<Sahand.ClinicPro.API.Middleware.BranchContextMiddleware>();
     app.UseMiddleware<LicenseValidationMiddleware>();
 
     // لاگ عملیات — همه نوشتن‌های API ثبت ردگیری می‌شوند

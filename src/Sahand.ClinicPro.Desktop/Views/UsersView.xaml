@@ -1,0 +1,119 @@
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.UsersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="620" d:DesignWidth="1080"
+             FlowDirection="RightToLeft"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══ مدیریت کاربران — گام U13 طبق فرم ۲۴ ═══ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- سربرگ -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="AccountGroup" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="مدیریت کاربران" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding CountText}" FontSize="12" Opacity="0.65" Margin="14,0,0,0" VerticalAlignment="Center" />
+            <Button Command="{Binding LoadCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="14,0,0,0">
+                <materialDesign:PackIcon Kind="Refresh" Width="14" Height="14" />
+            </Button>
+        </StackPanel>
+
+        <!-- نوار ابزار: کاربر جدید + جستجو + فیلترها -->
+        <WrapPanel Grid.Row="1" Margin="0,0,0,10">
+            <Button Command="{Binding AddUserCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,6">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
+                    <TextBlock Text="کاربر جدید" Margin="7,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <TextBox materialDesign:HintAssist.Hint="🔍 جستجو (نام کاربری / نام / ایمیل)"
+                     Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     Width="260" Margin="0,0,8,6" VerticalAlignment="Center" />
+            <ComboBox materialDesign:HintAssist.Hint="نقش"
+                      ItemsSource="{Binding RoleOptions}"
+                      SelectedItem="{Binding RoleFilter}"
+                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                      Width="140" Margin="0,0,8,6" VerticalAlignment="Center" />
+            <ComboBox materialDesign:HintAssist.Hint="وضعیت"
+                      ItemsSource="{Binding StatusOptions}"
+                      SelectedItem="{Binding StatusFilter}"
+                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                      Width="120" Margin="0,0,8,6" VerticalAlignment="Center" />
+            <Button Command="{Binding LoadCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" VerticalAlignment="Center" />
+                    <TextBlock Text="جستجو" Margin="6,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </WrapPanel>
+
+        <ProgressBar Grid.Row="2" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+
+        <!-- فهرست کاربران -->
+        <DataGrid Grid.Row="3" ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}"
+                  AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                  HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="نام کاربری" Binding="{Binding Username}" Width="130" FontWeight="SemiBold" FontFamily="Consolas" />
+                <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName, TargetNullValue=—}" Width="170" />
+                <DataGridTextColumn Header="نقش‌ها" Binding="{Binding RolesText}" Width="180" />
+                <DataGridTextColumn Header="آخرین ورود" Width="150">
+                    <DataGridTextColumn.Binding>
+                        <Binding Path="LastLoginAt" Converter="{StaticResource ShamsiDateTime}" TargetNullValue="—" />
+                    </DataGridTextColumn.Binding>
+                </DataGridTextColumn>
+                <DataGridTemplateColumn Header="وضعیت" Width="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
+                                    Background="{Binding StatusColor}">
+                                <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="White" />
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="عملیات" Width="230">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        Command="{Binding DataContext.EditUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}" ToolTip="ویرایش اطلاعات" Margin="2,0">
+                                    <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" />
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        Command="{Binding DataContext.ResetPasswordCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}" ToolTip="ریست رمز عبور" Margin="2,0">
+                                    <materialDesign:PackIcon Kind="Key" Width="15" Height="15" />
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        Command="{Binding DataContext.ToggleLockCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}" ToolTip="قفل / آزادسازی" Margin="2,0">
+                                    <materialDesign:PackIcon Kind="Lock" Width="15" Height="15" />
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        Command="{Binding DataContext.DeleteUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}" ToolTip="غیرفعال‌سازی" Margin="2,0"
+                                        Foreground="#C62828">
+                                    <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

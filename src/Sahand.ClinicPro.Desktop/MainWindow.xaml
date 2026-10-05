@@ -58,8 +58,47 @@
         <DataTemplate DataType="{x:Type vm:ReportsViewModel}">
             <views:ReportsView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ReportBrowserViewModel}">
+            <views:ReportBrowserView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:AdminViewModel}">
             <views:AdminView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:UsersViewModel}">
+            <views:UsersView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:RolesViewModel}">
+            <views:RolePermissionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SmsViewModel}">
+            <views:SmsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:NotificationsViewModel}">
+            <views:NotificationsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:BackupViewModel}">
+            <views:BackupView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AuditLogViewModel}">
+            <views:AuditLogView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:BranchesViewModel}">
+            <views:BranchesView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SepasViewModel}">
+            <views:SepasView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:EPrescriptionViewModel}">
+            <views:EPrescriptionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LicenseStatusViewModel}">
+            <views:LicenseStatusView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ComplementaryViewModel}">
+            <views:ComplementaryView />
         </DataTemplate>
     </Window.Resources>
 
@@ -173,8 +212,14 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!-- راست: زنگ اعلان با شمارنده + تم -->
+                    <!-- راست: انتخابگر شعبه + زنگ اعلان با شمارنده + تم -->
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <!-- انتخابگر شعبه — فقط وقتی بیش از یک شعبه فعال است (گام U17) -->
+                        <ComboBox ItemsSource="{Binding Branches}" SelectedItem="{Binding SelectedBranch}"
+                                  DisplayMemberPath="Name" MinWidth="130" FontSize="12"
+                                  materialDesign:HintAssist.Hint="شعبه"
+                                  Visibility="{Binding HasMultipleBranches, Converter={StaticResource BoolToVisibility}}"
+                                  Margin="0,0,14,0" VerticalAlignment="Center" />
                         <ToggleButton Command="{Binding ToggleThemeCommand}"
                                       Style="{StaticResource MaterialDesignFlatToggleButton}"
                                       ToolTip="تغییر تم روشن و تاریک"
