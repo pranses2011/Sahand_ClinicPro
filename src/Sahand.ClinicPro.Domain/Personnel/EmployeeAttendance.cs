@@ -25,6 +25,21 @@ public class EmployeeAttendance : AuditableEntity, ISoftDeletable
     /// <summary>وضعیت حضور</summary>
     public AttendanceStatus Status { get; set; }
 
+    /// <summary>دقایق تأخیر ورود نسبت به شیفت</summary>
+    public int LateMinutes { get; set; }
+
+    /// <summary>دقایق تعجیل خروج نسبت به شیفت</summary>
+    public int EarlyLeaveMinutes { get; set; }
+
+    /// <summary>دستگاه مبدأ آخرین ضربه — تهی یعنی ثبت دستی</summary>
+    public long? SourceDeviceId { get; set; }
+
+    /// <summary>آیا اپراتور دستی ویرایش کرده؟ — پرچم ممیزی</summary>
+    public bool IsManuallyEdited { get; set; }
+
+    /// <summary>یادداشت — مثلاً «اصلاحیه تأیید‌شده شماره ۱۲»</summary>
+    public string? Notes { get; set; }
+
     /// <summary>ساعات کارکرد</summary>
     public decimal WorkedHours { get; set; } = 0m;
 
@@ -36,4 +51,7 @@ public class EmployeeAttendance : AuditableEntity, ISoftDeletable
 
     /// <summary>شیفت</summary>
     public Shift? Shift { get; set; }
+
+    /// <summary>دستگاه مبدأ ضربه</summary>
+    public AttendanceDevice? SourceDevice { get; set; }
 }

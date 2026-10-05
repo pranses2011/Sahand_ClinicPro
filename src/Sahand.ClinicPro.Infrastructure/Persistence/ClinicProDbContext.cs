@@ -43,6 +43,12 @@ public class ClinicProDbContext : DbContext
     /// <summary>مجموعه Appointments</summary>
     public DbSet<Appointment> Appointments { get; set; }
 
+    /// <summary>مجموعه AttendanceCorrections — درخواست اصلاح کارت</summary>
+    public DbSet<AttendanceCorrection> AttendanceCorrections { get; set; }
+
+    /// <summary>مجموعه AttendanceDevices — دستگاه‌های حضور و غیاب</summary>
+    public DbSet<AttendanceDevice> AttendanceDevices { get; set; }
+
     /// <summary>مجموعه AuditLogs</summary>
     public DbSet<AuditLog> AuditLogs { get; set; }
 
@@ -103,6 +109,12 @@ public class ClinicProDbContext : DbContext
     /// <summary>مجموعه DocumentCategories</summary>
     public DbSet<DocumentCategory> DocumentCategories { get; set; }
 
+    /// <summary>مجموعه DeviceRawLogs — لاگ خام ضربه‌ها</summary>
+    public DbSet<DeviceRawLog> DeviceRawLogs { get; set; }
+
+    /// <summary>مجموعه DeviceUserMappings — نگاشت کاربر دستگاه به پرسنل</summary>
+    public DbSet<DeviceUserMapping> DeviceUserMappings { get; set; }
+
     /// <summary>مجموعه DrugInteractions</summary>
     public DbSet<DrugInteraction> DrugInteractions { get; set; }
 
@@ -121,6 +133,9 @@ public class ClinicProDbContext : DbContext
     /// <summary>مجموعه EmployeeSalaries</summary>
     public DbSet<EmployeeSalary> EmployeeSalaries { get; set; }
 
+    /// <summary>مجموعه EmployeeShiftAssignments — تخصیص شیفت</summary>
+    public DbSet<EmployeeShiftAssignment> EmployeeShiftAssignments { get; set; }
+
     /// <summary>مجموعه ErrorLogs</summary>
     public DbSet<ErrorLog> ErrorLogs { get; set; }
 
@@ -135,6 +150,9 @@ public class ClinicProDbContext : DbContext
 
     /// <summary>مجموعه FiscalYears</summary>
     public DbSet<FiscalYear> FiscalYears { get; set; }
+
+    /// <summary>مجموعه Holidays — تقویم تعطیلات</summary>
+    public DbSet<Holiday> Holidays { get; set; }
 
     /// <summary>مجموعه ICD10Codes</summary>
     public DbSet<Icd10Code> ICD10Codes { get; set; }

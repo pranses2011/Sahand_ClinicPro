@@ -15,6 +15,12 @@ public class ShiftConfiguration : IEntityTypeConfiguration<Shift>
         builder.Property(x => x.ShiftName).HasMaxLength(200).IsRequired().HasComment("نام شیفت");
         builder.Property(x => x.ShiftCode).HasMaxLength(20).HasComment("کد یکتای شیفت");
         builder.Property(x => x.ShiftType).HasConversion<byte>().HasComment("نوع شیفت");
+        builder.Property(x => x.LateGraceMinutes).HasComment("تحمل تأخیر (دقیقه)");
+        builder.Property(x => x.EarlyLeaveGraceMinutes).HasComment("تحمل تعجیل (دقیقه)");
+        builder.Property(x => x.MinMinutesBetweenPunches).HasComment("حداقل فاصله ضربه‌ها (دقیقه)");
+        builder.Property(x => x.BreakMinutes).HasComment("استراحت کسرشونده (دقیقه)");
+        builder.Property(x => x.OvertimeStartAfterMinutes).HasComment("شروع اضافه‌کاری پس از (دقیقه)");
+        builder.Property(x => x.Color).HasMaxLength(9).HasComment("رنگ تقویمی هگز");
 
         builder.HasIndex(x => new { x.ShiftCode }).IsUnique().HasDatabaseName("IX_Shift_ShiftCode").HasFilter("[IsDeleted] = 0");
     }
