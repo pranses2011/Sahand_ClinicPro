@@ -649,7 +649,7 @@ function ls_validate_license(string $licenseKey, string $fingerprint, bool $bind
     }
 
     // ۴) پاسخ موفق با امضای دیجیتال
-    return [
+    $response = [
         'isValid'    => true,
         'status'     => 'valid',
         'message'    => 'لایسنس معتبر است.',
@@ -661,6 +661,12 @@ function ls_validate_license(string $licenseKey, string $fingerprint, bool $bind
             (int)$l['max_users']
         ),
     ];
+    // چرخه دوازدهم — پیام‌های مستقیم پشتیبانی به داشبورد درمانگاه (تحویل با همین تپ‌قلب)
+    $messages = ls_messages_fetch_and_deliver((int)$l['id']);
+    if (count($messages) > 0) {
+        $response['messages'] = $messages;
+    }
+    return $response;
 }
 
 /** تولید محتوای فایل .lic برای فعال‌سازی آفلاین — JSON امضاشده */

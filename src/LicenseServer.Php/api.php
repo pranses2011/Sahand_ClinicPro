@@ -89,8 +89,12 @@ if (strlen($fingerprint) < 16 || strlen($fingerprint) > 150) {
 if ($action === 'activate' || $action === 'heartbeat') {
     try {
         $result = ls_validate_license($licenseKey, $fingerprint, $action === 'activate');
+        // چرخه دوازدهم — پیام‌های مستقیم پشتیبانی به داشبورد درمانگاه:
+        // داخل ls_validate_license به پاسخ موفق افزوده می‌شوند (آنجا شناسه لایسنس در دسترس است)
+        // و کلاینت دسکتاپ آن‌ها را در کارت «پیام‌های پشتیبانی» داشبورد نمایش می‌دهد.
         ls_json_out($result, $result['isValid'] ? 200 : 403);
     } catch (Throwable $e) {
+        ls_log_error('api:' . $action, $e);
         ls_json_out(['isValid' => false, 'status' => 'server_error',
             'message' => 'خطای داخلی سرور — بعداً تلاش کنید.'], 500);
     }
