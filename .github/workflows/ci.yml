@@ -27,6 +27,20 @@ jobs:
       - name: اجرای تست‌ها
         run: dotnet test Sahand.ClinicPro.sln --no-build -c Release --logger "trx" --results-directory ./TestResults
 
+      - name: تولید سند OpenAPI (چرخه دوازدهم B3)
+        run: |
+          dotnet msbuild src/Sahand.ClinicPro.API/Sahand.ClinicPro.API.csproj -t:GenerateOpenApiDocuments
+          mv docs/api/Sahand.ClinicPro.API.json docs/api/openapi.json || true
+        env:
+          PATH: ${{ env.PATH }}:/usr/share/dotnet
+
+      - name: بارگذاری سند OpenAPI
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: docs/api/openapi.json
+          retention-days: 30
+
       - name: بارگذاری نتایج تست
         uses: actions/upload-artifact@v4
         if: always()

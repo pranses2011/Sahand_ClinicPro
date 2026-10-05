@@ -8,6 +8,9 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <!-- چرخه دوازدهم (B3 — بند ۴-۸): تولید خودکار openapi.json هنگام بیلد
+         به docs/api برای مشتری‌ها و اتصال‌دهندگان — بدون نیاز به اجرای سرور -->
+    <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)\..\..\docs\api</OpenApiDocumentsDirectory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +21,8 @@
     <PackageReference Include="Serilog.Sinks.Seq" />
     <!-- مستندسازی Swagger با عنوان فارسی -->
     <PackageReference Include="Swashbuckle.AspNetCore" />
+    <!-- تولید openapi.json در زمان بیلد — چرخه دوازدهم (B3) -->
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server" PrivateAssets="all" />
     <!-- داشبورد کارهای پس‌زمینه (فعال‌سازی در گام ۲۳) -->
     <PackageReference Include="Hangfire.AspNetCore" />
     <!-- ابزار طراحی EF Core برای ساخت Migration از پروژه میزبان -->

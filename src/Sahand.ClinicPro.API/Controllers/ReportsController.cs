@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.API.Filters;
@@ -20,12 +21,14 @@ public partial class ReportsController : ApiBaseController
 {
     private readonly IMediator _mediator;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMemoryCache _catalogCache;
 
-    /// <summary>سازنده با تزریق میانجی و واحد کار (گام U16)</summary>
-    public ReportsController(IMediator mediator, IUnitOfWork unitOfWork)
+    /// <summary>سازنده با تزریق میانجی و واحد کار (گام U16) + کش حافظه‌ای (چرخه ۱۲ B5)</summary>
+    public ReportsController(IMediator mediator, IUnitOfWork unitOfWork, IMemoryCache catalogCache)
     {
         _mediator = mediator;
         _unitOfWork = unitOfWork;
+        _catalogCache = catalogCache;
     }
 
     /// <summary>درآمد روزانه — بازه اختیاری روز</summary>
@@ -89,12 +92,31 @@ public partial class ReportsController : ApiBaseController
     /* ═══════════════════════════════════════════════════════════
        گام U16 — گزارش‌ساز (فرم ۲۷): کاتالوگ ۳۱ گزارش + اجرای پارامتری
        گام P1 (v1.4) — تکمیل هر ۱۵ گزارش باقی‌مانده با کوئری واقعی
+       چرخه دوازدهم (B5): کش حافظه‌ای یک‌ساعته کاتالوگ — فهرست ثابت است
+       و هر بار ساختن آن هزینه بی‌دلیل دارد؛ باطل‌شدن با تعویض سند
        ═══════════════════════════════════════════════════════════ */
 
-    /// <summary>کاتالوگ گزارش‌ها دسته‌بندی‌شده — مطابق فهرست پرامپت بخش ۴</summary>
+    /// <summary>گزینه‌های کش کاتالوگ — انقضای مطلق یک‌ساعته</summary>
+    private static readonly MemoryCacheEntryOptions _catalogCacheOptions = new()
+    {
+        AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1),
+        Size = 1,
+    };
+
+    /// <summary>کاتالوگ گزارش‌ها دسته‌بندی‌شده — مطابق فهرست پرامپت بخش ۴ (کش یک‌ساعته)</summary>
     [HttpGet("catalog")]
     [HasPermission("reports.view")]
     public IActionResult GetCatalog()
+    {
+        var catalog = _catalogCache.GetOrCreate("reports-catalog", entry =>
+        {
+            entry.SetOptions(_catalogCacheOptions);
+            return BuildCatalog();
+        }) ?? BuildCatalog();
+        return Ok(ApiResponse<object>.Success(catalog));
+    }
+
+    private List<object> BuildCatalog()
     {
         var catalog = new List<object>
         {
@@ -175,7 +197,7 @@ public partial class ReportsController : ApiBaseController
             }}
         };
 
-        return Ok(ApiResponse<object>.Success(catalog));
+        return catalog;
     }
 
     /// <summary>اجرای گزارش با پارامترها — کارت‌های خلاصه + جدول نتایج</summary>

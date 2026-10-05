@@ -56,6 +56,8 @@
     <!-- لاگ‌گذاری ساختاریافته + داشبورد Seq -->
     <PackageVersion Include="Serilog.AspNetCore" Version="8.0.3" />
     <PackageVersion Include="Serilog.Sinks.Seq" Version="9.1.0" />
+    <!-- تولید openapi.json در زمان بیلد — چرخه دوازدهم (B3) -->
+    <PackageVersion Include="Microsoft.Extensions.ApiDescription.Server" Version="8.0.11" />
     <!-- مستندسازی Swagger با توضیحات فارسی -->
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <!-- تست یکپارچگی API -->

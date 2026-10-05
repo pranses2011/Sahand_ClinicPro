@@ -33,8 +33,19 @@ try
     // ── سرویس‌ها ──
 
     // Serilog جایگزین لاگر پیش‌فرض؛ تنظیمات از appsettings.json خوانده می‌شود
+    // چرخه دوازدهم (B1 — بند ۴-۱۳ سند تحلیل): سینک Seq فقط وقتی آدرس سرور
+    // تنظیم شده باشد (متغیر محیطی SEQ_SERVER_URL یا همان appsettings) اضافه
+    // می‌شود؛ استقرار بدون Seq کاملاً بی‌خطر است و فقط کنسول لاگ می‌گیرد
     builder.Host.UseSerilog((context, loggerConfiguration) =>
-        loggerConfiguration.ReadFrom.Configuration(context.Configuration));
+    {
+        loggerConfiguration.ReadFrom.Configuration(context.Configuration);
+
+        var seqUrl = context.Configuration["SEQ_SERVER_URL"];
+        if (!string.IsNullOrWhiteSpace(seqUrl))
+        {
+            loggerConfiguration.WriteTo.Seq(seqUrl);
+        }
+    });
 
     // فشرده‌سازی پاسخ JSON
     builder.Services.AddResponseCompression(options =>
@@ -42,6 +53,9 @@ try
 
     // کنترلرها با نام‌گذاری camelCase فارسی‌پسند
     builder.Services.AddControllers();
+
+    // کش حافظه‌ای — کش یک‌ساعته کاتالوگ گزارش‌ها (چرخه دوازدهم B5)
+    builder.Services.AddMemoryCache();
 
     // پاسخ استاندارد فارسی برای خطاهای ModelState — به‌جای ProblemDetails پیش‌فرض
     builder.Services.Configure<Microsoft.AspNetCore.Mvc.ApiBehaviorOptions>(options =>
