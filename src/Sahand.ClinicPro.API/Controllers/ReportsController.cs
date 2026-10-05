@@ -47,6 +47,45 @@ public class ReportsController : ApiBaseController
         var result = await _mediator.Send(new GetDoctorPerformanceQuery(days));
         return ToResponse(result);
     }
+
+    /// <summary>
+    /// گزارش تفصیلی «سود و حقوق درصدی هر پرسنل» دوره — چرخه دهم
+    /// </summary>
+    /// <param name="year">سال شمسی دوره</param>
+    /// <param name="month">ماه شمسی دوره — ۱ تا ۱۲</param>
+    /// <param name="departmentId">فیلتر اختیاری بخش</param>
+    /// <param name="employeeId">فیلتر اختیاری یک پرسنل</param>
+    [HttpGet("commission-detail")]
+    [HasPermission("payroll.manage")]
+    public async Task<IActionResult> CommissionDetail([FromQuery] int year, [FromQuery] int month,
+        [FromQuery] long? departmentId = null, [FromQuery] long? employeeId = null)
+    {
+        var result = await _mediator.Send(
+            new GetCommissionDetailReportQuery(year, month, departmentId, employeeId));
+        return ToResponse(result);
+    }
+
+    /// <summary>
+    /// خروجی اکسل گزارش سود و حقوق درصدی — فایل xlsx دو برگ (خلاصه + جزئیات)
+    /// </summary>
+    /// <param name="year">سال شمسی دوره</param>
+    /// <param name="month">ماه شمسی دوره — ۱ تا ۱۲</param>
+    /// <param name="departmentId">فیلتر اختیاری بخش</param>
+    /// <param name="employeeId">فیلتر اختیاری یک پرسنل</param>
+    [HttpGet("commission-detail/excel")]
+    [HasPermission("payroll.manage")]
+    public async Task<IActionResult> CommissionDetailExcel([FromQuery] int year, [FromQuery] int month,
+        [FromQuery] long? departmentId = null, [FromQuery] long? employeeId = null)
+    {
+        var result = await _mediator.Send(
+            new ExportCommissionDetailExcelQuery(year, month, departmentId, employeeId));
+        if (result.IsFailure)
+            return ToResponse(result);
+
+        return File(result.Value!,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"گزارش-سود-و-حقوق-درصدی-{year}-{month:00}.xlsx");
+    }
     /* ═══════════════════════════════════════════════════════════
        گام U16 — گزارش‌ساز (فرم ۲۷): کاتالوگ ۳۱ گزارش + اجرای پارامتری
        گام P1 (v1.4) — تکمیل هر ۱۵ گزارش باقی‌مانده با کوئری واقعی
