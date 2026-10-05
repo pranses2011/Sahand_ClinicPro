@@ -104,7 +104,9 @@ public partial class MainWindowViewModel : ObservableObject
         AuditLogViewModel auditVm,
         BranchesViewModel branchesVm,
         SepasViewModel sepasVm,
-        EPrescriptionViewModel erxVm)
+        EPrescriptionViewModel erxVm,
+        LicenseStatusViewModel licenseVm,
+        ComplementaryViewModel complementaryVm)
     {
         _api = api;
         _tokens = tokens;
@@ -153,7 +155,9 @@ public partial class MainWindowViewModel : ObservableObject
             ["audit"] = () => auditVm,
             ["branches"] = () => branchesVm,
             ["sepas"] = () => sepasVm,
-            ["erx"] = () => erxVm
+            ["erx"] = () => erxVm,
+            ["license"] = () => licenseVm,
+            ["complementary"] = () => complementaryVm
         };
 
         // آیتم‌های ناوبری — فعال بودن از لایسنس کنترل می‌شود
@@ -182,7 +186,9 @@ public partial class MainWindowViewModel : ObservableObject
             new() { Title = "نسخه الکترونیک", PageKey = "erx", Icon = "CloudUploadOutline" },
             new() { Title = "شعبه‌ها", PageKey = "branches", Icon = "HomeGroup" },
             new() { Title = "بکاپ و بازیابی", PageKey = "backup", Icon = "DatabaseBackup" },
-            new() { Title = "لاگ عملیات", PageKey = "audit", Icon = "FileDocumentEditOutline" }
+            new() { Title = "لاگ عملیات", PageKey = "audit", Icon = "FileDocumentEditOutline" },
+            new() { Title = "لایسنس", PageKey = "license", Icon = "KeyChain" },
+            new() { Title = "قالب چاپ و نظرسنجی", PageKey = "complementary", Icon = "TuneVertical" }
         };
 
         NavigateToPage("dashboard");

@@ -108,5 +108,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<BranchesViewModel>();
         services.AddTransient<SepasViewModel>();
         services.AddTransient<EPrescriptionViewModel>();
+        services.AddTransient<LicenseStatusViewModel>();
+        services.AddTransient<ComplementaryViewModel>();
     }
 }

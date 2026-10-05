@@ -94,6 +94,12 @@
         <DataTemplate DataType="{x:Type vm:EPrescriptionViewModel}">
             <views:EPrescriptionView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LicenseStatusViewModel}">
+            <views:LicenseStatusView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ComplementaryViewModel}">
+            <views:ComplementaryView />
+        </DataTemplate>
     </Window.Resources>
 
     <!-- ═══════════════════════════════════════════════════════════
