@@ -128,6 +128,15 @@ try
     builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
     builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
+    // ماژول حضور و غیاب — درایورهای دستگاه و همگام‌ساز
+    builder.Services.AddSingleton<Sahand.ClinicPro.Infrastructure.Services.Attendance.ZktecoPullDriver>();
+    builder.Services.AddSingleton<Sahand.ClinicPro.Infrastructure.Services.Attendance.HikvisionIsapiDriver>();
+    builder.Services.AddSingleton<Sahand.ClinicPro.Infrastructure.Services.Attendance.SimulatedDeviceDriver>();
+    builder.Services.AddSingleton<Sahand.ClinicPro.Domain.Interfaces.IAttendanceDriverFactory,
+        Sahand.ClinicPro.Infrastructure.Services.Attendance.AttendanceDriverFactory>();
+    builder.Services.AddScoped<Sahand.ClinicPro.Domain.Interfaces.IAttendanceSynchronizer,
+        Sahand.ClinicPro.Application.Features.Attendance.AttendanceSynchronizer>();
+
     // محدودیت نرخ درخواست — ۱۰۰ در دقیقه عادی و ۵ در دقیقه برای ورود
     builder.Services.AddRateLimiter(options =>
     {
@@ -188,6 +197,11 @@ try
         Hangfire.RecurringJob.AddOrUpdate<Sahand.ClinicPro.Infrastructure.Services.License.LicenseHeartbeatJob>(
             "license-heartbeat", job => job.RunAsync(System.Threading.CancellationToken.None),
             Hangfire.Cron.Daily(3));
+
+        // همگام‌سازی دوره‌ای دستگاه‌های حضور و غیاب — هر دقیقه سنجش موعد هر دستگاه
+        Hangfire.RecurringJob.AddOrUpdate<Sahand.ClinicPro.Infrastructure.Services.Attendance.AttendanceSyncJob>(
+            "attendance-sync", job => job.RunAsync(System.Threading.CancellationToken.None),
+            Hangfire.Cron.Minutely());
     }
 
     // Swagger فقط در محیط توسعه فعال است
