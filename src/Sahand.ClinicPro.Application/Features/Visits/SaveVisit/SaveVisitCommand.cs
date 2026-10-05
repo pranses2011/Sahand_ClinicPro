@@ -61,7 +61,7 @@ public class SaveVisitCommandHandler : IRequestHandler<SaveVisitCommand, Result<
         Domain.Entities.Clinical.Visit visit;
         if (dto.Id.HasValue)
         {
-            visit = await repo.GetByIdAsync(dto.Id.Value, cancellationToken);
+            visit = (await repo.GetByIdAsync(dto.Id.Value, cancellationToken))!;
             if (visit is null)
                 return Result<long>.Failure(Error.NotFound("ویزیت", dto.Id.Value));
         }

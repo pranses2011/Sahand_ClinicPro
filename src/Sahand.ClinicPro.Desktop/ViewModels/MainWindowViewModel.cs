@@ -81,6 +81,7 @@ public partial class MainWindowViewModel : ObservableObject
         ISnackbarService snackbar,
         DashboardViewModel dashboard,
         PatientsViewModel patients,
+        DoctorsViewModel doctorsVm,
         AppointmentsViewModel appointments,
         ReceptionsViewModel receptions,
         VisitsViewModel visitsVm,
@@ -114,6 +115,7 @@ public partial class MainWindowViewModel : ObservableObject
         {
             ["dashboard"] = () => dashboard,
             ["patients"] = () => patients,
+            ["doctors"] = () => doctorsVm,
             ["appointments"] = () => appointments,
             ["receptions"] = () => receptions,
             ["visits"] = () => visitsVm,
@@ -130,6 +132,7 @@ public partial class MainWindowViewModel : ObservableObject
         {
             new() { Title = "داشبورد", PageKey = "dashboard", Icon = "ViewDashboard" },
             new() { Title = "بیماران", PageKey = "patients", Icon = "AccountGroup" },
+            new() { Title = "پزشکان", PageKey = "doctors", Icon = "Doctor" },
             new() { Title = "نوبت‌دهی", PageKey = "appointments", Icon = "CalendarClock" },
             new() { Title = "پذیرش", PageKey = "receptions", Icon = "Reception" },
             new() { Title = "ویزیت و معاینه", PageKey = "visits", Icon = "Stethoscope" },

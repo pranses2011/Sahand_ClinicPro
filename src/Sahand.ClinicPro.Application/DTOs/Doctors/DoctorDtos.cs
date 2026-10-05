@@ -79,6 +79,13 @@ public class DoctorDetailDto
     /// <summary>پذیرش بیمار جدید</summary>
     public bool AcceptsNewPatients { get; set; }
 
+    /// <summary>تصویر امضا — Base64</summary>
+    public string? SignatureImageBase64 { get; set; }
+
+    /// <summary>تصویر مهر — Base64</summary>
+    public string? StampImageBase64 { get; set; }
+
+
     /// <summary>امتیاز</summary>
     public decimal Rating { get; set; }
 
@@ -129,4 +136,13 @@ public class SaveDoctorDto
 
     /// <summary>پذیرش بیمار جدید</summary>
     public bool AcceptsNewPatients { get; set; } = true;
+
+    /// <summary>تصویر امضا — Base64 از PNG شفاف ۳۰۰×۱۰۰</summary>
+    public string? SignatureImageBase64 { get; set; }
+
+    /// <summary>تصویر مهر — Base64 از PNG ۱۵۰×۱۵۰</summary>
+    public string? StampImageBase64 { get; set; }
+
+    /// <summary>فعال بودن پزشک</summary>
+    public bool IsActive { get; set; } = true;
 }

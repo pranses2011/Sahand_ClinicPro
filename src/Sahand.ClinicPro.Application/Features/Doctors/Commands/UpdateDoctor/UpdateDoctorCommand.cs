@@ -60,6 +60,10 @@ public class UpdateDoctorCommandHandler : IRequestHandler<UpdateDoctorCommand, R
         doctor.DoctorPercentage = dto.DoctorPercentage;
         doctor.OnlineBookingEnabled = dto.OnlineBookingEnabled;
         doctor.AcceptsNewPatients = dto.AcceptsNewPatients;
+        if (dto.SignatureImageBase64 is not null)
+            doctor.SignatureImage = Convert.FromBase64String(dto.SignatureImageBase64);
+        if (dto.StampImageBase64 is not null)
+            doctor.StampImage = Convert.FromBase64String(dto.StampImageBase64);
 
         repo.Update(doctor);
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);

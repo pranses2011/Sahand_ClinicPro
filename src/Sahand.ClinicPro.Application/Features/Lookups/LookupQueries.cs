@@ -4,6 +4,8 @@ using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Domain.Interfaces;
+using Sahand.ClinicPro.Domain.Entities.People;
+using Sahand.ClinicPro.Domain.Entities.Scheduling;
 
 namespace Sahand.ClinicPro.Application.Features.Lookups;
 
@@ -234,5 +236,130 @@ public class GetLabOrderByIdQueryHandler
                 .ToList());
 
         return Result<LabOrderDetailDto>.Success(dto);
+    }
+}
+
+
+/// <summary>آیتم تخصص برای لیست انتخاب</summary>
+public class SpecialtyItemDto
+{
+    /// <summary>شناسه</summary>
+    public long Id { get; set; }
+
+    /// <summary>نام تخصص</summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>شناسه والد — فوق‌تخصص‌ها بر اساس والد دسته می‌شوند</summary>
+    public long? ParentId { get; set; }
+}
+
+/// <summary>آیتم اتاق معاینه</summary>
+public class RoomItemDto
+{
+    /// <summary>شناسه</summary>
+    public long Id { get; set; }
+
+    /// <summary>نام نمایشی</summary>
+    public string DisplayName { get; set; } = string.Empty;
+}
+
+/// <summary>آیتم پرسنل برای انتخاب در فرم پزشک</summary>
+public class EmployeeItemDto
+{
+    /// <summary>شناسه</summary>
+    public long Id { get; set; }
+
+    /// <summary>نام کامل</summary>
+    public string FullName { get; set; } = string.Empty;
+
+    /// <summary>شماره پرسنلی</summary>
+    public string? PersonnelCode { get; set; }
+}
+
+/// <summary>پرس‌وجوی تخصص‌های فعال</summary>
+public record GetSpecialtiesQuery(bool OnlyParents = false) : IRequest<Result<List<SpecialtyItemDto>>>;
+
+/// <summary>گرداننده تخصص‌ها</summary>
+public class GetSpecialtiesQueryHandler : IRequestHandler<GetSpecialtiesQuery, Result<List<SpecialtyItemDto>>>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده</summary>
+    public GetSpecialtiesQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>اجرا</summary>
+    public async Task<Result<List<SpecialtyItemDto>>> Handle(GetSpecialtiesQuery request,
+        CancellationToken cancellationToken)
+    {
+        var query = _unitOfWork.Repository<Specialty>().QueryableNoTracking
+            .Where(s => s.IsActive);
+        if (request.OnlyParents)
+            query = query.Where(s => s.ParentId == null);
+
+        var items = await query.OrderBy(s => s.Name)
+            .Select(s => new SpecialtyItemDto { Id = s.Id, Name = s.Name, ParentId = s.ParentId })
+            .ToListAsync(cancellationToken);
+
+        return Result<List<SpecialtyItemDto>>.Success(items);
+    }
+}
+
+/// <summary>پرس‌وجوی اتاق‌های معاینه فعال</summary>
+public record GetRoomsQuery : IRequest<Result<List<RoomItemDto>>>;
+
+/// <summary>گرداننده اتاق‌ها</summary>
+public class GetRoomsQueryHandler : IRequestHandler<GetRoomsQuery, Result<List<RoomItemDto>>>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده</summary>
+    public GetRoomsQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>اجرا</summary>
+    public async Task<Result<List<RoomItemDto>>> Handle(GetRoomsQuery request,
+        CancellationToken cancellationToken)
+    {
+        var items = await _unitOfWork.Repository<ExaminationRoom>().QueryableNoTracking
+            .Where(r => r.IsActive)
+            .OrderBy(r => r.Id)
+            .Select(r => new RoomItemDto
+            {
+                Id = r.Id,
+                DisplayName = r.RoomName != null && r.RoomName != "" ? r.RoomName :
+                    ("اتاق " + (r.RoomNumber != null ? r.RoomNumber : r.Id.ToString()))
+            })
+            .ToListAsync(cancellationToken);
+
+        return Result<List<RoomItemDto>>.Success(items);
+    }
+}
+
+/// <summary>پرس‌وجوی پرسنل فعال برای Combobox فرم پزشک</summary>
+public record GetEmployeesQuery : IRequest<Result<List<EmployeeItemDto>>>;
+
+/// <summary>گرداننده پرسنل</summary>
+public class GetEmployeesQueryHandler : IRequestHandler<GetEmployeesQuery, Result<List<EmployeeItemDto>>>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده</summary>
+    public GetEmployeesQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>اجرا</summary>
+    public async Task<Result<List<EmployeeItemDto>>> Handle(GetEmployeesQuery request,
+        CancellationToken cancellationToken)
+    {
+        var items = await _unitOfWork.Repository<Employee>().QueryableNoTracking
+            .Where(e => e.IsActive)
+            .OrderBy(e => e.LastName)
+            .Select(e => new EmployeeItemDto
+            {
+                Id = e.Id,
+                FullName = e.FirstName + " " + e.LastName,
+                PersonnelCode = e.PersonnelCode
+            })
+            .ToListAsync(cancellationToken);
+
+        return Result<List<EmployeeItemDto>>.Success(items);
     }
 }

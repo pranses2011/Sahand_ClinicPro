@@ -35,8 +35,7 @@ public class GetTodayReceptionsQueryHandler
             .Include(r => r.Patient)
             .Include(r => r.Doctor).ThenInclude(d => d!.Employee)
             .Include(r => r.InsuranceCompany)
-            .Where(r => r.ReceptionDate != null
-                     && DateOnly.FromDateTime(r.ReceptionDate) == today);
+            .Where(r => DateOnly.FromDateTime(r.ReceptionDate) == today);
 
         if (request.DoctorId.HasValue)
             query = query.Where(r => r.DoctorId == request.DoctorId.Value);

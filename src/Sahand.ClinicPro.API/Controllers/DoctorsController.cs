@@ -8,6 +8,12 @@ using Sahand.ClinicPro.Application.Features.Doctors.Commands.DeleteDoctor;
 using Sahand.ClinicPro.Application.Features.Doctors.Commands.UpdateDoctor;
 using Sahand.ClinicPro.Application.Features.Doctors.Queries.GetDoctorById;
 using Sahand.ClinicPro.Application.Features.Doctors.Queries.GetDoctors;
+using Sahand.ClinicPro.Application.Features.Doctors.Commands.CreateDoctorAbsence;
+using Sahand.ClinicPro.Application.Features.Doctors.Commands.DeleteDoctorAbsence;
+using Sahand.ClinicPro.Application.Features.Doctors.Commands.SaveDoctorSchedule;
+using Sahand.ClinicPro.Application.Features.Doctors.Queries.GetDoctorAbsences;
+using Sahand.ClinicPro.Application.Features.Doctors.Queries.GetDoctorPerformance;
+using Sahand.ClinicPro.Application.Features.Doctors.Queries.GetDoctorSchedule;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -94,5 +100,53 @@ public class DoctorsController : ApiBaseController
     {
         var result = await _mediator.Send(new DeleteDoctorCommand(id));
         return ToResponse(result, "پزشک حذف شد");
+    }
+
+    /// <summary>برنامه کاری هفتگی پزشک — هفت ردیف شنبه تا جمعه</summary>
+    [HttpGet("{id:long}/schedule")]
+    public async Task<IActionResult> GetSchedule(long id)
+    {
+        var result = await _mediator.Send(new GetDoctorScheduleQuery(id));
+        return ToResponse(result);
+    }
+
+    /// <summary>ذخیره برنامه کاری هفتگی — جایگزینی کامل</summary>
+    [HttpPut("{id:long}/schedule")]
+    public async Task<IActionResult> SaveSchedule(long id, [FromBody] SaveScheduleRequest request)
+    {
+        var result = await _mediator.Send(new SaveDoctorScheduleCommand(id, request));
+        return ToResponse(result);
+    }
+
+    /// <summary>غیبت‌های آینده پزشک</summary>
+    [HttpGet("{id:long}/absences")]
+    public async Task<IActionResult> GetAbsences(long id)
+    {
+        var result = await _mediator.Send(new GetDoctorAbsencesQuery(id));
+        return ToResponse(result);
+    }
+
+    /// <summary>ثبت غیبت جدید — با شمارش نوبت‌های درگیر</summary>
+    [HttpPost("{id:long}/absences")]
+    public async Task<IActionResult> CreateAbsence(long id, [FromBody] CreateAbsenceRequest request)
+    {
+        var result = await _mediator.Send(new CreateDoctorAbsenceCommand(id, request));
+        return ToResponse(result);
+    }
+
+    /// <summary>حذف غیبت</summary>
+    [HttpDelete("absences/{absenceId:long}")]
+    public async Task<IActionResult> DeleteAbsence(long absenceId)
+    {
+        var result = await _mediator.Send(new DeleteDoctorAbsenceCommand(absenceId));
+        return ToResponse(result);
+    }
+
+    /// <summary>آمار عملکرد پزشک — ماه جاری و امروز</summary>
+    [HttpGet("{id:long}/performance")]
+    public async Task<IActionResult> GetPerformance(long id)
+    {
+        var result = await _mediator.Send(new GetDoctorPerformanceQuery(id));
+        return ToResponse(result);
     }
 }

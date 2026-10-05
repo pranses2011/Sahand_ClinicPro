@@ -44,6 +44,11 @@
             <converters:ShamsiDateTimeConverter x:Key="ShamsiDateTime" />
             <converters:NullToVisibilityConverter x:Key="NullToVisibility" />
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+            <converters:Base64ToImageConverter x:Key="Base64ToImage" />
+            <converters:BoolToTextConverter x:Key="BoolToText" />
+            <converters:NullToBoolConverter x:Key="NullToBool" />
+            <converters:ZeroToCollapsedConverter x:Key="ZeroToCollapsed" />
+            <converters:StringToVisibilityConverter x:Key="StringToVisibility" />
             <converters:CurrencyRialConverter x:Key="CurrencyRial" />
 
             <!-- سبک کارت آمار داشبورد -->

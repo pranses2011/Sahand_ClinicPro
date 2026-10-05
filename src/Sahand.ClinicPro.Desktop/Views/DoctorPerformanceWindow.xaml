@@ -1,0 +1,70 @@
+﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.DoctorPerformanceWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        Title="آمار عملکرد پزشک"
+        Width="560" Height="470"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        FlowDirection="RightToLeft"
+        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══ آمار عملکرد و کارانه — دکمه‌های آمار و کارانه فرم ۶ ═══ -->
+    <Grid Margin="18,14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+            <materialDesign:PackIcon Kind="ChartBar" Width="24" Height="24"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                     VerticalAlignment="Center" />
+            <TextBlock Text="{Binding DoctorName, Mode=OneWay}" FontSize="18" FontWeight="Bold"
+                       Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- ردیف اول کارت‌ها -->
+        <UniformGrid Grid.Row="1" Columns="3" Margin="0,0,0,10">
+            <controls:StatCard Label="ویزیت این ماه" Value="{Binding VisitsThisMonth, Mode=OneWay}"
+                               IconKind="Stethoscope" AccentBrush="#1976D2" Margin="0,0,8,0" />
+            <controls:StatCard Label="ویزیت امروز" Value="{Binding VisitsToday, Mode=OneWay}"
+                               IconKind="CalendarToday" AccentBrush="#388E3C" Margin="0,0,8,0" />
+            <controls:StatCard Label="امتیاز رضایت" Value="{Binding RatingDisplay, Mode=OneWay}"
+                               IconKind="Star" AccentBrush="#F57C00" />
+        </UniformGrid>
+
+        <!-- ردیف دوم -->
+        <UniformGrid Grid.Row="2" Columns="3" Margin="0,0,0,10">
+            <controls:StatCard Label="درآمد ماه (ریال)" Value="{Binding RevenueDisplay, Mode=OneWay}"
+                               IconKind="CashMultiple" AccentBrush="#00838F" Margin="0,0,8,0" />
+            <controls:StatCard Label="کارانه پزشک (ریال)" Value="{Binding CommissionDisplay, Mode=OneWay}"
+                               IconKind="CashCheck" AccentBrush="#6A1B9A" Margin="0,0,8,0" />
+            <controls:StatCard Label="میانگین هر ویزیت" Value="{Binding AverageDisplay, Mode=OneWay}"
+                               IconKind="ClockFast" AccentBrush="#4527A0" />
+        </UniformGrid>
+
+        <!-- نرخ عدم مراجعه -->
+        <Border Grid.Row="3" CornerRadius="10" Padding="14"
+                Background="{DynamicResource MaterialDesign.Brush.Background}">
+            <StackPanel>
+                <TextBlock Text="نرخ عدم مراجعه (No-Show)" FontSize="13" FontWeight="Bold" />
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ProgressBar Grid.Column="0" Height="14"
+                                 Maximum="30"
+                                 Value="{Binding NoShowRate, Mode=OneWay}" />
+                    <TextBlock Grid.Column="1" Text="{Binding NoShowDisplay, Mode=OneWay}"
+                               FontSize="14" FontWeight="Bold" Margin="12,0,0,0" VerticalAlignment="Center" />
+                </Grid>
+                <TextBlock Text="درصد نوبت‌هایی که بیمار در آن‌ها مراجعه نکرده است — بالای ۲۰٪ نیازمند پیگیری پیامکی است"
+                           FontSize="11" Opacity="0.6" Margin="0,8,0,0" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
