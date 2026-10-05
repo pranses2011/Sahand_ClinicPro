@@ -25,3 +25,13 @@ public record InsuranceInquiryDto(
     long PatientId,
     long InsuranceCompanyId,
     string? InsuranceNumber);
+
+/// <summary>نتیجه کامل استعلام بیمه — برای محاسبه سهم در فرم پذیرش (گام U5)</summary>
+public record InsuranceInquiryResultDto(
+    long InquiryId,
+    bool IsEligible,
+    bool WasOnline,
+    string Message,
+    string? ApprovalCode,
+    DateOnly? ValidUntil,
+    decimal CoveragePercent);

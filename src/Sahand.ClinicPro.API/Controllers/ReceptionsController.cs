@@ -7,6 +7,7 @@ using Sahand.ClinicPro.Application.Features.Receptions.Commands.UpdateReceptionS
 using Sahand.ClinicPro.Application.Features.Receptions.Queries.GetTodayReceptions;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Enums;
+using Sahand.ClinicPro.Application.Features.Receptions.GetQueueStats;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -64,4 +65,12 @@ public class ReceptionsController : ApiBaseController
 
     /// <summary>مدل تغییر وضعیت</summary>
     public record UpdateStatusDto(ReceptionStatus Status);
+
+    /// <summary>آمار روز پذیرش — انتظار/پذیرش‌شده/صف/درآمد</summary>
+    [HttpGet("queue-stats")]
+    public async Task<IActionResult> GetQueueStats()
+    {
+        var result = await _mediator.Send(new GetQueueStatsQuery());
+        return ToResponse(result);
+    }
 }
