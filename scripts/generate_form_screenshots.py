@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-📸 مولد اسکرین‌شات ۵۲ فرم برنامه دسکتاپ درمانگاه سهند — نسخه ۱.۶.۰
+📸 مولد اسکرین‌شات ۵۲ فرم برنامه دسکتاپ درمانگاه سهند — نسخه ۱.۷.۰
 ==============================================================
 هر فرم به‌صورت موکاپ HTML وفادار به طراحی WPF/Material تولید و در ابعاد
 1600×1000 اسکرین‌شات می‌شود تا در بروشور «تور تصویری کامل» استفاده شود.
@@ -23,11 +23,11 @@ W, H = 1600, 1000
 # ═══════════════════════════  قالب مشترک  ═══════════════════════════
 
 BASE_CSS = """
-@font-face { font-family:'Vazirmatn'; src:url('../../assets/fonts/Vazirmatn-Regular.ttf') format('truetype'); font-weight:400; }
-@font-face { font-family:'Vazirmatn'; src:url('../../assets/fonts/Vazirmatn-Medium.ttf') format('truetype'); font-weight:500; }
-@font-face { font-family:'Vazirmatn'; src:url('../../assets/fonts/Vazirmatn-SemiBold.ttf') format('truetype'); font-weight:600; }
-@font-face { font-family:'Vazirmatn'; src:url('../../assets/fonts/Vazirmatn-Bold.ttf') format('truetype'); font-weight:700; }
-@font-face { font-family:'Vazirmatn'; src:url('../../assets/fonts/Vazirmatn-ExtraBold.ttf') format('truetype'); font-weight:800; }
+@font-face { font-family:'Vazirmatn'; src:url('../../docs/assets/fonts/Vazirmatn-Regular.ttf') format('truetype'); font-weight:400; }
+@font-face { font-family:'Vazirmatn'; src:url('../../docs/assets/fonts/Vazirmatn-Medium.ttf') format('truetype'); font-weight:500; }
+@font-face { font-family:'Vazirmatn'; src:url('../../docs/assets/fonts/Vazirmatn-SemiBold.ttf') format('truetype'); font-weight:600; }
+@font-face { font-family:'Vazirmatn'; src:url('../../docs/assets/fonts/Vazirmatn-Bold.ttf') format('truetype'); font-weight:700; }
+@font-face { font-family:'Vazirmatn'; src:url('../../docs/assets/fonts/Vazirmatn-ExtraBold.ttf') format('truetype'); font-weight:800; }
 * { margin:0; padding:0; box-sizing:border-box; }
 html, body { width:1600px; height:1000px; overflow:hidden; }
 body { font-family:'Vazirmatn','Noto Color Emoji',sans-serif; direction:rtl;
@@ -38,8 +38,9 @@ body { font-family:'Vazirmatn','Noto Color Emoji',sans-serif; direction:rtl;
 .side { width:236px; background:linear-gradient(180deg,#16355E 0%,#1C4E89 100%); color:#DCE9FA;
   display:flex; flex-direction:column; padding:14px 10px; flex:none; }
 .side .brand { display:flex; align-items:center; gap:10px; padding:8px 10px 14px; }
-.side .brand .lg { width:40px; height:40px; border-radius:10px; background:#fff;
+.side .brand .lg { width:42px; height:42px; border-radius:11px; background:#fff; overflow:hidden; flex:none;
   display:flex; align-items:center; justify-content:center; font-size:22px; }
+.side .brand .lg img { width:100%; height:100%; object-fit:contain; display:block; }
 .side .brand b { font-size:15px; font-weight:800; color:#fff; line-height:1.2; }
 .side .brand small { font-size:9.5px; opacity:.65; letter-spacing:.5px; }
 .nav { display:flex; flex-direction:column; gap:2px; overflow:hidden; }
@@ -178,7 +179,9 @@ def sidebar(active_title: str) -> str:
     for em, title, _ in NAV_ITEMS:
         on = ' class="on"' if title == active_title else ""
         items.append(f'<div class="it"{on}><span class="em">{em}</span>{title}</div>')
-    return ('<aside class="side"><div class="brand"><div class="lg">🏥</div>'
+    # لوگوی رسمی محصول (ClinicPro.png آپلودی مالک) به‌جای ایموجی
+    return ('<aside class="side"><div class="brand"><div class="lg">'
+            '<img src="../../docs/assets/ClinicPro.png" alt="لوگو"></div>'
             '<div><b>درمانگاه سهند</b><br><small>SAHAND CLINICPRO</small></div></div>'
             f'<nav class="nav">{"".join(items)}</nav>'
             '<div class="foot">👤 دکتر رضایی · مدیر سیستم<br>۱۴۰۵/۰۷/۱۳ — ۱۰:۲۴</div></aside>')
@@ -438,12 +441,12 @@ view(10, "accounting", "حسابداری دوبل", "📒", "حسابداری",
 view(11, "payroll", "فیش حقوقی پرسنل", "🧾", "فیش حقوقی",
      toolbar([("صدور فیش ماه", "➕", "pri"), ("پیش‌نمایش چاپ", "🖨", "sec"), ("قواعد ۱۴۰۴", "📜", "sec")])
      + stat_row([("پرسنل حقوق‌بگیر", "۳۸", "▲ ۲ استخدام", "c1", "👔"), ("جمع حقوق مهر", "۸۹۲م ت", "▲ ۴.۲٪", "c2", "💰"),
-                 ("اضافه‌کاری این ماه", "۱٬۲۴۰ ساعت", "▲ از حضور واقعی", "c3", "🕐"), ("کسورات بیمه/مالیات", "۱۰۴م ت", "▲ محاسبه خودکار", "c4", "📉")])
-     + table_panel("فیش‌های حقوقی مهر ۱۴۰۵", ["پرسنل", "سمت", "کارکرد", "اضافه‌کاری", "مزایا", "بیمه ۷٪", "مالیات", "خالص پرداختی", "وضعیت"],
-        [("رضا محمدنژاد", "پرستار", "۱۷۶ ساعت", "۱۴ ساعت", "۱۲.۵م", "۲.۱م", "۱.۴م", "۳۴.۸م", B.format("green", "صادر شد")),
-         ("فاطمه اکبری", "منشی پذیرش", "۱۷۶ ساعت", "۶ ساعت", "۸.۴م", "۱.۵م", "۰.۹م", "۲۳.۲م", B.format("green", "صادر شد")),
-         ("مهدی قلی‌زاده", "آزمایشگاه", "۱۷۶ ساعت", "۲۲ ساعت", "۱۸.۷م", "۳.۲م", "۲.۶م", "۵۲.۱م", B.format("blue", "در بررسی")),
-         ("زهرا رحیمی", "کارمند مالی", "۱۶۸ ساعت", "—", "۹.۸م", "۱.۷م", "۱.۱م", "۲۶.۴م", B.format("green", "صادر شد"))]))
+                 ("حقوق درصدی از سود", "۶۱.۳م ت", "▲ از سود خدمات خود پرسنل", "c3", "📈"), ("کسورات بیمه/مالیات", "۱۰۴م ت", "▲ محاسبه خودکار", "c4", "📉")])
+     + table_panel("فیش‌های حقوقی مهر ۱۴۰۵", ["پرسنل", "سمت", "حقوق پایه", "٪ از سود", "سود خدمات", "حقوق درصدی", "اضافه‌کاری", "بیمه ۷٪", "خالص پرداختی", "وضعیت"],
+        [("رضا محمدنژاد", "پرستار", "۲۲م", "۳۰٪", "۴۸.۲م", "۱۴.۵م", "۲.۴م", "۲.۷م", "۳۵.۱م", B.format("green", "صادر شد")),
+         ("فاطمه اکبری", "منشی پذیرش", "۱۲م", "—", "—", "—", "۰.۸م", "۰.۹م", "۱۱.۳م", B.format("green", "صادر شد")),
+         ("مهدی قلی‌زاده", "آزمایشگاه", "۱۵م", "۲۵٪", "۶۲.۹م", "۱۵.۷م", "۳.۱م", "۲.۴م", "۲۵.۸م", B.format("blue", "در بررسی")),
+         ("زهرا رحیمی", "کارمند مالی", "۱۲م", "۱۰٪", "۱۹.۴م", "۱.۹م", "—", "۱م", "۱۲.۲م", B.format("green", "صادر شد"))]))
 
 # ─── ۱۲ حضور و غیاب ───
 view(12, "attendance", "حضور و غیاب", "🕐", "حضور و غیاب",
@@ -611,12 +614,12 @@ view(23, "personnel", "مدیریت پرسنل", "👔", "پرسنل",
      toolbar([("پرسنل جدید", "➕", "pri"), ("قرارداد", "📜", "sec"), ("سابقه", "🗂", "sec")])
      + stat_row([("کل پرسنل", "۳۸", "▲ ۲ استخدام ماه", "c1", "👔"), ("قرارداد فعال", "۳۶", "▲ ۲ در تمدید", "c2", "📜"),
                  ("پرسنل شعبه ۲", "۹", "▲ ۲۳.۷٪", "c3", "🏢"), ("میانگین سابقه", "۴.۲ سال", "▲ وفاداری بالا", "c4", "⏳")])
-     + table_panel("فهرست پرسنل", ["کد پرسنلی", "نام", "سمت", "شعبه", "تاریخ استخدام", "نوع قرارداد", "وضعیت"],
-        [("P-201", "رضا محمدنژاد", "پرستار", "مرکزی", "۱۳۹۹/۰۵/۰۱", B.format("green", "رسمی"), B.format("green", "شاغل")),
-         ("P-202", "فاطمه اکبری", "منشی پذیرش", "مرکزی", "۱۴۰۱/۰۲/۱۵", B.format("blue", "پروژه‌ای"), B.format("green", "شاغل")),
-         ("P-203", "مهدی قلی‌زاده", "کارشناس آزمایشگاه", "مرکزی", "۱۳۹۸/۰۹/۱۰", B.format("green", "رسمی"), B.format("green", "شاغل")),
-         ("P-208", "زهرا رحیمی", "کارمند مالی", "شعبه ۲", "۱۴۰۲/۰۶/۰۱", B.format("amber", "آزمایشی"), B.format("green", "شاغل")),
-         ("P-210", "علی نوروزی", "خدمات", "شعبه ۲", "۱۴۰۴/۱۱/۰۵", B.format("gray", "ساعتی"), B.format("amber", "مرخصی"))]))
+     + table_panel("فهرست پرسنل", ["کد پرسنلی", "نام", "سمت", "شعبه", "حقوق پایه", "٪ از سود خدمات", "نوع قرارداد", "وضعیت"],
+        [("P-201", "رضا محمدنژاد", "پرستار", "مرکزی", "۲۲٬۰۰۰٬۰۰۰", "۳۰٪", B.format("green", "رسمی"), B.format("green", "شاغل")),
+         ("P-202", "فاطمه اکبری", "منشی پذیرش", "مرکزی", "۱۲٬۰۰۰٬۰۰۰", "—", B.format("blue", "پروژه‌ای"), B.format("green", "شاغل")),
+         ("P-203", "مهدی قلی‌زاده", "کارشناس آزمایشگاه", "مرکزی", "۱۵٬۰۰۰٬۰۰۰", "۲۵٪", B.format("green", "رسمی"), B.format("green", "شاغل")),
+         ("P-208", "زهرا رحیمی", "کارمند مالی", "شعبه ۲", "۱۲٬۰۰۰٬۰۰۰", "۱۰٪", B.format("amber", "آزمایشی"), B.format("green", "شاغل")),
+         ("P-210", "علی نوروزی", "خدمات", "شعبه ۲", "۸٬۵۰۰٬۰۰۰", "—", B.format("gray", "ساعتی"), B.format("amber", "مرخصی"))]))
 
 # ─── ۲۴ تنظیمات ───
 view(24, "settings", "تنظیمات سیستم", "⚙️", "تنظیمات",
@@ -842,10 +845,10 @@ win(41, "doctor-form", "ثبت پزشک جدید", "🩺", "پزشکان — پ�
 
 win(42, "employee-form", "ثبت پرسنل جدید", "👔", "منابع انسانی — پرونده پرسنلی",
      form_fields([("نام", "زهرا", "👤"), ("نام خانوادگی", "رحیمی", "👤"),
-                 ("کد ملی", "۰۰۴۵۶۷۸۹۱۲", "🪪"), ("سمت", "کارمند مالی", "💼"),
+                 ("کد ملی", "۰۰۴۵۶۷۸۹۱", "🪪"), ("سمت", "کارمند مالی", "💼"),
                  ("شعبه", "شعبه ۲ — آذرشهر", "🏢"), ("تاریخ استخدام", "۱۴۰۲/۰۶/۰۱", "📅"),
                  ("نوع قرارداد", "آزمایشی ۳ ماهه", "📜"), ("حقوق پایه", "۱۸٬۵۰۰٬۰۰۰ تومان", "💰"),
-                 ("شماره بیمه تأمین", "۴۵٬۶۷۸٬۹۱۲", "🛡"), ("شیفت", "اداری ۸–۱۶", "🕐")])
+                 ("درصد حقوق از سود خدمات", "۱۰٪ — فقط از سود خدمات انجامی خود پرسنل", "📈"), ("شیفت", "اداری ۸–۱۶", "🕐")])
      + actions_row())
 
 win(43, "invoice-form", "صدور فاکتور", "💵", "صندوق ۱ — مریم احمدی",
@@ -867,12 +870,12 @@ win(44, "payment-window", "دریافت وجه", "💰", "صندوق — تسو�
 
 win(45, "payslip-window", "فیش حقوقی مهر ۱۴۰۵", "🧾", "رضا محمدنژاد — پرستار — ۱۷۶ ساعت کارکرد",
      '<div class="grid2"><div class="panel"><div class="ph"><b>➕ مزایا</b></div>'
-     + table_panel("", ["عنوان", "مبلغ"], [("حقوق پایه", "۲۲٬۰۰۰٬۰۰۰"), ("اضافه‌کاری ۱۴ ساعت × ۱.۴", "۲٬۴۵۰٬۰۰۰"), ("حق شیفت", "۱٬۸۰۰٬۰۰۰"), ("بن کارگری", "۹٬۰۰۰٬۰۰۰")], "").replace('class="panel grow"', 'class=""')
+     + table_panel("", ["عنوان", "مبلغ"], [("حقوق پایه", "۲۲٬۰۰۰٬۰۰۰"), ("حقوق درصدی از سود خدمات ۳۰٪", "۱۴٬۴۶۰٬۰۰۰"), ("اضافه‌کاری ۱۴ ساعت × ۱.۴", "۲٬۴۵۰٬۰۰۰"), ("بن کارگری", "۹٬۰۰۰٬۰۰۰")], "").replace('class="panel grow"', 'class=""')
      + '</div><div class="panel"><div class="ph"><b>➖ کسورات</b></div>'
-     + table_panel("", ["عنوان", "مبلغ"], [("بیمه سهم کارگر ۷٪", "۲٬۳۲۴٬۰۰۰"), ("مالیات پلکانی", "۱٬۴۱۰٬۰۰۰")], "").replace('class="panel grow"', 'class=""')
+     + table_panel("", ["عنوان", "مبلغ"], [("بیمه سهم کارگر ۷٪", "۳٬۳۸۳٬۰۰۰"), ("مالیات پلکانی", "۱٬۷۶۰٬۰۰۰")], "").replace('class="panel grow"', 'class=""')
      + '</div></div>'
-     + stat_row([("جمع مزایا", "۳۵٬۲۵۰٬۰۰۰", "▲", "c2", "➕"), ("جمع کسورات", "۳٬۷۳۴٬۰۰۰", "▼", "c5", "➖"),
-                 ("خالص پرداختی", "۳۱٬۵۱۶٬۰۰۰", "▲ واریز به کارت", "c1", "💰")])
+     + stat_row([("مبنای سود خدمات", "۴۸٬۲۰۰٬۰۰۰", "▲ سود = مبلغ − هزینه", "c3", "📈"), ("جمع کسورات", "۵٬۱۴۳٬۰۰۰", "▼", "c5", "➖"),
+                 ("خالص پرداختی", "۳۹٬۵۲۴٬۰۰۰", "▲ واریز به کارت", "c1", "💰")])
      + actions_row())
 
 win(46, "lab-order-form", "سفارش آزمایش", "🧪", "دکتر کریمی — مریم احمدی",
@@ -932,7 +935,7 @@ win(51, "doctor-performance", "عملکرد پزشک — دکتر رضایی", "
      + '<div class="chips"><span class="chip">🏆 رتبه ۱ رضایت بیمار</span><span class="chip">🔁 نرخ بازگشت: ۳۴٪</span>'
        '<span class="chip">🧾 نسخه الکترونیک: ۹۱٪</span><span class="chip">⭐ شکایت: ۰</span></div>')
 
-win(52, "login", "ورود به سیستم", "🔐", "درمانگاه سهند — نسخه ۱.۶.۰",
+win(52, "login", "ورود به سیستم", "🔐", "درمانگاه سهند — نسخه ۱.۷.۰",
      '<div style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px 0">'
      + '<div style="width:84px;height:84px;border-radius:22px;background:radial-gradient(circle at 40% 25%,#D8F1FF,#BFE4FB 70%);display:flex;align-items:center;justify-content:center;font-size:42px;box-shadow:0 10px 26px rgba(22,53,94,.25)">🏥</div>'
      + '<div style="text-align:center"><div style="font-size:20px;font-weight:800;color:#16355E">درمانگاه سهند</div>'
@@ -964,13 +967,22 @@ def main():
                 name = f"{spec['num']:02d}-{spec['key']}-win.png"
             src = TMP_DIR / f"{spec['num']:02d}.html"
             src.write_text(html, encoding="utf-8")
+            # ═══ ریشه‌یابی باگ فونت (چرخه نهم) ═══
+            # مسیر قدیمی ../../assets/fonts غلط بود و فونت هرگز بارگذاری نمی‌شد.
+            # حالا: (۱) goto اول — بارگذاری فونت‌ها؛ (۲) reload = ظاهر «بار دوم»
+            # مثل برنامه واقعی که پس از کش شدن فونت یکدست می‌شود؛ (۳) انتظار
+            # صریح document.fonts.ready؛ (۴) راستی‌آزمایی Vazirmatn واقعاً فعال است.
             page.goto(src.resolve().as_uri(), wait_until="networkidle")
+            page.reload(wait_until="networkidle")
             page.evaluate("() => document.fonts.ready.then(() => true)")
-            page.wait_for_timeout(350)
+            page.wait_for_timeout(250)
+            fonts_ok = page.evaluate("() => document.fonts.check('12px Vazirmatn')")
+            if not fonts_ok:
+                print(f"  ⚠ هشدار: فونت وزیرمتن در {name} فعال نشد!")
             out = OUT_DIR / name
             page.screenshot(path=str(out), clip={"x": 0, "y": 0, "width": W, "height": H})
             made += 1
-            print(f"  ✔ {name}  ({out.stat().st_size // 1024} KB)")
+            print(f"  ✔ {name}  ({out.stat().st_size // 1024} KB){'' if fonts_ok else ' — بدون فونت!'}")
         browser.close()
     print(f"\n📸 {made} اسکرین‌شات در {OUT_DIR} تولید شد")
 
