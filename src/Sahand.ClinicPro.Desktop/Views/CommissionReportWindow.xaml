@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:charts="clr-namespace:Sahand.ClinicPro.Desktop.Controls.Charts"
         Title="گزارش تفصیلی سود و حقوق درصدی پرسنل"
         Height="780" Width="1180"
         WindowStartupLocation="CenterOwner"
@@ -100,34 +101,60 @@
         <TextBlock Grid.Row="2" Text="{Binding ErrorMessage}" Foreground="#D32F2F" FontSize="12"
                    Margin="8,28,0,0" />
 
-        <!-- جدول خلاصه پرسنل -->
-        <DataGrid Grid.Row="3" ItemsSource="{Binding SummaryRows}"
-                  SelectedItem="{Binding SelectedSummaryRow}"
-                  AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                  Style="{StaticResource MaterialDesignDataGrid}"
-                  HeadersVisibility="Column" GridLinesVisibility="Horizontal">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode}" Width="95" />
-                <DataGridTextColumn Header="نام و نام خانوادگی" Binding="{Binding FullName}" Width="180" />
-                <DataGridTextColumn Header="بخش" Binding="{Binding DepartmentName}" Width="110" />
-                <DataGridTextColumn Header="سمت" Binding="{Binding PositionName}" Width="110" />
-                <DataGridTextColumn Header="پزشک متصل" Binding="{Binding DoctorNames}" Width="150" />
-                <DataGridTextColumn Header="اقلام" Binding="{Binding ServiceCount}" Width="60" />
-                <DataGridTextColumn Header="جمع فروش (ریال)" Binding="{Binding TotalRevenueText}" Width="120" />
-                <DataGridTextColumn Header="جمع هزینه (ریال)" Binding="{Binding TotalCostText}" Width="120" />
-                <DataGridTextColumn Header="سود خدمات (ریال)" Binding="{Binding TotalProfitText}" Width="120" />
-                <DataGridTextColumn Header="درصد" Binding="{Binding CommissionPercentText}" Width="60" />
-                <DataGridTextColumn Header="حقوق درصدی (ریال)" Binding="{Binding ServiceCommissionText}" Width="125">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="FontWeight" Value="SemiBold" />
-                            <Setter Property="Foreground" Value="#8E24AA" />
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="وضعیت فیش" Binding="{Binding SalaryStatusText}" Width="105" />
-            </DataGrid.Columns>
-        </DataGrid>
+        <!-- ردیف خلاصه: جدول پرسنل (۲fr) + نمودار دونات سهم (۱fr) — چرخه یازدهم -->
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2.3*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- جدول خلاصه پرسنل -->
+            <DataGrid Grid.Column="0" ItemsSource="{Binding SummaryRows}"
+                      SelectedItem="{Binding SelectedSummaryRow}"
+                      AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                      Style="{StaticResource MaterialDesignDataGrid}"
+                      HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode}" Width="95" />
+                    <DataGridTextColumn Header="نام و نام خانوادگی" Binding="{Binding FullName}" Width="180" />
+                    <DataGridTextColumn Header="بخش" Binding="{Binding DepartmentName}" Width="110" />
+                    <DataGridTextColumn Header="سمت" Binding="{Binding PositionName}" Width="110" />
+                    <DataGridTextColumn Header="پزشک متصل" Binding="{Binding DoctorNames}" Width="150" />
+                    <DataGridTextColumn Header="اقلام" Binding="{Binding ServiceCount}" Width="60" />
+                    <DataGridTextColumn Header="جمع فروش (ریال)" Binding="{Binding TotalRevenueText}" Width="120" />
+                    <DataGridTextColumn Header="جمع هزینه (ریال)" Binding="{Binding TotalCostText}" Width="120" />
+                    <DataGridTextColumn Header="سود خدمات (ریال)" Binding="{Binding TotalProfitText}" Width="120" />
+                    <DataGridTextColumn Header="درصد" Binding="{Binding CommissionPercentText}" Width="60" />
+                    <DataGridTextColumn Header="حقوق درصدی (ریال)" Binding="{Binding ServiceCommissionText}" Width="125">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter Property="Foreground" Value="#8E24AA" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="وضعیت فیش" Binding="{Binding SalaryStatusText}" Width="105" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- کارت دونات سهم پرسنل از حقوق درصدی — ماهیت سهم از کل → دونات -->
+            <Border Grid.Column="2" Style="{StaticResource StatCard}" Margin="0" Padding="10,8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="سهم پرسنل از حقوق درصدی دوره" FontSize="12" FontWeight="Bold"
+                               Foreground="#8E24AA" Margin="2,0,0,6" />
+                    <charts:DoughnutChart Grid.Row="1"
+                                          Points="{Binding CommissionChartPoints}"
+                                          CenterText="{Binding CommissionChartCenter}"
+                                          CenterSubtext="ریال — ۱۰ نفر برتر"
+                                          RingSize="140" />
+                </Grid>
+            </Border>
+        </Grid>
 
         <!-- عنوان جزئیات -->
         <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,10,0,6">

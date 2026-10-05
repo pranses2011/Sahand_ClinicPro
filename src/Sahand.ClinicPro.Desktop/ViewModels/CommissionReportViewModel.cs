@@ -4,6 +4,7 @@ using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Application.Common.Helpers;
+using Sahand.ClinicPro.Desktop.Controls.Charts;
 using Sahand.ClinicPro.Desktop.Services;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
@@ -88,6 +89,14 @@ public partial class CommissionReportViewModel : ViewModelBase
     [ObservableProperty]
     private decimal _totalCommission;
 
+    /// <summary>نقاط نمودار دونات سهم پرسنل از حقوق درصدی — چرخه یازدهم</summary>
+    [ObservableProperty]
+    private IReadOnlyList<ChartPointData>? _commissionChartPoints;
+
+    /// <summary>متن مرکز دونات — جمع حقوق درصدی دوره</summary>
+    [ObservableProperty]
+    private string _commissionChartCenter = "";
+
     /// <summary>تعداد اقلام منتسب‌شده دوره</summary>
     [ObservableProperty]
     private int _serviceCount;
@@ -160,6 +169,18 @@ public partial class CommissionReportViewModel : ViewModelBase
                     s.ServiceCount, s.TotalRevenue, s.TotalCost, s.TotalProfit,
                     s.CommissionPercent, s.CommissionBase, s.ServiceCommission,
                     s.SalaryStatusText)));
+
+            // نمودار دونات سهم پرسنل از حقوق درصدی — چرخه یازدهم (ماهیت سهم از کل)
+            CommissionChartPoints = SummaryRows
+                .Where(s => s.ServiceCommission > 0)
+                .OrderByDescending(s => s.ServiceCommission)
+                .Take(10)
+                .Select(s => new ChartPointData(
+                    s.FullName,
+                    (double)s.ServiceCommission,
+                    $"{s.FullName}: {s.ServiceCommission:N0} ریال (درصد {s.CommissionPercentText})"))
+                .ToList();
+            CommissionChartCenter = TotalCommission.ToString("#,0");
 
             _allDetails = (data.Details ?? new List<DetailDto>()).Select(d => new DetailRow(
                 d.EmployeeId, d.EmployeeName, d.InvoiceNumber, d.InvoiceDateShamsi,
