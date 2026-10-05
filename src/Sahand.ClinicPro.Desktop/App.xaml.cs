@@ -90,6 +90,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<BillingViewModel>();
         services.AddTransient<AccountingViewModel>();
         services.AddTransient<InsuranceViewModel>();
+        services.AddTransient<ParaclinicalViewModel>();
         services.AddTransient<LabViewModel>();
         services.AddTransient<PharmacyViewModel>();
         services.AddTransient<ReportsViewModel>();

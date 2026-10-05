@@ -46,6 +46,9 @@
         <DataTemplate DataType="{x:Type vm:InsuranceViewModel}">
             <views:InsuranceView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ParaclinicalViewModel}">
+            <views:ParaclinicalView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:LabViewModel}">
             <views:LabView />
         </DataTemplate>
