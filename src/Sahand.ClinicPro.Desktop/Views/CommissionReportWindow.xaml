@@ -1,0 +1,174 @@
+﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.CommissionReportWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="گزارش تفصیلی سود و حقوق درصدی پرسنل"
+        Height="780" Width="1180"
+        WindowStartupLocation="CenterOwner"
+        FlowDirection="RightToLeft"
+        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <Style x:Key="StatCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource MaterialDesign.Card.Background}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="14,10" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+        </Style>
+    </Window.Resources>
+    <!-- ═══════════════════════════════════════════════════════════
+         پنجره گزارش تفصیلی سود و حقوق درصدی — چرخه دهم
+         خلاصه هر پرسنل + جزئیات اقلام + خروجی اکسل دو برگ
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="2.2*" />
+        </Grid.RowDefinitions>
+
+        <!-- سربرگ -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="ChartBoxOutline" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="گزارش تفصیلی سود و حقوق درصدی پرسنل" FontSize="19" FontWeight="Bold"
+                       Margin="10,0,0,0" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding ClinicName}" FontSize="13" Opacity="0.7"
+                       Margin="16,4,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- نوار فیلتر و دکمه‌ها -->
+        <WrapPanel Grid.Row="1" Margin="0,0,0,10">
+            <TextBlock Text="دوره:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,8,0" />
+            <ComboBox SelectedValue="{Binding SelectedYear}" SelectedValuePath="Content" MinWidth="90" Margin="0,0,8,0">
+                <ComboBoxItem Content="1401" /><ComboBoxItem Content="1402" /><ComboBoxItem Content="1403" />
+                <ComboBoxItem Content="1404" /><ComboBoxItem Content="1405" />
+            </ComboBox>
+            <ComboBox SelectedIndex="{Binding SelectedMonthIndex}" MinWidth="105" Margin="0,0,14,0">
+                <ComboBoxItem Content="فروردین" /><ComboBoxItem Content="اردیبهشت" /><ComboBoxItem Content="خرداد" />
+                <ComboBoxItem Content="تیر" /><ComboBoxItem Content="مرداد" /><ComboBoxItem Content="شهریور" />
+                <ComboBoxItem Content="مهر" /><ComboBoxItem Content="آبان" /><ComboBoxItem Content="آذر" />
+                <ComboBoxItem Content="دی" /><ComboBoxItem Content="بهمن" /><ComboBoxItem Content="اسفند" />
+            </ComboBox>
+            <TextBlock Text="پرسنل:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,8,0" />
+            <ComboBox ItemsSource="{Binding Employees}"
+                      DisplayMemberPath="FullName"
+                      SelectedIndex="{Binding SelectedEmployeeIndex}"
+                      MinWidth="200" Margin="0,0,14,0" />
+            <Button Command="{Binding LoadCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                    Content="🔄 نمایش گزارش" Margin="0,0,8,0" />
+            <Button Command="{Binding ExportExcelCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                    Content="📊 خروجی اکسل" />
+        </WrapPanel>
+
+        <!-- کارت‌های آماری -->
+        <UniformGrid Grid.Row="2" Columns="4" Margin="0,0,0,10">
+            <Border Style="{StaticResource StatCard}">
+                <StackPanel>
+                    <TextBlock Text="جمع سود خدمات دوره (ریال)" FontSize="11.5" Opacity="0.65" />
+                    <TextBlock Text="{Binding TotalProfit, StringFormat='#,0'}" FontSize="21" FontWeight="Bold" Foreground="#1E88E5" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource StatCard}">
+                <StackPanel>
+                    <TextBlock Text="جمع حقوق درصدی (ریال)" FontSize="11.5" Opacity="0.65" />
+                    <TextBlock Text="{Binding TotalCommission, StringFormat='#,0'}" FontSize="21" FontWeight="Bold" Foreground="#8E24AA" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource StatCard}">
+                <StackPanel>
+                    <TextBlock Text="تعداد اقلام منتسب‌شده" FontSize="11.5" Opacity="0.65" />
+                    <TextBlock Text="{Binding ServiceCount}" FontSize="21" FontWeight="Bold" Foreground="#FB8C00" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource StatCard}">
+                <StackPanel>
+                    <TextBlock Text="پرسنل گزارش" FontSize="11.5" Opacity="0.65" />
+                    <TextBlock Text="{Binding EmployeeCount}" FontSize="21" FontWeight="Bold" Foreground="#43A047" />
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <ProgressBar Grid.Row="2" IsIndeterminate="True" Height="3"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+
+        <TextBlock Grid.Row="2" Text="{Binding ErrorMessage}" Foreground="#D32F2F" FontSize="12"
+                   Margin="8,28,0,0" />
+
+        <!-- جدول خلاصه پرسنل -->
+        <DataGrid Grid.Row="3" ItemsSource="{Binding SummaryRows}"
+                  SelectedItem="{Binding SelectedSummaryRow}"
+                  AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                  Style="{StaticResource MaterialDesignDataGrid}"
+                  HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode}" Width="95" />
+                <DataGridTextColumn Header="نام و نام خانوادگی" Binding="{Binding FullName}" Width="180" />
+                <DataGridTextColumn Header="بخش" Binding="{Binding DepartmentName}" Width="110" />
+                <DataGridTextColumn Header="سمت" Binding="{Binding PositionName}" Width="110" />
+                <DataGridTextColumn Header="پزشک متصل" Binding="{Binding DoctorNames}" Width="150" />
+                <DataGridTextColumn Header="اقلام" Binding="{Binding ServiceCount}" Width="60" />
+                <DataGridTextColumn Header="جمع فروش (ریال)" Binding="{Binding TotalRevenueText}" Width="120" />
+                <DataGridTextColumn Header="جمع هزینه (ریال)" Binding="{Binding TotalCostText}" Width="120" />
+                <DataGridTextColumn Header="سود خدمات (ریال)" Binding="{Binding TotalProfitText}" Width="120" />
+                <DataGridTextColumn Header="درصد" Binding="{Binding CommissionPercentText}" Width="60" />
+                <DataGridTextColumn Header="حقوق درصدی (ریال)" Binding="{Binding ServiceCommissionText}" Width="125">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter Property="Foreground" Value="#8E24AA" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="وضعیت فیش" Binding="{Binding SalaryStatusText}" Width="105" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- عنوان جزئیات -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,10,0,6">
+            <materialDesign:PackIcon Kind="ReceiptTextOutline" Width="18" Height="18"
+                                     Foreground="#16355E" VerticalAlignment="Center" />
+            <TextBlock FontSize="13.5" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0,0,0">
+                <Run Text="جزئیات اقلام" />
+                <Run Text="{Binding PeriodText, Mode=OneWay}" Foreground="#5B7290" />
+            </TextBlock>
+            <Button Command="{Binding ShowAllDetailsCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="نمایش همه پرسنل" FontSize="11.5" Margin="12,0,0,0" Padding="8,2" />
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#2E7D32" FontSize="12"
+                       Margin="16,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- جدول جزئیات اقلام -->
+        <DataGrid Grid.Row="5" ItemsSource="{Binding DetailRows}"
+                  AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                  Style="{StaticResource MaterialDesignDataGrid}"
+                  HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName}" Width="160" />
+                <DataGridTextColumn Header="شماره فاکتور" Binding="{Binding InvoiceNumber}" Width="110" />
+                <DataGridTextColumn Header="تاریخ" Binding="{Binding InvoiceDateShamsi}" Width="95" />
+                <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName}" Width="150" />
+                <DataGridTextColumn Header="خدمت" Binding="{Binding ServiceName}" Width="180" />
+                <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity}" Width="55" />
+                <DataGridTextColumn Header="قیمت واحد" Binding="{Binding UnitPriceText}" Width="105" />
+                <DataGridTextColumn Header="هزینه واحد" Binding="{Binding UnitCostText}" Width="105" />
+                <DataGridTextColumn Header="مبلغ قلم (ریال)" Binding="{Binding TotalPriceText}" Width="115" />
+                <DataGridTextColumn Header="سود قلم (ریال)" Binding="{Binding ProfitText}" Width="110">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter Property="Foreground" Value="#1E88E5" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="نحوه انتساب" Binding="{Binding Attribution}" Width="120" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</Window>
