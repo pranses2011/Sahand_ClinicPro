@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>راهنمای دانلود پروژه و خروجی گرفتن — درمانگاه سهند</title>
+<style>
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Regular.ttf') format('truetype'); font-weight:400; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Medium.ttf') format('truetype'); font-weight:500; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-SemiBold.ttf') format('truetype'); font-weight:600; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Bold.ttf') format('truetype'); font-weight:700; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-ExtraBold.ttf') format('truetype'); font-weight:800; }
+@page { size:A4; margin:16mm 14mm 18mm 14mm; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Vazirmatn','Noto Color Emoji',sans-serif; color:#263238; font-size:10.5pt; line-height:2; }
+h1,h2,h3,h4 { font-weight:800; color:#0D47A1; }
+h2 { font-size:15.5pt; margin:24px 0 12px; padding:10px 14px; background:#E3F2FD; border-radius:10px;
+  border-right:5px solid #1565C0; page-break-after:avoid; }
+h3 { font-size:12.5pt; margin:16px 0 8px; color:#1565C0; page-break-after:avoid; }
+p { margin:6px 0; text-align:justify; }
+ul,ol { margin:6px 22px 6px 0; }
+li { margin:4px 0; }
+code { font-family:Consolas,monospace; background:#ECEFF1; padding:1px 7px; border-radius:5px;
+  font-size:9.5pt; direction:ltr; display:inline-block; color:#B71C1C; }
+pre { background:#263238; color:#ECEFF1; border-radius:10px; padding:13px 16px; margin:10px 0;
+  font-family:Consolas,monospace; font-size:9pt; line-height:1.75; direction:ltr; text-align:left;
+  page-break-inside:avoid; }
+table { width:100%; border-collapse:collapse; margin:10px 0; font-size:9.5pt; page-break-inside:avoid; }
+th { background:#1565C0; color:#fff; padding:7px 10px; text-align:right; font-weight:600; }
+td { padding:6px 10px; border:1px solid #CFD8DC; }
+tr:nth-child(even) td { background:#F5F8FA; }
+.tip { background:#E8F5E9; border:1px solid #A5D6A7; border-right:5px solid #43A047;
+  border-radius:10px; padding:10px 14px; margin:10px 0; page-break-inside:avoid; }
+.warn { background:#FFF8E1; border:1px solid #FFE082; border-right:5px solid #FB8C00;
+  border-radius:10px; padding:10px 14px; margin:10px 0; page-break-inside:avoid; }
+.danger { background:#FDECEA; border:1px solid #F5C6C0; border-right:5px solid #D32F2F;
+  border-radius:10px; padding:10px 14px; margin:10px 0; page-break-inside:avoid; }
+.expect { background:#F3F0FF; border:1px solid #D4C5F9; border-right:5px solid #7C3AED;
+  border-radius:10px; padding:10px 14px; margin:10px 0; font-size:9.8pt; page-break-inside:avoid; }
+.step { display:flex; gap:12px; margin:13px 0; page-break-inside:avoid; }
+.step .num { width:34px; height:34px; border-radius:50%; background:#1565C0; color:#fff;
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13.5pt; flex-shrink:0; }
+.step .body { flex:1; padding-top:2px; }
+.step .body b.btn-name { background:#ECEFF1; border:1px solid #B0BEC5; border-radius:6px;
+  padding:0 9px; font-size:9.5pt; }
+.kbd { border:1px solid #B0BEC5; border-bottom-width:2.5px; border-radius:5px; padding:0 7px;
+  font-family:Consolas; font-size:9.5pt; background:#FAFAFA; }
+.cover { text-align:center; padding:56px 30px 30px; page-break-after:always; }
+.cover .logo-wrap { width:88px; height:88px; margin:0 auto; border-radius:22px;
+  background:radial-gradient(circle at 45% 20%,#D8F1FF,#BFE4FB 75%); box-shadow:0 8px 20px rgba(13,71,161,.25);
+  display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.cover .logo-wrap img { width:74px; height:74px; object-fit:contain; border-radius:18px; }
+.cover h1 { font-size:23pt; font-weight:900; margin:16px 0 6px; color:#0D47A1; }
+.cover h2 { font-size:13.5pt; background:none; border:none; padding:0; color:#00897B; margin:0 0 26px; }
+.cover .meta { display:inline-block; background:#F5F8FA; border:1px solid #CFD8DC;
+  border-radius:12px; padding:16px 32px; margin-top:22px; font-size:10.5pt; text-align:right; }
+.cover .meta td { border:none; padding:4px 14px; }
+.toc { page-break-after:always; }
+.toc h2 { background:none; border:none; padding:0; font-size:17pt; }
+.toc ol { font-size:10.5pt; }
+.toc li { margin:8px 0; }
+.toc a { color:#263238; text-decoration:none; }
+.support-band { background:linear-gradient(115deg,#0E7C86,#0E9F6E); color:#fff; border-radius:12px;
+  padding:13px 20px; margin:14px 0; font-size:10.5pt; page-break-inside:avoid; }
+.support-band b { font-size:12pt; }
+.support-band .ltr { direction:ltr; display:inline-block; }
+.tree { background:#F5F8FA; border:1px solid #CFD8DC; border-radius:10px; padding:12px 18px;
+  font-family:Consolas,monospace; font-size:9pt; direction:ltr; text-align:left; line-height:1.9;
+  page-break-inside:avoid; }
+.tree .dir { color:#0D47A1; font-weight:700; }
+.tree .file { color:#37474F; }
+.tree .hl { color:#B71C1C; font-weight:700; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ جلد ═══════════════ -->
+<div class="cover">
+  <div class="logo-wrap"><img src="../assets/ClinicPro.png" alt="لوگو"></div>
+  <h1>راهنمای دانلود پروژه و خروجی‌گرفتن (فایل exe)</h1>
+  <h2>برای ویژوال استودیو — نوشته‌شده برای افراد مبتدی</h2>
+  <div class="meta"><table>
+    <tr><td>نام محصول</td><td><b>درمانگاه سهند — Sahand ClinicPro</b></td></tr>
+    <tr><td>نسخه</td><td dir="ltr">1.6.0</td></tr>
+    <tr><td>مخاطب</td><td>برنامه‌نویس/تکنسینی که می‌خواهد از سورس‌کد فایل نصبی بسازد</td></tr>
+    <tr><td>زمان تقریبی</td><td>۳۰ دقیقه (بار اول) — بعدی‌ها ۵ دقیقه</td></tr>
+    <tr><td>پشتیبانی</td><td>سعید نجفی — سهند سرویس — <span style="direction:ltr">041-34436141</span></td></tr>
+  </table></div>
+</div>
+
+<div class="toc">
+<h2>📖 فهرست مطالب</h2>
+<ol>
+<li>این راهنما برای چیست؟</li>
+<li>قدم ۰: نصب پیش‌نیازها (Visual Studio 2022 + NET 8. +)</li>
+<li>قدم ۱: دانلود پروژه از گیت‌هاب (دو روش: ZIP ساده و Git)</li>
+<li>قدم ۲: باز کردن پروژه در ویژوال استودیو</li>
+<li>قدم ۳: بارگذاری کتابخانه‌ها (Restore) و بیلد اول</li>
+<li>قدم ۴: اجرای برنامه (F5) و تست</li>
+<li>قدم ۵: ساخت فایل exe نصبی (Publish) — سه روش</li>
+<li>قدم ۶: تغییر عناصر فرم‌ها (متن، دکمه، رنگ، جای المان‌ها)</li>
+<li>جدول خطاهای رایج و راه‌حل</li>
+<li>پرسش‌های پرتکرار</li>
+</ol>
+</div>
+
+<h2>۱️⃣ این راهنما برای چیست؟</h2>
+<p>اگر می‌خواهید <b>خودتان از سورس‌کد پروژه فایل exe بسازید</b> (مثلاً برای نصب روی رایانه‌های درمانگاه یا اعمال تغییرات دلخواه در ظاهر فرم‌ها)، این راهنما دقیقاً همان است. اگر فقط می‌خواهید برنامه را <b>نصب و استفاده کنید</b>، به راهنمای نصب مراجعه کنید — این راهنما مخصوص حالت توسعه است.</p>
+<div class="expect">👀 <b>چه انتظاری داشته باشید:</b> نیازی به دانش برنامه‌نویسی برای دنبال‌کردن این راهنما نیست؛ فقط باید بتوانید نرم‌افزار نصب کنید و روی دکمه‌ها کلیک کنید. برای بخش تغییر فرم‌ها آشنایی مقدمی با C# کمک می‌کند ولی اجباری نیست.</div>
+
+<h2>۲️⃣ قدم ۰: نصب پیش‌نیازها</h2>
+<div class="step"><div class="num">۱</div><div class="body">
+<p><b>Visual Studio 2022 Community</b> (نسخه رایگان مایکروسافت) را از این نشانی دانلود و نصب کنید:</p>
+<pre>https://visualstudio.microsoft.com/downloads/
+(از بخش Community برای ویندوز — دکمه Free Download)</pre></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>هنگام نصب، ویژوال استودیو می‌پرسد چه اجزایی لازم دارید («Workloads»). حتماً این چهار مورد را تیک بزنید:</p>
+<table>
+<tr><th>تیک بزنید</th><th>نام در فهرست</th><th>برای چه؟</th></tr>
+<tr><td>☑</td><td>.NET desktop development</td><td>برای برنامه ویندوزی (WPF) — مهم‌ترین مورد</td></tr>
+<tr><td>☑</td><td>ASP.NET and web development</td><td>برای بخش سرور (API) و پرتال لایسنس</td></tr>
+<tr><td>☑</td><td>.NET 8 SDK (در کارگاه دسکتاپ خودکار نصب می‌شود)</td><td>زبان اجرای پروژه</td></tr>
+<tr><td>☑</td><td>Data storage and processing (اختیاری)</td><td>ابزارهای دیتابیس برای کار با SQL Server</td></tr>
+</table>
+<p>بعد روی <b class="btn-name">Install</b> کلیک کنید — حدود ۸ تا ۱۵ گیگابایت نصب می‌کند؛ صبور باشید ☕.</p></div></div>
+<div class="tip">💡 اگر مایلید از خط فرمان هم استفاده کنید، <b>NET 8 SDK.</b> را جداگانه هم می‌توانید از <code>https://dotnet.microsoft.com/download/dotnet/8.0</code> نصب کنید (برای روش Publish با ترمینال لازم می‌شود).</div>
+
+<h2>۳️⃣ قدم ۱: دانلود پروژه از گیت‌هاب</h2>
+<h3>📥 روش الف) دانلود ساده ZIP — مناسب بار اول</h3>
+<div class="step"><div class="num">۱</div><div class="body">
+<p>به صفحه مخزن پروژه بروید (نشانی را از سهند سرویس دریافت کنید؛ مخزن خصوصی است و با اکانت شما باز می‌شود). وارد شوید (Sign in با اکانت گیت‌هابی که دسترسی دارد).</p></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>دکمه سبز <b class="btn-name">⟨⟩ Code</b> را بزنید → روی <b class="btn-name">Download ZIP</b> کلیک کنید. فایلی مثل <code>Sahand_ClinicPro-main.zip</code> دانلود می‌شود.</p></div></div>
+<div class="step"><div class="num">۳</div><div class="body">
+<p>روی فایل ZIP راست‌کلیک → <b class="btn-name">Extract All…</b> → مقصدی مثل <code>D:\SahandClinicPro</code> را بزنید و Extract کنید. تمام! پوشه پروژه آماده است.</p>
+<div class="expect">👀 <b>چه انتظاری داشته باشید:</b> پوشه‌ای با این ساختار می‌بینید (مختصر شده):</div>
+<div class="tree">
+<span class="dir">SahandClinicPro-main/</span>
+├── <span class="dir">src/</span>
+│   ├── <span class="dir">Sahand.ClinicPro.Desktop/</span>     <span class="hl">← برنامه ویندوزی (فرم‌ها اینجاست)</span>
+│   ├── <span class="dir">Sahand.ClinicPro.API/</span>         <span class="hl">← سرور برنامه</span>
+│   ├── <span class="dir">Sahand.ClinicPro.Domain/</span>      ← منطق اصلی
+│   ├── <span class="dir">Sahand.ClinicPro.Application/</span> ← دستورها و اعتبارسنجی‌ها
+│   ├── <span class="dir">Sahand.ClinicPro.Infrastructure/</span> ← دیتابیس و سرویس‌ها
+│   └── <span class="dir">LicenseServer.Php/</span>            ← سرور لایسنس cPanel
+├── <span class="file">Sahand.ClinicPro.sln</span>  <span class="hl">← فایل اصلی که در ویژوال استودیو باز می‌کنید</span>
+├── <span class="dir">docs/</span>  └── <span class="dir">installer/</span>
+</div></div></div>
+
+<h3>🌳 روش ب) کلون با Git — مناسب دریافت تغییرات بعدی</h3>
+<div class="step"><div class="num">۱</div><div class="body">
+<p>برنامه <b>Git</b> را از <code>https://git-scm.com/download/win</code> نصب کنید (همه تنظیمات پیش‌فرض، فقط Next بزنید).</p></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>در صفحه مخزن، دکمه <b class="btn-name">⟨⟩ Code → HTTPS</b> را بزنید و نشانی را کپی کنید. سپس در ویندوز روی دسکتاپ راست‌کلیک → <b class="btn-name">Open Git Bash here</b> و این دستور را بزنید (نشانی خودتان را جایگزین کنید):</p>
+<pre>git clone https://github.com/USERNAME/Sahand_ClinicPro.git D:/SahandClinicPro</pre>
+<p>اگر مخزن خصوصی است، گیت از شما نام کاربری و <b>Token</b> می‌خواهد — توکن را از Settings → Developer settings → Personal access tokens گیت‌هاب بسازید و به‌جای رمز بچسبانید.</p></div></div>
+<div class="tip">💡 <b>مزیت روش Git:</b> دفعه بعد که فروشنده نسخه جدید گذاشت، فقط می‌زنید <code>git pull</code> و همه تغییرات می‌آید — لازم نیست از اول دانلود کنید.</div>
+
+<h2>۴️⃣ قدم ۲: باز کردن پروژه در ویژوال استودیو</h2>
+<div class="step"><div class="num">۱</div><div class="body">
+<p>ویژوال استودیو 2022 را باز کنید → <b class="btn-name">Open a project or solution</b> → به پوشه پروژه بروید و فایل <code>Sahand.ClinicPro.sln</code> را انتخاب و باز کنید.</p></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>چند لحظه صبر کنید تا «Solution Explorer» (پنجره راست) پر شود از پروژه‌ها. اگر پیام بارگذاری پروژه‌های .NET Framework ظاهر شد، روی <b class="btn-name">Load</b> کلیک کنید.</p>
+<div class="expect">👀 <b>چه انتظاری داشته باشید:</b> بالای صفحه نوار سبز نیمه‌شفاف می‌آید با نوشته INCOMPATIBLE یا «توصیه می‌شود NET 8 SDK. نصب شود» اگر SDK ندارید — طبق قدم ۰ نصبش کنید و دوباره باز کنید.</div></div></div>
+
+<h2>۵️⃣ قدم ۳: بارگذاری کتابخانه‌ها (Restore) و بیلد اول</h2>
+<div class="step"><div class="num">۱</div><div class="body">
+<p>از منوی بالا: <b class="btn-name">Build → Rebuild Solution</b> (کلید میانبر: <span class="kbd">Ctrl</span>+<span class="kbd">Alt</span>+<span class="kbd">F7</span>). ویژوال استودیو خودکار همه کتابخانه‌های NuGet را دانلود می‌کند.</p></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>پایین صفحه در پنجره <b>Output</b> پیشرفت را ببینید. بار اول ۳ تا ۱۰ دقیقه طول می‌کشد (دانلود از اینترنت). آخرش باید بنویسد:</p>
+<pre>Rebuild succeeded. 0 Warning(s).  0 Error(s).</pre>
+<div class="expect">👀 <b>چه انتظاری داشته باشید:</b> اگر عدد Error صفر بود 🎉؛ اگر نبود، جدول «خطاهای رایج» پایین همین راهنما را ببینید — ۹۵٪ خطاها همان سه‌تای اول آن جدول است.</div></div></div>
+
+<h2>۶️⃣ قدم ۴: اجرای برنامه (F5)</h2>
+<div class="step"><div class="num">۱</div><div class="body">
+<p>در پنجره Solution Explorer روی پروژه <b>Sahand.ClinicPro.Desktop</b> راست‌کلیک → <b class="btn-name">Set as Startup Project</b> (نامش ضخیم می‌شود).</p></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>دکمه سبز <b class="btn-name">▶</b> (یا کلید <span class="kbd">F5</span>) را بزنید. برنامه کامپایل و اجرا می‌شود و پنجره ورود درمانگاه باز می‌شود. برای اجرای سریع‌تر بدون دیباگر: <span class="kbd">Ctrl</span>+<span class="kbd">F5</span>.</p>
+<div class="warn">⚠️ برای کار کامل، باید سرور برنامه (API) هم در حال اجرا باشد: روی <b>Sahand.ClinicPro.API</b> راست‌کلیک → <b class="btn-name">Debug → Start new instance</b> — یا از ترمینال: <code>dotnet run --project src/Sahand.ClinicPro.API</code></div></div></div>
+
+<h2>۷️⃣ قدم ۵: ساخت فایل exe (Publish) — سه روش</h2>
+
+<h3>🥇 روش الف) تک‌فایل خودکفا (پیشنهادی — مثل نصب ساده)</h3>
+<p>خروجی: <b>یک فایل exe واحد</b> که همه‌چیز داخلش هست — نیازی به نصب NET. روی رایانه مقصد ندارد.</p>
+<div class="step"><div class="num">۱</div><div class="body">
+<p>روی <b>Sahand.ClinicPro.Desktop</b> راست‌کلیک → <b class="btn-name">Publish…</b> (یا منوی Build → Publish Selection).</p></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>هدف (Target) را <b class="btn-name">Folder</b> انتخاب کنید → دکمه Next → پوشه مقصد مثلاً <code>D:\Publish\ClinicPro</code> → Next → <b class="btn-name">Finish</b>.</p></div></div>
+<div class="step"><div class="num">۳</div><div class="body">
+<p>حالا مهم‌ترین قسمت: روی نشانگر پروفایل (که ساخته شد، معمولاً <code>FolderProfile.pubxml</code>) دوبار کلیک کنید و حالت انتشار را تنظیم کنید — یا ساده‌تر: در صفحه Publish روی <b class="btn-name">Show all settings</b> بزنید و این‌ها را انتخاب کنید:</p>
+<table>
+<tr><th>تنظیم</th><th>مقدار پیشنهادی</th><th>چرا؟</th></tr>
+<tr><td>Deployment mode</td><td><b>Self-contained</b></td><td>یعنی NET. لازم نیست روی رایانه مقصد نصب باشد</td></tr>
+<tr><td>Target runtime</td><td><b>win-x64</b></td><td>برای ویندوز ۶۴ بیتی (اکثر رایانه‌های امروزی)</td></tr>
+<tr><td>Produce single file</td><td><b>تیک بزنید ✔</b></td><td>همه فایل‌ها داخل یک exe جمع می‌شوند</td></tr>
+<tr><td>Enable ReadyToRun compilation</td><td><b>تیک بزنید ✔</b></td><td>برنامه سریع‌تر باز می‌شود</td></tr>
+</table></div></div>
+<div class="step"><div class="num">۴</div><div class="body">
+<p>دکمه <b class="btn-name">Publish</b> را بزنید. بعد از چند دقیقه در پوشه مقصد <b>یک فایل</b> مثل این دارید:</p>
+<pre>D:\Publish\ClinicPro\Sahand.ClinicPro.Desktop.exe   (~120–170 MB چون همه‌چیز داخلش است)</pre>
+<p>این فایل را هر جا ببرید (فلش، شبکه، نصب‌کننده Inno Setup) مستقل اجرا می‌شود.</p></div></div>
+
+<h3>🥈 روش ب) خط فرمان (برای اسکریپت و تکرار سریع)</h3>
+<p>در پوشه اصلی پروژه، ترمینال باز کنید (نوع <code>cmd</code> در نوار آدرس فایل‌اکسپلورر) و بزنید:</p>
+<pre>cd src\Sahand.ClinicPro.Desktop
+dotnet publish -c Release -r win-x64 --self-contained true ^
+  -p:PublishSingleFile=true -p:EnableReadyToRun=true ^
+  -o D:\Publish\ClinicPro</pre>
+<p>نتیجه همان است — یک exe واحد در پوشه <code>D:\Publish\ClinicPro</code>.</p>
+
+<h3>🥉 روش ج) بسته کامل نصب با Inno Setup (مثل نصب‌کننده‌های حرفه‌ای)</h3>
+<div class="step"><div class="num">۱</div><div class="body">
+<p>برنامه <b>Inno Setup 6</b> را از <code>https://jrsoftware.org/isdl.php</code> نصب کنید (رایگان).</p></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>در پوشه <code>installer</code> پروژه فایل <code>sahand.iss</code> آماده است. آن را با Inno Setup باز کنید و روی <b class="btn-name">Compile ▶</b> بزنید. خروجی: <code>SahandClinicPro-Setup.exe</code> — یک نصب‌کننده فارسی کامل با دکمه «بعدی/نصب» و میانبر دسکتاپ.</p></div></div>
+
+<h2>۸️⃣ قدم ۶: تغییر عناصر فرم‌ها</h2>
+<p>همه فرم‌های برنامه در پوشه <code>src/Sahand.ClinicPro.Desktop/Views</code> هستند؛ هر فرم دو فایل دارد: <code>XxxView.xaml</code> (ظاهر فرم) و <code>XxxView.xaml.cs</code> (رفتار). منطق نمایشی هم در <code>ViewModels</code> است.</p>
+<h3>✏️ الف) تغییر متن دکمه/عنوان</h3>
+<div class="step"><div class="num">۱</div><div class="body">
+<p>مثلاً می‌خواهید متن دکمه صفحه ورود عوض شود: در Solution Explorer به مسیر <code>Desktop → Views → LoginWindow.xaml</code> بروید و دوبار کلیک کنید.</p></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>در کد XAML که باز می‌شود، متن موردنظر را پیدا کنید (مثلاً <code>Text="ورود به سیستم"</code>) و به دلخواه تغییرش دهید. با <span class="kbd">Ctrl</span>+<span class="kbd">S</span> ذخیره کنید.</p></div></div>
+<div class="step"><div class="num">۳</div><div class="body">
+<p><span class="kbd">F5</span> بزنید — تغییر را می‌بینید. این روش برای متن‌ها، ایموجی‌ها و رنگ‌ها یکسان است.</p></div></div>
+<h3>🎨 ب) تغییر رنگ/فونت</h3>
+<p>رنگ‌ها به شکل <code>Background="#1565C0"</code> در XAML آمده‌اند. کد رنگ‌ها «HEX» است؛ از سایت‌هایی مثل <code>colorpicker.me</code> رنگ دلخواه را انتخاب و کدش را جایگزین کنید. فونت سراسری در <code>App.xaml</code> تنظیم می‌شود (پیش‌فرض: وزیرمتن).</p>
+<h3>📐 ج) جابه‌جایی عناصر</h3>
+<p>چیدمان فرم‌ها با <b>Grid</b> و <b>StackPanel</b> سازمان‌یافته است: <code>Margin="راست,بالا,چپ,پایین"</code> فاصله هر عنصر را کنترل می‌کند. مثلاً <code>Margin="0,10,0,0"</code> یعنی «۱۰ پیکسل از بالا فاصله بده». برای دیدن نتیجه بدون اجرا، در ویژوال استودیو دکمه <b>Design</b> پایینِ محیط باز شدن XAML را بزنید (پیش‌نمایش زنده).</p>
+<div class="warn">⚠️ <b>دو نکته:</b> ① حتماً قبل از هر تغییر، از فایل اصلی یک کپی بگیرید (یا <code>git commit</code> بزنید) تا اگر خراب شد برگردانید. ② مقادیر اطلاعات پشتیبانی را در کد تغییر ندهید — آن‌ها از سرور لایسنس می‌آیند و باید از پنل مدیریت لایسنس ویرایش شوند.</div>
+<h3>🧭 د) تغییر ترتیب منوها</h3>
+<p>فهرست منوی راست برنامه در <code>ViewModels/MainWindowViewModel.cs</code> تعریف شده (بخش NavItems). هر خط یک منوست؛ می‌توانید ترتیب، عنوان یا آیکون (از کتابخانه Material Design Icons) را عوض کنید.</p>
+
+<h2>9️⃣ جدول خطاهای رایج و راه‌حل</h2>
+<table>
+<tr><th>خطا (متن یا شکل)</th><th>یعنی؟</th><th>راه‌حل</th></tr>
+<tr><td><code>NETSDK1045: current .NET SDK does not support targeting .NET 8.0</code></td><td>SDK نسخه ۸ نصب نیست</td><td>از قدم ۰ بخش ۱ نصب کنید؛ ویژوال استودیو را کامل ببندید و باز کنید</td></tr>
+<tr><td><code>NU1101: Unable to find package</code></td><td>اینترنت وصل نبوده موقع Restore</td><td>اینترنت را وصل کنید؛ منوی <b>Tools → NuGet Package Manager → Manage NuGet Packages → Restore</b></td></tr>
+<tr><td><code>MSB3644: reference assemblies for .NET 8 not found</code></td><td>Targeting Pack نصب نیست</td><td>Visual Studio Installer → Modify → تیک <b>.NET 8 SDK</b> و Targeting Pack را اضافه کنید</td></tr>
+<tr><td><code>XDG0061 XAML Duplicate</code> یا خطای XAML قرمز</td><td>تگ بسته‌نشده در ویرایش شما</td><td>آخرین تغییرات را برگردانید (Ctrl+Z) — معمولاً یک <code>"</code> یا <code>&gt;</code> جا افتاده</td></tr>
+<tr><td>برنامه باز می‌شود ولی «اتصال به سرور برقرار نشد»</td><td>سرور API اجرا نیست</td><td>قدم ۴: API را جداگانه Start کنید (Start new instance)</td></tr>
+<tr><td><code>Publish</code> با <code>RuntimeIdentifier not supported</code></td><td>نام runtime اشتباه تایپ شده</td><td>دقیقاً <code>win-x64</code> بنویسید (با خط تیره، بدون فاصله)</td></tr>
+<tr><td>خطای دیتابیس موقع اجرای API</td><td>رشته اتصال SQL معتبر نیست</td><td>در <code>appsettings.json</code> پروژه API نشانی SQL را طبق راهنمای نصب تنظیم کنید (مثل <code>localhost\\SQLEXPRESS</code>)</td></tr>
+<tr><td>فایل exe ساخته‌شده روی رایانه دیگر باز نمی‌شود</td><td>با حالت Framework-dependent منتشر کرده‌اید</td><td>Publish را با <b>Self-contained</b> و <b>win-x64</b> دوباره بزنید (قدم ۵ الف)</td></tr>
+</table>
+
+<h2>🔟 پرسش‌های پرتکرار</h2>
+<table>
+<tr><th>پرسش</th><th>پاسخ</th></tr>
+<tr><td>چرا حجم فایل exe بزرگ است؟</td><td>چون حالت Self-contained کل موتور NET. را داخل فایل می‌گذارد تا روی هر ویندوزی بدون پیش‌نیاز اجرا شود. اگر حجم برایتان مهم نیست و می‌توانید NET 8. را روی رایانه‌ها نصب کنید، حالت Framework-dependent حجم را به حدود ۱۵ مگابایت می‌رساند.</td></tr>
+<tr><td>می‌توانم فقط بخشی از پروژه را بیلد کنم؟</td><td>بله — روی همان پروژه راست‌کلیک → Build. ولی برای اجرای کامل دسکتاپ، API و وابسته‌ها باید بیلد شوند؛ ساده‌ترین راه همان Rebuild Solution است.</td></tr>
+<tr><td>تغییرم را برای فروشنده بفرستم؟</td><td>اگر با Git کار می‌کنید: <code>git add . → git commit -m "توضیح تغییر" → git push</code>. اگر نه، فایل(های) تغییر‌یافته را ایمیل کنید.</td></tr>
+<tr><td>فونت فارسی برنامه چیست و چطور عوضش کنم؟</td><td>وزیرمتن (Vazirmatn) است؛ فایل‌هایش در <code>Desktop/Assets/Fonts</code>. برای تعویض، فونت جدید را همان‌جا بگذارید و نامش را در <code>App.xaml</code> جایگزین کنید.</td></tr>
+<tr><td>آیا تغییر ظاهر فرم‌ها لایسنس را باطل می‌کند؟</td><td>نه — لایسنس به سخت‌افزار و کلید قفل است؛ تغییر ظاهر و حتی منطق داخلی تاثیری روی فعال‌سازی ندارد (تا وقتی سرور لایسنس همان باشد).</td></tr>
+</table>
+
+<div class="support-band">
+<b>🧑‍💻 گیر کردید؟ پشتیبانی سهند سرویس</b><br>
+تلفن: <span class="ltr">041-34436141</span> &nbsp;|&nbsp; موبایل: <span class="ltr">09144220430</span> &nbsp;|&nbsp; ایمیل: <span class="ltr">info@ea-fixer.ir</span> &nbsp;|&nbsp; وب: <span class="ltr">ea-fixer.ir</span><br>
+<small>عکس خطا + ذکر مرحله‌ای که گیر کرده‌اید، پاسخ را چند برابر سریع‌تر می‌کند.</small>
+</div>
+
+</body>
+</html>
