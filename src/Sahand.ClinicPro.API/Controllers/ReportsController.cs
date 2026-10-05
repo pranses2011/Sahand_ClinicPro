@@ -16,7 +16,7 @@ namespace Sahand.ClinicPro.API.Controllers;
 [ApiController]
 [Route("api/v1/reports")]
 [Authorize]
-public class ReportsController : ApiBaseController
+public partial class ReportsController : ApiBaseController
 {
     private readonly IMediator _mediator;
     private readonly IUnitOfWork _unitOfWork;
@@ -146,6 +146,20 @@ public class ReportsController : ApiBaseController
                 new { id = "revenue-trend", title = "روند درآمد", description = "روند بلندمدت درآمد", paramsList = new[] { "fromDate", "toDate" } },
                 new { id = "visit-patterns", title = "الگوی مراجعات", description = "الگوی ساعتی و روزانه", paramsList = new[] { "fromDate", "toDate" } },
                 new { id = "service-mix", title = "ترکیب خدمات", description = "سهم خدمات از درآمد", paramsList = new[] { "fromDate", "toDate" } }
+            }},
+            // چرخه یازدهم — گزارش‌های نموداری متعدد؛ هر کدام با نوع نمودارِ درستِ ماهیتش
+            new { category = "📈 گزارش‌های نموداری", icon = "📈", reports = new[]
+            {
+                new { id = "chart-revenue-trend", title = "روند درآمد روزانه", description = "نمودار سطحی روند درآمد در بازه — مناسب پایش رشد", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-revenue-monthly", title = "درآمد ۱۲ ماه اخیر", description = "نمودار ستونی مقایسه ماه‌به‌ماه (تقویم شمسی)", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-doctor-share", title = "سهم پزشکان از ویزیت", description = "نمودار دونات سهم هر پزشک از کل ویزیت‌ها", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-service-mix", title = "ترکیب خدمات از درآمد", description = "نمودار دونات سهم خدمات از درآمد", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-visit-hourly", title = "الگوی ساعتی مراجعات", description = "نمودار ستونی تعداد نوبت هر ساعت روز", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-visit-weekday", title = "الگوی روزهای هفته", description = "نمودار ستونی نوبت‌ها به تفکیک روز هفته (شنبه تا جمعه)", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-payment-methods", title = "سهم روش‌های پرداخت", description = "نمودار دونات تفکیک درآمد نقدی/کارت/آنلاین/…", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-gender-mix", title = "توزیع جنسیت بیماران", description = "نمودار دونات نسبت مرد/زن کل بیماران", paramsList = Array.Empty<string>() },
+                new { id = "chart-age-brackets", title = "توزیع سنی بیماران", description = "نمودار ستونی رده‌های سنی (کودک تا سالمند)", paramsList = Array.Empty<string>() },
+                new { id = "chart-top-services", title = "پردرآمدترین خدمات", description = "نمودار میله‌ای افقی رتبه‌بندی خدمات", paramsList = new[] { "fromDate", "toDate", "top" } }
             }}
         };
 
@@ -207,6 +221,17 @@ public class ReportsController : ApiBaseController
             // ── هوش تجاری ──
             "visit-patterns" => await VisitPatternsReportAsync(from, to),
             "service-mix" => await ServiceMixReportAsync(from, to),
+            // ── گزارش‌های نموداری — چرخه یازدهم ──
+            "chart-revenue-trend" => await ChartRevenueTrendAsync(from, to),
+            "chart-revenue-monthly" => await ChartRevenueMonthlyAsync(from, to),
+            "chart-doctor-share" => await ChartDoctorShareAsync(from, to),
+            "chart-service-mix" => await ChartServiceMixAsync(from, to),
+            "chart-visit-hourly" => await ChartVisitHourlyAsync(from, to),
+            "chart-visit-weekday" => await ChartVisitWeekdayAsync(from, to),
+            "chart-payment-methods" => await ChartPaymentMethodsAsync(from, to),
+            "chart-gender-mix" => await ChartGenderMixAsync(),
+            "chart-age-brackets" => await ChartAgeBracketsAsync(),
+            "chart-top-services" => await ChartTopServicesAsync(from, to, top),
             _ => Ok(ApiResponse<object>.Success(new
             {
                 available = false,
