@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'INSERT INTO ls_licenses
              (license_key, license_type, clinic_name, clinic_phone, max_users, max_doctors,
               max_patients, max_branches, enabled_modules, issued_date, expiry_date, notes, created_at, updated_at)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())'
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())'
         )->execute([
             $key, $type,
             mb_substr(trim((string)($_POST['clinic_name'] ?? '')), 0, 200) ?: null,
