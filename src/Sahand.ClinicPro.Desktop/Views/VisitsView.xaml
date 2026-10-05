@@ -1,96 +1,225 @@
 ﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.VisitsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="640" d:DesignWidth="1080"
+             FlowDirection="RightToLeft"
              FontFamily="Vazirmatn, Segoe UI, Tahoma">
-    <!-- ═══════════════════════════════════════════════════════════
-         ویزیت و معاینه — گام V3
-         جستجوی بیمار + تاریخچه ویزیت + شروع ویزیت جدید
-         ═══════════════════════════════════════════════════════════ -->
-    <Grid Margin="24">
+    <!-- ═══ صف ویزیت — گام U6 طبق پرامپت UI بخش ۲ (فرم ۱۳) ═══
+         کارت‌های آماری + بیمار فعلی + صف انتظار + ویزیت‌شده‌ها + فراخوان -->
+    <UserControl.InputBindings>
+        <KeyBinding Key="Space" Command="{Binding CallNextCommand}" />
+    </UserControl.InputBindings>
+
+    <Grid Margin="16,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- سربرگ -->
-        <DockPanel Grid.Row="0" Margin="0,0,0,12">
-            <Button DockPanel.Dock="Right"
-                    Command="{Binding NewVisitCommand}"
-                    IsEnabled="{Binding SelectedPatient, Converter={StaticResource NotNullToBool}}"
-                    Style="{StaticResource MaterialDesignFilledButton}"
-                    Content="شروع ویزیت جدید" />
-            <TextBlock Text="ویزیت و معاینه"
-                       Style="{StaticResource SectionTitle}"
-                       VerticalAlignment="Center" />
-        </DockPanel>
-
-        <!-- جستجوی بیمار -->
-        <Grid Grid.Row="1" Margin="0,0,0,12">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="360" />
-            </Grid.ColumnDefinitions>
-            <TextBox materialDesign:HintAssist.Hint="جستجوی بیمار: نام یا کد ملی یا موبایل"
-                     Text="{Binding PatientSearchTerm, UpdateSourceTrigger=PropertyChanged}">
-                <TextBox.InputBindings>
-                    <KeyBinding Key="Enter" Command="{Binding SearchPatientCommand}" />
-                </TextBox.InputBindings>
-            </TextBox>
-            <ListBox Grid.Column="1"
-                     ItemsSource="{Binding PatientResults}"
-                     SelectedItem="{Binding SelectedPatient}"
-                     Height="110"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel>
-                            <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" />
-                            <TextBlock Text="{Binding Detail}" FontSize="11" Opacity="0.75" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </Grid>
-
-        <!-- عملیات -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
-            <Button Command="{Binding OpenVisitCommand}"
-                    Style="{StaticResource MaterialDesignFlatButton}"
-                    Content="ادامه ثبت ویزیت انتخاب‌شده" Margin="0,0,8,0" />
-            <Button Command="{Binding LoadVisitsCommand}"
-                    Style="{StaticResource MaterialDesignFlatButton}"
-                    Content="بازخوانی" Margin="0,0,8,0" />
-            <TextBlock Text="{Binding ErrorMessage}"
-                       Foreground="{DynamicResource MaterialDesign.Brush.Error}"
-                       FontSize="12" VerticalAlignment="Center" />
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="Stethoscope"
+                                         Width="26" Height="26"
+                                         Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                         VerticalAlignment="Center" />
+                <TextBlock Text="صف ویزیت پزشک" FontSize="20" FontWeight="Bold"
+                           Margin="10,0,0,0" VerticalAlignment="Center" />
+                <ComboBox ItemsSource="{Binding Doctors}"
+                          SelectedIndex="{Binding DoctorFilterIndex}"
+                          DisplayMemberPath="Name"
+                          MinWidth="180" Margin="16,0,0,0" VerticalAlignment="Center" />
+                <Button Command="{Binding LoadCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0"
+                        VerticalAlignment="Center" ToolTip="بارگذاری مجدد">
+                    <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" />
+                </Button>
+            </StackPanel>
+            <TextBlock Text="میانبر فراخوان بیمار بعدی: کلید Space — صف هر ۳۰ ثانیه خودکار تازه می‌شود"
+                       FontSize="12" Opacity="0.65" Margin="2,4,0,0" />
         </StackPanel>
 
-        <!-- جدول ویزیت‌ها -->
-        <DataGrid Grid.Row="3"
-                  ItemsSource="{Binding Visits}"
-                  SelectedItem="{Binding SelectedVisit}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  SelectionMode="Single"
-                  CanUserAddRows="False"
-                  HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal"
-                  materialDesign:DataGridAssist.CellPadding="8,6">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="کد ویزیت" Binding="{Binding Code}" Width="110" />
-                <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName}" Width="*" />
-                <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName}" Width="*" />
-                <DataGridTextColumn Header="تاریخ" Binding="{Binding Date}" Width="100" />
-                <DataGridTextColumn Header="شکایت اصلی" Binding="{Binding ChiefComplaint}" Width="2*" />
-                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText}" Width="100" />
-            </DataGrid.Columns>
-            <DataGrid.InputBindings>
-                <MouseBinding MouseAction="LeftDoubleClick"
-                              Command="{Binding OpenVisitCommand}" />
-            </DataGrid.InputBindings>
-        </DataGrid>
+        <!-- کارت‌های آماری -->
+        <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,10">
+            <controls:StatCard IconKind="CheckCircle" Margin="0,0,8,0"
+                               Value="{Binding VisitedCount, Mode=OneWay}"
+                               Label="✅ ویزیت‌شده امروز" AccentBrush="#2E7D32" />
+            <controls:StatCard IconKind="PlayCircle" Margin="0,0,8,0"
+                               Value="{Binding InProgressCount, Mode=OneWay}"
+                               Label="🔵 در حال ویزیت" AccentBrush="#1565C0" />
+            <controls:StatCard IconKind="QueueFirstInLastOut" Margin="0,0,8,0"
+                               Value="{Binding WaitingCount, Mode=OneWay}"
+                               Label="🟡 در صف انتظار" AccentBrush="#F9A825" />
+            <controls:StatCard IconKind="ClockFast"
+                               Value="{Binding AverageDisplay, Mode=OneWay}"
+                               Label="میانگین مدت هر ویزیت" AccentBrush="#6A1B9A" />
+        </UniformGrid>
+
+        <!-- بیمار فعلی -->
+        <Border Grid.Row="2" CornerRadius="12" Padding="14,10" Margin="0,0,0,10" Background="#E3F2FD"
+                Visibility="{Binding CurrentPatient, Converter={StaticResource NullToVisibility}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Border Width="44" Height="44" CornerRadius="22" Background="#1565C0">
+                        <TextBlock Text="#️⃣" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock FontSize="15" FontWeight="Bold">
+                            <Run Text="{Binding CurrentPatient.PatientName, Mode=OneWay}" />
+                        </TextBlock>
+                        <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                            <TextBlock FontSize="11.5" Opacity="0.75">
+                                <Run Text="ساعت: " /><Run Text="{Binding CurrentPatient.AppointmentTime, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock FontSize="11.5" Opacity="0.75" Margin="14,0,0,0">
+                                <Run Text="نوع: " /><Run Text="{Binding CurrentPatient.VisitTypeText, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock FontSize="11.5" Opacity="0.75" Margin="14,0,0,0">
+                                <Run Text="موبایل: " /><Run Text="{Binding CurrentPatient.Mobile, Mode=OneWay}" FontFamily="Consolas" />
+                            </TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+                    <Border Background="#FFEBEE" CornerRadius="8" Padding="8,2" Margin="14,0,0,0"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding CurrentPatient.Allergies, Converter={StaticResource NullToVisibility}}">
+                        <TextBlock FontSize="10.5" Foreground="#C62828">
+                            <Run Text="⚠️ " /><Run Text="{Binding CurrentPatient.Allergies, Mode=OneWay}" />
+                        </TextBlock>
+                    </Border>
+                </StackPanel>
+                <Button Grid.Column="1" Command="{Binding OpenCurrentVisitCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}" FontSize="13">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FolderEditOutline" Width="16" Height="16" VerticalAlignment="Center" />
+                        <TextBlock Text="🩺 باز کردن فرم ویزیت" Margin="8,0,0,0" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- دو ستون: صف + ویزیت‌شده‌ها -->
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- صف انتظار -->
+            <Border Grid.Column="0" CornerRadius="12" Padding="12"
+                    Background="{DynamicResource MaterialDesign.Brush.Background}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                    BorderThickness="1">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="🟡 بیماران در صف" FontWeight="Bold" FontSize="14" Margin="2,0,2,8" />
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Waiting}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="10" Padding="10,8" Margin="0,0,0,6" Background="#FFF8E1"
+                                            ToolTip="{Binding Allergies, Mode=OneWay, TargetNullValue='بدون آلرژی'}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#F9A825"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding QueueNumber, Mode=OneWay}" FontWeight="Bold"
+                                                           Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="13" />
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock FontSize="11" Opacity="0.7">
+                                                        <Run Text="⏰ " /><Run Text="{Binding AppointmentTime, Mode=OneWay}" />
+                                                    </TextBlock>
+                                                    <TextBlock FontSize="11" Opacity="0.7" Margin="12,0,0,0">
+                                                        <Run Text="نوع: " /><Run Text="{Binding VisitTypeText, Mode=OneWay}" />
+                                                    </TextBlock>
+                                                    <TextBlock FontSize="11" Foreground="#E65100" Margin="12,0,0,0">
+                                                        <Run Text="انتظار: " /><Run Text="{Binding WaitingText, Mode=OneWay}" FontWeight="SemiBold" />
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Command="{Binding DataContext.CallNextCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11" Padding="8,4">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="BellRing" Width="13" Height="13" VerticalAlignment="Center" />
+                                                    <TextBlock Text="فراخوان" Margin="6,0,0,0" />
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    <controls:EmptyState Message="صف خالی است" IconKind="QueueFirstInLastOut"
+                                         Visibility="{Binding Waiting.Count, Converter={StaticResource NullToVisibility}, ConverterParameter=Inverse}" />
+                </DockPanel>
+            </Border>
+
+            <!-- ویزیت‌شده‌ها -->
+            <Border Grid.Column="2" CornerRadius="12" Padding="12"
+                    Background="{DynamicResource MaterialDesign.Brush.Background}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                    BorderThickness="1">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="✅ ویزیت‌شده‌های امروز" FontWeight="Bold" FontSize="14" Margin="2,0,2,8" />
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Done}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="10" Padding="10,7" Margin="0,0,0,6" Background="#E8F5E9">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="CheckCircle" Width="15" Height="15" Foreground="#2E7D32" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="12.5" Margin="8,0,0,0" />
+                                            </StackPanel>
+                                            <TextBlock FontSize="11" Opacity="0.75" Margin="0,3,0,0" FontFamily="Consolas">
+                                                <Run Text="{Binding TimeRange, Mode=OneWay}" />
+                                            </TextBlock>
+                                            <TextBlock FontSize="11" Opacity="0.75" Margin="0,2,0,0">
+                                                <Run Text="تشخیص: " /><Run Text="{Binding DiagnosisText, Mode=OneWay, TargetNullValue=—}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    <controls:EmptyState Message="هنوز ویزیتی تکمیل نشده" IconKind="ClipboardCheckOutline"
+                                         Visibility="{Binding Done.Count, Converter={StaticResource NullToVisibility}, ConverterParameter=Inverse}" />
+                </DockPanel>
+            </Border>
+        </Grid>
+
+        <!-- دکمه فراخوان -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,12,0,0">
+            <Button Command="{Binding CallNextCommand}"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Background="#1565C0" BorderBrush="#1565C0"
+                    FontSize="14" Padding="20,10">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="BellRing" Width="18" Height="18" VerticalAlignment="Center" />
+                    <TextBlock Text="🔔 فراخوانی بیمار بعدی (Space)" Margin="10,0,0,0" />
+                </StackPanel>
+            </Button>
+            <ProgressBar IsIndeterminate="True" Width="24" Height="18" Margin="12,0,0,0"
+                         Visibility="{Binding IsCalling, Converter={StaticResource BoolToVisibility}}" />
+        </StackPanel>
     </Grid>
 </UserControl>

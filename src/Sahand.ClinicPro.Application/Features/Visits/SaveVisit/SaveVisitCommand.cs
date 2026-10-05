@@ -94,6 +94,58 @@ public class SaveVisitCommandHandler : IRequestHandler<SaveVisitCommand, Result<
         visit.SoapPlan = dto.SoapPlan;
         visit.PrimaryDiagnosisId = dto.PrimaryDiagnosisId;
         visit.TreatmentPlan = dto.TreatmentPlan;
+        visit.FamilyHistory = dto.FamilyHistory;
+        visit.SocialHistory = dto.SocialHistory;
+        visit.ReviewOfSystems = dto.ReviewOfSystems;
+        visit.SecondaryDiagnoses = dto.SecondaryDiagnoses;
+        visit.FollowUpInstructions = dto.FollowUpInstructions;
+
+        // علائم حیاتی — تب ۲ فرم ۱۱: upsert در هر ذخیره
+        if (dto.VitalSigns is { } vitals)
+        {
+            var existingVitals = await _unitOfWork.Repository<Domain.Entities.Clinical.VitalSign>()
+                .QueryableTracking
+                .Where(v => v.VisitId == visit.Id)
+                .OrderByDescending(v => v.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (existingVitals is null)
+            {
+                await _unitOfWork.Repository<Domain.Entities.Clinical.VitalSign>().AddAsync(
+                    new Domain.Entities.Clinical.VitalSign
+                    {
+                        VisitId = visit.Id,
+                        PatientId = dto.PatientId,
+                        MeasuredAt = DateTime.UtcNow,
+                        BloodPressureSystolic = vitals.BloodPressureSystolic,
+                        BloodPressureDiastolic = vitals.BloodPressureDiastolic,
+                        HeartRate = vitals.HeartRate,
+                        Temperature = vitals.Temperature,
+                        OxygenSaturation = vitals.OxygenSaturation,
+                        Weight = vitals.Weight,
+                        Height = vitals.Height,
+                        BloodSugar = vitals.BloodSugar,
+                        Bmi = vitals.Height > 0 && vitals.Weight > 0
+                            ? Math.Round(vitals.Weight.Value / (vitals.Height.Value / 100m) / (vitals.Height.Value / 100m), 1)
+                            : 0m
+                    }, cancellationToken);
+            }
+            else
+            {
+                existingVitals.MeasuredAt = DateTime.UtcNow;
+                existingVitals.BloodPressureSystolic = vitals.BloodPressureSystolic;
+                existingVitals.BloodPressureDiastolic = vitals.BloodPressureDiastolic;
+                existingVitals.HeartRate = vitals.HeartRate;
+                existingVitals.Temperature = vitals.Temperature;
+                existingVitals.OxygenSaturation = vitals.OxygenSaturation;
+                existingVitals.Weight = vitals.Weight;
+                existingVitals.Height = vitals.Height;
+                existingVitals.BloodSugar = vitals.BloodSugar;
+                existingVitals.Bmi = vitals.Height > 0 && vitals.Weight > 0
+                    ? Math.Round(vitals.Weight.Value / (vitals.Height.Value / 100m) / (vitals.Height.Value / 100m), 1)
+                    : 0m;
+                _unitOfWork.Repository<Domain.Entities.Clinical.VitalSign>().Update(existingVitals);
+            }
+        }
 
         if (dto.FollowUpDateShamsi is not null
             && PersianDateHelper.ToGregorian(dto.FollowUpDateShamsi) is { } followUp)

@@ -33,7 +33,14 @@ public record VisitDetailDto(
     string? PrimaryDiagnosisCode,
     string? TreatmentPlan,
     string? FollowUpDateShamsi,
-    decimal VisitFee);
+    decimal VisitFee,
+    string? FamilyHistory = null,
+    string? SocialHistory = null,
+    string? ReviewOfSystems = null,
+    string? SecondaryDiagnoses = null,
+    string? FollowUpInstructions = null,
+    PatientContextDto? Patient = null,
+    VitalSignsViewDto? VitalSigns = null);
 
 /// <summary>درخواست شروع یا ذخیره ویزیت</summary>
 public record SaveVisitDto(
@@ -53,4 +60,47 @@ public record SaveVisitDto(
     long? PrimaryDiagnosisId = null,
     string? TreatmentPlan = null,
     string? FollowUpDateShamsi = null,
-    bool Complete = false);
+    bool Complete = false,
+    string? FamilyHistory = null,
+    string? SocialHistory = null,
+    string? ReviewOfSystems = null,
+    string? SecondaryDiagnoses = null,
+    string? FollowUpInstructions = null,
+    VitalSignsInputDto? VitalSigns = null);
+
+/// <summary>ورودی علائم حیاتی در ذخیره ویزیت — گام U6 تب ۲ فرم ۱۱</summary>
+public record VitalSignsInputDto(
+    int? BloodPressureSystolic = null,
+    int? BloodPressureDiastolic = null,
+    int? HeartRate = null,
+    decimal? Temperature = null,
+    int? OxygenSaturation = null,
+    decimal? Weight = null,
+    decimal? Height = null,
+    int? BloodSugar = null);
+
+/// <summary>اطلاعات زمینه بیمار در فرم ویزیت — سایدبار فرم ۱۱</summary>
+public record PatientContextDto(
+    string FullName,
+    string MedicalRecordNo,
+    string NationalCode,
+    int? Age,
+    string GenderText,
+    string? BloodType,
+    string Mobile,
+    string? InsuranceName,
+    string? Allergies,
+    string? ChronicDiseases,
+    string? CurrentMedications);
+
+/// <summary>علائم حیاتی نمایشی</summary>
+public record VitalSignsViewDto(
+    int? BloodPressureSystolic,
+    int? BloodPressureDiastolic,
+    int? HeartRate,
+    decimal? Temperature,
+    int? OxygenSaturation,
+    decimal? Weight,
+    decimal? Height,
+    decimal? Bmi,
+    int? BloodSugar);

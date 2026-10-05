@@ -6,173 +6,228 @@ using Sahand.ClinicPro.Desktop.Views;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
-/// <summary>ردیف ویزیت — منطبق با VisitListDto سرور</summary>
-public record VisitRow(
-    long Id,
-    string? Code,
+/// <summary>
+/// ردیف بیمار در صف — فرم ۱۳
+/// </summary>
+public record QueueRow(
+    long ReceptionId,
+    long PatientId,
     string PatientName,
-    string DoctorName,
-    string Date,
-    string StatusText,
-    string? ChiefComplaint);
+    string Mobile,
+    int QueueNumber,
+    string AppointmentTime,
+    string? InsuranceName,
+    string VisitTypeText,
+    int WaitingMinutes,
+    string WaitingText,
+    string? Allergies);
 
 /// <summary>
-/// ViewModel ویزیت‌ها — جستجوی بیمار و تاریخچه ویزیت‌ها
+/// ردیف ویزیت‌شده‌ها
+/// </summary>
+public record DoneRow(long VisitId, string PatientName, string TimeRange, string? DiagnosisText);
+
+/// <summary>
+/// ViewModel صف ویزیت — گام U6 طبق پرامپت UI بخش ۲ (فرم ۱۳):
+/// کارت‌های آماری + بیمار فعلی + صف انتظار + ویزیت‌شده‌ها + فراخوان (Space)
 /// </summary>
 public partial class VisitsViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
+    private readonly ISnackbarService _snackbar;
+    private System.Windows.Threading.DispatcherTimer? _refresher;
 
     /// <summary>عنوان صفحه</summary>
-    public override string Title => "ویزیت و معاینه";
+    public override string Title => "صف ویزیت";
 
-    /// <summary>عبارت جستجوی بیمار</summary>
-    [ObservableProperty]
-    private string _patientSearchTerm = string.Empty;
-
-    /// <summary>نتایج جستجو</summary>
-    [ObservableProperty]
-    private ObservableCollection<PatientOption> _patientResults = new();
-
-    /// <summary>بیمار انتخاب‌شده</summary>
-    [ObservableProperty]
-    private PatientOption? _selectedPatient;
-
-    /// <summary>ویزیت‌های بیمار</summary>
-    [ObservableProperty]
-    private ObservableCollection<VisitRow> _visits = new();
-
-    /// <summary>ویزیت انتخاب‌شده</summary>
-    [ObservableProperty]
-    private VisitRow? _selectedVisit;
-
-    /// <summary>پزشکان — برای شروع ویزیت جدید</summary>
+    /// <summary>پزشکان</summary>
     public ObservableCollection<DoctorOption> Doctors { get; } = new();
 
-    /// <summary>سازنده با تزریق کلاینت API</summary>
-    public VisitsViewModel(IApiClient api)
+    /// <summary>نمایه پزشک فیلتر — صفر یعنی همه</summary>
+    [ObservableProperty]
+    private int _doctorFilterIndex;
+
+    /// <summary>تعداد ویزیت‌شده</summary>
+    [ObservableProperty]
+    private int _visitedCount;
+
+    /// <summary>در حال ویزیت</summary>
+    [ObservableProperty]
+    private int _inProgressCount;
+
+    /// <summary>در صف</summary>
+    [ObservableProperty]
+    private int _waitingCount;
+
+    /// <summary>میانگین مدت ویزیت</summary>
+    [ObservableProperty]
+    private string _averageDisplay = "—";
+
+    /// <summary>بیمار فعلی</summary>
+    [ObservableProperty]
+    private QueueRow? _currentPatient;
+
+    /// <summary>صف انتظار</summary>
+    [ObservableProperty]
+    private ObservableCollection<QueueRow> _waiting = new();
+
+    /// <summary>ویزیت‌شده‌ها</summary>
+    [ObservableProperty]
+    private ObservableCollection<DoneRow> _done = new();
+
+    /// <summary>در حال فراخوان</summary>
+    [ObservableProperty]
+    private bool _isCalling;
+
+    /// <summary>سازنده</summary>
+    public VisitsViewModel(IApiClient api, ISnackbarService snackbar)
     {
         _api = api;
-        _ = LoadDoctorsAsync();
+        _snackbar = snackbar;
+        _ = InitializeAsync();
     }
 
-    /// <summary>بارگذاری پزشکان</summary>
-    private async Task LoadDoctorsAsync()
+    /// <summary>بارگذاری اولیه + تایمر ۳۰ ثانیه‌ای تازه‌سازی صف</summary>
+    private async Task InitializeAsync()
     {
-        var page = await _api.GetAsync<AppointmentsViewModel.DoctorsPage>("doctors?page=1&pageSize=200");
-        if (page?.Data is not null)
-            foreach (var d in page.Data)
+        var doctors = await _api.GetAsync<AppointmentsViewModel.DoctorsPage>("doctors?page=1&pageSize=200");
+        if (doctors?.Data is not null)
+            foreach (var d in doctors.Data)
                 Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName));
+
+        await LoadAsync();
+
+        // به‌روزرسانی زنده صف — هر ۳۰ ثانیه طبق فرم ۱۳
+        _refresher = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        _refresher.Tick += async (_, _) => await LoadAsync();
+        _refresher.Start();
     }
 
-    /// <summary>جستجوی بیمار</summary>
+    /// <summary>بارگذاری صف از سرور</summary>
     [RelayCommand]
-    private async Task SearchPatientAsync()
+    public async Task LoadAsync()
     {
-        if (string.IsNullOrWhiteSpace(PatientSearchTerm) || PatientSearchTerm.Trim().Length < 2)
+        var doctorId = DoctorFilterIndex <= 0 ? null : (long?)Doctors[DoctorFilterIndex - 1].Id;
+        var endpoint = "visits/queue" + (doctorId.HasValue ? $"?doctorId={doctorId}" : string.Empty);
+        var response = await _api.GetAsync<QueueResponse>(endpoint);
+        if (response?.Data is null)
+        {
+            ErrorMessage = _api.LastError ?? string.Empty;
             return;
-
-        var response = await _api.GetAsync<AppointmentFormViewModel.PatientsSearchResponse>(
-            $"patients/search?term={Uri.EscapeDataString(PatientSearchTerm.Trim())}");
-
-        PatientResults = response?.Data is not null
-            ? new ObservableCollection<PatientOption>(response.Data.Select(p =>
-                new PatientOption(p.Id,
-                    $"{p.FirstName} {p.LastName} — پرونده {p.MedicalRecordNo}",
-                    $"کد ملی {p.NationalCode} — موبایل {p.Mobile}")))
-            : new ObservableCollection<PatientOption>();
-    }
-
-    /// <summary>با انتخاب بیمار — تاریخچه ویزیت‌ها بارگذاری می‌شود</summary>
-    partial void OnSelectedPatientChanged(PatientOption? value)
-    {
-        if (value is not null)
-            _ = LoadVisitsAsync();
-    }
-
-    /// <summary>بارگذاری ویزیت‌های بیمار انتخاب‌شده</summary>
-    [RelayCommand]
-    public async Task LoadVisitsAsync()
-    {
-        if (SelectedPatient is null) return;
-
-        IsBusy = true;
-        ErrorMessage = string.Empty;
-
-        var response = await _api.GetAsync<VisitsResponse>(
-            $"visits/patient/{SelectedPatient.Id}");
-
-        if (response?.Data is not null)
-        {
-            Visits = new ObservableCollection<VisitRow>(response.Data.Select(v => new VisitRow(
-                v.Id, v.VisitCode, v.PatientName, v.DoctorName, v.DateShamsi,
-                StatusTextOf(v.Status), v.ChiefComplaint)));
-        }
-        else
-        {
-            ErrorMessage = _api.LastError ?? "دریافت ویزیت‌ها ناموفق بود";
         }
 
-        IsBusy = false;
+        var q = response.Data;
+        VisitedCount = q.VisitedCount;
+        InProgressCount = q.InProgressCount;
+        WaitingCount = q.WaitingCount;
+        AverageDisplay = q.AverageVisitMinutes > 0 ? $"{q.AverageVisitMinutes:0.#} دقیقه" : "—";
+        CurrentPatient = q.Current is null ? null : MapQueue(q.Current);
+        Waiting = new ObservableCollection<QueueRow>(q.Waiting.Select(MapQueue));
+        Done = new ObservableCollection<DoneRow>((q.Done ?? new List<DoneItem>())
+                .Select(d => new DoneRow(d.VisitId, d.PatientName, d.TimeRange, d.DiagnosisText)));
     }
 
-    /// <summary>متن فارسی وضعیت ویزیت</summary>
-    private static string StatusTextOf(int status) => status switch
-    {
-        1 => "شروع‌شده",
-        2 => "در جریان",
-        3 => "تکمیل‌شده",
-        4 => "پیش‌نویس",
-        _ => "نامشخص"
-    };
+    /// <summary>نگاشت ردیف صف</summary>
+    private static QueueRow MapQueue(QueueItem q) => new(
+        q.VisitId, q.PatientId, q.PatientName, q.Mobile, q.QueueNumber,
+        q.AppointmentTime, q.InsuranceName, q.VisitTypeText, q.WaitingMinutes,
+        q.WaitingMinutes > 0 ? $"{q.WaitingMinutes} دقیقه" : "تازه رسیده",
+        q.Allergies);
 
-    /// <summary>شروع ویزیت جدید برای بیمار انتخاب‌شده</summary>
+    /// <summary>فراخوان بیمار بعدی — میانبر Space</summary>
     [RelayCommand]
-    private void NewVisit()
+    private async Task CallNextAsync()
     {
-        if (SelectedPatient is null) return;
+        if (IsCalling) return;
+        IsCalling = true;
+        var doctorId = DoctorFilterIndex <= 0 ? null : (long?)Doctors[DoctorFilterIndex - 1].Id;
+        var endpoint = "visits/call-next" + (doctorId.HasValue ? $"?doctorId={doctorId}" : string.Empty);
+        var response = await _api.PostAsync<CallNextResponse>(endpoint, new { });
+        IsCalling = false;
 
-        var vm = new VisitEditViewModel(_api, Doctors, SelectedPatient.Id,
-            SelectedPatient.DisplayName);
-        var window = new VisitWindow(vm)
+        if (response?.Data is null)
+        {
+            _snackbar.Error(_api.LastError ?? "بیماری در صف انتظار نیست");
+            return;
+        }
+
+        _snackbar.Success($"بیمار بعدی فراخوانی شد — شماره {response.Data.VisitId % 100}");
+        await LoadAsync();
+
+        // باز کردن فرم ویزیت برای بیمار فراخوانی‌شده
+        var window = new VisitWindow(new VisitEditViewModel(_api, _snackbar, response.Data.VisitId))
         {
             Owner = System.Windows.Application.Current.MainWindow
         };
         window.ShowDialog();
-        _ = LoadVisitsAsync();
+        await LoadAsync();
     }
 
-    /// <summary>بازکردن ویزیت انتخاب‌شده برای ادامه ثبت</summary>
+    /// <summary>ادامه ویزیت بیمار فعلی</summary>
     [RelayCommand]
-    private void OpenVisit()
+    private void OpenCurrentVisit()
     {
-        if (SelectedVisit is null) return;
-
-        var vm = new VisitEditViewModel(_api, Doctors, SelectedVisit.Id);
-        var window = new VisitWindow(vm)
+        if (CurrentPatient is null) { _snackbar.Error("بیمار فعالی در ویزیت نیست"); return; }
+        var window = new VisitWindow(new VisitEditViewModel(_api, _snackbar, CurrentPatient.ReceptionId))
         {
             Owner = System.Windows.Application.Current.MainWindow
         };
         window.ShowDialog();
-        _ = LoadVisitsAsync();
+        _ = LoadAsync();
     }
 
-    /// <summary>پاسخ فهرست ویزیت‌ها</summary>
-    public sealed class VisitsResponse
+    /* ─── پاسخ‌های API ─── */
+
+    public sealed class QueueResponse
     {
         public bool IsSuccess { get; set; }
-        public List<VisitDto>? Data { get; set; }
+        public QueueData? Data { get; set; }
     }
 
-    /// <summary>DTO ویزیت منطبق بر سرور</summary>
-    public sealed class VisitDto
+    public sealed class QueueData
     {
-        public long Id { get; set; }
-        public string? VisitCode { get; set; }
+        public QueueItem? Current { get; set; }
+        public List<QueueItem>? Waiting { get; set; }
+        public List<DoneItem>? Done { get; set; }
+        public int VisitedCount { get; set; }
+        public int InProgressCount { get; set; }
+        public int WaitingCount { get; set; }
+        public double AverageVisitMinutes { get; set; }
+    }
+
+    public sealed class QueueItem
+    {
+        public long VisitId { get; set; }
+        public long PatientId { get; set; }
         public string PatientName { get; set; } = string.Empty;
-        public string DoctorName { get; set; } = string.Empty;
-        public string DateShamsi { get; set; } = string.Empty;
-        public int Status { get; set; }
+        public string Mobile { get; set; } = string.Empty;
+        public int QueueNumber { get; set; }
+        public string AppointmentTime { get; set; } = string.Empty;
+        public string? InsuranceName { get; set; }
+        public string VisitTypeText { get; set; } = string.Empty;
+        public int WaitingMinutes { get; set; }
         public string? ChiefComplaint { get; set; }
+        public string? Allergies { get; set; }
+    }
+
+    public sealed class DoneItem
+    {
+        public long VisitId { get; set; }
+        public string PatientName { get; set; } = string.Empty;
+        public string TimeRange { get; set; } = string.Empty;
+        public string? DiagnosisText { get; set; }
+    }
+
+    public sealed class CallNextResponse
+    {
+        public bool IsSuccess { get; set; }
+        public CallNextData? Data { get; set; }
+    }
+
+    public sealed class CallNextData
+    {
+        public long VisitId { get; set; }
+        public long ReceptionId { get; set; }
+        public long PatientId { get; set; }
     }
 }
