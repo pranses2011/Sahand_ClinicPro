@@ -115,5 +115,6 @@ public partial class App : System.Windows.Application
         services.AddTransient<ComplementaryViewModel>();
         services.AddTransient<AdvancedEmrViewModel>();
         services.AddTransient<PayrollViewModel>();
+        services.AddTransient<AttendanceViewModel>();
     }
 }

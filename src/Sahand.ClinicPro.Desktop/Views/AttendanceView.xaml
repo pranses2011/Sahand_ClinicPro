@@ -1,0 +1,432 @@
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.AttendanceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1180"
+             FlowDirection="RightToLeft"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══ ماژول حضور و غیاب — تابلو امروز + دستگاه‌ها + شیفت‌ها + اصلاحیه‌ها + گزارش ═══ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- عنوان -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="Fingerprint" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="حضور و غیاب پرسنل" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding BoardDate, StringFormat='— {0}'}" FontSize="13" Opacity="0.7"
+                       VerticalAlignment="Center" Margin="14,3,0,0" />
+        </StackPanel>
+
+        <!-- پیام خطا -->
+        <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}" Foreground="#D32F2F" FontSize="12"
+                   Margin="0,0,0,6" Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
+
+        <TabControl Grid.Row="2" Style="{StaticResource MaterialDesignTabControl}"
+                    materialDesign:ColorZoneAssist.Mode="Primary">
+            <!-- ═══════════ تب ۱: تابلوی امروز ═══════════ -->
+            <TabItem Header="📋 تابلوی امروز">
+                <Grid Margin="0,12,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- کارت‌های آماری -->
+                    <UniformGrid Grid.Row="0" Columns="6" Margin="0,0,0,10">
+                        <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                                Padding="12,10" Margin="0,0,6,0" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
+                            <StackPanel>
+                                <TextBlock Text="کل پرسنل" FontSize="11" Opacity="0.65" />
+                                <TextBlock Text="{Binding TotalStaff}" FontSize="21" FontWeight="Bold" Foreground="#546E7A" />
+                            </StackPanel>
+                        </Border>
+                        <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                                Padding="12,10" Margin="0,0,6,0" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
+                            <StackPanel>
+                                <TextBlock Text="حاضر" FontSize="11" Opacity="0.65" />
+                                <TextBlock Text="{Binding PresentCount}" FontSize="21" FontWeight="Bold" Foreground="#43A047" />
+                            </StackPanel>
+                        </Border>
+                        <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                                Padding="12,10" Margin="0,0,6,0" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
+                            <StackPanel>
+                                <TextBlock Text="تأخیر" FontSize="11" Opacity="0.65" />
+                                <TextBlock Text="{Binding LateCount}" FontSize="21" FontWeight="Bold" Foreground="#FB8C00" />
+                            </StackPanel>
+                        </Border>
+                        <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                                Padding="12,10" Margin="0,0,6,0" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
+                            <StackPanel>
+                                <TextBlock Text="غایب" FontSize="11" Opacity="0.65" />
+                                <TextBlock Text="{Binding AbsentCount}" FontSize="21" FontWeight="Bold" Foreground="#D32F2F" />
+                            </StackPanel>
+                        </Border>
+                        <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                                Padding="12,10" Margin="0,0,6,0" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
+                            <StackPanel>
+                                <TextBlock Text="مرخصی" FontSize="11" Opacity="0.65" />
+                                <TextBlock Text="{Binding LeaveCount}" FontSize="21" FontWeight="Bold" Foreground="#1E88E5" />
+                            </StackPanel>
+                        </Border>
+                        <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                                Padding="12,10" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
+                            <StackPanel>
+                                <TextBlock Text="مأموریت" FontSize="11" Opacity="0.65" />
+                                <TextBlock Text="{Binding MissionCount}" FontSize="21" FontWeight="Bold" Foreground="#8E24AA" />
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <!-- جدول پرسنل -->
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding BoardRows}" IsReadOnly="True"
+                              AutoGenerateColumns="False" CanUserAddRows="False"
+                              Style="{StaticResource MaterialDesignDataGrid}"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="پرسنل" Binding="{Binding FullName}" Width="2*" />
+                            <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode}" Width="*" />
+                            <DataGridTextColumn Header="بخش" Binding="{Binding Department}" Width="1.4*" />
+                            <DataGridTextColumn Header="شیفت" Binding="{Binding Shift}" Width="*" />
+                            <DataGridTextColumn Header="ورود" Binding="{Binding CheckIn}" Width="0.7*" />
+                            <DataGridTextColumn Header="خروج" Binding="{Binding CheckOut}" Width="0.7*" />
+                            <DataGridTextColumn Header="تأخیر" Binding="{Binding Late}" Width="0.9*" />
+                            <DataGridTemplateColumn Header="وضعیت" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{Binding StatusHex}" CornerRadius="10"
+                                                Padding="10,3" HorizontalAlignment="Center" Margin="0,4">
+                                            <TextBlock Text="{Binding Status}" Foreground="White" FontSize="11.5" FontWeight="Bold" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridCheckBoxColumn Header="دستی؟" Binding="{Binding Edited}" Width="0.6*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- ═══════════ تب ۲: دستگاه‌ها ═══════════ -->
+            <TabItem Header="🔌 دستگاه‌ها">
+                <Grid Margin="0,12,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <DataGrid Grid.Row="0" ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}"
+                              IsReadOnly="True" AutoGenerateColumns="False" CanUserAddRows="False"
+                              Style="{StaticResource MaterialDesignDataGrid}"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal" MinHeight="180">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="نام دستگاه" Binding="{Binding Name}" Width="1.6*" />
+                            <DataGridTextColumn Header="برند" Binding="{Binding Brand}" Width="*" />
+                            <DataGridTextColumn Header="نشانی" Binding="{Binding EndPoint}" Width="1.2*" />
+                            <DataGridTextColumn Header="محل" Binding="{Binding Location}" Width="1.4*" />
+                            <DataGridTemplateColumn Header="وضعیت" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{Binding StatusHex}" CornerRadius="10"
+                                                Padding="10,3" HorizontalAlignment="Center" Margin="0,4">
+                                            <TextBlock Text="{Binding Status}" Foreground="White" FontSize="11.5" FontWeight="Bold" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="آخرین سینک" Binding="{Binding LastSync}" Width="1.5*" />
+                            <DataGridTextColumn Header="کاربران" Binding="{Binding MappedUsers}" Width="0.7*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- نوار عملیات + نگاشت‌ها -->
+                    <Grid Grid.Row="1" Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- فرم دستگاه -->
+                        <Border Grid.Column="0" Background="{DynamicResource MaterialDesign.Card.Background}"
+                                CornerRadius="8" Padding="12" Margin="0,0,6,0"
+                                BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding DeviceFormTitle}"
+                                           FontWeight="Bold" FontSize="13" Margin="0,0,0,8" />
+                                <WrapPanel>
+                                    <TextBox materialDesign:HintAssist.Hint="نام دستگاه" Text="{Binding FormName}"
+                                             Width="160" Margin="0,0,8,8" />
+                                    <ComboBox materialDesign:HintAssist.Hint="برند" SelectedIndex="{Binding FormBrandIndex}"
+                                              ItemsSource="{Binding Brands}" Width="130" Margin="0,0,8,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="IP" Text="{Binding FormIp}"
+                                             Width="120" Margin="0,0,8,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="پورت" Text="{Binding FormPort}"
+                                             Width="70" Margin="0,0,8,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="محل نصب" Text="{Binding FormLocation}"
+                                             Width="150" Margin="0,0,8,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="سینک (دقیقه)" Text="{Binding FormInterval}"
+                                             Width="90" Margin="0,0,8,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="کلید ارتباطی" Text="{Binding FormCommKey}"
+                                             Width="120" Margin="0,0,8,8" />
+                                </WrapPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Command="{Binding SaveDeviceCommand}" Content="💾 ذخیره"
+                                            Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0" />
+                                    <Button Command="{Binding ResetDeviceFormCommand}" Content="پاک‌کردن فرم"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,14,0" />
+                                    <Button Command="{Binding TestDeviceCommand}" Content="📡 آزمون اتصال"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" />
+                                    <Button Command="{Binding SyncDeviceCommand}" Content="🔄 همگام‌سازی"
+                                            Style="{StaticResource MaterialDesignRaisedButton}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- نگاشت کاربران -->
+                        <Border Grid.Column="1" Background="{DynamicResource MaterialDesign.Card.Background}"
+                                CornerRadius="8" Padding="12" Margin="6,0,0,0"
+                                BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" FontWeight="Bold" FontSize="13" Margin="0,0,0,8"
+                                           Text="نگاشت کاربران دستگاه (شناسه روی دستگاه ← پرسنل)" />
+                                <WrapPanel Grid.Row="1" Margin="0,0,0,8">
+                                    <TextBox materialDesign:HintAssist.Hint="شناسه روی دستگاه" Text="{Binding MapEnrollNumber}"
+                                             Width="130" Margin="0,0,8,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="شناسه پرسنل" Text="{Binding MapEmployeeId}"
+                                             Width="100" Margin="0,0,8,8" />
+                                    <Button Command="{Binding SaveMappingCommand}" Content="➕ ثبت نگاشت"
+                                            Style="{StaticResource MaterialDesignRaisedButton}" VerticalAlignment="Center" />
+                                </WrapPanel>
+                                <DataGrid Grid.Row="2" ItemsSource="{Binding Mappings}" IsReadOnly="True"
+                                          AutoGenerateColumns="False" CanUserAddRows="False" MaxHeight="140"
+                                          Style="{StaticResource MaterialDesignDataGrid}" HeadersVisibility="Column">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="شناسه دستگاه" Binding="{Binding EnrollNumber}" Width="*" />
+                                        <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName}" Width="2*" />
+                                        <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode}" Width="*" />
+                                        <DataGridTemplateColumn Header="" Width="70">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="🗑" Command="{Binding DataContext.DeleteMappingCommand,
+                                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource MaterialDesignFlatButton}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- ═══════════ تب ۳: شیفت‌ها و تخصیص ═══════════ -->
+            <TabItem Header="⏰ شیفت‌ها">
+                <Grid Margin="0,12,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- شیفت‌ها -->
+                        <DataGrid Grid.Column="0" ItemsSource="{Binding Shifts}" IsReadOnly="True"
+                                  AutoGenerateColumns="False" CanUserAddRows="False" Margin="0,0,6,0"
+                                  Style="{StaticResource MaterialDesignDataGrid}" HeadersVisibility="Column">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="شیفت" Binding="{Binding Name}" Width="1.6*" />
+                                <DataGridTextColumn Header="ساعت" Binding="{Binding TimeRange}" Width="*" />
+                                <DataGridTextColumn Header="نوع" Binding="{Binding Kind}" Width="*" />
+                                <DataGridTextColumn Header="تحمل" Binding="{Binding Grace}" Width="*" />
+                                <DataGridTextColumn Header="تخصیص‌ها" Binding="{Binding Assigned}" Width="0.8*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- تخصیص‌های فعال -->
+                        <DataGrid Grid.Column="1" ItemsSource="{Binding Assignments}" IsReadOnly="True"
+                                  AutoGenerateColumns="False" CanUserAddRows="False" Margin="6,0,0,0"
+                                  Style="{StaticResource MaterialDesignDataGrid}" HeadersVisibility="Column">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName}" Width="1.6*" />
+                                <DataGridTextColumn Header="شیفت" Binding="{Binding ShiftName}" Width="*" />
+                                <DataGridTextColumn Header="بازه" Binding="{Binding Range}" Width="1.6*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+
+                    <!-- فرم‌های ثبت -->
+                    <Grid Grid.Row="1" Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- فرم شیفت -->
+                        <Border Grid.Column="0" Background="{DynamicResource MaterialDesign.Card.Background}"
+                                CornerRadius="8" Padding="12" Margin="0,0,6,0"
+                                BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
+                            <StackPanel>
+                                <TextBlock Text="تعریف شیفت جدید" FontWeight="Bold" FontSize="13" Margin="0,0,0,8" />
+                                <WrapPanel>
+                                    <TextBox materialDesign:HintAssist.Hint="نام شیفت" Text="{Binding ShiftName}"
+                                             Width="150" Margin="0,0,8,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="شروع HH:MM" Text="{Binding ShiftStart}"
+                                             Width="100" Margin="0,0,8,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="پایان HH:MM" Text="{Binding ShiftEnd}"
+                                             Width="100" Margin="0,0,8,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="تحمل تأخیر" Text="{Binding ShiftLateGrace}"
+                                             Width="80" Margin="0,0,8,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="تحمل تعجیل" Text="{Binding ShiftEarlyGrace}"
+                                             Width="80" Margin="0,0,8,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="استراحت (دقیقه)" Text="{Binding ShiftBreak}"
+                                             Width="110" Margin="0,0,8,8" />
+                                    <CheckBox Content="شیفت شبانه" IsChecked="{Binding ShiftIsNight}"
+                                              VerticalAlignment="Center" Margin="0,0,10,8" />
+                                    <Button Command="{Binding SaveShiftCommand}" Content="💾 ثبت شیفت"
+                                            Style="{StaticResource MaterialDesignRaisedButton}" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- فرم تخصیص -->
+                        <Border Grid.Column="1" Background="{DynamicResource MaterialDesign.Card.Background}"
+                                CornerRadius="8" Padding="12" Margin="6,0,0,0"
+                                BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
+                            <StackPanel>
+                                <TextBlock Text="تخصیص شیفت به پرسنل" FontWeight="Bold" FontSize="13" Margin="0,0,0,8" />
+                                <WrapPanel>
+                                    <TextBox materialDesign:HintAssist.Hint="شناسه پرسنل" Text="{Binding AssignEmployeeId}"
+                                             Width="110" Margin="0,0,8,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="شناسه شیفت" Text="{Binding AssignShiftId}"
+                                             Width="110" Margin="0,0,8,8" />
+                                    <Button Command="{Binding AssignShiftCommand}" Content="➕ تخصیص"
+                                            Style="{StaticResource MaterialDesignRaisedButton}" VerticalAlignment="Center" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- ═══════════ تب ۴: اصلاحیه‌ها ═══════════ -->
+            <TabItem Header="📝 اصلاح کارت">
+                <Grid Margin="0,12,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <WrapPanel Grid.Row="0" Margin="0,0,0,10">
+                        <CheckBox Content="فقط درخواست‌های در انتظار" IsChecked="{Binding OnlyPending}" />
+                    </WrapPanel>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Corrections}" IsReadOnly="True"
+                              AutoGenerateColumns="False" CanUserAddRows="False"
+                              Style="{StaticResource MaterialDesignDataGrid}" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName}" Width="1.6*" />
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding Date}" Width="*" />
+                            <DataGridTextColumn Header="فیلد" Binding="{Binding Field}" Width="0.7*" />
+                            <DataGridTextColumn Header="تغییر" Binding="{Binding Change}" Width="*" />
+                            <DataGridTextColumn Header="دلیل" Binding="{Binding Reason}" Width="2*" />
+                            <DataGridTemplateColumn Header="وضعیت" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{Binding StatusHex}" CornerRadius="10"
+                                                Padding="10,3" HorizontalAlignment="Center" Margin="0,4">
+                                            <TextBlock Text="{Binding Status}" Foreground="White" FontSize="11.5" FontWeight="Bold" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="اقدام" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Visibility="{Binding Pending, Converter={StaticResource BoolToVisibility}}">
+                                            <Button Content="✅" ToolTip="تأیید و اعمال"
+                                                    Command="{Binding DataContext.ApproveCorrectionCommand,
+                                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignFlatButton}" />
+                                            <Button Content="❌" ToolTip="رد"
+                                                    Command="{Binding DataContext.RejectCorrectionCommand,
+                                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignFlatButton}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- ═══════════ تب ۵: گزارش ماهانه ═══════════ -->
+            <TabItem Header="📊 گزارش ماهانه">
+                <Grid Margin="0,12,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <WrapPanel Grid.Row="0" Margin="0,0,0,10">
+                        <TextBlock Text="دوره:" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,8,0" />
+                        <ComboBox SelectedValue="{Binding SelectedYear}" SelectedValuePath="Content" MinWidth="90" Margin="0,0,8,0">
+                            <ComboBoxItem Content="1401" /><ComboBoxItem Content="1402" /><ComboBoxItem Content="1403" />
+                            <ComboBoxItem Content="1404" /><ComboBoxItem Content="1405" />
+                        </ComboBox>
+                        <ComboBox SelectedIndex="{Binding SelectedMonthIndex}" MinWidth="105" Margin="0,0,14,0">
+                            <ComboBoxItem Content="فروردین" /><ComboBoxItem Content="اردیبهشت" /><ComboBoxItem Content="خرداد" />
+                            <ComboBoxItem Content="تیر" /><ComboBoxItem Content="مرداد" /><ComboBoxItem Content="شهریور" />
+                            <ComboBoxItem Content="مهر" /><ComboBoxItem Content="آبان" /><ComboBoxItem Content="آذر" />
+                            <ComboBoxItem Content="دی" /><ComboBoxItem Content="بهمن" /><ComboBoxItem Content="اسفند" />
+                        </ComboBox>
+                        <Button Command="{Binding LoadMonthlyCommand}" Content="📊 بارگذاری"
+                                Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,14,0" />
+                        <TextBlock VerticalAlignment="Center" Margin="0,0,6,0">
+                            <Run Text="جمع کارکرد: " /><Run Text="{Binding TotalWorked, Mode=OneWay}" FontWeight="Bold" Foreground="#1E88E5" />
+                            <Run Text=" ساعت | جمع اضافه‌کاری: " /><Run Text="{Binding TotalOvertime, Mode=OneWay}" FontWeight="Bold" Foreground="#43A047" />
+                            <Run Text=" ساعت" />
+                        </TextBlock>
+                    </WrapPanel>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding MonthlyRows}" IsReadOnly="True"
+                              AutoGenerateColumns="False" CanUserAddRows="False"
+                              Style="{StaticResource MaterialDesignDataGrid}" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="پرسنل" Binding="{Binding FullName}" Width="1.8*" />
+                            <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode}" Width="*" />
+                            <DataGridTextColumn Header="بخش" Binding="{Binding Department}" Width="1.3*" />
+                            <DataGridTextColumn Header="روز حاضر" Binding="{Binding Present}" Width="0.8*" />
+                            <DataGridTextColumn Header="تأخیرها" Binding="{Binding LateCount}" Width="0.7*" />
+                            <DataGridTextColumn Header="مجموع تأخیر" Binding="{Binding LateTotal}" Width="*" />
+                            <DataGridTextColumn Header="کارکرد (ساعت)" Binding="{Binding Worked}" Width="*" />
+                            <DataGridTextColumn Header="اضافه‌کاری (ساعت)" Binding="{Binding Overtime}" Width="*" />
+                            <DataGridTextColumn Header="غیبت" Binding="{Binding Absent}" Width="0.6*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

@@ -110,6 +110,7 @@ public partial class MainWindowViewModel : ObservableObject
         ComplementaryViewModel complementaryVm,
         AdvancedEmrViewModel advancedEmrVm,
         PayrollViewModel payrollVm,
+        AttendanceViewModel attendanceVm,
         IRealtimeClient realtime)
     {
         _api = api;
@@ -164,7 +165,8 @@ public partial class MainWindowViewModel : ObservableObject
             ["license"] = () => licenseVm,
             ["complementary"] = () => complementaryVm,
             ["emr-advanced"] = () => advancedEmrVm,
-            ["payroll"] = () => payrollVm
+            ["payroll"] = () => payrollVm,
+            ["attendance"] = () => attendanceVm
         };
 
         // آیتم‌های ناوبری — فعال بودن از لایسنس کنترل می‌شود
@@ -181,6 +183,7 @@ public partial class MainWindowViewModel : ObservableObject
             new() { Title = "مالی و صندوق", PageKey = "billing", Icon = "CashMultiple" },
             new() { Title = "حسابداری", PageKey = "accounting", Icon = "BookOpenOutline" },
             new() { Title = "فیش حقوقی", PageKey = "payroll", Icon = "CashCheck" },
+            new() { Title = "حضور و غیاب", PageKey = "attendance", Icon = "Fingerprint" },
             new() { Title = "بیمه", PageKey = "insurance", Icon = "ShieldCheckOutline" },
             new() { Title = "پاراکلینیک", PageKey = "paraclinical", Icon = "MedicalBag" },
             new() { Title = "آزمایشگاه", PageKey = "lab", Icon = "TestTube" },
