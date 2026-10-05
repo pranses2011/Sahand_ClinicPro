@@ -86,13 +86,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $expiry = $type === 'perpetual' ? null : date('Y-m-d', strtotime('+' . $months . ' months'));
         $db->prepare(
             'INSERT INTO ls_licenses
-             (license_key, license_type, clinic_name, clinic_phone, max_users, max_doctors,
+             (license_key, license_type, clinic_name, clinic_phone, clinic_manager, clinic_email,
+              clinic_city, clinic_address, max_users, max_doctors,
               max_patients, max_branches, enabled_modules, issued_date, expiry_date, notes, created_at, updated_at)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())'
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())'
         )->execute([
             $key, $type,
             mb_substr(trim((string)($_POST['clinic_name'] ?? '')), 0, 200) ?: null,
             mb_substr(trim((string)($_POST['clinic_phone'] ?? '')), 0, 30) ?: null,
+            mb_substr(trim((string)($_POST['clinic_manager'] ?? '')), 0, 120) ?: null,
+            mb_substr(trim((string)($_POST['clinic_email'] ?? '')), 0, 160) ?: null,
+            mb_substr(trim((string)($_POST['clinic_city'] ?? '')), 0, 100) ?: null,
+            mb_substr(trim((string)($_POST['clinic_address'] ?? '')), 0, 300) ?: null,
             max(1, (int)($_POST['max_users'] ?? 5)),
             max(1, (int)($_POST['max_doctors'] ?? 10)),
             max(1, (int)($_POST['max_patients'] ?? 5000)),
@@ -106,6 +111,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'صدور ' . ($type === 'perpetual' ? 'دائمی' : 'اشتراکی ' . $months . ' ماهه') . ' — ' . $key);
         $_SESSION['flash'] = ['success', 'لایسنس «' . $key . '» صادر شد.'];
         ls_json_or_redirect('index.php?page=license_view&id=' . $newId);
+    }
+
+    /* ── ویرایش کامل لایسنس — چرخه دوازدهم ── */
+    if ($act === 'update_license') {
+        $id = (int)($_POST['id'] ?? 0);
+        $stmt = ls_db()->prepare('SELECT * FROM ls_licenses WHERE id = ?');
+        $stmt->execute([$id]);
+        $l = $stmt->fetch();
+        if ($l === false) {
+            $_SESSION['flash'] = ['danger', 'لایسنس یافت نشد.'];
+            ls_json_or_redirect('index.php?page=licenses');
+        }
+        $modules = array_values(array_intersect(
+            array_keys(ls_module_catalog()),
+            (array)($_POST['modules'] ?? [])
+        ));
+        if (count($modules) === 0) {
+            $modules = json_decode((string)$l['enabled_modules'], true) ?: [];
+        }
+        ls_db()->prepare(
+            'UPDATE ls_licenses SET
+             clinic_name = ?, clinic_phone = ?, clinic_manager = ?, clinic_email = ?,
+             clinic_city = ?, clinic_address = ?, max_users = ?, max_doctors = ?,
+             max_patients = ?, max_branches = ?, enabled_modules = ?, notes = ?, updated_at = NOW()
+             WHERE id = ?'
+        )->execute([
+            mb_substr(trim((string)($_POST['clinic_name'] ?? '')), 0, 200) ?: null,
+            mb_substr(trim((string)($_POST['clinic_phone'] ?? '')), 0, 30) ?: null,
+            mb_substr(trim((string)($_POST['clinic_manager'] ?? '')), 0, 120) ?: null,
+            mb_substr(trim((string)($_POST['clinic_email'] ?? '')), 0, 160) ?: null,
+            mb_substr(trim((string)($_POST['clinic_city'] ?? '')), 0, 100) ?: null,
+            mb_substr(trim((string)($_POST['clinic_address'] ?? '')), 0, 300) ?: null,
+            max(1, (int)($_POST['max_users'] ?? $l['max_users'])),
+            max(1, (int)($_POST['max_doctors'] ?? $l['max_doctors'])),
+            max(1, (int)($_POST['max_patients'] ?? $l['max_patients'])),
+            max(1, (int)($_POST['max_branches'] ?? $l['max_branches'])),
+            json_encode($modules, JSON_UNESCAPED_SLASHES),
+            mb_substr(trim((string)($_POST['notes'] ?? '')), 0, 1000) ?: null,
+            $id,
+        ]);
+        ls_audit($admin['id'], 'update_license', 'license', $id,
+            'ویرایش اطلاعات لایسنس ' . (string)$l['license_key']);
+        $_SESSION['flash'] = ['success', 'تغییرات لایسنس ذخیره شد — سقف‌ها و ماژول‌ها از تپ‌قلب بعدی در کلاینت اعمال می‌شود.'];
+        ls_json_or_redirect('index.php?page=license_view&id=' . $id);
+    }
+
+    /* ── حذف قطعی لایسنس — با حفاظت تأیید دومرحله‌ای (تایپ کلید) ── */
+    if ($act === 'delete_license') {
+        $id = (int)($_POST['id'] ?? 0);
+        $confirmKey = strtoupper(trim((string)($_POST['confirm_key'] ?? '')));
+        $stmt = ls_db()->prepare('SELECT * FROM ls_licenses WHERE id = ?');
+        $stmt->execute([$id]);
+        $l = $stmt->fetch();
+        if ($l === false) {
+            $_SESSION['flash'] = ['danger', 'لایسنس یافت نشد.'];
+            ls_json_or_redirect('index.php?page=licenses');
+        }
+        if ($confirmKey !== strtoupper((string)$l['license_key'])) {
+            $_SESSION['flash'] = ['danger', 'برای حذف، کلید لایسنس را دقیقاً و صحیح وارد کنید.'];
+            ls_json_or_redirect('index.php?page=license_view&id=' . $id);
+        }
+        // حذف — CASCADE فعال‌سازی‌ها و پیام‌ها را هم می‌برد؛ لاگ اعتبارسنجی بهخاطر SET NULL می‌ماند
+        ls_db()->prepare('DELETE FROM ls_licenses WHERE id = ?')->execute([$id]);
+        ls_audit($admin['id'], 'delete_license', 'license', $id,
+            'حذف قطعی لایسنس ' . (string)$l['license_key'] . ' (' . ((string)($l['clinic_name'] ?? 'بدون نام')) . ')');
+        $_SESSION['flash'] = ['warning', 'لایسنس «' . (string)$l['license_key'] . '» به‌طور کامل حذف شد.'];
+        ls_json_or_redirect('index.php?page=licenses');
+    }
+
+    /* ── ارسال پیام مستقیم به داشبورد درمانگاه — چرخه دوازدهم ── */
+    if ($act === 'send_message') {
+        $licenseId = (int)($_POST['license_id'] ?? 0);
+        $title = trim((string)($_POST['title'] ?? ''));
+        $body = trim((string)($_POST['body'] ?? ''));
+        $level = in_array($_POST['level'] ?? 'info', ['info', 'success', 'warning', 'danger'], true)
+            ? (string)$_POST['level'] : 'info';
+        if (mb_strlen($title) < 2 || mb_strlen($body) < 2) {
+            $_SESSION['flash'] = ['danger', 'عنوان و متن پیام حداقل ۲ کاراکتر باشد.'];
+            ls_json_or_redirect('index.php?page=messages');
+        }
+        $stmt = ls_db()->prepare('SELECT license_key, clinic_name FROM ls_licenses WHERE id = ?');
+        $stmt->execute([$licenseId]);
+        $target = $stmt->fetch();
+        if ($target === false) {
+            $_SESSION['flash'] = ['danger', 'لایسنس مقصد یافت نشد.'];
+            ls_json_or_redirect('index.php?page=messages');
+        }
+        ls_db()->prepare('INSERT INTO ls_messages (license_id, title, body, level, created_by, created_at)
+            VALUES (?, ?, ?, ?, ?, NOW())')
+            ->execute([$licenseId, mb_substr($title, 0, 200), mb_substr($body, 0, 3000), $level, $admin['id']]);
+        ls_audit($admin['id'], 'send_message', 'message', (int)ls_db()->lastInsertId(),
+            'پیام «' . mb_substr($title, 0, 60) . '» به ' . ((string)($target['clinic_name'] ?? $target['license_key'])));
+        $_SESSION['flash'] = ['success', 'پیام برای «' . ((string)($target['clinic_name'] ?? $target['license_key'])) . '» ثبت شد — با تپ‌قلب بعدی روی داشبورد درمانگاه ظاهر می‌شود.'];
+        ls_json_or_redirect('index.php?page=messages');
+    }
+
+    /* ── حذف پیام — پیش از تحویل یا پس از آن ── */
+    if ($act === 'delete_message') {
+        $mid = (int)($_POST['id'] ?? 0);
+        ls_db()->prepare('DELETE FROM ls_messages WHERE id = ?')->execute([$mid]);
+        ls_audit($admin['id'], 'delete_message', 'message', $mid, 'حذف پیام #' . $mid);
+        $_SESSION['flash'] = ['success', 'پیام حذف شد.'];
+        ls_json_or_redirect('index.php?page=messages');
     }
 
     if ($act === 'renew') {
@@ -316,6 +424,8 @@ function ls_header(string $title, array $admin, string $active): void
         'dashboard'  => ['📊', 'داشبورد'],
         'licenses'   => ['🔑', 'لایسنس‌ها'],
         'license_new'=> ['➕', 'صدور لایسنس'],
+        'messages'   => ['📨', 'پیام به درمانگاه'],
+        'reports'    => ['📈', 'گزارش‌ها'],
         'logs'       => ['📋', 'لاگ اعتبارسنجی'],
         'settings'   => ['⚙️', 'تنظیمات'],
     ];
@@ -332,7 +442,7 @@ function ls_header(string $title, array $admin, string $active): void
 
 function ls_footer(): void
 {
-    echo '</main></div></body></html>';
+    echo '</main></div><script src="assets/app.js" defer></script></body></html>';
 }
 
 function ls_flash(array $f): void
