@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>بنر افقی بیلبورد — درمانگاه سهند</title>
+<style>
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Regular.ttf') format('truetype'); font-weight:400; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Bold.ttf') format('truetype'); font-weight:700; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-ExtraBold.ttf') format('truetype'); font-weight:800; }
+@font-face { font-family:'Vazirmatn'; src:url('../assets/fonts/Vazirmatn-Black.ttf') format('truetype'); font-weight:900; }
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { width:8504px; height:4252px; }
+body { font-family:'Vazirmatn',sans-serif; direction:rtl;
+  background:linear-gradient(120deg,#082B5C 0%,#0D47A1 42%,#1565C0 62%,#00897B 100%);
+  color:#fff; overflow:hidden; position:relative; }
+.deco { position:absolute; border-radius:50%; }
+.d1 { width:3200px; height:3200px; top:-1300px; left:-1000px;
+  background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%); }
+.d2 { width:2600px; height:2600px; bottom:-1200px; right:-800px;
+  background:radial-gradient(circle,rgba(0,255,200,.09),transparent 70%); }
+.wrap { position:relative; z-index:5; height:100%; padding:230px 340px;
+  display:flex; align-items:center; gap:180px; }
+.logo-circle { width:1050px; height:1050px; border-radius:50%; flex-shrink:0;
+  background:rgba(255,255,255,.13); border:10px solid rgba(255,255,255,.4);
+  display:flex; align-items:center; justify-content:center; font-size:560px;
+  box-shadow:0 80px 200px rgba(0,0,0,.35); }
+.mid { flex:1; }
+.brand { display:flex; align-items:center; gap:60px; }
+.brand .en { font-size:150px; letter-spacing:30px; opacity:.85; font-weight:700; direction:ltr; }
+.brand .fa { font-size:240px; font-weight:900; }
+.mid h1 { font-size:390px; font-weight:900; line-height:1.35; margin-top:90px;
+  text-shadow:0 30px 90px rgba(0,0,0,.4); }
+.mid h1 .hl { color:#A5F3FC; }
+.mid .sub { font-size:150px; font-weight:500; opacity:.95; margin-top:60px; }
+.tag { display:inline-block; margin-top:110px; font-size:170px; font-weight:900;
+  background:linear-gradient(90deg,#FF8F00,#FFB300); color:#3E2723;
+  border-radius:150px; padding:40px 130px; box-shadow:0 40px 100px rgba(255,143,0,.45); }
+.contact { flex-shrink:0; text-align:center; background:rgba(0,0,0,.30);
+  border-radius:80px; padding:120px 140px; backdrop-filter:blur(6px); }
+.contact .lbl { font-size:130px; font-weight:700; }
+.contact .tel { font-size:300px; font-weight:900; direction:ltr; color:#A5F3FC;
+  margin-top:30px; letter-spacing:8px; }
+.contact .web { font-size:110px; opacity:.9; margin-top:50px; }
+</style>
+</head>
+<body>
+<div class="deco d1"></div><div class="deco d2"></div>
+<div class="wrap">
+  <div class="logo-circle">🏥</div>
+  <div class="mid">
+    <div class="brand">
+      <span class="fa">درمانگاه سهند</span>
+      <span class="en">SAHAND CLINICPRO</span>
+    </div>
+    <h1>مدیریت درمانگاه با <span class="hl">یک نرم‌افزار</span></h1>
+    <div class="sub">پذیرش • نوبت‌دهی • نسخه الکترونیک • مالی • حضور و غیاب</div>
+    <div class="tag">⭐ اتصال مستقیم دستگاه حضور و غیاب</div>
+  </div>
+  <div class="contact">
+    <div class="lbl">دموی رایگان 🎁</div>
+    <div class="tel">۰۴۱-۳۳۴۵۶۷۸۹</div>
+    <div class="web">sahand-clinicpro.ir</div>
+  </div>
+</div>
+</body>
+</html>
