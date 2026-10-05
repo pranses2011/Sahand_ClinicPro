@@ -23,6 +23,14 @@ public class InvoiceItemConfiguration : IEntityTypeConfiguration<InvoiceItem>
         builder.Property(x => x.TotalPrice).HasPrecision(18, 0).HasComment("قیمت کل قلم");
         builder.Property(x => x.DoctorShareAmount).HasPrecision(18, 0).HasComment("سهم ریالی پزشک");
         builder.Property(x => x.DoctorSharePercent).HasPrecision(5, 2).HasComment("درصد سهم پزشک");
+        builder.Property(x => x.UnitCost).HasPrecision(18, 0).HasComment("عکس‌فوری هزینه تمام‌شده هر واحد در لحظه صدور — مبنای سود این قلم");
+        builder.Property(x => x.PerformedById).HasComment("شناسه پرسنل انجام‌دهنده خدمت — مبنای حقوق درصدی سود خدمات انجامی همان پرسنل");
 
+        // رابطه اختیاری قلم→پرسنل انجام‌دهنده (حقوق درصدی از سود همین اقلام محاسبه می‌شود)
+        builder.HasIndex(x => x.PerformedById).HasDatabaseName("IX_InvoiceItem_PerformedBy");
+        builder.HasOne(x => x.Performer)
+            .WithMany()
+            .HasForeignKey(x => x.PerformedById)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
