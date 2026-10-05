@@ -26,6 +26,8 @@
                 <Setter Property="FontFamily" Value="Vazirmatn, Segoe UI, Tahoma" />
                 <Setter Property="FlowDirection" Value="RightToLeft" />
                 <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+                <!-- آیکون رسمی محصول — روی همه پنجره‌های برنامه (نوار عنوان و Taskbar) -->
+                <Setter Property="Icon" Value="/Assets/appicon.ico" />
             </Style>
 
             <!-- سبک متن عنوان بخش‌ها -->
