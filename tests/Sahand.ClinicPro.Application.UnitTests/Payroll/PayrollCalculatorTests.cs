@@ -107,4 +107,88 @@ public class PayrollCalculatorTests
         // یک ریال مازاد → ۱۰٪ یک ریال → گرد به صفر؟ نه — ۰/۱ ریال گرد به ۰
         PayrollCalculator.ProgressiveTax(240_000_100m).Should().Be(10m);
     }
+
+    // ═══════════ حقوق درصدی از سود خدمات — چرخه نهم ═══════════
+
+    /// <summary>حقوق درصدی = سود خدمات انجامی خود پرسنل × درصد (نه کل فروش)</summary>
+    [Fact]
+    public void Commission_IsPercentOfServiceProfit_NotTotalRevenue()
+    {
+        var result = PayrollCalculator.Calculate(new PayrollCalculator.PayrollInput(
+            BaseSalary: 200_000_000m,
+            CommissionPercent: 30m,
+            ServiceProfit: 100_000_000m));
+
+        // ۳۰٪ از سود ۱۰۰م = ۳۰م — نه ۳۰٪ از فروش یا کل دریافتی
+        result.ServiceCommission.Should().Be(30_000_000m);
+    }
+
+    /// <summary>سود منفی دوره → حقوق درصدی صفر (ضرر بر عهده کارفرماست)</summary>
+    [Fact]
+    public void Commission_NegativeProfit_IsZero()
+    {
+        var result = PayrollCalculator.Calculate(new PayrollCalculator.PayrollInput(
+            BaseSalary: 200_000_000m,
+            CommissionPercent: 30m,
+            ServiceProfit: -50_000_000m));
+
+        result.ServiceCommission.Should().Be(0m);
+    }
+
+    /// <summary>درصد صفر (فقط حقوق پایه) → بدون حقوق درصدی</summary>
+    [Fact]
+    public void Commission_ZeroPercent_IsZero()
+    {
+        var result = PayrollCalculator.Calculate(new PayrollCalculator.PayrollInput(
+            BaseSalary: 200_000_000m,
+            CommissionPercent: 0m,
+            ServiceProfit: 100_000_000m));
+
+        result.ServiceCommission.Should().Be(0m);
+    }
+
+    /// <summary>حقوق درصدی جزو مزایای مشمول بیمه و مالیات است (ماده ۲۸ ت.ا)</summary>
+    [Fact]
+    public void Commission_IsIncludedInGross_AndSubjectToInsurance()
+    {
+        var without = PayrollCalculator.Calculate(new PayrollCalculator.PayrollInput(
+            BaseSalary: 200_000_000m));
+        var with = PayrollCalculator.Calculate(new PayrollCalculator.PayrollInput(
+            BaseSalary: 200_000_000m,
+            CommissionPercent: 25m,
+            ServiceProfit: 80_000_000m)); // کمیسیون ۲۰م
+
+        // جمع مزایا دقیقاً به اندازه کمیسیون رشد می‌کند
+        with.GrossEarnings.Should().Be(without.GrossEarnings + 20_000_000m);
+        // بیمه ۷٪ از کل مزایای جدید (شامل کمیسیون): اختلاف = ۷٪ کمیسیون
+        with.Insurance.Should().Be(Math.Round((200_000_000m + 20_000_000m) * 0.07m));
+    }
+
+    /// <summary>گرد شدن حقوق درصدی به ریال کامل</summary>
+    [Fact]
+    public void Commission_RoundsToWholeRial()
+    {
+        var result = PayrollCalculator.Calculate(new PayrollCalculator.PayrollInput(
+            BaseSalary: 100_000_000m,
+            CommissionPercent: 33m,
+            ServiceProfit: 10_000_003m));
+
+        // ۳۳٪ از ۱۰٬۰۰۰٬۰۰۳ = ۳٬۳۰۰٬۰۰۰/۹۹ → ۳٬۳۰۰٬۰۰۱ ریال
+        result.ServiceCommission.Should().Be(3_300_001m);
+    }
+
+    /// <summary>خالص پرداختی با کمیسیون — کل زنجیره مزایا/کسورات متوازن است</summary>
+    [Fact]
+    public void NetAmount_WithCommission_Balances()
+    {
+        var result = PayrollCalculator.Calculate(new PayrollCalculator.PayrollInput(
+            BaseSalary: 150_000_000m,
+            CommissionPercent: 40m,
+            ServiceProfit: 50_000_000m)); // کمیسیون ۲۰م
+
+        var expectedGross = 150_000_000m + 20_000_000m;
+        result.GrossEarnings.Should().Be(expectedGross);
+        // بدون کسور اضافی: خالص = جمع مزایا − بیمه − مالیات
+        result.NetAmount.Should().Be(expectedGross - result.Insurance - result.Tax);
+    }
 }
