@@ -13,7 +13,7 @@
 [![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC2927?logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server)
 [![WPF](https://img.shields.io/badge/WPF-MaterialDesign-512BD4?logo=windows&logoColor=white)](https://materialdesigninxaml.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-130%20.NET%20%2B%2019%20E2E%20%E2%9C%85-2EA44F)](#%EF%B8%8F-تست‌ها)
+[![Tests](https://img.shields.io/badge/tests-158%20.NET%20%2B%2019%20E2E%20%E2%9C%85-2EA44F)](#%EF%B8%8F-تست‌ها)
 [![Version](https://img.shields.io/badge/release-v1.9.0-blue)](https://github.com/pranses2011/Sahand_ClinicPro/releases)
 [![Forms](https://img.shields.io/badge/forms-52%20%E2%9C%85-7C3AED)](#%EF%B8%8F-تصاویر-محیط-نرم‌افزار)
 
