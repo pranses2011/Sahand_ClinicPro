@@ -19,6 +19,24 @@ public class EmployeeSalary : AuditableEntity, ISoftDeletable
     /// <summary>حقوق پایه</summary>
     public decimal BaseSalary { get; set; } = 0m;
 
+    /// <summary>
+    /// عکس‌فوری درصد حقوق از سود خدمات در لحظه محاسبه فیش
+    /// (برای شفافیت و مقایسه تاریخی حتی اگر بعداً درصد پرسنل تغییر کند)
+    /// </summary>
+    public decimal CommissionPercent { get; set; } = 0m;
+
+    /// <summary>
+    /// جمع سود خدمات انجام‌شده توسط این پرسنل در دوره (ریال) —
+    /// مبنای محاسبه حقوق درصدی؛ «نه کل دریافتی و نه کل فروش»
+    /// </summary>
+    public decimal ServiceProfitBase { get; set; } = 0m;
+
+    /// <summary>
+    /// حقوق درصدی دوره (ریال) = ServiceProfitBase × CommissionPercent ÷ ۱۰۰.
+    /// فقط از سود خدمات انجامی خودِ پرسنل؛ در صورت سود منفی یا صفر، صفر است.
+    /// </summary>
+    public decimal ServiceCommission { get; set; } = 0m;
+
     /// <summary>اضافه‌کاری</summary>
     public decimal Overtime { get; set; } = 0m;
 
