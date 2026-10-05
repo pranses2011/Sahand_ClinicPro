@@ -1,0 +1,35 @@
+﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.PayslipWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="فیش حقوقی"
+        Width="760" Height="880" WindowStartupLocation="CenterOwner"
+        FlowDirection="RightToLeft"
+        FontFamily="Vazirmatn, Segoe UI, Tahoma"
+        Background="{DynamicResource MaterialDesign PaperBrush}"
+        TextOptions.TextFormattingMode="Ideal">
+    <!-- ═══ پنجره فیش حقوقی چاپی — گام R3 ═══ -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- نوار عملیات -->
+        <ToolBarTray Grid.Row="0" IsLocked="True">
+            <ToolBar Band="0" BandIndex="0" FlowDirection="RightToLeft">
+                <Button x:Name="PrintButton" Click="OnPrintClick" Padding="10,4">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Printer" Width="16" Height="16" VerticalAlignment="Center" />
+                        <TextBlock Text="🖨 چاپ فیش" Margin="6,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Separator />
+                <TextBlock x:Name="SummaryText" VerticalAlignment="Center" FontWeight="Bold" />
+            </ToolBar>
+        </ToolBarTray>
+
+        <!-- پیش‌نمایش سند جاری -->
+        <FlowDocumentScrollViewer Grid.Row="1" x:Name="Viewer" IsToolBarVisible="False" Padding="0" Margin="0" />
+    </Grid>
+</Window>

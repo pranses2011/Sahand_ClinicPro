@@ -24,5 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Sahand.ClinicPro.Application\Sahand.ClinicPro.Application.csproj" />
+    <!-- داده مرجع رشد WHO در Shared برای تست‌های گام R2 -->
+    <ProjectReference Include="..\..\src\Sahand.ClinicPro.Shared\Sahand.ClinicPro.Shared.csproj" />
   </ItemGroup>
 </Project>

@@ -334,6 +334,46 @@
                                 <TextBlock Text="✅ ثبت درخواست تصویربرداری" Margin="8,0,0,0" />
                             </StackPanel>
                         </Button>
+
+                        <!-- ═══ بخش فایل‌های DICOM — گام R4 ═══ -->
+                        <Separator Margin="0,16,0,12" />
+                        <TextBlock Text="🖼 فایل‌های تصویر و DICOM" FontWeight="Bold" FontSize="13.5"
+                                   Margin="2,0,0,6" />
+
+                        <WrapPanel Margin="0,0,0,8">
+                            <Button Command="{Binding LoadImagingOrdersCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}" Content="🔄 درخواست‌های امروز" />
+                            <Button Command="{Binding UploadImagingFileCommand}" Margin="8,0,0,0"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Content="⬆ بارگذاری فایل" IsEnabled="{Binding HasSelectedImagingOrder}" />
+                            <Button Command="{Binding OpenDicomViewerCommand}" Margin="8,0,0,0"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Content="🩻 نمایش DICOM" />
+                        </WrapPanel>
+
+                        <TextBlock Text="درخواست تصویربرداری (انتخاب برای اتصال فایل)" FontSize="10.5" Opacity="0.6" Margin="2,2,2,3" />
+                        <ComboBox ItemsSource="{Binding ImagingOrders}" SelectedItem="{Binding SelectedImagingOrder}"
+                                  DisplayMemberPath="Display" MaxDropDownHeight="260" Margin="0,0,0,8" />
+
+                        <DataGrid ItemsSource="{Binding ImagingFiles}" SelectedItem="{Binding SelectedImagingFile}"
+                                  AutoGenerateColumns="False" IsReadOnly="True" MaxHeight="220"
+                                  Style="{StaticResource MaterialDesignDataGrid}"
+                                  HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="نام فایل" Binding="{Binding FileName}" />
+                                <DataGridTextColumn Header="نوع" Binding="{Binding KindText}" />
+                                <DataGridTextColumn Header="حجم" Binding="{Binding SizeText}" />
+                                <DataGridTemplateColumn Header="عملیات">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="🗑 حذف" FontSize="10" Padding="6,2"
+                                                    Command="{Binding DataContext.DeleteImagingFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

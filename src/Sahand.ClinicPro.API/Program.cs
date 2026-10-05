@@ -111,6 +111,19 @@ try
     // احراز هویت JWT Bearer و سرویس‌های امنیتی
     builder.Services.AddIdentityServices(builder.Configuration);
 
+    // اتصال بلادرنگ SignalR — گام R1: صف شعبه‌ای + اعلان کاربر
+    builder.Services.AddSignalR(options =>
+    {
+        // اندازه پیام امن — اعلان‌ها و رویدادهای صف سبک هستند
+        options.MaximumReceiveMessageSize = 256 * 1024;
+        // پینگ سریع‌تر برای تشخیص قطع کلاینت‌های WPF
+        options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+        options.KeepAliveInterval = TimeSpan.FromSeconds(10);
+    });
+    // پیاده‌سازی واقعی جایگزین پیش‌فرض بی‌اثر لایه کاربرد می‌شود
+    builder.Services.AddScoped<Sahand.ClinicPro.Application.Interfaces.IRealtimeNotifier,
+        Sahand.ClinicPro.API.Realtime.SignalRRealtimeNotifier>();
+
     // مجوزدهی مبتنی بر دسترسی پویا — سیاست‌های PERMISSION:x
     builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
     builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
@@ -205,6 +218,10 @@ try
     app.UseMiddleware<AuditLogMiddleware>();
 
     app.MapControllers();
+
+    // نقشه‌یابی Hubهای بلادرنگ — احراز هویت JWT از query string (گام R1)
+    app.MapHub<Sahand.ClinicPro.API.Hubs.QueueHub>("/hubs/queue");
+    app.MapHub<Sahand.ClinicPro.API.Hubs.NotificationHub>("/hubs/notifications");
 
     // بذرافشان داده‌های اولیه — نقش‌ها، دسترسی‌ها، ادمین، داده‌های پایه
     // در نبود دیتابیس (محیط تست) خطا ثبت و عبور می‌شود

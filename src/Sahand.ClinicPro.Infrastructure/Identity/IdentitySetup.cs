@@ -59,7 +59,7 @@ public static class IdentitySetup
                 NameClaimType = ClaimTypes.NameIdentifier
             };
 
-            // پاسخ فارسی برای توکن منقضی
+            // پاسخ فارسی برای توکن منقضی + پذیرش توکن Hub از query string (گام R1)
             options.Events = new JwtBearerEvents
             {
                 OnAuthenticationFailed = context =>
@@ -73,6 +73,20 @@ public static class IdentitySetup
                             isSuccess = false,
                             message = "توکن دسترسی منقضی شده است — دوباره وارد شوید"
                         }));
+                    }
+                    return System.Threading.Tasks.Task.CompletedTask;
+                },
+
+                // کلاینت WPF SignalR نمی‌تواند هدر Authorization بفرستد؛
+                // طبق الگوی رسمی ASP.NET Core توکن از query string «access_token» خوانده می‌شود
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) &&
+                        (path.StartsWithSegments("/hubs/queue") || path.StartsWithSegments("/hubs/notifications")))
+                    {
+                        context.Token = accessToken;
                     }
                     return System.Threading.Tasks.Task.CompletedTask;
                 }

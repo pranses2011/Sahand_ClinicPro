@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Clinical;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
@@ -18,9 +19,14 @@ public record CallNextPatientCommand(long? DoctorId) : IRequest<Result<CallNextR
 public class CallNextPatientCommandHandler : IRequestHandler<CallNextPatientCommand, Result<CallNextResult>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IRealtimeNotifier _realtime;
 
-    /// <summary>سازنده</summary>
-    public CallNextPatientCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    /// <summary>سازنده — با اتصال بلادرنگ برای پخش فوری تغییر صف (گام R1)</summary>
+    public CallNextPatientCommandHandler(IUnitOfWork unitOfWork, IRealtimeNotifier realtime)
+    {
+        _unitOfWork = unitOfWork;
+        _realtime = realtime;
+    }
 
     /// <summary>اجرا — اولین پذیرش در صف → ویزیت در حال انجام</summary>
     public async Task<Result<CallNextResult>> Handle(CallNextPatientCommand request,
@@ -72,6 +78,10 @@ public class CallNextPatientCommandHandler : IRequestHandler<CallNextPatientComm
         _unitOfWork.Repository<Reception>().Update(next);
 
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        // پخش بلادرنگ تغییر صف — پذیرش و مانیتور صف فوری تازه می‌شوند (گام R1)
+        await _realtime.QueueChangedAsync(reason: "call-next", cancellationToken: cancellationToken);
+
         return Result<CallNextResult>.Success(new CallNextResult(visit.Id, next.Id, next.PatientId));
     }
 }

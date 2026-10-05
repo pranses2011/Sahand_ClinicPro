@@ -13,6 +13,8 @@
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <!-- نمایه‌سازی ساختگی برای تست واحد پیاده‌سازی SignalR (گام R1) -->
+    <PackageReference Include="Moq" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.API.Filters;
+using Sahand.ClinicPro.Application.Features.Notifications.CreateNotification;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Communication;
@@ -23,12 +24,15 @@ public class NotificationsController : ApiBaseController
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUser;
+    private readonly MediatR.IMediator _mediator;
 
-    /// <summary>سازنده با تزریق وابستگی‌ها</summary>
-    public NotificationsController(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+    /// <summary>سازنده با تزریق وابستگی‌ها — و فرستنده CQRS برای ایجاد اعلان (گام R1)</summary>
+    public NotificationsController(IUnitOfWork unitOfWork, ICurrentUserService currentUser,
+        MediatR.IMediator mediator)
     {
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
+        _mediator = mediator;
     }
 
     /// <summary>اعلان‌های کاربر جاری — صفحه‌بندی و فیلتر خوانده‌نشده</summary>
@@ -113,6 +117,28 @@ public class NotificationsController : ApiBaseController
     private async Task<int> CountUnreadAsync(long userId)
         => await _unitOfWork.Repository<Notification>().QueryableNoTracking
             .CountAsync(n => n.UserId == userId && !n.IsRead);
+
+    /// <summary>
+    /// ایجاد اعلان برای یک کاربر — ثبت در پایگاه داده و پخش بلادرنگ (گام R1)
+    /// دسترسی: مدیران با مجوز notifications.manage
+    /// </summary>
+    [HttpPost]
+    [HasPermission("notifications.manage")]
+    public async Task<IActionResult> Create(
+        [FromBody] CreateNotificationRequestDto dto, CancellationToken ct)
+    {
+        var result = await _mediator.Send(
+            new CreateNotificationCommand(new Application.Features.Notifications.CreateNotification
+                .CreateNotificationDto(dto.UserId, dto.Title, dto.Message, dto.Type ?? "Info", dto.Link)), ct);
+
+        return result.IsSuccess
+            ? Ok(ApiResponse<object>.SuccessMessage("اعلان ثبت و به‌صورت بلادرنگ پخش شد"))
+            : BadRequest(ApiResponse<object>.Failure(result.Error.Message));
+    }
+
+    /// <summary>ورودی ایجاد اعلان</summary>
+    public sealed record CreateNotificationRequestDto(long UserId, string Title,
+        string? Message, string? Type, string? Link);
 
     /// <summary>ردیف اعلان</summary>
     public record NotificationItemDto(long Id, string Title, string? Content, string Type,

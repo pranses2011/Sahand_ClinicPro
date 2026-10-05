@@ -197,3 +197,41 @@
 - ۱۱۵۳ ICD-10 | ۵۰۳۴ دارو | ۲۲۹ آزمایش | ۵۲۳ تداخل | ۵۷ تعرفه | ۳۱ استان/۶۳۵ شهر
 - ReferenceDataSeeder (Order 45) با نگاشت کلاس‌های دارویی + تکرارپذیری کامل
 - نتیجه چرخه تا اینجا: **۱۰/۲۸ گام** | ۵۴/۵۴ تست سبز | Solution بدون خطا
+
+---
+
+# 📊 چرخه چهارم توسعه (v1.3) — بلادرنگ، EMR پیشرفته، فیش حقوقی و DICOM
+
+> شروع و پایان: 2026-10-05 | فایل مدیریت: TODO-v1.3.md | مبنای شروع: تگ v1.2.0-alpha
+> شاخه: feature/phase-19-cycle4 — هر ۴ گام اجرایی + مستندات کامل شد
+
+## گام R1 — اتصال بلادرنگ SignalR ✅
+- قرارداد IRealtimeNotifier مستقل از فناوری در Application + پیاده‌سازی بی‌اثر پیش‌فرض (TryAdd در AddApplication)
+- QueueHub گروه شعبه‌ای + NotificationHub گروه کاربری — هر دو [Authorize] با توکن از query string (رویداد OnMessageReceived در IdentitySetup)
+- سیم‌کشی سه گرداننده صف + فرمان CreateNotification با پخش فوری + endpoint جدید POST notifications
+- کلاینت WPF با دو HubConnection + تلاش مجدد خودکار (۰/۲/۵/۱۵/۳۰s) + رفرش زنده صف پذیرش/ویزیت + زنگ فوری TopBar + وضعیت StatusBar
+- ۴ مجوز ویژه seeder شد (sms.bulksend که خلأ قبلی بود + notifications.manage + emr.advanced + payroll.manage)
+- ۹ تست (۴ قرارداد + ۵ Moq) — جمع ۶۳/۶۳
+
+## گام R2 — پرونده بالینی پیشرفته ✅
+- ۳ موجودیت (GrowthMeasurement + FamilyHistory + ChronicCarePlan) + مهاجرت Cycle4EmrAdvanced (۳ جدول + ۵ ایندکس)
+- داده مرجع WHO 2006 در Shared — ۴ شاخص × ۲ جنسیت + درون‌یابی خطی + z-score + طبقه‌بندی رنگی ۴سطحی
+- EmrController با ۱۱ endpoint + نمای AdvancedEmrView سه‌تبی با نمودار رشد Canvas (میانه + ±۱/۲/۳ SD + نقاط رنگی بیمار)
+- ۱۲ تست WHO — جمع ۷۵/۷۵
+
+## گام R3 — فیش حقوقی ✅
+- PayrollCalculator با قواعد ۱۴۰۴: اضافه‌کاری ۱/۴× (۱۹۲ ساعت) + بیمه ۷٪ + پلکان مالیات تجمعی (۲۴۰م/۳۶۰م/۶۰۰م) + کسر بیمه پیش از مالیات
+- GenerateSalariesCommand idempotent از قرارداد + حضوروغیاب + SalariesController با ۴ endpoint
+- PayrollView با انتخابگر دوره شمسی + ۳ کارت + جدول ۱۰ستونی + PayslipWindow با FlowDocument چاپی (۳ ناحیه امضا + PrintDialog)
+- ۹ تست محاسباتی — جمع ۸۴/۸۴
+
+## گام R4 — نمایشگر DICOM ✅
+- تجزیه‌گر خالص DicomFileReader در Shared: P10 + Explicit/Implicit VR LE + خاکستری ۸/۱۶بیت + RGB + قطعه‌قطعه + دنباله تودرتو + Rescale + پنجره/سطح + خطای فارسی برای فشرده/BE
+- DicomViewerWindow: اسلایدر پنجره/سطح + پنجره خودکار + بزرگ‌نمایی ۲۰-۸۰۰٪ + پنل متادیتای فارسی
+- ۶ endpoint فایل تصویر (آپلود multipart + تشخیص جادوی DICM + دانلود + ...) + PostFileAsync/DownloadFileAsync در ApiClient + بخش DICOM در تب تصویربرداری
+- ۹ تست با فایل مصنوعی — جمع نهایی **۹۳/۹۳ سبز**
+
+## وضعیت نهایی چرخه چهارم:
+- ۴/۴ گام + مستندات کامل | ۳۹ تست جدید (۵۴ → ۹۳) | برچسب v1.3.0-alpha
+- کشف و رفع باگ: قرارداد بایت تگ DICOM (گروه در ۱۶ بیت پایین uint32) — با پروژه دیباگ ایزوله ریشه‌یابی شد
+- ناوبری: ۲ آیتم جدید (پرونده بالینی پیشرفته + فیش حقوقی)

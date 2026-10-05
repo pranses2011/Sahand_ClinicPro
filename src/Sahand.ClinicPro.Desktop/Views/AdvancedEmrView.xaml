@@ -1,0 +1,274 @@
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.AdvancedEmrView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1150"
+             FlowDirection="RightToLeft"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══ پرونده بالینی پیشرفته — گام R2: نمودار رشد WHO + سابقه خانوادگی + مراقبت مزمن ═══ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- عنوان -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="MedicalBag" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="پرونده بالینی پیشرفته" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- نوار انتخاب بیمار -->
+        <Grid Grid.Row="1" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="جستجوی بیمار — نام / کدملی / موبایل / پرونده"
+                     Text="{Binding PatientSearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+            <Button Grid.Column="2" Command="{Binding SearchPatientCommand}"
+                    Style="{StaticResource MaterialDesignRaisedButton}" Content="🔍 جستجو" />
+
+            <!-- نتایج جستجو — فقط هنگام وجود نتیجه -->
+            <ListBox Grid.Column="3" x:Name="PatientResultsList"
+                     ItemsSource="{Binding PatientResults}" SelectedItem="{Binding SelectedPatient}"
+                     Visibility="{Binding PatientResults.Count, Converter={StaticResource ZeroToCollapsed}}"
+                     MaxHeight="150" BorderThickness="1"
+                     BorderBrush="{DynamicResource MaterialDesignDivider}" />
+        </Grid>
+
+        <ProgressBar Grid.Row="2" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+
+        <!-- پیام خطا -->
+        <TextBlock Grid.Row="2" Text="{Binding ErrorMessage}" Foreground="#D32F2F" FontSize="12"
+                   Margin="8,0,0,8" Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}"
+                   TextWrapping="Wrap" />
+
+        <!-- تب‌های سه‌گانه — فقط با انتخاب بیمار -->
+        <TabControl Grid.Row="3" SelectedIndex="{Binding IndicatorTab}" Style="{StaticResource MaterialDesignTabControl}"
+                    IsEnabled="{Binding HasPatient}">
+
+            <!-- ─── تب ۱: نمودار رشد ─── -->
+            <TabItem Header="📊 نمودار رشد">
+                <Grid Margin="4,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="190" />
+                    </Grid.RowDefinitions>
+
+                    <!-- انتخاب شاخص + بیمار فعلی -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="شاخص:" VerticalAlignment="Center" FontWeight="Bold" />
+                        <ComboBox SelectedIndex="{Binding IndicatorIndex}" Margin="10,0,0,0" MinWidth="170">
+                            <ComboBoxItem Content="وزن برای سن (۰-۶۰ ماه)" />
+                            <ComboBoxItem Content="قد برای سن (۰-۶۰ ماه)" />
+                            <ComboBoxItem Content="محیط سر برای سن (۰-۳۶ ماه)" />
+                            <ComboBoxItem Content="BMI برای سن (۰-۶۰ ماه)" />
+                        </ComboBox>
+                        <TextBlock Margin="18,0,0,0" VerticalAlignment="Center" Opacity="0.75" FontSize="12">
+                            <Run Text="بیمار: " />
+                            <Run Text="{Binding SelectedPatient.Title, Mode=OneWay, TargetNullValue='—'}" FontWeight="Bold" />
+                        </TextBlock>
+                    </StackPanel>
+
+                    <!-- بوم نمودار — رسم منحنی مرجع WHO و نقاط بیمار -->
+                    <Border Grid.Row="1" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}"
+                            CornerRadius="6" ClipToBounds="True" Margin="0,0,0,8">
+                        <Canvas x:Name="GrowthChart" SizeChanged="OnChartSizeChanged" />
+                    </Border>
+
+                    <!-- فرم ثبت اندازه‌گیری جدید -->
+                    <WrapPanel Grid.Row="2" Margin="0,0,0,8">
+                        <TextBox materialDesign:HintAssist.Hint="تاریخ شمسی (1404/07/10)" MinWidth="130"
+                                 Text="{Binding NewDateShamsi, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />
+                        <TextBox materialDesign:HintAssist.Hint="وزن (kg)" MinWidth="95"
+                                 Text="{Binding NewWeight, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />
+                        <TextBox materialDesign:HintAssist.Hint="قد (cm)" MinWidth="95"
+                                 Text="{Binding NewHeight, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />
+                        <TextBox materialDesign:HintAssist.Hint="محیط سر (cm)" MinWidth="105"
+                                 Text="{Binding NewHeadCirc, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />
+                        <Button Command="{Binding AddGrowthCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                                Content="➕ ثبت اندازه‌گیری" />
+                    </WrapPanel>
+
+                    <!-- جدول اندازه‌گیری‌ها با z-score -->
+                    <DataGrid Grid.Row="3" ItemsSource="{Binding GrowthRows}" SelectedItem="{Binding SelectedGrowthRow}"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              Style="{StaticResource MaterialDesignDataGrid}"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi}" />
+                            <DataGridTextColumn Header="سن (ماه)" Binding="{Binding AgeMonths}" />
+                            <DataGridTextColumn Header="وزن kg" Binding="{Binding WeightKg}" />
+                            <DataGridTextColumn Header="z وزن" Binding="{Binding ZWeight}" />
+                            <DataGridTextColumn Header="وضعیت وزن" Binding="{Binding StatusWeight}" />
+                            <DataGridTextColumn Header="قد cm" Binding="{Binding HeightCm}" />
+                            <DataGridTextColumn Header="z قد" Binding="{Binding ZHeight}" />
+                            <DataGridTextColumn Header="وضعیت قد" Binding="{Binding StatusHeight}" />
+                            <DataGridTextColumn Header="محیط سر" Binding="{Binding HeadCirc}" />
+                            <DataGridTextColumn Header="z سر" Binding="{Binding ZHead}" />
+                            <DataGridTemplateColumn Header="عملیات">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="🗑 حذف" Command="{Binding DataContext.DeleteGrowthCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" FontSize="10.5" Padding="6,2" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- ─── تب ۲: سابقه خانوادگی ─── -->
+            <TabItem Header="👥 سابقه خانوادگی">
+                <Grid Margin="4,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- فرم ثبت -->
+                    <WrapPanel Grid.Row="0" Margin="0,0,0,10">
+                        <ComboBox SelectedIndex="{Binding RelativeIndex}" MinWidth="125" Margin="0,0,10,0">
+                            <ComboBoxItem Content="پدر" /><ComboBoxItem Content="مادر" />
+                            <ComboBoxItem Content="برادر" /><ComboBoxItem Content="خواهر" />
+                            <ComboBoxItem Content="پسر" /><ComboBoxItem Content="دختر" />
+                            <ComboBoxItem Content="پدربزرگ" /><ComboBoxItem Content="مادربزرگ" />
+                            <ComboBoxItem Content="عمو/دایی" /><ComboBoxItem Content="عمه/خاله" />
+                            <ComboBoxItem Content="پسرعمو/پسرخاله" /><ComboBoxItem Content="سایر" />
+                        </ComboBox>
+                        <TextBox materialDesign:HintAssist.Hint="بیماری (دیابت نوع ۲…)" MinWidth="180"
+                                 Text="{Binding Disease, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />
+                        <TextBox materialDesign:HintAssist.Hint="سن شروع" MinWidth="80"
+                                 Text="{Binding OnsetAge, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />
+                        <CheckBox Content="ارثی/ژنتیک" IsChecked="{Binding IsGenetic}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <CheckBox Content="فوت‌شده" IsChecked="{Binding IsDeceased}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <Button Command="{Binding AddFamilyHistoryCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}" Content="➕ ثبت سابقه" />
+                    </WrapPanel>
+
+                    <!-- فهرست -->
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding FamilyRows}" SelectedItem="{Binding SelectedFamilyRow}"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              Style="{StaticResource MaterialDesignDataGrid}"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="خویشاوند" Binding="{Binding Relative}" />
+                            <DataGridTextColumn Header="بیماری" Binding="{Binding Disease}" />
+                            <DataGridTextColumn Header="کد ICD" Binding="{Binding Icd10}" />
+                            <DataGridTextColumn Header="سن شروع" Binding="{Binding OnsetAge}" />
+                            <DataGridTextColumn Header="ارثی" Binding="{Binding IsGenetic}" />
+                            <DataGridTextColumn Header="فوت" Binding="{Binding IsDeceased}" />
+                            <DataGridTextColumn Header="سن فوت" Binding="{Binding DeathAge}" />
+                            <DataGridTextColumn Header="یادداشت" Binding="{Binding Notes}" />
+                            <DataGridTemplateColumn Header="عملیات">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="🗑 حذف" Command="{Binding DataContext.DeleteFamilyHistoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" FontSize="10.5" Padding="6,2" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- ─── تب ۳: طرح مراقبت مزمن ─── -->
+            <TabItem Header="🩺 مراقبت بیمار مزمن">
+                <Grid Margin="4,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- فرم ثبت -->
+                    <WrapPanel Grid.Row="0" Margin="0,0,0,10">
+                        <TextBox materialDesign:HintAssist.Hint="بیماری مزمن (دیابت/پرفشاری…)" MinWidth="185"
+                                 Text="{Binding DiseaseTitle, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />
+                        <TextBox materialDesign:HintAssist.Hint="کد ICD-10" MinWidth="95"
+                                 Text="{Binding CareIcd10, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />
+                        <TextBox materialDesign:HintAssist.Hint="شروع شمسی" MinWidth="115"
+                                 Text="{Binding StartShamsi, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />
+                        <TextBox materialDesign:HintAssist.Hint="بازبینی بعدی شمسی" MinWidth="130"
+                                 Text="{Binding NextReviewShamsi, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />
+                        <TextBox materialDesign:HintAssist.Hint="اهداف درمانی" MinWidth="150"
+                                 Text="{Binding Goals, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />
+                        <Button Command="{Binding AddCarePlanCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}" Content="➕ ثبت طرح" />
+                    </WrapPanel>
+
+                    <!-- فهرست طرح‌ها -->
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding CarePlanRows}" SelectedItem="{Binding SelectedCarePlan}"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              Style="{StaticResource MaterialDesignDataGrid}"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsReviewOverdue}" Value="True">
+                                        <Setter Property="Background" Value="#FFF3E0" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="بیماری" Binding="{Binding DiseaseTitle}" />
+                            <DataGridTextColumn Header="ICD-10" Binding="{Binding Icd10}" />
+                            <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText}" />
+                            <DataGridTextColumn Header="شروع" Binding="{Binding StartShamsi}" />
+                            <DataGridTextColumn Header="بازبینی بعدی" Binding="{Binding NextReviewShamsi}" />
+                            <DataGridTextColumn Header="اهداف" Binding="{Binding Goals}" />
+                            <DataGridTextColumn Header="تیم مراقبت" Binding="{Binding CareTeam}" />
+                            <DataGridTemplateColumn Header="عملیات">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Content="✅ تکمیل" FontSize="10" Padding="5,2" Margin="0,0,4,0"
+                                                    Command="{Binding DataContext.ChangePlanStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="Completed" />
+                                            <Button Content="🔁 بازبینی شد" FontSize="10" Padding="5,2" Margin="0,0,4,0"
+                                                    Command="{Binding DataContext.ChangePlanStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="Active" />
+                                            <Button Content="⏸ متوقف" FontSize="10" Padding="5,2" Margin="0,0,4,0"
+                                                    Command="{Binding DataContext.ChangePlanStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="Discontinued" />
+                                            <Button Content="🗑" FontSize="10" Padding="5,2"
+                                                    Command="{Binding DataContext.DeleteCarePlanCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

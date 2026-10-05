@@ -29,6 +29,17 @@ public interface IApiClient
     /// <summary>درخواست DELETE با نتیجه موفقیت/شکست</summary>
     Task<bool> DeleteAsync(string endpoint, CancellationToken ct = default);
 
+    /// <summary>
+    /// آپلود فایل چندبخشی (multipart) با توکن — گام R4 برای فایل‌های DICOM
+    /// </summary>
+    Task<T?> PostFileAsync<T>(string endpoint, string fileName, byte[] content,
+        Dictionary<string, string>? fields = null, CancellationToken ct = default);
+
+    /// <summary>
+    /// دانلود بایت‌های خام فایل — گام R4 برای گشودن در نمایشگر DICOM
+    /// </summary>
+    Task<byte[]?> DownloadFileAsync(string endpoint, CancellationToken ct = default);
+
     /// <summary>ورود و دریافت توکن‌ها</summary>
     Task<bool> LoginAsync(string usernameOrEmail, string password, CancellationToken ct = default);
 

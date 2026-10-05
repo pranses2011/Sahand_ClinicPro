@@ -886,6 +886,9 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<long?>("CreatedBy")
                         .HasColumnType("bigint");
 
+                    b.Property<decimal>("DefaultCoveragePercent")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("DefaultInsuranceShare")
                         .HasPrecision(5, 2)
                         .HasColumnType("decimal(5,2)")
@@ -1694,6 +1697,100 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Clinical.ChronicCarePlan", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Actions")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasComment("اقدامات جاری");
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("CareTeam")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)")
+                        .HasComment("اعضای تیم مراقبت");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DiseaseTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasComment("عنوان بیماری مزمن");
+
+                    b.Property<string>("Goals")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasComment("اهداف درمانی قابل اندازه‌گیری");
+
+                    b.Property<string>("Icd10Code")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasComment("کد ICD-10");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateOnly?>("NextReviewDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasComment("یادداشت آزاد");
+
+                    b.Property<long>("PatientId")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientId")
+                        .HasDatabaseName("IX_ChronicCarePlans_Patient");
+
+                    b.HasIndex("Status", "NextReviewDate")
+                        .HasDatabaseName("IX_ChronicCarePlans_Review");
+
+                    b.ToTable("ChronicCarePlans", null, t =>
+                        {
+                            t.HasComment("طرح مراقبت بیمار مزمن — چرخه هدف/اقدام/بازبینی");
+                        });
+                });
+
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Clinical.DrugInteraction", b =>
                 {
                     b.Property<long>("Id")
@@ -1761,6 +1858,172 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.ToTable("DrugInteractions", null, t =>
                         {
                             t.HasComment("تداخل دارویی - جفت داروهای خطرناک با شدت تداخل");
+                        });
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Clinical.FamilyHistory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("DeathAge")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Disease")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasComment("عنوان بیماری");
+
+                    b.Property<string>("Icd10Code")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasComment("کد ICD-10");
+
+                    b.Property<bool>("IsDeceased")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsGenetic")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasComment("یادداشت آزاد");
+
+                    b.Property<int?>("OnsetAge")
+                        .HasColumnType("int");
+
+                    b.Property<long>("PatientId")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte>("Relative")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsGenetic")
+                        .HasDatabaseName("IX_FamilyHistories_Genetic");
+
+                    b.HasIndex("PatientId")
+                        .HasDatabaseName("IX_FamilyHistories_Patient");
+
+                    b.ToTable("FamilyHistories", null, t =>
+                        {
+                            t.HasComment("سابقه پزشکی خانواده — خویشاوندان بیمار");
+                        });
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Clinical.GrowthMeasurement", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("AgeMonths")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal?>("HeadCircumferenceCm")
+                        .HasPrecision(6, 1)
+                        .HasColumnType("decimal(6,1)")
+                        .HasComment("محیط سر سانتی‌متر");
+
+                    b.Property<decimal?>("HeightCm")
+                        .HasPrecision(6, 1)
+                        .HasColumnType("decimal(6,1)")
+                        .HasComment("قد سانتی‌متر");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateOnly>("MeasuredAt")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasComment("یادداشت شرایط اندازه‌گیری");
+
+                    b.Property<long>("PatientId")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal?>("WeightKg")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)")
+                        .HasComment("وزن کیلوگرم");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientId")
+                        .HasDatabaseName("IX_GrowthMeasurements_Patient");
+
+                    b.HasIndex("PatientId", "MeasuredAt")
+                        .IsUnique()
+                        .HasDatabaseName("IX_GrowthMeasurements_Patient_Date");
+
+                    b.ToTable("GrowthMeasurements", null, t =>
+                        {
+                            t.HasComment("اندازه‌گیری رشد کودک — وزن/قد/محیط سر");
                         });
                 });
 
@@ -9018,6 +9281,17 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Navigation("Service");
                 });
 
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Clinical.ChronicCarePlan", b =>
+                {
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Patient");
+                });
+
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Clinical.DrugInteraction", b =>
                 {
                     b.HasOne("Sahand.ClinicPro.Domain.Entities.Clinical.Medication", "Medication1")
@@ -9035,6 +9309,28 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Navigation("Medication1");
 
                     b.Navigation("Medication2");
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Clinical.FamilyHistory", b =>
+                {
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Clinical.GrowthMeasurement", b =>
+                {
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Clinical.Prescription", b =>

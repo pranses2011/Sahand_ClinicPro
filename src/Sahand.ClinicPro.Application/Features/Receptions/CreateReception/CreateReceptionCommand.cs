@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Application.DTOs.Receptions;
+using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
@@ -35,13 +36,15 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CreateReceptionCommandHandler> _logger;
+    private readonly IRealtimeNotifier _realtime;
 
-    /// <summary>سازنده با تزریق واحد کار</summary>
+    /// <summary>سازنده با تزریق واحد کار — و اتصال بلادرنگ صف (گام R1)</summary>
     public CreateReceptionCommandHandler(IUnitOfWork unitOfWork,
-        ILogger<CreateReceptionCommandHandler> logger)
+        ILogger<CreateReceptionCommandHandler> logger, IRealtimeNotifier realtime)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _realtime = realtime;
     }
 
     /// <summary>اجرای فرمان پذیرش</summary>
@@ -86,6 +89,9 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
         }
 
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        // پخش بلادرنگ — ورود بیمار جدید به صف برای همه مانیتورهای شعبه (گام R1)
+        await _realtime.QueueChangedAsync(reason: "enqueue", cancellationToken: cancellationToken);
 
         _logger.LogInformation("پذیرش {Number} برای بیمار {PatientId} ثبت شد",
             reception.ReceptionNumber, dto.PatientId);
