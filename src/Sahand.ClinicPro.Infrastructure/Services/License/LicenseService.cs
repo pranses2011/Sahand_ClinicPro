@@ -109,6 +109,9 @@ public class LicenseService : ILicenseService
             });
             await _context.SaveChangesAsync(ct);
 
+            // چرخه دوازدهم — پیام‌های مستقیم پشتیبانی به داشبورد درمانگاه
+            await SaveServerMessagesAsync(result.Messages, ct);
+
             return new LicenseStatusReport(true, LicenseValidationResult.Valid,
                 license.LicenseKey, license.ExpiryDate, license.MaxUsers, license.MaxDoctors,
                 license.MaxPatients, ParseModules(license.EnabledModules), "لایسنس با موفقیت فعال شد");
@@ -237,6 +240,10 @@ public class LicenseService : ILicenseService
                     Message = "تپ قلب موفق",
                 });
                 await _context.SaveChangesAsync(ct);
+
+                // چرخه دوازدهم — پیام‌های مستقیم پشتیبانی به داشبورد درمانگاه
+                await SaveServerMessagesAsync(result.Messages, ct);
+
                 return new LicenseStatusReport(true, LicenseValidationResult.Valid,
                     fresh.LicenseKey, fresh.ExpiryDate, fresh.MaxUsers, fresh.MaxDoctors,
                     fresh.MaxPatients, ParseModules(fresh.EnabledModules), "لایسنس معتبر است");
@@ -458,6 +465,91 @@ public class LicenseService : ILicenseService
     private static DateOnly? ParseDate(string? value)
         => DateOnly.TryParse(value, out var date) ? date : null;
 
+    /* ═══════════════════════════════════════════════════════
+       چرخه دوازدهم — پیام‌های مستقیم پشتیبانی به داشبورد درمانگاه:
+       با هر تپ‌قلب/فعال‌سازی موفق، آرایه messages از سرور دریافت و در
+       SystemSettings (دسته ServerMessages) ذخیره می‌شود؛ داشبورد می‌خواند.
+       شکست ذخیره هرگز جریان اصلی تپ‌قلب را نمی‌شکند.
+       ═══════════════════════════════════════════════════════ */
+
+    /// <summary>ذخیره پیام‌های دریافتی سرور — idempotent با کلید ServerMessages.{id}</summary>
+    private async Task SaveServerMessagesAsync(List<PortalMessage>? messages, CancellationToken ct)
+    {
+        if (messages is null || messages.Count == 0)
+            return;
+        try
+        {
+            var fresh = new List<SystemSetting>();
+            foreach (var m in messages.Take(20))
+            {
+                if (string.IsNullOrWhiteSpace(m.Title))
+                    continue;
+                var key = $"ServerMessages.{m.Id}";
+                var exists = await _context.SystemSettings.AsNoTracking()
+                    .AnyAsync(s => s.Category == "ServerMessages" && s.Key == key && !s.IsDeleted, ct);
+                if (exists)
+                    continue; // پیام تکراری تحویل نشود
+                fresh.Add(new SystemSetting
+                {
+                    Category = "ServerMessages",
+                    Key = key,
+                    Value = JsonSerializer.Serialize(new { m.Id, m.Title, m.Body, m.Level, m.Date }, JsonOptions),
+                    DataType = SettingDataType.String,
+                    Description = "پیام پشتیبانی — دریافتی از سرور لایسنس",
+                    IsSystem = false,
+                });
+            }
+            if (fresh.Count > 0)
+            {
+                _context.SystemSettings.AddRange(fresh);
+                await _context.SaveChangesAsync(ct);
+                _logger.LogInformation("{Count} پیام پشتیبانی جدید از سرور لایسنس دریافت شد", fresh.Count);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "ذخیره پیام‌های پشتیبانی ناموفق بود — تپ‌قلب ادامه می‌یابد");
+        }
+    }
+
+    /// <summary>
+    /// پیام‌های پشتیبانی ذخیره‌شده — جدیدترین اول؛ داشبورد در کارت
+    /// «پیام‌های پشتیبانی» نمایش می‌دهد
+    /// </summary>
+    public async Task<List<SupportMessageDto>> GetSupportMessagesAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var rows = await _context.SystemSettings.AsNoTracking()
+                .Where(s => s.Category == "ServerMessages" && !s.IsDeleted)
+                .OrderByDescending(s => s.Key)
+                .Take(30)
+                .ToListAsync(ct);
+            var result = new List<SupportMessageDto>();
+            foreach (var row in rows)
+            {
+                try
+                {
+                    var m = JsonSerializer.Deserialize<PortalMessage>(row.Value ?? "", JsonOptions);
+                    if (m is null || string.IsNullOrWhiteSpace(m.Title))
+                        continue;
+                    result.Add(new SupportMessageDto(m.Id, m.Title, m.Body ?? "", m.Level ?? "info", m.Date ?? ""));
+                }
+                catch (JsonException)
+                {
+                    // سطر خراب — نادیده گرفته می‌شود
+                }
+            }
+            // مرتب‌سازی نزولی بر اساس شناسه پیام سرور
+            return result.OrderByDescending(m => m.Id).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "خواندن پیام‌های پشتیبانی ناموفق بود");
+            return new List<SupportMessageDto>();
+        }
+    }
+
     /// <summary>اثر انگشت جایگزین مبتنی بر نام ماشین — فقط وقتی هیچ چیز تنظیم نشده</summary>
     private string ComputeLocalFingerprint()
     {
@@ -506,6 +598,28 @@ public sealed class PortalActivationResponse
 
     /// <summary>امضای Base64 روی «کلید|انقضا|حداکثر کاربر»</summary>
     [JsonPropertyName("signature")] public string? Signature { get; set; }
+
+    /// <summary>پیام‌های مستقیم پشتیبانی به داشبورد — چرخه دوازدهم</summary>
+    [JsonPropertyName("messages")] public List<PortalMessage>? Messages { get; set; }
+}
+
+/// <summary>یک پیام پشتیبانی دریافتی از سرور لایسنس</summary>
+public sealed class PortalMessage
+{
+    /// <summary>شناسه پیام در سرور — برای تحویل تک‌بار</summary>
+    [JsonPropertyName("id")] public long Id { get; set; }
+
+    /// <summary>عنوان پیام</summary>
+    [JsonPropertyName("title")] public string? Title { get; set; }
+
+    /// <summary>متن پیام</summary>
+    [JsonPropertyName("body")] public string? Body { get; set; }
+
+    /// <summary>سطح اهمیت: info | success | warning | danger</summary>
+    [JsonPropertyName("level")] public string? Level { get; set; }
+
+    /// <summary>تاریخ ارسال (yyyy-MM-dd)</summary>
+    [JsonPropertyName("date")] public string? Date { get; set; }
 }
 
 /// <summary>بدنه لایسنس — هم در پاسخ برخط و هم در فایل lic آفلاین</summary>

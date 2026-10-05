@@ -91,6 +91,29 @@ public class LicenseController : ApiBaseController
         return Ok(ApiResponse<object>.SuccessMessage("لایسنس برون‌خط فعال شد"));
     }
 
+    /// <summary>
+    /// پیام‌های مستقیم پشتیبانی به داشبورد درمانگاه — چرخه دوازدهم:
+    /// با هر تپ‌قلب موفق از سرور لایسنس (پنل PHP) دریافت و در تنظیمات محلی
+    /// ذخیره می‌شوند؛ داشبورد دسکتاپ اینجا می‌خواند و در کارت «پیام‌های پشتیبانی» می‌نمایاند
+    /// </summary>
+    [HttpGet("messages")]
+    [Authorize]
+    public async Task<IActionResult> GetSupportMessages()
+    {
+        var messages = await _license.GetSupportMessagesAsync();
+        var response = messages.Select(m => new
+        {
+            id = m.Id,
+            title = m.Title,
+            body = m.Body,
+            level = m.Level,
+            date = m.Date,
+            levelIcon = m.LevelIcon,
+            levelBrush = m.LevelBrush
+        });
+        return Ok(ApiResponse<object>.Success(response, $"{messages.Count} پیام پشتیبانی"));
+    }
+
     /// <summary>درخواست فعال‌سازی برخط</summary>
     public record ActivateRequest(string LicenseKey);
 

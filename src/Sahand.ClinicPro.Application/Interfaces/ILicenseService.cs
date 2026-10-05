@@ -28,6 +28,41 @@ public interface ILicenseService
     /// هیچ کلاینتی این مقادیر را هاردکد ندارد و همیشه از همین قرارداد می‌خواند
     /// </summary>
     Task<SupportInfoDto> GetSupportInfoAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// پیام‌های پشتیبانی دریافتی از سرور لایسنس — با تپ‌قلب تحویل و در تنظیمات محلی ذخیره می‌شوند؛
+    /// داشبورد درمانگاه آنها را در کارت «پیام‌های پشتیبانی» نمایش می‌دهد (چرخه دوازدهم)
+    /// </summary>
+    Task<List<SupportMessageDto>> GetSupportMessagesAsync(CancellationToken ct = default);
+}
+
+/// <summary>
+/// یک پیام پشتیبانی ارسالی از پنل لایسنس — نمایش در داشبورد درمانگاه
+/// </summary>
+public sealed record SupportMessageDto(
+    long Id,
+    string Title,
+    string Body,
+    string Level,
+    string Date)
+{
+    /// <summary>رنگ قاب بر اساس سطح — برای XAML</summary>
+    public string LevelBrush => Level switch
+    {
+        "success" => "#2E7D32",
+        "warning" => "#F9A825",
+        "danger" => "#C62828",
+        _ => "#1565C0",
+    };
+
+    /// <summary>آیکون بر اساس سطح</summary>
+    public string LevelIcon => Level switch
+    {
+        "success" => "✅",
+        "warning" => "⚠️",
+        "danger" => "🚨",
+        _ => "📢",
+    };
 }
 
 /// <summary>

@@ -112,6 +112,54 @@
                 </DockPanel>
             </Border>
 
+            <!-- ═══ چرخه دوازدهم: کارت پیام‌های پشتیبانی — پیام‌های مستقیم پنل لایسنس ═══ -->
+            <ItemsControl ItemsSource="{Binding SupportMessages}"
+                          Visibility="{Binding HasSupportMessages, Converter={StaticResource BooleanToVisibilityConverter}}"
+                          Margin="0,0,0,12">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border CornerRadius="10" Padding="14,10" Margin="0,0,0,8"
+                                Background="#FFF8E1"
+                                BorderBrush="#F9A825" BorderThickness="0,3,0,0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#E3F2FD" />
+                                    <Setter Property="BorderBrush" Value="#1565C0" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Level}" Value="success">
+                                            <Setter Property="Background" Value="#E8F5E9" />
+                                            <Setter Property="BorderBrush" Value="#2E7D32" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Level}" Value="warning">
+                                            <Setter Property="Background" Value="#FFF8E1" />
+                                            <Setter Property="BorderBrush" Value="#F9A825" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Level}" Value="danger">
+                                            <Setter Property="Background" Value="#FFEBEE" />
+                                            <Setter Property="BorderBrush" Value="#C62828" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel>
+                                <DockPanel>
+                                    <TextBlock Text="{Binding LevelIcon}" FontSize="15"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Title}" FontSize="13.5" FontWeight="Bold"
+                                               Margin="8,0,0,0" VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Date}" FontSize="10" Opacity="0.6"
+                                               DockPanel.Dock="Left" VerticalAlignment="Center"
+                                               Margin="0,0,8,0" />
+                                </DockPanel>
+                                <TextBlock Text="{Binding Body}" FontSize="12" Margin="0,5,0,0"
+                                           Opacity="0.85" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
             <!-- ردیف ۱: چهار کارت آمار اصلی -->
             <UniformGrid Columns="4" Rows="1">
                 <controls:StatCard IconKind="AccountGroup"

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Desktop.Controls.Charts;
 using Sahand.ClinicPro.Desktop.Services;
 
@@ -56,6 +57,16 @@ public partial class DashboardViewModel : ViewModelBase
     /// <summary>آخرین فعالیت‌ها</summary>
     public ObservableCollection<RecentActivityRow> RecentActivities { get; } = new();
 
+    /* ── چرخه دوازدهم: پیام‌های مستقیم پشتیبانی — با تپ‌قلب از سرور لایسنس
+       تحویل و در SystemSettings ذخیره می‌شوند؛ اینجا خوانده و در کارت نمایش می‌یابند ── */
+
+    /// <summary>آیا پیام پشتیبانی برای نمایش هست؟</summary>
+    [ObservableProperty]
+    private bool _hasSupportMessages;
+
+    /// <summary>پیام‌های پشتیبانی دریافتی از پنل لایسنس — جدیدترین اول</summary>
+    public ObservableCollection<SupportMessageDto> SupportMessages { get; } = new();
+
     /// <summary>سازنده با تزریق سرویس‌ها</summary>
     public DashboardViewModel(IApiClient api, ISnackbarService snackbar)
     {
@@ -72,6 +83,9 @@ public partial class DashboardViewModel : ViewModelBase
         WelcomeMessage = $"خوش آمدید! امروز {DateTime.Now:HH:mm} — وضعیت درمانگاه به‌روزرسانی شد.";
         TodayDateShamsi = Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.Now);
         ErrorMessage = string.Empty;
+
+        // ۰) چرخه دوازدهم — پیام‌های پشتیبانی دریافتی از سرور لایسنس (best-effort)
+        await LoadSupportMessagesAsync();
 
         // ۱) آمار خلاصه
         var stats = await _api.GetAsync<JsonElement>("dashboard/stats");
@@ -149,5 +163,38 @@ public partial class DashboardViewModel : ViewModelBase
     {
         await LoadStatsAsync();
         _snackbar.Success("داشبورد به‌روزرسانی شد");
+    }
+
+    /// <summary>
+    /// چرخه دوازدهم — بارگذاری پیام‌های پشتیبانی دریافتی از سرور لایسنس.
+    /// جریان داده: پنل PHP → تپ‌قلب LicenseService در API → SystemSettings
+    /// → endpoint برون‌گرانه license/messages → اینجا → کارت داشبورد. best-effort:
+    /// هر خطایی فقط کارت را مخفی می‌کند و بقیه داشبورد سالم می‌ماند.
+    /// </summary>
+    private async Task LoadSupportMessagesAsync()
+    {
+        try
+        {
+            SupportMessages.Clear();
+            var response = await _api.GetAsync<JsonElement>("license/messages");
+            if (response.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var m in response.EnumerateArray().Take(5))
+                {
+                    SupportMessages.Add(new SupportMessageDto(
+                        m.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.Number ? id.GetInt64() : 0,
+                        m.TryGetProperty("title", out var t) ? t.GetString() ?? "" : "",
+                        m.TryGetProperty("body", out var b) ? b.GetString() ?? "" : "",
+                        m.TryGetProperty("level", out var lv) ? lv.GetString() ?? "info" : "info",
+                        m.TryGetProperty("date", out var d) ? d.GetString() ?? "" : ""));
+                }
+            }
+            HasSupportMessages = SupportMessages.Count > 0;
+        }
+        catch
+        {
+            // خطای شبکه یا نبود لایسنس فعال — کارت مخفی می‌شود
+            HasSupportMessages = false;
+        }
     }
 }
