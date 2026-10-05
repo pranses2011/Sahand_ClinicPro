@@ -59,7 +59,9 @@ public class CreateDoctorCommandHandler : IRequestHandler<CreateDoctorCommand, R
             DoctorPercentage = dto.DoctorPercentage,
             OnlineBookingEnabled = dto.OnlineBookingEnabled,
             AcceptsNewPatients = dto.AcceptsNewPatients,
-            IsActive = true
+            SignatureImage = Convert.FromBase64String(dto.SignatureImageBase64 ?? string.Empty) is { Length: > 0 } sig ? sig : null,
+            StampImage = Convert.FromBase64String(dto.StampImageBase64 ?? string.Empty) is { Length: > 0 } stamp ? stamp : null,
+            IsActive = dto.IsActive
         };
 
         await _unitOfWork.Repository<Doctor>().AddAsync(doctor, cancellationToken);

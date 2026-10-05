@@ -1,207 +1,713 @@
 ﻿using System.Collections.ObjectModel;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Desktop.Services;
-using Sahand.ClinicPro.Desktop.Views;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
-
-/// <summary>ردیف نوبت در فهرست — منطبق با AppointmentListDto سرور</summary>
-public record AppointmentRow(
-    long Id,
-    string? Code,
-    string PatientName,
-    string DoctorName,
-    string Time,
-    string StatusText,
-    int StatusId,
-    string TypeText,
-    int QueueNumber);
 
 /// <summary>گزینه پزشک در ComboBox</summary>
 public record DoctorOption(long Id, string Name, string? SpecialtyName);
 
 /// <summary>
-/// ViewModel نوبت‌دهی — نوبت‌های یک روز با فیلتر پزشک و وضعیت
+/// اسلات زمانی نمایشی — گام U4 طبق فرم ۸ (سبز/خط‌خورده/انتخاب)
+/// </summary>
+public partial class SlotVM : ObservableObject
+{
+    /// <summary>ساعت — HH:mm</summary>
+    public string Time { get; init; } = string.Empty;
+
+    /// <summary>آزاد است</summary>
+    public bool IsAvailable { get; init; }
+
+    /// <summary>ساعت استراحت است</summary>
+    public bool IsBreak { get; init; }
+
+    /// <summary>نام بیمار رزروکننده — برای ToolTip</summary>
+    public string? PatientName { get; init; }
+
+    /// <summary>انتخاب فعلی کاربر</summary>
+    [ObservableProperty]
+    private bool _isSelected;
+
+    /// <summary>اتاق ویزیت</summary>
+    public string? RoomName { get; init; }
+
+    /// <summary>هزینه تخمینی</summary>
+    public decimal Fee { get; init; }
+
+    /// <summary>گروه صبح/عصر</summary>
+    public string Group => Time.Length >= 2 && int.TryParse(Time[..2], out var h) && h < 12 ? "صبح" : "عصر";
+}
+
+/// <summary>
+/// ردیف نوبت فهرست — ۱۲ ستون طبق فرم ۹
+/// </summary>
+public record AppointmentListRow(
+    long Id,
+    bool IsSelected,
+    string? Code,
+    string PatientName,
+    string? PatientMobile,
+    string DoctorName,
+    string? SpecialtyName,
+    string DateShamsi,
+    string Time,
+    int Status,
+    string StatusText,
+    string StatusColor,
+    int Type,
+    string TypeText,
+    int Source,
+    string SourceText,
+    decimal EstimatedFee);
+
+/// <summary>
+/// بیمار انتخاب‌شده در رزرو سریع
+/// </summary>
+public record QuickPatient(
+    long Id,
+    string FullName,
+    string NationalCode,
+    string Mobile,
+    string? InsuranceName,
+    string? Allergies,
+    string? LastVisitDateShamsi);
+
+/// <summary>
+/// ViewModel نوبت‌دهی — دو تب رزرو و فهرست — گام U4 طبق پرامپت UI بخش ۲ (فرم ۸ و ۹)
+/// تب ۱: جستجوی بیمار + تقویم شمسی + اسلات‌ها + خلاصه و ثبت
+/// تب ۲: فیلترهای کامل + Badge وضعیت + عملیات دسته‌ای
 /// </summary>
 public partial class AppointmentsViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
+    private readonly ISnackbarService _snackbar;
+    private readonly INavigationService _navigation;
+    private System.Windows.Threading.DispatcherTimer? _debounce;
 
     /// <summary>عنوان صفحه</summary>
     public override string Title => "نوبت‌دهی";
 
-    /// <summary>نوبت‌های فهرست</summary>
-    [ObservableProperty]
-    private ObservableCollection<AppointmentRow> _appointments = new();
+    /* ═══════════ تب ۱: رزرو نوبت ═══════════ */
 
-    /// <summary>نوبت انتخاب‌شده</summary>
+    /// <summary>متن جستجوی بیمار</summary>
     [ObservableProperty]
-    private AppointmentRow? _selectedAppointment;
+    private string _patientSearchText = string.Empty;
 
-    /// <summary>تاریخ شمسی فیلتر — پیش‌فرض امروز</summary>
+    /// <summary>نتایج جستجوی بیمار</summary>
     [ObservableProperty]
-    private string _dateShamsi = PersianDateHelper.ToShamsi(DateTime.UtcNow);
+    private ObservableCollection<QuickPatient> _patientSearchResults = new();
 
-    /// <summary>نمایه پزشک انتخاب‌شده در فیلتر — ۱- یعنی همه</summary>
+    /// <summary>بیمار انتخاب‌شده</summary>
     [ObservableProperty]
-    private int _doctorFilterIndex = -1;
+    private QuickPatient? _selectedPatient;
 
-    /// <summary>نمایه وضعیت فیلتر — صفر یعنی همه</summary>
+    /// <summary>پزشکان فعال</summary>
+    public ObservableCollection<DoctorOption> Doctors { get; } = new();
+
+    /// <summary>پزشک انتخاب‌شده</summary>
+    [ObservableProperty]
+    private DoctorOption? _selectedDoctor;
+
+    /// <summary>تاریخ انتخابی تقویم — میلادی</summary>
+    [ObservableProperty]
+    private DateTime? _selectedDate = DateTime.Today;
+
+    /// <summary>تاریخ انتخابی شمسی</summary>
+    [ObservableProperty]
+    private string _selectedDateShamsi = PersianDateHelper.ToShamsi(DateTime.Today);
+
+    /// <summary>ماه نمایشی تقویم</summary>
+    [ObservableProperty]
+    private int _displayMonth;
+
+    /// <summary>سال نمایشی تقویم</summary>
+    [ObservableProperty]
+    private int _displayYear;
+
+    /// <summary>نشانگرهای تقویم — تاریخ → تعداد نوبت آزاد</summary>
+    [ObservableProperty]
+    private IDictionary<DateTime, int>? _markedDates;
+
+    /// <summary>روزهای غیرفعال تقویم</summary>
+    [ObservableProperty]
+    private IEnumerable<DateTime>? _disabledDates;
+
+    /// <summary>اسلات‌های روز انتخابی</summary>
+    public ObservableCollection<SlotVM> Slots { get; } = new();
+
+    /// <summary>اسلات انتخاب‌شده</summary>
+    [ObservableProperty]
+    private SlotVM? _selectedSlot;
+
+    /// <summary>نمایه نوع ویزیت — اولیه/پیگیری/اورژانس/مشاوره</summary>
+    [ObservableProperty]
+    private int _selectedTypeIndex;
+
+    /// <summary>نمایه اولویت — عادی/بالا/اورژانس</summary>
+    [ObservableProperty]
+    private int _selectedPriorityIndex;
+
+    /// <summary>یادداشت نوبت</summary>
+    [ObservableProperty]
+    private string _notes = string.Empty;
+
+    /// <summary>اتاق ویزیت — از اسلات</summary>
+    [ObservableProperty]
+    private string? _selectedRoom;
+
+    /// <summary>هزینه تخمینی</summary>
+    [ObservableProperty]
+    private decimal _estimatedFee;
+
+    /// <summary>نوبت‌های امروز</summary>
+    public ObservableCollection<TodayRow> TodayAppointments { get; } = new();
+
+    /* ═══════════ تب ۲: فهرست نوبت‌ها ═══════════ */
+
+    /// <summary>از تاریخ — فیلتر</summary>
+    [ObservableProperty]
+    private string? _fromDateShamsi = PersianDateHelper.ToShamsi(DateTime.Today);
+
+    /// <summary>تا تاریخ — فیلتر</summary>
+    [ObservableProperty]
+    private string? _toDateShamsi = PersianDateHelper.ToShamsi(DateTime.Today);
+
+    /// <summary>نمایه فیلتر پزشک — صفر یعنی همه</summary>
+    [ObservableProperty]
+    private int _doctorFilterIndex;
+
+    /// <summary>نمایه فیلتر وضعیت — صفر یعنی همه</summary>
     [ObservableProperty]
     private int _statusFilterIndex;
 
-    /// <summary>فهرست پزشکان برای فیلتر</summary>
-    public ObservableCollection<DoctorOption> Doctors { get; } = new();
+    /// <summary>نمایه فیلتر نوع — صفر یعنی همه</summary>
+    [ObservableProperty]
+    private int _typeFilterIndex;
 
-    /// <summary>برچسب وضعیت‌ها — نمایه = مقدار enum منهای یک</summary>
+    /// <summary>نمایه فیلتر منبع — صفر یعنی همه</summary>
+    [ObservableProperty]
+    private int _sourceFilterIndex;
+
+    /// <summary>جستجوی متنی فهرست</summary>
+    [ObservableProperty]
+    private string _listSearch = string.Empty;
+
+    /// <summary>ردیف‌های فهرست</summary>
+    [ObservableProperty]
+    private ObservableCollection<AppointmentListRow> _rows = new();
+
+    /// <summary>ردیف انتخاب‌شده</summary>
+    [ObservableProperty]
+    private AppointmentListRow? _selectedRow;
+
+    /// <summary>شماره صفحه فهرست</summary>
+    [ObservableProperty]
+    private int _pageNumber = 1;
+
+    /// <summary>تعداد کل صفحات</summary>
+    [ObservableProperty]
+    private int _totalPages = 1;
+
+    /// <summary>تعداد کل</summary>
+    [ObservableProperty]
+    private int _totalCount;
+
+    /// <summary>اندازه صفحه</summary>
+    [ObservableProperty]
+    private int _pageSize = 20;
+
+    /// <summary>برچسب وضعیت‌ها — ایندکس +۱ = مقدار enum</summary>
     public string[] StatusLabels { get; } =
-        { "رزرو شده", "تأیید شده", "حاضر", "در جریان", "تکمیل شده", "لغو شده", "غایب" };
+        { "رزرو شده", "تأیید شده", "حاضر", "در حال ویزیت", "تکمیل شده", "لغو شده", "عدم مراجعه" };
 
-    /// <summary>سازنده با تزریق کلاینت API</summary>
-    public AppointmentsViewModel(IApiClient api)
+    /// <summary>رنگ Badge وضعیت‌ها</summary>
+    public string[] StatusColors { get; } =
+        { "#ECEFF1", "#BBDEFB", "#C8E6C9", "#90CAF9", "#A5D6A7", "#FFCDD2", "#FFE0B2" };
+
+    /// <summary>برچسب انواع نوبت</summary>
+    public string[] TypeLabels { get; } = { "اولیه", "پیگیری", "اورژانس", "مشاوره" };
+
+    /// <summary>برچسب منبع نوبت</summary>
+    public string[] SourceLabels { get; } = { "حضوری", "تلفنی", "آنلاین" };
+
+    /// <summary>انواع ویزیت — تب رزرو</summary>
+    public string[] VisitTypes { get; } = { "اولیه", "پیگیری", "اورژانس", "مشاوره" };
+
+    /// <summary>اولویت‌ها</summary>
+    public string[] Priorities { get; } = { "عادی", "بالا", "اورژانس" };
+
+    /// <summary>سازنده</summary>
+    public AppointmentsViewModel(IApiClient api, ISnackbarService snackbar, INavigationService navigation)
     {
         _api = api;
+        _snackbar = snackbar;
+        _navigation = navigation;
+        var today = PersianDateHelper.ToJalali(DateTime.Today);
+        DisplayYear = today.Year;
+        DisplayMonth = today.Month;
         _ = InitializeAsync();
     }
 
-    /// <summary>بارگذاری پزشکان و نوبت‌های امروز</summary>
+    /// <summary>بارگذاری اولیه — پزشکان + امروز</summary>
     private async Task InitializeAsync()
     {
-        var page = await _api.GetAsync<DoctorsPage>("doctors?page=1&pageSize=200");
-        if (page?.Data is not null)
-            foreach (var d in page.Data)
+        var doctors = await _api.GetAsync<DoctorsPage>("doctors?pageSize=200");
+        if (doctors?.Data is not null)
+            foreach (var d in doctors.Data)
                 Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName));
-
-        await LoadAsync();
+        await LoadTodayAppointmentsAsync();
+        await SearchListAsync();
     }
 
-    /// <summary>بارگذاری نوبت‌ها با فیلترهای فعلی</summary>
+    /* ─── جستجوی بیمار با Debounce ۳۰۰ms ─── */
+
+    /// <summary>تغییر متن جستجو → راه‌اندازی تایمر Debounce</summary>
+    partial void OnPatientSearchTextChanged(string value)
+    {
+        _debounce?.Stop();
+        if (value.Length < 2)
+        {
+            PatientSearchResults.Clear();
+            return;
+        }
+        _debounce = new System.Windows.Threading.DispatcherTimer
+            { Interval = TimeSpan.FromMilliseconds(300) };
+        _debounce.Tick += async (_, _) =>
+        {
+            _debounce.Stop();
+            await SearchPatientAsync();
+        };
+        _debounce.Start();
+    }
+
+    /// <summary>جستجوی بیمار از سرور</summary>
+    private async Task SearchPatientAsync()
+    {
+        var response = await _api.GetAsync<PatientSearchResponse>(
+            $"patients/search?term={Uri.EscapeDataString(PatientSearchText.Trim())}");
+        PatientSearchResults.Clear();
+        if (response?.Data is null) return;
+        foreach (var p in response.Data.Take(10))
+            PatientSearchResults.Add(new QuickPatient(p.Id,
+                $"{p.FirstName} {p.LastName}", p.NationalCode, p.Mobile,
+                p.InsuranceName, p.Allergies, p.LastVisitDateShamsi));
+    }
+
+    /// <summary>انتخاب بیمار از نتایج</summary>
     [RelayCommand]
-    public async Task LoadAsync()
+    private void SelectPatient(object? param)
+    {
+        if (param is QuickPatient patient)
+        {
+            SelectedPatient = patient;
+            PatientSearchText = patient.FullName;
+            PatientSearchResults.Clear();
+        }
+    }
+
+    /// <summary>تغییر پزشک → بارگذاری تقویم ماه</summary>
+    partial void OnSelectedDoctorChanged(DoctorOption? value)
+    {
+        if (value is not null)
+            _ = LoadCalendarAsync();
+    }
+
+    /// <summary>بارگذاری نشانگرهای تقویم ماه جاری</summary>
+    private async Task LoadCalendarAsync()
+    {
+        if (SelectedDoctor is null) return;
+        var response = await _api.GetAsync<CalendarSummaryResponse>(
+            $"doctors/{SelectedDoctor.Id}/calendar-summary?year={DisplayYear}&month={DisplayMonth}");
+        if (response?.Data?.Days is null) return;
+
+        var marked = new Dictionary<DateTime, int>();
+        var disabled = new List<DateTime>();
+        foreach (var day in response.Data.Days)
+        {
+            var g = PersianDateHelper.ToGregorian(day.DateShamsi);
+            if (g is null) continue;
+            if (day.IsDisabled)
+                disabled.Add(g.Value.Date);
+            else if (day.FreeSlots > 0)
+                marked[g.Value.Date] = day.FreeSlots;
+        }
+        MarkedDates = marked;
+        DisabledDates = disabled;
+    }
+
+    /// <summary>ماه بعد تقویم</summary>
+    [RelayCommand]
+    private void NextMonth()
+    {
+        DisplayMonth++;
+        if (DisplayMonth > 12) { DisplayMonth = 1; DisplayYear++; }
+        _ = LoadCalendarAsync();
+    }
+
+    /// <summary>ماه قبل تقویم</summary>
+    [RelayCommand]
+    private void PreviousMonth()
+    {
+        DisplayMonth--;
+        if (DisplayMonth < 1) { DisplayMonth = 12; DisplayYear--; }
+        _ = LoadCalendarAsync();
+    }
+
+    /// <summary>انتخاب تاریخ از تقویم → بارگذاری اسلات‌ها</summary>
+    [RelayCommand]
+    private void SelectDate(DateTime? date)
+    {
+        if (date is null) return;
+        SelectedDate = date;
+        SelectedDateShamsi = PersianDateHelper.ToShamsi(date.Value);
+        _ = LoadSlotsAsync();
+    }
+
+    /// <summary>بارگذاری اسلات‌های روز انتخابی</summary>
+    private async Task LoadSlotsAsync()
+    {
+        Slots.Clear();
+        SelectedSlot = null;
+        if (SelectedDoctor is null || SelectedDate is null) return;
+        var response = await _api.GetAsync<SlotsResponse>(
+            $"appointments/doctor/{SelectedDoctor.Id}/available-slots?date={Uri.EscapeDataString(SelectedDateShamsi)}");
+        if (response?.Data is null) return;
+        foreach (var s in response.Data)
+            Slots.Add(new SlotVM
+            {
+                Time = s.Time,
+                IsAvailable = s.IsAvailable,
+                IsBreak = s.IsBreak,
+                PatientName = s.PatientName,
+                RoomName = s.RoomName,
+                Fee = s.Fee
+            });
+    }
+
+    /// <summary>انتخاب اسلات</summary>
+    [RelayCommand]
+    private void SelectSlot(SlotVM slot)
+    {
+        if (!slot.IsAvailable) return;
+        foreach (var s in Slots) s.IsSelected = false;
+        slot.IsSelected = true;
+        SelectedSlot = slot;
+        SelectedRoom = slot.RoomName;
+        EstimatedFee = slot.Fee;
+    }
+
+    /// <summary>ثبت نهایی نوبت — اعتبارسنجی + POST</summary>
+    [RelayCommand]
+    private async Task BookAsync()
+    {
+        if (SelectedPatient is null) { _snackbar.Error("ابتدا بیمار را انتخاب کنید"); return; }
+        if (SelectedDoctor is null) { _snackbar.Error("ابتدا پزشک را انتخاب کنید"); return; }
+        if (SelectedSlot is null) { _snackbar.Error("ابتدا ساعت نوبت را انتخاب کنید"); return; }
+
+        var body = new
+        {
+            patientId = SelectedPatient.Id,
+            doctorId = SelectedDoctor.Id,
+            dateShamsi = SelectedDateShamsi,
+            time = SelectedSlot.Time,
+            type = SelectedTypeIndex + 1,
+            source = 1,
+            notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim()
+        };
+
+        IsBusy = true;
+        var response = await _api.PostAsync<BookResponse>("appointments", body);
+        IsBusy = false;
+
+        if (response?.Data is null)
+        {
+            _snackbar.Error(_api.LastError ?? (response is null ? "ثبت نوبت ناموفق بود" : "این ساعت رزرو شده است"));
+            return;
+        }
+
+        var code = response.Data.AppointmentCode ?? "—";
+        _snackbar.Success($"نوبت ثبت شد — کد پیگیری: {code}");
+        SelectedPatient = null;
+        PatientSearchText = string.Empty;
+        Notes = string.Empty;
+        SelectedSlot = null;
+        foreach (var s in Slots) s.IsSelected = false;
+        await LoadSlotsAsync();
+        await LoadTodayAppointmentsAsync();
+    }
+
+    /// <summary>بارگذاری نوبت‌های امروز — جدول پایین تب رزرو</summary>
+    private async Task LoadTodayAppointmentsAsync()
+    {
+        var response = await _api.GetAsync<TodayResponse>("appointments");
+        TodayAppointments.Clear();
+        if (response?.Data is null) return;
+        foreach (var a in response.Data)
+            TodayAppointments.Add(new TodayRow(a.Id, a.Time, a.PatientName, a.DoctorName,
+                a.Status, StatusText(a.Status)));
+    }
+
+    /* ═══════════ تب ۲: فهرست ═══════════ */
+
+    /// <summary>جستجوی فهرست با فیلترها</summary>
+    [RelayCommand]
+    private async Task SearchListAsync()
     {
         IsBusy = true;
-        ErrorMessage = string.Empty;
-
-        var endpoint = $"appointments?date={Uri.EscapeDataString(DateShamsi ?? string.Empty)}" +
-                       (DoctorFilterIndex >= 0 && DoctorFilterIndex < Doctors.Count
-                           ? $"&doctorId={Doctors[DoctorFilterIndex].Id}"
-                           : string.Empty) +
-                       (StatusFilterIndex > 0 ? $"&status={StatusFilterIndex}" : string.Empty);
-
-        var response = await _api.GetAsync<AppointmentsResponse>(endpoint);
-
-        if (response?.Data is not null)
+        var body = new
         {
-            Appointments = new ObservableCollection<AppointmentRow>(
-                response.Data.Select(MapRow));
+            fromDateShamsi = string.IsNullOrWhiteSpace(FromDateShamsi) ? null : FromDateShamsi.Trim(),
+            toDateShamsi = string.IsNullOrWhiteSpace(ToDateShamsi) ? null : ToDateShamsi.Trim(),
+            doctorId = DoctorFilterIndex <= 0 ? null : (long?)Doctors[DoctorFilterIndex - 1].Id,
+            status = StatusFilterIndex <= 0 ? null : (int?)StatusFilterIndex,
+            type = TypeFilterIndex <= 0 ? null : (int?)(TypeFilterIndex + 1),
+            source = SourceFilterIndex <= 0 ? null : (int?)(SourceFilterIndex + 1),
+            search = string.IsNullOrWhiteSpace(ListSearch) ? null : ListSearch.Trim(),
+            pageNumber = PageNumber,
+            pageSize = PageSize
+        };
+        var response = await _api.PostAsync<SearchResponse>("appointments/search", body);
+        if (response?.Data?.Items is not null)
+        {
+            Rows = new ObservableCollection<AppointmentListRow>(
+                response.Data.Items.Select(MapRow));
+            PageNumber = response.Data.PageNumber;
+            TotalPages = response.Data.TotalPages;
+            TotalCount = response.Data.TotalCount;
         }
         else
         {
-            ErrorMessage = _api.LastError ?? "دریافت نوبت‌ها ناموفق بود";
+            ErrorMessage = _api.LastError ?? "دریافت فهرست ناموفق بود";
         }
-
         IsBusy = false;
     }
 
-    /// <summary>نگاشت ردیف سرور به مدل نمایش</summary>
-    private static AppointmentRow MapRow(AppointmentDto a) =>
-        new(a.Id, a.AppointmentCode, a.PatientName, a.DoctorName, a.Time,
-            StatusTextOf(a.Status), a.Status, TypeTextOf(a.Type), a.QueueNumber);
+    /// <summary>نگاشت ردیف با Badge وضعیت</summary>
+    private AppointmentListRow MapRow(AppointmentSearchItem a) => new(
+        a.Id, false, a.AppointmentCode, a.PatientName, a.PatientMobile,
+        a.DoctorName, a.SpecialtyName, a.DateShamsi, a.Time,
+        a.Status, StatusText(a.Status), StatusColors[Math.Clamp(a.Status - 1, 0, 6)],
+        a.Type, TypeLabels[Math.Clamp(a.Type - 1, 0, 3)],
+        a.Source, SourceLabels[Math.Clamp(a.Source - 1, 0, 2)],
+        a.EstimatedFee);
 
     /// <summary>متن فارسی وضعیت</summary>
-    private static string StatusTextOf(int status) => status is >= 1 and <= 7
-        ? new[] { "رزرو شده", "تأیید شده", "حاضر", "در جریان", "تکمیل شده", "لغو شده", "غایب" }[status - 1]
-        : "نامشخص";
+    private string StatusText(int status) =>
+        status >= 1 && status <= 7 ? StatusLabels[status - 1] : "؟";
 
-    /// <summary>متن فارسی نوع نوبت</summary>
-    private static string TypeTextOf(int type) => type switch
-    {
-        1 => "اولیه",
-        2 => "پیگیری",
-        3 => "اورژانسی",
-        _ => "سایر"
-    };
-
-    /// <summary>ثبت نوبت جدید</summary>
+    /// <summary>تغییر صفحه فهرست</summary>
     [RelayCommand]
-    private void NewAppointment()
+    private async Task PageChangedAsync(object? page)
     {
-        var vm = new AppointmentFormViewModel(_api, Doctors);
-        var window = new AppointmentFormWindow(vm)
+        if (page is int p && p >= 1) PageNumber = p;
+        await SearchListAsync();
+    }
+
+    /// <summary>تأیید حضور نوبت</summary>
+    [RelayCommand]
+    private async Task ConfirmArrivalAsync()
+    {
+        if (SelectedRow is null) { _snackbar.Error("ابتدا یک نوبت انتخاب کنید"); return; }
+        var ok = await _api.PutAsync($"appointments/{SelectedRow.Id}/status",
+            new { status = 3, reason = (string?)null });
+        if (ok) { _snackbar.Success("حضور بیمار تأیید شد"); await SearchListAsync(); }
+        else _snackbar.Error(_api.LastError ?? "تغییر وضعیت ناموفق بود");
+    }
+
+    /// <summary>لغو تک‌نوبت</summary>
+    [RelayCommand]
+    private async Task CancelOneAsync()
+    {
+        if (SelectedRow is null) { _snackbar.Error("ابتدا یک نوبت انتخاب کنید"); return; }
+        var confirmed = System.Windows.MessageBox.Show(
+            $"لغو نوبت «{SelectedRow.PatientName}» در {SelectedRow.DateShamsi} ساعت {SelectedRow.Time}؟",
+            "تأیید لغو نوبت",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning) == System.Windows.MessageBoxResult.Yes;
+        if (!confirmed) return;
+        var ok = await _api.PutAsync($"appointments/{SelectedRow.Id}/status",
+            new { status = 6, reason = "لغو از فهرست نوبت‌ها" });
+        if (ok) { _snackbar.Success("نوبت لغو شد"); await SearchListAsync(); }
+        else _snackbar.Error(_api.LastError ?? "لغو ناموفق بود");
+    }
+
+    /// <summary>لغو دسته‌ای نوبت‌های انتخاب‌شده</summary>
+    [RelayCommand]
+    private async Task BatchCancelAsync()
+    {
+        var selected = Rows.Where(r => r.IsSelected).Select(r => r.Id).ToList();
+        if (selected.Count == 0) { _snackbar.Error("ابتدا نوبت‌ها را با ستون انتخاب علامت بزنید"); return; }
+        var confirmed = System.Windows.MessageBox.Show(
+            $"{selected.Count} نوبت انتخاب شده است. همه لغو شوند؟",
+            "لغو دسته‌ای",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning) == System.Windows.MessageBoxResult.Yes;
+        if (!confirmed) return;
+
+        var response = await _api.PostAsync<BatchResponse>("appointments/batch-cancel",
+            new { ids = selected, reason = "لغو دسته‌ای" });
+        if (response?.Data is not null)
         {
-            Owner = System.Windows.Application.Current.MainWindow
-        };
-        window.ShowDialog();
-        _ = LoadAsync();
+            _snackbar.Success($"{response.Data.Succeeded} نوبت لغو شد");
+            await SearchListAsync();
+        }
+        else _snackbar.Error(_api.LastError ?? "لغو دسته‌ای ناموفق بود");
     }
 
-    /// <summary>تأیید نوبت انتخاب‌شده</summary>
+    /// <summary>ارسال پیامک یادآوری نوبت‌های فردا</summary>
     [RelayCommand]
-    private Task ConfirmAsync() => ChangeStatusAsync(2);
-
-    /// <summary>لغو نوبت انتخاب‌شده</summary>
-    [RelayCommand]
-    private Task CancelAsync() => ChangeStatusAsync(6, "لغو توسط پذیرش");
-
-    /// <summary>ثبت غیبت نوبت انتخاب‌شده</summary>
-    [RelayCommand]
-    private Task NoShowAsync() => ChangeStatusAsync(7, "بیمار حاضر نشد");
-
-    /// <summary>اتمام نوبت انتخاب‌شده</summary>
-    [RelayCommand]
-    private Task CompleteAsync() => ChangeStatusAsync(5);
-
-    /// <summary>ارسال تغییر وضعیت به سرور</summary>
-    private async Task ChangeStatusAsync(int status, string? reason = null)
+    private async Task SendRemindersAsync()
     {
-        if (SelectedAppointment is null) return;
-
-        IsBusy = true;
-        var ok = await _api.PutAsync($"appointments/{SelectedAppointment.Id}/status",
-            new { status, reason });
-        IsBusy = false;
-
-        if (!ok)
-            ErrorMessage = _api.LastError ?? "تغییر وضعیت ناموفق بود";
+        var response = await _api.PostAsync<BatchResponse>("appointments/send-reminders", new { });
+        if (response?.Data is not null)
+            _snackbar.Success($"{response.Data.Succeeded} پیامک یادآوری در صف ارسال قرار گرفت");
         else
-            await LoadAsync();
+            _snackbar.Error(_api.LastError ?? "ارسال یادآوری ناموفق بود");
     }
 
-    /// <summary>پاسخ فهرست نوبت‌ها</summary>
-    public sealed class AppointmentsResponse
-    {
-        public bool IsSuccess { get; set; }
-        public List<AppointmentDto>? Data { get; set; }
-    }
+    /* ─── پاسخ‌های API ─── */
 
-    /// <summary>DTO نوبت منطبق بر سرور</summary>
-    public sealed class AppointmentDto
-    {
-        public long Id { get; set; }
-        public string? AppointmentCode { get; set; }
-        public string PatientName { get; set; } = string.Empty;
-        public string DoctorName { get; set; } = string.Empty;
-        public string DateShamsi { get; set; } = string.Empty;
-        public string Time { get; set; } = string.Empty;
-        public int Status { get; set; }
-        public int Type { get; set; }
-        public int QueueNumber { get; set; }
-    }
-
-    /// <summary>پاسخ صفحه‌بندی‌شده پزشکان</summary>
     public sealed class DoctorsPage
     {
         public bool IsSuccess { get; set; }
         public List<DoctorDto>? Data { get; set; }
     }
 
-    /// <summary>DTO پزشک منطبق بر سرور</summary>
     public sealed class DoctorDto
     {
         public long Id { get; set; }
         public string FullName { get; set; } = string.Empty;
         public string? SpecialtyName { get; set; }
     }
+
+    public sealed class PatientSearchResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<PatientQuick>? Data { get; set; }
+    }
+
+    public sealed class PatientQuick
+    {
+        public long Id { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string NationalCode { get; set; } = string.Empty;
+        public string Mobile { get; set; } = string.Empty;
+        public string? InsuranceName { get; set; }
+        public string? Allergies { get; set; }
+        public string? LastVisitDateShamsi { get; set; }
+    }
+
+    public sealed class CalendarSummaryResponse
+    {
+        public bool IsSuccess { get; set; }
+        public CalendarData? Data { get; set; }
+    }
+
+    public sealed class CalendarData
+    {
+        public List<CalendarDay>? Days { get; set; }
+    }
+
+    public sealed class CalendarDay
+    {
+        public string DateShamsi { get; set; } = string.Empty;
+        public bool IsDisabled { get; set; }
+        public int FreeSlots { get; set; }
+    }
+
+    public sealed class SlotsResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<SlotItem>? Data { get; set; }
+    }
+
+    public sealed class SlotItem
+    {
+        public string Time { get; set; } = string.Empty;
+        public bool IsAvailable { get; set; }
+        public string? PatientName { get; set; }
+        public bool IsBreak { get; set; }
+        public string? RoomName { get; set; }
+        public decimal Fee { get; set; }
+    }
+
+    public sealed class BookResponse
+    {
+        public bool IsSuccess { get; set; }
+        public BookData? Data { get; set; }
+    }
+
+    public sealed class BookData
+    {
+        public long Id { get; set; }
+        public string? AppointmentCode { get; set; }
+    }
+
+    public sealed class TodayResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<TodayItem>? Data { get; set; }
+    }
+
+    public sealed class TodayItem
+    {
+        public long Id { get; set; }
+        public string Time { get; set; } = string.Empty;
+        public string PatientName { get; set; } = string.Empty;
+        public string DoctorName { get; set; } = string.Empty;
+        public int Status { get; set; }
+    }
+
+    public sealed class SearchResponse
+    {
+        public bool IsSuccess { get; set; }
+        public SearchData? Data { get; set; }
+    }
+
+    public sealed class SearchData
+    {
+        public List<AppointmentSearchItem>? Items { get; set; }
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalCount { get; set; }
+        public int TotalPages { get; set; }
+    }
+
+    public sealed class AppointmentSearchItem
+    {
+        public long Id { get; set; }
+        public string? AppointmentCode { get; set; }
+        public string PatientName { get; set; } = string.Empty;
+        public string? PatientMobile { get; set; }
+        public string DoctorName { get; set; } = string.Empty;
+        public string? SpecialtyName { get; set; }
+        public string DateShamsi { get; set; } = string.Empty;
+        public string Time { get; set; } = string.Empty;
+        public int Status { get; set; }
+        public int Type { get; set; }
+        public int Source { get; set; }
+        public decimal EstimatedFee { get; set; }
+    }
+
+    public sealed class BatchResponse
+    {
+        public bool IsSuccess { get; set; }
+        public BatchData? Data { get; set; }
+    }
+
+    public sealed class BatchData
+    {
+        public int Total { get; set; }
+        public int Succeeded { get; set; }
+        public int Failed { get; set; }
+    }
 }
+
+/// <summary>
+/// ردیف نوبت امروز — جدول پایین تب رزرو
+/// </summary>
+public record TodayRow(long Id, string Time, string PatientName, string DoctorName, int Status, string StatusText);

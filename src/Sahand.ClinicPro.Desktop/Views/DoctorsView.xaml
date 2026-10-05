@@ -1,0 +1,224 @@
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.DoctorsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="560" d:DesignWidth="980"
+             FlowDirection="RightToLeft"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══ فهرست پزشکان — گام U3 طبق پرامپت UI بخش ۱ (فرم ۶) ═══ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- نوار عنوان -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="Doctor"
+                                         Width="26" Height="26"
+                                         Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                         VerticalAlignment="Center" />
+                <TextBlock Text="لیست پزشکان"
+                           FontSize="20" FontWeight="Bold"
+                           Margin="10,0,0,0" VerticalAlignment="Center" />
+                <Border Background="{DynamicResource MaterialDesign.Brush.Primary}"
+                        CornerRadius="10" Padding="10,2" VerticalAlignment="Center"
+                        Margin="12,0,0,0">
+                    <TextBlock Foreground="White" FontSize="11">
+                        <Run Text="کل: " /><Run Text="{Binding TotalCount, Mode=OneWay}" /><Run Text=" پزشک" />
+                    </TextBlock>
+                </Border>
+            </StackPanel>
+            <TextBlock Text="مدیریت کادر درمان و تنظیمات ویزیت و برنامه کاری"
+                       FontSize="12" Opacity="0.65" Margin="2,4,0,0" />
+        </StackPanel>
+
+        <!-- نوار ابزار -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource MaterialDesign.Brush.Background}"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                BorderThickness="1" CornerRadius="10"
+                Padding="10,8" Margin="0,0,0,10">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Command="{Binding AddDoctorCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            ToolTip="ثبت پزشک جدید (F3)" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" Width="16" Height="16" VerticalAlignment="Center" />
+                            <TextBlock Text="پزشک جدید" Margin="6,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding RefreshCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            ToolTip="بارگذاری مجدد (F5)" Margin="0,0,8,0">
+                        <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" />
+                    </Button>
+                    <Button Command="{Binding DeleteDoctorCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            ToolTip="حذف پزشک انتخاب‌شده"
+                            Foreground="#C62828" Padding="8,6">
+                        <materialDesign:PackIcon Kind="Delete" Width="16" Height="16" />
+                    </Button>
+                </StackPanel>
+                <TextBox materialDesign:HintAssist.Hint="🔍 جستجو با نام یا شماره نظام پزشکی…"
+                         Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                         FontSize="13" VerticalAlignment="Center" MinWidth="260">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+                    </TextBox.InputBindings>
+                </TextBox>
+            </DockPanel>
+        </Border>
+
+        <ProgressBar Grid.Row="2" IsIndeterminate="True" Height="3"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}"
+                     Margin="0,0,0,6" />
+
+        <!-- جدول ۱۰ ستونه -->
+        <DataGrid Grid.Row="3"
+                  ItemsSource="{Binding Doctors}"
+                  SelectedItem="{Binding SelectedDoctor}"
+                  AutoGenerateColumns="False"
+                  CanUserSortColumns="True"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  AlternatingRowBackground="#F7FAFD"
+                  HeadersVisibility="Column"
+                  RowBackground="Transparent"
+                  FontSize="12">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="شماره نظام"
+                                    Binding="{Binding MedicalLicenseNo, TargetNullValue=—}"
+                                    Width="105" FontFamily="Consolas" />
+                <DataGridTemplateColumn Header="نام و نام‌خانوادگی" Width="170" SortMemberPath="FullName">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Account" Width="15" Height="15"
+                                                         Opacity="0.55" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding FullName}" FontWeight="SemiBold"
+                                           Margin="7,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="تخصص"
+                                    Binding="{Binding SpecialtyName, TargetNullValue=—}"
+                                    Width="120" />
+                <DataGridTextColumn Header="فوق‌تخصص"
+                                    Binding="{Binding SubSpecialtyName, TargetNullValue=—}"
+                                    Width="120" />
+                <DataGridTextColumn Header="حق ویزیت (ریال)"
+                                    Binding="{Binding FeeDisplay}"
+                                    Width="120">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Left" />
+                            <Setter Property="FontFamily" Value="Consolas" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="مدت (دقیقه)"
+                                    Binding="{Binding VisitDuration}"
+                                    Width="85">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="درصد سهم"
+                                    Binding="{Binding DoctorPercentage}"
+                                    Width="75">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTemplateColumn Header="وضعیت" Width="80" SortMemberPath="IsActive">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#FFCDD2" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                <Setter Property="Background" Value="#C8E6C9" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock FontSize="11"
+                                           Text="{Binding IsActive, Converter={StaticResource BoolToText}}" />
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="امتیاز"
+                                    Binding="{Binding RatingDisplay}"
+                                    Width="70">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTemplateColumn Header="عملیات" Width="170">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Command="{Binding DataContext.EditDoctorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="ویرایش پزشک (۵ تب کامل)" Padding="5">
+                                    <materialDesign:PackIcon Kind="Pencil" Width="16" Height="16" />
+                                </Button>
+                                <Button Command="{Binding DataContext.ShowPerformanceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="آمار عملکرد ویزیت و درآمد" Padding="5">
+                                    <materialDesign:PackIcon Kind="ChartBar" Width="16" Height="16" />
+                                </Button>
+                                <Button Command="{Binding DataContext.EditDoctorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="برنامه کاری هفتگی (تب ۴ فرم ویرایش)" Padding="5">
+                                    <materialDesign:PackIcon Kind="CalendarClock" Width="16" Height="16" />
+                                </Button>
+                                <Button Command="{Binding DataContext.ShowPerformanceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="محاسبه کارانه (داخل آمار عملکرد)" Padding="5">
+                                    <materialDesign:PackIcon Kind="CashMultiple" Width="16" Height="16" />
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <controls:EmptyState Grid.Row="3"
+                             Message="پزشکی یافت نشد"
+                             IconKind="Doctor"
+                             Visibility="{Binding Doctors.Count, Converter={StaticResource NullToVisibility}, ConverterParameter=Inverse}" />
+
+        <controls:PaginationBar Grid.Row="4"
+                                PageNumber="{Binding PageNumber, Mode=TwoWay}"
+                                TotalPages="{Binding TotalPages, Mode=OneWay}"
+                                TotalCount="{Binding TotalCount, Mode=OneWay}"
+                                PageSize="{Binding PageSize, Mode=TwoWay}"
+                                PageChangedCommand="{Binding PageChangedCommand}" />
+    </Grid>
+</UserControl>

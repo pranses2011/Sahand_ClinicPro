@@ -4,6 +4,8 @@ using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Application.DTOs.Visits;
 using Sahand.ClinicPro.Application.Features.Visits.Commands.SaveVisit;
 using Sahand.ClinicPro.Application.Features.Visits.Queries;
+using Sahand.ClinicPro.Application.Features.Visits.GetVisitQueue;
+using Sahand.ClinicPro.Application.Features.Visits.CallNextPatient;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -51,5 +53,24 @@ public class VisitsController : ApiBaseController
         if (result.IsSuccess)
             return CreatedResponse(result, nameof(GetById), new { id = result.Value }, "ویزیت ذخیره شد");
         return ToResponse(result);
+    }
+
+    /// <summary>صف ویزیت امروز — فعلی + در انتظار + انجام‌شده</summary>
+    /// <param name="doctorId">فیلتر پزشک — تهی یعنی همه</param>
+    [HttpGet("queue")]
+    [HasPermission("visits.view")]
+    public async Task<IActionResult> GetQueue([FromQuery] long? doctorId)
+    {
+        var result = await _mediator.Send(new GetVisitQueueQuery(doctorId));
+        return ToResponse(result);
+    }
+
+    /// <summary>فراخوان بیمار بعدی از صف — ایجاد ویزیت در جریان</summary>
+    [HttpPost("call-next")]
+    [HasPermission("visits.create")]
+    public async Task<IActionResult> CallNext([FromQuery] long? doctorId)
+    {
+        var result = await _mediator.Send(new CallNextPatientCommand(doctorId));
+        return ToResponse(result, "بیمار بعدی فراخوانی شد");
     }
 }

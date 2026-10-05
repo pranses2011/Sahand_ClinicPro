@@ -1,0 +1,1010 @@
+# -*- coding: utf-8 -*-
+"""گام U3 — بخش دسکتاپ: DoctorsView + DoctorFormWindow (۵ تب) + پنجره عملکرد + ثبت ناوبری"""
+import os, io
+
+ROOT = "/home/z/my-project/Sahand_ClinicPro"
+DT = f"{ROOT}/src/Sahand.ClinicPro.Desktop"
+FILES = {}
+
+# ═══════════════════════ ViewModel ═══════════════════════
+FILES[f"{DT}/ViewModels/DoctorsViewModel.cs"] = '''using System.Collections.ObjectModel;
+using System.Text.Json;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.Views;
+
+namespace Sahand.ClinicPro.Desktop.ViewModels;
+
+/// <summary>
+/// ردیف پزشک در فهرست — گام U3 طبق پرامپت UI بخش ۱ (فرم ۶)
+/// ۱۰ ستون: شماره نظام/نام/تخصص/فوق‌تخصص/حق ویزیت/مدت/درصد سهم/وضعیت/امتیاز/عملیات
+/// </summary>
+public record DoctorRow(
+    long Id,
+    string? MedicalLicenseNo,
+    string FullName,
+    string? SpecialtyName,
+    string? SubSpecialtyName,
+    decimal ConsultationFee,
+    string FeeDisplay,
+    int VisitDuration,
+    decimal DoctorPercentage,
+    bool IsActive,
+    decimal Rating,
+    string RatingDisplay);
+
+/// <summary>
+/// ViewModel فهرست پزشکان — جستجو و صفحه‌بندی + دکمه‌های برنامه کاری/آمار/کارانه
+/// </summary>
+public partial class DoctorsViewModel : ViewModelBase
+{
+    private readonly IApiClient _api;
+    private readonly ISnackbarService _snackbar;
+
+    /// <summary>عنوان صفحه</summary>
+    public override string Title => "مدیریت پزشکان";
+
+    /// <summary>فهرست پزشکان صفحه فعلی</summary>
+    [ObservableProperty]
+    private ObservableCollection<DoctorRow> _doctors = new();
+
+    /// <summary>پزشک انتخاب‌شده</summary>
+    [ObservableProperty]
+    private DoctorRow? _selectedDoctor;
+
+    /// <summary>عبارت جستجو</summary>
+    [ObservableProperty]
+    private string _searchTerm = string.Empty;
+
+    /// <summary>شماره صفحه</summary>
+    [ObservableProperty]
+    private int _pageNumber = 1;
+
+    /// <summary>تعداد کل صفحات</summary>
+    [ObservableProperty]
+    private int _totalPages = 1;
+
+    /// <summary>تعداد کل</summary>
+    [ObservableProperty]
+    private int _totalCount;
+
+    /// <summary>اندازه صفحه</summary>
+    [ObservableProperty]
+    private int _pageSize = 20;
+
+    /// <summary>سازنده</summary>
+    public DoctorsViewModel(IApiClient api, ISnackbarService snackbar)
+    {
+        _api = api;
+        _snackbar = snackbar;
+        _ = LoadAsync();
+    }
+
+    /// <summary>بارگذاری از سرور</summary>
+    public async Task LoadAsync()
+    {
+        IsBusy = true;
+        ErrorMessage = string.Empty;
+        var endpoint = $"doctors?page={PageNumber}&pageSize={PageSize}&onlyActive=false" +
+                       (!string.IsNullOrWhiteSpace(SearchTerm)
+                           ? $"&page.search={Uri.EscapeDataString(SearchTerm.Trim())}"
+                           : string.Empty);
+        var response = await _api.GetAsync<DoctorsPage>(endpoint);
+        if (response is not null)
+        {
+            Doctors = new ObservableCollection<DoctorRow>(
+                response.Data?.Select(MapRow) ?? Enumerable.Empty<DoctorRow>());
+            PageNumber = response.PageNumber;
+            TotalPages = response.TotalPages;
+            TotalCount = response.TotalCount;
+        }
+        else
+        {
+            ErrorMessage = _api.LastError ?? "دریافت فهرست پزشکان ناموفق بود";
+        }
+        IsBusy = false;
+    }
+
+    /// <summary>نگاشت ردیف با جداکننده هزارگان ریال</summary>
+    private static DoctorRow MapRow(DoctorDto d) => new(
+        d.Id, d.MedicalLicenseNo,
+        d.FullName,
+        d.SpecialtyName, d.SubSpecialtyName,
+        d.ConsultationFee, d.ConsultationFee.ToString("N0"),
+        d.VisitDuration, d.DoctorPercentage,
+        d.IsActive, d.Rating,
+        d.Rating > 0 ? $"{d.Rating:0.0} ★" : "—");
+
+    /// <summary>جستجو</summary>
+    [RelayCommand]
+    private async Task SearchAsync()
+    {
+        PageNumber = 1;
+        await LoadAsync();
+    }
+
+    /// <summary>بارگذاری مجدد</summary>
+    [RelayCommand]
+    private async Task RefreshAsync() => await LoadAsync();
+
+    /// <summary>تغییر صفحه</summary>
+    [RelayCommand]
+    private async Task PageChangedAsync(object? page)
+    {
+        if (page is int p && p >= 1) PageNumber = p;
+        await LoadAsync();
+    }
+
+    /// <summary>ثبت پزشک جدید</summary>
+    [RelayCommand]
+    private void AddDoctor()
+        => OpenForm(new DoctorFormViewModel(_api, _snackbar, null));
+
+    /// <summary>ویرایش پزشک انتخاب‌شده</summary>
+    [RelayCommand]
+    private void EditDoctor()
+    {
+        if (SelectedDoctor is null) { _snackbar.Error("ابتدا یک پزشک انتخاب کنید"); return; }
+        OpenForm(new DoctorFormViewModel(_api, _snackbar, SelectedDoctor.Id));
+    }
+
+    /// <summary>حذف پزشک با تأیید</summary>
+    [RelayCommand]
+    private async Task DeleteDoctorAsync()
+    {
+        if (SelectedDoctor is null) { _snackbar.Error("ابتدا یک پزشک انتخاب کنید"); return; }
+        var name = SelectedDoctor.FullName;
+        var confirmed = System.Windows.MessageBox.Show(
+            $"آیا از حذف پزشک «{name}» مطمئن هستید؟\\nسوابق ویزیت‌ها حفظ می‌شود اما پزشک غیرفعال خواهد شد.",
+            "تأیید حذف پزشک",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning) == System.Windows.MessageBoxResult.Yes;
+        if (!confirmed) return;
+
+        IsBusy = true;
+        var ok = await _api.DeleteAsync($"doctors/{SelectedDoctor.Id}");
+        IsBusy = false;
+        if (ok) { _snackbar.Success($"پزشک «{name}» حذف شد"); await LoadAsync(); }
+        else _snackbar.Error(_api.LastError ?? "حذف ناموفق بود");
+    }
+
+    /// <summary>مشاهده آمار عملکرد — دکمه آمار طبق فرم ۶</summary>
+    [RelayCommand]
+    private async Task ShowPerformanceAsync()
+    {
+        if (SelectedDoctor is null) { _snackbar.Error("ابتدا یک پزشک انتخاب کنید"); return; }
+        var window = new DoctorPerformanceWindow(_api, SelectedDoctor.Id, SelectedDoctor.FullName)
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        window.ShowDialog();
+    }
+
+    /// <summary>باز کردن فرم مودال و بارگذاری مجدد</summary>
+    private void OpenForm(DoctorFormViewModel formVm)
+    {
+        var window = new DoctorFormWindow(formVm) { Owner = System.Windows.Application.Current.MainWindow };
+        window.ShowDialog();
+        _ = LoadAsync();
+    }
+
+    /// <summary>پاسخ صفحه‌بندی پزشکان</summary>
+    public sealed class DoctorsPage
+    {
+        public bool IsSuccess { get; set; }
+        public List<DoctorDto>? Data { get; set; }
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalCount { get; set; }
+        public int TotalPages { get; set; }
+    }
+
+    /// <summary>DTO پزشک منطبق بر سرور</summary>
+    public sealed class DoctorDto
+    {
+        public long Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string? MedicalLicenseNo { get; set; }
+        public string? NezamPezeshkiCode { get; set; }
+        public string? SpecialtyName { get; set; }
+        public string? SubSpecialtyName { get; set; }
+        public decimal ConsultationFee { get; set; }
+        public int VisitDuration { get; set; }
+        public decimal DoctorPercentage { get; set; }
+        public bool IsActive { get; set; }
+        public decimal Rating { get; set; }
+    }
+}
+
+/// <summary>
+/// ردیف برنامه هفتگی — قابل ویرایش در DataGrid تب ۴
+/// </summary>
+public partial class ScheduleRowVM : ObservableObject
+{
+    /// <summary>روز هفته — شنبه=۰ تا جمعه=۶</summary>
+    public byte DayOfWeek { get; init; }
+
+    /// <summary>نام فارسی روز</summary>
+    public string DayName => DayOfWeek switch
+    {
+        0 => "شنبه", 1 => "یکشنبه", 2 => "دوشنبه", 3 => "سه‌شنبه",
+        4 => "چهارشنبه", 5 => "پنجشنبه", 6 => "جمعه",
+        _ => "؟"
+    };
+
+    /// <summary>روز فعال است</summary>
+    [ObservableProperty]
+    private bool _isEnabled;
+
+    /// <summary>ساعت شروع — HH:mm</summary>
+    [ObservableProperty]
+    private string? _startTime;
+
+    /// <summary>ساعت پایان</summary>
+    [ObservableProperty]
+    private string? _endTime;
+
+    /// <summary>شروع استراحت</summary>
+    [ObservableProperty]
+    private string? _breakStart;
+
+    /// <summary>پایان استراحت</summary>
+    [ObservableProperty]
+    private string? _breakEnd;
+
+    /// <summary>شناسه اتاق</summary>
+    [ObservableProperty]
+    private long? _roomId;
+
+    /// <summary>نام اتاق</summary>
+    [ObservableProperty]
+    private string? _roomName;
+
+    /// <summary>ظرفیت حداکثر</summary>
+    [ObservableProperty]
+    private int? _maxPatients;
+}
+
+/// <summary>
+/// ردیف غیبت پزشک — تب ۵ فرم پزشک
+/// </summary>
+public record AbsenceRow(
+    long Id,
+    string DateShamsi,
+    string? FromTime,
+    string? ToTime,
+    string AbsenceTypeName,
+    string? Reason,
+    int BookedAppointments);
+
+/// <summary>
+/// گزینه اتاق معاینه برای Combobox
+/// </summary>
+public record RoomOption(long Id, string DisplayName);
+
+/// <summary>
+/// گزینه تخصص
+/// </summary>
+public record SpecialtyOption(long Id, string Name, long? ParentId);
+
+/// <summary>
+/// گزینه پرسنل
+/// </summary>
+public record EmployeeOption(long Id, string FullName, string? PersonnelCode);
+
+/// <summary>
+/// ViewModel فرم ثبت و ویرایش پزشک — گام U3 طبق فرم ۷:
+/// ۵ تب: پایه / تنظیم ویزیت / امضا و مهر / برنامه کاری / غیبت‌ها
+/// </summary>
+public partial class DoctorFormViewModel : ObservableObject
+{
+    private readonly IApiClient _api;
+    private readonly ISnackbarService _snackbar;
+    private readonly long? _doctorId;
+
+    /* ── تب ۱: اطلاعات پایه ── */
+    [ObservableProperty] private long? _employeeId;
+    [ObservableProperty] private string _medicalLicenseNo = string.Empty;
+    [ObservableProperty] private string _nezamPezeshkiCode = string.Empty;
+    [ObservableProperty] private long? _specialtyId;
+    [ObservableProperty] private long? _subSpecialtyId;
+    [ObservableProperty] private string? _academicRank;
+    [ObservableProperty] private string? _biography;
+
+    /* ── تب ۲: تنظیمات ویزیت ── */
+    [ObservableProperty] private string _consultationFeeText = "0";
+    [ObservableProperty] private int _visitDuration = 15;
+    [ObservableProperty] private int? _maxPatientsPerShift;
+    [ObservableProperty] private decimal _doctorPercentage;
+    [ObservableProperty] private bool _acceptsNewPatients = true;
+    [ObservableProperty] private bool _onlineBookingEnabled = true;
+
+    /* ── تب ۳: امضا و مهر ── */
+    [ObservableProperty] private string? _signatureImageBase64;
+    [ObservableProperty] private string? _stampImageBase64;
+
+    /* ── تب ۴: برنامه هفتگی ── */
+    public ObservableCollection<ScheduleRowVM> ScheduleRows { get; } = new();
+
+    /* ── تب ۵: غیبت‌ها ── */
+    public ObservableCollection<AbsenceRow> Absences { get; } = new();
+
+    /* ── فرم غیبت جدید ── */
+    [ObservableProperty] private string _newAbsenceDateShamsi = string.Empty;
+    [ObservableProperty] private string? _newAbsenceFromTime;
+    [ObservableProperty] private string? _newAbsenceToTime;
+    [ObservableProperty] private int _newAbsenceTypeIndex;
+    [ObservableProperty] private string? _newAbsenceReason;
+
+    /* ── عمومی ── */
+    [ObservableProperty] private string _errorMessage = string.Empty;
+    [ObservableProperty] private string _formTitle = "ثبت پزشک جدید";
+    [ObservableProperty] private bool _isBusy;
+
+    /// <summary>گزینه‌های مرتبه علمی — طبق فرم ۷</summary>
+    public List<string> AcademicRanks { get; } = new()
+        { "عمومی", "متخصص", "فوق‌تخصص", "فلوشیپ", "استادیار", "دانشیار", "استاد" };
+
+    /// <summary>گزینه‌های مدت ویزیت</summary>
+    public List<int> VisitDurations { get; } = new() { 5, 10, 15, 20, 30, 45, 60 };
+
+    /// <summary>نام فارسی انواع غیبت</summary>
+    public List<string> AbsenceTypes { get; } = new() { "مرخصی", "استعلاجی", "کنگره", "سایر" };
+
+    /// <summary>اتاق‌های معاینه</summary>
+    public ObservableCollection<RoomOption> Rooms { get; } = new();
+
+    /// <summary>تخصص‌های اصلی</summary>
+    public ObservableCollection<SpecialtyOption> Specialties { get; } = new();
+
+    /// <summary>فوق‌تخصص‌ها — فیلترشده بر اساس تخصص انتخابی</summary>
+    public ObservableCollection<SpecialtyOption> SubSpecialties { get; } = new();
+
+    /// <summary>پرسنل فعال</summary>
+    public ObservableCollection<EmployeeOption> Employees { get; } = new();
+
+    /// <summary>رویداد درخواست بستن</summary>
+    public event EventHandler? CloseRequested;
+
+    /// <summary>سازنده</summary>
+    public DoctorFormViewModel(IApiClient api, ISnackbarService snackbar, long? doctorId)
+    {
+        _api = api;
+        _snackbar = snackbar;
+        _doctorId = doctorId;
+        if (doctorId.HasValue) FormTitle = "ویرایش اطلاعات پزشک";
+        // هفت ردیف روزهای هفته
+        for (byte day = 0; day <= 6; day++)
+            ScheduleRows.Add(new ScheduleRowVM { DayOfWeek = day });
+        _ = InitializeAsync();
+    }
+
+    /// <summary>بارگذاری داده مرجع + ویرایش</summary>
+    private async Task InitializeAsync()
+    {
+        await LoadLookupsAsync();
+        if (_doctorId.HasValue)
+        {
+            var detail = await _api.GetAsync<DoctorDetailResponse>($"doctors/{_doctorId}");
+            if (detail?.Data is null)
+            {
+                ErrorMessage = _api.LastError ?? "دریافت اطلاعات پزشک ناموفق بود";
+                return;
+            }
+            var d = detail.Data;
+            EmployeeId = d.EmployeeId;
+            MedicalLicenseNo = d.MedicalLicenseNo ?? string.Empty;
+            NezamPezeshkiCode = d.NezamPezeshkiCode ?? string.Empty;
+            SpecialtyId = d.SpecialtyId;
+            SubSpecialtyId = d.SubSpecialtyId;
+            AcademicRank = d.AcademicRank;
+            Biography = d.Biography;
+            ConsultationFeeText = d.ConsultationFee.ToString("N0");
+            VisitDuration = d.VisitDuration;
+            MaxPatientsPerShift = d.MaxPatientsPerShift;
+            DoctorPercentage = d.DoctorPercentage;
+            AcceptsNewPatients = d.AcceptsNewPatients;
+            OnlineBookingEnabled = d.OnlineBookingEnabled;
+            SignatureImageBase64 = d.SignatureImageBase64;
+            StampImageBase64 = d.StampImageBase64;
+            FormTitle = $"ویرایش پزشک: {d.FullName}";
+            FilterSubSpecialties();
+            await LoadScheduleAsync();
+            await LoadAbsencesAsync();
+        }
+    }
+
+    /// <summary>بارگذاری داده مرجع</summary>
+    private async Task LoadLookupsAsync()
+    {
+        var rooms = await _api.GetAsync<RoomsResponse>("lookups/rooms");
+        if (rooms?.Data is not null)
+            foreach (var r in rooms.Data)
+                Rooms.Add(new RoomOption(r.Id, r.DisplayName));
+
+        var specialties = await _api.GetAsync<SpecialtiesResponse>("lookups/specialties?onlyParents=true");
+        if (specialties?.Data is not null)
+            foreach (var s in specialties.Data)
+                Specialties.Add(new SpecialtyOption(s.Id, s.Name, s.ParentId));
+
+        var employees = await _api.GetAsync<EmployeesResponse>("lookups/employees");
+        if (employees?.Data is not null)
+            foreach (var e in employees.Data)
+                Employees.Add(new EmployeeOption(e.Id, e.FullName, e.PersonnelCode));
+    }
+
+    /// <summary>فیلتر فوق‌تخصص‌ها بر اساس تخصص انتخابی</summary>
+    partial void OnSpecialtyIdChanged(long? value) => FilterSubSpecialties();
+
+    /// <summary>پر کردن فوق‌تخصص‌های مرتبط</summary>
+    private void FilterSubSpecialties()
+    {
+        SubSpecialties.Clear();
+        if (SpecialtyId is null) return;
+        foreach (var s in Specialties.Where(s => s.ParentId == SpecialtyId))
+            SubSpecialties.Add(s);
+    }
+
+    /// <summary>بارگذاری برنامه هفتگی</summary>
+    private async Task LoadScheduleAsync()
+    {
+        var result = await _api.GetAsync<ScheduleResponse>($"doctors/{_doctorId}/schedule");
+        if (result?.Data is null) return;
+        ScheduleRows.Clear();
+        foreach (var row in result.Data)
+            ScheduleRows.Add(new ScheduleRowVM
+            {
+                DayOfWeek = row.DayOfWeek,
+                IsEnabled = row.IsEnabled,
+                StartTime = row.StartTime,
+                EndTime = row.EndTime,
+                BreakStart = row.BreakStart,
+                BreakEnd = row.BreakEnd,
+                RoomId = row.RoomId,
+                RoomName = row.RoomName,
+                MaxPatients = row.MaxPatients
+            });
+    }
+
+    /// <summary>بارگذاری غیبت‌ها</summary>
+    private async Task LoadAbsencesAsync()
+    {
+        var result = await _api.GetAsync<AbsencesResponse>($"doctors/{_doctorId}/absences");
+        Absences.Clear();
+        if (result?.Data is null) return;
+        foreach (var a in result.Data)
+            Absences.Add(new AbsenceRow(a.Id, a.DateShamsi, a.FromTime, a.ToTime,
+                a.AbsenceTypeName, a.Reason, a.BookedAppointments));
+    }
+
+    /// <summary>ذخیره کل فرم — پایه + تنظیمات + امضا</summary>
+    [RelayCommand]
+    private async Task SaveAsync()
+    {
+        ErrorMessage = string.Empty;
+        if (!decimal.TryParse(DigitsOnly(ConsultationFeeText), out var fee))
+        { ErrorMessage = "حق ویزیت عددی نامعتبر است"; return; }
+        if (DoctorPercentage is < 0 or > 100)
+        { ErrorMessage = "درصد سهم پزشک باید بین ۰ تا ۱۰۰ باشد"; return; }
+        if (_doctorId is null && SpecialtyId is null)
+        { ErrorMessage = "انتخاب تخصص الزامی است"; return; }
+
+        var body = new
+        {
+            employeeId = EmployeeId,
+            medicalLicenseNo = MedicalLicenseNo,
+            nezamPezeshkiCode = NezamPezeshkiCode,
+            specialtyId = SpecialtyId,
+            subSpecialtyId = SubSpecialtyId,
+            academicRank = AcademicRank,
+            biography = Biography,
+            consultationFee = fee,
+            visitDuration = VisitDuration,
+            maxPatientsPerShift = MaxPatientsPerShift,
+            doctorPercentage = DoctorPercentage,
+            acceptsNewPatients = AcceptsNewPatients,
+            onlineBookingEnabled = OnlineBookingEnabled,
+            signatureImageBase64 = SignatureImageBase64,
+            stampImageBase64 = StampImageBase64,
+            isActive = true
+        };
+
+        IsBusy = true;
+        var ok = _doctorId.HasValue
+            ? await _api.PutAsync($"doctors/{_doctorId}", body)
+            : await _api.PostAsync("doctors", body);
+        IsBusy = false;
+
+        if (!ok)
+        {
+            ErrorMessage = _api.LastError ?? "ذخیره ناموفق بود";
+            return;
+        }
+        await SaveScheduleAsync();
+        CloseRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>ذخیره برنامه هفتگی — جدا از فرم اصلی</summary>
+    [RelayCommand]
+    private async Task SaveScheduleAsync()
+    {
+        if (_doctorId is null) return;
+        var body = new
+        {
+            rows = ScheduleRows.Select(r => new
+            {
+                dayOfWeek = (int)r.DayOfWeek,
+                isEnabled = r.IsEnabled,
+                startTime = r.StartTime,
+                endTime = r.EndTime,
+                breakStart = r.BreakStart,
+                breakEnd = r.BreakEnd,
+                roomId = r.RoomId,
+                roomName = r.RoomName,
+                maxPatients = r.MaxPatients
+            }).ToList()
+        };
+        var ok = await _api.PutAsync($"doctors/{_doctorId}/schedule", body);
+        if (ok) _snackbar.Success("برنامه کاری هفتگی ذخیره شد");
+        else _snackbar.Error(_api.LastError ?? "ذخیره برنامه کاری ناموفق بود");
+    }
+
+    /// <summary>انتخاب تصویر امضا — PNG شفاف ۳۰۰×۱۰۰</summary>
+    [RelayCommand]
+    private void PickSignature()
+        => SignatureImageBase64 = PickImagePng("انتخاب تصویر امضا (PNG شفاف)");
+
+    /// <summary>انتخاب تصویر مهر — ۱۵۰×۱۵۰</summary>
+    [RelayCommand]
+    private void PickStamp()
+        => StampImageBase64 = PickImagePng("انتخاب تصویر مهر");
+
+    /// <summary>دیالوگ انتخاب فایل PNG و تبدیل به Base64</summary>
+    private static string? PickImagePng(string title)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = title,
+            Filter = "تصویر PNG|*.png"
+        };
+        if (dialog.ShowDialog() != true) return null;
+        var bytes = System.IO.File.ReadAllBytes(dialog.FileName);
+        return Convert.ToBase64String(bytes);
+    }
+
+    /// <summary>ثبت غیبت جدید — با هشدار نوبت‌های رزروشده طبق فرم ۷</summary>
+    [RelayCommand]
+    private async Task AddAbsenceAsync()
+    {
+        if (_doctorId is null)
+        { ErrorMessage = "ابتدا پزشک را ذخیره کنید"; return; }
+        if (string.IsNullOrWhiteSpace(NewAbsenceDateShamsi))
+        { ErrorMessage = "تاریخ غیبت الزامی است"; return; }
+
+        var body = new
+        {
+            dateShamsi = NewAbsenceDateShamsi.Trim(),
+            fromTime = string.IsNullOrWhiteSpace(NewAbsenceFromTime) ? null : NewAbsenceFromTime.Trim(),
+            toTime = string.IsNullOrWhiteSpace(NewAbsenceToTime) ? null : NewAbsenceToTime.Trim(),
+            absenceType = NewAbsenceTypeIndex + 1,
+            reason = NewAbsenceReason
+        };
+
+        IsBusy = true;
+        var response = await _api.PostAsync<AbsenceCreateResponse>($"doctors/{_doctorId}/absences", body);
+        IsBusy = false;
+
+        if (response?.Data is null)
+        {
+            ErrorMessage = _api.LastError ?? "ثبت غیبت ناموفق بود";
+            return;
+        }
+
+        // هشدار نوبت‌های درگیر — «N نوبت رزرو شده وجود دارد. لغو شوند؟»
+        if (response.Data.BookedAppointments > 0)
+        {
+            System.Windows.MessageBox.Show(
+                $"{ToPersian(response.Data.BookedAppointments)} نوبت رزرو شده در این بازه وجود دارد.\\n" +
+                "برای لغو یا جابه‌جایی نوبت‌ها با پذیرش هماهنگ کنید.",
+                "نوبت‌های درگیر با غیبت",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Warning);
+        }
+
+        NewAbsenceDateShamsi = string.Empty;
+        NewAbsenceFromTime = null;
+        NewAbsenceToTime = null;
+        NewAbsenceReason = null;
+        _snackbar.Success("غیبت ثبت شد");
+        await LoadAbsencesAsync();
+    }
+
+    /// <summary>حذف غیبت</summary>
+    [RelayCommand]
+    private async Task DeleteAbsenceAsync(object? param)
+    {
+        if (param is not AbsenceRow row) return;
+        var ok = await _api.DeleteAsync($"doctors/absences/{row.Id}");
+        if (ok) { _snackbar.Success("غیبت حذف شد"); await LoadAbsencesAsync(); }
+        else _snackbar.Error(_api.LastError ?? "حذف ناموفق بود");
+    }
+
+    /// <summary>انصراف</summary>
+    [RelayCommand]
+    private void Cancel() => CloseRequested?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>حذف جداکننده‌های هزارگان از متن عددی</summary>
+    private static string DigitsOnly(string text) =>
+        new(text.Where(char.IsDigit).ToArray());
+
+    /// <summary>تبدیل عدد به رقم فارسی</summary>
+    private static string ToPersian(int value) =>
+        value.ToString().Replace('0', '۰').Replace('1', '۱').Replace('2', '۲')
+            .Replace('3', '۳').Replace('4', '۴').Replace('5', '۵')
+            .Replace('6', '۶').Replace('7', '۷').Replace('8', '۸').Replace('9', '۹');
+
+    /* ── پاسخ‌های API ── */
+
+    public sealed class DoctorDetailResponse
+    {
+        public bool IsSuccess { get; set; }
+        public DoctorDetail? Data { get; set; }
+    }
+
+    public sealed class DoctorDetail
+    {
+        public long Id { get; set; }
+        public long? EmployeeId { get; set; }
+        public string? MedicalLicenseNo { get; set; }
+        public string? NezamPezeshkiCode { get; set; }
+        public long? SpecialtyId { get; set; }
+        public long? SubSpecialtyId { get; set; }
+        public string? AcademicRank { get; set; }
+        public string? Biography { get; set; }
+        public decimal ConsultationFee { get; set; }
+        public int VisitDuration { get; set; }
+        public int? MaxPatientsPerShift { get; set; }
+        public decimal DoctorPercentage { get; set; }
+        public bool AcceptsNewPatients { get; set; }
+        public bool OnlineBookingEnabled { get; set; }
+        public string? SignatureImageBase64 { get; set; }
+        public string? StampImageBase64 { get; set; }
+        public string FullName { get; set; } = string.Empty;
+    }
+
+    public sealed class RoomsResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<RoomItem>? Data { get; set; }
+    }
+
+    public sealed class RoomItem
+    {
+        public long Id { get; set; }
+        public string DisplayName { get; set; } = string.Empty;
+    }
+
+    public sealed class SpecialtiesResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<SpecialtyItem>? Data { get; set; }
+    }
+
+    public sealed class SpecialtyItem
+    {
+        public long Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public long? ParentId { get; set; }
+    }
+
+    public sealed class EmployeesResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<EmployeeItem>? Data { get; set; }
+    }
+
+    public sealed class EmployeeItem
+    {
+        public long Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string? PersonnelCode { get; set; }
+    }
+
+    public sealed class ScheduleResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<ScheduleRow>? Data { get; set; }
+    }
+
+    public sealed class ScheduleRow
+    {
+        public byte DayOfWeek { get; set; }
+        public bool IsEnabled { get; set; }
+        public string? StartTime { get; set; }
+        public string? EndTime { get; set; }
+        public string? BreakStart { get; set; }
+        public string? BreakEnd { get; set; }
+        public long? RoomId { get; set; }
+        public string? RoomName { get; set; }
+        public int? MaxPatients { get; set; }
+    }
+
+    public sealed class AbsencesResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<AbsenceItem>? Data { get; set; }
+    }
+
+    public sealed class AbsenceItem
+    {
+        public long Id { get; set; }
+        public string DateShamsi { get; set; } = string.Empty;
+        public string? FromTime { get; set; }
+        public string? ToTime { get; set; }
+        public string AbsenceTypeName { get; set; } = string.Empty;
+        public string? Reason { get; set; }
+        public int BookedAppointments { get; set; }
+    }
+
+    public sealed class AbsenceCreateResponse
+    {
+        public bool IsSuccess { get; set; }
+        public AbsenceConflict? Data { get; set; }
+    }
+
+    public sealed class AbsenceConflict
+    {
+        public long AbsenceId { get; set; }
+        public int BookedAppointments { get; set; }
+    }
+}
+'''
+
+# ═══════════════════════ DoctorsView ═══════════════════════
+FILES[f"{DT}/Views/DoctorsView.xaml"] = '''<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.DoctorsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="560" d:DesignWidth="980"
+             FlowDirection="RightToLeft"
+             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+    <!-- ═══ فهرست پزشکان — گام U3 طبق پرامپت UI بخش ۱ (فرم ۶) ═══ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- نوار عنوان -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="Doctor"
+                                         Width="26" Height="26"
+                                         Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                         VerticalAlignment="Center" />
+                <TextBlock Text="لیست پزشکان"
+                           FontSize="20" FontWeight="Bold"
+                           Margin="10,0,0,0" VerticalAlignment="Center" />
+                <Border Background="{DynamicResource MaterialDesign.Brush.Primary}"
+                        CornerRadius="10" Padding="10,2" VerticalAlignment="Center"
+                        Margin="12,0,0,0">
+                    <TextBlock Foreground="White" FontSize="11">
+                        <Run Text="کل: " /><Run Text="{Binding TotalCount, Mode=OneWay}" /><Run Text=" پزشک" />
+                    </TextBlock>
+                </Border>
+            </StackPanel>
+            <TextBlock Text="مدیریت کادر درمان و تنظیمات ویزیت و برنامه کاری"
+                       FontSize="12" Opacity="0.65" Margin="2,4,0,0" />
+        </StackPanel>
+
+        <!-- نوار ابزار -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource MaterialDesign.Brush.Background}"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                BorderThickness="1" CornerRadius="10"
+                Padding="10,8" Margin="0,0,0,10">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Command="{Binding AddDoctorCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            ToolTip="ثبت پزشک جدید (F3)" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" Width="16" Height="16" VerticalAlignment="Center" />
+                            <TextBlock Text="پزشک جدید" Margin="6,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding RefreshCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            ToolTip="بارگذاری مجدد (F5)" Margin="0,0,8,0">
+                        <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" />
+                    </Button>
+                    <Button Command="{Binding DeleteDoctorCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            ToolTip="حذف پزشک انتخاب‌شده"
+                            Foreground="#C62828" Padding="8,6">
+                        <materialDesign:PackIcon Kind="Delete" Width="16" Height="16" />
+                    </Button>
+                </StackPanel>
+                <TextBox materialDesign:HintAssist.Hint="🔍 جستجو با نام یا شماره نظام پزشکی…"
+                         Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                         FontSize="13" VerticalAlignment="Center" MinWidth="260">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+                    </TextBox.InputBindings>
+                </TextBox>
+            </DockPanel>
+        </Border>
+
+        <ProgressBar Grid.Row="2" IsIndeterminate="True" Height="3"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}"
+                     Margin="0,0,0,6" />
+
+        <!-- جدول ۱۰ ستونه -->
+        <DataGrid Grid.Row="3"
+                  ItemsSource="{Binding Doctors}"
+                  SelectedItem="{Binding SelectedDoctor}"
+                  AutoGenerateColumns="False"
+                  CanUserSortColumns="True"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  AlternatingRowBackground="#F7FAFD"
+                  HeadersVisibility="Column"
+                  RowBackground="Transparent"
+                  FontSize="12">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="شماره نظام"
+                                    Binding="{Binding MedicalLicenseNo, TargetNullValue=—}"
+                                    Width="105" FontFamily="Consolas" />
+                <DataGridTemplateColumn Header="نام و نام‌خانوادگی" Width="170" SortMemberPath="FullName">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Account" Width="15" Height="15"
+                                                         Opacity="0.55" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding FullName}" FontWeight="SemiBold"
+                                           Margin="7,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="تخصص"
+                                    Binding="{Binding SpecialtyName, TargetNullValue=—}"
+                                    Width="120" />
+                <DataGridTextColumn Header="فوق‌تخصص"
+                                    Binding="{Binding SubSpecialtyName, TargetNullValue=—}"
+                                    Width="120" />
+                <DataGridTextColumn Header="حق ویزیت (ریال)"
+                                    Binding="{Binding FeeDisplay}"
+                                    Width="120">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Left" />
+                            <Setter Property="FontFamily" Value="Consolas" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="مدت (دقیقه)"
+                                    Binding="{Binding VisitDuration}"
+                                    Width="85">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="درصد سهم"
+                                    Binding="{Binding DoctorPercentage}"
+                                    Width="75">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTemplateColumn Header="وضعیت" Width="80" SortMemberPath="IsActive">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#FFCDD2" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                <Setter Property="Background" Value="#C8E6C9" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock FontSize="11"
+                                           Text="{Binding IsActive, Converter={StaticResource BoolToText}}" />
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="امتیاز"
+                                    Binding="{Binding RatingDisplay}"
+                                    Width="70">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTemplateColumn Header="عملیات" Width="170">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Command="{Binding DataContext.EditDoctorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="ویرایش پزشک (۵ تب کامل)" Padding="5">
+                                    <materialDesign:PackIcon Kind="Pencil" Width="16" Height="16" />
+                                </Button>
+                                <Button Command="{Binding DataContext.ShowPerformanceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="آمار عملکرد ویزیت و درآمد" Padding="5">
+                                    <materialDesign:PackIcon Kind="ChartBar" Width="16" Height="16" />
+                                </Button>
+                                <Button Command="{Binding DataContext.EditDoctorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="برنامه کاری هفتگی (تب ۴ فرم ویرایش)" Padding="5">
+                                    <materialDesign:PackIcon Kind="CalendarClock" Width="16" Height="16" />
+                                </Button>
+                                <Button Command="{Binding DataContext.ShowPerformanceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="محاسبه کارانه (داخل آمار عملکرد)" Padding="5">
+                                    <materialDesign:PackIcon Kind="CashMultiple" Width="16" Height="16" />
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <controls:EmptyState Grid.Row="3"
+                             Message="پزشکی یافت نشد"
+                             IconKind="Doctor"
+                             Visibility="{Binding Doctors.Count, Converter={StaticResource NullToVisibility}, ConverterParameter=Inverse}" />
+
+        <controls:PaginationBar Grid.Row="4"
+                                PageNumber="{Binding PageNumber, Mode=TwoWay}"
+                                TotalPages="{Binding TotalPages, Mode=OneWay}"
+                                TotalCount="{Binding TotalCount, Mode=OneWay}"
+                                PageSize="{Binding PageSize, Mode=TwoWay}"
+                                PageChangedCommand="{Binding PageChangedCommand}" />
+    </Grid>
+</UserControl>
+'''
+
+FILES[f"{DT}/Views/DoctorsView.xaml.cs"] = '''using System.Windows.Controls;
+
+namespace Sahand.ClinicPro.Desktop.Views;
+
+/// <summary>
+/// کد پشت فهرست پزشکان — گام U3
+/// </summary>
+public partial class DoctorsView : UserControl
+{
+    /// <summary>سازنده</summary>
+    public DoctorsView() => InitializeComponent();
+}
+'''
+
+print("Desktop files part 1:", len(FILES))
+for path, content in FILES.items():
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with io.open(path, "w", encoding="utf-8-sig", newline="\n") as f:
+        f.write(content)
+    print(" ✓", os.path.basename(path))

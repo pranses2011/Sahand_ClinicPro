@@ -1,99 +1,481 @@
 ﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.AppointmentsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="640" d:DesignWidth="1080"
+             FlowDirection="RightToLeft"
              FontFamily="Vazirmatn, Segoe UI, Tahoma">
-    <!-- ═══════════════════════════════════════════════════════════
-         نوبت‌دهی — گام V1
-         فیلتر تاریخ/پزشک/وضعیت + جدول نوبت‌ها + عملیات وضعیت
-         ═══════════════════════════════════════════════════════════ -->
-    <Grid Margin="24">
+    <!-- ═══ نوبت‌دهی دو-تبی — گام U4 طبق پرامپت UI بخش ۲ (فرم ۸ و ۹) ═══ -->
+    <Grid Margin="16,12">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- سربرگ -->
-        <DockPanel Grid.Row="0" Margin="0,0,0,12">
-            <Button DockPanel.Dock="Right"
-                    Command="{Binding NewAppointmentCommand}"
-                    Style="{StaticResource MaterialDesignFilledButton}"
-                    Content="نوبت جدید" />
-            <TextBlock Text="نوبت‌دهی"
-                       Style="{StaticResource SectionTitle}"
-                       VerticalAlignment="Center" />
-        </DockPanel>
-
-        <!-- فیلترها -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
-            <TextBox materialDesign:HintAssist.Hint="تاریخ شمسی (1404/01/15)"
-                     Text="{Binding DateShamsi, UpdateSourceTrigger=PropertyChanged}"
-                     Width="170" Margin="0,0,12,0">
-                <TextBox.InputBindings>
-                    <KeyBinding Key="Enter" Command="{Binding LoadCommand}" />
-                </TextBox.InputBindings>
-            </TextBox>
-            <ComboBox materialDesign:HintAssist.Hint="پزشک"
-                      ItemsSource="{Binding Doctors}"
-                      DisplayMemberPath="Name"
-                      SelectedIndex="{Binding DoctorFilterIndex}"
-                      Width="220" Margin="0,0,12,0" />
-            <ComboBox materialDesign:HintAssist.Hint="وضعیت"
-                      ItemsSource="{Binding StatusLabels}"
-                      SelectedIndex="{Binding StatusFilterIndex}"
-                      Width="140" Margin="0,0,12,0" />
-            <Button Command="{Binding LoadCommand}"
-                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                    Content="بازخوانی" />
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="CalendarClock"
+                                         Width="26" Height="26"
+                                         Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                         VerticalAlignment="Center" />
+                <TextBlock Text="نوبت‌دهی و تقویم" FontSize="20" FontWeight="Bold"
+                           Margin="10,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+            <TextBlock Text="رزرو نوبت با تقویم شمسی و اسلات‌های آزاد + مدیریت فهرست نوبت‌ها"
+                       FontSize="12" Opacity="0.65" Margin="2,4,0,0" />
         </StackPanel>
 
-        <!-- عملیات وضعیت روی نوبت انتخاب‌شده -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
-            <Button Command="{Binding ConfirmCommand}"
-                    Style="{StaticResource MaterialDesignFlatButton}"
-                    Content="تأیید" Margin="0,0,8,0" />
-            <Button Command="{Binding CancelCommand}"
-                    Style="{StaticResource MaterialDesignFlatButton}"
-                    Content="لغو نوبت" Margin="0,0,8,0" />
-            <Button Command="{Binding NoShowCommand}"
-                    Style="{StaticResource MaterialDesignFlatButton}"
-                    Content="ثبت غیبت" Margin="0,0,8,0" />
-            <Button Command="{Binding CompleteCommand}"
-                    Style="{StaticResource MaterialDesignFlatButton}"
-                    Content="اتمام" Margin="0,0,8,0" />
-            <TextBlock Text="عملیات روی نوبت انتخاب‌شده اعمال می‌شود"
-                       VerticalAlignment="Center" Opacity="0.7" FontSize="12" />
-        </StackPanel>
+        <TabControl Grid.Row="1" Style="{StaticResource MaterialDesignTabControl}">
+            <!-- ═══════════ تب ۱: رزرو نوبت ═══════════ -->
+            <TabItem Header="📅 رزرو نوبت جدید">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid Margin="4,8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
-        <!-- پیام خطا -->
-        <TextBlock Grid.Row="2" Text="{Binding ErrorMessage}"
-                   Foreground="{DynamicResource MaterialDesign.Brush.Error}"
-                   FontSize="12" TextWrapping="Wrap"
-                   HorizontalAlignment="Right" VerticalAlignment="Center"
-                   MaxWidth="360" />
+                        <!-- جستجوی بیمار + پزشک -->
+                        <Border Grid.Row="0" CornerRadius="10" Padding="12,10" Margin="0,0,0,10"
+                                Background="{DynamicResource MaterialDesign.Brush.Background}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                    <TextBlock Text="🔍 جستجوی بیمار (کد ملی / نام / موبایل)" FontSize="12" Opacity="0.7" Margin="2,0,2,4" />
+                                    <TextBox Text="{Binding PatientSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                             materialDesign:HintAssist.Hint="حداقل ۲ کاراکتر تایپ کنید…" />
+                                    <!-- نتایج جستجو -->
+                                    <ListBox ItemsSource="{Binding PatientSearchResults}"
+                                             Visibility="{Binding PatientSearchResults.Count, Converter={StaticResource NullToVisibility}}"
+                                             MaxHeight="140" Margin="0,6,0,0" BorderThickness="1">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Command="{Binding DataContext.SelectPatientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                                        HorizontalContentAlignment="Right">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Account" Width="16" Height="16" Opacity="0.6" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" Margin="8,0,0,0" />
+                                                        <TextBlock Text="{Binding NationalCode}" Opacity="0.6" FontFamily="Consolas" Margin="12,0,0,0" />
+                                                    </StackPanel>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="👨‍⚕️ پزشک" FontSize="12" Opacity="0.7" Margin="2,0,2,4" />
+                                    <ComboBox ItemsSource="{Binding Doctors}"
+                                              SelectedItem="{Binding SelectedDoctor}"
+                                              DisplayMemberPath="Name" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
 
-        <!-- جدول نوبت‌ها -->
-        <DataGrid Grid.Row="3"
-                  ItemsSource="{Binding Appointments}"
-                  SelectedItem="{Binding SelectedAppointment}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  SelectionMode="Single"
-                  CanUserAddRows="False"
-                  HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal"
-                  materialDesign:DataGridAssist.CellPadding="8,6">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="کد نوبت" Binding="{Binding Code}" Width="110" />
-                <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName}" Width="*" />
-                <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName}" Width="*" />
-                <DataGridTextColumn Header="ساعت" Binding="{Binding Time}" Width="80" />
-                <DataGridTextColumn Header="نوبت" Binding="{Binding QueueNumber}" Width="60" />
-                <DataGridTextColumn Header="نوع" Binding="{Binding TypeText}" Width="90" />
-                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText}" Width="110" />
-            </DataGrid.Columns>
-        </DataGrid>
+                        <!-- کارت بیمار انتخاب‌شده -->
+                        <Border Grid.Row="1" CornerRadius="10" Padding="12,8" Margin="0,0,0,10"
+                                Background="#E3F2FD"
+                                Visibility="{Binding SelectedPatient, Converter={StaticResource NullToVisibility}}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="AccountCheck" Width="20" Height="20"
+                                                         Foreground="#1565C0" VerticalAlignment="Center" />
+                                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold">
+                                    <Run Text="{Binding SelectedPatient.FullName, Mode=OneWay}" />
+                                </TextBlock>
+                                <TextBlock Margin="16,0,0,0" VerticalAlignment="Center" Opacity="0.75">
+                                    <Run Text="کد ملی: " /><Run Text="{Binding SelectedPatient.NationalCode, Mode=OneWay}" />
+                                </TextBlock>
+                                <TextBlock Margin="16,0,0,0" VerticalAlignment="Center" Opacity="0.75">
+                                    <Run Text="بیمه: " /><Run Text="{Binding SelectedPatient.InsuranceName, Mode=OneWay, TargetNullValue=آزاد}" />
+                                </TextBlock>
+                                <Border Background="#FFEBEE" CornerRadius="8" Padding="8,2" Margin="16,0,0,0"
+                                        Visibility="{Binding SelectedPatient.Allergies, Converter={StaticResource NullToVisibility}}">
+                                    <TextBlock FontSize="11" Foreground="#C62828">
+                                        <Run Text="⚠️ آلرژی: " /><Run Text="{Binding SelectedPatient.Allergies, Mode=OneWay}" />
+                                    </TextBlock>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- تقویم + اسلات‌ها + خلاصه -->
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="330" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- ستون تقویم -->
+                            <Border Grid.Column="0" CornerRadius="10" Padding="10" Margin="0,0,10,0"
+                                    Background="{DynamicResource MaterialDesign.Brush.Background}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Command="{Binding PreviousMonthCommand}"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}" Padding="6,4">
+                                            <materialDesign:PackIcon Kind="ChevronRight" Width="16" Height="16" />
+                                        </Button>
+                                        <TextBlock Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   FontSize="14" FontWeight="Bold">
+                                            <Run Text="{Binding DisplayMonth, Mode=OneWay}" /><Run Text=" / " /><Run Text="{Binding DisplayYear, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <Button Grid.Column="2" Command="{Binding NextMonthCommand}"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}" Padding="6,4">
+                                            <materialDesign:PackIcon Kind="ChevronLeft" Width="16" Height="16" />
+                                        </Button>
+                                    </Grid>
+                                    <controls:PersianCalendarControl Grid.Row="1"
+                                        x:Name="Calendar"
+                                        SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
+                                        DisplayMonth="{Binding DisplayMonth, Mode=TwoWay}"
+                                        DisplayYear="{Binding DisplayYear, Mode=TwoWay}"
+                                        MarkedDates="{Binding MarkedDates, Mode=OneWay}"
+                                        DisabledDates="{Binding DisabledDates, Mode=OneWay}"
+                                        DateSelected="OnCalendarDateSelected" />
+                                </Grid>
+                            </Border>
+
+                            <!-- ستون اسلات‌ها + خلاصه -->
+                            <Grid Grid.Column="1">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <!-- اسلات‌ها -->
+                                <Border Grid.Row="0" CornerRadius="10" Padding="12,10"
+                                        Background="{DynamicResource MaterialDesign.Brush.Background}">
+                                    <StackPanel>
+                                        <TextBlock FontSize="13" FontWeight="Bold" Margin="0,0,0,6">
+                                            <Run Text="⏰ ساعت‌های " /><Run Text="{Binding SelectedDateShamsi, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <ItemsControl ItemsSource="{Binding Slots}">
+                                            <ItemsControl.GroupStyle>
+                                                <GroupStyle>
+                                                    <GroupStyle.HeaderTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding Name}" FontWeight="Bold"
+                                                                       FontSize="12" Foreground="#1565C0"
+                                                                       Margin="2,8,2,4" />
+                                                        </DataTemplate>
+                                                    </GroupStyle.HeaderTemplate>
+                                                </GroupStyle>
+                                            </ItemsControl.GroupStyle>
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <ToggleButton Width="66" Height="32" Margin="3"
+                                                        IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                        IsEnabled="{Binding IsAvailable}"
+                                                        Command="{Binding DataContext.SelectSlotCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}">
+                                                        <TextBlock Text="{Binding Time}" FontFamily="Consolas" FontSize="12">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="TextDecorations" Value="None" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                            <Setter Property="FontWeight" Value="Bold" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                        <ToggleButton.Style>
+                                                            <Style TargetType="ToggleButton" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+                                                                <Setter Property="Background" Value="#FFFFFF" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsBreak}" Value="True">
+                                                                        <Setter Property="Background" Value="#ECEFF1" />
+                                                                        <Setter Property="Opacity" Value="0.55" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                        <Setter Property="Background" Value="#BBDEFB" />
+                                                                        <Setter Property="BorderBrush" Value="#1565C0" />
+                                                                        <Setter Property="BorderThickness" Value="2" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </ToggleButton.Style>
+                                                    </ToggleButton>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <TextBlock Text="راهنما: [سبز کمرنگ] آزاد | [خاکستری] استراحت | [آبی] انتخاب شما — اسلات رزروشده غیرفعال است"
+                                                   FontSize="10.5" Opacity="0.55" Margin="2,10,2,0" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- خلاصه و ثبت -->
+                                <Border Grid.Row="1" CornerRadius="10" Padding="12,10" Margin="0,10,0,0"
+                                        Background="#E8F5E9">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <!-- خلاصه انتخاب -->
+                                        <Grid Grid.Row="0" Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                                <TextBlock Text="📅 تاریخ" FontSize="10" Opacity="0.6" />
+                                                <TextBlock Text="{Binding SelectedDateShamsi, Mode=OneWay}" FontWeight="Bold" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
+                                                <TextBlock Text="⏰ ساعت" FontSize="10" Opacity="0.6" />
+                                                <TextBlock Text="{Binding SelectedSlot.Time, Mode=OneWay, TargetNullValue=—}" FontWeight="Bold" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Margin="0,0,16,0">
+                                                <TextBlock Text="🏥 اتاق" FontSize="10" Opacity="0.6" />
+                                                <TextBlock Text="{Binding SelectedRoom, Mode=OneWay, TargetNullValue=—}" FontWeight="Bold" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="3" HorizontalAlignment="Left">
+                                                <TextBlock Text="💰 تخمین هزینه (ریال)" FontSize="10" Opacity="0.6" />
+                                                <TextBlock Text="{Binding EstimatedFee, Mode=OneWay, StringFormat='{}{0:N0}'}" FontWeight="Bold" FontFamily="Consolas" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- نوع و اولویت و یادداشت -->
+                                        <Grid Grid.Row="1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="1.4*" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                                <TextBlock Text="نوع ویزیت" FontSize="11" Opacity="0.7" />
+                                                <ComboBox ItemsSource="{Binding VisitTypes}" SelectedIndex="{Binding SelectedTypeIndex}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                                                <TextBlock Text="اولویت" FontSize="11" Opacity="0.7" />
+                                                <ComboBox ItemsSource="{Binding Priorities}" SelectedIndex="{Binding SelectedPriorityIndex}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="یادداشت" FontSize="11" Opacity="0.7" />
+                                                <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- دکمه ثبت -->
+                                        <Button Grid.Row="2" Command="{Binding BookCommand}"
+                                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                                Background="#2E7D32" BorderBrush="#2E7D32"
+                                                Height="42" Margin="0,10,0,0">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="CheckCircle" Width="18" Height="18" VerticalAlignment="Center" />
+                                                <TextBlock Text="✅ تایید و ثبت نوبت" Margin="10,0,0,0" FontSize="14" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ═══════════ تب ۲: فهرست نوبت‌ها ═══════════ -->
+            <TabItem Header="📋 فهرست نوبت‌ها">
+                <Grid Margin="4,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- فیلترها -->
+                    <Border Grid.Row="0" CornerRadius="10" Padding="10,8" Margin="0,0,0,10"
+                            Background="{DynamicResource MaterialDesign.Brush.Background}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                <TextBlock Text="از تاریخ" FontSize="10" Opacity="0.6" />
+                                <TextBox Text="{Binding FromDateShamsi, UpdateSourceTrigger=PropertyChanged}" Width="100" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                <TextBlock Text="تا تاریخ" FontSize="10" Opacity="0.6" />
+                                <TextBox Text="{Binding ToDateShamsi, UpdateSourceTrigger=PropertyChanged}" Width="100" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                                <TextBlock Text="جستجو (نام/کدملی/موبایل/کد)" FontSize="10" Opacity="0.6" />
+                                <TextBox Text="{Binding ListSearch, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="3" Margin="0,0,8,0">
+                                <TextBlock Text="پزشک" FontSize="10" Opacity="0.6" />
+                                <ComboBox ItemsSource="{Binding Doctors}" SelectedIndex="{Binding DoctorFilterIndex}" DisplayMemberPath="Name" MinWidth="120" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="4" Margin="0,0,8,0">
+                                <TextBlock Text="وضعیت" FontSize="10" Opacity="0.6" />
+                                <ComboBox SelectedIndex="{Binding StatusFilterIndex}" MinWidth="100">
+                                    <ComboBoxItem Content="همه" />
+                                    <ComboBoxItem Content="رزرو شده" />
+                                    <ComboBoxItem Content="تأیید شده" />
+                                    <ComboBoxItem Content="حاضر" />
+                                    <ComboBoxItem Content="در حال ویزیت" />
+                                    <ComboBoxItem Content="تکمیل شده" />
+                                    <ComboBoxItem Content="لغو شده" />
+                                    <ComboBoxItem Content="عدم مراجعه" />
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Grid.Column="5" Margin="0,0,8,0">
+                                <TextBlock Text="نوع" FontSize="10" Opacity="0.6" />
+                                <ComboBox SelectedIndex="{Binding TypeFilterIndex}" MinWidth="90">
+                                    <ComboBoxItem Content="همه" />
+                                    <ComboBoxItem Content="اولیه" />
+                                    <ComboBoxItem Content="پیگیری" />
+                                    <ComboBoxItem Content="اورژانس" />
+                                    <ComboBoxItem Content="مشاوره" />
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Grid.Column="6" Margin="0,0,8,0">
+                                <TextBlock Text="منبع" FontSize="10" Opacity="0.6" />
+                                <ComboBox SelectedIndex="{Binding SourceFilterIndex}" MinWidth="85">
+                                    <ComboBoxItem Content="همه" />
+                                    <ComboBoxItem Content="حضوری" />
+                                    <ComboBoxItem Content="تلفنی" />
+                                    <ComboBoxItem Content="آنلاین" />
+                                </ComboBox>
+                            </StackPanel>
+                            <Button Grid.Column="7" Command="{Binding SearchListCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}" VerticalAlignment="Bottom">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Magnify" Width="15" Height="15" VerticalAlignment="Center" />
+                                    <TextBlock Text="جستجو" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- عملیات دسته‌ای -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Command="{Binding SendRemindersCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="MessageText" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="📱 ارسال SMS یادآوری (نوبت‌های فردا)" Margin="7,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding BatchCancelCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#C62828">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="❌ لغو دسته‌ای انتخاب‌شده‌ها" Margin="7,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- جدول ۱۲ ستونه -->
+                    <DataGrid Grid.Row="2"
+                              ItemsSource="{Binding Rows}"
+                              SelectedItem="{Binding SelectedRow}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="False"
+                              CanUserAddRows="False"
+                              HeadersVisibility="Column"
+                              AlternatingRowBackground="#F7FAFD"
+                              FontSize="12">
+                        <DataGrid.Columns>
+                            <DataGridCheckBoxColumn Header="" Width="36"
+                                Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
+                            <DataGridTextColumn Header="کد پیگیری" Width="95"
+                                Binding="{Binding Code, TargetNullValue=—}" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="تاریخ" Width="90" Binding="{Binding DateShamsi}" />
+                            <DataGridTextColumn Header="ساعت" Width="55" Binding="{Binding Time}" FontFamily="Consolas" />
+                            <DataGridTemplateColumn Header="بیمار" Width="150" SortMemberPath="PatientName">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Account" Width="14" Height="14" Opacity="0.5" VerticalAlignment="Center" />
+                                            <StackPanel Margin="6,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding PatientMobile, TargetNullValue=''}" FontSize="10" Opacity="0.55" FontFamily="Consolas" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="پزشک" Width="130" Binding="{Binding DoctorName}" />
+                            <DataGridTextColumn Header="تخصص" Width="100" Binding="{Binding SpecialtyName, TargetNullValue=—}" />
+                            <DataGridTextColumn Header="نوع" Width="70" Binding="{Binding TypeText}" />
+                            <DataGridTemplateColumn Header="وضعیت" Width="105" SortMemberPath="Status">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
+                                                Background="{Binding StatusColor}">
+                                            <TextBlock Text="{Binding StatusText}" FontSize="11" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="منبع" Width="65" Binding="{Binding SourceText}" />
+                            <DataGridTemplateColumn Header="عملیات" Width="130">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Button Command="{Binding DataContext.ConfirmArrivalCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                                    ToolTip="✓ تأیید حضور" Padding="5">
+                                                <materialDesign:PackIcon Kind="AccountCheck" Width="15" Height="15" />
+                                            </Button>
+                                            <Button Command="{Binding DataContext.CancelOneCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                                    ToolTip="❌ لغو نوبت" Foreground="#C62828" Padding="5">
+                                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="15" Height="15" />
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <controls:PaginationBar Grid.Row="3"
+                                            PageNumber="{Binding PageNumber, Mode=TwoWay}"
+                                            TotalPages="{Binding TotalPages, Mode=OneWay}"
+                                            TotalCount="{Binding TotalCount, Mode=OneWay}"
+                                            PageSize="{Binding PageSize, Mode=TwoWay}"
+                                            PageChangedCommand="{Binding PageChangedCommand}" />
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </UserControl>

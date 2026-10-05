@@ -61,4 +61,28 @@ public class LookupsController : ApiBaseController
         var result = await _mediator.Send(new GetLabTestsQuery(search));
         return ToResponse(result);
     }
+
+    /// <summary>فهرست تخصص‌های فعال — با گزینه فقط تخصص‌های اصلی</summary>
+    [HttpGet("specialties")]
+    public async Task<IActionResult> GetSpecialties([FromQuery] bool onlyParents = false)
+    {
+        var result = await _mediator.Send(new GetSpecialtiesQuery(onlyParents));
+        return ToResponse(result);
+    }
+
+    /// <summary>فهرست اتاق‌های معاینه فعال</summary>
+    [HttpGet("rooms")]
+    public async Task<IActionResult> GetRooms()
+    {
+        var result = await _mediator.Send(new GetRoomsQuery());
+        return ToResponse(result);
+    }
+
+    /// <summary>فهرست پرسنل فعال — برای انتخاب در فرم پزشک</summary>
+    [HttpGet("employees")]
+    public async Task<IActionResult> GetEmployees()
+    {
+        var result = await _mediator.Send(new GetEmployeesQuery());
+        return ToResponse(result);
+    }
 }

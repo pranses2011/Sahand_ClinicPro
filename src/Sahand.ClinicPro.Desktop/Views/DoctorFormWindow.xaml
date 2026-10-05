@@ -1,0 +1,427 @@
+﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.DoctorFormWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="{Binding FormTitle, Mode=OneWay}"
+        Width="900" Height="660"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        FlowDirection="RightToLeft"
+        FontFamily="Vazirmatn, Segoe UI, Tahoma"
+        TextOptions.TextFormattingMode="Ideal"
+        WindowChrome.IsHitTestVisibleInChrome="False">
+    <!-- ═══ فرم ثبت/ویرایش پزشک — گام U3 طبق پرامپت UI بخش ۱ (فرم ۷) ═══
+         ۵ تب: پایه / تنظیم ویزیت / امضا و مهر / برنامه کاری / غیبت‌ها -->
+    <Window.Resources>
+        <Style x:Key="FieldLabel" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignCaptionTextBlock}">
+            <Setter Property="Margin" Value="2,8,2,4" />
+            <Setter Property="Opacity" Value="0.8" />
+        </Style>
+        <Style x:Key="TimeBox" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
+            <Setter Property="materialDesign:HintAssist.Hint" Value="HH:mm" />
+            <Setter Property="materialDesign:TextFieldAssist.RippleOnFocusEnabled" Value="False" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="MaxLength" Value="5" />
+            <Setter Property="MinWidth" Value="62" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="18,14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- هدر -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="Doctor" Width="24" Height="24"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                     VerticalAlignment="Center" />
+            <TextBlock Text="{Binding FormTitle, Mode=OneWay}"
+                       FontSize="18" FontWeight="Bold"
+                       Margin="10,0,0,0" VerticalAlignment="Center" />
+            <Button DockPanel.Dock="Left" Command="{Binding CancelCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    HorizontalAlignment="Left" Padding="10,4">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Close" Width="14" Height="14" VerticalAlignment="Center" />
+                    <TextBlock Text="بستن" Margin="6,0,0,0" />
+                </StackPanel>
+            </Button>
+        </DockPanel>
+
+        <!-- تب‌ها -->
+        <TabControl Grid.Row="1"
+                    materialDesign:ColorZoneAssist.Mode="PrimaryLight"
+                    Style="{StaticResource MaterialDesignTabControl}">
+            <TabItem Header="👤 اطلاعات پایه">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="28" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="پرسنل مرتبط" />
+                            <ComboBox ItemsSource="{Binding Employees}"
+                                      SelectedValuePath="Id"
+                                      SelectedValue="{Binding EmployeeId}"
+                                      DisplayMemberPath="FullName"
+                                      materialDesign:HintAssist.Hint="انتخاب از پرسنل درمانگاه" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="0" Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="مرتبه علمی" />
+                            <ComboBox ItemsSource="{Binding AcademicRanks}"
+                                      SelectedItem="{Binding AcademicRank}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="0">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="شماره پروانه نظام پزشکی * (یکتا)" />
+                            <TextBox Text="{Binding MedicalLicenseNo, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="مثلاً ۱۲۳۴۵" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="کد نظام پزشکی (الزامی و یکتا)" />
+                            <TextBox Text="{Binding NezamPezeshkiCode, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2" Grid.Column="0">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="تخصص *" />
+                            <ComboBox ItemsSource="{Binding Specialties}"
+                                      SelectedValuePath="Id"
+                                      SelectedValue="{Binding SpecialtyId}"
+                                      DisplayMemberPath="Name" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="2" Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="فوق‌تخصص (اختیاری)" />
+                            <ComboBox ItemsSource="{Binding SubSpecialties}"
+                                      SelectedValuePath="Id"
+                                      SelectedValue="{Binding SubSpecialtyId}"
+                                      DisplayMemberPath="Name"
+                                      IsEnabled="{Binding SpecialtyId, Converter={StaticResource NullToBool}}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="بیوگرافی" />
+                            <TextBox Text="{Binding Biography, UpdateSourceTrigger=PropertyChanged}"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     Height="92"
+                                     VerticalScrollBarVisibility="Auto"
+                                     materialDesign:HintAssist.Hint="سوابق تحصیلی و حرفه‌ای — در پرونده الکترونیک بیمار نمایش داده می‌شود" />
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="⚙️ تنظیمات ویزیت">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="28" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="حق ویزیت (ریال)" />
+                            <TextBox Text="{Binding ConsultationFeeText, UpdateSourceTrigger=PropertyChanged}"
+                                     FontSize="18" FontFamily="Consolas"
+                                     TextAlignment="Center"
+                                     materialDesign:HintAssist.Hint="با جداکننده هزارگان" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="0" Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="مدت هر ویزیت (دقیقه)" />
+                            <ComboBox ItemsSource="{Binding VisitDurations}"
+                                      SelectedItem="{Binding VisitDuration}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="0">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="حداکثر بیمار در هر شیفت" />
+                            <TextBox Text="{Binding MaxPatientsPerShift, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="درصد سهم پزشک (۰ تا ۱۰۰)" />
+                            <TextBox Text="{Binding DoctorPercentage, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Margin="0,16,0,0">
+                            <ToggleButton IsChecked="{Binding AcceptsNewPatients}"
+                                          Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                          ToolTip="پذیرش بیمار جدید" />
+                            <TextBlock Text="پذیرش بیمار جدید" VerticalAlignment="Center" Margin="10,0,0,0" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Margin="0,16,0,0">
+                            <ToggleButton IsChecked="{Binding OnlineBookingEnabled}"
+                                          Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                          ToolTip="نوبت‌دهی آنلاین" />
+                            <TextBlock Text="نوبت‌دهی آنلاین فعال" VerticalAlignment="Center" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="✍️ امضا و مهر">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="8">
+                        <TextBlock Text="تصویر امضا" FontWeight="Bold" FontSize="13" />
+                        <TextBlock Text="PNG شفاف — ۳۰۰×۱۰۰ پیکسل" FontSize="11" Opacity="0.6" Margin="2,4,2,10" />
+                        <Border Height="120" CornerRadius="8"
+                                BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                                BorderThickness="1,1,1,1" Background="#FAFAFA"
+                                HorizontalAlignment="Center" Padding="10">
+                            <Image Source="{Binding SignatureImageBase64, Converter={StaticResource Base64ToImage}}"
+                                   Stretch="Uniform" StretchDirection="DownOnly"
+                                   MaxWidth="300" MaxHeight="100" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Center">
+                            <Button Command="{Binding PickSignatureCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Upload" Width="15" Height="15" VerticalAlignment="Center" />
+                                    <TextBlock Text="انتخاب تصویر امضا" Margin="7,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="8">
+                        <TextBlock Text="تصویر مهر" FontWeight="Bold" FontSize="13" />
+                        <TextBlock Text="PNG — ۱۵۰×۱۵۰ پیکسل" FontSize="11" Opacity="0.6" Margin="2,4,2,10" />
+                        <Border Height="120" CornerRadius="8"
+                                BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                                BorderThickness="1" Background="#FAFAFA"
+                                HorizontalAlignment="Center" Padding="10">
+                            <Image Source="{Binding StampImageBase64, Converter={StaticResource Base64ToImage}}"
+                                   Stretch="Uniform" StretchDirection="DownOnly"
+                                   MaxWidth="150" MaxHeight="150" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Center">
+                            <Button Command="{Binding PickStampCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Upload" Width="15" Height="15" VerticalAlignment="Center" />
+                                    <TextBlock Text="انتخاب تصویر مهر" Margin="7,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="📅 برنامه کاری">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="برنامه کاری هفتگی — شیفت هر روز هفته با اتاق و ظرفیت"
+                               FontSize="12" Opacity="0.7" Margin="2,2,2,8" />
+
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding ScheduleRows}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              HeadersVisibility="Column"
+                              FontSize="12"
+                              SelectedItem="{Binding SelectedScheduleRow, Mode=TwoWay}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="روز" Width="95">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
+                                                      VerticalAlignment="Center" Margin="0,0,8,0" />
+                                            <TextBlock Text="{Binding DayName}" FontWeight="SemiBold"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="شروع" Width="70"
+                                Binding="{Binding StartTime, UpdateSourceTrigger=PropertyChanged}" />
+                            <DataGridTextColumn Header="پایان" Width="70"
+                                Binding="{Binding EndTime, UpdateSourceTrigger=PropertyChanged}" />
+                            <DataGridTextColumn Header="استراحت از" Width="70"
+                                Binding="{Binding BreakStart, UpdateSourceTrigger=PropertyChanged}" />
+                            <DataGridTextColumn Header="استراحت تا" Width="70"
+                                Binding="{Binding BreakEnd, UpdateSourceTrigger=PropertyChanged}" />
+                            <DataGridTemplateColumn Header="اتاق" Width="140">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding DataContext.Rooms, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                  SelectedValuePath="Id"
+                                                  SelectedValue="{Binding RoomId, UpdateSourceTrigger=PropertyChanged}"
+                                                  DisplayMemberPath="DisplayName"
+                                                  FontSize="11" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="ظرفیت" Width="65"
+                                Binding="{Binding MaxPatients, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="2,10,0,0">
+                        <Button Command="{Binding SaveScheduleCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="ذخیره فقط برنامه کاری" Margin="7,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="قالب ساعت: 08:30 — ساعت استراحت اختیاری است"
+                                   FontSize="11" Opacity="0.55" VerticalAlignment="Center" Margin="6,0,0,0" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="🏖️ غیبت‌ها و مرخصی">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- فرم ثبت غیبت جدید -->
+                    <Border Grid.Row="0" CornerRadius="10" Padding="10,8" Margin="0,0,0,10"
+                            Background="{DynamicResource MaterialDesign.Brush.Background}"
+                            BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                            BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="ثبت غیبت جدید" FontWeight="Bold" FontSize="13" Margin="0,0,0,8" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                    <TextBlock Text="تاریخ (شمسی)" FontSize="11" Opacity="0.7" />
+                                    <TextBox Text="{Binding NewAbsenceDateShamsi, UpdateSourceTrigger=PropertyChanged}"
+                                             materialDesign:HintAssist.Hint="۱۴۰۴/۰۴/۰۳" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                    <TextBlock Text="از ساعت (اختیاری)" FontSize="11" Opacity="0.7" />
+                                    <TextBox Text="{Binding NewAbsenceFromTime, UpdateSourceTrigger=PropertyChanged}"
+                                             materialDesign:HintAssist.Hint="خالی = کل روز" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                                    <TextBlock Text="تا ساعت" FontSize="11" Opacity="0.7" />
+                                    <TextBox Text="{Binding NewAbsenceToTime, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="3">
+                                    <TextBlock Text="نوع غیبت" FontSize="11" Opacity="0.7" />
+                                    <ComboBox ItemsSource="{Binding AbsenceTypes}"
+                                              SelectedIndex="{Binding NewAbsenceTypeIndex}" />
+                                </StackPanel>
+                            </Grid>
+                            <Grid Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding NewAbsenceReason, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="دلیل غیبت (اختیاری)" Margin="0,0,8,0" />
+                                <Button Grid.Column="1" Command="{Binding AddAbsenceCommand}"
+                                        Style="{StaticResource MaterialDesignRaisedButton}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
+                                        <TextBlock Text="ثبت غیبت" Margin="7,0,0,0" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- فهرست غیبت‌ها -->
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding Absences}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              HeadersVisibility="Column"
+                              FontSize="12">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi}" Width="100" />
+                            <DataGridTextColumn Header="از ساعت" Binding="{Binding FromTime, TargetNullValue=—}" Width="75" />
+                            <DataGridTextColumn Header="تا ساعت" Binding="{Binding ToTime, TargetNullValue=—}" Width="75" />
+                            <DataGridTextColumn Header="نوع" Binding="{Binding AbsenceTypeName}" Width="85" />
+                            <DataGridTextColumn Header="دلیل" Binding="{Binding Reason, TargetNullValue=—}" Width="150" />
+                            <DataGridTemplateColumn Header="نوبت‌های درگیر" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center"
+                                                Background="#FFF3E0" Visibility="{Binding BookedAppointments, Converter={StaticResource ZeroToCollapsed}}">
+                                            <TextBlock FontSize="11" Foreground="#E65100"
+                                                       Text="{Binding BookedAppointments}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="عملیات" Width="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.DeleteAbsenceCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                                ToolTip="حذف غیبت" Foreground="#C62828" Padding="5">
+                                            <materialDesign:PackIcon Kind="Delete" Width="15" Height="15" />
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Grid.Row="2" FontSize="11" Opacity="0.55" Margin="2,8,0,0"
+                               Text="هنگام ثبت غیبت، نوبت‌های رزروشده در آن بازه بررسی و در صورت وجود هشدار داده می‌شود" />
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <!-- خطای فرم -->
+        <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}"
+                   Foreground="#C62828" FontSize="12" Margin="0,6,0,0"
+                   Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}"
+                   HorizontalAlignment="Center" VerticalAlignment="Bottom" />
+
+        <!-- نوار پایین -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Left">
+            <Button Command="{Binding SaveCommand}"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Width="170" HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="ContentSaveCheck" Width="17" Height="17" VerticalAlignment="Center" />
+                    <TextBlock Text="ذخیره پزشک و برنامه" Margin="8,0,0,0" />
+                </StackPanel>
+            </Button>
+            <ProgressBar IsIndeterminate="True" Width="26" Height="18" Margin="10,0,0,0"
+                         Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+        </StackPanel>
+    </Grid>
+</Window>

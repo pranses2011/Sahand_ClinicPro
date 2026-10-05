@@ -23,6 +23,7 @@ public record PrescriptionRow(
 public partial class PrescriptionsViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
+    private readonly ISnackbarService _snackbar;
     private const int PageSize = 20;
 
     /// <summary>عنوان صفحه</summary>
@@ -64,9 +65,10 @@ public partial class PrescriptionsViewModel : ViewModelBase
     public ObservableCollection<DoctorOption> Doctors { get; } = new();
 
     /// <summary>سازنده با تزریق کلاینت API</summary>
-    public PrescriptionsViewModel(IApiClient api)
+    public PrescriptionsViewModel(IApiClient api, ISnackbarService snackbar)
     {
         _api = api;
+        _snackbar = snackbar;
         _ = InitializeAsync();
     }
 
@@ -166,7 +168,7 @@ public partial class PrescriptionsViewModel : ViewModelBase
     [RelayCommand]
     private void NewPrescription()
     {
-        var vm = new PrescriptionFormViewModel(_api, Doctors);
+        var vm = new PrescriptionFormViewModel(_api, _snackbar, Doctors);
         var window = new PrescriptionFormWindow(vm)
         {
             Owner = System.Windows.Application.Current.MainWindow

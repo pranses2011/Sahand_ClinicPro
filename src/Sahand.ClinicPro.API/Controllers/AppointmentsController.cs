@@ -6,6 +6,10 @@ using Sahand.ClinicPro.Application.Features.Appointments.Commands.ChangeAppointm
 using Sahand.ClinicPro.Application.Features.Appointments.Commands.CreateAppointment;
 using Sahand.ClinicPro.Application.Features.Appointments.Queries.GetAppointmentsByDate;
 using Sahand.ClinicPro.Domain.Enums;
+using Sahand.ClinicPro.Application.Features.Appointments.Commands.BatchCancelAppointments;
+using Sahand.ClinicPro.Application.Features.Appointments.Commands.SendAppointmentReminders;
+using Sahand.ClinicPro.Application.Features.Appointments.Queries.GetAvailableSlots;
+using Sahand.ClinicPro.Application.Features.Appointments.Queries.SearchAppointments;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -61,4 +65,42 @@ public class AppointmentsController : ApiBaseController
 
     /// <summary>مدل درخواست تغییر وضعیت</summary>
     public record ChangeStatusDto(AppointmentStatus Status, string? Reason);
+
+    /// <summary>اسلات‌های زمانی آزاد پزشک در یک تاریخ — برای رزرو نوبت</summary>
+    /// <param name="id">شناسه پزشک</param>
+    /// <param name="date">تاریخ شمسی</param>
+    [HttpGet("doctor/{id:long}/available-slots")]
+    [HasPermission("appointments.view")]
+    public async Task<IActionResult> GetAvailableSlots(long id, [FromQuery] string date)
+    {
+        var result = await _mediator.Send(new GetAvailableSlotsQuery(id, date));
+        return ToResponse(result);
+    }
+
+    /// <summary>جستجوی پیشرفته نوبت‌ها با همه فیلترها و صفحه‌بندی</summary>
+    [HttpPost("search")]
+    [HasPermission("appointments.view")]
+    public async Task<IActionResult> Search([FromBody] AppointmentSearchFilter filter)
+    {
+        var result = await _mediator.Send(new SearchAppointmentsQuery(filter));
+        return ToResponse(result);
+    }
+
+    /// <summary>لغو دسته‌ای نوبت‌های انتخاب‌شده</summary>
+    [HttpPost("batch-cancel")]
+    [HasPermission("appointments.edit")]
+    public async Task<IActionResult> BatchCancel([FromBody] BatchCancelRequest request)
+    {
+        var result = await _mediator.Send(new BatchCancelAppointmentsCommand(request));
+        return ToResponse(result, "لغو دسته‌ای انجام شد");
+    }
+
+    /// <summary>ارسال پیامک یادآوری نوبت‌ها — پیش‌فرض نوبت‌های فردا</summary>
+    [HttpPost("send-reminders")]
+    [HasPermission("appointments.edit")]
+    public async Task<IActionResult> SendReminders([FromQuery] string? date = null)
+    {
+        var result = await _mediator.Send(new SendAppointmentRemindersCommand(date));
+        return ToResponse(result, "پیامک‌های یادآوری در صف ارسال قرار گرفتند");
+    }
 }

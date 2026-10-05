@@ -70,10 +70,20 @@ public class GetVisitByIdQueryHandler : IRequestHandler<GetVisitByIdQuery, Resul
         var v = await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>()
             .QueryableNoTracking
             .Include(x => x.PrimaryDiagnosis)
+            .Include(x => x.Patient)
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         if (v is null)
             return Result<VisitDetailDto>.Failure(Error.NotFound("ویزیت", request.Id));
+
+        var vitals = await _unitOfWork.Repository<Domain.Entities.Clinical.VitalSign>()
+            .QueryableNoTracking
+            .Where(vs => vs.VisitId == v.Id)
+            .OrderByDescending(vs => vs.Id)
+            .Select(vs => new VitalSignsViewDto(
+                vs.BloodPressureSystolic, vs.BloodPressureDiastolic, vs.HeartRate,
+                vs.Temperature, vs.OxygenSaturation, vs.Weight, vs.Height, vs.Bmi, vs.BloodSugar))
+            .FirstOrDefaultAsync(cancellationToken);
 
         var dto = new VisitDetailDto(
             v.Id, v.VisitCode, v.PatientId, v.DoctorId,
@@ -85,7 +95,25 @@ public class GetVisitByIdQueryHandler : IRequestHandler<GetVisitByIdQuery, Resul
             v.PrimaryDiagnosisId, v.PrimaryDiagnosis?.Code,
             v.TreatmentPlan,
             v.FollowUpDate.HasValue ? PersianDateHelper.ToShamsi(v.FollowUpDate.Value.ToDateTime(TimeOnly.MinValue)) : null,
-            v.VisitFee);
+            v.VisitFee,
+            v.FamilyHistory, v.SocialHistory, v.ReviewOfSystems,
+            v.SecondaryDiagnoses, v.FollowUpInstructions,
+            v.Patient is null ? null : new PatientContextDto(
+                v.Patient.FirstName + " " + v.Patient.LastName,
+                v.Patient.MedicalRecordNo ?? "",
+                v.Patient.NationalCode,
+                v.Patient.BirthDate.HasValue
+                    ? DateTime.UtcNow.Year - v.Patient.BirthDate.Value.Year -
+                      (DateTime.UtcNow.DayOfYear < v.Patient.BirthDate.Value.DayOfYear ? 1 : 0)
+                    : null,
+                v.Patient.Gender == Domain.Enums.Gender.Male ? "مرد" : v.Patient.Gender == Domain.Enums.Gender.Female ? "زن" : "—",
+                v.Patient.BloodType,
+                v.Patient.Mobile ?? "",
+                null,
+                v.Patient.Allergies,
+                v.Patient.ChronicDiseases,
+                v.Patient.CurrentMedications),
+            vitals);
 
         return Result<VisitDetailDto>.Success(dto);
     }

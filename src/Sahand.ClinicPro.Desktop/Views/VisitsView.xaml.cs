@@ -3,13 +3,10 @@
 namespace Sahand.ClinicPro.Desktop.Views;
 
 /// <summary>
-/// کد پشت فهرست ویزیت‌ها
+/// کد پشت صف ویزیت — گام U6
 /// </summary>
 public partial class VisitsView : UserControl
 {
-    /// <summary>سازنده پیش‌فرض</summary>
-    public VisitsView()
-    {
-        InitializeComponent();
-    }
+    /// <summary>سازنده</summary>
+    public VisitsView() => InitializeComponent();
 }

@@ -120,10 +120,10 @@ public class GetClaimsQueryHandler : IRequestHandler<GetClaimsQuery, Result<List
 /// <summary>
 /// فرمان ثبت استعلام بیمه — پاسخ پنل بیمه در گام ۲۴ به آن متصل می‌شود
 /// </summary>
-public record RecordInquiryCommand(InsuranceInquiryDto Dto) : IRequest<Result<long>>;
+public record RecordInquiryCommand(InsuranceInquiryDto Dto) : IRequest<Result<InsuranceInquiryResultDto>>;
 
 /// <summary>گرداننده ثبت استعلام</summary>
-public class RecordInquiryCommandHandler : IRequestHandler<RecordInquiryCommand, Result<long>>
+public class RecordInquiryCommandHandler : IRequestHandler<RecordInquiryCommand, Result<InsuranceInquiryResultDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IInsuranceEligibilityService _eligibility;
@@ -139,7 +139,7 @@ public class RecordInquiryCommandHandler : IRequestHandler<RecordInquiryCommand,
     /// <summary>
     /// اجرای ثبت استعلام — گام V10: اتصال واقعی به سامانه بیمه با سقوط برون‌خط
     /// </summary>
-    public async Task<Result<long>> Handle(RecordInquiryCommand request, CancellationToken cancellationToken)
+    public async Task<Result<InsuranceInquiryResultDto>> Handle(RecordInquiryCommand request, CancellationToken cancellationToken)
     {
         var dto = request.Dto;
 
@@ -148,7 +148,7 @@ public class RecordInquiryCommandHandler : IRequestHandler<RecordInquiryCommand,
             .FirstOrDefaultAsync(p => p.Id == dto.PatientId, cancellationToken);
 
         if (patient is null)
-            return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
+            return Result<InsuranceInquiryResultDto>.Failure(Error.NotFound("بیمار", dto.PatientId));
 
         var eligibility = await _eligibility.CheckAsync(new InsuranceEligibilityRequest(
             dto.PatientId, dto.InsuranceCompanyId, patient.NationalCode, dto.InsuranceNumber),
@@ -168,6 +168,18 @@ public class RecordInquiryCommandHandler : IRequestHandler<RecordInquiryCommand,
         await _unitOfWork.Repository<InsuranceInquiry>().AddAsync(inquiry, cancellationToken);
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
 
-        return Result<long>.Success(inquiry.Id);
+        // درصد پوشش بیمه از قرارداد محلی — برای محاسبه سهم بیمار در فرم پذیرش
+        decimal coveragePercent = 0m;
+        if (eligibility.IsEligible)
+        {
+            var contract = await _unitOfWork.Repository<Domain.Entities.Billing.InsuranceCompany>()
+                .QueryableNoTracking
+                .FirstOrDefaultAsync(c => c.Id == dto.InsuranceCompanyId, cancellationToken);
+            coveragePercent = contract?.DefaultCoveragePercent ?? 0m;
+        }
+
+        return Result<InsuranceInquiryResultDto>.Success(new InsuranceInquiryResultDto(
+            inquiry.Id, eligibility.IsEligible, eligibility.WasOnline, eligibility.Message,
+            eligibility.ApprovalCode, eligibility.ValidUntil, coveragePercent));
     }
 }
