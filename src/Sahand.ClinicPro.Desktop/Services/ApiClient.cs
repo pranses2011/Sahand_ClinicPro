@@ -151,6 +151,40 @@ public class ApiClient : IApiClient
         }
     }
 
+    /// <summary>درخواست POST با بدنه JSON و دریافت بایت‌های خام — خروجی PDF گزارش‌ها (چرخه ۱۳، D6)</summary>
+    public async Task<byte[]?> PostDownloadAsync(string endpoint, object? body, CancellationToken ct = default)
+    {
+        LastError = null;
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+            if (body is not null)
+                request.Content = new StringContent(
+                    JsonSerializer.Serialize(body, Json), Encoding.UTF8, "application/json");
+            if (!string.IsNullOrEmpty(_tokens.AccessToken))
+            {
+                if (BranchId is { } bid)
+                    request.Headers.Add("X-Branch-Id", bid.ToString());
+                request.Headers.Authorization =
+                    new AuthenticationHeaderValue("Bearer", _tokens.AccessToken);
+            }
+
+            using var response = await _http.SendAsync(request, ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                LastError = $"دریافت فایل ناموفق بود ({(int)response.StatusCode})";
+                return null;
+            }
+            return await response.Content.ReadAsByteArrayAsync(ct);
+        }
+        catch (HttpRequestException ex)
+        {
+            LastError = "ارتباط با سرور برقرار نشد";
+            System.Diagnostics.Debug.WriteLine($"خطای دانلود POST: {ex.Message}");
+            return null;
+        }
+    }
+
     /// <summary>ارسال فرمان و بررسی موفقیت از پاکت ApiResponse</summary>
     private async Task<bool> SendCommandAsync(HttpMethod method, string endpoint,
         object? body, CancellationToken ct)

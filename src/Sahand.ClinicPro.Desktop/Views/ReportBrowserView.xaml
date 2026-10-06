@@ -155,6 +155,14 @@
                                 <TextBlock Text="Excel" Margin="6,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
+                        <!-- خروجی PDF با سربرگ درمانگاه — چرخه سیزدهم (درخواست ۴-۶) -->
+                        <Button Command="{Binding ExportPdfCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6"
+                                ToolTip="PDF صفحه‌آرایی‌شده با سربرگ رسمی درمانگاه و محل امضا">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FilePdfBox" Width="14" Height="14" VerticalAlignment="Center" Foreground="#E53935" />
+                                <TextBlock Text="PDF" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                         <Button Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6" ToolTip="چاپ مستقیم نتایج">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Printer" Width="14" Height="14" VerticalAlignment="Center" />

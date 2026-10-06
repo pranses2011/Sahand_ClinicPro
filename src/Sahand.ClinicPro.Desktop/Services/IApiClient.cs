@@ -40,6 +40,11 @@ public interface IApiClient
     /// </summary>
     Task<byte[]?> DownloadFileAsync(string endpoint, CancellationToken ct = default);
 
+    /// <summary>
+    /// درخواست POST با بدنه JSON و دریافت بایت‌های خام — خروجی PDF گزارش‌ها (چرخه ۱۳، D6)
+    /// </summary>
+    Task<byte[]?> PostDownloadAsync(string endpoint, object? body, CancellationToken ct = default);
+
     /// <summary>ورود و دریافت توکن‌ها</summary>
     Task<bool> LoginAsync(string usernameOrEmail, string password, CancellationToken ct = default);
 

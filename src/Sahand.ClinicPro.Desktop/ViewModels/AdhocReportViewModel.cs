@@ -518,6 +518,41 @@ public partial class AdhocReportViewModel : ViewModelBase
         else _snackbar.Error(_api.LastError ?? "حذف ناموفق بود");
     }
 
+    /// <summary>خروجی PDF با سربرگ درمانگاه — چرخه سیزدهم (درخواست ۴-۶)</summary>
+    [RelayCommand]
+    private async Task ExportPdfAsync()
+    {
+        if (Rows.Count == 0) { _snackbar.Info("ابتدا گزارش را اجرا کنید"); return; }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "فایل PDF|*.pdf",
+            FileName = $"adhoc_{DateTime.Now:yyyyMMdd_HHmm}.pdf",
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        IsBusy = true;
+        try
+        {
+            var body = new
+            {
+                title = $"گزارش رایگانه — {SelectedEntity}",
+                summary = SummaryCards.ToDictionary(s => s.Label, s => s.Value),
+                columns = Columns.ToList(),
+                rows = Rows.Select(r => r.Cells.Select(c => c.Text).ToList()).ToList(),
+            };
+            var pdf = await _api.PostDownloadAsync("reports/pdf", body);
+            if (pdf is null || pdf.Length == 0)
+            {
+                _snackbar.Error(_api.LastError ?? "تولید PDF ناموفق بود");
+                return;
+            }
+            await System.IO.File.WriteAllBytesAsync(dialog.FileName, pdf);
+            _snackbar.Success($"PDF با سربرگ درمانگاه ذخیره شد ({pdf.Length / 1024.0:F0} KB)");
+        }
+        finally { IsBusy = false; }
+    }
+
     /// <summary>خروجی CSV از نتایج فعلی — با BOM برای سازگاری فارسی</summary>
     [RelayCommand]
     private void ExportCsv()

@@ -211,6 +211,7 @@
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <ComboBox Grid.Column="0" ItemsSource="{Binding SavedReports}" SelectedItem="{Binding SelectedSavedReport}"
                                           DisplayMemberPath="ReportName" materialDesign:HintAssist.Hint="انتخاب برای اجرای مجدد" FontSize="12" />
@@ -225,6 +226,10 @@
                                 <Button Grid.Column="3" Command="{Binding ExportCsvCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
                                         Margin="4,0,0,0" ToolTip="خروجی CSV از نتایج فعلی" Padding="8,6">
                                     <materialDesign:PackIcon Kind="FileDelimited" Width="15" Height="15" Foreground="#43A047" />
+                                </Button>
+                                <Button Grid.Column="4" Command="{Binding ExportPdfCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Margin="4,0,0,0" ToolTip="خروجی PDF با سربرگ درمانگاه" Padding="8,6">
+                                    <materialDesign:PackIcon Kind="FilePdfBox" Width="15" Height="15" Foreground="#E53935" />
                                 </Button>
                             </Grid>
                         </StackPanel>

@@ -118,6 +118,10 @@ public sealed class FakeApiClient : IApiClient
     public Task<byte[]?> DownloadFileAsync(string endpoint, CancellationToken ct = default)
         => throw new NotSupportedException("دانلود در تست ViewModel پشتیبانی نمی‌شود");
 
+    /// <summary>دانلود POST — خروجی PDF گزارش‌ها (چرخه ۱۳، D6) — در تست استفاده نمی‌شود</summary>
+    public Task<byte[]?> PostDownloadAsync(string endpoint, object? body, CancellationToken ct = default)
+        => throw new NotSupportedException("دانلود POST در تست ViewModel پشتیبانی نمی‌شود");
+
     /// <summary>ورود</summary>
     public Task<bool> LoginAsync(string usernameOrEmail, string password, CancellationToken ct = default)
         => Task.FromResult(true);

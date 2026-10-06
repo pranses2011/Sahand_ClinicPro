@@ -376,6 +376,41 @@ public partial class ReportBrowserViewModel : ViewModelBase
         _snackbar.Success("خروجی CSV ذخیره شد");
     }
 
+    /// <summary>خروجی PDF با سربرگ درمانگاه — چرخه سیزدهم (درخواست ۴-۶)</summary>
+    [RelayCommand]
+    private async Task ExportPdfAsync()
+    {
+        if (Rows.Count == 0) { _snackbar.Info("ابتدا گزارش را اجرا کنید"); return; }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "فایل PDF|*.pdf",
+            FileName = $"{SelectedReport?.Id ?? "report"}_{DateTime.Now:yyyyMMdd_HHmm}.pdf",
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        IsBusy = true;
+        try
+        {
+            var body = new
+            {
+                title = ReportTitle,
+                summary = SummaryCards.ToDictionary(s => s.Label, s => s.Value),
+                columns = Columns.ToList(),
+                rows = Rows.Select(r => r.Cells.Select(c => c.Text).ToList()).ToList(),
+            };
+            var pdf = await _api.PostDownloadAsync("reports/pdf", body);
+            if (pdf is null || pdf.Length == 0)
+            {
+                _snackbar.Error(_api.LastError ?? "تولید PDF ناموفق بود");
+                return;
+            }
+            await System.IO.File.WriteAllBytesAsync(dialog.FileName, pdf);
+            _snackbar.Success($"PDF با سربرگ درمانگاه ذخیره شد ({pdf.Length / 1024.0:F0} KB)");
+        }
+        finally { IsBusy = false; }
+    }
+
     /// <summary>گشودن پنجره گزارش‌ساز رایگانه (کوئری‌ساز گرافیکی) — چرخه سیزدهم (درخواست ۴-۳)</summary>
     [RelayCommand]
     private void OpenAdhocBuilder()

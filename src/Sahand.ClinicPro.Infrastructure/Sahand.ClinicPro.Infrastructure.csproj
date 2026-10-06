@@ -26,6 +26,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <!-- احراز هویت JWT Bearer -->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <!-- خروجی PDF گزارش‌ها با سربرگ درمانگاه (چرخه سیزدهم، D6) -->
+    <PackageReference Include="QuestPDF" />
     <!-- دسترسی به HttpContext برای سرویس کاربر فعلی -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
@@ -33,5 +35,11 @@
   <ItemGroup>
     <!-- وابستگی به لایه کاربرد (و از آن طریق به لایه دامنه) -->
     <ProjectReference Include="..\Sahand.ClinicPro.Application\Sahand.ClinicPro.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- فونت‌های فارس وزیرمتن به‌عنوان منبع جاسازی‌شده — خروجی PDF گزارش‌ها (چرخه ۱۳، D6) -->
+    <EmbeddedResource Include="Assets\Fonts\Vazirmatn-Regular.ttf" />
+    <EmbeddedResource Include="Assets\Fonts\Vazirmatn-Bold.ttf" />
   </ItemGroup>
 </Project>

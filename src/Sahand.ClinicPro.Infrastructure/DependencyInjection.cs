@@ -110,6 +110,9 @@ public static class DependencyInjection
         services.AddTransient<IDataSeeder, ReferenceDataSeeder>();
         services.AddTransient<IDataSeeder, PrintTemplateSeeder>(); // چرخه ۱۳ — قالب‌های چاپ پیش‌فرض
 
+        // خروجی PDF گزارش‌ها با سربرگ درمانگاه — چرخه سیزدهم (درخواست ۴-۶)
+        services.AddSingleton<Services.Reporting.ReportPdfService>();
+
         return services;
     }
 
