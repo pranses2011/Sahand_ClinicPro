@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -113,6 +114,7 @@ public partial class MainWindowViewModel : ObservableObject
         AdvancedEmrViewModel advancedEmrVm,
         PayrollViewModel payrollVm,
         AttendanceViewModel attendanceVm,
+        TrainingCenterViewModel trainingVm,
         IRealtimeClient realtime)
     {
         _api = api;
@@ -170,7 +172,8 @@ public partial class MainWindowViewModel : ObservableObject
             ["complementary"] = () => complementaryVm,
             ["emr-advanced"] = () => advancedEmrVm,
             ["payroll"] = () => payrollVm,
-            ["attendance"] = () => attendanceVm
+            ["attendance"] = () => attendanceVm,
+            ["training"] = () => trainingVm
         };
 
         // آیتم‌های ناوبری — فعال بودن از لایسنس کنترل می‌شود
@@ -206,7 +209,8 @@ public partial class MainWindowViewModel : ObservableObject
             new() { Title = "بکاپ و بازیابی", PageKey = "backup", Icon = "DatabaseBackup" },
             new() { Title = "لاگ عملیات", PageKey = "audit", Icon = "FileDocumentEditOutline" },
             new() { Title = "لایسنس", PageKey = "license", Icon = "KeyChain" },
-            new() { Title = "قالب چاپ و نظرسنجی", PageKey = "complementary", Icon = "TuneVertical" }
+            new() { Title = "قالب چاپ و نظرسنجی", PageKey = "complementary", Icon = "TuneVertical" },
+            new() { Title = "🎓 مرکز آموزش", PageKey = "training", Icon = "School" }
         };
 
         NavigateToPage("dashboard");
@@ -216,6 +220,11 @@ public partial class MainWindowViewModel : ObservableObject
 
         // اتصال رویداد انقضای نشست — بازگشت به صفحه ورود
         _api.SessionExpired += (_, _) => OnSessionExpired();
+
+        // ═══ تور هدایت‌شده اولین اجرا — چرخه سیزدهم (درخواست ۸-۶) ═══
+        // نام کاربر برای مارکر محلی + نمایش خودکار در نخستین ورود این ایستگاه
+        Views.TourMarker.CurrentUser = tokens.Username;
+        _ = TryShowGuidedTourAsync();
 
         // ═══ اتصال بلادرنگ SignalR — گام R1 ═══
         // تغییر صف → تازه‌سازی فوری صفحات صف‌دار (پذیرش/ویزیت)
@@ -270,6 +279,44 @@ public partial class MainWindowViewModel : ObservableObject
         CurrentPage = factory();
         CurrentTitle = CurrentPage.Title;
         Breadcrumb = $"خانه > {CurrentTitle}";
+    }
+
+    /// <summary>گشودن مرکز آموزش — دکمه 🎓 نوار بالا و آیتم منو</summary>
+    [RelayCommand]
+    private void OpenTraining() => NavigateToPage("training");
+
+    /// <summary>
+    /// نمایش خودکار تور هدایت‌شده در نخستین ورود کاربر روی این ایستگاه —
+    /// مارکر محلی per-user بررسی می‌شود؛ نبود مارکر یعنی اولین اجراست.
+    /// </summary>
+    [RelayCommand]
+    private void TryShowGuidedTour()
+    {
+        try
+        {
+            var user = _tokens.Username ?? "user";
+            var marker = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "SahandClinicPro", $"tour-done-{user}.marker");
+            if (File.Exists(marker)) return; // پیش‌تر دیده است
+        }
+        catch
+        {
+            return; // خطای فایل — تور خودکار نمایش نده
+        }
+
+        var owner = System.Windows.Application.Current.MainWindow;
+        if (owner is null) return;
+        var tour = new Views.GuidedTourWindow(owner) { Owner = owner };
+        tour.Show();
+    }
+
+    /// <summary>نسخه غیرهمگام امن برای فراخوانی از سازنده</summary>
+    private async Task TryShowGuidedTourAsync()
+    {
+        // تأخیر کوتاه تا پنجره اصلی و ناوبری کاملاً رندر شوند
+        await Task.Delay(900);
+        await System.Windows.Application.Current.Dispatcher.InvokeAsync(TryShowGuidedTour);
     }
 
     /// <summary>آیا اعلان خوانده‌نشده وجود دارد — برای نمایش نشانگر زنگ</summary>

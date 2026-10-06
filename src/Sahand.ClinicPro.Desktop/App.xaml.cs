@@ -121,5 +121,7 @@ public partial class App : System.Windows.Application
         // گزارش‌ساز رایگانه — چرخه سیزدهم (درخواست ۴-۳)
         services.AddTransient<AdhocReportViewModel>();
         services.AddTransient<AdhocReportWindow>();
+        // مرکز آموزش و تور هدایت‌شده — چرخه سیزدهم (درخواست ۸-۶)
+        services.AddTransient<TrainingCenterViewModel>();
     }
 }
