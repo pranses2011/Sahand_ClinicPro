@@ -4,7 +4,7 @@
 
 <p><img src="docs/assets/ClinicPro.png" width="140" alt="لوگوی درمانگاه سهند"></p>
 
-<h3>Sahand ClinicPro — v2.0.1</h3>
+<h3>Sahand ClinicPro — v2.0.2</h3>
 
 **نخستین سامانه یکپارچه فارسی‌زبان درمانگاه با اتصال مستقیم به دستگاه حضور و غیاب، سامانه‌های دولتی، نسخه الکترونیک و پشتیبانی زنده یکپارچه**
 
@@ -14,7 +14,7 @@
 [![WPF](https://img.shields.io/badge/WPF-MaterialDesign-512BD4?logo=windows&logoColor=white)](https://materialdesigninxaml.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-250%20.NET%20%E2%9C%85-2EA44F)](#%EF%B8%8F-تست‌ها)
-[![Version](https://img.shields.io/badge/release-v2.0.1-blue)](https://github.com/pranses2011/Sahand_ClinicPro/releases)
+[![Version](https://img.shields.io/badge/release-v2.0.2-blue)](https://github.com/pranses2011/Sahand_ClinicPro/releases)
 [![Coverage](https://img.shields.io/badge/coverage-36%25%20cobertura-orange)](#%EF%B8%8F-تست‌ها)
 [![Forms](https://img.shields.io/badge/forms-64%20%E2%9C%85-7C3AED)](#%EF%B8%8F-تصاویر-محیط-نرم‌افزار)
 
@@ -406,6 +406,7 @@ Sahand_ClinicPro/
 
 | نسخه | تاریخ | جهش اصلی |
 |:---|:---|:---|
+| **v2.0.2** | ۱۴۰۵/۰۷/۱۵ | 🔤 فونت وزیرمتن جاسازی‌شده داخل exe (۴ وزن TTF) — دیگر هیچ دستگاهی به نصب فونت نیاز ندارد؛ رفع ۶۷ ارجاع نامی به pack URI + فونت بومی مرکز آموزش (woff2 پایه‌۶۴) + نخستین بستهٔ آپدیت رلیز (فقط فایل‌های تغییرکرده از 2.0.1) — ۲۶۹ تست |
 | **v2.0.1** | ۱۴۰۵/۰۷/۱۴ | 🔧 وصله رفع کرش اجرای MaterialDesign در ویژوال استودیو — رفع ۱۱۰ ارجاع منبع نامعتبر XAML در ۴۱ فایل (۹ کلید شبح‌مانند مثل MaterialDesignFilledButton که در پکیج 5.3.2 وجود نداشت) + نسخه دینامیک از اسمبلی + گارد بازگشتی ممیزی XAML — ۲۵۰ تست |
 | **v2.0.0** | ۱۴۰۵/۰۷/۱۴ | 🎯 ۱۶ قابلیت منتخب سند ایده‌ها در ۶ محور: ایمنی دارویی ۷بُعدی + نتایج غیرعادی + خط زمان + طراح قالب چاپ + تسویه بیمه + صندوق شیفت + لیست انتظار + MoM/YoY + داشبورد شخصی + گزارش‌ساز رایگانه + RFM + پیش‌بینی درآمد + PDF سربرگ‌دار + بکاپ ابری + آرشیو سالانه + مرکز آموزش — ۶۴ فرم، ۲۵ نموداری، ۳۹ ماژول، ۲۴۹ تست |
 | **v1.9.0** | ۱۴۰۵/۰۷/۱۴ | 📈 رفع قطعی HTTP 500 سامانه لایسنس (باگ INSERT) + ترمیم خودکار اسکیمای لایسنس + ۴ کنترل نمودار و تغییر نوع نمودارها متناسب با ماهیت داده + ۱۰ گزارش نموداری جدید + دونات سهم پرسنل + سند تحلیل جامع کمبودها (docs/PROJECT-ANALYSIS.md) + ۱۳۰ تست دات‌نت و ۱۹ تست E2E لایسنس |
