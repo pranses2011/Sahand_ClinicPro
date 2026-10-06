@@ -23,6 +23,7 @@ public partial class LoginWindow : Window
         // PasswordBox به‌صورت امن با VM همگام می‌شود (بدون دوطرفه‌سازی XAML)
         PasswordBox.PasswordChanged += (_, _) => viewModel.Password = PasswordBox.Password;
         viewModel.LoginSucceeded += OnLoginSucceeded;
+        viewModel.PasswordChangeRequired += OnPasswordChangeRequired;
 
         // بازیابی نام کاربری ذخیره‌شده (مرا به خاطر بسپار) — فایل JSON محلی
         Loaded += (_, _) =>
@@ -81,6 +82,25 @@ public partial class LoginWindow : Window
 
         System.Windows.Application.Current.MainWindow = main;
         main.Show();
+        Close();
+    }
+
+    /// <summary>
+    /// سرور تغییر رمز را الزامی کرده — چرخه چهاردهم (گزارش پنجم مالک):
+    /// پنجره تغییر رمز با رمز فعلیِ همان لحظه باز می‌شود؛ پنجره اصلی هنوز باز
+    /// نمی‌شود تا رمز تازه ثبت شود (قول «دورزدنی‌ناپذیر» قدم ۷ راهنمای SQL)
+    /// </summary>
+    private void OnPasswordChangeRequired(object? sender, EventArgs e)
+    {
+        // فقط نام کاربری ذخیره می‌شود — هرگز رمز عبور
+        Services.LocalSettingsStore.Set("SavedUsername",
+            _viewModel.RememberMe ? _viewModel.Username : string.Empty);
+
+        var change = App.Services.GetRequiredService<ChangePasswordWindow>();
+        change.Initialize(_viewModel.Username.Trim(), _viewModel.Password);
+
+        System.Windows.Application.Current.MainWindow = change;
+        change.Show();
         Close();
     }
 }

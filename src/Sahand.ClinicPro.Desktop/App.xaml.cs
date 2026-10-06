@@ -82,6 +82,9 @@ public partial class App : System.Windows.Application
         services.AddSingleton<LoginWindow>();
         services.AddSingleton<MainWindow>();
         services.AddTransient<LoginViewModel>();
+        // جریان تغییر رمز اجباری — چرخه چهاردهم (گزارش پنجم مالک)
+        services.AddTransient<ChangePasswordViewModel>();
+        services.AddTransient<ChangePasswordWindow>();
         services.AddSingleton<MainWindowViewModel>();
         services.AddTransient<DashboardViewModel>();
         services.AddTransient<PatientsViewModel>();
