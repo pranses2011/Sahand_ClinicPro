@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Sahand.ClinicPro.API.Filters;
 using Hangfire;
@@ -275,6 +276,18 @@ try
     Log.Information("✅ API درمانگاه سهند راه‌اندازی شد و در حال سرویس‌دهی است");
 
     await app.RunAsync();
+}
+catch (HostAbortedException)
+{
+    // چرخه چهاردهم (پیوست P3 — گزارش مالک): ابزارهای طراحی EF Core مانند
+    // «dotnet ef database update» برای برداشتن تنظیمات، هاست را می‌سازند و
+    // سپس با پرتاب همین خطا عمداً متوقفش می‌کنند — توقف «عمدی و طبیعی» است.
+    // پیش‌تر این خطا به چنگال کلیِ پایین می‌افتاد و با پیام «💥 خطای مهلک» و
+    // stack trace چاپ می‌شد و کاربرِ راهنمای SQL را می‌ترساند. پرتاب دوباره
+    // الزامی است: خودِ ابزار EF منتظر همین خطاست (OperationExecutor آن را
+    // موفقیت می‌شمارد) و بلعیدنش رفتار طراحی‌زمان را تغییر می‌دهد.
+    Log.Information("🛠 توقف عمدی هاست توسط ابزار طراحی EF Core — طبیعی است");
+    throw;
 }
 catch (Exception ex)
 {
