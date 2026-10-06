@@ -1,0 +1,109 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Sahand.ClinicPro.Desktop.Services;
+
+namespace Sahand.ClinicPro.Desktop.ViewModels;
+
+/// <summary>
+/// ViewModel تغییر رمز عبور الزامی — چرخه چهاردهم (گزارش پنجم مالک).
+/// راهنمای SQL قدم ۷ قول داده بود برنامه بعد از ورود اولِ admin
+/// (بذرافشان با MustChangePassword=true) «بلافاصله و دورزدنی‌ناپذیر»
+/// تغییر رمز را بخواهد؛ پیش‌تر این جریان در دسکتاپ وجود نداشت و
+/// کاربر بدون تغییر رمز مستقیم وارد پنجره اصلی می‌شد.
+/// فرمان به POST auth/change-password می‌رود (توکنِ همان ورود پیوست می‌شود)
+/// و سرور پس از موفقیت پرچم کاربر را پایین می‌آورد.
+/// </summary>
+public partial class ChangePasswordViewModel : ObservableObject
+{
+    private readonly IApiClient _api;
+
+    /// <summary>
+    /// سازنده با تزریق کلاینت API
+    /// </summary>
+    public ChangePasswordViewModel(IApiClient api) => _api = api;
+
+    /// <summary>نام کاربریِ واردشده — فقط برای نمایش در سربرگ پنجره</summary>
+    public string Username { get; set; } = string.Empty;
+
+    /// <summary>رمز عبور فعلی — کاربر همان لحظه در صفحه ورود تایپش کرده است</summary>
+    [ObservableProperty]
+    private string _currentPassword = string.Empty;
+
+    /// <summary>رمز عبور جدید — حداقل ۸ کاراکتر با حرف و رقم (سیاست سرور)</summary>
+    [ObservableProperty]
+    private string _newPassword = string.Empty;
+
+    /// <summary>تکرار رمز عبور جدید — باید با خود رمز یکسان باشد</summary>
+    [ObservableProperty]
+    private string _confirmPassword = string.Empty;
+
+    /// <summary>پیام خطای فارسی برای نمایش در پنجره</summary>
+    [ObservableProperty]
+    private string _errorMessage = string.Empty;
+
+    /// <summary>نشانگر مشغول‌بودن — نوار انتظار و قفل دکمه</summary>
+    [ObservableProperty]
+    private bool _isBusy;
+
+    /// <summary>رویداد تغییر موفق رمز — پنجره اصلی باز می‌شود</summary>
+    public event EventHandler? ChangeSucceeded;
+
+    /// <summary>آیا پیام خطا نمایش داده شود</summary>
+    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+
+    /// <summary>
+    /// دکمه ثبت رمز جدید
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanChange))]
+    private async Task ChangePasswordAsync()
+    {
+        // بررسی محلی هم‌خوانی تکرار — قبل از رفت‌وبرگشت به سرور
+        if (NewPassword != ConfirmPassword)
+        {
+            ErrorMessage = "تکرار رمز جدید با خودِ رمز یکسان نیست";
+            OnPropertyChanged(nameof(HasError));
+            return;
+        }
+
+        IsBusy = true;
+        ErrorMessage = string.Empty;
+        OnPropertyChanged(nameof(HasError));
+        ChangePasswordCommand.NotifyCanExecuteChanged();
+
+        var ok = await _api.PostAsync("auth/change-password",
+            new { currentPassword = CurrentPassword, newPassword = NewPassword });
+
+        IsBusy = false;
+        ChangePasswordCommand.NotifyCanExecuteChanged();
+
+        if (ok)
+        {
+            ChangeSucceeded?.Invoke(this, EventArgs.Empty);
+        }
+        else
+        {
+            ErrorMessage = _api.LastError ?? "تغییر رمز عبور ناموفق بود";
+            OnPropertyChanged(nameof(HasError));
+        }
+    }
+
+    /// <summary>
+    /// امکان ثبت — هر سه کادر پر باشد و رمز جدید حداقل ۸ کاراکتر داشته باشد؛
+    /// سیاست کامل (حرف بزرگ/کوچک/عدد/علامت و تاریخچه رمزها) در سرور اعمال می‌شود
+    /// و پیام خطای فارسی همان‌جا ساخته می‌شود
+    /// </summary>
+    private bool CanChange() =>
+        !IsBusy
+        && !string.IsNullOrEmpty(CurrentPassword)
+        && NewPassword.Length >= 8
+        && !string.IsNullOrEmpty(ConfirmPassword);
+
+    /// <summary>به‌روزرسانی امکان دکمه با تغییر کادرها</summary>
+    partial void OnCurrentPasswordChanged(string value) => ChangePasswordCommand.NotifyCanExecuteChanged();
+
+    /// <summary>به‌روزرسانی امکان دکمه با تغییر کادرها</summary>
+    partial void OnNewPasswordChanged(string value) => ChangePasswordCommand.NotifyCanExecuteChanged();
+
+    /// <summary>به‌روزرسانی امکان دکمه با تغییر کادرها</summary>
+    partial void OnConfirmPasswordChanged(string value) => ChangePasswordCommand.NotifyCanExecuteChanged();
+}
