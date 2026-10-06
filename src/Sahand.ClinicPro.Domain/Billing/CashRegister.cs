@@ -40,6 +40,27 @@ public class CashRegister : AuditableEntity, ISoftDeletable
     /// <summary>وضعیت صندوق</summary>
     public CashRegisterStatus Status { get; set; } = Domain.Enums.CashRegisterStatus.Open;
 
+    /// <summary>شمارش فیزیکی نقد صندوقدار (ریال) — چرخه ۱۳ (درخواست ۲-۲)</summary>
+    public decimal CountedCash { get; set; } = 0m;
+
+    /// <summary>شمارش فیزیکی کارت (ریال) — تراکنش‌های کارتخوان</summary>
+    public decimal CountedCard { get; set; } = 0m;
+
+    /// <summary>شماره رسید تحویل شیفت — مثل SHR-0001</summary>
+    public string? ReceiptNumber { get; set; }
+
+    /// <summary>شناسه صندوقدار تحویل‌گیرنده شیفت بعد</summary>
+    public long? HandoverToUserId { get; set; }
+
+    /// <summary>یادداشت تحویل شیفت</summary>
+    public string? HandoverNote { get; set; }
+
+    /// <summary>شناسه کاربر بستن‌دهنده شیفت</summary>
+    public long? ClosedByUserId { get; set; }
+
+    /// <summary>نام بستن‌دهنده — عکس‌فوری برای گزارش</summary>
+    public string? ClosedByName { get; set; }
+
     /// <summary>پرداخت‌های ثبت‌شده در این صندوق</summary>
     public ICollection<Payment> Payments { get; set; } = new List<Payment>();
 }

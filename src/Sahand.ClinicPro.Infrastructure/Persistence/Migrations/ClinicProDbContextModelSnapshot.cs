@@ -486,10 +486,28 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("ClosedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ClosedByName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasComment("نام بستن‌دهنده شیفت — عکس‌فوری");
+
+                    b.Property<long?>("ClosedByUserId")
+                        .HasColumnType("bigint");
+
                     b.Property<decimal>("ClosingBalance")
                         .HasPrecision(18)
                         .HasColumnType("decimal(18,0)")
                         .HasComment("موجودی پایانی");
+
+                    b.Property<decimal>("CountedCard")
+                        .HasPrecision(18)
+                        .HasColumnType("decimal(18,0)")
+                        .HasComment("شمارش فیزیکی کارت");
+
+                    b.Property<decimal>("CountedCash")
+                        .HasPrecision(18)
+                        .HasColumnType("decimal(18,0)")
+                        .HasComment("شمارش فیزیکی نقد صندوقدار");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -508,6 +526,14 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("decimal(18,0)")
                         .HasComment("اختلاف شمارش");
 
+                    b.Property<string>("HandoverNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasComment("یادداشت تحویل شیفت");
+
+                    b.Property<long?>("HandoverToUserId")
+                        .HasColumnType("bigint");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -518,6 +544,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasPrecision(18)
                         .HasColumnType("decimal(18,0)")
                         .HasComment("موجودی اولیه");
+
+                    b.Property<string>("ReceiptNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasComment("شماره رسید تحویل شیفت — SHR-####");
 
                     b.Property<string>("RegisterName")
                         .IsRequired()

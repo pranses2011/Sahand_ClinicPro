@@ -22,5 +22,12 @@ public class CashRegisterConfiguration : IEntityTypeConfiguration<CashRegister>
         builder.Property(x => x.Status).HasConversion<byte>().HasComment("وضعیت صندوق");
 
         builder.HasIndex(x => new { x.RegisterName }).HasDatabaseName("IX_CashRegister_RegisterName");
+
+        // ═══ چرخه ۱۳ — بستن شیفت و تحویل صندوق (درخواست ۲-۲) ═══
+        builder.Property(x => x.CountedCash).HasPrecision(18, 0).HasComment("شمارش فیزیکی نقد صندوقدار");
+        builder.Property(x => x.CountedCard).HasPrecision(18, 0).HasComment("شمارش فیزیکی کارت");
+        builder.Property(x => x.ReceiptNumber).HasMaxLength(20).HasComment("شماره رسید تحویل شیفت — SHR-####");
+        builder.Property(x => x.HandoverNote).HasMaxLength(500).HasComment("یادداشت تحویل شیفت");
+        builder.Property(x => x.ClosedByName).HasMaxLength(100).HasComment("نام بستن‌دهنده شیفت — عکس‌فوری");
     }
 }

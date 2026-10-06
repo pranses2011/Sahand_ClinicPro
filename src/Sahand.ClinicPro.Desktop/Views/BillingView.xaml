@@ -42,6 +42,15 @@
                         <TextBlock Text="ثبت پرداخت" Margin="7,0,0,0" />
                     </StackPanel>
                 </Button>
+                <!-- بستن شیفت — چرخه ۱۳ (درخواست ۲-۲) -->
+                <Button Command="{Binding CloseShiftCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0"
+                        Background="#37474F" BorderBrush="#37474F" ToolTip="شمارش فیزیکی + اختلاف‌سنجی + رسید تحویل شیفت">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="CashLock" Width="15" Height="15" VerticalAlignment="Center" />
+                        <TextBlock Text="🌙 بستن شیفت" Margin="7,0,0,0" />
+                    </StackPanel>
+                </Button>
                 <Button Command="{Binding LoadCommand}"
                         Style="{StaticResource MaterialDesignOutlinedButton}">
                     <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" />

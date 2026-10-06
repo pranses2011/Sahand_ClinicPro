@@ -165,6 +165,17 @@ public partial class BillingViewModel : ViewModelBase
         _ = LoadAsync();
     }
 
+    /// <summary>بستن شیفت صندوق و تحویل — چرخه ۱۳ (درخواست ۲-۲)</summary>
+    [RelayCommand]
+    private void CloseShift()
+    {
+        var vm = new ShiftCloseViewModel(_api, _snackbar);
+        var window = new ShiftCloseWindow { Owner = System.Windows.Application.Current.MainWindow };
+        window.DataContext = vm;
+        window.ShowDialog();
+        _ = LoadAsync();
+    }
+
     /// <summary>ثبت پرداخت برای فاکتور انتخابی</summary>
     [RelayCommand]
     private void RecordPayment()

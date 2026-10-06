@@ -5,6 +5,7 @@ using Sahand.ClinicPro.Application.DTOs.Billing;
 using Sahand.ClinicPro.Application.Features.Billing.Commands.RecordPayment;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Application.Features.Billing.GetCashRegister;
+using Sahand.ClinicPro.Application.Features.Billing.Shifts;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -48,6 +49,26 @@ public class PaymentsController : ApiBaseController
 public async Task<IActionResult> GetTodayTransactions()
     {
         var result = await _mediator.Send(new GetTodayTransactionsQuery());
+        return ToResponse(result);
+    }
+
+    /* ═══════════ بستن شیفت و تحویل صندوق — چرخه ۱۳ (درخواست ۲-۲) ═══════════ */
+
+    /// <summary>بستن شیفت — شمارش فیزیکی + اختلاف‌سنجی + رسید تحویل</summary>
+    [HttpPost("shifts/close")]
+    [HasPermission("payments.create")]
+    public async Task<IActionResult> CloseShift([FromBody] CloseShiftDto dto)
+    {
+        var result = await _mediator.Send(new CloseShiftCommand(dto));
+        return ToResponse(result, "شیفت بسته و رسید تحویل صادر شد");
+    }
+
+    /// <summary>تاریخچه شیفت‌های بسته‌شده — ۱۰۰ مورد اخیر</summary>
+    [HttpGet("shifts")]
+    [HasPermission("payments.view")]
+    public async Task<IActionResult> GetShifts()
+    {
+        var result = await _mediator.Send(new GetShiftsQuery());
         return ToResponse(result);
     }
 }
