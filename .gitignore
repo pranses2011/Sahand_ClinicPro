@@ -44,7 +44,9 @@ visualstudio.db
 project.lock.json
 project.fragment.lock.json
 artifacts/
-**/Properties/launchSettings.json
+# launchSettings.json عمداً اینجا نیست: تنظیم پورت ثابت 5000 و swagger یک
+# تنظیم مشترک پروژه است و باید در سورس منتشر شود (نسخه ۲.۰.۱ بدون آن
+# ویژوال استودیو پورت تصادفی می‌ساخت و برنامه دسکتاپ وصل نمی‌شد)
 
 # ---------- NuGet ----------
 *.nupkg
