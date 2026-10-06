@@ -108,6 +108,7 @@ public static class DependencyInjection
         services.AddTransient<IDataSeeder, BasicDataSeeder>();
         services.AddTransient<IDataSeeder, AccountingAccountSeeder>();
         services.AddTransient<IDataSeeder, ReferenceDataSeeder>();
+        services.AddTransient<IDataSeeder, PrintTemplateSeeder>(); // چرخه ۱۳ — قالب‌های چاپ پیش‌فرض
 
         return services;
     }

@@ -274,6 +274,9 @@ public class ClinicProDbContext : DbContext
     /// <summary>مجموعه ReportSchedules</summary>
     public DbSet<ReportSchedule> ReportSchedules { get; set; }
 
+    /// <summary>مجموعه PrintTemplates — قالب چاپ سفارشی (چرخه ۱۳)</summary>
+    public DbSet<PrintTemplate> PrintTemplates { get; set; }
+
     /// <summary>مجموعه Roles</summary>
     public DbSet<Role> Roles { get; set; }
 

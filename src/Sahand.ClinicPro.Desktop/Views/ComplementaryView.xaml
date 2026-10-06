@@ -27,53 +27,161 @@
 
         <TabControl Grid.Row="2" SelectedIndex="{Binding TabIndex}" Style="{StaticResource MaterialDesignTabControl}">
 
-            <!-- ─── تب ۱: قالب‌های چاپ ─── -->
-            <TabItem Header="🖨️ قالب‌های چاپ">
+            <!-- ─── تب ۱: طراح قالب‌های چاپ — چرخه ۱۳ (درخواست ۱-۶) ─── -->
+            <TabItem Header="🖨️ طراح قالب چاپ">
                 <Grid Margin="4,8">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="290" />
-                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="272" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="430" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- فهرست ۹ قالب -->
-                    <ListBox Grid.Column="0" ItemsSource="{Binding PrintTemplates}" SelectedItem="{Binding SelectedTemplate}"
-                             Background="Transparent" BorderThickness="0">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal" Margin="4,8">
-                                    <TextBlock Text="{Binding Icon}" FontSize="16" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Title}" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-
-                    <!-- ویرایشگر متن قالب -->
-                    <Grid Grid.Column="2">
+                    <!-- ستون ۱: فهرست قالب‌ها + ساخت جدید -->
+                    <Grid Grid.Column="0" Margin="0,0,10,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" FontSize="15" FontWeight="Bold" Margin="2,0,0,8">
-                            <Run Text="ویرایش قالب: " />
-                            <Run Text="{Binding SelectedTemplate.Title, Mode=OneWay, TargetNullValue='— انتخاب کنید —'}"
-                                 Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
-                        </TextBlock>
-                        <TextBox Grid.Row="1" Text="{Binding SelectedTemplate.Body, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 AcceptsReturn="True" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"
-                                 VerticalContentAlignment="Top" IsReadOnly="False" />
-                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
-                            <Button Command="{Binding SaveTemplateCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
+                        <WrapPanel Grid.Row="0" Margin="0,0,0,8">
+                            <ComboBox x:Name="TypeCombo" SelectedIndex="{Binding NewTypeIndex}" MinWidth="150" FontSize="11.5" Margin="0,0,6,4" />
+                            <Button Command="{Binding NewTemplateCommand}" Style="{StaticResource MaterialDesignRaisedButton}" FontSize="11" Margin="0,0,4,4">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                                    <TextBlock Text="💾 ذخیره قالب" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                    <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" VerticalAlignment="Center" />
+                                    <TextBlock Text="قالب جدید" Margin="6,0,0,0" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
-                            <TextBlock Text="متغیرها: {نام بیمار} {تاریخ} {مبلغ} {نام درمانگاه} {نام پزشک}"
-                                       FontSize="10.5" Opacity="0.6" Margin="12,0,0,0" VerticalAlignment="Center" />
+                            <Button Command="{Binding LoadTemplatesCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11" Margin="0,0,4,4">
+                                <materialDesign:PackIcon Kind="Refresh" Width="13" Height="13" />
+                            </Button>
+                        </WrapPanel>
+                        <ListBox Grid.Row="1" ItemsSource="{Binding PrintTemplates}" SelectedItem="{Binding SelectedTemplate}"
+                                 Background="Transparent" BorderThickness="0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="4,7" Width="230">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Icon}" FontSize="15" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="SemiBold" Margin="8,0,0,0"
+                                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding BadgeText, Mode=OneWay}" FontSize="9.5" Foreground="#F9A825"
+                                                       FontWeight="Bold" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding TypeFa}" FontSize="10" Opacity="0.55" Margin="23,2,0,0" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button Command="{Binding DuplicateTemplateCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5" Margin="0,0,5,0"
+                                    ToolTip="کپی قالب انتخابی به‌عنوان نسخه جدید">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ContentCopy" Width="13" Height="13" />
+                                    <TextBlock Text="کپی" Margin="5,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding SetDefaultTemplateCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5" Margin="0,0,5,0"
+                                    ToolTip="استفاده این قالب به‌عنوان پیش‌فرض چاپ این نوع سند">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="StarOutline" Width="13" Height="13" />
+                                    <TextBlock Text="پیش‌فرض" Margin="5,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding DeleteTemplateCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5"
+                                    Foreground="#C62828" ToolTip="حذف قالب انتخابی">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="DeleteOutline" Width="13" Height="13" />
+                                    <TextBlock Text="حذف" Margin="5,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- ستون ۲: ویرایشگر قالب -->
+                    <Grid Grid.Column="1" Margin="0,0,10,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!-- تنظیمات قالب -->
+                        <WrapPanel Grid.Row="0" Margin="0,0,0,7">
+                            <TextBox Text="{Binding SelectedTemplate.Title, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="نام قالب"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="220" FontSize="12" Margin="0,0,7,5" />
+                            <ComboBox SelectedValuePath="Tag" SelectedValue="{Binding SelectedTemplate.PaperSize, Mode=TwoWay}" FontSize="11.5" Width="95" Margin="0,0,7,5">
+                                <ComboBoxItem Tag="A4" Content="کاغذ A4" />
+                                <ComboBoxItem Tag="A5" Content="کاغذ A5" />
+                                <ComboBoxItem Tag="A6" Content="کاغذ A6" />
+                            </ComboBox>
+                            <TextBox Text="{Binding SelectedTemplate.AccentColor, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="رنگ (#16355E)"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="110" FontSize="11" FontFamily="Consolas" Margin="0,0,7,5" />
+                            <TextBox Text="{Binding SelectedTemplate.FontSize, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="فونت"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="62" FontSize="11" Margin="0,0,7,5" />
+                            <CheckBox Content="لوگو" IsChecked="{Binding SelectedTemplate.ShowLogo}" FontSize="11" Margin="0,0,7,4" VerticalAlignment="Center" />
+                            <CheckBox Content="فعال" IsChecked="{Binding SelectedTemplate.IsActive}" FontSize="11" Margin="0,0,7,4" VerticalAlignment="Center" />
+                            <CheckBox Content="پیش‌فرض" IsChecked="{Binding SelectedTemplate.IsDefault}" FontSize="11" Margin="0,0,0,4" VerticalAlignment="Center" />
+                        </WrapPanel>
+
+                        <!-- عنوان ویرایشگر -->
+                        <TextBlock Grid.Row="1" FontSize="12" FontWeight="Bold" Opacity="0.7" Margin="2,0,0,5"
+                                   Text="بدنه HTML قالب — متغیرها با {{دو آکولاد}}" />
+
+                        <!-- بدنه -->
+                        <TextBox Grid.Row="2" Text="{Binding SelectedTemplate.Body, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 AcceptsReturn="True" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"
+                                 VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" />
+
+                        <!-- پالت متغیرها -->
+                        <TextBlock Grid.Row="3" Text="🧩 متغیرها — با کلیک به انتهای قالب اضافه می‌شود:"
+                                   FontSize="10.5" Opacity="0.6" Margin="2,7,0,3" />
+                        <ItemsControl Grid.Row="4" ItemsSource="{Binding ActiveVariables}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Command="{Binding DataContext.InsertVariableCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource MaterialDesignChipOutlineButton}"
+                                            FontSize="10.5" FontFamily="Consolas" Margin="0,0,5,4" Padding="8,2" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+
+                    <!-- ستون ۳: پیش‌نمایش زنده -->
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Button Grid.Row="0" Command="{Binding PreviewTemplateCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}" HorizontalAlignment="Stretch"
+                                FontSize="12" Margin="0,0,0,8">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="Eye" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="👁 پیش‌نمایش زنده با داده نمونه" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Border Grid.Row="1" CornerRadius="10" BorderBrush="#E1E8F2" BorderThickness="1" Background="#FAFBFD" ClipToBounds="True">
+                            <WebBrowser x:Name="PreviewBrowser" Visibility="Collapsed" />
+                        </Border>
+                        <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <materialDesign:PackIcon Kind="FileFindOutline" Width="44" Height="44" HorizontalAlignment="Center"
+                                                     Foreground="#B0BEC5" />
+                            <TextBlock Text="پیش‌نمایش اینجا نمایش داده می‌شود" FontSize="11.5" Foreground="#90A4AE"
+                                       HorizontalAlignment="Center" Margin="0,8,0,0" />
+                            <TextBlock Text="دکمه بالا را بزنید" FontSize="10" Foreground="#B0BEC5"
+                                       HorizontalAlignment="Center" Margin="0,3,0,0" />
                         </StackPanel>
                     </Grid>
                 </Grid>

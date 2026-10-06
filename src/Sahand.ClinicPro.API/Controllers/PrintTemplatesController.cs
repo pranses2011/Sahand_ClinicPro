@@ -1,0 +1,373 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.API.Filters;
+using Sahand.ClinicPro.Application.Common.Helpers;
+using Sahand.ClinicPro.Application.Common.Models;
+using Sahand.ClinicPro.Application.Features.Reporting.PrintTemplates;
+using Sahand.ClinicPro.Domain.Entities.Infrastructure;
+using Sahand.ClinicPro.Domain.Entities.Reporting;
+using Sahand.ClinicPro.Domain.Enums;
+using Sahand.ClinicPro.Domain.Interfaces;
+
+namespace Sahand.ClinicPro.API.Controllers;
+
+/// <summary>
+/// کنترلر قالب‌های چاپ سفارشی — طراح آنلاین با پیش‌نمایش زنده (چرخه ۱۳، درخواست ۱-۶)
+/// مسیرها: /api/v1/print-templates
+/// </summary>
+[ApiController]
+[Route("api/v1/print-templates")]
+[Authorize]
+public class PrintTemplatesController : ApiBaseController
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده با واحد کار</summary>
+    public PrintTemplatesController(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>فهرست قالب‌ها — با فیلتر نوع اختیاری</summary>
+    /// <param name="type">فیلتر نوع — مثل Invoice یا Prescription</param>
+    /// <param name="includeInactive">شامل قالب‌های غیرفعال</param>
+    [HttpGet]
+    [HasPermission("settings.view")]
+    public async Task<IActionResult> GetAll([FromQuery] string? type = null,
+        [FromQuery] bool includeInactive = true)
+    {
+        var query = _unitOfWork.Repository<PrintTemplate>().QueryableNoTracking
+            .Where(t => !t.IsDeleted);
+        if (!string.IsNullOrWhiteSpace(type) && Enum.TryParse<PrintTemplateType>(type, true, out var tFilter))
+            query = query.Where(t => t.Type == tFilter);
+        if (!includeInactive)
+            query = query.Where(t => t.IsActive);
+
+        var items = await query
+            .OrderBy(t => t.Type).ThenByDescending(t => t.IsDefault).ThenBy(t => t.TemplateName)
+            .Select(t => new PrintTemplateListDto(
+                t.Id, t.TemplateName, t.Type, TypeFa(t.Type), t.PaperSize, t.Orientation,
+                t.ShowClinicLogo, t.IsActive, t.IsDefault))
+            .ToListAsync();
+
+        return Ok(ApiResponse<List<PrintTemplateListDto>>.Success(items));
+    }
+
+    /// <summary>جزئیات کامل یک قالب</summary>
+    /// <param name="id">شناسه قالب</param>
+    [HttpGet("{id:long}")]
+    [HasPermission("settings.view")]
+    public async Task<IActionResult> GetById(long id)
+    {
+        var t = await _unitOfWork.Repository<PrintTemplate>().QueryableNoTracking
+            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        if (t is null)
+            return NotFound(ApiResponse<object>.Failure("قالب یافت نشد"));
+
+        return Ok(ApiResponse<PrintTemplateDetailDto>.Success(ToDetail(t)));
+    }
+
+    /// <summary>پیش‌نمایش زنده قالب با داده نمونه — HTML کامل آماده نمایش</summary>
+    /// <param name="id">شناسه قالب</param>
+    [HttpGet("{id:long}/preview")]
+    [HasPermission("settings.view")]
+    public async Task<IActionResult> Preview(long id)
+    {
+        var t = await _unitOfWork.Repository<PrintTemplate>().QueryableNoTracking
+            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        if (t is null)
+            return NotFound(ApiResponse<object>.Failure("قالب یافت نشد"));
+
+        var clinic = await ClinicInfoAsync();
+        var sample = PrintTemplateRenderer.SampleData(t.Type.ToString());
+        var body = PrintTemplateRenderer.Render(t.HtmlBody, sample)
+            .Replace("__PRINT_DATE__", PersianDateHelper.ToShamsi(DateTime.UtcNow));
+        var html = PrintTemplateRenderer.WrapDocument(
+            body, clinic.ClinicName ?? "درمانگاه سهند", clinic.Address, clinic.Phone,
+            logoUrl: null, t.AccentColor, t.FontSize, t.FontFamily,
+            t.ShowClinicLogo, t.PaperSize);
+
+        return Ok(ApiResponse<object>.Success(new { html, paperSize = t.PaperSize, type = t.Type.ToString() }));
+    }
+
+    /// <summary>رندر با متغیرهای واقعی — برای استفاده ماژول‌های چاپ (فاکتور/نسخه/…)</summary>
+    /// <param name="type">نوع سند — قالب پیش‌فرض همان نوع استفاده می‌شود</param>
+    /// <param name="request">متغیرهای سند</param>
+    [HttpPost("render/{type}")]
+    [HasPermission("settings.view")]
+    public async Task<IActionResult> Render(string type, [FromBody] RenderRequest request)
+    {
+        if (!Enum.TryParse<PrintTemplateType>(type, true, out var tType))
+            return BadRequest(ApiResponse<object>.Failure("نوع سند نامعتبر است"));
+
+        var template = await _unitOfWork.Repository<PrintTemplate>().QueryableNoTracking
+            .Where(t => !t.IsDeleted && t.IsActive && t.Type == tType)
+            .OrderByDescending(t => t.IsDefault)
+            .FirstOrDefaultAsync();
+        if (template is null)
+            return NotFound(ApiResponse<object>.Failure("قالب فعالی برای این نوع سند ثبت نشده است"));
+
+        var clinic = await ClinicInfoAsync();
+        var body = PrintTemplateRenderer.Render(template.HtmlBody,
+                request.Variables ?? new Dictionary<string, object?>())
+            .Replace("__PRINT_DATE__", PersianDateHelper.ToShamsi(DateTime.UtcNow));
+        var html = PrintTemplateRenderer.WrapDocument(
+            body, clinic.ClinicName ?? "درمانگاه سهند", clinic.Address, clinic.Phone,
+            logoUrl: null, template.AccentColor, template.FontSize, template.FontFamily,
+            template.ShowClinicLogo, template.PaperSize);
+
+        return Ok(ApiResponse<object>.Success(new { html, templateId = template.Id, templateName = template.TemplateName }));
+    }
+
+    /// <summary>پالت متغیرها — برای طراح دسکتاپ</summary>
+    [HttpGet("variables")]
+    [HasPermission("settings.view")]
+    public IActionResult Variables()
+        => Ok(ApiResponse<Dictionary<string, string[]>>.Success(PrintTemplateRenderer.VariablesOf()));
+
+    /// <summary>ثبت قالب جدید</summary>
+    /// <param name="dto">داده‌های قالب</param>
+    [HttpPost]
+    [HasPermission("settings.edit")]
+    public async Task<IActionResult> Create([FromBody] SavePrintTemplateDto dto)
+    {
+        var error = Validate(dto);
+        if (error is not null) return BadRequest(ApiResponse<object>.Failure(error));
+
+        var template = new PrintTemplate
+        {
+            TemplateName = dto.TemplateName.Trim(),
+            Type = dto.Type,
+            Description = dto.Description?.Trim(),
+            HtmlBody = dto.HtmlBody,
+            PaperSize = dto.PaperSize,
+            Orientation = dto.Orientation,
+            FontSize = dto.FontSize,
+            FontFamily = dto.FontFamily?.Trim(),
+            ShowClinicLogo = dto.ShowClinicLogo,
+            AccentColor = dto.AccentColor?.Trim(),
+            IsActive = dto.IsActive,
+            IsDefault = dto.IsDefault
+        };
+
+        if (template.IsDefault)
+            await ClearDefaultAsync(template.Type, null);
+
+        await _unitOfWork.Repository<PrintTemplate>().AddAsync(template);
+        await _unitOfWork.SaveEntitiesAsync();
+        return CreatedResponse(
+            Result<PrintTemplateDetailDto>.Success(ToDetail(template)),
+            nameof(GetById), new { id = template.Id }, $"قالب «{template.TemplateName}» ثبت شد");
+    }
+
+    /// <summary>ویرایش قالب</summary>
+    /// <param name="id">شناسه قالب</param>
+    /// <param name="dto">داده‌های جدید</param>
+    [HttpPut("{id:long}")]
+    [HasPermission("settings.edit")]
+    public async Task<IActionResult> Update(long id, [FromBody] SavePrintTemplateDto dto)
+    {
+        var template = await _unitOfWork.Repository<PrintTemplate>().QueryableTracking
+            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        if (template is null)
+            return NotFound(ApiResponse<object>.Failure("قالب یافت نشد"));
+
+        var error = Validate(dto);
+        if (error is not null) return BadRequest(ApiResponse<object>.Failure(error));
+
+        if (dto.IsDefault && !template.IsDefault)
+            await ClearDefaultAsync(dto.Type, id);
+
+        template.TemplateName = dto.TemplateName.Trim();
+        template.Type = dto.Type;
+        template.Description = dto.Description?.Trim();
+        template.HtmlBody = dto.HtmlBody;
+        template.PaperSize = dto.PaperSize;
+        template.Orientation = dto.Orientation;
+        template.FontSize = dto.FontSize;
+        template.FontFamily = dto.FontFamily?.Trim();
+        template.ShowClinicLogo = dto.ShowClinicLogo;
+        template.AccentColor = dto.AccentColor?.Trim();
+        template.IsActive = dto.IsActive;
+        template.IsDefault = dto.IsDefault;
+
+        await _unitOfWork.SaveEntitiesAsync();
+        return Ok(ApiResponse<PrintTemplateDetailDto>.Success(ToDetail(template), "قالب به‌روزرسانی شد"));
+    }
+
+    /// <summary>قالب پیش‌فرض یک نوع را جابه‌جا می‌کند</summary>
+    /// <param name="id">شناسه قالب</param>
+    [HttpPost("{id:long}/set-default")]
+    [HasPermission("settings.edit")]
+    public async Task<IActionResult> SetDefault(long id)
+    {
+        var template = await _unitOfWork.Repository<PrintTemplate>().QueryableTracking
+            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        if (template is null)
+            return NotFound(ApiResponse<object>.Failure("قالب یافت نشد"));
+
+        await ClearDefaultAsync(template.Type, id);
+        template.IsDefault = true;
+        template.IsActive = true; // قالب پیش‌فرض باید فعال باشد
+        await _unitOfWork.SaveEntitiesAsync();
+        return Ok(ApiResponse<object>.Success(new { template.Id }, "قالب پیش‌فرض این نوع سند شد"));
+    }
+
+    /// <summary>بازکردن (کپی) قالب — «ذخیره به‌عنوان نسخه جدید»</summary>
+    /// <param name="id">شناسه قالب مبدأ</param>
+    /// <param name="newName">نام نسخه جدید</param>
+    [HttpPost("{id:long}/duplicate")]
+    [HasPermission("settings.edit")]
+    public async Task<IActionResult> Duplicate(long id, [FromBody] DuplicateRequest request)
+    {
+        var src = await _unitOfWork.Repository<PrintTemplate>().QueryableNoTracking
+            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        if (src is null)
+            return NotFound(ApiResponse<object>.Failure("قالب یافت نشد"));
+
+        var copy = new PrintTemplate
+        {
+            TemplateName = string.IsNullOrWhiteSpace(request.NewName)
+                ? $"{src.TemplateName} (کپی)" : request.NewName.Trim(),
+            Type = src.Type,
+            Description = src.Description,
+            HtmlBody = src.HtmlBody,
+            PaperSize = src.PaperSize,
+            Orientation = src.Orientation,
+            FontSize = src.FontSize,
+            FontFamily = src.FontFamily,
+            ShowClinicLogo = src.ShowClinicLogo,
+            AccentColor = src.AccentColor,
+            IsActive = src.IsActive,
+            IsDefault = false // کپی هرگز خودکار پیش‌فرض نمی‌شود
+        };
+        await _unitOfWork.Repository<PrintTemplate>().AddAsync(copy);
+        await _unitOfWork.SaveEntitiesAsync();
+        return CreatedResponse(
+            Result<PrintTemplateDetailDto>.Success(ToDetail(copy)),
+            nameof(GetById), new { id = copy.Id }, $"نسخه جدید «{copy.TemplateName}» ساخته شد");
+    }
+
+    /// <summary>حذف نرم قالب</summary>
+    /// <param name="id">شناسه قالب</param>
+    [HttpDelete("{id:long}")]
+    [HasPermission("settings.edit")]
+    public async Task<IActionResult> Delete(long id)
+    {
+        var template = await _unitOfWork.Repository<PrintTemplate>().QueryableTracking
+            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        if (template is null)
+            return NotFound(ApiResponse<object>.Failure("قالب یافت نشد"));
+        if (template.IsDefault)
+            return BadRequest(ApiResponse<object>.Failure(
+                "قالب پیش‌فرض قابل حذف نیست — ابتدا قالب دیگری را پیش‌فرض کنید"));
+
+        template.IsDeleted = true;
+        await _unitOfWork.SaveEntitiesAsync();
+        return Ok(ApiResponse<object>.Success(new { }, "قالب حذف شد"));
+    }
+
+    /* ═══════════ کمکی ═══════════ */
+
+    /// <summary>اطلاعات درمانگاه برای سربرگ</summary>
+    private async Task<(string? ClinicName, string? Address, string? Phone)> ClinicInfoAsync()
+    {
+        var info = await _unitOfWork.Repository<ClinicInfo>().QueryableNoTracking
+            .OrderByDescending(c => c.Id)
+            .FirstOrDefaultAsync();
+        return (info?.ClinicName, info?.Address, info?.Phone);
+    }
+
+    /// <summary>پاک‌کردن پرچم پیش‌فرض بقیه قالب‌های همان نوع</summary>
+    private async Task ClearDefaultAsync(PrintTemplateType type, long? exceptId)
+    {
+        var others = await _unitOfWork.Repository<PrintTemplate>().QueryableTracking
+            .Where(t => !t.IsDeleted && t.Type == type && t.IsDefault && t.Id != exceptId)
+            .ToListAsync();
+        foreach (var t in others)
+            t.IsDefault = false;
+    }
+
+    /// <summary>اعتبارسنجی مشترک</summary>
+    private static string? Validate(SavePrintTemplateDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.TemplateName) || dto.TemplateName.Trim().Length < 3)
+            return "نام قالب حداقل ۳ نویسه باشد";
+        if (string.IsNullOrWhiteSpace(dto.HtmlBody) || dto.HtmlBody.Trim().Length < 10)
+            return "بدنه HTML قالب خالی است";
+        if (!new[] { "A4", "A5", "A6" }.Contains(dto.PaperSize))
+            return "اندازه کاغذ باید A4 یا A5 یا A6 باشد";
+        if (dto.FontSize is < 8 or > 24)
+            return "اندازه فونت بین ۸ تا ۲۴ باشد";
+        return null;
+    }
+
+    /// <summary>تبدیل به DTO جزئیات</summary>
+    private static PrintTemplateDetailDto ToDetail(PrintTemplate t) => new(
+        t.Id, t.TemplateName, t.Type, TypeFa(t.Type), t.Description, t.HtmlBody,
+        t.PaperSize, t.Orientation, t.FontSize, t.FontFamily, t.ShowClinicLogo,
+        t.AccentColor, t.IsActive, t.IsDefault);
+
+    /// <summary>نام فارسی نوع</summary>
+    private static string TypeFa(PrintTemplateType type) => type switch
+    {
+        PrintTemplateType.Invoice => "فاکتور و قبض پرداخت",
+        PrintTemplateType.Prescription => "نسخه پزشکی",
+        PrintTemplateType.LabOrder => "درخواست آزمایش",
+        PrintTemplateType.LabResult => "نتیجه آزمایش",
+        PrintTemplateType.ImagingOrder => "درخواست تصویربرداری",
+        PrintTemplateType.AppointmentTicket => "نوبت‌نامه",
+        PrintTemplateType.ReceptionReceipt => "رسید پذیرش",
+        PrintTemplateType.MedicalCertificate => "گواهی پزشکی",
+        PrintTemplateType.PayrollSlip => "فیش حقوقی",
+        _ => type.ToString()
+    };
+}
+
+/// <summary>ردیف فهرست قالب‌ها</summary>
+public record PrintTemplateListDto(
+    long Id,
+    string TemplateName,
+    PrintTemplateType Type,
+    string TypeFa,
+    string PaperSize,
+    string Orientation,
+    bool ShowClinicLogo,
+    bool IsActive,
+    bool IsDefault);
+
+/// <summary>جزئیات کامل قالب</summary>
+public record PrintTemplateDetailDto(
+    long Id,
+    string TemplateName,
+    PrintTemplateType Type,
+    string TypeFa,
+    string? Description,
+    string HtmlBody,
+    string PaperSize,
+    string Orientation,
+    int FontSize,
+    string? FontFamily,
+    bool ShowClinicLogo,
+    string? AccentColor,
+    bool IsActive,
+    bool IsDefault);
+
+/// <summary>ثبت/ویرایش قالب</summary>
+public record SavePrintTemplateDto(
+    string TemplateName,
+    PrintTemplateType Type,
+    string? Description,
+    string HtmlBody,
+    string PaperSize,
+    string Orientation,
+    int FontSize,
+    string? FontFamily,
+    bool ShowClinicLogo,
+    string? AccentColor,
+    bool IsActive,
+    bool IsDefault);
+
+/// <summary>درخواست رندر با متغیرهای واقعی</summary>
+public record RenderRequest(Dictionary<string, object?>? Variables);
+
+/// <summary>درخواست کپی قالب</summary>
+public record DuplicateRequest(string? NewName);

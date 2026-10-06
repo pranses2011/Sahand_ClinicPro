@@ -8331,6 +8331,113 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Reporting.PrintTemplate", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AccentColor")
+                        .HasMaxLength(9)
+                        .HasColumnType("nvarchar(9)")
+                        .HasComment("رنگ تأکیدی — هگز");
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasComment("توضیح اختیاری");
+
+                    b.Property<string>("FontFamily")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasComment("خانواده فونت");
+
+                    b.Property<int>("FontSize")
+                        .HasColumnType("int")
+                        .HasComment("اندازه فونت پایه (پیکسل)");
+
+                    b.Property<string>("HtmlBody")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasComment("بدنه HTML با متغیرهای {{نام_متغیر}}");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasComment("فعال");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit")
+                        .HasComment("پیش‌فرض این نوع");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Orientation")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)")
+                        .HasComment("جهت صفحه — Portrait/Landscape");
+
+                    b.Property<string>("PaperSize")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasComment("اندازه کاغذ — A4/A5/A6");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<bool>("ShowClinicLogo")
+                        .HasColumnType("bit")
+                        .HasComment("نمایش لوگوی درمانگاه در سربرگ");
+
+                    b.Property<string>("TemplateName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasComment("نام نمایشی قالب");
+
+                    b.Property<byte>("Type")
+                        .HasColumnType("tinyint")
+                        .HasComment("نوع سند — ۹ نوع چاپی");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Type", "IsDefault")
+                        .HasDatabaseName("IX_PrintTemplate_Type_Default")
+                        .HasFilter("[IsDefault] = 1 AND [IsDeleted] = 0");
+
+                    b.ToTable("PrintTemplates", null, t =>
+                        {
+                            t.HasComment("قالب چاپ سفارشی — طراح آنلاین با متغیرهای جایگاه‌دار");
+                        });
+                });
+
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Reporting.ReportDefinition", b =>
                 {
                     b.Property<long>("Id")
