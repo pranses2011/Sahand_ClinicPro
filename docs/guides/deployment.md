@@ -13,6 +13,11 @@
 ## ۲. دیتابیس
 
 ```powershell
+# بار اول: بازیابی ابزار dotnet-ef از manifest محلی پروژه (.config/dotnet-tools.json — نسخه 8.0.11)
+# ⚠️ الزامی: manifest محلی بر نصب سراسری (--global) اولویت دارد؛ بدون این مرحله خطای
+#    Run "dotnet tool restore" to make the "dotnet-ef" command available می‌گیرید
+dotnet tool restore
+
 # ساخت دیتابیس با Migration
 cd src/Sahand.ClinicPro.API
 dotnet ef database update --project ../Sahand.ClinicPro.Infrastructure --startup-project .
