@@ -31,11 +31,13 @@ def main() -> int:
             return 1
         data = path.read_bytes()
         b64 = base64.b64encode(data).decode("ascii")
-        faces.append(
-            "  @font-face {{ font-family: 'Vazirmatn'; "
-            f"src: url(data:font/woff2;base64,{b64}) format('woff2'); "
-            f"font-weight: {weight}; font-style: normal; }}"
-        )
+        # ⚠️ رشتهٔ سازنده فقط با الحاق ساده ساخته می‌شود (نه f-string):
+        # در f-string پایتون «}}» به «}» تکی تبدیل می‌شود و در رشتهٔ interpolate
+        # شدهٔ C# باید «}}» بماند — همین تداخل یک‌بار خطای CS8086 ساخت.
+        face = ("  @font-face {{ font-family: 'Vazirmatn'; "
+                "src: url(data:font/woff2;base64," + b64 + ") format('woff2'); "
+                "font-weight: " + str(weight) + "; font-style: normal; }}")
+        faces.append(face)
         print(f"  ✔ {fname}: {len(data)} بایت → {len(b64)} کاراکتر base64 (وزن {weight})")
 
     text = TARGET.read_text(encoding="utf-8")
