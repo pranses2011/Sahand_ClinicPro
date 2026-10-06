@@ -41,42 +41,42 @@
 
                     <!-- کارت‌های آماری -->
                     <UniformGrid Grid.Row="0" Columns="6" Margin="0,0,0,10">
-                        <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                        <Border Background="{DynamicResource MaterialDesign.Brush.Card.Background}" CornerRadius="8"
                                 Padding="12,10" Margin="0,0,6,0" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
                             <StackPanel>
                                 <TextBlock Text="کل پرسنل" FontSize="11" Opacity="0.65" />
                                 <TextBlock Text="{Binding TotalStaff}" FontSize="21" FontWeight="Bold" Foreground="#546E7A" />
                             </StackPanel>
                         </Border>
-                        <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                        <Border Background="{DynamicResource MaterialDesign.Brush.Card.Background}" CornerRadius="8"
                                 Padding="12,10" Margin="0,0,6,0" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
                             <StackPanel>
                                 <TextBlock Text="حاضر" FontSize="11" Opacity="0.65" />
                                 <TextBlock Text="{Binding PresentCount}" FontSize="21" FontWeight="Bold" Foreground="#43A047" />
                             </StackPanel>
                         </Border>
-                        <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                        <Border Background="{DynamicResource MaterialDesign.Brush.Card.Background}" CornerRadius="8"
                                 Padding="12,10" Margin="0,0,6,0" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
                             <StackPanel>
                                 <TextBlock Text="تأخیر" FontSize="11" Opacity="0.65" />
                                 <TextBlock Text="{Binding LateCount}" FontSize="21" FontWeight="Bold" Foreground="#FB8C00" />
                             </StackPanel>
                         </Border>
-                        <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                        <Border Background="{DynamicResource MaterialDesign.Brush.Card.Background}" CornerRadius="8"
                                 Padding="12,10" Margin="0,0,6,0" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
                             <StackPanel>
                                 <TextBlock Text="غایب" FontSize="11" Opacity="0.65" />
                                 <TextBlock Text="{Binding AbsentCount}" FontSize="21" FontWeight="Bold" Foreground="#D32F2F" />
                             </StackPanel>
                         </Border>
-                        <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                        <Border Background="{DynamicResource MaterialDesign.Brush.Card.Background}" CornerRadius="8"
                                 Padding="12,10" Margin="0,0,6,0" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
                             <StackPanel>
                                 <TextBlock Text="مرخصی" FontSize="11" Opacity="0.65" />
                                 <TextBlock Text="{Binding LeaveCount}" FontSize="21" FontWeight="Bold" Foreground="#1E88E5" />
                             </StackPanel>
                         </Border>
-                        <Border Background="{DynamicResource MaterialDesign.Card.Background}" CornerRadius="8"
+                        <Border Background="{DynamicResource MaterialDesign.Brush.Card.Background}" CornerRadius="8"
                                 Padding="12,10" BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
                             <StackPanel>
                                 <TextBlock Text="مأموریت" FontSize="11" Opacity="0.65" />
@@ -154,7 +154,7 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- فرم دستگاه -->
-                        <Border Grid.Column="0" Background="{DynamicResource MaterialDesign.Card.Background}"
+                        <Border Grid.Column="0" Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
                                 CornerRadius="8" Padding="12" Margin="0,0,6,0"
                                 BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
                             <StackPanel>
@@ -190,7 +190,7 @@
                         </Border>
 
                         <!-- نگاشت کاربران -->
-                        <Border Grid.Column="1" Background="{DynamicResource MaterialDesign.Card.Background}"
+                        <Border Grid.Column="1" Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
                                 CornerRadius="8" Padding="12" Margin="6,0,0,0"
                                 BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
                             <Grid>
@@ -281,7 +281,7 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- فرم شیفت -->
-                        <Border Grid.Column="0" Background="{DynamicResource MaterialDesign.Card.Background}"
+                        <Border Grid.Column="0" Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
                                 CornerRadius="8" Padding="12" Margin="0,0,6,0"
                                 BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
                             <StackPanel>
@@ -308,7 +308,7 @@
                         </Border>
 
                         <!-- فرم تخصیص -->
-                        <Border Grid.Column="1" Background="{DynamicResource MaterialDesign.Card.Background}"
+                        <Border Grid.Column="1" Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
                                 CornerRadius="8" Padding="12" Margin="6,0,0,0"
                                 BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
                             <StackPanel>

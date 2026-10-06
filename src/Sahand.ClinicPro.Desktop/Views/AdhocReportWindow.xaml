@@ -101,7 +101,7 @@
                             <ItemsControl ItemsSource="{Binding Filters}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                                        <Border Background="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                                                 CornerRadius="8" Padding="8,6" Margin="0,0,0,6">
                                             <StackPanel>
                                                 <Grid>

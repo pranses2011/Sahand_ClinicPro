@@ -36,7 +36,7 @@
 
             <!-- فهرست درس‌ها + پیشرفت کلی -->
             <Border Grid.Column="0" CornerRadius="10" Margin="0,0,8,0" Padding="8"
-                    Background="{DynamicResource MaterialDesign.Brush.Background.Variant}">
+                    Background="{DynamicResource MaterialDesign.Brush.Separator.Background}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -101,7 +101,7 @@
                     <TextBlock Grid.Row="0" Text="از فهرست راست یک درس انتخاب کنید" FontSize="13" Opacity="0.45"
                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                Visibility="{Binding HasLesson, Converter={StaticResource InverseBoolToVisibility}}" />
-                    <Border Grid.Row="1" Padding="12,8" Background="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                    <Border Grid.Row="1" Padding="12,8" Background="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                             CornerRadius="0,0,12,12">
                         <DockPanel>
                             <Button Command="{Binding MarkDoneCommand}" Style="{StaticResource MaterialDesignRaisedButton}"

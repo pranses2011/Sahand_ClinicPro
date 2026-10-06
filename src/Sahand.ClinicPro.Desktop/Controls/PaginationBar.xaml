@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Controls.PaginationBar"
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Controls.PaginationBar"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -12,7 +12,7 @@
     <!-- نوار صفحه‌بندی — مشخصات پرامپت UI بخش ۱:
          «نمایش ۱ تا ۲۰ از ۱٬۲۵۴ [قبلی][بعدی] + تعداد رکورد در صفحه» -->
     <Border Background="{DynamicResource MaterialDesign.Brush.Background}"
-            BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+            BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
             BorderThickness="0,1,0,0" Padding="12,6">
         <DockPanel>
             <!-- راست: توضیح بازه -->

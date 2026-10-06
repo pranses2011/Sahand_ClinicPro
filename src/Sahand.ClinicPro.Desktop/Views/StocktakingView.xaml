@@ -51,7 +51,7 @@
 
         <!-- سربرگ جلسه جاری + اقدامات -->
         <Border Grid.Row="2" CornerRadius="10" Padding="12,8" Margin="0,0,0,10"
-                Background="{DynamicResource MaterialDesign.Brush.Background.Variant}">
+                Background="{DynamicResource MaterialDesign.Brush.Separator.Background}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -102,7 +102,7 @@
 
             <!-- فهرست جلسات -->
             <Border Grid.Column="0" CornerRadius="10" Margin="0,0,8,0" Padding="6"
-                    BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}" BorderThickness="1">
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -114,7 +114,7 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Border Margin="2,4" Padding="10,8" CornerRadius="8"
-                                        Background="{DynamicResource MaterialDesign.Brush.Background.Variant}">
+                                        Background="{DynamicResource MaterialDesign.Brush.Separator.Background}">
                                     <StackPanel>
                                         <Grid>
                                             <Grid.ColumnDefinitions>

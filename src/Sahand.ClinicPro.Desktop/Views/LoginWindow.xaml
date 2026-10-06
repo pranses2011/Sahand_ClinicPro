@@ -1,4 +1,4 @@
-﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.LoginWindow"
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -127,14 +127,14 @@
 
                 <!-- پیام خطا -->
                 <TextBlock Text="{Binding ErrorMessage}"
-                           Foreground="{DynamicResource MaterialDesign.Brush.Error}"
+                           Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
                            FontSize="12" TextWrapping="Wrap"
                            Margin="0,10,0,0"
                            Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}" />
 
                 <!-- دکمه ورود — تمام عرض -->
                 <Button Command="{Binding LoginCommand}"
-                        Style="{StaticResource MaterialDesignFilledButton}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
                         Height="45" Margin="0,16,0,0"
                         FontSize="15" FontWeight="Bold"
                         IsDefault="True"
@@ -159,7 +159,7 @@
                 </Grid>
 
                 <!-- فعال‌سازی لایسنس — فقط وقتی لایسنس فعال نیست -->
-                <Button Style="{StaticResource MaterialDesignFlatPrimaryButton}"
+                <Button Style="{StaticResource MaterialDesignFlatButton}"
                         Content="🔑 فعال‌سازی لایسنس"
                         FontSize="13"
                         Command="{Binding ActivateLicenseCommand}"

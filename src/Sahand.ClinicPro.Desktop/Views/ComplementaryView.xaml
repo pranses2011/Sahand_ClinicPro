@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.ComplementaryView"
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.ComplementaryView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -151,7 +151,7 @@
                                 <DataTemplate>
                                     <Button Command="{Binding DataContext.InsertVariableCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                             CommandParameter="{Binding}"
-                                            Style="{StaticResource MaterialDesignChipOutlineButton}"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
                                             FontSize="10.5" FontFamily="Consolas" Margin="0,0,5,4" Padding="8,2" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>

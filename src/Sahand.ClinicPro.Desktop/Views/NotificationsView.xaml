@@ -45,7 +45,7 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Border Margin="2,4" Padding="12,10" CornerRadius="10"
-                                Background="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                                Background="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                                 Opacity="{Binding RowOpacity, Mode=OneWay}">
                             <Grid>
                                 <Grid.ColumnDefinitions>

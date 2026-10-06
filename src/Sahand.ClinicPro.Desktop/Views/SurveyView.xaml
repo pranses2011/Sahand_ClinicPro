@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.SurveyView"
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.SurveyView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -44,14 +44,14 @@
                     <!-- نوار دکمه‌ها -->
                     <WrapPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
                         <Button Content="➕ نظرسنجی جدید" Command="{Binding OpenCreateFormCommand}"
-                                Style="{StaticResource MaterialDesignFilledButton}" Margin="0,0,8,4" />
+                                Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,4" />
                         <Button Content="✏️ ویرایش" Command="{Binding OpenEditFormCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,4" />
                         <Button Content="⏯ فعال/غیرفعال" Command="{Binding ToggleActiveCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,4" />
                         <Button Content="📤 ارسال لینک به ویزیت‌های امروز" Command="{Binding SendLinksCommand}"
                                 ToolTip="لینک نظرسنجی برای همه بیماران ویزیت‌شده امروز پیامک می‌شود (از طریق صف ارسال)"
-                                Style="{StaticResource MaterialDesignFilledButton}" Margin="0,0,8,4"
+                                Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,4"
                                 Background="#FB8C00" BorderBrush="#FB8C00" />
                         <Button Content="🔄 بارگذاری مجدد" Command="{Binding LoadSurveysCommand}"
                                 Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,8,4" />
@@ -156,7 +156,7 @@
                             <!-- ذخیره/لغو -->
                             <WrapPanel Orientation="Horizontal">
                                 <Button Content="💾 ذخیره نظرسنجی" Command="{Binding SaveFormCommand}"
-                                        Style="{StaticResource MaterialDesignFilledButton}" Margin="0,0,8,0" />
+                                        Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0" />
                                 <Button Content="لغو" Command="{Binding CancelFormCommand}"
                                         Style="{StaticResource MaterialDesignOutlinedButton}" />
                             </WrapPanel>
@@ -199,7 +199,7 @@
                                       DisplayMemberPath="Title"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}" />
                             <Button Grid.Column="2" Content="🔄 بارگذاری نتایج" Command="{Binding LoadResultsCommand}"
-                                    Style="{StaticResource MaterialDesignFilledButton}" />
+                                    Style="{StaticResource MaterialDesignRaisedButton}" />
                         </Grid>
 
                         <!-- کارت‌های خلاصه -->

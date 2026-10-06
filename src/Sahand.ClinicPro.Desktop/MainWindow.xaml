@@ -1,4 +1,4 @@
-﻿<Window x:Class="Sahand.ClinicPro.Desktop.MainWindow"
+<Window x:Class="Sahand.ClinicPro.Desktop.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -135,7 +135,7 @@
 
         <!-- ═══ ستون کنار ═══ -->
         <Border Grid.Column="0"
-                Background="{DynamicResource MaterialDesign.Brush.Primary.Container}">
+                Background="{DynamicResource MaterialDesign.Brush.Primary.Light}">
             <Grid>
                 <Grid.RowDefinitions>
                     <!-- لوگو و نام درمانگاه (بالا) -->
@@ -215,7 +215,7 @@
             <!-- ═══ TopBar — مسیر صفحه + ساعت شمسی لحظه‌ای + زنگ اعلان + تم + کاربر ═══ -->
             <Border Grid.Row="0"
                     Padding="24,10,24,8"
-                    BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                     BorderThickness="0,0,0,1">
                 <DockPanel>
                     <!-- چپ: کاربر و آواتار -->
@@ -286,7 +286,7 @@
 
                         <!-- ساعت زنده شمسی -->
                         <Border CornerRadius="10"
-                                Background="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                                Background="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                                 Padding="10,3"
                                 Margin="16,0,0,0"
                                 VerticalAlignment="Center">
@@ -311,7 +311,7 @@
 
             <!-- ═══ StatusBar — وضعیت اتصال + کاربر + لایسنس + تاریخ ═══ -->
             <Border Grid.Row="2"
-                    BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                     BorderThickness="0,1,0,0"
                     Padding="16,4">
                 <DockPanel LastChildFill="False">

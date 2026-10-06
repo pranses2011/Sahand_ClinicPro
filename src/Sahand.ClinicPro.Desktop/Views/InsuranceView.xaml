@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.InsuranceView"
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.InsuranceView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -211,7 +211,7 @@
                         <TextBox Text="{Binding RulePercent, UpdateSourceTrigger=PropertyChanged}"
                                  materialDesign:HintAssist.Hint="درصد بیمه"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="105" FontSize="11.5" Margin="0,0,7,4"
-                                 IsEnabled="{Binding RuleIsNominal, Converter={StaticResource InverseBool}, FallbackValue=False}" />
+                                 IsEnabled="{Binding RuleIsNominal, Converter={StaticResource InvertBool}, FallbackValue=False}" />
                         <TextBox Text="{Binding RuleNominal, UpdateSourceTrigger=PropertyChanged}"
                                  materialDesign:HintAssist.Hint="مبلغ اسمی (ریال)"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="140" FontSize="11.5" Margin="0,0,7,4"

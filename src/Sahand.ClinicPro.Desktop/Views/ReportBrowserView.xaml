@@ -44,7 +44,7 @@
 
             <!-- ═══ ستون راست: دسته‌ها ═══ -->
             <Border Grid.Column="0" CornerRadius="10" Margin="0,0,8,0"
-                    Background="{DynamicResource MaterialDesign.Brush.Background.Variant}" Padding="8">
+                    Background="{DynamicResource MaterialDesign.Brush.Separator.Background}" Padding="8">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -72,7 +72,7 @@
 
             <!-- ═══ ستون میانه: کاتالوگ گزارش‌های دسته ═══ -->
             <Border Grid.Column="1" CornerRadius="10" Margin="0,0,8,0"
-                    BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}" BorderThickness="1" Padding="6">
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1" Padding="6">
                 <ListBox ItemsSource="{Binding SelectedCategory.Reports}" SelectedItem="{Binding SelectedReport}"
                          Background="Transparent" BorderThickness="0"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">

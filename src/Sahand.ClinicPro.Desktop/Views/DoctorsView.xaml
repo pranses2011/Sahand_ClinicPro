@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.DoctorsView"
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.DoctorsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -44,7 +44,7 @@
         <!-- نوار ابزار -->
         <Border Grid.Row="1"
                 Background="{DynamicResource MaterialDesign.Brush.Background}"
-                BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                 BorderThickness="1" CornerRadius="10"
                 Padding="10,8" Margin="0,0,0,10">
             <DockPanel>

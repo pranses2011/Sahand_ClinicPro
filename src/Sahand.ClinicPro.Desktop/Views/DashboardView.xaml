@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.DashboardView"
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.DashboardView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -18,7 +18,7 @@
         <!-- قالب ردیف نوبت‌های پیش‌رو — شماره صف دایره‌ای + نام + وضعیت -->
         <DataTemplate x:Key="AppointmentItemTemplate">
             <Border Background="{DynamicResource MaterialDesign.Brush.Background}"
-                    BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                     BorderThickness="0,0,0,1" CornerRadius="6" Padding="8,6" Margin="4,2">
                 <DockPanel>
                     <!-- نشان وضعیت رنگی -->
@@ -108,7 +108,7 @@
                 </ToggleButton>
                 <Button DockPanel.Dock="Left" Command="{Binding ResetLayoutCommand}"
                         Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0"
-                        Visibility="{Binding IsCustomizing, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Visibility="{Binding IsCustomizing, Converter={StaticResource BoolToVis}}"
                         ToolTip="بازگشت به چیدمان پیش‌فرض">
                     <materialDesign:PackIcon Kind="Restore" Width="15" Height="15" />
                 </Button>
@@ -131,7 +131,7 @@
 
             <!-- ═══ چرخه دوازدهم: کارت پیام‌های پشتیبانی — پیام‌های مستقیم پنل لایسنس ═══ -->
             <ItemsControl ItemsSource="{Binding SupportMessages}"
-                          Visibility="{Binding HasSupportMessages, Converter={StaticResource BooleanToVisibilityConverter}}"
+                          Visibility="{Binding HasSupportMessages, Converter={StaticResource BoolToVis}}"
                           Margin="0,0,0,12">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
@@ -179,7 +179,7 @@
 
             <!-- ═══ چرخه ۱۳ (۴-۲): پنل شخصی‌سازی — فقط در حالت تنظیم ═══ -->
             <Border Background="#FFF8E1" CornerRadius="10" Padding="12,9" Margin="0,0,0,10"
-                    Visibility="{Binding IsCustomizing, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    Visibility="{Binding IsCustomizing, Converter={StaticResource BoolToVis}}">
                 <WrapPanel>
                     <TextBlock Text="🧩 نمایش بخش‌ها:" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" Margin="0,0,10,0" />
                     <CheckBox Content="کارت‌های فرعی" IsChecked="{Binding ShowSecondaryCards}" FontSize="11.5" Margin="0,0,12,0" />
@@ -205,11 +205,11 @@
                                                Label="{Binding Label, Mode=OneWay}"
                                                CompareText="{Binding CompareText, Mode=OneWay}"
                                                AccentBrush="{Binding Accent, Mode=OneWay}"
-                                               Visibility="{Binding Visible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                               Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}" />
                             <!-- کنترل‌های چیدمان — فقط در حالت شخصی‌سازی -->
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top"
                                         Margin="4,2,0,0"
-                                        Visibility="{Binding DataContext.IsCustomizing, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        Visibility="{Binding DataContext.IsCustomizing, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource BoolToVis}}">
                                 <Button Command="{Binding DataContext.MoveCardUpCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource MaterialDesignFlatButton}" Padding="3,1" ToolTip="جابه‌جایی به قبل">
@@ -230,7 +230,7 @@
 
             <!-- ردیف ۲: سه کارت فرعی — نمایش قابل تنظیم (چرخه ۱۳) -->
             <UniformGrid Columns="3" Rows="1"
-                         Visibility="{Binding ShowSecondaryCards, Converter={StaticResource BooleanToVisibilityConverter}}">
+                         Visibility="{Binding ShowSecondaryCards, Converter={StaticResource BoolToVis}}">
                 <controls:StatCard IconKind="AlertCircle"
                                    Value="{Binding LowStockCount, Mode=OneWay}"
                                    Label="موجودی کم دارو"
@@ -258,7 +258,7 @@
 
                 <!-- کارت نمودار درآمد ۷ روز -->
                 <materialDesign:Card Grid.Column="0" UniformCornerRadius="14" Padding="16"
-                                     Visibility="{Binding ShowRevenueChart, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                     Visibility="{Binding ShowRevenueChart, Converter={StaticResource BoolToVis}}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -288,7 +288,7 @@
 
                 <!-- کارت نوبت‌های پیش‌رو — نمایش قابل تنظیم (چرخه ۱۳) -->
                 <materialDesign:Card Grid.Column="2" UniformCornerRadius="14" Padding="12"
-                                     Visibility="{Binding ShowUpcoming, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                     Visibility="{Binding ShowUpcoming, Converter={StaticResource BoolToVis}}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -323,7 +323,7 @@
 
             <!-- ردیف ۴: فعالیت‌های اخیر — نمایش قابل تنظیم (چرخه ۱۳) -->
             <materialDesign:Card UniformCornerRadius="14" Padding="16" Margin="0,14,0,4"
-                                 Visibility="{Binding ShowActivities, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                 Visibility="{Binding ShowActivities, Converter={StaticResource BoolToVis}}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -369,7 +369,7 @@
 
             <!-- پیام خطا در نبود سرور -->
             <TextBlock Text="{Binding ErrorMessage}"
-                       Foreground="{DynamicResource MaterialDesign.Brush.Error}"
+                       Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
                        TextWrapping="Wrap" Margin="4,12,4,0" />
         </StackPanel>
     </ScrollViewer>

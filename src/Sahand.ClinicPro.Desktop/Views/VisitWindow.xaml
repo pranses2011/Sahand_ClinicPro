@@ -1,4 +1,4 @@
-﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.VisitWindow"
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.VisitWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -57,7 +57,7 @@
             <!-- ═══ سایدبار ═══ -->
             <Border Grid.Column="0" CornerRadius="12" Padding="10" Margin="0,0,8,0"
                     Background="{DynamicResource MaterialDesign.Brush.Background}"
-                    BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                     BorderThickness="1">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
@@ -151,7 +151,7 @@
                                 <DataTemplate>
                                     <Border CornerRadius="8" Padding="8,6" Margin="0,0,0,5"
                                             Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
-                                            BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                                            BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                                             BorderThickness="1">
                                         <StackPanel>
                                             <TextBlock Text="{Binding DateShamsi}" FontSize="11" FontWeight="SemiBold" />
@@ -252,7 +252,7 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border Width="105" CornerRadius="10" Padding="8,6" Margin="0,0,7,7"
-                                                BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}"
+                                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                                                 BorderThickness="1" Background="#FAFAFA">
                                             <StackPanel HorizontalAlignment="Center">
                                                 <TextBlock Text="{Binding Title}" FontSize="10" FontFamily="Consolas" Opacity="0.6" HorizontalAlignment="Center" />
@@ -287,7 +287,7 @@
                             <TextBlock Text="گروه‌بندی معاینه — هر ناحیه: نرمال یا یافته غیرنرمال" FontSize="11.5" Opacity="0.65" Margin="2,4,0,8" />
                             <UniformGrid Columns="2">
                                 <Border CornerRadius="10" Padding="10" Margin="0,0,6,6" BorderThickness="1"
-                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}">
+                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}">
                                     <StackPanel>
                                         <CheckBox Content="سر و گردن: نرمال" IsChecked="{Binding HeadNeckNormal}" FontWeight="SemiBold" />
                                         <TextBox Text="{Binding HeadNeckFindings, UpdateSourceTrigger=PropertyChanged}"
@@ -297,7 +297,7 @@
                                     </StackPanel>
                                 </Border>
                                 <Border CornerRadius="10" Padding="10" Margin="0,0,0,6" BorderThickness="1"
-                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}">
+                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}">
                                     <StackPanel>
                                         <CheckBox Content="قفسه سینه: نرمال" IsChecked="{Binding ChestNormal}" FontWeight="SemiBold" />
                                         <TextBox Text="{Binding ChestFindings, UpdateSourceTrigger=PropertyChanged}"
@@ -307,7 +307,7 @@
                                     </StackPanel>
                                 </Border>
                                 <Border CornerRadius="10" Padding="10" Margin="0,0,6,0" BorderThickness="1"
-                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}">
+                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}">
                                     <StackPanel>
                                         <CheckBox Content="شکم: نرمال" IsChecked="{Binding AbdomenNormal}" FontWeight="SemiBold" />
                                         <TextBox Text="{Binding AbdomenFindings, UpdateSourceTrigger=PropertyChanged}"
@@ -317,7 +317,7 @@
                                     </StackPanel>
                                 </Border>
                                 <Border CornerRadius="10" Padding="10" BorderThickness="1"
-                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Background.Variant}">
+                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}">
                                     <StackPanel>
                                         <CheckBox Content="اندام‌ها: نرمال" IsChecked="{Binding LimbsNormal}" FontWeight="SemiBold" />
                                         <TextBox Text="{Binding LimbsFindings, UpdateSourceTrigger=PropertyChanged}"
