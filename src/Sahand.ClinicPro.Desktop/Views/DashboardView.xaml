@@ -15,6 +15,14 @@
          + نوبت‌های پیش‌رو + فعالیت‌های اخیر (به‌روزرسانی ۶۰ ثانیه)
          ═══════════════════════════════════════════════════════════ -->
     <UserControl.Resources>
+        <!-- مبدل دیدپذیری — چرخه شانزدهم (گزارش دهم مالک): این فایل در ۹ نقطه به
+             BoolToVis ارجاع می‌داد اما نه محلی تعریفش کرده بود و نه در App.xaml
+             موجود است؛ StaticResource فقط از منابع «همان فایل» یا App.xaml حل می‌شود
+             (تعریف در پنجره‌های دیگر — مثل ورود — برای این فایل بی‌اثر است) → نخستین
+             باز شدن داشبورد با XamlParseException می‌ریخت. الگوی ۱۳ فایل دیگر پروژه
+             (تعریف محلی BooleanToVisibilityConverter با کلید BoolToVis) اعمال شد. -->
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
         <!-- قالب ردیف نوبت‌های پیش‌رو — شماره صف دایره‌ای + نام + وضعیت -->
         <DataTemplate x:Key="AppointmentItemTemplate">
             <Border Background="{DynamicResource MaterialDesign.Brush.Background}"
