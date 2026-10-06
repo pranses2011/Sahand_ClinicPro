@@ -44,6 +44,9 @@ public static class DependencyInjection
         services.AddScoped<Common.Mappings.PatientMapper>();
         services.AddScoped<Common.Mappings.DoctorMapper>();
 
+        // موتور تسویه حساب بیمه — چرخه ۱۳ (درخواست ۲-۱)
+        services.AddScoped<Features.Insurance.Fractionment.FractionmentCalculator>();
+
         // اتصال بلادرنگ — پیش‌فرض بی‌اثر؛ در API با SignalRRealtimeNotifier بازنویسی می‌شود (گام R1)
         services.TryAddScoped<Interfaces.IRealtimeNotifier, Interfaces.NullRealtimeNotifier>();
 

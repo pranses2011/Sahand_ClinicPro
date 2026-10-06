@@ -169,6 +169,9 @@ public class ClinicProDbContext : DbContext
     /// <summary>مجموعه InsuranceCompanies</summary>
     public DbSet<InsuranceCompany> InsuranceCompanies { get; set; }
 
+    /// <summary>مجموعه InsuranceFractionmentRules — قواعد تسویه بیمه (چرخه ۱۳)</summary>
+    public DbSet<InsuranceFractionmentRule> InsuranceFractionmentRules { get; set; }
+
     /// <summary>مجموعه InsuranceInquiries</summary>
     public DbSet<InsuranceInquiry> InsuranceInquiries { get; set; }
 

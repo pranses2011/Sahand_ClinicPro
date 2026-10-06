@@ -18,6 +18,25 @@ public record ClaimRow(long Id, string? ClaimNumber, string InsuranceName,
 /// <summary>ردیف استعلام</summary>
 public record InquiryRow(long Id, string Time, string PatientName, bool IsValid, string ResultText);
 
+/// <summary>ردیف تسویه قلم فاکتور — چرخه ۱۳ (درخواست ۲-۱)</summary>
+public record FractionLineRow(
+    string Description,
+    string Quantity,
+    string ItemTotal,
+    string Franchise,
+    string InsuranceShare,
+    string PatientShare,
+    string RuleType,
+    string RuleSource);
+
+/// <summary>ردیف قاعده تسویه بیمه</summary>
+public record FractionRuleRow(
+    long Id,
+    string ServiceName,
+    string RuleType,
+    string Detail,
+    string Franchise);
+
 /// <summary>
 /// ViewModel بیمه — گام U11 طبق فرم ۱۹:
 /// ۴ تب: شرکت‌ها / تعرفه‌ها / مطالبات / استعلامات
@@ -46,6 +65,47 @@ public partial class InsuranceViewModel : ViewModelBase
 
     /// <summary>استعلامات امروز</summary>
     public ObservableCollection<InquiryRow> Inquiries { get; } = new();
+
+    /* ─── تب تسویه بیمه — چرخه ۱۳ ─── */
+
+    /// <summary>شناسه فاکتور برای تسویه</summary>
+    [ObservableProperty]
+    private long? _fractionInvoiceId;
+
+    /// <summary>اقلام تسویه محاسبه‌شده</summary>
+    [ObservableProperty]
+    private ObservableCollection<FractionLineRow> _fractionLines = new();
+
+    /// <summary>خلاصه صورتحساب بیمه‌ای</summary>
+    [ObservableProperty]
+    private string? _fractionSummaryText;
+
+    /// <summary>قواعد تسویه بیمه انتخابی</summary>
+    public ObservableCollection<FractionRuleRow> FractionRules { get; } = new();
+
+    /// <summary>نمایه بیمه برای فرم قاعده</summary>
+    [ObservableProperty]
+    private int _ruleCompanyIndex;
+
+    /// <summary>درصد بیمه در فرم قاعده</summary>
+    [ObservableProperty]
+    private decimal _rulePercent = 70m;
+
+    /// <summary>مبلغ اسمی در فرم قاعده</summary>
+    [ObservableProperty]
+    private decimal _ruleNominal;
+
+    /// <summary>فرانشیز در فرم قاعده</summary>
+    [ObservableProperty]
+    private decimal _ruleFranchise;
+
+    /// <summary>نوع قاعده — false=درصدی true=اسمی</summary>
+    [ObservableProperty]
+    private bool _ruleIsNominal;
+
+    /// <summary>شناسه فاکتور تسویه‌شده آخر (برای دکمه اعمال)</summary>
+    [ObservableProperty]
+    private long? _lastCalculatedInvoiceId;
 
     /// <summary>سازنده</summary>
     public InsuranceViewModel(IApiClient api, ISnackbarService snackbar)
@@ -104,6 +164,107 @@ public partial class InsuranceViewModel : ViewModelBase
         else _snackbar.Error(_api.LastError ?? "ایجاد مطالبه ناموفق بود");
     }
 
+    /* ─── تسویه حساب بیمه — چرخه ۱۳ (درخواست ۲-۱) ─── */
+
+    /// <summary>محاسبه تسویه فاکتور بدون اعمال</summary>
+    [RelayCommand]
+    private async Task CalculateFractionmentAsync()
+    {
+        if (FractionInvoiceId is not { } invId || invId <= 0)
+        { _snackbar.Error("شناسه فاکتور بیمه‌ای را وارد کنید"); return; }
+
+        IsBusy = true;
+        var response = await _api.GetAsync<FractionEnvelope>($"insurance/fractionment/{invId}");
+        IsBusy = false;
+
+        var d = response?.Data;
+        if (d is null) { _snackbar.Error(_api.LastError ?? "محاسبه ناموفق بود — فاکتور بیمه‌ای معتبر وارد کنید"); return; }
+
+        LastCalculatedInvoiceId = invId;
+        FractionLines = new ObservableCollection<FractionLineRow>(
+            d.Lines.Select(l => new FractionLineRow(
+                l.Description, $"{l.Quantity:0.#}", $"{l.ItemTotal:N0}",
+                $"{l.Franchise:N0}", $"{l.InsuranceShare:N0}", $"{l.PatientShare:N0}",
+                l.RuleType, l.RuleSource)));
+        FractionSummaryText = $"🧾 {d.InvoiceCode} — {d.PatientName} | بیمه: {d.InsuranceName} | " +
+                              $"جمع: {d.Subtotal:N0} | سهم بیمه: {d.TotalInsuranceShare:N0} | سهم بیمار: {d.TotalPatientShare:N0} ریال";
+        _snackbar.Success($"محاسبه انجام شد — {d.Lines.Count} قلم");
+    }
+
+    /// <summary>اعمال تسویه روی اقلام فاکتور</summary>
+    [RelayCommand]
+    private async Task ApplyFractionmentAsync()
+    {
+        if (LastCalculatedInvoiceId is not { } invId)
+        { _snackbar.Info("ابتدا محاسبه را انجام دهید"); return; }
+        IsBusy = true;
+        var response = await _api.PostAsync<FractionEnvelope>($"insurance/fractionment/{invId}/apply", new { });
+        IsBusy = false;
+        if (response?.Data is not null)
+        {
+            _snackbar.Success($"تسویه اعمال شد — سهم بیمه {response.Data.TotalInsuranceShare:N0} ریال روی اقلام ثبت شد");
+            await CalculateFractionmentAsync();
+        }
+        else _snackbar.Error(_api.LastError ?? "اعمال تسویه ناموفق بود");
+    }
+
+    /// <summary>بارگذاری قواعد تسویه</summary>
+    [RelayCommand]
+    private async Task LoadRulesAsync()
+    {
+        var response = await _api.GetAsync<RulesEnvelope>("insurance/fractionment-rules");
+        FractionRules.Clear();
+        foreach (var r in response?.Data ?? new List<RuleDto>())
+        {
+            FractionRules.Add(new FractionRuleRow(
+                r.Id,
+                r.ServiceName ?? "همه خدمات",
+                r.RuleType == 2 ? "اسمی" : "درصدی",
+                r.RuleType == 2
+                    ? $"{r.NominalAmount:N0} ریال"
+                    : $"{r.InsurancePercent:0.#}٪ بیمه",
+                r.FranchiseAmount > 0 ? $"فرانشیز {r.FranchiseAmount:N0}" : "—"));
+        }
+    }
+
+    /// <summary>ثبت قاعده جدید برای بیمه انتخابی</summary>
+    [RelayCommand]
+    private async Task AddRuleAsync()
+    {
+        if (Companies.Count == 0) { _snackbar.Error("شرکت بیمه‌ای موجود نیست"); return; }
+        if (RuleCompanyIndex < 0 || RuleCompanyIndex >= Companies.Count)
+        { _snackbar.Error("شرکت بیمه را انتخاب کنید"); return; }
+        if (!RuleIsNominal && (RulePercent is < 0 or > 100))
+        { _snackbar.Error("درصد بیمه بین ۰ تا ۱۰۰ باشد"); return; }
+
+        IsBusy = true;
+        var ok = await _api.PostAsync("insurance/fractionment-rules", new
+        {
+            id = 0L,
+            insuranceCompanyId = Companies[RuleCompanyIndex].Id,
+            serviceId = (long?)null,
+            ruleType = RuleIsNominal ? 2 : 1,
+            insurancePercent = RulePercent,
+            nominalAmount = RuleNominal,
+            franchiseAmount = RuleFranchise,
+            perItemCeiling = 0m,
+            notes = (string?)null
+        });
+        IsBusy = false;
+        if (ok) { _snackbar.Success("قاعده تسویه ثبت شد"); await LoadRulesAsync(); }
+        else _snackbar.Error(_api.LastError ?? "ثبت قاعده ناموفق بود");
+    }
+
+    /// <summary>حذف قاعده</summary>
+    [RelayCommand]
+    private async Task DeleteRuleAsync(FractionRuleRow? row)
+    {
+        if (row is null) return;
+        var ok = await _api.DeleteAsync($"insurance/fractionment-rules/{row.Id}");
+        if (ok) { _snackbar.Success("قاعده حذف شد"); await LoadRulesAsync(); }
+        else _snackbar.Error(_api.LastError ?? "حذف ناموفق بود");
+    }
+
     /* ─── پاسخ‌ها ─── */
 
     public sealed class CompaniesResponse
@@ -136,5 +297,58 @@ public partial class InsuranceViewModel : ViewModelBase
         public decimal ApprovedAmount { get; set; }
         public decimal ReceivedAmount { get; set; }
         public int Status { get; set; }
+    }
+
+    /// <summary>پاسخ تسویه — چرخه ۱۳</summary>
+    public sealed class FractionEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public FractionData? Data { get; set; }
+    }
+
+    /// <summary>داده تسویه</summary>
+    public sealed class FractionData
+    {
+        public long InvoiceId { get; set; }
+        public string InvoiceCode { get; set; } = "";
+        public string InsuranceName { get; set; } = "";
+        public string PatientName { get; set; } = "";
+        public string DateShamsi { get; set; } = "";
+        public List<FractionLineDto>? Lines { get; set; }
+        public decimal Subtotal { get; set; }
+        public decimal TotalFranchise { get; set; }
+        public decimal TotalInsuranceShare { get; set; }
+        public decimal TotalPatientShare { get; set; }
+    }
+
+    /// <summary>قلم تسویه</summary>
+    public sealed class FractionLineDto
+    {
+        public string Description { get; set; } = "";
+        public decimal Quantity { get; set; }
+        public decimal ItemTotal { get; set; }
+        public decimal Franchise { get; set; }
+        public decimal InsuranceShare { get; set; }
+        public decimal PatientShare { get; set; }
+        public string RuleType { get; set; } = "";
+        public string RuleSource { get; set; } = "";
+    }
+
+    /// <summary>پاسخ قواعد</summary>
+    public sealed class RulesEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public List<RuleDto>? Data { get; set; }
+    }
+
+    /// <summary>ردیف قاعده</summary>
+    public sealed class RuleDto
+    {
+        public long Id { get; set; }
+        public string? ServiceName { get; set; }
+        public int RuleType { get; set; }
+        public decimal InsurancePercent { get; set; }
+        public decimal NominalAmount { get; set; }
+        public decimal FranchiseAmount { get; set; }
     }
 }

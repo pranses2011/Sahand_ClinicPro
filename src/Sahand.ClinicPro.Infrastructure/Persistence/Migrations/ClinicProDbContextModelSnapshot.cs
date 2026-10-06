@@ -956,6 +956,95 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Billing.InsuranceFractionmentRule", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("FranchiseAmount")
+                        .HasPrecision(18)
+                        .HasColumnType("decimal(18,0)")
+                        .HasComment("فرانشیز ثابت بیمار");
+
+                    b.Property<long>("InsuranceCompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("InsurancePercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)")
+                        .HasComment("درصد سهم بیمه (وقتی درصدی)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("NominalAmount")
+                        .HasPrecision(18)
+                        .HasColumnType("decimal(18,0)")
+                        .HasComment("مبلغ اسمی سهم بیمه (وقتی اسمی)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasComment("یادداشت قرارداد");
+
+                    b.Property<decimal>("PerItemCeiling")
+                        .HasPrecision(18)
+                        .HasColumnType("decimal(18,0)")
+                        .HasComment("سقف پرداخت بیمه به‌ازای قلم — صفر یعنی بدون سقف");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<byte>("RuleType")
+                        .HasColumnType("tinyint")
+                        .HasComment("نوع قاعده — ۱=درصدی ۲=اسمی");
+
+                    b.Property<long?>("ServiceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceId");
+
+                    b.HasIndex("InsuranceCompanyId", "ServiceId", "IsActive")
+                        .HasDatabaseName("IX_FractionmentRule_Company_Service")
+                        .HasFilter("[IsActive] = 1 AND [IsDeleted] = 0");
+
+                    b.ToTable("InsuranceFractionmentRules", null, t =>
+                        {
+                            t.HasComment("قاعده تسویه بیمه — درصدی/اسمی به‌ازای خدمت + فرانشیز + سقف");
+                        });
+                });
+
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Billing.InsuranceInquiry", b =>
                 {
                     b.Property<long>("Id")
@@ -10005,6 +10094,24 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("InsuranceCompany");
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Billing.InsuranceFractionmentRule", b =>
+                {
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.Billing.InsuranceCompany", "InsuranceCompany")
+                        .WithMany()
+                        .HasForeignKey("InsuranceCompanyId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.Billing.Service", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("InsuranceCompany");
+
+                    b.Navigation("Service");
                 });
 
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Billing.InsuranceInquiry", b =>

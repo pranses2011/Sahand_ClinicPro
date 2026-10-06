@@ -1,13 +1,19 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.API.Filters;
+using Sahand.ClinicPro.Application.Common.Models;
 using Sahand.ClinicPro.Application.DTOs.Insurance;
 using Sahand.ClinicPro.Application.Features.Insurance;
+using Sahand.ClinicPro.Application.Features.Insurance.Fractionment;
+using Sahand.ClinicPro.Domain.Entities.Billing;
+using Sahand.ClinicPro.Domain.Enums;
+using Sahand.ClinicPro.Domain.Interfaces;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
 /// <summary>
-/// کنترلر بیمه — مطالبات و استعلامات
+/// کنترلر بیمه — مطالبات، استعلامات و تسویه حساب (چرخه ۱۳، درخواست ۲-۱)
 /// مسیرها: /api/v1/insurance
 /// </summary>
 [ApiController]
@@ -16,9 +22,14 @@ namespace Sahand.ClinicPro.API.Controllers;
 public class InsuranceController : ApiBaseController
 {
     private readonly IMediator _mediator;
+    private readonly IUnitOfWork _unitOfWork;
 
-    /// <summary>سازنده با تزریق میانجی</summary>
-    public InsuranceController(IMediator mediator) => _mediator = mediator;
+    /// <summary>سازنده با تزریق میانجی و واحد کار</summary>
+    public InsuranceController(IMediator mediator, IUnitOfWork unitOfWork)
+    {
+        _mediator = mediator;
+        _unitOfWork = unitOfWork;
+    }
 
     /// <summary>فهرست مطالبات بیمه</summary>
     /// <param name="companyId">فیلتر شرکت بیمه</param>
@@ -51,4 +62,132 @@ public class InsuranceController : ApiBaseController
             return CreatedResponse(result, "GetClaims", new { }, "استعلام ثبت شد");
         return ToResponse(result);
     }
+
+    /* ═══════════ تسویه حساب بیمه — چرخه ۱۳ (درخواست ۲-۱) ═══════════ */
+
+    /// <summary>
+    /// محاسبه تسویه فاکتور بیمه‌ای — تفکیک سهم بیمه/بیمار هر قلم بدون ذخیره
+    /// </summary>
+    /// <param name="invoiceId">شناسه فاکتور بیمه‌ای</param>
+    [HttpGet("fractionment/{invoiceId:long}")]
+    [HasPermission("insurance.view")]
+    public async Task<IActionResult> CalculateFractionment(long invoiceId)
+    {
+        var result = await _mediator.Send(new CalculateFractionmentQuery(invoiceId));
+        return ToResponse(result);
+    }
+
+    /// <summary>
+    /// اعمال تسویه روی فاکتور — ثبت سهم بیمه/بیمار روی اقلام + صورتحساب طبقه‌بندی‌شده
+    /// </summary>
+    /// <param name="invoiceId">شناسه فاکتور بیمه‌ای</param>
+    [HttpPost("fractionment/{invoiceId:long}/apply")]
+    [HasPermission("insurance.create")]
+    public async Task<IActionResult> ApplyFractionment(long invoiceId)
+    {
+        var result = await _mediator.Send(new ApplyFractionmentCommand(invoiceId));
+        return ToResponse(result, "تسویه بیمه روی اقلام فاکتور اعمال شد");
+    }
+
+    /// <summary>فهرست قواعد تسویه — با فیلتر بیمه</summary>
+    /// <param name="companyId">فیلتر شرکت بیمه</param>
+    [HttpGet("fractionment-rules")]
+    [HasPermission("insurance.view")]
+    public async Task<IActionResult> GetRules([FromQuery] long? companyId)
+    {
+        var query = _unitOfWork.Repository<InsuranceFractionmentRule>().QueryableNoTracking
+            .Where(r => !r.IsDeleted && r.IsActive);
+        if (companyId is { } cid)
+            query = query.Where(r => r.InsuranceCompanyId == cid);
+
+        var rules = await query
+            .OrderBy(r => r.InsuranceCompanyId).ThenBy(r => r.ServiceId)
+            .Select(r => new FractionmentRuleDto(
+                r.Id, r.InsuranceCompanyId, r.ServiceId,
+                r.ServiceId != null ? r.Service!.ServiceName : "همه خدمات",
+                r.RuleType, r.InsurancePercent, r.NominalAmount,
+                r.FranchiseAmount, r.PerItemCeiling, r.Notes))
+            .ToListAsync();
+
+        return Ok(ApiResponse<List<FractionmentRuleDto>>.Success(rules));
+    }
+
+    /// <summary>ثبت/ویرایش قاعده تسویه — شناسه صفر یعنی ثبت جدید</summary>
+    /// <param name="dto">داده قاعده</param>
+    [HttpPost("fractionment-rules")]
+    [HasPermission("insurance.create")]
+    public async Task<IActionResult> SaveRule([FromBody] SaveFractionmentRuleDto dto)
+    {
+        if (dto.InsurancePercent is < 0 or > 100)
+            return BadRequest(ApiResponse<object>.Failure("درصد بیمه باید بین ۰ تا ۱۰۰ باشد"));
+
+        InsuranceFractionmentRule rule;
+        if (dto.Id == 0)
+        {
+            rule = new InsuranceFractionmentRule();
+            await _unitOfWork.Repository<InsuranceFractionmentRule>().AddAsync(rule);
+        }
+        else
+        {
+            rule = await _unitOfWork.Repository<InsuranceFractionmentRule>().QueryableTracking
+                .FirstOrDefaultAsync(r => r.Id == dto.Id && !r.IsDeleted);
+            if (rule is null)
+                return NotFound(ApiResponse<object>.Failure("قاعده یافت نشد"));
+        }
+
+        rule.InsuranceCompanyId = dto.InsuranceCompanyId;
+        rule.ServiceId = dto.ServiceId;
+        rule.RuleType = dto.RuleType;
+        rule.InsurancePercent = dto.InsurancePercent;
+        rule.NominalAmount = dto.NominalAmount;
+        rule.FranchiseAmount = dto.FranchiseAmount;
+        rule.PerItemCeiling = dto.PerItemCeiling;
+        rule.Notes = dto.Notes?.Trim();
+        rule.IsActive = true;
+
+        await _unitOfWork.SaveEntitiesAsync();
+        return Ok(ApiResponse<object>.Success(
+            new { rule.Id }, dto.Id == 0 ? "قاعده تسویه ثبت شد" : "قاعده تسویه به‌روزرسانی شد"));
+    }
+
+    /// <summary>حذف نرم قاعده تسویه</summary>
+    /// <param name="id">شناسه قاعده</param>
+    [HttpDelete("fractionment-rules/{id:long}")]
+    [HasPermission("insurance.create")]
+    public async Task<IActionResult> DeleteRule(long id)
+    {
+        var rule = await _unitOfWork.Repository<InsuranceFractionmentRule>().QueryableTracking
+            .FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted);
+        if (rule is null)
+            return NotFound(ApiResponse<object>.Failure("قاعده یافت نشد"));
+
+        rule.IsDeleted = true;
+        await _unitOfWork.SaveEntitiesAsync();
+        return Ok(ApiResponse<object>.SuccessMessage("قاعده تسویه حذف شد"));
+    }
 }
+
+/// <summary>ردیف قاعده تسویه</summary>
+public record FractionmentRuleDto(
+    long Id,
+    long InsuranceCompanyId,
+    long? ServiceId,
+    string ServiceName,
+    FractionmentRuleType RuleType,
+    decimal InsurancePercent,
+    decimal NominalAmount,
+    decimal FranchiseAmount,
+    decimal PerItemCeiling,
+    string? Notes);
+
+/// <summary>ثبت/ویرایش قاعده تسویه</summary>
+public record SaveFractionmentRuleDto(
+    long Id,
+    long InsuranceCompanyId,
+    long? ServiceId,
+    FractionmentRuleType RuleType,
+    decimal InsurancePercent,
+    decimal NominalAmount,
+    decimal FranchiseAmount,
+    decimal PerItemCeiling,
+    string? Notes);
