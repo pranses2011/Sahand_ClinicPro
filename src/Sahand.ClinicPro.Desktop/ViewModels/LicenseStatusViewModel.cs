@@ -206,6 +206,12 @@ public partial class LicenseStatusViewModel : ViewModelBase
         ["Survey"] = "نظرسنجی بیماران", ["Payroll"] = "فیش حقوقی",
         ["Paraclinical"] = "پاراکلینیک", ["EMR"] = "پرونده بالینی پیشرفته",
         ["Complementary"] = "طب مکمل و قالب چاپ", ["Branches"] = "مدیریت شعبه‌ها",
+        // ── ماژول‌های نسخه ۲.۰.۰ (چرخه سیزدهم) — هماهنگ با کاتالوگ سرور لایسنس ──
+        ["ClinicalSafety"] = "ایمنی دارویی و تشخیصی", ["PrintTemplates"] = "طراح قالب چاپ سفارشی",
+        ["InsuranceSettlement"] = "تسویه حساب بیمه", ["ShiftCash"] = "صندوق و تحویل شیفت",
+        ["Waitlist"] = "لیست انتظار نوبت", ["AdhocReports"] = "گزارش‌ساز رایگانه",
+        ["CloudBackup"] = "بکاپ ابری", ["Archive"] = "آرشیو سالانه",
+        ["Training"] = "مرکز آموزش تعاملی",
     };
 
     /// <summary>فعال‌سازی آنلاین با کلید ورودی</summary>

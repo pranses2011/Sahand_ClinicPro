@@ -451,6 +451,16 @@ function ls_module_catalog(): array
         'EMR'           => 'پرونده بالینی پیشرفته',
         'Complementary' => 'طب مکمل و قالب چاپ',
         'Branches'      => 'مدیریت شعبه‌ها',
+        // ── ماژول‌های نسخه ۲.۰.۰ (چرخه سیزدهم) — ۹ قابلیت جدید ──
+        'ClinicalSafety'      => 'ایمنی دارویی و تشخیصی',
+        'PrintTemplates'      => 'طراح قالب چاپ سفارشی',
+        'InsuranceSettlement' => 'تسویه حساب بیمه',
+        'ShiftCash'           => 'صندوق و تحویل شیفت',
+        'Waitlist'            => 'لیست انتظار نوبت',
+        'AdhocReports'        => 'گزارش‌ساز رایگانه',
+        'CloudBackup'         => 'بکاپ ابری',
+        'Archive'             => 'آرشیو سالانه',
+        'Training'            => 'مرکز آموزش تعاملی',
     ];
 }
 
