@@ -4293,7 +4293,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                 name: "IX_PharmacyInventory_Quantity",
                 table: "PharmacyInventory",
                 column: "Quantity",
-                filter: "([Quantity] < [ReorderLevel] AND [IsDeleted] = 0)");
+                filter: "[IsDeleted] = 0");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PharmacyInventory_SupplierId",

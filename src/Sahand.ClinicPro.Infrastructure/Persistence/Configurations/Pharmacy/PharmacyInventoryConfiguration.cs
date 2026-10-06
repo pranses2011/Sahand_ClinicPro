@@ -22,6 +22,12 @@ public class PharmacyInventoryConfiguration : IEntityTypeConfiguration<PharmacyI
         builder.Property(x => x.Location).HasMaxLength(50).HasComment("محل فیزیکی در قفسه");
 
         builder.HasIndex(x => new { x.ExpiryDate }).HasDatabaseName("IX_PharmacyInventory_ExpiryDate");
-        builder.HasIndex(x => new { x.Quantity }).HasDatabaseName("IX_PharmacyInventory_Quantity").HasFilter("([Quantity] < [ReorderLevel] AND [IsDeleted] = 0)");
+        // چرخه چهاردهم (پیوست P4 — گزارش مالک): فیلتر قبلی «[Quantity] < [ReorderLevel]»
+        // مقایسه ستون‌به‌ستون است و SQL Server در فیلتر ایندکس فقط مقایسه ستون با
+        // مقدار ثابت را مجاز می‌داند → خطای 10735 هنگام dotnet ef database update.
+        // فیلتر به IsDeleted محدود شد؛ ایندکس همچنان جست‌وجهای موجودی صفر/کم را
+        // پوشش می‌دهد (پرس‌وجوی شرط سفارش مجدد به‌هرحال مقایسه ستون‌به‌ستون است
+        // و هیچ ایندکس فیلترداری نمی‌تواند مستقیماً آن را سیک کند).
+        builder.HasIndex(x => new { x.Quantity }).HasDatabaseName("IX_PharmacyInventory_Quantity").HasFilter("[IsDeleted] = 0");
     }
 }

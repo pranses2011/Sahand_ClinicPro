@@ -6914,7 +6914,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Quantity")
                         .HasDatabaseName("IX_PharmacyInventory_Quantity")
-                        .HasFilter("([Quantity] < [ReorderLevel] AND [IsDeleted] = 0)");
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.HasIndex("SupplierId");
 
