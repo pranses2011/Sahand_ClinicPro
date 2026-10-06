@@ -217,8 +217,9 @@ p, td, li, th { overflow-wrap:break-word; word-break:break-word; }
 <p>ابتدا وارد پوشه پروژه سرور (API) شوید — پوشه‌ای که فایل <code>Sahand.ClinicPro.API.csproj</code> در آن است. اگر پوشه پروژه را در مسیر پیش‌فرض باز کرده‌اید، این دستور همین کار را می‌کند (اگر مسیر شما فرق دارد، جایگزینش کنید):</p>
 <pre>cd D:\SahandClinicPro\src\Sahand.ClinicPro.API</pre></div></div>
 <div class="step"><div class="num">۳</div><div class="body">
-<p>بار اول فقط، ابزار ساخت دیتابیس را نصب کنید (یک‌بار برای همیشه — دفعه بعد این مرحله را ندارید):</p>
-<pre>dotnet tool install --global dotnet-ef</pre></div></div>
+<p>بار اول فقط، ابزار ساخت دیتابیس را بازیابی کنید (یک‌بار برای همیشه — دفعه بعد این مرحله را ندارید). سازندگان برنامه نسخه درستِ این ابزار را از قبل داخل خودِ فایل‌های پروژه گنجانده‌اند؛ دستور زیر همان نسخه را از اینترنت برداشته و همین‌جا آماده می‌کند (حدود یک دقیقه):</p>
+<pre>dotnet tool restore</pre>
+<p>چند خط نوشته ظاهر می‌شود و آرام می‌گیرد؛ تا کلمه <span dir="ltr">error</span> در قرمز ندیدید، یعنی آماده است و می‌توانید بروید سراغ مرحله بعد.</p></div></div>
 <div class="step"><div class="num">۴</div><div class="body">
 <p>حالا دستور اصلی ساخت دیتابیس را اجرا کنید — عیناً همین یک خط را کپی کنید و Enter بزنید:</p>
 <pre>dotnet ef database update -p ../Sahand.ClinicPro.Infrastructure -s .</pre>
@@ -272,7 +273,8 @@ p, td, li, th { overflow-wrap:break-word; word-break:break-word; }
 <tr><td dir="ltr">CREATE DATABASE permission denied</td><td>کاربر فعلی اجازه ساخت دیتابیس ندارد</td><td>با حساب نصب‌کننده SQL (مدیر) وارد شده و دستور قدم ۵ را دوباره بزنید</td></tr>
 <tr><td dir="ltr">The certificate chain was issued by an authority that is not trusted</td><td>عبارت <code>TrustServerCertificate=True</code> در رشته اتصال جا افتاده</td><td>نمونه کامل قدم ۴ را عیناً کپی کنید و ذخیره کنید</td></tr>
 <tr><td dir="ltr">Cannot open database "SahandClinicProDb" requested by the login</td><td>اتصال به SQL موفق بوده ولی دیتابیس هنوز وجود ندارد</td><td>قدم ۵ را اجرا کنید — همان دستور دیتابیس را می‌سازد</td></tr>
-<tr><td dir="ltr">No executable found matching command "dotnet-ef"</td><td>ابزار ساخت دیتابیس هنوز نصب نیست</td><td>دستور نصب مرحله ۳ قدم ۵ را بزنید؛ اگر باز هم شناخته نشد پنجره PowerShell را ببندید و یکی تازه باز کنید</td></tr>
+<tr><td dir="ltr">Run "dotnet tool restore" to make the "dotnet-ef" command available</td><td>ابزار ساخت دیتابیسِ همراه خود پروژه هنوز بازیابی نشده است (مرحله ۳ قدم ۵ جا افتاده است)</td><td>در همان پنجره دستور <code>dotnet tool restore</code> را بزنید و بعد دستور اصلی مرحله ۴ را دوباره اجرا کنید</td></tr>
+<tr><td dir="ltr">No executable found matching command "dotnet-ef"</td><td>ابزار هنوز بازیابی نشده، یا دستور را از پوشه بیرون پروژه زده‌اید</td><td>مطمئن شوید داخل پوشه پروژه هستید (قدم ۵ مرحله ۲) و دستور مرحله ۳ همان‌جا را بزنید؛ اگر باز هم شناخته نشد پنجره PowerShell را ببندید و یکی تازه باز کنید</td></tr>
 <tr><td dir="ltr">MSB1009 / Build failed (هنگام دستور قدم ۵)</td><td>پروژه هنوز به‌طور تمیز کامپایل نشده</td><td>اول در ویژوال استودیو: Build ← Rebuild Solution تا «0 Error» شود (راهنمای VS قدم ۳)؛ بعد دستور را دوباره بزنید</td></tr>
 </table>
 
