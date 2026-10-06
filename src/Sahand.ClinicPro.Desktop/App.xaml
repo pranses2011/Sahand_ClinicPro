@@ -9,7 +9,7 @@
          نقطه ورود کلاینت دسکتاپ درمانگاه سهند — گام ۱۰
          • تم Material Design 3 (روشن/تیره با ThemeService)
          • رنگ سازمانی: فیروزه‌ای + نیلی
-         • فونت وزیرمتن با جایگزین Segoe UI/Tahoma
+         • فونت وزیرمتن جاسازی‌شده داخل exe (Assets/Fonts) — بدون نیاز به نصب فونت
          • ناوبری و سرویس‌ها در App.xaml.cs ثبت می‌شوند
          ═══════════════════════════════════════════════════════════ -->
     <Application.Resources>
@@ -21,9 +21,12 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- فونت سراسری — وزیرمتن در گام انتشار کنار برنامه قرار می‌گیرد -->
+            <!-- فونت سراسری — وزیرمتن به‌صورت Resource داخل خود exe جاسازی شده است
+                 (Assets/Fonts — مجوز آزاد OFL)؛ ارجاع pack URI بدون توجه به فونت‌های
+                 نصب‌شدهٔ ویندوز کار می‌کند و روی هر دستگاهی اعمال می‌شود.
+                 ارجاع به «پوشه» (نه فایل تکی) عمدی است تا همه وزن‌ها فعال باشند. -->
             <Style TargetType="Window">
-                <Setter Property="FontFamily" Value="Vazirmatn, Segoe UI, Tahoma" />
+                <Setter Property="FontFamily" Value="pack://application:,,,/Assets/Fonts/#Vazirmatn" />
                 <Setter Property="FlowDirection" Value="RightToLeft" />
                 <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
                 <!-- آیکون رسمی محصول — روی همه پنجره‌های برنامه (نوار عنوان و Taskbar) -->
