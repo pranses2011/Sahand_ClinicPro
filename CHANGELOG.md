@@ -18,6 +18,7 @@
 ### Added — 🔍 گارد بازگشتی
 - **تست `XamlResourceAuditTests`** — هر ارجاع StaticResource/DynamicResource در ۷۰ فایل XAML دسکتاپ باید در `x:Key` محلی یا مانیفست کلیدهای پکیج تعریف شده باشد؛ این تنها گارد پیش از اجراست چون بیلد XAML را اعتبارسنجی نمی‌کند
 - **اسکریپت‌های ممیزی در مخزن** — `scripts/audit_xaml_resources.py` (ممیزی) + `scripts/extract_materialdesign_keys.py` (بازتولید مانیفست هنگام ارتقای پکیج) + `scripts/materialdesign-keys-5.3.2.txt`
+- **راهنمای PDF «اتصال به SQL Server و ساخت دیتابیس در اولین نصب و اجرا» (پس از انتشار وصله)** — ۱۸ صفحه مبتدی‌پسند: نصب SQL Server 2022 Express + یافتن نام نمونه از Services + SSMS + تنظیم رشته اتصال appsettings.json (با نکته دو-خط‌اریب JSON) + ساخت دیتابیس با `dotnet ef database update -p ../Sahand.ClinicPro.Infrastructure -s .` + اولین اجرا و ورود admin + دو جدول رفع اشکال ۱۶ خطایی + حالت‌های پیشرفته (sa/شبکه/نسخه منتشرشده) — به پیوست‌های رلیزهای v2.0.0 و v2.0.1 اضافه شد (`SahandClinicPro-SQL-Setup-Guide-v2.0.pdf`، ۱۸ صفحه، ۲.۶MB) + کشف و پوش رگرسیون چاپ RTL کرومیوم: خط بلندتر از عرض محتوا در `pre` موقع‌یابی همه بلوک‌های خط‌فرمان سند را ~۷۵pt به خارج از صفحه منحرف می‌کرد → `pre-wrap` + بازساخت دستور به فرم کپی-امن یک‌خطی (تأیید: صفر اسپن با x منفی، لبه‌های پاک، هشدار QA از ۶۳ به ۱۸)
 
 ---
 
