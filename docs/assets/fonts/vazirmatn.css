@@ -1,0 +1,8 @@
+/* فونت فارسی وزیرمتن — تعریف‌های مشترک راهنماهای درمانگاه سهند
+   (بارگذاری از راهنماها با: <link rel="stylesheet" href="../assets/fonts/vazirmatn.css">) */
+@font-face { font-family:'Vazirmatn'; src:url('Vazirmatn-Regular.ttf') format('truetype'); font-weight:400; }
+@font-face { font-family:'Vazirmatn'; src:url('Vazirmatn-Medium.ttf') format('truetype'); font-weight:500; }
+@font-face { font-family:'Vazirmatn'; src:url('Vazirmatn-SemiBold.ttf') format('truetype'); font-weight:600; }
+@font-face { font-family:'Vazirmatn'; src:url('Vazirmatn-Bold.ttf') format('truetype'); font-weight:700; }
+@font-face { font-family:'Vazirmatn'; src:url('Vazirmatn-ExtraBold.ttf') format('truetype'); font-weight:800; }
+@font-face { font-family:'Vazirmatn'; src:url('Vazirmatn-Black.ttf') format('truetype'); font-weight:900; }

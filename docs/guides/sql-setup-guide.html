@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../assets/fonts/vazirmatn.css">
+<title>راهنمای اتصال به SQL Server و ساخت دیتابیس — درمانگاه سهند</title>
+<style>
+@page { size:A4; margin:16mm 14mm 18mm 14mm; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Vazirmatn','Noto Color Emoji',sans-serif; color:#263238; font-size:10.5pt; line-height:2; }
+h1,h2,h3,h4 { font-weight:800; color:#0D47A1; }
+h2 { font-size:15.5pt; margin:24px 0 12px; padding:10px 14px; background:#E3F2FD; border-radius:10px;
+  border-right:5px solid #1565C0; page-break-after:avoid; }
+h3 { font-size:12.5pt; margin:16px 0 8px; color:#1565C0; page-break-after:avoid; }
+p { margin:6px 0; text-align:justify; }
+ul,ol { margin:6px 22px 6px 0; }
+li { margin:4px 0; }
+code { font-family:Consolas,monospace; background:#ECEFF1; padding:1px 7px; border-radius:5px;
+  font-size:9.5pt; direction:ltr; display:inline-block; color:#B71C1C; }
+pre { background:#263238; color:#ECEFF1; border-radius:10px; padding:13px 16px; margin:10px 0;
+  font-family:Consolas,monospace; font-size:9pt; line-height:1.75; direction:ltr; text-align:left;
+  page-break-inside:avoid; }
+table { width:100%; border-collapse:collapse; margin:10px 0; font-size:9.5pt; page-break-inside:avoid; }
+th { background:#1565C0; color:#fff; padding:7px 10px; text-align:right; font-weight:600; }
+td { padding:6px 10px; border:1px solid #CFD8DC; }
+tr:nth-child(even) td { background:#F5F8FA; }
+thead { display:table-header-group; }
+tr { page-break-inside:avoid; }
+p, td, li, th { overflow-wrap:break-word; word-break:break-word; }
+.tip { background:#E8F5E9; border:1px solid #A5D6A7; border-right:5px solid #43A047;
+  border-radius:10px; padding:10px 14px; margin:10px 0; page-break-inside:avoid; }
+.warn { background:#FFF8E1; border:1px solid #FFE082; border-right:5px solid #FB8C00;
+  border-radius:10px; padding:10px 14px; margin:10px 0; page-break-inside:avoid; }
+.danger { background:#FDECEA; border:1px solid #F5C6C0; border-right:5px solid #D32F2F;
+  border-radius:10px; padding:10px 14px; margin:10px 0; page-break-inside:avoid; }
+.expect { background:#F3F0FF; border:1px solid #D4C5F9; border-right:5px solid #7C3AED;
+  border-radius:10px; padding:10px 14px; margin:10px 0; font-size:9.8pt; page-break-inside:avoid; }
+.step { display:flex; gap:12px; margin:13px 0; page-break-inside:avoid; }
+.step .num { width:34px; height:34px; border-radius:50%; background:#1565C0; color:#fff;
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13.5pt; flex-shrink:0; }
+.step .body { flex:1; padding-top:2px; }
+.step .body b.btn-name { background:#ECEFF1; border:1px solid #B0BEC5; border-radius:6px;
+  padding:0 9px; font-size:9.5pt; }
+.shot { width:100%; height:auto; object-fit:contain; border:1px solid #CFD8DC; border-radius:10px;
+  margin:10px 0; box-shadow:0 2px 8px rgba(0,0,0,.08); page-break-inside:avoid; }
+.shot-caption { text-align:center; font-size:9pt; color:#607D8B; margin:-4px 0 10px; }
+.kbd { border:1px solid #B0BEC5; border-bottom-width:2.5px; border-radius:5px; padding:0 7px;
+  font-family:Consolas,monospace; font-size:9.5pt; background:#FAFAFA; }
+.cover { text-align:center; padding:56px 30px 30px; page-break-after:always; }
+.cover .logo-wrap { width:88px; height:88px; margin:0 auto; border-radius:22px;
+  background:radial-gradient(circle at 45% 20%,#D8F1FF,#BFE4FB 75%); box-shadow:0 8px 20px rgba(13,71,161,.25);
+  display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.cover .logo-wrap img { width:74px; height:74px; object-fit:contain; border-radius:18px; }
+.cover h1 { font-size:23pt; font-weight:900; margin:16px 0 6px; color:#0D47A1; }
+.cover h2 { font-size:13.5pt; background:none; border:none; padding:0; color:#00897B; margin:0 0 26px; }
+.cover .meta { display:inline-block; background:#F5F8FA; border:1px solid #CFD8DC;
+  border-radius:12px; padding:16px 32px; margin-top:22px; font-size:10.5pt; text-align:right; }
+.cover .meta td { border:none; padding:4px 14px; }
+.toc { page-break-after:always; }
+.toc h2 { background:none; border:none; padding:0; font-size:17pt; }
+.toc ol { font-size:10.5pt; }
+.toc li { margin:8px 0; }
+.toc a { color:#263238; text-decoration:none; }
+.support-band { background:linear-gradient(115deg,#0E7C86,#0E9F6E); color:#fff; border-radius:12px;
+  padding:13px 20px; margin:14px 0; font-size:10.5pt; page-break-inside:avoid; }
+.support-band b { font-size:12pt; }
+.support-band .ltr { direction:ltr; display:inline-block; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ جلد ═══════════════ -->
+<div class="cover">
+  <div class="logo-wrap"><img src="../assets/ClinicPro.png" alt="لوگو"></div>
+  <h1>راهنمای اتصال به SQL Server و ساخت دیتابیس</h1>
+  <h2>اولین نصب و اجرا — نوشته‌شده برای افراد مبتدی، بدون نیاز به دانش دیتابیس</h2>
+  <div class="meta"><table>
+    <tr><td>نام محصول</td><td><b>درمانگاه سهند — Sahand ClinicPro</b></td></tr>
+    <tr><td>نسخه</td><td dir="ltr">2.0</td></tr>
+    <tr><td>مخاطب</td><td>کاربری که برنامه را برای اولین بار راه می‌اندازد (از سورس‌کد یا نسخه منتشرشده)</td></tr>
+    <tr><td>زمان تقریبی</td><td>۳۰ تا ۴۵ دقیقه (یک‌بار برای همیشه)</td></tr>
+    <tr><td>پشتیبانی</td><td>سعید نجفی — سهند سرویس — <span style="direction:ltr">041-34436141</span></td></tr>
+  </table></div>
+</div>
+
+<div class="toc">
+<h2>📖 فهرست مطالب</h2>
+<ol>
+<li>این راهنما برای چیست؟</li>
+<li>قبل از شروع — سه نکته مهم و پیش‌نیازها</li>
+<li>قدم ۱: نصب SQL Server 2022 Express (با تصویر)</li>
+<li>قدم ۲: نام نمونه (Instance) خود را پیدا کنید</li>
+<li>قدم ۳: نصب SSMS و تست سلامت SQL (اختیاری)</li>
+<li>قدم ۴: معرفی برنامه به SQL (فایل appsettings.json)</li>
+<li>قدم ۵: ساخت دیتابیس و همه جدول‌ها با یک دستور</li>
+<li>قدم ۶: اولین اجرای سرور برنامه — API (با تصویر)</li>
+<li>قدم ۷: اجرای برنامه و اولین ورود (با تصویر)</li>
+<li>جدول رفع اشکال ۱ — خطاهای اتصال به SQL</li>
+<li>جدول رفع اشکال ۲ — خطاهای اولین اجرا</li>
+<li>حالت‌های خاص و پیشرفته (اختیاری)</li>
+<li>چک‌لیست نهایی — همه‌چیز درست است؟</li>
+<li>تماس با پشتیبانی</li>
+</ol>
+</div>
+
+<h2>۱️⃣ این راهنما برای چیست؟</h2>
+<p>برنامه درمانگاه سهند از <b>سه لایه</b> ساخته شده که هرکدام کار خودش را انجام می‌دهند. اولین لایه <b>SQL Server</b> است؛ دفترچه مرکزی درمانگاه که همه اطلاعات بیمارها، نوبت‌ها، فاکتورها و داروها در آن نوشته می‌شود. دومین لایه <b>سرور برنامه (API)</b> است؛ مثل یک منشی که بین برنامه و دفترچه وساطت می‌کند و مطمئن می‌شود هیچ‌کس بدون اجازه چیزی نخواند یا ننویسد. لایه سوم <b>خود نرم‌افزار دسکتاپ</b> است؛ پنجره‌ای که کاربران با آن کار می‌کنند و در راهنمای کاربر با آن آشنا می‌شوید.</p>
+<p>این راهنما دقیقاً یک هدف دارد: <b>وصل‌کردن برنامه به SQL Server و ساختن دیتابیس در اولین نصب و اجرا</b>. یعنی در انتهای این راهنما، دیتابیسی به نام <code>SahandClinicProDb</code> با حدود ۹۴ جدول آماده کار است، سرور برنامه روشن است و شما با نام کاربری اولیه وارد برنامه شده‌اید. از این به بعد هر بار برنامه را باز کنید، همه‌چیز همین‌طور آماده است و دیگر لازم نیست هیچ‌کدام از این قدم‌ها را تکرار کنید.</p>
+<div class="expect">👀 <b>چه انتظاری داشته باشید:</b> هیچ دستور سنگین یا متن پیچیده‌ای در کار نیست. هر جا باید چیزی تایپ کنید، همان را داخل کادر تیره‌رنگ آورده‌ایم تا فقط کپی کنید و بچسبانید. اگر جایی چیزی آن‌طور که نوشته‌ایم نشد، اصلاً نگران نباشید — دو جدول رفع اشکال انتهای راهنما تقریباً همه موقعیت‌های رایج را پوشش می‌دهند.</div>
+<div class="tip">💡 <b>سه راهنمای خواهر این راهنما:</b> برای نصب ویژوال استودیو و باز کردن پروژه، «راهنمای دانلود پروژه و خروجی گرفتن» (VS-Guide) را ببینید. برای نصب کامل روی شبکه درمانگاه با چند رایانه، «راهنمای قدم‌به‌قدم نصب و راه‌اندازی» (Install-Guide) را ببینید. برای کار با خود برنامه هم «راهنمای کاربر» (User-Guide) آماده است. این چهار فایل هم‌راه هم، کل مسیر از صفر تا استفاده روزمره را پوشش می‌دهند.</div>
+
+<h2>۲️⃣ قبل از شروع — سه نکته مهم و پیش‌نیازها</h2>
+<p><b>۱) ترتیب قدم‌ها مهم است:</b> اول SQL Server را نصب می‌کنیم، بعد نام آن را پیدا می‌کنیم، بعد برنامه را با آن آشنا می‌کنیم، بعد دیتابیس را می‌سازیم و در آخر سرور و برنامه را اجرا می‌کنیم. اگر جا بپرید یا ترتیب را به‌هم بریزید، برنامه پیام خطا می‌دهد — اما همین راهنما دارد و جدول رفع اشکال پایین هم هست؛ چیزی از دست نمی‌رود.</p>
+<p><b>۲) همه‌چیز رایگان است:</b> نسخه <b>SQL Server 2022 Express</b> که در این راهنما نصب می‌کنیم، نسخه رایگان مایکروسافت است و برای درمانگاه‌های کوچک و متوسط کاملاً کافی است. نه هزینه نرم‌افزاری دارد و نه لایسنس جداگانه می‌خواهد.</p>
+<p><b>۳) هیچ‌چیز خراب نمی‌شود:</b> دستوری که در قدم ۵ اجرا می‌کنید فقط <b>می‌سازد</b>؛ چیزی را حذف یا پاک نمی‌کند. اجرای دوباره آن هم بی‌خطر است؛ برنامه هوشمندانه می‌فهمد چه جدول‌هایی از قبل ساخته شده و فقط بقیه را می‌سازد.</p>
+<div class="danger">⚠️ <b>فقط یک استثنا:</b> اگر روی این رایانه قبلاً نسخه قدیمی‌تری از برنامه درمانگاه نصب بوده و اطلاعات واقعی بیمار در آن ثبت شده، <b>قبل از اجرای قدم ۵ با پشتیبانی تماس بگیرید</b> تا ابتدا از دیتابیس قدیمی نسخه پشتیبان تهیه شود. برای نصب نو روی رایانه جدید، هیچ نگرانی‌ای نیست.</div>
+<h3>🧰 پیش‌نیازها</h3>
+<table>
+<tr><th>#</th><th>چه چیزی؟</th><th>توضیح</th></tr>
+<tr><td>۱</td><td>ویندوز ۱۰ یا ۱۱ (۶۴ بیتی)</td><td>هر نسخه‌ای حتی Home کافی است.</td></tr>
+<tr><td>۲</td><td>Visual Studio 2022</td><td>فقط برای روش «اجرای از سورس‌کد». اگر هنوز نصب نکرده‌اید یا پروژه را باز نکرده‌اید، اول قدم‌های ۰ تا ۳ راهنمای VS را انجام دهید.</td></tr>
+<tr><td>۳</td><td>حدود ۱۰ گیگابایت فضای آزاد</td><td>خود SQL حدود ۲ گیگ و فایل‌های نصب و ابزارها باقی فضای لازم.</td></tr>
+<tr><td>۴</td><td>اینترنت برای دانلودها</td><td>فقط موقع دانلود SQL و SSMS لازم است؛ بعد از نصب، برنامه اینترنت برای دیتابیس نمی‌خواهد.</td></tr>
+<tr><td>۵</td><td>دسترسی مدیر (Admin)</td><td>برای نصب نرم‌افزار روی ویندوز، حساب کاربری شما باید مدیر باشد.</td></tr>
+</table>
+
+<h2>۳️⃣ قدم ۱: نصب SQL Server 2022 Express</h2>
+<p>SQL Server را فقط روی رایانه‌ای نصب کنید که قرار است «سرور» درمانگاه باشد. اگر فقط یک رایانه دارید، همان رایانه خودتان سرور است و هیچ مشکلی هم نیست. روی رایانه‌های کاربران (پذیرش و اتاق‌ها) SQL نصب <b>نکنید</b>.</p>
+
+<div class="step"><div class="num">۱</div><div class="body">
+<p>در مرورگر (Chrome یا Edge) این نشانی را باز کنید و دکمه <b class="btn-name">Download now</b> را بزنید:</p>
+<pre>https://www.microsoft.com/en-us/download/details.aspx?id=104781
+(اگر باز نشد، در گوگل جستجو کنید: SQL Server 2022 Express download)</pre></div></div>
+
+<div class="step"><div class="num">۲</div><div class="body">
+<p>فایل دانلودشده معمولاً به نام <code>SQLServer2022-SSEI-Expr.exe</code> است. روی آن <b>دوبار کلیک</b> کنید. اگر پنجره «User Account Control» پرسید اجازه تغییر بدهم؟، روی <b class="btn-name">Yes</b> کلیک کنید.</p>
+<div class="expect">👀 <b>چه انتظاری داشته باشید:</b> یک پنجره کوچک باز می‌شود با سه گزینه: Basic / Custom / Download Media. گزینه <b class="btn-name">Basic</b> (پیش‌فرض) همان چیزی است که می‌خواهیم — ساده‌ترین نصب با تنظیمات پیشنهادی مایکروسافت.</div></div></div>
+
+<div class="step"><div class="num">۳</div><div class="body">
+<p>روی <b class="btn-name">Accept</b> و بعد <b class="btn-name">Install</b> کلیک کنید و صبر کنید. در این مرحله چند چای بخورید ☕ — نصب ۵ تا ۱۵ دقیقه طول می‌کشد و نوار پیشرفت خودش جلو می‌رود.</p></div></div>
+
+<div class="step"><div class="num">۴</div><div class="body">
+<p>وقتی نصب تمام شد، صفحه‌ای مثل تصویر زیر می‌بینید. این صفحه یک نکته طلایی دارد: در بخش <b>Connection string</b> جلوی <code>Data Source=</code> نوشته شده است. این همان «نشانی» SQL شماست — معمولاً <code>localhost\SQLEXPRESS</code>. آن را یادداشت کنید (یا از همین صفحه عکس بگیرید)؛ در قدم ۲ و ۴ به آن نیاز داریم.</p>
+<img class="shot" src="../screenshots/install-sql-server.png" alt="صفحه پایان نصب SQL Server">
+<div class="shot-caption">صفحه پایان نصب — مقدار جلوی Data Source را یادداشت کنید؛ نام نمونه شماست</div></div></div>
+
+<div class="warn">⚠️ <b>مهم:</b> اگر وسط نصب پیام «Restart is required» (نیاز به راه‌اندازی مجدد) دیدید، رایانه را Restart کنید و بعد از بالا آمدن، دوباره فایل نصب را اجرا کنید تا مرحله نهایی را کامل کند — بقیه قدم‌های این راهنما از همین‌جا ادامه می‌یابد.</div>
+<div class="tip">💡 <b>حالت پیشنهادی برای متخصص‌ها:</b> اگر می‌خواهید نام نمونه نداشته باشید و نشانی کوتاه <code>localhost</code> بماند، هنگام نصب به‌جای Basic گزینه Custom را بزنید و در مرحله Database Engine Configuration نوع نصب <b>Default instance</b> را انتخاب کنید. برای بقیه ما، همان Basic با نام <code>SQLEXPRESS</code> کاملاً مناسب است.</div>
+
+<h2>۴️⃣ قدم ۲: نام نمونه (Instance) خود را پیدا کنید</h2>
+<p>هر SQL Server هنگام نصب یک «نام نمونه» می‌گیرد — مثل شماره اتاق در یک ساختمان. بیشترین خطاهایی که کاربران تازه‌کار می‌بینند به‌خاطر اشتباه در همین نام است؛ پس این قدم کوتاه را با دقت انجام دهید تا بقیه راه هموار باشد.</p>
+<p>اگر در قدم ۱ مقدار جلوی <code>Data Source=</code> را یادداشت کرده‌اید، همین حالا آن را دارید و کافی است. اگر نه، ساده‌ترین راه این است:</p>
+<div class="step"><div class="num">۱</div><div class="body">
+<p>از منوی Start تایپ کنید <code>services.msc</code> و Enter بزنید. پنجره Services باز می‌شود.</p></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>در فهرست، سرویسی پیدا کنید که نامش با <b>SQL Server</b> شروع می‌شود و کنارش داخل پرانتز یک نام دارد — مثلاً <code>SQL Server (SQLEXPRESS)</code>. همان نام داخل پرانتز، نام نمونه شماست.</p></div></div>
+<div class="step"><div class="num">۳</div><div class="body">
+<p>مطمئن شوید «Status» این سرویس <b>Running</b> است. اگر نبود، روی آن راست‌کلیک و <b class="btn-name">Start</b> بزنید.</p></div></div>
+<p>حالا بسته به آنچه دیدید، «نشانی SQL شما» یکی از این دو حالت است:</p>
+<table>
+<tr><th>نام سرویس در پنجره Services</th><th>یعنی چه؟</th><th>در رشته اتصال چه بنویسیم؟ (قدم ۴)</th></tr>
+<tr><td dir="ltr">SQL Server (SQLEXPRESS)</td><td>نصب Express با نام پیش‌فرض — رایج‌ترین حالت</td><td><code>localhost\SQLEXPRESS</code></td></tr>
+<tr><td dir="ltr">SQL Server (MSSQLSERVER)</td><td>نمونه بی‌نام (Default instance)</td><td>فقط <code>localhost</code></td></tr>
+</table>
+<div class="expect">👀 <b>چه انتظاری داشته باشید:</b> اگر چند سرویس «SQL Server (...)» دیدید (مثلاً نسخه قدیمی ۲۰۱۹ کنار ۲۰۲۲)، جدی‌ترین راه تشخیص این است که به صفحه پایان نصب قدم ۱ نگاه کنید؛ همان مقدار Data Source مال نصب تازه شماست. راهنمای نصب کامل چند-نمونه‌ای در بخش حالت‌های پیشرفته آمده است.</div>
+
+<h2>۵️⃣ قدم ۳: نصب SSMS و تست سلامت SQL (اختیاری ولی توصیه‌شده)</h2>
+<p><b>SSMS</b> (SQL Server Management Studio) برنامه رایگان مایکروسافت برای «دیدن داخل» SQL Server است — مثل پنجره‌ای به دفترچه مرکزی. با آن می‌توانید مطمئن شوید SQL سالم است و بعداً در قدم ۵ ساخته‌شدن جدول‌ها را با چشم خودتان ببینید.</p>
+<div class="step"><div class="num">۱</div><div class="body">
+<p>از نشانی کوتاه مایکروسافت دانلودش کنید (یا در گوگل جستجو کنید: SSMS download):</p>
+<pre>https://aka.ms/ssmsfullsetup</pre></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>نصب‌کننده را اجرا کنید (اگر اجازه خواست، <b class="btn-name">Yes</b>)، روی <b class="btn-name">Install</b> کلیک کنید و تا پایان صبر کنید؛ ممکن است چند دقیقه طول بکشد و در پایان بخواهد رایانه Restart شود — انجام دهید.</p></div></div>
+<div class="step"><div class="num">۳</div><div class="body">
+<p>SSMS را از منوی Start باز کنید. در پنجره Connect to Server این مقادیر را بگذارید:</p>
+<table>
+<tr><th>فیلد</th><th>چه بنویسیم؟</th></tr>
+<tr><td>Server name</td><td>نشانی SQL از قدم ۲ — مثلاً <code>localhost\SQLEXPRESS</code></td></tr>
+<tr><td>Authentication</td><td><b>Windows Authentication</b> (پیش‌فرض)</td></tr>
+<tr><td>User name / Password</td><td>خالی می‌ماند — ویندوز خودش شما را می‌شناسد</td></tr>
+</table>
+<p>و روی <b class="btn-name">Connect</b> کلیک کنید.</p></div></div>
+<div class="expect">👀 <b>چه انتظاری داشته باشید:</b> اگر پنجره اصلی SSMS باز شد و در گوشه چپ بالای آن (بخش Object Explorer) عبارت سبز «connected» را دیدید، تبریک — SQL شما کاملاً سالم است. اگر پیام خطا آمد، قبل از ادامه، جدول رفع اشکال ۱ (انتهای راهنما) را ببینید؛ تقریباً همیشه مشکل از نام نمونه است.</div>
+<div class="tip">💡 <b>این قدم را دور نریزید:</b> حتی اگر الان تندرست هستید، SSMS در قدم ۵ برای دیدن جدول‌های ساخته‌شده و در آینده برای کارهای پشتیبانی (مثل تهیه نسخه پشتیبان) به‌دردتان می‌خورد.</div>
+
+<h2>۶️⃣ قدم ۴: معرفی برنامه به SQL (فایل appsettings.json)</h2>
+<p>برنامه نمی‌تواند حدس بزند SQL شما کجاست و چه نامی دارد؛ باید به آن بگوییم. این آشنایی در فایلی به نام <code>appsettings.json</code> داخل پروژه سرور برنامه (API) انجام می‌شود. فقط یک خط از این فایل برای ما مهم است: خطی که با <code>DefaultConnection</code> شروع می‌شود — همان «رشته اتصال».</p>
+<div class="step"><div class="num">۱</div><div class="body">
+<p>در ویژوال استودیو، پنجره Solution Explorer (سمت راست) را باز کنید؛ پروژه <b>Sahand.ClinicPro.API</b> را پیدا کنید و آن را باز کنید تا فایل‌هایش دیده شوند. روی فایل <b>appsettings.json</b> دوبار کلیک کنید تا باز شود.</p></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>خط <code>DefaultConnection</code> را پیدا کنید (بالاهای فایل، داخل بخش <code>ConnectionStrings</code>). حالا بسته به حالت شما یکی از این دو نمونه را جایگزین مقدار فعلی کنید:</p>
+<p><b>حالت الف — نمونه بی‌نام</b> (نصب Custom با Default instance، یا SQL از قبل موجود روی همین رایانه):</p>
+<pre>"DefaultConnection": "Server=localhost;Database=SahandClinicProDb;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true"</pre>
+<p><b>حالت ب — نمونه نام‌دار SQLEXPRESS</b> (نصب Basic — رایج‌ترین حالت):</p>
+<pre>"DefaultConnection": "Server=localhost\\SQLEXPRESS;Database=SahandClinicProDb;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true"</pre>
+<div class="warn">⚠️ <b>نکته بسیار مهم — دو خط اریب:</b> در فایل‌های JSON برای نوشتن یک <code>\</code> باید دو تا <code>\\</code> پشت‌سرهم بنویسید (همان‌طور که در حالت ب می‌بینید). اگر فقط یکی بگذارید، فایل خراب می‌شود و سرور با پیام خطای JSON بالا نمی‌آید. عیناً از همین کادرها کپی کنید تا این مشکل هرگز برایتان پیش نیاید.</div></div></div>
+<div class="step"><div class="num">۳</div><div class="body">
+<p>با <span class="kbd">Ctrl</span>+<span class="kbd">S</span> ذخیره کنید. تمام! بقیه فایل دست نخورده بماند.</p></div></div>
+<h3>🔍 اجزای رشته اتصال به زبان ساده</h3>
+<table>
+<tr><th>قطعه</th><th>یعنی چه؟</th></tr>
+<tr><td dir="ltr">Server=localhost\SQLEXPRESS</td><td>نشانی و نام نمونه SQL — همان که در قدم ۲ پیدا کردید.</td></tr>
+<tr><td dir="ltr">Database=SahandClinicProDb</td><td>نام دیتابیسی که برنامه می‌سازد و استفاده می‌کند؛ آن را عوض نکنید.</td></tr>
+<tr><td dir="ltr">Trusted_Connection=True</td><td>ورود با حساب ویندوز خودتان (بدون رمز SQL) — ساده‌ترین و امن‌ترین روش برای تک‌رایانه.</td></tr>
+<tr><td dir="ltr">User Id=... ; Password=...</td><td>فقط در حالت «احراز هویت SQL» — به بخش حالت‌های پیشرفته (الف) مراجعه کنید.</td></tr>
+<tr><td dir="ltr">TrustServerCertificate=True</td><td>اجازه اتصال با گواهی پیش‌فرض خود SQL — بدون این عبارت، ویندوز اتصال را به‌خاطر «اعتماد نداشتن به گواهی» قطع می‌کند.</td></tr>
+<tr><td dir="ltr">MultipleActiveResultSets=true</td><td>اجازه می‌دهد برنامه هم‌زمان چند بسته اطلاعات از دیتابیس بخواند — برای سرعت بیشتر.</td></tr>
+</table>
+<div class="tip">💡 <b>حافظه تازه‌سازی:</b> سرور برنامه تنظیمات را فقط موقع روشن‌شدن می‌خواند. اگر API همین حالا در حال اجراست، آن را Stop کنید تا در قدم ۶ با تنظیم تازه بالا بیاید.</div>
+
+<h2>۷️⃣ قدم ۵: ساخت دیتابیس و همه جدول‌ها با یک دستور</h2>
+<p>درون پروژه، سازندگان برنامه «مهاجرت‌ها» (Migrations) را از قبل نوشته‌اند؛ یعنی نقشه‌های کامل ساخت حدود ۹۴ جدول — از پرونده بیمار تا نسخه و فاکتور. ما فقط باید یک دستور اجرا کنیم تا برنامه نقشه‌ها را به SQL بدهد و همه‌چیز ساخته شود. این دستور حتی خودِ دیتابیس <code>SahandClinicProDb</code> را هم اگر نباشد، می‌سازد.</p>
+<div class="step"><div class="num">۱</div><div class="body">
+<p>در ویژوال استودیو از منوی بالا بروید به: <b class="btn-name">Tools</b> ← <b class="btn-name">Command Line</b> ← <b class="btn-name">Developer PowerShell</b>. یک پنجره سیاه کوچک پایین صفحه باز می‌شود که دستورهای آن شناخته می‌شوند.</p></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>ابتدا مطمئن شوید داخل پوشه اصلی پروژه هستید (همان پوشه‌ای که فایل <code>Sahand.ClinicPro.sln</code> در آن است — مثلاً <code>D:\SahandClinicPro</code>). اگر نیستید با دستور <code>cd</code> وارد آن شوید:</p>
+<pre>cd D:\SahandClinicPro</pre></div></div>
+<div class="step"><div class="num">۳</div><div class="body">
+<p>بار اول فقط، ابزار ساخت دیتابیس را نصب کنید (یک‌بار برای همیشه — دفعه بعد این مرحله را ندارید):</p>
+<pre>dotnet tool install --global dotnet-ef</pre></div></div>
+<div class="step"><div class="num">۴</div><div class="body">
+<p>حالا دستور اصلی ساخت دیتابیس را اجرا کنید — عیناً همین یک خط را کپی کنید و Enter بزنید:</p>
+<pre>dotnet ef database update --project src/Sahand.ClinicPro.Infrastructure --startup-project src/Sahand.ClinicPro.API</pre></div></div>
+<div class="expect">👀 <b>چه انتظاری داشته باشید:</b> اول چند لحظه «Build started» می‌نویسد، بعد خط‌های زرد مانند <span dir="ltr">Applying migration '20261004205244_InitialCreate'.</span> یکی‌یکی رد می‌شوند و در پایان کلمه <span dir="ltr">Done.</span> را می‌بینید. اولین بار ۱ تا ۳ دقیقه طول می‌کشد. همین «Done» یعنی: دیتابیس ساخته شد و همه جدول‌ها آماده‌اند. 🎉</div>
+<div class="tip">💡 <b>دستور بی‌خطر است:</b> اگر یک‌بار دیگر هم اجرایش کنید، چیزی را دوباره نمی‌سازد یا خراب نمی‌کند؛ فقط می‌گوید همه مهاجرت‌ها از قبل اجرا شده‌اند. پس هر وقت شک کردید، دوباره بزنید.</div>
+<h3>🔍 تأیید با چشم خودتان (با SSMS)</h3>
+<div class="step"><div class="num">۱</div><div class="body">
+<p>در SSMS روی شاخه <b>Databases</b> راست‌کلیک و <b class="btn-name">Refresh</b> بزنید. حالا دیتابیس <b>SahandClinicProDb</b> را در فهرست می‌بینید.</p></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>روی مثلث کنار آن بزنید: <b>Tables ←</b> — فهرستی بلند از جدول‌ها (حدود ۹۴ مورد) را می‌بینید، از <code>Patients</code> و <code>Appointments</code> گرفته تا جدول تاریخچه‌ای به نام <code>__EFMigrationsHistory</code> که ثبت نقشه‌های اجراشده را نگه می‌دارد.</p></div></div>
+<div class="warn">⚠️ <b>نکته کاربر ویندوز:</b> دستور این قدم باید با همان حساب ویندوزی اجرا شود که SQL را نصب کرده است (نصب Express آن حساب را به‌عنوان مدیر SQL ثبت می‌کند). اگر با حساب دیگری می‌زنید و خطای <code>Login failed</code> گرفتید، جدول رفع اشکال ۱ ردیف دوم را ببینید.</div>
+
+<h2>۸️⃣ قدم ۶: اولین اجرای سرور برنامه (API)</h2>
+<p>حالا که انبار آماده است، سرور برنامه را روشن می‌کنیم. سرور (API) همان منشی وساطت‌گر است که برنامه دسکتاپ از طریق آن با دیتابیس حرف می‌زند.</p>
+<div class="step"><div class="num">۱</div><div class="body">
+<p>در Solution Explorer روی پروژه <b>Sahand.ClinicPro.API</b> راست‌کلیک کنید: <b class="btn-name">Debug</b> ← <b class="btn-name">Start new instance</b>. (راهنمای VS همین کار را برای پروژه دسکتاپ هم توضیح داده — هر دو می‌توانند هم‌زمان اجرا باشند.)</p></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>یک پنجره کنسول باز می‌شود و چند خط نوشته ظاهر می‌شود. دنبال این جمله بگردید:</p>
+<pre>Now listening on: http://localhost:5000</pre>
+<p>دیدید این جمله را؟ یعنی سرور با موفقیت روشن شد. در همین لحظات اول، سرور چند «بذرافشان» را هم خودکار اجرا می‌کند: نقش‌ها و دسترسی‌ها را می‌سازد، کاربر مدیر اولیه را ثبت می‌کند و داده‌های پایه برنامه را آماده می‌کند — پس چند ثانیه صبر کنید تا خطوط لاگ آرام بگیرند.</p>
+<img class="shot" src="../screenshots/install-api-console.png" alt="کنسول سرور API">
+<div class="shot-caption">کنسول سرور برنامه — نوشتن Now listening یعنی سرور آماده است</div></div></div>
+<div class="warn">⚠️ <b>این پنجره را باز نگه دارید:</b> پنجره کنسول یعنی خود سرور؛ اگر آن را ببندید، سرور خاموش می‌شود و برنامه «اتصال به سرور برقرار نشد» می‌گوید. در حالت توسعه همین‌طور باز می‌ماند؛ برای راه‌اندازی دائمی روی درمانگاه، راهنمای نصب روش سرویس خودکار ویندوز را دارد.</div>
+<div class="tip">💡 <b>تست سریع سلامت:</b> در مرورگر نشانی <code>http://localhost:5000/health</code> را باز کنید — باید پیام سبز «سامانه درمانگاه سهند فعال است» ببینید. این همان نقطه‌ای است که خود برنامه هم سلامت سرور را با آن می‌سنجد.</div>
+
+<h2>۹️⃣ قدم ۷: اجرای برنامه و اولین ورود</h2>
+<div class="step"><div class="num">۱</div><div class="body">
+<p>در Solution Explorer روی پروژه <b>Sahand.ClinicPro.Desktop</b> راست‌کلیک و <b class="btn-name">Set as Startup Project</b> بزنید (نام پروژه ضخیم می‌شود). حالا دکمه سبز <b class="btn-name">▶</b> یا کلید <span class="kbd">F5</span> را بزنید.</p></div></div>
+<div class="step"><div class="num">۲</div><div class="body">
+<p>پنجره ورود برنامه باز می‌شود. با این مشخصات وارد شوید:</p>
+<table>
+<tr><th>فیلد</th><th>مقدار اولیه</th></tr>
+<tr><td>نام کاربری</td><td><code>admin</code></td></tr>
+<tr><td>رمز عبور</td><td><code>Admin@123</code></td></tr>
+</table>
+<img class="shot" src="../screenshots/01-login.png" alt="صفحه ورود">
+<div class="shot-caption">صفحه ورود — ورود اولیه با کاربر admin</div></div></div>
+<div class="step"><div class="num">۳</div><div class="body">
+<p>برنامه بلافاصله از شما <b>تغییر رمز</b> می‌خواهد (این یک قانون امنیتی است و دورزدنی ندارد). یک رمز جدید قوی بگذارید — ترکیبی از حرف بزرگ و کوچک، عدد و علامت، حداقل ۸ کاراکتر — و آن را در جای مطمئنی یادداشت کنید؛ این رمز، کلید ورود مدیر کل درمانگاه است.</p></div></div>
+<div class="expect">👀 <b>چه انتظاری داشته باشید:</b> بعد از تغییر رمز، صفحه اصلی (داشبورد) با خوش‌آمدگویی باز می‌شود و بار اول یک «تور آشنایی» کوتاه هم پیشنهاد می‌شود. از این لحظه، راه‌اندازی تمام است — تهیه‌کننده محیط، SQL متصل، دیتابیس ساخته و اولین کاربر فعال شده است. 🎉</div>
+<div class="tip">💡 <b>قدم بعدی پیشنهادی:</b> حالا که سیستم زنده است، «راهنمای کاربر» را باز کنید تا با کارهای روزمره (ثبت بیمار، نوبت، نسخه و …) آشنا شوید و اولین کار مفید را انجام دهید: تکمیل اطلاعات درمانگاه از منوی تنظیمات.</div>
+
+<h2>🔟 جدول رفع اشکال ۱ — خطاهای اتصال به SQL</h2>
+<p>این جدول مخصوص خطاهایی است که موقع قدم ۳ (تست SSMS)، قدم ۵ (دستور ساخت دیتابیس) یا بالا آمدن سرور ممکن است ببینید. پیام‌های واقعی SQL معمولاً طولانی‌اند؛ اینجا فقط بخش شناسنامه‌ایشان آمده — با همین بخش می‌توانید ردیف مربوطه را پیدا کنید.</p>
+<table>
+<tr><th>پیام خطا (بخش اصلی)</th><th>یعنی چه؟</th><th>خودم چه کنم؟</th></tr>
+<tr><td dir="ltr">A network-related or instance-specific error... (error: 26)</td><td>نشانی یا نام نمونه درست نیست؛ یا سرویس SQL خاموش است</td><td>قدم ۲ را دوباره بروید و نام داخل پرانتز سرویس را دقیق بنویسید (یادتان باشد در JSON دو <code>\\</code>). بعد <code>services.msc</code> → سرویس SQL Server → راست‌کلیک → <b class="btn-name">Start</b></td></tr>
+<tr><td dir="ltr">Login failed for user 'DOMAIN\karbar'</td><td>حساب ویندوزی فعلی شما، مدیر SQL شناخته نمی‌شود</td><td>دستور قدم ۵ را با همان حسابی که SQL را نصب کرده‌اید اجرا کنید؛ یا در SSMS از مسیر Security ← Logins ← New Login حساب خودتان را با نقش سرور sysadmin اضافه کنید</td></tr>
+<tr><td dir="ltr">Login failed for user 'sa'</td><td>در حال اتصال با کاربر و رمز SQL هستید ولی یا رمز اشتباه است یا نصب SQL اجازه ورود رمزدار ندارد (Mixed Method خاموش)</td><td>اگر واقعاً احراز هویت SQL می‌خواهید → بخش حالت‌های پیشرفته (الف). پیش‌فرض این راهنما بدون sa کار می‌کند</td></tr>
+<tr><td dir="ltr">CREATE DATABASE permission denied</td><td>کاربر فعلی اجازه ساخت دیتابیس ندارد</td><td>با حساب نصب‌کننده SQL (مدیر) وارد شده و دستور قدم ۵ را دوباره بزنید</td></tr>
+<tr><td dir="ltr">The certificate chain was issued by an authority that is not trusted</td><td>عبارت <code>TrustServerCertificate=True</code> در رشته اتصال جا افتاده</td><td>نمونه کامل قدم ۴ را عیناً کپی کنید و ذخیره کنید</td></tr>
+<tr><td dir="ltr">Cannot open database "SahandClinicProDb" requested by the login</td><td>اتصال به SQL موفق بوده ولی دیتابیس هنوز وجود ندارد</td><td>قدم ۵ را اجرا کنید — همان دستور دیتابیس را می‌سازد</td></tr>
+<tr><td dir="ltr">No executable found matching command "dotnet-ef"</td><td>ابزار ساخت دیتابیس هنوز نصب نیست</td><td>دستور نصب مرحله ۳ قدم ۵ را بزنید؛ اگر باز هم شناخته نشد پنجره PowerShell را ببندید و یکی تازه باز کنید</td></tr>
+<tr><td dir="ltr">MSB1009 / Build failed (هنگام دستور قدم ۵)</td><td>پروژه هنوز به‌طور تمیز کامپایل نشده</td><td>اول در ویژوال استودیو: Build ← Rebuild Solution تا «0 Error» شود (راهنمای VS قدم ۳)؛ بعد دستور را دوباره بزنید</td></tr>
+</table>
+
+<h2>1️⃣1️⃣ جدول رفع اشکال ۲ — خطاهای اولین اجرا</h2>
+<p>این جدول برای بعد از قدم ۵ است؛ یعنی موقع اجرای سرور و اولین ورود به برنامه.</p>
+<table>
+<tr><th>مشکل</th><th>یعنی چه؟</th><th>خودم چه کنم؟</th></tr>
+<tr><td>برنامه می‌گوید «اتصال به سرور برقرار نشد»</td><td>سرور API اجرا نیست یا خاموش شده</td><td>قدم ۶ را اجرا کنید؛ بعد در مرورگر <code>http://localhost:5000/health</code> را باز کنید — پیام سبز یعنی سرور سالم است و مشکل جای دیگر است</td></tr>
+<tr><td>پنجره کنسول API سریع بسته می‌شود و خطا را نمی‌توانم بخوانم</td><td>سرور در همان ثانیه‌های اول به خطا خورده</td><td>از پنجره Developer PowerShell (قدم ۵ مرحله ۱) اجرا کنید: <code>dotnet run --project src/Sahand.ClinicPro.API</code> — کنسول باز می‌ماند و خطا را می‌بینید؛ معمولاً مشکل از رشته اتصال است (جدول بالا)</td></tr>
+<tr><td dir="ltr">Failed to bind to address http://localhost:5000: address already in use</td><td>یک نمونه دیگر از سرور از قبل روشن است</td><td>فقط یک نمونه کافی است: پنجره کنسول قبلی را ببندید یا در Task Manager برنامه‌های Sahand.ClinicPro.API را End task کنید و دوباره اجرا کنید</td></tr>
+<tr><td>ورود admin ناموفق است: «نام کاربری یا رمز عبور نامعتبر»</td><td>یا بذرها هنوز اجرا نشده‌اند، یا رمز را قبلاً عوض کرده‌اید و رمز جدید درست نیست</td><td>کنسول سرور را نگاه کنید؛ اگر موقع روشن‌شدن خطای دیتابیس داشت → جدول رفع اشکال ۱. اگر دیتابیس تازه ساخته شده → رمز اولیه <code>Admin@123</code> است</td></tr>
+<tr><td>روی رایانه دیگرِ شبکه به این سرور وصل نمی‌شود</td><td>نشانی سرور در فایل پیکربندی برنامه همان رایانه، هنوز localhost است</td><td>در فایل <code>appsettings.json</code> برنامه دسکتاپ همان رایانه، مقدار <code>BaseUrl</code> را به نشانی سرور تغییر دهید (مثل <code>http://192.168.1.10:5000/api/v1</code>) + بازکردن پورت ۵۰۰۰ در فایروال سرور — شرح کامل در راهنمای نصب قدم ۵</td></tr>
+<tr><td>بعد از تغییر appsettings تغییری نمی‌بینم</td><td>تنظیم‌ها فقط موقع روشن‌شدن خوانده می‌شوند</td><td>هم سرور API و هم برنامه را کامل ببندید و دوباره باز کنید</td></tr>
+<tr><td>خطای قرمز XAML موقع اجرای برنامه دسکتاپ</td><td>سورس‌تان مربوط به نسخه قدیمی ۲.۰.۰ است</td><td>این خطا در نسخه ۲.۰.۱ رفع شده — سورس را از رلیز v2.0.1 به بالا دانلود کنید (دکمه Source code در صفحه رلیز گیت‌هاب)</td></tr>
+<tr><td>ویژوال استودیو پروژه‌ها را نمی‌شناسد / نوار INCOMPATIBLE</td><td>NET 8 SDK. روی سیستم نصب نیست</td><td>قدم ۰ راهنمای VS — نصب NET 8 SDK. و باز کردن دوباره ویژوال استودیو</td></tr>
+</table>
+
+<h2>1️⃣2️⃣ حالت‌های خاص و پیشرفته (اختیاری)</h2>
+<p>این بخش برای موقعیت‌های خاص است؛ اگر مسیر اصلی این راهنما را رفته‌اید، به هیچ‌کدام از این‌ها نیازی ندارید و می‌توانید مستقیم به چک‌لیست نهایی بروید.</p>
+
+<h3>🔑 الف) اتصال با کاربر و رمز SQL (به‌جای حساب ویندوز)</h3>
+<p>گاهی برنامه باید با یک کاربر رمزدار به SQL وصل شود — مثلاً وقتی ویندوز درمانگاه دامین دارد یا نصب‌کننده SQL و کاربر روزمره یکی نیستند. برای این کار باید هنگام نصب SQL گزینه Custom را انتخاب کنید و در مرحله «Database Engine Configuration» حالت احراز هویت را روی <b>Mixed Mode</b> بگذارید و برای کاربر <code>sa</code> یک رمز قوی تعیین کنید (حروف بزرگ و کوچک + عدد + علامت، حداقل ۸ کاراکتر — ویندوز اجازه رمز ساده نمی‌دهد). آن‌وقت رشته اتصال چنین شکلی می‌گیرد:</p>
+<pre>"DefaultConnection": "Server=localhost\\SQLEXPRESS;Database=SahandClinicProDb;User Id=sa;Password=رمز-شما;TrustServerCertificate=True;MultipleActiveResultSets=true"</pre>
+<div class="tip">💡 <b>پیشنهاد ما:</b> برای تک‌رایانه و شبکه کوچک، همان روش پیش‌فرض این راهنما (ورود با حساب ویندوز) هم ساده‌تر است و هم امن‌تر — چون رمزی وجود ندارد که فراموش یا لو برود. Mixed Mode را فقط وقتی انتخاب کنید که دلیل مشخصی دارید.</div>
+
+<h3>🖥 ب) چند رایانه در شبکه درمانگاه</h3>
+<p>منطق کار همان است که یاد گرفتید؛ فقط دو تفاوت کوچک دارد: اولاً SQL و سرور برنامه روی رایانه مرکزی (سرور) می‌مانند و روی رایانه‌های کاربران فقط برنامه دسکتاپ نصب می‌شود. ثانیاً در فایل پیکربندی برنامه هر کلاینت، مقدار <code>BaseUrl</code> به‌جای <code>localhost</code> نشانی IP رایانه سرور می‌شود (مثل <code>http://192.168.1.10:5000/api/v1</code>) و در فایروال سرور پورت‌های ۵۰۰۰ و ۱۴۳۳ باز می‌شوند. تمام این کارها با تصویر و قدم‌به‌قدم در «راهنمای قدم‌به‌قدم نصب و راه‌اندازی» (Install-Guide) آمده است — همین راهنما را به مسئول شبکه بدهید.</p>
+
+<h3>📦 ج) راه‌اندازی دائمی بدون ویژوال استودیو (نسخه منتشرشده)</h3>
+<p>اجرای از ویژوال استودیو برای یادگیری و تست عالی است؛ اما برای کار روزمره درمانگاه، سرور باید بدون برنامه‌نویس روشن بماند. بسته نصب پروژه (پوشه <code>installer</code> مخزن) این را خودکار می‌کند: فایل <code>INSTALL-SERVER.bat</code> روی رایانه سرور، همه‌چیز را منتشر می‌کند، همان دستور ساخت دیتابیس قدم ۵ را اجرا می‌کند و سرور را به‌صورت «سرویس ویندوز» ثبت می‌کند تا با هر روشن‌شدن رایانه خودکار بالا بیاید. برای این حالت فقط دو نکته اضافه دارد: اول اینکه فایل <code>appsettings.json</code> موردنظر دیگر کنار سورس نیست، بلکه کنار فایل‌های منتشرشده سرور است (مثلاً <code>C:\SahandClinicPro\Server\appsettings.json</code>). دوم اینکه در محیط تولید، عوض‌کردن کلید امضای <code>Jwt:SecretKey</code> به یک مقدار تصادفی حداقل ۶۴ کاراکتری الزامی است — راهنمای کامل استقرار (فایل deployment در مخزن) دستور ساخت این کلید را دارد.</p>
+
+<h2>1️⃣3️⃣ چک‌لیست نهایی — همه‌چیز درست است؟</h2>
+<table>
+<tr><th>✓</th><th>بررسی</th><th>چطور مطمئن شوم؟</th></tr>
+<tr><td>☐</td><td>SQL نصب و روشن است</td><td>در <code>services.msc</code> سرویس SQL Server وضعیت Running دارد</td></tr>
+<tr><td>☐</td><td>SSMS وصل می‌شود</td><td>Connect با نام نمونه (قدم ۲) بدون خطا انجام می‌شود</td></tr>
+<tr><td>☐</td><td>رشته اتصال درست است</td><td>در <code>appsettings.json</code> پروژه API، مقدار Server دقیقاً همان نام نمونه شماست (با دو <code>\\</code> در JSON)</td></tr>
+<tr><td>☐</td><td>دیتابیس ساخته شده</td><td>در SSMS دیتابیس SahandClinicProDb با حدود ۹۴ جدول دیده می‌شود</td></tr>
+<tr><td>☐</td><td>سرور برنامه روشن است</td><td>کنسول API می‌نویسد Now listening on و <code>http://localhost:5000/health</code> پیام سبز می‌دهد</td></tr>
+<tr><td>☐</td><td>اولین ورود موفق بود</td><td>با admin وارد شدید و برنامه داشبورد را نشان داد</td></tr>
+<tr><td>☐</td><td>رمز مدیر عوض شد</td><td>رمز جدید در جای امن (دفترچه قفل یا نرم‌افزار رمز عبور) یادداشت شد</td></tr>
+<tr><td>☐</td><td>پشتیبان‌گیری در برنامه پلان است</td><td>هرچند امروز زود است، قرار شد طبق راهنمای نصب، پشتیبان خودکار شبانه فعال شود — اطلاعات بیماران بی‌بازگشت است</td></tr>
+</table>
+
+<h2>1️⃣4️⃣ تماس با پشتیبانی</h2>
+<p>اگر جای مانده‌ای از این راهنما گیر کردید، پیش از تماس این چهار چیز را آماده کنید تا پاسخ چند برابر سریع‌تر بگیرید: ① یک عکس واضح از پیام خطا ② شماره قدمی که در آن گیر کرده‌اید ③ نام نمونه SQL خودتان (قدم ۲) ④ یک کپی از خط <code>DefaultConnection</code> فایل appsettings.json (اگر رمز در آن هست، قبل از ارسال ستاره‌دارش کنید).</p>
+<div class="support-band">
+<b>🧑‍💻 سعید نجفی — سهند سرویس</b><br>
+تلفن: <span class="ltr">041-34436141</span> &nbsp;|&nbsp; موبایل: <span class="ltr">09144220430</span><br>
+ایمیل: <span class="ltr">info@ea-fixer.ir</span> &nbsp;|&nbsp; وب‌سایت: <span class="ltr">https://ea-fixer.ir</span><br>
+<small>در ساعات کاری معمولاً همان لحظه پاسخ می‌گیرید؛ عکس خطا + شماره قدم، نیمی از راه‌حل است.</small>
+</div>
+
+</body>
+</html>
