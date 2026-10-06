@@ -34,6 +34,12 @@ public partial class LoginViewModel : ObservableObject
     /// <summary>رویداد ورود موفق — پنجره را عوض می‌کند</summary>
     public event EventHandler? LoginSucceeded;
 
+    /// <summary>رویداد الزام تغییر رمز — سرور اعلام کرده رمز باید عوض شود (چرخه چهاردهم، گزارش پنجم مالک):
+     راهنمای SQL قدم ۷ قول داده بود برنامه بعد از ورود اولِ admin (بذرافشان با
+     MustChangePassword=true) «بلافاصله و دورزدنی‌ناپذیر» تغییر رمز بخواهد؛
+     پیش‌تر این جریان در دسکتاپ وجود نداشت و پرچم سرور نادیده گرفته می‌شد</summary>
+    public event EventHandler? PasswordChangeRequired;
+
     /// <summary>رویداد درخواست فعال‌سازی لایسنس</summary>
     public event EventHandler? LicenseActivationRequested;
 
@@ -58,7 +64,15 @@ public partial class LoginViewModel : ObservableObject
 
         if (ok)
         {
-            LoginSucceeded?.Invoke(this, EventArgs.Empty);
+            // سرور تغییر رمز را الزامی کرده؟ — تا تغییرِ رمز، ورود کامل نمی‌شود
+            if (_api.LastLoginMustChangePassword)
+            {
+                PasswordChangeRequired?.Invoke(this, EventArgs.Empty);
+            }
+            else
+            {
+                LoginSucceeded?.Invoke(this, EventArgs.Empty);
+            }
         }
         else
         {
