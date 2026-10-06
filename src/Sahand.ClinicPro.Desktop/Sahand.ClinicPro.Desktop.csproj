@@ -34,6 +34,17 @@
   <ItemGroup>
     <!-- جاسازی آیکون به‌عنوان Resource وردپ‌اف — مرجع سبک سراسری Icon در App.xaml -->
     <Resource Include="Assets\appicon.ico" />
+    <!-- فونت وزیرمتن (مجوز آزاد OFL) به‌عنوان Resource داخل exe جاسازی می‌شود تا
+         بدون نصب فونت روی ویندوز کاربر، همه فرم‌ها با pack URI زیر آن را ببینند:
+         pack://application:,,,/Assets/Fonts/#Vazirmatn
+         نکته: ارجاع به «پوشه» (نه فایل تکی) عمدی است تا WPF همه وزن‌های
+         خانواده (Regular/SemiBold/Bold/Black) را هم‌زمان بارگیری کند.
+         گزارش هشتم مالک: فونت وزیر در هیچ فرمی اعمال نمی‌شد چون ارجاعِ
+         نامی «Vazirmatn» فقط فونت‌های نصب‌شدهٔ ویندوز را می‌بیند. -->
+    <Resource Include="Assets\Fonts\Vazirmatn-Regular.ttf" />
+    <Resource Include="Assets\Fonts\Vazirmatn-SemiBold.ttf" />
+    <Resource Include="Assets\Fonts\Vazirmatn-Bold.ttf" />
+    <Resource Include="Assets\Fonts\Vazirmatn-Black.ttf" />
   </ItemGroup>
 
   <ItemGroup>
