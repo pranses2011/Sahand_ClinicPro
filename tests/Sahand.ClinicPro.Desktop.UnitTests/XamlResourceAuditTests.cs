@@ -11,11 +11,21 @@ namespace Sahand.ClinicPro.Desktop.UnitTests;
 /// این تست همان کلاس خطا را پیش از انتشار می‌گیرد: هر ارجاع StaticResource/DynamicResource
 /// در XAML دسکتاپ باید یا در خود پروژه تعریف شده باشد (x:Key) یا در مانیفست کلیدهای
 /// واقعی پکیج MaterialDesignThemes موجود باشد.
+/// چرخه شانزدهم (v2.0.3 — گزارش دهم مالک): تست دوم (scope-محور) افزوده شد — کرش
+/// BoolToVis داشبورد با وجود همین تست از نگاه رفت، چون این تست کلیدها را از «همهٔ
+/// فایل‌ها به‌صورت سراسری» جمع می‌کند و تعریف BoolToVis در ۱۳ فایل دیگر، ارجاعِ
+/// بی‌تعریفِ DashboardView را پوشانده بود؛ در حالی که StaticResource در زمان اجرا
+/// فقط از منابع «همان فایل» یا App.xaml حل می‌شود.
 /// </summary>
 public class XamlResourceAuditTests
 {
     private static readonly Regex RefRegex = new(
         @"(?:Static|Dynamic)Resource\s+([A-Za-z_][A-Za-z0-9_.\-]*)",
+        RegexOptions.Compiled);
+
+    /// <summary>فقط ارجاعات StaticResource — این‌ها باید در parse-time فایل حل شوند.</summary>
+    private static readonly Regex StaticRefRegex = new(
+        @"StaticResource\s+([A-Za-z_][A-Za-z0-9_.\-]*)",
         RegexOptions.Compiled);
 
     private static readonly Regex KeyDefRegex = new(
@@ -84,5 +94,81 @@ public class XamlResourceAuditTests
             "کلیدها را با اسکریپت scripts/audit_xaml_resources.py و مانیفست " +
             "scripts/materialdesign-keys-5.3.2.txt بررسی و اصلاح کنید. موارد: " +
             string.Join("، ", missing.Select(kv => $"{kv.Key} ({kv.Value.Count} فایل)")));
+    }
+
+    [Fact]
+    public void ارجاعات_استاتیک_در_محدودهٔ_همان_فایل_یا_اپ_قابل_حل_هستند()
+    {
+        // ۱) یافتن ریشه مخزن (نشانه: Directory.Build.props)
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "Directory.Build.props")))
+        {
+            dir = dir.Parent!;
+        }
+
+        dir.Should().NotBeNull("ریشه مخزن با Directory.Build.props یافت نشد — تست باید از درون مخزن اجرا شود");
+
+        // ۲) مانیفست کلیدهای واقعی پکیج MaterialDesignThemes (از طریق App.xaml ادغام‌شده)
+        var manifest = Path.Combine(dir!.FullName, "scripts", "materialdesign-keys-5.3.2.txt");
+        File.Exists(manifest).Should().BeTrue(
+            $"مانیفست کلیدهای پکیج یافت نشد: {manifest} — با scripts/extract_materialdesign_keys.py بازتولید شود");
+        var pkgKeys = File.ReadAllLines(manifest)
+            .Select(l => l.Trim())
+            .Where(l => l.Length > 0 && !l.StartsWith("#"))
+            .ToHashSet();
+
+        // ۳) کلیدهای تعریف‌شده در «هر فایل» به‌تفکیک + کلیدهای سطح برنامه (App.xaml)
+        var xamlDir = Path.Combine(dir.FullName, "src", "Sahand.ClinicPro.Desktop");
+        var xamlFiles = Directory.EnumerateFiles(xamlDir, "*.xaml", SearchOption.AllDirectories).ToList();
+        xamlFiles.Should().NotBeEmpty("هیچ فایل XAML یافت نشد");
+
+        var keysPerFile = xamlFiles.ToDictionary(
+            f => f,
+            f =>
+            {
+                var keys = new HashSet<string>();
+                foreach (Match m in KeyDefRegex.Matches(File.ReadAllText(f)))
+                {
+                    keys.Add(m.Groups[1].Value);
+                }
+                return keys;
+            });
+
+        var appKeys = keysPerFile.TryGetValue(Path.Combine(xamlDir, "App.xaml"), out var appSet)
+            ? appSet
+            : [];
+
+        // ۴) هر ارجاع StaticResource باید در محدودهٔ خود فایل + App.xaml + پکیج حل شود —
+        //    تعریف کلید در «فایل‌های دیگر» برای این فایل در parse-time قابل‌دسترس نیست
+        var scopeViolations = new SortedDictionary<string, List<string>>();
+        foreach (var file in xamlFiles)
+        {
+            var rel = Path.GetRelativePath(dir.FullName, file);
+            var allowed = keysPerFile[file]
+                .Concat(appKeys)
+                .Concat(pkgKeys)
+                .Concat(SystemKeys)
+                .ToHashSet();
+
+            foreach (Match m in StaticRefRegex.Matches(File.ReadAllText(file)))
+            {
+                var key = m.Groups[1].Value;
+                if (allowed.Contains(key))
+                {
+                    continue;
+                }
+
+                (scopeViolations.TryGetValue(key, out var list) ? list : scopeViolations[key] = [])
+                    .Add(rel);
+            }
+        }
+
+        scopeViolations.Should().BeEmpty(
+            "ارجاع StaticResource خارج از محدودهٔ فایل یافت شد — این ارجاعات در parse-time " +
+            "(InitializeComponent) با XamlParseException می‌ریزند حتی اگر کلید در فایل‌های " +
+            "دیگر تعریف شده باشد. راه‌حل: تعریف محلی <... x:Key=\"...\"/> در همان فایل یا " +
+            "انتقال به App.xaml. موارد: " +
+            string.Join("، ", scopeViolations.Select(kv =>
+                $"{kv.Key} در {string.Join("، ", kv.Value.Distinct())}")));
     }
 }
