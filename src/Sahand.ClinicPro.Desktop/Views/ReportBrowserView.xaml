@@ -21,6 +21,14 @@
             <materialDesign:PackIcon Kind="FileChart" Width="26" Height="26"
                                      Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
             <TextBlock Text="گزارش‌ساز" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+            <!-- دکمه گزارش‌ساز رایگانه — چرخه سیزدهم (درخواست ۴-۳) -->
+            <Button Command="{Binding OpenAdhocBuilderCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                    Margin="16,0,0,0" ToolTip="کوئری‌ساز گرافیکی سه‌گامی — بدون نیاز به SQL گزارش دلخواه بسازید">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="ChartBoxOutline" Width="15" Height="15" VerticalAlignment="Center" />
+                    <TextBlock Text="⚙ گزارش‌ساز رایگانه" Margin="6,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
         </StackPanel>
 
         <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,0,0,8"

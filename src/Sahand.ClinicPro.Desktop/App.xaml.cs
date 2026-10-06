@@ -118,5 +118,8 @@ public partial class App : System.Windows.Application
         services.AddTransient<AdvancedEmrViewModel>();
         services.AddTransient<PayrollViewModel>();
         services.AddTransient<AttendanceViewModel>();
+        // گزارش‌ساز رایگانه — چرخه سیزدهم (درخواست ۴-۳)
+        services.AddTransient<AdhocReportViewModel>();
+        services.AddTransient<AdhocReportWindow>();
     }
 }

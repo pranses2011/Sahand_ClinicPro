@@ -2,8 +2,10 @@
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using Sahand.ClinicPro.Desktop.Controls.Charts;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.Views;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -372,6 +374,15 @@ public partial class ReportBrowserViewModel : ViewModelBase
             sb.AppendLine(string.Join(",", row.Cells.Select(c => $"\"{c.Text}\"")));
         System.IO.File.WriteAllText(dialog.FileName, sb.ToString(), new System.Text.UTF8Encoding(true));
         _snackbar.Success("خروجی CSV ذخیره شد");
+    }
+
+    /// <summary>گشودن پنجره گزارش‌ساز رایگانه (کوئری‌ساز گرافیکی) — چرخه سیزدهم (درخواست ۴-۳)</summary>
+    [RelayCommand]
+    private void OpenAdhocBuilder()
+    {
+        var vm = App.Services.GetRequiredService<AdhocReportViewModel>();
+        var window = new AdhocReportWindow(vm) { Owner = System.Windows.Application.Current.MainWindow };
+        window.Show();
     }
 
     /// <summary>قالب‌بندی عدد با جداکننده</summary>
