@@ -193,7 +193,12 @@ public partial class ReportsController : ApiBaseController
                 new { id = "chart-lab-top-tests", title = "پرتکرارترین آزمون‌ها", description = "نمودار میله‌ای افقی پرتکرارترین تست‌های آزمایشگاه", paramsList = new[] { "fromDate", "toDate", "top" } },
                 new { id = "chart-top-medications", title = "پرمصرف‌ترین داروها", description = "نمودار میله‌ای افقی پرمصرف‌ترین داروهای نسخه", paramsList = new[] { "fromDate", "toDate", "top" } },
                 new { id = "chart-salary-share", title = "سهم پرسنل از حقوق درصدی", description = "نمودار دونات حقوق درصدی پرسنل در آخرین دوره", paramsList = Array.Empty<string>() },
-                new { id = "chart-prescription-trend", title = "روند روزانه صدور نسخه", description = "نمودار سطحی تعداد نسخه در هر روز", paramsList = new[] { "fromDate", "toDate" } }
+                new { id = "chart-prescription-trend", title = "روند روزانه صدور نسخه", description = "نمودار سطحی تعداد نسخه در هر روز", paramsList = new[] { "fromDate", "toDate" } },
+                // چرخه سیزدهم — هوش تجاری (D1/D4/D5)
+                new { id = "chart-growth-mom", title = "رشد ماه‌به‌ماه (MoM)", description = "نمودار ستونی دوقلو با درصد رشد و جهت صعود/نزول", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-growth-yoy", title = "مقایسه سال‌به‌سال (YoY)", description = "ستونی دوقلو: همین ماهِ امسال در برابر سال قبل", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-rfm-analysis", title = "تحلیل RFM بیماران", description = "دونات رده‌بندی ۸گانه + فهرست قهرمانان و در معرض خطر", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-revenue-forecast", title = "پیش‌بینی روند درآمد", description = "سطحی: رگرسیون ۶ ماه اخیر + پیش‌بینی ماه بعد با بازه اطمینان ۸۰٪", paramsList = new[] { "fromDate", "toDate" } }
             }}
         };
 
@@ -278,6 +283,11 @@ public partial class ReportsController : ApiBaseController
             "chart-top-medications" => await ChartTopMedicationsAsync(from, to, top),
             "chart-salary-share" => await ChartSalaryShareAsync(),
             "chart-prescription-trend" => await ChartPrescriptionTrendAsync(from, to),
+            // ── گزارش‌های هوش تجاری — چرخه سیزدهم ──
+            "chart-growth-mom" => await ChartGrowthMomAsync(from, to),
+            "chart-growth-yoy" => await ChartGrowthYoyAsync(from, to),
+            "chart-rfm-analysis" => await ChartRfmAnalysisAsync(from, to),
+            "chart-revenue-forecast" => await ChartRevenueForecastAsync(from, to),
             _ => Ok(ApiResponse<object>.Success(new
             {
                 available = false,
