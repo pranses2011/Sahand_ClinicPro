@@ -33,11 +33,24 @@ public static class DependencyInjection
             ?? throw new InvalidOperationException("رشته اتصال DefaultConnection یافت نشد");
 
         // DbContext با اینترسپتورهای حسابرسی و حذف نرم
+        //
+        // ── چرخه چهاردهم (گزارش ششم مالک — خطای ۵۰۰ لاگین): چرا EnableRetryOnFailure ممنوع است؟ ──
+        // TransactionBehavior همه فرمان‌های MediatR را در تراکنش دستیِ آغازشده با
+        // Database.BeginTransaction می‌پیچد؛ اما EF Core ترکیب «استراتژی تلاش‌مجدد»
+        // (SqlServerRetryingExecutionStrategy، فعال‌شده با گزینه یادشده) با تراکنش دستی
+        // را ناسازگار می‌داند و نخستین عملیات داخل تراکنش با InvalidOperationException
+        // («...does not support user-initiated transactions...») می‌شکند — یعنی همه
+        // endpointهای نوشتنی روی SQL Server واقعی ۵۰۰ می‌دادند و نخستین موردِ تاریخ
+        // پروژه، لاگین مالک بود. این تعارض در تست‌های یکپارچگی InMemory هرگز دیده
+        // نمی‌شود چون InMemory تراکنش را نادیده می‌گیرد و اصلاً چک استراتژی را فعال
+        // نمی‌کند (اثبات و گارد: ExecutionStrategyTransactionTests). راه‌حل جایگزین،
+        // پیچیدن فرمان در CreateExecutionStrategy بود که تلاش‌مجدد ناایدومپوونت روی
+        // منطق دلخواه گرداننده‌ها می‌شد؛ برای استقرار شبکه محلی یک درمانگاه، درستیِ
+        // تراکنش‌های صریح بر تاب‌آوری خطاهای گذرا مقدم است.
         services.AddDbContext<ClinicProDbContext>((sp, options) =>
         {
             options.UseSqlServer(connectionString, sql =>
             {
-                sql.EnableRetryOnFailure(3);
                 sql.CommandTimeout(60);
             });
             options.AddInterceptors(
