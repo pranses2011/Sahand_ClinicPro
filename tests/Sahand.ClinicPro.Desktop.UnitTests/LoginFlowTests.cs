@@ -149,6 +149,27 @@ public class ChangePasswordViewModelTests
     }
 
     [Fact]
+    public async Task Change_Payload_IncludesConfirmPassword()
+    {
+        // گزارش هفتم مالک: سرور ChangePasswordRequestDto سه فیلد اجباری دارد و
+        // نبودِ confirmPassword با 400 «اطلاعات ارسالی نامعتبر است» رد می‌شد —
+        // این گارد مانع بازگشت همان ریشه است
+        var (vm, api) = Create();
+        api.NextBoolResult = true;
+        vm.CurrentPassword = "Old@12345";
+        vm.NewPassword = "New@12345";
+        vm.ConfirmPassword = "New@12345";
+
+        await vm.ChangePasswordCommand.ExecuteAsync(null);
+
+        Assert.NotNull(api.LastBody);
+        var payload = System.Text.Json.JsonSerializer.Serialize(api.LastBody);
+        Assert.Contains("\"currentPassword\":\"Old@12345\"", payload);
+        Assert.Contains("\"newPassword\":\"New@12345\"", payload);
+        Assert.Contains("\"confirmPassword\":\"New@12345\"", payload);
+    }
+
+    [Fact]
     public void Change_ShortPassword_DisablesCommand()
     {
         var (vm, _) = Create();
