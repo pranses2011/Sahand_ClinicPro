@@ -70,8 +70,11 @@ public partial class ChangePasswordViewModel : ObservableObject
         OnPropertyChanged(nameof(HasError));
         ChangePasswordCommand.NotifyCanExecuteChanged();
 
+        // گزارش هفتم مالک: سرور ChangePasswordRequestDto سه فیلد اجباری دارد و
+        // ConfirmPassword آن [Required] + [Compare(NewPassword)] است — ارسالِ
+        // فقط دو فیلد با «اطلاعات ارسالی نامعتبر است» (400 ModelState) رد می‌شد
         var ok = await _api.PostAsync("auth/change-password",
-            new { currentPassword = CurrentPassword, newPassword = NewPassword });
+            new { currentPassword = CurrentPassword, newPassword = NewPassword, confirmPassword = ConfirmPassword });
 
         IsBusy = false;
         ChangePasswordCommand.NotifyCanExecuteChanged();
