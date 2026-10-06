@@ -91,12 +91,46 @@ public partial class BackupViewModel : ViewModelBase
     [ObservableProperty]
     private string _restoreStatus = string.Empty;
 
+    /* ─── پشتیبان ابری — چرخه سیزدهم (درخواست ۷-۳) ─── */
+
+    /// <summary>رنگ بج وضعیت ابری</summary>
+    [ObservableProperty]
+    private string _cloudStatusColor = "#9E9E9E";
+
+    /// <summary>متن بج وضعیت ابری</summary>
+    [ObservableProperty]
+    private string _cloudStatusBadge = "غیرفعال";
+
+    /// <summary>متن آخرین بارگذاری ابری</summary>
+    [ObservableProperty]
+    private string _cloudLastUploadText = "—";
+
+    /// <summary>متن تعداد نسخه‌های ابری</summary>
+    [ObservableProperty]
+    private string _cloudVersionsText = "—";
+
+    /// <summary>متن حجم کل ابری</summary>
+    [ObservableProperty]
+    private string _cloudTotalSizeText = "—";
+
+    /// <summary>پیام ابری — نتیجه تست اتصال/بارگذاری</summary>
+    [ObservableProperty]
+    private string? _cloudMessage;
+
+    /// <summary>آیا بکاپ انتخاب‌شده نسخه ابری دارد؟</summary>
+    [ObservableProperty]
+    private bool _canVerifyCloud;
+
+    /// <summary>شناسه آخرین رکورد ابری برای تست رمزگشایی</summary>
+    private long? _lastCloudRecordId;
+
     /// <summary>سازنده</summary>
     public BackupViewModel(IApiClient api, ISnackbarService snackbar)
     {
         _api = api;
         _snackbar = snackbar;
         _ = LoadAsync();
+        _ = LoadCloudStatusAsync();
     }
 
     /// <summary>بارگذاری تاریخچه بکاپ‌ها</summary>
@@ -204,6 +238,88 @@ public partial class BackupViewModel : ViewModelBase
             ? $"{bytes / 1024.0 / 1024 / 1024:0.#} GB"
             : $"{bytes / 1024.0 / 1024:0.#} MB";
 
+    /* ─── پشتیبان ابری — دستورات چرخه سیزدهم (درخواست ۷-۳) ─── */
+
+    /// <summary>بارگذاری وضعیت پشتیبان ابری</summary>
+    [RelayCommand]
+    private async Task LoadCloudStatusAsync()
+    {
+        var response = await _api.GetAsync<CloudStatusResponse>("backup/cloud/status");
+        var d = response?.Data;
+        if (d is null) return;
+
+        CloudStatusBadge = d.Enabled ? (d.Encrypted ? "فعال • رمزنگاری‌شده" : "فعال") : "غیرفعال";
+        CloudStatusColor = d.Enabled ? "#2E7D32" : "#9E9E9E";
+        CloudLastUploadText = d.LastUpload is null
+            ? "هنوز نسخه‌ای بارگذاری نشده"
+            : $"{FormatDate(d.LastUpload)} ({d.LastFile ?? "—"})";
+        CloudVersionsText = $"{d.Versions} نسخه";
+        CloudTotalSizeText = FormatSize(d.TotalSize);
+        CanVerifyCloud = d.Versions > 0;
+    }
+
+    /// <summary>تست اتصال به مقصد ابری</summary>
+    [RelayCommand]
+    private async Task CloudTestAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var response = await _api.PostAsync<CloudTestResponse>("backup/cloud/test", null);
+            var d = response?.Data;
+            if (d is null) { _snackbar.Error(_api.LastError ?? "تست اتصال ناموفق بود"); return; }
+            CloudMessage = d.Message;
+            if (d.Ok) _snackbar.Success(d.Message);
+            else _snackbar.Error(d.Message);
+        }
+        finally { IsBusy = false; }
+    }
+
+    /// <summary>بارگذاری دستی آخرین پشتیبان به ابر</summary>
+    [RelayCommand]
+    private async Task CloudUploadAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var response = await _api.PostAsync<CloudUploadResponse>("backup/cloud/upload-latest", null);
+            var d = response?.Data;
+            if (d is null) { _snackbar.Error(_api.LastError ?? "بارگذاری ابری ناموفق بود"); return; }
+            CloudMessage = $"{d.Message} — {d.FileName} ({FormatSize(d.Size)}{(d.Encrypted ? "، رمزنگاری‌شده" : "")})";
+            _snackbar.Success("بارگذاری ابری انجام شد");
+            await LoadCloudStatusAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    /// <summary>تست رمزگشایی آخرین نسخه ابری — بدون دست‌زدن به بانک اصلی</summary>
+    [RelayCommand]
+    private async Task CloudVerifyAsync()
+    {
+        // آخرین رکورد ابری از وضعیت گرفته می‌شود؛ endpoint رکورد محور است
+        var response = await _api.GetAsync<CloudStatusResponse>("backup/cloud/status");
+        var s = response?.Data;
+        if (s is null || s.Versions == 0) { _snackbar.Info("نسخه ابری برای تست وجود ندارد"); return; }
+
+        // شناسه آخرین رکورد ابری از تاریخچه — جدیدترین ردیف با سطر ابری
+        var history = await _api.GetAsync<BackupHistoryResponse>("backup/history");
+        var cloudRow = (history?.Data ?? new List<BackupDto>())
+            .FirstOrDefault(b => b.Storage == "Cloud" || b.CloudFileName is not null);
+        if (cloudRow is null) { _snackbar.Info("رکورد ابری در تاریخچه پیدا نشد"); return; }
+
+        IsBusy = true;
+        try
+        {
+            var verify = await _api.PostAsync<CloudVerifyResponse>($"backup/cloud/verify-restore/{cloudRow.Id}", null);
+            var v = verify?.Data;
+            if (v is null) { _snackbar.Error(_api.LastError ?? "تست بازیابی ناموفق بود"); return; }
+            CloudMessage = v.Message;
+            if (v.Ok) _snackbar.Success(v.Message);
+            else _snackbar.Error(v.Message);
+        }
+        finally { IsBusy = false; }
+    }
+
     /* ─── پاسخ‌ها ─── */
 
     private sealed class BackupHistoryResponse
@@ -222,5 +338,63 @@ public partial class BackupViewModel : ViewModelBase
         public long? FileSize { get; set; }
         public bool IsAutomatic { get; set; }
         public string? FilePath { get; set; }
+        public string? Storage { get; set; }
+        public string? CloudFileName { get; set; }
+    }
+
+    private sealed class CloudStatusResponse
+    {
+        public bool IsSuccess { get; set; }
+        public CloudStatusData? Data { get; set; }
+    }
+
+    private sealed class CloudStatusData
+    {
+        public bool Enabled { get; set; }
+        public string? Provider { get; set; }
+        public bool Encrypted { get; set; }
+        public DateTime? LastUpload { get; set; }
+        public string? LastFile { get; set; }
+        public int Versions { get; set; }
+        public long TotalSize { get; set; }
+    }
+
+    private sealed class CloudTestResponse
+    {
+        public bool IsSuccess { get; set; }
+        public CloudTestData? Data { get; set; }
+    }
+
+    private sealed class CloudTestData
+    {
+        public bool Ok { get; set; }
+        public string Message { get; set; } = "";
+    }
+
+    private sealed class CloudUploadResponse
+    {
+        public bool IsSuccess { get; set; }
+        public CloudUploadData? Data { get; set; }
+    }
+
+    private sealed class CloudUploadData
+    {
+        public string FileName { get; set; } = "";
+        public long Size { get; set; }
+        public bool Encrypted { get; set; }
+        public string Message { get; set; } = "";
+    }
+
+    private sealed class CloudVerifyResponse
+    {
+        public bool IsSuccess { get; set; }
+        public CloudVerifyData? Data { get; set; }
+    }
+
+    private sealed class CloudVerifyData
+    {
+        public bool Ok { get; set; }
+        public string Message { get; set; } = "";
+        public long PlainSize { get; set; }
     }
 }

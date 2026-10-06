@@ -17,5 +17,8 @@ public class BackupHistoryConfiguration : IEntityTypeConfiguration<BackupHistory
         builder.Property(x => x.Status).HasConversion<byte>().HasComment("وضعیت");
         builder.Property(x => x.StorageType).HasConversion<byte>().HasComment("محل ذخیره");
 
+        // ── پشتیبان ابری — چرخه سیزدهم (درخواست ۷-۳) ──
+        builder.Property(x => x.CloudFileName).HasMaxLength(300).HasComment("نام فایل در مقصد ابری");
+        builder.Property(x => x.CloudProvider).HasMaxLength(50).HasComment("نام ارائه‌دهنده ابری");
     }
 }

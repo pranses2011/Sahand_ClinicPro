@@ -3722,6 +3722,19 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<long?>("BranchId")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("CloudFileName")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)")
+                        .HasComment("نام فایل در مقصد ابری");
+
+                    b.Property<string>("CloudProvider")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("نام ارائه‌دهنده ابری");
+
+                    b.Property<DateTime?>("CloudUploadedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
 
@@ -3749,6 +3762,9 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<bool>("IsAutomatic")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsCloudEncrypted")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")

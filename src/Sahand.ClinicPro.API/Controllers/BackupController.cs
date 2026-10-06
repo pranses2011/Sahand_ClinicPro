@@ -7,6 +7,8 @@ using Sahand.ClinicPro.Domain.Entities.Infrastructure;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Domain.Interfaces;
 
+using Sahand.ClinicPro.Infrastructure.Services.Backup;
+
 namespace Sahand.ClinicPro.API.Controllers;
 
 /// <summary>
@@ -49,6 +51,8 @@ public class BackupController : ApiBaseController
                 completedAt = b.CompletedAt,
                 fileSize = b.FileSize,
                 isAutomatic = b.IsAutomatic,
+                storage = b.StorageType.ToString(),
+                b.CloudFileName,
                 b.ErrorMessage
             })
             .ToListAsync();
@@ -86,5 +90,96 @@ public class BackupController : ApiBaseController
 
         return Ok(ApiResponse<object>.SuccessMessage(
             "پشتیبان‌گیری ثبت شد — اجرای فایل توسط سرویس پشتیبان انجام می‌شود"));
+    }
+
+    // ═══ پشتیبان ابری — چرخه سیزدهم (درخواست ۷-۳) ═══
+
+    /// <summary>سرویس ابری تنبل</summary>
+    private Sahand.ClinicPro.Infrastructure.Services.Backup.Cloud.CloudBackupService? _cloudService;
+
+    /// <summary>دسترسی به سرویس پشتیبان ابری</summary>
+    private Sahand.ClinicPro.Infrastructure.Services.Backup.Cloud.CloudBackupService CloudSvc =>
+        _cloudService ??= new Sahand.ClinicPro.Infrastructure.Services.Backup.Cloud.CloudBackupService(_configuration,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<Sahand.ClinicPro.Infrastructure.Services.Backup.Cloud.CloudBackupService>.Instance);
+
+    /// <summary>وضعیت پشتیبان ابری — فعال بودن، آخرین بارگذاری، تعداد و حجم نسخه‌ها</summary>
+    [HttpGet("cloud/status")]
+    [HasPermission("backup.view")]
+    public async Task<IActionResult> CloudStatus(CancellationToken ct)
+    {
+        var provider = _configuration["Backup:Cloud:Provider"];
+        var cloudRecords = await _unitOfWork.Repository<BackupHistory>().QueryableNoTracking
+            .Where(b => !b.IsDeleted && b.StorageType == StorageType.Cloud)
+            .OrderByDescending(b => b.CloudUploadedAt)
+            .ToListAsync(ct);
+
+        return Ok(ApiResponse<object>.Success(new
+        {
+            enabled = !string.IsNullOrWhiteSpace(provider),
+            provider = CloudSvc.CreateStorage()?.ProviderName,
+            encrypted = CloudSvc.IsEncryptionEnabled,
+            lastUpload = cloudRecords.FirstOrDefault()?.CloudUploadedAt,
+            lastFile = cloudRecords.FirstOrDefault()?.CloudFileName,
+            versions = cloudRecords.Count,
+            totalSize = cloudRecords.Sum(b => b.FileSize ?? 0),
+        }));
+    }
+
+    /// <summary>تست اتصال به مقصد ابری</summary>
+    [HttpPost("cloud/test")]
+    [HasPermission("backup.view")]
+    public async Task<IActionResult> CloudTest(CancellationToken ct)
+    {
+        var storage = CloudSvc.CreateStorage();
+        if (storage is null)
+            return Ok(ApiResponse<object>.Success(new { ok = false, message = "پشتیبان ابری فعال نیست — Backup:Cloud:Provider را تنظیم کنید" }));
+
+        var (ok, message) = await storage.TestConnectionAsync(ct);
+        return Ok(ApiResponse<object>.Success(new { ok, message }));
+    }
+
+    /// <summary>بارگذاری دستی آخرین پشتیبان به ابر</summary>
+    /// <remarks>جدیدترین رکورد موفق با فایل موجود روی دیسک انتخاب و با رمزنگاری AES-256-GCM بارگذاری می‌شود</remarks>
+    [HttpPost("cloud/upload-latest")]
+    [HasPermission("backup.create")]
+    public async Task<IActionResult> CloudUploadLatest(CancellationToken ct)
+    {
+        var latest = await _unitOfWork.Repository<BackupHistory>().QueryableTracking
+            .Where(b => !b.IsDeleted && b.Status == BackupStatus.Success && b.FilePath != null)
+            .OrderByDescending(b => b.Id)
+            .FirstOrDefaultAsync(ct);
+        if (latest is null)
+            return BadRequest(ApiResponse<string>.Failure("هیچ پشتیبانی برای بارگذاری ثبت نشده است"));
+
+        try
+        {
+            var uploaded = await CloudSvc.UploadBackupAsync(latest, ct);
+            await _unitOfWork.SaveEntitiesAsync(ct);
+            return Ok(ApiResponse<object>.Success(new
+            {
+                fileName = uploaded.FileName,
+                size = uploaded.Size,
+                encrypted = latest.IsCloudEncrypted,
+                message = "بارگذاری ابری انجام شد",
+            }));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<string>.Failure(ex.Message));
+        }
+    }
+
+    /// <summary>تست صحت بازیابی — دانلود و رمزگشایی بدون دست‌زدن به بانک اصلی</summary>
+    [HttpPost("cloud/verify-restore/{id:long}")]
+    [HasPermission("backup.create")]
+    public async Task<IActionResult> CloudVerifyRestore(long id, CancellationToken ct)
+    {
+        var record = await _unitOfWork.Repository<BackupHistory>().QueryableNoTracking
+            .FirstOrDefaultAsync(b => b.Id == id && !b.IsDeleted && b.StorageType == StorageType.Cloud, ct);
+        if (record?.CloudFileName is null)
+            return BadRequest(ApiResponse<string>.Failure("این رکورد نسخه ابری ندارد"));
+
+        var (ok, message, plainSize) = await CloudSvc.VerifyRestoreAsync(record.CloudFileName, ct);
+        return Ok(ApiResponse<object>.Success(new { ok, message, plainSize }));
     }
 }

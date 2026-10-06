@@ -13,6 +13,9 @@ namespace Sahand.ClinicPro.Infrastructure.Services.Backup;
 /// نگهداشت (Backup:RetentionCount — پیش‌فرض ۱۴) به‌صورت خودکار پاک‌سازی می‌شوند
 /// (حذف رکورد + حذف فایل در حد امکان). اجرای واقعی BACKUP DATABASE بر عهده
 /// سرویس پشتیبان SQL است؛ این کار، ثبت تاریخچه و چرخه حیات نسخه‌ها را مدیریت می‌کند.
+/// چرخه سیزدهم (درخواست ۷-۳): پس از ثبت، اگر پشتیبان ابری فعال باشد فایل
+/// با رمزنگاری AES-256-GCM به مقصد ابری بارگذاری می‌شود (best-effort —
+/// شکست ابری چرخه شبانه را نمی‌شکند و رکورد محلی معتبر می‌ماند).
 /// فعال‌سازی: Jobs:Enabled = true در appsettings
 /// </summary>
 public class BackupJob
@@ -20,6 +23,9 @@ public class BackupJob
     private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
     private readonly ILogger<BackupJob> _logger;
+
+    /// <summary>سرویس پشتیبان ابری — اختیاری؛ تهی اگر پیکربندی نشده</summary>
+    private Cloud.CloudBackupService? _cloud;
 
     /// <summary>سازنده با تزریق وابستگی‌ها</summary>
     public BackupJob(IUnitOfWork unitOfWork, IConfiguration configuration, ILogger<BackupJob> logger)
@@ -29,7 +35,12 @@ public class BackupJob
         _logger = logger;
     }
 
-    /// <summary>اجرای شبانه — ثبت پشتیبان خودکار + پاک‌سازی نسخه‌های منقضی</summary>
+    /// <summary>تزریق تنبل سرویس ابری</summary>
+    private Cloud.CloudBackupService Cloud =>
+        _cloud ??= new Cloud.CloudBackupService(_configuration,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<Cloud.CloudBackupService>.Instance);
+
+    /// <summary>اجرای شبانه — ثبت پشتیبان خودکار + بارگذاری ابری + پاک‌سازی نسخه‌های منقضی</summary>
     public async Task RunAsync(CancellationToken ct = default)
     {
         var dir = _configuration["Backup:Directory"] ?? "C:/Backups/SahandClinicPro";
@@ -48,6 +59,23 @@ public class BackupJob
         await _unitOfWork.Repository<BackupHistory>().AddAsync(record, ct);
         await _unitOfWork.SaveEntitiesAsync(ct);
         _logger.LogInformation("پشتیبان‌گیری خودکار شبانه ثبت شد — {File}", record.FilePath);
+
+        // ── بارگذاری ابری — چرخه سیزدهم (درخواست ۷-۳) ──
+        // فایل فقط وقتی بارگذاری می‌شود که روی دیسک موجود باشد؛
+        // در استقرار واقعی سرویس SQL پیش از این کار فایل را می‌سازد.
+        if (Cloud.IsEnabled && !string.IsNullOrEmpty(record.FilePath) && File.Exists(record.FilePath))
+        {
+            try
+            {
+                await Cloud.UploadBackupAsync(record, ct);
+                await _unitOfWork.SaveEntitiesAsync(ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "بارگذاری ابری پشتیبان شبانه ناموفق بود — نسخه محلی معتبر است: {File}", record.FilePath);
+            }
+        }
 
         // پاک‌سازی نسخه‌های فراتر از سهمیه
         var removed = await CleanupExpiredAsync(ct);

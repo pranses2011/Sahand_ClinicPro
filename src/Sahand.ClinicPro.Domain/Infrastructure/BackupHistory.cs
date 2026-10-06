@@ -36,4 +36,18 @@ public class BackupHistory : AuditableEntity, ISoftDeletable
 
     /// <summary>شناسه اجراکننده</summary>
     public long? PerformedBy { get; set; }
+
+    // ── پشتیبان ابری — چرخه سیزدهم (درخواست ۷-۳) ──
+
+    /// <summary>نام فایل در مقصد ابری</summary>
+    public string? CloudFileName { get; set; }
+
+    /// <summary>زمان بارگذاری به ابر</summary>
+    public DateTime? CloudUploadedAt { get; set; }
+
+    /// <summary>نام ارائه‌دهنده ابری</summary>
+    public string? CloudProvider { get; set; }
+
+    /// <summary>آیا نسخه ابری رمزنگاری‌شده است؟</summary>
+    public bool IsCloudEncrypted { get; set; }
 }
