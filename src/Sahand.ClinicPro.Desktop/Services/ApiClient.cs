@@ -415,8 +415,31 @@ public class ApiClient : IApiClient
             try
             {
                 using var doc = JsonDocument.Parse(json);
-                if (doc.RootElement.TryGetProperty("message", out var message))
-                    LastError = message.GetString();
+
+                var message = doc.RootElement.TryGetProperty("message", out var m)
+                    && !string.IsNullOrWhiteSpace(m.GetString())
+                        ? m.GetString()
+                        : $"خطای سرور — کد {(int)response.StatusCode}";
+
+                // گزارش هفتم مالک: آرایه errors پاکت استاندارد نادیده گرفته می‌شد و
+                // کاربر فقط پیام عمومی («اطلاعات ارسالی نامعتبر است») می‌دید بدون
+                // ریشهٔ واقعی (مثل «تکرار رمز عبور الزامی است»)؛ نخستین خطای
+                // جزئی به پیام می‌چسبد تا دلیل ردشدن درخواست دیده شود
+                if (doc.RootElement.TryGetProperty("errors", out var errors)
+                    && errors.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in errors.EnumerateArray())
+                    {
+                        var detail = item.GetString();
+                        if (!string.IsNullOrWhiteSpace(detail))
+                        {
+                            message = $"{message} — {detail}";
+                            break; // فقط نخستین خطا — از شلوغی پیام جلوگیری می‌شود
+                        }
+                    }
+                }
+
+                LastError = message;
             }
             catch
             {
