@@ -32,6 +32,8 @@ def api(url: str, method: str = "GET", data: bytes | None = None,
     req.add_header("User-Agent", "SahandClinicPro-SQLGuide-Publisher")
     with urllib.request.urlopen(req) as resp:
         payload = resp.read()
+        if not payload:  # DELETE با 204 و بدنه خالی
+            return None
         return payload if raw else json.loads(payload.decode())
 
 
