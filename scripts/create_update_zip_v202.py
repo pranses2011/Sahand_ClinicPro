@@ -44,6 +44,12 @@ def changed_files():
     return files
 
 
+def fa_digits(text: str) -> str:
+    """تبدیل ارقام ASCII به فارسی برای هماهنگی متن فارسی راهنما"""
+    table = str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹")
+    return text.translate(table)
+
+
 def group_title(path: str) -> str:
     """گروه‌بندی فارسی برای نمایش در راهنما"""
     p = path.replace("\\", "/")
@@ -263,9 +269,9 @@ def build_guide(files, counts):
     parts = [GUIDE_HEAD, SECTION_WHAT, SECTION_FIXES, SECTION_INSTALL, SECTION_REASSURE, SECTION_LOCK]
 
     head = SECTION_FILES_HEAD
-    head = head.replace("__TOTAL__", str(counts["total"]))
-    head = head.replace("__NADD__", str(counts["added"]))
-    head = head.replace("__NMOD__", str(counts["modified"]))
+    head = head.replace("__TOTAL__", fa_digits(str(counts["total"])))
+    head = head.replace("__NADD__", fa_digits(str(counts["added"])))
+    head = head.replace("__NMOD__", fa_digits(str(counts["modified"])))
     head = head.replace("__MANIFEST__", MANIFEST_NAME)
     parts.append(head)
 
@@ -275,7 +281,7 @@ def build_guide(files, counts):
         groups.setdefault(group_title(path), []).append((status, path))
     for title in groups:
         items = groups[title]
-        block = ['<details open><summary>' + title + " — " + str(len(items)) + " فایل</summary>", '<div class="flist">']
+        block = ['<details open><summary>' + title + " — " + fa_digits(str(len(items))) + " فایل</summary>", '<div class="flist">']
         for status, path in items:
             cls = "tagA" if status == "A" else "tagM"
             mark = "جدید" if status == "A" else "ویرایش"
@@ -285,9 +291,9 @@ def build_guide(files, counts):
     parts.append(SECTION_FILES_TAIL)
 
     html = "\n".join(parts)
-    html = html.replace("__TOTAL__", str(counts["total"]))
-    html = html.replace("__NADD__", str(counts["added"]))
-    html = html.replace("__NMOD__", str(counts["modified"]))
+    html = html.replace("__TOTAL__", fa_digits(str(counts["total"])))
+    html = html.replace("__NADD__", fa_digits(str(counts["added"])))
+    html = html.replace("__NMOD__", fa_digits(str(counts["modified"])))
     html = html.replace("__GUIDE__", GUIDE_NAME)
     html = html.replace("__MANIFEST__", MANIFEST_NAME)
     return html
