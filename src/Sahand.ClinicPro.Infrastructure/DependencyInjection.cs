@@ -113,6 +113,9 @@ public static class DependencyInjection
         // خروجی PDF گزارش‌ها با سربرگ درمانگاه — چرخه سیزدهم (درخواست ۴-۶)
         services.AddSingleton<Services.Reporting.ReportPdfService>();
 
+        // سرویس آرشیو سالانه — چرخه سیزدهم (درخواست ۷-۷)
+        services.AddScoped<Services.Archive.ArchiveService>();
+
         return services;
     }
 

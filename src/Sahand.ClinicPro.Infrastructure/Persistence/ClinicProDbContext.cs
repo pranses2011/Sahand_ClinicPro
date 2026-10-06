@@ -58,6 +58,9 @@ public class ClinicProDbContext : DbContext
     /// <summary>مجموعه BackupHistory</summary>
     public DbSet<BackupHistory> BackupHistory { get; set; }
 
+    /// <summary>مجموعه ArchiveRecord — آرشیو سالانه چرخه سیزدهم (درخواست ۷-۷)</summary>
+    public DbSet<ArchiveRecord> ArchiveRecords { get; set; }
+
     /// <summary>مجموعه Branches</summary>
     public DbSet<Branch> Branches { get; set; }
 

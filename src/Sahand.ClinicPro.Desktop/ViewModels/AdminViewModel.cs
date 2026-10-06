@@ -52,6 +52,14 @@ public record EmployeeRow(
 /// <summary>ردیف تاریخچه پشتیبان</summary>
 public record BackupRow(string StatusText, string Date, string Mode);
 
+/// <summary>ردیف مرورگر آرشیو سالانه — چرخه سیزدهم (درخواست ۷-۷)</summary>
+public record ArchiveBrowserRow(
+    string TableTitle,
+    string? PatientName,
+    string? SummaryLine,
+    string DateText,
+    int YearJalali);
+
 /// <summary>
 /// ViewModel تنظیمات و اداری — چهار زبانه مجزا
 /// </summary>
@@ -98,6 +106,28 @@ public partial class AdminViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<BackupRow> _backups = new();
 
+    /* ─── آرشیو سالانه — چرخه سیزدهم (درخواست ۷-۷) ─── */
+
+    /// <summary>سال شمسی آرشیو</summary>
+    [ObservableProperty]
+    private string _archiveYear = "1403";
+
+    /// <summary>حذف فیزیکی پس از آرشیو؟</summary>
+    [ObservableProperty]
+    private bool _archiveHardPurge;
+
+    /// <summary>گزارش اجرا/پیش‌نمایش آرشیو</summary>
+    [ObservableProperty]
+    private string? _archiveReport;
+
+    /// <summary>عبارت جستجوی مرورگر آرشیو</summary>
+    [ObservableProperty]
+    private string? _archiveSearchTerm;
+
+    /// <summary>ردیف‌های مرورگر آرشیو</summary>
+    [ObservableProperty]
+    private ObservableCollection<ArchiveBrowserRow> _archiveRows = new();
+
     /// <summary>پیام وضعیت</summary>
     [ObservableProperty]
     private string _statusMessage = string.Empty;
@@ -118,6 +148,7 @@ public partial class AdminViewModel : ViewModelBase
         else if (value == 1) _ = LoadAuditAsync();
         else if (value == 2) _ = LoadEmployeesAsync();
         else if (value == 3) _ = LoadBackupsAsync();
+        else if (value == 4) _ = SearchArchiveAsync();
     }
 
     /// <summary>بارگذاری تنظیمات</summary>
@@ -359,6 +390,88 @@ public partial class AdminViewModel : ViewModelBase
         public List<BackupDto>? Data { get; set; }
     }
 
+    /// <summary>پیش‌نمایش شمارشی آرشیو سال انتخابی — بدون تغییر داده</summary>
+    [RelayCommand]
+    private async Task ArchivePreviewAsync()
+    {
+        if (!int.TryParse(ArchiveYear?.Trim(), out var year))
+        { ErrorMessage = "سال شمسی معتبر وارد کنید (مثل ۱۴۰۳)"; return; }
+
+        IsBusy = true;
+        try
+        {
+            var response = await _api.GetAsync<ArchivePreviewResponse>($"admin/archive/preview?year={year}");
+            var d = response?.Data;
+            if (d is null) { ErrorMessage = _api.LastError ?? "پیش‌نمایش ناموفق بود"; return; }
+
+            var lines = d.Items.Select(i =>
+                $"• {i.Title}: {i.Candidates:N0} ردیف قابل انتقال" +
+                (i.Blocked > 0 ? $" ({i.Blocked:N0} مسدود به‌دلیل ارجاع جدیدتر)" : "")).ToList();
+            ArchiveReport = $"پیش‌نمایش آرشیو سال {d.Year} — برش از {d.Cutoff:yyyy-MM-dd}\n" +
+                            string.Join("\n", lines) +
+                            $"\nمجموع: {d.TotalCandidates:N0} قابل انتقال، {d.TotalBlocked:N0} مسدود";
+        }
+        finally { IsBusy = false; }
+    }
+
+    /// <summary>اجرای آرشیو سال انتخابی — با تأیید دو‌مرحله‌ای</summary>
+    [RelayCommand]
+    private async Task ArchiveRunAsync()
+    {
+        if (!int.TryParse(ArchiveYear?.Trim(), out var year))
+        { ErrorMessage = "سال شمسی معتبر وارد کنید (مثل ۱۴۰۳)"; return; }
+
+        var purgeNote = ArchiveHardPurge
+            ? "\n⚠️ حذف فیزیکی فعال است — ردیف‌ها پس از ثبت نسخه آرشیو بلافاصله فیزیکی حذف می‌شوند."
+            : "\nحذف نرم امن است — ردیف‌ها از دید برنامه حذف می‌شوند و پاک‌سازی فیزیکی با اسکریپت نگهداشت انجام می‌شود.";
+        var answer = System.Windows.MessageBox.Show(
+            $"آرشیو همه داده‌های قدیمی‌تر از آغاز سال {year} اجرا شود؟{purgeNote}\n\nادامه می‌دهید؟",
+            "تأیید آرشیو سالانه", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+        if (answer != System.Windows.MessageBoxResult.Yes) return;
+
+        IsBusy = true;
+        try
+        {
+            var response = await _api.PostAsync<ArchiveRunResponse>("admin/archive/run",
+                new { year, hardPurge = ArchiveHardPurge });
+            var d = response?.Data;
+            if (d is null) { ErrorMessage = _api.LastError ?? "اجرای آرشیو ناموفق بود"; return; }
+
+            ArchiveReport = $"آرشیو سال {d.YearJalali} تکمیل شد — {d.TotalArchived:N0} ردیف منتقل شد (برش {d.Cutoff:yyyy-MM-dd})\n" +
+                            string.Join("\n", d.Items.Select(i =>
+                                $"• {i.Title}: {i.Archived:N0} منتقل" +
+                                (i.Blocked > 0 ? $"، {i.Blocked:N0} مسدود" : "") +
+                                (i.Archived < i.Candidates ? $" از {i.Candidates:N0} کاندید" : "")));
+            await SearchArchiveAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    /// <summary>جستجوی مرورگر آرشیو</summary>
+    [RelayCommand]
+    private async Task SearchArchiveAsync()
+    {
+        var qs = new List<string>();
+        if (!string.IsNullOrWhiteSpace(ArchiveSearchTerm))
+            qs.Add($"term={Uri.EscapeDataString(ArchiveSearchTerm.Trim())}");
+        if (int.TryParse(ArchiveYear?.Trim(), out _)) qs.Add($"take=200");
+
+        var response = await _api.GetAsync<ArchiveSearchResponse>(
+            "admin/archive/records" + (qs.Count > 0 ? "?" + string.Join("&", qs) : ""));
+        var rows = response?.Data ?? new List<ArchiveRowDto>();
+        ArchiveRows = new ObservableCollection<ArchiveBrowserRow>(rows.Select(r => new ArchiveBrowserRow(
+            TableTitle: r.SourceTable switch
+            {
+                "Payments" => "پرداخت", "Invoices" => "فاکتور", "Prescriptions" => "نسخه",
+                "LabOrders" => "آزمایش", "Visits" => "ویزیت", "Receptions" => "پذیرش",
+                "Appointments" => "نوبت", _ => r.SourceTable,
+            },
+            PatientName: r.PatientName,
+            SummaryLine: r.SummaryLine,
+            DateText: Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(r.RecordDate),
+            YearJalali: r.YearJalali)));
+    }
+
     /// <summary>DTO پشتیبان — منطبق بر پاسخ ناشناس کنترلر</summary>
     public sealed class BackupDto
     {
@@ -369,5 +482,135 @@ public partial class AdminViewModel : ViewModelBase
         public long? FileSize { get; set; }
         public bool IsAutomatic { get; set; }
         public string? ErrorMessage { get; set; }
+    }
+
+    /* ─── پاسخ‌های آرشیو — چرخه سیزدهم (درخواست ۷-۷) ─── */
+
+    /// <summary>پاسخ پیش‌نمایش آرشیو</summary>
+    public sealed class ArchivePreviewResponse
+    {
+        /// <summary>موفقیت</summary>
+        public bool IsSuccess { get; set; }
+
+        /// <summary>داده</summary>
+        public ArchivePreviewData? Data { get; set; }
+    }
+
+    /// <summary>داده پیش‌نمایش آرشیو</summary>
+    public sealed class ArchivePreviewData
+    {
+        /// <summary>سال شمسی</summary>
+        public int Year { get; set; }
+
+        /// <summary>تاریخ برش</summary>
+        public DateTime Cutoff { get; set; }
+
+        /// <summary>مجموع کاندیدها</summary>
+        public int TotalCandidates { get; set; }
+
+        /// <summary>مجموع مسدودها</summary>
+        public int TotalBlocked { get; set; }
+
+        /// <summary>ردیف‌های جدول‌به‌جدول</summary>
+        public List<ArchivePreviewItemDto> Items { get; set; } = new();
+    }
+
+    /// <summary>ردیف پیش‌نمایش یک جدول</summary>
+    public sealed class ArchivePreviewItemDto
+    {
+        /// <summary>نام جدول</summary>
+        public string Table { get; set; } = "";
+
+        /// <summary>عنوان فارسی</summary>
+        public string Title { get; set; } = "";
+
+        /// <summary>تعداد کاندید</summary>
+        public int Candidates { get; set; }
+
+        /// <summary>تعداد مسدود</summary>
+        public int Blocked { get; set; }
+    }
+
+    /// <summary>پاسخ اجرای آرشیو</summary>
+    public sealed class ArchiveRunResponse
+    {
+        /// <summary>موفقیت</summary>
+        public bool IsSuccess { get; set; }
+
+        /// <summary>داده</summary>
+        public ArchiveRunData? Data { get; set; }
+    }
+
+    /// <summary>داده اجرای آرشیو</summary>
+    public sealed class ArchiveRunData
+    {
+        /// <summary>سال شمسی</summary>
+        public int YearJalali { get; set; }
+
+        /// <summary>تاریخ برش</summary>
+        public DateTime Cutoff { get; set; }
+
+        /// <summary>مجموع منتقل‌شده</summary>
+        public int TotalArchived { get; set; }
+
+        /// <summary>ردیف‌های جدول‌به‌جدول</summary>
+        public List<ArchiveRunItemDto> Items { get; set; } = new();
+    }
+
+    /// <summary>ردیف گزارش اجرای یک جدول</summary>
+    public sealed class ArchiveRunItemDto
+    {
+        /// <summary>نام جدول</summary>
+        public string Table { get; set; } = "";
+
+        /// <summary>عنوان فارسی</summary>
+        public string Title { get; set; } = "";
+
+        /// <summary>تعداد کاندید</summary>
+        public int Candidates { get; set; }
+
+        /// <summary>تعداد منتقل‌شده</summary>
+        public int Archived { get; set; }
+
+        /// <summary>تعداد مسدود</summary>
+        public int Blocked { get; set; }
+    }
+
+    /// <summary>پاسخ جستجوی آرشیو</summary>
+    public sealed class ArchiveSearchResponse
+    {
+        /// <summary>موفقیت</summary>
+        public bool IsSuccess { get; set; }
+
+        /// <summary>ردیف‌ها</summary>
+        public List<ArchiveRowDto>? Data { get; set; }
+    }
+
+    /// <summary>ردیف آرشیو</summary>
+    public sealed class ArchiveRowDto
+    {
+        /// <summary>شناسه رکورد آرشیو</summary>
+        public long Id { get; set; }
+
+        /// <summary>جدول مبدأ</summary>
+        public string SourceTable { get; set; } = "";
+
+        /// <summary>شناسه مبدأ</summary>
+        public long SourceId { get; set; }
+
+        /// <summary>شناسه بیمار</summary>
+        public long? PatientId { get; set; }
+
+        /// <summary>نام بیمار</summary>
+        public string? PatientName { get; set; }
+
+        /// <summary>تاریخ رکورد</summary>
+        public DateTime RecordDate { get; set; }
+
+        /// <summary>سال شمسی</summary>
+        public int YearJalali { get; set; }
+
+        /// <summary>خلاصه‌سطر</summary>
+        public string? SummaryLine { get; set; }
     }
 }

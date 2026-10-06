@@ -206,6 +206,71 @@
                     </DataGrid>
                 </Grid>
             </TabItem>
+
+            <!-- ═══ آرشیو سالانه — چرخه سیزدهم (درخواست ۷-۷) ═══ -->
+            <TabItem Header="🗄 آرشیو سالانه">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- کنترل اجرای آرشیو -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="سال شمسی آرشیو (قدیمی‌تر از این سال):" VerticalAlignment="Center" FontSize="12.5" Margin="0,0,8,0" />
+                        <TextBox Text="{Binding ArchiveYear, UpdateSourceTrigger=PropertyChanged}" Width="80" FontSize="12.5"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="Consolas" Margin="0,0,8,0" />
+                        <Button Command="{Binding ArchivePreviewCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Content="پیش‌نمایش شمارشی" Margin="0,0,8,0" />
+                        <Button Command="{Binding ArchiveRunCommand}" Style="{StaticResource MaterialDesignFilledButton}"
+                                Content="اجرای آرشیو" Margin="0,0,8,0" />
+                        <CheckBox Content="حذف فیزیکی (پس از ثبت نسخه آرشیو)"
+                                  IsChecked="{Binding ArchiveHardPurge}" VerticalAlignment="Center" FontSize="11.5"
+                                  ToolTip="پیش‌فرض خاموش: حذف نرم امن. روشن کنید تا ردیف‌ها بلافاصله فیزیکی حذف شوند — پیش از آن از بانک پشتیبان بگیرید" Margin="0,0,8,0" />
+                    </StackPanel>
+
+                    <!-- گزارش اجرا -->
+                    <TextBlock Grid.Row="1" Text="{Binding ArchiveReport}" FontSize="12" Foreground="#1565C0"
+                               TextWrapping="Wrap" Margin="0,0,0,8"
+                               Visibility="{Binding ArchiveReport, Converter={StaticResource StringToVisibility}}" />
+
+                    <!-- مرورگر آرشیو — جستجوی پرونده قدیمی -->
+                    <Grid Grid.Row="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <materialDesign:PackIcon Kind="ArchiveSearch" Width="18" Height="18" VerticalAlignment="Center"
+                                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
+                            <TextBlock Text="مرورگر آرشیو — جستجوی پرونده قدیمی بیمار" FontSize="13" FontWeight="SemiBold"
+                                       VerticalAlignment="Center" Margin="8,0,0,0" />
+                            <TextBox Text="{Binding ArchiveSearchTerm, UpdateSourceTrigger=PropertyChanged}" Width="220" FontSize="12"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     materialDesign:HintAssist.Hint="نام بیمار یا شرح رکورد" Margin="14,0,0,0" />
+                            <Button Command="{Binding ArchiveSearchCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Margin="6,0,0,0" Content="جستجو" />
+                        </StackPanel>
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding ArchiveRows}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  CanUserAddRows="False"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal"
+                                  FontSize="11.5">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="مقصد" Binding="{Binding TableTitle}" Width="100" />
+                                <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, TargetNullValue=—}" Width="170" />
+                                <DataGridTextColumn Header="شرح" Binding="{Binding SummaryLine, TargetNullValue=—}" Width="*" />
+                                <DataGridTextColumn Header="تاریخ" Binding="{Binding DateText}" Width="110" />
+                                <DataGridTextColumn Header="سال" Binding="{Binding YearJalali}" Width="60" FontFamily="Consolas" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Grid>
+            </TabItem>
         </TabControl>
     </Grid>
 </UserControl>
