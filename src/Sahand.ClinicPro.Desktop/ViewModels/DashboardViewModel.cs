@@ -16,6 +16,38 @@ public record UpcomingAppointmentRow(
 /// <summary>ردیف جدول فعالیت‌های اخیر</summary>
 public record RecentActivityRow(string TimeShamsi, string User, string Action, string Entity);
 
+/// <summary>کارت آمار داینامیک داشبورد — قابل چیدمان (چرخه ۱۳، درخواست ۴-۲)</summary>
+public partial class DashboardCardVM : ObservableObject
+{
+    /// <summary>کلید کارت — مبنای ذخیره ترتیب</summary>
+    public string Key { get; init; } = "";
+
+    /// <summary>آیکن PackIcon</summary>
+    public string IconKind { get; init; } = "AccountGroup";
+
+    /// <summary>مقدار نمایشی</summary>
+    [ObservableProperty]
+    private string _value = "…";
+
+    /// <summary>عنوان</summary>
+    public string Label { get; init; } = "";
+
+    /// <summary>متن مقایسه</summary>
+    public string CompareText { get; init; } = "";
+
+    /// <summary>رنگ تأکیدی</summary>
+    public string Accent { get; init; } = "#1E88E5";
+
+    /// <summary>نمایش کارت</summary>
+    [ObservableProperty]
+    private bool _visible = true;
+
+    partial void OnVisibleChanged(bool value) => VisibleChanged?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>رویداد تغییر نمایش — برای ذخیره خودکار چیدمان</summary>
+    public event EventHandler? VisibleChanged;
+}
+
 /// <summary>
 /// ویومدل داشبورد — گام U1 طبق پرامپت UI بخش ۱ (فرم ۲):
 /// ۴ کارت آمار اصلی + ۳ کارت فرعی + نمودار درآمد + نوبت‌های پیش‌رو + فعالیت‌های اخیر
@@ -67,11 +99,205 @@ public partial class DashboardViewModel : ViewModelBase
     /// <summary>پیام‌های پشتیبانی دریافتی از پنل لایسنس — جدیدترین اول</summary>
     public ObservableCollection<SupportMessageDto> SupportMessages { get; } = new();
 
+    /* ── چرخه ۱۳ (درخواست ۴-۲): داشبورد شخصی‌سازی‌شده ── */
+
+    /// <summary>کارت‌های اصلی داینامیک — ترتیب قابل جابه‌جایی</summary>
+    public ObservableCollection<DashboardCardVM> MainCards { get; } = new();
+
+    /// <summary>حالت شخصی‌سازی فعال است؟</summary>
+    [ObservableProperty]
+    private bool _isCustomizing;
+
+    /// <summary>نمایش ردیف کارت‌های فرعی</summary>
+    [ObservableProperty]
+    private bool _showSecondaryCards = true;
+
+    /// <summary>نمایش نمودار درآمد</summary>
+    [ObservableProperty]
+    private bool _showRevenueChart = true;
+
+    /// <summary>نمایش کارت نوبت‌های پیش‌رو</summary>
+    [ObservableProperty]
+    private bool _showUpcoming = true;
+
+    /// <summary>نمایش فعالیت‌های اخیر</summary>
+    [ObservableProperty]
+    private bool _showActivities = true;
+
+    /// <summary>بازگشت به چیدمان پیش‌فرض</summary>
+    [RelayCommand]
+    private void ResetLayout()
+    {
+        foreach (var c in MainCards) c.Visible = true;
+        ShowSecondaryCards = true;
+        ShowRevenueChart = true;
+        ShowUpcoming = true;
+        ShowActivities = true;
+        // ترتیب پیش‌فرض
+        var ordered = MainCards.OrderBy(c => Array.IndexOf(DefaultOrder, c.Key)).ToList();
+        MainCards.Clear();
+        foreach (var c in ordered) MainCards.Add(c);
+        _ = SaveLayoutAsync();
+        _snackbar.Success("چیدمان به حالت پیش‌فرض بازگشت");
+    }
+
+    /// <summary>ترتیب پیش‌فرض کارت‌ها</summary>
+    private static readonly string[] DefaultOrder = { "patients", "visits", "waiting", "revenue" };
+
+    partial void OnShowSecondaryCardsChanged(bool value) => _ = SaveLayoutAsync();
+    partial void OnShowRevenueChartChanged(bool value) => _ = SaveLayoutAsync();
+    partial void OnShowUpcomingChanged(bool value) => _ = SaveLayoutAsync();
+    partial void OnShowActivitiesChanged(bool value) => _ = SaveLayoutAsync();
+
+    /// <summary>راه‌اندازی کارت‌های داینامیک</summary>
+    private void InitializeCards()
+    {
+        MainCards.Clear();
+        MainCards.Add(new DashboardCardVM
+        {
+            Key = "patients", IconKind = "AccountGroup", Label = "بیماران امروز",
+            CompareText = "مجموع نوبت‌های ثبت‌شده امروز", Accent = "#1E88E5"
+        });
+        MainCards.Add(new DashboardCardVM
+        {
+            Key = "visits", IconKind = "Stethoscope", Label = "ویزیت‌شده",
+            CompareText = "ویزیت‌های انجام‌شده امروز", Accent = "#43A047"
+        });
+        MainCards.Add(new DashboardCardVM
+        {
+            Key = "waiting", IconKind = "ClockOutline", Label = "در انتظار",
+            CompareText = "در صف انتظار باقی‌مانده", Accent = "#FB8C00"
+        });
+        MainCards.Add(new DashboardCardVM
+        {
+            Key = "revenue", IconKind = "CashMultiple", Label = "درآمد امروز (ریال)",
+            CompareText = "مجموع پرداخت‌های ثبت‌شده", Accent = "#8E24AA"
+        });
+        foreach (var c in MainCards)
+            c.VisibleChanged += (_, _) => _ = SaveLayoutAsync();
+    }
+
+    /// <summary>به‌روزرسانی مقادیر کارت‌ها از آمار</summary>
+    private void UpdateCardValues()
+    {
+        foreach (var c in MainCards)
+            c.Value = c.Key switch
+            {
+                "patients" => TodayPatients.ToString(),
+                "visits" => TodayVisits.ToString(),
+                "waiting" => WaitingCount.ToString(),
+                "revenue" => TodayRevenueText,
+                _ => "—"
+            };
+    }
+
+    /// <summary>جابه‌جایی کارت به بالا</summary>
+    [RelayCommand]
+    private void MoveCardUp(DashboardCardVM? card)
+    {
+        if (card is null) return;
+        var idx = MainCards.IndexOf(card);
+        if (idx <= 0) return;
+        MainCards.Move(idx, idx - 1);
+        _ = SaveLayoutAsync();
+    }
+
+    /// <summary>جابه‌جایی کارت به پایین</summary>
+    [RelayCommand]
+    private void MoveCardDown(DashboardCardVM? card)
+    {
+        if (card is null) return;
+        var idx = MainCards.IndexOf(card);
+        if (idx < 0 || idx >= MainCards.Count - 1) return;
+        MainCards.Move(idx, idx + 1);
+        _ = SaveLayoutAsync();
+    }
+
+    /// <summary>ذخیره چیدمان در سرور</summary>
+    private async Task SaveLayoutAsync()
+    {
+        try
+        {
+            var order = MainCards.Select(c => c.Key).ToList();
+            var layout = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                order,
+                hidden = MainCards.Where(c => !c.Visible).Select(c => c.Key).ToList(),
+                showSecondary = ShowSecondaryCards,
+                showChart = ShowRevenueChart,
+                showUpcoming = ShowUpcoming,
+                showActivities = ShowActivities
+            });
+            await _api.PutAsync("dashboard/layout", new { layout });
+        }
+        catch
+        {
+            // ذخیره چیدمان بهترین‌حالتی است — خطا داشبورد را نمی‌شکند
+        }
+    }
+
+    /// <summary>بارگذاری چیدمان ذخیره‌شده</summary>
+    private async Task LoadLayoutAsync()
+    {
+        try
+        {
+            var response = await _api.GetAsync<LayoutEnvelope>("dashboard/layout");
+            var json = response?.Data?.Layout;
+            if (string.IsNullOrWhiteSpace(json)) return;
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            if (root.TryGetProperty("order", out var order) && order.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                var ordered = new List<DashboardCardVM>();
+                foreach (var keyEl in order.EnumerateArray())
+                {
+                    var key = keyEl.GetString();
+                    var card = MainCards.FirstOrDefault(c => c.Key == key);
+                    if (card is not null && !ordered.Contains(card)) ordered.Add(card);
+                }
+                foreach (var c in MainCards)
+                    if (!ordered.Contains(c)) ordered.Add(c);
+                MainCards.Clear();
+                foreach (var c in ordered) MainCards.Add(c);
+            }
+            if (root.TryGetProperty("hidden", out var hidden) && hidden.ValueKind == System.Text.Json.JsonValueKind.Array)
+                foreach (var keyEl in hidden.EnumerateArray())
+                {
+                    var card = MainCards.FirstOrDefault(c => c.Key == keyEl.GetString());
+                    if (card is not null) card.Visible = false;
+                }
+            if (root.TryGetProperty("showSecondary", out var sec)) ShowSecondaryCards = sec.GetBoolean();
+            if (root.TryGetProperty("showChart", out var chart)) ShowRevenueChart = chart.GetBoolean();
+            if (root.TryGetProperty("showUpcoming", out var up)) ShowUpcoming = up.GetBoolean();
+            if (root.TryGetProperty("showActivities", out var act)) ShowActivities = act.GetBoolean();
+        }
+        catch
+        {
+            // بدون چیدمان ذخیره‌شده — پیش‌فرض
+        }
+    }
+
+    /// <summary>پاسخ چیدمان داشبورد</summary>
+    public sealed class LayoutEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public LayoutData? Data { get; set; }
+    }
+
+    /// <summary>داده چیدمان</summary>
+    public sealed class LayoutData
+    {
+        public string? Layout { get; set; }
+    }
+
     /// <summary>سازنده با تزریق سرویس‌ها</summary>
     public DashboardViewModel(IApiClient api, ISnackbarService snackbar)
     {
         _api = api;
         _snackbar = snackbar;
+        InitializeCards();
+        _ = LoadLayoutAsync();
         _refresh.Tick += async (_, _) => await LoadStatsAsync();
         _refresh.Start();
         _ = LoadStatsAsync();
@@ -107,6 +333,9 @@ public partial class DashboardViewModel : ViewModelBase
             LowStockCount = alerts.TryGetProperty("lowStock", out var low) ? low.GetInt32() : 0;
             PendingLabOrders = alerts.TryGetProperty("pendingLabOrders", out var lab) ? lab.GetInt32() : 0;
         }
+
+        // به‌روزرسانی کارت‌های داینامیک چرخه ۱۳
+        UpdateCardValues();
 
         // ۳) نمودار درآمد ۷ روز — چرخه یازدهم: میله‌ای سطح‌خورده بود؛
         // برای «روند در طول زمان» نوع درست نمودار، سطحی/خطی است

@@ -21,9 +21,15 @@ namespace Sahand.ClinicPro.API.Controllers;
 public class DashboardController : ApiBaseController
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly Application.Interfaces.ICurrentUserService _currentUser;
 
-    /// <summary>سازنده با تزریق واحد کار</summary>
-    public DashboardController(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    /// <summary>سازنده با تزریق واحد کار و کاربر جاری</summary>
+    public DashboardController(IUnitOfWork unitOfWork,
+        Application.Interfaces.ICurrentUserService currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <summary>
     /// آمار خلاصه امروز — بیماران ثبت‌شده، نوبت‌ها، ویزیت‌ها و درآمد
@@ -227,4 +233,67 @@ public class DashboardController : ApiBaseController
             pendingLabOrders,
         }, "هشدارهای داشبورد دریافت شد"));
     }
+
+    /* ═══════════ داشبورد شخصی‌سازی‌شده — چرخه ۱۳ (درخواست ۴-۲) ═══════════ */
+
+    /// <summary>کلید تنظیم چیدمان داشبورد هر کاربر</summary>
+    private string LayoutKey => $"dashboard-layout:{_currentUser.UserId ?? 0}";
+
+    /// <summary>
+    /// چیدمان شخصی داشبورد کاربر جاری — JSON ترتیب کارت‌ها و نمایش بخش‌ها
+    /// </summary>
+    [HttpGet("layout")]
+    [HasPermission("dashboard.view")]
+    public async Task<IActionResult> GetLayout(CancellationToken ct)
+    {
+        var setting = await _unitOfWork.Repository<Domain.Entities.Infrastructure.SystemSetting>()
+            .QueryableNoTracking
+            .FirstOrDefaultAsync(x => x.Key == LayoutKey && !x.IsDeleted, ct);
+
+        return Ok(Application.Common.Models.ApiResponse<object>.Success(new
+        {
+            layout = setting?.Value
+        }));
+    }
+
+    /// <summary>
+    /// ذخیره چیدمان شخصی داشبورد — هر کاربر چیدمان مستقل خودش را دارد
+    /// </summary>
+    /// <param name="request">JSON چیدمان — ترتیب کارت‌ها و نمایش بخش‌ها</param>
+    [HttpPut("layout")]
+    [HasPermission("dashboard.view")]
+    public async Task<IActionResult> SaveLayout([FromBody] SaveLayoutRequest request, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.Layout) || request.Layout.Length > 4000)
+            return BadRequest(Application.Common.Models.ApiResponse<object>.Failure(
+                "چیدمان نامعتبر است (حداکثر ۴۰۰۰ نویسه)"));
+
+        var setting = await _unitOfWork.Repository<Domain.Entities.Infrastructure.SystemSetting>()
+            .QueryableTracking
+            .FirstOrDefaultAsync(x => x.Key == LayoutKey && !x.IsDeleted, ct);
+
+        if (setting is null)
+        {
+            setting = new Domain.Entities.Infrastructure.SystemSetting
+            {
+                Category = "DashboardLayout",
+                Key = LayoutKey,
+                Value = request.Layout,
+                DataType = Domain.Enums.SettingDataType.Json,
+                Description = $"چیدمان داشبورد شخصی کاربر {_currentUser.Username}"
+            };
+            await _unitOfWork.Repository<Domain.Entities.Infrastructure.SystemSetting>()
+                .AddAsync(setting, ct);
+        }
+        else
+        {
+            setting.Value = request.Layout;
+        }
+
+        await _unitOfWork.SaveEntitiesAsync(ct);
+        return Ok(Application.Common.Models.ApiResponse<object>.SuccessMessage("چیدمان داشبورد ذخیره شد"));
+    }
 }
+
+/// <summary>درخواست ذخیره چیدمان داشبورد</summary>
+public record SaveLayoutRequest(string Layout);

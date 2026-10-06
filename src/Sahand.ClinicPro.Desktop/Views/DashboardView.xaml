@@ -95,6 +95,23 @@
                     <TextBlock Text="خلاصه وضعیت امروز درمانگاه"
                                FontSize="12" Opacity="0.7" Margin="0,0,0,4" />
                 </StackPanel>
+
+                <!-- چرخه ۱۳ (۴-۲): شخصی‌سازی داشبورد -->
+                <ToggleButton DockPanel.Dock="Left" IsChecked="{Binding IsCustomizing}" Margin="0,0,10,0"
+                              Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                              ToolTip="حالت شخصی‌سازی — جابه‌جایی/پنهان‌سازی کارت‌ها و بخش‌ها"
+                              VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="TuneVertical" Width="15" Height="15" VerticalAlignment="Center" />
+                        <TextBlock Text="شخصی‌سازی" FontSize="11.5" Margin="6,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ToggleButton>
+                <Button DockPanel.Dock="Left" Command="{Binding ResetLayoutCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0"
+                        Visibility="{Binding IsCustomizing, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        ToolTip="بازگشت به چیدمان پیش‌فرض">
+                    <materialDesign:PackIcon Kind="Restore" Width="15" Height="15" />
+                </Button>
             </DockPanel>
 
             <!-- نوار خوش‌آمد -->
@@ -160,32 +177,60 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <!-- ردیف ۱: چهار کارت آمار اصلی -->
-            <UniformGrid Columns="4" Rows="1">
-                <controls:StatCard IconKind="AccountGroup"
-                                   Value="{Binding TodayPatients, Mode=OneWay}"
-                                   Label="بیماران امروز"
-                                   CompareText="مجموع نوبت‌های ثبت‌شده امروز"
-                                   AccentBrush="#1E88E5" />
-                <controls:StatCard IconKind="Stethoscope"
-                                   Value="{Binding TodayVisits, Mode=OneWay}"
-                                   Label="ویزیت‌شده"
-                                   CompareText="ویزیت‌های انجام‌شده امروز"
-                                   AccentBrush="#43A047" />
-                <controls:StatCard IconKind="ClockOutline"
-                                   Value="{Binding WaitingCount, Mode=OneWay}"
-                                   Label="در انتظار"
-                                   CompareText="در صف انتظار باقی‌مانده"
-                                   AccentBrush="#FB8C00" />
-                <controls:StatCard IconKind="CashMultiple"
-                                   Value="{Binding TodayRevenueText, Mode=OneWay}"
-                                   Label="درآمد امروز (ریال)"
-                                   CompareText="مجموع پرداخت‌های ثبت‌شده"
-                                   AccentBrush="#8E24AA" />
-            </UniformGrid>
+            <!-- ═══ چرخه ۱۳ (۴-۲): پنل شخصی‌سازی — فقط در حالت تنظیم ═══ -->
+            <Border Background="#FFF8E1" CornerRadius="10" Padding="12,9" Margin="0,0,0,10"
+                    Visibility="{Binding IsCustomizing, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <WrapPanel>
+                    <TextBlock Text="🧩 نمایش بخش‌ها:" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <CheckBox Content="کارت‌های فرعی" IsChecked="{Binding ShowSecondaryCards}" FontSize="11.5" Margin="0,0,12,0" />
+                    <CheckBox Content="نمودار درآمد" IsChecked="{Binding ShowRevenueChart}" FontSize="11.5" Margin="0,0,12,0" />
+                    <CheckBox Content="نوبت‌های پیش‌رو" IsChecked="{Binding ShowUpcoming}" FontSize="11.5" Margin="0,0,12,0" />
+                    <CheckBox Content="فعالیت‌های اخیر" IsChecked="{Binding ShowActivities}" FontSize="11.5" />
+                </WrapPanel>
+            </Border>
 
-            <!-- ردیف ۲: سه کارت فرعی -->
-            <UniformGrid Columns="3" Rows="1">
+            <!-- ردیف ۱: کارت‌های آمار اصلی — داینامیک با ترتیب قابل جابه‌جایی (چرخه ۱۳) -->
+            <ItemsControl ItemsSource="{Binding MainCards}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="4" Rows="1" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0,0,8,0">
+                            <!-- کارت آمار -->
+                            <controls:StatCard IconKind="{Binding IconKind, Mode=OneWay}"
+                                               Value="{Binding Value, Mode=OneWay}"
+                                               Label="{Binding Label, Mode=OneWay}"
+                                               CompareText="{Binding CompareText, Mode=OneWay}"
+                                               AccentBrush="{Binding Accent, Mode=OneWay}"
+                                               Visibility="{Binding Visible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                            <!-- کنترل‌های چیدمان — فقط در حالت شخصی‌سازی -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                        Margin="4,2,0,0"
+                                        Visibility="{Binding DataContext.IsCustomizing, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <Button Command="{Binding DataContext.MoveCardUpCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignFlatButton}" Padding="3,1" ToolTip="جابه‌جایی به قبل">
+                                    <materialDesign:PackIcon Kind="ChevronUp" Width="12" Height="12" />
+                                </Button>
+                                <Button Command="{Binding DataContext.MoveCardDownCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignFlatButton}" Padding="3,1" ToolTip="جابه‌جایی به بعد">
+                                    <materialDesign:PackIcon Kind="ChevronDown" Width="12" Height="12" />
+                                </Button>
+                                <ToggleButton IsChecked="{Binding Visible}" Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                              Padding="2,0" ToolTip="نمایش/پنهان این کارت" />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- ردیف ۲: سه کارت فرعی — نمایش قابل تنظیم (چرخه ۱۳) -->
+            <UniformGrid Columns="3" Rows="1"
+                         Visibility="{Binding ShowSecondaryCards, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <controls:StatCard IconKind="AlertCircle"
                                    Value="{Binding LowStockCount, Mode=OneWay}"
                                    Label="موجودی کم دارو"
@@ -203,16 +248,17 @@
                                    AccentBrush="#5C6BC0" />
             </UniformGrid>
 
-            <!-- ردیف ۳: نمودار درآمد (۲fr) + نوبت‌های پیش‌رو (۱fr) -->
+            <!-- ردیف ۳: نمودار درآمد (۲fr) + نوبت‌های پیش‌رو (۱fr) — نمایش قابل تنظیم (چرخه ۱۳) -->
             <Grid Margin="0,8,0,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="2*" SharedSizeGroup="A" />
                     <ColumnDefinition Width="16" />
                     <ColumnDefinition Width="1*" />
                 </Grid.ColumnDefinitions>
 
                 <!-- کارت نمودار درآمد ۷ روز -->
-                <materialDesign:Card Grid.Column="0" UniformCornerRadius="14" Padding="16">
+                <materialDesign:Card Grid.Column="0" UniformCornerRadius="14" Padding="16"
+                                     Visibility="{Binding ShowRevenueChart, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -240,8 +286,9 @@
                     </Grid>
                 </materialDesign:Card>
 
-                <!-- کارت نوبت‌های پیش‌رو -->
-                <materialDesign:Card Grid.Column="2" UniformCornerRadius="14" Padding="12">
+                <!-- کارت نوبت‌های پیش‌رو — نمایش قابل تنظیم (چرخه ۱۳) -->
+                <materialDesign:Card Grid.Column="2" UniformCornerRadius="14" Padding="12"
+                                     Visibility="{Binding ShowUpcoming, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -274,8 +321,9 @@
                 </materialDesign:Card>
             </Grid>
 
-            <!-- ردیف ۴: فعالیت‌های اخیر -->
-            <materialDesign:Card UniformCornerRadius="14" Padding="16" Margin="0,14,0,4">
+            <!-- ردیف ۴: فعالیت‌های اخیر — نمایش قابل تنظیم (چرخه ۱۳) -->
+            <materialDesign:Card UniformCornerRadius="14" Padding="16" Margin="0,14,0,4"
+                                 Visibility="{Binding ShowActivities, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
