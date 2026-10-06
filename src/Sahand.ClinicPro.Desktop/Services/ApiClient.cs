@@ -28,6 +28,9 @@ public class ApiClient : IApiClient
     /// <summary>آخرین پیام خطای فارسی</summary>
     public string? LastError { get; private set; }
 
+    /// <summary>پرچم آخرین ورود — سرور تغییر رمز عبور را الزامی کرده است (چرخه چهاردهم، گزارش پنجم مالک)</summary>
+    public bool LastLoginMustChangePassword { get; private set; }
+
     /// <summary>شناسه شعبه جاری — با هر درخواست در هدر X-Branch-Id ارسال می‌شود (گام U17)</summary>
     public long? BranchId { get; set; }
 
@@ -39,8 +42,12 @@ public class ApiClient : IApiClient
     {
         _http = http;
         _tokens = tokens;
-        _http.BaseAddress = new Uri(configuration["ApiSettings:BaseUrl"]
-            ?? "http://localhost:5000/api/v1");
+        // چرخه چهاردهم (گزارش پنجم مالک): آدرس پایه باید به اسلش پایانی ختم شود —
+        // بدون آن، ترکیب مسیرهای نسبی طبق RFC 3986 قطعه «v1» را می‌اندازد و
+        // همه درخواست‌ها به api/… (بدون v1) می‌رسیدند و 404 با بدنه خالی
+        // می‌گرفتند؛ نرمال‌سازی در ApiHttp متمرکز شده و با تست گارد می‌شود.
+        _http.BaseAddress = new Uri(ApiHttp.NormalizeBaseUrl(
+            configuration["ApiSettings:BaseUrl"]));
         _http.Timeout = TimeSpan.FromSeconds(
             configuration.GetValue("ApiSettings:TimeoutSeconds", 30));
     }
@@ -245,19 +252,53 @@ public class ApiClient : IApiClient
         }
     }
 
-    /// <summary>ورود به سامانه و ذخیره توکن‌ها</summary>
+    /// <summary>
+    /// ورود به سامانه و ذخیره توکن‌ها — چرخه چهاردهم (گزارش پنجم مالک):
+    /// پاسخ سرور در پاکت استاندارد ApiResponse (isSuccess/message/data) پیچیده
+    /// می‌شود؛ پیش‌تر بدنه مستقیم به LoginResult نگاشت می‌شد و توکن‌ها همیشه
+    /// null می‌شدند و ورود به‌ظاهر موفق، عملاً بی‌توکن بود. پرچم الزام تغییر
+    /// رمز هم از همین پاسخ استخراج و در LastLoginMustChangePassword نگه می‌شود.
+    /// </summary>
     public async Task<bool> LoginAsync(string usernameOrEmail, string password, CancellationToken ct = default)
     {
         LastError = null;
-        var payload = new { usernameOrEmail, password };
-        var response = await SendInternalAsync<LoginResult>("auth/login", payload, attachToken: false, ct);
+        LastLoginMustChangePassword = false;
 
-        if (response is null)
+        try
+        {
+            using var response = await SendRawAsync("auth/login",
+                new { usernameOrEmail, password }, attachToken: false, HttpMethod.Post, ct);
+            var json = await response.Content.ReadAsStringAsync(ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var err = ApiHttp.ParseEnvelope<object>(json);
+                LastError = err?.Message ?? $"خطای سرور — کد {(int)response.StatusCode}";
+                return false;
+            }
+
+            var envelope = ApiHttp.ParseEnvelope<LoginResult>(json);
+            if (envelope is not { IsSuccess: true } || envelope.Data is null)
+            {
+                LastError = envelope?.Message ?? "ورود ناموفق بود";
+                return false;
+            }
+
+            LastLoginMustChangePassword = envelope.Data.MustChangePassword;
+            _tokens.SaveTokens(envelope.Data.AccessToken, envelope.Data.RefreshToken,
+                envelope.Data.ExpiresIn, envelope.Data.Username);
+            return true;
+        }
+        catch (HttpRequestException)
+        {
+            LastError = "ارتباط با سرور برقرار نشد — اتصال شبکه را بررسی کنید";
             return false;
-
-        _tokens.SaveTokens(response.AccessToken, response.RefreshToken,
-            response.ExpiresIn, response.Username);
-        return true;
+        }
+        catch (TaskCanceledException)
+        {
+            LastError = "مهلت درخواست به پایان رسید";
+            return false;
+        }
     }
 
     /// <summary>خروج و پاک‌کردن توکن‌ها</summary>
@@ -411,11 +452,14 @@ public class ApiClient : IApiClient
             if (!response.IsSuccessStatusCode) return false;
 
             var json = await response.Content.ReadAsStringAsync(ct);
-            var result = JsonSerializer.Deserialize<LoginResult>(json, Json);
-            if (result is null) return false;
 
-            _tokens.SaveTokens(result.AccessToken, result.RefreshToken,
-                result.ExpiresIn, _tokens.Username ?? string.Empty);
+            // چرخه چهاردهم: تمدید هم مثل ورود در پاکت ApiResponse پیچیده می‌شود —
+            // توکن‌های تازه از فیلد data خوانده می‌شوند نه از ریشه بدنه
+            var envelope = ApiHttp.ParseEnvelope<LoginResult>(json);
+            if (envelope is not { IsSuccess: true } || envelope.Data is null) return false;
+
+            _tokens.SaveTokens(envelope.Data.AccessToken, envelope.Data.RefreshToken,
+                envelope.Data.ExpiresIn, _tokens.Username ?? string.Empty);
             return true;
         }
         catch
@@ -424,10 +468,11 @@ public class ApiClient : IApiClient
         }
     }
 
-    /// <summary>ساختار پاسخ ورود</summary>
+    /// <summary>ساختار داده ورود — هم‌شکل فیلد data پاکت LoginResponseDto سرور</summary>
     private sealed record LoginResult(
         string AccessToken,
         string RefreshToken,
         int ExpiresIn,
-        string Username);
+        string Username,
+        bool MustChangePassword);
 }

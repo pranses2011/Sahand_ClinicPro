@@ -25,8 +25,17 @@ public sealed class FakeApiClient : IApiClient
     /// <summary>خطای تنظیم‌شده برای LastError</summary>
     public string? FakeError { get; set; }
 
+    /// <summary>پاسخ آماده LoginAsync — پیش‌فرض موفق</summary>
+    public bool FakeLoginSucceeds { get; set; } = true;
+
+    /// <summary>پرچم آماده — آیا ورود نیازمند تغییر رمز است (الزام سرور)</summary>
+    public bool FakeMustChangePassword { get; set; }
+
     /// <summary>آخرین پیام خطای فارسی</summary>
     public string? LastError => FakeError;
+
+    /// <summary>پرچم آخرین ورود — در نسخه ساختگی با تنظیم دستی</summary>
+    public bool LastLoginMustChangePassword => FakeMustChangePassword;
 
     /// <summary>رویداد نیاز به ورود مجدد</summary>
     public event EventHandler? SessionExpired;
@@ -124,7 +133,7 @@ public sealed class FakeApiClient : IApiClient
 
     /// <summary>ورود</summary>
     public Task<bool> LoginAsync(string usernameOrEmail, string password, CancellationToken ct = default)
-        => Task.FromResult(true);
+        => Task.FromResult(FakeLoginSucceeds);
 
     /// <summary>خروج</summary>
     public Task LogoutAsync() => Task.CompletedTask;

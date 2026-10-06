@@ -54,6 +54,9 @@ public interface IApiClient
     /// <summary>آخرین پیام خطای فارسی</summary>
     string? LastError { get; }
 
+    /// <summary>پرچم آخرین ورود — سرور تغییر رمز عبور را الزامی کرده است (چرخه چهاردهم)</summary>
+    bool LastLoginMustChangePassword { get; }
+
     /// <summary>رویداد نیاز به ورود مجدد — ناوبری به صفحه ورود</summary>
     event EventHandler? SessionExpired;
 }
