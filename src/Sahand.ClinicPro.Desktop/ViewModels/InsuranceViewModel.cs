@@ -181,8 +181,10 @@ public partial class InsuranceViewModel : ViewModelBase
         if (d is null) { _snackbar.Error(_api.LastError ?? "محاسبه ناموفق بود — فاکتور بیمه‌ای معتبر وارد کنید"); return; }
 
         LastCalculatedInvoiceId = invId;
+        // رفع CS8604: خطوط ممکن است تهی باشد — مجموعه خامل جایگزین می‌شود
+        var lines = d.Lines ?? new List<FractionLineDto>();
         FractionLines = new ObservableCollection<FractionLineRow>(
-            d.Lines.Select(l => new FractionLineRow(
+            lines.Select(l => new FractionLineRow(
                 l.Description, $"{l.Quantity:0.#}", $"{l.ItemTotal:N0}",
                 $"{l.Franchise:N0}", $"{l.InsuranceShare:N0}", $"{l.PatientShare:N0}",
                 l.RuleType, l.RuleSource)));

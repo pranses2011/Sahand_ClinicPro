@@ -78,7 +78,8 @@ public partial class DoughnutChart : UserControl
         CenterLabel.Text = CenterSubtext;
         if (!any) return;
 
-        var total = pts!.Sum(p => p.Value);
+        var points = pts!; // رفع CS8602: نمونه غیرتهی پس از گارد بالا
+        var total = points.Sum(p => p.Value);
         var size = Math.Max(60, RingSize);
         var outer = size / 2 - 2;
         var inner = outer * 0.62; // نسبت دونات ۶۲٪
@@ -88,9 +89,9 @@ public partial class DoughnutChart : UserControl
         RingCanvas.Height = size;
 
         double start = -90; // از بالای حلقه
-        for (var i = 0; i < pts.Count; i++)
+        for (var i = 0; i < points.Count; i++)
         {
-            var p = pts[i];
+            var p = points[i];
             var sweep = p.Value / total * 360;
             var end = start + Math.Min(sweep, 359.999);
 

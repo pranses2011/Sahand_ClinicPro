@@ -121,9 +121,6 @@ public partial class BackupViewModel : ViewModelBase
     [ObservableProperty]
     private bool _canVerifyCloud;
 
-    /// <summary>شناسه آخرین رکورد ابری برای تست رمزگشایی</summary>
-    private long? _lastCloudRecordId;
-
     /// <summary>سازنده</summary>
     public BackupViewModel(IApiClient api, ISnackbarService snackbar)
     {
