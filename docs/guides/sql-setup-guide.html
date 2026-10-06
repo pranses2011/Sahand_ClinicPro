@@ -19,7 +19,7 @@ code { font-family:Consolas,monospace; background:#ECEFF1; padding:1px 7px; bord
   font-size:9.5pt; direction:ltr; display:inline-block; color:#B71C1C; }
 pre { background:#263238; color:#ECEFF1; border-radius:10px; padding:13px 16px; margin:10px 0;
   font-family:Consolas,monospace; font-size:9pt; line-height:1.75; direction:ltr; text-align:left;
-  page-break-inside:avoid; }
+  page-break-inside:avoid; white-space:pre-wrap; overflow-wrap:break-word; }
 table { width:100%; border-collapse:collapse; margin:10px 0; font-size:9.5pt; page-break-inside:avoid; }
 th { background:#1565C0; color:#fff; padding:7px 10px; text-align:right; font-weight:600; }
 td { padding:6px 10px; border:1px solid #CFD8DC; }
@@ -196,6 +196,7 @@ p, td, li, th { overflow-wrap:break-word; word-break:break-word; }
 <div class="warn">⚠️ <b>نکته بسیار مهم — دو خط اریب:</b> در فایل‌های JSON برای نوشتن یک <code>\</code> باید دو تا <code>\\</code> پشت‌سرهم بنویسید (همان‌طور که در حالت ب می‌بینید). اگر فقط یکی بگذارید، فایل خراب می‌شود و سرور با پیام خطای JSON بالا نمی‌آید. عیناً از همین کادرها کپی کنید تا این مشکل هرگز برایتان پیش نیاید.</div></div></div>
 <div class="step"><div class="num">۳</div><div class="body">
 <p>با <span class="kbd">Ctrl</span>+<span class="kbd">S</span> ذخیره کنید. تمام! بقیه فایل دست نخورده بماند.</p></div></div>
+<div class="tip">💡 <b>ویرایش کنید، از نو ننویسید:</b> فایل appsettings.json از قبل خط کامل رشته اتصال را دارد؛ شما فقط بخش <code>Server=...</code> همان خط را عوض می‌کنید. رشته‌های کامل داخل این راهنما فقط برای مقایسه و مرجع‌اند — اگر موقع کپی از PDF در چند خط شکسته شدند، در فایل باید در یک خط قرار بگیرند؛ پس به‌جای کپی، همان خط موجود فایل را ویرایش کنید.</div>
 <h3>🔍 اجزای رشته اتصال به زبان ساده</h3>
 <table>
 <tr><th>قطعه</th><th>یعنی چه؟</th></tr>
@@ -213,14 +214,15 @@ p, td, li, th { overflow-wrap:break-word; word-break:break-word; }
 <div class="step"><div class="num">۱</div><div class="body">
 <p>در ویژوال استودیو از منوی بالا بروید به: <b class="btn-name">Tools</b> ← <b class="btn-name">Command Line</b> ← <b class="btn-name">Developer PowerShell</b>. یک پنجره سیاه کوچک پایین صفحه باز می‌شود که دستورهای آن شناخته می‌شوند.</p></div></div>
 <div class="step"><div class="num">۲</div><div class="body">
-<p>ابتدا مطمئن شوید داخل پوشه اصلی پروژه هستید (همان پوشه‌ای که فایل <code>Sahand.ClinicPro.sln</code> در آن است — مثلاً <code>D:\SahandClinicPro</code>). اگر نیستید با دستور <code>cd</code> وارد آن شوید:</p>
-<pre>cd D:\SahandClinicPro</pre></div></div>
+<p>ابتدا وارد پوشه پروژه سرور (API) شوید — پوشه‌ای که فایل <code>Sahand.ClinicPro.API.csproj</code> در آن است. اگر پوشه پروژه را در مسیر پیش‌فرض باز کرده‌اید، این دستور همین کار را می‌کند (اگر مسیر شما فرق دارد، جایگزینش کنید):</p>
+<pre>cd D:\SahandClinicPro\src\Sahand.ClinicPro.API</pre></div></div>
 <div class="step"><div class="num">۳</div><div class="body">
 <p>بار اول فقط، ابزار ساخت دیتابیس را نصب کنید (یک‌بار برای همیشه — دفعه بعد این مرحله را ندارید):</p>
 <pre>dotnet tool install --global dotnet-ef</pre></div></div>
 <div class="step"><div class="num">۴</div><div class="body">
 <p>حالا دستور اصلی ساخت دیتابیس را اجرا کنید — عیناً همین یک خط را کپی کنید و Enter بزنید:</p>
-<pre>dotnet ef database update --project src/Sahand.ClinicPro.Infrastructure --startup-project src/Sahand.ClinicPro.API</pre></div></div>
+<pre>dotnet ef database update -p ../Sahand.ClinicPro.Infrastructure -s .</pre>
+<p>در این دستور، <code>-p</code> یعنی «پروژه دیتابیس»، <code>-s</code> یعنی «پروژه راه‌انداز» و نقطه در انتها یعنی «همین پوشه فعلی» — چون در پوشه API هستید، همین کافی است.</p></div></div>
 <div class="expect">👀 <b>چه انتظاری داشته باشید:</b> اول چند لحظه «Build started» می‌نویسد، بعد خط‌های زرد مانند <span dir="ltr">Applying migration '20261004205244_InitialCreate'.</span> یکی‌یکی رد می‌شوند و در پایان کلمه <span dir="ltr">Done.</span> را می‌بینید. اولین بار ۱ تا ۳ دقیقه طول می‌کشد. همین «Done» یعنی: دیتابیس ساخته شد و همه جدول‌ها آماده‌اند. 🎉</div>
 <div class="tip">💡 <b>دستور بی‌خطر است:</b> اگر یک‌بار دیگر هم اجرایش کنید، چیزی را دوباره نمی‌سازد یا خراب نمی‌کند؛ فقط می‌گوید همه مهاجرت‌ها از قبل اجرا شده‌اند. پس هر وقت شک کردید، دوباره بزنید.</div>
 <h3>🔍 تأیید با چشم خودتان (با SSMS)</h3>
@@ -279,7 +281,7 @@ p, td, li, th { overflow-wrap:break-word; word-break:break-word; }
 <table>
 <tr><th>مشکل</th><th>یعنی چه؟</th><th>خودم چه کنم؟</th></tr>
 <tr><td>برنامه می‌گوید «اتصال به سرور برقرار نشد»</td><td>سرور API اجرا نیست یا خاموش شده</td><td>قدم ۶ را اجرا کنید؛ بعد در مرورگر <code>http://localhost:5000/health</code> را باز کنید — پیام سبز یعنی سرور سالم است و مشکل جای دیگر است</td></tr>
-<tr><td>پنجره کنسول API سریع بسته می‌شود و خطا را نمی‌توانم بخوانم</td><td>سرور در همان ثانیه‌های اول به خطا خورده</td><td>از پنجره Developer PowerShell (قدم ۵ مرحله ۱) اجرا کنید: <code>dotnet run --project src/Sahand.ClinicPro.API</code> — کنسول باز می‌ماند و خطا را می‌بینید؛ معمولاً مشکل از رشته اتصال است (جدول بالا)</td></tr>
+<tr><td>پنجره کنسول API سریع بسته می‌شود و خطا را نمی‌توانم بخوانم</td><td>سرور در همان ثانیه‌های اول به خطا خورده</td><td>از پنجره Developer PowerShell (قدم ۵) و از پوشه اصلی پروژه اجرا کنید: <code>dotnet run --project src/Sahand.ClinicPro.API</code> — کنسول باز می‌ماند و خطا را می‌بینید؛ معمولاً مشکل از رشته اتصال است (جدول بالا)</td></tr>
 <tr><td dir="ltr">Failed to bind to address http://localhost:5000: address already in use</td><td>یک نمونه دیگر از سرور از قبل روشن است</td><td>فقط یک نمونه کافی است: پنجره کنسول قبلی را ببندید یا در Task Manager برنامه‌های Sahand.ClinicPro.API را End task کنید و دوباره اجرا کنید</td></tr>
 <tr><td>ورود admin ناموفق است: «نام کاربری یا رمز عبور نامعتبر»</td><td>یا بذرها هنوز اجرا نشده‌اند، یا رمز را قبلاً عوض کرده‌اید و رمز جدید درست نیست</td><td>کنسول سرور را نگاه کنید؛ اگر موقع روشن‌شدن خطای دیتابیس داشت → جدول رفع اشکال ۱. اگر دیتابیس تازه ساخته شده → رمز اولیه <code>Admin@123</code> است</td></tr>
 <tr><td>روی رایانه دیگرِ شبکه به این سرور وصل نمی‌شود</td><td>نشانی سرور در فایل پیکربندی برنامه همان رایانه، هنوز localhost است</td><td>در فایل <code>appsettings.json</code> برنامه دسکتاپ همان رایانه، مقدار <code>BaseUrl</code> را به نشانی سرور تغییر دهید (مثل <code>http://192.168.1.10:5000/api/v1</code>) + بازکردن پورت ۵۰۰۰ در فایروال سرور — شرح کامل در راهنمای نصب قدم ۵</td></tr>
