@@ -43,6 +43,9 @@ public class ClinicProDbContext : DbContext
     /// <summary>مجموعه Appointments</summary>
     public DbSet<Appointment> Appointments { get; set; }
 
+    /// <summary>مجموعه WaitlistEntries — لیست انتظار نوبت (چرخه ۱۳)</summary>
+    public DbSet<WaitlistEntry> WaitlistEntries { get; set; }
+
     /// <summary>مجموعه AttendanceCorrections — درخواست اصلاح کارت</summary>
     public DbSet<AttendanceCorrection> AttendanceCorrections { get; set; }
 

@@ -10,6 +10,19 @@ namespace Sahand.ClinicPro.Desktop.ViewModels;
 /// <summary>گزینه پزشک در ComboBox</summary>
 public record DoctorOption(long Id, string Name, string? SpecialtyName);
 
+/// <summary>ردیف لیست انتظار — چرخه ۱۳ (درخواست ۳-۴)</summary>
+public record WaitlistRow(
+    long Id,
+    string PatientName,
+    string PatientMobile,
+    string DoctorName,
+    string PreferredText,
+    string PriorityText,
+    string StatusText,
+    string StatusColor,
+    string NotifiedText,
+    string? Notes);
+
 /// <summary>
 /// اسلات زمانی نمایشی — گام U4 طبق فرم ۸ (سبز/خط‌خورده/انتخاب)
 /// </summary>
@@ -89,6 +102,48 @@ public partial class AppointmentsViewModel : ViewModelBase
 
     /// <summary>عنوان صفحه</summary>
     public override string Title => "نوبت‌دهی";
+
+    /* ═══════════ تب ۳: لیست انتظار — چرخه ۱۳ (درخواست ۳-۴) ═══════════ */
+
+    /// <summary>ردیف‌های لیست انتظار</summary>
+    [ObservableProperty]
+    private ObservableCollection<WaitlistRow> _waitlist = new();
+
+    /// <summary>بیمار انتخاب‌شده برای افزودن به لیست انتظار</summary>
+    [ObservableProperty]
+    private QuickPatient? _waitlistPatient;
+
+    /// <summary>متن جستجوی بیمار لیست انتظار</summary>
+    [ObservableProperty]
+    private string _waitlistPatientSearch = string.Empty;
+
+    /// <summary>نتایج جستجوی بیمار لیست انتظار</summary>
+    [ObservableProperty]
+    private ObservableCollection<QuickPatient> _waitlistPatientResults = new();
+
+    /// <summary>نمایه پزشک دلخواه — -1 یعنی هر پزشک</summary>
+    [ObservableProperty]
+    private int _waitlistDoctorIndex = -1;
+
+    /// <summary>تاریخ شروع بازه دلخواه</summary>
+    [ObservableProperty]
+    private DateTime? _waitlistFromDate = DateTime.Today;
+
+    /// <summary>تاریخ پایان بازه دلخواه</summary>
+    [ObservableProperty]
+    private DateTime? _waitlistToDate = DateTime.Today.AddDays(14);
+
+    /// <summary>نمایه بازه روز — 0=هر 1=صبح 2=عصر 3=شب</summary>
+    [ObservableProperty]
+    private int _waitlistTimeIndex;
+
+    /// <summary>نمایه اولویت — 0=معمولی 1=فوری 2=اورژانس</summary>
+    [ObservableProperty]
+    private int _waitlistPriorityIndex;
+
+    /// <summary>یادداشت لیست انتظار</summary>
+    [ObservableProperty]
+    private string? _waitlistNotes;
 
     /* ═══════════ تب ۱: رزرو نوبت ═══════════ */
 
@@ -704,6 +759,119 @@ public partial class AppointmentsViewModel : ViewModelBase
         public int Total { get; set; }
         public int Succeeded { get; set; }
         public int Failed { get; set; }
+    }
+
+    /* ═══════════ لیست انتظار — چرخه ۱۳ (درخواست ۳-۴) ═══════════ */
+
+    /// <summary>بارگذاری لیست انتظار</summary>
+    [RelayCommand]
+    public async Task LoadWaitlistAsync()
+    {
+        var response = await _api.GetAsync<WaitlistEnvelope>("appointments/waitlist");
+        if (response?.Data is null) return;
+        Waitlist = new ObservableCollection<WaitlistRow>(
+            response.Data.Select(w => new WaitlistRow(
+                w.Id, w.PatientName, w.PatientMobile, w.DoctorName,
+                w.PreferredText, w.PriorityText, w.StatusText, w.StatusColor,
+                w.NotifiedText, w.Notes)));
+    }
+
+    /// <summary>جستجوی بیمار برای لیست انتظار — با debounce</summary>
+    [RelayCommand]
+    private async Task WaitlistPatientSearchAsync()
+    {
+        if (string.IsNullOrWhiteSpace(WaitlistPatientSearch) || WaitlistPatientSearch.Trim().Length < 3)
+        {
+            WaitlistPatientResults.Clear();
+            return;
+        }
+        var response = await _api.GetAsync<PatientSearchResponse>(
+            $"patients/search?term={Uri.EscapeDataString(WaitlistPatientSearch.Trim())}");
+        WaitlistPatientResults.Clear();
+        if (response?.Data is null) return;
+        foreach (var p in response.Data.Take(10))
+            WaitlistPatientResults.Add(new QuickPatient(p.Id,
+                $"{p.FirstName} {p.LastName}", p.NationalCode, p.Mobile,
+                p.InsuranceName, p.Allergies, p.LastVisitDateShamsi));
+    }
+
+    /// <summary>ثبت بیمار در لیست انتظار</summary>
+    [RelayCommand]
+    private async Task AddToWaitlistAsync()
+    {
+        if (WaitlistPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو و انتخاب کنید"); return; }
+        if (WaitlistFromDate is not { } from || WaitlistToDate is not { } to)
+        { _snackbar.Error("بازه تاریخ دلخواه را کامل کنید"); return; }
+        if (to < from) { _snackbar.Error("تاریخ پایان قبل از شروع است"); return; }
+
+        var ok = await _api.PostAsync("appointments/waitlist", new
+        {
+            patientId = WaitlistPatient.Id,
+            doctorId = WaitlistDoctorIndex >= 0 && WaitlistDoctorIndex < Doctors.Count
+                ? Doctors[WaitlistDoctorIndex].Id
+                : (long?)null,
+            specialtyId = (long?)null,
+            preferredFrom = from.ToString("yyyy-MM-dd"),
+            preferredTo = to.ToString("yyyy-MM-dd"),
+            preferredTimeOfDay = WaitlistTimeIndex switch { 1 => "صبح", 2 => "عصر", 3 => "شب", _ => (string?)null },
+            priority = WaitlistPriorityIndex switch { 2 => 1, 1 => 2, _ => 3 },
+            notes = WaitlistNotes
+        });
+
+        if (ok)
+        {
+            _snackbar.Success($"«{WaitlistPatient.FullName}» در لیست انتظار ثبت شد");
+            WaitlistPatient = null;
+            WaitlistPatientSearch = string.Empty;
+            WaitlistPatientResults.Clear();
+            WaitlistNotes = null;
+            await LoadWaitlistAsync();
+        }
+        else _snackbar.Error(_api.LastError ?? "ثبت در لیست انتظار ناموفق بود");
+    }
+
+    /// <summary>لغو ردیف لیست انتظار</summary>
+    [RelayCommand]
+    private async Task CancelWaitlistAsync(WaitlistRow? row)
+    {
+        if (row is null) return;
+        var ok = await _api.PostAsync($"appointments/waitlist/{row.Id}/cancel", new { });
+        if (ok) { _snackbar.Success("ردیف لیست انتظار لغو شد"); await LoadWaitlistAsync(); }
+        else _snackbar.Error(_api.LastError ?? "لغو ناموفق بود");
+    }
+
+    /// <summary>انتخاب بیمار از نتایج جستجوی لیست انتظار</summary>
+    [RelayCommand]
+    private void SelectWaitlistPatient(object? param)
+    {
+        if (param is QuickPatient patient)
+        {
+            WaitlistPatient = patient;
+            WaitlistPatientResults.Clear();
+            WaitlistPatientSearch = patient.FullName;
+        }
+    }
+
+    /// <summary>پاسخ فهرست لیست انتظار</summary>
+    public sealed class WaitlistEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public List<WaitlistDto>? Data { get; set; }
+    }
+
+    /// <summary>ردیف API لیست انتظار</summary>
+    public sealed class WaitlistDto
+    {
+        public long Id { get; set; }
+        public string PatientName { get; set; } = "";
+        public string PatientMobile { get; set; } = "";
+        public string DoctorName { get; set; } = "";
+        public string PreferredText { get; set; } = "";
+        public string PriorityText { get; set; } = "";
+        public string StatusText { get; set; } = "";
+        public string StatusColor { get; set; } = "#78909C";
+        public string NotifiedText { get; set; } = "—";
+        public string? Notes { get; set; }
     }
 }
 

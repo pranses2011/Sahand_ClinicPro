@@ -476,6 +476,122 @@
                                             PageChangedCommand="{Binding PageChangedCommand}" />
                 </Grid>
             </TabItem>
+
+            <!-- ═══ تب لیست انتظار — چرخه ۱۳ (درخواست ۳-۴) ═══ -->
+            <TabItem Header="⏳ لیست انتظار">
+                <Grid Margin="4,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- فرم افزودن به لیست انتظار -->
+                    <Border Grid.Row="0" CornerRadius="10" Padding="12,10" Margin="0,0,0,10"
+                            Background="#F5F7FB" BorderBrush="#E1E8F2" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="➕ افزودن بیمار به لیست انتظار" FontWeight="Bold" FontSize="13" Margin="0,0,0,8" />
+                            <WrapPanel>
+                                <TextBox Text="{Binding WaitlistPatientSearch, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="جستجوی بیمار (نام/کد ملی/موبایل)"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Width="240" FontSize="12" Margin="0,0,8,6" />
+                                <Button Command="{Binding WaitlistPatientSearchCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        FontSize="11" Margin="0,0,8,6" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />
+                                </Button>
+                                <TextBlock Text="{Binding WaitlistPatient.FullName, Mode=OneWay, TargetNullValue='— بیماری انتخاب نشده —'}"
+                                           FontWeight="SemiBold" Foreground="#1565C0" FontSize="12"
+                                           VerticalAlignment="Center" Margin="0,0,10,6" />
+                                <ComboBox SelectedIndex="{Binding WaitlistDoctorIndex}" Width="190" FontSize="11.5" Margin="0,0,8,6"
+                                          ItemsSource="{Binding Doctors}" DisplayMemberPath="Name"
+                                          materialDesign:HintAssist.Hint="پزشک دلخواه (خالی = هر پزشک)" />
+                                <DatePicker SelectedDate="{Binding WaitlistFromDate}" Width="130" FontSize="11.5" Margin="0,0,8,6"
+                                            materialDesign:HintAssist.Hint="از تاریخ" />
+                                <DatePicker SelectedDate="{Binding WaitlistToDate}" Width="130" FontSize="11.5" Margin="0,0,8,6"
+                                            materialDesign:HintAssist.Hint="تا تاریخ" />
+                                <ComboBox SelectedIndex="{Binding WaitlistTimeIndex}" Width="105" FontSize="11.5" Margin="0,0,8,6">
+                                    <ComboBoxItem Content="هر ساعت" />
+                                    <ComboBoxItem Content="صبح" />
+                                    <ComboBoxItem Content="عصر" />
+                                    <ComboBoxItem Content="شب" />
+                                </ComboBox>
+                                <ComboBox SelectedIndex="{Binding WaitlistPriorityIndex}" Width="100" FontSize="11.5" Margin="0,0,8,6">
+                                    <ComboBoxItem Content="معمولی" />
+                                    <ComboBoxItem Content="فوری" />
+                                    <ComboBoxItem Content="اورژانس" />
+                                </ComboBox>
+                                <Button Command="{Binding AddToWaitlistCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                                        FontSize="11.5" Margin="0,0,8,6" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" VerticalAlignment="Center" />
+                                        <TextBlock Text="ثبت در لیست" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding LoadWaitlistCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        FontSize="11" Margin="0,0,0,6" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Refresh" Width="13" Height="13" />
+                                </Button>
+                            </WrapPanel>
+                            <TextBox Text="{Binding WaitlistNotes, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="یادداشت (اختیاری)"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Width="440" FontSize="11.5" HorizontalAlignment="Right" />
+                            <!-- نتایج جستجو -->
+                            <ListBox ItemsSource="{Binding WaitlistPatientResults}" Visibility="{Binding WaitlistPatientResults.Count, Converter={StaticResource NullToVisibility}}"
+                                     MaxHeight="130" Margin="0,8,0,0" FontSize="11.5" BorderBrush="#E1E8F2">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.SelectWaitlistPatientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}"
+                                                HorizontalContentAlignment="Right" FontSize="11.5">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding NationalCode}" Opacity="0.55" Margin="12,0,0,0" FontFamily="Consolas" />
+                                                <TextBlock Text="{Binding Mobile}" Opacity="0.55" Margin="12,0,0,0" />
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- جدول لیست انتظار -->
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Waitlist}" AutoGenerateColumns="False"
+                              CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal" FlowDirection="RightToLeft">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName}" Width="*" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="موبایل" Binding="{Binding PatientMobile}" Width="110" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="پزشک/تخصص" Binding="{Binding DoctorName}" Width="130" />
+                            <DataGridTextColumn Header="بازه دلخواه" Binding="{Binding PreferredText}" Width="200" />
+                            <DataGridTextColumn Header="اولویت" Binding="{Binding PriorityText}" Width="80" />
+                            <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText}" Width="110">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="زمان پیامک" Binding="{Binding NotifiedText}" Width="110" />
+                            <DataGridTextColumn Header="یادداشت" Binding="{Binding Notes, TargetNullValue=—}" Width="150" />
+                            <DataGridTemplateColumn Header="عملیات" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.CancelWaitlistCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                FontSize="10" Foreground="#C62828" Padding="6,2" ToolTip="لغو ردیف">
+                                            <materialDesign:PackIcon Kind="CloseCircleOutline" Width="12" Height="12" />
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
         </TabControl>
     </Grid>
 </UserControl>

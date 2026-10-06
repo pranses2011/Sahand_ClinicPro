@@ -47,6 +47,9 @@ public static class DependencyInjection
         // موتور تسویه حساب بیمه — چرخه ۱۳ (درخواست ۲-۱)
         services.AddScoped<Features.Insurance.Fractionment.FractionmentCalculator>();
 
+        // اطلاع‌رسان لیست انتظار — چرخه ۱۳ (درخواست ۳-۴)
+        services.AddScoped<Interfaces.IWaitlistNotifier, Interfaces.WaitlistNotifier>();
+
         // اتصال بلادرنگ — پیش‌فرض بی‌اثر؛ در API با SignalRRealtimeNotifier بازنویسی می‌شود (گام R1)
         services.TryAddScoped<Interfaces.IRealtimeNotifier, Interfaces.NullRealtimeNotifier>();
 

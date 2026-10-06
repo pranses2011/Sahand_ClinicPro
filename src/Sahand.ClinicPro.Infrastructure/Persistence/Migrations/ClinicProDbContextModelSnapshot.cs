@@ -9472,6 +9472,106 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Scheduling.WaitlistEntry", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("ConfirmedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ContactMobile")
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)")
+                        .HasComment("شماره تماس عکس‌فوری هنگام ثبت");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("DoctorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasComment("یادداشت");
+
+                    b.Property<DateTime?>("NotifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("OfferedAppointmentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("PatientId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateOnly>("PreferredFrom")
+                        .HasColumnType("date");
+
+                    b.Property<string>("PreferredTimeOfDay")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasComment("بازه روز دلخواه — صبح/عصر/شب/هر");
+
+                    b.Property<DateOnly>("PreferredTo")
+                        .HasColumnType("date");
+
+                    b.Property<byte>("Priority")
+                        .HasColumnType("tinyint")
+                        .HasComment("اولویت — بالاتر اول پیشنهاد می‌شود");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long?>("SpecialtyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint")
+                        .HasComment("وضعیت — در انتظار/اطلاع‌رسانی/تأیید/منقضی/لغو");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId");
+
+                    b.HasIndex("PatientId");
+
+                    b.HasIndex("Status", "DoctorId", "SpecialtyId")
+                        .HasDatabaseName("IX_Waitlist_Status_Doctor")
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("WaitlistEntries", null, t =>
+                        {
+                            t.HasComment("لیست انتظار نوبت — بیماران منتظر جای خالی با پیشنهاد خودکار");
+                        });
+                });
+
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Security.PasswordHistory", b =>
                 {
                     b.Property<long>("Id")
@@ -11126,6 +11226,24 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Navigation("Doctor");
 
                     b.Navigation("InsuranceCompany");
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Scheduling.WaitlistEntry", b =>
+                {
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
 
                     b.Navigation("Patient");
                 });

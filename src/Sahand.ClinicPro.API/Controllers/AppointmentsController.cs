@@ -10,6 +10,7 @@ using Sahand.ClinicPro.Application.Features.Appointments.Commands.BatchCancelApp
 using Sahand.ClinicPro.Application.Features.Appointments.Commands.SendAppointmentReminders;
 using Sahand.ClinicPro.Application.Features.Appointments.Queries.GetAvailableSlots;
 using Sahand.ClinicPro.Application.Features.Appointments.Queries.SearchAppointments;
+using Sahand.ClinicPro.Application.Features.Appointments.Waitlist;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -102,5 +103,58 @@ public class AppointmentsController : ApiBaseController
     {
         var result = await _mediator.Send(new SendAppointmentRemindersCommand(date));
         return ToResponse(result, "پیامک‌های یادآوری در صف ارسال قرار گرفتند");
+    }
+
+    /* ═══════════ لیست انتظار — چرخه ۱۳ (درخواست ۳-۴) ═══════════ */
+
+    /// <summary>فهرست لیست انتظار — با فیلتر وضعیت اختیاری</summary>
+    /// <param name="status">فیلتر وضعیت — تهی یعنی همه</param>
+    [HttpGet("waitlist")]
+    [HasPermission("appointments.view")]
+    public async Task<IActionResult> GetWaitlist([FromQuery] WaitlistStatus? status = null)
+    {
+        var result = await _mediator.Send(new GetWaitlistQuery(status));
+        return ToResponse(result);
+    }
+
+    /// <summary>ثبت بیمار در لیست انتظار</summary>
+    [HttpPost("waitlist")]
+    [HasPermission("appointments.create")]
+    public async Task<IActionResult> AddToWaitlist([FromBody] AddWaitlistDto dto)
+    {
+        var result = await _mediator.Send(new AddToWaitlistCommand(dto));
+        if (result.IsSuccess)
+            return CreatedResponse(result, "GetWaitlist", new { }, "بیمار در لیست انتظار ثبت شد");
+        return ToResponse(result);
+    }
+
+    /// <summary>لغو ردیف لیست انتظار</summary>
+    /// <param name="id">شناسه ردیف</param>
+    [HttpPost("waitlist/{id:long}/cancel")]
+    [HasPermission("appointments.edit")]
+    public async Task<IActionResult> CancelWaitlist(long id)
+    {
+        var result = await _mediator.Send(new CancelWaitlistEntryCommand(id));
+        return ToResponse(result, "ردیف لیست انتظار لغو شد");
+    }
+
+    /// <summary>
+    /// پیشنهاد دستی جای خالی — متناظرترین منتظر همان پزشک پیامک پیشنهاد می‌گیرد
+    /// </summary>
+    /// <param name="doctorId">پزشک نوبت آزادشده</param>
+    /// <param name="date">تاریخ شمسی نوبت — تهی یعنی امروز</param>
+    /// <param name="time">ساعت نوبت — مثل 10:30</param>
+    [HttpPost("waitlist/offer")]
+    [HasPermission("appointments.edit")]
+    public async Task<IActionResult> OfferFreedSlot([FromQuery] long doctorId,
+        [FromQuery] string? date = null, [FromQuery] string time = "10:00")
+    {
+        var g = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToGregorian(date);
+        var dateOnly = g is { } gdate ? DateOnly.FromDateTime(gdate) : DateOnly.FromDateTime(DateTime.UtcNow);
+        var timeOnly = TimeOnly.TryParse(time, out var t) ? t : new TimeOnly(10, 0);
+        var result = await _mediator.Send(new NotifyWaitlistForFreedSlotCommand(0, doctorId, dateOnly, timeOnly));
+        return ToResponse(result, result.IsSuccess && result.Value > 0
+            ? "پیامک پیشنهاد نوبت به بیمار منتظر ارسال شد"
+            : "بیمار منتظرِ واجد شرایطی برای این پزشک/تاریخ نیست");
     }
 }

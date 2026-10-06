@@ -39,15 +39,18 @@ public class ChangeAppointmentStatusCommandHandler : IRequestHandler<ChangeAppoi
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUser;
     private readonly ILogger<ChangeAppointmentStatusCommandHandler> _logger;
+    private readonly Interfaces.IWaitlistNotifier _waitlistNotifier;
 
     /// <summary>سازنده با تزریق وابستگی‌ها</summary>
     public ChangeAppointmentStatusCommandHandler(IUnitOfWork unitOfWork,
         ICurrentUserService currentUser,
-        ILogger<ChangeAppointmentStatusCommandHandler> logger)
+        ILogger<ChangeAppointmentStatusCommandHandler> logger,
+        Interfaces.IWaitlistNotifier waitlistNotifier)
     {
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
         _logger = logger;
+        _waitlistNotifier = waitlistNotifier;
     }
 
     /// <summary>اجرای تغییر وضعیت</summary>
@@ -76,6 +79,24 @@ public class ChangeAppointmentStatusCommandHandler : IRequestHandler<ChangeAppoi
             if (patient is not null)
                 appointment.AddDomainEvent(new AppointmentCancelledEvent(
                     appointment.Id, patient.Id, request.Reason ?? string.Empty));
+
+            // ═══ چرخه ۱۳ (درخواست ۳-۴): پیشنهاد خودکار جای خالی به لیست انتظار ═══
+            if (appointment.DoctorId > 0 && appointment.AppointmentDate >= DateOnly.FromDateTime(DateTime.UtcNow))
+            {
+                try
+                {
+                    await _waitlistNotifier.NotifyFreedSlotAsync(
+                        appointment.Id, appointment.DoctorId,
+                        appointment.AppointmentDate, appointment.AppointmentTime,
+                        cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "پیشنهاد خودکار لیست انتظار برای نوبت {Id} ناموفق بود — تراکنش لغو سالم ماند",
+                        appointment.Id);
+                }
+            }
         }
         else
         {
