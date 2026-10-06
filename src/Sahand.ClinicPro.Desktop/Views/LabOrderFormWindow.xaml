@@ -5,7 +5,7 @@
         Title="درخواست آزمایش"
         Height="680" Width="680"
         WindowStartupLocation="CenterOwner"
-        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>

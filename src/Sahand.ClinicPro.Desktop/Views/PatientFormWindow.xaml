@@ -13,7 +13,7 @@
         FlowDirection="RightToLeft"
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
         Background="{DynamicResource MaterialDesign.Brush.Background}"
-        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══════════════════════════════════════════════════════════
          فرم ثبت/ویرایش بیمار — گام U2 طبق پرامپت UI بخش ۱ (فرم ۴)
          ۵ تب: اطلاعات اصلی | بیمه | سوابق پزشکی | تماس اضطراری | اسناد

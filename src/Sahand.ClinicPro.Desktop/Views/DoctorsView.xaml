@@ -8,7 +8,7 @@
              mc:Ignorable="d"
              d:DesignHeight="560" d:DesignWidth="980"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ فهرست پزشکان — گام U3 طبق پرامپت UI بخش ۱ (فرم ۶) ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

@@ -8,7 +8,7 @@
              mc:Ignorable="d"
              d:DesignHeight="640" d:DesignWidth="1080"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ نوبت‌دهی دو-تبی — گام U4 طبق پرامپت UI بخش ۲ (فرم ۸ و ۹) ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

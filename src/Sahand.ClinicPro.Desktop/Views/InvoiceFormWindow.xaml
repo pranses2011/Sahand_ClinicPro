@@ -6,7 +6,7 @@
         Width="1020" Height="720"
         WindowStartupLocation="CenterOwner"
         FlowDirection="RightToLeft"
-        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ صدور فاکتور — گام U8 طبق فرم ۱۴: ستون اصلی ۲fr + خلاصه ۱fr ═══ -->
     <Window.Resources>
         <Style x:Key="FieldCaption" TargetType="TextBlock">

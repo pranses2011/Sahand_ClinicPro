@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="640" d:DesignWidth="1080"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ نقش‌ها و ماتریس دسترسی — گام U13 طبق فرم ۲۵ (گرید دو‌ستونه) ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

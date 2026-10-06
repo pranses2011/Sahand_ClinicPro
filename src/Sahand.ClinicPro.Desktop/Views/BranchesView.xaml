@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="900"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ مدیریت شعبه‌ها — گام U17 چندشعبه‌ای ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

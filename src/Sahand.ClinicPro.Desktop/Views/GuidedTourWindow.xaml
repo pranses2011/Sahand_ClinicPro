@@ -6,7 +6,7 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         WindowState="Maximized" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True" FlowDirection="RightToLeft"
-        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ تور هدایت‌شده اولین اجرا — چرخه سیزدهم (درخواست ۸-۶)
          پس‌زمینه تیره شفاف با سوراخ روشن دور کنترل هدف + حباب راهنما ═══ -->
     <Grid>

@@ -7,7 +7,7 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize"
         FlowDirection="RightToLeft"
-        FontFamily="Vazirmatn, Segoe UI, Tahoma"
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn"
         TextOptions.TextFormattingMode="Ideal"
         WindowChrome.IsHitTestVisibleInChrome="False">
     <!-- ═══ فرم ثبت/ویرایش پزشک — گام U3 طبق پرامپت UI بخش ۱ (فرم ۷) ═══

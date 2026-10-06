@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="90" d:DesignWidth="320"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma"
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn"
              x:Name="Root">
     <!-- ورودی تگی — مشخصات پرامپت UI بخش ۱ (تب سوابق پزشکی بیمار):
          تایپ + Enter → افزودن تگ | × روی تگ → حذف | رنگ قابل تنظیم برای آلرژی/مزمن/دارو -->

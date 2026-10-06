@@ -47,7 +47,7 @@ public partial class PayslipWindow : Window
         var doc = new FlowDocument
         {
             PagePadding = new Thickness(36),
-            FontFamily = new FontFamily("Vazirmatn, Segoe UI, Tahoma"),
+            FontFamily = new FontFamily("pack://application:,,,/Assets/Fonts/#Vazirmatn"),
             FontSize = 11,
             ColumnWidth = double.PositiveInfinity // تک‌ستونه
         };

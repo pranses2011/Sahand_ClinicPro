@@ -6,7 +6,7 @@
         Height="480" Width="440"
         WindowStartupLocation="CenterOwner"
         FlowDirection="RightToLeft"
-        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>

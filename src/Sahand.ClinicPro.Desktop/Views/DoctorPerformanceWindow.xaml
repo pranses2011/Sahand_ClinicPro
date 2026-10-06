@@ -8,7 +8,7 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         FlowDirection="RightToLeft"
-        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ آمار عملکرد و کارانه — دکمه‌های آمار و کارانه فرم ۶ ═══ -->
     <Grid Margin="18,14">
         <Grid.RowDefinitions>

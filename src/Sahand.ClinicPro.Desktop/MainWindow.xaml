@@ -14,7 +14,7 @@
         FlowDirection="RightToLeft"
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
         Background="{DynamicResource MaterialDesign.Brush.Background}"
-        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <Window.Resources>
         <!-- نگاشت ViewModel به View — ناوبری مبتنی بر مدل‌نما -->
         <DataTemplate DataType="{x:Type vm:DashboardViewModel}">

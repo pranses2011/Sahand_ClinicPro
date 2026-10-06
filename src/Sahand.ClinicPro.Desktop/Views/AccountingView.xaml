@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="640" d:DesignWidth="1080"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ حسابداری دوبل — گام U9 طبق فرم ۱۶: ۵ تب ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

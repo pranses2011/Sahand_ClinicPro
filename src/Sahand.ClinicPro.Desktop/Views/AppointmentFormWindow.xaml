@@ -5,7 +5,7 @@
         Title="ثبت نوبت جدید"
         Height="640" Width="560"
         WindowStartupLocation="CenterOwner"
-        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>

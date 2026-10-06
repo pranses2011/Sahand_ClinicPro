@@ -8,7 +8,7 @@
              xmlns:charts="clr-namespace:Sahand.ClinicPro.Desktop.Controls.Charts"
              mc:Ignorable="d"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══════════════════════════════════════════════════════════
          داشبورد مدیریتی — گام U1 طبق پرامپت UI بخش ۱ (فرم ۲)
          نوار خوش‌آمد + ۴ کارت اصلی + ۳ کارت فرعی + نمودار درآمد ۷ روز

@@ -5,7 +5,7 @@
         Title="فیش حقوقی"
         Width="760" Height="880" WindowStartupLocation="CenterOwner"
         FlowDirection="RightToLeft"
-        FontFamily="Vazirmatn, Segoe UI, Tahoma"
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn"
         Background="{DynamicResource MaterialDesign PaperBrush}"
         TextOptions.TextFormattingMode="Ideal">
     <!-- ═══ پنجره فیش حقوقی چاپی — گام R3 ═══ -->

@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="280" d:DesignWidth="300"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- کنترل تقویم شمسی — مشخصات پرامپت UI بخش ۲ (فرم ۸) -->
     <Border Background="{DynamicResource MaterialDesign.Brush.Background}"
             BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"

@@ -6,7 +6,7 @@
         Width="1060" Height="760"
         WindowStartupLocation="CenterOwner"
         FlowDirection="RightToLeft"
-        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ نسخه‌نویسی — گام U7 طبق پرامپت UI بخش ۲ (فرم ۱۲) ═══ -->
     <Window.Resources>
         <Style x:Key="FieldCaption" TargetType="TextBlock">

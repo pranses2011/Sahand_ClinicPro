@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="160" d:DesignWidth="320"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma"
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn"
              x:Name="Root">
     <!-- حالت خالی — «موردی یافت نشد» طبق قوانین کلی پرامپت UI بخش ۱ -->
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="20">

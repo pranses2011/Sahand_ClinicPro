@@ -8,7 +8,7 @@
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1080"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ پذیرش بیمار — گام U5 طبق پرامپت UI بخش ۲ (فرم ۱۰) ═══ -->
     <UserControl.Resources>
         <Style x:Key="FieldCaption" TargetType="TextBlock">

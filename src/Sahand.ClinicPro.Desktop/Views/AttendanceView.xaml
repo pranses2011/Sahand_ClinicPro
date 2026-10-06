@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1180"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ ماژول حضور و غیاب — تابلو امروز + دستگاه‌ها + شیفت‌ها + اصلاحیه‌ها + گزارش ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

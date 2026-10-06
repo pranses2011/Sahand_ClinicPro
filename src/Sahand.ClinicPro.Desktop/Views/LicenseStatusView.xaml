@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="680" d:DesignWidth="860"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ وضعیت لایسنس — گام U19 طبق فرم ۳۱ ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="620" d:DesignWidth="1060"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ سامانه نسخه الکترونیک — گام U18: آمار + پایش + بازارسال ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

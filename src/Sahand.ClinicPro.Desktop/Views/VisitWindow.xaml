@@ -7,7 +7,7 @@
         Width="1180" Height="780"
         WindowStartupLocation="CenterOwner"
         FlowDirection="RightToLeft"
-        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ فرم ویزیت بیمار — گام U6 طبق پرامپت UI بخش ۲ (فرم ۱۱) ═══
          سایدبار ۲۸۰px: عکس + اطلاعات + آلرژی قرمز + مزمن نارنجی + دارو آبی + سوابق
          ۸ تب: SOAP / حیاتی / معاینه / تشخیص / نسخه / آزمایش / تصویر / فایل

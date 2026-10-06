@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="620" d:DesignWidth="720"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ مرکز اعلان‌ها — گام U14: ۵ نوع + خوانده‌شده ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

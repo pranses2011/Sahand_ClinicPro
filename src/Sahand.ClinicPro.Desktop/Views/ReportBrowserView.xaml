@@ -8,7 +8,7 @@
              mc:Ignorable="d"
              d:DesignHeight="660" d:DesignWidth="1140"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma">
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ گزارش‌ساز — گام U16 طبق فرم ۲۷: سایدبار دسته‌ها + محتوا ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

@@ -8,7 +8,7 @@
         FlowDirection="RightToLeft"
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
         Background="{DynamicResource MaterialDesign.Brush.Background}"
-        FontFamily="Vazirmatn, Segoe UI, Tahoma">
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
     <!-- ═══ فرم ثبت/ویرایش کاربر — گام U13 طبق فرم ۲۴ (۲ تب) ═══ -->
     <Grid Margin="20,14">
         <Grid.RowDefinitions>

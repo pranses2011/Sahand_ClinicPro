@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="110" d:DesignWidth="220"
              FlowDirection="RightToLeft"
-             FontFamily="Vazirmatn, Segoe UI, Tahoma"
+             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn"
              x:Name="Root">
     <!-- کارت آماری — مشخصات پرامپت UI بخش ۱ (داشبورد):
          نوار رنگی + آیکون + عدد درشت + عنوان + متن مقایسه با دیروز -->
