@@ -21,6 +21,16 @@ public record AbnormalResultRow(
     string DateShamsi,
     string Kind);
 
+/// <summary>ردیف رویداد خط زمان — چرخه ۱۳ (درخواست ۱-۵)</summary>
+public record TimelineRow(
+    string Kind,
+    string KindLabel,
+    string Title,
+    string Subtitle,
+    string DateShamsi,
+    string TimeShamsi,
+    string DotColor);
+
 /// <summary>
 /// ViewModel پرونده بیمار — گام U2 (فرم ۵): کارت سربرگ + هشدار آلرژی برجسته +
 /// تب‌های سوابق (ویزیت/نسخه از endpointهای موجود + پیام گام‌های بعدی برای بقیه)
@@ -70,10 +80,45 @@ public partial class PatientDetailViewModel : ObservableObject
     [ObservableProperty]
     private string _abnormalSummaryText = string.Empty;
 
+    /// <summary>رویدادهای خط زمان — چرخه ۱۳ (درخواست ۱-۵)</summary>
+    public ObservableCollection<TimelineRow> Timeline { get; } = new();
+
+    /// <summary>فیلترهای فعال خط زمان — رشته نوع‌ها با کاما</summary>
+    [ObservableProperty]
+    private string? _timelineFilterKinds;
+
+    /// <summary>سال شمسی فیلتر خط زمان — صفر یعنی همه</summary>
+    [ObservableProperty]
+    private int _timelineYearFilter;
+
+    /// <summary>سال‌های موجود برای فیلتر خط زمان</summary>
+    public ObservableCollection<int> TimelineYears { get; } = new();
+
+    /// <summary>چک‌باکس‌های فیلتر نوع خط زمان</summary>
+    [ObservableProperty] private bool _tlVisits = true;
+    [ObservableProperty] private bool _tlLabs = true;
+    [ObservableProperty] private bool _tlImaging = true;
+    [ObservableProperty] private bool _tlPrescriptions = true;
+    [ObservableProperty] private bool _tlReceptions = true;
+    [ObservableProperty] private bool _tlInvoices = true;
+    [ObservableProperty] private bool _tlPayments = true;
+
+    partial void OnTlVisitsChanged(bool value) => _ = LoadTimelineAsync(_patientIdCache);
+    partial void OnTlLabsChanged(bool value) => _ = LoadTimelineAsync(_patientIdCache);
+    partial void OnTlImagingChanged(bool value) => _ = LoadTimelineAsync(_patientIdCache);
+    partial void OnTlPrescriptionsChanged(bool value) => _ = LoadTimelineAsync(_patientIdCache);
+    partial void OnTlReceptionsChanged(bool value) => _ = LoadTimelineAsync(_patientIdCache);
+    partial void OnTlInvoicesChanged(bool value) => _ = LoadTimelineAsync(_patientIdCache);
+    partial void OnTlPaymentsChanged(bool value) => _ = LoadTimelineAsync(_patientIdCache);
+    partial void OnTimelineYearFilterChanged(int value) => _ = LoadTimelineAsync(_patientIdCache);
+
+    private long _patientIdCache;
+
     /// <summary>سازنده با شناسه بیمار</summary>
     public PatientDetailViewModel(IApiClient api, long patientId)
     {
         _api = api;
+        _patientIdCache = patientId;
         _ = LoadAsync(patientId);
     }
 
@@ -160,7 +205,57 @@ public partial class PatientDetailViewModel : ObservableObject
         {
             AbnormalCount = 0;
         }
+
+        // ۵) خط زمان رویدادها — چرخه ۱۳ (درخواست ۱-۵)
+        await LoadTimelineAsync(patientId);
     }
+
+    /// <summary>بارگذاری خط زمان با فیلترهای فعال</summary>
+    private async Task LoadTimelineAsync(long patientId)
+    {
+        var parts = new List<string>();
+        if (TlVisits) parts.Add("visit");
+        if (TlLabs) parts.Add("lab");
+        if (TlImaging) parts.Add("imaging");
+        if (TlPrescriptions) parts.Add("prescription");
+        if (TlReceptions) parts.Add("reception");
+        if (TlInvoices) parts.Add("invoice");
+        if (TlPayments) parts.Add("payment");
+        var qs = parts.Count == 7 ? "" : $"?kinds={string.Join(",", parts)}";
+        if (TimelineYearFilter > 0)
+            qs += (qs.Length == 0 ? "?" : "&") + $"yearShamsi={TimelineYearFilter}";
+
+        var tl = await _api.GetAsync<TimelineEnvelope>($"patients/{patientId}/timeline{qs}");
+        if (tl?.Data is null) return;
+
+        Timeline.Clear();
+        TimelineYears.Clear();
+        TimelineYears.Add(0); // همه
+        foreach (var y in tl.Data.YearsShamsi ?? new List<int>())
+            TimelineYears.Add(y);
+        foreach (var e in tl.Data.Events ?? new List<TimelineEventApi>())
+            Timeline.Add(new TimelineRow(
+                e.Kind ?? "",
+                e.KindLabel ?? "",
+                e.Title ?? "—",
+                e.Subtitle ?? "",
+                e.DateShamsi ?? "—",
+                e.TimeShamsi ?? "",
+                DotColorOf(e.Kind)));
+    }
+
+    /// <summary>رنگ نقطه رویداد بر اساس نوع</summary>
+    private static string DotColorOf(string? kind) => kind switch
+    {
+        "visit" => "#1E88E5",
+        "lab" => "#8E24AA",
+        "imaging" => "#00897B",
+        "prescription" => "#43A047",
+        "reception" => "#FB8C00",
+        "invoice" => "#E53935",
+        "payment" => "#3949AB",
+        _ => "#78909C"
+    };
 
     /// <summary>پر کردن مجموعه تگ از رشته JSON</summary>
     private static void FillTags(ObservableCollection<string> target, string? json)
@@ -211,6 +306,32 @@ public partial class PatientDetailViewModel : ObservableObject
         public string? FlagColor { get; set; }
         public string? DateShamsi { get; set; }
         public string? Kind { get; set; }
+    }
+
+    /// <summary>پاسخ خط زمان — چرخه ۱۳</summary>
+    public sealed class TimelineEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public TimelineData? Data { get; set; }
+    }
+
+    /// <summary>داده خط زمان</summary>
+    public sealed class TimelineData
+    {
+        public int TotalCount { get; set; }
+        public List<int>? YearsShamsi { get; set; }
+        public List<TimelineEventApi>? Events { get; set; }
+    }
+
+    /// <summary>رویداد خط زمان</summary>
+    public sealed class TimelineEventApi
+    {
+        public string? Kind { get; set; }
+        public string? KindLabel { get; set; }
+        public string? Title { get; set; }
+        public string? Subtitle { get; set; }
+        public string? DateShamsi { get; set; }
+        public string? TimeShamsi { get; set; }
     }
 
     /// <summary>پاسخ فهرست ویزیت‌های بیمار</summary>

@@ -8,6 +8,7 @@ using Sahand.ClinicPro.Application.Features.Patients.Commands.DeletePatient;
 using Sahand.ClinicPro.Application.Features.Patients.Commands.UpdatePatient;
 using Sahand.ClinicPro.Application.Features.Patients.Queries.GetAbnormalSummary;
 using Sahand.ClinicPro.Application.Features.Patients.Queries.GetAllPatients;
+using Sahand.ClinicPro.Application.Features.Patients.Queries.GetPatientTimeline;
 using Sahand.ClinicPro.Application.Features.Patients.Queries.GetPatientById;
 using Sahand.ClinicPro.Application.Features.Patients.Queries.SearchPatients;
 
@@ -118,6 +119,22 @@ public class PatientsController : ApiBaseController
     public async Task<IActionResult> GetAbnormalSummary(long id)
     {
         var result = await _mediator.Send(new GetAbnormalSummaryQuery(id));
+        return ToResponse(result);
+    }
+
+    /// <summary>
+    /// خط زمان رویدادهای بیمار — نمای زمان‌محور یکپارچه (چرخه ۱۳، درخواست ۱-۵)
+    /// ویزیت/آزمایش/تصویر/نسخه/پذیرش/فاکتور/پرداخت با فیلتر نوع و سال شمسی
+    /// </summary>
+    /// <param name="id">شناسه بیمار</param>
+    /// <param name="kinds">فیلتر نوع‌ها با کاما — visit,lab,imaging,prescription,reception,invoice,payment</param>
+    /// <param name="yearShamsi">فیلتر سال شمسی</param>
+    [HttpGet("{id:long}/timeline")]
+    [HasPermission("patients.view")]
+    public async Task<IActionResult> GetTimeline(long id, [FromQuery] string? kinds = null,
+        [FromQuery] int? yearShamsi = null)
+    {
+        var result = await _mediator.Send(new GetPatientTimelineQuery(id, kinds, yearShamsi));
         return ToResponse(result);
     }
 }
