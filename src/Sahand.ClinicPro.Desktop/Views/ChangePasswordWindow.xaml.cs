@@ -58,14 +58,25 @@ public partial class ChangePasswordWindow : Window
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 
     /// <summary>
-    /// نمایش یا مخفی‌کردن رمز جدید/تکرار — جابه‌جایی PasswordBox و TextBox بر اساس Tag
+    /// نمایش یا مخفی‌کردن رمز فعلی/جدید/تکرار — جابه‌جایی PasswordBox و TextBox بر اساس Tag.
+    /// گزارش هفتم مالک: چشمِ «رمز فعلی» نیز اضافه شد — هر سه کادر همین الگو را دارند
     /// </summary>
     private void OnEyeToggled(object sender, RoutedEventArgs e)
     {
         if (sender is not System.Windows.Controls.Primitives.ToggleButton toggle) return;
         var show = toggle.IsChecked == true;
 
-        if ((string?)toggle.Tag == "New")
+        if ((string?)toggle.Tag == "Current")
+        {
+            CurrentPasswordRevealBox.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            CurrentPasswordBox.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
+            if (show)
+            {
+                CurrentPasswordRevealBox.CaretIndex = CurrentPasswordRevealBox.Text.Length;
+                CurrentPasswordRevealBox.Focus();
+            }
+        }
+        else if ((string?)toggle.Tag == "New")
         {
             NewPasswordRevealBox.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
             NewPasswordBox.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
