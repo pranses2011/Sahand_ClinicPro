@@ -3,12 +3,18 @@
 """
 ✏️ به‌روزرسانی متن رلیز v1.4.0 — جایگزینی بخش «نصب» با فهرست ۹ پیوست همین رلیز
 """
+import os  # چرخه ۱۳: توکن از متغیر محیطی GH_TOKEN — دیگر در سورس هاردکد نمی‌شود
 import json
+# ⚠️ امنیت: توکن هرگز در سورس هاردکد نمی‌شود — از متغیر محیطی GH_TOKEN خوانده می‌شود
+# (توکن قدیمی این فایل با اسکن مخفی گیت‌هاب باطل شد؛ ریشه‌یابی چرخه ۱۳ فاز G)
+
 import pathlib
 import sys
 import urllib.request
 
-TOKEN = "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"
+TOKEN = os.environ.get("GH_TOKEN") or ""
+if not TOKEN:
+    raise SystemExit("متغیر محیطی GH_TOKEN تنظیم نشده است — توکن دیگر در سورس هاردکد نمی‌شود")
 REPO = "pranses2011/Sahand_ClinicPro"
 TAG = "v1.4.0"
 

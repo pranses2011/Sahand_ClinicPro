@@ -6,14 +6,20 @@
 ۹ پیوست با GitHub Upload API به رلیز v1.5.0 اضافه می‌شود:
   ۲ ZIP (نصب خودکفا + سرور لایسنس cPanel) + ۳ PDF (راهنماها و بروشور) + ۴ PNG (پوسترها و بنرها)
 """
+import os  # چرخه ۱۳: توکن از متغیر محیطی GH_TOKEN — دیگر در سورس هاردکد نمی‌شود
 import json
+# ⚠️ امنیت: توکن هرگز در سورس هاردکد نمی‌شود — از متغیر محیطی GH_TOKEN خوانده می‌شود
+# (توکن قدیمی این فایل با اسکن مخفی گیت‌هاب باطل شد؛ ریشه‌یابی چرخه ۱۳ فاز G)
+
 import pathlib
 import sys
 import time
 import urllib.parse
 import urllib.request
 
-TOKEN = "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"
+TOKEN = os.environ.get("GH_TOKEN") or ""
+if not TOKEN:
+    raise SystemExit("متغیر محیطی GH_TOKEN تنظیم نشده است — توکن دیگر در سورس هاردکد نمی‌شود")
 REPO = "pranses2011/Sahand_ClinicPro"
 TAG = "v1.5.0"
 OUT = pathlib.Path("/home/z/my-project/download")

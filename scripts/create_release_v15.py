@@ -3,11 +3,14 @@
 """
 🏁 ساخت رلیز گیت‌هاب v1.5.0 با یادداشت انتشار فارسی RTL
 """
+import os  # چرخه ۱۳: توکن از متغیر محیطی GH_TOKEN — دیگر در سورس هاردکد نمی‌شود
 import json
 import sys
 import urllib.request
 
-TOKEN = "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"
+TOKEN = os.environ.get("GH_TOKEN") or ""
+if not TOKEN:
+    raise SystemExit("متغیر محیطی GH_TOKEN تنظیم نشده است — توکن دیگر در سورس هاردکد نمی‌شود")
 REPO = "pranses2011/Sahand_ClinicPro"
 
 BODY = """<div dir="rtl" align="right">
