@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:helpers="clr-namespace:Sahand.ClinicPro.Desktop.Helpers"
         xmlns:views="clr-namespace:Sahand.ClinicPro.Desktop.Views"
         xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
         mc:Ignorable="d"
@@ -344,7 +345,7 @@
                                    FontSize="11" Opacity="0.8"
                                    Margin="4,0,16,0"
                                    VerticalAlignment="Center" />
-                        <TextBlock Text="نسخه ۲.۰.۰"
+                        <TextBlock Text="{x:Static helpers:AppInfo.VersionText}"
                                    FontSize="10" Opacity="0.5"
                                    VerticalAlignment="Center" />
                     </StackPanel>
