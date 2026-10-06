@@ -1,3 +1,39 @@
+# 📊 گزارش پیشرفت — چرخه چهاردهم «وصله رفع کرش اجرای MaterialDesign» (v2.0.1)
+
+**تاریخ:** اکتبر ۲۰۲۶ | **وضعیت:** ✅ کامل — فازهای A تا C (رفع ۱۱۰ ارجاع + گارد بازگشتی + بیلد/تست/ریلیز)
+
+## خلاصه یک‌خطی
+رفع کرش استارتاپ ویژوال استودیو (`MaterialDesignFilledButton` وجود نداشت) با ممیزی جامع ۷۰ فایل XAML در برابر فهرست ۸۷۲ کلید واقعی استخراج‌شده از DLL پکیج — ۱۱۰ ارجاع معیوب در ۹ کلید شبح‌مانند و ۴۱ فایل اصلاح شد + تست گارد بازگشتی تا این کلاس خطا هرگز بازنگردد + ۲۵۰/۲۵۰ تست سبز.
+
+## جدول گام‌ها
+
+| گام | شرح | ✅ |
+|:---|:---|:--:|
+| A1 | تعویض `MaterialDesignFilledButton` → `MaterialDesignRaisedButton` (۱۸ ارجاع — عامل کرش گزارش‌شده) | ✅ |
+| A2 | `Brush.Error` → `Brush.ValidationError` (۱۵) + `Card.Background` → `Brush.Card.Background` (۲۰) | ✅ |
+| A3 | `Brush.Background.Variant` → `Brush.Separator.Background` (۴۳) + `Primary.Container` → `Primary.Light` (۱) | ✅ |
+| A4 | سه استایل تکی: ChipOutline → Outlined و FlatMid → FlatMidBg و FlatPrimary → Flat | ✅ |
+| A5 | دو تایپوی محلی: `BooleanToVisibilityConverter` → `BoolToVis` (۹) و `InverseBool` → `InvertBool` (۱) | ✅ |
+| B1 | اسکریپت ممیزی + مانیفست کلیدهای پکیج + اسکریپت بازتولید در مخزن | ✅ |
+| B2 | تست گارد `XamlResourceAuditTests` — ۲۵۰مین تست سولوشن | ✅ |
+| C1 | بیلد Release ۰ خطا + ۲۵۰/۲۵۰ تست سبز | ✅ |
+| C2 | نسخه 2.0.1 + کلاس `Helpers/AppInfo` (نمایش دینامیک نسخه با ارقام فارسی — پنجره ورود از زمان v1.2.0 کهنه بود!) | ✅ |
+| C3 | CHANGELOG + PROGRESS + README (بج نسخه/تست + ردیف تاریخچه) | ✅ |
+| C4 | رلیز v2.0.1 — یادداشت فارسی RTL؛ دارایی‌های بازاریابی v2.0.0 معتبر می‌مانند | ✅ |
+
+## یادداشت‌های فنی کلیدی
+- **چرا بیلد سبز و تست سبز این خطا را نشان ندادند؟** ارجاعات `StaticResource` در XAML هنگام کامپایل اعتبارسنجی نمی‌شوند و فقط در زمان اجرا (بارگذاری BAML) فرو می‌ریزند؛ تست‌های دسکتاپ هم ViewModel-محورند و نمونه‌سازی View نیاز به ویندوز دارد
+- **مرجع حقیقت، DLL پکیج است نه مستندات/حافظه** — فهرست ۸۷۲ کلیدی با `strings` (ASCII + UTF-16) از `MaterialDesignThemes.Wpf.dll` نسخه net8.0 استخراج شد؛ `MaterialDesign3.Defaults.xaml` موجود و ادغام App.xaml صحیح بود — اشتباه فقط در نام کلیدها بود
+- **نگاشت‌ها معنایی‌اند نه مکانیکی**: Filled→Raised (معادل MD2 دکمه پررنگ)، Error→ValidationError (براش قرمز خطا)، Background.Variant→Separator (بند/حاشیه خنثی), Container→Primary.Light (سطح روشن رنگ اصلی) و FlatMid→FlatMidBg (استاندارد خود تقویم پکیج)
+- **گارد آینده**: پس از هر ارتقای نسخه MaterialDesignThemes، با `scripts/extract_materialdesign_keys.py <نسخه>` مانیفست بازتولید و تست گارد به مسیر مانیفست جدید به‌روز شود
+
+## محصولات چرخه
+- کامیت‌ها: ee65329 (فایل چرخه) → feb5f02 (رفع ۱۱۰ ارجاع) → 3998f8f (گارد) → 5edf1fa (نسخه 2.0.1) + مستندات
+- اسکریپت‌ها: `scripts/fix_materialdesign_refs_v201.py` و `scripts/audit_xaml_resources.py` و `scripts/extract_materialdesign_keys.py`
+- تست جدید: `XamlResourceAuditTests` (۲۵۰/۲۵۰ سبز)
+
+---
+
 # 📊 گزارش پیشرفت — چرخه سیزدهم «۱۶ قابلیت منتخب سند ایده‌ها» (v2.0.0)
 
 **تاریخ:** اکتبر ۲۰۲۶ | **وضعیت:** ✅ کامل — فازهای A تا G (هر ۱۶ قابلیت + اسکرین‌شات + بروشور + مستندات + بیلد + ریلیز)

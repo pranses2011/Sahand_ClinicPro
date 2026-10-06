@@ -4,7 +4,7 @@
 
 <p><img src="docs/assets/ClinicPro.png" width="140" alt="لوگوی درمانگاه سهند"></p>
 
-<h3>Sahand ClinicPro — v2.0.0</h3>
+<h3>Sahand ClinicPro — v2.0.1</h3>
 
 **نخستین سامانه یکپارچه فارسی‌زبان درمانگاه با اتصال مستقیم به دستگاه حضور و غیاب، سامانه‌های دولتی، نسخه الکترونیک و پشتیبانی زنده یکپارچه**
 
@@ -13,8 +13,8 @@
 [![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC2927?logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server)
 [![WPF](https://img.shields.io/badge/WPF-MaterialDesign-512BD4?logo=windows&logoColor=white)](https://materialdesigninxaml.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-249%20.NET%20%E2%9C%85-2EA44F)](#%EF%B8%8F-تست‌ها)
-[![Version](https://img.shields.io/badge/release-v2.0.0-blue)](https://github.com/pranses2011/Sahand_ClinicPro/releases)
+[![Tests](https://img.shields.io/badge/tests-250%20.NET%20%E2%9C%85-2EA44F)](#%EF%B8%8F-تست‌ها)
+[![Version](https://img.shields.io/badge/release-v2.0.1-blue)](https://github.com/pranses2011/Sahand_ClinicPro/releases)
 [![Coverage](https://img.shields.io/badge/coverage-36%25%20cobertura-orange)](#%EF%B8%8F-تست‌ها)
 [![Forms](https://img.shields.io/badge/forms-64%20%E2%9C%85-7C3AED)](#%EF%B8%8F-تصاویر-محیط-نرم‌افزار)
 
@@ -37,7 +37,7 @@
 | 🗄 جداول دیتابیس | ۹۷+ جدول (۹۴ پایه + آرشیو + قالب چاپ + لیست انتظار و…) + ۱۵ ایندکس حضور و غیاب |
 | 🔌 API | ۲۵ کنترلر — ۳۰۰+ endpoint |
 | 🖥 فرم‌های دسکتاپ | **۶۴ فرم WPF** با Material Design و RTL کامل |
-| 🧪 تست‌های خودکار | **۲۴۹ تست دات‌نت** در ۵ پروژه + ۳۴ تست E2E لایسنس — بیلد سورس بدون هشدار |
+| 🧪 تست‌های خودکار | **۲۵۰ تست دات‌نت** در ۵ پروژه + ۳۴ تست E2E لایسنس — بیلد سورس بدون هشدار |
 | 🧩 ماژول‌های لایسنس | **۳۹ ماژول** قابل فعال‌سازی جداگانه |
 | 📈 گزارش‌های نموداری | **۲۵ گزارش** با نوع درست نمودار برای هر ماهیت (سطحی/ستونی/دونات/میله‌ای) + گزارش‌ساز رایگانه بدون SQL |
 | 📨 پیام پشتیبانی | ارسال مستقیم پیام از پنل لایسنس روی داشبورد درمانگاه (۴ سطح اهمیت) |
@@ -406,6 +406,7 @@ Sahand_ClinicPro/
 
 | نسخه | تاریخ | جهش اصلی |
 |:---|:---|:---|
+| **v2.0.1** | ۱۴۰۵/۰۷/۱۴ | 🔧 وصله رفع کرش اجرای MaterialDesign در ویژوال استودیو — رفع ۱۱۰ ارجاع منبع نامعتبر XAML در ۴۱ فایل (۹ کلید شبح‌مانند مثل MaterialDesignFilledButton که در پکیج 5.3.2 وجود نداشت) + نسخه دینامیک از اسمبلی + گارد بازگشتی ممیزی XAML — ۲۵۰ تست |
 | **v2.0.0** | ۱۴۰۵/۰۷/۱۴ | 🎯 ۱۶ قابلیت منتخب سند ایده‌ها در ۶ محور: ایمنی دارویی ۷بُعدی + نتایج غیرعادی + خط زمان + طراح قالب چاپ + تسویه بیمه + صندوق شیفت + لیست انتظار + MoM/YoY + داشبورد شخصی + گزارش‌ساز رایگانه + RFM + پیش‌بینی درآمد + PDF سربرگ‌دار + بکاپ ابری + آرشیو سالانه + مرکز آموزش — ۶۴ فرم، ۲۵ نموداری، ۳۹ ماژول، ۲۴۹ تست |
 | **v1.9.0** | ۱۴۰۵/۰۷/۱۴ | 📈 رفع قطعی HTTP 500 سامانه لایسنس (باگ INSERT) + ترمیم خودکار اسکیمای لایسنس + ۴ کنترل نمودار و تغییر نوع نمودارها متناسب با ماهیت داده + ۱۰ گزارش نموداری جدید + دونات سهم پرسنل + سند تحلیل جامع کمبودها (docs/PROJECT-ANALYSIS.md) + ۱۳۰ تست دات‌نت و ۱۹ تست E2E لایسنس |
 | **v1.8.0** | ۱۴۰۵/۰۷/۱۵ | 📊 گزارش تفصیلی «سود و حقوق درصدی هر پرسنل» با خروجی اکسل دو برگ + دکمه ویرایش حقوقی از فهرست پرسنل + حقوق درصدی پزشکان (انتساب خودکار از پرسنل مرتبط) + رفع باگ حیاتی فرمول بازه دوره + ۱۵۸ تست |

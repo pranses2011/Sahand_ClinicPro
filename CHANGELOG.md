@@ -1,3 +1,26 @@
+## [v2.0.1] — 2026-10-06 (چرخه چهاردهم «وصله رفع کرش اجرای MaterialDesign»)
+
+> رفع کرش زمان اجرای برنامه در Visual Studio (گزارش مالک) + کشف و رفع ۹ کلید شبح‌مانند دیگر در همان کلاس خطا + گارد بازگشتی ضد تکرار
+
+### Fixed — 🔧 رفع کرش اجرای WPF
+- **کرش استارتاپ `XamlParseException: Cannot find resource named 'MaterialDesignFilledButton'`** — ریشه: کلیدهای استایل به سبک MD3 خام در پکیج `MaterialDesignThemes 5.3.2` وجود ندارند؛ چون ارجاعات `StaticResource` در XAML هنگام بیلد اعتبارسنجی نمی‌شوند، بیلد سبز و ۲۴۹ تست سبز این کلاس خطا را نشان ندادند. با کالبدشکافی DLL پکیج (فهرست ۸۷۲ کلید واقعی) ممیزی جامع انجام شد: **۱۱۰ ارجاع معیوب در ۹ کلید شبح‌مانند در ۴۱ فایل XAML** اصلاح شد با نگاشت معنایی:
+  - `MaterialDesignFilledButton` → `MaterialDesignRaisedButton` (۱۸ مورد — شامل دکمه ورود و همه فرم‌های ثبت)
+  - `MaterialDesign.Brush.Error` → `MaterialDesign.Brush.ValidationError` (۱۵)
+  - `MaterialDesign.Brush.Background.Variant` → `MaterialDesign.Brush.Separator.Background` (۴۳)
+  - `MaterialDesign.Brush.Primary.Container` → `MaterialDesign.Brush.Primary.Light` (۱)
+  - `MaterialDesign.Card.Background` → `MaterialDesign.Brush.Card.Background` (۲۰)
+  - `MaterialDesignChipOutlineButton` → `MaterialDesignOutlinedButton` (۱)
+  - `MaterialDesignFlatMidButton` → `MaterialDesignFlatMidBgButton` (۱ — همان استایل روزهای تقویم خود پکیج)
+  - `MaterialDesignFlatPrimaryButton` → `MaterialDesignFlatButton` (۱)
+  - دو کلید محلی تایپی‌شده: `BooleanToVisibilityConverter` → `BoolToVis` (۹ مورد داشبورد) و `InverseBool` → `InvertBool` (۱ مورد بیمه)
+- **نسخه کهنه پنجره ورود** — پانویس ورود هنوز «نسخه ۱.۲.۰» هاردکد نشان می‌داد؛ با کلاس `Helpers/AppInfo` هر دو نمایش (ورود + نوار وضعیت اصلی) به نسخه اسمبلی وصل شدند و دیگر کهنه نمی‌شوند
+
+### Added — 🔍 گارد بازگشتی
+- **تست `XamlResourceAuditTests`** — هر ارجاع StaticResource/DynamicResource در ۷۰ فایل XAML دسکتاپ باید در `x:Key` محلی یا مانیفست کلیدهای پکیج تعریف شده باشد؛ این تنها گارد پیش از اجراست چون بیلد XAML را اعتبارسنجی نمی‌کند
+- **اسکریپت‌های ممیزی در مخزن** — `scripts/audit_xaml_resources.py` (ممیزی) + `scripts/extract_materialdesign_keys.py` (بازتولید مانیفست هنگام ارتقای پکیج) + `scripts/materialdesign-keys-5.3.2.txt`
+
+---
+
 ## [v2.0.0] — 2026-10-06 (چرخه سیزدهم «۱۶ قابلیت منتخب سند ایده‌ها» — بزرگ‌ترین ارتقای یک‌باره محصول)
 
 > اجرای کامل ۱۶ قابلیت انتخاب‌شده مالک از سند FEATURE-IDEAS.md در ۶ محور: بالینی (۴)، مالی (۲)، نوبت‌دهی (۱)، هوش تجاری (۶)، زیرساخت (۲)، آموزش (۱)
