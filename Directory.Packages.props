@@ -45,6 +45,8 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.31" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.31" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.31" />
+    <!-- SQLite برای تست گارد سازگاری استراتژی تلاش‌مجدد با تراکنش دستی (چرخه چهاردهم — گزارش ششم) -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.31" />
     <!-- هش رمز عبور با Work Factor 12 مطابق مستندات -->
     <PackageVersion Include="BCrypt.Net-Next" Version="4.2.1" />
     <!-- کارهای پس‌زمینه (صف پیامک، یادآوری نوبت، بکاپ، Heartbeat) -->
