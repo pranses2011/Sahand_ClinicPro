@@ -259,8 +259,12 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- ═══ TopBar — مسیر صفحه + ساعت شمسی لحظه‌ای + زنگ اعلان + تم + کاربر ═══ -->
-            <Border Grid.Row="0"
+            <!-- ═══ TopBar — مسیر صفحه + ساعت شمسی لحظه‌ای + زنگ اعلان + تم + کاربر ═══
+                 چرخه هجدهم (گزارش دوازدهم): نام TopBar ثبت شد تا تور آموزشی بتواند
+                 این نوار را هایلایت کند — پیش‌تر نام‌گذاری نشده بود و گام «نوار بالا»
+                 تور به سوراخ مرکزی خالی می‌افتاد -->
+            <Border x:Name="TopBar"
+                    Grid.Row="0"
                     Padding="24,10,24,8"
                     BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                     BorderThickness="0,0,0,1">
@@ -352,8 +356,10 @@
                 </DockPanel>
             </Border>
 
-            <!-- ═══ میزکار صفحات ═══ -->
-            <ContentControl Grid.Row="1"
+            <!-- ═══ میزکار صفحات ═══
+                 چرخه هجدهم (گزارش دوازدهم): نام PageHost ثبت شد تا تور آموزشی
+                 محتوای صفحه فعلی را (نه آیتم ریز منو) هایلایت کند -->
+            <ContentControl x:Name="PageHost" Grid.Row="1"
                             Content="{Binding CurrentPage}" />
 
             <!-- ═══ StatusBar — وضعیت اتصال + کاربر + لایسنس + تاریخ ═══ -->
