@@ -199,32 +199,32 @@
                 <!-- چرخه بیستم (گزارش چهاردهم مالک): عرض ستون از ۱۷۰ به ۲۱۸ افزایش یافت —
                      چهار دکمهٔ آیکونی با پدینگ استاندارد متریال در ۱۷۰px بریده می‌شدند
                      و «ناقص دیده می‌شدند» -->
-                <DataGridTemplateColumn Header="عملیات" Width="218">
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="218">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <Button Command="{Binding DataContext.EditDoctorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
-                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                        ToolTip="ویرایش پزشک (۵ تب کامل)" Padding="4" Margin="1,0">
+                                        Style="{StaticResource App.RowIconButton}"
+                                        ToolTip="ویرایش پزشک (۵ تب کامل)" Margin="1,0">
                                     <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" />
                                 </Button>
                                 <Button Command="{Binding DataContext.ShowPerformanceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
-                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                        ToolTip="آمار عملکرد ویزیت و درآمد" Padding="4" Margin="1,0">
+                                        Style="{StaticResource App.RowIconButton}"
+                                        ToolTip="آمار عملکرد ویزیت و درآمد" Margin="1,0">
                                     <materialDesign:PackIcon Kind="ChartBar" Width="15" Height="15" />
                                 </Button>
                                 <Button Command="{Binding DataContext.EditDoctorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
-                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                        ToolTip="برنامه کاری هفتگی (تب ۴ فرم ویرایش)" Padding="4" Margin="1,0">
+                                        Style="{StaticResource App.RowIconButton}"
+                                        ToolTip="برنامه کاری هفتگی (تب ۴ فرم ویرایش)" Margin="1,0">
                                     <materialDesign:PackIcon Kind="CalendarClock" Width="15" Height="15" />
                                 </Button>
                                 <Button Command="{Binding DataContext.ShowPerformanceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
-                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                        ToolTip="محاسبه کارانه (داخل آمار عملکرد)" Padding="4" Margin="1,0">
+                                        Style="{StaticResource App.RowIconButton}"
+                                        ToolTip="محاسبه کارانه (داخل آمار عملکرد)" Margin="1,0">
                                     <materialDesign:PackIcon Kind="CashMultiple" Width="15" Height="15" />
                                 </Button>
                             </StackPanel>

@@ -231,10 +231,10 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                             <DataGridTextColumn Header="وضعیت" Binding="{Binding ActiveText}" Width="90" />
-                            <DataGridTemplateColumn Header="عملیات" Width="90">
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="90">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        <Button Style="{StaticResource App.RowIconButton}"
                                                 Command="{Binding DataContext.ToggleSurveyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                 CommandParameter="{Binding}" ToolTip="فعال/غیرفعال">
                                             <materialDesign:PackIcon Kind="ToggleSwitch" Width="15" Height="15" />

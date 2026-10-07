@@ -93,7 +93,7 @@
                               GridLinesVisibility="Horizontal">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="کاربر" Binding="{Binding Username}" Width="130" />
-                            <DataGridTextColumn Header="عملیات" Binding="{Binding Action}" Width="110" />
+                            <DataGridTextColumn Header="عملیات" Binding="{Binding Action}" Width="Auto" MinWidth="110" />
                             <DataGridTextColumn Header="موجودیت" Binding="{Binding EntityName}" Width="140" />
                             <DataGridTextColumn Header="شناسه" Binding="{Binding EntityId}" Width="90" />
                             <DataGridTextColumn Header="ماژول" Binding="{Binding Module}" Width="130" />
@@ -189,12 +189,12 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             <!-- دکمه ویرایش حقوقی کنار هر ردیف — چرخه دهم -->
-                            <DataGridTemplateColumn Header="عملیات" Width="140">
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="140">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Content="✏️ ویرایش حقوقی"
                                                 FontSize="11"
-                                                Padding="10,4"
+
                                                 Style="{StaticResource MaterialDesignOutlinedButton}"
                                                 Command="{Binding DataContext.EditSalaryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}" />

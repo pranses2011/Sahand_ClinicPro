@@ -116,12 +116,12 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="عملیات" Width="110">
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="110">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Command="{Binding DataContext.RecordResultCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding}"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5" Padding="8,3">
+                                    Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="ClipboardEditOutline" Width="13" Height="13" VerticalAlignment="Center" />
                                     <TextBlock Text="ثبت نتیجه" Margin="6,0,0,0" />

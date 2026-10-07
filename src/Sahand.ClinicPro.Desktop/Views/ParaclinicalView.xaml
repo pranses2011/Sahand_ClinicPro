@@ -365,7 +365,7 @@
                                 <DataGridTemplateColumn Header="عملیات">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="🗑 حذف" FontSize="10" Padding="6,2"
+                                            <Button Content="🗑 حذف" FontSize="10"
                                                     Command="{Binding DataContext.DeleteImagingFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}" />
                                         </DataTemplate>

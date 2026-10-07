@@ -444,20 +444,20 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                             <DataGridTextColumn Header="منبع" Width="65" Binding="{Binding SourceText}" />
-                            <DataGridTemplateColumn Header="عملیات" Width="130">
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="130">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                             <Button Command="{Binding DataContext.ConfirmArrivalCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                                    ToolTip="✓ تأیید حضور" Padding="5">
+                                                    Style="{StaticResource App.RowIconButton}"
+                                                    ToolTip="✓ تأیید حضور">
                                                 <materialDesign:PackIcon Kind="AccountCheck" Width="15" Height="15" />
                                             </Button>
                                             <Button Command="{Binding DataContext.CancelOneCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                                    ToolTip="❌ لغو نوبت" Foreground="#C62828" Padding="5">
+                                                    Style="{StaticResource App.RowIconButton}"
+                                                    ToolTip="❌ لغو نوبت" Foreground="#C62828">
                                                 <materialDesign:PackIcon Kind="CloseCircleOutline" Width="15" Height="15" />
                                             </Button>
                                         </StackPanel>
@@ -575,13 +575,13 @@
                             </DataGridTextColumn>
                             <DataGridTextColumn Header="زمان پیامک" Binding="{Binding NotifiedText}" Width="110" />
                             <DataGridTextColumn Header="یادداشت" Binding="{Binding Notes, TargetNullValue=—}" Width="150" />
-                            <DataGridTemplateColumn Header="عملیات" Width="90">
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="90">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Command="{Binding DataContext.CancelWaitlistCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                FontSize="10" Foreground="#C62828" Padding="6,2" ToolTip="لغو ردیف">
+                                                FontSize="10" Foreground="#C62828" ToolTip="لغو ردیف">
                                             <materialDesign:PackIcon Kind="CloseCircleOutline" Width="12" Height="12" />
                                         </Button>
                                     </DataTemplate>

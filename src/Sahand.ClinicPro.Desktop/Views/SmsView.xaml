@@ -136,10 +136,10 @@
                             <DataGridTextColumn Header="هزینه (ریال)" Width="110">
                                 <DataGridTextColumn.Binding><Binding Path="Cost" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
                             </DataGridTextColumn>
-                            <DataGridTemplateColumn Header="عملیات" Width="90">
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="90">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        <Button Style="{StaticResource App.RowIconButton}"
                                                 Command="{Binding DataContext.ResendCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                 CommandParameter="{Binding}" ToolTip="بازارسال">
                                             <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" />

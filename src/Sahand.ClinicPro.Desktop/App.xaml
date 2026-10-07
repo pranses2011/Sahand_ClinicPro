@@ -59,6 +59,46 @@
                 <Setter Property="Padding" Value="{DynamicResource App.CardPadding}" />
             </Style>
 
+            <!-- ═══ وسط‌چین عمودی محتوای سلول‌های همهٔ جدول‌های برنامه ═══
+                 چرخه بیست‌ویکم (گزارش پانزدهم مالک): «محتویات سطرهای لیست‌ها رو
+                 وسط چین عمودی بکن که همه محتوا در یک راستا باشن — الان بعضی
+                 از فیلدها رو بالای سلول میاره»
+                 تمپلیت پیش‌فرض DataGridCell کتابخانه، ContentPresenter را بدون
+                 تراز عمودی می‌گذارد و محتوا در سلول‌های بلند بالای سلول می‌چسبد؛
+                 این تمپلیت همان Border/Background/BorderBrush استایل MaterialDesign
+                 (که تریگرهای انتخاب/هاور روی آن‌ها اثر می‌گذارند) را حفظ و صرفاً
+                 تراز عمودی را از VerticalContentAlignment می‌خواند. -->
+            <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="DataGridCell">
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    Padding="{TemplateBinding Padding}"
+                                    SnapsToDevicePixels="True">
+                                <ContentPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                  SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- ═══ سبک دکمه‌های آیکونی ردیف‌های جدول ═══
+                 چرخه بیست‌ویکم: «کلیدهای عملیاتی آخر سطرها ناقص دیده می‌شوند» —
+                 حاشیهٔ داخلی فشرده + حداقل عرض تضمینی تا هیچ دکمه‌ای در ستون
+                 عملیات بریده نشود؛ همهٔ گریدها از این سبک استفاده می‌کنند. -->
+            <Style x:Key="App.RowIconButton" TargetType="Button"
+                   BasedOn="{StaticResource MaterialDesignIconForegroundButton}">
+                <Setter Property="Padding" Value="4" />
+                <Setter Property="MinWidth" Value="26" />
+                <Setter Property="MinHeight" Value="26" />
+                <Setter Property="Margin" Value="1,0" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
             <!-- سبک متن عنوان بخش‌ها -->
             <Style x:Key="SectionTitle" TargetType="TextBlock">
                 <Setter Property="FontSize" Value="20" />

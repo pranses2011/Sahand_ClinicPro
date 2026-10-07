@@ -423,13 +423,13 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="عملیات" Width="70">
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Command="{Binding DataContext.DeleteAbsenceCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 CommandParameter="{Binding}"
-                                                Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                                ToolTip="حذف غیبت" Foreground="#C62828" Padding="5">
+                                                Style="{StaticResource App.RowIconButton}"
+                                                ToolTip="حذف غیبت" Foreground="#C62828">
                                             <materialDesign:PackIcon Kind="Delete" Width="15" Height="15" />
                                         </Button>
                                     </DataTemplate>

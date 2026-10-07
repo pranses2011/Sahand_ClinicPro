@@ -127,7 +127,7 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Content="🗑 حذف" Command="{Binding DataContext.DeleteGrowthCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}" FontSize="10.5" Padding="6,2" />
+                                                CommandParameter="{Binding}" FontSize="10.5" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -184,7 +184,7 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Content="🗑 حذف" Command="{Binding DataContext.DeleteFamilyHistoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}" FontSize="10.5" Padding="6,2" />
+                                                CommandParameter="{Binding}" FontSize="10.5" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -248,16 +248,16 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
-                                            <Button Content="✅ تکمیل" FontSize="10" Padding="5,2" Margin="0,0,4,0"
+                                            <Button Content="✅ تکمیل" FontSize="10" Margin="0,0,4,0"
                                                     Command="{Binding DataContext.ChangePlanStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="Completed" />
-                                            <Button Content="🔁 بازبینی شد" FontSize="10" Padding="5,2" Margin="0,0,4,0"
+                                            <Button Content="🔁 بازبینی شد" FontSize="10" Margin="0,0,4,0"
                                                     Command="{Binding DataContext.ChangePlanStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="Active" />
-                                            <Button Content="⏸ متوقف" FontSize="10" Padding="5,2" Margin="0,0,4,0"
+                                            <Button Content="⏸ متوقف" FontSize="10" Margin="0,0,4,0"
                                                     Command="{Binding DataContext.ChangePlanStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="Discontinued" />
-                                            <Button Content="🗑" FontSize="10" Padding="5,2"
+                                            <Button Content="🗑" FontSize="10"
                                                     Command="{Binding DataContext.DeleteCarePlanCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}" />
                                         </StackPanel>

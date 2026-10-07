@@ -147,7 +147,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="عملیات" Binding="{Binding ActionText}" Width="110" />
+                            <DataGridTextColumn Header="عملیات" Binding="{Binding ActionText}" Width="Auto" MinWidth="110" />
                         </DataGrid.Columns>
                     </DataGrid>
                     <TextBlock Text="Core: غیرقابل غیرفعال‌سازی — ماژول بدون لایسنس قفل است و دکمه «خرید ماژول» به License Portal متصل می‌شود"

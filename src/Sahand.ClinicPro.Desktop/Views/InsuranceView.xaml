@@ -238,13 +238,13 @@
                             <DataGridTextColumn Header="نوع" Binding="{Binding RuleType}" Width="80" />
                             <DataGridTextColumn Header="جزئیات" Binding="{Binding Detail}" Width="150" />
                             <DataGridTextColumn Header="فرانشیز" Binding="{Binding Franchise}" Width="130" />
-                            <DataGridTemplateColumn Header="عملیات" Width="90">
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="90">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Command="{Binding DataContext.DeleteRuleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                FontSize="10" Foreground="#C62828" Padding="6,2">
+                                                FontSize="10" Foreground="#C62828">
                                             <materialDesign:PackIcon Kind="DeleteOutline" Width="12" Height="12" />
                                         </Button>
                                     </DataTemplate>

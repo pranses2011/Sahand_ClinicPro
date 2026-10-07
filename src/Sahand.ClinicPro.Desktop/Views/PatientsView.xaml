@@ -123,23 +123,25 @@
                 </Style>
             </DataGrid.RowStyle>
             <DataGrid.Columns>
+                <!-- چرخه بیست‌ویکم (گزارش پانزدهم مالک): عرض ستون‌ها بر اساس محتوا + عنوان
+                     (Auto با MinWidth) و ستون نام برای پرکردن فضای باقی‌مانده (*) -->
                 <!-- ۱. انتخاب چندتایی -->
                 <DataGridCheckBoxColumn Header=""
                                         Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"
-                                        Width="36" />
+                                        Width="Auto" MinWidth="36" />
 
                 <!-- ۲. شماره پرونده -->
                 <DataGridTextColumn Header="پرونده"
                                     Binding="{Binding MedicalRecordNo}"
-                                    Width="90"
+                                    Width="Auto" MinWidth="90"
                                     FontFamily="Consolas"
                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
 
-                <!-- ۳. نام و نام‌خانوادگی -->
-                <DataGridTemplateColumn Header="نام و نام‌خانوادگی" Width="190" SortMemberPath="FullName">
+                <!-- ۳. نام و نام‌خانوادگی — ستون کشسان برای پرکردن عرض جدول -->
+                <DataGridTemplateColumn Header="نام و نام‌خانوادگی" Width="*" MinWidth="170" SortMemberPath="FullName">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <materialDesign:PackIcon Kind="Account"
                                                          Width="15" Height="15"
                                                          Opacity="0.55"
@@ -156,17 +158,17 @@
                 <!-- ۴. کد ملی -->
                 <DataGridTextColumn Header="کد ملی"
                                     Binding="{Binding NationalCode}"
-                                    Width="110"
+                                    Width="Auto" MinWidth="105"
                                     FontFamily="Consolas" />
 
                 <!-- ۵. موبایل -->
                 <DataGridTextColumn Header="موبایل"
                                     Binding="{Binding Mobile}"
-                                    Width="115"
+                                    Width="Auto" MinWidth="110"
                                     FontFamily="Consolas" />
 
                 <!-- ۶. بیمه — Badge رنگی -->
-                <DataGridTemplateColumn Header="بیمه" Width="105" SortMemberPath="InsuranceName">
+                <DataGridTemplateColumn Header="بیمه" Width="Auto" MinWidth="90" SortMemberPath="InsuranceName">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center">
@@ -199,7 +201,7 @@
                 <!-- ۷. سن -->
                 <DataGridTextColumn Header="سن"
                                     Binding="{Binding Age, TargetNullValue=—}"
-                                    Width="50">
+                                    Width="Auto" MinWidth="45">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center" />
@@ -210,36 +212,37 @@
                 <!-- ۸. آخرین مراجعه (شمسی از سرور) -->
                 <DataGridTextColumn Header="آخرین مراجعه"
                                     Binding="{Binding LastVisitDateShamsi, TargetNullValue=—}"
-                                    Width="105" />
+                                    Width="Auto" MinWidth="100" />
 
-                <!-- ۹. عملیات -->
-                <DataGridTemplateColumn Header="عملیات" Width="150">
+                <!-- ۹. عملیات — چرخه بیست‌ویکم: عرض کشسان بر اساس دکمه‌ها +
+                     سبک فشردهٔ App.RowIconButton تا هیچ دکمه‌ای بریده نشود -->
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="170">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <Button Command="{Binding DataContext.ViewPatientCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
-                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                        ToolTip="مشاهده جزئیات بیمار" Padding="5">
+                                        Style="{StaticResource App.RowIconButton}"
+                                        ToolTip="مشاهده جزئیات بیمار">
                                     <materialDesign:PackIcon Kind="EyeOutline" Width="16" Height="16" />
                                 </Button>
                                 <Button Command="{Binding DataContext.EditPatientCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
-                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                        ToolTip="ویرایش اطلاعات بیمار" Padding="5">
+                                        Style="{StaticResource App.RowIconButton}"
+                                        ToolTip="ویرایش اطلاعات بیمار">
                                     <materialDesign:PackIcon Kind="Pencil" Width="16" Height="16" />
                                 </Button>
                                 <Button Command="{Binding DataContext.BookAppointmentCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
-                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                        ToolTip="رزرو نوبت برای این بیمار" Padding="5">
+                                        Style="{StaticResource App.RowIconButton}"
+                                        ToolTip="رزرو نوبت برای این بیمار">
                                     <materialDesign:PackIcon Kind="CalendarPlus" Width="16" Height="16" />
                                 </Button>
                                 <Button Command="{Binding DataContext.DeletePatientCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
-                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        Style="{StaticResource App.RowIconButton}"
                                         ToolTip="حذف بیمار"
-                                        Foreground="#C62828" Padding="5">
+                                        Foreground="#C62828">
                                     <materialDesign:PackIcon Kind="Delete" Width="16" Height="16" />
                                 </Button>
                             </StackPanel>
