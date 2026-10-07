@@ -11,6 +11,7 @@
         Title="سامانه جامع مدیریت درمانگاه سهند"
         Height="780" Width="1280" MinHeight="620" MinWidth="1000"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         FlowDirection="RightToLeft"
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
         Background="{DynamicResource MaterialDesign.Brush.Background}"
@@ -134,9 +135,18 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <!-- ═══ ستون کنار ═══ -->
-        <Border Grid.Column="0"
-                Background="{DynamicResource MaterialDesign.Brush.Primary.Light}">
+        <!-- ═══ ستون کنار ═══ — چرخه هفدهم (گزارش یازدهم): پس‌زمینهٔ سایدبار
+             از Primary.Light روشن (که با تم Teal سبز دیده می‌شد) به گرادیان
+             آبی تیرهٔ رسمی طرح (#16355E→#1C4E89 — همان اسکرین‌شات‌های محصول)
+             تغییر کرد؛ متن‌ها سفید/آبی‌روشن و آیتم فعال با های‌لایت نیمه‌شفاف
+             سفیدِ گوشه‌گرد — کاملاً هماهنگ با PrimaryColor=Blue جدید -->
+        <Border Grid.Column="0">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#16355E" Offset="0" />
+                    <GradientStop Color="#1C4E89" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
             <Grid>
                 <Grid.RowDefinitions>
                     <!-- لوگو و نام درمانگاه (بالا) -->
@@ -151,27 +161,60 @@
                 <StackPanel Grid.Row="0" Margin="16,20,16,16">
                     <materialDesign:PackIcon Kind="Hospital"
                                              Width="40" Height="40"
-                                             Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                             Foreground="White" />
                     <TextBlock Text="درمانگاه سهند"
                                FontSize="20" FontWeight="Bold" Margin="0,10,0,0"
-                               Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
+                               Foreground="White" />
                     <TextBlock Text="سامانه جامع مدیریت"
-                               FontSize="12" Opacity="0.7"
-                               Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
+                               FontSize="12" Opacity="0.72"
+                               Foreground="#DCE9FA" />
                 </StackPanel>
 
-                <!-- فهرست ناوبری ماژول‌ها -->
+                <!-- فهرست ناوبری ماژول‌ها — چرخه هفدهم: قالب آیتم سفارشی برای
+                     سایدبار تیره — متن آبی‌روشن، آیتم فعال/هاور با های‌لایت
+                     سفید نیمه‌شفاف گوشه‌گرد (الگوی فرم‌های طراحی) -->
                 <ListBox x:Name="NavList" Grid.Row="1"
                          ItemsSource="{Binding NavItems}"
                          SelectedItem="{Binding SelectedNav}"
                          Background="Transparent"
                          BorderThickness="0"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Foreground" Value="#DCE9FA" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="8,2" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                                CornerRadius="9" Padding="{TemplateBinding Padding}"
+                                                SnapsToDevicePixels="True">
+                                            <ContentPresenter />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#1FFFFFFF" />
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#33FFFFFF" />
+                                                <Setter Property="Foreground" Value="White" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" Margin="8,10">
                                 <materialDesign:PackIcon Kind="{Binding Icon}"
                                                          Width="22" Height="22"
+                                                         Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
                                                          VerticalAlignment="Center" />
                                 <TextBlock Text="{Binding Title}"
                                            FontSize="14"
@@ -184,17 +227,20 @@
 
                 <!-- اطلاعات کاربر + خروج -->
                 <StackPanel Grid.Row="2" Margin="16,8,16,16">
-                    <StackPanel Orientation="Horizontal" Margin="4,0,4,8">
+                    <StackPanel Orientation="Horizontal" Margin="4,0,4,10">
                         <materialDesign:PackIcon Kind="AccountCircle"
                                                  Width="26" Height="26"
+                                                 Foreground="#DCE9FA"
                                                  VerticalAlignment="Center" />
                         <TextBlock Text="{Binding CurrentUser}"
                                    FontSize="12" FontWeight="SemiBold"
+                                   Foreground="White"
                                    Margin="8,0,0,0"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                     <Button Command="{Binding LogoutCommand}"
                             Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="White" BorderBrush="#66FFFFFF"
                             HorizontalAlignment="Stretch">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Logout" VerticalAlignment="Center" />

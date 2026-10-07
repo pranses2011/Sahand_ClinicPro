@@ -8,7 +8,10 @@
     <!-- ═══════════════════════════════════════════════════════════
          نقطه ورود کلاینت دسکتاپ درمانگاه سهند — گام ۱۰
          • تم Material Design 3 (روشن/تیره با ThemeService)
-         • رنگ سازمانی: فیروزه‌ای + نیلی
+         • رنگ سازمانی: آبی (نیلی) — چرخه هفدهم (گزارش یازدهم مالک):
+           PrimaryColor از Teal (سبز) به Blue تغییر کرد تا با اسکرین‌شات‌های
+           طراحی و هویت بصری محصول (سایدبار #16355E→#1C4E89 و لهجهٔ #1565C0)
+           یکدست شود؛ پیش‌تر همهٔ دکمه‌ها/آیکون‌ها/های‌لایت‌ها سبز دیده می‌شدند
          • فونت وزیرمتن جاسازی‌شده داخل exe (Assets/Fonts) — بدون نیاز به نصب فونت
          • ناوبری و سرویس‌ها در App.xaml.cs ثبت می‌شوند
          ═══════════════════════════════════════════════════════════ -->
@@ -16,7 +19,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <materialDesign:BundledTheme BaseTheme="Light"
-                                             PrimaryColor="Teal"
+                                             PrimaryColor="Blue"
                                              SecondaryColor="Indigo" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
             </ResourceDictionary.MergedDictionaries>

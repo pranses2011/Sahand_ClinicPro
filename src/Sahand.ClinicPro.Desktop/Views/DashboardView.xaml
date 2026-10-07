@@ -248,7 +248,7 @@
                                    Value="{Binding PendingLabOrders, Mode=OneWay}"
                                    Label="آزمایش در انتظار"
                                    CompareText="درخواست‌های بدون نتیجه"
-                                   AccentBrush="#00897B" />
+                                   AccentBrush="#1E88E5" />
                 <controls:StatCard IconKind="CalendarMonth"
                                    Value="{Binding TodayPatients, Mode=OneWay}"
                                    Label="نوبت‌های امروز"
