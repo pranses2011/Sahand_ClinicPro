@@ -43,8 +43,9 @@
                 </Button>
             </Grid>
 
-            <!-- ردیف نام روزهای هفته: ش ی د س چ پ ج -->
-            <UniformGrid Grid.Row="1" Columns="7" Margin="0,4">
+            <!-- ردیف نام روزهای هفته: ش ی د س چ پ ج — چرخه بیست‌ویکم: در نمای
+                 انتخاب ماه/سال مخفی می‌شود (نام‌گذاری برای دسترسی کد) -->
+            <UniformGrid x:Name="WeekDaysRow" Grid.Row="1" Columns="7" Margin="0,4">
                 <TextBlock Text="ش" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
                 <TextBlock Text="ی" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
                 <TextBlock Text="د" TextAlignment="Center" FontSize="11" FontWeight="Bold" />

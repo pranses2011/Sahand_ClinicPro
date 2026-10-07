@@ -9,21 +9,45 @@ namespace Sahand.ClinicPro.Desktop.Controls;
 /// <summary>
 /// کنترل تقویم شمسی — مشخصات پرامپت UI بخش ۲:
 /// نمایش ماهانه با دکمه‌های روز؛ شنبه تا جمعه؛ جمعه قرمز؛ امروز متمایز؛
-/// MarkedDates برای نشانگر تعداد نوبت و DisabledDates برای تعطیلات و غیبت‌ها
+/// MarkedDates برای نشانگر تعداد نوبت و DisabledDates برای تعطیلات و غیبت‌ها.
+/// ═══ چرخه بیست‌ویکم (گزارش پانزدهم مالک) ═══
+/// «در کنترل انتخابگر تاریخ بتوان ماه و سال را هم انتخاب کرد همانند کنترل
+/// انتخاب تاریخ ویندوز ۱۰» — سه نمای سلسله‌مراتبی:
+///   نمای روزها —کلیک روی عنوان ماه→ نمای انتخاب ماه (۱۲ ماه)
+///   —کلیک روی عنوان سال→ نمای انتخاب سال (گرید ۱۲ ساله با ناوبری دهه)
+/// فلش‌های چپ/راست در نمای روز ماه را، در نمای ماه سال را و در نمای سال دهه را جابه‌جا می‌کنند.
 /// </summary>
 public partial class PersianCalendarControl : UserControl
 {
     /// <summary>تقویم فارسی دات‌نت — برای طول دقیق ماه‌های شمسی</summary>
     private static readonly System.Globalization.PersianCalendar Persian = new();
 
+    /// <summary>نمای فعلی تقویم — روزها / انتخاب ماه / انتخاب سال (چرخه بیست‌ویکم)</summary>
+    private enum CalendarViewMode
+    {
+        /// <summary>شبکهٔ روزهای ماه — نمای عادی</summary>
+        Days,
+        /// <summary>انتخاب ماه از میان ۱۲ ماه سال</summary>
+        Months,
+        /// <summary>انتخاب سال از گرید ۱۲ ساله</summary>
+        Years,
+    }
+
+    /// <summary>نمای فعلی — پیش‌فرض روزها</summary>
+    private CalendarViewMode _viewMode = CalendarViewMode.Days;
+
+    /// <summary>سال مبنای گرید انتخاب سال (شروع بازهٔ ۱۲ ساله) — چرخه بیست‌ویکم</summary>
+    private int _yearGridBase;
+
     /// <summary>سازنده — اتصال رویدادها و رندر اولیه</summary>
     public PersianCalendarControl()
     {
         InitializeComponent();
         Loaded += (_, _) => Render();
-        PrevMonthButton.Click += (_, _) => ShiftMonth(-1);
-        NextMonthButton.Click += (_, _) => ShiftMonth(+1);
-        MonthTitleButton.Click += (_, _) => ReturnToToday();
+        PrevMonthButton.Click += (_, _) => Navigate(-1);
+        NextMonthButton.Click += (_, _) => Navigate(+1);
+        // چرخه بیست‌ویکم: عنوان ماه → نمای ماه → نمای سال → بازگشت به روزها
+        MonthTitleButton.Click += (_, _) => TitleClicked();
     }
 
     /* ─────────────  خصوصیت‌های وابستگی  ───────────── */
@@ -143,6 +167,51 @@ public partial class PersianCalendarControl : UserControl
     private static void OnDisplayChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         => ((PersianCalendarControl)d).Render();
 
+    /// <summary>
+    /// ناوبری فلش‌های چپ/راست بر اساس نمای فعلی — چرخه بیست‌ویکم:
+    /// روزها → ماه قبل/بعد؛ ماه‌ها → سال قبل/بعد؛ سال‌ها → دهه قبل/بعد.
+    /// </summary>
+    private void Navigate(int delta)
+    {
+        switch (_viewMode)
+        {
+            case CalendarViewMode.Days:
+                ShiftMonth(delta);
+                break;
+            case CalendarViewMode.Months:
+                // جابه‌جایی سال در نمای انتخاب ماه
+                DisplayYear += delta;
+                MonthChanged?.Invoke(this, EventArgs.Empty);
+                Render();
+                break;
+            case CalendarViewMode.Years:
+                // جابه‌جایی بازهٔ ۱۲ ساله در نمای انتخاب سال
+                _yearGridBase += delta * 12;
+                Render();
+                break;
+        }
+    }
+
+    /// <summary>
+    /// کلیک روی عنوان — حرکت سلسله‌مراتبی نماها (چرخه بیست‌ویکم):
+    /// روزها → ماه‌ها → سال‌ها → روزها.
+    /// </summary>
+    private void TitleClicked()
+    {
+        _viewMode = _viewMode switch
+        {
+            CalendarViewMode.Days => CalendarViewMode.Months,
+            CalendarViewMode.Months => CalendarViewMode.Years,
+            _ => CalendarViewMode.Days,
+        };
+        if (_viewMode == CalendarViewMode.Years)
+        {
+            // مبنای گرید سال: از ۶ سال قبل شروع شود تا سال فعلی وسط گرید باشد
+            _yearGridBase = DisplayYear - 6;
+        }
+        Render();
+    }
+
     /// <summary>جابه‌جایی ماه نمایشی</summary>
     private void ShiftMonth(int delta)
     {
@@ -156,17 +225,7 @@ public partial class PersianCalendarControl : UserControl
         Render();
     }
 
-    /// <summary>بازگشت به ماه جاری</summary>
-    private void ReturnToToday()
-    {
-        var (y, m, _) = PersianDateHelper.ToJalali(DateTime.Today);
-        DisplayYear = y;
-        DisplayMonth = m;
-        MonthChanged?.Invoke(this, EventArgs.Empty);
-        Render();
-    }
-
-    /// <summary>رندر شبکه روزهای ماه نمایشی</summary>
+    /// <summary>رندر بر اساس نمای فعلی — روزها/ماه‌ها/سال‌ها (چرخه بیست‌ویکم)</summary>
     private void Render()
     {
         if (DaysGrid is null)
@@ -175,6 +234,121 @@ public partial class PersianCalendarControl : UserControl
         // نرمال‌سازی ماه نمایشی
         if (DisplayMonth is < 1 or > 12)
             DisplayMonth = 1;
+
+        switch (_viewMode)
+        {
+            case CalendarViewMode.Months:
+                RenderMonthsView();
+                return;
+            case CalendarViewMode.Years:
+                RenderYearsView();
+                return;
+            default:
+                RenderDaysView();
+                return;
+        }
+    }
+
+    /// <summary>نمای انتخاب ماه — ۱۲ دکمهٔ ماه با عنوان سال (چرخه بیست‌ویکم)</summary>
+    private void RenderMonthsView()
+    {
+        // عنوان: سال نمایشی — کلیک بعدی → نمای سال
+        MonthTitleText.Text = $"سال {PersianDateHelper.ToPersianDigits(DisplayYear.ToString())}";
+        // مخفی‌کردن ردیف نام روزها و تغییر شبکه به ۳ ستون × ۴ ردیف
+        WeekDaysRow.Visibility = Visibility.Collapsed;
+        DaysGrid.Columns = 3;
+        DaysGrid.Rows = 4;
+        DaysGrid.Children.Clear();
+
+        for (var month = 1; month <= 12; month++)
+        {
+            var captured = month;
+            var isCurrent = month == DisplayMonth;
+            var btn = new Button
+            {
+                Content = new TextBlock
+                {
+                    Text = PersianDateHelper.MonthNames[month - 1],
+                    TextAlignment = TextAlignment.Center,
+                    FontSize = 12,
+                },
+                Margin = new Thickness(2),
+                MinHeight = 38,
+                Padding = new Thickness(0),
+                Cursor = Cursors.Hand,
+                Style = (Style)FindResource("MaterialDesignFlatLightButton"),
+            };
+            if (isCurrent)
+            {
+                btn.Style = (Style)FindResource("MaterialDesignRaisedLightButton");
+            }
+            btn.Click += (_, _) =>
+            {
+                // انتخاب ماه → بازگشت به نمای روزهای همان ماه
+                DisplayMonth = captured;
+                _viewMode = CalendarViewMode.Days;
+                MonthChanged?.Invoke(this, EventArgs.Empty);
+                Render();
+            };
+            DaysGrid.Children.Add(btn);
+        }
+    }
+
+    /// <summary>نمای انتخاب سال — گرید ۱۲ ساله با ناوبری بازه (چرخه بیست‌ویکم)</summary>
+    private void RenderYearsView()
+    {
+        // عنوان بازهٔ ۱۲ سالهٔ فعلی
+        var fromYear = _yearGridBase;
+        var toYear = _yearGridBase + 11;
+        MonthTitleText.Text =
+            $"{PersianDateHelper.ToPersianDigits(fromYear.ToString())} — {PersianDateHelper.ToPersianDigits(toYear.ToString())}";
+        WeekDaysRow.Visibility = Visibility.Collapsed;
+        DaysGrid.Columns = 3;
+        DaysGrid.Rows = 4;
+        DaysGrid.Children.Clear();
+
+        for (var i = 0; i < 12; i++)
+        {
+            var year = _yearGridBase + i;
+            var isCurrent = year == DisplayYear;
+            var btn = new Button
+            {
+                Content = new TextBlock
+                {
+                    Text = PersianDateHelper.ToPersianDigits(year.ToString()),
+                    TextAlignment = TextAlignment.Center,
+                    FontSize = 12.5,
+                    FontFamily = new FontFamily("Consolas"),
+                },
+                Margin = new Thickness(2),
+                MinHeight = 38,
+                Padding = new Thickness(0),
+                Cursor = Cursors.Hand,
+                Style = (Style)FindResource("MaterialDesignFlatLightButton"),
+            };
+            if (isCurrent)
+            {
+                btn.Style = (Style)FindResource("MaterialDesignRaisedLightButton");
+            }
+            btn.Click += (_, _) =>
+            {
+                // انتخاب سال → نمای انتخاب ماه همان سال
+                DisplayYear = year;
+                _viewMode = CalendarViewMode.Months;
+                MonthChanged?.Invoke(this, EventArgs.Empty);
+                Render();
+            };
+            DaysGrid.Children.Add(btn);
+        }
+    }
+
+    /// <summary>نمای اصلی روزهای ماه — رفتار پیشین، چرخه بیست‌ویکم از Render تفکیک شد</summary>
+    private void RenderDaysView()
+    {
+        // بازگشت چیدمان روزها: نمایش ردیف هفته + شبکهٔ ۷×۶
+        WeekDaysRow.Visibility = Visibility.Visible;
+        DaysGrid.Columns = 7;
+        DaysGrid.Rows = 6;
 
         // چرخه ۱۹ (گزارش سیزدهم مالک): اعداد تقویم با ارقام فارسی نمایش داده می‌شوند
         MonthTitleText.Text =
