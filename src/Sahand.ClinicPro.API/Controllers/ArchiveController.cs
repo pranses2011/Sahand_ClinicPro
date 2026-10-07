@@ -10,6 +10,8 @@ namespace Sahand.ClinicPro.API.Controllers;
 /// کنترلر آرشیو سالانه — چرخه سیزدهم (درخواست ۷-۷).
 /// پیش‌نمایش شمارشی، اجرای انتقال به ArchiveRecords و مرورگر جستجوی پرونده قدیمی.
 /// مسیرها: /api/v1/admin/archive
+/// چرخه بیستم (گزارش چهاردهم مالک): قالب‌های مسیر با پیشوند ~/ مطلق شدند تا
+/// به مسیر پایهٔ api/v1/[controller] الحاق نشوند (وگرنه 404 برمی‌گشتند).
 /// </summary>
 [ApiController]
 [Authorize]
@@ -27,7 +29,7 @@ public class ArchiveController : ApiBaseController
 
     /// <summary>پیش‌نمایش آرشیو سال شمسی — شمارش ردیف‌های قابل انتقال و مسدودشده بدون تغییر داده</summary>
     /// <param name="year">سال شمسی — ردیف‌های قدیمی‌تر از آغاز این سال آرشیو می‌شوند</param>
-    [HttpGet("api/v1/admin/archive/preview")]
+    [HttpGet("~/api/v1/admin/archive/preview")]
     [HasPermission("settings.edit")]
     public async Task<IActionResult> Preview([FromQuery] int year)
     {
@@ -50,7 +52,7 @@ public class ArchiveController : ApiBaseController
     /// با hardPurge=true حذف فیزیکی بلافاصله اجرا می‌شود — برای پاک‌سازی برنامه‌ای
     /// همین کار با اسکریپت نگهداشت docs/guides/archive-maintenance.sql هم ممکن است.
     /// </remarks>
-    [HttpPost("api/v1/admin/archive/run")]
+    [HttpPost("~/api/v1/admin/archive/run")]
     [HasPermission("settings.edit")]
     public async Task<IActionResult> Run([FromBody] ArchiveRunRequest request, CancellationToken ct)
     {
@@ -73,7 +75,7 @@ public class ArchiveController : ApiBaseController
     /// <param name="patientId">شناسه بیمار</param>
     /// <param name="term">عبارت جستجو در نام بیمار یا شرح رکورد</param>
     /// <param name="sourceTable">فیلتر جدول مبدأ</param>
-    [HttpGet("api/v1/admin/archive/records")]
+    [HttpGet("~/api/v1/admin/archive/records")]
     [HasPermission("settings.view")]
     public async Task<IActionResult> Records([FromQuery] long? patientId, [FromQuery] string? term,
         [FromQuery] string? sourceTable, [FromQuery] int take = 100, CancellationToken ct = default)
@@ -83,7 +85,7 @@ public class ArchiveController : ApiBaseController
     }
 
     /// <summary>تصویر JSON کامل یک رکورد آرشیو</summary>
-    [HttpGet("api/v1/admin/archive/records/{id:long}/payload")]
+    [HttpGet("~/api/v1/admin/archive/records/{id:long}/payload")]
     [HasPermission("settings.view")]
     public async Task<IActionResult> Payload(long id, CancellationToken ct)
     {
@@ -94,7 +96,7 @@ public class ArchiveController : ApiBaseController
     }
 
     /// <summary>فهرست جداول آرشیوشونده با عنوان فارسی</summary>
-    [HttpGet("api/v1/admin/archive/tables")]
+    [HttpGet("~/api/v1/admin/archive/tables")]
     [HasPermission("settings.view")]
     public IActionResult Tables()
         => Ok(ApiResponse<object>.Success(ArchiveService.TableTitles));

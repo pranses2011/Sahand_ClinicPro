@@ -12,6 +12,8 @@ namespace Sahand.ClinicPro.API.Controllers;
 /// کنترلر پاراکلینیک — تصویربرداری و دندانپزشکی و چشم و فیزیوتراپی
 /// مسیرها: /api/v1/imaging و /api/v1/dental و /api/v1/eye و /api/v1/physiotherapy
 /// گام R4: مدیریت فایل‌های تصویر شامل آپلود DICOM و دانلود
+/// چرخه بیستم (گزارش چهاردهم مالک): قالب‌های مسیر با پیشوند ~/ مطلق شدند تا
+/// به مسیر پایهٔ api/v1/[controller] الحاق نشوند (وگرنه 404 برمی‌گشتند).
 /// </summary>
 [ApiController]
 [Authorize]
@@ -33,7 +35,7 @@ public class ParaclinicalController : ApiBaseController
     }
 
     /// <summary>ثبت درخواست تصویربرداری</summary>
-    [HttpPost("api/v1/imaging/orders")]
+    [HttpPost("~/api/v1/imaging/orders")]
     [HasPermission("imaging.create")]
     public async Task<IActionResult> CreateImagingOrder([FromBody] CreateImagingOrderDto dto)
     {
@@ -44,7 +46,7 @@ public class ParaclinicalController : ApiBaseController
     }
 
     /// <summary>فهرست درخواست‌های تصویربرداری امروز — برای انتخاب در گشودن فایل DICOM (گام R4)</summary>
-    [HttpGet("api/v1/imaging/orders")]
+    [HttpGet("~/api/v1/imaging/orders")]
     [HasPermission("imaging.create")]
     public async Task<IActionResult> GetTodayOrders()
     {
@@ -67,7 +69,7 @@ public class ParaclinicalController : ApiBaseController
     }
 
     /// <summary>ثبت گزارش رادیولوژی</summary>
-    [HttpPut("api/v1/imaging/reports")]
+    [HttpPut("~/api/v1/imaging/reports")]
     [HasPermission("imaging.edit")]
     public async Task<IActionResult> SubmitReport([FromBody] ImagingReportDto dto)
     {
@@ -76,7 +78,7 @@ public class ParaclinicalController : ApiBaseController
     }
 
     /// <summary>ثبت طرح درمان دندانپزشکی</summary>
-    [HttpPost("api/v1/dental/plans")]
+    [HttpPost("~/api/v1/dental/plans")]
     [HasPermission("dental.create")]
     public async Task<IActionResult> CreateDentalPlan([FromBody] CreateDentalPlanCommand command)
     {
@@ -87,7 +89,7 @@ public class ParaclinicalController : ApiBaseController
     }
 
     /// <summary>ثبت معاینه چشم‌پزشکی</summary>
-    [HttpPost("api/v1/eye/exams")]
+    [HttpPost("~/api/v1/eye/exams")]
     [HasPermission("eye.create")]
     public async Task<IActionResult> SaveEyeExam([FromBody] SaveEyeExamCommand command)
     {
@@ -98,7 +100,7 @@ public class ParaclinicalController : ApiBaseController
     }
 
     /// <summary>ثبت جلسه فیزیوتراپی</summary>
-    [HttpPost("api/v1/physiotherapy/sessions")]
+    [HttpPost("~/api/v1/physiotherapy/sessions")]
     [HasPermission("physiotherapy.create")]
     public async Task<IActionResult> RecordSession([FromBody] RecordPhysioSessionCommand command)
     {
@@ -117,7 +119,7 @@ public class ParaclinicalController : ApiBaseController
     /// <summary>بارگذاری فایل تصویر (DICOM یا معمولی) — تشخیص خودکار از جادوی DICM</summary>
     /// <param name="orderId">شناسه درخواست تصویربرداری</param>
     /// <param name="file">فایل چندبخشی</param>
-    [HttpPost("api/v1/imaging/files")]
+    [HttpPost("~/api/v1/imaging/files")]
     [HasPermission("imaging.edit")]
     [RequestSizeLimit(52_428_800)] // سقف ۵۰ مگابایت
     public async Task<IActionResult> UploadFile([FromForm] long orderId, IFormFile file)
@@ -175,7 +177,7 @@ public class ParaclinicalController : ApiBaseController
     }
 
     /// <summary>فهرست فایل‌های یک درخواست تصویربرداری</summary>
-    [HttpGet("api/v1/imaging/files")]
+    [HttpGet("~/api/v1/imaging/files")]
     [HasPermission("imaging.create")]
     public async Task<IActionResult> GetFiles([FromQuery] long orderId)
     {
@@ -190,7 +192,7 @@ public class ParaclinicalController : ApiBaseController
     }
 
     /// <summary>دانلود محتوای فایل — برای گشودن در نمایشگر DICOM کلاینت</summary>
-    [HttpGet("api/v1/imaging/files/{id:long}/content")]
+    [HttpGet("~/api/v1/imaging/files/{id:long}/content")]
     [HasPermission("imaging.create")]
     public async Task<IActionResult> DownloadFile(long id)
     {
@@ -210,7 +212,7 @@ public class ParaclinicalController : ApiBaseController
     }
 
     /// <summary>حذف نرم فایل تصویر</summary>
-    [HttpDelete("api/v1/imaging/files/{id:long}")]
+    [HttpDelete("~/api/v1/imaging/files/{id:long}")]
     [HasPermission("imaging.edit")]
     public async Task<IActionResult> DeleteFile(long id)
     {
