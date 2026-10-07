@@ -125,13 +125,14 @@ public partial class MainWindowViewModel : ObservableObject
         _realtime = realtime;
 
         CurrentUser = tokens.Username ?? "کاربر";
-        CurrentDate = PersianDateHelper.ToShamsi(DateTime.Now);
+        // چرخه هجدهم (گزارش دوازدهم): تاریخ و ساعت نوار بالا با ارقام فارسی
+        CurrentDate = PersianDateHelper.ToShamsiFa(DateTime.Now);
 
-        // ساعت لحظه‌ای — هر ثانیه به‌روزرسانی شمسی و ساعت
+        // ساعت لحظه‌ای — هر ثانیه به‌روزرسانی شمسی و ساعت (ارقام فارسی)
         _clock.Tick += (_, _) =>
-            ClockText = $"{PersianDateHelper.ToShamsi(DateTime.Now)} - {DateTime.Now:HH:mm:ss}";
+            ClockText = $"{PersianDateHelper.ToShamsiFa(DateTime.Now)} - {PersianDateHelper.ToClockFa(DateTime.Now)}";
         _clock.Start();
-        ClockText = $"{PersianDateHelper.ToShamsi(DateTime.Now)} - {DateTime.Now:HH:mm:ss}";
+        ClockText = $"{PersianDateHelper.ToShamsiFa(DateTime.Now)} - {PersianDateHelper.ToClockFa(DateTime.Now)}";
 
         // اتصال سرویس پیام شناور به صف نمایش
         _snackbar.MessagePosted += (message, _) => SnackbarQueue.Enqueue(message);

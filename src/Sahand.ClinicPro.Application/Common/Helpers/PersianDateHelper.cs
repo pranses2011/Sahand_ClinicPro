@@ -32,6 +32,28 @@ public static class PersianDateHelper
     }
 
     /// <summary>
+    /// تبدیل تاریخ میلادی به رشته شمسی با ارقام فارسی — فرمت ۱۴۰۳/۰۷/۱۲.
+    /// چرخه هجدهم (گزارش دوازدهم مالک): ساعت/تاریخ داشبورد و نوار بالا
+    /// با ارقام انگلیسی نمایش داده می‌شد؛ این خروجیِ فارسی‌رقم جایگزین
+    /// نمایش‌ها شد. ورودیِ پارس‌شونده (ToGregorian) همچنان ToShamsi است.
+    /// </summary>
+    public static string ToShamsiFa(DateTime gregorianDate)
+        => ToPersianDigits(ToShamsi(gregorianDate));
+
+    /// <summary>
+    /// ساعت لحظه‌ای با ارقام فارسی — فرمت ۱۴:۳۵:۰۵ یا ۱۴:۳۵ (ثانیه‌دار وقتی ثانیه صفر نباشد).
+    /// ساعت به وقت رسمی ایران تبدیل می‌شود تا با تقویم شمسی هماهنگ باشد.
+    /// </summary>
+    public static string ToClockFa(DateTime gregorianDate, bool withSeconds = true)
+    {
+        var iran = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+            gregorianDate, "Iran Standard Time");
+        var clock = withSeconds ? $"{iran.Hour:D2}:{iran.Minute:D2}:{iran.Second:D2}"
+                                : $"{iran.Hour:D2}:{iran.Minute:D2}";
+        return ToPersianDigits(clock);
+    }
+
+    /// <summary>
     /// تبدیل تاریخ میلادی به رشته شمسی با ساعت — فرمت 1403/07/12 14:35
     /// </summary>
     public static string ToShamsiWithTime(DateTime gregorianDate)

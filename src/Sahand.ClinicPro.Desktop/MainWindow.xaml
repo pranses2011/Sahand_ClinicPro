@@ -346,9 +346,9 @@
                                                          Width="14" Height="14"
                                                          VerticalAlignment="Center"
                                                          Margin="0,0,6,0" />
+                                <!-- چرخه هجدهم: فونت پیش‌فرض وزیرمتن برای ارقام فارسی ساعت -->
                                 <TextBlock Text="{Binding ClockText}"
                                            FontSize="12"
-                                           FontFamily="Consolas"
                                            VerticalAlignment="Center" />
                             </StackPanel>
                         </Border>

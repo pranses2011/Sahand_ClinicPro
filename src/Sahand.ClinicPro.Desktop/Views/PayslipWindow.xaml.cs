@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 using Sahand.ClinicPro.Application.Common.Helpers;
@@ -145,7 +145,7 @@ public partial class PayslipWindow : Window
 
         // ── تاریخ صدور ──
         doc.Blocks.Add(new Paragraph(new Run(
-            $"تاریخ صدور: {PersianDateHelper.ToShamsi(DateTime.Now)}"))
+            $"تاریخ صدور: {PersianDateHelper.ToShamsiFa(DateTime.Now)}"))
         {
             FontSize = 10,
             Foreground = Brushes.DimGray,

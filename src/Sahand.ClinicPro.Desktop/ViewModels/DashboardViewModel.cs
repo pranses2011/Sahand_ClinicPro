@@ -306,8 +306,9 @@ public partial class DashboardViewModel : ViewModelBase
     /// <summary>بارگذاری کامل همه بخش‌ها — طبق LoadAsync پرامپت</summary>
     public async Task LoadStatsAsync()
     {
-        WelcomeMessage = $"خوش آمدید! امروز {DateTime.Now:HH:mm} — وضعیت درمانگاه به‌روزرسانی شد.";
-        TodayDateShamsi = Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.Now);
+        // چرخه هجدهم (گزارش دوازدهم): ساعت و تاریخ داشبورد با ارقام فارسی
+        WelcomeMessage = $"خوش آمدید! امروز {Application.Common.Helpers.PersianDateHelper.ToClockFa(DateTime.Now, withSeconds: false)} — وضعیت درمانگاه به‌روزرسانی شد.";
+        TodayDateShamsi = Application.Common.Helpers.PersianDateHelper.ToShamsiFa(DateTime.Now);
         ErrorMessage = string.Empty;
 
         // ۰) چرخه دوازدهم — پیام‌های پشتیبانی دریافتی از سرور لایسنس (best-effort)

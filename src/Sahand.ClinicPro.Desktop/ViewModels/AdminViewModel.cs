@@ -298,7 +298,10 @@ public partial class AdminViewModel : ViewModelBase
             Backups = new ObservableCollection<BackupRow>(response.Data.Select(b =>
                 new BackupRow(
                     b.Status == "Completed" ? "موفق" : b.Status == "Failed" ? "ناموفق" : "در جریان",
-                    b.StartedAt?.ToString("yyyy/MM/dd HH:mm") ?? "—",
+                    // چرخه هجدهم: تاریخ نمایشی پشتیبان با ارقام فارسی
+                    b.StartedAt is { } sa
+                        ? Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToPersianDigits(sa.ToString("yyyy/MM/dd HH:mm"))
+                        : "—",
                     $"{(b.IsAutomatic ? "خودکار" : "دستی")} — {b.Type ?? string.Empty}")));
         else
             ErrorMessage = _api.LastError ?? "دریافت تاریخچه ناموفق بود";

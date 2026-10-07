@@ -497,7 +497,7 @@ public partial class ComplementaryViewModel : ViewModelBase
         if (ok)
         {
             SyncStatusText = "نقطه همگام‌سازی ایجاد شد";
-            LastSyncText = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.Now);
+            LastSyncText = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsiFa(DateTime.Now); // چرخه هجدهم: ارقام فارسی
             _snackbar.Success("همگام‌سازی آغاز شد — وضعیت در لاگ سیستم دنبال می‌شود");
         }
         else

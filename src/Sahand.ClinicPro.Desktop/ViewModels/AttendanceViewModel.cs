@@ -111,8 +111,9 @@ public partial class AttendanceViewModel : ViewModelBase
                     r.PersonnelCode ?? "—",
                     r.DepartmentName ?? "—",
                     r.ShiftName ?? "بدون شیفت",
-                    r.CheckIn is { } ci ? $"{ci:HH:mm}" : "—",
-                    r.CheckOut is { } co ? $"{co:HH:mm}" : "—",
+                    // چرخه هجدهم: ساعت‌های نمایشی حضوروغیاب با ارقام فارسی
+                    r.CheckIn is { } ci ? Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToPersianDigits($"{ci:HH:mm}") : "—",
+                    r.CheckOut is { } co ? Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToPersianDigits($"{co:HH:mm}") : "—",
                     r.LateMinutes > 0 ? $"{r.LateMinutes} دقیقه" : "—",
                     StatusText(r.Status),
                     StatusColor(r.Status),
@@ -475,7 +476,7 @@ public partial class AttendanceViewModel : ViewModelBase
             var shiftsResponse = await _api.GetAsync<ShiftsResponse>("attendance/shifts");
             var shifts = shiftsResponse?.Data ?? [];
             Shifts = new ObservableCollection<ShiftRow>(shifts.Select(s => new ShiftRow(
-                s.Id, s.ShiftName, $"{s.StartTime:HH:mm} تا {s.EndTime:HH:mm}",
+                s.Id, s.ShiftName, $"{Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToPersianDigits($"{s.StartTime:HH:mm}")} تا {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToPersianDigits($"{s.EndTime:HH:mm}")}",
                 s.IsNightShift ? "🌙 شبانه" : "☀ روزانه",
                 $"±{s.LateGraceMinutes} دقیقه",
                 s.AssignedCount,
