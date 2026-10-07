@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -122,8 +122,8 @@ public partial class BillingViewModel : ViewModelBase
         }
 
         var invoices = await _api.GetAsync<InvoicesResponse>("invoices?page=1&pageSize=15");
-        if (invoices?.Data?.Items is not null)
-            Invoices = new ObservableCollection<InvoiceRow>(invoices.Data.Items.Select(MapInvoice));
+        if (invoices?.Data is not null)
+            Invoices = new ObservableCollection<InvoiceRow>(invoices.Data.Select(MapInvoice));
 
         var tx = await _api.GetAsync<TransactionsResponse>("payments/today");
         Transactions.Clear();
@@ -224,15 +224,15 @@ public partial class BillingViewModel : ViewModelBase
         public string MethodText { get; set; } = string.Empty;
     }
 
+    /// <summary>پاسخ فاکتورها — تک‌لایه منطبق بر ToPagedResponse سرور (چرخه ۱۹)</summary>
     public sealed class InvoicesResponse
     {
         public bool IsSuccess { get; set; }
-        public InvoicesData? Data { get; set; }
-    }
-
-    public sealed class InvoicesData
-    {
-        public List<InvoiceDto>? Items { get; set; }
+        public List<InvoiceDto>? Data { get; set; }
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalCount { get; set; }
+        public int TotalPages { get; set; }
     }
 
     public sealed class InvoiceDto

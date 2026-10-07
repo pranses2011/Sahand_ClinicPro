@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -525,13 +525,13 @@ public partial class AppointmentsViewModel : ViewModelBase
             pageSize = PageSize
         };
         var response = await _api.PostAsync<SearchResponse>("appointments/search", body);
-        if (response?.Data?.Items is not null)
+        if (response?.Data is not null)
         {
             Rows = new ObservableCollection<AppointmentListRow>(
-                response.Data.Items.Select(MapRow));
-            PageNumber = response.Data.PageNumber;
-            TotalPages = response.Data.TotalPages;
-            TotalCount = response.Data.TotalCount;
+                response.Data.Select(MapRow));
+            PageNumber = response.PageNumber;
+            TotalPages = response.TotalPages;
+            TotalCount = response.TotalCount;
         }
         else
         {
@@ -717,15 +717,11 @@ public partial class AppointmentsViewModel : ViewModelBase
         public int Status { get; set; }
     }
 
+    /// <summary>پاسخ جستجوی نوبت‌ها — تک‌لایه منطبق بر ToPagedResponse سرور (چرخه ۱۹)</summary>
     public sealed class SearchResponse
     {
         public bool IsSuccess { get; set; }
-        public SearchData? Data { get; set; }
-    }
-
-    public sealed class SearchData
-    {
-        public List<AppointmentSearchItem>? Items { get; set; }
+        public List<AppointmentSearchItem>? Data { get; set; }
         public int PageNumber { get; set; }
         public int PageSize { get; set; }
         public int TotalCount { get; set; }

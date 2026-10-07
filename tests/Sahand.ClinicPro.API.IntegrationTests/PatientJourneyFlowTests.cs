@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -304,7 +304,7 @@ public class PatientJourneyFlowTests
         var invoices = await client.GetAsync("/api/v1/invoices?page=1&pageSize=10");
         invoices.StatusCode.Should().Be(HttpStatusCode.OK);
         var invoiceList = await ReadAsync<PagedPacket<EntityDto>>(invoices);
-        invoiceList.Data.Data.Should().NotBeEmpty(
+        invoiceList.Data.Should().NotBeEmpty(
             because: "فاکتور صادرشده باید در فهرست باشد");
     }
 
@@ -354,14 +354,8 @@ public class PatientJourneyFlowTests
         public List<T> Data { get; set; } = new();
     }
 
-    /// <summary>پاکت صفحه‌بندی‌شده — پاسخ GetInvoices نتیجه PagedResponse را دوباره می‌پوشاند</summary>
+    /// <summary>پاکت صفحه‌بندی‌شده — از چرخه ۱۹ پاسخ صفحه‌بندی تک‌لایه است (ToPagedResponse)</summary>
     private sealed class PagedPacket<T>
-    {
-        public PagedInner<T> Data { get; set; } = new();
-    }
-
-    /// <summary>لایه داخلی صفحه‌بندی</summary>
-    private sealed class PagedInner<T>
     {
         public int TotalCount { get; set; }
         public List<T> Data { get; set; } = new();

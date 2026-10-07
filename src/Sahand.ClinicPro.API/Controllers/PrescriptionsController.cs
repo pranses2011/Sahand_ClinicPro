@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Application.DTOs.Prescriptions;
@@ -40,7 +40,7 @@ public class PrescriptionsController : ApiBaseController
         var result = await _mediator.Send(new Application.Features.Prescriptions.Queries.GetPrescriptionsQuery(
             new Application.Common.Models.PagedRequest { PageNumber = page, PageSize = pageSize, Search = search },
             patientId, status));
-        return ToResponse(result);
+        return ToPagedResponse(result);
     }
 
     /// <summary>نسخه‌های یک ویزیت</summary>

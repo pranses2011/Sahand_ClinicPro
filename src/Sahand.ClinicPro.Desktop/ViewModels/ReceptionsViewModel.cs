@@ -204,7 +204,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             {
                 search = term, pageNumber = 1, pageSize = 5
             });
-            var appt = appts?.Data?.Items?.FirstOrDefault();
+            var appt = appts?.Data?.FirstOrDefault();
             if (appt is null)
             {
                 IsBusy = false;

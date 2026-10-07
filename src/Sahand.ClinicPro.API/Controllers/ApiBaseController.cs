@@ -25,6 +25,25 @@ public abstract class ApiBaseController : ControllerBase
             successMessage ?? "عملیات با موفقیت انجام شد"));
     }
 
+    /// <summary>
+    /// پاسخ صفحه‌بندی‌شده — چرخه نوزدهم (گزارش سیزدهم مالک):
+    /// PagedResponse خودش فرزند ApiResponse است؛ اگر مثل بقیه در ApiResponse پوشانده شود
+    /// پاسخ «دوبل» می‌شود (data.data) و کلاینت دسکتاپ که data را در ریشه انتظار دارد
+    /// فهرست را خالی می‌بیند (بیماران/پزشکان/نسخه‌ها/فاکتورها). این متد مقدار را
+    /// مستقیم و تک‌لایه برمی‌گرداند: { isSuccess, message, data: [...], pageNumber, ... }
+    /// </summary>
+    protected IActionResult ToPagedResponse<T>(Result<PagedResponse<T>> result)
+    {
+        if (result.IsFailure)
+        {
+            return BadRequest(ApiResponse<PagedResponse<T>>.Failure(result.Error.Message,
+                StatusCodes.Status400BadRequest,
+                new List<string> { result.Error.Code }));
+        }
+
+        return Ok(result.Value);
+    }
+
     /// <summary>تبدیل نتیجه بدون داده به پاسخ HTTP</summary>
     protected IActionResult ToResponse(Result result, string? successMessage = null)
     {

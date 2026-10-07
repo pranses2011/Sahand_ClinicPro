@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Application.Common.Models;
@@ -49,7 +49,7 @@ public class DoctorsController : ApiBaseController
         var result = await _mediator.Send(new GetDoctorsQuery(
             new PagedRequest { PageNumber = page, PageSize = pageSize, Search = search },
             specialtyId, onlyActive));
-        return ToResponse(result);
+        return ToPagedResponse(result);
     }
 
     /// <summary>

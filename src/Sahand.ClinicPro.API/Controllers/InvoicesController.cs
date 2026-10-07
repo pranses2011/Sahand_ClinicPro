@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Application.Common.Models;
@@ -33,7 +33,7 @@ public class InvoicesController : ApiBaseController
         var result = await _mediator.Send(new GetInvoicesQuery(
             new PagedRequest { PageNumber = page, PageSize = pageSize, Search = search },
             patientId, status));
-        return ToResponse(result);
+        return ToPagedResponse(result);
     }
 
     /// <summary>جزئیات کامل فاکتور با اقلام و سهم‌ها</summary>

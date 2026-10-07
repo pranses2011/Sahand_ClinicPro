@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Application.DTOs.Appointments;
@@ -84,7 +84,7 @@ public class AppointmentsController : ApiBaseController
     public async Task<IActionResult> Search([FromBody] AppointmentSearchFilter filter)
     {
         var result = await _mediator.Send(new SearchAppointmentsQuery(filter));
-        return ToResponse(result);
+        return ToPagedResponse(result);
     }
 
     /// <summary>لغو دسته‌ای نوبت‌های انتخاب‌شده</summary>
