@@ -30,14 +30,12 @@ public static class PhotoTools
         var bytes = File.ReadAllBytes(dialog.FileName);
         if (bytes.Length == 0)
         {
-            MessageBox.Show("فایل انتخاب‌شده خالی است.", "عکس نامعتبر",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
+            Views.AppDialog.Warn("عکس نامعتبر", "فایل انتخاب‌شده خالی است.");
             return null;
         }
         if (bytes.Length > MaxPhotoBytes)
         {
-            MessageBox.Show("حجم عکس نباید بیش از ۵ مگابایت باشد.", "عکس بزرگ",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
+            Views.AppDialog.Warn("عکس بزرگ", "حجم عکس نباید بیش از ۵ مگابایت باشد.");
             return null;
         }
         return (bytes, Path.GetFileName(dialog.FileName));
@@ -102,8 +100,7 @@ public static class PhotoTools
         var image = ToImage(bytes);
         if (image is null)
         {
-            MessageBox.Show("برای این شخص عکسی ثبت نشده است.", "بدون عکس",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            Views.AppDialog.Info("بدون عکس", "برای این شخص عکسی ثبت نشده است.");
             return;
         }
         var viewer = new PhotoViewerWindow(image, title)

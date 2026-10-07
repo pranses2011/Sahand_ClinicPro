@@ -307,11 +307,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         catch (TaskCanceledException)
         {
             // Timeout — «سامانه بیمه پاسخ نداد - ادامه بصورت آزاد؟»
-            var proceed = System.Windows.MessageBox.Show(
-                "سامانه بیمه پاسخ نداد. پذیرش به‌صورت آزاد ادامه یابد؟",
-                "عدم پاسخ سامانه بیمه",
-                System.Windows.MessageBoxButton.YesNo,
-                System.Windows.MessageBoxImage.Warning) == System.Windows.MessageBoxResult.Yes;
+            var proceed = Views.AppDialog.Confirm("عدم پاسخ سامانه بیمه", "سامانه بیمه پاسخ نداد. پذیرش به‌صورت آزاد ادامه یابد؟", Views.AppDialogIcon.Warning) == true;
             if (proceed)
             {
                 InsuranceIndex = 0;

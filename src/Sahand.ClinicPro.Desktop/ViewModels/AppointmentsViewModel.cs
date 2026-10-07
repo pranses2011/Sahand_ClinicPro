@@ -588,11 +588,7 @@ public partial class AppointmentsViewModel : ViewModelBase
     private async Task CancelOneAsync()
     {
         if (SelectedRow is null) { _snackbar.Error("ابتدا یک نوبت انتخاب کنید"); return; }
-        var confirmed = System.Windows.MessageBox.Show(
-            $"لغو نوبت «{SelectedRow.PatientName}» در {SelectedRow.DateShamsi} ساعت {SelectedRow.Time}؟",
-            "تأیید لغو نوبت",
-            System.Windows.MessageBoxButton.YesNo,
-            System.Windows.MessageBoxImage.Warning) == System.Windows.MessageBoxResult.Yes;
+        var confirmed = Views.AppDialog.Confirm("تأیید لغو نوبت", $"لغو نوبت «{SelectedRow.PatientName}» در {SelectedRow.DateShamsi} ساعت {SelectedRow.Time}؟", Views.AppDialogIcon.Warning) == true;
         if (!confirmed) return;
         var ok = await _api.PutAsync($"appointments/{SelectedRow.Id}/status",
             new { status = 6, reason = "لغو از فهرست نوبت‌ها" });
@@ -606,11 +602,7 @@ public partial class AppointmentsViewModel : ViewModelBase
     {
         var selected = Rows.Where(r => r.IsSelected).Select(r => r.Id).ToList();
         if (selected.Count == 0) { _snackbar.Error("ابتدا نوبت‌ها را با ستون انتخاب علامت بزنید"); return; }
-        var confirmed = System.Windows.MessageBox.Show(
-            $"{selected.Count} نوبت انتخاب شده است. همه لغو شوند؟",
-            "لغو دسته‌ای",
-            System.Windows.MessageBoxButton.YesNo,
-            System.Windows.MessageBoxImage.Warning) == System.Windows.MessageBoxResult.Yes;
+        var confirmed = Views.AppDialog.Confirm("لغو دسته‌ای", $"{selected.Count} نوبت انتخاب شده است. همه لغو شوند؟", Views.AppDialogIcon.Warning) == true;
         if (!confirmed) return;
 
         var response = await _api.PostAsync<BatchResponse>("appointments/batch-cancel",

@@ -285,10 +285,8 @@ public partial class BackupViewModel : ViewModelBase
         if (SelectedBackup is null) { _snackbar.Info("ابتدا یک پشتیبان از فهرست انتخاب کنید"); return; }
 
         // تأیید دو‌مرحله‌ای — پیام هشدار طبق فرم ۲۹
-        var answer = System.Windows.MessageBox.Show(
-            $"⚠️ هشدار: بازیابی از پشتیبان {SelectedBackup.DateText} تمام داده‌های فعلی را جایگزین می‌کند!\n\nادامه می‌دهید؟",
-            "تأیید بازیابی", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
-        if (answer != System.Windows.MessageBoxResult.Yes) return;
+        var answer = Views.AppDialog.Confirm("تأیید بازیابی", $"⚠️ هشدار: بازیابی از پشتیبان {SelectedBackup.DateText} تمام داده‌های فعلی را جایگزین می‌کند!\n\nادامه می‌دهید؟", Views.AppDialogIcon.Warning);
+        if (answer != true) return;
 
         RestoreStatus = "بازیابی در نسخه استقرار سرور توسط ادمین سامانه و سرویس پشتیبان انجام می‌شود";
         _snackbar.Success("راهنمای بازیابی: فایل .bak انتخاب‌شده را به SQL Server Restore کنید");

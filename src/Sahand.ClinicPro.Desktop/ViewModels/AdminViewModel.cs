@@ -306,10 +306,8 @@ public partial class AdminViewModel : ViewModelBase
     private async Task DeletePhotoAsync(EmployeeRow? row)
     {
         if (row is null) return;
-        var answer = System.Windows.MessageBox.Show(
-            $"عکس «{row.FullName}» حذف شود؟", "حذف عکس",
-            System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
-        if (answer != System.Windows.MessageBoxResult.Yes) return;
+        var answer = Views.AppDialog.Confirm("حذف عکس", $"عکس «{row.FullName}» حذف شود؟", Views.AppDialogIcon.Question);
+        if (answer != true) return;
 
         IsBusy = true;
         var ok = await _api.DeleteAsync($"people/employees/{row.Id}/photo");
@@ -489,10 +487,8 @@ public partial class AdminViewModel : ViewModelBase
         var purgeNote = ArchiveHardPurge
             ? "\n⚠️ حذف فیزیکی فعال است — ردیف‌ها پس از ثبت نسخه آرشیو بلافاصله فیزیکی حذف می‌شوند."
             : "\nحذف نرم امن است — ردیف‌ها از دید برنامه حذف می‌شوند و پاک‌سازی فیزیکی با اسکریپت نگهداشت انجام می‌شود.";
-        var answer = System.Windows.MessageBox.Show(
-            $"آرشیو همه داده‌های قدیمی‌تر از آغاز سال {year} اجرا شود؟{purgeNote}\n\nادامه می‌دهید؟",
-            "تأیید آرشیو سالانه", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
-        if (answer != System.Windows.MessageBoxResult.Yes) return;
+        var answer = Views.AppDialog.Confirm("تأیید آرشیو سالانه", $"آرشیو همه داده‌های قدیمی‌تر از آغاز سال {year} اجرا شود؟{purgeNote}\n\nادامه می‌دهید؟", Views.AppDialogIcon.Warning);
+        if (answer != true) return;
 
         IsBusy = true;
         try

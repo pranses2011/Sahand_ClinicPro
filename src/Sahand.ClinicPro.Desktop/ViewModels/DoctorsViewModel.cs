@@ -154,11 +154,7 @@ public partial class DoctorsViewModel : ViewModelBase
         var row = parameter as DoctorRow ?? SelectedDoctor; // چرخه بیستم — پارامتر ردیف
         if (row is null) { _snackbar.Error("ابتدا یک پزشک انتخاب کنید"); return; }
         var name = row.FullName;
-        var confirmed = System.Windows.MessageBox.Show(
-            $"آیا از حذف پزشک «{name}» مطمئن هستید؟\nسوابق ویزیت‌ها حفظ می‌شود اما پزشک غیرفعال خواهد شد.",
-            "تأیید حذف پزشک",
-            System.Windows.MessageBoxButton.YesNo,
-            System.Windows.MessageBoxImage.Warning) == System.Windows.MessageBoxResult.Yes;
+        var confirmed = Views.AppDialog.Confirm("تأیید حذف پزشک", $"آیا از حذف پزشک «{name}» مطمئن هستید؟\nسوابق ویزیت‌ها حفظ می‌شود اما پزشک غیرفعال خواهد شد.", Views.AppDialogIcon.Warning) == true;
         if (!confirmed) return;
 
         IsBusy = true;
@@ -747,12 +743,8 @@ public partial class DoctorFormViewModel : ObservableObject
         // هشدار نوبت‌های درگیر — «N نوبت رزرو شده وجود دارد. لغو شوند؟»
         if (response.Data.BookedAppointments > 0)
         {
-            System.Windows.MessageBox.Show(
-                $"{ToPersian(response.Data.BookedAppointments)} نوبت رزرو شده در این بازه وجود دارد.\n" +
-                "برای لغو یا جابه‌جایی نوبت‌ها با پذیرش هماهنگ کنید.",
-                "نوبت‌های درگیر با غیبت",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Warning);
+            Views.AppDialog.Warn("نوبت‌های درگیر با غیبت", $"{ToPersian(response.Data.BookedAppointments)} نوبت رزرو شده در این بازه وجود دارد.\n" +
+                "برای لغو یا جابه‌جایی نوبت‌ها با پذیرش هماهنگ کنید.");
         }
 
         NewAbsenceDateShamsi = string.Empty;

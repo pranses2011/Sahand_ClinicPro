@@ -211,11 +211,7 @@ public partial class PatientsViewModel : ViewModelBase
 
         var name = row.FullName;
         var patientId = row.Id;
-        var confirmed = System.Windows.MessageBox.Show(
-            $"آیا از حذف بیمار «{name}» مطمئن هستید؟\nاین عملیات حذف نرم است و قابل بازیابی توسط مدیر سیستم است.",
-            "تأیید حذف بیمار",
-            System.Windows.MessageBoxButton.YesNo,
-            System.Windows.MessageBoxImage.Warning) == System.Windows.MessageBoxResult.Yes;
+        var confirmed = Views.AppDialog.Confirm("تأیید حذف بیمار", $"آیا از حذف بیمار «{name}» مطمئن هستید؟\nاین عملیات حذف نرم است و قابل بازیابی توسط مدیر سیستم است.", Views.AppDialogIcon.Warning) == true;
 
         if (!confirmed) return;
 
@@ -512,12 +508,8 @@ public partial class PatientFormViewModel : ObservableObject
         var found = result?.Data?.FirstOrDefault(p => p.NationalCode == NationalCode);
         if (found is not null && found.Id != _patientId)
         {
-            var view = System.Windows.MessageBox.Show(
-                $"بیماری با این کد ملی قبلاً ثبت شده است:\n\n{found.FirstName} {found.LastName} — پرونده {found.MedicalRecordNo}\n\nمشاهده پرونده می‌کنید؟",
-                "کد ملی تکراری",
-                System.Windows.MessageBoxButton.YesNo,
-                System.Windows.MessageBoxImage.Information);
-            if (view == System.Windows.MessageBoxResult.Yes)
+            var view = Views.AppDialog.Confirm("کد ملی تکراری", $"بیماری با این کد ملی قبلاً ثبت شده است:\n\n{found.FirstName} {found.LastName} — پرونده {found.MedicalRecordNo}\n\nمشاهده پرونده می‌کنید؟", Views.AppDialogIcon.Info);
+            if (view == true)
                 CloseRequested?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -591,12 +583,8 @@ public partial class PatientFormViewModel : ObservableObject
         var dirty = !string.IsNullOrWhiteSpace(FirstName) || !string.IsNullOrWhiteSpace(NationalCode);
         if (dirty && _patientId is null)
         {
-            var confirm = System.Windows.MessageBox.Show(
-                "تغییرات ذخیره نشده است. خارج می‌شوید؟",
-                "تغییرات ذخیره نشده",
-                System.Windows.MessageBoxButton.YesNo,
-                System.Windows.MessageBoxImage.Warning);
-            if (confirm != System.Windows.MessageBoxResult.Yes) return;
+            var confirm = Views.AppDialog.Confirm("تغییرات ذخیره نشده", "تغییرات ذخیره نشده است. خارج می‌شوید؟", Views.AppDialogIcon.Warning);
+            if (confirm != true) return;
         }
         CloseRequested?.Invoke(this, EventArgs.Empty);
     }

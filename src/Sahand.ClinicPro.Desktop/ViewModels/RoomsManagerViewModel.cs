@@ -154,11 +154,7 @@ public partial class RoomsManagerViewModel : ObservableObject
             return;
         }
 
-        var confirmed = System.Windows.MessageBox.Show(
-            $"اتاق «{SelectedRoom.DisplayName}» غیرفعال شود؟ دیگر در برنامهٔ کاری پزشکان قابل انتخاب نخواهد بود.",
-            "غیرفعال‌سازی اتاق",
-            System.Windows.MessageBoxButton.YesNo,
-            System.Windows.MessageBoxImage.Warning) == System.Windows.MessageBoxResult.Yes;
+        var confirmed = Views.AppDialog.Confirm("غیرفعال‌سازی اتاق", $"اتاق «{SelectedRoom.DisplayName}» غیرفعال شود؟ دیگر در برنامهٔ کاری پزشکان قابل انتخاب نخواهد بود.", Views.AppDialogIcon.Warning) == true;
         if (!confirmed) return;
 
         IsBusy = true;
