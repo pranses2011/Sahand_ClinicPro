@@ -153,15 +153,16 @@ public static class PersianDateHelper
 
     /// <summary>
     /// تبدیل رشته شمسی به میلادی — فرمت قابل قبول: 1403/07/12 یا 1403-07-12
+    /// چرخه نوزدهم: ارقام فارسی (۱۴۰۳/۰۷/۱۲) هم پذیرفته می‌شوند
     /// </summary>
     public static DateTime? ToGregorian(string? shamsiDate)
     {
         if (string.IsNullOrWhiteSpace(shamsiDate)) return null;
         var parts = shamsiDate.Trim().Replace('-', '/').Split('/');
         if (parts.Length != 3) return null;
-        if (!int.TryParse(parts[0], out var y) ||
-            !int.TryParse(parts[1], out var m) ||
-            !int.TryParse(parts[2], out var d)) return null;
+        if (!int.TryParse(ToLatinDigits(parts[0]), out var y) ||
+            !int.TryParse(ToLatinDigits(parts[1]), out var m) ||
+            !int.TryParse(ToLatinDigits(parts[2]), out var d)) return null;
         try
         {
             return ToGregorian(y, m, d);
@@ -191,6 +192,24 @@ public static class PersianDateHelper
     {
         var persian = "۰۱۲۳۴۵۶۷۸۹";
         var chars = input.Select(c => char.IsDigit(c) ? persian[c - '0'] : c);
+        return new string(chars.ToArray());
+    }
+
+    /// <summary>
+    /// تبدیل ارقام فارسی/عربی به لاتین برای پارس — چرخه نوزدهم
+    /// </summary>
+    public static string ToLatinDigits(string input)
+    {
+        const string fa = "۰۱۲۳۴۵۶۷۸۹";
+        const string ar = "٠١٢٣٤٥٦٧٨٩";
+        var chars = input.Select(c =>
+        {
+            var fi = fa.IndexOf(c);
+            if (fi >= 0) return (char)('0' + fi);
+            var ai = ar.IndexOf(c);
+            if (ai >= 0) return (char)('0' + ai);
+            return c;
+        });
         return new string(chars.ToArray());
     }
 

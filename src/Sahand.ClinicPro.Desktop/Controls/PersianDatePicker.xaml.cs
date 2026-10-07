@@ -124,13 +124,12 @@ public partial class PersianDatePicker : UserControl
     /// <summary>ورود متن شمسی از بیرون — تحلیل و تبدیل به تاریخ</summary>
     private void OnDateShamsiTextChanged()
     {
-        // جلوگیری از حلقه — اگر متن با وضعیت فعلی هم‌ارز است کاری نکن
-        var text = DateShamsiText;
-        var current = SelectedShamsi;
-        if (string.Equals(text, current, StringComparison.Ordinal))
+        // چرخه ۱۹: مقایسه بر پایهٔ تاریخ معادل انجام می‌شود نه رشته —
+        // تا نمایش فارسی‌رقم و مقدار لاتینِ ViewModel بدون حلقه با هم هم‌گام بمانند
+        var parsed = PersianDateHelper.ToGregorian(DateShamsiText);
+        if (parsed == SelectedDate)
             return;
 
-        var parsed = PersianDateHelper.ToGregorian(text);
         if (parsed is { } date)
         {
             SelectedDate = date;
@@ -144,7 +143,10 @@ public partial class PersianDatePicker : UserControl
     {
         if (SelectedDate is { } date)
         {
-            SelectedShamsi = PersianDateHelper.ToShamsi(date);
+            // نمایش با ارقام فارسی (چرخه ۱۹) — مقدار قابل‌پارس لاتین جداگانه نگه داشته می‌شود
+            SelectedShamsi = PersianDateHelper.ToShamsiFa(date);
+            if (!string.Equals(DateShamsiText, PersianDateHelper.ToShamsi(date), StringComparison.Ordinal))
+                DateShamsiText = PersianDateHelper.ToShamsi(date);
             var (y, m, _) = PersianDateHelper.ToJalali(date);
             PopupCalendar.DisplayYear = y;
             PopupCalendar.DisplayMonth = m;

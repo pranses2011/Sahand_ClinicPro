@@ -176,7 +176,9 @@ public partial class PersianCalendarControl : UserControl
         if (DisplayMonth is < 1 or > 12)
             DisplayMonth = 1;
 
-        MonthTitleText.Text = $"{PersianDateHelper.MonthNames[DisplayMonth - 1]} {DisplayYear}";
+        // چرخه ۱۹ (گزارش سیزدهم مالک): اعداد تقویم با ارقام فارسی نمایش داده می‌شوند
+        MonthTitleText.Text =
+            $"{PersianDateHelper.MonthNames[DisplayMonth - 1]} {PersianDateHelper.ToPersianDigits(DisplayYear.ToString())}";
         DaysGrid.Children.Clear();
 
         var today = DateTime.Today;
@@ -208,10 +210,19 @@ public partial class PersianCalendarControl : UserControl
 
             var btn = new Button
             {
-                Content = new TextBlock { Text = day.ToString() },
+                // چرخه ۱۹: روز با ارقام فارسی + عرض/مرکزگیری صریح سلول تا روزهای دو‌رقمی کامل دیده شوند
+                Content = new TextBlock
+                {
+                    Text = PersianDateHelper.ToPersianDigits(day.ToString()),
+                    TextAlignment = TextAlignment.Center,
+                },
                 FontSize = 12,
                 Margin = new Thickness(1),
                 MinHeight = 30,
+                MinWidth = 30,
+                Padding = new Thickness(0),
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                VerticalContentAlignment = VerticalAlignment.Center,
                 Cursor = isDisabled ? Cursors.No : Cursors.Hand,
                 IsEnabled = !isDisabled,
                 Tag = date,
@@ -241,12 +252,12 @@ public partial class PersianCalendarControl : UserControl
             // نشانگر تعداد نوبت + راهنمای ماوس
             if (marked.TryGetValue(date, out var count))
             {
-                btn.ToolTip = $"{PersianDateHelper.ToShamsi(date)} — {count} نوبت";
+                btn.ToolTip = $"{PersianDateHelper.ToShamsiFa(date)} — {PersianDateHelper.ToPersianDigits(count.ToString())} نوبت";
                 btn.Content = new StackPanel
                 {
                     Children =
                     {
-                        new TextBlock { Text = day.ToString(), FontSize = 12, HorizontalAlignment = HorizontalAlignment.Center },
+                        new TextBlock { Text = PersianDateHelper.ToPersianDigits(day.ToString()), FontSize = 12, HorizontalAlignment = HorizontalAlignment.Center },
                         new Border
                         {
                             CornerRadius = new CornerRadius(5),
@@ -256,7 +267,7 @@ public partial class PersianCalendarControl : UserControl
                             Margin = new Thickness(0, 1, 0, 0),
                             Child = new TextBlock
                             {
-                                Text = count.ToString(),
+                                Text = PersianDateHelper.ToPersianDigits(count.ToString()),
                                 FontSize = 8,
                                 Foreground = Brushes.White,
                             },
@@ -266,13 +277,13 @@ public partial class PersianCalendarControl : UserControl
             }
             else if (!isDisabled)
             {
-                btn.ToolTip = PersianDateHelper.ToShamsi(date);
+                btn.ToolTip = PersianDateHelper.ToShamsiFa(date);
             }
 
             btn.Click += (_, _) =>
             {
                 SelectedDate = date;
-                SelectedShamsi = PersianDateHelper.ToShamsi(date);
+                SelectedShamsi = PersianDateHelper.ToShamsiFa(date);
                 DateSelected?.Invoke(this, date);
                 Render();
             };
