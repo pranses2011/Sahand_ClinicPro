@@ -125,8 +125,12 @@ public partial class PatientDetailViewModel : ObservableObject
     /// <summary>بارگذاری پرونده + سوابق</summary>
     private async Task LoadAsync(long patientId)
     {
-        // ۱) پرونده اصلی
-        var patient = await _api.GetAsync<PatientDetailDto>($"patients/{patientId}");
+        // ۱) پرونده اصلی — چرخه بیستم (گزارش چهاردهم مالک): پاسخ سرور در پاکت
+        // استاندارد ApiResponse (isSuccess/message/data) پیچیده می‌شود؛ پیش‌تر
+        // مستقیم روی PatientDetailDto نگاشت می‌شد، فیلد Data خوانده نمی‌شد و
+        // همهٔ مشخصات خالی می‌ماند (پروندهٔ بیمار بدون مشخصات باز می‌شد)
+        var envelope = await _api.GetAsync<PatientDetailEnvelope>($"patients/{patientId}");
+        var patient = envelope?.Data;
         if (patient is null)
             return;
 
@@ -364,6 +368,13 @@ public partial class PatientDetailViewModel : ObservableObject
         public string? DoctorName { get; set; }
         public int ItemsCount { get; set; }
         public string? Status { get; set; }
+    }
+
+    /// <summary>پاکت استاندارد پاسخ جزئیات بیمار — چرخه بیستم</summary>
+    public sealed class PatientDetailEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public PatientDetailDto? Data { get; set; }
     }
 
     /// <summary>DTO پرونده بیمار</summary>

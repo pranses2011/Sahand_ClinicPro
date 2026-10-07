@@ -10,7 +10,10 @@ namespace Sahand.ClinicPro.Desktop.ViewModels;
 public record PatientOption(long Id, string DisplayName, string Detail);
 
 /// <summary>
-/// ViewModel فرم ثبت نوبت — جستجوی بیمار + انتخاب پزشک + تاریخ و ساعت
+/// ViewModel فرم ثبت نوبت — جستجوی بیمار + انتخاب پزشک + تاریخ و ساعت.
+/// چرخه بیستم (گزارش چهاردهم مالک): فرم فهرست پزشکان را خودش از سرور
+/// بارگذاری می‌کند (پیش‌تر فقط از سازنده می‌گرفت و از صفحهٔ بیماران با
+/// فهرست خالی باز می‌شد) و می‌تواند با بیمارِ از پیش انتخاب‌شده باز شود.
 /// </summary>
 public partial class AppointmentFormViewModel : ObservableObject
 {
@@ -71,10 +74,50 @@ public partial class AppointmentFormViewModel : ObservableObject
 
     /// <summary>سازنده با کلاینت API و فهرست پزشکان موجود</summary>
     public AppointmentFormViewModel(IApiClient api, ObservableCollection<DoctorOption> doctors)
+        : this(api, doctors, null)
+    {
+    }
+
+    /// <summary>
+    /// سازنده کامل — چرخه بیستم: بیمار از پیش انتخاب‌شده (از صفحهٔ بیماران)
+    /// و بارگذاری خودکار فهرست پزشکان از سرور وقتی فهرست داده‌نشده/خالی است
+    /// </summary>
+    /// <param name="api">کلاینت API</param>
+    /// <param name="doctors">فهرست پزشکان — خالی مجاز است، خودکار پر می‌شود</param>
+    /// <param name="preselectedPatient">بیمار از پیش انتخاب‌شده یا null</param>
+    public AppointmentFormViewModel(IApiClient api, ObservableCollection<DoctorOption> doctors,
+        PatientOption? preselectedPatient)
     {
         _api = api;
         foreach (var d in doctors)
             Doctors.Add(d);
+
+        // بیمار تزریقی از صفحهٔ بیماران — فرم بدون جستجو باز می‌شود
+        if (preselectedPatient is not null)
+            SelectedPatient = preselectedPatient;
+
+        // بارگذاری خودکار پزشکان — فقط وقتی فهرست داده‌نشده یا خالی است
+        if (Doctors.Count == 0)
+            _ = LoadDoctorsAsync();
+    }
+
+    /// <summary>
+    /// بارگذاری پزشکان فعال از سرور — چرخه بیستم (گزارش چهاردهم مالک):
+    /// «لیست پزشکانی که تعریف شده هیچ‌جا نمی‌آید تا انتخاب کنیم»
+    /// </summary>
+    private async Task LoadDoctorsAsync()
+    {
+        try
+        {
+            var response = await _api.GetAsync<DoctorsPage>("doctors?pageSize=200");
+            if (response?.Data is null) return;
+            foreach (var d in response.Data)
+                Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName));
+        }
+        catch
+        {
+            // خطای شبکه هنگام بارگذاری پزشکان — پیام در زمان ذخیره داده می‌شود
+        }
     }
 
     /// <summary>جستجوی بیمار — حداقل ۲ نویسه</summary>
@@ -162,5 +205,20 @@ public partial class AppointmentFormViewModel : ObservableObject
         public string LastName { get; set; } = string.Empty;
         public string NationalCode { get; set; } = string.Empty;
         public string Mobile { get; set; } = string.Empty;
+    }
+
+    /// <summary>پاسخ صفحهٔ فهرست پزشکان — چرخه بیستم</summary>
+    public sealed class DoctorsPage
+    {
+        public bool IsSuccess { get; set; }
+        public List<DoctorDto>? Data { get; set; }
+    }
+
+    /// <summary>ردیف پزشک — چرخه بیستم</summary>
+    public sealed class DoctorDto
+    {
+        public long Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string? SpecialtyName { get; set; }
     }
 }

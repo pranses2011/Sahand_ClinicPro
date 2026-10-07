@@ -140,62 +140,77 @@ public partial class PatientsViewModel : ViewModelBase
     private void AddPatient()
         => OpenForm(new PatientFormViewModel(_api, null, afterSave: null));
 
-    /// <summary>ویرایش بیمار انتخاب‌شده</summary>
+    /// <summary>ویرایش بیمار — پارامتر ردیف از دکمهٔ سطر؛ در نبودش بیمار انتخاب‌شده — چرخه بیستم</summary>
     [RelayCommand]
-    private void EditPatient()
+    private void EditPatient(object? parameter)
     {
-        if (SelectedPatient is null)
+        // دکمهٔ داخل سطر جدول، ردیف را به‌عنوان پارامتر می‌فرستد — کلیک روی دکمه
+        // در WPF لزوماً ردیف را انتخاب نمی‌کند؛ پارامتر همان ردیف مقصود است
+        var row = parameter as PatientRow ?? SelectedPatient;
+        if (row is null)
         {
             _snackbar.Error("ابتدا یک بیمار انتخاب کنید");
             return;
         }
-        OpenForm(new PatientFormViewModel(_api, SelectedPatient.Id, afterSave: null));
+        OpenForm(new PatientFormViewModel(_api, row.Id, afterSave: null));
     }
 
-    /// <summary>مشاهده جزئیات — پنجره پرونده بیمار</summary>
+    /// <summary>مشاهده جزئیات — پنجره پرونده بیمار — پارامتر ردیف از دکمهٔ سطر — چرخه بیستم</summary>
     [RelayCommand]
-    private void ViewPatient()
+    private void ViewPatient(object? parameter)
     {
-        if (SelectedPatient is null)
+        var row = parameter as PatientRow ?? SelectedPatient;
+        if (row is null)
         {
             _snackbar.Error("ابتدا یک بیمار انتخاب کنید");
             return;
         }
-        var window = new PatientDetailWindow(new PatientDetailViewModel(_api, SelectedPatient.Id))
+        var window = new PatientDetailWindow(new PatientDetailViewModel(_api, row.Id))
         {
             Owner = System.Windows.Application.Current.MainWindow
         };
         window.ShowDialog();
     }
 
-    /// <summary>رزرو نوبت برای بیمار انتخاب‌شده</summary>
+    /// <summary>رزرو نوبت برای بیمار — مشخصات بیمار به فرم منتقل و پزشکان خودکار بارگذاری می‌شوند — چرخه بیستم</summary>
     [RelayCommand]
-    private void BookAppointment()
+    private void BookAppointment(object? parameter)
     {
-        if (SelectedPatient is null)
+        var row = parameter as PatientRow ?? SelectedPatient;
+        if (row is null)
         {
             _snackbar.Error("ابتدا یک بیمار انتخاب کنید");
             return;
         }
 
-        // نوبت‌دهی از طریق صفحه نوبت‌ها با جستجوی کد ملی
-        var form = new AppointmentFormViewModel(_api, new ObservableCollection<DoctorOption>());
+        // چرخه بیستم (گزارش چهاردهم مالک): پیش‌تر فرم با فهرست پزشکان خالی باز
+        // می‌شد و کاربر باید کد ملی را از نو جستجو می‌کرد. اکنون:
+        //   ۱) مشخصات بیمار از همان ردیف به فرم تزریق می‌شود (بیمار از پیش انتخاب‌شده)
+        //   ۲) فرم نوبت خودش فهرست پزشکان را از سرور بارگذاری می‌کند
+        var form = new AppointmentFormViewModel(
+            _api,
+            new ObservableCollection<DoctorOption>(),
+            preselectedPatient: new PatientOption(
+                row.Id,
+                $"{row.FullName} — پرونده {row.MedicalRecordNo}",
+                $"کد ملی {row.NationalCode} — موبایل {row.Mobile}"));
         var window = new AppointmentFormWindow(form) { Owner = System.Windows.Application.Current.MainWindow };
         window.ShowDialog();
-        _snackbar.Info($"برای «{SelectedPatient.FullName}» نوبت را با جستجوی کد ملی ثبت کنید");
     }
 
-    /// <summary>حذف بیمار انتخاب‌شده — با دیالوگ تأیید طبق قوانین کلی</summary>
+    /// <summary>حذف بیمار — پارامتر ردیف از دکمهٔ سطر؛ در نبودش انتخاب‌شده — چرخه بیستم</summary>
     [RelayCommand]
-    private async Task DeletePatientAsync()
+    private async Task DeletePatientAsync(object? parameter)
     {
-        if (SelectedPatient is null)
+        var row = parameter as PatientRow ?? SelectedPatient;
+        if (row is null)
         {
             _snackbar.Error("ابتدا یک بیمار انتخاب کنید");
             return;
         }
 
-        var name = SelectedPatient.FullName;
+        var name = row.FullName;
+        var patientId = row.Id;
         var confirmed = System.Windows.MessageBox.Show(
             $"آیا از حذف بیمار «{name}» مطمئن هستید؟\nاین عملیات حذف نرم است و قابل بازیابی توسط مدیر سیستم است.",
             "تأیید حذف بیمار",
@@ -205,7 +220,7 @@ public partial class PatientsViewModel : ViewModelBase
         if (!confirmed) return;
 
         IsBusy = true;
-        var ok = await _api.DeleteAsync($"patients/{SelectedPatient.Id}");
+        var ok = await _api.DeleteAsync($"patients/{patientId}");
         IsBusy = false;
 
         if (ok)
@@ -350,7 +365,11 @@ public partial class PatientFormViewModel : ObservableObject
                 InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name));
         if (_patientId.HasValue)
         {
-            var patient = await _api.GetAsync<PatientDetail>($"patients/{_patientId}");
+            // چرخه بیستم (گزارش چهاردهم مالک): پاسخ در پاکت ApiResponse پیچیده
+            // می‌شود؛ پیش‌تر مستقیم روی PatientDetail نگاشت می‌شد و چون فیلد Data
+            // وجود نداشت، همهٔ مشخصات خالی می‌ماند و «فرم ویرایش خالی» باز می‌شد
+            var envelope = await _api.GetAsync<PatientDetailEnvelope>($"patients/{_patientId}");
+            var patient = envelope?.Data;
             if (patient is not null)
             {
                 FirstName = patient.FirstName;
@@ -545,6 +564,13 @@ public partial class PatientFormViewModel : ObservableObject
     {
         public bool IsSuccess { get; set; }
         public List<PatientDetail>? Data { get; set; }
+    }
+
+    /// <summary>پاکت استاندارد پاسخ جزئیات بیمار — چرخه بیستم</summary>
+    public sealed class PatientDetailEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public PatientDetail? Data { get; set; }
     }
 
     /// <summary>DTO جزئیات بیمار — منطبق بر سرور</summary>

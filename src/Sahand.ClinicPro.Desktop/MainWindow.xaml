@@ -69,6 +69,11 @@
         <DataTemplate DataType="{x:Type vm:AdminViewModel}">
             <views:AdminView />
         </DataTemplate>
+        <!-- چرخه بیستم: ViewModel پرسنل فرزند AdminViewModel است؛ قالب صریح تا
+             بدون ابهام AdminView برای آن هم به‌کار رود (زبانهٔ ۲ پیش‌فرض) -->
+        <DataTemplate DataType="{x:Type vm:PersonnelViewModel}">
+            <views:AdminView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:UsersViewModel}">
             <views:UsersView />
         </DataTemplate>

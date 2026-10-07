@@ -25,6 +25,21 @@
                     <KeyBinding Key="Enter" Command="{Binding SearchPatientCommand}" />
                 </TextBox.InputBindings>
             </TextBox>
+            <!-- کارت بیمار انتخاب‌شده — چرخه بیستم (گزارش چهاردهم مالک):
+                 وقتی فرم با بیمار از پیش انتخاب‌شده (از صفحهٔ بیماران) باز می‌شود،
+                 مشخصاتش بدون نیاز به جستجو دیده می‌شود -->
+            <Border Background="#E8F5E9" BorderBrush="#A5D6A7" BorderThickness="1"
+                    CornerRadius="8" Padding="10,6" Margin="0,0,0,8"
+                    Visibility="{Binding SelectedPatient, Converter={StaticResource NullToVisibility}}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="AccountCheck" Width="16" Height="16"
+                                             Foreground="#2E7D32" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding SelectedPatient.DisplayName, Mode=OneWay}" FontWeight="SemiBold"
+                               VerticalAlignment="Center" Margin="8,0,0,0" />
+                    <TextBlock Text="{Binding SelectedPatient.Detail, Mode=OneWay}" FontSize="11"
+                               Opacity="0.75" VerticalAlignment="Center" Margin="14,0,0,0" />
+                </StackPanel>
+            </Border>
             <ListBox ItemsSource="{Binding PatientResults}"
                      SelectedItem="{Binding SelectedPatient}"
                      Height="130" Margin="0,0,0,12"

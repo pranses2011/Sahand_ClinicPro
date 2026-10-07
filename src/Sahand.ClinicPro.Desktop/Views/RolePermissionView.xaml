@@ -158,15 +158,19 @@
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding ModuleTitle}"
                                                        FontWeight="Bold" FontSize="12.5" Margin="0,0,0,4" />
-                                            <!-- انتخاب گروهی -->
-                                            <Button Grid.Row="0" Grid.Column="1" Command="{Binding CheckAllCommand}"
+                                            <!-- انتخاب گروهی — چرخه بیستم (گزارش چهاردهم مالک):
+                                                 عنصر باید ToggleButton باشد تا با TargetType استایل
+                                                 MaterialDesignFlatToggleButton هم‌خوانی داشته باشد؛
+                                                 با Button خطای XamlParseException («TargetType does not
+                                                 match») هنگام گشودن صفحهٔ نقش‌ها رخ می‌داد -->
+                                            <ToggleButton Grid.Row="0" Grid.Column="1" Command="{Binding CheckAllCommand}"
                                                     Style="{StaticResource MaterialDesignFlatToggleButton}" ToolTip="انتخاب همه این ماژول" Margin="2,0">
                                                 <materialDesign:PackIcon Kind="CheckAll" Width="13" Height="13" />
-                                            </Button>
-                                            <Button Grid.Row="0" Grid.Column="2" Command="{Binding UncheckAllCommand}"
+                                            </ToggleButton>
+                                            <ToggleButton Grid.Row="0" Grid.Column="2" Command="{Binding UncheckAllCommand}"
                                                     Style="{StaticResource MaterialDesignFlatToggleButton}" ToolTip="لغو همه این ماژول">
                                                 <materialDesign:PackIcon Kind="CloseCircleOutline" Width="13" Height="13" />
-                                            </Button>
+                                            </ToggleButton>
                                             <WrapPanel Grid.Row="1" Grid.ColumnSpan="3">
                                                 <ItemsControl ItemsSource="{Binding Permissions}">
                                                     <ItemsControl.ItemsPanel>

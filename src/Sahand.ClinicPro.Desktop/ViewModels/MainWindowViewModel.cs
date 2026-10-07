@@ -98,6 +98,7 @@ public partial class MainWindowViewModel : ObservableObject
         ReportsViewModel reportsVm,
         ReportBrowserViewModel reportBrowserVm,
         AdminViewModel adminVm,
+        PersonnelViewModel personnelVm,
         UsersViewModel usersVm,
         RolesViewModel rolesVm,
         SmsViewModel smsVm,
@@ -157,7 +158,9 @@ public partial class MainWindowViewModel : ObservableObject
             ["reports"] = () => reportBrowserVm,
             ["reports-legacy"] = () => reportsVm,
             ["settings"] = () => settingsVm,
-            ["personnel"] = () => adminVm,
+            // چرخه بیستم (گزارش چهاردهم مالک): پرسنل صفحهٔ خودش را می‌گیرد —
+            // پیش‌تر به adminVm (تنظیمات) نگاشت شده بود و زبانهٔ تنظیمات باز می‌شد
+            ["personnel"] = () => personnelVm,
             ["users"] = () => usersVm,
             ["roles"] = () => rolesVm,
             ["sms"] = () => smsVm,
