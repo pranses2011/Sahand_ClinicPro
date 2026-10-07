@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sahand.ClinicPro.Application.Interfaces;
 
@@ -7,6 +7,8 @@ namespace Sahand.ClinicPro.API.Controllers;
 /// <summary>
 /// کنترلر لایسنس — وضعیت و فعال‌سازی برخط و برون‌خط
 /// مسیرها: /api/v1/license — بدون نیاز به احراز هویت برای فعال‌سازی
+/// چرخه هجدهم (گزارش دوازدهم مالک): نشانی سرور لایسنس قابل خواندن/تغییر،
+/// فایل درخواست آفلاین (.req) قابل دریافت و اطلاعات پشتیبانی همیشه موجود است.
 /// </summary>
 [ApiController]
 [Route("api/v1/license")]
@@ -19,9 +21,10 @@ public class LicenseController : ApiBaseController
 
     /// <summary>وضعیت فعلی لایسنس — ماژول‌ها، گنجایش‌ها و اطلاعات پشتیبانی</summary>
     [HttpGet("status")]
-    [Authorize]
-    // عمدتاً عمومی برای همه کاربران واردشده (ممیزی چرخه ۱۲): وضعیت لایسنس برای همه کاربران برنامه نمایش داده می‌شود
-public async Task<IActionResult> GetStatus()
+    [AllowAnonymous]
+    // عمدتاً عمومی برای همه کاربران (ممیزی چرخه ۱۲)؛ چرخه هجدهم: AllowAnonymous شد تا
+    // پنجرهٔ فعال‌سازی پیش از ورود هم وضعیت را ببیند — داده‌ها فقط کلید/انقضا/ماژول‌هاست
+    public async Task<IActionResult> GetStatus()
     {
         var status = await _license.GetStatusAsync();
         var support = await _license.GetSupportInfoAsync();
@@ -41,7 +44,8 @@ public async Task<IActionResult> GetStatus()
                 phone = support.Phone,
                 mobile = support.Mobile,
                 email = support.Email,
-                website = support.Website
+                website = support.Website,
+                source = support.Source
             } : null,
             message = status.Message
         };
@@ -49,14 +53,18 @@ public async Task<IActionResult> GetStatus()
     }
 
     /// <summary>
-    /// اطلاعات پشتیبانی محصول — دریافتی از سرور لایسنس هنگام فعال‌سازی؛
-    /// کلاینت‌ها برای نمایش در سراسر برنامه (صفحه لایسنس، درباره، فوتر) از این مسیر می‌خوانند
+    /// اطلاعات پشتیبانی محصول — چرخه هجدهم (گزارش دوازدهم):
+    /// همیشه محتوا دارد — اول مقادیر ذخیره‌شده در دیتابیس، در نبود آن
+    /// تازه‌سازی best-effort از سرور لایسنس (action=support) و در نبود هر دو،
+    /// مقادیر پیش‌فرض محصول. «از دفعات بعد بروزرسانی از سرور لایسنس» همین‌جاست.
     /// </summary>
     [HttpGet("support")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetSupportInfo()
+    public async Task<IActionResult> GetSupportInfo(bool refresh = false)
     {
-        var support = await _license.GetSupportInfoAsync();
+        var support = refresh
+            ? await _license.RefreshSupportInfoAsync()
+            : await _license.GetSupportInfoAsync();
         var response = new
         {
             name = support.Name,
@@ -65,9 +73,53 @@ public async Task<IActionResult> GetStatus()
             mobile = support.Mobile,
             email = support.Email,
             website = support.Website,
-            hasData = support.HasData
+            hasData = support.HasData,
+            source = support.Source
         };
         return Ok(ApiResponse<object>.Success(response, "اطلاعات پشتیبانی"));
+    }
+
+    /// <summary>
+    /// نشانی سرور لایسنس — چرخه هجدهم: صفحهٔ فعال‌سازی این مقدار را در
+    /// فیلد «سرور لایسنس» نشان می‌دهد و کاربر می‌تواند عوضش کند.
+    /// </summary>
+    [HttpGet("settings")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetSettings()
+    {
+        var portalUrl = await _license.GetPortalUrlAsync();
+        var response = new { portalUrl };
+        return Ok(ApiResponse<object>.Success(response, "تنظیمات سرور لایسنس"));
+    }
+
+    /// <summary>
+    /// ذخیرهٔ نشانی سرور لایسنس واردشده از صفحهٔ فعال‌سازی —
+    /// ریشهٔ نشانی هم پذیرفته می‌شود و به api.php نرمال می‌شود.
+    /// </summary>
+    [HttpPut("settings")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SaveSettings([FromBody] SaveLicenseSettingsRequest request)
+    {
+        var ok = await _license.SetPortalUrlAsync(request.PortalUrl ?? string.Empty);
+        if (!ok)
+            return BadRequest(ApiResponse<object>.Failure(
+                "نشانی سرور لایسنس نامعتبر است — باید http/https باشد (مثل https://clinic-license.ea-fixer.ir)"));
+        var portalUrl = await _license.GetPortalUrlAsync();
+        return Ok(ApiResponse<object>.Success(new { portalUrl }, "نشانی سرور لایسنس ذخیره شد"));
+    }
+
+    /// <summary>
+    /// درخواست فعال‌سازی آفلاین (فایل .req) — چرخه هجدهم (گزارش دوازدهم):
+    /// کلاینت این پاسخ را با پسوند .req ذخیره می‌کند و برای فروشنده می‌فرستد؛
+    /// فروشنده در پنل، محتوای همین فایل را می‌پذیرد و فایل .lic برمی‌گرداند.
+    /// </summary>
+    /// <param name="licenseKey">کلید اختیاری — اگر هستوید در فایل درج می‌شود</param>
+    [HttpGet("activation-request")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetActivationRequest([FromQuery] string? licenseKey)
+    {
+        var request = await _license.BuildActivationRequestAsync(licenseKey);
+        return Ok(ApiResponse<object>.Success(request, "درخواست فعال‌سازی آفلاین ساخته شد"));
     }
 
     /// <summary>فعال‌سازی برخط با کلید لایسنس</summary>
@@ -100,7 +152,7 @@ public async Task<IActionResult> GetStatus()
     [HttpGet("messages")]
     [Authorize]
     // عمدتاً عمومی برای همه کاربران واردشده (ممیزی چرخه ۱۲): پیام‌های پشتیبانی روی داشبورد همه کاربران
-public async Task<IActionResult> GetSupportMessages()
+    public async Task<IActionResult> GetSupportMessages()
     {
         var messages = await _license.GetSupportMessagesAsync();
         var response = messages.Select(m => new
@@ -121,4 +173,7 @@ public async Task<IActionResult> GetSupportMessages()
 
     /// <summary>درخواست فعال‌سازی برون‌خط</summary>
     public record ActivateOfflineRequest(string LicenseFileContent);
+
+    /// <summary>بدنهٔ ذخیرهٔ تنظیمات سرور لایسنس — چرخه هجدهم</summary>
+    public record SaveLicenseSettingsRequest(string? PortalUrl);
 }

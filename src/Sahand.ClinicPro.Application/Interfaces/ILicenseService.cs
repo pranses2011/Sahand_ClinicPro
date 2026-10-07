@@ -29,6 +29,34 @@ public interface ILicenseService
     /// </summary>
     Task<SupportInfoDto> GetSupportInfoAsync(CancellationToken ct = default);
 
+
+    /// <summary>
+    /// نشانی فعلی سرور لایسنس — چرخه هجدهم (گزارش دوازدهم):
+    /// اولویت: تنظیم ذخیره‌شده توسط کاربر (SystemSettings) ← appsettings ←
+    /// پیش‌فرض رسمی https://clinic-license.ea-fixer.ir/api.php
+    /// </summary>
+    Task<string> GetPortalUrlAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// ذخیرهٔ نشانی سرور لایسنس واردشدهٔ کاربر — نرمال‌سازی با LicensePortalHelper؛
+    /// نشانی نامعتبر false برمی‌گرداند
+    /// </summary>
+    Task<bool> SetPortalUrlAsync(string portalUrl, CancellationToken ct = default);
+
+    /// <summary>
+    /// ساخت درخواست فعال‌سازی آفلاین (فایل .req) — شامل اثر انگشت سخت‌افزار
+    /// و کلید اختیاری؛ فروشنده در پنل لایسنس همین محتوا را می‌پذیرد و فایل
+    /// .lic امضاشده تحویل می‌دهد. (چرخه هجدهم — گزارش دوازدهم)
+    /// </summary>
+    Task<ActivationRequestDto> BuildActivationRequestAsync(string? licenseKey = null,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// تازه‌سازی اطلاعات پشتیبانی از سرور لایسنس (action=support عمومی) —
+    /// best-effort؛ در صورت قطعی، مقادیر ذخیره‌شده/پیش‌فرض باقی می‌مانند
+    /// </summary>
+    Task<SupportInfoDto> RefreshSupportInfoAsync(CancellationToken ct = default);
+
     /// <summary>
     /// پیام‌های پشتیبانی دریافتی از سرور لایسنس — با تپ‌قلب تحویل و در تنظیمات محلی ذخیره می‌شوند؛
     /// داشبورد درمانگاه آنها را در کارت «پیام‌های پشتیبانی» نمایش می‌دهد (چرخه دوازدهم)
@@ -74,14 +102,33 @@ public sealed record SupportInfoDto(
     string Phone,
     string Mobile,
     string Email,
-    string Website)
+    string Website,
+    string Source = "stored")
 {
     /// <summary>نمونه خالی — پیش از فعال‌سازی لایسنس</summary>
     public static SupportInfoDto Empty { get; } = new("", "", "", "", "", "");
 
     /// <summary>آیا اطلاعاتی ذخیره شده است</summary>
-    public bool HasData => !string.IsNullOrWhiteSpace(Company) || !string.IsNullOrWhiteSpace(Mobile);
+    public bool HasData => !string.IsNullOrWhiteSpace(Company) || !string.IsNullOrWhiteSpace(Mobile)
+                                                            || !string.IsNullOrWhiteSpace(Phone)
+                                                            || !string.IsNullOrWhiteSpace(Email)
+                                                            || !string.IsNullOrWhiteSpace(Website)
+                                                            || !string.IsNullOrWhiteSpace(Name);
 }
+
+/// <summary>
+/// درخواست فعال‌سازی آفلاین — محتوای فایل .req که برای فروشنده ارسال می‌شود؛
+/// پنل PHP فیلدهای fingerprint/hardwareFingerprint و licenseKey را می‌خواند.
+/// (چرخه هجدهم — گزارش دوازدهم مالک)
+/// </summary>
+public sealed record ActivationRequestDto(
+    int FormatVersion,
+    string RequestType,
+    string Fingerprint,
+    string? LicenseKey,
+    string ClinicName,
+    string AppVersion,
+    string RequestedAt);
 
 /// <summary>
 /// گزارش وضعیت لایسنس

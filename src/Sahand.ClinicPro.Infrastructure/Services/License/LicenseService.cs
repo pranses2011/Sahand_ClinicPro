@@ -1,10 +1,11 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Entities.Infrastructure;
 using Sahand.ClinicPro.Domain.Entities.Licensing;
@@ -62,11 +63,9 @@ public class LicenseService : ILicenseService
     /// </summary>
     public async Task<LicenseStatusReport> ActivateOnlineAsync(string licenseKey, CancellationToken ct = default)
     {
-        var portalUrl = _configuration["License:PortalUrl"];
-        if (string.IsNullOrWhiteSpace(portalUrl))
-            return Invalid(LicenseValidationResult.NotFound,
-                "نشانی پنل لایسنس تنظیم نشده است — License:PortalUrl");
-
+        // چرخه هجدهم (گزارش دوازدهم): تنظیم خالی دیگر خطا نمی‌دهد —
+        // اولویت: SystemSettings ← appsettings ← پیش‌فرض رسمی محصول
+        var portalUrl = await ResolvePortalUrlAsync(ct);
         var fingerprint = _configuration["License:HardwareFingerprint"] ?? "";
 
         try
@@ -190,14 +189,147 @@ public class LicenseService : ILicenseService
             .Where(s => s.Category == "Support" && keys.Contains(s.Key) && !s.IsDeleted)
             .ToDictionaryAsync(s => s.Key, s => s.Value ?? "", ct);
 
-        return new SupportInfoDto(
+        var stored = new SupportInfoDto(
             rows.GetValueOrDefault("Support.Name", ""),
             rows.GetValueOrDefault("Support.Company", ""),
             rows.GetValueOrDefault("Support.Phone", ""),
             rows.GetValueOrDefault("Support.Mobile", ""),
             rows.GetValueOrDefault("Support.Email", ""),
             rows.GetValueOrDefault("Support.Website", ""));
+        return stored.HasData ? stored : DefaultSupportInfo();
     }
+
+    /// <summary>
+    /// نشانی سرور لایسنس — چرخه هجدهم (گزارش دوازدهم مالک):
+    /// اولویت: تنظیم ذخیره‌شدهٔ کاربر (SystemSettings: License.PortalUrl) ←
+    /// appsettings (License:PortalUrl) ← پیش‌فرض رسمی محصول.
+    /// خطای «نشانی پنل لایسنس تنظیم نشده است» با همین زنجیره رفع شد.
+    /// </summary>
+    public async Task<string> GetPortalUrlAsync(CancellationToken ct = default)
+        => await ResolvePortalUrlAsync(ct);
+
+    /// <summary>
+    /// ذخیرهٔ نشانی سرور لایسنس کاربر — نرمال‌سازی (ریشه ← api.php) و
+    /// اعتبارسنجی http/https؛ سپس ذخیره در SystemSettings (دستهٔ License).
+    /// </summary>
+    public async Task<bool> SetPortalUrlAsync(string portalUrl, CancellationToken ct = default)
+    {
+        var raw = (portalUrl ?? string.Empty).Trim();
+        if (raw.Length > 0 && !LicensePortalHelper.IsValidHttpUrl(
+                raw.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                    ? raw
+                    : "https://" + raw))
+            return false;
+
+        var normalized = LicensePortalHelper.NormalizeApiUrl(raw);
+        var key = "License.PortalUrl";
+        var existing = await _context.SystemSettings
+            .FirstOrDefaultAsync(s => s.Category == "License" && s.Key == key, ct);
+        if (existing is not null)
+            existing.Value = normalized;
+        else
+            _context.SystemSettings.Add(new SystemSetting
+            {
+                Category = "License",
+                Key = key,
+                Value = normalized,
+                DataType = SettingDataType.String,
+                Description = "نشانی سرور لایسنس — تنظیم‌شده از صفحهٔ فعال‌سازی دسکتاپ",
+                IsSystem = false,
+            });
+        await _context.SaveChangesAsync(ct);
+        return true;
+    }
+
+    /// <summary>
+    /// ساخت درخواست فعال‌سازی آفلاین (فایل .req) — چرخه هجدهم (گزارش دوازدهم).
+    /// کلید اختیاری است؛ اگر داده شود پنل از ناسازگاری کلید/لایسنس جلوگیری می‌کند.
+    /// </summary>
+    public async Task<ActivationRequestDto> BuildActivationRequestAsync(string? licenseKey = null,
+        CancellationToken ct = default)
+    {
+        var fingerprint = _configuration["License:HardwareFingerprint"];
+        if (string.IsNullOrWhiteSpace(fingerprint))
+            fingerprint = ComputeLocalFingerprint();
+        if (string.IsNullOrWhiteSpace(fingerprint) || fingerprint.Length < 16)
+            fingerprint = fingerprint.PadLeft(16, '0');
+
+        // کلید داده نشده؟ آخرین کلید ثبت‌شدهٔ محلی (در ادامهٔ فعال‌سازی قبلی) به‌کار می‌رود
+        string? key = null;
+        if (string.IsNullOrWhiteSpace(licenseKey))
+            key = (await _context.ClinicLicense.AsNoTracking().FirstOrDefaultAsync(ct))?.LicenseKey;
+        else
+            key = licenseKey.Trim().ToUpperInvariant();
+
+        return new ActivationRequestDto(
+            FormatVersion: 1,
+            RequestType: "activationRequest",
+            Fingerprint: fingerprint,
+            LicenseKey: string.IsNullOrWhiteSpace(key) ? null : key,
+            ClinicName: _configuration["License:ClinicName"] ?? "درمانگاه سهند",
+            AppVersion: typeof(LicenseService).Assembly.GetName().Version?.ToString(3) ?? "1.0.0",
+            RequestedAt: DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"));
+    }
+
+    /// <summary>
+    /// تازه‌سازی اطلاعات پشتیبانی از سرور لایسنس — چرخه هجدهم (گزارش دوازدهم):
+    /// action=support عمومی پنل PHP خوانده می‌شود و در SystemSettings ذخیره
+    /// می‌شود؛ «از دفعات بعد» همین مقادیر تازه نمایش داده می‌شوند.
+    /// در صورت خطا، مقادیر ذخیره‌شده/پیش‌فرض برگردانده می‌شوند.
+    /// </summary>
+    public async Task<SupportInfoDto> RefreshSupportInfoAsync(CancellationToken ct = default)
+    {
+        var portalUrl = await ResolvePortalUrlAsync(ct);
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get,
+                portalUrl + (portalUrl.Contains('?') ? "&" : "?") + "action=support");
+            using var response = await _http.SendAsync(request, ct);
+            var raw = await response.Content.ReadAsStringAsync(ct);
+            var result = JsonSerializer.Deserialize<PortalSupportResponse>(raw, JsonOptions);
+            if (result?.Support is { } sup)
+            {
+                await UpsertSupportInfoAsync(sup, ct);
+                await _context.SaveChangesAsync(ct);
+            }
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            _logger.LogDebug(ex, "تازه‌سازی اطلاعات پشتیبانی از سرور لایسنس ناموفق بود — مقادیر موجود می‌مانند");
+        }
+        return await GetSupportInfoAsync(ct);
+    }
+
+    /// <summary>
+    /// خواندن نشانی سرور لایسنس با اولویت: تنظیم کاربر ← appsettings ← پیش‌فرض رسمی.
+    /// نرمال‌سازی تضمین می‌کند همیشه endpoint کامل (api.php) باشد.
+    /// </summary>
+    private async Task<string> ResolvePortalUrlAsync(CancellationToken ct)
+    {
+        var stored = await _context.SystemSettings.AsNoTracking()
+            .Where(s => s.Category == "License" && s.Key == "License.PortalUrl" && !s.IsDeleted)
+            .Select(s => s.Value)
+            .FirstOrDefaultAsync(ct);
+        if (!string.IsNullOrWhiteSpace(stored))
+            return stored;
+        var configured = _configuration["License:PortalUrl"];
+        return LicensePortalHelper.NormalizeApiUrl(configured);
+    }
+
+    /// <summary>
+    /// اطلاعات پشتیبانی پیش‌فرض — چرخه هجدهم (گزارش دوازدهم مالک):
+    /// «بصورت پیش‌فرض اطلاعات پشتیبانی موجود باشه»؛ تا نخستین تماس موفق با
+    /// سرور لایسنس، این مقادیر در صفحهٔ فعال‌سازی نمایش داده می‌شوند و پس از
+    /// دریافت مقادیر واقعی از پنل، همان‌ها جایگزین و در دیتابیس ذخیره می‌شوند.
+    /// </summary>
+    private static SupportInfoDto DefaultSupportInfo() => new(
+        "سعید نجفی",
+        "سهند سرویس",
+        "041-34436141",
+        "09144220430",
+        "info@ea-fixer.ir",
+        "https://ea-fixer.ir",
+        Source: "default");
 
     /// <summary>
     /// تپ قلب روزانه — اعلان حضور به سرور لایسنس:
@@ -210,9 +342,8 @@ public class LicenseService : ILicenseService
         if (license is null)
             return Invalid(LicenseValidationResult.NotFound, "لایسنس فعلی ثبت نشده است");
 
-        var portalUrl = _configuration["License:PortalUrl"];
-        if (string.IsNullOrWhiteSpace(portalUrl))
-            return await GetStatusAsync(ct); // بدون سرور — فقط اعتبارسنجی محلی
+        // چرخه هجدهم: نشانی سرور از Resolver مشترک — پیش‌فرض رسمی همیشه موجود است
+        var portalUrl = await ResolvePortalUrlAsync(ct);
 
         try
         {
@@ -659,6 +790,13 @@ public sealed class PortalLicensePayload
     [JsonPropertyName("signature")] public string? Signature { get; set; }
 
     /// <summary>اطلاعات پشتیبانی محصول — از پنل لایسنس ارسال می‌شود</summary>
+    [JsonPropertyName("support")] public PortalSupportInfo? Support { get; set; }
+}
+
+/// <summary>پاسخ action=support پنل PHP — فقط بستهٔ اطلاعات پشتیبانی</summary>
+public sealed class PortalSupportResponse
+{
+    /// <summary>بدنهٔ اطلاعات پشتیبانی</summary>
     [JsonPropertyName("support")] public PortalSupportInfo? Support { get; set; }
 }
 
