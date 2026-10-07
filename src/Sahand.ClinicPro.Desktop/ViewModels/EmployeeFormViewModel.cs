@@ -3,6 +3,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
 
+using Sahand.ClinicPro.Desktop.Helpers;
+
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
 /// <summary>
@@ -112,6 +114,18 @@ public partial class EmployeeFormViewModel : ObservableObject
             || string.IsNullOrWhiteSpace(NationalCode) || string.IsNullOrWhiteSpace(Mobile))
         {
             ErrorMessage = "همه فیلدهای الزامی را تکمیل کنید";
+            return;
+        }
+
+        // چرخه ۱۹ (گزارش سیزدهم مالک): صحت کد ملی با رقم کنترلی سنجیده می‌شود نه فقط طول
+        if (!Validators.IsValidNationalCode(NationalCode))
+        {
+            ErrorMessage = "کد ملی معتبر نیست — باید ۱۰ رقم با رقم کنترلی درست باشد";
+            return;
+        }
+        if (!Validators.IsValidMobile(Mobile))
+        {
+            ErrorMessage = "فرمت موبایل: ۰۹XXXXXXXXX";
             return;
         }
 

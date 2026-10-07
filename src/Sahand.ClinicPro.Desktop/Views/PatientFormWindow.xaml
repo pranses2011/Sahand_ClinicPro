@@ -123,10 +123,13 @@
                                     <ColumnDefinition Width="12" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="استان"
-                                         Text="{Binding Province, UpdateSourceTrigger=PropertyChanged}" />
-                                <TextBox Grid.Column="1" materialDesign:HintAssist.Hint="شهر"
-                                         Text="{Binding City, UpdateSourceTrigger=PropertyChanged}" />
+                                <!-- چرخه ۱۹: استان و شهر از فهرست کشویی — رفع نبودن فیلد شهر (در ستون فاصله‌دار ۱۲px بود) -->
+                                <ComboBox Grid.Column="0" materialDesign:HintAssist.Hint="استان"
+                                          ItemsSource="{Binding ProvinceOptions}"
+                                          SelectedItem="{Binding Province, UpdateSourceTrigger=PropertyChanged}" />
+                                <ComboBox Grid.Column="2" materialDesign:HintAssist.Hint="شهر"
+                                          ItemsSource="{Binding CityOptions}"
+                                          SelectedItem="{Binding City, UpdateSourceTrigger=PropertyChanged}" />
                             </Grid>
                             <Grid Margin="0,12,0,0">
                                 <Grid.ColumnDefinitions>
@@ -137,7 +140,8 @@
                                 <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="کد پستی"
                                          Text="{Binding PostalCode, UpdateSourceTrigger=PropertyChanged}"
                                          MaxLength="10" FontFamily="Consolas" />
-                                <TextBox Grid.Column="1" materialDesign:HintAssist.Hint="شغل"
+                                <!-- چرخه ۱۹: رفع نبودن فیلد شغل — قبلاً در ستون فاصله‌دار ۱۲px بود -->
+                                <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="شغل"
                                          Text="{Binding Occupation, UpdateSourceTrigger=PropertyChanged}" />
                             </Grid>
                             <TextBox materialDesign:HintAssist.Hint="آدرس کامل"

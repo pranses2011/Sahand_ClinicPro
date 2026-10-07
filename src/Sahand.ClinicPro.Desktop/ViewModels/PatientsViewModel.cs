@@ -1,7 +1,8 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Sahand.ClinicPro.Desktop.Helpers;
 using Sahand.ClinicPro.Desktop.Services;
 using Sahand.ClinicPro.Desktop.Views;
 
@@ -282,6 +283,13 @@ public partial class PatientFormViewModel : ObservableObject
     [ObservableProperty] private string? _occupation;
     [ObservableProperty] private string? _address;
 
+    /// <summary>فهرست استان‌ها — چرخه ۱۹: انتخاب از کشویی با دادهٔ پیش‌فرض داخل برنامه</summary>
+    public List<string> ProvinceOptions { get; } =
+        IranGeoData.Provinces.Keys.OrderBy(k => k, StringComparer.CurrentCulture).ToList();
+
+    /// <summary>شهرهای استان منتخب — با تغییر استان تازه می‌شود</summary>
+    public ObservableCollection<string> CityOptions { get; } = new();
+
     /* ── تب ۲: اطلاعات بیمه ── */
     [ObservableProperty] private long? _insuranceCompanyId;
     [ObservableProperty] private string? _insuranceNumber;
@@ -358,6 +366,15 @@ public partial class PatientFormViewModel : ObservableObject
                 Province = patient.Province;
                 City = patient.City;
                 Address = patient.Address;
+
+                // چرخه ۱۹: اگر مقدار ذخیره‌شده در فهرست پیش‌فرض نبود، به فهرست اضافه شود
+                // تا هنگام ویرایش، مقدار قبلی بیمار در کشویی دیده و حفظ شود
+                if (!string.IsNullOrWhiteSpace(Province)
+                    && !IranGeoData.Provinces.ContainsKey(Province)
+                    && !ProvinceOptions.Contains(Province))
+                    ProvinceOptions.Insert(0, Province);
+                if (!string.IsNullOrWhiteSpace(City) && !CityOptions.Contains(City))
+                    CityOptions.Add(City);
                 InsuranceCompanyId = patient.InsuranceCompanyId;
                 InsuranceNumber = patient.InsuranceNumber;
                 FormTitle = $"ویرایش بیمار: {patient.FirstName} {patient.LastName}";
@@ -393,18 +410,20 @@ public partial class PatientFormViewModel : ObservableObject
         }
     }
 
-    /// <summary>اعتبارسنجی کد ملی — رقم کنترلی طبق الگوریتم ملی</summary>
-    private static bool IsValidNationalCode(string code)
+    /// <summary>بارگذاری شهرهای استان منتخب — چرخه ۱۹ (گزارش سیزدهم مالک)</summary>
+    partial void OnProvinceChanged(string? value)
     {
-        if (code.Length != 10 || !code.All(char.IsDigit) || code.Distinct().Count() == 1)
-            return false;
-        var sum = 0;
-        for (var i = 0; i < 9; i++)
-            sum += (code[i] - '0') * (10 - i);
-        var remainder = sum % 11;
-        var check = code[9] - '0';
-        return (remainder < 2 && check == remainder) || (remainder >= 2 && check == 11 - remainder);
+        CityOptions.Clear();
+        if (string.IsNullOrWhiteSpace(value))
+            return;
+        if (IranGeoData.Provinces.TryGetValue(value, out var cities))
+            foreach (var c in cities)
+                CityOptions.Add(c);
     }
+
+    /// <summary>اعتبارسنجی کد ملی — از اعتبارسنج مشترک (چرخه ۱۹)</summary>
+    private static bool IsValidNationalCode(string code)
+        => Validators.IsValidNationalCode(code);
 
     /// <summary>بررسی خودکار یکتایی کد ملی بعد از ۱۰ رقم — طبق فرم ۴ پرامپت</summary>
     partial void OnNationalCodeChanged(string value)
@@ -449,8 +468,7 @@ public partial class PatientFormViewModel : ObservableObject
         if (NationalCode.Length != 10) { ErrorMessage = "کد ملی باید ۱۰ رقم باشد"; return; }
         if (!IsNationalCodeValid) { ErrorMessage = "کد ملی معتبر نیست (رقم کنترلی اشتباه)"; return; }
         if (string.IsNullOrWhiteSpace(Mobile)) { ErrorMessage = "شماره موبایل الزامی است"; return; }
-        if (!System.Text.RegularExpressions.Regex.IsMatch(Mobile, @"^09\d{9}$"))
-        { ErrorMessage = "فرمت موبایل: ۰۹XXXXXXXXX"; return; }
+        if (!Validators.IsValidMobile(Mobile)) { ErrorMessage = "فرمت موبایل: ۰۹XXXXXXXXX"; return; }
 
         var body = new
         {
