@@ -316,10 +316,20 @@ public partial class PatientFormViewModel : ObservableObject
     [ObservableProperty] private string? _emergencyContactRelation;
 
     /* ── عمومی ── */
+    /// <summary>متن خطای فرم</summary>
     [ObservableProperty] private string _errorMessage = string.Empty;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _formTitle = "ثبت بیمار جدید";
     [ObservableProperty] private bool _isNationalCodeValid;
+
+    /// <summary>
+    /// متن اعتبارسنجی زندهٔ کد ملی — چرخه بیستم (گزارش چهاردهم مالک):
+    /// «اعتبارسنجی کد ملی زنده باشد و هنگام نوشتن زیرش با متن نشان داده شود»
+    /// </summary>
+    [ObservableProperty] private string _nationalCodeValidationText = string.Empty;
+
+    /// <summary>رنگ متن اعتبارسنجی — سبز معتبر / قرمز نامعتبر / زرد ناقص</summary>
+    [ObservableProperty] private string _nationalCodeValidationColor = "#C62828";
 
     /// <summary>گزینه‌های بیمه برای ComboBox</summary>
     public ObservableCollection<InsuranceOption> InsuranceCompanies { get; } = new();
@@ -444,10 +454,39 @@ public partial class PatientFormViewModel : ObservableObject
     private static bool IsValidNationalCode(string code)
         => Validators.IsValidNationalCode(code);
 
-    /// <summary>بررسی خودکار یکتایی کد ملی بعد از ۱۰ رقم — طبق فرم ۴ پرامپت</summary>
+    /// <summary>بررسی خودکار یکتایی کد ملی بعد از ۱۰ رقم — طبق فرم ۴ پرامپت + بازخورد زندهٔ زیر فیلد (چرخه بیستم)</summary>
     partial void OnNationalCodeChanged(string value)
     {
         IsNationalCodeValid = IsValidNationalCode(value);
+
+        // ═══ بازخورد زندهٔ زیر فیلد — چرخه بیستم (گزارش چهاردهم مالک) ═══
+        var code = (value ?? string.Empty).Trim();
+        var latin = Money.PersianDigitsToLatin(code);
+        if (latin.Length == 0)
+        {
+            NationalCodeValidationText = string.Empty;
+        }
+        else if (latin.Any(ch => !char.IsDigit(ch)))
+        {
+            NationalCodeValidationColor = "#C62828";
+            NationalCodeValidationText = "❌ کد ملی فقط باید رقم باشد";
+        }
+        else if (latin.Length < 10)
+        {
+            NationalCodeValidationColor = "#F9A825";
+            NationalCodeValidationText = $"⏳ {10 - latin.Length} رقم دیگر وارد کنید ({latin.Length} از ۱۰)";
+        }
+        else if (IsNationalCodeValid)
+        {
+            NationalCodeValidationColor = "#2E7D32";
+            NationalCodeValidationText = "✅ کد ملی معتبر است (رقم کنترلی درست)";
+        }
+        else
+        {
+            NationalCodeValidationColor = "#C62828";
+            NationalCodeValidationText = "❌ رقم کنترلی کد ملی درست نیست — کد را بازبینی کنید";
+        }
+
         if (value?.Length == 10 && !_nationalCodeChecked && IsNationalCodeValid)
         {
             _nationalCodeChecked = true;

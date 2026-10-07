@@ -57,7 +57,8 @@
 
                         <!-- ستون راست -->
                         <StackPanel Grid.Column="0">
-                            <!-- کد ملی با اعتبارسنجی زنده -->
+                            <!-- کد ملی با اعتبارسنجی زنده — چرخه بیستم (گزارش چهاردهم مالک):
+                                 هنگام تایپ، زیر فیلد با متن رنگی بازخورد داده می‌شود -->
                             <TextBox materialDesign:HintAssist.Hint="کد ملی *"
                                      Text="{Binding NationalCode, UpdateSourceTrigger=PropertyChanged}"
                                      MaxLength="10"
@@ -72,6 +73,10 @@
                                     </Style>
                                 </TextBox.Style>
                             </TextBox>
+                            <TextBlock Text="{Binding NationalCodeValidationText, Mode=OneWay}"
+                                       Foreground="{Binding NationalCodeValidationColor, Mode=OneWay}"
+                                       FontSize="10.5" Margin="2,3,2,0"
+                                       Visibility="{Binding NationalCodeValidationText, Converter={StaticResource StringToVisibility}}" />
                             <TextBox materialDesign:HintAssist.Hint="نام *"
                                      Text="{Binding FirstName, UpdateSourceTrigger=PropertyChanged}"
                                      MaxLength="50" Margin="0,12,0,0" />

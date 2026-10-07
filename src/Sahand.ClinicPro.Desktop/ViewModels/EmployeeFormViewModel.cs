@@ -28,6 +28,54 @@ public partial class EmployeeFormViewModel : ObservableObject
     [ObservableProperty]
     private string _nationalCode = string.Empty;
 
+    /// <summary>
+    /// متن اعتبارسنجی زندهٔ کد ملی — چرخه بیستم (گزارش چهاردهم مالک):
+    /// «اعتبارسنجی کد ملی زنده باشد و هنگام نوشتن زیرش با متن نشان داده شود»
+    /// </summary>
+    [ObservableProperty]
+    private string _nationalCodeValidationText = string.Empty;
+
+    /// <summary>رنگ متن اعتبارسنجی — سبز معتبر / قرمز نامعتبر</summary>
+    [ObservableProperty]
+    private string _nationalCodeValidationColor = "#C62828";
+
+    /// <summary>
+    /// بازخورد زندهٔ کد ملی هنگام تایپ — تعداد رقم‌های باقی‌مانده،
+    /// درستی رقم کنترلی و خطای کاراکتر غیرعددی زیر فیلد نشان داده می‌شود
+    /// </summary>
+    partial void OnNationalCodeChanged(string value)
+    {
+        var code = value?.Trim() ?? string.Empty;
+        if (code.Length == 0)
+        {
+            NationalCodeValidationText = string.Empty;
+            return;
+        }
+
+        // نرمال‌سازی ارقام فارسی/عربی برای سنجش
+        var latin = Helpers.Money.PersianDigitsToLatin(code);
+
+        if (latin.Any(ch => !char.IsDigit(ch)))
+        {
+            NationalCodeValidationColor = "#C62828";
+            NationalCodeValidationText = "❌ کد ملی فقط باید رقم باشد";
+            return;
+        }
+
+        if (latin.Length < 10)
+        {
+            NationalCodeValidationColor = "#F9A825";
+            NationalCodeValidationText = $"⏳ {10 - latin.Length} رقم دیگر وارد کنید ({latin.Length} از ۱۰)";
+            return;
+        }
+
+        var valid = Validators.IsValidNationalCode(latin);
+        NationalCodeValidationColor = valid ? "#2E7D32" : "#C62828";
+        NationalCodeValidationText = valid
+            ? "✅ کد ملی معتبر است (رقم کنترلی درست)"
+            : "❌ رقم کنترلی کد ملی درست نیست — کد را بازبینی کنید";
+    }
+
     /// <summary>موبایل</summary>
     [ObservableProperty]
     private string _mobile = string.Empty;

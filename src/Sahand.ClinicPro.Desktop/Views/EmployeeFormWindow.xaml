@@ -70,9 +70,15 @@
         <TextBox materialDesign:HintAssist.Hint="نام خانوادگی *"
                  Text="{Binding LastName, UpdateSourceTrigger=PropertyChanged}"
                  Margin="0,0,0,12" />
+        <!-- کد ملی با اعتبارسنجی زنده — چرخه بیستم (گزارش چهاردهم مالک):
+             هنگام تایپ، زیر فیلد با متن رنگی بازخورد داده می‌شود -->
         <TextBox materialDesign:HintAssist.Hint="کد ملی *"
                  Text="{Binding NationalCode, UpdateSourceTrigger=PropertyChanged}"
-                 MaxLength="10" Margin="0,0,0,12" />
+                 MaxLength="10" Margin="0,0,0,2" />
+        <TextBlock Text="{Binding NationalCodeValidationText, Mode=OneWay}"
+                   Foreground="{Binding NationalCodeValidationColor, Mode=OneWay}"
+                   FontSize="10.5" Margin="2,3,2,10"
+                   Visibility="{Binding NationalCodeValidationText, Converter={StaticResource StringToVisibility}}" />
         <TextBox materialDesign:HintAssist.Hint="موبایل *"
                  Text="{Binding Mobile, UpdateSourceTrigger=PropertyChanged}"
                  MaxLength="11" Margin="0,0,0,12" />
