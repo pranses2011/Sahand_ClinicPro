@@ -88,7 +88,7 @@ public class BackupController : ApiBaseController
             BackupType = BackupType.Full,
             FilePath = fullPath,
             StartedAt = DateTime.Now,
-            Status = BackupStatus.Running,
+            Status = BackupStatus.InProgress,
             IsAutomatic = false,
             StorageType = StorageType.Local
         };

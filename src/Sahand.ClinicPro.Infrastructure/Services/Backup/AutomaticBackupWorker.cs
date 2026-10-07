@@ -91,7 +91,7 @@ public class AutomaticBackupWorker : BackgroundService
         // اگر ساعت مقرر نرسیده یا نسخهٔ خودکار امروز گرفته شده، کاری نکن
         if (now.Hour < hour)
             return;
-        var takenToday = await db.BackupHistories.AsNoTracking()
+        var takenToday = await db.BackupHistory.AsNoTracking()
             .AnyAsync(b => b.IsAutomatic && b.StartedAt >= today, ct);
         if (takenToday)
             return;
@@ -118,9 +118,9 @@ public class AutomaticBackupWorker : BackgroundService
             StartedAt = DateTime.Now,
             IsAutomatic = true,
             StorageType = StorageType.Local,
-            Status = BackupStatus.Running,
+            Status = BackupStatus.InProgress,
         };
-        db.BackupHistories.Add(record);
+        db.BackupHistory.Add(record);
         await db.SaveChangesAsync(ct);
 
         try

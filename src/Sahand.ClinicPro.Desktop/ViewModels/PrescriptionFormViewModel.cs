@@ -639,7 +639,7 @@ public partial class PrescriptionFormViewModel : ObservableObject
         }
 
         SavedPrescriptionId = response.Data;
-        return response.Data;
+        return response.Data ?? 0;
     }
 
     /// <summary>

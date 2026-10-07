@@ -7,7 +7,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Seeders.SeedData;
 /// تعداد: 523 جفت تداخل با شدت و مکانیزم و توصیه
 /// شدت: ۱=خفیف ۲=متوسط ۳=شدید ۴=منع مصرف
 /// </summary>
-public static class DrugInteractionSeedData
+public static partial class DrugInteractionSeedData
 {
     /// <summary>رکورد تداخل (بر پایه نام ژنریک)</summary>
     public sealed record InteractionRow(

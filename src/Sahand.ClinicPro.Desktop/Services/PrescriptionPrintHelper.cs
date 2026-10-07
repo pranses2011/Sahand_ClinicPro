@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Controls;
 using Sahand.ClinicPro.Application.Common.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.Services;
@@ -148,7 +149,7 @@ public static class PrescriptionPrintHelper
         {
             FontSize = 9.5,
             Foreground = MutedBrush,
-            Italic = true
+            FontStyle = FontStyles.Italic
         });
         doc.Blocks.Add(note);
 
@@ -179,7 +180,7 @@ public static class PrescriptionPrintHelper
             Width = 860,
             Height = 640,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Owner = Application.Current?.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive),
+            Owner = System.Windows.Application.Current?.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive),
             FlowDirection = FlowDirection.RightToLeft
         };
         window.ShowDialog();

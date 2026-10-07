@@ -173,19 +173,19 @@ public static class AppDialog
 {
     /// <summary>دیالوگ اطلاع‌رسانی با دکمهٔ تأیید</summary>
     public static bool Info(string title, string message)
-        => ShowDialog(null, title, message, AppDialogIcon.Info, AppDialogButtons.Ok) == true;
+        => ThemedDialog.ShowDialog(null, title, message, AppDialogIcon.Info, AppDialogButtons.Ok) == true;
 
     /// <summary>دیالوگ موفقیت با دکمهٔ تأیید</summary>
     public static bool Success(string title, string message)
-        => ShowDialog(null, title, message, AppDialogIcon.Success, AppDialogButtons.Ok) == true;
+        => ThemedDialog.ShowDialog(null, title, message, AppDialogIcon.Success, AppDialogButtons.Ok) == true;
 
     /// <summary>دیالوگ هشدار با دکمهٔ تأیید</summary>
     public static bool Warn(string title, string message)
-        => ShowDialog(null, title, message, AppDialogIcon.Warning, AppDialogButtons.Ok) == true;
+        => ThemedDialog.ShowDialog(null, title, message, AppDialogIcon.Warning, AppDialogButtons.Ok) == true;
 
     /// <summary>دیالوگ خطا با دکمهٔ تأیید</summary>
     public static bool Error(string title, string message)
-        => ShowDialog(null, title, message, AppDialogIcon.Error, AppDialogButtons.Ok) == true;
+        => ThemedDialog.ShowDialog(null, title, message, AppDialogIcon.Error, AppDialogButtons.Ok) == true;
 
     /// <summary>
     /// دیالوگ پرسش بله/خیر — بازگشت true یعنی «بله».

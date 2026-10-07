@@ -162,34 +162,8 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <!-- لوگو و نام سامانه — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
-                     «در بالای منوی کناری آیکون برنامه باید باشد ولی یک آیکون دیگر
-                     هست» — آیکون PackIcon عمومی با آیکون رسمی خود برنامه (appicon.ico)
-                     جایگزین شد تا هویت بصری محصول در سایدبار هم دیده شود -->
-                <StackPanel Grid.Row="0" Margin="16,20,16,16">
-                    <Image Source="/Assets/appicon.ico"
-                           Width="42" Height="42"
-                           RenderOptions.BitmapScalingMode="HighQuality"
-                           HorizontalAlignment="Right" />
-                    <TextBlock Text="درمانگاه سهند"
-                               FontSize="20" FontWeight="Bold" Margin="0,10,0,0"
-                               Foreground="White" HorizontalAlignment="Right" />
-                    <TextBlock Text="سامانه جامع مدیریت"
-                               FontSize="12" Opacity="0.72"
-                               Foreground="#DCE9FA" HorizontalAlignment="Right" />
-                </StackPanel>
-
-                <!-- فهرست ناوبری ماژول‌ها — چرخه هفدهم: قالب آیتم سفارشی برای
-                     سایدبار تیره — متن آبی‌روشن، آیتم فعال/هاور با های‌لایت
-                     سفید نیمه‌شفاف گوشه‌گرد (الگوی فرم‌های طراحی).
-                     ═══ چرخه بیست‌ویکم (گزارش پانزدهم مالک) ═══
-                     «گزینه‌های لیست کناری مرتب نیستند و شلوغ است؛ بر اساس عملکرد
-                     به‌صورت زیر منو قرار بده» — آیتم‌های گروه‌دار با HasChildren
-                     تشخیص داده می‌شوند و به‌صورت گروه بازشو (زیرمنوی تودرتو)
-                     دیده می‌شوند؛ آیتم‌های تکی همان دکمهٔ قبلی‌اند. -->
-
                 <!-- منابع مشترک قالب آیتم‌ها -->
-                <Border.Resources>
+                <Grid.Resources>
                     <!-- سبک پایهٔ آیتم تکی منو — دکمهٔ تمام‌عرض با آیکون و عنوان -->
                     <ControlTemplate x:Key="LeafNavItemTemplate" TargetType="Button">
                         <Border x:Name="LeafBd" Background="Transparent"
@@ -218,7 +192,34 @@
                             </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
-                </Border.Resources>
+                </Grid.Resources>
+
+                <!-- لوگو و نام سامانه — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
+                     «در بالای منوی کناری آیکون برنامه باید باشد ولی یک آیکون دیگر
+                     هست» — آیکون PackIcon عمومی با آیکون رسمی خود برنامه (appicon.ico)
+                     جایگزین شد تا هویت بصری محصول در سایدبار هم دیده شود -->
+                <StackPanel Grid.Row="0" Margin="16,20,16,16">
+                    <Image Source="/Assets/appicon.ico"
+                           Width="42" Height="42"
+                           RenderOptions.BitmapScalingMode="HighQuality"
+                           HorizontalAlignment="Right" />
+                    <TextBlock Text="درمانگاه سهند"
+                               FontSize="20" FontWeight="Bold" Margin="0,10,0,0"
+                               Foreground="White" HorizontalAlignment="Right" />
+                    <TextBlock Text="سامانه جامع مدیریت"
+                               FontSize="12" Opacity="0.72"
+                               Foreground="#DCE9FA" HorizontalAlignment="Right" />
+                </StackPanel>
+
+                <!-- فهرست ناوبری ماژول‌ها — چرخه هفدهم: قالب آیتم سفارشی برای
+                     سایدبار تیره — متن آبی‌روشن، آیتم فعال/هاور با های‌لایت
+                     سفید نیمه‌شفاف گوشه‌گرد (الگوی فرم‌های طراحی).
+                     ═══ چرخه بیست‌ویکم (گزارش پانزدهم مالک) ═══
+                     «گزینه‌های لیست کناری مرتب نیستند و شلوغ است؛ بر اساس عملکرد
+                     به‌صورت زیر منو قرار بده» — آیتم‌های گروه‌دار با HasChildren
+                     تشخیص داده می‌شوند و به‌صورت گروه بازشو (زیرمنوی تودرتو)
+                     دیده می‌شوند؛ آیتم‌های تکی همان دکمهٔ قبلی‌اند. -->
+
 
                 <ListBox x:Name="NavList" Grid.Row="1"
                          ItemsSource="{Binding NavItems}"

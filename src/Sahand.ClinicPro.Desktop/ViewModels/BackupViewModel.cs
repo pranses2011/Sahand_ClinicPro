@@ -469,6 +469,9 @@ public partial class BackupViewModel : ViewModelBase
         public string? FilePath { get; set; }
         public string? Storage { get; set; }
         public string? CloudFileName { get; set; }
+
+        /// <summary>پیام خطا در صورت ناموفقی — چرخه بیست‌ویکم برای پنل جزئیات</summary>
+        public string? ErrorMessage { get; set; }
     }
 
     /// <summary>پاسخ تنظیمات پشتیبان خودکار — چرخه بیست‌ویکم</summary>

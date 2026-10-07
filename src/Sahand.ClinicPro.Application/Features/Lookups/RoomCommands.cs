@@ -78,13 +78,13 @@ public class CreateRoomCommandHandler : IRequestHandler<CreateRoomCommand, Resul
     {
         var number = request.RoomNumber?.Trim();
         if (string.IsNullOrWhiteSpace(number))
-            return Result<long>.Failure(Error.Problem("شماره اتاق الزامی است"));
+            return Result<long>.Failure(new Error("ROOM.NUMBER_REQUIRED", "شماره اتاق الزامی است"));
 
         var repo = _unitOfWork.Repository<ExaminationRoom>();
         var duplicate = await repo.QueryableNoTracking
             .AnyAsync(r => r.RoomNumber == number, cancellationToken);
         if (duplicate)
-            return Result<long>.Failure(Error.Problem("اتاقی با این شماره قبلاً ثبت شده است"));
+            return Result<long>.Failure(new Error("ROOM.DUPLICATE", "اتاقی با این شماره قبلاً ثبت شده است"));
 
         var room = new ExaminationRoom
         {

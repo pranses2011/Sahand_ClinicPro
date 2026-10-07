@@ -185,12 +185,13 @@ public partial class MainWindowViewModel : ObservableObject
         // با زیر منو کم کن» — ۳۰ آیتم تخت به ۹ گروهِ عملکردی + ۳ آیتم تکی بازسازماندهی شد.
         // گروه‌ها: پذیرش و درمان | نسخه و دارو | پاراکلینیک | پزشکان و پرسنل |
         // مالی و بیمه | ارتباط با بیمار | مدیریت سامانه
-        static NavItem Group(string title, string icon, params NavItem[] children) => new()
+        static NavItem Group(string title, string icon, params NavItem[] children)
         {
-            Title = title,
-            Icon = icon,
-            Children = { children }
-        };
+            var group = new NavItem { Title = title, Icon = icon };
+            foreach (var child in children)
+                group.Children.Add(child);
+            return group;
+        }
 
         NavItems = new ObservableCollection<NavItem>
         {
