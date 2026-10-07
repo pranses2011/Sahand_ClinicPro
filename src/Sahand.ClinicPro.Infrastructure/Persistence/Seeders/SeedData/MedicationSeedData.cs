@@ -6,7 +6,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Seeders.SeedData;
 /// کاتالوگ داروهای رایج ایران — تولیدشده توسط stepS2_reference_data.py
 /// مولکول × فرم × دوز × سازنده — مبنای جستجوی نسخه‌نویسی
 /// </summary>
-public static class MedicationSeedData
+public static partial class MedicationSeedData
 {
     /// <summary>رکورد دارو</summary>
     public sealed record MedicationRow(

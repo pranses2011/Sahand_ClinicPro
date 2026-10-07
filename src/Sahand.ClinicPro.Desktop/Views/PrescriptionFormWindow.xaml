@@ -110,6 +110,21 @@
                         Background="{DynamicResource MaterialDesign.Brush.Background}"
                         BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
                     <StackPanel>
+                        <!-- چرخه بیستم (گزارش چهاردهم مالک): دکمهٔ بروزرسانی فهرست داروها —
+                             داروهای تازهٔ کاتالوگ مرجع به دیتابیس سرور افزوده می‌شوند -->
+                        <DockPanel Margin="0,0,0,6">
+                            <Button DockPanel.Dock="Left" Command="{Binding UpdateMedicationsCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11"
+                                    ToolTip="داروهای جدید کاتالوگ مرجع را به فهرست جستجو می‌افزاید">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="DatabaseRefresh" Width="14" Height="14" VerticalAlignment="Center" />
+                                    <TextBlock Text="بروزرسانی فهرست داروها" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="فهرست داروها با دکمهٔ کنار بروزرسانی می‌شود؛ داروهای جدید پس از بروزرسانی در جستجو ظاهر می‌شوند."
+                                       FontSize="10" Opacity="0.55" VerticalAlignment="Center"
+                                       TextWrapping="Wrap" Margin="10,0,0,0" />
+                        </DockPanel>
                         <TextBlock Text="🔍 جستجوی دارو (نام ژنریک / تجاری / بارکد / IRC)" Style="{StaticResource FieldCaption}" />
                         <TextBox Text="{Binding MedicationSearch, UpdateSourceTrigger=PropertyChanged}"
                                  materialDesign:HintAssist.Hint="حداقل ۲ کاراکتر — نتایج با تأخیر ۳۰۰ میلی‌ثانیه ظاهر می‌شوند" />
@@ -253,14 +268,30 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" FontSize="13.5" FontWeight="Bold">
                                 <Run Text="⚗️ بررسی خطر تشخیصی — تداخل، حساسیت، بارداری، سن، دوز" />
                             </TextBlock>
+                            <!-- چرخه بیستم (گزارش چهاردهم مالک): بروزرسانی کش محلی تداخل‌ها —
+                                 کل کاتالوگ سرور در %AppData% ذخیره می‌شود تا بررسی‌ها حتی
+                                 بی‌اتصال از پایگاه داخلی انجام شوند -->
+                            <Button Grid.Column="1" Command="{Binding UpdateInteractionsCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11"
+                                    Margin="0,0,10,0"
+                                    ToolTip="کاتالوگ کامل تداخل‌ها را از سرور می‌گیرد و در برنامه ذخیره می‌کند — تداخل‌های جدید اضافه می‌شوند">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Sync" Width="14" Height="14" VerticalAlignment="Center" />
+                                    <TextBlock Text="بروزرسانی تداخل‌ها" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
                             <!-- چک‌باکس‌های وضعیت مادر — چرخه ۱۳ -->
-                            <CheckBox Grid.Column="1" Content="🤰 باردار" IsChecked="{Binding IsPregnant}" FontSize="11.5" FontWeight="SemiBold" Margin="0,0,10,0" />
-                            <CheckBox Grid.Column="2" Content="🍼 شیرده" IsChecked="{Binding IsBreastfeeding}" FontSize="11.5" FontWeight="SemiBold" />
+                            <CheckBox Grid.Column="2" Content="🤰 باردار" IsChecked="{Binding IsPregnant}" FontSize="11.5" FontWeight="SemiBold" Margin="0,0,10,0" />
+                            <CheckBox Grid.Column="3" Content="🍼 شیرده" IsChecked="{Binding IsBreastfeeding}" FontSize="11.5" FontWeight="SemiBold" />
                         </Grid>
+                        <!-- وضعیت کش تداخل محلی — چرخه بیستم -->
+                        <TextBlock Text="{Binding InteractionCacheText, Mode=OneWay}" FontSize="10" Opacity="0.6"
+                                   Margin="0,0,0,4" TextWrapping="Wrap" />
 
                         <!-- بدون تداخل -->
                         <TextBlock Text="✅ هیچ خطر بالینی شناسایی نشد"

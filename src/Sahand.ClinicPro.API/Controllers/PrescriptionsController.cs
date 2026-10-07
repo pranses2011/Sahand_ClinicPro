@@ -128,4 +128,44 @@ public async Task<IActionResult> SaveTemplate([FromBody] SaveTemplateRequest req
         var result = await _mediator.Send(new DeletePrescriptionTemplateCommand(id));
         return ToResponse(result, "تمپلیت حذف شد");
     }
+
+    // ═══════════ چرخه بیستم (گزارش چهاردهم مالک) ═══════════
+    // «تمامی تداخل‌ها داخل برنامه باشد و دکمهٔ بروزرسانی داشته باشد» +
+    // «دکمه‌ای برای بروزرسانی لیست داروها تا داروهای جدید اضافه شوند»
+
+    /// <summary>
+    /// دانلود کامل کاتالوگ تداخل‌های دارویی — برای کش محلی کلاینت دسکتاپ.
+    /// کلاینت این فهرست را در %AppData% ذخیره می‌کند تا بررسی تداخل حتی در
+    /// قطعی شبکه از پایگاه محلی قابل انجام باشد؛ دکمهٔ «بروزرسانی تداخل‌ها»
+    /// همین endpoint را فرامی‌خواند و کش را نو می‌کند.
+    /// </summary>
+    [HttpGet("interactions")]
+    [HasPermission("prescriptions.view")]
+    public async Task<IActionResult> GetInteractions(CancellationToken ct)
+    {
+        var rows = await _mediator.Send(new GetDrugInteractionsQuery(), ct);
+        return ToResponse(rows);
+    }
+
+    /// <summary>
+    /// بروزرسانی فهرست داروها — داروها و جفت‌های تداخلی تازهٔ کاتالوگ بذر را
+    /// که هنوز در دیتابیس نیستند اضافه می‌کند (upsert تلنگری) و شمار
+    /// افزوده‌ها را برمی‌گرداند.
+    /// </summary>
+    [HttpPost("medications/refresh-catalog")]
+    [HasPermission("prescriptions.edit")]
+    public async Task<IActionResult> RefreshMedicationCatalog(CancellationToken ct)
+    {
+        var seeder = new Sahand.ClinicPro.Infrastructure.Persistence.Seeders.ReferenceDataSeeder(
+            HttpContext.RequestServices
+                .GetRequiredService<Sahand.ClinicPro.Infrastructure.Persistence.ClinicProDbContext>());
+        var (meds, interactions) = await seeder.RefreshCatalogAsync(ct);
+        return Ok(ApiResponse<object>.Success(new
+        {
+            medicationsAdded = meds,
+            interactionsAdded = interactions,
+        }, meds == 0 && interactions == 0
+            ? "فهرست داروها از قبل به‌روز بود"
+            : $"فهرست داروها به‌روز شد — {meds} دارو و {interactions} تداخل جدید افزوده شد"));
+    }
 }

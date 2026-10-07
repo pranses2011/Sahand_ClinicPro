@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -20,11 +20,19 @@ public record MedicationResult(
     string? Manufacturer,
     string Country);
 
-/// <summary>قلم نسخه قابل ویرایش</summary>
+/// <summary>
+/// قلم نسخه قابل ویرایش — چرخه بیستم (گزارش چهاردهم مالک):
+/// با تغییر دوز/مصرف/مدت، «تعداد کل» خودکار بازمحاسبه می‌شود
+/// (درخواست مالک: تعداد کل اتوماتیک از روی مدت، مصرف و دوز حساب شود)
+/// </summary>
 public partial class PrescriptionItemVM : ObservableObject
 {
     public long MedicationId { get; init; }
     public string Name { get; init; } = string.Empty;
+
+    /// <summary>نام ژنریک — برای تطبیق تداخل با کش محلی (چرخه بیستم)</summary>
+    public string GenericName { get; init; } = string.Empty;
+
     public string Subtitle { get; init; } = string.Empty;
 
     [ObservableProperty] private string? _dosage = "۱ قرص";
@@ -35,6 +43,50 @@ public partial class PrescriptionItemVM : ObservableObject
     [ObservableProperty] private string? _unit = "عدد";
     [ObservableProperty] private string? _instructions;
     [ObservableProperty] private bool _isSos;
+
+    /// <summary>بازمحاسبهٔ تعداد کل با هر تغییر دوز/مصرف/مدت — چرخه بیستم</summary>
+    partial void OnDosageChanged(string? value) => RecalculateTotal();
+
+    /// <summary>بازمحاسبهٔ تعداد کل با تغییر مصرف — چرخه بیستم</summary>
+    partial void OnFrequencyChanged(string? value) => RecalculateTotal();
+
+    /// <summary>بازمحاسبهٔ تعداد کل با تغییر مدت — چرخه بیستم</summary>
+    partial void OnDurationChanged(string? value) => RecalculateTotal();
+
+    /// <summary>
+    /// محاسبهٔ تعداد کل — دوز × تعداد مصرف روزانه × مدت؛ نتیجه به سمت بالا
+    /// گرد می‌شود (نمی‌شود نصف قرص تجویز خرید) و حداقل ۱ است.
+    /// مقادیر سفارشی خارج از فهرست‌ها با مقدار خنثی (۱ بار/۱ واحد/۷ روز) حساب می‌شوند.
+    /// </summary>
+    public void RecalculateTotal()
+    {
+        var dosesPerDay = Frequency switch
+        {
+            "روزی یکبار" or "صبح‌ها" or "شب‌ها" or "قبل از خواب" or "در صورت نیاز" => 1,
+            "روزی ۲ بار" or "هر ۱۲ ساعت" or "صبح و شب" => 2,
+            "روزی ۳ بار" or "هر ۸ ساعت" => 3,
+            "روزی ۴ بار" or "هر ۶ ساعت" => 4,
+            "هفته‌ای یکبار" => 0.14,
+            "هفته‌ای ۲ بار" => 0.28,
+            _ => 1,
+        };
+        var days = Duration switch
+        {
+            "۳ روز" => 3, "۵ روز" => 5, "۷ روز" => 7, "۱۰ روز" => 10, "۱۴ روز" => 14,
+            "۲۱ روز" => 21, "۳۰ روز" => 30, "۶۰ روز" => 60, "۹۰ روز" => 90,
+            "مصرف مداوم" => 30,
+            _ => 7,
+        };
+        var unitsPerDose = Dosage switch
+        {
+            "۲ قرص" or "۲ عدد" => 2,
+            "نصف قرص" => 0.5,
+            "۵ سی‌سی" => 5,
+            "۱۰ سی‌سی" => 10,
+            _ => 1,
+        };
+        Quantity = Math.Max(1, (decimal)Math.Ceiling(dosesPerDay * days * unitsPerDose));
+    }
 }
 
 /// <summary>تداخل/خطر نمایشی — چرخه ۱۳ با نوع ریسک</summary>
@@ -200,6 +252,7 @@ public partial class PrescriptionFormViewModel : ObservableObject
         _api = api;
         _snackbar = snackbar;
         Doctors = doctors;
+        InteractionCacheText = DescribeCache(); // وضعیت کش تداخل محلی (چرخه بیستم)
         _ = LoadTemplatesAsync();
     }
 
@@ -257,15 +310,17 @@ public partial class PrescriptionFormViewModel : ObservableObject
     private void AddMedication(object? param)
     {
         if (param is not MedicationResult med) return;
-        Items.Add(new PrescriptionItemVM
+        var item = new PrescriptionItemVM
         {
             MedicationId = med.Id,
             Name = med.NameFa,
+            GenericName = med.NameEn, // برای تطبیق تداخل کش محلی (چرخه بیستم)
             Subtitle = $"{med.Form ?? ""} {med.Strength ?? ""} — {med.Manufacturer ?? med.Country}".Trim(' ', '—')
-        });
+        };
+        Items.Add(item);
         MedicationSearch = string.Empty;
         MedicationResults.Clear();
-        RecalculateQuantity(Items[^1]);
+        item.RecalculateTotal(); // تعداد کل پایه بر اساس مقادیر پیش‌فرض قلم
         _ = CheckInteractionsAsync();
     }
 
@@ -278,33 +333,62 @@ public partial class PrescriptionFormViewModel : ObservableObject
         _ = CheckInteractionsAsync();
     }
 
-    /// <summary>محاسبه خودکار تعداد کل — دوز × تعداد × مدت</summary>
-    private static void RecalculateQuantity(PrescriptionItemVM item)
+    /* ═══════════ بروزرسانی پایگاه‌های دارویی — چرخه بیستم (گزارش چهاردهم مالک) ═══════════ */
+
+    /// <summary>متن وضعیت کش تداخل — «۵۲۳ تداخل • آخرین بروزرسانی: …»</summary>
+    [ObservableProperty]
+    private string _interactionCacheText = "کش تداخل بارگذاری نشده";
+
+    /// <summary>
+    /// بروزرسانی کش محلی تداخل‌ها از سرور — «دکمهٔ بروزرسانی تداخل‌ها»:
+    /// کل کاتالوگ سرور دانلود و در %AppData% ذخیره می‌شود تا بررسی‌های بعدی
+    /// حتی در قطعی شبکه از پایگاه داخلی انجام شود.
+    /// </summary>
+    [RelayCommand]
+    private async Task UpdateInteractionsAsync()
     {
-        var dosesPerDay = item.Frequency switch
+        IsBusy = true;
+        var count = await DrugInteractionCache.UpdateAsync(_api);
+        IsBusy = false;
+        if (count is null)
         {
-            "روزی یکبار" or "صبح‌ها" or "شب‌ها" or "قبل از خواب" => 1,
-            "روزی ۲ بار" or "هر ۱۲ ساعت" or "صبح و شب" => 2,
-            "روزی ۳ بار" or "هر ۸ ساعت" => 3,
-            "روزی ۴ بار" or "هر ۶ ساعت" => 4,
-            "هفته‌ای یکبار" => 0.14,
-            "هفته‌ای ۲ بار" => 0.28,
-            _ => 1
-        };
-        var days = item.Duration switch
+            _snackbar.Error(_api.LastError ?? "بروزرسانی تداخل‌ها ناموفق بود — اتصال سرور را بررسی کنید");
+            return;
+        }
+        InteractionCacheText = DescribeCache();
+        _snackbar.Success($"کاتالوگ تداخل‌ها بروز شد — {count} جفت تداخل در دسترس برنامه");
+        _ = CheckInteractionsAsync(); // بازبینی فوری اقلام فعلی با کش نو
+    }
+
+    /// <summary>
+    /// بروزرسانی فهرست داروها از سرور — داروهای تازهٔ کاتالوگ مرجع به دیتابیس
+    /// سرور افزوده می‌شوند (upsert)؛ جستجوی بعدی آنها را می‌یابد.
+    /// </summary>
+    [RelayCommand]
+    private async Task UpdateMedicationsAsync()
+    {
+        IsBusy = true;
+        var response = await _api.PostAsync<RefreshCatalogResponse>("prescriptions/medications/refresh-catalog", new { });
+        IsBusy = false;
+        var d = response?.Data;
+        if (d is null)
         {
-            "۳ روز" => 3, "۵ روز" => 5, "۷ روز" => 7, "۱۰ روز" => 10, "۱۴ روز" => 14,
-            "۲۱ روز" => 21, "۳۰ روز" => 30, "۶۰ روز" => 60, "۹۰ روز" => 90,
-            "مصرف مداوم" => 30,
-            _ => 7
-        };
-        var unitsPerDose = item.Dosage switch
-        {
-            "۲ قرص" or "۲ عدد" => 2,
-            "نصف قرص" => 0.5,
-            _ => 1
-        };
-        item.Quantity = Math.Max(1, (decimal)Math.Ceiling(dosesPerDay * days * unitsPerDose));
+            _snackbar.Error(_api.LastError ?? "بروزرسانی فهرست داروها ناموفق بود");
+            return;
+        }
+        _snackbar.Success(d.MedicationsAdded == 0 && d.InteractionsAdded == 0
+            ? "فهرست داروها از قبل به‌روز بود"
+            : $"فهرست داروها بروز شد — {d.MedicationsAdded} دارو و {d.InteractionsAdded} تداخل جدید افزوده شد");
+    }
+
+    /// <summary>متن توصیفی وضعیت کش — برای نوار وضعیت فرم</summary>
+    private string DescribeCache()
+    {
+        var count = DrugInteractionCache.Count;
+        if (count == 0)
+            return "کش تداخل خالی است — با دکمهٔ بروزرسانی پر می‌شود";
+        var when = DrugInteractionCache.LastUpdated?.ToLocalTime();
+        return $"{count} جفت تداخل در برنامه{(when is null ? "" : $" • آخرین بروزرسانی: {when:yyyy/MM/dd HH:mm}")}";
     }
 
     /* ═══════════ بررسی تداخل خودکار ═══════════ */
@@ -323,6 +407,19 @@ public partial class PrescriptionFormViewModel : ObservableObject
             return;
         }
 
+        // ═══ ۱) کش محلی تداخل — چرخه بیستم (گزارش چهاردهم مالک) ═══
+        // «تمامی تداخل‌ها داخل برنامه باشد» — تطبیق نام ژنریک اقلام با کش
+        // %AppData% بدون نیاز به شبکه؛ نتیجه با پاسخ سرور ادغام می‌شود
+        Interactions.Clear();
+        var localRows = DrugInteractionCache.Check(
+            Items.Select(i => string.IsNullOrWhiteSpace(i.GenericName) ? i.Name : i.GenericName));
+        foreach (var local in localRows)
+            Interactions.Add(new InteractionRow(
+                $"{local.M1Fa} × {local.M2Fa}",
+                local.Severity, local.SevText, local.SevColor,
+                local.Mech, local.Rec, false, "💊", "تداخل دارویی"));
+
+        // ═══ ۲) بررسی سرور — منبع کامل بالینی (آلرژی/بارداری/سن/اندام) ═══
         var response = await _api.PostAsync<CheckResponse>("prescriptions/check-interactions", new
         {
             patientId = Patient.Id,
@@ -332,26 +429,33 @@ public partial class PrescriptionFormViewModel : ObservableObject
             isBreastfeeding = IsBreastfeeding
         });
 
-        Interactions.Clear();
-        if (response?.Data is null)
+        if (response?.Data is not null)
         {
-            NoInteractions = Items.Count == 0;
-            return;
+            foreach (var i in response.Data.Interactions ?? new List<InteractionItem>())
+            {
+                // فقط ردیف‌هایی که کش محلی قبلاً نیاورده (تفکیک با نام‌ها؛ آلرژی‌ها همیشه می‌آیند)
+                var dup = !i.IsAllergyConflict && localRows.Any(l =>
+                    (i.Medication1Name.Contains(l.M1, StringComparison.Ordinal) ||
+                     i.Medication1Name.Contains(l.M1Fa, StringComparison.Ordinal)) &&
+                    (i.Medication2Name.Contains(l.M2, StringComparison.Ordinal) ||
+                     i.Medication2Name.Contains(l.M2Fa, StringComparison.Ordinal)));
+                if (dup)
+                    continue;
+                Interactions.Add(new InteractionRow(
+                    $"{i.Medication1Name} × {i.Medication2Name}",
+                    i.Severity, i.SeverityText, i.SeverityColor,
+                    i.Mechanism, i.Recommendation, i.IsAllergyConflict,
+                    string.IsNullOrWhiteSpace(i.KindIcon) ? "💊" : i.KindIcon,
+                    string.IsNullOrWhiteSpace(i.KindLabel) ? "تداخل دارویی" : i.KindLabel));
+            }
         }
 
-        HasSevereInteraction = response.Data.HasSevere;
-        HasAllergyConflict = response.Data.HasAllergyConflict;
-        HasPregnancyRisk = response.Data.HasPregnancyRisk;
-        HasAbsoluteBlock = response.Data.HasAbsoluteBlock;
-        NoInteractions = response.Data.Interactions is { Count: 0 };
-
-        foreach (var i in response.Data.Interactions ?? new List<InteractionItem>())
-            Interactions.Add(new InteractionRow(
-                $"{i.Medication1Name} × {i.Medication2Name}",
-                i.Severity, i.SeverityText, i.SeverityColor,
-                i.Mechanism, i.Recommendation, i.IsAllergyConflict,
-                string.IsNullOrWhiteSpace(i.KindIcon) ? "💊" : i.KindIcon,
-                string.IsNullOrWhiteSpace(i.KindLabel) ? "تداخل دارویی" : i.KindLabel));
+        // بازسازی پرچم‌های خطر از روی مجموع ردیف‌ها (محلی + سرور)
+        HasSevereInteraction = Interactions.Any(x => x.Severity >= 3 && !x.IsAllergyConflict);
+        HasAllergyConflict = Interactions.Any(x => x.IsAllergyConflict);
+        HasPregnancyRisk = response?.Data?.HasPregnancyRisk == true;
+        HasAbsoluteBlock = Interactions.Any(x => x.Severity >= 4);
+        NoInteractions = Interactions.Count == 0;
     }
 
     /* ═══════════ تمپلیت‌ها ═══════════ */
@@ -596,6 +700,20 @@ public partial class PrescriptionFormViewModel : ObservableObject
         public bool IsAllergyConflict { get; set; }
         public string? KindIcon { get; set; }
         public string? KindLabel { get; set; }
+    }
+
+    /// <summary>پاسخ بروزرسانی کاتالوگ داروها — چرخه بیستم</summary>
+    public sealed class RefreshCatalogResponse
+    {
+        public bool IsSuccess { get; set; }
+        public RefreshCatalogData? Data { get; set; }
+    }
+
+    /// <summary>شمار افزوده‌های بروزرسانی کاتالوگ</summary>
+    public sealed class RefreshCatalogData
+    {
+        public int MedicationsAdded { get; set; }
+        public int InteractionsAdded { get; set; }
     }
 
     public sealed class TemplatesResponse

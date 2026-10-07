@@ -27,12 +27,28 @@ public class ReferenceDataSeeder : IDataSeeder
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
         await SeedIcd10Async(cancellationToken);
-        await SeedMedicationsAsync(cancellationToken);
+        await EnsureMedicationsAsync(cancellationToken);
         await SeedLabTestsAsync(cancellationToken);
-        await SeedDrugInteractionsAsync(cancellationToken);
+        await EnsureDrugInteractionsAsync(cancellationToken);
         await SeedServicesAndTariffsAsync(cancellationToken);
         await EnrichMedicationRisksAsync(cancellationToken); // چرخه ۱۳ — غنی‌سازی خطر بالینی (idempotent)
         await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// فراخوانی عمومی از کنترلر نسخه‌ها — چرخه بیستم (گزارش چهاردهم مالک):
+    /// «فهرست داروها کامل باشد + دکمه‌ای باشد که با زدنش داروهای جدید به فهرست
+    /// اضافه شوند». این متد کاتالوگ بذر را با دیتابیس موجود وفق می‌دهد (upsert)
+    /// و شمار ردیف‌های تازه‌افزوده را برمی‌گرداند.
+    /// </summary>
+    /// <returns>تعداد داروها و تداخل‌های تازه‌ای که اضافه شدند</returns>
+    public async Task<(int MedicationsAdded, int InteractionsAdded)> RefreshCatalogAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var meds = await EnsureMedicationsAsync(cancellationToken);
+        var interactions = await EnsureDrugInteractionsAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+        return (meds, interactions);
     }
 
     /// <summary>بذر کدهای ICD-10 پرکاربرد با توضیح فارسی</summary>
@@ -62,16 +78,34 @@ public class ReferenceDataSeeder : IDataSeeder
         _context.ICD10Codes.AddRange(toAdd);
     }
 
-    /// <summary>بذر کاتالوگ داروهای ایران — مولکول × فرم × دوز × سازنده</summary>
-    private async Task SeedMedicationsAsync(CancellationToken ct)
+    /// <summary>
+    /// بذر/غنی‌سازی کاتالوگ داروهای ایران — مولکول × فرم × دوز × سازنده.
+    /// چرخه بیستم (گزارش چهاردهم مالک): به‌جای «فقط وقتی جدول خالی است»، upsert
+    /// واقعی انجام می‌شود — داروهای تازهٔ بذر حتی روی دیتابیس پرشده اضافه می‌شوند
+    /// تا دکمهٔ «بروزرسانی فهرست داروها» در برنامه کار کند. کلید یکتایی IRC.
+    /// </summary>
+    /// <returns>شمار داروهای تازه‌افزوده</returns>
+    public async Task<int> EnsureMedicationsAsync(CancellationToken ct)
     {
-        if (await _context.Medications.AsNoTracking().AnyAsync(ct))
-            return;
-
         // فقط یک ردیف برای هر مولکول × فرم × دوز × سازنده
-        var meds = MedicationSeedData.Rows
+        var rows = MedicationSeedData.AllRows
             .GroupBy(r => (r.GenericName, r.Form, r.Strength, r.Manufacturer))
             .Select(g => g.First())
+            .ToList();
+
+        // کلیدهای موجود — IRC اگر ثبت شده باشد وگرنه ترکیب نام/فرم/دوز/سازنده
+        var existing = (await _context.Medications.AsNoTracking()
+            .Select(m => new { m.IrcCode, m.GenericName, m.Form, m.Strength, m.Manufacturer })
+            .ToListAsync(ct))
+            .Select(m => string.IsNullOrWhiteSpace(m.IrcCode)
+                ? $"{m.GenericName}|{m.Form}|{m.Strength}|{m.Manufacturer}"
+                : $"IRC:{m.IrcCode}")
+            .ToHashSet();
+
+        var toAdd = rows
+            .Where(r => !existing.Contains(string.IsNullOrWhiteSpace(r.IrcCode)
+                ? $"{r.GenericName}|{r.Form}|{r.Strength}|{r.Manufacturer}"
+                : $"IRC:{r.IrcCode}"))
             .Select(r => new Medication
             {
                 IrcCode = r.IrcCode,
@@ -89,7 +123,9 @@ public class ReferenceDataSeeder : IDataSeeder
             })
             .ToList();
 
-        _context.Medications.AddRange(meds);
+        if (toAdd.Count > 0)
+            _context.Medications.AddRange(toAdd);
+        return toAdd.Count;
     }
 
     /// <summary>بذر کاتالوگ آزمایش‌ها با محدوده طبیعی وابسته به جنسیت</summary>
@@ -121,18 +157,27 @@ public class ReferenceDataSeeder : IDataSeeder
     }
 
     /// <summary>
-    /// بذر تداخلات دارویی — اتصال با شناسه داروهای موجود بر پایه نام ژنریک
-    /// جفت‌هایی که دارویشان در کاتالوگ نیست نادیده گرفته می‌شوند
+    /// بذر/غنی‌سازی تداخلات دارویی — اتصال با شناسه داروهای موجود بر پایه نام ژنریک.
+    /// چرخه بیستم: مثل داروها upsert شد — جفت‌های تازهٔ بذر روی دیتابیس پرشده هم
+    /// اضافه می‌شوند (کلید یکتایی: زوج شناسه‌ها به‌صورت مرتب) تا دکمهٔ «بروزرسانی
+    /// تداخل‌ها» در برنامه جفت‌های جدید را بیاورد.
     /// </summary>
-    private async Task SeedDrugInteractionsAsync(CancellationToken ct)
+    /// <returns>شمار جفت‌های تداخلی تازه‌افزوده</returns>
+    public async Task<int> EnsureDrugInteractionsAsync(CancellationToken ct)
     {
-        if (await _context.DrugInteractions.AsNoTracking().AnyAsync(ct))
-            return;
-
         // نگاشت نام ژنریک به شناسه — فقط قوی‌ترین دوز هر مولکول
         var medIds = await _context.Medications.AsNoTracking()
             .GroupBy(m => m.GenericName)
             .ToDictionaryAsync(g => g.Key, g => g.First().Id, ct);
+
+        // زوج‌های موجود — به‌صورت مرتب‌شده تا id1<id2 با id2<id1 یکی شمرده شود
+        var existingPairs = (await _context.DrugInteractions.AsNoTracking()
+            .Select(d => new { d.Medication1Id, d.Medication2Id })
+            .ToListAsync(ct))
+            .Select(p => p.Medication1Id <= p.Medication2Id
+                ? (p.Medication1Id, p.Medication2Id)
+                : (p.Medication2Id, p.Medication1Id))
+            .ToHashSet();
 
         var severityMap = new Dictionary<int, DrugInteractionSeverity>
         {
@@ -142,6 +187,7 @@ public class ReferenceDataSeeder : IDataSeeder
             [4] = DrugInteractionSeverity.Contraindicated,
         };
 
+        var added = 0;
         foreach (var row in DrugInteractionSeedData.Rows)
         {
             // نام کلاسی مثل NSAID یا ACEI به همه اعضای مرتبط نگاشت می‌شود (فقط سرفصل هشدار)
@@ -157,6 +203,11 @@ public class ReferenceDataSeeder : IDataSeeder
                 if (id1 == id2)
                     continue;
 
+                // کلید مرتب برای تشخیص تکراری
+                var key = id1 <= id2 ? (id1, id2) : (id2, id1);
+                if (!existingPairs.Add(key))
+                    continue;
+
                 _context.DrugInteractions.Add(new DrugInteraction
                 {
                     Medication1Id = id1,
@@ -166,8 +217,10 @@ public class ReferenceDataSeeder : IDataSeeder
                     Mechanism = row.Mechanism,
                     Recommendation = row.Recommendation,
                 });
+                added++;
             }
         }
+        return added;
     }
 
     /// <summary>نگاشت نام ژنریک یا نام کلاس به شناسه‌های دارو</summary>
