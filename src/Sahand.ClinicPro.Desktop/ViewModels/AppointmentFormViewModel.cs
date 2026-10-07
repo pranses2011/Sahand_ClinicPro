@@ -112,7 +112,7 @@ public partial class AppointmentFormViewModel : ObservableObject
             var response = await _api.GetAsync<DoctorsPage>("doctors?pageSize=200");
             if (response?.Data is null) return;
             foreach (var d in response.Data)
-                Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName));
+                Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
         }
         catch
         {
@@ -220,5 +220,8 @@ public partial class AppointmentFormViewModel : ObservableObject
         public long Id { get; set; }
         public string FullName { get; set; } = string.Empty;
         public string? SpecialtyName { get; set; }
+
+        /// <summary>حق ویزیت به ریال — چرخه بیست‌ویکم: برای پذیرش و نوبت</summary>
+        public decimal ConsultationFee { get; set; }
     }
 }

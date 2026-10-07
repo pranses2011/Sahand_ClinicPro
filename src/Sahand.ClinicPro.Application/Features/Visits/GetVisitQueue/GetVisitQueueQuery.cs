@@ -54,7 +54,11 @@ public class GetVisitQueueQueryHandler : IRequestHandler<GetVisitQueueQuery, Res
     public async Task<Result<VisitQueueDto>> Handle(GetVisitQueueQuery request,
         CancellationToken cancellationToken)
     {
-        var today = DateTime.Today;
+        // چرخه بیست‌ویکم (گزارش پانزدهم مالک): «بعد از پذیرش، بیمار در لیست ویزیت و
+        // معاینه نمایش داده نمی‌شود» — مرز روز بر پایهٔ UTC همانند زمان ثبت پذیرش
+        // (DateTime.UtcNow) گرفته شد؛ پیش‌تر DateTime.Today (زمان محلی سرور) بود و
+        // هرگاه منطقهٔ زمانی سرور با UTC فرق می‌کرد پذیرش تازه در مرز روز گم می‌شد.
+        var today = DateTime.UtcNow.Date;
         var tomorrow = today.AddDays(1);
 
         var receptions = await _unitOfWork.Repository<Reception>().QueryableNoTracking
@@ -63,6 +67,7 @@ public class GetVisitQueueQueryHandler : IRequestHandler<GetVisitQueueQuery, Res
                         (request.DoctorId == null || r.DoctorId == request.DoctorId))
             .Include(r => r.Patient)
             .Include(r => r.Doctor).ThenInclude(d => d!.Employee)
+            .Include(r => r.Appointment) // چرخه بیست‌ویکم: نوع ویزیت (اولیه/پیگیری/اورژانس) از نوبت مرتبط
             .OrderBy(r => r.Id)
             .ToListAsync(cancellationToken);
 

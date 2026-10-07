@@ -73,13 +73,22 @@ public partial class ReceptionFormViewModel : ObservableObject
         _ = LoadInsuranceAsync();
     }
 
-    /// <summary>بارگذاری بیمه‌ها از داده مرجع</summary>
+    /// <summary>بارگذاری بیمه‌ها از داده مرجع — با گزینهٔ آزاد در ابتدای فهرست</summary>
     private async Task LoadInsuranceAsync()
     {
+        // چرخه بیست‌ویکم (گزارش پانزدهم مالک): «در پذیرش، نوع بیمه گزینهٔ آزاد هم
+        // باشد که اگر کسی بیمه نداشت آن را انتخاب کنیم» — گزینهٔ آزاد با شناسهٔ ۰
+        // در ابتدای کشو قرار می‌گیرد و به سرور به‌صورت ۰ ارسال می‌شود (۰ = آزادِ صریح).
+        InsuranceCompanies.Add(new InsuranceOption(0, "آزاد (بدون بیمه)"));
+
         var response = await _api.GetAsync<InsuranceResponse>("lookups/insurance-companies");
         if (response?.Data is not null)
             foreach (var c in response.Data)
                 InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name));
+
+        // پیش‌فرض: آزاد — کاربر در صورت داشتن بیمه، آن را انتخاب می‌کند
+        if (InsuranceCompanies.Count > 0)
+            InsuranceIndex = 0;
     }
 
     /// <summary>جستجوی بیمار</summary>
@@ -135,6 +144,10 @@ public partial class ReceptionFormViewModel : ObservableObject
             patientId = SelectedPatient.Id,
             doctorId = Doctors[DoctorIndex].Id,
             appointmentId,
+            // چرخه بیست‌ویکم: ۰ = آزادِ صریح (بدون بیمه) — سرور آن را به null تبدیل
+            // می‌کند و دیگر به بیمهٔ پروندهٔ بیمار برنمی‌گردد؛ این ریشهٔ تداخل
+            // «بیمهٔ آسیا انتخاب شد ولی آزاد ثبت شد» بود: پیش‌تر مقدار ارسالی تهی
+            // بود و سرور به‌جای انتخاب کاربر، بیمهٔ (تهی) پرونده را می‌گذاشت.
             insuranceCompanyId = InsuranceIndex >= 0 && InsuranceIndex < InsuranceCompanies.Count
                 ? InsuranceCompanies[InsuranceIndex].Id
                 : (long?)null,

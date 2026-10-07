@@ -130,7 +130,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         var doctors = await _api.GetAsync<AppointmentsViewModel.DoctorsPage>("doctors?page=1&pageSize=200");
         if (doctors?.Data is not null)
             foreach (var d in doctors.Data)
-                Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName));
+                Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
 
         var companies = await _api.GetAsync<PatientFormViewModel.LookupCompanies>("lookups/insurance-companies");
         if (companies?.Data is not null)
@@ -325,14 +325,16 @@ public partial class ReceptionsViewModel : ViewModelBase
         }
     }
 
-    /// <summary>محاسبه خودکار هزینه — حق ویزیت × درصد بیمه</summary>
+    /// <summary>
+    /// محاسبه خودکار هزینه — حق ویزیت × درصد بیمه.
+    /// چرخه بیست‌ویکم (گزارش پانزدهم مالک): «برای پزشک ۴۵۰ حق ویزیت زدم ولی در
+    /// پذیرش ۷۰ می‌آورد» — پیش‌تر مقدار ثابت هاردکد ۷۰۰٬۰۰۰ ریال بود؛ اکنون
+    /// حق ویزیت واقعی از پروندهٔ همان پزشک (DoctorOption.ConsultationFee) خوانده می‌شود.
+    /// </summary>
     private void RecalculateCost()
     {
-        VisitFee = SelectedDoctor is null ? 0 : 700_000m; // مقدار پایه — حق ویزیت واقعی از لیست پزشکان
-        if (SelectedDoctor is not null && decimal.TryParse(CleanDigits(SelectedDoctor.Name), out _))
-        {
-            // نام پزشک رقمی نیست — سهم از Query جداگانه می‌آید؛ فعلا پایه
-        }
+        // حق ویزیت واقعی پزشک انتخاب‌شده — صفر یعنی پزشک هنوز انتخاب نشده
+        VisitFee = SelectedDoctor?.ConsultationFee ?? 0;
 
         // درصد پوشش: از استعلام یا صفر برای آزاد
         var percent = InsuranceIndex <= 0 ? 0 : CoveragePercent;

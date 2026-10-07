@@ -67,7 +67,18 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
             PatientId = dto.PatientId,
             DoctorId = dto.DoctorId,
             AppointmentId = dto.AppointmentId,
-            InsuranceCompanyId = dto.InsuranceCompanyId ?? patient.InsuranceCompanyId,
+            // چرخه بیست‌ویکم (گزارش پانزدهم مالک): بیمه پذیرش — سه حالت:
+            //   ▪ 0  → «آزاد» صریح از کشوی پذیرش → بدون بیمه ذخیره می‌شود (null)
+            //   ▪ >0 → همان شرکت بیمهٔ انتخاب‌شدهٔ کاربر (مثلاً آسیا) ذخیره می‌شود
+            //   ▪ null (نبود کلید در درخواست) → سازگاری قدیم: بیمهٔ پروندهٔ بیمار
+            // ریشهٔ «آسیا انتخاب شد ولی آزاد ثبت شد» همین‌جا بود: پیش‌تر مقدار تهیِ
+            // ارسالی بی‌شرط با بیمهٔ پرونده (که تهی بود) جایگزین می‌شد.
+            InsuranceCompanyId = dto.InsuranceCompanyId switch
+            {
+                0 => null,
+                > 0 => dto.InsuranceCompanyId,
+                _ => patient.InsuranceCompanyId
+            },
             ReferralCode = dto.ReferralCode,
             ReceptionDate = now,
             ReceptionDateShamsi = PersianDateHelper.ToShamsi(now),

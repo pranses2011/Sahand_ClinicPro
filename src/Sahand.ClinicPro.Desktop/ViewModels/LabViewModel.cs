@@ -89,7 +89,7 @@ public partial class LabViewModel : ViewModelBase
         var page = await _api.GetAsync<AppointmentsViewModel.DoctorsPage>("doctors?page=1&pageSize=200");
         if (page?.Data is not null)
             foreach (var d in page.Data)
-                Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName));
+                Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
 
         await LoadAsync();
     }

@@ -7,8 +7,12 @@ using Sahand.ClinicPro.Desktop.Services;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
-/// <summary>گزینه پزشک در ComboBox</summary>
-public record DoctorOption(long Id, string Name, string? SpecialtyName);
+/// <summary>
+/// گزینهٔ پزشک در کشوها — چرخه بیست‌ویکم: حق ویزیت واقعی پزشک هم همراه است
+/// تا در پذیرش به‌جای مقدار هاردکد، همان عدد ثبت‌شده در پروندهٔ پزشک استفاده شود
+/// (گزارش پانزدهم مالک: «برای پزشک ۴۵۰ حق ویزیت زدم ولی در پذیرش ۷۰ می‌آورد»)
+/// </summary>
+public record DoctorOption(long Id, string Name, string? SpecialtyName, decimal ConsultationFee = 0);
 
 /// <summary>ردیف لیست انتظار — چرخه ۱۳ (درخواست ۳-۴)</summary>
 public record WaitlistRow(
@@ -319,7 +323,7 @@ public partial class AppointmentsViewModel : ViewModelBase
         var doctors = await _api.GetAsync<DoctorsPage>("doctors?pageSize=200");
         if (doctors?.Data is not null)
             foreach (var d in doctors.Data)
-                Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName));
+                Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
         await LoadTodayAppointmentsAsync();
         await SearchListAsync();
     }
@@ -643,6 +647,9 @@ public partial class AppointmentsViewModel : ViewModelBase
         public long Id { get; set; }
         public string FullName { get; set; } = string.Empty;
         public string? SpecialtyName { get; set; }
+
+        /// <summary>حق ویزیت به ریال — چرخه بیست‌ویکم: برای پذیرش</summary>
+        public decimal ConsultationFee { get; set; }
     }
 
     public sealed class PatientSearchResponse

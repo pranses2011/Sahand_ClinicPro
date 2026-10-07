@@ -379,7 +379,7 @@ public partial class InvoiceFormViewModel : ObservableObject
         var doctors = await _api.GetAsync<AppointmentsViewModel.DoctorsPage>("doctors?page=1&pageSize=200");
         if (doctors?.Data is not null)
             foreach (var d in doctors.Data)
-                Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName));
+                Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
 
         var companies = await _api.GetAsync<PatientFormViewModel.LookupCompanies>("lookups/insurance-companies");
         if (companies?.Data is not null)
