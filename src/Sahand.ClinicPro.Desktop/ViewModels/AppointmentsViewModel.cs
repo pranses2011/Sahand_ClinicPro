@@ -222,13 +222,20 @@ public partial class AppointmentsViewModel : ViewModelBase
 
     /* ═══════════ تب ۲: فهرست نوبت‌ها ═══════════ */
 
-    /// <summary>از تاریخ — فیلتر</summary>
+    /// <summary>
+    /// از تاریخ — فیلتر. چرخه بیست‌ویکم (گزارش پانزدهم مالک): فیلتر از/تا تاریخ
+    /// با انتخابگر تاریخ شمسی انتخاب می‌شود؛ پیش‌فرض = امروز.
+    /// </summary>
     [ObservableProperty]
     private string? _fromDateShamsi = PersianDateHelper.ToShamsi(DateTime.Today);
 
-    /// <summary>تا تاریخ — فیلتر</summary>
+    /// <summary>
+    /// تا تاریخ — فیلتر. پیش‌فرض یک هفته جلوتر تا فهرست هفتهٔ جاری خالی نماند
+    /// (چرخه بیست‌ویکم: «فهرست نوبت‌ها نمایش داده نمی‌شود» — بازهٔ امروز-فقطر-امروز
+    /// اغلب خالی بود و کاربر فکر می‌کرد لیست کار نمی‌کند).
+    /// </summary>
     [ObservableProperty]
-    private string? _toDateShamsi = PersianDateHelper.ToShamsi(DateTime.Today);
+    private string? _toDateShamsi = PersianDateHelper.ToShamsi(DateTime.Today.AddDays(7));
 
     /// <summary>نمایه فیلتر پزشک — صفر یعنی همه</summary>
     [ObservableProperty]

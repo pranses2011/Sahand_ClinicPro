@@ -37,6 +37,9 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
+                            <!-- چرخه بیست‌ویکم: خلاصه و ثبت به ردیف مستقل تمام‌عرض منتقل شد
+                                 تا اسلات‌های ساعت کل عرض ستون را بگیرند و کنار هم قرار گیرند -->
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
                         <!-- جستجوی بیمار + پزشک -->
@@ -105,10 +108,11 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- تقویم + اسلات‌ها + خلاصه -->
+                        <!-- تقویم + اسلات‌ها — چرخه بیست‌ویکم: اسلات‌ها ستون راست را
+                             کامل می‌گیرند و خلاصه به ردیف پایین منتقل شد -->
                         <Grid Grid.Row="2">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="330" />
+                                <ColumnDefinition Width="300" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
@@ -150,32 +154,18 @@
                                 </Grid>
                             </Border>
 
-                            <!-- ستون اسلات‌ها + خلاصه -->
-                            <Grid Grid.Column="1">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-
-                                <!-- اسلات‌ها -->
-                                <Border Grid.Row="0" CornerRadius="10" Padding="12,10"
-                                        Background="{DynamicResource MaterialDesign.Brush.Background}">
-                                    <StackPanel>
-                                        <TextBlock FontSize="13" FontWeight="Bold" Margin="0,0,0,6">
-                                            <Run Text="⏰ ساعت‌های " /><Run Text="{Binding SelectedDateShamsi, Mode=OneWay}" />
-                                        </TextBlock>
+                            <!-- ستون اسلات‌ها — تمام عرض ستون راست -->
+                            <Border Grid.Column="1" CornerRadius="10" Padding="12,10"
+                                    Background="{DynamicResource MaterialDesign.Brush.Background}">
+                                <StackPanel>
+                                    <TextBlock FontSize="13" FontWeight="Bold" Margin="0,0,0,6">
+                                        <Run Text="⏰ ساعت‌های " /><Run Text="{Binding SelectedDateShamsi, Mode=OneWay}" />
+                                    </TextBlock>
+                                    <!-- چرخه بیست‌ویکم (گزارش پانزدهم مالک): «ساعت‌ها را به‌جای
+                                         کنار هم زیر هم نشان می‌دهد» — اسلات‌ها داخل WrapPanel
+                                         با عرض کامل ستون؛ حداکثر ۴ ردیف و سپس اسکرول عمودی داخلی -->
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="170">
                                         <ItemsControl ItemsSource="{Binding Slots}">
-                                            <ItemsControl.GroupStyle>
-                                                <GroupStyle>
-                                                    <GroupStyle.HeaderTemplate>
-                                                        <DataTemplate>
-                                                            <TextBlock Text="{Binding Name}" FontWeight="Bold"
-                                                                       FontSize="12" Foreground="#1565C0"
-                                                                       Margin="2,8,2,4" />
-                                                        </DataTemplate>
-                                                    </GroupStyle.HeaderTemplate>
-                                                </GroupStyle>
-                                            </ItemsControl.GroupStyle>
                                             <ItemsControl.ItemsPanel>
                                                 <ItemsPanelTemplate>
                                                     <WrapPanel />
@@ -187,7 +177,8 @@
                                                         IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                                         IsEnabled="{Binding IsAvailable}"
                                                         Command="{Binding DataContext.SelectSlotCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                        CommandParameter="{Binding}">
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip="{Binding PatientName, StringFormat='رزرو: {0}', TargetNullValue='آزاد — برای انتخاب کلیک کنید'}">
                                                         <TextBlock Text="{Binding Time}" FontFamily="Consolas" FontSize="12">
                                                             <TextBlock.Style>
                                                                 <Style TargetType="TextBlock">
@@ -201,9 +192,16 @@
                                                             </TextBlock.Style>
                                                         </TextBlock>
                                                         <ToggleButton.Style>
+                                                            <!-- چرخه بیست‌ویکم: رنگ‌ها مطابق راهنما —
+                                                                 سبز کمرنگ = آزاد، خاکستری خط‌خورده = رزروشده (غیرفعال)،
+                                                                 خاکستری روشن = استراحت، آبی = انتخاب فعلی -->
                                                             <Style TargetType="ToggleButton" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
-                                                                <Setter Property="Background" Value="#FFFFFF" />
+                                                                <Setter Property="Background" Value="#E8F5E9" />
                                                                 <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsAvailable}" Value="False">
+                                                                        <Setter Property="Background" Value="#ECEFF1" />
+                                                                        <Setter Property="Opacity" Value="0.6" />
+                                                                    </DataTrigger>
                                                                     <DataTrigger Binding="{Binding IsBreak}" Value="True">
                                                                         <Setter Property="Background" Value="#ECEFF1" />
                                                                         <Setter Property="Opacity" Value="0.55" />
@@ -220,82 +218,82 @@
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
-                                        <TextBlock Text="راهنما: [سبز کمرنگ] آزاد | [خاکستری] استراحت | [آبی] انتخاب شما — اسلات رزروشده غیرفعال است"
-                                                   FontSize="10.5" Opacity="0.55" Margin="2,10,2,0" />
-                                    </StackPanel>
-                                </Border>
-
-                                <!-- خلاصه و ثبت -->
-                                <Border Grid.Row="1" CornerRadius="10" Padding="12,10" Margin="0,10,0,0"
-                                        Background="#E8F5E9">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                        </Grid.RowDefinitions>
-
-                                        <!-- خلاصه انتخاب -->
-                                        <Grid Grid.Row="0" Margin="0,0,0,8">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                                                <TextBlock Text="📅 تاریخ" FontSize="10" Opacity="0.6" />
-                                                <TextBlock Text="{Binding SelectedDateShamsi, Mode=OneWay}" FontWeight="Bold" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                                <TextBlock Text="⏰ ساعت" FontSize="10" Opacity="0.6" />
-                                                <TextBlock Text="{Binding SelectedSlot.Time, Mode=OneWay, TargetNullValue=—}" FontWeight="Bold" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="2" Margin="0,0,16,0">
-                                                <TextBlock Text="🏥 اتاق" FontSize="10" Opacity="0.6" />
-                                                <TextBlock Text="{Binding SelectedRoom, Mode=OneWay, TargetNullValue=—}" FontWeight="Bold" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="3" HorizontalAlignment="Left">
-                                                <TextBlock Text="💰 تخمین هزینه (ریال)" FontSize="10" Opacity="0.6" />
-                                                <TextBlock Text="{Binding EstimatedFee, Mode=OneWay, StringFormat='{}{0:N0}'}" FontWeight="Bold" FontFamily="Consolas" />
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <!-- نوع و اولویت و یادداشت -->
-                                        <Grid Grid.Row="1">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="1.4*" />
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                                                <TextBlock Text="نوع ویزیت" FontSize="11" Opacity="0.7" />
-                                                <ComboBox ItemsSource="{Binding VisitTypes}" SelectedIndex="{Binding SelectedTypeIndex}" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="1" Margin="0,0,10,0">
-                                                <TextBlock Text="اولویت" FontSize="11" Opacity="0.7" />
-                                                <ComboBox ItemsSource="{Binding Priorities}" SelectedIndex="{Binding SelectedPriorityIndex}" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="یادداشت" FontSize="11" Opacity="0.7" />
-                                                <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" />
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <!-- دکمه ثبت -->
-                                        <Button Grid.Row="2" Command="{Binding BookCommand}"
-                                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                                Background="#2E7D32" BorderBrush="#2E7D32"
-                                                Height="42" Margin="0,10,0,0">
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <materialDesign:PackIcon Kind="CheckCircle" Width="18" Height="18" VerticalAlignment="Center" />
-                                                <TextBlock Text="✅ تایید و ثبت نوبت" Margin="10,0,0,0" FontSize="14" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </Button>
-                                    </Grid>
-                                </Border>
-                            </Grid>
+                                    </ScrollViewer>
+                                    <TextBlock Text="راهنما: سبز = آزاد | خاکستری = استراحت | آبی = انتخاب شما | کم‌رنگ غیرفعال = رزرو شده"
+                                               FontSize="10.5" Opacity="0.55" Margin="2,10,2,0" />
+                                </StackPanel>
+                            </Border>
                         </Grid>
+
+                        <!-- ═══ خلاصه و ثبت — چرخه بیست‌ویکم: تمام‌عرض در ردیف مستقل ═══ -->
+                        <Border Grid.Row="3" CornerRadius="10" Padding="12,10" Margin="0,10,0,0"
+                                Background="#E8F5E9">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <!-- خلاصه انتخاب -->
+                                <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                        <TextBlock Text="📅 تاریخ" FontSize="10" Opacity="0.6" />
+                                        <TextBlock Text="{Binding SelectedDateShamsi, Mode=OneWay}" FontWeight="Bold" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="0,0,16,0">
+                                        <TextBlock Text="⏰ ساعت" FontSize="10" Opacity="0.6" />
+                                        <TextBlock Text="{Binding SelectedSlot.Time, Mode=OneWay, TargetNullValue=—}" FontWeight="Bold" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Margin="0,0,16,0">
+                                        <TextBlock Text="🏥 اتاق" FontSize="10" Opacity="0.6" />
+                                        <TextBlock Text="{Binding SelectedRoom, Mode=OneWay, TargetNullValue=—}" FontWeight="Bold" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="3" HorizontalAlignment="Left">
+                                        <TextBlock Text="💰 تخمین هزینه (ریال)" FontSize="10" Opacity="0.6" />
+                                        <TextBlock Text="{Binding EstimatedFee, Mode=OneWay, StringFormat='{}{0:N0}'}" FontWeight="Bold" FontFamily="Consolas" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- نوع و اولویت و یادداشت -->
+                                <Grid Grid.Row="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="1.4*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                        <TextBlock Text="نوع ویزیت" FontSize="11" Opacity="0.7" />
+                                        <ComboBox ItemsSource="{Binding VisitTypes}" SelectedIndex="{Binding SelectedTypeIndex}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                                        <TextBlock Text="اولویت" FontSize="11" Opacity="0.7" />
+                                        <ComboBox ItemsSource="{Binding Priorities}" SelectedIndex="{Binding SelectedPriorityIndex}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="یادداشت" FontSize="11" Opacity="0.7" />
+                                        <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- دکمه ثبت -->
+                                <Button Grid.Row="2" Command="{Binding BookCommand}"
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Background="#2E7D32" BorderBrush="#2E7D32"
+                                        Height="42" Margin="0,10,0,0">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <materialDesign:PackIcon Kind="CheckCircle" Width="18" Height="18" VerticalAlignment="Center" />
+                                        <TextBlock Text="✅ تایید و ثبت نوبت" Margin="10,0,0,0" FontSize="14" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
                     </Grid>
                 </ScrollViewer>
             </TabItem>
@@ -310,7 +308,9 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <!-- فیلترها -->
+                    <!-- فیلترها — چرخه بیست‌ویکم: از/تا تاریخ با انتخابگر تاریخ شمسی
+                         (گزارش پانزدهم مالک: «در فهرست نوبت‌ها فیلتر از تاریخ تا تاریخ رو
+                         با کنترل انتخابگر تاریخ بزار») -->
                     <Border Grid.Row="0" CornerRadius="10" Padding="10,8" Margin="0,0,0,10"
                             Background="{DynamicResource MaterialDesign.Brush.Background}">
                         <Grid>
@@ -325,12 +325,14 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                <TextBlock Text="از تاریخ" FontSize="10" Opacity="0.6" />
-                                <TextBox Text="{Binding FromDateShamsi, UpdateSourceTrigger=PropertyChanged}" Width="100" />
+                                <TextBlock Text="از تاریخ" FontSize="10" Opacity="0.6" Margin="2,0,2,2" />
+                                <controls:PersianDatePicker Width="130"
+                                                            DateShamsiText="{Binding FromDateShamsi, Mode=TwoWay}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Margin="0,0,8,0">
-                                <TextBlock Text="تا تاریخ" FontSize="10" Opacity="0.6" />
-                                <TextBox Text="{Binding ToDateShamsi, UpdateSourceTrigger=PropertyChanged}" Width="100" />
+                                <TextBlock Text="تا تاریخ" FontSize="10" Opacity="0.6" Margin="2,0,2,2" />
+                                <controls:PersianDatePicker Width="130"
+                                                            DateShamsiText="{Binding ToDateShamsi, Mode=TwoWay}" />
                             </StackPanel>
                             <StackPanel Grid.Column="2" Margin="0,0,8,0">
                                 <TextBlock Text="جستجو (نام/کدملی/موبایل/کد)" FontSize="10" Opacity="0.6" />
