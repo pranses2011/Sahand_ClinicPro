@@ -38,16 +38,26 @@ public sealed record AppTheme(
 /// فونت و اندازهٔ پایه و واحد پول نمایشی. قبلاً این تنظیمات فقط ذخیره
 /// می‌شدند و هیچ اثری روی برنامه نداشتند؛ اکنون از طریق منابع پویا
 /// (DynamicResource) روی همهٔ پنجره‌ها بی‌درنگ اعمال می‌شوند.
+/// ═══ چرخه بیست‌ویکم (گزارش پانزدهم مالک) ═══
+/// «هر کدام از عناصر را بتوانیم به‌صورت جداگانه تغییر دهیم، نه اینکه با
+/// انتخاب یک گزینه همه عوض شود» — سه تنظیم مستقلِ جدا از تم افزوده شد:
+/// رنگ منوی کناری، شعاع گوشه و چگالی؛ مقدار تهی یعنی «همگام با تم».
 /// </summary>
 /// <param name="FontFamilyName">نام خانوادهٔ فونت — Vazirmatn (جاسازی‌شده) یا فونت ویندوز</param>
-/// <param name="BaseFontSize">اندازهٔ پایهٔ متن — بین ۱۱ تا ۱۶</param>
+/// <param name="BaseFontSize">اندازهٔ پایهٔ متن — بین ۱۱ تا ۱۸</param>
 /// <param name="AnimationsEnabled">انیمیشن‌های رابط فعال باشند؟</param>
 /// <param name="CurrencyUnit">واحد پول نمایشی — Rial یا Toman (فقط نمایش، بدون اثر بر محاسبات)</param>
+/// <param name="SidebarHex">رنگ منوی کناری — تهی یعنی همگام با رنگ تم (چرخه بیست‌ویکم)</param>
+/// <param name="CardRadiusOverride">شعاع گوشهٔ مستقل — تهی یعنی از تم (چرخه بیست‌ویکم)</param>
+/// <param name="DensityOverride">چگالی مستقل — تهی یعنی از تم؛ Compact یا Normal (چرخه بیست‌ویکم)</param>
 public sealed record AppearanceSettings(
     string FontFamilyName = "Vazirmatn",
     double BaseFontSize = 13,
     bool AnimationsEnabled = true,
-    string CurrencyUnit = "Rial")
+    string CurrencyUnit = "Rial",
+    string? SidebarHex = null,
+    int? CardRadiusOverride = null,
+    string? DensityOverride = null)
 {
     /// <summary>متن واحد پول — «ریال» یا «تومان»</summary>
     public string CurrencyLabel => CurrencyUnit == "Toman" ? "تومان" : "ریال";

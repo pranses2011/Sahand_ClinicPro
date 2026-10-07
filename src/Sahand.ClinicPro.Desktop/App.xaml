@@ -36,6 +36,12 @@
             <Thickness x:Key="App.CardPadding">20</Thickness>
             <system:Boolean x:Key="App.AnimationsEnabled">True</system:Boolean>
             <system:String x:Key="App.CurrencyLabel">ریال</system:String>
+            <!-- رنگ‌های منوی کناری — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
+                 «تغییر رنگ، رنگ منوی کناری را عوض نمی‌کند» — ThemeService این دو
+                 منبع پویا را با تعویض تم/رنگ سفارشی منو بازنویسی می‌کند؛
+                 مقادیر اینجا گرادیان پیش‌فرض آبی رسمی طرح است. -->
+            <SolidColorBrush x:Key="App.SidebarTop">#16355E</SolidColorBrush>
+            <SolidColorBrush x:Key="App.SidebarBottom">#1C4E89</SolidColorBrush>
 
             <!-- فونت سراسری — وزیرمتن به‌صورت Resource داخل خود exe جاسازی شده است
                  (Assets/Fonts — مجوز آزاد OFL)؛ ارجاع pack URI بدون توجه به فونت‌های

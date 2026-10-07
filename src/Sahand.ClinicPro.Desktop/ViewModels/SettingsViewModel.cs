@@ -135,7 +135,8 @@ public partial class SettingsViewModel : ViewModelBase
     private string? _selectedFont = "Vazirmatn";
 
     /// <summary>گزینه‌های فونت — وزیرمتن جاسازی‌شده + فونت‌های فارسی‌سازگار ویندوز</summary>
-    public List<string> FontOptions { get; } = new() { "Vazirmatn", "Tahoma", "Segoe UI" };
+    // FontOptions — فهرست فونت‌ها در بخش سفارشی‌سازی تفکیکی (چرخه بیست‌ویکم)
+    // با فونت‌های نصب‌شدهٔ ویندوز ساخته می‌شود؛ تعریف قدیمی سه‌فونتی حذف شد.
 
     /// <summary>
     /// سایز فونت پایه — چرخه بیستم: بی‌درنگ اعمال می‌شود (عناصر بدون اندازهٔ صریح
@@ -158,6 +159,89 @@ public partial class SettingsViewModel : ViewModelBase
 
     /// <summary>برچسب‌های واحد پول برای ComboBox</summary>
     public List<string> CurrencyUnitOptions { get; } = new() { "ریال", "تومان" };
+
+    /* ─── سفارشی‌سازی تفکیکی عناصر — چرخه بیست‌ویکم (گزارش پانزدهم مالک) ─── */
+
+    /// <summary>
+    /// فهرست فونت‌های قابل انتخاب — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
+    /// «بتوانیم از فونت‌های نصب‌شده روی ویندوز هم برای برنامه انتخاب کنیم» —
+    /// وزیرمتن جاسازی‌شدهٔ خود برنامه در صدر + همهٔ فونت‌های نصب‌شدهٔ سیستم.
+    /// </summary>
+    public List<string> FontOptions { get; } = BuildFontOptions();
+
+    /// <summary>
+    /// ساخت فهرست فونت‌ها — وزیرمتن (جاسازی‌شده) + فونت‌های ویندوز مرتب الفبایی
+    /// </summary>
+    private static List<string> BuildFontOptions()
+    {
+        var list = new List<string> { "Vazirmatn" };
+        try
+        {
+            // همهٔ خانواده‌های فونت نصب‌شدهٔ سیستم — Source نام خانواده است
+            var systemFonts = System.Windows.Media.Fonts.SystemFontFamilies
+                .Select(f => f.Source)
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(n => n, StringComparer.OrdinalIgnoreCase);
+            list.AddRange(systemFonts);
+        }
+        catch
+        {
+            // در نبود دسترسی به فونت‌های سیستم، فقط وزیرمتن باقی می‌ماند
+        }
+        return list;
+    }
+
+    /// <summary>
+    /// گزینه‌های رنگ منوی کناری — صفر یعنی «همگام با تم» (چرخه بیست‌ویکم):
+    /// «تغییر رنگ، رنگ منوی کناری را عوض نمی‌کند» + سفارشی‌سازی مستقل
+    /// </summary>
+    public List<string> SidebarColorOptions { get; } = new()
+    {
+        "همگام با تم", "آبی تیره رسمی", "سبز تیره", "خاکستری گرافیت",
+        "زرشکی تیره", "فیروزه‌ای تیره", "بنفش تیره", "قهوه‌ای گرم", "مشکی مات"
+    };
+
+    /// <summary>رنگ‌های متناظر گزینه‌های منو — ایندکس ۰ (همگام) مقدار ندارد</summary>
+    public static readonly string?[] SidebarColorHexes =
+    {
+        null, "#16355E", "#1B3A24", "#37474F", "#5C1A22",
+        "#0E4A4A", "#3B1E5C", "#4E342E", "#111111"
+    };
+
+    /// <summary>نمایهٔ رنگ منو — صفر = همگام با تم</summary>
+    [ObservableProperty]
+    private int _sidebarColorIndex;
+
+    /// <summary>گزینه‌های چگالی عناصر — صفر یعنی از تم</summary>
+    public List<string> DensityOptions { get; } = new()
+    {
+        "همگام با تم", "استاندارد", "فشرده"
+    };
+
+    /// <summary>نمایهٔ چگالی — صفر = از تم</summary>
+    [ObservableProperty]
+    private int _densityIndex;
+
+    /// <summary>
+    /// شعاع گوشهٔ مستقل کارت‌ها — چرخه بیست‌ویکم؛ صفر مقدار معتبرِ «گوشه‌های تیز»
+    /// است و برای «همگام با تم» از -1 استفاده می‌شود.
+    /// </summary>
+    [ObservableProperty]
+    private int _customCardRadius = -1;
+
+    /// <summary>گوشه مستقل فعال است؟ (برای چک‌باکس فعال‌سازی)</summary>
+    [ObservableProperty]
+    private bool _useCustomRadius;
+
+    /// <summary>
+    /// تایمر ضدبمباران ذخیرهٔ سروری — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
+    /// «فونت و اندازه اعمال نمی‌شود و خطای سرور کد ۴۲۹ می‌دهد» — ریشه: هر حرکت
+    /// اسلایدر فوراً ۶ درخواست PUT می‌فرستاد و سرور Rate-Limit (429) می‌کرد.
+    /// اکنون اعمال ظاهری محلی و بی‌درنگ است و ذخیرهٔ سروری فقط ۸۰۰ میلی‌ثانیه
+    /// پس از آخرین تغییر و یک‌باره انجام می‌شود.
+    /// </summary>
+    private System.Windows.Threading.DispatcherTimer? _themeSaveDebouncer;
 
     /* ─── بخش امنیت ─── */
 
@@ -213,6 +297,20 @@ public partial class SettingsViewModel : ViewModelBase
         BaseFontSize = _theme.Appearance.BaseFontSize;
         AnimationsEnabled = _theme.Appearance.AnimationsEnabled;
         CurrencyUnitIndex = _theme.Appearance.CurrencyUnit == "Toman" ? 1 : 0;
+
+        // چرخه بیست‌ویکم: مقدار اولیهٔ سفارشی‌سازی‌های تفکیکی از تم
+        var appearance = _theme.Appearance;
+        SidebarColorIndex = Array.IndexOf(SidebarColorHexes, appearance.SidebarHex);
+        if (SidebarColorIndex < 0) SidebarColorIndex = 0;
+        DensityIndex = appearance.DensityOverride switch
+        {
+            "Compact" => 2,
+            "Normal" => 1,
+            _ => 0
+        };
+        UseCustomRadius = appearance.CardRadiusOverride.HasValue;
+        CustomCardRadius = appearance.CardRadiusOverride ?? 8;
+
         RefreshThemeSelection();
         _initializing = false; // از این‌جا به بعد تغییر‌ها کاربرمبنا و ذخیره‌پذیرند
 
@@ -410,52 +508,116 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// تغییر فونت — چرخه بیستم (گزارش چهاردهم مالک): بی‌درنگ از طریق
-    /// منبع پویای App.FontFamily روی همهٔ پنجره‌ها اعمال و ذخیره می‌شود
+    /// تغییر فونت — چرخه بیستم: بی‌درنگ از طریق منبع پویای App.FontFamily روی
+    /// همهٔ پنجره‌ها اعمال می‌شود؛ ذخیرهٔ سروری با توقف ۸۰۰ms (چرخه بیست‌ویکم)
     /// </summary>
     partial void OnSelectedFontChanged(string? value)
     {
         if (string.IsNullOrWhiteSpace(value) || _initializing)
             return;
-        _theme.ApplyAppearance(new Services.AppearanceSettings(
-            value, BaseFontSize, AnimationsEnabled, CurrencyUnitIndex == 1 ? "Toman" : "Rial"));
-        _ = SaveThemeSettingsAsync();
+        ApplyAppearanceNow();
     }
 
-    /// <summary>تغییر سایز فونت پایه — بی‌درنگ اعمال (چرخه بیستم)</summary>
+    /// <summary>تغییر سایز فونت پایه — بی‌درنگ اعمال + ذخیرهٔ با توقف (چرخه بیست‌ویکم)</summary>
     partial void OnBaseFontSizeChanged(double value)
     {
         if (value is < 11 or > 18 || _initializing)
             return;
-        _theme.ApplyAppearance(new Services.AppearanceSettings(
-            SelectedFont ?? "Vazirmatn", value, AnimationsEnabled,
-            CurrencyUnitIndex == 1 ? "Toman" : "Rial"));
-        _ = SaveThemeSettingsAsync();
+        ApplyAppearanceNow();
     }
 
-    /// <summary>تغییر انیمیشن‌ها — ذخیره و اعمال (چرخه بیستم)</summary>
+    /// <summary>تغییر انیمیشن‌ها — ذخیره و اعمال (چرخه بیست‌ویکم)</summary>
     partial void OnAnimationsEnabledChanged(bool value)
     {
         if (_initializing)
             return;
-        _theme.ApplyAppearance(new Services.AppearanceSettings(
-            SelectedFont ?? "Vazirmatn", BaseFontSize, value,
-            CurrencyUnitIndex == 1 ? "Toman" : "Rial"));
-        _ = SaveThemeSettingsAsync();
+        ApplyAppearanceNow();
+    }
+
+    /// <summary>تغییر رنگ منوی کناری — چرخه بیست‌ویکم: اعمال بی‌درنگ مستقل از تم</summary>
+    partial void OnSidebarColorIndexChanged(int value)
+    {
+        if (_initializing)
+            return;
+        ApplyAppearanceNow();
+    }
+
+    /// <summary>تغییر چگالی مستقل — چرخه بیست‌ویکم</summary>
+    partial void OnDensityIndexChanged(int value)
+    {
+        if (_initializing)
+            return;
+        ApplyAppearanceNow();
+    }
+
+    /// <summary>تغییر فعال‌سازی گوشهٔ مستقل — چرخه بیست‌ویکم</summary>
+    partial void OnUseCustomRadiusChanged(bool value)
+    {
+        if (_initializing)
+            return;
+        ApplyAppearanceNow();
+    }
+
+    /// <summary>تغییر مقدار گوشهٔ مستقل — چرخه بیست‌ویکم</summary>
+    partial void OnCustomCardRadiusChanged(int value)
+    {
+        if (_initializing || !UseCustomRadius)
+            return;
+        ApplyAppearanceNow();
     }
 
     /// <summary>
-    /// تغییر واحد پول نمایشی — چرخه بیستم (گزارش چهاردهم مالک):
-    /// تعویض فقط نمایشی است (ریال/تومان) و محاسبات را تغییر نمی‌دهد
+    /// اعمال بی‌درنگ تنظیمات ظاهری فعلی (فونت/سایز/انیمیشن/واحد/رنگ منو/گوشه/چگالی)
+    /// + زمان‌بندی ذخیرهٔ سروری با توقف ۸۰۰ms — چرخه بیست‌ویکم: اعمال محلی فوری
+    /// است و سرور فقط یک‌بار پس از آرام‌شدن تغییرات خبردار می‌شود (رفع 429).
     /// </summary>
+    private void ApplyAppearanceNow()
+    {
+        _theme.ApplyAppearance(new Services.AppearanceSettings(
+            SelectedFont ?? "Vazirmatn",
+            BaseFontSize,
+            AnimationsEnabled,
+            CurrencyUnitIndex == 1 ? "Toman" : "Rial",
+            // رنگ منو — ایندکس ۰ یعنی همگام با تم (تهی)
+            SidebarColorIndex >= 0 && SidebarColorIndex < SidebarColorHexes.Length
+                ? SidebarColorHexes[SidebarColorIndex]
+                : null,
+            // گوشهٔ مستقل — فقط وقتی چک‌باکس فعال است
+            UseCustomRadius ? Math.Clamp(CustomCardRadius, 0, 24) : null,
+            // چگالی مستقل — ۰ از تم، ۱ استاندارد، ۲ فشرده
+            DensityIndex switch { 1 => "Normal", 2 => "Compact", _ => null }));
+
+        ScheduleThemeSave();
+    }
+
+    /// <summary>
+    /// زمان‌بندی ذخیرهٔ سروری با توقف — هر تغییر تایمر را ریست می‌کند؛ فقط ۸۰۰ms
+    /// پس از آخرین تغییر، یک‌بار SaveThemeSettingsAsync اجرا می‌شود.
+    /// </summary>
+    private void ScheduleThemeSave()
+    {
+        if (_themeSaveDebouncer is null)
+        {
+            _themeSaveDebouncer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(800)
+            };
+            _themeSaveDebouncer.Tick += (_, _) =>
+            {
+                _themeSaveDebouncer!.Stop();
+                _ = SaveThemeSettingsAsync();
+            };
+        }
+        _themeSaveDebouncer.Stop();
+        _themeSaveDebouncer.Start();
+    }
+
+    /// <summary>تغییر واحد پول نمایشی — چرخه بیست‌ویکم: اعمال بی‌درنگ + ذخیره با توقف</summary>
     partial void OnCurrencyUnitIndexChanged(int value)
     {
         if (_initializing)
             return;
-        _theme.ApplyAppearance(new Services.AppearanceSettings(
-            SelectedFont ?? "Vazirmatn", BaseFontSize, AnimationsEnabled,
-            value == 1 ? "Toman" : "Rial"));
-        _ = SaveThemeSettingsAsync();
+        ApplyAppearanceNow();
         _snackbar.Info(value == 1
             ? "واحد نمایشی به «تومان» تغییر یافت — فقط نمایش؛ محاسبات ریالی می‌ماند"
             : "واحد نمایشی به «ریال» تغییر یافت");
@@ -468,7 +630,10 @@ public partial class SettingsViewModel : ViewModelBase
             row.IsSelected = string.Equals(row.Theme.Key, SelectedThemeKey, StringComparison.OrdinalIgnoreCase);
     }
 
-    /// <summary>ذخیره تنظیمات تم — چرخه بیستم: فونت/سایز/واحد پول هم همراه می‌شوند</summary>
+    /// <summary>
+    /// ذخیره تنظیمات تم — چرخه بیست‌ویکم: فونت/سایز/واحد + سه سفارشی‌سازی تفکیکی
+    /// (رنگ منو/گوشه/چگالی) هم همراه می‌شوند
+    /// </summary>
     [RelayCommand]
     private async Task SaveThemeSettingsAsync()
     {
@@ -479,7 +644,11 @@ public partial class SettingsViewModel : ViewModelBase
             ["Font"] = SelectedFont,
             ["BaseFontSize"] = BaseFontSize.ToString("0"),
             ["Animations"] = AnimationsEnabled ? "true" : "false",
-            ["CurrencyUnit"] = CurrencyUnitIndex == 1 ? "Toman" : "Rial"
+            ["CurrencyUnit"] = CurrencyUnitIndex == 1 ? "Toman" : "Rial",
+            // چرخه بیست‌ویکم — سفارشی‌سازی تفکیکی عناصر
+            ["SidebarHex"] = SidebarColorIndex > 0 ? SidebarColorHexes[SidebarColorIndex] : "",
+            ["CardRadiusOverride"] = UseCustomRadius ? Math.Clamp(CustomCardRadius, 0, 24).ToString() : "",
+            ["DensityOverride"] = DensityIndex switch { 1 => "Normal", 2 => "Compact", _ => "" }
         });
     }
 

@@ -305,7 +305,7 @@
                         <RadioButton Content="☀️ روشن" GroupName="Theme" IsChecked="{Binding IsDarkTheme, Converter={StaticResource InvertBool}, Mode=OneWay}" Margin="10,0,0,0" VerticalAlignment="Center" />
                         <RadioButton Content="🌙 تاریک" GroupName="Theme" IsChecked="{Binding IsDarkTheme}" Margin="10,0,0,0" VerticalAlignment="Center" />
                     </StackPanel>
-                    <ComboBox materialDesign:HintAssist.Hint="فونت برنامه"
+                    <ComboBox materialDesign:HintAssist.Hint="فونت برنامه — وزیرمتن داخلی + فونت‌های نصب‌شدهٔ ویندوز"
                               ItemsSource="{Binding FontOptions}" SelectedItem="{Binding SelectedFont}"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,10" />
                     <StackPanel Orientation="Horizontal" Margin="2,8">
@@ -315,15 +315,51 @@
                         <TextBlock Text="{Binding BaseFontSize, StringFormat={}{0:0}}" VerticalAlignment="Center"
                                    FontFamily="Consolas" FontSize="13" />
                     </StackPanel>
-                    <!-- واحد پول نمایشی — چرخه بیستم (گزارش چهاردهم مالک):
-                         تعویض ریال/تومان فقط جنبهٔ نمایش دارد و محاسبات ریالی می‌مانند -->
+
+                    <!-- ═══ سفارشی‌سازی تفکیکی عناصر — چرخه بیست‌ویکم (گزارش پانزدهم مالک) ═══
+                         «هر کدام را بتوان بصورت جداگانه تغییر داد، نه اینکه با انتخاب
+                         یک گزینه همه عوض شود» — هر عنصر کنترل مستقل خودش را دارد و
+                         مقدار «همگام با تم» یعنی آن عنصر از تم انتخابی پیروی می‌کند. -->
+                    <Border BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                            BorderThickness="0,1" Margin="2,12" />
+                    <TextBlock Text="سفارشی‌سازی تفکیکی عناصر (مستقل از تم)"
+                               FontSize="13" FontWeight="Bold" Margin="2,10" />
+
+                    <!-- رنگ منوی کناری — مستقل از تم -->
+                    <StackPanel Orientation="Horizontal" Margin="2,8">
+                        <TextBlock Text="رنگ منوی کناری: " VerticalAlignment="Center" FontSize="12.5" />
+                        <ComboBox ItemsSource="{Binding SidebarColorOptions}"
+                                  SelectedIndex="{Binding SidebarColorIndex}" MinWidth="150"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="6,0,0,0" />
+                    </StackPanel>
+
+                    <!-- چگالی عناصر — مستقل از تم -->
+                    <StackPanel Orientation="Horizontal" Margin="2,8">
+                        <TextBlock Text="چگالی عناصر: " VerticalAlignment="Center" FontSize="12.5" />
+                        <ComboBox ItemsSource="{Binding DensityOptions}"
+                                  SelectedIndex="{Binding DensityIndex}" MinWidth="150"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="6,0,0,0" />
+                    </StackPanel>
+
+                    <!-- گوشهٔ کارت‌ها — فعال‌سازی مستقل با چک‌باکس + اسلایدر -->
+                    <StackPanel Orientation="Horizontal" Margin="2,8">
+                        <CheckBox Content="گوشهٔ کارت‌ها (شعاع):" IsChecked="{Binding UseCustomRadius}"
+                                  VerticalAlignment="Center" FontSize="12.5" />
+                        <Slider Minimum="0" Maximum="24" Value="{Binding CustomCardRadius}" Width="170"
+                                TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                Margin="10,0" IsEnabled="{Binding UseCustomRadius}" />
+                        <TextBlock Text="{Binding CustomCardRadius, StringFormat={}{0:0}}" VerticalAlignment="Center"
+                                   FontFamily="Consolas" FontSize="13" MinWidth="20" />
+                    </StackPanel>
+
+                    <!-- واحد پول نمایشی — چرخه بیستم: تعویض ریال/تومان فقط نمایشی است.
+                         چرخه بیست‌ویکم (گزارش پانزدهم مالک): متن «محاسبات همیشه ریالی است»
+                         به درخواست حذف شد -->
                     <StackPanel Orientation="Horizontal" Margin="2,10">
                         <TextBlock Text="واحد پول نمایشی: " VerticalAlignment="Center" FontSize="12.5" />
                         <ComboBox ItemsSource="{Binding CurrencyUnitOptions}"
                                   SelectedIndex="{Binding CurrencyUnitIndex}" MinWidth="130"
                                   Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="4,0,0,0" />
-                        <TextBlock Text="(فقط نمایش — محاسبات همیشه ریالی است)" FontSize="10.5"
-                                   Opacity="0.6" VerticalAlignment="Center" Margin="10,0,0,0" />
                     </StackPanel>
                     <CheckBox Content="انیمیشن‌ها فعال" IsChecked="{Binding AnimationsEnabled}" Margin="2,10" />
                     <StackPanel Orientation="Horizontal" Margin="2,8">

@@ -140,15 +140,16 @@
         </Grid.ColumnDefinitions>
 
         <!-- ═══ ستون کنار ═══ — چرخه هفدهم (گزارش یازدهم): پس‌زمینهٔ سایدبار
-             از Primary.Light روشن (که با تم Teal سبز دیده می‌شد) به گرادیان
-             آبی تیرهٔ رسمی طرح (#16355E→#1C4E89 — همان اسکرین‌شات‌های محصول)
-             تغییر کرد؛ متن‌ها سفید/آبی‌روشن و آیتم فعال با های‌لایت نیمه‌شفاف
-             سفیدِ گوشه‌گرد — کاملاً هماهنگ با PrimaryColor=Blue جدید -->
+             گرادیان آبی رسمی طرح؛ چرخه بیست‌ویکم (گزارش پانزدهم مالک):
+             «تغییر رنگ، رنگ منوی کناری را عوض نمی‌کند» — رنگ‌ها از منابع پویای
+             App.SidebarTop/Bottom خوانده می‌شوند که ThemeService آنها را از رنگ
+             تم (یا رنگ سفارشی کاربر) بازمی‌سازد؛ متن‌ها سفید/آبی‌روشن و آیتم
+             فعال با های‌لایت نیمه‌شفاف سفیدِ گوشه‌گرد. -->
         <Border Grid.Column="0">
             <Border.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#16355E" Offset="0" />
-                    <GradientStop Color="#1C4E89" Offset="1" />
+                    <GradientStop Color="{Binding Color, Source={StaticResource App.SidebarTop}}" Offset="0" />
+                    <GradientStop Color="{Binding Color, Source={StaticResource App.SidebarBottom}}" Offset="1" />
                 </LinearGradientBrush>
             </Border.Background>
             <Grid>

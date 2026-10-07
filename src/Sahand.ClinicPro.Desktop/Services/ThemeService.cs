@@ -69,7 +69,10 @@ public class ThemeService : IThemeService
 
     /// <summary>
     /// اعمال تم رنگی مشخص + حالت روشن/تیره — رنگ‌های MaterialDesign،
-    /// گوشه‌ها و چگالی کارت‌ها و ذخیرهٔ محلی برای اجرای بعدی
+    /// گوشه‌ها و چگالی کارت‌ها و ذخیرهٔ محلی برای اجرای بعدی.
+    /// چرخه بیست‌ویکم (گزارش پانزدهم مالک): ۱) رنگ منوی کناری هم از رنگ تم
+    /// ساخته می‌شود (پیش‌تر گرادیان هاردکد بود و تعویض تم منو را عوض نمی‌کرد)؛
+    /// ۲) گوشه/چگالی اگر کاربر مقدار مستقل گذاشته باشد، مقدار کاربر مقدم است.
     /// </summary>
     public void ApplyTheme(string themeKey, bool dark)
     {
@@ -89,15 +92,22 @@ public class ThemeService : IThemeService
         _isDark = dark;
         _currentThemeKey = picked.Key;
 
-        // ═══ ظاهر عناصر تم — چرخه بیستم ═══
-        // شعاع گوشهٔ کارت‌ها/پنل‌ها — سبک ضمنی Card در App.xaml از همین می‌خواند
-        System.Windows.Application.Current.Resources["App.CardRadius"] = new CornerRadius(picked.CardRadius);
-        // چگالی — فشرده: پدینگ کمتر، ردیف‌های جمع‌وجورتر
-        System.Windows.Application.Current.Resources["App.CardPadding"] = new Thickness(
-            picked.IsCompact ? 12 : 20,
-            picked.IsCompact ? 9 : 20,
-            picked.IsCompact ? 12 : 20,
-            picked.IsCompact ? 9 : 20);
+        // ═══ ظاهر عناصر تم — چرخه بیست + overrideهای مستقل چرخه بیست‌ویکم ═══
+        var resources = System.Windows.Application.Current.Resources;
+
+        // شعاع گوشه: مقدار مستقل کاربر مقدم است؛ وگرنه از تم
+        var radius = _appearance.CardRadiusOverride ?? picked.CardRadius;
+        resources["App.CardRadius"] = new CornerRadius(radius);
+
+        // چگالی: مقدار مستقل کاربر مقدم است؛ وگرنه از تم
+        var compact = _appearance.DensityOverride is not null
+            ? string.Equals(_appearance.DensityOverride, "Compact", StringComparison.OrdinalIgnoreCase)
+            : picked.IsCompact;
+        resources["App.CardPadding"] = new Thickness(
+            compact ? 12 : 20, compact ? 9 : 20, compact ? 12 : 20, compact ? 9 : 20);
+
+        // ═══ رنگ منوی کناری — چرخه بیست‌ویکم ═══
+        ApplySidebarColors(resources, picked);
 
         // ذخیرهٔ محلی — برای اعمال تم در اجرای بعدی پیش از ورود کاربر
         try
@@ -114,10 +124,86 @@ public class ThemeService : IThemeService
     }
 
     /// <summary>
+    /// اعمال رنگ منوی کناری — منابع پویای App.SidebarTop/Bottom.
+    /// اگر کاربر رنگ مستقل گذاشته باشد همان؛ وگرنه گرادیانی تیره از رنگ اصلی
+    /// تم ساخته می‌شود تا منو همیشه با تم هماهنگ باشد (گزارش پانزدهم مالک:
+    /// «تغییر رنگ، رنگ منوی کناری را عوض نمی‌کند»).
+    /// نکتهٔ فنی: رنگ داخل همان SolidColorBrush موجود بازنویسی می‌شود (نه
+    /// جایگزینی کل منبع) تا GradientStop های وصل‌شده با Binding فوراً تازه شوند.
+    /// </summary>
+    private void ApplySidebarColors(
+        System.Windows.ResourceDictionary resources, AppTheme picked)
+    {
+        System.Windows.Media.Color baseColor;
+        var customHex = _appearance.SidebarHex;
+        if (!string.IsNullOrWhiteSpace(customHex))
+        {
+            // رنگ سفارشی کاربر — مستقل از تم (رشتهٔ نامعتبر → بازگشت به رنگ تم)
+            try
+            {
+                baseColor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter
+                    .ConvertFromString(customHex);
+            }
+            catch
+            {
+                baseColor = picked.PrimaryColor;
+            }
+        }
+        else
+        {
+            // همگام با تم — تیره‌شدهٔ رنگ اصلی
+            baseColor = picked.PrimaryColor;
+        }
+        var top = Darken(baseColor, 0.30);   // بالای گرادیان — تیره‌تر
+        var bottom = Darken(baseColor, 0.08); // پایین گرادیان — نزدیک رنگ تم
+        SetBrushColor(resources, "App.SidebarTop", top);
+        SetBrushColor(resources, "App.SidebarBottom", bottom);
+    }
+
+    /// <summary>
+    /// بازنویسی رنگ قلمِ موجود در منبع — اگر منبع SolidColorBrush باشد رنگ همان
+    /// نمونه عوض می‌شود (و همهٔ مصرف‌کننده‌های Binding فوراً به‌روز می‌شوند)؛
+    /// در نبود منبع، قلم جدید ساخته می‌شود.
+    /// </summary>
+    private static void SetBrushColor(
+        System.Windows.ResourceDictionary resources, string key, System.Windows.Media.Color color)
+    {
+        if (resources[key] is System.Windows.Media.SolidColorBrush brush)
+        {
+            // Freeze نباشد تا تغییر رنگ مجاز باشد
+            if (brush.IsFrozen)
+            {
+                resources[key] = new System.Windows.Media.SolidColorBrush(color);
+                return;
+            }
+            brush.Color = color;
+        }
+        else
+        {
+            resources[key] = new System.Windows.Media.SolidColorBrush(color);
+        }
+    }
+
+    /// <summary>
+    /// تیره‌سازی رنگ برای گرادیان منو — رنگ ورودی با ضریب داده‌شده به سمت سیاه
+    /// می‌رود (factor بین ۰ و ۱)؛ کانال آلفا دست‌نخورده می‌ماند.
+    /// </summary>
+    private static System.Windows.Media.Color Darken(System.Windows.Media.Color c, double factor)
+    {
+        factor = Math.Clamp(factor, 0, 0.9);
+        return System.Windows.Media.Color.FromRgb(
+            (byte)(c.R * (1 - factor)),
+            (byte)(c.G * (1 - factor)),
+            (byte)(c.B * (1 - factor)));
+    }
+
+    /// <summary>
     /// اعمال تنظیمات ظاهری — چرخه بیستم (گزارش چهاردهم مالک):
     /// فونت و اندازهٔ پایه از طریق منابع پویا روی سبک ضمنی Window و همهٔ
     /// فرزندانش اثر می‌گذارد (نماهای Root فونت هاردکدشده ندارند)؛
     /// واحد پول نمایشی در سرویس Money خوانده می‌شود.
+    /// چرخه بیست‌ویکم: رنگ منو/گوشه/چگالی مستقل هم همین‌جا اعمال می‌شوند تا
+    /// تغییرشان بدون تعویض تم بی‌درنگ روی پوسته اثر کند.
     /// </summary>
     public void ApplyAppearance(AppearanceSettings settings)
     {
@@ -139,12 +225,32 @@ public class ThemeService : IThemeService
         resources["App.CurrencyLabel"] = _appearance.CurrencyLabel;
         Helpers.Money.CurrencyUnit = _appearance.CurrencyUnit;
 
+        // ═══ سفارشی‌سازی تفکیکی عناصر — چرخه بیست‌ویکم ═══
+        // گوشه و چگالی مستقل — اگر تهی باشند مقدار تم فعلی باقی می‌ماند
+        if (_appearance.CardRadiusOverride is { } radius)
+            resources["App.CardRadius"] = new CornerRadius(radius);
+        if (_appearance.DensityOverride is not null)
+        {
+            var compact = string.Equals(_appearance.DensityOverride, "Compact", StringComparison.OrdinalIgnoreCase);
+            resources["App.CardPadding"] = new Thickness(
+                compact ? 12 : 20, compact ? 9 : 20, compact ? 12 : 20, compact ? 9 : 20);
+        }
+        // رنگ منوی کناری — بازاعمال بی‌درنگ (سفارشی یا همگام با تم)
+        var picked = Catalog.FirstOrDefault(t =>
+            string.Equals(t.Key, _currentThemeKey, StringComparison.OrdinalIgnoreCase)) ?? Blue;
+        ApplySidebarColors(resources, picked);
+
         try
         {
             LocalSettingsStore.Set("AppFont", _appearance.FontFamilyName);
             LocalSettingsStore.Set("AppBaseFontSize", _appearance.BaseFontSize.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
             LocalSettingsStore.Set("AppAnimations", _appearance.AnimationsEnabled ? "true" : "false");
             LocalSettingsStore.Set("CurrencyUnit", _appearance.CurrencyUnit);
+            // چرخه بیست‌ویکم: سه تنظیم مستقل جدید
+            LocalSettingsStore.Set("SidebarHex", _appearance.SidebarHex ?? "");
+            LocalSettingsStore.Set("CardRadiusOverride",
+                _appearance.CardRadiusOverride is { } r2 ? r2.ToString() : "");
+            LocalSettingsStore.Set("DensityOverride", _appearance.DensityOverride ?? "");
         }
         catch
         {
@@ -156,7 +262,8 @@ public class ThemeService : IThemeService
 
     /// <summary>
     /// خواندن تنظیمات ظاهری ذخیره‌شدهٔ محلی — برای اعمال در راه‌اندازی
-    /// برنامه پیش از ساخت پنجرهٔ اصلی؛ در نبود مقدار، پیش‌فرض محصول
+    /// برنامه پیش از ساخت پنجرهٔ اصلی؛ در نبود مقدار، پیش‌فرض محصول.
+    /// چرخه بیست‌ویکم: سه تنظیم مستقل (رنگ منو/گوشه/چگالی) هم خوانده می‌شوند.
     /// </summary>
     public static AppearanceSettings LoadSavedAppearance()
     {
@@ -166,12 +273,19 @@ public class ThemeService : IThemeService
             var size = LocalSettingsStore.Get("AppBaseFontSize");
             var anim = LocalSettingsStore.Get("AppAnimations");
             var currency = LocalSettingsStore.Get("CurrencyUnit");
+            var sidebarHex = LocalSettingsStore.Get("SidebarHex");
+            var radiusOvr = LocalSettingsStore.Get("CardRadiusOverride");
+            var densityOvr = LocalSettingsStore.Get("DensityOverride");
             return new AppearanceSettings(
                 string.IsNullOrWhiteSpace(font) ? "Vazirmatn" : font,
                 double.TryParse(size, System.Globalization.NumberStyles.Any,
                     System.Globalization.CultureInfo.InvariantCulture, out var s) ? Math.Clamp(s, 11, 18) : 13,
                 anim != "false",
-                string.Equals(currency, "Toman", StringComparison.OrdinalIgnoreCase) ? "Toman" : "Rial");
+                string.Equals(currency, "Toman", StringComparison.OrdinalIgnoreCase) ? "Toman" : "Rial",
+                // رشتهٔ خالی یعنی «همگام با تم»
+                string.IsNullOrWhiteSpace(sidebarHex) ? null : sidebarHex,
+                int.TryParse(radiusOvr, out var r) && r is >= 0 and <= 24 ? r : null,
+                string.IsNullOrWhiteSpace(densityOvr) ? null : densityOvr);
         }
         catch
         {
