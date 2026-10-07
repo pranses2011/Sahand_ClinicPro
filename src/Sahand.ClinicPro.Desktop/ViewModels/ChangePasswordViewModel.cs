@@ -72,9 +72,16 @@ public partial class ChangePasswordViewModel : ObservableObject
 
         // گزارش هفتم مالک: سرور ChangePasswordRequestDto سه فیلد اجباری دارد و
         // ConfirmPassword آن [Required] + [Compare(NewPassword)] است — ارسالِ
-        // فقط دو فیلد با «اطلاعات ارسالی نامعتبر است» (400 ModelState) رد می‌شد
-        var ok = await _api.PostAsync("auth/change-password",
-            new { currentPassword = CurrentPassword, newPassword = NewPassword, confirmPassword = ConfirmPassword });
+        // فقط دو فیلد با «اطلاعات ارسالی نامعتبر است» (400 ModelState) رد می‌شد.
+        // چرخه هفدهم (گزارش یازدهم): نویسه‌های نامرئی جهت (که در کادرهای ماسک
+        // دیده نمی‌شوند) پیش از ارسال پاک می‌شوند تا رمزِ تایپ‌شده با رمزِ
+        // رسیده به سرور یکسان بماند
+        var ok = await _api.PostAsync("auth/change-password", new
+        {
+            currentPassword = InputSanitizer.StripDirectionMarks(CurrentPassword),
+            newPassword = InputSanitizer.StripDirectionMarks(NewPassword),
+            confirmPassword = InputSanitizer.StripDirectionMarks(ConfirmPassword)
+        });
 
         IsBusy = false;
         ChangePasswordCommand.NotifyCanExecuteChanged();

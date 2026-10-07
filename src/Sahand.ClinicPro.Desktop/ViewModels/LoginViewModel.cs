@@ -59,7 +59,9 @@ public partial class LoginViewModel : ObservableObject
         ErrorMessage = string.Empty;
         LoginCommand.NotifyCanExecuteChanged();
 
-        var ok = await _api.LoginAsync(Username.Trim(), Password);
+        var ok = await _api.LoginAsync(
+            InputSanitizer.StripDirectionMarks(Username).Trim(),
+            InputSanitizer.StripDirectionMarks(Password));
 
         IsBusy = false;
         LoginCommand.NotifyCanExecuteChanged();

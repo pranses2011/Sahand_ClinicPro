@@ -88,12 +88,18 @@
                     </TextBox.InputBindings>
                 </TextBox>
 
-                <!-- رمز عبور + دکمه نمایش — چرخه چهاردهم (گزارش پنجم مالک):
-                     (۱) کادرها چپ‌به‌راست و وسط‌چین شدند تا رمز لاتین وارونه دیده نشود
-                     (به‌جای Admin@123 عبارت 321@nimdA نمایش داده می‌شد — ارث‌بری
-                     جهت راست‌به‌چپ پنجره از سوی PasswordBox/TextBox)؛
-                     (۲) آیکون چشم از روی کادر به ستون کناری‌اش منتقل شد تا متن
-                     تایپی هرگز زیرش نرود -->
+                <!-- رمز عبور + دکمه نمایش — چرخه هفدهم (گزارش یازدهم مالک):
+                     بایندینگ materialDesign:PasswordBoxAssist.Password (دوطرفه) حذف شد —
+                     سورس پکیج 5.3.2 نشان داد این بایندینگ با DefaultUpdateSourceTrigger=LostFocus
+                     در HandlePasswordChanged مقدار را «بدون بررسی برابری» دوباره داخل
+                     PasswordBox.Password می‌نویسد؛ بازنویسی برنامه‌ای Password مکان‌نما را
+                     به ابتدای کادر می‌پراند و کاراکتر بعدی «در ابتدای رشته» درج می‌شد —
+                     نتیجه: Admin@123 به‌صورت 321@nimdA در ViewModel می‌نشست و چون کادر ماسک
+                     است کاربر فقط «رمز نادرست» می‌دید؛ با آیکون چشم (TextBox معمولی) مشکل
+                     نبود چرا که TextBox مسیر بایندینگ سالمی دارد.
+                     همگام‌سازی اکنون «تک‌مسیری» است: فقط رویداد PasswordChanged در کد پشت
+                     (LoginWindow.xaml.cs) مقدار را به ViewModel می‌برد و هیچ‌چیز هرگز به
+                     داخل کادرِ در حال تایپ بازنویسی نمی‌کند. -->
                 <Grid Margin="0,0,0,6" FlowDirection="LeftToRight">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -102,7 +108,6 @@
                     <Grid Grid.Column="0">
                         <PasswordBox x:Name="PasswordBox"
                                      materialDesign:HintAssist.Hint="🔒 رمز عبور"
-                                     materialDesign:PasswordBoxAssist.Password="{Binding Password, Mode=TwoWay}"
                                      MaxLength="100"
                                      FontSize="14"
                                      FlowDirection="LeftToRight"

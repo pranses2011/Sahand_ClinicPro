@@ -29,6 +29,14 @@ public partial class ChangePasswordWindow : Window
         ViewModel = viewModel;
         _tokens = tokens;
         DataContext = viewModel;
+        // چرخه هفدهم (گزارش یازدهم مالک): همگام‌سازی تک‌مسیری کادرهای ماسک —
+        // پس از حذف بایندینگ PasswordBoxAssist (ریشهٔ وارونگی رمز)، مقدار هر سه
+        // کادر فقط از همین رویداد به ViewModel می‌رسد؛ هیچ مسیری به داخل کادرِ
+        // در حال تایپ بازنویسی نمی‌کند تا مکان‌نما هرگز به ابتدای رشته نپرد
+        CurrentPasswordBox.PasswordChanged += (_, _) => viewModel.CurrentPassword = CurrentPasswordBox.Password;
+        NewPasswordBox.PasswordChanged += (_, _) => viewModel.NewPassword = NewPasswordBox.Password;
+        ConfirmPasswordBox.PasswordChanged += (_, _) => viewModel.ConfirmPassword = ConfirmPasswordBox.Password;
+
         viewModel.ChangeSucceeded += OnChangeSucceeded;
 
         // رمز فعلی از قبل پر است — فوکوس روی رمز جدید
@@ -36,12 +44,18 @@ public partial class ChangePasswordWindow : Window
     }
 
     /// <summary>
-    /// مقداردهی اولیه از پنجره ورود — نام کاربری برای سربرگ و رمز فعلیِ همان لحظه
+    /// مقداردهی اولیه از پنجره ورود — نام کاربری برای سربرگ و رمز فعلیِ همان لحظه.
+    /// چرخه هفدهم (گزارش یازدهم): کادر ماسک هم مثل گذشته نقش‌های رمز پیش‌پر را نشان
+    /// می‌دهد؛ پس از مقداردهی برنامه‌ای، SelectAll تا اگر کاربر تایپ کند «همه‌گزینی
+    /// جایگزین» شود نه درج در ابتدای رشته (مکان‌نمای کادر پس از مقداردهی برنامه‌ای
+    /// در ابتداست — درج آنجا یعنی وارونگی همان‌گونه که در پنجره ورود دیده می‌شد)
     /// </summary>
     public void Initialize(string username, string currentPassword)
     {
         ViewModel.Username = username;
         ViewModel.CurrentPassword = currentPassword;
+        CurrentPasswordBox.Password = currentPassword;
+        CurrentPasswordBox.SelectAll();
         NewPasswordBox.Focus();
     }
 
@@ -59,7 +73,10 @@ public partial class ChangePasswordWindow : Window
 
     /// <summary>
     /// نمایش یا مخفی‌کردن رمز فعلی/جدید/تکرار — جابه‌جایی PasswordBox و TextBox بر اساس Tag.
-    /// گزارش هفتم مالک: چشمِ «رمز فعلی» نیز اضافه شد — هر سه کادر همین الگو را دارند
+    /// گزارش هفتم مالک: چشمِ «رمز فعلی» نیز اضافه شد — هر سه کادر همین الگو را دارند.
+    /// چرخه هفدهم (گزارش یازدهم): هنگام مخفی‌شدن، کادر ماسک با آخرین مقدار ViewModel
+    /// همگام می‌شود تا ویرایش‌های کادر آشکار از بین نرود؛ SelectAll پس از مقداردهی
+    /// برنامه‌ای، تایپِ بعدی را «جایگزینِ همه‌گزینی» می‌کند نه درج در ابتدای رشته
     /// </summary>
     private void OnEyeToggled(object sender, RoutedEventArgs e)
     {
@@ -75,6 +92,7 @@ public partial class ChangePasswordWindow : Window
                 CurrentPasswordRevealBox.CaretIndex = CurrentPasswordRevealBox.Text.Length;
                 CurrentPasswordRevealBox.Focus();
             }
+            else SyncMaskedBox(CurrentPasswordBox, ViewModel.CurrentPassword);
         }
         else if ((string?)toggle.Tag == "New")
         {
@@ -85,6 +103,7 @@ public partial class ChangePasswordWindow : Window
                 NewPasswordRevealBox.CaretIndex = NewPasswordRevealBox.Text.Length;
                 NewPasswordRevealBox.Focus();
             }
+            else SyncMaskedBox(NewPasswordBox, ViewModel.NewPassword);
         }
         else if ((string?)toggle.Tag == "Confirm")
         {
@@ -95,6 +114,20 @@ public partial class ChangePasswordWindow : Window
                 ConfirmPasswordRevealBox.CaretIndex = ConfirmPasswordRevealBox.Text.Length;
                 ConfirmPasswordRevealBox.Focus();
             }
+            else SyncMaskedBox(ConfirmPasswordBox, ViewModel.ConfirmPassword);
+        }
+    }
+
+    /// <summary>
+    /// همگام‌سازی امن کادر ماسک با مقدار ViewModel — فقط وقتی متفاوت باشد؛
+    /// پس از نوشتن برنامه‌ای، همه‌گزینی تا تایپ بعدی کل مقدار را جایگزین کند
+    /// </summary>
+    private static void SyncMaskedBox(System.Windows.Controls.PasswordBox box, string vmValue)
+    {
+        if (box.Password != vmValue)
+        {
+            box.Password = vmValue;
+            box.SelectAll();
         }
     }
 

@@ -60,14 +60,26 @@ public partial class LoginWindow : Window
         }
     }
 
-    /// <summary>نمایش یا مخفی کردن رمز عبور — جابه‌جایی PasswordBox و TextBox</summary>
+    /// <summary>
+    /// نمایش یا مخفی کردن رمز عبور — جابه‌جایی PasswordBox و TextBox.
+    /// چرخه هفدهم (گزارش یازدهم): هنگام مخفی‌شدن، کادر ماسک با آخرین مقدار ViewModel
+    /// همگام می‌شود (ممکن است کاربر در کادر آشکار ویرایش کرده باشد)؛ پس از
+    /// مقداردهی برنامه‌ای SelectAll تا تایپِ بعدی «جایگزین همه» شود نه درج در ابتدا
+    /// </summary>
     private void OnEyeToggled(object sender, RoutedEventArgs e)
     {
         var show = EyeToggle.IsChecked == true;
         PasswordRevealBox.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         PasswordBox.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
         if (show)
+        {
             PasswordRevealBox.CaretIndex = PasswordRevealBox.Text.Length;
+        }
+        else if (PasswordBox.Password != _viewModel.Password)
+        {
+            PasswordBox.Password = _viewModel.Password;
+            PasswordBox.SelectAll();
+        }
     }
 
     /// <summary>پس از ورود موفق — ذخیره نام کاربری در صورت درخواست و باز کردن پنجره اصلی</summary>
