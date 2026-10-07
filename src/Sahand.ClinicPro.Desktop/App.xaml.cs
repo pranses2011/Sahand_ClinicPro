@@ -36,6 +36,15 @@ public partial class App : System.Windows.Application
         ConfigureServices(services, configuration);
         Services = services.BuildServiceProvider();
 
+        // چرخه نوزدهم (گزارش سیزدهم مالک): تم رنگی انتخاب‌شدهٔ کاربر از اجرای
+        // پیشین — پیش از باز شدن هر پنجره‌ای روی پوسته اعمال می‌شود تا برنامه
+        // از همان لحظهٔ اول با پوستهٔ دلخواه بالا بیاید (پیش‌فرض: آبی/روشن)
+        var savedThemeKey = LocalSettingsStore.Get("ThemeKey");
+        var savedThemeDark = string.Equals(LocalSettingsStore.Get("ThemeIsDark"), "true",
+            StringComparison.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(savedThemeKey))
+            Services.GetRequiredService<IThemeService>().ApplyTheme(savedThemeKey, savedThemeDark);
+
         // انتخاب پنجره آغازین بر اساس وضعیت توکن
         var tokens = Services.GetRequiredService<ITokenManager>();
         if (tokens.HasValidToken)
