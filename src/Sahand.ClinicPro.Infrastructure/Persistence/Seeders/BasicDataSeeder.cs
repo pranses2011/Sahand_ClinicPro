@@ -25,6 +25,7 @@ public class BasicDataSeeder : IDataSeeder
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
         await SeedSpecialtiesAsync(cancellationToken);
+        await SeedRoomsAsync(cancellationToken);
         await SeedIcd10Async(cancellationToken);
         await SeedInsuranceCompaniesAsync(cancellationToken);
         await SeedModulesAsync(cancellationToken);
@@ -174,6 +175,47 @@ public class BasicDataSeeder : IDataSeeder
             };
             _context.Specialties.Add(child);
             byCode[code] = child;
+        }
+    }
+
+    /// <summary>
+    /// بذر اتاق‌های معاینه — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
+    /// «فیلد اتاق برای انتخاب هست ولی جایی برای تعریف اتاق و اسم اتاق نیست» —
+    /// هیچ اتاقی بذر نشده بود و کشوی اتاق در برنامهٔ کاری پزشک همیشه خالی بود.
+    /// upsert بر اساس شمارهٔ اتاق؛ دیتابیس‌های موجود هم تکمیل می‌شوند.
+    /// </summary>
+    private async Task SeedRoomsAsync(CancellationToken ct)
+    {
+        var existingNumbers = await _context.ExaminationRooms
+            .IgnoreQueryFilters()
+            .Select(r => r.RoomNumber)
+            .ToListAsync(ct);
+        var set = existingNumbers.ToHashSet();
+
+        // هشت اتاق معاینهٔ طبقهٔ همکف — نقطهٔ شروع رایج درمانگاه
+        var rooms = new (string Number, string Name, int Floor)[]
+        {
+            ("1", "اتاق معاینه ۱", 0),
+            ("2", "اتاق معاینه ۲", 0),
+            ("3", "اتاق معاینه ۳", 0),
+            ("4", "اتاق معاینه ۴", 0),
+            ("5", "اتاق معاینه ۵", 0),
+            ("6", "اتاق معاینه ۶", 0),
+            ("7", "اتاق مشاوره", 1),
+            ("8", "اتاق پروسیجر", 1),
+        };
+        foreach (var (number, name, floor) in rooms)
+        {
+            if (set.Contains(number))
+                continue;
+            _context.ExaminationRooms.Add(new ExaminationRoom
+            {
+                RoomNumber = number,
+                RoomName = name,
+                Floor = floor,
+                Capacity = 1,
+                IsActive = true
+            });
         }
     }
 

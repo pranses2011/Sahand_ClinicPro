@@ -469,10 +469,7 @@ public partial class DoctorFormViewModel : ObservableObject
     /// <summary>بارگذاری داده مرجع</summary>
     private async Task LoadLookupsAsync()
     {
-        var rooms = await _api.GetAsync<RoomsResponse>("lookups/rooms");
-        if (rooms?.Data is not null)
-            foreach (var r in rooms.Data)
-                Rooms.Add(new RoomOption(r.Id, r.DisplayName));
+        await ReloadRoomsAsync();
 
         var specialties = await _api.GetAsync<SpecialtiesResponse>("lookups/specialties?onlyParents=true");
         if (specialties?.Data is not null)
@@ -558,6 +555,38 @@ public partial class DoctorFormViewModel : ObservableObject
         if (SpecialtyId is null) return;
         foreach (var s in AllSpecialties.Where(s => s.ParentId == SpecialtyId))
             SubSpecialties.Add(s);
+    }
+
+    /// <summary>
+    /// بازخوانی کشوی اتاق‌ها — پس از بازگشت از پنجرهٔ مدیریت اتاق‌ها نیز صدا زده می‌شود
+    /// تا اتاق تازه‌ساخته بی‌درنگ در همین فرم قابل انتخاب باشد (چرخه بیست‌ویکم)
+    /// </summary>
+    private async Task ReloadRoomsAsync()
+    {
+        Rooms.Clear();
+        var rooms = await _api.GetAsync<RoomsResponse>("lookups/rooms");
+        if (rooms?.Data is not null)
+            foreach (var r in rooms.Data)
+                Rooms.Add(new RoomOption(r.Id, r.DisplayName));
+    }
+
+    /// <summary>
+    /// باز کردن پنجرهٔ مدیریت اتاق‌ها — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
+    /// «فیلد اتاق برای انتخاب هست ولی جایی برای تعریف اتاق و اسم اتاق نیست».
+    /// پس از بستن پنجره، کشوی اتاق همین فرم تازه می‌شود.
+    /// </summary>
+    [RelayCommand]
+    private void ManageRooms()
+    {
+        var vm = new RoomsManagerViewModel(_api, _snackbar);
+        var window = new RoomsManagerWindow(vm)
+        {
+            Owner = System.Windows.Application.Current.Windows
+                .OfType<System.Windows.Window>()
+                .FirstOrDefault(w => w.IsActive)
+        };
+        window.ShowDialog();
+        _ = ReloadRoomsAsync();
     }
 
     /// <summary>بارگذاری برنامه هفتگی</summary>

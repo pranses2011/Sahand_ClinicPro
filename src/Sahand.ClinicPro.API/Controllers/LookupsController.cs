@@ -79,6 +79,64 @@ public class LookupsController : ApiBaseController
         return ToResponse(result);
     }
 
+    // ═══ چرخه بیست‌ویکم (گزارش پانزدهم مالک): مدیریت اتاق‌ها ═══
+    // «در تعریف پزشک فیلد اتاق برای انتخاب هست ولی جایی برای تعریف اتاق و اسم
+    //  اتاق نیست» — سه endpoint زیر برای پنجرهٔ مدیریت اتاق در فرم پزشک افزوده شدند.
+    // نوشتن دادهٔ مرجع نیازمند نقش مدیریتی است؛ خواندن برای همه باقی می‌ماند.
+
+    /// <summary>فهرست کامل اتاق‌ها شامل غیرفعال — پنجرهٔ مدیریت اتاق‌ها</summary>
+    [HttpGet("rooms/manage")]
+    public async Task<IActionResult> GetRoomsForManage()
+    {
+        var result = await _mediator.Send(new GetRoomsForManageQuery());
+        return ToResponse(result);
+    }
+
+    /// <summary>ساخت اتاق معاینه جدید</summary>
+    [HttpPost("rooms")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> CreateRoom([FromBody] CreateRoomRequest request)
+    {
+        var result = await _mediator.Send(
+            new CreateRoomCommand(request.RoomNumber, request.RoomName, request.Floor));
+        return ToResponse(result);
+    }
+
+    /// <summary>ویرایش اتاق معاینه</summary>
+    [HttpPut("rooms/{id:long}")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> UpdateRoom(long id, [FromBody] CreateRoomRequest request)
+    {
+        var result = await _mediator.Send(
+            new UpdateRoomCommand(id, request.RoomNumber, request.RoomName, request.Floor, request.IsActive));
+        return ToResponse(result);
+    }
+
+    /// <summary>غیرفعال‌سازی (حذف نرم) اتاق</summary>
+    [HttpDelete("rooms/{id:long}")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> DeactivateRoom(long id)
+    {
+        var result = await _mediator.Send(new DeactivateRoomCommand(id));
+        return ToResponse(result);
+    }
+
+    /// <summary>بدنهٔ درخواست ساخت/ویرایش اتاق</summary>
+    public sealed class CreateRoomRequest
+    {
+        /// <summary>شماره اتاق — یکتا</summary>
+        public string RoomNumber { get; set; } = string.Empty;
+
+        /// <summary>نام نمایشی اتاق</summary>
+        public string? RoomName { get; set; }
+
+        /// <summary>طبقه</summary>
+        public int? Floor { get; set; }
+
+        /// <summary>وضعیت فعال — فقط در ویرایش معنا دارد</summary>
+        public bool IsActive { get; set; } = true;
+    }
+
     /// <summary>فهرست پرسنل فعال — برای انتخاب در فرم پزشک</summary>
     [HttpGet("employees")]
     public async Task<IActionResult> GetEmployees()

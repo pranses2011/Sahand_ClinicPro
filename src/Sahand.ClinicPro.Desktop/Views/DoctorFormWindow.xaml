@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
         Title="{Binding FormTitle, Mode=OneWay}"
         Width="900" Height="660"
         WindowStartupLocation="CenterOwner"
@@ -277,8 +278,26 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="برنامه کاری هفتگی — شیفت هر روز هفته با اتاق و ظرفیت"
-                               FontSize="12" Opacity="0.7" Margin="2,2,2,8" />
+                    <!-- نوار بالای تب: دکمهٔ مدیریت اتاق‌ها — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
+                         «فیلد اتاق برای انتخاب هست ولی جایی برای تعریف اتاق و اسم اتاق نیست» -->
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="برنامه کاری هفتگی — شیفت هر روز هفته با اتاق و ظرفیت"
+                                   FontSize="12" Opacity="0.7" VerticalAlignment="Center" />
+                        <Button Grid.Column="1"
+                                Command="{Binding ManageRoomsCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                ToolTip="افزودن، تغییر نام و غیرفعال‌سازی اتاق‌های معاینه"
+                                Padding="10,4">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Door" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="مدیریت اتاق‌ها" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
 
                     <DataGrid Grid.Row="1"
                               ItemsSource="{Binding ScheduleRows}"
@@ -300,14 +319,41 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="شروع" Width="70"
-                                Binding="{Binding StartTime, UpdateSourceTrigger=PropertyChanged}" />
-                            <DataGridTextColumn Header="پایان" Width="70"
-                                Binding="{Binding EndTime, UpdateSourceTrigger=PropertyChanged}" />
-                            <DataGridTextColumn Header="استراحت از" Width="70"
-                                Binding="{Binding BreakStart, UpdateSourceTrigger=PropertyChanged}" />
-                            <DataGridTextColumn Header="استراحت تا" Width="70"
-                                Binding="{Binding BreakEnd, UpdateSourceTrigger=PropertyChanged}" />
+                            <!-- چرخه بیست‌ویکم (گزارش پانزدهم مالک): ستون‌های ساعت از تایپ
+                                 دستی به کنترل انتخابگر ساعت (پاپ‌آپ دوستونی ساعت/دقیقه)
+                                 تبدیل شدند تا هم سریع‌تر باشد و هم قالب HH:mm تضمین شود -->
+                            <DataGridTemplateColumn Header="شروع" Width="82" SortMemberPath="StartTime">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <controls:TimePicker TimeText="{Binding StartTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                             HorizontalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="پایان" Width="82" SortMemberPath="EndTime">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <controls:TimePicker TimeText="{Binding EndTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                             HorizontalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="استراحت از" Width="82" SortMemberPath="BreakStart">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <controls:TimePicker TimeText="{Binding BreakStart, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                             HorizontalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="استراحت تا" Width="82" SortMemberPath="BreakEnd">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <controls:TimePicker TimeText="{Binding BreakEnd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                             HorizontalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTemplateColumn Header="اتاق" Width="140">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -332,7 +378,7 @@
                                 <TextBlock Text="ذخیره فقط برنامه کاری" Margin="7,0,0,0" />
                             </StackPanel>
                         </Button>
-                        <TextBlock Text="قالب ساعت: 08:30 — ساعت استراحت اختیاری است"
+                        <TextBlock Text="ساعت‌ها با کلیک از انتخابگر انتخاب می‌شوند — استراحت اختیاری است و با دکمهٔ «پاک کردن» حذف می‌شود"
                                    FontSize="11" Opacity="0.55" VerticalAlignment="Center" Margin="6,0,0,0" />
                     </StackPanel>
                 </Grid>
