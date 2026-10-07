@@ -138,18 +138,22 @@ public partial class DoctorsViewModel : ViewModelBase
 
     /// <summary>ویرایش پزشک انتخاب‌شده</summary>
     [RelayCommand]
-    private void EditDoctor()
+    private void EditDoctor(object? parameter)
     {
-        if (SelectedDoctor is null) { _snackbar.Error("ابتدا یک پزشک انتخاب کنید"); return; }
-        OpenForm(new DoctorFormViewModel(_api, _snackbar, SelectedDoctor.Id));
+        // چرخه بیستم: دکمهٔ سطر، ردیف را به‌عنوان پارامتر می‌فرستد — کلیک روی دکمه
+        // در WPF لزوماً ردیف را انتخاب نمی‌کند
+        var row = parameter as DoctorRow ?? SelectedDoctor;
+        if (row is null) { _snackbar.Error("ابتدا یک پزشک انتخاب کنید"); return; }
+        OpenForm(new DoctorFormViewModel(_api, _snackbar, row.Id));
     }
 
     /// <summary>حذف پزشک با تأیید</summary>
     [RelayCommand]
-    private async Task DeleteDoctorAsync()
+    private async Task DeleteDoctorAsync(object? parameter)
     {
-        if (SelectedDoctor is null) { _snackbar.Error("ابتدا یک پزشک انتخاب کنید"); return; }
-        var name = SelectedDoctor.FullName;
+        var row = parameter as DoctorRow ?? SelectedDoctor; // چرخه بیستم — پارامتر ردیف
+        if (row is null) { _snackbar.Error("ابتدا یک پزشک انتخاب کنید"); return; }
+        var name = row.FullName;
         var confirmed = System.Windows.MessageBox.Show(
             $"آیا از حذف پزشک «{name}» مطمئن هستید؟\nسوابق ویزیت‌ها حفظ می‌شود اما پزشک غیرفعال خواهد شد.",
             "تأیید حذف پزشک",
@@ -158,7 +162,7 @@ public partial class DoctorsViewModel : ViewModelBase
         if (!confirmed) return;
 
         IsBusy = true;
-        var ok = await _api.DeleteAsync($"doctors/{SelectedDoctor.Id}");
+        var ok = await _api.DeleteAsync($"doctors/{row.Id}"); // چرخه بیستم: حذف همان ردیف پارامتر
         IsBusy = false;
         if (ok) { _snackbar.Success($"پزشک «{name}» حذف شد"); await LoadAsync(); }
         else _snackbar.Error(_api.LastError ?? "حذف ناموفق بود");
@@ -166,10 +170,11 @@ public partial class DoctorsViewModel : ViewModelBase
 
     /// <summary>مشاهده آمار عملکرد — دکمه آمار طبق فرم ۶</summary>
     [RelayCommand]
-    private void ShowPerformance()
+    private void ShowPerformance(object? parameter)
     {
-        if (SelectedDoctor is null) { _snackbar.Error("ابتدا یک پزشک انتخاب کنید"); return; }
-        var window = new DoctorPerformanceWindow(_api, SelectedDoctor.Id, SelectedDoctor.FullName)
+        var row = parameter as DoctorRow ?? SelectedDoctor; // چرخه بیستم — پارامتر ردیف
+        if (row is null) { _snackbar.Error("ابتدا یک پزشک انتخاب کنید"); return; }
+        var window = new DoctorPerformanceWindow(_api, row.Id, row.FullName)
         {
             Owner = System.Windows.Application.Current.MainWindow
         };
