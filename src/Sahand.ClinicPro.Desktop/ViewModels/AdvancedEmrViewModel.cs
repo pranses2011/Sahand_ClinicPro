@@ -84,13 +84,22 @@ public partial class AdvancedEmrViewModel : ViewModelBase
         _ = LoadPatientAsync(value.Id);
     }
 
+    /// <summary>
+    /// خلاصهٔ بیمار انتخاب‌شده — کارت بالای صفحه (چرخه بیست‌ویکم، گزارش پانزدهم
+    /// مالک: «در پروندهٔ بالینی پیشرفته با انتخاب بیمار هیچی نشان نمی‌دهد» —
+    /// پیش‌تر پس از انتخاب، تب‌ها خالی بود و هیچ بازخوردی از انتخاب بیمار دیده
+    /// نمی‌شد؛ اکنون کارت مشخصات + سن + جنسیت نمایش داده می‌شود)
+    /// </summary>
+    [ObservableProperty]
+    private string _patientSummary = string.Empty;
+
     /// <summary>بارگذاری کامل داده‌های پرونده بالینی بیمار</summary>
     private async Task LoadPatientAsync(long patientId)
     {
         IsBusy = true;
         try
         {
-            // جزئیات بیمار — تاریخ تولد و جنسیت برای z-score
+            // جزئیات بیمار — تاریخ تولد و جنسیت برای z-score + خلاصهٔ کارت بالای صفحه
             var detail = await _api.GetAsync<PatientDetailResponse>($"patients/{patientId}");
             if (detail?.Data is not null)
             {
@@ -99,6 +108,13 @@ public partial class AdvancedEmrViewModel : ViewModelBase
                     PatientBirthDate = birth;
                 else if (PersianDateHelper.ToGregorian(detail.Data.BirthDateShamsi) is { } gregorian)
                     PatientBirthDate = DateOnly.FromDateTime(gregorian);
+
+                // کارت خلاصه — نام کامل، کد ملی، سن، جنسیت
+                var ageText = detail.Data.Age is > 0 ? $"{detail.Data.Age} ساله" : "—";
+                PatientSummary = $"{detail.Data.FirstName} {detail.Data.LastName}" +
+                    $" | کد ملی: {detail.Data.NationalCode}" +
+                    $" | {ageText}" +
+                    $" | {(IsMale ? "مرد" : "زن")}";
             }
 
             await LoadGrowthAsync(patientId);
@@ -693,6 +709,12 @@ public partial class AdvancedEmrViewModel : ViewModelBase
         public int Gender { get; set; }
         public string? BirthDate { get; set; }
         public string? BirthDateShamsi { get; set; }
+
+        // چرخه بیست‌ویکم: فیلدهای کارت خلاصهٔ بیمار
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string NationalCode { get; set; } = string.Empty;
+        public int? Age { get; set; }
     }
 
     private sealed class GrowthResponse

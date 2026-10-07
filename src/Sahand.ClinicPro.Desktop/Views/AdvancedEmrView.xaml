@@ -54,6 +54,24 @@
                    Margin="8,0,0,8" Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}"
                    TextWrapping="Wrap" />
 
+        <!-- کارت خلاصه بیمار انتخاب‌شده — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
+             «با انتخاب بیمار هیچی نشان نمی‌داد» — اکنون پس از انتخاب، مشخصات
+             بیمار (نام، کد ملی، سن، جنسیت) به‌صورت کارت برجسته دیده می‌شود -->
+        <Border Grid.Row="2" CornerRadius="10" Padding="14,9" Margin="0,4,0,10"
+                Background="#E3F2FD"
+                HorizontalAlignment="Right"
+                Visibility="{Binding PatientSummary, Converter={StaticResource StringToVisibility}}">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="AccountCheck"
+                                         Width="19" Height="19"
+                                         Foreground="#1565C0"
+                                         VerticalAlignment="Center" />
+                <TextBlock Text="{Binding PatientSummary, Mode=OneWay}"
+                           Margin="9,0,0,0" VerticalAlignment="Center"
+                           FontWeight="SemiBold" FontSize="13" />
+            </StackPanel>
+        </Border>
+
         <!-- تب‌های سه‌گانه — فقط با انتخاب بیمار -->
         <TabControl Grid.Row="3" SelectedIndex="{Binding IndicatorTab}" Style="{StaticResource MaterialDesignTabControl}"
                     IsEnabled="{Binding HasPatient}">
