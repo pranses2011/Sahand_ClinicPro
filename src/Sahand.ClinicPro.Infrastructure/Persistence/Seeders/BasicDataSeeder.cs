@@ -34,11 +34,18 @@ public class BasicDataSeeder : IDataSeeder
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>بذر تخصص‌های پزشکی</summary>
+    /// <summary>
+    /// بذر تخصص‌های پزشکی — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
+    /// «لیست فوق‌تخصص رو خالی میاره و چیزی برای انتخاب کردن نیست» — ریشه آن‌بود که
+    /// بذر قبلی فقط ۱۴ تخصص والد می‌کاشت و هیچ فرزندی (فوق‌تخصص) وجود نداشت؛ به‌علاوه
+    /// شرط «اگر جدول پر است برگرد» مانع تکمیل دیتابیس‌های موجود می‌شد.
+    /// این نسخه: الف) upsert بر اساس Code (دیتابیس موجود هم کامل می‌شود)
+    ///           ب) ۲ تخصص والد جدید + ۵۰ فوق‌تخصص فرزند برای ۱۲ تخصص اصلی
+    /// </summary>
     private async Task SeedSpecialtiesAsync(CancellationToken ct)
     {
-        if (await _context.Specialties.AnyAsync(ct)) return;
-        var list = new (string Fa, string En, string Code)[]
+        // ── تخصص‌های والد (اصلی) — کد یکتا مبنای upsert ──
+        var parents = new (string Fa, string En, string Code)[]
         {
             ("پزشکی عمومی", "General Practice", "GP"),
             ("داخلی", "Internal Medicine", "INT"),
@@ -54,10 +61,119 @@ public class BasicDataSeeder : IDataSeeder
             ("دندانپزشکی", "Dentistry", "DENT"),
             ("فیزیوتراپی", "Physiotherapy", "PHY"),
             ("رادیولوژی", "Radiology", "RAD"),
+            // چرخه بیست‌ویکم — دو تخصص والد پرکاربردِ جاافتاده
+            ("مغز و اعصاب", "Neurology", "NEU"),
+            ("اورولوژی", "Urology", "URO"),
         };
-        foreach (var (fa, en, code) in list)
+
+        var existing = await _context.Specialties
+            .IgnoreQueryFilters()
+            .ToListAsync(ct);
+        var byCode = existing.ToDictionary(s => s.Code, s => s, StringComparer.OrdinalIgnoreCase);
+
+        // افزودن والدین تازه (دیتابیس موجود فقط موارد نوی را می‌گیرد)
+        foreach (var (fa, en, code) in parents)
         {
-            _context.Specialties.Add(new Specialty { Name = fa, NameEn = en, Code = code, IsActive = true });
+            if (!byCode.ContainsKey(code))
+            {
+                var entity = new Specialty { Name = fa, NameEn = en, Code = code, IsActive = true };
+                _context.Specialties.Add(entity);
+                byCode[code] = entity;
+            }
+        }
+        // والدین تازه باید Id بگیرند تا فرزندان به آن‌ها وصل شوند
+        await _context.SaveChangesAsync(ct);
+
+        // ── فوق‌تخصص‌ها (فرزندان) — چرخه بیست‌ویکم ──
+        // (کد والد، نام فارسی، نام انگلیسی، کد یکتای فرزند)
+        var subs = new (string ParentCode, string Fa, string En, string Code)[]
+        {
+            // داخلی
+            ("INT", "عفونی", "Infectious Diseases", "INT-INF"),
+            ("INT", "گوارش و کبد", "Gastroenterology", "INT-GAS"),
+            ("INT", "غدد و متابولیسم", "Endocrinology", "INT-END"),
+            ("INT", "کلیه", "Nephrology", "INT-NEP"),
+            ("INT", "ریه", "Pulmonology", "INT-PUL"),
+            ("INT", "خون و سرطان", "Hematology and Oncology", "INT-HEM"),
+            ("INT", "روماتولوژی", "Rheumatology", "INT-RHE"),
+            // قلب و عروق
+            ("CAR", "قلب مداخله‌ای", "Interventional Cardiology", "CAR-ICD"),
+            ("CAR", "الکتروفیزیولوژی قلب", "Cardiac Electrophysiology", "CAR-EPS"),
+            ("CAR", "اکوکاردیوگرافی", "Echocardiography", "CAR-ECH"),
+            ("CAR", "قلب اطفال", "Pediatric Cardiology", "CAR-PED"),
+            // اطفال
+            ("PED", "نوزادان", "Neonatology", "PED-NEO"),
+            ("PED", "نورولوژی اطفال", "Pediatric Neurology", "PED-NEU"),
+            ("PED", "گوارش اطفال", "Pediatric Gastroenterology", "PED-GAS"),
+            // زنان و زایمان
+            ("OBG", "پریناتولوژی", "Maternal-Fetal Medicine", "OBG-MFM"),
+            ("OBG", "ناباروری و IVF", "Reproductive Endocrinology", "OBG-IVF"),
+            ("OBG", "ژنیکولوژی آنکولوژی", "Gynecologic Oncology", "OBG-GON"),
+            // جراحی عمومی
+            ("SUR", "جراحی لاپاراسکوپیک", "Laparoscopic Surgery", "SUR-LAP"),
+            ("SUR", "جراحی سرطان", "Surgical Oncology", "SUR-ONC"),
+            ("SUR", "جراحی عروق", "Vascular Surgery", "SUR-VAS"),
+            // ارتوپدی
+            ("ORT", "ستون فقرات", "Spine Surgery", "ORT-SPI"),
+            ("ORT", "جراحی دست", "Hand Surgery", "ORT-HND"),
+            ("ORT", "تعویض مفصل", "Joint Replacement", "ORT-JNT"),
+            ("ORT", "ارتوپدی ورزشی", "Sports Medicine", "ORT-SPT"),
+            // پوست و مو
+            ("DER", "پوست ترمیمی و زیبایی", "Cosmetic Dermatology", "DER-COS"),
+            ("DER", "مو و ناخن", "Trichology", "DER-TRI"),
+            // چشم‌پزشکی
+            ("OPH", "شبکیه", "Retina", "OPH-RET"),
+            ("OPH", "آب‌سیاه", "Glaucoma", "OPH-GLA"),
+            ("OPH", "قرنیه", "Cornea", "OPH-COR"),
+            ("OPH", "قرارگیری عدسی (لیزیک)", "Refractive Surgery", "OPH-RFR"),
+            // گوش حلق بینی
+            ("ENT", "شنوایی‌شناسی", "Audiology", "ENT-AUD"),
+            ("ENT", "جراحی سر و گردن", "Head and Neck Surgery", "ENT-HNS"),
+            ("ENT", "آلرژی", "Rhinology and Allergy", "ENT-ALG"),
+            // روان‌پزشکی
+            ("PSY", "کودک و نوجوان", "Child Psychiatry", "PSY-CHD"),
+            ("PSY", "روان‌درمانی", "Psychotherapy", "PSY-PSY"),
+            ("PSY", "اعتیاد", "Addiction Medicine", "PSY-ADD"),
+            // دندانپزشکی
+            ("DENT", "ایمپلنت", "Implantology", "DENT-IMP"),
+            ("DENT", "ارتودنسی", "Orthodontics", "DENT-ORT"),
+            ("DENT", "جراحی فک و صورت", "Maxillofacial Surgery", "DENT-MFS"),
+            ("DENT", "دندان‌پزشکی کودکان", "Pediatric Dentistry", "DENT-PED"),
+            ("DENT", "درمان ریشه", "Endodontics", "DENT-END"),
+            ("DENT", "پروتز", "Prosthodontics", "DENT-PRO"),
+            // رادیولوژی
+            ("RAD", "سونوگرافی", "Ultrasonography", "RAD-USG"),
+            ("RAD", "ام‌آرآی", "MRI", "RAD-MRI"),
+            ("RAD", "سی‌تی‌اسکن", "CT Scan", "RAD-CT"),
+            ("RAD", "رادیولوژی مداخله‌ای", "Interventional Radiology", "RAD-INT"),
+            // مغز و اعصاب
+            ("NEU", "تشنج و صرع", "Epileptology", "NEU-EPI"),
+            ("NEU", "سکته مغزی", "Stroke", "NEU-STR"),
+            ("NEU", "دستگاه عصبی محیطی", "Neuromuscular", "NEU-NMD"),
+            // اورولوژی
+            ("URO", "جراحی کلیه", "Endourology", "URO-END"),
+            ("URO", "ناباروری مردان", "Male Infertility", "URO-INF"),
+            ("URO", "اورو-آنکولوژی", "Urologic Oncology", "URO-ONC"),
+        };
+
+        foreach (var (parentCode, fa, en, code) in subs)
+        {
+            // upsert بر اساس کد یکتا؛ دیتابیس‌های موجود فقط ردیف‌های جدید را می‌گیرند
+            if (byCode.ContainsKey(code))
+                continue;
+            if (!byCode.TryGetValue(parentCode, out var parent))
+                continue; // والد ناشناخته — از مسیر امن عبور کن
+
+            var child = new Specialty
+            {
+                Name = fa,
+                NameEn = en,
+                Code = code,
+                ParentId = parent.Id,
+                IsActive = true
+            };
+            _context.Specialties.Add(child);
+            byCode[code] = child;
         }
     }
 

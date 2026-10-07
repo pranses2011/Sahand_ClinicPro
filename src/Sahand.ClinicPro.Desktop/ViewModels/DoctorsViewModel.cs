@@ -401,6 +401,14 @@ public partial class DoctorFormViewModel : ObservableObject
     /// <summary>تخصص‌های اصلی</summary>
     public ObservableCollection<SpecialtyOption> Specialties { get; } = new();
 
+    /// <summary>
+    /// همهٔ تخصص‌ها شامل فوق‌تخصص‌ها (فرزندان) — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
+    /// «لیست فوق‌تخصص رو خالی میاره» — پیش‌تر فقط تخصص‌های والد بار می‌شدند و
+    /// فیلتر فرزندان در همان فهرست والد می‌گشت که نتیجه‌ای نداشت؛ اکنون فهرست
+    /// کامل جداگانه بار می‌شود و فیلتر از روی آن انجام می‌شود.
+    /// </summary>
+    public List<SpecialtyOption> AllSpecialties { get; } = new();
+
     /// <summary>فوق‌تخصص‌ها — فیلترشده بر اساس تخصص انتخابی</summary>
     public ObservableCollection<SpecialtyOption> SubSpecialties { get; } = new();
 
@@ -471,6 +479,13 @@ public partial class DoctorFormViewModel : ObservableObject
             foreach (var s in specialties.Data)
                 Specialties.Add(new SpecialtyOption(s.Id, s.Name, s.ParentId));
 
+        // چرخه بیست‌ویکم: فهرست کامل (والد + فرزند) برای کشوی فوق‌تخصص —
+        // بدون این درخواست دوم، فیلتر فرزندان همیشه خالی می‌ماند
+        var allSpecs = await _api.GetAsync<SpecialtiesResponse>("lookups/specialties");
+        if (allSpecs?.Data is not null)
+            foreach (var s in allSpecs.Data.Where(s => s.ParentId is not null))
+                AllSpecialties.Add(new SpecialtyOption(s.Id, s.Name, s.ParentId));
+
         var employees = await _api.GetAsync<EmployeesResponse>("lookups/employees");
         if (employees?.Data is not null)
             foreach (var e in employees.Data)
@@ -536,12 +551,12 @@ public partial class DoctorFormViewModel : ObservableObject
         Services.PhotoTools.ShowLarge(bytes, "عکس پزشک");
     }
 
-    /// <summary>پر کردن فوق‌تخصص‌های مرتبط</summary>
+    /// <summary>پر کردن فوق‌تخصص‌های مرتبط — از فهرست کامل فرزندان (چرخه بیست‌ویکم)</summary>
     private void FilterSubSpecialties()
     {
         SubSpecialties.Clear();
         if (SpecialtyId is null) return;
-        foreach (var s in Specialties.Where(s => s.ParentId == SpecialtyId))
+        foreach (var s in AllSpecialties.Where(s => s.ParentId == SpecialtyId))
             SubSpecialties.Add(s);
     }
 
