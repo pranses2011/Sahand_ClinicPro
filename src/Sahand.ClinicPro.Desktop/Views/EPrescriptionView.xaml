@@ -6,8 +6,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
              d:DesignHeight="620" d:DesignWidth="1060"
-             FlowDirection="RightToLeft"
-             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+             FlowDirection="RightToLeft">
     <!-- ═══ سامانه نسخه الکترونیک — گام U18: آمار + پایش + بازارسال ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

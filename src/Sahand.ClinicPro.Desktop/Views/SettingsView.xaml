@@ -6,8 +6,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
              d:DesignHeight="680" d:DesignWidth="1080"
-             FlowDirection="RightToLeft"
-             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+             FlowDirection="RightToLeft">
     <!-- ═══ تنظیمات سیستم — گام U15 طبق فرم ۲۸: سایدبار + بخش‌ها ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>
@@ -246,12 +245,13 @@
                 </StackPanel>
 
                 <!-- ─── بخش ۴: تم و ظاهر ─── -->
-                <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=4}" Margin="4,8" MaxWidth="560" HorizontalAlignment="Stretch">
+                <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=4}" Margin="4,8" MaxWidth="640" HorizontalAlignment="Stretch">
                     <TextBlock Text="تم و ظاهر" FontSize="16" FontWeight="Bold" Margin="2,0,0,12" />
 
-                    <!-- چرخه ۱۹ (گزارش سیزدهم مالک): انتخاب تم رنگی از کاتالوگ —
-                         هر کارت با کلیک انتخاب و بلافاصله روی کل برنامه اعمال می‌شود -->
-                    <TextBlock Text="پوستهٔ رنگی برنامه (با کلیک فوری اعمال می‌شود):" FontSize="12.5" Margin="2,8,2,6" />
+                    <!-- چرخه ۱۹ + بیستم: انتخاب تم از کاتالوگ — هر تم علاوه بر رنگ،
+                         شعاع گوشه و چگالی خودش را دارد تا چهرهٔ همهٔ عناصر عوض شود.
+                         با کلیک بلافاصله روی کل برنامه اعمال می‌شود -->
+                    <TextBlock Text="پوستهٔ برنامه (با کلیک فوری اعمال می‌شود — رنگ + گوشه‌ها + چگالی):" FontSize="12.5" Margin="2,8,2,6" TextWrapping="Wrap" />
                     <ItemsControl ItemsSource="{Binding ThemeOptions}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -266,16 +266,22 @@
                                              CommandParameter="{Binding Key}">
                                     <RadioButton.Template>
                                         <ControlTemplate TargetType="RadioButton">
-                                            <Border x:Name="Bd" CornerRadius="10" Padding="12,8" Margin="2"
+                                            <Border x:Name="Bd" CornerRadius="{Binding Radius, FallbackValue=8}" Padding="12,8" Margin="2"
                                                     BorderThickness="1.4" BorderBrush="#E0E0E0" Background="#FAFAFA"
                                                     Cursor="Hand">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="{Binding Icon}" FontSize="17" VerticalAlignment="Center" />
-                                                    <TextBlock Text="{Binding Title}" FontSize="12.5" Margin="7,0,4,0"
-                                                               VerticalAlignment="Center" />
-                                                    <Ellipse Width="13" Height="13" VerticalAlignment="Center"
-                                                             Fill="{Binding PrimaryColor}"
-                                                             Stroke="#00000022" StrokeThickness="1" />
+                                                <StackPanel>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding Icon}" FontSize="17" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Title}" FontSize="12.5" Margin="7,0,4,0"
+                                                                   VerticalAlignment="Center" FontWeight="SemiBold" />
+                                                        <Ellipse Width="13" Height="13" VerticalAlignment="Center"
+                                                                 Fill="{Binding PrimaryColor}"
+                                                                 Stroke="#00000022" StrokeThickness="1" />
+                                                    </StackPanel>
+                                                    <!-- مشخصات ظاهری تم — گوشه و چگالی (چرخه بیستم) -->
+                                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                        <TextBlock Text="{Binding DensityText, Mode=OneWay}" FontSize="10" Opacity="0.7" VerticalAlignment="Center" />
+                                                    </StackPanel>
                                                 </StackPanel>
                                             </Border>
                                             <ControlTemplate.Triggers>
@@ -299,15 +305,25 @@
                         <RadioButton Content="☀️ روشن" GroupName="Theme" IsChecked="{Binding IsDarkTheme, Converter={StaticResource InvertBool}, Mode=OneWay}" Margin="10,0,0,0" VerticalAlignment="Center" />
                         <RadioButton Content="🌙 تاریک" GroupName="Theme" IsChecked="{Binding IsDarkTheme}" Margin="10,0,0,0" VerticalAlignment="Center" />
                     </StackPanel>
-                    <ComboBox materialDesign:HintAssist.Hint="فونت"
+                    <ComboBox materialDesign:HintAssist.Hint="فونت برنامه"
                               ItemsSource="{Binding FontOptions}" SelectedItem="{Binding SelectedFont}"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,10" />
                     <StackPanel Orientation="Horizontal" Margin="2,8">
                         <TextBlock Text="سایز فونت پایه: " VerticalAlignment="Center" FontSize="12.5" />
-                        <Slider Minimum="11" Maximum="16" Value="{Binding BaseFontSize}" Width="220"
+                        <Slider Minimum="11" Maximum="18" Value="{Binding BaseFontSize}" Width="220"
                                 TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Margin="8,0" />
                         <TextBlock Text="{Binding BaseFontSize, StringFormat={}{0:0}}" VerticalAlignment="Center"
                                    FontFamily="Consolas" FontSize="13" />
+                    </StackPanel>
+                    <!-- واحد پول نمایشی — چرخه بیستم (گزارش چهاردهم مالک):
+                         تعویض ریال/تومان فقط جنبهٔ نمایش دارد و محاسبات ریالی می‌مانند -->
+                    <StackPanel Orientation="Horizontal" Margin="2,10">
+                        <TextBlock Text="واحد پول نمایشی: " VerticalAlignment="Center" FontSize="12.5" />
+                        <ComboBox ItemsSource="{Binding CurrencyUnitOptions}"
+                                  SelectedIndex="{Binding CurrencyUnitIndex}" MinWidth="130"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="4,0,0,0" />
+                        <TextBlock Text="(فقط نمایش — محاسبات همیشه ریالی است)" FontSize="10.5"
+                                   Opacity="0.6" VerticalAlignment="Center" Margin="10,0,0,0" />
                     </StackPanel>
                     <CheckBox Content="انیمیشن‌ها فعال" IsChecked="{Binding AnimationsEnabled}" Margin="2,10" />
                     <StackPanel Orientation="Horizontal" Margin="2,8">

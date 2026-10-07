@@ -6,8 +6,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
              d:DesignHeight="620" d:DesignWidth="1080"
-             FlowDirection="RightToLeft"
-             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+             FlowDirection="RightToLeft">
     <!-- ═══ مدیریت بیمه — گام U11 طبق فرم ۱۹: ۴ تب ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

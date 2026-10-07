@@ -7,8 +7,7 @@
              xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1080"
-             FlowDirection="RightToLeft"
-             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+             FlowDirection="RightToLeft">
     <!-- ═══ پذیرش بیمار — گام U5 طبق پرامپت UI بخش ۲ (فرم ۱۰) ═══ -->
     <UserControl.Resources>
         <Style x:Key="FieldCaption" TargetType="TextBlock">

@@ -1,4 +1,4 @@
-﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.PatientDetailWindow"
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.PatientDetailWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -12,8 +12,7 @@
         ResizeMode="CanResize" ShowInTaskbar="False"
         FlowDirection="RightToLeft"
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-        Background="{DynamicResource MaterialDesign.Brush.Background}"
-        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+        Background="{DynamicResource MaterialDesign.Brush.Background}">
     <!-- ═══════════════════════════════════════════════════════════
          پرونده بیمار — گام U2 طبق پرامپت UI بخش ۱ (فرم ۵):
          کارت سربرگ + هشدار آلرژی/مزمن/دارو + تب‌های سوابق + اقدامات سریع

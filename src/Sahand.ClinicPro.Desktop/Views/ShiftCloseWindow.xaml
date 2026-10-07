@@ -5,8 +5,7 @@
         Title="🌙 بستن شیفت صندوق و تحویل"
         Width="980" Height="720"
         WindowStartupLocation="CenterOwner"
-        FlowDirection="RightToLeft"
-        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+        FlowDirection="RightToLeft">
     <!-- ═══ بستن شیفت — چرخه ۱۳ (درخواست ۲-۲): شمارش فیزیکی ↔ سیستم + رسید + تاریخچه ═══ -->
     <Grid Margin="18,14">
         <Grid.RowDefinitions>

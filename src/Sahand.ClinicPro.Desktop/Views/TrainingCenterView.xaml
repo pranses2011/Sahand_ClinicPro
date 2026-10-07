@@ -6,8 +6,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
              d:DesignHeight="660" d:DesignWidth="1140"
-             FlowDirection="RightToLeft"
-             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+             FlowDirection="RightToLeft">
     <!-- ═══ مرکز آموزش — چرخه سیزدهم (درخواست ۸-۶):
          فهرست ۱۰ درس + نمایشگر HTML گام‌به‌گام + پیشرفت یادگیری ═══ -->
     <Grid Margin="16,12">

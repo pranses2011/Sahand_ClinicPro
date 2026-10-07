@@ -5,8 +5,7 @@
         Title="ثبت نتیجه آزمایش"
         Height="620" Width="860"
         FlowDirection="RightToLeft"
-        WindowStartupLocation="CenterOwner"
-        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+        WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>

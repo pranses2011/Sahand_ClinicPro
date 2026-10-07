@@ -5,7 +5,7 @@
         Title="نمایشگر DICOM"
         Width="1050" Height="780" WindowStartupLocation="CenterOwner"
         FlowDirection="RightToLeft"
-        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn"
+
         Background="{DynamicResource MaterialDesign PaperBrush}">
     <!-- ═══ نمایشگر DICOM — گام R4 ═══ -->
     <Grid Margin="10">

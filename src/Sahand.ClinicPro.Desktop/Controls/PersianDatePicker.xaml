@@ -8,7 +8,7 @@
              mc:Ignorable="d"
              d:DesignHeight="40" d:DesignWidth="200"
              FlowDirection="RightToLeft"
-             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn"
+
              x:Name="Root">
     <!-- انتخابگر تاریخ شمسی — جعبه متن فقط-خواندنی + تقویم بازشو -->
     <Grid>

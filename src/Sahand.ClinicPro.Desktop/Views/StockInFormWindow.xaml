@@ -5,8 +5,7 @@
         Title="ورود موجودی دارو"
         Height="620" Width="520"
         FlowDirection="RightToLeft"
-        WindowStartupLocation="CenterOwner"
-        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+        WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>

@@ -14,8 +14,7 @@
         WindowState="Maximized"
         FlowDirection="RightToLeft"
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-        Background="{DynamicResource MaterialDesign.Brush.Background}"
-        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+        Background="{DynamicResource MaterialDesign.Brush.Background}">
     <Window.Resources>
         <!-- نگاشت ViewModel به View — ناوبری مبتنی بر مدل‌نما -->
         <DataTemplate DataType="{x:Type vm:DashboardViewModel}">

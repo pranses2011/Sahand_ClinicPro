@@ -6,8 +6,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="900"
-             FlowDirection="RightToLeft"
-             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+             FlowDirection="RightToLeft">
     <!-- ═══ مدیریت شعبه‌ها — گام U17 چندشعبه‌ای ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

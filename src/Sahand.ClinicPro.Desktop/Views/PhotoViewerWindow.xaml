@@ -7,8 +7,7 @@
         WindowState="Maximized" ResizeMode="NoResize" ShowInTaskbar="False"
         Background="#E6000000" Topmost="True"
         FlowDirection="RightToLeft"
-        Cursor="Hand"
-        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+        Cursor="Hand">
     <!-- ═══ نمایشگر بزرگ عکس پروفایل — چرخه هجدهم (گزارش دوازدهم مالک)
          «با کلیک روی عکس اون رو بزرگ و نشون بده» — تمام‌صفحهٔ تیره؛
          بستن با کلیک روی هر نقطه یا کلید Esc ═══ -->

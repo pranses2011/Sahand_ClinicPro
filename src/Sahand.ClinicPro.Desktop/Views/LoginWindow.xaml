@@ -9,7 +9,7 @@
         ResizeMode="NoResize"
         WindowStyle="None"
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn"
+
         MouseLeftButtonDown="OnDragWindow"
         FlowDirection="RightToLeft">
     <!-- ═══════════════════════════════════════════════════════════

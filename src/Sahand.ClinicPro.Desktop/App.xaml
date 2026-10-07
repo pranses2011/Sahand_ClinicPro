@@ -4,6 +4,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:local="clr-namespace:Sahand.ClinicPro.Desktop"
              xmlns:converters="clr-namespace:Sahand.ClinicPro.Desktop.Converters"
+             xmlns:system="clr-namespace:System;assembly=mscorlib"
              ShutdownMode="OnMainWindowClose">
     <!-- ═══════════════════════════════════════════════════════════
          نقطه ورود کلاینت دسکتاپ درمانگاه سهند — گام ۱۰
@@ -24,16 +25,38 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
+            <!-- ═══ منابع پویای ظاهر — چرخه بیستم (گزارش چهاردهم مالک) ═══
+                 ThemeService این منابع را در زمان اجرا بازنویسی می‌کند؛
+                 سبک‌ها با DynamicReference می‌خوانند تا تغییر فونت/سایز/گوشه
+                 بی‌درنگ روی همهٔ پنجره‌ها اعمال شود. مقادیر اینجا پیش‌فرض‌های
+                 محصول‌اند (وزیرمتن ۱۳ / گوشهٔ ۸ / چگالی استاندارد). -->
+            <FontFamily x:Key="App.FontFamily">pack://application:,,,/Assets/Fonts/#Vazirmatn</FontFamily>
+            <system:Double x:Key="App.BaseFontSize">13</system:Double>
+            <CornerRadius x:Key="App.CardRadius">8</CornerRadius>
+            <Thickness x:Key="App.CardPadding">20</Thickness>
+            <system:Boolean x:Key="App.AnimationsEnabled">True</system:Boolean>
+            <system:String x:Key="App.CurrencyLabel">ریال</system:String>
+
             <!-- فونت سراسری — وزیرمتن به‌صورت Resource داخل خود exe جاسازی شده است
                  (Assets/Fonts — مجوز آزاد OFL)؛ ارجاع pack URI بدون توجه به فونت‌های
                  نصب‌شدهٔ ویندوز کار می‌کند و روی هر دستگاهی اعمال می‌شود.
-                 ارجاع به «پوشه» (نه فایل تکی) عمدی است تا همه وزن‌ها فعال باشند. -->
+                 ارجاع به «پوشه» (نه فایل تکی) عمدی است تا همه وزن‌ها فعال باشند.
+                 چرخه بیستم: مقدار از منبع پویای App.FontFamily خوانده می‌شود تا
+                 تغییر فونت از تنظیمات روی همهٔ پنجره‌ها اثر کند. -->
             <Style TargetType="Window">
-                <Setter Property="FontFamily" Value="pack://application:,,,/Assets/Fonts/#Vazirmatn" />
+                <Setter Property="FontFamily" Value="{DynamicResource App.FontFamily}" />
+                <Setter Property="FontSize" Value="{DynamicResource App.BaseFontSize}" />
                 <Setter Property="FlowDirection" Value="RightToLeft" />
                 <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
                 <!-- آیکون رسمی محصول — روی همه پنجره‌های برنامه (نوار عنوان و Taskbar) -->
                 <Setter Property="Icon" Value="/Assets/appicon.ico" />
+            </Style>
+
+            <!-- سبک کارت‌های MaterialDesign — گوشه و پدینگ از تم فعال
+                 (هر پوسته گوشه و چگالی خودش را دارد — ظاهر همهٔ عناصر) -->
+            <Style TargetType="materialDesign:Card">
+                <Setter Property="UniformCornerRadius" Value="{DynamicResource App.CardRadius}" />
+                <Setter Property="Padding" Value="{DynamicResource App.CardPadding}" />
             </Style>
 
             <!-- سبک متن عنوان بخش‌ها -->
@@ -61,6 +84,8 @@
             <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
             <converters:SectionToVisibilityConverter x:Key="SectionToVisibility" />
             <converters:CurrencyRialConverter x:Key="CurrencyRial" />
+            <!-- چرخه بیستم: مبلغ با واحد پول نمایشی — ریال/تومان از تنظیمات -->
+            <converters:MoneyWithUnitConverter x:Key="MoneyWithUnit" />
 
             <!-- سبک کارت آمار داشبورد -->
             <Style x:Key="StatCard" TargetType="materialDesign:Card">

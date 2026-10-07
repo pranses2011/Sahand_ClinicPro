@@ -1,12 +1,11 @@
-﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.InvoiceFormWindow"
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.InvoiceFormWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="{Binding FormTitle, Mode=OneWay}"
         Width="1020" Height="720"
         WindowStartupLocation="CenterOwner"
-        FlowDirection="RightToLeft"
-        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+        FlowDirection="RightToLeft">
     <!-- ═══ صدور فاکتور — گام U8 طبق فرم ۱۴: ستون اصلی ۲fr + خلاصه ۱fr ═══ -->
     <Window.Resources>
         <Style x:Key="FieldCaption" TargetType="TextBlock">

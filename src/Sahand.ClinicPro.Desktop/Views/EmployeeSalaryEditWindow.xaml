@@ -5,8 +5,7 @@
         Title="ویرایش اطلاعات حقوقی"
         Height="480" Width="440"
         WindowStartupLocation="CenterOwner"
-        FlowDirection="RightToLeft"
-        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+        FlowDirection="RightToLeft">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>

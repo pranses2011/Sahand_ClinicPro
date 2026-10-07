@@ -7,8 +7,7 @@
              xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
              mc:Ignorable="d"
              d:DesignHeight="640" d:DesignWidth="1080"
-             FlowDirection="RightToLeft"
-             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+             FlowDirection="RightToLeft">
     <!-- ═══ صف ویزیت — گام U6 طبق پرامپت UI بخش ۲ (فرم ۱۳) ═══
          کارت‌های آماری + بیمار فعلی + صف انتظار + ویزیت‌شده‌ها + فراخوان -->
     <UserControl.InputBindings>

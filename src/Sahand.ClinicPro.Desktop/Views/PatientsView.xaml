@@ -7,8 +7,7 @@
              xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
              mc:Ignorable="d"
              d:DesignHeight="560" d:DesignWidth="900"
-             FlowDirection="RightToLeft"
-             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+             FlowDirection="RightToLeft">
     <!-- ═══════════════════════════════════════════════════════════
          فهرست بیماران — گام U2 طبق پرامپت UI بخش ۱ (فرم ۳):
          نوار عنوان با Badge تعداد + نوار ابزار + ۹ ستون DataGrid +

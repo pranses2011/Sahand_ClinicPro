@@ -9,7 +9,7 @@
         Title="گزارش‌ساز رایگانه — سهند کلینیک‌پرو"
         Height="780" Width="1180" WindowStartupLocation="CenterOwner"
         FlowDirection="RightToLeft" WindowState="Maximized"
-        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn"
+
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
         Background="{DynamicResource MaterialDesign.Brush.Background}"
         d:DesignHeight="760" d:DesignWidth="1150">

@@ -7,8 +7,7 @@
              xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
              mc:Ignorable="d"
              d:DesignHeight="640" d:DesignWidth="1080"
-             FlowDirection="RightToLeft"
-             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+             FlowDirection="RightToLeft">
     <!-- ═══ مالی و صندوق — گام U8 طبق پرامپت UI بخش ۳ (فرم ۱۴ و ۱۵) ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

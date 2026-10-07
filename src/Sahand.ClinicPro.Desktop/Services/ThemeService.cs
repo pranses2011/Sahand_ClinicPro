@@ -1,34 +1,46 @@
-using System.Windows.Media;
+using System.Windows;
 using MaterialDesignThemes.Wpf;
 
 namespace Sahand.ClinicPro.Desktop.Services;
 
 /// <summary>
-/// سرویس تم — چرخه نوزدهم (گزارش سیزدهم مالک):
-/// علاوه بر روشن/تیره، هشت پالت رنگی با آیکون‌های متفاوت از تنظیمات
-/// قابل انتخاب و بلافاصله اعمال می‌شود؛ انتخاب در سیستم و به‌صورت محلی
-/// (برای اعمال پیش از ورود) ذخیره می‌شود.
+/// سرویس تم — چرخه نوزدهم + بازآرایی چرخه بیستم (گزارش چهاردهم مالک).
+/// وظایف:
+///   ۱) روشن/تیره + هشت پالت رنگی (چرخه ۱۹) — بی‌درنگ روی کل برنامه
+///   ۲) ظاهر عناصر هر تم: شعاع گوشهٔ کارت‌ها و چگالی فشرده/استاندارد
+///      از طریق منابع پویای App.CornerRadius و App.CardPadding
+///   ۳) تنظیمات ظاهری سراسری (فونت/اندازهٔ پایه/انیمیشن/واحد پول) —
+///      قبلاً این تنظیمات فقط در دیتابیس ذخیره می‌شدند و هیچ اثری
+///      نداشتند؛ اکنون با منابع پویای App.FontFamily و App.BaseFontSize
+///      روی همهٔ پنجره‌ها (سبک ضمنی Window) اعمال می‌شوند.
+/// انتخاب‌ها هم به‌صورت محلی (LocalSettingsStore — برای اجرای بعدی
+/// پیش از ورود) و هم در سرور (دستهٔ Theme/Currency تنظیمات) ذخیره می‌شوند.
 /// </summary>
 public class ThemeService : IThemeService
 {
     private readonly PaletteHelper _paletteHelper = new();
     private bool _isDark;
     private string _currentThemeKey = Blue.Key;
+    private AppearanceSettings _appearance = new();
 
     /// <summary>تم پیش‌فرض محصول — آبی</summary>
-    public static readonly AppTheme Blue = new("Blue", "آبی آسمانی", "💙", "#1565C0", "#00838F");
+    public static readonly AppTheme Blue = new("Blue", "آبی آسمانی", "💙", "#1565C0", "#00838F", 8, "Normal");
 
-    /// <summary>کاتالوگ تم‌ها — ترتیب نمایش در تنظیمات</summary>
+    /// <summary>
+    /// کاتالوگ تم‌ها — چرخه بیستم: هر تم علاوه بر رنگ، گوشه و چگالی خودش را دارد
+    /// تا «تعویض تم» واقعاً چهرهٔ عناصر برنامه را عوض کند، نه فقط رنگ را.
+    /// ترتیب نمایش در تنظیمات همین ترتیب است.
+    /// </summary>
     public static readonly IReadOnlyList<AppTheme> Catalog = new[]
     {
         Blue,
-        new AppTheme("Teal", "فیروزه‌ای", "🩵", "#00695C", "#26A69A"),
-        new AppTheme("Green", "سبز", "💚", "#2E7D32", "#7CB342"),
-        new AppTheme("Purple", "بنفش", "💜", "#6A1B9A", "#8E24AA"),
-        new AppTheme("Indigo", "نیلی", "🫐", "#283593", "#5C6BC0"),
-        new AppTheme("Crimson", "زرشکی", "❤️", "#C62828", "#EF5350"),
-        new AppTheme("Orange", "نارنجی", "🧡", "#E65100", "#FB8C00"),
-        new AppTheme("Pink", "صورتی", "💗", "#AD1457", "#EC407A"),
+        new AppTheme("Teal", "فیروزه‌ای", "🩵", "#00695C", "#26A69A", 14, "Normal"),
+        new AppTheme("Green", "سبز جنگلی", "💚", "#2E7D32", "#7CB342", 6, "Compact"),
+        new AppTheme("Purple", "بنفش سلطنتی", "💜", "#6A1B9A", "#8E24AA", 18, "Normal"),
+        new AppTheme("Indigo", "نیلی شبانه", "🫐", "#283593", "#5C6BC0", 10, "Compact"),
+        new AppTheme("Crimson", "زرشکی", "❤️", "#C62828", "#EF5350", 4, "Normal"),
+        new AppTheme("Orange", "نارنجی گرم", "🧡", "#E65100", "#FB8C00", 12, "Normal"),
+        new AppTheme("Pink", "صورتی مهتابی", "💗", "#AD1457", "#EC407A", 16, "Compact"),
     };
 
     /// <summary>تم فعلی تیره است؟</summary>
@@ -37,19 +49,28 @@ public class ThemeService : IThemeService
     /// <summary>کلید تم رنگی فعلی</summary>
     public string CurrentThemeKey => _currentThemeKey;
 
+    /// <summary>تنظیمات ظاهری فعلی — فونت/اندازه/انیمیشن/واحد پول</summary>
+    public AppearanceSettings Appearance => _appearance;
+
     /// <summary>کاتالوگ عمومی</summary>
     public IReadOnlyList<AppTheme> Themes => Catalog;
 
-    /// <summary>رویداد تغییر تم</summary>
+    /// <summary>رویداد تغییر تم رنگی/روشن-تیره</summary>
     public event EventHandler? ThemeChanged;
+
+    /// <summary>رویداد تغییر تنظیمات ظاهری (فونت/اندازه/واحد پول)</summary>
+    public event EventHandler? AppearanceChanged;
 
     /// <summary>تغییر تم روشن و تیره — پالت رنگی حفظ می‌شود</summary>
     public void ToggleTheme() => ApplyTheme(_currentThemeKey, !_isDark);
 
-    /// <summary>اعمال تم روشن/تیره — پالت رنگی حفظ می‌شود</summary>
+    /// <summary>اعمال تم روشن/تاریک — پالت رنگی حفظ می‌شود</summary>
     public void SetTheme(bool dark) => ApplyTheme(_currentThemeKey, dark);
 
-    /// <summary>اعمال تم رنگی مشخص + حالت روشن/تیره</summary>
+    /// <summary>
+    /// اعمال تم رنگی مشخص + حالت روشن/تیره — رنگ‌های MaterialDesign،
+    /// گوشه‌ها و چگالی کارت‌ها و ذخیرهٔ محلی برای اجرای بعدی
+    /// </summary>
     public void ApplyTheme(string themeKey, bool dark)
     {
         var theme = _paletteHelper.GetTheme();
@@ -60,12 +81,23 @@ public class ThemeService : IThemeService
         // پالت رنگی — کلید نامعتبر به پیش‌فرض آبی برمی‌گردد
         var picked = Catalog.FirstOrDefault(t =>
             string.Equals(t.Key, themeKey, StringComparison.OrdinalIgnoreCase)) ?? Blue;
-        theme.SetPrimaryColor((Color)ColorConverter.ConvertFromString(picked.PrimaryHex));
-        theme.SetSecondaryColor((Color)ColorConverter.ConvertFromString(picked.SecondaryHex));
+        theme.SetPrimaryColor(picked.PrimaryColor);
+        theme.SetSecondaryColor((System.Windows.Media.Color)System.Windows.Media.ColorConverter
+            .ConvertFromString(picked.SecondaryHex));
 
         _paletteHelper.SetTheme(theme);
         _isDark = dark;
         _currentThemeKey = picked.Key;
+
+        // ═══ ظاهر عناصر تم — چرخه بیستم ═══
+        // شعاع گوشهٔ کارت‌ها/پنل‌ها — سبک ضمنی Card در App.xaml از همین می‌خواند
+        System.Windows.Application.Current.Resources["App.CardRadius"] = new CornerRadius(picked.CardRadius);
+        // چگالی — فشرده: پدینگ کمتر، ردیف‌های جمع‌وجورتر
+        System.Windows.Application.Current.Resources["App.CardPadding"] = new Thickness(
+            picked.IsCompact ? 12 : 20,
+            picked.IsCompact ? 9 : 20,
+            picked.IsCompact ? 12 : 20,
+            picked.IsCompact ? 9 : 20);
 
         // ذخیرهٔ محلی — برای اعمال تم در اجرای بعدی پیش از ورود کاربر
         try
@@ -80,4 +112,79 @@ public class ThemeService : IThemeService
 
         ThemeChanged?.Invoke(this, EventArgs.Empty);
     }
+
+    /// <summary>
+    /// اعمال تنظیمات ظاهری — چرخه بیستم (گزارش چهاردهم مالک):
+    /// فونت و اندازهٔ پایه از طریق منابع پویا روی سبک ضمنی Window و همهٔ
+    /// فرزندانش اثر می‌گذارد (نماهای Root فونت هاردکدشده ندارند)؛
+    /// واحد پول نمایشی در سرویس Money خوانده می‌شود.
+    /// </summary>
+    public void ApplyAppearance(AppearanceSettings settings)
+    {
+        _appearance = settings ?? new AppearanceSettings();
+
+        var resources = System.Windows.Application.Current.Resources;
+
+        // فونت — نام‌های شناخته‌شدهٔ ویندوز مستقیم؛ Vazirmatn جاسازی‌شده با pack URI
+        resources["App.FontFamily"] = ResolveFontFamily(_appearance.FontFamilyName);
+
+        // اندازهٔ پایهٔ متن — عناصر بدون اندازهٔ صریح ارث می‌برند
+        resources["App.BaseFontSize"] = _appearance.BaseFontSize;
+
+        // انیمیشن‌ها — منبع سراسری برای رفتارهای رابط
+        resources["App.AnimationsEnabled"] = _appearance.AnimationsEnabled;
+
+        // واحد پول نمایشی — سرویس Money در هر قالب‌بندی مبلغ می‌خواندش؛
+        // برچسب متن هم برای هدرها/جمع‌ها منبع پویا می‌شود
+        resources["App.CurrencyLabel"] = _appearance.CurrencyLabel;
+        Helpers.Money.CurrencyUnit = _appearance.CurrencyUnit;
+
+        try
+        {
+            LocalSettingsStore.Set("AppFont", _appearance.FontFamilyName);
+            LocalSettingsStore.Set("AppBaseFontSize", _appearance.BaseFontSize.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
+            LocalSettingsStore.Set("AppAnimations", _appearance.AnimationsEnabled ? "true" : "false");
+            LocalSettingsStore.Set("CurrencyUnit", _appearance.CurrencyUnit);
+        }
+        catch
+        {
+            // ذخیرهٔ محلی نباید جریان برنامه را متوقف کند
+        }
+
+        AppearanceChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// خواندن تنظیمات ظاهری ذخیره‌شدهٔ محلی — برای اعمال در راه‌اندازی
+    /// برنامه پیش از ساخت پنجرهٔ اصلی؛ در نبود مقدار، پیش‌فرض محصول
+    /// </summary>
+    public static AppearanceSettings LoadSavedAppearance()
+    {
+        try
+        {
+            var font = LocalSettingsStore.Get("AppFont");
+            var size = LocalSettingsStore.Get("AppBaseFontSize");
+            var anim = LocalSettingsStore.Get("AppAnimations");
+            var currency = LocalSettingsStore.Get("CurrencyUnit");
+            return new AppearanceSettings(
+                string.IsNullOrWhiteSpace(font) ? "Vazirmatn" : font,
+                double.TryParse(size, System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out var s) ? Math.Clamp(s, 11, 18) : 13,
+                anim != "false",
+                string.Equals(currency, "Toman", StringComparison.OrdinalIgnoreCase) ? "Toman" : "Rial");
+        }
+        catch
+        {
+            return new AppearanceSettings();
+        }
+    }
+
+    /// <summary>
+    /// تبدیل نام فونت به FontFamily — Vazirmatn جاسازی‌شده در exe است؛
+    /// بقیهٔ نام‌ها فونت‌های نصب‌شدهٔ ویندوز (Tahoma/Segoe UI/…)
+    /// </summary>
+    private static System.Windows.Media.FontFamily ResolveFontFamily(string? name)
+        => string.IsNullOrWhiteSpace(name) || name == "Vazirmatn"
+            ? new System.Windows.Media.FontFamily("pack://application:,,,/Assets/Fonts/#Vazirmatn")
+            : new System.Windows.Media.FontFamily(name);
 }

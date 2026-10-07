@@ -6,8 +6,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1200"
-             FlowDirection="RightToLeft"
-             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+             FlowDirection="RightToLeft">
     <!-- ═══ انبارگردانی داروخانه — گام P2: دو پنل جلسات + اقلام ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

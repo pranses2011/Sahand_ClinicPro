@@ -8,7 +8,7 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize"
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn"
+
         FlowDirection="RightToLeft">
     <!-- ═══════════════════════════════════════════════════════════
          پنجره فعال‌سازی لایسنس — چرخه هفدهم (گزارش یازدهم مالک)

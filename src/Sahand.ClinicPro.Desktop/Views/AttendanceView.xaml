@@ -6,8 +6,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1180"
-             FlowDirection="RightToLeft"
-             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+             FlowDirection="RightToLeft">
     <!-- ═══ ماژول حضور و غیاب — تابلو امروز + دستگاه‌ها + شیفت‌ها + اصلاحیه‌ها + گزارش ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

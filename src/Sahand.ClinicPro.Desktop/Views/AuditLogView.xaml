@@ -6,8 +6,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
              d:DesignHeight="640" d:DesignWidth="1080"
-             FlowDirection="RightToLeft"
-             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+             FlowDirection="RightToLeft">
     <!-- ═══ لاگ عملیات — گام U15 طبق فرم ۳۰: فیلترها + جدول + جزئیات ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

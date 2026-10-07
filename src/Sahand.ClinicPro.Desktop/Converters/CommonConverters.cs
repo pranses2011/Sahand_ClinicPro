@@ -82,18 +82,41 @@ public sealed class BoolToVisibilityConverter : IValueConverter
 }
 
 /// <summary>
-/// مبدل مبلغ ریالی با جداکننده هزارگان — «۳٬۰۰۰٬۰۰۰»
+/// مبدل مبلغ ریالی با جداکنندهٔ هزارگان — چرخه بیستم (گزارش چهاردهم مالک):
+/// حالا از کمکی Money می‌گذرد تا (۱) جداکنندهٔ ۳ رقمی همه‌جا یکدست باشد و
+/// (۲) واحد پول نمایشی (ریال/تومان) از تنظیمات اعمال شود — صرفاً نمایش.
 /// </summary>
 public sealed class CurrencyRialConverter : IValueConverter
 {
-    /// <summary>قالب‌بندی مبلغ</summary>
+    /// <summary>قالب‌بندی مبلغ — decimal/long/int/double</summary>
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         => value switch
         {
-            decimal m => m.ToString("N0"),
-            long l => l.ToString("N0"),
-            int i => i.ToString("N0"),
-            double d => d.ToString("N0"),
+            decimal m => Sahand.ClinicPro.Desktop.Helpers.Money.Format(m),
+            long l => Sahand.ClinicPro.Desktop.Helpers.Money.Format(l),
+            int i => Sahand.ClinicPro.Desktop.Helpers.Money.Format(i),
+            double d => Sahand.ClinicPro.Desktop.Helpers.Money.Format(System.Convert.ToDecimal(d)),
+            _ => "0",
+        };
+
+    /// <summary>معکوس پشتیبانی نمی‌شود</summary>
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => Binding.DoNothing;
+}
+
+/// <summary>
+/// مبدل مبلغ همراه واحد پول نمایشی — «۱,۲۳۴,۵۶۷ ریال» — چرخه بیستم
+/// </summary>
+public sealed class MoneyWithUnitConverter : IValueConverter
+{
+    /// <summary>قالب‌بندی مبلغ + واحد پول</summary>
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value switch
+        {
+            decimal m => Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(m),
+            long l => Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(l),
+            int i => Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(i),
+            double d => Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(System.Convert.ToDecimal(d)),
             _ => "0",
         };
 

@@ -5,8 +5,7 @@
         Title="ثبت پرداخت"
         Height="520" Width="480"
         FlowDirection="RightToLeft"
-        WindowStartupLocation="CenterOwner"
-        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+        WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>

@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="44" d:DesignWidth="520"
              FlowDirection="RightToLeft"
-             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn"
+
              x:Name="Root">
     <!-- نوار صفحه‌بندی — مشخصات پرامپت UI بخش ۱:
          «نمایش ۱ تا ۲۰ از ۱٬۲۵۴ [قبلی][بعدی] + تعداد رکورد در صفحه» -->

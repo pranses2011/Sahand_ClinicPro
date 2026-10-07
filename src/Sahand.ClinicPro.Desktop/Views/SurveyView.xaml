@@ -8,8 +8,7 @@
              xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
              mc:Ignorable="d"
              d:DesignHeight="660" d:DesignWidth="1120"
-             FlowDirection="RightToLeft"
-             FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+             FlowDirection="RightToLeft">
     <!-- ═══ نظرسنجی بیماران — گام V2 چرخه هفتم (فرم ۳۴): دو تب ═══ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>

@@ -15,6 +15,12 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly ISnackbarService _snackbar;
     private readonly IThemeService _theme;
 
+    /// <summary>
+    /// پرچم همگام‌سازی مقدارهای اولیه — چرخه بیستم: هنگام مقداردهی اولیهٔ سازنده،
+    // گرداننده‌های تغییر (On*Changed) نباید ذخیرهٔ تکراری به سرور بفرستند
+    /// </summary>
+    private bool _initializing = true;
+
     /// <summary>عنوان صفحه</summary>
     public override string Title => "تنظیمات";
 
@@ -113,27 +119,45 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isDarkTheme;
 
-    /// <summary>فهرست تم‌های رنگی — چرخه ۱۹ (گزارش سیزدهم مالک)</summary>
+    /// <summary>فهرست تم‌های رنگی — چرخه ۱۹ + گوشه/چگالی چرخه ۲۰</summary>
     public ObservableCollection<ThemeOptionRow> ThemeOptions { get; } = new();
 
     /// <summary>کلید تم رنگی انتخاب‌شده — با تغییر، فوری اعمال و ذخیره می‌شود</summary>
     [ObservableProperty]
     private string _selectedThemeKey = "Blue";
 
-    /// <summary>فونت انتخابی</summary>
+    /// <summary>
+    /// فونت انتخابی — چرخه بیستم (گزارش چهاردهم مالک): با تغییر، بی‌درنگ روی
+    /// همهٔ پنجره‌ها اعمال و ذخیره می‌شود؛ پیش‌تر ذخیره می‌شد ولی اثری نداشت.
+    /// Vazirmatn داخل exe جاسازی شده؛ بقیه فونت‌های استاندارد ویندوز هستند.
+    /// </summary>
     [ObservableProperty]
     private string? _selectedFont = "Vazirmatn";
 
-    /// <summary>گزینه‌های فونت</summary>
-    public List<string> FontOptions { get; } = new() { "Vazirmatn", "IRANSans", "Yekan" };
+    /// <summary>گزینه‌های فونت — وزیرمتن جاسازی‌شده + فونت‌های فارسی‌سازگار ویندوز</summary>
+    public List<string> FontOptions { get; } = new() { "Vazirmatn", "Tahoma", "Segoe UI" };
 
-    /// <summary>سایز فونت پایه</summary>
+    /// <summary>
+    /// سایز فونت پایه — چرخه بیستم: بی‌درنگ اعمال می‌شود (عناصر بدون اندازهٔ صریح
+    /// ارث می‌برند — کادرها/جداول/فهرست‌ها) و در اجرای بعدی هم برقرار می‌ماند
+    /// </summary>
     [ObservableProperty]
     private double _baseFontSize = 13;
 
     /// <summary>انیمیشن‌ها فعال</summary>
     [ObservableProperty]
     private bool _animationsEnabled = true;
+
+    /// <summary>
+    /// نمایهٔ واحد پول نمایشی — چرخه بیستم (گزارش چهاردهم مالک):
+    /// ۰ = ریال (پیش‌فرض)، ۱ = تومان. تعویض فقط نمایشی است؛ محاسبات و
+    /// ذخیره‌سازی همه‌جا ریالی می‌مانند (کمکی Money تبدیل نمایشی را انجام می‌دهد).
+    /// </summary>
+    [ObservableProperty]
+    private int _currencyUnitIndex;
+
+    /// <summary>برچسب‌های واحد پول برای ComboBox</summary>
+    public List<string> CurrencyUnitOptions { get; } = new() { "ریال", "تومان" };
 
     /* ─── بخش امنیت ─── */
 
@@ -182,7 +206,15 @@ public partial class SettingsViewModel : ViewModelBase
         foreach (var th in _theme.Themes)
             ThemeOptions.Add(new ThemeOptionRow { Theme = th });
         SelectedThemeKey = _theme.CurrentThemeKey;
+
+        // چرخه بیستم: مقدار اولیهٔ تنظیمات ظاهری از سرویس تم (اجرای فعلی/ذخیره‌شده)
+        IsDarkTheme = _theme.IsDarkTheme;
+        SelectedFont = _theme.Appearance.FontFamilyName;
+        BaseFontSize = _theme.Appearance.BaseFontSize;
+        AnimationsEnabled = _theme.Appearance.AnimationsEnabled;
+        CurrencyUnitIndex = _theme.Appearance.CurrencyUnit == "Toman" ? 1 : 0;
         RefreshThemeSelection();
+        _initializing = false; // از این‌جا به بعد تغییر‌ها کاربرمبنا و ذخیره‌پذیرند
 
         // مقداردهی اولیه بخش‌ها — داده ماژول/دولتی از سرور در انتخاب بخش
         InitializeModules();
@@ -361,11 +393,72 @@ public partial class SettingsViewModel : ViewModelBase
     /// <summary>با تغییر کلید تم: اعمال روی پوسته + تازه‌سازی نشانگر انتخاب + ذخیره</summary>
     partial void OnSelectedThemeKeyChanged(string value)
     {
-        if (string.IsNullOrWhiteSpace(value))
+        if (string.IsNullOrWhiteSpace(value) || _initializing)
             return;
         _theme.ApplyTheme(value, IsDarkTheme);
         RefreshThemeSelection();
         _ = SaveThemeSettingsAsync();
+    }
+
+    /// <summary>تغییر حالت روشن/تیره از دکمه‌های تنظیمات — اعمال بی‌درنگ</summary>
+    partial void OnIsDarkThemeChanged(bool value)
+    {
+        if (_initializing)
+            return;
+        _theme.ApplyTheme(SelectedThemeKey, value);
+        _ = SaveThemeSettingsAsync();
+    }
+
+    /// <summary>
+    /// تغییر فونت — چرخه بیستم (گزارش چهاردهم مالک): بی‌درنگ از طریق
+    /// منبع پویای App.FontFamily روی همهٔ پنجره‌ها اعمال و ذخیره می‌شود
+    /// </summary>
+    partial void OnSelectedFontChanged(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || _initializing)
+            return;
+        _theme.ApplyAppearance(new Services.AppearanceSettings(
+            value, BaseFontSize, AnimationsEnabled, CurrencyUnitIndex == 1 ? "Toman" : "Rial"));
+        _ = SaveThemeSettingsAsync();
+    }
+
+    /// <summary>تغییر سایز فونت پایه — بی‌درنگ اعمال (چرخه بیستم)</summary>
+    partial void OnBaseFontSizeChanged(double value)
+    {
+        if (value is < 11 or > 18 || _initializing)
+            return;
+        _theme.ApplyAppearance(new Services.AppearanceSettings(
+            SelectedFont ?? "Vazirmatn", value, AnimationsEnabled,
+            CurrencyUnitIndex == 1 ? "Toman" : "Rial"));
+        _ = SaveThemeSettingsAsync();
+    }
+
+    /// <summary>تغییر انیمیشن‌ها — ذخیره و اعمال (چرخه بیستم)</summary>
+    partial void OnAnimationsEnabledChanged(bool value)
+    {
+        if (_initializing)
+            return;
+        _theme.ApplyAppearance(new Services.AppearanceSettings(
+            SelectedFont ?? "Vazirmatn", BaseFontSize, value,
+            CurrencyUnitIndex == 1 ? "Toman" : "Rial"));
+        _ = SaveThemeSettingsAsync();
+    }
+
+    /// <summary>
+    /// تغییر واحد پول نمایشی — چرخه بیستم (گزارش چهاردهم مالک):
+    /// تعویض فقط نمایشی است (ریال/تومان) و محاسبات را تغییر نمی‌دهد
+    /// </summary>
+    partial void OnCurrencyUnitIndexChanged(int value)
+    {
+        if (_initializing)
+            return;
+        _theme.ApplyAppearance(new Services.AppearanceSettings(
+            SelectedFont ?? "Vazirmatn", BaseFontSize, AnimationsEnabled,
+            value == 1 ? "Toman" : "Rial"));
+        _ = SaveThemeSettingsAsync();
+        _snackbar.Info(value == 1
+            ? "واحد نمایشی به «تومان» تغییر یافت — فقط نمایش؛ محاسبات ریالی می‌ماند"
+            : "واحد نمایشی به «ریال» تغییر یافت");
     }
 
     /// <summary>هماهنگی نشانگر انتخاب‌شده با کلید فعلی</summary>
@@ -375,7 +468,7 @@ public partial class SettingsViewModel : ViewModelBase
             row.IsSelected = string.Equals(row.Theme.Key, SelectedThemeKey, StringComparison.OrdinalIgnoreCase);
     }
 
-    /// <summary>ذخیره تنظیمات تم</summary>
+    /// <summary>ذخیره تنظیمات تم — چرخه بیستم: فونت/سایز/واحد پول هم همراه می‌شوند</summary>
     [RelayCommand]
     private async Task SaveThemeSettingsAsync()
     {
@@ -385,7 +478,8 @@ public partial class SettingsViewModel : ViewModelBase
             ["Name"] = SelectedThemeKey,
             ["Font"] = SelectedFont,
             ["BaseFontSize"] = BaseFontSize.ToString("0"),
-            ["Animations"] = AnimationsEnabled ? "true" : "false"
+            ["Animations"] = AnimationsEnabled ? "true" : "false",
+            ["CurrencyUnit"] = CurrencyUnitIndex == 1 ? "Toman" : "Rial"
         });
     }
 
@@ -548,8 +642,13 @@ public partial class ThemeOptionRow : ObservableObject
     public string Icon => Theme.Icon;
 
     /// <summary>رنگ پیش‌نمایش</summary>
-    public System.Windows.Media.Color PrimaryColor =>
-        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(Theme.PrimaryHex);
+    public System.Windows.Media.Color PrimaryColor => Theme.PrimaryColor;
+
+    /// <summary>شعاع گوشهٔ تم به‌صورت CornerRadius — برای قالب کارت تم (چرخه بیستم)</summary>
+    public System.Windows.CornerRadius Radius => new(Theme.CardRadius);
+
+    /// <summary>متن مشخصات ظاهری — «گوشه‌گرد ۱۴ • استاندارد/فشرده» (چرخه بیستم)</summary>
+    public string DensityText => $"⤴ گوشه {Theme.CardRadius} • {(Theme.IsCompact ? "فشرده" : "استاندارد")}";
 
     /// <summary>انتخاب‌شده است؟</summary>
     [ObservableProperty]

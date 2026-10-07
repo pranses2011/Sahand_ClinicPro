@@ -6,8 +6,7 @@
         Title="گزارش تفصیلی سود و حقوق درصدی پرسنل"
         Height="780" Width="1180"
         WindowStartupLocation="CenterOwner"
-        FlowDirection="RightToLeft"
-        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+        FlowDirection="RightToLeft">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <Style x:Key="StatCard" TargetType="Border">

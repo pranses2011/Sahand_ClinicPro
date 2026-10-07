@@ -45,6 +45,13 @@ public partial class App : System.Windows.Application
         if (!string.IsNullOrWhiteSpace(savedThemeKey))
             Services.GetRequiredService<IThemeService>().ApplyTheme(savedThemeKey, savedThemeDark);
 
+        // چرخه بیستم (گزارش چهاردهم مالک): تنظیمات ظاهری ذخیره‌شده — فونت و
+        // اندازهٔ پایه و واحد پول نمایشی — پیش‌تر فقط ذخیره می‌شدند و اثری
+        // نداشتند؛ اکنون در همان راه‌اندازی روی منابع پویا اعمال می‌شوند تا
+        // انتخاب فونت/سایز/واحد پول از اجرای قبل، از لحظهٔ اول برقرار باشد
+        Services.GetRequiredService<IThemeService>()
+            .ApplyAppearance(ThemeService.LoadSavedAppearance());
+
         // انتخاب پنجره آغازین بر اساس وضعیت توکن
         var tokens = Services.GetRequiredService<ITokenManager>();
         if (tokens.HasValidToken)

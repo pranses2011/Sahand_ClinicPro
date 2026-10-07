@@ -5,8 +5,7 @@
         Title="جزئیات نسخه"
         Height="560" Width="720"
         FlowDirection="RightToLeft"
-        WindowStartupLocation="CenterOwner"
-        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+        WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
