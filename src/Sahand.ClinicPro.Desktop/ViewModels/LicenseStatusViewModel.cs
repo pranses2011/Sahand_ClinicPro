@@ -34,7 +34,11 @@ public partial class LicenseLimitRow : ObservableObject
     public string ToolTipText => $"{Current:N0} از {Max:N0} مجاز استفاده شده";
 }
 
-/// <summary>ردیف ماژول فعال/غیرفعال لایسنس</summary>
+/// <summary>
+/// ردیف ماژول فعال/غیرفعال لایسنس — چرخه هجدهم (گزارش دوازدهم مالک):
+/// چیپس‌ها پیش‌تر فقط «غیرفعال» نشان می‌دادند؛ اکنون «نام ماژول + وضعیت»
+/// نمایش داده می‌شود و پس‌زمینهٔ چیپس با فعال شدن سبز می‌شود.
+/// </summary>
 public partial class LicenseModuleRow : ObservableObject
 {
     /// <summary>نام ماژول</summary>
@@ -45,7 +49,29 @@ public partial class LicenseModuleRow : ObservableObject
     private bool _isEnabled;
 
     /// <summary>متن وضعیت</summary>
-    public string StatusText => IsEnabled ? "✅ فعال" : "❌ غیرفعال";
+    public string StatusText => IsEnabled ? "✅ فعال" : "غیرفعال";
+
+    /// <summary>متن کامل چیپس — «بیماران • فعال»</summary>
+    public string DisplayText => $"{Title} • {StatusText}";
+
+    /// <summary>رنگ پس‌زمینهٔ چیپس — سبز فعال / خاکستری غیرفعال</summary>
+    public string ChipBackground => IsEnabled ? "#E8F5E9" : "#F5F5F5";
+
+    /// <summary>رنگ قاب چیپس</summary>
+    public string ChipBorder => IsEnabled ? "#A5D6A7" : "#E0E0E0";
+
+    /// <summary>رنگ متن چیپس</summary>
+    public string ChipForeground => IsEnabled ? "#1B5E20" : "#9E9E9E";
+
+    /// <summary>بازخورد تغییر فعال بودن — تازه‌سازی رنگ‌ها و متن</summary>
+    partial void OnIsEnabledChanged(bool value)
+    {
+        OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(DisplayText));
+        OnPropertyChanged(nameof(ChipBackground));
+        OnPropertyChanged(nameof(ChipBorder));
+        OnPropertyChanged(nameof(ChipForeground));
+    }
 }
 
 /// <summary>
@@ -135,6 +161,23 @@ public partial class LicenseStatusViewModel : ViewModelBase
     [ObservableProperty]
     private bool _hasSupport;
 
+    /// <summary>منبع اطلاعات پشتیبانی — ذخیره‌شده | پنل | پیش‌فرض</summary>
+    [ObservableProperty]
+    private string _supportSource = "default";
+
+    /* ─── چرخه هجدهم (گزارش دوازدهم مالک) ─── */
+
+    /// <summary>
+    /// نشانی سرور لایسنس — پیش‌فرض رسمی محصول؛ با دکمهٔ ذخیره قابل تغییر
+    /// و در تنظیمات سرور (SystemSettings) ماندگار است.
+    /// </summary>
+    [ObservableProperty]
+    private string _portalUrl = "https://clinic-license.ea-fixer.ir";
+
+    /// <summary>پیام وضعیت ذخیرهٔ نشانی سرور</summary>
+    [ObservableProperty]
+    private string? _portalSaveMessage;
+
     /// <summary>سازنده</summary>
     public LicenseStatusViewModel(IApiClient api, ISnackbarService snackbar, IConfiguration configuration)
     {
@@ -142,6 +185,102 @@ public partial class LicenseStatusViewModel : ViewModelBase
         _snackbar = snackbar;
         _configuration = configuration;
         _ = LoadAsync();
+        _ = LoadPortalUrlAsync();
+        _ = LoadSupportInfoAsync();
+    }
+
+    /// <summary>
+    /// بارگذاری نشانی سرور لایسنس از تنظیمات API — چرخه هجدهم:
+    /// فیلد «سرور لایسنس» پیش‌فرض رسمی را نشان می‌دهد و قابل ویرایش است.
+    /// </summary>
+    public async Task LoadPortalUrlAsync()
+    {
+        var response = await _api.GetAnonymousAsync<PortalSettingsResponse>("license/settings");
+        if (response?.Data is { } d && !string.IsNullOrWhiteSpace(d.PortalUrl))
+            PortalUrl = d.PortalUrl;
+    }
+
+    /// <summary>ذخیرهٔ نشانی سرور لایسنس واردشدهٔ کاربر — PUT license/settings</summary>
+    [RelayCommand]
+    private async Task SavePortalUrlAsync()
+    {
+        PortalSaveMessage = null;
+        var ok = await _api.PutAnonymousAsync("license/settings", new { portalUrl = PortalUrl?.Trim() });
+        if (ok)
+        {
+            PortalSaveMessage = "✅ نشانی سرور لایسنس ذخیره شد";
+            _snackbar.Success("نشانی سرور لایسنس ذخیره شد");
+            await LoadPortalUrlAsync(); // مقدار نرمال‌شده (api.php) بازخوانی می‌شود
+        }
+        else
+        {
+            PortalSaveMessage = _api.LastError ?? "❌ ذخیرهٔ نشانی ناموفق بود";
+        }
+    }
+
+    /// <summary>
+    /// بارگذاری اطلاعات پشتیبانی — چرخه هجدهم: «بصورت پیش‌فرض اطلاعات پشتیبانی
+    /// موجود باشه و از دفعات بعد بروزرسانی از سرور لایسنس رو انجام بده»؛
+    /// GET license/support با refresh — اول مقادیر ذخیره‌شده، سپس پنل، سپس پیش‌فرض.
+    /// </summary>
+    public async Task LoadSupportInfoAsync(bool refresh = false)
+    {
+        var endpoint = $"license/support" + (refresh ? "?refresh=true" : string.Empty);
+        var response = await _api.GetAnonymousAsync<SupportResponse>(endpoint);
+        var sup = response?.Data;
+        if (sup is null) return; // best-effort — کارت با آخرین مقادیر می‌ماند
+
+        SupportName = sup.Name ?? "";
+        SupportCompany = sup.Company ?? "";
+        SupportPhone = sup.Phone ?? "";
+        SupportMobile = sup.Mobile ?? "";
+        SupportEmail = sup.Email ?? "";
+        SupportWebsite = sup.Website ?? "";
+        SupportSource = sup.Source ?? "default";
+        HasSupport = !string.IsNullOrWhiteSpace(SupportCompany)
+                     || !string.IsNullOrWhiteSpace(SupportMobile)
+                     || !string.IsNullOrWhiteSpace(SupportPhone)
+                     || !string.IsNullOrWhiteSpace(SupportEmail)
+                     || !string.IsNullOrWhiteSpace(SupportWebsite)
+                     || !string.IsNullOrWhiteSpace(SupportName);
+    }
+
+    /// <summary>
+    /// دریافت فایل درخواست فعال‌سازی آفلاین (.req) — چرخه هجدهم (گزارش دوازدهم):
+    /// «نمیشه برای فعالسازی آفلاین فایل .req رو گرفت»؛ اکنون پاسخ endpoint
+    /// activation-request با پسوند .req ذخیره می‌شود و برای فروشنده ارسال می‌شود.
+    /// </summary>
+    [RelayCommand]
+    private async Task DownloadRequestFileAsync()
+    {
+        // کلید واردشده (در صورت وجود) داخل فایل درج می‌شود تا پنل تطابق کلید را بررسی کند
+        var key = string.IsNullOrWhiteSpace(ActivationKey) ? null : ActivationKey.Trim();
+        var endpoint = "license/activation-request" +
+                       (key is null ? string.Empty : $"?licenseKey={Uri.EscapeDataString(key)}");
+        var response = await _api.GetAnonymousAsync<ActivationRequestResponse>(endpoint);
+        var req = response?.Data;
+        if (req is null)
+        {
+            _snackbar.Error(_api.LastError ?? "ساخت فایل درخواست ناموفق بود");
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "فایل درخواست فعال‌سازی|*.req|همه فایل‌ها|*.*",
+            Title = "ذخیرهٔ فایل درخواست فعال‌سازی آفلاین",
+            FileName = $"activation-request-{DateTime.Now:yyyyMMdd-HHmm}.req"
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        var options = new System.Text.Json.JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+        var json = System.Text.Json.JsonSerializer.Serialize(req, options);
+        await System.IO.File.WriteAllTextAsync(dialog.FileName, json);
+        _snackbar.Success($"فایل درخواست ذخیره شد — «{dialog.FileName}» را برای فروشنده بفرستید تا فایل .lic بگیرید");
     }
 
     /// <summary>بارگذاری وضعیت لایسنس از سرور</summary>
@@ -151,7 +290,7 @@ public partial class LicenseStatusViewModel : ViewModelBase
         IsBusy = true;
         try
         {
-            var response = await _api.GetAsync<StatusResponse>("license/status");
+            var response = await _api.GetAnonymousAsync<StatusResponse>("license/status");
             var s = response?.Data;
             if (s is null)
             {
@@ -166,9 +305,12 @@ public partial class LicenseStatusViewModel : ViewModelBase
 
             if (s.ExpiryDate is { } expiry)
             {
-                ExpiryText = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(expiry);
+                // چرخه هجدهم: تاریخ انقضا با ارقام فارسی
+                ExpiryText = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsiFa(expiry);
                 var days = (int)(expiry.Date - DateTime.Now.Date).TotalDays;
-                RemainingText = days > 0 ? $"{days} روز باقیمانده" : "منقضی شده";
+                RemainingText = days > 0
+                    ? $"{Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToPersianDigits(days.ToString())} روز باقیمانده"
+                    : "منقضی شده";
             }
 
             // ماژول‌ها — از فهرست مجاز سرور با مقایسه بدون حساسیت به حروف
@@ -230,7 +372,7 @@ public partial class LicenseStatusViewModel : ViewModelBase
         { _snackbar.Error("کلید لایسنس معتبر وارد کنید"); return; }
 
         IsBusy = true;
-        var ok = await _api.PostAsync("license/activate", new { licenseKey = ActivationKey.Trim() });
+        var ok = await _api.PostAnonymousAsync("license/activate", new { licenseKey = ActivationKey.Trim() });
         IsBusy = false;
 
         if (ok)
@@ -256,7 +398,7 @@ public partial class LicenseStatusViewModel : ViewModelBase
 
         var content = System.IO.File.ReadAllText(dialog.FileName);
         IsBusy = true;
-        var ok = await _api.PostAsync("license/activate-offline", new { licenseFileContent = content });
+        var ok = await _api.PostAnonymousAsync("license/activate-offline", new { licenseFileContent = content });
         IsBusy = false;
 
         if (ok)
@@ -287,6 +429,59 @@ public partial class LicenseStatusViewModel : ViewModelBase
         public List<string>? EnabledModules { get; set; }
         public SupportInfoData? SupportInfo { get; set; }
         public string? Message { get; set; }
+    }
+
+    /* ─── پاسخ‌های چرخه هجدهم ─── */
+
+    /// <summary>پاسخ تنظیمات سرور لایسنس</summary>
+    private sealed class PortalSettingsResponse
+    {
+        public bool IsSuccess { get; set; }
+        public PortalSettingsData? Data { get; set; }
+    }
+
+    /// <summary>دادهٔ تنظیمات سرور لایسنس</summary>
+    private sealed class PortalSettingsData
+    {
+        public string? PortalUrl { get; set; }
+    }
+
+    /// <summary>پاسخ اطلاعات پشتیبانی</summary>
+    private sealed class SupportResponse
+    {
+        public bool IsSuccess { get; set; }
+        public SupportData? Data { get; set; }
+    }
+
+    /// <summary>دادهٔ اطلاعات پشتیبانی</summary>
+    private sealed class SupportData
+    {
+        public string? Name { get; set; }
+        public string? Company { get; set; }
+        public string? Phone { get; set; }
+        public string? Mobile { get; set; }
+        public string? Email { get; set; }
+        public string? Website { get; set; }
+        public string? Source { get; set; }
+    }
+
+    /// <summary>پاسخ درخواست فعال‌سازی آفلاین</summary>
+    private sealed class ActivationRequestResponse
+    {
+        public bool IsSuccess { get; set; }
+        public ActivationRequestData? Data { get; set; }
+    }
+
+    /// <summary>دادهٔ فایل .req — همان قالبی که پنل لایسنس می‌پذیرد</summary>
+    private sealed class ActivationRequestData
+    {
+        public int FormatVersion { get; set; }
+        public string? RequestType { get; set; }
+        public string? Fingerprint { get; set; }
+        public string? LicenseKey { get; set; }
+        public string? ClinicName { get; set; }
+        public string? AppVersion { get; set; }
+        public string? RequestedAt { get; set; }
     }
 
     /// <summary>اطلاعات پشتیبانی دریافتی از سرور — هیچ مقدار هاردکدی جایگزین آن نمی‌شود</summary>

@@ -8,7 +8,12 @@
              d:DesignHeight="680" d:DesignWidth="860"
              FlowDirection="RightToLeft"
              FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
-    <!-- ═══ وضعیت لایسنس — گام U19 طبق فرم ۳۱ ═══ -->
+    <!-- ═══ وضعیت لایسنس — گام U19 طبق فرم ۳۱ ═══
+         چرخه هجدهم (گزارش دوازدهم مالک):
+         + فیلد «سرور لایسنس» پیش‌فرض/قابل‌ویرایش (license/settings)
+         + دکمهٔ دریافت فایل درخواست آفلاین (.req)
+         + چیپس ماژول‌ها با نام ماژول + رنگ سبز در حالت فعال
+         + کارت پشتیبانی همیشه با محتوا (پیش‌فرض/پنل/ذخیره‌شده) -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -32,7 +37,34 @@
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="2">
             <StackPanel MaxWidth="760" HorizontalAlignment="Right" Margin="4,4">
 
+                <!-- ─── سرور لایسنس — چرخه هجدهم: پیش‌فرض رسمی + قابل ویرایش ─── -->
+                <TextBlock Text="سرور لایسنس" FontSize="14" FontWeight="Bold" Margin="4,0,2,8" />
+                <materialDesign:Card Padding="18" Margin="2,4" UniformCornerRadius="14">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0"
+                                     materialDesign:HintAssist.Hint="نشانی سرور لایسنس — مثلاً https://clinic-license.ea-fixer.ir"
+                                     Text="{Binding PortalUrl, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     FlowDirection="LeftToRight" FontFamily="Consolas" FontSize="12.5"
+                                     Margin="0,0,8,0" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Command="{Binding SavePortalUrlCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    VerticalAlignment="Center" Content="💾 ذخیره سرور" />
+                        </Grid>
+                        <TextBlock Text="نشانی ریشه کافی است — به‌صورت خودکار به api.php کامل می‌شود؛ این نشانی برای فعال‌سازی و تپ‌قلب روزانه به‌کار می‌رود."
+                                   FontSize="10.5" Opacity="0.6" TextWrapping="Wrap" Margin="0,8,0,0" />
+                        <TextBlock Text="{Binding PortalSaveMessage}" FontSize="11.5" Margin="0,6,0,0"
+                                   Foreground="{DynamicResource MaterialDesign.Brush.Primary}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </materialDesign:Card>
+
                 <!-- ─── اطلاعات لایسنس ─── -->
+                <TextBlock Text="اطلاعات لایسنس" FontSize="14" FontWeight="Bold" Margin="4,18,2,8" />
                 <materialDesign:Card Padding="18" Margin="2,4" UniformCornerRadius="14">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -54,8 +86,8 @@
                     </Grid>
                 </materialDesign:Card>
 
-                <!-- ─── ماژول‌های فعال ─── -->
-                <TextBlock Text="ماژول‌های فعال" FontSize="14" FontWeight="Bold" Margin="4,16,2,8" />
+                <!-- ─── ماژول‌ها — چیپس با نام + رنگ وضعیت (چرخه هجدهم) ─── -->
+                <TextBlock Text="ماژول‌ها" FontSize="14" FontWeight="Bold" Margin="4,18,2,8" />
                 <ItemsControl ItemsSource="{Binding Modules}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -64,9 +96,13 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border CornerRadius="10" Padding="12,6" Margin="3" Background="#F7FAFD"
-                                    BorderBrush="#DCE7F0" BorderThickness="1">
-                                <TextBlock Text="{Binding StatusText}" FontSize="11.5" />
+                            <Border CornerRadius="10" Padding="12,6" Margin="3"
+                                    Background="{Binding ChipBackground}"
+                                    BorderBrush="{Binding ChipBorder}"
+                                    BorderThickness="1.2"
+                                    ToolTip="{Binding Title}">
+                                <TextBlock Text="{Binding DisplayText}" FontSize="11.5"
+                                           Foreground="{Binding ChipForeground}" FontWeight="SemiBold" />
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
@@ -93,14 +129,19 @@
                         <Separator Margin="0,16,0,12" />
 
                         <TextBlock Text="📁 فعال‌سازی آفلاین" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,4" />
-                        <TextBlock Text="مرحله ۱ و ۲: فایل درخواست (.req) را از پورتال لایسنس دریافت و برای فروشنده ارسال کنید"
+                        <TextBlock Text="مرحله ۱: فایل درخواست (.req) این دستگاه را بگیرید و برای فروشنده بفرستید."
+                                   FontSize="11" Opacity="0.65" TextWrapping="Wrap" Margin="0,0,0,8" />
+                        <Button Command="{Binding DownloadRequestFileCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                HorizontalAlignment="Left" Content="📥 دریافت فایل درخواست (.req)" Margin="0,0,0,12" />
+                        <TextBlock Text="مرحله ۲: فایل لایسنس (.lic) که فروشنده برمی‌گرداند را بارگذاری کنید."
                                    FontSize="11" Opacity="0.65" TextWrapping="Wrap" Margin="0,0,0,8" />
                         <Button Command="{Binding ActivateOfflineCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
                                 HorizontalAlignment="Left" Content="📤 بارگذاری فایل لایسنس (.lic)" />
                     </StackPanel>
                 </materialDesign:Card>
 
-                <!-- ─── کارت پشتیبانی — داده‌ها هنگام فعال‌سازی از سرور لایسنس دریافت و ذخیره می‌شوند (بدون هاردکد) ─── -->
+                <!-- ─── کارت پشتیبانی — چرخه هجدهم: همیشه محتوا دارد؛ پس از تماس با سرور تازه می‌شود ─── -->
                 <TextBlock Text="پشتیبانی محصول" FontSize="14" FontWeight="Bold" Margin="4,18,2,8" />
                 <materialDesign:Card Padding="18" Margin="2,4" UniformCornerRadius="14"
                                      Visibility="{Binding HasSupport, Converter={StaticResource BoolToVisibility}}">
@@ -131,11 +172,11 @@
                                 <TextBlock Text="{Binding SupportWebsite}" FontSize="12.5" FontWeight="SemiBold" FlowDirection="LeftToRight" HorizontalAlignment="Right" />
                             </StackPanel>
                         </UniformGrid>
-                        <TextBlock Text="این اطلاعات از سرور لایسنس دریافت شده و با هر به‌روزرسانی، تازه می‌شود."
+                        <TextBlock Text="این اطلاعات با هر تماس موفق با سرور لایسنس (فعال‌سازی/تپ‌قلب) خودکار تازه می‌شود."
                                    FontSize="10" Opacity="0.55" TextWrapping="Wrap" Margin="0,10,0,0" />
                     </StackPanel>
                 </materialDesign:Card>
-                <!-- پیش از فعال‌سازی — پیام جایگزین -->
+                <!-- پشتیبان یافت نشد — فقط در حالت هیچ داده‌ای (بسیار نادر) -->
                 <materialDesign:Card Padding="14" Margin="2,4" UniformCornerRadius="14"
                                      Visibility="{Binding HasSupport, Converter={StaticResource InverseBoolToVisibility}}">
                     <TextBlock Text="پس از فعال‌سازی لایسنس، اطلاعات تماس پشتیبانی به‌طور خودکار از سرور دریافت و اینجا نمایش داده می‌شود."

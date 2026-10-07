@@ -76,6 +76,20 @@ public class ApiClient : IApiClient
     public async Task<bool> PostAsync(string endpoint, object? body, CancellationToken ct = default)
         => await SendCommandAsync(HttpMethod.Post, endpoint, body, ct);
 
+    /// <summary>
+    /// POST ناشناس بدون توکن — چرخه هجدهم (گزارش دوازدهم):
+    /// فرمان‌های لایسنس (فعال‌سازی آنلاین/آفلاین) پیش از ورود هم کار کنند
+    /// </summary>
+    public async Task<bool> PostAnonymousAsync(string endpoint, object? body, CancellationToken ct = default)
+        => await SendCommandAsync(HttpMethod.Post, endpoint, body, ct, attachToken: false);
+
+    /// <summary>
+    /// PUT ناشناس بدون توکن — چرخه هجدهم: ذخیرهٔ نشانی سرور لایسنس
+    /// از پنجرهٔ فعال‌سازی، پیش از ورود کاربر
+    /// </summary>
+    public async Task<bool> PutAnonymousAsync(string endpoint, object? body, CancellationToken ct = default)
+        => await SendCommandAsync(HttpMethod.Put, endpoint, body, ct, attachToken: false);
+
     /// <summary>PUT با بررسی پاکت استاندارد</summary>
     public async Task<bool> PutAsync(string endpoint, object? body, CancellationToken ct = default)
         => await SendCommandAsync(HttpMethod.Put, endpoint, body, ct);
@@ -194,7 +208,7 @@ public class ApiClient : IApiClient
 
     /// <summary>ارسال فرمان و بررسی موفقیت از پاکت ApiResponse</summary>
     private async Task<bool> SendCommandAsync(HttpMethod method, string endpoint,
-        object? body, CancellationToken ct)
+        object? body, CancellationToken ct, bool attachToken = true)
     {
         LastError = null;
         try
@@ -203,7 +217,7 @@ public class ApiClient : IApiClient
             if (body is not null)
                 request.Content = new StringContent(
                     JsonSerializer.Serialize(body, Json), Encoding.UTF8, "application/json");
-            if (!string.IsNullOrEmpty(_tokens.AccessToken))
+            if (attachToken && !string.IsNullOrEmpty(_tokens.AccessToken))
                 if (BranchId is { } bid)
                     request.Headers.Add("X-Branch-Id", bid.ToString());
                 request.Headers.Authorization =

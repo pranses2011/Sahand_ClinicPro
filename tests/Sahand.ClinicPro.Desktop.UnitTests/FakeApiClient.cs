@@ -109,10 +109,26 @@ public sealed class FakeApiClient : IApiClient
         return Task.FromResult(NextBoolResult);
     }
 
+    /// <summary>POST ناشناس با نتیجه بولی — چرخه هجدهم (فعال‌سازی لایسنس پیش از ورود)</summary>
+    public Task<bool> PostAnonymousAsync(string endpoint, object? body, CancellationToken ct = default)
+    {
+        Calls.Add(("POST-ANON-bool", endpoint));
+        LastBody = body;
+        return Task.FromResult(NextBoolResult);
+    }
+
     /// <summary>PUT با نتیجه بولی</summary>
     public Task<bool> PutAsync(string endpoint, object? body, CancellationToken ct = default)
     {
         Calls.Add(("PUT-bool", endpoint));
+        LastBody = body;
+        return Task.FromResult(NextBoolResult);
+    }
+
+    /// <summary>PUT ناشناس با نتیجه بولی — چرخه هجدهم (تنظیمات سرور لایسنس پیش از ورود)</summary>
+    public Task<bool> PutAnonymousAsync(string endpoint, object? body, CancellationToken ct = default)
+    {
+        Calls.Add(("PUT-ANON-bool", endpoint));
         LastBody = body;
         return Task.FromResult(NextBoolResult);
     }

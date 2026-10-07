@@ -20,6 +20,12 @@ public interface IApiClient
     /// <summary>درخواست GET بدون احراز هویت</summary>
     Task<T?> GetAnonymousAsync<T>(string endpoint, CancellationToken ct = default);
 
+    /// <summary>POST ناشناس (بدون توکن) با بررسی پاکت استاندارد — فعال‌سازی لایسنس پیش از ورود</summary>
+    Task<bool> PostAnonymousAsync(string endpoint, object? body, CancellationToken ct = default);
+
+    /// <summary>PUT ناشناس (بدون توکن) با بررسی پاکت استاندارد — ذخیرهٔ تنظیمات لایسنس پیش از ورود (چرخه هجدهم)</summary>
+    Task<bool> PutAnonymousAsync(string endpoint, object? body, CancellationToken ct = default);
+
     /// <summary>درخواست POST با نتیجه موفقیت/شکست — برای فرمان‌ها بدون داده خروجی</summary>
     Task<bool> PostAsync(string endpoint, object? body, CancellationToken ct = default);
 
