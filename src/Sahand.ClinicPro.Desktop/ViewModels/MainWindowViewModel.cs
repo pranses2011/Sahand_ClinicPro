@@ -180,40 +180,76 @@ public partial class MainWindowViewModel : ObservableObject
             ["training"] = () => trainingVm
         };
 
-        // آیتم‌های ناوبری — فعال بودن از لایسنس کنترل می‌شود
+        // ═══ آیتم‌های ناوبری — چرخه بیست‌ویکم (گزارش پانزدهم مالک) ═══
+        // «گزینه‌های لیست کناری مرتب نیستند؛ بر اساس کاربردشان مرتب بکن و شلوغی را
+        // با زیر منو کم کن» — ۳۰ آیتم تخت به ۹ گروهِ عملکردی + ۳ آیتم تکی بازسازماندهی شد.
+        // گروه‌ها: پذیرش و درمان | نسخه و دارو | پاراکلینیک | پزشکان و پرسنل |
+        // مالی و بیمه | ارتباط با بیمار | مدیریت سامانه
+        static NavItem Group(string title, string icon, params NavItem[] children) => new()
+        {
+            Title = title,
+            Icon = icon,
+            Children = { children }
+        };
+
         NavItems = new ObservableCollection<NavItem>
         {
             new() { Title = "داشبورد", PageKey = "dashboard", Icon = "ViewDashboard" },
-            new() { Title = "بیماران", PageKey = "patients", Icon = "AccountGroup" },
-            new() { Title = "پزشکان", PageKey = "doctors", Icon = "Doctor" },
-            new() { Title = "نوبت‌دهی", PageKey = "appointments", Icon = "CalendarClock" },
-            new() { Title = "پذیرش", PageKey = "receptions", Icon = "ClipboardAccount" },
-            new() { Title = "ویزیت و معاینه", PageKey = "visits", Icon = "Stethoscope" },
-            new() { Title = "نسخه‌نویسی", PageKey = "prescriptions", Icon = "Prescription" },
-            new() { Title = "پرونده بالینی پیشرفته", PageKey = "emr-advanced", Icon = "HeartPulse" },
-            new() { Title = "مالی و صندوق", PageKey = "billing", Icon = "CashMultiple" },
-            new() { Title = "حسابداری", PageKey = "accounting", Icon = "BookOpenOutline" },
-            new() { Title = "فیش حقوقی", PageKey = "payroll", Icon = "CashCheck" },
-            new() { Title = "حضور و غیاب", PageKey = "attendance", Icon = "Fingerprint" },
-            new() { Title = "بیمه", PageKey = "insurance", Icon = "ShieldCheckOutline" },
-            new() { Title = "پاراکلینیک", PageKey = "paraclinical", Icon = "MedicalBag" },
-            new() { Title = "آزمایشگاه", PageKey = "lab", Icon = "TestTube" },
-            new() { Title = "داروخانه", PageKey = "pharmacy", Icon = "Pill" },
-            new() { Title = "انبارگردانی", PageKey = "stocktaking", Icon = "ClipboardCheckOutline" },
+
+            // ─── جریان اصلی درمان از ورود تا خروج ───
+            Group("پذیرش و درمان", "Hospital",
+                new() { Title = "بیماران", PageKey = "patients", Icon = "AccountGroup" },
+                new() { Title = "نوبت‌دهی", PageKey = "appointments", Icon = "CalendarClock" },
+                new() { Title = "پذیرش", PageKey = "receptions", Icon = "ClipboardAccount" },
+                new() { Title = "ویزیت و معاینه", PageKey = "visits", Icon = "Stethoscope" },
+                new() { Title = "پرونده بالینی پیشرفته", PageKey = "emr-advanced", Icon = "HeartPulse" }),
+
+            // ─── تجویز و دارو ───
+            Group("نسخه و دارو", "Prescription",
+                new() { Title = "نسخه‌نویسی", PageKey = "prescriptions", Icon = "FileDocumentEdit" },
+                new() { Title = "داروخانه", PageKey = "pharmacy", Icon = "Pill" },
+                new() { Title = "انبارگردانی", PageKey = "stocktaking", Icon = "ClipboardCheckOutline" },
+                new() { Title = "نسخه الکترونیک", PageKey = "erx", Icon = "CloudUploadOutline" }),
+
+            // ─── تشخیص‌های یاری ───
+            Group("پاراکلینیک", "TestTube",
+                new() { Title = "آزمایشگاه", PageKey = "lab", Icon = "TestTube" },
+                new() { Title = "تصویربرداری و پاراکلینیک", PageKey = "paraclinical", Icon = "MedicalBag" }),
+
+            // ─── کادر درمان و پرسنل ───
+            Group("پزشکان و پرسنل", "AccountTie",
+                new() { Title = "پزشکان", PageKey = "doctors", Icon = "Doctor" },
+                new() { Title = "پرسنل", PageKey = "personnel", Icon = "AccountTie" },
+                new() { Title = "فیش حقوقی", PageKey = "payroll", Icon = "CashCheck" },
+                new() { Title = "حضور و غیاب", PageKey = "attendance", Icon = "Fingerprint" }),
+
+            // ─── امور مالی ───
+            Group("مالی و بیمه", "CashMultiple",
+                new() { Title = "مالی و صندوق", PageKey = "billing", Icon = "CashMultiple" },
+                new() { Title = "حسابداری", PageKey = "accounting", Icon = "BookOpenOutline" },
+                new() { Title = "بیمه", PageKey = "insurance", Icon = "ShieldCheckOutline" },
+                new() { Title = "سپاس", PageKey = "sepas", Icon = "BankTransfer" }),
+
+            // ─── ارتباط با بیمار ───
+            Group("ارتباط با بیمار", "MessageTextOutline",
+                new() { Title = "پیامک", PageKey = "sms", Icon = "MessageTextOutline" },
+                new() { Title = "نظرسنجی بیماران", PageKey = "surveys", Icon = "CommentQuoteOutline" }),
+
+            // ─── گزارش‌ها ───
             new() { Title = "گزارش‌ها", PageKey = "reports", Icon = "FileChart" },
-            new() { Title = "کاربران", PageKey = "users", Icon = "AccountKey" },
-            new() { Title = "نقش‌ها", PageKey = "roles", Icon = "ShieldAccount" },
-            new() { Title = "پیامک", PageKey = "sms", Icon = "MessageTextOutline" },
-            new() { Title = "نظرسنجی بیماران", PageKey = "surveys", Icon = "CommentQuoteOutline" },
-            new() { Title = "پرسنل", PageKey = "personnel", Icon = "AccountTie" },
-            new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog" },
-            new() { Title = "سپاس", PageKey = "sepas", Icon = "BankTransfer" },
-            new() { Title = "نسخه الکترونیک", PageKey = "erx", Icon = "CloudUploadOutline" },
-            new() { Title = "شعبه‌ها", PageKey = "branches", Icon = "HomeGroup" },
-            new() { Title = "بکاپ و بازیابی", PageKey = "backup", Icon = "DatabaseSync" },
-            new() { Title = "لاگ عملیات", PageKey = "audit", Icon = "FileDocumentEditOutline" },
-            new() { Title = "لایسنس", PageKey = "license", Icon = "KeyChain" },
-            new() { Title = "قالب چاپ و نظرسنجی", PageKey = "complementary", Icon = "TuneVertical" },
+
+            // ─── مدیریت و تنظیمات سامانه ───
+            Group("مدیریت سامانه", "Cog",
+                new() { Title = "کاربران", PageKey = "users", Icon = "AccountKey" },
+                new() { Title = "نقش‌ها", PageKey = "roles", Icon = "ShieldAccount" },
+                new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog" },
+                new() { Title = "شعبه‌ها", PageKey = "branches", Icon = "HomeGroup" },
+                new() { Title = "پشتیبان‌گیری و بازیابی", PageKey = "backup", Icon = "DatabaseSync" },
+                new() { Title = "لاگ عملیات", PageKey = "audit", Icon = "FileDocumentEditOutline" },
+                new() { Title = "لایسنس", PageKey = "license", Icon = "KeyChain" },
+                new() { Title = "قالب چاپ و نظرسنجی", PageKey = "complementary", Icon = "TuneVertical" }),
+
+            // ─── آموزش ───
             new() { Title = "🎓 مرکز آموزش", PageKey = "training", Icon = "School" }
         };
 
@@ -263,16 +299,69 @@ public partial class MainWindowViewModel : ObservableObject
     /// <summary>فهرست آیتم‌های ناوبری</summary>
     public ObservableCollection<NavItem> NavItems { get; }
 
-    /// <summary>انتخاب آیتم ناوبری → رفتن به صفحه</summary>
+    /// <summary>انتخاب آیتم ناوبری → رفتن به صفحه (آیتم گروه فقط باز/بسته می‌شود)</summary>
     partial void OnSelectedNavChanged(NavItem? value)
     {
-        if (value is not null)
-            NavigateToPage(value.PageKey);
+        if (value is null) return;
+        // چرخه بیست‌ویکم: آیتم‌های گروه‌دار صفحه ندارند — فقط زیرمنو باز/بسته می‌شود
+        if (value.HasChildren)
+        {
+            value.IsExpanded = !value.IsExpanded;
+            return;
+        }
+        NavigateToPage(value.PageKey);
     }
 
-    /// <summary>رفتن به صفحه با کلید</summary>
+    /// <summary>
+    /// دستور کلیک روی آیتم منو — چرخه بیست‌ویکم: برای آیتم‌های زیرمنو که در
+    /// ListBox تو در تو قرار دارند (بدون SelectedItem والد)؛ آیتم گروه را هم
+    /// هندل می‌کند (باز/بسته کردن).
+    /// </summary>
+    [RelayCommand]
+    private void Navigate(NavItem item)
+    {
+        if (item.HasChildren)
+        {
+            item.IsExpanded = !item.IsExpanded;
+            return;
+        }
+        NavigateToPage(item.PageKey);
+    }
+
+    /// <summary>
+    /// رفتن به صفحه با کلید — چرخه بیست‌ویکم: هایلایت صفحهٔ فعال روی منو
+    /// (IsCurrent روی آیتم تکی یا فرزند + باز ماندن گروه والد) نیز تنظیم می‌شود.
+    /// </summary>
     private void NavigateToPage(string pageKey)
     {
+        // بازنشانی هایلایت همهٔ آیتم‌ها (تکی و فرزندان گروه‌ها)
+        foreach (var nav in NavItems)
+        {
+            nav.IsCurrent = false;
+            foreach (var child in nav.Children)
+                child.IsCurrent = false;
+        }
+        // فعال‌سازی آیتم متناظر + باز ماندن گروهش
+        foreach (var nav in NavItems)
+        {
+            if (!nav.HasChildren)
+            {
+                if (nav.PageKey == pageKey)
+                {
+                    nav.IsCurrent = true;
+                    break;
+                }
+                continue;
+            }
+            var match = nav.Children.FirstOrDefault(c => c.PageKey == pageKey);
+            if (match is not null)
+            {
+                match.IsCurrent = true;
+                nav.IsExpanded = true; // گروه والد باز بماند تا محل فعال دیده شود
+                break;
+            }
+        }
+
         if (!_pages.TryGetValue(pageKey, out var factory))
         {
             // صفحات گام‌های بعد — پیام سازگار

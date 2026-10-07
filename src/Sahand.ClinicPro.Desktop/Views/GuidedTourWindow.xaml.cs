@@ -212,14 +212,21 @@ public partial class GuidedTourWindow : Window
     /// <summary>
     /// ناوبری پنجرهٔ اصلی به صفحهٔ با کلید داده‌شده — برای گام‌های توصیف‌کنندهٔ
     /// محتوای صفحه، تا هایلایت با نوشتهٔ حباب هم‌خوان باشد.
+    /// چرخه بیست‌ویکم: منو گروهی شد؛ صفحه‌های داخل زیرمنو با دستور Navigate
+    /// ناوبری می‌شوند (روی NavItems تخت دیگر یافت نمی‌شدند).
     /// </summary>
     private bool NavigateToPage(string pageKey)
     {
         if (_main.DataContext is not ViewModels.MainWindowViewModel shell) return false;
-        var item = shell.NavItems.FirstOrDefault(n => n.PageKey == pageKey);
-        if (item is null || Equals(shell.SelectedNav, item)) return item is not null;
 
-        shell.SelectedNav = item;
+        // جستجو در آیتم‌های تکی و فرزندان زیرمنوها
+        var item = shell.NavItems.FirstOrDefault(n => n.PageKey == pageKey);
+        if (item is null)
+            item = shell.NavItems.SelectMany(n => n.Children)
+                .FirstOrDefault(c => c.PageKey == pageKey);
+        if (item is null) return false;
+
+        shell.NavigateCommand.Execute(item);
         // فرصت رندر صفحهٔ جدید پیش از اندازه‌گیری ماسک
         Dispatcher.InvokeAsync(() => ShowStep(_index), DispatcherPriority.Loaded);
         return true;
