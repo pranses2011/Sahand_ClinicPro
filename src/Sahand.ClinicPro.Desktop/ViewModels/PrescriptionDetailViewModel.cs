@@ -46,11 +46,18 @@ public partial class PrescriptionDetailViewModel : ObservableObject
         _ = LoadAsync();
     }
 
-    /// <summary>بارگذاری جزئیات</summary>
+    /// <summary>
+    /// بارگذاری جزئیات — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
+    /// «جزئیات نسخه‌های ذخیره‌شده را نشان نمی‌دهد و همه نسخه‌ها خالی دیده می‌شوند» —
+    /// پاسخ سرور در پاکت استاندارد ApiResponse (isSuccess/data) می‌آید ولی اینجا
+    /// مستقیم روی ریشهٔ پاسخ نگاشت می‌شد؛ در نتیجه همهٔ فیلدها تهی می‌ماند.
+    /// اکنون از پاکت خوانده می‌شود.
+    /// </summary>
     private async Task LoadAsync()
     {
         IsBusy = true;
-        var detail = await _api.GetAsync<PrescriptionDetail>($"prescriptions/{_prescriptionId}");
+        var envelope = await _api.GetAsync<PrescriptionDetailEnvelope>($"prescriptions/{_prescriptionId}");
+        var detail = envelope?.Data;
 
         if (detail is null)
         {
@@ -73,6 +80,13 @@ public partial class PrescriptionDetailViewModel : ObservableObject
 
     /// <summary>فرمان بستن</summary>
     public void Close() => CloseRequested?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>پاکت استاندارد پاسخ جزئیات نسخه — چرخه بیست‌ویکم</summary>
+    public sealed class PrescriptionDetailEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public PrescriptionDetail? Data { get; set; }
+    }
 
     /// <summary>جزئیات نسخه منطبق بر سرور</summary>
     public sealed class PrescriptionDetail

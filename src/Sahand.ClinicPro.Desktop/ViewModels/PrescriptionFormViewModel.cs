@@ -33,6 +33,13 @@ public partial class PrescriptionItemVM : ObservableObject
     /// <summary>نام ژنریک — برای تطبیق تداخل با کش محلی (چرخه بیستم)</summary>
     public string GenericName { get; init; } = string.Empty;
 
+    /// <summary>
+    /// فرم دارویی (قرص/شربت/آمپول/…) — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
+    /// «وقتی دارو انتخاب می‌شود، باید نسبت به ماهیت دارو، دوز، مسیر و واحد
+    /// را انتخاب کند» — مبنای پیش‌فرض‌های هوشمند قلم.
+    /// </summary>
+    public string? Form { get; init; }
+
     public string Subtitle { get; init; } = string.Empty;
 
     [ObservableProperty] private string? _dosage = "۱ قرص";
@@ -43,6 +50,59 @@ public partial class PrescriptionItemVM : ObservableObject
     [ObservableProperty] private string? _unit = "عدد";
     [ObservableProperty] private string? _instructions;
     [ObservableProperty] private bool _isSos;
+
+    /// <summary>
+    /// پیش‌فرض‌های هوشمند بر اساس فرم دارویی — چرخه بیست‌ویکم:
+    /// با انتخاب دارو، دوز/مسیر/واحد متناسب با ماهیت آن (قرص، شربت، آمپول،
+    /// قطره، اسپری، پماد، شیاف، چشمی…) پیش‌پر می‌شود؛ کاربر می‌تواند از کشوها
+    /// تغییر دهد. مقادیر خارج از فهرست هم با کتاب خلاقانهٔ IsEditable پذیرفته می‌شوند.
+    /// </summary>
+    public void ApplyFormDefaults()
+    {
+        var f = (Form ?? "").Trim();
+        // قرص و کپسول و تابلت — خوراکی با واحد عدد
+        if (f.Contains("قرص") || f.Contains("کپسول") || f.Contains("تابلت"))
+        {
+            Dosage = "۱ قرص"; Route = "خوراکی"; Unit = "عدد";
+        }
+        // شربت و سوسپانسیون و محلول خوراکی و سیروپ
+        else if (f.Contains("شربت") || f.Contains("سوسپانسیون") || f.Contains("سیروپ") ||
+                 f.Contains("محلول خوراکی") || f.Contains("الگزیر"))
+        {
+            Dosage = "۵ سی‌سی"; Route = "خوراکی"; Unit = "شیشه";
+        }
+        // قطره چشمی/گوشی/بینی
+        else if (f.Contains("قطره"))
+        {
+            Dosage = "۲ قطره";
+            Route = f.Contains("چشم") ? "چشمی" : f.Contains("گوش") ? "گوشی" : "اسپری بینی";
+            Unit = "شیشه";
+        }
+        // آمپول و ویال و تزریقی
+        else if (f.Contains("آمپول") || f.Contains("ویال") || f.Contains("تزریقی") ||
+                 f.Contains("انفوزیون") || f.Contains("اینفوزیون"))
+        {
+            Dosage = "۱ عدد";
+            Route = f.Contains("ورید") ? "تزریق وریدی" : "تزریق عضلانی";
+            Unit = f.Contains("ویال") ? "ویال" : "آمپول";
+        }
+        // اسپری و استنشاقی
+        else if (f.Contains("اسپری") || f.Contains("استنشاق") || f.Contains("انحالر") || f.Contains("ایروسل"))
+        {
+            Dosage = "۱ پاف"; Route = "استنشاقی"; Unit = "بسته";
+        }
+        // پماد و کرم و ژل و لوسیون
+        else if (f.Contains("پماد") || f.Contains("کرم") || f.Contains("ژل") || f.Contains("لوسیون"))
+        {
+            Dosage = "به مقدار کافی"; Route = "پوستی"; Unit = "تیوب";
+        }
+        // شیاف
+        else if (f.Contains("شیاف"))
+        {
+            Dosage = "۱ عدد"; Route = "مقعدی"; Unit = "عدد";
+        }
+        RecalculateTotal();
+    }
 
     /// <summary>بازمحاسبهٔ تعداد کل با هر تغییر دوز/مصرف/مدت — چرخه بیستم</summary>
     partial void OnDosageChanged(string? value) => RecalculateTotal();
@@ -305,7 +365,7 @@ public partial class PrescriptionFormViewModel : ObservableObject
         _debounce.Start();
     }
 
-    /// <summary>افزودن دارو به نسخه</summary>
+    /// <summary>افزودن دارو به نسخه — با پیش‌فرض‌های متناسب با فرم دارویی (چرخه بیست‌ویکم)</summary>
     [RelayCommand]
     private void AddMedication(object? param)
     {
@@ -315,12 +375,14 @@ public partial class PrescriptionFormViewModel : ObservableObject
             MedicationId = med.Id,
             Name = med.NameFa,
             GenericName = med.NameEn, // برای تطبیق تداخل کش محلی (چرخه بیستم)
+            Form = med.Form,         // مبنای دوز/مسیر/واحد هوشمند (چرخه بیست‌ویکم)
             Subtitle = $"{med.Form ?? ""} {med.Strength ?? ""} — {med.Manufacturer ?? med.Country}".Trim(' ', '—')
         };
         Items.Add(item);
+        // پیش‌فرض دوز/مسیر/واحد بر اساس ماهیت دارو — سپس بازمحاسبهٔ تعداد کل
+        item.ApplyFormDefaults();
         MedicationSearch = string.Empty;
         MedicationResults.Clear();
-        item.RecalculateTotal(); // تعداد کل پایه بر اساس مقادیر پیش‌فرض قلم
         _ = CheckInteractionsAsync();
     }
 
@@ -524,18 +586,22 @@ public partial class PrescriptionFormViewModel : ObservableObject
 
     /* ═══════════ ذخیره و ارسال ═══════════ */
 
-    /// <summary>ذخیره نسخه — با گیت ایمنی چرخه ۱۳: منع مطلق فقط با دلیل کتبی قابل عبور است</summary>
-    [RelayCommand]
-    private async Task SaveAsync()
+    /// <summary>
+    /// ذخیرهٔ نسخه — با گیت ایمنی چرخه ۱۳: منع مطلق فقط با دلیل کتبی قابل عبور است.
+    /// چرخه بیست‌ویکم: به «هستهٔ ذخیره» بدون بستن فرم تبدیل شد (SaveCoreAsync) —
+    /// بستن فرم به دستور SaveAsync منتقل شد تا ثبت الکترونیک هم بتواند بدون بسته‌شدن
+    /// فرم ابتدا ذخیره کند.
+    /// </summary>
+    private async Task<long> SaveCoreAsync()
     {
         var error = Validate();
-        if (error is not null) { ErrorMessage = error; return; }
+        if (error is not null) { ErrorMessage = error; return 0; }
 
         // گیت ایمنی بالینی چرخه ۱۳ — شدت ۴ (منع مصرف/آلرژی/رده X) بدون دلیل کتبی رد می‌شود
         if (HasAbsoluteBlock && string.IsNullOrWhiteSpace(OverrideReason))
         {
             ErrorMessage = "⚠️ این نسخه دارای منع مصرف مطلق (شدت ۴) است — برای ادامه، دلیل تأیید پزشک را در کادر «دلیل تأیید» بنویسید";
-            return;
+            return 0;
         }
 
         IsBusy = true;
@@ -569,11 +635,25 @@ public partial class PrescriptionFormViewModel : ObservableObject
         if (response?.Data is null or 0)
         {
             ErrorMessage = _api.LastError ?? "ذخیره نسخه ناموفق بود";
-            return;
+            return 0;
         }
 
         SavedPrescriptionId = response.Data;
-        _snackbar.Success($"نسخه ذخیره شد — شناسه {response.Data}");
+        return response.Data;
+    }
+
+    /// <summary>
+    /// ذخیره نسخه و بستن فرم — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
+    /// «بعد از ثبت نسخه هنوز در صفحه می‌ماند و با زدن دوبارهٔ ذخیره، نسخهٔ جدید
+    /// ثبت می‌شود؛ باید با ثبت نسخه از فرم خارج شود تا دوباره زده نشود».
+    /// </summary>
+    [RelayCommand]
+    private async Task SaveAsync()
+    {
+        var id = await SaveCoreAsync();
+        if (id <= 0) return;
+        _snackbar.Success($"نسخه ذخیره شد — شناسه {id}");
+        CloseRequested?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>اعتبارسنجی</summary>
@@ -592,8 +672,9 @@ public partial class PrescriptionFormViewModel : ObservableObject
     {
         if (SavedPrescriptionId is null)
         {
-            await SaveAsync();
-            if (SavedPrescriptionId is null) return;
+            // ذخیرهٔ بی‌صدا با هستهٔ مشترک — فرم نبسته شود تا کد رهگیری دیده شود (چرخه بیست‌ویکم)
+            var saved = await SaveCoreAsync();
+            if (saved <= 0) return;
         }
 
         IsSubmitting = true;
@@ -638,11 +719,37 @@ public partial class PrescriptionFormViewModel : ObservableObject
         else _snackbar.Error(_api.LastError ?? "ارسال پیامک ناموفق بود");
     }
 
-    /// <summary>چاپ نسخه</summary>
+    /// <summary>
+    /// چاپ نسخه — چرخه بیست‌ویکم (گزارش پانزدهم مالک: «دکمه چاپ کار نمی‌کند»):
+    /// سند FlowDocument راست‌چین فارسی با سربرگ درمانگاه، مشخصات بیمار/پزشک و
+    /// جدول اقلام ساخته و در پنجرهٔ پیش‌نمایش چاپ (با دکمهٔ چاپ ویندوز) باز می‌کند.
+    /// </summary>
     [RelayCommand]
     private void Print()
     {
-        _snackbar.Info("پیش‌نمایش چاپ در گام U19 (قالب‌های چاپ) متصل می‌شود");
+        if (Patient is null || Items.Count == 0)
+        {
+            _snackbar.Error("برای چاپ، ابتدا بیمار و حداقل یک دارو را ثبت کنید");
+            return;
+        }
+        try
+        {
+            var doc = Services.PrescriptionPrintHelper.BuildDocument(
+                patientName: Patient.FullName,
+                patientNationalCode: Patient.NationalCode,
+                doctorName: DoctorIndex >= 0 && DoctorIndex < Doctors.Count ? Doctors[DoctorIndex].Name : "—",
+                dateShamsi: Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.Now),
+                trackingCode: ElectronicTrackingCode,
+                items: Items.Select(i => (
+                    i.Name, i.Subtitle,
+                    $"{i.Dosage} × {i.Frequency} × {i.Duration}",
+                    i.Route ?? "", i.Instructions ?? "")).ToList());
+            Services.PrescriptionPrintHelper.ShowPreview(doc, $"چاپ نسخه — {Patient.FullName}");
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Error($"آماده‌سازی چاپ ناموفق بود: {ex.Message}");
+        }
     }
 
     /// <summary>بستن</summary>
