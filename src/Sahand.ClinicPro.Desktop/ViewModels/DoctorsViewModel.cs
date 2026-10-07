@@ -23,7 +23,9 @@ public record DoctorRow(
     decimal DoctorPercentage,
     bool IsActive,
     decimal Rating,
-    string RatingDisplay);
+    string RatingDisplay,
+    long? EmployeeId = null,
+    bool HasPhoto = false); // چرخه هجدهم: عکس از پرسنل مرتبط
 
 /// <summary>
 /// ViewModel فهرست پزشکان — جستجو و صفحه‌بندی + دکمه‌های برنامه کاری/آمار/کارانه
@@ -105,7 +107,8 @@ public partial class DoctorsViewModel : ViewModelBase
         d.ConsultationFee, d.ConsultationFee.ToString("N0"),
         d.VisitDuration, d.DoctorPercentage,
         d.IsActive, d.Rating,
-        d.Rating > 0 ? $"{d.Rating:0.0} ★" : "—");
+        d.Rating > 0 ? $"{d.Rating:0.0} ★" : "—",
+        d.EmployeeId, d.HasPhoto);
 
     /// <summary>جستجو</summary>
     [RelayCommand]
@@ -172,6 +175,43 @@ public partial class DoctorsViewModel : ViewModelBase
         window.ShowDialog();
     }
 
+    /* ─── عکس پزشکان — چرخه هجدهم (گزارش دوازدهم مالک) ─── */
+
+    /// <summary>نمایش بزرگ عکس پزشک — از پرسنل مرتبط با پزشک</summary>
+    [RelayCommand]
+    private async Task ViewDoctorPhotoAsync(DoctorRow? row)
+    {
+        if (row is null) return;
+        var bytes = await Services.PhotoTools.DownloadDoctorPhotoAsync(_api, row.Id);
+        Services.PhotoTools.ShowLarge(bytes, $"عکس: {row.FullName}");
+    }
+
+    /// <summary>
+    /// انتخاب/تعویض عکس پزشک — عکس روی پرسنل مرتبط ذخیره می‌شود؛
+    /// پزشکِ بدون پرسنل مرتبط ابتدا باید از فرم ویرایش به پرسنل متصل شود.
+    /// </summary>
+    [RelayCommand]
+    private async Task ChangeDoctorPhotoAsync(DoctorRow? row)
+    {
+        if (row is null) return;
+        if (row.EmployeeId is null)
+        {
+            _snackbar.Error("این پزشک به رکورد پرسنل متصل نیست — ابتدا از «ویرایش»، پرسنل مرتبط را انتخاب کنید");
+            return;
+        }
+
+        var picked = Services.PhotoTools.PickPhoto($"انتخاب عکس: {row.FullName}");
+        if (picked is null) return;
+
+        IsBusy = true;
+        var ok = await Services.PhotoTools.UploadEmployeePhotoAsync(
+            _api, row.EmployeeId.Value, picked.Value.Bytes, picked.Value.FileName);
+        IsBusy = false;
+
+        if (ok) { _snackbar.Success($"عکس «{row.FullName}» ذخیره شد"); await LoadAsync(); }
+        else _snackbar.Error(_api.LastError ?? "ذخیرهٔ عکس ناموفق بود");
+    }
+
     /// <summary>باز کردن فرم مودال و بارگذاری مجدد</summary>
     private void OpenForm(DoctorFormViewModel formVm)
     {
@@ -195,6 +235,8 @@ public partial class DoctorsViewModel : ViewModelBase
     public sealed class DoctorDto
     {
         public long Id { get; set; }
+        public long? EmployeeId { get; set; }
+        public bool HasPhoto { get; set; }
         public string FullName { get; set; } = string.Empty;
         public string? MedicalLicenseNo { get; set; }
         public string? NezamPezeshkiCode { get; set; }
@@ -328,6 +370,10 @@ public partial class DoctorFormViewModel : ObservableObject
     [ObservableProperty] private int _newAbsenceTypeIndex;
     [ObservableProperty] private string? _newAbsenceReason;
 
+    /* ── عکس پروفایل — چرخه هجدهم: عکس پرسنلِ مرتبط ── */
+    [ObservableProperty] private System.Windows.Media.ImageSource? _photoPreview;
+    [ObservableProperty] private bool _hasPhoto;
+
     /* ── عمومی ── */
     [ObservableProperty] private string _errorMessage = string.Empty;
     [ObservableProperty] private string _formTitle = "ثبت پزشک جدید";
@@ -427,6 +473,62 @@ public partial class DoctorFormViewModel : ObservableObject
 
     /// <summary>فیلتر فوق‌تخصص‌ها بر اساس تخصص انتخابی</summary>
     partial void OnSpecialtyIdChanged(long? value) => FilterSubSpecialties();
+
+    /// <summary>
+    /// تغییر پرسنل مرتبط → پیش‌نمایش عکس همان پرسنل — چرخه هجدهم:
+    /// عکس پزشک همان عکس رکورد پرسنل است (Doctor.EmployeeId → Employee.ProfilePicture).
+    /// </summary>
+    async partial void OnEmployeeIdChanged(long? value)
+    {
+        PhotoPreview = null;
+        HasPhoto = false;
+        if (value is null) return;
+        var bytes = await Services.PhotoTools.DownloadEmployeePhotoAsync(_api, value.Value);
+        if (bytes is { Length: > 0 })
+        {
+            PhotoPreview = Services.PhotoTools.ToImage(bytes);
+            HasPhoto = true;
+        }
+    }
+
+    /// <summary>تعویض عکس پزشک — انتخاب فایل و آپلود روی پرسنل مرتبط</summary>
+    [RelayCommand]
+    private async Task ChangePhotoAsync()
+    {
+        if (EmployeeId is null)
+        {
+            ErrorMessage = "برای عکس، ابتدا «پرسنل مرتبط» را انتخاب و فرم را ذخیره کنید";
+            return;
+        }
+
+        var picked = Services.PhotoTools.PickPhoto("انتخاب عکس پزشک");
+        if (picked is null) return;
+
+        IsBusy = true;
+        var ok = await Services.PhotoTools.UploadEmployeePhotoAsync(
+            _api, EmployeeId.Value, picked.Value.Bytes, picked.Value.FileName);
+        IsBusy = false;
+
+        if (ok)
+        {
+            _snackbar.Success("عکس ذخیره شد");
+            PhotoPreview = Services.PhotoTools.ToImage(picked.Value.Bytes);
+            HasPhoto = true;
+        }
+        else
+        {
+            ErrorMessage = _api.LastError ?? "ذخیرهٔ عکس ناموفق بود";
+        }
+    }
+
+    /// <summary>نمایش بزرگ عکس پزشک</summary>
+    [RelayCommand]
+    private async Task ViewPhotoAsync()
+    {
+        if (EmployeeId is null) { Services.PhotoTools.ShowLarge(null, "عکس پزشک"); return; }
+        var bytes = await Services.PhotoTools.DownloadEmployeePhotoAsync(_api, EmployeeId.Value);
+        Services.PhotoTools.ShowLarge(bytes, "عکس پزشک");
+    }
 
     /// <summary>پر کردن فوق‌تخصص‌های مرتبط</summary>
     private void FilterSubSpecialties()

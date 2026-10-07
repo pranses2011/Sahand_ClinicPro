@@ -1,0 +1,35 @@
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.PhotoViewerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="نمایش عکس"
+        WindowStyle="None" AllowsTransparency="True"
+        WindowState="Maximized" ResizeMode="NoResize" ShowInTaskbar="False"
+        Background="#E6000000" Topmost="True"
+        FlowDirection="RightToLeft"
+        Cursor="Hand"
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn">
+    <!-- ═══ نمایشگر بزرگ عکس پروفایل — چرخه هجدهم (گزارش دوازدهم مالک)
+         «با کلیک روی عکس اون رو بزرگ و نشون بده» — تمام‌صفحهٔ تیره؛
+         بستن با کلیک روی هر نقطه یا کلید Esc ═══ -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="24,18,24,0">
+            <TextBlock x:Name="ViewerTitle" Text="عکس پروفایل"
+                       FontSize="16" FontWeight="Bold" Foreground="White"
+                       VerticalAlignment="Center" />
+            <TextBlock Text="برای بستن کلیک کنید یا Esc بزنید"
+                       FontSize="11" Foreground="#B0BEC5"
+                       DockPanel.Dock="Left" VerticalAlignment="Center"
+                       Margin="12,0,0,0" />
+        </DockPanel>
+
+        <Border Grid.Row="1" Margin="40" Background="White" CornerRadius="14" Padding="10">
+            <Image x:Name="PhotoImage" Stretch="Uniform" StretchDirection="DownOnly" />
+        </Border>
+    </Grid>
+</Window>

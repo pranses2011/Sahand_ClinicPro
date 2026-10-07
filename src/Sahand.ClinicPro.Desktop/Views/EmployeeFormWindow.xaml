@@ -1,4 +1,4 @@
-<Window x:Class="Sahand.ClinicPro.Desktop.Views.EmployeeFormWindow"
+﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.EmployeeFormWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -11,9 +11,58 @@
     </Window.Resources>
     <!-- ═══════════════════════════════════════════════════════════
          فرم ثبت پرسنل — گام V8 + اطلاعات حقوقی چرخه نهم
+         + کارت عکس پروفایل (چرخه هجدهم — گزارش دوازدهم مالک)
          ═══════════════════════════════════════════════════════════ -->
-    <StackPanel Margin="28">
-        <TextBlock Text="ثبت پرسنل جدید" Style="{StaticResource SectionTitle}" />
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="28">
+
+            <!-- ─── کارت عکس پروفایل — چرخه هجدهم ─── -->
+            <Border Background="#F5F9FF" BorderBrush="#CFE2F5" BorderThickness="1"
+                    CornerRadius="10" Padding="14,12" Margin="0,0,0,16">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <!-- پیش‌نمایش دایره‌ای یا جای‌نگهدار -->
+                        <Border Width="86" Height="86" CornerRadius="43"
+                                Background="#E3F2FD" BorderBrush="#90CAF9"
+                                BorderThickness="2" Cursor="Hand"
+                                ToolTip="با کلیک، عکس را بزرگ ببینید">
+                            <Border.InputBindings>
+                                <MouseBinding Gesture="LeftClick"
+                                              Command="{Binding ViewPhotoCommand}" />
+                            </Border.InputBindings>
+                            <Grid>
+                                <materialDesign:PackIcon Kind="AccountLarge"
+                                                         Width="44" Height="44"
+                                                         Foreground="#64B5F6"
+                                                         HorizontalAlignment="Center"
+                                                         VerticalAlignment="Center"
+                                                         Visibility="{Binding HasPendingPhoto, Converter={StaticResource InverseBoolToVisibility}}" />
+                                <Image Source="{Binding PhotoPreview}"
+                                       Stretch="UniformToFill" />
+                            </Grid>
+                        </Border>
+                        <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="🖼 عکس پرسنل" FontSize="13.5" FontWeight="Bold"
+                                       Foreground="#16355E" />
+                            <TextBlock Text="عکس JPG/PNG تا ۵ مگابایت؛ همراه ثبت، در پوشهٔ Photos/Employees برنامه ذخیره و مسیرش در دیتابیس ثبت می‌شود."
+                                       FontSize="10.5" Foreground="#5B7290" TextWrapping="Wrap"
+                                       Margin="0,4,0,8" MaxWidth="260" />
+                            <StackPanel Orientation="Horizontal">
+                                <Button Command="{Binding PickPhotoCommand}"
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Content="انتخاب عکس" FontSize="12" Padding="14,6" />
+                                <Button Command="{Binding ClearPhotoCommand}"
+                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                        Content="حذف" FontSize="11.5" Foreground="#C62828"
+                                        Padding="10,6" Margin="8,0,0,0"
+                                        Visibility="{Binding HasPendingPhoto, Converter={StaticResource BoolToVis}}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="ثبت پرسنل جدید" Style="{StaticResource SectionTitle}" />
 
         <TextBox materialDesign:HintAssist.Hint="نام *"
                  Text="{Binding FirstName, UpdateSourceTrigger=PropertyChanged}"
@@ -71,5 +120,6 @@
 
         <ProgressBar IsIndeterminate="True" Height="4" Margin="0,16,0,0"
                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
-    </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
 </Window>

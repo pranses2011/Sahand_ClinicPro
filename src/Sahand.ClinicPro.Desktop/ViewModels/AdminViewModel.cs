@@ -36,7 +36,7 @@ public record AuditRow(
     string? Module,
     string Time);
 
-/// <summary>ردیف پرسنل</summary>
+/// <summary>ردیف پرسنل — چرخه هجدهم: HasPhoto برای ستون عکس</summary>
 public record EmployeeRow(
     long Id,
     string? PersonnelCode,
@@ -47,7 +47,8 @@ public record EmployeeRow(
     string TypeText,
     bool IsActive,
     decimal BaseSalary = 0m,
-    decimal CommissionPercent = 0m);
+    decimal CommissionPercent = 0m,
+    bool HasPhoto = false);
 
 /// <summary>ردیف تاریخچه پشتیبان</summary>
 public record BackupRow(string StatusText, string Date, string Mode);
@@ -238,7 +239,7 @@ public partial class AdminViewModel : ViewModelBase
             Employees = new ObservableCollection<EmployeeRow>(response.Data.Select(e =>
                 new EmployeeRow(e.Id, e.PersonnelCode, e.FullName, e.PositionName,
                     e.DepartmentName, e.Mobile, TypeTextOf(e.Type), e.IsActive,
-                    e.BaseSalary, e.CommissionPercent)));
+                    e.BaseSalary, e.CommissionPercent, e.HasPhoto)));
         else
             ErrorMessage = _api.LastError ?? "دریافت پرسنل ناموفق بود";
         IsBusy = false;
@@ -263,6 +264,66 @@ public partial class AdminViewModel : ViewModelBase
         };
         window.ShowDialog();
         _ = LoadEmployeesAsync();
+    }
+
+    /* ─── عکس پروفایل پرسنل — چرخه هجدهم (گزارش دوازدهم مالک) ─── */
+
+    /// <summary>نمایش بزرگ عکس پرسنل — دانلود و گشودن در نمایشگر تمام‌صفحه</summary>
+    [RelayCommand]
+    private async Task ViewPhotoAsync(EmployeeRow? row)
+    {
+        if (row is null) return;
+        var bytes = await Services.PhotoTools.DownloadEmployeePhotoAsync(_api, row.Id);
+        Services.PhotoTools.ShowLarge(bytes, $"عکس: {row.FullName}");
+    }
+
+    /// <summary>انتخاب/تعویض عکس پرسنل — دیالوگ فایل + آپلود چندبخشی</summary>
+    [RelayCommand]
+    private async Task ChangePhotoAsync(EmployeeRow? row)
+    {
+        if (row is null) return;
+        var picked = Services.PhotoTools.PickPhoto($"انتخاب عکس: {row.FullName}");
+        if (picked is null) return;
+
+        IsBusy = true;
+        var ok = await Services.PhotoTools.UploadEmployeePhotoAsync(
+            _api, row.Id, picked.Value.Bytes, picked.Value.FileName);
+        IsBusy = false;
+
+        if (ok)
+        {
+            StatusMessage = $"عکس «{row.FullName}» ذخیره شد";
+            await LoadEmployeesAsync();
+        }
+        else
+        {
+            ErrorMessage = _api.LastError ?? "ذخیرهٔ عکس ناموفق بود";
+        }
+    }
+
+    /// <summary>حذف عکس پرسنل — با تأیید؛ فایل و مسیر دیتابیسی پاک می‌شوند</summary>
+    [RelayCommand]
+    private async Task DeletePhotoAsync(EmployeeRow? row)
+    {
+        if (row is null) return;
+        var answer = System.Windows.MessageBox.Show(
+            $"عکس «{row.FullName}» حذف شود؟", "حذف عکس",
+            System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+        if (answer != System.Windows.MessageBoxResult.Yes) return;
+
+        IsBusy = true;
+        var ok = await _api.DeleteAsync($"people/employees/{row.Id}/photo");
+        IsBusy = false;
+
+        if (ok)
+        {
+            StatusMessage = "عکس حذف شد";
+            await LoadEmployeesAsync();
+        }
+        else
+        {
+            ErrorMessage = _api.LastError ?? "حذف عکس ناموفق بود";
+        }
     }
 
     /// <summary>متن فارسی نوع استخدام</summary>
@@ -384,6 +445,7 @@ public partial class AdminViewModel : ViewModelBase
         public bool IsActive { get; set; }
         public decimal BaseSalary { get; set; }
         public decimal CommissionPercent { get; set; }
+        public bool HasPhoto { get; set; }
     }
 
     /// <summary>پاسخ پشتیبان</summary>

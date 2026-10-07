@@ -1,11 +1,14 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.IO;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
 /// <summary>
-/// ViewModel فرم ثبت پرسنل
+/// ViewModel فرم ثبت پرسنل — چرخه هجدهم (گزارش دوازدهم):
+/// عکس پروفایل همزمان با ثبت انتخاب می‌شود و پس از موفقیتِ ثبت (گرفتن شناسهٔ
+/// پرسنل از پاسخ API) در Photos/Employees ذخیره و مسیرش در دیتابیس ثبت می‌شود.
 /// </summary>
 public partial class EmployeeFormViewModel : ObservableObject
 {
@@ -47,6 +50,23 @@ public partial class EmployeeFormViewModel : ObservableObject
     [ObservableProperty]
     private bool _isBusy;
 
+    /* ─── عکس پروفایل — چرخه هجدهم ─── */
+
+    /// <summary>بایت‌های عکس انتخاب‌شده — پیش از ثبت در حافظه</summary>
+    [ObservableProperty]
+    private byte[]? _pendingPhotoBytes;
+
+    /// <summary>نام فایل عکس انتخاب‌شده</summary>
+    [ObservableProperty]
+    private string? _pendingPhotoFileName;
+
+    /// <summary>پیش‌نمایش عکس انتخاب‌شده</summary>
+    [ObservableProperty]
+    private System.Windows.Media.ImageSource? _photoPreview;
+
+    /// <summary>آیا عکسی انتخاب شده</summary>
+    public bool HasPendingPhoto => PendingPhotoBytes is { Length: > 0 };
+
     /// <summary>رویداد بستن</summary>
     public event EventHandler? CloseRequested;
 
@@ -55,6 +75,32 @@ public partial class EmployeeFormViewModel : ObservableObject
 
     /// <summary>سازنده با کلاینت API</summary>
     public EmployeeFormViewModel(IApiClient api) => _api = api;
+
+    /// <summary>انتخاب عکس پروفایل — JPG/PNG تا ۵ مگابایت</summary>
+    [RelayCommand]
+    private void PickPhoto()
+    {
+        var picked = PhotoTools.PickPhoto("انتخاب عکس پرسنل");
+        if (picked is null) return;
+        (PendingPhotoBytes, PendingPhotoFileName) = picked.Value;
+        PhotoPreview = PhotoTools.ToImage(PendingPhotoBytes);
+        OnPropertyChanged(nameof(HasPendingPhoto));
+    }
+
+    /// <summary>بزرگ‌نمایی عکس انتخاب‌شده</summary>
+    [RelayCommand]
+    private void ViewPhoto()
+        => PhotoTools.ShowLarge(PendingPhotoBytes, "عکس پرسنل");
+
+    /// <summary>حذف انتخاب عکس</summary>
+    [RelayCommand]
+    private void ClearPhoto()
+    {
+        PendingPhotoBytes = null;
+        PendingPhotoFileName = null;
+        PhotoPreview = null;
+        OnPropertyChanged(nameof(HasPendingPhoto));
+    }
 
     /// <summary>ثبت پرسنل</summary>
     [RelayCommand]
@@ -96,14 +142,38 @@ public partial class EmployeeFormViewModel : ObservableObject
             commissionPercent
         };
 
-        var ok = await _api.PostAsync("hr/employees", body);
-        IsBusy = false;
+        // پاسخ تایپ‌شده — شناسهٔ پرسنلِ تازه‌ثبت‌شده برای عکس لازم است
+        var response = await _api.PostAsync<CreateEmployeeResponse>("hr/employees", body);
+        var employeeId = response?.Data;
+        if (employeeId is null or 0)
+        {
+            IsBusy = false;
+            ErrorMessage = _api.LastError ?? "ثبت پرسنل ناموفق بود";
+            return;
+        }
 
-        if (ok) SaveSucceeded?.Invoke(this, EventArgs.Empty);
-        else ErrorMessage = _api.LastError ?? "ثبت پرسنل ناموفق بود";
+        // عکس انتخاب‌شده — پس از ثبت، آپلود روی شناسهٔ جدید
+        if (PendingPhotoBytes is { Length: > 0 })
+        {
+            var photoOk = await PhotoTools.UploadEmployeePhotoAsync(
+                _api, employeeId.Value, PendingPhotoBytes,
+                PendingPhotoFileName ?? "photo.jpg");
+            if (!photoOk)
+                ErrorMessage = "پرسنل ثبت شد اما ذخیرهٔ عکس ناموفق بود — از فهرست پرسنل دوباره عکس بگذارید";
+        }
+
+        IsBusy = false;
+        SaveSucceeded?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>انصراف</summary>
     [RelayCommand]
     private void Cancel() => CloseRequested?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>پاسخ ثبت پرسنل — پاکت استاندارد با شناسه</summary>
+    private sealed class CreateEmployeeResponse
+    {
+        public bool IsSuccess { get; set; }
+        public long? Data { get; set; }
+    }
 }

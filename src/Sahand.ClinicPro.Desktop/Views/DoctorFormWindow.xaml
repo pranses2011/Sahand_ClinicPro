@@ -69,6 +69,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0" Grid.Column="0">
@@ -120,6 +121,45 @@
                                      VerticalScrollBarVisibility="Auto"
                                      materialDesign:HintAssist.Hint="سوابق تحصیلی و حرفه‌ای — در پرونده الکترونیک بیمار نمایش داده می‌شود" />
                         </StackPanel>
+
+                        <!-- ─── کارت عکس پزشک — چرخه هجدهم (گزارش دوازدهم):
+                             عکس روی پرسنل مرتبط ذخیره می‌شود؛ با کلیک بزرگ می‌شود ─── -->
+                        <Border Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
+                                Background="#F5F9FF" BorderBrush="#CFE2F5" BorderThickness="1"
+                                CornerRadius="10" Padding="12,10" Margin="0,12,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="82" Height="82" CornerRadius="41"
+                                        Background="#E3F2FD" BorderBrush="#90CAF9"
+                                        BorderThickness="2" Cursor="Hand"
+                                        ToolTip="با کلیک، عکس را بزرگ ببینید">
+                                    <Border.InputBindings>
+                                        <MouseBinding Gesture="LeftClick"
+                                                      Command="{Binding ViewPhotoCommand}" />
+                                    </Border.InputBindings>
+                                    <Grid>
+                                        <materialDesign:PackIcon Kind="AccountLarge"
+                                                                 Width="40" Height="40"
+                                                                 Foreground="#64B5F6"
+                                                                 HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center"
+                                                                 Visibility="{Binding HasPhoto, Converter={StaticResource InverseBoolToVisibility}}" />
+                                        <Image Source="{Binding PhotoPreview}"
+                                               Stretch="UniformToFill" />
+                                    </Grid>
+                                </Border>
+                                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="🖼 عکس پزشک" FontSize="13" FontWeight="Bold"
+                                               Foreground="#16355E" />
+                                    <TextBlock Text="عکس JPG/PNG تا ۵ مگابایت — روی پرسنلِ مرتبط ذخیره می‌شود؛ اگر «پرسنل مرتبط» عوض شود عکس همان پرسنل نمایش می‌یابد."
+                                               FontSize="10.5" Foreground="#5B7290" TextWrapping="Wrap"
+                                               Margin="0,3,0,6" MaxWidth="480" />
+                                    <Button Command="{Binding ChangePhotoCommand}"
+                                            Style="{StaticResource MaterialDesignRaisedButton}"
+                                            Content="انتخاب / تعویض عکس" FontSize="12"
+                                            Padding="14,6" HorizontalAlignment="Left" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
                     </Grid>
                 </ScrollViewer>
             </TabItem>

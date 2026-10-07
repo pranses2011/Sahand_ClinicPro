@@ -136,6 +136,37 @@
                               HeadersVisibility="Column"
                               GridLinesVisibility="Horizontal">
                         <DataGrid.Columns>
+                            <!-- ─── عکس — چرخه هجدهم (گزارش دوازدهم): نمایش/تعویض/حذف ─── -->
+                            <DataGridTemplateColumn Header="عکس" Width="128">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                                    ToolTip="نمایش بزرگ عکس"
+                                                    Command="{Binding DataContext.ViewPhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Foreground="#1565C0" Padding="4,2">
+                                                <materialDesign:PackIcon Kind="Image" Width="18" Height="18" />
+                                            </Button>
+                                            <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                                    ToolTip="انتخاب / تعویض عکس"
+                                                    Command="{Binding DataContext.ChangePhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Foreground="#2E7D32" Padding="4,2">
+                                                <materialDesign:PackIcon Kind="ImagePlus" Width="18" Height="18" />
+                                            </Button>
+                                            <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                                    ToolTip="حذف عکس"
+                                                    Command="{Binding DataContext.DeletePhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Foreground="#C62828" Padding="4,2"
+                                                    Visibility="{Binding HasPhoto, Converter={StaticResource BoolToVisibility}}">
+                                                <materialDesign:PackIcon Kind="ImageRemove" Width="18" Height="18" />
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode}" Width="100" />
                             <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName}" Width="170" />
                             <DataGridTextColumn Header="سمت" Binding="{Binding PositionName}" Width="120" />
