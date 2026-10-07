@@ -31,6 +31,12 @@ public sealed class FakeApiClient : IApiClient
     /// <summary>پرچم آماده — آیا ورود نیازمند تغییر رمز است (الزام سرور)</summary>
     public bool FakeMustChangePassword { get; set; }
 
+    /// <summary>
+    /// آخرین جفت (نام کاربری، رمز) ارسالی به LoginAsync — چرخه هفدهم (گزارش یازدهم):
+    /// برای گارد تستیِ پاک‌سازی نویسه‌های نامرئی جهت پیش از ارسال به سرور
+    /// </summary>
+    public (string Username, string Password)? LastLoginCall { get; private set; }
+
     /// <summary>آخرین پیام خطای فارسی</summary>
     public string? LastError => FakeError;
 
@@ -133,7 +139,10 @@ public sealed class FakeApiClient : IApiClient
 
     /// <summary>ورود</summary>
     public Task<bool> LoginAsync(string usernameOrEmail, string password, CancellationToken ct = default)
-        => Task.FromResult(FakeLoginSucceeds);
+    {
+        LastLoginCall = (usernameOrEmail, password);
+        return Task.FromResult(FakeLoginSucceeds);
+    }
 
     /// <summary>خروج</summary>
     public Task LogoutAsync() => Task.CompletedTask;
