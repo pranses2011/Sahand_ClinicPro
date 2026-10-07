@@ -174,18 +174,23 @@
             <TabItem Header="💊 سوابق پزشکی">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="4,14" MaxWidth="560">
+                        <!-- چرخه هفدهم (گزارش یازدهم مالک): Mode از TwoWay به OneWay اصلاح شد —
+                             پراپرتی‌های تگ در ViewModel فقط getter دارند (ObservableCollection
+                             درجا تغییر می‌کند) و TwoWay روی پراپرتی بدون setter همان
+                             InvalidOperationException کرش باز شدن فرم بود؛ TagInputControl
+                             خودش Items را به همان مجموعه اضافه/حذف می‌کند و OneWay کافی است -->
                         <controls:TagInputControl Title="⚠️ آلرژی‌های شناخته‌شده"
                                                   Placeholder="نام آلرژی را بنویسید و Enter بزنید (مثلاً پنی‌سیلین)"
-                                                  Tags="{Binding Allergies, Mode=TwoWay}"
+                                                  Tags="{Binding Allergies, Mode=OneWay}"
                                                   TagBackground="#E53935" />
                         <controls:TagInputControl Title="🏥 بیماری‌های مزمن"
                                                   Placeholder="مثلاً: دیابت نوع ۲ — Enter برای ثبت"
-                                                  Tags="{Binding ChronicDiseases, Mode=TwoWay}"
+                                                  Tags="{Binding ChronicDiseases, Mode=OneWay}"
                                                   TagBackground="#FB8C00"
                                                   Margin="0,14,0,0" />
                         <controls:TagInputControl Title="💊 داروهای در حال مصرف"
                                                   Placeholder="مثلاً: متفورمین ۵۰۰ — Enter برای ثبت"
-                                                  Tags="{Binding CurrentMedications, Mode=TwoWay}"
+                                                  Tags="{Binding CurrentMedications, Mode=OneWay}"
                                                   TagBackground="#1E88E5"
                                                   Margin="0,14,0,0" />
                         <TextBlock Text="این موارد هنگام ویزیت و نسخه‌نویسی به‌صورت هشدار برجسته نمایش داده می‌شوند"
