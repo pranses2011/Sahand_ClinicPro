@@ -3,8 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="ثبت پرسنل"
-        Height="600" Width="460"
+        Height="640" Width="840"
+        MinHeight="560" MinWidth="640"
         FlowDirection="RightToLeft"
+        ResizeMode="CanResize"
         WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
@@ -64,50 +66,74 @@
 
             <TextBlock Text="ثبت پرسنل جدید" Style="{StaticResource SectionTitle}" />
 
-        <TextBox materialDesign:HintAssist.Hint="نام *"
-                 Text="{Binding FirstName, UpdateSourceTrigger=PropertyChanged}"
-                 Margin="0,0,0,12" />
-        <TextBox materialDesign:HintAssist.Hint="نام خانوادگی *"
-                 Text="{Binding LastName, UpdateSourceTrigger=PropertyChanged}"
-                 Margin="0,0,0,12" />
-        <!-- کد ملی با اعتبارسنجی زنده — چرخه بیستم (گزارش چهاردهم مالک):
-             هنگام تایپ، زیر فیلد با متن رنگی بازخورد داده می‌شود -->
-        <TextBox materialDesign:HintAssist.Hint="کد ملی *"
-                 Text="{Binding NationalCode, UpdateSourceTrigger=PropertyChanged}"
-                 MaxLength="10" Margin="0,0,0,2" />
-        <TextBlock Text="{Binding NationalCodeValidationText, Mode=OneWay}"
-                   Foreground="{Binding NationalCodeValidationColor, Mode=OneWay}"
-                   FontSize="10.5" Margin="2,3,2,10"
-                   Visibility="{Binding NationalCodeValidationText, Converter={StaticResource StringToVisibility}}" />
-        <TextBox materialDesign:HintAssist.Hint="موبایل *"
-                 Text="{Binding Mobile, UpdateSourceTrigger=PropertyChanged}"
-                 MaxLength="11" Margin="0,0,0,12" />
+        <!-- چرخه بیست‌ویکم (گزارش پانزدهم مالک): «صفحهٔ ثبت پرسنل را به جای
+             اسکرول کردن کمی بزرگ‌تر کن» — پنجره عریض‌تر شد و فیلدهای هویتی
+             دوستونه چیده شدند تا همهٔ محتوا بدون اسکرول در دید باشد -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <ComboBox materialDesign:HintAssist.Hint="نوع استخدام"
-                  SelectedIndex="{Binding EmploymentTypeIndex}"
-                  Margin="0,0,0,14">
-            <ComboBoxItem Content="تمام‌وقت" />
-            <ComboBoxItem Content="پاره‌وقت" />
-            <ComboBoxItem Content="قراردادی" />
-            <ComboBoxItem Content="کارآموز" />
-        </ComboBox>
+            <!-- ردیف ۱: نام (راست) + نام خانوادگی (چپ) -->
+            <TextBox Grid.Row="0" Grid.Column="0" materialDesign:HintAssist.Hint="نام *"
+                     Text="{Binding FirstName, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Grid.Row="0" Grid.Column="2" materialDesign:HintAssist.Hint="نام خانوادگی *"
+                     Text="{Binding LastName, UpdateSourceTrigger=PropertyChanged}" />
 
-        <!-- ═══ اطلاعات حقوقی — چرخه نهم: حقوق پایه + درصد از سود خدمات ═══ -->
+            <!-- ردیف ۲: کد ملی (راست) + موبایل (چپ) — کد ملی با اعتبارسنجی زنده (چرخه بیستم) -->
+            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,12,0,0">
+                <TextBox materialDesign:HintAssist.Hint="کد ملی *"
+                         Text="{Binding NationalCode, UpdateSourceTrigger=PropertyChanged}"
+                         MaxLength="10" />
+                <TextBlock Text="{Binding NationalCodeValidationText, Mode=OneWay}"
+                           Foreground="{Binding NationalCodeValidationColor, Mode=OneWay}"
+                           FontSize="10.5" Margin="2,3,2,0"
+                           Visibility="{Binding NationalCodeValidationText, Converter={StaticResource StringToVisibility}}" />
+            </StackPanel>
+            <TextBox Grid.Row="1" Grid.Column="2" Margin="0,12,0,0"
+                     materialDesign:HintAssist.Hint="موبایل *"
+                     Text="{Binding Mobile, UpdateSourceTrigger=PropertyChanged}"
+                     MaxLength="11" />
+
+            <!-- ردیف ۳: نوع استخدام (راست، نصف عرض) -->
+            <ComboBox Grid.Row="2" Grid.Column="0" Margin="0,12,0,0"
+                      materialDesign:HintAssist.Hint="نوع استخدام"
+                      SelectedIndex="{Binding EmploymentTypeIndex}">
+                <ComboBoxItem Content="تمام‌وقت" />
+                <ComboBoxItem Content="پاره‌وقت" />
+                <ComboBoxItem Content="قراردادی" />
+                <ComboBoxItem Content="کارآموز" />
+            </ComboBox>
+        </Grid>
+
+        <!-- ═══ اطلاعات حقوقی — چرخه نهم + چیدمان دوستونهٔ چرخه بیست‌ویکم ═══ -->
         <Border Background="#F5F9FF" BorderBrush="#CFE2F5" BorderThickness="1"
-                CornerRadius="8" Padding="12,10" Margin="0,0,0,4">
+                CornerRadius="8" Padding="12,10" Margin="0,14,0,4">
             <StackPanel>
                 <TextBlock Text="📄 اطلاعات حقوقی" FontSize="13" FontWeight="Bold"
                            Foreground="#16355E" Margin="0,0,0,10" />
-                <TextBox materialDesign:HintAssist.Hint="حقوق پایه (ریال) — ماهانه"
-                         Text="{Binding BaseSalary, UpdateSourceTrigger=PropertyChanged}"
-                         materialDesign:TextFieldAssist.PrefixText="﷼"
-                         Margin="0,0,0,12" />
-                <TextBox materialDesign:HintAssist.Hint="درصد حقوق از سود خدمات (٪) — فقط از سود خدمات انجامی خود این پرسنل"
-                         Text="{Binding CommissionPercent, UpdateSourceTrigger=PropertyChanged}"
-                         materialDesign:TextFieldAssist.SuffixText="٪"
-                         Margin="0,0,0,8" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="حقوق پایه (ریال) — ماهانه"
+                             Text="{Binding BaseSalary, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:TextFieldAssist.PrefixText="﷼" />
+                    <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="درصد از سود خدمات (٪)"
+                             Text="{Binding CommissionPercent, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:TextFieldAssist.SuffixText="٪" />
+                </Grid>
                 <TextBlock Text="ℹ️ حقوق درصدی از «سود» خدمت محاسبه می‌شود (مبلغ خدمت منهای هزینه آن)؛ نه از کل فروش. صفر = فقط حقوق پایه."
-                           FontSize="10.5" TextWrapping="Wrap" Foreground="#5B7290" />
+                           FontSize="10.5" TextWrapping="Wrap" Foreground="#5B7290" Margin="0,8,0,0" />
             </StackPanel>
         </Border>
 
