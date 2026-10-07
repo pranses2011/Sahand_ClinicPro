@@ -149,6 +149,89 @@
                                 <TextBlock Text="🧪 تست رمزگشایی نسخه ابری انتخاب‌شده (بدون بازیابی)" Margin="5,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
+
+                        <!-- ═══ فعال‌سازی و تنظیم پشتیبان ابری — چرخه بیستم (گزارش چهاردهم مالک):
+                             «جایی برای فعال و تنظیم کردن پشتیبان ابری نیست» ═══ -->
+                        <Expander Header="⚙️ فعال‌سازی و تنظیم پشتیبان ابری" FontSize="12.5" FontWeight="SemiBold"
+                                  Margin="0,10,0,0" IsExpanded="False">
+                            <Border Padding="12,10" CornerRadius="10" Background="#F7FAFD">
+                                <StackPanel MaxWidth="640" HorizontalAlignment="Stretch">
+                                    <TextBlock Text="ارائه‌دهندهٔ مقصد ابری:" FontSize="11.5" Margin="2,4,2,4" />
+                                    <ComboBox ItemsSource="{Binding CloudProviderOptions}"
+                                              SelectedIndex="{Binding CloudProviderIndex}"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+
+                                    <!-- فیلدهای S3 — فقط وقتی ارائه‌دهندهٔ S3 انتخاب شده -->
+                                    <StackPanel Visibility="{Binding CloudProviderIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}" Margin="0,8,0,0">
+                                        <TextBlock Text="نشانی نقطهٔ اتصال (Endpoint) — مثل s3.ir-thr-at1.arvanstorage.ir" FontSize="11" Margin="2,6,2,3" />
+                                        <TextBox Text="{Binding CloudEndpoint, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+                                        <Grid Margin="0,6,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="نام سطل (Bucket)" FontSize="11" Margin="2,4,2,3" />
+                                                <TextBox Text="{Binding CloudBucket, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="ناحیه (Region)" FontSize="11" Margin="2,4,2,3" />
+                                                <TextBox Text="{Binding CloudRegion, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+                                            </StackPanel>
+                                        </Grid>
+                                        <TextBlock Text="پیشوند کلیدها در سطل (Prefix)" FontSize="11" Margin="2,8,2,3" />
+                                        <TextBox Text="{Binding CloudPrefix, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+                                    </StackPanel>
+
+                                    <!-- پوشهٔ محلی — فقط وقتی ارائه‌دهندهٔ local انتخاب شده -->
+                                    <StackPanel Visibility="{Binding CloudProviderIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=2}" Margin="0,8,0,0">
+                                        <TextBlock Text="پوشهٔ مقصد (روی سرور — مثل D:\CloudBackups یا مسیر شبکه)" FontSize="11" Margin="2,4,2,3" />
+                                        <TextBox Text="{Binding CloudLocalFolder, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+                                    </StackPanel>
+
+                                    <!-- کلیدهای دسترسی — خالی یعنی حفظ مقدار قبلی -->
+                                    <Grid Margin="0,10,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="12" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="کلید دسترسی (Access Key)" FontSize="11" Margin="2,4,2,3" />
+                                            <TextBox Text="{Binding CloudAccessKey, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="کلید رمزی (Secret Key)" FontSize="11" Margin="2,4,2,3" />
+                                            <TextBox Text="{Binding CloudSecretKey, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock FontSize="10" Opacity="0.6" Margin="2,4,0,0" TextWrapping="Wrap"
+                                               Text="{Binding CloudHasStoredKeys, Converter={StaticResource BoolToText}, ConverterParameter=YesNo, Mode=OneWay}" />
+                                    <TextBlock Text="«بله» یعنی کلیدها از قبل ذخیره‌اند — کادرهای خالی مقدار قبلی را حفظ می‌کنند." FontSize="10" Opacity="0.55" Margin="2,2,0,6" TextWrapping="Wrap" />
+
+                                    <TextBlock Text="کلید رمزنگاری AES-256 فایل‌ها (اختیاری — برای رمزنگاری نسخه‌های ابری)" FontSize="11" Margin="2,4,2,3" />
+                                    <TextBox Text="{Binding CloudEncryptionKey, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+
+                                    <CheckBox Content="بارگذاری خودکار به ابر پس از هر پشتیبان موفق" IsChecked="{Binding CloudAutoUpload}" Margin="2,10,2,6" />
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
+                                        <Button Command="{Binding SaveCloudConfigCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="ContentSave" Width="14" Height="14" VerticalAlignment="Center" />
+                                                <TextBlock Text="ذخیرهٔ تنظیمات ابری" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding CloudTestCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="Plug" Width="14" Height="14" VerticalAlignment="Center" />
+                                                <TextBlock Text="تست اتصال" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
                     </StackPanel>
                 </materialDesign:Card>
 

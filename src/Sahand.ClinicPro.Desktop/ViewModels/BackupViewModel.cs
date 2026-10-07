@@ -63,9 +63,9 @@ public partial class BackupViewModel : ViewModelBase
     [ObservableProperty]
     private int _logHours = 1;
 
-    /// <summary>مسیر ذخیره محلی</summary>
+    /// <summary>مسیر ذخیره محلی — چرخه بیستم: رشتهٔ verbatim تک‌بک‌اسلش؛ قبلاً دوبل بود</summary>
     [ObservableProperty]
-    private string _backupPath = @"D:\\ClinicPro\\Backups";
+    private string _backupPath = @"D:\ClinicPro\Backups";
 
     /// <summary>نگهداری بکاپ کامل (روز)</summary>
     [ObservableProperty]
@@ -121,6 +121,56 @@ public partial class BackupViewModel : ViewModelBase
     [ObservableProperty]
     private bool _canVerifyCloud;
 
+    /* ─── تنظیم پشتیبان ابری — چرخه بیستم (گزارش چهاردهم مالک) ─── */
+
+    /// <summary>نمایهٔ ارائه‌دهندهٔ ابری — ۰ غیرفعال، ۱ سازگار S3، ۲ پوشهٔ محلی</summary>
+    [ObservableProperty]
+    private int _cloudProviderIndex;
+
+    /// <summary>گزینه‌های ارائه‌دهندهٔ ابری</summary>
+    public List<string> CloudProviderOptions { get; } =
+        new() { "غیرفعال", "سازگار S3 (آروان/آبرار/مین‌آیو)", "پوشهٔ محلی/شبکه" };
+
+    /// <summary>نشانی نقطهٔ اتصال S3 — مثل s3.ir-thr-at1.arvanstorage.ir</summary>
+    [ObservableProperty]
+    private string? _cloudEndpoint;
+
+    /// <summary>نام سطل</summary>
+    [ObservableProperty]
+    private string? _cloudBucket;
+
+    /// <summary>ناحیه — پیش‌فرض us-east-1</summary>
+    [ObservableProperty]
+    private string? _cloudRegion = "us-east-1";
+
+    /// <summary>پیشوند کلیدها در سطل — پیش‌فرض backups/</summary>
+    [ObservableProperty]
+    private string? _cloudPrefix = "backups/";
+
+    /// <summary>پوشهٔ محلی برای ارائه‌دهندهٔ local</summary>
+    [ObservableProperty]
+    private string? _cloudLocalFolder;
+
+    /// <summary>کلید دسترسی — خالی یعنی بدون تغییر از قبلی</summary>
+    [ObservableProperty]
+    private string? _cloudAccessKey;
+
+    /// <summary>کلید رمزی — خالی یعنی بدون تغییر</summary>
+    [ObservableProperty]
+    private string? _cloudSecretKey;
+
+    /// <summary>کلید رمزنگاری AES-256 — خالی یعنی بدون تغییر</summary>
+    [ObservableProperty]
+    private string? _cloudEncryptionKey;
+
+    /// <summary>بارگذاری خودکار پس از هر پشتیبان موفق</summary>
+    [ObservableProperty]
+    private bool _cloudAutoUpload;
+
+    /// <summary>کلید دسترسی قبلاً ذخیره شده؟ — برای راهنمای «خالی = بدون تغییر»</summary>
+    [ObservableProperty]
+    private bool _cloudHasStoredKeys;
+
     /// <summary>سازنده</summary>
     public BackupViewModel(IApiClient api, ISnackbarService snackbar)
     {
@@ -128,6 +178,7 @@ public partial class BackupViewModel : ViewModelBase
         _snackbar = snackbar;
         _ = LoadAsync();
         _ = LoadCloudStatusAsync();
+        _ = LoadCloudConfigAsync(); // تنظیمات ابری برای فرم فعال‌سازی (چرخه بیستم)
     }
 
     /// <summary>بارگذاری تاریخچه بکاپ‌ها</summary>
@@ -236,6 +287,71 @@ public partial class BackupViewModel : ViewModelBase
             : $"{bytes / 1024.0 / 1024:0.#} MB";
 
     /* ─── پشتیبان ابری — دستورات چرخه سیزدهم (درخواست ۷-۳) ─── */
+
+    /// <summary>
+    /// بارگذاری پیکربندی ابری برای فرم تنظیم — چرخه بیستم (گزارش چهاردهم مالک):
+    /// «جایی برای فعال و تنظیم کردن پشتیبان ابری نیست»
+    /// </summary>
+    [RelayCommand]
+    private async Task LoadCloudConfigAsync()
+    {
+        var response = await _api.GetAsync<CloudConfigResponse>("backup/cloud/config");
+        var d = response?.Data;
+        if (d is null) return;
+
+        CloudProviderIndex = d.Provider switch
+        {
+            "s3" or "s3compatible" or "arvan" or "abrar" => 1,
+            "local" or "folder" => 2,
+            _ => 0,
+        };
+        CloudEndpoint = d.Endpoint;
+        CloudBucket = d.Bucket;
+        CloudRegion = string.IsNullOrWhiteSpace(d.Region) ? "us-east-1" : d.Region;
+        CloudPrefix = string.IsNullOrWhiteSpace(d.Prefix) ? "backups/" : d.Prefix;
+        CloudLocalFolder = d.LocalFolder;
+        CloudHasStoredKeys = d.HasAccessKey;
+        CloudAutoUpload = d.AutoUpload;
+        // کلیدهای رمزی هرگز به کلاینت برنمی‌گردند — کادرها خالی می‌مانند
+        CloudAccessKey = null;
+        CloudSecretKey = null;
+        CloudEncryptionKey = null;
+    }
+
+    /// <summary>
+    /// ذخیرهٔ پیکربندی ابری — چرخه بیستم: کلیدهای رمزیِ خالی ارسال نمی‌شوند
+    /// تا مقدار ذخیره‌شدهٔ قبلی حفظ شود
+    /// </summary>
+    [RelayCommand]
+    private async Task SaveCloudConfigAsync()
+    {
+        IsBusy = true;
+        var ok = await _api.PutAsync("backup/cloud/config", new
+        {
+            provider = CloudProviderIndex switch { 1 => "s3", 2 => "local", _ => "" },
+            endpoint = CloudEndpoint?.Trim(),
+            bucket = CloudBucket?.Trim(),
+            region = CloudRegion?.Trim(),
+            prefix = CloudPrefix?.Trim(),
+            localFolder = CloudLocalFolder?.Trim(),
+            // null = بدون تغییر برای کلیدهای رمزی
+            accessKey = string.IsNullOrWhiteSpace(CloudAccessKey) ? null : CloudAccessKey.Trim(),
+            secretKey = string.IsNullOrWhiteSpace(CloudSecretKey) ? null : CloudSecretKey.Trim(),
+            encryptionKey = string.IsNullOrWhiteSpace(CloudEncryptionKey) ? null : CloudEncryptionKey.Trim(),
+            autoUpload = CloudAutoUpload,
+        });
+        IsBusy = false;
+        if (!ok)
+        {
+            _snackbar.Error(_api.LastError ?? "ذخیرهٔ تنظیمات ابری ناموفق بود");
+            return;
+        }
+        _snackbar.Success(CloudProviderIndex == 0
+            ? "پشتیبان ابری غیرفعال شد"
+            : "تنظیمات پشتیبان ابری ذخیره شد — با «تست اتصال» صحت آن را بررسی کنید");
+        await LoadCloudConfigAsync();
+        await LoadCloudStatusAsync();
+    }
 
     /// <summary>بارگذاری وضعیت پشتیبان ابری</summary>
     [RelayCommand]
@@ -354,6 +470,28 @@ public partial class BackupViewModel : ViewModelBase
         public string? LastFile { get; set; }
         public int Versions { get; set; }
         public long TotalSize { get; set; }
+    }
+
+    /// <summary>پاسخ پیکربندی ابری — چرخه بیستم</summary>
+    private sealed class CloudConfigResponse
+    {
+        public bool IsSuccess { get; set; }
+        public CloudConfigData? Data { get; set; }
+    }
+
+    /// <summary>دادهٔ پیکربندی ابری — کلیدها فقط به‌صورت پرچم برمی‌گردند</summary>
+    private sealed class CloudConfigData
+    {
+        public string? Provider { get; set; }
+        public string? Endpoint { get; set; }
+        public string? Bucket { get; set; }
+        public string? Region { get; set; }
+        public string? Prefix { get; set; }
+        public string? LocalFolder { get; set; }
+        public bool HasAccessKey { get; set; }
+        public bool HasSecretKey { get; set; }
+        public bool HasEncryptionKey { get; set; }
+        public bool AutoUpload { get; set; }
     }
 
     private sealed class CloudTestResponse
