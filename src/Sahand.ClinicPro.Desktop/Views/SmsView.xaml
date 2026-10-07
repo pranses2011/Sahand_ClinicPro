@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.SmsView"
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.SmsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -30,7 +30,7 @@
             <!-- ─── تب ۱: ارسال پیامک ─── -->
             <TabItem Header="📤 ارسال">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4">
-                    <StackPanel Margin="8,12" MaxWidth="720" HorizontalAlignment="Right">
+                    <StackPanel Margin="8,12" MaxWidth="720" HorizontalAlignment="Stretch">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                             <RadioButton Content="ارسال تکی" IsChecked="{Binding IsBulk, Converter={StaticResource InvertBool}, Mode=OneWay}"
                                          GroupName="SendType" Margin="0,0,16,0" />
@@ -88,7 +88,7 @@
                                 Visibility="{Binding IsBulk, Converter={StaticResource BoolToVisibility}}"
                                 HorizontalAlignment="Left">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="SendMultiple" Width="15" Height="15" VerticalAlignment="Center" />
+                                <materialDesign:PackIcon Kind="CommentMultiple" Width="15" Height="15" VerticalAlignment="Center" />
                                 <TextBlock Text="📤 ارسال دسته‌ای" Margin="7,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>

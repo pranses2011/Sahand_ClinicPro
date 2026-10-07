@@ -17,7 +17,7 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <materialDesign:PackIcon Kind="DatabaseBackup" Width="26" Height="26"
+            <materialDesign:PackIcon Kind="DatabaseSync" Width="26" Height="26"
                                      Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
             <TextBlock Text="بکاپ و بازیابی" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
@@ -26,7 +26,7 @@
                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
 
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="4">
-            <StackPanel Margin="4,4" MaxWidth="960" HorizontalAlignment="Right">
+            <StackPanel Margin="4,4" MaxWidth="1200" HorizontalAlignment="Stretch">
 
                 <!-- ─── وضعیت بکاپ ─── -->
                 <materialDesign:Card Padding="18" Margin="2,4" UniformCornerRadius="14">
@@ -156,7 +156,7 @@
                 <!-- ─── تنظیمات بکاپ خودکار ─── -->
                 <Expander Header="⚙️ تنظیمات بکاپ خودکار" FontSize="14" FontWeight="SemiBold" Margin="2,14,2,0">
                     <Border Padding="12,8" CornerRadius="10" Background="#F7FAFD">
-                        <StackPanel MaxWidth="620" HorizontalAlignment="Right">
+                        <StackPanel MaxWidth="620" HorizontalAlignment="Stretch">
                             <CheckBox Content="بکاپ کامل روزانه در ساعت:" IsChecked="{Binding DailyFullEnabled}" Margin="2,6" />
                             <TextBox Text="{Binding DailyFullTime}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="Consolas" />

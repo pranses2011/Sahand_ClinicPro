@@ -26,7 +26,7 @@
 
         <StackPanel Grid.Row="0" Margin="0,0,0,10">
             <StackPanel Orientation="Horizontal">
-                <materialDesign:PackIcon Kind="Reception"
+                <materialDesign:PackIcon Kind="ClipboardAccount"
                                          Width="26" Height="26"
                                          Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
                                          VerticalAlignment="Center" />

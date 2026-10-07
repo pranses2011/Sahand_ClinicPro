@@ -61,9 +61,9 @@
                     <Border Grid.Row="1" CornerRadius="12" BorderBrush="#90CAF9" BorderThickness="1.2"
                             Background="#F5FAFF" Padding="14" Margin="0,0,0,10"
                             Visibility="{Binding IsFormOpen, Converter={StaticResource BoolToVisibility}}">
-                        <StackPanel MaxWidth="760" HorizontalAlignment="Right">
+                        <StackPanel MaxWidth="760" HorizontalAlignment="Stretch">
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                <materialDesign:PackIcon Kind="ContentEdit" Width="20" Height="20" Foreground="#1565C0" VerticalAlignment="Center" />
+                                <materialDesign:PackIcon Kind="PlaylistEdit" Width="20" Height="20" Foreground="#1565C0" VerticalAlignment="Center" />
                                 <TextBlock FontSize="14.5" FontWeight="Bold" Foreground="#1565C0" VerticalAlignment="Center" Margin="8,0,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">

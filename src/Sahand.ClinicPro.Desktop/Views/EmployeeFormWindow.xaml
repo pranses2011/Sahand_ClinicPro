@@ -31,7 +31,7 @@
                                               Command="{Binding ViewPhotoCommand}" />
                             </Border.InputBindings>
                             <Grid>
-                                <materialDesign:PackIcon Kind="AccountLarge"
+                                <materialDesign:PackIcon Kind="AccountCircle"
                                                          Width="44" Height="44"
                                                          Foreground="#64B5F6"
                                                          HorizontalAlignment="Center"

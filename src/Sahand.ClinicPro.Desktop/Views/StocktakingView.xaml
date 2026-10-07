@@ -131,7 +131,7 @@
                                             <TextBlock Text="{Binding Date}" FontSize="10.5" Opacity="0.7" Margin="4,0,0,0" />
                                             <materialDesign:PackIcon Kind="Counter" Width="12" Height="12" Opacity="0.6" Margin="10,0,0,0" VerticalAlignment="Center" />
                                             <TextBlock Text="{Binding Progress}" FontSize="10.5" Opacity="0.7" Margin="4,0,0,0" FontFamily="Consolas" />
-                                            <materialDesign:PackIcon Kind="ChartDifference" Width="12" Height="12" Opacity="0.6" Margin="10,0,0,0" VerticalAlignment="Center" />
+                                            <materialDesign:PackIcon Kind="CompareHorizontal" Width="12" Height="12" Opacity="0.6" Margin="10,0,0,0" VerticalAlignment="Center" />
                                             <TextBlock Text="{Binding Diffs}" FontSize="10.5" Opacity="0.7" Margin="4,0,0,0" FontFamily="Consolas" />
                                         </StackPanel>
                                     </StackPanel>
