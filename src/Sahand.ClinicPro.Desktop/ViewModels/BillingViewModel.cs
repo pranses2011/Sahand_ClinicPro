@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
 using Sahand.ClinicPro.Desktop.Views;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -138,7 +139,7 @@ public partial class BillingViewModel : ViewModelBase
     /// <summary>قالب‌بندی فشرده مبالغ — ۳.۸M</summary>
     private static string Format(decimal v) => v >= 1_000_000
         ? $"{v / 1_000_000:0.##}M"
-        : v >= 1_000 ? $"{v / 1_000:0.#}K" : v.ToString("N0");
+        : v >= 1_000 ? $"{v / 1_000:0.#}K" : Money.Format(v);
 
     /// <summary>نگاشت ردیف فاکتور</summary>
     private static InvoiceRow MapInvoice(InvoiceDto i)
@@ -347,11 +348,11 @@ public partial class InvoiceFormViewModel : ObservableObject
     public decimal Remaining => Math.Max(0, Payable - ReceivedAmount);
 
     /// <summary>متن‌های نمایشی</summary>
-    public string GrossTotalText => GrossTotal.ToString("N0");
-    public string InsuranceShareText => InsuranceShare.ToString("N0");
-    public string TaxText => TaxAmount.ToString("N0");
-    public string PayableText => Payable.ToString("N0");
-    public string RemainingText => Remaining.ToString("N0");
+    public string GrossTotalText => Money.Format(GrossTotal);
+    public string InsuranceShareText => Money.Format(InsuranceShare);
+    public string TaxText => Money.Format(TaxAmount);
+    public string PayableText => Money.Format(Payable);
+    public string RemainingText => Money.Format(Remaining);
 
     /// <summary>در حال ثبت</summary>
     [ObservableProperty]

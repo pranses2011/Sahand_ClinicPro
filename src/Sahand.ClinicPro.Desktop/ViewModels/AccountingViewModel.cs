@@ -1,8 +1,9 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -15,7 +16,7 @@ public partial class AccountNodeVM : ObservableObject
     public int Level { get; init; }
     public bool IsDetail { get; init; }
     public decimal Balance { get; init; }
-    public string BalanceText => Balance.ToString("N0");
+    public string BalanceText => Money.Format(Balance);
     public string Icon => IsDetail ? "📄" : "📁";
     public ObservableCollection<AccountNodeVM> Children { get; } = new();
     public string Display => $"{Icon} {Code} — {Name} {(Balance != 0 ? $"(مانده: {BalanceText})" : "")}";

@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Controls.Charts;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -355,7 +356,7 @@ public partial class AdhocReportViewModel : ViewModelBase
                 foreach (var prop in data.Summary.Value.EnumerateObject())
                 {
                     var value = prop.Value.ValueKind == JsonValueKind.Number
-                        ? ((double)prop.Value.GetDouble()).ToString("N0")
+                        ? Money.Format((decimal)prop.Value.GetDouble())
                         : prop.Value.GetString() ?? "—";
                     SummaryCards.Add(new ReportSummaryCard(prop.Name, value, "#1E88E5"));
                 }
@@ -369,7 +370,7 @@ public partial class AdhocReportViewModel : ViewModelBase
                 {
                     var cells = row.Select(c => c.ValueKind switch
                     {
-                        JsonValueKind.Number => c.TryGetInt64(out var l) ? l.ToString("N0") : c.GetDouble().ToString("N0"),
+                        JsonValueKind.Number => c.TryGetInt64(out var l) ? Money.Format(l) : Money.Format((decimal)c.GetDouble()),
                         JsonValueKind.String => c.GetString() ?? "—",
                         _ => c.ToString(),
                     }).ToList();
@@ -394,7 +395,7 @@ public partial class AdhocReportViewModel : ViewModelBase
                         pts.Add(new ChartPointData(label, value, $"{label}: {value:N0} {ChartUnit}"));
                     }
                 ChartPoints = pts;
-                ChartCenterText = pts.Count > 0 ? ((decimal)pts.Sum(x => x.Value)).ToString("N0") : "";
+                ChartCenterText = pts.Count > 0 ? Money.Format((decimal)pts.Sum(x => x.Value)) : "";
             }
 
             _snackbar.Success($"گزارش اجرا شد — {Rows.Count} ردیف");

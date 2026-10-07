@@ -1,8 +1,9 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -140,9 +141,9 @@ public partial class StocktakingViewModel : ViewModelBase
             foreach (var i in d.Items ?? new())
                 Items.Add(new StockItemRow(
                     i.ItemId, i.MedicationName, i.BatchNumber,
-                    i.SystemQuantity.ToString("N0"), i.CountedQuantity.ToString("N0"),
+                    Money.Format(i.SystemQuantity), Money.Format(i.CountedQuantity),
                     i.Difference, i.IsCounted,
-                    !i.IsCounted ? "شمارش نشده" : (i.Difference == 0 ? "برابر" : (i.Difference > 0 ? "+" : "") + i.Difference.ToString("N0")),
+                    !i.IsCounted ? "شمارش نشده" : (i.Difference == 0 ? "برابر" : (i.Difference > 0 ? "+" : "") + Money.Format(i.Difference)),
                     !i.IsCounted ? "#9E9E9E" : (i.Difference == 0 ? "#43A047" : (i.Difference > 0 ? "#1E88E5" : "#E53935")),
                     i.Notes));
             ApplyFilter();

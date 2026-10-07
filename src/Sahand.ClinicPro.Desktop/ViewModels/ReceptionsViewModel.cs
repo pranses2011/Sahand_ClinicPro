@@ -1,7 +1,8 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -96,13 +97,13 @@ public partial class ReceptionsViewModel : ViewModelBase
     private decimal _coveragePercent;
 
     /// <summary>نمایش حق ویزیت</summary>
-    public string FeeDisplay => VisitFee.ToString("N0");
+    public string FeeDisplay => Money.Format(VisitFee);
 
     /// <summary>نمایش سهم بیمه</summary>
-    public string InsuranceShareDisplay => InsuranceShare.ToString("N0");
+    public string InsuranceShareDisplay => Money.Format(InsuranceShare);
 
     /// <summary>نمایش سهم بیمار — درشت و قرمز</summary>
-    public string PatientShareDisplay => PatientShare.ToString("N0");
+    public string PatientShareDisplay => Money.Format(PatientShare);
 
     /// <summary>پس‌زمینه ردیف صف</summary>
     public string[] QueueColors { get; } = { "#FFFFFF", "#FFF8E1", "#E3F2FD", "#E8F5E9", "#ECEFF1", "#FFEBEE" };
@@ -155,7 +156,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             TodayRevenue = stats.Data.TodayRevenue;
             TodayRevenueDisplay = TodayRevenue >= 1_000_000
                 ? $"{TodayRevenue / 1_000_000:0.#}M"
-                : TodayRevenue.ToString("N0");
+                : Money.Format(TodayRevenue);
         }
 
         var response = await _api.GetAsync<ReceptionsResponse>("receptions/today");

@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Desktop.Controls.Charts;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -180,7 +181,7 @@ public partial class CommissionReportViewModel : ViewModelBase
                     (double)s.ServiceCommission,
                     $"{s.FullName}: {s.ServiceCommission:N0} ریال (درصد {s.CommissionPercentText})"))
                 .ToList();
-            CommissionChartCenter = TotalCommission.ToString("#,0");
+            CommissionChartCenter = Money.Format(TotalCommission);
 
             _allDetails = (data.Details ?? new List<DetailDto>()).Select(d => new DetailRow(
                 d.EmployeeId, d.EmployeeName, d.InvoiceNumber, d.InvoiceDateShamsi,
@@ -277,19 +278,19 @@ public partial class CommissionReportViewModel : ViewModelBase
         string SalaryStatusText)
     {
         /// <summary>جمع فروش — نمایش هزارگان</summary>
-        public string TotalRevenueText => TotalRevenue.ToString("#,0");
+        public string TotalRevenueText => Money.Format(TotalRevenue);
 
         /// <summary>جمع هزینه — نمایش هزارگان</summary>
-        public string TotalCostText => TotalCost.ToString("#,0");
+        public string TotalCostText => Money.Format(TotalCost);
 
         /// <summary>سود خدمات — نمایش هزارگان</summary>
-        public string TotalProfitText => TotalProfit.ToString("#,0");
+        public string TotalProfitText => Money.Format(TotalProfit);
 
         /// <summary>مبنای حقوق درصدی — نمایش هزارگان</summary>
-        public string CommissionBaseText => CommissionBase.ToString("#,0");
+        public string CommissionBaseText => Money.Format(CommissionBase);
 
         /// <summary>حقوق درصدی — نمایش هزارگان</summary>
-        public string ServiceCommissionText => ServiceCommission.ToString("#,0");
+        public string ServiceCommissionText => Money.Format(ServiceCommission);
 
         /// <summary>درصد — نمایش بدون اعشار زائد</summary>
         public string CommissionPercentText => CommissionPercent.ToString("0.##");
@@ -306,16 +307,16 @@ public partial class CommissionReportViewModel : ViewModelBase
         string Attribution)
     {
         /// <summary>مبلغ قلم — نمایش هزارگان</summary>
-        public string TotalPriceText => TotalPrice.ToString("#,0");
+        public string TotalPriceText => Money.Format(TotalPrice);
 
         /// <summary>سود قلم — نمایش هزارگان</summary>
-        public string ProfitText => Profit.ToString("#,0");
+        public string ProfitText => Money.Format(Profit);
 
         /// <summary>قیمت واحد — نمایش هزارگان</summary>
-        public string UnitPriceText => UnitPrice.ToString("#,0");
+        public string UnitPriceText => Money.Format(UnitPrice);
 
         /// <summary>هزینه واحد — نمایش هزارگان</summary>
-        public string UnitCostText => UnitCost.ToString("#,0");
+        public string UnitCostText => Money.Format(UnitCost);
     }
 
     // ── مدل‌های پاسخ API ──

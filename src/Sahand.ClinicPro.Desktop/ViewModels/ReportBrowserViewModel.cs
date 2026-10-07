@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Sahand.ClinicPro.Desktop.Controls.Charts;
 using Sahand.ClinicPro.Desktop.Services;
 using Sahand.ClinicPro.Desktop.Views;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -311,7 +312,7 @@ public partial class ReportBrowserViewModel : ViewModelBase
                         var text = cell.Value.ValueKind switch
                         {
                             JsonValueKind.Number => cell.Value.TryGetInt64(out var l)
-                                ? l.ToString("N0")
+                                ? Money.Format(l)
                                 : FormatNumber(cell.Value.GetDecimal()),
                             JsonValueKind.String => cell.Value.GetString() ?? "—",
                             _ => cell.Value.ToString()
@@ -343,7 +344,7 @@ public partial class ReportBrowserViewModel : ViewModelBase
                     }
                 }
                 ChartPoints = pts;
-                ChartCenterText = pts.Count > 0 ? ((decimal)pts.Sum(x => x.Value)).ToString("N0") : "";
+                ChartCenterText = pts.Count > 0 ? Money.Format((decimal)pts.Sum(x => x.Value)) : "";
             }
 
             if (data.Available)
@@ -422,7 +423,7 @@ public partial class ReportBrowserViewModel : ViewModelBase
 
     /// <summary>قالب‌بندی عدد با جداکننده</summary>
     private static string FormatNumber(decimal value)
-        => value == Math.Truncate(value) ? ((long)value).ToString("N0") : value.ToString("N2");
+        => value == Math.Truncate(value) ? Money.Format(value) : value.ToString("N2");
 
     /* ─── پاسخ‌ها ─── */
 

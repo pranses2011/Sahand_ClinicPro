@@ -1,9 +1,10 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
 using Sahand.ClinicPro.Desktop.Views;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -104,7 +105,7 @@ public partial class DoctorsViewModel : ViewModelBase
         d.Id, d.MedicalLicenseNo,
         d.FullName,
         d.SpecialtyName, d.SubSpecialtyName,
-        d.ConsultationFee, d.ConsultationFee.ToString("N0"),
+        d.ConsultationFee, Money.Format(d.ConsultationFee),
         d.VisitDuration, d.DoctorPercentage,
         d.IsActive, d.Rating,
         d.Rating > 0 ? $"{d.Rating:0.0} ★" : "—",
@@ -437,7 +438,7 @@ public partial class DoctorFormViewModel : ObservableObject
             SubSpecialtyId = d.SubSpecialtyId;
             AcademicRank = d.AcademicRank;
             Biography = d.Biography;
-            ConsultationFeeText = d.ConsultationFee.ToString("N0");
+            ConsultationFeeText = Money.Format(d.ConsultationFee);
             VisitDuration = d.VisitDuration;
             MaxPatientsPerShift = d.MaxPatientsPerShift;
             DoctorPercentage = d.DoctorPercentage;

@@ -1,8 +1,9 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -380,11 +381,11 @@ public partial class SurveyViewModel : ViewModelBase
             }
 
             // کارت‌های خلاصه
-            TotalResponsesText = data.Summary.TotalResponses.ToString("N0");
+            TotalResponsesText = Money.Format(data.Summary.TotalResponses);
             AverageText = data.Summary.AverageRating > 0
                 ? data.Summary.AverageRating.ToString("0.##") + " از ۵"
                 : "—";
-            Last30Text = data.Summary.ResponsesLast30Days.ToString("N0");
+            Last30Text = Money.Format(data.Summary.ResponsesLast30Days);
 
             // توزیع ستاره‌ها — نوار افقی درصدی
             var maxStar = Math.Max(1, data.StarDistribution.Max(s => s.Count));

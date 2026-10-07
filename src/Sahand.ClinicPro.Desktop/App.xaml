@@ -84,6 +84,8 @@
             <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
             <converters:SectionToVisibilityConverter x:Key="SectionToVisibility" />
             <converters:CurrencyRialConverter x:Key="CurrencyRial" />
+            <!-- چرخه بیستم: مبدل ریال ↔ نمایش برای کادرهای ورود مبلغ -->
+            <converters:MoneyRialConverter x:Key="MoneyRial" />
             <!-- چرخه بیستم: مبلغ با واحد پول نمایشی — ریال/تومان از تنظیمات -->
             <converters:MoneyWithUnitConverter x:Key="MoneyWithUnit" />
 

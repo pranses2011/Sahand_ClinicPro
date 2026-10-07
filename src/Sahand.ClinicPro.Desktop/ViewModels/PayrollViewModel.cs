@@ -1,9 +1,10 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -219,7 +220,7 @@ public partial class PayrollViewModel : ViewModelBase
     }
 
     /// <summary>قالب‌بندی ریال با جداکننده هزارگان</summary>
-    private static string FormatRial(decimal amount) => amount.ToString("#,0");
+    private static string FormatRial(decimal amount) => Money.Format(amount);
 
     /// <summary>متن وضعیت</summary>
     private static string StatusText(int status) => status switch

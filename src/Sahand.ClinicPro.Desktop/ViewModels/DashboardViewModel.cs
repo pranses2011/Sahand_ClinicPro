@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Desktop.Controls.Charts;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -323,7 +324,7 @@ public partial class DashboardViewModel : ViewModelBase
             WaitingCount = Math.Max(0, TodayPatients - TodayVisits);
             var revenue = stats.TryGetProperty("todayRevenue", out var rev) && rev.ValueKind != JsonValueKind.Null
                 ? rev.GetDecimal() : 0;
-            TodayRevenueText = revenue.ToString("N0");
+            TodayRevenueText = Money.Format(revenue);
             ConnectionStatus = "آمار به‌روز شد";
         }
 
