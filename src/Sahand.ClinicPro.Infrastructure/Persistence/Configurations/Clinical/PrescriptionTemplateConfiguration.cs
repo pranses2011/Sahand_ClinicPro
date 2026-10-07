@@ -14,7 +14,11 @@ public class PrescriptionTemplateConfiguration : IEntityTypeConfiguration<Prescr
 
         builder.Property(x => x.TemplateName).HasMaxLength(100).IsRequired().HasComment("نام قالب");
         builder.Property(x => x.Category).HasMaxLength(200).HasComment("دسته قالب");
-        builder.Property(x => x.Items).HasMaxLength(200).HasComment("اقلام قالب - JSON");
+        // چرخه بیستم (گزارش چهاردهم مالک): ستون Items پیش‌تر nvarchar(200) بود و
+        // JSON اقلام نسخه (نام دارو + دوز + مصرف + مدت + …) به‌راحتی از ۲۰۰ نویسه
+        // عبور می‌کرد → خطای «رشته یا دادهٔ باینری قطع می‌شود» و پیام «خطای غیرمنتظره
+        // در سرور» هنگام «ذخیره به‌عنوان تمپلیت». ستون به nvarchar(max) ارتقا یافت.
+        builder.Property(x => x.Items).HasColumnType("nvarchar(max)").HasComment("اقلام قالب - JSON");
 
     }
 }

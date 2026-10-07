@@ -2663,8 +2663,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Items")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
+                        .HasColumnType("nvarchar(max)")
                         .HasComment("اقلام قالب - JSON");
 
                     b.Property<byte[]>("RowVersion")

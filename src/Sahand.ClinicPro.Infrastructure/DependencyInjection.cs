@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
@@ -133,12 +134,41 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// اجرای بذرها پس از راه‌اندازی — خطاها ثبت می‌شوند اما برنامه را متوقف نمی‌کنند
+    /// اجرای مهاجرت‌های معلق + بذرها پس از راه‌اندازی — خطاها ثبت می‌شوند اما برنامه را متوقف نمی‌کنند.
+    /// چرخه بیستم (گزارش چهاردهم مالک): پیش‌تر مهاجرت‌ها فقط با دستور «dotnet ef database
+    /// update» روی سرور اعمال می‌شدند؛ مالک فقط فایل‌های تغییرکرده را جایگزین می‌کند و
+    /// ابزار توسعه در اختیار ندارد. اکنون مهاجرت‌های معلق در همان راه‌اندازی سرور
+    /// به‌صورت خودکار اعمال می‌شوند تا ارتقای بستهٔ آپدیت بدون گام دستی ممکن باشد.
     /// </summary>
     public static async Task InitializeDatabaseAsync(this IServiceProvider serviceProvider)
     {
         try
         {
+            // ۱) اعمال مهاجرت‌های معلق — idempotent؛ اگر دیتابیس به‌روز باشد بی‌اثر است
+            using (var scope = serviceProvider.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<Persistence.ClinicProDbContext>();
+                var logger = scope.ServiceProvider
+                    .GetRequiredService<ILogger<Microsoft.Extensions.DependencyInjection.ServiceProvider>>();
+                try
+                {
+                    if (db.Database.GetPendingMigrations().Any())
+                    {
+                        logger.LogInformation(
+                            "اعمال {Count} مهاجرت معلق دیتابیس در راه‌اندازی…",
+                            db.Database.GetPendingMigrations().Count());
+                        await db.Database.MigrateAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // خطای مهاجرت جلوی اجرای سرویس را نمی‌گیرد — لاگ و ادامه
+                    // (مثلاً سرور در حال اجرا با اتصال موقتاً قطع‌شده)
+                    logger.LogError(ex, "اعمال مهاجرت‌های دیتابیس در راه‌اندازی ناموفق بود");
+                }
+            }
+
+            // ۲) اجرای بذرها
             await DataSeederRunner.RunAllAsync(serviceProvider);
         }
         catch
