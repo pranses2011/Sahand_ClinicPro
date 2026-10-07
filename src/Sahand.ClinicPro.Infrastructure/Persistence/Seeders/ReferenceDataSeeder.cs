@@ -188,7 +188,7 @@ public class ReferenceDataSeeder : IDataSeeder
         };
 
         var added = 0;
-        foreach (var row in DrugInteractionSeedData.Rows)
+        foreach (var row in DrugInteractionSeedData.AllInteractions)
         {
             // نام کلاسی مثل NSAID یا ACEI به همه اعضای مرتبط نگاشت می‌شود (فقط سرفصل هشدار)
             var firstIds = ResolveMedicationIds(medIds, row.Medication1Generic);

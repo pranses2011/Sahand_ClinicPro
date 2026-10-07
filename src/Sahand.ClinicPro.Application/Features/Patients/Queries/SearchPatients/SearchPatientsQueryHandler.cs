@@ -23,7 +23,13 @@ public class SearchPatientsQueryHandler : IRequestHandler<SearchPatientsQuery, R
         _mapper = mapper;
     }
 
-    /// <summary>اجرای جستجوی سریع</summary>
+    /// <summary>
+    /// اجرای جستجوی سریع.
+    /// چرخه بیست‌ویکم (گزارش پانزدهم مالک — به پیروی از قانون «رفع مورد مشابه
+    /// در جاهای دیگر برنامه»): نام‌های فارسی گاهی با نیم‌فاصله ذخیره می‌شوند و
+    /// جستجو با فاصله آنها را نمی‌یافت؛ مقایسهٔ فشرده (حذف فاصله/نیم‌فاصله از
+    /// هر دو طرف) به نام/نام‌خانوادگی اضافه شد تا «محمد رضا» ≡ «محمدرضا».
+    /// </summary>
     public async Task<Result<List<PatientListDto>>> Handle(SearchPatientsQuery request,
         CancellationToken cancellationToken)
     {
@@ -31,6 +37,9 @@ public class SearchPatientsQueryHandler : IRequestHandler<SearchPatientsQuery, R
             return Result<List<PatientListDto>>.Success(new List<PatientListDto>());
 
         var term = request.SearchTerm.Trim();
+        // نسخهٔ فشردهٔ عبارت — بدون فاصله/نیم‌فاصله برای مقایسهٔ مستقل از نیم‌فاصله
+        var compactTerm = term
+            .Replace(" ", "").Replace("\u200C", "").Replace("\u200F", "").Replace("\u00A0", "");
 
         var patients = await _unitOfWork.Repository<Patient>()
             .QueryableNoTracking
@@ -38,7 +47,10 @@ public class SearchPatientsQueryHandler : IRequestHandler<SearchPatientsQuery, R
                         || p.LastName.Contains(term)
                         || p.NationalCode.Contains(term)
                         || p.Mobile.Contains(term)
-                        || p.MedicalRecordNo.Contains(term))
+                        || p.MedicalRecordNo.Contains(term)
+                        // مقایسهٔ فشردهٔ نام — چرخه بیست‌ویکم (فاصله/نیم‌فاصله نادیده)
+                        || p.FirstName.Replace(" ", "").Replace("\u200C", "").Replace("\u200F", "").Replace("\u00A0", "").Contains(compactTerm)
+                        || p.LastName.Replace(" ", "").Replace("\u200C", "").Replace("\u200F", "").Replace("\u00A0", "").Contains(compactTerm))
             .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
             .Take(request.MaxResults)
             .ToListAsync(cancellationToken);

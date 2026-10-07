@@ -144,7 +144,9 @@ public static partial class MedicationSeedData
     };
 
     /// <summary>
-    /// کل ردیف‌ها — سری اصلی + مکمل چرخه بیستم؛ بذر از همین می‌خواند
+    /// همهٔ ردیف‌های بذر — سری اصلی + مکمل چرخه بیستم + مکمل دوم چرخه بیست‌ویکم
+    /// (گزارش پانزدهم مالک: «فهرست داروها را کامل کن»)؛ بذر از همین می‌خواند.
     /// </summary>
-    public static IEnumerable<MedicationRow> AllRows => Rows.Concat(SupplementRows);
+    public static IEnumerable<MedicationRow> AllRows
+        => Rows.Concat(SupplementRows).Concat(Supplement2Rows);
 }
