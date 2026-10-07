@@ -130,6 +130,12 @@ public static class DependencyInjection
         // سرویس آرشیو سالانه — چرخه سیزدهم (درخواست ۷-۷)
         services.AddScoped<Services.Archive.ArchiveService>();
 
+        // ═══ کارگر پشتیبان‌گیری خودکار — چرخه بیست‌ویکم (گزارش پانزدهم مالک) ═══
+        // «بکاپ خودکار انجام نمی‌شود» — هیچ کارگر پس‌زمینه‌ای وجود نداشت؛
+        // این HostedService بر اساس تنظیمات (SystemSettings دستهٔ Backup) هر روز
+        // در ساعت مقرر BACKUP DATABASE واقعی می‌گیرد و پوشهٔ مقصد را در نبود می‌سازد.
+        services.AddHostedService<Services.Backup.AutomaticBackupWorker>();
+
         return services;
     }
 

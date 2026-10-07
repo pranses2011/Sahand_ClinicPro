@@ -358,7 +358,7 @@ public partial class LicenseStatusViewModel : ViewModelBase
         ["Pharmacy"] = "داروخانه", ["Sms"] = "پیامک", ["Imaging"] = "تصویربرداری",
         ["Dental"] = "دندانپزشکی", ["Eye"] = "چشم‌پزشکی", ["Physiotherapy"] = "فیزیوتراپی",
         ["Attendance"] = "حضور و غیاب", ["HR"] = "پرسنل", ["Reports"] = "گزارش‌ها",
-        ["Government"] = "سامانه‌های دولتی", ["Settings"] = "تنظیمات", ["Backup"] = "بکاپ",
+        ["Government"] = "سامانه‌های دولتی", ["Settings"] = "تنظیمات", ["Backup"] = "پشتیبان‌گیری",
         ["Audit"] = "لاگ عملیات", ["Users"] = "کاربران",
         // ── ماژول‌های افزودنی نسخه ۱.۶.۰ — هماهنگ با کاتالوگ سرور لایسنس ──
         ["Survey"] = "نظرسنجی بیماران", ["Payroll"] = "فیش حقوقی",
@@ -368,7 +368,7 @@ public partial class LicenseStatusViewModel : ViewModelBase
         ["ClinicalSafety"] = "ایمنی دارویی و تشخیصی", ["PrintTemplates"] = "طراح قالب چاپ سفارشی",
         ["InsuranceSettlement"] = "تسویه حساب بیمه", ["ShiftCash"] = "صندوق و تحویل شیفت",
         ["Waitlist"] = "لیست انتظار نوبت", ["AdhocReports"] = "گزارش‌ساز رایگانه",
-        ["CloudBackup"] = "بکاپ ابری", ["Archive"] = "آرشیو سالانه",
+        ["CloudBackup"] = "پشتیبان ابری", ["Archive"] = "آرشیو سالانه",
         ["Training"] = "مرکز آموزش تعاملی",
     };
 

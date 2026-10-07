@@ -5,13 +5,14 @@ using Sahand.ClinicPro.Desktop.Services;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
-/// <summary>ردیف تاریخچه بکاپ — فرم ۲۹</summary>
+/// <summary>ردیف تاریخچه پشتیبان — فرم ۲۹</summary>
 public record BackupHistoryRow(long Id, string TypeText, string StatusText, string StatusColor,
-    string DateText, string SizeText, string? FilePath, bool IsAutomatic);
+    string DateText, string SizeText, string? FilePath, bool IsAutomatic,
+    string CompletedText, string StorageText, string? CloudFileName, string? ErrorMessage);
 
 /// <summary>
-/// ViewModel بکاپ و بازیابی — گام U15 طبق فرم ۲۹:
-/// وضعیت + تاریخچه + بکاپ فوری + تنظیمات خودکار سه‌سطحی + بازیابی
+/// ViewModel پشتیبان‌گیری و بازیابی — گام U15 طبق فرم ۲۹:
+/// وضعیت + تاریخچه + پشتیبان‌گیری فوری + تنظیمات خودکار + بازیابی
 /// </summary>
 public partial class BackupViewModel : ViewModelBase
 {
@@ -19,55 +20,55 @@ public partial class BackupViewModel : ViewModelBase
     private readonly ISnackbarService _snackbar;
 
     /// <summary>عنوان صفحه</summary>
-    public override string Title => "بکاپ و بازیابی";
+    public override string Title => "پشتیبان‌گیری و بازیابی";
 
-    /// <summary>تاریخچه بکاپ‌ها</summary>
+    /// <summary>تاریخچه پشتیبان‌ها</summary>
     [ObservableProperty]
     private ObservableCollection<BackupHistoryRow> _history = new();
 
-    /// <summary>متن وضعیت آخرین بکاپ کامل</summary>
+    /// <summary>متن وضعیت آخرین پشتیبان کامل</summary>
     [ObservableProperty]
     private string _lastFullText = "—";
 
-    /// <summary>متن وضعیت آخرین بکاپ لگ</summary>
+    /// <summary>متن وضعیت آخرین پشتیبان لگ</summary>
     [ObservableProperty]
     private string _lastLogText = "—";
 
-    /// <summary>بکاپ انتخاب‌شده</summary>
+    /// <summary>پشتیبان انتخاب‌شده</summary>
     [ObservableProperty]
     private BackupHistoryRow? _selectedBackup;
 
-    /* ─── تنظیمات بکاپ خودکار ─── */
+    /* ─── تنظیمات پشتیبان‌گیری خودکار ─── */
 
-    /// <summary>بکاپ کامل روزانه فعال</summary>
+    /// <summary>پشتیبان کامل روزانه فعال</summary>
     [ObservableProperty]
     private bool _dailyFullEnabled = true;
 
-    /// <summary>ساعت بکاپ کامل</summary>
+    /// <summary>ساعت پشتیبان کامل</summary>
     [ObservableProperty]
     private string _dailyFullTime = "03:00";
 
-    /// <summary>بکاپ تفاضلی فعال — هر چند ساعت</summary>
+    /// <summary>پشتیبان تفاضلی فعال — هر چند ساعت</summary>
     [ObservableProperty]
     private bool _diffEnabled = true;
 
-    /// <summary>فاصله بکاپ تفاضلی (ساعت)</summary>
+    /// <summary>فاصلهٔ پشتیبان تفاضلی (ساعت)</summary>
     [ObservableProperty]
     private int _diffHours = 6;
 
-    /// <summary>بکاپ لگ تراکنش فعال</summary>
+    /// <summary>پشتیبان لگ تراکنش فعال</summary>
     [ObservableProperty]
     private bool _logEnabled = true;
 
-    /// <summary>فاصله بکاپ لگ (ساعت)</summary>
+    /// <summary>فاصلهٔ پشتیبان لگ (ساعت)</summary>
     [ObservableProperty]
     private int _logHours = 1;
 
-    /// <summary>مسیر ذخیره محلی — چرخه بیستم: رشتهٔ verbatim تک‌بک‌اسلش؛ قبلاً دوبل بود</summary>
+    /// <summary>مسیر ذخیرهٔ محلی پشتیبان‌ها — چرخه بیستم: رشتهٔ verbatim تک‌بک‌اسلش؛ قبلاً دوبل بود</summary>
     [ObservableProperty]
     private string _backupPath = @"D:\ClinicPro\Backups";
 
-    /// <summary>نگهداری بکاپ کامل (روز)</summary>
+    /// <summary>نگهداری پشتیبان کامل (روز)</summary>
     [ObservableProperty]
     private int _keepFullDays = 30;
 
@@ -79,7 +80,7 @@ public partial class BackupViewModel : ViewModelBase
     [ObservableProperty]
     private int _keepLogHours = 48;
 
-    /// <summary>رمزنگاری فایل بکاپ</summary>
+    /// <summary>رمزنگاری فایل پشتیبان</summary>
     [ObservableProperty]
     private bool _encryptBackup = true;
 
@@ -117,7 +118,7 @@ public partial class BackupViewModel : ViewModelBase
     [ObservableProperty]
     private string? _cloudMessage;
 
-    /// <summary>آیا بکاپ انتخاب‌شده نسخه ابری دارد؟</summary>
+    /// <summary>آیا پشتیبان انتخاب‌شده نسخه ابری دارد؟</summary>
     [ObservableProperty]
     private bool _canVerifyCloud;
 
@@ -179,9 +180,10 @@ public partial class BackupViewModel : ViewModelBase
         _ = LoadAsync();
         _ = LoadCloudStatusAsync();
         _ = LoadCloudConfigAsync(); // تنظیمات ابری برای فرم فعال‌سازی (چرخه بیستم)
+        _ = LoadAutoSettingsAsync(); // تنظیمات خودکار — چرخه بیست‌ویکم
     }
 
-    /// <summary>بارگذاری تاریخچه بکاپ‌ها</summary>
+    /// <summary>بارگذاری تاریخچه پشتیبان‌ها</summary>
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -202,13 +204,16 @@ public partial class BackupViewModel : ViewModelBase
                     "Full" => "کامل", "Differential" => "تفاضلی", _ => "لگ"
                 };
                 return new BackupHistoryRow(b.Id, typeText, statusText, color,
-                    FormatDate(b.StartedAt), FormatSize(b.FileSize), b.FilePath, b.IsAutomatic);
+                    FormatDate(b.StartedAt), FormatSize(b.FileSize), b.FilePath, b.IsAutomatic,
+                    FormatDate(b.CompletedAt),
+                    b.Storage == "Cloud" ? "ابر" : "محلی",
+                    b.CloudFileName, string.IsNullOrWhiteSpace(b.ErrorMessage) ? null : b.ErrorMessage);
             }).ToList();
 
             History = new ObservableCollection<BackupHistoryRow>(rows);
 
             var lastFull = rows.FirstOrDefault(r => r.TypeText == "کامل" && r.StatusText == "✅ موفق");
-            LastFullText = lastFull is null ? "بکاپ کاملی ثبت نشده" : $"✅ {lastFull.DateText} ({lastFull.SizeText})";
+            LastFullText = lastFull is null ? "پشتیبان کاملی ثبت نشده" : $"✅ {lastFull.DateText} ({lastFull.SizeText})";
             var lastLog = rows.FirstOrDefault(r => r.TypeText == "لگ");
             LastLogText = lastLog is null ? "—" : $"{lastLog.DateText} ({lastLog.SizeText})";
         }
@@ -218,57 +223,70 @@ public partial class BackupViewModel : ViewModelBase
         }
     }
 
-    /// <summary>بکاپ فوری کامل</summary>
+    /// <summary>پشتیبان‌گیری فوری کامل</summary>
     [RelayCommand]
     private async Task RunBackupAsync()
     {
         IsBusy = true;
         var ok = await _api.PostAsync("backup/run", null);
         IsBusy = false;
-        if (ok) { _snackbar.Success("بکاپ فوری ثبت شد — اجرای فایل توسط سرویس پشتیبان انجام می‌شود"); await LoadAsync(); }
-        else _snackbar.Error(_api.LastError ?? "ثبت بکاپ ناموفق بود");
+        if (ok) { _snackbar.Success("پشتیبان‌گیری فوری ثبت شد"); await LoadAsync(); }
+        else _snackbar.Error(_api.LastError ?? "ثبت پشتیبان‌گیری ناموفق بود");
     }
 
-    /// <summary>ذخیره تنظیمات بکاپ خودکار</summary>
+    /// <summary>
+    /// ذخیرهٔ تنظیمات پشتیبان‌گیری خودکار — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
+    /// «بکاپ خودکار انجام نمی‌شود» — اکنون یک درخواست یکجا به backup/auto-config
+    /// می‌رود (پیش‌تر ۱۲ درخواست جداگانه بود و «ذخیره برخی تنظیمات ناموفق بود» می‌داد)؛
+    /// کارگر پس‌زمینهٔ سرور (AutomaticBackupWorker) این تنظیمات را هر ۵ دقیقه
+    /// می‌خواند و پشتیبان روزانهٔ واقعی می‌گیرد.
+    /// </summary>
     [RelayCommand]
     private async Task SaveAutoSettingsAsync()
     {
+        // ساعت از متن قالب HH:mm جدا می‌شود (کارگر سرور فقط ساعت می‌خواهد)
+        var hour = 2;
+        var parts = (DailyFullTime ?? "02:00").Split(':', '،');
+        if (parts.Length >= 1 && int.TryParse(parts[0].Trim(), out var h))
+            hour = Math.Clamp(h, 0, 23);
+
         IsBusy = true;
-        var allOk = true;
-        var entries = new Dictionary<string, string?>
+        var ok = await _api.PutAsync("backup/auto-config", new
         {
-            ["DailyFullEnabled"] = DailyFullEnabled ? "true" : "false",
-            ["DailyFullTime"] = DailyFullTime,
-            ["DiffEnabled"] = DiffEnabled ? "true" : "false",
-            ["DiffHours"] = DiffHours.ToString(),
-            ["LogEnabled"] = LogEnabled ? "true" : "false",
-            ["LogHours"] = LogHours.ToString(),
-            ["BackupPath"] = BackupPath,
-            ["KeepFullDays"] = KeepFullDays.ToString(),
-            ["KeepDiffDays"] = KeepDiffDays.ToString(),
-            ["KeepLogHours"] = KeepLogHours.ToString(),
-            ["EncryptBackup"] = EncryptBackup ? "true" : "false",
-            ["NotifyOnError"] = NotifyOnError ? "true" : "false"
-        };
-        foreach (var (key, value) in entries)
-        {
-            if (!await _api.PutAsync("settings", new { key, value, category = "Backup" }))
-                allOk = false;
-        }
+            enabled = DailyFullEnabled,
+            hour,
+            directory = BackupPath
+        });
         IsBusy = false;
-        if (allOk) _snackbar.Success("تنظیمات بکاپ خودکار ذخیره شد");
-        else _snackbar.Error("ذخیره برخی تنظیمات ناموفق بود");
+        if (ok) _snackbar.Success("تنظیمات پشتیبان‌گیری خودکار ذخیره شد");
+        else _snackbar.Error(_api.LastError ?? "ذخیرهٔ تنظیمات ناموفق بود");
     }
 
-    /// <summary>بازیابی از بکاپ انتخاب‌شده — با هشدار جایگزینی داده</summary>
+    /// <summary>
+    /// بارگذاری تنظیمات پشتیبان‌گیری خودکار از سرور — چرخه بیست‌ویکم:
+    /// وضعیت فعال/ساعت/مسیر در فرم نمایش داده می‌شود.
+    /// </summary>
+    [RelayCommand]
+    private async Task LoadAutoSettingsAsync()
+    {
+        var response = await _api.GetAsync<AutoConfigResponse>("backup/auto-config");
+        var d = response?.Data;
+        if (d is null) return;
+        DailyFullEnabled = d.Enabled;
+        DailyFullTime = $"{d.Hour:00}:00";
+        if (!string.IsNullOrWhiteSpace(d.Directory))
+            BackupPath = d.Directory;
+    }
+
+    /// <summary>بازیابی از پشتیبان انتخاب‌شده — با هشدار جایگزینی داده</summary>
     [RelayCommand]
     private void Restore()
     {
-        if (SelectedBackup is null) { _snackbar.Info("ابتدا یک بکاپ از فهرست انتخاب کنید"); return; }
+        if (SelectedBackup is null) { _snackbar.Info("ابتدا یک پشتیبان از فهرست انتخاب کنید"); return; }
 
         // تأیید دو‌مرحله‌ای — پیام هشدار طبق فرم ۲۹
         var answer = System.Windows.MessageBox.Show(
-            $"⚠️ هشدار: بازیابی از بکاپ {SelectedBackup.DateText} تمام داده‌های فعلی را جایگزین می‌کند!\n\nادامه می‌دهید؟",
+            $"⚠️ هشدار: بازیابی از پشتیبان {SelectedBackup.DateText} تمام داده‌های فعلی را جایگزین می‌کند!\n\nادامه می‌دهید؟",
             "تأیید بازیابی", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
         if (answer != System.Windows.MessageBoxResult.Yes) return;
 
@@ -453,6 +471,20 @@ public partial class BackupViewModel : ViewModelBase
         public string? FilePath { get; set; }
         public string? Storage { get; set; }
         public string? CloudFileName { get; set; }
+    }
+
+    /// <summary>پاسخ تنظیمات پشتیبان خودکار — چرخه بیست‌ویکم</summary>
+    private sealed class AutoConfigResponse
+    {
+        public bool IsSuccess { get; set; }
+        public AutoConfigData? Data { get; set; }
+    }
+
+    private sealed class AutoConfigData
+    {
+        public bool Enabled { get; set; }
+        public int Hour { get; set; }
+        public string? Directory { get; set; }
     }
 
     private sealed class CloudStatusResponse

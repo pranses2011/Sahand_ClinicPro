@@ -173,7 +173,7 @@ public class PermissionsController : ApiBaseController
         ["dental"] = "دندانپزشکی", ["eye"] = "چشم‌پزشکی", ["physiotherapy"] = "فیزیوتراپی",
         ["pharmacy"] = "داروخانه", ["sms"] = "پیامک", ["reports"] = "گزارش‌ها",
         ["users"] = "کاربران", ["roles"] = "نقش‌ها", ["settings"] = "تنظیمات",
-        ["backup"] = "بکاپ", ["auditlogs"] = "لاگ عملیات", ["license"] = "لایسنس",
+        ["backup"] = "پشتیبان‌گیری", ["auditlogs"] = "لاگ عملیات", ["license"] = "لایسنس",
         ["dashboard"] = "داشبورد"
     };
 

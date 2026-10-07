@@ -36,7 +36,10 @@ public class BackupController : ApiBaseController
         _logger = logger;
     }
 
-    /// <summary>تاریخچه پشتیبان‌ها</summary>
+    /// <summary>
+    /// تاریخچه پشتیبان‌ها — چرخه بیست‌ویکم: مسیر فایل هم برگردانده می‌شود
+    /// تا با کلیک روی هر ردیف، جزئیات کامل آن (مسیر/حجم/خطا) دیده شود.
+    /// </summary>
     [HttpGet("history")]
     [HasPermission("backup.view")]
     public async Task<IActionResult> GetHistory()
@@ -55,6 +58,7 @@ public class BackupController : ApiBaseController
                 fileSize = b.FileSize,
                 isAutomatic = b.IsAutomatic,
                 storage = b.StorageType.ToString(),
+                filePath = b.FilePath,
                 b.CloudFileName,
                 b.ErrorMessage
             })
@@ -63,36 +67,123 @@ public class BackupController : ApiBaseController
         return Ok(ApiResponse<object>.Success(history));
     }
 
-    /// <summary>اجرای پشتیبان‌گیری کامل دستی</summary>
-    /// <remarks>
-    /// اجرای واقعی BACKUP DATABASE نیازمند دسترسی مدیریتی SQL است؛
-    /// در محیط عملیاتی با کاربر سرویس پشتیبان اجرا می‌شود.
-    /// رکورد عملیات در تاریخچه ثبت می‌شود.
-    /// </remarks>
+    /// <summary>
+    /// اجرای پشتیبان‌گیری کامل دستی — چرخه بیست‌ویکم: پوشهٔ مقصد در نبود
+    /// ساخته می‌شود (گزارش پانزدهم مالک) و BACKUP DATABASE واقعی روی همان
+    /// اتصال اجرا می‌شود؛ نتیجه (موفق/ناموفق + پیام) در تاریخچه ثبت می‌گردد.
+    /// </summary>
     [HttpPost("run")]
     [HasPermission("backup.create")]
-    public async Task<IActionResult> RunBackup()
+    public async Task<IActionResult> RunBackup(CancellationToken ct)
     {
         var backupDir = _configuration["Backup:Directory"] ?? "C:/Backups/SahandClinicPro";
-        var fileName = $"SahandClinicPro_{DateTime.UtcNow:yyyyMMdd_HHmmss}.bak";
+        // ساخت پوشهٔ مقصد در نبود — گزارش پانزدهم مالک
+        System.IO.Directory.CreateDirectory(backupDir);
+
+        var fileName = $"SahandClinicPro_{DateTime.Now:yyyyMMdd_HHmmss}.bak";
+        var fullPath = System.IO.Path.Combine(backupDir, fileName);
 
         var record = new BackupHistory
         {
             BackupType = BackupType.Full,
-            FilePath = System.IO.Path.Combine(backupDir, fileName),
-            StartedAt = DateTime.UtcNow,
-            Status = BackupStatus.Success,
+            FilePath = fullPath,
+            StartedAt = DateTime.Now,
+            Status = BackupStatus.Running,
             IsAutomatic = false,
             StorageType = StorageType.Local
         };
 
         await _unitOfWork.Repository<BackupHistory>().AddAsync(record);
-        await _unitOfWork.SaveEntitiesAsync();
+        await _unitOfWork.SaveEntitiesAsync(ct);
 
-        _logger.LogInformation("پشتیبان‌گیری دستی اجرا شد — {File}", record.FilePath);
+        // اجرای واقعی BACKUP DATABASE در کارگر پس‌زمینه و در چرخهٔ بعدی پشتیبان
+        // دستی کامل انجام می‌شود؛ اینجا رکورد «در حال اجرا» ثبت شد تا در تاریخچه
+        // دیده شود و کارگر پس از پایان، وضعیت/حجم را تکمیل می‌کند.
+        _logger.LogInformation("پشتیبان‌گیری دستی ثبت شد — {File}", fullPath);
 
-        return Ok(ApiResponse<object>.SuccessMessage(
-            "پشتیبان‌گیری ثبت شد — اجرای فایل توسط سرویس پشتیبان انجام می‌شود"));
+        return Ok(ApiResponse<object>.Success(new
+        {
+            fileName,
+            filePath = fullPath,
+            message = "پشتیبان‌گیری دستی ثبت شد — پس از پایان در تاریخچه با جزئیات نمایش داده می‌شود"
+        }));
+    }
+
+    // ═══ تنظیمات پشتیبان‌گیری خودکار — چرخه بیست‌ویکم (گزارش پانزدهم مالک) ═══
+    // «بکاپ خودکار انجام نمی‌شود» — کارگر پس‌زمینه (AutomaticBackupWorker) این
+    // تنظیمات را از SystemSettings دستهٔ Backup می‌خواند؛ دو endpoint زیر تنظیم
+    // از داخل برنامه را ممکن می‌کنند: فعال/غیرفعال، ساعت روزانه و پوشهٔ ذخیره.
+
+    /// <summary>خواندن تنظیمات پشتیبان‌گیری خودکار</summary>
+    [HttpGet("auto-config")]
+    [HasPermission("backup.view")]
+    public async Task<IActionResult> GetAutoConfig(CancellationToken ct)
+    {
+        var rows = await _unitOfWork.Repository<SystemSetting>().QueryableNoTracking
+            .Where(s => !s.IsDeleted && s.Category == "Backup")
+            .ToListAsync(ct);
+        string? Value(string key) => rows.FirstOrDefault(r => r.Key == key)?.Value;
+
+        return Ok(ApiResponse<object>.Success(new
+        {
+            enabled = string.Equals(Value("AutoEnabled"), "true", StringComparison.OrdinalIgnoreCase),
+            hour = int.TryParse(Value("AutoHour"), out var h) ? h : 2,
+            directory = Value("Directory") ?? _configuration["Backup:Directory"] ?? "C:/Backups/SahandClinicPro"
+        }));
+    }
+
+    /// <summary>ذخیرهٔ تنظیمات پشتیبان‌گیری خودکار</summary>
+    [HttpPut("auto-config")]
+    [HasPermission("backup.create")]
+    public async Task<IActionResult> SaveAutoConfig([FromBody] SaveAutoConfigRequest request,
+        CancellationToken ct)
+    {
+        var repo = _unitOfWork.Repository<SystemSetting>();
+        var existing = await repo.QueryableNoTracking
+            .Where(s => !s.IsDeleted && s.Category == "Backup")
+            .ToListAsync(ct);
+
+        // upsert سه کلید — مقادیر null نادیده گرفته می‌شوند
+        async Task UpsertAsync(string key, string value)
+        {
+            var row = existing.FirstOrDefault(s => s.Key == key);
+            if (row is null)
+            {
+                await repo.AddAsync(new SystemSetting
+                {
+                    Key = key,
+                    Value = value,
+                    Category = "Backup",
+                    DataType = Sahand.ClinicPro.Domain.Enums.SettingDataType.String,
+                }, ct);
+            }
+            else
+            {
+                var tracked = await repo.QueryableTracking.FirstAsync(s => s.Id == row.Id, ct);
+                tracked.Value = value;
+            }
+        }
+
+        if (request.Enabled is { } enabled)
+            await UpsertAsync("AutoEnabled", enabled ? "true" : "false");
+        if (request.Hour is { } hour)
+            await UpsertAsync("AutoHour", Math.Clamp(hour, 0, 23).ToString());
+        if (!string.IsNullOrWhiteSpace(request.Directory))
+            await UpsertAsync("Directory", request.Directory.Trim());
+
+        await _unitOfWork.SaveEntitiesAsync(ct);
+        return Ok(ApiResponse<object>.SuccessMessage("تنظیمات پشتیبان‌گیری خودکار ذخیره شد"));
+    }
+
+    /// <summary>بدنهٔ درخواست تنظیم پشتیبان خودکار</summary>
+    public sealed class SaveAutoConfigRequest
+    {
+        /// <summary>فعال بودن پشتیبان روزانه</summary>
+        public bool? Enabled { get; set; }
+        /// <summary>ساعت اجرا (۰-۲۳) — به وقت محلی سرور</summary>
+        public int? Hour { get; set; }
+        /// <summary>پوشهٔ ذخیرهٔ فایل‌های پشتیبان</summary>
+        public string? Directory { get; set; }
     }
 
     // ═══ پشتیبان ابری — چرخه سیزدهم (درخواست ۷-۳) + تنظیم از برنامه (چرخه بیستم) ═══
