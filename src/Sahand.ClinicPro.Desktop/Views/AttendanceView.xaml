@@ -28,8 +28,10 @@
         <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}" Foreground="#D32F2F" FontSize="12"
                    Margin="0,0,0,6" Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
 
+        <!-- نوار زبانه‌ها با رنگ اصلی تم؛ مقدار PrimaryLight معتبرِ enum است
+             (مقدار قبلی «Primary» در ColorZoneMode وجود نداشت و باعث XamlParseException می‌شد) -->
         <TabControl Grid.Row="2" Style="{StaticResource MaterialDesignTabControl}"
-                    materialDesign:ColorZoneAssist.Mode="Primary">
+                    materialDesign:ColorZoneAssist.Mode="PrimaryLight">
             <!-- ═══════════ تب ۱: تابلوی امروز ═══════════ -->
             <TabItem Header="📋 تابلوی امروز">
                 <Grid Margin="0,12,0,0">
