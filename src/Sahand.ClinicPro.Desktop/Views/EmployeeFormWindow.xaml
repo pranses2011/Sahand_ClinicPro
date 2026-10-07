@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:behaviors="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
         Title="ثبت پرسنل"
         Height="640" Width="840"
         MinHeight="560" MinWidth="640"
@@ -125,8 +126,10 @@
                         <ColumnDefinition Width="16" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
+                    <!-- چرخه بیست‌ویکم: جداکنندهٔ زندهٔ ۳ رقمی هنگام تایپ (گزارش پانزدهم مالک) -->
                     <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="حقوق پایه (ریال) — ماهانه"
-                             Text="{Binding BaseSalary, UpdateSourceTrigger=PropertyChanged}"
+                             behaviors:MoneyInput.IsEnabled="True"
+                             behaviors:MoneyInput.NumericValue="{Binding BaseSalary, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
                              materialDesign:TextFieldAssist.PrefixText="﷼" />
                     <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="درصد از سود خدمات (٪)"
                              Text="{Binding CommissionPercent, UpdateSourceTrigger=PropertyChanged}"

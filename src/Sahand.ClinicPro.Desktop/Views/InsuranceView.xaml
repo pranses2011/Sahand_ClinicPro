@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:behaviors="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
              mc:Ignorable="d"
              d:DesignHeight="620" d:DesignWidth="1080"
              FlowDirection="RightToLeft">
@@ -211,12 +212,15 @@
                                  materialDesign:HintAssist.Hint="درصد بیمه"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="105" FontSize="11.5" Margin="0,0,7,4"
                                  IsEnabled="{Binding RuleIsNominal, Converter={StaticResource InvertBool}, FallbackValue=False}" />
-                        <TextBox Text="{Binding RuleNominal, UpdateSourceTrigger=PropertyChanged}"
-                                 materialDesign:HintAssist.Hint="مبلغ اسمی (ریال)"
+                        <!-- چرخه بیست‌ویکم: جداکنندهٔ زندهٔ ۳ رقمی هنگام تایپ -->
+                        <TextBox materialDesign:HintAssist.Hint="مبلغ اسمی (ریال)"
+                                 behaviors:MoneyInput.IsEnabled="True"
+                                 behaviors:MoneyInput.NumericValue="{Binding RuleNominal, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="140" FontSize="11.5" Margin="0,0,7,4"
                                  IsEnabled="{Binding RuleIsNominal}" />
-                        <TextBox Text="{Binding RuleFranchise, UpdateSourceTrigger=PropertyChanged}"
-                                 materialDesign:HintAssist.Hint="فرانشیز (ریال)"
+                        <TextBox materialDesign:HintAssist.Hint="فرانشیز (ریال)"
+                                 behaviors:MoneyInput.IsEnabled="True"
+                                 behaviors:MoneyInput.NumericValue="{Binding RuleFranchise, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="135" FontSize="11.5" Margin="0,0,7,4" />
                         <Button Command="{Binding AddRuleCommand}" Style="{StaticResource MaterialDesignRaisedButton}" FontSize="11" Margin="0,0,6,4">
                             <StackPanel Orientation="Horizontal">
