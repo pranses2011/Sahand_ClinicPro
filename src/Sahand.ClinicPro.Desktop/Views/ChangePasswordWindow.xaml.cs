@@ -39,6 +39,10 @@ public partial class ChangePasswordWindow : Window
 
         viewModel.ChangeSucceeded += OnChangeSucceeded;
 
+        // چرخه هفدهم (گزارش یازدهم): رمز عوض شد اما لایسنس فعال نیست — پیش از
+        // پوستهٔ اصلی باید فعال‌سازی انجام شود (همان گیت ورود، این‌بار از مسیر تغییر رمز)
+        viewModel.LicenseActivationRequired += OnLicenseActivationRequired;
+
         // رمز فعلی از قبل پر است — فوکوس روی رمز جدید
         Loaded += (_, _) => NewPasswordBox.Focus();
     }
@@ -137,7 +141,32 @@ public partial class ChangePasswordWindow : Window
     private void OnChangeSucceeded(object? sender, EventArgs e)
     {
         _changeCompleted = true;
+        EnterMain();
+    }
 
+    /// <summary>
+    /// رمز موفق عوض شد اما لایسنس نامعتبر است — چرخه هفدهم (گزارش یازدهم):
+    /// پنجرهٔ فعال‌سازی مودال باز می‌شود؛ با موفقیت، ورود کامل و پنجرهٔ اصلی
+    /// باز می‌شود؛ بدون فعال‌سازی، پنجره بسته می‌شود و چون _changeCompleted
+    /// هنوز false است توکن پاک و برنامه مطابق سیاست «دورزدنی‌ناپذیر» تمام می‌شود
+    /// (رمز جدید ذخیره شده و اجرای بعدی با آن + گیت لایسنس ادامه می‌یابد)
+    /// </summary>
+    private void OnLicenseActivationRequired(object? sender, EventArgs e)
+    {
+        if (LicenseActivationWindow.OpenAndActivate(this))
+        {
+            _changeCompleted = true;
+            EnterMain();
+        }
+        else
+        {
+            Close();
+        }
+    }
+
+    /// <summary>باز کردن پنجرهٔ اصلی و بستن پنجرهٔ فعلی</summary>
+    private void EnterMain()
+    {
         var main = App.Services.GetRequiredService(typeof(MainWindow)) as MainWindow;
         if (main is null) return;
 

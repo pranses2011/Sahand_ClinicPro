@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 using System.Windows.Input;
+using Sahand.ClinicPro.Desktop.Services;
 using Sahand.ClinicPro.Desktop.ViewModels;
 
 namespace Sahand.ClinicPro.Desktop.Views;
@@ -24,6 +25,13 @@ public partial class LoginWindow : Window
         PasswordBox.PasswordChanged += (_, _) => viewModel.Password = PasswordBox.Password;
         viewModel.LoginSucceeded += OnLoginSucceeded;
         viewModel.PasswordChangeRequired += OnPasswordChangeRequired;
+
+        // چرخه هفدهم (گزارش یازدهم مالک): دکمهٔ «فعال‌سازی لایسنس» پیش‌تر
+        // رویدادش را به هیچ شنونده‌ای نمی‌داد (کاملاً بی‌اثر بود) و ورود موفق هم
+        // بدون لایسنس مستقیم پوستهٔ اصلی را باز می‌کرد — هر دو مسیر اکنون به
+        // پنجرهٔ فعال‌سازی مستقل وصل‌اند
+        viewModel.LicenseActivationRequested += OnLicenseActivationRequested;
+        viewModel.LicenseActivationRequired += OnLicenseActivationRequired;
 
         // بازیابی نام کاربری ذخیره‌شده (مرا به خاطر بسپار) — فایل JSON محلی
         Loaded += (_, _) =>
@@ -79,6 +87,36 @@ public partial class LoginWindow : Window
         {
             PasswordBox.Password = _viewModel.Password;
             PasswordBox.SelectAll();
+        }
+    }
+
+    /// <summary>
+    /// دکمهٔ «فعال‌سازی لایسنس» — چرخه هفدهم (گزارش یازدهم): پنجرهٔ فعال‌سازی
+    /// مستقل به‌صورت مودال باز می‌شود؛ endpointهای فعال‌سازی AllowAnonymous هستند
+    /// و پیش از ورود هم کار می‌کنند. پس از بستن، کاربر همچنان باید وارد شود.
+    /// </summary>
+    private void OnLicenseActivationRequested(object? sender, EventArgs e)
+        => LicenseActivationWindow.OpenAndActivate(this);
+
+    /// <summary>
+    /// ورود موفق اما لایسنس نامعتبر — چرخه هفدهم (گزارش یازدهم): تا فعال‌سازی
+    /// پوستهٔ اصلی باز نمی‌شود؛ اگر فعال شد ورود ادامه می‌یابد و اگر پنجره بدون
+    /// فعال‌سازی بسته شد، توکن همین ورود پاک می‌شود تا اجرای بعدی هم از همین
+    /// گیت بگذرد و پیام راهنما روی همین صفحهٔ ورود نمایش می‌یابد
+    /// </summary>
+    private void OnLicenseActivationRequired(object? sender, EventArgs e)
+    {
+        if (LicenseActivationWindow.OpenAndActivate(this))
+        {
+            OnLoginSucceeded(sender, e);
+        }
+        else
+        {
+            App.Services.GetRequiredService<ITokenManager>().Clear();
+            _viewModel.Password = string.Empty;
+            PasswordBox.Password = string.Empty;
+            _viewModel.ShowLoginError("برای ورود به برنامه ابتدا لایسنس را فعال کنید");
+            PasswordBox.Focus();
         }
     }
 

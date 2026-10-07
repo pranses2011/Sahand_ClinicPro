@@ -1,0 +1,77 @@
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.LicenseActivationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:views="clr-namespace:Sahand.ClinicPro.Desktop.Views"
+        Title="فعال‌سازی لایسنس — درمانگاه سهند"
+        Height="700" Width="780" MinHeight="560" MinWidth="640"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+        FontFamily="pack://application:,,,/Assets/Fonts/#Vazirmatn"
+        FlowDirection="RightToLeft">
+    <!-- ═══════════════════════════════════════════════════════════
+         پنجره فعال‌سازی لایسنس — چرخه هفدهم (گزارش یازدهم مالک)
+         دکمهٔ «فعال‌سازی لایسنس» صفحهٔ ورود هیچ شنونده‌ای نداشت (بی‌اثر بود)
+         و با رمز درست، بدون لایسنس هم وارد پوستهٔ اصلی می‌شدند.
+         این پنجره همان نمای وضعیت لایسنس (LicenseStatusView) را در خود جای
+         می‌دهد تا فعال‌سازی آنلاین/آفلاین «قبل از ورود» هم ممکن باشد —
+         endpointهای فعال‌سازی AllowAnonymous هستند و توکن نمی‌خواهند.
+         ═══════════════════════════════════════════════════════════ -->
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- ═══ هدر آبی سازمانی ═══ -->
+        <Border DockPanel.Dock="Top" Height="66">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#0D47A1" Offset="0" />
+                    <GradientStop Color="#1565C0" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Grid Margin="20,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="KeyChain" Width="30" Height="30"
+                                             Foreground="White" VerticalAlignment="Center" />
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="🔑 فعال‌سازی لایسنس"
+                                   FontSize="16" FontWeight="Black" Foreground="White" />
+                        <TextBlock Text="برای ورود به برنامه، لایسنس معتبر وارد یا فایل لایسنس بارگذاری کنید"
+                                   FontSize="11" Foreground="#DCE9FA" Margin="0,2,0,0" />
+                    </StackPanel>
+                </StackPanel>
+                <Button x:Name="CloseButton"
+                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                        HorizontalAlignment="Left" VerticalAlignment="Center"
+                        Width="34" Height="30" Foreground="White"
+                        ToolTip="بستن این پنجره"
+                        Click="OnCloseClick">
+                    <materialDesign:PackIcon Kind="Close" />
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- ═══ بنر موفقیت — پس از فعال‌سازی موفق نمایش داده می‌شود ═══ -->
+        <Border x:Name="SuccessBanner"
+                DockPanel.Dock="Top"
+                Background="#2E7D32" Padding="18,10"
+                Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="CheckCircle" Width="20" Height="20"
+                                         Foreground="White" VerticalAlignment="Center" />
+                <TextBlock Text="لایسنس با موفقیت فعال شد — این پنجره خودکار بسته می‌شود و ورود ادامه می‌یابد"
+                           FontSize="12.5" FontWeight="SemiBold" Foreground="White"
+                           Margin="10,0,0,0" VerticalAlignment="Center"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <!-- ═══ اسنک‌بار محلی — پنجرهٔ اصلی هنوز باز نیست و پیام‌های فعال‌سازی اینجا دیده می‌شوند ═══ -->
+        <materialDesign:Snackbar x:Name="LocalSnackbar" DockPanel.Dock="Bottom" />
+
+        <!-- ═══ محتوا: همان نمای وضعیت لایسنس ═══ -->
+        <views:LicenseStatusView x:Name="StatusView" Margin="0" />
+    </DockPanel>
+</Window>

@@ -99,6 +99,14 @@ public partial class LicenseStatusViewModel : ViewModelBase
     [ObservableProperty]
     private string? _activationKey;
 
+    /// <summary>
+    /// رویداد فعال‌سازی موفق لایسنس — چرخه هفدهم (گزارش یازدهم):
+    /// پنجرهٔ فعال‌سازی مستقل (LicenseActivationWindow) این رویداد را می‌شنود تا
+    /// بنر موفقیت را نشان دهد و پس از آن خودش را با نتیجهٔ موفق ببندد؛ پیش‌تر
+    /// هیچ راهی نبود فراخواننده بفهمد فعال‌سازی واقعاً انجام شده است.
+    /// </summary>
+    public event EventHandler? LicenseActivated;
+
     /// <summary>نام پشتیبان — دریافتی از سرور لایسنس (بدون هاردکد)</summary>
     [ObservableProperty]
     private string _supportName = "";
@@ -225,7 +233,13 @@ public partial class LicenseStatusViewModel : ViewModelBase
         var ok = await _api.PostAsync("license/activate", new { licenseKey = ActivationKey.Trim() });
         IsBusy = false;
 
-        if (ok) { _snackbar.Success("لایسنس فعال شد"); ActivationKey = null; await LoadAsync(); }
+        if (ok)
+        {
+            _snackbar.Success("لایسنس فعال شد");
+            ActivationKey = null;
+            LicenseActivated?.Invoke(this, EventArgs.Empty);
+            await LoadAsync();
+        }
         else _snackbar.Error(_api.LastError ?? "فعال‌سازی ناموفق بود");
     }
 
@@ -245,7 +259,12 @@ public partial class LicenseStatusViewModel : ViewModelBase
         var ok = await _api.PostAsync("license/activate-offline", new { licenseFileContent = content });
         IsBusy = false;
 
-        if (ok) { _snackbar.Success("لایسنس آفلاین فعال شد"); await LoadAsync(); }
+        if (ok)
+        {
+            _snackbar.Success("لایسنس آفلاین فعال شد");
+            LicenseActivated?.Invoke(this, EventArgs.Empty);
+            await LoadAsync();
+        }
         else _snackbar.Error(_api.LastError ?? "فعال‌سازی آفلاین ناموفق بود");
     }
 

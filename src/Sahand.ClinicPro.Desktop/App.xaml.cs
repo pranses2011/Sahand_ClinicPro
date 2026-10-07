@@ -40,15 +40,63 @@ public partial class App : System.Windows.Application
         var tokens = Services.GetRequiredService<ITokenManager>();
         if (tokens.HasValidToken)
         {
-            var main = Services.GetRequiredService<MainWindow>();
-            MainWindow = main;
-            main.Show();
+            // چرخه هفدهم (گزارش یازدهم): توکن معتبر ذخیره شده اما اگر سرور صریحاً
+            // لایسنس را نامعتبر اعلام کند، پیش از پوستهٔ اصلی فعال‌سازی مطالبه
+            // می‌شود — پیش‌تر این مسیر هیچ گاردی نداشت و با توکنِ به‌یادمانده
+            // بدون لایسنس هم مستقیم وارد برنامه می‌شدند؛ وضعیت «نامعلوم»
+            // (قطعی شبکه) مانع کار درمانگاه نمی‌شود (fail-open فقط برای آن)
+            _ = StartupWithLicenseGateAsync();
         }
         else
         {
             var login = Services.GetRequiredService<LoginWindow>();
             MainWindow = login;
             login.Show();
+        }
+    }
+
+    /// <summary>
+    /// راه‌اندازی پوستهٔ اصلی پشت گیت لایسنس — چرخه هفدهم (گزارش یازدهم).
+    /// پس از بررسی وضعیت لایسنس: معتبر/نامعلوم ⇒ پنجرهٔ اصلی؛ نامعتبر ⇒ پنجرهٔ
+    /// فعال‌سازی مودال و در صورت انجام‌نشدن آن، توکن پاک و صفحهٔ ورود نشان
+    /// می‌شود تا هیچ مسیری بدون لایسنس به پوسته نرسد. هر خطای غیرمنتظره،
+    /// مطابق سیاست fail-open، پوسته را باز می‌گذارد (قفل‌شدن درمانگاه ممنوع).
+    /// </summary>
+    private async Task StartupWithLicenseGateAsync()
+    {
+        try
+        {
+            var api = Services.GetRequiredService<IApiClient>();
+            // مهلت کوتاه بررسی — در شبکهٔ معلق، پس از ~۸ ثانیه وضعیت «نامعلوم»
+            // فرض شده و پوسته (fail-open) باز می‌شود تا کار درمانگاه نایستد
+            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(8));
+            var verdict = await LicenseGate.CheckAsync(api, cts.Token);
+
+            if (verdict == LicenseGate.Verdict.Invalid
+                && !Views.LicenseActivationWindow.OpenAndActivate(null))
+            {
+                // فعال‌سازی انجام نشد — توکن همین اجرا پاک می‌شود و ورود مجدد
+                // از همان گیت لایسنس می‌گذرد
+                Services.GetRequiredService<ITokenManager>().Clear();
+                var login = Services.GetRequiredService<LoginWindow>();
+                MainWindow = login;
+                login.Show();
+                return;
+            }
+
+            var main = Services.GetRequiredService<MainWindow>();
+            MainWindow = main;
+            main.Show();
+        }
+        catch
+        {
+            // fail-open — در خطای غیرمنتظره پوستهٔ اصلی باز می‌شود
+            if (MainWindow is null)
+            {
+                var main = Services.GetRequiredService<MainWindow>();
+                MainWindow = main;
+                main.Show();
+            }
         }
     }
 
@@ -126,5 +174,9 @@ public partial class App : System.Windows.Application
         services.AddTransient<AdhocReportWindow>();
         // مرکز آموزش و تور هدایت‌شده — چرخه سیزدهم (درخواست ۸-۶)
         services.AddTransient<TrainingCenterViewModel>();
+
+        // پنجرهٔ فعال‌سازی مستقل لایسنس — چرخه هفدهم (گزارش یازدهم):
+        // پیش از ورود/در میانهٔ ورود به‌صورت مودال باز می‌شود
+        services.AddTransient<LicenseActivationWindow>();
     }
 }

@@ -45,6 +45,14 @@ public partial class LoginViewModel : ObservableObject
     /// <summary>رویداد درخواست فعال‌سازی لایسنس</summary>
     public event EventHandler? LicenseActivationRequested;
 
+    /// <summary>
+    /// رویداد الزام فعال‌سازی لایسنس — چرخه هفدهم (گزارش یازدهم مالک):
+    /// ورود به سرور موفق بوده اما لایسنس فعال نیست؛ تا فعال‌سازی، پوستهٔ اصلی
+    /// باز نمی‌شود. پیش‌تر هیچ بررسی لایسنسی در جریان ورود وجود نداشت و با
+    /// رمز درست بدون لایسنس هم وارد برنامه می‌شدند.
+    /// </summary>
+    public event EventHandler? LicenseActivationRequired;
+
     /// <summary>سازنده با تزریق کلاینت API</summary>
     public LoginViewModel(IApiClient api) => _api = api;
 
@@ -75,7 +83,20 @@ public partial class LoginViewModel : ObservableObject
             }
             else
             {
-                LoginSucceeded?.Invoke(this, EventArgs.Empty);
+                // گیت لایسنس — چرخه هفدهم (گزارش یازدهم): پاسخ «لایسنس نامعتبر»
+                // یعنی پیش از پوستهٔ اصلی باید فعال‌سازی انجام شود؛ وضعیت
+                // «نامعلوم» (قطعی شبکه) اما ورود را نمی‌بندد تا درمانگاه بر اثر
+                // اختلال لحظه‌ای سرور از کار نیفتد
+                var verdict = await LicenseGate.CheckAsync(_api);
+                LicenseNeedsActivation = verdict == LicenseGate.Verdict.Invalid;
+                if (verdict == LicenseGate.Verdict.Invalid)
+                {
+                    LicenseActivationRequired?.Invoke(this, EventArgs.Empty);
+                }
+                else
+                {
+                    LoginSucceeded?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
         else
@@ -94,6 +115,17 @@ public partial class LoginViewModel : ObservableObject
     /// <summary>به‌روزرسانی امکان دکمه با تغییر فیلدها</summary>
     partial void OnUsernameChanged(string value) => LoginCommand.NotifyCanExecuteChanged();
     partial void OnPasswordChanged(string value) => LoginCommand.NotifyCanExecuteChanged();
+
+    /// <summary>
+    /// نمایش پیام راهنما روی صفحهٔ ورود — چرخه هفدهم (گزارش یازدهم):
+    /// پنجره فعال‌سازی بدون نتیجه بسته شد و کاربر به صفحهٔ ورود بازگشته؛
+    /// HasError محاسباتی است و باید پس از ErrorMessage دستی اطلاع‌رسانی شود
+    /// </summary>
+    public void ShowLoginError(string message)
+    {
+        ErrorMessage = message;
+        OnPropertyChanged(nameof(HasError));
+    }
 
     /// <summary>فعال‌سازی لایسنس — رویداد به پنجره برای باز کردن دیالوگ فعال‌سازی</summary>
     [RelayCommand]

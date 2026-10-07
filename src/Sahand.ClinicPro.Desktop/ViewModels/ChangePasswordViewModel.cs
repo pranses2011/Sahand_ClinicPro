@@ -48,6 +48,14 @@ public partial class ChangePasswordViewModel : ObservableObject
     /// <summary>رویداد تغییر موفق رمز — پنجره اصلی باز می‌شود</summary>
     public event EventHandler? ChangeSucceeded;
 
+    /// <summary>
+    /// رویداد الزام فعال‌سازی لایسنس — چرخه هفدهم (گزارش یازدهم مالک):
+    /// رمز با موفقیت عوض شد اما لایسنس فعال نیست؛ پیش از پوستهٔ اصلی باید
+    /// فعال‌سازی انجام شود — مسیر پنجرهٔ اصلی از اینجا هم مثل ورود گارد می‌شود
+    /// تا دورزدنی نماند.
+    /// </summary>
+    public event EventHandler? LicenseActivationRequired;
+
     /// <summary>آیا پیام خطا نمایش داده شود</summary>
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
@@ -88,7 +96,17 @@ public partial class ChangePasswordViewModel : ObservableObject
 
         if (ok)
         {
-            ChangeSucceeded?.Invoke(this, EventArgs.Empty);
+            // گیت لایسنس — چرخه هفدهم (گزارش یازدهم): پاسخ صریحِ «لایسنس نامعتبر»
+            // فعال‌سازی را الزامی می‌کند؛ وضعیت نامعلوم (قطعی شبکه) مانع ادامه نمی‌شود
+            var verdict = await LicenseGate.CheckAsync(_api);
+            if (verdict == LicenseGate.Verdict.Invalid)
+            {
+                LicenseActivationRequired?.Invoke(this, EventArgs.Empty);
+            }
+            else
+            {
+                ChangeSucceeded?.Invoke(this, EventArgs.Empty);
+            }
         }
         else
         {
