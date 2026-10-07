@@ -10,6 +10,12 @@ public class DoctorListDto
     /// <summary>شناسه پزشک</summary>
     public long Id { get; set; }
 
+    /// <summary>شناسه پرسنل مرتبط — چرخه هجدهم: برای عکس پروفایل</summary>
+    public long? EmployeeId { get; set; }
+
+    /// <summary>عکس پروفایل موجود است؟ — چرخه هجدهم</summary>
+    public bool HasPhoto { get; set; }
+
     /// <summary>نام کامل</summary>
     public string FullName { get; set; } = string.Empty;
 
@@ -39,6 +45,9 @@ public class DoctorDetailDto
 
     /// <summary>شناسه پرسنل مرتبط</summary>
     public long? EmployeeId { get; set; }
+
+    /// <summary>عکس پروفایل موجود است؟ — چرخه هجدهم</summary>
+    public bool HasPhoto { get; set; }
 
     /// <summary>شماره پروانه پزشکی</summary>
     public string? MedicalLicenseNo { get; set; }

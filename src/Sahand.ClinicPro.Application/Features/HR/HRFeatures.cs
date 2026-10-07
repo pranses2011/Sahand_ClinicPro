@@ -14,7 +14,8 @@ namespace Sahand.ClinicPro.Application.Features.HR;
 public record EmployeeListDto(
     long Id, string? PersonnelCode, string FullName, string? PositionName,
     string? DepartmentName, string Mobile, EmploymentType Type, bool IsActive,
-    decimal BaseSalary = 0m, decimal CommissionPercent = 0m);
+    decimal BaseSalary = 0m, decimal CommissionPercent = 0m,
+    bool HasPhoto = false); // چرخه هجدهم: عکس پروفایل موجود است؟
 
 /// <summary>درخواست ثبت پرسنل</summary>
 public record CreateEmployeeDto(
@@ -213,7 +214,8 @@ public class GetEmployeesQueryHandler : IRequestHandler<GetEmployeesQuery, Resul
                 e.EmploymentType ?? EmploymentType.FullTime,
                 e.IsActive,
                 e.BaseSalary,
-                e.CommissionPercent))
+                e.CommissionPercent,
+                e.ProfilePicture != null && e.ProfilePicture != ""))
             .ToListAsync(cancellationToken);
 
         return Result<List<EmployeeListDto>>.Success(items);

@@ -62,6 +62,8 @@ public class GetDoctorsQueryHandler : IRequestHandler<GetDoctorsQuery, Result<Pa
         var dtos = items.Select(d => new DoctorListDto
         {
             Id = d.Id,
+            EmployeeId = d.EmployeeId,
+            HasPhoto = d.Employee != null && !string.IsNullOrEmpty(d.Employee.ProfilePicture),
             FullName = d.Employee is not null ? $"{d.Employee.FirstName} {d.Employee.LastName}" : $"پزشک {d.Id}",
             NezamPezeshkiCode = d.NezamPezeshkiCode,
             SpecialtyName = d.Specialty?.Name,

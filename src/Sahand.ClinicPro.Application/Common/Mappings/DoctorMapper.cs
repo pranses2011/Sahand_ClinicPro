@@ -15,6 +15,7 @@ public partial class DoctorMapper
     [MapperIgnoreTarget(nameof(DoctorDetailDto.SpecialtyName))]
     [MapperIgnoreTarget(nameof(DoctorDetailDto.SignatureImageBase64))]
     [MapperIgnoreTarget(nameof(DoctorDetailDto.StampImageBase64))]
+    [MapperIgnoreTarget(nameof(DoctorDetailDto.HasPhoto))] // چرخه هجدهم — دستی از Employee.ProfilePicture
     [MapperRequiredMapping(RequiredMappingStrategy.Target)]
     public partial DoctorDetailDto ToDoctorDetailDto(Doctor doctor);
 

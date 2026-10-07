@@ -46,6 +46,8 @@ public class GetDoctorByIdQueryHandler : IRequestHandler<GetDoctorByIdQuery, Res
         dto.SpecialtyName = doctor.Specialty?.Name;
         dto.SignatureImageBase64 = doctor.SignatureImage is { Length: > 0 } sig ? Convert.ToBase64String(sig) : null;
         dto.StampImageBase64 = doctor.StampImage is { Length: > 0 } stamp ? Convert.ToBase64String(stamp) : null;
+        dto.HasPhoto = doctor.Employee is not null
+                        && !string.IsNullOrEmpty(doctor.Employee.ProfilePicture); // چرخه هجدهم
         return Result<DoctorDetailDto>.Success(dto);
     }
 }
