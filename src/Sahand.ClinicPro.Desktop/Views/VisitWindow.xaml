@@ -403,7 +403,7 @@
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="۴. تاریخ مراجعه بعدی (شمسی)" FontSize="12" FontWeight="Bold" Margin="2,4,0,3" />
                                     <TextBox Text="{Binding FollowUpDateShamsi, UpdateSourceTrigger=PropertyChanged}"
-                                             materialDesign:HintAssist.Hint="۱۴۰۴/۰۴/۱۵" Width="200" HorizontalAlignment="Right" />
+                                             materialDesign:HintAssist.Hint="۱۴۰۴/۰۴/۱۵" Width="200" HorizontalAlignment="Left" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Margin="12,0,0,0">
                                     <CheckBox Content="رزرو خودکار نوبت" IsChecked="{Binding AutoBookFollowUp}" />

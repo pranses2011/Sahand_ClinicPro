@@ -35,7 +35,9 @@
                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
 
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="2">
-            <StackPanel MaxWidth="760" HorizontalAlignment="Right" Margin="4,4">
+            <!-- چرخه ۱۹ (گزارش سیزدهم مالک): در RTL مقدار Right یعنی سمت چپِ بصری —
+                      ستون به کل عرض صفحه گسترش می‌یابد (Stretch) تا محتوا تمام‌صفحه دیده شود -->
+            <StackPanel MaxWidth="1200" HorizontalAlignment="Stretch" Margin="4,4">
 
                 <!-- ─── سرور لایسنس — چرخه هجدهم: پیش‌فرض رسمی + قابل ویرایش ─── -->
                 <TextBlock Text="سرور لایسنس" FontSize="14" FontWeight="Bold" Margin="4,0,2,8" />

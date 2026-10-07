@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Configuration;
@@ -343,15 +343,23 @@ public partial class LicenseStatusViewModel : ViewModelBase
         }
     }
 
-    /// <summary>کاتالوگ نام‌های ماژول برای نمایش</summary>
+    /// <summary>
+    /// کاتالوگ نام‌های ماژول برای نمایش — چرخه نوزدهم (گزارش سیزدهم مالک):
+    /// کلیدها دقیقاً همان کاتالوگ سرور لایسنس PHP (ls_module_catalog) هستند.
+    /// ماژول «صندوق و فاکتور» قبلاً با کلید Invoices جستجو می‌شد در حالی که
+    /// سرور آن را Billing می‌فرستد و چیپس همیشه «غیرفعال» دیده می‌شد.
+    /// </summary>
     private static readonly Dictionary<string, string> ModuleCatalog = new()
     {
-        ["Patients"] = "بیماران", ["Appointments"] = "نوبت‌دهی", ["Receptions"] = "پذیرش",
-        ["Prescriptions"] = "نسخه‌نویسی", ["Invoices"] = "صندوق و فاکتور",
+        ["Dashboard"] = "داشبورد", ["Patients"] = "بیماران", ["Appointments"] = "نوبت‌دهی",
+        ["Receptions"] = "پذیرش", ["Visits"] = "ویزیت", ["Prescriptions"] = "نسخه‌نویسی",
+        ["Billing"] = "صندوق و فاکتور",
         ["Accounting"] = "حسابداری", ["Insurance"] = "بیمه", ["Lab"] = "آزمایشگاه",
         ["Pharmacy"] = "داروخانه", ["Sms"] = "پیامک", ["Imaging"] = "تصویربرداری",
         ["Dental"] = "دندانپزشکی", ["Eye"] = "چشم‌پزشکی", ["Physiotherapy"] = "فیزیوتراپی",
-        ["Attendance"] = "حضور و غیاب",
+        ["Attendance"] = "حضور و غیاب", ["HR"] = "پرسنل", ["Reports"] = "گزارش‌ها",
+        ["Government"] = "سامانه‌های دولتی", ["Settings"] = "تنظیمات", ["Backup"] = "بکاپ",
+        ["Audit"] = "لاگ عملیات", ["Users"] = "کاربران",
         // ── ماژول‌های افزودنی نسخه ۱.۶.۰ — هماهنگ با کاتالوگ سرور لایسنس ──
         ["Survey"] = "نظرسنجی بیماران", ["Payroll"] = "فیش حقوقی",
         ["Paraclinical"] = "پاراکلینیک", ["EMR"] = "پرونده بالینی پیشرفته",

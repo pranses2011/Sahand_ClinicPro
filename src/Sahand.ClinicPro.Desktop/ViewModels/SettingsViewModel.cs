@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -113,6 +113,13 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isDarkTheme;
 
+    /// <summary>فهرست تم‌های رنگی — چرخه ۱۹ (گزارش سیزدهم مالک)</summary>
+    public ObservableCollection<ThemeOptionRow> ThemeOptions { get; } = new();
+
+    /// <summary>کلید تم رنگی انتخاب‌شده — با تغییر، فوری اعمال و ذخیره می‌شود</summary>
+    [ObservableProperty]
+    private string _selectedThemeKey = "Blue";
+
     /// <summary>فونت انتخابی</summary>
     [ObservableProperty]
     private string? _selectedFont = "Vazirmatn";
@@ -172,6 +179,10 @@ public partial class SettingsViewModel : ViewModelBase
         _api = api;
         _snackbar = snackbar;
         _theme = theme;
+        foreach (var th in _theme.Themes)
+            ThemeOptions.Add(new ThemeOptionRow { Theme = th });
+        SelectedThemeKey = _theme.CurrentThemeKey;
+        RefreshThemeSelection();
 
         // مقداردهی اولیه بخش‌ها — داده ماژول/دولتی از سرور در انتخاب بخش
         InitializeModules();
@@ -253,10 +264,10 @@ public partial class SettingsViewModel : ViewModelBase
     private static string ToEnglishKey(string title) => title switch
     {
         "بیماران" => "Patients", "نوبت‌دهی" => "Appointments", "پذیرش" => "Receptions",
-        "نسخه‌نویسی" => "Prescriptions", "صندوق و فاکتور" => "Invoices", "حسابداری" => "Accounting",
+        "نسخه‌نویسی" => "Prescriptions", "صندوق و فاکتور" => "Billing", "حسابداری" => "Accounting",
         "بیمه" => "Insurance", "آزمایشگاه" => "Lab", "داروخانه" => "Pharmacy", "پیامک" => "Sms",
         "تصویربرداری" => "Imaging", "دندانپزشکی" => "Dental", "چشم‌پزشکی" => "Eye",
-        "فیزیوتراپی" => "Physiotherapy", "سپاس" => "Sepas", "نسخه الکترونیک" => "Erx",
+        "فیزیوتراپی" => "Physiotherapy", "سپاس" => "Government", "نسخه الکترونیک" => "Government",
         _ => title
     };
 
@@ -338,6 +349,32 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     private void ApplyTheme() => _theme.SetTheme(IsDarkTheme);
 
+    /// <summary>انتخاب تم رنگی از کاتالوگ — اعمال فوری + ذخیره (چرخه ۱۹)</summary>
+    [RelayCommand]
+    private void SelectTheme(string? key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            return;
+        SelectedThemeKey = key;
+    }
+
+    /// <summary>با تغییر کلید تم: اعمال روی پوسته + تازه‌سازی نشانگر انتخاب + ذخیره</summary>
+    partial void OnSelectedThemeKeyChanged(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return;
+        _theme.ApplyTheme(value, IsDarkTheme);
+        RefreshThemeSelection();
+        _ = SaveThemeSettingsAsync();
+    }
+
+    /// <summary>هماهنگی نشانگر انتخاب‌شده با کلید فعلی</summary>
+    private void RefreshThemeSelection()
+    {
+        foreach (var row in ThemeOptions)
+            row.IsSelected = string.Equals(row.Theme.Key, SelectedThemeKey, StringComparison.OrdinalIgnoreCase);
+    }
+
     /// <summary>ذخیره تنظیمات تم</summary>
     [RelayCommand]
     private async Task SaveThemeSettingsAsync()
@@ -345,6 +382,7 @@ public partial class SettingsViewModel : ViewModelBase
         await SaveSettingsBatchAsync("Theme", new Dictionary<string, string?>
         {
             ["IsDark"] = IsDarkTheme ? "true" : "false",
+            ["Name"] = SelectedThemeKey,
             ["Font"] = SelectedFont,
             ["BaseFontSize"] = BaseFontSize.ToString("0"),
             ["Animations"] = AnimationsEnabled ? "true" : "false"
@@ -489,4 +527,31 @@ public partial class GovSystemCard : ObservableObject
 
     /// <summary>متن وضعیت اتصال</summary>
     public string ConnectedText => IsConnected ? "🟢 متصل" : "⚪ بررسی نشده";
+}
+
+/// <summary>
+/// ردیف تم رنگی در فهرست تنظیمات — چرخه ۱۹:
+/// نشانگر انتخاب + رنگ پیش‌نمایش به‌صورت برش‌پذیر برای XAML
+/// </summary>
+public partial class ThemeOptionRow : ObservableObject
+{
+    /// <summary>تعریف تم از کاتالوگ</summary>
+    public required AppTheme Theme { get; init; }
+
+    /// <summary>کلید</summary>
+    public string Key => Theme.Key;
+
+    /// <summary>نام فارسی</summary>
+    public string Title => Theme.Title;
+
+    /// <summary>آیکون تم</summary>
+    public string Icon => Theme.Icon;
+
+    /// <summary>رنگ پیش‌نمایش</summary>
+    public System.Windows.Media.Color PrimaryColor =>
+        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(Theme.PrimaryHex);
+
+    /// <summary>انتخاب‌شده است؟</summary>
+    [ObservableProperty]
+    private bool _isSelected;
 }
