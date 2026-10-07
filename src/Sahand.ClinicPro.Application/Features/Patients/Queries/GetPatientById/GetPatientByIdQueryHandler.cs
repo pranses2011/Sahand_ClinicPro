@@ -41,6 +41,8 @@ public class GetPatientByIdQueryHandler : IRequestHandler<GetPatientByIdQuery, R
         dto.Age = patient.BirthDate.HasValue
             ? PersianDateHelper.CalculateAge(patient.BirthDate.Value.ToDateTime(TimeOnly.MinValue))
             : null;
+        // چرخه بیست‌ویکم: تأهل به نام فارسی برای نمایش در فرم ویرایش دسکتاپ
+        dto.MaritalStatusFa = MaritalStatusTextMapper.ToFaText(patient.MaritalStatus);
 
         return Result<PatientDetailDto>.Success(dto);
     }

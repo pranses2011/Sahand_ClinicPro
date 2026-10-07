@@ -25,10 +25,12 @@ public partial class PatientMapper
     [MapperRequiredMapping(RequiredMappingStrategy.Target)]
     public partial List<PatientListDto> ToPatientListDtos(List<Patient> patients);
 
-    /// <summary>موجودیت به جزئیات — فیلدهای محاسباتی توسط گرداننده پر می‌شوند</summary>
+    /// <summary>موجودیت به جزئیات — فیلدهای محاسباتی توسط گرداننده پر می‌شوند
+    /// چرخه بیست‌ویکم: MaritalStatusFa در گرداننده از enum ترجمه می‌شود</summary>
     [MapperIgnoreTarget(nameof(PatientDetailDto.Age))]
     [MapperIgnoreTarget(nameof(PatientDetailDto.InsuranceName))]
     [MapperIgnoreTarget(nameof(PatientDetailDto.RegistrationDateShamsi))]
+    [MapperIgnoreTarget(nameof(PatientDetailDto.MaritalStatusFa))]
     [MapperRequiredMapping(RequiredMappingStrategy.Target)]
     public partial PatientDetailDto ToPatientDetailDto(Patient patient);
 

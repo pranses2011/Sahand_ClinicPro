@@ -61,6 +61,9 @@ public class PatientDetailDto
     /// <summary>جنسیت</summary>
     public Gender Gender { get; set; }
 
+    /// <summary>وضعیت تأهل — نام فارسی: مجرد/متأهل/بیوه/مطلقه (چرخه بیست‌ویکم)</summary>
+    public string? MaritalStatusFa { get; set; }
+
     /// <summary>تاریخ تولد شمسی</summary>
     public string? BirthDateShamsi { get; set; }
 
@@ -88,6 +91,21 @@ public class PatientDetailDto
     /// <summary>استان</summary>
     public string? Province { get; set; }
 
+    /// <summary>کد پستی — ۱۰ رقمی (چرخه بیست‌ویکم)</summary>
+    public string? PostalCode { get; set; }
+
+    /// <summary>شغل بیمار (چرخه بیست‌ویکم)</summary>
+    public string? Occupation { get; set; }
+
+    /// <summary>نام تماس اضطراری (چرخه بیست‌ویکم)</summary>
+    public string? EmergencyContactName { get; set; }
+
+    /// <summary>تلفن تماس اضطراری (چرخه بیست‌ویکم)</summary>
+    public string? EmergencyContactPhone { get; set; }
+
+    /// <summary>نسبت تماس اضطراری با بیمار (چرخه بیست‌ویکم)</summary>
+    public string? EmergencyContactRelation { get; set; }
+
     /// <summary>بیمه اصلی — شناسه</summary>
     public long? InsuranceCompanyId { get; set; }
 
@@ -96,6 +114,9 @@ public class PatientDetailDto
 
     /// <summary>شماره دفترچه بیمه</summary>
     public string? InsuranceNumber { get; set; }
+
+    /// <summary>نوع بیمه — اصلی/تبعی ۱/تبعی ۲ (چرخه بیست‌ویکم)</summary>
+    public string? InsuranceType { get; set; }
 
     /// <summary>بیمه تکمیلی — شناسه</summary>
     public long? SupplementaryInsuranceId { get; set; }

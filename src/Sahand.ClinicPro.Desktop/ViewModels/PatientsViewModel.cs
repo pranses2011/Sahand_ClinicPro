@@ -390,6 +390,15 @@ public partial class PatientFormViewModel : ObservableObject
                 BirthDateShamsi = patient.BirthDateShamsi;
                 GenderIndex = patient.Gender == 2 ? 1 : 0;
                 BloodType = patient.BloodType;
+                // چرخه بیست‌ویکم (گزارش پانزدهم مالک): فیلدهای پیشین‌جا‌افتاده —
+                // کد پستی، شغل، تأهل، تماس اضطراری و نوع بیمه نیز در ویرایش بار می‌شوند
+                PostalCode = patient.PostalCode;
+                Occupation = patient.Occupation;
+                MaritalStatus = patient.MaritalStatusFa;
+                EmergencyContactName = patient.EmergencyContactName;
+                EmergencyContactPhone = patient.EmergencyContactPhone;
+                EmergencyContactRelation = patient.EmergencyContactRelation;
+                InsuranceTypeName = patient.InsuranceType;
                 Phone = patient.Phone;
                 Email = patient.Email;
                 Province = patient.Province;
@@ -538,6 +547,14 @@ public partial class PatientFormViewModel : ObservableObject
             birthDateShamsi = BirthDateShamsi,
             gender = GenderIndex + 1,
             bloodType = BloodType == "نامشخص" ? null : BloodType,
+            // چرخه بیست‌ویکم: فیلدهای پیشین ارسال‌نشدنی — حالا ذخیره واقعی می‌شوند
+            maritalStatus = MaritalStatus,
+            postalCode = PostalCode,
+            occupation = Occupation,
+            emergencyContactName = EmergencyContactName,
+            emergencyContactPhone = EmergencyContactPhone,
+            emergencyContactRelation = EmergencyContactRelation,
+            insuranceType = InsuranceTypeName,
             phone = Phone,
             email = Email,
             province = Province,
@@ -631,6 +648,14 @@ public partial class PatientFormViewModel : ObservableObject
         public string? Address { get; set; }
         public string? City { get; set; }
         public string? Province { get; set; }
+        // چرخه بیست‌ویکم: فیلدهای تازه‌افزوده برای نمایش کامل در فرم ویرایش
+        public string? PostalCode { get; set; }
+        public string? Occupation { get; set; }
+        public string? MaritalStatusFa { get; set; }
+        public string? EmergencyContactName { get; set; }
+        public string? EmergencyContactPhone { get; set; }
+        public string? EmergencyContactRelation { get; set; }
+        public string? InsuranceType { get; set; }
         public long? InsuranceCompanyId { get; set; }
         public string? InsuranceName { get; set; }
         public string? InsuranceNumber { get; set; }

@@ -41,6 +41,10 @@ public class CreatePatientCommandHandler : IRequestHandler<CreatePatientCommand,
         if (PersianDateHelper.ToGregorian(dto.BirthDateShamsi) is { } birth)
             patient.BirthDate = DateOnly.FromDateTime(birth);
 
+        // چرخه بیست‌ویکم (گزارش پانزدهم مالک): فیلدهای تازه‌افزودهٔ DTO نیز
+        // ذخیره می‌شوند — تأهل (متن فارسی→enum)، کد پستی، تماس اضطراری، نوع بیمه
+        patient.MaritalStatus = MaritalStatusTextMapper.FromFaText(dto.MaritalStatus);
+
         patient.RegistrationDate = DateTime.UtcNow;
         patient.IsActive = true;
 
