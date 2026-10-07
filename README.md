@@ -1,10 +1,10 @@
-<div dir="rtl" align="center">
+﻿<div dir="rtl" align="center">
 
 <h1>🏥 سامانه جامع مدیریت درمانگاه سهند</h1>
 
 <p><img src="docs/assets/ClinicPro.png" width="140" alt="لوگوی درمانگاه سهند"></p>
 
-<h3>Sahand ClinicPro — v2.0.4</h3>
+<h3>Sahand ClinicPro — v2.0.5</h3>
 
 **نخستین سامانه یکپارچه فارسی‌زبان درمانگاه با اتصال مستقیم به دستگاه حضور و غیاب، سامانه‌های دولتی، نسخه الکترونیک و پشتیبانی زنده یکپارچه**
 
@@ -14,7 +14,7 @@
 [![WPF](https://img.shields.io/badge/WPF-MaterialDesign-512BD4?logo=windows&logoColor=white)](https://materialdesigninxaml.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-270%20.NET%20%E2%9C%85-2EA44F)](#%EF%B8%8F-تست‌ها)
-[![Version](https://img.shields.io/badge/release-v2.0.4-blue)](https://github.com/pranses2011/Sahand_ClinicPro/releases)
+[![Version](https://img.shields.io/badge/release-v2.0.5-blue)](https://github.com/pranses2011/Sahand_ClinicPro/releases)
 [![Coverage](https://img.shields.io/badge/coverage-36%25%20cobertura-orange)](#%EF%B8%8F-تست‌ها)
 [![Forms](https://img.shields.io/badge/forms-64%20%E2%9C%85-7C3AED)](#%EF%B8%8F-تصاویر-محیط-نرم‌افزار)
 
