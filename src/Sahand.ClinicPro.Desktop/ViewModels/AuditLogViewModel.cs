@@ -33,8 +33,9 @@ public partial class AuditDetailRow : ObservableObject
     /// <summary>آدرس IP</summary>
     public string? IpAddress { get; init; }
 
-    /// <summary>زمان UTC</summary>
-    public DateTime CreatedAt { get; init; }
+    /// <summary>زمان وقوع (شمسی + ساعت) — متن آمادهٔ نمایش؛ چرخه ۲۴:
+    /// پیش‌تر DateTime UTC خام بود و از سرور هم ارسال نمی‌شد</summary>
+    public string? CreatedAt { get; init; }
 
     /// <summary>مقادیر قبلی JSON</summary>
     [ObservableProperty]
@@ -142,22 +143,27 @@ public partial class AuditLogViewModel : ViewModelBase
         IsBusy = true;
         try
         {
-            // نگاشت فیلتر فارسی به نام انگلیسی موجودیت — سرویس فعلی بر اساس entityName فیلتر می‌کند
-            var entity = ActionFilter switch
+            // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — «در صفحه لاگ عملیات چیزی
+            // نشان نمی‌دهد» ═══ دو ریشه داشت که هر دو رفع شد:
+            //   ۱) پاسخ سرور «تک‌لایه» است (data مستقیم آرایه است، نه شیءِ items)
+            // اما کلاینت ساختار دومرحله‌ای می‌خواند → خواندن همیشه خالی بود؛
+            //   ۲) فیلتر «عملیات» به پارامتر entityName فرستاده می‌شد که بی‌اثر بود —
+            // اکنون پارامتر مستقل action روی سرور اضافه و از این‌جا فرستاده می‌شود.
+            var action = ActionFilter switch
             {
                 "ایجاد" => "Create", "ویرایش" => "Update", "حذف" => "Delete",
                 "مشاهده" => "View", "ورود" => "Login", "خروج" => "Logout",
                 "تغییر رمز" => "PasswordChange", _ => (string?)null
             };
-            var entityParam = string.IsNullOrWhiteSpace(EntityFilter) ? entity : EntityFilter;
             var query = $"auditlogs?page={Page}&pageSize=50" +
-                        (entityParam is null ? "" : $"&entityName={Uri.EscapeDataString(entityParam)}");
+                        (action is null ? "" : $"&action={Uri.EscapeDataString(action)}") +
+                        (string.IsNullOrWhiteSpace(EntityFilter) ? "" : $"&entityName={Uri.EscapeDataString(EntityFilter.Trim())}");
 
             var response = await _api.GetAsync<AuditResponse>(query);
-            var data = response?.Data;
-            Logs = new ObservableCollection<AuditDetailRow>(
-                (data?.Items ?? new List<AuditDto>()).Select(MapRow));
-            CountText = $"صفحه {Page} — {Logs.Count} ردیف";
+            // data مستقیم فهرست ردیف‌هاست (پاسخ ToResponse تک‌لایه)
+            var rows = response?.Data ?? new List<AuditDto>();
+            Logs = new ObservableCollection<AuditDetailRow>(rows.Select(MapRow));
+            CountText = $"صفحه {Helpers.Money.ToPersianDigits(Page.ToString())} — {Helpers.Money.ToPersianDigits(Logs.Count.ToString())} ردیف";
         }
         finally
         {
@@ -171,12 +177,17 @@ public partial class AuditLogViewModel : ViewModelBase
         Id = a.Id,
         Username = a.Username,
         Module = a.Module,
-        Action = a.Action,
+        Action = a.Action switch
+        {
+            "Create" => "ایجاد", "Update" => "ویرایش", "Delete" => "حذف",
+            "View" => "مشاهده", "Login" => "ورود", "Logout" => "خروج",
+            "PasswordChange" => "تغییر رمز", _ => a.Action
+        },
         EntityName = a.EntityName,
         EntityId = a.EntityId,
-        Description = a.Description,
+        Description = a.NewValues is null ? "—" : (a.NewValues.Length > 60 ? a.NewValues[..60] + "…" : a.NewValues),
         IpAddress = a.IpAddress,
-        CreatedAt = a.CreatedAt,
+        CreatedAt = $"{a.TimeShamsi} {a.Time}",
         OldValues = a.OldValues,
         NewValues = a.NewValues
     };
@@ -199,20 +210,16 @@ public partial class AuditLogViewModel : ViewModelBase
 
     /* ─── پاسخ‌ها ─── */
 
+    /// <summary>پاسخ تک‌لایهٔ سرور — data مستقیماً فهرست ردیف‌هاست
+    /// (AdminController از ToResponse استفاده می‌کند: { isSuccess, data: [...] })</summary>
     private sealed class AuditResponse
     {
         public bool IsSuccess { get; set; }
-        public AuditPage? Data { get; set; }
+        public List<AuditDto>? Data { get; set; }
     }
 
-    private sealed class AuditPage
-    {
-        public List<AuditDto> Items { get; set; } = new();
-        public int TotalCount { get; set; }
-        public int Page { get; set; }
-        public int PageSize { get; set; }
-    }
-
+    /// <summary>ردیف لاگ — منطبق بر AuditLogDto سرور (چرخه ۲۴: فیلدهای
+    /// TimeShamsi/Time/IpAddress/NewValues/OldValues هم‌نام سرور شدند)</summary>
     private sealed class AuditDto
     {
         public long Id { get; set; }
@@ -221,10 +228,10 @@ public partial class AuditLogViewModel : ViewModelBase
         public string? EntityName { get; set; }
         public long? EntityId { get; set; }
         public string? Module { get; set; }
-        public string? Description { get; set; }
+        public string? TimeShamsi { get; set; }
+        public string? Time { get; set; }
         public string? IpAddress { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public string? OldValues { get; set; }
         public string? NewValues { get; set; }
+        public string? OldValues { get; set; }
     }
 }

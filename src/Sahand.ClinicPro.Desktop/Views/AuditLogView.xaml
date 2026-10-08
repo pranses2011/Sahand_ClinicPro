@@ -55,13 +55,11 @@
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                   HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="زمان" Width="150">
-                    <DataGridTextColumn.Binding>
-                        <Binding Path="CreatedAt" Converter="{StaticResource ShamsiDateTime}" />
-                    </DataGridTextColumn.Binding>
-                </DataGridTextColumn>
+                <!-- زمان — چرخه ۲۴: متن شمسی آماده از VM می‌آید؛ مبدل ارقام فارسی کافی است -->
+                <DataGridTextColumn Header="زمان" Width="150"
+                                    Binding="{Binding CreatedAt, TargetNullValue=—, Converter={StaticResource PersianDigits}}" />
                 <DataGridTextColumn Header="کاربر" Binding="{Binding Username, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" />
-                <DataGridTextColumn Header="IP" Binding="{Binding IpAddress, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="Consolas" FontSize="10.5" />
+                <DataGridTextColumn Header="IP" Binding="{Binding IpAddress, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" FontSize="10.5" />
                 <DataGridTextColumn Header="ماژول" Binding="{Binding Module, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" />
                 <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="110">
                     <DataGridTemplateColumn.CellTemplate>

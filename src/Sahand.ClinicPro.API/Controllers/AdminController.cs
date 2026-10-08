@@ -46,9 +46,10 @@ public class AdminController : ApiBaseController
     [HasPermission("auditlogs.view")]
     public async Task<IActionResult> GetAuditLogs([FromQuery] int page = 1,
         [FromQuery] int pageSize = 50, [FromQuery] long? userId = null,
-        [FromQuery] string? entityName = null)
+        [FromQuery] string? entityName = null,
+        [FromQuery] string? action = null)
     {
-        var result = await _mediator.Send(new GetAuditLogsQuery(page, pageSize, userId, entityName));
+        var result = await _mediator.Send(new GetAuditLogsQuery(page, pageSize, userId, entityName, action));
         return ToResponse(result);
     }
 }

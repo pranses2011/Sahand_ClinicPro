@@ -80,16 +80,21 @@ public class SaveSettingCommandHandler : IRequestHandler<SaveSettingCommand, Res
     }
 }
 
-/// <summary>ردیف لاگ عملیات</summary>
+/// <summary>ردیف لاگ عملیات — چرخه بیست‌وچهارم (گزارش هفدهم مالک):
+/// «در صفحه لاگ عملیات چیزی نشان نمی‌دهد» — DTO غنی‌تر شد تا ستون‌های
+/// IP / مقادیر جدید / مقادیر قبیل جزئیات واقعی داشته باشند</summary>
 public record AuditLogDto(
     long Id, string? Username, string Action, string? EntityName,
-    long? EntityId, string? Module, string TimeShamsi, string Time);
+    long? EntityId, string? Module, string TimeShamsi, string Time,
+    string? IpAddress, string? NewValues, string? OldValues);
 
 /// <summary>
-/// پرس‌وجوی لاگ عملیات با فیلتر کاربر و ماژول
+/// پرس‌وجوی لاگ عملیات با فیلتر کاربر، ماژول و نوع عملیات
+/// (چرخه بیست‌وچهارم: فیلتر «عملیات» به‌عنوان پارامتر مستقل اضافه شد —
+/// پیش‌تر کلاینت مقدار عملیات را به entityName می‌فرستاد که بی‌اثر بود)
 /// </summary>
 public record GetAuditLogsQuery(int Page = 1, int PageSize = 50, long? UserId = null,
-    string? EntityName = null) : IRequest<Result<List<AuditLogDto>>>;
+    string? EntityName = null, string? Action = null) : IRequest<Result<List<AuditLogDto>>>;
 
 /// <summary>گرداننده لاگ عملیات</summary>
 public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Result<List<AuditLogDto>>>
@@ -110,6 +115,9 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Resul
             query = query.Where(l => l.UserId == request.UserId.Value);
         if (!string.IsNullOrEmpty(request.EntityName))
             query = query.Where(l => l.EntityName == request.EntityName);
+        // فیلتر نوع عملیات — نام enum به صورت رشته‌ای مقایسه می‌شود
+        if (!string.IsNullOrEmpty(request.Action))
+            query = query.Where(l => l.ActionType.ToString() == request.Action);
 
         var items = await query
             .OrderByDescending(l => l.Timestamp)
@@ -120,7 +128,8 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Resul
                 l.ActionType.ToString(),
                 l.EntityName, l.EntityId, l.Module,
                 Common.Helpers.PersianDateHelper.ToShamsi(l.Timestamp),
-                l.Timestamp.ToString("HH:mm:ss")))
+                l.Timestamp.ToString("HH:mm:ss"),
+                l.IpAddress, l.NewValues, l.OldValues))
             .ToListAsync(cancellationToken);
 
         return Result<List<AuditLogDto>>.Success(items);
