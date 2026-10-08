@@ -10,8 +10,11 @@ namespace Sahand.ClinicPro.Desktop.ViewModels;
 /// <summary>ردیف سوابق ویزیت در پرونده بیمار</summary>
 public record PatientVisitRow(string DateShamsi, string DoctorName, string Diagnosis, string Status);
 
-/// <summary>ردیف نسخه‌های بیمار</summary>
-public record PatientPrescriptionRow(string DateShamsi, string DoctorName, int ItemsCount, string Status);
+/// <summary>ردیف نسخه‌های بیمار — چرخه بیست‌وچهارم: ستون «تعداد اقلام» با
+/// «کد نسخه» جایگزین شد زیرا PrescriptionListDto سرور شمارش قلم ندارد؛
+/// نام فیلدها هم عیناً منطبق بر سرور شد (نامقبستگی → خطای «پاسخ سرور
+/// قابل تفسیر نبود» در گزارش هفدهم مالک)</summary>
+public record PatientPrescriptionRow(string DateShamsi, string DoctorName, string Code, string Status);
 
 /// <summary>ردیف نوبت‌های بیمار — چرخه بیست‌وسوم (گزارش شانزدهم مالک): تب نوبت‌ها واقعی شد</summary>
 public record PatientAppointmentRow(string DateShamsi, string Time, string DoctorName, string Specialty, string Status);
@@ -206,7 +209,12 @@ public partial class PatientDetailViewModel : ObservableObject
             }
         }
 
-        // ۳) نسخه‌ها
+        // ۳) نسخه‌ها — چرخه بیست‌وچهارم (گزارش هفدهم مالک): ریشهٔ «بارگذاری
+        // نسخه‌ها ناموفق: پاسخ سرور قابل تفسیر نبود» این بود که DTO این تب با
+        // PrescriptionListDto سرور هم‌خوان نبود: نام فیلد تاریخ (PrescriptionDateShamsi
+        // به‌جای DateShamsi)، وضعیتِ رشته‌ای به‌جای عدد enum (بدون مبدل رشته‌ای
+        // JSON، enum سرور به‌صورت عدد می‌آید و خواندنش در string استثنای
+        // JsonSerializer می‌اندازد) و فیلد ItemsCount که سرور اصلاً نمی‌فرستد.
         {
             var prescriptions = await SectionAsync<PrescriptionsEnvelope>("نسخه‌ها",
                 $"prescriptions?patientId={patientId}&pageSize=50");
@@ -215,10 +223,10 @@ public partial class PatientDetailViewModel : ObservableObject
                 foreach (var p in prescriptions.Data)
                 {
                     Prescriptions.Add(new PatientPrescriptionRow(
-                        p.PrescriptionDateShamsi ?? "—",
+                        p.DateShamsi ?? "—",
                         p.DoctorName ?? "—",
-                        p.ItemsCount,
-                        p.Status ?? "—"));
+                        string.IsNullOrWhiteSpace(p.PrescriptionCode) ? "—" : p.PrescriptionCode,
+                        PrescriptionStatusText(p.Status)));
                 }
             }
         }
@@ -438,6 +446,13 @@ public partial class PatientDetailViewModel : ObservableObject
         _ => source ?? "—"
     };
 
+    /// <summary>متن فارسی وضعیت نسخه — چرخه بیست‌وچهارم: سرور enum را عددی
+    /// می‌فرستد (PrescriptionStatus)؛ این نگاشت عیناً هم‌ارز برچسب‌های صفحهٔ
+    /// اصلی نسخه‌هاست تا واژه‌ها یکدست بماند</summary>
+    private static string PrescriptionStatusText(int status) => status is >= 1 and <= 5
+        ? new[] { "صادر شده", "ارسال به بیمه", "تأیید بیمه", "تحویل شده", "ابطال شده" }[status - 1]
+        : "نامشخص";
+
     /// <summary>کوتاه‌کردن متن خلاصه برای ستون باریک — با سه‌نقطهٔ فارسی</summary>
     private static string Truncate(string? text, int max)
     {
@@ -592,13 +607,19 @@ public partial class PatientDetailViewModel : ObservableObject
         public List<PrescriptionRowDto>? Data { get; set; }
     }
 
-    /// <summary>ردیف نسخه</summary>
+    /// <summary>ردیف نسخه — منطبق عیناً بر PrescriptionListDto سرور:
+    /// وضعیت/نوع enum هستند و بدون JsonStringEnumConverter به‌صورت «عدد»
+    /// سریال می‌شوند؛ بنابراین اینجا هم int خوانده می‌شود نه string</summary>
     public sealed class PrescriptionRowDto
     {
-        public string? PrescriptionDateShamsi { get; set; }
+        public long Id { get; set; }
+        public string? PrescriptionCode { get; set; }
+        public string? PatientName { get; set; }
         public string? DoctorName { get; set; }
-        public int ItemsCount { get; set; }
-        public string? Status { get; set; }
+        public string? DateShamsi { get; set; }
+        public int Type { get; set; }
+        public int Status { get; set; }
+        public bool IsElectronic { get; set; }
     }
 
     /// <summary>پاکت استاندارد پاسخ جزئیات بیمار — چرخه بیستم</summary>

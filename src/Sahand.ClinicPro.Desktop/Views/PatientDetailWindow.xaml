@@ -260,7 +260,7 @@
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="110" />
                         <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="160" />
-                        <DataGridTextColumn Header="تعداد اقلام" Binding="{Binding ItemsCount, Converter={StaticResource PersianDigits}}" Width="100" />
+                        <DataGridTextColumn Header="کد نسخه" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="120" />
                         <DataGridTextColumn Header="وضعیت" Binding="{Binding Status, Converter={StaticResource PersianDigits}}" Width="*" />
                     </DataGrid.Columns>
                 </DataGrid>
