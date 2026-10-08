@@ -145,6 +145,52 @@ public class LookupsController : ApiBaseController
         return ToResponse(result);
     }
 
+    // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — سمت/دپارتمان پرسنل ═══
+    // «در تعریف پرسنل سمت و چند فیلد دیگر وجود ندارد» و لیست پرسنل سمت و
+    // دپارتمان را نشان نمی‌داد — این endpointها فهرست‌های مرجع را عرضه و
+    // ساخت سریع مقدار تازه را ممکن می‌کنند تا فرم پرسنل قابل تکمیل باشد.
+
+    /// <summary>فهرست دپارتمان‌های فعال — ComboBox فرم پرسنل</summary>
+    [HttpGet("departments")]
+    public async Task<IActionResult> GetDepartments()
+    {
+        var result = await _mediator.Send(new GetDepartmentsQuery());
+        return ToResponse(result);
+    }
+
+    /// <summary>فهرست سمت‌های فعال — ComboBox فرم پرسنل</summary>
+    [HttpGet("positions")]
+    public async Task<IActionResult> GetPositions()
+    {
+        var result = await _mediator.Send(new GetPositionsQuery());
+        return ToResponse(result);
+    }
+
+    /// <summary>ساخت دپارتمان جدید (یا بازگشت شناسهٔ موجود هم‌نام)</summary>
+    [HttpPost("departments")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> CreateDepartment([FromBody] CreateLookupRequest request)
+    {
+        var result = await _mediator.Send(new CreateDepartmentIfMissingCommand(request.Name));
+        return ToResponse(result);
+    }
+
+    /// <summary>ساخت سمت جدید (یا بازگشت شناسهٔ موجود هم‌عنوان)</summary>
+    [HttpPost("positions")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> CreatePosition([FromBody] CreateLookupRequest request)
+    {
+        var result = await _mediator.Send(new CreatePositionIfMissingCommand(request.Name));
+        return ToResponse(result);
+    }
+
+    /// <summary>بدنهٔ ساخت مرجع سمت/دپارتمان — نام یا عنوان</summary>
+    public sealed class CreateLookupRequest
+    {
+        /// <summary>نام دپارتمان یا عنوان سمت</summary>
+        public string Name { get; set; } = string.Empty;
+    }
+
     /// <summary>فهرست خدمات فعال با قیمت تعرفه — برای اقلام فاکتور</summary>
     [HttpGet("services")]
     public async Task<IActionResult> GetServices([FromQuery] string? search)

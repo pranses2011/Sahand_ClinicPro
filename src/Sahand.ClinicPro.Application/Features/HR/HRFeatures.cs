@@ -17,13 +17,21 @@ public record EmployeeListDto(
     decimal BaseSalary = 0m, decimal CommissionPercent = 0m,
     bool HasPhoto = false); // چرخه هجدهم: عکس پروفایل موجود است؟
 
-/// <summary>درخواست ثبت پرسنل</summary>
+/// <summary>درخواست ثبت پرسنل — چرخه بیست‌وچهارم (گزارش هفدهم مالک):
+/// فیلدهای «چند مورد دیگر» فرم پرسنل مطابق اسکرین‌شات افزوده شدند:
+/// کد پرسنلی، تاریخ استخدام، تحصیلات، رشتهٔ تحصیلی و تماس اضطراری</summary>
 public record CreateEmployeeDto(
     string FirstName, string LastName, string NationalCode, string Mobile,
     long? DepartmentId, long? PositionId,
     EmploymentType EmploymentType = EmploymentType.FullTime,
     decimal BaseSalary = 0m,
-    decimal CommissionPercent = 0m);
+    decimal CommissionPercent = 0m,
+    string? PersonnelCode = null,
+    DateOnly? HireDate = null,
+    EducationLevel? EducationLevel = null,
+    string? FieldOfStudy = null,
+    string? EmergencyContact = null,
+    string? EmergencyPhone = null);
 
 /// <summary>
 /// فرمان ثبت پرسنل جدید
@@ -77,7 +85,14 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
             EmploymentType = dto.EmploymentType,
             BaseSalary = dto.BaseSalary,
             CommissionPercent = dto.CommissionPercent,
-            HireDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            // چرخه بیست‌وچهارم: فیلدهای تکمیلی فرم پرسنل — پیش‌تر ارسال
+            // می‌شدند اما نادیده گرفته می‌شدند (فرم اصلاً آنها را نداشت)
+            PersonnelCode = dto.PersonnelCode,
+            HireDate = dto.HireDate ?? DateOnly.FromDateTime(DateTime.UtcNow),
+            EducationLevel = dto.EducationLevel,
+            FieldOfStudy = dto.FieldOfStudy,
+            EmergencyContact = dto.EmergencyContact,
+            EmergencyPhone = dto.EmergencyPhone,
             IsActive = true
         };
 

@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -80,6 +81,71 @@ public partial class EmployeeFormViewModel : ObservableObject
     [ObservableProperty]
     private string _mobile = string.Empty;
 
+    // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — سمت/دپارتمان + فیلدهای
+    // تکمیلی فرم پرسنل مطابق اسکرین‌شات: کد پرسنلی، تاریخ استخدام، تحصیلات،
+    // رشتهٔ تحصیلی و تماس اضطراری. پیش‌تر departmentId/positionId تهی
+    // هاردکد ارسال می‌شد و لیست پرسنل سمت/دپارتمان را همیشه «—» نشان می‌داد.
+
+    /// <summary>گزینهٔ مرجع سمت/دپارتمان</summary>
+    public sealed class LookupOption
+    {
+        /// <summary>شناسه</summary>
+        public long Id { get; init; }
+
+        /// <summary>نام نمایشی</summary>
+        public string Name { get; init; } = string.Empty;
+    }
+
+    /// <summary>فهرست دپارتمان‌ها — از lookups/departments</summary>
+    public ObservableCollection<LookupOption> Departments { get; } = new();
+
+    /// <summary>فهرست سمت‌ها — از lookups/positions</summary>
+    public ObservableCollection<LookupOption> Positions { get; } = new();
+
+    /// <summary>ایندکس دپارتمان انتخابی — -۱ یعنی هیچ</summary>
+    [ObservableProperty]
+    private int _departmentIndex = -1;
+
+    /// <summary>ایندکس سمت انتخابی — -۱ یعنی هیچ</summary>
+    [ObservableProperty]
+    private int _positionIndex = -1;
+
+    /// <summary>متن تایپی دپارتمان — ComboBox ویرایش‌پذیر؛ مقدار تازه = ساخت خودکار</summary>
+    [ObservableProperty]
+    private string? _departmentText;
+
+    /// <summary>متن تایپی سمت — ComboBox ویرایش‌پذیر؛ مقدار تازه = ساخت خودکار</summary>
+    [ObservableProperty]
+    private string? _positionText;
+
+    /// <summary>کد پرسنلی — اختیاری</summary>
+    [ObservableProperty]
+    private string? _personnelCode;
+
+    /// <summary>تاریخ استخدام شمسی — مثل ۱۴۰۳/۰۵/۱۲</summary>
+    [ObservableProperty]
+    private string? _hireDateShamsi;
+
+    /// <summary>ایندکس تحصیلات — ۰ دیپلم/سیکل/کاردانی/کارشناسی/کارشناسی ارشد/دکتری</summary>
+    [ObservableProperty]
+    private int _educationLevelIndex;
+
+    /// <summary>فهرست مقاطع تحصیلی فارسی</summary>
+    public string[] EducationLevels { get; } =
+        { "دیپلم", "فوق دیپلم", "کاردانی", "کارشناسی", "کارشناسی ارشد", "دکتری" };
+
+    /// <summary>رشتهٔ تحصیلی</summary>
+    [ObservableProperty]
+    private string? _fieldOfStudy;
+
+    /// <summary>نام فرد رابط در شرایط اضطراری</summary>
+    [ObservableProperty]
+    private string? _emergencyContact;
+
+    /// <summary>شمارهٔ تماس اضطراری</summary>
+    [ObservableProperty]
+    private string? _emergencyPhone;
+
     /// <summary>حقوق پایه ماهانه (ریال) — متن قابل تبدیل به عدد</summary>
     [ObservableProperty]
     private string _baseSalary = "0";
@@ -124,7 +190,69 @@ public partial class EmployeeFormViewModel : ObservableObject
     public event EventHandler? SaveSucceeded;
 
     /// <summary>سازنده با کلاینت API</summary>
-    public EmployeeFormViewModel(IApiClient api) => _api = api;
+    public EmployeeFormViewModel(IApiClient api)
+    {
+        _api = api;
+        // چرخه ۲۴: بارگذاری فهرست‌های مرجع سمت/دپارتمان برای ComboBoxها
+        _ = LoadLookupsAsync();
+    }
+
+    /// <summary>
+    /// بارگذاری فهرست‌های مرجع سمت/دپارتمان — چرخه بیست‌وچهارم؛
+    /// خطا بی‌صدا مقادیر خالی می‌گذارد (فرم بدون این فیلدها هم کار می‌کند)
+    /// </summary>
+    private async Task LoadLookupsAsync()
+    {
+        var departments = await _api.GetAsync<LookupResponse>("lookups/departments");
+        foreach (var d in departments?.Data ?? new List<LookupOption>())
+            Departments.Add(d);
+
+        var positions = await _api.GetAsync<LookupResponse>("lookups/positions");
+        foreach (var p in positions?.Data ?? new List<LookupOption>())
+            Positions.Add(p);
+    }
+
+    /// <summary>پاسخ فهرست مرجع — پاکت استاندارد ApiResponse</summary>
+    private sealed class LookupResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<LookupOption>? Data { get; set; }
+    }
+
+    /// <summary>
+    /// تبدیل انتخاب/متن ComboBox سمت یا دپارتمان به شناسه — اگر متن تایپی
+    /// تازه باشد (با هیچ مورد موجود منطبق نیست) ابتدا ساخته و شناسه‌اش
+    /// برگردانده می‌شود؛ «—» یا تهی = بدون مقدار (چرخه ۲۴)
+    /// </summary>
+    /// <param name="items">فهرست گزینه‌های موجود</param>
+    /// <param name="selectedIndex">ایندکس انتخابی</param>
+    /// <param name="text">متن تایپی</param>
+    /// <param name="createEndpoint">اندپوینت ساخت مقدار تازه</param>
+    private async Task<long?> ResolveLookupIdAsync(
+        ObservableCollection<LookupOption> items, int selectedIndex,
+        string? text, string createEndpoint)
+    {
+        // مورد انتخابی از فهرست؟
+        if (selectedIndex >= 0 && selectedIndex < items.Count)
+            return items[selectedIndex].Id;
+
+        // متن تایپی تازه؟ (نه خالی و نه نشان‌گر «بدون مقدار»)
+        var name = text?.Trim();
+        if (string.IsNullOrWhiteSpace(name) || name == "—")
+            return null;
+
+        // مقدار تازه — ساخت از طریق سرور (Admin/Manager)
+        var response = await _api.PostAsync<CreateLookupResponse>(createEndpoint,
+            new { name });
+        return response?.Data is > 0 ? response.Data : null;
+    }
+
+    /// <summary>پاسخ ساخت مرجع — شناسهٔ رکورد ساخته‌شده/موجود</summary>
+    private sealed class CreateLookupResponse
+    {
+        public bool IsSuccess { get; set; }
+        public long? Data { get; set; }
+    }
 
     /// <summary>انتخاب عکس پروفایل — JPG/PNG تا ۵ مگابایت</summary>
     [RelayCommand]
@@ -191,17 +319,38 @@ public partial class EmployeeFormViewModel : ObservableObject
         }
 
         IsBusy = true;
+
+        // ═══ چرخه ۲۴: حل سمت/دپارتمان — انتخابی از فهرست یا متن تایپی تازه
+        // (سمت/دپارتمان تازه در سرور ساخته می‌شود) ═══
+        var positionId = await ResolveLookupIdAsync(Positions, PositionIndex, PositionText, "lookups/positions");
+        var departmentId = await ResolveLookupIdAsync(Departments, DepartmentIndex, DepartmentText, "lookups/departments");
+
+        // تاریخ استخدام شمسی → میلادی (خالی = امروز)
+        DateOnly? hireDate = null;
+        var hireText = Helpers.Money.PersianDigitsToLatin(HireDateShamsi?.Trim() ?? "");
+        if (!string.IsNullOrWhiteSpace(hireText) &&
+            Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToGregorian(hireText) is { } g)
+            hireDate = DateOnly.FromDateTime(g);
+
         var body = new
         {
             firstName = FirstName.Trim(),
             lastName = LastName.Trim(),
             nationalCode = NationalCode.Trim(),
             mobile = Mobile.Trim(),
-            departmentId = (long?)null,
-            positionId = (long?)null,
+            departmentId,
+            positionId,
             employmentType = EmploymentTypeIndex + 1,
             baseSalary,
-            commissionPercent
+            commissionPercent,
+            // چرخه ۲۴ — فیلدهای تکمیلی مطابق اسکرین‌شات
+            personnelCode = string.IsNullOrWhiteSpace(PersonnelCode) ? null : PersonnelCode.Trim(),
+            hireDate,
+            educationLevel = EducationLevelIndex >= 0 && EducationLevelIndex < 6
+                ? EducationLevelIndex + 1 : (int?)null,
+            fieldOfStudy = string.IsNullOrWhiteSpace(FieldOfStudy) ? null : FieldOfStudy.Trim(),
+            emergencyContact = string.IsNullOrWhiteSpace(EmergencyContact) ? null : EmergencyContact.Trim(),
+            emergencyPhone = string.IsNullOrWhiteSpace(EmergencyPhone) ? null : EmergencyPhone.Trim()
         };
 
         // پاسخ تایپ‌شده — شناسهٔ پرسنلِ تازه‌ثبت‌شده برای عکس لازم است

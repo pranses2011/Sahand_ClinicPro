@@ -4,8 +4,8 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:behaviors="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
         Title="ثبت پرسنل"
-        Height="640" Width="840"
-        MinHeight="560" MinWidth="640"
+        Height="780" Width="880"
+        MinHeight="620" MinWidth="680"
         FlowDirection="RightToLeft"
         ResizeMode="CanResize"
         WindowStartupLocation="CenterOwner">
@@ -80,6 +80,10 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <!-- ردیف ۱: نام (راست) + نام خانوادگی (چپ) -->
@@ -103,7 +107,7 @@
                      Text="{Binding Mobile, UpdateSourceTrigger=PropertyChanged}"
                      MaxLength="11" />
 
-            <!-- ردیف ۳: نوع استخدام (راست، نصف عرض) -->
+            <!-- ردیف ۳: نوع استخدام (راست) + کد پرسنلی (چپ) — چرخه ۲۴ -->
             <ComboBox Grid.Row="2" Grid.Column="0" Margin="0,12,0,0"
                       materialDesign:HintAssist.Hint="نوع استخدام"
                       SelectedIndex="{Binding EmploymentTypeIndex}">
@@ -112,6 +116,49 @@
                 <ComboBoxItem Content="قراردادی" />
                 <ComboBoxItem Content="کارآموز" />
             </ComboBox>
+            <TextBox Grid.Row="2" Grid.Column="2" Margin="0,12,0,0"
+                     materialDesign:HintAssist.Hint="کد پرسنلی (خالی = خودکار)"
+                     Text="{Binding PersonnelCode, UpdateSourceTrigger=PropertyChanged}" MaxLength="20" />
+
+            <!-- ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — «در تعریف پرسنل سمت و
+                 چند فیلد دیگر وجود ندارد» — سمت و دپارتمان ویرایش‌پذیرند: می‌توان
+                 از فهرست انتخاب کرد یا مقدار تازه تایپ کرد (خودکار ساخته می‌شود) ═══ -->
+            <ComboBox Grid.Row="3" Grid.Column="0" Margin="0,12,0,0"
+                      materialDesign:HintAssist.Hint="سمت (قابل تایپ مقدار جدید)"
+                      IsEditable="True" StaysOpenOnEdit="True"
+                      ItemsSource="{Binding Positions}"
+                      DisplayMemberPath="Name"
+                      SelectedIndex="{Binding PositionIndex, TargetNullValue=-1}"
+                      Text="{Binding PositionText, UpdateSourceTrigger=PropertyChanged}" />
+            <ComboBox Grid.Row="3" Grid.Column="2" Margin="0,12,0,0"
+                      materialDesign:HintAssist.Hint="دپارتمان / بخش (قابل تایپ مقدار جدید)"
+                      IsEditable="True" StaysOpenOnEdit="True"
+                      ItemsSource="{Binding Departments}"
+                      DisplayMemberPath="Name"
+                      SelectedIndex="{Binding DepartmentIndex, TargetNullValue=-1}"
+                      Text="{Binding DepartmentText, UpdateSourceTrigger=PropertyChanged}" />
+
+            <!-- ردیف ۵: تاریخ استخدام (راست) + تحصیلات (چپ) -->
+            <TextBox Grid.Row="4" Grid.Column="0" Margin="0,12,0,0"
+                     materialDesign:HintAssist.Hint="تاریخ استخدام شمسی (مثل ۱۴۰۳/۰۵/۱۲ — خالی = امروز)"
+                     Text="{Binding HireDateShamsi, UpdateSourceTrigger=PropertyChanged}" MaxLength="10" />
+            <ComboBox Grid.Row="4" Grid.Column="2" Margin="0,12,0,0"
+                      materialDesign:HintAssist.Hint="مقطع تحصیلی"
+                      ItemsSource="{Binding EducationLevels}"
+                      SelectedIndex="{Binding EducationLevelIndex}" />
+
+            <!-- ردیف ۶: رشتهٔ تحصیلی (راست) + تماس اضطراری (چپ) -->
+            <TextBox Grid.Row="5" Grid.Column="0" Margin="0,12,0,0"
+                     materialDesign:HintAssist.Hint="رشتهٔ تحصیلی"
+                     Text="{Binding FieldOfStudy, UpdateSourceTrigger=PropertyChanged}" MaxLength="80" />
+            <TextBox Grid.Row="5" Grid.Column="2" Margin="0,12,0,0"
+                     materialDesign:HintAssist.Hint="تماس اضطراری (نام فرد)"
+                     Text="{Binding EmergencyContact, UpdateSourceTrigger=PropertyChanged}" MaxLength="60" />
+
+            <!-- ردیف ۷: شمارهٔ تماس اضطراری -->
+            <TextBox Grid.Row="6" Grid.Column="0" Margin="0,12,0,0"
+                     materialDesign:HintAssist.Hint="شمارهٔ تماس اضطراری"
+                     Text="{Binding EmergencyPhone, UpdateSourceTrigger=PropertyChanged}" MaxLength="15" />
         </Grid>
 
         <!-- ═══ اطلاعات حقوقی — چرخه نهم + چیدمان دوستونهٔ چرخه بیست‌ویکم ═══ -->
