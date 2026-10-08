@@ -75,6 +75,8 @@ public class ArchiveController : ApiBaseController
     /// <param name="patientId">شناسه بیمار</param>
     /// <param name="term">عبارت جستجو در نام بیمار یا شرح رکورد</param>
     /// <param name="sourceTable">فیلتر جدول مبدأ</param>
+    /// <param name="take">حداکثر تعداد ردیف — پیش‌فرض ۱۰۰ (چرخه بیست‌وسوم رفع CS1573)</param>
+    /// <param name="ct">توکن لغو هم‌زمان (چرخه بیست‌وسوم رفع CS1573)</param>
     [HttpGet("~/api/v1/admin/archive/records")]
     [HasPermission("settings.view")]
     public async Task<IActionResult> Records([FromQuery] long? patientId, [FromQuery] string? term,

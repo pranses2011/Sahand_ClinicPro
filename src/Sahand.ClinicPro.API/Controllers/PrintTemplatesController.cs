@@ -213,7 +213,7 @@ public class PrintTemplatesController : ApiBaseController
 
     /// <summary>بازکردن (کپی) قالب — «ذخیره به‌عنوان نسخه جدید»</summary>
     /// <param name="id">شناسه قالب مبدأ</param>
-    /// <param name="newName">نام نسخه جدید</param>
+    /// <param name="request">درخواست کپی — نام و توضیح نسخهٔ جدید (چرخه بیست‌وسوم رفع CS1572/CS1573)</param>
     [HttpPost("{id:long}/duplicate")]
     [HasPermission("settings.edit")]
     public async Task<IActionResult> Duplicate(long id, [FromBody] DuplicateRequest request)

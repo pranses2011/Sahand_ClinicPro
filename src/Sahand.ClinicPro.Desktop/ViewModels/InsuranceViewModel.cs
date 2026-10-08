@@ -1,6 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Sahand.ClinicPro.Desktop.Helpers;
 using Sahand.ClinicPro.Desktop.Services;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
@@ -185,12 +186,13 @@ public partial class InsuranceViewModel : ViewModelBase
         var lines = d.Lines ?? new List<FractionLineDto>();
         FractionLines = new ObservableCollection<FractionLineRow>(
             lines.Select(l => new FractionLineRow(
-                l.Description, $"{l.Quantity:0.#}", $"{l.ItemTotal:N0}",
-                $"{l.Franchise:N0}", $"{l.InsuranceShare:N0}", $"{l.PatientShare:N0}",
+                l.Description, $"{l.Quantity:0.#}", Money.Format(l.ItemTotal),
+                Money.Format(l.Franchise), Money.Format(l.InsuranceShare), Money.Format(l.PatientShare),
                 l.RuleType, l.RuleSource)));
         FractionSummaryText = $"🧾 {d.InvoiceCode} — {d.PatientName} | بیمه: {d.InsuranceName} | " +
-                              $"جمع: {d.Subtotal:N0} | سهم بیمه: {d.TotalInsuranceShare:N0} | سهم بیمار: {d.TotalPatientShare:N0} ریال";
-        _snackbar.Success($"محاسبه انجام شد — {d.Lines.Count} قلم");
+                              $"جمع: {Money.Format(d.Subtotal)} | سهم بیمه: {Money.Format(d.TotalInsuranceShare)} | سهم بیمار: {Money.Format(d.TotalPatientShare)} {Money.UnitLabel}";
+        // چرخه بیست‌وسوم رفع CS8602: شمارش از متغیر محلیِ تهی‌شده (Lines خود DTO تهی‌پذیر است)
+        _snackbar.Success($"محاسبه انجام شد — {lines.Count} قلم");
     }
 
     /// <summary>اعمال تسویه روی اقلام فاکتور</summary>

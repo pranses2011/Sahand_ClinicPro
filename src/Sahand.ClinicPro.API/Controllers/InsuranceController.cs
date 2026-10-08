@@ -121,7 +121,8 @@ public class InsuranceController : ApiBaseController
         if (dto.InsurancePercent is < 0 or > 100)
             return BadRequest(ApiResponse<object>.Failure("درصد بیمه باید بین ۰ تا ۱۰۰ باشد"));
 
-        InsuranceFractionmentRule rule;
+        // چرخه بیست‌وسوم رفع CS8600: نتیجهٔ جستجو تهی‌پذیر است — متغیر تهی‌پذیر
+        InsuranceFractionmentRule? rule;
         if (dto.Id == 0)
         {
             rule = new InsuranceFractionmentRule();

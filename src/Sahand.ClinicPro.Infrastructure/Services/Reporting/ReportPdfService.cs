@@ -135,16 +135,29 @@ public sealed class ReportPdfService
                             .FontSize(8.5f).FontColor(Colors.Grey.Darken1);
                     });
 
-                    // کارت‌های خلاصه — چهار کارت در هر ردیف
+                    // کارت‌های خلاصه — چهار کارت در هر ردیف — چرخه بیست‌وسوم رفع CS0618:
+                    // عنصر Grid از نسخهٔ 2022.11 منسوخ شده؛ چیدمان معادل با Table:
+                    // ۴ ستون محتوا با ستون‌های فاصلهٔ ۵ امتیازی میان‌شان و نشستن
+                    // تک‌تک کارت‌ها با مختصات صریح ستون/سطر
                     if (model.Summary.Count > 0)
                     {
-                        col.Item().PaddingBottom(10).Grid(g =>
+                        col.Item().PaddingBottom(10).Table(t =>
                         {
-                            g.Columns(4);
-                            g.Spacing(5);
-                            foreach (var s in model.Summary)
+                            t.ColumnsDefinition(c =>
                             {
-                                g.Item().Background("#E3F2FD").Border(1).BorderColor("#BBDEFB")
+                                c.RelativeColumn();
+                                c.ConstantColumn(5);
+                                c.RelativeColumn();
+                                c.ConstantColumn(5);
+                                c.RelativeColumn();
+                                c.ConstantColumn(5);
+                                c.RelativeColumn();
+                            });
+                            for (var index = 0; index < model.Summary.Count; index++)
+                            {
+                                var s = model.Summary[index];
+                                t.Cell().Column((uint)(index % 4) * 2).Row((uint)(index / 4))
+                                    .Background("#E3F2FD").Border(1).BorderColor("#BBDEFB")
                                     .CornerRadius(4).Padding(6).Column(c =>
                                     {
                                         c.Item().Text(s.Key).FontSize(8f).FontColor(Colors.Grey.Darken1);

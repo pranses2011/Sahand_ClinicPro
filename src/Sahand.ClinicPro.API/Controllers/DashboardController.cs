@@ -260,6 +260,7 @@ public class DashboardController : ApiBaseController
     /// ذخیره چیدمان شخصی داشبورد — هر کاربر چیدمان مستقل خودش را دارد
     /// </summary>
     /// <param name="request">JSON چیدمان — ترتیب کارت‌ها و نمایش بخش‌ها</param>
+    /// <param name="ct">توکن لغو هم‌زمان (چرخه بیست‌وسوم رفع CS1573)</param>
     [HttpPut("layout")]
     [HasPermission("dashboard.view")]
     public async Task<IActionResult> SaveLayout([FromBody] SaveLayoutRequest request, CancellationToken ct)

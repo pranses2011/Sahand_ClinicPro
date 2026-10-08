@@ -70,7 +70,12 @@ public class BasicDataSeeder : IDataSeeder
         var existing = await _context.Specialties
             .IgnoreQueryFilters()
             .ToListAsync(ct);
-        var byCode = existing.ToDictionary(s => s.Code, s => s, StringComparer.OrdinalIgnoreCase);
+        // چرخه بیست‌وسوم — رفع CS8714/CS8621: کلید ToDictionary باید غیرتهی باشد
+        // (Code تخصص الزاماً موجود است؛ ردیف‌های بی‌کد نادیده گرفته می‌شوند و
+        // مقایسه‌گر فقط برای کلیدهای معتبر ساخته می‌شود)
+        var byCode = existing
+            .Where(s => !string.IsNullOrWhiteSpace(s.Code))
+            .ToDictionary(s => s.Code!, s => s, StringComparer.OrdinalIgnoreCase);
 
         // افزودن والدین تازه (دیتابیس موجود فقط موارد نوی را می‌گیرد)
         foreach (var (fa, en, code) in parents)

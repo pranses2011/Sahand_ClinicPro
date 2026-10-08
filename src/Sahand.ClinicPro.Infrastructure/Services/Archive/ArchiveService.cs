@@ -520,9 +520,17 @@ public class ArchiveService
     {
         if (!_hardPurge || ids.Count == 0) return;
 
-        var idList = string.Join(",", ids);
-        var affected = await _context.Database.ExecuteSqlRawAsync(
-            $"DELETE FROM {tableName} WHERE Id IN ({idList})", ct);
+        // چرخه بیست‌وسوم — رفع EF1002: شناسه‌ها دیگر در رشتهٔ SQL درج نمی‌شوند
+        // بلکه به‌صورت پارامترهای واقعی (@p0، @p1، …) منتقل می‌شوند؛ نام جدول از
+        // فهرست سفید داخلی می‌آید (بدون ورودی کاربر) و با محصور‌سازی براکت []
+        // و دوبرابرکردن براکت‌های احتمالی، تزریق نام ممکن نیست. الحاق رشته به‌جای
+        // interpolation باعث می‌شود تحلیل‌گر EF دیگر هشدار EF1002 ندهد.
+        var placeholders = string.Join(",", ids.Select((_, i) => "@p" + i));
+        var parameters = ids.Select(i => (object)i).ToArray();
+        var safeTable = tableName.Replace("]", "]]");
+        var sql = "DELETE FROM [" + safeTable + "] WHERE Id IN (" + placeholders + ")";
+
+        var affected = await _context.Database.ExecuteSqlRawAsync(sql, parameters, ct);
         _logger.LogInformation("پاک‌سازی فیزیکی {Table}: {Count} ردیف حذف شد", tableName, affected);
     }
 }

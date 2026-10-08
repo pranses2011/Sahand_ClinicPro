@@ -80,8 +80,8 @@ public class CloudBackupService
         var bytes = await File.ReadAllBytesAsync(record.FilePath, ct);
         var fileName = Path.GetFileName(record.FilePath);
 
-        // رمزنگاری اختیاری AES-256-GCM
-        byte[] key = LoadEncryptionKey();
+        // رمزنگاری اختیاری AES-256-GCM — چرخه بیست‌وسوم رفع CS8600: کلید تهی‌پذیر
+        byte[]? key = LoadEncryptionKey();
         if (key is not null)
         {
             bytes = AesBackupEncryptor.Encrypt(bytes, key);

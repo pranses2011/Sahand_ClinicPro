@@ -106,7 +106,7 @@ public class PeoplePhotosController : ApiBaseController
     {
         var employee = await _unitOfWork.Repository<Employee>().QueryableNoTracking
             .FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
-        return await ServePhotoAsync(employee?.ProfilePicture);
+        return ServePhoto(employee?.ProfilePicture);
     }
 
     /// <summary>
@@ -120,7 +120,7 @@ public class PeoplePhotosController : ApiBaseController
         var doctor = await _unitOfWork.Repository<Doctor>().QueryableNoTracking
             .Include(d => d.Employee)
             .FirstOrDefaultAsync(d => d.Id == doctorId && !d.IsDeleted);
-        return await ServePhotoAsync(doctor?.Employee?.ProfilePicture);
+        return ServePhoto(doctor?.Employee?.ProfilePicture);
     }
 
     /// <summary>
@@ -152,8 +152,10 @@ public class PeoplePhotosController : ApiBaseController
     /// <summary>
     /// سرو فایل عکس از مسیر نسبی ذخیره‌شده — با محافظت از پیمایش مسیر
     /// (نورم‌سازی و چسباندن به ریشهٔ Photos).
+    /// چرخه بیست‌وسوم رفع CS1998: عملیات همه همگام‌اند (فایل/مسیر) — کلمهٔ async
+    /// حذف و امضا همگام شد تا هشدار «async بدون await» نماند.
     /// </summary>
-    private async Task<IActionResult> ServePhotoAsync(string? relativePath)
+    private IActionResult ServePhoto(string? relativePath)
     {
         if (string.IsNullOrWhiteSpace(relativePath))
             return NotFound(ApiResponse<object>.Failure("عکسی ثبت نشده است"));

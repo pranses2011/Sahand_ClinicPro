@@ -70,14 +70,19 @@ public partial class PatientMapper
         // پیمایش جفتی (dto ↔ موجودیت)؛ شرط i < هر دو برای اطمینان از هم‌طولی
         for (var i = 0; i < dtos.Count && i < patients.Count; i++)
         {
+            // روخش محلی تاریخ تولد — رفع CS8629: تحلیل‌گر تهی‌بودن را از طریق
+            // اندیس‌گذاری دوبار نمی‌فهمد؛ متغیر محلی مطمئن است
+            var birth = patients[i].BirthDate;
+
             // سن از تاریخ تولد میلادی با تقویم شمسی (سال‌گذرانی درست)
-            dtos[i].Age = patients[i].BirthDate.HasValue
-                ? PersianDateHelper.CalculateAge(patients[i].BirthDate.Value.ToDateTime(TimeOnly.MinValue))
+            dtos[i].Age = birth.HasValue
+                ? PersianDateHelper.CalculateAge(birth.Value.ToDateTime(TimeOnly.MinValue))
                 : null;
 
             // آخرین مراجعه → شمسی با ارقام فارسی (سازگار با زبان تمام‌فارسی رابط کاربری)
-            dtos[i].LastVisitDateShamsi = patients[i].LastVisitDate.HasValue
-                ? PersianDateHelper.ToShamsiFa(patients[i].LastVisitDate.Value)
+            var lastVisit = patients[i].LastVisitDate;
+            dtos[i].LastVisitDateShamsi = lastVisit.HasValue
+                ? PersianDateHelper.ToShamsiFa(lastVisit.Value)
                 : null;
         }
     }
