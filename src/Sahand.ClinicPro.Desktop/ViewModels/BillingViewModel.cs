@@ -280,6 +280,12 @@ public partial class InvoiceFormViewModel : ObservableObject
     [ObservableProperty]
     private int _insuranceIndex;
 
+    /// <summary>تغییر بیمهٔ فاکتور — چرخه ۲۴: فهرست خدمات با تعرفهٔ بیمهٔ منتخب
+    /// دوباره خوانده می‌شود (در نبود تعرفهٔ بیمه، همان تعرفهٔ آزاد نمایش می‌یابد)
+    /// تا قیمت اقلام تازه دقیق باشد</summary>
+    partial void OnInsuranceIndexChanged(int value)
+        => _ = LoadServicesAsync(ServiceSearch);
+
     /// <summary>بیمه‌ها</summary>
     public ObservableCollection<InsuranceOption> InsuranceCompanies { get; } = new();
 
@@ -404,11 +410,17 @@ public partial class InvoiceFormViewModel : ObservableObject
     /// <summary>جستجوی خدمات با تعرفه</summary>
     partial void OnServiceSearchChanged(string value) => _ = LoadServicesAsync(value);
 
-    /// <summary>بارگذاری خدمات</summary>
+    /// <summary>بارگذاری خدمات — چرخه ۲۴: با بیمهٔ منتخب فاکتور (تعرفهٔ بیمه‌ای
+    /// در نبود، تعرفهٔ آزاد) تا قیمت‌ها همگام با بیمهٔ انتخابی باشد</summary>
     private async Task LoadServicesAsync(string term)
     {
-        var response = await _api.GetAsync<ServicesResponse>(
-            $"lookups/services?search={Uri.EscapeDataString(term ?? string.Empty)}");
+        // شناسهٔ بیمهٔ منتخب — صفر = آزاد → پارامتری نمی‌فرستیم
+        var insuranceId = InsuranceIndex > 0 && InsuranceIndex < InsuranceCompanies.Count
+            ? InsuranceCompanies[InsuranceIndex].Id
+            : (long?)null;
+        var url = "lookups/services?search=" + Uri.EscapeDataString(term ?? string.Empty) +
+                  (insuranceId is null ? "" : $"&insuranceCompanyId={insuranceId}");
+        var response = await _api.GetAsync<ServicesResponse>(url);
         Services.Clear();
         if (response?.Data is null) return;
         foreach (var s in response.Data)

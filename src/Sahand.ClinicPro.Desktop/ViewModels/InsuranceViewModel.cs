@@ -18,13 +18,19 @@ public record CompanyRow(long Id, string Name, string? Code, decimal CoveragePer
 }
 
 /// <summary>
-/// ردیف تعرفه — چرخه بیست‌وسوم: فیلد Id برای ویرایش و فیلد IsActive افزوده شد
+/// ردیف تعرفه — چرخه بیست‌وسوم: فیلد Id برای ویرایش و فیلد IsActive افزوده شد.
+/// چرخه ۲۴: TargetBadge نشان می‌دهد این خدمت برای بیمهٔ منتخب «تعرفهٔ اختصاصی»
+/// دارد یا قیمت نمایشی همان تعرفهٔ پایه/آزاد است.
 /// </summary>
 public record TariffRow(long Id, string Code, string ServiceName, decimal Price,
-    decimal InsuranceShare, decimal PatientShare, bool IsActive = true)
+    decimal InsuranceShare, decimal PatientShare, bool IsActive = true,
+    bool HasTargetTariff = false)
 {
     /// <summary>متن فارسی وضعیت برای ستون گرید — بدون نیاز به مبدل</summary>
     public string StatusText => IsActive ? "فعال" : "غیرفعال";
+
+    /// <summary>نشان تعرفهٔ اختصاصی — ✅ برای «تعرفهٔ مختص بیمهٔ منتخب دارد»</summary>
+    public string TargetBadge => HasTargetTariff ? "اختصاصی" : "پایه";
 }
 
 /// <summary>ردیف مطالبه</summary>
@@ -79,6 +85,31 @@ public partial class InsuranceViewModel : ViewModelBase
     /// <summary>تعرفهٔ انتخاب‌شده — برای ویرایش (چرخه بیست‌وسوم)</summary>
     [ObservableProperty]
     private TariffRow? _selectedTariff;
+
+    // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — تعرفهٔ به‌تفکیک بیمه ═══
+    // «تعرفه‌ها برای بیمه‌ها متفاوت می‌تواند باشد و برای آزاد هم تعرفه تعریف بشود»
+    // — انتخابگر هدف تعرفه: اندیس ۰ = «آزاد (بدون بیمه)»، اندیس‌های بعدی =
+    // شرکت‌های بیمه. تعویض هدف، فهرست تعرفه‌ها را با پارامتر هدف از سرور
+    // می‌خواند و ذخیره/ویرایش هم روی همان هدف اعمال می‌شود.
+
+    /// <summary>اندیس هدف فعلی تعرفه‌ها — ۰ آزاد، ۱+ بیمه‌ها</summary>
+    [ObservableProperty]
+    private int _tariffTargetIndex;
+
+    /// <summary>برچسب هدف فعلی — بالای جدول تعرفه‌ها</summary>
+    [ObservableProperty]
+    private string _tariffTargetLabel = "آزاد (بدون بیمه)";
+
+    /// <summary>نام اهداف تعرفه برای انتخابگر — [۰] آزاد + [۱..] بیمه‌ها</summary>
+    public ObservableCollection<string> TariffTargetNames { get; } = new() { "🆓 آزاد (بدون بیمه)" };
+
+    /// <summary>تغییر هدف تعرفه — بارگذاری مجدد فهرست تعرفه‌ها برای هدف تازه</summary>
+    partial void OnTariffTargetIndexChanged(int value)
+    {
+        var (label, _) = CurrentTariffTarget();
+        TariffTargetLabel = label;
+        _ = LoadTariffsForTargetAsync();
+    }
 
     /// <summary>مطالبات</summary>
     [ObservableProperty]
@@ -139,6 +170,23 @@ public partial class InsuranceViewModel : ViewModelBase
         _ = LoadAsync();
     }
 
+    /// <summary>
+    /// بارگذاری فهرست تعرفه‌ها برای هدف فعلی — چرخه بیست‌وچهارم:
+    /// اندپوینت مدیریت با پارامتر insuranceCompanyId فراخوانی می‌شود؛
+    /// تهی = تعرفهٔ آزاد، مقدار = تعرفهٔ بیمهٔ منتخب (در نبود، مقدار پایه).
+    /// </summary>
+    private async Task LoadTariffsForTargetAsync()
+    {
+        var (_, targetId) = CurrentTariffTarget();
+        var url = "lookups/services/manage" +
+                   (targetId is null ? "" : $"?insuranceCompanyId={targetId}");
+        var services = await _api.GetAsync<ServicesManageResponse>(url);
+        Tariffs.Clear();
+        foreach (var s in services?.Data ?? new List<ServiceTariffManageDto>())
+            Tariffs.Add(new TariffRow(s.Id, s.ServiceCode ?? "—", s.ServiceName,
+                s.Price, s.InsuranceShare, s.PatientShare, s.IsActive, s.HasTargetTariff));
+    }
+
     /// <summary>بارگذاری هر چهار تب</summary>
     [RelayCommand]
     public async Task LoadAsync()
@@ -152,12 +200,17 @@ public partial class InsuranceViewModel : ViewModelBase
             (companies?.Data ?? new List<CompanyManageDto>()).Select(c =>
                 new CompanyRow(c.Id, c.Name, c.Code, c.CoveragePercent, c.Type, c.TypeName, c.IsActive)));
 
-        // تعرفه‌ها هم از اندپوینت مدیریت — شامل Id برای ویرایش
-        var services = await _api.GetAsync<ServicesManageResponse>("lookups/services/manage");
-        Tariffs.Clear();
-        foreach (var s in services?.Data ?? new List<ServiceTariffManageDto>())
-            Tariffs.Add(new TariffRow(s.Id, s.ServiceCode ?? "—", s.ServiceName,
-                s.Price, s.InsuranceShare, s.PatientShare, s.IsActive));
+        // چرخه ۲۴: فهرست اهداف تعرفه — «آزاد» + بیمه‌ها؛ انتخاب فعلی معتبر نگه
+        // می‌ماند اگر هنوز در بازه باشد (بعد از حذف بیمه ممکن است بیرون بیفتد)
+        TariffTargetNames.Clear();
+        TariffTargetNames.Add("🆓 آزاد (بدون بیمه)");
+        foreach (var c in Companies)
+            TariffTargetNames.Add(c.Name);
+        if (TariffTargetIndex > Companies.Count)
+            TariffTargetIndex = 0;
+
+        // ═══ چرخه ۲۴: تعرفه‌ها با پارامتر هدف (بیمهٔ منتخب یا آزاد) خوانده می‌شوند ═══
+        await LoadTariffsForTargetAsync();
 
         var claims = await _api.GetAsync<ClaimsResponse>("insurance/claims");
         Claims = new ObservableCollection<ClaimRow>(
@@ -227,11 +280,12 @@ public partial class InsuranceViewModel : ViewModelBase
         _ = LoadAsync();
     }
 
-    /// <summary>باز کردن فرم تعرفهٔ جدید</summary>
+    /// <summary>باز کردن فرم تعرفهٔ جدید — با هدف منتخب (آزاد یا بیمه) چرخه ۲۴</summary>
     [RelayCommand]
     private void NewTariff()
     {
-        var form = new TariffFormViewModel(_api, null);
+        var (targetLabel, targetId) = CurrentTariffTarget();
+        var form = new TariffFormViewModel(_api, null, targetId, targetLabel);
         var window = new Views.TariffFormWindow(form)
         {
             Owner = System.Windows.Application.Current?.MainWindow
@@ -240,7 +294,7 @@ public partial class InsuranceViewModel : ViewModelBase
         _ = LoadAsync();
     }
 
-    /// <summary>باز کردن فرم ویرایش تعرفهٔ انتخاب‌شده</summary>
+    /// <summary>باز کردن فرم ویرایش تعرفهٔ انتخاب‌شده — با هدف منتخب چرخه ۲۴</summary>
     [RelayCommand]
     private void EditTariff()
     {
@@ -249,13 +303,26 @@ public partial class InsuranceViewModel : ViewModelBase
             _snackbar.Error("ابتدا یک خدمت/تعرفه از جدول انتخاب کنید");
             return;
         }
-        var form = new TariffFormViewModel(_api, SelectedTariff);
+        var (targetLabel, targetId) = CurrentTariffTarget();
+        var form = new TariffFormViewModel(_api, SelectedTariff, targetId, targetLabel);
         var window = new Views.TariffFormWindow(form)
         {
             Owner = System.Windows.Application.Current?.MainWindow
         };
         window.ShowDialog();
         _ = LoadAsync();
+    }
+
+    /// <summary>
+    /// هدف فعلی تعرفه‌ها — اندیس منتخب انتخابگر تب تعرفه: ۰ = آزاد،
+    /// ۱+ = شرکت بیمهٔ i-اُم فهرست. برچسب فارسی و شناسهٔ سرور را برمی‌گرداند.
+    /// </summary>
+    private (string Label, long? Id) CurrentTariffTarget()
+    {
+        if (TariffTargetIndex <= 0 || TariffTargetIndex > Companies.Count)
+            return ("آزاد (بدون بیمه)", null);
+        var company = Companies[TariffTargetIndex - 1];
+        return (company.Name, company.Id);
     }
 
     /* ─── تسویه حساب بیمه — چرخه ۱۳ (درخواست ۲-۱) ─── */
@@ -415,6 +482,8 @@ public partial class InsuranceViewModel : ViewModelBase
         public decimal InsuranceShare { get; set; }
         public decimal PatientShare { get; set; }
         public bool IsActive { get; set; }
+        /// <summary>چرخه ۲۴: تعرفهٔ اختصاصی برای هدف منتخب (بیمه) دارد؟</summary>
+        public bool HasTargetTariff { get; set; }
     }
 
     public sealed class ClaimsResponse

@@ -26,12 +26,17 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- سربرگ -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
-            <materialDesign:PackIcon Kind="CashPlus" Width="24" Height="24"
-                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding Header}" FontSize="17" FontWeight="Bold"
-                       Margin="10,0,0,0" VerticalAlignment="Center" />
+        <!-- سربرگ — چرخه ۲۴: برچسب هدف تعرفه (آزاد یا بیمهٔ منتخب) زیر عنوان -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,4">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="CashPlus" Width="24" Height="24"
+                                         Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Header}" FontSize="17" FontWeight="Bold"
+                           Margin="10,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+            <TextBlock Text="{Binding TargetLabel, Mode=OneWay}" FontSize="11.5" Opacity="0.7"
+                       Margin="34,4,0,0"
+                       ToolTip="این قیمت/سهم‌ها روی تعرفهٔ همین هدف ذخیره می‌شود" />
         </StackPanel>
 
         <!-- نام خدمت -->

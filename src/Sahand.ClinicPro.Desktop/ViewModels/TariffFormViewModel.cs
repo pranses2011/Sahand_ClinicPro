@@ -17,6 +17,14 @@ public partial class TariffFormViewModel : ObservableObject
     /// <summary>ردیف در حال ویرایش — تهی یعنی ثبت جدید</summary>
     private readonly TariffRow? _editTarget;
 
+    // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — تعرفهٔ به‌تفکیک بیمه ═══
+    // «تعرفه‌ها برای بیمه‌ها متفاوت می‌تواند باشد و برای آزاد هم تعرفه تعریف
+    // بشود» — این فرم روی «هدف» مشخص ذخیره می‌کند: تهی = تعرفهٔ آزاد (بدون
+    // بیمه)، مقدار = تعرفهٔ اختصاصی همان بیمه. برچسب هدف هم در فرم دیده می‌شود.
+
+    /// <summary>شناسهٔ هدف تعرفه — تهی = آزاد</summary>
+    private readonly long? _insuranceCompanyId;
+
     /// <summary>عنوان پنجره</summary>
     [ObservableProperty]
     private string _header = "خدمت / تعرفهٔ جدید";
@@ -56,11 +64,15 @@ public partial class TariffFormViewModel : ObservableObject
     /// <summary>رویداد درخواست بستن</summary>
     public event EventHandler? CloseRequested;
 
-    /// <summary>سازنده — editTarget تهی یعنی ثبت جدید</summary>
-    public TariffFormViewModel(IApiClient api, TariffRow? editTarget)
+    /// <summary>سازنده — editTarget تهی یعنی ثبت جدید؛ چرخه ۲۴: targetInsuranceId
+    /// هدف تعرفه (تهی = آزاد) و targetLabel برچسب نمایشی همان هدف</summary>
+    public TariffFormViewModel(IApiClient api, TariffRow? editTarget,
+        long? targetInsuranceId = null, string targetLabel = "آزاد (بدون بیمه)")
     {
         _api = api;
         _editTarget = editTarget;
+        _insuranceCompanyId = targetInsuranceId;
+        TargetLabel = targetLabel;
 
         if (editTarget is not null)
         {
@@ -72,7 +84,15 @@ public partial class TariffFormViewModel : ObservableObject
             PatientShare = editTarget.PatientShare;
             IsActive = editTarget.IsActive;
         }
+        else
+        {
+            Header = $"خدمت / تعرفهٔ جدید — {targetLabel}";
+        }
     }
+
+    /// <summary>برچسب هدف تعرفه — آزاد یا نام بیمه (نمایش در فرم)</summary>
+    [ObservableProperty]
+    private string _targetLabel = "آزاد (بدون بیمه)";
 
     /// <summary>ذخیره — POST برای جدید / PUT برای ویرایش</summary>
     [RelayCommand]
@@ -105,7 +125,9 @@ public partial class TariffFormViewModel : ObservableObject
             price = Price,
             insuranceShare = InsuranceShare,
             patientShare = PatientShare,
-            isActive = IsActive
+            isActive = IsActive,
+            // چرخه ۲۴: هدف تعرفه — تهی = آزاد، مقدار = بیمهٔ منتخب
+            insuranceCompanyId = _insuranceCompanyId
         };
 
         bool ok;

@@ -72,9 +72,17 @@
                  تعرفه‌های موجود را ویرایش کرد» — نوار ابزار + ستون وضعیت ═══ -->
             <TabItem Header="💲 تعرفه‌ها">
                 <DockPanel>
+                    <!-- ═══ چرخه ۲۴ — نوار ابزار: هدف تعرفه (آزاد/بیمه‌ها) + دکمه‌ها ═══
+                         «تعرفه‌ها برای بیمه‌ها متفاوت می‌تواند باشد و برای آزاد هم
+                         تعرفه تعریف بشود» — انتخاب هدف، فهرست را برای همان هدف می‌آورد -->
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,8">
+                        <TextBlock Text="هدف تعرفه:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,8,0" />
+                        <!-- فهرست اهداف: «آزاد» + شرکت‌های بیمه — از VM (TariffTargetNames)
+                             چرخه ۲۴: تعرفه‌ها به‌تفکیک بیمه + تعرفهٔ آزاد -->
+                        <ComboBox MinWidth="180" SelectedIndex="{Binding TariffTargetIndex}"
+                                  ItemsSource="{Binding TariffTargetNames}" />
                         <Button Command="{Binding NewTariffCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
+                                Style="{StaticResource MaterialDesignRaisedButton}" Margin="14,0,8,0">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Plus" Width="15" Height="15" VerticalAlignment="Center" />
                                 <TextBlock Text="تعرفهٔ جدید" Margin="7,0,0,0" VerticalAlignment="Center" />
@@ -87,14 +95,20 @@
                                 <TextBlock Text="ویرایش تعرفهٔ انتخاب‌شده" Margin="7,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
+                        <TextBlock Text="📍 نمایش تعرفه‌ها برای:" VerticalAlignment="Center"
+                                   FontWeight="Bold" Foreground="#1565C0" Margin="14,0,6,0" />
+                        <TextBlock Text="{Binding TariffTargetLabel, Mode=OneWay}" VerticalAlignment="Center"
+                                   FontWeight="Bold" Foreground="#1565C0" />
                     </StackPanel>
                     <DataGrid ItemsSource="{Binding Tariffs}" SelectedItem="{Binding SelectedTariff}"
                               AutoGenerateColumns="False" CanUserAddRows="False"
                               IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="کد خدمت" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="کد خدمت" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="110" />
                             <DataGridTextColumn Header="نام خدمت" Binding="{Binding ServiceName, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="قیمت آزاد (ریال)" Width="130">
+                            <!-- چرخه ۲۴: نشان «اختصاصی/پایه» — آیا خدمت برای بیمهٔ منتخب تعرفهٔ جدا دارد؟ -->
+                            <DataGridTextColumn Header="نوع تعرفه" Binding="{Binding TargetBadge, Converter={StaticResource PersianDigits}}" Width="90" />
+                            <DataGridTextColumn Header="قیمت تعرفه" Width="130">
                                 <DataGridTextColumn.Binding><Binding Path="Price" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock"><Setter Property="FontFamily" Value="Consolas" /></Style>

@@ -376,8 +376,11 @@ public record ServiceTariffOptionDto(
     decimal InsuranceShare,
     decimal PatientShare);
 
-/// <summary>پرس‌وجوی خدمات فعال با قیمت تعرفه سال جاری</summary>
-public record GetServicesQuery(string? Search = null) : IRequest<Result<List<ServiceTariffOptionDto>>>;
+/// <summary>پرس‌وجوی خدمات فعال با قیمت تعرفه سال جاری — چرخه ۲۴: پارامتر
+/// InsuranceCompanyId تعیین می‌کند تعرفهٔ «کدام هدف» خوانده شود؛ تهی = آزاد.
+/// تعرفهٔ بیمهٔ منتخب → در نبود، تعرفهٔ آزاد → در نبود، قیمت پایهٔ خدمت</summary>
+public record GetServicesQuery(string? Search = null, long? InsuranceCompanyId = null)
+    : IRequest<Result<List<ServiceTariffOptionDto>>>;
 
 /// <summary>گرداننده خدمات با تعرفه</summary>
 public class GetServicesQueryHandler : IRequestHandler<GetServicesQuery, Result<List<ServiceTariffOptionDto>>>
@@ -387,7 +390,7 @@ public class GetServicesQueryHandler : IRequestHandler<GetServicesQuery, Result<
     /// <summary>سازنده</summary>
     public GetServicesQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
-    /// <summary>اجرا — خدمت فعال + قیمت تعرفه ۱۴۰۴ یا قیمت پایه</summary>
+    /// <summary>اجرا — خدمت فعال + قیمت تعرفهٔ هدف منتخب (بیمه یا آزاد) یا قیمت پایه</summary>
     public async Task<Result<List<ServiceTariffOptionDto>>> Handle(GetServicesQuery request,
         CancellationToken cancellationToken)
     {
@@ -402,11 +405,23 @@ public class GetServicesQueryHandler : IRequestHandler<GetServicesQuery, Result<
 
         var services = await query.OrderBy(x => x.ServiceName).Take(60).ToListAsync(cancellationToken);
         var serviceIds = services.Select(x => x.Id).ToList();
+
+        // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — تعرفهٔ به‌تفکیک بیمه ═══
+        // «تعرفه‌ها برای بیمه‌ها متفاوت می‌تواند باشد و برای آزاد هم تعرفه
+        // تعریف بشود» — هر دو ردیف تعرفه (هدف بیمه + آزاد) خوانده می‌شود و
+        // حل‌کننده: ۱) تعرفهٔ بیمهٔ منتخب ۲) تعرفهٔ آزاد ۳) قیمت پایهٔ خدمت
         var tariffs = await _unitOfWork.Repository<Tariff>().QueryableNoTracking
-            .Where(t => serviceIds.Contains(t.ServiceId) && t.InsuranceCompanyId == null && t.IsActive)
+            .Where(t => serviceIds.Contains(t.ServiceId) && t.IsActive &&
+                        (t.InsuranceCompanyId == request.InsuranceCompanyId ||
+                         (request.InsuranceCompanyId != null && t.InsuranceCompanyId == null)))
             .ToListAsync(cancellationToken);
         var tariffByService = tariffs.GroupBy(t => t.ServiceId)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(t => t.Year).First());
+            .ToDictionary(g => g.Key, g => g
+                // اولویت: ردیف بیمهٔ منتخب (تهی نبودن InsuranceCompanyId) بالاتر از آزاد
+                .OrderByDescending(t => t.InsuranceCompanyId == request.InsuranceCompanyId &&
+                                        request.InsuranceCompanyId != null)
+                .ThenByDescending(t => t.Year)
+                .First());
 
         var items = new List<ServiceTariffOptionDto>();
         foreach (var x in services)

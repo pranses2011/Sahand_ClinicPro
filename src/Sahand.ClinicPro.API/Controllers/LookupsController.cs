@@ -191,11 +191,13 @@ public class LookupsController : ApiBaseController
         public string Name { get; set; } = string.Empty;
     }
 
-    /// <summary>فهرست خدمات فعال با قیمت تعرفه — برای اقلام فاکتور</summary>
+    /// <summary>فهرست خدمات فعال با قیمت تعرفه — اقلام فاکتور؛ چرخه ۲۴:
+    /// پارامتر insuranceCompanyId تعرفهٔ بیمهٔ منتخب را برمی‌گرداند (تهی = آزاد)</summary>
     [HttpGet("services")]
-    public async Task<IActionResult> GetServices([FromQuery] string? search)
+    public async Task<IActionResult> GetServices([FromQuery] string? search,
+        [FromQuery] long? insuranceCompanyId)
     {
-        var result = await _mediator.Send(new GetServicesQuery(search));
+        var result = await _mediator.Send(new GetServicesQuery(search, insuranceCompanyId));
         return ToResponse(result);
     }
 
@@ -204,15 +206,17 @@ public class LookupsController : ApiBaseController
     // — چهار endpoint زیر به پنجرهٔ مدیریت تعرفه‌های صفحهٔ بیمه سرویس می‌دهند.
     // نوشتن دادهٔ مرجع نیازمند نقش مدیریتی است؛ خواندن برای همه باقی می‌ماند.
 
-    /// <summary>فهرست کامل خدمت‌های تعرفه‌دار شامل غیرفعال — پنجرهٔ مدیریت تعرفه‌ها</summary>
+    /// <summary>فهرست کامل خدمت‌های تعرفه‌دار شامل غیرفعال — پنجرهٔ مدیریت تعرفه‌ها؛
+    /// چرخه ۲۴: پارامتر insuranceCompanyId هدف تعرفه (تهی = آزاد)</summary>
     [HttpGet("services/manage")]
-    public async Task<IActionResult> GetServicesForManage()
+    public async Task<IActionResult> GetServicesForManage([FromQuery] long? insuranceCompanyId)
     {
-        var result = await _mediator.Send(new GetServicesTariffsForManageQuery());
+        var result = await _mediator.Send(new GetServicesTariffsForManageQuery(insuranceCompanyId));
         return ToResponse(result);
     }
 
-    /// <summary>ساخت خدمت تعرفه‌دار جدید (خدمت + ردیف تعرفهٔ آزاد سال جاری)</summary>
+    /// <summary>ساخت خدمت تعرفه‌دار جدید — خدمت + ردیف تعرفهٔ هدف منتخب سال جاری
+    /// (چرخه ۲۴: insuranceCompanyId تهی = تعرفهٔ آزاد، مقدار = تعرفهٔ بیمه)</summary>
     /// <param name="request">داده خدمت/تعرفه</param>
     [HttpPost("services")]
     [Authorize(Roles = "Admin,Manager")]
@@ -220,11 +224,11 @@ public class LookupsController : ApiBaseController
     {
         var result = await _mediator.Send(new CreateServiceTariffCommand(
             request.ServiceName, request.ServiceCode, request.Price,
-            request.InsuranceShare, request.PatientShare));
+            request.InsuranceShare, request.PatientShare, request.InsuranceCompanyId));
         return ToResponse(result, "خدمت/تعرفه ثبت شد");
     }
 
-    /// <summary>ویرایش خدمت تعرفه‌دار — تعرفهٔ آزاد سال جاری upsert می‌شود</summary>
+    /// <summary>ویرایش خدمت تعرفه‌دار — تعرفهٔ هدف منتخب سال جاری upsert می‌شود</summary>
     /// <param name="id">شناسه خدمت</param>
     /// <param name="request">داده خدمت/تعرفه</param>
     [HttpPut("services/{id:long}")]
@@ -233,7 +237,8 @@ public class LookupsController : ApiBaseController
     {
         var result = await _mediator.Send(new UpdateServiceTariffCommand(
             id, request.ServiceName, request.ServiceCode, request.Price,
-            request.InsuranceShare, request.PatientShare, request.IsActive));
+            request.InsuranceShare, request.PatientShare, request.IsActive,
+            request.InsuranceCompanyId));
         return ToResponse(result, "خدمت/تعرفه به‌روزرسانی شد");
     }
 
@@ -268,4 +273,7 @@ public sealed class SaveServiceTariffRequest
 
     /// <summary>وضعیت فعال — در ویرایش معنا دارد</summary>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>هدف تعرفه — چرخه ۲۴: تهی = تعرفهٔ آزاد (بدون بیمه)، مقدار = بیمهٔ منتخب</summary>
+    public long? InsuranceCompanyId { get; set; }
 }

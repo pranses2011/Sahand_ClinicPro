@@ -32,7 +32,8 @@ internal static class TariffYear
     }
 }
 
-/// <summary>آیتم خدمت/تعرفه برای پنجرهٔ مدیریت تعرفه‌ها</summary>
+/// <summary>آیتم خدمت/تعرفه برای پنجرهٔ مدیریت تعرفه‌ها.
+/// HasTargetTariff (چرخه ۲۴): تعرفهٔ اختصاصی برای هدف منتخب (بیمه) دارد؟</summary>
 public record ServiceTariffManageDto(
     long Id,
     string? ServiceCode,
@@ -40,10 +41,12 @@ public record ServiceTariffManageDto(
     decimal Price,
     decimal InsuranceShare,
     decimal PatientShare,
-    bool IsActive);
+    bool IsActive,
+    bool HasTargetTariff = false);
 
-/// <summary>پرس‌وجوی فهرست خدمت‌های تعرفه‌دار (پنجرهٔ مدیریت تعرفه‌ها) — شامل غیرفعال</summary>
-public record GetServicesTariffsForManageQuery
+/// <summary>پرس‌وجوی فهرست خدمت‌های تعرفه‌دار (پنجرهٔ مدیریت تعرفه‌ها) — شامل غیرفعال.
+/// چرخه بیست‌وچهارم: پارامتر InsuranceCompanyId هدف را تعیین می‌کند — تهی = آزاد.</summary>
+public record GetServicesTariffsForManageQuery(long? InsuranceCompanyId = null)
     : IRequest<Result<List<ServiceTariffManageDto>>>;
 
 /// <summary>گردانندهٔ فهرست تعرفه‌ها برای مدیریت</summary>
@@ -56,7 +59,9 @@ public class GetServicesTariffsForManageQueryHandler
     public GetServicesTariffsForManageQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
     /// <summary>
-    /// اجرا — خدمت‌ها (شامل غیرفعال) + آخرین تعرفهٔ آزاد هر خدمت.
+    /// اجرا — خدمت‌ها (شامل غیرفعال) + تعرفهٔ هدف منتخب (بیمه یا آزاد).
+    /// برای هدف بیمه: تعرفهٔ بیمه مقدم، در نبود آن تعرفهٔ آزاد (نمایش
+    /// «مقدار پایه»)؛ HasTargetTariff نشان می‌دهد تعرفهٔ اختصاصی دارد یا نه.
     /// </summary>
     public async Task<Result<List<ServiceTariffManageDto>>> Handle(GetServicesTariffsForManageQuery request,
         CancellationToken cancellationToken)
@@ -66,23 +71,31 @@ public class GetServicesTariffsForManageQueryHandler
             .ToListAsync(cancellationToken);
         var serviceIds = services.Select(s => s.Id).ToList();
 
-        // آخرین تعرفهٔ آزاد (بدون بیمه) هر خدمت — مبنای قیمت/سهم‌ها
+        // ردیف‌های تعرفهٔ هدف منتخب + آزاد (برای fallback نمایشی)
         var tariffs = await _unitOfWork.Repository<Tariff>().QueryableNoTracking
-            .Where(t => serviceIds.Contains(t.ServiceId) && t.InsuranceCompanyId == null)
+            .Where(t => serviceIds.Contains(t.ServiceId) &&
+                        (t.InsuranceCompanyId == request.InsuranceCompanyId ||
+                         (request.InsuranceCompanyId != null && t.InsuranceCompanyId == null)))
             .ToListAsync(cancellationToken);
-        var tariffByService = tariffs
-            .GroupBy(t => t.ServiceId)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(t => t.Year).First());
+
+        Tariff? Resolve(long serviceId) => tariffs
+            .Where(t => t.ServiceId == serviceId)
+            .OrderByDescending(t => t.InsuranceCompanyId == request.InsuranceCompanyId &&
+                                    request.InsuranceCompanyId != null)
+            .ThenByDescending(t => t.Year)
+            .FirstOrDefault();
 
         var items = services.Select(s =>
         {
-            var t = tariffByService.TryGetValue(s.Id, out var tariff) ? tariff : null;
+            var t = Resolve(s.Id);
+            var hasTarget = request.InsuranceCompanyId != null && tariffs.Any(x =>
+                x.ServiceId == s.Id && x.InsuranceCompanyId == request.InsuranceCompanyId);
             return new ServiceTariffManageDto(
                 s.Id, s.ServiceCode, s.ServiceName,
                 t is not null ? t.Price : s.DefaultPrice,
                 t is not null ? t.InsuranceShare : 0m,
                 t is not null ? t.PatientShare : 0m,
-                s.IsActive);
+                s.IsActive, hasTarget);
         }).ToList();
 
         return Result<List<ServiceTariffManageDto>>.Success(items);
@@ -90,15 +103,17 @@ public class GetServicesTariffsForManageQueryHandler
 }
 
 /// <summary>
-/// فرمان ساخت خدمت تعرفه‌دار جدید — هم خدمت ساخته می‌شود هم ردیف تعرفهٔ آزادِ
-/// سال جاری با قیمت/سهم‌های داده‌شده (upsert).
+/// فرمان ساخت خدمت تعرفه‌دار جدید — هم خدمت ساخته می‌شود هم ردیف تعرفهٔ
+/// هدف منتخب سال جاری با قیمت/سهم‌های داده‌شده (upsert). چرخه ۲۴: پارامتر
+/// InsuranceCompanyId هدف را تعیین می‌کند (تهی = تعرفهٔ آزاد/بدون بیمه).
 /// </summary>
 public record CreateServiceTariffCommand(
     string ServiceName,
     string? ServiceCode,
     decimal Price,
     decimal InsuranceShare,
-    decimal PatientShare) : IRequest<Result<long>>;
+    decimal PatientShare,
+    long? InsuranceCompanyId = null) : IRequest<Result<long>>;
 
 /// <summary>گردانندهٔ ساخت خدمت تعرفه‌دار</summary>
 public class CreateServiceTariffCommandHandler
@@ -135,11 +150,11 @@ public class CreateServiceTariffCommandHandler
         };
         await _unitOfWork.Repository<Service>().AddAsync(service, cancellationToken);
 
-        // ردیف تعرفهٔ آزادِ سال جاری — InsuranceCompanyId تهی یعنی تعرفهٔ پایه
+        // ردیف تعرفهٔ هدف منتخب سال جاری — InsuranceCompanyId تهی یعنی تعرفهٔ آزاد
         var tariff = new Tariff
         {
             ServiceId = service.Id,
-            InsuranceCompanyId = null,
+            InsuranceCompanyId = request.InsuranceCompanyId,
             Year = TariffYear.Current,
             Price = request.Price,
             InsuranceShare = request.InsuranceShare,
@@ -153,8 +168,9 @@ public class CreateServiceTariffCommandHandler
 }
 
 /// <summary>
-/// فرمان ویرایش خدمت تعرفه‌دار — نام/کد خدمت به‌روزرسانی و ردیف تعرفهٔ آزادِ
-/// سال جاری upsert می‌شود (اگر تعرفهٔ امسال نباشد ساخته می‌شود).
+/// فرمان ویرایش خدمت تعرفه‌دار — نام/کد خدمت به‌روزرسانی و ردیف تعرفهٔ
+/// هدف منتخب سال جاری upsert می‌شود (اگر تعرفهٔ امسال نباشد ساخته می‌شود).
+/// چرخه ۲۴: InsuranceCompanyId هدف تعرفه (تهی = آزاد).
 /// </summary>
 public record UpdateServiceTariffCommand(
     long Id,
@@ -163,7 +179,8 @@ public record UpdateServiceTariffCommand(
     decimal Price,
     decimal InsuranceShare,
     decimal PatientShare,
-    bool IsActive) : IRequest<Result>;
+    bool IsActive,
+    long? InsuranceCompanyId = null) : IRequest<Result>;
 
 /// <summary>گردانندهٔ ویرایش خدمت تعرفه‌دار</summary>
 public class UpdateServiceTariffCommandHandler
@@ -199,16 +216,18 @@ public class UpdateServiceTariffCommandHandler
         service.DefaultPrice = request.Price;
         service.IsActive = request.IsActive;
 
-        // upsert تعرفهٔ آزاد سال جاری
+        // ═══ چرخه ۲۴: upsert تعرفهٔ هدف منتخب (بیمه یا آزاد) سال جاری ═══
         var currentYearTariff = await _unitOfWork.Repository<Tariff>().QueryableNoTracking
-            .Where(t => t.ServiceId == service.Id && t.InsuranceCompanyId == null && t.Year == TariffYear.Current)
+            .Where(t => t.ServiceId == service.Id &&
+                        t.InsuranceCompanyId == request.InsuranceCompanyId &&
+                        t.Year == TariffYear.Current)
             .FirstOrDefaultAsync(cancellationToken);
         if (currentYearTariff is null)
         {
             await _unitOfWork.Repository<Tariff>().AddAsync(new Tariff
             {
                 ServiceId = service.Id,
-                InsuranceCompanyId = null,
+                InsuranceCompanyId = request.InsuranceCompanyId,
                 Year = TariffYear.Current,
                 Price = request.Price,
                 InsuranceShare = request.InsuranceShare,
