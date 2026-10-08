@@ -751,9 +751,11 @@ public partial class PrescriptionFormViewModel : ObservableObject
                     dateShamsi: Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.Now),
                     trackingCode: ElectronicTrackingCode,
                     items: Items.Select(i => (
-                        i.Name, (string?)i.Subtitle,
-                        $"{i.Dosage} × {i.Frequency} × {i.Duration}",
-                        (string?)i.Route ?? "", (string?)i.Instructions ?? "")).ToList(),
+                        Name: i.Name,
+                        Subtitle: (string?)i.Subtitle,
+                        Usage: $"{i.Dosage} × {i.Frequency} × {i.Duration}",
+                        Route: (string?)i.Route,
+                        Instructions: (string?)i.Instructions)).ToList(),
                     style),
                 $"چاپ نسخه — {Patient.FullName}");
         }
