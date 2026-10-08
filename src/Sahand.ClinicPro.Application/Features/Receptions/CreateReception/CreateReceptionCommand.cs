@@ -57,15 +57,41 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
         if (patient is null)
             return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
 
-        var doctor = await _unitOfWork.Repository<Doctor>().GetByIdAsync(dto.DoctorId, cancellationToken);
-        if (doctor is null)
-            return Result<long>.Failure(Error.NotFound("پزشک", dto.DoctorId));
+        // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — پذیرش خدمت درمانی ═══
+        // «قسمت پذیرش فقط پزشک دارد — بیمارِ آمپول/سرم/پانسمان/آزمایش/عکس چه
+        // می‌شود؟» — پذیرش دوگونه است: ویزیت پزشک (DoctorId) یا خدمت درمانی
+        // (ServiceId — از تعرفه‌ها: تزریقات/پانسمان/آزمایش/تصویربرداری و…).
+        // دقیقاً یکی از دو مسیر الزامی است؛ انجام‌دهندهٔ خدمت پرسنل است.
+        if (dto.DoctorId is null && dto.ServiceId is null)
+            return Result<long>.Failure(new Domain.Common.Error(
+                "RECEPTION.TARGET", "پذیرش نیازمند پزشک یا خدمت درمانی است — یکی را انتخاب کنید"));
+
+        if (dto.DoctorId is not null)
+        {
+            var doctor = await _unitOfWork.Repository<Doctor>().GetByIdAsync(dto.DoctorId.Value, cancellationToken);
+            if (doctor is null)
+                return Result<long>.Failure(Error.NotFound("پزشک", dto.DoctorId.Value));
+        }
+
+        if (dto.ServiceId is not null)
+        {
+            var service = await _unitOfWork.Repository<Domain.Entities.Billing.Service>()
+                .GetByIdAsync(dto.ServiceId.Value, cancellationToken);
+            if (service is null)
+                return Result<long>.Failure(Error.NotFound("خدمت", dto.ServiceId.Value));
+        }
 
         var now = DateTime.UtcNow;
         var reception = new Reception
         {
             PatientId = dto.PatientId,
             DoctorId = dto.DoctorId,
+            // چرخه ۲۴ — پذیرش خدمت درمانی (بدون پزشک)
+            ServiceId = dto.ServiceId,
+            ServiceName = dto.ServiceId is null ? null :
+                (dto.ServiceName ?? (await _unitOfWork.Repository<Domain.Entities.Billing.Service>()
+                    .GetByIdAsync(dto.ServiceId.Value, cancellationToken))?.ServiceName),
+            PerformedByEmployeeId = dto.PerformedByEmployeeId,
             AppointmentId = dto.AppointmentId,
             // چرخه بیست‌ویکم (گزارش پانزدهم مالک): بیمه پذیرش — سه حالت:
             //   ▪ 0  → «آزاد» صریح از کشوی پذیرش → بدون بیمه ذخیره می‌شود (null)

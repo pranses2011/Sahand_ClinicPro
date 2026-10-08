@@ -74,6 +74,40 @@ public partial class ReceptionsViewModel : ViewModelBase
 
     /* ── فرم پذیرش ── */
     public ObservableCollection<DoctorOption> Doctors { get; } = new();
+
+    // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — «پذیرش خدمت درمانی» ═══
+    // «برای خدمات تزریقات و پانسمان هیچ قابلیتی نیست؛ بیمارِ آمپول/سرم/
+    // پانسمان یا فقط آزمایش/عکس چه شود؟ قسمت پذیرش فقط پزشک دارد» — دو حالت:
+    //   ۰ ویزیت پزشک (رفتار پیشین) — پزشک الزامی
+    //   ۱ خدمت درمانی — خدمت از تعرفه‌ها (تزریقات/پانسمان/آزمایش/تصویربرداری…)
+    //     انتخاب می‌شود؛ پزشک نیست و انجام‌دهنده از پرسنل (اختیاری) است.
+
+    /// <summary>ایندکس حالت پذیرش — ۰ ویزیت پزشک، ۱ خدمت درمانی</summary>
+    [ObservableProperty]
+    private int _receptionModeIndex;
+
+    /// <summary>گزینه‌های حالت پذیرش</summary>
+    public string[] ReceptionModes { get; } = { "🩺 ویزیت پزشک", "💉 خدمت درمانی (تزریقات/پانسمان/آزمایش/…)" };
+
+    /// <summary>خدمات تعرفه‌دار فعال — برای حالت خدمت درمانی</summary>
+    public ObservableCollection<ServiceOption> Services { get; } = new();
+
+    /// <summary>خدمت انتخاب‌شدهٔ پذیرش خدمتی</summary>
+    [ObservableProperty]
+    private ServiceOption? _selectedService;
+
+    /// <summary>پرسنل فعال برای انتخاب انجام‌دهندهٔ خدمت</summary>
+    public ObservableCollection<PerformerOption> Performers { get; } = new();
+
+    /// <summary>انجام‌دهندهٔ انتخاب‌شده (اختیاری)</summary>
+    [ObservableProperty]
+    private PerformerOption? _selectedPerformer;
+
+    /// <summary>گزینهٔ خدمت تعرفه‌دار</summary>
+    public record ServiceOption(long Id, string Name, decimal Price);
+
+    /// <summary>گزینهٔ پرسنل انجام‌دهنده</summary>
+    public record PerformerOption(long Id, string FullName);
     public ObservableCollection<InsuranceOption> InsuranceCompanies { get; } = new();
 
     /// <summary>پزشک انتخاب‌شده</summary>
@@ -151,6 +185,8 @@ public partial class ReceptionsViewModel : ViewModelBase
         _api = api;
         _snackbar = snackbar;
         _ = InitializeAsync();
+        // چرخه ۲۴: خدمات تعرفه‌دار + پرسنل برای «پذیرش خدمت درمانی»
+        _ = LoadServicesAndPerformersAsync();
     }
 
     /// <summary>بارگذاری اولیه</summary>
@@ -324,6 +360,51 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// <summary>تغییر پزشک → محاسبه هزینه</summary>
     partial void OnSelectedDoctorChanged(DoctorOption? value) => RecalculateCost();
 
+    /// <summary>بارگذاری خدمات تعرفه‌دار و پرسنل — چرخه ۲۴: برای پذیرش خدمت درمانی</summary>
+    private async Task LoadServicesAndPerformersAsync()
+    {
+        // خدمات فعال با تعرفهٔ آزاد (قیمت‌ها با بیمهٔ انتخابی فاکتور بازمحاسبه می‌شوند)
+        var services = await _api.GetAsync<ServicesLookupResponse>("lookups/services?search=");
+        Services.Clear();
+        foreach (var s2 in services?.Data ?? new List<ServiceLookupDto>())
+            Services.Add(new ServiceOption(s2.ServiceId, s2.ServiceName, s2.Price));
+
+        // پرسنل فعال برای انتخاب انجام‌دهنده
+        var employees = await _api.GetAsync<EmployeesLookupResponse>("lookups/employees");
+        Performers.Clear();
+        foreach (var e in employees?.Data ?? new List<EmployeeLookupDto>())
+            Performers.Add(new PerformerOption(e.Id, e.FullName));
+    }
+
+    /// <summary>پاسخ فهرست خدمات — lookups/services</summary>
+    private sealed class ServicesLookupResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<ServiceLookupDto>? Data { get; set; }
+    }
+
+    /// <summary>ردیف خدمت تعرفه‌دار</summary>
+    private sealed class ServiceLookupDto
+    {
+        public long ServiceId { get; set; }
+        public string ServiceName { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+    }
+
+    /// <summary>پاسخ فهرست پرسنل</summary>
+    private sealed class EmployeesLookupResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<EmployeeLookupDto>? Data { get; set; }
+    }
+
+    /// <summary>ردیف پرسنل</summary>
+    private sealed class EmployeeLookupDto
+    {
+        public long Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+    }
+
     /// <summary>تغییر بیمه → محاسبه هزینه</summary>
     partial void OnInsuranceIndexChanged(int value)
     {
@@ -412,11 +493,18 @@ public partial class ReceptionsViewModel : ViewModelBase
 
     /* ═══════════ ثبت پذیرش ═══════════ */
 
-    /// <summary>اعتبارسنجی مشترک</summary>
+    /// <summary>اعتبارسنجی مشترک — چرخه ۲۴: در حالت خدمت درمانی به‌جای پزشک، خدمت الزامی است</summary>
     private bool ValidateReception()
     {
         if (FoundPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return false; }
-        if (SelectedDoctor is null) { _snackbar.Error("ابتدا پزشک را انتخاب کنید"); return false; }
+        if (ReceptionModeIndex == 1)
+        {
+            if (SelectedService is null) { _snackbar.Error("ابتدا خدمت درمانی را انتخاب کنید"); return false; }
+        }
+        else
+        {
+            if (SelectedDoctor is null) { _snackbar.Error("ابتدا پزشک را انتخاب کنید"); return false; }
+        }
         return true;
     }
 
@@ -437,15 +525,22 @@ public partial class ReceptionsViewModel : ViewModelBase
 
         IsBusy = true;
 
+        // ═══ چرخه ۲۴ — پذیرش خدمت درمانی یا ویزیت پزشک ═══
+        var isServiceMode = ReceptionModeIndex == 1;
+
         // ۱. ثبت پذیرش
         var reception = await _api.PostAsync<ReceptionCreateResponse>("receptions", new
         {
             patientId = FoundPatient!.Id,
-            doctorId = SelectedDoctor!.Id,
+            doctorId = isServiceMode ? (long?)null : SelectedDoctor!.Id,
             appointmentId = (long?)null,
             insuranceCompanyId = company?.Id,
             referralCode = string.IsNullOrWhiteSpace(ReferralCode) ? null : ReferralCode.Trim(),
-            notes = string.IsNullOrWhiteSpace(ReceptionNotes) ? null : ReceptionNotes.Trim()
+            notes = string.IsNullOrWhiteSpace(ReceptionNotes) ? null : ReceptionNotes.Trim(),
+            // حالت خدمت درمانی — خدمت + انجام‌دهندهٔ اختیاری از پرسنل
+            serviceId = isServiceMode ? SelectedService!.Id : (long?)null,
+            serviceName = isServiceMode ? SelectedService!.Name : null,
+            performedByEmployeeId = isServiceMode ? SelectedPerformer?.Id : (long?)null
         });
         if (reception?.Data is null)
         {
@@ -465,9 +560,15 @@ public partial class ReceptionsViewModel : ViewModelBase
             taxPercent = 0m,
             items = new List<object>
             {
-                new { serviceId = (long?)null, serviceName = $"ویزیت {SelectedDoctor.Name}", quantity = 1, unitPrice = VisitFee, discount = 0m }
+                // چرخه ۲۴ — قلم فاکتور: در حالت خدمتی، خودِ خدمت با قیمت تعرفه؛
+                // در حالت ویزیت، ویزیت پزشک (رفتار پیشین)
+                isServiceMode
+                    ? new { serviceId = (long?)SelectedService!.Id, serviceName = SelectedService.Name, quantity = 1, unitPrice = SelectedService.Price, discount = 0m }
+                    : new { serviceId = (long?)null, serviceName = $"ویزیت {SelectedDoctor!.Name}", quantity = 1, unitPrice = VisitFee, discount = 0m }
             },
-            description = $"پذیرش {FoundPatient.FullName}"
+            description = isServiceMode
+                ? $"پذیرش خدمت {SelectedService!.Name} — {FoundPatient.FullName}"
+                : $"پذیرش {FoundPatient.FullName}"
         });
 
         // ۳. پرداخت نقدی (اختیاری)
@@ -502,6 +603,9 @@ public partial class ReceptionsViewModel : ViewModelBase
         ReceptionNotes = null;
         Inquiry = null;
         InsuranceIndex = 0;
+        // چرخه ۲۴ — پاک‌سازی حالت خدمت
+        SelectedService = null;
+        SelectedPerformer = null;
 
         await LoadAsync();
     }

@@ -46,8 +46,10 @@ public class GetTodayReceptionsQueryHandler
                 r.Id,
                 r.ReceptionNumber,
                 r.Patient != null ? r.Patient.FirstName + " " + r.Patient.LastName : "",
+                // چرخه ۲۴ — پذیرش خدمتی: به‌جای پزشک، نام خدمت نمایش داده می‌شود
                 r.Doctor != null && r.Doctor.Employee != null
-                    ? r.Doctor.Employee.FirstName + " " + r.Doctor.Employee.LastName : "پزشک",
+                    ? r.Doctor.Employee.FirstName + " " + r.Doctor.Employee.LastName
+                    : (r.ServiceName ?? "خدمت درمانی"),
                 r.ReceptionDate.ToString("HH:mm"),
                 r.Status,
                 r.InsuranceCompany != null ? r.InsuranceCompany.Name : null,

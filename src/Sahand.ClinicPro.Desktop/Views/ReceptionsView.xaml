@@ -175,19 +175,43 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <!-- ستون راست: پزشک و نوع -->
+                            <!-- ستون راست: حالت پذیرش + پزشک/خدمت — چرخه ۲۴ -->
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="👨‍⚕️ پزشک" Style="{StaticResource FieldCaption}" />
-                                <ComboBox ItemsSource="{Binding Doctors}"
-                                          SelectedItem="{Binding SelectedDoctor}"
-                                          DisplayMemberPath="Name" />
-                                <TextBlock Text="نوع ویزیت" Style="{StaticResource FieldCaption}" />
-                                <ComboBox SelectedIndex="{Binding VisitTypeIndex}">
-                                    <ComboBoxItem Content="اولیه" />
-                                    <ComboBoxItem Content="پیگیری" />
-                                    <ComboBoxItem Content="اورژانس" />
-                                    <ComboBoxItem Content="مشاوره" />
-                                </ComboBox>
+                                <!-- ═══ چرخه ۲۴ (گزارش هفدهم مالک) — «پذیرش فقط پزشک دارد؛
+                                     بیمار آمپول/سرم/پانسمان/آزمایش/عکس چه شود؟» — انتخابگر
+                                     نوع پذیرش: ویزیت پزشک یا خدمت درمانی از تعرفه‌ها ═══ -->
+                                <TextBlock Text=" نوع پذیرش" Style="{StaticResource FieldCaption}" />
+                                <ComboBox ItemsSource="{Binding ReceptionModes}"
+                                          SelectedIndex="{Binding ReceptionModeIndex}"
+                                          FontSize="12" />
+
+                                <!-- حالت ویزیت پزشک: پزشک + نوع ویزیت -->
+                                <StackPanel Visibility="{Binding ReceptionModeIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=0}">
+                                    <TextBlock Text="👨‍⚕️ پزشک" Style="{StaticResource FieldCaption}" />
+                                    <ComboBox ItemsSource="{Binding Doctors}"
+                                              SelectedItem="{Binding SelectedDoctor}"
+                                              DisplayMemberPath="Name" />
+                                    <TextBlock Text="نوع ویزیت" Style="{StaticResource FieldCaption}" />
+                                    <ComboBox SelectedIndex="{Binding VisitTypeIndex}">
+                                        <ComboBoxItem Content="اولیه" />
+                                        <ComboBoxItem Content="پیگیری" />
+                                        <ComboBoxItem Content="اورژانس" />
+                                        <ComboBoxItem Content="مشاوره" />
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <!-- حالت خدمت درمانی: خدمت از تعرفه‌ها + انجام‌دهندهٔ اختیاری -->
+                                <StackPanel Visibility="{Binding ReceptionModeIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}">
+                                    <TextBlock Text="💉 خدمت درمانی (تزریقات/پانسمان/آزمایش/تصویربرداری/…)" Style="{StaticResource FieldCaption}" TextWrapping="Wrap" />
+                                    <ComboBox ItemsSource="{Binding Services}"
+                                              SelectedItem="{Binding SelectedService}"
+                                              DisplayMemberPath="Name" />
+                                    <TextBlock Text="انجام‌دهنده (اختیاری — از پرسنل)" Style="{StaticResource FieldCaption}" />
+                                    <ComboBox ItemsSource="{Binding Performers}"
+                                              SelectedItem="{Binding SelectedPerformer}"
+                                              DisplayMemberPath="FullName" />
+                                </StackPanel>
+
                                 <TextBlock Text="یادداشت پذیرش" Style="{StaticResource FieldCaption}" />
                                 <TextBox Text="{Binding ReceptionNotes, UpdateSourceTrigger=PropertyChanged}"
                                          AcceptsReturn="True" Height="56" TextWrapping="Wrap" />

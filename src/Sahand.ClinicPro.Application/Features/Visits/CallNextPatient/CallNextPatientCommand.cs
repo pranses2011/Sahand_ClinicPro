@@ -62,7 +62,11 @@ public class CallNextPatientCommandHandler : IRequestHandler<CallNextPatientComm
         var visit = new Visit
         {
             PatientId = next.PatientId,
-            DoctorId = next.DoctorId,
+            // چرخه ۲۴ — پذیرش خدمتی ممکن است پزشک نداشته باشد؛ «فراخوان بیمار
+            // بعدی» فقط برای پذیرش‌های ویزیت پزشک معنا دارد و در نگاشت، پزشک
+            // اختیاری به مقدار معتبر می‌رسد (بیمار خدمتی در همین گارد قبل از
+            // این نقطه رد شده است)
+            DoctorId = next.DoctorId ?? 0,
             ReceptionId = next.Id,
             VisitDate = DateTime.UtcNow,
             VisitDateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.UtcNow),

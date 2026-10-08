@@ -16,8 +16,20 @@ public class Reception : AuditableEntity, ISoftDeletable
     /// <summary>شناسه بیمار</summary>
     public long PatientId { get; set; }
 
-    /// <summary>شناسه پزشک</summary>
-    public long DoctorId { get; set; }
+    /// <summary>شناسه پزشک — چرخه ۲۴ (گزارش هفدهم مالک): اختیاری شد؛ پذیرش
+    /// «خدمت درمانی» (تزریقات/پانسمان/آزمایش/تصویربرداری و مانند آن) بدون
+    /// پزشک هم مجاز است («قسمت پذیرش فقط پزشک دارد — بیمارِ فقط آمپول/سرم/
+    /// پانسمان/آزمایش/عکس چه شود؟»)</summary>
+    public long? DoctorId { get; set; }
+
+    /// <summary>شناسه خدمت تعرفه‌دار پذیرش‌شده — در پذیرش خدمتی مقدار دارد (چرخه ۲۴)</summary>
+    public long? ServiceId { get; set; }
+
+    /// <summary>نام خدمت — غیرنرمال‌شده برای نمایش پایدار در فهرست‌ها (چرخه ۲۴)</summary>
+    public string? ServiceName { get; set; }
+
+    /// <summary>شناسه پرسنل انجام‌دهندهٔ خدمت — مثلاً بهیار تزریقات (چرخه ۲۴)</summary>
+    public long? PerformedByEmployeeId { get; set; }
 
     /// <summary>تاریخ و ساعت پذیرش</summary>
     public DateTime ReceptionDate { get; set; }
