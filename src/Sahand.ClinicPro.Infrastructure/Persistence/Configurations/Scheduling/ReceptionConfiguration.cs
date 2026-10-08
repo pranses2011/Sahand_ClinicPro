@@ -18,6 +18,10 @@ public class ReceptionConfiguration : IEntityTypeConfiguration<Reception>
         builder.Property(x => x.SupplementaryInsuranceCode).HasMaxLength(20).HasComment("کد بیمه تکمیلی");
         builder.Property(x => x.ReferralCode).HasMaxLength(50).HasComment("کد ارجاع");
         builder.Property(x => x.ReferringDoctor).HasMaxLength(100).HasComment("نام پزشک ارجاع‌دهنده");
+        // چرخه ۲۵ — هم‌راستایی مدل با مهاجرت دست‌نویس Cycle24ReceptionServices:
+        // ستون دیتابیسی nvarchar(200) است؛ بدون این سقف، EF به‌صورت کنوانسیون
+        // nvarchar(max) می‌سازد و مهاجرت‌های آتیِ تولیدشده بی‌دلیل ALTER می‌شدند
+        builder.Property(x => x.ServiceName).HasMaxLength(200).HasComment("نام خدمت پذیرش‌شده — نمایش پایدار در فهرست‌ها (چرخه ۲۴)");
         builder.Property(x => x.Status).HasConversion<byte>().HasComment("وضعیت پذیرش");
 
         builder.HasIndex(x => new { x.ReceptionNumber }).IsUnique().HasDatabaseName("IX_Reception_ReceptionNumber").HasFilter("[IsDeleted] = 0");

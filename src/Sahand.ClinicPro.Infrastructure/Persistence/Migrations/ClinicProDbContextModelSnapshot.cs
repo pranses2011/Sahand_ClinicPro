@@ -2656,7 +2656,6 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<long?>("DeletedBy")
                         .HasColumnType("bigint");
 
-                    // چرخه بیست‌وسوم: DoctorId اختیاری شد (تمپلیت عمومی بدون پزشک)
                     b.Property<long?>("DoctorId")
                         .HasColumnType("bigint");
 
@@ -9375,7 +9374,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<long?>("DeletedBy")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("DoctorId")
+                    b.Property<long?>("DoctorId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime?>("EnterTime")
@@ -9402,6 +9401,9 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("PatientId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("PerformedByEmployeeId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("ReceptionDate")
@@ -9436,6 +9438,14 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
+
+                    b.Property<long?>("ServiceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ServiceName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasComment("نام خدمت پذیرش‌شده — نمایش پایدار در فهرست‌ها (چرخه ۲۴)");
 
                     b.Property<byte>("Status")
                         .HasColumnType("tinyint")
@@ -10596,7 +10606,6 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("DoctorId")
                         .OnDelete(DeleteBehavior.NoAction);
-                    // چرخه بیست‌وسوم: IsRequired حذف شد — رابطهٔ اختیاری (تمپلیت عمومی)
 
                     b.Navigation("Doctor");
                 });
@@ -11316,8 +11325,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Doctor", "Doctor")
                         .WithMany()
                         .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Sahand.ClinicPro.Domain.Entities.Billing.InsuranceCompany", "InsuranceCompany")
                         .WithMany()

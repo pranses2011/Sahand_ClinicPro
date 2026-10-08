@@ -14,6 +14,13 @@
     <!-- ORM مطابق مستندات: EF Core 8 + SQL Server 2022 -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <!-- اجزای زمان‌طراحی ابزار dotnet-ef (چرخه ۲۵) — فقط ابزار، در خروجی
+         منتشر نمی‌شود؛ برای اجرای دستورات EF روی همین پروژه با
+         DesignTimeDbContextFactory لازم است -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <!-- هش رمز عبور BCrypt با Work Factor 12 (گام ۴) -->
     <PackageReference Include="BCrypt.Net-Next" />
     <!-- کارهای پس‌زمینه: صف پیامک، یادآوری نوبت، بکاپ، Heartbeat لایسنس -->
