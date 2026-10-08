@@ -1,4 +1,5 @@
-﻿using Sahand.ClinicPro.Desktop.ViewModels;
+﻿using Sahand.ClinicPro.Desktop.Helpers;
+using Sahand.ClinicPro.Desktop.ViewModels;
 using System.Globalization;
 using System.IO;
 using System.Windows;
@@ -120,12 +121,14 @@ public sealed class InvertBoolConverter : IValueConverter
 /// </summary>
 public sealed class CellValueConverter : IValueConverter
 {
-    /// <summary>استخراج متن سلول از ردیف با ایندکس</summary>
+    /// <summary>استخراج متن سلول از ردیف با ایندکس — چرخه بیست‌وچهارم:
+    /// متن سلول‌های گزارش پیش از نمایش به ارقام فارسی تبدیل می‌شود
+    /// («تمامی اعداد داخل برنامه بدون استثنا فارسی باشند» — گزارش هفدهم)</summary>
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is ReportResultRow row && int.TryParse(parameter?.ToString(), out var index)
             && index >= 0 && index < row.Cells.Count)
-            return row.Cells[index].Text;
+            return Money.ToPersianDigits(row.Cells[index].Text);
         return "—";
     }
 

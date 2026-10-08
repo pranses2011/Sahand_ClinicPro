@@ -47,7 +47,19 @@ public partial class ReportBrowserView : UserControl
         for (var i = 0; i < vm.Columns.Count; i++)
         {
             var index = i;
-            ResultsGrid.Columns.Add(new DataGridTextColumn
+
+            // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — رفع کرش گزارش‌ها ═══
+            // «ArgumentException: '' is not a valid value for property 'FontFamily'»
+            // در همین متد رخ می‌داد. دو ریشه داشت:
+            //   ۱) مقداردهی شرطی «i == 0 ? null : …» روی DependencyProperty
+            //      فونت — گذاشتن null صریح در مقداردهندهٔ شیء، زنجیرهٔ اعتبارسنجی
+            //      WPF را با مقدار رشته‌ای خالی («») روبرو می‌کرد و کرش می‌کرد؛
+            //      فونت حالت فقط در صورت نیاز و پس از ساخت ستون تنظیم می‌شود.
+            //   ۲) فونت هاردکد «Consolas» تضاد با خط فارسی/ارقام فارسی و تم
+            //      برنامه داشت؛ ستون‌ها اکنون فونت را از منبع پویای تم
+            //      (App.FontFamily — همان وزیرمتن یا انتخاب کاربر) به ارث
+            //      می‌برند تا تغییر فونت تنظیمات روی گزارش‌ها هم بنشیند.
+            var column = new DataGridTextColumn
             {
                 Header = vm.Columns[i],
                 Width = i == 0 ? DataGridLength.Auto : DataGridLength.SizeToCells,
@@ -57,9 +69,10 @@ public partial class ReportBrowserView : UserControl
                     Mode = BindingMode.OneWay,
                     Converter = new Converters.CellValueConverter(),
                     ConverterParameter = index.ToString()
-                },
-                FontFamily = i == 0 ? null : new System.Windows.Media.FontFamily("Consolas")
-            });
+                }
+            };
+
+            ResultsGrid.Columns.Add(column);
         }
     }
 }
