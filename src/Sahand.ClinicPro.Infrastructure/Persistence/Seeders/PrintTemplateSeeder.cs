@@ -22,12 +22,19 @@ public class PrintTemplateSeeder : IDataSeeder
     /// <summary>اجرای بذر — فقط وقتی برای نوعی قالبی وجود ندارد</summary>
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
+        // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) ═══ پیش‌تر شرط «برای نوع قالبی
+        // هست؟» بود؛ یعنی روی دیتابیس‌های موجود طرح‌های تازهٔ چرخهٔ ۲۴ هرگز
+        // اضافه نمی‌شدند و هر نوع فقط یک قالب اولیه داشت. اکنون شرط به «قالبی
+        // با همین نام هست؟» تغییر کرد: قالب‌های استاندارد/مدرن/حرارتی جدید روی
+        // نصب‌های موجود هم idempotent افزوده می‌شوند و ویرایش‌های خود درمانگاه
+        // (نام‌گذاری‌شدهٔ متفاوت) دست‌نخورده می‌مانند.
         foreach (var row in PrintTemplateSeedData.Rows)
         {
             var type = (PrintTemplateType)row.Type;
             var exists = await _context.PrintTemplates.AsNoTracking()
-                .AnyAsync(t => !t.IsDeleted && t.Type == type, cancellationToken);
-            if (exists) continue; // درمانگاه خودش ساخته — دست نمی‌زنیم
+                .AnyAsync(t => !t.IsDeleted && t.Type == type && t.TemplateName == row.TemplateName,
+                    cancellationToken);
+            if (exists) continue; // همین قالب استاندارد قبلاً ثبت شده — دست نمی‌زنیم
 
             _context.PrintTemplates.Add(new PrintTemplate
             {

@@ -111,10 +111,27 @@
                             <TextBox Text="{Binding SelectedTemplate.Title, UpdateSourceTrigger=PropertyChanged}"
                                      materialDesign:HintAssist.Hint="نام قالب"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="220" FontSize="12" Margin="0,0,7,5" />
-                            <ComboBox SelectedValuePath="Tag" SelectedValue="{Binding SelectedTemplate.PaperSize, Mode=TwoWay}" FontSize="11.5" Width="95" Margin="0,0,7,5">
+                            <!-- ═══ چرخه ۲۴ (گزارش هفدهم مالک) — «فقط ۳ اندازه کاغذ
+                                 هست و کاغذهای فیش پرینترهای حرارتی را نمی‌شود انتخاب
+                                 کرد؛ اندازه‌های زیاد و حتی سفارشی باشد» — فهرست کامل
+                                 اندازه‌ها + حالت سفارشی (قابل تایپ مثل Custom:100x180
+                                 میلی‌متر عرض×ارتفاع)؛ ویرایش‌پذیر است. -->
+                            <ComboBox IsEditable="True" StaysOpenOnEdit="True"
+                                      SelectedValuePath="Tag" SelectedValue="{Binding SelectedTemplate.PaperSize, Mode=TwoWay}"
+                                      Text="{Binding SelectedTemplate.PaperSize, Mode=TwoWay}"
+                                      FontSize="11.5" Width="112" Margin="0,0,7,5"
+                                      ToolTip="اندازه‌های استاندارد + فیش حرارتی؛ برای سفارشی عبارت Custom:عرضxارتفاع (میلی‌متر) تایپ کنید">
                                 <ComboBoxItem Tag="A4" Content="کاغذ A4" />
                                 <ComboBoxItem Tag="A5" Content="کاغذ A5" />
                                 <ComboBoxItem Tag="A6" Content="کاغذ A6" />
+                                <ComboBoxItem Tag="A3" Content="کاغذ A3" />
+                                <ComboBoxItem Tag="B5" Content="کاغذ B5" />
+                                <ComboBoxItem Tag="Letter" Content="Letter" />
+                                <ComboBoxItem Tag="Legal" Content="Legal" />
+                                <ComboBoxItem Tag="Thermal80" Content="فیش حرارتی ۸۰ میلی‌متر" />
+                                <ComboBoxItem Tag="Thermal58" Content="فیش حرارتی ۵۸ میلی‌متر" />
+                                <ComboBoxItem Tag="Custom:100x180" Content="سفارشی ۱۰۰×۱۸۰ میلی‌متر" />
+                                <ComboBoxItem Tag="Custom:210x100" Content="سفارشی ۲۱۰×۱۰۰ میلی‌متر" />
                             </ComboBox>
                             <TextBox Text="{Binding SelectedTemplate.AccentColor, UpdateSourceTrigger=PropertyChanged}"
                                      materialDesign:HintAssist.Hint="رنگ (#16355E)"
@@ -148,10 +165,14 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
+                                    <!-- ═══ چرخه ۲۴ — رفع «دکمه‌های متغیرها نامفهوم و بدون
+                                         متن/آیکون هستند»: برچسب فارسی + تولتیپِ توکن خام ═══ -->
                                     <Button Command="{Binding DataContext.InsertVariableCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                             CommandParameter="{Binding}"
+                                            Content="{Binding Converter={StaticResource VariableLabel}}"
+                                            ToolTip="افزودن متغیر {{توکن}} به انتهای قالب"
                                             Style="{StaticResource MaterialDesignOutlinedButton}"
-                                            FontSize="10.5" FontFamily="Consolas" Margin="0,0,5,4" Padding="8,2" />
+                                            FontSize="11" Margin="0,0,5,4" Padding="9,3" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

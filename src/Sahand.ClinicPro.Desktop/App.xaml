@@ -147,6 +147,8 @@
             <converters:SectionToVisibilityConverter x:Key="SectionToVisibility" />
             <!-- چرخه بیست‌وسوم: مبدل سراسری ارقام فارسی — همهٔ ستون‌های جدول‌ها -->
             <converters:PersianDigitsConverter x:Key="PersianDigits" />
+            <!-- چرخه ۲۴: مبدل برچسب فارسی متغیرهای قالب چاپ -->
+            <converters:VariableLabelConverter x:Key="VariableLabel" />
             <!-- چرخه ۲۴: مبدل رنگ آیکون‌های منو (حالت رنگی/یکدست) -->
             <converters:IconTintConverter x:Key="IconTint" />
             <converters:IconTintMultiConverter x:Key="IconTintMulti" />
