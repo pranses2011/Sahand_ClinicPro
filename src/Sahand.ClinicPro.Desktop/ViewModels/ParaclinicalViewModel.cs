@@ -12,6 +12,15 @@ public partial class ToothVM : ObservableObject
     public string Quadrant => Number / 10 == 1 || Number / 10 == 2 ? "بالا" : "پایین";
     public string ToolTip => $"دندان {Number} — فک {Quadrant}";
     [ObservableProperty] private int _condition; // 0 سالم 1 پوسیدگی 2 ترمیم 3 درمان 4 روکش 5 کشیده 6 ایمپلنت
+
+    /// <summary>این دندان همان دندان انتخاب‌شدهٔ چارت است؟ — چرخه بیست‌وچهارم:
+    /// مقدار با انتخاب کاربر توسط OnSelectedToothChanged به‌روز می‌شود تا
+    /// قالب دکمه با DataTrigger ساده (مقدار ثابت True) هایلایتش کند</summary>
+    [ObservableProperty] private bool _isSelected;
+
+    /// <summary>شمارهٔ دندان با ارقام فارسی — «همهٔ اعداد بدون استثنا فارسی» (گزارش هفدهم)</summary>
+    public string NumberFa => Helpers.Money.ToPersianDigits(Number.ToString());
+
     public string Color => Condition switch
     {
         1 => "#E53935", 2 => "#FDD835", 3 => "#43A047", 4 => "#1E88E5", 5 => "#37474F", 6 => "#8E24AA",
@@ -128,6 +137,19 @@ public partial class ParaclinicalViewModel : ViewModelBase
     {
         SelectedTooth = tooth;
         ToothConditionIndex = tooth.Condition;
+    }
+
+    /// <summary>همگام‌سازی پرچم IsSelected دندان‌ها با انتخاب فعلی — چرخه
+    /// بیست‌وچهارم (گزارش هفدهم مالک): هایلایت دندان انتخابی پیش‌تر با
+    /// «Value={Binding …}» روی DataTrigger پیاده شده بود؛ Value در
+    /// DataTrigger وابستگی DependencyProperty نیست و Binding روی آن
+    /// XamlParseException می‌اندازد و کل تب تصویربرداری/دندانپزشکی را
+    /// می‌بست. اکنون فقط این پرچم ساده به‌روز می‌شود و قالب با مقدار ثابت
+    /// True آن را می‌خواند — بی‌هیچ استثنایی.</summary>
+    partial void OnSelectedToothChanged(ToothVM? oldValue, ToothVM? newValue)
+    {
+        if (oldValue is not null) oldValue.IsSelected = false;
+        if (newValue is not null) newValue.IsSelected = true;
     }
 
     /// <summary>اعمال وضعیت روی دندان انتخابی</summary>

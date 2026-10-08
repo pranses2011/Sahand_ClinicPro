@@ -41,18 +41,22 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
+                                        <!-- چرخه بیست‌وچهارم: هایلایت دندان انتخابی با DataTrigger ساده
+                                             (Value از نوع CLR است و Binding روی آن XamlParseException می‌اندازد —
+                                             گزارش هفدهم مالک؛ پرچم IsSelected اکنون از ViewModel می‌آید).
+                                             فونت هاردکد Consolas هم حذف شد تا فونت تم برنامه اعمال شود. -->
                                         <Button Width="44" Height="44" Margin="2"
                                                 Command="{Binding DataContext.SelectToothCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 ToolTip="{Binding ToolTip}"
-                                                Content="{Binding Number}"
-                                                FontFamily="Consolas" FontSize="12">
+                                                Content="{Binding NumberFa}"
+                                                FontSize="12">
                                             <Button.Style>
                                                 <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
                                                     <Setter Property="Background" Value="{Binding Color, Mode=OneWay}" />
                                                     <Setter Property="BorderBrush" Value="#B0BEC5" />
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Number}" Value="{Binding DataContext.SelectedTooth.Number, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
                                                             <Setter Property="BorderBrush" Value="#1565C0" />
                                                             <Setter Property="BorderThickness" Value="3" />
                                                         </DataTrigger>
@@ -73,15 +77,28 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
+                                        <!-- فک پایین — همان قالب هایلایت انتخاب چرخه بیست‌وچهارم؛
+                                             پیش‌تر این ردیف اصلاً استایل انتخاب نداشت و دندان انتخابی
+                                             در فک پایین هایلایت نمی‌شد. ارقام فارسی + فونت تم. -->
                                         <Button Width="44" Height="44" Margin="2"
                                                 Command="{Binding DataContext.SelectToothCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 ToolTip="{Binding ToolTip}"
-                                                Content="{Binding Number}"
-                                                FontFamily="Consolas" FontSize="12"
-                                                Background="{Binding Color, Mode=OneWay}"
-                                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                BorderBrush="#B0BEC5" />
+                                                Content="{Binding NumberFa}"
+                                                FontSize="12">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+                                                    <Setter Property="Background" Value="{Binding Color, Mode=OneWay}" />
+                                                    <Setter Property="BorderBrush" Value="#B0BEC5" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter Property="BorderBrush" Value="#1565C0" />
+                                                            <Setter Property="BorderThickness" Value="3" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
