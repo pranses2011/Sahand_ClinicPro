@@ -179,7 +179,12 @@
                         <TextBlock Text="بیمار: " VerticalAlignment="Center" FontSize="12" Margin="6,0,6,0" />
                         <TextBox Text="{Binding PatientSearchTerm, UpdateSourceTrigger=PropertyChanged}" Width="220" FontSize="12"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 materialDesign:HintAssist.Hint="نام / کد ملی / موبایل / شماره پرونده" />
+                                 materialDesign:HintAssist.Hint="نام / کد ملی / موبایل / شماره پرونده">
+                            <!-- چرخه بیست‌وسوم (گزارش شانزدهم مالک): Enter = دکمهٔ جستجو -->
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding SearchPatientsCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
                         <Button Command="{Binding SearchPatientsCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="6,0,0,0">
                             <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />
                         </Button>

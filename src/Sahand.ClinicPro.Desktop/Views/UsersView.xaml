@@ -38,7 +38,12 @@
             <TextBox materialDesign:HintAssist.Hint="🔍 جستجو (نام کاربری / نام / ایمیل)"
                      Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                     Width="260" Margin="0,0,8,6" VerticalAlignment="Center" />
+                     Width="260" Margin="0,0,8,6" VerticalAlignment="Center">
+                <!-- چرخه بیست‌وسوم (گزارش شانزدهم مالک): کلید Enter هم‌ارزش دکمهٔ جستجو -->
+                <TextBox.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding LoadCommand}" />
+                </TextBox.InputBindings>
+            </TextBox>
             <ComboBox materialDesign:HintAssist.Hint="نقش"
                       ItemsSource="{Binding RoleOptions}"
                       SelectedItem="{Binding RoleFilter}"

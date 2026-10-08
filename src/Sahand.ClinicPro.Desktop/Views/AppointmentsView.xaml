@@ -336,7 +336,12 @@
                             </StackPanel>
                             <StackPanel Grid.Column="2" Margin="0,0,8,0">
                                 <TextBlock Text="جستجو (نام/کدملی/موبایل/کد)" FontSize="10" Opacity="0.6" />
-                                <TextBox Text="{Binding ListSearch, UpdateSourceTrigger=PropertyChanged}" />
+                                <!-- چرخه بیست‌وسوم: Enter = دکمهٔ جستجو -->
+                                <TextBox Text="{Binding ListSearch, UpdateSourceTrigger=PropertyChanged}">
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" Command="{Binding SearchListCommand}" />
+                                    </TextBox.InputBindings>
+                                </TextBox>
                             </StackPanel>
                             <StackPanel Grid.Column="3" Margin="0,0,8,0">
                                 <TextBlock Text="پزشک" FontSize="10" Opacity="0.6" />
@@ -495,7 +500,12 @@
                                 <TextBox Text="{Binding WaitlistPatientSearch, UpdateSourceTrigger=PropertyChanged}"
                                          materialDesign:HintAssist.Hint="جستجوی بیمار (نام/کد ملی/موبایل)"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Width="240" FontSize="12" Margin="0,0,8,6" />
+                                         Width="240" FontSize="12" Margin="0,0,8,6">
+                                    <!-- چرخه بیست‌وسوم: Enter = دکمهٔ جستجو -->
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" Command="{Binding WaitlistPatientSearchCommand}" />
+                                    </TextBox.InputBindings>
+                                </TextBox>
                                 <Button Command="{Binding WaitlistPatientSearchCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
                                         FontSize="11" Margin="0,0,8,6" VerticalAlignment="Center">
                                     <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />

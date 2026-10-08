@@ -234,7 +234,12 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBox Grid.Column="0" Text="{Binding PhysioPatientSearch, UpdateSourceTrigger=PropertyChanged}"
-                                     materialDesign:HintAssist.Hint="🔍 بیمار (کد ملی / موبایل)" />
+                                     materialDesign:HintAssist.Hint="🔍 بیمار (کد ملی / موبایل)">
+                                <!-- چرخه بیست‌وسوم: Enter = دکمهٔ جستجو -->
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding SearchPhysioPatientCommand}" />
+                                </TextBox.InputBindings>
+                            </TextBox>
                             <Button Grid.Column="1" Command="{Binding SearchPhysioPatientCommand}" Margin="8,0,0,0"
                                     Style="{StaticResource MaterialDesignRaisedButton}">
                                 <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />
@@ -293,7 +298,12 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBox Grid.Column="0" Text="{Binding ImagingPatientSearch, UpdateSourceTrigger=PropertyChanged}"
-                                     materialDesign:HintAssist.Hint="🔍 بیمار (کد ملی / موبایل)" />
+                                     materialDesign:HintAssist.Hint="🔍 بیمار (کد ملی / موبایل)">
+                                <!-- چرخه بیست‌وسوم: Enter = دکمهٔ جستجو -->
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding SearchImagingPatientCommand}" />
+                                </TextBox.InputBindings>
+                            </TextBox>
                             <Button Grid.Column="1" Command="{Binding SearchImagingPatientCommand}" Margin="8,0,0,0"
                                     Style="{StaticResource MaterialDesignRaisedButton}">
                                 <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />

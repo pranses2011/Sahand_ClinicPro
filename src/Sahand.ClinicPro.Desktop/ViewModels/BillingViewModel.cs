@@ -382,6 +382,12 @@ public partial class InvoiceFormViewModel : ObservableObject
                 Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
 
         var companies = await _api.GetAsync<PatientFormViewModel.LookupCompanies>("lookups/insurance-companies");
+        // چرخه بیست‌وسوم (گزارش شانزدهم مالک): همان رفعِ صفحهٔ پذیرش — قانون ۵
+        // (رفع خطای مشابه در کل برنامه): کشوی بیمه صورتحساب هم پیش‌تر فاقد گزینهٔ
+        // «آزاد» بود و نمایهٔ صفر (نخستین شرکت سرور) به‌عنوان بدون‌بیمه تفسیر می‌شد؛
+        // آیتم صریح آزاد با شناسهٔ صفر در ابتدا درج شد تا انتخاب آزاد واقعی و
+        // ثبت دقیق شرکت انتخابی (نمایهٔ ۱ به بعد) هر دو ممکن شود.
+        InsuranceCompanies.Add(new InsuranceOption(0, "آزاد (بدون بیمه)"));
         if (companies?.Data is not null)
             foreach (var c in companies.Data)
                 InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name));

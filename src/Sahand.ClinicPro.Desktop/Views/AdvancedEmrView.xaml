@@ -35,7 +35,12 @@
 
             <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="جستجوی بیمار — نام / کدملی / موبایل / پرونده"
                      Text="{Binding PatientSearchTerm, UpdateSourceTrigger=PropertyChanged}"
-                     Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}">
+                <!-- چرخه بیست‌وسوم (گزارش شانزدهم مالک): Enter = دکمهٔ جستجو -->
+                <TextBox.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding SearchPatientCommand}" />
+                </TextBox.InputBindings>
+            </TextBox>
             <Button Grid.Column="2" Command="{Binding SearchPatientCommand}"
                     Style="{StaticResource MaterialDesignRaisedButton}" Content="🔍 جستجو" />
 

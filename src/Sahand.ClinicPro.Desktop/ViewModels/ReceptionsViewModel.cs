@@ -162,6 +162,16 @@ public partial class ReceptionsViewModel : ViewModelBase
                 Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
 
         var companies = await _api.GetAsync<PatientFormViewModel.LookupCompanies>("lookups/insurance-companies");
+        // چرخه بیست‌وسوم (گزارش شانزدهم مالک): «نوع بیمه گزینهٔ آزاد وجود ندارد و
+        // هنوز بیمهٔ آسیا به‌عنوان آزاد ثبت می‌شود» — ریشهٔ باگ: کد، نمایهٔ صفرِ
+        // کشو را «آزاد/بدون بیمه» تفسیر می‌کرد (InsuranceIndex <= 0) ولی کشو هیچ
+        // آیتم آزادی نداشت؛ یعنی نخستین شرکت سرور (مثلاً آسیا) انتخاب می‌شد و
+        // هم‌زمان چون نمایه‌اش صفر بود به‌عنوان «بدون بیمه» ثبت می‌شد — هم گزینهٔ
+        // آزاد وجود نداشت هم بیمهٔ انتخابی قعر می‌رفت. رفع ساختاری: آیتم صریح
+        // «آزاد (بدون بیمه)» با شناسهٔ صفر در ابتدای کشو درج می‌شود تا نمایهٔ صفر
+        // واقعاً آزاد باشد و شرکت‌ها از نمایهٔ ۱ به بعد دقیق ثبت شوند (هم‌الگوی
+        // پنجرهٔ فرم پذیرش — ReceptionFormViewModel).
+        InsuranceCompanies.Add(new InsuranceOption(0, "آزاد (بدون بیمه)"));
         if (companies?.Data is not null)
             foreach (var c in companies.Data)
                 InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name));
