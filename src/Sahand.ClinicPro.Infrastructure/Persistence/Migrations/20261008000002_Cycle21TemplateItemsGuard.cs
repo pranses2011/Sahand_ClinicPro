@@ -13,7 +13,16 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
     /// این مهاجرت با SQL خامِ شرطی و idempotent ستون را تضمینی nvarchar(max)
     /// می‌کند؛ چه مهاجرت چرخه ۲۰ قبلاً اعمال شده باشد چه به‌دلایل تاریخچهٔ
     /// مهاجرت گیر کرده باشد. (attribute زمان‌دار تا پس از همهٔ مهاجرات اجرا شود)
+    ///
+    /// ⚠️ چرخه ۲۵ — ریشهٔ «Invalid column name» سرور مالک: این مهاجرت دست‌نویس
+    /// قبلاً فایل Designer.cs نداشت و مهم‌تر از آن ویژگی [DbContext] نیز
+    /// روی کلاس نبود؛ EF Core مهاجرت‌های یک اسمبلی را فقط از طریق همین
+    /// ویژگی به DbContext مربوط می‌کند — بدون آن مهاجرت در GetMigrations()
+    /// دیده نمی‌شود، GetPendingMigrations() خالی می‌ماند و MigrateAsync()
+    /// بی‌اثر اجرا می‌شود (ستون‌ها هرگز ساخته نمی‌شوند). گارد رگرسیون:
+    /// MigrationDiscoveryGuardTests.
     /// </summary>
+    [global::Microsoft.EntityFrameworkCore.Infrastructure.DbContext(typeof(Sahand.ClinicPro.Infrastructure.Persistence.ClinicProDbContext))]
     [global::Microsoft.EntityFrameworkCore.Migrations.Migration("20261008000002_Cycle21TemplateItemsGuard")]
     public partial class Cycle21TemplateItemsGuard : Migration
     {

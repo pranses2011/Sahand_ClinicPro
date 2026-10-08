@@ -24,6 +24,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
     /// قبلی با این نام باشد چه نباشد — بدون خطا اجرا شوند. سمت کد هم موجودیت
     /// long? شد و کلاینت پزشکِ انتخابی را ارسال می‌کند.
     /// </summary>
+    [global::Microsoft.EntityFrameworkCore.Infrastructure.DbContext(typeof(Sahand.ClinicPro.Infrastructure.Persistence.ClinicProDbContext))]
     [global::Microsoft.EntityFrameworkCore.Migrations.Migration("20261009000001_Cycle23TemplateDoctorNullable")]
     public partial class Cycle23TemplateDoctorNullable : Migration
     {

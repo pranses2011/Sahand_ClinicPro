@@ -19,6 +19,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
     ///      ServiceName (نام نمایشی پایدار) و PerformedByEmployeeId (پرسنل
     ///      انجام‌دهنده — کلید خارجی اختیاری به Employees).
     /// </summary>
+    [global::Microsoft.EntityFrameworkCore.Infrastructure.DbContext(typeof(Sahand.ClinicPro.Infrastructure.Persistence.ClinicProDbContext))]
     [global::Microsoft.EntityFrameworkCore.Migrations.Migration("20261009180000_Cycle24ReceptionServices")]
     public partial class Cycle24ReceptionServices : Migration
     {
