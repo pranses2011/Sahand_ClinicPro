@@ -1,0 +1,139 @@
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.PersonnelView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="640" d:DesignWidth="1080"
+             FlowDirection="RightToLeft">
+    <!-- ═══════════════════════════════════════════════════════════
+         صفحهٔ مستقل مدیریت پرسنل — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
+         «در منوی کناری، گزینه پرسنل صفحه تنظیمات و مدیریت سامانه را باز می‌کند
+         و پرسنل در تب پرسنل در این صفحه باز می‌شود که اشتباه است و پرسنل باید
+         یک صفحه جدا باشد و این صفحه هم گزینه جداگانه باشد».
+         پیش‌تر قالب نمایش PersonnelViewModel همان AdminView بود (تنظیمات با
+         زبانه‌ها)؛ اکنون این نمای اختصاصی و مستقل ساخته شد و زبانهٔ پرسنل از
+         صفحهٔ تنظیمات حذف گردید.
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- سربرگ صفحه -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="AccountTie" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="مدیریت پرسنل" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+            <TextBlock Text="ثبت، ویرایش حقوقی و عکس پرسن درمانگاه" FontSize="12" Opacity="0.65"
+                       Margin="14,4,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- نوار وضعیت/خطا -->
+        <TextBlock Grid.Row="1" Text="{Binding ErrorMessage, Mode=OneWay}" Foreground="#C62828"
+                   FontSize="12" TextWrapping="Wrap" Margin="2,0,0,8"
+                   Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
+
+        <!-- نوار ابزار -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="2,0,0,8"
+                    HorizontalAlignment="Left">
+            <Button Command="{Binding NewEmployeeCommand}"
+                    Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="AccountPlus" Width="16" Height="16" VerticalAlignment="Center" />
+                    <TextBlock Text="پرسنل جدید" Margin="7,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding LoadEmployeesCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" VerticalAlignment="Center" />
+                    <TextBlock Text="بازخوانی" Margin="7,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <!-- فهرست پرسن -->
+        <DataGrid Grid.Row="2"
+                  ItemsSource="{Binding Employees}"
+                  SelectedItem="{Binding SelectedEmployee}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  FontSize="12">
+            <DataGrid.Columns>
+                <!-- ─── عکس: نمایش/تعویض/حذف — چرخه هجدهم ─── -->
+                <DataGridTemplateColumn Header="عکس" Width="Auto" MinWidth="128">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="نمایش بزرگ عکس"
+                                        Command="{Binding DataContext.ViewPhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Foreground="#1565C0" Padding="4,2">
+                                    <materialDesign:PackIcon Kind="Image" Width="18" Height="18" />
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="انتخاب / تعویض عکس"
+                                        Command="{Binding DataContext.ChangePhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Foreground="#2E7D32" Padding="4,2">
+                                    <materialDesign:PackIcon Kind="ImagePlus" Width="18" Height="18" />
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="حذف عکس"
+                                        Command="{Binding DataContext.DeletePhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Foreground="#C62828" Padding="4,2"
+                                        Visibility="{Binding HasPhoto, Converter={StaticResource BoolToVisibility}}">
+                                    <materialDesign:PackIcon Kind="ImageRemove" Width="18" Height="18" />
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="100" />
+                <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="170" />
+                <DataGridTextColumn Header="سمت" Binding="{Binding PositionName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="120" />
+                <DataGridTextColumn Header="دپارتمان" Binding="{Binding DepartmentName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="120" />
+                <DataGridTextColumn Header="موبایل" Binding="{Binding Mobile, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
+                <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="90" />
+                <!-- حقوق پایه — مبدل مبلغ (واحد پول + ارقام فارسی + جداکننده) به‌جای StringFormat -->
+                <DataGridTextColumn Header="حقوق پایه" Binding="{Binding BaseSalary, Converter={StaticResource CurrencyRial}}" Width="Auto" MinWidth="120">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="درصد از سود (٪)" Binding="{Binding CommissionPercent, StringFormat='{}{0:0.##}'}" Width="Auto" MinWidth="105">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center" />
+                            <Setter Property="Foreground" Value="#8E24AA" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <!-- ویرایش حقوقی کنار هر ردیف — چرخه دهم -->
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="140">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="✏️ ویرایش حقوقی"
+                                    FontSize="11"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Command="{Binding DataContext.EditSalaryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

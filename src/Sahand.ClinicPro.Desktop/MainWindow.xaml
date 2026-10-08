@@ -68,10 +68,11 @@
         <DataTemplate DataType="{x:Type vm:AdminViewModel}">
             <views:AdminView />
         </DataTemplate>
-        <!-- چرخه بیستم: ViewModel پرسنل فرزند AdminViewModel است؛ قالب صریح تا
-             بدون ابهام AdminView برای آن هم به‌کار رود (زبانهٔ ۲ پیش‌فرض) -->
+        <!-- چرخه بیست‌وسوم (گزارش شانزدهم مالک): «گزینه پرسنل صفحهٔ تنظیمات را باز
+             می‌کند... پرسنل باید یک صفحه جدا باشد» — قالب پیش‌تر روی AdminView بود؛
+             اکنون نمای اختصاصی و مستقل به کار می‌رود -->
         <DataTemplate DataType="{x:Type vm:PersonnelViewModel}">
-            <views:AdminView />
+            <views:PersonnelView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:UsersViewModel}">
             <views:UsersView />
@@ -194,15 +195,42 @@
                     </ControlTemplate>
                 </Grid.Resources>
 
-                <!-- لوگو و نام سامانه — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
-                     «در بالای منوی کناری آیکون برنامه باید باشد ولی یک آیکون دیگر
-                     هست» — آیکون PackIcon عمومی با آیکون رسمی خود برنامه (appicon.ico)
-                     جایگزین شد تا هویت بصری محصول در سایدبار هم دیده شود -->
+                <!-- لوگو و نام سامانه — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
+                     «در بالای منوی کناری آیکون برنامه کوچک و بی‌کیفیته — یک تصویر
+                     بزرگ و باکیفیت بگذار» — به‌جای آیکون رستری کوچک، نشانِ برداری
+                     (وکتور) رسمی محصول رسم می‌شود که در هر اندازه‌ای شارپ می‌ماند:
+                     صفحهٔ گوشه‌گرد با گرادیان رسمی + صلیب پزشکی + نبض قلب -->
                 <StackPanel Grid.Row="0" Margin="16,20,16,16">
-                    <Image Source="/Assets/appicon.ico"
-                           Width="42" Height="42"
-                           RenderOptions.BitmapScalingMode="HighQuality"
-                           HorizontalAlignment="Right" />
+                    <!-- نشان برداری درمانگاه سهند — همیشه باکیفیت (بدون پیکسل‌بندی) -->
+                    <Grid Width="58" Height="58" HorizontalAlignment="Right">
+                        <!-- پس‌زمینهٔ گوشه‌گرد با گرادیان آبی رسمی -->
+                        <Border CornerRadius="16">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#1565C0" Offset="0" />
+                                    <GradientStop Color="#0D47A1" Offset="0.5" />
+                                    <GradientStop Color="#283593" Offset="1" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.35" />
+                            </Border.Effect>
+                        </Border>
+                        <!-- حلقهٔ داخلی ظریف -->
+                        <Border CornerRadius="13" BorderBrush="#40FFFFFF" BorderThickness="1"
+                                Margin="3" IsHitTestVisible="False" />
+                        <!-- صلیب پزشکی سفید -->
+                        <Grid IsHitTestVisible="False">
+                            <Border Background="White" CornerRadius="3" Width="26" Height="9" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                            <Border Background="White" CornerRadius="3" Width="9" Height="26" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        </Grid>
+                        <!-- خط نبض قلب پایین نشان -->
+                        <Canvas IsHitTestVisible="False" Margin="0,0,0,7">
+                            <Polyline Points="6,44 14,44 18,36 24,50 28,40 31,44 40,44"
+                                      Stroke="#7FD3FF" StrokeThickness="2.4"
+                                      StrokeLineJoin="Round" StrokeEndLineCap="Round" StrokeStartLineCap="Round" />
+                        </Canvas>
+                    </Grid>
                     <TextBlock Text="درمانگاه سهند"
                                FontSize="20" FontWeight="Bold" Margin="0,10,0,0"
                                Foreground="White" HorizontalAlignment="Right" />
@@ -211,19 +239,16 @@
                                Foreground="#DCE9FA" HorizontalAlignment="Right" />
                 </StackPanel>
 
-                <!-- فهرست ناوبری ماژول‌ها — چرخه هفدهم: قالب آیتم سفارشی برای
-                     سایدبار تیره — متن آبی‌روشن، آیتم فعال/هاور با های‌لایت
-                     سفید نیمه‌شفاف گوشه‌گرد (الگوی فرم‌های طراحی).
-                     ═══ چرخه بیست‌ویکم (گزارش پانزدهم مالک) ═══
-                     «گزینه‌های لیست کناری مرتب نیستند و شلوغ است؛ بر اساس عملکرد
-                     به‌صورت زیر منو قرار بده» — آیتم‌های گروه‌دار با HasChildren
-                     تشخیص داده می‌شوند و به‌صورت گروه بازشو (زیرمنوی تودرتو)
-                     دیده می‌شوند؛ آیتم‌های تکی همان دکمهٔ قبلی‌اند. -->
-
-
+                <!-- فهرست ناوبری ماژول‌ها — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
+                     «عنوان لیست‌های اصلی که زیرمنو دارند دیده نمی‌شوند» — الگوی
+                     قبلیِ سوییچ قالب با ContentControl+Style.Triggers شکننده بود؛
+                     اکنون هر دو بخش (سربرگ گروه و دکمهٔ تکی) همیشه در قالب هستند و
+                     فقط با دیدپذیری جداسازی می‌شوند — عنوان گروه در همهٔ حالت‌ها
+                     نمایان است.
+                     «گزینه‌های زیرمنو با رنگ متفاوت باشند تا زودتر تشخیص داده شوند» —
+                     فرزندان گروه با رنگ آبی‌روشنِ متمایز + نوار تأکیدی در لبهٔ راست. -->
                 <ListBox x:Name="NavList" Grid.Row="1"
                          ItemsSource="{Binding NavItems}"
-                         SelectedItem="{Binding SelectedNav}"
                          Background="Transparent"
                          BorderThickness="0"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
@@ -236,8 +261,7 @@
                             <Setter Property="Margin" Value="8,1" />
                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                             <Setter Property="Focusable" Value="False" />
-                            <!-- قالب شفاف: هایلایت/انتخاب خودِ ListBox غیرفعال است؛
-                                 آیتم تکی دکمه است و آیتم گروه خودش هدر بازشو دارد -->
+                            <!-- قالب شفاف: هایلایت/انتخاب خودِ ListBox غیرفعال است -->
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ListBoxItem">
@@ -249,124 +273,144 @@
                     </ListBox.ItemContainerStyle>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <!-- انتخاب‌گر قالب: آیتم تکی ↔ گروه زیرمنودار -->
-                            <ContentControl Content="{Binding}">
-                                <ContentControl.Style>
-                                    <Style TargetType="ContentControl">
-                                        <Setter Property="ContentTemplate">
-                                            <Setter.Value>
-                                                <!-- قالب آیتم تکی — دکمهٔ ناوبری -->
-                                                <DataTemplate>
-                                                    <Button Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                            CommandParameter="{Binding}"
-                                                            Template="{StaticResource LeafNavItemTemplate}"
-                                                            Cursor="Hand"
-                                                            HorizontalContentAlignment="Stretch"
-                                                            HorizontalAlignment="Stretch" />
-                                                </DataTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding HasChildren}" Value="True">
-                                                <Setter Property="ContentTemplate">
-                                                    <Setter.Value>
-                                                        <!-- قالب گروه — سربرگ بازشو + زیرمنو -->
-                                                        <DataTemplate>
-                                                            <StackPanel>
-                                                                <!-- سربرگ گروه — کلیک: باز/بسته -->
-                                                                <ToggleButton IsChecked="{Binding IsExpanded, Mode=TwoWay}"
-                                                                              Cursor="Hand">
-                                                                    <ToggleButton.Template>
-                                                                        <ControlTemplate TargetType="ToggleButton">
-                                                                            <Border x:Name="GrpBd" Background="Transparent"
-                                                                                    CornerRadius="9" Padding="10,9"
-                                                                                    SnapsToDevicePixels="True">
-                                                                                <StackPanel Orientation="Horizontal">
-                                                                                    <materialDesign:PackIcon Kind="{Binding Icon}"
-                                                                                                             Width="20" Height="20"
-                                                                                                             Foreground="#DCE9FA"
-                                                                                                             VerticalAlignment="Center" />
-                                                                                    <TextBlock Text="{Binding Title}"
-                                                                                               FontSize="13.5" FontWeight="SemiBold"
-                                                                                               Foreground="#E8F1FC"
-                                                                                               Margin="10,0,0,0"
-                                                                                               VerticalAlignment="Center" />
-                                                                                    <!-- فلش باز/بسته -->
-                                                                                    <materialDesign:PackIcon x:Name="Chev"
-                                                                                                             Kind="ChevronDown"
-                                                                                                             Width="15" Height="15"
-                                                                                                             Foreground="#9FB8D8"
-                                                                                                             Margin="8,0,0,0"
-                                                                                                             VerticalAlignment="Center"
-                                                                                                             RenderTransformOrigin="0.5,0.5">
-                                                                                        <materialDesign:PackIcon.RenderTransform>
-                                                                                            <RotateTransform Angle="0" />
-                                                                                        </materialDesign:PackIcon.RenderTransform>
-                                                                                    </materialDesign:PackIcon>
-                                                                                </StackPanel>
-                                                                            </Border>
-                                                                            <ControlTemplate.Triggers>
-                                                                                <Trigger Property="IsMouseOver" Value="True">
-                                                                                    <Setter TargetName="GrpBd" Property="Background" Value="#1FFFFFFF" />
-                                                                                </Trigger>
-                                                                                <Trigger Property="IsChecked" Value="True">
-                                                                                    <Setter TargetName="Chev" Property="RenderTransform">
-                                                                                        <Setter.Value>
-                                                                                            <RotateTransform Angle="180" />
-                                                                                        </Setter.Value>
-                                                                                    </Setter>
-                                                                                </Trigger>
-                                                                            </ControlTemplate.Triggers>
-                                                                        </ControlTemplate>
-                                                                    </ToggleButton.Template>
-                                                                </ToggleButton>
+                            <StackPanel>
+                                <!-- ═══ سربرگ گروه — همیشه رندر می‌شود؛ عنوان همیشه دیده
+                                     می‌شود (رفع «عنوان والد دیده نمی‌شود») ═══ -->
+                                <ToggleButton IsChecked="{Binding IsExpanded, Mode=TwoWay}"
+                                              Cursor="Hand"
+                                              Visibility="{Binding HasChildren, Converter={StaticResource BoolToVisibility}}">
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border x:Name="GrpBd" Background="#14FFFFFF"
+                                                    CornerRadius="9" Padding="10,9"
+                                                    Margin="0,2"
+                                                    SnapsToDevicePixels="True">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="{Binding Icon}"
+                                                                             Width="20" Height="20"
+                                                                             Foreground="#FFFFFF"
+                                                                             VerticalAlignment="Center" />
+                                                    <!-- عنوان گروه — سفید نیمه‌ضخیم برای تمایز از فرزندان -->
+                                                    <TextBlock Text="{Binding Title}"
+                                                               FontSize="13.5" FontWeight="SemiBold"
+                                                               Foreground="#FFFFFF"
+                                                               Margin="10,0,0,0"
+                                                               VerticalAlignment="Center" />
+                                                    <!-- فلش باز/بسته -->
+                                                    <materialDesign:PackIcon x:Name="Chev"
+                                                                             Kind="ChevronDown"
+                                                                             Width="15" Height="15"
+                                                                             Foreground="#9FB8D8"
+                                                                             Margin="8,0,2,0"
+                                                                             VerticalAlignment="Center"
+                                                                             RenderTransformOrigin="0.5,0.5">
+                                                        <materialDesign:PackIcon.RenderTransform>
+                                                            <RotateTransform Angle="0" />
+                                                        </materialDesign:PackIcon.RenderTransform>
+                                                    </materialDesign:PackIcon>
+                                                </StackPanel>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="GrpBd" Property="Background" Value="#24FFFFFF" />
+                                                </Trigger>
+                                                <Trigger Property="IsChecked" Value="True">
+                                                    <Setter TargetName="GrpBd" Property="Background" Value="#1EFFFFFF" />
+                                                    <Setter TargetName="Chev" Property="RenderTransform">
+                                                        <Setter.Value>
+                                                            <RotateTransform Angle="180" />
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
+                                </ToggleButton>
 
-                                                                <!-- زیرمنو — فقط هنگام باز بودن گروه -->
-                                                                <ListBox ItemsSource="{Binding Children}"
-                                                                         Background="Transparent"
-                                                                         BorderThickness="0"
-                                                                         Margin="14,2,0,2"
-                                                                         Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}"
-                                                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                                                         ScrollViewer.VerticalScrollBarVisibility="Disabled">
-                                                                    <ListBox.ItemContainerStyle>
-                                                                        <Style TargetType="ListBoxItem">
-                                                                            <Setter Property="Padding" Value="0" />
-                                                                            <Setter Property="Margin" Value="0,1" />
-                                                                            <Setter Property="Background" Value="Transparent" />
-                                                                            <Setter Property="BorderThickness" Value="0" />
-                                                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                                                            <Setter Property="Focusable" Value="False" />
-                                                                            <Setter Property="Template">
-                                                                                <Setter.Value>
-                                                                                    <ControlTemplate TargetType="ListBoxItem">
-                                                                                        <ContentPresenter />
-                                                                                    </ControlTemplate>
-                                                                                </Setter.Value>
-                                                                            </Setter>
-                                                                        </Style>
-                                                                    </ListBox.ItemContainerStyle>
-                                                                    <ListBox.ItemTemplate>
-                                                                        <DataTemplate>
-                                                                            <!-- فرزند گروه — همان دکمهٔ تکی با تورفتگی -->
-                                                                            <Button Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                                    CommandParameter="{Binding}"
-                                                                                    Template="{StaticResource LeafNavItemTemplate}"
-                                                                                    Cursor="Hand"
-                                                                                    HorizontalContentAlignment="Stretch"
-                                                                                    HorizontalAlignment="Stretch" />
-                                                                        </DataTemplate>
-                                                                    </ListBox.ItemTemplate>
-                                                                </ListBox>
+                                <!-- ═══ آیتم تکی (بدون زیرمنو) — فقط وقتی گروه نیست ═══ -->
+                                <Button Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        CommandParameter="{Binding}"
+                                        Template="{StaticResource LeafNavItemTemplate}"
+                                        Cursor="Hand"
+                                        Visibility="{Binding HasChildren, Converter={StaticResource InverseBoolToVisibility}}"
+                                        HorizontalContentAlignment="Stretch"
+                                        HorizontalAlignment="Stretch" />
+
+                                <!-- ═══ زیرمنو — فرزندان با رنگ متمایز (گزارش شانزدهم
+                                     مالک: «گزینه‌های زیرمنو با رنگ متفاوت باشند») ═══ -->
+                                <ListBox ItemsSource="{Binding Children}"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         Margin="10,2,0,4"
+                                         Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Padding" Value="0" />
+                                            <Setter Property="Margin" Value="0,1" />
+                                            <Setter Property="Background" Value="Transparent" />
+                                            <Setter Property="BorderThickness" Value="0" />
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                            <Setter Property="Focusable" Value="False" />
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <ContentPresenter />
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <!-- فرزند گروه — رنگ آبی‌روشن متمایز + نوار تأکیدی
+                                                 در لبهٔ راست تا از آیتم‌های تکی جدا دیده شود -->
+                                            <Button Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    Cursor="Hand"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    HorizontalAlignment="Stretch">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="ChildBd" Background="#0FFFFFFF"
+                                                                CornerRadius="8" Padding="8,7"
+                                                                SnapsToDevicePixels="True">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <!-- نوار تأکیدی متمایز — لبهٔ راست (RTL) -->
+                                                                <Border Width="3" CornerRadius="2"
+                                                                        Background="#7FD3FF"
+                                                                        Margin="0,0,8,0"
+                                                                        VerticalAlignment="Stretch" />
+                                                                <materialDesign:PackIcon Kind="{Binding Icon}"
+                                                                                         Width="17" Height="17"
+                                                                                         Foreground="#9FC7F7"
+                                                                                         VerticalAlignment="Center" />
+                                                                <TextBlock Text="{Binding Title}"
+                                                                           FontSize="12.5"
+                                                                           Foreground="#BBDEFB"
+                                                                           Margin="9,0,0,0"
+                                                                           VerticalAlignment="Center" />
                                                             </StackPanel>
-                                                        </DataTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </ContentControl.Style>
-                            </ContentControl>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="ChildBd" Property="Background" Value="#26FFFFFF" />
+                                                            </Trigger>
+                                                            <!-- هایلایت صفحهٔ فعال در زیرمنو -->
+                                                            <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                                                <Setter TargetName="ChildBd" Property="Background" Value="#38FFFFFF" />
+                                                                <Setter TargetName="ChildBd" Property="BorderBrush" Value="#7FD3FF" />
+                                                                <Setter TargetName="ChildBd" Property="BorderThickness" Value="1" />
+                                                            </DataTrigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>

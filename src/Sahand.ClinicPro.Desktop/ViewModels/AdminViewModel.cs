@@ -145,11 +145,11 @@ public partial class AdminViewModel : ViewModelBase
     {
         StatusMessage = string.Empty;
         ErrorMessage = string.Empty;
+        // چرخه بیست‌وسوم: زبانهٔ پرسنل حذف شد (صفحهٔ مستقل شد) — شماره‌ها یک واحد عقب رفتند
         if (value == 0) _ = LoadSettingsAsync();
         else if (value == 1) _ = LoadAuditAsync();
-        else if (value == 2) _ = LoadEmployeesAsync();
-        else if (value == 3) _ = LoadBackupsAsync();
-        else if (value == 4) _ = SearchArchiveAsync();
+        else if (value == 2) _ = LoadBackupsAsync();
+        else if (value == 3) _ = SearchArchiveAsync();
     }
 
     /// <summary>بارگذاری تنظیمات</summary>
