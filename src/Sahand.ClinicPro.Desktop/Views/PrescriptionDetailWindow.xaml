@@ -43,9 +43,23 @@
             <TextBlock Text="{Binding ErrorMessage}"
                        Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
                        FontSize="12" Margin="0,0,0,8" />
-            <Button Click="OnCloseClick"
-                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                    Content="بستن" Height="40" />
+            <!-- چرخه بیست‌وسوم (گزارش شانزدهم مالک): «در صفحه جزئیات نسخه، دکمه
+                 چاپ مجدد هم باشد» — دکمهٔ چاپ مجدد کنار بستن؛ سند نسخه از همان
+                 داده‌های بارگذاری‌شدهٔ جزئیات ساخته و پیش‌نمایش چاپ (با دکمهٔ
+                 ارسال به پرینتر) باز می‌شود -->
+            <UniformGrid Columns="2">
+                <Button Click="OnReprintClick"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Height="40" Margin="0,0,4,0">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <materialDesign:PackIcon Kind="Printer" Width="17" Height="17" VerticalAlignment="Center" />
+                        <TextBlock Text="🖨️ چاپ مجدد" Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Click="OnCloseClick"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Content="بستن" Height="40" Margin="4,0,0,0" />
+            </UniformGrid>
         </StackPanel>
     </Grid>
 </Window>

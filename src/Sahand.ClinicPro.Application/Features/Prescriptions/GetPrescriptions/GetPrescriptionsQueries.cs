@@ -69,6 +69,10 @@ public class GetPrescriptionByIdQueryHandler
     {
         var p = await _unitOfWork.Repository<Domain.Entities.Clinical.Prescription>()
             .QueryableNoTracking
+            // چرخه بیست‌وسوم (گزارش شانزدهم مالک): Include بیمار و پزشک برای
+            // PatientName/DoctorName در جزئیات (چاپ مجدد و هدر پنجرهٔ جزئیات)
+            .Include(x => x.Patient)
+            .Include(x => x.Doctor).ThenInclude(d => d!.Employee)
             .Include(x => x.Items).ThenInclude(i => i.Medication)
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
@@ -76,7 +80,13 @@ public class GetPrescriptionByIdQueryHandler
             return Result<PrescriptionDetailDto>.Failure(Error.NotFound("نسخه", request.Id));
 
         var dto = new PrescriptionDetailDto(
-            p.Id, p.PrescriptionCode, p.PatientId, p.DoctorId, p.VisitId,
+            p.Id, p.PrescriptionCode, p.PatientId,
+            // نام بیمار و پزشک — برای چاپ مجدد و هدر پنجرهٔ جزئیات (چرخه ۲۳)
+            p.Patient != null ? p.Patient.FirstName + " " + p.Patient.LastName : "",
+            p.DoctorId,
+            p.Doctor != null && p.Doctor.Employee != null
+                ? p.Doctor.Employee.FirstName + " " + p.Doctor.Employee.LastName : "پزشک",
+            p.VisitId,
             p.PrescriptionDate.HasValue
                 ? Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(p.PrescriptionDate.Value)
                 : string.Empty,

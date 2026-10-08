@@ -50,12 +50,18 @@ public record PrescriptionItemDetailDto(
     string? Unit,
     string? Instructions);
 
-/// <summary>جزئیات کامل نسخه</summary>
+/// <summary>
+/// جزئیات کامل نسخه — چرخه بیست‌وسوم (گزارش شانزدهم مالک): فیلدهای PatientName و
+/// DoctorName افزوده شدند تا پنجرهٔ جزئیات و «چاپ مجدد» نسخه، نام بیمار و پزشک را
+/// داشته باشند (پیش‌تر فقط شناسه ارسال می‌شد و هدر پنجرهٔ جزئیات بدون نام می‌ماند).
+/// </summary>
 public record PrescriptionDetailDto(
     long Id,
     string? PrescriptionCode,
     long PatientId,
+    string PatientName,
     long DoctorId,
+    string DoctorName,
     long? VisitId,
     string DateShamsi,
     PrescriptionType Type,

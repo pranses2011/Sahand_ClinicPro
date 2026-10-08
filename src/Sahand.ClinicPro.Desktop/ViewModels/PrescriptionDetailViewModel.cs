@@ -26,6 +26,26 @@ public partial class PrescriptionDetailViewModel : ObservableObject
     [ObservableProperty]
     private string _header = "جزئیات نسخه";
 
+    // ═══ چرخه بیست‌وسوم (گزارش شانزدهم مالک): «در صفحه جزئیات نسخه، دکمه چاپ
+    // مجدد هم باشد» — فیلدهای زیر از پاسخ سرور نگه داشته می‌شوند تا دکمهٔ
+    // «چاپ مجدد» بتواند سند چاپ را بدون درخواست دوباره بسازد ═══
+
+    /// <summary>نام کامل بیمار — برای چاپ مجدد</summary>
+    [ObservableProperty]
+    private string _patientName = string.Empty;
+
+    /// <summary>نام پزشک — برای چاپ مجدد</summary>
+    [ObservableProperty]
+    private string _doctorName = string.Empty;
+
+    /// <summary>تاریخ شمسی نسخه — برای چاپ مجدد</summary>
+    [ObservableProperty]
+    private string _dateShamsi = string.Empty;
+
+    /// <summary>کد نسخه — برای چاپ مجدد</summary>
+    [ObservableProperty]
+    private string? _prescriptionCode;
+
     /// <summary>اقلام نسخه</summary>
     [ObservableProperty]
     private ObservableCollection<PrescriptionItemView> _items = new();
@@ -66,6 +86,12 @@ public partial class PrescriptionDetailViewModel : ObservableObject
         else
         {
             Header = $"نسخه {detail.PrescriptionCode ?? _prescriptionId.ToString()} — {detail.PatientName}";
+            // چرخه بیست‌وسوم: فیلدهای چاپ مجدد از پاسخ پر می‌شوند (سرور اکنون
+            // PatientName/DoctorName هم ارسال می‌کند)
+            PatientName = detail.PatientName ?? string.Empty;
+            DoctorName = detail.DoctorName ?? string.Empty;
+            DateShamsi = detail.DateShamsi ?? string.Empty;
+            PrescriptionCode = detail.PrescriptionCode;
             Items = new ObservableCollection<PrescriptionItemView>(
                 (detail.Items ?? new()).Select(i => new PrescriptionItemView(
                     i.MedicationName, i.Dosage, i.Frequency, i.Duration,
@@ -88,12 +114,15 @@ public partial class PrescriptionDetailViewModel : ObservableObject
         public PrescriptionDetail? Data { get; set; }
     }
 
-    /// <summary>جزئیات نسخه منطبق بر سرور</summary>
+    /// <summary>جزئیات نسخه منطبق بر سرور — چرخه ۲۳: نام بیمار/پزشک هم می‌آید</summary>
     public sealed class PrescriptionDetail
     {
         public long Id { get; set; }
         public string? PrescriptionCode { get; set; }
-        public string PatientName { get; set; } = string.Empty;
+        public string? PatientName { get; set; }
+        public string? DoctorName { get; set; }
+        public long PatientId { get; set; }
+        public long DoctorId { get; set; }
         public string DateShamsi { get; set; } = string.Empty;
         public int Status { get; set; }
         public string? Notes { get; set; }
