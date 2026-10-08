@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1150"
              FlowDirection="RightToLeft">
@@ -108,11 +109,12 @@
                         <Canvas x:Name="GrowthChart" SizeChanged="OnChartSizeChanged" />
                     </Border>
 
-                    <!-- فرم ثبت اندازه‌گیری جدید -->
+                    <!-- فرم ثبت اندازه‌گیری جدید — چرخه بیست‌وسوم: فیلد تاریخ از
+                         انتخابگر تاریخ شمسی استفاده می‌کند (قابل «همهٔ فیلدهای تاریخ») -->
                     <WrapPanel Grid.Row="2" Margin="0,0,0,8">
-                        <TextBox materialDesign:HintAssist.Hint="تاریخ شمسی (1404/07/10)" MinWidth="130"
-                                 Text="{Binding NewDateShamsi, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />
+                        <controls:PersianDatePicker DateShamsiText="{Binding NewDateShamsi, Mode=TwoWay}"
+                                                    Placeholder="تاریخ اندازه‌گیری" MinWidth="135"
+                                                    Margin="0,0,10,0" />
                         <TextBox materialDesign:HintAssist.Hint="وزن (kg)" MinWidth="95"
                                  Text="{Binding NewWeight, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />

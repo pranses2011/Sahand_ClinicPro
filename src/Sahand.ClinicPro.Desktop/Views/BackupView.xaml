@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
              mc:Ignorable="d"
              d:DesignHeight="640" d:DesignWidth="1000"
              FlowDirection="RightToLeft">
@@ -295,9 +296,11 @@
                 <Expander Header="⚙️ تنظیمات بکاپ خودکار" FontSize="14" FontWeight="SemiBold" Margin="2,14,2,0">
                     <Border Padding="12,8" CornerRadius="10" Background="#F7FAFD">
                         <StackPanel MaxWidth="620" HorizontalAlignment="Stretch">
-                            <CheckBox Content="بکاپ کامل روزانه در ساعت:" IsChecked="{Binding DailyFullEnabled}" Margin="2,6" />
-                            <TextBox Text="{Binding DailyFullTime}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="Consolas" />
+                            <!-- چرخه بیست‌وسوم: ساعت پشتیبان کامل روزانه از انتخابگر ساعت
+                                 (قابل «همهٔ فیلدهای ساعت از کنترل انتخابگر ساعت») -->
+                            <CheckBox Content="پشتیبان کامل روزانه در ساعت:" IsChecked="{Binding DailyFullEnabled}" Margin="2,6" />
+                            <controls:TimePicker TimeText="{Binding DailyFullTime, Mode=TwoWay}"
+                                                 HorizontalAlignment="Left" Margin="26,2,0,8" />
                             <CheckBox Content="بکاپ Differential هر (ساعت):" IsChecked="{Binding DiffEnabled}" Margin="2,6" />
                             <TextBox Text="{Binding DiffHours}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="Consolas" />

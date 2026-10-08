@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Sahand.ClinicPro.Application.Common.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.Controls;
@@ -10,6 +11,14 @@ namespace Sahand.ClinicPro.Desktop.Controls;
 /// </summary>
 public partial class PersianDatePicker : UserControl
 {
+    /// <summary>
+    /// آیا پاپ‌آپ هنگام فشردن دکمهٔ ماوس روی جعبهٔ متن باز بود؟ — چرخه بیست‌وسوم:
+    /// با StaysOpen=False، کلیک روی جعبهٔ متنِ (بیرونِ پاپ‌آپ) ابتدا پاپ‌آپ را
+    /// می‌بندد و سپس رویداد MouseUp دوباره بازش می‌کرد → به نظر می‌رسید «هیچ‌وقت
+    /// بسته نمی‌شود». با این پرچم، بازکردن دوبارهٔ بی‌درنگ متوقف می‌شود.
+    /// </summary>
+    private bool _popupWasOpenOnMouseDown;
+
     /// <summary>سازنده — اتصال رویدادها</summary>
     public PersianDatePicker()
     {
@@ -17,7 +26,21 @@ public partial class PersianDatePicker : UserControl
         CalendarToggle.Checked += (_, _) => CalendarPopup.IsOpen = true;
         CalendarToggle.Unchecked += (_, _) => CalendarPopup.IsOpen = false;
         CalendarPopup.Closed += (_, _) => CalendarToggle.IsChecked = false;
+        // چرخه بیست‌وسوم (گزارش شانزدهم مالک): «با کلیک روی تاریخ‌ها بسته شود» —
+        // بستن پاپ‌آپ به محض انتخاب روز از تقویم
         PopupCalendar.DateSelected += (_, _) => CalendarPopup.IsOpen = false;
+        // ثبت وضعیت پاپ‌آپ پیش از فشردن دکمه — برای رفتار toggle صحیح جعبهٔ متن
+        ShamsiBox.PreviewMouseLeftButtonDown += (_, _) =>
+            _popupWasOpenOnMouseDown = CalendarPopup.IsOpen;
+        // بستن با کلید Escape — سازگاری صفحه‌کلید
+        PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Escape && CalendarPopup.IsOpen)
+            {
+                CalendarPopup.IsOpen = false;
+                e.Handled = true;
+            }
+        };
         Loaded += (_, _) => SyncShamsi();
     }
 
@@ -110,9 +133,21 @@ public partial class PersianDatePicker : UserControl
 
     /* ─────────────  منطق  ───────────── */
 
-    /// <summary>باز کردن تقویم با کلیک روی جعبه متن</summary>
+    /// <summary>
+    /// باز/بستن پاپ‌آپ با کلیک روی جعبهٔ متن — چرخه بیست‌وسوم:
+    /// اگر پاپ‌آپ هنگام فشردن دکمه باز بود، سیستم (StaysOpen=False) بندش داده
+    /// و اینجا نباید دوباره باز شود — کلیک روی فیلد = toggle (باز → بسته)
+    /// </summary>
     private void OpenPopup(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        => CalendarPopup.IsOpen = true;
+    {
+        if (_popupWasOpenOnMouseDown)
+        {
+            // پاپ‌آپ همین حالا بسته شده است — بازکردن مجدد ممنوع
+            _popupWasOpenOnMouseDown = false;
+            return;
+        }
+        CalendarPopup.IsOpen = true;
+    }
 
     /// <summary>هم‌گام‌سازی متن شمسی و جهت ماه نمایشی با تاریخ انتخاب‌شده</summary>
     private void OnSelectedDateChanged()

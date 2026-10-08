@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
              mc:Ignorable="d"
              d:DesignHeight="640" d:DesignWidth="1080"
              FlowDirection="RightToLeft">
@@ -157,10 +158,12 @@
                         <ComboBox ItemsSource="{Binding FlatAccounts}"
                                   SelectedItem="{Binding LedgerAccount}"
                                   DisplayMemberPath="Display" MinWidth="320" />
-                        <TextBox Text="{Binding LedgerFrom, UpdateSourceTrigger=PropertyChanged}"
-                                 materialDesign:HintAssist.Hint="از تاریخ" Width="110" Margin="10,0,0,0" />
-                        <TextBox Text="{Binding LedgerTo, UpdateSourceTrigger=PropertyChanged}"
-                                 materialDesign:HintAssist.Hint="تا تاریخ" Width="110" Margin="8,0,0,0" />
+                        <!-- چرخه بیست‌وسوم: فیلدهای تاریخ دفتر کل از انتخابگر تاریخ شمسی
+                             (قابل «همهٔ فیلدهای تاریخ از کنترل انتخابگر استفاده بکنن») -->
+                        <controls:PersianDatePicker DateShamsiText="{Binding LedgerFrom, Mode=TwoWay}"
+                                                    Placeholder="از تاریخ" Width="125" Margin="10,0,0,0" />
+                        <controls:PersianDatePicker DateShamsiText="{Binding LedgerTo, Mode=TwoWay}"
+                                                    Placeholder="تا تاریخ" Width="125" Margin="8,0,0,0" />
                         <Button Command="{Binding ShowLedgerCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="10,0,0,0">
                             <TextBlock Text="نمایش" />
                         </Button>
@@ -243,10 +246,11 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
-                        <TextBox Text="{Binding IncomeFrom, UpdateSourceTrigger=PropertyChanged}" Width="110"
-                                 materialDesign:HintAssist.Hint="از تاریخ" />
-                        <TextBox Text="{Binding IncomeTo, UpdateSourceTrigger=PropertyChanged}" Width="110" Margin="8,0,0,0"
-                                 materialDesign:HintAssist.Hint="تا تاریخ" />
+                        <!-- چرخه بیست‌وسوم: فیلدهای تاریخ سود و زیان از انتخابگر تاریخ شمسی -->
+                        <controls:PersianDatePicker DateShamsiText="{Binding IncomeFrom, Mode=TwoWay}"
+                                                    Placeholder="از تاریخ" Width="125" />
+                        <controls:PersianDatePicker DateShamsiText="{Binding IncomeTo, Mode=TwoWay}"
+                                                    Placeholder="تا تاریخ" Width="125" Margin="8,0,0,0" />
                         <Button Command="{Binding RefreshReportsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="10,0,0,0">
                             <TextBlock Text="به‌روزرسانی" />
                         </Button>

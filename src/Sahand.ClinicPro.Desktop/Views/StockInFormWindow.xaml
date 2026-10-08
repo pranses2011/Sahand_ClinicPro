@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:behaviors="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
         Title="ورود موجودی دارو"
         Height="620" Width="520"
         FlowDirection="RightToLeft"
@@ -60,9 +61,11 @@
                          behaviors:MoneyInput.NumericValue="{Binding SellPrice, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
                          Margin="6,0,0,0" />
             </UniformGrid>
-            <TextBox materialDesign:HintAssist.Hint="تاریخ انقضا شمسی * (1405/06/31)"
-                     Text="{Binding ExpiryDateShamsi, UpdateSourceTrigger=PropertyChanged}"
-                     Margin="0,0,0,16" />
+            <!-- تاریخ انقضا — چرخه بیست‌وسوم: فیلد تاریخ از انتخابگر تاریخ شمسی -->
+            <controls:PersianDatePicker DateShamsiText="{Binding ExpiryDateShamsi, Mode=TwoWay}"
+                                        Placeholder="تاریخ انقضا شمسی *"
+                                        HorizontalAlignment="Left" MinWidth="180"
+                                        Margin="0,0,0,16" />
 
             <TextBlock Text="{Binding ErrorMessage}"
                        Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"

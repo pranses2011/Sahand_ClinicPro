@@ -5,11 +5,21 @@
              FlowDirection="RightToLeft"
              Focusable="True">
     <!-- ═══════════════════════════════════════════════════════════
-         انتخابگر ساعت — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
-         «ساعت‌هایی که برای شروع و پایان و استراحت‌ها تنظیم می‌کنیم را طوری
-         بکن که با کلیک روی آن با یک کنترل انتخاب ساعت انتخاب کنیم»
-         جعبهٔ متن فقط-خواندنی «08:30» + پاپ‌آپ دوستونی ساعت/دقیقه؛
-         خروجی متن HH:mm از طریق وابستگی TimeText (دوطرفه).
+         انتخابگر ساعت طرح Material — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
+         «کنترل انتخاب ساعت رو مثل این عکس بکن» — مرجع: انتخابگر زمان متریال
+         با ساعت عقربه‌ای + نمایش دیجیتال دو خانه‌ای + کلید صبح/عصر + تأیید/انصراف
+         ─────────────────────────────────────────────────────────────
+         ساختار مطابق تصویر مرجع:
+         ● نمایش دیجیتال: خانهٔ ساعت : خانهٔ دقیقه — خانهٔ فعال با پس‌زمینهٔ
+           رنگ اصلی هایلایت؛ کلیک روی هر خانه، صفحهٔ عقربه‌ای را به همان حالت
+           می‌برد (انتخاب ساعت یا دقیقه)
+         ● کلید «صبح / عصر» (معادل AM/PM مرجع)
+         ● ساعت عقربه‌ای: ۱۲ خانهٔ عددی دور دایره + عقربه + نقطهٔ انتخاب توپرِ
+           رنگ اصلی با عدد سفید — دقیقاً مانند تصویر؛ در حالت دقیقه اعداد ۰۰-۵۵
+           (گام ۵) و پس از انتخاب ساعت، خودکار به حالت دقیقه می‌رود
+         ● پاورقی: کلید صفحه‌کلید (ورود تایپی مستقیم) + انصراف + تأیید
+         خروجی همان قرارداد قبلی است: TimeText دوطرفه با قالب «HH:mm» (لاتین)؛
+         نمایش رابط کاربری همه‌جا با ارقام فارسی است.
          ═══════════════════════════════════════════════════════════ -->
     <Grid>
         <!-- دکمهٔ بازکردن پاپ‌آپ — ظاهر هم‌خانوادهٔ TextBox متریال -->
@@ -32,10 +42,11 @@
                                                      VerticalAlignment="Center"
                                                      Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
                                                      Opacity="0.8" />
+                            <!-- نمایش ارقام فارسی — متن واقعی TimeText لاتین است -->
                             <TextBlock x:Name="TimeTextBlock"
-                                       Text="{Binding TimeText, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=OneWay}"
+                                       Text="{Binding TimeTextFa, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=OneWay}"
                                        Margin="6,0,0,0"
-                                       MinWidth="38"
+                                       MinWidth="42"
                                        VerticalAlignment="Center"
                                        FontFamily="Consolas"
                                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
@@ -56,7 +67,7 @@
             </ToggleButton.Template>
         </ToggleButton>
 
-        <!-- پاپ‌آپ انتخاب ساعت و دقیقه -->
+        <!-- ═══ پاپ‌آپ انتخابگر زمان طرح Material ═══ -->
         <Popup x:Name="PickerPopup"
                PlacementTarget="{Binding ElementName=Toggle}"
                Placement="Bottom"
@@ -66,68 +77,140 @@
             <Border Background="{DynamicResource MaterialDesign.Brush.Background}"
                     BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                     BorderThickness="1"
-                    CornerRadius="8"
+                    CornerRadius="12"
                     Margin="12"
-                    Padding="4"
-                    Effect="{StaticResource MaterialDesignShadowDepth2}"
-                    Width="236">
+                    Padding="10"
+                    Effect="{StaticResource MaterialDesignShadowDepth2}">
+                <Border.Resources>
+                    <!-- خانهٔ دیجیتال ساعت/دقیقه — پس‌زمینهٔ روشن؛ با فعال‌شدن،
+                         هایلایت رنگ اصلی (قالب سبک مرجع متریال) -->
+                    <ControlTemplate x:Key="DigitBoxTemplate" TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{DynamicResource MaterialDesign.Brush.TextField.HoverBackground}"
+                                CornerRadius="8"
+                                Width="46" Height="40">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.75" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                    <!-- کلید صبح/عصر — دکمهٔ تقسیم‌شده مطابق مرجع -->
+                    <Style x:Key="AmPmButtonStyle" TargetType="Button">
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                        <Setter Property="BorderThickness" Value="1" />
+                        <Setter Property="Padding" Value="10,4" />
+                        <Setter Property="FontSize" Value="11.5" />
+                        <Setter Property="Cursor" Value="Hand" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="Bd"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="8"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Border.Resources>
+
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <!-- سربرگ ستون‌ها -->
+                    <!-- ─── بدنهٔ اصلی: نمایش دیجیتال (راست) + ساعت عقربه‌ای (چپ) ─── -->
                     <Grid Grid.Row="0" Margin="4,2">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="ساعت"
-                                   FontSize="11" Opacity="0.6"
-                                   HorizontalAlignment="Center" />
-                        <TextBlock Grid.Column="1" Text="دقیقه"
-                                   FontSize="11" Opacity="0.6"
-                                   HorizontalAlignment="Center" />
+
+                        <!-- ═══ نمایش دیجیتال — دو خانهٔ ساعت/دقیقه + جداکننده + صبح/عصر ═══ -->
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,4,0">
+                            <TextBlock Text="انتخاب زمان" FontSize="10.5" Opacity="0.55"
+                                       Margin="2,0,0,7" />
+                            <StackPanel Orientation="Horizontal">
+                                <Button x:Name="HourBox" Template="{StaticResource DigitBoxTemplate}"
+                                        Click="OnHourBoxClick" Cursor="Hand">
+                                    <TextBlock x:Name="HourText" FontSize="21" FontWeight="Bold"
+                                               FontFamily="Consolas" />
+                                </Button>
+                                <TextBlock Text=":" FontSize="21" FontWeight="Bold"
+                                           VerticalAlignment="Center" Margin="4,0" />
+                                <Button x:Name="MinuteBox" Template="{StaticResource DigitBoxTemplate}"
+                                        Click="OnMinuteBoxClick" Cursor="Hand">
+                                    <TextBlock x:Name="MinuteText" FontSize="21" FontWeight="Bold"
+                                               FontFamily="Consolas" />
+                                </Button>
+                            </StackPanel>
+
+                            <!-- صبح / عصر — معادل AM/PM مرجع؛ پیش‌فرض برای شیفت صبحاطلاعی -->
+                            <UniformGrid Columns="2" Margin="0,10,0,0">
+                                <Button x:Name="AmBox" Style="{StaticResource AmPmButtonStyle}"
+                                        Content="صبح" Click="OnAmClick" />
+                                <Button x:Name="PmBox" Style="{StaticResource AmPmButtonStyle}"
+                                        Content="عصر" Click="OnPmClick" Margin="6,0,0,0" />
+                            </UniformGrid>
+
+                            <!-- ورود تایپی مستقیم — با کلید صفحه‌کلید نمایان می‌شود -->
+                            <StackPanel x:Name="KeyboardPanel" Visibility="Collapsed" Margin="0,10,0,0">
+                                <TextBlock Text="ورود تایپی (HH:mm):" FontSize="10.5" Opacity="0.6" Margin="2,0,0,3" />
+                                <TextBox x:Name="ManualInput" MaxLength="5" Width="104"
+                                         HorizontalAlignment="Left" FontFamily="Consolas"
+                                         KeyDown="OnManualKeyDown" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- ═══ صفحهٔ ساعت عقربه‌ای — رندر پویا از کد پشت ═══ -->
+                        <Border Grid.Column="2" Background="{DynamicResource MaterialDesign.Brush.TextField.HoverBackground}"
+                                CornerRadius="125" Width="250" Height="250">
+                            <Canvas x:Name="ClockFace"
+                                    Width="250" Height="250"
+                                    MouseDown="OnClockFaceMouseDown" />
+                        </Border>
                     </Grid>
 
-                    <!-- دو لیست اسکرولی — ساعت ۰ تا ۲۳ و دقیقه ۵ در ۵ -->
-                    <Grid Grid.Row="1" Margin="0,2">
+                    <!-- ─── پاورقی: کلید صفحه‌کلید + انصراف + تأیید ─── -->
+                    <Grid Grid.Row="1" Margin="6,8,6,2">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <ListBox x:Name="HoursList"
-                                 Grid.Column="0"
-                                 BorderThickness="0"
-                                 MaxHeight="186"
-                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                 FontFamily="Consolas"
-                                 SelectionChanged="OnHoursChanged" />
-                        <ListBox x:Name="MinutesList"
-                                 Grid.Column="1"
-                                 BorderThickness="0"
-                                 MaxHeight="186"
-                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                 FontFamily="Consolas"
-                                 SelectionChanged="OnMinutesChanged" />
-                    </Grid>
-
-                    <!-- دکمه‌های تأیید و پاک‌کردن -->
-                    <StackPanel Grid.Row="2" Orientation="Horizontal"
-                                HorizontalAlignment="Center" Margin="0,6,0,2">
-                        <Button Content="پاک کردن"
-                                Click="OnClearClick"
-                                FontSize="11"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Padding="10,4" Margin="0,0,6,0" />
-                        <Button Content="تأیید"
-                                Click="OnAcceptClick"
-                                FontSize="11"
+                        <Button Grid.Column="0" x:Name="KeyboardToggle" Click="OnKeyboardToggleClick"
+                                Cursor="Hand" ToolTip="ورود تایپی زمان"
+                                Style="{StaticResource MaterialDesignFlatButton}" Padding="6,4">
+                            <materialDesign:PackIcon Kind="Keyboard" Width="16" Height="16"
+                                                     Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                        </Button>
+                        <Button Grid.Column="2" x:Name="ClearButton" Click="OnClearClick"
+                                Content="پاک کردن" FontSize="11.5"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                Padding="8,4" Margin="0,0,4,0" />
+                        <Button Grid.Column="3" x:Name="CancelButton" Click="OnCancelClick"
+                                Content="انصراف" FontSize="11.5"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                Padding="8,4" Margin="0,0,4,0" />
+                        <Button Grid.Column="4" x:Name="OkButton" Click="OnAcceptClick"
+                                Content="تأیید" FontSize="11.5"
                                 Style="{StaticResource MaterialDesignRaisedButton}"
                                 Padding="14,4" />
-                    </StackPanel>
+                    </Grid>
                 </Grid>
             </Border>
         </Popup>

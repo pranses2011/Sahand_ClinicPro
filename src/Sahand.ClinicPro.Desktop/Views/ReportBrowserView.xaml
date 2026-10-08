@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:charts="clr-namespace:Sahand.ClinicPro.Desktop.Controls.Charts"
+             xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
              mc:Ignorable="d"
              d:DesignHeight="660" d:DesignWidth="1140"
              FlowDirection="RightToLeft">
@@ -107,12 +108,13 @@
                 <StackPanel Grid.Row="1" Margin="2,0,2,10"
                             Visibility="{Binding IsReportAvailable, Converter={StaticResource BoolToVisibility}}">
                     <WrapPanel>
+                        <!-- چرخه بیست‌وسوم: جایگزینی DatePicker میلادی ویندوز با انتخابگر شمسی -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,10,6"
                                     Visibility="{Binding HasDateRange, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="از: " VerticalAlignment="Center" FontSize="12" />
-                            <DatePicker SelectedDate="{Binding FromDate}" Width="120" FontSize="12" />
+                            <controls:PersianDatePicker SelectedDate="{Binding FromDate}" Width="120" />
                             <TextBlock Text=" تا: " VerticalAlignment="Center" FontSize="12" Margin="8,0,0,0" />
-                            <DatePicker SelectedDate="{Binding ToDate}" Width="120" FontSize="12" />
+                            <controls:PersianDatePicker SelectedDate="{Binding ToDate}" Width="120" />
                         </StackPanel>
                         <!-- تعداد ماه — گزارش انقضا / بدون مراجعه -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,10,6"
