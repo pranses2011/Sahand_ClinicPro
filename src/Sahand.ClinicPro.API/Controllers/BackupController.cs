@@ -95,7 +95,8 @@ public class BackupController : ApiBaseController
     /// </summary>
     [HttpPost("run")]
     [HasPermission("backup.create")]
-    public async Task<IActionResult> RunBackup(CancellationToken ct)
+    public async Task<IActionResult> RunBackup(CancellationToken ct,
+        [FromQuery] string? format)
     {
         var backupDir = _configuration["Backup:Directory"] ?? "C:/Backups/SahandClinicPro";
 
@@ -107,7 +108,10 @@ public class BackupController : ApiBaseController
 
         var manager = CreateManager();
 
-        var (ok, zipPath, error) = await manager.CreateFullBackupAsync(backupDir, isAutomatic: false, ct);
+        // چرخه ۲۴ — فرمت خروجی به انتخاب کاربر: zip فشردهٔ پیش‌فرض یا bak خام
+        var chosenFormat = string.Equals(format, "bak", StringComparison.OrdinalIgnoreCase) ? "bak" : "zip";
+        var (ok, zipPath, error) = await manager.CreateFullBackupAsync(
+            backupDir, isAutomatic: false, ct, chosenFormat);
 
         if (!ok)
             return BadRequest(ApiResponse<object>.Failure($"پشتیبان‌گیری ناموفق بود: {error}"));
@@ -185,6 +189,69 @@ public class BackupController : ApiBaseController
     public sealed class RestoreRequest
     {
         /// <summary>مسیر کامل فایل ZIP یا BAK — از فهرست backup/files</summary>
+        public string? FullPath { get; set; }
+    }
+
+    // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — حذف فایل‌های پشتیبان قدیمی ═══
+    // «امکان حذف فایل‌های پشتیبان قدیمی به‌صورت دستی و اتوماتیک هم باشد» —
+    // حذف خودکار از طریق سهمیهٔ نگهداشت (Backup:RetentionCount) در کار شبانه
+    /// انجام می‌شود؛ حذف دستی با endpoint زیر از پنجرهٔ بازیابی ممکن است.
+
+    /// <summary>حذف یک فایل پشتیبان (ZIP/BAK) از دیسک — همراه با تاریخچهٔ مربوط</summary>
+    /// <param name="request">مسیر کامل فایل</param>
+    [HttpPost("delete-file")]
+    [HasPermission("backup.create")]
+    public async Task<IActionResult> DeleteBackupFile([FromBody] DeleteFileRequest request)
+    {
+        var path = request?.FullPath?.Trim();
+        if (string.IsNullOrWhiteSpace(path))
+            return BadRequest(ApiResponse<object>.Failure("مسیر فایل لازم است"));
+
+        // امنیت: فقط فایل zip/bak در «پوشهٔ پشتیبان‌های برنامه» قابل حذف است —
+        // مسیرهای بیرونی (مثل فایل‌های سیستم) هرگز پاک نمی‌شوند
+        var backupDir = _configuration["Backup:Directory"] ?? "C:/Backups/SahandClinicPro";
+        var dirSetting = await _unitOfWork.Repository<SystemSetting>().QueryableNoTracking
+            .FirstOrDefaultAsync(s => !s.IsDeleted && s.Category == "Backup" && s.Key == "Directory");
+        if (dirSetting is not null && !string.IsNullOrWhiteSpace(dirSetting.Value))
+            backupDir = dirSetting.Value;
+
+        var fullBakDir = Path.GetFullPath(backupDir);
+        var fullTarget = Path.GetFullPath(path);
+        if (!fullTarget.StartsWith(fullBakDir, StringComparison.OrdinalIgnoreCase))
+            return BadRequest(ApiResponse<object>.Failure("حذف فقط در پوشهٔ پشتیبان‌های برنامه مجاز است"));
+        if (!Path.GetExtension(fullTarget).Equals(".zip", StringComparison.OrdinalIgnoreCase)
+            && !Path.GetExtension(fullTarget).Equals(".bak", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(ApiResponse<object>.Failure("فقط فایل‌های پشتیبان ZIP/BAK قابل حذف‌اند"));
+
+        if (!System.IO.File.Exists(fullTarget))
+            return BadRequest(ApiResponse<object>.Failure("فایل یافت نشد"));
+
+        try
+        {
+            System.IO.File.Delete(fullTarget);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse<object>.Failure("حذف فایل ناموفق بود: " + ex.Message));
+        }
+
+        // تاریخچهٔ مرتبط (در صورت وجود) هم غیرفعال/حذف نرم شود تا در فهرست نیاید
+        var history = _unitOfWork.Repository<BackupHistory>().QueryableTracking
+            .Where(b => b.FilePath == fullTarget);
+        foreach (var h in history)
+        {
+            h.IsDeleted = true;
+            h.Status = BackupStatus.Deleted;
+        }
+        await _unitOfWork.SaveEntitiesAsync();
+
+        return Ok(ApiResponse<object>.SuccessMessage("فایل پشتیبان حذف شد"));
+    }
+
+    /// <summary>بدنهٔ درخواست حذف فایل پشتیبان</summary>
+    public sealed class DeleteFileRequest
+    {
+        /// <summary>مسیر کامل فایل ZIP/BAK</summary>
         public string? FullPath { get; set; }
     }
 

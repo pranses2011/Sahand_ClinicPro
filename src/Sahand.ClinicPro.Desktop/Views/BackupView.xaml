@@ -44,13 +44,23 @@
                             <TextBlock Text="آخرین پشتیبان Log" FontSize="11" Opacity="0.65" />
                             <TextBlock Text="{Binding LastLogText}" FontSize="13" FontWeight="SemiBold" Margin="0,3,0,0" />
                         </StackPanel>
-                        <Button Grid.Column="2" Command="{Binding RunBackupCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}" Margin="10,0,0,0">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="BackupRestore" Width="15" Height="15" VerticalAlignment="Center" />
-                                <TextBlock Text="💾 پشتیبان‌گیری فوری" Margin="7,0,0,0" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
+                        <!-- ═══ چرخه ۲۴ — انتخاب فرمت پشتیبان (گزارش هفدهم مالک):
+                             «فرمت رو خودمون انتخاب بکنیم» — ZIP فشرده یا BAK خام ═══ -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                            <ComboBox ItemsSource="{Binding BackupFormats}"
+                                      SelectedIndex="{Binding BackupFormatIndex}"
+                                      MinWidth="170"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      materialDesign:HintAssist.Hint="فرمت پشتیبان"
+                                      ToolTip="بازیابی هر دو فرمت را خودکار تشخیص می‌دهد" />
+                            <Button Command="{Binding RunBackupCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}" Margin="8,0,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="BackupRestore" Width="15" Height="15" VerticalAlignment="Center" />
+                                    <TextBlock Text="💾 پشتیبان‌گیری فوری" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
                     </Grid>
                 </materialDesign:Card>
 
@@ -161,9 +171,18 @@
                                     <TextBlock Text="بازیابی فایل انتخاب‌شده" Margin="7,0,0,0" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
-                            <TextBlock Text="📂 فایل‌های پشتیبان پوشهٔ ذخیره (ZIP فشرده — نام شمسی) — برای بازیابی، یکی را انتخاب کنید:"
+                            <TextBlock Text="📂 فایل‌های پشتیبان پوشهٔ ذخیره (ZIP/BAK — نام شمسی) — برای بازیابی یا حذف، یکی را انتخاب کنید:"
                                        FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"
-                                       Margin="0,0,12,0" />
+                                       Margin="0,0,12,0" TextWrapping="Wrap" MaxWidth="420" />
+                            <!-- چرخه ۲۴ — حذف دستی فایل پشتیبان قدیمی (گزارش هفدهم مالک) -->
+                            <Button Command="{Binding DeleteBackupFileCommand}"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    Foreground="#C62828" DockPanel.Dock="Right" Margin="0,0,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Delete" Width="14" Height="14" VerticalAlignment="Center" />
+                                    <TextBlock Text="🗑 حذف فایل انتخاب‌شده" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
                         </DockPanel>
 
                         <DataGrid ItemsSource="{Binding BackupFiles}"

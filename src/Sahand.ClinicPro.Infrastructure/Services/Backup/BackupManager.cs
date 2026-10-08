@@ -54,8 +54,10 @@ public class BackupManager
     /// <param name="directory">پوشهٔ مقصد — در نبود ساخته می‌شود</param>
     /// <param name="isAutomatic">آیا اجرای خودکار است (برای نام و تاریخچه)</param>
     /// <param name="ct">توکن لغو</param>
+    /// <param name="format">فرمت خروجی — «zip» فشردهٔ پیش‌فرض، «bak» فایل خام (چرخه ۲۴:
+    /// «فرمت رو خودمون انتخاب بکنیم»)؛ بازیابی هر دو فرمت را خودکار تشخیص می‌دهد</param>
     public async Task<(bool Ok, string ZipPath, string? Error)> CreateFullBackupAsync(
-        string directory, bool isAutomatic, CancellationToken ct = default)
+        string directory, bool isAutomatic, CancellationToken ct = default, string format = "zip")
     {
         // ساخت پوشهٔ مقصد در نبود — بازگشتی (گزارش پانزدهم مالک)
         Directory.CreateDirectory(directory);
@@ -66,10 +68,14 @@ public class BackupManager
         var bakPath = Path.Combine(directory, bakName);
         var zipPath = Path.Combine(directory, zipName);
 
+        // چرخه ۲۴ — فرمت خام BAK: فایل اصلی همان خروجی SQL می‌ماند و فشرده‌سازی انجام نمی‌شود
+        var rawBak = string.Equals(format, "bak", StringComparison.OrdinalIgnoreCase);
+        var finalPath = rawBak ? bakPath : zipPath;
+
         var record = new BackupHistory
         {
             BackupType = BackupType.Full,
-            FilePath = zipPath, // از چرخه بیست‌وسوم: مسیر ثبت‌شده نسخهٔ فشرده است
+            FilePath = finalPath, // چرخه ۲۴: بسته به فرمت انتخابی — ZIP یا BAK خام
             StartedAt = DateTime.Now,
             IsAutomatic = isAutomatic,
             StorageType = StorageType.Local,
@@ -101,18 +107,23 @@ public class BackupManager
                 await connection.CloseAsync();
             }
 
-            // ─── ۲) فشرده‌سازی ZIP (کاهش مصرف فضا — گزارش شانزدهم مالک) ───
-            await CompressFileAsync(bakPath, zipPath, ct);
+            // ─── ۲) فشرده‌سازی ZIP (کاهش مصرف فضا — گزارش شانزدهم مالک) —
+            // چرخه ۲۴: فقط وقتی فرمت فشرده انتخاب شده (پیش‌فرض)؛ در حالت BAK خام
+            // فایلِ نوشته‌شده توسط خود SQL همان خروجی نهایی است
+            if (!rawBak)
+                await CompressFileAsync(bakPath, zipPath, ct);
 
             // ─── ۳) ثبت موفقیت — حجم نسخهٔ فشرده ملاک است ───
             record.Status = BackupStatus.Success;
             record.CompletedAt = DateTime.Now;
-            record.FileSize = new FileInfo(zipPath).Exists ? new FileInfo(zipPath).Length : null;
-            _logger.LogInformation("پشتیبان {Kind} موفق — {Zip} (حجم فشرده: {Size} بایت)",
-                isAutomatic ? "خودکار" : "دستی", zipPath, record.FileSize);
+            // چرخه ۲۴: در حالت BAK خام، حجم همان فایل اصلی است نه نسخهٔ فشرده
+            record.FileSize = new FileInfo(finalPath).Exists ? new FileInfo(finalPath).Length : null;
+            _logger.LogInformation("پشتیبان {Kind} موفق — {Path} (حجم: {Size} بایت)",
+                isAutomatic ? "خودکار" : "دستی", finalPath, record.FileSize);
 
-            // فایل خام پس از فشرده‌سازی موفق حذف می‌شود تا فقط نسخهٔ کم‌حجم بماند
-            TryDelete(bakPath);
+            // فایل خام فقط وقتی فشرده‌سازی شد حذف می‌شود (در حالت BAK خودش خروجی نهایی است)
+            if (!rawBak)
+                TryDelete(bakPath);
 
             await _db.SaveChangesAsync(ct);
             return (true, zipPath, null);
@@ -166,15 +177,34 @@ public class BackupManager
         if (!File.Exists(zipOrBakPath))
             return (false, "فایل پشتیبان یافت نشد — مسیر را بررسی کنید");
 
-        // ─── ۱) به‌دست‌آوردن مسیر .bak — استخراج ZIP در پوشهٔ موقت ───
+        // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — رفع «بازیابی ناموفق:
+        // Cannot open backup device» ═══ ریشه: ZIP در پوشهٔ Temp «کاربر»
+        // استخراج می‌شد؛ سرویس SQL Server با حساب دیگری اجرا می‌شود و به آن
+        // مسیر دسترسی خواندن ندارد → RESTORE با خطای «Cannot open backup
+        // device … Operating system error 5 (Access is denied)» شکست
+        // می‌خورد. راه‌حل قطعی: استخراج در پوشهٔ «پشتیبان پیش‌فرض خودِ
+        // SQL Server» (از رجیستریِ نمونه — همیشه برای حساب سرویس SQL
+        // خواناست)؛ در نبود آن، همان پوشهٔ فایل ZIP (پوشهٔ پشتیبان‌های
+        // برنامه که SQL خودش در آن نوشته است) و در آخر Temp.
         string bakPath;
         var isZip = zipOrBakPath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
-        var tempDir = Path.Combine(Path.GetTempPath(), "SahandClinicProRestore_" + Guid.NewGuid().ToString("N"));
+        var tempDir = string.Empty;
         try
         {
             if (isZip)
             {
-                Directory.CreateDirectory(tempDir);
+                // مسیر استخراج امن — به‌ترتیبِ اولویت (بالا → پایین)
+                var extractDir = await TryGetSqlServerBackupDirectoryAsync(ct)
+                    ?? (Directory.Exists(zipOrBakPath) ? zipOrBakPath : null)
+                    ?? Path.GetDirectoryName(zipOrBakPath);
+                if (string.IsNullOrWhiteSpace(extractDir) || !Directory.Exists(extractDir))
+                {
+                    tempDir = Path.Combine(Path.GetTempPath(),
+                        "SahandClinicProRestore_" + Guid.NewGuid().ToString("N"));
+                    Directory.CreateDirectory(tempDir);
+                    extractDir = tempDir;
+                }
+
                 using var archive = ZipFile.OpenRead(zipOrBakPath);
                 // نخستین ورودیِ .bak — در بایگانی‌های این برنامه تک‌ورودی است
                 var entry = archive.Entries.FirstOrDefault(e =>
@@ -183,7 +213,9 @@ public class BackupManager
                 if (entry is null)
                     return (false, "بایگانی ZIP فایل پشتیبان ندارد");
 
-                bakPath = Path.Combine(tempDir, entry.Name);
+                // نام یکتا برای هر بازیابی — تداخل با پشتیبان‌های موجود نگیرد
+                bakPath = Path.Combine(extractDir,
+                    "SahandClinicPro_Restore_" + Guid.NewGuid().ToString("N")[..8] + ".bak");
                 entry.ExtractToFile(bakPath, overwrite: true);
             }
             else
@@ -253,6 +285,42 @@ public class BackupManager
             // پاک‌سازی پوشهٔ موقت استخراج
             try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, recursive: true); }
             catch { /* پاک‌سازی موقت اهمیت حیاتی ندارد */ }
+        }
+    }
+
+    /// <summary>
+    /// خواندن پوشهٔ «پشتیبان پیش‌فرض» SQL Server از رجیستری نمونه — چرخه ۲۴:
+    /// مسیری که حساب سرویس SQL به‌طور قطعی مجاز به خواندن/نوشتن آن است؛
+    /// برای استخراج امن فایل BAK درون ZIP پیش از RESTORE به‌کار می‌رود.
+    /// خروجی تهی یعنی خواندن ناموفق بود (نبود دسترسی/کلید رجیستری).
+    /// </summary>
+    private async Task<string?> TryGetSqlServerBackupDirectoryAsync(CancellationToken ct)
+    {
+        try
+        {
+            var connection = _db.Database.GetDbConnection();
+            if (connection.State != System.Data.ConnectionState.Open)
+                await connection.OpenAsync(ct);
+            try
+            {
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = "DECLARE @dir nvarchar(4000); " +
+                    "EXEC xp_instance_regread N'HKEY_LOCAL_MACHINE', " +
+                    "N'Software\\Microsoft\\MSSQLServer\\MSSQLServer', " +
+                    "N'BackupDirectory', @dir OUTPUT; " +
+                    "SELECT @dir;";
+                var result = await cmd.ExecuteScalarAsync(ct);
+                var dir = result as string;
+                return string.IsNullOrWhiteSpace(dir) ? null : dir;
+            }
+            finally
+            {
+                await connection.CloseAsync();
+            }
+        }
+        catch
+        {
+            return null; // مسیر جایگزین (پوشهٔ ZIP) استفاده می‌شود
         }
     }
 

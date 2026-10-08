@@ -11,4 +11,6 @@ public enum BackupStatus : byte
     Success = 2,
     /// <summary>ناموفق</summary>
     Failed = 3,
+    /// <summary>حذف‌شده — چرخه ۲۴: فایل پشتیبان به‌صورت دستی از دیسک پاک شده است</summary>
+    Deleted = 4,
 }

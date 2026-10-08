@@ -247,21 +247,69 @@ public partial class BackupViewModel : ViewModelBase
         }
     }
 
-    /// <summary>پشتیبان‌گیری فوری کامل — چرخه بیست‌وسوم: پاسخ واقعی است؛ نام ZIP شمسی برگردانده می‌شود</summary>
+    // ═══ چرخه ۲۴ — انتخاب فرمت پشتیبان (گزارش هفدهم مالک) ═══
+    // «برای فایل پشتیبان فقط زیپ نباشه و فرمت رو خودمون انتخاب بکنیم» —
+    // دو گزینه: ZIP فشرده (پیش‌فرض، حجم کم) و BAK خام (سازگاری با ابزارهای
+    // SQL). بازیابی هر دو فرمت را خودکار تشخیص می‌دهد.
+
+    /// <summary>ایندکس فرمت پشتیبان — ۰ ZIP فشرده، ۱ BAK خام</summary>
+    [ObservableProperty]
+    private int _backupFormatIndex;
+
+    /// <summary>گزینه‌های فرمت پشتیبان</summary>
+    public string[] BackupFormats { get; } = { "ZIP فشرده (حجم کمتر)", "BAK خام SQL Server" };
+
+    /// <summary>پشتیبان‌گیری فوری کامل — چرخه ۲۳: پاسخ واقعی است؛ نام فایل شمسی
+    /// برگردانده می‌شود؛ چرخه ۲۴: فرمت از انتخابگر (ZIP/BAK) ارسال می‌شود</summary>
     [RelayCommand]
     private async Task RunBackupAsync()
     {
         IsBusy = true;
-        var response = await _api.PostAsync<RunBackupResponse>("backup/run", null);
+        var format = BackupFormatIndex == 1 ? "bak" : "zip";
+        var response = await _api.PostAsync<RunBackupResponse>($"backup/run?format={format}", null);
         IsBusy = false;
         if (response is { IsSuccess: true })
         {
-            _snackbar.Success("پشتیبان فشرده با نام شمسی ذخیره شد: " + response.Data?.FileName);
+            _snackbar.Success((BackupFormatIndex == 1
+                ? "پشتیبان خام BAK با نام شمسی ذخیره شد: "
+                : "پشتیبان فشرده با نام شمسی ذخیره شد: ") + response.Data?.FileName);
             await LoadAsync();
             await LoadBackupFilesAsync();
         }
         else
             _snackbar.Error(_api.LastError ?? "پشتیبان‌گیری ناموفق بود");
+    }
+
+    /// <summary>
+    /// حذف دستی فایل پشتیبان انتخاب‌شده — چرخه ۲۴ (گزارش هفدهم مالک):
+    /// «امکان حذف فایل‌های پشتیبان قدیمی به‌صورت دستی و اتوماتیک هم باشد» —
+    /// حذف خودکار از طریق سهمیهٔ نگهداشت شبانه انجام می‌شود؛ این فرمان حذف
+    /// دستیِ فایل منتخب از دیسک + تاریخچه است (با دیالوگ فارسی تأیید).
+    /// </summary>
+    [RelayCommand]
+    private async Task DeleteBackupFileAsync()
+    {
+        if (SelectedBackupFile is null)
+        {
+            _snackbar.Error("ابتدا یک فایل پشتیبان از فهرست انتخاب کنید");
+            return;
+        }
+
+        var answer = Views.AppDialog.Confirm("تأیید حذف فایل پشتیبان",
+            $"فایل «{SelectedBackupFile.FileName}» ({SelectedBackupFile.SizeText}) برای همیشه از دیسک حذف می‌شود.\n\nادامه می‌دهید؟");
+        if (answer != true) return;
+
+        IsBusy = true;
+        var ok = await _api.PostAsync("backup/delete-file",
+            new { fullPath = SelectedBackupFile.FullPath });
+        IsBusy = false;
+        if (ok)
+        {
+            _snackbar.Success("فایل پشتیبان حذف شد");
+            await LoadBackupFilesAsync();
+        }
+        else
+            _snackbar.Error(_api.LastError ?? "حذف فایل ناموفق بود");
     }
 
     /// <summary>پاسخ پشتیبان‌گیری فوری — نام و مسیر ZIP — چرخه بیست‌وسوم</summary>
