@@ -75,6 +75,26 @@ public class ExceptionHandlingMiddleware
                 exception.GetType().Name, exception.Message, traceId);
         }
 
+        // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — گارد پاسخِ آغازشده ═══
+        // لاگ سرور پر از «InvalidOperationException: StatusCode cannot be set
+        // because the response has already started» بود. ریشه: برخی استثناها
+        // «در میانهٔ نوشتن بدنهٔ پاسخ» رخ می‌دهند (مثلاً خطای Serialize پس از
+        // ارسال سرآیندها). در آن حالت Kestrel پاسخ را آغاز کرده و هر تلاش
+        // برای تعیین StatusCode/ContentType خودِ استثنای دومی می‌اندازد؛ آن
+        // استثنای دوم به‌صورت «unhandled exception» کل اتصال را می‌بست و
+        // کلاینت WPF پاسخِ ناقص/خالی می‌گرفت («پاسخ سرور قابل تفسیر نبود»).
+        // رفتار صحیح استاندارد ASP.NET Core: اگر پاسخ آغاز شده، فقط ثبت لاگ
+        // بحرانی و بازگشت — دست زدن به پاسخ ممنوع. خطای اصلی از این پس در
+        // لاگ ثبت می‌شود (نه استثنای ثانویهٔ مبهم) و اتصال سالم می‌ماند.
+        if (context.Response.HasStarted)
+        {
+            _logger.LogCritical(
+                "پاسخ پیش از رسیدگی به خطا آغاز شده است — بدنهٔ خطا نوشته نشد. " +
+                "خطای اصلی: {ExceptionType} — TraceId: {TraceId}",
+                exception.GetType().Name, traceId);
+            return;
+        }
+
         var response = new
         {
             isSuccess = false,
