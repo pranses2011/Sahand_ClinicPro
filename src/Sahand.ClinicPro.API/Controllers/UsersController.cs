@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Common;
+using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Entities.Security;
 using Sahand.ClinicPro.Domain.Interfaces;
 using System.Security.Cryptography;
@@ -99,13 +100,18 @@ public class UsersController : ApiBaseController
         if (!_hasher.MeetsPolicy(request.Password, out var policyError))
             return BadRequest(ApiResponse<object>.Failure(policyError));
 
+        // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — «فیلد نام کامل وجود ندارد» ═══
+        // نام کامل به رکورد پرسنل متصل می‌شود (رکورد موجود هم‌نام یا ایجاد
+        // رکورد حداقلی) تا «نام کامل» در لیست کاربران و لاگ عملیات دیده شود
+        var employeeId = await ResolveEmployeeIdAsync(request.FullName);
+
         var user = new User
         {
             Username = request.Username.Trim(),
             Email = (request.Email ?? $"{request.Username}@clinic.local").Trim(),
             PasswordHash = _hasher.Hash(request.Password),
             PhoneNumber = request.Phone,
-            EmployeeId = request.EmployeeId,
+            EmployeeId = request.EmployeeId ?? employeeId,
             MustChangePassword = request.MustChangePassword,
             TwoFactorEnabled = request.TwoFactorEnabled,
             IsActive = request.IsActive,
@@ -114,7 +120,7 @@ public class UsersController : ApiBaseController
             CreatedAt = DateTime.UtcNow
         };
 
-        await AttachRolesAsync(user, request.RoleIds);
+        await SyncRolesAsync(user, request.RoleIds);
         await _unitOfWork.Repository<User>().AddAsync(user);
         await _unitOfWork.SaveEntitiesAsync();
 
@@ -135,14 +141,20 @@ public class UsersController : ApiBaseController
         if (!string.IsNullOrWhiteSpace(request.Email))
             user.Email = request.Email.Trim();
         user.PhoneNumber = request.Phone;
-        user.EmployeeId = request.EmployeeId;
+        // نام کامل — اتصال به پرسنل (گزارش هفدهم مالک — چرخه ۲۴)
+        var employeeId = await ResolveEmployeeIdAsync(request.FullName);
+        user.EmployeeId = request.EmployeeId ?? employeeId ?? user.EmployeeId;
         user.MustChangePassword = request.MustChangePassword;
         user.TwoFactorEnabled = request.TwoFactorEnabled;
         user.IsActive = request.IsActive;
 
-        // جایگزینی نقش‌ها
-        user.Roles.Clear();
-        await AttachRolesAsync(user, request.RoleIds);
+        // ═══ چرخه بیست‌وچهارم — ریشهٔ «نقش و دسترسی ذخیره نمی‌شود» ═══
+        // پیش‌تر Roles.Clear() + افزودن مجدد ردیف‌ها زده می‌شد؛ چون UserRole
+        // کلید مرکب (UserId, RoleId) دارد، افزودن ردیفی با همان کلیدِ ردیفِ
+        // تازه‌حذف‌شده (که هنوز Track شده است) باعث تداخل کلید در EF می‌شد و
+        // کل ذخیره‌سازی با خطا می‌شکست. همگام‌سازیِ تفاوتی جایگزین شد: فقط
+        // نقش‌های حذف‌شده پاک و فقط نقش‌های تازه افزوده می‌شوند.
+        await SyncRolesAsync(user, request.RoleIds);
 
         await _unitOfWork.SaveEntitiesAsync();
         return Ok(ApiResponse<object>.SuccessMessage("کاربر به‌روزرسانی شد"));
@@ -233,14 +245,75 @@ public class UsersController : ApiBaseController
         return Ok(ApiResponse<object>.SuccessMessage("کاربر غیرفعال شد"));
     }
 
-    /// <summary>پیوست کردن نقش‌ها به کاربر بر اساس شناسه‌ها</summary>
-    private async Task AttachRolesAsync(User user, List<long>? roleIds)
+    /// <summary>
+    /// همگام‌سازی تفاوتی نقش‌های کاربر — چرخه بیست‌وچهارم (گزارش هفدهم مالک):
+    /// «در تعریف کاربر جدید، نقش و دسترسی ذخیره نمی‌شود». جای الگوی مخرب
+    /// Clear+Add (که با کلید مرکب UserRole تداخل می‌کرد و استثنا می‌انداخت)،
+    /// فقط تفاوت‌ها اعمال می‌شود: نقش‌های برداشته‌شده حذف و تازه‌ها افزوده
+    /// می‌شوند؛ ردیف‌های مشترک دست نمی‌خورند. برای کاربر نو هم بی‌نقص کار
+    /// می‌کند (مجموعهٔ خالی = همهٔ انتخاب‌ها افزودنی‌اند).
+    /// </summary>
+    private async Task SyncRolesAsync(User user, List<long>? roleIds)
     {
-        if (roleIds is null || roleIds.Count == 0) return;
-        var roles = await _unitOfWork.Repository<Role>().QueryableTracking
-            .Where(r => roleIds.Contains(r.Id)).ToListAsync();
-        foreach (var role in roles)
-            user.Roles.Add(new UserRole { UserId = user.Id, RoleId = role.Id });
+        if (roleIds is null)
+            return; // تهی = بدون تغییر در نقش‌ها
+
+        // شناسه‌های نقش‌های موجود در دیتابیس (نقش حذف‌شده نادیده گرفته می‌شود)
+        var validIds = (await _unitOfWork.Repository<Role>().QueryableNoTracking
+            .Where(r => roleIds.Contains(r.Id)).Select(r => r.Id).ToListAsync())
+            .ToHashSet();
+
+        // حذف نقش‌هایی که دیگر انتخاب نشده‌اند
+        foreach (var existing in user.Roles.ToList())
+            if (!validIds.Contains(existing.RoleId))
+                user.Roles.Remove(existing);
+
+        // افزودن نقش‌های تازه — ردیف موجود دست نمی‌خورد
+        foreach (var roleId in validIds)
+            if (user.Roles.All(ur => ur.RoleId != roleId))
+                user.Roles.Add(new UserRole
+                {
+                    UserId = user.Id,
+                    RoleId = roleId,
+                    AssignedAt = DateTime.UtcNow
+                });
+    }
+
+    /// <summary>
+    /// یافتن/ایجاد رکورد پرسنل بر اساس نام کامل — چرخه بیست‌وچهارم:
+    /// نام کامل کاربر در فیلد «نام کامل» فرم وارد می‌شود؛ اگر پرسنل هم‌نام
+    /// موجود باشد به همان متصل می‌شویم، وگرنه رکورد حداقلی پرسنل با همان نام
+    /// ساخته می‌شود تا نام کامل در لیست کاربران و لاگ عملیات دیده شود.
+    /// خروجی تهی یعنی نامی ارسال نشده (بدون تغییر رکورد فعلی).
+    /// </summary>
+    private async Task<long?> ResolveEmployeeIdAsync(string? fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName))
+            return null;
+
+        var name = fullName.Trim();
+        // تجزیهٔ نام: نخستین واژه = نام، بقیه = نام‌خانوادگی
+        var parts = name.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+        var first = parts[0];
+        var last = parts.Length > 1 ? parts[1].Trim() : "—";
+
+        // پرسنل هم‌نام موجود؟
+        var existing = await _unitOfWork.Repository<Employee>().QueryableNoTracking
+            .FirstOrDefaultAsync(e => e.FirstName == first && e.LastName == last);
+        if (existing is not null)
+            return existing.Id;
+
+        // ایجاد رکورد حداقلی پرسنل — بقیهٔ فیلدها بعداً از فرم پرسنل تکمیل می‌شود
+        var employee = new Employee
+        {
+            FirstName = first,
+            LastName = last,
+            Mobile = null,
+            CreatedAt = DateTime.UtcNow
+        };
+        await _unitOfWork.Repository<Employee>().AddAsync(employee);
+        await _unitOfWork.SaveEntitiesAsync();
+        return employee.Id;
     }
 
     /* ─── مدل‌های درخواست/پاسخ ─── */
@@ -252,11 +325,12 @@ public class UsersController : ApiBaseController
     /// <summary>نتیجه صفحه‌بندی‌شده</summary>
     public record PagedResult<T>(List<T> Items, int TotalCount, int Page, int PageSize);
 
-    /// <summary>درخواست ثبت کاربر</summary>
+    /// <summary>درخواست ثبت کاربر — FullName نام کامل (چرخه ۲۴)</summary>
     public record CreateUserRequest(string Username, string? Email, string Password, string? Phone,
-        long? EmployeeId, List<long>? RoleIds, bool MustChangePassword, bool TwoFactorEnabled, bool IsActive);
+        string? FullName, long? EmployeeId, List<long>? RoleIds,
+        bool MustChangePassword, bool TwoFactorEnabled, bool IsActive);
 
-    /// <summary>درخواست ویرایش کاربر</summary>
-    public record UpdateUserRequest(string? Email, string? Phone, long? EmployeeId,
+    /// <summary>درخواست ویرایش کاربر — FullName نام کامل (چرخه ۲۴)</summary>
+    public record UpdateUserRequest(string? Email, string? Phone, string? FullName, long? EmployeeId,
         List<long>? RoleIds, bool MustChangePassword, bool TwoFactorEnabled, bool IsActive);
 }

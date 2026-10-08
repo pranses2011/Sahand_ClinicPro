@@ -26,6 +26,12 @@ public partial class UserFormViewModel : ViewModelBase
     [ObservableProperty]
     private string _username = string.Empty;
 
+    /// <summary>نام کامل کاربر — چرخه بیست‌وچهارم (گزارش هفدهم مالک):
+    /// «فیلد نام کامل در ثبت/ویرایش کاربر وجود ندارد» — در سرور به رکورد
+    /// پرسنل متصل می‌شود و در لیست کاربران نمایش داده می‌شود</summary>
+    [ObservableProperty]
+    private string? _fullName;
+
     /// <summary>ایمیل</summary>
     [ObservableProperty]
     private string? _email;
@@ -158,6 +164,7 @@ public partial class UserFormViewModel : ViewModelBase
         if (user is null) { _snackbar.Error("کاربر یافت نشد"); return; }
 
         Username = user.Username;
+        FullName = user.FullName;
         Email = user.Email;
         IsActive = user.IsActive;
         MustChangePassword = user.MustChangePassword;
@@ -178,6 +185,10 @@ public partial class UserFormViewModel : ViewModelBase
         if (!IsEdit && Username.Trim().Length < 3)
         { ErrorMessage = "نام کاربری حداقل ۳ کاراکتر است"; return; }
 
+        // نام کامل — الزامی برای شناسایی انسانی کاربر (گزارش هفدهم مالک)
+        if (string.IsNullOrWhiteSpace(FullName) || FullName.Trim().Length < 3)
+        { ErrorMessage = "نام کامل کاربر را وارد کنید"; return; }
+
         if (!IsEdit)
         {
             if (Password.Length < 8)
@@ -191,16 +202,19 @@ public partial class UserFormViewModel : ViewModelBase
 
         var roleIds = Roles.Where(r => r.IsChecked).Select(r => r.Id).ToList();
 
+        // چرخه بیست‌وچهارم: نام کامل هم ارسال می‌شود تا سرور کاربر را به
+        // پرسنل (Employee) متصل کند — ریشهٔ «نام کامل در لیست خالی بود»
         var ok = IsEdit
             ? await _api.PutAsync($"users/{EditUserId}", new
             {
-                email = Email, phone = Phone, roleIds,
+                email = Email, phone = Phone, fullName = FullName?.Trim(), roleIds,
                 mustChangePassword = MustChangePassword,
                 twoFactorEnabled = TwoFactorEnabled, isActive = IsActive
             })
             : await _api.PostAsync("users", new
             {
                 username = Username.Trim(), email = Email, password = Password,
+                fullName = FullName?.Trim(),
                 phone = Phone, roleIds, mustChangePassword = MustChangePassword,
                 twoFactorEnabled = TwoFactorEnabled, isActive = IsActive
             });

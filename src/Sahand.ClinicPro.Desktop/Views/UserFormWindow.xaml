@@ -28,6 +28,14 @@
                         <TextBlock Text="{Binding UsernameError}" Foreground="#C62828" FontSize="11"
                                    Margin="4,0,0,6" Visibility="{Binding UsernameError, Converter={StaticResource StringToVisibility}}" />
 
+                        <!-- ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — «فیلد نام کامل
+                             در ثبت/ویرایش کاربر وجود ندارد» — نام کامل کاربر اینجا
+                             وارد و به پرسنل (Employee) متصل می‌شود تا در لیست کاربران
+                             و لاگ عملیات با نام واقعی دیده شود ═══ -->
+                        <TextBox materialDesign:HintAssist.Hint="نام کامل * (مثال: رضا محمدی)"
+                                 Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,12" />
+
                         <TextBox materialDesign:HintAssist.Hint="ایمیل"
                                  Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,12" />
