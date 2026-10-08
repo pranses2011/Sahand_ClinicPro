@@ -158,19 +158,39 @@ public static class DependencyInjection
                     .GetRequiredService<ILogger<Microsoft.Extensions.DependencyInjection.ServiceProvider>>();
                 try
                 {
-                    if (db.Database.GetPendingMigrations().Any())
+                    var pending = db.Database.GetPendingMigrations().ToList();
+                    if (pending.Count > 0)
                     {
                         logger.LogInformation(
                             "اعمال {Count} مهاجرت معلق دیتابیس در راه‌اندازی…",
-                            db.Database.GetPendingMigrations().Count());
+                            pending.Count);
                         await db.Database.MigrateAsync();
+
+                        // ═══ چرخه ۲۵ — گارد پس از مهاجرت (درس‌گرفته از خطای
+                        // «Invalid column name 'ServiceId'» سرور مالک) ═══
+                        // اگر پس از MigrateAsync هنوز مهاجرت معلق بماند، یعنی
+                        // اسکیمای دیتابیس از کد عقب است و پرس‌وجوها به‌زودی با
+                        // SqlException 207 «Invalid column name» می‌شکنند؛ این
+                        // وضعیت باید همان‌جا با بلندترین سطح لاگ اعلام شود تا
+                        // پیش از خطاهای زمانِ اجرا دیده و پیگیری شود.
+                        var stillPending = db.Database.GetPendingMigrations().ToList();
+                        if (stillPending.Count > 0)
+                        {
+                            logger.LogCritical(
+                                "اسکیمای دیتابیس از کد عقب مانده است: {Count} مهاجرت اعمال‌نشده ({Migrations}). " +
+                                "پرس‌وجوها با خطای «Invalid column name» شکست خواهند خورد — " +
+                                "لاگ خطای مهاجرت را در بالا ببینید، علت را رفع کنید و سرور را ری‌استارت کنید",
+                                stillPending.Count, string.Join(", ", stillPending));
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
                     // خطای مهاجرت جلوی اجرای سرویس را نمی‌گیرد — لاگ و ادامه
                     // (مثلاً سرور در حال اجرا با اتصال موقتاً قطع‌شده)
-                    logger.LogError(ex, "اعمال مهاجرت‌های دیتابیس در راه‌اندازی ناموفق بود");
+                    logger.LogError(ex,
+                        "اعمال مهاجرت‌های دیتابیس در راه‌اندازی ناموفق بود — اسکیمای دیتابیس " +
+                        "ممکن است از کد عقب بماند و پرس‌وجوها با خطای «Invalid column name» شکست بخورند");
                 }
             }
 
