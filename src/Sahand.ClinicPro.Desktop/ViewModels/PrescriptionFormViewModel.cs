@@ -741,17 +741,21 @@ public partial class PrescriptionFormViewModel : ObservableObject
         }
         try
         {
-            var doc = Services.PrescriptionPrintHelper.BuildDocument(
-                patientName: Patient.FullName,
-                patientNationalCode: Patient.NationalCode,
-                doctorName: DoctorIndex >= 0 && DoctorIndex < Doctors.Count ? Doctors[DoctorIndex].Name : "—",
-                dateShamsi: Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.Now),
-                trackingCode: ElectronicTrackingCode,
-                items: Items.Select(i => (
-                    i.Name, (string?)i.Subtitle,
-                    $"{i.Dosage} × {i.Frequency} × {i.Duration}",
-                    i.Route ?? "", i.Instructions ?? "")).ToList());
-            Services.PrescriptionPrintHelper.ShowPreview(doc, $"چاپ نسخه — {Patient.FullName}");
+            // چرخه ۲۳: طرح چاپ از آخرین انتخاب کاربر شروع می‌شود و در پیش‌نمایش
+            // با انتخابگر «طرح چاپ» زنده قابل تعویض است (کلاسیک/مدرن/فشرده)
+            Services.PrescriptionPrintHelper.ShowPreview(
+                style => Services.PrescriptionPrintHelper.BuildDocument(
+                    patientName: Patient.FullName,
+                    patientNationalCode: Patient.NationalCode,
+                    doctorName: DoctorIndex >= 0 && DoctorIndex < Doctors.Count ? Doctors[DoctorIndex].Name : "—",
+                    dateShamsi: Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.Now),
+                    trackingCode: ElectronicTrackingCode,
+                    items: Items.Select(i => (
+                        i.Name, (string?)i.Subtitle,
+                        $"{i.Dosage} × {i.Frequency} × {i.Duration}",
+                        i.Route ?? "", i.Instructions ?? "")).ToList(),
+                    style),
+                $"چاپ نسخه — {Patient.FullName}");
         }
         catch (Exception ex)
         {

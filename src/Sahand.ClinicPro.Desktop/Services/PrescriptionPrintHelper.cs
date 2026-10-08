@@ -33,6 +33,39 @@ public static class PrescriptionPrintHelper
     private const string FontName = "Tahoma";
 
     /// <summary>
+    /// طرح چاپ نسخه — چرخه بیست‌وسوم (گزارش شانزدهم مالک): «برای همهٔ موارد
+    /// قابل چاپ چندین طرح چاپ اولیه طراحی کن تا از بین آن‌ها انتخاب کنم».
+    /// سه طرح اولیه: کلاسیک (جدول رسمی)، مدرن (نوار رنگی + کادرها) و فشرده
+    /// (فهرست دوخطی دارویی — سبک نسخه‌های کوتاه). انتخاب طرح در پیش‌نمایش
+    /// زنده عوض می‌شود و انتخاب آخر کاربر یادآوری می‌گردد.
+    /// </summary>
+    public enum PrescriptionPrintStyle
+    {
+        /// <summary>جدول رسمی با سربرگ وسط‌چین — طرح پیش‌فرض</summary>
+        Classic = 0,
+        /// <summary>نوار رنگی بالا + کادر مشخصات + جدول رنگی</summary>
+        Modern = 1,
+        /// <summary>فهرست شماره‌دار فشرده — هر دارو در یک-دو خط</summary>
+        Compact = 2
+    }
+
+    /// <summary>نام فارسی طرح چاپ برای نمایش در انتخابگر</summary>
+    public static string StyleNameFa(PrescriptionPrintStyle style) => style switch
+    {
+        PrescriptionPrintStyle.Modern => "مدرن",
+        PrescriptionPrintStyle.Compact => "فشرده",
+        _ => "کلاسیک"
+    };
+
+    /// <summary>طرح آخرین انتخاب کاربر — ذخیرهٔ محلی برای اجرای بعدی</summary>
+    public static PrescriptionPrintStyle SavedStyle
+    {
+        get => Enum.TryParse<PrescriptionPrintStyle>(
+            LocalSettingsStore.Get("PrescriptionPrintStyle"), out var s) ? s : PrescriptionPrintStyle.Classic;
+        set => LocalSettingsStore.Set("PrescriptionPrintStyle", value.ToString());
+    }
+
+    /// <summary>
     /// ساخت سند نسخه — اقلام به‌صورت (نام، زیرعنوان، مصرف، مسیر، توضیح)
     /// </summary>
     public static FlowDocument BuildDocument(
@@ -41,7 +74,8 @@ public static class PrescriptionPrintHelper
         string doctorName,
         string dateShamsi,
         string? trackingCode,
-        IReadOnlyList<(string Name, string? Subtitle, string Usage, string? Route, string? Instructions)> items)
+        IReadOnlyList<(string Name, string? Subtitle, string Usage, string? Route, string? Instructions)> items,
+        PrescriptionPrintStyle style = PrescriptionPrintStyle.Classic)
     {
         var doc = new FlowDocument
         {
@@ -53,7 +87,124 @@ public static class PrescriptionPrintHelper
             ColumnWidth = double.PositiveInfinity
         };
 
-        // ═══ سربرگ ═══
+        // ═══ سربرگ — سه طرح چرخه ۲۳ ═══
+        if (style == PrescriptionPrintStyle.Modern)
+        {
+            // ─── طرح مدرن: نوار رنگی تمام‌عرض با عنوان سفید + مشخصات داخل کادر ───
+            var band = new Table { CellSpacing = 0, Margin = new Thickness(0, 0, 0, 10) };
+            band.Columns.Add(new TableColumn { Width = new GridLength(1, GridUnitType.Star) });
+            band.RowGroups.Add(new TableRowGroup());
+            var bandRow = new TableRow();
+            var bandCell = new TableCell
+            {
+                Background = HeaderBrush,
+                Padding = new Thickness(14, 10, 14, 10),
+                BorderThickness = new Thickness(0)
+            };
+            var bandPar = new Paragraph { TextAlignment = TextAlignment.Center, Margin = new Thickness(0) };
+            bandPar.Inlines.Add(new Run("🩺 نسخهٔ دارویی درمانگاه سهند")
+            {
+                FontSize = 18,
+                FontWeight = FontWeights.Bold,
+                Foreground = Brushes.White
+            });
+            bandPar.Inlines.Add(new LineBreak());
+            bandPar.Inlines.Add(new Run($"تاریخ: {PersianDateHelper.ToPersianDigits(dateShamsi)}" +
+                (string.IsNullOrWhiteSpace(trackingCode)
+                    ? ""
+                    : $"    |    کد رهگیری: {PersianDateHelper.ToPersianDigits(trackingCode!)}"))
+            {
+                FontSize = 10.5,
+                Foreground = new SolidColorBrush(Color.FromRgb(0xDC, 0xE9, 0xFA))
+            });
+            bandCell.Blocks.Add(bandPar);
+            bandRow.Cells.Add(bandCell);
+            band.RowGroups[0].Rows.Add(bandRow);
+            doc.Blocks.Add(band);
+
+            // کادر مشخصات — پس‌زمینهٔ آبی بسیار روشن
+            var infoBox = new Table { CellSpacing = 0, Margin = new Thickness(0, 0, 0, 12) };
+            infoBox.Columns.Add(new TableColumn { Width = new GridLength(1, GridUnitType.Star) });
+            infoBox.RowGroups.Add(new TableRowGroup());
+            var infoRow = new TableRow();
+            var infoCell = new TableCell
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0xF0, 0xF6, 0xFC)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(0xC5, 0xD9, 0xF2)),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(10, 6, 10, 6)
+            };
+            var infoPar = new Paragraph { Margin = new Thickness(0) };
+            infoPar.Inlines.Add(new Run("بیمار: ") { FontWeight = FontWeights.Bold, Foreground = HeaderBrush });
+            infoPar.Inlines.Add(new Run($"{patientName}      "));
+            infoPar.Inlines.Add(new Run("کد ملی: ") { FontWeight = FontWeights.Bold, Foreground = HeaderBrush });
+            infoPar.Inlines.Add(new Run($"{PersianDateHelper.ToPersianDigits(patientNationalCode)}      "));
+            infoPar.Inlines.Add(new Run("پزشک: ") { FontWeight = FontWeights.Bold, Foreground = HeaderBrush });
+            infoPar.Inlines.Add(new Run(doctorName));
+            infoCell.Blocks.Add(infoPar);
+            infoRow.Cells.Add(infoCell);
+            infoBox.RowGroups[0].Rows.Add(infoRow);
+            doc.Blocks.Add(infoBox);
+        }
+        else if (style == PrescriptionPrintStyle.Compact)
+        {
+            // ─── طرح فشرده: عنوان یک‌خطی + خط جداکننده + فهرست داروها ───
+            var compactHeader = new Paragraph
+            {
+                TextAlignment = TextAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 4),
+                BorderBrush = HeaderBrush,
+                BorderThickness = new Thickness(0, 0, 0, 1.4),
+                Padding = new Thickness(0, 0, 0, 4)
+            };
+            compactHeader.Inlines.Add(new Run("نسخهٔ دارویی")
+            {
+                FontSize = 16,
+                FontWeight = FontWeights.Bold,
+                Foreground = HeaderBrush
+            });
+            compactHeader.Inlines.Add(new Run($"     ({PersianDateHelper.ToPersianDigits(dateShamsi)})")
+            {
+                FontSize = 11,
+                Foreground = MutedBrush
+            });
+            doc.Blocks.Add(compactHeader);
+
+            var compactInfo = new Paragraph
+            {
+                Margin = new Thickness(0, 4, 0, 8),
+                FontSize = 10.5
+            };
+            compactInfo.Inlines.Add(new Run($"بیمار: {patientName}  |  کد ملی: {PersianDateHelper.ToPersianDigits(patientNationalCode)}  |  پزشک: {doctorName}")
+            {
+                Foreground = MutedBrush
+            });
+            doc.Blocks.Add(compactInfo);
+
+            // فهرست شماره‌دار فشرده — هر دارو یک-دو خط (بدون جدول)
+            for (var i = 0; i < items.Count; i++)
+            {
+                var it = items[i];
+                var p = new Paragraph { Margin = new Thickness(0, 0, 0, 5) };
+                p.Inlines.Add(new Run($"{PersianDateHelper.ToPersianDigits((i + 1).ToString())}. ")
+                {
+                    FontWeight = FontWeights.Bold,
+                    Foreground = HeaderBrush
+                });
+                p.Inlines.Add(new Run(it.Name) { FontWeight = FontWeights.Bold });
+                if (!string.IsNullOrWhiteSpace(it.Subtitle))
+                    p.Inlines.Add(new Run($"  ({it.Subtitle})") { FontSize = 10, Foreground = MutedBrush });
+                p.Inlines.Add(new Run($"  —  {it.Usage}"));
+                if (!string.IsNullOrWhiteSpace(it.Route))
+                    p.Inlines.Add(new Run($"  —  {it.Route}") { Foreground = MutedBrush });
+                if (!string.IsNullOrWhiteSpace(it.Instructions))
+                    p.Inlines.Add(new Run($"  ({it.Instructions})") { FontSize = 10, Foreground = MutedBrush });
+                doc.Blocks.Add(p);
+            }
+        }
+        else
+        {
+        // ─── طرح کلاسیک: همان سربرگ وسط‌چین رسمی ───
         var header = new Paragraph
         {
             TextAlignment = TextAlignment.Center,
@@ -91,8 +242,11 @@ public static class PrescriptionPrintHelper
         info.Inlines.Add(new Run("پزشک: ") { FontWeight = FontWeights.Bold });
         info.Inlines.Add(new Run(doctorName));
         doc.Blocks.Add(info);
+        }
 
-        // ═══ جدول اقلام — با خط‌کشی کامل سلول‌ها (چرخه ۲۳: خوانایی) ═══
+        // ═══ جدول اقلام — فقط برای طرح‌های کلاسیک و مدرن (فشرده بالا ساخته شد) ═══
+        if (style != PrescriptionPrintStyle.Compact)
+        {
         var border = new Thickness(0.5);
         var borderBrush = Brushes.Gray;
         var table = new Table
@@ -179,6 +333,7 @@ public static class PrescriptionPrintHelper
             table.RowGroups[0].Rows.Add(row);
         }
         doc.Blocks.Add(table);
+        } // پایان بلوک طرح‌های جدول‌دار (کلاسیک/مدرن)
 
         // ═══ پانویس و امضا ═══
         var footer = new Paragraph { Margin = new Thickness(0, 18, 0, 0) };
@@ -221,9 +376,31 @@ public static class PrescriptionPrintHelper
     ///   • دکمهٔ بزرگ «چاپ» → PrintDialog ویندوز (انتخاب پرینتر + تنظیمات) و
     ///     ارسال مستقیم سند به پرینتر
     ///   • زوم +/− و نمایش درصد زوم + دکمهٔ بستن — همهٔ برچسب‌ها فارسی
+    ///   • انتخابگر «طرح چاپ» (کلاسیک/مدرن/فشرده) با بازسازی زندهٔ سند
+    /// </summary>
+    /// <summary>
+    /// پیش‌نمایش با سند از پیش ساخته‌شده — سازگاری با فراخوانی‌های قدیمی.
     /// </summary>
     public static void ShowPreview(FlowDocument document, string title)
+        => ShowPreview(_ => document, title, document);
+
+    /// <summary>
+    /// پیش‌نمایش با سازندهٔ طرح‌دار — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
+    /// «چندین طرح چاپ اولیه طراحی کن تا از بین آن‌ها انتخاب کنم» — نوار ابزار
+    /// «طرح چاپ» دارد و با تعویضش سند دوباره با طرح منتخب ساخته می‌شود؛ طرح
+    /// انتخاب‌شده در ذخیرهٔ محلی می‌ماند تا دفعهٔ بعد همان طرح باز شود.
+    /// </summary>
+    /// <param name="buildByStyle">سازندهٔ سند بر اساس طرح</param>
+    /// <param name="title">عنوان پنجره</param>
+    /// <param name="initialDocument">سند اولیه (بهینه‌سازی — بازسازی فقط هنگام تعویض طرح)</param>
+    public static void ShowPreview(
+        Func<PrescriptionPrintStyle, FlowDocument> buildByStyle,
+        string title,
+        FlowDocument? initialDocument = null)
     {
+        // طرح اولیه = آخرین انتخاب کاربر
+        var currentStyle = SavedStyle;
+        var document = initialDocument ?? buildByStyle(currentStyle);
         document.PageWidth = 793.7;   // A4 - 210mm با ۹۶dpi
         document.PageHeight = 1122.5; // A4 - 297mm
 
@@ -323,9 +500,42 @@ public static class PrescriptionPrintHelper
             Child = toolbar
         };
 
-        // راست: دکمهٔ چاپ (چون RTL است اولین فرزند سمت راست می‌افتد)
+        // راست: دکمهٔ چاپ + انتخابگر طرح چاپ (چون RTL است اولین فرزند سمت راست می‌افتد)
         var rightTools = new StackPanel { Orientation = Orientation.Horizontal };
         rightTools.Children.Add(printBtn);
+
+        // ─── انتخابگر «طرح چاپ» — چرخه ۲۳: بازسازی زندهٔ سند با طرح منتخب ───
+        var styleLabel = new TextBlock
+        {
+            Text = "طرح چاپ:",
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(14, 0, 6, 0),
+            FontFamily = new FontFamily(FontName)
+        };
+        var styleCombo = new ComboBox
+        {
+            Width = 105,
+            VerticalAlignment = VerticalAlignment.Center,
+            FontFamily = new FontFamily(FontName),
+            SelectedIndex = (int)currentStyle
+        };
+        foreach (var s in Enum.GetValues<PrescriptionPrintStyle>())
+            styleCombo.Items.Add(StyleNameFa(s));
+        // تعویض طرح → سند دوباره ساخته می‌شود و انتخاب در ذخیرهٔ محلی می‌ماند
+        styleCombo.SelectionChanged += (_, _) =>
+        {
+            var picked = (PrescriptionPrintStyle)styleCombo.SelectedIndex;
+            if (picked == currentStyle) return;
+            currentStyle = picked;
+            SavedStyle = picked; // یادآوری انتخاب کاربر
+            var fresh = buildByStyle(picked);
+            fresh.PageWidth = 793.7;
+            fresh.PageHeight = 1122.5;
+            viewer.Document = fresh;
+            document = fresh; // چاپ دکمهٔ «چاپ» همان سند نمای فعال را می‌فرستد
+        };
+        rightTools.Children.Add(styleLabel);
+        rightTools.Children.Add(styleCombo);
         DockPanel.SetDock(rightTools, Dock.Right);
         toolbar.Children.Add(rightTools);
 

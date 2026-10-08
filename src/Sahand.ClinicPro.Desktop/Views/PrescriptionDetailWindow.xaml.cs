@@ -46,17 +46,20 @@ public partial class PrescriptionDetailWindow : Window
                 (string?)"",
                 (string?)(i.Instructions ?? string.Empty))).ToList();
 
-            var doc = PrescriptionPrintHelper.BuildDocument(
-                _vm.PatientName,
-                // کد ملی بیمار در پاسخ جزئیات نیست — کد نسخه جای آن می‌نشیند
-                _vm.PrescriptionCode ?? string.Empty,
-                _vm.DoctorName,
-                _vm.DateShamsi,
-                // کد رهگیری الکترونیک جداگانه نداریم — کد نسخه نمایش داده می‌شود
-                _vm.PrescriptionCode,
-                items);
-
-            PrescriptionPrintHelper.ShowPreview(doc, $"چاپ مجدد — {_vm.Header}");
+            // چرخه ۲۳: طرح چاپ از آخرین انتخاب کاربر شروع می‌شود و در پیش‌نمایش
+            // با انتخابگر «طرح چاپ» زنده قابل تعویض است (کلاسیک/مدرن/فشرده)
+            Services.PrescriptionPrintHelper.ShowPreview(
+                style => PrescriptionPrintHelper.BuildDocument(
+                    _vm.PatientName,
+                    // کد ملی بیمار در پاسخ جزئیات نیست — کد نسخه جای آن می‌نشیند
+                    _vm.PrescriptionCode ?? string.Empty,
+                    _vm.DoctorName,
+                    _vm.DateShamsi,
+                    // کد رهگیری الکترونیک جداگانه نداریم — کد نسخه نمایش داده می‌شود
+                    _vm.PrescriptionCode,
+                    items,
+                    style),
+                $"چاپ مجدد — {_vm.Header}");
         }
         catch (Exception ex)
         {
