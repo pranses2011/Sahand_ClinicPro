@@ -112,7 +112,7 @@ public partial class PatientsViewModel : ViewModelBase
         new(p.Id, p.MedicalRecordNo,
             $"{p.FirstName} {p.LastName}".Trim(),
             p.NationalCode, p.Mobile, p.InsuranceName,
-            null, p.LastVisitDateShamsi, false);
+            p.Age, p.LastVisitDateShamsi, false);
 
     /// <summary>جستجو — بازگشت به صفحه اول (میانبر: Enter یا دکمه)</summary>
     [RelayCommand]
@@ -261,6 +261,9 @@ public partial class PatientsViewModel : ViewModelBase
         public string NationalCode { get; set; } = string.Empty;
         public string Mobile { get; set; } = string.Empty;
         public string? InsuranceName { get; set; }
+
+        /// <summary>سن محاسبه‌شده از سمت سرور — چرخه بیست‌وسوم: ستون سن فهرست بیماران</summary>
+        public int? Age { get; set; }
         public string? LastVisitDateShamsi { get; set; }
     }
 }

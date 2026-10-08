@@ -55,6 +55,12 @@ public class SearchPatientsQueryHandler : IRequestHandler<SearchPatientsQuery, R
             .Take(request.MaxResults)
             .ToListAsync(cancellationToken);
 
-        return Result<List<PatientListDto>>.Success(_mapper.ToPatientListDtos(patients));
+        var dtos = _mapper.ToPatientListDtos(patients);
+
+        // چرخه بیست‌وسوم: جستجوی سریع هم همان ستون‌های فهرست را می‌دهد — سن و آخرین
+        // مراجعه اینجا هم پر می‌شود تا نتیجهٔ جستجو با فهرست اصلی هم‌ارز باشد (قانون مشابه‌یابی)
+        PatientMapper.EnrichListComputedFields(dtos, patients);
+
+        return Result<List<PatientListDto>>.Success(dtos);
     }
 }

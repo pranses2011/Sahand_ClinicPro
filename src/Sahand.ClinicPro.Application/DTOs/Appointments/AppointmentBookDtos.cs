@@ -39,6 +39,11 @@ public record BatchCancelRequest(List<long> Ids, string? Reason);
 /// <summary>
 /// درخواست جستجوی پیشرفته نوبت‌ها — فرم ۹
 /// </summary>
+/// <remarks>
+/// چرخه بیست‌وسوم (گزارش شانزدهم مالک): پارامتر PatientId به انتهای رکورد افزوده شد
+/// تا تب «نوبت‌ها»ی پروندهٔ بیمار بتواند همهٔ نوبت‌های یک بیمار را بی‌وابستگی به
+/// تاریخ/پزشک فیلتر کند؛ مقدار پیش‌فرض تهی و برای فراخوان‌های موجود بی‌اثر است.
+/// </remarks>
 public record AppointmentSearchFilter(
     string? FromDateShamsi,
     string? ToDateShamsi,
@@ -48,7 +53,8 @@ public record AppointmentSearchFilter(
     int? Source,
     string? Search,
     int PageNumber = 1,
-    int PageSize = 20);
+    int PageSize = 20,
+    long? PatientId = null);
 
 /// <summary>
 /// ردیف نتیجه جستجوی نوبت‌ها — با موبایل و تخصص برای ۱۲ ستون فرم ۹

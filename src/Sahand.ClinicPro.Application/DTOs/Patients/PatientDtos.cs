@@ -31,6 +31,10 @@ public class PatientListDto
     /// <summary>نام بیمه اصلی</summary>
     public string? InsuranceName { get; set; }
 
+    /// <summary>سن محاسبه‌شده از تاریخ تولد — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
+    /// ستون «سن» در فهرست بیماران همیشه خالی بود چون DTO فهرست این فیلد را نداشت</summary>
+    public int? Age { get; set; }
+
     /// <summary>تاریخ آخرین مراجعه شمسی</summary>
     public string? LastVisitDateShamsi { get; set; }
 }

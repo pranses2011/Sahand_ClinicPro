@@ -31,13 +31,42 @@ public partial class ReceptionsViewModel : ViewModelBase
     [ObservableProperty] private string _todayRevenueDisplay = "۰";
 
     /* ── جستجوی هوشمند ── */
-    /// <summary>عبارت جستجو — کد ملی یا کد پیگیری APT یا موبایل</summary>
+    /// <summary>عبارت جستجو — نام/نام‌خانوادگی/کد ملی/کد پیگیری APT/موبایل</summary>
     [ObservableProperty]
     private string _smartSearch = string.Empty;
 
     /// <summary>بیمار یافته‌شده</summary>
     [ObservableProperty]
     private QuickPatient? _foundPatient;
+
+    /// <summary>
+    /// نتایج جستجوی بیمار — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
+    /// «جستجو بر اساس نام/نام‌خانوادگی و تطبیق جزئی کد ملی/نام — الان باید کد ملی
+    /// را کامل بزنیم» — ریشه: کلاینت نتایج جزئی سرور را با شرط «کد ملی == دقیق»
+    /// دوربردارد می‌کرد. اکنون همهٔ نتایج برای «انتخاب» فهرست می‌شوند.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowSearchResults))]
+    private ObservableCollection<QuickPatient> _patientResults = new();
+
+    /// <summary>بیمار انتخاب‌شده از فهرست نتایج جستجو — چرخه بیست‌وسوم</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowSearchResults))]
+    private QuickPatient? _selectedSearchResult;
+
+    /// <summary>
+    /// فهرست نتایج فقط تا پیش از انتخاب بیمار دیده شود — چرخه بیست‌وسوم:
+    /// منبع ListBox با انتخاب پاک نمی‌شود (انتخاب را باطل می‌کرد) بلکه مخفی می‌شود
+    /// </summary>
+    public bool ShowSearchResults => FoundPatient is null && PatientResults.Count > 0;
+
+    /// <summary>بازخورد انتخاب از فهرست نتایج — بیمار همان لحظه تنظیم می‌شود</summary>
+    partial void OnSelectedSearchResultChanged(QuickPatient? value)
+    {
+        if (value is null) return;
+        FoundPatient = value;
+        _snackbar.Success($"بیمار انتخاب شد: {value.FullName}");
+    }
 
     /// <summary>نوبت فعال یافته‌شده — اگر بیمار نوبت داشته باشد</summary>
     [ObservableProperty]
@@ -186,17 +215,25 @@ public partial class ReceptionsViewModel : ViewModelBase
 
     /* ═══════════ جستجوی هوشمند ═══════════ */
 
-    /// <summary>جستجو — تشخیص خودکار نوع: کد ملی ۱۰رقمی / کد APT / موبایل</summary>
+    /// <summary>
+    /// جستجو — تشخیص خودکار نوع: کد پیگیری APT / نام / کد ملی / موبایل.
+    /// چرخه بیست‌وسوم (گزارش شانزدهم مالک): پیش‌تر حداقل ۴ نویسه لازم بود و کلاینت
+    /// نتایج جزئی سرور را با شرط تطابق «دقیق» کد ملی/موبایل دور می‌ریخت — یعنی فقط
+    /// کد ملی کامل جواب می‌داد. اکنون: حداقل ۲ نویسه؛ همهٔ نتایج جزئی (نام، نام
+    /// خانوادگی، بخشی از کد ملی/موبایل/پرونده) از سرور می‌آید؛ یک نتیجه = انتخاب
+    /// خودکار؛ چند نتیجه = فهرست برای انتخاب کاربر؛ صفر = پیام راهنما.
+    /// </summary>
     [RelayCommand]
     private async Task SmartSearchAsync()
     {
         var term = SmartSearch.Trim();
-        if (term.Length < 4) { _snackbar.Error("کد ملی، موبایل یا کد پیگیری نوبت را وارد کنید"); return; }
+        if (term.Length < 2) { _snackbar.Error("بخشی از نام، کد ملی، موبایل یا کد پیگیری نوبت را وارد کنید"); return; }
 
         IsBusy = true;
         FoundPatient = null;
         FoundAppointmentInfo = null;
         Inquiry = null;
+        SelectedSearchResult = null;
 
         if (term.StartsWith("APT", StringComparison.OrdinalIgnoreCase))
         {
@@ -212,7 +249,9 @@ public partial class ReceptionsViewModel : ViewModelBase
                 _snackbar.Error("نوبتی با این کد پیگیری یافت نشد");
                 return;
             }
-            var patient = await FindPatientByNational(appt.PatientMobile ?? "");
+            // بیمارِ نوبت با موبایل (تطابق دقیق — موبایل نوبت داریم)
+            var patient = (await FindPatientsAsync(appt.PatientMobile ?? ""))
+                .FirstOrDefault(x => x.Mobile == appt.PatientMobile);
             if (patient is null)
             {
                 IsBusy = false;
@@ -226,31 +265,48 @@ public partial class ReceptionsViewModel : ViewModelBase
         }
         else
         {
-            // جستجوی بیمار با کد ملی یا موبایل
-            var patient = await FindPatientByNational(term);
-            if (patient is null)
+            // جستجوی بیمار — تطبیق جزئی نام/کد ملی/موبایل/پرونده از سمت سرور
+            var results = await FindPatientsAsync(term);
+
+            switch (results.Count)
             {
-                IsBusy = false;
-                _snackbar.Error("بیماری با این مشخصه یافت نشد — ابتدا بیمار را ثبت کنید");
-                return;
+                case 0:
+                    _snackbar.Error("بیماری یافت نشد — بخشی از نام یا کد ملی را امتحان کنید یا ابتدا بیمار را ثبت کنید");
+                    break;
+
+                case 1:
+                    // تک‌نتیجه — انتخاب خودکار بدون نیاز به کلیک اضافه
+                    FoundPatient = results[0];
+                    _snackbar.Success($"بیمار یافت شد: {FoundPatient.FullName}");
+                    break;
+
+                default:
+                    // چندنتیجه — فهرست برای انتخاب کاربر (گزارش شانزدهم مالک:
+                    // «جستجو موارد رو بیاره تا انتخاب بکنیم»)
+                    PatientResults = new ObservableCollection<QuickPatient>(results);
+                    _snackbar.Info($"{results.Count} بیمار یافت شد — از فهرست انتخاب کنید");
+                    break;
             }
-            FoundPatient = patient;
         }
 
         IsBusy = false;
-        _snackbar.Success($"بیمار یافت شد: {FoundPatient.FullName}");
     }
 
-    /// <summary>یافتن بیمار با کد ملی یا موبایل</summary>
-    private async Task<QuickPatient?> FindPatientByNational(string term)
+    /// <summary>
+    /// یافتن بیماران با تطبیق جزئی — چرخه بیست‌وسوم: دیگر با شرط «کد ملی == دقیق»
+    /// دوربرداشته نمی‌شود؛ سرور خودش Contains روی نام/کدملی/موبایل/پرونده و
+    /// مقایسهٔ فشردهٔ نیم‌فاصله انجام می‌دهد
+    /// </summary>
+    private async Task<List<QuickPatient>> FindPatientsAsync(string term)
     {
         var response = await _api.GetAsync<PatientFormViewModel.SearchResponse>(
             $"patients/search?term={Uri.EscapeDataString(term)}");
-        var p = response?.Data?.FirstOrDefault(x =>
-            x.NationalCode == term || x.Mobile == term);
-        if (p is null) return null;
-        return new QuickPatient(p.Id, $"{p.FirstName} {p.LastName}", p.NationalCode, p.Mobile,
-            p.InsuranceName, p.Allergies, null);
+        if (response?.Data is null) return new List<QuickPatient>();
+
+        return response.Data
+            .Select(p => new QuickPatient(p.Id, $"{p.FirstName} {p.LastName}", p.NationalCode, p.Mobile,
+                p.InsuranceName, p.Allergies, null))
+            .ToList();
     }
 
     /* ═══════════ استعلام بیمه ═══════════ */

@@ -44,6 +44,9 @@ public class SearchAppointmentsQueryHandler : IRequestHandler<SearchAppointments
             query = query.Where(a => a.AppointmentDate <= DateOnly.FromDateTime(to.Value));
         if (f.DoctorId.HasValue)
             query = query.Where(a => a.DoctorId == f.DoctorId.Value);
+        // چرخه بیست‌وسوم (گزارش شانزدهم مالک): فیلتر بیمار — تب «نوبت‌ها»ی پروندهٔ بیمار
+        if (f.PatientId.HasValue)
+            query = query.Where(a => a.PatientId == f.PatientId.Value);
         if (f.Status.HasValue && Enum.IsDefined(typeof(AppointmentStatus), (byte)f.Status.Value))
             query = query.Where(a => a.Status == (AppointmentStatus)f.Status.Value);
         if (f.Type.HasValue && Enum.IsDefined(typeof(AppointmentType), (byte)f.Type.Value))

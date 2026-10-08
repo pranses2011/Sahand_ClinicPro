@@ -22,11 +22,24 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
+        <!-- پیام خطای بارگذاری — چرخه بیست‌وسوم: پیش‌تر شکست endpoint بی‌صدا بود و
+             پنجره خالی باز می‌ماند؛ اکنون علت بالای پنجره دیده می‌شود -->
+        <Border Grid.Row="0" Background="#FFF3E0" CornerRadius="10" Padding="12,7" Margin="0,0,0,10"
+                Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="AlertCircle" Foreground="#E65100"
+                                         Width="17" Height="17" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding ErrorMessage, Mode=OneWay}" Foreground="#E65100"
+                           FontSize="12" TextWrapping="Wrap" Margin="8,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
         <!-- ═══ کارت سربرگ: عکس + مشخصات خلاصه ═══ -->
-        <materialDesign:Card Grid.Row="0" UniformCornerRadius="14" Padding="18" Margin="0,0,0,10">
+        <materialDesign:Card Grid.Row="1" UniformCornerRadius="14" Padding="18" Margin="0,0,0,10">
             <DockPanel>
                 <!-- چپ: دکمه‌های چاپ و ویرایش -->
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Top">
@@ -100,7 +113,7 @@
         </materialDesign:Card>
 
         <!-- ═══ نوار نتایج غیرعادی پاراکلینیک — چرخه ۱۳ (درخواست ۱-۴) ═══ -->
-        <Expander Grid.Row="1" Margin="0,0,0,10" IsExpanded="False"
+        <Expander Grid.Row="2" Margin="0,0,0,10" IsExpanded="False"
                   Visibility="{Binding AbnormalCount, Converter={StaticResource NullToVisibility}}">
             <Expander.Header>
                 <StackPanel Orientation="Horizontal">
@@ -138,8 +151,9 @@
             </Border>
         </Expander>
 
-        <!-- ═══ هشدارهای برجسته پزشکی ═══ -->
-        <StackPanel Grid.Row="1" Margin="0,0,0,10">
+        <!-- ═══ هشدارهای برجسته پزشکی — ردیف ۳ (پیش‌تر با اکسپندر پاراکلینیک در
+             همان ردیف همپوشان بود و در حالت باز، روی هم می‌افتادند — چرخه بیست‌وسوم) ═══ -->
+        <StackPanel Grid.Row="3" Margin="0,0,0,10">
             <!-- آلرژی — قرمز -->
             <Border Background="#FFEBEE" CornerRadius="10" Padding="12,8"
                     Visibility="{Binding Allergies.Count, Converter={StaticResource NullToVisibility}}">
@@ -219,7 +233,7 @@
         </StackPanel>
 
         <!-- ═══ تب‌های سوابق ═══ -->
-        <TabControl Grid.Row="3" Background="Transparent">
+        <TabControl Grid.Row="4" Background="Transparent">
             <!-- سوابق ویزیت -->
             <TabItem Header="📋 سوابق ویزیت">
                 <DataGrid ItemsSource="{Binding Visits}"
@@ -252,28 +266,75 @@
                 </DataGrid>
             </TabItem>
 
-            <!-- آزمایش‌ها — گام U10 -->
+            <!-- آزمایش‌ها — چرخه بیست‌وسوم: اتصال واقعی به درخواست‌های آزمایش بیمار
+                 (پیش‌تر EmptyState «در گام U10 متصل می‌شود» بود — تب خالی) -->
             <TabItem Header="🧪 آزمایش‌ها">
-                <controls:EmptyState IconKind="TestTube"
-                                     Message="آزمایش‌های بیمار در گام U10 متصل می‌شود" />
+                <DataGrid ItemsSource="{Binding Labs}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          CanUserAddRows="False" FontSize="12"
+                          HeadersVisibility="Column"
+                          AlternatingRowBackground="#F7FAFD">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="شماره درخواست" Binding="{Binding OrderNumber}" Width="Auto" MinWidth="110" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi}" Width="Auto" MinWidth="105" />
+                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName}" Width="Auto" MinWidth="140" />
+                        <DataGridTextColumn Header="تعداد اقلام" Binding="{Binding ItemsCount}" Width="Auto" MinWidth="80" />
+                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
             </TabItem>
 
-            <!-- فاکتورها — گام U8 -->
+            <!-- فاکتورها — چرخه بیست‌وسوم: اتصال واقعی به فاکتورهای بیمار
+                 (پیش‌تر EmptyState «در گام U8 متصل می‌شود» بود — تب خالی) -->
             <TabItem Header="💰 فاکتورها">
-                <controls:EmptyState IconKind="ReceiptText"
-                                     Message="فاکتورهای بیمار در گام U8 متصل می‌شود" />
+                <DataGrid ItemsSource="{Binding Invoices}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          CanUserAddRows="False" FontSize="12"
+                          HeadersVisibility="Column"
+                          AlternatingRowBackground="#F7FAFD">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="شماره فاکتور" Binding="{Binding InvoiceNumber}" Width="Auto" MinWidth="110" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi}" Width="Auto" MinWidth="105" />
+                        <DataGridTextColumn Header="مبلغ کل" Binding="{Binding TotalAmount}" Width="Auto" MinWidth="120" />
+                        <DataGridTextColumn Header="پرداخت‌شده" Binding="{Binding PaidAmount}" Width="Auto" MinWidth="120" />
+                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
             </TabItem>
 
-            <!-- نوبت‌ها — گام U4 -->
+            <!-- نوبت‌ها — چرخه بیست‌وسوم: اتصال واقعی به نوبت‌های بیمار
+                 (پیش‌تر EmptyState «در گام U4 متصل می‌شود» بود — تب خالی) -->
             <TabItem Header="📅 نوبت‌ها">
-                <controls:EmptyState IconKind="CalendarClock"
-                                     Message="نوبت‌های بیمار در گام U4 متصل می‌شود" />
+                <DataGrid ItemsSource="{Binding Appointments}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          CanUserAddRows="False" FontSize="12"
+                          HeadersVisibility="Column"
+                          AlternatingRowBackground="#F7FAFD">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi}" Width="Auto" MinWidth="105" />
+                        <DataGridTextColumn Header="ساعت" Binding="{Binding Time}" Width="Auto" MinWidth="70" />
+                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName}" Width="Auto" MinWidth="140" />
+                        <DataGridTextColumn Header="تخصص" Binding="{Binding Specialty}" Width="Auto" MinWidth="110" />
+                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
             </TabItem>
 
-            <!-- اسناد — گام U15 -->
+            <!-- اسناد — چرخه بیست‌وسوم: سوابق آرشیوی بیمار از سرور
+                 (پیش‌تر EmptyState «در گام U15 متصل می‌شود» بود — تب خالی) -->
             <TabItem Header="📎 اسناد">
-                <controls:EmptyState IconKind="FileMultiple"
-                                     Message="اسناد و پیوست‌های بیمار در گام U15 متصل می‌شود" />
+                <DataGrid ItemsSource="{Binding Documents}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          CanUserAddRows="False" FontSize="12"
+                          HeadersVisibility="Column"
+                          AlternatingRowBackground="#F7FAFD">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="نوع" Binding="{Binding SourceTable}" Width="Auto" MinWidth="100" />
+                        <DataGridTextColumn Header="عنوان" Binding="{Binding Title}" Width="Auto" MinWidth="160" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi}" Width="Auto" MinWidth="105" />
+                        <DataGridTextColumn Header="خلاصه" Binding="{Binding Summary}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
             </TabItem>
 
             <!-- ═══ خط زمان — چرخه ۱۳ (درخواست ۱-۵) ═══ -->

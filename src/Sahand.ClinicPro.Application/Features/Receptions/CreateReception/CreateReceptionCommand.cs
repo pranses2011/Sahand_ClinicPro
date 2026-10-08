@@ -90,6 +90,11 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
 
         await _unitOfWork.Repository<Reception>().AddAsync(reception, cancellationToken);
 
+        // چرخه بیست‌وسوم (گزارش شانزدهم مالک): پذیرش خودش یک «مراجعه» است —
+        // ستون «آخرین مراجعه» فهرست بیماران باید با پذیرش هم تازه شود (نه فقط با ثبت ویزیت)
+        if (patient.LastVisitDate is null || patient.LastVisitDate < now)
+            patient.LastVisitDate = now;
+
         // اگر از نوبت است — وضعیت نوبت به حاضر تغییر می‌کند
         if (dto.AppointmentId.HasValue)
         {

@@ -38,10 +38,11 @@
             <Button Grid.Column="2" Command="{Binding SearchPatientCommand}"
                     Style="{StaticResource MaterialDesignRaisedButton}" Content="🔍 جستجو" />
 
-            <!-- نتایج جستجو — فقط هنگام وجود نتیجه -->
+            <!-- نتایج جستجو — فقط تا پیش از انتخاب بیمار (چرخه بیست‌وسوم:
+                 پیش‌تر با انتخاب، منبع پاک می‌شد و انتخاب باطل می‌گشت و صفحه غیرفعال می‌ماند) -->
             <ListBox Grid.Column="3" x:Name="PatientResultsList"
                      ItemsSource="{Binding PatientResults}" SelectedItem="{Binding SelectedPatient}"
-                     Visibility="{Binding PatientResults.Count, Converter={StaticResource ZeroToCollapsed}}"
+                     Visibility="{Binding ShowPatientResults, Converter={StaticResource BoolToVisibility}}"
                      MaxHeight="150" BorderThickness="1"
                      BorderBrush="{DynamicResource MaterialDesignDivider}" />
         </Grid>

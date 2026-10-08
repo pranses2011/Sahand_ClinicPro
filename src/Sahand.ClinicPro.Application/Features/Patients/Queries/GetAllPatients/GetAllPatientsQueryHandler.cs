@@ -56,6 +56,9 @@ public class GetAllPatientsQueryHandler : IRequestHandler<GetAllPatientsQuery, R
 
         var dtos = _mapper.ToPatientListDtos(items);
 
+        // چرخه بیست‌وسوم: پرکردن سن و آخرین مراجعه شمسی — پیش از این ستون‌ها همیشه خالی بودند
+        PatientMapper.EnrichListComputedFields(dtos, items);
+
         return Result<PagedResponse<PatientListDto>>.Success(
             PagedResponse<PatientListDto>.Create(dtos, page.PageNumber, page.PageSize, totalCount));
     }

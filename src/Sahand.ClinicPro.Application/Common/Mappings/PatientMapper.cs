@@ -1,4 +1,5 @@
 ﻿using Riok.Mapperly.Abstractions;
+using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Application.DTOs.Patients;
 using Sahand.ClinicPro.Domain.Entities.People;
 
@@ -53,4 +54,31 @@ public partial class PatientMapper
     [MapperIgnoreTarget(nameof(Patient.Histories))]
     [MapperRequiredMapping(RequiredMappingStrategy.Target)]
     public partial Patient ToPatient(CreatePatientDto dto);
+
+    /// <summary>
+    /// پرکردن فیلدهای محاسباتی ردیف‌های فهرست بیماران — چرخه بیست‌وسوم (گزارش شانزدهم مالک).
+    /// ستون‌های «سن» و «آخرین مراجعه» در فهرست بیماران همیشه خالی بودند چون:
+    /// ۱) نگاشتگر Mapperly سن را محاسبه نمی‌کند (فیلد هدف از موجودیت مستقیم نمی‌آید)
+    /// ۲) LastVisitDateShamsi عمداً از نگاشت حذف شده بود و هیچ گرداننده‌ای پرش نمی‌کرد
+    /// این متد پس از نگاشت در هر دو گردانندهٔ «فهرست بیماران» و «جستجوی سریع» فراخوانی
+    /// می‌شود تا هر دو نقطهٔ نمایش فهرست، مقادیر تازه و درست داشته باشند (قانون مشابه‌یابی).
+    /// </summary>
+    /// <param name="dtos">ردیف‌های نگاشت‌شده — به همان ترتیب موجودیت‌ها</param>
+    /// <param name="patients">موجودیت‌های منبع — ترتیب حفظ می‌شود</param>
+    public static void EnrichListComputedFields(List<PatientListDto> dtos, IReadOnlyList<Patient> patients)
+    {
+        // پیمایش جفتی (dto ↔ موجودیت)؛ شرط i < هر دو برای اطمینان از هم‌طولی
+        for (var i = 0; i < dtos.Count && i < patients.Count; i++)
+        {
+            // سن از تاریخ تولد میلادی با تقویم شمسی (سال‌گذرانی درست)
+            dtos[i].Age = patients[i].BirthDate.HasValue
+                ? PersianDateHelper.CalculateAge(patients[i].BirthDate.Value.ToDateTime(TimeOnly.MinValue))
+                : null;
+
+            // آخرین مراجعه → شمسی با ارقام فارسی (سازگار با زبان تمام‌فارسی رابط کاربری)
+            dtos[i].LastVisitDateShamsi = patients[i].LastVisitDate.HasValue
+                ? PersianDateHelper.ToShamsiFa(patients[i].LastVisitDate.Value)
+                : null;
+        }
+    }
 }

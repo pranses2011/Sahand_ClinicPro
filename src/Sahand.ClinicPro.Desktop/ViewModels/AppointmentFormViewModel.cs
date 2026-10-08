@@ -103,20 +103,33 @@ public partial class AppointmentFormViewModel : ObservableObject
 
     /// <summary>
     /// بارگذاری پزشکان فعال از سرور — چرخه بیستم (گزارش چهاردهم مالک):
-    /// «لیست پزشکانی که تعریف شده هیچ‌جا نمی‌آید تا انتخاب کنیم»
+    /// «لیست پزشکانی که تعریف شده هیچ‌جا نمی‌آید تا انتخاب کنیم».
+    /// چرخه بیست‌وسوم (گزارش شانزدهم مالک): «کادر ثبت نوبت بدون هیچ اطلاعی باز
+    /// می‌شود» — شکست بارگذاری پزشکان پیش‌تر بی‌صدا قورت داده می‌شد و کشوی
+    /// پزشک خالی می‌ماند بی‌آنکه کاربر بداند چرا؛ اکنون علت در پیام خطای فرم دیده می‌شود.
     /// </summary>
     private async Task LoadDoctorsAsync()
     {
         try
         {
             var response = await _api.GetAsync<DoctorsPage>("doctors?pageSize=200");
-            if (response?.Data is null) return;
+            if (response?.Data is null)
+            {
+                // پاسخ تهی = خطای سرور/شبکه — پیام فارسی کلاینت در LastError است
+                ErrorMessage = $"بارگذاری فهرست پزشکان ناموفق بود: {_api.LastError ?? "پاسخ سرور تهی بود"}";
+                return;
+            }
+
             foreach (var d in response.Data)
                 Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
+
+            // اگر هیچ پزشکی فعال نیست، کاربر باید بداند (شکاف تعریف پزشک)
+            if (Doctors.Count == 0)
+                ErrorMessage = "هیچ پزشکی ثبت نشده است — ابتدا از صفحهٔ پزشکان، پزشک تعریف کنید";
         }
-        catch
+        catch (Exception ex)
         {
-            // خطای شبکه هنگام بارگذاری پزشکان — پیام در زمان ذخیره داده می‌شود
+            ErrorMessage = $"بارگذاری فهرست پزشکان ناموفق بود: {ex.Message}";
         }
     }
 

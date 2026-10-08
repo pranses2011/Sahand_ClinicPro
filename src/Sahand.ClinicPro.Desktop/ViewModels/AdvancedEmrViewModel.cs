@@ -36,17 +36,29 @@ public partial class AdvancedEmrViewModel : ViewModelBase
     [ObservableProperty]
     private string _patientSearchTerm = string.Empty;
 
-    /// <summary>نتایج جستجوی بیمار</summary>
+    /// <summary>نتایج جستجوی بیمار — چرخه بیست‌وسوم: فراخوانی ShowPatientResults با هر جایگزینی</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowPatientResults))]
     private ObservableCollection<PatientOption> _patientResults = new();
 
     /// <summary>بیمار انتخاب‌شده</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasPatient))]
+    [NotifyPropertyChangedFor(nameof(ShowPatientResults))]
     private PatientOption? _selectedPatient;
 
     /// <summary>آیا بیماری انتخاب شده — نمایش بخش‌ها</summary>
     public bool HasPatient => SelectedPatient is not null;
+
+    /// <summary>
+    /// آیا فهرست نتایج جستجو دیده شود؟ — فقط تا پیش از انتخاب بیمار (چرخه بیست‌وسوم).
+    /// ریشهٔ «صفحه کمرنگ و غیرفعال با انتخاب بیمار»: پیش‌تر در OnSelectedPatientChanged
+    /// بلافاصله PatientResults.Clear() اجرا می‌شد؛ پاک‌شدن آیتم انتخاب‌شده از منبع ListBox
+    /// انتخاب را در همان لحظه باطل می‌کرد → SelectedPatient دوباره null می‌شد → HasPatient=false
+    /// → TabControl (IsEnabled=HasPatient) برای همیشه غیرفعال و کمرنگ می‌ماند.
+    /// راه‌حل: نتایج پاک نمی‌شوند؛ فقط با انتخاب بیمار «مخفی» می‌شوند.
+    /// </summary>
+    public bool ShowPatientResults => SelectedPatient is null && PatientResults.Count > 0;
 
     /// <summary>تاریخ تولد بیمار (میلادی) — پایه محاسبه سن نمودار رشد</summary>
     public DateOnly? PatientBirthDate { get; private set; }
@@ -76,10 +88,14 @@ public partial class AdvancedEmrViewModel : ViewModelBase
             : new ObservableCollection<PatientOption>();
     }
 
-    /// <summary>بازخورد انتخاب بیمار — بارگذاری هر سه مجموعه داده + جزئیات برای سن/جنسیت</summary>
+    /// <summary>
+    /// بازخورد انتخاب بیمار — بارگذاری هر سه مجموعه داده + جزئیات برای سن/جنسیت.
+    /// چرخه بیست‌وسوم: PatientResults.Clear() حذف شد — پاک‌کردن منبعِ ListBox هم‌زمان با
+    /// انتخاب، آیتم انتخاب‌شده را از بین می‌برد و انتخاب را باطل می‌کرد (HasPatient→false)
+    /// و کل صفحه غیرفعال می‌ماند. اکنون نتایج فقط مخفی می‌شوند (ShowPatientResults).
+    /// </summary>
     partial void OnSelectedPatientChanged(PatientOption? value)
     {
-        PatientResults.Clear();
         if (value is null) return;
         _ = LoadPatientAsync(value.Id);
     }
