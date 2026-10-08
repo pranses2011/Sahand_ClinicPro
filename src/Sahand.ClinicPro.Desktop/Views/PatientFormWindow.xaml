@@ -101,9 +101,10 @@
                                                             Placeholder="تاریخ تولد"
                                                             DateShamsiText="{Binding BirthDateShamsi, Mode=TwoWay}" />
                                 <ComboBox Grid.Column="1"
-                                          materialDesign:HintAssist.Hint="خون"
+                                          materialDesign:HintAssist.Hint="گروه خونی"
                                           ItemsSource="{Binding BloodTypes}"
-                                          SelectedItem="{Binding BloodType}" />
+                                          SelectedItem="{Binding BloodType}"
+                                          ToolTip="گروه خونی بیمار — در تب «اطلاعات شخصی» فرم ثبت/ویرایش بیمار" />
                             </Grid>
                             <ComboBox materialDesign:HintAssist.Hint="وضعیت تأهل"
                                       ItemsSource="{Binding MaritalStates}"

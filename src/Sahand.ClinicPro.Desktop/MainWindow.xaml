@@ -141,18 +141,15 @@
         </Grid.ColumnDefinitions>
 
         <!-- ═══ ستون کنار ═══ — چرخه هفدهم (گزارش یازدهم): پس‌زمینهٔ سایدبار
-             گرادیان آبی رسمی طرح؛ چرخه بیست‌ویکم (گزارش پانزدهم مالک):
-             «تغییر رنگ، رنگ منوی کناری را عوض نمی‌کند» — رنگ‌ها از منابع پویای
-             App.SidebarTop/Bottom خوانده می‌شوند که ThemeService آنها را از رنگ
-             تم (یا رنگ سفارشی کاربر) بازمی‌سازد؛ متن‌ها سفید/آبی‌روشن و آیتم
-             فعال با های‌لایت نیمه‌شفاف سفیدِ گوشه‌گرد. -->
-        <Border Grid.Column="0">
-            <Border.Background>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="{Binding Color, Source={StaticResource App.SidebarTop}}" Offset="0" />
-                    <GradientStop Color="{Binding Color, Source={StaticResource App.SidebarBottom}}" Offset="1" />
-                </LinearGradientBrush>
-            </Border.Background>
+             گرادیان آبی رسمی طرح؛ چرخه بیست‌ویکم: رنگ‌ها از منابع پویا خوانده
+             می‌شوند؛ چرخه بیست‌وسوم (گزارش شانزدهم مالک): «رنگ منو تا ری‌استارت
+             عوض نمی‌شود» — ریشه: قلم‌های XAML فریز می‌شوند و StaticResource
+             جایگزینیِ منبع را نمی‌بیند؛ اکنون پس‌زمینه با DynamicResource از
+             قلمِ گرادیانیِ کاملِ App.SidebarBrush خوانده می‌شود که ThemeService
+             با هر تغییر تم/رنگ سفارشی، نمونهٔ نوِ آن را می‌سازد — بی‌درنگ و
+             بدون ری‌استارت. متن‌ها سفید/آبی‌روشن و آیتم فعال با های‌لایت
+             نیمه‌شفاف سفیدِ گوشه‌گرد. -->
+        <Border Grid.Column="0" Background="{DynamicResource App.SidebarBrush}">
             <Grid>
                 <Grid.RowDefinitions>
                     <!-- لوگو و نام درمانگاه (بالا) -->

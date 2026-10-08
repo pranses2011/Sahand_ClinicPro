@@ -158,6 +158,12 @@ try
         options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
         // سیاست عمومی همه endpointها
+        // چرخه بیست‌وسوم (گزارش شانزدهم مالک): «بعضاً خطای 429 می‌دهد» — سقف
+        // پیشین ۱۰۰ درخواست در دقیقه برای کلاینت دسکتاپِ فعال (نظرسنجی داشبورد،
+        // بروزرسانی زندهٔ صف، ذخیرهٔ تنظیمات با Debounce، بارگذاری فرم‌ها) به‌سادگی
+        // پُر می‌شد و خطای 429 به کاربر می‌رسید؛ این کلاینتِ اختصاصیِ درمانگاه است
+        // نه API عمومی — سقف به ۶۰۰ در دقیقه (۱۰ در ثانیه) افزایش یافت. سیاست
+        // سخت‌گیرانهٔ ورود (۵ تلاش در دقیقه) دست‌نخورده ماند.
         options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
             RateLimitPartition.GetFixedWindowLimiter(
                 partitionKey: httpContext.User.Identity?.Name
@@ -165,7 +171,7 @@ try
                               ?? "anonymous",
                 factory: _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 100,
+                    PermitLimit = 600,
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0
                 }));

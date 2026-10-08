@@ -39,9 +39,19 @@
             <!-- رنگ‌های منوی کناری — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
                  «تغییر رنگ، رنگ منوی کناری را عوض نمی‌کند» — ThemeService این دو
                  منبع پویا را با تعویض تم/رنگ سفارشی منو بازنویسی می‌کند؛
-                 مقادیر اینجا گرادیان پیش‌فرض آبی رسمی طرح است. -->
-            <SolidColorBrush x:Key="App.SidebarTop">#16355E</SolidColorBrush>
-            <SolidColorBrush x:Key="App.SidebarBottom">#1C4E89</SolidColorBrush>
+                 مقادیر اینجا گرادیان پیش‌فرض آبی رسمی طرح است.
+                 ═══ چرخه بیست‌وسوم (گزارش شانزدهم مالک): «رنگ منو تا ری‌استارت
+                 عوض نمی‌شود» — ریشه: قلم‌های تعریف‌شده در XAML توسط بهینه‌ساز
+                 BAML فریز (IsFrozen) می‌شوند؛ بازنویسی رنگ در همان نمونه ممکن
+                 نبود و جایگزینی کل منبع هم با StaticResource دیده نمی‌شد.
+                 رفع قطعی: به‌جای دو قلمِ جامد، یک «قلم گرادیانی کامل» به‌صورت
+                 منبع پویا (App.SidebarBrush) تعریف شد؛ ThemeService هر بار
+                 قلمِ گرادیانیِ نو می‌سازد و کل منبع را جایگزین می‌کند و سایدبار
+                 با DynamicReference بی‌درنگ تازه می‌شود. -->
+            <LinearGradientBrush x:Key="App.SidebarBrush" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#16355E" Offset="0" />
+                <GradientStop Color="#1C4E89" Offset="1" />
+            </LinearGradientBrush>
 
             <!-- فونت سراسری — وزیرمتن به‌صورت Resource داخل خود exe جاسازی شده است
                  (Assets/Fonts — مجوز آزاد OFL)؛ ارجاع pack URI بدون توجه به فونت‌های

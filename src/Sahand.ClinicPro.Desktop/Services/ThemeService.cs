@@ -124,12 +124,16 @@ public class ThemeService : IThemeService
     }
 
     /// <summary>
-    /// اعمال رنگ منوی کناری — منابع پویای App.SidebarTop/Bottom.
+    /// اعمال رنگ منوی کناری — منبع پویای App.SidebarBrush (چرخه بیست‌وسوم).
     /// اگر کاربر رنگ مستقل گذاشته باشد همان؛ وگرنه گرادیانی تیره از رنگ اصلی
     /// تم ساخته می‌شود تا منو همیشه با تم هماهنگ باشد (گزارش پانزدهم مالک:
     /// «تغییر رنگ، رنگ منوی کناری را عوض نمی‌کند»).
-    /// نکتهٔ فنی: رنگ داخل همان SolidColorBrush موجود بازنویسی می‌شود (نه
-    /// جایگزینی کل منبع) تا GradientStop های وصل‌شده با Binding فوراً تازه شوند.
+    /// نکتهٔ فنی (رفع ریشهٔ گزارش شانزدهم: «رنگ منو تا ری‌استارت عوض نمی‌شود»):
+    /// قلم‌های تعریف‌شده در XAML توسط بهینه‌ساز BAML فریز (IsFrozen) می‌شوند؛
+    /// تغییر رنگِ نمونهٔ فریزشده ناممکن و جایگزینی منبع هم با StaticResource
+    /// دیده نمی‌شد. اکنون هر بار یک قلم گرادیانیِ نو (دو GradientStop از
+    /// رنگ پایه) ساخته و «کل منبع» جایگزین می‌شود؛ سایدبار با DynamicResource
+    /// بی‌درنگ تازه می‌شود — بدون ری‌استارت.
     /// </summary>
     private void ApplySidebarColors(
         System.Windows.ResourceDictionary resources, AppTheme picked)
@@ -156,32 +160,11 @@ public class ThemeService : IThemeService
         }
         var top = Darken(baseColor, 0.30);   // بالای گرادیان — تیره‌تر
         var bottom = Darken(baseColor, 0.08); // پایین گرادیان — نزدیک رنگ تم
-        SetBrushColor(resources, "App.SidebarTop", top);
-        SetBrushColor(resources, "App.SidebarBottom", bottom);
-    }
 
-    /// <summary>
-    /// بازنویسی رنگ قلمِ موجود در منبع — اگر منبع SolidColorBrush باشد رنگ همان
-    /// نمونه عوض می‌شود (و همهٔ مصرف‌کننده‌های Binding فوراً به‌روز می‌شوند)؛
-    /// در نبود منبع، قلم جدید ساخته می‌شود.
-    /// </summary>
-    private static void SetBrushColor(
-        System.Windows.ResourceDictionary resources, string key, System.Windows.Media.Color color)
-    {
-        if (resources[key] is System.Windows.Media.SolidColorBrush brush)
-        {
-            // Freeze نباشد تا تغییر رنگ مجاز باشد
-            if (brush.IsFrozen)
-            {
-                resources[key] = new System.Windows.Media.SolidColorBrush(color);
-                return;
-            }
-            brush.Color = color;
-        }
-        else
-        {
-            resources[key] = new System.Windows.Media.SolidColorBrush(color);
-        }
+        // قلم گرادیانی نو — جایگزینی کامل منبع تا DynamicResource فوراً بگیردش
+        // زاویهٔ ۹۰ درجه = عمودی از بالا (تیره‌تر) به پایین (روشن‌تر)
+        var brush = new System.Windows.Media.LinearGradientBrush(top, bottom, 90d);
+        resources["App.SidebarBrush"] = brush;
     }
 
     /// <summary>

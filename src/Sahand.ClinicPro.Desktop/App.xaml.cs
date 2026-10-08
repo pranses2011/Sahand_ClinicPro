@@ -21,6 +21,46 @@ public partial class App : System.Windows.Application
     /// <summary>ارائه‌دهنده سرویس سراسری برنامه دسکتاپ</summary>
     public static IServiceProvider Services { get; private set; } = null!;
 
+    // ═══ چرخه بیست‌وسوم (گزارش شانزدهم مالک): فونت سراسری واقعاً اعمال شود ═══
+    // «فونت و اندازهٔ فونت اعمال نمی‌شود — نه فونت‌های خود برنامه نه ویندوز»
+    // ریشهٔ یافت‌شده: استایل ضمنی <Style TargetType="Window"> در App.xaml فقط
+    // روی پنجره‌هایی با «نوعِ دقیقِ Window» اثر می‌کند؛ در WPF جست‌وجوی استایل
+    // ضمنی با کلیدِ نوعِ دقیقِ عنصر انجام می‌شود و پنجره‌های مشتق‌شده
+    // (MainWindow، فرم‌های مودال و…) آن را نمی‌گیرند — یعنی FontFamily و
+    // FontSize هرگز از منابع App.FontFamily/App.BaseFontSize به هیچ پنجره‌ای
+    // نمی‌رسید و تعویض فونت/سایز هیچ اثری نداشت.
+    // رفع قطعی: یک «کلاس‌هندلر» روی رویداد Loaded نوع پایهٔ Window ثبت می‌شود
+    // که برای همهٔ پنجره‌های برنامه (مشتق‌شده هم) اجرا می‌شود و فونت/اندازه را
+    // با SetResourceReference (معادل DynamicResource در کد) وصل می‌کند —
+    // تغییر منبع در ThemeService بی‌درنگ روی همهٔ پنجره‌ها اعمال می‌شود.
+    static App()
+    {
+        EventManager.RegisterClassHandler(
+            typeof(Window),
+            Window.LoadedEvent,
+            new RoutedEventHandler(OnAnyWindowLoadedForFont));
+    }
+
+    /// <summary>
+    /// اتصال فونت/اندازهٔ پویا به هر پنجره هنگام باز شدن — چرخه بیست‌وسوم.
+    /// SetResourceReference مثل {DynamicResource} رفتار می‌کند: با بازنویسی
+    /// منابع App.FontFamily/App.BaseFontSize در ThemeService، همهٔ پنجره‌های
+    /// باز بی‌درنگ تازه می‌شوند (بدون ری‌استارت).
+    /// </summary>
+    private static void OnAnyWindowLoadedForFont(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Window window) return;
+        // فقط یک‌بار وصل شود (پرچم روی خود پنجره)
+        if (window.GetValue(FontHookedProperty) is true) return;
+        window.SetValue(FontHookedProperty, true);
+        window.SetResourceReference(Window.FontFamilyProperty, "App.FontFamily");
+        window.SetResourceReference(Window.FontSizeProperty, "App.BaseFontSize");
+    }
+
+    /// <summary>پرچم جلوگیری از وصل‌شدن دوبارهٔ فونت به همان پنجره</summary>
+    private static readonly DependencyProperty FontHookedProperty =
+        DependencyProperty.RegisterAttached("FontHooked", typeof(bool), typeof(App), new PropertyMetadata(false));
+
     /// <summary>رویداد راه‌اندازی — ساخت کانتینر DI و انتخاب پنجره آغازین</summary>
     protected override void OnStartup(StartupEventArgs e)
     {
