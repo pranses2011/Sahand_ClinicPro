@@ -205,6 +205,11 @@ public partial class MainWindowViewModel : ObservableObject
             ["reports"] = () => reportBrowserVm,
             ["reports-legacy"] = () => reportsVm,
             ["settings"] = () => settingsVm,
+            // چرخه ۲۴: صفحهٔ «مدیریت سامانه» (AdminView تب‌دار: تنظیمات کلینیک/
+            // لاگ حسابرسی/پشتیبان‌گیری/آرشیو سالانه) — با جدا شدن پرسنل و
+            // تنظیماتِ بخش‌بندی‌شده، این صفحه از منو حذف شده و تک‌افتاده بود؛
+            // دوباره از منوی مدیریت سامانه در دسترس شد (گزارش هفدهم مالک)
+            ["admin"] = () => adminVm,
             // چرخه بیستم (گزارش چهاردهم مالک): پرسنل صفحهٔ خودش را می‌گیرد —
             // پیش‌تر به adminVm (تنظیمات) نگاشت شده بود و زبانهٔ تنظیمات باز می‌شد
             ["personnel"] = () => personnelVm,
@@ -288,6 +293,7 @@ public partial class MainWindowViewModel : ObservableObject
 
             // ─── مدیریت و تنظیمات سامانه ───
             Group("مدیریت سامانه", "Cog",
+                new() { Title = "مدیریت سامانه (تب‌بندی کامل)", PageKey = "admin", Icon = "ViewDashboardOutline" },
                 new() { Title = "کاربران", PageKey = "users", Icon = "AccountKey" },
                 new() { Title = "نقش‌ها", PageKey = "roles", Icon = "ShieldAccount" },
                 new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog" },

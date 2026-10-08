@@ -97,10 +97,14 @@
                                     <ColumnDefinition Width="12" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
+                                <!-- ═══ چرخه ۲۴ (گزارش هفدهم مالک) — رفع «فیلد گروه خونی
+                                     خیلی کوچک است و دیده نمی‌شود»: کمبو پیش‌تر در ستون ۱
+                                     (ستون فاصله‌انداز ۱۲ پیکسلی!) نشسته بود؛ به ستون ۲
+                                     منتقل شد و اکنون نیمهٔ چپ ردیف را مثل تاریخ تولد می‌گیرد -->
                                 <controls:PersianDatePicker Grid.Column="0"
                                                             Placeholder="تاریخ تولد"
                                                             DateShamsiText="{Binding BirthDateShamsi, Mode=TwoWay}" />
-                                <ComboBox Grid.Column="1"
+                                <ComboBox Grid.Column="2"
                                           materialDesign:HintAssist.Hint="گروه خونی"
                                           ItemsSource="{Binding BloodTypes}"
                                           SelectedItem="{Binding BloodType}"
