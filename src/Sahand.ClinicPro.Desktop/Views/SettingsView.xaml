@@ -370,6 +370,54 @@
                                    FontFamily="Consolas" FontSize="13" MinWidth="20" />
                     </StackPanel>
 
+                    <!-- ═══ چرخه ۲۴ — شخصی‌سازی حرفه‌ای: رنگ اصلی سفارشی + حالت آیکون‌ها ═══ -->
+                    <StackPanel Orientation="Horizontal" Margin="2,8">
+                        <TextBlock Text="رنگ اصلی دکمه‌ها/هایلایت‌ها: " VerticalAlignment="Center" FontSize="12.5" />
+                        <ComboBox ItemsSource="{Binding CustomPrimaryOptions}"
+                                  SelectedIndex="{Binding CustomPrimaryIndex}" MinWidth="150"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="6,0,0,0" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="2,8">
+                        <TextBlock Text="آیکون‌های منوی کناری: " VerticalAlignment="Center" FontSize="12.5" />
+                        <ComboBox SelectedIndex="{Binding IconColorModeIndex}" MinWidth="150"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="6,0,0,0">
+                            <ComboBoxItem Content="یکدست (هم‌رنگ منو)" />
+                            <ComboBoxItem Content="🎨 رنگی و شاداب" />
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- ═══ چرخه ۲۴ — پریست‌های شخصی تم: ذخیره/اعمال/حذف ═══
+                         «تنظیمات شخصی رو بتونیم ذخیره و بعداً استفاده بکنیم» -->
+                    <Border Background="#F5F9FF" BorderBrush="#CFE2F5" BorderThickness="1"
+                            CornerRadius="8" Padding="12,10" Margin="2,12">
+                        <StackPanel>
+                            <TextBlock Text="💠 پریست‌های شخصی (ذخیرهٔ ترکیب کامل و بازیابی با یک کلیک):"
+                                       FontSize="12.5" FontWeight="SemiBold" Foreground="#16355E" Margin="0,0,0,8" />
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBox materialDesign:HintAssist.Hint="نام پریست جدید"
+                                         Text="{Binding PresetName, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Width="200" VerticalAlignment="Center" />
+                                <Button Command="{Binding SaveThemePresetCommand}"
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Content="💾 ذخیرهٔ پریست" Padding="12,6" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <ComboBox ItemsSource="{Binding ThemePresets}"
+                                          SelectedItem="{Binding SelectedThemePreset}"
+                                          materialDesign:HintAssist.Hint="پریست‌های ذخیره‌شده"
+                                          MinWidth="200" VerticalAlignment="Center"
+                                          Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+                                <Button Command="{Binding ApplyThemePresetCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Content="▶️ اعمال" Padding="12,6" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                <Button Command="{Binding DeleteThemePresetCommand}"
+                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                        Content="🗑 حذف" Foreground="#C62828" Padding="10,6" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
                     <!-- واحد پول نمایشی — چرخه بیستم: تعویض ریال/تومان فقط نمایشی است.
                          چرخه بیست‌ویکم (گزارش پانزدهم مالک): متن «محاسبات همیشه ریالی است»
                          به درخواست حذف شد -->

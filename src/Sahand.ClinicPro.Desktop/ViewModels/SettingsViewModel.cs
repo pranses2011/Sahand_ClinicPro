@@ -190,12 +190,24 @@ public partial class SettingsViewModel : ViewModelBase
     /// </summary>
     public List<string> FontOptions { get; } = BuildFontOptions();
 
+    /// <summary>برچسب نمایشی → نام خام فونت برای ThemeService (چرخه ۲۴)</summary>
+    private static string FontKey(string? display)
+        => display == "وزیرمتن (فونت برنامه)" ? "Vazirmatn" : (display ?? "Vazirmatn");
+
+    /// <summary>نام خام فونت → برچسب نمایشی در فهرست (چرخه ۲۴)</summary>
+    private static string FontDisplay(string? key)
+        => key == "Vazirmatn" ? "وزیرمتن (فونت برنامه)" : (key ?? "وزیرمتن (فونت برنامه)");
+
     /// <summary>
-    /// ساخت فهرست فونت‌ها — وزیرمتن (جاسازی‌شده) + فونت‌های ویندوز مرتب الفبایی
+    /// ساخت فهرست فونت‌ها — چرخه ۲۴: فونت‌های «درون برنامه» با برچسب ویژه و
+    /// متمایز از فونت‌های ویندوز عرضه می‌شوند (گزارش هفدهم مالک: «فونت‌های
+    /// درون برنامه از فونت‌های ویندوزی متمایز باشند تا قابل تشخیص باشند»)؛
+    /// مقدار ارسالی به ThemeService همان نام خام (Vazirmatn) است — برچسب
+    /// نمایشی فقط برای چشم کاربر است.
     /// </summary>
     private static List<string> BuildFontOptions()
     {
-        var list = new List<string> { "Vazirmatn" };
+        var list = new List<string> { "وزیرمتن (فونت برنامه)" };
         try
         {
             // همهٔ خانواده‌های فونت نصب‌شدهٔ سیستم — Source نام خانواده است
@@ -254,6 +266,55 @@ public partial class SettingsViewModel : ViewModelBase
     /// <summary>گوشه مستقل فعال است؟ (برای چک‌باکس فعال‌سازی)</summary>
     [ObservableProperty]
     private bool _useCustomRadius;
+
+    // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — شخصی‌سازی حرفه‌ای تم ═══
+    // «بتوانیم ظاهر همهٔ عناصر را جداگانه تغییر دهیم و هر چیزی برای تغییر تم
+    // هست بگذار تا شخصی‌سازی در حد حرفه‌ای شود» + «تنظیمات شخصی را بتوان
+    // ذخیره و بعداً استفاده کرد»: رنگ اصلی سفارشی، حالت آیکون رنگی/یکدست و
+    // سیستم پریست (ذخیره/بازیابی/حذف ترکیب دلخواه) افزوده شد.
+
+    /// <summary>ایندکس حالت رنگ آیکون‌ها — ۰ یکدست، ۱ رنگی</summary>
+    [ObservableProperty]
+    private int _iconColorModeIndex;
+
+    /// <summary>ایندکس رنگ اصلی سفارشی — ۰ یعنی همگام با تم</summary>
+    [ObservableProperty]
+    private int _customPrimaryIndex;
+
+    /// <summary>گزینه‌های رنگ اصلی سفارشی — [۰] همگام با تم + پالت</summary>
+    public List<string> CustomPrimaryOptions { get; } = new()
+        { "همگام با تم", "قرمز روشن", "صورتی", "بنفش", "سرمه‌ای", "آبی تیره", "فیروزه‌ای تیره", "سبز تیره", "زیتونی", "کهربایی", "قهوه‌ای" };
+
+    /// <summary>مقدارهای هگز گزینه‌های رنگ اصلی — هم‌اندیس فهرست بالا</summary>
+    public static readonly string?[] CustomPrimaryHexes =
+        { null, "#E53935", "#D81B60", "#8E24AA", "#1A237E", "#0D47A1", "#00695C", "#1B5E20", "#827717", "#E65100", "#4E342E" };
+
+    /// <summary>نام پریست در حال ذخیره — ورودی کاربر</summary>
+    [ObservableProperty]
+    private string? _presetName;
+
+    /// <summary>پریست‌های ذخیره‌شدهٔ کاربر — نام‌ها</summary>
+    public ObservableCollection<string> ThemePresets { get; } = new();
+
+    /// <summary>پریست انتخاب‌شده برای اعمال/حذف</summary>
+    [ObservableProperty]
+    private string? _selectedThemePreset;
+
+    /// <summary>تغییر حالت رنگ آیکون‌ها — اعمال بی‌درنگ (چرخه ۲۴)</summary>
+    partial void OnIconColorModeIndexChanged(int value)
+    {
+        if (_initializing) return;
+        ApplyAppearanceNow();
+    }
+
+    /// <summary>تغییر رنگ اصلی سفارشی — اعمال بی‌درنگ روی کل پوسته (چرخه ۲۴)</summary>
+    partial void OnCustomPrimaryIndexChanged(int value)
+    {
+        if (_initializing) return;
+        ApplyAppearanceNow();
+        // رنگ اصلی پالت متریال هم باید بازاعمال شود (دکمه‌ها/هایلایت‌ها)
+        _theme.ApplyTheme(_theme.CurrentThemeKey, _theme.IsDarkTheme);
+    }
 
     /// <summary>
     /// تایمر ضدبمباران ذخیرهٔ سروری — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
@@ -314,7 +375,7 @@ public partial class SettingsViewModel : ViewModelBase
 
         // چرخه بیستم: مقدار اولیهٔ تنظیمات ظاهری از سرویس تم (اجرای فعلی/ذخیره‌شده)
         IsDarkTheme = _theme.IsDarkTheme;
-        SelectedFont = _theme.Appearance.FontFamilyName;
+        SelectedFont = FontDisplay(_theme.Appearance.FontFamilyName);
         BaseFontSize = _theme.Appearance.BaseFontSize;
         AnimationsEnabled = _theme.Appearance.AnimationsEnabled;
         CurrencyUnitIndex = _theme.Appearance.CurrencyUnit == "Toman" ? 1 : 0;
@@ -331,6 +392,10 @@ public partial class SettingsViewModel : ViewModelBase
         };
         UseCustomRadius = appearance.CardRadiusOverride.HasValue;
         CustomCardRadius = appearance.CardRadiusOverride ?? 8;
+        // چرخه ۲۴: رنگ اصلی سفارشی + حالت رنگ آیکون‌ها + پریست‌ها
+        CustomPrimaryIndex = Math.Max(0, Array.IndexOf(CustomPrimaryHexes, appearance.CustomPrimaryHex));
+        IconColorModeIndex = appearance.IsColorfulIcons ? 1 : 0;
+        LoadThemePresets();
 
         RefreshThemeSelection();
         _initializing = false; // از این‌جا به بعد تغییر‌ها کاربرمبنا و ذخیره‌پذیرند
@@ -649,7 +714,7 @@ public partial class SettingsViewModel : ViewModelBase
     private void ApplyAppearanceNow()
     {
         _theme.ApplyAppearance(new Services.AppearanceSettings(
-            SelectedFont ?? "Vazirmatn",
+            FontKey(SelectedFont),
             BaseFontSize,
             AnimationsEnabled,
             CurrencyUnitIndex == 1 ? "Toman" : "Rial",
@@ -660,7 +725,12 @@ public partial class SettingsViewModel : ViewModelBase
             // گوشهٔ مستقل — فقط وقتی چک‌باکس فعال است
             UseCustomRadius ? Math.Clamp(CustomCardRadius, 0, 24) : null,
             // چگالی مستقل — ۰ از تم، ۱ استاندارد، ۲ فشرده
-            DensityIndex switch { 1 => "Normal", 2 => "Compact", _ => null }));
+            DensityIndex switch { 1 => "Normal", 2 => "Compact", _ => null },
+            // چرخه ۲۴ — رنگ اصلی سفارشی (۰ = همگام با تم) و حالت رنگ آیکون‌ها
+            CustomPrimaryIndex >= 0 && CustomPrimaryIndex < CustomPrimaryHexes.Length
+                ? CustomPrimaryHexes[CustomPrimaryIndex]
+                : null,
+            IconColorModeIndex == 1 ? "Colorful" : "Mono"));
 
         ScheduleThemeSave();
     }
@@ -716,15 +786,158 @@ public partial class SettingsViewModel : ViewModelBase
         {
             ["IsDark"] = IsDarkTheme ? "true" : "false",
             ["Name"] = SelectedThemeKey,
-            ["Font"] = SelectedFont,
+            ["Font"] = FontKey(SelectedFont),
             ["BaseFontSize"] = BaseFontSize.ToString("0"),
             ["Animations"] = AnimationsEnabled ? "true" : "false",
             ["CurrencyUnit"] = CurrencyUnitIndex == 1 ? "Toman" : "Rial",
             // چرخه بیست‌ویکم — سفارشی‌سازی تفکیکی عناصر
             ["SidebarHex"] = SidebarColorIndex > 0 ? SidebarColorHexes[SidebarColorIndex] : "",
             ["CardRadiusOverride"] = UseCustomRadius ? Math.Clamp(CustomCardRadius, 0, 24).ToString() : "",
-            ["DensityOverride"] = DensityIndex switch { 1 => "Normal", 2 => "Compact", _ => "" }
+            ["DensityOverride"] = DensityIndex switch { 1 => "Normal", 2 => "Compact", _ => "" },
+            // چرخه ۲۴ — رنگ اصلی سفارشی و حالت رنگ آیکون‌ها
+            ["CustomPrimaryHex"] = CustomPrimaryIndex > 0 ? CustomPrimaryHexes[CustomPrimaryIndex] : "",
+            ["IconColorMode"] = IconColorModeIndex == 1 ? "Colorful" : "Mono"
         });
+    }
+
+    // ═══ چرخه ۲۴ — پریست‌های شخصی تم (ذخیره/اعمال/حذف) ═══
+    // «تنظیمات شخصی رو بتونیم ذخیره و بعداً استفاده بکنیم» — کل ترکیب فعلی
+    // (تم رنگی + روشن/تیره + فونت/اندازه + همهٔ سفارشی‌سازی‌ها) به‌صورت JSON
+    // در ذخیره‌گاه محلی نگهداری و با یک کلیک بازیابی می‌شود.
+
+    /// <summary>بارگذاری فهرست پریست‌های ذخیره‌شده — از کلیدهای ذخیره‌گاه محلی</summary>
+    private void LoadThemePresets()
+    {
+        try
+        {
+            ThemePresets.Clear();
+            foreach (var key in LocalSettingsStore.Keys().Where(k => k.StartsWith("ThemePreset.", StringComparison.Ordinal)))
+                ThemePresets.Add(key["ThemePreset.".Length..]);
+        }
+        catch
+        {
+            // ذخیره‌گاه محلی نباید جریان را متوقف کند
+        }
+    }
+
+    /// <summary>ذخیرهٔ ترکیب فعلی به‌عنوان پریست با نام دلخواه</summary>
+    [RelayCommand]
+    private void SaveThemePreset()
+    {
+        var name = PresetName?.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            _snackbar.Error("نام پریست را وارد کنید");
+            return;
+        }
+
+        // JSON تمام وجوه ترکیب فعلی — ساده و قابل‌خواندن توسط انسان
+        var json = System.Text.Json.JsonSerializer.Serialize(new ThemePresetData
+        {
+            ThemeKey = SelectedThemeKey,
+            IsDark = IsDarkTheme,
+            Font = SelectedFont,
+            BaseFontSize = BaseFontSize,
+            Animations = AnimationsEnabled,
+            CurrencyToman = CurrencyUnitIndex == 1,
+            SidebarHex = SidebarColorIndex > 0 ? SidebarColorHexes[SidebarColorIndex] : null,
+            CardRadius = UseCustomRadius ? Math.Clamp(CustomCardRadius, 0, 24) : null,
+            Density = DensityIndex switch { 1 => "Normal", 2 => "Compact", _ => null },
+            CustomPrimaryHex = CustomPrimaryIndex > 0 ? CustomPrimaryHexes[CustomPrimaryIndex] : null,
+            ColorfulIcons = IconColorModeIndex == 1
+        });
+        LocalSettingsStore.Set($"ThemePreset.{name}", json);
+        LoadThemePresets();
+        SelectedThemePreset = name;
+        PresetName = string.Empty;
+        _snackbar.Success($"پریست «{name}» ذخیره شد");
+    }
+
+    /// <summary>اعمال پریست انتخاب‌شده — بازگرداندن کل ترکیب ذخیره‌شده</summary>
+    [RelayCommand]
+    private void ApplyThemePreset()
+    {
+        var name = SelectedThemePreset;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            _snackbar.Error("ابتدا یک پریست را از فهرست انتخاب کنید");
+            return;
+        }
+
+        var json = LocalSettingsStore.Get($"ThemePreset.{name}");
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            _snackbar.Error("پریست یافت نشد");
+            return;
+        }
+
+        try
+        {
+            var data = System.Text.Json.JsonSerializer.Deserialize<ThemePresetData>(json);
+            if (data is null)
+            {
+                _snackbar.Error("محتوای پریست قابل خواندن نیست");
+                return;
+            }
+
+            _initializing = true;
+            SelectedThemeKey = data.ThemeKey;
+            IsDarkTheme = data.IsDark;
+            _theme.ApplyTheme(data.ThemeKey, data.IsDark);
+            SelectedFont = data.Font ?? "Vazirmatn";
+            BaseFontSize = data.BaseFontSize is >= 11 and <= 18 ? data.BaseFontSize.Value : 13;
+            AnimationsEnabled = data.Animations;
+            CurrencyUnitIndex = data.CurrencyToman ? 1 : 0;
+            SidebarColorIndex = Math.Max(0, Array.IndexOf(SidebarColorHexes, data.SidebarHex));
+            UseCustomRadius = data.CardRadius.HasValue;
+            CustomCardRadius = data.CardRadius ?? 8;
+            DensityIndex = data.Density switch { "Normal" => 1, "Compact" => 2, _ => 0 };
+            CustomPrimaryIndex = Math.Max(0, Array.IndexOf(CustomPrimaryHexes, data.CustomPrimaryHex));
+            IconColorModeIndex = data.ColorfulIcons ? 1 : 0;
+            _initializing = false;
+
+            // اعمال یکجای کل ترکیب + ذخیره
+            ApplyAppearanceNow();
+            _theme.ApplyTheme(_theme.CurrentThemeKey, _theme.IsDarkTheme);
+            _snackbar.Success($"پریست «{name}» اعمال شد");
+        }
+        catch
+        {
+            _initializing = false;
+            _snackbar.Error("خواندن پریست ناموفق بود");
+        }
+    }
+
+    /// <summary>حذف پریست انتخاب‌شده</summary>
+    [RelayCommand]
+    private void DeleteThemePreset()
+    {
+        var name = SelectedThemePreset;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            _snackbar.Error("ابتدا یک پریست را از فهرست انتخاب کنید");
+            return;
+        }
+        LocalSettingsStore.Remove($"ThemePreset.{name}");
+        LoadThemePresets();
+        SelectedThemePreset = ThemePresets.FirstOrDefault();
+        _snackbar.Success($"پریست «{name}» حذف شد");
+    }
+
+    /// <summary>دادهٔ پریست تم — سازگار با JSON برای ذخیره‌سازی محلی</summary>
+    private sealed class ThemePresetData
+    {
+        public string ThemeKey { get; set; } = "Blue";
+        public bool IsDark { get; set; }
+        public string? Font { get; set; }
+        public double? BaseFontSize { get; set; }
+        public bool Animations { get; set; } = true;
+        public bool CurrencyToman { get; set; }
+        public string? SidebarHex { get; set; }
+        public int? CardRadius { get; set; }
+        public string? Density { get; set; }
+        public string? CustomPrimaryHex { get; set; }
+        public bool ColorfulIcons { get; set; }
     }
 
     /* ─── امنیت ─── */

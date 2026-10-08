@@ -168,10 +168,18 @@
                                 CornerRadius="9" Padding="10,9"
                                 SnapsToDevicePixels="True">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="{Binding Icon}"
-                                                         Width="20" Height="20"
-                                                         Foreground="#DCE9FA"
-                                                         VerticalAlignment="Center" />
+                                <!-- چرخه ۲۴: رنگ آیکون از مبدل حالت رنگی/یکدست — MultiBinding با شمارندهٔ
+                                     نوسازی تا تعویض حالت بدون ری‌استارت اعمال شود -->
+                                <materialDesign:PackIcon Width="20" Height="20"
+                                                         VerticalAlignment="Center"
+                                                         Kind="{Binding Icon}">
+                                    <materialDesign:PackIcon.Foreground>
+                                        <MultiBinding Converter="{StaticResource IconTintMulti}">
+                                            <Binding Path="Icon" />
+                                            <Binding Path="DataContext.IconRefreshTick" RelativeSource="{RelativeSource AncestorType=Window}" />
+                                        </MultiBinding>
+                                    </materialDesign:PackIcon.Foreground>
+                                </materialDesign:PackIcon>
                                 <TextBlock Text="{Binding Title}"
                                            FontSize="13.5"
                                            Foreground="#DCE9FA"
@@ -283,10 +291,16 @@
                                                     Margin="0,2"
                                                     SnapsToDevicePixels="True">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <materialDesign:PackIcon Kind="{Binding Icon}"
-                                                                             Width="20" Height="20"
-                                                                             Foreground="#FFFFFF"
-                                                                             VerticalAlignment="Center" />
+                                                    <materialDesign:PackIcon Width="20" Height="20"
+                                                                             VerticalAlignment="Center"
+                                                                             Kind="{Binding Icon}">
+                                                        <materialDesign:PackIcon.Foreground>
+                                                            <MultiBinding Converter="{StaticResource IconTintMulti}">
+                                                                <Binding Path="Icon" />
+                                                                <Binding Path="DataContext.IconRefreshTick" RelativeSource="{RelativeSource AncestorType=Window}" />
+                                                            </MultiBinding>
+                                                        </materialDesign:PackIcon.Foreground>
+                                                    </materialDesign:PackIcon>
                                                     <!-- عنوان گروه — سفید نیمه‌ضخیم برای تمایز از فرزندان -->
                                                     <TextBlock Text="{Binding Title}"
                                                                FontSize="13.5" FontWeight="SemiBold"
@@ -379,10 +393,16 @@
                                                                         Background="#7FD3FF"
                                                                         Margin="0,0,8,0"
                                                                         VerticalAlignment="Stretch" />
-                                                                <materialDesign:PackIcon Kind="{Binding Icon}"
-                                                                                         Width="17" Height="17"
-                                                                                         Foreground="#9FC7F7"
-                                                                                         VerticalAlignment="Center" />
+                                                                <materialDesign:PackIcon Width="17" Height="17"
+                                                                                         VerticalAlignment="Center"
+                                                                                         Kind="{Binding Icon}">
+                                                                    <materialDesign:PackIcon.Foreground>
+                                                                        <MultiBinding Converter="{StaticResource IconTintMulti}">
+                                                                            <Binding Path="Icon" />
+                                                                            <Binding Path="DataContext.IconRefreshTick" RelativeSource="{RelativeSource AncestorType=Window}" />
+                                                                        </MultiBinding>
+                                                                    </materialDesign:PackIcon.Foreground>
+                                                                </materialDesign:PackIcon>
                                                                 <TextBlock Text="{Binding Title}"
                                                                            FontSize="12.5"
                                                                            Foreground="#BBDEFB"

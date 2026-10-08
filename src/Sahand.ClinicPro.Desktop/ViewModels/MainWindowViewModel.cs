@@ -35,6 +35,15 @@ public partial class MainWindowViewModel : ObservableObject
     /// <summary>کلید صفحهٔ جاری — برای بازسازی صفحه پس از تغییر ظاهر/واحد پول (چرخه بیست‌وسوم)</summary>
     private string _currentPageKey = string.Empty;
 
+    /// <summary>
+    /// شمارندهٔ نوسازی رنگ آیکون‌های منو — چرخه ۲۴ (گزارش هفدهم مالک): با هر تغییر
+    /// تنظیمات ظاهری (به‌ویژه حالت آیکون رنگی/یکدست) این شمارنده زیاد می‌شود و
+    /// MultiBindingهای رنگ آیکون دوباره ارزیابی می‌شوند؛ نتیجه: تعویض حالت
+    /// آیکون بدون ری‌استارت بی‌درنگ روی منو می‌نشیند.
+    /// </summary>
+    [ObservableProperty]
+    private int _iconRefreshTick;
+
     /// <summary>آیتم ناوبری انتخاب‌شده</summary>
     [ObservableProperty]
     private NavItem? _selectedNav;
@@ -136,6 +145,11 @@ public partial class MainWindowViewModel : ObservableObject
         // رندر شوند — بی‌نیاز از ری‌استارت برنامه.
         _theme.AppearanceChanged += (_, _) =>
         {
+            // چرخه ۲۴: نوسازی رنگ آیکون‌های منو — شمارنده با هر تغییر ظاهری زیاد
+            // می‌شود و MultiBindingهای رنگ آیکون دوباره ارزیابی می‌شوند (حالت
+            // آیکون رنگی/یکدست بی‌درنگ عوض می‌شود — بدون ری‌استارت)
+            IconRefreshTick++;
+
             if (string.IsNullOrEmpty(_currentPageKey))
                 return;
             NavigateToPage(_currentPageKey);

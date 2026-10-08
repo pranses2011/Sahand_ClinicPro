@@ -76,6 +76,15 @@ public partial class App : System.Windows.Application
         window.SetValue(FontHookedProperty, true);
         window.SetResourceReference(Window.FontFamilyProperty, "App.FontFamily");
         window.SetResourceReference(Window.FontSizeProperty, "App.BaseFontSize");
+
+        // ═══ چرخه بیست‌وچهارم — مقیاس سراسری رابط ═══ «اندازهٔ فونت فقط صفحهٔ تم
+        // را تغییر می‌داد»: پنجرهٔ اصلی، محتوایش به تبدیل مقیاس پویا وصل می‌شود
+        // تا تغییر اندازهٔ فونت، همهٔ عناصر برنامه را هماهنگ بزرگ/کوچک کند (زوم
+        // پیوسته مثل مرورگر). پنجره‌های دیالوگ اندازهٔ ثابت دارند و مقیاس متنشان
+        // از همان FontSize ارثی تأمین می‌شود تا فرم‌ها بریده نشوند.
+        if (window is MainWindow && window.Content is FrameworkElement rootContent)
+            rootContent.SetResourceReference(
+                FrameworkElement.LayoutTransformProperty, "App.FontScaleTransform");
     }
 
     /// <summary>پرچم جلوگیری از وصل‌شدن دوبارهٔ فونت به همان پنجره</summary>

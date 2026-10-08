@@ -32,6 +32,12 @@
                  محصول‌اند (وزیرمتن ۱۳ / گوشهٔ ۸ / چگالی استاندارد). -->
             <FontFamily x:Key="App.FontFamily">pack://application:,,,/Assets/Fonts/#Vazirmatn</FontFamily>
             <system:Double x:Key="App.BaseFontSize">13</system:Double>
+            <!-- ═══ چرخه ۲۴ — مقیاس سراسری فونت/رابط ═══ «اندازهٔ فونت فقط صفحهٔ تم را
+                 تغییر می‌داد نه کل برنامه را» — این تبدیل روی محتوای پنجرهٔ اصلی
+                 اعمال می‌شود و همه‌چیز (متن/آیکون/فاصله‌ها) هماهنگ و پیوسته مقیاس
+                 می‌گیرد؛ مقدار پایه = BaseFontSize ÷ ۱۳ و از سوی ThemeService
+                 بازنویسی می‌شود (مثل زوم مرورگر). -->
+            <ScaleTransform x:Key="App.FontScaleTransform" ScaleX="1" ScaleY="1" />
             <CornerRadius x:Key="App.CardRadius">8</CornerRadius>
             <Thickness x:Key="App.CardPadding">20</Thickness>
             <system:Boolean x:Key="App.AnimationsEnabled">True</system:Boolean>
@@ -141,6 +147,9 @@
             <converters:SectionToVisibilityConverter x:Key="SectionToVisibility" />
             <!-- چرخه بیست‌وسوم: مبدل سراسری ارقام فارسی — همهٔ ستون‌های جدول‌ها -->
             <converters:PersianDigitsConverter x:Key="PersianDigits" />
+            <!-- چرخه ۲۴: مبدل رنگ آیکون‌های منو (حالت رنگی/یکدست) -->
+            <converters:IconTintConverter x:Key="IconTint" />
+            <converters:IconTintMultiConverter x:Key="IconTintMulti" />
             <!-- چرخه بیست‌وسوم: مبدل bool → «فعال/غیرفعال» فارسی — ستون وضعیت بیمه/تعرفه -->
             <converters:BoolToFaTextConverter x:Key="BoolToFaText" />
             <converters:CurrencyRialConverter x:Key="CurrencyRial" />

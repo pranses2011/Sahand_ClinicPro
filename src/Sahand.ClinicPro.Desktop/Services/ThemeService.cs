@@ -84,7 +84,23 @@ public class ThemeService : IThemeService
         // پالت رنگی — کلید نامعتبر به پیش‌فرض آبی برمی‌گردد
         var picked = Catalog.FirstOrDefault(t =>
             string.Equals(t.Key, themeKey, StringComparison.OrdinalIgnoreCase)) ?? Blue;
-        theme.SetPrimaryColor(picked.PrimaryColor);
+
+        // ═══ چرخه ۲۴ — رنگ اصلی سفارشی کاربر مقدم بر رنگ تم است («شخصی‌سازی
+        // تک‌تک عناصر»)؛ مقدار نامعتبر به رنگ تم برمی‌گردد
+        var primary = picked.PrimaryColor;
+        if (!string.IsNullOrWhiteSpace(_appearance.CustomPrimaryHex))
+        {
+            try
+            {
+                primary = (System.Windows.Media.Color)System.Windows.Media.ColorConverter
+                    .ConvertFromString(_appearance.CustomPrimaryHex);
+            }
+            catch
+            {
+                primary = picked.PrimaryColor;
+            }
+        }
+        theme.SetPrimaryColor(primary);
         theme.SetSecondaryColor((System.Windows.Media.Color)System.Windows.Media.ColorConverter
             .ConvertFromString(picked.SecondaryHex));
 
@@ -200,6 +216,14 @@ public class ThemeService : IThemeService
         // اندازهٔ پایهٔ متن — عناصر بدون اندازهٔ صریح ارث می‌برند
         resources["App.BaseFontSize"] = _appearance.BaseFontSize;
 
+        // ═══ چرخه ۲۴ — مقیاس سراسری فونت ═══ «اندازهٔ فونت فقط صفحهٔ تم را تغییر
+        // می‌داد نه کل برنامه را»: علاوه بر اندازهٔ پایهٔ متنی، یک ScaleTransform
+        // پویا (App.FontScaleTransform) روی محتوای پنجرهٔ اصلی اعمال می‌شود تا
+        // همهٔ عناصر (حتی آنهایی که اندازهٔ صریح دارند) هماهنگ مقیاس بگیرند —
+        // تجربه‌ای مثل زوم مرورگر؛ ۱۳ = اندازهٔ پایه (مقیاس ۱).
+        var fontScale = Math.Clamp(_appearance.BaseFontSize / 13.0, 0.85, 1.6);
+        resources["App.FontScaleTransform"] = new System.Windows.Media.ScaleTransform(fontScale, fontScale);
+
         // انیمیشن‌ها — منبع سراسری برای رفتارهای رابط
         resources["App.AnimationsEnabled"] = _appearance.AnimationsEnabled;
 
@@ -218,6 +242,11 @@ public class ThemeService : IThemeService
             resources["App.CardPadding"] = new Thickness(
                 compact ? 12 : 20, compact ? 9 : 20, compact ? 12 : 20, compact ? 9 : 20);
         }
+
+        // ═══ چرخه ۲۴ — حالت رنگ آیکون‌ها (یکدست/رنگی) به‌صورت منبع پویا؛
+        // IconTintConverter این منبع را می‌خواند و رنگ آیکون منو را تعیین می‌کند
+        resources["App.IconColorMode"] = _appearance.IconColorMode;
+
         // رنگ منوی کناری — بازاعمال بی‌درنگ (سفارشی یا همگام با تم)
         var picked = Catalog.FirstOrDefault(t =>
             string.Equals(t.Key, _currentThemeKey, StringComparison.OrdinalIgnoreCase)) ?? Blue;
@@ -234,6 +263,9 @@ public class ThemeService : IThemeService
             LocalSettingsStore.Set("CardRadiusOverride",
                 _appearance.CardRadiusOverride is { } r2 ? r2.ToString() : "");
             LocalSettingsStore.Set("DensityOverride", _appearance.DensityOverride ?? "");
+            // چرخه ۲۴: دو تنظیم مستقل جدید — رنگ اصلی سفارشی و حالت رنگ آیکون‌ها
+            LocalSettingsStore.Set("CustomPrimaryHex", _appearance.CustomPrimaryHex ?? "");
+            LocalSettingsStore.Set("IconColorMode", _appearance.IconColorMode);
         }
         catch
         {
@@ -259,6 +291,9 @@ public class ThemeService : IThemeService
             var sidebarHex = LocalSettingsStore.Get("SidebarHex");
             var radiusOvr = LocalSettingsStore.Get("CardRadiusOverride");
             var densityOvr = LocalSettingsStore.Get("DensityOverride");
+            // چرخه ۲۴: رنگ اصلی سفارشی + حالت رنگ آیکون‌ها
+            var customPrimary = LocalSettingsStore.Get("CustomPrimaryHex");
+            var iconMode = LocalSettingsStore.Get("IconColorMode");
             return new AppearanceSettings(
                 string.IsNullOrWhiteSpace(font) ? "Vazirmatn" : font,
                 double.TryParse(size, System.Globalization.NumberStyles.Any,
@@ -268,7 +303,10 @@ public class ThemeService : IThemeService
                 // رشتهٔ خالی یعنی «همگام با تم»
                 string.IsNullOrWhiteSpace(sidebarHex) ? null : sidebarHex,
                 int.TryParse(radiusOvr, out var r) && r is >= 0 and <= 24 ? r : null,
-                string.IsNullOrWhiteSpace(densityOvr) ? null : densityOvr);
+                string.IsNullOrWhiteSpace(densityOvr) ? null : densityOvr,
+                // چرخه ۲۴ — رنگ اصلی سفارشی و حالت رنگ آیکون‌ها
+                string.IsNullOrWhiteSpace(customPrimary) ? null : customPrimary,
+                string.Equals(iconMode, "Colorful", StringComparison.OrdinalIgnoreCase) ? "Colorful" : "Mono");
         }
         catch
         {
@@ -277,11 +315,31 @@ public class ThemeService : IThemeService
     }
 
     /// <summary>
-    /// تبدیل نام فونت به FontFamily — Vazirmatn جاسازی‌شده در exe است؛
-    /// بقیهٔ نام‌ها فونت‌های نصب‌شدهٔ ویندوز (Tahoma/Segoe UI/…)
+    /// تبدیل نام فونت به FontFamily — چرخه بیست‌وچهارم (گزارش هفدهم مالک):
+    /// «فونت وزیرمتن اعمال نمی‌شود اما فونت‌های ویندوزی اعمال می‌شوند».
+    /// ریشه: FontFamily ساخته‌شده از رشتهٔ pack-URI با سازندهٔ تک‌رشته‌ای در
+    /// «کد پشت» منبع جاسازی‌شده را بازنمی‌یابد (برخلاف BAML که زمینهٔ BaseUri
+    /// دارد) و WPF بی‌صدا به فونت پیش‌فرض می‌افتید. اکنون کارخانهٔ FontAssets
+    /// با الگوی رسمی دوسطری (BaseUri + نام نسبی) فونت جاسازی‌شده را می‌سازد.
     /// </summary>
     private static System.Windows.Media.FontFamily ResolveFontFamily(string? name)
         => string.IsNullOrWhiteSpace(name) || name == "Vazirmatn"
-            ? new System.Windows.Media.FontFamily("pack://application:,,,/Assets/Fonts/#Vazirmatn")
+            ? Helpers.FontAssets.Vazirmatn
             : new System.Windows.Media.FontFamily(name);
+
+    /// <summary>
+    /// فهرست فونت‌های قابل انتخاب — چرخه ۲۴: فونت‌های «درون برنامه» از فونت‌های
+    /// ویندوزی متمایز می‌شوند تا کاربر بتواند وزیرمتن را از میان فهرست بلند
+    /// ویندوز به‌سرعت تشخیص دهد (گزارش هفدهم مالک: «فونت‌های درون برنامه از
+    /// فونت‌های ویندوزی متمایز باشند تا قابل تشخیص باشند»).
+    /// </summary>
+    public static IReadOnlyList<(string Name, string DisplayName, bool IsBuiltIn)> FontCatalog()
+    {
+        // فونت‌های جاسازی‌شدهٔ خود برنامه — همیشه اول فهرست با نشان ویژه
+        var builtIn = new List<(string, string, bool)>
+        {
+            ("Vazirmatn", "وزیرمتن (فونت برنامه)", true),
+        };
+        return builtIn;
+    }
 }

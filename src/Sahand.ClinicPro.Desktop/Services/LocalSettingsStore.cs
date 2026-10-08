@@ -22,6 +22,44 @@ public static class LocalSettingsStore
         }
     }
 
+    /// <summary>همهٔ کلیدهای ذخیره‌شده — برای فهرست‌ها (مثل پریست‌های تم چرخه ۲۴)</summary>
+    public static List<string> Keys()
+    {
+        try
+        {
+            if (!File.Exists(SettingsPath))
+                return new List<string>();
+            var json = File.ReadAllText(SettingsPath);
+            var doc = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+            return doc?.Keys.ToList() ?? new List<string>();
+        }
+        catch
+        {
+            return new List<string>();
+        }
+    }
+
+    /// <summary>حذف یک کلید — برای حذف پریست تم (چرخه ۲۴)</summary>
+    public static void Remove(string key)
+    {
+        try
+        {
+            if (!File.Exists(SettingsPath))
+                return;
+            var json = File.ReadAllText(SettingsPath);
+            var doc = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+            if (doc is null || !doc.Remove(key))
+                return;
+            File.WriteAllText(SettingsPath,
+                System.Text.Json.JsonSerializer.Serialize(doc,
+                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch
+        {
+            // حذف ناموفق هرگز نباید جریان را متوقف کند
+        }
+    }
+
     /// <summary>خواندن یک مقدار رشته‌ای — تهی در نبود</summary>
     public static string Get(string key)
     {

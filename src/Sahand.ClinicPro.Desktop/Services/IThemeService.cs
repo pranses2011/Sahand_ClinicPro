@@ -50,6 +50,8 @@ public sealed record AppTheme(
 /// <param name="SidebarHex">رنگ منوی کناری — تهی یعنی همگام با رنگ تم (چرخه بیست‌ویکم)</param>
 /// <param name="CardRadiusOverride">شعاع گوشهٔ مستقل — تهی یعنی از تم (چرخه بیست‌ویکم)</param>
 /// <param name="DensityOverride">چگالی مستقل — تهی یعنی از تم؛ Compact یا Normal (چرخه بیست‌ویکم)</param>
+/// <param name="CustomPrimaryHex">رنگ اصلی سفارشی — تهی یعنی از تم (چرخه ۲۴)</param>
+/// <param name="IconColorMode">حالت رنگ آیکون‌ها — Mono (یکدست) یا Colorful (رنگی) — چرخه ۲۴</param>
 public sealed record AppearanceSettings(
     string FontFamilyName = "Vazirmatn",
     double BaseFontSize = 13,
@@ -57,10 +59,16 @@ public sealed record AppearanceSettings(
     string CurrencyUnit = "Rial",
     string? SidebarHex = null,
     int? CardRadiusOverride = null,
-    string? DensityOverride = null)
+    string? DensityOverride = null,
+    string? CustomPrimaryHex = null,
+    string IconColorMode = "Mono")
 {
     /// <summary>متن واحد پول — «ریال» یا «تومان»</summary>
     public string CurrencyLabel => CurrencyUnit == "Toman" ? "تومان" : "ریال";
+
+    /// <summary>حالت رنگی آیکون‌ها فعال است؟ — چرخه ۲۴</summary>
+    public bool IsColorfulIcons =>
+        string.Equals(IconColorMode, "Colorful", StringComparison.OrdinalIgnoreCase);
 }
 
 /// <summary>
