@@ -217,7 +217,7 @@ public partial class TimePicker : UserControl
     private static void HighlightBox(Button? box, TextBlock? text, bool isActive, Brush primary, Brush? activeBg)
     {
         if (box?.Template?.FindName("Bd", box) is not Border bd) return;
-        var idleBg = box.TryFindResource("MaterialDesign.Brush.TextField.HoverBackground") as Brush;
+        var idleBg = box.TryFindResource("MaterialDesign.Brush.TextBox.HoverBackground") as Brush;
         bd.Background = isActive ? activeBg ?? Brushes.Transparent : idleBg ?? Brushes.Transparent;
         if (text is not null)
         {

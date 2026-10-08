@@ -29,53 +29,99 @@
                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
 
         <TabControl Grid.Row="2" Style="{StaticResource MaterialDesignTabControl}">
+            <!-- ═══ تب بیمه‌ها — چرخه بیست‌وسوم (گزارش شانزدهم مالک): «بتوان بیمه جدید
+                 تعریف کرد و یا بیمه‌های موجود را ویرایش کرد» — نوار ابزار + ستون نوع/وضعیت ═══ -->
             <TabItem Header="🏦 شرکت‌های بیمه">
-                <DataGrid ItemsSource="{Binding Companies}" AutoGenerateColumns="False" CanUserAddRows="False"
-                          IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="نام شرکت" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
-                        <DataGridTextColumn Header="کد" Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="Consolas" />
-                        <DataGridTextColumn Header="درصد پوشش" Width="110">
-                            <DataGridTextColumn.Binding>
-                                <Binding Path="CoveragePercent" StringFormat="{}{0:N0}٪" />
-                            </DataGridTextColumn.Binding>
-                        </DataGridTextColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,8">
+                        <Button Command="{Binding NewCompanyCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Plus" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="بیمهٔ جدید" Margin="7,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding EditCompanyCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="ویرایش بیمهٔ انتخاب‌شده" Margin="7,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <DataGrid ItemsSource="{Binding Companies}" SelectedItem="{Binding SelectedCompany}"
+                              AutoGenerateColumns="False" CanUserAddRows="False"
+                              IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="نام شرکت" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="کد" Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="100" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="نوع" Binding="{Binding TypeName, Converter={StaticResource PersianDigits}}" Width="100" />
+                            <DataGridTextColumn Header="درصد پوشش" Width="100">
+                                <DataGridTextColumn.Binding>
+                                    <Binding Path="CoveragePercent" StringFormat="{}{0:N0}٪" />
+                                </DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+                            <!-- وضعیت فعال — متن فارسی از خاصیت محاسبه‌شدهٔ رکورد -->
+                            <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="90" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
             </TabItem>
 
+            <!-- ═══ تب تعرفه‌ها — چرخه بیست‌وسوم: «بتوان تعرفه جدید تعریف کرد و یا
+                 تعرفه‌های موجود را ویرایش کرد» — نوار ابزار + ستون وضعیت ═══ -->
             <TabItem Header="💲 تعرفه‌ها">
-                <DataGrid ItemsSource="{Binding Tariffs}" AutoGenerateColumns="False" CanUserAddRows="False"
-                          IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="کد خدمت" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="Consolas" />
-                        <DataGridTextColumn Header="نام خدمت" Binding="{Binding ServiceName, Converter={StaticResource PersianDigits}}" Width="*" />
-                        <DataGridTextColumn Header="قیمت آزاد (ریال)" Width="130">
-                            <DataGridTextColumn.Binding><Binding Path="Price" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock"><Setter Property="FontFamily" Value="Consolas" /></Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-                        <DataGridTextColumn Header="سهم بیمه (ریال)" Width="130">
-                            <DataGridTextColumn.Binding><Binding Path="InsuranceShare" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="FontFamily" Value="Consolas" />
-                                    <Setter Property="Foreground" Value="#2E7D32" />
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-                        <DataGridTextColumn Header="سهم بیمار (ریال)" Width="130">
-                            <DataGridTextColumn.Binding><Binding Path="PatientShare" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="FontFamily" Value="Consolas" />
-                                    <Setter Property="Foreground" Value="#C62828" />
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,8">
+                        <Button Command="{Binding NewTariffCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Plus" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="تعرفهٔ جدید" Margin="7,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding EditTariffCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="ویرایش تعرفهٔ انتخاب‌شده" Margin="7,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <DataGrid ItemsSource="{Binding Tariffs}" SelectedItem="{Binding SelectedTariff}"
+                              AutoGenerateColumns="False" CanUserAddRows="False"
+                              IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="کد خدمت" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="نام خدمت" Binding="{Binding ServiceName, Converter={StaticResource PersianDigits}}" Width="*" />
+                            <DataGridTextColumn Header="قیمت آزاد (ریال)" Width="130">
+                                <DataGridTextColumn.Binding><Binding Path="Price" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock"><Setter Property="FontFamily" Value="Consolas" /></Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="سهم بیمه (ریال)" Width="130">
+                                <DataGridTextColumn.Binding><Binding Path="InsuranceShare" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontFamily" Value="Consolas" />
+                                        <Setter Property="Foreground" Value="#2E7D32" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="سهم بیمار (ریال)" Width="130">
+                                <DataGridTextColumn.Binding><Binding Path="PatientShare" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontFamily" Value="Consolas" />
+                                        <Setter Property="Foreground" Value="#C62828" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="90" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
             </TabItem>
 
             <TabItem Header="📋 مطالبات">

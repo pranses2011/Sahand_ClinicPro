@@ -6,11 +6,26 @@ using Sahand.ClinicPro.Desktop.Services;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
-/// <summary>ردیف شرکت بیمه</summary>
-public record CompanyRow(long Id, string Name, string? Code, decimal CoveragePercent);
+/// <summary>
+/// ردیف شرکت بیمه — چرخه بیست‌وسوم (گزارش شانزدهم مالک): فیلدهای Type/TypeName/IsActive
+/// برای «تعریف بیمه جدید + ویرایش بیمه‌های موجود» افزوده شد
+/// </summary>
+public record CompanyRow(long Id, string Name, string? Code, decimal CoveragePercent,
+    int Type = 4, string TypeName = "خصوصی", bool IsActive = true)
+{
+    /// <summary>متن فارسی وضعیت برای ستون گرید — بدون نیاز به مبدل (قابل‌حل بودن استاتیک XAML)</summary>
+    public string StatusText => IsActive ? "فعال" : "غیرفعال";
+}
 
-/// <summary>ردیف تعرفه</summary>
-public record TariffRow(string Code, string ServiceName, decimal Price, decimal InsuranceShare, decimal PatientShare);
+/// <summary>
+/// ردیف تعرفه — چرخه بیست‌وسوم: فیلد Id برای ویرایش و فیلد IsActive افزوده شد
+/// </summary>
+public record TariffRow(long Id, string Code, string ServiceName, decimal Price,
+    decimal InsuranceShare, decimal PatientShare, bool IsActive = true)
+{
+    /// <summary>متن فارسی وضعیت برای ستون گرید — بدون نیاز به مبدل</summary>
+    public string StatusText => IsActive ? "فعال" : "غیرفعال";
+}
 
 /// <summary>ردیف مطالبه</summary>
 public record ClaimRow(long Id, string? ClaimNumber, string InsuranceName,
@@ -54,8 +69,16 @@ public partial class InsuranceViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<CompanyRow> _companies = new();
 
+    /// <summary>شرکت بیمه انتخاب‌شده — برای ویرایش (چرخه بیست‌وسوم)</summary>
+    [ObservableProperty]
+    private CompanyRow? _selectedCompany;
+
     /// <summary>تعرفه‌ها</summary>
     public ObservableCollection<TariffRow> Tariffs { get; } = new();
+
+    /// <summary>تعرفهٔ انتخاب‌شده — برای ویرایش (چرخه بیست‌وسوم)</summary>
+    [ObservableProperty]
+    private TariffRow? _selectedTariff;
 
     /// <summary>مطالبات</summary>
     [ObservableProperty]
@@ -122,16 +145,19 @@ public partial class InsuranceViewModel : ViewModelBase
     {
         IsBusy = true;
 
-        var companies = await _api.GetAsync<CompaniesResponse>("lookups/insurance-companies");
+        // چرخه بیست‌وسوم (گزارش شانزدهم مالک): بیمه‌ها از اندپوینت مدیریت خوانده
+        // می‌شوند تا نوع/وضعیت هم برای ویرایش در دسترس باشد (شامل غیرفعال‌ها)
+        var companies = await _api.GetAsync<CompaniesManageResponse>("insurance/companies/manage");
         Companies = new ObservableCollection<CompanyRow>(
-            (companies?.Data ?? new List<CompanyDto>()).Select(c =>
-                new CompanyRow(c.Id, c.Name, c.Code, 70m)));
+            (companies?.Data ?? new List<CompanyManageDto>()).Select(c =>
+                new CompanyRow(c.Id, c.Name, c.Code, c.CoveragePercent, c.Type, c.TypeName, c.IsActive)));
 
-        var services = await _api.GetAsync<InvoiceFormViewModel.ServicesResponse>("lookups/services");
+        // تعرفه‌ها هم از اندپوینت مدیریت — شامل Id برای ویرایش
+        var services = await _api.GetAsync<ServicesManageResponse>("lookups/services/manage");
         Tariffs.Clear();
-        foreach (var s in services?.Data ?? new List<InvoiceFormViewModel.ServiceDto>())
-            Tariffs.Add(new TariffRow(s.ServiceCode ?? "—", s.ServiceName,
-                s.Price, s.InsuranceShare, s.PatientShare));
+        foreach (var s in services?.Data ?? new List<ServiceTariffManageDto>())
+            Tariffs.Add(new TariffRow(s.Id, s.ServiceCode ?? "—", s.ServiceName,
+                s.Price, s.InsuranceShare, s.PatientShare, s.IsActive));
 
         var claims = await _api.GetAsync<ClaimsResponse>("insurance/claims");
         Claims = new ObservableCollection<ClaimRow>(
@@ -163,6 +189,73 @@ public partial class InsuranceViewModel : ViewModelBase
         var ok = await _api.PostAsync("insurance/claims", new { insuranceCompanyId = company.Id });
         if (ok) { _snackbar.Success("مطالبه دوره‌ای ایجاد شد"); await LoadAsync(); }
         else _snackbar.Error(_api.LastError ?? "ایجاد مطالبه ناموفق بود");
+    }
+
+    /* ═══ مدیریت بیمه‌ها و تعرفه‌ها — چرخه بیست‌وسوم (گزارش شانزدهم مالک) ═══
+       «در صفحه بیمه، بتوان بیمه جدید تعریف کرد و یا بیمه‌های موجود را ویرایش کرد»
+       «در صفحه بیمه، بتوان تعرفه جدید تعریف کرد و یا تعرفه‌های موجود را ویرایش کرد»
+       — فرم‌های مدیریتی مودال باز می‌شوند و پس از ذخیرهٔ موفق، فهرست تازه می‌شود */
+
+    /// <summary>باز کردن فرم بیمهٔ جدید</summary>
+    [RelayCommand]
+    private void NewCompany()
+    {
+        var form = new CompanyFormViewModel(_api, null);
+        var window = new Views.CompanyFormWindow(form)
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+        window.ShowDialog();
+        _ = LoadAsync(); // در هر حالت (ذخیره یا انصراف) فهرست تازه می‌شود
+    }
+
+    /// <summary>باز کردن فرم ویرایش بیمهٔ انتخاب‌شده</summary>
+    [RelayCommand]
+    private void EditCompany()
+    {
+        if (SelectedCompany is null)
+        {
+            _snackbar.Error("ابتدا یک شرکت بیمه از جدول انتخاب کنید");
+            return;
+        }
+        var form = new CompanyFormViewModel(_api, SelectedCompany);
+        var window = new Views.CompanyFormWindow(form)
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+        window.ShowDialog();
+        _ = LoadAsync();
+    }
+
+    /// <summary>باز کردن فرم تعرفهٔ جدید</summary>
+    [RelayCommand]
+    private void NewTariff()
+    {
+        var form = new TariffFormViewModel(_api, null);
+        var window = new Views.TariffFormWindow(form)
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+        window.ShowDialog();
+        _ = LoadAsync();
+    }
+
+    /// <summary>باز کردن فرم ویرایش تعرفهٔ انتخاب‌شده</summary>
+    [RelayCommand]
+    private void EditTariff()
+    {
+        if (SelectedTariff is null)
+        {
+            _snackbar.Error("ابتدا یک خدمت/تعرفه از جدول انتخاب کنید");
+            return;
+        }
+        var form = new TariffFormViewModel(_api, SelectedTariff);
+        var window = new Views.TariffFormWindow(form)
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+        window.ShowDialog();
+        _ = LoadAsync();
     }
 
     /* ─── تسویه حساب بیمه — چرخه ۱۳ (درخواست ۲-۱) ─── */
@@ -282,6 +375,46 @@ public partial class InsuranceViewModel : ViewModelBase
         public long Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Code { get; set; }
+    }
+
+    // ═══ چرخه بیست‌وسوم (گزارش شانزدهم مالک): پاسخ اندپوینت مدیریت بیمه‌ها ═══
+
+    /// <summary>پاکت پاسخ فهرست بیمه‌ها برای مدیریت</summary>
+    public sealed class CompaniesManageResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<CompanyManageDto>? Data { get; set; }
+    }
+
+    /// <summary>ردیف بیمه در پنجرهٔ مدیریت — با نوع/درصد پوشش/وضعیت</summary>
+    public sealed class CompanyManageDto
+    {
+        public long Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Code { get; set; }
+        public int Type { get; set; }
+        public string TypeName { get; set; } = string.Empty;
+        public decimal CoveragePercent { get; set; }
+        public bool IsActive { get; set; }
+    }
+
+    /// <summary>پاکت پاسخ فهرست تعرفه‌ها برای مدیریت</summary>
+    public sealed class ServicesManageResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<ServiceTariffManageDto>? Data { get; set; }
+    }
+
+    /// <summary>ردیف خدمت/تعرفه در پنجرهٔ مدیریت</summary>
+    public sealed class ServiceTariffManageDto
+    {
+        public long Id { get; set; }
+        public string? ServiceCode { get; set; }
+        public string ServiceName { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public decimal InsuranceShare { get; set; }
+        public decimal PatientShare { get; set; }
+        public bool IsActive { get; set; }
     }
 
     public sealed class ClaimsResponse

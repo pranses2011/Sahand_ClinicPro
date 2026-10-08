@@ -152,4 +152,74 @@ public class LookupsController : ApiBaseController
         var result = await _mediator.Send(new GetServicesQuery(search));
         return ToResponse(result);
     }
+
+    // ═══ چرخه بیست‌وسوم (گزارش شانزدهم مالک): مدیریت تعرفه‌ها ═══
+    // «در صفحه بیمه، بتوان تعرفه جدید تعریف کرد و یا تعرفه‌های موجود را ویرایش کرد»
+    // — چهار endpoint زیر به پنجرهٔ مدیریت تعرفه‌های صفحهٔ بیمه سرویس می‌دهند.
+    // نوشتن دادهٔ مرجع نیازمند نقش مدیریتی است؛ خواندن برای همه باقی می‌ماند.
+
+    /// <summary>فهرست کامل خدمت‌های تعرفه‌دار شامل غیرفعال — پنجرهٔ مدیریت تعرفه‌ها</summary>
+    [HttpGet("services/manage")]
+    public async Task<IActionResult> GetServicesForManage()
+    {
+        var result = await _mediator.Send(new GetServicesTariffsForManageQuery());
+        return ToResponse(result);
+    }
+
+    /// <summary>ساخت خدمت تعرفه‌دار جدید (خدمت + ردیف تعرفهٔ آزاد سال جاری)</summary>
+    /// <param name="request">داده خدمت/تعرفه</param>
+    [HttpPost("services")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> CreateService([FromBody] SaveServiceTariffRequest request)
+    {
+        var result = await _mediator.Send(new CreateServiceTariffCommand(
+            request.ServiceName, request.ServiceCode, request.Price,
+            request.InsuranceShare, request.PatientShare));
+        return ToResponse(result, "خدمت/تعرفه ثبت شد");
+    }
+
+    /// <summary>ویرایش خدمت تعرفه‌دار — تعرفهٔ آزاد سال جاری upsert می‌شود</summary>
+    /// <param name="id">شناسه خدمت</param>
+    /// <param name="request">داده خدمت/تعرفه</param>
+    [HttpPut("services/{id:long}")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> UpdateService(long id, [FromBody] SaveServiceTariffRequest request)
+    {
+        var result = await _mediator.Send(new UpdateServiceTariffCommand(
+            id, request.ServiceName, request.ServiceCode, request.Price,
+            request.InsuranceShare, request.PatientShare, request.IsActive));
+        return ToResponse(result, "خدمت/تعرفه به‌روزرسانی شد");
+    }
+
+    /// <summary>غیرفعال‌سازی (حذف نرم) خدمت — سوابق فاکتور حفظ می‌شوند</summary>
+    /// <param name="id">شناسه خدمت</param>
+    [HttpDelete("services/{id:long}")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> DeactivateService(long id)
+    {
+        var result = await _mediator.Send(new DeactivateServiceCommand(id));
+        return ToResponse(result, "خدمت غیرفعال شد");
+    }
+}
+
+/// <summary>بدنهٔ درخواست ساخت/ویرایش خدمت تعرفه‌دار — چرخه بیست‌وسوم</summary>
+public sealed class SaveServiceTariffRequest
+{
+    /// <summary>نام خدمت</summary>
+    public string ServiceName { get; set; } = string.Empty;
+
+    /// <summary>کد خدمت — یکتا اگر داده شود</summary>
+    public string? ServiceCode { get; set; }
+
+    /// <summary>قیمت تعرفه‌ای</summary>
+    public decimal Price { get; set; }
+
+    /// <summary>درصد سهم بیمه (۰-۱۰۰)</summary>
+    public decimal InsuranceShare { get; set; }
+
+    /// <summary>درصد سهم بیمار (۰-۱۰۰)</summary>
+    public decimal PatientShare { get; set; }
+
+    /// <summary>وضعیت فعال — در ویرایش معنا دارد</summary>
+    public bool IsActive { get; set; } = true;
 }

@@ -136,9 +136,12 @@ public sealed class ReportPdfService
                     });
 
                     // کارت‌های خلاصه — چهار کارت در هر ردیف — چرخه بیست‌وسوم رفع CS0618:
-                    // عنصر Grid از نسخهٔ 2022.11 منسوخ شده؛ چیدمان معادل با Table:
-                    // ۴ ستون محتوا با ستون‌های فاصلهٔ ۵ امتیازی میان‌شان و نشستن
-                    // تک‌تک کارت‌ها با مختصات صریح ستون/سطر
+                    // عنصر Grid از نسخهٔ 2022.11 منسوخ شده؛ چیدمان معادل با Table.
+                    // نکتهٔ مهم (رفع رگرسیون چرخه ۲۳): مختصات صریح Column/Row در Table
+                    // جدید با سلول‌های خودکارِ سایر بخش‌ها «تداخل قید اندازه» می‌سازد و
+                    // DocumentLayoutException می‌داد؛ چیدمان خودکارِ ترتیبی همانند Grid
+                    // قبلی به‌کار رفت (۴ ستون هم‌عرض و پرشدن خودکار ردیف‌ها) و
+                    // فاصله‌ساز ۵ امتیادی Grid با Padding داخلی هر سلول شبیه‌سازی شد.
                     if (model.Summary.Count > 0)
                     {
                         col.Item().PaddingBottom(10).Table(t =>
@@ -146,17 +149,13 @@ public sealed class ReportPdfService
                             t.ColumnsDefinition(c =>
                             {
                                 c.RelativeColumn();
-                                c.ConstantColumn(5);
                                 c.RelativeColumn();
-                                c.ConstantColumn(5);
                                 c.RelativeColumn();
-                                c.ConstantColumn(5);
                                 c.RelativeColumn();
                             });
-                            for (var index = 0; index < model.Summary.Count; index++)
+                            foreach (var s in model.Summary)
                             {
-                                var s = model.Summary[index];
-                                t.Cell().Column((uint)(index % 4) * 2).Row((uint)(index / 4))
+                                t.Cell().Padding(2.5f)
                                     .Background("#E3F2FD").Border(1).BorderColor("#BBDEFB")
                                     .CornerRadius(4).Padding(6).Column(c =>
                                     {

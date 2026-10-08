@@ -131,6 +131,8 @@
             <converters:SectionToVisibilityConverter x:Key="SectionToVisibility" />
             <!-- چرخه بیست‌وسوم: مبدل سراسری ارقام فارسی — همهٔ ستون‌های جدول‌ها -->
             <converters:PersianDigitsConverter x:Key="PersianDigits" />
+            <!-- چرخه بیست‌وسوم: مبدل bool → «فعال/غیرفعال» فارسی — ستون وضعیت بیمه/تعرفه -->
+            <converters:BoolToFaTextConverter x:Key="BoolToFaText" />
             <converters:CurrencyRialConverter x:Key="CurrencyRial" />
             <!-- چرخه بیستم: مبدل ریال ↔ نمایش برای کادرهای ورود مبلغ -->
             <converters:MoneyRialConverter x:Key="MoneyRial" />

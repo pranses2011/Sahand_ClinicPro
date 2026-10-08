@@ -166,6 +166,74 @@ public class InsuranceController : ApiBaseController
         await _unitOfWork.SaveEntitiesAsync();
         return Ok(ApiResponse<object>.SuccessMessage("قاعده تسویه حذف شد"));
     }
+
+    // ═══ چرخه بیست‌وسوم (گزارش شانزدهم مالک): مدیریت شرکت‌های بیمه ═══
+    // «در صفحه بیمه، بتوان بیمه جدید تعریف کرد و یا بیمه‌های موجود را ویرایش کرد»
+    // — چهار endpoint زیر به پنجرهٔ مدیریت بیمه‌های صفحهٔ بیمه سرویس می‌دهند.
+    // نوشتن دادهٔ مرجع نیازمند نقش مدیریتی است؛ خواندن برای همه باقی می‌ماند.
+
+    /// <summary>فهرست کامل بیمه‌ها شامل غیرفعال — پنجرهٔ مدیریت بیمه‌ها</summary>
+    [HttpGet("companies/manage")]
+    [HasPermission("insurance.view")]
+    public async Task<IActionResult> GetCompaniesForManage()
+    {
+        var result = await _mediator.Send(
+            new Application.Features.Lookups.GetInsuranceCompaniesForManageQuery());
+        return ToResponse(result);
+    }
+
+    /// <summary>ساخت شرکت بیمه جدید</summary>
+    /// <param name="request">داده بیمه (نام/کد/نوع/درصد پوشش)</param>
+    [HttpPost("companies")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> CreateCompany([FromBody] SaveInsuranceCompanyRequest request)
+    {
+        var result = await _mediator.Send(new Application.Features.Lookups.CreateInsuranceCompanyCommand(
+            request.Name, request.Code, request.Type, request.CoveragePercent, request.IsActive));
+        return ToResponse(result, "شرکت بیمه ثبت شد");
+    }
+
+    /// <summary>ویرایش شرکت بیمه</summary>
+    /// <param name="id">شناسه بیمه</param>
+    /// <param name="request">داده بیمه</param>
+    [HttpPut("companies/{id:long}")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> UpdateCompany(long id, [FromBody] SaveInsuranceCompanyRequest request)
+    {
+        var result = await _mediator.Send(new Application.Features.Lookups.UpdateInsuranceCompanyCommand(
+            id, request.Name, request.Code, request.Type, request.CoveragePercent, request.IsActive));
+        return ToResponse(result, "شرکت بیمه به‌روزرسانی شد");
+    }
+
+    /// <summary>غیرفعال‌سازی (حذف نرم) بیمه — سوابق مالی حفظ می‌شوند</summary>
+    /// <param name="id">شناسه بیمه</param>
+    [HttpDelete("companies/{id:long}")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> DeactivateCompany(long id)
+    {
+        var result = await _mediator.Send(
+            new Application.Features.Lookups.DeactivateInsuranceCompanyCommand(id));
+        return ToResponse(result, "شرکت بیمه غیرفعال شد");
+    }
+}
+
+/// <summary>بدنهٔ درخواست ساخت/ویرایش شرکت بیمه — چرخه بیست‌وسوم</summary>
+public sealed class SaveInsuranceCompanyRequest
+{
+    /// <summary>نام شرکت بیمه — یکتا</summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>کد اختصاری بیمه</summary>
+    public string? Code { get; set; }
+
+    /// <summary>نوع بیمه — ۱ عمومی، ۲ سلامت، ۳ ارتش، ۴ خصوصی، ۵ تکمیلی</summary>
+    public int Type { get; set; } = 4;
+
+    /// <summary>درصد پوشش پیش‌فرض (۰ تا ۱۰۰)</summary>
+    public decimal CoveragePercent { get; set; } = 70m;
+
+    /// <summary>وضعیت فعال — در ویرایش معنا دارد</summary>
+    public bool IsActive { get; set; } = true;
 }
 
 /// <summary>ردیف قاعده تسویه</summary>

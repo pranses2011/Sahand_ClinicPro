@@ -41,7 +41,7 @@ public static class PrescriptionPrintHelper
         string doctorName,
         string dateShamsi,
         string? trackingCode,
-        IReadOnlyList<(string Name, string Subtitle, string Usage, string Route, string Instructions)> items)
+        IReadOnlyList<(string Name, string? Subtitle, string Usage, string? Route, string? Instructions)> items)
     {
         var doc = new FlowDocument
         {

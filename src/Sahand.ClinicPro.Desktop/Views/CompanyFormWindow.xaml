@@ -1,0 +1,89 @@
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.CompanyFormWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="{Binding Header}"
+        Height="470" Width="440"
+        FlowDirection="RightToLeft"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <x:Array x:Key="TypeNames" Type="sys:String"
+                 xmlns:sys="clr-namespace:System;assembly=mscorlib">
+            <!-- ترتیب باید با CompanyFormViewModel.TypeOptions یکی باشد -->
+            <sys:String>عمومی (تأمین اجتماعی)</sys:String>
+            <sys:String>سلامت</sys:String>
+            <sys:String>نیروهای مسلح</sys:String>
+            <sys:String>خصوصی</sys:String>
+            <sys:String>تکمیلی</sys:String>
+        </x:Array>
+    </Window.Resources>
+    <!-- ═══════════════════════════════════════════════════════════
+         فرم ثبت/ویرایش شرکت بیمه — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
+         «در صفحه بیمه، بتوان بیمه جدید تعریف کرد و یا بیمه‌های موجود را
+         ویرایش کرد» — نام/کد/نوع/درصد پوشش/وضعیت فعال
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- سربرگ -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+            <materialDesign:PackIcon Kind="ShieldPlus" Width="24" Height="24"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding Header}" FontSize="17" FontWeight="Bold"
+                       Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- نام -->
+        <TextBox Grid.Row="1" materialDesign:HintAssist.Hint="نام شرکت بیمه *"
+                 Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                 Margin="0,0,0,12" />
+
+        <!-- کد -->
+        <TextBox Grid.Row="2" materialDesign:HintAssist.Hint="کد اختصاری (اختیاری)"
+                 Text="{Binding Code, UpdateSourceTrigger=PropertyChanged}"
+                 Margin="0,0,0,12" FontFamily="Consolas" FlowDirection="LeftToRight" />
+
+        <!-- نوع -->
+        <ComboBox Grid.Row="3" materialDesign:HintAssist.Hint="نوع بیمه"
+                  ItemsSource="{StaticResource TypeNames}"
+                  SelectedIndex="{Binding TypeIndex}"
+                  Margin="0,0,0,12" />
+
+        <!-- درصد پوشش -->
+        <TextBox Grid.Row="4" materialDesign:HintAssist.Hint="درصد پوشش پیش‌فرض (۰ تا ۱۰۰)"
+                 Text="{Binding CoveragePercent, UpdateSourceTrigger=PropertyChanged}"
+                 Margin="0,0,0,12" />
+
+        <!-- فعال -->
+        <CheckBox Grid.Row="5" Content="فعال باشد (در فرم‌های پذیرش قابل انتخاب است)"
+                  IsChecked="{Binding IsActive}"
+                  Margin="0,0,0,12" />
+
+        <!-- خطا + دکمه‌ها -->
+        <StackPanel Grid.Row="6">
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
+                       FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" />
+            <UniformGrid Columns="2">
+                <Button Command="{Binding SaveCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Content="ذخیره" Height="40" Margin="0,0,4,0" />
+                <Button Command="{Binding CancelCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Content="انصراف" Height="40" Margin="4,0,0,0" />
+            </UniformGrid>
+            <ProgressBar IsIndeterminate="True" Height="4" Margin="0,12,0,0"
+                         Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+        </StackPanel>
+    </Grid>
+</Window>

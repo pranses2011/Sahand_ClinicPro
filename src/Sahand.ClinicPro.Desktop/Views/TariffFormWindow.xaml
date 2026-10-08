@@ -1,0 +1,84 @@
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.TariffFormWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="{Binding Header}"
+        Height="500" Width="440"
+        FlowDirection="RightToLeft"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+    <!-- ═══════════════════════════════════════════════════════════
+         فرم ثبت/ویرایش خدمت/تعرفه — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
+         «در صفحه بیمه، بتوان تعرفه جدید تعریف کرد و یا تعرفه‌های موجود را
+         ویرایش کرد» — نام/کد/قیمت/سهم بیمه/سهم بیمار/وضعیت فعال
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- سربرگ -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+            <materialDesign:PackIcon Kind="CashPlus" Width="24" Height="24"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding Header}" FontSize="17" FontWeight="Bold"
+                       Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- نام خدمت -->
+        <TextBox Grid.Row="1" materialDesign:HintAssist.Hint="نام خدمت *"
+                 Text="{Binding ServiceName, UpdateSourceTrigger=PropertyChanged}"
+                 Margin="0,0,0,12" />
+
+        <!-- کد خدمت -->
+        <TextBox Grid.Row="2" materialDesign:HintAssist.Hint="کد خدمت (اختیاری — یکتا)"
+                 Text="{Binding ServiceCode, UpdateSourceTrigger=PropertyChanged}"
+                 Margin="0,0,0,12" FontFamily="Consolas" FlowDirection="LeftToRight" />
+
+        <!-- قیمت -->
+        <TextBox Grid.Row="3" materialDesign:HintAssist.Hint="قیمت تعرفه‌ای"
+                 Text="{Binding Price, UpdateSourceTrigger=PropertyChanged}"
+                 Margin="0,0,0,12" />
+
+        <!-- سهم بیمه / بیمار — دوستونه -->
+        <UniformGrid Grid.Row="4" Columns="2">
+            <TextBox materialDesign:HintAssist.Hint="٪ سهم بیمه (۰-۱۰۰)"
+                     Text="{Binding InsuranceShare, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,4,12" />
+            <TextBox materialDesign:HintAssist.Hint="٪ سهم بیمار (۰-۱۰۰)"
+                     Text="{Binding PatientShare, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="4,0,0,12" />
+        </UniformGrid>
+
+        <!-- فعال -->
+        <CheckBox Grid.Row="5" Content="فعال باشد (در فرم فاکتور قابل انتخاب است)"
+                  IsChecked="{Binding IsActive}"
+                  Margin="0,0,0,12" />
+
+        <!-- خطا + دکمه‌ها -->
+        <StackPanel Grid.Row="6">
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
+                       FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" />
+            <UniformGrid Columns="2">
+                <Button Command="{Binding SaveCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Content="ذخیره" Height="40" Margin="0,0,4,0" />
+                <Button Command="{Binding CancelCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Content="انصراف" Height="40" Margin="4,0,0,0" />
+            </UniformGrid>
+            <ProgressBar IsIndeterminate="True" Height="4" Margin="0,12,0,0"
+                         Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+        </StackPanel>
+    </Grid>
+</Window>

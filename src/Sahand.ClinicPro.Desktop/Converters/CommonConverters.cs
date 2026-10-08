@@ -175,3 +175,23 @@ public sealed class PersianDigitsConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => Binding.DoNothing;
 }
+
+/// <summary>
+/// مبدل bool → متن فارسی «فعال / غیرفعال» — چرخه بیست‌وسوم (گزارش شانزدهم
+/// مالک): ستون وضعیت جدول‌های بیمه/تعرفهٔ صفحهٔ بیمه؛ برچسب‌ها فارسی.
+/// </summary>
+public sealed class BoolToFaTextConverter : IValueConverter
+{
+    /// <summary>true → فعال | false → غیرفعال | null → —</summary>
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value switch
+        {
+            true => "فعال",
+            false => "غیرفعال",
+            _ => "—"
+        };
+
+    /// <summary>برگشت بی‌اثر — ستون فقط‌خواندنی است</summary>
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => Binding.DoNothing;
+}
