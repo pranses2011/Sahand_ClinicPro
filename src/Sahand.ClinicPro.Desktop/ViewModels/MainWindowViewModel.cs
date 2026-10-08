@@ -32,6 +32,9 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private ViewModelBase? _currentPage;
 
+    /// <summary>کلید صفحهٔ جاری — برای بازسازی صفحه پس از تغییر ظاهر/واحد پول (چرخه بیست‌وسوم)</summary>
+    private string _currentPageKey = string.Empty;
+
     /// <summary>آیتم ناوبری انتخاب‌شده</summary>
     [ObservableProperty]
     private NavItem? _selectedNav;
@@ -124,6 +127,36 @@ public partial class MainWindowViewModel : ObservableObject
         _navigation = navigation;
         _snackbar = snackbar;
         _realtime = realtime;
+
+        // چرخه بیست‌وسوم (گزارش شانزدهم مالک): «واحد پولی که عوض می‌کنیم در تمام
+        // برنامه اعمال نشود» — مبدل‌های مبلغ (CurrencyRial/MoneyWithUnit) مقدار
+        // را هنگام تغییر «منبع» قالب‌بندی می‌کنند؛ تغییر واحد پول استاتیک است و
+        // اتصال‌های موجود را وادار به نوسازی نمی‌کند. با هر تغییر ظاهر، صفحهٔ جاری
+        // از نو ساخته می‌شود تا همهٔ مبالغ با واحد تازه (و ارقام فارسی) دوباره
+        // رندر شوند — بی‌نیاز از ری‌استارت برنامه.
+        _theme.AppearanceChanged += (_, _) =>
+        {
+            if (string.IsNullOrEmpty(_currentPageKey))
+                return;
+            NavigateToPage(_currentPageKey);
+
+            // نوسازی داده‌های صفحهٔ جاری — رشته‌های قالب‌بندی‌شده در سطح ViewModel
+            // (مثل جمع‌ها و ردیف‌های مبلغ) با بازسازی نما نو نمی‌شوند؛ اگر صفحه
+            // فرمان استاندارد بارگذاری/نوسازی داشته باشد فراخوانده می‌شود.
+            try
+            {
+                var type = CurrentPage?.GetType();
+                var commandProp = type?.GetProperty("RefreshCommand")
+                                  ?? type?.GetProperty("LoadCommand");
+                if (commandProp?.GetValue(CurrentPage) is System.Windows.Input.ICommand command
+                    && command.CanExecute(null))
+                    command.Execute(null);
+            }
+            catch
+            {
+                // نوسازی داده اختیاری است — خطایش جریان را متوقف نمی‌کند
+            }
+        };
 
         CurrentUser = tokens.Username ?? "کاربر";
         // چرخه هجدهم (گزارش دوازدهم): تاریخ و ساعت نوار بالا با ارقام فارسی
@@ -332,9 +365,12 @@ public partial class MainWindowViewModel : ObservableObject
     /// <summary>
     /// رفتن به صفحه با کلید — چرخه بیست‌ویکم: هایلایت صفحهٔ فعال روی منو
     /// (IsCurrent روی آیتم تکی یا فرزند + باز ماندن گروه والد) نیز تنظیم می‌شود.
+    /// چرخه بیست‌وسوم: کلید صفحهٔ جاری نگه داشته می‌شود تا با تغییر ظاهر/واحد پول،
+    /// صفحه با اتصال‌های تازه بازسازی شود.
     /// </summary>
     private void NavigateToPage(string pageKey)
     {
+        _currentPageKey = pageKey;
         // بازنشانی هایلایت همهٔ آیتم‌ها (تکی و فرزندان گروه‌ها)
         foreach (var nav in NavItems)
         {
@@ -370,7 +406,14 @@ public partial class MainWindowViewModel : ObservableObject
             return;
         }
 
-        CurrentPage = factory();
+        var fresh = factory();
+        // چرخه بیست‌وسوم: کارخانه‌ها نمونه‌های تک‌الگو (singleton) برمی‌گردانند؛
+        // اگر همان نمونهٔ فعلی باشد، تخصیص مستقیم هیچ نوسازی نمی‌کند — تهی‌گذاری
+        // موقت، بازسازی کامل نمای صفحه را وادار می‌کند تا مبالغ با واحد پول/تم
+        // تازه دوباره قالب‌بندی شوند (تغییر واحد پول بی‌ری‌استارت اعمال شود)
+        if (ReferenceEquals(fresh, CurrentPage))
+            CurrentPage = null;
+        CurrentPage = fresh;
         CurrentTitle = CurrentPage.Title;
         Breadcrumb = $"خانه > {CurrentTitle}";
     }

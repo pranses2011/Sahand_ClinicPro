@@ -257,7 +257,7 @@
                                     </StackPanel>
                                     <StackPanel Grid.Column="3" HorizontalAlignment="Left">
                                         <TextBlock Text="💰 تخمین هزینه (ریال)" FontSize="10" Opacity="0.6" />
-                                        <TextBlock Text="{Binding EstimatedFee, Mode=OneWay, StringFormat='{}{0:N0}'}" FontWeight="Bold" FontFamily="Consolas" />
+                                        <TextBlock Text="{Binding EstimatedFee, Mode=OneWay, Converter={StaticResource CurrencyRial}}" FontWeight="Bold" FontFamily="Consolas" />
                                     </StackPanel>
                                 </Grid>
 
@@ -416,9 +416,9 @@
                             <DataGridCheckBoxColumn Header="" Width="36"
                                 Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
                             <DataGridTextColumn Header="کد پیگیری" Width="95"
-                                Binding="{Binding Code, TargetNullValue=—}" FontFamily="Consolas" />
-                            <DataGridTextColumn Header="تاریخ" Width="90" Binding="{Binding DateShamsi}" />
-                            <DataGridTextColumn Header="ساعت" Width="55" Binding="{Binding Time}" FontFamily="Consolas" />
+                                Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="تاریخ" Width="90" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" />
+                            <DataGridTextColumn Header="ساعت" Width="55" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" FontFamily="Consolas" />
                             <DataGridTemplateColumn Header="بیمار" Width="150" SortMemberPath="PatientName">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -432,9 +432,9 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="پزشک" Width="130" Binding="{Binding DoctorName}" />
-                            <DataGridTextColumn Header="تخصص" Width="100" Binding="{Binding SpecialtyName, TargetNullValue=—}" />
-                            <DataGridTextColumn Header="نوع" Width="70" Binding="{Binding TypeText}" />
+                            <DataGridTextColumn Header="پزشک" Width="130" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" />
+                            <DataGridTextColumn Header="تخصص" Width="100" Binding="{Binding SpecialtyName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" />
+                            <DataGridTextColumn Header="نوع" Width="70" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" />
                             <DataGridTemplateColumn Header="وضعیت" Width="105" SortMemberPath="Status">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -445,7 +445,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="منبع" Width="65" Binding="{Binding SourceText}" />
+                            <DataGridTextColumn Header="منبع" Width="65" Binding="{Binding SourceText, Converter={StaticResource PersianDigits}}" />
                             <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="130">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -564,12 +564,12 @@
                               CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column"
                               GridLinesVisibility="Horizontal" FlowDirection="RightToLeft">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName}" Width="*" FontWeight="SemiBold" />
-                            <DataGridTextColumn Header="موبایل" Binding="{Binding PatientMobile}" Width="110" FontFamily="Consolas" />
-                            <DataGridTextColumn Header="پزشک/تخصص" Binding="{Binding DoctorName}" Width="130" />
-                            <DataGridTextColumn Header="بازه دلخواه" Binding="{Binding PreferredText}" Width="200" />
-                            <DataGridTextColumn Header="اولویت" Binding="{Binding PriorityText}" Width="80" />
-                            <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText}" Width="110">
+                            <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="موبایل" Binding="{Binding PatientMobile, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="پزشک/تخصص" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="130" />
+                            <DataGridTextColumn Header="بازه دلخواه" Binding="{Binding PreferredText, Converter={StaticResource PersianDigits}}" Width="200" />
+                            <DataGridTextColumn Header="اولویت" Binding="{Binding PriorityText, Converter={StaticResource PersianDigits}}" Width="80" />
+                            <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="110">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontWeight" Value="SemiBold" />
@@ -577,8 +577,8 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="زمان پیامک" Binding="{Binding NotifiedText}" Width="110" />
-                            <DataGridTextColumn Header="یادداشت" Binding="{Binding Notes, TargetNullValue=—}" Width="150" />
+                            <DataGridTextColumn Header="زمان پیامک" Binding="{Binding NotifiedText, Converter={StaticResource PersianDigits}}" Width="110" />
+                            <DataGridTextColumn Header="یادداشت" Binding="{Binding Notes, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="150" />
                             <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="90">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>

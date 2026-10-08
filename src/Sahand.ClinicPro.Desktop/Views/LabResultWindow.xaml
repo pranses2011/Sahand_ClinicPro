@@ -44,13 +44,13 @@
                   GridLinesVisibility="Horizontal"
                   materialDesign:DataGridAssist.CellPadding="6,4">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="آزمایش" Binding="{Binding TestName}" Width="2*" IsReadOnly="True" />
-                <DataGridTextColumn Header="واحد" Binding="{Binding Unit}" Width="80" IsReadOnly="True" />
-                <DataGridTextColumn Header="بازه طبیعی" Binding="{Binding NormalRange}" Width="110" IsReadOnly="True" />
-                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText}" Width="100" IsReadOnly="True" />
-                <DataGridTextColumn Header="نتیجه متنی" Binding="{Binding Result, UpdateSourceTrigger=PropertyChanged}" Width="*" />
-                <DataGridTextColumn Header="نتیجه عددی" Binding="{Binding ResultNumeric, UpdateSourceTrigger=PropertyChanged}" Width="110" />
-                <DataGridTextColumn Header="توضیح" Binding="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                <DataGridTextColumn Header="آزمایش" Binding="{Binding TestName, Converter={StaticResource PersianDigits}}" Width="2*" IsReadOnly="True" />
+                <DataGridTextColumn Header="واحد" Binding="{Binding Unit, Converter={StaticResource PersianDigits}}" Width="80" IsReadOnly="True" />
+                <DataGridTextColumn Header="بازه طبیعی" Binding="{Binding NormalRange, Converter={StaticResource PersianDigits}}" Width="110" IsReadOnly="True" />
+                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="100" IsReadOnly="True" />
+                <DataGridTextColumn Header="نتیجه متنی" Binding="{Binding Result, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="*" />
+                <DataGridTextColumn Header="نتیجه عددی" Binding="{Binding ResultNumeric, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="110" />
+                <DataGridTextColumn Header="توضیح" Binding="{Binding Comment, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="*" />
             </DataGrid.Columns>
         </DataGrid>
 

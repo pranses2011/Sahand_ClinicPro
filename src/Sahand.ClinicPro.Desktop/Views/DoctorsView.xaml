@@ -119,7 +119,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="شماره نظام"
-                                    Binding="{Binding MedicalLicenseNo, TargetNullValue=—}"
+                                    Binding="{Binding MedicalLicenseNo, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
                                     Width="105" FontFamily="Consolas" />
                 <DataGridTemplateColumn Header="نام و نام‌خانوادگی" Width="170" SortMemberPath="FullName">
                     <DataGridTemplateColumn.CellTemplate>
@@ -134,13 +134,13 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="تخصص"
-                                    Binding="{Binding SpecialtyName, TargetNullValue=—}"
+                                    Binding="{Binding SpecialtyName, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
                                     Width="120" />
                 <DataGridTextColumn Header="فوق‌تخصص"
-                                    Binding="{Binding SubSpecialtyName, TargetNullValue=—}"
+                                    Binding="{Binding SubSpecialtyName, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
                                     Width="120" />
                 <DataGridTextColumn Header="حق ویزیت (ریال)"
-                                    Binding="{Binding FeeDisplay}"
+                                    Binding="{Binding FeeDisplay, Converter={StaticResource PersianDigits}}"
                                     Width="120">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
@@ -150,7 +150,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="مدت (دقیقه)"
-                                    Binding="{Binding VisitDuration}"
+                                    Binding="{Binding VisitDuration, Converter={StaticResource PersianDigits}}"
                                     Width="85">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
@@ -159,7 +159,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="درصد سهم"
-                                    Binding="{Binding DoctorPercentage}"
+                                    Binding="{Binding DoctorPercentage, Converter={StaticResource PersianDigits}}"
                                     Width="75">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
@@ -188,7 +188,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="امتیاز"
-                                    Binding="{Binding RatingDisplay}"
+                                    Binding="{Binding RatingDisplay, Converter={StaticResource PersianDigits}}"
                                     Width="70">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">

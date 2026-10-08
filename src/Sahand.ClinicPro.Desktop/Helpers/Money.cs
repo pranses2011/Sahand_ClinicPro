@@ -42,18 +42,25 @@ public static class Money
     public static decimal FromDisplayInput(decimal displayAmount) => IsToman ? displayAmount * 10m : displayAmount;
 
     /// <summary>
-    /// قالب‌بندی مبلغ با جداکنندهٔ ۳ رقمی و بدون اعشار — «۱,۲۳۴,۵۶۷».
+    /// قالب‌بندی مبلغ با جداکنندهٔ ۳ رقمی و بدون اعشار — «۱٬۲۳۴٬۵۶۷».
     /// واحد پول اعمال نمی‌شود (برای ستون‌های جدول و کادرهای عددی).
+    /// چرخه بیست‌وسوم (گزارش شانزدهم مالک — «تمامی اعداد بدون استثنا فارسی»):
+    /// ارقام به فارسی و جداکنندهٔ هزارگان به «٬» (جداکنندهٔ عربی-فارسی) تبدیل شد.
     /// </summary>
     public static string Format(decimal rialAmount)
-        => ToDisplay(Math.Round(rialAmount)).ToString("#,0", CultureInfo.InvariantCulture);
+    {
+        // جداکنندهٔ هزارگانِ خودِ چارچوب برای متن فارسی — همان جداکنندهٔ «٬» است؛
+        // برای اطمینان از یکدستی، کامای لاتین پس از قالب‌بندی به «٬» تبدیل می‌شود
+        var latin = ToDisplay(Math.Round(rialAmount)).ToString("#,0", CultureInfo.InvariantCulture);
+        return ToPersianDigits(latin.Replace(',', '٬'));
+    }
 
     /// <summary>قالب‌بندی مقدار قابل تهی — تهی → خط تیره</summary>
     public static string FormatOrDash(decimal? rialAmount)
         => rialAmount is null ? "—" : Format(rialAmount.Value);
 
     /// <summary>
-    /// قالب‌بندی مبلغ همراه واحد پول نمایشی — «۱,۲۳۴,۵۶۷ ریال» یا «۱۲۳,۴۵۶ تومان».
+    /// قالب‌بندی مبلغ همراه واحد پول نمایشی — «۱٬۲۳۴٬۵۶۷ ریال» یا «۱۲۳٬۴۵۶ تومان».
     /// برای جمع‌های پایین فاکتور، فیش حقوقی و گزارش‌ها.
     /// </summary>
     public static string FormatWithUnit(decimal rialAmount) => $"{Format(rialAmount)} {UnitLabel}";
@@ -94,6 +101,28 @@ public static class Money
             {
                 >= '۰' and <= '۹' => (char)('0' + ch - '۰'),
                 >= '٠' and <= '٩' => (char)('0' + ch - '٠'),
+                _ => ch
+            });
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// تبدیل ارقام لاتین به فارسی — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
+    /// «تمامی اعداد داخل برنامه بدون استثنا اعداد فارسی باشند».
+    /// این متد روی هر متنی بی‌خطر است: نویسه‌های غیررقمی دست‌نخورده می‌مانند.
+    /// </summary>
+    public static string ToPersianDigits(string? input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input ?? string.Empty;
+
+        var sb = new System.Text.StringBuilder(input.Length);
+        foreach (var ch in input)
+        {
+            sb.Append(ch switch
+            {
+                >= '0' and <= '9' => (char)('۰' + ch - '0'),
                 _ => ch
             });
         }

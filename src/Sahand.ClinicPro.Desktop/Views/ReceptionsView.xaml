@@ -325,7 +325,7 @@
                                   HeadersVisibility="Column" FontSize="12" MinHeight="150"
                                   AlternatingRowBackground="#F7FAFD">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="شماره" Binding="{Binding Number, TargetNullValue=—}" Width="80" FontFamily="Consolas" />
+                                <DataGridTextColumn Header="شماره" Binding="{Binding Number, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="Consolas" />
                                 <DataGridTemplateColumn Header="بیمار" Width="180" SortMemberPath="PatientName">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
@@ -336,9 +336,9 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName}" Width="150" />
-                                <DataGridTextColumn Header="ساعت پذیرش" Binding="{Binding Time}" Width="100" />
-                                <DataGridTextColumn Header="بیمه" Binding="{Binding InsuranceName, TargetNullValue=آزاد}" Width="110" />
+                                <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="150" />
+                                <DataGridTextColumn Header="ساعت پذیرش" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" Width="100" />
+                                <DataGridTextColumn Header="بیمه" Binding="{Binding InsuranceName, TargetNullValue=آزاد, Converter={StaticResource PersianDigits}}" Width="110" />
                                 <DataGridTemplateColumn Header="وضعیت" Width="110" SortMemberPath="StatusId">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
@@ -349,7 +349,7 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="انتظار" Binding="{Binding WaitingText}" Width="90" />
+                                <DataGridTextColumn Header="انتظار" Binding="{Binding WaitingText, Converter={StaticResource PersianDigits}}" Width="90" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </StackPanel>

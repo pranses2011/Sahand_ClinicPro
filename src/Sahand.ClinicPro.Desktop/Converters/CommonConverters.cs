@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Data;
 using Sahand.ClinicPro.Application.Common.Helpers;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.Converters;
 
@@ -151,6 +152,26 @@ public sealed class SectionToVisibilityConverter : IValueConverter
             : Visibility.Collapsed;
 
     /// <summary>بدون پشتیبانی</summary>
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => Binding.DoNothing;
+}
+
+/// <summary>
+/// مبدل سراسری ارقام فارسی — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
+/// «تمامی اعداد داخل برنامه بدون استثنا اعداد فارسی باشند».
+/// هر متنی که از این مبدل بگذرد ارقام لاتینش به فارسی تبدیل می‌شود؛
+/// نویسه‌های غیررقمی (حروف، جداکننده‌ها، خط تیره و …) دست‌نخورده می‌مانند،
+/// از این‌رو اعمالش روی ستون‌های متنی هم بی‌ضرر است.
+/// این مبدل یک‌ره رو (OneWay) است؛ ConvertBack مقدار را برمی‌گرداند چون
+/// ورودی کاربر جداگانه (MoneyInput/پارس ارقام فارسی) هندل می‌شود.
+/// </summary>
+public sealed class PersianDigitsConverter : IValueConverter
+{
+    /// <summary>تبدیل ارقام لاتین متن به فارسی — تهی به تهی</summary>
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is string s ? Money.ToPersianDigits(s) : (object?)value ?? string.Empty;
+
+    /// <summary>برگشت بی‌اثر — ورودی‌ها جداگانه ارقام فارسی را می‌پذیرند</summary>
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => Binding.DoNothing;
 }

@@ -89,8 +89,8 @@
                                       CanUserAddRows="False" HeadersVisibility="Column" FontSize="12"
                                       MinHeight="90">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="کد" Binding="{Binding Code}" Width="85" FontFamily="Consolas" IsReadOnly="True" />
-                                    <DataGridTextColumn Header="شرح خدمت" Binding="{Binding Name}" Width="*" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="کد" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="85" FontFamily="Consolas" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="شرح خدمت" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" IsReadOnly="True" />
                                     <DataGridTemplateColumn Header="انجام‌دهنده" Width="150">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
@@ -101,7 +101,7 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Width="60" />
+                                    <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="60" />
                                     <DataGridTextColumn Header="قیمت واحد" Binding="{Binding UnitPrice, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="110" IsReadOnly="True" FontFamily="Consolas" />
                                     <DataGridTextColumn Header="سهم بیمه" Binding="{Binding TotalInsurance, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="100" IsReadOnly="True" FontFamily="Consolas" />
                                     <DataGridTextColumn Header="سهم بیمار" Binding="{Binding TotalPatient, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="100" IsReadOnly="True" FontFamily="Consolas" />

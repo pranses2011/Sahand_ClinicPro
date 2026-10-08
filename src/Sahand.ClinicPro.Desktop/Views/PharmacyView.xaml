@@ -102,9 +102,9 @@
                           AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                           HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="دارو" Binding="{Binding Name}" Width="*" FontWeight="SemiBold" />
-                        <DataGridTextColumn Header="فرم/دوز" Binding="{Binding Form, TargetNullValue=—}" Width="130" />
-                        <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity}" Width="90" FontFamily="Consolas" />
+                        <DataGridTextColumn Header="دارو" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
+                        <DataGridTextColumn Header="فرم/دوز" Binding="{Binding Form, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="130" />
+                        <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="Consolas" />
                         <DataGridTemplateColumn Header="وضعیت موجودی" Width="130" SortMemberPath="IsLowStock">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -135,8 +135,8 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel}" Width="90" FontFamily="Consolas" />
-                        <DataGridTextColumn Header="انقضا" Binding="{Binding ExpiryDateShamsi, TargetNullValue=—}" Width="100" />
+                        <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="Consolas" />
+                        <DataGridTextColumn Header="انقضا" Binding="{Binding ExpiryDateShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="100" />
                         <DataGridTemplateColumn Header="هشدار" Width="110" SortMemberPath="IsExpiringSoon">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -181,9 +181,9 @@
                               HeadersVisibility="Column" FontSize="12"
                               RowBackground="#FFF8E1">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="دارو" Binding="{Binding Name}" Width="*" FontWeight="SemiBold" />
-                            <DataGridTextColumn Header="موجودی فعلی" Binding="{Binding Quantity}" Width="110" FontFamily="Consolas" />
-                            <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel}" Width="110" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="دارو" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="موجودی فعلی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="Consolas" />
                             <DataGridTextColumn Header="پیشنهاد سفارش" Width="115">
                                 <DataGridTextColumn.Binding>
                                     <Binding Path="SuggestedOrder" StringFormat="{}{0:N0}" />

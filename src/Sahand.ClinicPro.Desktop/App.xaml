@@ -129,6 +129,8 @@
             <converters:InvertBoolConverter x:Key="InvertBool" />
             <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
             <converters:SectionToVisibilityConverter x:Key="SectionToVisibility" />
+            <!-- چرخه بیست‌وسوم: مبدل سراسری ارقام فارسی — همهٔ ستون‌های جدول‌ها -->
+            <converters:PersianDigitsConverter x:Key="PersianDigits" />
             <converters:CurrencyRialConverter x:Key="CurrencyRial" />
             <!-- چرخه بیستم: مبدل ریال ↔ نمایش برای کادرهای ورود مبلغ -->
             <converters:MoneyRialConverter x:Key="MoneyRial" />

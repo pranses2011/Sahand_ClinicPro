@@ -103,7 +103,7 @@
                               GridLinesVisibility="Horizontal"
                               materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="تاریخ" Binding="{Binding Date}" Width="120" />
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="120" />
                             <DataGridTextColumn Header="درآمد (ریال)" Binding="{Binding Total, StringFormat=N0}" Width="*" />
                             <DataGridTextColumn Header="وصولی" Binding="{Binding Paid, StringFormat=N0}" Width="*" />
                             <DataGridTextColumn Header="مانده" Binding="{Binding Remaining, StringFormat=N0}" Width="*" />
@@ -158,8 +158,8 @@
                               GridLinesVisibility="Horizontal"
                               materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName}" Width="2*" />
-                            <DataGridTextColumn Header="تعداد ویزیت" Binding="{Binding VisitsCount}" Width="110" />
+                            <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="2*" />
+                            <DataGridTextColumn Header="تعداد ویزیت" Binding="{Binding VisitsCount, Converter={StaticResource PersianDigits}}" Width="110" />
                             <DataGridTextColumn Header="درآمد (ریال)" Binding="{Binding TotalRevenue, StringFormat=N0}" Width="*" />
                             <DataGridTextColumn Header="سهم پزشک (ریال)" Binding="{Binding DoctorShare, StringFormat=N0}" Width="*" />
                         </DataGrid.Columns>

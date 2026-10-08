@@ -115,17 +115,17 @@
                       Style="{StaticResource MaterialDesignDataGrid}"
                       HeadersVisibility="Column" GridLinesVisibility="Horizontal">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode}" Width="95" />
-                    <DataGridTextColumn Header="نام و نام خانوادگی" Binding="{Binding FullName}" Width="180" />
-                    <DataGridTextColumn Header="بخش" Binding="{Binding DepartmentName}" Width="110" />
-                    <DataGridTextColumn Header="سمت" Binding="{Binding PositionName}" Width="110" />
-                    <DataGridTextColumn Header="پزشک متصل" Binding="{Binding DoctorNames}" Width="150" />
-                    <DataGridTextColumn Header="اقلام" Binding="{Binding ServiceCount}" Width="60" />
-                    <DataGridTextColumn Header="جمع فروش (ریال)" Binding="{Binding TotalRevenueText}" Width="120" />
-                    <DataGridTextColumn Header="جمع هزینه (ریال)" Binding="{Binding TotalCostText}" Width="120" />
-                    <DataGridTextColumn Header="سود خدمات (ریال)" Binding="{Binding TotalProfitText}" Width="120" />
-                    <DataGridTextColumn Header="درصد" Binding="{Binding CommissionPercentText}" Width="60" />
-                    <DataGridTextColumn Header="حقوق درصدی (ریال)" Binding="{Binding ServiceCommissionText}" Width="125">
+                    <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="95" />
+                    <DataGridTextColumn Header="نام و نام خانوادگی" Binding="{Binding FullName, Converter={StaticResource PersianDigits}}" Width="180" />
+                    <DataGridTextColumn Header="بخش" Binding="{Binding DepartmentName, Converter={StaticResource PersianDigits}}" Width="110" />
+                    <DataGridTextColumn Header="سمت" Binding="{Binding PositionName, Converter={StaticResource PersianDigits}}" Width="110" />
+                    <DataGridTextColumn Header="پزشک متصل" Binding="{Binding DoctorNames, Converter={StaticResource PersianDigits}}" Width="150" />
+                    <DataGridTextColumn Header="اقلام" Binding="{Binding ServiceCount, Converter={StaticResource PersianDigits}}" Width="60" />
+                    <DataGridTextColumn Header="جمع فروش (ریال)" Binding="{Binding TotalRevenueText, Converter={StaticResource PersianDigits}}" Width="120" />
+                    <DataGridTextColumn Header="جمع هزینه (ریال)" Binding="{Binding TotalCostText, Converter={StaticResource PersianDigits}}" Width="120" />
+                    <DataGridTextColumn Header="سود خدمات (ریال)" Binding="{Binding TotalProfitText, Converter={StaticResource PersianDigits}}" Width="120" />
+                    <DataGridTextColumn Header="درصد" Binding="{Binding CommissionPercentText, Converter={StaticResource PersianDigits}}" Width="60" />
+                    <DataGridTextColumn Header="حقوق درصدی (ریال)" Binding="{Binding ServiceCommissionText, Converter={StaticResource PersianDigits}}" Width="125">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="FontWeight" Value="SemiBold" />
@@ -133,7 +133,7 @@
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
-                    <DataGridTextColumn Header="وضعیت فیش" Binding="{Binding SalaryStatusText}" Width="105" />
+                    <DataGridTextColumn Header="وضعیت فیش" Binding="{Binding SalaryStatusText, Converter={StaticResource PersianDigits}}" Width="105" />
                 </DataGrid.Columns>
             </DataGrid>
 
@@ -176,16 +176,16 @@
                   Style="{StaticResource MaterialDesignDataGrid}"
                   HeadersVisibility="Column" GridLinesVisibility="Horizontal">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName}" Width="160" />
-                <DataGridTextColumn Header="شماره فاکتور" Binding="{Binding InvoiceNumber}" Width="110" />
-                <DataGridTextColumn Header="تاریخ" Binding="{Binding InvoiceDateShamsi}" Width="95" />
-                <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName}" Width="150" />
-                <DataGridTextColumn Header="خدمت" Binding="{Binding ServiceName}" Width="180" />
-                <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity}" Width="55" />
-                <DataGridTextColumn Header="قیمت واحد" Binding="{Binding UnitPriceText}" Width="105" />
-                <DataGridTextColumn Header="هزینه واحد" Binding="{Binding UnitCostText}" Width="105" />
-                <DataGridTextColumn Header="مبلغ قلم (ریال)" Binding="{Binding TotalPriceText}" Width="115" />
-                <DataGridTextColumn Header="سود قلم (ریال)" Binding="{Binding ProfitText}" Width="110">
+                <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="160" />
+                <DataGridTextColumn Header="شماره فاکتور" Binding="{Binding InvoiceNumber, Converter={StaticResource PersianDigits}}" Width="110" />
+                <DataGridTextColumn Header="تاریخ" Binding="{Binding InvoiceDateShamsi, Converter={StaticResource PersianDigits}}" Width="95" />
+                <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="150" />
+                <DataGridTextColumn Header="خدمت" Binding="{Binding ServiceName, Converter={StaticResource PersianDigits}}" Width="180" />
+                <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="55" />
+                <DataGridTextColumn Header="قیمت واحد" Binding="{Binding UnitPriceText, Converter={StaticResource PersianDigits}}" Width="105" />
+                <DataGridTextColumn Header="هزینه واحد" Binding="{Binding UnitCostText, Converter={StaticResource PersianDigits}}" Width="105" />
+                <DataGridTextColumn Header="مبلغ قلم (ریال)" Binding="{Binding TotalPriceText, Converter={StaticResource PersianDigits}}" Width="115" />
+                <DataGridTextColumn Header="سود قلم (ریال)" Binding="{Binding ProfitText, Converter={StaticResource PersianDigits}}" Width="110">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="FontWeight" Value="SemiBold" />
@@ -193,7 +193,7 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="نحوه انتساب" Binding="{Binding Attribution}" Width="120" />
+                <DataGridTextColumn Header="نحوه انتساب" Binding="{Binding Attribution, Converter={StaticResource PersianDigits}}" Width="120" />
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

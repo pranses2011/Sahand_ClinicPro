@@ -60,9 +60,9 @@
                         <Binding Path="CreatedAt" Converter="{StaticResource ShamsiDateTime}" />
                     </DataGridTextColumn.Binding>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="کاربر" Binding="{Binding Username, TargetNullValue=—}" Width="110" />
-                <DataGridTextColumn Header="IP" Binding="{Binding IpAddress, TargetNullValue=—}" Width="110" FontFamily="Consolas" FontSize="10.5" />
-                <DataGridTextColumn Header="ماژول" Binding="{Binding Module, TargetNullValue=—}" Width="110" />
+                <DataGridTextColumn Header="کاربر" Binding="{Binding Username, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" />
+                <DataGridTextColumn Header="IP" Binding="{Binding IpAddress, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="Consolas" FontSize="10.5" />
+                <DataGridTextColumn Header="ماژول" Binding="{Binding Module, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" />
                 <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="110">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -71,9 +71,9 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="موجودیت" Binding="{Binding EntityName, TargetNullValue=—}" Width="120" />
-                <DataGridTextColumn Header="شناسه" Binding="{Binding EntityId, TargetNullValue=—}" Width="70" FontFamily="Consolas" />
-                <DataGridTextColumn Header="شرح" Binding="{Binding Description, TargetNullValue=—}" Width="*" />
+                <DataGridTextColumn Header="موجودیت" Binding="{Binding EntityName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" />
+                <DataGridTextColumn Header="شناسه" Binding="{Binding EntityId, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="70" FontFamily="Consolas" />
+                <DataGridTextColumn Header="شرح" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" />
             </DataGrid.Columns>
         </DataGrid>
 

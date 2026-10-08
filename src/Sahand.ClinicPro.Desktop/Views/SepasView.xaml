@@ -97,9 +97,9 @@
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="بیمار" Binding="{Binding Patient}" Width="170" />
-                            <DataGridTextColumn Header="نوع" Binding="{Binding TypeText}" Width="110" />
-                            <DataGridTextColumn Header="شناسه ارجاع" Binding="{Binding ReferenceId, TargetNullValue=—}" Width="130" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="بیمار" Binding="{Binding Patient, Converter={StaticResource PersianDigits}}" Width="170" />
+                            <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="110" />
+                            <DataGridTextColumn Header="شناسه ارجاع" Binding="{Binding ReferenceId, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="130" FontFamily="Consolas" />
                             <DataGridTemplateColumn Header="وضعیت" Width="110">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -110,13 +110,13 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="تلاش مجدد" Binding="{Binding RetryCount}" Width="80" />
+                            <DataGridTextColumn Header="تلاش مجدد" Binding="{Binding RetryCount, Converter={StaticResource PersianDigits}}" Width="80" />
                             <DataGridTextColumn Header="ارسال" Width="150">
                                 <DataGridTextColumn.Binding>
                                     <Binding Path="SentAt" Converter="{StaticResource ShamsiDateTime}" TargetNullValue="—" />
                                 </DataGridTextColumn.Binding>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="خطا" Binding="{Binding Error, TargetNullValue=—}" Width="*" FontSize="10.5" />
+                            <DataGridTextColumn Header="خطا" Binding="{Binding Error, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" FontSize="10.5" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -159,17 +159,17 @@
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="سرویس" Binding="{Binding Service, TargetNullValue=—}" Width="110" />
-                            <DataGridTextColumn Header="Endpoint" Binding="{Binding Endpoint, TargetNullValue=—}" Width="*" FontFamily="Consolas" FontSize="10.5" />
-                            <DataGridTextColumn Header="متد" Binding="{Binding Method, TargetNullValue=—}" Width="60" FontFamily="Consolas" />
-                            <DataGridTextColumn Header="کد" Binding="{Binding StatusCode, TargetNullValue=—}" Width="60" FontFamily="Consolas" />
-                            <DataGridTextColumn Header="مدت (ms)" Binding="{Binding DurationMs, TargetNullValue=—}" Width="80" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="سرویس" Binding="{Binding Service, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" />
+                            <DataGridTextColumn Header="Endpoint" Binding="{Binding Endpoint, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" FontFamily="Consolas" FontSize="10.5" />
+                            <DataGridTextColumn Header="متد" Binding="{Binding Method, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="60" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="کد" Binding="{Binding StatusCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="60" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="مدت (ms)" Binding="{Binding DurationMs, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="Consolas" />
                             <DataGridTextColumn Header="زمان" Width="150">
                                 <DataGridTextColumn.Binding>
                                     <Binding Path="CalledAt" Converter="{StaticResource ShamsiDateTime}" TargetNullValue="—" />
                                 </DataGridTextColumn.Binding>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="نتیجه" Binding="{Binding IsSuccess}" Width="70" />
+                            <DataGridTextColumn Header="نتیجه" Binding="{Binding IsSuccess, Converter={StaticResource PersianDigits}}" Width="70" />
                         </DataGrid.Columns>
                     </DataGrid>
                     <TextBlock Grid.Row="2" Text="جزئیات فراخوانی انتخاب‌شده:" FontSize="12.5" FontWeight="SemiBold" Margin="2,10,0,6" />

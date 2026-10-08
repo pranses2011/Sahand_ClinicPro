@@ -96,15 +96,15 @@
                               IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                               FlowDirection="RightToLeft">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="رسید" Binding="{Binding ReceiptNumber}" Width="80" FontFamily="Consolas" />
-                            <DataGridTextColumn Header="صندوق" Binding="{Binding RegisterName}" Width="85" />
-                            <DataGridTextColumn Header="زمان بستن" Binding="{Binding ClosedText}" Width="120" />
-                            <DataGridTextColumn Header="بستن‌دهنده" Binding="{Binding ClosedByName}" Width="100" />
-                            <DataGridTextColumn Header="نقد" Binding="{Binding TotalCash}" Width="90" />
-                            <DataGridTextColumn Header="کارت" Binding="{Binding TotalCard}" Width="90" />
-                            <DataGridTextColumn Header="آنلاین" Binding="{Binding TotalOnline}" Width="85" />
-                            <DataGridTextColumn Header="اختلاف" Binding="{Binding Difference}" Width="85" />
-                            <DataGridTextColumn Header="وضعیت" Binding="{Binding DifferenceState}" Width="*">
+                            <DataGridTextColumn Header="رسید" Binding="{Binding ReceiptNumber, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="صندوق" Binding="{Binding RegisterName, Converter={StaticResource PersianDigits}}" Width="85" />
+                            <DataGridTextColumn Header="زمان بستن" Binding="{Binding ClosedText, Converter={StaticResource PersianDigits}}" Width="120" />
+                            <DataGridTextColumn Header="بستن‌دهنده" Binding="{Binding ClosedByName, Converter={StaticResource PersianDigits}}" Width="100" />
+                            <DataGridTextColumn Header="نقد" Binding="{Binding TotalCash, Converter={StaticResource PersianDigits}}" Width="90" />
+                            <DataGridTextColumn Header="کارت" Binding="{Binding TotalCard, Converter={StaticResource PersianDigits}}" Width="90" />
+                            <DataGridTextColumn Header="آنلاین" Binding="{Binding TotalOnline, Converter={StaticResource PersianDigits}}" Width="85" />
+                            <DataGridTextColumn Header="اختلاف" Binding="{Binding Difference, Converter={StaticResource PersianDigits}}" Width="85" />
+                            <DataGridTextColumn Header="وضعیت" Binding="{Binding DifferenceState, Converter={StaticResource PersianDigits}}" Width="*">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontWeight" Value="SemiBold" />

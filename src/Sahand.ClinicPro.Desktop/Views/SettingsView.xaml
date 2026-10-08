@@ -135,8 +135,8 @@
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12" MaxHeight="420" AlternatingRowBackground="#F7FAFD">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="ماژول" Binding="{Binding Title}" Width="150" FontWeight="SemiBold" />
-                            <DataGridTextColumn Header="وضعیت لایسنس" Binding="{Binding LicenseText}" Width="110" />
+                            <DataGridTextColumn Header="ماژول" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="150" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="وضعیت لایسنس" Binding="{Binding LicenseText, Converter={StaticResource PersianDigits}}" Width="110" />
                             <DataGridTemplateColumn Header="فعال در سیستم" Width="110">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -147,7 +147,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="عملیات" Binding="{Binding ActionText}" Width="Auto" MinWidth="110" />
+                            <DataGridTextColumn Header="عملیات" Binding="{Binding ActionText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
                         </DataGrid.Columns>
                     </DataGrid>
                     <TextBlock Text="Core: غیرقابل غیرفعال‌سازی — ماژول بدون لایسنس قفل است و دکمه «خرید ماژول» به License Portal متصل می‌شود"

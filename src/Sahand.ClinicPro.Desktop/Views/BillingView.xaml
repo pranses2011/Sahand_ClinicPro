@@ -98,10 +98,10 @@
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="شماره" Binding="{Binding InvoiceNumber}" Width="80" FontFamily="Consolas" />
-                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, TargetNullValue=—}" Width="85" />
-                            <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName}" Width="*" />
-                            <DataGridTextColumn Header="مبلغ (ریال)" Binding="{Binding Total, StringFormat='{}{0:N0}'}" Width="110">
+                            <DataGridTextColumn Header="شماره" Binding="{Binding InvoiceNumber, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="85" />
+                            <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="*" />
+                            <DataGridTextColumn Header="مبلغ (ریال)" Binding="{Binding Total, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="110">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontFamily" Value="Consolas" />
@@ -109,7 +109,7 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="پرداخت (ریال)" Binding="{Binding Paid, StringFormat='{}{0:N0}'}" Width="105">
+                            <DataGridTextColumn Header="پرداخت (ریال)" Binding="{Binding Paid, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="105">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontFamily" Value="Consolas" />
@@ -160,7 +160,7 @@
                                                     <Run Text=" — فاکتور " /><Run Text="{Binding InvoiceId, Mode=OneWay, TargetNullValue=—}" />
                                                 </TextBlock>
                                             </StackPanel>
-                                            <TextBlock Grid.Column="1" Text="{Binding Amount, StringFormat='{}{0:N0}'}"
+                                            <TextBlock Grid.Column="1" Text="{Binding Amount, Mode=OneWay, Converter={StaticResource CurrencyRial}}"
                                                        FontFamily="Consolas" FontWeight="Bold" Foreground="#2E7D32"
                                                        VerticalAlignment="Center" />
                                         </Grid>

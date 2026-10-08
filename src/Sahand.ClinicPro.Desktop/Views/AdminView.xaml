@@ -49,9 +49,9 @@
                               HeadersVisibility="Column"
                               GridLinesVisibility="Horizontal">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="کلید" Binding="{Binding Key}" Width="220" IsReadOnly="True" />
-                            <DataGridTextColumn Header="شرح" Binding="{Binding Description}" Width="*" IsReadOnly="True" />
-                            <DataGridTextColumn Header="مقدار" Binding="{Binding Value, UpdateSourceTrigger=PropertyChanged}" Width="2*" />
+                            <DataGridTextColumn Header="کلید" Binding="{Binding Key, Converter={StaticResource PersianDigits}}" Width="220" IsReadOnly="True" />
+                            <DataGridTextColumn Header="شرح" Binding="{Binding Description, Converter={StaticResource PersianDigits}}" Width="*" IsReadOnly="True" />
+                            <DataGridTextColumn Header="مقدار" Binding="{Binding Value, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="2*" />
                             <DataGridCheckBoxColumn Header="رمزنگاری‌شده" Binding="{Binding IsEncrypted}" Width="110" IsReadOnly="True" />
                         </DataGrid.Columns>
                     </DataGrid>
@@ -92,12 +92,12 @@
                               HeadersVisibility="Column"
                               GridLinesVisibility="Horizontal">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="کاربر" Binding="{Binding Username}" Width="130" />
-                            <DataGridTextColumn Header="عملیات" Binding="{Binding Action}" Width="Auto" MinWidth="110" />
-                            <DataGridTextColumn Header="موجودیت" Binding="{Binding EntityName}" Width="140" />
-                            <DataGridTextColumn Header="شناسه" Binding="{Binding EntityId}" Width="90" />
-                            <DataGridTextColumn Header="ماژول" Binding="{Binding Module}" Width="130" />
-                            <DataGridTextColumn Header="زمان" Binding="{Binding Time}" Width="180" />
+                            <DataGridTextColumn Header="کاربر" Binding="{Binding Username, Converter={StaticResource PersianDigits}}" Width="130" />
+                            <DataGridTextColumn Header="عملیات" Binding="{Binding Action, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
+                            <DataGridTextColumn Header="موجودیت" Binding="{Binding EntityName, Converter={StaticResource PersianDigits}}" Width="140" />
+                            <DataGridTextColumn Header="شناسه" Binding="{Binding EntityId, Converter={StaticResource PersianDigits}}" Width="90" />
+                            <DataGridTextColumn Header="ماژول" Binding="{Binding Module, Converter={StaticResource PersianDigits}}" Width="130" />
+                            <DataGridTextColumn Header="زمان" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" Width="180" />
                         </DataGrid.Columns>
                     </DataGrid>
                     <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
@@ -166,12 +166,12 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode}" Width="100" />
-                            <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName}" Width="170" />
-                            <DataGridTextColumn Header="سمت" Binding="{Binding PositionName}" Width="120" />
-                            <DataGridTextColumn Header="دپارتمان" Binding="{Binding DepartmentName}" Width="120" />
-                            <DataGridTextColumn Header="موبایل" Binding="{Binding Mobile}" Width="110" />
-                            <DataGridTextColumn Header="نوع" Binding="{Binding TypeText}" Width="90" />
+                            <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="100" />
+                            <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName, Converter={StaticResource PersianDigits}}" Width="170" />
+                            <DataGridTextColumn Header="سمت" Binding="{Binding PositionName, Converter={StaticResource PersianDigits}}" Width="120" />
+                            <DataGridTextColumn Header="دپارتمان" Binding="{Binding DepartmentName, Converter={StaticResource PersianDigits}}" Width="120" />
+                            <DataGridTextColumn Header="موبایل" Binding="{Binding Mobile, Converter={StaticResource PersianDigits}}" Width="110" />
+                            <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="90" />
                             <DataGridTextColumn Header="حقوق پایه (ریال)" Binding="{Binding BaseSalary, StringFormat='#,0'}" Width="120">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -229,9 +229,9 @@
                               HeadersVisibility="Column"
                               GridLinesVisibility="Horizontal">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="نوع" Binding="{Binding Mode}" Width="200" />
-                            <DataGridTextColumn Header="زمان" Binding="{Binding Date}" Width="180" />
-                            <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText}" Width="120" />
+                            <DataGridTextColumn Header="نوع" Binding="{Binding Mode, Converter={StaticResource PersianDigits}}" Width="200" />
+                            <DataGridTextColumn Header="زمان" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="180" />
+                            <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="120" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -291,11 +291,11 @@
                                   GridLinesVisibility="Horizontal"
                                   FontSize="11.5">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="مقصد" Binding="{Binding TableTitle}" Width="100" />
-                                <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, TargetNullValue=—}" Width="170" />
-                                <DataGridTextColumn Header="شرح" Binding="{Binding SummaryLine, TargetNullValue=—}" Width="*" />
-                                <DataGridTextColumn Header="تاریخ" Binding="{Binding DateText}" Width="110" />
-                                <DataGridTextColumn Header="سال" Binding="{Binding YearJalali}" Width="60" FontFamily="Consolas" />
+                                <DataGridTextColumn Header="مقصد" Binding="{Binding TableTitle, Converter={StaticResource PersianDigits}}" Width="100" />
+                                <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="170" />
+                                <DataGridTextColumn Header="شرح" Binding="{Binding SummaryLine, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" />
+                                <DataGridTextColumn Header="تاریخ" Binding="{Binding DateText, Converter={StaticResource PersianDigits}}" Width="110" />
+                                <DataGridTextColumn Header="سال" Binding="{Binding YearJalali, Converter={StaticResource PersianDigits}}" Width="60" FontFamily="Consolas" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>

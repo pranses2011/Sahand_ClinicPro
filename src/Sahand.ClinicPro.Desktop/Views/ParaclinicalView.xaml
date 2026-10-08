@@ -129,7 +129,7 @@
                                                             <Run Text=" — " /><Run Text="{Binding Procedure, Mode=OneWay}" FontWeight="SemiBold" />
                                                         </TextBlock>
                                                         <TextBlock FontSize="10.5" Opacity="0.75" FontFamily="Consolas">
-                                                            <Run Text="{Binding Price, Mode=OneWay, StringFormat='{}{0:N0}'}" /><Run Text=" ریال" />
+                                                            <Run Text="{Binding Price, Mode=OneWay, Converter={StaticResource CurrencyRial}}" /><Run Text=" ریال" />
                                                         </TextBlock>
                                                     </StackPanel>
                                                 </Border>
@@ -359,9 +359,9 @@
                                   Style="{StaticResource MaterialDesignDataGrid}"
                                   HeadersVisibility="Column" GridLinesVisibility="Horizontal">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="نام فایل" Binding="{Binding FileName}" />
-                                <DataGridTextColumn Header="نوع" Binding="{Binding KindText}" />
-                                <DataGridTextColumn Header="حجم" Binding="{Binding SizeText}" />
+                                <DataGridTextColumn Header="نام فایل" Binding="{Binding FileName, Converter={StaticResource PersianDigits}}" />
+                                <DataGridTextColumn Header="نوع" Binding="{Binding KindText, Converter={StaticResource PersianDigits}}" />
+                                <DataGridTextColumn Header="حجم" Binding="{Binding SizeText, Converter={StaticResource PersianDigits}}" />
                                 <DataGridTemplateColumn Header="عملیات">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>

@@ -132,7 +132,7 @@
 
                 <!-- ۲. شماره پرونده -->
                 <DataGridTextColumn Header="پرونده"
-                                    Binding="{Binding MedicalRecordNo}"
+                                    Binding="{Binding MedicalRecordNo, Converter={StaticResource PersianDigits}}"
                                     Width="Auto" MinWidth="90"
                                     FontFamily="Consolas"
                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
@@ -157,13 +157,13 @@
 
                 <!-- ۴. کد ملی -->
                 <DataGridTextColumn Header="کد ملی"
-                                    Binding="{Binding NationalCode}"
+                                    Binding="{Binding NationalCode, Converter={StaticResource PersianDigits}}"
                                     Width="Auto" MinWidth="105"
                                     FontFamily="Consolas" />
 
                 <!-- ۵. موبایل -->
                 <DataGridTextColumn Header="موبایل"
-                                    Binding="{Binding Mobile}"
+                                    Binding="{Binding Mobile, Converter={StaticResource PersianDigits}}"
                                     Width="Auto" MinWidth="110"
                                     FontFamily="Consolas" />
 
@@ -200,7 +200,7 @@
 
                 <!-- ۷. سن -->
                 <DataGridTextColumn Header="سن"
-                                    Binding="{Binding Age, TargetNullValue=—}"
+                                    Binding="{Binding Age, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
                                     Width="Auto" MinWidth="45">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
@@ -211,7 +211,7 @@
 
                 <!-- ۸. آخرین مراجعه (شمسی از سرور) -->
                 <DataGridTextColumn Header="آخرین مراجعه"
-                                    Binding="{Binding LastVisitDateShamsi, TargetNullValue=—}"
+                                    Binding="{Binding LastVisitDateShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
                                     Width="Auto" MinWidth="100" />
 
                 <!-- ۹. عملیات — چرخه بیست‌ویکم: عرض کشسان بر اساس دکمه‌ها +

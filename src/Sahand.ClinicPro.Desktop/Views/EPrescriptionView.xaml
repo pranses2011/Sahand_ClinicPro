@@ -67,9 +67,9 @@
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                   HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="شناسه" Binding="{Binding Id}" Width="70" FontFamily="Consolas" />
-                <DataGridTextColumn Header="نسخه" Binding="{Binding PrescriptionId}" Width="80" FontFamily="Consolas" />
-                <DataGridTextColumn Header="کد رهگیری" Binding="{Binding TrackingCode, TargetNullValue=—}" Width="160" FontFamily="Consolas" FontWeight="SemiBold" />
+                <DataGridTextColumn Header="شناسه" Binding="{Binding Id, Converter={StaticResource PersianDigits}}" Width="70" FontFamily="Consolas" />
+                <DataGridTextColumn Header="نسخه" Binding="{Binding PrescriptionId, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="Consolas" />
+                <DataGridTextColumn Header="کد رهگیری" Binding="{Binding TrackingCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="160" FontFamily="Consolas" FontWeight="SemiBold" />
                 <DataGridTemplateColumn Header="وضعیت" Width="130">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

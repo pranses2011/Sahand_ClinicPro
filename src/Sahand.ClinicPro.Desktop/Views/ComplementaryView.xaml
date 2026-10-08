@@ -218,9 +218,9 @@
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="عنوان" Binding="{Binding Title}" Width="220" FontWeight="SemiBold" />
-                            <DataGridTextColumn Header="توضیح" Binding="{Binding Description, TargetNullValue=—}" Width="*" />
-                            <DataGridTextColumn Header="پاسخ‌ها" Binding="{Binding ResponseCount}" Width="80" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="عنوان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="220" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="توضیح" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" />
+                            <DataGridTextColumn Header="پاسخ‌ها" Binding="{Binding ResponseCount, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="Consolas" />
                             <DataGridTemplateColumn Header="میانگین امتیاز" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -230,7 +230,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="وضعیت" Binding="{Binding ActiveText}" Width="90" />
+                            <DataGridTextColumn Header="وضعیت" Binding="{Binding ActiveText, Converter={StaticResource PersianDigits}}" Width="90" />
                             <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="90">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>

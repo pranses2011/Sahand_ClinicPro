@@ -195,11 +195,11 @@
                             </Style>
                         </DataGrid.RowStyle>
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="دارو" Binding="{Binding Medication}" Width="*" />
-                            <DataGridTextColumn Header="بچ" Binding="{Binding Batch}" Width="110" />
-                            <DataGridTextColumn Header="موجودی سیستم" Binding="{Binding SystemQty}" Width="100" />
-                            <DataGridTextColumn Header="شمارش واقعی" Binding="{Binding CountedQty}" Width="100" />
-                            <DataGridTextColumn Header="مغایرت" Binding="{Binding DiffText}" Width="110">
+                            <DataGridTextColumn Header="دارو" Binding="{Binding Medication, Converter={StaticResource PersianDigits}}" Width="*" />
+                            <DataGridTextColumn Header="بچ" Binding="{Binding Batch, Converter={StaticResource PersianDigits}}" Width="110" />
+                            <DataGridTextColumn Header="موجودی سیستم" Binding="{Binding SystemQty, Converter={StaticResource PersianDigits}}" Width="100" />
+                            <DataGridTextColumn Header="شمارش واقعی" Binding="{Binding CountedQty, Converter={StaticResource PersianDigits}}" Width="100" />
+                            <DataGridTextColumn Header="مغایرت" Binding="{Binding DiffText, Converter={StaticResource PersianDigits}}" Width="110">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Center" />
@@ -207,7 +207,7 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="وضعیت" Binding="{Binding Notes}" Width="140" />
+                            <DataGridTextColumn Header="وضعیت" Binding="{Binding Notes, Converter={StaticResource PersianDigits}}" Width="140" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>

@@ -366,7 +366,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                             <DataGridTextColumn Header="ظرفیت" Width="65"
-                                Binding="{Binding MaxPatients, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                                Binding="{Binding MaxPatients, UpdateSourceTrigger=PropertyChanged, TargetNullValue='', Converter={StaticResource PersianDigits}}" />
                         </DataGrid.Columns>
                     </DataGrid>
 
@@ -453,11 +453,11 @@
                               HeadersVisibility="Column"
                               FontSize="12">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi}" Width="100" />
-                            <DataGridTextColumn Header="از ساعت" Binding="{Binding FromTime, TargetNullValue=—}" Width="75" />
-                            <DataGridTextColumn Header="تا ساعت" Binding="{Binding ToTime, TargetNullValue=—}" Width="75" />
-                            <DataGridTextColumn Header="نوع" Binding="{Binding AbsenceTypeName}" Width="85" />
-                            <DataGridTextColumn Header="دلیل" Binding="{Binding Reason, TargetNullValue=—}" Width="150" />
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="100" />
+                            <DataGridTextColumn Header="از ساعت" Binding="{Binding FromTime, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="75" />
+                            <DataGridTextColumn Header="تا ساعت" Binding="{Binding ToTime, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="75" />
+                            <DataGridTextColumn Header="نوع" Binding="{Binding AbsenceTypeName, Converter={StaticResource PersianDigits}}" Width="85" />
+                            <DataGridTextColumn Header="دلیل" Binding="{Binding Reason, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="150" />
                             <DataGridTemplateColumn Header="نوبت‌های درگیر" Width="100">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>

@@ -45,13 +45,13 @@
                   FontSize="12"
                   AlternatingRowBackground="#F7FAFD">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="شماره" Binding="{Binding RoomNumber}"
+                <DataGridTextColumn Header="شماره" Binding="{Binding RoomNumber, Converter={StaticResource PersianDigits}}"
                                     Width="Auto" MinWidth="60" FontFamily="Consolas" />
-                <DataGridTextColumn Header="نام اتاق" Binding="{Binding DisplayName}"
+                <DataGridTextColumn Header="نام اتاق" Binding="{Binding DisplayName, Converter={StaticResource PersianDigits}}"
                                     Width="*" MinWidth="140" />
-                <DataGridTextColumn Header="طبقه" Binding="{Binding Floor, TargetNullValue=—}"
+                <DataGridTextColumn Header="طبقه" Binding="{Binding Floor, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
                                     Width="Auto" MinWidth="50" />
-                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText}"
+                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}"
                                     Width="Auto" MinWidth="65" />
             </DataGrid.Columns>
         </DataGrid>

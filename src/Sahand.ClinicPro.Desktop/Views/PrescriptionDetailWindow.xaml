@@ -30,12 +30,12 @@
                   GridLinesVisibility="Horizontal"
                   materialDesign:DataGridAssist.CellPadding="8,6">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="دارو" Binding="{Binding MedicationName}" Width="2*" />
-                <DataGridTextColumn Header="دوز" Binding="{Binding Dosage}" Width="*" />
-                <DataGridTextColumn Header="تکرار" Binding="{Binding Frequency}" Width="*" />
-                <DataGridTextColumn Header="مدت" Binding="{Binding Duration}" Width="90" />
-                <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity}" Width="70" />
-                <DataGridTextColumn Header="دستور مصرف" Binding="{Binding Instructions}" Width="2*" />
+                <DataGridTextColumn Header="دارو" Binding="{Binding MedicationName, Converter={StaticResource PersianDigits}}" Width="2*" />
+                <DataGridTextColumn Header="دوز" Binding="{Binding Dosage, Converter={StaticResource PersianDigits}}" Width="*" />
+                <DataGridTextColumn Header="تکرار" Binding="{Binding Frequency, Converter={StaticResource PersianDigits}}" Width="*" />
+                <DataGridTextColumn Header="مدت" Binding="{Binding Duration, Converter={StaticResource PersianDigits}}" Width="90" />
+                <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="70" />
+                <DataGridTextColumn Header="دستور مصرف" Binding="{Binding Instructions, Converter={StaticResource PersianDigits}}" Width="2*" />
             </DataGrid.Columns>
         </DataGrid>
 

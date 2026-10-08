@@ -96,12 +96,12 @@
                   Style="{StaticResource MaterialDesignDataGrid}"
                   HeadersVisibility="Column" GridLinesVisibility="Horizontal">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode}" />
-                <DataGridTextColumn Header="نام و نام خانوادگی" Binding="{Binding EmployeeName}" />
-                <DataGridTextColumn Header="حقوق پایه" Binding="{Binding BaseSalary}" />
-                <DataGridTextColumn Header="درصد از سود" Binding="{Binding CommissionPercent}" />
-                <DataGridTextColumn Header="سود خدمات دوره" Binding="{Binding ServiceProfitBase}" />
-                <DataGridTextColumn Header="حقوق درصدی" Binding="{Binding ServiceCommission}">
+                <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" />
+                <DataGridTextColumn Header="نام و نام خانوادگی" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" />
+                <DataGridTextColumn Header="حقوق پایه" Binding="{Binding BaseSalary, Converter={StaticResource PersianDigits}}" />
+                <DataGridTextColumn Header="درصد از سود" Binding="{Binding CommissionPercent, Converter={StaticResource PersianDigits}}" />
+                <DataGridTextColumn Header="سود خدمات دوره" Binding="{Binding ServiceProfitBase, Converter={StaticResource PersianDigits}}" />
+                <DataGridTextColumn Header="حقوق درصدی" Binding="{Binding ServiceCommission, Converter={StaticResource PersianDigits}}">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="FontWeight" Value="SemiBold" />
@@ -109,11 +109,11 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="اضافه‌کاری" Binding="{Binding Overtime}" />
-                <DataGridTextColumn Header="پاداش" Binding="{Binding Bonus}" />
-                <DataGridTextColumn Header="بیمه ۷٪" Binding="{Binding Insurance}" />
-                <DataGridTextColumn Header="مالیات" Binding="{Binding Tax}" />
-                <DataGridTextColumn Header="خالص پرداختی" Binding="{Binding NetAmount}">
+                <DataGridTextColumn Header="اضافه‌کاری" Binding="{Binding Overtime, Converter={StaticResource PersianDigits}}" />
+                <DataGridTextColumn Header="پاداش" Binding="{Binding Bonus, Converter={StaticResource PersianDigits}}" />
+                <DataGridTextColumn Header="بیمه ۷٪" Binding="{Binding Insurance, Converter={StaticResource PersianDigits}}" />
+                <DataGridTextColumn Header="مالیات" Binding="{Binding Tax, Converter={StaticResource PersianDigits}}" />
+                <DataGridTextColumn Header="خالص پرداختی" Binding="{Binding NetAmount, Converter={StaticResource PersianDigits}}">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="FontWeight" Value="Bold" />

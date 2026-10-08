@@ -51,9 +51,9 @@
                           AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                           HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="نام آزمایش" Binding="{Binding Name}" Width="220" FontWeight="Bold" />
-                        <DataGridTextColumn Header="دسته" Binding="{Binding Category, TargetNullValue=—}" Width="130" />
-                        <DataGridTextColumn Header="واحد" Binding="{Binding Unit, TargetNullValue=—}" Width="90" />
+                        <DataGridTextColumn Header="نام آزمایش" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="220" FontWeight="Bold" />
+                        <DataGridTextColumn Header="دسته" Binding="{Binding Category, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="130" />
+                        <DataGridTextColumn Header="واحد" Binding="{Binding Unit, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="90" />
                         <DataGridTextColumn Header="قیمت (ریال)" Width="120">
                             <DataGridTextColumn.Binding>
                                 <Binding Path="Price" StringFormat="{}{0:N0}" />
@@ -77,17 +77,17 @@
                   HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD"
                   MouseDoubleClick="OnOrderDoubleClick">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="شماره درخواست" Binding="{Binding Number, TargetNullValue=—}" Width="120" FontFamily="Consolas" />
-                <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName}" Width="180" FontWeight="SemiBold" />
-                <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName}" Width="160" />
-                <DataGridTextColumn Header="تعداد تست" Binding="{Binding ItemsCount}" Width="85">
+                <DataGridTextColumn Header="شماره درخواست" Binding="{Binding Number, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="Consolas" />
+                <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="180" FontWeight="SemiBold" />
+                <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="160" />
+                <DataGridTextColumn Header="تعداد تست" Binding="{Binding ItemsCount, Converter={StaticResource PersianDigits}}" Width="85">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="تاریخ" Binding="{Binding Date}" Width="100" />
+                <DataGridTextColumn Header="تاریخ" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="100" />
                 <DataGridTemplateColumn Header="وضعیت" Width="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

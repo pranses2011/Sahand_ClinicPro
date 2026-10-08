@@ -358,16 +358,16 @@
                               FontSize="11">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="زمان"
-                                                Binding="{Binding TimeShamsi}"
+                                                Binding="{Binding TimeShamsi, Converter={StaticResource PersianDigits}}"
                                                 Width="140" />
                             <DataGridTextColumn Header="کاربر"
-                                                Binding="{Binding User}"
+                                                Binding="{Binding User, Converter={StaticResource PersianDigits}}"
                                                 Width="120" />
                             <DataGridTextColumn Header="عملیات"
-                                                Binding="{Binding Action}"
+                                                Binding="{Binding Action, Converter={StaticResource PersianDigits}}"
                                                 Width="110" />
                             <DataGridTextColumn Header="موجودیت"
-                                                Binding="{Binding Entity}"
+                                                Binding="{Binding Entity, Converter={StaticResource PersianDigits}}"
                                                 Width="*" />
                         </DataGrid.Columns>
                     </DataGrid>

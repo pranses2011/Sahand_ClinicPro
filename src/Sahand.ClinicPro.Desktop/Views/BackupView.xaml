@@ -61,8 +61,8 @@
                           HeadersVisibility="Column" FontSize="12" MaxHeight="220"
                           AlternatingRowBackground="#F7FAFD">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateText}" Width="140" />
-                        <DataGridTextColumn Header="نوع" Binding="{Binding TypeText}" Width="90" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateText, Converter={StaticResource PersianDigits}}" Width="140" />
+                        <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="90" />
                         <DataGridTemplateColumn Header="وضعیت" Width="100">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -73,9 +73,9 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="سایز" Binding="{Binding SizeText}" Width="90" FontFamily="Consolas" />
-                        <DataGridTextColumn Header="مسیر" Binding="{Binding FilePath, TargetNullValue=—}" Width="*" FontFamily="Consolas" FontSize="10.5" />
-                        <DataGridTextColumn Header="حالت" Binding="{Binding IsAutomatic}" Width="80" />
+                        <DataGridTextColumn Header="سایز" Binding="{Binding SizeText, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="Consolas" />
+                        <DataGridTextColumn Header="مسیر" Binding="{Binding FilePath, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" FontFamily="Consolas" FontSize="10.5" />
+                        <DataGridTextColumn Header="حالت" Binding="{Binding IsAutomatic, Converter={StaticResource PersianDigits}}" Width="80" />
                     </DataGrid.Columns>
                 </DataGrid>
 
