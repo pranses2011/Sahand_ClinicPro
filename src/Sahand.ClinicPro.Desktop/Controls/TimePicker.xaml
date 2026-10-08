@@ -36,7 +36,12 @@
                             CornerRadius="4"
                             Padding="8,5"
                             SnapsToDevicePixels="True">
-                        <StackPanel Orientation="Horizontal">
+                        <!-- چرخه بیست‌وچهارم: جهت چینش LTR — آیکون سمت چپ و متن ساعت
+                             سمت راست؛ در RTL قبلی، متن با شروع از راست رسم می‌شد و
+                             در فضای تنگ، رقم «ساعت» بریده می‌شد و فقط دقیقه دیده می‌شد.
+                             فونت هاردکد Consolas هم حذف شد (ارقام فارسی ندارد و فونت
+                             انتخابی کاربر روی آن نمی‌نشست) — اکنون فونت تم اعمال می‌شود. -->
+                        <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight">
                             <materialDesign:PackIcon Kind="ClockOutline"
                                                      Width="15" Height="15"
                                                      VerticalAlignment="Center"
@@ -46,9 +51,8 @@
                             <TextBlock x:Name="TimeTextBlock"
                                        Text="{Binding TimeTextFa, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=OneWay}"
                                        Margin="6,0,0,0"
-                                       MinWidth="42"
+                                       MinWidth="48"
                                        VerticalAlignment="Center"
-                                       FontFamily="Consolas"
                                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
                         </StackPanel>
                     </Border>
@@ -140,18 +144,20 @@
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,4,0">
                             <TextBlock Text="انتخاب زمان" FontSize="10.5" Opacity="0.55"
                                        Margin="2,0,0,7" />
-                            <StackPanel Orientation="Horizontal">
+                            <!-- چرخه بیست‌وچهارم: ردیف دیجیتال با جهت LTR — زمان همیشه
+                                 چپ‌به‌راست خوانده می‌شود؛ در RTL قبلی ساعت به راست و دقیقه
+                                 به چپ می‌افتاد و «وارونه» دیده می‌شد (گزارش هفدهم مالک).
+                                 فونت هاردکد حذف شد تا ارقام فارسی با فونت تم رسم شوند. -->
+                            <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight">
                                 <Button x:Name="HourBox" Template="{StaticResource DigitBoxTemplate}"
                                         Click="OnHourBoxClick" Cursor="Hand">
-                                    <TextBlock x:Name="HourText" FontSize="21" FontWeight="Bold"
-                                               FontFamily="Consolas" />
+                                    <TextBlock x:Name="HourText" FontSize="21" FontWeight="Bold" />
                                 </Button>
                                 <TextBlock Text=":" FontSize="21" FontWeight="Bold"
                                            VerticalAlignment="Center" Margin="4,0" />
                                 <Button x:Name="MinuteBox" Template="{StaticResource DigitBoxTemplate}"
                                         Click="OnMinuteBoxClick" Cursor="Hand">
-                                    <TextBlock x:Name="MinuteText" FontSize="21" FontWeight="Bold"
-                                               FontFamily="Consolas" />
+                                    <TextBlock x:Name="MinuteText" FontSize="21" FontWeight="Bold" />
                                 </Button>
                             </StackPanel>
 
@@ -163,17 +169,22 @@
                                         Content="عصر" Click="OnPmClick" Margin="6,0,0,0" />
                             </UniformGrid>
 
-                            <!-- ورود تایپی مستقیم — با کلید صفحه‌کلید نمایان می‌شود -->
+                            <!-- ورود تایپی مستقیم — با کلید صفحه‌کلید نمایان می‌شود؛
+                                 LTR و بدون فونت هاردکد (قالب HH:mm لاتین/ارقام فارسی) -->
                             <StackPanel x:Name="KeyboardPanel" Visibility="Collapsed" Margin="0,10,0,0">
                                 <TextBlock Text="ورود تایپی (HH:mm):" FontSize="10.5" Opacity="0.6" Margin="2,0,0,3" />
                                 <TextBox x:Name="ManualInput" MaxLength="5" Width="104"
-                                         HorizontalAlignment="Left" FontFamily="Consolas"
+                                         HorizontalAlignment="Left" FlowDirection="LeftToRight"
                                          KeyDown="OnManualKeyDown" />
                             </StackPanel>
                         </StackPanel>
 
-                        <!-- ═══ صفحهٔ ساعت عقربه‌ای — رندر پویا از کد پشت ═══ -->
-                        <Border Grid.Column="2" Background="{DynamicResource MaterialDesign.Brush.TextBox.HoverBackground}"
+                        <!-- ═══ صفحهٔ ساعت عقربه‌ای — رندر پویا از کد پشت ═══
+                             چرخه بیست‌وچهارم: جهت LTR روی بوم — کانوسِ RTL مختصات X را
+                             آینه می‌کند؛ اعداد عقربه‌ای وارونه (۳ به‌جای چپ در راست)
+                             دیده می‌شد و هندسهٔ کلیک هم با زاویهٔ واقعی نمی‌خواند. -->
+                        <Border Grid.Column="2" FlowDirection="LeftToRight"
+                                Background="{DynamicResource MaterialDesign.Brush.TextBox.HoverBackground}"
                                 CornerRadius="125" Width="250" Height="250">
                             <Canvas x:Name="ClockFace"
                                     Width="250" Height="250"
