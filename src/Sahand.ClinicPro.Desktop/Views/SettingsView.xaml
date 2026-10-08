@@ -210,20 +210,38 @@
                 <!-- ─── بخش ۳: چاپگر و چاپ ─── -->
                 <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=3}" Margin="4,8" MaxWidth="520" HorizontalAlignment="Stretch">
                     <TextBlock Text="چاپگر و چاپ" FontSize="16" FontWeight="Bold" Margin="2,0,0,12" />
-                    <TextBox materialDesign:HintAssist.Hint="چاپگر پیش‌فرض"
-                             Text="{Binding DefaultPrinter, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
-                    <TextBox materialDesign:HintAssist.Hint="چاپگر فاکتور"
-                             Text="{Binding InvoicePrinter, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
-                    <TextBox materialDesign:HintAssist.Hint="چاپگر نسخه"
-                             Text="{Binding PrescriptionPrinter, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+
+                    <!-- ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — «فیلدهای چاپگرها
+                         خالی هستند و نمی‌شود چاپگر انتخاب کرد» ═══ چاپگرهای نصب‌شدهٔ
+                         ویندوز در ComboBox قابل انتخاب‌اند (ویرایش‌پذیر برای نام‌های
+                         دستی/شبکه)؛ «چاپگر نوبت‌دهی» برای قبض‌های نوبت اضافه شد. -->
+                    <ComboBox materialDesign:HintAssist.Hint="چاپگر پیش‌فرض"
+                              ItemsSource="{Binding PrinterNames}"
+                              IsEditable="True" StaysOpenOnEdit="True"
+                              Text="{Binding DefaultPrinter, UpdateSourceTrigger=PropertyChanged}"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,10" />
+                    <ComboBox materialDesign:HintAssist.Hint="چاپگر فاکتور"
+                              ItemsSource="{Binding PrinterNames}"
+                              IsEditable="True" StaysOpenOnEdit="True"
+                              Text="{Binding InvoicePrinter, UpdateSourceTrigger=PropertyChanged}"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,10" />
+                    <ComboBox materialDesign:HintAssist.Hint="چاپگر نسخه"
+                              ItemsSource="{Binding PrinterNames}"
+                              IsEditable="True" StaysOpenOnEdit="True"
+                              Text="{Binding PrescriptionPrinter, UpdateSourceTrigger=PropertyChanged}"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,10" />
+                    <ComboBox materialDesign:HintAssist.Hint="چاپگر نوبت‌دهی — قبض‌های نوبت با این چاپ می‌شوند"
+                              ItemsSource="{Binding PrinterNames}"
+                              IsEditable="True" StaysOpenOnEdit="True"
+                              Text="{Binding TicketPrinter, UpdateSourceTrigger=PropertyChanged}"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,10" />
                     <ComboBox materialDesign:HintAssist.Hint="سایز کاغذ فاکتور"
                               ItemsSource="{Binding PaperSizes}" SelectedItem="{Binding InvoicePaperSize}"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,12" />
                     <CheckBox Content="نمایش پیش‌نمایش قبل از چاپ" IsChecked="{Binding ShowPreview}" Margin="2,3" />
                     <CheckBox Content="چاپ خودکار بعد از ثبت فاکتور" IsChecked="{Binding AutoPrintInvoice}" Margin="2,3" />
+                    <!-- چرخه ۲۴: چاپ خودکار قبض نوبت پس از ثبت موفق — با چاپگر نوبت‌دهی بالا -->
+                    <CheckBox Content="چاپ خودکار قبض نوبت پس از ثبت (با چاپگر نوبت‌دهی)" IsChecked="{Binding AutoPrintTicket}" Margin="2,3" />
                     <StackPanel Orientation="Horizontal" Margin="2,10">
                         <TextBlock Text="تعداد نسخه چاپ: " VerticalAlignment="Center" FontSize="12.5" />
                         <TextBox Text="{Binding PrintCopies, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />

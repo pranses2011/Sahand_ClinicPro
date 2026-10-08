@@ -496,6 +496,29 @@ public partial class AppointmentsViewModel : ViewModelBase
 
         var code = response.Data.AppointmentCode ?? "—";
         _snackbar.Success($"نوبت ثبت شد — کد پیگیری: {code}");
+
+        // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — قبض نوبت ═══
+        // «یک چاپگر پیش‌فرض برای نوبت‌دهی باشد تا قبض‌های نوبت با آن چاپ شود»:
+        // اگر «چاپ خودکار قبض» در تنظیمات فعال باشد، قبض فیشی همان لحظه با
+        // چاپگر نوبت‌دهی انتخاب‌شده چاپ می‌شود (بدون هیچ دیالوگی). نام چاپگر و
+        // پرچم خودکار در ذخیره‌گاه محلی هم آینه می‌شوند تا بدون درخواست اضافهٔ
+        // شبکه در دسترس باشند.
+        var ticketPatient = SelectedPatient.FullName;
+        var ticketDoctor = SelectedDoctor.Name;
+        var ticketDate = SelectedDateShamsi;
+        var ticketTime = SelectedSlot?.Time ?? string.Empty;
+        var ticketType = VisitTypes.ElementAtOrDefault(Math.Clamp(SelectedTypeIndex, 0, VisitTypes.Length - 1));
+        if (LocalSettingsStore.Get("Printer.AutoPrintTicket") == "true")
+        {
+            var ticketPrinter = LocalSettingsStore.Get("Printer.TicketPrinter");
+            var clinicTitle = LocalSettingsStore.Get("Printer.ClinicName") is { Length: > 0 } clinic
+                ? clinic : "درمانگاه سهند";
+            System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
+                Services.AppointmentTicketPrinter.Print(
+                    ticketPrinter, clinicTitle, code, ticketPatient, ticketDoctor,
+                    ticketDate, ticketTime, $"نوبت {ticketType}"));
+        }
+
         SelectedPatient = null;
         PatientSearchText = string.Empty;
         Notes = string.Empty;

@@ -83,6 +83,14 @@ public partial class SettingsViewModel : ViewModelBase
 
     /* ─── بخش چاپگر ─── */
 
+    // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — «فیلدهای چاپگرها خالی هستند و
+    // نمی‌شود چاپگر انتخاب کرد» ═══ فهرست چاپگرهای نصب‌شدهٔ ویندوز از
+    // LocalPrintServer خوانده و در ComboBoxهای بخش چاپگر عرضه می‌شود؛
+    // «چاپگر نوبت‌دهی» هم برای قبض‌های نوبت اضافه شد (چاپ مستقیم بدون دیالوگ).
+
+    /// <summary>چاپگرهای نصب‌شدهٔ این ویندوز — برای ComboBoxهای بخش چاپگر</summary>
+    public ObservableCollection<string> PrinterNames { get; } = new();
+
     /// <summary>چاپگر پیش‌فرض</summary>
     [ObservableProperty]
     private string? _defaultPrinter;
@@ -94,6 +102,14 @@ public partial class SettingsViewModel : ViewModelBase
     /// <summary>چاپگر نسخه</summary>
     [ObservableProperty]
     private string? _prescriptionPrinter;
+
+    /// <summary>چاپگر نوبت‌دهی — قبض‌های نوبت با این چاپ می‌شوند (چرخه ۲۴)</summary>
+    [ObservableProperty]
+    private string? _ticketPrinter;
+
+    /// <summary>چاپ خودکار قبض نوبت پس از ثبت موفق — چرخه ۲۴</summary>
+    [ObservableProperty]
+    private bool _autoPrintTicket;
 
     /// <summary>سایز کاغذ فاکتور</summary>
     [ObservableProperty]
@@ -323,6 +339,8 @@ public partial class SettingsViewModel : ViewModelBase
         InitializeModules();
         InitializeGovSystems();
         _ = LoadClinicInfoAsync();
+        // چرخه ۲۴: چاپگرهای نصب‌شده + تنظیمات چاپگر ذخیره‌شده
+        _ = LoadPrinterSettingsAsync();
     }
 
     /// <summary>بارگذاری بخش فعال</summary>
@@ -446,7 +464,10 @@ public partial class SettingsViewModel : ViewModelBase
 
     /* ─── چاپگر ─── */
 
-    /// <summary>ذخیره تنظیمات چاپگر</summary>
+    /// <summary>ذخیره تنظیمات چاپگر — شامل چاپگر نوبت‌دهی و چاپ خودکار قبض.
+    /// چرخه ۲۴: مقادیر کلیدی (چاپگر نوبت/پرچم خودکار/نام درمانگاه) علاوه بر سرور
+    /// در ذخیره‌گاه محلی هم آینه می‌شوند تا لحظهٔ ثبت نوبت بدون درخواست شبکه
+    /// در دسترس باشند.</summary>
     [RelayCommand]
     private async Task SavePrinterSettingsAsync()
     {
@@ -455,11 +476,60 @@ public partial class SettingsViewModel : ViewModelBase
             ["DefaultPrinter"] = DefaultPrinter,
             ["InvoicePrinter"] = InvoicePrinter,
             ["PrescriptionPrinter"] = PrescriptionPrinter,
+            ["TicketPrinter"] = TicketPrinter,
             ["InvoicePaperSize"] = InvoicePaperSize,
             ["ShowPreview"] = ShowPreview ? "true" : "false",
             ["AutoPrintInvoice"] = AutoPrintInvoice ? "true" : "false",
+            ["AutoPrintTicket"] = AutoPrintTicket ? "true" : "false",
             ["PrintCopies"] = PrintCopies.ToString()
         });
+
+        // آینهٔ محلی — دسترسی بی‌درنگ هنگام ثبت نوبت (بدون رفت‌وبرگشت شبکه)
+        try
+        {
+            LocalSettingsStore.Set("Printer.TicketPrinter", TicketPrinter ?? string.Empty);
+            LocalSettingsStore.Set("Printer.AutoPrintTicket", AutoPrintTicket ? "true" : "false");
+            LocalSettingsStore.Set("Printer.ClinicName", ClinicName ?? string.Empty);
+        }
+        catch
+        {
+            // ذخیرهٔ محلی هرگز نباید جریان را متوقف کند
+        }
+
+        _snackbar.Success("تنظیمات چاپگر ذخیره شد");
+    }
+
+    /// <summary>بارگذاری تنظیمات چاپگر ذخیره‌شده + کش فهرست چاپگرهای محلی —
+    /// چرخه ۲۴: مقادیر ذخیره‌شده در بخش چاپگر نمایش داده شوند و فهرست
+    /// چاپگرهای ویندوز هم برای انتخاب در دسترس باشد</summary>
+    private async Task LoadPrinterSettingsAsync()
+    {
+        // فهرست چاپگرهای نصب‌شدهٔ ویندوز — از سرویس چاپ ویندوز (بدون کرش در نبود چاپگر)
+        try
+        {
+            var server = new System.Printing.LocalPrintServer();
+            foreach (var queue in server.GetPrintQueues()
+                         .OrderBy(q => q.FullName, StringComparer.CurrentCultureIgnoreCase))
+                PrinterNames.Add(queue.FullName);
+        }
+        catch
+        {
+            // محیط بدون سرویس چاپ — فهرست خالی می‌ماند و ComboBox ویرایش‌پذیر است
+        }
+
+        // مقادیر ذخیره‌شدهٔ تنظیمات چاپگر از سرور
+        var response = await _api.GetAsync<SettingsResponse>("settings?category=Printer");
+        var map = response?.Data ?? new List<SettingDto>();
+        DefaultPrinter = Value(map, "DefaultPrinter");
+        InvoicePrinter = Value(map, "InvoicePrinter");
+        PrescriptionPrinter = Value(map, "PrescriptionPrinter");
+        TicketPrinter = Value(map, "TicketPrinter");
+        InvoicePaperSize = string.IsNullOrWhiteSpace(Value(map, "InvoicePaperSize")) ? "A5" : Value(map, "InvoicePaperSize");
+        ShowPreview = Value(map, "ShowPreview") != "false";
+        AutoPrintInvoice = Value(map, "AutoPrintInvoice") == "true";
+        AutoPrintTicket = Value(map, "AutoPrintTicket") == "true";
+        var copies = Value(map, "PrintCopies");
+        if (int.TryParse(copies, out var n) && n is >= 1 and <= 10) PrintCopies = n;
     }
 
     /// <summary>تست چاپگر — ارسال صفحه آزمایشی به چاپگر پیش‌فرض ویندوز</summary>
