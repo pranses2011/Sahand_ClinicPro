@@ -82,7 +82,25 @@
 
                 <!-- ─── بخش ۰: اطلاعات درمانگاه ─── -->
                 <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=0}" Margin="4,8">
-                    <TextBlock Text="اطلاعات درمانگاه" FontSize="16" FontWeight="Bold" Margin="2,0,0,12" />
+                    <TextBlock Text="اطلاعات درمانگاه" FontSize="16" FontWeight="Bold" Margin="2,0,0,6" />
+
+                    <!-- ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) ═══
+                         «در تنظیمات و اطلاعات درمانگاه فقط اطلاعات درمانگاه را نشان
+                         بده و همه این اطلاعات را از لایسنس بخوان و در اولین چک کردن
+                         لایسنس در تنظیمات قرار بده و فقط از سرور لایسنس قابل تغییر
+                         باشند» — کل بخش فقط‌خواندنی شد: مقادیر هنگام هر اعتبارسنجی
+                         موفق لایسنس به‌صورت خودکار از پنل مدیریت لایسنس همگام
+                         می‌شوند و دکمهٔ ذخیره حذف شد؛ تغییر تنها از پنل لایسنس است. -->
+                    <Border Background="#FFF8E1" BorderBrush="#FFE082" BorderThickness="1"
+                            CornerRadius="8" Padding="10,8" Margin="2,0,2,12">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="InformationOutline" Width="18" Height="18"
+                                                     Foreground="#E65100" VerticalAlignment="Center" />
+                            <TextBlock Text="این اطلاعات از «سرور لایسنس» خوانده می‌شود و با هر بررسی لایسنس به‌طور خودکار همگام می‌گردد؛ برای تغییر، از پنل مدیریت لایسنس اقدام کنید."
+                                       FontSize="11.5" Foreground="#795548" TextWrapping="Wrap"
+                                       Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -91,41 +109,35 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
                             <TextBox materialDesign:HintAssist.Hint="نام درمانگاه (الزامی)"
-                                     Text="{Binding ClinicName, UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding ClinicName, Mode=OneWay}" IsReadOnly="True"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
                             <TextBox materialDesign:HintAssist.Hint="شماره مجوز"
-                                     Text="{Binding LicenseNumber, UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding LicenseNumber, Mode=OneWay}" IsReadOnly="True"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
                             <TextBox materialDesign:HintAssist.Hint="کد اقتصادی"
-                                     Text="{Binding EconomicCode, UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding EconomicCode, Mode=OneWay}" IsReadOnly="True"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
                             <TextBox materialDesign:HintAssist.Hint="شناسه ملی"
-                                     Text="{Binding NationalId, UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding NationalId, Mode=OneWay}" IsReadOnly="True"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                             <TextBox materialDesign:HintAssist.Hint="نام مدیر"
-                                     Text="{Binding ManagerName, UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding ManagerName, Mode=OneWay}" IsReadOnly="True"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
                             <TextBox materialDesign:HintAssist.Hint="تلفن"
-                                     Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding Phone, Mode=OneWay}" IsReadOnly="True"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
                             <TextBox materialDesign:HintAssist.Hint="ایمیل"
-                                     Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding Email, Mode=OneWay}" IsReadOnly="True"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
                             <TextBox materialDesign:HintAssist.Hint="آدرس"
-                                     Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding Address, Mode=OneWay}" IsReadOnly="True"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      AcceptsReturn="True" Height="70" TextWrapping="Wrap" VerticalContentAlignment="Top" />
                         </StackPanel>
                     </Grid>
-                    <Button Command="{Binding SaveClinicInfoCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
-                            HorizontalAlignment="Left" Margin="0,14,0,0">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                            <TextBlock Text="💾 ذخیره تغییرات" Margin="7,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
+                    <!-- چرخه ۲۴ — دکمهٔ ذخیره حذف شد: داده‌ها فقط از سرور لایسنس همگام می‌شوند -->
                 </StackPanel>
 
                 <!-- ─── بخش ۱: ماژول‌ها ─── -->

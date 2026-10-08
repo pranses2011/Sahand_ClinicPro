@@ -573,6 +573,17 @@ function ls_license_payload(array $l): array
         'maxBranches'    => (int)$l['max_branches'],
         'enabledModules' => is_array($modules) ? array_values($modules) : [],
         'daysRemaining'  => ls_days_remaining($l),
+        // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — اطلاعات کامل درمانگاه ═══
+        // «در تنظیمات، اطلاعات درمانگاه فقط از سرور لایسنس خوانده و قابل تغییر
+        // باشد» — کل اطلاعات درمانگاه که در پنل مدیریت لایسنس نگهداری می‌شود
+        // به پاسخ اعتبارسنجی افزوده شد تا کلاینت در اولین بررسی، مقادیر را در
+        // تنظیمات برنامه جای‌گذاری کند (تنها مرجعِ تغییر، همین پنل است).
+        'clinicName'     => (string)($l['clinic_name'] ?? ''),
+        'clinicManager'  => (string)($l['clinic_manager'] ?? ''),
+        'clinicPhone'    => (string)($l['clinic_phone'] ?? ''),
+        'clinicEmail'    => (string)($l['clinic_email'] ?? ''),
+        'clinicCity'     => (string)($l['clinic_city'] ?? ''),
+        'clinicAddress'  => (string)($l['clinic_address'] ?? ''),
         // اطلاعات پشتیبانی — از پنل قابل ویرایش؛ کلاینت هنگام فعال‌سازی می‌گیرد و سراسر برنامه استفاده می‌کند
         'support'        => ls_support_info(),
     ];
@@ -820,6 +831,9 @@ function ls_db_migrate(): array
             'clinic_email'         => 'VARCHAR(160) NULL',
             'clinic_city'          => 'VARCHAR(100) NULL',
             'clinic_address'       => 'VARCHAR(300) NULL',
+            // چرخه ۲۴ — تلفن درمانگاه (پنل مدیریت لایسنس از قبل فرم/نمایشش را دارد؛
+            // ستونش در نصب‌های قدیمی نبود و اینجا تضمین می‌شود)
+            'clinic_phone'         => 'VARCHAR(60) NULL',
         ],
         'ls_messages'   => [
             'delivered_at' => 'DATETIME NULL',

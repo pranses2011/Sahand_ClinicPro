@@ -18,7 +18,7 @@ namespace Sahand.ClinicPro.Infrastructure.Services.License;
 /// سرویس لایسنس سمت کلاینت — اتصال واقعی به سرور لایسنس (نسخه PHP برای cPanel یا پنل بلزور)
 /// اعتبارسنجی سه‌مرحله‌ای: اثر انگشت سخت‌افزار ← انقضا ← امضای RSA-2048
 /// </summary>
-public class LicenseService : ILicenseService
+public partial class LicenseService : ILicenseService
 {
     private readonly ClinicProDbContext _context;
     private readonly HttpClient _http;
@@ -375,6 +375,14 @@ public class LicenseService : ILicenseService
                 // چرخه دوازدهم — پیام‌های مستقیم پشتیبانی به داشبورد درمانگاه
                 await SaveServerMessagesAsync(result.Messages, ct);
 
+                // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) ═══ «در تنظیمات، اطلاعات
+                // درمانگاه را از لایسنس بخوان و در اولین چک کردن لایسنس در تنظیمات
+                // قرار بده؛ فقط از سرور لایسنس قابل تغییر باشد» — با هر اعتبارسنجی
+                // موفق آنلاین، اطلاعات درمانگاهِ سرور لایسنس روی تنظیمات محلی
+                // (دستهٔ ClinicInfo) همگام می‌شود؛ صفحهٔ تنظیمات این بخش را فقط-
+                // خواندنی نمایش می‌دهد و تغییر تنها از پنل مدیریت لایسنس است.
+                await SyncClinicInfoFromLicenseAsync(result.License, ct);
+
                 return new LicenseStatusReport(true, LicenseValidationResult.Valid,
                     fresh.LicenseKey, fresh.ExpiryDate, fresh.MaxUsers, fresh.MaxDoctors,
                     fresh.MaxPatients, ParseModules(fresh.EnabledModules), "لایسنس معتبر است");
@@ -710,6 +718,67 @@ public class LicenseService : ILicenseService
 }
 
 /// <summary>پاسخ فعال‌سازی سرور لایسنس — قرارداد مشترک با سرور PHP</summary>
+// ═══ چرخه ۲۴ — همگام‌سازی اطلاعات درمانگاه از سرور لایسنس ═══
+// «اطلاعات درمانگاه فقط از سرور لایسنس خوانده شود» — با هر تپ قلب/اعتبارسنجی
+// موفق آنلاین، مقادیر پنل لایسنس روی دستهٔ ClinicInfo تنظیمات محلی می‌نشیند.
+public sealed partial class LicenseService
+{
+    /// <summary>
+    /// جای‌گذاری اطلاعات درمانگاه دریافتی از سرور لایسنس در تنظیمات برنامه —
+    /// فقط فیلدهای دارای مقدار بازنویسی می‌شوند (پنل می‌تواند فیلدی را خالی بگذارد).
+    /// </summary>
+    /// <param name="license">بدنهٔ لایسنس دریافتی از پورتال</param>
+    /// <param name="ct">توکن لغو</param>
+    private async Task SyncClinicInfoFromLicenseAsync(PortalLicensePayload license, CancellationToken ct)
+    {
+        try
+        {
+            // نگاشت فیلدهای پورتال → کلیدهای تنظیمات ClinicInfo (همان که صفحهٔ تنظیمات می‌خواند)
+            var map = new (string Key, string? Value)[]
+            {
+                ("ClinicName", license.ClinicName),
+                ("ManagerName", license.ClinicManager),
+                ("Phone", license.ClinicPhone),
+                ("Email", license.ClinicEmail),
+                ("City", license.ClinicCity),
+                ("Address", license.ClinicAddress),
+                // شماره لایسنس = همان کلیدی که درمانگاه با آن فعال شده
+                ("LicenseNumber", license.LicenseKey),
+            };
+
+            foreach (var (key, value) in map)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    continue; // پنل مقدار نداده — مقدار فعلی درمانگاه دست‌نخورده می‌ماند
+
+                var setting = await _context.SystemSettings
+                    .FirstOrDefaultAsync(s => !s.IsDeleted && s.Category == "ClinicInfo" && s.Key == key, ct);
+                if (setting is null)
+                {
+                    _context.SystemSettings.Add(new SystemSetting
+                    {
+                        Category = "ClinicInfo",
+                        Key = key,
+                        Value = value.Trim(),
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+                else
+                {
+                    setting.Value = value.Trim();
+                    setting.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            await _context.SaveChangesAsync(ct);
+        }
+        catch
+        {
+            // همگام‌سازی اطلاعات درمانگاه هرگز نباید جریان اعتبارسنجی را متوقف کند
+        }
+    }
+}
+
 public sealed class PortalActivationResponse
 {
     /// <summary>آیا لایسنس معتبر است</summary>
@@ -782,6 +851,22 @@ public sealed class PortalLicensePayload
 
     /// <summary>ماژول‌های فعال</summary>
     [JsonPropertyName("enabledModules")] public List<string> EnabledModules { get; set; } = new();
+
+    // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — اطلاعات درمانگاه از سرور لایسنس ═══
+    // «در تنظیمات، اطلاعات درمانگاه را از لایسنس بخوان و در اولین چک کردن لایسنس
+    // در تنظیمات قرار بده؛ فقط از سرور لایسنس قابل تغییر باشد»
+    /// <summary>نام درمانگاه</summary>
+    [JsonPropertyName("clinicName")] public string? ClinicName { get; set; }
+    /// <summary>نام مدیر درمانگاه</summary>
+    [JsonPropertyName("clinicManager")] public string? ClinicManager { get; set; }
+    /// <summary>تلفن درمانگاه</summary>
+    [JsonPropertyName("clinicPhone")] public string? ClinicPhone { get; set; }
+    /// <summary>ایمیل درمانگاه</summary>
+    [JsonPropertyName("clinicEmail")] public string? ClinicEmail { get; set; }
+    /// <summary>شهر</summary>
+    [JsonPropertyName("clinicCity")] public string? ClinicCity { get; set; }
+    /// <summary>نشانی کامل</summary>
+    [JsonPropertyName("clinicAddress")] public string? ClinicAddress { get; set; }
 
     /// <summary>روزهای باقیمانده</summary>
     [JsonPropertyName("daysRemaining")] public int? DaysRemaining { get; set; }
