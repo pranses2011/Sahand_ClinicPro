@@ -20,5 +20,16 @@ public class PrescriptionTemplateConfiguration : IEntityTypeConfiguration<Prescr
         // در سرور» هنگام «ذخیره به‌عنوان تمپلیت». ستون به nvarchar(max) ارتقا یافت.
         builder.Property(x => x.Items).HasColumnType("nvarchar(max)").HasComment("اقلام قالب - JSON");
 
+        // چرخه بیست‌وسوم (گزارش شانزدهم مالک): رابطهٔ پزشک↔تمپلیت پیش‌تر با قراردادِ
+        // «FK الزامی» ساخته می‌شد و درج تمپلیت بدون پزشک (DoctorId=0 که در جدول
+        // پزشکان وجود ندارد) با نقض کلید خارجی شکست می‌خورد و به خطای ۵۰۰
+        // «غیر منتظره در سرور» منجر می‌شد. رابطهٔ صریحِ اختیاری (IsRequired=false)
+        // پیکربندی شد تا تمپلیت عمومی بدون پزشک مجاز باشد. مهاجرت متناظر:
+        // Cycle23TemplateDoctorNullable.
+        builder.HasOne(x => x.Doctor)
+            .WithMany()
+            .HasForeignKey(x => x.DoctorId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }

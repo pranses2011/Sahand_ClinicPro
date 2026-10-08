@@ -2656,7 +2656,8 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<long?>("DeletedBy")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("DoctorId")
+                    // چرخه بیست‌وسوم: DoctorId اختیاری شد (تمپلیت عمومی بدون پزشک)
+                    b.Property<long?>("DoctorId")
                         .HasColumnType("bigint");
 
                     b.Property<bool>("IsDeleted")
@@ -10594,8 +10595,8 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Doctor", "Doctor")
                         .WithMany()
                         .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
+                    // چرخه بیست‌وسوم: IsRequired حذف شد — رابطهٔ اختیاری (تمپلیت عمومی)
 
                     b.Navigation("Doctor");
                 });

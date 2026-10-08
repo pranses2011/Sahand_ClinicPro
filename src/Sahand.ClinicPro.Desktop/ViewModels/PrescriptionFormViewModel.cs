@@ -573,7 +573,14 @@ public partial class PrescriptionFormViewModel : ObservableObject
         }));
         var ok = await _api.PostAsync("prescriptions/templates", new
         {
-            name = NewTemplateName.Trim(), category = (string?)null, templateJson = json
+            name = NewTemplateName.Trim(), category = (string?)null, templateJson = json,
+            // چرخه بیست‌وسوم (گزارش شانزدهم مالک): پزشکِ انتخاب‌شدهٔ فرم هم
+            // ارسال می‌شود تا تمپلیت به او منتسب شود؛ اگر پزشکی انتخاب نشده
+            // باشد null می‌رود و تمپلیت عمومی ذخیره می‌شود (پیش‌تر نبودنش به
+            // نقض کلید خارجی و «خطای غیر منتظره در سرور» منجر می‌شد)
+            doctorId = (DoctorIndex >= 0 && DoctorIndex < Doctors.Count)
+                ? Doctors[DoctorIndex].Id
+                : (long?)null
         });
         if (ok)
         {

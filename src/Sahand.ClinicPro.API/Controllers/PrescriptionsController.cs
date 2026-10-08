@@ -116,7 +116,9 @@ public async Task<IActionResult> GetTemplates()
     [HasPermission("prescriptions.edit")] // ممیزی چرخه ۱۲
 public async Task<IActionResult> SaveTemplate([FromBody] SaveTemplateRequest request)
     {
-        var result = await _mediator.Send(new SavePrescriptionTemplateCommand(request));
+        // چرخه بیست‌وسوم: پزشک صاحب تمپلیت از خود درخواست خوانده می‌شود
+        // (کلاینت آن را می‌فرستد) — اختیاری است و null یعنی تمپلیت عمومی
+        var result = await _mediator.Send(new SavePrescriptionTemplateCommand(request, request.DoctorId));
         return ToResponse(result, "تمپلیت ذخیره شد");
     }
 

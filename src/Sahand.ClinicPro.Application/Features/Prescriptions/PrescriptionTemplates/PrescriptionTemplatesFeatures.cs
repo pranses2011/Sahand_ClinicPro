@@ -61,7 +61,11 @@ public class SavePrescriptionTemplateCommandHandler
             TemplateName = request.Request.Name.Trim(),
             Category = request.Request.Category,
             Items = request.Request.TemplateJson,
-            DoctorId = request.DoctorId ?? 0
+            // چرخه بیست‌وسوم (گزارش شانزدهم مالک): پیش‌تر «?? 0» مقدار صفر می‌گذاشت
+            // که با کلید خارجی الزامی به پزشکان نمی‌خواست و ذخیرهٔ تمپلیت با خطای
+            // ۵۰۰ «غیر منتظره در سرور» شکست می‌خورد؛ ستون اکنون اختیاری است و null
+            // یعنی تمپلیت عمومی (بدون پزشک صاحب)
+            DoctorId = request.DoctorId
         };
         await _unitOfWork.Repository<PrescriptionTemplate>().AddAsync(template, cancellationToken);
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);

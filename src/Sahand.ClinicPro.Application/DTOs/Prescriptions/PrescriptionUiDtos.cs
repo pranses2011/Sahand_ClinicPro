@@ -84,8 +84,15 @@ public record PrescriptionTemplateDto(
     string? Category,
     string TemplateJson);
 
-/// <summary>درخواست ذخیره تمپلیت</summary>
+/// <summary>
+/// درخواست ذخیره تمپلیت — چرخه بیست‌وسوم (گزارش شانزدهم مالک): فیلد DoctorId
+/// اختیاری افزوده شد تا دسکتاپ هنگام ذخیرهٔ تمپلیت، پزشکِ انتخاب‌شدهٔ فرم نسخه را
+/// هم بفرستد و تمپلیت به آن پزشک منتسب شود؛ اگر پزشکی انتخاب نشده باشد تمپلیت
+/// به‌صورت عمومی (بدون پزشک) ذخیره می‌شود و دیگر با خطای کلید خارجی روبه‌رو
+/// نمی‌شود.
+/// </summary>
 public record SaveTemplateRequest(
     string Name,
     string? Category,
-    string TemplateJson);
+    string TemplateJson,
+    long? DoctorId = null);
