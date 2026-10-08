@@ -33,11 +33,14 @@
                 <TextBlock Text="📄 اطلاعات حقوقی" FontSize="13" FontWeight="Bold"
                            Foreground="#16355E" Margin="0,0,0,10" />
                 <!-- چرخه بیستم: کادر مبلغ با جداکنندهٔ زندهٔ ۳ رقمی -->
-                <TextBox materialDesign:HintAssist.Hint="حقوق پایه (ریال) — ماهانه"
-                         behaviors:MoneyInput.IsEnabled="True"
+                <TextBox behaviors:MoneyInput.IsEnabled="True"
                          behaviors:MoneyInput.NumericValue="{Binding BaseSalary, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
                          materialDesign:TextFieldAssist.PrefixText="﷼"
-                         Margin="0,0,0,12" />
+                         Margin="0,0,0,12">
+                    <materialDesign:HintAssist.Hint>
+                        <TextBlock><Run Text="حقوق پایه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=") — ماهانه" /></TextBlock>
+                    </materialDesign:HintAssist.Hint>
+                </TextBox>
                 <TextBox materialDesign:HintAssist.Hint="درصد حقوق از سود خدمات (٪) — فقط از سود خدمات انجامی خود این پرسنل"
                          Text="{Binding CommissionPercent, UpdateSourceTrigger=PropertyChanged}"
                          materialDesign:TextFieldAssist.SuffixText="٪"

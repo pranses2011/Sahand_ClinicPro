@@ -261,7 +261,7 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="💰 حق ویزیت (ریال)" FontSize="11" Opacity="0.7" />
+                                        <TextBlock FontSize="11" Opacity="0.7"><Run Text="💰 حق ویزیت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                                         <TextBlock Text="{Binding FeeDisplay, Mode=OneWay}" FontSize="15" FontWeight="Bold" FontFamily="Consolas" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="1">
@@ -271,7 +271,7 @@
                                         <TextBlock Text="{Binding InsuranceShareDisplay, Mode=OneWay}" FontSize="15" FontWeight="Bold" FontFamily="Consolas" Foreground="#2E7D32" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="👤 سهم بیمار (ریال)" FontSize="11" Opacity="0.7" />
+                                        <TextBlock FontSize="11" Opacity="0.7"><Run Text="👤 سهم بیمار (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                                         <TextBlock Text="{Binding PatientShareDisplay, Mode=OneWay}" FontSize="18" FontWeight="Bold"
                                                    FontFamily="Consolas" Foreground="#C62828" />
                                     </StackPanel>

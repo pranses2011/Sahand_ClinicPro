@@ -70,13 +70,13 @@
         <UniformGrid Grid.Row="2" Columns="4" Margin="0,0,0,10">
             <Border Style="{StaticResource StatCard}">
                 <StackPanel>
-                    <TextBlock Text="جمع سود خدمات دوره (ریال)" FontSize="11.5" Opacity="0.65" />
+                    <TextBlock FontSize="11.5" Opacity="0.65"><Run Text="جمع سود خدمات دوره (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                     <TextBlock Text="{Binding TotalProfit, StringFormat='#,0'}" FontSize="21" FontWeight="Bold" Foreground="#1E88E5" />
                 </StackPanel>
             </Border>
             <Border Style="{StaticResource StatCard}">
                 <StackPanel>
-                    <TextBlock Text="جمع حقوق درصدی (ریال)" FontSize="11.5" Opacity="0.65" />
+                    <TextBlock FontSize="11.5" Opacity="0.65"><Run Text="جمع حقوق درصدی (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                     <TextBlock Text="{Binding TotalCommission, StringFormat='#,0'}" FontSize="21" FontWeight="Bold" Foreground="#8E24AA" />
                 </StackPanel>
             </Border>
@@ -121,11 +121,11 @@
                     <DataGridTextColumn Header="سمت" Binding="{Binding PositionName, Converter={StaticResource PersianDigits}}" Width="110" />
                     <DataGridTextColumn Header="پزشک متصل" Binding="{Binding DoctorNames, Converter={StaticResource PersianDigits}}" Width="150" />
                     <DataGridTextColumn Header="اقلام" Binding="{Binding ServiceCount, Converter={StaticResource PersianDigits}}" Width="60" />
-                    <DataGridTextColumn Header="جمع فروش (ریال)" Binding="{Binding TotalRevenueText, Converter={StaticResource PersianDigits}}" Width="120" />
-                    <DataGridTextColumn Header="جمع هزینه (ریال)" Binding="{Binding TotalCostText, Converter={StaticResource PersianDigits}}" Width="120" />
-                    <DataGridTextColumn Header="سود خدمات (ریال)" Binding="{Binding TotalProfitText, Converter={StaticResource PersianDigits}}" Width="120" />
+                    <DataGridTextColumn Binding="{Binding TotalRevenueText, Converter={StaticResource PersianDigits}}" Width="120"><DataGridTextColumn.Header><TextBlock><Run Text="جمع فروش (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
+                    <DataGridTextColumn Binding="{Binding TotalCostText, Converter={StaticResource PersianDigits}}" Width="120"><DataGridTextColumn.Header><TextBlock><Run Text="جمع هزینه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
+                    <DataGridTextColumn Binding="{Binding TotalProfitText, Converter={StaticResource PersianDigits}}" Width="120"><DataGridTextColumn.Header><TextBlock><Run Text="سود خدمات (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
                     <DataGridTextColumn Header="درصد" Binding="{Binding CommissionPercentText, Converter={StaticResource PersianDigits}}" Width="60" />
-                    <DataGridTextColumn Header="حقوق درصدی (ریال)" Binding="{Binding ServiceCommissionText, Converter={StaticResource PersianDigits}}" Width="125">
+                    <DataGridTextColumn Binding="{Binding ServiceCommissionText, Converter={StaticResource PersianDigits}}" Width="125"><DataGridTextColumn.Header><TextBlock><Run Text="حقوق درصدی (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="FontWeight" Value="SemiBold" />
@@ -149,7 +149,7 @@
                     <charts:DoughnutChart Grid.Row="1"
                                           Points="{Binding CommissionChartPoints}"
                                           CenterText="{Binding CommissionChartCenter}"
-                                          CenterSubtext="ریال — ۱۰ نفر برتر"
+                                          CenterSubtext="برشمرده بر اساس واحد پول برنامه — ۱۰ نفر برتر"
                                           RingSize="140" />
                 </Grid>
             </Border>
@@ -184,8 +184,8 @@
                 <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="55" />
                 <DataGridTextColumn Header="قیمت واحد" Binding="{Binding UnitPriceText, Converter={StaticResource PersianDigits}}" Width="105" />
                 <DataGridTextColumn Header="هزینه واحد" Binding="{Binding UnitCostText, Converter={StaticResource PersianDigits}}" Width="105" />
-                <DataGridTextColumn Header="مبلغ قلم (ریال)" Binding="{Binding TotalPriceText, Converter={StaticResource PersianDigits}}" Width="115" />
-                <DataGridTextColumn Header="سود قلم (ریال)" Binding="{Binding ProfitText, Converter={StaticResource PersianDigits}}" Width="110">
+                <DataGridTextColumn Binding="{Binding TotalPriceText, Converter={StaticResource PersianDigits}}" Width="115"><DataGridTextColumn.Header><TextBlock><Run Text="مبلغ قلم (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding ProfitText, Converter={StaticResource PersianDigits}}" Width="110"><DataGridTextColumn.Header><TextBlock><Run Text="سود قلم (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="FontWeight" Value="SemiBold" />

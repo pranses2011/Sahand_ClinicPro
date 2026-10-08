@@ -256,7 +256,7 @@
                                         <TextBlock Text="{Binding SelectedRoom, Mode=OneWay, TargetNullValue=—}" FontWeight="Bold" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="3" HorizontalAlignment="Left">
-                                        <TextBlock Text="💰 تخمین هزینه (ریال)" FontSize="10" Opacity="0.6" />
+                                        <TextBlock FontSize="10" Opacity="0.6"><Run Text="💰 تخمین هزینه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                                         <TextBlock Text="{Binding EstimatedFee, Mode=OneWay, Converter={StaticResource CurrencyRial}}" FontWeight="Bold" FontFamily="Consolas" />
                                     </StackPanel>
                                 </Grid>

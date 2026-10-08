@@ -114,7 +114,7 @@
                                     <Style TargetType="TextBlock"><Setter Property="FontFamily" Value="Consolas" /></Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="سهم بیمه (ریال)" Width="130">
+                            <DataGridTextColumn Width="130"><DataGridTextColumn.Header><TextBlock><Run Text="سهم بیمه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                                 <DataGridTextColumn.Binding><Binding Path="InsuranceShare" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -123,7 +123,7 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="سهم بیمار (ریال)" Width="130">
+                            <DataGridTextColumn Width="130"><DataGridTextColumn.Header><TextBlock><Run Text="سهم بیمار (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                                 <DataGridTextColumn.Binding><Binding Path="PatientShare" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -236,7 +236,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="شرح خدمت" Binding="{Binding Description, Converter={StaticResource PersianDigits}}" Width="*" />
                             <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="60" />
-                            <DataGridTextColumn Header="مبلغ قلم (ریال)" Binding="{Binding ItemTotal, Converter={StaticResource PersianDigits}}" Width="120" />
+                            <DataGridTextColumn Binding="{Binding ItemTotal, Converter={StaticResource PersianDigits}}" Width="120"><DataGridTextColumn.Header><TextBlock><Run Text="مبلغ قلم (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
                             <DataGridTextColumn Header="فرانشیز" Binding="{Binding Franchise, Converter={StaticResource PersianDigits}}" Width="100" />
                             <DataGridTextColumn Header="سهم بیمه" Binding="{Binding InsuranceShare, Converter={StaticResource PersianDigits}}" Width="110">
                                 <DataGridTextColumn.ElementStyle>
@@ -273,15 +273,8 @@
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="105" FontSize="11.5" Margin="0,0,7,4"
                                  IsEnabled="{Binding RuleIsNominal, Converter={StaticResource InvertBool}, FallbackValue=False}" />
                         <!-- چرخه بیست‌ویکم: جداکنندهٔ زندهٔ ۳ رقمی هنگام تایپ -->
-                        <TextBox materialDesign:HintAssist.Hint="مبلغ اسمی (ریال)"
-                                 behaviors:MoneyInput.IsEnabled="True"
-                                 behaviors:MoneyInput.NumericValue="{Binding RuleNominal, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="140" FontSize="11.5" Margin="0,0,7,4"
-                                 IsEnabled="{Binding RuleIsNominal}" />
-                        <TextBox materialDesign:HintAssist.Hint="فرانشیز (ریال)"
-                                 behaviors:MoneyInput.IsEnabled="True"
-                                 behaviors:MoneyInput.NumericValue="{Binding RuleFranchise, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="135" FontSize="11.5" Margin="0,0,7,4" />
+                        <TextBox behaviors:MoneyInput.IsEnabled="True" behaviors:MoneyInput.NumericValue="{Binding RuleNominal, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="140" FontSize="11.5" Margin="0,0,7,4" IsEnabled="{Binding RuleIsNominal}"><materialDesign:HintAssist.Hint><TextBlock><Run Text="مبلغ اسمی (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></materialDesign:HintAssist.Hint></TextBox>
+                        <TextBox behaviors:MoneyInput.IsEnabled="True" behaviors:MoneyInput.NumericValue="{Binding RuleFranchise, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="135" FontSize="11.5" Margin="0,0,7,4"><materialDesign:HintAssist.Hint><TextBlock><Run Text="فرانشیز (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></materialDesign:HintAssist.Hint></TextBox>
                         <Button Command="{Binding AddRuleCommand}" Style="{StaticResource MaterialDesignRaisedButton}" FontSize="11" Margin="0,0,6,4">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" VerticalAlignment="Center" />

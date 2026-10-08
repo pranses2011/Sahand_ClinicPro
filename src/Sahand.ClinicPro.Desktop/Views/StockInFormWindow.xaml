@@ -52,14 +52,8 @@
                      Margin="0,0,0,12" />
             <UniformGrid Columns="2" Margin="0,0,0,12">
                 <!-- چرخه بیست‌ویکم: جداکنندهٔ زندهٔ ۳ رقمی هنگام تایپ (گزارش پانزدهم مالک) -->
-                <TextBox materialDesign:HintAssist.Hint="قیمت خرید (ریال)"
-                         behaviors:MoneyInput.IsEnabled="True"
-                         behaviors:MoneyInput.NumericValue="{Binding PurchasePrice, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
-                         Margin="0,0,6,0" />
-                <TextBox materialDesign:HintAssist.Hint="قیمت فروش (ریال)"
-                         behaviors:MoneyInput.IsEnabled="True"
-                         behaviors:MoneyInput.NumericValue="{Binding SellPrice, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
-                         Margin="6,0,0,0" />
+                <TextBox behaviors:MoneyInput.IsEnabled="True" behaviors:MoneyInput.NumericValue="{Binding PurchasePrice, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}" Margin="0,0,6,0"><materialDesign:HintAssist.Hint><TextBlock><Run Text="قیمت خرید (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></materialDesign:HintAssist.Hint></TextBox>
+                <TextBox behaviors:MoneyInput.IsEnabled="True" behaviors:MoneyInput.NumericValue="{Binding SellPrice, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}" Margin="6,0,0,0"><materialDesign:HintAssist.Hint><TextBlock><Run Text="قیمت فروش (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></materialDesign:HintAssist.Hint></TextBox>
             </UniformGrid>
             <!-- تاریخ انقضا — چرخه بیست‌وسوم: فیلد تاریخ از انتخابگر تاریخ شمسی -->
             <controls:PersianDatePicker DateShamsiText="{Binding ExpiryDateShamsi, Mode=TwoWay}"

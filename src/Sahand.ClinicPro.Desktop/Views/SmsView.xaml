@@ -133,7 +133,7 @@
                                     <Binding Path="SentAt" Converter="{StaticResource ShamsiDateTime}" TargetNullValue="—" />
                                 </DataGridTextColumn.Binding>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="هزینه (ریال)" Width="110">
+                            <DataGridTextColumn Width="110"><DataGridTextColumn.Header><TextBlock><Run Text="هزینه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                                 <DataGridTextColumn.Binding><Binding Path="Cost" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
                             </DataGridTextColumn>
                             <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="90">
@@ -196,7 +196,7 @@
                             <DataGridTextColumn Header="نام پنل" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="150" FontWeight="SemiBold" />
                             <DataGridTextColumn Header="کد" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="130" FontFamily="Consolas" />
                             <DataGridTextColumn Header="شماره ارسال" Binding="{Binding SenderNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="Consolas" />
-                            <DataGridTextColumn Header="موجودی (ریال)" Width="120">
+                            <DataGridTextColumn Width="120"><DataGridTextColumn.Header><TextBlock><Run Text="موجودی (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                                 <DataGridTextColumn.Binding><Binding Path="Balance" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
                             </DataGridTextColumn>
                             <DataGridTextColumn Header="اولویت" Binding="{Binding Priority, Converter={StaticResource PersianDigits}}" Width="70" />

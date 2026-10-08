@@ -37,10 +37,18 @@
 
         <!-- ردیف دوم -->
         <UniformGrid Grid.Row="2" Columns="3" Margin="0,0,0,10">
-            <controls:StatCard Label="درآمد ماه (ریال)" Value="{Binding RevenueDisplay, Mode=OneWay}"
-                               IconKind="CashMultiple" AccentBrush="#00838F" Margin="0,0,8,0" />
-            <controls:StatCard Label="کارانه پزشک (ریال)" Value="{Binding CommissionDisplay, Mode=OneWay}"
-                               IconKind="CashCheck" AccentBrush="#6A1B9A" Margin="0,0,8,0" />
+            <controls:StatCard Value="{Binding RevenueDisplay, Mode=OneWay}"
+                               IconKind="CashMultiple" AccentBrush="#00838F" Margin="0,0,8,0">
+                <controls:StatCard.Label>
+                    <TextBlock><Run Text="درآمد ماه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                </controls:StatCard.Label>
+            </controls:StatCard>
+            <controls:StatCard Value="{Binding CommissionDisplay, Mode=OneWay}"
+                               IconKind="CashCheck" AccentBrush="#6A1B9A" Margin="0,0,8,0">
+                <controls:StatCard.Label>
+                    <TextBlock><Run Text="کارانه پزشک (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                </controls:StatCard.Label>
+            </controls:StatCard>
             <controls:StatCard Label="میانگین هر ویزیت" Value="{Binding AverageDisplay, Mode=OneWay}"
                                IconKind="ClockFast" AccentBrush="#4527A0" />
         </UniformGrid>

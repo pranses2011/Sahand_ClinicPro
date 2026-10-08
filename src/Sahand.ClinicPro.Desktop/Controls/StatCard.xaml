@@ -29,9 +29,10 @@
                 <TextBlock Text="{Binding Value, ElementName=Root}"
                            FontSize="26" FontWeight="Black"
                            Foreground="{Binding AccentBrush, ElementName=Root}" />
-                <!-- عنوان -->
-                <TextBlock Text="{Binding Label, ElementName=Root}"
-                           FontSize="12" Opacity="0.75" Margin="0,2,0,0" />
+                <!-- عنوان — چرخه ۲۴: ContentPresenter تا Label بتواند عنصر
+                     (مثل TextBlock با Run واحد پول پویا) هم باشد، نه فقط رشته -->
+                <ContentPresenter Content="{Binding Label, ElementName=Root}"
+                                  TextElement.FontSize="12" Margin="0,2,0,0" Opacity="0.75" />
                 <!-- مقایسه -->
                 <TextBlock Text="{Binding CompareText, ElementName=Root}"
                            FontSize="10" Opacity="0.6" Margin="0,4,0,0"

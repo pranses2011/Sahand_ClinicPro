@@ -54,7 +54,7 @@
                         <DataGridTextColumn Header="نام آزمایش" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="220" FontWeight="Bold" />
                         <DataGridTextColumn Header="دسته" Binding="{Binding Category, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="130" />
                         <DataGridTextColumn Header="واحد" Binding="{Binding Unit, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="90" />
-                        <DataGridTextColumn Header="قیمت (ریال)" Width="120">
+                        <DataGridTextColumn Width="120"><DataGridTextColumn.Header><TextBlock><Run Text="قیمت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                             <DataGridTextColumn.Binding>
                                 <Binding Path="Price" StringFormat="{}{0:N0}" />
                             </DataGridTextColumn.Binding>

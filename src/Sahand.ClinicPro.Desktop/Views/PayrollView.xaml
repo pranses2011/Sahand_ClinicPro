@@ -62,7 +62,7 @@
                     Padding="14,10" Margin="0,0,8,0" BorderThickness="1"
                     BorderBrush="{DynamicResource MaterialDesignDivider}">
                 <StackPanel>
-                    <TextBlock Text="جمع حقوق درصدی از سود (ریال)" FontSize="11.5" Opacity="0.65" />
+                    <TextBlock FontSize="11.5" Opacity="0.65"><Run Text="جمع حقوق درصدی از سود (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                     <TextBlock Text="{Binding TotalCommission, StringFormat='#,0'}" FontSize="22" FontWeight="Bold" Foreground="#8E24AA" />
                 </StackPanel>
             </Border>
@@ -70,7 +70,7 @@
                     Padding="14,10" Margin="0,0,8,0" BorderThickness="1"
                     BorderBrush="{DynamicResource MaterialDesignDivider}">
                 <StackPanel>
-                    <TextBlock Text="جمع خالص پرداختی (ریال)" FontSize="11.5" Opacity="0.65" />
+                    <TextBlock FontSize="11.5" Opacity="0.65"><Run Text="جمع خالص پرداختی (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                     <TextBlock Text="{Binding TotalNet, StringFormat='#,0'}" FontSize="22" FontWeight="Bold" Foreground="#43A047" />
                 </StackPanel>
             </Border>

@@ -39,6 +39,27 @@ public partial class App : System.Windows.Application
             typeof(Window),
             Window.LoadedEvent,
             new RoutedEventHandler(OnAnyWindowLoadedForFont));
+
+        // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — ارقام فارسی «بدون استثنا» ═══
+        // «همهٔ اعداد داخل برنامه فارسی باشند ولی هنوز در برخی فرم‌ها و تاریخ‌ها
+        // انگلیسی‌اند» — ریشه: ارقام در WPF با زبان عنصر (پیش‌فرض en-US) شکل
+        // می‌گیرند و فقط جاهایی که صریحاً مبدل PersianDigits بودند فارسی می‌شدند.
+        // راه‌حل قطعی و استاندارد: مقدار پیش‌فرض Language همهٔ پنجره‌ها fa-IR
+        // می‌شود (با OverrideMetadata + Inherits) تا موتور رندر WPF (جایگذاری
+        // ارقام NumberSubstitution) همهٔ ارقام را به‌صورت فارسی ۰-۹ رسم کند و
+        // قالب‌بندی‌های عددی StringFormat هم جداکنندهٔ فارسی بگیرند. این قانون
+        // هم‌زیست بی‌خطر با مبدل‌های موجود PersianDigits دارد (بدون تغییر).
+        System.Windows.FrameworkElement.LanguageProperty.OverrideMetadata(
+            typeof(Window),
+            new System.Windows.FrameworkPropertyMetadata(
+                System.Windows.Markup.XmlLanguage.GetLanguage("fa-IR"),
+                System.Windows.FrameworkPropertyMetadataOptions.Inherits));
+
+        // فرهنگ جاری رشته‌ها هم فارسی شود — پارس ورودی‌های عددی ارقام فارسی را
+        // می‌پذیرد و قالب‌بندی پیش‌فرض اعداد/تاریخ‌ها شمسی می‌شود
+        var fa = new System.Globalization.CultureInfo("fa-IR");
+        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = fa;
+        System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = fa;
     }
 
     /// <summary>

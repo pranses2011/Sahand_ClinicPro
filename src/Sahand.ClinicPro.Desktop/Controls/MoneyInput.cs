@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.Controls;
@@ -12,6 +13,13 @@ namespace Sahand.ClinicPro.Desktop.Controls;
 /// ارقام فارسی هم پذیرفته و نرمال می‌شوند و مقدار عددی تمیز در
 /// AttachedProperty خروجی (NumericValue) برای اتصال TwoWay در دسترس است.
 /// کاربرد: <code>TextBox behaviors:MoneyInput.IsEnabled="True"</code>
+/// ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — تعمیر قطعی جداکنندهٔ زنده ═══
+/// «چندین بار گفته بودم ولی نشده — حتی با ترک کادر هم جداکننده نمی‌افتد»:
+///   ۱) باگ ریشه‌ای: SetValue روی NumericValue «مقدار محلی» می‌گذاشت و
+///      «اتصال داطمی را حذف» می‌کرد — پس مقدار هرگز به ViewModel نمی‌رسید
+///      و همگام‌سازی دوطرفه از همان ویرایش نخست می‌مُرد. اکنون
+///      SetCurrentValue به‌کار می‌رود که مقدار را می‌گذارد بدون شکستن اتصال.
+///   ۲) مکان‌نما هنگام قالب‌بندی هنگام تایپ در میانهٔ عدد حفظ می‌شود.
 /// </summary>
 public static class MoneyInput
 {
@@ -38,7 +46,12 @@ public static class MoneyInput
             return;
 
         if (e.NewValue is true)
+        {
             box.TextChanged += OnTextChanged;
+            // اگر هنگام وصله‌شدن رفتار کادر از پیش مقدار دارد (ویرایش رکورد)،
+            // همین حالا قالب‌بندی شود — پیش‌تر تا تایپ بعدی جداکننده نمی‌افتاد
+            OnTextChanged(box, new TextChangedEventArgs(TextBoxBase.TextChangedEvent, UndoAction.None));
+        }
         else
             box.TextChanged -= OnTextChanged;
     }
@@ -102,7 +115,8 @@ public static class MoneyInput
         var raw = box.Text;
         if (string.IsNullOrEmpty(raw))
         {
-            box.SetValue(NumericValueProperty, 0m);
+            // چرخه ۲۴: SetCurrentValue به‌جای SetValue — اتصال داطمی زنده می‌ماند
+            box.SetCurrentValue(NumericValueProperty, 0m);
             return;
         }
 
@@ -118,21 +132,47 @@ public static class MoneyInput
 
         if (digitsOnly.Length == 0)
         {
-            box.Text = string.Empty;
-            box.SetValue(NumericValueProperty, 0m);
+            if (box.Text.Length > 0)
+            {
+                box.Text = string.Empty;
+            }
+            else
+            {
+                box.SetCurrentValue(NumericValueProperty, 0m);
+            }
             return;
         }
 
         // مقدار عددی تمیز — به رسم نمایشی (تومان/ریال از دید کاربر)
         var value = decimal.Parse(digitsOnly.ToString(), System.Globalization.CultureInfo.InvariantCulture);
-        box.SetValue(NumericValueProperty, value);
+
+        // ═══ چرخه ۲۴ — اصلاح حیاتی ═══ SetValue روی DP ای که Binding دارد
+        // «اتصال را حذف» می‌کند (رفتار مستند WPF)؛ نتیجه: مقدار هرگز به VM
+        // نمی‌رسید، همگام‌سازی دوطرفه می‌مُرد و کاربر جدای از جداکننده، ذخیرهٔ
+        // نادرست هم می‌گرفت. SetCurrentValue مقدار را بدون شکستن اتصال می‌گذارد.
+        box.SetCurrentValue(NumericValueProperty, value);
 
         // قالب‌بندی هزارگان — اگر متن کاربر همین است، بازنویسی نکن (حلقه/پرش مکان‌نما)
         var formatted = value.ToString("#,0", System.Globalization.CultureInfo.InvariantCulture);
         if (!string.Equals(raw, formatted, StringComparison.Ordinal))
         {
+            // حفظ مکان‌نمای منطقی: فاصلهٔ مکان‌نما تا انتهای متن پیش از تغییر حفظ می‌شود
+            // تا تایپ در میانهٔ عدد پرش نکند؛ حذف جداکننده‌ها از شمارش پوشش داده می‌شود
+            var digitsAfterCaret = 0;
+            for (var i = box.CaretIndex; i < raw.Length; i++)
+                if (char.IsDigit(raw[i])) digitsAfterCaret++;
             box.Text = formatted;
-            box.CaretIndex = box.Text.Length;
+            // بازیابی مکان‌نما — به اندازهٔ همان رقم‌های باقی‌مانده از انتهای جدید
+            var newIndex = formatted.Length;
+            while (newIndex > 0 && digitsAfterCaret > 0 && !char.IsDigit(formatted[newIndex - 1]))
+                newIndex--;
+            var countBack = digitsAfterCaret;
+            while (newIndex > 0 && countBack > 0)
+            {
+                newIndex--;
+                if (char.IsDigit(formatted[newIndex])) countBack--;
+            }
+            box.CaretIndex = newIndex;
         }
     }
 }

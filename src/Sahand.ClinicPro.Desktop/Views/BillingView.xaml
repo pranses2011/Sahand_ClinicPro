@@ -64,7 +64,11 @@
                                Label="🧾 فاکتورهای امروز" AccentBrush="#5C6BC0" />
             <controls:StatCard IconKind="Cash" Margin="0,0,8,0"
                                Value="{Binding CashTotalDisplay, Mode=OneWay}"
-                               Label="💵 نقدی (ریال)" AccentBrush="#2E7D32" />
+                               AccentBrush="#2E7D32">
+                <controls:StatCard.Label>
+                    <TextBlock><Run Text="💵 نقدی (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                </controls:StatCard.Label>
+            </controls:StatCard>
             <controls:StatCard IconKind="CreditCard" Margin="0,0,8,0"
                                Value="{Binding CardTotalDisplay, Mode=OneWay}"
                                Label="💳 کارت‌خوان" AccentBrush="#1565C0" />
@@ -101,7 +105,7 @@
                             <DataGridTextColumn Header="شماره" Binding="{Binding InvoiceNumber, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="Consolas" />
                             <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="85" />
                             <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="مبلغ (ریال)" Binding="{Binding Total, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="110">
+                            <DataGridTextColumn Binding="{Binding Total, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="110"><DataGridTextColumn.Header><TextBlock><Run Text="مبلغ (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontFamily" Value="Consolas" />
@@ -109,7 +113,7 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="پرداخت (ریال)" Binding="{Binding Paid, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="105">
+                            <DataGridTextColumn Binding="{Binding Paid, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="105"><DataGridTextColumn.Header><TextBlock><Run Text="پرداخت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontFamily" Value="Consolas" />

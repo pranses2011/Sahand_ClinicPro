@@ -45,12 +45,12 @@
                 <StackPanel>
                     <TextBlock Text="💵 شمارش فیزیکی پایان شیفت" FontWeight="Bold" FontSize="14" Margin="0,0,0,12" />
 
-                    <TextBlock Text="وجه نقد شمرده‌شده (ریال)" FontSize="11.5" Opacity="0.7" Margin="0,0,0,4" />
+                    <TextBlock FontSize="11.5" Opacity="0.7" Margin="0,0,0,4"><Run Text="وجه نقد شمرده‌شده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                     <TextBox Text="{Binding CountedCash, UpdateSourceTrigger=PropertyChanged}"
                              Style="{StaticResource MaterialDesignOutlinedTextBox}" FontSize="14" FontFamily="Consolas"
                              materialDesign:HintAssist.Hint="مثلاً ۴۵۰٬۰۰۰" Margin="0,0,0,12" />
 
-                    <TextBlock Text="مبلغ تراکنش‌های کارتخوان (ریال)" FontSize="11.5" Opacity="0.7" Margin="0,0,0,4" />
+                    <TextBlock FontSize="11.5" Opacity="0.7" Margin="0,0,0,4"><Run Text="مبلغ تراکنش‌های کارتخوان (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                     <TextBox Text="{Binding CountedCard, UpdateSourceTrigger=PropertyChanged}"
                              Style="{StaticResource MaterialDesignOutlinedTextBox}" FontSize="14" FontFamily="Consolas"
                              materialDesign:HintAssist.Hint="از گزارش کارتخوان" Margin="0,0,0,12" />

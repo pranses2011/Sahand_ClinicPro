@@ -21,9 +21,11 @@ public partial class StatCard : UserControl
         DependencyProperty.Register(nameof(Value), typeof(string),
             typeof(StatCard), new PropertyMetadata("0"));
 
-    /// <summary>عنوان زیر عدد (مثل «بیماران امروز»)</summary>
+    /// <summary>عنوان زیر عدد (مثل «بیماران امروز») — چرخه ۲۴: نوع object شد
+    /// تا برچسب‌های دارای واحد پول پویا ({DynamicResource App.CurrencyLabel})
+    /// به‌صورت TextBlock با Run هم قابل‌گذارش باشند؛ رشتهٔ ساده هم بی‌تغییر کار می‌کند</summary>
     public static readonly DependencyProperty LabelProperty =
-        DependencyProperty.Register(nameof(Label), typeof(string),
+        DependencyProperty.Register(nameof(Label), typeof(object),
             typeof(StatCard), new PropertyMetadata(string.Empty));
 
     /// <summary>متن مقایسه (مثل «↑ ۱۲٪ نسبت به دیروز»)</summary>
@@ -49,10 +51,10 @@ public partial class StatCard : UserControl
         set => SetValue(ValueProperty, value);
     }
 
-    /// <summary>عنوان</summary>
-    public string Label
+    /// <summary>عنوان — رشتهٔ ساده یا عنصر بصری (TextBlock با Runها)</summary>
+    public object Label
     {
-        get => (string)GetValue(LabelProperty);
+        get => (object)GetValue(LabelProperty);
         set => SetValue(LabelProperty, value);
     }
 

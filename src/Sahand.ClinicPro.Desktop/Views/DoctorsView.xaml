@@ -139,9 +139,7 @@
                 <DataGridTextColumn Header="فوق‌تخصص"
                                     Binding="{Binding SubSpecialtyName, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
                                     Width="120" />
-                <DataGridTextColumn Header="حق ویزیت (ریال)"
-                                    Binding="{Binding FeeDisplay, Converter={StaticResource PersianDigits}}"
-                                    Width="120">
+                <DataGridTextColumn Binding="{Binding FeeDisplay, Converter={StaticResource PersianDigits}}" Width="120"><DataGridTextColumn.Header><TextBlock><Run Text="حق ویزیت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Left" />

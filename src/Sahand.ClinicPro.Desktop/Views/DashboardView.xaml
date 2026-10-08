@@ -277,10 +277,9 @@
                             <TextBlock Text="روند درآمد ۷ روز اخیر"
                                        FontSize="14" FontWeight="Bold"
                                        VerticalAlignment="Center" />
-                            <TextBlock Text="(ریال)"
-                                       FontSize="10" Opacity="0.5"
+                            <TextBlock FontSize="10" Opacity="0.5"
                                        VerticalAlignment="Bottom"
-                                       Margin="6,0,0,2" />
+                                       Margin="6,0,0,2"><Run Text="(" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                         </DockPanel>
 
                         <TextBlock Grid.Row="1" Text="{Binding ConnectionStatus}"

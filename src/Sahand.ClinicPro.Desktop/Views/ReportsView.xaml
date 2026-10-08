@@ -31,19 +31,19 @@
         <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,14">
             <materialDesign:Card Style="{StaticResource StatCard}">
                 <StackPanel>
-                    <TextBlock Text="جمع درآمد (ریال)" FontSize="12" Opacity="0.75" />
+                    <TextBlock FontSize="12" Opacity="0.75"><Run Text="جمع درآمد (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                     <TextBlock Text="{Binding TotalRevenue, StringFormat=N0}" FontSize="18" FontWeight="Bold" />
                 </StackPanel>
             </materialDesign:Card>
             <materialDesign:Card Style="{StaticResource StatCard}">
                 <StackPanel>
-                    <TextBlock Text="جمع وصولی (ریال)" FontSize="12" Opacity="0.75" />
+                    <TextBlock FontSize="12" Opacity="0.75"><Run Text="جمع وصولی (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                     <TextBlock Text="{Binding TotalPaid, StringFormat=N0}" FontSize="18" FontWeight="Bold" />
                 </StackPanel>
             </materialDesign:Card>
             <materialDesign:Card Style="{StaticResource StatCard}">
                 <StackPanel>
-                    <TextBlock Text="جمع مانده (ریال)" FontSize="12" Opacity="0.75" />
+                    <TextBlock FontSize="12" Opacity="0.75"><Run Text="جمع مانده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                     <TextBlock Text="{Binding TotalRemaining, StringFormat=N0}" FontSize="18" FontWeight="Bold" />
                 </StackPanel>
             </materialDesign:Card>
@@ -104,7 +104,7 @@
                               materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="تاریخ" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="120" />
-                            <DataGridTextColumn Header="درآمد (ریال)" Binding="{Binding Total, StringFormat=N0}" Width="*" />
+                            <DataGridTextColumn Binding="{Binding Total, StringFormat=N0}" Width="*"><DataGridTextColumn.Header><TextBlock><Run Text="درآمد (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
                             <DataGridTextColumn Header="وصولی" Binding="{Binding Paid, StringFormat=N0}" Width="*" />
                             <DataGridTextColumn Header="مانده" Binding="{Binding Remaining, StringFormat=N0}" Width="*" />
                         </DataGrid.Columns>
@@ -160,8 +160,8 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="2*" />
                             <DataGridTextColumn Header="تعداد ویزیت" Binding="{Binding VisitsCount, Converter={StaticResource PersianDigits}}" Width="110" />
-                            <DataGridTextColumn Header="درآمد (ریال)" Binding="{Binding TotalRevenue, StringFormat=N0}" Width="*" />
-                            <DataGridTextColumn Header="سهم پزشک (ریال)" Binding="{Binding DoctorShare, StringFormat=N0}" Width="*" />
+                            <DataGridTextColumn Binding="{Binding TotalRevenue, StringFormat=N0}" Width="*"><DataGridTextColumn.Header><TextBlock><Run Text="درآمد (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
+                            <DataGridTextColumn Binding="{Binding DoctorShare, StringFormat=N0}" Width="*"><DataGridTextColumn.Header><TextBlock><Run Text="سهم پزشک (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
