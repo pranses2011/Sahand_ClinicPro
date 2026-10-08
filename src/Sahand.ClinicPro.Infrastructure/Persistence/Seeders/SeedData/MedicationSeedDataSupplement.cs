@@ -150,5 +150,6 @@ public static partial class MedicationSeedData
     /// بذر از همین می‌خواند.
     /// </summary>
     public static IEnumerable<MedicationRow> AllRows
-        => Rows.Concat(SupplementRows).Concat(Supplement2Rows).Concat(Supplement3Rows);
+        => Rows.Concat(SupplementRows).Concat(Supplement2Rows).Concat(Supplement3Rows)
+              .Concat(Supplement4Rows); // چرخه ۲۴ — مکمل چهارم
 }

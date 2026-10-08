@@ -21,7 +21,8 @@ public static partial class DrugInteractionSeedData
     /// درمانی)؛ بذر و دکمهٔ «بروزرسانی تداخل‌ها» از همین می‌خواند.
     /// </summary>
     public static IEnumerable<InteractionRow> AllInteractions
-        => Rows.Concat(SupplementRows).Concat(Supplement2Rows);
+        => Rows.Concat(SupplementRows).Concat(Supplement2Rows)
+              .Concat(Supplement3Rows); // چرخه ۲۴ — مکمل سوم
 
     /// <summary>تداخل‌های مکمل چرخه بیست‌ویکم</summary>
     public static readonly IReadOnlyList<InteractionRow> SupplementRows = new InteractionRow[]
