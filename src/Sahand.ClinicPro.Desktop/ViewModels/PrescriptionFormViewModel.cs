@@ -753,7 +753,7 @@ public partial class PrescriptionFormViewModel : ObservableObject
                     items: Items.Select(i => (
                         i.Name, (string?)i.Subtitle,
                         $"{i.Dosage} × {i.Frequency} × {i.Duration}",
-                        i.Route ?? "", i.Instructions ?? "")).ToList(),
+                        (string?)i.Route ?? "", (string?)i.Instructions ?? "")).ToList(),
                     style),
                 $"چاپ نسخه — {Patient.FullName}");
         }

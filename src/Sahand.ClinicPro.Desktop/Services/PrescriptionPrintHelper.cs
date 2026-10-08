@@ -3,6 +3,7 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Controls;
 using Sahand.ClinicPro.Application.Common.Helpers;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.Services;
 
@@ -29,8 +30,10 @@ public static class PrescriptionPrintHelper
     /// <summary>رنگ متن کم‌رنگ راهنما</summary>
     private static readonly SolidColorBrush MutedBrush = new(Color.FromRgb(0x60, 0x64, 0x68));
 
-    /// <summary>قلم فارسی پایدار برای چاپ — روی همهٔ ویندوزها موجود است</summary>
-    private const string FontName = "Tahoma";
+    /// <summary>قلم چاپ — وزیرمتن جاسازی‌شدهٔ برنامه (چرخه بیست‌وچهارم:
+/// پیش‌تر Tahoma هاردکد بود و ظاهر چاپ با ظاهر برنامه نمی‌خواند؛ کارخانهٔ
+/// FontAssets با الگوی صحیح pack-URI فونت جاسازی‌شده را برمی‌گرداند)</summary>
+    private static FontFamily PrintFontFamily => FontAssets.PrintFont;
 
     /// <summary>
     /// طرح چاپ نسخه — چرخه بیست‌وسوم (گزارش شانزدهم مالک): «برای همهٔ موارد
@@ -79,9 +82,9 @@ public static class PrescriptionPrintHelper
     {
         var doc = new FlowDocument
         {
-            // راست‌چین و قلم فارسی — مستقل از فونت تنظیمات تا چاپ همیشه خوانا باشد
+            // راست‌چین و قلم فارسی — فونت وزیرمتن جاسازی‌شدهٔ برنامه (چرخه ۲۴)
             FlowDirection = FlowDirection.RightToLeft,
-            FontFamily = new FontFamily(FontName),
+            FontFamily = PrintFontFamily,
             FontSize = 12,
             PagePadding = new Thickness(40),
             ColumnWidth = double.PositiveInfinity
@@ -256,11 +259,18 @@ public static class PrescriptionPrintHelper
             BorderThickness = border,
             Margin = new Thickness(0, 0, 0, 14)
         };
-        table.Columns.Add(new TableColumn { Width = new GridLength(34) });            // ردیف
-        table.Columns.Add(new TableColumn { Width = new GridLength(2.4, GridUnitType.Star) }); // دارو
-        table.Columns.Add(new TableColumn { Width = new GridLength(2.2, GridUnitType.Star) }); // مصرف
-        table.Columns.Add(new TableColumn { Width = new GridLength(1, GridUnitType.Star) });   // مسیر
-        table.Columns.Add(new TableColumn { Width = new GridLength(1.6, GridUnitType.Star) }); // توضیح
+        // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — رفع «فیلد ردیف کل عرض صفحه
+        // را می‌گیرد» ═══ ستون‌های ستاره‌ای (GridUnitType.Star) در جدول‌های
+        // FlowDocumentِ راست‌به‌چپ باگ شناخته‌شدهٔ WPF دارند: توزیع عرض به‌درستی
+        // انجام نمی‌شود و ستون اول (شمارهٔ ردیف با عرض ثابت) تمام عرض را می‌گیرد
+        // و بقیهٔ ستون‌ها له می‌شوند — «قالب‌بندی بهم‌ریخته» گزارش همین بود.
+        // راه‌حل قطعی: عرض‌های «پیکسل ثابت» بر اساس عرض قابل چاپ A4
+        // (۷۹۳.۷ − ۲×۴۰ حاشیه = ~۷۱۳ پیکسل). مجموع دقیقاً ۷۱۳ است.
+        table.Columns.Add(new TableColumn { Width = new GridLength(34) });   // ردیف
+        table.Columns.Add(new TableColumn { Width = new GridLength(232) });  // دارو
+        table.Columns.Add(new TableColumn { Width = new GridLength(206) });  // مصرف
+        table.Columns.Add(new TableColumn { Width = new GridLength(96) });   // مسیر
+        table.Columns.Add(new TableColumn { Width = new GridLength(145) });  // توضیح
         table.RowGroups.Add(new TableRowGroup());
 
         // سرستون‌ها — با خط‌کشی سلول (چرخه ۲۳)
@@ -412,6 +422,15 @@ public static class PrescriptionPrintHelper
             MaxZoom = 300
         };
 
+        // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — زوم واقعاً کار کند ═══
+        // «دکمه‌های زوم کار نمی‌کنند»: تنظیم Zoom روی FlowDocumentPageViewerِ
+        // ساخته‌شده در کد (بدون اعمال قالب کامل و کنترل داخلی DocumentPageView)
+        // در عمل بی‌اثر می‌ماند. راه‌حل مطمئن و مستقل از قالب: مقیاس‌گذاری
+        // خود نمایشگر با ScaleTransform — همیشه روی هر نسخهٔ ویندوز اثر می‌کند.
+        double zoomLevel = 100;
+        var zoomScale = new ScaleTransform(1, 1);
+        viewer.LayoutTransform = zoomScale;
+
         // ─── دکمهٔ چاپ — ارسال مستقیم به پرینتر از طریق PrintDialog ───
         var printBtn = new Button
         {
@@ -433,7 +452,7 @@ public static class PrescriptionPrintHelper
             Padding = new Thickness(18, 8, 18, 8),
             BorderThickness = new Thickness(0),
             Cursor = System.Windows.Input.Cursors.Hand,
-            FontFamily = new FontFamily(FontName)
+            FontFamily = PrintFontFamily
         };
         // رویداد کلیک چاپ —.paginator استاندارد سند به پرینتر فرستاده می‌شود؛
         // اگر کاربر پرینتر را لغو کند یا پرینتری نصب نباشد، بی‌صدا بازمی‌گردد
@@ -460,34 +479,33 @@ public static class PrescriptionPrintHelper
         // ─── زوم +/− و درصد زوم ───
         var zoomText = new TextBlock
         {
-            Text = $"{PersianDateHelper.ToPersianDigits(((int)viewer.Zoom).ToString())}٪",
+            Text = $"{PersianDateHelper.ToPersianDigits(((int)zoomLevel).ToString())}٪",
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(8, 0, 8, 0),
-            FontFamily = new FontFamily(FontName),
+            FontFamily = PrintFontFamily,
             MinWidth = 44,
             TextAlignment = TextAlignment.Center
         };
-        var zoomIn = new Button { Content = "+", Width = 34, Height = 30, FontSize = 15, FontFamily = new FontFamily(FontName) };
-        var zoomOut = new Button { Content = "−", Width = 34, Height = 30, FontSize = 15, FontFamily = new FontFamily(FontName) };
-        // زوم با به‌روزرسانی درصد فارسی — FlowDocumentPageViewer رویداد ZoomChanged
-        // ندارد؛ متن درصد در همان کلیک‌ها تازه می‌شود
-        zoomIn.Click += (_, _) =>
+        var zoomIn = new Button { Content = "+", Width = 34, Height = 30, FontSize = 15, FontFamily = PrintFontFamily };
+        var zoomOut = new Button { Content = "−", Width = 34, Height = 30, FontSize = 15, FontFamily = PrintFontFamily };
+        // اعمال زوم مقیاسی — نمایشگر با LayoutTransform مقیاس می‌گیرد و درصد
+        // فارسی همان لحظه تازه می‌شود؛ کلیدهای Ctrl+توسط نمایشگر پشتیبانی می‌شوند
+        void ApplyZoom(double value)
         {
-            viewer.Zoom = Math.Min(viewer.MaxZoom, viewer.Zoom + 10);
-            zoomText.Text = $"{PersianDateHelper.ToPersianDigits(((int)viewer.Zoom).ToString())}٪";
-        };
-        zoomOut.Click += (_, _) =>
-        {
-            viewer.Zoom = Math.Max(viewer.MinZoom, viewer.Zoom - 10);
-            zoomText.Text = $"{PersianDateHelper.ToPersianDigits(((int)viewer.Zoom).ToString())}٪";
-        };
+            zoomLevel = Math.Clamp(value, 50, 300);
+            zoomScale.ScaleX = zoomLevel / 100.0;
+            zoomScale.ScaleY = zoomLevel / 100.0;
+            zoomText.Text = $"{PersianDateHelper.ToPersianDigits(((int)zoomLevel).ToString())}٪";
+        }
+        zoomIn.Click += (_, _) => ApplyZoom(zoomLevel + 10);
+        zoomOut.Click += (_, _) => ApplyZoom(zoomLevel - 10);
 
         // ─── دکمهٔ بستن ───
         var closeBtn = new Button
         {
             Content = "بستن",
             Padding = new Thickness(14, 6, 14, 6),
-            FontFamily = new FontFamily(FontName)
+            FontFamily = PrintFontFamily
         };
 
         // ─── نوار ابزار فارسی بالای پنجره ───
@@ -510,13 +528,13 @@ public static class PrescriptionPrintHelper
             Text = "طرح چاپ:",
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(14, 0, 6, 0),
-            FontFamily = new FontFamily(FontName)
+            FontFamily = PrintFontFamily
         };
         var styleCombo = new ComboBox
         {
             Width = 105,
             VerticalAlignment = VerticalAlignment.Center,
-            FontFamily = new FontFamily(FontName),
+            FontFamily = PrintFontFamily,
             SelectedIndex = (int)currentStyle
         };
         foreach (var s in Enum.GetValues<PrescriptionPrintStyle>())
@@ -557,7 +575,7 @@ public static class PrescriptionPrintHelper
             FontWeight = FontWeights.SemiBold,
             VerticalAlignment = VerticalAlignment.Center,
             HorizontalAlignment = HorizontalAlignment.Center,
-            FontFamily = new FontFamily(FontName)
+            FontFamily = PrintFontFamily
         };
         toolbar.Children.Add(titleText);
 
@@ -579,9 +597,19 @@ public static class PrescriptionPrintHelper
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Owner = System.Windows.Application.Current?.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive),
             FlowDirection = FlowDirection.RightToLeft,
-            FontFamily = new FontFamily(FontName)
+            FontFamily = PrintFontFamily
         };
         closeBtn.Click += (_, _) => window.Close();
+        // چرخه بیست‌وچهارم (گزارش هفدهم مالک): «کلید کنسل یا ESC برای بستن
+        // کادرها» — کلید Escape پنجرهٔ پیش‌نمایش چاپ را هم می‌بندد
+        window.PreviewKeyDown += (_, ke) =>
+        {
+            if (ke.Key == System.Windows.Input.Key.Escape)
+            {
+                window.Close();
+                ke.Handled = true;
+            }
+        };
         window.ShowDialog();
     }
 }
