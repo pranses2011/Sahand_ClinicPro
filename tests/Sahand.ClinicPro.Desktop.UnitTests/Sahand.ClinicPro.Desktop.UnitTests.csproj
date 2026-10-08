@@ -2,47 +2,69 @@
   <!-- ═══════════════════════════════════════════════════════════════
        تست‌های واحد ViewModelهای دسکتاپ — چرخه دوازدهم (C1، بند ۴-۱)
        با کلاینت API ساختگی — جریان‌های پول‌ساز بدون نیاز به سرور
-       نکته فنی: پروژه دسکتاپ net8.0-windows است و در NuGet با net8.0
-       ناسازگار شمرده می‌شود؛ از این‌رو ارجاع مستقیم DLL + هدفِ
-       «اول دسکتاپ را بساز» به‌کار رفته تا ترتیب ساخت تضمین شود.
-       ViewModelهای هدف هیچ وابستگی به فضای‌نام System.Windows ندارند
-       و روی لینوکس هم اجرای تست میسر است.
+       ─────────────────────────────────────────────────────────────
+       📌 چرخه بیست‌ودوم — رفع خطای CS0006 در «Rebuild Solution»:
+       پیش‌تر این پروژه به‌جای ProjectReference، از ارجاع مستقیم DLL
+       (HintPath به پوشهٔ bin دسکتاپ) + هدفِ «اول دسکتاپ را بساز»
+       استفاده می‌کرد. عیب بزرگ این الگو:
+       ● Visual Studio گراف ترتیب ساخت پروژه‌ها را از روی
+           ProjectReferenceها می‌سازد؛ چون این پروژه هیچ
+           ProjectReference‌ای به دسکتاپ نداشت، VS می‌توانست تست‌ها
+           را هم‌زمان با (یا حتی قبل از) ساخت دسکتاپ بیلد کند.
+       ● در Rebuild Solution اول همه‌چیز Clean می‌شود (DLL دسکتاپ
+           حذف می‌شود)؛ اگر کامپایل تست‌ها قبل از تولید مجدد DLL
+           اجرا شود → خطای آبشاری:
+           CS0006 «Metadata file ...Sahand.ClinicPro.Desktop.dll
+           could not be found» در همین پروژهٔ UnitTests.
+       ● هدفِ BuildDesktopFirst هم در VS وضع را بدتر می‌کرد: با نبود
+           DLL، یک بیلدِ تودرتو (nested MSBuild) از همان پروژهٔ
+           دسکتاپی که VS خودش به‌صورت موازی در حال بیلدش بود
+           راه می‌انداخت → قفل فایل ویندوزی روی خروجی‌های میانی
+           (obj\*.g.cs و DLL/PDB) → شکست یکی از دو بیلد.
+       ✅ راه‌حل قطعی (این فایل):
+       ۱) TargetFramework از net8.0 به net8.0-windows تغییر کرد تا
+          ProjectReference به پروژهٔ دسکتاپِ net8.0-windows مجاز
+          باشد (ناسازگاری NuGet معروفِ NU1201 فقط در حالت net8.0
+          رخ می‌داد — دلیل اصلی هکِ DLL در گذشته همین بود).
+       ۲) ارجاع استاندارد ProjectReference جایگزین هک DLL شد؛ اکنون
+          MSBuild و VS همیشه دسکتاپ را «قبل از» تست‌ها می‌سازند —
+          چه در Build چه در Rebuild — و دیگری ناممکن است.
+       ۳) برکود حذف شد: هشدارهای MSB3277 (تعارض اسمبلی‌های
+          WindowsBase و ...) و CA1416 مرتبط با ارجاع دستی حذف شدند.
+       نکتهٔ اجرا: هیچ تستی در زمان اجرا به نوع‌های WPF دست نمی‌زند
+       (ViewModelها فاقد وابستگی به System.Windows هستند)؛ از این‌رو
+       اجرای تست روی ویندوز و لینوکس/CI (با EnableWindowsTargeting)
+       هر دو ممکن است.
        ═══════════════════════════════════════════════════════════════ -->
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <!-- هم‌TFM با پروژهٔ دسکتاپ (net8.0-windows) تا ارجاع استاندارد
+         ProjectReference به آن معتبر باشد — پیش‌نیاز رفع CS0006 -->
+    <TargetFramework>net8.0-windows</TargetFramework>
     <IsPackable>false</IsPackable>
+    <!-- ساخت پروژهٔ ویندوزی (WPF) روی لینوکس/CI نیز ممکن باشد؛
+         زمان اجرای تست‌ها به نوع‌های WPF اشاره‌ای نیست -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <!-- نکته: ~۶۲ هشدار اطلاع‌رسانی MSB3277 (تعارض نسخه اسمبلی‌های WindowsBase و ...)
-         ناشی از ارجاع مستقیم DLL دسکتاپ است — بی‌ضرر و مورد انتظار؛ تست‌ها سبزند.
-         پروژه‌های سورس بدون هیچ هشدار بیلد می‌شوند. -->
-    <!-- خروجی دسکتاپ برای ارجاع HintPath -->
-    <DesktopDll>..\..\src\Sahand.ClinicPro.Desktop\bin\$(Configuration)\net8.0-windows\Sahand.ClinicPro.Desktop.dll</DesktopDll>
   </PropertyGroup>
 
-  <!-- ترتیب ساخت: ابتدا پروژه دسکتاپ ساخته شود تا DLL موجود باشد -->
-  <Target Name="BuildDesktopFirst" BeforeTargets="BeforeBuild" Condition="!Exists('$(DesktopDll)')">
-    <MSBuild Projects="..\..\src\Sahand.ClinicPro.Desktop\Sahand.ClinicPro.Desktop.csproj"
-             Targets="Build"
-             Properties="Configuration=$(Configuration)" />
-  </Target>
-
   <ItemGroup>
-    <!-- ارجاع مستقیم به اسمبلی دسکتاپ (بدون بررسی سازگاری NuGet) -->
-    <Reference Include="Sahand.ClinicPro.Desktop">
-      <HintPath>$(DesktopDll)</HintPath>
-      <Private>true</Private>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- لایه‌های سازگار net8.0 — برای PersianDateHelper و DTOها -->
+    <!-- ═══ ارجاع استاندارد به پروژه‌های سورس ═══
+         MSBuild از روی همین ارجاع‌ها گراف ترتیب ساخت را می‌سازد:
+         ۱) دسکتاپ همیشه پیش از این پروژهٔ تست ساخته می‌شود
+            (رفع دائمی CS0006 در Rebuild Solution)
+         ۲) وابستگی‌های انتقالی (CommunityToolkit.Mvvm و ...)
+            به‌صورت خودکار منتقل می‌شوند
+         ۳) همیشه DLL تازهٔ دسکتاپ مبنای کامپایل تست‌هاست؛
+            حتی پس از Clean کامل بدون هیچ هک اضافه‌ای -->
+    <ProjectReference Include="..\..\src\Sahand.ClinicPro.Desktop\Sahand.ClinicPro.Desktop.csproj" />
     <ProjectReference Include="..\..\src\Sahand.ClinicPro.Application\Sahand.ClinicPro.Application.csproj" />
     <ProjectReference Include="..\..\src\Sahand.ClinicPro.Shared\Sahand.ClinicPro.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- وابستگی‌های موردنیام ViewModelها — با ارجاع مستقیم DLL منتقل نمی‌شوند -->
+    <!-- وابستگی‌های آزمون‌سازی (نسخه‌ها در Directory.Packages.props مرکزی‌اند)
+         نکته: CommunityToolkit.Mvvm از دسکتاپ هم انتقالی می‌رسد؛
+         ذکر صریح برای شفافیت استفادهٔ مستقیم تست‌ها از ObservableObject -->
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
