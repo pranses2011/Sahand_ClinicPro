@@ -85,14 +85,60 @@ public static class IdentitySetup
                 {
                     if (context.Exception is SecurityTokenExpiredException)
                     {
-                        context.Response.StatusCode = 401;
-                        context.Response.ContentType = "application/json";
-                        context.Response.WriteAsync(JsonSerializer.Serialize(new
+                        // چرخه بیست‌وچهارم: اگر پاسخ قبلاً آغاز شده باشد نوشتن
+                        // دوبارهٔ آن استثنای ثانویه می‌اندازد (گزارش هفدهم مالک)
+                        if (!context.Response.HasStarted)
                         {
-                            isSuccess = false,
-                            message = "توکن دسترسی منقضی شده است — دوباره وارد شوید"
-                        }));
+                            context.Response.StatusCode = 401;
+                            context.Response.ContentType = "application/json";
+                            context.Response.WriteAsync(JsonSerializer.Serialize(new
+                            {
+                                isSuccess = false,
+                                message = "توکن دسترسی منقضی شده است — دوباره وارد شوید"
+                            }));
+                        }
                     }
+                    return System.Threading.Tasks.Task.CompletedTask;
+                },
+
+                // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — گارد چالش ۴۰۱ ═══
+                // لاگ سرور: «InvalidOperationException در JwtBearerHandler.
+                // HandleChallengeAsync — StatusCode cannot be set because the
+                // response has already started». وقتی درخواستِ بدون/با توکنِ
+                // نامعتبر به اندپوینت محافظت‌شده می‌رسد و پاسخ به هر دلیلی
+                // (میانهٔ خطای قبلی، فشرده‌سازی و…) آغاز شده باشد، چالشِ
+                // پیش‌فرض ۴۰۱ کرش می‌کرد و «unhandled exception» می‌شد.
+                // با شروعِ دستی رویداد، پاسخِ آغازشده را به چالش نمی‌فرستیم؛
+                // رفتار عادی (هدر WWW-Authenticate + ۴۰۱ JSON فارسی) حفظ شد.
+                OnChallenge = context =>
+                {
+                    if (context.Response.HasStarted)
+                    {
+                        // پاسخ آغاز شده — تعیین کد وضعیت ممکن نیست؛ فقط اعلان
+                        // پیش‌فرض متوقف و درخواست خاتمه می‌یابد بدون استثنا
+                        context.HandleResponse();
+                        return System.Threading.Tasks.Task.CompletedTask;
+                    }
+
+                    // پاسخ فارسی استاندارد به‌جای Challenge خالی پیش‌فرض —
+                    // کلاینت WPF پیام روشن می‌گیرد (توکن نیست/منقضی/نامعتبر)
+                    context.Response.StatusCode = 401;
+                    context.Response.ContentType = "application/json";
+                    context.Response.WriteAsync(JsonSerializer.Serialize(new
+                    {
+                        isSuccess = false,
+                        statusCode = 401,
+                        message = string.IsNullOrEmpty(context.Error)
+                            ? "برای این عملیات باید وارد برنامه شوید"
+                            : "اعتبارنامه یا دسترسی شما معتبر نیست — دوباره وارد شوید",
+                        errors = new List<string>(),
+                        traceId = context.HttpContext.TraceIdentifier,
+                        data = (object?)null,
+                        elapsedMs = 0
+                    }));
+                    // جلوگیری از چالش پیش‌فرض (نوشتن سرآیند WWW-Authenticate
+                    // و متن خالی) — بدنهٔ JSON خودمان پاسخ نهایی است
+                    context.HandleResponse();
                     return System.Threading.Tasks.Task.CompletedTask;
                 },
 
