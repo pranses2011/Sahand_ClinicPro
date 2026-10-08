@@ -16,10 +16,12 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Seeders.SeedData;
 public static partial class DrugInteractionSeedData
 {
     /// <summary>
-    /// همهٔ تداخل‌ها — سری اصلی + مکمل چرخه بیست‌ویکم؛ بذر از همین می‌خواند.
+    /// همهٔ تداخل‌ها — سری اصلی + مکمل چرخه بیست‌ویکم + مکمل دوم چرخه
+    /// بیست‌وسوم (گزارش شانزدهم مالک — ~۱۲۰ تداخل بالینی جدید در ده گروه
+    /// درمانی)؛ بذر و دکمهٔ «بروزرسانی تداخل‌ها» از همین می‌خواند.
     /// </summary>
     public static IEnumerable<InteractionRow> AllInteractions
-        => Rows.Concat(SupplementRows);
+        => Rows.Concat(SupplementRows).Concat(Supplement2Rows);
 
     /// <summary>تداخل‌های مکمل چرخه بیست‌ویکم</summary>
     public static readonly IReadOnlyList<InteractionRow> SupplementRows = new InteractionRow[]

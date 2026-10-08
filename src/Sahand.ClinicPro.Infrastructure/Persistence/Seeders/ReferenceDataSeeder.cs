@@ -271,6 +271,29 @@ public class ReferenceDataSeeder : IDataSeeder
             "Smoking (Tobacco)" => Array.Empty<long>(),
             "Grapefruit Juice" => Array.Empty<long>(),
             "Protein Meals" => Array.Empty<long>(),
+
+            // ═══ چرخه بیست‌وسوم (گزارش شانزدهم مالک) — کلاس‌های ارجاعی مکمل دوم ═══
+            // «تمامی تداخل‌های روز دنیا داخل برنامه باشد» — این کلاس‌ها به اعضای
+            // نمونهٔ موجود در کاتالوگ داروها نگاشت می‌شوند تا جفت‌های تداخلیِ
+            // سطح-کلاس به داروهای واقعیِ قابل تجویز وصل شوند.
+            "PPI" => new[] { "Omeprazole", "Pantoprazole", "Esomeprazole", "Lansoprazole", "Rabeprazole" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "SSRI" => new[] { "Sertraline", "Fluoxetine", "Paroxetine", "Citalopram", "Escitalopram", "Fluvoxamine" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "OCP" or "OCP (Ethinylestradiol)" when medIds.ContainsKey("Ethinylestradiol")
+                => new[] { medIds["Ethinylestradiol"] },
+            "Azoles" => new[] { "Fluconazole", "Ketoconazole", "Itraconazole", "Clotrimazole" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Nitrate" => new[] { "Nitroglycerin", "Isosorbide Dinitrate", "Isosorbide Mononitrate" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "ACEI (Lisinopril)" => new[] { "Lisinopril", "Enalapril", "Captopril", "Ramipril" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "PPI (Omeprazole)" when medIds.ContainsKey("Omeprazole") => new[] { medIds["Omeprazole"] },
+            "SSRI (Sertraline)" when medIds.ContainsKey("Sertraline") => new[] { medIds["Sertraline"] },
+            "Bisphosphonates (Alendronate)" when medIds.ContainsKey("Alendronate")
+                => new[] { medIds["Alendronate"] },
+            "Levodopa/Carbidopa" => new[] { "Levodopa + Carbidopa", "Levodopa/Carbidopa" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
             _ => Array.Empty<long>(),
         };
     }
