@@ -44,7 +44,16 @@
     <!-- ساخت تکرارپذیر و امن -->
     <Deterministic>true</Deterministic>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+    <!-- ⚠️ چرخه ۲۵ — ریشهٔ هشدارهای MC3072/MC3074 در ویژوال استودیو:
+         تا اینجا true بود و «بیلد شتاب‌یافته» (Accelerated Build) در VS
+         بخش‌های Design-Time Build را دور می‌زند؛ در نتیجه ویرایشگر XAML
+         اسمبلی‌های NuGet (مثل MaterialDesignThemes) را resolve نمی‌کرد و
+         برای همهٔ PackIcon/BundledTheme/Card/HintAssist/ColorZoneAssist/
+         DataGridAssist هشدارِ «در XML namespace وجود ندارد» می‌داد، در
+         حالی که بیلد واقعی (dotnet build) کاملاً تمیز و بدون هیچ خطا/
+         هشدار MC است. با false شدن، هوشمندی XAML و Intellisense کامل
+         برمی‌گردد؛ تنها بهای آن کمی کندتر شدن بیلدِ داخل IDE است. -->
+    <AccelerateBuildsInVisualStudio>false</AccelerateBuildsInVisualStudio>
   </PropertyGroup>
 
   <ItemGroup>
