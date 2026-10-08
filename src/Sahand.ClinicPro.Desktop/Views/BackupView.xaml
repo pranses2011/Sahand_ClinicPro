@@ -135,7 +135,8 @@
                     </StackPanel>
                 </Border>
 
-                <!-- دکمه بازیابی از انتخابی -->
+                <!-- دکمه بازیابی از انتخابی — چرخه بیست‌وسوم: بازیابی اکنون واقعی است
+                     (سرور ZIP را استخراج و RESTORE DATABASE اجرا می‌کند) -->
                 <Button Command="{Binding RestoreCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
                         HorizontalAlignment="Left" Margin="2,10,0,4">
                     <StackPanel Orientation="Horizontal">
@@ -146,6 +147,39 @@
                 <TextBlock Text="{Binding RestoreStatus}" FontSize="11.5" Foreground="#1565C0" Margin="2,4,0,0"
                            Visibility="{Binding RestoreStatus, Converter={StaticResource StringToVisibility}}"
                            TextWrapping="Wrap" />
+
+                <!-- ─── فهرست فایل‌های پشتیبان برای انتخاب دستی بازیابی — چرخه بیست‌وسوم
+                     (گزارش شانزدهم مالک: «امکان انتخاب دستی فایل پشتیبان برای بازیابی») ─── -->
+                <Border CornerRadius="10" Padding="12,9" Margin="2,12,2,4" Background="#F1F8E9"
+                        BorderBrush="#C5E1A5" BorderThickness="1">
+                    <StackPanel>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Command="{Binding RestoreSelectedFileCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}" Padding="10,4" FontSize="12">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FileRestore" Width="15" Height="15" VerticalAlignment="Center" />
+                                    <TextBlock Text="بازیابی فایل انتخاب‌شده" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="📂 فایل‌های پشتیبان پوشهٔ ذخیره (ZIP فشرده — نام شمسی) — برای بازیابی، یکی را انتخاب کنید:"
+                                       FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"
+                                       Margin="0,0,12,0" />
+                        </DockPanel>
+
+                        <DataGrid ItemsSource="{Binding BackupFiles}"
+                                  SelectedItem="{Binding SelectedBackupFile}"
+                                  AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                                  HeadersVisibility="Column" FontSize="11.5" MaxHeight="190"
+                                  Margin="0,9,0,0" AlternatingRowBackground="#F7FAFD">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="نام فایل" Binding="{Binding FileName, Converter={StaticResource PersianDigits}}" Width="*" />
+                                <DataGridTextColumn Header="نوع" Binding="{Binding Kind}" Width="Auto" MinWidth="90" />
+                                <DataGridTextColumn Header="حجم" Binding="{Binding SizeText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
+                                <DataGridTextColumn Header="تاریخ فایل" Binding="{Binding DateShamsi}" Width="Auto" MinWidth="110" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
 
                 <!-- ─── پشتیبان ابری — چرخه سیزدهم (درخواست ۷-۳) ─── -->
                 <materialDesign:Card Padding="18" Margin="2,14,2,4" UniformCornerRadius="14"

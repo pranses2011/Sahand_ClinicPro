@@ -27,14 +27,31 @@ public class BackupController : ApiBaseController
     private readonly IConfiguration _configuration;
     private readonly ILogger<BackupController> _logger;
 
+    /// <summary>ارائه‌دهندهٔ خدمات درخواست — برای ساخت BackupManager با کانتکست همان درخواست (چرخه بیست‌وسوم)</summary>
+    private readonly IServiceProvider _services;
+
+    /// <summary>ثبت‌گر اختصاصی مدیر پشتیبان — چرخه بیست‌وسوم</summary>
+    private readonly ILogger<BackupManager> _backupLogger;
+
     /// <summary>سازنده با تزریق وابستگی‌ها</summary>
     public BackupController(IUnitOfWork unitOfWork, IConfiguration configuration,
-        ILogger<BackupController> logger)
+        ILogger<BackupController> logger, IServiceProvider services,
+        ILogger<BackupManager> backupLogger)
     {
         _unitOfWork = unitOfWork;
         _configuration = configuration;
         _logger = logger;
+        _services = services;
+        _backupLogger = backupLogger;
     }
+
+    /// <summary>
+    /// ساخت مدیر پشتیبان با کانتکست دامنهٔ همین درخواست — ثبت تاریخچه و اجرای
+    /// BACKUP/RESTORE روی همان اتصال (چرخه بیست‌وسوم)
+    /// </summary>
+    private BackupManager CreateManager() =>
+        new(_services.GetRequiredService<Sahand.ClinicPro.Infrastructure.Persistence.ClinicProDbContext>(),
+            _backupLogger);
 
     /// <summary>
     /// تاریخچه پشتیبان‌ها — چرخه بیست‌ویکم: مسیر فایل هم برگردانده می‌شود
@@ -68,45 +85,117 @@ public class BackupController : ApiBaseController
     }
 
     /// <summary>
-    /// اجرای پشتیبان‌گیری کامل دستی — چرخه بیست‌ویکم: پوشهٔ مقصد در نبود
-    /// ساخته می‌شود (گزارش پانزدهم مالک) و BACKUP DATABASE واقعی روی همان
-    /// اتصال اجرا می‌شود؛ نتیجه (موفق/ناموفق + پیام) در تاریخچه ثبت می‌گردد.
+    /// اجرای پشتیبان‌گیری کامل دستی — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
+    /// پیش‌تر این endpoint فقط رکورد «در حال اجرا» می‌ساخت و BACKUP DATABASE
+    /// واقعی اجرا نمی‌شد («بکاپ دستی انجام نمی‌شود»). اکنون از طریق BackupManager:
+    ///   • پشتیبان واقعی SQL Server روی همان اتصال
+    ///   • نام فایل با تاریخ/ساعت شمسی — SahandClinicPro_14040712_1530.zip
+    ///   • فشرده‌سازی ZIP (حجم کمتر) — فایل خام پس از فشرده‌سازی حذف می‌شود
+    ///   • نتیجهٔ هم‌زمان (موفق/ناموفق + مسیر + حجم) در پاسخ و تاریخچه
     /// </summary>
     [HttpPost("run")]
     [HasPermission("backup.create")]
     public async Task<IActionResult> RunBackup(CancellationToken ct)
     {
         var backupDir = _configuration["Backup:Directory"] ?? "C:/Backups/SahandClinicPro";
-        // ساخت پوشهٔ مقصد در نبود — گزارش پانزدهم مالک
-        System.IO.Directory.CreateDirectory(backupDir);
 
-        var fileName = $"SahandClinicPro_{DateTime.Now:yyyyMMdd_HHmmss}.bak";
-        var fullPath = System.IO.Path.Combine(backupDir, fileName);
+        // تنظیم پوشه از دیتابیس (تنظیمات برنامه) بر تنظیم فایل اولویت دارد
+        var dirSetting = await _unitOfWork.Repository<SystemSetting>().QueryableNoTracking
+            .FirstOrDefaultAsync(s => !s.IsDeleted && s.Category == "Backup" && s.Key == "Directory", ct);
+        if (dirSetting is not null && !string.IsNullOrWhiteSpace(dirSetting.Value))
+            backupDir = dirSetting.Value;
 
-        var record = new BackupHistory
-        {
-            BackupType = BackupType.Full,
-            FilePath = fullPath,
-            StartedAt = DateTime.Now,
-            Status = BackupStatus.InProgress,
-            IsAutomatic = false,
-            StorageType = StorageType.Local
-        };
+        var manager = CreateManager();
 
-        await _unitOfWork.Repository<BackupHistory>().AddAsync(record);
-        await _unitOfWork.SaveEntitiesAsync(ct);
+        var (ok, zipPath, error) = await manager.CreateFullBackupAsync(backupDir, isAutomatic: false, ct);
 
-        // اجرای واقعی BACKUP DATABASE در کارگر پس‌زمینه و در چرخهٔ بعدی پشتیبان
-        // دستی کامل انجام می‌شود؛ اینجا رکورد «در حال اجرا» ثبت شد تا در تاریخچه
-        // دیده شود و کارگر پس از پایان، وضعیت/حجم را تکمیل می‌کند.
-        _logger.LogInformation("پشتیبان‌گیری دستی ثبت شد — {File}", fullPath);
+        if (!ok)
+            return BadRequest(ApiResponse<object>.Failure($"پشتیبان‌گیری ناموفق بود: {error}"));
 
         return Ok(ApiResponse<object>.Success(new
         {
-            fileName,
-            filePath = fullPath,
-            message = "پشتیبان‌گیری دستی ثبت شد — پس از پایان در تاریخچه با جزئیات نمایش داده می‌شود"
-        }));
+            fileName = System.IO.Path.GetFileName(zipPath),
+            filePath = zipPath,
+            message = "پشتیبان‌گیری با موفقیت انجام شد — نسخهٔ فشردهٔ ZIP با نام شمسی ذخیره شد"
+        }, "پشتیبان‌گیری با موفقیت انجام شد"));
+    }
+
+    // ═══ فهرست و بازیابی فایل‌های پشتیبان — چرخه بیست‌وسوم (گزارش شانزدهم مالک) ═══
+    // «امکان انتخاب دستی فایل پشتیبان برای بازیابی» + «در هنگام بازیابی زیپ را
+    // باز و بازیابی کنن» — دو endpoint زیر فهرست فایل‌های پوشهٔ پشتیبان و اجرای
+    // بازیابی واقعی (RESTORE DATABASE با REPLACE) را ممکن می‌کنند.
+
+    /// <summary>فهرست فایل‌های پشتیبان پوشه — برای انتخاب دستی بازیابی (تازه‌ترین اول)</summary>
+    [HttpGet("files")]
+    [HasPermission("backup.view")]
+    public async Task<IActionResult> ListFiles(CancellationToken ct)
+    {
+        var backupDir = await ResolveBackupDirectoryAsync(ct);
+        var files = BackupManager.ListBackupFiles(backupDir);
+
+        return Ok(ApiResponse<object>.Success(files.Select(f => new
+        {
+            fileName = f.FileName,
+            fullPath = f.FullPath,
+            sizeBytes = f.SizeBytes,
+            sizeText = $"{f.SizeBytes / 1024.0 / 1024.0:0.#} مگابایت",
+            lastWrite = f.LastWriteTime,
+            kind = f.Kind,
+        })));
+    }
+
+    /// <summary>
+    /// بازیابی از فایل پشتیبان انتخاب‌شده — ZIP استخراج و RESTORE واقعی اجرا می‌شود.
+    /// ⚠️ داده‌های فعلی دیتابیس به‌طور کامل با نسخهٔ پشتیبان جایگزین می‌شود —
+    /// کلاینت باید پیش از فراخوانی، تأییدیهٔ صریح کاربر را گرفته باشد.
+    /// </summary>
+    /// <param name="request">مسیر کامل فایل ZIP/BAK (از فهرست files) — یا تهی برای آخرین نسخه</param>
+    /// <param name="ct">توکن لغو هم‌زمان</param>
+    [HttpPost("restore")]
+    [HasPermission("backup.create")]
+    public async Task<IActionResult> Restore([FromBody] RestoreRequest request, CancellationToken ct)
+    {
+        string path;
+        if (!string.IsNullOrWhiteSpace(request?.FullPath))
+        {
+            path = request.FullPath.Trim();
+        }
+        else
+        {
+            // پیش‌فرض: تازه‌ترین پشتیبان موفق ثبت‌شده
+            var latest = await _unitOfWork.Repository<BackupHistory>().QueryableNoTracking
+                .Where(b => !b.IsDeleted && b.Status == BackupStatus.Success && b.FilePath != null)
+                .OrderByDescending(b => b.Id)
+                .FirstOrDefaultAsync(ct);
+            if (latest?.FilePath is null)
+                return BadRequest(ApiResponse<string>.Failure("هیچ فایل پشتیبانی برای بازیابی یافت نشد"));
+            path = latest.FilePath;
+        }
+
+        var manager = CreateManager();
+
+        var (ok, message) = await manager.RestoreFromBackupAsync(path, ct);
+        if (!ok)
+            return BadRequest(ApiResponse<string>.Failure(message));
+
+        return Ok(ApiResponse<object>.SuccessMessage(message));
+    }
+
+    /// <summary>بدنهٔ درخواست بازیابی — تهی یعنی آخرین نسخهٔ موفق</summary>
+    public sealed class RestoreRequest
+    {
+        /// <summary>مسیر کامل فایل ZIP یا BAK — از فهرست backup/files</summary>
+        public string? FullPath { get; set; }
+    }
+
+    /// <summary>حل پوشهٔ پشتیبان — تنظیم دیتابیس مقدم بر فایل پیکربندی</summary>
+    private async Task<string> ResolveBackupDirectoryAsync(CancellationToken ct)
+    {
+        var dirSetting = await _unitOfWork.Repository<SystemSetting>().QueryableNoTracking
+            .FirstOrDefaultAsync(s => !s.IsDeleted && s.Category == "Backup" && s.Key == "Directory", ct);
+        return !string.IsNullOrWhiteSpace(dirSetting?.Value)
+            ? dirSetting.Value
+            : _configuration["Backup:Directory"] ?? "C:/Backups/SahandClinicPro";
     }
 
     // ═══ تنظیمات پشتیبان‌گیری خودکار — چرخه بیست‌ویکم (گزارش پانزدهم مالک) ═══

@@ -62,7 +62,11 @@ public class AutomaticBackupWorker : BackgroundService
         }
     }
 
-    /// <summary>یک چرخهٔ بررسی: خواندن تنظیمات → در صورت لزوم اجرای پشتیبان</summary>
+    /// <summary>
+    /// یک چرخهٔ بررسی: خواندن تنظیمات → در صورت لزوم اجرای پشتیبان
+    /// چرخه بیست‌وسوم: اجرا به BackupManager سپرده شد (نام شمسی + فشرده‌سازی ZIP)
+    /// تا رفتار خودکار و دستی یکسان باشد.
+    /// </summary>
     private async Task TickAsync(CancellationToken ct)
     {
         using var scope = _scopeFactory.CreateScope();
@@ -96,72 +100,14 @@ public class AutomaticBackupWorker : BackgroundService
         if (takenToday)
             return;
 
-        await RunBackupAsync(db, directory, ct);
-    }
-
-    /// <summary>
-    /// اجرای واقعی پشتیبان کامل — BACKUP DATABASE روی همان اتصال کانتکست؛
-    /// پوشه در نبود ساخته می‌شود و نتیجه در تاریخچه ثبت می‌گردد.
-    /// </summary>
-    private async Task RunBackupAsync(ClinicProDbContext db, string directory, CancellationToken ct)
-    {
-        // ساخت پوشهٔ مقصد در نبود (گزارش پانزدهم مالک) — بازگشتی
-        Directory.CreateDirectory(directory);
-
-        var fileName = $"SahandClinicPro_Auto_{DateTime.Now:yyyyMMdd_HHmmss}.bak";
-        var fullPath = Path.Combine(directory, fileName);
-
-        var record = new BackupHistory
-        {
-            BackupType = BackupType.Full,
-            FilePath = fullPath,
-            StartedAt = DateTime.Now,
-            IsAutomatic = true,
-            StorageType = StorageType.Local,
-            Status = BackupStatus.InProgress,
-        };
-        db.BackupHistory.Add(record);
-        await db.SaveChangesAsync(ct);
-
-        try
-        {
-            // نام دیتابیس از خود اتصال جاری — با کوتیشن برای نام‌های خاص
-            var connection = db.Database.GetDbConnection();
-            await connection.OpenAsync(ct);
-            try
-            {
-                var databaseName = connection.Database;
-                using var cmd = connection.CreateCommand();
-                cmd.CommandText =
-                    "BACKUP DATABASE [" + databaseName.Replace("]", "]]") + "] " +
-                    "TO DISK = @path WITH INIT, STATS = 25, CHECKSUM";
-                var param = cmd.CreateParameter();
-                param.ParameterName = "@path";
-                param.Value = fullPath;
-                cmd.Parameters.Add(param);
-                await cmd.ExecuteNonQueryAsync(ct);
-            }
-            finally
-            {
-                await connection.CloseAsync();
-            }
-
-            record.Status = BackupStatus.Success;
-            record.CompletedAt = DateTime.Now;
-            record.FileSize = new FileInfo(fullPath).Exists
-                ? new FileInfo(fullPath).Length
-                : null;
-            _logger.LogInformation("پشتیبان خودکار موفق — {File}", fullPath);
-        }
-        catch (Exception ex)
-        {
-            record.Status = BackupStatus.Failed;
-            record.CompletedAt = DateTime.Now;
-            record.ErrorMessage = ex.Message.Length > 900 ? ex.Message[..900] : ex.Message;
-            _logger.LogError(ex, "پشتیبان خودکار ناموفق — {File}", fullPath);
-        }
-
-        await db.SaveChangesAsync(ct);
+        // چرخه بیست‌وسوم: پشتیبان واقعی + نام شمسی + ZIP از مدیر مشترک
+        var manager = new BackupManager(db,
+            scope.ServiceProvider.GetRequiredService<ILogger<BackupManager>>());
+        var (ok, zipPath, error) = await manager.CreateFullBackupAsync(directory, isAutomatic: true, ct);
+        if (!ok)
+            _logger.LogWarning("پشتیبان خودکار ناموفق بود — {Error}", error);
+        else
+            _logger.LogInformation("پشتیبان خودکار فشرده شد — {Zip}", zipPath);
     }
 
     /// <summary>خواندن مقدار کلید از دیکشنری تنظیمات</summary>

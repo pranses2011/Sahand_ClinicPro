@@ -11,6 +11,18 @@ public record BackupHistoryRow(long Id, string TypeText, string StatusText, stri
     string CompletedText, string StorageText, string? CloudFileName, string? ErrorMessage);
 
 /// <summary>
+/// ردیف فایل پشتیبان قابل انتخاب برای بازیابی — چرخه بیست‌وسوم (گزارش شانزدهم
+/// مالک): «امکان انتخاب دستی فایل پشتیبان برای بازیابی» — فایل‌های ZIP/BAK
+/// پوشهٔ پشتیبان از سرور فهرست می‌شوند.
+/// </summary>
+public record BackupFileRow(
+    string FileName,
+    string FullPath,
+    string SizeText,
+    string DateShamsi,
+    string Kind);
+
+/// <summary>
 /// ViewModel پشتیبان‌گیری و بازیابی — گام U15 طبق فرم ۲۹:
 /// وضعیت + تاریخچه + پشتیبان‌گیری فوری + تنظیمات خودکار + بازیابی
 /// </summary>
@@ -37,6 +49,17 @@ public partial class BackupViewModel : ViewModelBase
     /// <summary>پشتیبان انتخاب‌شده</summary>
     [ObservableProperty]
     private BackupHistoryRow? _selectedBackup;
+
+    /// <summary>
+    /// فایل‌های پشتیبان پوشهٔ ذخیره — چرخه بیست‌وسوم: برای انتخاب دستی بازیابی.
+    /// نام فایل‌ها از این چرخه شمسی و پسوندشان ZIP است (فشرده).
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<BackupFileRow> _backupFiles = new();
+
+    /// <summary>فایل پشتیبان انتخاب‌شده برای بازیابی دستی — چرخه بیست‌وسوم</summary>
+    [ObservableProperty]
+    private BackupFileRow? _selectedBackupFile;
 
     /* ─── تنظیمات پشتیبان‌گیری خودکار ─── */
 
@@ -181,6 +204,7 @@ public partial class BackupViewModel : ViewModelBase
         _ = LoadCloudStatusAsync();
         _ = LoadCloudConfigAsync(); // تنظیمات ابری برای فرم فعال‌سازی (چرخه بیستم)
         _ = LoadAutoSettingsAsync(); // تنظیمات خودکار — چرخه بیست‌ویکم
+        _ = LoadBackupFilesAsync(); // فهرست فایل‌ها برای بازیابی دستی — چرخه بیست‌وسوم
     }
 
     /// <summary>بارگذاری تاریخچه پشتیبان‌ها</summary>
@@ -223,15 +247,35 @@ public partial class BackupViewModel : ViewModelBase
         }
     }
 
-    /// <summary>پشتیبان‌گیری فوری کامل</summary>
+    /// <summary>پشتیبان‌گیری فوری کامل — چرخه بیست‌وسوم: پاسخ واقعی است؛ نام ZIP شمسی برگردانده می‌شود</summary>
     [RelayCommand]
     private async Task RunBackupAsync()
     {
         IsBusy = true;
-        var ok = await _api.PostAsync("backup/run", null);
+        var response = await _api.PostAsync<RunBackupResponse>("backup/run", null);
         IsBusy = false;
-        if (ok) { _snackbar.Success("پشتیبان‌گیری فوری ثبت شد"); await LoadAsync(); }
-        else _snackbar.Error(_api.LastError ?? "ثبت پشتیبان‌گیری ناموفق بود");
+        if (response is { IsSuccess: true })
+        {
+            _snackbar.Success("پشتیبان فشرده با نام شمسی ذخیره شد: " + response.Data?.FileName);
+            await LoadAsync();
+            await LoadBackupFilesAsync();
+        }
+        else
+            _snackbar.Error(_api.LastError ?? "پشتیبان‌گیری ناموفق بود");
+    }
+
+    /// <summary>پاسخ پشتیبان‌گیری فوری — نام و مسیر ZIP — چرخه بیست‌وسوم</summary>
+    public sealed class RunBackupResponse
+    {
+        public bool IsSuccess { get; set; }
+        public RunBackupData? Data { get; set; }
+    }
+
+    /// <summary>دادهٔ پاسخ پشتیبان‌گیری</summary>
+    public sealed class RunBackupData
+    {
+        public string? FileName { get; set; }
+        public string? FilePath { get; set; }
     }
 
     /// <summary>
@@ -278,18 +322,81 @@ public partial class BackupViewModel : ViewModelBase
             BackupPath = d.Directory;
     }
 
-    /// <summary>بازیابی از پشتیبان انتخاب‌شده — با هشدار جایگزینی داده</summary>
+    /// <summary>
+    /// بازیابی از پشتیبان انتخاب‌شدهٔ تاریخچه — چرخه بیست‌وسوم (گزارش شانزدهم
+    /// مالک): بازیابی اکنون واقعی است — سرور ZIP را استخراج و RESTORE DATABASE
+    /// با REPLACE اجرا می‌کند. پیش‌تر فقط پیام راهنما نشان داده می‌شد.
+    /// </summary>
     [RelayCommand]
-    private void Restore()
+    private async Task RestoreAsync()
     {
         if (SelectedBackup is null) { _snackbar.Info("ابتدا یک پشتیبان از فهرست انتخاب کنید"); return; }
+        if (string.IsNullOrWhiteSpace(SelectedBackup.FilePath))
+        { _snackbar.Error("این رکورد مسیر فایل ندارد — از فهرست فایل‌ها استفاده کنید"); return; }
 
         // تأیید دو‌مرحله‌ای — پیام هشدار طبق فرم ۲۹
-        var answer = Views.AppDialog.Confirm("تأیید بازیابی", $"⚠️ هشدار: بازیابی از پشتیبان {SelectedBackup.DateText} تمام داده‌های فعلی را جایگزین می‌کند!\n\nادامه می‌دهید؟", Views.AppDialogIcon.Warning);
+        var answer = Views.AppDialog.Confirm("تأیید بازیابی",
+            $"⚠️ هشدار: بازیابی از پشتیبان {SelectedBackup.DateText} تمام داده‌های فعلی را جایگزین می‌کند و همهٔ کاربران موقتاً قطع می‌شوند!\n\nادامه می‌دهید؟",
+            Views.AppDialogIcon.Warning);
         if (answer != true) return;
 
-        RestoreStatus = "بازیابی در نسخه استقرار سرور توسط ادمین سامانه و سرویس پشتیبان انجام می‌شود";
-        _snackbar.Success("راهنمای بازیابی: فایل .bak انتخاب‌شده را به SQL Server Restore کنید");
+        await ExecuteRestoreAsync(SelectedBackup.FilePath);
+    }
+
+    /// <summary>
+    /// فهرست فایل‌های پشتیبان پوشه — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
+    /// «امکان انتخاب دستی فایل پشتیبان برای بازیابی» — از endpoint تازهٔ
+    /// backup/files (تازه‌ترین اول، ZIP/BAK).
+    /// </summary>
+    [RelayCommand]
+    private async Task LoadBackupFilesAsync()
+    {
+        var response = await _api.GetAsync<BackupFilesResponse>("backup/files");
+        if (response?.Data is null) return;
+
+        BackupFiles = new ObservableCollection<BackupFileRow>(response.Data.Select(f => new BackupFileRow(
+            f.FileName ?? "—",
+            f.FullPath ?? "",
+            f.SizeText ?? "—",
+            f.LastWrite is { } t
+                ? Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsiFa(t)
+                : "—",
+            f.Kind == "zip" ? "ZIP فشرده" : "BAK خام")));
+    }
+
+    /// <summary>بازیابی از فایل دستی انتخاب‌شده — چرخه بیست‌وسوم</summary>
+    [RelayCommand]
+    private async Task RestoreSelectedFileAsync()
+    {
+        if (SelectedBackupFile is null)
+        { _snackbar.Info("ابتدا یک فایل پشتیبان از فهرست انتخاب کنید"); return; }
+
+        var answer = Views.AppDialog.Confirm("تأیید بازیابی",
+            $"⚠️ هشدار: بازیابی از فایل «{SelectedBackupFile.FileName}» تمام داده‌های فعلی را جایگزین می‌کند و همهٔ کاربران موقتاً قطع می‌شوند!\n\nادامه می‌دهید؟",
+            Views.AppDialogIcon.Warning);
+        if (answer != true) return;
+
+        await ExecuteRestoreAsync(SelectedBackupFile.FullPath);
+    }
+
+    /// <summary>اجرای بازیابی واقعی از طریق سرور — پیام نتیجه به کاربر</summary>
+    private async Task ExecuteRestoreAsync(string fullPath)
+    {
+        IsBusy = true;
+        RestoreStatus = "در حال بازیابی… سرور فایل را استخراج و RESTORE اجرا می‌کند";
+        var ok = await _api.PostAsync("backup/restore", new { fullPath });
+        IsBusy = false;
+
+        if (ok)
+        {
+            RestoreStatus = "بازیابی با موفقیت انجام شد — برنامه را ببندید و دوباره باز کنید";
+            _snackbar.Success("بازیابی انجام شد — برنامه را ری‌استارت کنید");
+        }
+        else
+        {
+            RestoreStatus = $"بازیابی ناموفق: {_api.LastError}";
+            _snackbar.Error(_api.LastError ?? "بازیابی ناموفق بود");
+        }
     }
 
     /// <summary>قالب‌بندی تاریخ شمسی</summary>
@@ -564,5 +671,23 @@ public partial class BackupViewModel : ViewModelBase
         public bool Ok { get; set; }
         public string Message { get; set; } = "";
         public long PlainSize { get; set; }
+    }
+
+    /// <summary>پاسخ فهرست فایل‌های پشتیبان — چرخه بیست‌وسوم (backup/files)</summary>
+    private sealed class BackupFilesResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<BackupFileDto>? Data { get; set; }
+    }
+
+    /// <summary>ردیف فایل پشتیبان از سرور — منطبق بر خروجی BackupController.ListFiles</summary>
+    private sealed class BackupFileDto
+    {
+        public string? FileName { get; set; }
+        public string? FullPath { get; set; }
+        public long SizeBytes { get; set; }
+        public string? SizeText { get; set; }
+        public DateTime? LastWrite { get; set; }
+        public string? Kind { get; set; }
     }
 }
