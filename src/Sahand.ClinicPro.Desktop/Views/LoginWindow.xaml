@@ -52,16 +52,14 @@
             </Border.Effect>
 
             <StackPanel>
-                <!-- لوگو دایره‌ای ۷۰×۷۰ -->
-                <Border Width="70" Height="70" CornerRadius="35"
-                        Background="#E3F2FD"
-                        HorizontalAlignment="Center" Margin="0,4,0,12">
-                    <materialDesign:PackIcon Kind="Hospital"
-                                             Width="38" Height="38"
-                                             Foreground="#1565C0"
-                                             HorizontalAlignment="Center"
-                                             VerticalAlignment="Center" />
-                </Border>
+                <!-- ═══ چرخه ۲۴ — لوگوی رسمی باکیفیت (گزارش هفدهم مالک): «در فرم
+                     لاگین تصویر باکیفیت از لوگوی برنامه باشد» — نسخهٔ ۵۱۲ پیکسلی
+                     ClinicPro.png (زمینهٔ شفاف) جاسازی‌شده در exe جایگزین آیکون شد ═══ -->
+                <Image Source="/Assets/Logo/ClinicPro-512.png"
+                       Width="110" Height="110"
+                       HorizontalAlignment="Center" Margin="0,4,0,10"
+                       RenderOptions.BitmapScalingMode="HighQuality"
+                       ToolTip="سامانه جامع مدیریت درمانگاه سهند" />
 
                 <!-- نام سیستم -->
                 <TextBlock Text="ClinicPro"

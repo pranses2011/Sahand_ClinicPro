@@ -200,42 +200,23 @@
                     </ControlTemplate>
                 </Grid.Resources>
 
-                <!-- لوگو و نام سامانه — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
-                     «در بالای منوی کناری آیکون برنامه کوچک و بی‌کیفیته — یک تصویر
-                     بزرگ و باکیفیت بگذار» — به‌جای آیکون رستری کوچک، نشانِ برداری
-                     (وکتور) رسمی محصول رسم می‌شود که در هر اندازه‌ای شارپ می‌ماند:
-                     صفحهٔ گوشه‌گرد با گرادیان رسمی + صلیب پزشکی + نبض قلب -->
+                <!-- ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — لوگوی اصلی برنامه ═══
+                     «آیکون بالای منو را عوض کردی ولی من می‌خواهم همان آیکون اصلی
+                     خود برنامه باشد ولی یک تصویر بزرگ و باکیفیت؛ فایل تصویر بزرگش
+                     داخل ریپو و پوشهٔ docs/assets/ClinicPro.png هست» — نسخهٔ ۲۵۶
+                     پیکسلی از همان فایل رسمی (با زمینهٔ شفاف) جاسازی شد و نشانِ
+                     برداریِ قبلی جای خود را به لوگوی واقعی محصول داد. -->
                 <StackPanel Grid.Row="0" Margin="16,20,16,16">
-                    <!-- نشان برداری درمانگاه سهند — همیشه باکیفیت (بدون پیکسل‌بندی) -->
-                    <Grid Width="58" Height="58" HorizontalAlignment="Right">
-                        <!-- پس‌زمینهٔ گوشه‌گرد با گرادیان آبی رسمی -->
-                        <Border CornerRadius="16">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                    <GradientStop Color="#1565C0" Offset="0" />
-                                    <GradientStop Color="#0D47A1" Offset="0.5" />
-                                    <GradientStop Color="#283593" Offset="1" />
-                                </LinearGradientBrush>
-                            </Border.Background>
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.35" />
-                            </Border.Effect>
-                        </Border>
-                        <!-- حلقهٔ داخلی ظریف -->
-                        <Border CornerRadius="13" BorderBrush="#40FFFFFF" BorderThickness="1"
-                                Margin="3" IsHitTestVisible="False" />
-                        <!-- صلیب پزشکی سفید -->
-                        <Grid IsHitTestVisible="False">
-                            <Border Background="White" CornerRadius="3" Width="26" Height="9" VerticalAlignment="Center" HorizontalAlignment="Center" />
-                            <Border Background="White" CornerRadius="3" Width="9" Height="26" VerticalAlignment="Center" HorizontalAlignment="Center" />
-                        </Grid>
-                        <!-- خط نبض قلب پایین نشان -->
-                        <Canvas IsHitTestVisible="False" Margin="0,0,0,7">
-                            <Polyline Points="6,44 14,44 18,36 24,50 28,40 31,44 40,44"
-                                      Stroke="#7FD3FF" StrokeThickness="2.4"
-                                      StrokeLineJoin="Round" StrokeEndLineCap="Round" StrokeStartLineCap="Round" />
-                        </Canvas>
-                    </Grid>
+                    <!-- لوگوی رسمی ClinicPro — تصویر بزرگ باکیفیت با زمینهٔ شفاف -->
+                    <Image Source="/Assets/Logo/ClinicPro-256.png"
+                           Width="72" Height="72"
+                           HorizontalAlignment="Right"
+                           RenderOptions.BitmapScalingMode="HighQuality"
+                           ToolTip="سامانه جامع مدیریت درمانگاه سهند">
+                        <Image.Effect>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.35" />
+                        </Image.Effect>
+                    </Image>
                     <TextBlock Text="درمانگاه سهند"
                                FontSize="20" FontWeight="Bold" Margin="0,10,0,0"
                                Foreground="White" HorizontalAlignment="Right" />

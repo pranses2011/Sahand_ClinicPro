@@ -1,0 +1,111 @@
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.SplashWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="در حال بارگذاری…"
+        Width="480" Height="420"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        Cursor="Wait"
+        FlowDirection="RightToLeft">
+    <!-- ═══════════════════════════════════════════════════════════
+         پنجرهٔ اسپلش — چرخه بیست‌وچهارم (گزارش هفدهم مالک):
+         «برنامه Splash با انیمیشن و نوار پیشرفت بساز که خیلی زیبا و با
+         زمینهٔ شفاف باشه و از همون تصویر بزرگ آیکون استفاده بکن که زمینهٔ
+         شفاف هم داره چون نمیخوام معمولی و مثل فرم دیده بشه».
+         ─────────────────────────────────────────────────────────────
+         • زمینهٔ کاملاً شفاف (AllowsTransparency + Background=Transparent)
+         • لوگوی بزرگ جاسازی‌شدهٔ ClinicPro-512 با زمینهٔ شفاف خودش
+         • انیمیشن ورود نرم (محوشدن + بزرگ‌نمایی تدریجی)
+         • نوار پیشرفت با درصدهای فارسی و پیام‌های مرحله‌ای
+         • در پایان، محوشدن آرام و باز شدن پنجرهٔ اصلی/ورود
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid>
+        <!-- ظرف نیمه‌شفاف تیره — پشت لوگو برای خوانایی؛ خود پنجره شفاف است -->
+        <Border CornerRadius="26" Background="#F2091A33"
+                Margin="26" Padding="0">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="24" ShadowDepth="0" Opacity="0.45" Color="#0A1E3C" />
+            </Border.Effect>
+
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <!-- لوگوی بزرگ — انیمیشن ورود: از مقیاس ۰٫۸ و شفاف صفر -->
+                <Image x:Name="LogoImage"
+                       Source="/Assets/Logo/ClinicPro-512.png"
+                       Width="190" Height="190"
+                       RenderTransformOrigin="0.5,0.5"
+                       Margin="0,0,0,6">
+                    <Image.RenderTransform>
+                        <ScaleTransform x:Name="LogoScale" ScaleX="0.8" ScaleY="0.8" />
+                    </Image.RenderTransform>
+                    <Image.Triggers>
+                        <EventTrigger RoutedEvent="Loaded">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <!-- محوشدن ورود -->
+                                    <DoubleAnimation Storyboard.TargetName="LogoImage"
+                                                     Storyboard.TargetProperty="Opacity"
+                                                     From="0" To="1" Duration="0:0:0.55">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase EasingMode="EaseOut" />
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <!-- بزرگ‌نمایی نرم تا اندازهٔ واقعی -->
+                                    <DoubleAnimation Storyboard.TargetName="LogoScale"
+                                                     Storyboard.TargetProperty="ScaleX"
+                                                     From="0.8" To="1" Duration="0:0:0.6">
+                                        <DoubleAnimation.EasingFunction>
+                                            <BackEase Amplitude="0.3" EasingMode="EaseOut" />
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <DoubleAnimation Storyboard.TargetName="LogoScale"
+                                                     Storyboard.TargetProperty="ScaleY"
+                                                     From="0.8" To="1" Duration="0:0:0.6">
+                                        <DoubleAnimation.EasingFunction>
+                                            <BackEase Amplitude="0.3" EasingMode="EaseOut" />
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <!-- نبض آرام بی‌نهایت — حس زنده‌بودن -->
+                                    <DoubleAnimation Storyboard.TargetName="LogoImage"
+                                                     Storyboard.TargetProperty="Opacity"
+                                                     From="1" To="0.88" BeginTime="0:0:0.8"
+                                                     Duration="0:0:1.1" AutoReverse="True"
+                                                     RepeatBehavior="Forever" />
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Image.Triggers>
+                </Image>
+
+                <!-- نام محصول -->
+                <TextBlock Text="سامانه جامع مدیریت درمانگاه سهند"
+                           FontSize="17" FontWeight="Bold" Foreground="#FFFFFF"
+                           HorizontalAlignment="Center" Margin="0,4,0,2" />
+                <TextBlock x:Name="SubtitleText" Text="در حال آماده‌سازی…"
+                           FontSize="12" Foreground="#B9CBE6"
+                           HorizontalAlignment="Center" Margin="0,2,0,16" />
+
+                <!-- نوار پیشرفت -->
+                <Grid Width="300" HorizontalAlignment="Center">
+                    <Border Background="#1B3355" CornerRadius="8" Height="14" />
+                    <Border x:Name="ProgressFill" HorizontalAlignment="Left"
+                            Width="0" CornerRadius="8" Height="14">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#4FA3E3" Offset="0" />
+                                <GradientStop Color="#8FD4FF" Offset="1" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                    <!-- درصد فارسی روی نوار -->
+                    <TextBlock x:Name="ProgressText" Text="۰٪"
+                               FontSize="10.5" FontWeight="Bold" Foreground="#FFFFFF"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Grid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

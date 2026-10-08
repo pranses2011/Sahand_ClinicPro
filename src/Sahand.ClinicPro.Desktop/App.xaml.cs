@@ -77,12 +77,30 @@ public partial class App : System.Windows.Application
         window.SetResourceReference(Window.FontFamilyProperty, "App.FontFamily");
         window.SetResourceReference(Window.FontSizeProperty, "App.BaseFontSize");
 
+        // ═══ چرخه بیست‌وچهارم — کلید Escape برای بستن فرم‌ها ═══
+        // «در تمامی فرم‌هایی که باز می‌شوند کلید کنسل یا ESC را هم تنظیم کن
+        // برای بستن کادرها و فرم‌ها» — برای همهٔ پنجره‌های فرعی (دیالوگ/فرم)
+        // ثبت می‌شود؛ پنجرهٔ اصلی و ورود استثنا هستند (بستنشان خروج از برنامه
+        // است). PreviewKeyDown پیش از پردازش عناصر داخلی (کمبو/تقویم) می‌گیرد
+        // تا ESC همیشه فرم را ببندد.
+        if (window is not Sahand.ClinicPro.Desktop.MainWindow
+            && window is not Views.LoginWindow)
+        {
+            window.PreviewKeyDown += (_, ke) =>
+            {
+                if (ke.Key == System.Windows.Input.Key.Escape)
+                {
+                    window.Close();
+                    ke.Handled = true;
+                }
+            };
+        }
         // ═══ چرخه بیست‌وچهارم — مقیاس سراسری رابط ═══ «اندازهٔ فونت فقط صفحهٔ تم
         // را تغییر می‌داد»: پنجرهٔ اصلی، محتوایش به تبدیل مقیاس پویا وصل می‌شود
         // تا تغییر اندازهٔ فونت، همهٔ عناصر برنامه را هماهنگ بزرگ/کوچک کند (زوم
         // پیوسته مثل مرورگر). پنجره‌های دیالوگ اندازهٔ ثابت دارند و مقیاس متنشان
         // از همان FontSize ارثی تأمین می‌شود تا فرم‌ها بریده نشوند.
-        if (window is MainWindow && window.Content is FrameworkElement rootContent)
+        if (window is Sahand.ClinicPro.Desktop.MainWindow && window.Content is FrameworkElement rootContent)
             rootContent.SetResourceReference(
                 FrameworkElement.LayoutTransformProperty, "App.FontScaleTransform");
     }
@@ -122,8 +140,16 @@ public partial class App : System.Windows.Application
         Services.GetRequiredService<IThemeService>()
             .ApplyAppearance(ThemeService.LoadSavedAppearance());
 
-        // انتخاب پنجره آغازین بر اساس وضعیت توکن
+        // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — اسپلش انیمیشنی ═══
+        // «برنامه Splash با انیمیشن و نوار پیشرفت بساز که خیلی زیبا و با
+        // زمینهٔ شفاف باشه» — پیش از پنجرهٔ ورود/اصلی، اسپلش با لوگوی بزرگ
+        // شفاف و نوار پیشرفت درصدی نمایش داده می‌شود و مراحل راه‌اندازی
+        // (تم/توکن/لایسنس) پیشرفت را جلو می‌برند.
         var tokens = Services.GetRequiredService<ITokenManager>();
+        var splash = new Views.SplashWindow();
+        splash.Show();
+        splash.ReportProgress(20);
+
         if (tokens.HasValidToken)
         {
             // چرخه هفدهم (گزارش یازدهم): توکن معتبر ذخیره شده اما اگر سرور صریحاً
@@ -131,13 +157,28 @@ public partial class App : System.Windows.Application
             // می‌شود — پیش‌تر این مسیر هیچ گاردی نداشت و با توکنِ به‌یادمانده
             // بدون لایسنس هم مستقیم وارد برنامه می‌شدند؛ وضعیت «نامعلوم»
             // (قطعی شبکه) مانع کار درمانگاه نمی‌شود (fail-open فقط برای آن)
-            _ = StartupWithLicenseGateAsync();
+            splash.ReportProgress(55);
+            _ = StartupWithLicenseGateAsync(splash);
         }
         else
         {
             var login = Services.GetRequiredService<LoginWindow>();
             MainWindow = login;
-            login.Show();
+            splash.ReportProgress(80);
+
+            // اسپلش تا آماده‌شدن ورود بماند و با محو آرام کنار برود
+            var openDelay = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(450)
+            };
+            openDelay.Tick += (_, _) =>
+            {
+                openDelay.Stop();
+                splash.ReportProgress(100);
+                login.Show();
+                splash.CloseWithFade();
+            };
+            openDelay.Start();
         }
     }
 
@@ -148,7 +189,7 @@ public partial class App : System.Windows.Application
     /// می‌شود تا هیچ مسیری بدون لایسنس به پوسته نرسد. هر خطای غیرمنتظره،
     /// مطابق سیاست fail-open، پوسته را باز می‌گذارد (قفل‌شدن درمانگاه ممنوع).
     /// </summary>
-    private async Task StartupWithLicenseGateAsync()
+    private async Task StartupWithLicenseGateAsync(Views.SplashWindow? splash = null)
     {
         try
         {
@@ -157,6 +198,7 @@ public partial class App : System.Windows.Application
             // فرض شده و پوسته (fail-open) باز می‌شود تا کار درمانگاه نایستد
             using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(8));
             var verdict = await LicenseGate.CheckAsync(api, cts.Token);
+            splash?.ReportProgress(85);
 
             if (verdict == LicenseGate.Verdict.Invalid
                 && !Views.LicenseActivationWindow.OpenAndActivate(null))
@@ -167,12 +209,15 @@ public partial class App : System.Windows.Application
                 var login = Services.GetRequiredService<LoginWindow>();
                 MainWindow = login;
                 login.Show();
+                splash?.CloseWithFade();
                 return;
             }
 
             var main = Services.GetRequiredService<MainWindow>();
             MainWindow = main;
+            splash?.ReportProgress(100);
             main.Show();
+            splash?.CloseWithFade();
         }
         catch
         {
@@ -182,6 +227,7 @@ public partial class App : System.Windows.Application
                 var main = Services.GetRequiredService<MainWindow>();
                 MainWindow = main;
                 main.Show();
+                splash?.CloseWithFade();
             }
         }
     }
