@@ -287,7 +287,20 @@ try
         });
     }
 
-    app.UseHttpsRedirection();
+    // ═══ چرخهٔ سی‌امین — هشدار «Failed to determine the https port for
+    // redirect» ═══
+    // استقرار درمانگاه روی HTTP شبکهٔ محلی اجرا می‌شود (کلاینت WPF مستقیم
+    // به http وصل است) و هیچ نشانی HTTPS‌ای به برنامه داده نشده است؛ در
+    // این حالت میدلور ریدایرکت در هر درخواست فقط همین هشدار را می‌نوشت و
+    // هیچ کاری انجام نمی‌داد. اکنون ریدایرکت فقط وقتی فعال می‌شود که
+    // نشانی https واقعی در پیکربندی موجود باشد (نشانی‌های برنامه یا
+    // متغیر محیطی استاندارد ASPNETCORE_HTTPS_PORT) — در استقرار‌های HTTPS
+    // دار هم رفتار دست‌نخورده باقی می‌ماند.
+    var hasHttpsEndpoint = app.Urls.Any(u => u.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                           || !string.IsNullOrWhiteSpace(
+                               Environment.GetEnvironmentVariable("ASPNETCORE_HTTPS_PORT"));
+    if (hasHttpsEndpoint)
+        app.UseHttpsRedirection();
 
     // فشرده‌سازی پاسخ — کاهش پهنای‌باند برای کلاینت WPF
     app.UseResponseCompression();

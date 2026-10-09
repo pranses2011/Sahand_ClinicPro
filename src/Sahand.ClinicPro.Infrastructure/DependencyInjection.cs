@@ -54,6 +54,23 @@ public static class DependencyInjection
             {
                 sql.CommandTimeout(60);
             });
+
+            // ═══ چرخهٔ سی‌امین — هشدار «Savepoints are disabled because
+            // Multiple Active Result Sets (MARS) is enabled» ═══
+            // ریشهٔ هشدار: رشتهٔ اتصال MultipleActiveResultSets=true دارد و
+            // TransactionBehavior هم همهٔ فرمان‌های نوشتنی MediatR را در تراکنشِ
+            // صریح می‌پیچد؛ SQL Server در حالت MARS از Savepoint پشتیبانی
+            // نمی‌کند و EF Core برای هر SaveChangesِ داخلِ تراکنش این هشدار
+            // را می‌نوشت (به‌ازای هر درخواست نوشتنی یک WRN در لاگ).
+            // سرکوبِ آگاهانه و مستند این هشدارِ مشخص بی‌خطر است، چون:
+            // ۱) جایگزین Savepoint، عقبگردِ کاملِ تراکنش توسط خودِ
+            //    TransactionBehavior است (RollbackAsync در catch) که همان
+            //    رفتار مطلوبِ همه‌یابدموند (all-or-nothing) ماست؛
+            // ۲) MARS حفظ می‌شود چون کارگرهای پس‌زمینه (پشتیبان‌گیری خودکار
+            //    و تپ‌قلب لایسنس) و میدلور لاگ عملیات روی همین اتصال
+            //    کارهای هم‌زمان انجام می‌دهند.
+            options.ConfigureWarnings(w => w.Ignore(
+                Microsoft.EntityFrameworkCore.Diagnostics.SqlServerEventId.SavepointsDisabledBecauseOfMARS));
             options.AddInterceptors(
                 sp.GetRequiredService<AuditableEntityInterceptor>(),
                 sp.GetRequiredService<SoftDeleteInterceptor>());
