@@ -215,11 +215,15 @@
                      داخل ریپو و پوشهٔ docs/assets/ClinicPro.png هست» — نسخهٔ ۲۵۶
                      پیکسلی از همان فایل رسمی (با زمینهٔ شفاف) جاسازی شد و نشانِ
                      برداریِ قبلی جای خود را به لوگوی واقعی محصول داد. -->
+                <!-- ═══ چرخه سی‌ویکم (گزارش مالک) — «در بالای منوی کناری که تصویر و
+                     نام برنامه هست، اونارو وسط چین بکن تا زیباتر دیده بشن» — لوگو و هر
+                     دو سطر نام از لبهٔ راست به میانهٔ ستون منتقل شدند (HorizontalAlignment
+                     و TextAlignment هر دو Center تا متن‌ها هم حول مرکز بچینند) ═══ -->
                 <StackPanel Grid.Row="0" Margin="16,20,16,16">
-                    <!-- لوگوی رسمی ClinicPro — تصویر بزرگ باکیفیت با زمینهٔ شفاف -->
+                    <!-- لوگوی رسمی ClinicPro — تصویر بزرگ باکیفیت با زمینهٔ شفاف — وسط‌چین -->
                     <Image Source="/Assets/Logo/ClinicPro-256.png"
                            Width="72" Height="72"
-                           HorizontalAlignment="Right"
+                           HorizontalAlignment="Center"
                            RenderOptions.BitmapScalingMode="HighQuality"
                            ToolTip="سامانه جامع مدیریت درمانگاه سهند">
                         <Image.Effect>
@@ -228,10 +232,10 @@
                     </Image>
                     <TextBlock Text="درمانگاه سهند"
                                FontSize="20" FontWeight="Bold" Margin="0,10,0,0"
-                               Foreground="White" HorizontalAlignment="Right" />
+                               Foreground="White" HorizontalAlignment="Center" TextAlignment="Center" />
                     <TextBlock Text="سامانه جامع مدیریت"
                                FontSize="12" Opacity="0.72"
-                               Foreground="#DCE9FA" HorizontalAlignment="Right" />
+                               Foreground="#DCE9FA" HorizontalAlignment="Center" TextAlignment="Center" />
                 </StackPanel>
 
                 <!-- فهرست ناوبری ماژول‌ها — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
