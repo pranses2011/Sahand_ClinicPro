@@ -232,6 +232,104 @@ public static class PrintTemplateSeedData
   <tr><td style='color:#C62828'>مالیات:</td><td style='color:#C62828'>-{{tax}}</td></tr>
   <tr style='font-weight:800;border-top:2px solid #283593'><td>خالص پرداختی:</td><td>{{net_pay}}</td></tr>
 </table>
-<div class='sig'><div class='box'><div class='line'></div>امضای دریافت‌کننده</div></div>")
+<div class='sig'><div class='box'><div class='line'></div>امضای دریافت‌کننده</div></div>"),
+
+        // ═══ چرخه سی‌ویکم (گزارش مالک): «برای همهٔ انواع موجودیت‌های قابل چاپ چندین
+        // قالب پیش‌فرض اولیه طراحی شود» — طرح سومِ «کلاسیک» برای انواعی که فقط دو
+        // طرح داشتند؛ اکنون هر ۹ نوع دست‌کم ۳ قالب آمادهٔ اولیه دارند ═══
+
+        new("فاکتور کلاسیک — خطوط ظریف", 1,
+            "فاکتور کم‌رنگ با خطوط افقی ظریف و کلاسیک",
+            @"<div style='border-bottom:1px solid #333;padding-bottom:10px;font-size:15px;font-weight:800'>فاکتور خدمات پزشکی</div>
+<table style='width:100%;font-size:12px;margin:10px 0'>
+  <tr><td style='width:90px;opacity:.7'>شماره فاکتور:</td><td>{{invoice_code}}</td>
+      <td style='width:70px;opacity:.7'>تاریخ:</td><td>{{invoice_date}}</td></tr>
+  <tr><td style='opacity:.7'>بیمار:</td><td>{{patient_name}}</td>
+      <td style='opacity:.7'>بیمه:</td><td>{{insurance_name}}</td></tr>
+</table>
+{{items_html}}
+<table style='width:100%;font-size:12px;margin-top:10px;border-top:1px solid #333'>
+  <tr><td style='padding-top:6px'>جمع کل:</td><td style='padding-top:6px'>{{subtotal}}</td></tr>
+  <tr><td>تخفیف:</td><td>{{discount}}</td></tr>
+  <tr><td>سهم بیمه:</td><td>{{insurance_share}}</td></tr>
+  <tr style='font-weight:800;border-top:1px solid #333'><td style='padding-top:6px'>قابل پرداخت:</td><td style='padding-top:6px'>{{patient_share}}</td></tr>
+</table>
+<div class='sig'><div class='box'><div class='line'></div>مهر و امضای مسئول مالی</div>
+<div class='box'><div class='line'></div>امضای بیمار</div></div>"),
+
+        new("نسخه پزشکی کلاسیک — سربرگ دارویی", 2,
+            "نسخه با لوگوی دارو و فهرست ساده ردیفی",
+            @"<div style='font-size:16px;font-weight:800;text-align:center;border-bottom:2px solid #555;padding-bottom:10px'>℞ نسخه پزشکی</div>
+<table style='width:100%;font-size:12px;margin:10px 0'>
+  <tr><td><b>بیمار:</b> {{patient_name}} ({{patient_age}})</td><td><b>کد نسخه:</b> {{prescription_code}}</td></tr>
+  <tr><td><b>پزشک:</b> {{doctor_name}}</td><td><b>تاریخ:</b> {{visit_date}}</td></tr>
+</table>
+{{items_html}}
+<div style='font-size:11.5px;margin-top:10px;border-top:1px dashed #999;padding-top:8px'><b>توضیحات:</b> {{notes}}</div>
+<div class='sig'><div class='box'><div class='line'></div>امضا و مهر پزشک</div></div>"),
+
+        new("درخواست آزمایش کلاسیک — فهرست نقطه‌چین", 3,
+            "درخواست با فهرست نقطه‌چین آزمون‌ها و امضای دوبل",
+            @"<div style='border:1.5px solid #333;padding:10px 12px'>
+<div style='font-size:15px;font-weight:800;border-bottom:1px solid #333;padding-bottom:8px'>درخواست آزمایش {{order_number}}</div>
+<table style='width:100%;font-size:12px;margin:8px 0'>
+  <tr><td><b>بیمار:</b> {{patient_name}}</td><td><b>تاریخ:</b> {{order_date}}</td></tr>
+  <tr><td><b>پزشک:</b> {{doctor_name}}</td><td></td></tr>
+</table>
+<div style='font-size:11.5px;opacity:.8;margin-bottom:6px'><b>شرح حال:</b> {{clinical_info}}</div>
+{{tests_html}}
+</div>
+<div class='sig'><div class='box'><div class='line'></div>امضای پزشک</div>
+<div class='box'><div class='line'></div>امضای بیمار</div></div>"),
+
+        new("نتیجه آزمایش کلاسیک — گزارش رسمی", 4,
+            "گزارش نتیجه با قاب رسمی و مهر تأیید",
+            @"<div style='border:2px double #333;padding:12px 14px'>
+<div style='font-size:15px;font-weight:800;text-align:center;border-bottom:1px solid #333;padding-bottom:8px'>گزارش نتیجه آزمایش</div>
+<table style='width:100%;font-size:12px;margin:8px 0'>
+  <tr><td><b>شماره سفارش:</b> {{order_number}}</td><td><b>تاریخ نتیجه:</b> {{result_date}}</td></tr>
+  <tr><td><b>بیمار:</b> {{patient_name}}</td><td></td></tr>
+</table>
+{{results_html}}
+<div style='font-size:11px;margin-top:12px;text-align:left;border-top:1px solid #333;padding-top:8px'>{{verified_by}}</div>
+</div>"),
+
+        new("درخواست تصویربرداری کلاسیک — فرم رسمی", 5,
+            "درخواست با قاب رسمی و کادر اطلاعات بالینی",
+            @"<div style='border:1.5px solid #333;padding:10px 12px'>
+<div style='font-size:15px;font-weight:800;border-bottom:1px solid #333;padding-bottom:8px'>درخواست {{modality}}</div>
+<table style='width:100%;font-size:12px;margin:8px 0'>
+  <tr><td><b>بیمار:</b> {{patient_name}}</td><td><b>شماره:</b> {{order_number}}</td></tr>
+  <tr><td><b>تاریخ:</b> {{order_date}}</td><td></td></tr>
+</table>
+<div style='font-size:11.5px;background:#FAFAFA;border:1px solid #DDD;padding:8px 10px'><b>اطلاعات بالینی:</b> {{clinical_info}}</div>
+</div>
+<div class='sig'><div class='box'><div class='line'></div>امضای پزشک معالج</div></div>"),
+
+        new("گواهی پزشکی کلاسیک — فرم اداری", 8,
+            "گواهی با قاب اداری و متن وسط‌چین رسمی",
+            @"<div style='border:2px solid #333;padding:16px 18px'>
+<div style='font-size:17px;font-weight:800;text-align:center'>گواهی پزشکی</div>
+<div style='font-size:12px;text-align:center;opacity:.7;margin:4px 0 12px'>شماره {{issue_code}} — تاریخ {{issue_date}}</div>
+<div style='font-size:12.5px;line-height:2.2;text-align:justify'>{{content}}</div>
+<div style='font-size:12.5px;margin-top:12px'>مدت استراحت توصیه‌شده: <b>{{duration}}</b></div>
+<div style='font-size:12.5px;margin-top:14px'>بیمار: <b>{{patient_name}}</b></div>
+<div class='sig'><div class='box'><div class='line'></div>{{doctor_name}}</div></div>
+</div>", "A5", "Portrait", 13),
+
+        new("فیش حقوقی کلاسیک — جدول رسمی", 9,
+            "فیش حقوقی با جدول خط‌کشی‌شده رسمی",
+            @"<div style='font-size:15px;font-weight:800;text-align:center;border-bottom:2px solid #333;padding-bottom:8px'>فیش حقوقی — دوره {{period}}</div>
+<div style='font-size:13.5px;font-weight:700;margin:10px 0 6px'>{{employee_name}}</div>
+<table style='width:100%;font-size:12px;border-collapse:collapse;border:1px solid #555'>
+  <tr style='background:#EEE'><td colspan='2' style='padding:6px;border:1px solid #999'><b>مشمول حقوق</b></td></tr>
+  <tr><td style='padding:5px 8px;border:1px solid #999'>حقوق پایه</td><td style='padding:5px 8px;border:1px solid #999'>{{base_salary}}</td></tr>
+  <tr><td style='padding:5px 8px;border:1px solid #999'>اضافه‌کاری</td><td style='padding:5px 8px;border:1px solid #999'>{{overtime_pay}}</td></tr>
+  <tr style='background:#EEE'><td colspan='2' style='padding:6px;border:1px solid #999'><b>کسورات</b></td></tr>
+  <tr><td style='padding:5px 8px;border:1px solid #999'>بیمه</td><td style='padding:5px 8px;border:1px solid #999'>-{{insurance}}</td></tr>
+  <tr><td style='padding:5px 8px;border:1px solid #999'>مالیات</td><td style='padding:5px 8px;border:1px solid #999'>-{{tax}}</td></tr>
+  <tr style='font-weight:800;background:#F5F5F5'><td style='padding:6px 8px;border:1px solid #999'>خالص پرداختی</td><td style='padding:6px 8px;border:1px solid #999'>{{net_pay}}</td></tr>
+</table>
+<div class='sig'><div class='box'><div class='line'></div>امضای دریافت‌کننده</div></div>", "A5", "Portrait", 12)
     };
 }

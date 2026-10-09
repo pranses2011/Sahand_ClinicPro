@@ -54,7 +54,11 @@ public static class PrintTemplateRenderer
     {
         var accentColor = string.IsNullOrWhiteSpace(accent) ? DefaultAccent : accent!;
         var font = string.IsNullOrWhiteSpace(fontFamily) ? "Vazirmatn, Tahoma, sans-serif" : $"{fontFamily}, Tahoma, sans-serif";
-        var width = paper switch { "A4" => "794px", "A6" => "298px", _ => "559px" }; // ۹۶dpi
+        // ═══ چرخه سی‌ویکم — پشتیبانی کامل اندازه‌های کاغذ در پیش‌نمایش/چاپ:
+        // استانداردها (۹۶dpi) + فیش حرارتی ۸۰/۵۸ میلی‌متری + قالب سفارشی
+        // «Custom:عرضxارتفاع» (میلی‌متر). مقیاس: ۹۶px ≈ ۲۵.۴mm → ۳.۷۸px بر mm
+        // (سازگار با رفتار پیشین: مقادیر مجهول همچنان به A5 می‌روند) ═══
+        var width = ResolvePaperWidthPx(paper);
 
         var sb = new StringBuilder(@"<!DOCTYPE html>
 <html lang=""fa"" dir=""rtl"">
@@ -112,6 +116,42 @@ public static class PrintTemplateRenderer
 </body>
 </html>");
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// تبدیل اندازهٔ کاغذ به عرض پیکسلی برگه در رزولوشن ۹۶dpi — چرخه سی‌ویکم.
+    /// استانداردها: A3=1123 / A4=794 / A5=559 / A6=397 / B5=691 / Letter=816 / Legal=1056
+    /// فیش حرارتی: Thermal80=302 / Thermal58=219 (عرض مفید کاغذ ۸۰ و ۵۸ میلی‌متری)
+    /// سفارشی: «Custom:عرضxارتفاع» بر حسب میلی‌متر با مقیاس ۹۶/۲۵.۴ ≈ ۳.۷۸ پیکسل بر میلی‌متر
+    /// </summary>
+    /// <param name="paper">کلید اندازهٔ کاغذ</param>
+    private static string ResolvePaperWidthPx(string? paper)
+    {
+        // مطابقت بدون توجه به بزرگی/کوچکی حروف و فضاهای اضافی
+        var key = paper?.Trim();
+        if (string.IsNullOrEmpty(key)) return "559px"; // پیش‌فرض A5
+
+        switch (key.ToUpperInvariant())
+        {
+            case "A3": return "1123px";
+            case "A4": return "794px";
+            case "A6": return "397px";
+            case "B5": return "691px";
+            case "LETTER": return "816px";
+            case "LEGAL": return "1056px";
+            case "THERMAL80": return "302px"; // ۸۰mm × ۳.۷۸ ≈ ۳۰۲px — پرینترهای کاسه‌ای متداول
+            case "THERMAL58": return "219px"; // ۵۸mm × ۳.۷۸ ≈ ۲۱۹px — فیش‌خوان‌های کوچک
+            default:
+                // قالب سفارشی — Custom:100x180 یا Custom:100×180 (میلی‌متر)
+                var m = Regex.Match(key, @"^Custom:\s*(\d{1,4})\s*[x×]\s*(\d{1,4})", RegexOptions.IgnoreCase);
+                if (m.Success && int.TryParse(m.Groups[1].Value, out var mm))
+                {
+                    // محدودهٔ منطقی ۲۰ تا ۱۰۰۰ میلی‌متر (خارج از آن → A5)
+                    var px = (int)Math.Round(mm * 96.0 / 25.4);
+                    if (px is >= 75 and <= 3779) return $"{px}px";
+                }
+                return "559px"; // نام آشنا → A5 (رفتار سازگار با قبل)
+        }
     }
 
     /// <summary>داده نمونه برای پیش‌نمایش زنده هر نوع سند</summary>

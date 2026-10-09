@@ -293,12 +293,29 @@ public class PrintTemplatesController : ApiBaseController
             return "نام قالب حداقل ۳ نویسه باشد";
         if (string.IsNullOrWhiteSpace(dto.HtmlBody) || dto.HtmlBody.Trim().Length < 10)
             return "بدنه HTML قالب خالی است";
-        if (!new[] { "A4", "A5", "A6" }.Contains(dto.PaperSize))
-            return "اندازه کاغذ باید A4 یا A5 یا A6 باشد";
+        // ═══ چرخه سی‌ویکم (گزارش مالک) — قبول پهنای کامل اندازه‌های کاغذ:
+        // استانداردهای A3/A4/A5/A6/B5/Letter/Legal + فیش حرارتی ۸۰/۵۸ میلی‌متری
+        // + قالب سفارشی «Custom:عرضxارتفاع» (میلی‌متر). پیش‌تر فقط A4/A5/A6
+        // پذیرفته می‌شد و ذخیرهٔ ویرایش قالب‌های حرارتیِ بذرفشان با خطای
+        // «اندازه کاغذ باید A4 یا A5 یا A6 باشد» شکست می‌خورد ═══
+        if (!IsValidPaperSize(dto.PaperSize))
+            return "اندازه کاغذ معتبر نیست — استاندارد (A3…Legal)، حرارتی (Thermal80/58) یا Custom:عرضxارتفاع";
         if (dto.FontSize is < 8 or > 24)
             return "اندازه فونت بین ۸ تا ۲۴ باشد";
         return null;
     }
+
+    /// <summary>
+    /// اعتبارسنجی اندازهٔ کاغذ — پذیرش اندازه‌های استاندارد، فیش حرارتی و قالب سفارشی
+    /// الگوی سفارشی: Custom:100x180 یا Custom:100×180 (میلی‌متر، اعداد صحیح ۲۰ تا ۱۰۰۰)
+    /// </summary>
+    private static bool IsValidPaperSize(string? paper) =>
+        paper is not null &&
+        (new[] { "A3", "A4", "A5", "A6", "B5", "Letter", "Legal", "Thermal80", "Thermal58" }
+            .Contains(paper, StringComparer.OrdinalIgnoreCase)
+         || System.Text.RegularExpressions.Regex.IsMatch(
+                paper, @"^Custom:\s*(\d{1,4})\s*[x×]\s*(\d{1,4})\s*(mm)?$", 
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase));
 
     /// <summary>تبدیل به DTO جزئیات</summary>
     private static PrintTemplateDetailDto ToDetail(PrintTemplate t) => new(

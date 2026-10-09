@@ -7,7 +7,18 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Seeders;
 
 /// <summary>
 /// بذر قالب‌های چاپ پیش‌فرض — چرخه ۱۳ (درخواست ۱-۶)
-/// ۹ قالب استاندارد که هرکدام پیش‌فرض نوع خود هستند؛ idempotent و بدون رونویسی ویرایش‌های درمانگاه
+/// قالب‌های استاندارد که هرکدام پیش‌فرض نوع خود هستند؛ idempotent و بدون رونویسی ویرایش‌های درمانگاه
+/// ═══ چرخه سی‌ویکم (گزارش مالک) — رفع دو باگ ریشه‌ای «چندین قالب پیش‌فرض برای همهٔ
+/// انواع موجودیت‌های قابل چاپ طراحی شود که در تب طراح قالب دیده نشدند» ═══
+/// ۱) این بذر هرگز SaveChangesAsync صدا نمی‌زد؛ موجودیت‌ها فقط در ChangeTracker
+///    می‌ماندند و ذخیره‌شان به دوشِ سیدرِ بعدی (AccountingAccountSeeder با Order=۵۰)
+///    بود که روی دیتابیس‌های موجود به‌خاطر وجود سرفصل‌ها early-return می‌کند و
+///    ذخیره هیچ‌وقت اتفاق نمی‌افتاد — قالب‌های تازه فقط روی دیتابیس خالیِ کامل
+///    (که سرفصل هم می‌ساخت) ظاهر می‌شدند. اکنون سیدر خودش ذخیره می‌کند.
+/// ۲) همهٔ قالب‌ها با IsDefault=true ساخته می‌شدند در حالی که ایندکس فیلترشدهٔ
+///    IX_PrintTemplate_Type_Default فقط «یک» قالب پیش‌فرض برای هر نوع مجاز می‌داند
+///    → DbUpdateException روی نصب تازه. اکنون فقط نخستین قالبِ هر نوع (در صورت
+///    نبودِ پیش‌فرضِ زندهٔ دیگر) پیش‌فرض می‌شود و بقیه قالب معمولی‌اند.
 /// </summary>
 public class PrintTemplateSeeder : IDataSeeder
 {
@@ -19,15 +30,29 @@ public class PrintTemplateSeeder : IDataSeeder
     /// <summary>سازنده با تزریق کانتکست</summary>
     public PrintTemplateSeeder(ClinicProDbContext context) => _context = context;
 
-    /// <summary>اجرای بذر — فقط وقتی برای نوعی قالبی وجود ندارد</summary>
+    /// <summary>
+    /// اجرای بذر — فقط وقتی قالبی «با همین نام استاندارد» وجود ندارد افزوده می‌شود
+    /// (چرخه بیست‌وچهارم: شرط از «نوع» به «نام» تغییر کرد تا قالب‌های تازه روی
+    /// نصب‌های موجود هم بیایند و ویرایش‌های خود درمانگاه دست‌نخورده بمانند)
+    /// </summary>
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
-        // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) ═══ پیش‌تر شرط «برای نوع قالبی
-        // هست؟» بود؛ یعنی روی دیتابیس‌های موجود طرح‌های تازهٔ چرخهٔ ۲۴ هرگز
-        // اضافه نمی‌شدند و هر نوع فقط یک قالب اولیه داشت. اکنون شرط به «قالبی
-        // با همین نام هست؟» تغییر کرد: قالب‌های استاندارد/مدرن/حرارتی جدید روی
-        // نصب‌های موجود هم idempotent افزوده می‌شوند و ویرایش‌های خود درمانگاه
-        // (نام‌گذاری‌شدهٔ متفاوت) دست‌نخورده می‌مانند.
+        // انواعِ دارای پیش‌فرضِ زنده در دیتابیس — قالب تازهٔ همان نوع نباید
+        // دوباره پرچم پیش‌فرض بگیرد (ایندکس یکتا اجازه نمی‌دهد).
+        // نکته: Cast<int>() روی enum در زمان اجرا InvalidCastException می‌دهد (CA2021)
+        // → با Select و تبدیل صریح هر عنصر حل می‌شود
+        var defaultTypes = (await _context.PrintTemplates.AsNoTracking()
+                .Where(t => !t.IsDeleted && t.IsDefault)
+                .Select(t => (int)t.Type)
+                .ToListAsync(cancellationToken))
+            .ToHashSet();
+
+        var addedAny = false;
+
+        // نخستین باری که برای نوعی قالب می‌سازیم، همان قالب پیش‌فرضِ نوع می‌شود؛
+        // قالب‌های بعدی همان نوع (مدرن/حرارتی/…) قالب معمولی‌اند
+        var newlyDefaultedTypes = new HashSet<int>();
+
         foreach (var row in PrintTemplateSeedData.Rows)
         {
             var type = (PrintTemplateType)row.Type;
@@ -35,6 +60,10 @@ public class PrintTemplateSeeder : IDataSeeder
                 .AnyAsync(t => !t.IsDeleted && t.Type == type && t.TemplateName == row.TemplateName,
                     cancellationToken);
             if (exists) continue; // همین قالب استاندارد قبلاً ثبت شده — دست نمی‌زنیم
+
+            // پیش‌فرض فقط وقتی که نه در دیتابیس پیش‌فرضی برای این نوع هست و
+            // نه در همین اجرا قبلاً برایش قالبی پیش‌فرض ساخته‌ایم
+            var makeDefault = !defaultTypes.Contains(row.Type) && newlyDefaultedTypes.Add(row.Type);
 
             _context.PrintTemplates.Add(new PrintTemplate
             {
@@ -49,8 +78,14 @@ public class PrintTemplateSeeder : IDataSeeder
                 ShowClinicLogo = true,
                 AccentColor = row.AccentColor,
                 IsActive = true,
-                IsDefault = true
+                IsDefault = makeDefault
             });
+            addedAny = true;
         }
+
+        // ═══ اصلاح ریشه‌ای چرخهٔ سی‌ویکم: ذخیرهٔ مستقل — دیگر اتکایی به
+        // SaveChangesِ سیدرهای بعدی (که ممکن است early-return کنند) نیست ═══
+        if (addedAny)
+            await _context.SaveChangesAsync(cancellationToken);
     }
 }

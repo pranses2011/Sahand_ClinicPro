@@ -17,7 +17,9 @@ public class PrintTemplateConfiguration : IEntityTypeConfiguration<PrintTemplate
         builder.Property(x => x.Type).HasConversion<byte>().HasComment("نوع سند — ۹ نوع چاپی");
         builder.Property(x => x.Description).HasMaxLength(500).HasComment("توضیح اختیاری");
         builder.Property(x => x.HtmlBody).IsRequired().HasComment("بدنه HTML با متغیرهای {{نام_متغیر}}");
-        builder.Property(x => x.PaperSize).HasMaxLength(10).HasComment("اندازه کاغذ — A4/A5/A6");
+        // چرخه سی‌ویکم: ۱۰ → ۲۰ نویسه برای کلیدهای بلندتر مثل «Custom:100x180»
+        // (قالب سفارشی عرضxارتفاع) و «Thermal80» که پیش‌تر به‌زور در ۱۰ نویسه جا می‌شد
+        builder.Property(x => x.PaperSize).HasMaxLength(20).HasComment("اندازه کاغذ — A4/A5/A6/Thermal80/Custom:WxH");
         builder.Property(x => x.Orientation).HasMaxLength(12).HasComment("جهت صفحه — Portrait/Landscape");
         builder.Property(x => x.FontSize).HasComment("اندازه فونت پایه (پیکسل)");
         builder.Property(x => x.FontFamily).HasMaxLength(100).HasComment("خانواده فونت");
