@@ -158,8 +158,70 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <TextBlock Text="راهنما: ⬜ سالم   🟥 پوسیدگی   🟨 ترمیم‌شده   🟩 درمان‌شده   🟦 روکش   ⬛ کشیده‌شده   🟪 ایمپلنت"
-                                       FontSize="10.5" Opacity="0.6" Margin="2,12,2,0" />
+                            <!-- ═══ راهنمای رنگ‌های وضعیت دندان — چرخهٔ سی‌وسوم (گزارش نوزدهم مالک) ═══
+                                 «رنگ‌های وضعیت فک بالا/پایین درست نشان داده می‌شوند ولی راهنمای
+                                 تشخیص رنگ‌ها که زیرشان هست درست نمی‌آید و مشخص نیست»:
+                                 ریشه — راهنمای پیشین یک متن یگانه با نویسه‌های ایموجی (⬜🟥🟨…)
+                                 بود؛ این گلیف‌ها در فونت فارسی برنامه (وزیرمتن) وجود ندارند و
+                                 موتور رندر WPF آن‌ها را به‌صورت مربع تهی/علامت جایگزین می‌کشد —
+                                 دقیقاً همان «مشخص نیست»ی که مالک می‌دید. راه‌حل قطعی: به‌جای
+                                 نویسه، چیپ‌های رنگی واقعی (Border با Brush همان کد رنگ ViewModel
+                                 ToothVM.Color) + برچسب فارسی کنار هرکدام — رندر آن در هر فونت و
+                                 هر نسخهٔ ویندوز تضمینی است و رنگ‌ها با خود دکمه‌های چارت یکی‌اند.
+                                 چیپ سفیدِ «سالم» حاشیهٔ خاکستری می‌گیرد تا روی پس‌زمینهٔ روشن
+                                 دیده شود. WrapPanel در عرض کم می‌شکند و راهنما هرگز بیرون نمی‌زند. -->
+                            <WrapPanel Margin="2,12,2,0">
+                                <!-- آیتم راهنما: چیپ رنگ + برچسب — قالب مشترک با x:Shared و منبع -->
+                                <WrapPanel.Resources>
+                                    <Style x:Key="LegendChip" TargetType="Border">
+                                        <Setter Property="Width" Value="15" />
+                                        <Setter Property="Height" Value="15" />
+                                        <Setter Property="CornerRadius" Value="4" />
+                                        <Setter Property="BorderThickness" Value="1" />
+                                        <Setter Property="BorderBrush" Value="#90A4AE" />
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="Margin" Value="0,0,5,0" />
+                                    </Style>
+                                    <Style x:Key="LegendLabel" TargetType="TextBlock">
+                                        <Setter Property="FontSize" Value="11" />
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="Margin" Value="0,0,12,2" />
+                                        <Setter Property="Opacity" Value="0.85" />
+                                    </Style>
+                                </WrapPanel.Resources>
+                                <!-- رنگ‌ها عیناً از ToothVM.Color (پوشهٔ ViewModelها):
+                                     ۰ سالم #FFFFFF / ۱ پوسیدگی #E53935 / ۲ ترمیم #FDD835 /
+                                     ۳ درمان #43A047 / ۴ روکش #1E88E5 / ۵ کشیده #37474F /
+                                     ۶ ایمپلنت #8E24AA -->
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="دندان بدون مشکل">
+                                    <Border Style="{StaticResource LegendChip}" Background="#FFFFFF" />
+                                    <TextBlock Style="{StaticResource LegendLabel}" Text="سالم" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="نیاز به ترمیم دارد">
+                                    <Border Style="{StaticResource LegendChip}" Background="#E53935" />
+                                    <TextBlock Style="{StaticResource LegendLabel}" Text="پوسیدگی" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="قبلاً پرکردگی شده">
+                                    <Border Style="{StaticResource LegendChip}" Background="#FDD835" />
+                                    <TextBlock Style="{StaticResource LegendLabel}" Text="ترمیم‌شده" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="درمان ریشه/کامل انجام شده">
+                                    <Border Style="{StaticResource LegendChip}" Background="#43A047" />
+                                    <TextBlock Style="{StaticResource LegendLabel}" Text="درمان‌شده" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="روکش نصب شده">
+                                    <Border Style="{StaticResource LegendChip}" Background="#1E88E5" />
+                                    <TextBlock Style="{StaticResource LegendLabel}" Text="روکش" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="دندان کشیده شده">
+                                    <Border Style="{StaticResource LegendChip}" Background="#37474F" />
+                                    <TextBlock Style="{StaticResource LegendLabel}" Text="کشیده‌شده" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="ایمپلنت کاشته شده">
+                                    <Border Style="{StaticResource LegendChip}" Background="#8E24AA" />
+                                    <TextBlock Style="{StaticResource LegendLabel}" Text="ایمپلنت" />
+                                </StackPanel>
+                            </WrapPanel>
                         </StackPanel>
                     </Border>
 
@@ -443,8 +505,21 @@
                         </TextBlock>
                         <Slider Minimum="0" Maximum="10" Value="{Binding PainScore}"
                                 TickFrequency="1" IsSnapToTickEnabled="True" />
-                        <TextBlock Text="🟢 ۰-۳ خفیف        🟡 ۴-۶ متوسط        🔴 ۷-۱۰ شدید"
-                                   FontSize="10.5" Opacity="0.6" Margin="2,4,2,0" />
+                        <!-- راهنمای رنگ نمرهٔ درد — چرخهٔ ۳۳: همان الگوی چیپ رنگی واقعی به‌جای
+                             ایموجی (ایموجی‌ها در فونت فارسی رندر نمی‌شوند — رفع مشابه راهنمای
+                             چارت دندان در همین نما). رنگ‌ها عیناً از PainColor ویژومدل:
+                             ≤۳ #43A047 / ≤۶ #FDD835 / بقیه #E53935 -->
+                        <StackPanel Orientation="Horizontal" Margin="2,4,2,0">
+                            <Border Width="13" Height="13" CornerRadius="4" Background="#43A047"
+                                    BorderThickness="1" BorderBrush="#90A4AE" VerticalAlignment="Center" />
+                            <TextBlock Text="۰-۳ خفیف" FontSize="10.5" Opacity="0.85" VerticalAlignment="Center" Margin="5,0,14,0" />
+                            <Border Width="13" Height="13" CornerRadius="4" Background="#FDD835"
+                                    BorderThickness="1" BorderBrush="#90A4AE" VerticalAlignment="Center" />
+                            <TextBlock Text="۴-۶ متوسط" FontSize="10.5" Opacity="0.85" VerticalAlignment="Center" Margin="5,0,14,0" />
+                            <Border Width="13" Height="13" CornerRadius="4" Background="#E53935"
+                                    BorderThickness="1" BorderBrush="#90A4AE" VerticalAlignment="Center" />
+                            <TextBlock Text="۷-۱۰ شدید" FontSize="10.5" Opacity="0.85" VerticalAlignment="Center" Margin="5,0,0,0" />
+                        </StackPanel>
 
                         <TextBlock Text="یادداشت پیشرفت" FontSize="10.5" Opacity="0.6" Margin="2,10,2,2" />
                         <TextBox Text="{Binding PhysioNotes, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
