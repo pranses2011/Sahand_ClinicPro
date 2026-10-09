@@ -53,6 +53,28 @@ public partial class TariffFormViewModel : ObservableObject
     [ObservableProperty]
     private bool _isActive = true;
 
+    /// <summary>
+    /// آیا هدف این تعرفه «آزاد» است؟ — چرخهٔ بیست‌وششم (گزارش هجدهم مالک):
+    /// «برای آزاد (بدون بیمه) تمامی مبالغ بصورت پیش‌فرض سهم بیمار بکن چون از
+    /// اسمش مشخص هست و بیمه‌ای در کار نیست». تعرفهٔ آزاد همیشه ۱۰۰٪ سهم
+    /// بیمار و ۰٪ سهم بیمه است؛ فیلدهای درصد در فرم غیرفعال می‌شوند.
+    /// </summary>
+    public bool IsFreeTarget => _insuranceCompanyId is null;
+
+    /// <summary>
+    /// آیا هدف این تعرفه یک «بیمه» است؟ (وارون IsFreeTarget) — فیلدهای درصد
+    /// سهم فقط برای تعرفهٔ بیمه‌ای فعال‌اند؛ برای آزاد غیرفعال می‌شوند
+    /// </summary>
+    public bool IsInsuranceTarget => _insuranceCompanyId is not null;
+
+    /// <summary>
+    /// متن راهنمای بخش سهم‌ها — برای هدف آزاد توضیح قاعدهٔ ۱۰۰٪ و برای بیمه
+    /// راهنمای عادی درصدها
+    /// </summary>
+    public string ShareHint => IsFreeTarget
+        ? "تعرفهٔ آزاد (بدون بیمه): تمام مبلغ به‌صورت پیش‌فرض سهم بیمار است (۱۰۰٪) — بیمه‌ای در کار نیست"
+        : "درصد سهم بیمه و بیمار (۰ تا ۱۰۰) — مجموع دو سهم باید ۱۰۰ باشد";
+
     /// <summary>پیام خطا</summary>
     [ObservableProperty]
     private string _errorMessage = string.Empty;
@@ -88,6 +110,15 @@ public partial class TariffFormViewModel : ObservableObject
         {
             Header = $"خدمت / تعرفهٔ جدید — {targetLabel}";
         }
+
+        // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) ═══ برای هدف آزاد، سهم‌ها
+        // به‌صورت پیش‌فرض ۱۰۰٪ بیمار / ۰٪ بیمه است و در ویرایش هم مقادیر
+        // بیمه‌ای قبلی به همین قاعدهٔ استاندارد بازتنظیم می‌شود
+        if (IsFreeTarget)
+        {
+            InsuranceShare = 0;
+            PatientShare = 100;
+        }
     }
 
     /// <summary>برچسب هدف تعرفه — آزاد یا نام بیمه (نمایش در فرم)</summary>
@@ -115,6 +146,12 @@ public partial class TariffFormViewModel : ObservableObject
             return;
         }
 
+        // ═══ چرخهٔ بیست‌وششم ═══ تعرفهٔ آزاد همیشه ۱۰۰٪ بیمار است — بیمه‌ای
+        // وجود ندارد؛ مقادیر ارسالی صرفاً از حالت فرم خوانده نمی‌شود تا با
+        // غیرفعال‌بودن فیلدها هم سازگار و قطعی باشد
+        var insuranceShare = IsFreeTarget ? 0 : InsuranceShare;
+        var patientShare = IsFreeTarget ? 100 : PatientShare;
+
         IsBusy = true;
         ErrorMessage = string.Empty;
 
@@ -123,8 +160,8 @@ public partial class TariffFormViewModel : ObservableObject
             serviceName = ServiceName.Trim(),
             serviceCode = string.IsNullOrWhiteSpace(ServiceCode) ? null : ServiceCode.Trim(),
             price = Price,
-            insuranceShare = InsuranceShare,
-            patientShare = PatientShare,
+            insuranceShare,
+            patientShare,
             isActive = IsActive,
             // چرخه ۲۴: هدف تعرفه — تهی = آزاد، مقدار = بیمهٔ منتخب
             insuranceCompanyId = _insuranceCompanyId

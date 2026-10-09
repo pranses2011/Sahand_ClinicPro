@@ -24,6 +24,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- سربرگ — چرخه ۲۴: برچسب هدف تعرفه (آزاد یا بیمهٔ منتخب) زیر عنوان -->
@@ -54,8 +55,12 @@
                  Text="{Binding Price, UpdateSourceTrigger=PropertyChanged}"
                  Margin="0,0,0,12" />
 
-        <!-- سهم بیمه / بیمار — دوستونه -->
-        <UniformGrid Grid.Row="4" Columns="2">
+        <!-- ═══ سهم بیمه / بیمار — دوستونه ═══
+             چرخهٔ بیست‌وششم (گزارش هجدهم مالک): «برای آزاد، تمامی مبالغ بصورت
+             پیش‌فرض سهم بیمار بکن و در ویرایش تعرفه‌های آزاد درصدهای بیمار و
+             بیمه غیرفعال و ۱۰۰ درصد بیمار باشد» — برای هدف آزاد هر دو فیلد
+             غیرفعال و مقادیر استاندارد (۰/۱۰۰) نمایش داده می‌شوند -->
+        <UniformGrid Grid.Row="4" Columns="2" IsEnabled="{Binding IsInsuranceTarget, Mode=OneWay}">
             <TextBox materialDesign:HintAssist.Hint="٪ سهم بیمه (۰-۱۰۰)"
                      Text="{Binding InsuranceShare, UpdateSourceTrigger=PropertyChanged}"
                      Margin="0,0,4,12" />
@@ -63,14 +68,19 @@
                      Text="{Binding PatientShare, UpdateSourceTrigger=PropertyChanged}"
                      Margin="4,0,0,12" />
         </UniformGrid>
+        <!-- راهنمای سهم‌ها — برای آزاد: قاعدهٔ ۱۰۰٪ بیمار؛ برای بیمه: عادی -->
+        <TextBlock Grid.Row="5" Text="{Binding ShareHint, Mode=OneWay}"
+                   FontSize="10.5" TextWrapping="Wrap" Opacity="0.75"
+                   Margin="2,0,0,10"
+                   Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
 
         <!-- فعال -->
-        <CheckBox Grid.Row="5" Content="فعال باشد (در فرم فاکتور قابل انتخاب است)"
+        <CheckBox Grid.Row="6" Content="فعال باشد (در فرم فاکتور قابل انتخاب است)"
                   IsChecked="{Binding IsActive}"
                   Margin="0,0,0,12" />
 
         <!-- خطا + دکمه‌ها -->
-        <StackPanel Grid.Row="6">
+        <StackPanel Grid.Row="7">
             <TextBlock Text="{Binding ErrorMessage}"
                        Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
                        FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" />

@@ -86,6 +86,13 @@ public partial class ReceptionsViewModel : ViewModelBase
     [ObservableProperty]
     private int _receptionModeIndex;
 
+    /// <summary>
+    /// تغییر حالت پذیرش → بازمحاسبهٔ هزینه — چرخهٔ بیست‌وششم: جابه‌جایی میان
+    /// ویزیت پزشک و خدمت درمانی، بخش هزینه را از حق ویزیت پزشک به تعرفهٔ
+    /// خدمت منتخب (و برعکس) سوییچ می‌کند
+    /// </summary>
+    partial void OnReceptionModeIndexChanged(int value) => RecalculateCost();
+
     /// <summary>گزینه‌های حالت پذیرش</summary>
     public string[] ReceptionModes { get; } = { "🩺 ویزیت پزشک", "💉 خدمت درمانی (تزریقات/پانسمان/آزمایش/…)" };
 
@@ -96,6 +103,14 @@ public partial class ReceptionsViewModel : ViewModelBase
     [ObservableProperty]
     private ServiceOption? _selectedService;
 
+    /// <summary>
+    /// تغییر خدمت منتخب → بازمحاسبهٔ هزینه با تعرفهٔ همان خدمت —
+    /// چرخهٔ بیست‌وششم (گزارش هجدهم مالک): «در پذیرش خدمات درمانی، تعرفه
+    /// خدمات رو نمیاره»؛ اکنون قیمت و سهم‌های بیمه/بیمار خدمتِ منتخب
+    /// بی‌درنگ در بخش هزینه اعمال می‌شود.
+    /// </summary>
+    partial void OnSelectedServiceChanged(ServiceOption? value) => RecalculateCost();
+
     /// <summary>پرسنل فعال برای انتخاب انجام‌دهندهٔ خدمت</summary>
     public ObservableCollection<PerformerOption> Performers { get; } = new();
 
@@ -103,8 +118,9 @@ public partial class ReceptionsViewModel : ViewModelBase
     [ObservableProperty]
     private PerformerOption? _selectedPerformer;
 
-    /// <summary>گزینهٔ خدمت تعرفه‌دار</summary>
-    public record ServiceOption(long Id, string Name, decimal Price);
+    /// <summary>گزینهٔ خدمت تعرفه‌دار — چرخهٔ بیست‌وششم: سهم‌های تعرفه هم همراهش می‌آید</summary>
+    public record ServiceOption(long Id, string Name, decimal Price,
+        decimal TariffInsuranceShare = 0m, decimal TariffPatientShare = 100m);
 
     /// <summary>گزینهٔ پرسنل انجام‌دهنده</summary>
     public record PerformerOption(long Id, string FullName);
@@ -360,20 +376,32 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// <summary>تغییر پزشک → محاسبه هزینه</summary>
     partial void OnSelectedDoctorChanged(DoctorOption? value) => RecalculateCost();
 
-    /// <summary>بارگذاری خدمات تعرفه‌دار و پرسنل — چرخه ۲۴: برای پذیرش خدمت درمانی</summary>
-    private async Task LoadServicesAndPerformersAsync()
+    /// <summary>
+    /// بارگذاری خدمات تعرفه‌دار و پرسنل — چرخه ۲۴: برای پذیرش خدمت درمانی.
+    /// ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) ═══ «تعرفه خدمات رو نمیاره؛
+    /// باید با فیلتر بیمه و خدمات، تعرفهٔ اون خدمات رو بیاره» — تعرفه‌ها
+    /// اکنون به‌ازای بیمهٔ منتخب از سرور خوانده می‌شود (تعرفهٔ بیمه → در
+    /// نبود، تعرفهٔ آزاد → در نبود، قیمت پایه) و با هر تغییر بیمه/حالت دوباره
+    /// بارگذاری می‌شود؛ در حالت آزاد تعرفهٔ آزاد (سهم بیمار ۱۰۰٪) می‌آید.
+    /// </summary>
+    /// <param name="insuranceCompanyId">شناسهٔ بیمهٔ منتخب — تهی = آزاد</param>
+    private async Task LoadServicesAndPerformersAsync(long? insuranceCompanyId = null)
     {
-        // خدمات فعال با تعرفهٔ آزاد (قیمت‌ها با بیمهٔ انتخابی فاکتور بازمحاسبه می‌شوند)
-        var services = await _api.GetAsync<ServicesLookupResponse>("lookups/services?search=");
+        // خدمات فعال با تعرفهٔ هدفِ منتخب — سهم‌های بیمه/بیمار همراه قیمت می‌آید
+        var url = $"lookups/services?search=&insuranceCompanyId={insuranceCompanyId?.ToString() ?? ""}";
+        var services = await _api.GetAsync<ServicesLookupResponse>(url);
         Services.Clear();
         foreach (var s2 in services?.Data ?? new List<ServiceLookupDto>())
-            Services.Add(new ServiceOption(s2.ServiceId, s2.ServiceName, s2.Price));
+            Services.Add(new ServiceOption(s2.ServiceId, s2.ServiceName, s2.Price,
+                s2.InsuranceShare, s2.PatientShare));
 
-        // پرسنل فعال برای انتخاب انجام‌دهنده
-        var employees = await _api.GetAsync<EmployeesLookupResponse>("lookups/employees");
-        Performers.Clear();
-        foreach (var e in employees?.Data ?? new List<EmployeeLookupDto>())
-            Performers.Add(new PerformerOption(e.Id, e.FullName));
+        // پرسنل فعال برای انتخاب انجام‌دهنده — فقط یک بار لازم است
+        if (Performers.Count == 0)
+        {
+            var employees = await _api.GetAsync<EmployeesLookupResponse>("lookups/employees");
+            foreach (var e in employees?.Data ?? new List<EmployeeLookupDto>())
+                Performers.Add(new PerformerOption(e.Id, e.FullName));
+        }
     }
 
     /// <summary>پاسخ فهرست خدمات — lookups/services</summary>
@@ -389,6 +417,12 @@ public partial class ReceptionsViewModel : ViewModelBase
         public long ServiceId { get; set; }
         public string ServiceName { get; set; } = string.Empty;
         public decimal Price { get; set; }
+
+        /// <summary>درصد سهم بیمهٔ تعرفهٔ منتخب — چرخهٔ ۲۶</summary>
+        public decimal InsuranceShare { get; set; }
+
+        /// <summary>درصد سهم بیمار تعرفهٔ منتخب — چرخهٔ ۲۶</summary>
+        public decimal PatientShare { get; set; }
     }
 
     /// <summary>پاسخ فهرست پرسنل</summary>
@@ -405,11 +439,28 @@ public partial class ReceptionsViewModel : ViewModelBase
         public string FullName { get; set; } = string.Empty;
     }
 
-    /// <summary>تغییر بیمه → محاسبه هزینه</summary>
+    /// <summary>تغییر بیمه → محاسبه هزینه + بارگذاری مجدد تعرفه‌ها با بیمهٔ جدید</summary>
     partial void OnInsuranceIndexChanged(int value)
     {
         Inquiry = null;
         RecalculateCost();
+
+        // ═══ چرخهٔ بیست‌وششم ═══ تعرفه‌ها بیمه‌محورند — با تغییر بیمه، فهرست
+        // خدمات با تعرفهٔ همان بیمه بازخوانی می‌شود و خدمتِ قبلی هم اگر هنوز
+        // موجود باشد دوباره انتخاب می‌شود تا قیمت‌ها بی‌درنگ درست بمانند.
+        // (نمایهٔ صفر = آزاد → بیمهٔ تهی به سرور می‌رود)
+        var selectedCompany = value >= 0 && value < InsuranceCompanies.Count
+            ? InsuranceCompanies[value]
+            : null;
+        var companyId = selectedCompany is { Id: > 0 } ? selectedCompany.Id : (long?)null;
+        var previousServiceName = SelectedService?.Name;
+        _ = LoadServicesAndPerformersAsync(companyId).ContinueWith(_ =>
+        {
+            if (previousServiceName is null) return;
+            var same = Services.FirstOrDefault(s => s.Name == previousServiceName);
+            if (same is not null)
+                System.Windows.Application.Current?.Dispatcher.BeginInvoke(() => SelectedService = same);
+        });
     }
 
     /// <summary>استعلام بیمه — با Timeout ۳۰ ثانیه و پیام مناسب</summary>
@@ -419,7 +470,12 @@ public partial class ReceptionsViewModel : ViewModelBase
         if (FoundPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return; }
         if (InsuranceIndex <= 0) { _snackbar.Error("ابتدا نوع بیمه را انتخاب کنید"); return; }
 
-        var company = InsuranceCompanies[InsuranceIndex - 1];
+        // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — رفع آف‌بای‌وان ═══
+        // آیتم «آزاد» با شناسهٔ صفر در ابتدای کشوست و شرکت‌های واقعی از
+        // نمایهٔ ۱؛ خواندن با «نمایهٔ منهای یک» شرکت بعدی را می‌داد و بیمهٔ
+        // انتخابی بیمار در پذیرش قعر می‌رفت (ریشهٔ «تامین اجتماعی زدم ولی
+        // آزاد ثبت می‌شود» در صف پذیرش)؛ اکنون خودِ نمایه خوانده می‌شود
+        var company = InsuranceCompanies[InsuranceIndex];
         IsInquiring = true;
         try
         {
@@ -473,16 +529,35 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// چرخه بیست‌ویکم (گزارش پانزدهم مالک): «برای پزشک ۴۵۰ حق ویزیت زدم ولی در
     /// پذیرش ۷۰ می‌آورد» — پیش‌تر مقدار ثابت هاردکد ۷۰۰٬۰۰۰ ریال بود؛ اکنون
     /// حق ویزیت واقعی از پروندهٔ همان پزشک (DoctorOption.ConsultationFee) خوانده می‌شود.
+    /// ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) ═══ «در پذیرش خدمات درمانی،
+    /// تعرفه خدمات رو نمیاره» — در حالت خدمت درمانی، قیمت و سهم‌های بیمه/
+    /// بیمار از «تعرفهٔ همان خدمت برای بیمهٔ منتخب» اعمال می‌شود (تعرفهٔ آزاد:
+    /// ۱۰۰٪ بیمار) و بخش هزینه بی‌درنگ به‌روز می‌شود.
     /// </summary>
     private void RecalculateCost()
     {
-        // حق ویزیت واقعی پزشک انتخاب‌شده — صفر یعنی پزشک هنوز انتخاب نشده
-        VisitFee = SelectedDoctor?.ConsultationFee ?? 0;
+        if (ReceptionModeIndex == 1)
+        {
+            // ═══ حالت خدمت درمانی — تعرفهٔ خدمت منتخب ═══
+            // قیمت = تعرفهٔ خدمت برای بیمهٔ منتخب (خودِ فهرست خدمات بیمه‌محور
+            // بازخوانی می‌شود)؛ سهم‌ها از درصدهای تعرفهٔ همان خدمت
+            VisitFee = SelectedService?.Price ?? 0;
+            var insurancePercent = SelectedService?.TariffInsuranceShare ?? 0m;
+            InsuranceShare = Math.Round(VisitFee * insurancePercent / 100m);
+            PatientShare = VisitFee - InsuranceShare;
+        }
+        else
+        {
+            // ═══ حالت ویزیت پزشک — رفتار پیشین ═══
+            // حق ویزیت واقعی پزشک انتخاب‌شده — صفر یعنی پزشک هنوز انتخاب نشده
+            VisitFee = SelectedDoctor?.ConsultationFee ?? 0;
 
-        // درصد پوشش: از استعلام یا صفر برای آزاد
-        var percent = InsuranceIndex <= 0 ? 0 : CoveragePercent;
-        InsuranceShare = Math.Round(VisitFee * percent / 100m);
-        PatientShare = VisitFee - InsuranceShare;
+            // درصد پوشش: از استعلام یا صفر برای آزاد
+            var percent = InsuranceIndex <= 0 ? 0 : CoveragePercent;
+            InsuranceShare = Math.Round(VisitFee * percent / 100m);
+            PatientShare = VisitFee - InsuranceShare;
+        }
+
         OnPropertyChanged(nameof(FeeDisplay));
         OnPropertyChanged(nameof(InsuranceShareDisplay));
         OnPropertyChanged(nameof(PatientShareDisplay));
@@ -521,7 +596,13 @@ public partial class ReceptionsViewModel : ViewModelBase
     {
         if (!ValidateReception()) return;
 
-        var company = InsuranceIndex > 0 ? InsuranceCompanies[InsuranceIndex - 1] : null;
+        // ═══ چرخهٔ بیست‌وششم — رفع آف‌بای‌وان بیمه (همان ریشهٔ بالا) ═══
+        // نمایهٔ صفر = آزاد (شناسهٔ ۰) → تهی ارسال می‌شود؛ نمایه‌های بعدی
+        // خودِ شرکت منتخب — نه یک شیفت عقب
+        var selectedCompany = InsuranceIndex >= 0 && InsuranceIndex < InsuranceCompanies.Count
+            ? InsuranceCompanies[InsuranceIndex]
+            : null;
+        var company = selectedCompany is { Id: > 0 } ? selectedCompany : null;
 
         IsBusy = true;
 
