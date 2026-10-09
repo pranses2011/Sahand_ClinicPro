@@ -23,7 +23,7 @@
             <Setter Property="materialDesign:HintAssist.Hint" Value="HH:mm" />
             <Setter Property="materialDesign:TextFieldAssist.RippleOnFocusEnabled" Value="False" />
             <Setter Property="TextAlignment" Value="Center" />
-            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
             <Setter Property="MaxLength" Value="5" />
             <Setter Property="MinWidth" Value="62" />
         </Style>

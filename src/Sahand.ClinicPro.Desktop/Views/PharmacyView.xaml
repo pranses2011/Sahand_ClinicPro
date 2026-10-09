@@ -190,7 +190,7 @@
                                 </DataGridTextColumn.Binding>
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="FontFamily" Value="Consolas" />
+                                        <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
                                         <Setter Property="FontWeight" Value="Bold" />
                                         <Setter Property="Foreground" Value="#E65100" />
                                     </Style>

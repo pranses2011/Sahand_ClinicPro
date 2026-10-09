@@ -175,6 +175,15 @@ public partial class ReceptionsViewModel : ViewModelBase
     [ObservableProperty]
     private decimal _coveragePercent;
 
+    /// <summary>
+    /// آیا بیمهٔ واقعی انتخاب شده است؟ — چرخهٔ سی‌ودوم (گزارش مالک):
+    /// در حالت «آزاد (بدون بیمه)» ستون «سهم بیمه» بخش هزینه پنهان و کل مبلغ
+    /// به‌صورت درشت به‌عنوان سهم بیمار نمایش داده می‌شود؛ نمایش دو سهم برای
+    /// بیمار بدون بیمه گمراه‌کننده و اشتباه است.
+    /// </summary>
+    [ObservableProperty]
+    private bool _hasInsurance = true;
+
     /// <summary>نمایش حق ویزیت</summary>
     public string FeeDisplay => Money.Format(VisitFee);
 
@@ -540,16 +549,29 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// تعرفه خدمات رو نمیاره» — در حالت خدمت درمانی، قیمت و سهم‌های بیمه/
     /// بیمار از «تعرفهٔ همان خدمت برای بیمهٔ منتخب» اعمال می‌شود (تعرفهٔ آزاد:
     /// ۱۰۰٪ بیمار) و بخش هزینه بی‌درنگ به‌روز می‌شود.
+    /// ═══ چرخهٔ سی‌ودوم (گزارش مالک) ═══ «در پذیرش هم درست اعمال نمی‌شود و
+    /// برای بیمهٔ آزاد هم سهم بیمه و سهم بیمار می‌اندازد که اشتباه است — در
+    /// بدون بیمه باید تمام تعرفه را بیمار پرداخت کند»: اگر بیمهٔ منتخب
+    /// «آزاد» است، هر درصد بیمه‌ای (حتی مقدار ذخیره‌شدهٔ قدیمی روی تعرفهٔ آزاد)
+    /// نادیده گرفته می‌شود؛ سهم بیمه صفر و کل مبلغ عهدهٔ بیمار است.
     /// </summary>
     private void RecalculateCost()
     {
+        // بیمهٔ منتخب فعلی — نمایهٔ صفر «آزاد (بدون بیمه)» با شناسهٔ ۰ است
+        var selectedCompany = InsuranceIndex >= 0 && InsuranceIndex < InsuranceCompanies.Count
+            ? InsuranceCompanies[InsuranceIndex]
+            : null;
+        var isFree = selectedCompany is not { Id: > 0 };
+        // حالت نمایشی بخش هزینه — برای آزاد، ستون سهم بیمه پنهان می‌شود
+        HasInsurance = !isFree;
+
         if (ReceptionModeIndex == 1)
         {
             // ═══ حالت خدمت درمانی — تعرفهٔ خدمت منتخب ═══
-            // قیمت = تعرفهٔ خدمت برای بیمهٔ منتخب (خودِ فهرست خدمات بیمه‌محور
-            // بازخوانی می‌شود)؛ سهم‌ها از درصدهای تعرفهٔ همان خدمت
+            // قیمت = تعرفهٔ خدمت برای بیمهٔ منتخب؛ سهم‌ها از درصدهای تعرفهٔ همان
+            // خدمت — مگر در حالت آزاد که کل مبلغ سهم بیمار است (۰٪ بیمه)
             VisitFee = SelectedService?.Price ?? 0;
-            var insurancePercent = SelectedService?.TariffInsuranceShare ?? 0m;
+            var insurancePercent = !isFree ? SelectedService?.TariffInsuranceShare ?? 0m : 0m;
             InsuranceShare = Math.Round(VisitFee * insurancePercent / 100m);
             PatientShare = VisitFee - InsuranceShare;
         }
@@ -560,7 +582,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             VisitFee = SelectedDoctor?.ConsultationFee ?? 0;
 
             // درصد پوشش: از استعلام یا صفر برای آزاد
-            var percent = InsuranceIndex <= 0 ? 0 : CoveragePercent;
+            var percent = isFree ? 0 : CoveragePercent;
             InsuranceShare = Math.Round(VisitFee * percent / 100m);
             PatientShare = VisitFee - InsuranceShare;
         }

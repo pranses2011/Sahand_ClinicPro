@@ -33,7 +33,7 @@
                             </Grid>
 
                             <TextBlock Grid.Column="2" Text="{Binding ValueText}" FontSize="10.5"
-                                       FontFamily="Consolas" Opacity="0.8" VerticalAlignment="Center"
+                                       FontFamily="{DynamicResource App.CodeFont}" Opacity="0.8" VerticalAlignment="Center"
                                        Margin="10,0,0,0" HorizontalAlignment="Left" />
                         </Grid>
                     </DataTemplate>

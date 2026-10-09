@@ -55,13 +55,13 @@
                         BorderBrush="#22000000" Margin="0,0,0,12">
                     <Grid>
                         <TextBlock x:Name="PreviewHexShadow" Text="#1565C0" HorizontalAlignment="Center"
-                                   VerticalAlignment="Center" FontSize="17" FontWeight="Bold" FontFamily="Consolas">
+                                   VerticalAlignment="Center" FontSize="17" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}">
                             <TextBlock.Effect>
                                 <BlurEffect Radius="7" />
                             </TextBlock.Effect>
                         </TextBlock>
                         <TextBlock x:Name="PreviewHexText" Text="#1565C0" HorizontalAlignment="Center"
-                                   VerticalAlignment="Center" FontSize="17" FontWeight="Bold" FontFamily="Consolas" />
+                                   VerticalAlignment="Center" FontSize="17" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
                     </Grid>
                 </Border>
 
@@ -91,28 +91,28 @@
                             TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"
                             ValueChanged="RgbSlider_ValueChanged" Margin="6,2" />
                     <TextBlock x:Name="RedValueText" Text="21" Grid.Row="0" Grid.Column="2" FontSize="12"
-                               FontFamily="Consolas" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                               FontFamily="{DynamicResource App.CodeFont}" VerticalAlignment="Center" HorizontalAlignment="Center" />
 
                     <TextBlock Text="سبز" Grid.Row="1" Grid.Column="0" FontSize="11.5" VerticalAlignment="Center" />
                     <Slider x:Name="GreenSlider" Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="255"
                             TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"
                             ValueChanged="RgbSlider_ValueChanged" Margin="6,2" />
                     <TextBlock x:Name="GreenValueText" Text="101" Grid.Row="1" Grid.Column="2" FontSize="12"
-                               FontFamily="Consolas" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                               FontFamily="{DynamicResource App.CodeFont}" VerticalAlignment="Center" HorizontalAlignment="Center" />
 
                     <TextBlock Text="آبی" Grid.Row="2" Grid.Column="0" FontSize="11.5" VerticalAlignment="Center" />
                     <Slider x:Name="BlueSlider" Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="255"
                             TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"
                             ValueChanged="RgbSlider_ValueChanged" Margin="6,2" />
                     <TextBlock x:Name="BlueValueText" Text="192" Grid.Row="2" Grid.Column="2" FontSize="12"
-                               FontFamily="Consolas" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                               FontFamily="{DynamicResource App.CodeFont}" VerticalAlignment="Center" HorizontalAlignment="Center" />
                 </Grid>
 
                 <!-- ورودی کد HEX با اعتبارسنجی برخط -->
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                     <TextBlock Text="کد رنگ (HEX):" FontSize="12" VerticalAlignment="Center" />
                     <TextBox x:Name="HexInput" Width="104" Margin="10,0,0,0" VerticalAlignment="Center"
-                             FontFamily="Consolas" FontSize="13" TextChanged="HexInput_TextChanged" />
+                             FontFamily="{DynamicResource App.CodeFont}" FontSize="13" TextChanged="HexInput_TextChanged" />
                     <TextBlock x:Name="HexErrorText" Text="کد نامعتبر است — مثل #1565C0" FontSize="11"
                                Foreground="#C62828" Margin="8,0,0,0" VerticalAlignment="Center"
                                Visibility="Collapsed" />

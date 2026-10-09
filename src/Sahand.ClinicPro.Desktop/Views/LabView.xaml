@@ -60,7 +60,7 @@
                             </DataGridTextColumn.Binding>
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="FontFamily" Value="Consolas" />
+                                    <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>

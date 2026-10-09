@@ -108,7 +108,7 @@
                             <DataGridTextColumn Binding="{Binding Total, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="110"><DataGridTextColumn.Header><TextBlock><Run Text="مبلغ (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="FontFamily" Value="Consolas" />
+                                        <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
                                         <Setter Property="HorizontalAlignment" Value="Left" />
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
@@ -116,7 +116,7 @@
                             <DataGridTextColumn Binding="{Binding Paid, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="105"><DataGridTextColumn.Header><TextBlock><Run Text="پرداخت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="FontFamily" Value="Consolas" />
+                                        <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
                                         <Setter Property="HorizontalAlignment" Value="Left" />
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>

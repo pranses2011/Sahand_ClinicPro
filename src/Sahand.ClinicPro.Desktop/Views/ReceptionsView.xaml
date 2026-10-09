@@ -279,6 +279,10 @@
                         </Grid>
 
                         <!-- ═══ محاسبه هزینه ═══ -->
+                        <!-- چرخهٔ سی‌ودوم (گزارش مالک): «برای بیمهٔ آزاد هم سهم بیمه و سهم
+                             بیمار می‌اندازد که اشتباه است» — در حالت «آزاد (بدون بیمه)»
+                             ستون سهم بیمه پنهان و ستون سهم بیمار پهن‌تر و برجسته می‌شود؛
+                             کل تعرفه بر عهدهٔ بیمار است و نمایش دو سهم گمراه‌کننده است. -->
                         <Border CornerRadius="10" Padding="14,10" Margin="0,12,0,0" Background="#FFF8E1"
                                 BorderBrush="#FFE082" BorderThickness="1">
                             <StackPanel>
@@ -292,18 +296,41 @@
                                         <TextBlock FontSize="11" Opacity="0.7"><Run Text="💰 حق ویزیت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                                         <TextBlock Text="{Binding FeeDisplay, Mode=OneWay}" FontSize="15" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
                                     </StackPanel>
-                                    <StackPanel Grid.Column="1">
+                                    <StackPanel Grid.Column="1"
+                                                Visibility="{Binding HasInsurance, Converter={StaticResource BoolToVisibility}}">
                                         <TextBlock FontSize="11" Opacity="0.7">
                                             <Run Text="🏥 سهم بیمه (" /><Run Text="{Binding CoveragePercent, Mode=OneWay}" /><Run Text="٪)" />
                                         </TextBlock>
                                         <TextBlock Text="{Binding InsuranceShareDisplay, Mode=OneWay}" FontSize="15" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" Foreground="#2E7D32" />
                                     </StackPanel>
-                                    <StackPanel Grid.Column="2">
-                                        <TextBlock FontSize="11" Opacity="0.7"><Run Text="👤 سهم بیمار (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                                    <!-- ستون سهم بیمار — جایگاه آن از استایل تعیین می‌شود
+                                         (مقدار محلی Grid.Column عمداً حذف شده تا تریگرِ
+                                         حالت آزاد بتواند آن را به ستون میانی ببرد) -->
+                                    <StackPanel>
+                                        <StackPanel.Style>
+                                            <Style TargetType="StackPanel">
+                                                <Setter Property="Grid.Column" Value="2" />
+                                                <Style.Triggers>
+                                                    <!-- آزاد: سهم بیمار جای ستون سهم بیمه را هم می‌گیرد -->
+                                                    <DataTrigger Binding="{Binding HasInsurance}" Value="False">
+                                                        <Setter Property="Grid.Column" Value="1" />
+                                                        <Setter Property="Grid.ColumnSpan" Value="2" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </StackPanel.Style>
+                                        <TextBlock FontSize="11" Opacity="0.7"
+                                                   ToolTip="بدون بیمه — کل مبلغ تعرفه بر عهدهٔ بیمار است">
+                                            <Run Text="👤 قابل پرداخت بیمار (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" />
+                                        </TextBlock>
                                         <TextBlock Text="{Binding PatientShareDisplay, Mode=OneWay}" FontSize="18" FontWeight="Bold"
                                                    FontFamily="{DynamicResource App.CodeFont}" Foreground="#C62828" />
                                     </StackPanel>
                                 </Grid>
+                                <!-- راهنمای حالت آزاد — بدون بیمه هیچ سهمی روی بیمه نیست -->
+                                <TextBlock Text="🆓 پذیرش آزاد (بدون بیمه) — کل مبلغ تعرفه توسط بیمار پرداخت می‌شود"
+                                           FontSize="10.5" Foreground="#C62828" Opacity="0.85" Margin="0,6,0,0"
+                                           Visibility="{Binding HasInsurance, Converter={StaticResource InverseBoolToVisibility}}" />
                             </StackPanel>
                         </Border>
 
