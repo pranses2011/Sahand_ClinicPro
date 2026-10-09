@@ -9,7 +9,9 @@ namespace Sahand.ClinicPro.Desktop.ViewModels;
 
 /// <summary>ردیف نظرسنجی — تب ۱ فرم ۳۴</summary>
 public record SurveyListRow(long Id, string Title, string? Description, string TypeText,
-    bool IsActive, string ActiveText, int ResponseCount, string AverageText);
+    bool IsActive, string ActiveText, int ResponseCount, string AverageText,
+    /// <summary>متن خام JSON سوالات — برای بارگذاری در طراح ویرایش (چرخهٔ ۲۸)</summary>
+    string? QuestionsJson);
 
 /// <summary>یک سوال از سازنده پویا — قابل سریالایز به JSON برای فیلد Questions</summary>
 public partial class SurveyQuestionItem : ObservableObject
@@ -46,6 +48,77 @@ public partial class SurveyQuestionItem : ObservableObject
             ? Choices.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             : null
     }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+    /// <summary>
+    /// تجزیهٔ آرایهٔ JSON سوالات به آیتم‌های طراح — چرخهٔ بیست‌وهشتم
+    /// (گزارش هجدهم مالک): «نظرسنجی‌ها طراحی نمی‌شوند، فقط به لیست اضافه
+    /// می‌شوند» — ریشه: فرم ویرایش سوالات موجود نظرسنجی را بارگذاری
+    /// نمی‌کرد و هر بار از نو بازنویسی می‌کرد. این پارسر هر دو قرارداد
+    /// کلید قدیم («q») و جدید («text») و گزینه‌ها (آرایه یا رشتهٔ «|»جدا)
+    /// را می‌پذیرد؛ متن تهی/خراب → فهرست خالی (فرم با سوال پیش‌فرض باز می‌شود).
+    /// </summary>
+    /// <param name="json">متن خام JSON آرایهٔ سوالات از سرور</param>
+    /// <returns>آیتم‌های سازندهٔ پویا — خالی در نبود/خرابی متن</returns>
+    public static List<SurveyQuestionItem> ParseList(string? json)
+    {
+        var result = new List<SurveyQuestionItem>();
+        if (string.IsNullOrWhiteSpace(json))
+            return result;
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind != JsonValueKind.Array)
+                return result;
+
+            foreach (var q in doc.RootElement.EnumerateArray())
+            {
+                if (q.ValueKind != JsonValueKind.Object)
+                    continue;
+
+                // متن — کلید «text» (قرارداد جدید) یا «q» (قرارداد قدیمی)
+                string? rawText = null;
+                if (q.TryGetProperty("text", out var t))
+                    rawText = t.GetString();
+                else if (q.TryGetProperty("q", out var qk))
+                    rawText = qk.GetString();
+                var text = rawText ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(text))
+                    continue;
+
+                // نوع — rating پیش‌فرض
+                var typeKey = q.TryGetProperty("type", out var ty) ? ty.GetString() : "rating";
+                var type = typeKey switch
+                {
+                    "text" => TypeOptions[1],
+                    "choice" => TypeOptions[2],
+                    _ => TypeOptions[0]
+                };
+
+                // گزینه‌ها — آرایهٔ JSON یا رشتهٔ جداشده با «|»
+                string choices = string.Empty;
+                if (q.TryGetProperty("options", out var opt))
+                {
+                    if (opt.ValueKind == JsonValueKind.Array)
+                        choices = string.Join("|", opt.EnumerateArray()
+                            .Select(o => o.GetString()).Where(s => !string.IsNullOrWhiteSpace(s)));
+                    else if (opt.ValueKind == JsonValueKind.String)
+                        choices = opt.GetString() ?? string.Empty;
+                }
+
+                result.Add(new SurveyQuestionItem
+                {
+                    Text = text,
+                    QuestionType = type,
+                    Choices = choices
+                });
+            }
+        }
+        catch (JsonException)
+        {
+            // متن خراب/قدیمی — فهرست خالی؛ فرم ویرایش سوال پیش‌فرض می‌گذارد
+        }
+        return result;
+    }
 }
 
 /// <summary>ستون توزیع ستاره‌ها — ارتفاع نوار از پیش مقیاس‌شده</summary>
@@ -215,7 +288,6 @@ public partial class SurveyViewModel : ViewModelBase
         IsBusy = true;
         try
         {
-            // جزئیات کامل شامل سوالات — از همان فهرست (سوالات در GET / نیست؛ ویرایش سوالات تنها از طریق بازخوانی JSON ممکن است)
             IsEditing = true;
             _editingId = SelectedSurvey.Id;
             FormTitle = SelectedSurvey.Title;
@@ -226,9 +298,25 @@ public partial class SurveyViewModel : ViewModelBase
                 "Doctor" => TypeOptions[2],
                 _ => TypeOptions[0]
             };
+
+            // ═══ چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک) ═══
+            // «نظرسنجی‌ها طراحی نمی‌شوند، فقط به لیست اضافه می‌شوند» —
+            // ریشه: فرم ویرایش سوالات موجود را از JSON فعلی بارگذاری
+            // نمی‌کرد و هر بار یک سوال پیش‌فرض می‌گذاشت و ذخیره، کل
+            // نظرسنجی را «بازنویسی» می‌کرد. اکنون سوالات موجود با پارسر
+            // مشترک ParseList بارگذاری می‌شوند؛ فقط در نبود/خرابی متن،
+            // سوال پیش‌فرض پیشنهاد می‌شود.
             Questions.Clear();
-            // سوالات موجود از JSON فعلی بارگذاری نمی‌شوند (فیلد در فهرست نیست) — کاربر می‌تواند بازنویسی کند
-            Questions.Add(new SurveyQuestionItem { Text = "میزان رضایت کلی شما از خدمات درمانگاه؟" });
+            var existing = SurveyQuestionItem.ParseList(SelectedSurvey.QuestionsJson);
+            if (existing.Count > 0)
+            {
+                foreach (var q in existing)
+                    Questions.Add(q);
+            }
+            else
+            {
+                Questions.Add(new SurveyQuestionItem { Text = "میزان رضایت کلی شما از خدمات درمانگاه؟" });
+            }
             IsFormOpen = true;
         }
         finally
@@ -432,7 +520,8 @@ public partial class SurveyViewModel : ViewModelBase
         return new SurveyListRow(s.Id, s.Title, s.Description, s.Type,
             s.IsActive, s.IsActive ? "🟢 فعال" : "🔴 غیرفعال",
             s.ResponseCount,
-            s.AverageRating > 0 ? s.AverageRating.ToString("0.##") + " از ۵" : "—");
+            s.AverageRating > 0 ? s.AverageRating.ToString("0.##") + " از ۵" : "—",
+            s.Questions);
     }
 
     /* ─── پاسخ‌های API ─── */
@@ -452,6 +541,8 @@ public partial class SurveyViewModel : ViewModelBase
         public bool IsActive { get; set; }
         public int ResponseCount { get; set; }
         public double AverageRating { get; set; }
+        /// <summary>سوالات JSON — چرخهٔ ۲۸: از GET / فهرست برای طراح ویرایش</summary>
+        public string? Questions { get; set; }
     }
 
     private sealed class SendLinksResponse

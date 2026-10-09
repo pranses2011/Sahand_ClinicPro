@@ -42,7 +42,13 @@ public class SurveysController : ApiBaseController
                 s.SurveyType.ToString(),
                 s.IsActive,
                 s.Responses.Count,
-                s.Responses.Where(r => r.Rating != null).Average(r => (double?)r.Rating!) ?? 0))
+                s.Responses.Where(r => r.Rating != null).Average(r => (double?)r.Rating!) ?? 0,
+                // ═══ چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک) ═══ «نظرسنجی‌ها طراحی
+                // نمی‌شوند، فقط به لیست اضافه می‌شوند» — ریشه: فهرست، سوالات JSON
+                // را برنمی‌گرداند و فرم ویرایش هر بار سوالات را از نو بازنویسی
+                // می‌کرد؛ اکنون متن خام سوالات هم در فهرست می‌آید تا طراح،
+                // سوالات موجود را بارگذاری و ویرایش کند
+                s.Questions))
             .ToListAsync();
         return Ok(ApiResponse<object>.Success(surveys));
     }
@@ -96,6 +102,28 @@ public class SurveysController : ApiBaseController
 
         await _unitOfWork.SaveEntitiesAsync();
         return Ok(ApiResponse<object>.SuccessMessage("نظرسنجی به‌روزرسانی شد"));
+    }
+
+    /// <summary>
+    /// حذف نرم نظرسنجی — چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک): «دکمه‌های عملیاتی
+    /// لیست نظرسنجی ناقص است» — حذف با تأییدیهٔ فارسی خود برنامه در کلاینت؛
+    /// پاسخ‌های ثبت‌شدهٔ نظرسنجی حفظ می‌شوند (حذف نرم ISoftDeletable).
+    /// </summary>
+    [HttpDelete("{id:long}")]
+    [HasPermission("surveys.manage")]
+    public async Task<IActionResult> DeleteSurvey(long id)
+    {
+        var survey = await _unitOfWork.Repository<Survey>().QueryableTracking
+            .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted);
+        if (survey is null)
+            return BadRequest(ApiResponse<object>.Failure("نظرسنجی یافت نشد"));
+
+        // حذف نرم — رکورد و پاسخ‌ها در دیتابیس می‌مانند ولی از فهرست‌ها کنار می‌روند
+        survey.IsDeleted = true;
+        survey.IsActive = false;
+        survey.UpdatedAt = DateTime.UtcNow;
+        await _unitOfWork.SaveEntitiesAsync();
+        return Ok(ApiResponse<object>.SuccessMessage($"نظرسنجی «{survey.Title}» حذف شد"));
     }
 
     /// <summary>فعال/غیرفعال‌سازی نظرسنجی</summary>
@@ -295,7 +323,8 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
             : SurveyType.Satisfaction;
     /// <summary>ردیف نظرسنجی</summary>
     public record SurveyListItemDto(long Id, string Title, string? Description,
-        string Type, bool IsActive, int ResponseCount, double AverageRating);
+        string Type, bool IsActive, int ResponseCount, double AverageRating,
+        string? Questions);
 
     /// <summary>درخواست ایجاد/ویرایش نظرسنجی — سوالات JSON با سازنده پویای کلاینت</summary>
     public record CreateSurveyRequest(string Title, string? Description, string? Questions,

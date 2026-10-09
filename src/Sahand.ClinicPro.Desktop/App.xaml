@@ -163,6 +163,8 @@
             <converters:IconTintMultiConverter x:Key="IconTintMulti" />
             <!-- چرخهٔ بیست‌وهفتم: مبدل مجموعهٔ آیکون‌ها (کلاسیک/مدرن/مینیمال) -->
             <converters:IconSetKindConverter x:Key="IconSetKind" />
+            <!-- چرخهٔ بیست‌وهشتم: مبدل رنگ متمایز هر بیمه در لیست بیماران -->
+            <converters:InsuranceBrushConverter x:Key="InsuranceBrush" />
             <!-- چرخه بیست‌وسوم: مبدل bool → «فعال/غیرفعال» فارسی — ستون وضعیت بیمه/تعرفه -->
             <converters:BoolToFaTextConverter x:Key="BoolToFaText" />
             <converters:CurrencyRialConverter x:Key="CurrencyRial" />

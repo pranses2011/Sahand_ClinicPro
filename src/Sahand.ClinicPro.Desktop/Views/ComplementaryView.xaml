@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
              mc:Ignorable="d"
              d:DesignHeight="640" d:DesignWidth="1100"
              FlowDirection="RightToLeft">
@@ -213,6 +214,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
@@ -266,7 +268,96 @@
                         </StackPanel>
                     </Border>
 
-                    <DataGrid Grid.Row="2" ItemsSource="{Binding Surveys}" SelectedItem="{Binding SelectedSurvey}"
+                    <!-- ═══ طراح سوالات نظرسنجی — چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک) ═══
+                         «نظرسنجی‌ها طراحی نمی‌شوند و فقط به لیست اضافه می‌شوند» —
+                         سازندهٔ پویای سوالات (متن + نوع + گزینه‌ها) با بارگذاری
+                         سوالات موجود نظرسنجی؛ با کلید سطری ✏️ هر ردیف باز می‌شود -->
+                    <Border Grid.Row="2" CornerRadius="10" BorderBrush="#90CAF9" BorderThickness="1.2"
+                            Background="#F5FAFF" Padding="14" Margin="0,0,0,10"
+                            Visibility="{Binding IsSurveyDesignerOpen, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel MaxWidth="820" HorizontalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <materialDesign:PackIcon Kind="PlaylistEdit" Width="20" Height="20" Foreground="#1565C0" VerticalAlignment="Center" />
+                                <TextBlock Text="طراحی سوالات نظرسنجی — سوالات موجود بارگذاری و ویرایش می‌شوند" FontSize="14"
+                                           FontWeight="Bold" Foreground="#1565C0" VerticalAlignment="Center" Margin="8,0,0,0" />
+                            </StackPanel>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="عنوان نظرسنجی"
+                                         Text="{Binding DesignerTitle, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                                <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="توضیح (اختیاری)"
+                                         Text="{Binding DesignerDescription, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                            </Grid>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="210">
+                                <ItemsControl ItemsSource="{Binding DesignerQuestions}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="8" Background="#FFFFFF" BorderBrush="#E3F2FD"
+                                                    BorderThickness="1" Padding="8" Margin="0,0,0,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="2.1*" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="1.4*" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="متن سوال"
+                                                             Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" FontSize="12" />
+                                                    <ComboBox Grid.Column="2" ItemsSource="{x:Static vm:SurveyQuestionItem.TypeOptions}"
+                                                              SelectedItem="{Binding QuestionType}"
+                                                              materialDesign:HintAssist.Hint="نوع" FontSize="12"
+                                                              Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+                                                    <TextBox Grid.Column="4" materialDesign:HintAssist.Hint="گزینه‌ها با | جدا شود"
+                                                             Text="{Binding Choices, UpdateSourceTrigger=PropertyChanged}" FontSize="12">
+                                                        <TextBox.Style>
+                                                            <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding QuestionType}" Value="چندگزینه‌ای">
+                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBox.Style>
+                                                    </TextBox>
+                                                    <Button Grid.Column="6" Command="{Binding DataContext.RemoveDesignerQuestionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource MaterialDesignIconButton}" ToolTip="حذف سوال">
+                                                        <materialDesign:PackIcon Kind="CloseCircleOutline" Width="20" Height="20" Foreground="#C62828" />
+                                                    </Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                            <WrapPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Content="➕ افزودن سوال" Command="{Binding AddDesignerQuestionCommand}"
+                                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#1565C0" Margin="0,0,8,4" />
+                                <Button Command="{Binding SaveSurveyDesignerCommand}"
+                                        Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,4">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                                        <TextBlock Text="💾 ذخیرهٔ نظرسنجی" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Content="بستن طراح" Command="{Binding CancelSurveyDesignerCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,0,4" />
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <DataGrid Grid.Row="3" ItemsSource="{Binding Surveys}" SelectedItem="{Binding SelectedSurvey}"
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                         <DataGrid.Columns>
@@ -283,21 +374,42 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                             <DataGridTextColumn Header="وضعیت" Binding="{Binding ActiveText, Converter={StaticResource PersianDigits}}" Width="90" />
-                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="90">
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="210">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Style="{StaticResource App.RowIconButton}"
-                                                Command="{Binding DataContext.ToggleSurveyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}" ToolTip="فعال/غیرفعال">
-                                            <materialDesign:PackIcon Kind="ToggleSwitch" Width="15" Height="15" />
-                                        </Button>
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- ✏️ طراح سوالات — بارگذاری سوالات موجود و ویرایش (چرخهٔ ۲۸) -->
+                                            <Button Style="{StaticResource App.RowIconButton}"
+                                                    Command="{Binding DataContext.OpenSurveyDesignerCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}" ToolTip="طراحی/ویرایش سوالات">
+                                                <materialDesign:PackIcon Kind="PlaylistEdit" Width="15" Height="15" Foreground="#1565C0" />
+                                            </Button>
+                                            <!-- 📊 نتایج — دیالوگ خلاصه + توزیع ستاره (چرخهٔ ۲۸) -->
+                                            <Button Style="{StaticResource App.RowIconButton}"
+                                                    Command="{Binding DataContext.ShowSurveyResultsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}" ToolTip="نتایج و آمار">
+                                                <materialDesign:PackIcon Kind="ChartBar" Width="15" Height="15" Foreground="#2E7D32" />
+                                            </Button>
+                                            <!-- ⏯ فعال/غیرفعال -->
+                                            <Button Style="{StaticResource App.RowIconButton}"
+                                                    Command="{Binding DataContext.ToggleSurveyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}" ToolTip="فعال/غیرفعال">
+                                                <materialDesign:PackIcon Kind="ToggleSwitch" Width="15" Height="15" Foreground="#F9A825" />
+                                            </Button>
+                                            <!-- 🗑 حذف نرم با تأییدیهٔ فارسی (چرخهٔ ۲۸) -->
+                                            <Button Style="{StaticResource App.RowIconButton}"
+                                                    Command="{Binding DataContext.DeleteSurveyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}" ToolTip="حذف نظرسنجی">
+                                                <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" Foreground="#C62828" />
+                                            </Button>
+                                        </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <TextBlock Grid.Row="3" Text="ارسال: پس از تکمیل ویزیت، لینک نظرسنجی با پیامک برای بیمار ارسال می‌شود"
+                    <TextBlock Grid.Row="4" Text="ارسال: پس از تکمیل ویزیت، لینک نظرسنجی با پیامک برای بیمار ارسال می‌شود"
                                FontSize="10.5" Opacity="0.6" Margin="2,8,0,0" />
                 </Grid>
             </TabItem>

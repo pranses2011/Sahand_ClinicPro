@@ -105,6 +105,9 @@ public partial class SurveyRow : ObservableObject
 
     /// <summary>وضعیت فعال</summary>
     public string ActiveText => IsActive ? "🟢 فعال" : "⚪ غیرفعال";
+
+    /// <summary>متن خام JSON سوالات — برای بارگذاری در طراح ویرایش (چرخهٔ ۲۸)</summary>
+    public string? QuestionsJson { get; init; }
 }
 
 /// <summary>
@@ -175,6 +178,30 @@ public partial class ComplementaryViewModel : ViewModelBase
     /// <summary>توضیح نظرسنجی جدید</summary>
     [ObservableProperty]
     private string? _newSurveyDescription;
+
+    // ═══ چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک) ═══
+    // «نظرسنجی‌ها طراحی نمی‌شوند و فقط به لیست اضافه می‌شوند + دکمه‌های
+    // عملیاتی لیست ناقص است» — طراح سوالات (سازندهٔ پویا) به همین تب
+    // آورده شد؛ سوالات موجود نظرسنجی از JSON بارگذاری و ویرایش می‌شوند
+    // و کلیدهای سطری ویرایش/نتایج/حذف به جدول اضافه شدند.
+
+    /// <summary>آیا طراح سوالات باز است</summary>
+    [ObservableProperty]
+    private bool _isSurveyDesignerOpen;
+
+    /// <summary>شناسهٔ نظرسنجی در حال ویرایش در طراح</summary>
+    private long _designingSurveyId;
+
+    /// <summary>عنوان در طراح سوالات</summary>
+    [ObservableProperty]
+    private string _designerTitle = string.Empty;
+
+    /// <summary>توضیح در طراح سوالات</summary>
+    [ObservableProperty]
+    private string? _designerDescription;
+
+    /// <summary>سوالات طراح — سازندهٔ پویا (همان آیتم صفحهٔ نظرسنجی)</summary>
+    public ObservableCollection<SurveyQuestionItem> DesignerQuestions { get; } = new();
 
     // ═══ چرخهٔ بیست‌وهفتم (گزارش هجدهم مالک) — قالب‌های آمادهٔ نظرسنجی ═══
     // «قالب‌های پیش‌فرض نظرسنجی» — چهار نظرسنجی حرفه‌ای آماده با یک کلیک
@@ -470,7 +497,8 @@ public partial class ComplementaryViewModel : ViewModelBase
                     Description = s.Description,
                     IsActive = s.IsActive,
                     ResponseCount = s.ResponseCount,
-                    AverageRating = s.AverageRating
+                    AverageRating = s.AverageRating,
+                    QuestionsJson = s.Questions
                 }));
         }
         finally
@@ -520,6 +548,118 @@ public partial class ComplementaryViewModel : ViewModelBase
         IsBusy = false;
         if (ok) { _snackbar.Success("وضعیت نظرسنجی تغییر کرد"); await LoadSurveysAsync(); }
         else _snackbar.Error(_api.LastError ?? "عملیات ناموفق بود");
+    }
+
+    /// <summary>
+    /// گشودن طراح سوالات یک نظرسنجی — چرخهٔ بیست‌وهشتم: سوالات موجود از
+    /// JSON فهرست بارگذاری می‌شوند (GET از چرخهٔ ۲۸ سوالات را برمی‌گرداند)
+    /// تا ویرایش واقعی باشد نه بازنویسی از نو.
+    /// </summary>
+    [RelayCommand]
+    private void OpenSurveyDesigner(SurveyRow? row)
+    {
+        row ??= SelectedSurvey;
+        if (row is null) { _snackbar.Error("ابتدا یک نظرسنجی از جدول انتخاب کنید"); return; }
+
+        _designingSurveyId = row.Id;
+        DesignerTitle = row.Title;
+        DesignerDescription = row.Description;
+        DesignerQuestions.Clear();
+        var existing = SurveyQuestionItem.ParseList(row.QuestionsJson);
+        if (existing.Count > 0)
+            foreach (var q in existing)
+                DesignerQuestions.Add(q);
+        else
+            DesignerQuestions.Add(new SurveyQuestionItem { Text = "میزان رضایت کلی شما از خدمات درمانگاه؟" });
+        IsSurveyDesignerOpen = true;
+    }
+
+    /// <summary>افزودن سوال به طراح</summary>
+    [RelayCommand]
+    private void AddDesignerQuestion() => DesignerQuestions.Add(new SurveyQuestionItem());
+
+    /// <summary>حذف سوال از طراح</summary>
+    [RelayCommand]
+    private void RemoveDesignerQuestion(SurveyQuestionItem question) => DesignerQuestions.Remove(question);
+
+    /// <summary>ذخیرهٔ نظرسنجی از طراح — PUT surveys/{id}</summary>
+    [RelayCommand]
+    private async Task SaveSurveyDesignerAsync()
+    {
+        if (string.IsNullOrWhiteSpace(DesignerTitle) || DesignerTitle.Trim().Length < 3)
+        { _snackbar.Error("عنوان نظرسنجی حداقل ۳ کاراکتر است"); return; }
+        if (DesignerQuestions.Count == 0)
+        { _snackbar.Error("حداقل یک سوال اضافه کنید"); return; }
+
+        var questionsJson = "[" + string.Join(",", DesignerQuestions.Select(q => q.ToJson())) + "]";
+        IsBusy = true;
+        var ok = await _api.PutAsync($"surveys/{_designingSurveyId}", new
+        {
+            title = DesignerTitle.Trim(),
+            description = DesignerDescription,
+            questions = questionsJson,
+            isActive = (bool?)null
+        });
+        IsBusy = false;
+        if (ok)
+        {
+            _snackbar.Success("نظرسنجی با سوالات جدید به‌روزرسانی شد");
+            IsSurveyDesignerOpen = false;
+            await LoadSurveysAsync();
+        }
+        else _snackbar.Error(_api.LastError ?? "ذخیرهٔ نظرسنجی ناموفق بود");
+    }
+
+    /// <summary>بستن طراح بدون ذخیره</summary>
+    [RelayCommand]
+    private void CancelSurveyDesigner() => IsSurveyDesignerOpen = false;
+
+    /// <summary>
+    /// حذف نرم نظرسنجی — با تأییدیهٔ فارسی خود برنامه (قانون مالک — نه کادر ویندوز)
+    /// </summary>
+    [RelayCommand]
+    private async Task DeleteSurveyAsync(SurveyRow? row)
+    {
+        row ??= SelectedSurvey;
+        if (row is null) { _snackbar.Error("ابتدا یک نظرسنجی از جدول انتخاب کنید"); return; }
+
+        var confirmed = Views.AppDialog.Confirm(
+            "حذف نظرسنجی",
+            $"نظرسنجی «{row.Title}» حذف شود؟\nپاسخ‌های ثبت‌شده در دیتابیس حفظ می‌شوند.",
+            Views.AppDialogIcon.Warning);
+        if (confirmed != true) return;
+
+        IsBusy = true;
+        var ok = await _api.DeleteAsync($"surveys/{row.Id}");
+        IsBusy = false;
+        if (ok) { _snackbar.Success("نظرسنجی حذف شد"); await LoadSurveysAsync(); }
+        else _snackbar.Error(_api.LastError ?? "حذف ناموفق بود");
+    }
+
+    /// <summary>
+    /// نمایش خلاصهٔ نتایج نظرسنجی — کارت‌های خلاصه + توزیع ستاره‌ها در دیالوگ فارسی
+    /// </summary>
+    [RelayCommand]
+    private async Task ShowSurveyResultsAsync(SurveyRow? row)
+    {
+        row ??= SelectedSurvey;
+        if (row is null) { _snackbar.Error("ابتدا یک نظرسنجی از جدول انتخاب کنید"); return; }
+
+        var response = await _api.GetAsync<SurveyResultsResponse>($"surveys/{row.Id}/results");
+        var r = response?.Data;
+        if (r?.Summary is null)
+        { _snackbar.Error(_api.LastError ?? "دریافت نتایج ناموفق بود"); return; }
+
+        // توزیع ستاره‌ها — خط خوانا از ۵ تا ۱
+        var distText = string.Join("\n", (r.Distribution ?? new List<StarDistributionDto>())
+            .OrderByDescending(d => d.Star)
+            .Select(d => $"ستاره {d.Star}: {d.Count} پاسخ"));
+
+        Views.AppDialog.Info(
+            $"نتایج «{row.Title}»",
+            $"کل پاسخ‌ها: {r.Summary.TotalResponses}\n" +
+            $"میانگین امتیاز: {(r.Summary.AverageRating > 0 ? r.Summary.AverageRating.ToString("0.##") + " از ۵" : "—")}\n" +
+            $"پاسخ‌های ۳۰ روز اخیر: {r.Summary.Last30Days}\n\n{distText}");
     }
 
     /// <summary>
@@ -658,5 +798,33 @@ public partial class ComplementaryViewModel : ViewModelBase
         public bool IsActive { get; set; }
         public int ResponseCount { get; set; }
         public double AverageRating { get; set; }
+        /// <summary>سوالات JSON — چرخهٔ ۲۸: از GET / فهرست برای طراح</summary>
+        public string? Questions { get; set; }
+    }
+
+    /// <summary>پاسخ خلاصهٔ نتایج نظرسنجی — چرخهٔ ۲۸ (دیالوگ نتایج)</summary>
+    private sealed class SurveyResultsResponse
+    {
+        public bool IsSuccess { get; set; }
+        public SurveyResultsData? Data { get; set; }
+    }
+
+    private sealed class SurveyResultsData
+    {
+        public SurveyResultsSummary? Summary { get; set; }
+        public List<StarDistributionDto>? Distribution { get; set; }
+    }
+
+    private sealed class SurveyResultsSummary
+    {
+        public int TotalResponses { get; set; }
+        public double AverageRating { get; set; }
+        public int Last30Days { get; set; }
+    }
+
+    private sealed class StarDistributionDto
+    {
+        public int Star { get; set; }
+        public int Count { get; set; }
     }
 }

@@ -167,30 +167,17 @@
                                     Width="Auto" MinWidth="110"
                                     FontFamily="{DynamicResource App.CodeFont}" />
 
-                <!-- ۶. بیمه — Badge رنگی -->
+                <!-- ۶. بیمه — Badge رنگی ═══ چرخهٔ بیست‌وهشتم (گزارش هجدهم
+                     مالک): «همهٔ بیمه‌ها با یک رنگ نشان داده می‌شوند» — چهار
+                     DataTrigger ثابت فقط بیمه‌های پیش‌فرض را رنگ می‌داد و هر
+                     بیمهٔ سفارشیِ درمانگاه خاکستری می‌ماند؛ اکنون مبدل پالت
+                     پایدار «هر» بیمه را رنگ متمایز می‌دهد (بیمه‌های شناخته‌شده
+                     رنگ همیشگی خودشان، بیمه‌های سفارشی از هش نام) ═══ -->
                 <DataGridTemplateColumn Header="بیمه" Width="Auto" MinWidth="90" SortMemberPath="InsuranceName">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="#ECEFF1" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding InsuranceName, TargetNullValue=آزاد}" Value="تامین اجتماعی">
-                                                <Setter Property="Background" Value="#BBDEFB" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding InsuranceName}" Value="سلامت">
-                                                <Setter Property="Background" Value="#C8E6C9" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding InsuranceName}" Value="نظام وظیفه">
-                                                <Setter Property="Background" Value="#E1BEE7" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding InsuranceName}" Value="نیروهای مسلح">
-                                                <Setter Property="Background" Value="#E1BEE7" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
+                            <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
+                                    Background="{Binding InsuranceName, TargetNullValue=آزاد, Converter={StaticResource InsuranceBrush}}">
                                 <TextBlock Text="{Binding InsuranceName, TargetNullValue=آزاد}"
                                            FontSize="11" />
                             </Border>
