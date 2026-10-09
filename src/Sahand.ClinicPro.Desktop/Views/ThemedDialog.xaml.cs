@@ -136,6 +136,93 @@ public partial class ThemedDialog : Window
         _result = null;
         Close();
     }
+
+    /// <summary>
+    /// نمایش دیالوگ تأیید خروج از برنامه با چک‌باکس گزینه‌ای — چرخهٔ
+    /// بیست‌وهشتم (گزارش هجدهم مالک): «برای خروج از برنامه تأییدیه بگیره و
+    /// در اون تأییدیه چک باکس پشتیبان‌گیری قبل از خروج هم باشه که اگه فعال
+    /// کنیم قبل از خروج پشتیبان بگیره و بعد خارج بشه». همان کارت/آیکون/
+    /// دکمه‌های دیالوگ استاندارد + یک چک‌باکس فارسی میان متن و دکمه‌ها.
+    /// </summary>
+    /// <param name="owner">پنجرهٔ مالک</param>
+    /// <param name="title">عنوان</param>
+    /// <param name="message">متن پیام</param>
+    /// <param name="checkboxText">برچسب چک‌باکس گزینه‌ای</param>
+    /// <returns>تأیید خروج + وضعیت چک‌باکس؛ انصراف = (null, false)</returns>
+    public static (bool? Confirmed, bool OptionChecked) ShowExitConfirm(
+        Window? owner, string title, string message, string checkboxText)
+    {
+        var dialog = new ThemedDialog
+        {
+            Owner = owner ?? (System.Windows.Application.Current?.Windows
+                .OfType<Window>().FirstOrDefault(w => w.IsActive)),
+        };
+        dialog.TitleText.Text = title;
+        dialog.MessageText.Text = message;
+
+        // آیکون هشدار — خروج از برنامه رویداد مهمی است
+        dialog.IconGlyph.Kind = MaterialDesignThemes.Wpf.PackIconKind.ExitToApp;
+        var orange = new SolidColorBrush(Color.FromRgb(0xF5, 0x7C, 0x00));
+        orange.Freeze();
+        dialog.IconCircle.Background = orange;
+
+        // ═══ چک‌باکس گزینه‌ای — میان متن پیام و دکمه‌ها درج می‌شود ═══
+        // والدِ متن همان StackPanel کارت است؛ چک‌باکس بلافاصله پس از متن می‌نشیند
+        var option = new CheckBox
+        {
+            Content = checkboxText,
+            FontSize = 12.5,
+            FontWeight = FontWeights.SemiBold,
+            IsChecked = true, // پیش‌فرض روشن — امنیت داده‌ها در اولویت است
+            Cursor = Cursors.Hand,
+            Margin = new Thickness(0, 0, 0, 16),
+        };
+        if (dialog.MessageText.Parent is StackPanel cardPanel)
+        {
+            var index = cardPanel.Children.IndexOf(dialog.MessageText);
+            cardPanel.Children.Insert(index + 1, option);
+        }
+
+        // دکمه‌ها: خروج (اصلی) + انصراف
+        var panel = dialog.ButtonsPanel;
+        panel.Children.Clear();
+
+        void AddButton(string text, bool? value, bool isPrimary, string? background = null)
+        {
+            var btn = new Button
+            {
+                Content = text,
+                MinWidth = 104,
+                Height = 38,
+                Margin = new Thickness(0, 0, 10, 0),
+                Cursor = Cursors.Hand,
+                FontSize = 13,
+                Style = (Style)dialog.FindResource(isPrimary
+                    ? "MaterialDesignRaisedButton"
+                    : "MaterialDesignOutlinedButton"),
+            };
+            if (background is not null && isPrimary)
+            {
+                var primary = new SolidColorBrush((Color)ColorConverter.ConvertFromString(background));
+                primary.Freeze();
+                btn.Background = primary;
+                btn.BorderBrush = primary;
+            }
+            btn.Click += (_, _) =>
+            {
+                dialog._result = value;
+                dialog.Close();
+            };
+            panel.Children.Add(btn);
+        }
+
+        AddButton("خروج از برنامه", true, isPrimary: true, background: "#C62828");
+        AddButton("انصراف — بازگشت به برنامه", false, isPrimary: false);
+
+        dialog._result = null;
+        dialog.ShowDialog();
+        return (dialog._result, option.IsChecked == true);
+    }
 }
 
 /// <summary>نوع آیکون دیالوگ — رنگ دایره هم مطابق همین ست می‌شود</summary>

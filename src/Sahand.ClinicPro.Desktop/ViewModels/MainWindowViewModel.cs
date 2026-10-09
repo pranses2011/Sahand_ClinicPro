@@ -331,6 +331,10 @@ public partial class MainWindowViewModel : ObservableObject
 
         // ═══ اتصال بلادرنگ SignalR — گام R1 ═══
         // تغییر صف → تازه‌سازی فوری صفحات صف‌دار (پذیرش/ویزیت)
+        // ═══ چرخهٔ بیست‌وهشتم: میزکار پزشک هم به همین جریان وصل شد — «وقتی
+        // بیماری پذیرش می‌شود باید فوری در لیست نشان داده شود در حالی که چند
+        // ثانیه طول می‌کشد تا با تپ قلب بعدی بیاید»؛ تازه‌ساز ۳۰ ثانیه‌ای
+        // میزکار هنوز هست ولی تغییر صف حالا بی‌درنگ همان لحظه می‌نشیند ═══
         _realtime.QueueChanged += async (_, args) =>
         {
             var page = CurrentPage;
@@ -338,6 +342,8 @@ public partial class MainWindowViewModel : ObservableObject
                 await receptions.LoadAsync();
             else if (page is VisitsViewModel visits)
                 await visits.LoadAsync();
+            else if (page is DoctorVisitViewModel doctorVisit)
+                await doctorVisit.LoadAsync();
         };
 
         // اعلان جدید → شمارنده زنگ + پیام شناور
@@ -628,6 +634,56 @@ public partial class MainWindowViewModel : ObservableObject
         OnSessionExpired();
     }
 
+    /// <summary>
+    /// تأیید خروج از برنامه + پشتیبان‌گیری اختیاری — چرخهٔ بیست‌وهشتم
+    /// (گزارش هجدهم مالک): «برای خروج از برنامه تاییدیه بگیره و در اون
+    /// تأییدیه چک باکس پشتیبان‌گیری قبل از خروج هم باشه که اگه فعال کنیم
+    /// قبل از خروج پشتیبان بگیره و بعد خارج بشه».
+    /// دیالوگ فارسی خود برنامه (قانون مالک — نه کادر ویندوز) نمایش داده
+    /// می‌شود؛ اگر چک‌باکس روشن باشد، پیش از بستن، پشتیبان کامل ZIP از
+    /// سرور گرفته می‌شود. شکست پشتیبان خروج را نمی‌بندد — انتخاب ادامه
+    /// با کاربر است (داده‌ها سمت سرور امن‌اند).
+    /// </summary>
+    /// <returns>true = ادامهٔ خروج مجاز است</returns>
+    public async Task<bool> ConfirmExitAsync()
+    {
+        var (confirmed, backupRequested) = Views.ThemedDialog.ShowExitConfirm(
+            null,
+            "خروج از برنامه",
+            "آیا از خروج کامل از سامانه اطمینان دارید؟\n" +
+            "برای امنیت داده‌ها می‌توانید پیش از خروج یک نسخهٔ پشتیبان کامل تهیه کنید.",
+            "پیش از خروج، پشتیبان‌گیری کامل تهیه شود");
+
+        if (confirmed != true)
+            return false;
+
+        if (backupRequested)
+        {
+            // اجرای پشتیبان کامل روی سرور — همان دکمهٔ صفحهٔ پشتیبان‌گیری
+            var ok = await _api.PostAsync("backup/run", new { });
+            if (ok)
+            {
+                Views.AppDialog.Success(
+                    "پشتیبان‌گیری کامل شد",
+                    "نسخهٔ پشتیبان کامل (ZIP) با نام شمسی در پوشهٔ پشتیبان ذخیره شد.\nخروج ادامه می‌یابد — خداحافظ!");
+            }
+            else
+            {
+                // شکست پشتیبان (مثلاً نبود مجوز) — ادامه با انتخاب کاربر
+                var proceed = Views.AppDialog.Confirm(
+                    "پشتیبان‌گیری ناموفق بود",
+                    $"پشتیبان‌گیری انجام نشد: {_api.LastError ?? "خطای ناشناخته"}\n\nادامهٔ خروج بدون پشتیبان‌گیری؟",
+                    Views.AppDialogIcon.Warning);
+                if (proceed != true)
+                    return false;
+            }
+        }
+
+        // قطع اتصال بلادرنگ پیش از خروج — نشست تمیز بسته می‌شود
+        await _realtime.StopAsync();
+        return true;
+    }
+
     /// <summary>تغییر تم روشن و تیره</summary>
     [RelayCommand]
     private void ToggleTheme() => _theme.ToggleTheme();
@@ -645,7 +701,12 @@ public partial class MainWindowViewModel : ObservableObject
             var oldWindow = System.Windows.Application.Current.MainWindow;
             System.Windows.Application.Current.MainWindow = login;
             login.Show();
-            oldWindow?.Close();
+            // بستن پنجرهٔ قدیمی بدون تأییدیهٔ خروج — این مسیر «خروج از حساب»
+            // است نه خروج از برنامه؛ چرخهٔ ۲۸ (توضیح کامل در MainWindow.CloseForLoginSwitch)
+            if (oldWindow is MainWindow mainWindow)
+                mainWindow.CloseForLoginSwitch();
+            else
+                oldWindow?.Close();
         });
     }
 }
