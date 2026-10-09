@@ -112,6 +112,24 @@ public partial class ParaclinicalViewModel : ViewModelBase
     /// <summary>گزینه‌های دید رنگی</summary>
     public string[] ColorVisionOptions { get; } = { "طبیعی", "کاهش نسبی", "کانونی", "آتروفی عصبی" };
 
+    /* ── تب دندانپزشکی — بیمار و ماندگاری چارت (چرخهٔ ۲۸) ── */
+    [ObservableProperty] private string _dentalPatientSearch = string.Empty;
+    [ObservableProperty] private QuickPatient? _dentalPatient;
+
+    /// <summary>اطلاعات آخرین ذخیرهٔ چارت — «آخرین ذخیره: ۱۴۰۴/۰۷/۱۲» یا راهنما</summary>
+    [ObservableProperty]
+    private string _dentalChartInfo = "بیمار را جستجو کنید تا چارت ذخیره‌شدهٔ او بارگذاری شود";
+
+    /* ── تب چشم — بیمار و سابقه (چرخهٔ ۲۸) ── */
+    [ObservableProperty] private string _eyePatientSearch = string.Empty;
+    [ObservableProperty] private QuickPatient? _eyePatient;
+
+    /// <summary>سابقهٔ معاینه‌های چشم بیمار منتخب — ۲۰ مورد آخر</summary>
+    public ObservableCollection<EyeExamRow> EyeHistory { get; } = new();
+
+    /// <summary>ردیف سابقهٔ معاینهٔ چشم — نمایش خوانا در فهرست</summary>
+    public record EyeExamRow(string DateShamsi, string OdSummary, string OsSummary, string? Findings);
+
     /* ── تب فیزیوتراپی ── */
     public ObservableCollection<string> Techniques { get; } = new()
         { "الکتروتراپی (TENS)", "اولتراسوند", "لیزر درمانی", "تمرینات درمانی", "ماساژ", "هیدروتراپی", "طب سوزنی" };
@@ -200,6 +218,101 @@ public partial class ParaclinicalViewModel : ViewModelBase
             price, "پیشنهاد", "#FFF3E0"));
     }
 
+    /// <summary>
+    /// جستجوی بیمار تب دندانپزشکی — چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک):
+    /// «در دندانپزشکی نمی‌شود بیمار را انتخاب کرد و مشخص نیست اطلاعات برای
+    /// چه کسی ذخیره می‌شود». با انتخاب بیمار، آخرین چارت ذخیره‌شدهٔ او
+    /// خودکار بارگذاری می‌شود تا ادامهٔ همان پرونده باشد.
+    /// </summary>
+    [RelayCommand]
+    private async Task SearchDentalPatientAsync()
+        => await SearchPatientGenericAsync(t =>
+        {
+            DentalPatient = t;
+            _ = LoadDentalChartAsync();
+        }, DentalPatientSearch);
+
+    /// <summary>
+    /// بازیابی آخرین چارت دندان و طرح درمان بیمار — GET dental/chart
+    /// </summary>
+    private async Task LoadDentalChartAsync()
+    {
+        DentalPlan.Clear();
+        if (DentalPatient is null) return;
+        var response = await _api.GetAsync<DentalChartResponse>(
+            $"dental/chart?patientId={DentalPatient.Id}");
+        var chart = response?.Data;
+        if (chart is null)
+        {
+            DentalChartInfo = "بازیابی چارت ناموفق بود — می‌توانید چارت تازه ذخیره کنید";
+            return;
+        }
+
+        // اعمال وضعیت دندان‌ها از نقشهٔ ذخیره‌شده — هر ۳۲ دندان
+        foreach (var tooth in UpperTeeth.Concat(LowerTeeth))
+            if (chart.Teeth is not null && chart.Teeth.TryGetValue(tooth.Number.ToString(), out var cond))
+                tooth.Condition = cond;
+
+        // ردیف‌های طرح درمان ذخیره‌شده
+        if (chart.Rows is not null)
+            foreach (var r in chart.Rows)
+                DentalPlan.Add(new DentalPlanRow(r.Tooth, r.Procedure ?? "—", r.Price,
+                    r.Status ?? "پیشنهاد", "#FFF3E0"));
+
+        DentalChartInfo = string.IsNullOrWhiteSpace(chart.CreatedDateShamsi)
+            ? "چارتی برای این بیمار ثبت نشده — نخستین ثبت"
+            : $"آخرین ذخیرهٔ چارت: {chart.CreatedDateShamsi}";
+    }
+
+    /// <summary>
+    /// ذخیرهٔ چارت کامل + طرح درمان برای بیمار منتخب — POST dental/plans؛
+    /// وضعیت هر ۳۲ دندان و ردیف‌های طرح به‌صورت JSON در PlanDetails طرح
+    /// درمان ذخیره می‌شود و با هر بار بازیابی، چارت همان وضعیت را برمی‌گرداند.
+    /// </summary>
+    [RelayCommand]
+    private async Task SaveDentalChartAsync()
+    {
+        if (DentalPatient is null)
+        { _snackbar.Error("ابتدا بیمار را جستجو کنید — چارت باید به پروندهٔ یک بیمار وصل باشد"); return; }
+
+        // نقشهٔ وضعیت همهٔ دندان‌ها — اعداد کلیدی؛ وضعیت صفر هم ذخیره می‌شود تا
+        // بازیابی، تصویر کامل چارت (و نه فقط تغییرات) را بازسازی کند
+        var teeth = UpperTeeth.Concat(LowerTeeth)
+            .ToDictionary(t => t.Number.ToString(), t => t.Condition);
+
+        // ردیف‌های طرح درمان — متن/قیمت/وضعیت
+        var rows = DentalPlan.Select(r => new { tooth = r.Tooth, procedure = r.Procedure, price = r.Price, status = r.StatusText })
+            .ToList();
+
+        var planDetails = System.Text.Json.JsonSerializer.Serialize(new { teeth, rows });
+        var ok = await _api.PostAsync("dental/plans", new
+        {
+            patientId = DentalPatient.Id,
+            dentistId = (long?)null,
+            totalCost = DentalPlan.Sum(r => r.Price),
+            estimatedSessions = DentalPlan.Count,
+            planDetails
+        });
+        if (ok)
+        {
+            _snackbar.Success($"چارت و طرح درمان برای «{DentalPatient.FullName}» ذخیره شد");
+            DentalChartInfo = $"آخرین ذخیرهٔ چارت: {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(System.DateTime.Now)}";
+        }
+        else _snackbar.Error(_api.LastError ?? "ذخیرهٔ چارت ناموفق بود");
+    }
+
+    /// <summary>پاک‌کردن بیمار دندانپزشکی — چارت تازه برای بیمار بعدی</summary>
+    [RelayCommand]
+    private void ClearDentalPatient()
+    {
+        DentalPatient = null;
+        DentalPatientSearch = string.Empty;
+        DentalPlan.Clear();
+        foreach (var t in UpperTeeth.Concat(LowerTeeth)) t.Condition = 0;
+        SelectedTooth = null;
+        DentalChartInfo = "بیمار را جستجو کنید تا چارت ذخیره‌شدهٔ او بارگذاری شود";
+    }
+
     /// <summary>جستجوی بیمار فیزیوتراپی</summary>
     [RelayCommand]
     private async Task SearchPhysioPatientAsync() => await SearchPatientGenericAsync(t => PhysioPatient = t, PhysioPatientSearch);
@@ -266,23 +379,100 @@ public partial class ParaclinicalViewModel : ViewModelBase
         else _snackbar.Error(_api.LastError ?? "ثبت درخواست ناموفق بود");
     }
 
-    /// <summary>ذخیره معاینه چشم</summary>
+    /// <summary>
+    /// جستجوی بیمار تب چشم — چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک): پیش‌تر
+    /// فرم چشم بیمارِ خودش را نداشت و باید بیمار در تب فیزیوتراپی/تصویربرداری
+    /// جستجو می‌شد! اکنون تب چشم بیمار مستقل خودش را دارد و با انتخاب،
+    /// آخرین معاینه + سابقه در فرم بارگذاری می‌شود.
+    /// </summary>
+    [RelayCommand]
+    private async Task SearchEyePatientAsync()
+        => await SearchPatientGenericAsync(t =>
+        {
+            EyePatient = t;
+            _ = LoadEyeHistoryAsync();
+        }, EyePatientSearch);
+
+    /// <summary>بازیابی آخرین معاینهٔ چشم بیمار + سابقه — GET eye/exams</summary>
+    private async Task LoadEyeHistoryAsync()
+    {
+        EyeHistory.Clear();
+        if (EyePatient is null) return;
+        var response = await _api.GetAsync<EyeExamsResponse>($"eye/exams?patientId={EyePatient.Id}");
+        var exams = response?.Data;
+        if (exams is null || exams.Count == 0) return;
+
+        // آخرین معاینه → پر کردن فرم برای ادامهٔ پرونده
+        var last = exams[0];
+        OdSphere = last.Od?.Sphere?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        OdCylinder = last.Od?.Cylinder?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        OdAxis = last.Od?.Axis?.ToString();
+        OsSphere = last.Os?.Sphere?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        OsCylinder = last.Os?.Cylinder?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        OsAxis = last.Os?.Axis?.ToString();
+        OdIop = last.Od?.Iop?.ToString();
+        OsIop = last.Os?.Iop?.ToString();
+        Pd = last.Pd?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        EyeFindings = last.Findings;
+        if (last.Od?.Acuity is { } odAcuity && VisionOptions.Contains(odAcuity))
+            OdVisionIndex = Array.IndexOf(VisionOptions, odAcuity);
+        if (last.Os?.Acuity is { } osAcuity && VisionOptions.Contains(osAcuity))
+            OsVisionIndex = Array.IndexOf(VisionOptions, osAcuity);
+        if (last.ColorVision is { } cv && ColorVisionOptions.Contains(cv))
+            ColorVisionIndex = Array.IndexOf(ColorVisionOptions, cv);
+
+        // سابقه — نمایش خوانا برای مرور روند درمان
+        foreach (var e in exams)
+            EyeHistory.Add(new EyeExamRow(
+                e.DateShamsi ?? "—",
+                e.Od is null ? "—" : $"S {e.Od.Sphere} / C {e.Od.Cylinder} / IOP {e.Od.Iop?.ToString() ?? "—"}",
+                e.Os is null ? "—" : $"S {e.Os.Sphere} / C {e.Os.Cylinder} / IOP {e.Os.Iop?.ToString() ?? "—"}",
+                e.Findings));
+    }
+
+    /// <summary>پاک‌کردن بیمار چشم و سابقه — بیمار بعدی</summary>
+    [RelayCommand]
+    private void ClearEyePatient()
+    {
+        EyePatient = null;
+        EyePatientSearch = string.Empty;
+        EyeHistory.Clear();
+    }
+
+    /// <summary>
+    /// ذخیرهٔ معاینه چشم — چرخهٔ بیست‌وهشتم: بیمار تب چشم (یا به‌عنوان
+    /// جایگزین، بیمار تب‌های دیگر — سازگاری با رفتار پیشین) + ارسال همهٔ
+    /// اندازه‌ها شامل IOP و PD و حدت بینایی و دید رنگی که پیش‌تر در binding
+    /// سرور دور ریخته می‌شدند.
+    /// </summary>
     [RelayCommand]
     private async Task SaveEyeExamAsync()
     {
-        if (PhysioPatient is null && ImagingPatient is null)
-        { _snackbar.Error("ابتدا بیمار را در یکی از تب‌ها جستجو کنید"); return; }
-        var patientId = PhysioPatient?.Id ?? ImagingPatient!.Id;
+        var patient = EyePatient ?? PhysioPatient ?? ImagingPatient;
+        if (patient is null)
+        { _snackbar.Error("ابتدا بیمار را در همین تب جستجو کنید"); return; }
+
+        // پارس امن IOP و PD — ورودی خالی = تهی (ثبت نمی‌شود)
+        int? TryInt(string? s) => int.TryParse(s?.Trim(), out var v) ? v : null;
+        decimal? TryDec(string? s) => decimal.TryParse(s?.Trim(), System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : null;
+
         var ok = await _api.PostAsync("eye/exams", new
         {
-            patientId,
-            odSphere = OdSphere, odCylinder = OdCylinder, odAxis = OdAxis, odAdd = OdAdd,
-            osSphere = OsSphere, osCylinder = OsCylinder, osAxis = OsAxis, osAdd = OsAdd,
-            iopOd = OdIop, iopOs = OsIop,
-            pupillaryDistance = Pd,
-            findings = EyeFindings
+            patientId = patient.Id,
+            odSphere = TryDec(OdSphere), odCylinder = TryDec(OdCylinder), odAxis = TryInt(OdAxis),
+            osSphere = TryDec(OsSphere), osCylinder = TryDec(OsCylinder), osAxis = TryInt(OsAxis),
+            rightIop = TryInt(OdIop), leftIop = TryInt(OsIop),
+            rightVisualAcuity = VisionOptions.ElementAtOrDefault(OdVisionIndex),
+            leftVisualAcuity = VisionOptions.ElementAtOrDefault(OsVisionIndex),
+            pupilDistance = TryDec(Pd),
+            colorVision = ColorVisionOptions.ElementAtOrDefault(ColorVisionIndex),
+            findings = EyeFindings,
+            // تجویز عینک — از مقادیر Add (نزدیک‌بین) ساخته می‌شود
+            eyewearPrescription = (string.IsNullOrWhiteSpace(OdAdd) && string.IsNullOrWhiteSpace(OsAdd))
+                ? null
+                : $"Add OD {OdAdd} / OS {OsAdd} — PD {Pd}"
         });
-        if (ok) _snackbar.Success("معاینه چشم ثبت شد");
+        if (ok) _snackbar.Success($"معاینهٔ چشم برای «{patient.FullName}» ثبت شد");
         else _snackbar.Error(_api.LastError ?? "ثبت معاینه ناموفق بود");
     }
 
@@ -509,5 +699,60 @@ public partial class ParaclinicalViewModel : ViewModelBase
     {
         public long FileId { get; set; }
         public bool IsDicom { get; set; }
+    }
+
+    // ── مدل‌های پاسخ چارت دندان و معاینهٔ چشم — چرخهٔ بیست‌وهشتم ──
+
+    /// <summary>پاسخ GET dental/chart — وضعیت دندان‌ها + ردیف‌های طرح</summary>
+    private sealed class DentalChartResponse
+    {
+        public DentalChartData? Data { get; set; }
+    }
+
+    private sealed class DentalChartData
+    {
+        public long? PlanId { get; set; }
+        public string? CreatedDateShamsi { get; set; }
+        /// <summary>نقشهٔ شمارهٔ دندان → وضعیت (۰ سالم تا ۶ ایمپلنت)</summary>
+        public Dictionary<string, int>? Teeth { get; set; }
+        public List<DentalPlanRowDto>? Rows { get; set; }
+        public string? Note { get; set; }
+    }
+
+    private sealed class DentalPlanRowDto
+    {
+        public int Tooth { get; set; }
+        public string? Procedure { get; set; }
+        public decimal Price { get; set; }
+        public string? Status { get; set; }
+    }
+
+    /// <summary>پاسخ GET eye/exams — سابقهٔ معاینه‌های چشم بیمار</summary>
+    private sealed class EyeExamsResponse
+    {
+        public List<EyeExamDto>? Data { get; set; }
+    }
+
+    private sealed class EyeExamDto
+    {
+        public long Id { get; set; }
+        public string? DateShamsi { get; set; }
+        public long? VisitId { get; set; }
+        public EyeSideDto? Od { get; set; }
+        public EyeSideDto? Os { get; set; }
+        public decimal? Pd { get; set; }
+        public string? ColorVision { get; set; }
+        public string? Findings { get; set; }
+        public string? EyewearPrescription { get; set; }
+    }
+
+    /// <summary>اندازه‌های یک چشم (OD راست / OS چپ)</summary>
+    private sealed class EyeSideDto
+    {
+        public decimal? Sphere { get; set; }
+        public decimal? Cylinder { get; set; }
+        public int? Axis { get; set; }
+        public string? Acuity { get; set; }
+        public int? Iop { get; set; }
     }
 }

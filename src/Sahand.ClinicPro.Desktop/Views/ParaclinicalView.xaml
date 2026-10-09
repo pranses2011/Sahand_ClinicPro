@@ -24,14 +24,69 @@
             <!-- ═══ تب دندانپزشکی ═══ -->
             <TabItem Header="🦷 دندانپزشکی">
                 <Grid Margin="4,8">
+                    <Grid.RowDefinitions>
+                        <!-- نوار بیمار دندانپزشکی — چرخهٔ ۲۸ -->
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="10" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2.6*" />
                         <ColumnDefinition Width="12" />
                         <ColumnDefinition Width="1*" />
                     </Grid.ColumnDefinitions>
 
+                    <!-- ═══ نوار بیمار تب دندانپزشکی — چرخهٔ بیست‌وهشتم (گزارش هجدهم
+                         مالک): «نمی‌شود بیمار را انتخاب کرد و مشخص نیست اطلاعات
+                         برای چه کسی ذخیره می‌شود» — چارت و طرح درمان اکنون به
+                         پروندهٔ همین بیمار وصل است و با جستجو، آخرین چارتِ ذخیره‌شده
+                         خودکار بازیابی می‌شود ═══ -->
+                    <Grid Grid.Row="0" Grid.ColumnSpan="3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2.4*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" Text="{Binding DentalPatientSearch, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="🔍 بیمار دندانپزشکی — کد ملی / موبایل / نام">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding SearchDentalPatientCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
+                        <Button Grid.Column="1" Command="{Binding SearchDentalPatientCommand}" Margin="8,0,0,0"
+                                Style="{StaticResource MaterialDesignRaisedButton}" Padding="12,4">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Magnify" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="جستجو" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <!-- کارت بیمار منتخب — محل ذخیره‌شدن داده‌ها همین پرونده است -->
+                        <Border Grid.Column="2" Background="#E8F5E9" BorderBrush="#A5D6A7" BorderThickness="1"
+                                CornerRadius="8" Padding="10,5" Margin="8,0,8,0"
+                                Visibility="{Binding DentalPatient, Converter={StaticResource NullToVisibility}}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="AccountCheck" Width="16" Height="16" Foreground="#2E7D32" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding DentalPatient.FullName, Mode=OneWay}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0" />
+                                <TextBlock Text="{Binding DentalPatient.NationalCode, Mode=OneWay}" Opacity="0.7" FontSize="11"
+                                           VerticalAlignment="Center" Margin="10,0,0,0" />
+                                <TextBlock Text="{Binding DentalPatient.Allergies, Mode=OneWay, TargetNullValue='', FallbackValue=''}" Foreground="#C62828"
+                                           FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0"
+                                           Visibility="{Binding DentalPatient.Allergies, Converter={StaticResource StringToVisibility}}" />
+                            </StackPanel>
+                        </Border>
+                        <Button Grid.Column="3" Command="{Binding ClearDentalPatientCommand}"
+                                Style="{StaticResource MaterialDesignFlatButton}" Padding="8,4" ToolTip="بستن پرونده و بیمار بعدی"
+                                Visibility="{Binding DentalPatient, Converter={StaticResource NullToVisibility}}">
+                            <materialDesign:PackIcon Kind="CloseCircleOutline" Width="18" Height="18" Foreground="#C62828" />
+                        </Button>
+                    </Grid>
+                    <!-- راهنمای وضعیت ذخیره/بازیابی چارت — پاسخ «از کجا بازیابی می‌شود؟» -->
+                    <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Text="{Binding DentalChartInfo, Mode=OneWay}"
+                               FontSize="10.5" Opacity="0.65" VerticalAlignment="Center" />
+
                     <!-- چارت FDI -->
-                    <Border Grid.Column="0" CornerRadius="12" Padding="12"
+                    <Border Grid.Row="2" Grid.Column="0" CornerRadius="12" Padding="12"
                             Background="{DynamicResource MaterialDesign.Brush.Background}">
                         <StackPanel>
                             <TextBlock Text="ماگزیلا (فک بالا)" FontWeight="Bold" FontSize="12.5" Margin="2,0,2,6" />
@@ -109,10 +164,11 @@
                     </Border>
 
                     <!-- جزئیات و طرح درمان -->
-                    <Grid Grid.Column="2">
+                    <Grid Grid.Row="2" Grid.Column="2">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <Border Grid.Row="0" CornerRadius="12" Padding="12" Margin="0,0,0,8"
                                 Background="{DynamicResource MaterialDesign.Brush.Background}">
@@ -157,6 +213,20 @@
                                 </ScrollViewer>
                             </DockPanel>
                         </Border>
+
+                        <!-- ═══ ذخیرهٔ چارت و طرح درمان در پروندهٔ بیمار — چرخهٔ ۲۸ ═══
+                             وضعیت هر ۳۲ دندان + ردیف‌های طرح، در طرح درمان بیمارِ
+                             جستجوشده ذخیره می‌شود و دفعهٔ بعد با جستجوی همان بیمار
+                             بازیابی می‌گردد -->
+                        <Button Grid.Row="2" Command="{Binding SaveDentalChartCommand}" Margin="0,8,0,0"
+                                Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32"
+                                HorizontalAlignment="Stretch"
+                                ToolTip="وضعیت همهٔ دندان‌ها و ردیف‌های طرح درمان در پروندهٔ بیمار ذخیره می‌شود">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ContentSave" Width="16" Height="16" VerticalAlignment="Center" />
+                                <TextBlock Text="💾 ذخیرهٔ چارت و طرح درمان" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                     </Grid>
                 </Grid>
             </TabItem>
@@ -165,6 +235,48 @@
             <TabItem Header="👁️ چشم‌پزشکی">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8">
                     <StackPanel>
+                        <!-- ═══ نوار بیمار تب چشم — چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک):
+                             پیش‌تر این تب بیمار خودش را نداشت و باید بیمار در تب
+                             فیزیوتراپی/تصویربرداری جستجو می‌شد؛ اکنون معاینه و سابقه
+                             به پروندهٔ همین بیمار وصل است ═══ -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2.4*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" Text="{Binding EyePatientSearch, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="🔍 بیمار چشم‌پزشکی — کد ملی / موبایل / نام">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding SearchEyePatientCommand}" />
+                                </TextBox.InputBindings>
+                            </TextBox>
+                            <Button Grid.Column="1" Command="{Binding SearchEyePatientCommand}" Margin="8,0,0,0"
+                                    Style="{StaticResource MaterialDesignRaisedButton}" Padding="12,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Magnify" Width="15" Height="15" VerticalAlignment="Center" />
+                                    <TextBlock Text="جستجو" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <!-- کارت بیمار — معاینه در پروندهٔ همین بیمار ثبت می‌شود -->
+                            <Border Grid.Column="2" Background="#E8F5E9" BorderBrush="#A5D6A7" BorderThickness="1"
+                                    CornerRadius="8" Padding="10,5" Margin="8,0,8,0"
+                                    Visibility="{Binding EyePatient, Converter={StaticResource NullToVisibility}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="AccountCheck" Width="16" Height="16" Foreground="#2E7D32" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding EyePatient.FullName, Mode=OneWay}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0" />
+                                    <TextBlock Text="{Binding EyePatient.NationalCode, Mode=OneWay}" Opacity="0.7" FontSize="11"
+                                               VerticalAlignment="Center" Margin="10,0,0,0" />
+                                </StackPanel>
+                            </Border>
+                            <Button Grid.Column="3" Command="{Binding ClearEyePatientCommand}"
+                                    Style="{StaticResource MaterialDesignFlatButton}" Padding="8,4" ToolTip="بستن پرونده و بیمار بعدی"
+                                    Visibility="{Binding EyePatient, Converter={StaticResource NullToVisibility}}">
+                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="18" Height="18" Foreground="#C62828" />
+                            </Button>
+                        </Grid>
+
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -235,9 +347,52 @@
                                 Style="{StaticResource MaterialDesignRaisedButton}">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                                <TextBlock Text="💾 ذخیره معاینه چشم" Margin="8,0,0,0" />
+                                <TextBlock Text="💾 ذخیره معاینهٔ چشم در پروندهٔ بیمار" Margin="8,0,0,0" />
                             </StackPanel>
                         </Button>
+
+                        <!-- ═══ سابقهٔ معاینه‌های چشم بیمار منتخب — چرخهٔ ۲۸ ═══
+                             با انتخاب بیمار، ۲۰ معاینهٔ آخر او از پرونده خوانده می‌شود؛
+                             آخرین معاینه در فرم می‌نشیند و بقیه برای مرور روند درمان است -->
+                        <Border CornerRadius="12" BorderBrush="#B39DDB" BorderThickness="1" Padding="12" Margin="0,14,0,0"
+                                Background="#F3E5F5"
+                                Visibility="{Binding EyePatient, Converter={StaticResource NullToVisibility}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <materialDesign:PackIcon Kind="History" Width="18" Height="18" Foreground="#5E35B1" VerticalAlignment="Center" />
+                                    <TextBlock Text="سابقهٔ معاینه‌های چشم (۲۰ مورد آخر — از پروندهٔ بیمار)" FontSize="13"
+                                               FontWeight="Bold" VerticalAlignment="Center" Margin="8,0,0,0" />
+                                </StackPanel>
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="170">
+                                    <ItemsControl ItemsSource="{Binding EyeHistory}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border CornerRadius="8" Background="#FFFFFF" Padding="9,6" Margin="0,0,0,5">
+                                                    <StackPanel>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="{Binding DateShamsi, Mode=OneWay}" FontWeight="SemiBold"
+                                                                       FontFamily="{DynamicResource App.CodeFont}" VerticalAlignment="Center" />
+                                                            <TextBlock Grid.Column="1" HorizontalAlignment="Left" FontSize="10.5" Opacity="0.8"
+                                                                       VerticalAlignment="Center" Margin="14,0,0,0">
+                                                                <Run Text="OD: " /><Run Text="{Binding OdSummary, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
+                                                                <Run Text="   OS: " /><Run Text="{Binding OsSummary, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
+                                                            </TextBlock>
+                                                        </Grid>
+                                                        <TextBlock Text="{Binding Findings, Mode=OneWay, TargetNullValue=''}" FontSize="10.5" Opacity="0.7"
+                                                                   TextWrapping="Wrap" Margin="0,3,0,0"
+                                                                   Visibility="{Binding Findings, Converter={StaticResource StringToVisibility}}" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
