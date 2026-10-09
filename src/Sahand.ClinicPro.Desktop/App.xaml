@@ -81,6 +81,23 @@
                 <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
                 <!-- آیکون رسمی محصول — روی همه پنجره‌های برنامه (نوار عنوان و Taskbar) -->
                 <Setter Property="Icon" Value="/Assets/appicon.ico" />
+                <!-- ═══ چرخهٔ سی‌ودوم (گزارش مالک) — عنوان شناور همهٔ فیلدهای فرم ═══
+                     «در فرم‌ها عنوان فیلدها وجود ندارد و فقط داخل خود فیلدها حالت
+                     نمایشی دارد؛ وقتی فیلدی پر بشود نمی‌شود تشخیص داد عنوانش چیست.
+                     همشون رو مانند کادر کد ملی بکن که هنگام پر شدن عنوانش بره بالاش»
+                     ریشه: فیلد کد ملی با استایل MaterialDesignOutlinedTextBox ساخته
+                     شده که در MaterialDesignThemes 5.3.2 بر پایهٔ FloatingHint است
+                     (عنوان هنگام پر شدن به بالای کادر می‌رود) ولی بقیهٔ فیلدها با
+                     استایل پیش‌فرض filled ساخته می‌شوند که Hint فقط به‌صورت placeholder
+                     داخل کادر است و با تایپ کاربر برای همیشه ناپدید می‌شود.
+                     راه‌حل: خاصیت ضمیمهٔ HintAssist.IsFloating با FrameworkProperty-
+                     MetadataOptions.Inherits ثبت شده است — یک‌بار روی استایل پنجره
+                     تنظیم می‌شود و «همهٔ» TextBox/ComboBox/PasswordBox در «همهٔ»
+                     فرم‌ها و پنجره‌های برنامه ارث می‌برند: عنوان هر فیلدی هنگام
+                     فوکوس یا پر شدن به بالای کادر شناور می‌شود (رفتار Material
+                     استاندارد). انتخابگر تاریخ/ساعت برنامه هم داخلش TextBox با Hint
+                     دارد و همین‌طور شناور می‌شود. -->
+                <Setter Property="materialDesign:HintAssist.IsFloating" Value="True" />
             </Style>
 
             <!-- سبک کارت‌های MaterialDesign — گوشه و پدینگ از تم فعال
