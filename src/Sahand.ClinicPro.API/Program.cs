@@ -14,7 +14,19 @@ using Sahand.ClinicPro.Infrastructure;
 using Sahand.ClinicPro.Infrastructure.Identity;
 using Serilog;
 
-// ═══════════════════════════════════════════════════════════════════
+// ═══ چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک) — «حروف فارسی لاگ کنسول جدا از هم ═══
+// نمایش داده می‌شوند و خوانا نیست»: پس از اصلاح کدپیج UTF-8 (چرخهٔ ۲۶)،
+// نویسه‌ها سالم چاپ می‌شوند ولی کنسول قدیمی ویندوز (conhost) با فونت‌های
+// رستری/بدون شکل‌دهی عربی، حروف فارسی را «جدا از هم» (بدون اتصال) رسم
+// می‌کند. راه‌حل: در راه‌اندازی، فونت کنسول به یک فونت TrueType دارای
+// گلیف عربی (Courier New — در همهٔ ویندوزها موجود) تنظیم می‌شود؛ conhost
+// با فونت TrueType از شکل‌دهی GDI/Uniscribe پشتیبانی می‌کند و متن فارسی
+// متصل و خوانا می‌شود. در ترمینال مدرن (Windows Terminal) فونت خودکار
+// انتخاب می‌شود و این تنظیم بی‌اثر و بی‌خطر است؛ خطای هر مرحله بی‌صدا
+// بلعیده می‌شود تا اجرای سرویس/لینوکس مختل نشود. راه مطالعهٔ مطمئن لاگ:
+// فایل‌های UTF-8 روزانه در پوشهٔ Logs کنار API (چرخهٔ ۲۶).
+// پیاده‌سازی P/Invoke در «partial class Program» انتهای همین فایل است.
+
 // نقطه ورود API سامانه جامع مدیریت درمانگاه سهند (Sahand ClinicPro)
 // گام‌های ۱ تا ۹: Serilog، Swagger، DI کامل، Identity، میدلورها، Rate Limit
 // ═══════════════════════════════════════════════════════════════════
@@ -34,6 +46,8 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     Console.OutputEncoding = System.Text.Encoding.UTF8;
+    // چرخهٔ ۲۸ — فونت TrueType شکل‌دهنده (حروف متصل) پس از کدپیج UTF-8
+    TrySetPersianCapableConsoleFont();
 }
 catch
 {
@@ -339,4 +353,75 @@ finally
 /// <summary>
 /// نشانگر کلاس Program برای تست‌های یکپارچگی WebApplicationFactory
 /// </summary>
-public partial class Program { }
+public partial class Program
+{
+    // ═══ چرخهٔ بیست‌وهشتم — فونت TrueType شکل‌دهندهٔ فارسی برای کنسول ویندوز ═══
+    // توضیح کامل ریشه/راه‌حل در سربرگ ابتدای همین فایل.
+
+    /// <summary>ساختار انتخاب فونت کنسول (CONSOLE_FONT_INFO_EX)</summary>
+    [System.Runtime.InteropServices.StructLayout(
+        System.Runtime.InteropServices.LayoutKind.Sequential, CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private struct ConsoleFontInfoEx
+    {
+        /// <summary>اندازهٔ ساختار — باید پیش از فراخوانی ست شود</summary>
+        public uint cbSize;
+        /// <summary>نمایهٔ فونت در جدول فونت‌های کنسول — صفر هنگام تعیین با نام</summary>
+        public uint nFont;
+        /// <summary>عرض نویسه — صفر یعنی پیش‌فرض</summary>
+        public short dwFontSizeX;
+        /// <summary>ارتفاع نویسه (پیکسل)</summary>
+        public short dwFontSizeY;
+        /// <summary>خانوادهٔ فونت — باید پرچم TrueType داشته باشد</summary>
+        public int FontFamily;
+        /// <summary>وزن فونت — ۴۰۰ معمولی</summary>
+        public int FontWeight;
+        /// <summary>نام فونت — حداکثر ۳۲ نویسه</summary>
+        [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string FaceName;
+    }
+
+    /// <summary>دریافت دستگیرهٔ جریان خروجی استاندارد کنسول</summary>
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr GetStdHandle(int nStdHandle);
+
+    /// <summary>تنظیم فونت جاری کنسول — فقط conhost ویندوز</summary>
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true,
+        CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private static extern bool SetCurrentConsoleFontEx(IntPtr hConsoleOutput, bool bMaximumWindow,
+        ref ConsoleFontInfoEx lpConsoleCurrentFontEx);
+
+    /// <summary>
+    /// تنظیم فونت TrueType شکل‌دهندهٔ فارسی روی کنسول ویندوز — پس از
+    /// UTF-8 کردن کدپیج صدا زده می‌شود؛ هر خطایی بی‌صدا بلعیده می‌شود.
+    /// </summary>
+    private static void TrySetPersianCapableConsoleFont()
+    {
+        try
+        {
+            if (!System.OperatingSystem.IsWindows())
+                return;
+
+            const int stdOutputHandle = -11; // STD_OUTPUT_HANDLE
+            var handle = GetStdHandle(stdOutputHandle);
+            if (handle == IntPtr.Zero || handle == new IntPtr(-1))
+                return;
+
+            var font = new ConsoleFontInfoEx
+            {
+                cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<ConsoleFontInfoEx>(),
+                nFont = 0,
+                dwFontSizeX = 0,   // صفر = اندازهٔ پیش‌فرض خود conhost
+                dwFontSizeY = 18,  // ارتفاع خوانا برای متن فارسی
+                FontFamily = 54,   // TMPF_TRUETYPE (0x04) | FF_MODERN (0x30)
+                FontWeight = 400,  // وزن معمولی
+                FaceName = "Courier New" // TrueType دارای گلیف عربی در همهٔ ویندوزها
+            };
+            SetCurrentConsoleFontEx(handle, bMaximumWindow: false, ref font);
+        }
+        catch
+        {
+            // محیط بدون کنسول متصل یا دسترسی ناکافی — بی‌خطر؛ خروجی همیشه
+            // در فایل‌های UTF-8 روزانه هم ثبت می‌شود
+        }
+    }
+}
