@@ -1369,9 +1369,9 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasComment("درصد بیمه");
 
                     b.Property<decimal>("InsuranceShare")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)")
-                        .HasComment("سهم بیمه");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("سهم ریالی بیمه از این قلم");
 
                     b.Property<long>("InvoiceId")
                         .HasColumnType("bigint");
@@ -1380,9 +1380,9 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit");
 
                     b.Property<decimal>("PatientShare")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)")
-                        .HasComment("سهم بیمار");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("سهم ریالی بیمار از این قلم");
 
                     b.Property<long?>("PerformedById")
                         .HasColumnType("bigint")
