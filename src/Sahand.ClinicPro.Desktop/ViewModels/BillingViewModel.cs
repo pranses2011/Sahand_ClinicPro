@@ -521,7 +521,14 @@ public partial class InvoiceFormViewModel : ObservableObject
         if (ReceivedAmount < Payable) { ErrorMessage = "مبلغ دریافتی کمتر از قابل پرداخت است"; return; }
 
         IsBusy = true;
-        var company = InsuranceIndex > 0 ? InsuranceCompanies[InsuranceIndex - 1] : null;
+        // چرخه بیست‌وهفتم (بازبینی الگوی کشوی بیمه — ادامهٔ قانون ۵):
+        // کشوی بیمه گزینهٔ «آزاد» را با شناسهٔ صفر در نمایهٔ ۰ دارد (بند
+        // InitializeAsync بالا)؛ پس نمایهٔ انتخابی مستقیماً روی همان فهرست
+        // اعمال می‌شود. الگوی قدیمی «نمایه − ۱» که بیمهٔ قبلی را ثبت می‌کرد
+        // حذف گردید — هم‌راستا با LoadServicesAsync و AddService همین فایل.
+        var company = InsuranceIndex > 0 && InsuranceIndex < InsuranceCompanies.Count
+            ? InsuranceCompanies[InsuranceIndex]
+            : null;
 
         // پزشک انتخاب‌شده سطح فاکتور — به همه اقلام منتسب می‌شود (چرخه دهم) تا
         // انتساب خودکار «انجام‌دهنده از پرسنل مرتبط پزشک» در سرور فعال شود و
