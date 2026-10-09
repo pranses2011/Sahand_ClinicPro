@@ -67,6 +67,27 @@ public partial class TimePicker : UserControl
     public TimePicker()
     {
         InitializeComponent();
+
+        // ═══ چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک) — «کادر انتخابگر زمان با
+        // دکمهٔ تأیید بسته نمی‌شود» ═══
+        // ریشه: پاپ‌آپ StaysOpen=False با کلیک بیرون بسته می‌شد ولی حالت
+        // دکمهٔ تاگل (IsChecked) همگام نمی‌شد — همان الگوی PersianDatePicker
+        // در چرخه ۲۳ (bb52c73). هم‌زمانی با رویداد Closed خودِ پاپ‌آپ برقرار
+        // می‌شود تا هر مسیر بستن (تأیید/انصراف/پاک‌کردن/کلیک بیرون/Escape)
+        // وضعیت دکمه را هم بریزد و چرخهٔ «باز‌شدن بی‌درنگ پس از بسته‌شدن» و
+        // «بسته‌نشدن با تأیید» هر دو رفع شود.
+        PickerPopup.Closed += (_, _) => Toggle.IsChecked = false;
+
+        // بستن با کلید Escape — سازگاری صفحه‌کلید (همان الگوی تقویم)
+        PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Escape && PickerPopup.IsOpen)
+            {
+                PickerPopup.IsOpen = false;
+                e.Handled = true;
+            }
+        };
+
         // شروع: ساعت عقربه‌ای در حالت ساعت + دیجیتال خوانده از TimeText
         Loaded += (_, _) =>
         {
@@ -494,12 +515,12 @@ public partial class TimePicker : UserControl
 
     private void OnToggleUnchecked(object sender, RoutedEventArgs e) => PickerPopup.IsOpen = false;
 
-    /// <summary>تأیید — مقدار در لحظهٔ انتخاب نوشته شده؛ فقط بستن پاپ‌آپ</summary>
+    /// <summary>تأیید — مقدار در لحظهٔ انتخاب نوشته شده؛ فقط بستن پاپ‌آپ
+    /// (همگام‌سازی دکمهٔ تاگل با رویداد Closed انجام می‌شود — چرخه ۲۸)</summary>
     private void OnAcceptClick(object sender, RoutedEventArgs e)
     {
         _valueAtOpen = TimeText;
         PickerPopup.IsOpen = false;
-        Toggle.IsChecked = false;
     }
 
     /// <summary>انصراف — بازگشت به مقدار هنگام گشودن پاپ‌آپ (مطابق مرجع CANCEL)</summary>
@@ -514,7 +535,6 @@ public partial class TimePicker : UserControl
         SyncFromTimeText();
         RefreshTimeTextFa();
         PickerPopup.IsOpen = false;
-        Toggle.IsChecked = false;
     }
 
     /// <summary>پاک‌کردن — تهی‌سازی ساعت (حذف استراحت اختیاری و مانند آن)</summary>
@@ -527,6 +547,5 @@ public partial class TimePicker : UserControl
         finally { _suppressWrite = false; }
         RefreshTimeTextFa();
         PickerPopup.IsOpen = false;
-        Toggle.IsChecked = false;
     }
 }

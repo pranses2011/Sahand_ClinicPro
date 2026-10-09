@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
+using MaterialDesignThemes.Wpf;
 
 namespace Sahand.ClinicPro.Desktop.Converters;
 
@@ -11,13 +12,17 @@ namespace Sahand.ClinicPro.Desktop.Converters;
 /// نام آیکون پایهٔ هر آیتم منو با توجه به مجموعهٔ منتخب کاربر (کلاسیک/
 /// مدرن/مینیمال — منبع پویای App.IconSetName از ThemeService) به نام
 /// هم‌ارز همان مجموعه نگاشت می‌شود تا شکل واقعی آیکون‌ها عوض شود.
-/// ▪ MultiBinding است تا با شمارندهٔ IconRefreshTick (که ThemeService با
-///   هر تغییر ظاهری زیاد می‌کند) بی‌درنگ و بدون ری‌استارت دوباره ارزیابی شود
-///   (همان الگوی IconTintConverter چرخه ۲۴).
-/// ▪ اگر نگاشتی برای آیکونی در مجموعهٔ منتخب نبود، همان نام پایه برگردانده
-///   می‌شود (fallback ایمن) — هیچ آیکونی گم نمی‌شود.
-/// خروجی رشته است؛ موتور اتصال WPF آن را با TypeConverter از پیش‌فرضِ
-/// PackIconKind به enum تبدیل می‌کند (همان رفتار Kind="{Binding Icon}" فعلی).
+/// ═══════════════════════════════════════════════════════════════════
+/// چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک — «آیکون‌های منو خراب شده و همه با
+/// یک آیکون نشان داده می‌شوند»):
+/// ریشه — این مبدل پیش‌تر «رشتهٔ نام آیکون» برمی‌گرداند و انتظار داشت
+/// موتور اتصال WPF آن را خودکار به enum تبدیل کند؛ اما برخلاف اتصال
+/// تک‌مقداری (Binding ساده) که تبدیل رشته→enum را از طریق
+/// TypeConverter انجام می‌دهد، در MultiBinding خروجی مبدل بدون تبدیل
+/// خودکار روی خاصیت هدف (PackIconKind) می‌نشیند؛ اتصال شکست می‌خورد و
+/// «همهٔ» آیکون‌ها روی مقدار پیش‌فرض enum می‌مانند — دقیقاً علامتِ
+/// «همه با یک آیکون». رفع قطعی: خروجی از نوع PackIconKind (خودِ enum)
+/// برگردانده می‌شود — بدون هیچ تبدیلی در لایهٔ اتصال.
 /// </summary>
 public class IconSetKindConverter : IMultiValueConverter
 {
@@ -120,13 +125,17 @@ public class IconSetKindConverter : IMultiValueConverter
         };
 
     /// <summary>
-    /// نام پایه → نام مجموعهٔ فعال. مقدار دوم (شمارندهٔ نوسازی) فقط برای
-    /// تحریک ارزیابی مجدد است؛ خوانده نمی‌شود.
+    /// نام پایه → عضو enum پک‌آیکون مجموعهٔ فعال. مقدار دوم (شمارندهٔ نوسازی)
+    /// فقط برای تحریک ارزیابی مجدد است؛ خوانده نمی‌شود.
+    /// خروجی «همیشه» از نوع PackIconKind است (چرخه ۲۸ — رفع یکسان‌شدن
+    /// آیکون‌ها؛ توضیح کامل در سربرگ کلاس).
     /// </summary>
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
-        if (values[0] is not string baseIcon || string.IsNullOrEmpty(baseIcon))
-            return "ChartLine"; // آیکون پیش‌فرض امن پک‌آیکون
+        // نام پایهٔ آیکون — اگر به هر دلیل وصل نشد (تهی/خالی/غیررشته)،
+        // آیکون امن پیش‌فرض؛ هرگز رشتهٔ خام به اتصال enum برنمی‌گردد
+        if (values is not { Length: > 0 } || values[0] is not string baseIcon || string.IsNullOrEmpty(baseIcon))
+            return PackIconKind.ChartLine;
 
         // مجموعهٔ فعال از منبع پویا — پیش‌فرض کلاسیک (بدون تغییر نام)
         var setName = System.Windows.Application.Current?.Resources["App.IconSetName"] as string
@@ -139,9 +148,18 @@ public class IconSetKindConverter : IMultiValueConverter
             _ => null // کلاسیک = همان نام پایه
         };
 
-        return map is not null && map.TryGetValue(baseIcon, out var mapped)
+        var targetName = map is not null && map.TryGetValue(baseIcon, out var mapped)
             ? mapped // نگاشت یافت شد
             : baseIcon; // fallback ایمن — آیکون پایه
+
+        // تبدیل قطعی نام → enum با پارس امن؛ اگر نام (به هر دلیل، مثلاً
+        // نسخهٔ آیندهٔ کتابخانه) عضو enum نبود، اول نام پایه و سپس آیکون
+        // امن پیش‌فرض — هرگز مقدار رشته‌ای برگردانده نمی‌شود
+        if (Enum.TryParse<PackIconKind>(targetName, true, out var kind))
+            return kind;
+        if (Enum.TryParse<PackIconKind>(baseIcon, true, out var fallback))
+            return fallback;
+        return PackIconKind.ChartLine;
     }
 
     /// <summary>تبدیل معکوس لازم نیست — اتصال یک‌طرفه است</summary>
