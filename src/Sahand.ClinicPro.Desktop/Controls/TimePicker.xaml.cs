@@ -63,6 +63,15 @@ public partial class TimePicker : UserControl
     /// <summary>پرچم جلوگیری از حلقهٔ بازخورد هنگام هم‌گام‌سازی برنامه‌ای</summary>
     private bool _suppressWrite;
 
+    /// <summary>
+    /// آیا پاپ‌آپ همان لحظهٔ فشردن دکمهٔ تاگل باز بود؟ (چرخهٔ سی‌وسوم)
+    /// با StaysOpen=False، فشردن دکمهٔ تاگل (بیرونِ پاپ‌آپ) ابتدا پاپ‌آپ را
+    /// می‌بندد و سپس رویداد Click خودِ تاگل اجرا می‌شود؛ بدون این گارد،
+    /// تاگلِ «الان بدون-تیک» دوباره تیک می‌خورد و پاپ‌آپ بی‌درنگ بازمی‌گردد —
+    /// همان الگوی اثبات‌شدهٔ PersianDatePicker (چرخه ۲۳).
+    /// </summary>
+    private bool _popupWasOpenOnMouseDown;
+
     /// <summary>سازنده</summary>
     public TimePicker()
     {
@@ -87,6 +96,14 @@ public partial class TimePicker : UserControl
                 e.Handled = true;
             }
         };
+
+        // ═══ چرخهٔ سی‌وسوم (گزارش نوزدهم مالک) — گارد بازشدن‌مجدد پس از بسته‌شدن ═══
+        // همان الگوی PersianDatePicker: لحظهٔ فشردن دکمهٔ تاگل یادداشت می‌شود که
+        // پاپ‌آپ باز بود یا نه؛ اگر باز بود، سیستم (StaysOpen=False) خودش بسته‌اش
+        // کرده و OnToggleChecked نباید دوباره بازش کند — وگرنه تجربهٔ کاربر این
+        // می‌شود که «کادر هرچه تأیید یا کلیک می‌کنم بسته نمی‌شود».
+        Toggle.PreviewMouseDown += (_, _) =>
+            _popupWasOpenOnMouseDown = PickerPopup.IsOpen;
 
         // شروع: ساعت عقربه‌ای در حالت ساعت + دیجیتال خوانده از TimeText
         Loaded += (_, _) =>
@@ -505,6 +522,15 @@ public partial class TimePicker : UserControl
     /// <summary>گشودن پاپ‌آپ — ذخیرهٔ مقدار فعلی برای انصراف + شروع در حالت ساعت</summary>
     private void OnToggleChecked(object sender, RoutedEventArgs e)
     {
+        // گارد چرخهٔ سی‌وسوم: اگر پاپ‌آپ همین حالا (با همین کلیک) توسط سیستم
+        // بسته شده، بازکردن مجدد ممنوع — کلیک روی تاگل یعنی «بستن» (toggle)
+        if (_popupWasOpenOnMouseDown)
+        {
+            _popupWasOpenOnMouseDown = false;
+            Toggle.IsChecked = false;
+            return;
+        }
+
         _valueAtOpen = TimeText;
         _isHourMode = true;
         KeyboardPanel.Visibility = Visibility.Collapsed;
@@ -515,12 +541,28 @@ public partial class TimePicker : UserControl
 
     private void OnToggleUnchecked(object sender, RoutedEventArgs e) => PickerPopup.IsOpen = false;
 
-    /// <summary>تأیید — مقدار در لحظهٔ انتخاب نوشته شده؛ فقط بستن پاپ‌آپ
-    /// (همگام‌سازی دکمهٔ تاگل با رویداد Closed انجام می‌شود — چرخه ۲۸)</summary>
+    /// <summary>
+    /// بستن تضمینی پاپ‌آپ — چرخهٔ سی‌وسوم (گزارش نوزدهم مالک):
+    /// «با دکمهٔ تأیید بسته نمی‌شود». هر سه دکمهٔ پاورقی علاوه بر IsOpen=false،
+    /// وضعیت دکمهٔ تاگل را هم صریحاً می‌ریزند (دو مسیر مستقل به یک نتیجه —
+    /// اگر حتی یکی به هر دلیل بی‌اثر بماند، دیگری می‌بندد) و گارد بازشدن‌مجدد
+    /// هم فعال می‌شود تا هیچ مسیری پاپ‌آپ را بی‌درنگ بازنگرداند.
+    /// </summary>
+    private void ClosePopupForcibly()
+    {
+        _popupWasOpenOnMouseDown = true; // هر بازشدن بعدیِ ناخواسته در همین کلیک را مسدود کن
+        Toggle.IsChecked = false;        // مسیر ۱: رویداد Unchecked → IsOpen=false
+        PickerPopup.IsOpen = false;      // مسیر ۲: بستن مستقیم و صریح
+        // ریست گارد در انتهای چرخهٔ ورودی — پس از اینکه صف رویدادهای این کلیک تخلیه شد
+        Dispatcher.BeginInvoke(() => _popupWasOpenOnMouseDown = false,
+            DispatcherPriority.Input);
+    }
+
+    /// <summary>تأیید — مقدار در لحظهٔ انتخاب نوشته شده؛ فقط بستن تضمینی پاپ‌آپ</summary>
     private void OnAcceptClick(object sender, RoutedEventArgs e)
     {
         _valueAtOpen = TimeText;
-        PickerPopup.IsOpen = false;
+        ClosePopupForcibly();
     }
 
     /// <summary>انصراف — بازگشت به مقدار هنگام گشودن پاپ‌آپ (مطابق مرجع CANCEL)</summary>
@@ -534,7 +576,7 @@ public partial class TimePicker : UserControl
         }
         SyncFromTimeText();
         RefreshTimeTextFa();
-        PickerPopup.IsOpen = false;
+        ClosePopupForcibly();
     }
 
     /// <summary>پاک‌کردن — تهی‌سازی ساعت (حذف استراحت اختیاری و مانند آن)</summary>
@@ -546,6 +588,6 @@ public partial class TimePicker : UserControl
         try { TimeText = string.Empty; }
         finally { _suppressWrite = false; }
         RefreshTimeTextFa();
-        PickerPopup.IsOpen = false;
+        ClosePopupForcibly();
     }
 }
