@@ -134,8 +134,9 @@
                         <StackPanel Orientation="Horizontal" Margin="0,0,10,6"
                                     Visibility="{Binding HasMinAmountParam, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="حداقل مبلغ: " VerticalAlignment="Center" FontSize="12" />
+                            <!-- چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان) — حذف هاردکد -->
                             <TextBox Text="{Binding MinAmount, UpdateSourceTrigger=PropertyChanged}" Width="110" FontSize="12"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="ریال" />
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="{DynamicResource App.CurrencyLabel}" />
                         </StackPanel>
                         <!-- سقف نتایج -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,10,6"

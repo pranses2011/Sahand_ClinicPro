@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -141,7 +142,7 @@ public partial class ShiftCloseViewModel : ObservableObject
             $"بازه: {r.OpenedText} تا {r.ClosedText} | بستن‌دهنده: {r.ClosedByName}\n" +
             $"سیستم — نقد {r.TotalCash:N0} | کارت {r.TotalCard:N0} | آنلاین {r.TotalOnline:N0} | جمع {r.SystemTotal:N0}\n" +
             $"شمارش — نقد {r.CountedCash:N0} | کارت {r.CountedCard:N0} | جمع {r.CountedTotal:N0}\n" +
-            $"اختلاف نقد: {r.CashDifference:N0} | کارت: {r.CardDifference:N0} | خالص: {r.NetDifference:N0} ریال ({r.DifferenceState})\n" +
+            $"اختلاف نقد: {r.CashDifference:N0} | کارت: {r.CardDifference:N0} | خالص: {Money.FormatWithUnit(r.NetDifference)} ({r.DifferenceState})\n" +
             (string.IsNullOrWhiteSpace(r.HandoverNote) ? "" : $"یادداشت: {r.HandoverNote}\n") +
             $"تعداد تراکنش‌های شیفت: {r.PaymentCount}";
 

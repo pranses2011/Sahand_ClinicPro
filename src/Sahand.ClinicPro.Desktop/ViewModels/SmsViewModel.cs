@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -146,9 +147,9 @@ public partial class SmsViewModel : ViewModelBase
     [ObservableProperty]
     private string _failedText = "۰";
 
-    /// <summary>هزینه ماه</summary>
+    /// <summary>هزینه ماه — چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات</summary>
     [ObservableProperty]
-    private string _monthCostText = "۰ ریال";
+    private string _monthCostText = $"۰ {Money.UnitLabel}";
 
     /// <summary>درصد موفقیت</summary>
     [ObservableProperty]
@@ -351,7 +352,8 @@ public partial class SmsViewModel : ViewModelBase
             SentText = $"{stats.SentCount:N0}";
             DeliveredText = $"{stats.DeliveredCount:N0}";
             FailedText = $"{stats.FailedCount:N0}";
-            MonthCostText = $"{stats.MonthCost:N0} ریال";
+            // چرخهٔ بیست‌وهفتم: قالب‌بندی با واحد پویا + ارقام فارسی + جداکنندهٔ فارسی
+            MonthCostText = Money.FormatWithUnit(stats.MonthCost);
             SuccessRateText = $"{stats.SuccessRate:0.#}٪";
 
             DailyPoints.Clear();

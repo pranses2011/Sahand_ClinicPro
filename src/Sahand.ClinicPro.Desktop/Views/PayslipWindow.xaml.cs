@@ -2,6 +2,7 @@
 using System.Windows.Documents;
 using System.Windows.Media;
 using Sahand.ClinicPro.Application.Common.Helpers;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.Views;
 
@@ -27,7 +28,9 @@ public partial class PayslipWindow : Window
         var gross = baseSalary + serviceCommission + overtime + bonus;
         var totalDeductions = insurance + tax + deductions;
 
-        SummaryText.Text = $"فیش حقوقی {employeeName} — دوره {periodText} — خالص: {net:#,0} ریال";
+        // چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان) + ارقام فارسی
+        // (Money.FormatWithUnit تقسیم ۱۰ِ حالت تومان را هم به‌صورت نمایشی اعمال می‌کند)
+        SummaryText.Text = $"فیش حقوقی {employeeName} — دوره {periodText} — خالص: {Money.FormatWithUnit(net)}";
 
         Viewer.Document = BuildDocument(clinicName, employeeName, personnelCode,
             nationalCode, periodText, monthName, baseSalary, commissionPercent,
@@ -93,7 +96,8 @@ public partial class PayslipWindow : Window
         // سربرگ جدول
         var head = new TableRowGroup();
         table.RowGroups.Add(head);
-        head.Rows.Add(HeaderRow("مزایا", "مبلغ (ریال)", "کسورات", "مبلغ (ریال)"));
+        // چرخهٔ بیست‌وهفتم: عنوان ستون مبلغ با واحد پویا از تنظیمات
+        head.Rows.Add(HeaderRow("مزایا", $"مبلغ ({Money.UnitLabel})", "کسورات", $"مبلغ ({Money.UnitLabel})"));
 
         // ردیف‌های زوج — مزایا در ستون‌های راست، کسورات در چپ
         var body = new TableRowGroup();
@@ -109,7 +113,8 @@ public partial class PayslipWindow : Window
         // ردیف خالص — تمام‌عرض
         var netRow = new TableRow { Background = Brushes.Gainsboro };
         var c1 = Cell("خالص پرداختی", bold: true);
-        var c2 = Cell($"{net:#,0}", bold: true);
+        // چرخهٔ بیست‌وهفتم: ارقام فارسی + جداکنندهٔ فارسی + واحد پویا
+        var c2 = Cell(Money.FormatWithUnit(net), bold: true);
         c1.ColumnSpan = 3;
         netRow.Cells.Add(c1);
         netRow.Cells.Add(c2);
@@ -122,7 +127,7 @@ public partial class PayslipWindow : Window
             "مبنا: ساعت کار قانونی ۱۹۲ ساعت در ماه؛ اضافه‌کاری ۱/۴ برابر نرخ ساعت عادی؛ " +
             "بیمه سهم کارمند ۷٪؛ پلکان مالیات حقوق مصوب بودجه ۱۴۰۴. " +
             $"حقوق درصدی: {commissionPercent:0.##}٪ از سود خدمات انجام‌شده توسط خودِ این پرسنل در دوره " +
-            $"(مبنای سود خدمات: {serviceProfitBase:#,0} ریال) — نه از کل دریافتی درمانگاه. " +
+            $"(مبنای سود خدمات: {Money.FormatWithUnit(serviceProfitBase)}) — نه از کل دریافتی درمانگاه. " +
             "این فیش به‌صورت سیستمی صادر شده است.")
         {
             FontSize = 9.5,
@@ -240,9 +245,10 @@ public partial class PayslipWindow : Window
             Padding = new Thickness(2)
         };
 
-    /// <summary>سلول مبلغی با جداکننده هزارگان و چینش چپ</summary>
+    /// <summary>سلول مبلغی با جداکنندهٔ فارسی، ارقام فارسی و چینش چپ
+    /// چرخهٔ بیست‌وهفتم: از Money.Format (ارقام فارسی + واحد نمایشی) استفاده می‌کند</summary>
     private static TableCell AmountCell(decimal amount, bool bold)
-        => new(new Paragraph(new Run(amount.ToString("#,0"))
+        => new(new Paragraph(new Run(Money.Format(amount))
         {
             FontWeight = bold ? FontWeights.Bold : FontWeights.Normal
         })

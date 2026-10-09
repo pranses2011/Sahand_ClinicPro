@@ -179,7 +179,8 @@ public partial class CommissionReportViewModel : ViewModelBase
                 .Select(s => new ChartPointData(
                     s.FullName,
                     (double)s.ServiceCommission,
-                    $"{s.FullName}: {s.ServiceCommission:N0} ریال (درصد {s.CommissionPercentText})"))
+                    // چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان)
+                    $"{s.FullName}: {Money.FormatWithUnit(s.ServiceCommission)} (درصد {s.CommissionPercentText})"))
                 .ToList();
             CommissionChartCenter = Money.Format(TotalCommission);
 

@@ -146,7 +146,8 @@
                                                             <Run Text=" — " /><Run Text="{Binding Procedure, Mode=OneWay}" FontWeight="SemiBold" />
                                                         </TextBlock>
                                                         <TextBlock FontSize="10.5" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}">
-                                                            <Run Text="{Binding Price, Mode=OneWay, Converter={StaticResource CurrencyRial}}" /><Run Text=" ریال" />
+                                                            <!-- چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان) — حذف هاردکد -->
+                                                            <Run Text="{Binding Price, Mode=OneWay, Converter={StaticResource CurrencyRial}}" /><Run Text=" " /><Run Text="{DynamicResource App.CurrencyLabel}" />
                                                         </TextBlock>
                                                     </StackPanel>
                                                 </Border>

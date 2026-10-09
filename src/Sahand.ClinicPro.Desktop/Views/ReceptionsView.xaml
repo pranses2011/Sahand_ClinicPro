@@ -54,8 +54,12 @@
                                        AccentBrush="#1E88E5" />
                     <controls:StatCard IconKind="CashMultiple"
                                        Value="{Binding TodayRevenueDisplay, Mode=OneWay}"
-                                       Label="💰 درآمد پذیرش (ریال)"
-                                       AccentBrush="#00897B" />
+                                       AccentBrush="#00897B">
+                        <!-- چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان) — حذف هاردکد «(ریال)» -->
+                        <controls:StatCard.Label>
+                            <TextBlock><Run Text="💰 درآمد پذیرش (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                        </controls:StatCard.Label>
+                    </controls:StatCard>
                 </UniformGrid>
 
                 <ProgressBar IsIndeterminate="True" Height="3" Margin="0,0,0,10"

@@ -366,7 +366,8 @@ public partial class InsuranceViewModel : ViewModelBase
         IsBusy = false;
         if (response?.Data is not null)
         {
-            _snackbar.Success($"تسویه اعمال شد — سهم بیمه {response.Data.TotalInsuranceShare:N0} ریال روی اقلام ثبت شد");
+            // چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان)
+            _snackbar.Success($"تسویه اعمال شد — سهم بیمه {Money.FormatWithUnit(response.Data.TotalInsuranceShare)} روی اقلام ثبت شد");
             await CalculateFractionmentAsync();
         }
         else _snackbar.Error(_api.LastError ?? "اعمال تسویه ناموفق بود");
@@ -384,8 +385,9 @@ public partial class InsuranceViewModel : ViewModelBase
                 r.Id,
                 r.ServiceName ?? "همه خدمات",
                 r.RuleType == 2 ? "اسمی" : "درصدی",
+                // چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان) — حذف هاردکد
                 r.RuleType == 2
-                    ? $"{r.NominalAmount:N0} ریال"
+                    ? Money.FormatWithUnit(r.NominalAmount)
                     : $"{r.InsurancePercent:0.#}٪ بیمه",
                 r.FranchiseAmount > 0 ? $"فرانشیز {r.FranchiseAmount:N0}" : "—"));
         }

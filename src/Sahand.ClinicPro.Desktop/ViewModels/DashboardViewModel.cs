@@ -171,7 +171,8 @@ public partial class DashboardViewModel : ViewModelBase
         });
         MainCards.Add(new DashboardCardVM
         {
-            Key = "revenue", IconKind = "CashMultiple", Label = "درآمد امروز (ریال)",
+            // چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان) — حذف هاردکد
+            Key = "revenue", IconKind = "CashMultiple", Label = $"درآمد امروز ({Money.UnitLabel})",
             CompareText = "مجموع پرداخت‌های ثبت‌شده", Accent = "#8E24AA"
         });
         foreach (var c in MainCards)
@@ -350,7 +351,10 @@ public partial class DashboardViewModel : ViewModelBase
                 var label = item.TryGetProperty("label", out var l) ? l.GetString() ?? "—" : "—";
                 var amount = item.TryGetProperty("amount", out var a) && a.ValueKind != JsonValueKind.Null
                     ? (double)a.GetDecimal() : 0;
-                RevenueChart.Add(new ChartPointData(label, amount, $"{label}: {amount:N0} ریال"));
+                // چرخهٔ بیست‌وهفتم: قالب‌بندی مبلغ با واحد پویا + جداکنندهٔ فارسی
+                // (Money.FormatWithUnit همزمان تقسیم ۱۰ِ حالت تومان را هم اعمال می‌کند)
+                RevenueChart.Add(new ChartPointData(label, amount,
+                    $"{label}: {Money.FormatWithUnit((decimal)amount)}"));
             }
         }
 
