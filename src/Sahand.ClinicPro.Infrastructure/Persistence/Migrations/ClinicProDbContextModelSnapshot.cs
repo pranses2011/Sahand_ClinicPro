@@ -918,7 +918,9 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<decimal>("DefaultCoveragePercent")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)")
+                        .HasComment("درصد پوشش پیش‌فرض بیمه");
 
                     b.Property<decimal>("DefaultInsuranceShare")
                         .HasPrecision(5, 2)
@@ -8625,9 +8627,9 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("PaperSize")
                         .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
-                        .HasComment("اندازه کاغذ — A4/A5/A6");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasComment("اندازه کاغذ — A4/A5/A6/Thermal80/Custom:WxH");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()

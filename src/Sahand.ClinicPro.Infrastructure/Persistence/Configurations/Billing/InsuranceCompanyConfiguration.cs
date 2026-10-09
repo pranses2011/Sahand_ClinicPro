@@ -19,6 +19,11 @@ public class InsuranceCompanyConfiguration : IEntityTypeConfiguration<InsuranceC
         builder.Property(x => x.ContractNumber).HasMaxLength(20).HasComment("شماره قرارداد");
         builder.Property(x => x.DefaultPatientShare).HasPrecision(5, 2).HasComment("سهم پیش‌فرض بیمار");
         builder.Property(x => x.DefaultInsuranceShare).HasPrecision(5, 2).HasComment("سهم پیش‌فرض بیمه");
+        // ═══ چرخه سی‌ویکم (گزارش مالک) — رفع هشدار EF «No store type was specified for
+        // the decimal property 'DefaultCoveragePercent'»: بدون دقت صریح، مقادیر
+        // خارج از decimal(18,2) پیش‌فرض به‌صورت خاموش کوتاه می‌شدند. درصد پوشش
+        // ۰ تا ۱۰۰ با دو رقم اعشار → decimal(5,2) هم‌خانوادهٔ ستون‌های درصدی دیگر
+        builder.Property(x => x.DefaultCoveragePercent).HasPrecision(5, 2).HasComment("درصد پوشش پیش‌فرض بیمه");
         builder.Property(x => x.ApiEndpoint).HasMaxLength(200).HasComment("نشانی API استعلام");
         builder.Property(x => x.ApiUsername).HasMaxLength(200).HasComment("نام کاربری API");
         builder.Property(x => x.ApiToken).HasMaxLength(200).HasComment("توکن پایدار API");

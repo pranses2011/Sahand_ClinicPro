@@ -469,6 +469,23 @@ public class ClinicProDbContext : DbContext
             }
         }
 
+        // ═══ چرخه سی‌ویکم (گزارش مالک) — رفع سه هشدار EF Core «required end of a
+        // relationship with query filter» ═══
+        // موجودیت‌های وابستهٔ امنیتی (UserRole / RolePermission / RefreshToken) خودشان
+        // ISoftDeletable نیستند ولی کلید خارجیِ «الزامی» به موجودیت‌های فیلتردار
+        // (User / Role / Permission) دارند؛ EF هشدار می‌داد که ممکن است ردیفِ وابسته به
+        // اصلیِ حذف‌شدهٔ نرم، در پرس‌وجوها «یتیم» دیده شود. راه‌حل استانداردِ مستند
+        // (go.microsoft.com/fwlink/?linkid=2131316): تعریف فیلتر منطبق برای وابسته —
+        // سطرهایی که اصلیِ آن‌ها حذف نرم شده از پرس‌وجوهای مستقیم پنهان می‌شوند.
+        // نکتهٔ مهم: فیلترهای پرس‌وجو روی «بارگذاری از مسیر ناوبری» (مثل user.Roles
+        // در SyncRolesAsync) اعمال نمی‌شوند؛ بنابراین جریان‌های تغییر نقش دست‌نخورده‌اند.
+        modelBuilder.Entity<UserRole>()
+            .HasQueryFilter(ur => !ur.User!.IsDeleted && !ur.Role!.IsDeleted);
+        modelBuilder.Entity<RolePermission>()
+            .HasQueryFilter(rp => !rp.Role!.IsDeleted && !rp.Permission!.IsDeleted);
+        modelBuilder.Entity<RefreshToken>()
+            .HasQueryFilter(rt => !rt.User!.IsDeleted);
+
         // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — رفع خطای ۲۶۰۱ اس‌کیوال‌سرور ═══
         // در اس‌کیوال‌سرور ایندکس یکتا روی ستون تهی‌پذیر فقط «یک» رکورد NULL را
         // مجاز می‌شمارد؛ ثبت دومین کاربر/پرسنلِ بدون کد پرسنلی با خطای
