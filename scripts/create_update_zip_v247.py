@@ -70,8 +70,13 @@ for rel, needle, desc in NEGATIVE_CHECKS:
     print(f"  ✅ {desc}")
 
 # تطبیق فهرست فایل‌ها با دیف واقعی گیت (تا هیچ فایلی جا نیفتد)
+# مستثنی‌ها: اسکریپت‌های بسته‌بندی/انتشار خودمان (داخلی — به ایستگاه مالک
+# ربطی ندارند) و پوشهٔ docs؛ هر چیز دیگرِ تغییرکرده باید در بسته باشد.
 diff = subprocess.run(
-    f'git -C "{REPO}" diff --name-only {BASE}..HEAD -- . ":(exclude)docs/*"',
+    'git -C "%s" diff --name-only %s..HEAD -- . '
+    '":(exclude)docs/*" '
+    '":(exclude)scripts/create_update_zip_*.py" '
+    '":(exclude)scripts/publish_release_*.py"' % (REPO, BASE),
     shell=True, capture_output=True, text=True, check=True).stdout.split()
 diff_set = set(diff)
 changed_set = set(CHANGED)
