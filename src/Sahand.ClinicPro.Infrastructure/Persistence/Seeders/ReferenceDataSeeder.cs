@@ -451,12 +451,18 @@ public class ReferenceDataSeeder : IDataSeeder
                 DefaultPrice = row.PriceRial,
                 IsActive = true,
             };
+            // ═══ چرخهٔ سی‌ودوم (گزارش مالک) ═══ «در تعرفه‌ها برای آزاد (بدون
+            // بیمه) تمامی مبالغ بصورت پیش‌فرض سهم بیمار باید باشد» — این ردیف
+            // تعرفه «آزاد» است (بدون InsuranceCompanyId)؛ پیش‌تر درصد پوشش
+            // بیمهٔ پیش‌فرض (مثلاً ۷۰/۳۰) رویش ذخیره می‌شد و در پذیرشِ آزاد
+            // سهم بیمهٔ غیرواقعی می‌ساخت. تعرفهٔ آزاد همیشه ۰٪ بیمه / ۱۰۰٪
+            // بیمار است؛ درصد پوشش بذر صرفاً برای تعرفه‌های بیمه‌ای معنا دارد.
             service.Tariffs.Add(new Tariff
             {
                 Year = year,
                 Price = row.PriceRial,
-                InsuranceShare = row.InsurancePercent,
-                PatientShare = 100 - row.InsurancePercent,
+                InsuranceShare = 0m,
+                PatientShare = 100m,
                 ValidFrom = DateOnly.FromDateTime(DateTime.UtcNow),
                 IsActive = true,
             });

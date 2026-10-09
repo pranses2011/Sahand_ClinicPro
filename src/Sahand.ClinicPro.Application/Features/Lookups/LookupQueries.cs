@@ -427,12 +427,19 @@ public class GetServicesQueryHandler : IRequestHandler<GetServicesQuery, Result<
         foreach (var x in services)
         {
             var tariff = tariffByService.TryGetValue(x.Id, out var t) ? t : null;
+            // ═══ چرخهٔ سی‌ودوم (گزارش مالک) ═══ «برای بیمهٔ آزاد هم سهم بیمه و
+            // سهم بیمار می‌اندازد که اشتباه است — در بدون بیمه باید تمام تعرفه را
+            // بیمار پرداخت کند»: برای هدف «آزاد» (InsuranceCompanyId تهی) هر مقدار
+            // ذخیره‌شده‌ای (ازجمله ردیف‌های قدیمیِ با درصدهای بیمه‌ای پیش از
+            // مهاجرت سی‌ودوم) نادیده گرفته و همیشه ۰٪ بیمه / ۱۰۰٪ بیمار
+            // برمی‌گردد — دفاع در عمق؛ درصد سهم فقط برای بیمهٔ واقعی معنا دارد.
+            var isFreeTarget = request.InsuranceCompanyId is null;
             items.Add(new ServiceTariffOptionDto(
                 x.Id, x.ServiceCode, x.ServiceName,
                 x.ServiceType.ToString(),
                 tariff is not null ? tariff.Price : x.DefaultPrice,
-                tariff is not null ? tariff.InsuranceShare : 0m,
-                tariff is not null ? tariff.PatientShare : 0m));
+                isFreeTarget ? 0m : (tariff is not null ? tariff.InsuranceShare : 0m),
+                isFreeTarget ? 100m : (tariff is not null ? tariff.PatientShare : 0m)));
         }
 
         return Result<List<ServiceTariffOptionDto>>.Success(items);

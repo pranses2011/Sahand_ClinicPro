@@ -90,11 +90,16 @@ public class GetServicesTariffsForManageQueryHandler
             var t = Resolve(s.Id);
             var hasTarget = request.InsuranceCompanyId != null && tariffs.Any(x =>
                 x.ServiceId == s.Id && x.InsuranceCompanyId == request.InsuranceCompanyId);
+            // ═══ چرخهٔ سی‌ودوم (گزارش مالک) ═══ «وقتی آزاد را انتخاب می‌کنم در
+            // لیست همانند بیمه‌ها درصد بیمه و بیمار دارد» — هدف «آزاد» همیشه
+            // ۰٪ بیمه / ۱۰۰٪ بیمار نمایش می‌دهد؛ مقادیر بیمه‌ای قدیمیِ ردیف آزاد
+            // (پیش از مهاجرت سی‌ودوم) هم پنهان و اصلاح‌شده دیده می‌شوند.
+            var isFreeTarget = request.InsuranceCompanyId is null;
             return new ServiceTariffManageDto(
                 s.Id, s.ServiceCode, s.ServiceName,
                 t is not null ? t.Price : s.DefaultPrice,
-                t is not null ? t.InsuranceShare : 0m,
-                t is not null ? t.PatientShare : 0m,
+                isFreeTarget ? 0m : (t is not null ? t.InsuranceShare : 0m),
+                isFreeTarget ? 100m : (t is not null ? t.PatientShare : 0m),
                 s.IsActive, hasTarget);
         }).ToList();
 
@@ -151,14 +156,18 @@ public class CreateServiceTariffCommandHandler
         await _unitOfWork.Repository<Service>().AddAsync(service, cancellationToken);
 
         // ردیف تعرفهٔ هدف منتخب سال جاری — InsuranceCompanyId تهی یعنی تعرفهٔ آزاد
+        // ═══ چرخهٔ سی‌ودوم ═══ تعرفهٔ آزاد همیشه ۱۰۰٪ سهم بیمار است — سهم‌های
+        // ارسالی کلاینت برای هدف آزاد نادیده و قاعدهٔ استاندارد (۰/۱۰۰) ذخیره
+        // می‌شود تا هیچ مسیری (حتی کلاینت قدیمی) درصد بیمه‌ای روی ردیف آزاد ننویسد
+        var isFreeTarget = request.InsuranceCompanyId is null;
         var tariff = new Tariff
         {
             ServiceId = service.Id,
             InsuranceCompanyId = request.InsuranceCompanyId,
             Year = TariffYear.Current,
             Price = request.Price,
-            InsuranceShare = request.InsuranceShare,
-            PatientShare = request.PatientShare
+            InsuranceShare = isFreeTarget ? 0m : request.InsuranceShare,
+            PatientShare = isFreeTarget ? 100m : request.PatientShare
         };
         await _unitOfWork.Repository<Tariff>().AddAsync(tariff, cancellationToken);
 
@@ -217,6 +226,8 @@ public class UpdateServiceTariffCommandHandler
         service.IsActive = request.IsActive;
 
         // ═══ چرخه ۲۴: upsert تعرفهٔ هدف منتخب (بیمه یا آزاد) سال جاری ═══
+        // چرخهٔ سی‌ودوم: برای هدف آزاد سهم‌ها همیشه ۰/۱۰۰ ذخیره می‌شود
+        var isFreeTarget = request.InsuranceCompanyId is null;
         var currentYearTariff = await _unitOfWork.Repository<Tariff>().QueryableNoTracking
             .Where(t => t.ServiceId == service.Id &&
                         t.InsuranceCompanyId == request.InsuranceCompanyId &&
@@ -230,8 +241,8 @@ public class UpdateServiceTariffCommandHandler
                 InsuranceCompanyId = request.InsuranceCompanyId,
                 Year = TariffYear.Current,
                 Price = request.Price,
-                InsuranceShare = request.InsuranceShare,
-                PatientShare = request.PatientShare
+                InsuranceShare = isFreeTarget ? 0m : request.InsuranceShare,
+                PatientShare = isFreeTarget ? 100m : request.PatientShare
             }, cancellationToken);
         }
         else
@@ -240,8 +251,8 @@ public class UpdateServiceTariffCommandHandler
             var tracked = await _unitOfWork.Repository<Tariff>().QueryableTracking
                 .FirstAsync(t => t.Id == currentYearTariff.Id, cancellationToken);
             tracked.Price = request.Price;
-            tracked.InsuranceShare = request.InsuranceShare;
-            tracked.PatientShare = request.PatientShare;
+            tracked.InsuranceShare = isFreeTarget ? 0m : request.InsuranceShare;
+            tracked.PatientShare = isFreeTarget ? 100m : request.PatientShare;
         }
 
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
