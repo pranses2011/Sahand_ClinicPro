@@ -31,7 +31,7 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
 
     <!-- اطلاعات اسمبلی -->
-    <Version>2.2.1</Version>
+    <Version>2.3.0</Version>
     <Authors>Sahand ClinicPro Team</Authors>
     <Company>Sahand</Company>
     <Product>Sahand ClinicPro</Product>
