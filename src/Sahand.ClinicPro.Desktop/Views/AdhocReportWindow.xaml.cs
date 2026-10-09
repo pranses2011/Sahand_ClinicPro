@@ -46,7 +46,7 @@ public partial class AdhocReportWindow : Window
         for (var i = 0; i < vm.Columns.Count; i++)
         {
             var index = i;
-            ResultsGrid.Columns.Add(new DataGridTextColumn
+            var column = new DataGridTextColumn
             {
                 Header = vm.Columns[i],
                 Width = i == 0 ? DataGridLength.Auto : DataGridLength.SizeToCells,
@@ -56,9 +56,21 @@ public partial class AdhocReportWindow : Window
                     Mode = BindingMode.OneWay,
                     Converter = new Converters.CellValueConverter(),
                     ConverterParameter = index.ToString()
-                },
-                FontFamily = i == 0 ? null : new System.Windows.Media.FontFamily("Consolas")
-            });
+                }
+            };
+
+            // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — رفع کرش گزارش‌ساز ═══
+            // «'' is not a valid value for property 'FontFamily'»: ویژگی
+            // FontFamily در WPF یک فراخوان اعتبارسنجی دارد که مقدار تهی را
+            // رد می‌کند (null.ToString() در پیام خطا به‌صورت '' دیده می‌شود)؛
+            // پیش‌تر ستونِ اول «FontFamily = null» می‌گرفت و هر بار اجرای
+            // گزارش در همان ستون اول با ArgumentException می‌شکست. راه‌حل:
+            // مقداردهی فقط برای ستون‌های داده (Consolas) و بی‌اعتنایی به
+            // ستون اول تا فونت را از پنجره ارث ببرد — هرگز null ست نمی‌شود.
+            if (i > 0)
+                column.FontFamily = new System.Windows.Media.FontFamily("Consolas");
+
+            ResultsGrid.Columns.Add(column);
         }
     }
 }

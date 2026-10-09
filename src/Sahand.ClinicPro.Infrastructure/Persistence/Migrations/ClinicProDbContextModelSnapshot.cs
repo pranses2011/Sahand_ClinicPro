@@ -383,7 +383,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("EntryNumber")
                         .IsUnique()
                         .HasDatabaseName("IX_JournalEntry_EntryNumber")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[EntryNumber] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("FiscalYearId");
 
@@ -753,7 +753,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("ExpenseNumber")
                         .IsUnique()
                         .HasDatabaseName("IX_Expense_ExpenseNumber")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[ExpenseNumber] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("Expenses", null, t =>
                         {
@@ -846,7 +846,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("ClaimNumber")
                         .IsUnique()
                         .HasDatabaseName("IX_InsuranceClaim_ClaimNumber")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[ClaimNumber] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("InsuranceCompanyId");
 
@@ -979,7 +979,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("Code")
                         .IsUnique()
                         .HasDatabaseName("IX_InsuranceCompany_Code")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[Code] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("InsuranceCompanies", null, t =>
                         {
@@ -1294,7 +1294,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("InvoiceNumber")
                         .IsUnique()
                         .HasDatabaseName("IX_Invoice_InvoiceNumber")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[InvoiceNumber] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("PatientId")
                         .HasDatabaseName("IX_Invoice_PatientId");
@@ -1552,7 +1552,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("PaymentNumber")
                         .IsUnique()
                         .HasDatabaseName("IX_Payment_PaymentNumber")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[PaymentNumber] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("Payments", null, t =>
                         {
@@ -1658,7 +1658,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("ServiceCode")
                         .IsUnique()
                         .HasDatabaseName("IX_Service_ServiceCode")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[ServiceCode] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("Services", null, t =>
                         {
@@ -1728,7 +1728,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("Code")
                         .IsUnique()
                         .HasDatabaseName("IX_ServiceCategory_Code")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[Code] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("ParentId");
 
@@ -2402,7 +2402,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("IrcCode")
                         .IsUnique()
                         .HasDatabaseName("IX_Medication_IrcCode")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[IrcCode] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("Medications", null, t =>
                         {
@@ -2513,7 +2513,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("PrescriptionCode")
                         .IsUnique()
                         .HasDatabaseName("IX_Prescription_PrescriptionCode")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[PrescriptionCode] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("VisitId");
 
@@ -2843,7 +2843,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("VisitCode")
                         .IsUnique()
                         .HasDatabaseName("IX_Visit_VisitCode")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[VisitCode] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("DoctorId", "VisitDate")
                         .HasDatabaseName("IX_Visit_DoctorId_VisitDate");
@@ -3316,7 +3316,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("ProviderCode")
                         .IsUnique()
                         .HasDatabaseName("IX_SmsProvider_ProviderCode")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[ProviderCode] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("SmsProviders", null, t =>
                         {
@@ -3460,7 +3460,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("Code")
                         .IsUnique()
                         .HasDatabaseName("IX_SmsTemplate_Code")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[Code] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("SmsTemplates", null, t =>
                         {
@@ -4409,7 +4409,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("Code")
                         .IsUnique()
                         .HasDatabaseName("IX_SystemModule_Code")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[Code] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("Modules", null, t =>
                         {
@@ -4735,7 +4735,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("TrackingCode")
                         .IsUnique()
                         .HasDatabaseName("IX_ElectronicPrescription_TrackingCode")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[TrackingCode] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("ElectronicPrescriptions", null, t =>
                         {
@@ -4819,7 +4819,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("ReferralCode")
                         .IsUnique()
                         .HasDatabaseName("IX_ReferralRecord_ReferralCode")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[ReferralCode] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("ReferralSystem", null, t =>
                         {
@@ -5674,7 +5674,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrderNumber")
                         .IsUnique()
                         .HasDatabaseName("IX_ImagingOrder_OrderNumber")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[OrderNumber] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("PatientId")
                         .HasDatabaseName("IX_ImagingOrder_PatientId");
@@ -5776,7 +5776,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrderNumber")
                         .IsUnique()
                         .HasDatabaseName("IX_LabOrder_OrderNumber")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[OrderNumber] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("PatientId")
                         .HasDatabaseName("IX_LabOrder_PatientId");
@@ -5980,7 +5980,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("TestCode")
                         .IsUnique()
                         .HasDatabaseName("IX_LabTest_TestCode")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[TestCode] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("LabTests", null, t =>
                         {
@@ -6146,7 +6146,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("BranchCode")
                         .IsUnique()
                         .HasDatabaseName("IX_Branch_BranchCode")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[BranchCode] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("Branches", null, t =>
                         {
@@ -6224,7 +6224,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("Code")
                         .IsUnique()
                         .HasDatabaseName("IX_Department_Code")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[Code] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("ParentId");
 
@@ -6341,12 +6341,12 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("MedicalLicenseNo")
                         .IsUnique()
                         .HasDatabaseName("IX_Doctor_MedicalLicenseNo")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[MedicalLicenseNo] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("NezamPezeshkiCode")
                         .IsUnique()
                         .HasDatabaseName("IX_Doctor_NezamPezeshkiCode")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[NezamPezeshkiCode] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("SpecialtyId");
 
@@ -6535,12 +6535,12 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("NationalCode")
                         .IsUnique()
                         .HasDatabaseName("IX_Employee_NationalCode")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[NationalCode] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("PersonnelCode")
                         .IsUnique()
                         .HasDatabaseName("IX_Employee_PersonnelCode")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[PersonnelCode] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("PositionId");
 
@@ -6923,7 +6923,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("Code")
                         .IsUnique()
                         .HasDatabaseName("IX_Position_Code")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[Code] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("DepartmentId");
 
@@ -7005,7 +7005,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("Code")
                         .IsUnique()
                         .HasDatabaseName("IX_Specialty_Code")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[Code] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("ParentId");
 
@@ -7928,7 +7928,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("ContractNumber")
                         .IsUnique()
                         .HasDatabaseName("IX_PersonnelContract_ContractNumber")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[ContractNumber] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("EmployeeId");
 
@@ -8144,7 +8144,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("TransactionNumber")
                         .IsUnique()
                         .HasDatabaseName("IX_PharmacyTransaction_TransactionNumber")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[TransactionNumber] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("PharmacyTransactions", null, t =>
                         {
@@ -8222,7 +8222,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrderNumber")
                         .IsUnique()
                         .HasDatabaseName("IX_PurchaseOrder_OrderNumber")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[OrderNumber] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("SupplierId");
 
@@ -8551,7 +8551,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("Code")
                         .IsUnique()
                         .HasDatabaseName("IX_Supplier_Code")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[Code] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("Suppliers", null, t =>
                         {
@@ -8741,7 +8741,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("Code")
                         .IsUnique()
                         .HasDatabaseName("IX_ReportDefinition_Code")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[Code] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("ReportDefinitions", null, t =>
                         {
@@ -9007,7 +9007,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("AppointmentCode")
                         .IsUnique()
                         .HasDatabaseName("IX_Appointment_AppointmentCode")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[AppointmentCode] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("DoctorId");
 
@@ -9259,7 +9259,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("RoomNumber")
                         .IsUnique()
                         .HasDatabaseName("IX_ExaminationRoom_RoomNumber")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[RoomNumber] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("ExaminationRooms", null, t =>
                         {
@@ -9481,7 +9481,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("ReceptionNumber")
                         .IsUnique()
                         .HasDatabaseName("IX_Reception_ReceptionNumber")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[ReceptionNumber] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("Receptions", null, t =>
                         {
@@ -9583,7 +9583,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("ShiftCode")
                         .IsUnique()
                         .HasDatabaseName("IX_Shift_ShiftCode")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[ShiftCode] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("Shifts", null, t =>
                         {

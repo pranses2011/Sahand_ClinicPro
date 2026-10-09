@@ -29,6 +29,15 @@ public static class Money
     public static string UnitLabel => IsToman ? "تومان" : "ریال";
 
     /// <summary>
+    /// سقف امن مبلغ ریالی — مطابق بزرگ‌ترین ستون مبلغ دیتابیس decimal(18,0).
+    /// چرخهٔ بیست‌وششم (گزارش هجدهم مالک): ورودی‌های خیلی بزرگ در کادر مبلغ
+    /// در حالت تومان با ×۱۰ از بازهٔ decimal بیرون می‌زدند و کل برنامه با
+    /// OverflowException («Value was either too large or too small for a
+    /// Decimal») می‌بست. از این پس ورودی در همین سقف محبوس می‌شود.
+    /// </summary>
+    public const decimal MaxRial = 999_999_999_999_999_999m; // ۱۸ رقم — decimal(18,0)
+
+    /// <summary>
     /// تبدیل نمایشی مقدار — ریال ذخیره‌شده → مقدار نمایشی.
     /// در حالت تومان، مبلغ بر ۱۰ تقسیم می‌شود (صرفاً برای نمایش)؛
     /// محاسبات و ذخیره‌سازی هرگز از این خروجی استفاده نمی‌کنند.
@@ -38,8 +47,27 @@ public static class Money
     /// <summary>
     /// تبدیل معکوس مقدار ورودی کاربر → ریال ذخیره‌شده.
     /// کاربر در حالت تومان مقدار را به تومان وارد می‌کند؛ ×۱۰ برای ریال.
+    /// ═══ چرخهٔ بیست‌وششم — ایمن از سرریز ═══ تایپ اعداد نجومی در حالت
+    /// تومان، ×۱۰ را از بازهٔ decimal بیرون می‌زد و برنامه کرش می‌کرد؛
+    /// اکنون حاصل‌ضرب در بلوک checked محاسبه و در صورت سرریز به سقف
+    /// امن ستون‌های مبلغ (decimal(18,0)) محبوس می‌شود — بدون استثنا.
     /// </summary>
-    public static decimal FromDisplayInput(decimal displayAmount) => IsToman ? displayAmount * 10m : displayAmount;
+    public static decimal FromDisplayInput(decimal displayAmount)
+    {
+        if (!IsToman)
+            return displayAmount;
+        try
+        {
+            var rial = checked(displayAmount * 10m);
+            return rial > MaxRial ? MaxRial : rial;
+        }
+        catch (OverflowException)
+        {
+            // ورودی نجومی — به سقف امن محبوس می‌شود تا نه کرش رخ دهد نه
+            // مقدار نامعتبری به لایهٔ ذخیره‌سازی راه پیدا کند
+            return MaxRial;
+        }
+    }
 
     /// <summary>
     /// قالب‌بندی مبلغ با جداکنندهٔ ۳ رقمی و بدون اعشار — «۱٬۲۳۴٬۵۶۷».
@@ -70,6 +98,9 @@ public static class Money
     /// «۱٬۲۳۴٬۵۶۷» و «1,234,567» هر دو → 1234567. تهی/نامعتبر → false.
     /// جهتِ تبدیل: خروجی «مقدار نمایشی» است (در حالت تومان همان تومان)؛
     /// برای ذخیره، با FromDisplayInput به ریال برگردانده می‌شود.
+    /// ═══ چرخهٔ بیست‌وششم — ایمن از سرریز ═══ رشته‌های خیلی بلند (>۲۸ رقم)
+    /// خودِ decimal.TryParse را هم سرریز می‌کنند؛ TryParse به‌جای Parse
+    /// به‌کار رفت و در نهایت مقدار به سقف امن مبلغ محبوس می‌شود.
     /// </summary>
     public static bool TryParse(string? text, out decimal displayValue)
     {
@@ -85,7 +116,19 @@ public static class Money
             .Replace(" ", string.Empty)
             .Replace("‌", string.Empty); // نیم‌فاصله
 
-        return decimal.TryParse(normalized, NumberStyles.Number, CultureInfo.InvariantCulture, out displayValue);
+        // پارس امن — رشتهٔ رقم‌دارِ طولانی به‌جای استثنا، تهی برمی‌گردد
+        if (!decimal.TryParse(normalized, NumberStyles.Number, CultureInfo.InvariantCulture, out displayValue))
+        {
+            displayValue = 0;
+            return false;
+        }
+
+        // محبوس‌سازی مقدار نمایشی به سقف امن (سپس در FromDisplayInput به
+        // سقف ریالی نهایی محبوس می‌شود) — ورودی هرگز از ستون‌های دیتابیس
+        // بزرگ‌تر نمی‌شود
+        if (displayValue > MaxRial)
+            displayValue = MaxRial;
+        return true;
     }
 
     /// <summary>تبدیل ارقام فارسی و عربی به لاتین — برای پارس ورودی مبلغ و کد</summary>

@@ -49,6 +49,10 @@ public sealed class MoneyRialConverter : IValueConverter
     /// <summary>
     /// پارس امن رشتهٔ مبلغ — ارقام فارسی/عربی نرمال، جداکننده‌ها حذف؛
     /// نتیجهٔ نامعتبر صفر است (کادر خالی هم ۰ حساب می‌شود).
+    /// ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) ═══ رشتهٔ بلندتر از ۲۸ رقم،
+    /// خودِ decimal.Parse را با OverflowException می‌شکست و برنامه را
+    /// می‌بست؛ اکنون TryParse امن است و مقدار به سقف ستون‌های مبلغ
+    /// دیتابیس (decimal(18,0)) محبوس می‌شود.
     /// </summary>
     private static decimal ParseSafe(string text)
     {
@@ -56,8 +60,14 @@ public sealed class MoneyRialConverter : IValueConverter
             return 0m;
         var latin = Money.PersianDigitsToLatin(text);
         var digits = new string(latin.Where(char.IsDigit).ToArray());
-        return digits.Length == 0
-            ? 0m
-            : decimal.Parse(digits, System.Globalization.CultureInfo.InvariantCulture);
+        if (digits.Length == 0)
+            return 0m;
+
+        // برش تا سقف ۱۸ رقم + پارس امن — نه استثنا، نه مقدار خارج از بازه
+        if (digits.Length > 18)
+            digits = digits[..18];
+        return decimal.TryParse(digits, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : 0m;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Sahand.ClinicPro.Domain.Common;
 
 namespace Sahand.ClinicPro.Infrastructure.Persistence;
@@ -465,6 +466,60 @@ public class ClinicProDbContext : DbContext
             if (rowVersion is not null)
             {
                 modelBuilder.Entity(clrType).Property(nameof(AuditableEntity.RowVersion)).IsRowVersion();
+            }
+        }
+
+        // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — رفع خطای ۲۶۰۱ اس‌کیوال‌سرور ═══
+        // در اس‌کیوال‌سرور ایندکس یکتا روی ستون تهی‌پذیر فقط «یک» رکورد NULL را
+        // مجاز می‌شمارد؛ ثبت دومین کاربر/پرسنلِ بدون کد پرسنلی با خطای
+        // «Cannot insert duplicate key row … duplicate key value is (<NULL>)»
+        // (شمارهٔ ۲۶۰۱) شکست می‌خورد و کل تراکنش (شامل نقش‌ها و دسترسی‌ها)
+        // لغو می‌شود. راه‌حل استاندارد: ایندکس فیلترشده که سطرهای NULL را از
+        // دامنهٔ یکتایی خارج می‌کند. این حلقهٔ سراسری روی «همهٔ» موجودیت‌ها
+        // اعمال می‌شود تا هر ایندکس یکتای تک‌ستونیِ تهی‌پذیر (PersonnelCode،
+        // NationalCode، NezamPezeshkiCode، IrcCode، ReferralCode و…) به‌صورت
+        // خودکار شرط «IS NOT NULL» بگیرد؛ فیلترهای موجود (حذف نرم) نیز حفظ
+        // می‌شوند. از این پس افزودن موجودیت تازه با ستون یکتای اختیاری، بدون
+        // نیاز به پیکربندی دستی، از این بیمهٔ یکتایی برخوردار خواهد بود.
+        if (!IsInMemory)
+        {
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                var tableName = entityType.GetTableName();
+                if (tableName is null)
+                    continue; // موجودیت بدون جدول (keyless/owned) — بی‌ربط
+
+                var tableId = StoreObjectIdentifier.Table(tableName, entityType.GetSchema());
+
+                foreach (var index in entityType.GetIndexes())
+                {
+                    if (index is not IMutableIndex mutableIndex)
+                        continue;
+
+                    // فقط ایندکس‌های «یکتا» و «تک‌ستونی» با ستون تهی‌پذیر هدف‌اند؛
+                    // ایندکس‌های ترکیبی و ستون‌های الزامی یکتایی طبیعی سالم دارند
+                    if (!index.IsUnique || index.Properties.Count != 1)
+                        continue;
+
+                    var prop = index.Properties[0];
+                    if (!prop.IsNullable)
+                        continue;
+
+                    var column = prop.GetColumnName(tableId);
+                    if (string.IsNullOrEmpty(column))
+                        continue;
+
+                    // شرط خروج سطرهای NULL + حفظ فیلتر حذف نرم موجود؛
+                    // اگر فیلتر فعلی از قبل همین شرط را دارد (مثل ایندکس‌های
+                    // کلید خارجی اختیاری) از تکرار بی‌مورد پرهیز می‌شود
+                    var notNullCondition = $"[{column}] IS NOT NULL";
+                    var existingFilter = index.GetFilter();
+                    if (existingFilter?.Contains(notNullCondition, StringComparison.OrdinalIgnoreCase) == true)
+                        continue;
+                    mutableIndex.SetFilter(string.IsNullOrEmpty(existingFilter)
+                        ? notNullCondition
+                        : $"{notNullCondition} AND {existingFilter}");
+                }
             }
         }
     }

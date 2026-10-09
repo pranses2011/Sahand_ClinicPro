@@ -143,8 +143,23 @@ public static class MoneyInput
             return;
         }
 
-        // مقدار عددی تمیز — به رسم نمایشی (تومان/ریال از دید کاربر)
-        var value = decimal.Parse(digitsOnly.ToString(), System.Globalization.CultureInfo.InvariantCulture);
+        // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — رفع کرش OverflowException ═══
+        // «Value was either too large or too small for a Decimal» هنگام تایپ
+        // اعداد خیلی بزرگ: ۱) رشتهٔ بلندتر از ۲۸ رقم اصلاً در decimal جا
+        // نمی‌شود و decimal.Parse خودش سرریز می‌کرد؛ ۲) در حالت تومان
+        // FromDisplayInput با ×۱۰ سرریز می‌کرد. اکنون تعداد ارقام به سقف
+        // ستون‌های مبلغ دیتابیس (decimal(18,0)) بریده می‌شود و پارس هم
+        // با TryParse امن است — ورودی از لحظهٔ تایپ محبوس است، نه در آخر.
+        if (digitsOnly.Length > 18)
+            digitsOnly.Length = 18; // شارپ‌بیلدر — برش تا سقف ۱۸ رقم
+
+        if (!decimal.TryParse(digitsOnly.ToString(), System.Globalization.CultureInfo.InvariantCulture, out var value))
+        {
+            // عدد نامعتبر (نمی‌بایست رخ دهد — فقط رقم داریم)؛ برای اطمینان
+            // مقدار صفر همگام می‌شود و از استثنا در مسیر اتصال جلوگیری می‌شود
+            box.SetCurrentValue(NumericValueProperty, 0m);
+            return;
+        }
 
         // ═══ چرخه ۲۴ — اصلاح حیاتی ═══ SetValue روی DP ای که Binding دارد
         // «اتصال را حذف» می‌کند (رفتار مستند WPF)؛ نتیجه: مقدار هرگز به VM

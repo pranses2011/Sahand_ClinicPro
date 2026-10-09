@@ -25,6 +25,22 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 
+// ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — نمایش فارسی در لاگ کنسول API ═══
+// پیام‌های فارسی سریلوگ روی کنسول ویندوز به‌صورت «???? ????» دیده می‌شدند؛
+// ریشه: کدپیج پیش‌فرض کنسول (مثلاً CP437/CP850) نویسه‌های فارسی را به «?»
+// ترجمه می‌کند. با UTF-8 قرار دادن کدپیجِ خروجی، متن فارسی سالم چاپ می‌شود.
+// در حالت‌های بدون کنسول متصل (اجرا به‌عنوان سرویس یا ریدایرکت خروجی)
+// تنظیم کدپیج IOException می‌دهد — بی‌خطر در try/catch بلعیده می‌شود.
+try
+{
+    Console.OutputEncoding = System.Text.Encoding.UTF8;
+}
+catch
+{
+    // بدون کنسول متصل — مسیر عادی سرویس/CI؛ خروجی سریلوگ ریدایرکت می‌شود
+    // و کدپیج موضوعیت ندارد
+}
+
 try
 {
     Log.Information("🚀 در حال راه‌اندازی API سامانه درمانگاه سهند");
@@ -40,6 +56,21 @@ try
     builder.Host.UseSerilog((context, loggerConfiguration) =>
     {
         loggerConfiguration.ReadFrom.Configuration(context.Configuration);
+
+        // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — سینک فایل با کدگذاری UTF-8 ═══
+        // حتی با اصلاح کدپیج کنسول، فونت‌های کنسول ویندوز ممکن است نویسه‌های
+        // فارسی را کامل رندر نکنند؛ برای مطالعهٔ مطمئنِ لاگ‌ها (به‌ویژه برای
+        // پشتیبانی) سینک فایل روزانهٔ UTF-8 افزوده شد: Logs/api-YYYYMMDD.log
+        // با نگهداشت ۶۱ روز. shared اجازهٔ هم‌زمان‌نویسی چند پردازه را می‌دهد
+        // و long-running پردازهٔ API هر ۲ ثانیه خروجی را روی دیسک فلاش می‌کند.
+        loggerConfiguration.WriteTo.File(
+            path: Path.Combine(AppContext.BaseDirectory, "Logs", "api-.log"),
+            outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}",
+            rollingInterval: Serilog.RollingInterval.Day,
+            retainedFileCountLimit: 61,
+            encoding: System.Text.Encoding.UTF8,
+            shared: true,
+            flushToDiskInterval: TimeSpan.FromSeconds(2));
 
         var seqUrl = context.Configuration["SEQ_SERVER_URL"];
         if (!string.IsNullOrWhiteSpace(seqUrl))
