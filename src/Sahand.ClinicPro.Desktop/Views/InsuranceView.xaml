@@ -118,7 +118,10 @@
                                  ۳) برای هدف «آزاد» سرور همیشه ۰/۱۰۰ برمی‌گرداند و لیست
                                  دیگر سهم بیمهٔ غیرواقعی نشان نمی‌دهد. -->
                             <DataGridTextColumn Header="قیمت تعرفه" Width="130">
-                                <DataGridTextColumn.Binding><Binding Path="Price" Converter={StaticResource CurrencyRial}" /></DataGridTextColumn.Binding>
+                                <!-- ⚠ اصلاح خطای MC3000: کوتیشن ابتدای مقدار «Converter» جا افتاده بود
+                                     (Converter={StaticResource CurrencyRial}" ← نامعتبر) — حالا مقدار
+                                     داخل جفت‌کوتیشن کامل قرار گرفته و XML معتبر است. -->
+                                <DataGridTextColumn.Binding><Binding Path="Price" Converter="{StaticResource CurrencyRial}" /></DataGridTextColumn.Binding>
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
