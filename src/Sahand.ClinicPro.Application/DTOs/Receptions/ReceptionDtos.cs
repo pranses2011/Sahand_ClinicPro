@@ -12,7 +12,12 @@ public record ReceptionListDto(
     string TimeShamsi,
     ReceptionStatus Status,
     string? InsuranceName,
-    int? WaitingTime);
+    int? WaitingTime,
+    // ═══ چرخه سی‌ویکم (گزارش مالک): «هیچ مبلغی در هیچ‌کجای برنامه نمایش داده
+    // نمی‌شود» — جمع فاکتورهای متصل به این پذیرش و مبلغ پرداخت‌شدهٔ آنها در
+    // فهرست پذیرش روز نمایش داده می‌شود تا گردش مالی همان جا دیده شود ═══
+    decimal InvoiceTotal,
+    decimal PaidAmount);
 
 /// <summary>درخواست ثبت پذیرش</summary>
 public record CreateReceptionDto(

@@ -378,6 +378,55 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
                                 <DataGridTextColumn Header="انتظار" Binding="{Binding WaitingText, Converter={StaticResource PersianDigits}}" Width="90" />
+                                <!-- ═══ چرخه سی‌ویکم (گزارش مالک): «هیچ مبلغی در هیچ‌کجای برنامه
+                                     نمایش داده نمیشود» — دو ستون مالی برای هر پذیرش روز:
+                                     جمع فاکتور + پرداخت‌شده (مبدل ریالی با ارقام فارسی) و
+                                     برچسب وضعیت مالی (تسویه/پرداخت‌نشده/بدون فاکتور) ═══ -->
+                                <DataGridTextColumn Binding="{Binding InvoiceTotal, Converter={StaticResource CurrencyRial}}" Width="115">
+                                    <DataGridTextColumn.Header>
+                                        <TextBlock><Run Text="مبلغ فاکتور (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                                    </DataGridTextColumn.Header>
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center" />
+                                            <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Binding="{Binding PaidAmount, Converter={StaticResource CurrencyRial}}" Width="110">
+                                    <DataGridTextColumn.Header>
+                                        <TextBlock><Run Text="پرداخت‌شده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                                    </DataGridTextColumn.Header>
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center" />
+                                            <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTemplateColumn Header="وضعیت مالی" Width="105" SortMemberPath="FinancialText">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#ECEFF1" />
+                                                        <Style.Triggers>
+                                                            <!-- تسویه → سبز؛ پرداخت‌نشده → قرمزروشن -->
+                                                            <DataTrigger Binding="{Binding FinancialText}" Value="تسویه">
+                                                                <Setter Property="Background" Value="#E8F5E9" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding FinancialText}" Value="پرداخت‌نشده">
+                                                                <Setter Property="Background" Value="#FFEBEE" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding FinancialText}" FontSize="11" />
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                     </StackPanel>

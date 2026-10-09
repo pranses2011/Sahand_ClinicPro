@@ -266,7 +266,14 @@ public partial class ReceptionsViewModel : ViewModelBase
         Math.Clamp(r.Status - 1, 0, 5),
         r.InsuranceName,
         r.WaitingTime.HasValue ? $"{r.WaitingTime} دقیقه" : "—",
-        new[] { "#FFFFFF", "#FFF8E1", "#E3F2FD", "#E8F5E9", "#ECEFF1", "#FFEBEE" }[Math.Clamp(r.Status - 1, 0, 5)]);
+        new[] { "#FFFFFF", "#FFF8E1", "#E3F2FD", "#E8F5E9", "#ECEFF1", "#FFEBEE" }[Math.Clamp(r.Status - 1, 0, 5)],
+        // ═══ چرخه سی‌ویکم — مبالغ مالی هر پذیرش در فهرست روز ═══ جمع فاکتور +
+        // پرداخت‌شده + متن وضعیت مالی (پرداخت‌شده/پرداخت نشده/بدون فاکتور)
+        r.InvoiceTotal,
+        r.PaidAmount,
+        r.InvoiceTotal > 0
+            ? (r.PaidAmount >= r.InvoiceTotal ? "تسویه" : "پرداخت‌نشده")
+            : "بدون فاکتور");
 
     /// <summary>متن وضعیت</summary>
     private static string StatusTextOf(int status) => status switch
@@ -631,6 +638,17 @@ public partial class ReceptionsViewModel : ViewModelBase
         }
 
         // ۲. صدور فاکتور خودکار — قلم ویزیت با کد خدمت K
+        // ═══ چرخهٔ سی‌ویکم (گزارش مالک) — ریشهٔ «هیچ مبلغی در هیچ‌کجای برنامه
+        // ذخیره نشد» ═══ دو ایراد ساختاری همین‌جا بود:
+        //   (الف) ناهمخوانی نام فیلدها: دسکتاپ «serviceName» و «discount» می‌فرستاد
+        //        ولی قرارداد سرور «description» و «discountPercent» است → نام قلم
+        //        فاکتور برای همیشه تهی می‌ماند (ServiceName نادیده گرفته می‌شد)؛
+        //        اکنون نام‌های صحیح قرارداد ارسال می‌شود.
+        //   (ب) بلع خاموش خطا: اگر صدور فاکتور یا ثبت پرداخت شکست بخورد، پیام
+        //        موفقیت بی‌قید و شرط چاپ می‌شد و کاربر گمان می‌کرد همه‌چیز ثبت
+        //        شده؛ اکنون شکست هر حلقه با دیالوگ فارسی خودِ برنامه (قانون ششم
+        //        مالک — بدون MessageBox ویندوز) اعلام و کل زنجیره صادقانه گزارش می‌شود.
+        var invoiceFailed = false; // وضعیت صدور فاکتور برای پیام پایانی صادقانه
         var invoice = await _api.PostAsync<InvoiceCreateResponse>("invoices", new
         {
             patientId = FoundPatient.Id,
@@ -643,16 +661,27 @@ public partial class ReceptionsViewModel : ViewModelBase
             {
                 // چرخه ۲۴ — قلم فاکتور: در حالت خدمتی، خودِ خدمت با قیمت تعرفه؛
                 // در حالت ویزیت، ویزیت پزشک (رفتار پیشین)
+                // چرخه سی‌ویکم — نام فیلدها مطابق قرارداد سرور: description + discountPercent
                 isServiceMode
-                    ? new { serviceId = (long?)SelectedService!.Id, serviceName = SelectedService.Name, quantity = 1, unitPrice = SelectedService.Price, discount = 0m }
-                    : new { serviceId = (long?)null, serviceName = $"ویزیت {SelectedDoctor!.Name}", quantity = 1, unitPrice = VisitFee, discount = 0m }
+                    ? new { serviceId = (long?)SelectedService!.Id, description = SelectedService.Name, quantity = 1, unitPrice = SelectedService.Price, discountPercent = 0m }
+                    : new { serviceId = (long?)null, description = $"ویزیت {SelectedDoctor!.Name}", quantity = 1, unitPrice = VisitFee, discountPercent = 0m }
             },
             description = isServiceMode
                 ? $"پذیرش خدمت {SelectedService!.Name} — {FoundPatient.FullName}"
                 : $"پذیرش {FoundPatient.FullName}"
         });
+        if (invoice?.Data is null || invoice.Data <= 0)
+        {
+            // پذیرش ثبت شده ولی فاکتور نه — از ماژول «صندوق و فاکتور» قابل تکمیل است؛
+            // خطای واقعی سرور (LastError) نمایش داده می‌شود تا ریشه مشخص باشد
+            invoiceFailed = true;
+            IsBusy = false;
+            Views.AppDialog.Error("صدور فاکتور ناموفق",
+                $"پذیرش با شماره صف {reception.Data} ثبت شد اما صدور فاکتور شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}فاکتور را بعداً از ماژول «صندوق و فاکتور» صادر کنید.");
+        }
 
         // ۳. پرداخت نقدی (اختیاری)
+        var paymentFailed = false;
         if (withPayment && invoice?.Data is not null && invoice.Data > 0)
         {
             var payment = await _api.PostAsync<PaymentCreateResponse>("payments", new
@@ -664,16 +693,29 @@ public partial class ReceptionsViewModel : ViewModelBase
                 referenceNumber = (string?)null,
                 cardNumber = (string?)null
             });
-            if (payment?.Data is null)
-                _snackbar.Info("پرداخت ثبت نشد — از ماژول مالی تکمیل کنید");
+            if (payment?.Data is null || payment.Data <= 0)
+            {
+                // پرداخت ثبت نشد — کاربر باید بداند؛ فاکتور بدهکار مانده است
+                paymentFailed = true;
+                IsBusy = false;
+                Views.AppDialog.Error("ثبت پرداخت ناموفق",
+                    $"فاکتور صادر شد اما ثبت پرداخت {PatientShare:N0} ریال شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}پرداخت را بعداً از ماژول «صندوق و فاکتور» تکمیل کنید.");
+            }
         }
 
         IsBusy = false;
 
         var queueNo = reception.Data;
-        _snackbar.Success(withPayment
-            ? $"پذیرش موفق — شماره صف: {queueNo} (فاکتور و پرداخت ثبت شد)"
-            : $"پذیرش موفق — شماره صف: {queueNo} (فاکتور صادر شد)");
+        // پیام پایانی صادقانه — وضعیت واقعی هر سه حلقه (پذیرش/فاکتور/پرداخت)
+        // چرخه سی‌ویکم: دیگر پس از شکست فاکتور/پرداخت، پیام «ثبت شد» چاپ نمی‌شود
+        if (invoiceFailed)
+            _snackbar.Info($"پذیرش ثبت شد — شماره صف {queueNo}؛ صدور فاکتور ناموفق بود (از ماژول مالی تکمیل کنید)");
+        else if (paymentFailed)
+            _snackbar.Info($"پذیرش موفق — شماره صف {queueNo}؛ فاکتور صادر شد اما پرداخت ثبت نشد");
+        else
+            _snackbar.Success(withPayment
+                ? $"پذیرش موفق — شماره صف: {queueNo} (فاکتور و پرداخت ثبت شد)"
+                : $"پذیرش موفق — شماره صف: {queueNo} (فاکتور صادر شد)");
 
         // پاک‌سازی فرم
         SmartSearch = string.Empty;
@@ -723,6 +765,10 @@ public partial class ReceptionsViewModel : ViewModelBase
         public int Status { get; set; }
         public string? InsuranceName { get; set; }
         public int? WaitingTime { get; set; }
+
+        // چرخه سی‌ویکم — مبالغ مالی پذیرش (جمع فاکتورهای متصل + پرداخت‌شده)
+        public decimal InvoiceTotal { get; set; }
+        public decimal PaidAmount { get; set; }
     }
 
     public sealed class ReceptionCreateResponse
@@ -774,4 +820,8 @@ public record ReceptionRow(
     int ColorIndex,
     string? InsuranceName,
     string WaitingText,
-    string StatusColor);
+    string StatusColor,
+    // چرخه سی‌ویکم — مبالغ مالی پذیرش برای نمایش در فهرست روز
+    decimal InvoiceTotal,
+    decimal PaidAmount,
+    string FinancialText);

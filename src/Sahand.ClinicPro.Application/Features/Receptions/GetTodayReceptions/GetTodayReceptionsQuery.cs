@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Application.DTOs.Receptions;
 using Sahand.ClinicPro.Domain.Common;
+using Sahand.ClinicPro.Domain.Entities.Billing;
 using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
 using Sahand.ClinicPro.Domain.Interfaces;
@@ -30,6 +31,18 @@ public class GetTodayReceptionsQueryHandler
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
+        // ═══ چرخه سی‌ویکم (گزارش مالک) — جمع مالی هر پذیرش ═══
+        // «هیچ مبلغی در هیچ‌کجای برنامه نمایش داده نمیشود» — فاکتورهای صادرشدهٔ
+        // متصل به هر پذیرش (Invoice.ReceptionId) جمع‌بندی و همراه هر ردیف
+        // فهرست پذیرش روز برگردانده می‌شود: جمع فاکتور + پرداخت‌شده. پذیرش بدون
+        // فاکتور (صادرنشده/شکست‌خورده) با صفر نمایش داده می‌شود تا خلأ مالی
+        // همان‌جا دیده شود، نه اینکه ستون خالی بماند.
+        var invoiceTotals = await _unitOfWork.Repository<Invoice>().QueryableNoTracking
+            .Where(i => !i.IsDeleted && i.ReceptionId != null)
+            .GroupBy(i => i.ReceptionId!.Value)
+            .Select(g => new { ReceptionId = g.Key, Total = g.Sum(x => x.TotalAmount), Paid = g.Sum(x => x.PaidAmount) })
+            .ToDictionaryAsync(x => x.ReceptionId, cancellationToken);
+
         IQueryable<Reception> query = _unitOfWork.Repository<Reception>()
             .QueryableNoTracking
             .Include(r => r.Patient)
@@ -40,21 +53,39 @@ public class GetTodayReceptionsQueryHandler
         if (request.DoctorId.HasValue)
             query = query.Where(r => r.DoctorId == request.DoctorId.Value);
 
-        var items = await query
+        // نکتهٔ پیاده‌سازی: نگاشت دیکشنری مالی باید در حافظه انجام شود —
+        // فراخوانی TryGetValue داخل درخت عبارت EF به SQL ترجمه نمی‌شود؛
+        // پس نخست ردیف‌های خام خوانده می‌شوند سپس DTO در حافظه ساخته می‌شود
+        var rawRows = await query
             .OrderBy(r => r.ReceptionDate)
-            .Select(r => new ReceptionListDto(
+            .Select(r => new
+            {
                 r.Id,
                 r.ReceptionNumber,
-                r.Patient != null ? r.Patient.FirstName + " " + r.Patient.LastName : "",
+                PatientName = r.Patient != null ? r.Patient.FirstName + " " + r.Patient.LastName : "",
                 // چرخه ۲۴ — پذیرش خدمتی: به‌جای پزشک، نام خدمت نمایش داده می‌شود
-                r.Doctor != null && r.Doctor.Employee != null
+                DoctorName = r.Doctor != null && r.Doctor.Employee != null
                     ? r.Doctor.Employee.FirstName + " " + r.Doctor.Employee.LastName
                     : (r.ServiceName ?? "خدمت درمانی"),
-                r.ReceptionDate.ToString("HH:mm"),
+                r.ReceptionDate,
                 r.Status,
-                r.InsuranceCompany != null ? r.InsuranceCompany.Name : null,
-                r.WaitingTime))
+                InsuranceName = r.InsuranceCompany != null ? r.InsuranceCompany.Name : null,
+                r.WaitingTime
+            })
             .ToListAsync(cancellationToken);
+
+        // چرخه سی‌ویکم — ساخت نهایی DTO با مبالغ مالی (صفر وقتی فاکتوری صادر نشده)
+        var items = rawRows.Select(r => new ReceptionListDto(
+            r.Id,
+            r.ReceptionNumber,
+            r.PatientName,
+            r.DoctorName,
+            r.ReceptionDate.ToString("HH:mm"),
+            r.Status,
+            r.InsuranceName,
+            r.WaitingTime,
+            invoiceTotals.TryGetValue(r.Id, out var fin) ? fin.Total : 0m,
+            invoiceTotals.TryGetValue(r.Id, out var fin2) ? fin2.Paid : 0m)).ToList();
 
         return Result<List<ReceptionListDto>>.Success(items);
     }

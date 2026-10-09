@@ -536,6 +536,10 @@ public partial class InvoiceFormViewModel : ObservableObject
         var doctor = DoctorIndex >= 0 && DoctorIndex < Doctors.Count ? Doctors[DoctorIndex] : null;
 
         // ۱. ثبت فاکتور
+        // ═══ چرخهٔ سی‌ویکم (گزارش مالک — قانون پنجم: ریشهٔ همین خطا در پذیرش) ═══
+        // ناهمخوانی نام فیلدها با قرارداد سرور: «serviceName»/«discount» نادیده
+        // گرفته می‌شد و نام اقلام فاکتور برای همیشه تهی ذخیره می‌شد؛ نام‌های
+        // صحیح قرارداد (description + discountPercent) ارسال می‌شود.
         var invoice = await _api.PostAsync<InvoiceCreateResult>("invoices", new
         {
             patientId = Patient.Id,
@@ -547,10 +551,10 @@ public partial class InvoiceFormViewModel : ObservableObject
             items = Items.Select(i => new
             {
                 serviceId = i.ServiceId,
-                serviceName = i.Name,
+                description = i.Name,
                 quantity = i.Quantity,
                 unitPrice = i.UnitPrice,
-                discount = 0m,
+                discountPercent = 0m,
                 performedById = i.Performer?.Id,
                 doctorId = doctor?.Id
             }),
@@ -565,7 +569,10 @@ public partial class InvoiceFormViewModel : ObservableObject
         }
 
         // ۲. ثبت پرداخت
-        await _api.PostAsync("payments", new
+        // چرخه سی‌ویکم — بررسی نتیجهٔ پرداخت: پیش‌تر بی‌شرط صدا زده می‌شد و شکستش
+        // خاموش می‌ماند؛ اکنون شکست با دیالوگ فارسی خودِ برنامه اعلام می‌شود
+        // (قانون ششم مالک — بدون MessageBox ویندوز) تا فاکتورِ بدهکار گم نشود
+        var paymentOk = await _api.PostAsync("payments", new
         {
             invoiceId = invoice.Data,
             patientId = Patient.Id,
@@ -576,6 +583,15 @@ public partial class InvoiceFormViewModel : ObservableObject
         });
 
         IsBusy = false;
+        if (!paymentOk)
+        {
+            // فاکتور ثبت شده ولی پرداخت نه — فاکتور در وضعیت بدهکار می‌ماند
+            Views.AppDialog.Error("ثبت پرداخت ناموفق",
+                $"فاکتور #{invoice.Data} صادر شد اما ثبت پرداخت شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}پرداخت را از همان فهرست فاکتورها (کلید «ثبت پرداخت») تکمیل کنید.");
+            CloseRequested?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
         _snackbar.Success($"فاکتور #{invoice.Data} ثبت شد — چاپ در گام U19 متصل می‌شود");
         CloseRequested?.Invoke(this, EventArgs.Empty);
     }
