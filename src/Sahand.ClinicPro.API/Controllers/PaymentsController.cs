@@ -30,7 +30,11 @@ public class PaymentsController : ApiBaseController
     {
         var result = await _mediator.Send(new RecordPaymentCommand(dto));
         if (result.IsSuccess)
-            return CreatedResponse(result, "GetAll", new { }, "پرداخت با موفقیت ثبت شد");
+            // چرخهٔ سی‌امین — نام اکشن «GetAll» در این کنترلر وجود ندارد؛
+            // در نتیجه هر ثبتِ موفقِ پرداخت پس از ذخیره با «No route matches
+            // the supplied values» فرو می‌ریخت و کلاینت ۵۰۰ می‌گرفت. هدف
+            // طبیعی، فهرست تراکنش‌های امروز همان صندوق است.
+            return CreatedResponse(result, nameof(GetTodayTransactions), new { }, "پرداخت با موفقیت ثبت شد");
         return ToResponse(result);
     }
 

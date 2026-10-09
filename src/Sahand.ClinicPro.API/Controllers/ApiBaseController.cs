@@ -57,7 +57,19 @@ public abstract class ApiBaseController : ControllerBase
         return Ok(ApiResponse<object>.SuccessMessage(successMessage ?? "عملیات با موفقیت انجام شد"));
     }
 
-    /// <summary>پاسخ ساخته‌شده موفق — کد 201 با مکان منبع</summary>
+    /// <summary>
+    /// پاسخ ساخته‌شده موفق — کد 201 با مکان منبع.
+    /// چرخهٔ سی‌امین — رفع «InvalidOperationException: No route matches the
+    /// supplied values»: پیش‌تر CreatedAtAction مستقیم برمی‌گشت و اگر نام
+    /// اکشن هدف در کنترلر وجود نداشت (مثل «GetOrders» در پاراکلینیک که
+    /// اکشن واقعی GetTodayOrders بود)، استثنا نه هنگام ساختن پاسخ بلکه
+    /// «در مرحلهٔ اجرای نتیجه» پرتاب می‌شد — یعنی پس از ذخیرهٔ موفق داده،
+    /// کلاینت دسکتاپ پاسخ ۵۰۰ «خطای غیرمنتظره» می‌گرفت و کاربر گمان می‌کرد
+    /// عملیات (طرح درمان دندانپزشکی و…) ثبت نشده است. اکنون نشانی منبع
+    /// همین‌جا و به‌صورت زودهنگام ساخته می‌شود؛ اگر مسیری یافت نشد، پاسخ
+    /// 201 بدون سرآیند Location برگردانده می‌شود (کلاینت دسکتاپ فقط بدنهٔ
+    /// JSON استاندارد را می‌خواند) تا این رده از خطا برای همیشه ناممکن شود.
+    /// </summary>
     protected IActionResult CreatedResponse<T>(Result<T> result, string actionName, object routeValues,
         string? successMessage = null)
     {
@@ -68,7 +80,12 @@ public abstract class ApiBaseController : ControllerBase
                 new List<string> { result.Error.Code }));
         }
 
-        return CreatedAtAction(actionName, routeValues,
-            ApiResponse<T>.Success(result.Value!, successMessage ?? "با موفقیت ایجاد شد"));
+        var payload = ApiResponse<T>.Success(result.Value!, successMessage ?? "با موفقیت ایجاد شد");
+
+        // ساخت نشانی با IUrlHelper — null یعنی مسیری با این نام/مقادیر وجود ندارد
+        var location = Url?.Action(actionName, routeValues);
+        return location is null
+            ? StatusCode(StatusCodes.Status201Created, payload)
+            : CreatedAtAction(actionName, routeValues, payload);
     }
 }

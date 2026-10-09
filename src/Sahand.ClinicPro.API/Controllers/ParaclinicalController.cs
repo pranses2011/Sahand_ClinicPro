@@ -41,7 +41,8 @@ public class ParaclinicalController : ApiBaseController
     {
         var result = await _mediator.Send(new CreateImagingOrderCommand(dto));
         if (result.IsSuccess)
-            return CreatedResponse(result, "GetOrders", new { }, "درخواست تصویربرداری ثبت شد");
+            // چرخهٔ سی‌امین — «GetOrders» به nameof(GetTodayOrders) اصلاح شد (اکشنی با آن نام وجود نداشت)
+            return CreatedResponse(result, nameof(GetTodayOrders), new { }, "درخواست تصویربرداری ثبت شد");
         return ToResponse(result);
     }
 
@@ -84,7 +85,10 @@ public class ParaclinicalController : ApiBaseController
     {
         var result = await _mediator.Send(command);
         if (result.IsSuccess)
-            return CreatedResponse(result, "GetOrders", new { }, "طرح درمان ثبت شد");
+            // چرخهٔ سی‌امین — نام اکشن هدف با nameof وصل شد؛ رشتهٔ «GetOrders»
+            // وجود نداشت و پس از ثبت موفقِ طرح، اجرای نتیجه با
+            // «No route matches the supplied values» فرو می‌ریخت و کلاینت ۵۰۰ می‌گرفت
+            return CreatedResponse(result, nameof(GetTodayOrders), new { }, "طرح درمان ثبت شد");
         return ToResponse(result);
     }
 
@@ -170,7 +174,8 @@ public class ParaclinicalController : ApiBaseController
     {
         var result = await _mediator.Send(command);
         if (result.IsSuccess)
-            return CreatedResponse(result, "GetOrders", new { }, "معاینه چشم ثبت شد");
+            // چرخهٔ سی‌امین — «GetOrders» به nameof(GetTodayOrders) اصلاح شد (اکشنی با آن نام وجود نداشت)
+            return CreatedResponse(result, nameof(GetTodayOrders), new { }, "معاینه چشم ثبت شد");
         return ToResponse(result);
     }
 
@@ -219,7 +224,8 @@ public class ParaclinicalController : ApiBaseController
     {
         var result = await _mediator.Send(command);
         if (result.IsSuccess)
-            return CreatedResponse(result, "GetOrders", new { }, "جلسه ثبت شد");
+            // چرخهٔ سی‌امین — «GetOrders» به nameof(GetTodayOrders) اصلاح شد (اکشنی با آن نام وجود نداشت)
+            return CreatedResponse(result, nameof(GetTodayOrders), new { }, "جلسه ثبت شد");
         return ToResponse(result);
     }
 
