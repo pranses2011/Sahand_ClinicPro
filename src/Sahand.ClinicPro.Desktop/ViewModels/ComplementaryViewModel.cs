@@ -176,6 +176,44 @@ public partial class ComplementaryViewModel : ViewModelBase
     [ObservableProperty]
     private string? _newSurveyDescription;
 
+    // ═══ چرخهٔ بیست‌وهفتم (گزارش هجدهم مالک) — قالب‌های آمادهٔ نظرسنجی ═══
+    // «قالب‌های پیش‌فرض نظرسنجی» — چهار نظرسنجی حرفه‌ای آماده با یک کلیک
+    // افزوده می‌شوند؛ سؤال‌ها از سه نوع پشتیبانی‌شدهٔ سامانه ساخته شده‌اند:
+    // rating (امتیاز ۵ ستاره) | text (متن آزاد) | choice (چندگزینه‌ای با options)
+    /// <summary>قالب نظرسنجی آماده — با یک کلیک ثبت می‌شود</summary>
+    /// <param name="Title">عنوان قالب</param>
+    /// <param name="Icon">ایموجی دکمهٔ قالب</param>
+    /// <param name="Description">توضیح قالب</param>
+    /// <param name="Questions">جیسون سؤال‌ها — همان ساختار فرم نظرسنجی</param>
+    public record SurveyTemplateRow(string Icon, string Title, string Description, string Questions);
+
+    /// <summary>قالب‌های آمادهٔ نظرسنجی — چرخه ۲۷</summary>
+    public IReadOnlyList<SurveyTemplateRow> SurveyTemplates { get; } = new SurveyTemplateRow[]
+    {
+        new("⭐", "رضایت عمومی بیماران", "نظرسنجی استاندارد رضایت از پذیرش تا ویزیت (۵ سؤال)",
+            "[{\"q\":\"میزان رضایت شما از برخورد پذیرش؟\",\"type\":\"rating\"}," +
+            "{\"q\":\"میزان رضایت شما از پزشک معالج؟\",\"type\":\"rating\"}," +
+            "{\"q\":\"نظافت و آراستگی درمانگاه؟\",\"type\":\"rating\"}," +
+            "{\"q\":\"مدت انتظار شما چگونه بود؟\",\"type\":\"choice\",\"options\":[\"کم\",\"متوسط\",\"زیاد\"]}," +
+            "{\"q\":\"پیشنهاد یا انتقاد شما؟\",\"type\":\"text\"}]"),
+        new("🤝", "ارزیابی کیفیت پرسنل", "برخورد، پاسخگویی و آموزش پرسنل (۴ سؤال)",
+            "[{\"q\":\"پاسخگویی تلفنی چگونه بود؟\",\"type\":\"choice\",\"options\":[\"عالی\",\"خوب\",\"ضعیف\"]}," +
+            "{\"q\":\"برخورد پرسنل پذیرش؟\",\"type\":\"rating\"}," +
+            "{\"q\":\"توضیح پزشک درباره بیماری و داروها؟\",\"type\":\"rating\"}," +
+            "{\"q\":\"نکته‌ای که باید بهتر شود؟\",\"type\":\"text\"}]"),
+        new("💊", "پیگیری پس از درمان", "وضعیت بیمار پس از ویزیت/دندان‌پزشکی/عمل (۴ سؤال)",
+            "[{\"q\":\"وضعیت عمومی شما اکنون چگونه است؟\",\"type\":\"choice\",\"options\":[\"کاملاً بهبود\",\"در حال بهبود\",\"بدون تغییر\",\"بدتر شده\"]}," +
+            "{\"q\":\"عوارض یا درد جدید داشته‌اید؟\",\"type\":\"choice\",\"options\":[\"خیر\",\"خفیف\",\"متوسط\",\"شدید\"]}," +
+            "{\"q\":\"داروها را طبق دستور مصرف کرده‌اید؟\",\"type\":\"choice\",\"options\":[\"بله\",\"مخالف\",\"قطع کرده‌ام\"]}," +
+            "{\"q\":\"توضیح بیشتر برای پزشک؟\",\"type\":\"text\"}]"),
+        new("🏥", "ارزیابی خدمات درمانگاه", "نظرسنجی جامع کیفیت خدمات و امکانات (۵ سؤال)",
+            "[{\"q\":\"آسان‌یابی مسیر و تابلوها؟\",\"type\":\"rating\"}," +
+            "{\"q\":\"راحتی انتظار و امکانات راهرو؟\",\"type\":\"rating\"}," +
+            "{\"q\":\"کیفیت خدمات آزمایشگاه/تصویربرداری؟\",\"type\":\"rating\"}," +
+            "{\"q\":\"تعرفه‌ها و شفافیت هزینه‌ها؟\",\"type\":\"choice\",\"options\":[\"مناسب\",\"متوسط\",\"نامناسب\"]}," +
+            "{\"q\":\"آیا درمانگاه را به دیگران پیشنهاد می‌کنید؟ چرا؟\",\"type\":\"text\"}]"),
+    };
+
     /* ─── تب ۳: همگام‌سازی داده ─── */
 
     /// <summary>وضعیت همگام‌سازی</summary>
@@ -482,6 +520,36 @@ public partial class ComplementaryViewModel : ViewModelBase
         IsBusy = false;
         if (ok) { _snackbar.Success("وضعیت نظرسنجی تغییر کرد"); await LoadSurveysAsync(); }
         else _snackbar.Error(_api.LastError ?? "عملیات ناموفق بود");
+    }
+
+    /// <summary>
+    /// افزودن نظرسنجی از قالب آماده — چرخهٔ بیست‌وهفتم (گزارش هجدهم مالک):
+    /// «قالب‌های پیش‌فرض نظرسنجی» — قالب حرفه‌ای آماده با یک کلیک ثبت
+    /// می‌شود؛ اگر نظرسنجی هم‌نامِ فعلی وجود داشته باشد، عنوان پسوند «(جدید)» می‌گیرد.
+    /// </summary>
+    [RelayCommand]
+    private async Task AddSurveyFromTemplateAsync(SurveyTemplateRow? template)
+    {
+        if (template is null) return;
+        IsBusy = true;
+        // عنوان یکتا — اگر نظرسنجی هم‌نام فعال هست، پسوند «(جدید)» می‌گیرد
+        var title = Surveys.Any(s => s.Title == template.Title && s.IsActive)
+            ? $"{template.Title} (جدید)"
+            : template.Title;
+        var ok = await _api.PostAsync("surveys", new
+        {
+            title,
+            description = template.Description,
+            questions = template.Questions
+        });
+        IsBusy = false;
+        if (ok)
+        {
+            _snackbar.Success($"نظرسنجی «{title}» از قالب آماده ساخته شد");
+            await LoadSurveysAsync();
+        }
+        else
+            _snackbar.Error(_api.LastError ?? "ایجاد نظرسنجی از قالب ناموفق بود");
     }
 
     /* ─── همگام‌سازی داده ─── */

@@ -24,64 +24,16 @@
         <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
 
-        <!-- گرید: سایدبار منو + محتوا -->
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="230" />
-                <ColumnDefinition Width="16" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <!-- ═══ سایدبار منوی تنظیمات ═══ -->
-            <Border Grid.Column="0" CornerRadius="10"
-                    Background="{DynamicResource MaterialDesign.Brush.Separator.Background}" Padding="6">
-                <ListBox SelectedIndex="{Binding SectionIndex}" Background="Transparent" BorderThickness="0"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal" Margin="8,10">
-                            <TextBlock Text="🏥" FontSize="15" VerticalAlignment="Center" />
-                            <TextBlock Text="اطلاعات درمانگاه" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal" Margin="8,10">
-                            <TextBlock Text="🧩" FontSize="15" VerticalAlignment="Center" />
-                            <TextBlock Text="ماژول‌ها" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal" Margin="8,10">
-                            <TextBlock Text="🔗" FontSize="15" VerticalAlignment="Center" />
-                            <TextBlock Text="سامانه‌های دولتی" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal" Margin="8,10">
-                            <TextBlock Text="🖨️" FontSize="15" VerticalAlignment="Center" />
-                            <TextBlock Text="چاپگر و چاپ" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal" Margin="8,10">
-                            <TextBlock Text="🎨" FontSize="15" VerticalAlignment="Center" />
-                            <TextBlock Text="تم و ظاهر" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal" Margin="8,10">
-                            <TextBlock Text="🔐" FontSize="15" VerticalAlignment="Center" />
-                            <TextBlock Text="امنیت" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </ListBoxItem>
-                </ListBox>
-            </Border>
-
-            <!-- ═══ محتوای بخش‌ها — پنل مخفی/نمایان ═══ -->
-            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" Padding="8,4">
-                <StackPanel>
+        <!-- ═══ چرخهٔ بیست‌وهفتم (گزارش هجدهم مالک) — تب‌بندی تنظیمات ═══
+             «صفحهٔ تنظیمات تب‌بندی شود نه سایدبار» — همان الگوی AdminView؛
+             SectionIndex همان ایندکس تب است و منطق ViewModel دست‌نخورده ماند ═══ -->
+        <TabControl Grid.Row="2" SelectedIndex="{Binding SectionIndex}"
+                    materialDesign:ColorZoneAssist.Mode="PrimaryLight">
 
                 <!-- ─── بخش ۰: اطلاعات درمانگاه ─── -->
-                <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=0}" Margin="4,8">
+                <TabItem Header="🏥 اطلاعات درمانگاه">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8,4">
+                    <StackPanel Margin="4,8">
                     <TextBlock Text="اطلاعات درمانگاه" FontSize="16" FontWeight="Bold" Margin="2,0,0,6" />
 
                     <!-- ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) ═══
@@ -143,9 +95,13 @@
                     </Grid>
                     <!-- چرخه ۲۴ — دکمهٔ ذخیره حذف شد: داده‌ها فقط از سرور لایسنس همگام می‌شوند -->
                 </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
                 <!-- ─── بخش ۱: ماژول‌ها ─── -->
-                <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}" Margin="4,8">
+                <TabItem Header="🧩 ماژول‌ها">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8,4">
+                    <StackPanel Margin="4,8">
                     <TextBlock Text="ماژول‌ها و وضعیت لایسنس" FontSize="16" FontWeight="Bold" Margin="2,0,4,12" />
                     <DataGrid ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule}"
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
@@ -169,9 +125,13 @@
                     <TextBlock Text="Core: غیرقابل غیرفعال‌سازی — ماژول بدون لایسنس قفل است و دکمه «خرید ماژول» به License Portal متصل می‌شود"
                                FontSize="10.5" Opacity="0.6" Margin="2,10,0,0" TextWrapping="Wrap" />
                 </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
                 <!-- ─── بخش ۲: سامانه‌های دولتی ─── -->
-                <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=2}" Margin="4,8">
+                <TabItem Header="🔗 سامانه‌های دولتی">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8,4">
+                    <StackPanel Margin="4,8">
                     <TextBlock Text="سامانه‌های دولتی" FontSize="16" FontWeight="Bold" Margin="2,0,4,12" />
                     <ItemsControl ItemsSource="{Binding GovSystems}">
                         <ItemsControl.ItemTemplate>
@@ -222,9 +182,13 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
                 <!-- ─── بخش ۳: چاپگر و چاپ ─── -->
-                <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=3}" Margin="4,8" MaxWidth="520" HorizontalAlignment="Stretch">
+                <TabItem Header="🖨️ چاپگر و چاپ">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8,4">
+                    <StackPanel Margin="4,8" MaxWidth="520" HorizontalAlignment="Stretch">
                     <TextBlock Text="چاپگر و چاپ" FontSize="16" FontWeight="Bold" Margin="2,0,0,12" />
 
                     <!-- ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — «فیلدهای چاپگرها
@@ -277,9 +241,13 @@
                         </Button>
                     </StackPanel>
                 </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
                 <!-- ─── بخش ۴: تم و ظاهر ─── -->
-                <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=4}" Margin="4,8" MaxWidth="640" HorizontalAlignment="Stretch">
+                <TabItem Header="🎨 تم و ظاهر">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8,4">
+                    <StackPanel Margin="4,8" MaxWidth="640" HorizontalAlignment="Stretch">
                     <TextBlock Text="تم و ظاهر" FontSize="16" FontWeight="Bold" Margin="2,0,0,12" />
 
                     <!-- چرخه ۱۹ + بیستم: انتخاب تم از کاتالوگ — هر تم علاوه بر رنگ،
@@ -452,9 +420,13 @@
                         <Button Command="{Binding SaveThemeSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Content="💾 ذخیره" />
                     </StackPanel>
                 </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
                 <!-- ─── بخش ۵: امنیت ─── -->
-                <StackPanel Visibility="{Binding SectionIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=5}" Margin="4,8" MaxWidth="560" HorizontalAlignment="Stretch">
+                <TabItem Header="🔐 امنیت">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8,4">
+                    <StackPanel Margin="4,8" MaxWidth="560" HorizontalAlignment="Stretch">
                     <TextBlock Text="امنیت" FontSize="16" FontWeight="Bold" Margin="2,0,0,12" />
                     <StackPanel Orientation="Horizontal" Margin="2,6">
                         <TextBlock Text="حداقل طول رمز عبور: " VerticalAlignment="Center" FontSize="12.5" Width="170" />
@@ -489,8 +461,8 @@
                         </StackPanel>
                     </Button>
                 </StackPanel>
-                </StackPanel>
-            </ScrollViewer>
-        </Grid>
+                    </ScrollViewer>
+                </TabItem>
+        </TabControl>
     </Grid>
 </UserControl>

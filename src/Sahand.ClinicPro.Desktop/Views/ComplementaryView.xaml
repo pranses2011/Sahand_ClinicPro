@@ -212,6 +212,7 @@
                 <Grid Margin="4,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
@@ -235,7 +236,37 @@
                         </Button>
                     </WrapPanel>
 
-                    <DataGrid Grid.Row="1" ItemsSource="{Binding Surveys}" SelectedItem="{Binding SelectedSurvey}"
+                    <!-- ═══ چرخهٔ بیست‌وهفتم (گزارش هجدهم مالک) — قالب‌های آمادهٔ نظرسنجی ═══
+                         «قالب‌های پیش‌فرض نظرسنجی» — چهار نظرسنجی حرفه‌ای با یک کلیک -->
+                    <Border Grid.Row="1" CornerRadius="10" Padding="10,8" Margin="0,0,0,10"
+                            Background="#F1F8E9" BorderBrush="#AED581" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="📋 قالب‌های آمادهٔ نظرسنجی — با یک کلیک ثبت می‌شود" FontSize="12" FontWeight="Bold"
+                                       Foreground="#33691E" Margin="0,0,0,6" />
+                            <ItemsControl ItemsSource="{Binding SurveyTemplates}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.AddSurveyFromTemplateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11.5"
+                                                Padding="10,5" Margin="0,0,6,4" ToolTip="{Binding Description}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Icon}" FontSize="14" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Title}" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <DataGrid Grid.Row="2" ItemsSource="{Binding Surveys}" SelectedItem="{Binding SelectedSurvey}"
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                         <DataGrid.Columns>
@@ -266,7 +297,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <TextBlock Grid.Row="2" Text="ارسال: پس از تکمیل ویزیت، لینک نظرسنجی با پیامک برای بیمار ارسال می‌شود"
+                    <TextBlock Grid.Row="3" Text="ارسال: پس از تکمیل ویزیت، لینک نظرسنجی با پیامک برای بیمار ارسال می‌شود"
                                FontSize="10.5" Opacity="0.6" Margin="2,8,0,0" />
                 </Grid>
             </TabItem>
