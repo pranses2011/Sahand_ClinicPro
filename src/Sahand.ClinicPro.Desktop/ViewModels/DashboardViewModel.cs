@@ -316,8 +316,16 @@ public partial class DashboardViewModel : ViewModelBase
         // ۰) چرخه دوازدهم — پیام‌های پشتیبانی دریافتی از سرور لایسنس (best-effort)
         await LoadSupportMessagesAsync();
 
-        // ۱) آمار خلاصه
-        var stats = await _api.GetAsync<JsonElement>("dashboard/stats");
+        // ═══ چرخهٔ سی‌ودوم (گزارش مالک — قانون هم‌کلاسی‌ها) ═══ همهٔ اندپوینت‌های
+        // داشبورد پاسخ را در پاکت استاندارد ApiResponse ({isSuccess, data}) می‌فرستند
+        // ولی کد قدقی ریشهٔ JSON را مستقیم «شیء آمار» یا «آرایهٔ نوبت‌ها» فرض
+        // می‌کرد؛ در نتیجه ValueKind آرایه‌ها هرگز برقرار نمی‌شد و آمار هم فقط
+        // صفر می‌خواند — نمودار درآمد، نوبت‌های امروز، فعالیت‌های اخیر و
+        // هشدارها همگی همیشه خالی بودند. اکنون هر پنج پاسخ نخست از پاکت باز
+        // می‌شوند (UnwrapData) و سپس خوانده می‌شوند.
+
+        // ۱) آمار خلاصه — payload داخل data است
+        var stats = UnwrapData(await _api.GetAsync<JsonElement>("dashboard/stats"));
         if (stats.ValueKind == JsonValueKind.Object)
         {
             TodayPatients = stats.TryGetProperty("todayAppointments", out var appts) ? appts.GetInt32() : 0;
@@ -330,7 +338,7 @@ public partial class DashboardViewModel : ViewModelBase
         }
 
         // ۲) هشدارها (موجودی کم و آزمایش در انتظار)
-        var alerts = await _api.GetAsync<JsonElement>("dashboard/alerts");
+        var alerts = UnwrapData(await _api.GetAsync<JsonElement>("dashboard/alerts"));
         if (alerts.ValueKind == JsonValueKind.Object)
         {
             LowStockCount = alerts.TryGetProperty("lowStock", out var low) ? low.GetInt32() : 0;
@@ -342,7 +350,7 @@ public partial class DashboardViewModel : ViewModelBase
 
         // ۳) نمودار درآمد ۷ روز — چرخه یازدهم: میله‌ای سطح‌خورده بود؛
         // برای «روند در طول زمان» نوع درست نمودار، سطحی/خطی است
-        var chart = await _api.GetAsync<JsonElement>("dashboard/revenue-chart?days=7");
+        var chart = UnwrapData(await _api.GetAsync<JsonElement>("dashboard/revenue-chart?days=7"));
         RevenueChart.Clear();
         if (chart.ValueKind == JsonValueKind.Array)
         {
@@ -359,7 +367,7 @@ public partial class DashboardViewModel : ViewModelBase
         }
 
         // ۴) نوبت‌های امروز
-        var appointments = await _api.GetAsync<JsonElement>("dashboard/appointments-today?limit=8");
+        var appointments = UnwrapData(await _api.GetAsync<JsonElement>("dashboard/appointments-today?limit=8"));
         UpcomingAppointments.Clear();
         if (appointments.ValueKind == JsonValueKind.Array)
         {
@@ -377,7 +385,7 @@ public partial class DashboardViewModel : ViewModelBase
         }
 
         // ۵) فعالیت‌های اخیر
-        var activities = await _api.GetAsync<JsonElement>("dashboard/recent-activities?limit=10");
+        var activities = UnwrapData(await _api.GetAsync<JsonElement>("dashboard/recent-activities?limit=10"));
         RecentActivities.Clear();
         if (activities.ValueKind == JsonValueKind.Array)
         {
@@ -392,6 +400,20 @@ public partial class DashboardViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// بازکردن پاکت استاندارد ApiResponse — چرخهٔ سی‌ودوم: همهٔ اندپوینت‌های
+    /// API دادهٔ واقعی را در ویژگی «data» می‌فرستند؛ این کمکی اگر پاکت باشد
+    /// آن را باز می‌کند و در نبود پاکت، خود ریشه را برمی‌گرداند (سازگار با
+    /// پاسخ‌های بدون پاکت). درخواست ناموفق → JsonElement پیش‌فرض (Undefined)
+    /// که شرط‌های ValueKind بعدی آن را نادیده می‌گیرند.
+    /// </summary>
+    private static JsonElement UnwrapData(JsonElement root)
+        => root.ValueKind == JsonValueKind.Object &&
+           root.TryGetProperty("data", out var data) &&
+           (data.ValueKind == JsonValueKind.Object || data.ValueKind == JsonValueKind.Array)
+            ? data
+            : root;
+
     /// <summary>بارگذاری مجدد دستی (F5)</summary>
     [RelayCommand]
     private async Task RefreshAsync()
@@ -405,6 +427,12 @@ public partial class DashboardViewModel : ViewModelBase
     /// جریان داده: پنل PHP → تپ‌قلب LicenseService در API → SystemSettings
     /// → endpoint برون‌گرانه license/messages → اینجا → کارت داشبورد. best-effort:
     /// هر خطایی فقط کارت را مخفی می‌کند و بقیه داشبورد سالم می‌ماند.
+    /// ═══ چرخهٔ سی‌ودوم (گزارش مالک) — «پیام‌های ارسالی از سرور لایسنس هنوز
+    /// هم در برنامه نمایش داده نمی‌شوند» ═══ ریشه: پاسخ endpoint در پاکت
+    /// استاندارد ApiResponse است ({isSuccess, data:[…]}) ولی کد قدیمی ریشهٔ
+    /// JSON را مستقیماً «آرایه» فرض می‌کرد؛ ValueKind همیشه Object بود، شرط
+    /// هرگز برقرار نمی‌شد و کارت هرگز چیزی نشان نمی‌داد — حتی وقتی پیام‌ها
+    /// در دیتابیس موجود بودند. اکنون نخست پاکت باز و آرایهٔ data خوانده می‌شود.
     /// </summary>
     private async Task LoadSupportMessagesAsync()
     {
@@ -412,17 +440,24 @@ public partial class DashboardViewModel : ViewModelBase
         {
             SupportMessages.Clear();
             var response = await _api.GetAsync<JsonElement>("license/messages");
-            if (response.ValueKind == JsonValueKind.Array)
+
+            // ── بازکردن پاکت استاندارد: دادهٔ واقعی در ویژگی «data» است ──
+            if (response.ValueKind != JsonValueKind.Object ||
+                !response.TryGetProperty("data", out var data) ||
+                data.ValueKind != JsonValueKind.Array)
             {
-                foreach (var m in response.EnumerateArray().Take(5))
-                {
-                    SupportMessages.Add(new SupportMessageDto(
-                        m.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.Number ? id.GetInt64() : 0,
-                        m.TryGetProperty("title", out var t) ? t.GetString() ?? "" : "",
-                        m.TryGetProperty("body", out var b) ? b.GetString() ?? "" : "",
-                        m.TryGetProperty("level", out var lv) ? lv.GetString() ?? "info" : "info",
-                        m.TryGetProperty("date", out var d) ? d.GetString() ?? "" : ""));
-                }
+                HasSupportMessages = false;
+                return;
+            }
+
+            foreach (var m in data.EnumerateArray().Take(5))
+            {
+                SupportMessages.Add(new SupportMessageDto(
+                    m.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.Number ? id.GetInt64() : 0,
+                    m.TryGetProperty("title", out var t) ? t.GetString() ?? "" : "",
+                    m.TryGetProperty("body", out var b) ? b.GetString() ?? "" : "",
+                    m.TryGetProperty("level", out var lv) ? lv.GetString() ?? "info" : "info",
+                    m.TryGetProperty("date", out var d) ? d.GetString() ?? "" : ""));
             }
             HasSupportMessages = SupportMessages.Count > 0;
         }
