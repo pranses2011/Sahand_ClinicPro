@@ -109,9 +109,10 @@ NEGATIVE_CHECKS = [
     ("src/Sahand.ClinicPro.Infrastructure/Persistence/Seeders/ReferenceDataSeeder.cs",
      "InsuranceShare = row.InsurancePercent,",
      "بذر قدیمی درصد بیمه‌ای روی تعرفهٔ آزاد حذف شد"),
-    # تپ قلب قدیمی با ?? بی‌اثر
+    # تپ قلب قدیمی با ?? بی‌اثر — نشانگر با کامای انتهایی کد قدیمی؛
+    # (کامنتِ توضیحی همین رفع، الگو را بدون کاما نقل می‌کند و نباید گارد را بگیرد)
     ("src/Sahand.ClinicPro.Infrastructure/Services/License/LicenseService.cs",
-     '?? license.HardwareFingerprint ?? ""',
+     '?? license.HardwareFingerprint ?? "",',
      "الگوی ?? بی‌اثر اثر انگشت حذف شد"),
     # DTO enum قدیمی قالب چاپ
     ("src/Sahand.ClinicPro.API/Controllers/PrintTemplatesController.cs",
