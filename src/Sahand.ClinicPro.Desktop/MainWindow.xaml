@@ -175,8 +175,13 @@
                                 <!-- چرخه ۲۴: رنگ آیکون از مبدل حالت رنگی/یکدست — MultiBinding با شمارندهٔ
                                      نوسازی تا تعویض حالت بدون ری‌استارت اعمال شود -->
                                 <materialDesign:PackIcon Width="20" Height="20"
-                                                         VerticalAlignment="Center"
-                                                         Kind="{Binding Icon}">
+                                                         VerticalAlignment="Center">
+                                                         <materialDesign:PackIcon.Kind>
+                                                             <MultiBinding Converter="{StaticResource IconSetKind}">
+                                                                 <Binding Path="Icon" />
+                                                                 <Binding Path="DataContext.IconRefreshTick" RelativeSource="{RelativeSource AncestorType=Window}" />
+                                                             </MultiBinding>
+                                                         </materialDesign:PackIcon.Kind>
                                     <materialDesign:PackIcon.Foreground>
                                         <MultiBinding Converter="{StaticResource IconTintMulti}">
                                             <Binding Path="Icon" />
@@ -290,8 +295,13 @@
                                                             Margin="0,0,10,0"
                                                             VerticalAlignment="Stretch" />
                                                     <materialDesign:PackIcon Width="22" Height="22"
-                                                                             VerticalAlignment="Center"
-                                                                             Kind="{Binding Icon}">
+                                                                             VerticalAlignment="Center">
+                                                                             <materialDesign:PackIcon.Kind>
+                                                                                 <MultiBinding Converter="{StaticResource IconSetKind}">
+                                                                                     <Binding Path="Icon" />
+                                                                                     <Binding Path="DataContext.IconRefreshTick" RelativeSource="{RelativeSource AncestorType=Window}" />
+                                                                                 </MultiBinding>
+                                                                             </materialDesign:PackIcon.Kind>
                                                         <materialDesign:PackIcon.Foreground>
                                                             <MultiBinding Converter="{StaticResource IconTintMulti}">
                                                                 <Binding Path="Icon" />
@@ -392,8 +402,13 @@
                                                                         Margin="0,0,8,0"
                                                                         VerticalAlignment="Stretch" />
                                                                 <materialDesign:PackIcon Width="17" Height="17"
-                                                                                         VerticalAlignment="Center"
-                                                                                         Kind="{Binding Icon}">
+                                                                                         VerticalAlignment="Center">
+                                                                                         <materialDesign:PackIcon.Kind>
+                                                                                             <MultiBinding Converter="{StaticResource IconSetKind}">
+                                                                                                 <Binding Path="Icon" />
+                                                                                                 <Binding Path="DataContext.IconRefreshTick" RelativeSource="{RelativeSource AncestorType=Window}" />
+                                                                                             </MultiBinding>
+                                                                                         </materialDesign:PackIcon.Kind>
                                                                     <materialDesign:PackIcon.Foreground>
                                                                         <MultiBinding Converter="{StaticResource IconTintMulti}">
                                                                             <Binding Path="Icon" />

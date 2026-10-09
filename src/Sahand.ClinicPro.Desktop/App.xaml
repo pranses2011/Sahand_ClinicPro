@@ -161,6 +161,8 @@
             <!-- چرخه ۲۴: مبدل رنگ آیکون‌های منو (حالت رنگی/یکدست) -->
             <converters:IconTintConverter x:Key="IconTint" />
             <converters:IconTintMultiConverter x:Key="IconTintMulti" />
+            <!-- چرخهٔ بیست‌وهفتم: مبدل مجموعهٔ آیکون‌ها (کلاسیک/مدرن/مینیمال) -->
+            <converters:IconSetKindConverter x:Key="IconSetKind" />
             <!-- چرخه بیست‌وسوم: مبدل bool → «فعال/غیرفعال» فارسی — ستون وضعیت بیمه/تعرفه -->
             <converters:BoolToFaTextConverter x:Key="BoolToFaText" />
             <converters:CurrencyRialConverter x:Key="CurrencyRial" />

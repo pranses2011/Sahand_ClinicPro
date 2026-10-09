@@ -368,6 +368,14 @@
                             <ComboBoxItem Content="یکدست (هم‌رنگ منو)" />
                             <ComboBoxItem Content="🎨 رنگی و شاداب" />
                         </ComboBox>
+                        <!-- ═══ چرخهٔ بیست‌وهفتم — مجموعهٔ آیکون‌ها (تعویض یکجای شکل، نه فقط رنگ) ═══ -->
+                        <TextBlock Text="مجموعهٔ آیکون‌ها: " VerticalAlignment="Center" FontSize="12.5" Margin="18,0,0,0" />
+                        <ComboBox SelectedIndex="{Binding IconSetIndex}" MinWidth="150"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="6,0,0,0">
+                            <ComboBoxItem Content="کلاسیک (پرپشت)" />
+                            <ComboBoxItem Content="خط‌نازک مدرن" />
+                            <ComboBoxItem Content="مینیمال ساده" />
+                        </ComboBox>
                     </StackPanel>
 
                     <!-- ═══ چرخه ۲۴ — پریست‌های شخصی تم: ذخیره/اعمال/حذف ═══

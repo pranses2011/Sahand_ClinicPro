@@ -281,6 +281,16 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private int _iconColorModeIndex;
 
+    /// <summary>
+    /// ایندکس مجموعهٔ آیکون‌های منو — ۰ کلاسیک، ۱ مدرن (خط‌نازک)، ۲ مینیمال
+    /// چرخهٔ بیست‌وهفتم (گزارش هجدهم مالک): «تعویض یکجای آیکون‌ها نه فقط رنگ»
+    /// </summary>
+    [ObservableProperty]
+    private int _iconSetIndex;
+
+    /// <summary>مقدارهای مجموعهٔ آیکون — هم‌اندیس کشوی تنظیمات</summary>
+    public static readonly string[] IconSetKeys = { "Classic", "Modern", "Minimal" };
+
     /// <summary>ایندکس رنگ اصلی سفارشی — ۰ یعنی همگام با تم</summary>
     [ObservableProperty]
     private int _customPrimaryIndex;
@@ -306,6 +316,14 @@ public partial class SettingsViewModel : ViewModelBase
 
     /// <summary>تغییر حالت رنگ آیکون‌ها — اعمال بی‌درنگ (چرخه ۲۴)</summary>
     partial void OnIconColorModeIndexChanged(int value)
+    {
+        if (_initializing) return;
+        ApplyAppearanceNow();
+    }
+
+    /// <summary>تغییر مجموعهٔ آیکون‌های منو — اعمال بی‌درنگ روی شکل همهٔ آیکون‌ها
+    /// (چرخهٔ بیست‌وهفتم — تعویض یکجای مجموعهٔ آیکون)</summary>
+    partial void OnIconSetIndexChanged(int value)
     {
         if (_initializing) return;
         ApplyAppearanceNow();
@@ -399,6 +417,8 @@ public partial class SettingsViewModel : ViewModelBase
         // چرخه ۲۴: رنگ اصلی سفارشی + حالت رنگ آیکون‌ها + پریست‌ها
         CustomPrimaryIndex = Math.Max(0, Array.IndexOf(CustomPrimaryHexes, appearance.CustomPrimaryHex));
         IconColorModeIndex = appearance.IsColorfulIcons ? 1 : 0;
+        // چرخهٔ بیست‌وهفتم — مجموعهٔ آیکون‌های منو (کلاسیک/مدرن/مینیمال)
+        IconSetIndex = Math.Max(0, Array.IndexOf(IconSetKeys, appearance.IconSetName ?? "Classic"));
         LoadThemePresets();
 
         RefreshThemeSelection();
@@ -729,7 +749,9 @@ public partial class SettingsViewModel : ViewModelBase
             CustomPrimaryIndex >= 0 && CustomPrimaryIndex < CustomPrimaryHexes.Length
                 ? CustomPrimaryHexes[CustomPrimaryIndex]
                 : null,
-            IconColorModeIndex == 1 ? "Colorful" : "Mono"));
+            IconColorModeIndex == 1 ? "Colorful" : "Mono",
+            // چرخهٔ بیست‌وهفتم — مجموعهٔ آیکون‌های منو
+            IconSetIndex >= 0 && IconSetIndex < IconSetKeys.Length ? IconSetKeys[IconSetIndex] : "Classic"));
 
         ScheduleThemeSave();
     }

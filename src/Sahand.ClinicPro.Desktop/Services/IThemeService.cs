@@ -52,6 +52,8 @@ public sealed record AppTheme(
 /// <param name="DensityOverride">چگالی مستقل — تهی یعنی از تم؛ Compact یا Normal (چرخه بیست‌ویکم)</param>
 /// <param name="CustomPrimaryHex">رنگ اصلی سفارشی — تهی یعنی از تم (چرخه ۲۴)</param>
 /// <param name="IconColorMode">حالت رنگ آیکون‌ها — Mono (یکدست) یا Colorful (رنگی) — چرخه ۲۴</param>
+/// <param name="IconSetName">مجموعهٔ آیکون‌های منو — Classic یا Modern یا Minimal (چرخهٔ بیست‌وهفتم:
+/// تعویض یکجای شکل آیکون‌ها، هم‌عرضِ «تعویض آیکون‌ها» گزارش هجدهم مالک)</param>
 public sealed record AppearanceSettings(
     string FontFamilyName = "Vazirmatn",
     double BaseFontSize = 13,
@@ -61,7 +63,8 @@ public sealed record AppearanceSettings(
     int? CardRadiusOverride = null,
     string? DensityOverride = null,
     string? CustomPrimaryHex = null,
-    string IconColorMode = "Mono")
+    string IconColorMode = "Mono",
+    string IconSetName = "Classic")
 {
     /// <summary>متن واحد پول — «ریال» یا «تومان»</summary>
     public string CurrencyLabel => CurrencyUnit == "Toman" ? "تومان" : "ریال";

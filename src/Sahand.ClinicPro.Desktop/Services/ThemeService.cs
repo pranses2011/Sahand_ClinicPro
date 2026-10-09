@@ -255,6 +255,12 @@ public class ThemeService : IThemeService
         // IconTintConverter این منبع را می‌خواند و رنگ آیکون منو را تعیین می‌کند
         resources["App.IconColorMode"] = _appearance.IconColorMode;
 
+        // ═══ چرخهٔ بیست‌وهفتم — مجموعهٔ آیکون‌های منو (کلاسیک/مدرن/مینیمال) ═══
+        // «تعویض یکجای آیکون‌ها نه فقط رنگ» — IconSetKindConverter این منبع را
+        // می‌خواند و شکل آیکون هر آیتم منو را بازمی‌نگرداند؛ IconRefreshTick
+        // که با رویداد AppearanceChanged زیاد می‌شود اتصال‌ها را دوباره ارزیابی می‌کند
+        resources["App.IconSetName"] = _appearance.IconSetName;
+
         // رنگ منوی کناری — بازاعمال بی‌درنگ (سفارشی یا همگام با تم)
         var picked = Catalog.FirstOrDefault(t =>
             string.Equals(t.Key, _currentThemeKey, StringComparison.OrdinalIgnoreCase)) ?? Blue;
@@ -274,6 +280,8 @@ public class ThemeService : IThemeService
             // چرخه ۲۴: دو تنظیم مستقل جدید — رنگ اصلی سفارشی و حالت رنگ آیکون‌ها
             LocalSettingsStore.Set("CustomPrimaryHex", _appearance.CustomPrimaryHex ?? "");
             LocalSettingsStore.Set("IconColorMode", _appearance.IconColorMode);
+            // چرخهٔ بیست‌وهفتم — مجموعهٔ آیکون‌های منو
+            LocalSettingsStore.Set("IconSetName", _appearance.IconSetName);
         }
         catch
         {
@@ -302,6 +310,8 @@ public class ThemeService : IThemeService
             // چرخه ۲۴: رنگ اصلی سفارشی + حالت رنگ آیکون‌ها
             var customPrimary = LocalSettingsStore.Get("CustomPrimaryHex");
             var iconMode = LocalSettingsStore.Get("IconColorMode");
+            // چرخهٔ بیست‌وهفتم: مجموعهٔ آیکون‌های منو
+            var iconSet = LocalSettingsStore.Get("IconSetName");
             return new AppearanceSettings(
                 string.IsNullOrWhiteSpace(font) ? "Vazirmatn" : font,
                 double.TryParse(size, System.Globalization.NumberStyles.Any,
@@ -314,7 +324,9 @@ public class ThemeService : IThemeService
                 string.IsNullOrWhiteSpace(densityOvr) ? null : densityOvr,
                 // چرخه ۲۴ — رنگ اصلی سفارشی و حالت رنگ آیکون‌ها
                 string.IsNullOrWhiteSpace(customPrimary) ? null : customPrimary,
-                string.Equals(iconMode, "Colorful", StringComparison.OrdinalIgnoreCase) ? "Colorful" : "Mono");
+                string.Equals(iconMode, "Colorful", StringComparison.OrdinalIgnoreCase) ? "Colorful" : "Mono",
+                // چرخهٔ بیست‌وهفتم — مجموعهٔ آیکون (پیش‌فرض کلاسیک)
+                iconSet is "Modern" or "Minimal" ? iconSet : "Classic");
         }
         catch
         {
