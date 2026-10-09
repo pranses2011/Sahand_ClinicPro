@@ -47,11 +47,13 @@
                                                      VerticalAlignment="Center"
                                                      Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
                                                      Opacity="0.8" />
-                            <!-- نمایش ارقام فارسی — متن واقعی TimeText لاتین است -->
+                            <!-- نمایش ارقام فارسی — متن واقعی TimeText لاتین است.
+                                 چرخهٔ ۲۸: MinWidth از ۴۸ به ۵۶ — در ستون‌های برنامهٔ
+                                 کاری با زوم فونت بزرگ، رقم ساعت بریده می‌شد -->
                             <TextBlock x:Name="TimeTextBlock"
                                        Text="{Binding TimeTextFa, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=OneWay}"
                                        Margin="6,0,0,0"
-                                       MinWidth="48"
+                                       MinWidth="56"
                                        VerticalAlignment="Center"
                                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
                         </StackPanel>
