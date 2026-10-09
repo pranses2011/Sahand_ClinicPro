@@ -130,6 +130,33 @@ public class UsersController : ApiBaseController
         return Ok(ApiResponse<object>.Success(response, "کاربر جاری"));
     }
 
+    /// <summary>
+    /// یافتن حساب کاربری متصل به یک پرسنل — چرخهٔ بیست‌ونهم (گزارش هجدهم مالک):
+    /// کلید «مشخصات کاربری» در لیست پزشکان/پرسنل باید حسابِ متصل را برای ویرایش
+    /// باز کند و اگر پرسنل هنوز حساب ندارد، فرم ثبتِ کاربرِ جدیدِ متصل به
+    /// «همان» رکورد پرسنل را نشان دهد. این نقطهٔ پایانی فقط شناسه/نام‌کاربری/
+    /// فعال‌بودن را برمی‌گرداند — تهی یعنی این پرسنل حساب ورود ندارد.
+    /// اتصالِ دقیق با EmployeeId از تطبیقِ نامی (ResolveEmployeeIdAsync) امن‌تر
+    /// است چون تطبیق نامی با ثبت پرسنل تکراریِ هم‌نام، حساب را به رکورد اشتباه
+    /// می‌بست.
+    /// </summary>
+    [HttpGet("by-employee/{employeeId:long}")]
+    [HasPermission("users.view")]
+    public async Task<IActionResult> GetUserByEmployee(long employeeId)
+    {
+        var user = await _unitOfWork.Repository<User>().QueryableNoTracking
+            .Where(u => u.EmployeeId == employeeId && !u.IsDeleted)
+            .OrderByDescending(u => u.IsActive) // حسابِ فعال در اولویت
+            .ThenBy(u => u.Id)
+            .Select(u => new { u.Id, u.Username, u.IsActive })
+            .FirstOrDefaultAsync();
+
+        // بدون حساب — دادهٔ تهی؛ کلاینت با Data تهی «فهرستِ ثبت حساب جدید» را باز می‌کند
+        if (user is null)
+            return Ok(ApiResponse<object>.SuccessMessage("این پرسنل هنوز حساب کاربری ندارد"));
+        return Ok(ApiResponse<object>.Success(user, "حساب متصل به پرسنل"));
+    }
+
     /// <summary>ثبت کاربر جدید — با هش BCrypt و نقش‌های انتخابی</summary>
     [HttpPost]
     [HasPermission("users.create")]

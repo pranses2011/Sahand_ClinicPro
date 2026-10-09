@@ -18,6 +18,16 @@ public partial class UserFormViewModel : ViewModelBase
     [ObservableProperty]
     private long? _editUserId;
 
+    /// <summary>
+    /// شناسهٔ پرسنلِ هدف — چرخهٔ بیست‌ونهم (گزارش هجدهم مالک):
+    /// کلید «مشخصات کاربری» در لیست پزشکان/پرسنل این مقدار را پر می‌کند تا
+    /// کاربرِ جدید به «همان رکورد پرسنل» متصل شود؛ اتصال دقیق با شناسه از
+    /// تطبیق نامی (ResolveEmployeeIdAsync سرور) مطمئن‌تر است که با وجود
+    /// پرسنل تکراریِ هم‌نام، حساب را به رکورد اشتباه می‌بست.
+    /// </summary>
+    [ObservableProperty]
+    private long? _linkedEmployeeId;
+
     /// <summary>عنوان فرم — ثبت یا ویرایش</summary>
     [ObservableProperty]
     private string _formTitle = "ثبت کاربر جدید";
@@ -211,6 +221,21 @@ public partial class UserFormViewModel : ViewModelBase
             role.IsChecked = user.Roles?.Contains(role.Name) == true;
     }
 
+    /// <summary>
+    /// آماده‌سازی فرم برای ساخت حسابِ کاربریِ متصل به یک پرسنل — چرخهٔ
+    /// بیست‌ونهم (گزارش هجدهم مالک): کلید «مشخصات کاربری» در لیست پرسنل
+    /// این متد را صدا می‌زند؛ نام کامل و موبایل از رکورد پرسنل پیش‌پر
+    /// می‌شود، عنوان فرم نام پرسنل را نشان می‌دهد و LinkedEmployeeId تضمین
+    /// می‌کند ذخیره دقیقاً به همین رکورد پرسنل متصل شود.
+    /// </summary>
+    public void PrepareForEmployee(long employeeId, string fullName, string? mobile)
+    {
+        LinkedEmployeeId = employeeId;
+        FullName = fullName;
+        Phone = mobile;
+        FormTitle = $"ثبت حساب کاربری — {fullName}";
+    }
+
     /* ─── ذخیره ─── */
 
     /// <summary>ذخیره کاربر — اعتبارسنجی کامل سپس ثبت/ویرایش</summary>
@@ -242,10 +267,14 @@ public partial class UserFormViewModel : ViewModelBase
 
         // چرخه بیست‌وچهارم: نام کامل هم ارسال می‌شود تا سرور کاربر را به
         // پرسنل (Employee) متصل کند — ریشهٔ «نام کامل در لیست خالی بود»
+        // چرخهٔ بیست‌ونهم: از لیست پرسنل، EmployeeId دقیق هم می‌رود تا
+        // اتصال به رکورد پرسنلِ درست قطعی شود (نه تطبیق نامیِ خطاپذیر)
         var ok = IsEdit
             ? await _api.PutAsync($"users/{EditUserId}", new
             {
-                email = Email, phone = Phone, fullName = FullName?.Trim(), roleIds,
+                email = Email, phone = Phone, fullName = FullName?.Trim(),
+                employeeId = LinkedEmployeeId,
+                roleIds,
                 mustChangePassword = MustChangePassword,
                 twoFactorEnabled = TwoFactorEnabled, isActive = IsActive
             })
@@ -253,6 +282,7 @@ public partial class UserFormViewModel : ViewModelBase
             {
                 username = Username.Trim(), email = Email, password = Password,
                 fullName = FullName?.Trim(),
+                employeeId = LinkedEmployeeId,
                 phone = Phone, roleIds, mustChangePassword = MustChangePassword,
                 twoFactorEnabled = TwoFactorEnabled, isActive = IsActive
             });

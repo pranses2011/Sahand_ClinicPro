@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
@@ -17,16 +18,41 @@ namespace Sahand.ClinicPro.Desktop.ViewModels;
 /// </summary>
 public partial class PersonnelViewModel : AdminViewModel
 {
+    private readonly IApiClient _api;
+    private readonly ISnackbarService _snackbar;
+
     /// <summary>عنوان فارسی صفحه — نوار بالا و Breadcrumb از همین می‌خوانند</summary>
     public override string Title => "مدیریت پرسنل";
 
     /// <summary>
     /// سازنده — بارگذاری مستقیم فهرست پرسنل (بدون زبانه)؛ سازندهٔ پایه فقط
     /// ساخت اولیه است و TabIndex پیش‌فرض صفر می‌ماند چون نمای مستقل، زبانه ندارد.
+    /// چرخهٔ بیست‌ونهم: snackbar و api تزریق محلی شدند تا فرمان «مشخصات کاربری»
+    /// بازخورد شناور بدهد (AdminViewModel فقط StatusText داخل‌صفحه‌ای دارد).
     /// </summary>
-    public PersonnelViewModel(IApiClient api) : base(api)
+    public PersonnelViewModel(IApiClient api, ISnackbarService snackbar) : base(api)
     {
+        _api = api;
+        _snackbar = snackbar;
         // بارگذاری فهرست پرسنل برای صفحهٔ مستقل — پیش‌تر از طریق تغییر زبانه انجام می‌شد
         _ = LoadEmployeesAsync();
+    }
+
+    /// <summary>
+    /// مشخصات کاربری پرسنل — چرخهٔ بیست‌ونهم (گزارش هجدهم مالک):
+    /// «کلید مشخصات کاربری در لیست پرسنل لازم است تا حساب ورودِ متصل به همین
+    /// رکورد ساخته یا ویرایش شود». حسابِ موجود برای ویرایش باز می‌شود؛
+    /// بدون حساب، فرم ثبتِ جدید با نام کامل/موبایل پیش‌پر و اتصال دقیق
+    /// با شناسهٔ همین پرسنل باز می‌شود.
+    /// </summary>
+    [RelayCommand]
+    private async Task ManageAccountAsync(EmployeeRow? row)
+    {
+        var employee = row ?? SelectedEmployee;
+        if (employee is null) { _snackbar.Info("ابتدا یک پرسنل انتخاب کنید"); return; }
+
+        IsBusy = true;
+        await AccountTools.OpenForEmployeeAsync(_api, _snackbar, employee.Id, employee.FullName, employee.Mobile);
+        IsBusy = false;
     }
 }

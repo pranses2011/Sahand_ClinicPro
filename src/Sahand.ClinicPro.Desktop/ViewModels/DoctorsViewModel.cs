@@ -177,6 +177,31 @@ public partial class DoctorsViewModel : ViewModelBase
         window.ShowDialog();
     }
 
+    /* ─── مشخصات کاربری پزشک — چرخهٔ بیست‌ونهم (گزارش هجدهم مالک) ─── */
+
+    /// <summary>
+    /// مشخصات کاربری پزشک — کلید «مشخصات کاربری» در لیست پزشکان:
+    /// حسابِ ورودِ متصل به پرسنلِ همین پزشک را ویرایش می‌کند یا حسابِ
+    /// جدیدِ متصل به همان رکورد پرسنل می‌سازد؛ پزشکِ بدون پرسنل مرتبط
+    /// ابتدا باید از فرم ویرایش به پرسنل متصل شود (همان قالب عکس پزشک).
+    /// </summary>
+    [RelayCommand]
+    private async Task ManageAccountAsync(DoctorRow? row)
+    {
+        var doctor = row ?? SelectedDoctor;
+        if (doctor is null) { _snackbar.Error("ابتدا یک پزشک انتخاب کنید"); return; }
+        if (doctor.EmployeeId is null)
+        {
+            _snackbar.Error("این پزشک به رکورد پرسنل متصل نیست — ابتدا از «ویرایش»، پرسنل مرتبط را انتخاب کنید");
+            return;
+        }
+
+        IsBusy = true;
+        await Services.AccountTools.OpenForEmployeeAsync(
+            _api, _snackbar, doctor.EmployeeId.Value, doctor.FullName, mobile: null);
+        IsBusy = false;
+    }
+
     /* ─── عکس پزشکان — چرخه هجدهم (گزارش دوازدهم مالک) ─── */
 
     /// <summary>نمایش بزرگ عکس پزشک — از پرسنل مرتبط با پزشک</summary>

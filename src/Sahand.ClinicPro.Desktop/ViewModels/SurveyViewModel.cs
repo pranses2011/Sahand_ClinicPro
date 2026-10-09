@@ -10,8 +10,7 @@ namespace Sahand.ClinicPro.Desktop.ViewModels;
 /// <summary>ردیف نظرسنجی — تب ۱ فرم ۳۴</summary>
 public record SurveyListRow(long Id, string Title, string? Description, string TypeText,
     bool IsActive, string ActiveText, int ResponseCount, string AverageText,
-    /// <summary>متن خام JSON سوالات — برای بارگذاری در طراح ویرایش (چرخهٔ ۲۸)</summary>
-    string? QuestionsJson);
+    string? QuestionsJson); // QuestionsJson: متن خام JSON سوالات — برای بارگذاری در طراح ویرایش (چرخهٔ ۲۸)
 
 /// <summary>یک سوال از سازنده پویا — قابل سریالایز به JSON برای فیلد Questions</summary>
 public partial class SurveyQuestionItem : ObservableObject

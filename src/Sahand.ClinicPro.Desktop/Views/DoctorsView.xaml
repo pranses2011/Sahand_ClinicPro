@@ -196,8 +196,9 @@
                 </DataGridTextColumn>
                 <!-- چرخه بیستم (گزارش چهاردهم مالک): عرض ستون از ۱۷۰ به ۲۱۸ افزایش یافت —
                      چهار دکمهٔ آیکونی با پدینگ استاندارد متریال در ۱۷۰px بریده می‌شدند
-                     و «ناقص دیده می‌شدند» -->
-                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="218">
+                     و «ناقص دیده می‌شدند»؛ چرخهٔ بیست‌ونهم: پنجمین کلید «مشخصات کاربری»
+                     (گزارش هجدهم مالک) — عرض به ۲۶۶ رسید -->
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="266">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -224,6 +225,15 @@
                                         Style="{StaticResource App.RowIconButton}"
                                         ToolTip="محاسبه کارانه (داخل آمار عملکرد)" Margin="1,0">
                                     <materialDesign:PackIcon Kind="CashMultiple" Width="15" Height="15" />
+                                </Button>
+                                <!-- مشخصات کاربری — چرخهٔ بیست‌ونهم (گزارش هجدهم مالک):
+                                     حسابِ ورودِ متصل به پرسنلِ همین پزشک را ویرایش یا می‌سازد -->
+                                <Button Command="{Binding DataContext.ManageAccountCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource App.RowIconButton}"
+                                        ToolTip="مشخصات کاربری — ویرایش حساب ورودِ متصل یا ساخت حساب جدید" Margin="1,0"
+                                        Foreground="#00695C">
+                                    <materialDesign:PackIcon Kind="AccountKey" Width="15" Height="15" />
                                 </Button>
                             </StackPanel>
                         </DataTemplate>

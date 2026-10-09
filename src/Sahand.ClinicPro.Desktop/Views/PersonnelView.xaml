@@ -123,8 +123,9 @@
                 </DataGridTextColumn>
                 <!-- ═══ کلیدهای عملیاتی کامل — چرخهٔ بیست‌وششم (گزارش هجدهم مالک):
                      «امکان ویرایش پرسنل وجود ندارد و کلیدهای عملیاتی ناقص‌اند» —
-                     ویرایش کامل (فرم ثبت در حالت ویرایش) + ویرایش حقوقی + حذف نرم ═══ -->
-                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="210">
+                     ویرایش کامل (فرم ثبت در حالت ویرایش) + ویرایش حقوقی + حذف نرم
+                     چرخهٔ بیست‌ونهم: کلید «مشخصات کاربری» — حسابِ ورودِ متصل ═══ -->
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="264">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -134,11 +135,19 @@
                                         CommandParameter="{Binding}" Foreground="#1565C0">
                                     <materialDesign:PackIcon Kind="AccountEdit" Width="18" Height="18" />
                                 </Button>
-                                <Button Style="{StaticResource App.RowIconButton}"
+                                <Button Style="StaticResource App.RowIconButton}"
                                         ToolTip="ویرایش اطلاعات حقوقی — حقوق پایه و درصد از سود"
                                         Command="{Binding DataContext.EditSalaryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}" Foreground="#2E7D32">
                                     <materialDesign:PackIcon Kind="CurrencyUsd" Width="18" Height="18" />
+                                </Button>
+                                <!-- مشخصات کاربری — چرخهٔ بیست‌ونهم (گزارش هجدهم مالک):
+                                     حسابِ ورودِ متصل به همین پرسنل را ویرایش یا می‌سازد -->
+                                <Button Style="{StaticResource App.RowIconButton}"
+                                        ToolTip="مشخصات کاربری — ویرایش حساب ورودِ متصل یا ساخت حساب جدید"
+                                        Command="{Binding DataContext.ManageAccountCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" Foreground="#00695C">
+                                    <materialDesign:PackIcon Kind="AccountKey" Width="18" Height="18" />
                                 </Button>
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         ToolTip="حذف پرسنل (حذف نرم — سابقه‌ها سالم می‌مانند)"
