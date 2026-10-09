@@ -261,18 +261,31 @@
                         <DataTemplate>
                             <StackPanel>
                                 <!-- ═══ سربرگ گروه — همیشه رندر می‌شود؛ عنوان همیشه دیده
-                                     می‌شود (رفع «عنوان والد دیده نمی‌شود») ═══ -->
+                                     می‌شود (رفع «عنوان والد دیده نمی‌شود») ═══
+                                     ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک — مهم) ═══
+                                     «منوهای اصلی که زیرمنو دارند با یک رنگ متفاوت از
+                                     زیرمنوها باشند و عنوانشان کاملاً دیده شود»: سربرگ
+                                     گروه اکنون کاملاً متمایز است — رنگ طلایی گرم، نوار
+                                     تأکیدی پررنگ در لبهٔ راست، فونت درشت‌تر و پررنگ‌تر
+                                     و پس‌زمینهٔ قوی‌تر؛ در نگاه اول از فرزندان آبی‌روشن
+                                     و آیتم‌های تکی سفید جدا می‌شود. -->
                                 <ToggleButton IsChecked="{Binding IsExpanded, Mode=TwoWay}"
                                               Cursor="Hand"
                                               Visibility="{Binding HasChildren, Converter={StaticResource BoolToVisibility}}">
                                     <ToggleButton.Template>
                                         <ControlTemplate TargetType="ToggleButton">
-                                            <Border x:Name="GrpBd" Background="#14FFFFFF"
-                                                    CornerRadius="9" Padding="10,9"
-                                                    Margin="0,2"
+                                            <Border x:Name="GrpBd" Background="#22FFFFFF"
+                                                    BorderBrush="#FFD54F" BorderThickness="0,0,0,1"
+                                                    CornerRadius="9" Padding="10,10"
+                                                    Margin="0,4,0,2"
                                                     SnapsToDevicePixels="True">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <materialDesign:PackIcon Width="20" Height="20"
+                                                    <!-- نوار تأکیدی طلایی گروه — لبهٔ راست (RTL) -->
+                                                    <Border Width="4" CornerRadius="2"
+                                                            Background="#FFD54F"
+                                                            Margin="0,0,10,0"
+                                                            VerticalAlignment="Stretch" />
+                                                    <materialDesign:PackIcon Width="22" Height="22"
                                                                              VerticalAlignment="Center"
                                                                              Kind="{Binding Icon}">
                                                         <materialDesign:PackIcon.Foreground>
@@ -282,17 +295,17 @@
                                                             </MultiBinding>
                                                         </materialDesign:PackIcon.Foreground>
                                                     </materialDesign:PackIcon>
-                                                    <!-- عنوان گروه — سفید نیمه‌ضخیم برای تمایز از فرزندان -->
+                                                    <!-- عنوان گروه — طلایی، درشت و پررنگ برای تمایز کامل از فرزندان -->
                                                     <TextBlock Text="{Binding Title}"
-                                                               FontSize="13.5" FontWeight="SemiBold"
-                                                               Foreground="#FFFFFF"
+                                                               FontSize="14.5" FontWeight="Bold"
+                                                               Foreground="#FFD54F"
                                                                Margin="10,0,0,0"
                                                                VerticalAlignment="Center" />
                                                     <!-- فلش باز/بسته -->
                                                     <materialDesign:PackIcon x:Name="Chev"
                                                                              Kind="ChevronDown"
                                                                              Width="15" Height="15"
-                                                                             Foreground="#9FB8D8"
+                                                                             Foreground="#FFD54F"
                                                                              Margin="8,0,2,0"
                                                                              VerticalAlignment="Center"
                                                                              RenderTransformOrigin="0.5,0.5">
@@ -304,10 +317,10 @@
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="GrpBd" Property="Background" Value="#24FFFFFF" />
+                                                    <Setter TargetName="GrpBd" Property="Background" Value="#33FFFFFF" />
                                                 </Trigger>
                                                 <Trigger Property="IsChecked" Value="True">
-                                                    <Setter TargetName="GrpBd" Property="Background" Value="#1EFFFFFF" />
+                                                    <Setter TargetName="GrpBd" Property="Background" Value="#2AFFFFFF" />
                                                     <Setter TargetName="Chev" Property="RenderTransform">
                                                         <Setter.Value>
                                                             <RotateTransform Angle="180" />

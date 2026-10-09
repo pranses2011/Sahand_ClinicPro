@@ -1,6 +1,7 @@
 <Window x:Class="Sahand.ClinicPro.Desktop.Views.SplashWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:helpers="clr-namespace:Sahand.ClinicPro.Desktop.Helpers"
         Title="در حال بارگذاری…"
         Width="480" Height="420"
         WindowStyle="None"
@@ -84,9 +85,22 @@
                 <TextBlock Text="سامانه جامع مدیریت درمانگاه سهند"
                            FontSize="17" FontWeight="Bold" Foreground="#FFFFFF"
                            HorizontalAlignment="Center" Margin="0,4,0,2" />
+
+                <!-- ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک): «در صفحه Splash
+                     شمارهٔ نسخهٔ برنامه هم باشد» — نشان نسخه با ارقام فارسی از
+                     همان منبع تک‌نسخهٔ AppInfo (ویژگی Version فایل ساخت)؛ نه
+                     هاردکد — با ارتقای نسخه بی‌خود تازه می‌شود ═══ -->
+                <Border Background="#2E4A73" CornerRadius="10" Padding="12,3"
+                        HorizontalAlignment="Center" Margin="0,4,0,2"
+                        BorderBrush="#5B8CC6" BorderThickness="1">
+                    <TextBlock Text="{x:Static helpers:AppInfo.VersionText}"
+                               FontSize="11.5" FontWeight="SemiBold"
+                               Foreground="#CFE4FB" />
+                </Border>
+
                 <TextBlock x:Name="SubtitleText" Text="در حال آماده‌سازی…"
                            FontSize="12" Foreground="#B9CBE6"
-                           HorizontalAlignment="Center" Margin="0,2,0,16" />
+                           HorizontalAlignment="Center" Margin="0,6,0,16" />
 
                 <!-- نوار پیشرفت -->
                 <Grid Width="300" HorizontalAlignment="Center">
