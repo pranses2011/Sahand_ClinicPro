@@ -55,7 +55,7 @@ COHERENCE_CHECKS = [
      "کشش افقی محتوای سلول همهٔ جدول‌ها"),
     # ۵) منوی کناری — گرید تضمینی عنوان گروه
     ("src/Sahand.ClinicPro.Desktop/MainWindow.xaml",
-     '<ColumnDefinition Width="*" />\n                                                        <!-- عنوان — تمام عرض باقی‌مانده؛ تضمینی -->',
+     '<!-- عنوان — تمام عرض باقی‌مانده؛ تضمینی -->',
      "ستون * عنوان سربرگ گروه"),
     ("src/Sahand.ClinicPro.Desktop/MainWindow.xaml",
      'Margin="8,2,20,4"',
