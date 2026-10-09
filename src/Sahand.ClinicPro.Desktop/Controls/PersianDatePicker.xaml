@@ -36,13 +36,15 @@
             <materialDesign:PackIcon Kind="CalendarMonth" />
         </ToggleButton>
 
-        <!-- پنجره بازشوی تقویم -->
+        <!-- پنجره بازشوی تقویم — چرخهٔ سی‌وسوم: PopupAnimation=Fade حذف شد
+             (قانون هم‌کلاسی‌ها با انتخابگر ساعت): ترکیب انیمیشن محو با
+             StaysOpen=False در برخی ویندوزها رویداد Closed را به‌تعویق
+             می‌اندازد و پاپ‌آپ در حالت باز گیر می‌کند -->
         <Popup x:Name="CalendarPopup"
                PlacementTarget="{Binding ElementName=ShamsiBox}"
                Placement="Bottom"
                StaysOpen="False"
-               AllowsTransparency="True"
-               PopupAnimation="Fade">
+               AllowsTransparency="True">
             <Border Background="{DynamicResource MaterialDesign.Brush.Background}"
                     CornerRadius="10" Padding="6" Margin="8">
                 <Border.Effect>

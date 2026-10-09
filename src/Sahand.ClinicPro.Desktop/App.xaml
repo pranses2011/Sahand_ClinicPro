@@ -107,7 +107,7 @@
                 <Setter Property="Padding" Value="{DynamicResource App.CardPadding}" />
             </Style>
 
-            <!-- ═══ وسط‌چین عمودی محتوای سلول‌های همهٔ جدول‌های برنامه ═══
+            <!-- ═══ وسط‌چین عمودی + کشش افقی محتوای سلول‌های همهٔ جدول‌های برنامه ═══
                  چرخه بیست‌ویکم (گزارش پانزدهم مالک): «محتویات سطرهای لیست‌ها رو
                  وسط چین عمودی بکن که همه محتوا در یک راستا باشن — الان بعضی
                  از فیلدها رو بالای سلول میاره»
@@ -115,9 +115,16 @@
                  تراز عمودی می‌گذارد و محتوا در سلول‌های بلند بالای سلول می‌چسبد؛
                  این تمپلیت همان Border/Background/BorderBrush استایل MaterialDesign
                  (که تریگرهای انتخاب/هاور روی آن‌ها اثر می‌گذارند) را حفظ و صرفاً
-                 تراز عمودی را از VerticalContentAlignment می‌خواند. -->
+                 تراز عمودی را از VerticalContentAlignment می‌خواند.
+                 ═══ چرخهٔ سی‌وسوم (گزارش نوزدهم مالک — قانون هم‌کلاسی‌ها) ═══
+                 «کنترل ساعت در برنامهٔ کاری ثابت مانده و در وسط سلول نشسته»:
+                 HorizontalContentAlignment=Stretch هم پیش‌فرض شد و ContentPresenter
+                 تراز افقی را از آن می‌خواند — محتوای قالبیِ همهٔ سلول‌ها (نه فقط
+                 انتخابگر ساعت) در تمام عرض سلول می‌نشیند؛ در غیر این صورت عنصر
+                 قالب بدون تراز صریح، در تراز پیش‌فرض قالب کتابخانه می‌ماند. -->
             <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="DataGridCell">
@@ -127,6 +134,7 @@
                                     Padding="{TemplateBinding Padding}"
                                     SnapsToDevicePixels="True">
                                 <ContentPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                                   SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                             </Border>
                         </ControlTemplate>

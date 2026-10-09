@@ -328,11 +328,18 @@
                                  چرخه بیست‌ویکم: ستون‌ها از تایپ دستی به کنترل انتخابگر ساعت تبدیل شدند -->
                             <!-- چرخهٔ بیست‌وهشتم: ستون‌های ساعت ۱۲۶px با زوم فونت بزرگ/تم روشن می‌بریدند
                                      («ساعت‌ها هنوز کامل دیده نمی‌شوند» — مهم) → ۱۵۶px + کشش افقی کنترل -->
+                            <!-- ═══ چرخهٔ سی‌وسوم (گزارش نوزدهم مالک — مهم) ═══
+                                 «به‌جای بیشتر کردن عرض کنترل زمان، عرض سلول را زیاد کرده‌ای؛
+                                 اندازهٔ کنترل ثابت مانده و زمان ناقص دیده می‌شود»:
+                                 عرض صریح ۱۵۰px روی خود کنترل (نه اتکا به تراز سلول) —
+                                 کنترل همیشه تمام‌عرضِ سلول ۱۵۶px را می‌پوشاند و متنِ
+                                 مرکزچینِ انتخابگر در هر حالت کامل دیده می‌شود. -->
                             <DataGridTemplateColumn Header="شروع" Width="156" SortMemberPath="StartTime">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <controls:TimePicker TimeText="{Binding StartTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                             HorizontalAlignment="Stretch" Margin="2,2" />
+                                                             Width="150" HorizontalAlignment="Stretch"
+                                                             VerticalAlignment="Center" Margin="2,2" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -340,7 +347,8 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <controls:TimePicker TimeText="{Binding EndTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                             HorizontalAlignment="Stretch" Margin="2,2" />
+                                                             Width="150" HorizontalAlignment="Stretch"
+                                                             VerticalAlignment="Center" Margin="2,2" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -348,7 +356,8 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <controls:TimePicker TimeText="{Binding BreakStart, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                             HorizontalAlignment="Stretch" Margin="2,2" />
+                                                             Width="150" HorizontalAlignment="Stretch"
+                                                             VerticalAlignment="Center" Margin="2,2" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -356,7 +365,8 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <controls:TimePicker TimeText="{Binding BreakEnd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                             HorizontalAlignment="Stretch" Margin="2,2" />
+                                                             Width="150" HorizontalAlignment="Stretch"
+                                                             VerticalAlignment="Center" Margin="2,2" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

@@ -23,9 +23,16 @@
          ═══════════════════════════════════════════════════════════ -->
     <Grid>
         <!-- دکمهٔ بازکردن پاپ‌آپ — ظاهر هم‌خانوادهٔ TextBox متریال -->
+        <!-- ═══ چرخهٔ سی‌وسوم (گزارش نوزدهم مالک) — کشش کامل و مرکزچینی ساعت ═══
+             «به‌جای بیشتر کردن عرض کنترل زمان، عرض سلول را زیاد کرده‌ای ولی اندازهٔ
+             کنترل ثابت مانده و زمان ناقص دیده می‌شود»: تاگل صریحاً تمام‌عرض
+             می‌شود (HorizontalAlignment=Stretch) و محتوایش (آیکون+متن ساعت)
+             مرکزچین — متن ساعت در هر عرضی کامل و در میان دیده می‌شود و
+             MinWidth ثابتِ ۵۶px هم حذف شد تا «عرض ثابتِ غیرواقعی» نماند. -->
         <ToggleButton x:Name="Toggle"
                       Checked="OnToggleChecked"
                       Unchecked="OnToggleUnchecked"
+                      HorizontalAlignment="Stretch"
                       Cursor="Hand">
             <ToggleButton.Template>
                 <ControlTemplate TargetType="ToggleButton">
@@ -40,20 +47,22 @@
                              سمت راست؛ در RTL قبلی، متن با شروع از راست رسم می‌شد و
                              در فضای تنگ، رقم «ساعت» بریده می‌شد و فقط دقیقه دیده می‌شد.
                              فونت هاردکد Consolas هم حذف شد (ارقام فارسی ندارد و فونت
-                             انتخابی کاربر روی آن نمی‌نشست) — اکنون فونت تم اعمال می‌شود. -->
-                        <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight">
+                             انتخابی کاربر روی آن نمی‌نشست) — اکنون فونت تم اعمال می‌شود.
+                             چرخهٔ سی‌وسوم: مرکزچین — در کنترلِ تمام‌عرض، زمان همیشه
+                             در میان و بدون بریدگی دیده می‌شود. -->
+                        <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight"
+                                    HorizontalAlignment="Center">
                             <materialDesign:PackIcon Kind="ClockOutline"
                                                      Width="15" Height="15"
                                                      VerticalAlignment="Center"
                                                      Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
                                                      Opacity="0.8" />
                             <!-- نمایش ارقام فارسی — متن واقعی TimeText لاتین است.
-                                 چرخهٔ ۲۸: MinWidth از ۴۸ به ۵۶ — در ستون‌های برنامهٔ
-                                 کاری با زوم فونت بزرگ، رقم ساعت بریده می‌شد -->
+                                 چرخهٔ ۲۸ MinWidth=۵۶ داشت که «عرض ثابت غیرواقعی» می‌ساخت؛
+                                 حذف شد — عرض متن با خودِ زمان تازه می‌شود -->
                             <TextBlock x:Name="TimeTextBlock"
                                        Text="{Binding TimeTextFa, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=OneWay}"
                                        Margin="6,0,0,0"
-                                       MinWidth="56"
                                        VerticalAlignment="Center"
                                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
                         </StackPanel>
