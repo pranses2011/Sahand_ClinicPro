@@ -1,0 +1,132 @@
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.ColorPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="انتخاب رنگ دلخواه"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        Width="470"
+        SizeToContent="Height"
+        FlowDirection="RightToLeft"
+        TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+        TextOptions.TextFormattingMode="Ideal">
+    <!-- ═══════════════════════════════════════════════════════════
+         انتخاب‌گر رنگ حرفه‌ای — چرخهٔ بیست‌ونهم (گزارش هجدهم مالک):
+         «توسعهٔ تنظیمات تم تک‌عنصری حرفه‌ای‌تر». به‌جای محدودیت پالت
+         ثابت کشویی، هر رنگی قابل انتخاب است: پالت آمادهٔ متریال
+         (۱۹ خانوادهٔ رنگ × ۵ طیف) + اسلایدرهای دقیق RGB + ورودی کد
+         HEX با اعتبارسنجی برخط + پیش‌نمایش زنده.
+         ظاهر: همان زبان طراحی ThemedDialog (پوشش تیره + کارت تابع تم).
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid>
+        <!-- پوشش تیرهٔ پس‌زمینه -->
+        <Border Background="#66000000" MouseLeftButtonDown="OnDimClick" />
+
+        <!-- کارت انتخاب‌گر -->
+        <Border Background="{DynamicResource MaterialDesign.Brush.Background}"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource App.CardRadius}"
+                Margin="24"
+                VerticalAlignment="Center"
+                Padding="22,18">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="22" ShadowDepth="0" Opacity="0.35" Color="#000000" />
+            </Border.Effect>
+            <StackPanel>
+                <!-- سربرگ -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <Border Width="44" Height="44" CornerRadius="22" HorizontalAlignment="Right"
+                            Background="{DynamicResource MaterialDesign.Brush.Primary}">
+                        <materialDesign:PackIcon Kind="Palette" Width="24" Height="24"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                 Foreground="White" />
+                    </Border>
+                    <TextBlock x:Name="TitleText" Text="انتخاب رنگ دلخواه" FontSize="16" FontWeight="Bold"
+                               Margin="10,0,4,0" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- پیش‌نمایش زندهٔ رنگ انتخابی + کد -->
+                <Border x:Name="PreviewBorder" Height="58" CornerRadius="10" BorderThickness="1"
+                        BorderBrush="#22000000" Margin="0,0,0,12">
+                    <Grid>
+                        <TextBlock x:Name="PreviewHexShadow" Text="#1565C0" HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" FontSize="17" FontWeight="Bold" FontFamily="Consolas">
+                            <TextBlock.Effect>
+                                <BlurEffect Radius="7" />
+                            </TextBlock.Effect>
+                        </TextBlock>
+                        <TextBlock x:Name="PreviewHexText" Text="#1565C0" HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" FontSize="17" FontWeight="Bold" FontFamily="Consolas" />
+                    </Grid>
+                </Border>
+
+                <!-- پالت آمادهٔ متریال — سطرها از کد پر می‌شوند -->
+                <TextBlock Text="پالت آماده (برای هر خانوادهٔ رنگ، روشن‌ترین طیف در راست):" FontSize="12.5"
+                           FontWeight="SemiBold" Margin="0,0,0,6" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="196" Margin="0,0,0,10">
+                    <StackPanel x:Name="PaletteRows" />
+                </ScrollViewer>
+
+                <!-- تنظیم دقیق — اسلایدرهای قرمز/سبز/آبی -->
+                <TextBlock Text="تنظیم دقیق (RGB):" FontSize="12.5" FontWeight="SemiBold" Margin="0,0,0,6" />
+                <Grid Margin="0,0,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="34" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="36" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="قرمز" Grid.Row="0" Grid.Column="0" FontSize="11.5" VerticalAlignment="Center" />
+                    <Slider x:Name="RedSlider" Grid.Row="0" Grid.Column="1" Minimum="0" Maximum="255"
+                            TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                            ValueChanged="RgbSlider_ValueChanged" Margin="6,2" />
+                    <TextBlock x:Name="RedValueText" Text="21" Grid.Row="0" Grid.Column="2" FontSize="12"
+                               FontFamily="Consolas" VerticalAlignment="Center" HorizontalAlignment="Center" />
+
+                    <TextBlock Text="سبز" Grid.Row="1" Grid.Column="0" FontSize="11.5" VerticalAlignment="Center" />
+                    <Slider x:Name="GreenSlider" Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="255"
+                            TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                            ValueChanged="RgbSlider_ValueChanged" Margin="6,2" />
+                    <TextBlock x:Name="GreenValueText" Text="101" Grid.Row="1" Grid.Column="2" FontSize="12"
+                               FontFamily="Consolas" VerticalAlignment="Center" HorizontalAlignment="Center" />
+
+                    <TextBlock Text="آبی" Grid.Row="2" Grid.Column="0" FontSize="11.5" VerticalAlignment="Center" />
+                    <Slider x:Name="BlueSlider" Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="255"
+                            TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                            ValueChanged="RgbSlider_ValueChanged" Margin="6,2" />
+                    <TextBlock x:Name="BlueValueText" Text="192" Grid.Row="2" Grid.Column="2" FontSize="12"
+                               FontFamily="Consolas" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                </Grid>
+
+                <!-- ورودی کد HEX با اعتبارسنجی برخط -->
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <TextBlock Text="کد رنگ (HEX):" FontSize="12" VerticalAlignment="Center" />
+                    <TextBox x:Name="HexInput" Width="104" Margin="10,0,0,0" VerticalAlignment="Center"
+                             FontFamily="Consolas" FontSize="13" TextChanged="HexInput_TextChanged" />
+                    <TextBlock x:Name="HexErrorText" Text="کد نامعتبر است — مثل #1565C0" FontSize="11"
+                               Foreground="#C62828" Margin="8,0,0,0" VerticalAlignment="Center"
+                               Visibility="Collapsed" />
+                </StackPanel>
+
+                <!-- دکمه‌ها -->
+                <StackPanel Orientation="Horizontal" Margin="0,16,0,0" HorizontalAlignment="Left">
+                    <Button x:Name="AcceptButton" Content="تأیید رنگ" MinWidth="110" Height="38"
+                            Style="{StaticResource MaterialDesignRaisedButton}" Cursor="Hand"
+                            Click="OnAcceptClick" Margin="0,0,10,0" />
+                    <Button Content="انصراف" MinWidth="96" Height="38" Cursor="Hand"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" Click="OnCancelClick" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -231,24 +231,51 @@ public partial class SettingsViewModel : ViewModelBase
 
     /// <summary>
     /// گزینه‌های رنگ منوی کناری — صفر یعنی «همگام با تم» (چرخه بیست‌ویکم):
-    /// «تغییر رنگ، رنگ منوی کناری را عوض نمی‌کند» + سفارشی‌سازی مستقل
+    /// «تغییر رنگ، رنگ منوی کناری را عوض نمی‌کند» + سفارشی‌سازی مستقل.
+    /// چرخهٔ بیست‌ونهم (گزارش هجدهم مالک): گزینهٔ آخر «رنگ دلخواه…»
+    /// انتخاب‌گر رنگ حرفه‌ای را باز می‌کند — هر رنگی، نه فقط پالت ثابت.
     /// </summary>
     public List<string> SidebarColorOptions { get; } = new()
     {
         "همگام با تم", "آبی تیره رسمی", "سبز تیره", "خاکستری گرافیت",
-        "زرشکی تیره", "فیروزه‌ای تیره", "بنفش تیره", "قهوه‌ای گرم", "مشکی مات"
+        "زرشکی تیره", "فیروزه‌ای تیره", "بنفش تیره", "قهوه‌ای گرم", "مشکی مات",
+        "🎨 رنگ دلخواه…"
     };
 
     /// <summary>رنگ‌های متناظر گزینه‌های منو — ایندکس ۰ (همگام) مقدار ندارد</summary>
     public static readonly string?[] SidebarColorHexes =
     {
         null, "#16355E", "#1B3A24", "#37474F", "#5C1A22",
-        "#0E4A4A", "#3B1E5C", "#4E342E", "#111111"
+        "#0E4A4A", "#3B1E5C", "#4E342E", "#111111", null
     };
 
     /// <summary>نمایهٔ رنگ منو — صفر = همگام با تم</summary>
     [ObservableProperty]
     private int _sidebarColorIndex;
+
+    /// <summary>
+    /// کد رنگ دلخواه منوی کناری — چرخهٔ بیست‌ونهم: وقتی گزینهٔ «رنگ دلخواه…»
+    /// انتخاب شده باشد این مقدار به‌جای پالت ثابت اعمال/ذخیره می‌شود.
+    /// </summary>
+    [ObservableProperty]
+    private string? _sidebarCustomHex;
+
+    /// <summary>ایندکس گزینهٔ «رنگ دلخواه…» منو — آخرین آیتم فهرست</summary>
+    private int SidebarCustomIndex => SidebarColorOptions.Count - 1;
+
+    /// <summary>رنگ مؤثر منو — گزینهٔ دلخواه یا پالت ثابت یا تهی (همگام با تم)</summary>
+    private string? EffectiveSidebarHex => SidebarColorIndex == SidebarCustomIndex
+        ? SidebarCustomHex
+        : (SidebarColorIndex > 0 ? SidebarColorHexes[SidebarColorIndex] : null);
+
+    /// <summary>نمونهٔ رنگ مؤثر منو — نمایش زندهٔ کنار کشو (چرخهٔ ۲۹)</summary>
+    public string? SidebarSwatchHex => EffectiveSidebarHex;
+
+    /// <summary>
+    /// تازه‌سازی نمونهٔ رنگ منو — با هر تغییر گزینه یا رنگ دلخواه
+    /// </summary>
+    partial void OnSidebarCustomHexChanged(string? value)
+        => OnPropertyChanged(nameof(SidebarSwatchHex));
 
     /// <summary>گزینه‌های چگالی عناصر — صفر یعنی از تم</summary>
     public List<string> DensityOptions { get; } = new()
@@ -295,13 +322,35 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private int _customPrimaryIndex;
 
-    /// <summary>گزینه‌های رنگ اصلی سفارشی — [۰] همگام با تم + پالت</summary>
+    /// <summary>گزینه‌های رنگ اصلی سفارشی — [۰] همگام با تم + پالت + دلخواه</summary>
     public List<string> CustomPrimaryOptions { get; } = new()
-        { "همگام با تم", "قرمز روشن", "صورتی", "بنفش", "سرمه‌ای", "آبی تیره", "فیروزه‌ای تیره", "سبز تیره", "زیتونی", "کهربایی", "قهوه‌ای" };
+        { "همگام با تم", "قرمز روشن", "صورتی", "بنفش", "سرمه‌ای", "آبی تیره", "فیروزه‌ای تیره", "سبز تیره", "زیتونی", "کهربایی", "قهوه‌ای", "🎨 رنگ دلخواه…" };
 
     /// <summary>مقدارهای هگز گزینه‌های رنگ اصلی — هم‌اندیس فهرست بالا</summary>
     public static readonly string?[] CustomPrimaryHexes =
-        { null, "#E53935", "#D81B60", "#8E24AA", "#1A237E", "#0D47A1", "#00695C", "#1B5E20", "#827717", "#E65100", "#4E342E" };
+        { null, "#E53935", "#D81B60", "#8E24AA", "#1A237E", "#0D47A1", "#00695C", "#1B5E20", "#827717", "#E65100", "#4E342E", null };
+
+    /// <summary>
+    /// کد رنگ دلخواه اصلی — چرخهٔ بیست‌ونهم: وقتی گزینهٔ «رنگ دلخواه…»
+    /// انتخاب شده باشد این مقدار به‌جای پالت ثابت اعمال/ذخیره می‌شود.
+    /// </summary>
+    [ObservableProperty]
+    private string? _primaryCustomHex;
+
+    /// <summary>ایندکس گزینهٔ «رنگ دلخواه…» رنگ اصلی — آخرین آیتم فهرست</summary>
+    private int PrimaryCustomIndex => CustomPrimaryOptions.Count - 1;
+
+    /// <summary>رنگ مؤثر اصلی — گزینهٔ دلخواه یا پالت ثابت یا تهی (همگام با تم)</summary>
+    private string? EffectivePrimaryHex => CustomPrimaryIndex == PrimaryCustomIndex
+        ? PrimaryCustomHex
+        : (CustomPrimaryIndex > 0 ? CustomPrimaryHexes[CustomPrimaryIndex] : null);
+
+    /// <summary>نمونهٔ رنگ مؤثر اصلی — نمایش زندهٔ کنار کشو (چرخهٔ ۲۹)</summary>
+    public string? PrimarySwatchHex => EffectivePrimaryHex;
+
+    /// <summary>تازه‌سازی نمونهٔ رنگ اصلی — با هر تغییر گزینه یا رنگ دلخواه</summary>
+    partial void OnPrimaryCustomHexChanged(string? value)
+        => OnPropertyChanged(nameof(PrimarySwatchHex));
 
     /// <summary>نام پریست در حال ذخیره — ورودی کاربر</summary>
     [ObservableProperty]
@@ -329,13 +378,59 @@ public partial class SettingsViewModel : ViewModelBase
         ApplyAppearanceNow();
     }
 
-    /// <summary>تغییر رنگ اصلی سفارشی — اعمال بی‌درنگ روی کل پوسته (چرخه ۲۴)</summary>
+    /// <summary>
+    /// تغییر رنگ اصلی سفارشی — اعمال بی‌درنگ روی کل پوسته (چرخه ۲۴).
+    /// چرخهٔ بیست‌ونهم: گزینهٔ «🎨 رنگ دلخواه…» انتخاب‌گر حرفه‌ای را باز
+    /// می‌کند؛ انصراف به گزینهٔ قبلی برمی‌گردد.
+    /// </summary>
     partial void OnCustomPrimaryIndexChanged(int value)
     {
+        OnPropertyChanged(nameof(PrimarySwatchHex));
         if (_initializing) return;
+
+        if (value == PrimaryCustomIndex)
+        {
+            var hex = Views.ColorPickerWindow.Pick(System.Windows.Application.Current?.MainWindow,
+                "رنگ اصلی دکمه‌ها و هایلایت‌ها", PrimaryCustomHex ?? "#1565C0");
+            if (hex is null)
+            {
+                _initializing = true;
+                CustomPrimaryIndex = _lastPrimaryIndex;
+                _initializing = false;
+                return;
+            }
+            PrimaryCustomHex = hex;
+        }
+        else if (value >= 0 && value < PrimaryCustomIndex)
+        {
+            _lastPrimaryIndex = value;
+        }
+
         ApplyAppearanceNow();
         // رنگ اصلی پالت متریال هم باید بازاعمال شود (دکمه‌ها/هایلایت‌ها)
         _theme.ApplyTheme(_theme.CurrentThemeKey, _theme.IsDarkTheme);
+    }
+
+    /// <summary>آخرین گزینهٔ غیردلخواه رنگ اصلی — برای بازگشت پس از انصراف</summary>
+    private int _lastPrimaryIndex;
+
+    /// <summary>
+    /// گشودن مجدد انتخاب‌گر رنگ اصلی — دکمهٔ 🎨 کنار کشو؛ رنگ دلخواهِ
+    /// ذخیره‌شده مقدار اولیه است.
+    /// </summary>
+    [RelayCommand]
+    private void PickPrimaryColor()
+    {
+        var hex = Views.ColorPickerWindow.Pick(System.Windows.Application.Current?.MainWindow,
+            "رنگ اصلی دکمه‌ها و هایلایت‌ها", PrimaryCustomHex ?? "#1565C0");
+        if (hex is null) return;
+        PrimaryCustomHex = hex;
+        _initializing = true;
+        CustomPrimaryIndex = PrimaryCustomIndex;
+        _initializing = false;
+        ApplyAppearanceNow();
+        _theme.ApplyTheme(_theme.CurrentThemeKey, _theme.IsDarkTheme);
+        _snackbar.Success($"رنگ اصلی دلخواه ({hex}) اعمال شد");
     }
 
     /// <summary>
@@ -403,9 +498,17 @@ public partial class SettingsViewModel : ViewModelBase
         CurrencyUnitIndex = _theme.Appearance.CurrencyUnit == "Toman" ? 1 : 0;
 
         // چرخه بیست‌ویکم: مقدار اولیهٔ سفارشی‌سازی‌های تفکیکی از تم
+        // چرخهٔ بیست‌ونهم: رنگ خارج از پالت ثابت = رنگ دلخواهِ ذخیره‌شده
         var appearance = _theme.Appearance;
-        SidebarColorIndex = Array.IndexOf(SidebarColorHexes, appearance.SidebarHex);
-        if (SidebarColorIndex < 0) SidebarColorIndex = 0;
+        var initSidebarIdx = Array.IndexOf(SidebarColorHexes, appearance.SidebarHex);
+        if (initSidebarIdx >= 0) SidebarColorIndex = initSidebarIdx;
+        else if (!string.IsNullOrWhiteSpace(appearance.SidebarHex))
+        {
+            SidebarCustomHex = appearance.SidebarHex;
+            SidebarColorIndex = SidebarCustomIndex;
+        }
+        else SidebarColorIndex = 0;
+        _lastSidebarIndex = SidebarColorIndex == SidebarCustomIndex ? 0 : SidebarColorIndex;
         DensityIndex = appearance.DensityOverride switch
         {
             "Compact" => 2,
@@ -415,7 +518,15 @@ public partial class SettingsViewModel : ViewModelBase
         UseCustomRadius = appearance.CardRadiusOverride.HasValue;
         CustomCardRadius = appearance.CardRadiusOverride ?? 8;
         // چرخه ۲۴: رنگ اصلی سفارشی + حالت رنگ آیکون‌ها + پریست‌ها
-        CustomPrimaryIndex = Math.Max(0, Array.IndexOf(CustomPrimaryHexes, appearance.CustomPrimaryHex));
+        var initPrimaryIdx = Array.IndexOf(CustomPrimaryHexes, appearance.CustomPrimaryHex);
+        if (initPrimaryIdx >= 0) CustomPrimaryIndex = initPrimaryIdx;
+        else if (!string.IsNullOrWhiteSpace(appearance.CustomPrimaryHex))
+        {
+            PrimaryCustomHex = appearance.CustomPrimaryHex;
+            CustomPrimaryIndex = PrimaryCustomIndex;
+        }
+        else CustomPrimaryIndex = 0;
+        _lastPrimaryIndex = CustomPrimaryIndex == PrimaryCustomIndex ? 0 : CustomPrimaryIndex;
         IconColorModeIndex = appearance.IsColorfulIcons ? 1 : 0;
         // چرخهٔ بیست‌وهفتم — مجموعهٔ آیکون‌های منو (کلاسیک/مدرن/مینیمال)
         IconSetIndex = Math.Max(0, Array.IndexOf(IconSetKeys, appearance.IconSetName ?? "Classic"));
@@ -693,12 +804,57 @@ public partial class SettingsViewModel : ViewModelBase
         ApplyAppearanceNow();
     }
 
-    /// <summary>تغییر رنگ منوی کناری — چرخه بیست‌ویکم: اعمال بی‌درنگ مستقل از تم</summary>
+    /// <summary>
+    /// تغییر رنگ منوی کناری — چرخه بیست‌ویکم: اعمال بی‌درنگ مستقل از تم.
+    /// چرخهٔ بیست‌ونهم: انتخاب گزینهٔ «🎨 رنگ دلخواه…» انتخاب‌گر حرفه‌ای را
+    /// باز می‌کند؛ انصراف به گزینهٔ قبلی برمی‌گردد (بدون رنگ بی‌حساب اعمال نمی‌شود).
+    /// </summary>
     partial void OnSidebarColorIndexChanged(int value)
     {
+        OnPropertyChanged(nameof(SidebarSwatchHex));
         if (_initializing)
             return;
+
+        // گزینهٔ دلخواه — انتخاب‌گر را باز کن؛ انصراف = بازگشت به گزینهٔ قبلی
+        if (value == SidebarCustomIndex)
+        {
+            var hex = Views.ColorPickerWindow.Pick(System.Windows.Application.Current?.MainWindow,
+                "رنگ منوی کناری", SidebarCustomHex ?? "#16355E");
+            if (hex is null)
+            {
+                _initializing = true;
+                SidebarColorIndex = _lastSidebarIndex;
+                _initializing = false;
+                return;
+            }
+            SidebarCustomHex = hex;
+        }
+        else if (value >= 0 && value < SidebarCustomIndex)
+        {
+            _lastSidebarIndex = value;
+        }
         ApplyAppearanceNow();
+    }
+
+    /// <summary>آخرین گزینهٔ غیردلخواه منو — برای بازگشت پس از انصراف انتخاب‌گر</summary>
+    private int _lastSidebarIndex;
+
+    /// <summary>
+    /// گشودن مجدد انتخاب‌گر رنگ منو — دکمهٔ 🎨 کنار کشو؛ رنگ دلخواهِ ذخیره‌شده
+    /// مقدار اولیهٔ انتخاب‌گر است تا تنظیم دقیق قبلی حفظ شود.
+    /// </summary>
+    [RelayCommand]
+    private void PickSidebarColor()
+    {
+        var hex = Views.ColorPickerWindow.Pick(System.Windows.Application.Current?.MainWindow,
+            "رنگ منوی کناری", SidebarCustomHex ?? "#16355E");
+        if (hex is null) return;
+        SidebarCustomHex = hex;
+        _initializing = true;
+        SidebarColorIndex = SidebarCustomIndex;
+        _initializing = false;
+        ApplyAppearanceNow();
+        _snackbar.Success($"رنگ دلخواه منو ({hex}) اعمال شد");
     }
 
     /// <summary>تغییر چگالی مستقل — چرخه بیست‌ویکم</summary>
@@ -737,18 +893,14 @@ public partial class SettingsViewModel : ViewModelBase
             BaseFontSize,
             AnimationsEnabled,
             CurrencyUnitIndex == 1 ? "Toman" : "Rial",
-            // رنگ منو — ایندکس ۰ یعنی همگام با تم (تهی)
-            SidebarColorIndex >= 0 && SidebarColorIndex < SidebarColorHexes.Length
-                ? SidebarColorHexes[SidebarColorIndex]
-                : null,
+            // رنگ منو — چرخهٔ بیست‌ونهم: گزینهٔ دلخواه از رنگ دلخواه می‌آید
+            EffectiveSidebarHex,
             // گوشهٔ مستقل — فقط وقتی چک‌باکس فعال است
             UseCustomRadius ? Math.Clamp(CustomCardRadius, 0, 24) : null,
             // چگالی مستقل — ۰ از تم، ۱ استاندارد، ۲ فشرده
             DensityIndex switch { 1 => "Normal", 2 => "Compact", _ => null },
             // چرخه ۲۴ — رنگ اصلی سفارشی (۰ = همگام با تم) و حالت رنگ آیکون‌ها
-            CustomPrimaryIndex >= 0 && CustomPrimaryIndex < CustomPrimaryHexes.Length
-                ? CustomPrimaryHexes[CustomPrimaryIndex]
-                : null,
+            EffectivePrimaryHex,
             IconColorModeIndex == 1 ? "Colorful" : "Mono",
             // چرخهٔ بیست‌وهفتم — مجموعهٔ آیکون‌های منو
             IconSetIndex >= 0 && IconSetIndex < IconSetKeys.Length ? IconSetKeys[IconSetIndex] : "Classic"));
@@ -811,12 +963,12 @@ public partial class SettingsViewModel : ViewModelBase
             ["BaseFontSize"] = BaseFontSize.ToString("0"),
             ["Animations"] = AnimationsEnabled ? "true" : "false",
             ["CurrencyUnit"] = CurrencyUnitIndex == 1 ? "Toman" : "Rial",
-            // چرخه بیست‌ویکم — سفارشی‌سازی تفکیکی عناصر
-            ["SidebarHex"] = SidebarColorIndex > 0 ? SidebarColorHexes[SidebarColorIndex] : "",
+            // چرخه بیست‌ویکم — سفارشی‌سازی تفکیکی عناصر (چرخهٔ ۲۹: دلخواه پشتیبانی)
+            ["SidebarHex"] = EffectiveSidebarHex ?? "",
             ["CardRadiusOverride"] = UseCustomRadius ? Math.Clamp(CustomCardRadius, 0, 24).ToString() : "",
             ["DensityOverride"] = DensityIndex switch { 1 => "Normal", 2 => "Compact", _ => "" },
-            // چرخه ۲۴ — رنگ اصلی سفارشی و حالت رنگ آیکون‌ها
-            ["CustomPrimaryHex"] = CustomPrimaryIndex > 0 ? CustomPrimaryHexes[CustomPrimaryIndex] : "",
+            // چرخه ۲۴ — رنگ اصلی سفارشی و حالت رنگ آیکون‌ها (چرخهٔ ۲۹: دلخواه)
+            ["CustomPrimaryHex"] = EffectivePrimaryHex ?? "",
             ["IconColorMode"] = IconColorModeIndex == 1 ? "Colorful" : "Mono"
         });
     }
@@ -861,10 +1013,10 @@ public partial class SettingsViewModel : ViewModelBase
             BaseFontSize = BaseFontSize,
             Animations = AnimationsEnabled,
             CurrencyToman = CurrencyUnitIndex == 1,
-            SidebarHex = SidebarColorIndex > 0 ? SidebarColorHexes[SidebarColorIndex] : null,
+            SidebarHex = EffectiveSidebarHex,
             CardRadius = UseCustomRadius ? Math.Clamp(CustomCardRadius, 0, 24) : null,
             Density = DensityIndex switch { 1 => "Normal", 2 => "Compact", _ => null },
-            CustomPrimaryHex = CustomPrimaryIndex > 0 ? CustomPrimaryHexes[CustomPrimaryIndex] : null,
+            CustomPrimaryHex = EffectivePrimaryHex,
             ColorfulIcons = IconColorModeIndex == 1
         });
         LocalSettingsStore.Set($"ThemePreset.{name}", json);
@@ -909,11 +1061,27 @@ public partial class SettingsViewModel : ViewModelBase
             BaseFontSize = data.BaseFontSize is >= 11 and <= 18 ? data.BaseFontSize.Value : 13;
             AnimationsEnabled = data.Animations;
             CurrencyUnitIndex = data.CurrencyToman ? 1 : 0;
-            SidebarColorIndex = Math.Max(0, Array.IndexOf(SidebarColorHexes, data.SidebarHex));
+            // چرخهٔ بیست‌ونهم: رنگ ذخیره‌شده اگر در پالت ثابت نبود، همان رنگ
+            // دلخواه است — کد ذخیره می‌شود و گزینهٔ «دلخواه…» انتخاب می‌شود
+            var sidebarIdx = Array.IndexOf(SidebarColorHexes, data.SidebarHex);
+            if (sidebarIdx >= 0) SidebarColorIndex = sidebarIdx;
+            else if (!string.IsNullOrWhiteSpace(data.SidebarHex))
+            {
+                SidebarCustomHex = data.SidebarHex;
+                SidebarColorIndex = SidebarCustomIndex;
+            }
+            else SidebarColorIndex = 0;
             UseCustomRadius = data.CardRadius.HasValue;
             CustomCardRadius = data.CardRadius ?? 8;
             DensityIndex = data.Density switch { "Normal" => 1, "Compact" => 2, _ => 0 };
-            CustomPrimaryIndex = Math.Max(0, Array.IndexOf(CustomPrimaryHexes, data.CustomPrimaryHex));
+            var primaryIdx = Array.IndexOf(CustomPrimaryHexes, data.CustomPrimaryHex);
+            if (primaryIdx >= 0) CustomPrimaryIndex = primaryIdx;
+            else if (!string.IsNullOrWhiteSpace(data.CustomPrimaryHex))
+            {
+                PrimaryCustomHex = data.CustomPrimaryHex;
+                CustomPrimaryIndex = PrimaryCustomIndex;
+            }
+            else CustomPrimaryIndex = 0;
             IconColorModeIndex = data.ColorfulIcons ? 1 : 0;
             _initializing = false;
 
