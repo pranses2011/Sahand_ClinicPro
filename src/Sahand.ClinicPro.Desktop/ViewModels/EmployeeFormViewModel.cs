@@ -342,8 +342,11 @@ public partial class EmployeeFormViewModel : FormViewModelBase
         EmploymentTypeIndex = Math.Max(0, (int)d.EmploymentType - 1);
         EducationLevelIndex = d.EducationLevel is null ? -1 : (int)d.EducationLevel - 1;
 
-        // حقوق — به رسم نمایشی کاربر (در حالت تومان مقدار ریالی/۱۰)
-        BaseSalary = Helpers.Money.ToDisplay(d.BaseSalary).ToString("0", System.Globalization.CultureInfo.InvariantCulture);
+        // حقوق — ریال خالص در VM (کادر مبلغ با MoneyRial خودش نمایشی می‌کند)
+        // ═══ چرخهٔ بیست‌وهشتم — قرارداد MoneyRial: VM همیشه ریال خالص با
+        // ارقام لاتین است؛ پیش‌تر ToDisplay در VM می‌نشست و در حالت تومان
+        // کادر مبلغ دوباره تقسیم می‌کرد (نمایش ۱۰ برابر کوچک‌تر) ═══
+        BaseSalary = d.BaseSalary.ToString("0", System.Globalization.CultureInfo.InvariantCulture);
         CommissionPercent = d.CommissionPercent.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
 
         // تاریخ استخدام میلادی → شمسی متن
@@ -437,12 +440,15 @@ public partial class EmployeeFormViewModel : FormViewModelBase
         }
 
         // ═══ اطلاعات حقوقی چرخه نهم — حقوق پایه + درصد از سود خدمات ═══
-        if (!decimal.TryParse(BaseSalary.Trim(), out var baseSalary) || baseSalary < 0)
+        // ═══ چرخهٔ بیست‌وهشتم — پارس امن ارقام فارسی/جداکننده (هم‌کلاس رفع
+        // «حق ویزیت عددی نامعتبر است» پزشک — قانون ۵ مالک) ═══
+        if (!Helpers.Money.TryParseRialDigits(BaseSalary, out var baseSalary))
         {
             ErrorMessage = "حقوق پایه عددی نامعتبر است";
             return;
         }
-        if (!decimal.TryParse(CommissionPercent.Trim(), out var commissionPercent)
+        var commissionLatin = Helpers.Money.PersianDigitsToLatin(CommissionPercent?.Trim() ?? "").Replace("٫", ".");
+        if (!decimal.TryParse(commissionLatin, System.Globalization.CultureInfo.InvariantCulture, out var commissionPercent)
             || commissionPercent is < 0 or > 100)
         {
             ErrorMessage = "درصد حقوق از سود خدمات باید عددی بین ۰ تا ۱۰۰ باشد";

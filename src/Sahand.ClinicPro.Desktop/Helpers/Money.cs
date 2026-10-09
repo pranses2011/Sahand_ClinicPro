@@ -151,6 +151,36 @@ public static class Money
     }
 
     /// <summary>
+    /// پارس امن «رشتهٔ مبلغ ریالیِ ViewModel» — چرخهٔ بیست‌وهشتم (گزارش
+    /// هجدهم مالک): ریشهٔ «حق ویزیت عددی نامعتبر است» در ویرایش پزشک.
+    /// پراپرتی‌های مبلغی VM که با MoneyRial به کادر مبلغ وصل‌اند ممکن است
+    /// ارقام فارسی و جداکنندهٔ «٬» داشته باشند (مثلاً از Money.Format پیش‌پر
+    /// شده باشند یا کاربر با ارقام فارسی تایپ کند)؛ decimal.TryParse پیش‌فرض
+    /// این نویسه‌ها را نمی‌شناسد. این متد: ارقام فارسی→لاتین، حذف نویسه‌های
+    /// غیررقمی، سقف ۱۸ رقم (ستون‌های decimal(18,0)) و پارس invariant.
+    /// </summary>
+    /// <param name="text">متن مبلغ — ارقام فارسی/لاتین با هر جداکننده</param>
+    /// <param name="rialValue">مقدار ریالی پارس‌شده</param>
+    /// <returns>true وقتی حداقل یک رقم یافت شد و پارس شد</returns>
+    public static bool TryParseRialDigits(string? text, out decimal rialValue)
+    {
+        rialValue = 0m;
+        if (string.IsNullOrWhiteSpace(text))
+            return false;
+
+        // ارقام فارسی/عربی → لاتین و نگه‌داشتن صرفاً ارقام
+        var latin = PersianDigitsToLatin(text);
+        var digits = new string(latin.Where(char.IsDigit).ToArray());
+        if (digits.Length == 0)
+            return false;
+
+        // سقف امن ۱۸ رقم مطابق ستون‌های مبلغ دیتابیس — نه استثنا، نه سرریز
+        if (digits.Length > 18)
+            digits = digits[..18];
+        return decimal.TryParse(digits, CultureInfo.InvariantCulture, out rialValue);
+    }
+
+    /// <summary>
     /// تبدیل ارقام لاتین به فارسی — چرخه بیست‌وسوم (گزارش شانزدهم مالک):
     /// «تمامی اعداد داخل برنامه بدون استثنا اعداد فارسی باشند».
     /// این متد روی هر متنی بی‌خطر است: نویسه‌های غیررقمی دست‌نخورده می‌مانند.

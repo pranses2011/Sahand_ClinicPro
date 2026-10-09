@@ -447,7 +447,13 @@ public partial class DoctorFormViewModel : ObservableObject
             SubSpecialtyId = d.SubSpecialtyId;
             AcademicRank = d.AcademicRank;
             Biography = d.Biography;
-            ConsultationFeeText = Money.Format(d.ConsultationFee);
+            // ═══ چرخهٔ بیست‌وهشتم — ریشهٔ «حق ویزیت عددی نامعتبر است» ═══
+            // پیش‌تر Money.Format (ارقام فارسی + جداکنندهٔ «٬» + تبدیل به واحد
+            // نمایشی) در پراپرتی ریالیِ VM می‌نشست؛ ذخیره با decimal.TryParse
+            // ساده شکست می‌خورد و در حالت تومان مقدار هم ۱۰ برابر کوچک می‌شد.
+            // اکنون همان قرارداد MoneyRial: VM همیشه «ریال خالص با ارقام لاتین»
+            // است؛ کادر مبلغ خودش قالب‌بندی نمایشی را انجام می‌دهد.
+            ConsultationFeeText = d.ConsultationFee.ToString("0", System.Globalization.CultureInfo.InvariantCulture);
             VisitDuration = d.VisitDuration;
             MaxPatientsPerShift = d.MaxPatientsPerShift;
             DoctorPercentage = d.DoctorPercentage;
@@ -622,7 +628,11 @@ public partial class DoctorFormViewModel : ObservableObject
     private async Task SaveAsync()
     {
         ErrorMessage = string.Empty;
-        if (!decimal.TryParse(DigitsOnly(ConsultationFeeText), out var fee))
+        // ═══ چرخهٔ بیست‌وهشتم — پارس امن ارقام فارسی/جداکننده ═══
+        // فیلد ممکن است با ارقام فارسی پر یا پیش‌پر شده باشد؛ پارس مشترک
+        // Money.TryParseRialDigits همهٔ شکل‌ها را می‌پذیرد (ریشۀ «حق ویزیت
+        // عددی نامعتبر است» در ویرایش). مقدار VM بر حسب ریال است.
+        if (!Helpers.Money.TryParseRialDigits(ConsultationFeeText, out var fee))
         { ErrorMessage = "حق ویزیت عددی نامعتبر است"; return; }
         if (DoctorPercentage is < 0 or > 100)
         { ErrorMessage = "درصد سهم پزشک باید بین ۰ تا ۱۰۰ باشد"; return; }

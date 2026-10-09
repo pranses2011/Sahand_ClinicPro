@@ -63,12 +63,16 @@ public partial class EmployeeSalaryEditViewModel : ObservableObject
     {
         ErrorMessage = string.Empty;
 
-        if (!decimal.TryParse(BaseSalary.Trim(), out var baseSalary) || baseSalary < 0)
+        // ═══ چرخهٔ بیست‌وهشتم — پارس امن ارقام فارسی/جداکننده (هم‌کلاس رفع
+        // «حق ویزیت عددی نامعتبر است» پزشک — قانون ۵ مالک: خطای هم‌نوع همه‌جا)
+        if (!Helpers.Money.TryParseRialDigits(BaseSalary, out var baseSalary))
         {
             ErrorMessage = "حقوق پایه عددی نامعتبر است";
             return;
         }
-        if (!decimal.TryParse(CommissionPercent.Trim(), out var commissionPercent)
+        // درصد — اعشار هم مجاز؛ ارقام فارسی نرمال می‌شوند
+        var commissionLatin = Helpers.Money.PersianDigitsToLatin(CommissionPercent?.Trim() ?? "").Replace("٫", ".");
+        if (!decimal.TryParse(commissionLatin, System.Globalization.CultureInfo.InvariantCulture, out var commissionPercent)
             || commissionPercent is < 0 or > 100)
         {
             ErrorMessage = "درصد حقوق از سود خدمات باید عددی بین ۰ تا ۱۰۰ باشد";
