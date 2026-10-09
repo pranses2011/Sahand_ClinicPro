@@ -326,6 +326,8 @@ public partial class App : System.Windows.Application
         services.AddTransient<AppointmentsViewModel>();
         services.AddTransient<ReceptionsViewModel>();
         services.AddTransient<VisitsViewModel>();
+        // چرخهٔ بیست‌وهفتم — میزکار پزشک (صفحهٔ ویزیت پزشک — گزارش هجدهم مالک)
+        services.AddTransient<DoctorVisitViewModel>();
         services.AddTransient<PrescriptionsViewModel>();
         services.AddTransient<BillingViewModel>();
         services.AddTransient<AccountingViewModel>();

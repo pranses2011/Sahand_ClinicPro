@@ -7,6 +7,7 @@ using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Entities.Security;
 using Sahand.ClinicPro.Domain.Interfaces;
+using System.Security.Claims;
 using System.Security.Cryptography;
 
 namespace Sahand.ClinicPro.API.Controllers;
@@ -84,6 +85,49 @@ public class UsersController : ApiBaseController
         var exists = await _unitOfWork.Repository<User>().QueryableNoTracking
             .AnyAsync(u => u.Username == username && (excludeId == null || u.Id != excludeId));
         return Ok(ApiResponse<object>.Success(new { available = !exists }));
+    }
+
+    /// <summary>
+    /// مشخصات کاربر جاری — چرخهٔ بیست‌وهفتم (گزارش هجدهم مالک):
+    /// «صفحهٔ ویزیت پزشک» باید بداند کاربرِ واردشده کدام پزشک است. این نقطهٔ
+    /// پایانی عمومی (بدون مجوز ویژه — هر کاربرِ واردشده مشخصات خودش را
+    /// می‌بیند) شناسهٔ کاربر/پرسنل/پزشکِ مرتبط و نقش‌ها را برمی‌گرداند تا
+    /// میزکار پزشک، خودش را خودکار شناسایی کند.
+    /// </summary>
+    [HttpGet("me")]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        // شناسهٔ کاربر از ادعای NameIdentifier توکن (همان الگوی AuditLogMiddleware)
+        var idText = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        if (!long.TryParse(idText, out var userId))
+            return Unauthorized(ApiResponse<object>.Failure("نشست نامعتبر است — دوباره وارد شوید"));
+
+        var user = await _unitOfWork.Repository<User>().QueryableNoTracking
+            .Include(u => u.Employee)
+            .Include(u => u.Roles).ThenInclude(r => r.Role)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+        if (user is null)
+            return NotFound(ApiResponse<object>.Failure("کاربر یافت نشد"));
+
+        // پزشکِ مرتبط از مسیر پرسنل — User.EmployeeId → Doctor.EmployeeId
+        var doctorId = user.EmployeeId is { } empId
+            ? await _unitOfWork.Repository<Doctor>().QueryableNoTracking
+                .Where(d => d.EmployeeId == empId && !d.IsDeleted)
+                .Select(d => (long?)d.Id)
+                .FirstOrDefaultAsync()
+            : null;
+
+        var response = new
+        {
+            id = user.Id,
+            username = user.Username,
+            fullName = user.Employee is null ? user.Username
+                : $"{user.Employee.FirstName} {user.Employee.LastName}",
+            employeeId = user.EmployeeId,
+            doctorId, // تهی یعنی این کاربر پزشک نیست
+            roles = user.Roles.Where(r => r.Role != null).Select(r => r.Role!.Name).ToList()
+        };
+        return Ok(ApiResponse<object>.Success(response, "کاربر جاری"));
     }
 
     /// <summary>ثبت کاربر جدید — با هش BCrypt و نقش‌های انتخابی</summary>

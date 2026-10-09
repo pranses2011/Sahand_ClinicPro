@@ -102,6 +102,8 @@ public partial class MainWindowViewModel : ObservableObject
         AppointmentsViewModel appointments,
         ReceptionsViewModel receptions,
         VisitsViewModel visitsVm,
+        // چرخهٔ بیست‌وهفتم — میزکار پزشک (صفحهٔ ویزیت پزشک)
+        DoctorVisitViewModel doctorVisitVm,
         PrescriptionsViewModel prescriptionsVm,
         BillingViewModel billingVm,
         AccountingViewModel accountingVm,
@@ -197,6 +199,8 @@ public partial class MainWindowViewModel : ObservableObject
             ["appointments"] = () => appointments,
             ["receptions"] = () => receptions,
             ["visits"] = () => visitsVm,
+            // چرخهٔ بیست‌وهفتم — میزکار پزشک (گزارش هجدهم مالک)
+            ["doctor-visit"] = () => doctorVisitVm,
             ["prescriptions"] = () => prescriptionsVm,
             ["billing"] = () => billingVm,
             ["accounting"] = () => accountingVm,
@@ -258,6 +262,8 @@ public partial class MainWindowViewModel : ObservableObject
                 new() { Title = "نوبت‌دهی", PageKey = "appointments", Icon = "CalendarClock" },
                 new() { Title = "پذیرش", PageKey = "receptions", Icon = "ClipboardAccount" },
                 new() { Title = "ویزیت و معاینه", PageKey = "visits", Icon = "Stethoscope" },
+                // چرخهٔ بیست‌وهفتم — میزکار شخصی پزشک (صف و فراخوان و آمار خودش)
+                new() { Title = "میزکار پزشک", PageKey = "doctor-visit", Icon = "Doctor" },
                 new() { Title = "پرونده بالینی پیشرفته", PageKey = "emr-advanced", Icon = "HeartPulse" }),
 
             // ─── تجویز و دارو ───
