@@ -41,12 +41,25 @@ public class PrintTemplatesController : ApiBaseController
         if (!includeInactive)
             query = query.Where(t => t.IsActive);
 
-        var items = await query
+        // ═══ چرخهٔ سی‌ودوم ═══ پروجکشن دو مرحله‌ای: enum با ToString در
+        // پروجکشن EF Core به SQL ترجمه نمی‌شود؛ ابتدا بار سبک (نوع عددی) خوانده
+        // و نگاشت رشته‌ای/فارسی در حافظه انجام می‌شود — هم قابل‌ترجمه هم سریع
+        var rows = await query
             .OrderBy(t => t.Type).ThenByDescending(t => t.IsDefault).ThenBy(t => t.TemplateName)
-            .Select(t => new PrintTemplateListDto(
-                t.Id, t.TemplateName, t.Type, TypeFa(t.Type), t.PaperSize, t.Orientation,
-                t.ShowClinicLogo, t.IsActive, t.IsDefault))
+            .Select(t => new
+            {
+                t.Id, t.TemplateName, Type = (int)t.Type,
+                t.PaperSize, t.Orientation, t.ShowClinicLogo, t.IsActive, t.IsDefault
+            })
             .ToListAsync();
+
+        var items = rows.Select(t =>
+        {
+            var type = (PrintTemplateType)t.Type;
+            return new PrintTemplateListDto(
+                t.Id, t.TemplateName, type.ToString(), TypeFa(type), t.PaperSize, t.Orientation,
+                t.ShowClinicLogo, t.IsActive, t.IsDefault);
+        }).ToList();
 
         return Ok(ApiResponse<List<PrintTemplateListDto>>.Success(items));
     }
@@ -129,13 +142,21 @@ public class PrintTemplatesController : ApiBaseController
     [HasPermission("settings.edit")]
     public async Task<IActionResult> Create([FromBody] SavePrintTemplateDto dto)
     {
+        // ═══ چرخهٔ سی‌ودوم (گزارش مالک) ═══ قرارداد نوع قالب رشته‌ای شد
+        // ("Invoice"/"Prescription"/…) — پیش‌تر DTO از نوع enum بود و کلاینتِ
+        // دسکتاپ که نام نوع را به‌صورت رشته می‌فرستاد با خطای اعتبارسنجی
+        // «اطلاعات ارسالی نامعتبر است» رد می‌شد و ذخیرهٔ قالب هیچ‌وقت ممکن نبود.
+        if (!TryParseTemplateType(dto.Type, out var parsedType))
+            return BadRequest(ApiResponse<object>.Failure(
+                "نوع قالب نامعتبر است — مثل Invoice یا Prescription"));
+
         var error = Validate(dto);
         if (error is not null) return BadRequest(ApiResponse<object>.Failure(error));
 
         var template = new PrintTemplate
         {
             TemplateName = dto.TemplateName.Trim(),
-            Type = dto.Type,
+            Type = parsedType,
             Description = dto.Description?.Trim(),
             HtmlBody = dto.HtmlBody,
             PaperSize = dto.PaperSize,
@@ -170,14 +191,19 @@ public class PrintTemplatesController : ApiBaseController
         if (template is null)
             return NotFound(ApiResponse<object>.Failure("قالب یافت نشد"));
 
+        // چرخهٔ سی‌ودوم: نوع قالب به‌صورت رشته از کلاینت می‌آید (توضیح در Create)
+        if (!TryParseTemplateType(dto.Type, out var parsedType))
+            return BadRequest(ApiResponse<object>.Failure(
+                "نوع قالب نامعتبر است — مثل Invoice یا Prescription"));
+
         var error = Validate(dto);
         if (error is not null) return BadRequest(ApiResponse<object>.Failure(error));
 
         if (dto.IsDefault && !template.IsDefault)
-            await ClearDefaultAsync(dto.Type, id);
+            await ClearDefaultAsync(parsedType, id);
 
         template.TemplateName = dto.TemplateName.Trim();
-        template.Type = dto.Type;
+        template.Type = parsedType;
         template.Description = dto.Description?.Trim();
         template.HtmlBody = dto.HtmlBody;
         template.PaperSize = dto.PaperSize;
@@ -306,6 +332,15 @@ public class PrintTemplatesController : ApiBaseController
     }
 
     /// <summary>
+    /// تحلیل امن نوع قالب — چرخهٔ سی‌ودوم: قرارداد نوع رشته‌ای شد تا کلاینتِ
+    /// ارسال‌کنندهٔ نام نوع (مثل "Invoice") بدون خطای بستهٔ بندی JSON/System.Text.Json
+    /// (که پیش‌فرض رشته را به enum نمی‌پذیرد) پذیرفته شود؛ نام فارسی هم پذیرفته نمی‌شود
+    /// چون قرارداد رسمی، نام لاتین enum است.
+    /// </summary>
+    private static bool TryParseTemplateType(string? type, out PrintTemplateType parsed)
+        => Enum.TryParse(type, true, out parsed) && Enum.IsDefined(parsed);
+
+    /// <summary>
     /// اعتبارسنجی اندازهٔ کاغذ — پذیرش اندازه‌های استاندارد، فیش حرارتی و قالب سفارشی
     /// الگوی سفارشی: Custom:100x180 یا Custom:100×180 (میلی‌متر، اعداد صحیح ۲۰ تا ۱۰۰۰)
     /// </summary>
@@ -319,7 +354,7 @@ public class PrintTemplatesController : ApiBaseController
 
     /// <summary>تبدیل به DTO جزئیات</summary>
     private static PrintTemplateDetailDto ToDetail(PrintTemplate t) => new(
-        t.Id, t.TemplateName, t.Type, TypeFa(t.Type), t.Description, t.HtmlBody,
+        t.Id, t.TemplateName, t.Type.ToString(), TypeFa(t.Type), t.Description, t.HtmlBody,
         t.PaperSize, t.Orientation, t.FontSize, t.FontFamily, t.ShowClinicLogo,
         t.AccentColor, t.IsActive, t.IsDefault);
 
@@ -339,11 +374,13 @@ public class PrintTemplatesController : ApiBaseController
     };
 }
 
-/// <summary>ردیف فهرست قالب‌ها</summary>
+/// <summary>ردیف فهرست قالب‌ها — چرخهٔ سی‌ودوم: Type رشته‌ای شد ("Invoice"…)
+/// چون سریالایز پیش‌فرض enum را عدد می‌فرستاد و کلاینت دسکتاپ (DTO رشته‌ای)
+/// با JsonException کل لیست را از دست می‌داد — «قالب‌ها نمایش داده نمی‌شدند»</summary>
 public record PrintTemplateListDto(
     long Id,
     string TemplateName,
-    PrintTemplateType Type,
+    string Type,
     string TypeFa,
     string PaperSize,
     string Orientation,
@@ -351,11 +388,11 @@ public record PrintTemplateListDto(
     bool IsActive,
     bool IsDefault);
 
-/// <summary>جزئیات کامل قالب</summary>
+/// <summary>جزئیات کامل قالب — Type رشته‌ای (هم‌قرارداد فهرست، چرخهٔ سی‌ودوم)</summary>
 public record PrintTemplateDetailDto(
     long Id,
     string TemplateName,
-    PrintTemplateType Type,
+    string Type,
     string TypeFa,
     string? Description,
     string HtmlBody,
@@ -368,10 +405,11 @@ public record PrintTemplateDetailDto(
     bool IsActive,
     bool IsDefault);
 
-/// <summary>ثبت/ویرایش قالب</summary>
+/// <summary>ثبت/ویرایش قالب — چرخهٔ سی‌ودوم: Type رشته‌ای (نام لاتین مثل
+/// "Invoice") تا بستهٔ JSON پیش‌فرض رشته را به enum نبندد و کلاینت رد نشود</summary>
 public record SavePrintTemplateDto(
     string TemplateName,
-    PrintTemplateType Type,
+    string Type,
     string? Description,
     string HtmlBody,
     string PaperSize,
