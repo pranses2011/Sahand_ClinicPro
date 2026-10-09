@@ -255,9 +255,16 @@ public partial class TimePicker : UserControl
         var selectedValue = _isHourMode ? (_hour24 % 12 == 0 ? 12 : _hour24 % 12) : _minute;
 
         // ۱۲ خانهٔ عددی — زاویهٔ خانهٔ i از بالای دایره در جهت عقربه‌های ساعت
+        // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — رفع چرخش یک‌خانه‌ای صفحه ═══
+        // «خط عقربه درست نشان داده نمی‌شود و بعضی وقت‌ها عدد اشتباهی به‌جای
+        // عدد انتخاب‌شده نشان می‌دهد»: پیش‌تر مقدار خانهٔ i با «i+1» پر می‌شد
+        // یعنی ۱ در «بالای صفحه» (جای ۱۲) و ۴ در «راست» (جای ۳) می‌نشست —
+        // کل صفحه یک خانه چرخیده بود؛ عقربه (که فرمول درست v%12 دارد) به
+        // جای عدد انتخابی نمی‌رسید و کلیک هم مقدار خانهٔ مجاور را می‌داد.
+        // چیدمان صحیح ساعت عقربه‌ای: خانهٔ ۰ (بالا) = ۱۲ و خانهٔ i = خودِ i.
         for (var i = 0; i < 12; i++)
         {
-            var value = _isHourMode ? i + 1 : i * 5;
+            var value = _isHourMode ? (i == 0 ? 12 : i) : i * 5;
             var angleDeg = i * 30 - 90; // −۹۰ یعنی شروع از بالا
             var (x, y) = PointOnCircle(angleDeg, NumbersRadius);
 
@@ -374,7 +381,8 @@ public partial class TimePicker : UserControl
         var angle = Math.Atan2(dy, dx) * 180.0 / Math.PI; // −۱۸۰..۱۸۰ (۰ = راست)
         var index = (int)Math.Round(angle / 30.0 + 3) % 12; // جابه‌جایی صفر از راست به بالا
         if (index < 0) index += 12;
-        var value = _isHourMode ? index + 1 : index * 5;
+        // چرخهٔ ۲۶ — هم‌ارزش با چیدمان اصلاح‌شدهٔ صفحه: خانهٔ ۰ (بالا) = ۱۲
+        var value = _isHourMode ? (index == 0 ? 12 : index) : index * 5;
         ApplyValue(value);
     }
 

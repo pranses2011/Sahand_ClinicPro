@@ -10,8 +10,22 @@ public partial class ToothVM : ObservableObject
 {
     public int Number { get; init; }
     public string Quadrant => Number / 10 == 1 || Number / 10 == 2 ? "بالا" : "پایین";
-    public string ToolTip => $"دندان {Number} — فک {Quadrant}";
+    public string ToolTip => $"دندان {Number} — فک {Quadrant} — {ConditionText}";
     [ObservableProperty] private int _condition; // 0 سالم 1 پوسیدگی 2 ترمیم 3 درمان 4 روکش 5 کشیده 6 ایمپلنت
+
+    // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — رفع «رنگ‌های وضعیت برای فک
+    // بالا و پایین درست نشان داده نمی‌شوند و همگی سفید می‌مانند» ═══
+    // «Color» و «ToolTip» و «ConditionText» پراپرتی‌های محاسبه‌ای‌اند و با
+    // تغییر Condition هیچ اعلانی برایشان صادر نمی‌شد → اتصال Background در
+    // قالب دکمهٔ دندان فقط مقدار لحظهٔ بارگذاری (سالم = سفید) را می‌دید و
+    // هرگز تازه نمی‌شد. اکنون تغییر Condition، اعلان تغییر همهٔ موارد
+    // وابسته را هم صادر می‌کند تا رنگ دندان بی‌درنگ عوض شود.
+    partial void OnConditionChanged(int value)
+    {
+        OnPropertyChanged(nameof(Color));
+        OnPropertyChanged(nameof(ToolTip));
+        OnPropertyChanged(nameof(ConditionText));
+    }
 
     /// <summary>این دندان همان دندان انتخاب‌شدهٔ چارت است؟ — چرخه بیست‌وچهارم:
     /// مقدار با انتخاب کاربر توسط OnSelectedToothChanged به‌روز می‌شود تا
@@ -21,6 +35,18 @@ public partial class ToothVM : ObservableObject
     /// <summary>شمارهٔ دندان با ارقام فارسی — «همهٔ اعداد بدون استثنا فارسی» (گزارش هفدهم)</summary>
     public string NumberFa => Helpers.Money.ToPersianDigits(Number.ToString());
 
+    /// <summary>متن فارسی وضعیت — برای تولتیپ و نمایش</summary>
+    public string ConditionText => Condition switch
+    {
+        1 => "پوسیدگی", 2 => "ترمیم‌شده", 3 => "درمان‌شده", 4 => "روکش", 5 => "کشیده‌شده", 6 => "ایمپلنت",
+        _ => "سالم"
+    };
+
+    /// <summary>
+    /// رنگ وضعیت — مطابق راهنمای چارت: ⬜ سالم 🟥 پوسیدگی 🟨 ترمیم 🟩 درمان
+    /// 🟦 روکش ⬛ کشیده 🟪 ایمپلنت. با تغییر Condition اعلان تازه‌شدن هم صادر
+    /// می‌شود (بالا) تا اتصال پس‌زمینهٔ دکمه بی‌درنگ رنگ را بگیرد
+    /// </summary>
     public string Color => Condition switch
     {
         1 => "#E53935", 2 => "#FDD835", 3 => "#43A047", 4 => "#1E88E5", 5 => "#37474F", 6 => "#8E24AA",
