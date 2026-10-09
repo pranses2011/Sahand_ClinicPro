@@ -111,6 +111,15 @@ public partial class LicenseService : ILicenseService
             // چرخه دوازدهم — پیام‌های مستقیم پشتیبانی به داشبورد درمانگاه
             await SaveServerMessagesAsync(result.Messages, ct);
 
+            // ═══ چرخه سی‌ویکم (گزارش مالک) — «در تنظیمات و اطلاعات درمانگاه،
+            // اطلاعات رو از لایسنس نمیاره و نشون نمیده» ═══
+            // ریشه: همگام‌سازی اطلاعات درمانگاه فقط در تپ قلبِ شبانهٔ ۳ بامداد
+            // اجرا می‌شد؛ پس از فعال‌سازی، صفحهٔ تنظیمات تا اولین ۳ صبح خالی
+            // می‌ماند. اکنون همان لحظهٔ فعال‌سازی موفقِ برخط، فیلدهای پنل
+            // لایسنس (نام/مدیر/تلفن/ایمیل/شهر/نشانی/کدها) روی دستهٔ ClinicInfo
+            // تنظیمات محلی می‌نشیند تا صفحهٔ تنظیمات بی‌درنگ نمایششان دهد.
+            await SyncClinicInfoFromLicenseAsync(result.License, ct);
+
             return new LicenseStatusReport(true, LicenseValidationResult.Valid,
                 license.LicenseKey, license.ExpiryDate, license.MaxUsers, license.MaxDoctors,
                 license.MaxPatients, ParseModules(license.EnabledModules), "لایسنس با موفقیت فعال شد");
@@ -158,6 +167,11 @@ public partial class LicenseService : ILicenseService
                 Message = "فعال‌سازی برون‌خط از فایل lic",
             });
             await _context.SaveChangesAsync(ct);
+
+            // چرخه سی‌ویکم — همان همگام‌سازیِ فعال‌سازی برخط، برای فایل lic برون‌خط:
+            // فایل تولیدی پنل لایسنس همان فیلدهای اطلاعات درمانگاه را دارد و پس از
+            // فعال‌سازی برون‌خط هم باید بی‌درنگ در صفحهٔ تنظیمات ظاهر شود
+            await SyncClinicInfoFromLicenseAsync(lic, ct);
 
             return new LicenseStatusReport(true, LicenseValidationResult.Valid,
                 license.LicenseKey, license.ExpiryDate, license.MaxUsers, license.MaxDoctors,
