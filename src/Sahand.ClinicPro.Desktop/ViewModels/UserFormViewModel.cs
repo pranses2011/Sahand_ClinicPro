@@ -79,6 +79,9 @@ public partial class UserFormViewModel : ViewModelBase
     {
         _api = api;
         _snackbar = snackbar;
+        // پیش‌گرمایش فهرست نقش‌ها — تسک در حال اجرا نگه داشته می‌شود تا
+        // فراخوانی‌های بعدی (LoadForEdit) همان نمونه را منتظر بمانند نه
+        // درخواست موازی دوم که با پاک‌سازی دیرهنگام، تیک‌ها را می‌خورد
         _ = LoadRolesAsync();
     }
 
@@ -135,32 +138,66 @@ public partial class UserFormViewModel : ViewModelBase
 
     /* ─── بارگذاری داده ─── */
 
-    /// <summary>بارگذاری نقش‌ها برای چک‌باکس‌ها</summary>
-    private async Task LoadRolesAsync()
+    /// <summary>
+    /// بارگذاری نقش‌ها برای چک‌باکس‌ها — چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک):
+    /// «در ویرایش کاربر، تب نقش‌ها نقش کاربر را نشان نمی‌دهد».
+    /// ریشه: این متد در سازنده به‌صورت آتش‌و-فراموش‌کن (fire-and-forget)
+    /// صدا می‌خورد و LoadForEdit منتظر پایان آن نمی‌ماند؛ اگر فهرست نقش‌ها
+    /// دیرتر از مشخصات کاربر می‌رسید، حلقهٔ «تیک‌زدن نقش‌های کاربر» روی
+    /// مجموعهٔ خالی می‌چرخید و هیچ تکی نمی‌خورد — نقش‌ها هرگز نمایش
+    /// داده نمی‌شدند. اکنون تسکِ در حال اجرا به‌اشتراک گذاشته می‌شود:
+    /// سازنده پیش‌گرمایش می‌کند و LoadForEdit «همان» تسک را منتظر
+    /// می‌ماند — نه درخواست موازی که با پاک‌سازی دیرهنگام تیک‌ها را
+    /// دوباره بخورد.
+    /// </summary>
+    private Task LoadRolesAsync()
     {
-        var roles = await _api.GetAsync<RolesResponse>("roles");
-        Roles.Clear();
-        foreach (var r in roles?.Data ?? new List<RoleItemDto>())
-            Roles.Add(new RoleCheckItem { Id = r.Id, Name = r.Name, Description = r.Description, IsChecked = false });
+        // اگر تلاش قبلی «تمام شده ولی بی‌نتیجه» است (خطای شبکه هنگام
+        // پیش‌گرمایش سازنده)، تسک کش‌شده کنار می‌رود تا دوباره تلاش شود
+        if (_rolesLoadTask is { IsCompleted: true } && Roles.Count == 0)
+            _rolesLoadTask = null;
+        return _rolesLoadTask ??= LoadRolesCoreAsync();
     }
 
-    /// <summary>بارگذاری کاربر برای ویرایش — پر کردن فیلدها</summary>
+    /// <summary>تسک بارگذاری نقش‌ها — فقط یک‌بار هم‌زمان در حال اجراست</summary>
+    private Task? _rolesLoadTask;
+
+    /// <summary>خواندن نقش‌ها از سرور و پر کردن چک‌باکس‌ها</summary>
+    private async Task LoadRolesCoreAsync()
+    {
+        try
+        {
+            var roles = await _api.GetAsync<RolesResponse>("roles");
+            Roles.Clear();
+            foreach (var r in roles?.Data ?? new List<RoleItemDto>())
+                Roles.Add(new RoleCheckItem { Id = r.Id, Name = r.Name, Description = r.Description, IsChecked = false });
+        }
+        catch
+        {
+            // خطای شبکه هنگام پیش‌گرمایش — بی‌صدا؛ فرم ویرایش دوباره تلاش می‌کند
+        }
+    }
+
+    /// <summary>
+    /// بارگذاری کاربر برای ویرایش — پر کردن فیلدها
+    /// چرخهٔ بیست‌وهشتم: پیش از تیک‌زدن نقش‌ها، بارگذاری فهرست نقش‌ها
+    /// «منتظر می‌مانَد» تا مسابقهٔ زمانی رفع شود؛ پرس‌وجوی «pageSize=1»
+    /// بی‌معنا (تقریباً همیشه کاربر در همان یک ردیف نخست پیدا نمی‌شد و
+    /// بار دوم کامل می‌رفت) حذف شد — از همان ابتدا فهرست کافی خوانده
+    /// می‌شود و نقش‌ها پس از رسیدن هر دو پاسخ اعمال می‌شوند.
+    /// </summary>
     public async Task LoadForEdit(long userId)
     {
         EditUserId = userId;
         FormTitle = $"ویرایش کاربر #{userId}";
         OnPropertyChanged(nameof(IsEdit));
 
-        var response = await _api.GetAsync<UsersResponse>($"users?page=1&pageSize=1&search=");
-        // ویرایش برخط فهرست — یافتن از همان پاسخ
-        var users = response?.Data?.Items ?? new List<UserDto>();
-        var user = users.FirstOrDefault(u => u.Id == userId);
-        if (user is null)
-        {
-            // تلاش با بارگذاری کامل — سرویس فهرست فیلترشده
-            var all = await _api.GetAsync<UsersResponse>("users?page=1&pageSize=500");
-            user = (all?.Data?.Items ?? new List<UserDto>()).FirstOrDefault(u => u.Id == userId);
-        }
+        // فهرست نقش‌ها — پیش از اعمال تیک‌ها باید حاضر باشد (رفع مسابقه)؛
+        // اگر پیش‌گرمایش سازنده هنوز در جریان است، همان تسک منتظر می‌مانَد
+        await LoadRolesAsync();
+
+        var response = await _api.GetAsync<UsersResponse>("users?page=1&pageSize=500");
+        var user = (response?.Data?.Items ?? new List<UserDto>()).FirstOrDefault(u => u.Id == userId);
         if (user is null) { _snackbar.Error("کاربر یافت نشد"); return; }
 
         Username = user.Username;
@@ -169,6 +206,7 @@ public partial class UserFormViewModel : ViewModelBase
         IsActive = user.IsActive;
         MustChangePassword = user.MustChangePassword;
 
+        // تیک نقش‌های کاربر — اکنون فهرست نقش‌ها حتماً پُر است
         foreach (var role in Roles)
             role.IsChecked = user.Roles?.Contains(role.Name) == true;
     }
