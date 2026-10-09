@@ -18,11 +18,15 @@ public static partial class DrugInteractionSeedData
     /// <summary>
     /// همهٔ تداخل‌ها — سری اصلی + مکمل چرخه بیست‌ویکم + مکمل دوم چرخه
     /// بیست‌وسوم (گزارش شانزدهم مالک — ~۱۲۰ تداخل بالینی جدید در ده گروه
-    /// درمانی)؛ بذر و دکمهٔ «بروزرسانی تداخل‌ها» از همین می‌خواند.
+    /// درمانی) + مکمل سوم چرخه بیست‌وچهارم + مکمل چهارم چرخهٔ
+    /// بیست‌وهفتم (گزارش هجدهم مالک — ۵۵ تداخل در ده گروه: DOAC/
+    /// بیولوژیک/سل/هپاتیت C/نقرس/اپیوئید/MS/PAH/GLP-1/چشم و CNS)؛
+    /// بذر و دکمهٔ «بروزرسانی تداخل‌ها» از همین می‌خواند.
     /// </summary>
     public static IEnumerable<InteractionRow> AllInteractions
         => Rows.Concat(SupplementRows).Concat(Supplement2Rows)
-              .Concat(Supplement3Rows); // چرخه ۲۴ — مکمل سوم
+              .Concat(Supplement3Rows) // چرخه ۲۴ — مکمل سوم
+              .Concat(Supplement4Rows); // چرخه ۲۷ — مکمل چهارم
 
     /// <summary>تداخل‌های مکمل چرخه بیست‌ویکم</summary>
     public static readonly IReadOnlyList<InteractionRow> SupplementRows = new InteractionRow[]
