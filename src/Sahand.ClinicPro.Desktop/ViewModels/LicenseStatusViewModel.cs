@@ -296,13 +296,26 @@ public partial class LicenseStatusViewModel : ViewModelBase
         _snackbar.Success($"فایل درخواست ذخیره شد — «{dialog.FileName}» را برای فروشنده بفرستید تا فایل .lic بگیرید");
     }
 
-    /// <summary>بارگذاری وضعیت لایسنس از سرور</summary>
+    /// <summary>
+    /// بارگذاری وضعیت لایسنس — چرخهٔ سی‌ودوم (گزارش مالک): دکمهٔ «بررسی آنلاین»
+    /// اکنون واقعاً برخط است؛ پیش‌تر فقط وضعیت «محلی» ذخیره‌شده را می‌خواند و
+    /// ماژول تازه‌فعال‌شده در پنل لایسنس هرگز دیده نمی‌شد. ابتدا تپ قلب لحظه‌ای
+    /// از طریق اندپوینت جدید license/refresh زده می‌شود (حضور اعلام، محدودیت‌ها/
+    /// ماژول‌ها/اطلاعات درمانگاه تازه و پیام‌های پشتیبانی تحویل می‌شوند) و سپس
+    /// وضعیت تازه‌شده خوانده می‌شود؛ در قطعی شبکه هم بی‌خطا به مقادیر محلی
+    /// برمی‌گردد (مهلت آفلاین خودش در سرور اعمال می‌شود).
+    /// </summary>
     [RelayCommand]
     public async Task LoadAsync()
     {
         IsBusy = true;
         try
         {
+            // ۱) تازه‌سازی لحظه‌ای از سرور لایسنس — best-effort و بی‌صدا
+            try { await _api.PostAnonymousAsync("license/refresh", new { }); }
+            catch { /* قطعی شبکه — وضعیت محلی خوانده می‌شود */ }
+
+            // ۲) خواندن وضعیت (اکنون تازه‌شده)
             var response = await _api.GetAnonymousAsync<StatusResponse>("license/status");
             var s = response?.Data;
             if (s is null)

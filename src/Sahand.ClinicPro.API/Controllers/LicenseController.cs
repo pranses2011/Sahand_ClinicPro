@@ -145,6 +145,35 @@ public class LicenseController : ApiBaseController
     }
 
     /// <summary>
+    /// تازه‌سازی لایسنس از سرور لایسنس — چرخهٔ سی‌ودوم (گزارش مالک):
+    /// «ماژول جدید در پنل لایسنس فعال کردم ولی هنوز غیرفعال نشان می‌دهد» —
+    /// فهرست ماژول‌ها/گنجایش‌ها و اطلاعات درمانگاه فقط با تپ قلب یا فعال‌سازی
+    /// مجدد به‌روز می‌شدند. این اندپوینت همان تپ قلب (HeartbeatAsync) را در
+    /// لحظه اجرا می‌کند: حضور به سرور لایسنس اعلام، محدودیت‌ها/ماژول‌ها/اطلاعات
+    /// درمانگاه تازه و پیام‌های پشتیبانی تحویل می‌شوند؛ پاسخ، وضعیت تازه است.
+    /// در قطعی شبکه، وضعیت محلی فعلی (مهلت آفلاین) بی‌خطا برمی‌گردد.
+    /// </summary>
+    [HttpPost("refresh")]
+    [AllowAnonymous]
+    // عمومی مثل وضعیت — پیش از ورود هم (پنجرهٔ فعال‌سازی) قابل فراخوان است
+    public async Task<IActionResult> RefreshFromServer()
+    {
+        var status = await _license.HeartbeatAsync();
+        var response = new
+        {
+            isValid = status.IsValid,
+            licenseKey = status.LicenseKey,
+            expiryDate = status.ExpiryDate,
+            maxUsers = status.MaxUsers,
+            maxDoctors = status.MaxDoctors,
+            maxPatients = status.MaxPatients,
+            enabledModules = status.EnabledModules,
+            message = status.Message
+        };
+        return Ok(ApiResponse<object>.Success(response, status.Message));
+    }
+
+    /// <summary>
     /// پیام‌های مستقیم پشتیبانی به داشبورد درمانگاه — چرخه دوازدهم:
     /// با هر تپ‌قلب موفق از سرور لایسنس (پنل PHP) دریافت و در تنظیمات محلی
     /// ذخیره می‌شوند؛ داشبورد دسکتاپ اینجا می‌خواند و در کارت «پیام‌های پشتیبانی» می‌نمایاند

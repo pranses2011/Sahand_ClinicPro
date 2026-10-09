@@ -373,12 +373,30 @@ public partial class LicenseService : ILicenseService
 
         try
         {
+            // ═══ چرخهٔ سی‌ودوم (گزارش مالک) — ریشهٔ «اطلاعات درمانگاه و ماژول‌ها
+            // از لایسنس به‌روز نمی‌شوند» ═══
+            // پیش‌تر: `config ?? license.HardwareFingerprint ?? ""` — مقدار config
+            // در appsettings پیش‌فرض «رشتهٔ خالی» است (نه null!) → عملگر ?? هرگز
+            // به fallback نمی‌رسید → تپ قلب همیشه با اثر انگشت خالی ارسال می‌شد
+            // → سرور لایسنس (پنل PHP) آن را با fingerprint_mismatch رد می‌کرد →
+            // تپ قلب هرگز موفق نمی‌شد؛ یعنی همگام‌سازی اطلاعات درمانگاه، تازه‌سازی
+            // ماژول‌ها و تحویل پیام‌های پشتیبانی عملاً از کار افتاده بود.
+            // حل سه‌مرحله‌ای (همان ترتیب فعال‌سازی): تنظیم صریح config ←
+            // اثر انگشت ثبت‌شده روی رکورد لایسنس ← اثر انگشت محلی محاسبه‌شده
+            // (MachineName|OSVersion|ProcessorCount که در فعال‌سازی برخط به کلید
+            // بسته شده و قطعاً همان است).
+            var configFingerprint = _configuration["License:HardwareFingerprint"];
+            var fingerprint = !string.IsNullOrWhiteSpace(configFingerprint)
+                ? configFingerprint
+                : !string.IsNullOrWhiteSpace(license.HardwareFingerprint)
+                    ? license.HardwareFingerprint
+                    : ComputeLocalFingerprint();
+
             var body = JsonSerializer.Serialize(new
             {
                 action = "heartbeat",
                 licenseKey = license.LicenseKey,
-                fingerprint = _configuration["License:HardwareFingerprint"]
-                              ?? license.HardwareFingerprint ?? "",
+                fingerprint,
             }, JsonOptions);
 
             using var content = new StringContent(body, Encoding.UTF8, "application/json");
@@ -561,9 +579,17 @@ public partial class LicenseService : ILicenseService
         license.EnabledModules = JsonSerializer.Serialize(data.EnabledModules);
         license.IssuedDate = ParseDate(data.IssuedDate) ?? DateOnly.FromDateTime(DateTime.UtcNow);
         license.ExpiryDate = ParseDate(data.ExpiryDate);
+        // ═══ چرخهٔ سی‌ودوم — ماندگاری اثر انگشت روی رکورد لایسنس ═══
+        // پیش‌تر وقتی config خالی بود (حالت رایج)، مقدار فعلی (در اولین فعال‌سازی:
+        // تهی) دست‌نخورده می‌ماند؛ اکنون اگر config تنظیم نشده و مقدار فعلی هم خالی
+        // است، اثر انگشت محلیِ محاسبه‌شده (همانی که فعال‌سازی برخط برای سرور لایسنس
+        // فرستاده و به کلید بسته شده) ذخیره می‌شود تا تپ‌قلب‌های بعدی مستقل از
+        // config هم مقدار صحیح را داشته باشند. مقدار موجود هرگز بازنویسی نمی‌شود.
         license.HardwareFingerprint = _configuration["License:HardwareFingerprint"] is { Length: > 0 } fp
             ? fp
-            : license.HardwareFingerprint;
+            : string.IsNullOrWhiteSpace(license.HardwareFingerprint)
+                ? ComputeLocalFingerprint()
+                : license.HardwareFingerprint;
         license.LastValidatedAt = DateTime.UtcNow;
 
         // امضای سرور برای اعتبارسنجی‌های بعدی آفلاین

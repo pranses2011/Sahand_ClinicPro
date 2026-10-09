@@ -538,7 +538,8 @@ public partial class SettingsViewModel : ViewModelBase
         // مقداردهی اولیه بخش‌ها — داده ماژول/دولتی از سرور در انتخاب بخش
         InitializeModules();
         InitializeGovSystems();
-        _ = LoadClinicInfoAsync();
+        // چرخهٔ سی‌ودوم: اطلاعات درمانگاه پس از تازه‌سازی لایسنس (توضیح متد بالا)
+        _ = RefreshThenLoadClinicInfoAsync();
         // چرخه ۲۴: چاپگرهای نصب‌شده + تنظیمات چاپگر ذخیره‌شده
         _ = LoadPrinterSettingsAsync();
     }
@@ -546,8 +547,51 @@ public partial class SettingsViewModel : ViewModelBase
     /// <summary>بارگذاری بخش فعال</summary>
     partial void OnSectionIndexChanged(int value)
     {
-        if (value == 1) _ = LoadModulesStatusAsync();
+        if (value == 0) _ = RefreshThenLoadClinicInfoAsync();
+        else if (value == 1) _ = RefreshThenLoadModulesAsync();
         else if (value == 2) _ = LoadGovSystemsAsync();
+    }
+
+    /// <summary>
+    /// تازه‌سازی لایسنس از سرور لایسنس — چرخهٔ سی‌ودوم (گزارش مالک):
+    /// «ماژول جدید در پنل لایسنس فعال کردم ولی هنوز غیرفعال نشان می‌دهد» —
+    /// قبل از نمایش بخش‌های «اطلاعات درمانگاه» و «ماژول‌ها»، تپ قلب لحظه‌ای
+    /// از طریق اندپوینت تازهٔ license/refresh اجرا می‌شود: ماژول‌ها/گنجایش‌ها
+    /// از سرور لایسنس تازه و اطلاعات درمانگاه روی دستهٔ ClinicInfo همگام
+    /// می‌شود؛ سپس داده‌ها خوانده و نمایش داده می‌شوند. شکست (قطعی شبکه)
+    /// بی‌صدا نادیده گرفته می‌شود و مقادیر محلی فعلی نمایش می‌یابند.
+    /// </summary>
+    private async Task RefreshLicenseFromServerAsync()
+    {
+        try
+        {
+            // اندپوینت ناشناس هم کار می‌کند؛ خروجی مهم نیست — همگام‌سازی سمت سرور
+            // روی دسته‌های ClinicInfo و لایسنس محلی انجام می‌شود و بارگذاری
+            // بعدی همین صفحه مقادیر تازه را می‌خواند
+            await _api.PostAsync("license/refresh", new { });
+        }
+        catch
+        {
+            // قطعی شبکه/سرور — بی‌صدا؛ مقادیر محلی مرجع نمایش می‌مانند
+        }
+    }
+
+    /// <summary>تازه‌سازی + بارگذاری اطلاعات درمانگاه (ورود به بخش ۰)</summary>
+    private async Task RefreshThenLoadClinicInfoAsync()
+    {
+        IsBusy = true;
+        await RefreshLicenseFromServerAsync();
+        await LoadClinicInfoAsync();
+        IsBusy = false;
+    }
+
+    /// <summary>تازه‌سازی + بارگذاری وضعیت ماژول‌ها (ورود به بخش ۱)</summary>
+    private async Task RefreshThenLoadModulesAsync()
+    {
+        IsBusy = true;
+        await RefreshLicenseFromServerAsync();
+        await LoadModulesStatusAsync();
+        IsBusy = false;
     }
 
     /* ─── اطلاعات درمانگاه ─── */
