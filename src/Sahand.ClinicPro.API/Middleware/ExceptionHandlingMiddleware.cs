@@ -30,6 +30,19 @@ public class ExceptionHandlingMiddleware
         {
             await _next(context);
         }
+        catch (Microsoft.AspNetCore.Http.BadHttpRequestException)
+        {
+            // ═══ چرخهٔ سی‌امین — قطع اتصال کلاینت، خطای برنامه نیست ═══
+            // «Unexpected end of request content»، «request body too long»
+            // و موارد هم‌خانواده از خود Kestrel برمی‌خیزند و معنایش رفتنِ
+            // کلاینت است، نه خرابی سرور. استثنای زیرساختی Kestrel باید به
+            // خودش برگردد تا اتصال را بی‌سروصدا و تمیز ببندد؛ بلعیدنش و
+            // نوشتن پاسخ JSON برای کلاینتِ رفته بی‌معناست — و ثبتش به‌عنوان
+            // «خطای غیرمنتظره» (ERR) لاگ را با نویز کاذب پر می‌کرد. برای
+            // ردیابی، سطح Debug کافی است (به‌طور پیش‌فرض خاموش است).
+            _logger.LogDebug("درخواست ناقص/قطع‌شده توسط کلاینت بسته شد — {Path}", context.Request.Path);
+            throw;
+        }
         catch (Exception ex)
         {
             await HandleExceptionAsync(context, ex);

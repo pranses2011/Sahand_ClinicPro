@@ -50,10 +50,34 @@ public class AuditLogMiddleware
         context.Request.EnableBuffering();
         if (context.Request.ContentLength is > 0 and < 100_000)
         {
-            context.Request.Body.Position = 0;
-            using var reader = new StreamReader(context.Request.Body, leaveOpen: true);
-            requestBody = await reader.ReadToEndAsync();
-            context.Request.Body.Position = 0;
+            // ═══ چرخهٔ سی‌امین — قطع اتصال کلاینت هنگام ارسال بدنه ═══
+            // «Unexpected end of request content» یعنی کلاینت وسط ارسال
+            // بدنه اتصال را بریده است (تایم‌اوت کلاینت، بستن برنامهٔ دسکتاپ،
+            // لغو درخواست در Swagger و…). این رده خطا «خطای برنامه» نیست؛
+            // پیش‌تر همین استثنا تا میدلور مدیریت خطا بالا می‌آمد و به‌عنوان
+            // «خطای غیرمنتظره» (ERR با TraceId) ثبت می‌شد. اکنون خواندنِ
+            // بدنهٔ ناقص برای لاگ بی‌ارزش است: بی‌صدا رها می‌شود و جریان
+            // به مرحلهٔ بعد می‌رود تا مدل‌بایندینگ خودش خطای زیرساختی را به
+            // Kestrel برگرداند (میدلور مدیریت خطا هم این استثنا را عمداً
+            // بازمی‌پرتابد تا Kestrel اتصال را بی‌سروصدا ببندد).
+            try
+            {
+                context.Request.Body.Position = 0;
+                using var reader = new StreamReader(context.Request.Body, leaveOpen: true);
+                requestBody = await reader.ReadToEndAsync();
+            }
+            catch (Exception ex) when (ex is BadHttpRequestException or IOException
+                                       or OperationCanceledException)
+            {
+                // بدنه ناقص — چیزی برای ثبت نیست
+                requestBody = null;
+            }
+            finally
+            {
+                // بازنشانی محل جریان حتی در شکست خواندن — خواننده‌های بعدی
+                try { context.Request.Body.Position = 0; }
+                catch { /* جریان در حالت خطا — نادیده گرفته می‌شود */ }
+            }
         }
 
         // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — «مقادیر قبلی چیزی نشان نمی‌دهد» ═══
