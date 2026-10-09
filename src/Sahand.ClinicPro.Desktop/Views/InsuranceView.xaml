@@ -158,14 +158,34 @@
                             <DataGridTextColumn Header="شماره مطالبه" Binding="{Binding ClaimNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="بیمه" Binding="{Binding InsuranceName, Converter={StaticResource PersianDigits}}" Width="150" />
                             <DataGridTextColumn Header="دوره" Binding="{Binding PeriodText, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="170" />
-                            <DataGridTextColumn Header="مبلغ ارسالی" Width="120">
-                                <DataGridTextColumn.Binding><Binding Path="TotalAmount" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
+                            <!-- ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) ═══ «تمامی اعداد
+                                 بدون استثنا فارسی باشند» — سه ستون مبلغ با
+                                 StringFormat لاتین بودند (ارقام و کامای انگلیسی)؛
+                                 اکنون مبدل مبلغ برنامه (ارقام فارسی + جداکنندهٔ
+                                 فارسی + واحد پول کاربر) اعمال می‌شود -->
+                            <DataGridTextColumn Header="مبلغ ارسالی" Width="130"
+                                Binding="{Binding TotalAmount, Converter={StaticResource CurrencyRial}}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="مبلغ تأییدی" Width="120">
-                                <DataGridTextColumn.Binding><Binding Path="ApprovedAmount" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
+                            <DataGridTextColumn Header="مبلغ تأییدی" Width="130"
+                                Binding="{Binding ApprovedAmount, Converter={StaticResource CurrencyRial}}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="دریافتی" Width="120">
-                                <DataGridTextColumn.Binding><Binding Path="ReceivedAmount" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
+                            <DataGridTextColumn Header="دریافتی" Width="130"
+                                Binding="{Binding ReceivedAmount, Converter={StaticResource CurrencyRial}}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             <DataGridTemplateColumn Header="وضعیت" Width="105">
                                 <DataGridTemplateColumn.CellTemplate>

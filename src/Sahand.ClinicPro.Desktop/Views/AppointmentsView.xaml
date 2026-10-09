@@ -249,7 +249,7 @@
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Margin="0,0,16,0">
                                         <TextBlock Text="⏰ ساعت" FontSize="10" Opacity="0.6" />
-                                        <TextBlock Text="{Binding SelectedSlot.Time, Mode=OneWay, TargetNullValue=—}" FontWeight="Bold" />
+                                        <TextBlock Text="{Binding SelectedSlot.Time, Mode=OneWay, TargetNullValue=—, Converter={StaticResource PersianDigits}}" FontWeight="Bold" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Margin="0,0,16,0">
                                         <TextBlock Text="🏥 اتاق" FontSize="10" Opacity="0.6" />
@@ -431,7 +431,7 @@
                                             <materialDesign:PackIcon Kind="Account" Width="14" Height="14" Opacity="0.5" VerticalAlignment="Center" />
                                             <StackPanel Margin="6,0,0,0" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding PatientMobile, TargetNullValue=''}" FontSize="10" Opacity="0.55" FontFamily="{DynamicResource App.CodeFont}" />
+                                                <TextBlock Text="{Binding PatientMobile, TargetNullValue='', Converter={StaticResource PersianDigits}}" FontSize="10" Opacity="0.55" FontFamily="{DynamicResource App.CodeFont}" />
                                             </StackPanel>
                                         </StackPanel>
                                     </DataTemplate>

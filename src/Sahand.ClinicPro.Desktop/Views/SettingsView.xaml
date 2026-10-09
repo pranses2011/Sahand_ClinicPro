@@ -342,7 +342,7 @@
                         <TextBlock Text="سایز فونت پایه: " VerticalAlignment="Center" FontSize="12.5" />
                         <Slider Minimum="11" Maximum="18" Value="{Binding BaseFontSize}" Width="220"
                                 TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Margin="8,0" />
-                        <TextBlock Text="{Binding BaseFontSize, StringFormat={}{0:0}}" VerticalAlignment="Center"
+                        <TextBlock Text="{Binding BaseFontSize, Converter={StaticResource PersianDigits}}" VerticalAlignment="Center"
                                    FontFamily="{DynamicResource App.CodeFont}" FontSize="13" />
                     </StackPanel>
 
@@ -378,7 +378,7 @@
                         <Slider Minimum="0" Maximum="24" Value="{Binding CustomCardRadius}" Width="170"
                                 TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"
                                 Margin="10,0" IsEnabled="{Binding UseCustomRadius}" />
-                        <TextBlock Text="{Binding CustomCardRadius, StringFormat={}{0:0}}" VerticalAlignment="Center"
+                        <TextBlock Text="{Binding CustomCardRadius, Converter={StaticResource PersianDigits}}" VerticalAlignment="Center"
                                    FontFamily="{DynamicResource App.CodeFont}" FontSize="13" MinWidth="20" />
                     </StackPanel>
 
