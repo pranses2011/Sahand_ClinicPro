@@ -73,9 +73,21 @@ public class AutomaticBackupWorker : BackgroundService
         var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
 
         // تنظیمات — از SystemSettings دستهٔ Backup با پیش‌فرض‌های امن
-        var settings = await db.SystemSettings.AsNoTracking()
+        // ═══ چرخهٔ سی‌امین — الگوی امن به‌جای ToDictionaryAsync مستقیم ═══
+        // جدول تنظیمات هیچ یکتایی دیتابیسی روی (Category, Key) ندارد؛ ردیف
+        // تکراری (مثلاً پس از بازیابی/ادغام نسخه‌های پشتیبان) نباید کارگر
+        // پشتیبان‌گیری خودکار را با استثنای «کلید تکراری» از کار بیندازد —
+        // همان ردهٔ خطایی که بذرافشان مرجع را می‌کشت. اولین ردیفِ هر کلید
+        // ملاک است و بقیه بی‌صدا نادیده گرفته می‌شوند.
+        var settingRows = await db.SystemSettings.AsNoTracking()
             .Where(s => !s.IsDeleted && s.Category == "Backup")
-            .ToDictionaryAsync(s => s.Key, s => s.Value, ct);
+            .Select(s => new { s.Key, s.Value })
+            .ToListAsync(ct);
+
+        var settings = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        foreach (var row in settingRows)
+            if (!string.IsNullOrEmpty(row.Key) && !settings.ContainsKey(row.Key))
+                settings[row.Key] = row.Value;
 
         var enabled = string.Equals(GetSetting(settings, "AutoEnabled"), "true",
             StringComparison.OrdinalIgnoreCase);

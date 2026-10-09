@@ -165,10 +165,33 @@ public class ReferenceDataSeeder : IDataSeeder
     /// <returns>شمار جفت‌های تداخلی تازه‌افزوده</returns>
     public async Task<int> EnsureDrugInteractionsAsync(CancellationToken ct)
     {
-        // نگاشت نام ژنریک به شناسه — فقط قوی‌ترین دوز هر مولکول
-        var medIds = await _context.Medications.AsNoTracking()
-            .GroupBy(m => m.GenericName)
-            .ToDictionaryAsync(g => g.Key, g => g.First().Id, ct);
+        // ═══ چرخهٔ سی‌امین — رفع کرش «An item with the same key has already
+        // been added. Key: Isosorbide Dinitrate» ═══
+        // ریشه: کاتالوگ داروها به‌طور مشروع چند ردیف با نام ژنریک یکسان دارد
+        // (یک مولکول با دوز/فرم/سازندهٔ متفاوت — مثل Isosorbide Dinitrate
+        // قرص ۵ و ۱۰ میلی‌گرمی). ترکیب «GroupBy سمت سرور + ToDictionaryAsync»
+        // در مواجهه با این تکرارِ مشروع — یا هر اختلاف جزئی نام‌ها مثل فاصلهٔ
+        // انتهایی/بزرگی حروف میان ردیف‌ها — استثنای کلید تکراری می‌انداخت و
+        // کل بذرافشانِ داده‌های مرجع (دارو + آزمایش + تعرفه) را از کار
+        // می‌انداخت؛ در نتیجه بخش بزرگی از داده‌های پایه هرگز بذر نمی‌شد.
+        // الگوی امن: بارگذاری سبکِ فقط (شناسه + نام ژنریک) با ToListAsync،
+        // سپس ساخت دیکشنری در حافظه با مقایسه‌گر نادیده‌گرفتنِ بزرگی حروف؛
+        // «اولین ردیفِ هر نام» ملاک است و تکرارها بی‌صدا نادیده گرفته
+        // می‌شوند — نه کرش، نه از دست رفتن داده. مقایسه‌گر بدون حساسیت حروف
+        // بونوس هم دارد: نگاشت‌های ResolveMedicationIds دیگر با اختلاف
+        // بزرگی حروفِ رکوردهای قدیمی (مثل Ferrous Sulfate / Ferrous
+        // sulfate) هم تطبیق پیدا می‌کنند.
+        var medRows = await _context.Medications.AsNoTracking()
+            .Select(m => new { m.Id, m.GenericName })
+            .ToListAsync(ct);
+
+        var medIds = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+        foreach (var row in medRows)
+        {
+            var name = row.GenericName?.Trim();
+            if (!string.IsNullOrEmpty(name) && !medIds.ContainsKey(name))
+                medIds[name] = row.Id;
+        }
 
         // زوج‌های موجود — به‌صورت مرتب‌شده تا id1<id2 با id2<id1 یکی شمرده شود
         var existingPairs = (await _context.DrugInteractions.AsNoTracking()
@@ -223,7 +246,12 @@ public class ReferenceDataSeeder : IDataSeeder
         return added;
     }
 
-    /// <summary>نگاشت نام ژنریک یا نام کلاس به شناسه‌های دارو</summary>
+    /// <summary>
+    /// نگاشت نام ژنریک یا نام کلاس به شناسه‌های دارو.
+    /// چرخهٔ سی‌امین: دیکشنری ورودی با مقایسه‌گر بدون حساسیت به بزرگی حروف
+    /// ساخته می‌شود (رشتهٔ «Ferrous Sulfate» با رکورد «Ferrous sulfate» هم
+    /// تطبیق پیدا می‌کند) — بخشی از رفع کرش کلید تکراری بذرافشان.
+    /// </summary>
     private static IReadOnlyList<long> ResolveMedicationIds(
         IReadOnlyDictionary<string, long> medIds, string name)
     {

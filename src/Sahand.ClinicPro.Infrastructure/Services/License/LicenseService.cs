@@ -185,9 +185,21 @@ public partial class LicenseService : ILicenseService
     public async Task<SupportInfoDto> GetSupportInfoAsync(CancellationToken ct = default)
     {
         var keys = new[] { "Support.Name", "Support.Company", "Support.Phone", "Support.Mobile", "Support.Email", "Support.Website" };
-        var rows = await _context.SystemSettings.AsNoTracking()
+
+        // ═══ چرخهٔ سی‌امین — الگوی امن به‌جای ToDictionaryAsync مستقیم ═══
+        // جدول SystemSettings یکتایی دیتابیسی روی (Category, Key) ندارد؛
+        // ردیف تکراری (حذف‌نرم‌شدهٔ بازمانده از پشتیبان قدیمی و…) نباید
+        // خواندن اطلاعات پشتیبانی را با استثنای «کلید تکراری» بکشد —
+        // همان ردهٔ خطای بذرافشان مرجع. اولین ردیفِ هر کلید ملاک است.
+        var supportRows = await _context.SystemSettings.AsNoTracking()
             .Where(s => s.Category == "Support" && keys.Contains(s.Key) && !s.IsDeleted)
-            .ToDictionaryAsync(s => s.Key, s => s.Value ?? "", ct);
+            .Select(s => new { s.Key, s.Value })
+            .ToListAsync(ct);
+
+        var rows = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var row in supportRows)
+            if (!string.IsNullOrEmpty(row.Key) && !rows.ContainsKey(row.Key))
+                rows[row.Key] = row.Value ?? "";
 
         var stored = new SupportInfoDto(
             rows.GetValueOrDefault("Support.Name", ""),
@@ -578,9 +590,22 @@ public partial class LicenseService : ILicenseService
             ["Support.Website"] = support.Website ?? "",
         };
 
-        var existing = await _context.SystemSettings
-            .Where(s => s.Category == "Support" && map.Keys.Contains(s.Key))
-            .ToDictionaryAsync(s => s.Key, ct);
+        // ═══ چرخهٔ سی‌امین — الگوی امن + فیلتر حذف‌نرم‌شده‌ها ═══
+        // پیش از این پرس‌وجو نه فیلتر IsDeleted داشت و نه مصونیت از کلید
+        // تکراری: اگر برای یک کلید هم ردیف حذف‌شده باشد هم ردیف فعال،
+        // ToDictionaryAsync با «An item with the same key…» می‌شکست و تپ‌قلب/
+        // فعال‌سازی لایسنس (فراخوانندهٔ همین متد) ناقص می‌ماند؛ ضمن آنکه
+        // به‌روزرسانی ردیفِ حذف‌شده بی‌اثر بود (مسیرهای خواندن IsDeleted را
+        // فیلتر می‌کنند و مقدار هرگز دیده نمی‌شد). اکنون: فقط ردیف‌های فعال
+        // خوانده می‌شوند و ساخت دیکشنری در حافظه با «اولین ردیف ملاک» است.
+        var existingRows = await _context.SystemSettings
+            .Where(s => s.Category == "Support" && map.Keys.Contains(s.Key) && !s.IsDeleted)
+            .ToListAsync(ct);
+
+        var existing = new Dictionary<string, SystemSetting>(StringComparer.OrdinalIgnoreCase);
+        foreach (var row in existingRows)
+            if (!string.IsNullOrEmpty(row.Key) && !existing.ContainsKey(row.Key))
+                existing[row.Key] = row;
 
         foreach (var (key, value) in map)
         {
