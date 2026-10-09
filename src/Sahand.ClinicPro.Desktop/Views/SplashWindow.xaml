@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:helpers="clr-namespace:Sahand.ClinicPro.Desktop.Helpers"
         Title="در حال بارگذاری…"
-        Width="480" Height="420"
+        Width="640" Height="560"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -18,108 +18,136 @@
          زمینهٔ شفاف باشه و از همون تصویر بزرگ آیکون استفاده بکن که زمینهٔ
          شفاف هم داره چون نمیخوام معمولی و مثل فرم دیده بشه».
          ─────────────────────────────────────────────────────────────
-         • زمینهٔ کاملاً شفاف (AllowsTransparency + Background=Transparent)
-         • لوگوی بزرگ جاسازی‌شدهٔ ClinicPro-512 با زمینهٔ شفاف خودش
-         • انیمیشن ورود نرم (محوشدن + بزرگ‌نمایی تدریجی)
-         • نوار پیشرفت با درصدهای فارسی و پیام‌های مرحله‌ای
-         • در پایان، محوشدن آرام و باز شدن پنجرهٔ اصلی/ورود
+         ═══ چرخهٔ سی‌وسوم (گزارش نوزدهم مالک) ═══
+         «تصویر صفحه Splash رو بزرگتر بکن و با زمینه شفاف نه خاکستری» —
+         ریشهٔ ظاهر «خاکستری»: قالب پیشین یک ظرف نیمه‌مات تیرهٔ تمام‌عیار
+         (#F2091A33 با آلفای ۹۵٪) دور همهٔ محتوا می‌کشید که روی هر دسکتاپی
+         به‌صورت یک تختهٔ خاکستری/تیره دیده می‌شد. در این بازطراحی:
+         • پنجرهٔ بزرگ‌تر: ۴۸۰×۴۲۰ → ۶۴۰×۵۶۰ و لوگو ۱۹۰ → ۲۸۰ پیکسل
+         • هیچ ظرف پس‌زمینه‌ای نیست — زمینهٔ پنجره مثل خود ویندوز کاملاً
+           شفاف است؛ فقط عناصر (لوگو/نوشته/نوار) روی دسکتاپ می‌نشینند
+         • خوانایی بدون پنل: هر متن با DropShadowEffect نرم تیره پشتیبانی
+           می‌شود تا روی هر تصویر پس‌زمینهٔ روشن یا تیره خوانا بماند
+         • نشان نسخه و پیام‌ها با پیل‌های ریز نیمه‌شفافِ خودشان (کوچک‌تر
+           از «پنل» بودن) — جلوهٔ شناور روی شیشه
+         • انیمیشن ورود نرم و نبض آرام لوگو حفظ شد
          ═══════════════════════════════════════════════════════════ -->
     <Grid>
-        <!-- ظرف نیمه‌شفاف تیره — پشت لوگو برای خوانایی؛ خود پنجره شفاف است -->
-        <Border CornerRadius="26" Background="#F2091A33"
-                Margin="26" Padding="0">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="24" ShadowDepth="0" Opacity="0.45" Color="#0A1E3C" />
-            </Border.Effect>
+        <!-- هیچ پس‌زمینه‌ای کشیده نمی‌شود — شفافیت کامل روی دسکتاپ -->
 
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <!-- لوگوی بزرگ — انیمیشن ورود: از مقیاس ۰٫۸ و شفاف صفر -->
-                <Image x:Name="LogoImage"
-                       Source="/Assets/Logo/ClinicPro-512.png"
-                       Width="190" Height="190"
-                       RenderTransformOrigin="0.5,0.5"
-                       Margin="0,0,0,6">
-                    <Image.RenderTransform>
-                        <ScaleTransform x:Name="LogoScale" ScaleX="0.8" ScaleY="0.8" />
-                    </Image.RenderTransform>
-                    <Image.Triggers>
-                        <EventTrigger RoutedEvent="Loaded">
-                            <BeginStoryboard>
-                                <Storyboard>
-                                    <!-- محوشدن ورود -->
-                                    <DoubleAnimation Storyboard.TargetName="LogoImage"
-                                                     Storyboard.TargetProperty="Opacity"
-                                                     From="0" To="1" Duration="0:0:0.55">
-                                        <DoubleAnimation.EasingFunction>
-                                            <CubicEase EasingMode="EaseOut" />
-                                        </DoubleAnimation.EasingFunction>
-                                    </DoubleAnimation>
-                                    <!-- بزرگ‌نمایی نرم تا اندازهٔ واقعی -->
-                                    <DoubleAnimation Storyboard.TargetName="LogoScale"
-                                                     Storyboard.TargetProperty="ScaleX"
-                                                     From="0.8" To="1" Duration="0:0:0.6">
-                                        <DoubleAnimation.EasingFunction>
-                                            <BackEase Amplitude="0.3" EasingMode="EaseOut" />
-                                        </DoubleAnimation.EasingFunction>
-                                    </DoubleAnimation>
-                                    <DoubleAnimation Storyboard.TargetName="LogoScale"
-                                                     Storyboard.TargetProperty="ScaleY"
-                                                     From="0.8" To="1" Duration="0:0:0.6">
-                                        <DoubleAnimation.EasingFunction>
-                                            <BackEase Amplitude="0.3" EasingMode="EaseOut" />
-                                        </DoubleAnimation.EasingFunction>
-                                    </DoubleAnimation>
-                                    <!-- نبض آرام بی‌نهایت — حس زنده‌بودن -->
-                                    <DoubleAnimation Storyboard.TargetName="LogoImage"
-                                                     Storyboard.TargetProperty="Opacity"
-                                                     From="1" To="0.88" BeginTime="0:0:0.8"
-                                                     Duration="0:0:1.1" AutoReverse="True"
-                                                     RepeatBehavior="Forever" />
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
-                    </Image.Triggers>
-                </Image>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <!-- لوگوی بزرگ — انیمیشن ورود: از مقیاس ۰٫۸ و شفاف صفر -->
+            <Image x:Name="LogoImage"
+                   Source="/Assets/Logo/ClinicPro-512.png"
+                   Width="280" Height="280"
+                   RenderTransformOrigin="0.5,0.5"
+                   Margin="0,0,0,10">
+                <Image.Effect>
+                    <!-- سایهٔ نرم زیر لوگو — تعلیق بصری روی دسکتاپ شفاف -->
+                    <DropShadowEffect BlurRadius="22" ShadowDepth="6" Opacity="0.4" Color="#0A1E3C" />
+                </Image.Effect>
+                <Image.RenderTransform>
+                    <ScaleTransform x:Name="LogoScale" ScaleX="0.8" ScaleY="0.8" />
+                </Image.RenderTransform>
+                <Image.Triggers>
+                    <EventTrigger RoutedEvent="Loaded">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <!-- محوشدن ورود -->
+                                <DoubleAnimation Storyboard.TargetName="LogoImage"
+                                                 Storyboard.TargetProperty="Opacity"
+                                                 From="0" To="1" Duration="0:0:0.55">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut" />
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                                <!-- بزرگ‌نمایی نرم تا اندازهٔ واقعی -->
+                                <DoubleAnimation Storyboard.TargetName="LogoScale"
+                                                 Storyboard.TargetProperty="ScaleX"
+                                                 From="0.8" To="1" Duration="0:0:0.6">
+                                    <DoubleAnimation.EasingFunction>
+                                        <BackEase Amplitude="0.3" EasingMode="EaseOut" />
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                                <DoubleAnimation Storyboard.TargetName="LogoScale"
+                                                 Storyboard.TargetProperty="ScaleY"
+                                                 From="0.8" To="1" Duration="0:0:0.6">
+                                    <DoubleAnimation.EasingFunction>
+                                        <BackEase Amplitude="0.3" EasingMode="EaseOut" />
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                                <!-- نبض آرام بی‌نهایت — حس زنده‌بودن -->
+                                <DoubleAnimation Storyboard.TargetName="LogoImage"
+                                                 Storyboard.TargetProperty="Opacity"
+                                                 From="1" To="0.88" BeginTime="0:0:0.8"
+                                                 Duration="0:0:1.1" AutoReverse="True"
+                                                 RepeatBehavior="Forever" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Image.Triggers>
+            </Image>
 
-                <!-- نام محصول -->
-                <TextBlock Text="سامانه جامع مدیریت درمانگاه سهند"
-                           FontSize="17" FontWeight="Bold" Foreground="#FFFFFF"
-                           HorizontalAlignment="Center" Margin="0,4,0,2" />
+            <!-- نام محصول — سفید درشت با سایهٔ تیرهٔ نرم؛ بدون نیاز به پنل
+                 پس‌زمینه روی هر دسکتاپی خواناست (اصلاح چرخهٔ ۳۳) -->
+            <TextBlock Text="سامانه جامع مدیریت درمانگاه سهند"
+                       FontSize="21" FontWeight="Bold" Foreground="#FFFFFF"
+                       HorizontalAlignment="Center" Margin="0,6,0,2">
+                <TextBlock.Effect>
+                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.75" Color="#0A1E3C" />
+                </TextBlock.Effect>
+            </TextBlock>
 
-                <!-- ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک): «در صفحه Splash
-                     شمارهٔ نسخهٔ برنامه هم باشد» — نشان نسخه با ارقام فارسی از
-                     همان منبع تک‌نسخهٔ AppInfo (ویژگی Version فایل ساخت)؛ نه
-                     هاردکد — با ارتقای نسخه بی‌خود تازه می‌شود ═══ -->
-                <Border Background="#2E4A73" CornerRadius="10" Padding="12,3"
-                        HorizontalAlignment="Center" Margin="0,4,0,2"
-                        BorderBrush="#5B8CC6" BorderThickness="1">
-                    <TextBlock Text="{x:Static helpers:AppInfo.VersionText}"
-                               FontSize="11.5" FontWeight="SemiBold"
-                               Foreground="#CFE4FB" />
+            <!-- ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک): «در صفحه Splash
+                 شمارهٔ نسخهٔ برنامه هم باشد» — نشان نسخه با ارقام فارسی از
+                 همان منبع تک‌نسخهٔ AppInfo (ویژگی Version فایل ساخت)؛ نه
+                 هاردکد — با ارتقای نسخه بی‌خود تازه می‌شود.
+                 پیلِ ریز نیمه‌شفاف — نه پنل؛ شناور روی زمینهٔ شفاف ═══ -->
+            <Border Background="#B3172B4D" CornerRadius="11" Padding="13,4"
+                    HorizontalAlignment="Center" Margin="0,8,0,2"
+                    BorderBrush="#8CB4E3" BorderThickness="1">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.45" Color="#0A1E3C" />
+                </Border.Effect>
+                <TextBlock Text="{x:Static helpers:AppInfo.VersionText}"
+                           FontSize="12" FontWeight="SemiBold"
+                           Foreground="#EAF3FE" />
+            </Border>
+
+            <!-- پیام مرحله‌ای — با سایه برای خوانایی روی شفافیت کامل -->
+            <TextBlock x:Name="SubtitleText" Text="در حال آماده‌سازی…"
+                       FontSize="13" Foreground="#EAF3FE"
+                       HorizontalAlignment="Center" Margin="0,10,0,20">
+                <TextBlock.Effect>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.7" Color="#0A1E3C" />
+                </TextBlock.Effect>
+            </TextBlock>
+
+            <!-- نوار پیشرفت — پیل‌های خودش را دارد؛ جزو «زمینه» نیست -->
+            <Grid Width="380" HorizontalAlignment="Center">
+                <Border Background="#CC12233F" CornerRadius="9" Height="16">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.4" Color="#0A1E3C" />
+                    </Border.Effect>
                 </Border>
-
-                <TextBlock x:Name="SubtitleText" Text="در حال آماده‌سازی…"
-                           FontSize="12" Foreground="#B9CBE6"
-                           HorizontalAlignment="Center" Margin="0,6,0,16" />
-
-                <!-- نوار پیشرفت -->
-                <Grid Width="300" HorizontalAlignment="Center">
-                    <Border Background="#1B3355" CornerRadius="8" Height="14" />
-                    <Border x:Name="ProgressFill" HorizontalAlignment="Left"
-                            Width="0" CornerRadius="8" Height="14">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                <GradientStop Color="#4FA3E3" Offset="0" />
-                                <GradientStop Color="#8FD4FF" Offset="1" />
-                            </LinearGradientBrush>
-                        </Border.Background>
-                    </Border>
-                    <!-- درصد فارسی روی نوار -->
-                    <TextBlock x:Name="ProgressText" Text="۰٪"
-                               FontSize="10.5" FontWeight="Bold" Foreground="#FFFFFF"
-                               HorizontalAlignment="Center" VerticalAlignment="Center" />
-                </Grid>
-            </StackPanel>
-        </Border>
+                <Border x:Name="ProgressFill" HorizontalAlignment="Left"
+                        Width="0" CornerRadius="9" Height="16">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#4FA3E3" Offset="0" />
+                            <GradientStop Color="#8FD4FF" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+                <!-- درصد فارسی روی نوار — با سایهٔ ظریف -->
+                <TextBlock x:Name="ProgressText" Text="۰٪"
+                           FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"
+                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock.Effect>
+                        <DropShadowEffect BlurRadius="4" ShadowDepth="1" Opacity="0.7" Color="#0A1E3C" />
+                    </TextBlock.Effect>
+                </TextBlock>
+            </Grid>
+        </StackPanel>
     </Grid>
 </Window>
