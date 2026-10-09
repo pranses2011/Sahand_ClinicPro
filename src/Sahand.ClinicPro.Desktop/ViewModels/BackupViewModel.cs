@@ -427,6 +427,82 @@ public partial class BackupViewModel : ViewModelBase
         await ExecuteRestoreAsync(SelectedBackupFile.FullPath);
     }
 
+    /// <summary>
+    /// انتخاب فایل پشتیبان از دیسک/فلش و بازیابی — چرخهٔ بیست‌وششم (گزارش
+    /// هجدهم مالک): «امکان انتخاب فایل پشتیبانی که در لیست نیست وجود ندارد
+    /// و می‌خوام از هارد یا فلش انتخاب کنم». با دیالوگ انتخاب فایل ویندوز
+    /// هر ZIP/BAK از هر درایوی انتخاب می‌شود، سپس با فرم چندبخشی به سرور
+    /// بارگذاری و همان‌جا بازیابی می‌شود — مستقل از اینکه سرور روی همین
+    /// ماشین باشد یا ماشین دیگری.
+    /// </summary>
+    [RelayCommand]
+    private async Task RestoreFromExternalFileAsync()
+    {
+        // دیالوگ انتخاب فایل — عنوان فارسی و فقط پسوندهای پشتیبان
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "انتخاب فایل پشتیبان (ZIP/BAK) از هارد یا فلش",
+            Filter = "فایل پشتیبان (*.zip;*.bak)|*.zip;*.bak|همهٔ فایل‌ها (*.*)|*.*"
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        var fileName = System.IO.Path.GetFileName(dialog.FileName);
+        long sizeBytes;
+        try
+        {
+            sizeBytes = new System.IO.FileInfo(dialog.FileName).Length;
+        }
+        catch
+        {
+            _snackbar.Error("خواندن فایل ممکن نشد — مسیر را بررسی کنید");
+            return;
+        }
+        var sizeText = sizeBytes > 1024 * 1024 * 1024
+            ? $"{sizeBytes / 1024.0 / 1024 / 1024:0.#} گیگابایت"
+            : sizeBytes > 1024 * 1024 ? $"{sizeBytes / 1024.0 / 1024:0.#} مگابایت" : $"{sizeBytes / 1024.0:0.#} کیلوبایت";
+
+        // تأیید دو‌مرحله‌ای — مانند بازیابی از فهرست
+        var answer = Views.AppDialog.Confirm("تأیید بازیابی از فایل خارجی",
+            $"⚠️ هشدار: بازیابی از فایل «{fileName}» ({sizeText}) تمام داده‌های فعلی را جایگزین می‌کند و همهٔ کاربران موقتاً قطع می‌شوند!\n\nادامه می‌دهید؟",
+            Views.AppDialogIcon.Warning);
+        if (answer != true) return;
+
+        // بارگذاری چندبخشی به سرور — بدنهٔ بزرگ؛ وضعیت به‌روز می‌شود
+        IsBusy = true;
+        RestoreStatus = "در حال بارگذاری فایل به سرور…";
+        try
+        {
+            var bytes = await System.IO.File.ReadAllBytesAsync(dialog.FileName);
+            var response = await _api.PostFileAsync<RestoreUploadResponse>("backup/upload-restore",
+                fileName, bytes);
+            IsBusy = false;
+
+            if (response?.IsSuccess == true)
+            {
+                RestoreStatus = "بازیابی با موفقیت انجام شد — برنامه را ببندید و دوباره باز کنید";
+                _snackbar.Success("بازیابی انجام شد — برنامه را ری‌استارت کنید");
+            }
+            else
+            {
+                RestoreStatus = $"بازیابی ناموفق: {response?.Message ?? _api.LastError}";
+                _snackbar.Error(response?.Message ?? _api.LastError ?? "بازیابی ناموفق بود");
+            }
+        }
+        catch (Exception ex)
+        {
+            IsBusy = false;
+            RestoreStatus = $"بازیابی ناموفق: {ex.Message}";
+            _snackbar.Error("خواندن/بارگذاری فایل ناموفق بود — فایل سالم و در دسترس است؟");
+        }
+    }
+
+    /// <summary>پاسخ بارگذاری-و-بازیابی — پاکت استاندارد با پیام</summary>
+    private sealed class RestoreUploadResponse
+    {
+        public bool IsSuccess { get; set; }
+        public string? Message { get; set; }
+    }
+
     /// <summary>اجرای بازیابی واقعی از طریق سرور — پیام نتیجه به کاربر</summary>
     private async Task ExecuteRestoreAsync(string fullPath)
     {

@@ -54,6 +54,23 @@ public class BackupController : ApiBaseController
             _backupLogger);
 
     /// <summary>
+    /// پوشهٔ پشتیبان‌های برنامه — ترکیب تنظیم فایل (Backup:Directory) و
+    /// رویهٔ دیتابیسی (SystemSetting دستهٔ Backup، کلید Directory)؛ چرخهٔ
+    /// بیست‌وششم: به‌عنوان «پوشهٔ ترجیحی استخراج» به بازیابی داده می‌شود تا
+    /// استخراج ZIP همیشه در مسیری انجام شود که هم API مجاز به نوشتنش است
+    /// و هم سرویس SQL می‌تواند بخواند (رفع خطای دسترسی).
+    /// </summary>
+    private async Task<string> GetBackupDirectoryAsync(CancellationToken ct)
+    {
+        var backupDir = _configuration["Backup:Directory"] ?? "C:/Backups/SahandClinicPro";
+        var dirSetting = await _unitOfWork.Repository<SystemSetting>().QueryableNoTracking
+            .FirstOrDefaultAsync(s => !s.IsDeleted && s.Category == "Backup" && s.Key == "Directory", ct);
+        if (dirSetting is not null && !string.IsNullOrWhiteSpace(dirSetting.Value))
+            backupDir = dirSetting.Value;
+        return backupDir;
+    }
+
+    /// <summary>
     /// تاریخچه پشتیبان‌ها — چرخه بیست‌ویکم: مسیر فایل هم برگردانده می‌شود
     /// تا با کلیک روی هر ردیف، جزئیات کامل آن (مسیر/حجم/خطا) دیده شود.
     /// </summary>
@@ -178,11 +195,71 @@ public class BackupController : ApiBaseController
 
         var manager = CreateManager();
 
-        var (ok, message) = await manager.RestoreFromBackupAsync(path, ct);
+        // ═══ چرخهٔ بیست‌وششم — پوشهٔ ترجیحی استخراج = پوشهٔ پشتیبان‌های برنامه ═══
+        // ریشهٔ «access to the path is denied»: پیش‌تر ZIP در پوشهٔ بکاپ خودِ
+        // SQL استخراج می‌شد که فرایند API مجوز نوشتن در آن را ندارد؛ اکنون
+        // پوشهٔ برنامه اولویت اول است (با آزمون نوشتن در BackupManager)
+        var preferredDir = await GetBackupDirectoryAsync(ct);
+
+        var (ok, message) = await manager.RestoreFromBackupAsync(path, preferredDir, ct);
         if (!ok)
             return BadRequest(ApiResponse<string>.Failure(message));
 
         return Ok(ApiResponse<object>.SuccessMessage(message));
+    }
+
+    /// <summary>
+    /// بارگذاری فایل پشتیبان خارجی و بازیابی — چرخهٔ بیست‌وششم (گزارش هجدهم
+    /// مالک): «امکان انتخاب فایل پشتیبانی که در لیست نیست وجود ندارد و
+    /// می‌خوام از هارد یا فلش انتخاب کنم». فایل ZIP/BAK از هر درایوی
+    /// (چون روی کلاینت است و سرور شاید روی ماشین دیگری باشد) با فرم
+    /// چندبخشی بارگذاری و در پوشهٔ پشتیبان‌های برنامه ذخیره می‌شود، سپس
+    /// همان‌جا بازیابی اجرا می‌شود — مسیری که هم برای API قابل‌نوشتن است و
+    /// هم برای سرویس SQL خواناست. پس از بازیابی موفق نسخهٔ بارگذاری‌شده
+    /// پاک می‌شود (اصل فایل روی فلش کاربر سالم می‌ماند).
+    /// </summary>
+    [HttpPost("upload-restore")]
+    [HasPermission("backup.create")]
+    [RequestSizeLimit(2_147_483_647)] // تا ۲ گیگابایت — فایل بکاپ سنگین است
+    public async Task<IActionResult> UploadAndRestore(CancellationToken ct)
+    {
+        var file = Request.Form.Files.FirstOrDefault();
+        if (file is null || file.Length == 0)
+            return BadRequest(ApiResponse<object>.Failure("فایل پشتیبان ارسال نشده است"));
+
+        // امنیت: فقط پسوندهای مجاز پشتیبان
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (extension != ".zip" && extension != ".bak")
+            return BadRequest(ApiResponse<object>.Failure("فقط فایل‌های پشتیبان ZIP یا BAK قابل بازیابی‌اند"));
+
+        // ذخیرهٔ امن در پوشهٔ پشتیبان‌های برنامه — مسیر ترجیحی استخراج همان است
+        var backupDir = await GetBackupDirectoryAsync(ct);
+        Directory.CreateDirectory(backupDir);
+        var savedPath = Path.Combine(backupDir,
+            "SahandClinicPro_ExternalRestore_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + extension);
+
+        try
+        {
+            await using (var stream = System.IO.File.Create(savedPath))
+                await file.CopyToAsync(stream, ct);
+
+            var manager = CreateManager();
+            var (ok, message) = await manager.RestoreFromBackupAsync(savedPath, backupDir, ct);
+            if (!ok)
+                return BadRequest(ApiResponse<string>.Failure(message));
+
+            return Ok(ApiResponse<object>.SuccessMessage(message));
+        }
+        finally
+        {
+            // پاک‌سازی نسخهٔ بارگذاری‌شده پس از تلاش بازیابی — اصل فایل نزد کاربر است
+            try
+            {
+                if (System.IO.File.Exists(savedPath))
+                    System.IO.File.Delete(savedPath);
+            }
+            catch { /* اگر سرویس SQL هنوز فایل را نگه دارد، دفعهٔ بعد پاک می‌شود */ }
+        }
     }
 
     /// <summary>بدنهٔ درخواست بازیابی — تهی یعنی آخرین نسخهٔ موفق</summary>

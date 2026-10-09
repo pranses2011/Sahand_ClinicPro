@@ -164,40 +164,63 @@ public class BackupManager
     }
 
     /// <summary>
-    /// بازیابی از فایل پشتیبان — پذیرش ZIP (استخراج ورودی نخست) یا .bak خام:
-    /// ۱) تک‌کاربر + قطع فوری اتصال‌های دیگر (ROLLBACK IMMEDIATE)
-    /// ۲) RESTORE DATABASE … WITH REPLACE, RECOVERY
+    /// بازیابی از فایل پشتیبان — ZIP استخراج و RESTORE واقعی اجرا می‌شود.
+    /// ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — رفع «بازیابی ناموفق: access to
+    /// the path is denied» ═══ پیش‌تر ZIP در پوشهٔ «پشتیبان پیش‌فرض خودِ SQL
+    /// Server» استخراج می‌شد؛ آن پوشه برای حساب سرویس SQL قفل است و فرایند
+    /// API معمولاً «مجوز نوشتن» در آن ندارد → استخراج با
+    /// UnauthorizedAccessException می‌شکست. ترتیب صحیح پوشهٔ استخراج:
+    /// ۱) پوشهٔ پشتیبان‌های برنامه (هم API در آن ZIP می‌نویسد و هم سرویس SQL
+    ///    هنگام BACKUP در آن .bak نوشته — یعنی هر دو حساب دسترسی کامل دارند)
+    /// ۲) پوشهٔ خود فایل ZIP (مثلاً فلش)
+    /// ۳) پوشهٔ پیش‌فرض SQL (اگر نوشتن در آن ممکن بود)
+    /// ۴) پوشهٔ موقت — آخرین راه
+    /// در هر گام «آزمون نوشتن» انجام می‌شود تا اولین پوشهٔ واقعاً قابل‌نوشتن
+    /// برگزیده شود؛ BAK استخراج‌شده پس از پایان بازیابی (موفق یا ناموفق)
+    /// پاک می‌شود تا پوشهٔ پشتیبان شلوغ نشود.
     /// نکتهٔ مهم: بازیابی داده‌های فعلی را جایگزین می‌کند — فراخواننده باید
     /// تأییدیهٔ کاربر را گرفته باشد.
     /// </summary>
-    /// <param name="zipOrBakPath">مسیر فایل ZIP یا BAK انتخاب‌شده</param>
+    /// <param name="zipOrBakPath">مسیر کامل فایل ZIP/BAK</param>
+    /// <param name="preferredExtractDirectory">پوشهٔ پیشنهادی استخراج — پوشهٔ پشتیبان‌های برنامه</param>
     /// <param name="ct">توکن لغو</param>
-    public async Task<(bool Ok, string Message)> RestoreFromBackupAsync(string zipOrBakPath, CancellationToken ct = default)
+    public async Task<(bool Ok, string Message)> RestoreFromBackupAsync(string zipOrBakPath,
+        string? preferredExtractDirectory = null, CancellationToken ct = default)
     {
         if (!File.Exists(zipOrBakPath))
             return (false, "فایل پشتیبان یافت نشد — مسیر را بررسی کنید");
 
-        // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — رفع «بازیابی ناموفق:
-        // Cannot open backup device» ═══ ریشه: ZIP در پوشهٔ Temp «کاربر»
-        // استخراج می‌شد؛ سرویس SQL Server با حساب دیگری اجرا می‌شود و به آن
-        // مسیر دسترسی خواندن ندارد → RESTORE با خطای «Cannot open backup
-        // device … Operating system error 5 (Access is denied)» شکست
-        // می‌خورد. راه‌حل قطعی: استخراج در پوشهٔ «پشتیبان پیش‌فرض خودِ
-        // SQL Server» (از رجیستریِ نمونه — همیشه برای حساب سرویس SQL
-        // خواناست)؛ در نبود آن، همان پوشهٔ فایل ZIP (پوشهٔ پشتیبان‌های
-        // برنامه که SQL خودش در آن نوشته است) و در آخر Temp.
         string bakPath;
         var isZip = zipOrBakPath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
         var tempDir = string.Empty;
+        // آیا BAK نهایی «مااخت خودمان» است (باید در پایان پاک شود)؟
+        var extractedBakPath = string.Empty;
         try
         {
             if (isZip)
             {
-                // مسیر استخراج امن — به‌ترتیبِ اولویت (بالا → پایین)
-                var extractDir = await TryGetSqlServerBackupDirectoryAsync(ct)
-                    ?? (Directory.Exists(zipOrBakPath) ? zipOrBakPath : null)
-                    ?? Path.GetDirectoryName(zipOrBakPath);
-                if (string.IsNullOrWhiteSpace(extractDir) || !Directory.Exists(extractDir))
+                // ═══ چرخهٔ ۲۶ — انتخاب پوشهٔ استخراج با آزمون نوشتن ═══
+                var sqlBackupDir = await TryGetSqlServerBackupDirectoryAsync(ct);
+                var zipDir = Path.GetDirectoryName(zipOrBakPath);
+
+                string? extractDir = null;
+                foreach (var candidate in new[]
+                         {
+                             preferredExtractDirectory, // پوشهٔ پشتیبان‌های برنامه — بهترین گزینه
+                             zipDir, // پوشهٔ خود فایل (مثلاً فلش)
+                             sqlBackupDir // پوشهٔ SQL — اگر نوشتن ممکن بود
+                         })
+                {
+                    if (string.IsNullOrWhiteSpace(candidate) || !Directory.Exists(candidate))
+                        continue;
+                    if (!CanWriteToDirectory(candidate))
+                        continue; // حساب فرایند API مجوز نوشتن ندارد (ریشهٔ خطای دسترسی)
+                    extractDir = candidate;
+                    break;
+                }
+
+                // هیچ‌کدام قابل‌نوشتن نبود — پوشهٔ موقت (آخرین راه)
+                if (extractDir is null)
                 {
                     tempDir = Path.Combine(Path.GetTempPath(),
                         "SahandClinicProRestore_" + Guid.NewGuid().ToString("N"));
@@ -216,6 +239,7 @@ public class BackupManager
                 // نام یکتا برای هر بازیابی — تداخل با پشتیبان‌های موجود نگیرد
                 bakPath = Path.Combine(extractDir,
                     "SahandClinicPro_Restore_" + Guid.NewGuid().ToString("N")[..8] + ".bak");
+                extractedBakPath = bakPath; // مااخت است — پس از بازیابی پاک می‌شود
                 entry.ExtractToFile(bakPath, overwrite: true);
             }
             else
@@ -275,6 +299,15 @@ public class BackupManager
             _logger.LogInformation("بازیابی از {File} با موفقیت انجام شد", zipOrBakPath);
             return (true, "بازیابی با موفقیت انجام شد — برنامه را ری‌استارت کنید تا داده‌های تازه بار شود");
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            // خطای دسترسی — پیام کاربردی فارسی با راهنمای رفع (چرخه ۲۶)
+            _logger.LogError(ex, "بازیابی از {File} — خطای دسترسی", zipOrBakPath);
+            return (false,
+                "دسترسی به مسیر استخراج داده نشد (Access Denied). سرور API به پوشهٔ مقصد اجازهٔ نوشتن ندارد؛ " +
+                "پوشهٔ پشتیبان برنامه را در تنظیمات به مسیری قابل‌نوشتن تغییر دهید (مثلاً C:\\Backups\\SahandClinicPro) " +
+                "یا دسترسی کامل کاربر سرویس را بدهید.");
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "بازیابی از {File} ناموفق", zipOrBakPath);
@@ -282,9 +315,35 @@ public class BackupManager
         }
         finally
         {
-            // پاک‌سازی پوشهٔ موقت استخراج
+            // پاک‌سازی: پوشهٔ موقت استخراج + فایل BAK مااخت (پوشهٔ پشتیبان شلوغ نشود)
             try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, recursive: true); }
             catch { /* پاک‌سازی موقت اهمیت حیاتی ندارد */ }
+            try
+            {
+                if (!string.IsNullOrEmpty(extractedBakPath) && File.Exists(extractedBakPath))
+                    File.Delete(extractedBakPath);
+            }
+            catch { /* اگر سرویس SQL هنوز فایل را نگه داشته، در اجرای بعدی پاک می‌شود */ }
+        }
+    }
+
+    /// <summary>
+    /// آزمون نوشتن در پوشه — ساخت و حذف یک فایل کاوشگر کوچک؛
+    /// چرخهٔ بیست‌وششم: برای انتخاب پوشهٔ استخراج ZIP که هم برای فرایند API
+    /// قابل‌نوشتن باشد (ریشهٔ «access to the path is denied")
+    /// </summary>
+    private static bool CanWriteToDirectory(string directory)
+    {
+        try
+        {
+            var probe = Path.Combine(directory, ".write_probe_" + Guid.NewGuid().ToString("N")[..8]);
+            File.WriteAllText(probe, "probe");
+            File.Delete(probe);
+            return true;
+        }
+        catch
+        {
+            return false; // حساب فرایند جاری اجازهٔ نوشتن ندارد
         }
     }
 

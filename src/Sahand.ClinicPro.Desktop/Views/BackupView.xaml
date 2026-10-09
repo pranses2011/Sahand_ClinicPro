@@ -171,6 +171,17 @@
                                     <TextBlock Text="بازیابی فایل انتخاب‌شده" Margin="7,0,0,0" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
+                            <!-- ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک): «امکان انتخاب فایل
+                                 پشتیبانی که در لیست نیست وجود نداره — از هارد یا فلش» —
+                                 بارگذاری فایل خارجی و بازیابی مستقل از فهرست برنامه ═══ -->
+                            <Button DockPanel.Dock="Left" Command="{Binding RestoreFromExternalFileCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}" Padding="10,4"
+                                    FontSize="12" Margin="8,0,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Usb" Width="15" Height="15" VerticalAlignment="Center" />
+                                    <TextBlock Text="بازیابی از هارد / فلش…" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
                             <TextBlock Text="📂 فایل‌های پشتیبان پوشهٔ ذخیره (ZIP/BAK — نام شمسی) — برای بازیابی یا حذف، یکی را انتخاب کنید:"
                                        FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"
                                        Margin="0,0,12,0" TextWrapping="Wrap" MaxWidth="420" />
