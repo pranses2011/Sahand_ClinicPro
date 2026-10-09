@@ -166,15 +166,25 @@
 
                 <!-- منابع مشترک قالب آیتم‌ها -->
                 <Grid.Resources>
-                    <!-- سبک پایهٔ آیتم تکی منو — دکمهٔ تمام‌عرض با آیکون و عنوان -->
+                    <!-- سبک پایهٔ آیتم تکی منو — دکمهٔ تمام‌عرض با آیکون و عنوان.
+                         چرخهٔ سی‌وسوم (قانون هم‌کلاسی‌ها با سربرگ گروه): چیدمان از
+                         StackPanel به گرید سه‌ستونه — عنوان ستون * و فضای تضمینی؛
+                         عنوان‌های بلند (مانند «مدیریت سامانه (تب‌بندی کامل)») دیگر
+                         از لبهٔ منو بیرون نمی‌زنند و در کمبود فضا فقط «…» می‌گیرند -->
                     <ControlTemplate x:Key="LeafNavItemTemplate" TargetType="Button">
                         <Border x:Name="LeafBd" Background="Transparent"
                                 CornerRadius="9" Padding="10,9"
                                 SnapsToDevicePixels="True">
-                            <StackPanel Orientation="Horizontal">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <!-- آیکون -->
+                                    <ColumnDefinition Width="*" />
+                                    <!-- عنوان — تمام عرض باقی‌مانده -->
+                                </Grid.ColumnDefinitions>
                                 <!-- چرخه ۲۴: رنگ آیکون از مبدل حالت رنگی/یکدست — MultiBinding با شمارندهٔ
                                      نوسازی تا تعویض حالت بدون ری‌استارت اعمال شود -->
-                                <materialDesign:PackIcon Width="20" Height="20"
+                                <materialDesign:PackIcon Grid.Column="0" Width="20" Height="20"
                                                          VerticalAlignment="Center">
                                                          <materialDesign:PackIcon.Kind>
                                                              <MultiBinding Converter="{StaticResource IconSetKind}">
@@ -189,12 +199,13 @@
                                         </MultiBinding>
                                     </materialDesign:PackIcon.Foreground>
                                 </materialDesign:PackIcon>
-                                <TextBlock Text="{Binding Title}"
+                                <TextBlock Grid.Column="1" Text="{Binding Title}"
                                            FontSize="13.5"
                                            Foreground="#DCE9FA"
                                            Margin="10,0,0,0"
-                                           VerticalAlignment="Center" />
-                            </StackPanel>
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" />
+                            </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -281,9 +292,23 @@
                                      گروه اکنون کاملاً متمایز است — رنگ طلایی گرم، نوار
                                      تأکیدی پررنگ در لبهٔ راست، فونت درشت‌تر و پررنگ‌تر
                                      و پس‌زمینهٔ قوی‌تر؛ در نگاه اول از فرزندان آبی‌روشن
-                                     و آیتم‌های تکی سفید جدا می‌شود. -->
+                                     و آیتم‌های تکی سفید جدا می‌شود.
+                                     ═══ چرخهٔ سی‌وسوم (گزارش نوزدهم مالک — مهم؛ سومین
+                                     گزارش همین مورد) ═══
+                                     «گزینه‌های اصلی که زیرمنو دارند بدون عنوان‌اند و فقط
+                                     آیکونشان دیده می‌شود؛ گزینه‌های اصلی تمام عرض باشند»:
+                                     بازطراحی ساختاری — چیدمان از StackPanel افقی (که در
+                                     فونت/زوم بزرگ می‌توانست عنوان را از لبه بیرون براند)
+                                     به گرید چهارستونه تبدیل شد: [نوار][آیکون][عنوان *][فلش]
+                                     — ستون عنوان «*» است یعنی تمام عرض باقی‌مانده به آن
+                                     تضمین می‌شود و در هیچ فونت/زومی تنگ نمی‌شود؛ فلش هم
+                                     همیشه در انتهای چپ (RTL) پین است. تاگل صریحاً
+                                     تمام‌عرض (Stretch) شد تا پس‌زمینهٔ سربرگ تمام عرض
+                                     ستون منو را بپوشاند. بریدگی فقط در حالت غیرممکنِ
+                                     کمبود فضا و به‌صورت «…» انتهای متن است (TextTrimming). -->
                                 <ToggleButton IsChecked="{Binding IsExpanded, Mode=TwoWay}"
                                               Cursor="Hand"
+                                              HorizontalAlignment="Stretch"
                                               Visibility="{Binding HasChildren, Converter={StaticResource BoolToVisibility}}">
                                     <ToggleButton.Template>
                                         <ControlTemplate TargetType="ToggleButton">
@@ -292,13 +317,24 @@
                                                     CornerRadius="9" Padding="10,10"
                                                     Margin="0,4,0,2"
                                                     SnapsToDevicePixels="True">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <!-- نوار تأکیدی طلایی گروه — لبهٔ راست (RTL) -->
-                                                    <Border Width="4" CornerRadius="2"
+                                                <!-- گرید تضمینی — عنوان ستون * دارد (چرخهٔ ۳۳) -->
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <!-- نوار تأکیدی طلایی — لبهٔ راست (RTL) -->
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <!-- آیکون گروه -->
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <!-- عنوان — تمام عرض باقی‌مانده؛ تضمینی -->
+                                                        <ColumnDefinition Width="*" />
+                                                        <!-- فلش باز/بسته — انتهای چپ -->
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <Border Grid.Column="0" Width="4" CornerRadius="2"
                                                             Background="#FFD54F"
                                                             Margin="0,0,10,0"
                                                             VerticalAlignment="Stretch" />
-                                                    <materialDesign:PackIcon Width="22" Height="22"
+                                                    <materialDesign:PackIcon Grid.Column="1" Width="22" Height="22"
                                                                              VerticalAlignment="Center">
                                                                              <materialDesign:PackIcon.Kind>
                                                                                  <MultiBinding Converter="{StaticResource IconSetKind}">
@@ -313,14 +349,16 @@
                                                             </MultiBinding>
                                                         </materialDesign:PackIcon.Foreground>
                                                     </materialDesign:PackIcon>
-                                                    <!-- عنوان گروه — طلایی، درشت و پررنگ برای تمایز کامل از فرزندان -->
-                                                    <TextBlock Text="{Binding Title}"
+                                                    <!-- عنوان گروه — طلایی، درشت و پررنگ برای تمایز کامل از فرزندان؛
+                                                         ستون * یعنی فضای تضمینی؛ … فقط در کمبود غیرممکن فضایی -->
+                                                    <TextBlock Grid.Column="2" Text="{Binding Title}"
                                                                FontSize="14.5" FontWeight="Bold"
                                                                Foreground="#FFD54F"
                                                                Margin="10,0,0,0"
-                                                               VerticalAlignment="Center" />
+                                                               VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis" />
                                                     <!-- فلش باز/بسته -->
-                                                    <materialDesign:PackIcon x:Name="Chev"
+                                                    <materialDesign:PackIcon x:Name="Chev" Grid.Column="3"
                                                                              Kind="ChevronDown"
                                                                              Width="15" Height="15"
                                                                              Foreground="#FFD54F"
@@ -331,7 +369,7 @@
                                                             <RotateTransform Angle="0" />
                                                         </materialDesign:PackIcon.RenderTransform>
                                                     </materialDesign:PackIcon>
-                                                </StackPanel>
+                                                </Grid>
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
@@ -360,11 +398,17 @@
                                         HorizontalAlignment="Stretch" />
 
                                 <!-- ═══ زیرمنو — فرزندان با رنگ متمایز (گزارش شانزدهم
-                                     مالک: «گزینه‌های زیرمنو با رنگ متفاوت باشند») ═══ -->
+                                     مالک: «گزینه‌های زیرمنو با رنگ متفاوت باشند») ═══
+                                     ═══ چرخهٔ سی‌وسوم (گزارش نوزدهم مالک) ═══
+                                     «زیرمنوها کمی از سمت راست فاصله داشته باشند تا مشخص
+                                     باشد زیرمنو هستند»: حاشیهٔ راست ۲۰px — در چیدمان RTL
+                                     سمت راست «آغاز» است و این تورفتگی، فرزندان را از
+                                     سربرگ طلایی والد و آیتم‌های تکی جدا و سلسله‌مراتب را
+                                     در نگاه اول آشکار می‌کند. -->
                                 <ListBox ItemsSource="{Binding Children}"
                                          Background="Transparent"
                                          BorderThickness="0"
-                                         Margin="10,2,0,4"
+                                         Margin="8,2,20,4"
                                          Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                          ScrollViewer.VerticalScrollBarVisibility="Disabled">
@@ -388,7 +432,9 @@
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
                                             <!-- فرزند گروه — رنگ آبی‌روشن متمایز + نوار تأکیدی
-                                                 در لبهٔ راست تا از آیتم‌های تکی جدا دیده شود -->
+                                                 در لبهٔ راست تا از آیتم‌های تکی جدا دیده شود.
+                                                 چرخهٔ سی‌وسوم: گرید دوستونه (قانون هم‌کلاسی‌ها) —
+                                                 عنوان ستون * و «…» در کمبود فضا؛ بیرون‌زدگی ممنوع -->
                                             <Button Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}"
                                                     Cursor="Hand"
@@ -399,13 +445,21 @@
                                                         <Border x:Name="ChildBd" Background="#0FFFFFFF"
                                                                 CornerRadius="8" Padding="8,7"
                                                                 SnapsToDevicePixels="True">
-                                                            <StackPanel Orientation="Horizontal">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <!-- نوار تأکیدی -->
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <!-- آیکون -->
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <!-- عنوان -->
+                                                                </Grid.ColumnDefinitions>
                                                                 <!-- نوار تأکیدی متمایز — لبهٔ راست (RTL) -->
-                                                                <Border Width="3" CornerRadius="2"
+                                                                <Border Grid.Column="0" Width="3" CornerRadius="2"
                                                                         Background="#7FD3FF"
                                                                         Margin="0,0,8,0"
                                                                         VerticalAlignment="Stretch" />
-                                                                <materialDesign:PackIcon Width="17" Height="17"
+                                                                <materialDesign:PackIcon Grid.Column="1" Width="17" Height="17"
                                                                                          VerticalAlignment="Center">
                                                                                          <materialDesign:PackIcon.Kind>
                                                                                              <MultiBinding Converter="{StaticResource IconSetKind}">
@@ -420,12 +474,13 @@
                                                                         </MultiBinding>
                                                                     </materialDesign:PackIcon.Foreground>
                                                                 </materialDesign:PackIcon>
-                                                                <TextBlock Text="{Binding Title}"
+                                                                <TextBlock Grid.Column="2" Text="{Binding Title}"
                                                                            FontSize="12.5"
                                                                            Foreground="#BBDEFB"
                                                                            Margin="9,0,0,0"
-                                                                           VerticalAlignment="Center" />
-                                                            </StackPanel>
+                                                                           VerticalAlignment="Center"
+                                                                           TextTrimming="CharacterEllipsis" />
+                                                            </Grid>
                                                         </Border>
                                                         <ControlTemplate.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
@@ -471,6 +526,19 @@
                             <TextBlock Text="خروج از حساب" Margin="8,0,0,0" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+
+                    <!-- ═══ نشان نسخهٔ در حال اجرا — چرخهٔ سی‌وسوم (گزارش نوزدهم مالک) ═══
+                         سومین گزارش پیاپی «عنوان گروه‌های منو دیده نمی‌شود» در حالی که
+                         رفعش در دو رلیز قبل هم اعمال شده بود؛ محتمل‌ترین علت، ماندن
+                         بیلد قدیمی روی ایستگاه است (BAML کش‌شده یا جایگزینی‌نشدن فایل).
+                         این نشانِ همیشه‌نمایان زیر دکمهٔ خروج، تک‌منبعی همان AppInfo.VersionText
+                         (ویژگی Version فایل ساخت) است تا در یک نگاه مشخص شود نسخهٔ
+                         در حال اجرا کدام است — اگر پس از آپدیت این عدد تازه نشده،
+                         بیلد/کش ایستایش تازه نیست و باید Clean و بازبیلد شود. -->
+                    <TextBlock Text="{x:Static helpers:AppInfo.VersionText}"
+                               FontSize="10" Foreground="#9FB6D4" Opacity="0.75"
+                               HorizontalAlignment="Center" Margin="0,10,0,0"
+                               ToolTip="نسخهٔ در حال اجرای برنامه — پس از هر به‌روزرسانی باید تازه باشد؛ اگر نبود، بیلد ایستگاه شما تازه نشده است" />
                 </StackPanel>
             </Grid>
         </Border>
