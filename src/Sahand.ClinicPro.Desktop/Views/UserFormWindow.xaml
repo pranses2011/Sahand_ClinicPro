@@ -85,7 +85,12 @@
                         <ItemsControl ItemsSource="{Binding Roles}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <CheckBox Margin="6,3">
+                                    <!-- ═══ اصلاح چرخهٔ سی‌ویکم (گزارش مالک): «تب نقش‌ها نقش کاربر
+                                         را نشان نمی‌دهد و ذخیره نمی‌شود» — چک‌باکس فاقد بایندینگ
+                                         IsChecked بود؛ هم نمایش نقش‌های فعلی کاربر (OneWay از سرور)
+                                         و هم ذخیرهٔ انتخاب‌ها (TwoWay به RoleCheckItem.IsChecked که
+                                         در SaveAsync به roleIds ارسال می‌شود) اکنون کار می‌کند ═══ -->
+                                    <CheckBox Margin="6,3" IsChecked="{Binding IsChecked, Mode=TwoWay}">
                                         <CheckBox.Content>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />

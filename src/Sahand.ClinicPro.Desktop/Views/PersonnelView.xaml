@@ -135,7 +135,9 @@
                                         CommandParameter="{Binding}" Foreground="#1565C0">
                                     <materialDesign:PackIcon Kind="AccountEdit" Width="18" Height="18" />
                                 </Button>
-                                <Button Style="StaticResource App.RowIconButton}"
+                                <!-- اصلاح چرخهٔ سی‌ویکم: آکولاد باز جاافتاده در StaticResource باعث
+                                     XamlParseException (رشته به‌جای Style) و کرش کل صفحهٔ پرسنل می‌شد -->
+                                <Button Style="{StaticResource App.RowIconButton}"
                                         ToolTip="ویرایش اطلاعات حقوقی — حقوق پایه و درصد از سود"
                                         Command="{Binding DataContext.EditSalaryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}" Foreground="#2E7D32">
