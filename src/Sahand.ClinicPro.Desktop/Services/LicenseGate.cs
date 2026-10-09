@@ -15,11 +15,22 @@ public sealed class LicenseStatusEnvelope
     public LicenseStatusData? Data { get; set; }
 }
 
-/// <summary>دادهٔ وضعیت لایسنس — فقط فیلدهایی که گیت ورود نیاز دارد</summary>
+/// <summary>دادهٔ وضعیت لایسنس — فیلدهای مورد نیاز گیت ورود + پیام سرور</summary>
 public sealed class LicenseStatusData
 {
     /// <summary>لایسنس معتبر و فعال است؟</summary>
     public bool IsValid { get; set; }
+
+    /// <summary>
+    /// پیام سرور لایسنس — چرخهٔ بیست‌وهفتم (گزارش هجدهم مالک):
+    /// «پیام‌های سرور لایسنس در برنامه نمایش داده شود» — پیام متنی پنل
+    /// (مانند هشدار نزدیکی انقضا یا اطلاعیهٔ فروشنده) که سرور API در
+    /// پاسخ license/status برمی‌گرداند و پیش‌تر نادیده گرفته می‌شد.
+    /// </summary>
+    public string? Message { get; set; }
+
+    /// <summary>تاریخ انقضا — برای شمارش روزهای باقیمانده در نوار وضعیت</summary>
+    public DateTime? ExpiryDate { get; set; }
 }
 
 /// <summary>
@@ -59,6 +70,35 @@ public static class LicenseGate
             { IsValid: true } => Verdict.Valid,
             { IsValid: false } => Verdict.Invalid,
             _ => Verdict.Unknown,
+        };
+    }
+
+    /// <summary>
+    /// نتیجهٔ بررسی تفصیلی لایسنس — چرخهٔ بیست‌وهفتم (گزارش هجدهم مالک):
+    /// علاوه بر داوری، پیام سرور و روزهای باقیمانده هم برگردانده می‌شود تا
+    /// نوار وضعیت برنامه و اعلان سراسری، پیام پنل لایسنس را به کاربر برسانند.
+    /// </summary>
+    public sealed record LicenseCheckResult(Verdict Verdict, string? Message, DateTime? ExpiryDate)
+    {
+        /// <summary>شمار روزهای باقیمانده تا انقضا — تهی یعنی دائمی/نامعلوم</summary>
+        public int? DaysRemaining => ExpiryDate is { } d
+            ? (int)(d.Date - DateTime.Now.Date).TotalDays
+            : null;
+    }
+
+    /// <summary>
+    /// بررسی تفصیلی — همان CheckAsync اما پیام و انقضای سرور را هم برمی‌گرداند.
+    /// خطای شبکه ⇒ Unknown با پیام تهی (درمانگاه نباید به‌خاطر قطعی لحظه‌ای از
+    /// کار بیفتد — همان سیاست fail-open CheckAsync).
+    /// </summary>
+    public static async Task<LicenseCheckResult> CheckDetailedAsync(IApiClient api, CancellationToken ct = default)
+    {
+        var envelope = await api.GetAsync<LicenseStatusEnvelope>("license/status", ct);
+        return envelope?.Data switch
+        {
+            { IsValid: true } d => new LicenseCheckResult(Verdict.Valid, d.Message, d.ExpiryDate),
+            { IsValid: false } d => new LicenseCheckResult(Verdict.Invalid, d.Message, d.ExpiryDate),
+            _ => new LicenseCheckResult(Verdict.Unknown, null, null),
         };
     }
 }

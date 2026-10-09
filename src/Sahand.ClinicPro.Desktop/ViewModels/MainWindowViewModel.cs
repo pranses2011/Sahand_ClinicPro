@@ -72,9 +72,12 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private string _connectionStatus = "متصل";
 
-    /// <summary>وضعیت لایسنس در StatusBar</summary>
+    /// <summary>وضعیت لایسنس در StatusBar — چرخهٔ بیست‌وهفتم: از سرور تازه می‌شود</summary>
     [ObservableProperty]
     private string _licenseStatus = "لایسنس فعال";
+
+    /// <summary>تایمر تازه‌سازی وضعیت لایسنس — هر ۳۰ دقیقه (چرخهٔ بیست‌وهفتم)</summary>
+    private readonly System.Windows.Threading.DispatcherTimer? _licenseTimer;
 
     /// <summary>تعداد اعلان‌های خوانده‌نشده</summary>
     [ObservableProperty]
@@ -348,6 +351,49 @@ public partial class MainWindowViewModel : ObservableObject
 
         // شروع اتصال پس از ورود — MainWindow فقط با توکن معتبر باز می‌شود
         _ = _realtime.StartAsync();
+
+        // ═══ چرخهٔ بیست‌وهفتم (گزارش هجدهم مالک) — پیام‌های سرور لایسنس ═══
+        // «پیام‌های سرور لایسنس در برنامه نمایش داده شود»: نوار وضعیت از متن
+        // ثابتِ «لایسنس فعال» به وضعیت واقعی + روزهای باقیمانده تبدیل می‌شود و
+        // پیام پنل (هشدار انقضا/اطلاعیهٔ فروشنده) با اعلان شناور سراسری به
+        // کاربر می‌رسد. هر ۳۰ دقیقه هم تازه می‌شود (هم‌قدم با تپ‌قلب سرور).
+        _ = LoadLicenseStatusAsync();
+        _licenseTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMinutes(30)
+        };
+        _licenseTimer.Tick += (_, _) => _ = LoadLicenseStatusAsync();
+        _licenseTimer.Start();
+    }
+
+    /// <summary>
+    /// بارگذاری وضعیت لایسنس در نوار وضعیت + نمایش پیام سرور — چرخهٔ بیست‌وهفتم.
+    /// خطا هرگز جریان برنامه را متوقف نمی‌کند (متن پیش‌فرض باقی می‌ماند).
+    /// </summary>
+    private async Task LoadLicenseStatusAsync()
+    {
+        try
+        {
+            var check = await LicenseGate.CheckDetailedAsync(_api);
+
+            // متن نوار وضعیت — وضعیت + روزهای باقیمانده (فقط وقتی کم است)
+            LicenseStatus = check.Verdict switch
+            {
+                LicenseGate.Verdict.Valid => check.DaysRemaining is { } days and > 0 && days <= 30
+                    ? $"لایسنس فعال — {PersianDateHelper.ToPersianDigits(days.ToString())} روز باقیمانده"
+                    : "لایسنس فعال",
+                LicenseGate.Verdict.Invalid => "❌ لایسنس نامعتبر",
+                _ => "لایسنس — وضعیت نامعلوم"
+            };
+
+            // پیام سرور لایسنس → اعلان شناور سراسری (یادآوری تک‌باره در هر تازه‌سازی)
+            if (!string.IsNullOrWhiteSpace(check.Message))
+                _snackbar.Info($"🏛 سرور لایسنس: {check.Message}");
+        }
+        catch
+        {
+            // قطعی لحظه‌ای سرور — نوار وضعیت دست‌نخورده می‌ماند (fail-open)
+        }
     }
 
     /// <summary>فهرست آیتم‌های ناوبری</summary>

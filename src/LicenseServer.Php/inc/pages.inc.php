@@ -269,6 +269,11 @@ function ls_clinic_fields(?array $l = null): void
         . '<label>تلفن درمانگاه<input type="text" name="clinic_phone" value="' . $v('clinic_phone') . '" dir="ltr" placeholder="041-XXXXXXX"></label>'
         . '<label>ایمیل<input type="email" name="clinic_email" value="' . $v('clinic_email') . '" dir="ltr" placeholder="info@clinic.ir"></label>'
         . '<label>شهر<input type="text" name="clinic_city" value="' . $v('clinic_city') . '" placeholder="تبریز"></label>'
+        // ═══ چرخهٔ بیست‌وهفتم — تکمیل فیلدهای سرور لایسنس ═══
+        // «کد اقتصادی» و «شناسه ملی» درمانگاه — بخش اطلاعات درمانگاه برنامه
+        // این دو فیلد را از لایسنس می‌خواند؛ ستون‌ها/فیلدها در پنل تکمیل شد.
+        . '<label>کد اقتصادی<input type="text" name="economic_code" value="' . $v('economic_code') . '" dir="ltr" placeholder="411123456789"></label>'
+        . '<label>شناسه ملی<input type="text" name="national_id" value="' . $v('national_id') . '" dir="ltr" placeholder="14009933690"></label>'
         . '<label class="full2">نشانی کامل<input type="text" name="clinic_address" value="' . $v('clinic_address') . '" placeholder="خیابان، کوچه، پلاک…"></label>'
         . '</div>';
 }
@@ -383,6 +388,9 @@ if ($page === 'license_view') {
         . ($l['clinic_address'] ? ' — ' . ls_e((string)$l['clinic_address']) : '') . '</b></div>'
         . '<div><small>تلفن / ایمیل</small><b>' . ls_e($l['clinic_phone'] ?? '—')
         . ($l['clinic_email'] ? ' — ' . ls_e((string)$l['clinic_email']) : '') . '</b></div>'
+        // چرخهٔ بیست‌وهفتم — نمایش کد اقتصادی و شناسه ملی در جزئیات لایسنس
+        . '<div><small>کد اقتصادی</small><b>' . ls_e($l['economic_code'] ?? '—') . '</b></div>'
+        . '<div><small>شناسه ملی</small><b>' . ls_e($l['national_id'] ?? '—') . '</b></div>'
         . '<div><small>حداکثر کاربر / پزشک / بیمار / شعبه</small><b>'
         . ls_fa_num((string)$l['max_users']) . ' / ' . ls_fa_num((string)$l['max_doctors'])
         . ' / ' . ls_fa_num((string)$l['max_patients']) . ' / ' . ls_fa_num((string)$l['max_branches']) . '</b></div>'

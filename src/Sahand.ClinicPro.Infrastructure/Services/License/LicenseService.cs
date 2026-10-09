@@ -742,6 +742,9 @@ public sealed partial class LicenseService
                 ("Email", license.ClinicEmail),
                 ("City", license.ClinicCity),
                 ("Address", license.ClinicAddress),
+                // چرخهٔ بیست‌وهفتم — کد اقتصادی و شناسه ملی از پنل لایسنس
+                ("EconomicCode", license.ClinicEconomicCode),
+                ("NationalId", license.ClinicNationalId),
                 // شماره لایسنس = همان کلیدی که درمانگاه با آن فعال شده
                 ("LicenseNumber", license.LicenseKey),
             };
@@ -867,6 +870,13 @@ public sealed class PortalLicensePayload
     [JsonPropertyName("clinicCity")] public string? ClinicCity { get; set; }
     /// <summary>نشانی کامل</summary>
     [JsonPropertyName("clinicAddress")] public string? ClinicAddress { get; set; }
+    // ═══ چرخهٔ بیست‌وهفتم — تکمیل فیلدهای سرور لایسنس ═══
+    // «کد اقتصادی» و «شناسه ملی» درمانگاه — ستون/فیلد پنل PHP در همین چرخه
+    // تکمیل شد؛ بخش اطلاعات درمانگاه برنامه این دو را هم از لایسنس می‌گیرد.
+    /// <summary>کد اقتصادی درمانگاه</summary>
+    [JsonPropertyName("clinicEconomicCode")] public string? ClinicEconomicCode { get; set; }
+    /// <summary>شناسه ملی درمانگاه</summary>
+    [JsonPropertyName("clinicNationalId")] public string? ClinicNationalId { get; set; }
 
     /// <summary>روزهای باقیمانده</summary>
     [JsonPropertyName("daysRemaining")] public int? DaysRemaining { get; set; }

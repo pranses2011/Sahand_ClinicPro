@@ -26,6 +26,9 @@ CREATE TABLE IF NOT EXISTS ls_licenses (
     clinic_email        VARCHAR(160) NULL,
     clinic_city         VARCHAR(100) NULL,
     clinic_address      VARCHAR(300) NULL,
+    -- چرخهٔ بیست‌وهفتم — تکمیل فیلدهای سرور لایسنس: کد اقتصادی + شناسه ملی
+    economic_code       VARCHAR(50)  NULL,
+    national_id         VARCHAR(20)  NULL,
     max_users           INT NOT NULL DEFAULT 5,
     max_doctors         INT NOT NULL DEFAULT 10,
     max_patients        INT NOT NULL DEFAULT 5000,

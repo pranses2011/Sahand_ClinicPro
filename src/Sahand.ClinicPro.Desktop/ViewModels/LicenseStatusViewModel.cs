@@ -115,6 +115,19 @@ public partial class LicenseStatusViewModel : ViewModelBase
     [ObservableProperty]
     private string _statusColor = "#F9A825";
 
+    /// <summary>
+    /// پیام سرور لایسنس — چرخهٔ بیست‌وهفتم (گزارش هجدهم مالک):
+    /// «پیام‌های سرور لایسنس در برنامه نمایش داده شود» — پیام متنی پنل
+    /// (هشدار انقضای نزدیک، اطلاعیهٔ تمدید و…) که در پاسخ license/status
+    /// می‌آید و پیش‌تر نادیده گرفته می‌شد؛ در بنر هشدار بالای صفحه نمایش می‌یابد.
+    /// </summary>
+    [ObservableProperty]
+    private string? _serverMessage;
+
+    /// <summary>آیا پیام سرور برای نمایش هست؟ — برای پنهان‌سازی بنر وقتی پیامی نیست</summary>
+    [ObservableProperty]
+    private bool _hasServerMessage;
+
     /// <summary>محدودیت‌ها</summary>
     public ObservableCollection<LicenseLimitRow> Limits { get; } = new();
 
@@ -302,6 +315,11 @@ public partial class LicenseStatusViewModel : ViewModelBase
             LicenseKeyText = s.LicenseKey ?? "—";
             StatusText = s.IsValid ? "✅ فعال" : "❌ نامعتبر";
             StatusColor = s.IsValid ? "#2E7D32" : "#C62828";
+
+            // چرخهٔ بیست‌وهفتم: پیام سرور لایسنس در بنر بالای صفحه —
+            // پیام هر بار جای‌گذاری می‌شود؛ نبود پیام بنر را پنهان می‌کند
+            ServerMessage = string.IsNullOrWhiteSpace(s.Message) ? null : s.Message.Trim();
+            HasServerMessage = ServerMessage is not null;
 
             if (s.ExpiryDate is { } expiry)
             {

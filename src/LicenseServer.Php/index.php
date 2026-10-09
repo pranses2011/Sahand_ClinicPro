@@ -87,9 +87,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db->prepare(
             'INSERT INTO ls_licenses
              (license_key, license_type, clinic_name, clinic_phone, clinic_manager, clinic_email,
-              clinic_city, clinic_address, max_users, max_doctors,
+              clinic_city, clinic_address, economic_code, national_id, max_users, max_doctors,
               max_patients, max_branches, enabled_modules, issued_date, expiry_date, notes, created_at, updated_at)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())'
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())'
         )->execute([
             $key, $type,
             mb_substr(trim((string)($_POST['clinic_name'] ?? '')), 0, 200) ?: null,
@@ -98,6 +98,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mb_substr(trim((string)($_POST['clinic_email'] ?? '')), 0, 160) ?: null,
             mb_substr(trim((string)($_POST['clinic_city'] ?? '')), 0, 100) ?: null,
             mb_substr(trim((string)($_POST['clinic_address'] ?? '')), 0, 300) ?: null,
+            // چرخهٔ بیست‌وهفتم — کد اقتصادی و شناسه ملی درمانگاه
+            mb_substr(trim((string)($_POST['economic_code'] ?? '')), 0, 50) ?: null,
+            mb_substr(trim((string)($_POST['national_id'] ?? '')), 0, 20) ?: null,
             max(1, (int)($_POST['max_users'] ?? 5)),
             max(1, (int)($_POST['max_doctors'] ?? 10)),
             max(1, (int)($_POST['max_patients'] ?? 5000)),
@@ -133,7 +136,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ls_db()->prepare(
             'UPDATE ls_licenses SET
              clinic_name = ?, clinic_phone = ?, clinic_manager = ?, clinic_email = ?,
-             clinic_city = ?, clinic_address = ?, max_users = ?, max_doctors = ?,
+             clinic_city = ?, clinic_address = ?, economic_code = ?, national_id = ?,
+             max_users = ?, max_doctors = ?,
              max_patients = ?, max_branches = ?, enabled_modules = ?, notes = ?, updated_at = NOW()
              WHERE id = ?'
         )->execute([
@@ -143,6 +147,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mb_substr(trim((string)($_POST['clinic_email'] ?? '')), 0, 160) ?: null,
             mb_substr(trim((string)($_POST['clinic_city'] ?? '')), 0, 100) ?: null,
             mb_substr(trim((string)($_POST['clinic_address'] ?? '')), 0, 300) ?: null,
+            // چرخهٔ بیست‌وهفتم — کد اقتصادی و شناسه ملی درمانگاه
+            mb_substr(trim((string)($_POST['economic_code'] ?? '')), 0, 50) ?: null,
+            mb_substr(trim((string)($_POST['national_id'] ?? '')), 0, 20) ?: null,
             max(1, (int)($_POST['max_users'] ?? $l['max_users'])),
             max(1, (int)($_POST['max_doctors'] ?? $l['max_doctors'])),
             max(1, (int)($_POST['max_patients'] ?? $l['max_patients'])),

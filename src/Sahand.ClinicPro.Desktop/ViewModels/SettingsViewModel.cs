@@ -55,6 +55,10 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private string? _phone;
 
+    /// <summary>شهر — چرخهٔ بیست‌وهفتم: از پنل لایسنس همگام می‌شود و نمایش داده می‌شود</summary>
+    [ObservableProperty]
+    private string? _city;
+
     /// <summary>ایمیل</summary>
     [ObservableProperty]
     private string? _email;
@@ -417,7 +421,9 @@ public partial class SettingsViewModel : ViewModelBase
 
     /* ─── اطلاعات درمانگاه ─── */
 
-    /// <summary>بارگذاری اطلاعات درمانگاه از تنظیمات</summary>
+    /// <summary>بارگذاری اطلاعات درمانگاه از تنظیمات — چرخهٔ بیست‌وهفتم: شهر هم
+    /// خوانده و نمایش داده می‌شود (پنل لایسنس فیلد شهر جدا دارد و همگام‌ساز
+    /// آن را در کلید City ذخیره می‌کند ولی فرم نمایشش نمی‌داد)</summary>
     private async Task LoadClinicInfoAsync()
     {
         var response = await _api.GetAsync<SettingsResponse>("settings?category=ClinicInfo");
@@ -429,22 +435,15 @@ public partial class SettingsViewModel : ViewModelBase
         ManagerName = Value(map, "ManagerName");
         Phone = Value(map, "Phone");
         Email = Value(map, "Email");
+        City = Value(map, "City");
         Address = Value(map, "Address");
     }
 
-    /// <summary>ذخیره اطلاعات درمانگاه</summary>
-    [RelayCommand]
-    private async Task SaveClinicInfoAsync()
-    {
-        var entries = new Dictionary<string, string?>
-        {
-            ["ClinicName"] = ClinicName, ["LicenseNumber"] = LicenseNumber,
-            ["EconomicCode"] = EconomicCode, ["NationalId"] = NationalId,
-            ["ManagerName"] = ManagerName, ["Phone"] = Phone,
-            ["Email"] = Email, ["Address"] = Address
-        };
-        await SaveSettingsBatchAsync("ClinicInfo", entries);
-    }
+    // ═══ چرخهٔ بیست‌وهفتم — حذف SaveClinicInfoAsync ═══
+    // «اطلاعات درمانگاه فقط از سرور لایسنس قابل تغییر باشد»: دکمهٔ ذخیره در
+    // چرخه ۲۴ حذف شد ولی متد ذخیره‌ساز باقی مانده بود؛ برای اینکه هیچ مسیر
+    // نوشتنی از داخل برنامه روی ClinicInfo نماند، متد هم حذف شد — تنها مرجع
+    // تغییر، همگام‌ساز خودکار از پنل لایسنس است (SyncClinicInfoFromLicenseAsync).
 
     /* ─── ماژول‌ها ─── */
 

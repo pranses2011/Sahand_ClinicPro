@@ -584,6 +584,11 @@ function ls_license_payload(array $l): array
         'clinicEmail'    => (string)($l['clinic_email'] ?? ''),
         'clinicCity'     => (string)($l['clinic_city'] ?? ''),
         'clinicAddress'  => (string)($l['clinic_address'] ?? ''),
+        // ═══ چرخهٔ بیست‌وهفتم — تکمیل فیلدهای سرور لایسنس ═══
+        // کد اقتصادی و شناسه ملی درمانگاه — بخش اطلاعات درمانگاه برنامه این
+        // دو فیلد را از لایسنس می‌خواند (تنها مرجع تغییر، همین پنل است).
+        'clinicEconomicCode' => (string)($l['economic_code'] ?? ''),
+        'clinicNationalId'   => (string)($l['national_id'] ?? ''),
         // اطلاعات پشتیبانی — از پنل قابل ویرایش؛ کلاینت هنگام فعال‌سازی می‌گیرد و سراسر برنامه استفاده می‌کند
         'support'        => ls_support_info(),
     ];
@@ -834,6 +839,11 @@ function ls_db_migrate(): array
             // چرخه ۲۴ — تلفن درمانگاه (پنل مدیریت لایسنس از قبل فرم/نمایشش را دارد؛
             // ستونش در نصب‌های قدیمی نبود و اینجا تضمین می‌شود)
             'clinic_phone'         => 'VARCHAR(60) NULL',
+            // ═══ چرخهٔ بیست‌وهفتم — تکمیل فیلدهای سرور لایسنس ═══
+            // کد اقتصادی و شناسه ملی درمانگاه — با auto-install روی نصب‌های
+            // قدیمی هم به‌صورت خودکار افزوده می‌شوند (نصب مجدد لازم نیست)
+            'economic_code'        => 'VARCHAR(50) NULL',
+            'national_id'          => 'VARCHAR(20) NULL',
         ],
         'ls_messages'   => [
             'delivered_at' => 'DATETIME NULL',

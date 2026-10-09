@@ -33,6 +33,21 @@
         <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
 
+        <!-- ═══ چرخهٔ بیست‌وهفتم (گزارش هجدهم مالک) — بنر پیام سرور لایسنس ═══
+             «پیام‌های سرور لایسنس در برنامه نمایش داده شود» — پیام متنی پنل
+             (هشدار انقضای نزدیک/اطلاعیهٔ فروشنده) که در پاسخ license/status
+             می‌آید؛ با نبود پیام، بنر کامل پنهان است -->
+        <Border Grid.Row="1" Visibility="{Binding HasServerMessage, Converter={StaticResource BoolToVisibility}}"
+                Background="#FFF8E1" BorderBrush="#FFB300" BorderThickness="0.8" CornerRadius="8"
+                Padding="12,8" Margin="0,12,0,0">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="MessageAlertOutline" Width="20" Height="20"
+                                         Foreground="#E65100" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding ServerMessage}" FontSize="12.5" TextWrapping="Wrap"
+                           Foreground="#4E342E" VerticalAlignment="Center" Margin="8,0,0,0" />
+            </StackPanel>
+        </Border>
+
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="2">
             <!-- چرخه ۱۹ (گزارش سیزدهم مالک): در RTL مقدار Right یعنی سمت چپِ بصری —
                       ستون به کل عرض صفحه گسترش می‌یابد (Stretch) تا محتوا تمام‌صفحه دیده شود -->

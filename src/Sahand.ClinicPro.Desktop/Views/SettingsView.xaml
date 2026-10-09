@@ -128,6 +128,10 @@
                             <TextBox materialDesign:HintAssist.Hint="تلفن"
                                      Text="{Binding Phone, Mode=OneWay}" IsReadOnly="True"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                            <!-- چرخهٔ بیست‌وهفتم: شهر از پنل لایسنس همگام می‌شود ولی نمایش داده نمی‌شد -->
+                            <TextBox materialDesign:HintAssist.Hint="شهر"
+                                     Text="{Binding City, Mode=OneWay}" IsReadOnly="True"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
                             <TextBox materialDesign:HintAssist.Hint="ایمیل"
                                      Text="{Binding Email, Mode=OneWay}" IsReadOnly="True"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
