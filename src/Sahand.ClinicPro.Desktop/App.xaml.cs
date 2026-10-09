@@ -106,9 +106,12 @@ public partial class App : System.Windows.Application
             };
 
             // دکمهٔ بستن (X) هم همان تأیید را می‌گیرد — قانون «قبل از بستن بررسی شود»
+            // چرخهٔ بیست‌وهفتم: رفع هشدار CA2013 — ReferenceEquals روی bool شکسته‌شده
+            // همیشه false برمی‌گرداند (boxing) و پرچم مجوز بستن هرگز خوانده نمی‌شد؛
+            // الگوی استاندارد «is not true» جایگزین شد (همان الگوی FontHookedProperty بالا)
             window.Closing += (_, ce) =>
             {
-                if (!ReferenceEquals(window.GetValue(CloseAllowedProperty), true)
+                if (window.GetValue(CloseAllowedProperty) is not true
                     && !ConfirmCloseIfDirty(window))
                     ce.Cancel = true;
                 else
