@@ -161,11 +161,19 @@ public class RecordPhysioSessionCommandHandler : IRequestHandler<RecordPhysioSes
     }
 }
 
-/// <summary>فرمان ثبت معاینه چشم</summary>
+/// <summary>
+/// فرمان ثبت معاینه چشم — چرخهٔ بیست‌وهشتم: فیلدهای اندازه‌گیری که کلاینت
+/// ارسال می‌کرد ولی این فرمان نداشت (IOP چپ/راست، حدت بینایی، فاصلهٔ
+/// مردمک، دید رنگی) اضافه شدند؛ پیش‌تر این مقادیر در محل binding دور
+/// ریخته می‌شدند و در سابقهٔ بیمار ذخیره نمی‌شدند.
+/// </summary>
 public record SaveEyeExamCommand(
     long PatientId, long? VisitId,
     decimal? RightSphere, decimal? RightCylinder, int? RightAxis,
     decimal? LeftSphere, decimal? LeftCylinder, int? LeftAxis,
+    int? RightIop, int? LeftIop,
+    string? RightVisualAcuity, string? LeftVisualAcuity,
+    decimal? PupilDistance, string? ColorVision,
     string? Findings, string? EyewearPrescription) : IRequest<Result<long>>;
 
 /// <summary>گرداننده ثبت معاینه چشم</summary>
@@ -176,7 +184,7 @@ public class SaveEyeExamCommandHandler : IRequestHandler<SaveEyeExamCommand, Res
     /// <summary>سازنده با تزریق واحد کار</summary>
     public SaveEyeExamCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
-    /// <summary>اجرای ثبت معاینه چشم</summary>
+    /// <summary>اجرای ثبت معاینه چشم — همهٔ اندازه‌ها در رکورد بیمار می‌نشیند</summary>
     public async Task<Result<long>> Handle(SaveEyeExamCommand request, CancellationToken cancellationToken)
     {
         var exam = new EyeExamRecord
@@ -189,6 +197,13 @@ public class SaveEyeExamCommandHandler : IRequestHandler<SaveEyeExamCommand, Res
             LeftSphere = request.LeftSphere,
             LeftCylinder = request.LeftCylinder,
             LeftAxis = request.LeftAxis,
+            // چرخهٔ بیست‌وهشتم — پوشش کامل اندازه‌ها
+            RightIop = request.RightIop,
+            LeftIop = request.LeftIop,
+            RightVisualAcuity = request.RightVisualAcuity,
+            LeftVisualAcuity = request.LeftVisualAcuity,
+            PupilDistance = request.PupilDistance,
+            ColorVision = request.ColorVision,
             Findings = request.Findings,
             EyewearPrescription = request.EyewearPrescription
         };

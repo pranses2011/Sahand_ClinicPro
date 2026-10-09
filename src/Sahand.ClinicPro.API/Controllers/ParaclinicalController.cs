@@ -88,6 +88,81 @@ public class ParaclinicalController : ApiBaseController
         return ToResponse(result);
     }
 
+    /// <summary>
+    /// بازیابی آخرین چارت دندان و طرح درمان یک بیمار — چرخهٔ بیست‌وهشتم
+    /// (گزارش هجدهم مالک): «در دندانپزشکی مشخص نیست اطلاعات برای چه کسی
+    /// ذخیره و از کجا بازیابی می‌شود». این نقطهٔ پایانی، آخرین طرح درمانِ
+    /// ثبت‌شدهٔ بیمار را برمی‌گرداند: وضعیت تک‌تک دندان‌ها (نقشهٔ شماره →
+    /// وضعیت) + ردیف‌های طرح درمان + تاریخ ثبت. PlanDetails طرح به‌صورت
+    /// JSON ذخیره می‌شود و همین‌جا تجزیه می‌شود؛ طرح‌های متنی قدیمی بدون
+    /// چارت، فهرست ردیف خالی اما مشخصات طرح را برمی‌گردانند.
+    /// </summary>
+    /// <param name="patientId">شناسه بیمار</param>
+    [HttpGet("~/api/v1/dental/chart")]
+    [HasPermission("dental.create")]
+    public async Task<IActionResult> GetDentalChart([FromQuery] long patientId)
+    {
+        if (patientId <= 0)
+            return BadRequest(ApiResponse<object>.Failure("شناسه بیمار نامعتبر است"));
+
+        // آخرین طرح درمان بیمار (حذف‌نرم‌شده‌ها بی‌اثر)
+        var plan = await _unitOfWork.Repository<Domain.Entities.Paraclinical.DentalTreatmentPlan>()
+            .QueryableNoTracking
+            .Where(p => p.PatientId == patientId && !p.IsDeleted)
+            .OrderByDescending(p => p.Id)
+            .FirstOrDefaultAsync();
+
+        if (plan is null)
+            return Ok(ApiResponse<object>.Success(new
+            {
+                planId = (long?)null,
+                createdDateShamsi = (string?)null,
+                teeth = new Dictionary<string, int>(),
+                rows = Array.Empty<object>(),
+                note = "چارتی برای این بیمار ثبت نشده است"
+            }));
+
+        // تجزیهٔ JSON ذخیره‌شده در PlanDetails — ساختار:
+        // { "teeth": {"11": 2, ...}, "rows": [{"tooth":11,"procedure":"ترمیم","price":1500000,"status":"پیشنهاد"}] }
+        var teeth = new Dictionary<string, int>();
+        var rows = new List<object>();
+        if (!string.IsNullOrWhiteSpace(plan.PlanDetails))
+        {
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(plan.PlanDetails);
+                if (doc.RootElement.TryGetProperty("teeth", out var teethEl))
+                    foreach (var prop in teethEl.EnumerateObject())
+                        if (prop.Value.TryGetInt32(out var cond))
+                            teeth[prop.Name] = cond;
+                if (doc.RootElement.TryGetProperty("rows", out var rowsEl))
+                    foreach (var row in rowsEl.EnumerateArray())
+                        rows.Add(new
+                        {
+                            tooth = row.TryGetProperty("tooth", out var t) && t.TryGetInt32(out var tv) ? tv : 0,
+                            procedure = row.TryGetProperty("procedure", out var pr) ? pr.GetString() : null,
+                            price = row.TryGetProperty("price", out var p) && p.TryGetDecimal(out var pv) ? pv : 0m,
+                            status = row.TryGetProperty("status", out var s) ? s.GetString() : null
+                        });
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // طرح متنی قدیمی — بدون چارت؛ خود متن به‌عنوان یادداشت برمی‌گردد
+            }
+        }
+
+        return Ok(ApiResponse<object>.Success(new
+        {
+            planId = plan.Id,
+            createdDateShamsi = plan.CreatedDate.HasValue
+                ? Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(plan.CreatedDate.Value.ToDateTime(TimeOnly.MinValue))
+                : null,
+            teeth,
+            rows,
+            note = (string?)null
+        }));
+    }
+
     /// <summary>ثبت معاینه چشم‌پزشکی</summary>
     [HttpPost("~/api/v1/eye/exams")]
     [HasPermission("eye.create")]
@@ -97,6 +172,44 @@ public class ParaclinicalController : ApiBaseController
         if (result.IsSuccess)
             return CreatedResponse(result, "GetOrders", new { }, "معاینه چشم ثبت شد");
         return ToResponse(result);
+    }
+
+    /// <summary>
+    /// سابقهٔ معاینه‌های چشم یک بیمار — چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک):
+    /// «در چشم‌پزشکی مشخص نیست اطلاعات برای چه کسی ذخیره و از کجا بازیابی
+    /// می‌شود». ۲۰ معاینهٔ آخر بیمار (نزولی) با همهٔ اندازه‌ها برگردانده
+    /// می‌شود؛ کلاینت «آخرین» معاینه را در فرم می‌نشاند و باقی به‌عنوان
+    /// سابقهٔ قابل مرور نمایش داده می‌شوند.
+    /// </summary>
+    /// <param name="patientId">شناسه بیمار</param>
+    [HttpGet("~/api/v1/eye/exams")]
+    [HasPermission("eye.create")]
+    public async Task<IActionResult> GetEyeExams([FromQuery] long patientId)
+    {
+        if (patientId <= 0)
+            return BadRequest(ApiResponse<object>.Failure("شناسه بیمار نامعتبر است"));
+
+        var exams = await _unitOfWork.Repository<Domain.Entities.Paraclinical.EyeExamRecord>()
+            .QueryableNoTracking
+            .Where(e => e.PatientId == patientId && !e.IsDeleted)
+            .OrderByDescending(e => e.Id)
+            .Take(20)
+            .Select(e => new
+            {
+                e.Id,
+                dateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(e.CreatedAt),
+                e.VisitId,
+                od = new { sphere = e.RightSphere, cylinder = e.RightCylinder, axis = e.RightAxis,
+                           acuity = e.RightVisualAcuity, iop = e.RightIop },
+                os = new { sphere = e.LeftSphere, cylinder = e.LeftCylinder, axis = e.LeftAxis,
+                           acuity = e.LeftVisualAcuity, iop = e.LeftIop },
+                pd = e.PupilDistance,
+                colorVision = e.ColorVision,
+                e.Findings,
+                e.EyewearPrescription
+            })
+            .ToListAsync();
+        return Ok(ApiResponse<object>.Success(exams));
     }
 
     /// <summary>ثبت جلسه فیزیوتراپی</summary>
