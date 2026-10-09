@@ -40,6 +40,42 @@ public class HrController : ApiBaseController
     }
 
     /// <summary>
+    /// جزئیات یک پرسنل — چرخهٔ بیست‌وششم (گزارش هجدهم مالک):
+    /// بارگذاری فرم ویرایش با تمام فیلدهای ثبت
+    /// </summary>
+    [HttpGet("employees/{id:long}")]
+    [HasPermission("patients.view")]
+    public async Task<IActionResult> GetEmployeeById(long id)
+    {
+        var result = await _mediator.Send(new GetEmployeeByIdQuery(id));
+        return ToResponse(result);
+    }
+
+    /// <summary>
+    /// ویرایش کامل اطلاعات پرسنل — چرخهٔ بیست‌وششم (گزارش هجدهم مالک):
+    /// «در لیست پرسنل امکان ویرایش پرسنل وجود ندارد»
+    /// </summary>
+    [HttpPut("employees/{id:long}")]
+    [HasPermission("patients.create")]
+    public async Task<IActionResult> UpdateEmployee(long id, [FromBody] CreateEmployeeDto dto)
+    {
+        var result = await _mediator.Send(new UpdateEmployeeCommand(id, dto));
+        return ToResponse(result);
+    }
+
+    /// <summary>
+    /// حذف نرم پرسنل — چرخهٔ بیست‌وششم (گزارش هجدهم مالک):
+    /// «کلیدهای عملیاتی پرسنل ناقص‌اند» — رکورد پنهان می‌شود و سابقه‌ها سالم می‌مانند
+    /// </summary>
+    [HttpDelete("employees/{id:long}")]
+    [HasPermission("patients.create")]
+    public async Task<IActionResult> DeleteEmployee(long id)
+    {
+        var result = await _mediator.Send(new DeleteEmployeeCommand(id));
+        return ToResponse(result);
+    }
+
+    /// <summary>
     /// ویرایش اطلاعات حقوقی پرسنل — حقوق پایه + درصد حقوق از سود خدمات انجامی
     /// (چرخه نهم؛ درصد فقط از سود خدمات خود پرسنل اعمال می‌شود نه کل دریافتی)
     /// </summary>

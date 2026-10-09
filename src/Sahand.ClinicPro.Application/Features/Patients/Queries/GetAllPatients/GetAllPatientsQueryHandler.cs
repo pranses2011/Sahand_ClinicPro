@@ -29,7 +29,12 @@ public class GetAllPatientsQueryHandler : IRequestHandler<GetAllPatientsQuery, R
         CancellationToken cancellationToken)
     {
         var page = request.Page ?? new PagedRequest();
-        var query = _unitOfWork.Repository<Patient>().QueryableNoTracking;
+        // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — رفع «بیمهٔ بیمار اشتباه نشان داده می‌شود» ═══
+        // «تامین اجتماعی ثبت کرده‌ام ولی لیست آزاد نشان می‌دهد»: کوئری Includeِ
+        // ناوبری بیمه را نداشت → نام بیمه همیشه تهی → رابط با TargetNullValue
+        // «آزاد» می‌چپاند. اکنون بیمهٔ اصلی همراه ردیف‌ها بارگذاری می‌شود.
+        IQueryable<Patient> query = _unitOfWork.Repository<Patient>().QueryableNoTracking
+            .Include(p => p.InsuranceCompany);
 
         // جستجوی عمومی روی نام و کد ملی و موبایل و شماره پرونده
         if (!string.IsNullOrWhiteSpace(page.Search))

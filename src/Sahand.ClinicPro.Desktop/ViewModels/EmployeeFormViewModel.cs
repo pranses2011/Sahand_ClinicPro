@@ -17,6 +17,20 @@ public partial class EmployeeFormViewModel : ObservableObject
 {
     private readonly IApiClient _api;
 
+    /// <summary>
+    /// شناسهٔ پرسنل در حال ویرایش — چرخهٔ بیست‌وششم (گزارش هجدهم مالک):
+    /// «در لیست پرسنل امکان ویرایش پرسنل وجود ندارد». تهی = حالت ثبت جدید؛
+    /// مقدار‌دار = حالت ویرایش — فرم با داده‌های فعلی پرسنل پر و ذخیره
+    /// به PUT hr/employees/{id} می‌رود.
+    /// </summary>
+    private readonly long? _editEmployeeId;
+
+    /// <summary>عنوان فرم — «ثبت پرسنل جدید» یا «ویرایش پرسنل»</summary>
+    public string FormTitle => _editEmployeeId is null ? "ثبت پرسنل جدید" : "ویرایش پرسنل";
+
+    /// <summary>متن دکمهٔ ذخیره — «ثبت» یا «ذخیرهٔ تغییرات»</summary>
+    public string SaveButtonText => _editEmployeeId is null ? "ثبت پرسنل" : "ذخیرهٔ تغییرات";
+
     /// <summary>نام</summary>
     [ObservableProperty]
     private string _firstName = string.Empty;
@@ -189,12 +203,36 @@ public partial class EmployeeFormViewModel : ObservableObject
     /// <summary>رویداد ذخیره موفق</summary>
     public event EventHandler? SaveSucceeded;
 
-    /// <summary>سازنده با کلاینت API</summary>
+    /// <summary>سازندهٔ حالت ثبت — چرخه هجدهم</summary>
     public EmployeeFormViewModel(IApiClient api)
+        : this(api, editEmployeeId: null)
+    {
+    }
+
+    /// <summary>
+    /// سازندهٔ حالت ویرایش — چرخهٔ بیست‌وششم (گزارش هجدهم مالک):
+    /// با شناسهٔ پرسنل، فرم پس از بارگذاری لیست‌های مرجع با داده‌های
+    /// فعلی پرسنل پر می‌شود تا همان فرم به‌عنوان ویرایش باز شود.
+    /// </summary>
+    public EmployeeFormViewModel(IApiClient api, long? editEmployeeId)
     {
         _api = api;
-        // چرخه ۲۴: بارگذاری فهرست‌های مرجع سمت/دپارتمان برای ComboBoxها
-        _ = LoadLookupsAsync();
+        _editEmployeeId = editEmployeeId;
+        // چرخه ۲۴: بارگذاری فهرست‌های مرجع سمت/دپارتمان برای ComboBoxها —
+        // در حالت ویرایش، پس از آن داده‌های پرسنل هم بارگذاری می‌شود تا
+        // اندیکس سمت/دپارتمان فعلی از فهرستِ ازپیش‌بارگذاری‌شده انتخاب شود
+        _ = InitializeAsync();
+    }
+
+    /// <summary>
+    /// بارگذاری لیست‌های مرجع و سپس (در حالت ویرایش) داده‌های پرسنل —
+    /// ترتیب مهم است: ابتدا فهرست‌ها تا انتخاب اندیکس صحیح ممکن باشد
+    /// </summary>
+    private async Task InitializeAsync()
+    {
+        await LoadLookupsAsync();
+        if (_editEmployeeId is not null)
+            await LoadForEditAsync(_editEmployeeId.Value);
     }
 
     /// <summary>
@@ -263,6 +301,89 @@ public partial class EmployeeFormViewModel : ObservableObject
         (PendingPhotoBytes, PendingPhotoFileName) = picked.Value;
         PhotoPreview = PhotoTools.ToImage(PendingPhotoBytes);
         OnPropertyChanged(nameof(HasPendingPhoto));
+    }
+
+    /// <summary>
+    /// بارگذاری داده‌های فعلی پرسنل برای ویرایش — چرخهٔ بیست‌وششم
+    /// (گزارش هجدهم مالک): GET hr/employees/{id} و پُرکردن همهٔ فیلدها؛
+    /// سمت/دپارتمان از روی شناسه در فهرست مرجع انتخاب می‌شود و حقوق پایه
+    /// به رسم نمایشی (تومان/ریال کاربر) تبدیل می‌شود.
+    /// </summary>
+    private async Task LoadForEditAsync(long employeeId)
+    {
+        var response = await _api.GetAsync<EmployeeDetailResponse>($"hr/employees/{employeeId}");
+        var d = response?.Data;
+        if (d is null)
+        {
+            ErrorMessage = _api.LastError ?? "دریافت اطلاعات پرسنل ناموفق بود";
+            return;
+        }
+
+        FirstName = d.FirstName ?? string.Empty;
+        LastName = d.LastName ?? string.Empty;
+        NationalCode = d.NationalCode ?? string.Empty;
+        Mobile = d.Mobile ?? string.Empty;
+        PersonnelCode = d.PersonnelCode;
+        FieldOfStudy = d.FieldOfStudy;
+        EmergencyContact = d.EmergencyContact;
+        EmergencyPhone = d.EmergencyPhone;
+
+        // نوع استخدام و مقطع تحصیلی — اندیس صفرمبنه از مقدار عددی یک‌مبنای سرور
+        EmploymentTypeIndex = Math.Max(0, (int)d.EmploymentType - 1);
+        EducationLevelIndex = d.EducationLevel is null ? -1 : (int)d.EducationLevel - 1;
+
+        // حقوق — به رسم نمایشی کاربر (در حالت تومان مقدار ریالی/۱۰)
+        BaseSalary = Helpers.Money.ToDisplay(d.BaseSalary).ToString("0", System.Globalization.CultureInfo.InvariantCulture);
+        CommissionPercent = d.CommissionPercent.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+
+        // تاریخ استخدام میلادی → شمسی متن
+        if (d.HireDate is { } hd)
+        {
+            HireDateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper
+                .ToShamsi(hd);
+        }
+
+        // انتخاب سمت/دپارتمان فعلی از فهرست مرجع ازپیش‌بارگذاری‌شده
+        PositionIndex = FindLookupIndex(Positions, d.PositionId);
+        DepartmentIndex = FindLookupIndex(Departments, d.DepartmentId);
+    }
+
+    /// <summary>
+    /// یافتن اندیس گزینهٔ مرجع با شناسهٔ داده‌شده — -۱ یعنی در فهرست نیست
+    /// (مثلاً سمت حذف‌شده یا نبود مرجع)؛ ساختار فشرده برای خوانایی فرم
+    /// </summary>
+    private static int FindLookupIndex(System.Collections.ObjectModel.ObservableCollection<LookupOption> items, long? id)
+        => id is null
+            ? -1
+            : System.Linq.Enumerable.ToList(items).FindIndex(p => p.Id == id.Value);
+
+    /// <summary>پاسخ جزئیات پرسنل برای ویرایش — پاکت استاندارد</summary>
+    private sealed class EmployeeDetailResponse
+    {
+        public bool IsSuccess { get; set; }
+        public EmployeeDetailDto? Data { get; set; }
+    }
+
+    /// <summary>مدل جزئیات پرسنل — هم‌نام DTO سرور</summary>
+    private sealed class EmployeeDetailDto
+    {
+        public long Id { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string? NationalCode { get; set; }
+        public string? Mobile { get; set; }
+        public long? DepartmentId { get; set; }
+        public long? PositionId { get; set; }
+        public int EmploymentType { get; set; }
+        public decimal BaseSalary { get; set; }
+        public decimal CommissionPercent { get; set; }
+        public string? PersonnelCode { get; set; }
+        public DateTime? HireDate { get; set; }
+        public int? EducationLevel { get; set; }
+        public string? FieldOfStudy { get; set; }
+        public string? EmergencyContact { get; set; }
+        public string? EmergencyPhone { get; set; }
+        public bool HasPhoto { get; set; }
     }
 
     /// <summary>بزرگ‌نمایی عکس انتخاب‌شده</summary>
@@ -352,6 +473,33 @@ public partial class EmployeeFormViewModel : ObservableObject
             emergencyContact = string.IsNullOrWhiteSpace(EmergencyContact) ? null : EmergencyContact.Trim(),
             emergencyPhone = string.IsNullOrWhiteSpace(EmergencyPhone) ? null : EmergencyPhone.Trim()
         };
+
+        // ═══ چرخهٔ بیست‌وششم — دو مسیر ذخیره ═══
+        // ثبت جدید: POST با پاسخ شناسهٔ تازه (برای آپلود عکس)؛
+        // ویرایش: PUT روی شناسهٔ موجود (بدون پاسخ داده — فقط موفق/ناموفق)
+        if (_editEmployeeId is { } editId)
+        {
+            var ok = await _api.PutAsync($"hr/employees/{editId}", body);
+            if (!ok)
+            {
+                IsBusy = false;
+                ErrorMessage = _api.LastError ?? "ذخیرهٔ تغییرات ناموفق بود";
+                return;
+            }
+
+            // عکس تازه‌انتخاب‌شده هم روی همین پرسنل آپلود می‌شود
+            if (PendingPhotoBytes is { Length: > 0 })
+            {
+                var photoOk = await PhotoTools.UploadEmployeePhotoAsync(
+                    _api, editId, PendingPhotoBytes, PendingPhotoFileName ?? "photo.jpg");
+                if (!photoOk)
+                    ErrorMessage = "تغییرات ذخیره شد اما ذخیرهٔ عکس ناموفق بود";
+            }
+
+            IsBusy = false;
+            SaveSucceeded?.Invoke(this, EventArgs.Empty);
+            return;
+        }
 
         // پاسخ تایپ‌شده — شناسهٔ پرسنلِ تازه‌ثبت‌شده برای عکس لازم است
         var response = await _api.PostAsync<CreateEmployeeResponse>("hr/employees", body);

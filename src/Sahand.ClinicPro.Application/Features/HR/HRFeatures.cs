@@ -17,6 +17,18 @@ public record EmployeeListDto(
     decimal BaseSalary = 0m, decimal CommissionPercent = 0m,
     bool HasPhoto = false); // چرخه هجدهم: عکس پروفایل موجود است؟
 
+/// <summary>
+/// جزئیات کامل پرسنل برای فرم ویرایش — چرخهٔ بیست‌وششم (گزارش هجدهم مالک):
+/// «در لیست پرسنل امکان ویرایش پرسنل وجود ندارد»؛ فرم ویرایش به تمام
+/// فیلدهای فرم ثبت نیاز دارد تا همان فرم در حالت ویرایش باز شود.
+/// </summary>
+public record EmployeeDetailDto(
+    long Id, string FirstName, string LastName, string? NationalCode, string? Mobile,
+    long? DepartmentId, long? PositionId,
+    EmploymentType EmploymentType, decimal BaseSalary, decimal CommissionPercent,
+    string? PersonnelCode, DateOnly? HireDate, EducationLevel? EducationLevel,
+    string? FieldOfStudy, string? EmergencyContact, string? EmergencyPhone, bool HasPhoto);
+
 /// <summary>درخواست ثبت پرسنل — چرخه بیست‌وچهارم (گزارش هفدهم مالک):
 /// فیلدهای «چند مورد دیگر» فرم پرسنل مطابق اسکرین‌شات افزوده شدند:
 /// کد پرسنلی، تاریخ استخدام، تحصیلات، رشتهٔ تحصیلی و تماس اضطراری</summary>
@@ -109,6 +121,147 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
 /// </summary>
 public record UpdateEmployeeSalaryCommand(
     long EmployeeId, decimal BaseSalary, decimal CommissionPercent) : IRequest<Result>;
+
+/// <summary>
+/// پرس‌وجوی جزئیات یک پرسنل — چرخهٔ بیست‌وششم (گزارش هجدهم مالک):
+/// بارگذاری فرم ویرایش پرسنل با تمام فیلدهای ثبت
+/// </summary>
+public record GetEmployeeByIdQuery(long EmployeeId) : IRequest<Result<EmployeeDetailDto>>;
+
+/// <summary>گرداننده جزئیات پرسنل</summary>
+public class GetEmployeeByIdQueryHandler : IRequestHandler<GetEmployeeByIdQuery, Result<EmployeeDetailDto>>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده با تزریق واحد کار</summary>
+    public GetEmployeeByIdQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>اجرای پرس‌وجو — موجود نیست یا حذف‌شدهٔ نرم است → NotFound</summary>
+    public async Task<Result<EmployeeDetailDto>> Handle(GetEmployeeByIdQuery request,
+        CancellationToken cancellationToken)
+    {
+        var dto = await _unitOfWork.Repository<Employee>().QueryableNoTracking
+            .Where(e => e.Id == request.EmployeeId && !e.IsDeleted)
+            .Select(e => new EmployeeDetailDto(
+                e.Id, e.FirstName, e.LastName, e.NationalCode, e.Mobile,
+                e.DepartmentId, e.PositionId,
+                e.EmploymentType ?? EmploymentType.FullTime,
+                e.BaseSalary, e.CommissionPercent,
+                e.PersonnelCode, e.HireDate, e.EducationLevel,
+                e.FieldOfStudy, e.EmergencyContact, e.EmergencyPhone,
+                e.ProfilePicture != null && e.ProfilePicture != ""))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return dto is null
+            ? Result<EmployeeDetailDto>.Failure(Error.NotFound("پرسنل", request.EmployeeId))
+            : Result<EmployeeDetailDto>.Success(dto);
+    }
+}
+
+/// <summary>
+/// فرمان ویرایش کامل اطلاعات پرسنل — چرخهٔ بیست‌وششم (گزارش هجدهم مالک):
+/// همان فیلدهای فرم ثبت؛ کد ملی یکتایی‌اش فقط نسبت به «دیگران» سنجیده
+/// می‌شود و تاریخ استخدامِ ارسال‌نشده دست‌نخورده می‌ماند.
+/// </summary>
+public record UpdateEmployeeCommand(long EmployeeId, CreateEmployeeDto Dto) : IRequest<Result>;
+
+/// <summary>اعتبارسنج ویرایش پرسنل</summary>
+public class UpdateEmployeeCommandValidator : AbstractValidator<UpdateEmployeeCommand>
+{
+    /// <summary>قواعد اعتبارسنجی — همان قواعد ثبت</summary>
+    public UpdateEmployeeCommandValidator()
+    {
+        RuleFor(x => x.EmployeeId).GreaterThan(0).WithMessage("شناسه پرسنل نامعتبر است");
+        RuleFor(x => x.Dto.FirstName).NotEmpty().WithMessage("نام الزامی است");
+        RuleFor(x => x.Dto.LastName).NotEmpty().WithMessage("نام خانوادگی الزامی است");
+        RuleFor(x => x.Dto.NationalCode)
+            .Must(Common.Helpers.NationalCodeValidator.IsValid).WithMessage("کد ملی نامعتبر است");
+        RuleFor(x => x.Dto.Mobile).Matches("^09\\d{9}$").WithMessage("موبایل معتبر نیست");
+        RuleFor(x => x.Dto.BaseSalary).GreaterThanOrEqualTo(0)
+            .WithMessage("حقوق پایه نمی‌تواند منفی باشد");
+        RuleFor(x => x.Dto.CommissionPercent).InclusiveBetween(0, 100)
+            .WithMessage("درصد حقوق از سود خدمات باید بین صفر تا صد باشد");
+    }
+}
+
+/// <summary>گرداننده ویرایش کامل پرسنل</summary>
+public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeCommand, Result>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده با تزریق واحد کار</summary>
+    public UpdateEmployeeCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>اجرای ویرایش — یکتایی کد ملی با استثنای خود رکورد</summary>
+    public async Task<Result> Handle(UpdateEmployeeCommand request, CancellationToken cancellationToken)
+    {
+        var dto = request.Dto;
+
+        var employee = await _unitOfWork.Repository<Employee>().QueryableTracking
+            .FirstOrDefaultAsync(e => e.Id == request.EmployeeId && !e.IsDeleted, cancellationToken);
+        if (employee is null)
+            return Result.Failure(Error.NotFound("پرسنل", request.EmployeeId));
+
+        // یکتایی کد ملی — فقط نسبت به سایر پرسنل (خود رکورد مستثناست)
+        var duplicateNational = await _unitOfWork.Repository<Employee>().QueryableNoTracking
+            .AnyAsync(e => e.Id != request.EmployeeId && !e.IsDeleted
+                && dto.NationalCode != null && e.NationalCode == dto.NationalCode,
+                cancellationToken);
+        if (duplicateNational)
+            return Result.Failure(new Error("DUPLICATE", "پرسنل دیگری با این کد ملی ثبت شده است"));
+
+        employee.FirstName = dto.FirstName;
+        employee.LastName = dto.LastName;
+        employee.NationalCode = dto.NationalCode;
+        employee.Mobile = dto.Mobile;
+        employee.DepartmentId = dto.DepartmentId;
+        employee.PositionId = dto.PositionId;
+        employee.EmploymentType = dto.EmploymentType;
+        employee.BaseSalary = dto.BaseSalary;
+        employee.CommissionPercent = dto.CommissionPercent;
+        employee.PersonnelCode = dto.PersonnelCode;
+        employee.HireDate = dto.HireDate ?? employee.HireDate; // تهی = بدون تغییر
+        employee.EducationLevel = dto.EducationLevel;
+        employee.FieldOfStudy = dto.FieldOfStudy;
+        employee.EmergencyContact = dto.EmergencyContact;
+        employee.EmergencyPhone = dto.EmergencyPhone;
+
+        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+        return Result.Success();
+    }
+}
+
+/// <summary>
+/// فرمان حذف نرم پرسنل — چرخهٔ بیست‌وششم (گزارش هجدهم مالک):
+/// «کلیدهای عملیاتی پرسنل ناقص‌اند»؛ حذف، رکورد را به‌صورت نرم پنهان
+/// می‌کند (سابقهٔ مالی/حضور مرتبط سالم می‌ماند) و پرسنل را غیرفعال می‌کند.
+/// </summary>
+public record DeleteEmployeeCommand(long EmployeeId) : IRequest<Result>;
+
+/// <summary>گرداننده حذف نرم پرسنل</summary>
+public class DeleteEmployeeCommandHandler : IRequestHandler<DeleteEmployeeCommand, Result>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده با تزریق واحد کار</summary>
+    public DeleteEmployeeCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>اجرای حذف نرم + غیرفعال‌سازی</summary>
+    public async Task<Result> Handle(DeleteEmployeeCommand request, CancellationToken cancellationToken)
+    {
+        var employee = await _unitOfWork.Repository<Employee>().QueryableTracking
+            .FirstOrDefaultAsync(e => e.Id == request.EmployeeId && !e.IsDeleted, cancellationToken);
+        if (employee is null)
+            return Result.Failure(Error.NotFound("پرسنل", request.EmployeeId));
+
+        employee.IsDeleted = true;
+        employee.IsActive = false;
+        employee.DeletedAt = DateTime.UtcNow;
+        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        return Result.Success();
+    }
+}
 
 /// <summary>اعتبارسنج ویرایش اطلاعات حقوقی</summary>
 public class UpdateEmployeeSalaryCommandValidator : AbstractValidator<UpdateEmployeeSalaryCommand>

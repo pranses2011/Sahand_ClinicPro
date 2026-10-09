@@ -347,6 +347,58 @@ public partial class AdminViewModel : ViewModelBase
         _ = LoadEmployeesAsync();
     }
 
+    /// <summary>
+    /// ویرایش کامل اطلاعات پرسنل — چرخهٔ بیست‌وششم (گزارش هجدهم مالک):
+    /// «در لیست پرسنل امکان ویرایش پرسنل وجود ندارد». همان فرم ثبت، این بار
+    /// در حالت ویرایش با شناسهٔ پرسنل باز می‌شود و پس از بستن فهرست بازخوانی
+    /// می‌شود تا تغییرات بی‌درنگ دیده شوند.
+    /// </summary>
+    [RelayCommand]
+    private void EditEmployee(EmployeeRow? row)
+    {
+        if (row is null) return;
+
+        var vm = new EmployeeFormViewModel(_api, editEmployeeId: row.Id);
+        var window = new EmployeeFormWindow(vm)
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        window.ShowDialog();
+        _ = LoadEmployeesAsync();
+    }
+
+    /// <summary>
+    /// حذف نرم پرسنل — چرخهٔ بیست‌وششم (گزارش هجدهم مالک):
+    /// «کلیدهای عملیاتی پرسنل ناقص‌اند». با تأیید دیالوگ فارسی خود برنامه،
+    /// رکورد حذف نرم می‌شود (سابقهٔ مالی/حضور سالم می‌ماند) و فهرست بازخوانی
+    /// می‌شود.
+    /// </summary>
+    [RelayCommand]
+    private async Task DeleteEmployeeAsync(EmployeeRow? row)
+    {
+        if (row is null) return;
+
+        // دیالوگ فارسی خود برنامه — نه کادر پیام ویندوز (قانون مالک)
+        var answer = Views.AppDialog.Confirm("حذف پرسنل",
+            $"پرسنل «{row.FullName}» حذف شود؟\nحذف نرم است — سوابق مالی و حضور او سالم می‌مانند.",
+            Views.AppDialogIcon.Question);
+        if (answer != true) return;
+
+        IsBusy = true;
+        var ok = await _api.DeleteAsync($"hr/employees/{row.Id}");
+        IsBusy = false;
+
+        if (ok)
+        {
+            StatusMessage = $"پرسنل «{row.FullName}» حذف شد";
+            await LoadEmployeesAsync();
+        }
+        else
+        {
+            ErrorMessage = _api.LastError ?? "حذف پرسنل ناموفق بود";
+        }
+    }
+
     /// <summary>بارگذاری تاریخچه پشتیبان</summary>
     [RelayCommand]
     public async Task LoadBackupsAsync()

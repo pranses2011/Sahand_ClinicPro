@@ -43,6 +43,9 @@ public class SearchPatientsQueryHandler : IRequestHandler<SearchPatientsQuery, R
 
         var patients = await _unitOfWork.Repository<Patient>()
             .QueryableNoTracking
+            // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — همان اصلاح فهرست اصلی ═══
+            // بدون Include بیمه، نام بیمه تهی می‌ماند و رابط «آزاد» می‌چپاند
+            .Include(p => p.InsuranceCompany)
             .Where(p => p.FirstName.Contains(term)
                         || p.LastName.Contains(term)
                         || p.NationalCode.Contains(term)

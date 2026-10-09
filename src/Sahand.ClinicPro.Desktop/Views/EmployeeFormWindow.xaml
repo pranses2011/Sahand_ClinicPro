@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:behaviors="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
-        Title="ثبت پرسنل"
+        xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        Title="{Binding FormTitle, Mode=OneWay}"
         Height="780" Width="880"
         MinHeight="620" MinWidth="680"
         FlowDirection="RightToLeft"
@@ -139,9 +140,12 @@
                       Text="{Binding DepartmentText, UpdateSourceTrigger=PropertyChanged}" />
 
             <!-- ردیف ۵: تاریخ استخدام (راست) + تحصیلات (چپ) -->
-            <TextBox Grid.Row="4" Grid.Column="0" Margin="0,12,0,0"
-                     materialDesign:HintAssist.Hint="تاریخ استخدام شمسی (مثل ۱۴۰۳/۰۵/۱۲ — خالی = امروز)"
-                     Text="{Binding HireDateShamsi, UpdateSourceTrigger=PropertyChanged}" MaxLength="10" />
+            <!-- ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک): «تاریخ استخدام از کنترل
+                 انتخابگر تاریخ استفاده بکن» — کنترل انتخابگر شمسی جایگزین TextBox
+                 متن‌خالی شد؛ DateShamsiText همان رشتهٔ شمسی را دوسویه نگه می‌دارد ═══ -->
+            <controls:PersianDatePicker Grid.Row="4" Grid.Column="0" Margin="0,12,0,0"
+                                         DateShamsiText="{Binding HireDateShamsi, Mode=TwoWay}"
+                                         Placeholder="تاریخ استخدام شمسی (خالی = امروز)" />
             <ComboBox Grid.Row="4" Grid.Column="2" Margin="0,12,0,0"
                       materialDesign:HintAssist.Hint="مقطع تحصیلی"
                       ItemsSource="{Binding EducationLevels}"
@@ -173,11 +177,12 @@
                         <ColumnDefinition Width="16" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <!-- چرخه بیست‌ویکم: جداکنندهٔ زندهٔ ۳ رقمی هنگام تایپ (گزارش پانزدهم مالک) -->
+                    <!-- چرخه بیست‌ویکم: جداکنندهٔ زندهٔ ۳ رقمی هنگام تایپ (گزارش پانزدهم مالک) —
+                         چرخهٔ بیست‌وششم: پیشوند واحد پول هم پویا شد (نشان ریال هاردکد حذف) -->
                     <TextBox Grid.Column="0"
                                  behaviors:MoneyInput.IsEnabled="True"
                                  behaviors:MoneyInput.NumericValue="{Binding BaseSalary, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
-                                 materialDesign:TextFieldAssist.PrefixText="﷼">
+                                 materialDesign:TextFieldAssist.PrefixText="{DynamicResource App.CurrencyLabel}">
                             <materialDesign:HintAssist.Hint>
                                 <TextBlock><Run Text="حقوق پایه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=") — ماهانه" /></TextBlock>
                             </materialDesign:HintAssist.Hint>
@@ -198,7 +203,7 @@
         <UniformGrid Columns="2">
             <Button Command="{Binding SaveCommand}"
                     Style="{StaticResource MaterialDesignRaisedButton}"
-                    Content="ثبت" Height="42" Margin="4" />
+                    Content="{Binding SaveButtonText, Mode=OneWay}" Height="42" Margin="4" />
             <Button Command="{Binding CancelCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     Content="انصراف" Height="42" Margin="4" />
