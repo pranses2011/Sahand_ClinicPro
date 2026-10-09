@@ -318,7 +318,9 @@ public partial class PersianCalendarControl : UserControl
                     Text = PersianDateHelper.ToPersianDigits(year.ToString()),
                     TextAlignment = TextAlignment.Center,
                     FontSize = 12.5,
-                    FontFamily = new FontFamily("Consolas"),
+                    // چرخهٔ ۲۶: فونت هاردکد حذف — سال شمسی با ارقام فارسی باید با
+                    // فونت وزیرمتن برنامه رسم شود نه فونت لاتین بدون ارقام فارسی
+                    FontFamily = Sahand.ClinicPro.Desktop.Helpers.FontAssets.Vazirmatn,
                 },
                 Margin = new Thickness(2),
                 MinHeight = 38,

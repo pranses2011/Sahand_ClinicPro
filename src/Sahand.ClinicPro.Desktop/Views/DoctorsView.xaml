@@ -120,7 +120,7 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="شماره نظام"
                                     Binding="{Binding MedicalLicenseNo, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
-                                    Width="105" FontFamily="Consolas" />
+                                    Width="105" FontFamily="{DynamicResource App.CodeFont}" />
                 <DataGridTemplateColumn Header="نام و نام‌خانوادگی" Width="170" SortMemberPath="FullName">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

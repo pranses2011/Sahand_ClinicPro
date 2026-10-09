@@ -51,7 +51,7 @@
                                      materialDesign:HintAssist.Hint="نشانی سرور لایسنس — مثلاً https://clinic-license.ea-fixer.ir"
                                      Text="{Binding PortalUrl, UpdateSourceTrigger=PropertyChanged}"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     FlowDirection="LeftToRight" FontFamily="Consolas" FontSize="12.5"
+                                     FlowDirection="LeftToRight" FontFamily="{DynamicResource App.CodeFont}" FontSize="12.5"
                                      Margin="0,0,8,0" VerticalAlignment="Center" />
                             <Button Grid.Column="1" Command="{Binding SavePortalUrlCommand}"
                                     Style="{StaticResource MaterialDesignRaisedButton}"
@@ -73,7 +73,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="{Binding LicenseKeyText}" FontSize="15" FontWeight="Bold" FontFamily="Consolas" />
+                            <TextBlock Text="{Binding LicenseKeyText}" FontSize="15" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
                             <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                 <TextBlock Text="انقضا: " FontSize="12" Opacity="0.7" VerticalAlignment="Center" />
                                 <TextBlock Text="{Binding ExpiryText}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" />
@@ -121,7 +121,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="کلید لایسنس — SCPRO-XXXXX-XXXXX-XXXXX"
                                      Text="{Binding ActivationKey, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="Consolas"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="{DynamicResource App.CodeFont}"
                                      Margin="0,0,8,0" />
                             <Button Grid.Column="1" Command="{Binding ActivateOnlineCommand}"
                                     Style="{StaticResource MaterialDesignRaisedButton}" Content="🔑 فعال‌سازی آنلاین" />

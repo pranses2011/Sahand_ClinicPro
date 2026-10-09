@@ -67,8 +67,12 @@ public partial class AdhocReportWindow : Window
             // گزارش در همان ستون اول با ArgumentException می‌شکست. راه‌حل:
             // مقداردهی فقط برای ستون‌های داده (Consolas) و بی‌اعتنایی به
             // ستون اول تا فونت را از پنجره ارث ببرد — هرگز null ست نمی‌شود.
+            // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) ═══ فونت هاردکد Consolas
+            // برای ستون‌های داده حذف شد — ارقام فارسی آن fallback می‌گرفت و با
+            // فونتی متفاوت رندر می‌شد؛ اکنون فونت وزیرمتن جاسازی‌شدهٔ برنامه
+            // اعمال می‌شود (قانون «فونت روی ارقام فارسی اعمال شود»)
             if (i > 0)
-                column.FontFamily = new System.Windows.Media.FontFamily("Consolas");
+                column.FontFamily = Sahand.ClinicPro.Desktop.Helpers.FontAssets.Vazirmatn;
 
             ResultsGrid.Columns.Add(column);
         }

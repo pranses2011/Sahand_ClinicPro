@@ -51,7 +51,7 @@
         <!-- کد -->
         <TextBox Grid.Row="2" materialDesign:HintAssist.Hint="کد اختصاری (اختیاری)"
                  Text="{Binding Code, UpdateSourceTrigger=PropertyChanged}"
-                 Margin="0,0,0,12" FontFamily="Consolas" FlowDirection="LeftToRight" />
+                 Margin="0,0,0,12" FontFamily="{DynamicResource App.CodeFont}" FlowDirection="LeftToRight" />
 
         <!-- نوع -->
         <ComboBox Grid.Row="3" materialDesign:HintAssist.Hint="نوع بیمه"

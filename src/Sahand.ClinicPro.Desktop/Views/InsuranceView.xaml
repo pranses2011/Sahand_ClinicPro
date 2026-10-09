@@ -54,7 +54,7 @@
                               IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="نام شرکت" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
-                            <DataGridTextColumn Header="کد" Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="100" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="کد" Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="100" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="نوع" Binding="{Binding TypeName, Converter={StaticResource PersianDigits}}" Width="100" />
                             <DataGridTextColumn Header="درصد پوشش" Width="100">
                                 <DataGridTextColumn.Binding>
@@ -155,7 +155,7 @@
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="شماره مطالبه" Binding="{Binding ClaimNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="شماره مطالبه" Binding="{Binding ClaimNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="بیمه" Binding="{Binding InsuranceName, Converter={StaticResource PersianDigits}}" Width="150" />
                             <DataGridTextColumn Header="دوره" Binding="{Binding PeriodText, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="170" />
                             <DataGridTextColumn Header="مبلغ ارسالی" Width="120">

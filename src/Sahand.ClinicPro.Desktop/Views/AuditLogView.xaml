@@ -70,7 +70,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="موجودیت" Binding="{Binding EntityName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" />
-                <DataGridTextColumn Header="شناسه" Binding="{Binding EntityId, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="70" FontFamily="Consolas" />
+                <DataGridTextColumn Header="شناسه" Binding="{Binding EntityId, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="70" FontFamily="{DynamicResource App.CodeFont}" />
                 <DataGridTextColumn Header="شرح" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" />
             </DataGrid.Columns>
         </DataGrid>
@@ -88,12 +88,12 @@
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="مقادیر قبلی (Old Values)" FontSize="11.5" FontWeight="SemiBold" Foreground="#C62828" Margin="0,0,0,4" />
                     <TextBlock Text="{Binding SelectedLog.FormattedOld, TargetNullValue='— ردیفی انتخاب نشده —'}"
-                               FontFamily="Consolas" FontSize="10.5" TextWrapping="Wrap" />
+                               FontFamily="{DynamicResource App.CodeFont}" FontSize="10.5" TextWrapping="Wrap" />
                 </StackPanel>
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="مقادیر جدید (New Values)" FontSize="11.5" FontWeight="SemiBold" Foreground="#2E7D32" Margin="0,0,0,4" />
                     <TextBlock Text="{Binding SelectedLog.FormattedNew, TargetNullValue='—'}"
-                               FontFamily="Consolas" FontSize="10.5" TextWrapping="Wrap" />
+                               FontFamily="{DynamicResource App.CodeFont}" FontSize="10.5" TextWrapping="Wrap" />
                 </StackPanel>
             </Grid>
         </Border>

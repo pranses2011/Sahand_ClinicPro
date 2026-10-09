@@ -83,8 +83,8 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="سایز" Binding="{Binding SizeText, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="Consolas" />
-                        <DataGridTextColumn Header="مسیر" Binding="{Binding FilePath, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" FontFamily="Consolas" FontSize="10.5" />
+                        <DataGridTextColumn Header="سایز" Binding="{Binding SizeText, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="{DynamicResource App.CodeFont}" />
+                        <DataGridTextColumn Header="مسیر" Binding="{Binding FilePath, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" FontFamily="{DynamicResource App.CodeFont}" FontSize="10.5" />
                         <DataGridTextColumn Header="حالت" Binding="{Binding IsAutomatic, Converter={StaticResource PersianDigits}}" Width="80" />
                     </DataGrid.Columns>
                 </DataGrid>
@@ -130,7 +130,7 @@
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="فایل: " Opacity="0.65" FontSize="11.5" Margin="0,4,0,0" />
                             <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4" Margin="0,4,0,0"
                                        Text="{Binding SelectedBackup.FilePath, Mode=OneWay, TargetNullValue=—}"
-                                       FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" />
+                                       FontFamily="{DynamicResource App.CodeFont}" FontSize="11" TextWrapping="Wrap" />
                         </Grid>
                         <!-- فایل ابری — فقط پشتیبان‌های ابری -->
                         <TextBlock Margin="0,6,0,0" FontSize="11.5" Opacity="0.8"
@@ -285,7 +285,7 @@
                                     <!-- فیلدهای S3 — فقط وقتی ارائه‌دهندهٔ S3 انتخاب شده -->
                                     <StackPanel Visibility="{Binding CloudProviderIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}" Margin="0,8,0,0">
                                         <TextBlock Text="نشانی نقطهٔ اتصال (Endpoint) — مثل s3.ir-thr-at1.arvanstorage.ir" FontSize="11" Margin="2,6,2,3" />
-                                        <TextBox Text="{Binding CloudEndpoint, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+                                        <TextBox Text="{Binding CloudEndpoint, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
                                         <Grid Margin="0,6,0,0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
@@ -294,21 +294,21 @@
                                             </Grid.ColumnDefinitions>
                                             <StackPanel Grid.Column="0">
                                                 <TextBlock Text="نام سطل (Bucket)" FontSize="11" Margin="2,4,2,3" />
-                                                <TextBox Text="{Binding CloudBucket, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+                                                <TextBox Text="{Binding CloudBucket, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
                                             </StackPanel>
                                             <StackPanel Grid.Column="2">
                                                 <TextBlock Text="ناحیه (Region)" FontSize="11" Margin="2,4,2,3" />
-                                                <TextBox Text="{Binding CloudRegion, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+                                                <TextBox Text="{Binding CloudRegion, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
                                             </StackPanel>
                                         </Grid>
                                         <TextBlock Text="پیشوند کلیدها در سطل (Prefix)" FontSize="11" Margin="2,8,2,3" />
-                                        <TextBox Text="{Binding CloudPrefix, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+                                        <TextBox Text="{Binding CloudPrefix, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
                                     </StackPanel>
 
                                     <!-- پوشهٔ محلی — فقط وقتی ارائه‌دهندهٔ local انتخاب شده -->
                                     <StackPanel Visibility="{Binding CloudProviderIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=2}" Margin="0,8,0,0">
                                         <TextBlock Text="پوشهٔ مقصد (روی سرور — مثل D:\CloudBackups یا مسیر شبکه)" FontSize="11" Margin="2,4,2,3" />
-                                        <TextBox Text="{Binding CloudLocalFolder, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+                                        <TextBox Text="{Binding CloudLocalFolder, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
                                     </StackPanel>
 
                                     <!-- کلیدهای دسترسی — خالی یعنی حفظ مقدار قبلی -->
@@ -320,11 +320,11 @@
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
                                             <TextBlock Text="کلید دسترسی (Access Key)" FontSize="11" Margin="2,4,2,3" />
-                                            <TextBox Text="{Binding CloudAccessKey, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+                                            <TextBox Text="{Binding CloudAccessKey, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
                                             <TextBlock Text="کلید رمزی (Secret Key)" FontSize="11" Margin="2,4,2,3" />
-                                            <TextBox Text="{Binding CloudSecretKey, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+                                            <TextBox Text="{Binding CloudSecretKey, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
                                         </StackPanel>
                                     </Grid>
                                     <TextBlock FontSize="10" Opacity="0.6" Margin="2,4,0,0" TextWrapping="Wrap"
@@ -332,7 +332,7 @@
                                     <TextBlock Text="«بله» یعنی کلیدها از قبل ذخیره‌اند — کادرهای خالی مقدار قبلی را حفظ می‌کنند." FontSize="10" Opacity="0.55" Margin="2,2,0,6" TextWrapping="Wrap" />
 
                                     <TextBlock Text="کلید رمزنگاری AES-256 فایل‌ها (اختیاری — برای رمزنگاری نسخه‌های ابری)" FontSize="11" Margin="2,4,2,3" />
-                                    <TextBox Text="{Binding CloudEncryptionKey, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="11.5" />
+                                    <TextBox Text="{Binding CloudEncryptionKey, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
 
                                     <CheckBox Content="بارگذاری خودکار به ابر پس از هر پشتیبان موفق" IsChecked="{Binding CloudAutoUpload}" Margin="2,10,2,6" />
 
@@ -367,14 +367,14 @@
                                                  HorizontalAlignment="Left" Margin="26,2,0,8" />
                             <CheckBox Content="بکاپ Differential هر (ساعت):" IsChecked="{Binding DiffEnabled}" Margin="2,6" />
                             <TextBox Text="{Binding DiffHours}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="Consolas" />
+                                     Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="{DynamicResource App.CodeFont}" />
                             <CheckBox Content="بکاپ Transaction Log هر (ساعت):" IsChecked="{Binding LogEnabled}" Margin="2,6" />
                             <TextBox Text="{Binding LogHours}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="Consolas" />
+                                     Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="{DynamicResource App.CodeFont}" />
 
                             <TextBlock Text="مسیر ذخیره محلی:" FontSize="12" Margin="2,10,0,4" />
                             <TextBox Text="{Binding BackupPath}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     FontFamily="Consolas" FontSize="11.5" />
+                                     FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
 
                             <Grid Margin="2,12,2,0">
                                 <Grid.ColumnDefinitions>
@@ -386,15 +386,15 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="نگهداری کامل (روز)" FontSize="11" Opacity="0.7" />
-                                    <TextBox Text="{Binding KeepFullDays}" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="Consolas" />
+                                    <TextBox Text="{Binding KeepFullDays}" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="{DynamicResource App.CodeFont}" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="نگهداری Diff (روز)" FontSize="11" Opacity="0.7" />
-                                    <TextBox Text="{Binding KeepDiffDays}" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="Consolas" />
+                                    <TextBox Text="{Binding KeepDiffDays}" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="{DynamicResource App.CodeFont}" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="4">
                                     <TextBlock Text="نگهداری Log (ساعت)" FontSize="11" Opacity="0.7" />
-                                    <TextBox Text="{Binding KeepLogHours}" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="Consolas" />
+                                    <TextBox Text="{Binding KeepLogHours}" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="{DynamicResource App.CodeFont}" />
                                 </StackPanel>
                             </Grid>
 

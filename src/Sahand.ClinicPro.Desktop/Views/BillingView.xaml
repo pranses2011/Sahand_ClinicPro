@@ -102,7 +102,7 @@
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="شماره" Binding="{Binding InvoiceNumber, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="شماره" Binding="{Binding InvoiceNumber, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="85" />
                             <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="*" />
                             <DataGridTextColumn Binding="{Binding Total, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="110"><DataGridTextColumn.Header><TextBlock><Run Text="مبلغ (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
@@ -160,12 +160,12 @@
                                                     <TextBlock Text="{Binding MethodText}" FontSize="10.5" Opacity="0.7" Margin="10,0,0,0" VerticalAlignment="Center" />
                                                 </StackPanel>
                                                 <TextBlock FontSize="10.5" Opacity="0.6" Margin="0,2,0,0">
-                                                    <Run Text="ساعت " /><Run Text="{Binding Time, Mode=OneWay}" FontFamily="Consolas" />
+                                                    <Run Text="ساعت " /><Run Text="{Binding Time, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
                                                     <Run Text=" — فاکتور " /><Run Text="{Binding InvoiceId, Mode=OneWay, TargetNullValue=—}" />
                                                 </TextBlock>
                                             </StackPanel>
                                             <TextBlock Grid.Column="1" Text="{Binding Amount, Mode=OneWay, Converter={StaticResource CurrencyRial}}"
-                                                       FontFamily="Consolas" FontWeight="Bold" Foreground="#2E7D32"
+                                                       FontFamily="{DynamicResource App.CodeFont}" FontWeight="Bold" Foreground="#2E7D32"
                                                        VerticalAlignment="Center" />
                                         </Grid>
                                     </Border>

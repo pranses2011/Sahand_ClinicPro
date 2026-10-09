@@ -134,7 +134,7 @@
                 <DataGridTextColumn Header="پرونده"
                                     Binding="{Binding MedicalRecordNo, Converter={StaticResource PersianDigits}}"
                                     Width="Auto" MinWidth="90"
-                                    FontFamily="Consolas"
+                                    FontFamily="{DynamicResource App.CodeFont}"
                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
 
                 <!-- ۳. نام و نام‌خانوادگی — ستون کشسان برای پرکردن عرض جدول -->
@@ -159,13 +159,13 @@
                 <DataGridTextColumn Header="کد ملی"
                                     Binding="{Binding NationalCode, Converter={StaticResource PersianDigits}}"
                                     Width="Auto" MinWidth="105"
-                                    FontFamily="Consolas" />
+                                    FontFamily="{DynamicResource App.CodeFont}" />
 
                 <!-- ۵. موبایل -->
                 <DataGridTextColumn Header="موبایل"
                                     Binding="{Binding Mobile, Converter={StaticResource PersianDigits}}"
                                     Width="Auto" MinWidth="110"
-                                    FontFamily="Consolas" />
+                                    FontFamily="{DynamicResource App.CodeFont}" />
 
                 <!-- ۶. بیمه — Badge رنگی -->
                 <DataGridTemplateColumn Header="بیمه" Width="Auto" MinWidth="90" SortMemberPath="InsuranceName">

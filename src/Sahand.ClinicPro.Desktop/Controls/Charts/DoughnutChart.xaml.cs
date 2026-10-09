@@ -129,7 +129,10 @@ public partial class DoughnutChart : UserControl
             row.Children.Add(new TextBlock
             {
                 Text = pct.ToString("0.#") + "٪", FontSize = 10.5, Opacity = 0.6,
-                VerticalAlignment = VerticalAlignment.Center, FontFamily = new FontFamily("Consolas"),
+                // چرخهٔ ۲۶: فونت هاردکد Consolas حذف — ارقام فارسی fallback می‌گرفت؛
+                // اکنون فونت وزیرمتن جاسازی‌شدهٔ برنامه (قانون «فونت روی ارقام فارسی»)
+                VerticalAlignment = VerticalAlignment.Center,
+                FontFamily = Sahand.ClinicPro.Desktop.Helpers.FontAssets.Vazirmatn,
             });
             LegendPanel.Children.Add(row);
 

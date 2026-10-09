@@ -67,7 +67,7 @@
                                                     <StackPanel Orientation="Horizontal">
                                                         <materialDesign:PackIcon Kind="Account" Width="16" Height="16" Opacity="0.6" VerticalAlignment="Center" />
                                                         <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" Margin="8,0,0,0" />
-                                                        <TextBlock Text="{Binding NationalCode}" Opacity="0.6" FontFamily="Consolas" Margin="12,0,0,0" />
+                                                        <TextBlock Text="{Binding NationalCode}" Opacity="0.6" FontFamily="{DynamicResource App.CodeFont}" Margin="12,0,0,0" />
                                                     </StackPanel>
                                                 </Button>
                                             </DataTemplate>
@@ -179,7 +179,7 @@
                                                         Command="{Binding DataContext.SelectSlotCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         CommandParameter="{Binding}"
                                                         ToolTip="{Binding PatientName, StringFormat='رزرو: {0}', TargetNullValue='آزاد — برای انتخاب کلیک کنید'}">
-                                                        <TextBlock Text="{Binding Time}" FontFamily="Consolas" FontSize="12">
+                                                        <TextBlock Text="{Binding Time}" FontFamily="{DynamicResource App.CodeFont}" FontSize="12">
                                                             <TextBlock.Style>
                                                                 <Style TargetType="TextBlock">
                                                                     <Setter Property="TextDecorations" Value="None" />
@@ -257,7 +257,7 @@
                                     </StackPanel>
                                     <StackPanel Grid.Column="3" HorizontalAlignment="Left">
                                         <TextBlock FontSize="10" Opacity="0.6"><Run Text="💰 تخمین هزینه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
-                                        <TextBlock Text="{Binding EstimatedFee, Mode=OneWay, Converter={StaticResource CurrencyRial}}" FontWeight="Bold" FontFamily="Consolas" />
+                                        <TextBlock Text="{Binding EstimatedFee, Mode=OneWay, Converter={StaticResource CurrencyRial}}" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
                                     </StackPanel>
                                 </Grid>
 
@@ -421,9 +421,9 @@
                             <DataGridCheckBoxColumn Header="" Width="36"
                                 Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
                             <DataGridTextColumn Header="کد پیگیری" Width="95"
-                                Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" FontFamily="Consolas" />
+                                Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="تاریخ" Width="90" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="ساعت" Width="55" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="ساعت" Width="55" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTemplateColumn Header="بیمار" Width="150" SortMemberPath="PatientName">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -431,7 +431,7 @@
                                             <materialDesign:PackIcon Kind="Account" Width="14" Height="14" Opacity="0.5" VerticalAlignment="Center" />
                                             <StackPanel Margin="6,0,0,0" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding PatientMobile, TargetNullValue=''}" FontSize="10" Opacity="0.55" FontFamily="Consolas" />
+                                                <TextBlock Text="{Binding PatientMobile, TargetNullValue=''}" FontSize="10" Opacity="0.55" FontFamily="{DynamicResource App.CodeFont}" />
                                             </StackPanel>
                                         </StackPanel>
                                     </DataTemplate>
@@ -559,7 +559,7 @@
                                                 HorizontalContentAlignment="Right" FontSize="11.5">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding NationalCode}" Opacity="0.55" Margin="12,0,0,0" FontFamily="Consolas" />
+                                                <TextBlock Text="{Binding NationalCode}" Opacity="0.55" Margin="12,0,0,0" FontFamily="{DynamicResource App.CodeFont}" />
                                                 <TextBlock Text="{Binding Mobile}" Opacity="0.55" Margin="12,0,0,0" />
                                             </StackPanel>
                                         </Button>
@@ -575,7 +575,7 @@
                               GridLinesVisibility="Horizontal" FlowDirection="RightToLeft">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
-                            <DataGridTextColumn Header="موبایل" Binding="{Binding PatientMobile, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="موبایل" Binding="{Binding PatientMobile, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="پزشک/تخصص" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="130" />
                             <DataGridTextColumn Header="بازه دلخواه" Binding="{Binding PreferredText, Converter={StaticResource PersianDigits}}" Width="200" />
                             <DataGridTextColumn Header="اولویت" Binding="{Binding PriorityText, Converter={StaticResource PersianDigits}}" Width="80" />

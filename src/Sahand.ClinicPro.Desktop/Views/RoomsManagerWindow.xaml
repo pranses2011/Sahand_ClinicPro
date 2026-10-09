@@ -46,7 +46,7 @@
                   AlternatingRowBackground="#F7FAFD">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="شماره" Binding="{Binding RoomNumber, Converter={StaticResource PersianDigits}}"
-                                    Width="Auto" MinWidth="60" FontFamily="Consolas" />
+                                    Width="Auto" MinWidth="60" FontFamily="{DynamicResource App.CodeFont}" />
                 <DataGridTextColumn Header="نام اتاق" Binding="{Binding DisplayName, Converter={StaticResource PersianDigits}}"
                                     Width="*" MinWidth="140" />
                 <DataGridTextColumn Header="طبقه" Binding="{Binding Floor, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
@@ -83,13 +83,13 @@
                     </Grid.ColumnDefinitions>
                     <TextBox materialDesign:HintAssist.Hint="شماره اتاق *"
                              Text="{Binding RoomNumber, UpdateSourceTrigger=PropertyChanged}"
-                             Grid.Column="0" FontFamily="Consolas" />
+                             Grid.Column="0" FontFamily="{DynamicResource App.CodeFont}" />
                     <TextBox materialDesign:HintAssist.Hint="نام اتاق (مثلاً: اتاق معاینه ۳)"
                              Text="{Binding RoomName, UpdateSourceTrigger=PropertyChanged}"
                              Grid.Column="1" Margin="8,0,0,0" />
                     <TextBox materialDesign:HintAssist.Hint="طبقه"
                              Text="{Binding Floor, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}"
-                             Grid.Column="2" Margin="8,0,0,0" FontFamily="Consolas" />
+                             Grid.Column="2" Margin="8,0,0,0" FontFamily="{DynamicResource App.CodeFont}" />
                 </Grid>
 
                 <!-- دکمه‌های عملیات — انتخاب ردیف = ویرایش؛ بدون انتخاب = افزودن -->

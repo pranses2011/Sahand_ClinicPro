@@ -70,18 +70,18 @@
                                 VerticalAlignment="Center">
                             <TextBlock Text="{Binding MedicalRecordNo}"
                                        Foreground="White" FontSize="11"
-                                       FontFamily="Consolas" />
+                                       FontFamily="{DynamicResource App.CodeFont}" />
                         </Border>
                     </StackPanel>
 
                     <UniformGrid Columns="4" Margin="0,10,0,0" TextBlock.FontSize="11">
                         <StackPanel>
                             <TextBlock Text="کد ملی" Opacity="0.55" />
-                            <TextBlock Text="{Binding NationalCode}" FontFamily="Consolas" />
+                            <TextBlock Text="{Binding NationalCode}" FontFamily="{DynamicResource App.CodeFont}" />
                         </StackPanel>
                         <StackPanel>
                             <TextBlock Text="موبایل" Opacity="0.55" />
-                            <TextBlock Text="{Binding Mobile}" FontFamily="Consolas" />
+                            <TextBlock Text="{Binding Mobile}" FontFamily="{DynamicResource App.CodeFont}" />
                         </StackPanel>
                         <StackPanel>
                             <TextBlock Text="سن" Opacity="0.55" />
@@ -97,7 +97,7 @@
                         </StackPanel>
                         <StackPanel Margin="0,8,0,0">
                             <TextBlock Text="شماره بیمه" Opacity="0.55" />
-                            <TextBlock Text="{Binding InsuranceNumber}" FontFamily="Consolas" />
+                            <TextBlock Text="{Binding InsuranceNumber}" FontFamily="{DynamicResource App.CodeFont}" />
                         </StackPanel>
                         <StackPanel Margin="0,8,0,0">
                             <TextBlock Text="گروه خون" Opacity="0.55" />

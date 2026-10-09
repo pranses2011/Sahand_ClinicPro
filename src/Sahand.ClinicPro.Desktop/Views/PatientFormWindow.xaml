@@ -62,7 +62,7 @@
                             <TextBox materialDesign:HintAssist.Hint="کد ملی *"
                                      Text="{Binding NationalCode, UpdateSourceTrigger=PropertyChanged}"
                                      MaxLength="10"
-                                     FontFamily="Consolas">
+                                     FontFamily="{DynamicResource App.CodeFont}">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
                                         <Style.Triggers>
@@ -119,10 +119,10 @@
                         <StackPanel Grid.Column="2">
                             <TextBox materialDesign:HintAssist.Hint="شماره موبایل * — ۰۹XXXXXXXXX"
                                      Text="{Binding Mobile, UpdateSourceTrigger=PropertyChanged}"
-                                     MaxLength="11" FontFamily="Consolas" />
+                                     MaxLength="11" FontFamily="{DynamicResource App.CodeFont}" />
                             <TextBox materialDesign:HintAssist.Hint="تلفن ثابت"
                                      Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"
-                                     Margin="0,12,0,0" FontFamily="Consolas" />
+                                     Margin="0,12,0,0" FontFamily="{DynamicResource App.CodeFont}" />
                             <TextBox materialDesign:HintAssist.Hint="ایمیل"
                                      Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
                                      Margin="0,12,0,0" />
@@ -148,7 +148,7 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="کد پستی"
                                          Text="{Binding PostalCode, UpdateSourceTrigger=PropertyChanged}"
-                                         MaxLength="10" FontFamily="Consolas" />
+                                         MaxLength="10" FontFamily="{DynamicResource App.CodeFont}" />
                                 <!-- چرخه ۱۹: رفع نبودن فیلد شغل — قبلاً در ستون فاصله‌دار ۱۲px بود -->
                                 <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="شغل"
                                          Text="{Binding Occupation, UpdateSourceTrigger=PropertyChanged}" />
@@ -172,7 +172,7 @@
                               SelectedValue="{Binding InsuranceCompanyId}" />
                     <TextBox materialDesign:HintAssist.Hint="شماره دفترچه / بیمه"
                              Text="{Binding InsuranceNumber, UpdateSourceTrigger=PropertyChanged}"
-                             Margin="0,14,0,0" FontFamily="Consolas" />
+                             Margin="0,14,0,0" FontFamily="{DynamicResource App.CodeFont}" />
                     <ComboBox materialDesign:HintAssist.Hint="نوع بیمه"
                               ItemsSource="{Binding InsuranceTypes}"
                               SelectedItem="{Binding InsuranceTypeName}"
@@ -219,7 +219,7 @@
                              Text="{Binding EmergencyContactName, UpdateSourceTrigger=PropertyChanged}" />
                     <TextBox materialDesign:HintAssist.Hint="تلفن تماس اضطراری"
                              Text="{Binding EmergencyContactPhone, UpdateSourceTrigger=PropertyChanged}"
-                             FontFamily="Consolas" Margin="0,14,0,0" />
+                             FontFamily="{DynamicResource App.CodeFont}" Margin="0,14,0,0" />
                     <TextBox materialDesign:HintAssist.Hint="نسبت با بیمار"
                              Text="{Binding EmergencyContactRelation, UpdateSourceTrigger=PropertyChanged}"
                              Margin="0,14,0,0" />

@@ -48,7 +48,7 @@
         <!-- کد خدمت -->
         <TextBox Grid.Row="2" materialDesign:HintAssist.Hint="کد خدمت (اختیاری — یکتا)"
                  Text="{Binding ServiceCode, UpdateSourceTrigger=PropertyChanged}"
-                 Margin="0,0,0,12" FontFamily="Consolas" FlowDirection="LeftToRight" />
+                 Margin="0,0,0,12" FontFamily="{DynamicResource App.CodeFont}" FlowDirection="LeftToRight" />
 
         <!-- قیمت -->
         <TextBox Grid.Row="3" materialDesign:HintAssist.Hint="قیمت تعرفه‌ای"

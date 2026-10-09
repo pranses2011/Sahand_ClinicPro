@@ -85,7 +85,7 @@
                                 <Run Text="نوع: " /><Run Text="{Binding CurrentPatient.VisitTypeText, Mode=OneWay}" />
                             </TextBlock>
                             <TextBlock FontSize="11.5" Opacity="0.75" Margin="14,0,0,0">
-                                <Run Text="موبایل: " /><Run Text="{Binding CurrentPatient.Mobile, Mode=OneWay}" FontFamily="Consolas" />
+                                <Run Text="موبایل: " /><Run Text="{Binding CurrentPatient.Mobile, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
                             </TextBlock>
                         </StackPanel>
                     </StackPanel>
@@ -188,7 +188,7 @@
                                                 <materialDesign:PackIcon Kind="CheckCircle" Width="15" Height="15" Foreground="#2E7D32" VerticalAlignment="Center" />
                                                 <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="12.5" Margin="8,0,0,0" />
                                             </StackPanel>
-                                            <TextBlock FontSize="11" Opacity="0.75" Margin="0,3,0,0" FontFamily="Consolas">
+                                            <TextBlock FontSize="11" Opacity="0.75" Margin="0,3,0,0" FontFamily="{DynamicResource App.CodeFont}">
                                                 <Run Text="{Binding TimeRange, Mode=OneWay}" />
                                             </TextBlock>
                                             <TextBlock FontSize="11" Opacity="0.75" Margin="0,2,0,0">

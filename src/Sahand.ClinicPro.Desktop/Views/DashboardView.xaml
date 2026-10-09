@@ -55,7 +55,7 @@
                     <!-- زمان و پزشک -->
                     <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center">
                         <TextBlock Text="{Binding Time}" FontSize="13" FontWeight="Bold"
-                                   FontFamily="Consolas" HorizontalAlignment="Center" />
+                                   FontFamily="{DynamicResource App.CodeFont}" HorizontalAlignment="Center" />
                         <TextBlock Text="{Binding DoctorName}" FontSize="9" Opacity="0.6"
                                    HorizontalAlignment="Center" />
                     </StackPanel>

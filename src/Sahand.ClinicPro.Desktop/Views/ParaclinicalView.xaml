@@ -118,7 +118,7 @@
                                 Background="{DynamicResource MaterialDesign.Brush.Background}">
                             <StackPanel>
                                 <TextBlock FontSize="13" FontWeight="Bold" Margin="0,0,0,6">
-                                    <Run Text="دندان انتخابی: " /><Run Text="{Binding SelectedTooth.Number, Mode=OneWay, TargetNullValue=—}" FontFamily="Consolas" />
+                                    <Run Text="دندان انتخابی: " /><Run Text="{Binding SelectedTooth.Number, Mode=OneWay, TargetNullValue=—}" FontFamily="{DynamicResource App.CodeFont}" />
                                 </TextBlock>
                                 <TextBlock Text="وضعیت" FontSize="10.5" Opacity="0.6" />
                                 <ComboBox ItemsSource="{Binding ToothConditions}" SelectedIndex="{Binding ToothConditionIndex}" />
@@ -142,10 +142,10 @@
                                                 <Border CornerRadius="8" Padding="9,6" Margin="0,0,0,5" Background="#FFF8E1">
                                                     <StackPanel>
                                                         <TextBlock FontSize="12">
-                                                            <Run Text="دندان " /><Run Text="{Binding Tooth, Mode=OneWay}" FontFamily="Consolas" FontWeight="Bold" />
+                                                            <Run Text="دندان " /><Run Text="{Binding Tooth, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" FontWeight="Bold" />
                                                             <Run Text=" — " /><Run Text="{Binding Procedure, Mode=OneWay}" FontWeight="SemiBold" />
                                                         </TextBlock>
-                                                        <TextBlock FontSize="10.5" Opacity="0.75" FontFamily="Consolas">
+                                                        <TextBlock FontSize="10.5" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}">
                                                             <Run Text="{Binding Price, Mode=OneWay, Converter={StaticResource CurrencyRial}}" /><Run Text=" ریال" />
                                                         </TextBlock>
                                                     </StackPanel>
@@ -175,15 +175,15 @@
                                 <StackPanel>
                                     <TextBlock Text="چشم راست (OD)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8" />
                                     <UniformGrid Columns="2">
-                                        <StackPanel Margin="0,0,6,6"><TextBlock Text="Sphere" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdSphere, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" /></StackPanel>
-                                        <StackPanel Margin="0,0,0,6"><TextBlock Text="Cylinder" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdCylinder, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" /></StackPanel>
-                                        <StackPanel Margin="0,0,6,0"><TextBlock Text="Axis" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdAxis, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" /></StackPanel>
-                                        <StackPanel><TextBlock Text="Add" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdAdd, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" /></StackPanel>
+                                        <StackPanel Margin="0,0,6,6"><TextBlock Text="Sphere" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdSphere, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                        <StackPanel Margin="0,0,0,6"><TextBlock Text="Cylinder" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdCylinder, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                        <StackPanel Margin="0,0,6,0"><TextBlock Text="Axis" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdAxis, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                        <StackPanel><TextBlock Text="Add" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdAdd, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
                                     </UniformGrid>
                                     <TextBlock Text="دید بدون عینک" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
                                     <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OdVisionIndex}" />
                                     <TextBlock Text="فشار چشم IOP (mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
-                                    <TextBox Text="{Binding OdIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" />
+                                    <TextBox Text="{Binding OdIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
                                     <TextBlock Text="{Binding OdIopWarning, Mode=OneWay}" Foreground="#C62828" FontWeight="Bold" FontSize="11.5" Margin="0,4,0,0"
                                                Visibility="{Binding OdIopWarning, Converter={StaticResource StringToVisibility}}" />
                                 </StackPanel>
@@ -193,15 +193,15 @@
                                 <StackPanel>
                                     <TextBlock Text="چشم چپ (OS)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8" />
                                     <UniformGrid Columns="2">
-                                        <StackPanel Margin="0,0,6,6"><TextBlock Text="Sphere" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsSphere, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" /></StackPanel>
-                                        <StackPanel Margin="0,0,0,6"><TextBlock Text="Cylinder" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsCylinder, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" /></StackPanel>
-                                        <StackPanel Margin="0,0,6,0"><TextBlock Text="Axis" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsAxis, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" /></StackPanel>
-                                        <StackPanel><TextBlock Text="Add" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsAdd, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" /></StackPanel>
+                                        <StackPanel Margin="0,0,6,6"><TextBlock Text="Sphere" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsSphere, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                        <StackPanel Margin="0,0,0,6"><TextBlock Text="Cylinder" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsCylinder, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                        <StackPanel Margin="0,0,6,0"><TextBlock Text="Axis" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsAxis, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                        <StackPanel><TextBlock Text="Add" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsAdd, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
                                     </UniformGrid>
                                     <TextBlock Text="دید بدون عینک" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
                                     <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OsVisionIndex}" />
                                     <TextBlock Text="فشار چشم IOP (mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
-                                    <TextBox Text="{Binding OsIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" />
+                                    <TextBox Text="{Binding OsIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
                                     <TextBlock Text="{Binding OsIopWarning, Mode=OneWay}" Foreground="#C62828" FontWeight="Bold" FontSize="11.5" Margin="0,4,0,0"
                                                Visibility="{Binding OsIopWarning, Converter={StaticResource StringToVisibility}}" />
                                 </StackPanel>
@@ -217,7 +217,7 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="PD فاصله مردمک (mm)" FontSize="10.5" Opacity="0.6" />
-                                <TextBox Text="{Binding Pd, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" />
+                                <TextBox Text="{Binding Pd, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="دید رنگ" FontSize="10.5" Opacity="0.6" />
@@ -283,7 +283,7 @@
                                  materialDesign:HintAssist.Hint="سایر تکنیک‌ها…" Margin="0,8,0,0" />
 
                         <TextBlock FontSize="13" FontWeight="Bold" Margin="2,14,2,4">
-                            <Run Text="نمره درد (۰ تا ۱۰): " /><Run Text="{Binding PainScore, Mode=OneWay}" FontFamily="Consolas" Foreground="{Binding PainColor, Mode=OneWay}" />
+                            <Run Text="نمره درد (۰ تا ۱۰): " /><Run Text="{Binding PainScore, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" Foreground="{Binding PainColor, Mode=OneWay}" />
                         </TextBlock>
                         <Slider Minimum="0" Maximum="10" Value="{Binding PainScore}"
                                 TickFrequency="1" IsSnapToTickEnabled="True" />

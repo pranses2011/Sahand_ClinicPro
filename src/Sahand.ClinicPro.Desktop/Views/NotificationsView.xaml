@@ -64,7 +64,7 @@
                                     </StackPanel>
                                     <TextBlock Text="{Binding Message, TargetNullValue=''}" FontSize="11.5" Opacity="0.75"
                                                TextWrapping="Wrap" Margin="0,3,0,0" />
-                                    <TextBlock FontSize="10" Opacity="0.5" Margin="0,3,0,0" FontFamily="Consolas">
+                                    <TextBlock FontSize="10" Opacity="0.5" Margin="0,3,0,0" FontFamily="{DynamicResource App.CodeFont}">
                                         <TextBlock.Text>
                                             <Binding Path="CreatedAt" Converter="{StaticResource ShamsiDateTime}" />
                                         </TextBlock.Text>

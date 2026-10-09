@@ -160,7 +160,7 @@
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
                         <TextBlock Text="سال شمسی آرشیو (قدیمی‌تر از این سال):" VerticalAlignment="Center" FontSize="12.5" Margin="0,0,8,0" />
                         <TextBox Text="{Binding ArchiveYear, UpdateSourceTrigger=PropertyChanged}" Width="80" FontSize="12.5"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="Consolas" Margin="0,0,8,0" />
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="{DynamicResource App.CodeFont}" Margin="0,0,8,0" />
                         <Button Command="{Binding ArchivePreviewCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
                                 Content="پیش‌نمایش شمارشی" Margin="0,0,8,0" />
                         <Button Command="{Binding ArchiveRunCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
@@ -205,7 +205,7 @@
                                 <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="170" />
                                 <DataGridTextColumn Header="شرح" Binding="{Binding SummaryLine, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" />
                                 <DataGridTextColumn Header="تاریخ" Binding="{Binding DateText, Converter={StaticResource PersianDigits}}" Width="110" />
-                                <DataGridTextColumn Header="سال" Binding="{Binding YearJalali, Converter={StaticResource PersianDigits}}" Width="60" FontFamily="Consolas" />
+                                <DataGridTextColumn Header="سال" Binding="{Binding YearJalali, Converter={StaticResource PersianDigits}}" Width="60" FontFamily="{DynamicResource App.CodeFont}" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>

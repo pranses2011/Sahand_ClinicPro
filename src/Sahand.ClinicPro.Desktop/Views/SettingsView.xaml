@@ -193,7 +193,7 @@
                                                       Style="{StaticResource MaterialDesignSwitchToggleButton}" ToolTip="فعال" />
                                         <TextBox Grid.Row="1" Grid.ColumnSpan="2" materialDesign:HintAssist.Hint="آدرس API"
                                                  Text="{Binding ApiUrl, UpdateSourceTrigger=PropertyChanged}"
-                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10,0,8" FontFamily="Consolas" FontSize="11.5" />
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10,0,8" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
                                         <Grid Grid.Row="2" Grid.ColumnSpan="2">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
@@ -343,7 +343,7 @@
                         <Slider Minimum="11" Maximum="18" Value="{Binding BaseFontSize}" Width="220"
                                 TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Margin="8,0" />
                         <TextBlock Text="{Binding BaseFontSize, StringFormat={}{0:0}}" VerticalAlignment="Center"
-                                   FontFamily="Consolas" FontSize="13" />
+                                   FontFamily="{DynamicResource App.CodeFont}" FontSize="13" />
                     </StackPanel>
 
                     <!-- ═══ سفارشی‌سازی تفکیکی عناصر — چرخه بیست‌ویکم (گزارش پانزدهم مالک) ═══
@@ -379,7 +379,7 @@
                                 TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"
                                 Margin="10,0" IsEnabled="{Binding UseCustomRadius}" />
                         <TextBlock Text="{Binding CustomCardRadius, StringFormat={}{0:0}}" VerticalAlignment="Center"
-                                   FontFamily="Consolas" FontSize="13" MinWidth="20" />
+                                   FontFamily="{DynamicResource App.CodeFont}" FontSize="13" MinWidth="20" />
                     </StackPanel>
 
                     <!-- ═══ چرخه ۲۴ — شخصی‌سازی حرفه‌ای: رنگ اصلی سفارشی + حالت آیکون‌ها ═══ -->

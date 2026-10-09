@@ -47,12 +47,12 @@
 
                     <TextBlock FontSize="11.5" Opacity="0.7" Margin="0,0,0,4"><Run Text="وجه نقد شمرده‌شده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                     <TextBox Text="{Binding CountedCash, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}" FontSize="14" FontFamily="Consolas"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}" FontSize="14" FontFamily="{DynamicResource App.CodeFont}"
                              materialDesign:HintAssist.Hint="مثلاً ۴۵۰٬۰۰۰" Margin="0,0,0,12" />
 
                     <TextBlock FontSize="11.5" Opacity="0.7" Margin="0,0,0,4"><Run Text="مبلغ تراکنش‌های کارتخوان (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                     <TextBox Text="{Binding CountedCard, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}" FontSize="14" FontFamily="Consolas"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}" FontSize="14" FontFamily="{DynamicResource App.CodeFont}"
                              materialDesign:HintAssist.Hint="از گزارش کارتخوان" Margin="0,0,0,12" />
 
                     <TextBlock Text="تحویل به (صندوقدار شیفت بعد)" FontSize="11.5" Opacity="0.7" Margin="0,0,0,4" />
@@ -96,7 +96,7 @@
                               IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                               FlowDirection="RightToLeft">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="رسید" Binding="{Binding ReceiptNumber, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="رسید" Binding="{Binding ReceiptNumber, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="صندوق" Binding="{Binding RegisterName, Converter={StaticResource PersianDigits}}" Width="85" />
                             <DataGridTextColumn Header="زمان بستن" Binding="{Binding ClosedText, Converter={StaticResource PersianDigits}}" Width="120" />
                             <DataGridTextColumn Header="بستن‌دهنده" Binding="{Binding ClosedByName, Converter={StaticResource PersianDigits}}" Width="100" />

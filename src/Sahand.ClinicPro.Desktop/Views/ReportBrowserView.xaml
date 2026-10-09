@@ -62,7 +62,7 @@
                                     <TextBlock Text="{Binding Icon}" FontSize="15" VerticalAlignment="Center" />
                                     <TextBlock Text="{Binding Title}" FontSize="13" Margin="8,0,0,0" VerticalAlignment="Center" />
                                     <TextBlock Text="{Binding Count}" FontSize="11" Opacity="0.55" Margin="8,0,0,0"
-                                               VerticalAlignment="Center" FontFamily="Consolas" />
+                                               VerticalAlignment="Center" FontFamily="{DynamicResource App.CodeFont}" />
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -193,10 +193,10 @@
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft">
-                                        <TextBlock Text="{Binding MedicalRecordNo}" FontFamily="Consolas" FontSize="11" Opacity="0.7" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding MedicalRecordNo}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11" Opacity="0.7" VerticalAlignment="Center" />
                                         <TextBlock Text="{Binding FirstName}" Margin="8,0,0,0" VerticalAlignment="Center" />
                                         <TextBlock Text="{Binding LastName}" Margin="4,0,0,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding NationalCode}" FontFamily="Consolas" FontSize="11" Opacity="0.55" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding NationalCode}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11" Opacity="0.55" Margin="8,0,0,0" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
@@ -231,7 +231,7 @@
                                 <Border CornerRadius="10" Padding="12,8" Margin="3" Background="#E3F2FD" MinWidth="130">
                                     <StackPanel>
                                         <TextBlock Text="{Binding Label}" FontSize="10.5" Opacity="0.7" />
-                                        <TextBlock Text="{Binding Value}" FontSize="16" FontWeight="Bold" FontFamily="Consolas" />
+                                        <TextBlock Text="{Binding Value}" FontSize="16" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>

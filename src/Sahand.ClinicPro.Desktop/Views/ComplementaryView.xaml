@@ -135,7 +135,7 @@
                             </ComboBox>
                             <TextBox Text="{Binding SelectedTemplate.AccentColor, UpdateSourceTrigger=PropertyChanged}"
                                      materialDesign:HintAssist.Hint="رنگ (#16355E)"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="110" FontSize="11" FontFamily="Consolas" Margin="0,0,7,5" />
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="110" FontSize="11" FontFamily="{DynamicResource App.CodeFont}" Margin="0,0,7,5" />
                             <TextBox Text="{Binding SelectedTemplate.FontSize, UpdateSourceTrigger=PropertyChanged}"
                                      materialDesign:HintAssist.Hint="فونت"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="62" FontSize="11" Margin="0,0,7,5" />
@@ -151,7 +151,7 @@
                         <!-- بدنه -->
                         <TextBox Grid.Row="2" Text="{Binding SelectedTemplate.Body, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 AcceptsReturn="True" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"
+                                 AcceptsReturn="True" TextWrapping="Wrap" FontFamily="{DynamicResource App.CodeFont}" FontSize="12"
                                  VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" />
 
                         <!-- پالت متغیرها -->
@@ -241,12 +241,12 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="عنوان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="220" FontWeight="SemiBold" />
                             <DataGridTextColumn Header="توضیح" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="پاسخ‌ها" Binding="{Binding ResponseCount, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="پاسخ‌ها" Binding="{Binding ResponseCount, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTemplateColumn Header="میانگین امتیاز" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding RatingText}" Foreground="{Binding RatingColor}"
-                                                   FontWeight="SemiBold" FontFamily="Consolas"
+                                                   FontWeight="SemiBold" FontFamily="{DynamicResource App.CodeFont}"
                                                    VerticalAlignment="Center" HorizontalAlignment="Center" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

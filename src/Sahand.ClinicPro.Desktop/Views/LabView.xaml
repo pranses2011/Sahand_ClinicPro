@@ -77,7 +77,7 @@
                   HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD"
                   MouseDoubleClick="OnOrderDoubleClick">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="شماره درخواست" Binding="{Binding Number, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="Consolas" />
+                <DataGridTextColumn Header="شماره درخواست" Binding="{Binding Number, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="{DynamicResource App.CodeFont}" />
                 <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="180" FontWeight="SemiBold" />
                 <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="160" />
                 <DataGridTextColumn Header="تعداد تست" Binding="{Binding ItemsCount, Converter={StaticResource PersianDigits}}" Width="85">

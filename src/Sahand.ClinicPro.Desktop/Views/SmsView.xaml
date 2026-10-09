@@ -56,7 +56,7 @@
                                  AcceptsReturn="True" TextWrapping="Wrap" Height="130" MaxLength="1000"
                                  VerticalContentAlignment="Top" Margin="0,0,0,4" />
                         <TextBlock Text="{Binding CharCountText, Mode=OneWay}" FontSize="11" Opacity="0.7"
-                                   FontFamily="Consolas" Margin="2,0,0,4" HorizontalAlignment="Left" />
+                                   FontFamily="{DynamicResource App.CodeFont}" Margin="2,0,0,4" HorizontalAlignment="Left" />
                         <TextBlock Text="متغیرها: {نام بیمار} {نام پزشک} {تاریخ} {ساعت} {کد پیگیری}"
                                    FontSize="10.5" Opacity="0.55" Margin="2,0,0,10" />
 
@@ -116,7 +116,7 @@
                     <DataGrid Grid.Row="1" ItemsSource="{Binding History}" AutoGenerateColumns="False" CanUserAddRows="False"
                               IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="گیرنده" Binding="{Binding Recipient, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="گیرنده" Binding="{Binding Recipient, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="متن" Binding="{Binding Message, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" />
                             <DataGridTemplateColumn Header="وضعیت" Width="110">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -158,7 +158,7 @@
                           IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="نام تمپلیت" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="170" FontWeight="SemiBold" />
-                        <DataGridTextColumn Header="کد" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="190" FontFamily="Consolas" />
+                        <DataGridTextColumn Header="کد" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="190" FontFamily="{DynamicResource App.CodeFont}" />
                         <DataGridTextColumn Header="محتوا" Binding="{Binding Content, Converter={StaticResource PersianDigits}}" Width="*" />
                     </DataGrid.Columns>
                 </DataGrid>
@@ -194,8 +194,8 @@
                               HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="نام پنل" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="150" FontWeight="SemiBold" />
-                            <DataGridTextColumn Header="کد" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="130" FontFamily="Consolas" />
-                            <DataGridTextColumn Header="شماره ارسال" Binding="{Binding SenderNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="Consolas" />
+                            <DataGridTextColumn Header="کد" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="130" FontFamily="{DynamicResource App.CodeFont}" />
+                            <DataGridTextColumn Header="شماره ارسال" Binding="{Binding SenderNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Width="120"><DataGridTextColumn.Header><TextBlock><Run Text="موجودی (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                                 <DataGridTextColumn.Binding><Binding Path="Balance" StringFormat="{}{0:N0}" /></DataGridTextColumn.Binding>
                             </DataGridTextColumn>
@@ -226,31 +226,31 @@
                             <Border CornerRadius="12" Padding="14" Margin="5" Background="#E3F2FD">
                                 <StackPanel>
                                     <TextBlock Text="📤 ارسال‌شده" FontSize="11" Opacity="0.7" />
-                                    <TextBlock Text="{Binding SentText}" FontSize="20" FontWeight="Bold" FontFamily="Consolas" />
+                                    <TextBlock Text="{Binding SentText}" FontSize="20" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
                                 </StackPanel>
                             </Border>
                             <Border CornerRadius="12" Padding="14" Margin="5" Background="#E8F5E9">
                                 <StackPanel>
                                     <TextBlock Text="✅ تحویل‌شده" FontSize="11" Opacity="0.7" />
-                                    <TextBlock Text="{Binding DeliveredText}" FontSize="20" FontWeight="Bold" FontFamily="Consolas" />
+                                    <TextBlock Text="{Binding DeliveredText}" FontSize="20" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
                                 </StackPanel>
                             </Border>
                             <Border CornerRadius="12" Padding="14" Margin="5" Background="#FFEBEE">
                                 <StackPanel>
                                     <TextBlock Text="❌ خطا" FontSize="11" Opacity="0.7" />
-                                    <TextBlock Text="{Binding FailedText}" FontSize="20" FontWeight="Bold" FontFamily="Consolas" />
+                                    <TextBlock Text="{Binding FailedText}" FontSize="20" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
                                 </StackPanel>
                             </Border>
                             <Border CornerRadius="12" Padding="14" Margin="5" Background="#FFF8E1">
                                 <StackPanel>
                                     <TextBlock Text="💰 هزینه ماه" FontSize="11" Opacity="0.7" />
-                                    <TextBlock Text="{Binding MonthCostText}" FontSize="14" FontWeight="Bold" FontFamily="Consolas" />
+                                    <TextBlock Text="{Binding MonthCostText}" FontSize="14" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
                                 </StackPanel>
                             </Border>
                             <Border CornerRadius="12" Padding="14" Margin="5" Background="#F3E5F5">
                                 <StackPanel>
                                     <TextBlock Text="📈 نرخ موفقیت" FontSize="11" Opacity="0.7" />
-                                    <TextBlock Text="{Binding SuccessRateText}" FontSize="20" FontWeight="Bold" FontFamily="Consolas" />
+                                    <TextBlock Text="{Binding SuccessRateText}" FontSize="20" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
                                 </StackPanel>
                             </Border>
                         </UniformGrid>
@@ -281,7 +281,7 @@
                                                         MinHeight="2"
                                                         CornerRadius="3,3,0,0" Background="#1E88E5" />
                                                 <TextBlock Grid.Row="1" Text="{Binding Count}" FontSize="9"
-                                                           HorizontalAlignment="Center" FontFamily="Consolas" />
+                                                           HorizontalAlignment="Center" FontFamily="{DynamicResource App.CodeFont}" />
                                             </Grid>
                                         </Border>
                                         <TextBlock Grid.Row="1" Text="{Binding Date}" FontSize="8" Opacity="0.6"

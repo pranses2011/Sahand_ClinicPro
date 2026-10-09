@@ -35,7 +35,7 @@
             </Border>
             <Border DockPanel.Dock="Left" Background="#ECEFF1" CornerRadius="8" Padding="10,4"
                     VerticalAlignment="Center" Margin="10,0,0,0">
-                <TextBlock FontFamily="Consolas" FontSize="13">
+                <TextBlock FontFamily="{DynamicResource App.CodeFont}" FontSize="13">
                     <Run Text="⏱️ " /><Run Text="{Binding ElapsedText, Mode=OneWay}" FontWeight="Bold" />
                 </TextBlock>
             </Border>
@@ -73,7 +73,7 @@
                                            FontWeight="Bold" FontSize="13" TextWrapping="Wrap"
                                            HorizontalAlignment="Center" />
                                 <TextBlock Text="{Binding PatientMrn, Mode=OneWay, FallbackValue=''}"
-                                           FontSize="11" Opacity="0.7" FontFamily="Consolas"
+                                           FontSize="11" Opacity="0.7" FontFamily="{DynamicResource App.CodeFont}"
                                            HorizontalAlignment="Center" Margin="0,2,0,0" />
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
                                     <TextBlock Text="{Binding PatientAgeGender, Mode=OneWay, FallbackValue=''}" FontSize="11" />
@@ -81,7 +81,7 @@
                                                FontSize="11" Margin="8,0,0,0" />
                                 </StackPanel>
                                 <TextBlock Text="{Binding PatientMobile, Mode=OneWay, FallbackValue=''}"
-                                           FontSize="10.5" Opacity="0.7" FontFamily="Consolas"
+                                           FontSize="10.5" Opacity="0.7" FontFamily="{DynamicResource App.CodeFont}"
                                            HorizontalAlignment="Center" Margin="0,3,0,0" />
                                 <TextBlock Text="{Binding PatientInsurance, Mode=OneWay, FallbackValue=''}"
                                            FontSize="10.5" Opacity="0.7"
@@ -211,35 +211,35 @@
                             <UniformGrid Columns="4" Margin="0,4,0,8">
                                 <StackPanel Margin="0,0,6,8">
                                     <TextBlock Text="BP — فشار خون" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding BpText, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="130/85" FontSize="15" FontFamily="Consolas" TextAlignment="Center" />
+                                    <TextBox Text="{Binding BpText, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="130/85" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
                                 </StackPanel>
                                 <StackPanel Margin="0,0,6,8">
                                     <TextBlock Text="HR — ضربان" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding HrText, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="78" FontSize="15" FontFamily="Consolas" TextAlignment="Center" />
+                                    <TextBox Text="{Binding HrText, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="78" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
                                 </StackPanel>
                                 <StackPanel Margin="0,0,6,8">
                                     <TextBlock Text="Temp — دما" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding TempText, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="37.2" FontSize="15" FontFamily="Consolas" TextAlignment="Center" />
+                                    <TextBox Text="{Binding TempText, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="37.2" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
                                 </StackPanel>
                                 <StackPanel Margin="0,0,0,8">
                                     <TextBlock Text="SpO2 — اکسیژن" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding Spo2Text, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="98" FontSize="15" FontFamily="Consolas" TextAlignment="Center" />
+                                    <TextBox Text="{Binding Spo2Text, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="98" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
                                 </StackPanel>
                                 <StackPanel Margin="0,0,6,8">
                                     <TextBlock Text="Weight — وزن (kg)" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding WeightText, UpdateSourceTrigger=PropertyChanged}" FontSize="15" FontFamily="Consolas" TextAlignment="Center" />
+                                    <TextBox Text="{Binding WeightText, UpdateSourceTrigger=PropertyChanged}" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
                                 </StackPanel>
                                 <StackPanel Margin="0,0,6,8">
                                     <TextBlock Text="Height — قد (cm)" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding HeightText, UpdateSourceTrigger=PropertyChanged}" FontSize="15" FontFamily="Consolas" TextAlignment="Center" />
+                                    <TextBox Text="{Binding HeightText, UpdateSourceTrigger=PropertyChanged}" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
                                 </StackPanel>
                                 <StackPanel Margin="0,0,6,8">
                                     <TextBlock Text="BMI — شاخص توده" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding BmiDisplay, Mode=OneWay}" IsReadOnly="True" FontSize="15" FontFamily="Consolas" TextAlignment="Center" Background="#FAFAFA" />
+                                    <TextBox Text="{Binding BmiDisplay, Mode=OneWay}" IsReadOnly="True" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" Background="#FAFAFA" />
                                 </StackPanel>
                                 <StackPanel Margin="0,0,0,8">
                                     <TextBlock Text="BS — قند خون" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding BsText, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="140" FontSize="15" FontFamily="Consolas" TextAlignment="Center" />
+                                    <TextBox Text="{Binding BsText, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="140" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
                                 </StackPanel>
                             </UniformGrid>
 
@@ -254,9 +254,9 @@
                                                 BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                                                 BorderThickness="1" Background="#FAFAFA">
                                             <StackPanel HorizontalAlignment="Center">
-                                                <TextBlock Text="{Binding Title}" FontSize="10" FontFamily="Consolas" Opacity="0.6" HorizontalAlignment="Center" />
+                                                <TextBlock Text="{Binding Title}" FontSize="10" FontFamily="{DynamicResource App.CodeFont}" Opacity="0.6" HorizontalAlignment="Center" />
                                                 <TextBlock Text="{Binding PersianTitle}" FontSize="10.5" Opacity="0.75" HorizontalAlignment="Center" />
-                                                <TextBlock FontSize="16" FontWeight="Bold" FontFamily="Consolas" HorizontalAlignment="Center" Margin="0,3,0,0">
+                                                <TextBlock FontSize="16" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" HorizontalAlignment="Center" Margin="0,3,0,0">
                                                     <Run Text="{Binding Value, Mode=OneWay, FallbackValue=—}" />
                                                     <Run Text="{Binding Unit, Mode=OneWay}" FontSize="9" FontWeight="Normal" Foreground="#888888" />
                                                 </TextBlock>
@@ -345,7 +345,7 @@
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Right">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Code}" FontFamily="Consolas" FontWeight="Bold" Foreground="#1565C0" />
+                                                <TextBlock Text="{Binding Code}" FontFamily="{DynamicResource App.CodeFont}" FontWeight="Bold" Foreground="#1565C0" />
                                                 <TextBlock Text="{Binding Title}" Margin="12,0,0,0" />
                                             </StackPanel>
                                         </Button>
@@ -355,7 +355,7 @@
                             <Border Background="#E8F5E9" CornerRadius="8" Padding="10,5" Margin="0,8,0,0"
                                     Visibility="{Binding PrimaryDiagnosis, Converter={StaticResource NullToVisibility}}">
                                 <TextBlock FontSize="12.5">
-                                    <Run Text="✅ تشخیص اصلی: " /><Run Text="{Binding PrimaryDiagnosis.Code, Mode=OneWay}" FontWeight="Bold" FontFamily="Consolas" />
+                                    <Run Text="✅ تشخیص اصلی: " /><Run Text="{Binding PrimaryDiagnosis.Code, Mode=OneWay}" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
                                     <Run Text=" — " /><Run Text="{Binding PrimaryDiagnosis.Title, Mode=OneWay}" FontWeight="SemiBold" />
                                 </TextBlock>
                             </Border>
@@ -382,7 +382,7 @@
                                                 Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Right" FontSize="11">
                                             <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon Kind="PlusCircleOutline" Width="13" Height="13" />
-                                                <TextBlock Text="{Binding Code}" FontFamily="Consolas" Margin="8,0,0,0" />
+                                                <TextBlock Text="{Binding Code}" FontFamily="{DynamicResource App.CodeFont}" Margin="8,0,0,0" />
                                                 <TextBlock Text="{Binding Title}" Margin="10,0,0,0" />
                                             </StackPanel>
                                         </Button>

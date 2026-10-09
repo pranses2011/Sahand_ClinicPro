@@ -213,6 +213,14 @@ public class ThemeService : IThemeService
         // فونت — نام‌های شناخته‌شدهٔ ویندوز مستقیم؛ Vazirmatn جاسازی‌شده با pack URI
         resources["App.FontFamily"] = ResolveFontFamily(_appearance.FontFamilyName);
 
+        // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) ═══ فونت متن‌های عددی/کدی —
+        // «ارقام فارسی فونت نمی‌گیرند و با فونت پیش‌فرض نمایش داده می‌شوند»:
+        // ۱۹۵ جای برنامه فونت هاردکد Consolas داشت که ارقام فارسی ندارد و
+        // fallback فونت سیستم می‌گرفت؛ اکنون همه از این منبع می‌خوانند و اینجا
+        // هم به همان فونت انتخابی کاربر مقداردهی می‌شود تا ارقام فارسی هم
+        // هم‌خانوادهٔ بقیهٔ متن دیده شوند
+        resources["App.CodeFont"] = ResolveFontFamily(_appearance.FontFamilyName);
+
         // اندازهٔ پایهٔ متن — عناصر بدون اندازهٔ صریح ارث می‌برند
         resources["App.BaseFontSize"] = _appearance.BaseFontSize;
 

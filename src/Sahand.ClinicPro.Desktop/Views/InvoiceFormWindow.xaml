@@ -74,7 +74,7 @@
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="نرخ مالیات (٪)" Style="{StaticResource FieldCaption}" />
-                                <TextBox Text="{Binding TaxPercent, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" TextAlignment="Center" />
+                                <TextBox Text="{Binding TaxPercent, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
                                 <TextBlock Text="پیش‌فرض معمولاً صفر است" FontSize="9.5" Opacity="0.5" Margin="1,4,1,0" />
                             </StackPanel>
                         </Grid>
@@ -89,7 +89,7 @@
                                       CanUserAddRows="False" HeadersVisibility="Column" FontSize="12"
                                       MinHeight="90">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="کد" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="85" FontFamily="Consolas" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="کد" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="85" FontFamily="{DynamicResource App.CodeFont}" IsReadOnly="True" />
                                     <DataGridTextColumn Header="شرح خدمت" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" IsReadOnly="True" />
                                     <DataGridTemplateColumn Header="انجام‌دهنده" Width="150">
                                         <DataGridTemplateColumn.CellTemplate>
@@ -102,9 +102,9 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="60" />
-                                    <DataGridTextColumn Header="قیمت واحد" Binding="{Binding UnitPrice, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="110" IsReadOnly="True" FontFamily="Consolas" />
-                                    <DataGridTextColumn Header="سهم بیمه" Binding="{Binding TotalInsurance, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="100" IsReadOnly="True" FontFamily="Consolas" />
-                                    <DataGridTextColumn Header="سهم بیمار" Binding="{Binding TotalPatient, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="100" IsReadOnly="True" FontFamily="Consolas" />
+                                    <DataGridTextColumn Header="قیمت واحد" Binding="{Binding UnitPrice, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="110" IsReadOnly="True" FontFamily="{DynamicResource App.CodeFont}" />
+                                    <DataGridTextColumn Header="سهم بیمه" Binding="{Binding TotalInsurance, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="100" IsReadOnly="True" FontFamily="{DynamicResource App.CodeFont}" />
+                                    <DataGridTextColumn Header="سهم بیمار" Binding="{Binding TotalPatient, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="100" IsReadOnly="True" FontFamily="{DynamicResource App.CodeFont}" />
                                     <DataGridTemplateColumn Header="" Width="50">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
@@ -137,7 +137,7 @@
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Margin="0,0,8,0">
                                     <TextBlock Text="تعداد" Style="{StaticResource FieldCaption}" />
-                                    <TextBox Text="{Binding ServiceQuantity, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center" FontFamily="Consolas" />
+                                    <TextBox Text="{Binding ServiceQuantity, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center" FontFamily="{DynamicResource App.CodeFont}" />
                                 </StackPanel>
                                 <Button Grid.Column="2" Command="{Binding AddServiceCommand}"
                                         Style="{StaticResource MaterialDesignRaisedButton}" VerticalAlignment="Bottom">
@@ -160,36 +160,36 @@
                         <TextBlock Text="💰 خلاصه فاکتور" FontWeight="Bold" FontSize="14" Margin="2,0,2,10" />
 
                         <TextBlock Style="{StaticResource FieldCaption}"><Run Text="جمع کل (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
-                        <TextBlock Text="{Binding GrossTotalText, Mode=OneWay}" FontSize="16" FontWeight="Bold" FontFamily="Consolas" />
+                        <TextBlock Text="{Binding GrossTotalText, Mode=OneWay}" FontSize="16" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
 
                         <TextBlock Style="{StaticResource FieldCaption}"><Run Text="تخفیف — مبلغ (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                         <!-- چرخه بیستم: کادر مبلغ با جداکنندهٔ زندهٔ ۳ رقمی (MoneyInput)
                              + مبدل ریال↔نمایش برای حالت تومان -->
                         <TextBox behaviors:MoneyInput.IsEnabled="True"
                                  behaviors:MoneyInput.NumericValue="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
-                                 FontFamily="Consolas" />
+                                 FontFamily="{DynamicResource App.CodeFont}" />
                         <TextBlock Text="تخفیف — درصد" Style="{StaticResource FieldCaption}" />
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" Text="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" />
+                            <TextBox Grid.Column="0" Text="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
                             <TextBlock Grid.Column="1" Text="٪" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0,0,0" />
                         </Grid>
 
                         <TextBlock Style="{StaticResource FieldCaption}"><Run Text="سهم بیمه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                         <TextBlock Text="{Binding InsuranceShareText, Mode=OneWay}" FontSize="14" FontWeight="Bold"
-                                   FontFamily="Consolas" Foreground="#2E7D32" />
+                                   FontFamily="{DynamicResource App.CodeFont}" Foreground="#2E7D32" />
 
                         <TextBlock Style="{StaticResource FieldCaption}"><Run Text="مالیات (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
-                        <TextBlock Text="{Binding TaxText, Mode=OneWay}" FontSize="13" FontFamily="Consolas" />
+                        <TextBlock Text="{Binding TaxText, Mode=OneWay}" FontSize="13" FontFamily="{DynamicResource App.CodeFont}" />
 
                         <Separator Margin="0,12,0,8" />
 
                         <TextBlock FontSize="13" FontWeight="Bold"><Run Text="💵 قابل پرداخت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                         <TextBlock Text="{Binding PayableText, Mode=OneWay}" FontSize="20" FontWeight="Bold"
-                                   FontFamily="Consolas" Foreground="#C62828" />
+                                   FontFamily="{DynamicResource App.CodeFont}" Foreground="#C62828" />
 
                         <Separator Margin="0,12,0,8" />
 
@@ -204,13 +204,13 @@
                         <TextBlock Style="{StaticResource FieldCaption}"><Run Text="مبلغ دریافتی (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                         <TextBox behaviors:MoneyInput.IsEnabled="True"
                                  behaviors:MoneyInput.NumericValue="{Binding ReceivedAmount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
-                                 FontFamily="Consolas" FontSize="14" />
+                                 FontFamily="{DynamicResource App.CodeFont}" FontSize="14" />
 
                         <TextBlock Text="شماره ارجاع (برای کارت/بانک)" Style="{StaticResource FieldCaption}" />
                         <TextBox Text="{Binding ReferenceNumber, UpdateSourceTrigger=PropertyChanged}" />
 
                         <TextBlock Style="{StaticResource FieldCaption}"><Run Text="باقیمانده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
-                        <TextBlock Text="{Binding RemainingText, Mode=OneWay}" FontSize="14" FontFamily="Consolas"
+                        <TextBlock Text="{Binding RemainingText, Mode=OneWay}" FontSize="14" FontFamily="{DynamicResource App.CodeFont}"
                                    Foreground="#C62828" />
 
                         <Button Command="{Binding SaveAndPrintCommand}" Margin="0,14,0,0"
