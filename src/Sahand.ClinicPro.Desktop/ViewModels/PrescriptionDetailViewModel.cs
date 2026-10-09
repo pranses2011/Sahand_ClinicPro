@@ -46,6 +46,14 @@ public partial class PrescriptionDetailViewModel : ObservableObject
     [ObservableProperty]
     private string? _prescriptionCode;
 
+    /// <summary>
+    /// کد ملی بیمار — چرخهٔ بیست‌وششم (گزارش هجدهم مالک): «در چاپ نسخه به
+    /// جای کد ملی بیمار، کد پیگیری می‌اندازد» — کد ملی واقعی از جزئیات
+    /// سرور خوانده و در سربرگ چاپ جایگزین می‌شود
+    /// </summary>
+    [ObservableProperty]
+    private string? _patientNationalCode;
+
     /// <summary>اقلام نسخه</summary>
     [ObservableProperty]
     private ObservableCollection<PrescriptionItemView> _items = new();
@@ -92,6 +100,8 @@ public partial class PrescriptionDetailViewModel : ObservableObject
             DoctorName = detail.DoctorName ?? string.Empty;
             DateShamsi = detail.DateShamsi ?? string.Empty;
             PrescriptionCode = detail.PrescriptionCode;
+            // چرخهٔ ۲۶ — کد ملی واقعی بیمار برای سربرگ چاپ مجدد
+            PatientNationalCode = detail.PatientNationalCode;
             Items = new ObservableCollection<PrescriptionItemView>(
                 (detail.Items ?? new()).Select(i => new PrescriptionItemView(
                     i.MedicationName, i.Dosage, i.Frequency, i.Duration,
@@ -114,12 +124,14 @@ public partial class PrescriptionDetailViewModel : ObservableObject
         public PrescriptionDetail? Data { get; set; }
     }
 
-    /// <summary>جزئیات نسخه منطبق بر سرور — چرخه ۲۳: نام بیمار/پزشک هم می‌آید</summary>
+    /// <summary>جزئیات نسخه منطبق بر سرور — چرخه ۲۳: نام بیمار/پزشک هم می‌آید؛
+    /// چرخه ۲۶: کد ملی بیمار هم می‌آید</summary>
     public sealed class PrescriptionDetail
     {
         public long Id { get; set; }
         public string? PrescriptionCode { get; set; }
         public string? PatientName { get; set; }
+        public string? PatientNationalCode { get; set; }
         public string? DoctorName { get; set; }
         public long PatientId { get; set; }
         public long DoctorId { get; set; }

@@ -48,14 +48,16 @@ public partial class PrescriptionDetailWindow : Window
 
             // چرخه ۲۳: طرح چاپ از آخرین انتخاب کاربر شروع می‌شود و در پیش‌نمایش
             // با انتخابگر «طرح چاپ» زنده قابل تعویض است (کلاسیک/مدرن/فشرده)
+            // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) ═══ «در چاپ نسخه به جای کد
+            // ملی بیمار، کد پیگیری می‌اندازد» — پیش‌تر کد ملی در جزئیات نمی‌آمد
+            // و کد نسخه جایش می‌نشست؛ اکنون کد ملی واقعی بیمار در سربرگ چاپ
+            // می‌نشیند و کد نسخه فقط در جای کد رهگیری می‌ماند
             Services.PrescriptionPrintHelper.ShowPreview(
                 style => PrescriptionPrintHelper.BuildDocument(
                     _vm.PatientName,
-                    // کد ملی بیمار در پاسخ جزئیات نیست — کد نسخه جای آن می‌نشیند
-                    _vm.PrescriptionCode ?? string.Empty,
+                    _vm.PatientNationalCode ?? "—",
                     _vm.DoctorName,
                     _vm.DateShamsi,
-                    // کد رهگیری الکترونیک جداگانه نداریم — کد نسخه نمایش داده می‌شود
                     _vm.PrescriptionCode,
                     items,
                     style),

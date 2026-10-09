@@ -2,6 +2,8 @@ using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Desktop.Helpers;
 
@@ -414,13 +416,32 @@ public static class PrescriptionPrintHelper
         document.PageWidth = 793.7;   // A4 - 210mm با ۹۶dpi
         document.PageHeight = 1122.5; // A4 - 297mm
 
-        // ─── نمایشگر سند (بدون نوار ابزار پیش‌فرض — نوار اختصاصی فارسی داریم) ───
+        // ─── نمایشگر سند ───
+        // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — حذف نوار ابزار داخلی نمایشگر ═══
+        // «دکمه‌های زوم بالای صفحه برعکس عمل می‌کنند و نوشتهٔ + و − دیده نمی‌شود؛
+        // اسلایدر زوم پایین هم کار نمی‌کند»: FlowDocumentPageViewer نوار ابزار
+        // داخلی خودش (دکمه‌های زوم + اسلایدر + درصد) را هم می‌کشد؛ آن زوم با
+        // «زوم مقیاسی اختصاصی برنامه» تداخل دارد، در پنجرهٔ راست‌چین رفتار
+        // معکوس می‌دهد و نویسهٔ +/− قالبش هم با فونت فارسی رندر نمی‌شود.
+        // قالب مینیمال فقط «صفحهٔ سند» می‌گذارد و تنها زوم فارسی خود برنامه
+        // می‌ماند — رفتار یکدست و بدون تعارض.
         var viewer = new FlowDocumentPageViewer
         {
             Document = document,
             MinZoom = 50,
             MaxZoom = 300
         };
+        // ═══ قالب مینیمال: فقط «صفحهٔ سند» (PART_ContentHost) بدون نوار ابزار ═══
+        // FlowDocumentPageViewer هنگام اعمال قالب، سند را خودش به قسمتِ
+        // نام‌گذاری‌شدهٔ PART_ContentHost (از نوع DocumentPageView) وصل می‌کند
+        // — الگوی رسمی قالب این کنترل در WPF؛ پس نیازی به اتصال دستی نیست
+        var bareTemplate = new ControlTemplate(typeof(FlowDocumentPageViewer));
+        var pageViewFactory = new FrameworkElementFactory(typeof(DocumentPageView), "PART_ContentHost");
+        // سند راست‌چین است؛ خود صفحه همیشه چپ‌به‌راست رندر می‌شود (الگوی قالب
+        // پیش‌فرض ویندوز) تا آینه‌ای شدن ناخواسته رخ ندهد
+        pageViewFactory.SetValue(FrameworkElement.FlowDirectionProperty, FlowDirection.LeftToRight);
+        bareTemplate.VisualTree = pageViewFactory;
+        viewer.Template = bareTemplate;
 
         // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — زوم واقعاً کار کند ═══
         // «دکمه‌های زوم کار نمی‌کنند»: تنظیم Zoom روی FlowDocumentPageViewerِ
@@ -487,18 +508,42 @@ public static class PrescriptionPrintHelper
             TextAlignment = TextAlignment.Center
         };
         var zoomIn = new Button { Content = "+", Width = 34, Height = 30, FontSize = 15, FontFamily = PrintFontFamily };
-        var zoomOut = new Button { Content = "−", Width = 34, Height = 30, FontSize = 15, FontFamily = PrintFontFamily };
+        var zoomOut = new Button { Content = "-", Width = 34, Height = 30, FontSize = 15, FontFamily = PrintFontFamily };
+
+        // ═══ چرخهٔ بیست‌وششم — اسلایدر زوم فارسی ═══ «اسلایدر زوم که در پایین
+        // صفحه است عمل نمی‌کند» — اسلایدر قدیمیِ نوار داخلی حذف شد؛ اسلایدر
+        // اختصاصی زیر همان زوم مقیاسی برنامه قرار گرفت و با دکمه‌ها و درصد
+        // همگام می‌شود
+        var zoomSlider = new Slider
+        {
+            Minimum = 50,
+            Maximum = 300,
+            Width = 130,
+            VerticalAlignment = VerticalAlignment.Center,
+            IsMoveToPointEnabled = true,
+            IsSnapToTickEnabled = true,
+            TickFrequency = 10,
+            SmallChange = 10,
+            LargeChange = 20,
+            FontFamily = PrintFontFamily
+        };
         // اعمال زوم مقیاسی — نمایشگر با LayoutTransform مقیاس می‌گیرد و درصد
-        // فارسی همان لحظه تازه می‌شود؛ کلیدهای Ctrl+توسط نمایشگر پشتیبانی می‌شوند
+        // فارسی همان لحظه تازه می‌شود؛ اسلایدر و دکمه‌ها همگی همگام‌اند
         void ApplyZoom(double value)
         {
             zoomLevel = Math.Clamp(value, 50, 300);
             zoomScale.ScaleX = zoomLevel / 100.0;
             zoomScale.ScaleY = zoomLevel / 100.0;
             zoomText.Text = $"{PersianDateHelper.ToPersianDigits(((int)zoomLevel).ToString())}٪";
+            // همگام‌سازی اسلایدر (بدون حلقه — فقط هنگام تفاوت واقعی)
+            if (Math.Abs(zoomSlider.Value - zoomLevel) > 0.5)
+                zoomSlider.Value = zoomLevel;
         }
         zoomIn.Click += (_, _) => ApplyZoom(zoomLevel + 10);
         zoomOut.Click += (_, _) => ApplyZoom(zoomLevel - 10);
+        // اسلایدر → زوم؛ مقدار اولیه هم روی اسلایدر می‌نشیند
+        zoomSlider.Value = zoomLevel;
+        zoomSlider.ValueChanged += (_, e) => ApplyZoom(e.NewValue);
 
         // ─── دکمهٔ بستن ───
         var closeBtn = new Button
@@ -557,11 +602,12 @@ public static class PrescriptionPrintHelper
         DockPanel.SetDock(rightTools, Dock.Right);
         toolbar.Children.Add(rightTools);
 
-        // چپ: زوم و بستن
+        // چپ: زوم (دکمه‌ها + درصد + اسلایدر) و بستن — چرخه ۲۶: اسلایدر هم اضافه شد
         var leftTools = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        leftTools.Children.Add(zoomIn);
-        leftTools.Children.Add(zoomText);
         leftTools.Children.Add(zoomOut);
+        leftTools.Children.Add(zoomText);
+        leftTools.Children.Add(zoomIn);
+        leftTools.Children.Add(zoomSlider);
         leftTools.Children.Add(new Border { Width = 10 });
         leftTools.Children.Add(closeBtn);
         DockPanel.SetDock(leftTools, Dock.Left);

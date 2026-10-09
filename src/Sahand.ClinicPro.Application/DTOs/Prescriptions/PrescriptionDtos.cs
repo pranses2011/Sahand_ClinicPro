@@ -60,6 +60,7 @@ public record PrescriptionDetailDto(
     string? PrescriptionCode,
     long PatientId,
     string PatientName,
+    string? PatientNationalCode,
     long DoctorId,
     string DoctorName,
     long? VisitId,

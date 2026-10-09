@@ -83,6 +83,11 @@ public class GetPrescriptionByIdQueryHandler
             p.Id, p.PrescriptionCode, p.PatientId,
             // نام بیمار و پزشک — برای چاپ مجدد و هدر پنجرهٔ جزئیات (چرخه ۲۳)
             p.Patient != null ? p.Patient.FirstName + " " + p.Patient.LastName : "",
+            // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) ═══ «در چاپ نسخه به جای کد
+            // ملی بیمار، کد پیگیری می‌ندازد» — کد ملی بیمار در پاسخ جزئیات
+            // نمی‌آمد و چاپ مجدد مجبور بود کد نسخه را جایش بگذارد؛ اکنون کد
+            // ملی واقعی بیمار با جزئیات ارسال می‌شود
+            p.Patient?.NationalCode,
             p.DoctorId,
             p.Doctor != null && p.Doctor.Employee != null
                 ? p.Doctor.Employee.FirstName + " " + p.Doctor.Employee.LastName : "پزشک",
