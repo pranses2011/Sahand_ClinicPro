@@ -435,12 +435,24 @@ public static class PrescriptionPrintHelper
         // FlowDocumentPageViewer هنگام اعمال قالب، سند را خودش به قسمتِ
         // نام‌گذاری‌شدهٔ PART_ContentHost (از نوع DocumentPageView) وصل می‌کند
         // — الگوی رسمی قالب این کنترل در WPF؛ پس نیازی به اتصال دستی نیست
+        // ═══ چرخهٔ سی‌وسوم (گزارش نوزدهم مالک) — «دکمه‌های زوم درست کار نمی‌کنند» ═══
+        // قالب مینیمال قبلی DocumentPageView را «برهنه» می‌گذاشت؛ قالب پیش‌فرض
+        // این کنترل، صفحه را داخل یک ScrollViewer می‌چیند — بدون آن، هر زومی
+        // بزرگ‌تر از ۱۰۰٪ صفحه را از لبهٔ پنجره بیرون می‌برد و بدون نوار پیمایش
+        // هیچ راهی برای دیدن لبه‌ها نیست (همان «درست کار نمی‌کند»). اکنون همان
+        // چیدمان رسمی بازگردانده شد: ScrollViewer (پیمایش خودکار افقی/عمودی)
+        // دور PART_ContentHost — زوم بزرگ = نوار پیمایش تازه؛ زوم کوچک = بدون نوار.
         var bareTemplate = new ControlTemplate(typeof(FlowDocumentPageViewer));
+        var scrollFactory = new FrameworkElementFactory(typeof(ScrollViewer));
+        // نوارهای پیمایش فقط در نیاز ظاهر می‌شوند (Auto) — در ۱۰۰٪ هیچ نوری نیست
+        scrollFactory.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Auto);
+        scrollFactory.SetValue(ScrollViewer.VerticalScrollBarVisibilityProperty, ScrollBarVisibility.Auto);
         var pageViewFactory = new FrameworkElementFactory(typeof(DocumentPageView), "PART_ContentHost");
         // سند راست‌چین است؛ خود صفحه همیشه چپ‌به‌راست رندر می‌شود (الگوی قالب
         // پیش‌فرض ویندوز) تا آینه‌ای شدن ناخواسته رخ ندهد
         pageViewFactory.SetValue(FrameworkElement.FlowDirectionProperty, FlowDirection.LeftToRight);
-        bareTemplate.VisualTree = pageViewFactory;
+        scrollFactory.AppendChild(pageViewFactory);
+        bareTemplate.VisualTree = scrollFactory;
         viewer.Template = bareTemplate;
 
         // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — زوم واقعاً کار کند ═══
@@ -507,8 +519,37 @@ public static class PrescriptionPrintHelper
             MinWidth = 44,
             TextAlignment = TextAlignment.Center
         };
-        var zoomIn = new Button { Content = "+", Width = 34, Height = 30, FontSize = 15, FontFamily = PrintFontFamily };
-        var zoomOut = new Button { Content = "-", Width = 34, Height = 30, FontSize = 15, FontFamily = PrintFontFamily };
+        // ═══ چرخهٔ سی‌وسوم (گزارش نوزدهم مالک) — «نوشتهٔ + و − قابل مشاهده نیست» ═══
+        // ریشه: محتوای دکمه‌ها نویسهٔ متنی «+»/«−» با فونت فارسی وزیرمتن بود؛ این
+        // گلیف‌ها در فونت فارسی بسیار نازک/ریز رسم می‌شوند (و در برخی نگارش‌ها
+        // اصلاً فالبک نمی‌شوند) و دکمه‌ها «خالی» دیده می‌شدند. راه‌حل قطعی و
+        // مستقل از فونت: آیکون وکتوری پک‌آیکون (Plus/Minus) — در هر فونت و هر
+        // تمی همیشه رسم می‌شود؛ دکمه‌ها هم بزرگ‌تر (۳۶×۳۲) شدند و تولتیپ فارسی
+        // «بزرگ‌نمایی/کوچک‌نمایی» گرفتند تا کارکردشان هم شفاف باشد.
+        var zoomIn = new Button
+        {
+            Content = new MaterialDesignThemes.Wpf.PackIcon
+            {
+                Kind = MaterialDesignThemes.Wpf.PackIconKind.Plus,
+                Width = 16, Height = 16,
+                VerticalAlignment = VerticalAlignment.Center
+            },
+            Width = 36, Height = 32,
+            Cursor = System.Windows.Input.Cursors.Hand,
+            ToolTip = "بزرگ‌نمایی"
+        };
+        var zoomOut = new Button
+        {
+            Content = new MaterialDesignThemes.Wpf.PackIcon
+            {
+                Kind = MaterialDesignThemes.Wpf.PackIconKind.Minus,
+                Width = 16, Height = 16,
+                VerticalAlignment = VerticalAlignment.Center
+            },
+            Width = 36, Height = 32,
+            Cursor = System.Windows.Input.Cursors.Hand,
+            ToolTip = "کوچک‌نمایی"
+        };
 
         // ═══ چرخهٔ بیست‌وششم — اسلایدر زوم فارسی ═══ «اسلایدر زوم که در پایین
         // صفحه است عمل نمی‌کند» — اسلایدر قدیمیِ نوار داخلی حذف شد؛ اسلایدر
@@ -603,11 +644,24 @@ public static class PrescriptionPrintHelper
         toolbar.Children.Add(rightTools);
 
         // چپ: زوم (دکمه‌ها + درصد + اسلایدر) و بستن — چرخه ۲۶: اسلایدر هم اضافه شد
+        // ═══ چرخهٔ سی‌وسوم (گزارش نوزدهم مالک): خوشهٔ زوم با جهت چپ‌به‌راست ═══
+        // در پنجرهٔ راست‌چین، StackPanel ارثی RTL ترتیب فرزندان را آینه می‌کند و
+        // تشخیص اینکه کدام دکمه بزرگ‌نمایی است مبهم می‌شود. خوشهٔ زوم صریحاً LTR
+        // شد: همیشه [−] [٪] [+] [اسلایدر] — همان الگوی آشنای زوم مرورگرها؛ بدون
+        // ابهام در هیچ جهت چیدمانی.
+        var zoomCluster = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            FlowDirection = FlowDirection.LeftToRight,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        zoomCluster.Children.Add(zoomOut);
+        zoomCluster.Children.Add(zoomText);
+        zoomCluster.Children.Add(zoomIn);
+        zoomCluster.Children.Add(zoomSlider);
+
         var leftTools = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        leftTools.Children.Add(zoomOut);
-        leftTools.Children.Add(zoomText);
-        leftTools.Children.Add(zoomIn);
-        leftTools.Children.Add(zoomSlider);
+        leftTools.Children.Add(zoomCluster);
         leftTools.Children.Add(new Border { Width = 10 });
         leftTools.Children.Add(closeBtn);
         DockPanel.SetDock(leftTools, Dock.Left);
