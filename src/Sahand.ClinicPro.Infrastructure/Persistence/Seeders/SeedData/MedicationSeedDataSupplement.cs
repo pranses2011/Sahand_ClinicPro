@@ -153,5 +153,6 @@ public static partial class MedicationSeedData
     public static IEnumerable<MedicationRow> AllRows
         => Rows.Concat(SupplementRows).Concat(Supplement2Rows).Concat(Supplement3Rows)
               .Concat(Supplement4Rows) // چرخه ۲۴ — مکمل چهارم
-              .Concat(Supplement5Rows); // چرخه ۲۷ — مکمل پنجم
+              .Concat(Supplement5Rows) // چرخه ۲۷ — مکمل پنجم
+              .Concat(Supplement6Rows); // چرخه ۲۹ — مکمل ششم (داروهای مرجع تداخل‌های خفته)
 }

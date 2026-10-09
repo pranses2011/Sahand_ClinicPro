@@ -26,7 +26,8 @@ public static partial class DrugInteractionSeedData
     public static IEnumerable<InteractionRow> AllInteractions
         => Rows.Concat(SupplementRows).Concat(Supplement2Rows)
               .Concat(Supplement3Rows) // چرخه ۲۴ — مکمل سوم
-              .Concat(Supplement4Rows); // چرخه ۲۷ — مکمل چهارم
+              .Concat(Supplement4Rows) // چرخه ۲۷ — مکمل چهارم
+              .Concat(Supplement5Rows); // چرخه ۲۹ — مکمل پنجم
 
     /// <summary>تداخل‌های مکمل چرخه بیست‌ویکم</summary>
     public static readonly IReadOnlyList<InteractionRow> SupplementRows = new InteractionRow[]

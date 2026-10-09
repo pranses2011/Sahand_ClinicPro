@@ -294,6 +294,98 @@ public class ReferenceDataSeeder : IDataSeeder
                 => new[] { medIds["Alendronate"] },
             "Levodopa/Carbidopa" => new[] { "Levodopa + Carbidopa", "Levodopa/Carbidopa" }
                 .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+
+            // ═══ چرخهٔ بیست‌ونهم (گزارش هجدهم مالک) — فعال‌سازی تداخل‌های خفته ═══
+            // تحلیل پوشش نشان داد ده‌ها جفت تداخلِ از قبل ثبت‌شده در بذر هرگز
+            // اعمال نمی‌شدند چون نام یک طرف در سطر تداخل با نام کاتالوگ یکی
+            // نبود (Valproate در برابر Sodium Valproate، Lithium در برابر
+            // Lithium Carbonate و…) یا کلاسِ بدون نگاشت بود (Beta blockers،
+            // ACE inhibitors، Nitrates و…). این نگاشت‌های مستعار آن جفت‌ها را
+            // با تغییری در دادهٔ بالینی فعال می‌کنند؛ سقف Take(3) خودکار
+            // تعداد اعضا را مهار می‌کند.
+            "Valproate" or "Valproic Acid" or "Divalproex" => new[]
+                { "Sodium Valproate", "Sodium valproate" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Lithium" when medIds.ContainsKey("Lithium Carbonate") => new[] { medIds["Lithium Carbonate"] },
+            "Meperidine" when medIds.ContainsKey("Pethidine") => new[] { medIds["Pethidine"] },
+            "Glyburide" when medIds.ContainsKey("Glibenclamide") => new[] { medIds["Glibenclamide"] },
+            "Acetylsalicylic Acid" when medIds.ContainsKey("Aspirin") => new[] { medIds["Aspirin"] },
+            "Insulin" => new[] { "Insulin regular", "Insulin NPH", "Insulin glargine", "Insulin Aspart" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Penicillin" => new[] { "Penicillin G (Benzylpenicillin)", "Penicillin V" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Thyroxine" when medIds.ContainsKey("Levothyroxine") => new[] { medIds["Levothyroxine"] },
+            "Morphine" when medIds.ContainsKey("Morphine Sulfate") => new[] { medIds["Morphine Sulfate"] },
+            "Diclofenac" when medIds.ContainsKey("Diclofenac Sodium") => new[] { medIds["Diclofenac Sodium"] },
+            "Warfarin (weekly)" when medIds.ContainsKey("Warfarin") => new[] { medIds["Warfarin"] },
+            "Digoxin (weekly)" when medIds.ContainsKey("Digoxin") => new[] { medIds["Digoxin"] },
+            "Acetaminophen (high-dose)" when medIds.ContainsKey("Acetaminophen") => new[] { medIds["Acetaminophen"] },
+            "Metronidazole (course)" when medIds.ContainsKey("Metronidazole") => new[] { medIds["Metronidazole"] },
+            "Fluconazole (single)" when medIds.ContainsKey("Fluconazole") => new[] { medIds["Fluconazole"] },
+            "Clarithromycin (course)" when medIds.ContainsKey("Clarithromycin") => new[] { medIds["Clarithromycin"] },
+            "Lamotrigine (start)" when medIds.ContainsKey("Lamotrigine") => new[] { medIds["Lamotrigine"] },
+            "Isotretinoin" when medIds.ContainsKey("Isotretinoin (Oral)") => new[] { medIds["Isotretinoin (Oral)"] },
+            "Iron" or "Iron (Ferrous sulfate)" or "Iron supplements" => new[]
+                { "Ferrous Sulfate", "Ferrous sulfate", "Ferrous Fumarate" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Vitamin K" when medIds.ContainsKey("Vitamin K1") => new[] { medIds["Vitamin K1"] },
+            "Pyridoxine" when medIds.ContainsKey("Vitamin B6 (Pyridoxine)") => new[] { medIds["Vitamin B6 (Pyridoxine)"] },
+            "Ascorbic Acid" when medIds.ContainsKey("Vitamin C (Ascorbic Acid)") => new[] { medIds["Vitamin C (Ascorbic Acid)"] },
+            "Thiamine" => new[] { "Vitamin B1 (Thiamine)", "Thiamine (Ampoule)" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Oral Contraceptive (Levonorgestrel/EE)" or "Oral contraceptives" or "Combined Oral Contraceptive"
+                => new[] { "Combined Oral Contraceptive (Levonorgestrel/EE)", "Ethinylestradiol" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Miconazole (Oral Gel)" when medIds.ContainsKey("Miconazole") => new[] { medIds["Miconazole"] },
+            "Amoxicillin/Clavulanate" when medIds.ContainsKey("Amoxicillin/Clavulanic acid")
+                => new[] { medIds["Amoxicillin/Clavulanic acid"] },
+            "Trimethoprim" or "Sulfamethoxazole" when medIds.ContainsKey("Trimethoprim/Sulfamethoxazole")
+                => new[] { medIds["Trimethoprim/Sulfamethoxazole"] },
+            "Azole antifungals" => new[] { "Fluconazole", "Ketoconazole", "Itraconazole" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Beta blockers" or "Beta-blocker" => new[] { "Propranolol", "Metoprolol", "Bisoprolol", "Carvedilol" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "ACE inhibitors" => new[] { "Lisinopril", "Enalapril", "Captopril", "Ramipril" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Diuretics" => new[] { "Furosemide", "Hydrochlorothiazide", "Torasemide" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Loop Diuretics" => new[] { "Furosemide", "Torasemide" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Corticosteroids" => new[] { "Prednisolone", "Dexamethasone" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Benzodiazepines" => new[] { "Diazepam", "Alprazolam", "Lorazepam" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "MAO inhibitors" => new[] { "Selegiline", "Phenelzine" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "SSRIs" => new[] { "Sertraline", "Fluoxetine", "Paroxetine", "Citalopram" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Antidepressants" => new[] { "Sertraline", "Fluoxetine", "Amitriptyline" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Aminoglycoside" => new[] { "Gentamicin", "Amikacin" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Nitrates" => new[] { "Nitroglycerin", "Isosorbide Dinitrate", "Isosorbide Mononitrate" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Proton pump inhibitors" or "PPIs long-term" => new[]
+                { "Omeprazole", "Pantoprazole", "Lansoprazole", "Esomeprazole" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "NSAIDs" => new[]
+                { "Ibuprofen", "Diclofenac Sodium", "Naproxen", "Aspirin", "Mefenamic Acid", "Aceclofenac", "Piroxicam", "Tenoxicam" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Strong CYP3A4 inhibitors" => new[] { "Ketoconazole", "Clarithromycin", "Ritonavir" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "CYP3A4 inducers" => new[] { "Rifampin", "Carbamazepine", "Phenytoin" }
+                .Where(medIds.ContainsKey).Select(m => medIds[m]).ToList(),
+            "Thiazolidinediones" when medIds.ContainsKey("Pioglitazone") => new[] { medIds["Pioglitazone"] },
+            "Lactated Ringer" when medIds.ContainsKey("Ringer Lactate") => new[] { medIds["Ringer Lactate"] },
+            "Calcium carbonate" when medIds.ContainsKey("Calcium Carbonate") => new[] { medIds["Calcium Carbonate"] },
+            "Potassium chloride" when medIds.ContainsKey("Potassium Chloride") => new[] { medIds["Potassium Chloride"] },
+            "Antacid" when medIds.ContainsKey("Aluminum Hydroxide + Magnesium Hydroxide")
+                => new[] { medIds["Aluminum Hydroxide + Magnesium Hydroxide"] },
+            // موارد صرفاً مستندشده — دارویی در کاتالوگ ندارند و فقط حاشیهٔ آموزشی‌اند
+            "Grapefruit juice" or "St John's Wort" or "Live vaccines"
+                or "Smoking cessation" or "Kaolin-pectin" or "Contrast agents" or "Ginkgo biloba" or "Ginseng"
+                or "Enteric Coated Tablets" or "Neomycin" or "Castor Oil" or "Psyllium"
+                => Array.Empty<long>(),
             _ => Array.Empty<long>(),
         };
     }
