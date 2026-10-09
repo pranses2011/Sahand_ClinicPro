@@ -13,6 +13,18 @@ namespace Sahand.ClinicPro.Application.Features.Appointments.Queries.GetAvailabl
 /// <summary>
 /// پرس‌وجوی اسلات‌های زمانی یک پزشک در یک تاریخ — گام U4 طبق فرم ۸
 /// تولید اسلات از برنامه هفتگی + حذف رزروشده‌ها + استراحت + غیبت
+/// ═══════════════════════════════════════════════════════════════════
+/// چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک) — «ساعت‌های صفحهٔ نوبت‌دهی همه
+/// فعال می‌آیند و ساعات پر مشخص نمی‌شوند». دو شکاف واقعی رفع شد:
+/// ۱) تطابق «تساوی دقیقِ ساعت» فقط نوبت‌هایی را پر نشان می‌داد که دقیقاً
+///    روی مرز اسلات‌ها ثبت شده‌اند؛ نوبت ثبت‌شده از فرم نوبت (ساعت آزاد
+///    مثل ۰۹:۳۵) یا با گام متفاوتِ برنامهٔ کاری هرگز هیچ اسلاتی را پر
+///    نمی‌کرد. اکنون «تداخل بازه‌ای» بررسی می‌شود: بازهٔ نوبت
+///    [ساعت، ساعت + مدت) با بازهٔ اسلات [شروع، شروع + گام) تصادم دارد؟
+/// ۲) پذیرش‌های حضوری همان روز برای همان پزشک (ثبت از صفحهٔ پذیرش)
+///    اصلاً در این پرس‌وجو دیده نمی‌شدند — بیماری که پذیرش شده ولی نوبت
+///    ندارد، اسلاتی را اشغال نمی‌کرد. اکنون پذیرش‌های فعال روز (مرتبط
+///    با پزشک) هم بازهٔ اشغالی می‌سازند.
 /// </summary>
 public record GetAvailableSlotsQuery(long DoctorId, string DateShamsi)
     : IRequest<Result<List<SlotDto>>>;
@@ -47,12 +59,8 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
         if (dayAbsence)
             return Result<List<SlotDto>>.Success(new List<SlotDto>());
 
-        // روز هفته ایرانی: شنبه=۰
-        var persianDay = ((int)date.DayOfWeek + 1) % 7; // شنبه=6→0 با +1
-        var persianDayIndex = ((int)date.DayOfWeek + 2) % 7; // اصلاح: شنبه DotNet=6
-        // شنبه دات‌نت=Saturday=6 → index 0
-        var dayIndex = ((int)date.DayOfWeek + 2) % 7 == 0 ? 6 : ((int)date.DayOfWeek + 1) % 7;
-        dayIndex = date.DayOfWeek switch
+        // روز هفته ایرانی — شنبه=۰
+        var dayIndex = date.DayOfWeek switch
         {
             DayOfWeek.Saturday => 0,
             DayOfWeek.Sunday => 1,
@@ -75,14 +83,41 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
             await _unitOfWork.Repository<ExaminationRoom>().QueryableNoTracking
                 .FirstOrDefaultAsync(r => r.Id == schedule.RoomId, cancellationToken);
 
-        // نوبت‌های همان روز
+        var slotDuration = doctor.VisitDuration > 0 ? doctor.VisitDuration : schedule.SlotDuration;
+
+        // ═══ نوبت‌های همان روز — با «مدت» برای تداخل بازه‌ای (چرخه ۲۸) ═══
         var booked = await _unitOfWork.Repository<Appointment>().QueryableNoTracking
             .Where(a => a.DoctorId == request.DoctorId && a.AppointmentDate == date &&
                         a.Status != AppointmentStatus.Cancelled &&
                         a.Status != AppointmentStatus.NoShow)
-            .Select(a => new { a.AppointmentTime, PatientName = a.Patient!.FirstName + " " + a.Patient.LastName })
+            .Select(a => new
+            {
+                a.AppointmentTime,
+                // مدت واقعی نوبت؛ صفر = همان گام اسلات (حداقل یک اسلات اشغال)
+                Duration = a.Duration > 0 ? a.Duration : slotDuration,
+                PatientName = a.Patient!.FirstName + " " + a.Patient.LastName
+            })
             .ToListAsync(cancellationToken);
-        var bookedMap = booked.ToDictionary(b => b.AppointmentTime, b => b.PatientName);
+
+        // ═══ پذیرش‌های حضوری همان روز برای همین پزشک — چرخه ۲۸ ═══
+        // بیمارِ پذیرش‌شده از صفحهٔ پذیرش هم وقت پزشک را می‌گیرد؛ ساعتِ مراجعه
+        // از خود ReceptionDate (شامل ساعت ثبت) و در نبود آن EnterTime خوانده
+        // می‌شود؛ پذیرش‌های لغو/ترخیص‌شده غالباً جای پزشک را آزاد کرده‌اند اما
+        // برای اطمینانِ ظرفیت، همهٔ پذیرش‌های فعال روز لحاظ می‌شوند
+        var dayStart = date.ToDateTime(TimeOnly.MinValue);
+        var dayEnd = dayStart.AddDays(1);
+        var receptions = await _unitOfWork.Repository<Reception>().QueryableNoTracking
+            .Where(r => r.DoctorId == request.DoctorId &&
+                        !r.IsDeleted &&
+                        r.ReceptionDate >= dayStart && r.ReceptionDate < dayEnd)
+            .Select(r => new
+            {
+                Time = r.EnterTime != null
+                    ? TimeOnly.FromDateTime(r.EnterTime.Value)
+                    : TimeOnly.FromDateTime(r.ReceptionDate),
+                PatientName = r.Patient != null ? r.Patient.FirstName + " " + r.Patient.LastName : ""
+            })
+            .ToListAsync(cancellationToken);
 
         // غیبت ساعتی
         var hourAbsence = await _unitOfWork.Repository<DoctorAbsence>().QueryableNoTracking
@@ -90,16 +125,26 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
             .Select(a => new { a.FromTime, a.ToTime })
             .ToListAsync(cancellationToken);
 
-        var slotDuration = doctor.VisitDuration > 0 ? doctor.VisitDuration : schedule.SlotDuration;
         var slots = new List<SlotDto>();
 
         for (var time = schedule.StartTime; time < schedule.EndTime; time = time.AddMinutes(slotDuration))
         {
+            var slotEnd = time.AddMinutes(slotDuration);
             var isBreak = schedule.BreakStart is not null && schedule.BreakEnd is not null &&
                           time >= schedule.BreakStart && time < schedule.BreakEnd;
             var inAbsence = hourAbsence.Any(a => time >= a.FromTime && time < a.ToTime);
-            var isBooked = bookedMap.ContainsKey(time);
-            var patient = isBooked ? bookedMap[time] : null;
+
+            // ═══ تداخل بازه‌ای — چرخه ۲۸ ═══
+            // بازهٔ نوبت [t, t+d) با بازهٔ اسلات [شروع، پایان) هر تلاقی داشت،
+            // اسلات «پر» است — حالت‌های ساعتِ آزاد و گامِ متفاوت هم پوشش
+            // داده می‌شوند؛ نام بیمار نخستین نوبتِ تصادمی برای تولتیپ
+            var bookedHit = booked.FirstOrDefault(b =>
+                b.AppointmentTime < slotEnd && time < b.AppointmentTime.AddMinutes(b.Duration));
+            var receptionHit = receptions.FirstOrDefault(r =>
+                r.Time < slotEnd && time < r.Time.AddMinutes(slotDuration));
+
+            var isBooked = bookedHit is not null || receptionHit is not null;
+            var patient = bookedHit?.PatientName ?? receptionHit?.PatientName;
 
             slots.Add(new SlotDto(
                 time.ToString("HH:mm"),
