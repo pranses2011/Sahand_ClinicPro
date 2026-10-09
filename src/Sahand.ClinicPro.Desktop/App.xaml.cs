@@ -83,6 +83,12 @@ public partial class App : System.Windows.Application
         // ثبت می‌شود؛ پنجرهٔ اصلی و ورود استثنا هستند (بستنشان خروج از برنامه
         // است). PreviewKeyDown پیش از پردازش عناصر داخلی (کمبو/تقویم) می‌گیرد
         // تا ESC همیشه فرم را ببندد.
+        // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) ═══ «باید قبل از بستن بررسی
+        // کنه که تغییری داده نشده باشه و اگه تغییری باشه، با تایید کاربر فرم
+        // رو ببنده»: اگر ViewModel فرم قرارداد IHasUnsavedChanges را پیاده
+        // کرده و تغییرات ذخیره‌نشده دارد، ابتدا تأیید فارسی خود برنامه پرسیده
+        // می‌شود — با دیالوگ برنامه (قانون مالک) نه کادر پیام ویندوز. همان
+        // بررسی روی دکمهٔ بستن (X) پنجره هم از رویداد Closing رد می‌شود.
         if (window is not Sahand.ClinicPro.Desktop.MainWindow
             && window is not Views.LoginWindow)
         {
@@ -90,9 +96,23 @@ public partial class App : System.Windows.Application
             {
                 if (ke.Key == System.Windows.Input.Key.Escape)
                 {
+                    // تغییرات ذخیره‌نشده؟ — ابتدا تأیید کاربر
+                    if (!ConfirmCloseIfDirty(window))
+                        return;
+                    AllowClose(window);
                     window.Close();
                     ke.Handled = true;
                 }
+            };
+
+            // دکمهٔ بستن (X) هم همان تأیید را می‌گیرد — قانون «قبل از بستن بررسی شود»
+            window.Closing += (_, ce) =>
+            {
+                if (!ReferenceEquals(window.GetValue(CloseAllowedProperty), true)
+                    && !ConfirmCloseIfDirty(window))
+                    ce.Cancel = true;
+                else
+                    AllowClose(window);
             };
         }
         // ═══ چرخه بیست‌وچهارم — مقیاس سراسری رابط ═══ «اندازهٔ فونت فقط صفحهٔ تم
@@ -108,6 +128,37 @@ public partial class App : System.Windows.Application
     /// <summary>پرچم جلوگیری از وصل‌شدن دوبارهٔ فونت به همان پنجره</summary>
     private static readonly DependencyProperty FontHookedProperty =
         DependencyProperty.RegisterAttached("FontHooked", typeof(bool), typeof(App), new PropertyMetadata(false));
+
+    /// <summary>
+    /// پرچم «بستن مجاز» — پس از تأیید کاربر (یا فرم تمیز) روی پنجره گذاشته
+    /// می‌شود تا رویداد Closing دوباره تأیید نخواهد؛ چرخهٔ بیست‌وششم
+    /// </summary>
+    private static readonly DependencyProperty CloseAllowedProperty =
+        DependencyProperty.RegisterAttached("CloseAllowed", typeof(bool), typeof(App), new PropertyMetadata(false));
+
+    /// <summary>علامت‌گذاری پنجره به‌عنوان مجاز به بستن — پرهیز از تأیید تکراری</summary>
+    private static void AllowClose(Window window) => window.SetValue(CloseAllowedProperty, true);
+
+    /// <summary>
+    /// بررسی تغییرات ذخیره‌نشده پیش از بستن پنجره — چرخهٔ بیست‌وششم:
+    /// اگر ViewModel فرم قرارداد IHasUnsavedChanges را پیاده کرده و کثیف
+    /// است، تأیید دوگزینه‌ای فارسی نمایش داده می‌شود؛ انصراف کاربر یعنی
+    /// «فرم باز بماند». فرم‌های بدون قرارداد (نمایشی/مرورگر) بی‌تأیید
+    /// بسته می‌شوند — رفتار پیشین.
+    /// </summary>
+    private static bool ConfirmCloseIfDirty(Window window)
+    {
+        if (window.DataContext is not ViewModels.IHasUnsavedChanges { HasUnsavedChanges: true } dirty)
+            return true; // فرم تمیز است یا قرارداد ندارد — بستن بی‌تأیید
+
+        // دیالوگ فارسی خود برنامه — نه کادر پیام ویندوز (قانون مالک)
+        var answer = Views.AppDialog.Confirm(
+            "تغییرات ذخیره‌نشده",
+            $"در «{dirty.UnsavedChangesTitle}» تغییراتی وارد کرده‌اید که ذخیره نشده است.\n" +
+            "فرم بدون ذخیره بسته شود؟",
+            Views.AppDialogIcon.Warning);
+        return answer == true;
+    }
 
     /// <summary>رویداد راه‌اندازی — ساخت کانتینر DI و انتخاب پنجره آغازین</summary>
     protected override void OnStartup(StartupEventArgs e)

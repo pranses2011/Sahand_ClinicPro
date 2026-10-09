@@ -12,8 +12,11 @@ namespace Sahand.ClinicPro.Desktop.ViewModels;
 /// ViewModel فرم ثبت پرسنل — چرخه هجدهم (گزارش دوازدهم):
 /// عکس پروفایل همزمان با ثبت انتخاب می‌شود و پس از موفقیتِ ثبت (گرفتن شناسهٔ
 /// پرسنل از پاسخ API) در Photos/Employees ذخیره و مسیرش در دیتابیس ثبت می‌شود.
+/// ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) ═══ پایهٔ FormViewModelBase برای
+/// ردیابی تغییرات ذخیره‌نشده — پیش از بستن فرم (ESC یا دکمهٔ بستن) تأیید
+/// فارسی خود برنامه پرسیده می‌شود.
 /// </summary>
-public partial class EmployeeFormViewModel : ObservableObject
+public partial class EmployeeFormViewModel : FormViewModelBase
 {
     private readonly IApiClient _api;
 
@@ -30,6 +33,9 @@ public partial class EmployeeFormViewModel : ObservableObject
 
     /// <summary>متن دکمهٔ ذخیره — «ثبت» یا «ذخیرهٔ تغییرات»</summary>
     public string SaveButtonText => _editEmployeeId is null ? "ثبت پرسنل" : "ذخیرهٔ تغییرات";
+
+    /// <summary>عنوان فرم برای پیام تأیید تغییرات ذخیره‌نشده — چرخه ۲۶</summary>
+    public override string UnsavedChangesTitle => FormTitle;
 
     /// <summary>نام</summary>
     [ObservableProperty]
@@ -226,13 +232,17 @@ public partial class EmployeeFormViewModel : ObservableObject
 
     /// <summary>
     /// بارگذاری لیست‌های مرجع و سپس (در حالت ویرایش) داده‌های پرسنل —
-    /// ترتیب مهم است: ابتدا فهرست‌ها تا انتخاب اندیکس صحیح ممکن باشد
+    /// ترتیب مهم است: ابتدا فهرست‌ها تا انتخاب اندیکس صحیح ممکن باشد.
+    /// چرخه ۲۶: پس از پایان بارگذاری فرم «تمیز» علامت می‌خورد تا ردیابی
+    /// تغییرات کاربر (نه پرشدن برنامه‌ای فرم) از همین نقطه آغاز شود.
     /// </summary>
     private async Task InitializeAsync()
     {
+        BeginInit();
         await LoadLookupsAsync();
         if (_editEmployeeId is not null)
             await LoadForEditAsync(_editEmployeeId.Value);
+        MarkClean();
     }
 
     /// <summary>
@@ -497,6 +507,7 @@ public partial class EmployeeFormViewModel : ObservableObject
             }
 
             IsBusy = false;
+            MarkClean(); // ذخیرهٔ موفق — فرم دیگر «کثیف» نیست؛ بستن بی‌تأیید
             SaveSucceeded?.Invoke(this, EventArgs.Empty);
             return;
         }
@@ -522,6 +533,7 @@ public partial class EmployeeFormViewModel : ObservableObject
         }
 
         IsBusy = false;
+        MarkClean(); // ذخیرهٔ موفق — فرم دیگر «کثیف» نیست؛ بستن بی‌تأیید
         SaveSucceeded?.Invoke(this, EventArgs.Empty);
     }
 

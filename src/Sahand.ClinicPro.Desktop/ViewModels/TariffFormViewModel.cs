@@ -9,8 +9,10 @@ namespace Sahand.ClinicPro.Desktop.ViewModels;
 /// «در صفحه بیمه، بتوان تعرفه جدید تعریف کرد و یا تعرفه‌های موجود را ویرایش کرد».
 /// اگر EditTarget تهی باشد ثبت جدید است؛ در غیر این صورت ویرایش همان ردیف.
 /// سهم بیمه/بیمار درصدی است (۰-۱۰۰) و در سرور روی ردیف تعرفهٔ آزادِ سال جاری اعمال می‌شود.
+/// ═══ چرخهٔ بیست‌وششم ═══ پایهٔ FormViewModelBase — تغییرات ذخیره‌نشده پیش از
+/// بستن (ESC/انصراف/دکمهٔ بستن) با تأیید فارسی خود برنامه پرسیده می‌شود.
 /// </summary>
-public partial class TariffFormViewModel : ObservableObject
+public partial class TariffFormViewModel : FormViewModelBase
 {
     private readonly IApiClient _api;
 
@@ -119,11 +121,17 @@ public partial class TariffFormViewModel : ObservableObject
             InsuranceShare = 0;
             PatientShare = 100;
         }
+
+        // فرم آماده است — نقطهٔ شروع ردیابی تغییرات کاربر (چرخه ۲۶)
+        MarkClean();
     }
 
     /// <summary>برچسب هدف تعرفه — آزاد یا نام بیمه (نمایش در فرم)</summary>
     [ObservableProperty]
     private string _targetLabel = "آزاد (بدون بیمه)";
+
+    /// <summary>عنوان فرم برای پیام تأیید تغییرات ذخیره‌نشده — چرخه ۲۶</summary>
+    public override string UnsavedChangesTitle => Header;
 
     /// <summary>ذخیره — POST برای جدید / PUT برای ویرایش</summary>
     [RelayCommand]
@@ -174,7 +182,11 @@ public partial class TariffFormViewModel : ObservableObject
             ok = await _api.PutAsync($"lookups/services/{_editTarget.Id}", body);
 
         IsBusy = false;
-        if (ok) CloseRequested?.Invoke(this, EventArgs.Empty);
+        if (ok)
+        {
+            MarkClean(); // ذخیرهٔ موفق — بستن بی‌تأیید (چرخه ۲۶)
+            CloseRequested?.Invoke(this, EventArgs.Empty);
+        }
         else ErrorMessage = _api.LastError ?? "ذخیره ناموفق بود";
     }
 
