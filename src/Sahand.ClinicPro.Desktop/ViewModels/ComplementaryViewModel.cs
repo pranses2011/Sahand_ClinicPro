@@ -131,6 +131,30 @@ public partial class ComplementaryViewModel : ViewModelBase
     /// <summary>همه قالب‌های چاپ (سروری)</summary>
     public ObservableCollection<PrintTemplateRow> PrintTemplates { get; } = new();
 
+    // ═══ چرخهٔ سی‌وششم (گزارش مالک — رفع CS8604 و باگ پنهان زمان-اجرا) ═══
+    // TemplateFilterOptions در مقداردهندهٔ استاتیک خود TemplateTypes را
+    // می‌خواند؛ پیش از این چرخه TemplateTypes در متن فایل «بعد از» آن تعریف
+    // شده بود. مقداردهنده‌های استاتیک به‌ترتیبِ ظاهر در متن اجرا می‌شوند، پس
+    // هنگام ساخت TemplateFilterOptions مقدار TemplateTypes هنوز تهی بود:
+    // هم هشدار CS8604 کامپایلر صادق بود و هم در زمان اجرا، نخستین دسترسی به
+    // این کلاس (بازکردن صفحهٔ «فرم‌های تکمیلی») با کرش TypeInitializationException
+    // متوقف می‌شد (متد Concat با آرگومان تهی استثنا می‌دهد). درمان: تعریف
+    // TemplateTypes به بالای همهٔ مصرف‌کننده‌های استاتیکش منتقل شد.
+    // ⚠️ این ترتیب را جابه‌جا نکنید؛ گارد بسته‌بندی چرخه‌ها پایشش می‌کند.
+    /// <summary>گزینه‌های نوع سند — ۹ نوع سند قابل طراحی در طراح (تک‌منبع انواع سند)</summary>
+    public static (string key, string fa)[] TemplateTypes { get; } =
+    {
+        ("Invoice", "فاکتور و قبض پرداخت"),
+        ("Prescription", "نسخه پزشکی"),
+        ("LabOrder", "درخواست آزمایش"),
+        ("LabResult", "نتیجه آزمایش"),
+        ("ImagingOrder", "درخواست تصویربرداری"),
+        ("AppointmentTicket", "نوبت‌نامه"),
+        ("ReceptionReceipt", "رسید پذیرش"),
+        ("MedicalCertificate", "گواهی پزشکی"),
+        ("PayrollSlip", "فیش حقوقی")
+    };
+
     // ═══ چرخهٔ سی‌وپنجم (گزارش مالک) — فیلتر موجودیت در طراح قالب ═══
     // «در تب طراح قالب چاپ همه قالب‌ها نمایش داده می‌شوند در حالی که باید فقط
     // طرح‌های مربوط به موجودیتی که از لیست انتخاب می‌کنیم نمایش داده شود»:
@@ -145,7 +169,7 @@ public partial class ComplementaryViewModel : ViewModelBase
     [ObservableProperty]
     private int _templateFilterIndex;
 
-    /// <summary>گزینه‌های فیلتر موجودیت — «همه» + ۹ نوع سند</summary>
+    /// <summary>گزینه‌های فیلتر موجودیت — «همه» + ۹ نوع سند؛ به ترتیبِ استاتیکِ TemplateTypes وابسته است (باید بالاتر تعریف بماند)</summary>
     public static (string key, string fa)[] TemplateFilterOptions { get; } =
         new[] { ("", "همه موجودیت‌ها") }.Concat(TemplateTypes).ToArray();
 
@@ -185,23 +209,9 @@ public partial class ComplementaryViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<string> _activeVariables = new();
 
-    /// <summary>نمایه نوع در فرم ساخت سریع</summary>
+    /// <summary>نمایه نوع در فرم ساخت سریع — اندیس داخل TemplateTypes (که در چرخهٔ سی‌وششم به بالای مصرف‌کننده‌های استاتیکش منتقل شد)</summary>
     [ObservableProperty]
     private int _newTypeIndex;
-
-    /// <summary>گزینه‌های نوع سند</summary>
-    public static (string key, string fa)[] TemplateTypes { get; } =
-    {
-        ("Invoice", "فاکتور و قبض پرداخت"),
-        ("Prescription", "نسخه پزشکی"),
-        ("LabOrder", "درخواست آزمایش"),
-        ("LabResult", "نتیجه آزمایش"),
-        ("ImagingOrder", "درخواست تصویربرداری"),
-        ("AppointmentTicket", "نوبت‌نامه"),
-        ("ReceptionReceipt", "رسید پذیرش"),
-        ("MedicalCertificate", "گواهی پزشکی"),
-        ("PayrollSlip", "فیش حقوقی")
-    };
 
     /* ─── تب ۲: نظرسنجی ─── */
 
