@@ -2344,16 +2344,17 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsNarcotic")
                         .HasColumnType("bit");
 
-                    b.Property<byte>("ItemKind")
-                        .HasColumnType("tinyint")
-                        .HasDefaultValue((byte)1)
-                        .HasComment("نوع قلم انبار — ۱: دارو، ۲: لوازم مصرفی (سرنگ/سرم/گاز و…) — چرخهٔ ۳۹");
-
                     b.Property<bool>("IsOtc")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsRefrigerated")
                         .HasColumnType("bit");
+
+                    b.Property<byte>("ItemKind")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint")
+                        .HasDefaultValue((byte)1)
+                        .HasComment("نوع قلم انبار — ۱: دارو، ۲: لوازم مصرفی (سرنگ/سرم/گاز و…) — چرخهٔ ۳۹");
 
                     b.Property<string>("Manufacturer")
                         .HasMaxLength(200)
@@ -8344,6 +8345,10 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<byte?>("ItemKind")
+                        .HasColumnType("tinyint")
+                        .HasComment("دامنهٔ جلسه انبارگردانی — ۱: دارو، ۲: لوازم مصرفی، تهی: کل انبار — چرخهٔ ۴۳");
+
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
@@ -10308,6 +10313,8 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("KeysJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)")
                         .HasDefaultValue("[]")

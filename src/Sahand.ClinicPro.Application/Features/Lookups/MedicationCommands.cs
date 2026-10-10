@@ -47,6 +47,12 @@ public class CreatePharmacyItemCommandValidator : AbstractValidator<CreatePharma
             .WithMessage("نام فارسی قلم الزامی است (حداکثر ۲۰۰ نویسه)");
         RuleFor(x => x.GenericName).NotEmpty().MaximumLength(200)
             .WithMessage("نام ژنریک/انگلیسی الزامی است — برای لوازم مصرفی می‌توانید همان نام فارسی را وارد کنید");
+        // ═══ چرخهٔ ۴۳ (گزارش مالک: «سرنگ ۲ سی سی رو ثبت بکنم ولی گفت در لیست
+        // اقلام موجود است») — نام ژنریک تک‌نویسه‌ای تقریباً همیشه از رونوشت
+        // ناقص خودکار فرم می‌آید؛ رد صریح با پیام راهنما از ثبت دادهٔ معیوب
+        // پیشگیری می‌کند و گارد تکراری را هم از تطبیق‌های کاذب خلاص می‌کند.
+        RuleFor(x => x.GenericName).MinimumLength(2).When(x => !string.IsNullOrWhiteSpace(x.GenericName))
+            .WithMessage("نام ژنریک حداقل ۲ نویسه است — اگر نام فارسی به‌طور خودکار کپی شده، آن را کامل کنید");
         RuleFor(x => x.ItemKind).IsInEnum().WithMessage("نوع قلم نامعتبر است (دارو یا لوازم مصرفی)");
     }
 }
@@ -59,26 +65,48 @@ public class CreatePharmacyItemCommandHandler : IRequestHandler<CreatePharmacyIt
     /// <summary>سازنده با تزریق واحد کار</summary>
     public CreatePharmacyItemCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
-    /// <summary>اجرای ثبت — نام تکراریِ فعال رد می‌شود تا فهرست‌ها دوزبانگی نداشته باشند</summary>
+    /// <summary>
+    /// اجرای ثبت — نام تکراریِ فعال رد می‌شود تا فهرست‌ها دوزبانگی نداشته باشند.
+    /// ═══ چرخهٔ ۴۳ (گزارش مالک: «سرنگ ۲ سی سی رو ثبت بکنم ولی گفت در لیست
+    /// اقلام موجود است… در حالی که در لیست نبود») ═══ ریشهٔ تکراری کاذب:
+    /// فرم دسکتاپ نام ژنریک را فقط با «نخستین نویسهٔ» نام فارسی پر می‌کرد (مثل
+    /// «س» برای سرنگ)؛ چون گارد تکراری نام ژنریک را هم تطبیق می‌داد، هر قلم
+    /// دوم با حرف آغازین یکسان رد می‌شد. اکنون تطبیق نام‌ها با «نرمال‌سازی
+    /// فارسی» انجام می‌شود (ی/ي عربی، ک/ك عربی و فاصله‌های ابتدایی/انتهایی)
+    /// تا فقط نام‌های «واقعاً یکسان» تکراری شمرده شوند.
+    /// </summary>
     public async Task<Result<long>> Handle(CreatePharmacyItemCommand request,
         CancellationToken cancellationToken)
     {
-        var nameFa = request.NameFa.Trim();
+        // مقدار خامِ بریده‌شده برای ذخیره + نسخهٔ نرمال‌شده فقط برای مقایسه
+        // (نرمال‌سازی هرگز روی دادهٔ ذخیره‌شده اعمال نمی‌شود تا ورودی کاربر دست‌نخورده بماند)
+        var rawNameFa = request.NameFa.Trim();
+        var rawGeneric = request.GenericName.Trim();
+        var nameFa = NormalizeFa(rawNameFa);
+        var genericName = NormalizeFa(rawGeneric);
 
         // گارد نام تکراری — قلم فعالِ هم‌نام (دارو یا مصرفی) نباید دوباره ساخته شود؛
-        // اگر قبلاً نرم‌حذف شده باشد، ردیف جدید بدون تداخل با یکتایی IrcCode ساخته می‌شود
-        var duplicate = await _unitOfWork.Repository<Medication>().QueryableNoTracking
-            .AnyAsync(m => !m.IsDeleted && m.IsActive
-                && (m.GenericNameFa == nameFa || m.GenericName == request.GenericName.Trim()),
-                cancellationToken);
+        // اگر قبلاً نرم‌حذف شده باشد، ردیف جدید بدون تداخل با یکتایی IrcCode ساخته می‌شود.
+        // همهٔ نام‌های فعال خوانده و در حافظه با نرمال‌سازی فارسی مقایسه می‌شوند —
+        // چون SQL تبدیل نویسه‌های عربی/فارسی (ي/ی، ك/ک) را انجام نمی‌دهد و پالایش
+        // پیشینی روی متن خام، جفت‌های هم‌نام با صفحه‌کلید متفاوت را از دست می‌داد.
+        // سقف مقرون‌به‌صرفه: کاتالوگ دارو چند هزار ردیف است و این یک بار در هر
+        // ثبت قلم اتفاق می‌افتد؛ فقط دو ستون متنی خوانده می‌شود.
+        var existing = await _unitOfWork.Repository<Medication>().QueryableNoTracking
+            .Where(m => !m.IsDeleted && m.IsActive)
+            .Select(m => new { m.GenericNameFa, m.GenericName })
+            .ToListAsync(cancellationToken);
+        var duplicate = existing.Any(m =>
+            NormalizeFa(m.GenericNameFa ?? "") == nameFa ||
+            NormalizeFa(m.GenericName ?? "") == genericName);
         if (duplicate)
             return Result<long>.Failure(new Error("PHARMACY.ITEM.DUPLICATE",
-                $"قلم «{nameFa}» از قبل در انبار ثبت شده است — از همان استفاده کنید"));
+                $"قلم «{rawNameFa}» از قبل در انبار ثبت شده است — از همان استفاده کنید"));
 
         var item = new Medication
         {
-            GenericName = request.GenericName.Trim(),
-            GenericNameFa = nameFa,
+            GenericName = rawGeneric,
+            GenericNameFa = rawNameFa,
             ItemKind = request.ItemKind,
             Form = request.Form?.Trim(),
             Strength = request.Strength?.Trim(),
@@ -92,4 +120,17 @@ public class CreatePharmacyItemCommandHandler : IRequestHandler<CreatePharmacyIt
 
         return Result<long>.Success(item.Id);
     }
+
+    /// <summary>
+    /// نرمال‌سازی فارسی برای «مقایسهٔ» نام‌ها — نویسه‌های هم‌ارز عربی/فارسی و
+    /// فاصله‌ها یکسان‌سازی می‌شوند تا دو نام که فقط تفاوت صفحه‌کلیدی دارند
+    /// («سرنگ» با ي عربی و «سرنگ» با ی فارسی) به‌درستی تکراری شمرده شوند.
+    /// فقط برای مقایسه است؛ مقدار اصلی کاربر بدون تغییر ذخیره می‌شود.
+    /// </summary>
+    internal static string NormalizeFa(string text) => text
+        .Replace('ي', 'ی')   // ي عربی → ی فارسی
+        .Replace('ك', 'ک')   // ك عربی → ک فارسی
+        .Replace('ۀ', 'ه')
+        .Replace('\u200c', ' ') // نیم‌فاصله → فاصله (برای برابری)
+        .Trim();
 }

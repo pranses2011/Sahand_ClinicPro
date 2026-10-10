@@ -26,6 +26,15 @@ public class StockTaking : AuditableEntity, ISoftDeletable
     /// <summary>تاریخ تأیید نهایی و اعمال مغایرت</summary>
     public DateTime? ApprovedAt { get; set; }
 
+    /// <summary>
+    /// دامنهٔ جلسه — چرخهٔ چهل‌وسوم (گزارش مالک: «برای اقلام مصرفی هم
+    /// انبارگردانی بزار»): جلسه فقط روی داروها (۱) یا فقط لوازم مصرفی (۲)
+    /// یا کل انبار (تهی) شروع می‌شود؛ شمارش‌گر با کاتالوگِ هم‌نوع روبه‌رو
+    /// می‌شود و دو جلسهٔ با دامنهٔ متفاوت می‌توانند هم‌زمان باز باشند.
+    /// جلسه‌های قدیمیِ پیش از این ستون تهی‌اند = کل انبار (رفتار پیشین).
+    /// </summary>
+    public MedicationItemKind? ItemKind { get; set; }
+
     /// <summary>اقلام شمارش این جلسه — عکس فوری از موجودی هنگام شروع</summary>
     public ICollection<StockTakingItem> Items { get; set; } = new List<StockTakingItem>();
 }

@@ -20,7 +20,9 @@ namespace Sahand.ClinicPro.Application.Features.Pharmacy;
 public record StocktakingListDto(
     long Id, string? TakingNumber, string DateShamsi,
     string Status, string StatusColor, int TotalItems, int CountedItems,
-    int DifferenceItems, decimal TotalShortage, decimal TotalSurplus, string? Notes);
+    int DifferenceItems, decimal TotalShortage, decimal TotalSurplus, string? Notes,
+    // چرخهٔ ۴۳ — دامنهٔ جلسه: «داروها» / «لوازم مصرفی» / «کل انبار»
+    string ItemKindText = "کل انبار");
 
 /// <summary>ردیف قلم انبارگردانی با مغایرت رنگی</summary>
 public record StocktakingItemDto(
@@ -33,7 +35,9 @@ public record StocktakingDetailDto(
     long Id, string? TakingNumber, string DateShamsi, string Status, string StatusColor,
     int TotalItems, int CountedItems, int DifferenceItems,
     decimal TotalShortage, decimal TotalSurplus, string? Notes,
-    List<StocktakingItemDto> Items);
+    List<StocktakingItemDto> Items,
+    // چرخهٔ ۴۳ — دامنهٔ جلسه: «داروها» / «لوازم مصرفی» / «کل انبار»
+    string ItemKindText = "کل انبار");
 
 /// <summary>
 /// پرس‌وجوی فهرست جلسات انبارگردانی — جدیدترین در ابتدا
@@ -68,10 +72,19 @@ public class GetStocktakingsQueryHandler : IRequestHandler<GetStocktakingsQuery,
             s.Items.Count(i => i.IsCounted && i.Difference != 0),
             s.Items.Where(i => i.IsCounted && i.Difference > 0).Sum(i => i.Difference),
             s.Items.Where(i => i.IsCounted && i.Difference < 0).Sum(i => -i.Difference),
-            s.Notes)).ToList();
+            s.Notes,
+            ScopeFa(s.ItemKind))).ToList();
 
         return Result<List<StocktakingListDto>>.Success(rows);
     }
+
+    /// <summary>متن فارسی دامنهٔ جلسه — چرخهٔ ۴۳</summary>
+    internal static string ScopeFa(MedicationItemKind? kind) => kind switch
+    {
+        MedicationItemKind.Drug => "داروها",
+        MedicationItemKind.Consumable => "لوازم مصرفی",
+        _ => "کل انبار"
+    };
 
     internal static string StatusFa(StockTakingStatus status) => status switch
     {
@@ -138,7 +151,7 @@ public class GetStocktakingDetailQueryHandler : IRequestHandler<GetStocktakingDe
             items.Count(i => i.IsCounted && i.Difference != 0),
             items.Where(i => i.IsCounted && i.Difference > 0).Sum(i => i.Difference),
             items.Where(i => i.IsCounted && i.Difference < 0).Sum(i => -i.Difference),
-            s.Notes, items);
+            s.Notes, items, GetStocktakingsQueryHandler.ScopeFa(s.ItemKind));
 
         return Result<StocktakingDetailDto>.Success(dto);
     }
@@ -150,7 +163,10 @@ public record StartStocktakingResultDto(long Id, string? TakingNumber, int Total
 /// <summary>
 /// فرمان شروع جلسه انبارگردانی — عکس فوری از تمام بچ‌های موجودی ثبت می‌شود
 /// </summary>
-public record StartStocktakingCommand(string? Notes) : IRequest<Result<StartStocktakingResultDto>>;
+public record StartStocktakingCommand(
+    string? Notes,
+    // چرخهٔ ۴۳ — دامنهٔ جلسه: تهی = کل انبار؛ ۱ داروها؛ ۲ لوازم مصرفی
+    MedicationItemKind? ItemKind = null) : IRequest<Result<StartStocktakingResultDto>>;
 
 /// <summary>اعتبارسنجی شروع</summary>
 public class StartStocktakingCommandValidator : AbstractValidator<StartStocktakingCommand>
@@ -175,18 +191,27 @@ public class StartStocktakingCommandHandler : IRequestHandler<StartStocktakingCo
         _currentUser = currentUser;
     }
 
-    /// <summary>اجرای شروع — تنها یک جلسه باز هم‌زمان مجاز است</summary>
+    /// <summary>
+    /// اجرای شروع — چرخهٔ ۴۳: تنها یک جلسهٔ بازِ «هم‌دامنه» مجاز است؛
+    /// دو جلسهٔ با دامنهٔ متفاوت (مثلاً انبارگردانی داروها و انبارگردانی
+    /// لوازم مصرفی) می‌توانند هم‌زمان باز باشند چون شمارش‌گرها و قفسه‌های
+    /// متفاوتی را می‌شمارند و با هم تداخلی ندارند (گزارش مالک: «برای اقلام
+    /// مصرفی هم انبارگردانی بزار»).
+    /// </summary>
     public async Task<Result<StartStocktakingResultDto>> Handle(StartStocktakingCommand request, CancellationToken cancellationToken)
     {
         var hasOpen = await _unitOfWork.Repository<StockTaking>().QueryableNoTracking
-            .AnyAsync(s => !s.IsDeleted && s.Status == StockTakingStatus.InProgress, cancellationToken);
+            .AnyAsync(s => !s.IsDeleted && s.Status == StockTakingStatus.InProgress
+                           && s.ItemKind == request.ItemKind, cancellationToken);
         if (hasOpen)
             return Result<StartStocktakingResultDto>.Failure(new Error("OPEN_SESSION_EXISTS",
-                "یک جلسه انبارگردانی در حال شمارش وجود دارد — ابتدا آن را تکمیل یا لغو کنید"));
+                $"یک جلسه انبارگردانی باز برای «{GetStocktakingsQueryHandler.ScopeFa(request.ItemKind)}» در حال شمارش وجود دارد — ابتدا آن را تکمیل یا لغو کنید"));
 
-        // عکس فوری از تمام بچ‌های دارای موجودی (حتی صفر — برای شمارش فیزیکی قفسه)
+        // عکس فوری از تمام بچ‌های دارای موجودی (حتی صفر — برای شمارش فیزیکی قفسه)؛
+        // چرخهٔ ۴۳ — فقط بچ‌های اقلامِ داخل دامنهٔ جلسه
         var inventories = await _unitOfWork.Repository<PharmacyInventory>().QueryableNoTracking
-            .Where(inv => !inv.IsDeleted)
+            .Where(inv => !inv.IsDeleted
+                          && (request.ItemKind == null || inv.Medication != null && inv.Medication.ItemKind == request.ItemKind))
             .OrderBy(inv => inv.Medication != null ? (inv.Medication.BrandName ?? inv.Medication.GenericName) : "")
             .ThenBy(inv => inv.BatchNumber)
             .Select(inv => new { inv.Id, inv.Quantity })
@@ -201,7 +226,9 @@ public class StartStocktakingCommandHandler : IRequestHandler<StartStocktakingCo
             PerformedBy = _currentUser.UserId,
             Status = StockTakingStatus.InProgress,
             Notes = request.Notes,
-            TakingNumber = "ST-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmm")
+            TakingNumber = "ST-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmm"),
+            // چرخهٔ ۴۳ — دامنهٔ جلسه برای تفکیک دارو/لوازم مصرفی
+            ItemKind = request.ItemKind
         };
 
         foreach (var inv in inventories)

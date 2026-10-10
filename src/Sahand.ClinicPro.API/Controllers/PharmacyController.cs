@@ -32,12 +32,17 @@ public class PharmacyController : ApiBaseController
         return ToResponse(result);
     }
 
-    /// <summary>ورود موجودی جدید — بچ با تاریخ انقضا</summary>
+    /// <summary>
+    /// ورود موجودی جدید — بچ با تاریخ انقضا. چرخهٔ ۴۳: قلم باید «دارو» باشد —
+    /// داروخانه از این پس فقط کاتالوگ داروها را می‌پذیرد (گزارش مالک: «از
+    /// داروخانه هم حذف شود چون فقط دارو در اونجا ثبت میشه» — نوع لوازم مصرفی
+    /// از صفحهٔ مستقل مصرفی‌ها وارد می‌شود).
+    /// </summary>
     [HttpPost("inventory")]
     [HasPermission("pharmacy.create")]
     public async Task<IActionResult> StockIn([FromBody] StockInCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command with { ExpectedItemKind = Sahand.ClinicPro.Domain.Enums.MedicationItemKind.Drug });
         if (result.IsSuccess)
             return CreatedResponse(result, "GetInventory", new { }, "موجودی ثبت شد");
         return ToResponse(result);

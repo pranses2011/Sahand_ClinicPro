@@ -39,12 +39,16 @@ public class StocktakingsController : ApiBaseController
         return ToResponse(result);
     }
 
-    /// <summary>شروع جلسه جدید — عکس فوری از کل موجودی + قفل تک‌جلسه‌ای</summary>
+    /// <summary>
+    /// شروع جلسه جدید — عکس فوری از موجودیِ دامنهٔ انتخابی + قفل تک‌جلسه‌ایِ هم‌دامنه.
+    /// چرخهٔ ۴۳ (گزارش مالک: «برای اقلام مصرفی هم انبارگردانی بزار») — دامنه:
+    /// itemKind تهی = کل انبار؛ ۱ = فقط داروها؛ ۲ = فقط لوازم مصرفی.
+    /// </summary>
     [HttpPost("start")]
     [HasPermission("pharmacy.stocktake")]
     public async Task<IActionResult> Start([FromBody] StartStocktakingRequest request)
     {
-        var result = await _mediator.Send(new StartStocktakingCommand(request.Notes));
+        var result = await _mediator.Send(new StartStocktakingCommand(request.Notes, request.ItemKind));
         if (result.IsSuccess)
             return CreatedResponse(result, "GetDetail", new { id = result.Value }, "جلسه انبارگردانی با عکس فوری موجودی آغاز شد");
         return ToResponse(result);
@@ -98,8 +102,12 @@ public class StocktakingsController : ApiBaseController
     }
 }
 
-/// <summary>بدنه درخواست شروع انبارگردانی</summary>
-public record StartStocktakingRequest(string? Notes);
+/// <summary>
+/// بدنه درخواست شروع انبارگردانی — چرخهٔ ۴۳: دامنهٔ جلسه (itemKind)
+/// تهی = کل انبار؛ ۱ = داروها؛ ۲ = لوازم مصرفی (سازگار رو به عقب: کلاینت
+/// کهنه که فقط notes می‌فرستد، دامنهٔ تهی = کل انبار می‌گیرد — همان رفتار پیشین)
+/// </summary>
+public record StartStocktakingRequest(string? Notes, Sahand.ClinicPro.Domain.Enums.MedicationItemKind? ItemKind = null);
 
 /// <summary>بدنه درخواست ثبت شمارش قلم</summary>
 public record RecordCountRequest(decimal CountedQuantity, string? Notes);

@@ -27,14 +27,22 @@ public class MedicationConfiguration : IEntityTypeConfiguration<Medication>
 
         builder.HasIndex(x => new { x.IrcCode }).IsUnique().HasDatabaseName("IX_Medication_IrcCode").HasFilter("[IsDeleted] = 0");
 
-        // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — نوع قلم انبار: دارو یا لوازم مصرفی ═══
-        // «سرنگ و سرم و گاز استریل و مواردی از این قبیل… خرید و انبار و قیمت‌های
-        // این لوازم هم باید باشه» — همان جدول Medications با پرچم ItemKind به
-        // دو دسته تقسیم می‌شود؛ مقدار پیش‌فرض ۱ (دارو) یعنی همهٔ ردیف‌های موجود
-        // پس از مهاجرت بدون تغییر، دارو باقی می‌مانند.
+        // ═══ چرخهٔ چهل‌وسوم (گزارش مالک — هشدار لاگ سرور) ═══
+        // «The 'MedicationItemKind' property 'ItemKind' … is configured with a
+        // database-generated default, but has no configured sentinel value» —
+        // EF Core هشدار می‌داد چون مقدار پیش‌فرض CLR این enum (صفر) هیچ عضو
+        // نام‌داری ندارد و EF نمی‌دانست صفر یعنی «تنظیم‌نشده». راه‌حل مستند:
+        // Sentinel = «مقداری که وقتی در موجودیت باشد، ستون از INSERT حذف و
+        // پیش‌فرض دیتابیس به‌کار می‌رود». چون پیش‌فرض دیتابیس همین Drug است،
+        // Sentinel=Drug رفتار را ذره‌ای تغییر نمی‌دهد — قلم «دارو» از INSERT
+        // حذف و با پیش‌فرض ۱ دیتابیس پر می‌شود (همان مقدار)؛ قلم «مصرفی» (۲)
+        // همیشه صریح ذخیره می‌شود. نکته: Sentinel نمی‌تواند مقدار پیش‌فرض CLR
+        // (صفر) باشد چون EF آن را نرمال و حذف می‌کند — باید مقدار «متفاوت از
+        // صفر» و معنادار باشد (درس این چرخه).
         builder.Property(x => x.ItemKind)
             .HasConversion<byte>()
             .HasDefaultValue(MedicationItemKind.Drug)
+            .HasSentinel(MedicationItemKind.Drug)
             .HasComment("نوع قلم انبار — ۱: دارو، ۲: لوازم مصرفی (سرنگ/سرم/گاز و…) — چرخهٔ ۳۹");
 
         // ═══ چرخه ۱۳ — الگوریتم خطر تشخیصی: ستون‌های خطر بالینی ═══

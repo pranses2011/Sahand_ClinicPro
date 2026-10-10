@@ -92,13 +92,16 @@ public class ConsumablesController : ApiBaseController
     /// ورود کالا (خرید) برای یک قلم — بچ با تاریخ انقضا، قیمت خرید/فروش و
     /// تراکنش انبار ثبت می‌شود؛ همان فرمان ورود کالای داروخانه، بدون گیت
     /// ماژولی. عملیات مالی خرید است → نقش مدیریتی.
+    /// چرخهٔ ۴۳ (گزارش مالک: «چون اقلام مصرفی دیگه از داروخانه مستقل شده، در
+    /// افزودن قلم جدید و ورود کالا نباید نوع قلم وجود داشته باشه») — نوع
+    /// «لوازم مصرفی» سمت سرور قفل می‌شود تا داروها از این مسیر وارد نشوند.
     /// </summary>
     /// <param name="command">شناسهٔ قلم + بچ/تعداد/قیمت‌ها/انقضای شمسی</param>
     [HttpPost("inventory")]
     [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> StockIn([FromBody] StockInCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command with { ExpectedItemKind = MedicationItemKind.Consumable });
         if (result.IsSuccess)
             return CreatedResponse(result, nameof(GetInventory), new { }, "موجودی ثبت شد");
         return ToResponse(result);

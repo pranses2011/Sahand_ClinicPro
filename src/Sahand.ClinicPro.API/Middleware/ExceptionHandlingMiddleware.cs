@@ -53,6 +53,7 @@ public class ExceptionHandlingMiddleware
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         var traceId = context.TraceIdentifier;
+        var isServerError = false;
         var (statusCode, message, errors) = exception switch
         {
             AppValidationException validation => (StatusCodes.Status400BadRequest,
@@ -75,17 +76,37 @@ public class ExceptionHandlingMiddleware
                 "درخواست توسط کلاینت لغو شد", new List<string>()),
 
             _ => (StatusCodes.Status500InternalServerError,
-                "خطای غیرمنتظره در سرور رخ داد — با پشتیبانی تماس بگیرید", new List<string>())
+                "خطای غیرمنتظره در سرور رخ داد — با پشتیبانی تماس بگیرید",
+                // ═══ چرخهٔ ۴۳ (گزارش مالک: «در ورود اقلام خطای غیر منتظره میده») ═══
+                // برای خطاهای ۵۰۰، نوع و پیام کوتاه استثنا در آرایهٔ errors می‌آید تا
+                // کلاینت همان را کنار پیام عمومی نشان دهد و «نخستین رخداد بعدی» بدون
+                // نیاز به لاگ سرور قابل تشخیص باشد (مثل SqlException: String or binary
+                // data would be truncated). جزئیات کامل (رد پشته) همچنان فقط در لاگ.
+                new List<string>())
         };
 
         if (statusCode >= 500)
         {
+            isServerError = true;
             _logger.LogError(exception, "خطای غیرمنتظره — TraceId: {TraceId}", traceId);
         }
         else
         {
             _logger.LogWarning("خطای {ExceptionType} — پیام: {Message} — TraceId: {TraceId}",
                 exception.GetType().Name, exception.Message, traceId);
+        }
+
+        // ═══ چرخهٔ ۴۳ — جزئیات کوتاه استثنا فقط برای خطاهای سرور (۵۰۰+) ═══
+        // «نوع استثنا: پیام» در آرایهٔ errors؛ کلاینت دسکتاپ نخستین جزء را به
+        // پیام عمومی می‌چسباند و کاربر همان‌جا ریشهٔ واقعی را می‌بیند. رد پشته
+        // و جزئیات درونی هرگز ارسال نمی‌شود (فقط لاگ سرور). پیام به ۳۰۰ نویسه
+        // بریده می‌شود تا پاسخ سبک بماند (پیام‌های SqlException گاهی بلندند).
+        if (isServerError)
+        {
+            var detail = $"{exception.GetType().Name}: {exception.Message}";
+            if (detail.Length > 300)
+                detail = detail[..300] + "…";
+            errors = new List<string> { detail };
         }
 
         // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — گارد پاسخِ آغازشده ═══
