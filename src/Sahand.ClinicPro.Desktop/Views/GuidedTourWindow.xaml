@@ -1,7 +1,14 @@
+<!-- ⚠️ چرخهٔ چهلم — xmlns معیوب این فایل ریشهٔ خطای MC3074 بیلد بود:
+     این فایلِ یکتا «materialdesigninxaml.net/xaml/themes» (بدون winfx) داشت
+     در حالی که ۸۰ فایل دیگر پروژه همگی «.../winfx/xaml/themes» دارند؛
+     کتابخانهٔ MaterialDesignThemes فقط URI دارای winfx را به‌عنوان
+     XmlnsDefinition ثبت کرده و URI کوتاه‌تر در زمان کامپایل XAML به هیچ
+     اسمبلی نگاشت نمی‌شود ⇒ «تگ PackIcon در فضای‌نام XML وجود ندارد».
+     URI به شکل استاندارد و یکسان با بقیهٔ پروژه اصلاح شد. -->
 <UserControl x:Class="Sahand.ClinicPro.Desktop.Views.GuidedTourWindow"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:materialDesign="http://materialdesigninxaml.net/xaml/themes"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              FlowDirection="RightToLeft">
     <!-- ═══════════════════════════════════════════════════════════
          تور هدایت‌شده اولین اجرا — چرخه سیزدهم (درخواست ۸-۶)
@@ -24,6 +31,10 @@
          کلی منتفی است.
          نام کلاس/فایل عمداً «GuidedTourWindow» ماند تا بستهٔ آپدیت فقط
          همین دو فایل را جایگزین کند و فایل زائد روی ایستگاه نمانَد.
+         ═══ چرخهٔ چهلم (رفع خطای بیلد MC3074) ═══
+         xmlns این فایل از نسخهٔ بی‌winfx به نسخهٔ استاندارد winfxدار
+         اصلاح شد — تنها فایل پروژه بود که URI متفاوت داشت؛ شرح کامل
+         در کامنت بالای تگ UserControl.
          ═══════════════════════════════════════════════════════════ -->
     <Grid>
         <!-- ماسک تیره با سوراخ هایلایت — هندسه در کد پشت به‌روزرسانی می‌شود؛
