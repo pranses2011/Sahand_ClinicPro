@@ -19,6 +19,12 @@ public class LicenseValidationMiddleware
     public async Task InvokeAsync(HttpContext context, ILicenseService licenseService)
     {
         // نقشه پیشوند مسیر به کد ماژول
+        // ⚠️ نکتهٔ معماری چرخهٔ ۴۱: پیشوند api/v1/consumables عمداً در این نقشه
+        // نیست — لوازم مصرفی درمانگاه (سرنگ/سرم/گاز) جزو جریان اصلی «پذیرش خدمتی»
+        // است نه ماژول اختیاری داروخانه؛ درمانگاه بدون لایسنس Pharmacy هم باید
+        // بتواند مصرفی‌ها را تعریف/انبار/مصرف کند (گزارش مالک). مجوزهای این مسیر
+        // در خود ConsumablesController اعمال می‌شوند (receptions.view/create برای
+        // فهرست/مصرف و نقش Admin/Manager برای تعریف قلم و ورود کالا).
         var moduleMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["api/v1/patients"] = "Patients",
