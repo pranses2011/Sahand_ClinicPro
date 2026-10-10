@@ -157,7 +157,7 @@
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
                         <ComboBox ItemsSource="{Binding FlatAccounts}"
                                   SelectedItem="{Binding LedgerAccount}"
-                                  DisplayMemberPath="Display" MinWidth="320" />
+                                  DisplayMemberPath="Display" MinWidth="320" materialDesign:HintAssist.Hint="حساب دفتر کل"/>>
                         <!-- چرخه بیست‌وسوم: فیلدهای تاریخ دفتر کل از انتخابگر تاریخ شمسی
                              (قابل «همهٔ فیلدهای تاریخ از کنترل انتخابگر استفاده بکنن») -->
                         <controls:PersianDatePicker DateShamsiText="{Binding LedgerFrom, Mode=TwoWay}"

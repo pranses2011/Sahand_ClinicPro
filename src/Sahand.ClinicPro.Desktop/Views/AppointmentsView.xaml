@@ -569,13 +569,13 @@
                                                             Placeholder="از تاریخ" Width="130" Margin="0,0,8,6" />
                                 <controls:PersianDatePicker SelectedDate="{Binding WaitlistToDate}"
                                                             Placeholder="تا تاریخ" Width="130" Margin="0,0,8,6" />
-                                <ComboBox SelectedIndex="{Binding WaitlistTimeIndex}" Width="105" FontSize="11.5" Margin="0,0,8,6">
+                                <ComboBox SelectedIndex="{Binding WaitlistTimeIndex}" Width="105" FontSize="11.5" Margin="0,0,8,6" materialDesign:HintAssist.Hint="ساعت پیشنهادی">
                                     <ComboBoxItem Content="هر ساعت" />
                                     <ComboBoxItem Content="صبح" />
                                     <ComboBoxItem Content="عصر" />
                                     <ComboBoxItem Content="شب" />
                                 </ComboBox>
-                                <ComboBox SelectedIndex="{Binding WaitlistPriorityIndex}" Width="100" FontSize="11.5" Margin="0,0,8,6">
+                                <ComboBox SelectedIndex="{Binding WaitlistPriorityIndex}" Width="100" FontSize="11.5" Margin="0,0,8,6" materialDesign:HintAssist.Hint="اولویت">
                                     <ComboBoxItem Content="معمولی" />
                                     <ComboBoxItem Content="فوری" />
                                     <ComboBoxItem Content="اورژانس" />

@@ -83,7 +83,7 @@
                         <!-- ردیف ۳: ساخت قالب جدید (با نوع منتخب) + بارگذاری مجدد فهرست -->
                         <WrapPanel Grid.Row="3" Margin="0,8,0,0">
                             <ComboBox x:Name="TypeCombo" SelectedIndex="{Binding NewTypeIndex}" MinWidth="150" FontSize="11.5" Margin="0,0,6,4"
-                                      DisplayMemberPath="Fa" />
+                                      DisplayMemberPath="Fa" materialDesign:HintAssist.Hint="نوع قالب"/>>
                             <Button Command="{Binding NewTemplateCommand}" Style="{StaticResource MaterialDesignRaisedButton}" FontSize="11" Margin="0,0,4,4">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" VerticalAlignment="Center" />
@@ -145,7 +145,7 @@
                                       SelectedValuePath="Tag" SelectedValue="{Binding SelectedTemplate.PaperSize, Mode=TwoWay}"
                                       Text="{Binding SelectedTemplate.PaperSize, Mode=TwoWay}"
                                       FontSize="11.5" Width="112" Margin="0,0,7,5"
-                                      ToolTip="اندازه‌های استاندارد + فیش حرارتی؛ برای سفارشی عبارت Custom:عرضxارتفاع (میلی‌متر) تایپ کنید">
+                                      ToolTip="اندازه‌های استاندارد + فیش حرارتی؛ برای سفارشی عبارت Custom:عرضxارتفاع (میلی‌متر) تایپ کنید" materialDesign:HintAssist.Hint="اندازهٔ کاغذ">
                                 <ComboBoxItem Tag="A4" Content="کاغذ A4" />
                                 <ComboBoxItem Tag="A5" Content="کاغذ A5" />
                                 <ComboBoxItem Tag="A6" Content="کاغذ A6" />
@@ -177,7 +177,7 @@
                         <TextBox Grid.Row="2" Text="{Binding SelectedTemplate.Body, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  AcceptsReturn="True" TextWrapping="Wrap" FontFamily="{DynamicResource App.CodeFont}" FontSize="12"
-                                 VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" />
+                                 VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" materialDesign:HintAssist.Hint="متن قالب چاپ"/>>
 
                         <!-- پالت متغیرها -->
                         <TextBlock Grid.Row="3" Text="🧩 متغیرها — با کلیک به انتهای قالب اضافه می‌شود:"

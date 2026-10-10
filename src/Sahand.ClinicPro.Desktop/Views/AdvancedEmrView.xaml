@@ -172,7 +172,7 @@
 
                     <!-- فرم ثبت -->
                     <WrapPanel Grid.Row="0" Margin="0,0,0,10">
-                        <ComboBox SelectedIndex="{Binding RelativeIndex}" MinWidth="125" Margin="0,0,10,0">
+                        <ComboBox SelectedIndex="{Binding RelativeIndex}" MinWidth="125" Margin="0,0,10,0" materialDesign:HintAssist.Hint="نسبت با بیمار">
                             <ComboBoxItem Content="پدر" /><ComboBoxItem Content="مادر" />
                             <ComboBoxItem Content="برادر" /><ComboBoxItem Content="خواهر" />
                             <ComboBoxItem Content="پسر" /><ComboBoxItem Content="دختر" />
