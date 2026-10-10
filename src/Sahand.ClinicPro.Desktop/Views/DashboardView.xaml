@@ -262,6 +262,12 @@
                                             Value="{Binding EffectiveBrush, Converter={StaticResource HexBrush}}" />
                                 </Style>
                             </Border.Style>
+                            <!-- ═══ چرخهٔ چهلم (رفع خطای بیلد MC3089) ═══ Border فقط یک فرزند
+                                 محتوایی می‌پذیرد؛ گرید سربرگ (عنوان + بج تاریخ) و متن پیام دو
+                                 فرزند مستقل بودند ⇒ «The object 'Border' already has a child
+                                 and cannot add 'TextBlock'». هر دو داخل StackPanel عمودی
+                                 قرار گرفتند تا سربرگ و متن پشت سر هم و مرتب دیده شوند. -->
+                            <StackPanel>
                             <!-- ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — جای بج تاریخ ═══
                                  «تاریخ رو گفته بودم در گوشه بالا و چپ کادر پیام قرار
                                  بگیره ولی در سمت راست و بالای عنوان هست» — ریشه:
@@ -310,6 +316,7 @@
                             <!-- متن پیام -->
                             <TextBlock Text="{Binding Body}" FontSize="12" Margin="0,5,0,0"
                                        Opacity="0.85" TextWrapping="Wrap" />
+                            </StackPanel>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
