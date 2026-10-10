@@ -518,12 +518,14 @@ public partial class ReceptionsViewModel : ViewModelBase
                     !string.IsNullOrWhiteSpace(room.RoomName) ? room.RoomName : $"اتاق {room.RoomNumber}"));
         }
 
-        // ═══ چرخهٔ ۳۹ — اقلام مصرفیِ دارای موجودی؛ فقط یک بار لازم است ═══
+        // ═══ چرخهٔ ۳۹/۴۱ — اقلام مصرفیِ دارای موجودی؛ فقط یک بار لازم است ═══
         // فهرست خالی به معنی «هیچ قلم مصرفی‌ای هنوز ورود کالا نشده» است؛ بخش
-        // مصرفی همان‌جا راهنمای «از داروخانه ورود کالا» نشان می‌دهد.
+        // مصرفی همان‌جا راهنمای «از صفحهٔ لوازم مصرفی ورود کالا» نشان می‌دهد.
+        // چرخهٔ ۴۱: مسیر از pharmacy/consumables به consumables (مستقل از لایسنس
+        // داروخانه) منتقل شد تا درمانگاهِ بدون آن ماژول هم مصرفی‌ها را ببیند.
         if (ConsumableOptions.Count == 0)
         {
-            var consumables = await _api.GetAsync<ConsumablesResponse>("pharmacy/consumables");
+            var consumables = await _api.GetAsync<ConsumablesResponse>("consumables");
             foreach (var c in consumables?.Data ?? new List<ConsumableDto>())
                 ConsumableOptions.Add(new ConsumableOption(c.MedicationId, c.Name, c.Form, c.TotalQuantity, c.SellPrice));
         }
@@ -938,7 +940,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         var consumablesSkipped = false;
         if (isServiceMode && Consumables.Count > 0)
         {
-            var consume = await _api.PostAsync<ConsumeResponse>("pharmacy/consume", new
+            var consume = await _api.PostAsync<ConsumeResponse>("consumables/consume", new
             {
                 receptionId = reception.Data,
                 items = Consumables.Select(c => new { medicationId = c.Option.Id, quantity = c.Quantity }).ToList()
@@ -950,7 +952,7 @@ public partial class ReceptionsViewModel : ViewModelBase
                     $"پذیرش با شماره صف {reception.Data} ثبت شد اما برداشت لوازم مصرفی از انبار شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}ادامه می‌دهید؟ (فاکتور فقط با هزینهٔ خدمت صادر می‌شود و اقلام مصرفی از انبار کم نشدند)", Views.AppDialogIcon.Warning) == true;
                 if (!proceed)
                 {
-                    _snackbar.Info($"پذیرش ثبت شد — شماره صف {reception.Data}؛ فاکتور/پرداخت متوقف شد تا مصرف لوازم اصلاح شود (اقلام را کم کنید یا از داروخانه ورود کالا ثبت کنید)");
+                    _snackbar.Info($"پذیرش ثبت شد — شماره صف {reception.Data}؛ فاکتور/پرداخت متوقف شد تا مصرف لوازم اصلاح شود (اقلام را کم کنید یا از صفحهٔ «لوازم مصرفی» ورود کالا ثبت کنید)");
                     await LoadAsync();
                     return;
                 }

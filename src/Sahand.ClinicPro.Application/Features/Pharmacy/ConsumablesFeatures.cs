@@ -232,7 +232,7 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
 
             if (remaining > 0)
                 return Result<ConsumeStockResultDto>.Failure(new Error("PHARMACY.CONSUME.STOCK",
-                    $"موجودی «{medication.GenericNameFa ?? medication.GenericName}» کافی نیست — {remaining} عدد کمبود دارد؛ ابتدا از ماژول داروخانه ورود کالا ثبت کنید"));
+                    $"موجودی «{medication.GenericNameFa ?? medication.GenericName}» کافی نیست — {remaining} عدد کمبود دارد؛ ابتدا از صفحهٔ «لوازم مصرفی» ورود کالا ثبت کنید"));
 
             resultItems.Add(new ConsumeResultItemDto(
                 medication.Id,
