@@ -192,6 +192,9 @@
             <converters:InsuranceBrushConverter x:Key="InsuranceBrush" />
             <!-- چرخهٔ بیست‌ونهم: مبدل کد HEX → قلم‌وی — نمونهٔ رنگِ مؤثر تنظیمات تم -->
             <converters:HexToBrushConverter x:Key="HexToBrush" />
+            <!-- چرخهٔ سی‌وپنجم: مبدل هگز → براش با حالت «soft» (پس‌زمینهٔ ملایم ۱۴٪)
+                 — رنگ کادر پیام‌های سرور لایسنس از پنل فروشنده -->
+            <converters:HexBrushConverter x:Key="HexBrush" />
             <!-- چرخه بیست‌وسوم: مبدل bool → «فعال/غیرفعال» فارسی — ستون وضعیت بیمه/تعرفه -->
             <converters:BoolToFaTextConverter x:Key="BoolToFaText" />
             <converters:CurrencyRialConverter x:Key="CurrencyRial" />

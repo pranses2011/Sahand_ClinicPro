@@ -192,7 +192,12 @@ public class LicenseController : ApiBaseController
             level = m.Level,
             date = m.Date,
             levelIcon = m.LevelIcon,
-            levelBrush = m.LevelBrush
+            levelBrush = m.LevelBrush,
+            // ═══ چرخهٔ سی‌وپنجم (گزارش مالک) ═══ «رنگ کادر پیام با رنگ انتخابی
+            // در سرور لایسنس فرق دارد» — رنگ مؤثر (رنگ سرور یا رنگ سطح) تحویل
+            // می‌شود تا کلاینت همیشه با همان رنگی که فروشنده برگزیده بکشد
+            color = m.Color,
+            effectiveBrush = m.EffectiveBrush
         });
         return Ok(ApiResponse<object>.Success(response, $"{messages.Count} پیام پشتیبانی"));
     }

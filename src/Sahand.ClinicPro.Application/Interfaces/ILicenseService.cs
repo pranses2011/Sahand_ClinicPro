@@ -72,9 +72,11 @@ public sealed record SupportMessageDto(
     string Title,
     string Body,
     string Level,
-    string Date)
+    string Date,
+    /// <summary>چرخهٔ سی‌وپنجم: رنگ انتخابی فروشنده در پنل لایسنس (هگز مثل #E53935) — تهی = رنگ‌بندی سطح</summary>
+    string? Color = null)
 {
-    /// <summary>رنگ قاب بر اساس سطح — برای XAML</summary>
+    /// <summary>رنگ قاب بر اساس سطح — برای XAML (پیش‌فرض وقتی رنگ سرور نیامده)</summary>
     public string LevelBrush => Level switch
     {
         "success" => "#2E7D32",
@@ -82,6 +84,30 @@ public sealed record SupportMessageDto(
         "danger" => "#C62828",
         _ => "#1565C0",
     };
+
+    /// <summary>
+    /// ═══ چرخهٔ سی‌وپنجم (گزارش مالک) ═══ «رنگ کادر پیام با رنگ انتخابی در
+    /// سرور لایسنس فرق دارد» — رنگ مؤثر کادر: اگر فروشنده رنگی فرستاده باشد
+    /// همان، وگرنه رنگ‌بندی سطح اهمیت. کلاینت فقط همین را مصرف می‌کند.
+    /// </summary>
+    public string EffectiveBrush
+        => string.IsNullOrWhiteSpace(Color) ? LevelBrush : Color.Trim();
+
+    /// <summary>
+    /// ═══ چرخهٔ سی‌وپنجم (گزارش مالک) ═══ «تاریخ جلوی عنوان میلادی است؛ باید
+    /// شمسی شود و زیر عنوان قرار بگیرد» — تاریخ ارسال (yyyy-MM-dd میلادی از
+    /// پنل) به شمسیِ ارقام‌فارسی تبدیل می‌شود؛ اگر رشته قابل پارس نبود، همان
+    /// متن خام برگردانده می‌شود (هرگز خانه خالی نمی‌ماند).
+    /// </summary>
+    public string DateFa
+    {
+        get
+        {
+            if (DateOnly.TryParse(Date, out var d))
+                return Common.Helpers.PersianDateHelper.ToShamsiFa(d.ToDateTime(TimeOnly.MinValue));
+            return Date;
+        }
+    }
 
     /// <summary>آیکون بر اساس سطح</summary>
     public string LevelIcon => Level switch

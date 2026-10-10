@@ -136,46 +136,45 @@
                 </DockPanel>
             </Border>
 
-            <!-- ═══ چرخه دوازدهم: کارت پیام‌های پشتیبانی — پیام‌های مستقیم پنل لایسنس ═══ -->
+            <!-- ═══ چرخه دوازدهم: کارت پیام‌های پشتیبانی — پیام‌های مستقیم پنل لایسنس ═══
+                 ═══ چرخهٔ سی‌وپنجم (گزارش مالک) — سه اصلاح: ═══
+                 ۱) «تاریخ جلوی عنوان میلادی است و باید شمسی شود و زیر عنوان قرار
+                    بگیرد» — تاریخ (DateFa شمسی/ارقام‌فارسی) ردیفی مستقل زیر عنوان
+                 ۲) «رنگ کادر با رنگ انتخابی در سرور لایسنس فرق دارد» — حاشیه و
+                    پس‌زمینه از EffectiveBrush (رنگ سرور، یا رنگ سطح در نبودش)
+                 ۳) آیکون سطح هم‌رنگ کادر شد تا یکپارچگی بصری پیام کامل شود -->
             <ItemsControl ItemsSource="{Binding SupportMessages}"
                           Visibility="{Binding HasSupportMessages, Converter={StaticResource BoolToVis}}"
                           Margin="0,0,0,12">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Border CornerRadius="10" Padding="14,10" Margin="0,0,0,8"
-                                Background="#FFF8E1"
-                                BorderBrush="#F9A825" BorderThickness="0,3,0,0">
+                                BorderThickness="0,3,0,0">
+                            <!-- رنگ کادر از سرور لایسنس: حاشیهٔ بالایی توپر + پس‌زمینهٔ
+                                 ملایم ۱۴٪ همان رنگ؛ در نبود رنگ سرور، رنگ سطح اهمیت -->
                             <Border.Style>
                                 <Style TargetType="Border">
-                                    <Setter Property="Background" Value="#E3F2FD" />
-                                    <Setter Property="BorderBrush" Value="#1565C0" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Level}" Value="success">
-                                            <Setter Property="Background" Value="#E8F5E9" />
-                                            <Setter Property="BorderBrush" Value="#2E7D32" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding Level}" Value="warning">
-                                            <Setter Property="Background" Value="#FFF8E1" />
-                                            <Setter Property="BorderBrush" Value="#F9A825" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding Level}" Value="danger">
-                                            <Setter Property="Background" Value="#FFEBEE" />
-                                            <Setter Property="BorderBrush" Value="#C62828" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
+                                    <Setter Property="Background"
+                                            Value="{Binding EffectiveBrush, Converter={StaticResource HexBrush}, ConverterParameter=soft}" />
+                                    <Setter Property="BorderBrush"
+                                            Value="{Binding EffectiveBrush, Converter={StaticResource HexBrush}}" />
                                 </Style>
                             </Border.Style>
                             <StackPanel>
-                                <DockPanel>
+                                <!-- ردیف عنوان: آیکون سطح + عنوان پیام -->
+                                <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding LevelIcon}" FontSize="15"
                                                VerticalAlignment="Center" />
                                     <TextBlock Text="{Binding Title}" FontSize="13.5" FontWeight="Bold"
                                                Margin="8,0,0,0" VerticalAlignment="Center"
                                                TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Text="{Binding Date}" FontSize="10" Opacity="0.6"
-                                               DockPanel.Dock="Left" VerticalAlignment="Center"
-                                               Margin="0,0,8,0" />
-                                </DockPanel>
+                                </StackPanel>
+                                <!-- تاریخ ارسال — شمسی/ارقام‌فارسی، زیر عنوان (گزارش مالک) -->
+                                <TextBlock Text="{Binding DateFa, Mode=OneWay}" FontSize="10" Opacity="0.62"
+                                           Margin="23,2,0,0"
+                                           FontFamily="{DynamicResource App.CodeFont}"
+                                           HorizontalAlignment="Left" />
+                                <!-- متن پیام -->
                                 <TextBlock Text="{Binding Body}" FontSize="12" Margin="0,5,0,0"
                                            Opacity="0.85" TextWrapping="Wrap" />
                             </StackPanel>

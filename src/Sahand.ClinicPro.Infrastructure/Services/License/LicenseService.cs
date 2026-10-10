@@ -697,7 +697,11 @@ public partial class LicenseService : ILicenseService
                 {
                     Category = "ServerMessages",
                     Key = key,
-                    Value = JsonSerializer.Serialize(new { m.Id, m.Title, m.Body, m.Level, m.Date }, JsonOptions),
+                    // ═══ چرخهٔ سی‌وپنجم (گزارش مالک) — رنگ انتخابی پنل لایسنس ═══
+                    // «رنگ کادر پیام با رنگ انتخابی در سرور لایسنس فرق دارد» —
+                    // فیلد color که فروشنده در پنل PHP برای هر پیام برمی‌گزیند از
+                    // این پس در زنجیره ذخیره/تحویل می‌ماند (مقدار خالی مجاز است).
+                    Value = JsonSerializer.Serialize(new { m.Id, m.Title, m.Body, m.Level, m.Date, m.Color }, JsonOptions),
                     DataType = SettingDataType.String,
                     Description = "پیام پشتیبانی — دریافتی از سرور لایسنس",
                     IsSystem = false,
@@ -737,7 +741,9 @@ public partial class LicenseService : ILicenseService
                     var m = JsonSerializer.Deserialize<PortalMessage>(row.Value ?? "", JsonOptions);
                     if (m is null || string.IsNullOrWhiteSpace(m.Title))
                         continue;
-                    result.Add(new SupportMessageDto(m.Id, m.Title, m.Body ?? "", m.Level ?? "info", m.Date ?? ""));
+                    // چرخهٔ سی‌وپنجم: رنگ انتخابی سرور هم تحویل می‌شود (خالی = کلاینت
+                    // به رنگ‌بندی سطح اهمیت برمی‌گردد)
+                    result.Add(new SupportMessageDto(m.Id, m.Title, m.Body ?? "", m.Level ?? "info", m.Date ?? "", m.Color));
                 }
                 catch (JsonException)
                 {
@@ -888,6 +894,14 @@ public sealed class PortalMessage
 
     /// <summary>تاریخ ارسال (yyyy-MM-dd)</summary>
     [JsonPropertyName("date")] public string? Date { get; set; }
+
+    /// <summary>
+    /// ═══ چرخهٔ سی‌وپنجم (گزارش مالک) ═══
+    /// «رنگ کادرش با رنگ انتخابی در سرور لایسنس فرق دارد» — فروشنده در پنل
+    /// PHP برای هر پیام رنگ دلخواه (مثل #E53935) برمی‌گزیند؛ تهی/موجودنبودن
+    /// مجاز است → کلاینت به رنگ‌بندی سطح اهمیت برمی‌گردد.
+    /// </summary>
+    [JsonPropertyName("color")] public string? Color { get; set; }
 }
 
 /// <summary>بدنه لایسنس — هم در پاسخ برخط و هم در فایل lic آفلاین</summary>

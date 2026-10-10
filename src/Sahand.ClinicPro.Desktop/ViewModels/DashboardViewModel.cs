@@ -452,12 +452,18 @@ public partial class DashboardViewModel : ViewModelBase
 
             foreach (var m in data.EnumerateArray().Take(5))
             {
+                // ═══ چرخهٔ سی‌وپنجم (گزارش مالک) ═══
+                // «رنگ کادر پیام با رنگ انتخابی در سرور لایسنس فرق دارد» — فیلد
+                // color فروشنده خوانده می‌شود (تهی مجاز — EffectiveBrush خودش به
+                // رنگ‌بندی سطح اهمیت برمی‌گردد). تاریخ هم از این پس با DateFa
+                // شمسیِ ارقام‌فارسی نمایش داده می‌شود (تبدیل در خود DTO مشترک).
                 SupportMessages.Add(new SupportMessageDto(
                     m.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.Number ? id.GetInt64() : 0,
                     m.TryGetProperty("title", out var t) ? t.GetString() ?? "" : "",
                     m.TryGetProperty("body", out var b) ? b.GetString() ?? "" : "",
                     m.TryGetProperty("level", out var lv) ? lv.GetString() ?? "info" : "info",
-                    m.TryGetProperty("date", out var d) ? d.GetString() ?? "" : ""));
+                    m.TryGetProperty("date", out var d) ? d.GetString() ?? "" : "",
+                    m.TryGetProperty("color", out var c) ? c.GetString() : null));
             }
             HasSupportMessages = SupportMessages.Count > 0;
         }

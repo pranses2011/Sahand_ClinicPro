@@ -195,3 +195,45 @@ public sealed class BoolToFaTextConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => Binding.DoNothing;
 }
+
+/// <summary>
+/// ═══ چرخهٔ سی‌وپنجم (گزارش مالک) — مبدل رشتهٔ هگز رنگ به براش WPF ═══
+/// «رنگ کادر پیام‌های سرور لایسنس با رنگ انتخابی در سرور فرق دارد»:
+/// پیام‌های پشتیبانی داشبورد رنگشان از پنل لایسنس می‌آید (رشته‌هایی مثل
+/// «#E53935» یا «E53935» یا رنگ‌های نامی «OrangeRed»). این مبدل رشته را به
+/// SolidColorBrush تبدیل می‌کند و با پارامتر می‌توان حالت «ملایم» گرفت:
+///   ConverterParameter=soft  → همان رنگ با آلفای ~۱۴٪ برای پس‌زمینهٔ کادر
+///   (پیش‌فرض بدون پارامتر)   → رنگ توپر برای حاشیه/نوار
+/// رشتهٔ نامعتبر → براش خنثی (بدون کرش، بدون رنگ عجیب).
+/// قالب‌بندی یخ‌زدن (Freeze) انجام می‌شود تا رندر سبک‌تر باشد.
+/// </summary>
+public sealed class HexBrushConverter : IValueConverter
+{
+    /// <summary>رشتهٔ رنگ → براش؛ پارامتر «soft» رنگ را برای پس‌زمینه ملایم می‌کند</summary>
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var raw = value as string;
+        if (string.IsNullOrWhiteSpace(raw))
+            return Brushes.Transparent;
+
+        try
+        {
+            var color = (Color)ColorConverter.ConvertFromString(raw.Trim());
+            // حالت ملایم — پس‌زمینهٔ کادر: همان رنگ ولی تقریباً شفاف (۱۴٪ آلفا)
+            if (string.Equals(parameter as string, "soft", StringComparison.OrdinalIgnoreCase))
+                color.A = 36; // ~۱۴٪ شفافیت
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+            return brush;
+        }
+        catch
+        {
+            // نام/قالب رنگ نامعتبر — کادر بی‌رنگ می‌ماند تا پیام در هر حالت خوانا بماند
+            return Brushes.Transparent;
+        }
+    }
+
+    /// <summary>برگشت بی‌اثر — رنگ فقط از سمت سرور می‌آید</summary>
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => Binding.DoNothing;
+}
