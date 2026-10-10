@@ -288,6 +288,12 @@
             <!-- تب ۵: سود و زیان -->
             <TabItem Header="💹 سود/زیان">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                    <!-- ═══ چرخهٔ چهلم (رفع خطای بیلد MC3089) ═══ ScrollViewer فقط یک فرزند
+                         می‌پذیرد؛ بنر شکست بارگذاری و کارت صورت سود/زیان دو فرزند مستقل
+                         بودند ⇒ «The object 'ScrollViewer' already has a child». هر دو داخل
+                         یک StackPanel عمودی قرار گرفتند تا هم ScrollViewer تک‌فرزند بماند و
+                         هم هر دو عنصر در ارتفاع محتوا پشت سر هم و با اسکرول دیده شوند. -->
+                    <StackPanel>
                     <!-- ═══ بنر شکست بارگذاری — چرخهٔ ۳۸ (همان تراز؛ سود و زیان هم
                          با همان علت می‌شکند و پیام باید دیده شود) ═══ -->
                     <Border Padding="12,8" CornerRadius="10" Background="#FDECEA"
@@ -324,6 +330,7 @@
                             </ItemsControl>
                         </StackPanel>
                     </Border>
+                    </StackPanel>
                 </ScrollViewer>
             </TabItem>
         </TabControl>
