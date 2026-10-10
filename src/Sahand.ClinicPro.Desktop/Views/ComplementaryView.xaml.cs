@@ -14,7 +14,11 @@ public partial class ComplementaryView : UserControl
     public ComplementaryView()
     {
         InitializeComponent();
+        // انتخابگر «نوع قالب جدید» — جفت‌مرتبه‌های (کلید، فارسی) از ViewModel
         TypeCombo.ItemsSource = ComplementaryViewModel.TemplateTypes;
+        // چرخهٔ سی‌وپنجم: انتخابگر «فیلتر موجودیت» — «همه» + ۹ نوع سند؛
+        // آیتم‌ها از TemplateFilterOptions می‌آیند تا با فهرست نوع‌ها همیشه همگام بماند
+        TemplateFilterCombo.ItemsSource = ComplementaryViewModel.TemplateFilterOptions;
         DataContextChanged += OnDataContextChangedAsync;
     }
 

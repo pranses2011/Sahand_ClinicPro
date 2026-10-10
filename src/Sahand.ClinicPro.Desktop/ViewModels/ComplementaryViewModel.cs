@@ -131,6 +131,48 @@ public partial class ComplementaryViewModel : ViewModelBase
     /// <summary>همه قالب‌های چاپ (سروری)</summary>
     public ObservableCollection<PrintTemplateRow> PrintTemplates { get; } = new();
 
+    // ═══ چرخهٔ سی‌وپنجم (گزارش مالک) — فیلتر موجودیت در طراح قالب ═══
+    // «در تب طراح قالب چاپ همه قالب‌ها نمایش داده می‌شوند در حالی که باید فقط
+    // طرح‌های مربوط به موجودیتی که از لیست انتخاب می‌کنیم نمایش داده شود»:
+    // فهرست پالایه‌شده جدا از فهرست کامل نگه داشته می‌شود — فهرست کامل از سرور
+    // می‌آید (LoadTemplatesAsync) و هر بار پالایه دوباره روی آن اعمال می‌شود؛
+    // جدول طراح فقط به VisibleTemplates بایند است پس همیشه فقط قالب‌های
+    // موجودیتِ منتخب دیده می‌شوند (صفر = همه).
+    /// <summary>قالب‌های قابل‌رِیت در فهرست — پالایه‌شده بر اساس موجودیت انتخابی</summary>
+    public ObservableCollection<PrintTemplateRow> VisibleTemplates { get; } = new();
+
+    /// <summary>پالایهٔ موجودیت طراح قالب — صفر یعنی «همه»</summary>
+    [ObservableProperty]
+    private int _templateFilterIndex;
+
+    /// <summary>گزینه‌های فیلتر موجودیت — «همه» + ۹ نوع سند</summary>
+    public static (string key, string fa)[] TemplateFilterOptions { get; } =
+        new[] { ("", "همه موجودیت‌ها") }.Concat(TemplateTypes).ToArray();
+
+    /// <summary>بازسازی فهرست پالایه‌شده — پس از بارگذاری یا تغییر پالایه</summary>
+    private void ApplyTemplateFilter()
+    {
+        // اندیسِ امن — اگر پالایه بیرون از بازه شد (مثلاً پس از حذف نوعی) به «همه» برمی‌گردد
+        var idx = TemplateFilterIndex;
+        if (idx < 0 || idx >= TemplateFilterOptions.Length) idx = 0;
+        var key = TemplateFilterOptions[idx].key;
+
+        VisibleTemplates.Clear();
+        foreach (var t in PrintTemplates)
+        {
+            // کلید خالی = بدون پالایه؛ وگرنه فقط قالب‌های همان نوع
+            if (key.Length == 0 || string.Equals(t.Key, key, StringComparison.OrdinalIgnoreCase))
+                VisibleTemplates.Add(t);
+        }
+
+        // اگر قالب انتخابی فعلی در فهرست پالایه‌شده نیست، اولین قالب فهرست انتخاب می‌شود
+        if (SelectedTemplate is null || (key.Length > 0 && SelectedTemplate.Key != key))
+            SelectedTemplate = VisibleTemplates.Count > 0 ? VisibleTemplates[0] : null;
+    }
+
+    /// <summary>پالایه عوض شد — فهرست دوباره پالایه می‌شود (بدون رفت‌وبرگشت به سرور)</summary>
+    partial void OnTemplateFilterIndexChanged(int value) => ApplyTemplateFilter();
+
     /// <summary>قالب انتخابی</summary>
     [ObservableProperty]
     private PrintTemplateRow? _selectedTemplate;
@@ -296,6 +338,9 @@ public partial class ComplementaryViewModel : ViewModelBase
             };
             PrintTemplates.Add(row);
         }
+        // چرخهٔ سی‌وپنجم: پس از بارگذاری کامل، پالایهٔ موجودیت دوباره اعمال می‌شود
+        // تا فهرست طراح همیشه فقط قالب‌های موجودیتِ منتخب را نشان دهد
+        ApplyTemplateFilter();
         if (SelectedTemplate is null && PrintTemplates.Count > 0)
             SelectedTemplate = PrintTemplates[0];
     }
@@ -368,6 +413,14 @@ public partial class ComplementaryViewModel : ViewModelBase
             if (e.PropertyName != nameof(PrintTemplateRow.IsDirty)) row.IsDirty = true;
         };
         PrintTemplates.Add(row);
+        // چرخهٔ سی‌وپنجم: اگر فیلتر فعلی با نوع قالب تازه یکی نیست، فیلتر به همان
+        // موجودیت می‌رود تا قالب تازه بلافاصله در فهرست دیده شود (وگرنه پالایه
+        // قالب تازه را پنهان می‌کرد و کاربر فکر می‌کرد ساخته نشده است)
+        var filterIdx = Array.FindIndex(TemplateFilterOptions, o => o.key == key);
+        if (TemplateFilterIndex != filterIdx && filterIdx >= 0)
+            TemplateFilterIndex = filterIdx;
+        else
+            ApplyTemplateFilter();
         SelectedTemplate = row;
         RefreshPalette(key);
         _snackbar.Info("قالب جدید ساخته شد — پس از ویرایش ذخیره کنید");

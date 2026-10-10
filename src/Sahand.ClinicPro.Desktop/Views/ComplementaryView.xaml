@@ -36,26 +36,28 @@
                         <ColumnDefinition Width="430" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- ستون ۱: فهرست قالب‌ها + ساخت جدید -->
+                    <!-- ستون ۱: فیلتر موجودیت + فهرست قالب‌ها + ساخت جدید -->
                     <Grid Grid.Column="0" Margin="0,0,10,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <WrapPanel Grid.Row="0" Margin="0,0,0,8">
-                            <ComboBox x:Name="TypeCombo" SelectedIndex="{Binding NewTypeIndex}" MinWidth="150" FontSize="11.5" Margin="0,0,6,4" />
-                            <Button Command="{Binding NewTemplateCommand}" Style="{StaticResource MaterialDesignRaisedButton}" FontSize="11" Margin="0,0,4,4">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" VerticalAlignment="Center" />
-                                    <TextBlock Text="قالب جدید" Margin="6,0,0,0" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                            <Button Command="{Binding LoadTemplatesCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11" Margin="0,0,4,4">
-                                <materialDesign:PackIcon Kind="Refresh" Width="13" Height="13" />
-                            </Button>
-                        </WrapPanel>
-                        <ListBox Grid.Row="1" ItemsSource="{Binding PrintTemplates}" SelectedItem="{Binding SelectedTemplate}"
+                        <!-- ═══ چرخهٔ سی‌وپنجم (گزارش مالک) — فیلتر موجودیت ═══
+                             «باید فقط طرح‌های مربوط به موجودیتی که از لیست انتخاب
+                             می‌کنیم نمایش داده شود» — انتخابگر موجودیت بالای فهرست؛
+                             فهرست پایین فقط قالب‌های همان موجودیت را نشان می‌دهد.
+                             آیتم‌ها در کد-پشت از TemplateFilterOptions پر می‌شوند
+                             (DisplayMemberPath=fa: نام فارسی هر نوع) -->
+                        <TextBlock Grid.Row="0" Text="نمایش قالب‌های:"
+                                   FontSize="11" FontWeight="SemiBold" Margin="2,0,0,4" />
+                        <ComboBox x:Name="TemplateFilterCombo" Grid.Row="1"
+                                  SelectedIndex="{Binding TemplateFilterIndex}"
+                                  DisplayMemberPath="Item2"
+                                  FontSize="11.5" Margin="0,0,0,8" />
+                        <ListBox Grid.Row="2" ItemsSource="{Binding VisibleTemplates}" SelectedItem="{Binding SelectedTemplate}"
                                  Background="Transparent" BorderThickness="0">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
@@ -72,7 +74,23 @@
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
-                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
+                        <!-- ردیف ۳: ساخت قالب جدید (با نوع منتخب) + بارگذاری مجدد فهرست -->
+                        <WrapPanel Grid.Row="3" Margin="0,8,0,0">
+                            <ComboBox x:Name="TypeCombo" SelectedIndex="{Binding NewTypeIndex}" MinWidth="150" FontSize="11.5" Margin="0,0,6,4"
+                                      DisplayMemberPath="Item2" />
+                            <Button Command="{Binding NewTemplateCommand}" Style="{StaticResource MaterialDesignRaisedButton}" FontSize="11" Margin="0,0,4,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" VerticalAlignment="Center" />
+                                    <TextBlock Text="قالب جدید" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding LoadTemplatesCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11" Margin="0,0,4,4"
+                                    ToolTip="بارگذاری مجدد فهرست از سرور">
+                                <materialDesign:PackIcon Kind="Refresh" Width="13" Height="13" />
+                            </Button>
+                        </WrapPanel>
+                        <!-- ردیف ۴: عملیات روی قالب انتخابی -->
+                        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,4,0,0">
                             <Button Command="{Binding DuplicateTemplateCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5" Margin="0,0,5,0"
                                     ToolTip="کپی قالب انتخابی به‌عنوان نسخه جدید">
                                 <StackPanel Orientation="Horizontal">
