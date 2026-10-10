@@ -135,7 +135,11 @@ public sealed record SupportMessageDto(
                 return Common.Helpers.PersianDateHelper.ToShamsiFa(d2.ToDateTime(TimeOnly.MinValue));
 
             // رشتهٔ ناشناخته — همان متن خام تا خانهٔ تاریخ خالی نماند
-            return Date;
+            // چرخهٔ چهلم — رفع CS8603: بازگشتِ خودِ Date در این نقطه «شاید تهی»
+            // شمرده می‌شد (تحلیل تهی‌بودنِ کامپایلر روی پراپرتی‌های رکوردِ دارای
+            // پارامتر اختیاری تهی)؛ raw همان متنِ Trim شدهٔ Date است و قطعاً
+            // ناتهی — از این پس همان بازگردانده می‌شود (محتوا یکسان، بدون هشدار).
+            return raw;
         }
     }
 
