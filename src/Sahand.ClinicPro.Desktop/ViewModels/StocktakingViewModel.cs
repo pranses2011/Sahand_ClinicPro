@@ -18,10 +18,12 @@ public record StockItemRow(
     string SystemQty, string CountedQty, decimal Difference,
     bool IsCounted, string DiffText, string DiffColor, string? Notes);
 
-/// <summary>ردیف جلسه در فهرست</summary>
+/// <summary>ردیف جلسه در فهرست — چرخهٔ ۴۳: ستون «دامنه» (داروها/لوازم مصرفی/کل انبار)</summary>
 public record StockSessionRow(
     long Id, string? Number, string Date, string Status, string StatusColor,
-    string Progress, string Diffs, string? Notes);
+    string Progress, string Diffs, string? Notes,
+    // چرخهٔ ۴۳ — متن دامنهٔ جلسه
+    string Scope = "کل انبار");
 
 /// <summary>
 /// ViewModel انبارگردانی — دو پنل: فهرست جلسات + جزئیات جلسه انتخاب‌شده
@@ -31,8 +33,11 @@ public partial class StocktakingViewModel : ViewModelBase
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
 
-    /// <summary>عنوان صفحه</summary>
-    public override string Title => "انبارگردانی داروخانه";
+    /// <summary>
+    /// عنوان صفحه — چرخهٔ ۴۳: انبارگردانی هم داروها و هم لوازم مصرفی را
+    /// پوشش می‌دهد (گزارش مالک: «برای اقلام مصرفی هم انبارگردانی بزار»)
+    /// </summary>
+    public override string Title => "انبارگردانی انبار";
 
     /// <summary>فهرست جلسات</summary>
     public ObservableCollection<StockSessionRow> Sessions { get; } = new();
@@ -59,6 +64,30 @@ public partial class StocktakingViewModel : ViewModelBase
     /// <summary>یادداشت جلسه جدید</summary>
     [ObservableProperty]
     private string? _newSessionNotes;
+
+    // ═══ چرخهٔ ۴۳ (گزارش مالک: «برای اقلام مصرفی هم انبارگردانی بزار») ═══
+    // دامنهٔ جلسهٔ جدید: کل انبار / فقط داروها / فقط لوازم مصرفی — جلسات با
+    // دامنه‌های متفاوت می‌توانند هم‌زمان باز باشند (قفل سمت سرور هم‌دامنه است)
+
+    /// <summary>نمایهٔ دامنهٔ جلسهٔ جدید — ۰ کل، ۱ داروها، ۲ لوازم مصرفی</summary>
+    [ObservableProperty]
+    private int _newSessionScopeIndex;
+
+    /// <summary>گزینه‌های دامنهٔ جلسهٔ جدید</summary>
+    public string[] NewSessionScopes { get; } =
+    {
+        "🗂️ کل انبار",
+        "💊 فقط داروها",
+        "🧰 فقط لوازم مصرفی"
+    };
+
+    /// <summary>مقدار itemKind ارسالی به سرور بر اساس نمایهٔ منتخب — تهی = کل</summary>
+    private int? NewSessionScopeKind => NewSessionScopeIndex switch
+    {
+        1 => 1,
+        2 => 2,
+        _ => null
+    };
 
     /// <summary>وضعیت جلسه جاری — متن</summary>
     [ObservableProperty]
@@ -104,7 +133,8 @@ public partial class StocktakingViewModel : ViewModelBase
             foreach (var s in response?.Data ?? new List<SessionDto>())
                 Sessions.Add(new StockSessionRow(
                     s.Id, s.TakingNumber, s.DateShamsi, s.Status, s.StatusColor,
-                    $"{s.CountedItems} از {s.TotalItems}", $"{s.DifferenceItems} مغایرت", s.Notes));
+                    $"{s.CountedItems} از {s.TotalItems}", $"{s.DifferenceItems} مغایرت", s.Notes,
+                    string.IsNullOrWhiteSpace(s.ItemKindText) ? "کل انبار" : s.ItemKindText));
             if (Sessions.Count == 0) _snackbar.Info("هنوز جلسه انبارگردانی ثبت نشده است");
         }
         finally { IsBusy = false; }
@@ -171,8 +201,9 @@ public partial class StocktakingViewModel : ViewModelBase
         IsBusy = true;
         try
         {
+            // چرخهٔ ۴۳ — دامنهٔ جلسه در بدنهٔ درخواست می‌آید؛ تهی = کل انبار
             var response = await _api.PostAsync<StartResponse>("stocktakings/start",
-                new { notes = string.IsNullOrWhiteSpace(NewSessionNotes) ? null : NewSessionNotes.Trim() });
+                new { notes = string.IsNullOrWhiteSpace(NewSessionNotes) ? null : NewSessionNotes.Trim(), itemKind = NewSessionScopeKind });
             if (response?.Data != null)
             {
                 _snackbar.Success($"جلسه {response.Data.TakingNumber} با {response.Data.TotalItems} قلم آغاز شد — عکس فوری از موجودی ثبت شد");
