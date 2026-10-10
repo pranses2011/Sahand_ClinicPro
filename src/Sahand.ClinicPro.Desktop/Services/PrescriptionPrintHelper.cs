@@ -426,32 +426,42 @@ public static class PrescriptionPrintHelper
         // معکوس می‌دهد و نویسهٔ +/− قالبش هم با فونت فارسی رندر نمی‌شود.
         // قالب مینیمال فقط «صفحهٔ سند» می‌گذارد و تنها زوم فارسی خود برنامه
         // می‌ماند — رفتار یکدست و بدون تعارض.
+        // ═══ چرخهٔ سی‌وهفتم (گزارش مالک — «پیش‌نمایش هیچی نشان نمی‌دهد»؛ دومین
+        // گزارش همان مورد) ═══
+        // ریشه: در چرخهٔ ۳۵ قالب سفارشی با «ScrollViewer ریشه‌ای» ساخته شد که در
+        // قالب رسمی WPF وجود ندارد؛ ترکیب ScrollViewer (اندازه‌گیری با فضای
+        // بی‌نهایت) + AdornerDecorator بریده (ClipToBounds) + صفحه‌بندیِ «غیرهمگامِ»
+        // FlowDocument در برخی ایستگاه‌ها صفحه را تهه می‌گذاشت: نخستین اندازه‌گیری
+        // پیش از آماده‌شدن صفحه صفر می‌شود و بازچیدمانِ بعدی درون قالبِ اسکرول،
+        // در پلتفرم‌های خاص دیر/هرگز رخ نمی‌دهد ⇒ نمایشگر سفید می‌ماند. اکنون:
+        //   ۱) قالب = بازسازی وفادارانهٔ قالب رسمی
+        //      (PresentationUI/Themes/Generic.xaml — سبک PUIFlowDocumentPageViewer):
+        //      DockPanel > Border(وسط‌چین) > AdornerDecorator(ClipToBounds) >
+        //      DocumentPageView(PageNumber=0, IsMasterPage=True) — بدون هیچ لایهٔ
+        //      اضافه؛ همان ساختاری که همهٔ برنامه‌های ویندوزی با آن پیش‌نمایش
+        //      می‌گیرند.
+        //   ۲) پیمایشِ زومهای بزرگ به «بیرونِ» نمایشگر منتقل شد (ScrollViewer در
+        //      چیدمان پنجره، نه در قالب) — نمایشگر خودش همیشه در اندازهٔ طبیعی
+        //      صفحه اندازه‌گیری می‌شود.
+        //   ۳) دوبار‌وصل‌سازی اطمینانی: پس از بارگذاری پنجره، سند یک بار
+        //      قطع/وصل می‌شود تا UpdatePageViews بی‌چون‌وچرا با درختِ آماده اجرا
+        //      شود — سپر در برابر هرگونه ترتیبِ قالب/سند در نسخه‌های مختلف.
         var viewer = new FlowDocumentPageViewer
         {
             Document = document,
             MinZoom = 50,
-            MaxZoom = 300
+            MaxZoom = 300,
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            VerticalContentAlignment = VerticalAlignment.Center
         };
-        // ═══ قالب مینیمال: فقط «صفحهٔ سند» (بدون نوار ابزار داخلی) ═══
-        // ═══ چرخهٔ سی‌وپنجم (گزارش مالک) — «پیش‌نمایش هیچی نشان نمی‌دهد» ═══
-        // ریشه: قالب‌های سفارشی قبلی (DocumentPageView برهنه در چرخهٔ ۲۶ و
-        // ScrollViewer>DocumentPageView در چرخهٔ ۳۳) دو الزام قالب رسمی WPF را
-        // نقض می‌کردند که از سورس رسمی (PresentationUI/Themes/Generic.xaml —
-        // سبک PUIFlowDocumentPageViewer) استخراج شد:
-        //   ۱) صفحهٔ سند باید داخل AdornerDecorator با ClipToBounds باشد (محل
-        //      رندر انتخاب متن و Adornerها؛ DocumentViewerBase در نبودش
-        //      TextEditorRenderScope تهی می‌سازد)
-        //   ۲) DocumentPageView باید PageNumber=0 و DocumentViewerBase.
-        //      IsMasterPage=True داشته باشد (صفحهٔ مستر = صفحتی که MasterPageNumber
-        //      روی آن اعمال می‌شود؛ نبودش یعنی صفحه ممکن است هرگز شماره نگیرد = خالی)
-        // ساختار فعلی = کپی رسمی + یک ScrollViewer اضافه برای پیمایش در زوم‌های
-        // بزرگ (لازمِ اصلاح چرخهٔ ۳۳) — جست‌وجوی صفحه‌ها (FindDocumentPageViews)
-        // از سورس WPF درخت‌پیمایی بصری انجام می‌دهد و ScrollViewer مانعش نیست.
         var bareTemplate = new ControlTemplate(typeof(FlowDocumentPageViewer));
-        // لایهٔ پیمایش — نوارها فقط در نیاز (زوم > ۱۰۰٪) ظاهر می‌شوند
-        var scrollFactory = new FrameworkElementFactory(typeof(ScrollViewer));
-        scrollFactory.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Auto);
-        scrollFactory.SetValue(ScrollViewer.VerticalScrollBarVisibilityProperty, ScrollBarVisibility.Auto);
+        // ریشهٔ رسمی: DockPanel با LastChildFill
+        var dockFactory = new FrameworkElementFactory(typeof(DockPanel));
+        dockFactory.SetValue(DockPanel.LastChildFillProperty, true);
+        // قاب رسمی: وسط‌چینی افقی/عمودی صفحه (الزام قالب پیش‌فرض)
+        var pageHostBorderFactory = new FrameworkElementFactory(typeof(Border));
+        pageHostBorderFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+        pageHostBorderFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
         // لایهٔ رسمی آدورنر — الزام قالب پیش‌فرض WPF (ClipToBounds=True)
         var adornerFactory = new FrameworkElementFactory(typeof(AdornerDecorator));
         adornerFactory.SetValue(AdornerDecorator.ClipToBoundsProperty, true);
@@ -465,8 +475,9 @@ public static class PrescriptionPrintHelper
         // پیش‌فرض ویندوز) تا آینه‌ای شدن ناخواسته رخ ندهد
         pageViewFactory.SetValue(FrameworkElement.FlowDirectionProperty, FlowDirection.LeftToRight);
         adornerFactory.AppendChild(pageViewFactory);
-        scrollFactory.AppendChild(adornerFactory);
-        bareTemplate.VisualTree = scrollFactory;
+        pageHostBorderFactory.AppendChild(adornerFactory);
+        dockFactory.AppendChild(pageHostBorderFactory);
+        bareTemplate.VisualTree = dockFactory;
         viewer.Template = bareTemplate;
 
         // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — زوم واقعاً کار کند ═══
@@ -694,13 +705,26 @@ public static class PrescriptionPrintHelper
         toolbar.Children.Add(titleText);
 
         // ─── چیدمان نهایی پنجره ───
+        // ═══ چرخهٔ سی‌وهفتم: پیمایش زومهای بزرگ «بیرونِ» نمایشگر ═══
+        // نمایشگر در اندازهٔ طبیعی صفحه (A4) اندازه‌گیری می‌شود و این
+        // ScrollViewer بیرونی است که در زوم‌های بزرگ پنجره را قابل پیمایش
+        // می‌کند — LayoutTransformِ زوم روی خود نمایشگر است پس اندازهٔ
+        // مقیاس‌یافتهٔ آن به‌درستی به اسکرول منتقل می‌شود.
+        var previewScroller = new ScrollViewer
+        {
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            Content = viewer,
+            Background = new SolidColorBrush(Color.FromRgb(0xE9, 0xEE, 0xF5)),
+            Padding = new Thickness(10)
+        };
         var grid = new Grid();
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         Grid.SetRow(toolbarBorder, 0);
-        Grid.SetRow(viewer, 1);
+        Grid.SetRow(previewScroller, 1);
         grid.Children.Add(toolbarBorder);
-        grid.Children.Add(viewer);
+        grid.Children.Add(previewScroller);
 
         var window = new Window
         {
@@ -712,6 +736,17 @@ public static class PrescriptionPrintHelper
             Owner = System.Windows.Application.Current?.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive),
             FlowDirection = FlowDirection.RightToLeft,
             FontFamily = PrintFontFamily
+        };
+        // ═══ چرخهٔ سی‌وهفتم — دوباروصل‌سازی اطمینانی سند ═══
+        // پس از ساخت پنجره و اعمال قالب، سند یک بار قطع و دوباره وصل می‌شود
+        // تا UpdatePageViews حتماً با درختِ بصریِ آماده اجرا شود و DocumentPageView
+        // صفحه‌ساز سند را بگیرد — سپری در برابر هر ترتیبِ قالب/سند/بارگذاری.
+        window.Loaded += (_, _) =>
+        {
+            if (viewer.Document is null) return;
+            var doc = viewer.Document;
+            viewer.Document = null;
+            viewer.Document = doc;
         };
         closeBtn.Click += (_, _) => window.Close();
         // چرخه بیست‌وچهارم (گزارش هفدهم مالک): «کلید کنسل یا ESC برای بستن

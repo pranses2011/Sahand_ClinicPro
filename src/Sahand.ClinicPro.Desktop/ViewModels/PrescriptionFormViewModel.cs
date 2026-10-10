@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -868,19 +869,62 @@ public partial class PrescriptionFormViewModel : ObservableObject
         public string? TrackingCode { get; set; }
     }
 
-    /// <summary>آیتم تمپلیت در JSON</summary>
+    /// <summary>
+    /// آیتم تمپلیت در JSON.
+    /// ═══ چرخهٔ سی‌وهفتم (گزارش مالک — «بارگذاری تمپلیت داروها را بی‌نام و
+    /// بی‌مشخصات اضافه می‌کند») ═══
+    /// ریشه: «ذخیره» با شیء بی‌نامِ با نام‌خصوصیتِ camelCase سریال می‌کرد
+    /// (medicationId، name، dosage، …) ولی «بارگذاری» با System.Text.Json
+    /// پیش‌فرض (تطبیق «حساس به بزرگی/کوچکی حروف») روی خصوصیات PascalCase
+    /// این کلاس کرد — هیچ نامی جفت نمی‌شد و همهٔ فیلدها مقدار پیش‌فرض
+    /// (تهی/صفر) می‌شد: به همان تعداد دارو اضافه می‌شد ولی همگی بی‌نام!
+    /// درمان: نام‌گذاری صریح JSON هر خصوصیت با [JsonPropertyName] تا
+    /// ذخیره و بارگذاری روی یک الفبای واحد (camelCase) هم‌زبان شوند.
+    /// </summary>
     public sealed class TemplateItem
     {
+        /// <summary>شناسهٔ دارو — صفر یعنی داروی آزاد/دستی</summary>
+        [JsonPropertyName("medicationId")]
         public long MedicationId { get; set; }
+
+        /// <summary>نام دارو</summary>
+        [JsonPropertyName("name")]
         public string Name { get; set; } = string.Empty;
+
+        /// <summary>زیرعنوان (شکل/غلظت دارو)</summary>
+        [JsonPropertyName("subtitle")]
         public string? Subtitle { get; set; }
+
+        /// <summary>دوز (مثلاً «۵۰۰ mg»)</summary>
+        [JsonPropertyName("dosage")]
         public string? Dosage { get; set; }
+
+        /// <summary>تعداد دفعات مصرف در روز</summary>
+        [JsonPropertyName("frequency")]
         public string? Frequency { get; set; }
+
+        /// <summary>مدت مصرف</summary>
+        [JsonPropertyName("duration")]
         public string? Duration { get; set; }
+
+        /// <summary>مسیر مصرف (خوراکی/تزریقی/…)</summary>
+        [JsonPropertyName("route")]
         public string? Route { get; set; }
+
+        /// <summary>تعداد/مقدار</summary>
+        [JsonPropertyName("quantity")]
         public decimal Quantity { get; set; }
+
+        /// <summary>واحد شمارش</summary>
+        [JsonPropertyName("unit")]
         public string? Unit { get; set; }
+
+        /// <summary>توضیح مصرف</summary>
+        [JsonPropertyName("instructions")]
         public string? Instructions { get; set; }
+
+        /// <summary>مصرف در صورت نیاز (SOS)</summary>
+        [JsonPropertyName("isSos")]
         public bool IsSos { get; set; }
     }
 }
