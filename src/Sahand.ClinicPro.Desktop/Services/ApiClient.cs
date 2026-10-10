@@ -299,8 +299,14 @@ public class ApiClient : IApiClient
             }
 
             LastLoginMustChangePassword = envelope.Data.MustChangePassword;
+            // ═══ چرخهٔ سی‌وهشتم (سطح دسترسی و پروفایل کاربر) ═══
+            // پاسخ لاگین سرور علاوه بر توکن‌ها «نام نمایشی + نقش‌ها + دسترسی‌ها»
+            // را هم دارد؛ از این پس همراه توکن ذخیره می‌شود تا منوی پوسته بر
+            // اساس دسترسی فیلتر شود و نام کامل کاربر نمایش یابد (پیش‌تر دور
+            // ریخته می‌شد و فقط نام کاربری زنده می‌ماند).
             _tokens.SaveTokens(envelope.Data.AccessToken, envelope.Data.RefreshToken,
-                envelope.Data.ExpiresIn, envelope.Data.Username);
+                envelope.Data.ExpiresIn, envelope.Data.Username,
+                envelope.Data.DisplayName, envelope.Data.Roles, envelope.Data.Permissions);
             return true;
         }
         catch (HttpRequestException)
@@ -505,11 +511,18 @@ public class ApiClient : IApiClient
         }
     }
 
-    /// <summary>ساختار داده ورود — هم‌شکل فیلد data پاکت LoginResponseDto سرور</summary>
+    /// <summary>
+    /// ساختار داده ورود — هم‌شکل فیلد data پاکت LoginResponseDto سرور.
+    /// چرخهٔ سی‌وهشتم: displayName/roles/permissions هم نگاشت می‌شود (سطح
+    /// دسترسی و پروفایل کاربر در پوسته).
+    /// </summary>
     private sealed record LoginResult(
         string AccessToken,
         string RefreshToken,
         int ExpiresIn,
         string Username,
-        bool MustChangePassword);
+        bool MustChangePassword,
+        string? DisplayName = null,
+        IReadOnlyList<string>? Roles = null,
+        IReadOnlyList<string>? Permissions = null);
 }
