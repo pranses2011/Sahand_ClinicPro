@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -431,27 +432,40 @@ public static class PrescriptionPrintHelper
             MinZoom = 50,
             MaxZoom = 300
         };
-        // ═══ قالب مینیمال: فقط «صفحهٔ سند» (PART_ContentHost) بدون نوار ابزار ═══
-        // FlowDocumentPageViewer هنگام اعمال قالب، سند را خودش به قسمتِ
-        // نام‌گذاری‌شدهٔ PART_ContentHost (از نوع DocumentPageView) وصل می‌کند
-        // — الگوی رسمی قالب این کنترل در WPF؛ پس نیازی به اتصال دستی نیست
-        // ═══ چرخهٔ سی‌وسوم (گزارش نوزدهم مالک) — «دکمه‌های زوم درست کار نمی‌کنند» ═══
-        // قالب مینیمال قبلی DocumentPageView را «برهنه» می‌گذاشت؛ قالب پیش‌فرض
-        // این کنترل، صفحه را داخل یک ScrollViewer می‌چیند — بدون آن، هر زومی
-        // بزرگ‌تر از ۱۰۰٪ صفحه را از لبهٔ پنجره بیرون می‌برد و بدون نوار پیمایش
-        // هیچ راهی برای دیدن لبه‌ها نیست (همان «درست کار نمی‌کند»). اکنون همان
-        // چیدمان رسمی بازگردانده شد: ScrollViewer (پیمایش خودکار افقی/عمودی)
-        // دور PART_ContentHost — زوم بزرگ = نوار پیمایش تازه؛ زوم کوچک = بدون نوار.
+        // ═══ قالب مینیمال: فقط «صفحهٔ سند» (بدون نوار ابزار داخلی) ═══
+        // ═══ چرخهٔ سی‌وپنجم (گزارش مالک) — «پیش‌نمایش هیچی نشان نمی‌دهد» ═══
+        // ریشه: قالب‌های سفارشی قبلی (DocumentPageView برهنه در چرخهٔ ۲۶ و
+        // ScrollViewer>DocumentPageView در چرخهٔ ۳۳) دو الزام قالب رسمی WPF را
+        // نقض می‌کردند که از سورس رسمی (PresentationUI/Themes/Generic.xaml —
+        // سبک PUIFlowDocumentPageViewer) استخراج شد:
+        //   ۱) صفحهٔ سند باید داخل AdornerDecorator با ClipToBounds باشد (محل
+        //      رندر انتخاب متن و Adornerها؛ DocumentViewerBase در نبودش
+        //      TextEditorRenderScope تهی می‌سازد)
+        //   ۲) DocumentPageView باید PageNumber=0 و DocumentViewerBase.
+        //      IsMasterPage=True داشته باشد (صفحهٔ مستر = صفحتی که MasterPageNumber
+        //      روی آن اعمال می‌شود؛ نبودش یعنی صفحه ممکن است هرگز شماره نگیرد = خالی)
+        // ساختار فعلی = کپی رسمی + یک ScrollViewer اضافه برای پیمایش در زوم‌های
+        // بزرگ (لازمِ اصلاح چرخهٔ ۳۳) — جست‌وجوی صفحه‌ها (FindDocumentPageViews)
+        // از سورس WPF درخت‌پیمایی بصری انجام می‌دهد و ScrollViewer مانعش نیست.
         var bareTemplate = new ControlTemplate(typeof(FlowDocumentPageViewer));
+        // لایهٔ پیمایش — نوارها فقط در نیاز (زوم > ۱۰۰٪) ظاهر می‌شوند
         var scrollFactory = new FrameworkElementFactory(typeof(ScrollViewer));
-        // نوارهای پیمایش فقط در نیاز ظاهر می‌شوند (Auto) — در ۱۰۰٪ هیچ نوری نیست
         scrollFactory.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Auto);
         scrollFactory.SetValue(ScrollViewer.VerticalScrollBarVisibilityProperty, ScrollBarVisibility.Auto);
+        // لایهٔ رسمی آدورنر — الزام قالب پیش‌فرض WPF (ClipToBounds=True)
+        var adornerFactory = new FrameworkElementFactory(typeof(AdornerDecorator));
+        adornerFactory.SetValue(AdornerDecorator.ClipToBoundsProperty, true);
+        // صفحهٔ سند — دقیقاً مطابق قالب رسمی: PageNumber صفر + پرچم صفحهٔ مستر
         var pageViewFactory = new FrameworkElementFactory(typeof(DocumentPageView), "PART_ContentHost");
+        pageViewFactory.SetValue(DocumentPageView.PageNumberProperty, 0);
+        pageViewFactory.SetValue(DocumentViewerBase.IsMasterPageProperty, true);
+        pageViewFactory.SetValue(KeyboardNavigation.IsTabStopProperty, false);
+        pageViewFactory.SetValue(KeyboardNavigation.TabNavigationProperty, KeyboardNavigationMode.Local);
         // سند راست‌چین است؛ خود صفحه همیشه چپ‌به‌راست رندر می‌شود (الگوی قالب
         // پیش‌فرض ویندوز) تا آینه‌ای شدن ناخواسته رخ ندهد
         pageViewFactory.SetValue(FrameworkElement.FlowDirectionProperty, FlowDirection.LeftToRight);
-        scrollFactory.AppendChild(pageViewFactory);
+        adornerFactory.AppendChild(pageViewFactory);
+        scrollFactory.AppendChild(adornerFactory);
         bareTemplate.VisualTree = scrollFactory;
         viewer.Template = bareTemplate;
 
