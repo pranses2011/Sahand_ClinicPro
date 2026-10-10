@@ -80,7 +80,7 @@ upload_url = release["upload_url"].replace("{?name,label}", f"?name={ZIP.name}")
 req = urllib.request.Request(
     upload_url,
     data=ZIP.read_bytes(),
-    headers={"Authorization": f"token {TOKEN}", "Accept: application/vnd.github+json",
+    headers={"Authorization": f"token {TOKEN}", "Accept": "application/vnd.github+json",
              "Content-Type": "application/zip"},
     method="POST")
 with urllib.request.urlopen(req) as r:
