@@ -219,8 +219,55 @@
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
                                     </ScrollViewer>
-                                    <TextBlock Text="راهنما: سبز = آزاد | خاکستری = استراحت | آبی = انتخاب شما | کم‌رنگ غیرفعال = رزرو شده"
-                                               FontSize="10.5" Opacity="0.55" Margin="2,10,2,0" />
+                                    <!-- ═══ راهنمای رنگ‌های اسلات نوبت — چرخهٔ سی‌وپنجم (گزارش مالک) ═══
+                                         «راهنمای رنگی که در دندانپزشکی درست کردی را در هر جای دیگری
+                                         که راهنمای رنگی دارد هم اعمال کن» — قانون هم‌کلاسی‌ها:
+                                         همان الگوی چیپ رنگی واقعی چارت دندان (LegendChip چرخهٔ ۳۳)
+                                         به‌جای متنِ «سبز = آزاد | خاکستری = …»؛ رنگ چیپ‌ها عیناً از
+                                         همان استایل‌های DataTrigger بالا کپی شده تا راهنما همیشه
+                                         با خود دکمه‌ها یکی باشد (نویسه و ایموجی در فونت فارسی
+                                         نمی‌ماند، چیپ در هر فونتی می‌ماند) -->
+                                    <WrapPanel Margin="2,10,2,0">
+                                        <WrapPanel.Resources>
+                                            <!-- قالب مشترک چیپ/برچسب — هم‌نام با ParaclinicalView -->
+                                            <Style x:Key="LegendChip" TargetType="Border">
+                                                <Setter Property="Width" Value="15" />
+                                                <Setter Property="Height" Value="15" />
+                                                <Setter Property="CornerRadius" Value="4" />
+                                                <Setter Property="BorderThickness" Value="1" />
+                                                <Setter Property="BorderBrush" Value="#90A4AE" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="Margin" Value="0,0,5,0" />
+                                            </Style>
+                                            <Style x:Key="LegendLabel" TargetType="TextBlock">
+                                                <Setter Property="FontSize" Value="11" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="Margin" Value="0,0,12,2" />
+                                                <Setter Property="Opacity" Value="0.85" />
+                                            </Style>
+                                        </WrapPanel.Resources>
+                                        <!-- #E8F5E9 = پس‌زمینهٔ اسلات آزاد در استایل بالا -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="اسلات فعال برای رزرو نوبت">
+                                            <Border Style="{StaticResource LegendChip}" Background="#E8F5E9" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="آزاد" />
+                                        </StackPanel>
+                                        <!-- #ECEFF1 با شفافیت = استراحت پزشک -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="زمان استراحت پزشک">
+                                            <Border Style="{StaticResource LegendChip}" Background="#ECEFF1" Opacity="0.55" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="استراحت" />
+                                        </StackPanel>
+                                        <!-- #BBDEFB با حاشیهٔ آبی = اسلات انتخاب‌شدهٔ فعلی شما -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="اسلاتی که انتخاب کرده‌اید">
+                                            <Border Style="{StaticResource LegendChip}" Background="#BBDEFB"
+                                                    BorderBrush="#1565C0" BorderThickness="2" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="انتخاب شما" />
+                                        </StackPanel>
+                                        <!-- #ECEFF1 کم‌رنگ = قبلاً رزرو شده / غیرفعال -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="قبلاً رزرو شده — قابل انتخاب نیست">
+                                            <Border Style="{StaticResource LegendChip}" Background="#ECEFF1" Opacity="0.35" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="رزرو شده" />
+                                        </StackPanel>
+                                    </WrapPanel>
                                 </StackPanel>
                             </Border>
                         </Grid>
