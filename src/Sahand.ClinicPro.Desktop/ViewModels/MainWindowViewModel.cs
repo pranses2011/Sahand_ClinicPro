@@ -521,9 +521,12 @@ public partial class MainWindowViewModel : ObservableObject
         }
 
         var owner = System.Windows.Application.Current.MainWindow;
-        if (owner is null) return;
-        var tour = new Views.GuidedTourWindow(owner) { Owner = owner };
-        tour.Show();
+        if (owner is not MainWindow mainWindow) return;
+        // چرخهٔ سی‌وهشتم: تور درون‌پنجره‌ای — به‌جای پنجرهٔ همپوشان جدا،
+        // در لایهٔ TourLayer خود پنجرهٔ اصلی مستقر می‌شود تا اندازه‌گیری
+        // هایلایت در همان درخت بصری انجام شود (رفع ریشهٔ آینه‌شدن RTL)
+        var tour = new Views.GuidedTourWindow(owner);
+        mainWindow.ShowTourOverlay(tour);
     }
 
     /// <summary>نسخه غیرهمگام امن برای فراخوانی از سازنده</summary>

@@ -2,7 +2,6 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Threading;
 using Sahand.ClinicPro.Desktop.Services;
 
@@ -10,24 +9,34 @@ namespace Sahand.ClinicPro.Desktop.Views;
 
 /// <summary>
 /// کد پشت تور هدایت‌شده اولین اجرا — چرخه سیزدهم (درخواست ۸-۶)؛
-/// بازنویسی چرخه هجدهم (گزارش دوازدهم مالک):
-/// ماسک تیره تمام‌صفحه با سوراخ روشن دور کنترل هدف، حباب راهنما با
-/// ناوبری قبلی/بعدی/رد شدن و نشانگر پیشرفت.
-/// رفع‌های این چرخه — هایلایت‌های «خالی/بی‌ارتباط» گزارش‌شده:
-/// ۱) خطای DPI: PointToScreen پیکسل فیزیکی برمی‌گرداند ولی مسیر ماسک
-///    با واحد منطقی DIP ترسیم می‌شد؛ در نمایشگرهای با مقیاس ۱۲۵/۱۵۰٪ سوراخ
-///    جابه‌جا و خالی می‌افتاد. اکنون مختصات نسبت به پنجرهٔ تور و با
-///    TransformFromDevice به DIP تبدیل می‌شود.
-/// ۲) گام‌های صفحات (داشبورد/بیماران/…) به جای هایلایت آیتم ریز منو،
-///    ابتدا به خود صفحه ناوبری می‌کنند و «هر دو» — آیتم منو و میزکار
-///    صفحه — سوراخ روشن می‌گیرند تا نوشتهٔ حباب با تصویر روی صفحه بخواند.
-/// ۳) حباب خوش‌آمد (گام بدون هدف) حالا دور خودش سوراخ می‌گیرد؛ پیش‌تر
-///    سوراخ ثابت مرکزی بود که با هر ابعاد صفحه جابه‌جا می‌ماند.
-/// ۴) تغییر اندازهٔ پنجره در میانهٔ تور، ماسک را دوباره چیده می‌کند.
+/// بازنویسی چرخه هجدهم (گزارش دوازدهم مالک): ماسک تیره تمام‌پنجره با
+/// سوراخ روشن دور کنترل هدف، حباب راهنما با ناوبری قبلی/بعدی/رد شدن و
+/// نشانگر پیشرفت.
+///
+/// ═══ چرخهٔ سی‌وهشتم (گزارش مالک — بازنویسی معماری، ریشهٔ RTL) ═══
+/// «هایلایت‌های تور آموزشی اولین ورود درست نیست و فکر کنم به خاطر RTL
+/// بودن فرم باشه». ریشهٔ قطعی: این تور پیشتر «پنجرهٔ همپوشان» جدا بود
+/// (WindowStyle=None + Maximized) و برای یافتن مختصات هدف باید از
+/// PointToScreen بین دو پنجره کمک می‌گرفت؛ ویندوز برای پنجره‌های WPF با
+/// FlowDirection=RightToLeft محور X مختصات صفحه را آینه می‌کند (رفتار
+/// شناخته‌شدهٔ RTL) → سوراخ‌های هایلایت به‌صورت آینه‌ای در جای غلط
+/// می‌افتادند و رفع‌های قبلیِ DPI نمی‌توانستند این لایهٔ خطا را ببینند.
+///
+/// معماری تازه: این کلاس دیگر پنجره نیست؛ UserControl ای است که در
+/// «لایهٔ همپوشان» درون پنجرهٔ اصلی (TourLayer در MainWindow) مستقر
+/// می‌شود. اندازه‌گیری هدف با TranslatePoint در همان درخت بصری انجام
+/// می‌شود؛ مبدأ اندازه‌گیری و مبدأ ترسیم ماسک یکی است، پس:
+///   • آینه‌شوندگی RTL بر هر دو یکسان اثر می‌گذارد → خطای آینه‌ای صفر
+///   • مقیاس DPI هر دو را یکسان می‌بُرد → بدون تبدیل دستی پیکسل/DIP
+///   • جابه‌جایی/تغییر اندازهٔ پنجرهٔ اصلی، لایه را هم می‌کشاند → ماسک
+///     همیشه با رابط هم‌تراز می‌ماند (حتی هنگام درگ پنجره که پیشتر
+///     پشتیبانی نمی‌شد)
+/// نام کلاس/فایل «GuidedTourWindow» حفظ شد تا بستهٔ آپدیت فقط همین دو
+/// فایل را جایگزین کند (پایداری ایستگاه‌های مالک).
 /// </summary>
-public partial class GuidedTourWindow : Window
+public partial class GuidedTourWindow : UserControl
 {
-    /// <summary>پنجره اصلی — برای یافتن کنترل‌های هدف</summary>
+    /// <summary>پنجرهٔ اصلی — برای یافتن کنترل‌های هدف و ناوبری</summary>
     private readonly Window _main;
 
     /// <summary>ایستگاه جاری</summary>
@@ -36,21 +45,22 @@ public partial class GuidedTourWindow : Window
     /// <summary>مجموعه ایستگاه‌ها</summary>
     private readonly List<TourStep> _steps;
 
-    /// <summary>رخداد پایان تور (با هر دو حالت تکمیل/رد شدن)</summary>
+    /// <summary>رخداد پایان تور (با هر دو حالت تکمیل/رد شدن) — میزبان لایه را جمع می‌کند</summary>
     public event EventHandler? TourClosed;
 
-    /// <summary>سازنده با پنجره اصلی</summary>
+    /// <summary>سازنده با پنجرهٔ اصلی — تور در لایهٔ درون‌پنجره‌ای آن مستقر می‌شود</summary>
     public GuidedTourWindow(Window main)
     {
         InitializeComponent();
         _main = main;
         _steps = TourCatalog.Steps;
 
-        // تغییر اندازه/جابه‌جایی پنجرهٔ اصلی → چیدمان دوبارهٔ ماسک ایستگاه جاری
+        // تغییر اندازهٔ پنجرهٔ اصلی یا خود لایه → چیدمان دوبارهٔ ماسک ایستگاه جاری
         _main.SizeChanged += OnMainSizeChanged;
         SizeChanged += (_, _) => ShowStep(_index);
 
-        // ناوبری با کلید‌ها: راست = قبلی (RTL)، چپ = بعدی، Esc = رد شدن
+        // ناوبری با کلید‌ها: Esc = رد شدن از تور
+        // (تونل‌وار از ریشهٔ پنجره به همهٔ کنترل‌ها می‌رسد — لایه هم می‌بیند)
         PreviewKeyDown += (_, e) =>
         {
             if (e.Key == Key.Escape) { OnSkip(this, e); e.Handled = true; }
@@ -78,7 +88,9 @@ public partial class GuidedTourWindow : Window
     }
 
     /// <summary>
-    /// ساخت ماسک تیره با سوراخ‌های روشن — هماهنگ با DPI و نسبت به همین پنجره.
+    /// ساخت ماسک تیره با سوراخ‌های روشن — همهٔ مختصات در فضای منطقی
+    /// «همین لایه» اند (همان درخت بصری پنجرهٔ اصلی)؛ دیگر هیچ تبدیل
+    /// بین‌پنجره‌ای/صفحه‌ای در کار نیست (رفع ریشهٔ RTL چرخهٔ ۳۸).
     /// اگر هدف یک کلید صفحه (PageKey) باشد، ابتدا پنجرهٔ اصلی به آن صفحه
     /// می‌رود، سپس «آیتم منو + میزکار صفحه» هر دو سوراخ می‌گیرند.
     /// </summary>
@@ -141,8 +153,8 @@ public partial class GuidedTourWindow : Window
     /// <summary>حباب میانهٔ صفحه با سوراخ روشن دور خودش — گام بدون هدف</summary>
     private void ApplyCenteredMask()
     {
-        var width = ActualWidth > 0 ? ActualWidth : SystemParameters.WorkArea.Width;
-        var height = ActualHeight > 0 ? ActualHeight : SystemParameters.WorkArea.Height;
+        var width = ActualWidth > 0 ? ActualWidth : _main.ActualWidth;
+        var height = ActualHeight > 0 ? ActualHeight : _main.ActualHeight;
 
         var top = Math.Max(40, (height - 440) / 2);
         Bubble.HorizontalAlignment = HorizontalAlignment.Center;
@@ -154,8 +166,8 @@ public partial class GuidedTourWindow : Window
     /// <summary>اعمال ماسک چندسوراخه + جای‌گذاری حباب زیر پایینی‌ترین سوراخ</summary>
     private void ApplyMask(List<Rect> holes, bool placeBubble)
     {
-        var width = ActualWidth > 0 ? ActualWidth : SystemParameters.WorkArea.Width;
-        var height = ActualHeight > 0 ? ActualHeight : SystemParameters.WorkArea.Height;
+        var width = ActualWidth > 0 ? ActualWidth : _main.ActualWidth;
+        var height = ActualHeight > 0 ? ActualHeight : _main.ActualHeight;
 
         var full = new RectangleGeometry(new Rect(0, 0, width, height));
         var cuts = new GeometryGroup();
@@ -177,31 +189,26 @@ public partial class GuidedTourWindow : Window
     }
 
     /// <summary>
-    /// مستطیل هدف در فضای منطقی همین پنجره — DPI-امن:
-    /// PointToScreen پیکسل فیزیکی می‌دهد؛ با مبدأ پنجرهٔ تور و
-    /// TransformFromDevice به DIP تبدیل می‌شود.
+    /// مستطیل هدف در فضای منطقی «همین لایه» — چرخهٔ سی‌وهشتم:
+    /// TranslatePoint در همان درخت بصری پنجرهٔ اصلی کار می‌کند؛ چیدمان RTL،
+    /// مقیاس DPI و جای‌گذاری پنجره در محاسبه و ترسیم ماسک «یکسان» اعمال
+    /// می‌شوند پس هیچ تبدیل دستی لازم نیست و خطای آینه‌ای RTL منتفی است.
     /// </summary>
     private Rect TargetRect(FrameworkElement target, double pad)
     {
-        var source = PresentationSource.FromVisual(this);
-        var toLogical = source?.CompositionTarget?.TransformFromDevice
-                        ?? Matrix.Identity;
-        var origin = PointToScreen(new Point(0, 0));       // پیکسل فیزیکی مبدأ تور
-        var targetTopLeft = target.PointToScreen(new Point(0, 0)); // پیکسل فیزیکی هدف
-
-        var rel = toLogical.Transform(new Point(
-            targetTopLeft.X - origin.X, targetTopLeft.Y - origin.Y));
-        var size = target.RenderSize;                       // از قبل منطقی است
+        // موقعیت گوشهٔ بالا-چپِ بصریِ هدف نسبت به ریشهٔ همین لایه (DIP منطقی)
+        var rel = target.TranslatePoint(new Point(0, 0), (IInputElement)this);
+        var size = target.RenderSize;
 
         return new Rect(rel.X - pad, rel.Y - pad,
             size.Width + 2 * pad, size.Height + 2 * pad);
     }
 
-    /// <summary>بریدن سوراخ به محدودهٔ پنجره — سوراخ بیرون‌زدیده دیده نمی‌شود</summary>
+    /// <summary>بریدن سوراخ به محدودهٔ لایه — سوراخ بیرون‌زدیده دیده نمی‌شود</summary>
     private Rect ClampToWindow(Rect rect)
     {
-        var width = ActualWidth > 0 ? ActualWidth : SystemParameters.WorkArea.Width;
-        var height = ActualHeight > 0 ? ActualHeight : SystemParameters.WorkArea.Height;
+        var width = ActualWidth > 0 ? ActualWidth : _main.ActualWidth;
+        var height = ActualHeight > 0 ? ActualHeight : _main.ActualHeight;
         var x = Math.Max(0, Math.Min(rect.X, width - 8));
         var y = Math.Max(0, Math.Min(rect.Y, height - 8));
         return new Rect(x, y,
@@ -249,7 +256,11 @@ public partial class GuidedTourWindow : Window
     /// <summary>رد شدن از تور</summary>
     private void OnSkip(object sender, RoutedEventArgs e) => Finish(completed: false);
 
-    /// <summary>پایان تور — علامت‌گذاری فایل مارکر محلی برای عدم نمایش خودکار مجدد</summary>
+    /// <summary>
+    /// پایان تور — علامت‌گذاری فایل مارکر محلی برای عدم نمایش خودکار مجدد؛
+    /// سپس جداشدن از لایهٔ میزبان (بستن «پنجره» دیگر معنا ندارد — تور
+    /// کنترلی درون پنجرهٔ اصلی است و با حذف از لایه جمع می‌شود).
+    /// </summary>
     private void Finish(bool completed)
     {
         try
@@ -278,7 +289,10 @@ public partial class GuidedTourWindow : Window
         }
 
         TourClosed?.Invoke(this, EventArgs.Empty);
-        Close();
+
+        // جداشدن از لایهٔ میزبان درون پنجرهٔ اصلی
+        if (Parent is Panel panel)
+            panel.Children.Remove(this);
     }
 
     /// <summary>شنوندهٔ جدا برای جداسازی مطمئن (قابل حذف با -=)</summary>

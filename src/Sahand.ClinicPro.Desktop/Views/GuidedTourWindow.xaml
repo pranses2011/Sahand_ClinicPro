@@ -1,18 +1,36 @@
-<Window x:Class="Sahand.ClinicPro.Desktop.Views.GuidedTourWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="تور معرفی"
-        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
-        WindowState="Maximized" ResizeMode="NoResize" ShowInTaskbar="False"
-        Topmost="True" FlowDirection="RightToLeft">
-    <!-- ═══ تور هدایت‌شده اولین اجرا — چرخه سیزدهم (درخواست ۸-۶)
-         پس‌زمینه تیره شفاف با سوراخ روشن دور کنترل هدف + حباب راهنما ═══ -->
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.GuidedTourWindow"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/xaml/themes"
+             FlowDirection="RightToLeft">
+    <!-- ═══════════════════════════════════════════════════════════
+         تور هدایت‌شده اولین اجرا — چرخه سیزدهم (درخواست ۸-۶)
+         پس‌زمینه تیره شفاف با سوراخ روشن دور کنترل هدف + حباب راهنما
+
+         ═══ چرخهٔ سی‌وهشتم (گزارش مالک — ریشه‌یابی RTL) ═══
+         «هایلایت‌های تور آموزشی اولین ورود درست نیست و فکر کنم به خاطر
+         RTL بودن فرم باشه» — تشخیص مالک دقیق بود: پیشتر این تور یک
+         «پنجرهٔ همپوشان» جدا بود و برای یافتن مختصات کنترل هدف باید از
+         PointToScreen بین دو پنجره استفاده می‌شد؛ در پنجره‌های WPF با
+         FlowDirection=RightToLeft مختصات X از سوی ویندوز آینه می‌شود
+         (رفتار شناخته‌شدهٔ پنجره‌های RTL) و در نتیجه سوراخ هایلایت به‌صورت
+         آینه‌ای در جای اشتباه می‌افتاد.
+         رفع قطعی با تغییر معماری: تور دیگر پنجرهٔ جدا نیست؛ به‌صورت
+         «کنترل کاربر» در لایهٔ همپوشان درون خود پنجرهٔ اصلی می‌نشیند
+         (لایهٔ TourLayer در MainWindow). اندازه‌گیری هدف با TranslatePoint
+         در «همان درخت بصری» انجام می‌شود — یعنی مبدأ اندازه‌گیری و مبدأ
+         ترسیم ماسک یکسان‌اند و هر آینه‌شوندگی (RTL)، مقیاس DPI یا جابه‌جایی
+         پنجره به‌طور خودکار بر هر دو یکسان اثر می‌گذارد؛ خطای مختصات به
+         کلی منتفی است.
+         نام کلاس/فایل عمداً «GuidedTourWindow» ماند تا بستهٔ آپدیت فقط
+         همین دو فایل را جایگزین کند و فایل زائد روی ایستگاه نمانَد.
+         ═══════════════════════════════════════════════════════════ -->
     <Grid>
-        <!-- ماسک تیره با سوراخ هایلایت — مسیر جغرافیایی در کد پشت به‌روزرسانی می‌شود -->
+        <!-- ماسک تیره با سوراخ هایلایت — هندسه در کد پشت به‌روزرسانی می‌شود؛
+             Fill غیرتهی است تا کلیک‌های روی ناحیهٔ تیره به رابط زیرین نرسد -->
         <Path x:Name="MaskPath" Fill="#B3000000" IsHitTestVisible="True" />
 
-        <!-- حباب راهنما -->
+        <!-- حباب راهنما — همیشه روی ماسک -->
         <Border x:Name="Bubble" Background="White" CornerRadius="14" Padding="20,16"
                 Width="430" VerticalAlignment="Top" HorizontalAlignment="Center"
                 Effect="{DynamicResource MaterialDesignShadowDepth3}"
@@ -49,4 +67,4 @@
             </StackPanel>
         </Border>
     </Grid>
-</Window>
+</UserControl>
