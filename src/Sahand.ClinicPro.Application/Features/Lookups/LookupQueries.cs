@@ -423,6 +423,21 @@ public class GetServicesQueryHandler : IRequestHandler<GetServicesQuery, Result<
                 .ThenByDescending(t => t.Year)
                 .First());
 
+        // ═══ چرخهٔ سی‌وهفتم (گزارش مالک) ═══ «تعرفه همه بیمه‌ها بهم ریخته و
+        // همشون ۱۰۰٪ سهم بیمار شدن» — این کوئری مسیر پذیرش/صدور فاکتور است و
+        // همان ریشهٔ پنجرهٔ مدیریت تعرفه را داشت: در نبود ردیف اختصاصی برای
+        // بیمهٔ هدف، سهم‌ها از ردیف آزاد (۰/۱۰۰ پس از مهاجرت سی‌ودوم) خوانده
+        // می‌شد و فاکتور بیمه‌ای تمام بار را به بیمار می‌انداخت. اکنون سهم‌های
+        // ردیفِ «پایه» از تنظیمات خودِ بیمه (DefaultCoveragePercent و
+        // هم‌خانواده‌ها — همان الگوی تسویه و پنجرهٔ مدیریت) محاسبه می‌شود؛
+        // ردیف اختصاصی بیمه همچنان مقدم و بی‌تغییر است.
+        InsuranceCompany? targetCompany = request.InsuranceCompanyId is long companyId
+            ? await _unitOfWork.Repository<InsuranceCompany>().QueryableNoTracking
+                .FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken)
+            : null;
+        var fallbackInsurancePercent = TariffFallbackShares.InsurancePercentOf(targetCompany);
+        var fallbackPatientPercent = 100m - fallbackInsurancePercent;
+
         var items = new List<ServiceTariffOptionDto>();
         foreach (var x in services)
         {
@@ -434,12 +449,20 @@ public class GetServicesQueryHandler : IRequestHandler<GetServicesQuery, Result<
             // مهاجرت سی‌ودوم) نادیده گرفته و همیشه ۰٪ بیمه / ۱۰۰٪ بیمار
             // برمی‌گردد — دفاع در عمق؛ درصد سهم فقط برای بیمهٔ واقعی معنا دارد.
             var isFreeTarget = request.InsuranceCompanyId is null;
+            // ردیف حل‌شده «اختصاصیِ همین بیمه» است یا سقوط به تعرفهٔ پایه؟
+            // (برای هدف بیمه‌ای، هر ردیف حل‌شده با InsuranceCompanyId مقداری،
+            // همان ردیف اختصاصیِ بیمهٔ هدف است — شرط کوئری بالا)
+            var isDedicatedRow = !isFreeTarget && tariff is not null && tariff.InsuranceCompanyId != null;
             items.Add(new ServiceTariffOptionDto(
                 x.Id, x.ServiceCode, x.ServiceName,
                 x.ServiceType.ToString(),
                 tariff is not null ? tariff.Price : x.DefaultPrice,
-                isFreeTarget ? 0m : (tariff is not null ? tariff.InsuranceShare : 0m),
-                isFreeTarget ? 100m : (tariff is not null ? tariff.PatientShare : 0m)));
+                isFreeTarget ? 0m
+                    : isDedicatedRow ? tariff!.InsuranceShare
+                    : fallbackInsurancePercent,
+                isFreeTarget ? 100m
+                    : isDedicatedRow ? tariff!.PatientShare
+                    : fallbackPatientPercent));
         }
 
         return Result<List<ServiceTariffOptionDto>>.Success(items);

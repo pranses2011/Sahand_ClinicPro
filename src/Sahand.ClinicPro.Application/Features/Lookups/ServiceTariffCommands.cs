@@ -32,6 +32,22 @@ internal static class TariffYear
     }
 }
 
+// ═══ چرخهٔ سی‌وهفتم (گزارش مالک) ═══ سهم پیش‌فرض بیمهٔ هدف برای ردیف‌های
+// «پایه» (بدون تعرفهٔ اختصاصی) — الگوی اولویت همان FractionmentCalculator:
+// DefaultCoveragePercent مقدم، در نبود آن DefaultInsuranceShare، در نبود ۷۰.
+internal static class TariffFallbackShares
+{
+    /// <summary>
+    /// درصد سهم بیمه برای هدف بیمه‌ایِ فاقد ردیف تعرفهٔ اختصاصی —
+    /// مقدار را از تنظیمات خود شرکت بیمه می‌خواند (نه از ردیف آزاد).
+    /// </summary>
+    public static decimal InsurancePercentOf(InsuranceCompany? company) =>
+        company is null ? 0m
+        : company.DefaultCoveragePercent > 0 ? company.DefaultCoveragePercent
+        : company.DefaultInsuranceShare > 0 ? company.DefaultInsuranceShare
+        : 70m;
+}
+
 /// <summary>آیتم خدمت/تعرفه برای پنجرهٔ مدیریت تعرفه‌ها.
 /// HasTargetTariff (چرخه ۲۴): تعرفهٔ اختصاصی برای هدف منتخب (بیمه) دارد؟</summary>
 public record ServiceTariffManageDto(
@@ -78,6 +94,21 @@ public class GetServicesTariffsForManageQueryHandler
                          (request.InsuranceCompanyId != null && t.InsuranceCompanyId == null)))
             .ToListAsync(cancellationToken);
 
+        // ═══ چرخهٔ سی‌وهفتم (گزارش مالک) ═══ «تعرفه همه بیمه‌ها بهم ریخته و
+        // همشون ۱۰۰٪ سهم بیمار شدن» — ریشه: در نبود ردیف اختصاصی برای بیمهٔ
+        // هدف، سهم‌ها از ردیف آزاد خوانده می‌شد که پس از مهاجرت سی‌ودوم
+        // (قاعدهٔ درستِ آزاد = ۰/۱۰۰) دیگر برای بیمه معنایی ندارد و همه‌جا
+        // ۱۰۰٪ بیمار نشان می‌داد. اکنون سهم‌های ردیفِ «پایه» از تنظیمات خودِ
+        // بیمه (DefaultCoveragePercent و هم‌خانواده‌هایش — همان الگوی تسویه)
+        // محاسبه می‌شود؛ قیمت همچنان از تعرفهٔ پایه است و ردیف اختصاصی
+        // (نشان «اختصاصی») همچنان مقدم و بی‌تغییر است.
+        InsuranceCompany? targetCompany = request.InsuranceCompanyId is long companyId
+            ? await _unitOfWork.Repository<InsuranceCompany>().QueryableNoTracking
+                .FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken)
+            : null;
+        var fallbackInsurancePercent = TariffFallbackShares.InsurancePercentOf(targetCompany);
+        var fallbackPatientPercent = 100m - fallbackInsurancePercent;
+
         Tariff? Resolve(long serviceId) => tariffs
             .Where(t => t.ServiceId == serviceId)
             .OrderByDescending(t => t.InsuranceCompanyId == request.InsuranceCompanyId &&
@@ -95,11 +126,19 @@ public class GetServicesTariffsForManageQueryHandler
             // ۰٪ بیمه / ۱۰۰٪ بیمار نمایش می‌دهد؛ مقادیر بیمه‌ای قدیمیِ ردیف آزاد
             // (پیش از مهاجرت سی‌ودوم) هم پنهان و اصلاح‌شده دیده می‌شوند.
             var isFreeTarget = request.InsuranceCompanyId is null;
+            // ردیف حل‌شده «اختصاصیِ همین بیمه» است یا سقوط به تعرفهٔ پایه؟
+            // (برای هدف بیمه‌ای، هر ردیف حل‌شده با InsuranceCompanyId مقداری،
+            // همان ردیف اختصاصیِ بیمهٔ هدف است — شرط کوئری بالا)
+            var isDedicatedRow = !isFreeTarget && t is not null && t.InsuranceCompanyId != null;
             return new ServiceTariffManageDto(
                 s.Id, s.ServiceCode, s.ServiceName,
                 t is not null ? t.Price : s.DefaultPrice,
-                isFreeTarget ? 0m : (t is not null ? t.InsuranceShare : 0m),
-                isFreeTarget ? 100m : (t is not null ? t.PatientShare : 0m),
+                isFreeTarget ? 0m
+                    : isDedicatedRow ? t!.InsuranceShare
+                    : fallbackInsurancePercent,
+                isFreeTarget ? 100m
+                    : isDedicatedRow ? t!.PatientShare
+                    : fallbackPatientPercent,
                 s.IsActive, hasTarget);
         }).ToList();
 

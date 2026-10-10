@@ -117,6 +117,9 @@
                                  درصدهای ۰-۱۰۰ هستند — اکنون «٪» درست است.
                                  ۳) برای هدف «آزاد» سرور همیشه ۰/۱۰۰ برمی‌گرداند و لیست
                                  دیگر سهم بیمهٔ غیرواقعی نشان نمی‌دهد. -->
+                            <!-- ستون‌های عددی لیست تعرفه — چرخهٔ سی‌وهفتم (گزارش مالک):
+                                 «در لیست تعرفه‌ها ستون تعرفه و درصد بیمار و درصد بیمه رو وسط‌چین بکن»
+                                 — هر سه ستون عددی از راست‌چین به وسط‌چین تغییر یافت. -->
                             <DataGridTextColumn Header="قیمت تعرفه" Width="130">
                                 <!-- ⚠ اصلاح خطای MC3000 (v2.4.7): در کامیت تعرفهٔ بیمه، کوتیشنِ
                                      آغازینِ مقدار صفت Converter جا افتاده بود و آکولادِ بی‌کوتیشن
@@ -125,7 +128,7 @@
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
-                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                        <Setter Property="HorizontalAlignment" Value="Center" />
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -135,7 +138,7 @@
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
                                         <Setter Property="Foreground" Value="#2E7D32" />
-                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                        <Setter Property="HorizontalAlignment" Value="Center" />
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -145,7 +148,7 @@
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
                                         <Setter Property="Foreground" Value="#C62828" />
-                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                        <Setter Property="HorizontalAlignment" Value="Center" />
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
