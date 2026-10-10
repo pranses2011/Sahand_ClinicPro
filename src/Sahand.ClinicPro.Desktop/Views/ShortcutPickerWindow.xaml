@@ -3,58 +3,279 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="افزودن میانبر به داشبورد"
-        Height="620" Width="600"
+        Height="660" Width="680"
+        MinHeight="520" MinWidth="560"
         FlowDirection="RightToLeft"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize" ShowInTaskbar="False">
+        ResizeMode="CanResize" ShowInTaskbar="False"
+        Background="#FAFBFD">
     <!-- ═══════════════════════════════════════════════════════════
-         انتخابگر میانبر داشبورد — چرخهٔ سی‌ونه‌م (گزارش مالک):
-         «بتونم دکمه‌های میانبر برای قسمت‌های مختلف رو داخلش ایجاد بکنم» —
-         فهرست صفحات مجازِ هنوز‌پین‌نشده با آیکون؛ جستجوی زنده؛ با کلیک
-         انتخاب و بسته می‌شود.
+         انتخابگر میانبر داشبورد — چرخهٔ سی‌ونه‌م: فهرست سادهٔ تک‌انتخابی.
+         ═══ چرخهٔ چهل‌ودوم (گزارش مالک) ═══
+         «در فرم انتخاب میانبرهای داشبود، ظاهر بدی داره و زیباتر و حرفه‌ای
+         ترش بکن» — بازطراحی کامل با چهار بهبود:
+           ۱) سربرگ گرادیانی برند با آیکون بزرگ و چیپ شمار صفحات
+           ۲) گروه‌بندی صفحات بر اساس دستهٔ منو (PageCatalog.Group) با سرصفحهٔ
+              فارسی و رنگ اختصاصی هر دسته روی لبهٔ کارت، دایرهٔ آیکون و چیپ دسته
+           ۳) انتخاب چندگانه — تیک روی چند کارت و «افزودن همه با هم» به‌جای
+              افزودن تک‌به‌تکِ قبلی (ListBox با SelectionMode=Multiple؛ چک‌باکس
+              هر کارت دوسویه به IsSelected خود آیتم بسته است)
+           ۴) جستجوی زنده با شمار نتیجه و حالت «یافت نشد» + دکمهٔ افزودنِ
+              هوشمند (غیرفعال و راهنما در نبودِ انتخاب)
+         پالت ثابتِ روشن — هماهنگ با سایر فرم‌های فرعی برنامه (فرم پرسنل و…).
          ═══════════════════════════════════════════════════════════ -->
-    <Grid Margin="20,16">
+    <Window.Resources>
+        <!-- مبدل نام دسته ← رنگ تأکیدی آن — چرخهٔ ۴۲: سرصفحهٔ گروه‌ها فقط نام
+             گروه را از CollectionViewGroup می‌گیرد؛ رنگ از پالت PageCatalog -->
+        <local:GroupNameToColorConverter x:Key="GroupNameToColor" xmlns:local="clr-namespace:Sahand.ClinicPro.Desktop.Views" />
+
+        <!-- قالب کارت صفحه: لبهٔ رنگی دسته (راست) + دایرهٔ آیکون + عنوان و
+             چیپ دسته + چک‌باکس (چپ). حالت‌های هاور (سایهٔ نرم) و انتخاب
+             (پس‌زمینهٔ آبیِ ملایم + حاشیهٔ برند) روی خود ListBoxItem تا
+             کلیک هر جای کارت، انتخاب را تاگل کند -->
+        <Style x:Key="ShortcutCardStyle" TargetType="ListBoxItem">
+            <Setter Property="Foreground" Value="#1F2937" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Card" CornerRadius="12"
+                                Background="#FFFFFF"
+                                BorderBrush="#E4E8EE" BorderThickness="1"
+                                Padding="10,9" Margin="2,3"
+                                Cursor="Hand"
+                                SnapsToDevicePixels="True">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <!-- ستون ۰ (راست بصری): لبهٔ رنگی دسته -->
+                                    <ColumnDefinition Width="Auto" />
+                                    <!-- ستون ۱: دایرهٔ آیکون + متن‌ها -->
+                                    <ColumnDefinition Width="*" />
+                                    <!-- ستون ۲ (چپ بصری): چک‌باکس انتخاب -->
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- لبهٔ رنگی دسته — عرض ۴ با گوشهٔ گرد -->
+                                <Border Width="4" CornerRadius="2"
+                                        Background="{Binding GroupColor}"
+                                        Margin="0,0,10,0"
+                                        VerticalAlignment="Stretch" />
+
+                                <!-- دایرهٔ آیکون با رنگ پرِ دسته — آیکون سفید -->
+                                <Grid Grid.Column="1" Width="40" Height="40"
+                                      VerticalAlignment="Center">
+                                    <Ellipse Fill="{Binding GroupColor}" />
+                                    <materialDesign:PackIcon Kind="{Binding Icon}"
+                                                             Width="21" Height="21"
+                                                             Foreground="White"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                </Grid>
+
+                                <!-- عنوان و چیپ دسته -->
+                                <StackPanel Grid.Column="1" Margin="12,0,12,0"
+                                            VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Title}" FontSize="13.5"
+                                               FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                               ToolTip="{Binding Title}" />
+                                    <!-- چیپ خطی دسته — حاشیه و متن به رنگ دسته -->
+                                    <Border CornerRadius="8" BorderBrush="{Binding GroupColor}"
+                                            BorderThickness="1" Background="Transparent"
+                                            Padding="7,1" Margin="0,4,0,0"
+                                            HorizontalAlignment="Left">
+                                        <TextBlock Text="{Binding Group}" FontSize="9.5"
+                                                   Foreground="{Binding GroupColor}" />
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- چک‌باکس — دوسویه به IsSelected همین آیتم؛
+                                     کلیک کارت هم آن را همگام نگه می‌دارد -->
+                                <CheckBox Grid.Column="2"
+                                          IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Mode=TwoWay}"
+                                          VerticalAlignment="Center" ClickMode="Press"
+                                          Focusable="False" Cursor="Hand" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- هاور: سایهٔ نرم و حاشیهٔ روشن‌تر -->
+                            <Trigger SourceName="Card" Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Card" Property="BorderBrush" Value="#B9C6D6" />
+                                <Setter TargetName="Card" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect ShadowDepth="1" BlurRadius="7"
+                                                          Direction="270" Opacity="0.16" Color="#2A3B52" />
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <!-- انتخاب‌شده: پس‌زمینهٔ آبی ملایم + حاشیهٔ برند -->
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Card" Property="Background" Value="#E8F1FB" />
+                                <Setter TargetName="Card" Property="BorderBrush" Value="#1565C0" />
+                                <Setter TargetName="Card" Property="BorderThickness" Value="1.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
         <Grid.RowDefinitions>
+            <!-- سربرگ گرادیانی -->
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <!-- جستجو + فهرست -->
             <RowDefinition Height="*" />
+            <!-- فوتر دکمه‌ها -->
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- سربرگ -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <TextBlock Text="افزودن میانبر" FontSize="17" FontWeight="Bold" />
-            <TextBlock Text="صفحهٔ دلخواه را انتخاب کنید — کاشی آن به پنل «میانبرهای سریع» داشبورد شما اضافه می‌شود."
-                       FontSize="11.5" Opacity="0.7" Margin="0,4,0,0" TextWrapping="Wrap" />
-        </StackPanel>
+        <!-- ═══ سربرگ برند — گرادیان نیلی + آیکون ستاره + چیپ شمار صفحات ═══ -->
+        <Border Grid.Row="0" Padding="22,16,22,14">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+                    <GradientStop Color="#1E88E5" Offset="0" />
+                    <GradientStop Color="#0D47A1" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <!-- راست بصری: آیکون بزرگ در دایرهٔ شیشه‌ای -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- میانه: عنوان‌ها -->
+                    <ColumnDefinition Width="*" />
+                    <!-- چپ بصری: چیپ شمار صفحات -->
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-        <!-- جستجوی زنده -->
-        <TextBox Grid.Row="1" x:Name="SearchBox"
-                 materialDesign:HintAssist.Hint="🔍 جستجوی صفحه…"
-                 TextChanged="OnSearchChanged"
-                 Margin="0,0,0,10" FontSize="13" />
+                <Border Grid.Column="0" Width="54" Height="54" CornerRadius="27"
+                        Background="#29FFFFFF" BorderBrush="#4DFFFFFF" BorderThickness="1">
+                    <materialDesign:PackIcon Kind="StarCircle" Width="30" Height="30"
+                                             Foreground="White"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
 
-        <!-- فهرست صفحات -->
-        <ListBox Grid.Row="2" x:Name="ItemsList"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                 BorderThickness="0"
-                 MouseLeftButtonUp="OnItemClick">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Border Background="#FFFFFF" CornerRadius="10" Padding="12,9" Margin="2,3"
-                            BorderBrush="#E0E0E0" BorderThickness="1" Cursor="Hand">
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="38" Height="38" CornerRadius="10" Background="#E3F2FD"
-                                    VerticalAlignment="Center">
-                                <materialDesign:PackIcon Kind="{Binding Icon}" Width="20" Height="20"
-                                                         Foreground="#1565C0"
-                                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Border>
-                            <TextBlock Text="{Binding Title}" FontSize="13.5" FontWeight="SemiBold"
-                                       Margin="12,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Border>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+                <StackPanel Grid.Column="1" Margin="14,0,14,0"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="افزودن میانبر سریع" FontSize="17.5" FontWeight="Bold"
+                               Foreground="White" />
+                    <TextBlock Text="صفحه‌های دلخواه را تیک بزنید — کاشی‌شان به پنل «میانبرهای سریع» داشبورد شما اضافه می‌شود."
+                               FontSize="11.5" Foreground="#D9E6F5" Margin="0,3,0,0"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+
+                <!-- چیپ شمار کل صفحات در دسترس — متن از کد پشت با ارقام فارسی -->
+                <Border Grid.Column="2" CornerRadius="13" Background="#26FFFFFF"
+                        BorderBrush="#40FFFFFF" BorderThickness="1"
+                        Padding="12,4" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="ViewGridOutline" Width="14" Height="14"
+                                                 Foreground="White" VerticalAlignment="Center"
+                                                 Margin="0,0,6,0" />
+                        <TextBlock x:Name="CountBadge" Text="—" FontSize="11.5"
+                                   Foreground="White" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ═══ بدنه: جستجو + شمار نتیجه + فهرست گروه‌بندی‌شده ═══ -->
+        <Grid Grid.Row="1" Margin="18,12,18,4">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- جعبهٔ جستجوی زنده -->
+            <TextBox Grid.Row="0" x:Name="SearchBox"
+                     materialDesign:HintAssist.Hint="جستجوی صفحه…"
+                     materialDesign:TextFieldAssist.HasClearButton="True"
+                     TextChanged="OnSearchChanged"
+                     FontSize="13" materialDesign:HintAssist.IsFloating="True" />
+
+            <!-- شمار نتیجه — با جستجو به «n نتیجه برای …» تغییر می‌کند -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="4,8,4,4">
+                <materialDesign:PackIcon Kind="FilterVariant" Width="13" Height="13"
+                                         Foreground="#78909C" VerticalAlignment="Center"
+                                         Margin="0,0,5,0" />
+                <TextBlock x:Name="ResultCount" Text="—"
+                           FontSize="11" Foreground="#78909C" />
+            </StackPanel>
+
+            <!-- فهرست صفحات — گروه‌بندی بر اساس دستهٔ منو؛ حالت «یافت نشد»
+                 زیرش همیشه رندر می‌شود و فقط با شمار صفر نمایان می‌شود -->
+            <ListBox Grid.Row="2" x:Name="ItemsList"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.PanningMode="VerticalOnly"
+                     BorderThickness="0" Background="Transparent"
+                     SelectionMode="Multiple"
+                     ItemContainerStyle="{StaticResource ShortcutCardStyle}"
+                     VirtualizingPanel.IsVirtualizing="True"
+                     VirtualizingPanel.VirtualizationMode="Recycling">
+                <ListBox.GroupStyle>
+                    <GroupStyle>
+                        <GroupStyle.HeaderTemplate>
+                            <DataTemplate>
+                                <!-- سرصفحهٔ گروه: نقطهٔ رنگی هم‌رنگ دسته + نام دسته -->
+                                <StackPanel Orientation="Horizontal" Margin="4,10,4,3">
+                                    <Ellipse Width="8" Height="8"
+                                             Fill="{Binding Name, Converter={StaticResource GroupNameToColor}}"
+                                             VerticalAlignment="Center" Margin="0,0,6,0" />
+                                    <TextBlock Text="{Binding Name}" FontSize="12"
+                                               FontWeight="Bold" Foreground="#546E7A" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </GroupStyle.HeaderTemplate>
+                    </GroupStyle>
+                </ListBox.GroupStyle>
+            </ListBox>
+
+            <!-- حالت خالی جستجو -->
+            <StackPanel x:Name="EmptyState" Grid.Row="2"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Visibility="Collapsed" IsHitTestVisible="False">
+                <materialDesign:PackIcon Kind="Magnify" Width="42" Height="42"
+                                         Foreground="#B0BEC5"
+                                         HorizontalAlignment="Center" />
+                <TextBlock Text="صفحه‌ای با این نام پیدا نشد" FontSize="13"
+                           Foreground="#78909C" Margin="0,8,0,0"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="املای عبارت را بازبینی کنید یا همهٔ فهرست را ببینید"
+                           FontSize="10.5" Foreground="#90A4AE" Margin="0,3,0,0"
+                           HorizontalAlignment="Center" />
+            </StackPanel>
+        </Grid>
+
+        <!-- ═══ فوتر: انصراف + افزودن هوشمند ═══ -->
+        <Border Grid.Row="2" BorderBrush="#E4E8EE" BorderThickness="0,1,0,0"
+                Background="#FFFFFF" Padding="18,10,18,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- راهنمای گام بعد — کنار لبهٔ راست -->
+                <TextBlock x:Name="FooterHint" Grid.Column="0"
+                           Text="برای انتخاب چند صفحه، چند کارت را تیک بزنید"
+                           FontSize="10.5" Foreground="#90A4AE"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+
+                <Button Grid.Column="1" Content="انصراف"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        Click="OnCancelClick" Margin="0,0,10,0"
+                        FontSize="13" MinWidth="96" />
+
+                <!-- دکمهٔ افزودن — متن/فعالیت از کد پشت بر اساس شمار انتخاب -->
+                <Button Grid.Column="2" x:Name="AddButton"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Background="#1565C0" BorderBrush="#1565C0"
+                        Click="OnAddClick"
+                        FontSize="13" MinWidth="170"
+                        materialDesign:ButtonAssist.CornerRadius="8" />
+            </Grid>
+        </Border>
     </Grid>
 </Window>

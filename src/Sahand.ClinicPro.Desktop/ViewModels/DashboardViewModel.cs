@@ -360,7 +360,7 @@ public partial class DashboardViewModel : ViewModelBase
 
     // ═════════════════ چرخهٔ ۳۹ — میانبرهای شخصی داشبورد ═════════════════
 
-    /// <summary>کاشی میانبر — کلید صفحه + عنوان + آیکون + رنگ تأکیدی</summary>
+    /// <summary>کاشی میانبر — کلید صفحه + عنوان + آیکون + رنگ تأکیدی + دستهٔ منو</summary>
     public sealed class ShortcutTile
     {
         /// <summary>کلید صفحهٔ مقصد</summary>
@@ -374,6 +374,19 @@ public partial class DashboardViewModel : ViewModelBase
 
         /// <summary>رنگ تأکیدی کاشی — چرخهٔ رنگی هماهنگ با کارت‌های آمار</summary>
         public string Accent { get; init; } = "#1E88E5";
+
+        /// <summary>
+        /// نام فارسی دستهٔ منو — چرخهٔ ۴۲ (گزارش مالک: «در فرم انتخاب میانبرهای
+        /// داشبورد ظاهر بدی داره و زیباتر و حرفه‌ای‌ترش بکن»): گروه‌بندی بصری
+        /// انتخابگر میانبرها بر همین فیلد انجام می‌شود.
+        /// </summary>
+        public string Group { get; init; } = "مدیریت سامانه";
+
+        /// <summary>
+        /// رنگ دستهٔ منو — چرخهٔ ۴۲: لبه/دایرهٔ آیکون/چیپ کارت در انتخابگر از
+        /// همین رنگ استفاده می‌کند (رنگِ کاشی داشبورد همچنان از Accent تکراری است).
+        /// </summary>
+        public string GroupColor { get; init; } = "#616161";
     }
 
     /// <summary>میانبرهای این کاربر</summary>
@@ -492,7 +505,9 @@ public partial class DashboardViewModel : ViewModelBase
                 Key = entry.Key,
                 Title = entry.Title,
                 Icon = entry.Icon,
-                Accent = ShortcutAccents[index % ShortcutAccents.Length]
+                Accent = ShortcutAccents[index % ShortcutAccents.Length],
+                Group = entry.Group,
+                GroupColor = Helpers.PageCatalog.ColorOfGroup(entry.Group)
             });
             index++;
         }
@@ -600,7 +615,11 @@ public partial class DashboardViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// افزودن میانبر — انتخابگر صفحات (فقط صفحات مجازِ هنوز‌پین‌نشده) باز می‌شود
+    /// افزودن میانبر — انتخابگر صفحات (فقط صفحات مجازِ هنوز‌پین‌نشده) باز می‌شود.
+    /// چرخهٔ ۴۲ (گزارش مالک: «در فرم انتخاب میانبرهای داشبود، ظاهر بدی داره و
+    /// زیباتر و حرفه‌ای‌ترش بکن»): انتخابگر بازطراحی شد — گروه‌بندی دسته‌ای با
+    /// رنگِ هر دسته، جستجوی زنده با شمار نتیجه و «انتخاب چندگانه» (تیک روی
+    /// چند کارت و افزودن همه با هم) به‌جای افزودنِ تک‌به‌تکِ قبلی.
     /// </summary>
     [RelayCommand]
     private void AddShortcut()
@@ -608,7 +627,14 @@ public partial class DashboardViewModel : ViewModelBase
         var already = Shortcuts.Select(s => s.Key).ToHashSet();
         var available = Helpers.PageCatalog.All
             .Where(p => p.ShowInPicker && !already.Contains(p.Key) && HasShortcutAccess(p.Key))
-            .Select(p => new ShortcutTile { Key = p.Key, Title = p.Title, Icon = p.Icon })
+            .Select(p => new ShortcutTile
+            {
+                Key = p.Key,
+                Title = p.Title,
+                Icon = p.Icon,
+                Group = p.Group,
+                GroupColor = Helpers.PageCatalog.ColorOfGroup(p.Group)
+            })
             .ToList();
 
         if (available.Count == 0)
@@ -623,20 +649,29 @@ public partial class DashboardViewModel : ViewModelBase
         };
         picker.ShowDialog();
 
-        if (picker.SelectedKey is not { Length: > 0 } key) return;
+        // چرخهٔ ۴۲: افزودن جمعی — هر تیک‌خورده یک کاشی می‌شود؛ یک‌بار ذخیره
+        // و یک پیام با شمار واقعی (منطبق با قانون پیام فارسی/توست مالک)
+        if (picker.SelectedKeys is not { Count: > 0 } keys) return;
 
-        var entry = Helpers.PageCatalog.Find(key);
-        if (entry is null) return;
-        Shortcuts.Add(new ShortcutTile
+        foreach (var key in keys)
         {
-            Key = entry.Key,
-            Title = entry.Title,
-            Icon = entry.Icon,
-            Accent = ShortcutAccents[Shortcuts.Count % ShortcutAccents.Length]
-        });
+            var entry = Helpers.PageCatalog.Find(key);
+            if (entry is null) continue;
+            Shortcuts.Add(new ShortcutTile
+            {
+                Key = entry.Key,
+                Title = entry.Title,
+                Icon = entry.Icon,
+                Accent = ShortcutAccents[Shortcuts.Count % ShortcutAccents.Length],
+                Group = entry.Group,
+                GroupColor = Helpers.PageCatalog.ColorOfGroup(entry.Group)
+            });
+        }
         OnPropertyChanged(nameof(HasShortcuts));
         SaveShortcuts();
-        _snackbar.Success($"میانبر «{entry.Title}» به داشبورد اضافه شد");
+        _snackbar.Success(keys.Count == 1
+            ? $"میانبر «{Helpers.PageCatalog.Find(keys[0])?.Title ?? keys[0]}» به داشبورد اضافه شد"
+            : $"{keys.Count} میانبر به داشبورد اضافه شد");
     }
 
     /// <summary>حذف میانبر — در حالت ویرایش</summary>
