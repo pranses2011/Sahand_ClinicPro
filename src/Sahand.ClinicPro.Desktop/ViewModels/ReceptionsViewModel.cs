@@ -114,6 +114,21 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// <summary>پرسنل فعال برای انتخاب انجام‌دهندهٔ خدمت</summary>
     public ObservableCollection<PerformerOption> Performers { get; } = new();
 
+    // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — اتاق انجام خدمت پذیرش خدمتی ═══
+    // «اتاق معاینه برای پزشک در برنامهٔ کاری پزشک مشخص می‌شود ولی برای خدمات
+    // درمانی نمی‌شود معین کرد» — فهرست اتاق‌های فعال از lookups/rooms؛ برای
+    // ویزیت پزشک نمایش داده نمی‌شود چون اتاق از برنامهٔ کاری خود پزشک می‌آید
+
+    /// <summary>اتاق‌های فعال درمانگاه — برای پذیرش خدمت درمانی</summary>
+    public ObservableCollection<RoomOption> Rooms { get; } = new();
+
+    /// <summary>اتاق انتخاب‌شدهٔ انجام خدمت (اختیاری)</summary>
+    [ObservableProperty]
+    private RoomOption? _selectedRoom;
+
+    /// <summary>گزینهٔ اتاق معاینه — نام نمایشی از نام کامل یا شماره اتاق</summary>
+    public record RoomOption(long Id, string DisplayName);
+
     /// <summary>انجام‌دهندهٔ انتخاب‌شده (اختیاری)</summary>
     [ObservableProperty]
     private PerformerOption? _selectedPerformer;
@@ -276,6 +291,8 @@ public partial class ReceptionsViewModel : ViewModelBase
         r.InsuranceName,
         r.WaitingTime.HasValue ? $"{r.WaitingTime} دقیقه" : "—",
         new[] { "#FFFFFF", "#FFF8E1", "#E3F2FD", "#E8F5E9", "#ECEFF1", "#FFEBEE" }[Math.Clamp(r.Status - 1, 0, 5)],
+        // چرخهٔ ۳۹ — اتاق انجام خدمت
+        r.RoomName,
         // ═══ چرخه سی‌ویکم — مبالغ مالی هر پذیرش در فهرست روز ═══ جمع فاکتور +
         // پرداخت‌شده + متن وضعیت مالی (پرداخت‌شده/پرداخت نشده/بدون فاکتور)
         r.InvoiceTotal,
@@ -418,6 +435,15 @@ public partial class ReceptionsViewModel : ViewModelBase
             foreach (var e in employees?.Data ?? new List<EmployeeLookupDto>())
                 Performers.Add(new PerformerOption(e.Id, e.FullName));
         }
+
+        // ═══ چرخهٔ ۳۹ — اتاق‌های فعال برای پذیرش خدمتی؛ فقط یک بار لازم است ═══
+        if (Rooms.Count == 0)
+        {
+            var rooms = await _api.GetAsync<RoomsLookupResponse>("lookups/rooms");
+            foreach (var room in rooms?.Data ?? new List<RoomLookupDto>())
+                Rooms.Add(new RoomOption(room.Id,
+                    !string.IsNullOrWhiteSpace(room.RoomName) ? room.RoomName : $"اتاق {room.RoomNumber}"));
+        }
     }
 
     /// <summary>پاسخ فهرست خدمات — lookups/services</summary>
@@ -453,6 +479,21 @@ public partial class ReceptionsViewModel : ViewModelBase
     {
         public long Id { get; set; }
         public string FullName { get; set; } = string.Empty;
+    }
+
+    /// <summary>پاسخ فهرست اتاق‌های فعال — چرخهٔ ۳۹</summary>
+    private sealed class RoomsLookupResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<RoomLookupDto>? Data { get; set; }
+    }
+
+    /// <summary>ردیف اتاق فعال</summary>
+    private sealed class RoomLookupDto
+    {
+        public long Id { get; set; }
+        public string? RoomNumber { get; set; }
+        public string? RoomName { get; set; }
     }
 
     /// <summary>تغییر بیمه → محاسبه هزینه + بارگذاری مجدد تعرفه‌ها با بیمهٔ جدید</summary>
@@ -650,7 +691,10 @@ public partial class ReceptionsViewModel : ViewModelBase
             // حالت خدمت درمانی — خدمت + انجام‌دهندهٔ اختیاری از پرسنل
             serviceId = isServiceMode ? SelectedService!.Id : (long?)null,
             serviceName = isServiceMode ? SelectedService!.Name : null,
-            performedByEmployeeId = isServiceMode ? SelectedPerformer?.Id : (long?)null
+            performedByEmployeeId = isServiceMode ? SelectedPerformer?.Id : (long?)null,
+            // چرخهٔ ۳۹ — اتاق محل انجام خدمت؛ فقط پذیرش خدمتی (ویزیت پزشک: اتاق از
+            // برنامهٔ کاری خود پزشک می‌آید و ارسال تهی معنای درست دارد)
+            roomId = isServiceMode ? SelectedRoom?.Id : (long?)null
         });
         if (reception?.Data is null)
         {
@@ -788,6 +832,9 @@ public partial class ReceptionsViewModel : ViewModelBase
         public string? InsuranceName { get; set; }
         public int? WaitingTime { get; set; }
 
+        // چرخهٔ ۳۹ — اتاق محل انجام خدمت (پذیرش خدمتی؛ ویزیت پزشک تهی)
+        public string? RoomName { get; set; }
+
         // چرخه سی‌ویکم — مبالغ مالی پذیرش (جمع فاکتورهای متصل + پرداخت‌شده)
         public decimal InvoiceTotal { get; set; }
         public decimal PaidAmount { get; set; }
@@ -843,6 +890,8 @@ public record ReceptionRow(
     string? InsuranceName,
     string WaitingText,
     string StatusColor,
+    // چرخهٔ ۳۹ — اتاق محل انجام خدمت (پذیرش خدمتی)
+    string? RoomName,
     // چرخه سی‌ویکم — مبالغ مالی پذیرش برای نمایش در فهرست روز
     decimal InvoiceTotal,
     decimal PaidAmount,

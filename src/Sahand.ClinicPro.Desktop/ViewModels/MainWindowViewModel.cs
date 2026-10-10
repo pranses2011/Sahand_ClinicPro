@@ -112,6 +112,9 @@ public partial class MainWindowViewModel : ObservableObject
         ["settings"] = "settings.view",
         ["settings-full"] = "settings.view",
         ["branches"] = "settings.view",          // BranchesController با settings گیت می‌شود
+        // چرخهٔ ۳۹ — صفحهٔ منوی کناری اتاق‌ها؛ نوشتنش (ساخت/ویرایش اتاق) در
+        // سرور با نقش Admin/Manager گیت می‌شود — همان سطح سایر داده‌های مرجع سامانه
+        ["rooms"] = "settings.view",
         ["backup"] = "backup.view",
         ["audit"] = "auditlogs.view",
         ["complementary"] = "settings.view",     // قالب چاپ ← PrintTemplatesController
@@ -191,6 +194,8 @@ public partial class MainWindowViewModel : ObservableObject
         BackupViewModel backupVm,
         AuditLogViewModel auditVm,
         BranchesViewModel branchesVm,
+        // چرخهٔ سی‌ونه‌م — صفحهٔ منوی کناری «مدیریت اتاق‌ها» (گزارش مالک)
+        RoomsManagerViewModel roomsVm,
         SepasViewModel sepasVm,
         EPrescriptionViewModel erxVm,
         LicenseStatusViewModel licenseVm,
@@ -295,6 +300,8 @@ public partial class MainWindowViewModel : ObservableObject
             ["backup"] = () => backupVm,
             ["audit"] = () => auditVm,
             ["branches"] = () => branchesVm,
+            // چرخهٔ سی‌ونه‌م — صفحهٔ منوی کناری اتاق‌ها
+            ["rooms"] = () => roomsVm,
             ["sepas"] = () => sepasVm,
             ["erx"] = () => erxVm,
             ["license"] = () => licenseVm,
@@ -373,6 +380,9 @@ public partial class MainWindowViewModel : ObservableObject
                 new() { Title = "نقش‌ها", PageKey = "roles", Icon = "ShieldAccount" },
                 new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog" },
                 new() { Title = "شعبه‌ها", PageKey = "branches", Icon = "HomeGroup" },
+                // چرخهٔ سی‌ونه‌م (گزارش مالک): «مدیریت اتاق ها رو در منوی کناری
+                // هم قرار بده» — پیش‌تر فقط از تب برنامهٔ کاری فرم پزشک باز می‌شد
+                new() { Title = "مدیریت اتاق‌ها", PageKey = "rooms", Icon = "Door" },
                 new() { Title = "پشتیبان‌گیری و بازیابی", PageKey = "backup", Icon = "DatabaseSync" },
                 new() { Title = "لاگ عملیات", PageKey = "audit", Icon = "FileDocumentEditOutline" },
                 new() { Title = "لایسنس", PageKey = "license", Icon = "KeyChain" },

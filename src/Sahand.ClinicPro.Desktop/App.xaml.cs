@@ -353,6 +353,9 @@ public partial class App : System.Windows.Application
         services.AddTransient<BackupViewModel>();
         services.AddTransient<AuditLogViewModel>();
         services.AddTransient<BranchesViewModel>();
+        // چرخهٔ سی‌ونه‌م (گزارش مالک): صفحهٔ منوی کناری «مدیریت اتاق‌ها» — همان
+        // ویومدل پنجرهٔ فرم پزشک، این‌بار به‌صورت صفحهٔ اصلی (RoomsView)
+        services.AddTransient<RoomsManagerViewModel>();
         services.AddTransient<SepasViewModel>();
         services.AddTransient<EPrescriptionViewModel>();
         services.AddTransient<LicenseStatusViewModel>();

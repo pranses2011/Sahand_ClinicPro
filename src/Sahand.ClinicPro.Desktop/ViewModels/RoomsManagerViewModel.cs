@@ -28,11 +28,18 @@ public record RoomManageRow(
 /// ViewModel پنجرهٔ مدیریت اتاق‌های معاینه — چرخه بیست‌ویکم (گزارش پانزدهم مالک):
 /// «در تعریف پزشک فیلد اتاق برای انتخاب هست ولی جایی برای تعریف اتاق و اسم اتاق نیست»
 /// افزودن/ویرایش/غیرفعال‌سازی اتاق از داخل فرم پزشک بدون مراجعه به دیتابیس.
+/// ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) ═══ «مدیریت اتاق‌ها رو در منوی کناری هم
+/// قرار بده» — همین ویومدل هم‌اکنون پایهٔ صفحهٔ منوی کناری (RoomsView) نیز
+/// هست؛ وراثت به ViewModelBase رفت تا عنوان صفحه و پرچم مشغولی از پایه
+/// بیاید و پنجرهٔ قبلیِ فرم پزشک بدون هیچ تغییری به کار خود ادامه دهد.
 /// </summary>
-public partial class RoomsManagerViewModel : ObservableObject
+public partial class RoomsManagerViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
+
+    /// <summary>عنوان صفحه — هدر پوسته (چرخهٔ ۳۹: هم‌اکنون پایهٔ صفحهٔ منوی کناری هم هست)</summary>
+    public override string Title => "مدیریت اتاق‌های درمانگاه";
 
     /// <summary>فهرست کامل اتاق‌ها (شامل غیرفعال)</summary>
     [ObservableProperty]
@@ -54,13 +61,17 @@ public partial class RoomsManagerViewModel : ObservableObject
     [ObservableProperty]
     private int? _floor;
 
-    /// <summary>پیام خطای فرم</summary>
-    [ObservableProperty]
-    private string _errorMessage = string.Empty;
+    /* ─── چرخهٔ ۳۹ — خلاصه‌های صفحهٔ منوی کناری ─── */
 
-    /// <summary>در حال کار با سرور</summary>
-    [ObservableProperty]
-    private bool _isBusy;
+    /// <summary>جمع اتاق‌های فعال — چیپ آمار بالای صفحه</summary>
+    public int ActiveCount => Rooms.Count(r => r.IsActive);
+
+    /// <summary>جمع اتاق‌های غیرفعال (حذف‌نرم‌شده) — چیپ آمار بالای صفحه</summary>
+    public int InactiveCount => Rooms.Count(r => !r.IsActive);
+
+    /// <summary>راهنمای صفحه — اتاق‌ها در برنامهٔ کاری پزشک و پذیرش خدمتی استفاده می‌شوند</summary>
+    public static string HintText =>
+        "اتاق‌ها در «برنامهٔ کاری پزشک» و «پذیرش خدمت درمانی» انتخاب می‌شوند؛ اتاقِ غیرفعال در فهرست‌ها نمی‌آید ولی تاریخچهٔ پذیرش‌های قبلی آن حفظ می‌شود.";
 
     /// <summary>سازنده — بارگذاری خودکار فهرست</summary>
     public RoomsManagerViewModel(IApiClient api, ISnackbarService snackbar)
@@ -93,6 +104,16 @@ public partial class RoomsManagerViewModel : ObservableObject
         RoomName = value.RoomName;
         Floor = value.Floor;
         ErrorMessage = string.Empty;
+    }
+
+    /// <summary>
+    /// نوسازی چیپ‌های آمار پس از هر بارگذاری — پراپرتی‌های محاسباتی خودکار
+    /// اطلاع‌رسانی نمی‌کنند؛ با رویداد تغییر Rooms دستی اعلام می‌شوند (چرخهٔ ۳۹)
+    /// </summary>
+    partial void OnRoomsChanged(ObservableCollection<RoomManageRow> value)
+    {
+        OnPropertyChanged(nameof(ActiveCount));
+        OnPropertyChanged(nameof(InactiveCount));
     }
 
     /// <summary>افزودن اتاق جدید</summary>

@@ -105,6 +105,10 @@
         <DataTemplate DataType="{x:Type vm:BranchesViewModel}">
             <views:BranchesView />
         </DataTemplate>
+        <!-- چرخهٔ سی‌ونه‌م (گزارش مالک): صفحهٔ منوی کناری «مدیریت اتاق‌ها» -->
+        <DataTemplate DataType="{x:Type vm:RoomsManagerViewModel}">
+            <views:RoomsView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:SepasViewModel}">
             <views:SepasView />
         </DataTemplate>

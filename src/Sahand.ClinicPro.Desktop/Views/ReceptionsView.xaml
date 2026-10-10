@@ -204,7 +204,7 @@
                                     </ComboBox>
                                 </StackPanel>
 
-                                <!-- حالت خدمت درمانی: خدمت از تعرفه‌ها + انجام‌دهندهٔ اختیاری -->
+                                <!-- حالت خدمت درمانی: خدمت از تعرفه‌ها + انجام‌دهندهٔ اختیاری + اتاق -->
                                 <StackPanel Visibility="{Binding ReceptionModeIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}">
                                     <TextBlock Text="💉 خدمت درمانی (تزریقات/پانسمان/آزمایش/تصویربرداری/…)" Style="{StaticResource FieldCaption}" TextWrapping="Wrap" />
                                     <ComboBox ItemsSource="{Binding Services}"
@@ -214,6 +214,14 @@
                                     <ComboBox ItemsSource="{Binding Performers}"
                                               SelectedItem="{Binding SelectedPerformer}"
                                               DisplayMemberPath="FullName" />
+                                    <!-- ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) ═══ «اتاق معاینه برای پزشک
+                                         در برنامهٔ کاری پزشک مشخص می‌شود ولی برای خدمات درمانی نمی‌شود
+                                         معین کرد» — انتخابگر اتاقِ محل انجام خدمت از اتاق‌های فعال؛
+                                         نام اتاق پس از ثبت در ستون «اتاق» صف پذیرش امروز می‌نشیند -->
+                                    <TextBlock Text="🚪 اتاق انجام خدمت (اختیاری — از اتاق‌های درمانگاه)" Style="{StaticResource FieldCaption}" />
+                                    <ComboBox ItemsSource="{Binding Rooms}"
+                                              SelectedItem="{Binding SelectedRoom}"
+                                              DisplayMemberPath="DisplayName" />
                                 </StackPanel>
 
                                 <TextBlock Text="یادداشت پذیرش" Style="{StaticResource FieldCaption}" />
@@ -409,6 +417,8 @@
                                 <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="150" />
                                 <DataGridTextColumn Header="ساعت پذیرش" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" Width="100" />
                                 <DataGridTextColumn Header="بیمه" Binding="{Binding InsuranceName, TargetNullValue=آزاد, Converter={StaticResource PersianDigits}}" Width="110" />
+                                <!-- چرخهٔ ۳۹ — اتاق محل انجام خدمت (پذیرش خدمتی) -->
+                                <DataGridTextColumn Header="اتاق" Binding="{Binding RoomName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" />
                                 <DataGridTemplateColumn Header="وضعیت" Width="110" SortMemberPath="StatusId">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
