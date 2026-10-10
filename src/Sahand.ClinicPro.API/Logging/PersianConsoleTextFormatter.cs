@@ -127,8 +127,13 @@ public sealed class PersianConsoleTextFormatter : ITextFormatter
         };
 
         var line = $"← {method} {path}";
-        if (status is { } sc)
-            line += $" → {sc}";
+        // چرخهٔ چهلم — رفع CS0165: متغیر الگوی «is { } sc» فقط درون شاخهٔ true
+        // «قطعاً مقداردهی‌شده» شمرده می‌شود؛ تحلیل جریان کامپایلر بی‌خیالیِ
+        // «status is null ⇒ return» را به عقب‌گردِ آن متغیر وصل نمی‌کند. حذف sc
+        // و استفادهٔ مستقیم از خود status — پس از بازگشتِ زودهنگام بالا،
+        // تحلیل تهی‌بودن کامپایلر می‌داند status در این نقطه ناتهی است.
+        if (status is not null)
+            line += $" → {status}";
         if (elapsed is not null)
             line += $" · {elapsed}";
 
@@ -137,7 +142,7 @@ public sealed class PersianConsoleTextFormatter : ITextFormatter
 
         // رنگ فقط روی بخش «→ 200 · 45ms» — مسیر خنثی می‌ماند
         var neutralPart = $"← {method} {path} → ";
-        return neutralPart + statusColor + $"{sc}" + (elapsed is null ? "" : $" · {elapsed}") + "\u001b[0m";
+        return neutralPart + statusColor + $"{status}" + (elapsed is null ? "" : $" · {elapsed}") + "\u001b[0m";
     }
 
     /// <summary>
