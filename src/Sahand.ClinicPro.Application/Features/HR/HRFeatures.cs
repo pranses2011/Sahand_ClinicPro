@@ -21,10 +21,15 @@ public record EmployeeListDto(
 /// جزئیات کامل پرسنل برای فرم ویرایش — چرخهٔ بیست‌وششم (گزارش هجدهم مالک):
 /// «در لیست پرسنل امکان ویرایش پرسنل وجود ندارد»؛ فرم ویرایش به تمام
 /// فیلدهای فرم ثبت نیاز دارد تا همان فرم در حالت ویرایش باز شود.
+/// ═══ چرخهٔ چهل‌ودوم (گزارش مالک) ═══ «در ویرایش پرسنل، سمت و دپارتمان رو
+/// اصلاح نمیکنه» — نام‌های سمت/دپارتمان هم کنار شناسه‌ها برمی‌گردند تا کلاینت
+/// در نبودِ مقدار در فهرست مرجع (مثلاً سمتِ حذف‌شده یا فهرست خالیِ پیش از
+/// بذر چرخهٔ ۴۲)، متنِ کامبوی ویرایش را با نام فعلی پر کند و ذخیرهٔ بدون
+/// تغییر، مقدار فعلی را پاک نکند (رفع ریشهٔ «هر ویرایش، سمت را صفر می‌کرد»).
 /// </summary>
 public record EmployeeDetailDto(
     long Id, string FirstName, string LastName, string? NationalCode, string? Mobile,
-    long? DepartmentId, long? PositionId,
+    long? DepartmentId, long? PositionId, string? PositionName, string? DepartmentName,
     EmploymentType EmploymentType, decimal BaseSalary, decimal CommissionPercent,
     string? PersonnelCode, DateOnly? HireDate, EducationLevel? EducationLevel,
     string? FieldOfStudy, string? EmergencyContact, string? EmergencyPhone, bool HasPhoto);
@@ -145,6 +150,10 @@ public class GetEmployeeByIdQueryHandler : IRequestHandler<GetEmployeeByIdQuery,
             .Select(e => new EmployeeDetailDto(
                 e.Id, e.FirstName, e.LastName, e.NationalCode, e.Mobile,
                 e.DepartmentId, e.PositionId,
+                // چرخهٔ ۴۲: نام‌های سمت/دپارتمان — پروجکشنِ ناوبری داخل Select
+                // را EF Core خودکار به JOIN ترجمه می‌کند (بدون Include)
+                e.Position != null ? e.Position.Title : null,
+                e.Department != null ? e.Department.Name : null,
                 e.EmploymentType ?? EmploymentType.FullTime,
                 e.BaseSalary, e.CommissionPercent,
                 e.PersonnelCode, e.HireDate, e.EducationLevel,

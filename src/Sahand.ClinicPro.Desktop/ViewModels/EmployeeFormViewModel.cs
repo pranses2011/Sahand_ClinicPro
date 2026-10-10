@@ -28,6 +28,24 @@ public partial class EmployeeFormViewModel : FormViewModelBase
     /// </summary>
     private readonly long? _editEmployeeId;
 
+    // ═══ چرخهٔ چهل‌ودوم (گزارش مالک): «در ویرایش پرسنل، سمت و دپارتمان رو
+    // اصلاح نمیکنه» — ریشه: فرم ویرایش در نبودِ مقدار در فهرست مرجع (فهرست
+    // خالیِ پیش از بذر چرخهٔ ۴۲ یا سمتِ حذف‌شده)، متنی در کامبو نداشت و ذخیره
+    // بدون تغییر، تهی ارسال و مقدار فعلی را «پاک» می‌کرد؛ حل سمت/دپارتمان
+    // اکنون مقدار اصل را می‌شناسد و در همین وضعیت، همان را نگه می‌دارد.
+
+    /// <summary>شناسهٔ سمتِ فعلی پرسنل هنگام باز شدن فرم ویرایش — تهی یعنی سمت ندارد</summary>
+    private long? _originalPositionId;
+
+    /// <summary>نام سمتِ فعلی پرسنل هنگام باز شدن فرم ویرایش — برای تطبیق متن کامبو</summary>
+    private string? _originalPositionName;
+
+    /// <summary>شناسهٔ دپارتمان فعلی پرسنل هنگام باز شدن فرم ویرایش — تهی یعنی بخش ندارد</summary>
+    private long? _originalDepartmentId;
+
+    /// <summary>نام دپارتمان فعلی پرسنل هنگام باز شدن فرم ویرایش — برای تطبیق متن کامبو</summary>
+    private string? _originalDepartmentName;
+
     /// <summary>عنوان فرم — «ثبت پرسنل جدید» یا «ویرایش پرسنل»</summary>
     public string FormTitle => _editEmployeeId is null ? "ثبت پرسنل جدید" : "ویرایش پرسنل";
 
@@ -268,31 +286,60 @@ public partial class EmployeeFormViewModel : FormViewModelBase
     }
 
     /// <summary>
-    /// تبدیل انتخاب/متن ComboBox سمت یا دپارتمان به شناسه — اگر متن تایپی
-    /// تازه باشد (با هیچ مورد موجود منطبق نیست) ابتدا ساخته و شناسه‌اش
-    /// برگردانده می‌شود؛ «—» یا تهی = بدون مقدار (چرخه ۲۴)
+    /// حل انتخاب/متن ComboBox سمت یا دپارتمان به شناسه — چرخهٔ چهل‌ودوم:
+    /// زنجیرهٔ پنج‌مرحله‌ای که سه عارضهٔ قدیمی را می‌بندد:
+    ///   ۱) انتخاب از فهرست → شناسهٔ همان گزینه
+    ///   ۲) متن تهی/«—» → تهی (پاک‌کردن آگاهانهٔ کاربر — در ویرایش، متن از
+    ///      ابتدا با نام فعلی پر شده است پس این حالت فقط با پاک‌کردن دستی رخ می‌دهد)
+    ///   ۳) متن برابر نامِ فعلی → شناسهٔ فعلی، بدون رفت‌وبرگشت سرور (حفاظت
+    ///      در برابر 403 کاربر غیرمدیر و رفع «هر ویرایش مقدار را صفر می‌کرد»)
+    ///   ۴) متن منطبق با گزینهٔ موجود فهرست → شناسهٔ همان (جستجوی کلایندی)
+    ///   ۵) مقدار تازه → ساخت سروری؛ شکست ساخت دیگر بی‌صدا تهی نمی‌شود بلکه
+    ///      ذخیره با پیام فارسی متوقف می‌شود تا کاربر بداند چه شده است
     /// </summary>
     /// <param name="items">فهرست گزینه‌های موجود</param>
     /// <param name="selectedIndex">ایندکس انتخابی</param>
     /// <param name="text">متن تایپی</param>
     /// <param name="createEndpoint">اندپوینت ساخت مقدار تازه</param>
-    private async Task<long?> ResolveLookupIdAsync(
-        ObservableCollection<LookupOption> items, int selectedIndex,
-        string? text, string createEndpoint)
+    /// <param name="originalId">شناسهٔ مقدار فعلی پرسنل (ویرایش) یا تهی (ثبت جدید)</param>
+    /// <param name="originalName">نام مقدار فعلی پرسنل یا تهی</param>
+    /// <param name="fieldLabel">برچسب فارسی فیلد برای پیام خطا (سمت/دپارتمان)</param>
+    /// <returns>شناسهٔ حل‌شده + در صورت شکست ساخت، پیام خطای فارسی</returns>
+    private async Task<(long? Id, string? Error)> ResolveLookupIdAsync(
+        ObservableCollection<LookupOption> items, int selectedIndex, string? text,
+        string createEndpoint, long? originalId, string? originalName, string fieldLabel)
     {
-        // مورد انتخابی از فهرست؟
+        // ۱) مورد انتخابی از فهرست؟
         if (selectedIndex >= 0 && selectedIndex < items.Count)
-            return items[selectedIndex].Id;
+            return (items[selectedIndex].Id, null);
 
-        // متن تایپی تازه؟ (نه خالی و نه نشان‌گر «بدون مقدار»)
+        // ۲) متن تهی؟ (خالی یا نشان‌گر «بدون مقدار») — پاک‌کردن آگاهانه
         var name = text?.Trim();
         if (string.IsNullOrWhiteSpace(name) || name == "—")
-            return null;
+            return (null, null);
 
-        // مقدار تازه — ساخت از طریق سرور (Admin/Manager)
+        // ۳) همان نام فعلی؟ — حفظ مقدار جاری بدون هیچ تماس سروری؛ کاربر
+        //    فیلد را دست نزده است (متن اولیهٔ ویرایش) یا همان را دوباره تایپ کرده
+        if (originalId is not null
+            && string.Equals(name, originalName, StringComparison.OrdinalIgnoreCase))
+            return (originalId, null);
+
+        // ۴) منطبق با گزینهٔ موجود فهرست؟ — جستجوی کلایندی، بدون رفت‌وبرگشت
+        var match = items.FirstOrDefault(i =>
+            string.Equals(i.Name, name, StringComparison.OrdinalIgnoreCase));
+        if (match is not null)
+            return (match.Id, null);
+
+        // ۵) مقدار تازه — ساخت از طریق سرور (اندپوینت‌های ساخت نقش
+        //    Admin/Manager را می‌خواهند؛ کاربر بدون نقش با پیام راهنما متوقف می‌شود)
         var response = await _api.PostAsync<CreateLookupResponse>(createEndpoint,
             new { name });
-        return response?.Data is > 0 ? response.Data : null;
+        if (response?.Data is > 0)
+            return (response.Data, null);
+
+        return (null,
+            $"ذخیرهٔ {fieldLabel} جدید («{name}») ناموفق بود: {_api.LastError ?? "خطای ناشناخته"} — " +
+            "اگر نقش شما مدیر نیست، یکی از گزینه‌های موجود فهرست را انتخاب کنید");
     }
 
     /// <summary>پاسخ ساخت مرجع — شناسهٔ رکورد ساخته‌شده/موجود</summary>
@@ -356,9 +403,20 @@ public partial class EmployeeFormViewModel : FormViewModelBase
                 .ToShamsi(hd);
         }
 
-        // انتخاب سمت/دپارتمان فعلی از فهرست مرجع ازپیش‌بارگذاری‌شده
+        // انتخاب سمت/دپارتمان فعلی از فهرست مرجع ازپیش‌بارگذاری‌شده؛ چرخهٔ ۴۲:
+        // در نبودِ اندیس (فهرست خالی یا مقدارِ حذف‌شده)، متن کامبو با «نام
+        // فعلی» پر می‌شود و مقدارهای اصل برای حلِ مقاوم ذخیره می‌شوند — ذخیرهٔ
+        // بدون تغییر دیگر مقدار فعلی را پاک نمی‌کند و کاربر هم می‌بیند چه بوده
+        _originalPositionId = d.PositionId;
+        _originalPositionName = d.PositionName;
+        _originalDepartmentId = d.DepartmentId;
+        _originalDepartmentName = d.DepartmentName;
         PositionIndex = FindLookupIndex(Positions, d.PositionId);
         DepartmentIndex = FindLookupIndex(Departments, d.DepartmentId);
+        if (PositionIndex < 0 && !string.IsNullOrWhiteSpace(d.PositionName))
+            PositionText = d.PositionName;
+        if (DepartmentIndex < 0 && !string.IsNullOrWhiteSpace(d.DepartmentName))
+            DepartmentText = d.DepartmentName;
     }
 
     /// <summary>
@@ -387,6 +445,9 @@ public partial class EmployeeFormViewModel : FormViewModelBase
         public string? Mobile { get; set; }
         public long? DepartmentId { get; set; }
         public long? PositionId { get; set; }
+        // چرخهٔ ۴۲: نام‌های سمت/دپارتمان برای پرکردن متن کامبو در نبودِ اندیس
+        public string? PositionName { get; set; }
+        public string? DepartmentName { get; set; }
         public int EmploymentType { get; set; }
         public decimal BaseSalary { get; set; }
         public decimal CommissionPercent { get; set; }
@@ -457,10 +518,27 @@ public partial class EmployeeFormViewModel : FormViewModelBase
 
         IsBusy = true;
 
-        // ═══ چرخه ۲۴: حل سمت/دپارتمان — انتخابی از فهرست یا متن تایپی تازه
-        // (سمت/دپارتمان تازه در سرور ساخته می‌شود) ═══
-        var positionId = await ResolveLookupIdAsync(Positions, PositionIndex, PositionText, "lookups/positions");
-        var departmentId = await ResolveLookupIdAsync(Departments, DepartmentIndex, DepartmentText, "lookups/departments");
+        // ═══ چرخهٔ ۴۲: حل سمت/دپارتمان با زنجیرهٔ مقاوم — انتخاب فهرستی، حفظ
+        // مقدار فعلی، تطبیق کلایندی نام، و ساخت سروریِ مقدار تازه؛ شکستِ ساخت
+        // ذخیره را با پیام فارسی متوقف می‌کند تا مقدار بی‌صدا پاک نشود ═══
+        var (positionId, positionError) = await ResolveLookupIdAsync(
+            Positions, PositionIndex, PositionText, "lookups/positions",
+            _originalPositionId, _originalPositionName, "سمت");
+        if (positionError is not null)
+        {
+            IsBusy = false;
+            ErrorMessage = positionError;
+            return;
+        }
+        var (departmentId, departmentError) = await ResolveLookupIdAsync(
+            Departments, DepartmentIndex, DepartmentText, "lookups/departments",
+            _originalDepartmentId, _originalDepartmentName, "دپارتمان");
+        if (departmentError is not null)
+        {
+            IsBusy = false;
+            ErrorMessage = departmentError;
+            return;
+        }
 
         // تاریخ استخدام شمسی → میلادی (خالی = امروز)
         DateOnly? hireDate = null;
