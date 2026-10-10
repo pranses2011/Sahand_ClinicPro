@@ -147,6 +147,21 @@ public partial class DoctorsViewModel : ViewModelBase
         OpenForm(new DoctorFormViewModel(_api, _snackbar, row.Id));
     }
 
+    // ═══ چرخهٔ سی‌وهفتم (گزارش مالک) ═══
+    // «وقتی در لیست پزشکان کلید عملیاتی برنامهٔ کاری را می‌زنم، در فرم ویرایش
+    // پزشک که باز می‌کند باید به تب برنامهٔ کاری برود تا برنامهٔ کاری پزشک را
+    // ویرایش کنم ولی در تب اطلاعات پایه می‌ماند» — همان فرم ویرایش، ولی نمایهٔ
+    // تب اولیه ۳ (برنامهٔ کاری) با آن ساخته می‌شود؛ DoctorFormWindow پس از
+    // ساخت، همان تب را انتخاب می‌کند.
+    /// <summary>ویرایش مستقیم روی تب برنامهٔ کاری — دکمهٔ «برنامه کاری» لیست</summary>
+    [RelayCommand]
+    private void EditDoctorSchedule(object? parameter)
+    {
+        var row = parameter as DoctorRow ?? SelectedDoctor;
+        if (row is null) { _snackbar.Error("ابتدا یک پزشک انتخاب کنید"); return; }
+        OpenForm(new DoctorFormViewModel(_api, _snackbar, row.Id, initialTabIndex: 3));
+    }
+
     /// <summary>حذف پزشک با تأیید</summary>
     [RelayCommand]
     private async Task DeleteDoctorAsync(object? parameter)
@@ -439,12 +454,21 @@ public partial class DoctorFormViewModel : ObservableObject
     /// <summary>رویداد درخواست بستن</summary>
     public event EventHandler? CloseRequested;
 
+    // ═══ چرخهٔ سی‌وهفتم (گزارش مالک) ═══
+    // «کلید عملیاتی «برنامه کاری» در لیست پزشکان باید فرم ویرایش را مستقیماً
+    // روی تب برنامهٔ کاری باز کند، نه تب اطلاعات پایه» — نمایهٔ تب اولیه از
+    // سازنده دریافت می‌شود و DoctorFormWindow پس از InitializeComponent همان تب
+    // را انتخاب می‌کند. مقدار پیش‌فرض ۰ = همان رفتار قبلی (تب اطلاعات پایه).
+    /// <summary>نمایهٔ تب اولیه‌ای که فرم با آن باز می‌شود — ۰: پایه، ۱: ویزیت، ۲: امضا، ۳: برنامهٔ کاری، ۴: غیبت‌ها</summary>
+    public int InitialTabIndex { get; }
+
     /// <summary>سازنده</summary>
-    public DoctorFormViewModel(IApiClient api, ISnackbarService snackbar, long? doctorId)
+    public DoctorFormViewModel(IApiClient api, ISnackbarService snackbar, long? doctorId, int initialTabIndex = 0)
     {
         _api = api;
         _snackbar = snackbar;
         _doctorId = doctorId;
+        InitialTabIndex = initialTabIndex;
         if (doctorId.HasValue) FormTitle = "ویرایش اطلاعات پزشک";
         // هفت ردیف روزهای هفته
         for (byte day = 0; day <= 6; day++)
@@ -575,13 +599,31 @@ public partial class DoctorFormViewModel : ObservableObject
         Services.PhotoTools.ShowLarge(bytes, "عکس پزشک");
     }
 
-    /// <summary>پر کردن فوق‌تخصص‌های مرتبط — از فهرست کامل فرزندان (چرخه بیست‌ویکم)</summary>
+    /// <summary>
+    /// بازسازی فهرست فوق‌تخصص‌های مجاز برای تخصصِ منتخب — از فهرست کامل فرزندان (چرخه بیست‌ویکم).
+    /// ═══ چرخهٔ سی‌وهفتم (گزارش مالک — «فیلد فوق‌تخصص ذخیره نمی‌شود») ═══
+    /// ریشه: بازسازی مجموعه با Clear() باعث می‌شد WPF مقدار SelectedValueِ کشوی
+    /// فوق‌تخصص را تهی کند و چون اتصال TwoWay است، همین تهی‌شدن «به منبع برمی‌گشت»
+    /// و SubSpecialtyId واقعی را می‌کشت — InitializeAsync در پایان کار دوباره
+    /// FilterSubSpecialties را صدا می‌زد، پس مقدارِ درست‌شده دوباره تهی می‌شد؛
+    /// کاربر فوق‌تخصص خالی می‌دید و با ذخیره، تهی در دیتابیس می‌نشست. اکنون:
+    /// مقدار فعلی قبل از Clear نگه داشته می‌شود و اگر در فهرست تازه هنوز معتبر
+    /// است دوباره روی آن قرار می‌گیرد؛ فقط وقتی زیر مجموعهٔ تخصصِ جدید نباشد
+    /// (تعویض تخصص توسط کاربر) تهی می‌شود — رفتار درست UX.
+    /// </summary>
     private void FilterSubSpecialties()
     {
+        var keep = SubSpecialtyId; // مقدار فعلی را نگه دار — بازسازی مجموعه نباید آن را بکشد
         SubSpecialties.Clear();
-        if (SpecialtyId is null) return;
+        if (SpecialtyId is null)
+        {
+            SubSpecialtyId = null; // بدون تخصص، فوق‌تخصص بی‌معناست
+            return;
+        }
         foreach (var s in AllSpecialties.Where(s => s.ParentId == SpecialtyId))
             SubSpecialties.Add(s);
+        // اگر فوق‌تخصص پیشین هنوز زیر تخصصِ فعلی است، دوباره انتخابش کن
+        SubSpecialtyId = keep is not null && SubSpecialties.Any(s => s.Id == keep) ? keep : null;
     }
 
     /// <summary>

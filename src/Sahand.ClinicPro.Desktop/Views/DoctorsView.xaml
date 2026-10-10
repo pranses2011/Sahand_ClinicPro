@@ -214,10 +214,10 @@
                                         ToolTip="آمار عملکرد ویزیت و درآمد" Margin="1,0">
                                     <materialDesign:PackIcon Kind="ChartBar" Width="15" Height="15" />
                                 </Button>
-                                <Button Command="{Binding DataContext.EditDoctorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                <Button Command="{Binding DataContext.EditDoctorScheduleCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource App.RowIconButton}"
-                                        ToolTip="برنامه کاری هفتگی (تب ۴ فرم ویرایش)" Margin="1,0">
+                                        ToolTip="برنامه کاری هفتگی — باز شدن مستقیم روی تب برنامهٔ کاری (چرخهٔ ۳۷)" Margin="1,0">
                                     <materialDesign:PackIcon Kind="CalendarClock" Width="15" Height="15" />
                                 </Button>
                                 <Button Command="{Binding DataContext.ShowPerformanceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"

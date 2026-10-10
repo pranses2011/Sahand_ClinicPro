@@ -55,7 +55,7 @@
         </DockPanel>
 
         <!-- تب‌ها -->
-        <TabControl Grid.Row="1"
+        <TabControl x:Name="FormTabs" Grid.Row="1"
                     materialDesign:ColorZoneAssist.Mode="PrimaryLight"
                     Style="{StaticResource MaterialDesignTabControl}">
             <TabItem Header="👤 اطلاعات پایه">
