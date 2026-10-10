@@ -61,7 +61,14 @@ public static class PageCatalog
 
         // ─── پاراکلینیک ───
         new PageCatalogEntry("lab", "آزمایشگاه", "TestTube", "lab.view", Group: "پاراکلینیک"),
-        new PageCatalogEntry("paraclinical", "تصویربرداری و پاراکلینیک", "MedicalBag", "imaging.view", Group: "پاراکلینیک"),
+        // ═══ چرخهٔ ۴۳ — تفکیک به چهار صفحهٔ مستقل (گزارش مالک: «برای هر کدوم
+        // یک صفحه مستقل طراحی بکن تا با همدیگه تداخلی نداشته باشن») ═══
+        new PageCatalogEntry("dentistry", "دندانپزشکی", "ToothOutline", "imaging.view", Group: "پاراکلینیک"),
+        new PageCatalogEntry("ophthalmology", "چشم‌پزشکی", "EyeCircle", "imaging.view", Group: "پاراکلینیک"),
+        new PageCatalogEntry("physiotherapy", "فیزیوتراپی", "DirectionsRun", "imaging.view", Group: "پاراکلینیک"),
+        new PageCatalogEntry("imaging", "تصویربرداری", "CameraBurst", "imaging.view", Group: "پاراکلینیک"),
+        // کلید قدیمی برای میانبرهای ذخیره‌شده — به تصویربرداری نگاشت می‌شود
+        new PageCatalogEntry("paraclinical", "تصویربرداری (قدیمی)", "CameraBurst", "imaging.view", ShowInPicker: false, Group: "پاراکلینیک"),
 
         // ─── کادر درمان و پرسنل ───
         new PageCatalogEntry("doctors", "پزشکان", "Doctor", "doctors.view", Group: "کادر درمان و پرسنل"),

@@ -147,7 +147,10 @@ public partial class MainWindowViewModel : ObservableObject
         BillingViewModel billingVm,
         AccountingViewModel accountingVm,
         InsuranceViewModel insuranceVm,
-        ParaclinicalViewModel paraclinicalVm,
+        DentistryViewModel dentistryVm,
+        OphthalmologyViewModel ophthalmologyVm,
+        PhysiotherapyViewModel physiotherapyVm,
+        ImagingViewModel imagingVm,
         LabViewModel labVm,
         PharmacyViewModel pharmacyVm,
         StocktakingViewModel stocktakingVm,
@@ -258,7 +261,14 @@ public partial class MainWindowViewModel : ObservableObject
             ["billing"] = () => billingVm,
             ["accounting"] = () => accountingVm,
             ["insurance"] = () => insuranceVm,
-            ["paraclinical"] = () => paraclinicalVm,
+            // چرخهٔ ۴۳ — تفکیک پاراکلینیک به چهار صفحهٔ مستقل (گزارش مالک)
+            ["dentistry"] = () => dentistryVm,
+            ["ophthalmology"] = () => ophthalmologyVm,
+            ["physiotherapy"] = () => physiotherapyVm,
+            ["imaging"] = () => imagingVm,
+            // نگاشت سازگاری: میانبرهای ذخیره‌شدهٔ قدیمی با کلید paraclinical
+            // به صفحهٔ تصویربرداری می‌روند (نام قدیمی همان تصویربرداری و پاراکلینیک بود)
+            ["paraclinical"] = () => imagingVm,
             ["lab"] = () => labVm,
             ["pharmacy"] = () => pharmacyVm,
             ["stocktaking"] = () => stocktakingVm,
@@ -335,7 +345,10 @@ public partial class MainWindowViewModel : ObservableObject
             // ─── تشخیص‌های یاری ───
             Group("پاراکلینیک", "TestTube",
                 new() { Title = "آزمایشگاه", PageKey = "lab", Icon = "TestTube" },
-                new() { Title = "تصویربرداری و پاراکلینیک", PageKey = "paraclinical", Icon = "MedicalBag" }),
+                new() { Title = "دندانپزشکی", PageKey = "dentistry", Icon = "ToothOutline" },
+                new() { Title = "چشم‌پزشکی", PageKey = "ophthalmology", Icon = "EyeCircle" },
+                new() { Title = "فیزیوتراپی", PageKey = "physiotherapy", Icon = "DirectionsRun" },
+                new() { Title = "تصویربرداری", PageKey = "imaging", Icon = "CameraBurst" }),
 
             // ─── کادر درمان و پرسنل ───
             Group("پزشکان و پرسنل", "AccountTie",

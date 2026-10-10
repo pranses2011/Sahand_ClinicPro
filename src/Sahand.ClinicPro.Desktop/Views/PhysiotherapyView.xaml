@@ -1,0 +1,102 @@
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.PhysiotherapyView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="640" d:DesignWidth="1080"
+             FlowDirection="RightToLeft">
+    <!-- ═══ فیزیوتراپی — چرخهٔ چهل‌وسوم (گزارش مالک): «دندانپزشکی و چشم پزشکی و
+         تصویربرداری و فزیوتراپی در یک صفحه و تب‌های جداگانه هستند. برای هر
+         کدوم یک صفحه مستقل طراحی بکن تا با همدیگه تداخلی نداشته باشن» —
+         محتوای این تب از پاراکلینیکِ سابقِ تب‌دار جدا شد و اکنون صفحهٔ
+         اختصاصی مستقل خودش است؛ تمام منطق و اتصال‌ها بدون تغییر منتقل شدند. ═══ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="DirectionsRun" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="فیزیوتراپی" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- محتوای صفحه — عیناً از تب پاراکلینیک سابق (اتصال‌ها بدون تغییر) -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8">
+                            <StackPanel MaxWidth="760" HorizontalAlignment="Center">
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="3*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding PhysioPatientSearch, UpdateSourceTrigger=PropertyChanged}"
+                                             materialDesign:HintAssist.Hint="🔍 بیمار (کد ملی / موبایل)">
+                                        <!-- چرخه بیست‌وسوم: Enter = دکمهٔ جستجو -->
+                                        <TextBox.InputBindings>
+                                            <KeyBinding Key="Enter" Command="{Binding SearchPhysioPatientCommand}" />
+                                        </TextBox.InputBindings>
+                                    </TextBox>
+                                    <Button Grid.Column="1" Command="{Binding SearchPhysioPatientCommand}" Margin="8,0,0,0"
+                                            Style="{StaticResource MaterialDesignRaisedButton}">
+                                        <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />
+                                    </Button>
+                                </Grid>
+                                <Border Background="#E3F2FD" CornerRadius="8" Padding="10,5" Margin="0,0,0,10"
+                                        Visibility="{Binding PhysioPatient, Converter={StaticResource NullToVisibility}}">
+                                    <TextBlock Text="{Binding PhysioPatient.FullName, Mode=OneWay}" FontWeight="SemiBold" />
+                                </Border>
+
+                                <TextBlock Text="تکنیک‌های درمانی" FontWeight="Bold" FontSize="13" Margin="2,0,2,6" />
+                                <ItemsControl ItemsSource="{Binding Techniques}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <CheckBox Content="{Binding}" Margin="4,3" FontSize="12"
+                                                      Checked="OnTechniqueChecked" Unchecked="OnTechniqueUnchecked" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBox Text="{Binding PhysioOtherTechnique, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="سایر تکنیک‌ها…" Margin="0,8,0,0" />
+
+                                <TextBlock FontSize="13" FontWeight="Bold" Margin="2,14,2,4">
+                                    <Run Text="نمره درد (۰ تا ۱۰): " /><Run Text="{Binding PainScore, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" Foreground="{Binding PainColor, Mode=OneWay}" />
+                                </TextBlock>
+                                <Slider Minimum="0" Maximum="10" Value="{Binding PainScore}"
+                                        TickFrequency="1" IsSnapToTickEnabled="True" />
+                                <!-- راهنمای رنگ نمرهٔ درد — چرخهٔ ۳۳: همان الگوی چیپ رنگی واقعی به‌جای
+                                     ایموجی (ایموجی‌ها در فونت فارسی رندر نمی‌شوند — رفع مشابه راهنمای
+                                     چارت دندان در همین نما). رنگ‌ها عیناً از PainColor ویژومدل:
+                                     ≤۳ #43A047 / ≤۶ #FDD835 / بقیه #E53935 -->
+                                <StackPanel Orientation="Horizontal" Margin="2,4,2,0">
+                                    <Border Width="13" Height="13" CornerRadius="4" Background="#43A047"
+                                            BorderThickness="1" BorderBrush="#90A4AE" VerticalAlignment="Center" />
+                                    <TextBlock Text="۰-۳ خفیف" FontSize="10.5" Opacity="0.85" VerticalAlignment="Center" Margin="5,0,14,0" />
+                                    <Border Width="13" Height="13" CornerRadius="4" Background="#FDD835"
+                                            BorderThickness="1" BorderBrush="#90A4AE" VerticalAlignment="Center" />
+                                    <TextBlock Text="۴-۶ متوسط" FontSize="10.5" Opacity="0.85" VerticalAlignment="Center" Margin="5,0,14,0" />
+                                    <Border Width="13" Height="13" CornerRadius="4" Background="#E53935"
+                                            BorderThickness="1" BorderBrush="#90A4AE" VerticalAlignment="Center" />
+                                    <TextBlock Text="۷-۱۰ شدید" FontSize="10.5" Opacity="0.85" VerticalAlignment="Center" Margin="5,0,0,0" />
+                                </StackPanel>
+
+                                <TextBlock Text="یادداشت پیشرفت" FontSize="10.5" Opacity="0.6" Margin="2,10,2,2" />
+                                <TextBox Text="{Binding PhysioNotes, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
+                                         TextWrapping="Wrap" Height="66" />
+
+                                <Button Command="{Binding SavePhysioSessionCommand}" Margin="0,14,0,0" HorizontalAlignment="Left"
+                                        Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                                        <TextBlock Text="💾 ذخیره جلسه" Margin="8,0,0,0" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </ScrollViewer>
+    </Grid>
+</UserControl>

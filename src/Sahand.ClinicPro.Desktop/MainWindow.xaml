@@ -55,8 +55,18 @@
         <DataTemplate DataType="{x:Type vm:InsuranceViewModel}">
             <views:InsuranceView />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:ParaclinicalViewModel}">
-            <views:ParaclinicalView />
+        <!-- ═══ چرخهٔ ۴۳ — چهار صفحهٔ مستقل به‌جای پاراکلینیکِ تب‌دار ═══ -->
+        <DataTemplate DataType="{x:Type vm:DentistryViewModel}">
+            <views:DentistryView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OphthalmologyViewModel}">
+            <views:OphthalmologyView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PhysiotherapyViewModel}">
+            <views:PhysiotherapyView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ImagingViewModel}">
+            <views:ImagingView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:LabViewModel}">
             <views:LabView />

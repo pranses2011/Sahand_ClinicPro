@@ -384,7 +384,11 @@ public partial class App : System.Windows.Application
         services.AddTransient<BillingViewModel>();
         services.AddTransient<AccountingViewModel>();
         services.AddTransient<InsuranceViewModel>();
-        services.AddTransient<ParaclinicalViewModel>();
+        // ═══ چرخهٔ ۴۳ — تفکیک پاراکلینیک به چهار صفحهٔ مستقل (گزارش مالک) ═══
+        services.AddTransient<DentistryViewModel>();
+        services.AddTransient<OphthalmologyViewModel>();
+        services.AddTransient<PhysiotherapyViewModel>();
+        services.AddTransient<ImagingViewModel>();
         services.AddTransient<LabViewModel>();
         services.AddTransient<PharmacyViewModel>();
         services.AddTransient<StocktakingViewModel>();

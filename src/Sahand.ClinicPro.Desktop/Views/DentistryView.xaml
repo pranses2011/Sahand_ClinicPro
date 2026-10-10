@@ -1,0 +1,297 @@
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.DentistryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="640" d:DesignWidth="1080"
+             FlowDirection="RightToLeft">
+    <!-- ═══ دندانپزشکی — چرخهٔ چهل‌وسوم (گزارش مالک): «دندانپزشکی و چشم پزشکی و
+         تصویربرداری و فزیوتراپی در یک صفحه و تب‌های جداگانه هستند. برای هر
+         کدوم یک صفحه مستقل طراحی بکن تا با همدیگه تداخلی نداشته باشن» —
+         محتوای این تب از پاراکلینیکِ سابقِ تب‌دار جدا شد و اکنون صفحهٔ
+         اختصاصی مستقل خودش است؛ تمام منطق و اتصال‌ها بدون تغییر منتقل شدند. ═══ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="ToothOutline" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="دندانپزشکی" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- محتوای صفحه — عیناً از تب پاراکلینیک سابق (اتصال‌ها بدون تغییر) -->
+        <Grid Margin="4,8">
+                            <Grid.RowDefinitions>
+                                <!-- نوار بیمار دندانپزشکی — چرخهٔ ۲۸ -->
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="10" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2.6*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- ═══ نوار بیمار تب دندانپزشکی — چرخهٔ بیست‌وهشتم (گزارش هجدهم
+                                 مالک): «نمی‌شود بیمار را انتخاب کرد و مشخص نیست اطلاعات
+                                 برای چه کسی ذخیره می‌شود» — چارت و طرح درمان اکنون به
+                                 پروندهٔ همین بیمار وصل است و با جستجو، آخرین چارتِ ذخیره‌شده
+                                 خودکار بازیابی می‌شود ═══ -->
+                            <Grid Grid.Row="0" Grid.ColumnSpan="3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2.4*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding DentalPatientSearch, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="🔍 بیمار دندانپزشکی — کد ملی / موبایل / نام">
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" Command="{Binding SearchDentalPatientCommand}" />
+                                    </TextBox.InputBindings>
+                                </TextBox>
+                                <Button Grid.Column="1" Command="{Binding SearchDentalPatientCommand}" Margin="8,0,0,0"
+                                        Style="{StaticResource MaterialDesignRaisedButton}" Padding="12,4">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Magnify" Width="15" Height="15" VerticalAlignment="Center" />
+                                        <TextBlock Text="جستجو" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <!-- کارت بیمار منتخب — محل ذخیره‌شدن داده‌ها همین پرونده است -->
+                                <Border Grid.Column="2" Background="#E8F5E9" BorderBrush="#A5D6A7" BorderThickness="1"
+                                        CornerRadius="8" Padding="10,5" Margin="8,0,8,0"
+                                        Visibility="{Binding DentalPatient, Converter={StaticResource NullToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="AccountCheck" Width="16" Height="16" Foreground="#2E7D32" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding DentalPatient.FullName, Mode=OneWay}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0" />
+                                        <TextBlock Text="{Binding DentalPatient.NationalCode, Mode=OneWay}" Opacity="0.7" FontSize="11"
+                                                   VerticalAlignment="Center" Margin="10,0,0,0" />
+                                        <TextBlock Text="{Binding DentalPatient.Allergies, Mode=OneWay, TargetNullValue='', FallbackValue=''}" Foreground="#C62828"
+                                                   FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0"
+                                                   Visibility="{Binding DentalPatient.Allergies, Converter={StaticResource StringToVisibility}}" />
+                                    </StackPanel>
+                                </Border>
+                                <Button Grid.Column="3" Command="{Binding ClearDentalPatientCommand}"
+                                        Style="{StaticResource MaterialDesignFlatButton}" Padding="8,4" ToolTip="بستن پرونده و بیمار بعدی"
+                                        Visibility="{Binding DentalPatient, Converter={StaticResource NullToVisibility}}">
+                                    <materialDesign:PackIcon Kind="CloseCircleOutline" Width="18" Height="18" Foreground="#C62828" />
+                                </Button>
+                            </Grid>
+                            <!-- راهنمای وضعیت ذخیره/بازیابی چارت — پاسخ «از کجا بازیابی می‌شود؟» -->
+                            <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Text="{Binding DentalChartInfo, Mode=OneWay}"
+                                       FontSize="10.5" Opacity="0.65" VerticalAlignment="Center" />
+
+                            <!-- چارت FDI -->
+                            <Border Grid.Row="2" Grid.Column="0" CornerRadius="12" Padding="12"
+                                    Background="{DynamicResource MaterialDesign.Brush.Background}">
+                                <StackPanel>
+                                    <TextBlock Text="ماگزیلا (فک بالا)" FontWeight="Bold" FontSize="12.5" Margin="2,0,2,6" />
+                                    <ItemsControl ItemsSource="{Binding UpperTeeth}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <!-- چرخه بیست‌وچهارم: هایلایت دندان انتخابی با DataTrigger ساده
+                                                     (Value از نوع CLR است و Binding روی آن XamlParseException می‌اندازد —
+                                                     گزارش هفدهم مالک؛ پرچم IsSelected اکنون از ViewModel می‌آید).
+                                                     فونت هاردکد Consolas هم حذف شد تا فونت تم برنامه اعمال شود. -->
+                                                <Button Width="44" Height="44" Margin="2"
+                                                        Command="{Binding DataContext.SelectToothCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip="{Binding ToolTip}"
+                                                        Content="{Binding NumberFa}"
+                                                        FontSize="12">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+                                                            <Setter Property="Background" Value="{Binding Color, Mode=OneWay}" />
+                                                            <Setter Property="BorderBrush" Value="#B0BEC5" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                    <Setter Property="BorderBrush" Value="#1565C0" />
+                                                                    <Setter Property="BorderThickness" Value="3" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <Separator Margin="0,10,0,10" />
+
+                                    <TextBlock Text="مندیبل (فک پایین)" FontWeight="Bold" FontSize="12.5" Margin="2,0,2,6" />
+                                    <ItemsControl ItemsSource="{Binding LowerTeeth}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <!-- فک پایین — همان قالب هایلایت انتخاب چرخه بیست‌وچهارم؛
+                                                     پیش‌تر این ردیف اصلاً استایل انتخاب نداشت و دندان انتخابی
+                                                     در فک پایین هایلایت نمی‌شد. ارقام فارسی + فونت تم. -->
+                                                <Button Width="44" Height="44" Margin="2"
+                                                        Command="{Binding DataContext.SelectToothCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip="{Binding ToolTip}"
+                                                        Content="{Binding NumberFa}"
+                                                        FontSize="12">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+                                                            <Setter Property="Background" Value="{Binding Color, Mode=OneWay}" />
+                                                            <Setter Property="BorderBrush" Value="#B0BEC5" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                    <Setter Property="BorderBrush" Value="#1565C0" />
+                                                                    <Setter Property="BorderThickness" Value="3" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <!-- ═══ راهنمای رنگ‌های وضعیت دندان — چرخهٔ سی‌وسوم (گزارش نوزدهم مالک) ═══
+                                         «رنگ‌های وضعیت فک بالا/پایین درست نشان داده می‌شوند ولی راهنمای
+                                         تشخیص رنگ‌ها که زیرشان هست درست نمی‌آید و مشخص نیست»:
+                                         ریشه — راهنمای پیشین یک متن یگانه با نویسه‌های ایموجی (⬜🟥🟨…)
+                                         بود؛ این گلیف‌ها در فونت فارسی برنامه (وزیرمتن) وجود ندارند و
+                                         موتور رندر WPF آن‌ها را به‌صورت مربع تهی/علامت جایگزین می‌کشد —
+                                         دقیقاً همان «مشخص نیست»ی که مالک می‌دید. راه‌حل قطعی: به‌جای
+                                         نویسه، چیپ‌های رنگی واقعی (Border با Brush همان کد رنگ ViewModel
+                                         ToothVM.Color) + برچسب فارسی کنار هرکدام — رندر آن در هر فونت و
+                                         هر نسخهٔ ویندوز تضمینی است و رنگ‌ها با خود دکمه‌های چارت یکی‌اند.
+                                         چیپ سفیدِ «سالم» حاشیهٔ خاکستری می‌گیرد تا روی پس‌زمینهٔ روشن
+                                         دیده شود. WrapPanel در عرض کم می‌شکند و راهنما هرگز بیرون نمی‌زند. -->
+                                    <WrapPanel Margin="2,12,2,0">
+                                        <!-- آیتم راهنما: چیپ رنگ + برچسب — قالب مشترک با x:Shared و منبع -->
+                                        <WrapPanel.Resources>
+                                            <Style x:Key="LegendChip" TargetType="Border">
+                                                <Setter Property="Width" Value="15" />
+                                                <Setter Property="Height" Value="15" />
+                                                <Setter Property="CornerRadius" Value="4" />
+                                                <Setter Property="BorderThickness" Value="1" />
+                                                <Setter Property="BorderBrush" Value="#90A4AE" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="Margin" Value="0,0,5,0" />
+                                            </Style>
+                                            <Style x:Key="LegendLabel" TargetType="TextBlock">
+                                                <Setter Property="FontSize" Value="11" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="Margin" Value="0,0,12,2" />
+                                                <Setter Property="Opacity" Value="0.85" />
+                                            </Style>
+                                        </WrapPanel.Resources>
+                                        <!-- رنگ‌ها عیناً از ToothVM.Color (پوشهٔ ViewModelها):
+                                             ۰ سالم #FFFFFF / ۱ پوسیدگی #E53935 / ۲ ترمیم #FDD835 /
+                                             ۳ درمان #43A047 / ۴ روکش #1E88E5 / ۵ کشیده #37474F /
+                                             ۶ ایمپلنت #8E24AA -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="دندان بدون مشکل">
+                                            <Border Style="{StaticResource LegendChip}" Background="#FFFFFF" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="سالم" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="نیاز به ترمیم دارد">
+                                            <Border Style="{StaticResource LegendChip}" Background="#E53935" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="پوسیدگی" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="قبلاً پرکردگی شده">
+                                            <Border Style="{StaticResource LegendChip}" Background="#FDD835" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="ترمیم‌شده" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="درمان ریشه/کامل انجام شده">
+                                            <Border Style="{StaticResource LegendChip}" Background="#43A047" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="درمان‌شده" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="روکش نصب شده">
+                                            <Border Style="{StaticResource LegendChip}" Background="#1E88E5" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="روکش" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="دندان کشیده شده">
+                                            <Border Style="{StaticResource LegendChip}" Background="#37474F" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="کشیده‌شده" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="ایمپلنت کاشته شده">
+                                            <Border Style="{StaticResource LegendChip}" Background="#8E24AA" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="ایمپلنت" />
+                                        </StackPanel>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- جزئیات و طرح درمان -->
+                            <Grid Grid.Row="2" Grid.Column="2">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Border Grid.Row="0" CornerRadius="12" Padding="12" Margin="0,0,0,8"
+                                        Background="{DynamicResource MaterialDesign.Brush.Background}">
+                                    <StackPanel>
+                                        <TextBlock FontSize="13" FontWeight="Bold" Margin="0,0,0,6">
+                                            <Run Text="دندان انتخابی: " /><Run Text="{Binding SelectedTooth.Number, Mode=OneWay, TargetNullValue=—, Converter={StaticResource PersianDigits}}" FontFamily="{DynamicResource App.CodeFont}" />
+                                        </TextBlock>
+                                        <TextBlock Text="وضعیت" FontSize="10.5" Opacity="0.6" />
+                                        <ComboBox ItemsSource="{Binding ToothConditions}" SelectedIndex="{Binding ToothConditionIndex}" />
+                                        <Button Command="{Binding AddDentalPlanCommand}" Margin="0,10,0,0"
+                                                Style="{StaticResource MaterialDesignRaisedButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" />
+                                                <TextBlock Text="افزودن به طرح درمان" Margin="7,0,0,0" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Row="1" CornerRadius="12" Padding="10"
+                                        Background="{DynamicResource MaterialDesign.Brush.Background}">
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Top" Text="طرح درمان" FontWeight="Bold" FontSize="13" Margin="2,0,2,6" />
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                            <ItemsControl ItemsSource="{Binding DentalPlan}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border CornerRadius="8" Padding="9,6" Margin="0,0,0,5" Background="#FFF8E1">
+                                                            <StackPanel>
+                                                                <TextBlock FontSize="12">
+                                                                    <Run Text="دندان " /><Run Text="{Binding Tooth, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" FontWeight="Bold" />
+                                                                    <Run Text=" — " /><Run Text="{Binding Procedure, Mode=OneWay}" FontWeight="SemiBold" />
+                                                                </TextBlock>
+                                                                <TextBlock FontSize="10.5" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}">
+                                                                    <!-- چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان) — حذف هاردکد -->
+                                                                    <Run Text="{Binding Price, Mode=OneWay, Converter={StaticResource CurrencyRial}}" /><Run Text=" " /><Run Text="{DynamicResource App.CurrencyLabel}" />
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </DockPanel>
+                                </Border>
+
+                                <!-- ═══ ذخیرهٔ چارت و طرح درمان در پروندهٔ بیمار — چرخهٔ ۲۸ ═══
+                                     وضعیت هر ۳۲ دندان + ردیف‌های طرح، در طرح درمان بیمارِ
+                                     جستجوشده ذخیره می‌شود و دفعهٔ بعد با جستجوی همان بیمار
+                                     بازیابی می‌گردد -->
+                                <Button Grid.Row="2" Command="{Binding SaveDentalChartCommand}" Margin="0,8,0,0"
+                                        Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32"
+                                        HorizontalAlignment="Stretch"
+                                        ToolTip="وضعیت همهٔ دندان‌ها و ردیف‌های طرح درمان در پروندهٔ بیمار ذخیره می‌شود">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ContentSave" Width="16" Height="16" VerticalAlignment="Center" />
+                                        <TextBlock Text="💾 ذخیرهٔ چارت و طرح درمان" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Grid>
+    </Grid>
+</UserControl>

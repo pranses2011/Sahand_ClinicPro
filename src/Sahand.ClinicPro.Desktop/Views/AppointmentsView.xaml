@@ -229,7 +229,7 @@
                                          نمی‌ماند، چیپ در هر فونتی می‌ماند) -->
                                     <WrapPanel Margin="2,10,2,0">
                                         <WrapPanel.Resources>
-                                            <!-- قالب مشترک چیپ/برچسب — هم‌نام با ParaclinicalView -->
+                                            <!-- قالب مشترک چیپ/برچسب — هم‌نام با صفحات پاراکلینیک مستقل (چرخهٔ ۴۳) -->
                                             <Style x:Key="LegendChip" TargetType="Border">
                                                 <Setter Property="Width" Value="15" />
                                                 <Setter Property="Height" Value="15" />
