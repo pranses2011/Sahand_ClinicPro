@@ -31,8 +31,8 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
 
     <!-- اطلاعات اسمبلی -->
-    <!-- نسخهٔ ۲.۴.۸: چرخهٔ سی‌وپنجم — ۷ اصلاح + بستهٔ تجمعی v2.4.4→HEAD -->
-    <Version>2.4.8</Version>
+    <!-- نسخهٔ ۲.۴.۹: وصلهٔ فوری چرخهٔ سی‌وششم — ترمیم خطای ساخت بستهٔ v2.4.۸ (using رسانه‌ای + ترتیب استاتیک + کامنت XML پارامتر) -->
+    <Version>2.4.9</Version>
     <Authors>Sahand ClinicPro Team</Authors>
     <Company>Sahand</Company>
     <Product>Sahand ClinicPro</Product>
