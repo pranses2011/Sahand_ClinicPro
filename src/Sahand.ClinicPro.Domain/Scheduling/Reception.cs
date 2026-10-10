@@ -31,6 +31,16 @@ public class Reception : AuditableEntity, ISoftDeletable
     /// <summary>شناسه پرسنل انجام‌دهندهٔ خدمت — مثلاً بهیار تزریقات (چرخه ۲۴)</summary>
     public long? PerformedByEmployeeId { get; set; }
 
+    /// <summary>
+    /// شناسه اتاق انجام خدمت — چرخهٔ سی‌ونه‌م (گزارش مالک):
+    /// «اتاق معاینه برای پزشک در برنامهٔ کاری پزشک مشخص می‌شود ولی برای خدمات
+    /// درمانی نمی‌شود معین کرد» — در پذیرش خدمتی (تزریقات/پانسمان/سرم و مانند
+    /// آن) اتاقِ محل انجام خدمت از فهرست اتاق‌های فعال درمانگاه انتخاب می‌شود
+    /// تا بیمار بداند به کدام اتاق برود و صف اتاق‌ها قابل ردیابی باشد. برای
+    /// پذیرش ویزیت پزشک تهی می‌ماند (اتاق از برنامهٔ کاری خود پزشک می‌آید).
+    /// </summary>
+    public long? RoomId { get; set; }
+
     /// <summary>تاریخ و ساعت پذیرش</summary>
     public DateTime ReceptionDate { get; set; }
 
@@ -78,6 +88,12 @@ public class Reception : AuditableEntity, ISoftDeletable
 
     /// <summary>بیمار</summary>
     public Patient? Patient { get; set; }
+
+    /// <summary>
+    /// اتاق انجام خدمت — چرخهٔ سی‌ونه‌م؛ ناوبری اطلاعاتی است (بدون مجموعهٔ
+    /// سمت اتاق) چون گزارش‌های اتاق از سمت تراکنش‌ها ساخته می‌شوند
+    /// </summary>
+    public ExaminationRoom? Room { get; set; }
 
     /// <summary>پزشک</summary>
     public Doctor? Doctor { get; set; }

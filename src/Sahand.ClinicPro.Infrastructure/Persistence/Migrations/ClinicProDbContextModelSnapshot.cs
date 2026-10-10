@@ -9436,6 +9436,10 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasComment("نام پزشک ارجاع‌دهنده");
 
+                    b.Property<long?>("RoomId")
+                        .HasColumnType("bigint")
+                        .HasComment("اتاق انجام خدمت — پذیرش خدمتی چرخهٔ ۳۹ (ویزیت پزشک: اتاق از برنامهٔ کاری خود پزشک)");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -9484,6 +9488,8 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_Reception_ReceptionNumber")
                         .HasFilter("[ReceptionNumber] IS NOT NULL AND [IsDeleted] = 0");
+
+                    b.HasIndex("RoomId");
 
                     b.ToTable("Receptions", null, t =>
                         {
@@ -11340,6 +11346,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.Scheduling.ExaminationRoom", "Room")
+                        .WithMany()
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("Appointment");
 
                     b.Navigation("Doctor");
@@ -11347,6 +11358,8 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Navigation("InsuranceCompany");
 
                     b.Navigation("Patient");
+
+                    b.Navigation("Room");
                 });
 
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Scheduling.WaitlistEntry", b =>

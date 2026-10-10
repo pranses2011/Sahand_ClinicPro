@@ -26,5 +26,19 @@ public class ReceptionConfiguration : IEntityTypeConfiguration<Reception>
 
         builder.HasIndex(x => new { x.ReceptionNumber }).IsUnique().HasDatabaseName("IX_Reception_ReceptionNumber").HasFilter("[IsDeleted] = 0");
         builder.HasIndex(x => new { x.PatientId }).HasDatabaseName("IX_Reception_PatientId");
+
+        // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — اتاق انجام خدمت در پذیرش خدمتی ═══
+        // «اتاق معاینه برای پزشک در برنامهٔ کاری پزشک مشخص می‌شود ولی برای
+        // خدمات درمانی نمی‌شود معین کرد» — ستون RoomId به جدول پذیرش‌ها
+        // اضافه شد؛ رابطهٔ ناوبری بدون مجموعهٔ سمت اتاق (ناوبری فقط از پذیرش
+        // به اتاق خوانده می‌شود) و حذف NoAction تا حذف اتاق هرگز پذیرش‌های
+        // تاریخی را نکشد (اتاق‌ها فقط نرم-غیرفعال می‌شوند).
+        builder.HasOne(x => x.Room)
+            .WithMany()
+            .HasForeignKey(x => x.RoomId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.Property(x => x.RoomId).HasComment("اتاق انجام خدمت — پذیرش خدمتی چرخهٔ ۳۹ (ویزیت پزشک: اتاق از برنامهٔ کاری خود پزشک)");
+        // ایندکس پرس‌وجو بر اساس اتاق (بار اتاق‌ها در طول روز) — نام کانونشنی EF
+        builder.HasIndex(x => x.RoomId);
     }
 }

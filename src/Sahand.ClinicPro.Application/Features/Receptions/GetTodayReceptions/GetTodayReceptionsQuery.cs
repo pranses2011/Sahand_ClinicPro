@@ -70,6 +70,9 @@ public class GetTodayReceptionsQueryHandler
                 r.ReceptionDate,
                 r.Status,
                 InsuranceName = r.InsuranceCompany != null ? r.InsuranceCompany.Name : null,
+                // چرخهٔ ۳۹ — نام نمایشی اتاق خدمت (نام کامل یا شماره)؛ پذیرش ویزیت
+                // پزشک تهی می‌ماند چون اتاق آن از برنامهٔ کاری خود پزشک می‌آید
+                RoomName = r.Room != null ? (r.Room.RoomName ?? r.Room.RoomNumber) : null,
                 r.WaitingTime
             })
             .ToListAsync(cancellationToken);
@@ -84,6 +87,8 @@ public class GetTodayReceptionsQueryHandler
             r.Status,
             r.InsuranceName,
             r.WaitingTime,
+            // چرخهٔ ۳۹ — اتاق انجام خدمت
+            r.RoomName,
             invoiceTotals.TryGetValue(r.Id, out var fin) ? fin.Total : 0m,
             invoiceTotals.TryGetValue(r.Id, out var fin2) ? fin2.Paid : 0m)).ToList();
 

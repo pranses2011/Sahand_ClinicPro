@@ -81,6 +81,19 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
                 return Result<long>.Failure(Error.NotFound("خدمت", dto.ServiceId.Value));
         }
 
+        // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — اتاق انجام خدمت پذیرش خدمتی ═══
+        // «اتاق معاینه برای پزشک در برنامهٔ کاری پزشک مشخص می‌شود ولی برای خدمات
+        // درمانی نمی‌شود معین کرد» — اگر اتاقی ارسال شده باشد باید وجود و فعال
+        // باشد؛ اتاق غیرفعال‌شده (حذف نرم) پذیرفته نمی‌شود تا بیمار به اتاق
+        // بسته هدایت نشود.
+        if (dto.RoomId is not null)
+        {
+            var room = await _unitOfWork.Repository<ExaminationRoom>()
+                .GetByIdAsync(dto.RoomId.Value, cancellationToken);
+            if (room is null || !room.IsActive)
+                return Result<long>.Failure(Error.NotFound("اتاق", dto.RoomId.Value));
+        }
+
         var now = DateTime.UtcNow;
         var reception = new Reception
         {
@@ -92,6 +105,8 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
                 (dto.ServiceName ?? (await _unitOfWork.Repository<Domain.Entities.Billing.Service>()
                     .GetByIdAsync(dto.ServiceId.Value, cancellationToken))?.ServiceName),
             PerformedByEmployeeId = dto.PerformedByEmployeeId,
+            // چرخهٔ ۳۹ — اتاق محل انجام خدمت (پذیرش خدمتی)
+            RoomId = dto.RoomId,
             AppointmentId = dto.AppointmentId,
             // چرخه بیست‌ویکم (گزارش پانزدهم مالک): بیمه پذیرش — سه حالت:
             //   ▪ 0  → «آزاد» صریح از کشوی پذیرش → بدون بیمه ذخیره می‌شود (null)
