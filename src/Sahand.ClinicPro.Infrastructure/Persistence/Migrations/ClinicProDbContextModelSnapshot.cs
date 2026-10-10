@@ -10281,6 +10281,66 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Security.UserShortcut", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("KeysJson")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)")
+                        .HasDefaultValue("[]")
+                        .HasComment("کلید صفحات پین‌شدهٔ داشبورد به‌صورت JSON آرایه‌ای");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasComment("شناسه کاربر مالک میانبرها — یکتا در ردیف‌های سالم");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_UserShortcuts_UserId")
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("UserShortcuts", null, t =>
+                        {
+                            t.HasComment("میانبرهای سریع داشبورد کاربر — چرخهٔ ۴۱");
+                        });
+                });
+
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Accounting.AccountingAccount", b =>
                 {
                     b.HasOne("Sahand.ClinicPro.Domain.Entities.Accounting.AccountingAccount", "Parent")

@@ -359,6 +359,12 @@ public class ClinicProDbContext : DbContext
     /// <summary>مجموعه UserSessions</summary>
     public DbSet<UserSession> UserSessions { get; set; }
 
+    /// <summary>
+    /// مجموعه UserShortcuts — میانبرهای سریع داشبورد کاربر (چرخهٔ ۴۱):
+    /// حقیقت مرجعِ چیدمان شخصی داشبورد از فایل محلی %AppData% به دیتابیس منتقل شد
+    /// </summary>
+    public DbSet<UserShortcut> UserShortcuts { get; set; }
+
     /// <summary>مجموعه Visits</summary>
     public DbSet<Visit> Visits { get; set; }
 

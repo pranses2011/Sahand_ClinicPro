@@ -148,6 +148,145 @@ public class UsersController : ApiBaseController
         return Ok(ApiResponse<object>.Success(response, "کاربر جاری"));
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // چرخهٔ چهل‌ویکم (گزارش مالک) — میانبرهای سریع داشبورد در دیتابیس
+    // «پنل میانبرهای سریع داشبورد در دیتابیس ذخیره بشه تا مشکلی براش پیش
+    // نیاد» — پیش‌تر این چیدمان شخصی فقط در %AppData% همان ایستگاه زندگی
+    // می‌کرد؛ دو اندپوینت زیر حقیقت مرجع را به سرور می‌آورند تا با تعویض
+    // ایستگاه/پروفایل از بین نرود و در پشتیبان‌های سرور هم پوشش داده شود.
+    // مجوز ویژه‌ای لازم نیست (الگوی me): هر کاربرِ واردشده فقط میانبرهای
+    // «خودش» را می‌بیند و ذخیره می‌کند.
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// میانبرهای داشبورد کاربر جاری — اگر رکوردی وجود نداشته باشد Data تهی
+    /// برمی‌گردد (کلاینت در آن حالت سراغ کش محلی و سپس پیش‌فرض‌ها می‌رود)؛
+    /// لیست خالی معنای «کاربر همه را برداشته» دارد و مبنا قرار می‌گیرد.
+    /// </summary>
+    [HttpGet("me/shortcuts")]
+    public async Task<IActionResult> GetMyShortcuts()
+    {
+        var userId = ResolveCurrentUserId();
+        if (userId is null)
+            return Unauthorized(ApiResponse<object>.Failure("نشست نامعتبر است — دوباره وارد شوید"));
+
+        // فیلتر نرم‌حذفی خودکار اعمال می‌شود (HasQueryFilter سراسری)
+        var record = await _unitOfWork.Repository<UserShortcut>().QueryableNoTracking
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (record is null)
+            return Ok(ApiResponse<UserShortcutsDto>.Success(new UserShortcutsDto(null), "میانبری ثبت نشده است"));
+
+        // JSON رکورد به لیست کلیدها تجزیه می‌شود — خرابیِ محتوا هرگز نباید
+        // اندپوینت را خطا بدهد؛ لیست خالی، حالتِ محافظه‌کارانهٔ همان رکورد است
+        var keys = TryParseKeys(record.KeysJson);
+        return Ok(ApiResponse<UserShortcutsDto>.Success(new UserShortcutsDto(keys), "میانبرهای داشبورد"));
+    }
+
+    /// <summary>
+    /// ذخیرهٔ میانبرهای داشبورد کاربر جاری — Upsert ردیف یکتای UserId؛
+    /// ردیف نرم‌حذف‌شدهٔ قبلی (در صورت وجود) با IgnoreQueryFilters بازگردانده
+    /// می‌شود تا ایندکس یکتای فیلترشده هرگز درجِ دوم را قفل نکند.
+    /// </summary>
+    /// <param name="request">فهرست کلید صفحات به ترتیب چیدمان — خالی مجاز است</param>
+    [HttpPut("me/shortcuts")]
+    public async Task<IActionResult> SaveMyShortcuts([FromBody] SaveUserShortcutsRequest request)
+    {
+        var userId = ResolveCurrentUserId();
+        if (userId is null)
+            return Unauthorized(ApiResponse<object>.Failure("نشست نامعتبر است — دوباره وارد شوید"));
+
+        // ─── اعتبارسنجی دفاعی: کلیدها کوتاه، محدود و بی‌نویسهٔ مهار هستند تا
+        // ستون JSON (۴۰۰۰ نویسه) سرریز نشود و محتوای مخرب ذخیره نشود ───
+        var keys = (request.Keys ?? new List<string>())
+            .Where(k => !string.IsNullOrWhiteSpace(k))
+            .Select(k => k.Trim())
+            .Where(k => k.Length <= 64)
+            .Take(24)
+            .ToList();
+
+        var json = System.Text.Json.JsonSerializer.Serialize(keys);
+
+        // Upsert با دور زدن فیلتر نرم‌حذفی — ردیف مردهٔ قبلی همان‌جا زنده می‌شود
+        var existing = await _unitOfWork.Repository<UserShortcut>().QueryableTracking
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (existing is null)
+        {
+            await _unitOfWork.Repository<UserShortcut>().AddAsync(new UserShortcut
+            {
+                UserId = userId.Value,
+                KeysJson = json,
+                IsDeleted = false
+            });
+        }
+        else
+        {
+            existing.KeysJson = json;
+            // بازگرداندن ردیف نرم‌حذف‌شده (لایهٔ دوم دفاع در برابر قفل ایندکس یکتا)
+            existing.IsDeleted = false;
+            existing.DeletedAt = null;
+            existing.DeletedBy = null;
+        }
+
+        try
+        {
+            await _unitOfWork.SaveEntitiesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            // دو ایستگاه هم‌زمان برای کاربرِ تازه insert زدند → برندهٔ ایندکس
+            // یکتا ردیف ساخت؛ بازنده دوباره می‌خواند و به‌روزرسانی می‌کند
+            var winner = await _unitOfWork.Repository<UserShortcut>().QueryableTracking
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(s => s.UserId == userId);
+            if (winner is null) throw; // خطای دیگری بود — بالا بیاید
+
+            winner.KeysJson = json;
+            winner.IsDeleted = false;
+            winner.DeletedAt = null;
+            winner.DeletedBy = null;
+            await _unitOfWork.SaveEntitiesAsync();
+        }
+
+        return Ok(ApiResponse<object>.Success(new { keys.Count }, "میانبرهای داشبورد ذخیره شد"));
+    }
+
+    /// <summary>
+    /// شناسهٔ کاربر جاری از ادعای NameIdentifier توکن — تهی یعنی نشست نامعتبر
+    /// (همان الگوی GetCurrentUser؛ به‌صورت متد مشترک برای دو اندپوینت بالا).
+    /// </summary>
+    private long? ResolveCurrentUserId()
+    {
+        var idText = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return long.TryParse(idText, out var id) ? id : null;
+    }
+
+    /// <summary>
+    /// تجزیهٔ امن JSON کلیدها — هر خرابیِ محتوا به «لیست خالی» فرومی‌نشیند؛
+    /// فقط آرایهٔ رشته‌ای پذیرفته می‌شود و ردیف‌های غیررشته‌ای نادیده می‌مانند.
+    /// </summary>
+    private static List<string>? TryParseKeys(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return new List<string>();
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind != System.Text.Json.JsonValueKind.Array)
+                return new List<string>();
+            return doc.RootElement.EnumerateArray()
+                .Where(e => e.ValueKind == System.Text.Json.JsonValueKind.String)
+                .Select(e => e.GetString() ?? string.Empty)
+                .Where(s => s.Length > 0)
+                .ToList();
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return new List<string>();
+        }
+    }
+
     /// <summary>
     /// یافتن حساب کاربری متصل به یک پرسنل — چرخهٔ بیست‌ونهم (گزارش هجدهم مالک):
     /// کلید «مشخصات کاربری» در لیست پزشکان/پرسنل باید حسابِ متصل را برای ویرایش
@@ -422,4 +561,19 @@ public class UsersController : ApiBaseController
     /// <summary>درخواست ویرایش کاربر — FullName نام کامل (چرخه ۲۴)</summary>
     public record UpdateUserRequest(string? Email, string? Phone, string? FullName, long? EmployeeId,
         List<long>? RoleIds, bool MustChangePassword, bool TwoFactorEnabled, bool IsActive);
+
+    // ═══ چرخهٔ چهل‌ویکم — میانبرهای داشبورد در دیتابیس ═══
+
+    /// <summary>
+    /// درخواست ذخیرهٔ میانبرهای داشبورد — Keys همان کلیدهای PageCatalog دسکتاپ
+    /// به ترتیب چیدمان کاربر است (اولین عنصر = نخستین کاشی).
+    /// </summary>
+    public record SaveUserShortcutsRequest(List<string>? Keys);
+
+    /// <summary>
+    /// میانبرهای ذخیره‌شدهٔ کاربر جاری — تهی بودن Keys یعنی هنوز رکوردی
+    /// ثبت نشده (کلاینت باید سراغ کش محلی/پیش‌فرض‌ها برود)؛ لیست خالی یعنی
+    /// کاربر عمداً همهٔ میانبرها را برداشته و نباید پیش‌فرض بازگردد.
+    /// </summary>
+    public record UserShortcutsDto(List<string>? Keys);
 }
