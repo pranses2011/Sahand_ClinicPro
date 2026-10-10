@@ -540,18 +540,34 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
 
-                <!-- اطلاعات کاربر + خروج -->
+                <!-- ═══ اطلاعات کاربر + خروج — چرخهٔ ۳۸ (گزارش مالک): نام کامل
+                     (در صورت وجود، وگرنه نام کاربری) + تصویر کاربر ═══ -->
                 <StackPanel Grid.Row="2" Margin="16,8,16,16">
-                    <StackPanel Orientation="Horizontal" Margin="4,0,4,10">
-                        <materialDesign:PackIcon Kind="AccountCircle"
-                                                 Width="26" Height="26"
-                                                 Foreground="#DCE9FA"
-                                                 VerticalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" Margin="4,0,4,12">
+                        <!-- عکس کاربر — دایرهٔ سه‌لایه (همان الگوی لیست پزشکان/پرسنل چرخهٔ ۳۷):
+                             حلقهٔ زمینه + آدمک جای‌گزین + برش دایره‌ای عکس واقعی روی آن؛
+                             ImageBrush تهی هیچ نمی‌کشد پس بی‌عکس همان آدمک دیده می‌شود -->
+                        <Grid Width="38" Height="38" VerticalAlignment="Center">
+                            <Ellipse Fill="#33FFFFFF" />
+                            <materialDesign:PackIcon Kind="Account" Width="20" Height="20"
+                                                     Foreground="#DCE9FA"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center" />
+                            <Ellipse>
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="{Binding CurrentUserPhoto}"
+                                                Stretch="UniformToFill" />
+                                </Ellipse.Fill>
+                            </Ellipse>
+                        </Grid>
                         <TextBlock Text="{Binding CurrentUser}"
-                                   FontSize="12" FontWeight="SemiBold"
+                                   FontSize="12.5" FontWeight="SemiBold"
                                    Foreground="White"
-                                   Margin="8,0,0,0"
-                                   VerticalAlignment="Center" />
+                                   Margin="10,0,0,0"
+                                   VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxWidth="135"
+                                   ToolTip="{Binding CurrentUser}" />
                     </StackPanel>
                     <Button Command="{Binding LogoutCommand}"
                             Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -590,28 +606,96 @@
             <!-- ═══ TopBar — مسیر صفحه + ساعت شمسی لحظه‌ای + زنگ اعلان + تم + کاربر ═══
                  چرخه هجدهم (گزارش دوازدهم): نام TopBar ثبت شد تا تور آموزشی بتواند
                  این نوار را هایلایت کند — پیش‌تر نام‌گذاری نشده بود و گام «نوار بالا»
-                 تور به سوراخ مرکزی خالی می‌افتاد -->
+                 تور به سوراخ مرکزی خالی می‌افتاد.
+                 ═══ چرخهٔ سی‌وهشتم (گزارش مالک) ═══
+                 «در قسمت بالای صفحات، نام صفحه و بج ساعت و زمان را وسط‌چین بکن» —
+                 چیدمان از DockPanel به گرید سه‌ستونه تغییر کرد: DockPanel فضای میانهٔ
+                 باقی‌مانده را به محتوا می‌داد و با ناموزش عرض دو سمت، گروه میانه از
+                 مرکز واقعی می‌افتاد؛ اکنون ستون میانه «*» است و گروهِ نام صفحه +
+                 بج ساعت با HorizontalAlignment=Center دقیقاً وسط پنجره می‌نشیند.
+                 در RTL ستون‌ها آینه می‌شوند: ستون ۰ = راست بصری (کاربر)، ستون ۲ = چپ
+                 بصری (شعبه/تم/زنگ). نام کاربر هم حالا عکس دایره‌ای دارد (گزارش مالک:
+                 «تصویر هر کاربر هم نمایش داده شود» + «نام کامل در صورت وجود»). -->
             <Border x:Name="TopBar"
                     Grid.Row="0"
                     Padding="24,10,24,8"
                     BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                     BorderThickness="0,0,0,1">
-                <DockPanel>
-                    <!-- چپ: کاربر و آواتار -->
-                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="AccountCircle"
-                                                 Width="30" Height="30"
-                                                 VerticalAlignment="Center" />
-                        <StackPanel Margin="8,0,0,0" VerticalAlignment="Center">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <!-- ستون ۰ — در RTL سمت راست بصری: کاربر و آواتار -->
+                        <ColumnDefinition Width="Auto" />
+                        <!-- ستون ۱ — میانه: نام صفحه + بج ساعت (وسط‌چین واقعی) -->
+                        <ColumnDefinition Width="*" />
+                        <!-- ستون ۲ — در RTL سمت چپ بصری: شعبه + تم + زنگ -->
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- ═══ ستون ۰ (راست بصری): کاربر و آواتار و تاریخ ═══ -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- عکس کاربر — دایرهٔ سه‌لایه (الگوی چرخهٔ ۳۷/۳۸): زمینه +
+                             آدمک جای‌گزین + برش دایره‌ای عکس واقعی؛ بی‌عکس آدمک می‌ماند -->
+                        <Grid Width="34" Height="34" VerticalAlignment="Center">
+                            <Ellipse Fill="#E3F2FD" />
+                            <materialDesign:PackIcon Kind="Account" Width="19" Height="19"
+                                                     Foreground="#1565C0"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center" />
+                            <Ellipse>
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="{Binding CurrentUserPhoto}"
+                                                Stretch="UniformToFill" />
+                                </Ellipse.Fill>
+                            </Ellipse>
+                        </Grid>
+                        <StackPanel Margin="9,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding CurrentUser}"
-                                       FontWeight="SemiBold" FontSize="13" />
+                                       FontWeight="SemiBold" FontSize="13"
+                                       TextTrimming="CharacterEllipsis" MaxWidth="170"
+                                       ToolTip="{Binding CurrentUser}" />
                             <TextBlock Text="{Binding CurrentDate}"
                                        FontSize="10" Opacity="0.7" />
                         </StackPanel>
                     </StackPanel>
 
-                    <!-- راست: انتخابگر شعبه + زنگ اعلان با شمارنده + تم -->
-                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <!-- ═══ ستون ۱ (میانه): مسیر صفحه + نام صفحه + بج ساعت — وسط‌چین ═══ -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="Home"
+                                                 Width="16" Height="16"
+                                                 Opacity="0.6"
+                                                 VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Breadcrumb}"
+                                   FontSize="12" Opacity="0.75"
+                                   Margin="6,0,0,0"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding CurrentTitle}"
+                                   FontSize="18" FontWeight="Bold"
+                                   Margin="14,0,0,0"
+                                   VerticalAlignment="Center" />
+
+                        <!-- ساعت زنده شمسی -->
+                        <Border CornerRadius="10"
+                                Background="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                                Padding="10,3"
+                                Margin="16,0,0,0"
+                                VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ClockOutline"
+                                                         Width="14" Height="14"
+                                                         VerticalAlignment="Center"
+                                                         Margin="0,0,6,0" />
+                                <!-- چرخه هجدهم: فونت پیش‌فرض وزیرمتن برای ارقام فارسی ساعت -->
+                                <TextBlock Text="{Binding ClockText}"
+                                           FontSize="12"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- ═══ ستون ۲ (چپ بصری): انتخابگر شعبه + زنگ اعلان + تم ═══ -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right"
+                                VerticalAlignment="Center">
                         <!-- انتخابگر شعبه — فقط وقتی بیش از یک شعبه فعال است (گام U17) -->
                         <ComboBox ItemsSource="{Binding Branches}" SelectedItem="{Binding SelectedBranch}"
                                   DisplayMemberPath="Name" MinWidth="130" FontSize="12"
@@ -647,41 +731,7 @@
                             </Grid>
                         </Button>
                     </StackPanel>
-
-                    <!-- میانه: مسیر صفحه (Breadcrumb) + ساعت شمسی لحظه‌ای -->
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <materialDesign:PackIcon Kind="Home"
-                                                 Width="16" Height="16"
-                                                 Opacity="0.6"
-                                                 VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding Breadcrumb}"
-                                   FontSize="12" Opacity="0.75"
-                                   Margin="6,0,0,0"
-                                   VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding CurrentTitle}"
-                                   FontSize="18" FontWeight="Bold"
-                                   Margin="14,0,0,0"
-                                   VerticalAlignment="Center" />
-
-                        <!-- ساعت زنده شمسی -->
-                        <Border CornerRadius="10"
-                                Background="{DynamicResource MaterialDesign.Brush.Separator.Background}"
-                                Padding="10,3"
-                                Margin="16,0,0,0"
-                                VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ClockOutline"
-                                                         Width="14" Height="14"
-                                                         VerticalAlignment="Center"
-                                                         Margin="0,0,6,0" />
-                                <!-- چرخه هجدهم: فونت پیش‌فرض وزیرمتن برای ارقام فارسی ساعت -->
-                                <TextBlock Text="{Binding ClockText}"
-                                           FontSize="12"
-                                           VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </DockPanel>
+                </Grid>
             </Border>
 
             <!-- ═══ میزکار صفحات ═══

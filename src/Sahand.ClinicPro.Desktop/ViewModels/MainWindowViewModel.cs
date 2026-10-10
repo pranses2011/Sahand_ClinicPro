@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Windows.Media;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -60,9 +61,63 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private string _clockText = string.Empty;
 
-    /// <summary>نام کاربر واردشده</summary>
+    /// <summary>نام کاربر واردشده — نام کامل در صورت وجود وگرنه نام کاربری (چرخهٔ ۳۸)</summary>
     [ObservableProperty]
     private string _currentUser = string.Empty;
+
+    /// <summary>
+    /// تصویر کاربر واردشده (بندانگشتی پرسنل متصل) — تهی یعنی عکسی ثبت نشده؛
+    /// سایدبار و نوار بالا در نبودش آدمک جای‌گزین می‌کشند. چرخهٔ ۳۸ (گزارش
+    /// مالک: «تصویر هر کاربر هم نشون داده بشه») — همان کش/دانلودِ
+    /// PhotoTools لیست پزشکان/پرسنل (چرخهٔ ۳۷) این‌جا هم به کار می‌رود.
+    /// </summary>
+    [ObservableProperty]
+    private ImageSource? _currentUserPhoto;
+
+    /// <summary>
+    /// نقشهٔ کلید صفحه ← دسترسی لازم — چرخهٔ سی‌وهشتم (گزارش مالک: «فقط منوها
+    /// و فرم‌هایی که کاربر دسترسی دارد نمایش داده شود»). کلیدها همان
+    /// گیت‌های HasPermission خود کنترلرها هستند تا آنچه منو می‌بیند با آنچه
+    /// سرور اجرا می‌کند یکی باشد؛ صفحاتی که سرورشان آزاد است (لایسنس/آموزش)
+    /// اینجا هم آزادند.
+    /// </summary>
+    private static readonly Dictionary<string, string> PagePermissionMap = new(StringComparer.Ordinal)
+    {
+        ["dashboard"] = "dashboard.view",
+        ["patients"] = "patients.view",
+        ["appointments"] = "appointments.view",
+        ["receptions"] = "receptions.view",
+        ["visits"] = "visits.view",
+        ["doctor-visit"] = "visits.view",
+        ["emr-advanced"] = "emr.advanced",
+        ["prescriptions"] = "prescriptions.view",
+        ["erx"] = "prescriptions.view",          // نسخهٔ الکترونیک ← گیت GovernmentController
+        ["pharmacy"] = "pharmacy.view",
+        ["stocktaking"] = "pharmacy.stocktake",
+        ["lab"] = "lab.view",
+        ["paraclinical"] = "imaging.view",        // تصویربرداری/دندان/چشم/فیزیوتراپی
+        ["doctors"] = "doctors.view",
+        ["personnel"] = "patients.view",          // HrController پرسنل با همین گیت محافظت می‌شود
+        ["payroll"] = "payroll.manage",
+        ["attendance"] = "attendance.view",
+        ["billing"] = "invoices.view",           // مالی و صندوق ← فاکتور+پرداخت
+        ["accounting"] = "accounting.view",
+        ["insurance"] = "insurance.view",
+        ["sepas"] = "appointments.view",          // government/sepas با همین گیت
+        ["sms"] = "sms.view",
+        ["surveys"] = "surveys.view",
+        ["reports"] = "reports.view",
+        ["admin"] = "settings.view",
+        ["users"] = "users.view",
+        ["roles"] = "roles.view",
+        ["settings"] = "settings.view",
+        ["settings-full"] = "settings.view",
+        ["branches"] = "settings.view",          // BranchesController با settings گیت می‌شود
+        ["backup"] = "backup.view",
+        ["audit"] = "auditlogs.view",
+        ["complementary"] = "settings.view",     // قالب چاپ ← PrintTemplatesController
+        // «license» و «training» عمداً آزادند — سرور هم گیت خاصی برایشان نگذاشته
+    };
 
     /// <summary>تاریخ امروز شمسی</summary>
     [ObservableProperty]
@@ -177,7 +232,7 @@ public partial class MainWindowViewModel : ObservableObject
             }
         };
 
-        CurrentUser = tokens.Username ?? "کاربر";
+        CurrentUser = _tokens.DisplayName ?? _tokens.Username ?? "کاربر";
         // چرخه هجدهم (گزارش دوازدهم): تاریخ و ساعت نوار بالا با ارقام فارسی
         CurrentDate = PersianDateHelper.ToShamsiFa(DateTime.Now);
 
@@ -316,7 +371,17 @@ public partial class MainWindowViewModel : ObservableObject
             new() { Title = "🎓 مرکز آموزش", PageKey = "training", Icon = "School" }
         };
 
-        NavigateToPage("dashboard");
+        // ═══ چرخهٔ سی‌وهشتم (گزارش مالک — سطح دسترسی) ═══
+        // «فقط منوها و فرم‌هایی که کاربر دسترسی دارد نمایش داده شود»: منو
+        // پیش از نخستین ناوبری با دسترسی‌های ذخیره‌شدهٔ ورود پالایش می‌شود
+        // (ادمین بدون تغییر می‌ماند)؛ سپس اگر داشبورد مجاز نبود، اولین صفحهٔ
+        // مجاز جایگزین می‌شود تا کاربر هرگز روی «این ماژول فعال نشده» گیر نکند.
+        ApplyPermissionFilter();
+        NavigateToPage(HasPageAccess("dashboard") ? "dashboard" : FirstAllowedPageKey());
+
+        // پروفایل زندهٔ کاربر (نام کامل/تصویر/دسترسی‌های تازه از users/me)
+        // هم‌زمان با شعبه‌ها بار می‌شود — شکستش هرگز پوسته را نمی‌شکند
+        _ = LoadCurrentUserAsync();
 
         // بارگذاری شعبه‌ها برای انتخابگر TopBar — گام U17
         _ = LoadBranchesAsync();
@@ -410,6 +475,147 @@ public partial class MainWindowViewModel : ObservableObject
 
     /// <summary>فهرست آیتم‌های ناوبری</summary>
     public ObservableCollection<NavItem> NavItems { get; }
+
+    /// <summary>
+    /// آیا کاربر جاری به این صفحه دسترسی دارد؟ — ادمین همه‌چیز؛ صفحهٔ بدون
+    /// گیت آزاد؛ در غیر این صورت دسترسی اتمی متناظر در فهرست نقش‌های توکن
+    /// جست‌وجو می‌شود (چرخهٔ ۳۸).
+    /// </summary>
+    private bool HasPageAccess(string pageKey)
+    {
+        if (_tokens.IsAdmin) return true;
+        if (!PagePermissionMap.TryGetValue(pageKey, out var permission)) return true;
+        return _tokens.Permissions.Contains(permission, StringComparer.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// پالایش منو با سطح دسترسی — چرخهٔ ۳۸: آیتم‌های تکی بدون دسترسی حذف
+    /// می‌شوند؛ از فرزندان گروه‌ها فقط بی‌دسترسی‌ها کنده می‌شود و گروهِ خالی‌شده
+    /// کل حذف می‌شود. برای ادمین هیچ کاری انجام نمی‌شود (همه‌چیز مجاز است).
+    /// متد خودتوان (idempotent) است — فراخوانی دوباره پس از به‌روزشدن
+    /// دسترسی‌ها از users/me بی‌ضرر است چون آیتم حذف‌شده دیگر در فهرست نیست.
+    /// </summary>
+    private void ApplyPermissionFilter()
+    {
+        if (_tokens.IsAdmin) return;
+
+        var toRemove = new List<NavItem>();
+        foreach (var nav in NavItems)
+        {
+            if (nav.HasChildren)
+            {
+                var blockedChildren = nav.Children
+                    .Where(c => !HasPageAccess(c.PageKey))
+                    .ToList();
+                foreach (var child in blockedChildren)
+                    nav.Children.Remove(child);
+                if (nav.Children.Count == 0)
+                    toRemove.Add(nav); // گروهی که همهٔ فرزندانش بی‌دسترسی بودند
+            }
+            else if (!HasPageAccess(nav.PageKey))
+            {
+                toRemove.Add(nav);
+            }
+        }
+        foreach (var item in toRemove)
+            NavItems.Remove(item);
+    }
+
+    /// <summary>
+    /// نخستین کلید صفحهٔ مجاز برای ناوبری اولیه — وقتی داشبورد در دسترس
+    /// نیست (کاربر نیمه‌مجاز). مرکز آموزش همیشه آزاد است پس هرگز نتیجه‌ای
+    /// خالی نمی‌ماند؛ خروجی تهی هم برای اطمینان به داشبورد برمی‌گردد.
+    /// </summary>
+    private string FirstAllowedPageKey()
+    {
+        foreach (var nav in NavItems)
+        {
+            if (nav.HasChildren)
+            {
+                var child = nav.Children.FirstOrDefault(c => HasPageAccess(c.PageKey));
+                if (child is not null) return child.PageKey;
+            }
+            else if (HasPageAccess(nav.PageKey))
+            {
+                return nav.PageKey;
+            }
+        }
+        return "dashboard"; // فهرست خالی/بی‌دسترسی — همان رفتار پیشین
+    }
+
+    /// <summary>
+    /// بارگذاری پروفایل زندهٔ کاربر — چرخهٔ ۳۸ (گزارش مالک):
+    /// «اگر نام کامل وجود داشته باشد همان نوشته شود و در صورت نبودش نام
+    /// کاربری» + «تصویر هر کاربر هم نمایش داده شود».
+    /// از users/me: نام نمایشی و نقش/دسترسی‌های تازه (اگر مدیر نقش‌ها را
+    /// عوض کرده باشد بی‌درنگ منو هم‌قدم می‌شود) + عکس پرسنل متصل با همان
+    /// زیرساخت کش بندانگشتی چرخهٔ ۳۷. هر خطایی بی‌صرفه ادامه می‌یابد و
+    /// دادهٔ ذخیره‌شدهٔ لحظهٔ ورود می‌ماند.
+    /// </summary>
+    private async Task LoadCurrentUserAsync()
+    {
+        try
+        {
+            var response = await _api.GetAsync<CurrentUserResponse>("users/me");
+            var me = response?.Data;
+            if (me is not null)
+            {
+                // نام کامل در صورت وجود — وگرنه نام کاربری (قانون مالک)
+                CurrentUser = !string.IsNullOrWhiteSpace(me.DisplayName)
+                    ? me.DisplayName!.Trim()
+                    : (string.IsNullOrWhiteSpace(me.Username) ? CurrentUser : me.Username!);
+
+                // همگام‌سازی دسترسی‌های زندهٔ نشست + بازپالایش منو
+                _tokens.UpdateProfile(me.DisplayName, me.Roles, me.Permissions);
+                ApplyPermissionFilter();
+
+                // تصویر کاربر — بندانگشتی پرسنل متصل (کش مشترک با لیست‌ها)
+                if (me.EmployeeId is { } employeeId)
+                {
+                    var cacheKey = PhotoTools.EmployeeThumbnailKey(employeeId);
+                    if (PhotoTools.GetCachedThumbnail(cacheKey) is { } cached)
+                    {
+                        CurrentUserPhoto = cached;
+                        return;
+                    }
+                    var bytes = await PhotoTools.DownloadEmployeePhotoAsync(_api, employeeId);
+                    var thumb = PhotoTools.ToThumbnail(bytes, 72);
+                    if (thumb is not null)
+                    {
+                        PhotoTools.CacheThumbnail(cacheKey, thumb);
+                        CurrentUserPhoto = thumb;
+                    }
+                }
+            }
+            else
+            {
+                // پاسخ ناموفق — دادهٔ لحظهٔ ورود محلی (بهتر از هیچ)
+                CurrentUser = _tokens.DisplayName ?? _tokens.Username ?? CurrentUser;
+            }
+        }
+        catch
+        {
+            // قطعی گذرا — وضعیت موجود می‌ماند؛ پروفایل جانبی است
+        }
+    }
+
+    /// <summary>پاسخ اندپوینت users/me — پاکت استاندارد</summary>
+    private sealed class CurrentUserResponse
+    {
+        public bool IsSuccess { get; set; }
+        public CurrentUserDto? Data { get; set; }
+    }
+
+    /// <summary>داده‌های کاربر جاری — نام نمایشی/پرسنل متصل/نقش‌ها/دسترسی‌ها</summary>
+    private sealed class CurrentUserDto
+    {
+        public long Id { get; set; }
+        public string? Username { get; set; }
+        public string? DisplayName { get; set; }
+        public long? EmployeeId { get; set; }
+        public List<string>? Roles { get; set; }
+        public List<string>? Permissions { get; set; }
+    }
 
     /// <summary>انتخاب آیتم ناوبری → رفتن به صفحه (آیتم گروه فقط باز/بسته می‌شود)</summary>
     partial void OnSelectedNavChanged(NavItem? value)
