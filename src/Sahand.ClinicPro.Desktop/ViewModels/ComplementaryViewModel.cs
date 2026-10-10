@@ -141,18 +141,30 @@ public partial class ComplementaryViewModel : ViewModelBase
     // متوقف می‌شد (متد Concat با آرگومان تهی استثنا می‌دهد). درمان: تعریف
     // TemplateTypes به بالای همهٔ مصرف‌کننده‌های استاتیکش منتقل شد.
     // ⚠️ این ترتیب را جابه‌جا نکنید؛ گارد بسته‌بندی چرخه‌ها پایشش می‌کند.
+    /// <summary>
+    /// گزینهٔ «نوع سند» برای نمایش در انتخابگرها (کمبوی فیلتر طراح و کمبوی نوع قالب جدید).
+    /// ═══ چرخهٔ سی‌وهفتم (ریشهٔ «۹ گزینهٔ سفید بدون متن») ═══
+    /// پیش از این چرخه گزینه‌ها ValueTuple‌های (string key, string fa) بودند و
+    /// انتخابگرها با DisplayMemberPath="Item2" می‌خواستند نام فارسی را نشان
+    /// دهند — ولی Item1/Item2 در ValueTuple «فیلد عمومی»‌اند نه Property، و
+    /// مسیرِ پروپرتی WPF فقط به Property بایند می‌شود؛ نتیجه: متن تهی برای همهٔ
+    /// گزینه‌ها (۹ گزینهٔ سفید خالی!). درمان: این رکورد با Property واقعی
+    /// (Key/Fa) جای ValueTuple نشست و DisplayMemberPath به «Fa» تغییر کرد.
+    /// </summary>
+    public sealed record TemplateTypeOption(string Key, string Fa);
+
     /// <summary>گزینه‌های نوع سند — ۹ نوع سند قابل طراحی در طراح (تک‌منبع انواع سند)</summary>
-    public static (string key, string fa)[] TemplateTypes { get; } =
+    public static TemplateTypeOption[] TemplateTypes { get; } =
     {
-        ("Invoice", "فاکتور و قبض پرداخت"),
-        ("Prescription", "نسخه پزشکی"),
-        ("LabOrder", "درخواست آزمایش"),
-        ("LabResult", "نتیجه آزمایش"),
-        ("ImagingOrder", "درخواست تصویربرداری"),
-        ("AppointmentTicket", "نوبت‌نامه"),
-        ("ReceptionReceipt", "رسید پذیرش"),
-        ("MedicalCertificate", "گواهی پزشکی"),
-        ("PayrollSlip", "فیش حقوقی")
+        new("Invoice", "فاکتور و قبض پرداخت"),
+        new("Prescription", "نسخه پزشکی"),
+        new("LabOrder", "درخواست آزمایش"),
+        new("LabResult", "نتیجه آزمایش"),
+        new("ImagingOrder", "درخواست تصویربرداری"),
+        new("AppointmentTicket", "نوبت‌نامه"),
+        new("ReceptionReceipt", "رسید پذیرش"),
+        new("MedicalCertificate", "گواهی پزشکی"),
+        new("PayrollSlip", "فیش حقوقی")
     };
 
     // ═══ چرخهٔ سی‌وپنجم (گزارش مالک) — فیلتر موجودیت در طراح قالب ═══
@@ -170,8 +182,8 @@ public partial class ComplementaryViewModel : ViewModelBase
     private int _templateFilterIndex;
 
     /// <summary>گزینه‌های فیلتر موجودیت — «همه» + ۹ نوع سند؛ به ترتیبِ استاتیکِ TemplateTypes وابسته است (باید بالاتر تعریف بماند)</summary>
-    public static (string key, string fa)[] TemplateFilterOptions { get; } =
-        new[] { ("", "همه موجودیت‌ها") }.Concat(TemplateTypes).ToArray();
+    public static TemplateTypeOption[] TemplateFilterOptions { get; } =
+        new[] { new TemplateTypeOption("", "همه موجودیت‌ها") }.Concat(TemplateTypes).ToArray();
 
     /// <summary>بازسازی فهرست پالایه‌شده — پس از بارگذاری یا تغییر پالایه</summary>
     private void ApplyTemplateFilter()
@@ -179,7 +191,7 @@ public partial class ComplementaryViewModel : ViewModelBase
         // اندیسِ امن — اگر پالایه بیرون از بازه شد (مثلاً پس از حذف نوعی) به «همه» برمی‌گردد
         var idx = TemplateFilterIndex;
         if (idx < 0 || idx >= TemplateFilterOptions.Length) idx = 0;
-        var key = TemplateFilterOptions[idx].key;
+        var key = TemplateFilterOptions[idx].Key;
 
         VisibleTemplates.Clear();
         foreach (var t in PrintTemplates)
@@ -405,7 +417,8 @@ public partial class ComplementaryViewModel : ViewModelBase
     [RelayCommand]
     private void NewTemplate()
     {
-        var (key, fa) = TemplateTypes[Math.Max(0, Math.Min(NewTypeIndex, TemplateTypes.Length - 1))];
+        var typeOpt = TemplateTypes[Math.Max(0, Math.Min(NewTypeIndex, TemplateTypes.Length - 1))];
+        var (key, fa) = (typeOpt.Key, typeOpt.Fa);
         var row = new PrintTemplateRow
         {
             Id = 0,
@@ -426,7 +439,7 @@ public partial class ComplementaryViewModel : ViewModelBase
         // چرخهٔ سی‌وپنجم: اگر فیلتر فعلی با نوع قالب تازه یکی نیست، فیلتر به همان
         // موجودیت می‌رود تا قالب تازه بلافاصله در فهرست دیده شود (وگرنه پالایه
         // قالب تازه را پنهان می‌کرد و کاربر فکر می‌کرد ساخته نشده است)
-        var filterIdx = Array.FindIndex(TemplateFilterOptions, o => o.key == key);
+        var filterIdx = Array.FindIndex(TemplateFilterOptions, o => o.Key == key);
         if (TemplateFilterIndex != filterIdx && filterIdx >= 0)
             TemplateFilterIndex = filterIdx;
         else
