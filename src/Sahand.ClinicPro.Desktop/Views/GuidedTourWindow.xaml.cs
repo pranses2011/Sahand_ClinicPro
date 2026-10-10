@@ -2,6 +2,12 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+// چرخهٔ چهلم — رفع CS0246/CS0103: هندسه‌های ماسک (RectangleGeometry/GeometryGroup/
+// CombinedGeometry/GeometryCombineMode و MaskPath.Data) در System.Windows.Media
+// هستند؛ پیش‌تر MC3074 بیلد را پیش از رسیدن به این فایل قطع می‌کرد و نبود این
+// using هرگز دیده نشد (خطای ماسک‌شده). قانون هم‌کلاسی‌ها: بررسی شد — این تنها
+// فایلِ بدون Media در بین فایل‌های دارای هندسه بود.
+using System.Windows.Media;
 using System.Windows.Threading;
 using Sahand.ClinicPro.Desktop.Services;
 
@@ -197,7 +203,9 @@ public partial class GuidedTourWindow : UserControl
     private Rect TargetRect(FrameworkElement target, double pad)
     {
         // موقعیت گوشهٔ بالا-چپِ بصریِ هدف نسبت به ریشهٔ همین لایه (DIP منطقی)
-        var rel = target.TranslatePoint(new Point(0, 0), (IInputElement)this);
+        // چرخهٔ چهلم — رفع CS1503: پارامتر دوم TranslatePoint از نوع UIElement است
+        // نه IInputElement؛ cast اصلاح شد (UserControl خودش UIElement است).
+        var rel = target.TranslatePoint(new Point(0, 0), (UIElement)this);
         var size = target.RenderSize;
 
         return new Rect(rel.X - pad, rel.Y - pad,
