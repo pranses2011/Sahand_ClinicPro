@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -6,13 +6,29 @@ using Sahand.ClinicPro.Desktop.Services;
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
 /// <summary>
-/// ViewModel فرم ورود موجودی — بچ دارو با تاریخ انقضا
+/// ViewModel فرم ورود موجودی — بچ دارو/قلم با تاریخ انقضا
 /// </summary>
+/// <remarks>
+/// ═══ چرخهٔ چهل‌وسوم (گزارش مالک) ═══
+/// «چون اقلام مصرفی دیگه از داروخانه مستقل شده، در… ورود کالا نباید نوع
+/// قلم وجود داشته باشه. همچنین از داروخانه هم حذف شود چون فقط دارو در
+/// اونجا ثبت میشه» — کمبوی «نوع قلم» حذف و جستجوی قلم به بافت فراخواننده
+/// قفل شد: صفحهٔ لوازم مصرفی فقط قلم‌های مصرفی را جست‌وجو می‌کند و
+/// داروخانه فقط داروها (سمت سرور هم با ExpectedItemKind رد می‌شود).
+///
+/// «در ورود اقلام هم خطای غیر منتظره میده» — دو ریشهٔ مرتبط رفع شد:
+/// ۱) نتایج جستجو نام‌های خالی نشان می‌دادند (DTO مشترک نسخه‌نویسی فیلدهای
+///    nameFa/nameEn را از پاسخ lookups/medications انتظار داشت در حالی که
+///    سرور id/name/form/strength می‌فرستد — نام هیچ‌وقت بایند نمی‌شد!)؛
+///    اکنون DTO محلیِ هم‌شکل پاسخ سرور؛
+/// ۲) سمت سرور: گارد وجود/نوع قلم + اتصال ناوبری تراکنش (کامیت سرور این چرخه).
+/// </remarks>
 public partial class StockInFormViewModel : ObservableObject
 {
     private readonly IApiClient _api;
+    private readonly bool _isConsumableContext;
 
-    /// <summary>جستجوی دارو</summary>
+    /// <summary>جستجوی دارو/قلم</summary>
     [ObservableProperty]
     private string _medicationSearchTerm = string.Empty;
 
@@ -44,25 +60,6 @@ public partial class StockInFormViewModel : ObservableObject
     [ObservableProperty]
     private string? _expiryDateShamsi;
 
-    // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — فیلتر نوع قلم در جستجوی ورود کالا ═══
-    // ورود کالا برای دارو و لوازم مصرفی (سرنگ/سرم/گاز…) مشترک است؛ این فیلتر
-    // جستجو را به دستهٔ منتخب محدود می‌کند تا یافتن قلم در انبار بزرگ آسان شود.
-
-    /// <summary>نمایهٔ فیلتر نوع در جستجو — ۰ همه، ۱ دارو، ۲ لوازم مصرفی</summary>
-    [ObservableProperty]
-    private int _searchKindIndex;
-
-    /// <summary>گزینه‌های فیلتر نوع جستجو</summary>
-    public string[] SearchKindFilters { get; } =
-    {
-        "🗂️ همهٔ اقلام",
-        "💊 فقط داروها",
-        "🧰 فقط لوازم مصرفی"
-    };
-
-    /// <summary>تغییر فیلتر نوع → جستجوی مجدد با همان عبارت (اگر معتبر باشد)</summary>
-    partial void OnSearchKindIndexChanged(int value) => _ = SearchMedicationAsync();
-
     /// <summary>پیام خطا</summary>
     [ObservableProperty]
     private string _errorMessage = string.Empty;
@@ -77,35 +74,42 @@ public partial class StockInFormViewModel : ObservableObject
     /// <summary>رویداد ذخیره موفق</summary>
     public event EventHandler? SaveSucceeded;
 
-    /// <summary>سازنده با کلاینت API</summary>
+    /// <summary>عنوان فرم — بافت‌دار (مصرفی/دارو)</summary>
+    public string FormTitle => _isConsumableContext
+        ? "ورود کالای مصرفی (خرید)"
+        : "ورود دارو به انبار (خرید)";
+
+    /// <summary>راهنمای بافت‌دار زیر عنوان</summary>
+    public string FormHint => _isConsumableContext
+        ? "قلم مصرفی را جستجو کنید و بچ/تعداد/قیمت را ثبت کنید — موجودی فوراً در صفحهٔ لوازم مصرفی دیده می‌شود."
+        : "دارو را جستجو کنید و بچ/تعداد/قیمت را ثبت کنید — موجودی فوراً در تب «موجودی» داروخانه دیده می‌شود.";
+
+    /// <summary>
+    /// سازنده با کلاینت API و بافت فراخواننده
+    /// </summary>
     /// <param name="api">کلاینت HTTP برنامه</param>
-    /// <param name="defaultKindIndex">
-    /// نمایهٔ پیش‌فرض فیلتر نوع جستجو — ۰ همه، ۱ دارو، ۲ لوازم مصرفی
-    /// (چرخهٔ ۴۱: صفحهٔ مستقل مصرفی‌ها با ۲ باز می‌شود تا جستجو فقط بین مصرفی‌ها باشد)
+    /// <param name="isConsumableContext">
+    /// true = از صفحهٔ «لوازم مصرفی» (جستجو فقط بین مصرفی‌ها و ثبت در مسیر
+    /// مستقل consumables)؛ false = از داروخانه (فقط داروها و مسیر pharmacy)
     /// </param>
-    public StockInFormViewModel(IApiClient api, int defaultKindIndex = 0)
+    public StockInFormViewModel(IApiClient api, bool isConsumableContext = true)
     {
         _api = api;
-        // تخصیص از طریق پراپرتی (نه فیلد پشتیبان) تا اثر جانبی OnSearchKindIndexChanged
-        // هم در صورت وجود اجرا شود؛ جستجوی اولیه با عبارت خالی بی‌اثر و بی‌ضرر است
-        SearchKindIndex = defaultKindIndex;
+        _isConsumableContext = isConsumableContext;
     }
 
-    /// <summary>جستجوی دارو/قلم با فیلتر نوع — چرخهٔ ۳۹</summary>
+    /// <summary>
+    /// جستجوی دارو/قلم — چرخهٔ ۴۳: فیلتر نوع از بافت فرم می‌آید (۱ دارو،
+    /// ۲ مصرفی) و DTO محلی هم‌شکل پاسخ واقعی سرور (id/name/form/strength).
+    /// </summary>
     [RelayCommand]
     private async Task SearchMedicationAsync()
     {
         if (string.IsNullOrWhiteSpace(MedicationSearchTerm) || MedicationSearchTerm.Trim().Length < 2)
             return;
 
-        // چرخهٔ ۳۹ — پارامتر نوع قلم: ۱ دارو، ۲ لوازم مصرفی؛ نبود = همه
-        var kindParam = SearchKindIndex switch
-        {
-            1 => "&itemKind=1",
-            2 => "&itemKind=2",
-            _ => ""
-        };
-        var response = await _api.GetAsync<PrescriptionFormViewModel.MedicationsResponse>(
+        var kindParam = _isConsumableContext ? "&itemKind=2" : "&itemKind=1";
+        var response = await _api.GetAsync<MedicationsLookupResponse>(
             $"lookups/medications?search={Uri.EscapeDataString(MedicationSearchTerm.Trim())}&take=25{kindParam}");
 
         MedicationResults = response?.Data is not null
@@ -122,7 +126,7 @@ public partial class StockInFormViewModel : ObservableObject
 
         if (SelectedMedication is null)
         {
-            ErrorMessage = "انتخاب دارو الزامی است";
+            ErrorMessage = "ابتدا قلم را از جستجو انتخاب کنید";
             return;
         }
         if (Quantity <= 0)
@@ -153,13 +157,12 @@ public partial class StockInFormViewModel : ObservableObject
             supplierId = (long?)null
         };
 
-        // ═══ چرخهٔ ۴۱ — مسیر مستقل api/v1/consumables/inventory ═══
-        // پیش‌تر POST pharmacy/inventory بود و میدلور لایسنس، همان پیشوند را به
-        // ماژول «Pharmacy» گره زده بود → درمانگاه بدون لایسنس داروخانه حتی برای
-        // گاز استریل هم ۴۰۳ می‌گرفت؛ این مسیر همان فرمان را بدون گیت ماژولی اجرا
-        // می‌کند (گیت نقش Admin/Manager در خود کنترلر مصرفی است). برای کلینیک‌های
-        // دارویی هم رفتار یکسان است — همان Handler، همان تراکنش انبار.
-        var ok = await _api.PostAsync("consumables/inventory", body);
+        // ═══ چرخهٔ ۴۳ — مسیر بر اساس بافت فرم ═══
+        // مصرفی‌ها: مسیر مستقل api/v1/consumables/inventory (بدون گیت لایسنس
+        // داروخانه؛ نوع «مصرفی» سمت سرور قفل است) — داروخانه: مسیر
+        // pharmacy/inventory (نوع «دارو» قفل است). هر دو به همان فرمان می‌رسند.
+        var endpoint = _isConsumableContext ? "consumables/inventory" : "pharmacy/inventory";
+        var ok = await _api.PostAsync(endpoint, body);
         IsBusy = false;
 
         if (ok) SaveSucceeded?.Invoke(this, EventArgs.Empty);
@@ -169,4 +172,28 @@ public partial class StockInFormViewModel : ObservableObject
     /// <summary>انصراف</summary>
     [RelayCommand]
     private void Cancel() => CloseRequested?.Invoke(this, EventArgs.Empty);
+
+    // ═══ DTOهای سبک محلی — هم‌شکل پاسخ واقعی سرور (چرخهٔ ۴۳) ═══
+    // پیش‌تر از MedicationsResponse نسخه‌نویسی (nameFa/nameEn/…) استفاده می‌شد
+    // که پاسخ lookups/medications آن شکل را ندارد (سرور id/name/form/strength/
+    // isNarcotic/itemKind/kindText می‌فرستد) → نام‌ها هرگز بایند نمی‌شدند و
+    // نتایج جستجو «خالی» دیده می‌شدند.
+
+    /// <summary>پاسخ فهرست اقلام — پاکت استاندارد ApiResponse</summary>
+    public sealed class MedicationsLookupResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<MedicationLookupDto>? Data { get; set; }
+    }
+
+    /// <summary>ردیف قلم از GET lookups/medications — هم‌شکل MedicationOptionDto سرور</summary>
+    public sealed class MedicationLookupDto
+    {
+        public long Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Form { get; set; }
+        public string? Strength { get; set; }
+    }
 }
+// توجه: MedicationOption از قبل در سطح همین namespace تعریف شده
+// (PrescriptionFormViewModel.cs) و همین‌جا بازاستفاده می‌شود.

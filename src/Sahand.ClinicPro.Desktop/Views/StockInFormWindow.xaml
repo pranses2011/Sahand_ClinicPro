@@ -4,27 +4,25 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:behaviors="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
         xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
-        Title="ورود موجودی دارو"
-        Height="620" Width="520"
+        Title="ورود موجودی"
+        Height="640" Width="540"
         FlowDirection="RightToLeft"
         WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
     <!-- ═══════════════════════════════════════════════════════════
-         فرم ورود موجودی — گام V6
+         فرم ورود موجودی — گام V6؛ بازطراحی چرخهٔ ۴۳ (گزارش مالک):
+         «در… ورود کالا نباید نوع قلم وجود داشته باشه» — کمبوی نوع حذف شد؛
+         جستجو از بافت فرم (مصرفی/دارو) قفل است؛ عنوان و راهنما بافت‌دارند.
          ═══════════════════════════════════════════════════════════ -->
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="28">
-            <TextBlock Text="ورود موجودی جدید" Style="{StaticResource SectionTitle}" />
+            <TextBlock Text="{Binding FormTitle}" Style="{StaticResource SectionTitle}" />
+            <TextBlock Text="{Binding FormHint}" FontSize="11.5" Opacity="0.7"
+                       Margin="0,0,0,14" TextWrapping="Wrap" />
 
-            <!-- چرخهٔ ۳۹ — فیلتر نوع قلم: ورود کالا برای دارو و لوازم مصرفی مشترک است -->
-            <TextBlock Text="نوع قلم:" FontSize="11.5" Opacity="0.7" Margin="2,6,2,3" />
-            <ComboBox ItemsSource="{Binding SearchKindFilters}"
-                      SelectedIndex="{Binding SearchKindIndex}"
-                      FontSize="12.5" Margin="0,0,0,10" />
-
-            <!-- جستجوی دارو -->
+            <!-- جستجوی قلم -->
             <TextBox materialDesign:HintAssist.Hint="جستجوی قلم: نام ژنریک یا برند *"
                      Text="{Binding MedicationSearchTerm, UpdateSourceTrigger=PropertyChanged}"
                      Margin="0,0,0,8">
@@ -34,8 +32,9 @@
             </TextBox>
             <ListBox ItemsSource="{Binding MedicationResults}"
                      SelectedItem="{Binding SelectedMedication}"
-                     Height="110" Margin="0,0,0,12"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                     Height="120" Margin="0,0,0,12"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     materialDesign:HintAssist.Hint="نتایج جستجو">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel>
@@ -57,11 +56,11 @@
                      Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}"
                      Margin="0,0,0,12" />
             <UniformGrid Columns="2" Margin="0,0,0,12">
-                <!-- چرخه بیست‌ویکم: جداکنندهٔ زندهٔ ۳ رقمی هنگام تایپ (گزارش پانزدهم مالک) -->
+                <!-- جداکنندهٔ زندهٔ ۳ رقمی هنگام تایپ (چرخه بیست‌ویکم) -->
                 <TextBox behaviors:MoneyInput.IsEnabled="True" behaviors:MoneyInput.NumericValue="{Binding PurchasePrice, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}" Margin="0,0,6,0"><materialDesign:HintAssist.Hint><TextBlock><Run Text="قیمت خرید (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></materialDesign:HintAssist.Hint></TextBox>
                 <TextBox behaviors:MoneyInput.IsEnabled="True" behaviors:MoneyInput.NumericValue="{Binding SellPrice, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}" Margin="6,0,0,0"><materialDesign:HintAssist.Hint><TextBlock><Run Text="قیمت فروش (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></materialDesign:HintAssist.Hint></TextBox>
             </UniformGrid>
-            <!-- تاریخ انقضا — چرخه بیست‌وسوم: فیلد تاریخ از انتخابگر تاریخ شمسی -->
+            <!-- تاریخ انقضا — فیلد تاریخ از انتخابگر تاریخ شمسی (چرخه ۲۳) -->
             <controls:PersianDatePicker DateShamsiText="{Binding ExpiryDateShamsi, Mode=TwoWay}"
                                         Placeholder="تاریخ انقضا شمسی *"
                                         HorizontalAlignment="Left" MinWidth="180"

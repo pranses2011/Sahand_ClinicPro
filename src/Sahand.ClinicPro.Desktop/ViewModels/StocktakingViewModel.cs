@@ -297,6 +297,9 @@ public partial class StocktakingViewModel : ViewModelBase
     {
         public long Id { get; set; }
         public string? TakingNumber { get; set; }
+
+        // چرخهٔ ۴۳ — متن دامنهٔ جلسه («داروها»/«لوازم مصرفی»/«کل انبار»)
+        public string? ItemKindText { get; set; }
         public string DateShamsi { get; set; } = "";
         public string Status { get; set; } = "";
         public string StatusColor { get; set; } = "#757575";

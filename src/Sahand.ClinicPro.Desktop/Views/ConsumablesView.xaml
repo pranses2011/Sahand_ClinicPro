@@ -154,7 +154,7 @@
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="قلم مصرفی" Binding="{Binding Name, Converter={StaticResource PersianDigits}}"
                                             Width="*" MinWidth="170" FontWeight="SemiBold" />
-                        <DataGridTextColumn Header="بچ" Binding="{Binding BatchNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
+                        <DataGridTextColumn Header="تعداد بچ" Binding="{Binding BatchCount, Converter={StaticResource PersianDigits}}"
                                             Width="90" FontFamily="{DynamicResource App.CodeFont}" />
                         <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}"
                                             Width="80" FontFamily="{DynamicResource App.CodeFont}" />

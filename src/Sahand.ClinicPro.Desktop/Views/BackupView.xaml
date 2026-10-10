@@ -50,7 +50,7 @@
                             <ComboBox ItemsSource="{Binding BackupFormats}"
                                       SelectedIndex="{Binding BackupFormatIndex}"
                                       MinWidth="170"
-                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                     
                                       materialDesign:HintAssist.Hint="فرمت پشتیبان"
                                       ToolTip="بازیابی هر دو فرمت را خودکار تشخیص می‌دهد" />
                             <Button Command="{Binding RunBackupCommand}"
@@ -280,7 +280,7 @@
                                     <TextBlock Text="ارائه‌دهندهٔ مقصد ابری:" FontSize="11.5" Margin="2,4,2,4" />
                                     <ComboBox ItemsSource="{Binding CloudProviderOptions}"
                                               SelectedIndex="{Binding CloudProviderIndex}"
-                                              Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+                                              />
 
                                     <!-- فیلدهای S3 — فقط وقتی ارائه‌دهندهٔ S3 انتخاب شده -->
                                     <StackPanel Visibility="{Binding CloudProviderIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}" Margin="0,8,0,0">

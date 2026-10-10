@@ -515,7 +515,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             var rooms = await _api.GetAsync<RoomsLookupResponse>("lookups/rooms");
             foreach (var room in rooms?.Data ?? new List<RoomLookupDto>())
                 Rooms.Add(new RoomOption(room.Id,
-                    !string.IsNullOrWhiteSpace(room.RoomName) ? room.RoomName : $"اتاق {room.RoomNumber}"));
+                    !string.IsNullOrWhiteSpace(room.DisplayName) ? room.DisplayName : "اتاق"));
         }
 
         // ═══ چرخهٔ ۳۹/۴۱ — اقلام مصرفیِ دارای موجودی؛ فقط یک بار لازم است ═══
@@ -640,12 +640,18 @@ public partial class ReceptionsViewModel : ViewModelBase
         public List<RoomLookupDto>? Data { get; set; }
     }
 
-    /// <summary>ردیف اتاق فعال</summary>
+    /// <summary>
+    /// ردیف اتاق فعال — چرخهٔ ۴۳ (گزارش مالک: «در پذیرش اسم اتاق‌ها رو درست
+    /// نمیاره و همشون رو اتاق مینویسه»): سرور فیلد «displayName» می‌فرستد (نام
+    /// اتاق یا «اتاق + شماره»)؛ پیش‌تر DTO کلاینت RoomName/RoomNumber می‌خواند که
+    /// در پاسخ سرور وجود ندارد → هر دو تهی می‌ماند و متن پس‌قرینهٔ «اتاق » بدون
+    /// شماره نمایش داده می‌شد. DoctorsViewModel از همان ابتدا درست بود و
+    /// DisplayName را می‌خواند (قانون هم‌کلاسی‌ها: اینجا هم همان قرارداد).
+    /// </summary>
     private sealed class RoomLookupDto
     {
         public long Id { get; set; }
-        public string? RoomNumber { get; set; }
-        public string? RoomName { get; set; }
+        public string? DisplayName { get; set; }
     }
 
     /// <summary>پاسخ فهرست اقلام مصرفی — چرخهٔ ۳۹</summary>

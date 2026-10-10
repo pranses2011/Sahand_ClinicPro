@@ -21,11 +21,13 @@
                                      VerticalAlignment="Center" />
             <TextBlock Text="داروخانه و انبار" FontSize="20" FontWeight="Bold"
                        Margin="10,0,0,0" VerticalAlignment="Center" />
-            <!-- چرخهٔ ۳۹ — افزودن قلم جدید (دارو/لوازم مصرفی)؛ تاکنون ساخت قلم
-                 از خود برنامه ممکن نبود و کاتالوگ فقط از بذر اولیه می‌آمد -->
+            <!-- چرخهٔ ۳۹ — افزودن قلم جدید؛ تاکنون ساخت قلم از خود برنامه ممکن
+                 نبود و کاتالوگ فقط از بذر اولیه می‌آمد. چرخهٔ ۴۳: این دکمه از این
+                 پس فقط «دارو» می‌سازد (بافت داروخانه) — لوازم مصرفی صفحهٔ مستقل
+                 خودشان را دارند -->
             <Button Command="{Binding AddItemCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
                     Margin="16,0,0,0" VerticalAlignment="Center" MinHeight="38" MinWidth="125"
-                    ToolTip="ساخت قلم جدید انبار — دارو یا لوازم مصرفی (سرنگ/سرم/گاز…)">
+                    ToolTip="ساخت داروی جدید برای انبار داروخانه">
                 <StackPanel Orientation="Horizontal">
                     <materialDesign:PackIcon Kind="PlusBox" Width="15" Height="15" VerticalAlignment="Center" />
                     <TextBlock Text="افزودن قلم" Margin="7,0,0,0" VerticalAlignment="Center" />
@@ -114,13 +116,14 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <!-- چرخهٔ ۳۹ — فیلتر نوع قلم: همه/دارو/لوازم مصرفی + سوییچ کمبود -->
+                    <!-- ═══ چرخهٔ ۴۳ (گزارش مالک: «از داروخانه هم حذف شود چون فقط
+                         دارو در اونجا ثبت میشه») — فیلتر نوع قلم حذف شد: این تب
+                         فقط داروها را نشان می‌دهد؛ لوازم مصرفی صفحهٔ مستقل خودشان
+                         را دارند. سوییچ کمبود باقی است. ═══ -->
                     <DockPanel Grid.Row="0" Margin="2,0,2,8">
-                        <ComboBox DockPanel.Dock="Left"
-                                  ItemsSource="{Binding InventoryKindFilters}"
-                                  SelectedIndex="{Binding InventoryKindIndex}"
-                                  FontSize="12.5" MinWidth="190" HorizontalAlignment="Left"
-                                  ToolTip="فیلتر نوع قلم انبار — داروها و لوازم مصرفی جداگانه" />
+                        <TextBlock Text="💊 انبار داروها — فهرست در سطح قلم"
+                                   FontSize="12.5" Opacity="0.75" VerticalAlignment="Center"
+                                   DockPanel.Dock="Left" />
                         <CheckBox DockPanel.Dock="Right" Content="فقط کالاهای کمبود"
                                   IsChecked="{Binding LowStockOnly}"
                                   FontSize="12.5" VerticalAlignment="Center"
@@ -133,9 +136,10 @@
                               HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="قلم" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
-                            <!-- چرخهٔ ۳۹ — نوع قلم: دارو یا لوازم مصرفی -->
-                            <DataGridTextColumn Header="نوع" Binding="{Binding KindText, Converter={StaticResource PersianDigits}}" Width="105" />
-                            <DataGridTextColumn Header="بچ/سری" Binding="{Binding Form, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="130" />
+                            <!-- چرخهٔ ۴۳ — ستون نوع حذف شد (فقط دارو) و ستون شمار بچ جای آن نشست -->
+                            <DataGridTextColumn Header="تعداد بچ" Binding="{Binding BatchCount, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="{DynamicResource App.CodeFont}" />
+                            <!-- چرخهٔ ۴۳ — ستون بچ حذف شد (ردیف‌ها قلم‌اند)؛ موجودی = جمع بچ‌ها -->
+                            <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="100" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTemplateColumn Header="وضعیت موجودی" Width="130" SortMemberPath="IsLowStock">
                                 <DataGridTemplateColumn.CellTemplate>

@@ -199,25 +199,25 @@
                               ItemsSource="{Binding PrinterNames}"
                               IsEditable="True" StaysOpenOnEdit="True"
                               Text="{Binding DefaultPrinter, UpdateSourceTrigger=PropertyChanged}"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,10" />
+                              Margin="0,0,0,10" />
                     <ComboBox materialDesign:HintAssist.Hint="چاپگر فاکتور"
                               ItemsSource="{Binding PrinterNames}"
                               IsEditable="True" StaysOpenOnEdit="True"
                               Text="{Binding InvoicePrinter, UpdateSourceTrigger=PropertyChanged}"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,10" />
+                              Margin="0,0,0,10" />
                     <ComboBox materialDesign:HintAssist.Hint="چاپگر نسخه"
                               ItemsSource="{Binding PrinterNames}"
                               IsEditable="True" StaysOpenOnEdit="True"
                               Text="{Binding PrescriptionPrinter, UpdateSourceTrigger=PropertyChanged}"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,10" />
+                              Margin="0,0,0,10" />
                     <ComboBox materialDesign:HintAssist.Hint="چاپگر نوبت‌دهی — قبض‌های نوبت با این چاپ می‌شوند"
                               ItemsSource="{Binding PrinterNames}"
                               IsEditable="True" StaysOpenOnEdit="True"
                               Text="{Binding TicketPrinter, UpdateSourceTrigger=PropertyChanged}"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,10" />
+                              Margin="0,0,0,10" />
                     <ComboBox materialDesign:HintAssist.Hint="سایز کاغذ فاکتور"
                               ItemsSource="{Binding PaperSizes}" SelectedItem="{Binding InvoicePaperSize}"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,12" />
+                              Margin="0,0,0,12" />
                     <CheckBox Content="نمایش پیش‌نمایش قبل از چاپ" IsChecked="{Binding ShowPreview}" Margin="2,3" />
                     <CheckBox Content="چاپ خودکار بعد از ثبت فاکتور" IsChecked="{Binding AutoPrintInvoice}" Margin="2,3" />
                     <!-- چرخه ۲۴: چاپ خودکار قبض نوبت پس از ثبت موفق — با چاپگر نوبت‌دهی بالا -->
@@ -309,7 +309,7 @@
                     </StackPanel>
                     <ComboBox materialDesign:HintAssist.Hint="فونت برنامه — وزیرمتن داخلی + فونت‌های نصب‌شدهٔ ویندوز"
                               ItemsSource="{Binding FontOptions}" SelectedItem="{Binding SelectedFont}"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,10" />
+                              Margin="0,10" />
                     <StackPanel Orientation="Horizontal" Margin="2,8">
                         <TextBlock Text="سایز فونت پایه: " VerticalAlignment="Center" FontSize="12.5" />
                         <Slider Minimum="11" Maximum="18" Value="{Binding BaseFontSize}" Width="220"
@@ -332,7 +332,7 @@
                         <TextBlock Text="رنگ منوی کناری: " VerticalAlignment="Center" FontSize="12.5" />
                         <ComboBox ItemsSource="{Binding SidebarColorOptions}"
                                   SelectedIndex="{Binding SidebarColorIndex}" MinWidth="150"
-                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="6,0,0,0" />
+                                  Margin="6,0,0,0" />
                         <!-- نمونهٔ رنگ مؤثر — شامل رنگ دلخواه انتخاب‌شده -->
                         <Border Width="20" Height="20" CornerRadius="5" Margin="8,0,0,0"
                                 VerticalAlignment="Center" BorderBrush="#33000000" BorderThickness="1"
@@ -349,7 +349,7 @@
                         <TextBlock Text="چگالی عناصر: " VerticalAlignment="Center" FontSize="12.5" />
                         <ComboBox ItemsSource="{Binding DensityOptions}"
                                   SelectedIndex="{Binding DensityIndex}" MinWidth="150"
-                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="6,0,0,0" />
+                                  Margin="6,0,0,0" />
                     </StackPanel>
 
                     <!-- گوشهٔ کارت‌ها — فعال‌سازی مستقل با چک‌باکس + اسلایدر -->
@@ -368,7 +368,7 @@
                         <TextBlock Text="رنگ اصلی دکمه‌ها/هایلایت‌ها: " VerticalAlignment="Center" FontSize="12.5" />
                         <ComboBox ItemsSource="{Binding CustomPrimaryOptions}"
                                   SelectedIndex="{Binding CustomPrimaryIndex}" MinWidth="150"
-                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="6,0,0,0" />
+                                  Margin="6,0,0,0" />
                         <!-- چرخهٔ ۲۹: نمونهٔ رنگ زندهٔ مؤثر + انتخاب‌گر حرفه‌ای -->
                         <Border Width="20" Height="20" CornerRadius="5" Margin="8,0,0,0"
                                 VerticalAlignment="Center" BorderBrush="#33000000" BorderThickness="1"
@@ -382,14 +382,14 @@
                     <StackPanel Orientation="Horizontal" Margin="2,8">
                         <TextBlock Text="آیکون‌های منوی کناری: " VerticalAlignment="Center" FontSize="12.5" />
                         <ComboBox SelectedIndex="{Binding IconColorModeIndex}" MinWidth="150"
-                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="6,0,0,0">
+                                  Margin="6,0,0,0">
                             <ComboBoxItem Content="یکدست (هم‌رنگ منو)" />
                             <ComboBoxItem Content="🎨 رنگی و شاداب" />
                         </ComboBox>
                         <!-- ═══ چرخهٔ بیست‌وهفتم — مجموعهٔ آیکون‌ها (تعویض یکجای شکل، نه فقط رنگ) ═══ -->
                         <TextBlock Text="مجموعهٔ آیکون‌ها: " VerticalAlignment="Center" FontSize="12.5" Margin="18,0,0,0" />
                         <ComboBox SelectedIndex="{Binding IconSetIndex}" MinWidth="150"
-                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="6,0,0,0">
+                                  Margin="6,0,0,0">
                             <ComboBoxItem Content="کلاسیک (پرپشت)" />
                             <ComboBoxItem Content="خط‌نازک مدرن" />
                             <ComboBoxItem Content="مینیمال ساده" />
@@ -417,7 +417,7 @@
                                           SelectedItem="{Binding SelectedThemePreset}"
                                           materialDesign:HintAssist.Hint="پریست‌های ذخیره‌شده"
                                           MinWidth="200" VerticalAlignment="Center"
-                                          Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+                                          />
                                 <Button Command="{Binding ApplyThemePresetCommand}"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
                                         Content="▶️ اعمال" Padding="12,6" Margin="8,0,0,0" VerticalAlignment="Center" />
@@ -435,7 +435,7 @@
                         <TextBlock Text="واحد پول نمایشی: " VerticalAlignment="Center" FontSize="12.5" />
                         <ComboBox ItemsSource="{Binding CurrencyUnitOptions}"
                                   SelectedIndex="{Binding CurrencyUnitIndex}" MinWidth="130"
-                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="4,0,0,0" />
+                                  Margin="4,0,0,0" />
                     </StackPanel>
                     <CheckBox Content="انیمیشن‌ها فعال" IsChecked="{Binding AnimationsEnabled}" Margin="2,10" />
                     <StackPanel Orientation="Horizontal" Margin="2,8">

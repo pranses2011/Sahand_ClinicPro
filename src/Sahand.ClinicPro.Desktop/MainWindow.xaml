@@ -820,11 +820,15 @@
              در انتهای چپ. کل کپسول کلیک‌پذیر است (بستن) و هر توست خودکار پس از
              چند ثانیه محو می‌شود (زمان‌سنج در ViewModel). جایگزین Snackbar
              متریال شد که ظاهر و رفتارش با نمونه فرق داشت. -->
+        <!-- ═══ چرخهٔ ۴۳ (گزارش مالک): «پیام‌های توست کم بالا میان و کمی از
+             کادر زیر استاتوس بار میمونه و خوب دیده نمیشه» — حاشیهٔ پایین از ۳۶
+             به ۶۴ پیکسل افزایش یافت تا کپسول کاملاً بالای StatusBar (ارتفاع
+             ~۲۸px + فاصلهٔ تنفس) بنشیند و هیچ بخشی زیر نوار پنهان نماند. ═══ -->
         <ItemsControl ItemsSource="{Binding Toasts}"
                       Grid.Column="1"
                       VerticalAlignment="Bottom"
                       HorizontalAlignment="Center"
-                      Margin="0,0,0,36"
+                      Margin="0,0,0,64"
                       Panel.ZIndex="60"
                       IsHitTestVisible="True"
                       Focusable="False">
@@ -845,12 +849,20 @@
                             ToolTip="بستن پیام">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
+                                <!-- ═══ چرخهٔ ۴۳ (گزارش مالک) ═══
+                                     «گوشه هاش کاملاً گرد نباشه بلکه مستطیل با گوشه های
+                                     زیاد گرد باشه» — شعاع گوشه از ۲۶ (قرص کامل) به ۱۲
+                                     تغییر کرد؛ «در حاشیه سمت راستش نوار عمودی همرنگ نوعش
+                                     هم باشه» — نوار عمودی ۵ پیکسری همرنگ نوع در لبهٔ
+                                     فیزیکی راست (ستون نخست گرید در RTL) اضافه شد؛ قرصِ
+                                     عمودیِ تورفته (Margin عمودی ۱۱) از گوشه‌های گرد کارت
+                                     امن است و در هر دو تم خوانا. -->
                                 <Border x:Name="ToastCard"
-                                        CornerRadius="26"
+                                        CornerRadius="12"
                                         Background="{DynamicResource MaterialDesign.Brush.Background}"
                                         BorderBrush="#E0E0E0"
                                         BorderThickness="1"
-                                        Padding="18,0,20,0"
+                                        Padding="0"
                                         MinHeight="52"
                                         MaxWidth="470"
                                         SnapsToDevicePixels="True"
@@ -865,63 +877,82 @@
                                         <TranslateTransform x:Name="ToastShift" Y="14" />
                                     </Border.RenderTransform>
 
-                                    <!-- محتوا: [آیکون رنگی][متن][ضربدر بستن] — در RTL آیکون سمت راست -->
+                                    <!-- محتوا: [نوار رنگی][آیکون رنگی][متن][ضربدر بستن]
+                                         — در RTL ستون نخست = لبهٔ فیزیکی راست -->
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
 
-                                        <!-- دایرهٔ آیکون — رنگ/نویسه با تریگر نوع تعیین می‌شود -->
-                                        <Border x:Name="IconCircle" Grid.Column="0"
-                                                Width="34" Height="34" CornerRadius="17"
-                                                VerticalAlignment="Center"
-                                                Background="#059669">
-                                            <materialDesign:PackIcon x:Name="IconGlyph"
-                                                                     Kind="Check"
-                                                                     Width="17" Height="17"
-                                                                     Foreground="White"
-                                                                     HorizontalAlignment="Center"
-                                                                     VerticalAlignment="Center" />
-                                        </Border>
+                                        <!-- نوار عمودی همرنگ نوع — لبهٔ راست کپسول -->
+                                        <Border x:Name="AccentStrip" Grid.Column="0"
+                                                Width="5" CornerRadius="3"
+                                                Margin="0,11,0,11"
+                                                Background="#059669" />
 
-                                        <!-- متن پیام — تیره، نیمه‌درشت، راست‌چین (RTL طبیعی) -->
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding Text}"
-                                                   FontSize="13.5" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-                                                   TextWrapping="Wrap"
-                                                   VerticalAlignment="Center"
-                                                   Margin="12,8,14,8"
-                                                   MaxWidth="360" />
+                                        <!-- ستون محتوا: آیکون + متن + ضربدر -->
+                                        <Grid Grid.Column="1" Margin="17,0,19,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
 
-                                        <!-- ضربدرِ بستن — کم‌رنگ؛ با هاور پررنگ -->
-                                        <materialDesign:PackIcon x:Name="ToastClose" Grid.Column="2"
-                                                                 Kind="Close" Width="13" Height="13"
-                                                                 Foreground="#9AA5B1"
-                                                                 VerticalAlignment="Center"
-                                                                 HorizontalAlignment="Center" />
+                                            <!-- دایرهٔ آیکون — رنگ/نویسه با تریگر نوع تعیین می‌شود -->
+                                            <Border x:Name="IconCircle" Grid.Column="0"
+                                                    Width="34" Height="34" CornerRadius="17"
+                                                    VerticalAlignment="Center"
+                                                    Background="#059669">
+                                                <materialDesign:PackIcon x:Name="IconGlyph"
+                                                                         Kind="Check"
+                                                                         Width="17" Height="17"
+                                                                         Foreground="White"
+                                                                         HorizontalAlignment="Center"
+                                                                         VerticalAlignment="Center" />
+                                            </Border>
+
+                                            <!-- متن پیام — تیره، نیمه‌درشت، راست‌چین (RTL طبیعی) -->
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding Text}"
+                                                       FontSize="13.5" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                                       TextWrapping="Wrap"
+                                                       VerticalAlignment="Center"
+                                                       Margin="12,8,14,8"
+                                                       MaxWidth="360" />
+
+                                            <!-- ضربدرِ بستن — کم‌رنگ؛ با هاور پررنگ -->
+                                            <materialDesign:PackIcon x:Name="ToastClose" Grid.Column="2"
+                                                                     Kind="Close" Width="13" Height="13"
+                                                                     Foreground="#9AA5B1"
+                                                                     VerticalAlignment="Center"
+                                                                     HorizontalAlignment="Center" />
+                                        </Grid>
                                     </Grid>
                                 </Border>
 
                                 <ControlTemplate.Triggers>
-                                    <!-- ═══ رنگ‌بندی بر طبق نوع — چرخهٔ ۳۸ ═══ -->
+                                    <!-- ═══ رنگ‌بندی بر طبق نوع — چرخهٔ ۳۸؛ نوار راست چرخهٔ ۴۳ ═══ -->
                                     <DataTrigger Binding="{Binding Kind}" Value="Success">
                                         <Setter TargetName="IconCircle" Property="Background" Value="#059669" />
                                         <Setter TargetName="IconGlyph" Property="Kind" Value="Check" />
+                                        <Setter TargetName="AccentStrip" Property="Background" Value="#059669" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding Kind}" Value="Error">
                                         <Setter TargetName="IconCircle" Property="Background" Value="#DC2626" />
                                         <Setter TargetName="IconGlyph" Property="Kind" Value="Close" />
+                                        <Setter TargetName="AccentStrip" Property="Background" Value="#DC2626" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding Kind}" Value="Warning">
                                         <Setter TargetName="IconCircle" Property="Background" Value="#D97706" />
                                         <Setter TargetName="IconGlyph" Property="Kind" Value="Alert" />
+                                        <Setter TargetName="AccentStrip" Property="Background" Value="#D97706" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding Kind}" Value="Info">
                                         <Setter TargetName="IconCircle" Property="Background" Value="#2563EB" />
                                         <Setter TargetName="IconGlyph" Property="Kind" Value="InformationOutline" />
+                                        <Setter TargetName="AccentStrip" Property="Background" Value="#2563EB" />
                                     </DataTrigger>
 
                                     <!-- هاور: پررنگ‌شدن ضربدر و کمی بالا آمدن کپسول -->

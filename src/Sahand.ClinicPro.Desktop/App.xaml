@@ -4,6 +4,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:local="clr-namespace:Sahand.ClinicPro.Desktop"
              xmlns:converters="clr-namespace:Sahand.ClinicPro.Desktop.Converters"
+             xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
              xmlns:system="clr-namespace:System;assembly=mscorlib"
              ShutdownMode="OnMainWindowClose">
     <!-- ═══════════════════════════════════════════════════════════
@@ -112,6 +113,37 @@
                      فوکوس یا پر شدن به بالای کادر شناور می‌شود (رفتار Material
                      استاندارد). انتخابگر تاریخ/ساعت برنامه هم داخلش TextBox با Hint
                      دارد و همین‌طور شناور می‌شود. -->
+                <Setter Property="materialDesign:HintAssist.IsFloating" Value="True" />
+            </Style>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 سبک‌های ضمنی سراسری فیلدها — چرخهٔ چهل‌وسوم (گزارش مالک):
+                 «یا همشون رو مانند کادر کد ملی بکن که هنگام پر شدن عنوانش
+                 بره بالاش و نشون بده و یا برای همشون عنوان بزار» + «تمامی
+                 فیلدهایی که بصورت کمبوباس هستند… قابلیت تایپ کردن هم بهشون
+                 اضافه بکن». کادر کد ملی از استایل MaterialDesignOutlinedTextBox
+                 ساخته شده که عنوان شناور (FloatingHint) دارد؛ پیش‌تر «همهٔ»
+                 فیلدهای بدون استایلِ صریح با استایل filled پیش‌فرض ساخته
+                 می‌شدند که Hint فقط placeholder داخلی است و با پر شدن برای
+                 همیشه ناپدید می‌شد. اکنون استایل ضمنی «خط‌دار» برای هر سهٔ
+                 TextBox/ComboBox/PasswordBox تثبیت می‌شود: عنوانِ هر فیلد
+                 هنگام فوکوس/پر شدن به بالای کادر می‌رود — همان ظاهری که مالک
+                 به‌عنوان نمونهٔ درست (کد ملی) نشان داده بود.
+                 کمبوباکس‌ها هم‌زمان «جستجوی تایپی» می‌گیرند (پالایش زندهٔ
+                 «شامل‌بودن» با نرمال‌سازی فارسی — رفتار Controls.ComboBoxSearch).
+                 فیلدهای دارای استایل صریح دست‌نخورده می‌مانند.
+                 ═══════════════════════════════════════════════════════════ -->
+            <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+                <!-- ارث‌بری عنوان شناور از استایل پنجره (چرخهٔ ۳۲) حفظ می‌شود -->
+                <Setter Property="materialDesign:HintAssist.IsFloating" Value="True" />
+            </Style>
+            <Style TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}">
+                <Setter Property="materialDesign:HintAssist.IsFloating" Value="True" />
+                <!-- جستجوی تایپی برای همهٔ کمبوباکس‌ها؛ خروج صریح با
+                     controls:ComboBoxSearch.IsEnabled="False" -->
+                <Setter Property="controls:ComboBoxSearch.IsEnabled" Value="True" />
+            </Style>
+            <Style TargetType="PasswordBox" BasedOn="{StaticResource MaterialDesignOutlinedPasswordBox}">
                 <Setter Property="materialDesign:HintAssist.IsFloating" Value="True" />
             </Style>
 

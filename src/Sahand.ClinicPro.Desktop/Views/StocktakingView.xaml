@@ -25,13 +25,20 @@
             <StackPanel Orientation="Horizontal">
                 <materialDesign:PackIcon Kind="ClipboardCheckOutline" Width="26" Height="26"
                                          Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
-                <TextBlock Text="انبارگردانی داروخانه" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
-                <TextBlock Text="شمارش ادواری موجودی + اعمال مغایرت با تراکنش اصلاح" FontSize="11.5" Opacity="0.6"
+                <TextBlock Text="انبارگردانی انبار" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+                <TextBlock Text="شمارش ادواری داروها و لوازم مصرفی + اعمال مغایرت با تراکنش اصلاح" FontSize="11.5" Opacity="0.6"
                            Margin="14,4,0,0" VerticalAlignment="Center" />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <!-- ═══ چرخهٔ ۴۳ (گزارش مالک: «برای اقلام مصرفی هم انبارگردانی بزار») ═══
+                     دامنهٔ جلسهٔ جدید: کل انبار / فقط داروها / فقط لوازم مصرفی؛
+                     جلساتِ هم‌دامنه هم‌زمان فقط یکی باز می‌مانند (دو جلسهٔ با
+                     دامنهٔ متفاوت هم‌زمان ممکن است). -->
+                <ComboBox ItemsSource="{Binding NewSessionScopes}"
+                          SelectedIndex="{Binding NewSessionScopeIndex}"
+                          Width="175" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"
+                          ToolTip="دامنهٔ جلسهٔ جدید — اقلامی که شمرده می‌شوند" />
                 <TextBox Text="{Binding NewSessionNotes, UpdateSourceTrigger=PropertyChanged}" Width="240" FontSize="12"
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
                          materialDesign:HintAssist.Hint="یادداشت جلسه جدید (اختیاری)" VerticalAlignment="Center" />
                 <Button Command="{Binding StartSessionCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="8,0,0,0">
                     <StackPanel Orientation="Horizontal">
@@ -120,7 +127,13 @@
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding Number}" FontSize="12.5" FontWeight="SemiBold" FontFamily="{DynamicResource App.CodeFont}" />
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Number}" FontSize="12.5" FontWeight="SemiBold" FontFamily="{DynamicResource App.CodeFont}" />
+                                                <!-- چیپ دامنه — چرخهٔ ۴۳: داروها/لوازم مصرفی/کل انبار -->
+                                                <Border CornerRadius="8" Padding="7,2" Margin="8,0,0,0" Background="#E3F2FD" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Scope}" FontSize="9.5" Foreground="#1565C0" />
+                                                </Border>
+                                            </StackPanel>
                                             <Border Grid.Column="1" CornerRadius="9" Padding="8,2" Background="{Binding StatusColor}">
                                                 <TextBlock Text="{Binding Status}" FontSize="9.5" Foreground="White" />
                                             </Border>

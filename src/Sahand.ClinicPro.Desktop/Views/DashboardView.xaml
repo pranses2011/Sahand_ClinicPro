@@ -154,28 +154,29 @@
                             <TextBlock Text="میانبرهای سریع من" FontSize="14.5" FontWeight="Bold"
                                        Margin="8,0,0,0" VerticalAlignment="Center" />
                         </StackPanel>
+                        <!-- ═══ چرخهٔ ۴۳ (گزارش مالک: «دکمه میانبر جدید رو همانند حالت
+                             ویرایش بکن که فقط آیکون باشه تا زیباتر دیده بشه») ═══
+                             هر دو دکمهٔ مدیریتی حالا فقط-آیکون و هم‌شکل‌اند: دایرهٔ
+                             نرم ۳۴px با آیکون ۱۶px؛ «میانبر جدید» نارنجی پررنگ (کانون
+                             توجه) و «ویرایش» خاکستری کم‌رنگ که در حالت فعال پر می‌شود. -->
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" HorizontalAlignment="Left"
                                     VerticalAlignment="Center">
-                            <!-- افزودن — همیشه نمایان -->
+                            <!-- افزودن — فقط-آیکون؛ دایرهٔ نارنجی با تولتیپ راهنما -->
                             <Button Command="{Binding AddShortcutCommand}"
-                                    Style="{StaticResource MaterialDesignRaisedButton}"
-                                    MinHeight="36" MinWidth="115" Padding="14,6" Margin="0,0,8,0"
-                                    Background="#F57C00" BorderBrush="#F57C00"
-                                    ToolTip="افزودن میانبر صفحهٔ دلخواه به این پنل">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Plus" Width="15" Height="15" VerticalAlignment="Center" />
-                                    <TextBlock Text="میانبر جدید" Margin="6,0,0,0" VerticalAlignment="Center" />
-                                </StackPanel>
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    Width="34" Height="34" Padding="0" Margin="0,0,6,0"
+                                    Background="#F57C00" Foreground="White"
+                                    ToolTip="میانبر جدید — افزودن صفحهٔ دلخواه به این پنل">
+                                <materialDesign:PackIcon Kind="Plus" Width="16" Height="16" VerticalAlignment="Center"
+                                                         HorizontalAlignment="Center" />
                             </Button>
-                            <!-- ویرایش — حذف کاشی‌ها؛ پایان خودکارِ حالت = ذخیره -->
+                            <!-- ویرایش — فقط-آیکون؛ پایان خودکارِ حالت = ذخیره -->
                             <ToggleButton IsChecked="{Binding IsEditingShortcuts}"
                                           Style="{StaticResource MaterialDesignFlatToggleButton}"
-                                          MinHeight="36" Padding="12,6"
+                                          Width="34" Height="34" Padding="0"
                                           ToolTip="حالت ویرایش — دکمهٔ حذف روی هر کاشی نمایان می‌شود؛ با پایان ویرایش، تغییرات ذخیره می‌شوند">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" VerticalAlignment="Center" />
-                                    <TextBlock Text="ویرایش" Margin="6,0,0,0" VerticalAlignment="Center" />
-                                </StackPanel>
+                                <materialDesign:PackIcon Kind="PencilOutline" Width="15" Height="15"
+                                                         VerticalAlignment="Center" HorizontalAlignment="Center" />
                             </ToggleButton>
                         </StackPanel>
                     </DockPanel>
@@ -185,47 +186,102 @@
                                Text="هنوز میانبری نساخته‌اید — صفحات پرکاربرد خود را با «میانبر جدید» به این پنل اضافه کنید تا بدون گشتن در منو، با یک کلیک باز شوند."
                                Visibility="{Binding HasShortcuts, Converter={StaticResource InverseBoolToVisibility}}" />
 
-                    <!-- کاشی‌های میانبر -->
-                    <ItemsControl ItemsSource="{Binding Shortcuts}">
+                    <!-- ═══ کاشی‌های میانبر — چرخهٔ ۴۳ بازطراحی (گزارش مالک:
+                         «ظاهر دکمه‌های میانبر رو زیباتر بکن… دکمه‌های میانبر رو وسط
+                         چین بکن») ═══ کارت سفید با گوشهٔ ۱۴ و آیکون در «دایرهٔ توپرِ
+                         رنگ تأکیدی» + عنوان دوخطی‌شدنی؛ سایهٔ نرم هنگام هاور و
+                         برجسته‌شدن حاشیه با رنگ تأکیدی همان کاشی؛ چیدمان WrapPanel
+                         وسط‌چین تا کاشی‌ها همیشه زیر عنوان و در مرکز پنل بنشینند. -->
+                    <ItemsControl ItemsSource="{Binding Shortcuts}"
+                                  HorizontalAlignment="Center">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <WrapPanel />
+                                <WrapPanel HorizontalAlignment="Center" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,0,8,8" Width="128">
+                                <Grid Margin="5,5,5,7" Width="118">
                                     <!-- کاشی اصلی — کلیک = ناوبری مستقیم -->
                                     <Button Command="{Binding DataContext.OpenShortcutCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                             CommandParameter="{Binding}"
-                                            Style="{StaticResource MaterialDesignRaisedButton}"
-                                            Height="86" Background="#FFFFFF" BorderBrush="#E0E0E0"
-                                            Foreground="#1F2937" BorderThickness="1"
+                                            Cursor="Hand" Focusable="False"
                                             ToolTip="{Binding Title, StringFormat=باز کردن {0}}">
-                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                            <Border Width="40" Height="40" CornerRadius="20"
-                                                    Background="#E3F2FD" HorizontalAlignment="Center">
-                                                <materialDesign:PackIcon Kind="{Binding Icon}" Width="21" Height="21"
-                                                                         Foreground="{Binding Accent}"
-                                                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                            </Border>
-                                            <TextBlock Text="{Binding Title}" FontSize="11" FontWeight="SemiBold"
-                                                       Foreground="#1F2937" Margin="0,6,0,0"
-                                                       HorizontalAlignment="Center" TextAlignment="Center"
-                                                       TextTrimming="CharacterEllipsis" MaxWidth="112" />
-                                        </StackPanel>
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="Tile"
+                                                        CornerRadius="14" Background="#FFFFFF"
+                                                        BorderBrush="#E4E9F0" BorderThickness="1.2"
+                                                        Padding="0,12,0,10">
+                                                    <Border.Effect>
+                                                        <!-- سایهٔ همیشه‌نرم؛ با هاور عمیق‌تر و پایین‌تر می‌شود -->
+                                                        <DropShadowEffect x:Name="TileShadow" BlurRadius="10" ShadowDepth="2"
+                                                                          Direction="270" Opacity="0.10" Color="#25405E" />
+                                                    </Border.Effect>
+                                                    <StackPanel HorizontalAlignment="Center">
+                                                        <!-- دایرهٔ آیکون — توپر با رنگ تأکیدی کاشی -->
+                                                        <Border Width="42" Height="42" CornerRadius="21"
+                                                                Background="{Binding Accent, Converter={StaticResource HexToBrush}}"
+                                                                HorizontalAlignment="Center" Margin="0,0,0,7">
+                                                            <materialDesign:PackIcon Kind="{Binding Icon}" Width="21" Height="21"
+                                                                                     Foreground="White"
+                                                                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Border>
+                                                        <TextBlock Text="{Binding Title}" FontSize="11" FontWeight="SemiBold"
+                                                                   Foreground="#1F2937" Margin="6,0,6,0"
+                                                                   HorizontalAlignment="Center" TextAlignment="Center"
+                                                                   TextTrimming="CharacterEllipsis" MaxWidth="104" />
+                                                    </StackPanel>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <!-- هاور: سایهٔ نرم‌تر و بازشدن ملایم + حاشیهٔ رنگی کاشی -->
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Tile" Property="BorderBrush"
+                                                                Value="{Binding Accent, Converter={StaticResource HexToBrush}}" />
+                                                        <Setter TargetName="Tile" Property="Background" Value="#FDFEFF" />
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="Tile" Property="Opacity" Value="0.85" />
+                                                    </Trigger>
+                                                    <EventTrigger RoutedEvent="MouseEnter">
+                                                        <BeginStoryboard>
+                                                            <Storyboard>
+                                                                <DoubleAnimation Storyboard.TargetName="TileShadow"
+                                                                                 Storyboard.TargetProperty="Opacity"
+                                                                                 To="0.22" Duration="0:0:0.16" />
+                                                                <DoubleAnimation Storyboard.TargetName="TileShadow"
+                                                                                 Storyboard.TargetProperty="ShadowDepth"
+                                                                                 To="5" Duration="0:0:0.16" />
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </EventTrigger>
+                                                    <EventTrigger RoutedEvent="MouseLeave">
+                                                        <BeginStoryboard>
+                                                            <Storyboard>
+                                                                <DoubleAnimation Storyboard.TargetName="TileShadow"
+                                                                                 Storyboard.TargetProperty="Opacity"
+                                                                                 To="0.10" Duration="0:0:0.16" />
+                                                                <DoubleAnimation Storyboard.TargetName="TileShadow"
+                                                                                 Storyboard.TargetProperty="ShadowDepth"
+                                                                                 To="2" Duration="0:0:0.16" />
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </EventTrigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
                                     </Button>
                                     <!-- دکمهٔ حذف گوشه — فقط در حالت ویرایش (روی کاشی، مستقل از کلیک اصلی) -->
                                     <Button Command="{Binding DataContext.RemoveShortcutCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                             CommandParameter="{Binding}"
-                                            Style="{StaticResource MaterialDesignFlatButton}"
-                                            Width="26" Height="26" Padding="2"
+                                            Style="{StaticResource App.RowIconButton}"
+                                            Width="24" Height="24" Padding="0"
                                             HorizontalAlignment="Left" VerticalAlignment="Top"
-                                            Margin="0,-8,-8,0"
+                                            Margin="0,-6,-6,0"
                                             Background="#FFEBEE" Foreground="#C62828"
                                             ToolTip="حذف این میانبر"
                                             Visibility="{Binding DataContext.IsEditingShortcuts, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource BoolToVisibility}}">
-                                        <materialDesign:PackIcon Kind="Close" Width="14" Height="14" />
+                                        <materialDesign:PackIcon Kind="Close" Width="13" Height="13" />
                                     </Button>
                                 </Grid>
                             </DataTemplate>

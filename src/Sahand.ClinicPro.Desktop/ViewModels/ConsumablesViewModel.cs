@@ -8,27 +8,32 @@ using Sahand.ClinicPro.Desktop.Views;
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
 /// <summary>
-/// ردیف بچ قلم مصرفی — یک ورود کالا از انبار (قلم + بچ + موجودی + قیمت‌ها)
+/// ردیف «قلم مصرفی» — چرخهٔ ۴۳ بازطراحی: هر ردیف یک قلم (نه بچ) با جمع
+/// موجودی همهٔ بچ‌ها، قیمت‌های آخرین خرید و نزدیک‌ترین انقضا؛ قلم‌های
+/// تعریف‌شدهٔ بدون ورود کالا هم با موجودی صفر دیده می‌شوند تا کاتالوگ
+/// مصرفی‌های درمانگاه همیشه کامل نمایش یابد (گزارش مالک: «لیست اقلام
+/// مصرفی نمایش داده نمیشه» — ریشه: فهرست قبلی بچ‌محور بود و قلمِ بدون
+/// بچ هرگز در آن نمی‌آمد).
 /// </summary>
-/// <param name="Id">شناسهٔ ردیف انبار</param>
+/// <param name="Id">شناسهٔ قلم (Medication)</param>
 /// <param name="Name">نام قلم (فارسی یا ژنریک)</param>
-/// <param name="BatchNumber">شماره بچ — تهی یعنی بدون بچ</param>
-/// <param name="Quantity">موجودی باقی‌ماندهٔ این بچ</param>
-/// <param name="ReorderLevel">نقطه سفارش مجدد</param>
-/// <param name="ExpiryShamsi">تاریخ انقضا شمسی — تهی یعنی بدون انقضا</param>
-/// <param name="SellPrice">قیمت فروش هر واحد این بچ (ریال/تومان طبق واحد سرور)</param>
-/// <param name="PurchasePrice">قیمت خرید هر واحد این بچ</param>
-/// <param name="IsLowStock">موجودی زیر نقطه سفارش است؟</param>
-/// <param name="IsExpiringSoon">انقضا در ۹۰ روز آینده است؟</param>
+/// <param name="Quantity">جمع موجودی همهٔ بچ‌های قلم</param>
+/// <param name="ReorderLevel">بیشینهٔ نقطهٔ سفارش بچ‌های قلم (صفر = بدون تنظیم)</param>
+/// <param name="ExpiryShamsi">نزدیک‌ترین تاریخ انقضا شمسی — تهی یعنی بدون بچ/بدون انقضا</param>
+/// <param name="SellPrice">قیمت فروش آخرین بچ (ریال سرور)</param>
+/// <param name="PurchasePrice">قیمت خرید آخرین بچ (ریال سرور)</param>
+/// <param name="IsLowStock">جمع موجودی زیر نقطهٔ سفارش است؟</param>
+/// <param name="IsExpiringSoon">نزدیک‌ترین انقضا در ۹۰ روز آینده است؟</param>
+/// <param name="BatchCount">شمار بچ‌های ثبت‌شدهٔ این قلم</param>
 public record ConsumableBatchRow(
-    long Id, string Name, string? BatchNumber, decimal Quantity, decimal ReorderLevel,
+    long Id, string Name, decimal Quantity, decimal ReorderLevel,
     string? ExpiryShamsi, decimal SellPrice, decimal PurchasePrice,
-    bool IsLowStock, bool IsExpiringSoon)
+    bool IsLowStock, bool IsExpiringSoon, int BatchCount)
 {
-    /// <summary>متن وضعیت بچ — همان واژگان تب موجودی داروخانه</summary>
+    /// <summary>متن وضعیت قلم — همان واژگان تب موجودی داروخانه</summary>
     public string StatusText => IsLowStock ? "کمبود موجودی" : IsExpiringSoon ? "نزدیک انقضا" : "نرمال";
 
-    /// <summary>ارزش فروش این بچ (موجودی × قیمت فروش) — برای جمع ارزش انبار</summary>
+    /// <summary>ارزش فروش این قلم (جمع موجودی × قیمت فروش) — برای جمع ارزش انبار</summary>
     public decimal StockValue => Quantity * SellPrice;
 }
 
@@ -136,11 +141,11 @@ public partial class ConsumablesViewModel : ViewModelBase
         }
     }
 
-    /// <summary>نگاشت DTO سرور به ردیف نمایشی</summary>
+    /// <summary>نگاشت DTO قلم‌محور سرور به ردیف نمایشی — چرخهٔ ۴۳</summary>
     private static ConsumableBatchRow MapRow(InventoryDto dto) => new(
-        dto.Id, dto.MedicationName, dto.BatchNumber, dto.Quantity, dto.ReorderLevel,
-        dto.ExpiryDateShamsi, dto.SellPrice, dto.PurchasePrice,
-        dto.IsLowStock, dto.IsExpiringSoon);
+        dto.ItemId, dto.MedicationName, dto.TotalQuantity, dto.ReorderLevel,
+        dto.NearestExpiryShamsi, dto.SellPrice, dto.PurchasePrice,
+        dto.IsLowStock, dto.IsExpiringSoon, dto.BatchCount);
 
     /// <summary>
     /// به‌روزرسانی چیپ‌های خلاصه — اقلام یکتا (تجمیع بچ‌ها به قلم)، کمبود،
@@ -156,9 +161,10 @@ public partial class ConsumablesViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// پالایش زندهٔ فهرست بر اساس جستجو — نام قلم/بچ؛ بدون رفت‌وبرگشت به
+    /// پالایش زندهٔ فهرست بر اساس جستجو — نام قلم؛ بدون رفت‌وبرگشت به
     /// سرور (۲۰۰ ردیف سقف سرور است و پالایش کلایندی فوری است)؛ با هر تایپ،
-    /// اتصال VisibleBatches از نو ارزیابی می‌شود.
+    /// اتصال VisibleBatches از نو ارزیابی می‌شود. چرخهٔ ۴۳: ردیف‌ها قلم‌اند
+    /// نه بچ، پس ستون بچ در جستجو معنا ندارد.
     /// </summary>
     partial void OnSearchChanged(string? value)
     {
@@ -177,8 +183,7 @@ public partial class ConsumablesViewModel : ViewModelBase
             if (string.IsNullOrWhiteSpace(term))
                 return Batches;
             return Batches.Where(b =>
-                b.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || (b.BatchNumber?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false));
+                b.Name.Contains(term, StringComparison.OrdinalIgnoreCase));
         }
     }
 
@@ -194,7 +199,7 @@ public partial class ConsumablesViewModel : ViewModelBase
     [RelayCommand]
     private void AddItem()
     {
-        var vm = new PharmacyItemFormViewModel(_api);
+        var vm = new PharmacyItemFormViewModel(_api, isConsumableContext: true);
         var window = new PharmacyItemFormWindow(vm)
         {
             Owner = System.Windows.Application.Current.MainWindow
@@ -210,7 +215,7 @@ public partial class ConsumablesViewModel : ViewModelBase
     [RelayCommand]
     private void StockIn()
     {
-        var vm = new StockInFormViewModel(_api, defaultKindIndex: 2);
+        var vm = new StockInFormViewModel(_api, isConsumableContext: true);
         var window = new StockInFormWindow(vm)
         {
             Owner = System.Windows.Application.Current.MainWindow
@@ -226,20 +231,22 @@ public partial class ConsumablesViewModel : ViewModelBase
         public List<InventoryDto>? Data { get; set; }
     }
 
-    /// <summary>DTO بچ انبار — خروجی GET consumables/inventory</summary>
+    /// <summary>DTO قلم انبار — خروجی قلم‌محور GET consumables/inventory (چرخهٔ ۴۳)</summary>
     public sealed class InventoryDto
     {
-        public long Id { get; set; }
+        public long ItemId { get; set; }
         public string MedicationName { get; set; } = string.Empty;
-        public string? BatchNumber { get; set; }
-        public decimal Quantity { get; set; }
+        public decimal TotalQuantity { get; set; }
         public decimal ReorderLevel { get; set; }
-        public string? ExpiryDateShamsi { get; set; }
+        public string? NearestExpiryShamsi { get; set; }
         public bool IsLowStock { get; set; }
         public bool IsExpiringSoon { get; set; }
 
-        // چرخهٔ ۴۱ — قیمت‌های افزایشی (صفحهٔ مستقل مصرفی؛ داروخانه نادیده می‌گیرد)
+        // چرخهٔ ۴۱ — قیمت‌های افزایشی؛ چرخهٔ ۴۳ — قیمت‌های «آخرین بچ» قلم
         public decimal SellPrice { get; set; }
         public decimal PurchasePrice { get; set; }
+
+        // چرخهٔ ۴۳ — شمار بچ‌های ثبت‌شدهٔ قلم
+        public int BatchCount { get; set; }
     }
 }

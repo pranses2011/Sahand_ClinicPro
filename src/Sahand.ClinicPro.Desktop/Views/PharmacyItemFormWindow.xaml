@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="قلم جدید انبار"
-        Height="600" Width="520"
+        Height="620" Width="520"
         FlowDirection="RightToLeft"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize" ShowInTaskbar="False">
@@ -11,30 +11,28 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
     <!-- ═══════════════════════════════════════════════════════════
-         فرم قلم جدید انبار داروخانه — چرخهٔ سی‌ونه‌م (گزارش مالک):
+         فرم قلم جدید انبار — چرخهٔ سی‌ونه‌م (گزارش مالک):
          «خرید و انبار و قیمت‌های این لوازم هم باید باشه» — ساخت دارو یا
          لوازم مصرفی (سرنگ/سرم/گاز استریل و…)؛ پس از ساخت قلم، موجودی
-         اولیه از تب «ورود کالا» داروخانه با بچ/تعداد/قیمت ثبت می‌شود.
+         اولیه از فرم «ورود کالا» با بچ/تعداد/قیمت ثبت می‌شود.
+         ═══ چرخهٔ چهل‌وسوم (گزارش مالک): «چون اقلام مصرفی دیگه از داروخانه
+         مستقل شده، در افزودن قلم جدید… نباید نوع قلم وجود داشته باشه» —
+         کمبوی نوع حذف شد؛ نوع از بافت فراخواننده می‌آید (مصرفی‌ها از صفحهٔ
+         خودشان، داروها از داروخانه) و عنوان/راهنمای فرم بافت‌دار شدند.
          ═══════════════════════════════════════════════════════════ -->
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="28">
-            <TextBlock Text="افزودن قلم جدید انبار" Style="{StaticResource SectionTitle}" />
-            <TextBlock Text="نخست قلم را بسازید؛ سپس از تب «ورود کالا» بچ، تعداد و قیمت خرید/فروش را ثبت کنید."
+            <TextBlock Text="{Binding FormTitle}" Style="{StaticResource SectionTitle}" />
+            <TextBlock Text="{Binding FormHint}"
                        FontSize="11.5" Opacity="0.7" Margin="0,0,0,14" TextWrapping="Wrap" />
-
-            <!-- نوع قلم — دارو یا لوازم مصرفی -->
-            <TextBlock Text="نوع قلم *" FontSize="12" Opacity="0.75" Margin="2,0,2,4" />
-            <ComboBox ItemsSource="{Binding KindOptions}"
-                      SelectedIndex="{Binding KindIndex}"
-                      FontSize="13" Margin="0,0,0,12" />
 
             <!-- نام فارسی -->
             <TextBox materialDesign:HintAssist.Hint="نام فارسی قلم * (مثلاً: سرنگ ۵ سی‌سی / گاز استریل)"
                      Text="{Binding NameFa, UpdateSourceTrigger=PropertyChanged}"
                      Margin="0,0,0,12" />
 
-            <!-- نام ژنریک — خودکار از فارسی پر می‌شود -->
-            <TextBox materialDesign:HintAssist.Hint="نام ژنریک/انگلیسی * (برای لوازم مصرفی می‌تواند همان فارسی باشد)"
+            <!-- نام ژنریک — خودکار و کامل از فارسی پر می‌شود؛ ویرایش دستی محترم است -->
+            <TextBox materialDesign:HintAssist.Hint="نام ژنریک/انگلیسی * (خودکار از نام فارسی — قابل ویرایش)"
                      Text="{Binding GenericName, UpdateSourceTrigger=PropertyChanged}"
                      Margin="0,0,0,12" />
 

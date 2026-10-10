@@ -46,7 +46,7 @@
                         <ComboBox materialDesign:HintAssist.Hint="مخاطبان"
                                   ItemsSource="{Binding AudienceOptions}"
                                   SelectedItem="{Binding AudienceType}"
-                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,10"
+                                  Margin="0,0,0,10"
                                   Visibility="{Binding IsBulk, Converter={StaticResource BoolToVisibility}}" />
 
                         <!-- متن پیامک + شمارنده -->
@@ -69,7 +69,7 @@
                             </Grid.ColumnDefinitions>
                             <ComboBox ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate}"
                                       DisplayMemberPath="Name"
-                                      Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,6,0" />
+                                      Margin="0,0,6,0" />
                             <Button Grid.Column="1" Command="{Binding ApplyTemplateCommand}"
                                     Style="{StaticResource MaterialDesignOutlinedButton}" Content="اعمال" />
                         </Grid>
@@ -105,7 +105,7 @@
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
                         <ComboBox materialDesign:HintAssist.Hint="وضعیت"
                                   ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding StatusFilter}"
-                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="150" Margin="0,0,8,0" />
+                                  Width="150" Margin="0,0,8,0" />
                         <Button Command="{Binding LoadHistoryCommand}" Style="{StaticResource MaterialDesignOutlinedButton}">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Refresh" Width="14" Height="14" VerticalAlignment="Center" />

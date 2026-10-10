@@ -64,17 +64,28 @@ public partial class ShiftCloseViewModel : ObservableObject
     [ObservableProperty]
     private int _systemInvoiceCount;
 
-    /// <summary>نمایش فروش نقدی سیستم</summary>
-    public string SystemCashDisplay => $"{SystemCash:N0}";
+    // ═══ چرخهٔ ۴۳ (گزارش مالک: «در بستن شیفت و تحویل صندوق، مبالغ رو درست
+    // نشون نمیده») — همهٔ نمایش‌های مبلغ از Money.Format می‌گذرند: ارقام فارسی،
+    // جداکنندهٔ هزارگان و مهم‌تر از همه «تبدیل واحد نمایشی» (در حالت تومان،
+    // مبالغ ریالیِ سرور بر ۱۰ تقسیم و با برچسب تومان نمایش داده می‌شوند؛
+    // پیش‌تر ارقام خام ریالی با ارقام لاتین نمایش داده می‌شدند و مقایسه با
+    // شمارشِ تایپی کاربر ناممکن می‌شد). ورودی‌های شمارش هم با MoneyInput +
+    // مبدل MoneyRial در XAML وصل شدند تا ورودی و نمایش هم‌واحد باشند. ═══
 
-    /// <summary>نمایش فروش کارتی سیستم</summary>
-    public string SystemCardDisplay => $"{SystemCard:N0}";
+    /// <summary>نمایش فروش نقدی سیستم — با واحد پول نمایشی</summary>
+    public string SystemCashDisplay => Money.Format(SystemCash);
 
-    /// <summary>نمایش آنلاین سیستم</summary>
-    public string SystemOnlineDisplay => $"{SystemOnline:N0}";
+    /// <summary>نمایش فروش کارتی سیستم — با واحد پول نمایشی</summary>
+    public string SystemCardDisplay => Money.Format(SystemCard);
 
-    /// <summary>نمایش خالص سیستم</summary>
-    public string SystemNetDisplay => $"{SystemNet:N0}";
+    /// <summary>نمایش آنلاین سیستم — با واحد پول نمایشی</summary>
+    public string SystemOnlineDisplay => Money.Format(SystemOnline);
+
+    /// <summary>نمایش خالص سیستم — با واحد پول نمایشی</summary>
+    public string SystemNetDisplay => Money.Format(SystemNet);
+
+    /// <summary>برچسب واحد پول نمایشی — هم‌گام با تنظیمات ظاهر</summary>
+    public string CurrencyLabel => Money.UnitLabel;
 
     /// <summary>یادداشت تحویل</summary>
     [ObservableProperty]
@@ -106,14 +117,14 @@ public partial class ShiftCloseViewModel : ObservableObject
     /// <summary>رنگ وضعیت مغایرت زنده</summary>
     public string LiveDiffColor => Math.Abs(LiveNetDiff) < 0.5m ? "#2E7D32" : LiveNetDiff < 0 ? "#C62828" : "#E65100";
 
-    /// <summary>نمایش مغایرت نقدی زنده</summary>
-    public string LiveCashDiffDisplay => $"{(LiveCashDiff >= 0 ? "+" : "−")}{Math.Abs(LiveCashDiff):N0}";
+    /// <summary>نمایش مغایرت نقدی زنده — با واحد پول نمایشی و ارقام فارسی</summary>
+    public string LiveCashDiffDisplay => $"{(LiveCashDiff >= 0 ? "+" : "−")}{Money.Format(Math.Abs(LiveCashDiff))}";
 
-    /// <summary>نمایش مغایرت کارتی زنده</summary>
-    public string LiveCardDiffDisplay => $"{(LiveCardDiff >= 0 ? "+" : "−")}{Math.Abs(LiveCardDiff):N0}";
+    /// <summary>نمایش مغایرت کارتی زنده — با واحد پول نمایشی</summary>
+    public string LiveCardDiffDisplay => $"{(LiveCardDiff >= 0 ? "+" : "−")}{Money.Format(Math.Abs(LiveCardDiff))}";
 
-    /// <summary>نمایش مغایرت خالص زنده</summary>
-    public string LiveNetDiffDisplay => $"{(LiveNetDiff >= 0 ? "+" : "−")}{Math.Abs(LiveNetDiff):N0}";
+    /// <summary>نمایش مغایرت خالص زنده — با واحد پول نمایشی</summary>
+    public string LiveNetDiffDisplay => $"{(LiveNetDiff >= 0 ? "+" : "−")}{Money.Format(Math.Abs(LiveNetDiff))}";
 
     /// <summary>تاریخچه شیفت‌ها</summary>
     public ObservableCollection<ShiftHistoryRow> History { get; } = new();
@@ -177,10 +188,10 @@ public partial class ShiftCloseViewModel : ObservableObject
                 s.RegisterName,
                 s.ClosedText,
                 s.ClosedByName,
-                $"{s.TotalCash:N0}",
-                $"{s.TotalCard:N0}",
-                $"{s.TotalOnline:N0}",
-                $"{s.Difference:N0}",
+                Money.Format(s.TotalCash),
+                Money.Format(s.TotalCard),
+                Money.Format(s.TotalOnline),
+                Money.Format(s.Difference),
                 s.DifferenceState,
                 s.DifferenceColor));
 
@@ -216,6 +227,7 @@ public partial class ShiftCloseViewModel : ObservableObject
         OnPropertyChanged(nameof(SystemCardDisplay));
         OnPropertyChanged(nameof(SystemOnlineDisplay));
         OnPropertyChanged(nameof(SystemNetDisplay));
+        OnPropertyChanged(nameof(CurrencyLabel));
     }
 
     /// <summary>بستن شیفت و صدور رسید</summary>
@@ -250,15 +262,34 @@ public partial class ShiftCloseViewModel : ObservableObject
         DifferenceState = r.DifferenceState;
         DifferenceColor = r.DifferenceColor;
         ReceiptText =
-            $"🧾 رسید {r.ReceiptNumber} — {r.RegisterName}\n" +
+            $"🧾 رسید {Money.ToPersianDigits(r.ReceiptNumber)} — {r.RegisterName}\n" +
             $"بازه: {r.OpenedText} تا {r.ClosedText} | بستن‌دهنده: {r.ClosedByName}\n" +
-            $"سیستم — نقد {r.TotalCash:N0} | کارت {r.TotalCard:N0} | آنلاین {r.TotalOnline:N0} | جمع {r.SystemTotal:N0}\n" +
-            $"شمارش — نقد {r.CountedCash:N0} | کارت {r.CountedCard:N0} | جمع {r.CountedTotal:N0}\n" +
-            $"اختلاف نقد: {r.CashDifference:N0} | کارت: {r.CardDifference:N0} | خالص: {Money.FormatWithUnit(r.NetDifference)} ({r.DifferenceState})\n" +
+            $"سیستم — نقد {Money.Format(r.TotalCash)} | کارت {Money.Format(r.TotalCard)} | آنلاین {Money.Format(r.TotalOnline)} | جمع {Money.Format(r.SystemTotal)}\n" +
+            $"شمارش — نقد {Money.Format(r.CountedCash)} | کارت {Money.Format(r.CountedCard)} | جمع {Money.Format(r.CountedTotal)}\n" +
+            $"اختلاف نقد: {Money.Format(r.CashDifference)} | کارت: {Money.Format(r.CardDifference)} | خالص: {Money.FormatWithUnit(r.NetDifference)} ({r.DifferenceState})\n" +
             (string.IsNullOrWhiteSpace(r.HandoverNote) ? "" : $"یادداشت: {r.HandoverNote}\n") +
-            $"تعداد تراکنش‌های شیفت: {r.PaymentCount}";
+            $"تعداد تراکنش‌های شیفت: {Money.ToPersianDigits(r.PaymentCount.ToString())}";
 
-        _snackbar.Success($"شیفت بسته شد — رسید {r.ReceiptNumber} صادر شد");
+        _snackbar.Success($"شیفت بسته شد — رسید {Money.ToPersianDigits(r.ReceiptNumber)} صادر شد");
+
+        // ═══ چرخهٔ ۴۳ (گزارش مالک: «با بستن شیفت میگه رسید ثبت شد ولی پیشنمایش
+        // رسید رو نشون نمیده تا چاپ بکنیم») ═══ پیش‌نمایش رسید همان لحظه باز
+        // می‌شود — چیدمان «رسید کاغذی» با دکمهٔ چاپ (سند ۸۰ میلی‌متری حرارتی)
+        var receipt = new Services.ShiftReceipt(
+            r.ReceiptNumber, r.RegisterName, r.OpenedText, r.ClosedText, r.ClosedByName,
+            r.TotalCash, r.TotalCard, r.TotalOnline, r.SystemTotal,
+            r.CountedCash, r.CountedCard, r.CountedTotal,
+            r.CashDifference, r.CardDifference, r.NetDifference,
+            r.DifferenceState, r.DifferenceColor, r.PaymentCount, r.HandoverNote);
+        System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+        {
+            var preview = new Views.ShiftReceiptPreviewWindow(receipt)
+            {
+                Owner = System.Windows.Application.Current.MainWindow
+            };
+            preview.Show();
+        });
+
         await LoadAsync();
     }
 
