@@ -851,14 +851,42 @@ public partial class ReceptionsViewModel : ViewModelBase
 
     /// <summary>«پذیرش و فاکتور» — ثبت پذیرش + صدور فاکتور بدون پرداخت</summary>
     [RelayCommand]
-    private async Task ReceptionAndInvoiceAsync() => await SubmitReceptionAsync(withPayment: false);
+    private async Task ReceptionAndInvoiceAsync() => await SubmitReceptionAsync(null);
 
-    /// <summary>«پذیرش و پرداخت نقدی» — ثبت پذیرش + فاکتور + پرداخت نقدی</summary>
+    // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — کارت‌خوان در پذیرش ═══
+    // «در پذیرش فقط پرداخت نقدی وجود داره و کارت خوان پیاده سازی نشده» —
+    // دکمهٔ «پذیرش و پرداخت» اکنون پنجرهٔ انتخاب روش (نقدی/کارتخوان + مرجع و
+    // چهار رقم کارت برای کارتی — همان الگوی ماژول مالی) را می‌گشاید و سپس
+    // کل زنجیره (پذیرش → مصرف لوازم → فاکتور → پرداخت با روش منتخب) اجرا می‌شود.
+
+    /// <summary>
+    /// «پذیرش و پرداخت» — گشودن پنجرهٔ پرداخت (نقدی/کارتخوان) و سپس ثبت زنجیره
+    /// </summary>
     [RelayCommand]
-    private async Task ReceptionAndPayAsync() => await SubmitReceptionAsync(withPayment: true);
+    private async Task ReceptionAndPayAsync()
+    {
+        if (!ValidateReception()) return;
 
-    /// <summary>اجرای زنجیره پذیرش طبق فرم ۱۰ — پذیرش + فاکتور + پرداخت اختیاری</summary>
-    private async Task SubmitReceptionAsync(bool withPayment)
+        // مبلغ پیش‌بینی‌شده = سهم بیمار خدمت + جمع لوازم مصرفی (قیمت پیشنهادیِ
+        // بچ پرموجودی؛ مبلغ نهایی پس از مصرف واقعی از بچ‌ها در زنجیره محاسبه می‌شود)
+        var payVm = new ReceptionPayViewModel(PayableByPatientDisplay);
+        var payWindow = new Views.ReceptionPayWindow(payVm)
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        payWindow.ShowDialog();
+
+        // انصراف — هیچ چیزی ثبت نمی‌شود
+        if (payVm.Result is null) return;
+
+        await SubmitReceptionAsync(payVm.Result);
+    }
+
+    /// <summary>
+    /// اجرای زنجیره پذیرش طبق فرم ۱۰ — پذیرش + مصرف لوازم + فاکتور + پرداخت اختیاری
+    /// </summary>
+    /// <param name="payment">اطلاعات پرداخت منتخب از پنجرهٔ پرداخت — تهی یعنی بدون پرداخت (فقط فاکتور)</param>
+    private async Task SubmitReceptionAsync(ReceptionPaymentInfo? payment)
     {
         if (!ValidateReception()) return;
 
@@ -969,23 +997,24 @@ public partial class ReceptionsViewModel : ViewModelBase
                 $"پذیرش با شماره صف {reception.Data} ثبت شد اما صدور فاکتور شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}فاکتور را بعداً از ماژول «صندوق و فاکتور» صادر کنید.");
         }
 
-        // ۳. پرداخت (اختیاری) — مبلغ = سهم بیمار خدمت + هزینهٔ واقعی لوازم مصرفی
+        // ۳. پرداخت (اختیاری) — روش و مرجع از پنجرهٔ پرداخت پذیرش (چرخهٔ ۳۹)
         var paymentFailed = false;
-        if (withPayment && invoice?.Data is not null && invoice.Data > 0)
+        if (payment is not null && invoice?.Data is not null && invoice.Data > 0)
         {
             // چرخهٔ ۳۹ — مبلغ قابل پرداخت بیمار = سهم بیمار خدمت + جمع لوازم مصرفی
             // (قیمت واقعی بچ‌ها از مصرف؛ اگر مصرف رد شده و کاربر ادامه داد، فقط خدمت)
             var payable = PatientShare + (consumeResult?.TotalCost ?? 0m);
-            var payment = await _api.PostAsync<PaymentCreateResponse>("payments", new
+            var paymentResult = await _api.PostAsync<PaymentCreateResponse>("payments", new
             {
                 invoiceId = invoice.Data,
                 patientId = FoundPatient.Id,
                 amount = payable,
-                method = 1,
-                referenceNumber = (string?)null,
-                cardNumber = (string?)null
+                // روش و مرجع از پنجرهٔ پرداخت — ۱ نقدی، ۲ کارتخوان (چرخهٔ ۳۹)
+                method = payment.Method,
+                referenceNumber = payment.ReferenceNumber,
+                cardNumber = payment.CardNumber
             });
-            if (payment?.Data is null || payment.Data <= 0)
+            if (paymentResult?.Data is null || paymentResult.Data <= 0)
             {
                 // پرداخت ثبت نشد — کاربر باید بداند؛ فاکتور بدهکار مانده است
                 paymentFailed = true;
@@ -1008,10 +1037,10 @@ public partial class ReceptionsViewModel : ViewModelBase
             _snackbar.Info($"پذیرش موفق — شماره صف {queueNo}؛ فاکتور فقط با هزینهٔ خدمت صادر شد (مصرف لوازم ثبت نشد)");
         else if (consumeResult is not null)
             _snackbar.Success($"پذیرش موفق — شماره صف {queueNo} (فاکتور شامل {consumeResult.Items?.Count ?? 0} قلم لوازم مصرفی ثبت شد)");
+        else if (payment is not null)
+            _snackbar.Success($"پذیرش موفق — شماره صف: {queueNo} (فاکتور و پرداخت {(payment.Method == 2 ? "کارتخوان" : "نقدی")} ثبت شد)");
         else
-            _snackbar.Success(withPayment
-                ? $"پذیرش موفق — شماره صف: {queueNo} (فاکتور و پرداخت ثبت شد)"
-                : $"پذیرش موفق — شماره صف: {queueNo} (فاکتور صادر شد)");
+            _snackbar.Success($"پذیرش موفق — شماره صف: {queueNo} (فاکتور صادر شد)");
 
         // پاک‌سازی فرم
         SmartSearch = string.Empty;

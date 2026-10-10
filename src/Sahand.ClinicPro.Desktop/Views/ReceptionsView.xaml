@@ -473,10 +473,10 @@
                                     Style="{StaticResource MaterialDesignRaisedButton}"
                                     Background="#2E7D32" BorderBrush="#2E7D32"
                                     FontSize="13" Padding="20,12" MinWidth="215" MinHeight="46"
-                                    ToolTip="ثبت پذیرش + صدور فاکتور + ثبت پرداخت بیمار">
+                                    ToolTip="ثبت پذیرش + صدور فاکتور + پنجرهٔ انتخاب روش پرداخت (نقدی/کارتخوان)">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="CashCheck" Width="17" Height="17" VerticalAlignment="Center" />
-                                    <TextBlock Text="💵 پذیرش و پرداخت نقدی" Margin="8,0,0,0"
+                                    <TextBlock Text="💳 پذیرش و پرداخت" Margin="8,0,0,0"
                                                TextWrapping="Wrap" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>

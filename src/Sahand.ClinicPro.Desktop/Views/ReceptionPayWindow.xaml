@@ -1,0 +1,78 @@
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.ReceptionPayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="پرداخت بیمار"
+        Height="480" Width="470"
+        FlowDirection="RightToLeft"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize" ShowInTaskbar="False">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+    <!-- ═══════════════════════════════════════════════════════════
+         پنجرهٔ پرداخت پذیرش — چرخهٔ سی‌ونه‌م (گزارش مالک):
+         «در پذیرش فقط پرداخت نقدی وجود داره و کارت خوان پیاده سازی نشده» —
+         انتخاب روش (نقدی/کارتخوان) پیش از ثبت زنجیرهٔ پذیرش؛ مبلغ قابل
+         پرداخت = سهم بیمار خدمت + لوازم مصرفی درمانگاه.
+         ═══════════════════════════════════════════════════════════ -->
+    <StackPanel Margin="26">
+        <TextBlock Text="ثبت پرداخت بیمار" FontSize="16" FontWeight="Bold" />
+        <TextBlock Text="روش پرداخت را انتخاب و تأیید کنید — همراه ثبت پذیرش و صدور فاکتور انجام می‌شود."
+                   FontSize="11.5" Opacity="0.7" Margin="0,4,0,14" TextWrapping="Wrap" />
+
+        <!-- مبلغ قابل پرداخت — کارت برجسته -->
+        <Border Background="#FFF8E1" BorderBrush="#FFE082" BorderThickness="1"
+                CornerRadius="10" Padding="14,10" Margin="0,0,0,14">
+            <StackPanel>
+                <TextBlock FontSize="11.5" Opacity="0.75">
+                    <Run Text="مبلغ قابل پرداخت (خدمت + لوازم مصرفی) — " /><Run Text="{DynamicResource App.CurrencyLabel}" />
+                </TextBlock>
+                <TextBlock Text="{Binding PayableText, Mode=OneWay}" FontSize="24" FontWeight="Bold"
+                           FontFamily="{DynamicResource App.CodeFont}" Foreground="#C62828" Margin="0,3,0,0" />
+            </StackPanel>
+        </Border>
+
+        <!-- روش پرداخت -->
+        <TextBlock Text="روش پرداخت:" FontSize="12" Opacity="0.75" Margin="2,0,2,5" />
+        <ComboBox ItemsSource="{Binding MethodOptions}"
+                  SelectedIndex="{Binding MethodIndex}"
+                  FontSize="14" Margin="0,0,0,12" />
+
+        <!-- فیلدهای کارتخوان — فقط در روش کارتی -->
+        <StackPanel Visibility="{Binding IsCard, Converter={StaticResource BoolToVis}}">
+            <TextBox materialDesign:HintAssist.Hint="شماره پیگیری / مرجع تراکنش کارتخوان (اختیاری)"
+                     Text="{Binding ReferenceNumber, UpdateSourceTrigger=PropertyChanged}"
+                     FontFamily="{DynamicResource App.CodeFont}"
+                     Margin="0,0,0,12" />
+            <TextBox materialDesign:HintAssist.Hint="چهار رقم آخر کارت (اختیاری)"
+                     Text="{Binding CardNumber, UpdateSourceTrigger=PropertyChanged}"
+                     MaxLength="4"
+                     FontFamily="{DynamicResource App.CodeFont}"
+                     Margin="0,0,0,12" />
+        </StackPanel>
+
+        <!-- خطا -->
+        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
+                   FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8"
+                   Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
+
+        <!-- دکمه‌ها — ضدفشردگی چرخهٔ ۳۹ -->
+        <UniformGrid Columns="2">
+            <Button Command="{Binding ConfirmCommand}"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Background="#2E7D32" BorderBrush="#2E7D32"
+                    Height="46" Margin="4" MinWidth="130">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <materialDesign:PackIcon Kind="CheckCircle" Width="17" Height="17" VerticalAlignment="Center" />
+                    <TextBlock Text="تأیید و ثبت پذیرش" Margin="8,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap" />
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding CancelCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Height="46" Margin="4" MinWidth="110">
+                <TextBlock Text="انصراف" VerticalAlignment="Center" />
+            </Button>
+        </UniformGrid>
+    </StackPanel>
+</Window>
