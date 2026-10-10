@@ -325,6 +325,9 @@ public partial class App : System.Windows.Application
         services.AddTransient<DoctorsViewModel>();
         services.AddTransient<AppointmentsViewModel>();
         services.AddTransient<ReceptionsViewModel>();
+        // چرخهٔ ۴۱ — صفحهٔ مستقل لوازم مصرفی درمانگاه (بدون نیاز به ماژول
+        // داروخانه؛ اندپوینت‌های api/v1/consumables خارج از گیت لایسنس)
+        services.AddTransient<ConsumablesViewModel>();
         services.AddTransient<VisitsViewModel>();
         // چرخهٔ بیست‌وهفتم — میزکار پزشک (صفحهٔ ویزیت پزشک — گزارش هجدهم مالک)
         services.AddTransient<DoctorVisitViewModel>();

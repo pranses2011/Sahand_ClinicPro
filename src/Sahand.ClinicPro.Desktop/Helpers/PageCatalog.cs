@@ -39,6 +39,10 @@ public static class PageCatalog
         new PageCatalogEntry("patients", "بیماران", "AccountGroup", "patients.view"),
         new PageCatalogEntry("appointments", "نوبت‌دهی", "CalendarClock", "appointments.view"),
         new PageCatalogEntry("receptions", "پذیرش", "ClipboardAccount", "receptions.view"),
+        // چرخهٔ ۴۱ — لوازم مصرفی درمانگاه: صفحهٔ مستقلِ مدیریت مصرفی‌ها؛ مجوزش
+        // همان پذیرش است چون مصرفِ سرنگ/سرم/گاز حین خدمت، حلقهٔ طبیعیِ جریان
+        // پذیرش است و درمانگاهِ بدون ماژول داروخانه هم باید به آن دسترسی داشته باشد
+        new PageCatalogEntry("consumables", "لوازم مصرفی درمانگاه", "Syringe", "receptions.view"),
         new PageCatalogEntry("visits", "ویزیت و معاینه", "Stethoscope", "visits.view"),
         new PageCatalogEntry("doctor-visit", "میزکار پزشک", "Doctor", "visits.view"),
         new PageCatalogEntry("emr-advanced", "پرونده بالینی پیشرفته", "HeartPulse", "emr.advanced"),

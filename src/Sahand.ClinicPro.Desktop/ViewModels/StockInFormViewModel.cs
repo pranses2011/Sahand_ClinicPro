@@ -78,7 +78,18 @@ public partial class StockInFormViewModel : ObservableObject
     public event EventHandler? SaveSucceeded;
 
     /// <summary>سازنده با کلاینت API</summary>
-    public StockInFormViewModel(IApiClient api) => _api = api;
+    /// <param name="api">کلاینت HTTP برنامه</param>
+    /// <param name="defaultKindIndex">
+    /// نمایهٔ پیش‌فرض فیلتر نوع جستجو — ۰ همه، ۱ دارو، ۲ لوازم مصرفی
+    /// (چرخهٔ ۴۱: صفحهٔ مستقل مصرفی‌ها با ۲ باز می‌شود تا جستجو فقط بین مصرفی‌ها باشد)
+    /// </param>
+    public StockInFormViewModel(IApiClient api, int defaultKindIndex = 0)
+    {
+        _api = api;
+        // تخصیص از طریق پراپرتی (نه فیلد پشتیبان) تا اثر جانبی OnSearchKindIndexChanged
+        // هم در صورت وجود اجرا شود؛ جستجوی اولیه با عبارت خالی بی‌اثر و بی‌ضرر است
+        SearchKindIndex = defaultKindIndex;
+    }
 
     /// <summary>جستجوی دارو/قلم با فیلتر نوع — چرخهٔ ۳۹</summary>
     [RelayCommand]
@@ -142,7 +153,13 @@ public partial class StockInFormViewModel : ObservableObject
             supplierId = (long?)null
         };
 
-        var ok = await _api.PostAsync("pharmacy/inventory", body);
+        // ═══ چرخهٔ ۴۱ — مسیر مستقل api/v1/consumables/inventory ═══
+        // پیش‌تر POST pharmacy/inventory بود و میدلور لایسنس، همان پیشوند را به
+        // ماژول «Pharmacy» گره زده بود → درمانگاه بدون لایسنس داروخانه حتی برای
+        // گاز استریل هم ۴۰۳ می‌گرفت؛ این مسیر همان فرمان را بدون گیت ماژولی اجرا
+        // می‌کند (گیت نقش Admin/Manager در خود کنترلر مصرفی است). برای کلینیک‌های
+        // دارویی هم رفتار یکسان است — همان Handler، همان تراکنش انبار.
+        var ok = await _api.PostAsync("consumables/inventory", body);
         IsBusy = false;
 
         if (ok) SaveSucceeded?.Invoke(this, EventArgs.Empty);

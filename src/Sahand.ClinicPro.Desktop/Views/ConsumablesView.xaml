@@ -1,0 +1,197 @@
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.ConsumablesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="680" d:DesignWidth="1120"
+             FlowDirection="RightToLeft">
+    <!-- ═══════════════════════════════════════════════════════════
+         صفحهٔ لوازم مصرفی درمانگاه — چرخهٔ چهل‌ویکم (گزارش مالک):
+         «احتمال داره یک درمانگاه ماژول داروخانه رو نداشته باشه و اونموقع
+         نمیتونه لوازم مصرفی رو تعریف و استفاده بکنه» — نقطهٔ مدیریتیِ مستقلِ
+         مصرفی‌ها: تعریف قلم + ورود کالا + پایش موجودی/کمبود/انقضا؛ همه روی
+         اندپوینت‌های api/v1/consumables خارج از گیت ماژول لایسنس داروخانه.
+         چیدمان: سربرگ + دکمه‌های مدیریتی (Admin/Manager) + چیپ‌های خلاصه +
+         نوار پالایش + جدول بچ‌ها.
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid Margin="16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ سربرگ + دکمه‌های مدیریتی ═══ -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="Syringe" Width="26" Height="26"
+                                         Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                         VerticalAlignment="Center" />
+                <TextBlock Text="لوازم مصرفی درمانگاه" FontSize="20" FontWeight="Bold"
+                           Margin="10,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+
+            <!-- دکمه‌های مدیریتی — فقط برای Admin/Manager (بازتاب گیت سرور) -->
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left"
+                        HorizontalAlignment="Left" VerticalAlignment="Center"
+                        Margin="14,0,0,0"
+                        Visibility="{Binding CanManage, Converter={StaticResource BoolToVisibility}}">
+                <Button Command="{Binding AddItemCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                        MinHeight="38" MinWidth="125" Margin="0,0,8,0"
+                        ToolTip="ساخت قلم مصرفی جدید — سرنگ/سرم/گاز استریل و…">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="PlusBox" Width="15" Height="15" VerticalAlignment="Center" />
+                        <TextBlock Text="قلم مصرفی جدید" Margin="7,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding StockInCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                        MinHeight="38" Margin="0,0,8,0"
+                        ToolTip="ثبت خرید — بچ با تعداد/قیمت خرید/قیمت فروش/انقضا">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="PackageDown" Width="14" Height="14" VerticalAlignment="Center" />
+                        <TextBlock Text="ورود کالا" Margin="7,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <!-- نوسازی — سمت مقابل عنوان -->
+            <Button DockPanel.Dock="Left" Command="{Binding LoadCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    HorizontalAlignment="Left" VerticalAlignment="Center"
+                    ToolTip="بارگذاری مجدد فهرست بچ‌ها از سرور">
+                <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" />
+            </Button>
+        </DockPanel>
+
+        <!-- ═══ راهنمای صفحه ═══ -->
+        <TextBlock Grid.Row="1" FontSize="12" Opacity="0.65" Margin="2,0,0,8" TextWrapping="Wrap"
+                   Text="سرنگ، سرم، گاز استریل و اقلام مشابه — هنگام پذیرش خدمتی مصرف می‌شوند و هزینه‌شان خودکار به فاکتور بیمار می‌نشیند. این صفحه مستقل از ماژول داروخانه است و به لایسنس Pharmacy نیازی ندارد." />
+
+        <!-- ═══ چیپ‌های خلاصه — همیشه از کل داده (مستقل از جستجو) ═══ -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
+            <Border Background="#E3F2FD" CornerRadius="10" Padding="14,6" Margin="0,0,8,0"
+                    ToolTip="شمار اقلام مصرفی تعریف‌شده (بچ‌ها به قلم تجمیع شده‌اند)">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Syringe" Width="15" Height="15" Foreground="#1565C0" VerticalAlignment="Center" />
+                    <TextBlock Margin="7,0,0,0" FontSize="12.5" Foreground="#0D47A1" VerticalAlignment="Center">
+                        <Run Text="اقلام: " /><Run Text="{Binding ItemsCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontWeight="Bold" />
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+            <Border Background="#FFF3E0" CornerRadius="10" Padding="14,6" Margin="0,0,8,0"
+                    ToolTip="بچ‌های زیر نقطه سفارش — پیش از اتمام، ورود کالا ثبت کنید">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="PackageDown" Width="15" Height="15" Foreground="#E65100" VerticalAlignment="Center" />
+                    <TextBlock Margin="7,0,0,0" FontSize="12.5" Foreground="#BF360C" VerticalAlignment="Center">
+                        <Run Text="کمبود: " /><Run Text="{Binding LowStockCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontWeight="Bold" />
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+            <Border Background="#FCE4EC" CornerRadius="10" Padding="14,6" Margin="0,0,8,0"
+                    ToolTip="بچ‌هایی که در ۹۰ روز آینده منقضی می‌شوند">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="ClockAlertOutline" Width="15" Height="15" Foreground="#AD1457" VerticalAlignment="Center" />
+                    <TextBlock Margin="7,0,0,0" FontSize="12.5" Foreground="#880E4F" VerticalAlignment="Center">
+                        <Run Text="نزدیک انقضا: " /><Run Text="{Binding ExpiringCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontWeight="Bold" />
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+            <Border Background="#E8F5E9" CornerRadius="10" Padding="14,6"
+                    ToolTip="جمع ارزش فروش کل موجودی مصرفی (موجودی × قیمت فروش هر بچ)">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="CashMultiple" Width="15" Height="15" Foreground="#2E7D32" VerticalAlignment="Center" />
+                    <TextBlock Margin="7,0,0,0" FontSize="12.5" Foreground="#1B5E20" VerticalAlignment="Center">
+                        <Run Text="ارزش انبار: " /><Run Text="{Binding TotalValueText, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <ProgressBar Grid.Row="3" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+
+        <!-- ═══ جدول بچ‌ها + نوار پالایش ═══ -->
+        <Border Grid.Row="4" CornerRadius="12" Padding="10"
+                Background="{DynamicResource MaterialDesign.Brush.Background}"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- نوار پالایش: جستجو + سوییچ کمبود -->
+                <DockPanel Grid.Row="0" Margin="2,0,2,8">
+                    <TextBox DockPanel.Dock="Right" Width="260" Margin="12,0,0,0" FontSize="12.5"
+                             VerticalAlignment="Center"
+                             materialDesign:HintAssist.Hint="🔍 جستجوی قلم یا شماره بچ"
+                             Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                    <CheckBox DockPanel.Dock="Left" Content="فقط بچ‌های کمبود"
+                              IsChecked="{Binding LowStockOnly}"
+                              FontSize="12.5" VerticalAlignment="Center"
+                              HorizontalAlignment="Left"
+                              ToolTip="موجودیِ زیر نقطه سفارش — از سرور با پارامتر lowStock" />
+                </DockPanel>
+
+                <!-- خطای درون‌صفحه‌ای — چرخهٔ ۳۸ (شکست هرگز خاموش نیست) -->
+                <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}" Foreground="#C62828"
+                           FontSize="12" TextWrapping="Wrap" Margin="2,0,2,6"
+                           Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
+
+                <!-- جدول بچ‌ها — VisibleBatches شامل پالایش زندهٔ جستجوست -->
+                <DataGrid Grid.Row="2" ItemsSource="{Binding VisibleBatches}"
+                          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                          HeadersVisibility="Column" FontSize="12.5"
+                          GridLinesVisibility="Horizontal"
+                          AlternatingRowBackground="#F7FAFD">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="قلم مصرفی" Binding="{Binding Name, Converter={StaticResource PersianDigits}}"
+                                            Width="*" MinWidth="170" FontWeight="SemiBold" />
+                        <DataGridTextColumn Header="بچ" Binding="{Binding BatchNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
+                                            Width="90" FontFamily="{DynamicResource App.CodeFont}" />
+                        <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}"
+                                            Width="80" FontFamily="{DynamicResource App.CodeFont}" />
+                        <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel, Converter={StaticResource PersianDigits}}"
+                                            Width="85" FontFamily="{DynamicResource App.CodeFont}" />
+                        <DataGridTextColumn Header="قیمت فروش" Binding="{Binding SellPrice, Converter={StaticResource CurrencyRial}}"
+                                            Width="100" FontFamily="{DynamicResource App.CodeFont}" />
+                        <DataGridTextColumn Header="قیمت خرید" Binding="{Binding PurchasePrice, Converter={StaticResource CurrencyRial}}"
+                                            Width="100" FontFamily="{DynamicResource App.CodeFont}" />
+                        <DataGridTextColumn Header="انقضا" Binding="{Binding ExpiryShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
+                                            Width="95" FontFamily="{DynamicResource App.CodeFont}" />
+                        <DataGridTemplateColumn Header="وضعیت" Width="110">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <!-- رنگ وضعیت با تریگر — مبدل اختصاصی لازم نیست (الگوی اتاق‌ها) -->
+                                    <Border CornerRadius="10" Padding="10,2.5" HorizontalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#E8F5E9" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsLowStock}" Value="True">
+                                                        <Setter Property="Background" Value="#FFEBEE" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsExpiringSoon}" Value="True">
+                                                        <Setter Property="Background" Value="#FFF3E0" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding StatusText, Converter={StaticResource PersianDigits}}" FontSize="11.5" />
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

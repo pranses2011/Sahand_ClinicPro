@@ -136,6 +136,8 @@ public partial class MainWindowViewModel : ObservableObject
         DoctorsViewModel doctorsVm,
         AppointmentsViewModel appointments,
         ReceptionsViewModel receptions,
+        // چرخهٔ ۴۱ — صفحهٔ مستقل لوازم مصرفی (بدون نیاز به ماژول داروخانه)
+        ConsumablesViewModel consumablesVm,
         VisitsViewModel visitsVm,
         // چرخهٔ بیست‌وهفتم — میزکار پزشک (صفحهٔ ویزیت پزشک)
         DoctorVisitViewModel doctorVisitVm,
@@ -235,6 +237,8 @@ public partial class MainWindowViewModel : ObservableObject
             ["doctors"] = () => doctorsVm,
             ["appointments"] = () => appointments,
             ["receptions"] = () => receptions,
+            // چرخهٔ ۴۱ — لوازم مصرفی درمانگاه (صفحهٔ منوی کناری؛ مستقل از داروخانه)
+            ["consumables"] = () => consumablesVm,
             ["visits"] = () => visitsVm,
             // چرخهٔ بیست‌وهفتم — میزکار پزشک (گزارش هجدهم مالک)
             ["doctor-visit"] = () => doctorVisitVm,
@@ -300,6 +304,10 @@ public partial class MainWindowViewModel : ObservableObject
                 new() { Title = "بیماران", PageKey = "patients", Icon = "AccountGroup" },
                 new() { Title = "نوبت‌دهی", PageKey = "appointments", Icon = "CalendarClock" },
                 new() { Title = "پذیرش", PageKey = "receptions", Icon = "ClipboardAccount" },
+                // چرخهٔ ۴۱ (گزارش مالک) — «درمانگاه بدون ماژول داروخانه هم باید
+                // بتواند لوازم مصرفی را تعریف و استفاده کند»: صفحهٔ مستقل مصرفی‌ها
+                // در گروه پذیرش و درمان (نه نسخه و دارو) تا جایگاهش در جریان درمان روشن باشد
+                new() { Title = "لوازم مصرفی", PageKey = "consumables", Icon = "Syringe" },
                 new() { Title = "ویزیت و معاینه", PageKey = "visits", Icon = "Stethoscope" },
                 // چرخهٔ بیست‌وهفتم — میزکار شخصی پزشک (صف و فراخوان و آمار خودش)
                 new() { Title = "میزکار پزشک", PageKey = "doctor-visit", Icon = "Doctor" },

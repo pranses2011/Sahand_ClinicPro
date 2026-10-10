@@ -11,7 +11,8 @@ namespace Sahand.ClinicPro.Desktop.ViewModels;
 /// <remarks>
 /// «خرید و انبار و قیمت‌های این لوازم هم باید باشه» — پيش از این چرخه ساخت
 /// قلم جدید (دارو یا لوازم مصرفی مثل سرنگ/سرم/گاز استریل) از خود برنامه
-/// ممکن نبود. این فرم POST lookups/medications را صدا می‌زند؛ پس از ساخت
+/// ممکن نبود. این فرم POST consumables/items را صدا می‌زند (چرخهٔ ۴۱: مسیر
+/// مستقل مصرفی‌ها، بدون گیت ماژول لایسنس داروخانه)؛ پس از ساخت
 /// قلم، کاربر از تب «ورود کالا» بچ/تعداد/قیمت را ثبت می‌کند تا موجودی اولیه
 /// بسازد (قلم بدون موجودی در فهرست «موجودی» نمی‌آید چون فهرست فقط بچ‌هاست).
 /// </remarks>
@@ -95,7 +96,12 @@ public partial class PharmacyItemFormViewModel : ObservableObject
         }
 
         IsBusy = true;
-        var ok = await _api.PostAsync("lookups/medications", new
+        // ═══ چرخهٔ ۴۱ — مسیر مستقل api/v1/consumables/items ═══
+        // همان فرمان CreatePharmacyItemCommand چرخهٔ ۳۹ است که تاکنون به
+        // lookups/medications می‌رفت؛ از این پس مسیر تخصیصی مصرفی‌ها (بدون گیت
+        // ماژول لایسنس داروخانه) می‌رود تا کلینیکِ بدون آن ماژول هم بتواند
+        // قلم تعریف کند. گیت نقش (Admin/Manager) دست‌نخورده مانده است.
+        var ok = await _api.PostAsync("consumables/items", new
         {
             nameFa = NameFa.Trim(),
             genericName = GenericName.Trim(),

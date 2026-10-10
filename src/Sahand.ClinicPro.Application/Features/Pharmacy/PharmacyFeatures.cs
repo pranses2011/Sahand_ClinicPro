@@ -21,7 +21,12 @@ public record InventoryListDto(
     // نوع قلم — ۱ دارو، ۲ لوازم مصرفی (چرخهٔ ۳۹) — کامنت عادی (درس CS1587)
     int ItemKind = 1,
     // متن فارسی نوع — «دارو» یا «لوازم مصرفی»
-    string KindText = "دارو");
+    string KindText = "دارو",
+    // قیمت فروش هر واحد این بچ — چرخهٔ ۴۱: صفحهٔ مستقل لوازم مصرفی برای
+    // نمایش ارزش انبار و قیمت‌گذاری مصرف می‌خواند (افزایشی؛ داروخانه نادیده می‌گیرد)
+    decimal SellPrice = 0,
+    // قیمت خرید هر واحد این بچ — همان‌طور افزایشی برای صفحهٔ چرخهٔ ۴۱
+    decimal PurchasePrice = 0);
 
 /// <summary>ردیف فهرست اقلام نسخه برای تحویل</summary>
 public record PrescriptionItemRowDto(
@@ -234,7 +239,10 @@ public class GetInventoryQueryHandler : IRequestHandler<GetInventoryQuery, Resul
                 i.ExpiryDate.HasValue && i.ExpiryDate.Value <= soon,
                 // چرخهٔ ۳۹ — نوع قلم + متن فارسی
                 (int)i.Medication!.ItemKind,
-                i.Medication.ItemKind == MedicationItemKind.Consumable ? "لوازم مصرفی" : "دارو"))
+                i.Medication.ItemKind == MedicationItemKind.Consumable ? "لوازم مصرفی" : "دارو",
+                // چرخهٔ ۴۱ — قیمت‌های هر بچ برای صفحهٔ مستقل لوازم مصرفی (افزایشی)
+                i.SellPrice,
+                i.PurchasePrice))
             .ToListAsync(cancellationToken);
 
         return Result<List<InventoryListDto>>.Success(items);
