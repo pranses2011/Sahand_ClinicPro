@@ -43,7 +43,11 @@
             <DockPanel>
                 <!-- چپ: دکمه‌های چاپ و ویرایش -->
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Top">
+                    <!-- چرخهٔ ۳۸ (گزارش مالک: «هیچ دکمه چاپی کار نمی‌کند»): دکمهٔ مردهٔ
+                         چاپ کارت به فرمان واقعی وصل شد — کارت شناسایی بیمار با سند
+                         جریان فارسی به چاپگر می‌رود -->
                     <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Click="OnPrintCardClick"
                             ToolTip="چاپ کارت بیمار" Margin="0,0,8,0" Padding="8,6">
                         <materialDesign:PackIcon Kind="Printer" Width="16" Height="16" />
                     </Button>

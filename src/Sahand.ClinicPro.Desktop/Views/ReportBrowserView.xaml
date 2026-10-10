@@ -165,7 +165,9 @@
                                 <TextBlock Text="PDF" Margin="6,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6" ToolTip="چاپ مستقیم نتایج">
+                        <Button Command="{Binding PrintCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6"
+                                ToolTip="چاپ مستقیم نتایج با سربرگ و تاریخ شمسی — چرخهٔ ۳۸">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Printer" Width="14" Height="14" VerticalAlignment="Center" />
                                 <TextBlock Text="چاپ" Margin="6,0,0,0" VerticalAlignment="Center" />
@@ -210,6 +212,22 @@
                         Visibility="{Binding IsReportAvailable, Converter={StaticResource InverseBoolToVisibility}}">
                     <TextBlock Text="{Binding UnavailableMessage, TargetNullValue='این گزارش هنوز داده واقعی ندارد'}"
                                FontSize="12" Foreground="#E65100" TextWrapping="Wrap" />
+                </Border>
+
+                <!-- ═══ پیام درون‌صفحه‌ای شکست/خطا — چرخهٔ ۳۸ (گزارش مالک: «گزارش‌ها
+                     چیزی نشان نمی‌دهند»): علت (خطای سرور/ماژول/مجوز) داخل خود
+                     صفحه می‌ماند نه فقط یک توست گذرا؛ پس‌زمینهٔ قرمز ملایم و متن
+                     راهنما — با رفع مشکل و اجرای موفق، خودش پنهان می‌شود ═══ -->
+                <Border Grid.Row="2" Padding="14,10" CornerRadius="10" Background="#FDECEA" Margin="2,0,2,10"
+                        Visibility="{Binding ResultNotice, Converter={StaticResource StringToVisibility}}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="AlertCircle" Width="18" Height="18"
+                                                 Foreground="#C62828" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <StackPanel>
+                            <TextBlock Text="اجرای گزارش ناموفق بود" FontSize="12.5" FontWeight="Bold" Foreground="#C62828" />
+                            <TextBlock Text="{Binding ResultNotice}" FontSize="12" Foreground="#8E2A20" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </StackPanel>
                 </Border>
 
                 <!-- نتایج -->

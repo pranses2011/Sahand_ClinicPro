@@ -97,6 +97,15 @@ public partial class AccountingViewModel : ViewModelBase
     public string TrialTotalText => TrialDebitTotal == TrialCreditTotal
         ? $"✅ متوازن — {TrialDebitTotal:N0}" : $"⚠️ نامتوازن — بده: {TrialDebitTotal:N0} / بستان: {TrialCreditTotal:N0}";
 
+    /// <summary>
+    /// پیام درون‌صفحه‌ای شکست گزارش‌های مالی — چرخهٔ سی‌وهشتم (گزارش مالک:
+    /// «در گزارش‌های مالی خروجی نشان نمی‌دهد»): پیش‌تر شکست بارگذاری تراز/
+    /// سود و زیان بی‌صدا می‌ماند و حتی توست «به‌روزرسانی شد» باجو می‌زد؛ اکنون
+    /// علت داخل خود تب می‌نشیند و توست هم درست است.
+    /// </summary>
+    [ObservableProperty]
+    private string? _reportsNotice;
+
     /* ── تب ۵: سود و زیان ── */
     public ObservableCollection<IncomeRow> IncomeRows { get; } = new();
     [ObservableProperty] private string? _incomeFrom = PersianDateHelper.ToShamsi(new DateTime(DateTime.Now.Year, 1, 1));
@@ -297,41 +306,61 @@ public partial class AccountingViewModel : ViewModelBase
 
     /* ── تب ۴: تراز ── */
 
-    /// <summary>بارگذاری تراز</summary>
-    private async Task LoadTrialAsync()
+    /// <summary>بارگذاری تراز — خروجی: موفقیت/شکست (چرخهٔ ۳۸)</summary>
+    private async Task<bool> LoadTrialAsync()
     {
         var response = await _api.GetAsync<TrialResponse>(
             $"accounting/trial-balance?from={Uri.EscapeDataString(IncomeFrom ?? string.Empty)}" +
             $"&to={Uri.EscapeDataString(IncomeTo ?? string.Empty)}");
         TrialRows.Clear();
-        if (response?.Data is null) return;
+        if (response?.Data is null) return false; // شکست سرور/مجوز — علت با LastError
         foreach (var r in response.Data)
             TrialRows.Add(new TrialRow(r.AccountCode, r.AccountName, r.OpeningBalance,
                 r.PeriodDebit, r.PeriodCredit, r.ClosingBalance, r.BalanceType));
         OnPropertyChanged(nameof(TrialTotalText));
+        return true;
     }
 
     /* ── تب ۵: سود و زیان ── */
 
-    /// <summary>بارگذاری سود و زیان</summary>
-    private async Task LoadIncomeAsync()
+    /// <summary>بارگذاری سود و زیان — خروجی: موفقیت/شکست (چرخهٔ ۳۸)</summary>
+    private async Task<bool> LoadIncomeAsync()
     {
         var response = await _api.GetAsync<IncomeResponse>(
             $"accounting/income-statement?from={Uri.EscapeDataString(IncomeFrom ?? string.Empty)}" +
             $"&to={Uri.EscapeDataString(IncomeTo ?? string.Empty)}");
         IncomeRows.Clear();
-        if (response?.Data is null) return;
+        if (response?.Data is null) return false;
         foreach (var r in response.Data)
             IncomeRows.Add(new IncomeRow(r.Title, r.Amount, r.IsHeader, r.IsTotal));
+        return true;
     }
 
-    /// <summary>به‌روزرسانی گزارش‌ها با بازه جدید</summary>
+    /// <summary>
+    /// به‌روزرسانی گزارش‌ها با بازه جدید — چرخهٔ سی‌وهشتم: نتیجهٔ واقعی هر دو
+    /// گزارش اعلام می‌شود؛ شکست، پیامش درون صفحه می‌نشیند (پیش‌تر حتی روی
+    /// شکست هم «به‌روزرسانی شد» می‌گفت — گمراه‌کننده بود).
+    /// </summary>
     [RelayCommand]
     private async Task RefreshReportsAsync()
     {
-        await LoadTrialAsync();
-        await LoadIncomeAsync();
-        _snackbar.Success("گزارش‌ها به‌روزرسانی شدند");
+        ReportsNotice = null;
+        var trialOk = await LoadTrialAsync();
+        var incomeOk = await LoadIncomeAsync();
+
+        if (trialOk && incomeOk)
+        {
+            _snackbar.Success("گزارش‌های تراز و سود و زیان به‌روزرسانی شدند");
+            return;
+        }
+
+        // دست‌کم یکی شکست خورده — نام بخش(ها) + علت سرور درون صفحه
+        var failed = new List<string>();
+        if (!trialOk) failed.Add("تراز آزمایشی");
+        if (!incomeOk) failed.Add("سود و زیان");
+        ReportsNotice = $"بارگذاری {string.Join(" و ", failed)} ناموفق بود — " +
+            $"{_api.LastError ?? "خطای ناشناخته سرور"}";
+        _snackbar.Error("بارگذاری گزارش‌های مالی ناموفق بود");
     }
 
     /* ─── پاسخ‌های API ─── */

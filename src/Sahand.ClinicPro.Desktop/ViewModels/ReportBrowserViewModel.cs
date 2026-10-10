@@ -3,6 +3,7 @@ using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Desktop.Controls.Charts;
 using Sahand.ClinicPro.Desktop.Services;
 using Sahand.ClinicPro.Desktop.Views;
@@ -128,6 +129,15 @@ public partial class ReportBrowserViewModel : ViewModelBase
     [ObservableProperty]
     private string? _unavailableMessage;
 
+    /// <summary>
+    /// پیام درون‌صفحه‌ای ناحیهٔ نتایج — چرخهٔ سی‌وهشتم (گزارش مالک: «گزارش‌ها
+    /// چیزی نشان نمی‌دهند»): پیش‌تر شکست اجرا فقط یک توست گذرا بود و صفحهٔ
+    /// نتایج تهی می‌ماند؛ اکنون علت (خطای سرور/ماژول/مجوز) داخل خود ناحیهٔ
+    /// نتیجه می‌نشیند تا کاربر ببیند و بماند — نه فقط بگذرد.
+    /// </summary>
+    [ObservableProperty]
+    private string? _resultNotice;
+
     /// <summary>کارت‌های خلاصه</summary>
     public ObservableCollection<ReportSummaryCard> SummaryCards { get; } = new();
 
@@ -186,6 +196,11 @@ public partial class ReportBrowserViewModel : ViewModelBase
                     c.Reports.Select(r => new ReportCatalogItem(
                         r.Id, r.Title, r.Description, r.ParamsList)).ToList())));
             SelectedCategory = Categories.FirstOrDefault();
+
+            // چرخهٔ ۳۸: شکست کاتالوگ درون‌صفحه‌ای اعلام شود — سایدبار تهی بی‌توضیح
+            // گزارش مالک («هیچ‌کدام از گزارش‌ها کار نمی‌کنند») را ریشه‌یابی‌ناپذیر می‌کند
+            if (Categories.Count == 0)
+                _snackbar.Error($"کاتالوگ گزارش‌ها بارگذاری نشد — {_api.LastError ?? "خطای سرور"}");
         }
         finally
         {
@@ -219,6 +234,7 @@ public partial class ReportBrowserViewModel : ViewModelBase
         HasChart = false;
         ChartPoints = null;
         UnavailableMessage = null;
+        ResultNotice = null;
         IsReportAvailable = true;
     }
 
@@ -277,12 +293,17 @@ public partial class ReportBrowserViewModel : ViewModelBase
             var data = response?.Data;
             if (data is null)
             {
-                _snackbar.Error(_api.LastError ?? "اجرای گزارش ناموفق بود");
+                // چرخهٔ ۳۸: علت شکست هم توست می‌شود هم درون صفحهٔ نتیجه می‌ماند
+                var why = _api.LastError ?? "اجرای گزارش ناموفق بود";
+                ResultNotice = why;
+                _snackbar.Error(why);
                 return;
             }
 
             IsReportAvailable = data.Available;
             UnavailableMessage = data.Available ? null : data.Message;
+            // گزارش در دسترس نیست (مثلاً ماژول خاموش) — پیامش درون صفحه بنشیند
+            ResultNotice = data.Available ? null : (data.Message ?? "این گزارش هم‌اکنون در دسترس نیست");
 
             SummaryCards.Clear();
             if (data.Summary is not null)
@@ -410,6 +431,147 @@ public partial class ReportBrowserViewModel : ViewModelBase
             _snackbar.Success($"PDF با سربرگ درمانگاه ذخیره شد ({pdf.Length / 1024.0:F0} KB)");
         }
         finally { IsBusy = false; }
+    }
+
+    /// <summary>
+    /// چاپ مستقیم نتایج گزارش — چرخهٔ سی‌وهشتم (گزارش مالک: «هیچ‌کدام از
+    /// دکمه‌های چاپ کار نمی‌کنند»). دکمهٔ چاپ ناحیهٔ نتایج پیش‌تر هیچ فرمانی
+    /// نداشت (دکمهٔ مرده)؛ اکنون سند جریان فارسی راست‌چین با سربرگ (عنوان +
+    /// بازه + تاریخ چاپ شمسی)، خط خلاصه‌ها و جدول کامل نتایج می‌سازد و به
+    /// چاپگر پیش‌فرض ویندوز می‌فرستد. ستون‌ها به عرض قابل چاپ صفحه تقسیم
+    /// مساوی می‌شوند تا هیچ ستونی بریده یا جاافتاده نماند.
+    /// </summary>
+    [RelayCommand]
+    private void PrintReport()
+    {
+        if (Rows.Count == 0) { _snackbar.Info("ابتدا گزارش را اجرا کنید تا نتیجه‌ای برای چاپ باشد"); return; }
+
+        // چاپگر پیش از ساخت سند لازم است — عرض قابل چاپ (DIP) ستون‌بندی را تعیین می‌کند
+        var dialog = new System.Windows.Controls.PrintDialog();
+        if (dialog.ShowDialog() != true) return; // انصراف کاربر
+
+        var app = System.Windows.Application.Current;
+        var font = app?.TryFindResource("App.FontFamily") as System.Windows.Media.FontFamily
+                   ?? new System.Windows.Media.FontFamily("Tahoma");
+
+        // ═══ سند جریان فارسی — راست‌چین با فونت برنامه ═══
+        var doc = new System.Windows.Documents.FlowDocument
+        {
+            FlowDirection = System.Windows.FlowDirection.RightToLeft,
+            FontFamily = font,
+            FontSize = 12,
+            PagePadding = new System.Windows.Thickness(40, 36, 40, 44),
+        };
+
+        // سربرگ: عنوان گزارش + بازه اجرا + تاریخ چاپ شمسی
+        var header = new System.Windows.Documents.Paragraph
+        {
+            FontSize = 17,
+            FontWeight = System.Windows.FontWeights.Bold,
+            Foreground = System.Windows.Media.Brushes.DarkSlateGray,
+            Margin = new System.Windows.Thickness(0, 0, 0, 4),
+        };
+        header.Inlines.Add(new System.Windows.Documents.Run(ReportTitle));
+        doc.Blocks.Add(header);
+
+        var rangeText = HasDateRange
+            ? $"بازه: {PersianDateHelper.ToShamsiFa(FromDate)} تا {PersianDateHelper.ToShamsiFa(ToDate)}"
+            : "بازه: کل داده‌ها";
+        var meta = new System.Windows.Documents.Paragraph
+        {
+            FontSize = 11,
+            Foreground = System.Windows.Media.Brushes.Gray,
+            Margin = new System.Windows.Thickness(0, 0, 0, 10),
+        };
+        meta.Inlines.Add(new System.Windows.Documents.Run(
+            $"{rangeText}    |    تاریخ چاپ: {PersianDateHelper.ToShamsiFa(DateTime.Now)} - {PersianDateHelper.ToClockFa(DateTime.Now)}"));
+        doc.Blocks.Add(meta);
+
+        // خط خلاصه‌ها — کارت‌ها به یک سطر خوانا فشرده می‌شوند
+        if (SummaryCards.Count > 0)
+        {
+            var summary = new System.Windows.Documents.Paragraph
+            {
+                FontSize = 11.5,
+                FontWeight = System.Windows.FontWeights.SemiBold,
+                Margin = new System.Windows.Thickness(0, 0, 0, 10),
+            };
+            summary.Inlines.Add(string.Join("    |    ",
+                SummaryCards.Select(c => $"{c.Label}: {c.Value}")));
+            doc.Blocks.Add(summary);
+        }
+
+        // ═══ جدول نتایج — عرض مساوی در عرض قابل چاپ ═══
+        var colCount = Math.Max(1, Columns.Count);
+        var usableWidth = Math.Max(300, dialog.PrintableAreaWidth
+            - doc.PagePadding.Left - doc.PagePadding.Right);
+        var colWidth = Math.Floor(usableWidth / colCount);
+
+        var table = new System.Windows.Documents.Table
+        {
+            CellSpacing = 0,
+            BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xCF, 0xD8, 0xDC)),
+            BorderThickness = new System.Windows.Thickness(0.5),
+        };
+        for (var i = 0; i < colCount; i++)
+            table.Columns.Add(new System.Windows.Documents.TableColumn
+            {
+                Width = new System.Windows.GridLength(colWidth, System.Windows.GridUnitType.Pixel),
+            });
+
+        // ردیف سرستون‌ها — پس‌زمینهٔ آبی روشن و متن درشت
+        var headerRow = new System.Windows.Documents.TableRowGroup { Background = System.Windows.Media.Brushes.WhiteSmoke };
+        var hr = new System.Windows.Documents.TableRow();
+        foreach (var col in Columns)
+        {
+            hr.Cells.Add(new System.Windows.Documents.TableCell(new System.Windows.Documents.Paragraph(
+                new System.Windows.Documents.Run(col))
+            {
+                FontWeight = System.Windows.FontWeights.Bold,
+                Margin = new System.Windows.Thickness(0),
+            })
+            {
+                Padding = new System.Windows.Thickness(6, 5, 6, 5),
+                BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xB0, 0xBE, 0xC5)),
+                BorderThickness = new System.Windows.Thickness(0.5),
+            });
+        }
+        headerRow.Rows.Add(hr);
+        table.RowGroups.Add(headerRow);
+
+        // ردیف‌های داده — یک‌درمیان سایهٔ بسیار ملایم برای خوانایی
+        var body = new System.Windows.Documents.TableRowGroup();
+        var zebra = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0x0D, 0x00, 0x00, 0x00));
+        zebra.Freeze();
+        for (var r = 0; r < Rows.Count; r++)
+        {
+            var row = Rows[r];
+            var tr = new System.Windows.Documents.TableRow();
+            if (r % 2 == 1) tr.Background = zebra;
+            for (var c = 0; c < colCount; c++)
+            {
+                var text = c < row.Cells.Count ? row.Cells[c].Text : "";
+                tr.Cells.Add(new System.Windows.Documents.TableCell(new System.Windows.Documents.Paragraph(
+                    new System.Windows.Documents.Run(text))
+                {
+                    Margin = new System.Windows.Thickness(0),
+                })
+                {
+                    Padding = new System.Windows.Thickness(6, 4, 6, 4),
+                    BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xE0, 0xE0, 0xE0)),
+                    BorderThickness = new System.Windows.Thickness(0.5),
+                });
+            }
+            body.Rows.Add(tr);
+        }
+        table.RowGroups.Add(body);
+        doc.Blocks.Add(table);
+
+        // ارسال به چاپگر — نام کار: عنوان گزارش
+        dialog.PrintDocument(
+            ((System.Windows.Documents.IDocumentPaginatorSource)doc).DocumentPaginator,
+            $"گزارش: {ReportTitle}");
+        _snackbar.Success($"«{ReportTitle}» به چاپگر ارسال شد");
     }
 
     /// <summary>گشودن پنجره گزارش‌ساز رایگانه (کوئری‌ساز گرافیکی) — چرخه سیزدهم (درخواست ۴-۳)</summary>

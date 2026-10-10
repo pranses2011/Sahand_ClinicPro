@@ -243,6 +243,7 @@
                 <Grid Margin="4,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
@@ -256,7 +257,20 @@
                         </Button>
                         <TextBlock Text="{Binding TrialTotalText, Mode=OneWay}" FontWeight="Bold" Margin="16,0,0,0" VerticalAlignment="Center" />
                     </StackPanel>
-                    <DataGrid Grid.Row="1" ItemsSource="{Binding TrialRows}" AutoGenerateColumns="False"
+
+                    <!-- ═══ بنر شکست بارگذاری — چرخهٔ ۳۸ (گزارش مالک: «در گزارش‌های
+                         مالی خروجی نشان نمی‌دهد»): علت داخل خود تب می‌ماند ═══ -->
+                    <Border Grid.Row="1" Padding="12,8" CornerRadius="10" Background="#FDECEA"
+                            Margin="0,0,0,8" HorizontalAlignment="Stretch"
+                            Visibility="{Binding ReportsNotice, Converter={StaticResource StringToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AlertCircle" Width="17" Height="17"
+                                                     Foreground="#C62828" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBlock Text="{Binding ReportsNotice}" FontSize="12" Foreground="#8E2A20"
+                                       TextWrapping="Wrap" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                    <DataGrid Grid.Row="2" ItemsSource="{Binding TrialRows}" AutoGenerateColumns="False"
                               CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column" FontSize="12">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="کد" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="100" FontFamily="{DynamicResource App.CodeFont}" />
@@ -274,6 +288,18 @@
             <!-- تب ۵: سود و زیان -->
             <TabItem Header="💹 سود/زیان">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                    <!-- ═══ بنر شکست بارگذاری — چرخهٔ ۳۸ (همان تراز؛ سود و زیان هم
+                         با همان علت می‌شکند و پیام باید دیده شود) ═══ -->
+                    <Border Padding="12,8" CornerRadius="10" Background="#FDECEA"
+                            Margin="0,0,0,10" HorizontalAlignment="Stretch"
+                            Visibility="{Binding ReportsNotice, Converter={StaticResource StringToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AlertCircle" Width="17" Height="17"
+                                                     Foreground="#C62828" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBlock Text="{Binding ReportsNotice}" FontSize="12" Foreground="#8E2A20"
+                                       TextWrapping="Wrap" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
                     <Border CornerRadius="12" Padding="18" MaxWidth="560" HorizontalAlignment="Center"
                             Background="{DynamicResource MaterialDesign.Brush.Background}" Margin="0,8,0,0">
                         <StackPanel>
