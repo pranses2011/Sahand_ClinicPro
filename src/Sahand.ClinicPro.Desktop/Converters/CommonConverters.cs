@@ -1,6 +1,14 @@
 ﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
+// ═══ چرخهٔ سی‌وششم (گزارش مالک — رفع خطای ساخت CS0103/CS0246) ═══
+// مبدل HexBrushConverter (چرخهٔ سی‌وپنجم، رنگ کادر پیام‌های سرور لایسنس) از
+// انواع Brushes / Color / ColorConverter / SolidColorBrush استفاده می‌کند که
+// همگی عضو فضای‌نام System.Windows.Media هستند؛ این using در آن چرخه جا
+// افتاده بود. این فایل تا پیش از چرخهٔ سی‌وپنجم هیچ نوعِ رسانه‌ای مصرف
+// نمی‌کرد و به همین دلیل خطا تا مرحلهٔ Rebuild مالک آشکار نشد — نبودِ آن
+// پروژهٔ دسکتاپ را می‌شکند و در زنجیره‌اش پروژهٔ تست هم (CS0006) از آب می‌افتد.
+using System.Windows.Media;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Desktop.Helpers;
 
