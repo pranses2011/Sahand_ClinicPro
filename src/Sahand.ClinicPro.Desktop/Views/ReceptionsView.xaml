@@ -286,6 +286,108 @@
                             </StackPanel>
                         </Grid>
 
+                        <!-- ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — لوازم مصرفی درمانگاه ═══
+                             «سرنگ و سرم و گاز استریل و مواردی از این قبیل رو وقتی بیمار
+                             با خودش نمیاره، باید از لوازم خود درمانگاه استفاده بکنیم و
+                             در پذیرش برای اونها هم هزینه به هزینه‌های بیمار اضافه بشه» —
+                             فقط در حالت خدمت درمانی نمایان؛ اقلام دارای موجودی از انبار
+                             می‌آیند، جمع هزینه بی‌درنگ به «قابل پرداخت بیمار» می‌چسبد و
+                             هنگام ثبت، موجودی FEFO کم می‌شود و به فاکتور می‌نشیند. -->
+                        <Border CornerRadius="10" Padding="14,10" Margin="0,12,0,0"
+                                Background="#E0F7FA" BorderBrush="#4DD0E1" BorderThickness="1"
+                                Visibility="{Binding ReceptionModeIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}">
+                            <StackPanel>
+                                <TextBlock Text="🧰 لوازم مصرفی درمانگاه — برای مواردی که بیمار خودش همراه ندارد"
+                                           FontSize="12.5" FontWeight="Bold" Margin="0,0,0,8" />
+
+                                <!-- ردیف افزودن: قلم + تعداد + دکمه -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox Grid.Column="0"
+                                              ItemsSource="{Binding ConsumableOptions}"
+                                              SelectedItem="{Binding SelectedConsumable}"
+                                              DisplayMemberPath="Display"
+                                              materialDesign:HintAssist.Hint="انتخاب قلم مصرفی (نام — موجودی · قیمت)"
+                                              FontSize="12" />
+                                    <TextBox Grid.Column="1" Text="{Binding ConsumableQty, UpdateSourceTrigger=PropertyChanged}"
+                                             materialDesign:HintAssist.Hint="تعداد"
+                                             Margin="8,0,0,0" FontFamily="{DynamicResource App.CodeFont}"
+                                             HorizontalContentAlignment="Center" />
+                                    <Button Grid.Column="2" Command="{Binding AddConsumableCommand}"
+                                            Style="{StaticResource MaterialDesignRaisedButton}"
+                                            Margin="8,0,0,0" MinWidth="90" MinHeight="38" Padding="14,8"
+                                            ToolTip="افزودن قلم مصرفی به فهرست مصرف این پذیرش">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Plus" Width="15" Height="15" VerticalAlignment="Center" />
+                                            <TextBlock Text="افزودن" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+
+                                <!-- راهنمای نبود قلم مصرفی در انبار -->
+                                <TextBlock FontSize="11" Foreground="#006064" Opacity="0.85" Margin="2,8,2,0"
+                                           Text="هیچ قلم مصرفی‌ای موجودی ندارد — نخست از ماژول «داروخانه» (افزودن قلم + ورود کالا) سرنگ/سرم/گاز و… را ثبت کنید."
+                                           TextWrapping="Wrap"
+                                           Visibility="{Binding ConsumableOptions, Converter={StaticResource EmptyListToVisibility}}" />
+
+                                <!-- ردیف‌های مصرف انتخاب‌شده -->
+                                <ItemsControl ItemsSource="{Binding Consumables}" Margin="0,8,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#FFFFFF" CornerRadius="8" Padding="9,5"
+                                                    Margin="0,0,0,5" BorderBrush="#80DEEA" BorderThickness="1"
+                                                    Opacity="0.97">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="95" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="Syringe" Width="15" Height="15" Foreground="#00838F" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Option.Name}" FontWeight="SemiBold" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                    <!-- تعداد — قابل ویرایش؛ جمع همان لحظه تازه می‌شود -->
+                                                    <TextBox Grid.Column="1" Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}"
+                                                             FontFamily="{DynamicResource App.CodeFont}" FontSize="12.5"
+                                                             materialDesign:HintAssist.Hint="تعداد"
+                                                             MinWidth="60" Margin="8,0,0,0" HorizontalContentAlignment="Center"
+                                                             VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="2" Text="{Binding LineTotal, Mode=OneWay, Converter={StaticResource CurrencyRial}}"
+                                                               FontFamily="{DynamicResource App.CodeFont}" FontSize="12.5" FontWeight="Bold"
+                                                               Foreground="#006064" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                                    <Button Grid.Column="3" Command="{Binding DataContext.RemoveConsumableCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                                            Foreground="#C62828" Padding="6,2" Margin="8,0,0,0"
+                                                            ToolTip="حذف این قلم از فهرست مصرف">
+                                                        <materialDesign:PackIcon Kind="Close" Width="14" Height="14" />
+                                                    </Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- جمع مصرفی‌ها — فقط وقتی ردیفی هست -->
+                                <Border Background="#B2EBF2" CornerRadius="8" Padding="10,5" Margin="0,6,0,0"
+                                        Visibility="{Binding HasConsumables, Converter={StaticResource BoolToVisibility}}">
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Right" Text="🧾 جمع لوازم مصرفی (۱۰۰٪ بر عهدهٔ بیمار — بدون سهم بیمه):"
+                                                   FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding ConsumablesTotalDisplay, Mode=OneWay}"
+                                                   FontFamily="{DynamicResource App.CodeFont}" FontSize="14.5" FontWeight="Bold"
+                                                   Foreground="#006064" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                                    </DockPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
                         <!-- ═══ محاسبه هزینه ═══ -->
                         <!-- چرخهٔ سی‌ودوم (گزارش مالک): «برای بیمهٔ آزاد هم سهم بیمه و سهم
                              بیمار می‌اندازد که اشتباه است» — در حالت «آزاد (بدون بیمه)»
@@ -328,10 +430,12 @@
                                             </Style>
                                         </StackPanel.Style>
                                         <TextBlock FontSize="11" Opacity="0.7"
-                                                   ToolTip="بدون بیمه — کل مبلغ تعرفه بر عهدهٔ بیمار است">
-                                            <Run Text="👤 قابل پرداخت بیمار (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" />
+                                                   ToolTip="سهم بیمار از خدمت + هزینهٔ لوازم مصرفی درمانگاه (۱۰۰٪ بر عهدهٔ بیمار — چرخهٔ ۳۹)">
+                                            <Run Text="👤 قابل پرداخت بیمار (خدمت + لوازم) (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" />
                                         </TextBlock>
-                                        <TextBlock Text="{Binding PatientShareDisplay, Mode=OneWay}" FontSize="18" FontWeight="Bold"
+                                        <!-- چرخهٔ ۳۹ — مبلغ نهایی = سهم بیمار خدمت + جمع لوازم مصرفی؛
+                                             بدون مصرفی همان سهم بیمار خدمت است -->
+                                        <TextBlock Text="{Binding PayableByPatientDisplay, Mode=OneWay}" FontSize="18" FontWeight="Bold"
                                                    FontFamily="{DynamicResource App.CodeFont}" Foreground="#C62828" />
                                     </StackPanel>
                                 </Grid>

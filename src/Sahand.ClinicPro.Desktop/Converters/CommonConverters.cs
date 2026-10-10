@@ -258,3 +258,31 @@ public sealed class HexBrushConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => Binding.DoNothing;
 }
+
+// ═══ چرخهٔ سی‌ونه‌م (گزارش مالک — لوازم مصرفی) ═══ مبدل «فهرست خالی» برای
+// راهنماهای حالت خالی: اگر مقدارِ همبسته یک مجموعه (ObservableCollection) با
+// صفر عنصر باشد، نمایان می‌شود — مثلاً راهنمای «هیچ قلم مصرفی‌ای موجودی
+// ندارد…» در فرم پذیرش فقط وقتی انبار مصرفی خالی است دیده می‌شود.
+/// <summary>
+/// مبدل فهرست خالی به دیدپذیری — مجموعهٔ بدون عنصر = نمایان (راهنمای حالت خالی)
+/// </summary>
+public sealed class EmptyListToVisibilityConverter : IValueConverter
+{
+    /// <summary>تبدیل — شمار عناصر مجموعه (یا طول رشته) صفر باشد نمایان</summary>
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var count = value switch
+        {
+            System.Collections.ICollection col => col.Count,
+            System.Collections.IEnumerable en => en.Cast<object?>().Count(),
+            string s => s.Length,
+            null => 0,
+            _ => 1
+        };
+        return count == 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>برگشت — در اتصالهای یک‌طرفه استفاده نمی‌شود</summary>
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => Binding.DoNothing;
+}

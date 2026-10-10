@@ -23,7 +23,11 @@ public record InvoiceItemDto(
     decimal DiscountPercent,
     long? DoctorId,
     decimal DoctorSharePercent,
-    long? PerformedById = null);
+    long? PerformedById = null,
+    // چرخهٔ ۳۹ — معافیت بیمه‌ای قلم: برای اقلام کالایی (لوازم مصرفی درمانگاه)
+    // که سهم بیمه ندارند و ۱۰۰٪ بر عهدهٔ بیمار است؛ پیش‌فرض false یعنی رفتار
+    // پیشین (سهم بیمه از درصد شرکت بیمه) کاملاً دست‌نخورده می‌ماند
+    bool IsInsuranceExempt = false);
 
 /// <summary>درخواست صدور فاکتور</summary>
 public record CreateInvoiceDto(

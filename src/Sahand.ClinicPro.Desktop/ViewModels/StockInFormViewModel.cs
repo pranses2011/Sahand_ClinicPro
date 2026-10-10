@@ -44,6 +44,25 @@ public partial class StockInFormViewModel : ObservableObject
     [ObservableProperty]
     private string? _expiryDateShamsi;
 
+    // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — فیلتر نوع قلم در جستجوی ورود کالا ═══
+    // ورود کالا برای دارو و لوازم مصرفی (سرنگ/سرم/گاز…) مشترک است؛ این فیلتر
+    // جستجو را به دستهٔ منتخب محدود می‌کند تا یافتن قلم در انبار بزرگ آسان شود.
+
+    /// <summary>نمایهٔ فیلتر نوع در جستجو — ۰ همه، ۱ دارو، ۲ لوازم مصرفی</summary>
+    [ObservableProperty]
+    private int _searchKindIndex;
+
+    /// <summary>گزینه‌های فیلتر نوع جستجو</summary>
+    public string[] SearchKindFilters { get; } =
+    {
+        "🗂️ همهٔ اقلام",
+        "💊 فقط داروها",
+        "🧰 فقط لوازم مصرفی"
+    };
+
+    /// <summary>تغییر فیلتر نوع → جستجوی مجدد با همان عبارت (اگر معتبر باشد)</summary>
+    partial void OnSearchKindIndexChanged(int value) => _ = SearchMedicationAsync();
+
     /// <summary>پیام خطا</summary>
     [ObservableProperty]
     private string _errorMessage = string.Empty;
@@ -61,15 +80,22 @@ public partial class StockInFormViewModel : ObservableObject
     /// <summary>سازنده با کلاینت API</summary>
     public StockInFormViewModel(IApiClient api) => _api = api;
 
-    /// <summary>جستجوی دارو</summary>
+    /// <summary>جستجوی دارو/قلم با فیلتر نوع — چرخهٔ ۳۹</summary>
     [RelayCommand]
     private async Task SearchMedicationAsync()
     {
         if (string.IsNullOrWhiteSpace(MedicationSearchTerm) || MedicationSearchTerm.Trim().Length < 2)
             return;
 
+        // چرخهٔ ۳۹ — پارامتر نوع قلم: ۱ دارو، ۲ لوازم مصرفی؛ نبود = همه
+        var kindParam = SearchKindIndex switch
+        {
+            1 => "&itemKind=1",
+            2 => "&itemKind=2",
+            _ => ""
+        };
         var response = await _api.GetAsync<PrescriptionFormViewModel.MedicationsResponse>(
-            $"lookups/medications?search={Uri.EscapeDataString(MedicationSearchTerm.Trim())}&take=25");
+            $"lookups/medications?search={Uri.EscapeDataString(MedicationSearchTerm.Trim())}&take=25{kindParam}");
 
         MedicationResults = response?.Data is not null
             ? new ObservableCollection<MedicationOption>(response.Data.Select(m =>

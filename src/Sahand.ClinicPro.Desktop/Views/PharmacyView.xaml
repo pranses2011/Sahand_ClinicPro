@@ -19,13 +19,23 @@
             <materialDesign:PackIcon Kind="Pill" Width="26" Height="26"
                                      Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
                                      VerticalAlignment="Center" />
-            <TextBlock Text="داروخانه" FontSize="20" FontWeight="Bold"
+            <TextBlock Text="داروخانه و انبار" FontSize="20" FontWeight="Bold"
                        Margin="10,0,0,0" VerticalAlignment="Center" />
+            <!-- چرخهٔ ۳۹ — افزودن قلم جدید (دارو/لوازم مصرفی)؛ تاکنون ساخت قلم
+                 از خود برنامه ممکن نبود و کاتالوگ فقط از بذر اولیه می‌آمد -->
+            <Button Command="{Binding AddItemCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Margin="16,0,0,0" VerticalAlignment="Center" MinHeight="38" MinWidth="125"
+                    ToolTip="ساخت قلم جدید انبار — دارو یا لوازم مصرفی (سرنگ/سرم/گاز…)">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="PlusBox" Width="15" Height="15" VerticalAlignment="Center" />
+                    <TextBlock Text="افزودن قلم" Margin="7,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
             <Button Command="{Binding StockInCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
-                    Margin="16,0,0,0" VerticalAlignment="Center">
+                    Margin="8,0,0,0" VerticalAlignment="Center" MinHeight="38">
                 <StackPanel Orientation="Horizontal">
                     <materialDesign:PackIcon Kind="PackageDown" Width="14" Height="14" VerticalAlignment="Center" />
-                    <TextBlock Text="ورود کالا" Margin="7,0,0,0" />
+                    <TextBlock Text="ورود کالا" Margin="7,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
             <Button Command="{Binding LoadCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -98,57 +108,80 @@
 
             <!-- تب ۲: موجودی -->
             <TabItem Header="📦 موجودی">
-                <DataGrid ItemsSource="{Binding Inventory}"
-                          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                          HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="دارو" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
-                        <DataGridTextColumn Header="فرم/دوز" Binding="{Binding Form, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="130" />
-                        <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="{DynamicResource App.CodeFont}" />
-                        <DataGridTemplateColumn Header="وضعیت موجودی" Width="130" SortMemberPath="IsLowStock">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="Background" Value="#C8E6C9" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsLowStock}" Value="True">
-                                                        <Setter Property="Background" Value="#FFEBEE" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <TextBlock FontSize="11">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Text" Value="🟢 موجود" />
+                <Grid Margin="4,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <!-- چرخهٔ ۳۹ — فیلتر نوع قلم: همه/دارو/لوازم مصرفی + سوییچ کمبود -->
+                    <DockPanel Grid.Row="0" Margin="2,0,2,8">
+                        <ComboBox DockPanel.Dock="Left"
+                                  ItemsSource="{Binding InventoryKindFilters}"
+                                  SelectedIndex="{Binding InventoryKindIndex}"
+                                  FontSize="12.5" MinWidth="190" HorizontalAlignment="Left"
+                                  ToolTip="فیلتر نوع قلم انبار — داروها و لوازم مصرفی جداگانه" />
+                        <CheckBox DockPanel.Dock="Right" Content="فقط کالاهای کمبود"
+                                  IsChecked="{Binding LowStockOnly}"
+                                  FontSize="12.5" VerticalAlignment="Center"
+                                  HorizontalAlignment="Right" Margin="12,0,0,0" />
+                    </DockPanel>
+                    <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,0,0,6"
+                                 Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+                    <DataGrid Grid.Row="2" ItemsSource="{Binding Inventory}"
+                              AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                              HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="قلم" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
+                            <!-- چرخهٔ ۳۹ — نوع قلم: دارو یا لوازم مصرفی -->
+                            <DataGridTextColumn Header="نوع" Binding="{Binding KindText, Converter={StaticResource PersianDigits}}" Width="105" />
+                            <DataGridTextColumn Header="بچ/سری" Binding="{Binding Form, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="130" />
+                            <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="{DynamicResource App.CodeFont}" />
+                            <DataGridTemplateColumn Header="وضعیت موجودی" Width="130" SortMemberPath="IsLowStock">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#C8E6C9" />
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsLowStock}" Value="True">
-                                                            <Setter Property="Text" Value="🔴 کسری" />
+                                                            <Setter Property="Background" Value="#FFEBEE" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="{DynamicResource App.CodeFont}" />
-                        <DataGridTextColumn Header="انقضا" Binding="{Binding ExpiryDateShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="100" />
-                        <DataGridTemplateColumn Header="هشدار" Width="110" SortMemberPath="IsExpiringSoon">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Background="#FFF3E0" CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
-                                            Visibility="{Binding IsExpiringSoon, Converter={StaticResource BoolToVisibility}}">
-                                        <TextBlock Text="⏰ نزدیک انقضا" FontSize="10.5" Foreground="#E65100" />
-                                    </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
+                                            </Border.Style>
+                                            <TextBlock FontSize="11">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="🟢 موجود" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsLowStock}" Value="True">
+                                                                <Setter Property="Text" Value="🔴 کسری" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="{DynamicResource App.CodeFont}" />
+                            <DataGridTextColumn Header="انقضا" Binding="{Binding ExpiryDateShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="100" />
+                            <DataGridTemplateColumn Header="هشدار" Width="110" SortMemberPath="IsExpiringSoon">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#FFF3E0" CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
+                                                Visibility="{Binding IsExpiringSoon, Converter={StaticResource BoolToVisibility}}">
+                                            <TextBlock Text="⏰ نزدیک انقضا" FontSize="10.5" Foreground="#E65100" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
             </TabItem>
 
             <!-- تب ۳: ورود کالا -->

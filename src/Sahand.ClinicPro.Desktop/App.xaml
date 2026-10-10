@@ -205,6 +205,8 @@
             <converters:IconSetKindConverter x:Key="IconSetKind" />
             <!-- چرخهٔ بیست‌وهشتم: مبدل رنگ متمایز هر بیمه در لیست بیماران -->
             <converters:InsuranceBrushConverter x:Key="InsuranceBrush" />
+            <!-- چرخهٔ سی‌ونه‌م: مبدل فهرست خالی → دیدپذیری — راهنماهای حالت خالی (انبار مصرفی بدون قلم) -->
+            <converters:EmptyListToVisibilityConverter x:Key="EmptyListToVisibility" />
             <!-- چرخهٔ بیست‌ونهم: مبدل کد HEX → قلم‌وی — نمونهٔ رنگِ مؤثر تنظیمات تم -->
             <converters:HexToBrushConverter x:Key="HexToBrush" />
             <!-- چرخهٔ سی‌وپنجم: مبدل هگز → براش با حالت «soft» (پس‌زمینهٔ ملایم ۱۴٪)

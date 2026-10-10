@@ -6,7 +6,11 @@ using Sahand.ClinicPro.Desktop.Views;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
-/// <summary>ردیف موجودی داروخانه</summary>
+/// <summary>
+/// ردیف موجودی داروخانه
+/// ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) ═══ نوع قلم هم برمی‌گردد تا تب موجودی
+/// بتواند داروها و لوازم مصرفی را جدا فیلتر/برچسب کند
+/// </summary>
 public record InventoryRow(
     long Id,
     string MedicationName,
@@ -15,7 +19,11 @@ public record InventoryRow(
     decimal ReorderLevel,
     string? ExpiryDate,
     bool IsLowStock,
-    bool IsExpiringSoon)
+    bool IsExpiringSoon,
+    // نوع قلم — ۱ دارو، ۲ لوازم مصرفی (چرخهٔ ۳۹) — کامنت عادی (درس CS1587)
+    int ItemKind = 1,
+    // متن فارسی نوع — «دارو» یا «لوازم مصرفی»
+    string KindText = "دارو")
 {
     /// <summary>متن وضعیت موجودی</summary>
     public string LowStockText => IsLowStock ? "کمبود موجودی" : IsExpiringSoon ? "نزدیک انقضا" : "نرمال";
@@ -55,6 +63,25 @@ public partial class PharmacyViewModel : ViewModelBase
     [ObservableProperty]
     private bool _lowStockOnly;
 
+    // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — فیلتر نوع قلم داروخانه ═══
+    // «سرنگ و سرم و گاز استریل… خرید و انبار و قیمت‌های این لوازم هم باید باشه»
+    // — نمایهٔ ۰: همهٔ اقلام | ۱: فقط داروها | ۲: فقط لوازم مصرفی
+
+    /// <summary>نمایهٔ فیلتر نوع قلم — ۰ همه، ۱ دارو، ۲ لوازم مصرفی</summary>
+    [ObservableProperty]
+    private int _inventoryKindIndex;
+
+    /// <summary>گزینه‌های فیلتر نوع قلم</summary>
+    public string[] InventoryKindFilters { get; } =
+    {
+        "🗂️ همهٔ اقلام",
+        "💊 فقط داروها",
+        "🧰 فقط لوازم مصرفی"
+    };
+
+    /// <summary>تغییر فیلتر نوع → بارگذاری مجدد موجودی با پارامتر جدید</summary>
+    partial void OnInventoryKindIndexChanged(int value) => _ = LoadAsync();
+
     /// <summary>شناسه نسخه برای تحویل</summary>
     [ObservableProperty]
     private string _prescriptionId = string.Empty;
@@ -83,14 +110,23 @@ public partial class PharmacyViewModel : ViewModelBase
         IsBusy = true;
         ErrorMessage = string.Empty;
 
-        var endpoint = "pharmacy/inventory" + (LowStockOnly ? "?lowStock=true" : string.Empty);
+        // ═══ چرخهٔ ۳۹ — فیلتر نوع قلم به‌علاوهٔ فیلتر کمبود ═══ نمایهٔ ۰ = همه؛
+        // ۱ = دارو؛ ۲ = لوازم مصرفی (پارامتر itemKind اندپوینت موجودی)
+        var kindParam = InventoryKindIndex switch
+        {
+            1 => "&itemKind=1",
+            2 => "&itemKind=2",
+            _ => ""
+        };
+        var endpoint = "pharmacy/inventory?" + (LowStockOnly ? "lowStock=true&" : "") + kindParam.TrimStart('&');
         var response = await _api.GetAsync<InventoryResponse>(endpoint);
 
         if (response?.Data is not null)
         {
             Inventory = new ObservableCollection<InventoryRow>(response.Data.Select(i =>
                 new InventoryRow(i.Id, i.MedicationName, i.BatchNumber, i.Quantity,
-                    i.ReorderLevel, i.ExpiryDateShamsi, i.IsLowStock, i.IsExpiringSoon)));
+                    i.ReorderLevel, i.ExpiryDateShamsi, i.IsLowStock, i.IsExpiringSoon,
+                    i.ItemKind, i.KindText)));
         }
         else
         {
@@ -106,6 +142,27 @@ public partial class PharmacyViewModel : ViewModelBase
     {
         var vm = new StockInFormViewModel(_api);
         var window = new StockInFormWindow(vm)
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        window.ShowDialog();
+        _ = LoadAsync();
+    }
+
+    // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — افزودن قلم جدید انبار ═══
+    // «خرید و انبار و قیمت‌های این لوازم هم باید باشه» — تا این چرخه کاتالوگ
+    // اقلام فقط از بذر اولیه سرور می‌آمد و ساختن قلم جدید (سرنگ/سرم/گاز و…)
+    // از خود برنامه ممکن نبود؛ این فرمان پنجرهٔ «قلم جدید» را می‌گشاید.
+
+    /// <summary>
+    /// افزودن قلم جدید انبار — دارو یا لوازم مصرفی؛ پس از ثبت موفق، فهرست
+    /// موجودی تازه می‌شود تا قلم تازه (حتی بدون موجودی) در تب مناسب دیده شود
+    /// </summary>
+    [RelayCommand]
+    private void AddItem()
+    {
+        var vm = new PharmacyItemFormViewModel(_api);
+        var window = new PharmacyItemFormWindow(vm)
         {
             Owner = System.Windows.Application.Current.MainWindow
         };
@@ -188,6 +245,10 @@ public partial class PharmacyViewModel : ViewModelBase
         public string? ExpiryDateShamsi { get; set; }
         public bool IsLowStock { get; set; }
         public bool IsExpiringSoon { get; set; }
+
+        // ═══ چرخهٔ ۳۹ — نوع قلم: ۱ دارو، ۲ لوازم مصرفی (سرنگ/سرم/گاز و…) ═══
+        public int ItemKind { get; set; } = 1;
+        public string KindText { get; set; } = "دارو";
     }
 
     /// <summary>جزئیات نسخه برای تحویل</summary>

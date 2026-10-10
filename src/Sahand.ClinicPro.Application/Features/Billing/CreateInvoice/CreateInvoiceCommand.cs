@@ -153,7 +153,14 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
             var gross = item.Quantity * item.UnitPrice;
             var discount = gross * item.DiscountPercent / 100m;
             var net = gross - discount;
-            var insuranceShare = net * insurancePercent / 100m;
+
+            // ═══ چرخهٔ ۳۹ — معافیت بیمه‌ای قلم ═══ اقلام کالایی (لوازم مصرفی
+            // درمانگاه: سرنگ/سرم/گاز و…) سهم بیمه ندارند و ۱۰۰٪ بر عهدهٔ بیمارند؛
+            // این پرچم فقط از پذیرش خدمتی برای اقلام مصرفی true می‌آید و سایر
+            // فراخوانی‌ها (بدون پرچم = false) دقیقاً رفتار پیشین را می‌بینند.
+            var insuranceShare = item.IsInsuranceExempt
+                ? 0m
+                : net * insurancePercent / 100m;
             var patientShare = net - insuranceShare;
 
             subTotal += gross;

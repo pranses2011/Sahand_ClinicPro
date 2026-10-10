@@ -129,6 +129,79 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// <summary>گزینهٔ اتاق معاینه — نام نمایشی از نام کامل یا شماره اتاق</summary>
     public record RoomOption(long Id, string DisplayName);
 
+    // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — لوازم مصرفی درمانگاه در پذیرش خدمتی ═══
+    // «لوازمی که استفاده می‌شود مثل سرنگ و سرم و گاز استریل و مواردی از این
+    // قبیل رو وقتی بیمار با خودش نمیاره، باید از لوازم خود درمانگاه استفاده
+    // بکنیم و در پذیرش برای اونها هم هزینه به هزینه‌های بیمار اضافه بشه» —
+    // اقلام مصرفیِ دارای موجودی از GET pharmacy/consumables می‌آیند؛ کاربر
+    // قلم و تعداد برمی‌گزیند، جمع هزینه بی‌درنگ به «قابل پرداخت بیمار»
+    // می‌چسبد و هنگام ثبت، موجودی FEFO کم و تراکنش انبار با منشأ همین
+    // پذیرش ثبت می‌شود؛ فاکتور اقلام مصرفی را با «معافیت بیمه‌ای» (۱۰۰٪
+    // بیمار) صادر می‌کند.
+
+    /// <summary>گزینهٔ قلم مصرفی از انبار — با موجودی کل و قیمت فروش</summary>
+    public record ConsumableOption(long Id, string Name, string? Form, decimal Available, decimal SellPrice)
+    {
+        /// <summary>متن کمبوباکس — نام + موجودی + قیمت</summary>
+        public string Display =>
+            $"{Name}{(string.IsNullOrWhiteSpace(Form) ? "" : $" ({Form})")} — موجودی {Available:0.#} · {SellPrice:N0}";
+    }
+
+    /// <summary>ردیف مصرف انتخاب‌شده برای این پذیرش — تعداد قابل ویرایش است</summary>
+    public partial class ConsumableLine : ObservableObject
+    {
+        /// <summary>قلم مصرفی</summary>
+        public ConsumableOption Option { get; }
+
+        /// <summary>تعداد مصرف‌شده</summary>
+        [ObservableProperty]
+        private decimal _quantity;
+
+        /// <summary>بازخورد تغییر تعداد → نوسازی جمع کل در ویومدل پدر</summary>
+        public event EventHandler? LineChanged;
+
+        partial void OnQuantityChanged(decimal value) => LineChanged?.Invoke(this, EventArgs.Empty);
+
+        /// <summary>جمع این ردیف = قیمت فروش × تعداد</summary>
+        public decimal LineTotal => Option.SellPrice * Quantity;
+
+        /// <summary>سازنده</summary>
+        public ConsumableLine(ConsumableOption option, decimal quantity)
+        {
+            Option = option;
+            _quantity = quantity;
+        }
+    }
+
+    /// <summary>اقلام مصرفیِ در دسترس (دارای موجودی سالم)</summary>
+    public ObservableCollection<ConsumableOption> ConsumableOptions { get; } = new();
+
+    /// <summary>ردیف‌های مصرف انتخاب‌شدهٔ این پذیرش</summary>
+    public ObservableCollection<ConsumableLine> Consumables { get; } = new();
+
+    /// <summary>قلم مصرفی منتخب برای افزودن</summary>
+    [ObservableProperty]
+    private ConsumableOption? _selectedConsumable;
+
+    /// <summary>تعداد برای قلم در حال افزودن</summary>
+    [ObservableProperty]
+    private decimal _consumableQty = 1;
+
+    /// <summary>جمع هزینهٔ لوازم مصرفی انتخاب‌شده</summary>
+    public decimal ConsumablesTotal => Consumables.Sum(c => c.LineTotal);
+
+    /// <summary>قابل پرداخت نهایی بیمار = سهم بیمار خدمت + لوازم مصرفی</summary>
+    public decimal PayableByPatient => PatientShare + ConsumablesTotal;
+
+    /// <summary>نمایش جمع لوازم مصرفی</summary>
+    public string ConsumablesTotalDisplay => Money.Format(ConsumablesTotal);
+
+    /// <summary>نمایش قابل پرداخت نهایی (خدمت + مصرفی)</summary>
+    public string PayableByPatientDisplay => Money.Format(PayableByPatient);
+
+    /// <summary>آیا ردیف مصرفی انتخاب شده؟ — برای نمایش بخش جمع مصرفی</summary>
+    public bool HasConsumables => Consumables.Count > 0;
+
     /// <summary>انجام‌دهندهٔ انتخاب‌شده (اختیاری)</summary>
     [ObservableProperty]
     private PerformerOption? _selectedPerformer;
@@ -444,6 +517,83 @@ public partial class ReceptionsViewModel : ViewModelBase
                 Rooms.Add(new RoomOption(room.Id,
                     !string.IsNullOrWhiteSpace(room.RoomName) ? room.RoomName : $"اتاق {room.RoomNumber}"));
         }
+
+        // ═══ چرخهٔ ۳۹ — اقلام مصرفیِ دارای موجودی؛ فقط یک بار لازم است ═══
+        // فهرست خالی به معنی «هیچ قلم مصرفی‌ای هنوز ورود کالا نشده» است؛ بخش
+        // مصرفی همان‌جا راهنمای «از داروخانه ورود کالا» نشان می‌دهد.
+        if (ConsumableOptions.Count == 0)
+        {
+            var consumables = await _api.GetAsync<ConsumablesResponse>("pharmacy/consumables");
+            foreach (var c in consumables?.Data ?? new List<ConsumableDto>())
+                ConsumableOptions.Add(new ConsumableOption(c.MedicationId, c.Name, c.Form, c.TotalQuantity, c.SellPrice));
+        }
+    }
+
+    // ═════════════════ چرخهٔ ۳۹ — دستورات بخش لوازم مصرفی ═════════════════
+
+    /// <summary>
+    /// افزودن قلم مصرفی به فهرست مصرف این پذیرش — اگر همان قلم قبلاً باشد
+    /// تعدادش افزایش می‌یابد (ادغام) تا فهرست تمیز بماند؛ سقف موجودی انبار
+    /// سمت کلاینت هم کنترل می‌شود (سرور هم جداگانه رد می‌کند).
+    /// </summary>
+    [RelayCommand]
+    private void AddConsumable()
+    {
+        if (SelectedConsumable is null)
+        {
+            _snackbar.Error("ابتدا قلم مصرفی را انتخاب کنید");
+            return;
+        }
+        if (ConsumableQty <= 0)
+        {
+            _snackbar.Error("تعداد باید بیشتر از صفر باشد");
+            return;
+        }
+
+        // ادغام با ردیف موجود همان قلم
+        var existing = Consumables.FirstOrDefault(c => c.Option.Id == SelectedConsumable.Id);
+        var newQuantity = (existing?.Quantity ?? 0) + ConsumableQty;
+        if (newQuantity > SelectedConsumable.Available)
+        {
+            _snackbar.Error($"موجودی انبار «{SelectedConsumable.Name}» فقط {SelectedConsumable.Available:0.#} است");
+            return;
+        }
+
+        if (existing is not null)
+            existing.Quantity = newQuantity;
+        else
+        {
+            var line = new ConsumableLine(SelectedConsumable, ConsumableQty);
+            line.LineChanged += (_, _) => RefreshConsumableTotals();
+            Consumables.Add(line);
+        }
+
+        ConsumableQty = 1;
+        SelectedConsumable = null;
+        RefreshConsumableTotals();
+    }
+
+    /// <summary>حذف ردیف مصرف از فهرست</summary>
+    /// <param name="line">ردیف قابل حذف — از CommandParameter دکمه می‌آید</param>
+    [RelayCommand]
+    private void RemoveConsumable(ConsumableLine? line)
+    {
+        if (line is null) return;
+        Consumables.Remove(line);
+        RefreshConsumableTotals();
+    }
+
+    /// <summary>
+    /// نوسازی جمع‌های مصرفی — پس از هر افزودن/حذف/تغییر تعداد فراخوانده می‌شود؛
+    /// جمع مصرفی + قابل پرداخت نهایی + نمایش بخش خالی/پر را با هم تازه می‌کند.
+    /// </summary>
+    private void RefreshConsumableTotals()
+    {
+        OnPropertyChanged(nameof(ConsumablesTotal));
+        OnPropertyChanged(nameof(ConsumablesTotalDisplay));
+        OnPropertyChanged(nameof(PayableByPatient));
+        OnPropertyChanged(nameof(PayableByPatientDisplay));
+        OnPropertyChanged(nameof(HasConsumables));
     }
 
     /// <summary>پاسخ فهرست خدمات — lookups/services</summary>
@@ -494,6 +644,49 @@ public partial class ReceptionsViewModel : ViewModelBase
         public long Id { get; set; }
         public string? RoomNumber { get; set; }
         public string? RoomName { get; set; }
+    }
+
+    /// <summary>پاسخ فهرست اقلام مصرفی — چرخهٔ ۳۹</summary>
+    private sealed class ConsumablesResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<ConsumableDto>? Data { get; set; }
+    }
+
+    /// <summary>ردیف قلم مصرفی از GET pharmacy/consumables</summary>
+    private sealed class ConsumableDto
+    {
+        public long MedicationId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Form { get; set; }
+        public decimal TotalQuantity { get; set; }
+        public decimal SellPrice { get; set; }
+    }
+
+    /// <summary>پاسخ ثبت مصرف لوازم — POST pharmacy/consume</summary>
+    private sealed class ConsumeResponse
+    {
+        public bool IsSuccess { get; set; }
+        public ConsumeResultDto? Data { get; set; }
+    }
+
+    /// <summary>رسید مصرف با اقلام و قیمت واقعی بچ‌ها</summary>
+    private sealed class ConsumeResultDto
+    {
+        public long ReceptionId { get; set; }
+        public string ReceptionNumber { get; set; } = string.Empty;
+        public List<ConsumeItemResultDto>? Items { get; set; }
+        public decimal TotalCost { get; set; }
+    }
+
+    /// <summary>قلم مصرف‌شدهٔ واقعی با قیمت محاسبه‌شده از بچ‌ها</summary>
+    private sealed class ConsumeItemResultDto
+    {
+        public long MedicationId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public decimal Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal TotalPrice { get; set; }
     }
 
     /// <summary>تغییر بیمه → محاسبه هزینه + بارگذاری مجدد تعرفه‌ها با بیمهٔ جدید</summary>
@@ -631,6 +824,9 @@ public partial class ReceptionsViewModel : ViewModelBase
         OnPropertyChanged(nameof(FeeDisplay));
         OnPropertyChanged(nameof(InsuranceShareDisplay));
         OnPropertyChanged(nameof(PatientShareDisplay));
+        // چرخهٔ ۳۹ — سهم بیمار تغییر کرد ⇒ قابل پرداخت نهایی (با مصرفی‌ها) هم باید تازه شود
+        OnPropertyChanged(nameof(PayableByPatient));
+        OnPropertyChanged(nameof(PayableByPatientDisplay));
     }
 
     /// <summary>حذف ارقام غیررقمی</summary>
@@ -703,6 +899,41 @@ public partial class ReceptionsViewModel : ViewModelBase
             return;
         }
 
+        // ═══ ۱/۵. ثبت مصرف لوازم درمانگاه — چرخهٔ ۳۹ (فقط پذیرش خدمتی با اقلام مصرفی) ═══
+        // «وقتی بیمار با خودش نمیاره باید از لوازم خود درمانگاه استفاده بکنیم و
+        // در پذیرش برای اونها هم هزینه به هزینه‌های بیمار اضافه بشه» — پیش از صدور
+        // فاکتور، موجودی FEFO کم می‌شود و قیمت واقعی بچ‌ها برای اقلام فاکتور
+        // برمی‌گردد؛ شکست مصرف (مثلاً کمبود هم‌زمان موجودی) با دیالوگ فارسی و
+        // حق انتخاب «ادامه بدون مصرفی» یا توقف صادقانه اعلام می‌شود — پذیرش
+        // ثبت‌شده باقی می‌ماند تا زنجیره دستی تکمیل شود.
+        ConsumeResultDto? consumeResult = null;
+        var consumablesSkipped = false;
+        if (isServiceMode && Consumables.Count > 0)
+        {
+            var consume = await _api.PostAsync<ConsumeResponse>("pharmacy/consume", new
+            {
+                receptionId = reception.Data,
+                items = Consumables.Select(c => new { medicationId = c.Option.Id, quantity = c.Quantity }).ToList()
+            });
+            if (consume?.Data is null)
+            {
+                IsBusy = false;
+                var proceed = Views.AppDialog.Confirm("ثبت مصرف لوازم ناموفق",
+                    $"پذیرش با شماره صف {reception.Data} ثبت شد اما برداشت لوازم مصرفی از انبار شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}ادامه می‌دهید؟ (فاکتور فقط با هزینهٔ خدمت صادر می‌شود و اقلام مصرفی از انبار کم نشدند)", Views.AppDialogIcon.Warning) == true;
+                if (!proceed)
+                {
+                    _snackbar.Info($"پذیرش ثبت شد — شماره صف {reception.Data}؛ فاکتور/پرداخت متوقف شد تا مصرف لوازم اصلاح شود (اقلام را کم کنید یا از داروخانه ورود کالا ثبت کنید)");
+                    await LoadAsync();
+                    return;
+                }
+                consumablesSkipped = true;
+            }
+            else
+            {
+                consumeResult = consume.Data;
+            }
+        }
+
         // ۲. صدور فاکتور خودکار — قلم ویزیت با کد خدمت K
         // ═══ چرخهٔ سی‌ویکم (گزارش مالک) — ریشهٔ «هیچ مبلغی در هیچ‌کجای برنامه
         // ذخیره نشد» ═══ دو ایراد ساختاری همین‌جا بود:
@@ -723,15 +954,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             type = 1,
             insuranceCompanyId = company?.Id,
             taxPercent = 0m,
-            items = new List<object>
-            {
-                // چرخه ۲۴ — قلم فاکتور: در حالت خدمتی، خودِ خدمت با قیمت تعرفه؛
-                // در حالت ویزیت، ویزیت پزشک (رفتار پیشین)
-                // چرخه سی‌ویکم — نام فیلدها مطابق قرارداد سرور: description + discountPercent
-                isServiceMode
-                    ? new { serviceId = (long?)SelectedService!.Id, description = SelectedService.Name, quantity = 1, unitPrice = SelectedService.Price, discountPercent = 0m }
-                    : new { serviceId = (long?)null, description = $"ویزیت {SelectedDoctor!.Name}", quantity = 1, unitPrice = VisitFee, discountPercent = 0m }
-            },
+            items = BuildInvoiceItems(isServiceMode, consumeResult),
             description = isServiceMode
                 ? $"پذیرش خدمت {SelectedService!.Name} — {FoundPatient.FullName}"
                 : $"پذیرش {FoundPatient.FullName}"
@@ -746,15 +969,18 @@ public partial class ReceptionsViewModel : ViewModelBase
                 $"پذیرش با شماره صف {reception.Data} ثبت شد اما صدور فاکتور شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}فاکتور را بعداً از ماژول «صندوق و فاکتور» صادر کنید.");
         }
 
-        // ۳. پرداخت نقدی (اختیاری)
+        // ۳. پرداخت (اختیاری) — مبلغ = سهم بیمار خدمت + هزینهٔ واقعی لوازم مصرفی
         var paymentFailed = false;
         if (withPayment && invoice?.Data is not null && invoice.Data > 0)
         {
+            // چرخهٔ ۳۹ — مبلغ قابل پرداخت بیمار = سهم بیمار خدمت + جمع لوازم مصرفی
+            // (قیمت واقعی بچ‌ها از مصرف؛ اگر مصرف رد شده و کاربر ادامه داد، فقط خدمت)
+            var payable = PatientShare + (consumeResult?.TotalCost ?? 0m);
             var payment = await _api.PostAsync<PaymentCreateResponse>("payments", new
             {
                 invoiceId = invoice.Data,
                 patientId = FoundPatient.Id,
-                amount = PatientShare,
+                amount = payable,
                 method = 1,
                 referenceNumber = (string?)null,
                 cardNumber = (string?)null
@@ -765,7 +991,7 @@ public partial class ReceptionsViewModel : ViewModelBase
                 paymentFailed = true;
                 IsBusy = false;
                 Views.AppDialog.Error("ثبت پرداخت ناموفق",
-                    $"فاکتور صادر شد اما ثبت پرداخت {PatientShare:N0} ریال شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}پرداخت را بعداً از ماژول «صندوق و فاکتور» تکمیل کنید.");
+                    $"فاکتور صادر شد اما ثبت پرداخت {payable:N0} ریال شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}پرداخت را بعداً از ماژول «صندوق و فاکتور» تکمیل کنید.");
             }
         }
 
@@ -778,6 +1004,10 @@ public partial class ReceptionsViewModel : ViewModelBase
             _snackbar.Info($"پذیرش ثبت شد — شماره صف {queueNo}؛ صدور فاکتور ناموفق بود (از ماژول مالی تکمیل کنید)");
         else if (paymentFailed)
             _snackbar.Info($"پذیرش موفق — شماره صف {queueNo}؛ فاکتور صادر شد اما پرداخت ثبت نشد");
+        else if (consumablesSkipped)
+            _snackbar.Info($"پذیرش موفق — شماره صف {queueNo}؛ فاکتور فقط با هزینهٔ خدمت صادر شد (مصرف لوازم ثبت نشد)");
+        else if (consumeResult is not null)
+            _snackbar.Success($"پذیرش موفق — شماره صف {queueNo} (فاکتور شامل {consumeResult.Items?.Count ?? 0} قلم لوازم مصرفی ثبت شد)");
         else
             _snackbar.Success(withPayment
                 ? $"پذیرش موفق — شماره صف: {queueNo} (فاکتور و پرداخت ثبت شد)"
@@ -795,8 +1025,49 @@ public partial class ReceptionsViewModel : ViewModelBase
         // چرخه ۲۴ — پاک‌سازی حالت خدمت
         SelectedService = null;
         SelectedPerformer = null;
+        // چرخهٔ ۳۹ — پاک‌سازی اتاق و اقلام مصرفی
+        SelectedRoom = null;
+        SelectedConsumable = null;
+        ConsumableQty = 1;
+        Consumables.Clear();
+        RefreshConsumableTotals();
 
         await LoadAsync();
+    }
+
+    /// <summary>
+    /// ساخت اقلام فاکتور پذیرش — چرخهٔ ۳۹: قلم خدمت/ویزیت + اقلام لوازم مصرفی
+    /// با قیمت واقعی بچ‌ها (از نتیجهٔ مصرف) و پرچم «معاف از بیمه» (۱۰۰٪ بیمار).
+    /// نام فیلدها مطابق قرارداد سرور: description + discountPercent (درس چرخهٔ ۳۱).
+    /// </summary>
+    /// <param name="isServiceMode">حالت پذیرش خدمتی؟</param>
+    /// <param name="consumeResult">نتیجهٔ مصرف لوازم — تهی یعنی بدون مصرفی</param>
+    private List<object> BuildInvoiceItems(bool isServiceMode, ConsumeResultDto? consumeResult)
+    {
+        var items = new List<object>
+        {
+            // چرخه ۲۴ — قلم فاکتور: در حالت خدمتی، خودِ خدمت با قیمت تعرفه؛
+            // در حالت ویزیت، ویزیت پزشک (رفتار پیشین)
+            isServiceMode
+                ? new { serviceId = (long?)SelectedService!.Id, description = SelectedService.Name, quantity = 1, unitPrice = SelectedService.Price, discountPercent = 0m }
+                : new { serviceId = (long?)null, description = $"ویزیت {SelectedDoctor!.Name}", quantity = 1, unitPrice = VisitFee, discountPercent = 0m }
+        };
+
+        // چرخهٔ ۳۹ — اقلام مصرفی با قیمت واقعی برداشت از بچ‌ها؛ معاف از بیمه
+        foreach (var consumed in consumeResult?.Items ?? new List<ConsumeItemResultDto>())
+        {
+            items.Add(new
+            {
+                serviceId = (long?)null,
+                description = $"لوازم مصرفی: {consumed.Name}",
+                quantity = consumed.Quantity,
+                unitPrice = consumed.UnitPrice,
+                discountPercent = 0m,
+                isInsuranceExempt = true
+            });
+        }
+
+        return items;
     }
 
     /* ─── پاسخ‌های API ─── */

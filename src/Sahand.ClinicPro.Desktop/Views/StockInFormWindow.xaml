@@ -18,8 +18,14 @@
         <StackPanel Margin="28">
             <TextBlock Text="ورود موجودی جدید" Style="{StaticResource SectionTitle}" />
 
+            <!-- چرخهٔ ۳۹ — فیلتر نوع قلم: ورود کالا برای دارو و لوازم مصرفی مشترک است -->
+            <TextBlock Text="نوع قلم:" FontSize="11.5" Opacity="0.7" Margin="2,6,2,3" />
+            <ComboBox ItemsSource="{Binding SearchKindFilters}"
+                      SelectedIndex="{Binding SearchKindIndex}"
+                      FontSize="12.5" Margin="0,0,0,10" />
+
             <!-- جستجوی دارو -->
-            <TextBox materialDesign:HintAssist.Hint="جستجوی دارو: نام ژنریک یا برند *"
+            <TextBox materialDesign:HintAssist.Hint="جستجوی قلم: نام ژنریک یا برند *"
                      Text="{Binding MedicationSearchTerm, UpdateSourceTrigger=PropertyChanged}"
                      Margin="0,0,0,8">
                 <TextBox.InputBindings>
