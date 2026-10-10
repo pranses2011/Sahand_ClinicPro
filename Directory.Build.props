@@ -31,8 +31,8 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
 
     <!-- اطلاعات اسمبلی -->
-    <!-- نسخهٔ ۲.۴.۷: وصلهٔ فوری — تعمیر خطای MC3000 ساخت پروژه در InsuranceView.xaml -->
-    <Version>2.4.7</Version>
+    <!-- نسخهٔ ۲.۴.۸: چرخهٔ سی‌وپنجم — ۷ اصلاح + بستهٔ تجمعی v2.4.4→HEAD -->
+    <Version>2.4.8</Version>
     <Authors>Sahand ClinicPro Team</Authors>
     <Company>Sahand</Company>
     <Product>Sahand ClinicPro</Product>
