@@ -271,11 +271,19 @@
                             <Setter Property="Margin" Value="8,1" />
                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                             <Setter Property="Focusable" Value="False" />
-                            <!-- قالب شفاف: هایلایت/انتخاب خودِ ListBox غیرفعال است -->
+                            <!-- قالب شفاف: هایلایت/انتخاب خودِ ListBox غیرفعال است.
+                                 ═══ چرخهٔ سی‌وپنجم (چهارمین گزارش عنوان گروه‌ها) ═══
+                                 ContentPresenter حالا صریحاً HorizontalContentAlignmentِ
+                                 والد قالب را با TemplateBinding می‌خواند — تضمین
+                                 مستقیم کششِ افقی محتوا؛ دیگر اتکایی به همگام‌سازی
+                                 خودکار WPF نیست که در ترکیب‌های خاص تم/کنترل
+                                 می‌شکند و سربرگ‌ها به عرضِ محتوا (۵۵px فقط‌آیکونی)
+                                 جمع می‌شدند. -->
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ListBoxItem">
-                                        <ContentPresenter />
+                                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
                                     </ControlTemplate>
                                 </Setter.Value>
                             </Setter>
@@ -309,6 +317,7 @@
                                 <ToggleButton IsChecked="{Binding IsExpanded, Mode=TwoWay}"
                                               Cursor="Hand"
                                               HorizontalAlignment="Stretch"
+                                              MinWidth="190"
                                               Visibility="{Binding HasChildren, Converter={StaticResource BoolToVisibility}}">
                                     <ToggleButton.Template>
                                         <ControlTemplate TargetType="ToggleButton">
@@ -388,11 +397,15 @@
                                     </ToggleButton.Template>
                                 </ToggleButton>
 
-                                <!-- ═══ آیتم تکی (بدون زیرمنو) — فقط وقتی گروه نیست ═══ -->
+                                <!-- ═══ آیتم تکی (بدون زیرمنو) — فقط وقتی گروه نیست ═══
+                                     MinWidth=۱۹۰ همان تضمین پادفنی سربرگ‌ها: حتی اگر
+                                     بایندینگ عنوانی روزی تهی بماند، دکمه هرگز به
+                                     فقط‌آیکونیِ ۵۵px فرونمی‌ریزد (چرخهٔ ۳۵) -->
                                 <Button Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                         CommandParameter="{Binding}"
                                         Template="{StaticResource LeafNavItemTemplate}"
                                         Cursor="Hand"
+                                        MinWidth="190"
                                         Visibility="{Binding HasChildren, Converter={StaticResource InverseBoolToVisibility}}"
                                         HorizontalContentAlignment="Stretch"
                                         HorizontalAlignment="Stretch" />
