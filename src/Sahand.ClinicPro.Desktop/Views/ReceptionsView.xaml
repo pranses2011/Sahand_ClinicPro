@@ -334,23 +334,38 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- دکمه‌های زنجیره‌ای -->
+                        <!-- ═══ دکمه‌های زنجیره‌ای — چرخهٔ سی‌ونه‌م (گزارش مالک) ═══
+                             «دکمه‌های پذیرش و فاکتور و پذیرش و پرداخت نقدی له شده‌اند
+                             و متن روی دکمه‌ها ناقص دیده می‌شود» — سه‌لایهٔ ضدفشردگی:
+                             ۱) Padding سخاوانه (۲۰×۱۲) تا متن هرگز به لبهٔ دکمه نچسبد
+                             ۲) MinWidth/MinHeight صریح — دکمه حتی در تنگ‌ترین فضا از
+                                محتوای خود عریض‌تر/مرتفع‌تر می‌ماند (له‌شدن یعنی عرضِ
+                                کمتر از محتوا؛ سقف صریح این حالت را قطعی می‌کند)
+                             ۳) TextWrapping روی متن — اگر به هر دلیل (پنجرهٔ باریک،
+                                فونت درشت‌شده از تنظیمات، DPI خاص) فضای افقی کم بیاید
+                                متن به دو خط می‌شکند و دکمه بلندتر می‌شود؛ دیگر هرگز
+                                بریده/ناقص نمایش داده نمی‌شود -->
                         <StackPanel Orientation="Horizontal" Margin="0,14,0,0" HorizontalAlignment="Left">
                             <Button Command="{Binding ReceptionAndInvoiceCommand}"
                                     Style="{StaticResource MaterialDesignOutlinedButton}"
-                                    FontSize="13" Padding="16,10" Margin="0,0,10,0">
+                                    FontSize="13" Padding="20,12" MinWidth="195" MinHeight="46"
+                                    Margin="0,0,10,0"
+                                    ToolTip="ثبت پذیرش + صدور فاکتور — بدون ثبت پرداخت">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="FileDocumentOutline" Width="16" Height="16" VerticalAlignment="Center" />
-                                    <TextBlock Text="💾 پذیرش و فاکتور" Margin="8,0,0,0" />
+                                    <materialDesign:PackIcon Kind="FileDocumentOutline" Width="17" Height="17" VerticalAlignment="Center" />
+                                    <TextBlock Text="💾 پذیرش و فاکتور" Margin="8,0,0,0"
+                                               TextWrapping="Wrap" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                             <Button Command="{Binding ReceptionAndPayCommand}"
                                     Style="{StaticResource MaterialDesignRaisedButton}"
                                     Background="#2E7D32" BorderBrush="#2E7D32"
-                                    FontSize="13" Padding="16,10">
+                                    FontSize="13" Padding="20,12" MinWidth="215" MinHeight="46"
+                                    ToolTip="ثبت پذیرش + صدور فاکتور + ثبت پرداخت بیمار">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="CashCheck" Width="16" Height="16" VerticalAlignment="Center" />
-                                    <TextBlock Text="💵 پذیرش و پرداخت نقدی" Margin="8,0,0,0" />
+                                    <materialDesign:PackIcon Kind="CashCheck" Width="17" Height="17" VerticalAlignment="Center" />
+                                    <TextBlock Text="💵 پذیرش و پرداخت نقدی" Margin="8,0,0,0"
+                                               TextWrapping="Wrap" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                         </StackPanel>
