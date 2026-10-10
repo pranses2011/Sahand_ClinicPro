@@ -62,16 +62,25 @@ public partial class DashboardViewModel : ViewModelBase
     // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — میانبرهای شخصی داشبورد ═══
     // «میخوام در داشبورد… دکمه‌های میانبر برای قسمت‌های مختلف… با کلیک مستقیم
     // اون فرم باز بشه… برای هر کاربر مختص خودش ذخیره بشه» — ناوبری از
-    // INavigationService و ذخیرهٔ فایل JSON محلی به‌ازای کاربر واردشده
-    // (shortcuts.{username}.json در %AppData%/SahandClinicPro) تا هر کاربر
-    // پنل میانبر خودش را مستقل از سرور و شعبه داشته باشد.
+    // INavigationService؛ چرخهٔ ۴۱ (گزارش مالک: «در دیتابیس ذخیره بشه تا
+    // مشکلی براش پیش نیاد»): حقیقت مرجع به جدول UserShortcuts سرور منتقل شد
+    // (اندپوینت‌های users/me/shortcuts) تا با تعویض ایستگاه/پروفایل ویندوز
+    // از بین نرود و در پشتیبان سرور هم پوشش داده شود؛ فایل محلی فقط کشِ
+    // آفلاین + منبع مهاجرتِ یک‌بارهٔ چیدمان‌های قدیمی است.
     private readonly ITokenManager _tokens;
     private readonly INavigationService _navigation;
 
     /// <summary>
-    /// مسیر فایل میانبرهای این کاربر — پوشهٔ %AppData%/SahandClinicPro؛ نام
-    /// کاربری در نام فایل است تا میانبرها «مختص هر کاربر» بمانند و روی هر
-    /// ایستگاه جداگانه ذخیره شوند.
+    /// آیا ذخیرهٔ کاربر بر بارگذاریِ در حال پرواز از سرور پیشی گرفته؟ — گاردِ
+    /// مسابقه: PUT تازه‌تر از GET است و پاسخ کهنه نباید چیدمانِ همین لحظهٔ
+    /// کاربر را بازنویسی کند (چرخهٔ ۴۱).
+    /// </summary>
+    private bool _shortcutsSaveWonRace;
+
+    /// <summary>
+    /// مسیر فایل کش محلی میانبرهای این کاربر — پوشهٔ %AppData%/SahandClinicPro؛
+    /// از چرخهٔ ۴۱ فقط نقش «کش آفلاین + منبع مهاجرت یک‌باره» را دارد و مرجعِ
+    /// اصلی رکورد دیتابیسی همین کاربر روی سرور است.
     /// </summary>
     private string ShortcutsFilePath => System.IO.Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -312,6 +321,25 @@ public partial class DashboardViewModel : ViewModelBase
         public string? Layout { get; set; }
     }
 
+    // ═══ چرخهٔ ۴۱ — پاسخ GET users/me/shortcuts ═══
+
+    /// <summary>
+    /// پوشش پاسخ استاندارد — Data.Keys تهی یعنی هنوز رکوردی در دیتابیس نیست
+    /// (کلاینت به کش محلی/پیش‌فرض می‌رود)؛ لیست خالی یعنی انتخاب آگاهانهٔ
+    /// کاربر (هیچ میانبری).
+    /// </summary>
+    public sealed class ShortcutsResponse
+    {
+        public bool IsSuccess { get; set; }
+        public ShortcutsData? Data { get; set; }
+    }
+
+    /// <summary>بارِ میانبرها — همان UserShortcutsDto سرور</summary>
+    public sealed class ShortcutsData
+    {
+        public List<string>? Keys { get; set; }
+    }
+
     /// <summary>سازنده با تزریق سرویس‌ها</summary>
     public DashboardViewModel(IApiClient api, ISnackbarService snackbar,
         ITokenManager tokens, INavigationService navigation)
@@ -323,7 +351,8 @@ public partial class DashboardViewModel : ViewModelBase
         _navigation = navigation;
         InitializeCards();
         _ = LoadLayoutAsync();
-        LoadShortcuts();
+        // چرخهٔ ۴۱ — میانبرها از دیتابیس (با مهاجرت کش محلی و جانشینی آفلاین)
+        _ = LoadShortcutsAsync();
         _refresh.Tick += async (_, _) => await LoadStatsAsync();
         _refresh.Start();
         _ = LoadStatsAsync();
@@ -371,46 +400,155 @@ public partial class DashboardViewModel : ViewModelBase
     };
 
     /// <summary>
-    /// بارگذاری میانبرها از فایل محلی — خرابی/نبود فایل به‌صورت بی‌صدا به
-    /// حالت خالی برمی‌گردد؛ هر میانبر با کلیدِ ناشناخته (صفحهٔ حذف‌شده یا
-    /// کاربر بدون مجوز فعلی) از فهرست کنده می‌شود تا کاشی مرده نماند.
+    /// میانبرهای پیش‌فرض ادمین — چرخهٔ ۴۱ (گزارش مالک: «میانبرهای پیش‌فرض برای
+    /// ادمین بزار»): پرمصرف‌ترین صفحات جریان روزانهٔ درمانگاه؛ فقط وقتی دیده
+    /// می‌شوند که هیچ رکورد سروری و هیچ کش محلی در کار نباشد (انتخاب آگاهانهٔ
+    /// کاربر همیشه بر پیش‌فرض مقدم است) و عمداً ذخیره نمی‌شوند تا نخستین
+    /// ویرایشِ ادمین همان مبنای رکورد دیتابیس شود.
     /// </summary>
-    private void LoadShortcuts()
+    private static readonly string[] DefaultAdminShortcutKeys =
     {
-        Shortcuts.Clear();
+        "receptions",     // پذیرش — پرتکرارترین کار روزانه
+        "appointments",   // نوبت‌دهی
+        "patients",       // پرونده بیماران
+        "visits",         // ویزیت و معاینه
+        "billing",        // مالی و صندوق
+        "reports"         // گزارش‌ها — پایش روزانهٔ مدیر
+    };
+
+    /// <summary>
+    /// بارگذاری میانبرها — چرخهٔ ۴۱: اولویت با رکورد دیتابیسی است (GET
+    /// users/me/shortcuts)؛ اگر رکوردی نبود، کش محلی یک‌باره به سرور مهاجرت
+    /// داده می‌شود؛ اگر کش هم نبود و کاربر ادمین بود، میانبرهای پیش‌فرض
+    /// نمایش داده می‌شود؛ اگر سرور در دسترس نبود، کش محلی (رفتار پیش از
+    /// چرخهٔ ۴۱) جانشین می‌شود تا قطعیِ لحظه‌ای پنل را خالی نکند.
+    /// </summary>
+    private async Task LoadShortcutsAsync()
+    {
+        ShortcutsResponse? response = null;
         try
         {
-            if (System.IO.File.Exists(ShortcutsFilePath))
-            {
-                var keys = JsonSerializer.Deserialize<List<string>>(
-                    System.IO.File.ReadAllText(ShortcutsFilePath)) ?? new List<string>();
-                var index = 0;
-                foreach (var key in keys)
-                {
-                    var entry = Helpers.PageCatalog.Find(key);
-                    if (entry is null || !entry.ShowInPicker) continue;
-                    // مجوز → همان قاعدهٔ منو: ادمین همه‌چیز؛ صفحهٔ آزاد همیشه
-                    if (!HasShortcutAccess(key)) continue;
-                    Shortcuts.Add(new ShortcutTile
-                    {
-                        Key = entry.Key,
-                        Title = entry.Title,
-                        Icon = entry.Icon,
-                        Accent = ShortcutAccents[index % ShortcutAccents.Length]
-                    });
-                    index++;
-                }
-            }
+            response = await _api.GetAsync<ShortcutsResponse>("users/me/shortcuts");
         }
         catch
         {
-            // فایل خراب یا قفل‌شده — پنل خالی می‌ماند؛ ذخیرهٔ بعدی ترمیمش می‌کند
+            // قطعی لحظه‌ای شبکه — پایین با کش محلی ادامه می‌دهیم
+        }
+
+        // گارد مسابقه: اگر کاربر پیش از رسیدن پاسخ، چیزی ذخیره کرد، همان
+        // PUT تازه حقیقت است و پاسخ کهنهٔ این GET کنار می‌رود
+        if (_shortcutsSaveWonRace) return;
+
+        if (response?.Data is not null)
+        {
+            if (response.Data.Keys is not null)
+            {
+                // رکورد سرور موجود — مبنای حقیقت؛ حتی لیست خالی یعنی کاربر
+                // آگاهانه همهٔ میانبرها را برداشته و پیش‌فرض نباید بازگردد
+                ApplyShortcutKeys(response.Data.Keys);
+                return;
+            }
+
+            // رکوردی در دیتابیس نیست — مهاجرت کش محلی قدیمی (چرخهٔ ۳۹) یا پیش‌فرض
+            var local = ReadLocalShortcutKeys();
+            if (local is not null)
+            {
+                ApplyShortcutKeys(local);
+                // مهاجرت بی‌صدا به دیتابیس — از این پس همهٔ ایستگاه‌ها همان را می‌بینند
+                _ = SaveShortcutsToServerAsync();
+            }
+            else
+            {
+                ApplyDefaultShortcuts();
+            }
+            return;
+        }
+
+        // سرور پاسخ نداد — کش محلی (رفتار کاملاً مشتری‌محورِ پیش از چرخهٔ ۴۱)
+        var cached = ReadLocalShortcutKeys();
+        if (cached is not null)
+            ApplyShortcutKeys(cached);
+        // نه سرور، نه کش: پنل خالی می‌ماند تا نخستین بارگذاری موفق
+    }
+
+    /// <summary>
+    /// اعمال فهرست کلیدها روی پنل — همان پالایشِ چرخهٔ ۳۹: کلید ناشناخته
+    /// (صفحهٔ حذف‌شده) و صفحهٔ بی‌مجوزِ کاربر از فهرست کنده می‌شود تا کاشی
+    /// مرده/ممنوع نماند و چرخهٔ رنگ کاشی‌ها به ترتیب نمایش می‌چسبد.
+    /// </summary>
+    /// <param name="keys">کلید صفحات به ترتیب چیدمان کاربر</param>
+    private void ApplyShortcutKeys(IEnumerable<string> keys)
+    {
+        Shortcuts.Clear();
+        var index = 0;
+        foreach (var key in keys)
+        {
+            var entry = Helpers.PageCatalog.Find(key);
+            if (entry is null || !entry.ShowInPicker) continue;
+            // مجوز → همان قاعدهٔ منو: ادمین همه‌چیز؛ صفحهٔ آزاد همیشه
+            if (!HasShortcutAccess(key)) continue;
+            Shortcuts.Add(new ShortcutTile
+            {
+                Key = entry.Key,
+                Title = entry.Title,
+                Icon = entry.Icon,
+                Accent = ShortcutAccents[index % ShortcutAccents.Length]
+            });
+            index++;
         }
         OnPropertyChanged(nameof(HasShortcuts));
     }
 
-    /// <summary>ذخیرهٔ میانبرها به فایل محلی — فقط کلیدها نگه داشته می‌شوند</summary>
+    /// <summary>
+    /// میانبرهای پیش‌فرض فقط برای ادمین — چرخهٔ ۴۱؛ کاربر عادی پنل خالی می‌گیرد
+    /// (انتخاب شخصی خودش)؛ ادمین شش میانبر پرکاربرد می‌بیند و عمداً چیزی
+    /// ذخیره نمی‌شود تا نخستین ویرایش، مبنای رکورد دیتابیس شود.
+    /// </summary>
+    private void ApplyDefaultShortcuts()
+    {
+        if (_tokens.IsAdmin)
+            ApplyShortcutKeys(DefaultAdminShortcutKeys);
+        else
+            OnPropertyChanged(nameof(HasShortcuts));
+    }
+
+    /// <summary>
+    /// خواندن کش محلی — تهی یعنی فایل نیست/خراب است؛ تنها مصرف‌کنندهٔ
+    /// مهاجرتِ یک‌بارهٔ چرخهٔ ۴۱ و حالت قطعی سرور است.
+    /// </summary>
+    private List<string>? ReadLocalShortcutKeys()
+    {
+        try
+        {
+            if (System.IO.File.Exists(ShortcutsFilePath))
+                return JsonSerializer.Deserialize<List<string>>(
+                    System.IO.File.ReadAllText(ShortcutsFilePath));
+        }
+        catch
+        {
+            // فایل قفل‌شده/خراب — تهی برمی‌گردد و مسیر پیش‌فرض ادامه می‌یابد
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// ذخیرهٔ میانبرها — چرخهٔ ۴۱: کش محلی بلافاصله نوشته می‌شود (رفتار
+    /// پیشین + جانشینی آفلاین) و رکورد مرجع دیتابیس به‌صورت ناهمگام تازه
+    /// می‌شود؛ پرچم مسابقه هم اینجا برافراشته می‌شود تا GETِ در حال پروازِ
+    /// همان لحظه، چیدمان تازه را بازنویسی نکند.
+    /// </summary>
     private void SaveShortcuts()
+    {
+        SaveLocalShortcuts();
+        _shortcutsSaveWonRace = true;
+        _ = SaveShortcutsToServerAsync();
+    }
+
+    /// <summary>
+    /// نوشتن کش محلی — همان منطق چرخهٔ ۳۹ (فقط کلیدها، با تورفتگی خوانا)؛
+    /// شکست دیسک بی‌صدا است چون رکورد مرجع در دیتابیس ذخیره می‌شود.
+    /// </summary>
+    private void SaveLocalShortcuts()
     {
         try
         {
@@ -422,7 +560,24 @@ public partial class DashboardViewModel : ViewModelBase
         }
         catch
         {
-            // دیسک فقط‌خواندنی/دسترسی ناکافی — بی‌صدا؛ میانبرها تا پایان نشست کار می‌کنند
+            // دیسک فقط‌خواندنی/دسترسی ناکافی — بی‌صدا؛ رکورد دیتابیسی مرجع است
+        }
+    }
+
+    /// <summary>
+    /// ذخیرهٔ مرجع در دیتابیس — PUT users/me/shortcuts؛ شکست بی‌صدا است چون
+    /// کش محلی نوشته شده و تلاش بعدی (بارگذاری/ذخیرهٔ بعدی) دوباره می‌فرستد.
+    /// </summary>
+    private async Task SaveShortcutsToServerAsync()
+    {
+        try
+        {
+            await _api.PutAsync("users/me/shortcuts",
+                new { keys = Shortcuts.Select(s => s.Key).ToList() });
+        }
+        catch
+        {
+            // قطعی لحظه‌ای — کش محلی جانشین است تا اتصال بعدی
         }
     }
 
