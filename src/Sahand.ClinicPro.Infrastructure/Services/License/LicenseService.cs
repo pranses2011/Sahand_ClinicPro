@@ -31,6 +31,15 @@ public partial class LicenseService : ILicenseService
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
 
+    /// <summary>
+    /// گیت هم‌زمانی جای‌گذاری لایسنس — چرخهٔ سی‌وهشتم (رفع DbUpdateConcurrencyException).
+    /// ایستا است تا «همهٔ» نمونه‌های سرویس (هر درخواست HTTP نمونهٔ خودش را
+    /// می‌سازد) روی یک صف مشترک بیفتند؛ تپ‌قلب/فعال‌سازی‌های هم‌زمان در
+    /// این پردازه پشت هم اجرا می‌شوند و رکورد تک‌مصرف لایسنس با RowVersion
+    /// (نشانهٔ همزمانی خوش‌بینانه) دیگر تصادم ۰-سطری نمی‌گیرد.
+    /// </summary>
+    private static readonly SemaphoreSlim UpsertGate = new(1, 1);
+
     /// <summary>سازنده با تزریق وابستگی‌ها — HttpClient از نوع typed client</summary>
     public LicenseService(ClinicProDbContext context, HttpClient http, IConfiguration configuration,
         ILogger<LicenseService> logger)
@@ -548,10 +557,73 @@ public partial class LicenseService : ILicenseService
     }
 
     /// <summary>
-    /// ساخت یا به‌روزرسانی رکورد لایسنس محلی با داده‌های واقعی سرور
+    /// جای‌گذاری/به‌روزرسانی رکورد لایسنس از دادهٔ سرور — چرخهٔ سی‌وهشتم
+    /// (گزارش مالک: خطای DbUpdateConcurrencyException در لاگ سرور API).
+    ///
+    /// ═══ ریشهٔ خطا ═══
+    /// Column RowVersion روی همهٔ جدول‌ها «نشانهٔ همزمانی» است
+    /// (ClinicProDbContext آن را با IsRowVersion ثبت کرده)؛ یعنی هر UPDATE
+    /// با شرط «RowVersion همان‌طور که خوانده شد» اجرا می‌شود. رکورد لایسنس
+    /// «تک» است و چند مسیر هم‌زمان می‌توانند بخواهند او را بنویسند:
+    /// تازه‌سازی دستی لایسنس (پنجرهٔ فعال‌سازی، اندپوینت refresh) از چند
+    /// ایستگاه هم‌زمان + فعال‌سازی مجدد + تپ‌قلب. دو فراخوانی هم‌زمان، هر دو
+    /// نسخهٔ یکسان RowVersion را می‌خوانند؛ نخستین ذخیره نسخه را جلو می‌برد
+    /// و ذخیرهٔ دومی «۰ سطر» می‌یابد ⇒ DbUpdateConcurrencyException و شکست
+    /// کامل تپ‌قلب (500 به کلاینت).
+    ///
+    /// ═══ رفع (دو لایه) ═══
+    /// ۱) گیت فرایندِ ایستا: همهٔ جای‌گذاری‌های لایسنس این پردازه پشت یک
+    ///    سمافور صف می‌شوند تا اصلاً هم‌پوشانی رخ ندهد (کاهش تصادم در مبدأ).
+    /// ۲) تلاش مجدد خوش‌بینانه: اگر با این حال تصادمی از پردازه/ایستگاه
+    ///    دیگر رسید، خطای همزمانی گرفته می‌شود، «فقط» موجودیت‌های همین
+    ///    عملیات (لایسنس + تنظیمات) از ردیاب جدا می‌شوند و چرخه با دادهٔ
+    ///    تازهٔ دیتابیس دوباره اجرا می‌شود — تا ۴ تلاش با وقفهٔ پلکانی.
+    ///    منطق درست این‌جای کار «دادهٔ سرور مقدم است» (last-write-wins) است؛
+    ///    پاسخ پورتال مرجع است نه نسخهٔ خوانده‌شدهٔ محلی.
     /// </summary>
-    private async Task<ClinicLicense> UpsertLicenseAsync(PortalLicensePayload data, bool isOffline,
-        CancellationToken ct)
+    private async Task<ClinicLicense> UpsertLicenseAsync(PortalLicensePayload data, bool isOffline, CancellationToken ct)
+    {
+        // گیت ایستا — همهٔ نمونه‌های سرویس (هر درخواست، نمونهٔ خودش را دارد)
+        // روی همین سمافور مشترک‌اند؛ صف‌شدن در سطح پردازه
+        await UpsertGate.WaitAsync(ct);
+        try
+        {
+            const int maxAttempts = 4;
+            for (var attempt = 1; ; attempt++)
+            {
+                try
+                {
+                    return await UpsertLicenseCoreAsync(data, isOffline, ct);
+                }
+                catch (DbUpdateConcurrencyException) when (attempt < maxAttempts)
+                {
+                    // موجودیت‌های این عملیات را از ردیاب جدا کن — تنها این‌ها
+                    // دوباره ساخته می‌شوند؛ رکوردهای ردیابی‌شدهٔ میدلورهای
+                    // دیگر (مثل ممیزی) دست‌نخورده می‌مانند
+                    foreach (var entry in _context.ChangeTracker.Entries()
+                                 .Where(e => e.Entity is ClinicLicense or SystemSetting)
+                                 .ToList())
+                        entry.State = EntityState.Detached;
+
+                    _logger.LogInformation(
+                        "تصادم همزمانی در ذخیرهٔ لایسنس (تلاش {Attempt} از {Max}) — دادهٔ تازه بازیابی و دوباره ذخیره می‌شود",
+                        attempt, maxAttempts);
+                    await Task.Delay(TimeSpan.FromMilliseconds(150 * attempt), ct);
+                }
+            }
+        }
+        finally
+        {
+            UpsertGate.Release();
+        }
+    }
+
+    /// <summary>
+    /// هستهٔ جای‌گذاری لایسنس — بدون منطق تلاش مجدد (پوشش آن در UpsertLicenseAsync).
+    /// موجودیت تازه از دیتابیس خوانده می‌شود، مقادیر پورتال روی آن می‌نشیند
+    /// و همراه تنظیمات پشتیبانی در یک تراکنش ذخیره می‌شود.
+    /// </summary>
+    private async Task<ClinicLicense> UpsertLicenseCoreAsync(PortalLicensePayload data, bool isOffline, CancellationToken ct)
     {
         var license = await _context.ClinicLicense.FirstOrDefaultAsync(ct);
         if (license is null)
@@ -676,13 +748,30 @@ public partial class LicenseService : ILicenseService
        شکست ذخیره هرگز جریان اصلی تپ‌قلب را نمی‌شکند.
        ═══════════════════════════════════════════════════════ */
 
-    /// <summary>ذخیره پیام‌های دریافتی سرور — idempotent با کلید ServerMessages.{id}</summary>
+    /// <summary>
+    /// ذخیره پیام‌های دریافتی سرور — idempotent با کلید ServerMessages.{id}.
+    /// چرخهٔ سی‌وهشتم: ذخیره پشت «تلاش مجدد خوش‌بینانه» رفت — ردیف‌های
+    /// SystemSettings هم RowVersion (نشانهٔ همزمانی) دارند و دو تازه‌سازی
+    /// هم‌زمان می‌توانند تصادم بزنند (همان ریشهٔ خطای لایسنس).
+    /// </summary>
     private async Task SaveServerMessagesAsync(List<PortalMessage>? messages, CancellationToken ct)
     {
         if (messages is null || messages.Count == 0)
             return;
         try
         {
+            await SaveSettingsWithRetryAsync(
+                () => SaveServerMessagesCoreAsync(messages, ct), ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "ذخیره پیام‌های پشتیبانی ناموفق بود — تپ‌قلب ادامه می‌یابد");
+        }
+    }
+
+    /// <summary>هستهٔ ذخیرهٔ پیام‌ها — بدون تلاش مجدد (پوشش آن در متد بیرونی)</summary>
+    private async Task SaveServerMessagesCoreAsync(List<PortalMessage> messages, CancellationToken ct)
+    {
             var fresh = new List<SystemSetting>();
             foreach (var m in messages.Take(20))
             {
@@ -737,11 +826,6 @@ public partial class LicenseService : ILicenseService
                 // ذخیرهٔ به‌روزرسانیِ ردیف‌های موجود (مسیر upsert)
                 await _context.SaveChangesAsync(ct);
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "ذخیره پیام‌های پشتیبانی ناموفق بود — تپ‌قلب ادامه می‌یابد");
-        }
     }
 
     /// <summary>
@@ -819,8 +903,47 @@ public partial class LicenseService : ILicenseService
 public sealed partial class LicenseService
 {
     /// <summary>
+    /// اجرای یک عملیات «بارگذاری + تغییر + ذخیرهٔ تنظیمات» با تلاش مجدد خوش‌بینانه —
+    /// چرخهٔ سی‌وهشتم (قانون هم‌کلاسی‌ها برای ریشهٔ DbUpdateConcurrencyException):
+    /// ردیف‌های SystemSettings/ClinicLicense همگی RowVersion (نشانهٔ همزمانی
+    /// خوش‌بینانه) دارند؛ دو تپ‌قلب/تازه‌سازی هم‌زمان می‌توانند نسخهٔ یکسان بخوانند و
+    /// دومی هنگام ذخیره «۰ سطر» بیابد. این پوشش چرخه را با دادهٔ تازه دوباره اجرا
+    /// می‌کند (تا ۴ تلاش با وقفهٔ پلکانی) و فقط موجودیت‌های همین عملیات را از
+    /// ردیاب جدا می‌کند تا رکوردهای میدلورهای دیگر (مثل ممیزی) دست‌نخورده بمانند.
+    /// </summary>
+    /// <param name="operation">عملیات بارگذاری+تغییر+ذخیره — پس از هر تلاش ناموفق از نو اجرا می‌شود</param>
+    /// <param name="ct">توکن لغو</param>
+    private async Task SaveSettingsWithRetryAsync(Func<Task> operation, CancellationToken ct)
+    {
+        const int maxAttempts = 4;
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                await operation();
+                return;
+            }
+            catch (DbUpdateConcurrencyException) when (attempt < maxAttempts)
+            {
+                // جداکردن فقط موجودیت‌های این عملیات — نه کل ردیاب
+                foreach (var entry in _context.ChangeTracker.Entries()
+                             .Where(e => e.Entity is ClinicLicense or SystemSetting)
+                             .ToList())
+                    entry.State = EntityState.Detached;
+
+                _logger.LogInformation(
+                    "تصادم همزمانی در ذخیرهٔ تنظیمات لایسنس (تلاش {Attempt} از {Max}) — دوباره با دادهٔ تازه",
+                    attempt, maxAttempts);
+                await Task.Delay(TimeSpan.FromMilliseconds(150 * attempt), ct);
+            }
+        }
+    }
+
+    /// <summary>
     /// جای‌گذاری اطلاعات درمانگاه دریافتی از سرور لایسنس در تنظیمات برنامه —
     /// فقط فیلدهای دارای مقدار بازنویسی می‌شوند (پنل می‌تواند فیلدی را خالی بگذارد).
+    /// چرخهٔ سی‌وهشتم: ذخیره پشت تلاش مجدد خوش‌بینانه رفت (همان الگوی ریشهٔ
+    /// خطای همزمانی لایسنس — این متد هم روی SystemSettings می‌نویسد).
     /// </summary>
     /// <param name="license">بدنهٔ لایسنس دریافتی از پورتال</param>
     /// <param name="ct">توکن لغو</param>
@@ -828,7 +951,19 @@ public sealed partial class LicenseService
     {
         try
         {
-            // نگاشت فیلدهای پورتال → کلیدهای تنظیمات ClinicInfo (همان که صفحهٔ تنظیمات می‌خواند)
+            await SaveSettingsWithRetryAsync(
+                () => SyncClinicInfoCoreAsync(license, ct), ct);
+        }
+        catch
+        {
+            // همگام‌سازی اطلاعات درمانگاه هرگز نباید جریان اعتبارسنجی را متوقف کند
+        }
+    }
+
+    /// <summary>هستهٔ همگام‌سازی اطلاعات درمانگاه — بدون تلاش مجدد (پوشش آن در متد بیرونی)</summary>
+    private async Task SyncClinicInfoCoreAsync(PortalLicensePayload license, CancellationToken ct)
+    {
+        // نگاشت فیلدهای پورتال → کلیدهای تنظیمات ClinicInfo (همان که صفحهٔ تنظیمات می‌خواند)
             var map = new (string Key, string? Value)[]
             {
                 ("ClinicName", license.ClinicName),
@@ -869,11 +1004,6 @@ public sealed partial class LicenseService
             }
 
             await _context.SaveChangesAsync(ct);
-        }
-        catch
-        {
-            // همگام‌سازی اطلاعات درمانگاه هرگز نباید جریان اعتبارسنجی را متوقف کند
-        }
     }
 }
 
