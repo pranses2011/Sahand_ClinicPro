@@ -21,7 +21,7 @@ public partial class PersonnelViewModel : AdminViewModel
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
 
-    /// <summary>عنوان فارسی صفحه — نوار بالا و Breadcrumb از همین می‌خوانند</summary>
+    /// <summary>عنوان فارسی صفحه — نوار بالای پنجره از همین می‌خواند (چرخهٔ ۴۲: Breadcrumb حذف شد)</summary>
     public override string Title => "مدیریت پرسنل";
 
     /// <summary>

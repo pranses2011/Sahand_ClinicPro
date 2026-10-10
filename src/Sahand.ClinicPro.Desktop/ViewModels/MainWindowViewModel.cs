@@ -52,9 +52,11 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private string _currentTitle = "داشبورد";
 
-    /// <summary>مسیر صفحه فعلی (Breadcrumb) — «خانه > داشبورد»</summary>
-    [ObservableProperty]
-    private string _breadcrumb = "خانه > داشبورد";
+    // ═══ چرخهٔ چهل‌ودوم (گزارش مالک) — پراپرتی Breadcrumb حذف شد ═══
+    // «گفته بودم نام صفحه و بج ساعت و زمان رو وسط‌چین بکن ولی تو Breadcrumb
+    // رو هم وسط‌چین کردی. اونو پاکش بکن و فقط نام صفحه و بج ساعت وسط باشن» —
+    // مسیر «خانه > عنوان» از نوار بالا برداشته شد؛ تنها مصرف‌کننده همان
+    // TextBlock گروه میانهٔ MainWindow.xaml بود و با آن یکی شد.
 
     /// <summary>ساعت شمسی لحظه‌ای — «۱۴۰۴/۰۴/۰۱ - ۱۰:۳۰:۲۵»</summary>
     [ObservableProperty]
@@ -694,7 +696,8 @@ public partial class MainWindowViewModel : ObservableObject
             CurrentPage = null;
         CurrentPage = fresh;
         CurrentTitle = CurrentPage.Title;
-        Breadcrumb = $"خانه > {CurrentTitle}";
+        // چرخهٔ ۴۲: Breadcrumb («خانه > عنوان») به درخواست مالک از نوار بالا
+        // حذف شد — وسط نوار فقط نام صفحه و بج ساعت است؛ مقداردهی اضافه حذف شد
     }
 
     /// <summary>گشودن مرکز آموزش — دکمه 🎓 نوار بالا و آیتم منو</summary>
