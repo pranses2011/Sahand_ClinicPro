@@ -137,12 +137,15 @@
             </Border>
 
             <!-- ═══ چرخه دوازدهم: کارت پیام‌های پشتیبانی — پیام‌های مستقیم پنل لایسنس ═══
-                 ═══ چرخهٔ سی‌وپنجم (گزارش مالک) — سه اصلاح: ═══
-                 ۱) «تاریخ جلوی عنوان میلادی است و باید شمسی شود و زیر عنوان قرار
-                    بگیرد» — تاریخ (DateFa شمسی/ارقام‌فارسی) ردیفی مستقل زیر عنوان
-                 ۲) «رنگ کادر با رنگ انتخابی در سرور لایسنس فرق دارد» — حاشیه و
-                    پس‌زمینه از EffectiveBrush (رنگ سرور، یا رنگ سطح در نبودش)
-                 ۳) آیکون سطح هم‌رنگ کادر شد تا یکپارچگی بصری پیام کامل شود -->
+                 ═══ چرخهٔ سی‌وپنجم (گزارش مالک) ═══ رنگ کادر از EffectiveBrush (انتخاب پنل)
+                 ═══ چرخهٔ سی‌وهفتم (گزارش مالک — سه اصلاح) ═══
+                 ۱) «تاریخ زیر عنوان میلادی بود» — تجزیهٔ سه‌مرحله‌ای DateFa در DTO
+                    (تاریخ خالص، تاریخ+ساعت، برشِ بخش نخست) همهٔ قالب‌های پنل را شمسی می‌کند
+                 ۲) «تاریخ باید به‌صورت بج در گوشهٔ بالا و چپ کادر پیام باشد» — بجِ
+                    چیپیِ هم‌رنگ کادر در گوشهٔ بالا-چپ (Left در RTL همان لبهٔ فیزیکی چپ است)
+                 ۳) «رنگ کادر با انتخاب پنل یکی است ولی تیره است» — پس‌زمینه از «soft»
+                    (۱۴٪ آلفا — وابسته به پس‌زمینهٔ پشت) به «tint» (ترکیب کدر با سفید،
+                    همیشه روشن) تغییر کرد؛ حاشیهٔ بالایی رنگ تأکید می‌ماند -->
             <ItemsControl ItemsSource="{Binding SupportMessages}"
                           Visibility="{Binding HasSupportMessages, Converter={StaticResource BoolToVis}}"
                           Margin="0,0,0,12">
@@ -150,17 +153,30 @@
                     <DataTemplate>
                         <Border CornerRadius="10" Padding="14,10" Margin="0,0,0,8"
                                 BorderThickness="0,3,0,0">
-                            <!-- رنگ کادر از سرور لایسنس: حاشیهٔ بالایی توپر + پس‌زمینهٔ
-                                 ملایم ۱۴٪ همان رنگ؛ در نبود رنگ سرور، رنگ سطح اهمیت -->
+                            <!-- رنگ کادر از سرور لایسنس: پس‌زمینهٔ روشنِ ثابت (tint) +
+                                 حاشیهٔ بالاییِ توپر همان رنگ؛ در نبود رنگ سرور، رنگ سطح اهمیت -->
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="Background"
-                                            Value="{Binding EffectiveBrush, Converter={StaticResource HexBrush}, ConverterParameter=soft}" />
+                                            Value="{Binding EffectiveBrush, Converter={StaticResource HexBrush}, ConverterParameter=tint}" />
                                     <Setter Property="BorderBrush"
                                             Value="{Binding EffectiveBrush, Converter={StaticResource HexBrush}}" />
                                 </Style>
                             </Border.Style>
                             <StackPanel>
+                                <!-- بج تاریخ ارسال — گوشهٔ بالا-چپ کادر؛ چیپِ هم‌رنگ کادر
+                                     (پس‌زمینهٔ tint + متن و حاشیهٔ رنگ تأکید) تا در هر رنگی
+                                     خوانا بماند؛ تاریخ شمسی/ارقام‌فارسی از DateFa -->
+                                <Border HorizontalAlignment="Left" Margin="0,0,0,7"
+                                        CornerRadius="9" Padding="9,2.5"
+                                        Background="{Binding EffectiveBrush, Converter={StaticResource HexBrush}, ConverterParameter=tint}"
+                                        BorderBrush="{Binding EffectiveBrush, Converter={StaticResource HexBrush}}"
+                                        BorderThickness="1">
+                                    <TextBlock Text="{Binding DateFa, Mode=OneWay}" FontSize="9.5"
+                                               FontWeight="SemiBold"
+                                               Foreground="{Binding EffectiveBrush, Converter={StaticResource HexBrush}}"
+                                               FontFamily="{DynamicResource App.CodeFont}" />
+                                </Border>
                                 <!-- ردیف عنوان: آیکون سطح + عنوان پیام -->
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding LevelIcon}" FontSize="15"
@@ -169,11 +185,6 @@
                                                Margin="8,0,0,0" VerticalAlignment="Center"
                                                TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
-                                <!-- تاریخ ارسال — شمسی/ارقام‌فارسی، زیر عنوان (گزارش مالک) -->
-                                <TextBlock Text="{Binding DateFa, Mode=OneWay}" FontSize="10" Opacity="0.62"
-                                           Margin="23,2,0,0"
-                                           FontFamily="{DynamicResource App.CodeFont}"
-                                           HorizontalAlignment="Left" />
                                 <!-- متن پیام -->
                                 <TextBlock Text="{Binding Body}" FontSize="12" Margin="0,5,0,0"
                                            Opacity="0.85" TextWrapping="Wrap" />

@@ -230,6 +230,19 @@ public sealed class HexBrushConverter : IValueConverter
             // حالت ملایم — پس‌زمینهٔ کادر: همان رنگ ولی تقریباً شفاف (۱۴٪ آلفا)
             if (string.Equals(parameter as string, "soft", StringComparison.OrdinalIgnoreCase))
                 color.A = 36; // ~۱۴٪ شفافیت
+            // ═══ چرخهٔ سی‌وهفتم (گزارش مالک — «کادر پیام تیره است») ═══
+            // حالت «tint»: ترکیبِ کدر به‌سفید (۱۳٪ رنگ + ۸۷٪ سفید) — برخلاف
+            // «soft» که آلفا دارد و رنگش به پس‌زمینهٔ پشتش وابسته است (در تم
+            // تیره/پس‌زمینهٔ رنگی تیره دیده می‌شد)، tint همیشه و در هر جایی
+            // «روشن» است چون رنگ نهایی از پیش با سفید مخلوط شده است.
+            else if (string.Equals(parameter as string, "tint", StringComparison.OrdinalIgnoreCase))
+            {
+                const double K = 0.13; // سهم رنگ — بقیه سفید
+                color = Color.FromRgb(
+                    (byte)Math.Round(255 + (color.R - 255) * K),
+                    (byte)Math.Round(255 + (color.G - 255) * K),
+                    (byte)Math.Round(255 + (color.B - 255) * K));
+            }
             var brush = new SolidColorBrush(color);
             brush.Freeze();
             return brush;

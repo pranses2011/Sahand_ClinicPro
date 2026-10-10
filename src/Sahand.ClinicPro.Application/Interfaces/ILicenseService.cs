@@ -101,13 +101,40 @@ public sealed record SupportMessageDto(
     /// شمسی شود و زیر عنوان قرار بگیرد» — تاریخ ارسال (yyyy-MM-dd میلادی از
     /// پنل) به شمسیِ ارقام‌فارسی تبدیل می‌شود؛ اگر رشته قابل پارس نبود، همان
     /// متن خام برگردانده می‌شود (هرگز خانه خالی نمی‌ماند).
+    /// ═══ چرخهٔ سی‌وهفتم (گزارش مالک — تاریخ هنوز میلادی دیده می‌شد) ═══
+    /// ریشه: پنل لایسنس همیشه «yyyy-MM-dd خالص» نمی‌فرستد — رشتهٔ تاریخ گاه
+    /// با ساعت است («yyyy-MM-dd HH:mm:ss») و DateOnly.TryParse روی آن شکست
+    /// می‌خورد و مسیر جایگزین، متن خامِ میلادی را نشان می‌داد. اکنون زنجیرهٔ
+    /// سه‌مرحله‌ای: ۱) DateOnly کامل ۲) DateTime کامل (تاریخ+ساعت) ۳) برشِ
+    /// بخش نخست رشته (پیش از فاصله/T) و پارس دوباره — پوشش همهٔ قالب‌های
+    /// رایج پنل؛ خروجی همیشه شمسیِ ارقام‌فارسی است مگر رشته کاملاً ناشناخته
+    /// باشد که در آن صورت متن خام نمایش داده می‌شود.
     /// </summary>
     public string DateFa
     {
         get
         {
-            if (DateOnly.TryParse(Date, out var d))
+            var raw = (Date ?? "").Trim();
+            if (raw.Length == 0)
+                return "";
+
+            // ۱) قالب کامل تاریخ بدون ساعت — مسیر اصلی پنل
+            if (DateOnly.TryParse(raw, System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out var d))
                 return Common.Helpers.PersianDateHelper.ToShamsiFa(d.ToDateTime(TimeOnly.MinValue));
+
+            // ۲) قالب تاریخ+ساعت — «2026-10-05 14:30:00» و همتاهای ISO آن
+            if (DateTime.TryParse(raw, System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out var dt))
+                return Common.Helpers.PersianDateHelper.ToShamsiFa(dt);
+
+            // ۳) برشِ بخش تاریخ از ابتدای رشته (پیش از فاصله یا T) — مقاوم‌ترین لایه
+            var head = raw.Split(' ', 'T')[0];
+            if (head != raw && DateOnly.TryParse(head, System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out var d2))
+                return Common.Helpers.PersianDateHelper.ToShamsiFa(d2.ToDateTime(TimeOnly.MinValue));
+
+            // رشتهٔ ناشناخته — همان متن خام تا خانهٔ تاریخ خالی نماند
             return Date;
         }
     }

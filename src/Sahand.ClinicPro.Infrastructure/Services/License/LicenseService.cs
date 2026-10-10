@@ -689,10 +689,29 @@ public partial class LicenseService : ILicenseService
                 if (string.IsNullOrWhiteSpace(m.Title))
                     continue;
                 var key = $"ServerMessages.{m.Id}";
-                var exists = await _context.SystemSettings.AsNoTracking()
-                    .AnyAsync(s => s.Category == "ServerMessages" && s.Key == key && !s.IsDeleted, ct);
-                if (exists)
-                    continue; // پیام تکراری تحویل نشود
+                // ═══ چرخهٔ سی‌وهفتم (گزارش مالک — «رنگ کادر با انتخاب پنل فرق داشت») ═══
+                // پیش از این چرخه پیامِ یک‌بار ذخیره‌شده برای همیشه «منجمد» می‌شد:
+                // شرط exists ردیف را رد می‌کرد و حتی اگر فروشنده در پنل رنگ/متن/تاریخِ
+                // پیام را ویرایش می‌کرد، نسخهٔ کهنه در دیتابیس می‌ماند — پیام‌هایِ
+                // ذخیره‌شدهٔ پیش از چرخهٔ ۳۵ اصلاً فیلد color نداشتند و همیشه با
+                // رنگِ سطح (نه رنگِ انتخابی) رندر می‌شدند. اکنون با مفهوم «upsert»:
+                // ردیف موجود خوانده می‌شود و اگر نسخهٔ سرور (رنگ/عنوان/متن/سطح/تاریخ)
+                // با نسخهٔ ذخیره‌شده فرق داشته باشد، مقدارش بازنویسی می‌شود؛ تنها
+                // وقتی ردیف نبود یا یکسان بود که دست نمی‌زنیم.
+                var existing = await _context.SystemSettings
+                    .FirstOrDefaultAsync(s => s.Category == "ServerMessages" && s.Key == key && !s.IsDeleted, ct);
+                if (existing is not null)
+                {
+                    var newValue = JsonSerializer.Serialize(
+                        new { m.Id, m.Title, m.Body, m.Level, m.Date, m.Color }, JsonOptions);
+                    if (!string.Equals(existing.Value, newValue, StringComparison.Ordinal))
+                    {
+                        existing.Value = newValue;
+                        existing.UpdatedAt = DateTime.UtcNow;
+                        _logger.LogInformation("پیام پشتیبانی {Key} از سرور لایسنس به‌روزرسانی شد", key);
+                    }
+                    continue;
+                }
                 fresh.Add(new SystemSetting
                 {
                     Category = "ServerMessages",
@@ -712,6 +731,11 @@ public partial class LicenseService : ILicenseService
                 _context.SystemSettings.AddRange(fresh);
                 await _context.SaveChangesAsync(ct);
                 _logger.LogInformation("{Count} پیام پشتیبانی جدید از سرور لایسنس دریافت شد", fresh.Count);
+            }
+            else if (_context.ChangeTracker.Entries<SystemSetting>().Any(e => e.State == EntityState.Modified))
+            {
+                // ذخیرهٔ به‌روزرسانیِ ردیف‌های موجود (مسیر upsert)
+                await _context.SaveChangesAsync(ct);
             }
         }
         catch (Exception ex)
