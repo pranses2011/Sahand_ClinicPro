@@ -142,7 +142,8 @@
                  ۱) «تاریخ زیر عنوان میلادی بود» — تجزیهٔ سه‌مرحله‌ای DateFa در DTO
                     (تاریخ خالص، تاریخ+ساعت، برشِ بخش نخست) همهٔ قالب‌های پنل را شمسی می‌کند
                  ۲) «تاریخ باید به‌صورت بج در گوشهٔ بالا و چپ کادر پیام باشد» — بجِ
-                    چیپیِ هم‌رنگ کادر در گوشهٔ بالا-چپ (Left در RTL همان لبهٔ فیزیکی چپ است)
+                    چیپیِ هم‌رنگ کادر؛ جای‌گذاری نهایی در چرخهٔ ۳۹ با گرید دوسطونه
+                    انجام شد (ستون آخر RTL = لبهٔ فیزیکی چپ) — کامنت درون قالب
                  ۳) «رنگ کادر با انتخاب پنل یکی است ولی تیره است» — پس‌زمینه از «soft»
                     (۱۴٪ آلفا — وابسته به پس‌زمینهٔ پشت) به «tint» (ترکیب کدر با سفید،
                     همیشه روشن) تغییر کرد؛ حاشیهٔ بالایی رنگ تأکید می‌ماند -->
@@ -163,11 +164,41 @@
                                             Value="{Binding EffectiveBrush, Converter={StaticResource HexBrush}}" />
                                 </Style>
                             </Border.Style>
-                            <StackPanel>
+                            <!-- ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — جای بج تاریخ ═══
+                                 «تاریخ رو گفته بودم در گوشه بالا و چپ کادر پیام قرار
+                                 بگیره ولی در سمت راست و بالای عنوان هست» — ریشه:
+                                 HorizontalAlignment در WPF «نسبت به جریان» است نه لبهٔ
+                                 فیزیکی؛ در ظرف RTL مقدار Left به لبهٔ فیزیکی «راست»
+                                 می‌نشیند (همان دلیلی که چرخهٔ ۳۷ تصور می‌کرد Left =
+                                 چپ فیزیکی ولی روی صفحه راست افتاد). رفع قطعی: سربرگ
+                                 کارت به گرید دوسطونه تبدیل شد — ستونِ نخستِ RTL از
+                                 راست شروع می‌شود (عنوان) و ستونِ آخرِ RTL به لبهٔ
+                                 فیزیکی «چپ» می‌رسد (بج تاریخ)؛ یعنی تاریخ دقیقاً در
+                                 گوشهٔ بالا-چپ کادر و هم‌ردیف عنوان می‌نشیند و دیگر
+                                 ردیف مجزایی اشغال نمی‌کند. -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <!-- ستون عنوان — در RTL سمت راست کارت -->
+                                    <ColumnDefinition Width="*" />
+                                    <!-- ستون بج تاریخ — در RTL لبهٔ فیزیکی چپ (گوشهٔ بالا-چپ) -->
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- ردیف عنوان: آیکون سطح + عنوان پیام (راست) -->
+                                <StackPanel Grid.Column="0" Orientation="Horizontal"
+                                            Margin="0,0,12,0">
+                                    <TextBlock Text="{Binding LevelIcon}" FontSize="15"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Title}" FontSize="13.5" FontWeight="Bold"
+                                               Margin="8,0,0,0" VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+
                                 <!-- بج تاریخ ارسال — گوشهٔ بالا-چپ کادر؛ چیپِ هم‌رنگ کادر
                                      (پس‌زمینهٔ tint + متن و حاشیهٔ رنگ تأکید) تا در هر رنگی
                                      خوانا بماند؛ تاریخ شمسی/ارقام‌فارسی از DateFa -->
-                                <Border HorizontalAlignment="Left" Margin="0,0,0,7"
+                                <Border Grid.Column="1"
+                                        VerticalAlignment="Center"
                                         CornerRadius="9" Padding="9,2.5"
                                         Background="{Binding EffectiveBrush, Converter={StaticResource HexBrush}, ConverterParameter=tint}"
                                         BorderBrush="{Binding EffectiveBrush, Converter={StaticResource HexBrush}}"
@@ -177,18 +208,10 @@
                                                Foreground="{Binding EffectiveBrush, Converter={StaticResource HexBrush}}"
                                                FontFamily="{DynamicResource App.CodeFont}" />
                                 </Border>
-                                <!-- ردیف عنوان: آیکون سطح + عنوان پیام -->
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding LevelIcon}" FontSize="15"
-                                               VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Title}" FontSize="13.5" FontWeight="Bold"
-                                               Margin="8,0,0,0" VerticalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis" />
-                                </StackPanel>
-                                <!-- متن پیام -->
-                                <TextBlock Text="{Binding Body}" FontSize="12" Margin="0,5,0,0"
-                                           Opacity="0.85" TextWrapping="Wrap" />
-                            </StackPanel>
+                            </Grid>
+                            <!-- متن پیام -->
+                            <TextBlock Text="{Binding Body}" FontSize="12" Margin="0,5,0,0"
+                                       Opacity="0.85" TextWrapping="Wrap" />
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
