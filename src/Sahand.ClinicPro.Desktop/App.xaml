@@ -47,6 +47,21 @@
                  می‌گیرد؛ مقدار پایه = BaseFontSize ÷ ۱۳ و از سوی ThemeService
                  بازنویسی می‌شود (مثل زوم مرورگر). -->
             <ScaleTransform x:Key="App.FontScaleTransform" ScaleX="1" ScaleY="1" />
+            <!-- ═══ چرخهٔ سی‌وهفتم (ریشهٔ قطعی پنج گزارش پیاپی سایدبار + بریدگی ساعت) ═══
+                 MaterialDesign3.Defaults.xaml (که در MergedDictionaries بالا ادغام شده)
+                 برای «همهٔ ToggleButtonها» استایل ضمنی تعریف می‌کند:
+                     <Style TargetType="ToggleButton"
+                            BasedOn="{StaticResource MaterialDesignSwitchToggleButton}" />
+                 یعنی هر تاگلی که Style صریح نداشته باشد، ابعاد سوییچِ iOS-مانند
+                 (Height=32 و Width=52) را به ارث می‌برد و قالب سفارشی‌اش در همان
+                 قاب کوچک زندانی می‌شود — سربرگ گروه‌های منوی کناری به قرصِ ۲۶px
+                 با متن له‌شده فرومی‌رفت و انتخابگر ساعت، متن «10:30» را به «10:3»
+                 و آیکونش را به نصف برید (قانون هم‌کلاسی‌ها: هر دو از یک ریشه).
+                 پادزهر سراسری: این استایلِ خالیِ صریح زنجیرهٔ ارث‌بری را کامل قطع
+                 می‌کند (استایل صریح مقدم بر استایل ضمنی است) و مصرف‌کننده‌اش
+                 Template محلی خودش را با ابعاد طبیعی می‌سازد. ابعاد را تعیین
+                 نکنید تا تداخلی با Measure طبیعی محتوا ایجاد نشود. -->
+            <Style x:Key="App.PlainToggleButton" TargetType="ToggleButton" />
             <CornerRadius x:Key="App.CardRadius">8</CornerRadius>
             <Thickness x:Key="App.CardPadding">20</Thickness>
             <system:Boolean x:Key="App.AnimationsEnabled">True</system:Boolean>

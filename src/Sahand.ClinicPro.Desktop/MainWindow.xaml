@@ -314,8 +314,30 @@
                                      تمام‌عرض (Stretch) شد تا پس‌زمینهٔ سربرگ تمام عرض
                                      ستون منو را بپوشاند. بریدگی فقط در حالت غیرممکنِ
                                      کمبود فضا و به‌صورت «…» انتهای متن است (TextTrimming). -->
+                                <!-- ═══ چرخهٔ سی‌وهفتم (پنجمین گزارش عنوان گروه‌ها — ریشهٔ قطعی) ═══
+                                     ریشهٔ واقعی پنج گزارش پیاپی «ارتفاع سربرگ‌ها کم است و عنوان
+                                     خوانده نمی‌شود» سرانجام با تحلیل پیکسلی اسکرین‌شات مالک و
+                                     کاوش منابع MaterialDesignThemes 5.3.2 کشف شد:
+                                     فایل MaterialDesign3.Defaults.xaml (که از App.xaml ادغام
+                                     می‌شود) یک استایل «ضمنی» برای همهٔ ToggleButtonها تعریف
+                                     می‌کند: BasedOn=MaterialDesignSwitchToggleButton یعنی
+                                     Height=32 و Width=52 — ابعاد سوییچ iOS-مانند! تاگلِ بدون
+                                     Style صریح از این استایل ضمنی پیروی می‌کند؛ قالب محلی ما
+                                     Template را درست جایگزین می‌کند ولی Height=32 ستون فقرات
+                                     قرص را می‌شکند: قالب با Padding=10,10 و آیکون ۲۲px به
+                                     فضای محتوای ~۵px فرو می‌ریزد و متن/آیکون له می‌شود.
+                                     رفع قطعی: Style صریحِ خالی «App.PlainToggleButton»
+                                     (تعریف در App.xaml) زنجیرهٔ استایل سوییچ را کامل می‌بُرد؛
+                                     Width/Height صریح Auto هم سپر دومی است که حتی اگر روزی
+                                     استایل ضمنی دیگری معرفی شود، مقدار محلی بر آن می‌چربد.
+                                     MinWidth=190 (چرخهٔ ۳۵) عرض را تضمین می‌کرد ولی هیچ‌چیز
+                                     ارتفاع را تضمین نمی‌کرد — به همین دلیل رفع‌های چرخهٔ ۳۳
+                                     و ۳۵ در ایستگاه مالک بی‌اثر می‌ماند. -->
                                 <ToggleButton IsChecked="{Binding IsExpanded, Mode=TwoWay}"
                                               Cursor="Hand"
+                                              Style="{StaticResource App.PlainToggleButton}"
+                                              Width="Auto"
+                                              Height="Auto"
                                               HorizontalAlignment="Stretch"
                                               MinWidth="190"
                                               Visibility="{Binding HasChildren, Converter={StaticResource BoolToVisibility}}">
@@ -325,6 +347,7 @@
                                                     BorderBrush="#FFD54F" BorderThickness="0,0,0,1"
                                                     CornerRadius="9" Padding="10,10"
                                                     Margin="0,4,0,2"
+                                                    MinHeight="46"
                                                     SnapsToDevicePixels="True">
                                                 <!-- گرید تضمینی — عنوان ستون * دارد (چرخهٔ ۳۳) -->
                                                 <Grid>
