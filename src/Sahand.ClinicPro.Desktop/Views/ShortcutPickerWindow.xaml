@@ -1,0 +1,60 @@
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.ShortcutPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="افزودن میانبر به داشبورد"
+        Height="620" Width="600"
+        FlowDirection="RightToLeft"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize" ShowInTaskbar="False">
+    <!-- ═══════════════════════════════════════════════════════════
+         انتخابگر میانبر داشبورد — چرخهٔ سی‌ونه‌م (گزارش مالک):
+         «بتونم دکمه‌های میانبر برای قسمت‌های مختلف رو داخلش ایجاد بکنم» —
+         فهرست صفحات مجازِ هنوز‌پین‌نشده با آیکون؛ جستجوی زنده؛ با کلیک
+         انتخاب و بسته می‌شود.
+         ═══════════════════════════════════════════════════════════ -->
+    <Grid Margin="20,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- سربرگ -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="افزودن میانبر" FontSize="17" FontWeight="Bold" />
+            <TextBlock Text="صفحهٔ دلخواه را انتخاب کنید — کاشی آن به پنل «میانبرهای سریع» داشبورد شما اضافه می‌شود."
+                       FontSize="11.5" Opacity="0.7" Margin="0,4,0,0" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- جستجوی زنده -->
+        <TextBox Grid.Row="1" x:Name="SearchBox"
+                 materialDesign:HintAssist.Hint="🔍 جستجوی صفحه…"
+                 TextChanged="OnSearchChanged"
+                 Margin="0,0,0,10" FontSize="13" />
+
+        <!-- فهرست صفحات -->
+        <ListBox Grid.Row="2" x:Name="ItemsList"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 BorderThickness="0"
+                 MouseLeftButtonUp="OnItemClick">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border Background="#FFFFFF" CornerRadius="10" Padding="12,9" Margin="2,3"
+                            BorderBrush="#E0E0E0" BorderThickness="1" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="38" Height="38" CornerRadius="10" Background="#E3F2FD"
+                                    VerticalAlignment="Center">
+                                <materialDesign:PackIcon Kind="{Binding Icon}" Width="20" Height="20"
+                                                         Foreground="#1565C0"
+                                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="{Binding Title}" FontSize="13.5" FontWeight="SemiBold"
+                                       Margin="12,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</Window>

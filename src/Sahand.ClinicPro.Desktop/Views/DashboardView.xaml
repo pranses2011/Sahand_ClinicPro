@@ -136,6 +136,104 @@
                 </DockPanel>
             </Border>
 
+            <!-- ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — پنل میانبرهای سریع شخصی ═══
+                 «میخوام در داشبورد… دکمه‌های میانبر برای قسمت‌های مختلف رو داخلش
+                 ایجاد بکنم که در هنگام نیاز، داخل منو و صفحات دنبالشون نگردم و
+                 با کلیک بر روی اون دکمه مستقیم اون فرم باز بشه… برای هر کاربر
+                 مختص خودش ذخیره بشه» — کاشی‌های گوشه‌گرد با آیکون و رنگ چرخه‌ای؛
+                 حالت ویرایش دکمهٔ حذف هر کاشی را نمایان می‌کند؛ ذخیره خودکار در
+                 پایان ویرایش، در فایل محلی مختص کاربر واردشده. -->
+            <Border Background="#F5F7FB" CornerRadius="12" Padding="14,10" Margin="0,0,0,12"
+                    BorderBrush="#E0E0E0" BorderThickness="1">
+                <StackPanel>
+                    <!-- سربرگ پنل + دکمه‌های مدیریت -->
+                    <DockPanel Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="LightningBolt" Width="20" Height="20"
+                                                     Foreground="#F57C00" VerticalAlignment="Center" />
+                            <TextBlock Text="میانبرهای سریع من" FontSize="14.5" FontWeight="Bold"
+                                       Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" HorizontalAlignment="Left"
+                                    VerticalAlignment="Center">
+                            <!-- افزودن — همیشه نمایان -->
+                            <Button Command="{Binding AddShortcutCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    MinHeight="36" MinWidth="115" Padding="14,6" Margin="0,0,8,0"
+                                    Background="#F57C00" BorderBrush="#F57C00"
+                                    ToolTip="افزودن میانبر صفحهٔ دلخواه به این پنل">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Plus" Width="15" Height="15" VerticalAlignment="Center" />
+                                    <TextBlock Text="میانبر جدید" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <!-- ویرایش — حذف کاشی‌ها؛ پایان خودکارِ حالت = ذخیره -->
+                            <ToggleButton IsChecked="{Binding IsEditingShortcuts}"
+                                          Style="{StaticResource MaterialDesignFlatToggleButton}"
+                                          MinHeight="36" Padding="12,6"
+                                          ToolTip="حالت ویرایش — دکمهٔ حذف روی هر کاشی نمایان می‌شود؛ با پایان ویرایش، تغییرات ذخیره می‌شوند">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" VerticalAlignment="Center" />
+                                    <TextBlock Text="ویرایش" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </ToggleButton>
+                        </StackPanel>
+                    </DockPanel>
+
+                    <!-- حالت خالی — دعوت به افزودن نخستین میانبر -->
+                    <TextBlock FontSize="12" Opacity="0.7" Margin="4,2,4,4" TextWrapping="Wrap"
+                               Text="هنوز میانبری نساخته‌اید — صفحات پرکاربرد خود را با «میانبر جدید» به این پنل اضافه کنید تا بدون گشتن در منو، با یک کلیک باز شوند."
+                               Visibility="{Binding HasShortcuts, Converter={StaticResource InverseBoolToVisibility}}" />
+
+                    <!-- کاشی‌های میانبر -->
+                    <ItemsControl ItemsSource="{Binding Shortcuts}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,8,8" Width="128">
+                                    <!-- کاشی اصلی — کلیک = ناوبری مستقیم -->
+                                    <Button Command="{Binding DataContext.OpenShortcutCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource MaterialDesignRaisedButton}"
+                                            Height="86" Background="#FFFFFF" BorderBrush="#E0E0E0"
+                                            Foreground="#1F2937" BorderThickness="1"
+                                            ToolTip="{Binding Title, StringFormat=باز کردن {0}}">
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Border Width="40" Height="40" CornerRadius="20"
+                                                    Background="#E3F2FD" HorizontalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="{Binding Icon}" Width="21" Height="21"
+                                                                         Foreground="{Binding Accent}"
+                                                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                            <TextBlock Text="{Binding Title}" FontSize="11" FontWeight="SemiBold"
+                                                       Foreground="#1F2937" Margin="0,6,0,0"
+                                                       HorizontalAlignment="Center" TextAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" MaxWidth="112" />
+                                        </StackPanel>
+                                    </Button>
+                                    <!-- دکمهٔ حذف گوشه — فقط در حالت ویرایش (روی کاشی، مستقل از کلیک اصلی) -->
+                                    <Button Command="{Binding DataContext.RemoveShortcutCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                            Width="26" Height="26" Padding="2"
+                                            HorizontalAlignment="Left" VerticalAlignment="Top"
+                                            Margin="0,-8,-8,0"
+                                            Background="#FFEBEE" Foreground="#C62828"
+                                            ToolTip="حذف این میانبر"
+                                            Visibility="{Binding DataContext.IsEditingShortcuts, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource BoolToVisibility}}">
+                                        <materialDesign:PackIcon Kind="Close" Width="14" Height="14" />
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
             <!-- ═══ چرخه دوازدهم: کارت پیام‌های پشتیبانی — پیام‌های مستقیم پنل لایسنس ═══
                  ═══ چرخهٔ سی‌وپنجم (گزارش مالک) ═══ رنگ کادر از EffectiveBrush (انتخاب پنل)
                  ═══ چرخهٔ سی‌وهفتم (گزارش مالک — سه اصلاح) ═══

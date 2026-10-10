@@ -58,6 +58,25 @@ public partial class DashboardViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
+
+    // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — میانبرهای شخصی داشبورد ═══
+    // «میخوام در داشبورد… دکمه‌های میانبر برای قسمت‌های مختلف… با کلیک مستقیم
+    // اون فرم باز بشه… برای هر کاربر مختص خودش ذخیره بشه» — ناوبری از
+    // INavigationService و ذخیرهٔ فایل JSON محلی به‌ازای کاربر واردشده
+    // (shortcuts.{username}.json در %AppData%/SahandClinicPro) تا هر کاربر
+    // پنل میانبر خودش را مستقل از سرور و شعبه داشته باشد.
+    private readonly ITokenManager _tokens;
+    private readonly INavigationService _navigation;
+
+    /// <summary>
+    /// مسیر فایل میانبرهای این کاربر — پوشهٔ %AppData%/SahandClinicPro؛ نام
+    /// کاربری در نام فایل است تا میانبرها «مختص هر کاربر» بمانند و روی هر
+    /// ایستگاه جداگانه ذخیره شوند.
+    /// </summary>
+    private string ShortcutsFilePath => System.IO.Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "Sahand_ClinicPro",
+        $"shortcuts.{_tokens.Username ?? "user"}.json");
     private readonly System.Windows.Threading.DispatcherTimer _refresh =
         new() { Interval = TimeSpan.FromSeconds(60) };
 
@@ -294,15 +313,186 @@ public partial class DashboardViewModel : ViewModelBase
     }
 
     /// <summary>سازنده با تزریق سرویس‌ها</summary>
-    public DashboardViewModel(IApiClient api, ISnackbarService snackbar)
+    public DashboardViewModel(IApiClient api, ISnackbarService snackbar,
+        ITokenManager tokens, INavigationService navigation)
     {
         _api = api;
         _snackbar = snackbar;
+        // چرخهٔ ۳۹ — میانبرهای شخصی
+        _tokens = tokens;
+        _navigation = navigation;
         InitializeCards();
         _ = LoadLayoutAsync();
+        LoadShortcuts();
         _refresh.Tick += async (_, _) => await LoadStatsAsync();
         _refresh.Start();
         _ = LoadStatsAsync();
+    }
+
+    // ═════════════════ چرخهٔ ۳۹ — میانبرهای شخصی داشبورد ═════════════════
+
+    /// <summary>کاشی میانبر — کلید صفحه + عنوان + آیکون + رنگ تأکیدی</summary>
+    public sealed class ShortcutTile
+    {
+        /// <summary>کلید صفحهٔ مقصد</summary>
+        public string Key { get; init; } = "";
+
+        /// <summary>عنوان فارسی — از کاتالوگ</summary>
+        public string Title { get; init; } = "";
+
+        /// <summary>آیکون PackIcon — از کاتالوگ</summary>
+        public string Icon { get; init; } = "ViewDashboard";
+
+        /// <summary>رنگ تأکیدی کاشی — چرخهٔ رنگی هماهنگ با کارت‌های آمار</summary>
+        public string Accent { get; init; } = "#1E88E5";
+    }
+
+    /// <summary>میانبرهای این کاربر</summary>
+    public ObservableCollection<ShortcutTile> Shortcuts { get; } = new();
+
+    /// <summary>حالت ویرایش میانبرها — دکمه‌های حذف/افزودن نمایان می‌شوند</summary>
+    [ObservableProperty]
+    private bool _isEditingShortcuts;
+
+    /// <summary>آیا میانبری ثبت شده؟ — برای حالت خالی پنل</summary>
+    public bool HasShortcuts => Shortcuts.Count > 0;
+
+    /// <summary>تغییر حالت ویرایش → ذخیره در خاموشی حالت (تجربهٔ ایمن)</summary>
+    partial void OnIsEditingShortcutsChanged(bool value)
+    {
+        if (!value) SaveShortcuts();
+        OnPropertyChanged(nameof(HasShortcuts));
+    }
+
+    /// <summary>چرخهٔ رنگ کاشی‌ها — هماهنگ با کارت‌های آمار داشبورد</summary>
+    private static readonly string[] ShortcutAccents =
+    {
+        "#1E88E5", "#43A047", "#F57C00", "#00897B", "#5E35B1", "#C2185B", "#5D4037", "#0277BD"
+    };
+
+    /// <summary>
+    /// بارگذاری میانبرها از فایل محلی — خرابی/نبود فایل به‌صورت بی‌صدا به
+    /// حالت خالی برمی‌گردد؛ هر میانبر با کلیدِ ناشناخته (صفحهٔ حذف‌شده یا
+    /// کاربر بدون مجوز فعلی) از فهرست کنده می‌شود تا کاشی مرده نماند.
+    /// </summary>
+    private void LoadShortcuts()
+    {
+        Shortcuts.Clear();
+        try
+        {
+            if (System.IO.File.Exists(ShortcutsFilePath))
+            {
+                var keys = JsonSerializer.Deserialize<List<string>>(
+                    System.IO.File.ReadAllText(ShortcutsFilePath)) ?? new List<string>();
+                var index = 0;
+                foreach (var key in keys)
+                {
+                    var entry = Helpers.PageCatalog.Find(key);
+                    if (entry is null || !entry.ShowInPicker) continue;
+                    // مجوز → همان قاعدهٔ منو: ادمین همه‌چیز؛ صفحهٔ آزاد همیشه
+                    if (!HasShortcutAccess(key)) continue;
+                    Shortcuts.Add(new ShortcutTile
+                    {
+                        Key = entry.Key,
+                        Title = entry.Title,
+                        Icon = entry.Icon,
+                        Accent = ShortcutAccents[index % ShortcutAccents.Length]
+                    });
+                    index++;
+                }
+            }
+        }
+        catch
+        {
+            // فایل خراب یا قفل‌شده — پنل خالی می‌ماند؛ ذخیرهٔ بعدی ترمیمش می‌کند
+        }
+        OnPropertyChanged(nameof(HasShortcuts));
+    }
+
+    /// <summary>ذخیرهٔ میانبرها به فایل محلی — فقط کلیدها نگه داشته می‌شوند</summary>
+    private void SaveShortcuts()
+    {
+        try
+        {
+            var dir = System.IO.Path.GetDirectoryName(ShortcutsFilePath);
+            if (!string.IsNullOrEmpty(dir)) System.IO.Directory.CreateDirectory(dir);
+            System.IO.File.WriteAllText(ShortcutsFilePath,
+                JsonSerializer.Serialize(Shortcuts.Select(s => s.Key).ToList(),
+                    new JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch
+        {
+            // دیسک فقط‌خواندنی/دسترسی ناکافی — بی‌صدا؛ میانبرها تا پایان نشست کار می‌کنند
+        }
+    }
+
+    /// <summary>دسترسی این کاربر به کلید صفحه — همان قاعدهٔ منوی کناری</summary>
+    private bool HasShortcutAccess(string key)
+    {
+        if (_tokens.IsAdmin) return true;
+        var permission = Helpers.PageCatalog.PermissionMap.TryGetValue(key, out var p) ? p : null;
+        return permission is null
+            || _tokens.Permissions.Contains(permission, StringComparer.OrdinalIgnoreCase);
+    }
+
+    /// <summary>بازکردن صفحهٔ مقصد با کلیک روی کاشی</summary>
+    /// <param name="tile">کاشی کلیک‌شده — از CommandParameter</param>
+    [RelayCommand]
+    private void OpenShortcut(ShortcutTile? tile)
+    {
+        if (tile is null) return;
+        _navigation.NavigateTo(tile.Key);
+    }
+
+    /// <summary>
+    /// افزودن میانبر — انتخابگر صفحات (فقط صفحات مجازِ هنوز‌پین‌نشده) باز می‌شود
+    /// </summary>
+    [RelayCommand]
+    private void AddShortcut()
+    {
+        var already = Shortcuts.Select(s => s.Key).ToHashSet();
+        var available = Helpers.PageCatalog.All
+            .Where(p => p.ShowInPicker && !already.Contains(p.Key) && HasShortcutAccess(p.Key))
+            .Select(p => new ShortcutTile { Key = p.Key, Title = p.Title, Icon = p.Icon })
+            .ToList();
+
+        if (available.Count == 0)
+        {
+            _snackbar.Info("صفحهٔ دیگری برای افزودن نیست — همهٔ صفحات مجاز شما پین شده‌اند");
+            return;
+        }
+
+        var picker = new Views.ShortcutPickerWindow(available)
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        picker.ShowDialog();
+
+        if (picker.SelectedKey is not { Length: > 0 } key) return;
+
+        var entry = Helpers.PageCatalog.Find(key);
+        if (entry is null) return;
+        Shortcuts.Add(new ShortcutTile
+        {
+            Key = entry.Key,
+            Title = entry.Title,
+            Icon = entry.Icon,
+            Accent = ShortcutAccents[Shortcuts.Count % ShortcutAccents.Length]
+        });
+        OnPropertyChanged(nameof(HasShortcuts));
+        SaveShortcuts();
+        _snackbar.Success($"میانبر «{entry.Title}» به داشبورد اضافه شد");
+    }
+
+    /// <summary>حذف میانبر — در حالت ویرایش</summary>
+    /// <param name="tile">کاشی قابل حذف — از CommandParameter</param>
+    [RelayCommand]
+    private void RemoveShortcut(ShortcutTile? tile)
+    {
+        if (tile is null) return;
+        Shortcuts.Remove(tile);
+        OnPropertyChanged(nameof(HasShortcuts));
+        SaveShortcuts();
     }
 
     /// <summary>بارگذاری کامل همه بخش‌ها — طبق LoadAsync پرامپت</summary>

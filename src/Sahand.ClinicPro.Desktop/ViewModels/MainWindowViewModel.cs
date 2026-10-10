@@ -80,46 +80,12 @@ public partial class MainWindowViewModel : ObservableObject
     /// سرور اجرا می‌کند یکی باشد؛ صفحاتی که سرورشان آزاد است (لایسنس/آموزش)
     /// اینجا هم آزادند.
     /// </summary>
-    private static readonly Dictionary<string, string> PagePermissionMap = new(StringComparer.Ordinal)
-    {
-        ["dashboard"] = "dashboard.view",
-        ["patients"] = "patients.view",
-        ["appointments"] = "appointments.view",
-        ["receptions"] = "receptions.view",
-        ["visits"] = "visits.view",
-        ["doctor-visit"] = "visits.view",
-        ["emr-advanced"] = "emr.advanced",
-        ["prescriptions"] = "prescriptions.view",
-        ["erx"] = "prescriptions.view",          // نسخهٔ الکترونیک ← گیت GovernmentController
-        ["pharmacy"] = "pharmacy.view",
-        ["stocktaking"] = "pharmacy.stocktake",
-        ["lab"] = "lab.view",
-        ["paraclinical"] = "imaging.view",        // تصویربرداری/دندان/چشم/فیزیوتراپی
-        ["doctors"] = "doctors.view",
-        ["personnel"] = "patients.view",          // HrController پرسنل با همین گیت محافظت می‌شود
-        ["payroll"] = "payroll.manage",
-        ["attendance"] = "attendance.view",
-        ["billing"] = "invoices.view",           // مالی و صندوق ← فاکتور+پرداخت
-        ["accounting"] = "accounting.view",
-        ["insurance"] = "insurance.view",
-        ["sepas"] = "appointments.view",          // government/sepas با همین گیت
-        ["sms"] = "sms.view",
-        ["surveys"] = "surveys.view",
-        ["reports"] = "reports.view",
-        ["admin"] = "settings.view",
-        ["users"] = "users.view",
-        ["roles"] = "roles.view",
-        ["settings"] = "settings.view",
-        ["settings-full"] = "settings.view",
-        ["branches"] = "settings.view",          // BranchesController با settings گیت می‌شود
-        // چرخهٔ ۳۹ — صفحهٔ منوی کناری اتاق‌ها؛ نوشتنش (ساخت/ویرایش اتاق) در
-        // سرور با نقش Admin/Manager گیت می‌شود — همان سطح سایر داده‌های مرجع سامانه
-        ["rooms"] = "settings.view",
-        ["backup"] = "backup.view",
-        ["audit"] = "auditlogs.view",
-        ["complementary"] = "settings.view",     // قالب چاپ ← PrintTemplatesController
-        // «license» و «training» عمداً آزادند — سرور هم گیت خاصی برایشان نگذاشته
-    };
+    private static readonly Dictionary<string, string> PagePermissionMap =
+        // چرخهٔ ۳۹ — منبع یگانه شد: کلید/مجوزها از PageCatalog می‌آیند (کاتالوگ
+        // مشترک منوی کناری + میانبرهای داشبورد)؛ صفحات آزاد (لایسنس/آموزش/
+        // اعلان‌ها) مجوز تهی دارند و عمداً بیرون نقشه می‌مانند — همان قرارداد
+        // پیشین: «نبودن در نقشه = آزاد». رفتار HasPageFilter یک بایت هم عوض نشده.
+        new Dictionary<string, string>(Helpers.PageCatalog.PermissionMap, StringComparer.Ordinal);
 
     /// <summary>تاریخ امروز شمسی</summary>
     [ObservableProperty]
