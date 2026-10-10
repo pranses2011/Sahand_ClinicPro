@@ -54,6 +54,86 @@ public partial class ReportBrowserViewModel : ViewModelBase
     [ObservableProperty]
     private string? _search;
 
+    // ═══ چرخهٔ چهل‌ویکم (گزارش مالک) — فیلتر نوع چاپ/گزارش‌ها ═══
+    // «فیلتر نوع به چاپ/گزارش‌ها اضافه بکن» + جعبهٔ جستجوی این صفحه که از
+    // ابتدا به Search بایند بود ولی هیچ پالایشی انجام نمی‌داد (همان الگوی
+    // «دکمهٔ مرده» چرخهٔ ۳۸ که در ممیزی قانون ۳ پیدا شد). اکنون:
+    //   ۱) کاتالوگ کامل سرور یک‌بار در _allCategories می‌نشیند؛
+    //   ۲) فیلتر نوع (همه/جدولی/نموداری) + جستجوی زنده، پالایش سمت کلاینت
+    //      را روی همان دادهٔ کش‌شده اجرا می‌کند (بدون رفت‌وبرگشت به سرور)؛
+    //   ۳) شناسهٔ نوع: گزارش‌های نموداری با پیشوند chart- در کاتالوگ سرور
+    //      نشانه‌گذاری می‌شوند — جدولی‌ها (خروجی جدول + چاپ/CSV/PDF) باقی.
+
+    /// <summary>گزینه‌های فیلتر نوع گزارش</summary>
+    public string[] ReportTypeFilters { get; } =
+    {
+        "🗂️ همهٔ انواع",
+        "📄 جدولی (چاپ/اکسل/PDF)",
+        "📈 نموداری"
+    };
+
+    /// <summary>نمایهٔ فیلتر نوع — ۰ همه، ۱ جدولی، ۲ نموداری</summary>
+    [ObservableProperty]
+    private int _typeFilterIndex;
+
+    /// <summary>
+    /// کاتالوگ کاملِ بارگذاری‌شده از سرور — مبنای هر دو پالایشِ زنده؛ پس از
+    /// تغییر فیلتر/جستجو از همین نسخهٔ کامل ساخته می‌شود نه درخواست جدید.
+    /// </summary>
+    private List<ReportCategory> _allCategories = new();
+
+    /// <summary>تغییر فیلتر نوع → پالایش مجدد کاتالوگِ کش‌شده</summary>
+    partial void OnTypeFilterIndexChanged(int value) => ApplyCatalogFilters();
+
+    /// <summary>تایپ در جستجو → پالایش زنده (رفع جعبهٔ مردهٔ پیشین)</summary>
+    partial void OnSearchChanged(string? value) => ApplyCatalogFilters();
+
+    /// <summary>
+    /// آیا این گزارش از نوع نموداری است؟ — مبنای نشانه‌گذاری سرور، پیشوند
+    /// chart- در شناسهٔ گزارش است (دستهٔ «📈 گزارش‌های نموداری» چرخهٔ ۱۱ به بعد)
+    /// </summary>
+    private static bool IsChartReport(ReportCatalogItem report) =>
+        report.Id.StartsWith("chart-", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// اعمال هم‌زمان فیلتر نوع و جستجو روی کاتالوگ کامل — دسته‌های تهی‌شده
+    /// پنهان می‌شوند و شمارنده‌شان تازه؛ انتخاب قبلی کاربر اگر هنوز زنده است
+    /// حفظ می‌شود تا پالایش، جای او را عوض نکند.
+    /// </summary>
+    private void ApplyCatalogFilters()
+    {
+        var term = Search?.Trim();
+        var previousTitle = SelectedCategory?.Title;
+
+        IEnumerable<ReportCategory> query = _allCategories;
+
+        // لایهٔ ۱ — فیلتر نوع: جدولی = بی‌پیشوند chart-؛ نموداری = با پیشوند
+        if (TypeFilterIndex == 1)
+            query = query.Select(c => FilterCategory(c, r => !IsChartReport(r)));
+        else if (TypeFilterIndex == 2)
+            query = query.Select(c => FilterCategory(c, IsChartReport));
+
+        // لایهٔ ۲ — جستجو در عنوان و توضیح (هر دو سطح)
+        if (!string.IsNullOrWhiteSpace(term))
+            query = query.Select(c => FilterCategory(c, r =>
+                r.Title.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || r.Description.Contains(term, StringComparison.OrdinalIgnoreCase)));
+
+        // دسته‌های خالی‌شده حذف + شمار تازه
+        Categories = new ObservableCollection<ReportCategory>(
+            query.Where(c => c.Reports.Count > 0));
+
+        // حفظ انتخاب قبلی در صورت بقای دسته؛ وگرنه نخستین دسته
+        SelectedCategory = Categories.FirstOrDefault(c => c.Title == previousTitle)
+                           ?? Categories.FirstOrDefault();
+    }
+
+    /// <summary>کپی دسته با گزارش‌های پالایش‌شده و شمار تازه</summary>
+    private static ReportCategory FilterCategory(ReportCategory category,
+        Func<ReportCatalogItem, bool> predicate) =>
+        new(category.Icon, category.Title,
+            category.Reports.Count(predicate), category.Reports.Where(predicate).ToList());
+
     /// <summary>عنوان و توضیح گزارش در پنل نتیجه</summary>
     [ObservableProperty]
     private string _reportTitle = "گزارشی انتخاب نشده";
@@ -189,17 +269,23 @@ public partial class ReportBrowserViewModel : ViewModelBase
         try
         {
             var response = await _api.GetAsync<CatalogResponse>("reports/catalog");
-            Categories = new ObservableCollection<ReportCategory>(
-                (response?.Data ?? new List<CategoryDto>()).Select(c => new ReportCategory(
+
+            // کاتالوگ کامل کش می‌شود — فیلتر نوع/جستجو (چرخهٔ ۴۱) روی همین
+            // نسخه در حافظه پالایش می‌کنند، نه با درخواست جدید از سرور
+            _allCategories = (response?.Data ?? new List<CategoryDto>())
+                .Select(c => new ReportCategory(
                     c.Icon, c.Category,
                     c.Reports.Count,
                     c.Reports.Select(r => new ReportCatalogItem(
-                        r.Id, r.Title, r.Description, r.ParamsList)).ToList())));
-            SelectedCategory = Categories.FirstOrDefault();
+                        r.Id, r.Title, r.Description, r.ParamsList)).ToList()))
+                .ToList();
+
+            // پالایش زنده از نو اعمال می‌شود (فیلتر نوع/جستجوی فعلی حفظ می‌شود)
+            ApplyCatalogFilters();
 
             // چرخهٔ ۳۸: شکست کاتالوگ درون‌صفحه‌ای اعلام شود — سایدبار تهی بی‌توضیح
             // گزارش مالک («هیچ‌کدام از گزارش‌ها کار نمی‌کنند») را ریشه‌یابی‌ناپذیر می‌کند
-            if (Categories.Count == 0)
+            if (_allCategories.Count == 0)
                 _snackbar.Error($"کاتالوگ گزارش‌ها بارگذاری نشد — {_api.LastError ?? "خطای سرور"}");
         }
         finally
