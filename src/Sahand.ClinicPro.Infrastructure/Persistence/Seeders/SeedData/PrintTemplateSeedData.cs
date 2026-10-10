@@ -330,6 +330,179 @@ public static class PrintTemplateSeedData
   <tr><td style='padding:5px 8px;border:1px solid #999'>مالیات</td><td style='padding:5px 8px;border:1px solid #999'>-{{tax}}</td></tr>
   <tr style='font-weight:800;background:#F5F5F5'><td style='padding:6px 8px;border:1px solid #999'>خالص پرداختی</td><td style='padding:6px 8px;border:1px solid #999'>{{net_pay}}</td></tr>
 </table>
-<div class='sig'><div class='box'><div class='line'></div>امضای دریافت‌کننده</div></div>", "A5", "Portrait", 12)
+<div class='sig'><div class='box'><div class='line'></div>امضای دریافت‌کننده</div></div>", "A5", "Portrait", 12),
+
+        // ═══ چرخهٔ سی‌وپنجم (گزارش مالک) — «برای هر موجودیت ۲ طرح دیگه هم بساز» ═══
+        // دو خانوادهٔ تازه برای هر ۹ نوع سند — «مینیمال» (سفید و پاک، بدون نوار رنگی،
+        // فضای سفید زیاد، خطوط ظریف خاکستری) و «فشرده» (چیدمان دوستونهٔ کوتاه برای
+        // کاغذ کوچک/ایкономیک، فونت ریزتر، همه‌چیز در نیمی از ارتفاع معمول).
+        // نام‌ها یکتاست و بذر idempotent است → در اولین اجرای API روی هر دیتابیسِ
+        // موجودی این ۱۸ طرح تازه هم افزوده می‌شوند (بدون دست‌زدن به ویرایش‌های
+        // خود درمانگاه) — جمع هر موجودیت به ۵ طرح می‌رسد.
+
+        // ─────────────── خانوادهٔ «مینیمال» — سفیدِ پاک ───────────────
+
+        new("فاکتور مینیمال — سفید پاک", 1,
+            "فاکتور بدون نوار رنگی؛ فقط تیتر باریک و خط ظریف — مناسب پرینتر لیزری اقتصادی",
+            @"<div style='font-size:16px;font-weight:300;letter-spacing:1px;color:#333'>فاکتور {{invoice_code}}</div>
+<div style='border-bottom:1px solid #DDD;margin:8px 0 10px'></div>
+<div style='font-size:11.5px;color:#777;margin-bottom:10px'>{{invoice_date}} — بیمار: {{patient_name}} — بیمه: {{insurance_name}}</div>
+{{items_html}}
+<div style='font-size:12.5px;margin-top:10px;line-height:2'>
+جمع: {{subtotal}} <span style='color:#999'>|</span> تخفیف: {{discount}} <span style='color:#999'>|</span> سهم بیمه: {{insurance_share}}<br/>
+<b style='font-size:14px'>قابل پرداخت بیمار: {{patient_share}}</b>
+</div>", "A5", "Portrait", 12, "#444444"),
+
+        new("نسخه پزشکی مینیمال — بدون حاشیه", 2,
+            "نسخه سبک با تایپوگرافی هوادار؛ مناسب نسخه‌های کم‌قلم",
+            @"<div style='font-size:16px;font-weight:300;color:#333'>نسخه {{prescription_code}}</div>
+<div style='border-bottom:1px solid #DDD;margin:8px 0 10px'></div>
+<div style='font-size:11.5px;color:#777;margin-bottom:10px'>بیمار: {{patient_name}} ({{patient_age}}) — پزشک: {{doctor_name}} — {{visit_date}}</div>
+{{items_html}}
+<div style='font-size:11px;color:#888;margin-top:9px'>{{notes}}</div>
+<div style='margin-top:18px;font-size:11.5px;color:#555'>امضا و مهر پزشک ..............................</div>", "A5", "Portrait", 12, "#444444"),
+
+        new("درخواست آزمایش مینیمال", 3,
+            "درخواست آزمایش سبک با فهرست آزمون‌ها",
+            @"<div style='font-size:16px;font-weight:300'>درخواست آزمایش {{order_number}}</div>
+<div style='border-bottom:1px solid #DDD;margin:8px 0 10px'></div>
+<div style='font-size:11.5px;color:#777;margin-bottom:10px'>بیمار: {{patient_name}} — پزشک: {{doctor_name}} — {{order_date}}</div>
+<div style='font-size:11.5px;color:#666;margin-bottom:8px'>شرح حال: {{clinical_info}}</div>
+{{tests_html}}", "A5", "Portrait", 12, "#444444"),
+
+        new("نتیجه آزمایش مینیمال", 4,
+            "گزارش نتیجه با کمترین عناصر گرافیکی",
+            @"<div style='font-size:16px;font-weight:300'>نتیجه آزمایش {{order_number}}</div>
+<div style='border-bottom:1px solid #DDD;margin:8px 0 10px'></div>
+<div style='font-size:11.5px;color:#777;margin-bottom:10px'>بیمار: {{patient_name}} — {{result_date}}</div>
+{{results_html}}
+<div style='font-size:10.5px;color:#888;margin-top:10px'>{{verified_by}}</div>", "A5", "Portrait", 12, "#444444"),
+
+        new("درخواست تصویربرداری مینیمال", 5,
+            "درخواست تصویربرداری سبک و خوانا",
+            @"<div style='font-size:16px;font-weight:300'>درخواست {{modality}}</div>
+<div style='border-bottom:1px solid #DDD;margin:8px 0 10px'></div>
+<div style='font-size:11.5px;color:#777;margin-bottom:10px'>بیمار: {{patient_name}} — شماره: {{order_number}} — {{order_date}}</div>
+<div style='font-size:11.5px;color:#666'>اطلاعات بالینی: {{clinical_info}}</div>", "A5", "Portrait", 12, "#444444"),
+
+        new("نوبت‌نامه مینیمال — رزروشیت", 6,
+            "نوبت‌نامه‌ی کاغذ A6 با حداقل جوهر",
+            @"<div style='font-size:15px;font-weight:300;text-align:center'>نوبت {{queue_number}}</div>
+<div style='border-bottom:1px solid #DDD;margin:7px 0 9px'></div>
+<div style='font-size:12px;line-height:2'>
+بیمار: {{patient_name}}<br/>
+پزشک: {{doctor_name}}<br/>
+{{appointment_date}} — ساعت {{appointment_time}}<br/>
+<span style='color:#888;font-size:10.5px'>رهگیری: {{tracking_code}}</span>
+</div>", "A6", "Portrait", 12, "#444444"),
+
+        new("رسید پذیرش مینیمال", 7,
+            "رسید ساده بدون کادر — مناسب پرینتر سوزنی",
+            @"<div style='font-size:15px;font-weight:300'>رسید {{reception_code}}</div>
+<div style='border-bottom:1px solid #DDD;margin:7px 0 9px'></div>
+<div style='font-size:12px;line-height:2'>
+بیمار: {{patient_name}}<br/>
+تاریخ: {{reception_date}}<br/>
+خدمت: {{service_name}}<br/>
+مبلغ: <b>{{amount}}</b> ({{payment_method}})
+</div>", "A5", "Portrait", 12, "#444444"),
+
+        new("گواهی پزشکی مینیمال", 8,
+            "گواهی با متن رسمی وسط‌چین و حاشیه سفید",
+            @"<div style='font-size:16px;font-weight:300;text-align:center;margin-bottom:4px'>گواهی پزشکی</div>
+<div style='font-size:11px;color:#888;text-align:center;margin-bottom:14px'>{{issue_date}}</div>
+<div style='font-size:12.5px;line-height:2.3;text-align:justify;color:#333'>{{content}}</div>
+<div style='font-size:12px;margin-top:12px'>مدت استراحت: <b>{{duration}}</b> — بیمار: <b>{{patient_name}}</b></div>
+<div style='margin-top:20px;font-size:11.5px;color:#555'>{{doctor_name}}</div>", "A5", "Portrait", 12, "#444444"),
+
+        new("فیش حقوقی مینیمال", 9,
+            "فیش حقوقی سبک با ردیف‌های خط‌فاصله‌دار",
+            @"<div style='font-size:15px;font-weight:300'>فیش حقوقی — {{period}}</div>
+<div style='border-bottom:1px solid #DDD;margin:8px 0 10px'></div>
+<div style='font-size:13px;font-weight:700;margin-bottom:8px'>{{employee_name}}</div>
+<div style='font-size:12px;line-height:2.2'>
+حقوق پایه ................ {{base_salary}}<br/>
+اضافه‌کاری ................ {{overtime_pay}}<br/>
+بیمه ................ −{{insurance}}<br/>
+مالیات ................ −{{tax}}
+</div>
+<div style='border-top:1px solid #DDD;margin-top:8px;padding-top:8px;font-size:13px'><b>خالص پرداختی: {{net_pay}}</b></div>", "A5", "Portrait", 12, "#444444"),
+
+        // ─────────────── خانوادهٔ «فشرده» — دوستونه روی کاغذ کوچک ───────────────
+
+        new("فاکتور فشرده — فیش A6", 1,
+            "فاکتور جمع‌وجور دوستونه برای کاغذ A6 — صرفه‌جویی در کاغذ",
+            @"<div style='font-size:13px;font-weight:800;border-bottom:2px solid #16355E;padding-bottom:4px'>فاکتور {{invoice_code}}</div>
+<div style='font-size:10.5px;margin:5px 0;line-height:1.8'>بیمار: {{patient_name}} — {{invoice_date}} — بیمه: {{insurance_name}}</div>
+{{items_html}}
+<div style='font-size:11px;margin-top:5px;line-height:1.8'>جمع {{subtotal}} — تخفیف {{discount}} — بیمه {{insurance_share}}</div>
+<div style='font-size:12.5px;font-weight:800;margin-top:4px'>پرداخت بیمار: {{patient_share}}</div>", "A6", "Portrait", 11),
+
+        new("نسخه پزشکی فشرده — نصف صفحه", 2,
+            "نسخه دوستونه فشرده — دو نسخه در یک برگ A5",
+            @"<div style='font-size:12.5px;font-weight:800;border-bottom:1px solid #999;padding-bottom:3px'>نسخه {{prescription_code}} — {{visit_date}}</div>
+<div style='font-size:10.5px;margin:4px 0'>بیمار: {{patient_name}} ({{patient_age}}) — پزشک: {{doctor_name}}</div>
+{{items_html}}
+<div style='font-size:10px;color:#666;margin-top:4px'>{{notes}}</div>
+<div style='font-size:10.5px;margin-top:8px'>امضا: ....................</div>", "A5", "Portrait", 11),
+
+        new("درخواست آزمایش فشرده", 3,
+            "درخواست آزمایش کوتاه برای کاغذ A6",
+            @"<div style='font-size:12.5px;font-weight:800'>آزمایش {{order_number}}</div>
+<div style='font-size:10.5px;margin:4px 0'>{{patient_name}} — {{doctor_name}} — {{order_date}}</div>
+<div style='font-size:10px;color:#666;margin-bottom:4px'>{{clinical_info}}</div>
+{{tests_html}}", "A6", "Portrait", 11),
+
+        new("نتیجه آزمایش فشرده", 4,
+            "نتیجه آزمایش فشرده با جدول ریز",
+            @"<div style='font-size:12.5px;font-weight:800'>نتیجه {{order_number}}</div>
+<div style='font-size:10.5px;margin:4px 0'>{{patient_name}} — {{result_date}}</div>
+{{results_html}}
+<div style='font-size:9.5px;color:#777;margin-top:5px'>{{verified_by}}</div>", "A6", "Portrait", 11),
+
+        new("درخواست تصویربرداری فشرده", 5,
+            "درخواست تصویربرداری کوتاه A6",
+            @"<div style='font-size:12.5px;font-weight:800'>{{modality}} — {{order_number}}</div>
+<div style='font-size:10.5px;margin:4px 0'>{{patient_name}} — {{order_date}}</div>
+<div style='font-size:10px;color:#666'>{{clinical_info}}</div>", "A6", "Portrait", 11),
+
+        new("نوبت‌نامه فشرده — سه‌قیمت", 6,
+            "سه نوبت‌نامه در یک برگ A5 — برش با قیچی",
+            @"<div style='border:1px dashed #999;padding:7px 9px;margin-bottom:6px'>
+<div style='font-size:12px;font-weight:800'>نوبت {{queue_number}} <span style='font-weight:400;font-size:10.5px'>— {{appointment_date}} {{appointment_time}}</span></div>
+<div style='font-size:10.5px;line-height:1.7'>بیمار: {{patient_name}} — پزشک: {{doctor_name}} — رهگیری {{tracking_code}}</div>
+</div>
+<div style='border:1px dashed #999;padding:7px 9px;margin-bottom:6px'>
+<div style='font-size:12px;font-weight:800'>نوبت {{queue_number}} <span style='font-weight:400;font-size:10.5px'>— {{appointment_date}} {{appointment_time}}</span></div>
+<div style='font-size:10.5px;line-height:1.7'>بیمار: {{patient_name}} — پزشک: {{doctor_name}} — رهگیری {{tracking_code}}</div>
+</div>
+<div style='border:1px dashed #999;padding:7px 9px'>
+<div style='font-size:12px;font-weight:800'>نوبت {{queue_number}} <span style='font-weight:400;font-size:10.5px'>— {{appointment_date}} {{appointment_time}}</span></div>
+<div style='font-size:10.5px;line-height:1.7'>بیمار: {{patient_name}} — پزشک: {{doctor_name}} — رهگیری {{tracking_code}}</div>
+</div>", "A5", "Portrait", 11),
+
+        new("رسید پذیرش فشرده — فیش A6", 7,
+            "رسید کوتاه پذیرش روی کاغذ A6",
+            @"<div style='font-size:12.5px;font-weight:800'>رسید {{reception_code}}</div>
+<div style='font-size:10.5px;line-height:1.8;margin-top:3px'>{{patient_name}} — {{reception_date}}<br/>{{service_name}}</div>
+<div style='font-size:12px;font-weight:800;margin-top:4px'>{{amount}} ({{payment_method}})</div>", "A6", "Portrait", 11),
+
+        new("گواهی پزشکی فشرده", 8,
+            "گواهی کوتاه برای کاغذ A6",
+            @"<div style='font-size:13px;font-weight:800;text-align:center'>گواهی پزشکی</div>
+<div style='font-size:10px;color:#777;text-align:center;margin:2px 0 8px'>{{issue_date}}</div>
+<div style='font-size:11px;line-height:1.9;text-align:justify'>{{content}}</div>
+<div style='font-size:10.5px;margin-top:8px'>استراحت {{duration}} — {{patient_name}}</div>
+<div style='font-size:10.5px;margin-top:6px'>{{doctor_name}}</div>", "A6", "Portrait", 11),
+
+        new("فیش حقوقی فشرده — کیف پارک", 9,
+            "فیش حقوقی جمع‌وجور روی کاغذ A6",
+            @"<div style='font-size:13px;font-weight:800'>فیش حقوقی — {{period}}</div>
+<div style='font-size:12px;font-weight:700;margin:3px 0'>{{employee_name}}</div>
+<div style='font-size:10.5px;line-height:1.8'>
+پایه {{base_salary}} — اضافه‌کاری {{overtime_pay}}<br/>
+بیمه −{{insurance}} — مالیات −{{tax}}
+</div>
+<div style='border-top:1px solid #999;margin-top:4px;padding-top:4px;font-size:12px;font-weight:800'>خالص: {{net_pay}}</div>", "A6", "Portrait", 11)
     };
 }
