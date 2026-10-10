@@ -43,14 +43,36 @@ public class LookupsController : ApiBaseController
         return ToResponse(result);
     }
 
-    /// <summary>جستجوی داروها</summary>
-    /// <param name="search">عبارت جستجو در نام دارو</param>
+    /// <summary>جستجوی داروها و اقلام انبار</summary>
+    /// <param name="search">عبارت جستجو در نام دارو/قلم</param>
     /// <param name="take">حداکثر تعداد نتیجه — پیش‌فرض ۳۰</param>
+    /// <param name="itemKind">فیلتر نوع قلم — چرخهٔ ۳۹: ۱ دارو، ۲ لوازم مصرفی، تهی هر دو</param>
     [HttpGet("medications")]
     public async Task<IActionResult> GetMedications([FromQuery] string? search,
-        [FromQuery] int take = 30)
+        [FromQuery] int take = 30,
+        [FromQuery] Sahand.ClinicPro.Domain.Enums.MedicationItemKind? itemKind = null)
     {
-        var result = await _mediator.Send(new GetMedicationsQuery(search, take));
+        var result = await _mediator.Send(new GetMedicationsQuery(search, take, itemKind));
+        return ToResponse(result);
+    }
+
+    // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — ثبت قلم جدید انبار ═══
+    // «خرید و انبار و قیمت‌های این لوازم هم باید باشه» — تا این چرخه کاتالوگ
+    // اقلام فقط از بذر اولیه پر می‌شد و ساخت قلم (دارو یا لوازم مصرفی) از
+    // خود برنامه ممکن نبود؛ اندپوینت زیر برای پنجرهٔ «افزودن قلم» داروخانه
+    // است. نوشتن دادهٔ مرجع نیازمند نقش مدیریتی است (هم‌سبک اتاق‌ها).
+
+    /// <summary>
+    /// ثبت قلم جدید انبار داروخانه — دارو یا لوازم مصرفی (سرنگ/سرم/گاز و…)
+    /// </summary>
+    /// <param name="request">مشخصات قلم — نام فارسی/ژنریک، نوع و مشخصات اختیاری</param>
+    [HttpPost("medications")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> CreateMedication([FromBody] CreatePharmacyItemCommand request)
+    {
+        var result = await _mediator.Send(request);
+        if (result.IsSuccess)
+            return CreatedResponse(result, nameof(GetMedications), new { }, "قلم انبار ثبت شد");
         return ToResponse(result);
     }
 

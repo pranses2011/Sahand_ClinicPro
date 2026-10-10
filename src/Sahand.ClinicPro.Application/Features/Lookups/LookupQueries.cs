@@ -16,8 +16,20 @@ public record InsuranceCompanyOptionDto(long Id, string Name, string? Code);
 /// <summary>گزینه تشخیص ICD-10</summary>
 public record DiagnosisOptionDto(long Id, string Code, string Title, string? Description);
 
-/// <summary>گزینه دارو برای اقلام نسخه</summary>
-public record MedicationOptionDto(long Id, string Name, string? Form, string? Strength, bool IsNarcotic);
+/// <summary>
+/// گزینه دارو برای اقلام نسخه — چرخهٔ ۳۹: نوع قلم (دارو/لوازم مصرفی) هم
+/// همراه می‌آید تا فهرست‌های انتخاب بتوانند اقلام را برچسب‌گذاری کنند
+/// </summary>
+public record MedicationOptionDto(
+    long Id,
+    string Name,
+    string? Form,
+    string? Strength,
+    bool IsNarcotic,
+    // نوع قلم — ۱ دارو، ۲ لوازم مصرفی (چرخهٔ ۳۹) — کامنت عادی: درس CS1587 چرخهٔ ۳۶
+    int ItemKind = 1,
+    // متن فارسی نوع — «دارو» یا «لوازم مصرفی»
+    string KindText = "دارو");
 
 /// <summary>گزینه آزمایش برای درخواست</summary>
 public record LabTestOptionDto(long Id, string Name, string? Category, string? Unit, decimal Price);
@@ -101,7 +113,8 @@ public class GetDiagnosesQueryHandler
 /// </summary>
 /// <param name="Search">عبارت جستجو در نام</param>
 /// <param name="Take">حداکثر تعداد نتیجه</param>
-public record GetMedicationsQuery(string? Search = null, int Take = 30)
+/// <param name="ItemKind">فیلتر نوع قلم — چرخهٔ ۳۹: دارو (۱)، لوازم مصرفی (۲) یا هر دو (تهی)</param>
+public record GetMedicationsQuery(string? Search = null, int Take = 30, MedicationItemKind? ItemKind = null)
     : IRequest<Result<List<MedicationOptionDto>>>;
 
 /// <summary>گرداننده جستجوی دارو</summary>
@@ -122,6 +135,10 @@ public class GetMedicationsQueryHandler
             .QueryableNoTracking
             .Where(m => !m.IsDeleted && m.IsActive);
 
+        // چرخهٔ ۳۹ — فیلتر نوع قلم: داروخانه مصرفی فقط لوازم، نسخه‌نویسی فقط دارو
+        if (request.ItemKind.HasValue)
+            query = query.Where(m => m.ItemKind == request.ItemKind.Value);
+
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(m =>
                 (m.GenericNameFa != null && m.GenericNameFa.Contains(search)) ||
@@ -132,7 +149,10 @@ public class GetMedicationsQueryHandler
             .OrderBy(m => m.GenericNameFa ?? m.GenericName)
             .Take(Math.Clamp(request.Take, 1, 100))
             .Select(m => new MedicationOptionDto(
-                m.Id, m.GenericNameFa ?? m.GenericName, m.Form, m.Strength, m.IsNarcotic))
+                m.Id, m.GenericNameFa ?? m.GenericName, m.Form, m.Strength, m.IsNarcotic,
+                // چرخهٔ ۳۹ — نوع قلم + متن فارسی آن (ترجمهٔ CASE به SQL)
+                (int)m.ItemKind,
+                m.ItemKind == MedicationItemKind.Consumable ? "لوازم مصرفی" : "دارو"))
             .ToListAsync(cancellationToken);
 
         return Result<List<MedicationOptionDto>>.Success(items);

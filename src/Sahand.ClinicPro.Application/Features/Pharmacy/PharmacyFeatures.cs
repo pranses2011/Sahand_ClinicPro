@@ -10,11 +10,18 @@ using Sahand.ClinicPro.Domain.Interfaces;
 
 namespace Sahand.ClinicPro.Application.Features.Pharmacy;
 
-/// <summary>ردیف موجودی داروخانه</summary>
+/// <summary>
+/// ردیف موجودی داروخانه — چرخهٔ ۳۹: نوع قلم (دارو/لوازم مصرفی) هم برمی‌گردد
+/// تا تب «موجودی» داروخانه بتواند هر دسته را جدا فیلتر/برچسب کند
+/// </summary>
 public record InventoryListDto(
     long Id, string MedicationName, string? BatchNumber,
     decimal Quantity, decimal ReorderLevel, string? ExpiryDateShamsi,
-    bool IsLowStock, bool IsExpiringSoon);
+    bool IsLowStock, bool IsExpiringSoon,
+    // نوع قلم — ۱ دارو، ۲ لوازم مصرفی (چرخهٔ ۳۹) — کامنت عادی (درس CS1587)
+    int ItemKind = 1,
+    // متن فارسی نوع — «دارو» یا «لوازم مصرفی»
+    string KindText = "دارو");
 
 /// <summary>ردیف فهرست اقلام نسخه برای تحویل</summary>
 public record PrescriptionItemRowDto(
@@ -180,7 +187,10 @@ public class StockInCommandHandler : IRequestHandler<StockInCommand, Result<long
 /// <summary>
 /// پرس‌وجوی موجودی داروخانه با هشدار کمبود و انقضا
 /// </summary>
-public record GetInventoryQuery(bool? LowStock = null) : IRequest<Result<List<InventoryListDto>>>;
+/// <param name="LowStock">فقط اقلام کمبود</param>
+/// <param name="ItemKind">فیلتر نوع قلم — چرخهٔ ۳۹: دارو (۱)، لوازم مصرفی (۲) یا هر دو (تهی)</param>
+public record GetInventoryQuery(bool? LowStock = null, MedicationItemKind? ItemKind = null)
+    : IRequest<Result<List<InventoryListDto>>>;
 
 /// <summary>گرداننده فهرست موجودی</summary>
 public class GetInventoryQueryHandler : IRequestHandler<GetInventoryQuery, Result<List<InventoryListDto>>>
@@ -204,6 +214,11 @@ public class GetInventoryQueryHandler : IRequestHandler<GetInventoryQuery, Resul
         if (request.LowStock == true)
             query = query.Where(i => i.Quantity <= i.ReorderLevel);
 
+        // چرخهٔ ۳۹ — فیلتر نوع قلم: تب موجودی داروخانه بتواند فقط دارو یا فقط
+        // لوازم مصرفی را نشان دهد
+        if (request.ItemKind.HasValue)
+            query = query.Where(i => i.Medication!.ItemKind == request.ItemKind.Value);
+
         var items = await query
             .OrderBy(i => i.Medication!.GenericName)
             .Take(200)
@@ -216,7 +231,10 @@ public class GetInventoryQueryHandler : IRequestHandler<GetInventoryQuery, Resul
                     ? Application.Common.Helpers.PersianDateHelper.ToShamsi(i.ExpiryDate.Value.ToDateTime(TimeOnly.MinValue))
                     : null,
                 i.Quantity <= i.ReorderLevel,
-                i.ExpiryDate.HasValue && i.ExpiryDate.Value <= soon))
+                i.ExpiryDate.HasValue && i.ExpiryDate.Value <= soon,
+                // چرخهٔ ۳۹ — نوع قلم + متن فارسی
+                (int)i.Medication!.ItemKind,
+                i.Medication.ItemKind == MedicationItemKind.Consumable ? "لوازم مصرفی" : "دارو"))
             .ToListAsync(cancellationToken);
 
         return Result<List<InventoryListDto>>.Success(items);

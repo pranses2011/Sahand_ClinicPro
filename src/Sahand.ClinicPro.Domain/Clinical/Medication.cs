@@ -40,6 +40,14 @@ public class Medication : AuditableEntity, ISoftDeletable
     /// <summary>دسته دارویی</summary>
     public string? Category { get; set; }
 
+    /// <summary>
+    /// نوع قلم — چرخهٔ سی‌ونه‌م (گزارش مالک): دارو یا لوازم مصرفی
+    /// (سرنگ/سرم/گاز استریل و مانند آن). لوازم مصرفی از همان زیرساخت انبار
+    /// داروخانه (بچ/انقضا/قیمت خرید و فروش/نقطه سفارش/انبارگردانی) استفاده
+    /// می‌کنند؛ تنها تفاوت، تفکیک فهرست‌ها و محور «مصرف در پذیرش خدمتی» است.
+    /// </summary>
+    public MedicationItemKind ItemKind { get; set; } = MedicationItemKind.Drug;
+
     /// <summary>بدون نیاز به نسخه</summary>
     public bool IsOtc { get; set; } = false;
 

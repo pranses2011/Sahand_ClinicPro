@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sahand.ClinicPro.Domain.Entities.Clinical;
+using Sahand.ClinicPro.Domain.Enums;
 
 namespace Sahand.ClinicPro.Infrastructure.Persistence.Configurations;
 
@@ -25,6 +26,16 @@ public class MedicationConfiguration : IEntityTypeConfiguration<Medication>
         builder.Property(x => x.Category).HasMaxLength(200).HasComment("دسته دارویی");
 
         builder.HasIndex(x => new { x.IrcCode }).IsUnique().HasDatabaseName("IX_Medication_IrcCode").HasFilter("[IsDeleted] = 0");
+
+        // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — نوع قلم انبار: دارو یا لوازم مصرفی ═══
+        // «سرنگ و سرم و گاز استریل و مواردی از این قبیل… خرید و انبار و قیمت‌های
+        // این لوازم هم باید باشه» — همان جدول Medications با پرچم ItemKind به
+        // دو دسته تقسیم می‌شود؛ مقدار پیش‌فرض ۱ (دارو) یعنی همهٔ ردیف‌های موجود
+        // پس از مهاجرت بدون تغییر، دارو باقی می‌مانند.
+        builder.Property(x => x.ItemKind)
+            .HasConversion<byte>()
+            .HasDefaultValue(MedicationItemKind.Drug)
+            .HasComment("نوع قلم انبار — ۱: دارو، ۲: لوازم مصرفی (سرنگ/سرم/گاز و…) — چرخهٔ ۳۹");
 
         // ═══ چرخه ۱۳ — الگوریتم خطر تشخیصی: ستون‌های خطر بالینی ═══
         builder.Property(x => x.PregnancyCategory)

@@ -2344,6 +2344,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsNarcotic")
                         .HasColumnType("bit");
 
+                    b.Property<byte>("ItemKind")
+                        .HasColumnType("tinyint")
+                        .HasDefaultValue((byte)1)
+                        .HasComment("نوع قلم انبار — ۱: دارو، ۲: لوازم مصرفی (سرنگ/سرم/گاز و…) — چرخهٔ ۳۹");
+
                     b.Property<bool>("IsOtc")
                         .HasColumnType("bit");
 
