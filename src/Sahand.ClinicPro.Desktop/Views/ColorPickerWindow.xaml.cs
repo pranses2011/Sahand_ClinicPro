@@ -195,12 +195,8 @@ public partial class ColorPickerWindow : Window
         Close();
     }
 
-    /// <summary>کلیک روی پوشش تیره = انصراف (همان رفتار دیالوگ‌های استاندارد)</summary>
-    private void OnDimClick(object sender, MouseButtonEventArgs e)
-    {
-        SelectedHex = null;
-        Close();
-    }
+    // ═══ چرخهٔ سی‌وهشتم ═══ پوشش تیرهٔ پشت کارت حذف شد (گزارش مالک:
+    // «کادر خاکستری پشت کادر نمی‌خواهم باشه») — OnDimClick هم با آن رفت.
 
     /// <summary>تجزیهٔ کد HEX — با یا بدون #، ۶ رقمی</summary>
     private static bool TryParseHex(string text, out Color color)

@@ -130,12 +130,10 @@ public partial class ThemedDialog : Window
         return dialog._result;
     }
 
-    /// <summary>کلیک روی پوشش تیره = انصراف (رفتار استاندارد دیالوگ‌ها)</summary>
-    private void OnDimClick(object sender, MouseButtonEventArgs e)
-    {
-        _result = null;
-        Close();
-    }
+    // ═══ چرخهٔ سی‌وهشتم ═══ «پشت کادر یک کادر خاکستری هست که نمی‌خواهم
+    // باشه» — پوشش تیرهٔ پشت کارت (که در پنجرهٔ کوچک دیالوگ فقط یک قاب
+    // خاکستری زشت می‌کشید) حذف شد؛ OnDimClick هم با همان حذف شد. Escape و
+    // دکمه‌ها همچنان راه بستن هستند.
 
     /// <summary>
     /// نمایش دیالوگ تأیید خروج از برنامه با چک‌باکس گزینه‌ای — چرخهٔ
