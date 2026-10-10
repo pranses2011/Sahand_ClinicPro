@@ -36,6 +36,46 @@ public partial class ShiftCloseViewModel : ObservableObject
     [ObservableProperty]
     private decimal _countedCard;
 
+    // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — مبالغ سیستم و مغایرت زنده ═══
+    // «فقط کادرهایی هستن که خودمون بنویسیم در حالی که باید مبالغ رو بیاره و
+    // ما هم شمارش رو بنویسیم تا مغایرت رو نشون بده و بعد ثبت بکنه» — مبالغ
+    // ثبت‌شدهٔ سیستم (فروش نقدی/کارتخوان/آنلاین امروز) از payments/today-summary
+    // خوانده و کنار ورودی شمارش نشان داده می‌شود؛ مغایرت همان لحظه که شمارش
+    // تایپ می‌شود محاسبه و رنگ می‌شود؛ رقم نهایی معتبر همچنان از رسید سرور
+    // پس از بستن می‌آید (زیرا ممکن است هم‌زمان تراکنش جدیدی ثبت شود).
+
+    /// <summary>فروش نقدی امروز بر اساس سیستم</summary>
+    [ObservableProperty]
+    private decimal _systemCash;
+
+    /// <summary>فروش کارتخوان امروز بر اساس سیستم</summary>
+    [ObservableProperty]
+    private decimal _systemCard;
+
+    /// <summary>پرداخت آنلاین امروز بر اساس سیستم</summary>
+    [ObservableProperty]
+    private decimal _systemOnline;
+
+    /// <summary>خالص امروز بر اساس سیستم (نقد + کارت + آنلاین)</summary>
+    [ObservableProperty]
+    private decimal _systemNet;
+
+    /// <summary>تعداد فاکتورهای امروز بر اساس سیستم</summary>
+    [ObservableProperty]
+    private int _systemInvoiceCount;
+
+    /// <summary>نمایش فروش نقدی سیستم</summary>
+    public string SystemCashDisplay => $"{SystemCash:N0}";
+
+    /// <summary>نمایش فروش کارتی سیستم</summary>
+    public string SystemCardDisplay => $"{SystemCard:N0}";
+
+    /// <summary>نمایش آنلاین سیستم</summary>
+    public string SystemOnlineDisplay => $"{SystemOnline:N0}";
+
+    /// <summary>نمایش خالص سیستم</summary>
+    public string SystemNetDisplay => $"{SystemNet:N0}";
+
     /// <summary>یادداشت تحویل</summary>
     [ObservableProperty]
     private string? _handoverNote;
@@ -46,6 +86,34 @@ public partial class ShiftCloseViewModel : ObservableObject
 
     /// <summary>گزینه‌های تحویل‌گیرنده (کاربران صندوقدار)</summary>
     public ObservableCollection<UserOption> Users { get; } = new();
+
+    /* ─── چرخهٔ ۳۹ — مغایرت زندهٔ پیش از ثبت ─── */
+
+    /// <summary>مغایرت نقدی زنده = شمارش − سیستم</summary>
+    public decimal LiveCashDiff => CountedCash - SystemCash;
+
+    /// <summary>مغایرت کارتی زنده = شمارش − سیستم</summary>
+    public decimal LiveCardDiff => CountedCard - SystemCard;
+
+    /// <summary>مغایرت خالص زنده = (نقد + کارت شمارش‌شده) − (نقد + کارت سیستم)</summary>
+    public decimal LiveNetDiff => (CountedCash + CountedCard) - (SystemCash + SystemCard);
+
+    /// <summary>متن وضعیت مغایرت زنده — مطابقت/کم/اضافه</summary>
+    public string LiveDiffState => Math.Abs(LiveNetDiff) < 0.5m
+        ? "مغایرتی نیست — شمارش با سیستم مطابقت دارد"
+        : LiveNetDiff < 0 ? $"کسری {Math.Abs(LiveNetDiff):N0} — شمارش کمتر از سیستم است" : $"اضافه {LiveNetDiff:N0} — شمارش بیشتر از سیستم است";
+
+    /// <summary>رنگ وضعیت مغایرت زنده</summary>
+    public string LiveDiffColor => Math.Abs(LiveNetDiff) < 0.5m ? "#2E7D32" : LiveNetDiff < 0 ? "#C62828" : "#E65100";
+
+    /// <summary>نمایش مغایرت نقدی زنده</summary>
+    public string LiveCashDiffDisplay => $"{(LiveCashDiff >= 0 ? "+" : "−")}{Math.Abs(LiveCashDiff):N0}";
+
+    /// <summary>نمایش مغایرت کارتی زنده</summary>
+    public string LiveCardDiffDisplay => $"{(LiveCardDiff >= 0 ? "+" : "−")}{Math.Abs(LiveCardDiff):N0}";
+
+    /// <summary>نمایش مغایرت خالص زنده</summary>
+    public string LiveNetDiffDisplay => $"{(LiveNetDiff >= 0 ? "+" : "−")}{Math.Abs(LiveNetDiff):N0}";
 
     /// <summary>تاریخچه شیفت‌ها</summary>
     public ObservableCollection<ShiftHistoryRow> History { get; } = new();
@@ -77,7 +145,7 @@ public partial class ShiftCloseViewModel : ObservableObject
         _ = LoadAsync();
     }
 
-    /// <summary>بارگذاری کاربران و تاریخچه</summary>
+    /// <summary>بارگذاری کاربران، مبالغ سیستم و تاریخچه</summary>
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -87,6 +155,19 @@ public partial class ShiftCloseViewModel : ObservableObject
         Users.Clear();
         foreach (var u in users?.Data ?? new List<UserDto>())
             Users.Add(new UserOption(u.Id, $"{u.FullName} ({u.Username})"));
+
+        // ═══ چرخهٔ ۳۹ — مبالغ امروز سیستم برای مغایرت‌گیری زنده ═══
+        // شکست خواندن، بخش شمارش را بی‌اثر نمی‌کند — فقط ستون سیستم خالی می‌ماند
+        var summary = await _api.GetAsync<TodaySummaryEnvelope>("payments/today-summary");
+        if (summary?.Data is not null)
+        {
+            SystemCash = summary.Data.CashTotal;
+            SystemCard = summary.Data.CardTotal;
+            SystemOnline = summary.Data.OnlineTotal;
+            SystemNet = summary.Data.NetTotal;
+            SystemInvoiceCount = summary.Data.InvoiceCount;
+        }
+        RefreshLiveDiffs();
 
         var shifts = await _api.GetAsync<ShiftsEnvelope>("payments/shifts");
         History.Clear();
@@ -104,6 +185,37 @@ public partial class ShiftCloseViewModel : ObservableObject
                 s.DifferenceColor));
 
         IsBusy = false;
+    }
+
+    // ─── نوسازی مغایرت‌های زنده با هر تغییر شمارش/سیستم (چرخهٔ ۳۹) ───
+
+    /// <summary>بازخورد تغییر شمارش نقد → مغایرت‌ها</summary>
+    partial void OnCountedCashChanged(decimal value) => RefreshLiveDiffs();
+
+    /// <summary>بازخورد تغییر شمارش کارت → مغایرت‌ها</summary>
+    partial void OnCountedCardChanged(decimal value) => RefreshLiveDiffs();
+
+    /// <summary>بازخورد تغییر فروش نقدی سیستم → مغایرت‌ها</summary>
+    partial void OnSystemCashChanged(decimal value) => RefreshLiveDiffs();
+
+    /// <summary>بازخورد تغییر فروش کارتی سیستم → مغایرت‌ها</summary>
+    partial void OnSystemCardChanged(decimal value) => RefreshLiveDiffs();
+
+    /// <summary>اعلان همهٔ پراپرتی‌های محاسباتی مغایرت زنده</summary>
+    private void RefreshLiveDiffs()
+    {
+        OnPropertyChanged(nameof(LiveCashDiff));
+        OnPropertyChanged(nameof(LiveCardDiff));
+        OnPropertyChanged(nameof(LiveNetDiff));
+        OnPropertyChanged(nameof(LiveDiffState));
+        OnPropertyChanged(nameof(LiveDiffColor));
+        OnPropertyChanged(nameof(LiveCashDiffDisplay));
+        OnPropertyChanged(nameof(LiveCardDiffDisplay));
+        OnPropertyChanged(nameof(LiveNetDiffDisplay));
+        OnPropertyChanged(nameof(SystemCashDisplay));
+        OnPropertyChanged(nameof(SystemCardDisplay));
+        OnPropertyChanged(nameof(SystemOnlineDisplay));
+        OnPropertyChanged(nameof(SystemNetDisplay));
     }
 
     /// <summary>بستن شیفت و صدور رسید</summary>
@@ -157,6 +269,24 @@ public partial class ShiftCloseViewModel : ObservableObject
     {
         public bool IsSuccess { get; set; }
         public List<UserDto>? Data { get; set; }
+    }
+
+    /// <summary>پاسخ خلاصهٔ امروز صندوق — چرخهٔ ۳۹ (مبالغ سیستم بستن شیفت)</summary>
+    public sealed class TodaySummaryEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public TodaySummaryDto? Data { get; set; }
+    }
+
+    /// <summary>ردیف خلاصهٔ امروز — همان CashRegisterSummaryDto سرور</summary>
+    public sealed class TodaySummaryDto
+    {
+        public int InvoiceCount { get; set; }
+        public decimal CashTotal { get; set; }
+        public decimal CardTotal { get; set; }
+        public decimal OnlineTotal { get; set; }
+        public decimal RefundTotal { get; set; }
+        public decimal NetTotal { get; set; }
     }
 
     /// <summary>ردیف کاربر</summary>
