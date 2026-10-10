@@ -117,15 +117,33 @@ public class UsersController : ApiBaseController
                 .FirstOrDefaultAsync()
             : null;
 
+        // ═══ چرخهٔ سی‌وهشتم (گزارش مالک — سطح دسترسی و پروفایل کاربر) ═══
+        // «فقط منوها و فرم‌هایی که کاربر دسترسی دارد نمایش داده شود» +
+        // «اگر نام کامل وجود داشت همان نوشته شود وگرنه نام کاربری» + «تصویر
+        // کاربر هم نمایش داده شود». این نقطهٔ پایانی علاوه بر داده‌های قبلی،
+        // فهرست دسترسی‌های «زندهٔ» توکن (ادعاهای permission) هم برمی‌گرداند
+        // تا پوستهٔ دسکتاپ منو را بر اساس همان کلیدهایی که سرور خودش با
+        // HasPermission اجرا می‌کند فیلتر کند — نه بر پایهٔ دادهٔ کهنهٔ ورود.
+        // displayName تهی یعنی کاربر پرسنل متصل ندارد → کلاینت به نام
+        // کاربری برمی‌گردد (قانون مالک: نام کامل در صورت وجود، وگرنه نام کاربری).
+        var permissions = User.Claims
+            .Where(c => string.Equals(c.Type, "permission", StringComparison.OrdinalIgnoreCase))
+            .Select(c => c.Value)
+            .Distinct()
+            .ToList();
+
         var response = new
         {
             id = user.Id,
             username = user.Username,
+            displayName = user.Employee is null ? (string?)null
+                : $"{user.Employee.FirstName} {user.Employee.LastName}".Trim(),
             fullName = user.Employee is null ? user.Username
                 : $"{user.Employee.FirstName} {user.Employee.LastName}",
             employeeId = user.EmployeeId,
             doctorId, // تهی یعنی این کاربر پزشک نیست
-            roles = user.Roles.Where(r => r.Role != null).Select(r => r.Role!.Name).ToList()
+            roles = user.Roles.Where(r => r.Role != null).Select(r => r.Role!.Name).ToList(),
+            permissions
         };
         return Ok(ApiResponse<object>.Success(response, "کاربر جاری"));
     }
