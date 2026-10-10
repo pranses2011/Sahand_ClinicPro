@@ -274,8 +274,11 @@ public sealed class EmptyListToVisibilityConverter : IValueConverter
         var count = value switch
         {
             System.Collections.ICollection col => col.Count,
+            // چرخهٔ چهلم — رفع CS8510: بازوی «string s => s.Length» حذف شد؛ رشته
+            // خودش System.Collections.IEnumerable را پیاده می‌کند و همین بازوی
+            // زیر آن را می‌بلعد، پس بازوی رشته‌ای هرگز دسترس‌پذیر نبود (شمارش
+            // کاراکترهای رشته از همین مسیر همان Length را می‌دهد — رفتار یکسان).
             System.Collections.IEnumerable en => en.Cast<object?>().Count(),
-            string s => s.Length,
             null => 0,
             _ => 1
         };
