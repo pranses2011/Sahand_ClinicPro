@@ -508,7 +508,13 @@ public partial class EmployeeFormViewModel : FormViewModelBase
             {
                 var photoOk = await PhotoTools.UploadEmployeePhotoAsync(
                     _api, editId, PendingPhotoBytes, PendingPhotoFileName ?? "photo.jpg");
-                if (!photoOk)
+                if (photoOk)
+                {
+                    // چرخهٔ سی‌وهفتم: ابطال کش بندانگشتی — فهرست پرسنل پس از بستن فرم
+                    // بازخوانی می‌شود و باید نسخهٔ تازه را دانلود کند نه کهنه را
+                    PhotoTools.InvalidateThumbnail(PhotoTools.EmployeeThumbnailKey(editId));
+                }
+                else
                     ErrorMessage = "تغییرات ذخیره شد اما ذخیرهٔ عکس ناموفق بود";
             }
 
@@ -534,7 +540,12 @@ public partial class EmployeeFormViewModel : FormViewModelBase
             var photoOk = await PhotoTools.UploadEmployeePhotoAsync(
                 _api, employeeId.Value, PendingPhotoBytes,
                 PendingPhotoFileName ?? "photo.jpg");
-            if (!photoOk)
+            if (photoOk)
+            {
+                // چرخهٔ سی‌وهفتم: ابطال کش بندانگشتی پرسنل تازه (اگر از قبل عکس داشته باشد)
+                PhotoTools.InvalidateThumbnail(PhotoTools.EmployeeThumbnailKey(employeeId.Value));
+            }
+            else
                 ErrorMessage = "پرسنل ثبت شد اما ذخیرهٔ عکس ناموفق بود — از فهرست پرسنل دوباره عکس بگذارید";
         }
 

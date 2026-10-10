@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Text.Json;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -11,6 +13,11 @@ namespace Sahand.ClinicPro.Desktop.ViewModels;
 /// <summary>
 /// ردیف پزشک در فهرست — گام U3 طبق پرامپت UI بخش ۱ (فرم ۶)
 /// ۱۰ ستون: شماره نظام/نام/تخصص/فوق‌تخصص/حق ویزیت/مدت/درصد سهم/وضعیت/امتیاز/عملیات
+/// ═══ چرخهٔ سی‌وهفتم (گزارش مالک) ═══ «در لیست پزشکان تصویرشان به‌صورت بندانگشتی
+/// قابل‌کلیک برای بزرگ‌نمایی نمایش داده شود» — پراپرتی Photo پس از بارگذاری
+/// فهرست به‌صورت غیرهمگام پر می‌شود؛ چون رکورد موقعیتی (positional) است، در
+/// برابری/HashCode نقشی ندارد و فقط با رخداد PropertyChanged گرید را به‌روز
+/// می‌کند (اتصال به ستون تصویر دایره‌ای).
 /// </summary>
 public record DoctorRow(
     long Id,
@@ -26,7 +33,30 @@ public record DoctorRow(
     decimal Rating,
     string RatingDisplay,
     long? EmployeeId = null,
-    bool HasPhoto = false); // چرخه هجدهم: عکس از پرسنل مرتبط
+    bool HasPhoto = false) : INotifyPropertyChanged
+{
+    /// <summary>بندانگشتی عکس پزشک — تهی یعنی جای‌نگهدار آدمک در ستون عکس</summary>
+    private ImageSource? _photo;
+
+    /// <summary>
+    /// بندانگشتی دایره‌ای عکس پزشک — پس از LoadAsync برای ردیف‌های دارای عکس
+    /// دانلود و از کش ایستا پر می‌شود؛ کلیک روی آن در گرید، عکس کامل را در
+    /// نمایشگر تمام‌صفحه بزرگ می‌کند.
+    /// </summary>
+    public ImageSource? Photo
+    {
+        get => _photo;
+        set
+        {
+            if (ReferenceEquals(_photo, value)) return;
+            _photo = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Photo)));
+        }
+    }
+
+    /// <summary>اطلاع‌رسانی تغییر پراپرتی‌های غیرموقعیتی (Photo) به اتصال گرید</summary>
+    public event PropertyChangedEventHandler? PropertyChanged;
+}
 
 /// <summary>
 /// ViewModel فهرست پزشکان — جستجو و صفحه‌بندی + دکمه‌های برنامه کاری/آمار/کارانه
@@ -67,6 +97,13 @@ public partial class DoctorsViewModel : ViewModelBase
     [ObservableProperty]
     private int _pageSize = 20;
 
+    /// <summary>
+    /// ابطال‌کنندهٔ بارگذاری بندانگشتی‌های فهرست پزشکان — هر بازخوانی/تعویض
+    /// صفحه، دانلودهای ردیف‌های قبلی را لغو می‌کند تا پاسخ‌های دیررس فهرست
+    /// کهنه، تصاویر ردیف‌های تازه را جابه‌جا نکنند (چرخهٔ سی‌وهفتم).
+    /// </summary>
+    private System.Threading.CancellationTokenSource? _doctorThumbCts;
+
     /// <summary>سازنده</summary>
     public DoctorsViewModel(IApiClient api, ISnackbarService snackbar)
     {
@@ -92,6 +129,8 @@ public partial class DoctorsViewModel : ViewModelBase
             PageNumber = response.PageNumber;
             TotalPages = response.TotalPages;
             TotalCount = response.TotalCount;
+            // چرخهٔ سی‌وهفتم: بندانگشتی‌های عکس پس از نمایش فهرست، غیرهمگام پر می‌شوند
+            _ = LoadDoctorThumbnailsAsync();
         }
         else
         {
@@ -110,6 +149,43 @@ public partial class DoctorsViewModel : ViewModelBase
         d.IsActive, d.Rating,
         d.Rating > 0 ? $"{d.Rating:0.0} ★" : "—",
         d.EmployeeId, d.HasPhoto);
+
+    /// <summary>
+    /// بارگذاری بندانگشتی‌های عکس پزشکان — چرخهٔ سی‌وهفتم (گزارش مالک):
+    /// «در لیست پزشکان و لیست پرسنل تصویرشان به‌صورت بندانگشتیِ قابل‌کلیک
+    /// برای بزرگ‌نمایی نمایش داده شود». فقط ردیف‌های دارای عکس دانلود می‌شوند
+    /// (پرچم HasPhoto از سرور) و نتیجه در کش ایستا می‌ماند تا مرور صفحه‌ها و
+    /// بازخوانی‌ها دانلود تکراری نداشته باشد. دانلودها پشت‌سرهم انجام می‌شوند
+    /// تا سرور در فهرست‌های بزرگ زیر بار نرود و بندانگشتی‌ها به‌ترتیب ظاهر
+    /// شوند؛ لغو نوبت قبلی پیش از شروع، پاسخ‌های کهنه را بی‌اثر می‌کند.
+    /// </summary>
+    private async Task LoadDoctorThumbnailsAsync()
+    {
+        // لغو نوبت قبلی — فهرست جای‌گذاری شده است. ⚠ بدون Dispose: نخ دانلود
+        // قبلی هنوز ممکن است روی توکنِ کهنه ثبت‌نام کرده باشد (HttpClient داخل
+        // SendAsync ثبت‌نام می‌کند) و Dispose هم‌زمان روی آن ObjectDisposedException
+        // می‌سازد؛ CTS بدون تایمر منبع مدیریتی ندارد و با اتمام لغو به GC می‌رسد.
+        _doctorThumbCts?.Cancel();
+        _doctorThumbCts = new System.Threading.CancellationTokenSource();
+        var ct = _doctorThumbCts.Token;
+
+        foreach (var row in Doctors.Where(r => r.HasPhoto).ToList())
+        {
+            if (ct.IsCancellationRequested) return;
+
+            var key = Services.PhotoTools.DoctorThumbnailKey(row.Id);
+            var cached = Services.PhotoTools.GetCachedThumbnail(key);
+            if (cached is not null) { row.Photo = cached; continue; }
+
+            var bytes = await Services.PhotoTools.DownloadDoctorPhotoAsync(_api, row.Id, ct);
+            if (ct.IsCancellationRequested) return;
+
+            var thumb = Services.PhotoTools.ToThumbnail(bytes);
+            if (thumb is null) continue; // عکسی نیست یا بایت خراب است — جای‌نگهدار می‌ماند
+            Services.PhotoTools.CacheThumbnail(key, thumb);
+            row.Photo = thumb;
+        }
+    }
 
     /// <summary>جستجو</summary>
     [RelayCommand]
@@ -250,7 +326,13 @@ public partial class DoctorsViewModel : ViewModelBase
             _api, row.EmployeeId.Value, picked.Value.Bytes, picked.Value.FileName);
         IsBusy = false;
 
-        if (ok) { _snackbar.Success($"عکس «{row.FullName}» ذخیره شد"); await LoadAsync(); }
+        if (ok)
+        {
+            _snackbar.Success($"عکس «{row.FullName}» ذخیره شد");
+            // ابطال کش بندانگشتی همین پزشک — بازخوانی فهرست نسخهٔ تازه را می‌آورد
+            Services.PhotoTools.InvalidateThumbnail(Services.PhotoTools.DoctorThumbnailKey(row.Id));
+            await LoadAsync();
+        }
         else _snackbar.Error(_api.LastError ?? "ذخیرهٔ عکس ناموفق بود");
     }
 
@@ -583,6 +665,14 @@ public partial class DoctorFormViewModel : ObservableObject
             _snackbar.Success("عکس ذخیره شد");
             PhotoPreview = Services.PhotoTools.ToImage(picked.Value.Bytes);
             HasPhoto = true;
+            // ═══ چرخهٔ سی‌وهفتم ═══ ابطال کش بندانگشتی‌ها — عکس روی رکورد پرسنل
+            // ذخیره شده، پس هم کلید پرسنل و هم کلید پزشکِ در حال ویرایش (که فهرست
+            // پزشکان از همان می‌خواند) باید تازه شوند؛ وگرنه بازخوانی فهرست،
+            // بندانگشتی کهنه را از کش نشان می‌داد.
+            Services.PhotoTools.InvalidateThumbnail(
+                Services.PhotoTools.EmployeeThumbnailKey(EmployeeId.Value));
+            if (_doctorId is { } did)
+                Services.PhotoTools.InvalidateThumbnail(Services.PhotoTools.DoctorThumbnailKey(did));
         }
         else
         {

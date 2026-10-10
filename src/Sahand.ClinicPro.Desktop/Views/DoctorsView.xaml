@@ -95,17 +95,39 @@
                   RowBackground="Transparent"
                   FontSize="12">
             <DataGrid.Columns>
-                <!-- ─── عکس — چرخه هجدهم (گزارش دوازدهم): نمایش/تعویض از پرسنل مرتبط ─── -->
+                <!-- ─── عکس — چرخه هجدهم: تعویض از پرسنل مرتبط / چرخهٔ سی‌وهفتم:
+                     بندانگشتی دایره‌ایِ قابل‌کلیک به‌جای آیکون «نمایش بزرگ» ─── -->
                 <DataGridTemplateColumn Header="عکس" Width="96">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <!-- ═══ چرخهٔ سی‌وهفتم (گزارش مالک) ═══ «در لیست پزشکان
+                                     تصویرشان به‌صورت بندانگشتی قابل‌کلیک برای بزرگ‌نمایی
+                                     نمایش داده شود» — کلیک روی بندانگشتی همان دستور نمایشِ
+                                     بزرگ را اجرا می‌کند (دانلود عکس کامل + نمایشگر تمام‌صفحه).
+                                     تا رسیدن بندانگشتی یا در نبود عکس، آدمک خاکستری دیده
+                                     می‌شود؛ ImageBrush با منبع تهی هیچ نمی‌کشد و آدمک
+                                     نمایان می‌ماند — بدون نیاز به مبدل وارون. برش دایره‌ای
+                                     واقعی با ImageBrush روی Ellipse انجام می‌شود. -->
                                 <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
                                         ToolTip="نمایش بزرگ عکس"
                                         Command="{Binding DataContext.ViewDoctorPhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
-                                        Foreground="#1565C0" Padding="4,2">
-                                    <materialDesign:PackIcon Kind="Image" Width="18" Height="18" />
+                                        Padding="0" Margin="0,0,8,0" Cursor="Hand">
+                                    <Grid Width="34" Height="34">
+                                        <!-- زمینهٔ روشن + حلقهٔ دور بندانگشتی -->
+                                        <Ellipse Width="34" Height="34" Fill="#ECEFF1" Stroke="#B0BEC5" StrokeThickness="1" />
+                                        <!-- جای‌نگهدار آدمک — زیر لایهٔ عکس -->
+                                        <materialDesign:PackIcon Kind="Account" Width="20" Height="20"
+                                                                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                 Foreground="#90A4AE" />
+                                        <!-- بندانگشتی عکس — لایهٔ رویی؛ با پر شدن Photo آدمک را می‌پوشاند -->
+                                        <Ellipse Width="34" Height="34">
+                                            <Ellipse.Fill>
+                                                <ImageBrush ImageSource="{Binding Photo}" Stretch="UniformToFill" />
+                                            </Ellipse.Fill>
+                                        </Ellipse>
+                                    </Grid>
                                 </Button>
                                 <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
                                         ToolTip="انتخاب / تعویض عکس"

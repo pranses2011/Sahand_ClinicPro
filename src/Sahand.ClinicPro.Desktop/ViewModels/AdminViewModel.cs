@@ -1,4 +1,6 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -36,7 +38,14 @@ public record AuditRow(
     string? Module,
     string Time);
 
-/// <summary>ردیف پرسنل — چرخه هجدهم: HasPhoto برای ستون عکس</summary>
+/// <summary>
+/// ردیف پرسنل — چرخه هجدهم: HasPhoto برای ستون عکس.
+/// ═══ چرخهٔ سی‌وهفتم (گزارش مالک) ═══ «در لیست پرسنل تصویرشان به‌صورت
+/// بندانگشتیِ قابل‌کلیک برای بزرگ‌نمایی نمایش داده شود» — پراپرتی Photo پس
+/// از بارگذاری فهرست غیرهمگام پر می‌شود؛ رکورد موقعیتی است و در برابری/
+/// HashCode نقشی ندارد، فقط با PropertyChanged ستون تصویر گرید را به‌روز
+/// می‌کند.
+/// </summary>
 public record EmployeeRow(
     long Id,
     string? PersonnelCode,
@@ -48,7 +57,30 @@ public record EmployeeRow(
     bool IsActive,
     decimal BaseSalary = 0m,
     decimal CommissionPercent = 0m,
-    bool HasPhoto = false);
+    bool HasPhoto = false) : INotifyPropertyChanged
+{
+    /// <summary>بندانگشتی عکس پرسنل — تهی یعنی جای‌نگهدار آدمک در ستون عکس</summary>
+    private ImageSource? _photo;
+
+    /// <summary>
+    /// بندانگشتی دایره‌ای عکس پرسنل — پس از LoadEmployeesAsync برای ردیف‌های
+    /// دارای عکس دانلود و از کش ایستا پر می‌شود؛ کلیک روی آن در گرید، عکس
+    /// کامل را در نمایشگر تمام‌صفحه بزرگ می‌کند.
+    /// </summary>
+    public ImageSource? Photo
+    {
+        get => _photo;
+        set
+        {
+            if (ReferenceEquals(_photo, value)) return;
+            _photo = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Photo)));
+        }
+    }
+
+    /// <summary>اطلاع‌رسانی تغییر پراپرتی‌های غیرموقعیتی (Photo) به اتصال گرید</summary>
+    public event PropertyChangedEventHandler? PropertyChanged;
+}
 
 /// <summary>ردیف تاریخچه پشتیبان</summary>
 public record BackupRow(string StatusText, string Date, string Mode);
@@ -229,6 +261,13 @@ public partial class AdminViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// ابطال‌کنندهٔ بارگذاری بندانگشتی‌های فهرست پرسنل — هر بازخوانی، دانلودهای
+    /// نوبت قبلی را لغو می‌کند تا پاسخ‌های دیررس فهرست کهنه، تصاویر ردیف‌های
+    /// تازه را جابه‌جا نکنند (چرخهٔ سی‌وهفتم).
+    /// </summary>
+    private System.Threading.CancellationTokenSource? _empThumbCts;
+
     /// <summary>بارگذاری پرسنل</summary>
     [RelayCommand]
     public async Task LoadEmployeesAsync()
@@ -236,13 +275,53 @@ public partial class AdminViewModel : ViewModelBase
         IsBusy = true;
         var response = await _api.GetAsync<EmployeesResponse>("hr/employees");
         if (response?.Data is not null)
+        {
             Employees = new ObservableCollection<EmployeeRow>(response.Data.Select(e =>
                 new EmployeeRow(e.Id, e.PersonnelCode, e.FullName, e.PositionName,
                     e.DepartmentName, e.Mobile, TypeTextOf(e.Type), e.IsActive,
                     e.BaseSalary, e.CommissionPercent, e.HasPhoto)));
+            // چرخهٔ سی‌وهفتم: بندانگشتی‌ها پس از نمایش فهرست، غیرهمگام پر می‌شوند
+            _ = LoadEmployeeThumbnailsAsync();
+        }
         else
             ErrorMessage = _api.LastError ?? "دریافت پرسنل ناموفق بود";
         IsBusy = false;
+    }
+
+    /// <summary>
+    /// بارگذاری بندانگشتی‌های عکس پرسنل — چرخهٔ سی‌وهفتم (گزارش مالک):
+    /// «در لیست پزشکان و لیست پرسنل تصویرشان به‌صورت بندانگشتیِ قابل‌کلیک
+    /// برای بزرگ‌نمایی نمایش داده شود». فقط ردیف‌های دارای عکس دانلود می‌شوند
+    /// و بندانگشتی در کش ایستا می‌ماند تا بازخوانی‌ها دانلود تکراری نداشته
+    /// باشند؛ دانلود پشت‌سرهم تا رودررویی با سرور در فهرست‌های بزرگ و ظاهر
+    /// شدن به‌ترتیب ردیف‌ها.
+    /// </summary>
+    private async Task LoadEmployeeThumbnailsAsync()
+    {
+        // لغو نوبت قبلی — فهرست جای‌گذاری شده است. ⚠ بدون Dispose: نخ دانلود
+        // قبلی هنوز ممکن است روی توکنِ کهنه ثبت‌نام کرده باشد (HttpClient داخل
+        // SendAsync ثبت‌نام می‌کند) و Dispose هم‌زمان روی آن ObjectDisposedException
+        // می‌سازد؛ CTS بدون تایمر منبع مدیریتی ندارد و با اتمام لغو به GC می‌رسد.
+        _empThumbCts?.Cancel();
+        _empThumbCts = new System.Threading.CancellationTokenSource();
+        var ct = _empThumbCts.Token;
+
+        foreach (var row in Employees.Where(r => r.HasPhoto).ToList())
+        {
+            if (ct.IsCancellationRequested) return;
+
+            var key = Services.PhotoTools.EmployeeThumbnailKey(row.Id);
+            var cached = Services.PhotoTools.GetCachedThumbnail(key);
+            if (cached is not null) { row.Photo = cached; continue; }
+
+            var bytes = await Services.PhotoTools.DownloadEmployeePhotoAsync(_api, row.Id, ct);
+            if (ct.IsCancellationRequested) return;
+
+            var thumb = Services.PhotoTools.ToThumbnail(bytes);
+            if (thumb is null) continue; // عکسی نیست یا بایت خراب است — جای‌نگهدار می‌ماند
+            Services.PhotoTools.CacheThumbnail(key, thumb);
+            row.Photo = thumb;
+        }
     }
 
     /// <summary>
@@ -293,6 +372,8 @@ public partial class AdminViewModel : ViewModelBase
         if (ok)
         {
             StatusMessage = $"عکس «{row.FullName}» ذخیره شد";
+            // چرخهٔ سی‌وهفتم: ابطال کش بندانگشتی همین پرسنل — بازخوانی فهرست نسخهٔ تازه را می‌آورد
+            Services.PhotoTools.InvalidateThumbnail(Services.PhotoTools.EmployeeThumbnailKey(row.Id));
             await LoadEmployeesAsync();
         }
         else
@@ -316,6 +397,8 @@ public partial class AdminViewModel : ViewModelBase
         if (ok)
         {
             StatusMessage = "عکس حذف شد";
+            // چرخهٔ سی‌وهفتم: ابطال کش بندانگشتی — ردیف بدون عکس/با جای‌نگهدار تازه دیده می‌شود
+            Services.PhotoTools.InvalidateThumbnail(Services.PhotoTools.EmployeeThumbnailKey(row.Id));
             await LoadEmployeesAsync();
         }
         else
