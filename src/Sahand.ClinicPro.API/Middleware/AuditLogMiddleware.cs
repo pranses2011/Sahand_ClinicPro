@@ -216,12 +216,27 @@ public class AuditLogMiddleware
         return parts is { Length: >= 3 } ? parts[2] : null;
     }
 
-    /// <summary>استخراج شناسه از انتهای مسیر</summary>
+    /// <summary>استخراج شناسه از مسیر — چرخهٔ سی‌وپنجم: «آخرین قطعهٔ عددی»</summary>
+    /// <summary>
+    /// پیش‌تر فقط «آخرین قطعهٔ مسیر» بررسی می‌شد؛ مسیرهای زیرمنبعی مثل
+    /// PUT /api/v1/doctors/5/schedule قطعهٔ آخرشان «schedule» است → مقدار قبلی
+    /// هرگز برایشان ثبت نمی‌شد (لاگ عملیات ویرایش برنامهٔ کاری، سهم بیمه و
+    /// سایر زیرمنبع‌ها بدون OldValues می‌ماند). اکنون از انتها به ابتدا، نخستین
+    /// قطعهٔ عددی یافت‌شده برگردانده می‌شود تا مسیرهای «/…/{id}/زیرمنبع» هم
+    /// پوشش داده شوند؛ مسیرهای سادهٔ /{id} هم دقیقاً همان‌طور که بودند کار می‌کنند.
+    /// </summary>
     private static long? ExtractId(PathString path)
     {
         var parts = path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (parts is not { Length: > 0 }) return null;
-        return long.TryParse(parts[^1], out var id) ? id : null;
+        // از انتها به ابتدا — نخستین قطعهٔ عددی همان شناسهٔ رکورد است
+        // (قطعه‌های غیرعددی مثل «v1» یا «schedule» با long.TryParse رد می‌شوند)
+        for (var i = parts.Length - 1; i >= 0; i--)
+        {
+            if (long.TryParse(parts[i], out var id))
+                return id;
+        }
+        return null;
     }
 
     /// <summary>برش متن به سقف مجاز — جلوگیری از باد کردن ستون‌های لاگ</summary>
