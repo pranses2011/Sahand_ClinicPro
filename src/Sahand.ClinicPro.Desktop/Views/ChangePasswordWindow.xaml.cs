@@ -164,14 +164,15 @@ public partial class ChangePasswordWindow : Window
         }
     }
 
-    /// <summary>باز کردن پنجرهٔ اصلی و بستن پنجرهٔ فعلی</summary>
+    /// <summary>
+    /// باز کردن پنجرهٔ اصلی و بستن پنجرهٔ فعلی
+    /// چرخهٔ چهل‌ودوم: نمایش از App.ShowMainWindow می‌گذرد (نمونهٔ زنده اگر
+    /// باشد وگرنه ساختِ نو از DI) تا پس از تعویض نشست، پنجرهٔ بسته‌شدهٔ
+    /// قبلی هرگز Show نشود — همان ریشهٔ خطای «خروج از حساب».
+    /// </summary>
     private void EnterMain()
     {
-        var main = App.Services.GetRequiredService(typeof(MainWindow)) as MainWindow;
-        if (main is null) return;
-
-        System.Windows.Application.Current.MainWindow = main;
-        main.Show();
+        App.ShowMainWindow();
         Close();
     }
 

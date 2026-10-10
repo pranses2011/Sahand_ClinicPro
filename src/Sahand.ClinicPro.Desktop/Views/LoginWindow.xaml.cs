@@ -120,18 +120,20 @@ public partial class LoginWindow : Window
         }
     }
 
-    /// <summary>پس از ورود موفق — ذخیره نام کاربری در صورت درخواست و باز کردن پنجره اصلی</summary>
+    /// <summary>
+    /// پس از ورود موفق — ذخیره نام کاربری در صورت درخواست و باز کردن پنجره اصلی
+    /// چرخهٔ چهل‌ودوم: نمایش پنجرهٔ اصلی از App.ShowMainWindow می‌گذرد — نخست
+    /// نمونهٔ زندهٔ موجود می‌یابد و فقط در نبودش نمونهٔ نو می‌سازد؛ پس از
+    /// «خروج از حساب» و ورود مجدد، MainWindow قبلی (بسته‌شده با CloseForLoginSwitch)
+    /// دیگر Show نمی‌شود و خطای پنجرهٔ بسته رخ نمی‌دهد.
+    /// </summary>
     private void OnLoginSucceeded(object? sender, EventArgs e)
     {
         // فقط نام کاربری ذخیره می‌شود — هرگز رمز عبور
         Services.LocalSettingsStore.Set("SavedUsername",
             _viewModel.RememberMe ? _viewModel.Username : string.Empty);
 
-        var main = App.Services.GetRequiredService(typeof(MainWindow)) as MainWindow;
-        if (main is null) return;
-
-        System.Windows.Application.Current.MainWindow = main;
-        main.Show();
+        App.ShowMainWindow();
         Close();
     }
 

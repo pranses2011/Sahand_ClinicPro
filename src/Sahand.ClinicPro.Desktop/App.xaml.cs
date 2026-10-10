@@ -216,8 +216,9 @@ public partial class App : System.Windows.Application
         }
         else
         {
-            var login = Services.GetRequiredService<LoginWindow>();
-            MainWindow = login;
+            // چرخهٔ چهل‌ودوم: ساخت/نمایش ورود از متد کمکی می‌گذرد تا هرگز پنجرهٔ
+            // بسته‌شده Show نشود؛ MainWindow هم در همان متد ست می‌شود تا با
+            // بسته‌شدن اسپلش (آخرین پنجرهٔ باز) برنامه تعطیل نشود
             splash.ReportProgress(80);
 
             // اسپلش تا آماده‌شدن ورود بماند و با محو آرام کنار برود
@@ -229,7 +230,7 @@ public partial class App : System.Windows.Application
             {
                 openDelay.Stop();
                 splash.ReportProgress(100);
-                login.Show();
+                ShowLoginWindow();
                 splash.CloseWithFade();
             };
             openDelay.Start();
@@ -258,19 +259,18 @@ public partial class App : System.Windows.Application
                 && !Views.LicenseActivationWindow.OpenAndActivate(null))
             {
                 // فعال‌سازی انجام نشد — توکن همین اجرا پاک می‌شود و ورود مجدد
-                // از همان گیت لایسنس می‌گذرد
+                // از همان گیت لایسنس می‌گذرد (چرخهٔ ۴۲: نمایش ورود از متد کمکی)
                 Services.GetRequiredService<ITokenManager>().Clear();
-                var login = Services.GetRequiredService<LoginWindow>();
-                MainWindow = login;
-                login.Show();
+                ShowLoginWindow();
                 splash?.CloseWithFade();
                 return;
             }
 
-            var main = Services.GetRequiredService<MainWindow>();
-            MainWindow = main;
+            // چرخهٔ ۴۲: پوستهٔ اصلی هم از متد کمکی — گارد MainWindow is null
+            // مسیر دوباره‌ساختن را در استثنای پس از Show حفظ می‌کند
+            if (MainWindow is null)
+                ShowMainWindow();
             splash?.ReportProgress(100);
-            main.Show();
             splash?.CloseWithFade();
         }
         catch
@@ -278,12 +278,50 @@ public partial class App : System.Windows.Application
             // fail-open — در خطای غیرمنتظره پوستهٔ اصلی باز می‌شود
             if (MainWindow is null)
             {
-                var main = Services.GetRequiredService<MainWindow>();
-                MainWindow = main;
-                main.Show();
+                ShowMainWindow();
                 splash?.CloseWithFade();
             }
         }
+    }
+
+    // ═══ چرخهٔ چهل‌ودوم (گزارش مالک) — کارخانهٔ نمایش پنجره‌های نشست ═══
+    // ریشهٔ خطای «خروج از حساب» (Cannot call Show after a Window has closed):
+    // پنجره‌های WPF پس از Close دیگر قابل نمایش نیستند؛ DI تک‌نمونه نمونهٔ
+    // بسته را دوباره تحویل می‌داد. این دو متد الگوی صحیح را تثبیت می‌کنند:
+    // نخست پنجرهٔ «زندهٔ» هم‌نوع از مجموعهٔ پنجره‌های باز برنامه برداشته
+    // می‌شود (تعویض نشست دوباره‌کاری نمی‌سازد و فوکوس به همان می‌آید)؛ فقط
+    // در نبودِ آن، نمونهٔ تازه از DI (اکنون Transient) ساخته می‌شود. همیشه
+    // MainWindow هم روی پنجرهٔ تازه ست می‌شود تا ShutdownMode=OnLastWindowClose
+    // در گذارهای نشست، برنامه را نبندد.
+
+    /// <summary>
+    /// نمایش پنجرهٔ ورود — نمونهٔ زنده اگر باشد وگرنه ساخت نمونهٔ نو.
+    /// </summary>
+    /// <returns>پنجرهٔ ورودِ هم‌اکنون قابل مشاهده</returns>
+    public static Views.LoginWindow ShowLoginWindow()
+    {
+        // پنجرهٔ بسته از Current.Windows حذف می‌شود؛ پس یافتهٔ اینجا همیشه
+        // قابل Show است (Show روی پنجرهٔ از قبل باز هم بی‌ضرر و بی‌اثر است)
+        var login = Current.Windows.OfType<Views.LoginWindow>().FirstOrDefault()
+                    ?? Services.GetRequiredService<Views.LoginWindow>();
+        Current.MainWindow = login;
+        login.Show();
+        login.Activate(); // اگر از قبل باز بود، فقط فوکوس می‌گیرد
+        return login;
+    }
+
+    /// <summary>
+    /// نمایش پنجرهٔ اصلی — نمونهٔ زنده اگر باشد وگرنه ساخت نمونهٔ نو.
+    /// </summary>
+    /// <returns>پنجرهٔ اصلیِ هم‌اکنون قابل مشاهده</returns>
+    public static MainWindow ShowMainWindow()
+    {
+        var main = Current.Windows.OfType<MainWindow>().FirstOrDefault()
+                   ?? Services.GetRequiredService<MainWindow>();
+        Current.MainWindow = main;
+        main.Show();
+        main.Activate();
+        return main;
     }
 
     /// <summary>ثبت سرویس‌ها و پنجره‌ها در کانتینر</summary>
@@ -313,8 +351,19 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IRealtimeClient, RealtimeClientService>();
 
         // پنجره‌ها و ViewModelها
-        services.AddSingleton<LoginWindow>();
-        services.AddSingleton<MainWindow>();
+        // ═══ چرخهٔ چهل‌ودوم (گزارش مالک) — پنجره‌ها دیگر Singleton نیستند ═══
+        // گزارش مالک: خطای «خروج از حساب» — InvalidOperationException با پیام
+        // «Cannot set Visibility or call Show… after a Window has closed».
+        // ریشه: LoginWindow/MainWindow در DI تک‌نمونه (Singleton) بودند؛ پس از
+        // لاگین موفق، LoginWindow واقعاً Close می‌شود و «خروج از حساب» همان
+        // نمونهٔ بسته را از DI می‌گیرد — WPF روی پنجرهٔ بسته Show را ممنوع
+        // می‌کند. MainWindow هم در لاگین دوم دچار همین وضع می‌شد (CloseForLoginSwitch
+        // آن را می‌بندد). ثبت Transient + متدهای کمکی App.ShowLoginWindow/
+        // ShowMainWindow (که نخست پنجرهٔ زندهٔ موجود را می‌یابند) هر دو عارضه
+        // را برای همیشه می‌بندد؛ ViewModelها تک‌نمونه ماندند تا وضعیت پوسته
+        // (تابع‌ها/اشتراک‌ها) بین تعویض پنجره حفظ شود.
+        services.AddTransient<LoginWindow>();
+        services.AddTransient<MainWindow>();
         services.AddTransient<LoginViewModel>();
         // جریان تغییر رمز اجباری — چرخه چهاردهم (گزارش پنجم مالک)
         services.AddTransient<ChangePasswordViewModel>();

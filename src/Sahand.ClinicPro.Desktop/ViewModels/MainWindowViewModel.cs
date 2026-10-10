@@ -937,19 +937,26 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void ToggleTheme() => _theme.ToggleTheme();
 
-    /// <summary>بازگشت به صفحه ورود — بستن پنجره فعلی و باز کردن ورود</summary>
+    /// <summary>
+    /// بازگشت به صفحه ورود — بستن پنجره فعلی و باز کردن ورود
+    /// ═══ چرخهٔ چهل‌ودوم (گزارش مالک) ═══
+    /// گزارش: خطای «خروج از حساب» — InvalidOperationException («Cannot call
+    /// Show… after a Window has closed»). ریشه: LoginWindow در DI تک‌نمونه بود
+    /// و پس از لاگین موفق Close واقعی می‌شد؛ اینجا همان نمونهٔ بسته Show می‌شد.
+    /// رفع: نمایش ورود از App.ShowLoginWindow می‌گذرد — نخست پنجرهٔ زندهٔ موجود
+    /// را می‌یابد (تعویض نشست دوباره‌کاری نمی‌سازد) و فقط در نبودش نمونهٔ نو
+    /// از DI (اکنون Transient) می‌سازد؛ نمونهٔ بسته هرگز دیگر Show نمی‌شود.
+    /// </summary>
     private void OnSessionExpired()
     {
         // قطع اتصال بلادرنگ — نشست دیگر معتبر نیست (گام R1)
         _ = _realtime.StopAsync();
         System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
-            var login = App.Services.GetRequiredService(typeof(LoginWindow)) as LoginWindow;
-            if (login is null) return;
-
+            // پنجرهٔ فعلی را «پیش از» نمایش ورود برمی‌داریم چون ShowLoginWindow
+            // خودش MainWindow را روی پنجرهٔ ورود ست می‌کند و مرجع قبلی از دست می‌رود
             var oldWindow = System.Windows.Application.Current.MainWindow;
-            System.Windows.Application.Current.MainWindow = login;
-            login.Show();
+            App.ShowLoginWindow();
             // بستن پنجرهٔ قدیمی بدون تأییدیهٔ خروج — این مسیر «خروج از حساب»
             // است نه خروج از برنامه؛ چرخهٔ ۲۸ (توضیح کامل در MainWindow.CloseForLoginSwitch)
             if (oldWindow is MainWindow mainWindow)
