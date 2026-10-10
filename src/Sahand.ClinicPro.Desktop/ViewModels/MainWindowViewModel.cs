@@ -5,7 +5,6 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MaterialDesignThemes.Wpf;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Desktop.Services;
 using Sahand.ClinicPro.Desktop.Views;
@@ -138,8 +137,20 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private int _unreadCount;
 
-    /// <summary>صف ارسال پیام شناور — برای Snackbar سراسری</summary>
-    public SnackbarMessageQueue SnackbarQueue { get; } = new(TimeSpan.FromSeconds(3));
+    /// <summary>
+    /// فهرست پیام‌های شناور فعال — چرخهٔ سی‌وهشتم (گزارش مالک: ظاهر توست‌ها
+    /// مطابق تصویر نمونه با رنگبندی نوع). میزبان پوسته این مجموعه را با
+    /// کپسول‌های گوشه‌گرد نمایش می‌دهد؛ هر پیام پس از زمانی کوتاه خودکار
+    /// (یا با کلیک کاربر) کنده می‌شود. جایگزین SnackbarMessageQueue متریال شد.
+    /// </summary>
+    public ObservableCollection<ToastMessage> Toasts { get; } = new();
+
+    /// <summary>
+    /// زمان‌سنج‌های حذف خودکار هر توست — توست رکوردِ مقداری است و کلیدِ همان
+    /// در دیکشنری نگه داشته می‌شود تا پس از تیک یا کلیک، هم تایمر بایستد و هم
+    /// توست از فهرست کنده شود (نشت تایمر = نشت حافظه).
+    /// </summary>
+    private readonly System.Collections.Generic.Dictionary<ToastMessage, DispatcherTimer> _toastTimers = new();
 
     /// <summary>کارخانه صفحات — کلید به ViewModel</summary>
     private readonly Dictionary<string, Func<ViewModelBase>> _pages;
@@ -242,8 +253,8 @@ public partial class MainWindowViewModel : ObservableObject
         _clock.Start();
         ClockText = $"{PersianDateHelper.ToShamsiFa(DateTime.Now)} - {PersianDateHelper.ToClockFa(DateTime.Now)}";
 
-        // اتصال سرویس پیام شناور به صف نمایش
-        _snackbar.MessagePosted += (message, _) => SnackbarQueue.Enqueue(message);
+        // اتصال سرویس پیام شناور به میزبان کپسول‌های پوسته — چرخهٔ ۳۸
+        _snackbar.MessagePosted += EnqueueToast;
 
         // کارخانه صفحات — صفحات بعدی در گام‌های ۱۳ به بعد اضافه می‌شوند
         _pages = new Dictionary<string, Func<ViewModelBase>>
@@ -411,16 +422,16 @@ public partial class MainWindowViewModel : ObservableObject
                 await doctorVisit.LoadAsync();
         };
 
-        // اعلان جدید → شمارنده زنگ + پیام شناور
+        // اعلان جدید → شمارنده زنگ + پیام شناور خبری (آبی)
         _realtime.NotificationReceived += (_, args) =>
         {
             UnreadCount++;
-            _snackbar.Info($"🔔 {args.Title}");
+            _snackbar.Info(args.Title);
         };
 
-        // هشدار سراسری → پیام شناور هشدار
+        // هشدار سراسری → پیام شناور هشدار (کهربایی — نوع ساخت‌یافتهٔ چرخهٔ ۳۸)
         _realtime.BroadcastAlert += (_, args) =>
-            _snackbar.Info($"⚠ {args.Title}: {args.Message}");
+            _snackbar.Warning($"{args.Title}: {args.Message}");
 
         // وضعیت اتصال بلادرنگ در StatusBar
         _realtime.ConnectionStateChanged += (_, _) =>
@@ -465,7 +476,7 @@ public partial class MainWindowViewModel : ObservableObject
 
             // پیام سرور لایسنس → اعلان شناور سراسری (یادآوری تک‌باره در هر تازه‌سازی)
             if (!string.IsNullOrWhiteSpace(check.Message))
-                _snackbar.Info($"🏛 سرور لایسنس: {check.Message}");
+                _snackbar.Info($"سرور لایسنس: {check.Message}");
         }
         catch
         {
@@ -705,6 +716,51 @@ public partial class MainWindowViewModel : ObservableObject
     /// <summary>گشودن مرکز آموزش — دکمه 🎓 نوار بالا و آیتم منو</summary>
     [RelayCommand]
     private void OpenTraining() => NavigateToPage("training");
+
+    /* ═══ میزبان پیام‌های شناور — چرخهٔ سی‌وهشتم (گزارش مالک: ظاهر مطابق
+       تصویر نمونهٔ ToastNotif.png با رنگبندی نوع) ═══ */
+
+    /// <summary>
+    /// افزودن توست به فهرست نمایش — حداکثر ۳ توست هم‌زمان (قدیمی‌ترین
+    /// کنده می‌شود تا پشت‌هم انبار نشوند) + زمان‌سنج حذف خودکار:
+    /// موفقیت/خبری ۴ ثانیه؛ خطا/هشدار ۶٫۵ ثانیه (خواندن پیام بلندتر).
+    /// </summary>
+    private void EnqueueToast(ToastMessage toast)
+    {
+        // سقف هم‌زمانی — قدیمی‌ترین بی‌سروصدا حذف می‌شود
+        while (Toasts.Count >= 3)
+            RemoveToast(Toasts[0]);
+
+        Toasts.Add(toast);
+
+        // زمان‌سنج حذف خودکار — خطا/هشدار بیشتر می‌مانند (فرصت خواندن)
+        var duration = toast.Kind is ToastKind.Error or ToastKind.Warning
+            ? TimeSpan.FromSeconds(6.5)
+            : TimeSpan.FromSeconds(4);
+        var timer = new DispatcherTimer { Interval = duration };
+        timer.Tick += (_, _) => RemoveToast(toast);
+        timer.Start();
+        _toastTimers[toast] = timer;
+    }
+
+    /// <summary>
+    /// بستن توست با کلیک کاربر — تایمرش هم بایستد تا نشت نشود؛ رکورد مقداری
+    /// است پس کلید همان نمونهٔ اصلی است.
+    /// </summary>
+    [RelayCommand]
+    private void DismissToast(ToastMessage? toast)
+    {
+        if (toast is not null)
+            RemoveToast(toast);
+    }
+
+    /// <summary>کنده‌شدن توست از فهرست + توقف تایمرش</summary>
+    private void RemoveToast(ToastMessage toast)
+    {
+        if (_toastTimers.Remove(toast, out var timer))
+            timer.Stop();
+        Toasts.Remove(toast);
+    }
 
     /// <summary>
     /// نمایش خودکار تور هدایت‌شده در نخستین ورود کاربر روی این ایستگاه —

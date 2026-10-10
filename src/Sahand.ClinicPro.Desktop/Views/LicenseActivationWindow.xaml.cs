@@ -56,9 +56,15 @@ public partial class LicenseActivationWindow : Window
         Closing += (_, _) => _snackbar.MessagePosted -= OnSnackbarMessagePosted;
     }
 
-    /// <summary>هدایت پیام‌های سرویس شناور به صف اسنک‌بار محلی</summary>
-    private void OnSnackbarMessagePosted(string message, bool success)
-        => _localQueue.Enqueue(message);
+    /// <summary>
+    /// هدایت پیام‌های سرویس شناور به صف اسنک‌بار محلی — چرخهٔ سی‌وهشتم:
+    /// قرارداد سرویس ساخت‌یافته شد (ToastMessage با نوع)؛ این پنجره پیش از
+    /// ورود باز است و میزبان کپسول‌های پوستهٔ اصلی را ندارد، پس متنِ پیام
+    /// روی همان اسنک‌بار محلی متریال می‌نشیند (پیشوندهای ایموجی نیز از سوی
+    /// سرویس حذف شدند — متن تمیز فارسی کافی است).
+    /// </summary>
+    private void OnSnackbarMessagePosted(ToastMessage toast)
+        => _localQueue.Enqueue(toast.Text);
 
     /// <summary>فعال‌سازی موفق — بنر سبز + بستن خودکار با نتیجهٔ true</summary>
     private void OnLicenseActivated(object? sender, EventArgs e)

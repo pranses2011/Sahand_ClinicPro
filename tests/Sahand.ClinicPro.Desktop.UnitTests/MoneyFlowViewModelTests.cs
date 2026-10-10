@@ -8,23 +8,28 @@ namespace Sahand.ClinicPro.Desktop.UnitTests;
 
 /// <summary>
 /// اسنک‌بار ساختگی — پیام‌ها در حافظه ضبط می‌شوند
+/// چرخهٔ سی‌وهشتم: قرارداد سرویس پیام شناور ساخت‌یافته شد (ToastMessage با
+/// نوع چهارگانه) — دام ساختگی هم با همان شکل نو شد تا بیلد تست سالم بماند.
 /// </summary>
 public sealed class FakeSnackbar : ISnackbarService
 {
-    /// <summary>پیام‌های ضبط‌شده: (متن، موفق)</summary>
-    public List<(string Message, bool Success)> Messages { get; } = new();
+    /// <summary>پیام‌های ضبط‌شده: (متن، نوع)</summary>
+    public List<(string Message, ToastKind Kind)> Messages { get; } = new();
 
-    /// <summary>رویداد انتشار پیام</summary>
-    public event Action<string, bool>? MessagePosted;
+    /// <summary>رویداد انتشار پیام — مدل کامل (چرخهٔ ۳۸)</summary>
+    public event Action<ToastMessage>? MessagePosted;
 
     /// <summary>نمایش پیام موفق</summary>
-    public void Success(string message) { Messages.Add((message, true)); MessagePosted?.Invoke(message, true); }
+    public void Success(string message) { Messages.Add((message, ToastKind.Success)); MessagePosted?.Invoke(new ToastMessage(ToastKind.Success, message)); }
 
     /// <summary>نمایش پیام خطا</summary>
-    public void Error(string message) { Messages.Add((message, false)); MessagePosted?.Invoke(message, false); }
+    public void Error(string message) { Messages.Add((message, ToastKind.Error)); MessagePosted?.Invoke(new ToastMessage(ToastKind.Error, message)); }
+
+    /// <summary>نمایش پیام هشدار — چرخهٔ ۳۸</summary>
+    public void Warning(string message) { Messages.Add((message, ToastKind.Warning)); MessagePosted?.Invoke(new ToastMessage(ToastKind.Warning, message)); }
 
     /// <summary>نمایش پیام خبری</summary>
-    public void Info(string message) { Messages.Add((message, true)); MessagePosted?.Invoke(message, true); }
+    public void Info(string message) { Messages.Add((message, ToastKind.Info)); MessagePosted?.Invoke(new ToastMessage(ToastKind.Info, message)); }
 }
 
 /// <summary>

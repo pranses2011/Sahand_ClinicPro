@@ -795,10 +795,152 @@
         <Grid x:Name="TourLayer" Grid.Column="0" Grid.ColumnSpan="2"
               Panel.ZIndex="90" />
 
-        <materialDesign:Snackbar MessageQueue="{Binding SnackbarQueue}"
-                                 VerticalAlignment="Bottom"
-                                 HorizontalAlignment="Center"
-                                 Margin="0,0,0,36"
-                                 Grid.Column="1" />
+        <!-- ═══ میزبان پیام‌های شناور — چرخهٔ سی‌وهشتم (گزارش مالک) ═══
+             «ظاهر توست‌ها مانند تصویر نمونهٔ ToastNotif.png با رنگبندی بر طبق
+             نوع و پیام»: کپسول کاملاً گوشه‌گرد سفید/تابع تم با حاشیهٔ روشن و
+             سایهٔ نرم؛ دایرهٔ پرشدهٔ رنگی با نویسهٔ سفید (سبز=تیک، قرمز=ضربدر،
+             کهربایی=تعجب، آبی=i) در سمت راست، متن تیره در ادامه و ضربدرِ بستن
+             در انتهای چپ. کل کپسول کلیک‌پذیر است (بستن) و هر توست خودکار پس از
+             چند ثانیه محو می‌شود (زمان‌سنج در ViewModel). جایگزین Snackbar
+             متریال شد که ظاهر و رفتارش با نمونه فرق داشت. -->
+        <ItemsControl ItemsSource="{Binding Toasts}"
+                      Grid.Column="1"
+                      VerticalAlignment="Bottom"
+                      HorizontalAlignment="Center"
+                      Margin="0,0,0,36"
+                      Panel.ZIndex="60"
+                      IsHitTestVisible="True"
+                      Focusable="False">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <!-- انبارش عمودی از پایین؛ جدیدترین زیرِ قبلی می‌نشیند -->
+                    <StackPanel Orientation="Vertical" VerticalAlignment="Bottom" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <!-- کل کپسول یک دکمه است: کلیک روی هر جای توست = بستن -->
+                    <Button Command="{Binding DataContext.DismissToastCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}"
+                            Cursor="Hand" Margin="0,0,0,10"
+                            HorizontalAlignment="Center"
+                            Focusable="False"
+                            ToolTip="بستن پیام">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="ToastCard"
+                                        CornerRadius="26"
+                                        Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                        BorderBrush="#E0E0E0"
+                                        BorderThickness="1"
+                                        Padding="18,0,20,0"
+                                        MinHeight="52"
+                                        MaxWidth="470"
+                                        SnapsToDevicePixels="True"
+                                        RenderTransformOrigin="0.5,0.5">
+                                    <Border.Effect>
+                                        <!-- سایهٔ نرم رو به پایین — حس معلق بودن مطابق نمونه -->
+                                        <DropShadowEffect BlurRadius="18" ShadowDepth="4"
+                                                          Direction="270" Opacity="0.18"
+                                                          Color="#0A1E3C" />
+                                    </Border.Effect>
+                                    <Border.RenderTransform>
+                                        <TranslateTransform x:Name="ToastShift" Y="14" />
+                                    </Border.RenderTransform>
+
+                                    <!-- محتوا: [آیکون رنگی][متن][ضربدر بستن] — در RTL آیکون سمت راست -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- دایرهٔ آیکون — رنگ/نویسه با تریگر نوع تعیین می‌شود -->
+                                        <Border x:Name="IconCircle" Grid.Column="0"
+                                                Width="34" Height="34" CornerRadius="17"
+                                                VerticalAlignment="Center"
+                                                Background="#059669">
+                                            <materialDesign:PackIcon x:Name="IconGlyph"
+                                                                     Kind="Check"
+                                                                     Width="17" Height="17"
+                                                                     Foreground="White"
+                                                                     HorizontalAlignment="Center"
+                                                                     VerticalAlignment="Center" />
+                                        </Border>
+
+                                        <!-- متن پیام — تیره، نیمه‌درشت، راست‌چین (RTL طبیعی) -->
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Text}"
+                                                   FontSize="13.5" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,8,14,8"
+                                                   MaxWidth="360" />
+
+                                        <!-- ضربدرِ بستن — کم‌رنگ؛ با هاور پررنگ -->
+                                        <materialDesign:PackIcon x:Name="ToastClose" Grid.Column="2"
+                                                                 Kind="Close" Width="13" Height="13"
+                                                                 Foreground="#9AA5B1"
+                                                                 VerticalAlignment="Center"
+                                                                 HorizontalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+
+                                <ControlTemplate.Triggers>
+                                    <!-- ═══ رنگ‌بندی بر طبق نوع — چرخهٔ ۳۸ ═══ -->
+                                    <DataTrigger Binding="{Binding Kind}" Value="Success">
+                                        <Setter TargetName="IconCircle" Property="Background" Value="#059669" />
+                                        <Setter TargetName="IconGlyph" Property="Kind" Value="Check" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Error">
+                                        <Setter TargetName="IconCircle" Property="Background" Value="#DC2626" />
+                                        <Setter TargetName="IconGlyph" Property="Kind" Value="Close" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Warning">
+                                        <Setter TargetName="IconCircle" Property="Background" Value="#D97706" />
+                                        <Setter TargetName="IconGlyph" Property="Kind" Value="Alert" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Info">
+                                        <Setter TargetName="IconCircle" Property="Background" Value="#2563EB" />
+                                        <Setter TargetName="IconGlyph" Property="Kind" Value="InformationOutline" />
+                                    </DataTrigger>
+
+                                    <!-- هاور: پررنگ‌شدن ضربدر و کمی بالا آمدن کپسول -->
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="ToastClose" Property="Foreground" Value="#5B6773" />
+                                        <Setter TargetName="ToastCard" Property="Opacity" Value="0.94" />
+                                    </Trigger>
+
+                                    <!-- انیمیشن ورود: محوشدن از پایین داخل خود قالب — نام‌های
+                                         قالب فقط از رویدادهای همان قالب قابل نشانه‌گیری‌اند -->
+                                    <EventTrigger RoutedEvent="Loaded">
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="ToastCard"
+                                                                 Storyboard.TargetProperty="Opacity"
+                                                                 From="0" To="1" Duration="0:0:0.22">
+                                                    <DoubleAnimation.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut" />
+                                                    </DoubleAnimation.EasingFunction>
+                                                </DoubleAnimation>
+                                                <DoubleAnimation Storyboard.TargetName="ToastShift"
+                                                                 Storyboard.TargetProperty="Y"
+                                                                 From="14" To="0" Duration="0:0:0.26">
+                                                    <DoubleAnimation.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut" />
+                                                    </DoubleAnimation.EasingFunction>
+                                                </DoubleAnimation>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
     </Grid>
 </Window>
