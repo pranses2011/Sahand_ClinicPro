@@ -80,14 +80,14 @@
                                         <StackPanel>
                                             <TextBlock Text="چشم راست (OD)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8" />
                                             <UniformGrid Columns="2">
-                                                <StackPanel Margin="0,0,6,6"><TextBlock Text="Sphere" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdSphere, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
-                                                <StackPanel Margin="0,0,0,6"><TextBlock Text="Cylinder" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdCylinder, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
-                                                <StackPanel Margin="0,0,6,0"><TextBlock Text="Axis" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdAxis, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
-                                                <StackPanel><TextBlock Text="Add" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdAdd, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,6,6"><TextBlock Text="عدسی (Sphere)" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdSphere, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,0,6"><TextBlock Text="استوانه (Cylinder)" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdCylinder, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,6,0"><TextBlock Text="محور (Axis)" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdAxis, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel><TextBlock Text="افزوده نزدیک‌بین (Add)" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OdAdd, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
                                             </UniformGrid>
-                                            <TextBlock Text="دید بدون عینک" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
+                                            <TextBlock Text="حدت بینایی بدون اصلاح (Visual Acuity)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
                                             <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OdVisionIndex}" />
-                                            <TextBlock Text="فشار چشم IOP (mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
+                                            <TextBlock Text="فشار داخل چشم (IOP — mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
                                             <TextBox Text="{Binding OdIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
                                             <TextBlock Text="{Binding OdIopWarning, Mode=OneWay}" Foreground="#C62828" FontWeight="Bold" FontSize="11.5" Margin="0,4,0,0"
                                                        Visibility="{Binding OdIopWarning, Converter={StaticResource StringToVisibility}}" />
@@ -98,14 +98,14 @@
                                         <StackPanel>
                                             <TextBlock Text="چشم چپ (OS)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8" />
                                             <UniformGrid Columns="2">
-                                                <StackPanel Margin="0,0,6,6"><TextBlock Text="Sphere" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsSphere, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
-                                                <StackPanel Margin="0,0,0,6"><TextBlock Text="Cylinder" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsCylinder, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
-                                                <StackPanel Margin="0,0,6,0"><TextBlock Text="Axis" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsAxis, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
-                                                <StackPanel><TextBlock Text="Add" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsAdd, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,6,6"><TextBlock Text="عدسی (Sphere)" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsSphere, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,0,6"><TextBlock Text="استوانه (Cylinder)" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsCylinder, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,6,0"><TextBlock Text="محور (Axis)" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsAxis, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel><TextBlock Text="افزوده نزدیک‌بین (Add)" FontSize="10.5" Opacity="0.6" /><TextBox Text="{Binding OsAdd, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
                                             </UniformGrid>
-                                            <TextBlock Text="دید بدون عینک" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
+                                            <TextBlock Text="حدت بینایی بدون اصلاح (Visual Acuity)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
                                             <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OsVisionIndex}" />
-                                            <TextBlock Text="فشار چشم IOP (mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
+                                            <TextBlock Text="فشار داخل چشم (IOP — mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
                                             <TextBox Text="{Binding OsIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
                                             <TextBlock Text="{Binding OsIopWarning, Mode=OneWay}" Foreground="#C62828" FontWeight="Bold" FontSize="11.5" Margin="0,4,0,0"
                                                        Visibility="{Binding OsIopWarning, Converter={StaticResource StringToVisibility}}" />
@@ -121,11 +121,11 @@
                                         <ColumnDefinition Width="2*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="PD فاصله مردمک (mm)" FontSize="10.5" Opacity="0.6" />
+                                        <TextBlock Text="فاصله مردمک (PD — میلی‌متر)" FontSize="10.5" Opacity="0.6" />
                                         <TextBox Text="{Binding Pd, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="دید رنگ" FontSize="10.5" Opacity="0.6" />
+                                        <TextBlock Text="دید رنگی (Color Vision)" FontSize="10.5" Opacity="0.6" />
                                         <ComboBox ItemsSource="{Binding ColorVisionOptions}" SelectedIndex="{Binding ColorVisionIndex}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="3">
