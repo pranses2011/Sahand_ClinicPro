@@ -6,6 +6,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
              xmlns:charts="clr-namespace:Sahand.ClinicPro.Desktop.Controls.Charts"
+             xmlns:helpers="clr-namespace:Sahand.ClinicPro.Desktop.Helpers"
              mc:Ignorable="d"
              FlowDirection="RightToLeft">
     <!-- ═══════════════════════════════════════════════════════════
@@ -174,6 +175,26 @@
                                                      Foreground="#F57C00" VerticalAlignment="Center" />
                             <TextBlock Text="میانبرهای سریع من" FontSize="14.5" FontWeight="Bold"
                                        Margin="8,0,0,0" VerticalAlignment="Center" />
+                            <!-- ═══ چرخهٔ ۴۷ (گزارش مالک: «دکمه‌های میانبر ناقص
+                                 هستند و آیکون و عنوان مشخص نیست») — نشان نسخهٔ
+                                 تشخیصی روی خود داشبورد ═══
+                                 تحلیل پیکسلی تصویر مالک نشان داد رندر ایستگاه با
+                                 XAML های چرخهٔ ۴۴ و قدیمی‌تر است (کاشی ~۳۳px و توستِ
+                                 بدون حاشیهٔ ۶۴px چرخهٔ ۴۳) در حالی که نسخهٔ نصب‌شده
+                                 «به‌روز» اعلام شده — یعنی فایل‌های UI جدید هرگز به
+                                 بیلد نرسیده‌اند (کش BAML/جایگزینی‌نشدن فایل). این نشان
+                                 روی خودِ صفحهٔ داشبورد می‌نشیند تا در یک نگاه روشن
+                                 شود بیلدِ در حال اجرا تازه است یا کهنه: اگر پس از
+                                 آپدیت این نشان نبود، ایستگاه باید Clean + Rebuild شود
+                                 (همان راهنمای داخل بستهٔ آپدیت). -->
+                            <Border CornerRadius="9" Padding="8,2" Margin="10,0,0,0"
+                                    Background="#E3F2FD" BorderBrush="#90CAF9" BorderThickness="1"
+                                    VerticalAlignment="Center"
+                                    ToolTip="نسخهٔ بیلدِ در حال اجرا — پس از نصب هر بستهٔ آپدیت باید با نسخهٔ همان بسته یکی باشد؛ اگر نبود، فایل‌های جدید جایگزین نشده‌اند و باید Clean + Rebuild انجام شود">
+                                <TextBlock Text="{x:Static helpers:AppInfo.VersionText}"
+                                           FontSize="10" Foreground="#1565C0"
+                                           FontFamily="{DynamicResource App.CodeFont}" />
+                            </Border>
                         </StackPanel>
                         <!-- ═══ چرخهٔ ۴۵ (گزارش مالک) — دکمه‌های مدیریتیِ کاملاً گرد ═══
                              «دکمه میانبر جدید در داشبورد رو همانند دکمه حالت ویرایش بکن
@@ -264,6 +285,14 @@
                          و حذف کامل هر افکت/انیمیشنی که محتوا را به مرز چیدمان
                          می‌راند. قواعد ۴۵ (بدون سایه/دیوار کف/هاور بی‌استوری‌بورد)
                          همگی برقرار ماندند. -->
+                    <!-- ═══ چرخهٔ ۴۷ — ارتفاع قطعی کاشی ═══
+                         «دکمه‌های میانبر ناقص هستند و آیکون و عنوان مشخص نیست» —
+                         تجربهٔ چرخه‌های ۴۵/۴۶ نشان داد «کف ارتفاع» (MinHeight) در
+                         برابر فشردگی‌های چیدمانیِ نامعمولِ ایستگاه‌های خاص کافی
+                         نیست؛ ارتفاعِ قطعی (Height) روی هر دو لایهٔ گرید و قالب
+                         تعیین می‌شود تا هیچ سنجه‌ای نتواند کاشی را له کند. هیچ
+                         افکت سایه‌ای هم روی کاشی نیست (سازوکار بریدن مرز — درس
+                         چرخهٔ ۴۵). -->
                     <ItemsControl ItemsSource="{Binding Shortcuts}"
                                   HorizontalAlignment="Center">
                         <ItemsControl.ItemsPanel>
@@ -273,7 +302,7 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="5,5,5,7" Width="120" MinHeight="110">
+                                <Grid Margin="5,5,5,7" Width="120" Height="116">
                                     <!-- کاشی اصلی — کلیک = ناوبری مستقیم -->
                                     <Button Command="{Binding DataContext.OpenShortcutCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                             CommandParameter="{Binding}"
@@ -281,11 +310,16 @@
                                             ToolTip="{Binding Title, StringFormat=باز کردن {0}}">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
+                                                <!-- چرخهٔ ۴۷: Height قطعی (نه فقط کف) —
+                                                     ارتفاع ثابت ۱۱۶px روی قالب؛ محتوا
+                                                     (آیکون ۴۴ + فاصله ۷ + متن دوسطری ۳۴ +
+                                                     حاشیهٔ عمودی ۲۲ = ۱۰۷) با ۹px اطمینان جا
+                                                     می‌شود و هیچ چیدمانی نمی‌تواند آن را فشرده کند -->
                                                 <Border x:Name="Tile"
                                                         CornerRadius="14" Background="#FFFFFF"
                                                         BorderBrush="#D9E2EC" BorderThickness="1.4"
                                                         Padding="0,12,0,10"
-                                                        MinHeight="110"
+                                                        Height="116"
                                                         UseLayoutRounding="True"
                                                         SnapsToDevicePixels="True">
                                                     <!-- ═══ چرخهٔ ۴۵: بدون DropShadowEffect — افکت،
@@ -300,7 +334,10 @@
                                                         <Border Width="44" Height="44" CornerRadius="22"
                                                                 Background="{Binding Accent, Converter={StaticResource HexToBrush}}"
                                                                 HorizontalAlignment="Center" Margin="0,0,0,7">
-                                                            <materialDesign:PackIcon Kind="{Binding Icon}" Width="22" Height="22"
+                                                            <!-- چرخهٔ ۴۷: گارد اتصال — میانبرِ
+                                                                 ذخیره‌شدهٔ کهنه با کلید حذف‌شده نباید
+                                                                 آیکون تهی بدهد؛ ViewDashboard پیش‌فرض -->
+                                                            <materialDesign:PackIcon Kind="{Binding Icon, TargetNullValue=ViewDashboard, FallbackValue=ViewDashboard}" Width="22" Height="22"
                                                                                      Foreground="White"
                                                                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                         </Border>
@@ -308,7 +345,9 @@
                                                              برش می‌داد) — سقف حساب‌شدهٔ ۳۴px = دو سطر کامل
                                                              ۱۵px؛ ۴۴+۷+۳۴+۲۲=۱۰۷ ≤ کفِ ۱۱۰px کاشی ⇒ هیچ
                                                              سرریزی در مرز نمی‌ماند -->
-                                                        <TextBlock Text="{Binding Title}" FontSize="11" FontWeight="SemiBold"
+                                                        <!-- چرخهٔ ۴۷: گارد اتصال عنوان — تهی
+                                                             یعنی «بدون عنوان» نه کاشی بی‌متن -->
+                                                        <TextBlock Text="{Binding Title, TargetNullValue=بدون عنوان, FallbackValue=بدون عنوان}" FontSize="11" FontWeight="SemiBold"
                                                                    Foreground="#1F2937" Margin="6,0,6,0"
                                                                    HorizontalAlignment="Center" TextAlignment="Center"
                                                                    TextWrapping="Wrap" MaxHeight="34" MaxWidth="106"
