@@ -157,11 +157,17 @@ public partial class OphthalmologyViewModel : ViewModelBase
         int? TryInt(string? s) => int.TryParse(s?.Trim(), out var v) ? v : null;
         decimal? TryDec(string? s) => decimal.TryParse(s?.Trim(), System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : null;
 
+        // ═══ چرخهٔ ۴۸ — سازگاری کامل با قرارداد سرور SaveEyeExamCommand ═══
+        // نام‌های قبلی odSphere/osCylinder/… با هیچ ویژگی‌ای از DTO سرور
+        // (rightSphere/leftCylinder/…) بایند نمی‌شدند ⇒ عدسی/استوانه/محور هر دو
+        // چشم بی‌صدا دور ریخته می‌شد و رکورد معاینهٔ چشم «ثبت‌شده» بدون نسخهٔ
+        // عینک ذخیره می‌شد (گزارش مالک: قابلیت‌ها پیاده نشده‌اند).
         var ok = await _api.PostAsync("eye/exams", new
         {
             patientId = EyePatient.Id,
-            odSphere = TryDec(OdSphere), odCylinder = TryDec(OdCylinder), odAxis = TryInt(OdAxis),
-            osSphere = TryDec(OsSphere), osCylinder = TryDec(OsCylinder), osAxis = TryInt(OsAxis),
+            visitId = (long?)null,
+            rightSphere = TryDec(OdSphere), rightCylinder = TryDec(OdCylinder), rightAxis = TryInt(OdAxis),
+            leftSphere = TryDec(OsSphere), leftCylinder = TryDec(OsCylinder), leftAxis = TryInt(OsAxis),
             rightIop = TryInt(OdIop), leftIop = TryInt(OsIop),
             rightVisualAcuity = VisionOptions.ElementAtOrDefault(OdVisionIndex),
             leftVisualAcuity = VisionOptions.ElementAtOrDefault(OsVisionIndex),

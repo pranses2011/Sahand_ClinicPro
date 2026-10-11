@@ -61,13 +61,22 @@ public partial class ImagingViewModel : ViewModelBase
     private async Task SaveImagingOrderAsync()
     {
         if (ImagingPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return; }
+        // ═══ چرخهٔ ۴۸ — سازگاری کامل با قرارداد سرور CreateImagingOrderDto ═══
+        // بدنهٔ قبلی نام‌های ناهم‌جنس داشت (modalityType/region/clinicalInformation/
+        // isUrgent) که با هیچ ویژگی‌ای از DTO سرور (modality/bodyPart/priority/
+        // clinicalInfo) بایند نمی‌شد ⇒ مودالیته صفر و ناحیهٔ بدن تهی؛ اعتبارسنج
+        // «ناحیهٔ بدن الزامی است» هر درخواست را رد می‌کرد و فرم تصویربرداری
+        // هرگز ذخیره نمی‌شد (گزارش مالک: قابلیت‌های ارجاع پیاده نشده‌اند).
         var ok = await _api.PostAsync("imaging/orders", new
         {
             patientId = ImagingPatient.Id,
-            modalityType = ImagingTypeIndex + 1,
-            region = BodyRegions[Math.Clamp(System.Array.IndexOf(BodyRegions, ImagingRegion ?? "سر و گردن"), 0, 8)],
-            clinicalInformation = ImagingClinicalInfo,
-            isUrgent = ImagingUrgent
+            referringDoctorId = (long?)null,
+            // نمایهٔ انتخابگر مودالیته — همان ترتیب enum سرور: ۱ سونوگرافی، ۲ رادیوگرافی، …
+            modality = ImagingTypeIndex + 1,
+            bodyPart = BodyRegions[Math.Clamp(System.Array.IndexOf(BodyRegions, ImagingRegion ?? "سر و گردن"), 0, 8)],
+            // اولویت سرور: ۱ اورژانس، ۲ بالا، ۳ عادی — چک‌باکس «فوری» یعنی اورژانس
+            priority = ImagingUrgent ? 1 : 3,
+            clinicalInfo = ImagingClinicalInfo
         });
         if (ok)
         {

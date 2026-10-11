@@ -69,14 +69,21 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     private async Task SavePhysioSessionAsync()
     {
         if (PhysioPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return; }
+        // ═══ چرخهٔ ۴۸ — سازگاری کامل با قرارداد سرور RecordPhysioSessionCommand ═══
+        // بدنهٔ قبلی فیلدهای ناهم‌جنس داشت (techniques/notes/sessionDateShamsi) که
+        // سرور نمی‌شناخت ⇒ «تکنیک‌های درمان» هرگز ثبت نمی‌شد (Treatments تهی) و
+        // یادداشت‌ها نیز دور ریخته می‌شدند — جلسهٔ بی‌محتوا ثبت می‌شد.
         var ok = await _api.PostAsync("physiotherapy/sessions", new
         {
             patientId = PhysioPatient.Id,
+            therapistId = (long?)null,
             sessionNumber = 1,
-            sessionDateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(System.DateTime.Now),
-            techniques = string.Join("، ", SelectedTechniques.Concat(string.IsNullOrWhiteSpace(PhysioOtherTechnique) ? System.Linq.Enumerable.Empty<string>() : new[] { PhysioOtherTechnique.Trim() })),
-            painScore = PainScore,
-            notes = PhysioNotes
+            // تکنیک‌های منتخب + سایر — به فیلد Treatments سرور می‌نشیند؛
+            // یادداشت آزاد کاردرمان هم (در نبود ستون مستقل در قرارداد فعلی سرور)
+            // در انتهای همان فیلد با برچسب واضح حفظ می‌شود تا هیچ داده‌ای دور ریخته نشود.
+            treatments = BuildSessionSummary(),
+            duration = (int?)null,
+            painScore = PainScore
         });
         if (ok)
         {
@@ -86,5 +93,26 @@ public partial class PhysiotherapyViewModel : ViewModelBase
             PainScore = 0;
         }
         else _snackbar.Error(_api.LastError ?? "ثبت جلسه ناموفق بود");
+    }
+
+    /// <summary>
+    /// متن جمع‌بندی جلسه — تکنیک‌های منتخب + تکنیک دیگر + یادداشت درمانگر؛
+    /// چرخهٔ ۴۸: قرارداد فعلی سرور فقط فیلد Treatments دارد؛ یادداشت با برچسب
+    /// «یادداشت:» به انتهای آن می‌چسبد تا در گزارش‌ها و پرونده قابل خواندن بماند.
+    /// </summary>
+    private string BuildSessionSummary()
+    {
+        var parts = SelectedTechniques
+            .Concat(string.IsNullOrWhiteSpace(PhysioOtherTechnique)
+                ? System.Linq.Enumerable.Empty<string>()
+                : new[] { PhysioOtherTechnique.Trim() })
+            .Where(t => !string.IsNullOrWhiteSpace(t))
+            .ToList();
+        var summary = string.Join("، ", parts);
+        if (!string.IsNullOrWhiteSpace(PhysioNotes))
+            summary = string.IsNullOrWhiteSpace(summary)
+                ? $"یادداشت: {PhysioNotes.Trim()}"
+                : $"{summary} — یادداشت: {PhysioNotes.Trim()}";
+        return summary;
     }
 }
