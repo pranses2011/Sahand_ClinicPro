@@ -129,7 +129,13 @@ public class CreateJournalEntryCommandHandler : IRequestHandler<CreateJournalEnt
             ReferenceId = dto.ReferenceId,
             TotalDebit = totalDebit,
             TotalCredit = totalCredit,
-            Status = JournalEntryStatus.Draft
+            // ═══ چرخهٔ چهل‌وهفتم — اسناد از ابتدا «تأیید‌شده» ثبت می‌شوند ═══
+            // پیشتر هر سند جدید Draft (پیش‌نویس) بود و چون هیچ گردش‌کار تأییدی
+            // در برنامه وجود ندارد، همهٔ اسناد برای همیشه «پیش‌نویس» می‌ماندند و
+            // نشان وضعیت در دفتر روزنامهٔ دسکتاپ گمراه‌کننده بود. گزارش‌های
+            // تراز/دفتر کل/سود و زیان از ابتدا همهٔ اسناد (با هر وضعیت) را
+            // می‌خوانند پس این تغییر رفتار گزارش‌ها را عوض نمی‌کند.
+            Status = JournalEntryStatus.Approved
         };
 
         var lineNumber = 1;
@@ -321,6 +327,85 @@ public class GetTrialBalanceQueryHandler
     }
 }
 
+/// <summary>
+/// پرس‌وجوی جزئیات کامل یک سند — چرخهٔ چهل‌وهفتم (گزارش مالک):
+/// «در تب دفتر روزنامه، با دابل کلیک بر روی یک سند، جزئیات کاملش رو
+/// بهمون نشون بده» — سربرگ سند + همهٔ سطرها با عنوان حساب.
+/// </summary>
+public record GetJournalEntryDetailQuery(long EntryId) : IRequest<Result<JournalEntryDetailDto>>;
+
+/// <summary>ردیف سطر سند در دیالوگ جزئیات — عنوان کامل حساب با کد</summary>
+public record JournalEntryLineDto(
+    int LineNumber,
+    string AccountCode,
+    string AccountName,
+    string? Description,
+    decimal Debit,
+    decimal Credit);
+
+/// <summary>دی‌تی‌او جزئیات کامل سند</summary>
+public record JournalEntryDetailDto(
+    long Id,
+    string? EntryNumber,
+    string DateShamsi,
+    string Description,
+    decimal TotalDebit,
+    decimal TotalCredit,
+    int Status,
+    List<JournalEntryLineDto> Lines);
+
+/// <summary>گردانندهٔ جزئیات سند — سطرها با عنوان حساب از راه اتصال ناوبری</summary>
+public class GetJournalEntryDetailQueryHandler
+    : IRequestHandler<GetJournalEntryDetailQuery, Result<JournalEntryDetailDto>>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده</summary>
+    public GetJournalEntryDetailQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>اجرا — سند + سطرهای مرتب با حساب</summary>
+    public async Task<Result<JournalEntryDetailDto>> Handle(GetJournalEntryDetailQuery request,
+        CancellationToken cancellationToken)
+    {
+        var entry = await _unitOfWork.Repository<JournalEntry>().QueryableNoTracking
+            .Include(e => e.Lines)
+            .FirstOrDefaultAsync(e => e.Id == request.EntryId, cancellationToken);
+        if (entry is null)
+            return Result<JournalEntryDetailDto>.Failure(Error.NotFound("سند حسابداری", request.EntryId));
+
+        // حساب هر سطر یک‌جا واکشی می‌شود (کد + عنوان برای نمایش)
+        var accountIds = entry.Lines.Select(l => l.AccountId).Distinct().ToList();
+        var accounts = await _unitOfWork.Repository<AccountingAccount>().QueryableNoTracking
+            .Where(a => accountIds.Contains(a.Id))
+            .ToDictionaryAsync(a => a.Id, cancellationToken);
+
+        var dto = new JournalEntryDetailDto(
+            entry.Id,
+            entry.EntryNumber,
+            entry.EntryDateShamsi ?? string.Empty,
+            entry.Description,
+            entry.TotalDebit,
+            entry.TotalCredit,
+            (int)entry.Status,
+            entry.Lines.OrderBy(l => l.LineNumber)
+                .Select(l =>
+                {
+                    // حساب سطر — در نبود (حذف‌شده) نشان جایگزین چاپ می‌شود
+                    accounts.TryGetValue(l.AccountId, out var account);
+                    return new JournalEntryLineDto(
+                        l.LineNumber,
+                        account?.AccountCode ?? "؟",
+                        account?.AccountName ?? "حساب حذف‌شده",
+                        l.Description,
+                        l.Debit,
+                        l.Credit);
+                })
+                .ToList());
+
+        return Result<JournalEntryDetailDto>.Success(dto);
+    }
+}
+
 /// <summary>ردیف سود و زیان</summary>
 public record IncomeStatementRowDto(string Title, decimal Amount, bool IsHeader, bool IsTotal);
 
@@ -360,8 +445,22 @@ public class GetIncomeStatementQueryHandler
                 l.AccountId == accountId && l.Entry != null &&
                 (from is null || l.Entry.EntryDate >= DateOnly.FromDateTime(from.Value)) &&
                 (to is null || l.Entry.EntryDate <= DateOnly.FromDateTime(to.Value)));
+            // ═══ چرخهٔ چهل‌وهفتم (گزارش مالک) — رفع علامت معکوس ═══
+            // «فکر میکنم عملیات مالی ایراد داره چون در تب سود و زیان از صفحه
+            // حسابداری، مبالغ رو زیان خالص میندازه و هیچ سودی نیست».
+            // ماندهٔ حسابداریِ درست با «ماهیت» حساب تعیین می‌شود:
+            //   درآمد (ماهیت بستانکار، natureSign=−۱): مانده = بستانکار−بدهکار
+            //     = −(Σد−Σب) ⇒ natureSign × (Σد−Σب) با علامت − ✓
+            //   هزینه (ماهیت بدهکار، natureSign=+۱): مانده = بدهکار−بستانکار
+            //     = +(Σد−Σب) ⇒ natureSign × (Σد−Σب) با علامت + ✓
+            // فرمول پیشین «−natureSign × …» دقیقاً هر دو را وارونه می‌کرد:
+            // درآمد و هزینه هر دو منفی می‌شدند و «سود خالص = Σ(−درآمد) − Σ(−هزینه)
+            // = هزینه − درآمد» همیشه زیان نشان می‌داد (یا سودِ کاذب در کلینیک
+            // پر هزینه). حذف علامت منفی، هر دو ردیف و جمع نهایی را اصلاح می‌کند.
+            // هم‌خانواده‌ها بازبینی شدند: دفتر کل و تراز (natureSign × (د−ب))
+            // از ابتدا درست‌اند — تنها صورت سود و زیان معیوب بود.
             var natureSign = account.Nature == AccountNature.Credit ? -1 : 1;
-            return -natureSign * accountLines.Sum(l => l.Debit - l.Credit);
+            return natureSign * accountLines.Sum(l => l.Debit - l.Credit);
         }
 
         var rows = new List<IncomeStatementRowDto>();

@@ -49,6 +49,20 @@ public class AccountingController : ApiBaseController
         return ToResponse(result);
     }
 
+    // ═══ چرخهٔ چهل‌وهفتم (گزارش مالک) ═══
+    // «در صفحه حسابداری و تب دفتر روزنامه، با دابل کلیک بر روی یک سند،
+    //  جزئیات کاملش رو بهمون نشون بده» — اندپوینت جزئیات کامل سند با
+    // همهٔ سطرها و عنوان حساب هر سطر؛ دسکتاپ در دابل‌کلیک ردیف دفتر
+    // روزنامه دیالوگ فارسی جزئیات را با همین پاسخ پر می‌کند.
+    /// <summary>جزئیات کامل یک سند — سربرگ + همهٔ سطرها با عنوان حساب</summary>
+    [HttpGet("entries/{entryId:long}")]
+    [HasPermission("accounting.view")]
+    public async Task<IActionResult> GetEntryDetail(long entryId)
+    {
+        var result = await _mediator.Send(new GetJournalEntryDetailQuery(entryId));
+        return ToResponse(result);
+    }
+
     /// <summary>دفتر کل یک حساب — گردش و مانده تراکمی</summary>
     [HttpGet("ledger")]
     [HasPermission("accounting.view")]
