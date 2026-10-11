@@ -25,5 +25,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Sahand.ClinicPro.Infrastructure\Sahand.ClinicPro.Infrastructure.csproj" />
+    <!-- چرخهٔ ۴۸ — تست جامع اجرای همهٔ گزارش‌ها مستقیماً روی ReportsController؛
+         ارجاع به لایهٔ API برای دسترسی به کنترلر (بدون میزبانی HTTP — سبک و سریع) -->
+    <ProjectReference Include="..\..\src\Sahand.ClinicPro.API\Sahand.ClinicPro.API.csproj" />
   </ItemGroup>
 </Project>

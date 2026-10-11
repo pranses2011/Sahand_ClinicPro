@@ -179,6 +179,17 @@
                                 <TextBlock Text="PDF" Margin="6,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
+                        <!-- ═══ خروجی تصویری — چرخهٔ ۴۸ (گزارش مالک: «برای گزارشات خروجی تصویر هم
+                             بزار با فرمت‌های مختلف قابل انتخاب توسط کاربر») — خلاصه‌ها + نمودار +
+                             جدول با هم در یک تصویر تمیز رندر می‌شوند؛ فرمت (PNG/JPEG/BMP/GIF/TIFF)
+                             از فهرست «نوع فایل» پنجرهٔ ذخیره انتخاب می‌شود ═══ -->
+                        <Button Command="{Binding ExportImageCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6"
+                                ToolTip="ذخیرهٔ تصویر نتایج (خلاصه‌ها + نمودار + جدول) — فرمت PNG/JPEG/BMP/GIF/TIFF هنگام ذخیره انتخاب می‌شود">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FileImage" Width="14" Height="14" VerticalAlignment="Center" Foreground="#00897B" />
+                                <TextBlock Text="تصویر" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                         <Button Command="{Binding PrintCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6"
                                 ToolTip="چاپ مستقیم نتایج با سربرگ و تاریخ شمسی — چرخهٔ ۳۸">
