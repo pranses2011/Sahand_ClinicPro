@@ -30,6 +30,9 @@ namespace Sahand.ClinicPro.Desktop.Controls;
 /// رفتار:
 ///   • کمبو ویرایش‌پذیر می‌شود (IsEditable) و با هر تایپ، فهرست گزینه‌ها
 ///     «زنده» پالایش می‌شود — تطبیق از نوع «شامل‌بودن» است نه فقط «شروع‌با»؛
+///   • چرخهٔ چهل‌وهفتم (گزارش مالک): با ورود فوکوس (Tab/کلیک) و کلیک ماوس
+///     روی کمبوی بسته، فهرست گزینه‌ها بی‌درنگ باز می‌شود تا کاربر بدون
+///     الزام به تایپ، گزینه را ببیند و انتخاب کند؛
 ///   • تطبیق با «نرمال‌سازی فارسی» انجام می‌شود: ي/ی و ك/ک عربی، ة→ه،
 ///     ارقام فارسی/عربی→لاتین، نیم‌فاصله و فاصله‌های اضافی نادیده — تا
 ///     صفحه‌کلید فارسی/عربی کاربر هرگز گزینه را پنهان نکند؛
@@ -85,6 +88,18 @@ public static class ComboBoxSearch
             combo.PreviewKeyDown += OnComboPreviewKeyDown;
             combo.LostFocus += OnComboLostFocus;
             combo.DropDownClosed += OnComboDropDownClosed;
+
+            // ═══ چرخهٔ چهل‌وهفتم (گزارش مالک) ═══
+            // «تمامی کمبوباکس های جستجو شونده رو طوری تنظیم بکن که وقتی روش
+            //  فوکوس میشه و یا با ماوس روش کلیک میکنیم، لیستشون باز بشه تا
+            //  انتخاب بکنیم» — دو رویداد:
+            //  ① GotFocus: ورود فوکوس (تب‌کیبورد/کلیک اول) فهرست را می‌گشاید؛
+            //  ② PreviewMouseLeftButtonDown: کلیک روی ناحیهٔ متنِ کمبوی بسته نیز
+            //     فهرست را می‌گشاید (کلیک روی فلش، رفتار بومی کمبو را دارد و
+            //     با گشایش ما تداخلی ندارد؛ کلیک روی فلشِ کمبوی باز نیز
+            //     بی‌اثر است چون فقط حالتِ «بسته» را دست می‌زنیم).
+            combo.GotFocus += OnComboGotFocus;
+            combo.PreviewMouseLeftButtonDown += OnComboPreviewMouseLeftButtonDown;
         }
         else if (e.OldValue is true && GetState(combo) is not null)
         {
@@ -99,6 +114,8 @@ public static class ComboBoxSearch
             combo.PreviewKeyDown -= OnComboPreviewKeyDown;
             combo.LostFocus -= OnComboLostFocus;
             combo.DropDownClosed -= OnComboDropDownClosed;
+            combo.GotFocus -= OnComboGotFocus;
+            combo.PreviewMouseLeftButtonDown -= OnComboPreviewMouseLeftButtonDown;
         }
     }
 
@@ -122,6 +139,35 @@ public static class ComboBoxSearch
     }
 
     // ═════════════════════════ رویدادها ═════════════════════════
+
+    /// <summary>
+    /// گشایش فهرست با ورود فوکوس — چرخهٔ چهل‌وهفتم (گزارش مالک): کمبوی
+    /// جستجویی باید با نشستن فوکوس (Tab یا نخستین کلیک) فهرستش را بگشاید.
+    /// گاردها: ① گزینه‌ای موجود باشد (پاپ‌آپ خالی آزاردهنده است) ② کمبو
+    /// بسته باشد ③ در حالت غیرفعال/غیرقابل‌ویرایش گشوده نشود.
+    /// </summary>
+    private static void OnComboGotFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is not ComboBox combo) return;
+        if (combo.IsDropDownOpen || !combo.HasItems || combo.IsReadOnly || !combo.IsEnabled)
+            return;
+        combo.IsDropDownOpen = true;
+    }
+
+    /// <summary>
+    /// گشایش فهرست با کلیک ماوس روی کمبوی بسته — چرخهٔ چهل‌وهفتم.
+    /// فقط وقتی دخالت می‌کند که فهرست بسته باشد؛ کلیک روی فلشِ کمبوی باز
+    /// (بستن بومی) و کلیک روی آیتم‌های پاپ‌آپ باز دست‌نخورده می‌مانند.
+    /// رویداد Handle نمی‌شود تا رفتار بومی کمبو (جای‌گذاری مکان‌نما و…)
+    /// هم حفظ شود.
+    /// </summary>
+    private static void OnComboPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not ComboBox combo) return;
+        if (combo.IsDropDownOpen || !combo.HasItems || combo.IsReadOnly || !combo.IsEnabled)
+            return;
+        combo.IsDropDownOpen = true;
+    }
 
     /// <summary>تغییر متن — اگر تایپ کاربر است، پالایش زنده انجام می‌شود</summary>
     private static void OnComboTextChanged(object sender, TextChangedEventArgs e)
