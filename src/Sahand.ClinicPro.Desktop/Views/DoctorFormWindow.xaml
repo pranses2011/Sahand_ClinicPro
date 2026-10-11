@@ -311,7 +311,7 @@
                               FontSize="12"
                               SelectedItem="{Binding SelectedScheduleRow, Mode=TwoWay}">
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="روز" Width="95">
+                            <DataGridTemplateColumn Header="روز" Width="90">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -334,43 +334,52 @@
                                  عرض صریح ۱۵۰px روی خود کنترل (نه اتکا به تراز سلول) —
                                  کنترل همیشه تمام‌عرضِ سلول ۱۵۶px را می‌پوشاند و متنِ
                                  مرکزچینِ انتخابگر در هر حالت کامل دیده می‌شود. -->
-                            <DataGridTemplateColumn Header="شروع" Width="156" SortMemberPath="StartTime">
+                            <!-- ═══ چرخهٔ چهل‌وچهارم (گزارش مالک) — ستون‌های باریک بدون اسکرول افقی ═══
+                                 «عرض ستون های شروع و پایان و استراحت رو کمتر بکن تا
+                                 زیباتر دیده بشن و نیازی به اسکرول افقی فرم نباشه»:
+                                 حالتِ بستهٔ انتخابگر ساعت فشرده شد (Padding و آیکون
+                                 کوچک‌تر در خود کنترل) و عرض صریح ۱۵۰px از کنترل‌ها
+                                 حذف شد تا با عرض طبیعی محتوا رشد کند؛ ستون‌های زمان
+                                 ۱۵۶→۱۰۶ و مجموع ستون‌ها ≈ ۷۰۰px — در پنجرهٔ ۹۰۰px
+                                 بدون اسکرول افقی جا می‌شوند. تاریخچهٔ چرخه‌های ۲۳/۲۱/
+                                 ۲۸/۳۳ برای ثبت رشد قبلی عرض‌ها حفظ شد. -->
+                            <DataGridTemplateColumn Header="شروع" Width="106" SortMemberPath="StartTime">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <controls:TimePicker TimeText="{Binding StartTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                             Width="150" HorizontalAlignment="Stretch"
+                                                             HorizontalAlignment="Stretch"
                                                              VerticalAlignment="Center" Margin="2,2" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="پایان" Width="156" SortMemberPath="EndTime">
+                            <DataGridTemplateColumn Header="پایان" Width="106" SortMemberPath="EndTime">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <controls:TimePicker TimeText="{Binding EndTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                             Width="150" HorizontalAlignment="Stretch"
+                                                             HorizontalAlignment="Stretch"
                                                              VerticalAlignment="Center" Margin="2,2" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="استراحت از" Width="156" SortMemberPath="BreakStart">
+                            <DataGridTemplateColumn Header="استراحت از" Width="106" SortMemberPath="BreakStart">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <controls:TimePicker TimeText="{Binding BreakStart, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                             Width="150" HorizontalAlignment="Stretch"
+                                                             HorizontalAlignment="Stretch"
                                                              VerticalAlignment="Center" Margin="2,2" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="استراحت تا" Width="156" SortMemberPath="BreakEnd">
+                            <DataGridTemplateColumn Header="استراحت تا" Width="106" SortMemberPath="BreakEnd">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <controls:TimePicker TimeText="{Binding BreakEnd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                             Width="150" HorizontalAlignment="Stretch"
+                                                             HorizontalAlignment="Stretch"
                                                              VerticalAlignment="Center" Margin="2,2" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="اتاق" Width="140">
+                            <DataGridTemplateColumn Header="اتاق" Width="130">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <ComboBox ItemsSource="{Binding DataContext.Rooms, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -381,7 +390,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="ظرفیت" Width="65"
+                            <DataGridTextColumn Header="ظرفیت" Width="58"
                                 Binding="{Binding MaxPatients, UpdateSourceTrigger=PropertyChanged, TargetNullValue='', Converter={StaticResource PersianDigits}}" />
                         </DataGrid.Columns>
                     </DataGrid>

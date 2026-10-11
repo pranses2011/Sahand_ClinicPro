@@ -50,8 +50,8 @@
                             BorderBrush="{DynamicResource MaterialDesign.Brush.TextBox.OutlineBorder}"
                             BorderThickness="1"
                             CornerRadius="4"
-                            Padding="8,5"
-                            MinHeight="34"
+                            Padding="5,3"
+                            MinHeight="30"
                             SnapsToDevicePixels="True">
                         <!-- چرخه بیست‌وچهارم: جهت چینش LTR — آیکون سمت چپ و متن ساعت
                              سمت راست؛ در RTL قبلی، متن با شروع از راست رسم می‌شد و
@@ -63,7 +63,7 @@
                         <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight"
                                     HorizontalAlignment="Center">
                             <materialDesign:PackIcon Kind="ClockOutline"
-                                                     Width="15" Height="15"
+                                                     Width="13" Height="13"
                                                      VerticalAlignment="Center"
                                                      Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
                                                      Opacity="0.8" />
@@ -96,7 +96,17 @@
              چرخهٔ سی‌وسوم (گزارش نوزدهم مالک): «با دکمهٔ تأیید بسته نمی‌شود» —
              انیمیشن محوِ پاپ‌آپ (Fade) حذف شد؛ ترکیب آن با StaysOpen=False در
              برخی ویندوز‌ها پاپ‌آپ را در حالت «روشن مانده» گیر می‌اندازد (رویداد
-             Closed دیر/هرگز صادر نمی‌شود و همگام‌سازی دکمهٔ تاگل بی‌اثر می‌ماند). -->
+             Closed دیر/هرگز صادر نمی‌شود و همگام‌سازی دکمهٔ تاگل بی‌اثر می‌ماند).
+             ═══ چرخهٔ چهل‌وچهارم (گزارش مالک) — دکمه‌های مرده درون دیتاگرید ═══
+             «در تب برنامه کاری پزشک، کلیدهای تأیید و کنسل و حتی دکمه‌های صبح و
+             عصر کار نمی‌کنند» (در فرم‌های عادی سالم بود). ریشه: دکمه‌های
+             «فوکوس‌پذیر» درون Popupِ سوار بر سلول دیتاگرید، رخداد تمرکز را به
+             چرخهٔ ویرایش سطر/سلول تزریق می‌کنند و کلیک در همان راهرو بلعیده
+             می‌شود؛ اعدادِ صفحهٔ عقربه‌ای (Focusable=False از ابتدا) به همین
+             دلیل سالم ماندند. رفع دفاع‌عمیق: همهٔ دکمه‌های پاپ‌آپ Focusable=False
+             و دکمه‌های عملیاتی ClickMode=Press — شلیک در لحظهٔ فشردن، پیش از هر
+             رقص فوکوس (هم‌الگوی اعداد عقربه‌ای). ورود تایپی (ManualInput) باید
+             تایپ بپذیرد و فوکوس‌پذیر می‌ماند. -->
         <Popup x:Name="PickerPopup"
                PlacementTarget="{Binding ElementName=Toggle}"
                Placement="Bottom"
@@ -174,13 +184,13 @@
                                  فونت هاردکد حذف شد تا ارقام فارسی با فونت تم رسم شوند. -->
                             <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight">
                                 <Button x:Name="HourBox" Template="{StaticResource DigitBoxTemplate}"
-                                        Click="OnHourBoxClick" Cursor="Hand">
+                                        Click="OnHourBoxClick" Cursor="Hand" Focusable="False" ClickMode="Press">
                                     <TextBlock x:Name="HourText" FontSize="21" FontWeight="Bold" />
                                 </Button>
                                 <TextBlock Text=":" FontSize="21" FontWeight="Bold"
                                            VerticalAlignment="Center" Margin="4,0" />
                                 <Button x:Name="MinuteBox" Template="{StaticResource DigitBoxTemplate}"
-                                        Click="OnMinuteBoxClick" Cursor="Hand">
+                                        Click="OnMinuteBoxClick" Cursor="Hand" Focusable="False" ClickMode="Press">
                                     <TextBlock x:Name="MinuteText" FontSize="21" FontWeight="Bold" />
                                 </Button>
                             </StackPanel>
@@ -188,9 +198,10 @@
                             <!-- صبح / عصر — معادل AM/PM مرجع؛ پیش‌فرض برای شیفت صبحاطلاعی -->
                             <UniformGrid Columns="2" Margin="0,10,0,0">
                                 <Button x:Name="AmBox" Style="{StaticResource AmPmButtonStyle}"
-                                        Content="صبح" Click="OnAmClick" />
+                                        Content="صبح" Click="OnAmClick" Focusable="False" ClickMode="Press" />
                                 <Button x:Name="PmBox" Style="{StaticResource AmPmButtonStyle}"
-                                        Content="عصر" Click="OnPmClick" Margin="6,0,0,0" />
+                                        Content="عصر" Click="OnPmClick" Margin="6,0,0,0"
+                                        Focusable="False" ClickMode="Press" />
                             </UniformGrid>
 
                             <!-- ورود تایپی مستقیم — با کلید صفحه‌کلید نمایان می‌شود؛
@@ -226,23 +237,23 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Button Grid.Column="0" x:Name="KeyboardToggle" Click="OnKeyboardToggleClick"
-                                Cursor="Hand" ToolTip="ورود تایپی زمان"
+                                Cursor="Hand" ToolTip="ورود تایپی زمان" Focusable="False"
                                 Style="{StaticResource MaterialDesignFlatButton}" Padding="6,4">
                             <materialDesign:PackIcon Kind="Keyboard" Width="16" Height="16"
                                                      Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
                         </Button>
                         <Button Grid.Column="2" x:Name="ClearButton" Click="OnClearClick"
-                                Content="پاک کردن" FontSize="11.5"
+                                Content="پاک کردن" FontSize="11.5" Focusable="False" ClickMode="Press"
                                 Style="{StaticResource MaterialDesignFlatButton}"
                                 Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
                                 Padding="8,4" Margin="0,0,4,0" />
                         <Button Grid.Column="3" x:Name="CancelButton" Click="OnCancelClick"
-                                Content="انصراف" FontSize="11.5"
+                                Content="انصراف" FontSize="11.5" Focusable="False" ClickMode="Press"
                                 Style="{StaticResource MaterialDesignFlatButton}"
                                 Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
                                 Padding="8,4" Margin="0,0,4,0" />
                         <Button Grid.Column="4" x:Name="OkButton" Click="OnAcceptClick"
-                                Content="تأیید" FontSize="11.5"
+                                Content="تأیید" FontSize="11.5" Focusable="False" ClickMode="Press"
                                 Style="{StaticResource MaterialDesignRaisedButton}"
                                 Padding="14,4" />
                     </Grid>
