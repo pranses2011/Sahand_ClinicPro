@@ -83,7 +83,7 @@
                         <!-- ردیف ۳: ساخت قالب جدید (با نوع منتخب) + بارگذاری مجدد فهرست -->
                         <WrapPanel Grid.Row="3" Margin="0,8,0,0">
                             <ComboBox x:Name="TypeCombo" SelectedIndex="{Binding NewTypeIndex}" MinWidth="150" FontSize="11.5" Margin="0,0,6,4"
-                                      DisplayMemberPath="Fa" materialDesign:HintAssist.Hint="نوع قالب"/>>
+                                      DisplayMemberPath="Fa" materialDesign:HintAssist.Hint="نوع قالب"/>
                             <Button Command="{Binding NewTemplateCommand}" Style="{StaticResource MaterialDesignRaisedButton}" FontSize="11" Margin="0,0,4,4">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" VerticalAlignment="Center" />
@@ -177,7 +177,7 @@
                         <TextBox Grid.Row="2" Text="{Binding SelectedTemplate.Body, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  AcceptsReturn="True" TextWrapping="Wrap" FontFamily="{DynamicResource App.CodeFont}" FontSize="12"
-                                 VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" materialDesign:HintAssist.Hint="متن قالب چاپ"/>>
+                                 VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" materialDesign:HintAssist.Hint="متن قالب چاپ"/>
 
                         <!-- پالت متغیرها -->
                         <TextBlock Grid.Row="3" Text="🧩 متغیرها — با کلیک به انتهای قالب اضافه می‌شود:"

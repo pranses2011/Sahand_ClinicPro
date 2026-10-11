@@ -367,10 +367,10 @@
                                                  HorizontalAlignment="Left" Margin="26,2,0,8" />
                             <CheckBox Content="بکاپ Differential هر (ساعت):" IsChecked="{Binding DiffEnabled}" Margin="2,6" />
                             <TextBox Text="{Binding DiffHours}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="{DynamicResource App.CodeFont}" materialDesign:HintAssist.Hint="فاصلهٔ بکاپ تفاضلی (ساعت)"/>>
+                                     Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="{DynamicResource App.CodeFont}" materialDesign:HintAssist.Hint="فاصلهٔ بکاپ تفاضلی (ساعت)"/>
                             <CheckBox Content="بکاپ Transaction Log هر (ساعت):" IsChecked="{Binding LogEnabled}" Margin="2,6" />
                             <TextBox Text="{Binding LogHours}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="{DynamicResource App.CodeFont}" materialDesign:HintAssist.Hint="فاصلهٔ بکاپ لاگ (ساعت)"/>>
+                                     Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="{DynamicResource App.CodeFont}" materialDesign:HintAssist.Hint="فاصلهٔ بکاپ لاگ (ساعت)"/>
 
                             <TextBlock Text="مسیر ذخیره محلی:" FontSize="12" Margin="2,10,0,4" />
                             <TextBox Text="{Binding BackupPath}" Style="{StaticResource MaterialDesignOutlinedTextBox}"

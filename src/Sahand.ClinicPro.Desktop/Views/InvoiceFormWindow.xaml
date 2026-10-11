@@ -167,7 +167,7 @@
                              + مبدل ریال↔نمایش برای حالت تومان -->
                         <TextBox behaviors:MoneyInput.IsEnabled="True"
                                  behaviors:MoneyInput.NumericValue="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
-                                 FontFamily="{DynamicResource App.CodeFont}" materialDesign:HintAssist.Hint="تخفیف (مبلغ)"/>>
+                                 FontFamily="{DynamicResource App.CodeFont}" materialDesign:HintAssist.Hint="تخفیف (مبلغ)"/>
                         <TextBlock Text="تخفیف — درصد" Style="{StaticResource FieldCaption}" />
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -204,7 +204,7 @@
                         <TextBlock Style="{StaticResource FieldCaption}"><Run Text="مبلغ دریافتی (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                         <TextBox behaviors:MoneyInput.IsEnabled="True"
                                  behaviors:MoneyInput.NumericValue="{Binding ReceivedAmount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
-                                 FontFamily="{DynamicResource App.CodeFont}" FontSize="14" materialDesign:HintAssist.Hint="مبلغ دریافتی"/>>
+                                 FontFamily="{DynamicResource App.CodeFont}" FontSize="14" materialDesign:HintAssist.Hint="مبلغ دریافتی"/>
 
                         <TextBlock Text="شماره ارجاع (برای کارت/بانک)" Style="{StaticResource FieldCaption}" />
                         <TextBox Text="{Binding ReferenceNumber, UpdateSourceTrigger=PropertyChanged}" />
