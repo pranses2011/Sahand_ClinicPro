@@ -15,24 +15,50 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <materialDesign:PackIcon Kind="TestTube" Width="26" Height="26"
-                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
-                                     VerticalAlignment="Center" />
-            <TextBlock Text="آزمایشگاه" FontSize="20" FontWeight="Bold"
-                       Margin="10,0,0,0" VerticalAlignment="Center" />
-            <Button Command="{Binding NewOrderCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
-                    Margin="16,0,0,0" VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
-                    <TextBlock Text="درخواست آزمایش" Margin="7,0,0,0" />
+        <!-- ═══ سربرگ گرادیانی — چرخهٔ ۴۸ (گزارش مالک: «ظاهر و چیدمان تمامی صفحات
+             خیلی حرفه‌ای‌تر و زیباتر بکن») — هم‌الگوی صفحات بازطراحی‌شدهٔ چرخهٔ ۴۵-۴۷:
+             نشان شیشه‌ای + عنوان/زیرعنوان + دکمه‌های اقدام در گوشهٔ چپ فیزیکی (RTL) ═══ -->
+        <Border Grid.Row="0" CornerRadius="14" Padding="16,10" Margin="0,0,0,10">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#6A1B9A" Offset="0" />
+                    <GradientStop Color="#311B92" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Opacity="0.16" Color="#1A0033" />
+            </Border.Effect>
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                    <Button Command="{Binding NewOrderCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                            Foreground="White" Background="#7E57C2" BorderBrush="#7E57C2"
+                            MinHeight="36" Margin="0,0,6,0" VerticalAlignment="Center"
+                            ToolTip="ثبت درخواست آزمایش جدید برای بیمار">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
+                            <TextBlock Text="درخواست آزمایش" Margin="7,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding LoadCommand}" Style="{StaticResource MaterialDesignFlatButton}"
+                            Foreground="White" MinHeight="36" MinWidth="42" VerticalAlignment="Center"
+                            ToolTip="بارگذاری مجدد فهرست درخواست‌ها از سرور">
+                        <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" />
+                    </Button>
                 </StackPanel>
-            </Button>
-            <Button Command="{Binding LoadCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
-                    Margin="8,0,0,0" VerticalAlignment="Center">
-                <materialDesign:PackIcon Kind="Refresh" Width="14" Height="14" />
-            </Button>
-        </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="44" Height="44" CornerRadius="22" VerticalAlignment="Center" Margin="0,0,12,0"
+                            Background="#33FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1">
+                        <materialDesign:PackIcon Kind="TestTube" Width="22" Height="22"
+                                                 Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="آزمایشگاه" FontSize="17" FontWeight="Bold" Foreground="White" />
+                        <TextBlock Text="درخواست‌ها، ثبت نتیجه قلم‌به‌قلم و کاتالوگ تست‌ها"
+                                   FontSize="10.5" Foreground="#E1BEE7" Margin="0,2,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
         <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />

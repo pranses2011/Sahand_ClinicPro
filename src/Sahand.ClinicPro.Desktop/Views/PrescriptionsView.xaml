@@ -14,16 +14,44 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- سربرگ -->
-        <DockPanel Grid.Row="0" Margin="0,0,0,12">
-            <Button DockPanel.Dock="Right"
-                    Command="{Binding NewPrescriptionCommand}"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Content="صدور نسخه" />
-            <TextBlock Text="نسخه‌نویسی"
-                       Style="{StaticResource SectionTitle}"
-                       VerticalAlignment="Center" />
-        </DockPanel>
+        <!-- ═══ سربرگ گرادیانی — چرخهٔ ۴۸ (هم‌الگوی چرخهٔ ۴۵-۴۷؛ گزارش مالک:
+             «ظاهر و چیدمان تمامی صفحات خیلی حرفه‌ای‌تر و زیباتر بکن») ═══ -->
+        <Border Grid.Row="0" CornerRadius="14" Padding="16,10" Margin="0,0,0,12">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#00695C" Offset="0" />
+                    <GradientStop Color="#004D40" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Opacity="0.16" Color="#00291F" />
+            </Border.Effect>
+            <DockPanel>
+                <Button DockPanel.Dock="Left"
+                        Command="{Binding NewPrescriptionCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Foreground="White" Background="#26A69A" BorderBrush="#26A69A"
+                        MinHeight="36" MinWidth="140" VerticalAlignment="Center"
+                        ToolTip="فرم نسخه‌نویسی با تداخل‌سنجی خودکار داروها و پایش حساسیت بیمار">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Prescription" Width="15" Height="15" VerticalAlignment="Center" />
+                        <TextBlock Text="صدور نسخهٔ جدید" Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="44" Height="44" CornerRadius="22" VerticalAlignment="Center" Margin="0,0,12,0"
+                            Background="#33FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1">
+                        <materialDesign:PackIcon Kind="Prescription" Width="22" Height="22"
+                                                 Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="نسخه‌نویسی" FontSize="17" FontWeight="Bold" Foreground="White" />
+                        <TextBlock Text="صدور نسخه با تداخل‌سنجی خودکار داروها و پایش حساسیت بیمار"
+                                   FontSize="10.5" Foreground="#B2DFDB" Margin="0,2,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
         <!-- فیلترها -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
