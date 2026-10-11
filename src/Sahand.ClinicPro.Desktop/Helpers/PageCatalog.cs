@@ -79,6 +79,9 @@ public static class PageCatalog
         new PageCatalogEntry("personnel", "پرسنل", "AccountTie", "patients.view", Group: "کادر درمان و پرسنل"),
         new PageCatalogEntry("payroll", "فیش حقوقی", "CashCheck", "payroll.manage", Group: "کادر درمان و پرسنل"),
         new PageCatalogEntry("attendance", "حضور و غیاب", "Fingerprint", "attendance.view", Group: "کادر درمان و پرسنل"),
+        // چرخهٔ ۴۷ (گزارش مالک): «مدیریت شیفت ها یک صفحه مجزا باشه» — مجوزِ دید
+        // همان حضور و غیاب است؛ ثبت/ویرایش/حذف همچنان با گیت attendance.shifts
+        new PageCatalogEntry("shifts", "مدیریت شیفت‌ها", "ClockOutline", "attendance.view", Group: "کادر درمان و پرسنل"),
 
         // ─── مالی و بیمه ───
         new PageCatalogEntry("billing", "مالی و صندوق", "CashMultiple", "invoices.view", Group: "مالی و بیمه"),

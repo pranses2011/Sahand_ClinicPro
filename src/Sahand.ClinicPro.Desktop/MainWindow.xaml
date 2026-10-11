@@ -141,6 +141,10 @@
         <DataTemplate DataType="{x:Type vm:PayrollViewModel}">
             <views:PayrollView />
         </DataTemplate>
+        <!-- چرخهٔ ۴۷ — صفحهٔ مستقل مدیریت شیفت‌ها -->
+        <DataTemplate DataType="{x:Type vm:ShiftsViewModel}">
+            <views:ShiftsView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:AttendanceViewModel}">
             <views:AttendanceView />
         </DataTemplate>

@@ -176,6 +176,8 @@ public partial class MainWindowViewModel : ObservableObject
         AdvancedEmrViewModel advancedEmrVm,
         PayrollViewModel payrollVm,
         AttendanceViewModel attendanceVm,
+        // چرخهٔ ۴۷ — صفحهٔ مستقل مدیریت شیفت‌ها (گزارش مالک)
+        ShiftsViewModel shiftsVm,
         TrainingCenterViewModel trainingVm,
         IRealtimeClient realtime)
     {
@@ -303,6 +305,8 @@ public partial class MainWindowViewModel : ObservableObject
             ["emr-advanced"] = () => advancedEmrVm,
             ["payroll"] = () => payrollVm,
             ["attendance"] = () => attendanceVm,
+            // چرخهٔ ۴۷ — صفحهٔ مستقل مدیریت شیفت‌ها
+            ["shifts"] = () => shiftsVm,
             ["training"] = () => trainingVm
         };
 
@@ -498,7 +502,9 @@ public partial class MainWindowViewModel : ObservableObject
                 new() { Title = "پزشکان", PageKey = "doctors", Icon = "Doctor" },
                 new() { Title = "پرسنل", PageKey = "personnel", Icon = "AccountTie" },
                 new() { Title = "فیش حقوقی", PageKey = "payroll", Icon = "CashCheck" },
-                new() { Title = "حضور و غیاب", PageKey = "attendance", Icon = "Fingerprint" }),
+                new() { Title = "حضور و غیاب", PageKey = "attendance", Icon = "Fingerprint" },
+                // چرخهٔ ۴۷ (گزارش مالک): «مدیریت شیفت ها یک صفحه مجزا باشه»
+                new() { Title = "مدیریت شیفت‌ها", PageKey = "shifts", Icon = "ClockOutline" }),
 
             // ─── امور مالی ───
             Group("مالی و بیمه", "CashMultiple",
