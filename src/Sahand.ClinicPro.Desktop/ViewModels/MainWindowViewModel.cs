@@ -815,6 +815,39 @@ public partial class MainWindowViewModel : ObservableObject
         CurrentTitle = CurrentPage.Title;
         // چرخهٔ ۴۲: Breadcrumb («خانه > عنوان») به درخواست مالک از نوار بالا
         // حذف شد — وسط نوار فقط نام صفحه و بج ساعت است؛ مقداردهی اضافه حذف شد
+
+        // ═══ چرخهٔ ۴۸ (گزارش مالک: «بعد از ثبت و ورود اقلام جدید… لیست اقلام در
+        //      کمبوباکس پذیرش هم به‌روز نمی‌شود») ═══
+        // کارخانه‌های صفحات تک‌الگو (singleton) هستند و دادهٔ هر ViewModel فقط
+        // در سازنده‌اش بارگذاری می‌شود؛ ناوبری فقط «نما» را بازسازی می‌کرد نه
+        // داده را ⇒ کمبوی اقلام مصرفی پذیرش، فهرست بیماران و امثال آنها تا
+        // ری‌استارت برنامه کهنه می‌ماندند. اکنون پس از هر ناوبری، اگر صفحهٔ هدف
+        // فرمان استاندارد نوسازی (RefreshCommand/LoadCommand) داشته باشد فراخوانده
+        // می‌شود — همان الگوی جاافتادهٔ تغییر تم، این‌بار برای تازگی دادهٔ هر صفحه.
+        TryRefreshCurrentPageData();
+    }
+
+    /// <summary>
+    /// نوسازی دادهٔ صفحهٔ جاری — چرخهٔ ۴۸: اگر ViewModel فعلی فرمان استاندارد
+    /// «RefreshCommand» یا «LoadCommand» داشته باشد اجرا می‌شود تا دادهٔ کهنهٔ
+    /// صفحات تک‌الگو (مثل کمبوی اقلام مصرفی پذیرش) پس از تغییرات دیگر صفحات
+    /// بی‌درنگ تازه شود. خطاها بی‌صدا نادیده گرفته می‌شوند (نوسازی اختیاری است).
+    /// </summary>
+    private void TryRefreshCurrentPageData()
+    {
+        try
+        {
+            var type = CurrentPage?.GetType();
+            var commandProp = type?.GetProperty("RefreshCommand")
+                              ?? type?.GetProperty("LoadCommand");
+            if (commandProp?.GetValue(CurrentPage) is System.Windows.Input.ICommand command
+                && command.CanExecute(null))
+                command.Execute(null);
+        }
+        catch
+        {
+            // نوسازی داده اختیاری است — خطایش جریان ناوبری را متوقف نمی‌کند
+        }
     }
 
     /// <summary>گشودن مرکز آموزش — دکمه 🎓 نوار بالا و آیتم منو</summary>
