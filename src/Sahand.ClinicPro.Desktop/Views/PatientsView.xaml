@@ -23,26 +23,41 @@
         </Grid.RowDefinitions>
 
         <!-- نوار عنوان صفحه — با Badge تعداد -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <StackPanel Orientation="Horizontal">
-                <materialDesign:PackIcon Kind="AccountGroup"
-                                         Width="26" Height="26"
-                                         Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
-                                         VerticalAlignment="Center" />
-                <TextBlock Text="لیست بیماران"
-                           FontSize="20" FontWeight="Bold"
-                           Margin="10,0,0,0" VerticalAlignment="Center" />
-                <Border Background="{DynamicResource MaterialDesign.Brush.Primary}"
-                        CornerRadius="10" Padding="10,2" VerticalAlignment="Center"
-                        Margin="12,0,0,0">
-                    <TextBlock Foreground="White" FontSize="11">
-                        <Run Text="کل: " /><Run Text="{Binding TotalCount, Mode=OneWay}" /><Run Text=" نفر" />
+        <!-- ═══ چرخهٔ ۴۵ (گزارش مالک: «ظاهر صفحات بیماران… رو خیلی حرفه ای تر و
+             زیباتر بکن») — سربرگ گرادیانی برند؛ هم‌الگوی پذیرش/نوبت‌دهی/نقش‌ها:
+             نشان شیشه‌ای + عنوان/زیرعنوان + چیپ شمار بیماران در گوشهٔ چپ فیزیکی ═══ -->
+        <Border Grid.Row="0" CornerRadius="14" Padding="16,12" Margin="0,0,0,10">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#5E35B1" Offset="0" />
+                    <GradientStop Color="#311B92" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Opacity="0.16" Color="#1A237E" />
+            </Border.Effect>
+            <DockPanel>
+                <!-- چیپ شمار بیماران — گوشهٔ چپ فیزیکی (RTL) -->
+                <Border DockPanel.Dock="Left" CornerRadius="9" Padding="10,3" VerticalAlignment="Center"
+                        Background="#26FFFFFF" BorderBrush="#59FFFFFF" BorderThickness="1">
+                    <TextBlock Foreground="White" FontSize="10.5" FontWeight="SemiBold">
+                        <Run Text="کل: " /><Run Text="{Binding TotalCount, Mode=OneWay}" /><Run Text=" بیمار" />
                     </TextBlock>
                 </Border>
-            </StackPanel>
-            <TextBlock Text="مدیریت و جستجوی بیماران ثبت‌شده در سامانه"
-                       FontSize="12" Opacity="0.65" Margin="2,4,0,0" />
-        </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="46" Height="46" CornerRadius="23" VerticalAlignment="Center" Margin="0,0,12,0"
+                            Background="#33FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1">
+                        <materialDesign:PackIcon Kind="AccountGroup" Width="24" Height="24"
+                                                 Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="لیست بیماران" FontSize="18" FontWeight="Bold" Foreground="White" />
+                        <TextBlock Text="مدیریت و جستجوی بیماران ثبت‌شده در سامانه"
+                                   FontSize="11" Foreground="#E4DBFF" Margin="0,3,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
         <!-- نوار ابزار -->
         <Border Grid.Row="1"

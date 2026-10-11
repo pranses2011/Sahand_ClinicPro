@@ -27,32 +27,67 @@
         </Grid.RowDefinitions>
 
         <!-- سربرگ + سلام شخصی -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <StackPanel Orientation="Horizontal">
-                <materialDesign:PackIcon Kind="Doctor"
-                                         Width="26" Height="26"
-                                         Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
-                                         VerticalAlignment="Center" />
-                <TextBlock Text="میزکار پزشک" FontSize="20" FontWeight="Bold"
-                           Margin="10,0,0,0" VerticalAlignment="Center" />
-                <TextBlock FontSize="14" Opacity="0.75" Margin="14,3,0,0" VerticalAlignment="Center"
-                           Text="{Binding CurrentUserName, Mode=OneWay, TargetNullValue='—'}" />
-                <!-- انتخابگر پزشک — فقط وقتی حساب به پزشکی متصل نیست -->
-                <ComboBox ItemsSource="{Binding Doctors}"
-                          SelectedIndex="{Binding DoctorIndex}"
-                          DisplayMemberPath="Name"
-                          materialDesign:HintAssist.Hint="پزشک میزکار"
-                          MinWidth="180" Margin="16,0,0,0" VerticalAlignment="Center"
-                          Visibility="{Binding IsLinkedToDoctor, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}" />
-                <Button Command="{Binding LoadCommand}"
-                        Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0"
-                        VerticalAlignment="Center" ToolTip="بارگذاری مجدد">
+        <!-- ═══ چرخهٔ ۴۵ (گزارش مالک: «ظاهر صفحات… میز کار پزشک رو خیلی حرفه ای
+             تر و زیباتر بکن») — سربرگ گرادیانی برند با چیپ نام کاربر + انتخابگر
+             پزشک (برای حساب‌های بدون اتصال) روی خود سربرگ ═══ -->
+        <Border Grid.Row="0" CornerRadius="14" Padding="16,10" Margin="0,0,0,10">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#1565C0" Offset="0" />
+                    <GradientStop Color="#0D2C54" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Opacity="0.16" Color="#0A1E3C" />
+            </Border.Effect>
+            <DockPanel>
+                <!-- انتخابگر پزشک (حساب بدون اتصال) + نوسازی — گوشهٔ چپ فیزیکی (RTL) -->
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left"
+                            HorizontalAlignment="Left" VerticalAlignment="Center"
+                            Visibility="{Binding IsLinkedToDoctor, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}">
+                    <ComboBox ItemsSource="{Binding Doctors}"
+                              SelectedIndex="{Binding DoctorIndex}"
+                              DisplayMemberPath="Name"
+                              materialDesign:HintAssist.Hint="پزشک میزکار"
+                              MinWidth="170" VerticalAlignment="Center" />
+                    <Button Command="{Binding LoadCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Foreground="White" MinWidth="42" MinHeight="36" Margin="6,0,0,0"
+                            VerticalAlignment="Center" ToolTip="بارگذاری مجدد">
+                        <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" />
+                    </Button>
+                </StackPanel>
+                <!-- نوسازی برای حساب‌های متصل -->
+                <Button DockPanel.Dock="Left" Command="{Binding LoadCommand}"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        Foreground="White" MinWidth="42" MinHeight="36" Margin="0,0,0,0"
+                        HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip="بارگذاری مجدد"
+                        Visibility="{Binding IsLinkedToDoctor, Converter={StaticResource BoolToVisibility}}">
                     <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" />
                 </Button>
-            </StackPanel>
-            <TextBlock Text="این صفحه فقط صف و آمار شماست — فراخوان بیمار بعدی با کلید Space؛ هر ۳۰ ثانیه خودکار تازه می‌شود"
-                       FontSize="12" Opacity="0.65" Margin="2,4,0,0" />
-        </StackPanel>
+
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="46" Height="46" CornerRadius="23" VerticalAlignment="Center" Margin="0,0,12,0"
+                            Background="#33FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1">
+                        <materialDesign:PackIcon Kind="Doctor" Width="24" Height="24"
+                                                 Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="میزکار پزشک" FontSize="18" FontWeight="Bold" Foreground="White" />
+                            <!-- چیپ نام کاربر — هم‌خانوادهٔ سربرگ‌های جدید -->
+                            <Border CornerRadius="9" Padding="9,2.5" Margin="10,1,0,0" VerticalAlignment="Center"
+                                    Background="#26FFFFFF" BorderBrush="#59FFFFFF" BorderThickness="1">
+                                <TextBlock Text="{Binding CurrentUserName, Mode=OneWay, TargetNullValue='—'}"
+                                           Foreground="White" FontSize="10.5" FontWeight="SemiBold" />
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="این صفحه فقط صف و آمار شماست — فراخوان بیمار بعدی با کلید Space؛ هر ۳۰ ثانیه خودکار تازه می‌شود"
+                                   FontSize="10.5" Foreground="#C9DDF5" Margin="0,3,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
         <!-- بنر راهنما — حساب به پزشک متصل نیست -->
         <Border Grid.Row="1" Background="#FFF8E1" BorderBrush="#FFE082" BorderThickness="1"

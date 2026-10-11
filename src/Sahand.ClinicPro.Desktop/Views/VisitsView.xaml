@@ -23,27 +23,50 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <StackPanel Orientation="Horizontal">
-                <materialDesign:PackIcon Kind="Stethoscope"
-                                         Width="26" Height="26"
-                                         Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
-                                         VerticalAlignment="Center" />
-                <TextBlock Text="صف ویزیت پزشک" FontSize="20" FontWeight="Bold"
-                           Margin="10,0,0,0" VerticalAlignment="Center" />
-                <ComboBox ItemsSource="{Binding Doctors}"
-                          SelectedIndex="{Binding DoctorFilterIndex}"
-                          DisplayMemberPath="Name"
-                          MinWidth="180" Margin="16,0,0,0" VerticalAlignment="Center" />
-                <Button Command="{Binding LoadCommand}"
-                        Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0"
-                        VerticalAlignment="Center" ToolTip="بارگذاری مجدد">
-                    <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" />
-                </Button>
-            </StackPanel>
-            <TextBlock Text="میانبر فراخوان بیمار بعدی: کلید Space — صف هر ۳۰ ثانیه خودکار تازه می‌شود"
-                       FontSize="12" Opacity="0.65" Margin="2,4,0,0" />
-        </StackPanel>
+        <!-- ═══ چرخهٔ ۴۵ (گزارش مالک: «ظاهر صفحات… ویزیت و معاینه… رو خیلی حرفه ای
+             تر و زیباتر بکن») — سربرگ گرادیانی برند + فیلتر پزشک و نوسازی روی
+             خود سربرگ؛ نشان شیشه‌ای + عنوان/زیرعنوان با راهنمای کلید Space ═══ -->
+        <Border Grid.Row="0" CornerRadius="14" Padding="16,10" Margin="0,0,0,10">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#00695C" Offset="0" />
+                    <GradientStop Color="#1B5E20" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Opacity="0.16" Color="#1B4D3E" />
+            </Border.Effect>
+            <DockPanel>
+                <!-- فیلتر پزشک + نوسازی — گوشهٔ چپ فیزیکی (RTL) -->
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left"
+                            HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <ComboBox ItemsSource="{Binding Doctors}"
+                              SelectedIndex="{Binding DoctorFilterIndex}"
+                              DisplayMemberPath="Name"
+                              materialDesign:HintAssist.Hint="همهٔ پزشکان"
+                              MinWidth="170" VerticalAlignment="Center" />
+                    <Button Command="{Binding LoadCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Foreground="White" MinWidth="42" MinHeight="36" Margin="6,0,0,0"
+                            VerticalAlignment="Center" ToolTip="بارگذاری مجدد">
+                        <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" />
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="46" Height="46" CornerRadius="23" VerticalAlignment="Center" Margin="0,0,12,0"
+                            Background="#33FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1">
+                        <materialDesign:PackIcon Kind="Stethoscope" Width="24" Height="24"
+                                                 Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="صف ویزیت پزشک" FontSize="18" FontWeight="Bold" Foreground="White" />
+                        <TextBlock Text="میانبر فراخوان بیمار بعدی: کلید Space — صف هر ۳۰ ثانیه خودکار تازه می‌شود"
+                                   FontSize="10.5" Foreground="#CDE8DC" Margin="0,3,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
         <!-- کارت‌های آماری -->
         <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,10">
