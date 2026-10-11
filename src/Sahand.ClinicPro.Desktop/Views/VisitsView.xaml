@@ -231,11 +231,14 @@
                                                     </TextBlock>
                                                 </StackPanel>
                                             </StackPanel>
+                                            <!-- چرخهٔ ۴۷: دیوار کف ارتفاع دکمهٔ ردیفی فراخوان (هم‌الگوی دکمهٔ اصلی) -->
                                             <Button Grid.Column="2" Command="{Binding DataContext.CallNextCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                    Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11" Padding="8,4">
+                                                    Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11" Padding="10,6"
+                                                    MinWidth="92" MinHeight="34">
                                                 <StackPanel Orientation="Horizontal">
                                                     <materialDesign:PackIcon Kind="BellRing" Width="13" Height="13" VerticalAlignment="Center" />
-                                                    <TextBlock Text="فراخوان" Margin="6,0,0,0" />
+                                                    <TextBlock Text="فراخوان" Margin="6,0,0,0"
+                                                               TextWrapping="Wrap" VerticalAlignment="Center" />
                                                 </StackPanel>
                                             </Button>
                                         </Grid>
@@ -286,13 +289,20 @@
 
         <!-- دکمه فراخوان -->
         <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,12,0,0">
+            <!-- ═══ چرخهٔ ۴۷ (گزارش مالک) ═══
+                 «در صفحه ویزیت و معاینه، دکمه فراخوانی بیمار بعدی له شده و
+                 نوشته خوانده نمیشود. همانند دکمه های پذیرش که درستشون کردی
+                 ولی اینو فراموش کردی» — همان نسخهٔ مقاومِ دکمه‌های پذیرش
+                 (ReceptionsView چرخهٔ پیشین): دیوار کف ارتفاع ۴۶px + کمینهٔ
+                 عرض + شکستن متن تا در پنجره‌های تنگ، متن هرگز له/بریده نشود. -->
             <Button Command="{Binding CallNextCommand}"
                     Style="{StaticResource MaterialDesignRaisedButton}"
                     Background="#1565C0" BorderBrush="#1565C0"
-                    FontSize="14" Padding="20,10">
+                    FontSize="13" Padding="20,12" MinWidth="230" MinHeight="46">
                 <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="BellRing" Width="18" Height="18" VerticalAlignment="Center" />
-                    <TextBlock Text="فراخوانی بیمار بعدی (Space)" Margin="10,0,0,0" />
+                    <materialDesign:PackIcon Kind="BellRing" Width="17" Height="17" VerticalAlignment="Center" />
+                    <TextBlock Text="فراخوانی بیمار بعدی (Space)" Margin="10,0,0,0"
+                               TextWrapping="Wrap" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
             <ProgressBar IsIndeterminate="True" Width="24" Height="18" Margin="12,0,0,0"

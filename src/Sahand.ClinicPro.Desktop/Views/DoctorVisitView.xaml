@@ -304,13 +304,17 @@
 
         <!-- دکمه فراخوان -->
         <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,12,0,0">
+            <!-- ═══ چرخهٔ ۴۷ (گزارش مالک — قانون هم‌کلاسی‌ها) ═══ همان اصلاح
+                 دکمهٔ فراخوانِ صفحهٔ ویزیت و معاینه: دیوار کف ارتفاع ۴۶px +
+                 کمینهٔ عرض + شکستن متن تا در پنجره‌های تنگ له/بریده نشود. -->
             <Button Command="{Binding CallNextCommand}"
                     Style="{StaticResource MaterialDesignRaisedButton}"
                     Background="#2E7D32" BorderBrush="#2E7D32"
-                    FontSize="14" Padding="20,10">
+                    FontSize="13" Padding="20,12" MinWidth="230" MinHeight="46">
                 <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="BellRing" Width="18" Height="18" VerticalAlignment="Center" />
-                    <TextBlock Text="فراخوانی بیمار بعدی (Space)" Margin="10,0,0,0" />
+                    <materialDesign:PackIcon Kind="BellRing" Width="17" Height="17" VerticalAlignment="Center" />
+                    <TextBlock Text="فراخوانی بیمار بعدی (Space)" Margin="10,0,0,0"
+                               TextWrapping="Wrap" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
             <ProgressBar IsIndeterminate="True" Width="24" Height="18" Margin="12,0,0,0"
