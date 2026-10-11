@@ -41,7 +41,11 @@ public static class PageCatalog
     public static readonly IReadOnlyList<PageCatalogEntry> All = new[]
     {
         // ─── جریان درمان ───
-        new PageCatalogEntry("dashboard", "داشبورد", "ViewDashboard", "dashboard.view", Group: "جریان درمان"),
+        // ═══ چرخهٔ ۴۴ (گزارش مالک): «در فرم افزودن کلید میانبر، خود داشبورد هم
+        //     در لیست هست که نیازی به بودنش نیست و ایراد محسوب میشه» — میانبرِ
+        //     داشبورد داخل خود داشبورد بی‌معناست (کاربر همین‌جاست!) → از
+        //     انتخابگر حذف شد؛ کلید مسیر و منو دست‌نخورده می‌ماند.
+        new PageCatalogEntry("dashboard", "داشبورد", "ViewDashboard", "dashboard.view", ShowInPicker: false, Group: "جریان درمان"),
         new PageCatalogEntry("patients", "بیماران", "AccountGroup", "patients.view", Group: "جریان درمان"),
         new PageCatalogEntry("appointments", "نوبت‌دهی", "CalendarClock", "appointments.view", Group: "جریان درمان"),
         new PageCatalogEntry("receptions", "پذیرش", "ClipboardAccount", "receptions.view", Group: "جریان درمان"),

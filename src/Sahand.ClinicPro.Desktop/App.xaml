@@ -258,6 +258,66 @@
                 <Setter Property="Margin" Value="6" />
                 <Setter Property="UniformCornerRadius" Value="14" />
             </Style>
+
+            <!-- ═══ چرخهٔ چهل‌وچهارم (گزارش مالک) — سبک ضمنی سراسری تولتیپ‌ها ═══
+                 «تول تیپ ها با فاصلهٔ زیادی نسبت به کلید و نشانگر ماوس نشان داده
+                 میشوند» (داشبورد، کاشی‌های میانبر و فرم افزودن میانبر).
+                 ریشه: تولتیپِ بدون استایل، با جای‌گذاری پیش‌فرضِ «نسبت به گوشهٔ
+                 عنصر» رندر می‌شود؛ روی دکمه‌های قالب‌سفارشی (کاشی‌ها) فاصلهٔ
+                 مرئی زیادی با نشانگر می‌افتد.
+                 رفع سراسری (قانون الگو در کل برنامه): استایل ضمنی ToolTip با
+                 Placement=Mouse — لنگر همان نقطهٔ نشانگر؛ آفست عمودی ۱۴px
+                 (کمی پایین‌تر، همیشه خوانا) و افقی ۰؛ کارت گوشه‌گردِ تم با
+                 سایهٔ نرم، فونت برنامه و عرض بیشینه تا متن‌های بلند شکسته شوند.
+                 InitialShowDelay=۴۰۰ms (خوانا ولی مزاحم نیست) و ShowDuration=۶s. -->
+            <Style TargetType="ToolTip">
+                <Setter Property="Placement" Value="Mouse" />
+                <Setter Property="VerticalOffset" Value="14" />
+                <Setter Property="HorizontalOffset" Value="0" />
+                <!-- تأخیرها/دوام خصوصیت‌های الحاقی ToolTipService‌اند نه مستقیم -->
+                <Setter Property="ToolTipService.InitialShowDelay" Value="400" />
+                <Setter Property="ToolTipService.ShowDuration" Value="6000" />
+                <Setter Property="ToolTipService.BetweenShowDelay" Value="200" />
+                <Setter Property="HasDropShadow" Value="True" />
+                <Setter Property="Foreground"
+                        Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                <Setter Property="FontFamily" Value="{StaticResource App.FontFamily}" />
+                <Setter Property="FontSize" Value="11.5" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ToolTip">
+                            <Border x:Name="TipCard"
+                                    Background="{DynamicResource MaterialDesign.Brush.ToolTip.Background}"
+                                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="10,6"
+                                    MaxWidth="320"
+                                    SnapsToDevicePixels="True">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="8" ShadowDepth="2"
+                                                      Direction="270" Opacity="0.22" Color="#25405E" />
+                                </Border.Effect>
+                                <!-- نوار رنگی راست — هم‌زبان توست‌ها/کارت‌های برنامه (RTL).
+                                     TextWrapping روی خود قالب متن نشسته (Setter صریح زیر
+                                     ContentPresenter) چون خصوصیت الحاقی روی میزبان محتوا
+                                     معتبر نیست (خطای MC3015). -->
+                                <StackPanel Orientation="Horizontal">
+                                    <Rectangle Width="3.5" RadiusX="2" RadiusY="2" Fill="#FFFFFFFF"
+                                               Opacity="0.35" VerticalAlignment="Stretch" />
+                                    <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center">
+                                        <ContentPresenter.Resources>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextWrapping" Value="Wrap" />
+                                            </Style>
+                                        </ContentPresenter.Resources>
+                                    </ContentPresenter>
+                                </StackPanel>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
