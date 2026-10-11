@@ -266,21 +266,33 @@ public partial class App : System.Windows.Application
                 return;
             }
 
-            // چرخهٔ ۴۲: پوستهٔ اصلی هم از متد کمکی — گارد MainWindow is null
-            // مسیر دوباره‌ساختن را در استثنای پس از Show حفظ می‌کند
-            if (MainWindow is null)
-                ShowMainWindow();
+            // ═══ چرخهٔ ۴۶ (گزارش مالک: «برنامه پس از اسپلش بدون دلیل خارج
+            // می‌شود و صفحه لاگین/اصلی نمی‌آید») — ریشه‌یابی بحرانی ═══
+            // گارد قبلی چرخهٔ ۴۲ «if (MainWindow is null)» هرگز true نمی‌شد:
+            // WPF خاصیت Application.MainWindow را خودکار روی «اولین پنجره‌ای
+            // که Show می‌شود» ست می‌کند — یعنی همان SplashWindow. در نتیجه:
+            //   ۱) ShowMainWindow() هرگز اجرا نمی‌شد و پوستهٔ اصلی باز نمی‌شد
+            //   ۲) CloseWithFade اسپلش را می‌بست؛ و چون ShutdownMode برنامه
+            //      «OnMainWindowClose» است و MainWindowِ برنامه همان اسپلشِ
+            //      تازه‌بسته‌شده بود، کل برنامه بی‌صدا Shutdown می‌شد.
+            // فیکس: گارد حذف شد؛ ShowMainWindow خودش idempotent است — نخست
+            // پنجرهٔ زندهٔ موجود را از Current.Windows برمی‌دارد (فقط Activate)
+            // و در نبودش نمونهٔ نو می‌سازد. اینجا همچنین MainWindow برنامه
+            // روی پنجرهٔ واقعی ست می‌شود تا بستن اسپلش هرگز خروج معنا نگیرد.
+            ShowMainWindow();
             splash?.ReportProgress(100);
             splash?.CloseWithFade();
         }
         catch
         {
-            // fail-open — در خطای غیرمنتظره پوستهٔ اصلی باز می‌شود
-            if (MainWindow is null)
-            {
-                ShowMainWindow();
-                splash?.CloseWithFade();
-            }
+            // fail-open — در خطای غیرمنتظره پوستهٔ اصلی باز می‌شود.
+            // چرخهٔ ۴۶: همان گارد معیوب بالا اینجا هم بود — MainWindow هرگز
+            // null نبود (روی اسپلش ست شده بود) پس در استثنا هیچ پنجره‌ای باز
+            // نمی‌شد و برنامه روی اسپلش هنگ می‌کرد. اکنون بی‌قید‌وشرط پوسته
+            // باز می‌شود (ShowMainWindow روی پنجرهٔ از قبل باز فقط Activate است)
+            // و اسپلش هم با محو بسته می‌شود تا مسیر خطا هم به بن‌بست نخورد.
+            ShowMainWindow();
+            splash?.CloseWithFade();
         }
     }
 
