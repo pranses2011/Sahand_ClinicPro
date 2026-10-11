@@ -205,6 +205,12 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// <summary>اقلام مصرفیِ در دسترس (دارای موجودی سالم)</summary>
     public ObservableCollection<ConsumableOption> ConsumableOptions { get; } = new();
 
+    /// <summary>گارد هم‌زمانی نوسازی اقلام مصرفی — چرخهٔ ۴۵</summary>
+    private bool _refreshingConsumables;
+
+    /// <summary>آیا خطای بارگذاری اقلام در این نشست یک‌بار نشان داده شده؟ — چرخهٔ ۴۵</summary>
+    private bool _consumablesErrorShown;
+
     /// <summary>ردیف‌های مصرف انتخاب‌شدهٔ این پذیرش</summary>
     public ObservableCollection<ConsumableLine> Consumables { get; } = new();
 
@@ -386,6 +392,14 @@ public partial class ReceptionsViewModel : ViewModelBase
         else
             ErrorMessage = _api.LastError ?? string.Empty;
 
+        // ═══ چرخهٔ ۴۵ (گزارش مالک: «در پذیرش، لیست اقلام مصرفی رو نمیاره و
+        //    نمیتونم انتخاب بکنم») ═══ ریشه: ReceptionsViewModel تک‌نمونه است و
+        // اقلام مصرفی فقط «یک‌بار در سازنده» (زمان ورود به برنامه) بار می‌شدند
+        // — کاربر قلم و ورود کالای تازه ثبت می‌کرد ولی فهرست پذیرش تا ری‌استارت
+        // هیچ‌وقت تازه نمی‌شد! اکنون با هر بارگذاری صفحهٔ پذیرش نوسازی می‌شود
+        // (همراه با گارد هم‌زمانی و آشکارسازی خطای سرور).
+        _ = RefreshConsumablesAsync();
+
         IsBusy = false;
     }
 
@@ -551,16 +565,67 @@ public partial class ReceptionsViewModel : ViewModelBase
                     !string.IsNullOrWhiteSpace(room.DisplayName) ? room.DisplayName : "اتاق"));
         }
 
-        // ═══ چرخهٔ ۳۹/۴۱ — اقلام مصرفیِ دارای موجودی؛ فقط یک بار لازم است ═══
-        // فهرست خالی به معنی «هیچ قلم مصرفی‌ای هنوز ورود کالا نشده» است؛ بخش
-        // مصرفی همان‌جا راهنمای «از صفحهٔ لوازم مصرفی ورود کالا» نشان می‌دهد.
-        // چرخهٔ ۴۱: مسیر از pharmacy/consumables به consumables (مستقل از لایسنس
-        // داروخانه) منتقل شد تا درمانگاهِ بدون آن ماژول هم مصرفی‌ها را ببیند.
-        if (ConsumableOptions.Count == 0)
+        // ═══ چرخهٔ ۴۵ — اقلام مصرفی: بارگذاری مستقل و همیشه تازه ═══
+        // پیش‌تر همین‌جا با گارد «Count == 0» فقط یک‌بار در عمر برنامه بار می‌شد
+        // (ریشهٔ «لیست اقلام مصرفی نمیاره»)؛ اکنون نوسازیِ هر صفحه به متد
+        // اختصاصی RefreshConsumablesAsync منتقل شده (گارد خطا/هم‌زمانی هم دارد).
+        await RefreshConsumablesAsync();
+    }
+
+    /// <summary>
+    /// نوسازی اقلام مصرفیِ دارای موجودی — چرخهٔ ۴۵.
+    /// هر بارگذاری صفحهٔ پذیرش صدا زده می‌شود تا قلم/ورود کالای تازه بی‌درنگ
+    /// در کمبو دیده شود (پیش‌تر فقط یک‌بار در عمر برنامه بار می‌شد).
+    /// • گارد هم‌زمانی: دو فراخوانی روی هم نمی‌افتند (بارگذاری اولیه + نوسازی
+    ///   صفحه می‌توانند پشت‌سرهم باشند)
+    /// • گارد خطا: شکست سرور با پیام فارسی دیده می‌شود (فقط بار اول هر نشست —
+    ///   جلوگیری از باران توست در هر تغییر بیمه)
+    /// • انتخاب فعلی حفظ می‌شود اگر قلم هنوز موجودی دارد
+    /// </summary>
+    private async Task RefreshConsumablesAsync()
+    {
+        // نوسازیِ در جریان است — این فراخوانی همان است؛ چیزی گم نمی‌شود
+        if (_refreshingConsumables) return;
+        _refreshingConsumables = true;
+        try
         {
             var consumables = await _api.GetAsync<ConsumablesResponse>("consumables");
-            foreach (var c in consumables?.Data ?? new List<ConsumableDto>())
+            var rows = consumables?.Data;
+            if (rows is null)
+            {
+                // پاسخ ناموفق — پیش از این بی‌صدا می‌ماند و کاربر فقط «لیست خالی»
+                // می‌دید؛ اکنون علت دیده می‌شود (یک‌بار در هر نشست)
+                if (!_consumablesErrorShown)
+                {
+                    _consumablesErrorShown = true;
+                    _snackbar.Error($"بارگذاری اقلام مصرفی ناموفق: {_api.LastError ?? "خطای ناشناخته"}");
+                }
+                return;
+            }
+
+            // جایگزینی درون‌جای فهرست — کمبو و پالایش زندهٔ آن به همین نمونه وصل‌اند
+            ConsumableOptions.Clear();
+            foreach (var c in rows)
                 ConsumableOptions.Add(new ConsumableOption(c.MedicationId, c.Name, c.Form, c.TotalQuantity, c.SellPrice));
+
+            // انتخاب فعلی اگر هنوز موجودی دارد حفظ شود؛ وگرنه پاک شود (موجودی تمام شده)
+            if (SelectedConsumable is { } current
+                && ConsumableOptions.FirstOrDefault(x => x.Id == current.Id) is { } fresh)
+                SelectedConsumable = fresh;
+            else
+                SelectedConsumable = null;
+        }
+        catch (Exception ex)
+        {
+            if (!_consumablesErrorShown)
+            {
+                _consumablesErrorShown = true;
+                _snackbar.Error($"بارگذاری اقلام مصرفی ناموفق: {ex.Message}");
+            }
+        }
+        finally
+        {
+            _refreshingConsumables = false;
         }
     }
 
