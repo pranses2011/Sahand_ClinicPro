@@ -163,7 +163,15 @@ public class PermissionsController : ApiBaseController
     /// <summary>سازنده با تزریق واحد کار</summary>
     public PermissionsController(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
-    /// <summary>نام فارسی ماژول‌ها برای نمایش ماتریس</summary>
+    /// <summary>
+    /// نام فارسی ماژول‌ها برای نمایش ماتریس — چرخهٔ چهل‌وچهارم (گزارش مالک:
+    /// «صفحه نقش ها و دسترسی ها رو با امکانات و صفحات جدید بروز کن»):
+    /// پنج ماژولِ افزوده‌شده در چرخه‌های اخیر (حضور و غیاب/پرونده بالینی/
+    /// حقوق و فیش/نظرسنجی/اعلان‌ها) در بذر مجوزها موجود بودند ولی عنوان
+    /// فارسی‌شان در این واژه‌نامه نبود → گروه‌های ماتریس با نام خام
+    /// انگلیسی (attendance، payroll و…) دیده می‌شدند. اکنون همهٔ ماژول‌های
+    /// بذر پوشش عنوان فارسی دارند.
+    /// </summary>
     private static readonly Dictionary<string, string> ModuleTitles = new()
     {
         ["patients"] = "بیماران", ["doctors"] = "پزشکان", ["appointments"] = "نوبت‌دهی",
@@ -174,7 +182,13 @@ public class PermissionsController : ApiBaseController
         ["pharmacy"] = "داروخانه", ["sms"] = "پیامک", ["reports"] = "گزارش‌ها",
         ["users"] = "کاربران", ["roles"] = "نقش‌ها", ["settings"] = "تنظیمات",
         ["backup"] = "پشتیبان‌گیری", ["auditlogs"] = "لاگ عملیات", ["license"] = "لایسنس",
-        ["dashboard"] = "داشبورد"
+        ["dashboard"] = "داشبورد",
+        // ═══ چرخهٔ ۴۴ — ماژول‌های چرخه‌های اخیر که عنوان نداشتند ═══
+        ["attendance"] = "حضور و غیاب",
+        ["emr"] = "پرونده بالینی پیشرفته",
+        ["payroll"] = "حقوق و فیش حقوقی",
+        ["surveys"] = "نظرسنجی بیماران",
+        ["notifications"] = "اعلان‌ها"
     };
 
     /// <summary>نام فارسی عملیات برای نمایش ماتریس</summary>

@@ -5,9 +5,23 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
-             d:DesignHeight="640" d:DesignWidth="1080"
+             d:DesignHeight="640" d:DesignWidth="1180"
              FlowDirection="RightToLeft">
-    <!-- ═══ نقش‌ها و ماتریس دسترسی — گام U13 طبق فرم ۲۵ (گرید دو‌ستونه) ═══ -->
+    <!-- ═══ نقش‌ها و ماتریس دسترسی — گام U13 طبق فرم ۲۵ (گرید دو‌ستونه)
+         ═══ چرخهٔ چهل‌وچهارم (گزارش مالک) — بازطراحی حرفه‌ای ═══
+         «صفحه نقش‌ها و دسترسی‌ها رو با امکانات و صفحات جدید بروز کن و ظاهر
+         صفحه رو حرفه‌ای تر و زیباتر بکن»:
+         ● سربرگ گرادیانی برند با آیکون سپر در دایرهٔ شیشه‌ای + چیپ آمار
+           (نقش‌ها/ماژول‌ها/مجوزها) + نشان تغییرات ذخیره‌نشده
+         ● فهرست نقش‌ها: کارت‌های نشان‌دارِ حرف‌نما با حالت انتخاب و هاور
+         ● ماتریس: جستجوی زندهٔ مجوزها + شمارندهٔ «n از m» روی هر کارت +
+           کارت‌های بی‌نتیجهٔ جستجو پنهان می‌شوند
+         ● نوار ذخیرهٔ چسبان پایین ماتریس با دکمهٔ برجسته هنگام تغییرات -->
+    <UserControl.Resources>
+        <!-- مبدل دیدپذیری — محلی برای استقلال این فایل -->
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
     <Grid Margin="16,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -15,77 +29,153 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- سربرگ -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <materialDesign:PackIcon Kind="ShieldAccount" Width="26" Height="26"
-                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
-            <TextBlock Text="مدیریت نقش‌ها و دسترسی‌ها" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
-        </StackPanel>
+        <!-- ═══ سربرگ گرادیانی برند — چرخهٔ ۴۴ ═══ -->
+        <Border Grid.Row="0" CornerRadius="14" Padding="16,12" Margin="0,0,0,10">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#1E88E5" Offset="0" />
+                    <GradientStop Color="#0D47A1" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Opacity="0.18" Color="#1E3A5F" />
+            </Border.Effect>
+            <DockPanel>
+                <!-- دکمه‌های سربرگ (سمت چپ فیزیکی) -->
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Command="{Binding LoadCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Foreground="White" Padding="10,5" Margin="0,0,6,0"
+                            ToolTip="بازخوانی نقش‌ها و کاتالوگ مجوزها از سرور">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" VerticalAlignment="Center" />
+                            <TextBlock Text="بازخوانی" Margin="6,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal">
+                    <!-- نشان سپر در دایرهٔ شیشه‌ای -->
+                    <Border Width="46" Height="46" CornerRadius="23" VerticalAlignment="Center" Margin="0,0,12,0"
+                            Background="#33FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1">
+                        <materialDesign:PackIcon Kind="ShieldAccount" Width="24" Height="24"
+                                                 Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="مدیریت نقش‌ها و دسترسی‌ها" FontSize="18" FontWeight="Bold" Foreground="White" />
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                            <!-- چیپ آمار — نقش‌ها/ماژول‌ها/مجوزها -->
+                            <Border CornerRadius="9" Padding="9,2.5" Margin="0,0,6,0"
+                                    Background="#26FFFFFF" BorderBrush="#59FFFFFF" BorderThickness="1">
+                                <TextBlock Text="{Binding SummaryText, Mode=OneWay}" Foreground="White"
+                                           FontSize="10.5" FontWeight="SemiBold" />
+                            </Border>
+                            <!-- نشان تغییرات ذخیره‌نشده — چرخهٔ ۴۴ -->
+                            <Border CornerRadius="9" Padding="9,2.5"
+                                    Background="#33FFA726" BorderBrush="#FFA726" BorderThickness="1"
+                                    Visibility="{Binding HasUnsavedChanges, Converter={StaticResource BoolToVis}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ContentSaveAlertOutline" Width="12" Height="12"
+                                                             Foreground="#FFE0B2" VerticalAlignment="Center" />
+                                    <TextBlock Text="تغییرات ذخیره‌نشده" Foreground="#FFE0B2" FontSize="10.5"
+                                               FontWeight="SemiBold" Margin="5,0,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
         <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
-                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
 
         <!-- دو ستون: نقش‌ها (۱fr) + ماتریس (۲fr) -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*" MinWidth="270" />
+                <ColumnDefinition Width="1*" MinWidth="280" />
                 <ColumnDefinition Width="16" />
-                <ColumnDefinition Width="2*" MinWidth="420" />
+                <ColumnDefinition Width="2*" MinWidth="430" />
             </Grid.ColumnDefinitions>
 
             <!-- ═══ ستون راست: فهرست نقش‌ها ═══ -->
-            <Border Grid.Column="0" CornerRadius="10" BorderThickness="1"
+            <Border Grid.Column="0" CornerRadius="12" BorderThickness="1"
                     BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" Padding="10">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="نقش‌ها" FontWeight="Bold" FontSize="14" Margin="2,0,0,8" />
+                    <DockPanel Grid.Row="0" Margin="2,0,2,8">
+                        <TextBlock Text="نقش‌ها" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" />
+                        <!-- حذف نقش — کنار عنوان؛ با دیالوگ فارسی تأیید می‌گیرد -->
+                        <Button DockPanel.Dock="Left" Command="{Binding DeleteRoleCommand}"
+                                Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                ToolTip="حذف نقش انتخابی (با تأیید)" Foreground="#C62828" Padding="4">
+                            <materialDesign:PackIcon Kind="DeleteOutline" Width="16" Height="16" />
+                        </Button>
+                    </DockPanel>
 
                     <!-- ثبت نقش جدید -->
                     <Grid Grid.Row="1" Margin="0,0,0,8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBox materialDesign:HintAssist.Hint="نام نقش جدید"
+                        <TextBox materialDesign:HintAssist.Hint="نام نقش جدید…"
                                  Text="{Binding NewRoleName, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,6,0" />
                         <Button Grid.Column="1" Command="{Binding AddRoleCommand}"
-                                Style="{StaticResource MaterialDesignIconForegroundButton}" ToolTip="ایجاد نقش" Margin="0,0,4,0">
-                            <materialDesign:PackIcon Kind="Plus" />
-                        </Button>
-                        <Button Grid.Column="2" Command="{Binding DeleteRoleCommand}"
-                                Style="{StaticResource MaterialDesignIconForegroundButton}" ToolTip="حذف نقش انتخابی" Foreground="#C62828">
-                            <materialDesign:PackIcon Kind="DeleteOutline" />
+                                Style="{StaticResource MaterialDesignRaisedButton}" ToolTip="ایجاد نقش" Padding="10,4">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
+                                <TextBlock Text="ایجاد" Margin="5,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
                         </Button>
                     </Grid>
 
-                    <!-- فهرست نقش‌ها -->
+                    <!-- فهرست نقش‌ها — کارت‌های نشان‌دار حرف‌نما (چرخهٔ ۴۴) -->
                     <ListBox Grid.Row="2" ItemsSource="{Binding Roles}" SelectedItem="{Binding SelectedRole}"
                              Background="Transparent" BorderThickness="0"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Border Margin="2,3" Padding="10,8" CornerRadius="8"
-                                        Background="{DynamicResource MaterialDesign.Brush.Separator.Background}">
+                                <Border Margin="2,3" Padding="10,8" CornerRadius="10">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                                            <Style.Triggers>
+                                                <!-- انتخاب‌شده — لبهٔ رنگ نشان نقش -->
+                                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
+                                                    <Setter Property="Background" Value="#E8F1FB" />
+                                                    <Setter Property="BorderBrush" Value="{Binding BadgeColor, Converter={StaticResource HexToBrush}}" />
+                                                    <Setter Property="BorderThickness" Value="0,0,3,0" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsMouseOver}" Value="True">
+                                                    <Setter Property="Background" Value="#F0F5FB" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
-                                        <Ellipse Grid.Column="0" Width="11" Height="11"
-                                                 Fill="{Binding BadgeColor}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                        <!-- دایرهٔ حرف‌نما با رنگ نقش -->
+                                        <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18"
+                                                Background="{Binding BadgeColor, Converter={StaticResource HexToBrush}}"
+                                                VerticalAlignment="Center" Margin="0,0,10,0">
+                                            <TextBlock Text="{Binding Initial}" Foreground="White" FontWeight="Bold"
+                                                       FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
                                         <StackPanel Grid.Column="1">
                                             <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13" />
                                             <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                                                <TextBlock Text="{Binding SystemText}" FontSize="10.5" Opacity="0.75" />
-                                                <TextBlock Text="{Binding PermText}" FontSize="10.5" Opacity="0.55" Margin="10,0,0,0" />
+                                                <TextBlock Text="{Binding SystemText}" FontSize="10" Opacity="0.7" />
+                                                <TextBlock Text="{Binding PermText}" FontSize="10" Opacity="0.55" Margin="10,0,0,0" />
                                             </StackPanel>
                                         </StackPanel>
                                     </Grid>
@@ -93,39 +183,44 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-
-                    <Button Grid.Row="3" Command="{Binding LoadCommand}"
-                            Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,8,0,0" HorizontalAlignment="Stretch">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Refresh" Width="14" Height="14" VerticalAlignment="Center" />
-                            <TextBlock Text="بازخوانی" Margin="7,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
                 </Grid>
             </Border>
 
             <!-- ═══ ستون چپ: ماتریس دسترسی نقش ═══ -->
-            <Border Grid.Column="2" CornerRadius="10" BorderThickness="1"
+            <Border Grid.Column="2" CornerRadius="12" BorderThickness="1"
                     BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" Padding="12">
                 <Grid>
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <!-- مشخصات نقش انتخابی -->
-                    <StackPanel Grid.Row="0" Margin="2,0,0,6">
-                        <TextBlock FontSize="16" FontWeight="Bold">
-                            <Run Text="🔖 نقش: " /><Run Text="{Binding SelectedRole.Name, Mode=OneWay, TargetNullValue='— انتخاب کنید —'}" Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
-                        </TextBlock>
-                        <TextBlock Text="{Binding SelectedRole.Description, Mode=OneWay, TargetNullValue=''}"
-                                   FontSize="11" Opacity="0.7" Margin="0,2,0,0" />
-                    </StackPanel>
+                    <!-- مشخصات نقش انتخاب‌شده + جستجوی مجوزها -->
+                    <Grid Grid.Row="0" Margin="2,0,2,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="230" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock FontSize="15.5" FontWeight="Bold">
+                                <Run Text="🔖 نقش: " /><Run Text="{Binding SelectedRole.Name, Mode=OneWay, TargetNullValue='— انتخاب کنید —'}" Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
+                            </TextBlock>
+                            <TextBlock Text="{Binding SelectedRole.Description, Mode=OneWay, TargetNullValue='دسترسی‌های هر نقش را از کارت‌های ماژول زیر تنظیم و ذخیره کنید'}"
+                                       FontSize="10.5" Opacity="0.65" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <!-- جستجوی زندهٔ مجوزها — چرخهٔ ۴۴ (عنوان/نام فنی/ماژول) -->
+                        <TextBox Grid.Column="1" materialDesign:HintAssist.Hint="🔍 جستجوی مجوز یا ماژول…"
+                                 Text="{Binding PermissionSearch, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 VerticalAlignment="Center"
+                                 ToolTip="تایپ کنید: «مشاهده»، «حضور و غیاب» یا patients.view" />
+                    </Grid>
 
                     <!-- انتخاب همه / حذف همه — طبق فرم ۲۵ -->
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="2,2,0,8">
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="2,2,2,8">
                         <TextBlock Text="دسترسی‌های نقش:" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0" />
                         <Button Style="{StaticResource MaterialDesignOutlinedButton}" Command="{Binding SelectAllCommand}" Margin="0,0,6,0"
                                 ToolTip="انتخاب همه دسترسی‌ها در همه ماژول‌ها" Content="☑ انتخاب همه" />
@@ -133,8 +228,8 @@
                                 ToolTip="لغو همه دسترسی‌ها" Content="☐ حذف همه" />
                     </StackPanel>
 
-                    <!-- ماتریس ۲۴ گروهی — کارت به کارت با اسکرول -->
-                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="2">
+                    <!-- ماتریس گروه‌ها — کارت به کارت با اسکرول؛ بی‌نتیجه‌های جستجو پنهان -->
+                    <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Padding="2">
                         <ItemsControl ItemsSource="{Binding PermissionGroups}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -143,8 +238,10 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
+                                    <!-- پنهان‌سازی گروه‌های بی‌نتیجهٔ جستجو (چرخهٔ ۴۴) -->
                                     <Border Margin="4" Padding="10,8" CornerRadius="10" Background="#F5F9FD"
-                                            BorderBrush="#DCE7F0" BorderThickness="1">
+                                            BorderBrush="#DCE7F0" BorderThickness="1"
+                                            Visibility="{Binding IsVisible, Converter={StaticResource BoolToVis}}">
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -156,22 +253,24 @@
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding ModuleTitle}"
-                                                       FontWeight="Bold" FontSize="12.5" Margin="0,0,0,4" />
-                                            <!-- انتخاب گروهی — چرخه بیستم (گزارش چهاردهم مالک):
-                                                 عنصر باید ToggleButton باشد تا با TargetType استایل
-                                                 MaterialDesignFlatToggleButton هم‌خوانی داشته باشد؛
-                                                 با Button خطای XamlParseException («TargetType does not
-                                                 match») هنگام گشودن صفحهٔ نقش‌ها رخ می‌داد -->
-                                            <ToggleButton Grid.Row="0" Grid.Column="1" Command="{Binding CheckAllCommand}"
+                                                       FontWeight="Bold" FontSize="12.5" Margin="0,0,0,4"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <!-- شمارندهٔ «n از m» — چرخهٔ ۴۴ -->
+                                            <Border Grid.Row="0" Grid.Column="1" CornerRadius="8" Padding="7,1.5"
+                                                    Background="#E8F1FB" BorderBrush="#CFE2F5" BorderThickness="1"
+                                                    Margin="0,0,6,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding CountText, Mode=OneWay}" FontSize="9"
+                                                           Foreground="#1565C0" FontWeight="SemiBold" />
+                                            </Border>
+                                            <!-- انتخاب گروهی — عنصر ToggleButton تا با استایل
+                                                 MaterialDesignFlatToggleButton هم‌خوانی داشته باشد
+                                                 (درس چرخه بیستم — خطای TargetType mismatch) -->
+                                            <ToggleButton Grid.Row="0" Grid.Column="2" Command="{Binding CheckAllCommand}"
                                                     Style="{StaticResource MaterialDesignFlatToggleButton}" ToolTip="انتخاب همه این ماژول" Margin="2,0">
                                                 <materialDesign:PackIcon Kind="CheckAll" Width="13" Height="13" />
                                             </ToggleButton>
-                                            <ToggleButton Grid.Row="0" Grid.Column="2" Command="{Binding UncheckAllCommand}"
-                                                    Style="{StaticResource MaterialDesignFlatToggleButton}" ToolTip="لغو همه این ماژول">
-                                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="13" Height="13" />
-                                            </ToggleButton>
                                             <WrapPanel Grid.Row="1" Grid.ColumnSpan="3">
-                                                <ItemsControl ItemsSource="{Binding Permissions}">
+                                                <ItemsControl ItemsSource="{Binding VisiblePermissions}">
                                                     <ItemsControl.ItemsPanel>
                                                         <ItemsPanelTemplate>
                                                             <WrapPanel />
@@ -180,7 +279,7 @@
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
                                                             <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" Margin="2,2,8,2" FontSize="11">
-                                                                <TextBlock Text="{Binding ActionTitle}" />
+                                                                <TextBlock Text="{Binding ActionTitle}" ToolTip="{Binding Name}" />
                                                             </CheckBox>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
@@ -193,14 +292,40 @@
                         </ItemsControl>
                     </ScrollViewer>
 
-                    <!-- ذخیره تغییرات -->
-                    <Button Grid.Row="3" Command="{Binding SavePermissionsCommand}"
-                            Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,10,0,0" HorizontalAlignment="Left">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                            <TextBlock Text="ذخیره تغییرات نقش" Margin="7,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
+                    <!-- نوار ذخیرهٔ چسبان — دکمه هنگام تغییرات برجسته می‌شود (چرخهٔ ۴۴) -->
+                    <Border Grid.Row="4" Margin="0,10,0,0" Padding="10,8" CornerRadius="10"
+                            Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                            BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Text="تنظیمات هر نقش پس از هر تغییر باید ذخیره شود"
+                                       FontSize="10.5" Opacity="0.55" VerticalAlignment="Center" Margin="10,0,0,0" />
+                            <StackPanel Orientation="Horizontal">
+                                <Button Command="{Binding SavePermissionsCommand}" Padding="16,6">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                            <Setter Property="Opacity" Value="0.85" />
+                                            <Style.Triggers>
+                                                <!-- تغییرات ذخیره‌نشده → دکمه برجسته (سایه + پررنگی کامل) -->
+                                                <DataTrigger Binding="{Binding HasUnsavedChanges}" Value="True">
+                                                    <Setter Property="Opacity" Value="1" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                                        <TextBlock Text="ذخیره تغییرات نقش" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <!-- چیپ هشدار کنار دکمه -->
+                                <Border CornerRadius="9" Padding="9,2.5" Margin="8,0,0,0" VerticalAlignment="Center"
+                                        Background="#FFF8E1" BorderBrush="#F9A825" BorderThickness="1"
+                                        Visibility="{Binding HasUnsavedChanges, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="ذخیره نشده!" FontSize="10" Foreground="#E65100" FontWeight="SemiBold" />
+                                </Border>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
                 </Grid>
             </Border>
         </Grid>
