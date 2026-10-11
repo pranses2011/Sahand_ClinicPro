@@ -96,11 +96,32 @@
                     </StackPanel>
                 </Button>
 
+                <!-- ═══ چرخهٔ ۴۴ (گزارش مالک: «مدیریت داشبورد رو خیلی حرفه ای تر و
+                     زیباتر پیاده سازی بکن») — سربرگ گرادیانی برند به‌جای عنوان سادهٔ
+                     متنی؛ هم‌الگوی صفحهٔ نقش‌ها: نشان شیشه‌ای + عنوان + زیرعنوان +
+                     چیپ تاریخ شمسی امروز در گوشهٔ چپ فیزیکی -->
                 <StackPanel>
-                    <TextBlock Text="📊 داشبورد مدیریتی"
-                               Style="{StaticResource SectionTitle}" Margin="0" />
-                    <TextBlock Text="خلاصه وضعیت امروز درمانگاه"
-                               FontSize="12" Opacity="0.7" Margin="0,0,0,4" />
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="42" Height="42" CornerRadius="21" VerticalAlignment="Center" Margin="0,0,10,0"
+                                Background="#331E88E5" BorderBrush="#661E88E5" BorderThickness="1">
+                            <materialDesign:PackIcon Kind="ViewDashboard" Width="21" Height="21"
+                                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="📊 داشبورد مدیریتی"
+                                       Style="{StaticResource SectionTitle}" Margin="0" />
+                            <TextBlock Text="خلاصه وضعیت امروز درمانگاه"
+                                       FontSize="12" Opacity="0.7" Margin="0,0,0,2" />
+                        </StackPanel>
+                        <!-- چیپ تاریخ امروز — گوشهٔ چپ فیزیکی (RTL) -->
+                        <Border CornerRadius="9" Padding="10,3" VerticalAlignment="Center" Margin="14,4,0,0"
+                                Background="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
+                            <TextBlock Text="{Binding TodayDateShamsi, Mode=OneWay}" FontSize="10.5"
+                                       Foreground="{DynamicResource MaterialDesign.Brush.Primary}" FontWeight="SemiBold" />
+                        </Border>
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- چرخه ۱۳ (۴-۲): شخصی‌سازی داشبورد -->
@@ -378,16 +399,56 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <!-- ═══ چرخه ۱۳ (۴-۲): پنل شخصی‌سازی — فقط در حالت تنظیم ═══ -->
-            <Border Background="#FFF8E1" CornerRadius="10" Padding="12,9" Margin="0,0,0,10"
-                    Visibility="{Binding IsCustomizing, Converter={StaticResource BoolToVis}}">
-                <WrapPanel>
-                    <TextBlock Text="🧩 نمایش بخش‌ها:" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" Margin="0,0,10,0" />
-                    <CheckBox Content="کارت‌های فرعی" IsChecked="{Binding ShowSecondaryCards}" FontSize="11.5" Margin="0,0,12,0" />
-                    <CheckBox Content="نمودار درآمد" IsChecked="{Binding ShowRevenueChart}" FontSize="11.5" Margin="0,0,12,0" />
-                    <CheckBox Content="نوبت‌های پیش‌رو" IsChecked="{Binding ShowUpcoming}" FontSize="11.5" Margin="0,0,12,0" />
-                    <CheckBox Content="فعالیت‌های اخیر" IsChecked="{Binding ShowActivities}" FontSize="11.5" />
-                </WrapPanel>
+            <!-- ═══ چرخهٔ ۴۴ (گزارش مالک: «مدیریت داشبورد رو حرفه‌ای‌تر بکن») —
+                 نوار مدیریت چرخهٔ شخصی‌سازی: به‌جای کادر زرد ساده با چک‌باکس‌های
+                 خام، نوار راهنمای ساختاریافته: عنوان راهنما + چیپ‌های نمایش/پنهان
+                 بخش‌ها (سوییچ متریال) + یادآوری ذخیرهٔ خودکار؛ فقط در حالت تنظیم -->
+            <Border CornerRadius="12" Padding="14,10" Margin="0,0,0,12"
+                    Visibility="{Binding IsCustomizing, Converter={StaticResource BoolToVis}}"
+                    BorderThickness="1,3.5,1,1" BorderBrush="#F9A825">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#FFFDF5" Offset="0" />
+                        <GradientStop Color="#FFF8E1" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Direction="270" Opacity="0.12" Color="#8D6E00" />
+                </Border.Effect>
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,8">
+                        <materialDesign:PackIcon DockPanel.Dock="Right" Kind="TuneVertical" Width="18" Height="18"
+                                                 Foreground="#E65100" VerticalAlignment="Center" />
+                        <TextBlock Text="🧩 حالت مدیریت چیدمان — تغییرات به‌صورت خودکار ذخیره می‌شوند"
+                                   FontWeight="Bold" FontSize="13" Foreground="#E65100" Margin="2,0,8,0"
+                                   VerticalAlignment="Center" />
+                    </DockPanel>
+                    <WrapPanel>
+                        <!-- چیپ‌های نمایش بخش‌ها — سوییچ‌های هم‌خانوادهٔ فرم‌ها -->
+                        <StackPanel Orientation="Horizontal" Margin="0,3,14,3">
+                            <TextBlock Text="کارت‌های فرعی" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <ToggleButton IsChecked="{Binding ShowSecondaryCards}"
+                                          Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,3,14,3">
+                            <TextBlock Text="نمودار درآمد" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <ToggleButton IsChecked="{Binding ShowRevenueChart}"
+                                          Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,3,14,3">
+                            <TextBlock Text="نوبت‌های پیش‌رو" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <ToggleButton IsChecked="{Binding ShowUpcoming}"
+                                          Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,3,14,3">
+                            <TextBlock Text="فعالیت‌های اخیر" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <ToggleButton IsChecked="{Binding ShowActivities}"
+                                          Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
+                        </StackPanel>
+                        <TextBlock Text="با دکمه‌های ⬆⬇ روی کارت‌های آمار، ترتیب‌شان را جابه‌جا کنید و با سوییچ کنارشان پنهان‌شان کنید"
+                                   FontSize="10" Opacity="0.6" VerticalAlignment="Center" Margin="0,3,0,3" />
+                    </WrapPanel>
+                </StackPanel>
             </Border>
 
             <!-- ردیف ۱: کارت‌های آمار اصلی — داینامیک با ترتیب قابل جابه‌جایی (چرخه ۱۳) -->

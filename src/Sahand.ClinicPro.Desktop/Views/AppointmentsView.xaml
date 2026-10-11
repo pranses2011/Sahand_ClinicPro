@@ -15,18 +15,43 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <StackPanel Orientation="Horizontal">
-                <materialDesign:PackIcon Kind="CalendarClock"
-                                         Width="26" Height="26"
-                                         Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
-                                         VerticalAlignment="Center" />
-                <TextBlock Text="نوبت‌دهی و تقویم" FontSize="20" FontWeight="Bold"
-                           Margin="10,0,0,0" VerticalAlignment="Center" />
-            </StackPanel>
-            <TextBlock Text="رزرو نوبت با تقویم شمسی و اسلات‌های آزاد + مدیریت فهرست نوبت‌ها"
-                       FontSize="12" Opacity="0.65" Margin="2,4,0,0" />
-        </StackPanel>
+        <!-- ═══ چرخهٔ ۴۴ (گزارش مالک: «ظاهر صفحه نوبت دهی رو خیلی حرفه ای تر و
+             زیباتر بکن») — سربرگ گرادیانی برند؛ هم‌الگوی صفحهٔ پذیرش: نشان
+             شیشه‌ای + عنوان/زیرعنوان + چیپ راهنمای جریان در گوشهٔ چپ فیزیکی ═══ -->
+        <Border Grid.Row="0" CornerRadius="14" Padding="16,12" Margin="0,0,0,10">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#00897B" Offset="0" />
+                    <GradientStop Color="#004D40" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Opacity="0.18" Color="#00352C" />
+            </Border.Effect>
+            <DockPanel>
+                <!-- چیپ جریان کار — گوشهٔ چپ فیزیکی (RTL) -->
+                <Border DockPanel.Dock="Left" CornerRadius="9" Padding="10,3" VerticalAlignment="Center"
+                        Background="#26FFFFFF" BorderBrush="#59FFFFFF" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="CalendarPlus" Width="12" Height="12" Foreground="White" VerticalAlignment="Center" />
+                        <TextBlock Text="بیمار ← پزشک ← زمان آزاد ← ثبت" Foreground="White" FontSize="10.5"
+                                   FontWeight="SemiBold" Margin="5,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="46" Height="46" CornerRadius="23" VerticalAlignment="Center" Margin="0,0,12,0"
+                            Background="#33FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1">
+                        <materialDesign:PackIcon Kind="CalendarClock" Width="24" Height="24"
+                                                 Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="نوبت‌دهی و تقویم" FontSize="18" FontWeight="Bold" Foreground="White" />
+                        <TextBlock Text="رزرو نوبت با تقویم شمسی و اسلات‌های آزاد + مدیریت فهرست نوبت‌ها"
+                                   FontSize="11" Foreground="#D9F2EE" Margin="0,3,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
         <TabControl Grid.Row="1" Style="{StaticResource MaterialDesignTabControl}">
             <!-- ═══════════ تب ۱: رزرو نوبت ═══════════ -->

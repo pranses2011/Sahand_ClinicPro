@@ -23,18 +23,43 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <StackPanel Orientation="Horizontal">
-                <materialDesign:PackIcon Kind="ClipboardAccount"
-                                         Width="26" Height="26"
-                                         Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
-                                         VerticalAlignment="Center" />
-                <TextBlock Text="پذیرش بیمار" FontSize="20" FontWeight="Bold"
-                           Margin="10,0,0,0" VerticalAlignment="Center" />
-            </StackPanel>
-            <TextBlock Text="جستجوی هوشمند بیمار + استعلام بیمه + محاسبه خودکار هزینه + صف زنده"
-                       FontSize="12" Opacity="0.65" Margin="2,4,0,0" />
-        </StackPanel>
+        <!-- ═══ چرخهٔ ۴۴ (گزارش مالک: «ظاهر صفحه پذیرش رو خیلی حرفه ای تر و
+             زیباتر بکن») — سربرگ گرادیانی برند؛ هم‌الگوی صفحات بروزرساشده:
+             نشان شیشه‌ای + عنوان/زیرعنوان + چیپ راهنمای جریان در گوشهٔ چپ فیزیکی ═══ -->
+        <Border Grid.Row="0" CornerRadius="14" Padding="16,12" Margin="0,0,0,10">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#1E88E5" Offset="0" />
+                    <GradientStop Color="#0D47A1" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Opacity="0.18" Color="#1E3A5F" />
+            </Border.Effect>
+            <DockPanel>
+                <!-- چیپ جریان کار — گوشهٔ چپ فیزیکی (RTL) -->
+                <Border DockPanel.Dock="Left" CornerRadius="9" Padding="10,3" VerticalAlignment="Center"
+                        Background="#26FFFFFF" BorderBrush="#59FFFFFF" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="ArrowLeftBold" Width="12" Height="12" Foreground="White" VerticalAlignment="Center" />
+                        <TextBlock Text="جستجو ← انتخاب بیمار ← پذیرش" Foreground="White" FontSize="10.5"
+                                   FontWeight="SemiBold" Margin="5,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="46" Height="46" CornerRadius="23" VerticalAlignment="Center" Margin="0,0,12,0"
+                            Background="#33FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1">
+                        <materialDesign:PackIcon Kind="ClipboardAccount" Width="24" Height="24"
+                                                 Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="پذیرش بیمار" FontSize="18" FontWeight="Bold" Foreground="White" />
+                        <TextBlock Text="جستجوی هوشمند بیمار + استعلام بیمه + محاسبه خودکار هزینه + صف زنده"
+                                   FontSize="11" Foreground="#D9E7F5" Margin="0,3,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel>
@@ -71,7 +96,20 @@
                         BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                         BorderThickness="1">
                     <StackPanel>
-                        <TextBlock Text="═══ فرم پذیرش جدید ═══" FontWeight="Bold" FontSize="14" Margin="0,0,0,10" />
+                        <!-- سربرگ فرم — چرخهٔ ۴۴: به‌جای جداکنندهٔ متنی «═══»،
+                             سربرگ ساختاریافته با نشان رنگی و خط زیرین -->
+                        <DockPanel Margin="0,0,0,10">
+                            <Border DockPanel.Dock="Right" Width="30" Height="30" CornerRadius="15"
+                                    Background="#E3F2FD" VerticalAlignment="Center" Margin="0,0,8,0">
+                                <materialDesign:PackIcon Kind="ClipboardPlusOutline" Width="16" Height="16"
+                                                         Foreground="#1565C0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel>
+                                <TextBlock Text="فرم پذیرش جدید" FontWeight="Bold" FontSize="14" />
+                                <Border Height="2.5" CornerRadius="1.2" Width="52" HorizontalAlignment="Right"
+                                        Background="{DynamicResource MaterialDesign.Brush.Primary}" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </DockPanel>
 
                         <!-- جستجوی هوشمند — چرخه بیست‌وسوم: برچسب و راهنما برای جستجوی
                              نام/نام‌خانوادگی و تطبیق جزئی (پیش‌تر فقط کد ملی کامل جواب می‌داد) -->
