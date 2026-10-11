@@ -669,12 +669,6 @@ public partial class AttendanceViewModel : ViewModelBase
         public string? PersonnelCode { get; set; }
     }
 
-    }
-
-    }
-
-    }
-
     private sealed class CorrectionsResponse
     {
         public bool IsSuccess { get; set; }
@@ -764,8 +758,6 @@ public partial class AttendanceViewModel : ViewModelBase
     public record MappingRow(
         long Id, string EnrollNumber, long EmployeeId, string EmployeeName, string PersonnelCode);
 
-    /// <summary>
-    /// <summary>
     /// <summary>ردیف اصلاحیه</summary>
     public record CorrectionRow(
         long Id, string EmployeeName, string Date, string Field, string Change,

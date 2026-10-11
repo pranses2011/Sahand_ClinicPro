@@ -336,7 +336,10 @@ public class AuditLogMiddleware
                     {
                         r.Name,
                         Permissions = r.Permissions
-                            .Select(rp => new { rp.Permission.Id, rp.Permission.Name })
+                            // ناوبری Permission تهی‌پذیر است (هشدار CS8602 چرخهٔ ۴۷) —
+                            // ردیف یتیم (مجوز حذف‌شده از جفت‌جدول) از فهرست کنار می‌رود
+                            .Where(rp => rp.Permission != null)
+                            .Select(rp => new { rp.Permission!.Id, rp.Permission!.Name })
                             .OrderBy(p => p.Name)
                             .ToList()
                     })

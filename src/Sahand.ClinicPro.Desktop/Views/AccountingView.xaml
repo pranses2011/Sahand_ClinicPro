@@ -440,6 +440,7 @@
                                                                FontFamily="{DynamicResource App.CodeFont}" FontSize="12.5"
                                                                Margin="24,0,0,0" VerticalAlignment="Center" />
                                                 </Grid>
+                                                </Grid>
 
                                                 <DataTemplate.Triggers>
                                                     <!-- عنوان بخش → کپسول؛ بدنه پنهان -->
@@ -471,7 +472,6 @@
                                                         <Setter TargetName="Body" Property="Margin" Value="0,12,0,0" />
                                                     </DataTrigger>
                                                 </DataTemplate.Triggers>
-                                            </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>

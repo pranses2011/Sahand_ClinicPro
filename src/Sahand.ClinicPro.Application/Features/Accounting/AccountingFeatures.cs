@@ -383,7 +383,8 @@ public class GetJournalEntryDetailQueryHandler
             entry.Id,
             entry.EntryNumber,
             entry.EntryDateShamsi ?? string.Empty,
-            entry.Description,
+            // شرح سند نامهربان به تهی — پارامتر DTO ناتهی است (هشدار CS8604 چرخهٔ ۴۷)
+            entry.Description ?? string.Empty,
             entry.TotalDebit,
             entry.TotalCredit,
             (int)entry.Status,
