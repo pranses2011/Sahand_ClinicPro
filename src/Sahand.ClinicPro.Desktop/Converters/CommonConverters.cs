@@ -170,18 +170,46 @@ public sealed class SectionToVisibilityConverter : IValueConverter
 /// هر متنی که از این مبدل بگذرد ارقام لاتینش به فارسی تبدیل می‌شود؛
 /// نویسه‌های غیررقمی (حروف، جداکننده‌ها، خط تیره و …) دست‌نخورده می‌مانند،
 /// از این‌رو اعمالش روی ستون‌های متنی هم بی‌ضرر است.
-/// این مبدل یک‌ره رو (OneWay) است؛ ConvertBack مقدار را برمی‌گرداند چون
-/// ورودی کاربر جداگانه (MoneyInput/پارس ارقام فارسی) هندل می‌شود.
+/// ═══ چرخهٔ چهل‌وهفتم (گزارش مالک) — دوسویه شد ═══
+/// «در فیلد ظرفیت [برنامهٔ کاری] هر مقداری که مینویسم اعمال نمیشه و با ترک
+/// سلول، مقدار پاک میشه»: ConvertBack پیشتر همیشه Binding.DoNothing بود و
+/// ویرایش ستون‌های دوسویهٔ دارای این مبدل (ظرفیت برنامهٔ کاری پزشک و
+/// بدهکار/بستانکار/شرح سطرهای سند حسابداری) هرگز به منبع نمی‌رسید.
+/// اکنون برگشت، ارقام فارسی/عربی را به لاتین برمی‌گرداند تا موتور اتصال
+/// مقدار را به نوع مقصد (int?/decimal/رشته) تبدیل کند.
 /// </summary>
 public sealed class PersianDigitsConverter : IValueConverter
 {
-    /// <summary>تبدیل ارقام لاتین متن به فارسی — تهی به تهی</summary>
+    /// <summary>
+    /// تبدیل ارقام لاتین متن به فارسی — چرخهٔ چهل‌وهفتم (گزارش مالک):
+    /// «در فیلد ظرفیت [برنامهٔ کاری پزشک] هر مقداری که مینویسم اعمال نمیشه و
+    /// با ترک سلول، مقدار پاک میشه».
+    /// ریشه: Convert فقط «رشته» را می‌پذیرفت؛ مقدار عددی (مثل int? MaxPatients)
+    /// از مسیر value ?? string.Empty خام رد می‌شد و مهم‌تر از آن ConvertBack
+    /// همیشه Binding.DoNothing برمی‌گرداند ⇒ هر ویرایشی در ستون‌های دوسویهٔ
+    /// دارای این مبدل (ظرفیت برنامهٔ کاری، بدهکار/بستانکار/شرح سطرهای سند
+    /// حسابداری) هرگز به منبع نمی‌رسید و سلول پس از ویرایش به مقدار پیشین
+    /// (تهی) برمی‌گشت — دقیقاً «پاک شدن با ترک سلول».
+    /// اکنون: ① نمایش — هر مقدار غیرتهی به متن تبدیل و ارقامش فارسی می‌شود؛
+    /// ② برگشت — ارقام فارسی/عربیِ تایپ‌شده به لاتین برگردانده می‌شود تا
+    /// موتور اتصال WPF آن را به نوع مقصد (int?/decimal/رشته) تبدیل کند.
+    /// تهی و رشتهٔ خالی عيناً عبور داده می‌شوند تا TargetNullValue کار کند.
+    /// </summary>
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-        => value is string s ? Money.ToPersianDigits(s) : (object?)value ?? string.Empty;
+        => value is null
+            ? string.Empty
+            : Money.ToPersianDigits(value.ToString() ?? string.Empty);
 
-    /// <summary>برگشت بی‌اثر — ورودی‌ها جداگانه ارقام فارسی را می‌پذیرند</summary>
+    /// <summary>
+    /// برگشت دوسویه — ارقام فارسی/عربی به لاتین (با Money.PersianDigitsToLatin)
+    /// تا ویرایش سلول‌ها واقعاً در منبع ثبت شود؛ خالی = تهی می‌ماند.
+    /// </summary>
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-        => Binding.DoNothing;
+    {
+        if (value is not string s)
+            return value ?? Binding.DoNothing;
+        return string.IsNullOrWhiteSpace(s) ? s : Money.PersianDigitsToLatin(s);
+    }
 }
 
 /// <summary>
