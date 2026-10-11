@@ -95,6 +95,18 @@ public partial class ReceptionsViewModel : ViewModelBase
         var index = company is null ? 0 : InsuranceCompanies.IndexOf(company);
         if (index < 0) index = 0; // شرکت در فهرست نیست (مثلاً غیرفعال شده) → آزاد
         InsuranceIndex = index;
+
+        // ═══ چرخهٔ چهل‌وهفتم (گزارش مالک) ═══
+        // «در فرم پذیرش وقتی بیمار رو انتخاب میکنیم، فیلد نوع بیمه بر اساس
+        // بیمه بیمار انتخاب بشه» — زنجیرهٔ انتخاب خودکار از چرخهٔ ۴۴ کامل
+        // بود ولی بی‌صدا؛ توست تأیید، اعمال آن را دیدنی و قابل راستی‌آزمایی
+        // می‌کند (و در نبود بیمه هم کاربر می‌داند چرا «آزاد» نشسته).
+        if (company is not null)
+            _snackbar.Info($"بیمهٔ پروندهٔ بیمار روی «{company.Name}» تنظیم شد");
+        else if (patient.InsuranceCompanyId is not null)
+            _snackbar.Warning($"بیمهٔ پرونده («{patient.InsuranceName ?? "نامشخص"}») در فهرست فعال نیست — «آزاد» انتخاب شد");
+        else
+            _snackbar.Info("بیمار بیمه‌ای ندارد — «آزاد (بدون بیمه)» تنظیم شد");
     }
 
     /// <summary>نوبت فعال یافته‌شده — اگر بیمار نوبت داشته باشد</summary>
