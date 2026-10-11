@@ -312,6 +312,14 @@ public partial class App : System.Windows.Application
 
     /// <summary>
     /// نمایش پنجرهٔ اصلی — نمونهٔ زنده اگر باشد وگرنه ساخت نمونهٔ نو.
+    /// ═══ چرخهٔ چهل‌وچهارم — شروع/نوسازی نشست با هر نمایش ═══
+    /// گزارش مالک: «خروج از حساب و ورود با کاربر دیگر، همچنان کاربر قبلی
+    /// را نشان می‌دهد». MainWindowViewModel تک‌نمونه است و پیش‌تر کل
+    /// راه‌اندازی نشست در سازنده‌اش بود که فقط یک‌بار (برای نخستین کاربر)
+    /// اجرا می‌شد. اکنون هر نمایش پنجرهٔ اصلی، StartSessionAsync همان
+    /// ViewModel را صدا می‌زند: نام/عکس کاربر، بازسازی منو با پالایش
+    /// دسترسی کاربر تازه، میانبرهای داشبورد او، اتصال بلادرنگ و وضعیت
+    /// لایسنس — نخستین ورود و هر ورود پس از خروج از حساب، یکسان تازه.
     /// </summary>
     /// <returns>پنجرهٔ اصلیِ هم‌اکنون قابل مشاهده</returns>
     public static MainWindow ShowMainWindow()
@@ -321,6 +329,11 @@ public partial class App : System.Windows.Application
         Current.MainWindow = main;
         main.Show();
         main.Activate();
+
+        // شروع/نوسازی نشست — fire-and-forget؛ خطایش پوسته را نمی‌شکند
+        // (همهٔ بارگذاری‌های درونش بهترین‌تلاش‌اند و خودشان خطا را می‌بلعند)
+        if (main.DataContext is ViewModels.MainWindowViewModel vm)
+            _ = vm.StartSessionAsync();
         return main;
     }
 

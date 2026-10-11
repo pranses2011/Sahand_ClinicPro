@@ -396,13 +396,65 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isEditingShortcuts;
 
+    /// <summary>
+    /// خروجِ پس از تعویض نشست را «بدون ذخیره» رد کن — چرخهٔ ۴۴.
+    /// اگر کاربر قبلی هنگام خروج از حساب در حالت ویرایش میانبرها بود،
+    /// پایین‌آوردنِ سادهٔ پرچم یعنی SaveShortcuts با «مجموعهٔ میانبرهای
+    /// کاربر قبلی» روی مسیر/رکورد «کاربر تازه» — خرابی داده است. این
+    /// پرچم یک‌بارهٔ مصرفی آن ذخیره را قورت می‌دهد.
+    /// </summary>
+    private bool _suppressEditExitSave;
+
     /// <summary>آیا میانبری ثبت شده؟ — برای حالت خالی پنل</summary>
     public bool HasShortcuts => Shortcuts.Count > 0;
+
+    /// <summary>
+    /// شروع/نوسازی نشست — چرخهٔ چهل‌وچهارم (گزارش مالک: «با کاربری دیگری
+    /// وارد میشوم همچنان کاربر قبلی رو نشون میده»).
+    /// DashboardViewModel هم تک‌نمونه است؛ بدون این نوسازی، میانبرها و
+    /// چیدمانِ ذخیره‌شدهٔ «کاربر قبلی» برای کاربر تازه نمایش داده می‌شد
+    /// (سازنده فقط یک‌بار و برای نخستین کاربر اجرا می‌شود). MainWindowViewModel
+    /// در آغاز هر نشست این متد را فراخوانی می‌کند.
+    /// </summary>
+    public async Task OnSessionStartedAsync()
+    {
+        // خروج از حالت ویرایشِ احتمالیِ کاربر قبلی — بی‌ذخیره (توضیح پرچم بالا)
+        if (IsEditingShortcuts)
+        {
+            _suppressEditExitSave = true;
+            IsEditingShortcuts = false;
+        }
+
+        // پاک‌سازی میانبرهای کاربر قبلی پیش از بارگذاریِ کاربر تازه
+        Shortcuts.Clear();
+        OnPropertyChanged(nameof(HasShortcuts));
+
+        // پرچم مسابقهٔ دورهٔ قبل معتبر نیست — GET تازه باید بی‌دردسر بنشیند
+        _shortcutsSaveWonRace = false;
+
+        // کارت‌ها و چیدمانِ ذخیره‌شدهٔ کاربر تازه + میانبرهای او
+        // (InitializeCards علاوه بر ساخت خام، رویداد ذخیرهٔ خودکار چیدمان
+        //  هر کارت را هم وصل می‌کند — الگوی همان سازنده)
+        InitializeCards();
+        await LoadLayoutAsync();
+        await LoadShortcutsAsync();
+
+        // آمار داشبورد نیز برای کاربر تازه بی‌درنگ تازه شود (نه منتظر تیک ۶۰ ثانیه)
+        _ = LoadStatsAsync();
+    }
 
     /// <summary>تغییر حالت ویرایش → ذخیره در خاموشی حالت (تجربهٔ ایمن)</summary>
     partial void OnIsEditingShortcutsChanged(bool value)
     {
-        if (!value) SaveShortcuts();
+        if (!value && _suppressEditExitSave)
+        {
+            // چرخهٔ ۴۴ — خروجِ ناشی از تعویض نشست؛ ذخیره‌ای در کار نیست
+            _suppressEditExitSave = false;
+        }
+        else if (!value)
+        {
+            SaveShortcuts();
+        }
         OnPropertyChanged(nameof(HasShortcuts));
     }
 

@@ -185,6 +185,8 @@ public partial class MainWindowViewModel : ObservableObject
         _navigation = navigation;
         _snackbar = snackbar;
         _realtime = realtime;
+        // چرخهٔ ۴۴ — مرجع داشبورد برای نوسازی میانبرها/چیدمان در شروع نشست
+        _dashboardVm = dashboard;
 
         // چرخه بیست‌وسوم (گزارش شانزدهم مالک): «واحد پولی که عوض می‌کنیم در تمام
         // برنامه اعمال نشود» — مبدل‌های مبلغ (CurrencyRial/MoneyWithUnit) مقدار
@@ -304,6 +306,147 @@ public partial class MainWindowViewModel : ObservableObject
             ["training"] = () => trainingVm
         };
 
+
+
+        // ═══ چرخهٔ چهل‌وچهارم — تفکیک «زیرساخت یک‌باره» از «شروع نشست» ═══
+        // گزارش مالک: «با کاربری دیگری وارد میشوم، همچنان کاربر قبلی نشان
+        // داده می‌شود» — ریشه: ViewModel تک‌نمونه است و کل راه‌اندازی نشست
+        // در سازنده بود که فقط یک‌بار اجرا می‌شود؛ پنجرهٔ اصلیِ جدید همان
+        // نمونهٔ کهنه را می‌گرفت و هیچ‌چیز برای کاربر تازه نو نمی‌شد.
+        // اکنون سازنده فقط «زیرساختِ عمرِ برنامه» را می‌سازد (اشتراک
+        // رویدادها و تایمرها — تکرارشان با هر ورود یعنی انباشت/نشت) و هر
+        // چیزی وابسته به «کاربر جاری» در StartSessionAsync است که
+        // App.ShowMainWindow با هر نمایش پنجرهٔ اصلی فراخوانی‌اش می‌کند.
+
+        // منو — ساخت خام بدون پالایش؛ پالایش دسترسی در شروع نشست
+        RebuildNavItems();
+
+        // اتصال رویداد انقضای نشست — بازگشت به صفحه ورود (یک‌بار برای عمر VM)
+        _api.SessionExpired += (_, _) => OnSessionExpired();
+
+        // ═══ اتصال بلادرنگ SignalR — گام R1 (مشترکین یک‌باره) ═══
+        // تغییر صف → تازه‌سازی فوری صفحات صف‌دار (پذیرش/ویزیت)
+        // ═══ چرخهٔ بیست‌وهشتم: میزکار پزشک هم به همین جریان وصل شد — «وقتی
+        // بیماری پذیرش می‌شود باید فوری در لیست نشان داده شود در حالی که چند
+        // ثانیه طول می‌کشد تا با تپ قلب بعدی بیاید»؛ تازه‌ساز ۳۰ ثانیه‌ای
+        // میزکار هنوز هست ولی تغییر صف حالا بی‌درنگ همان لحظه می‌نشیند ═══
+        _realtime.QueueChanged += async (_, args) =>
+        {
+            var page = CurrentPage;
+            if (page is ReceptionsViewModel receptions)
+                await receptions.LoadAsync();
+            else if (page is VisitsViewModel visits)
+                await visits.LoadAsync();
+            else if (page is DoctorVisitViewModel doctorVisit)
+                await doctorVisit.LoadAsync();
+        };
+
+        // اعلان جدید → شمارنده زنگ + پیام شناور خبری (آبی)
+        _realtime.NotificationReceived += (_, args) =>
+        {
+            UnreadCount++;
+            _snackbar.Info(args.Title);
+        };
+
+        // هشدار سراسری → پیام شناور هشدار (کهربایی — نوع ساخت‌یافتهٔ چرخهٔ ۳۸)
+        _realtime.BroadcastAlert += (_, args) =>
+            _snackbar.Warning($"{args.Title}: {args.Message}");
+
+        // وضعیت اتصال بلادرنگ در StatusBar
+        _realtime.ConnectionStateChanged += (_, _) =>
+            ConnectionStatus = _realtime.IsConnected ? "متصل • بلادرنگ فعال" : "متصل";
+
+        // تایمر تازه‌سازی وضعیت لایسنس (۳۰ دقیقه) — یک‌بار ساخته می‌شود؛
+        // فراخوانی نخست و بقیهٔ بارگذاری‌های نشست در StartSessionAsync است
+        _licenseTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMinutes(30)
+        };
+        _licenseTimer.Tick += (_, _) => _ = LoadLicenseStatusAsync();
+        _licenseTimer.Start();
+    }
+
+    /// <summary>مرجع داشبورد — برای نوسازی میانبرها/چیدمان در شروع نشست</summary>
+    private readonly DashboardViewModel _dashboardVm;
+
+    /// <summary>گارد هم‌زمانی شروع نشست — دو فراخوانی روی هم نمی‌افتند</summary>
+    private int _sessionStarting;
+
+    /// <summary>
+    /// شروع/نوسازی نشست کاربر جاری — چرخهٔ چهل‌وچهارم (گزارش مالک).
+    /// با «هر» نمایش پنجرهٔ اصلی فراخوانی می‌شود (نخستین ورود و هر ورودِ
+    /// پس از خروج از حساب)؛ هرچیز وابسته به کاربر جاری اینجا نو می‌شود:
+    ///   ۱) نام نمایشی بی‌درنگ از توکن (پیش از رسیدن users/me) + پاک‌شدن
+    ///      عکس/شمارندهٔ اعلان کاربر قبلی و توست‌های مانده
+    ///   ۲) بازسازی کامل منو از تعریف واحد + پالایش دسترسی کاربر تازه
+    ///      (پالایشِ دورهٔ قبل حذفِ برگشت‌ناپذیر بود — بازسازی، وارونش است)
+    ///   ۳) ناوبری به نخستین صفحهٔ مجاز (داشبورد یا جایگزین)
+    ///   ۴) پروفایل زنده (users/me)، شعبه‌ها و شمار اعلان‌های خوانده‌نشده
+    ///   ۵) میانبرها و چیدمان داشبوردِ کاربر تازه (DashboardViewModel
+    ///      هم تک‌نمونه است و میانبرهای کاربر قبلی را در خود داشت)
+    ///   ۶) اتصال بلادرنگ با توکن تازه (لاگ‌اوت قبلی قطعش کرده بود)
+    ///   ۷) وضعیت لایسنس + مارکر تورِ per-user
+    /// گارد Interlocked جلوی هم‌زمانی دو شروع را می‌گیرد (مثلاً ShowMainWindow
+    /// پشت‌سرهم در گذار گیت لایسنس/ورود).
+    /// </summary>
+    public async Task StartSessionAsync()
+    {
+        // شروع دیگری در جریان است — دادهٔ همین فراخوانی در آن ادغام شده است
+        if (System.Threading.Interlocked.CompareExchange(ref _sessionStarting, 1, 0) != 0)
+            return;
+        try
+        {
+            // ۱) هویت نمایشی تازه بی‌درنگ — کاربر قبلی همین حالا پاک می‌شود؛
+            //    عکس/اعلان/توست‌های او هم (پیش از بارگذاری‌های تازه)
+            CurrentUser = _tokens.DisplayName ?? _tokens.Username ?? "کاربر";
+            CurrentUserPhoto = null;
+            UnreadCount = 0;
+            foreach (var toast in Toasts.ToList())
+                RemoveToast(toast);
+
+            // ۲) منو از تعریف واحد + پالایش دسترسی کاربر جاری
+            RebuildNavItems();
+            ApplyPermissionFilter();
+
+            // ۳) نخستین صفحهٔ مجاز — کاربر هرگز روی صفحهٔ ممنوع گیر نمی‌کند
+            NavigateToPage(HasPageAccess("dashboard") ? "dashboard" : FirstAllowedPageKey());
+
+            // ۴) بارگذاری‌های نشست — شکست هیچ‌کدام جریان را نمی‌شکند
+            _ = LoadCurrentUserAsync();
+            _ = LoadBranchesAsync();
+            _ = RefreshUnreadCountAsync();
+
+            // ۵) داشبورد کاربر تازه — میانبرها (دیتابیس/کش محلی) و چیدمان
+            //    کارت‌ها؛ تک‌نمونه بودن DashboardViewModel یعنی بدون این
+            //    نوسازی، میانبرهای کارور قبلی نمایش داده می‌شد
+            await _dashboardVm.OnSessionStartedAsync();
+
+            // ۶) اتصال بلادرنگ با توکن تازه — لاگ‌اوت قبلی StopAsync کرده بود
+            _ = _realtime.StartAsync();
+
+            // ۷) وضعیت لایسنس + مارکر تور per-user (نخستین ورود هر کاربر)
+            _ = LoadLicenseStatusAsync();
+            Views.TourMarker.CurrentUser = _tokens.Username;
+            _ = TryShowGuidedTourAsync();
+        }
+        finally
+        {
+            System.Threading.Volatile.Write(ref _sessionStarting, 0);
+        }
+    }
+
+
+    /// <summary>
+    /// ساخت تعریف کامل منوی کناری — چرخهٔ چهل‌وچهارم.
+    /// پیش‌تر این تعریف «درون سازنده» بود و چون ViewModel تک‌نمونه است، فقط
+    /// یک‌بار برای نخستین کاربر ساخته می‌شد؛ ApplyPermissionFilter آیتم‌های
+    /// بی‌دسترسیِ همان کاربر را «حذف» می‌کرد و پس از ورود کاربر دوم هیچ
+    /// راهی برای بازگشت آیتم‌ها نبود (حذفِ انجام‌شده برگشت‌ناپذیر است).
+    /// اکنون هر «شروع نشست» منو را از این تعریف پاک می‌سازد و بعد پالایش
+    /// دسترسیِ کاربر جاری را اعمال می‌کند — تعریف واحد، سازنده و نشست‌ها.
+    /// </summary>
+    private ObservableCollection<NavItem> BuildNavMenu()
+    {
         // ═══ آیتم‌های ناوبری — چرخه بیست‌ویکم (گزارش پانزدهم مالک) ═══
         // «گزینه‌های لیست کناری مرتب نیستند؛ بر اساس کاربردشان مرتب بکن و شلوغی را
         // با زیر منو کم کن» — ۳۰ آیتم تخت به ۹ گروهِ عملکردی + ۳ آیتم تکی بازسازماندهی شد.
@@ -317,7 +460,7 @@ public partial class MainWindowViewModel : ObservableObject
             return group;
         }
 
-        NavItems = new ObservableCollection<NavItem>
+        return new ObservableCollection<NavItem>
         {
             new() { Title = "داشبورد", PageKey = "dashboard", Icon = "ViewDashboard" },
 
@@ -390,77 +533,18 @@ public partial class MainWindowViewModel : ObservableObject
             // ─── آموزش ───
             new() { Title = "🎓 مرکز آموزش", PageKey = "training", Icon = "School" }
         };
+    }
 
-        // ═══ چرخهٔ سی‌وهشتم (گزارش مالک — سطح دسترسی) ═══
-        // «فقط منوها و فرم‌هایی که کاربر دسترسی دارد نمایش داده شود»: منو
-        // پیش از نخستین ناوبری با دسترسی‌های ذخیره‌شدهٔ ورود پالایش می‌شود
-        // (ادمین بدون تغییر می‌ماند)؛ سپس اگر داشبورد مجاز نبود، اولین صفحهٔ
-        // مجاز جایگزین می‌شود تا کاربر هرگز روی «این ماژول فعال نشده» گیر نکند.
-        ApplyPermissionFilter();
-        NavigateToPage(HasPageAccess("dashboard") ? "dashboard" : FirstAllowedPageKey());
-
-        // پروفایل زندهٔ کاربر (نام کامل/تصویر/دسترسی‌های تازه از users/me)
-        // هم‌زمان با شعبه‌ها بار می‌شود — شکستش هرگز پوسته را نمی‌شکند
-        _ = LoadCurrentUserAsync();
-
-        // بارگذاری شعبه‌ها برای انتخابگر TopBar — گام U17
-        _ = LoadBranchesAsync();
-
-        // اتصال رویداد انقضای نشست — بازگشت به صفحه ورود
-        _api.SessionExpired += (_, _) => OnSessionExpired();
-
-        // ═══ تور هدایت‌شده اولین اجرا — چرخه سیزدهم (درخواست ۸-۶) ═══
-        // نام کاربر برای مارکر محلی + نمایش خودکار در نخستین ورود این ایستگاه
-        Views.TourMarker.CurrentUser = tokens.Username;
-        _ = TryShowGuidedTourAsync();
-
-        // ═══ اتصال بلادرنگ SignalR — گام R1 ═══
-        // تغییر صف → تازه‌سازی فوری صفحات صف‌دار (پذیرش/ویزیت)
-        // ═══ چرخهٔ بیست‌وهشتم: میزکار پزشک هم به همین جریان وصل شد — «وقتی
-        // بیماری پذیرش می‌شود باید فوری در لیست نشان داده شود در حالی که چند
-        // ثانیه طول می‌کشد تا با تپ قلب بعدی بیاید»؛ تازه‌ساز ۳۰ ثانیه‌ای
-        // میزکار هنوز هست ولی تغییر صف حالا بی‌درنگ همان لحظه می‌نشیند ═══
-        _realtime.QueueChanged += async (_, args) =>
-        {
-            var page = CurrentPage;
-            if (page is ReceptionsViewModel receptions)
-                await receptions.LoadAsync();
-            else if (page is VisitsViewModel visits)
-                await visits.LoadAsync();
-            else if (page is DoctorVisitViewModel doctorVisit)
-                await doctorVisit.LoadAsync();
-        };
-
-        // اعلان جدید → شمارنده زنگ + پیام شناور خبری (آبی)
-        _realtime.NotificationReceived += (_, args) =>
-        {
-            UnreadCount++;
-            _snackbar.Info(args.Title);
-        };
-
-        // هشدار سراسری → پیام شناور هشدار (کهربایی — نوع ساخت‌یافتهٔ چرخهٔ ۳۸)
-        _realtime.BroadcastAlert += (_, args) =>
-            _snackbar.Warning($"{args.Title}: {args.Message}");
-
-        // وضعیت اتصال بلادرنگ در StatusBar
-        _realtime.ConnectionStateChanged += (_, _) =>
-            ConnectionStatus = _realtime.IsConnected ? "متصل • بلادرنگ فعال" : "متصل";
-
-        // شروع اتصال پس از ورود — MainWindow فقط با توکن معتبر باز می‌شود
-        _ = _realtime.StartAsync();
-
-        // ═══ چرخهٔ بیست‌وهفتم (گزارش هجدهم مالک) — پیام‌های سرور لایسنس ═══
-        // «پیام‌های سرور لایسنس در برنامه نمایش داده شود»: نوار وضعیت از متن
-        // ثابتِ «لایسنس فعال» به وضعیت واقعی + روزهای باقیمانده تبدیل می‌شود و
-        // پیام پنل (هشدار انقضا/اطلاعیهٔ فروشنده) با اعلان شناور سراسری به
-        // کاربر می‌رسد. هر ۳۰ دقیقه هم تازه می‌شود (هم‌قدم با تپ‌قلب سرور).
-        _ = LoadLicenseStatusAsync();
-        _licenseTimer = new System.Windows.Threading.DispatcherTimer
-        {
-            Interval = TimeSpan.FromMinutes(30)
-        };
-        _licenseTimer.Tick += (_, _) => _ = LoadLicenseStatusAsync();
-        _licenseTimer.Start();
+    /// <summary>
+    /// بازسازی درون‌جای منو — چرخهٔ ۴۴: نمونهٔ مجموعه دست‌نخورده می‌ماند
+    /// (بایندینگ ItemsSource منوی کناری به همین نمونه وصل است) و فقط
+    /// محتوایش از تعریف واحد تازه می‌شود؛ سپس پالایش دسترسی کاربر جاری.
+    /// </summary>
+    private void RebuildNavItems()
+    {
+        NavItems.Clear();
+        foreach (var item in BuildNavMenu())
+            NavItems.Add(item);
     }
 
     /// <summary>
@@ -493,8 +577,12 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
-    /// <summary>فهرست آیتم‌های ناوبری</summary>
-    public ObservableCollection<NavItem> NavItems { get; }
+    /// <summary>
+    /// فهرست آیتم‌های ناوبری — نمونهٔ ثابتِ درون‌خطی (چرخهٔ ۴۴): بایندینگ
+    /// ItemsSource منوی کناری به همین نمونه وصل است و RebuildNavItems محتوایش
+    /// را درون‌جای پاک/بازسازی می‌کند (تعویض نمونه لازم نیست).
+    /// </summary>
+    public ObservableCollection<NavItem> NavItems { get; } = new();
 
     /// <summary>
     /// آیا کاربر جاری به این صفحه دسترسی دارد؟ — ادمین همه‌چیز؛ صفحهٔ بدون
