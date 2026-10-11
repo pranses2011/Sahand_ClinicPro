@@ -251,6 +251,11 @@
             <converters:MoneyRialConverter x:Key="MoneyRial" />
             <!-- چرخه بیستم: مبلغ با واحد پول نمایشی — ریال/تومان از تنظیمات -->
             <converters:MoneyWithUnitConverter x:Key="MoneyWithUnit" />
+            <!-- چرخهٔ ۴۸: مبدلهای چارت دندان‌شکل — هندسهٔ جنس دندان از شمارهٔ FDI
+                 + قلم خوانای شماره بر اساس رنگ وضعیت (گزارش مالک: نشانگرها به‌جای
+                 کادر مربع باید خودِ دندان باشند) -->
+            <converters:ToothShapeConverter x:Key="ToothShape" />
+            <converters:ToothNumberBrushConverter x:Key="ToothNumberBrush" />
 
             <!-- سبک کارت آمار داشبورد -->
             <Style x:Key="StatCard" TargetType="materialDesign:Card">

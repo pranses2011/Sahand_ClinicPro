@@ -98,28 +98,106 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <!-- چرخه بیست‌وچهارم: هایلایت دندان انتخابی با DataTrigger ساده
-                                                     (Value از نوع CLR است و Binding روی آن XamlParseException می‌اندازد —
-                                                     گزارش هفدهم مالک؛ پرچم IsSelected اکنون از ViewModel می‌آید).
-                                                     فونت هاردکد Consolas هم حذف شد تا فونت تم برنامه اعمال شود. -->
-                                                <Button Width="44" Height="44" Margin="2"
+                                                <!-- ═══ چرخهٔ ۴۸ (گزارش مالک): نشانگر دندان‌شکل — جایگزین کادر مربع ═══
+                                                     هر نشانگر اکنون «خودِ دندان» است: هندسهٔ وکتوری بر اساس جنس واقعی
+                                                     دندان (آسیا/آسیای کوچک/نیش/پیش‌دندان) از مبدل ToothShape؛ رنگ داخل
+                                                     = وضعیت؛ شمارهٔ فارسی روی تاج با قلم خودتنظیف (روی سفیدِ سالم تیره و
+                                                     روی بقیهٔ رنگ‌ها سفید)؛ دندان‌های فک بالا با چرخش ۱۸۰ درجه ریشه‌ها را
+                                                     به بالا می‌برند — چیدمان استاندارد اودنتوگرام؛ انتخاب با هالهٔ آبی و
+                                                     دورخط ضخیم‌تر؛ دندان کشیده‌شده (وضعیت ۵) علامت × می‌گیرد. -->
+                                                <Button Width="46" Height="60" Margin="2,1" Padding="0"
+                                                        Cursor="Hand"
                                                         Command="{Binding DataContext.SelectToothCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         CommandParameter="{Binding}"
-                                                        ToolTip="{Binding ToolTip}"
-                                                        Content="{Binding NumberFa}"
-                                                        FontSize="12">
-                                                    <Button.Style>
-                                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
-                                                            <Setter Property="Background" Value="{Binding Color, Mode=OneWay}" />
-                                                            <Setter Property="BorderBrush" Value="#B0BEC5" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                    <Setter Property="BorderBrush" Value="#1565C0" />
-                                                                    <Setter Property="BorderThickness" Value="3" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Button.Style>
+                                                        ToolTip="{Binding ToolTip}">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <!-- پس‌زمینهٔ شفاف + بدون افکت کلیک پیش‌فرض — شکل دندان خودش محتواست -->
+                                                            <ContentPresenter />
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                    <Grid>
+                                                    <Grid RenderTransformOrigin="0.5,0.5">
+                                                        <Grid.Style>
+                                                            <Style TargetType="Grid">
+                                                                <Style.Triggers>
+                                                                    <!-- فک بالا: ریشه‌ها به بالا (چرخش استاندارد اودنتوگرام) -->
+                                                                    <DataTrigger Binding="{Binding Quadrant, Mode=OneWay}" Value="بالا">
+                                                                        <Setter Property="RenderTransform">
+                                                                            <Setter.Value>
+                                                                                <RotateTransform Angle="180" />
+                                                                            </Setter.Value>
+                                                                        </Setter>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Grid.Style>
+                                                        <!-- هالهٔ انتخاب — دورخط آبی پهن و نیمه‌شفاف پشت دندان -->
+                                                        <Path Data="{Binding Number, Converter={StaticResource ToothShape}}"
+                                                              Stretch="Uniform" Margin="1"
+                                                              Fill="Transparent" Stroke="Transparent" StrokeThickness="5">
+                                                            <Path.Style>
+                                                                <Style TargetType="Path">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                            <Setter Property="Stroke" Value="#90CAF9" />
+                                                                            <Setter Property="StrokeThickness" Value="6" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                        <!-- بدنهٔ دندان — هندسهٔ جنس + رنگ وضعیت -->
+                                                        <Path Data="{Binding Number, Converter={StaticResource ToothShape}}"
+                                                              Stretch="Uniform" Margin="1"
+                                                              Fill="{Binding Color, Mode=OneWay}">
+                                                            <Path.Style>
+                                                                <Style TargetType="Path">
+                                                                    <Setter Property="Stroke" Value="#78909C" />
+                                                                    <Setter Property="StrokeThickness" Value="1.1" />
+                                                                    <Setter Property="StrokeLineJoin" Value="Round" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                            <Setter Property="Stroke" Value="#1565C0" />
+                                                                            <Setter Property="StrokeThickness" Value="2.4" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                        <!-- علامت × دندان کشیده‌شده (وضعیت ۵) — دو خط متقاطع سفید -->
+                                                        <Path Data="M0,0 L1,1 M1,0 L0,1" Stretch="Uniform" Margin="9,10,9,10"
+                                                              Stroke="#FFFFFF" StrokeThickness="2.6" StrokeLineJoin="Round"
+                                                              Visibility="Collapsed">
+                                                            <Path.Style>
+                                                                <Style TargetType="Path">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Condition}" Value="5">
+                                                                            <Setter Property="Visibility" Value="Visible" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                    </Grid>
+                                                    <!-- شمارهٔ دندان روی تاج — همیشه راست‌وقرار (خارج از چرخش) -->
+                                                    <Border Background="#B3FFFFFF" CornerRadius="7" Padding="5,1"
+                                                            HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,8,0,0">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Style.Triggers>
+                                                                    <!-- فک بالا: تاج پس از چرخش در پایین است → شماره هم پایین -->
+                                                                    <DataTrigger Binding="{Binding Quadrant, Mode=OneWay}" Value="بالا">
+                                                                        <Setter Property="VerticalAlignment" Value="Bottom" />
+                                                                        <Setter Property="Margin" Value="0,0,0,18" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <TextBlock Text="{Binding NumberFa}" FontSize="10.5" FontWeight="Bold"
+                                                                   Foreground="#263238" FontFamily="{DynamicResource App.CodeFont}" />
+                                                    </Border>
+                                                    </Grid>
                                                 </Button>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
@@ -134,27 +212,95 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <!-- فک پایین — همان قالب هایلایت انتخاب چرخه بیست‌وچهارم؛
-                                                     پیش‌تر این ردیف اصلاً استایل انتخاب نداشت و دندان انتخابی
-                                                     در فک پایین هایلایت نمی‌شد. ارقام فارسی + فونت تم. -->
-                                                <Button Width="44" Height="44" Margin="2"
+                                                <!-- فک پایین — همان نشانگر دندان‌شکل چرخهٔ ۴۸ (کپی قالب فک بالا؛
+                                                     اینجا چرخش اعمال نمی‌شود چون Quadrant=پایین است و ریشه‌ها
+                                                     به‌طور طبیعی پایین‌اند — چیدمان استاندارد اودنتوگرام). -->
+                                                <Button Width="46" Height="60" Margin="2,1" Padding="0"
+                                                        Cursor="Hand"
                                                         Command="{Binding DataContext.SelectToothCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         CommandParameter="{Binding}"
-                                                        ToolTip="{Binding ToolTip}"
-                                                        Content="{Binding NumberFa}"
-                                                        FontSize="12">
-                                                    <Button.Style>
-                                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
-                                                            <Setter Property="Background" Value="{Binding Color, Mode=OneWay}" />
-                                                            <Setter Property="BorderBrush" Value="#B0BEC5" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                    <Setter Property="BorderBrush" Value="#1565C0" />
-                                                                    <Setter Property="BorderThickness" Value="3" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Button.Style>
+                                                        ToolTip="{Binding ToolTip}">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <ContentPresenter />
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                    <Grid>
+                                                    <Grid RenderTransformOrigin="0.5,0.5">
+                                                        <Grid.Style>
+                                                            <Style TargetType="Grid">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Quadrant, Mode=OneWay}" Value="بالا">
+                                                                        <Setter Property="RenderTransform">
+                                                                            <Setter.Value>
+                                                                                <RotateTransform Angle="180" />
+                                                                            </Setter.Value>
+                                                                        </Setter>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Grid.Style>
+                                                        <Path Data="{Binding Number, Converter={StaticResource ToothShape}}"
+                                                              Stretch="Uniform" Margin="1"
+                                                              Fill="Transparent" Stroke="Transparent" StrokeThickness="5">
+                                                            <Path.Style>
+                                                                <Style TargetType="Path">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                            <Setter Property="Stroke" Value="#90CAF9" />
+                                                                            <Setter Property="StrokeThickness" Value="6" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                        <Path Data="{Binding Number, Converter={StaticResource ToothShape}}"
+                                                              Stretch="Uniform" Margin="1"
+                                                              Fill="{Binding Color, Mode=OneWay}">
+                                                            <Path.Style>
+                                                                <Style TargetType="Path">
+                                                                    <Setter Property="Stroke" Value="#78909C" />
+                                                                    <Setter Property="StrokeThickness" Value="1.1" />
+                                                                    <Setter Property="StrokeLineJoin" Value="Round" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                            <Setter Property="Stroke" Value="#1565C0" />
+                                                                            <Setter Property="StrokeThickness" Value="2.4" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                        <Path Data="M0,0 L1,1 M1,0 L0,1" Stretch="Uniform" Margin="9,10,9,10"
+                                                              Stroke="#FFFFFF" StrokeThickness="2.6" StrokeLineJoin="Round"
+                                                              Visibility="Collapsed">
+                                                            <Path.Style>
+                                                                <Style TargetType="Path">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Condition}" Value="5">
+                                                                            <Setter Property="Visibility" Value="Visible" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                    </Grid>
+                                                    <Border Background="#B3FFFFFF" CornerRadius="7" Padding="5,1"
+                                                            HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,8,0,0">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Quadrant, Mode=OneWay}" Value="بالا">
+                                                                        <Setter Property="VerticalAlignment" Value="Bottom" />
+                                                                        <Setter Property="Margin" Value="0,0,0,18" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <TextBlock Text="{Binding NumberFa}" FontSize="10.5" FontWeight="Bold"
+                                                                   Foreground="#263238" FontFamily="{DynamicResource App.CodeFont}" />
+                                                    </Border>
+                                                    </Grid>
                                                 </Button>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
