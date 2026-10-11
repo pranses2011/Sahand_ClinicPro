@@ -5,82 +5,207 @@
         xmlns:behaviors="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
         xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
         Title="ورود موجودی"
-        Height="640" Width="540"
+        Height="780" Width="680"
+        MinHeight="620" MinWidth="620"
         FlowDirection="RightToLeft"
         WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
     <!-- ═══════════════════════════════════════════════════════════
-         فرم ورود موجودی — گام V6؛ بازطراحی چرخهٔ ۴۳ (گزارش مالک):
-         «در… ورود کالا نباید نوع قلم وجود داشته باشه» — کمبوی نوع حذف شد؛
-         جستجو از بافت فرم (مصرفی/دارو) قفل است؛ عنوان و راهنما بافت‌دارند.
+         فرم ورود موجودی — گام V6؛ بازطراحی چرخهٔ ۴۳ (حذف کمبوی نوع قلم و
+         قفل جستجو به بافت فرم)؛ چرخهٔ ۴۵ (گزارش مالک: «ورود کالا حالت دسته
+         جمعی هم داشته باشه که همه کالاها رو بنویسیم و در آخر ثبت بکنیم»):
+         فرمِ فهرستی — قلم را جستجو/پُر می‌کنید → «افزودن به فهرست» → ردیف
+         در جدول می‌نشیند و فرم خالی می‌شود → «ثبت همه (n)» همه را پشت‌سرهم
+         ثبت می‌کند. جریان تک‌ردیفی قبلی هم حفظ شد (فهرست خالی + فرم پُر).
          ═══════════════════════════════════════════════════════════ -->
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="28">
-            <TextBlock Text="{Binding FormTitle}" Style="{StaticResource SectionTitle}" />
-            <TextBlock Text="{Binding FormHint}" FontSize="11.5" Opacity="0.7"
-                       Margin="0,0,0,14" TextWrapping="Wrap" />
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-            <!-- جستجوی قلم -->
-            <TextBox materialDesign:HintAssist.Hint="جستجوی قلم: نام ژنریک یا برند *"
-                     Text="{Binding MedicationSearchTerm, UpdateSourceTrigger=PropertyChanged}"
-                     Margin="0,0,0,8">
-                <TextBox.InputBindings>
-                    <KeyBinding Key="Enter" Command="{Binding SearchMedicationCommand}" />
-                </TextBox.InputBindings>
-            </TextBox>
-            <ListBox ItemsSource="{Binding MedicationResults}"
-                     SelectedItem="{Binding SelectedMedication}"
-                     Height="120" Margin="0,0,0,12"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     materialDesign:HintAssist.Hint="نتایج جستجو">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel>
-                            <TextBlock Text="{Binding Name}" FontWeight="Bold" />
-                            <TextBlock FontSize="11" Opacity="0.75">
-                                <Run Text="{Binding Form, Mode=OneWay}" />
-                                <Run Text=" — " />
-                                <Run Text="{Binding Strength, Mode=OneWay}" />
-                            </TextBlock>
+        <!-- ─── سربرگ ساختاریافته — چرخهٔ ۴۴/۴۵ ─── -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <Border DockPanel.Dock="Right" Width="38" Height="38" CornerRadius="19"
+                    Background="#E8F5E9" VerticalAlignment="Center" Margin="0,0,10,0">
+                <materialDesign:PackIcon Kind="TrayArrowDown" Width="19" Height="19"
+                                         Foreground="#2E7D32" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <StackPanel>
+                <TextBlock Text="{Binding FormTitle}" FontSize="16" FontWeight="Bold"
+                           Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
+                <TextBlock Text="{Binding FormHint}" FontSize="11" Opacity="0.7"
+                           Margin="0,3,0,0" TextWrapping="Wrap" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- ─── بدنهٔ اسکرول‌شونده: جستجو + مشخصات بچ + افزودن ─── -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,0,0,10">
+
+                <!-- جستجوی قلم -->
+                <TextBox materialDesign:HintAssist.Hint="جستجوی قلم: نام ژنریک یا برند *"
+                         Text="{Binding MedicationSearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0,0,0,8">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding SearchMedicationCommand}" />
+                    </TextBox.InputBindings>
+                </TextBox>
+                <ListBox ItemsSource="{Binding MedicationResults}"
+                         SelectedItem="{Binding SelectedMedication}"
+                         Height="110" Margin="0,0,0,12"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         materialDesign:HintAssist.Hint="نتایج جستجو">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Name}" FontWeight="Bold" />
+                                <TextBlock FontSize="11" Opacity="0.75">
+                                    <Run Text="{Binding Form, Mode=OneWay}" />
+                                    <Run Text=" — " />
+                                    <Run Text="{Binding Strength, Mode=OneWay}" />
+                                </TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="120" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox materialDesign:HintAssist.Hint="شماره بچ"
+                             Text="{Binding BatchNumber, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="0,0,0,12" />
+                    <TextBox Grid.Column="1" materialDesign:HintAssist.Hint="تعداد *"
+                             Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="8,0,0,12" HorizontalContentAlignment="Center" />
+                </Grid>
+                <UniformGrid Columns="2" Margin="0,0,0,12">
+                    <!-- جداکنندهٔ زندهٔ ۳ رقمی هنگام تایپ (چرخه بیست‌ویکم) -->
+                    <TextBox behaviors:MoneyInput.IsEnabled="True" behaviors:MoneyInput.NumericValue="{Binding PurchasePrice, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}" Margin="0,0,6,0"><materialDesign:HintAssist.Hint><TextBlock><Run Text="قیمت خرید (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></materialDesign:HintAssist.Hint></TextBox>
+                    <TextBox behaviors:MoneyInput.IsEnabled="True" behaviors:MoneyInput.NumericValue="{Binding SellPrice, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}" Margin="6,0,0,0"><materialDesign:HintAssist.Hint><TextBlock><Run Text="قیمت فروش (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></materialDesign:HintAssist.Hint></TextBox>
+                </UniformGrid>
+                <!-- تاریخ انقضا — فیلد تاریخ از انتخابگر تاریخ شمسی (چرخه ۲۳؛ قانون مالک) -->
+                <controls:PersianDatePicker DateShamsiText="{Binding ExpiryDateShamsi, Mode=TwoWay}"
+                                            Placeholder="تاریخ انقضا شمسی *"
+                                            HorizontalAlignment="Left" MinWidth="180"
+                                            Margin="0,0,0,10" />
+
+                <!-- ردیف اقدام فرم: افزودن به فهرست (دسته‌جمعی) + ثبت سریع -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Command="{Binding AddLineCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Height="40" ToolTip="این قلم را به فهرست ثبت‌نشده اضافه کن و فرم را برای قلم بعدی خالی کن">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="PlaylistPlus" Width="16" Height="16" VerticalAlignment="Center" />
+                            <TextBlock Text="افزودن به فهرست" Margin="7,0,0,0" VerticalAlignment="Center" />
                         </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                    </Button>
+                </Grid>
 
-            <TextBox materialDesign:HintAssist.Hint="شماره بچ"
-                     Text="{Binding BatchNumber, UpdateSourceTrigger=PropertyChanged}"
-                     Margin="0,0,0,12" />
-            <TextBox materialDesign:HintAssist.Hint="تعداد *"
-                     Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}"
-                     Margin="0,0,0,12" />
-            <UniformGrid Columns="2" Margin="0,0,0,12">
-                <!-- جداکنندهٔ زندهٔ ۳ رقمی هنگام تایپ (چرخه بیست‌ویکم) -->
-                <TextBox behaviors:MoneyInput.IsEnabled="True" behaviors:MoneyInput.NumericValue="{Binding PurchasePrice, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}" Margin="0,0,6,0"><materialDesign:HintAssist.Hint><TextBlock><Run Text="قیمت خرید (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></materialDesign:HintAssist.Hint></TextBox>
-                <TextBox behaviors:MoneyInput.IsEnabled="True" behaviors:MoneyInput.NumericValue="{Binding SellPrice, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}" Margin="6,0,0,0"><materialDesign:HintAssist.Hint><TextBlock><Run Text="قیمت فروش (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></materialDesign:HintAssist.Hint></TextBox>
-            </UniformGrid>
-            <!-- تاریخ انقضا — فیلد تاریخ از انتخابگر تاریخ شمسی (چرخه ۲۳) -->
-            <controls:PersianDatePicker DateShamsiText="{Binding ExpiryDateShamsi, Mode=TwoWay}"
-                                        Placeholder="تاریخ انقضا شمسی *"
-                                        HorizontalAlignment="Left" MinWidth="180"
-                                        Margin="0,0,0,16" />
+                <!-- ═══ جدول ردیف‌های فهرست‌شده — چرخهٔ ۴۵ ═══ -->
+                <Border CornerRadius="10" Padding="10,8" Margin="0,12,0,0"
+                        Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                        BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                        BorderThickness="1"
+                        Visibility="{Binding HasBatchLines, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <DockPanel Margin="2,0,2,6">
+                            <Button DockPanel.Dock="Left" Command="{Binding ClearLinesCommand}"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    Foreground="#C62828" Padding="8,2" FontSize="11"
+                                    ToolTip="حذف همهٔ ردیف‌های ثبت‌نشده (با تأیید)">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="PlaylistRemove" Width="14" Height="14" VerticalAlignment="Center" />
+                                    <TextBlock Text="خالی‌کردن" Margin="5,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="📋 اقلام فهرست‌شده برای ثبت" FontWeight="Bold" FontSize="12.5"
+                                       VerticalAlignment="Center" />
+                        </DockPanel>
 
+                        <ScrollViewer MaxHeight="190" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding BatchLines}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                                CornerRadius="8" Padding="9,6" Margin="0,0,0,5"
+                                                BorderBrush="#CFE2D6" BorderThickness="1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="70" />
+                                                    <ColumnDefinition Width="110" />
+                                                    <ColumnDefinition Width="86" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding ItemDisplay}" FontWeight="SemiBold" FontSize="12" />
+                                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                        <TextBlock FontSize="10" Opacity="0.7">
+                                                            <Run Text="بچ: " /><Run Text="{Binding BatchNumber, Mode=OneWay, TargetNullValue=—}" />
+                                                            <Run Text=" · انقضا: " /><Run Text="{Binding ExpiryShamsi, Mode=OneWay}" />
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding Quantity, Converter={StaticResource PersianDigits}}"
+                                                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                           FontFamily="{DynamicResource App.CodeFont}" FontWeight="SemiBold" />
+                                                <TextBlock Grid.Column="2" Text="{Binding PurchaseTotal, Converter={StaticResource CurrencyRial}}"
+                                                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                           FontSize="11" Foreground="#2E7D32" FontWeight="SemiBold" />
+                                                <TextBlock Grid.Column="3" Text="{Binding SellPrice, Converter={StaticResource CurrencyRial}}"
+                                                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                           FontSize="11" Opacity="0.85" />
+                                                <Button Grid.Column="4" Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource App.RowIconButton}" Padding="4"
+                                                        Foreground="#C62828" Margin="6,0,0,0"
+                                                        ToolTip="حذف این ردیف از فهرست">
+                                                    <materialDesign:PackIcon Kind="Close" Width="13" Height="13" />
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <!-- جمع فهرست -->
+                        <TextBlock Text="{Binding BatchSummaryText, Mode=OneWay}" FontSize="11.5"
+                                   FontWeight="SemiBold" Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                   Margin="4,6,4,0" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ─── نوار اقدام چسبان پایین: خطا + دکمه‌ها ─── -->
+        <StackPanel Grid.Row="2" Margin="0,10,0,0">
             <TextBlock Text="{Binding ErrorMessage}"
                        Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
-                       FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" />
-
+                       FontSize="11.5" TextWrapping="Wrap" Margin="0,0,0,8"
+                       Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
             <UniformGrid Columns="2">
+                <!-- متن دکمه با حالت هم‌قدم می‌شود: تک‌ردیفی یا «ثبت همه (n)» -->
                 <Button Command="{Binding SaveCommand}"
                         Style="{StaticResource MaterialDesignRaisedButton}"
-                        Content="ثبت موجودی" Height="42" Margin="4" />
+                        Content="{Binding SaveButtonText, Mode=OneWay}" Height="42" Margin="4" />
                 <Button Command="{Binding CancelCommand}"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
-                        Content="انصراف" Height="42" Margin="4" />
+                        Content="انصراف و بستن" Height="42" Margin="4" />
             </UniformGrid>
-
-            <ProgressBar IsIndeterminate="True" Height="4" Margin="0,16,0,0"
+            <ProgressBar IsIndeterminate="True" Height="4" Margin="0,12,0,0"
                          Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
         </StackPanel>
-    </ScrollViewer>
+    </Grid>
 </Window>

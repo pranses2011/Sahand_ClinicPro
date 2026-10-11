@@ -6,6 +6,51 @@ using Sahand.ClinicPro.Desktop.Services;
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
 /// <summary>
+/// ردیف فهرست ورود کالای دسته‌جمعی — چرخهٔ ۴۵.
+/// هر ردیف یک «بچ» کامل است: قلم + شماره بچ + تعداد + قیمت خرید/فروش + انقضا؛
+/// دکمهٔ ثبت همه، ردیف‌ها را پشت‌سرهم به سرور می‌فرستد و نتیجهٔ هر ردیف را جدا گزارش می‌کند.
+/// </summary>
+public sealed class StockInBatchLine
+{
+    /// <summary>قلم دارو/مصرفی</summary>
+    public MedicationOption Item { get; }
+
+    /// <summary>شماره بچ — اختیاری</summary>
+    public string? BatchNumber { get; }
+
+    /// <summary>تعداد ورودی</summary>
+    public decimal Quantity { get; }
+
+    /// <summary>قیمت خرید هر واحد (ریال)</summary>
+    public decimal PurchasePrice { get; }
+
+    /// <summary>قیمت فروش هر واحد (ریال)</summary>
+    public decimal SellPrice { get; }
+
+    /// <summary>تاریخ انقضای شمسی</summary>
+    public string ExpiryShamsi { get; }
+
+    /// <summary>متن نمایشی قلم — نام + فرم/توان (برای ستون فهرست)</summary>
+    public string ItemDisplay =>
+        $"{Item.Name}{(string.IsNullOrWhiteSpace(Item.Form) ? "" : $" ({Item.Form})")}";
+
+    /// <summary>جمع خرید این ردیف (تعداد × قیمت خرید)</summary>
+    public decimal PurchaseTotal => Quantity * PurchasePrice;
+
+    /// <summary>سازنده با همهٔ داده‌های بچ</summary>
+    public StockInBatchLine(MedicationOption item, string? batchNumber, decimal quantity,
+        decimal purchasePrice, decimal sellPrice, string expiryShamsi)
+    {
+        Item = item;
+        BatchNumber = batchNumber;
+        Quantity = quantity;
+        PurchasePrice = purchasePrice;
+        SellPrice = sellPrice;
+        ExpiryShamsi = expiryShamsi;
+    }
+}
+
+/// <summary>
 /// ViewModel فرم ورود موجودی — بچ دارو/قلم با تاریخ انقضا
 /// </summary>
 /// <remarks>
@@ -16,12 +61,15 @@ namespace Sahand.ClinicPro.Desktop.ViewModels;
 /// قفل شد: صفحهٔ لوازم مصرفی فقط قلم‌های مصرفی را جست‌وجو می‌کند و
 /// داروخانه فقط داروها (سمت سرور هم با ExpectedItemKind رد می‌شود).
 ///
-/// «در ورود اقلام هم خطای غیر منتظره میده» — دو ریشهٔ مرتبط رفع شد:
-/// ۱) نتایج جستجو نام‌های خالی نشان می‌دادند (DTO مشترک نسخه‌نویسی فیلدهای
-///    nameFa/nameEn را از پاسخ lookups/medications انتظار داشت در حالی که
-///    سرور id/name/form/strength می‌فرستد — نام هیچ‌وقت بایند نمی‌شد!)؛
-///    اکنون DTO محلیِ هم‌شکل پاسخ سرور؛
-/// ۲) سمت سرور: گارد وجود/نوع قلم + اتصال ناوبری تراکنش (کامیت سرور این چرخه).
+/// ═══ چرخهٔ چهل‌وپنجم (گزارش مالک) — ورود کالای دسته‌جمعی ═══
+/// «در اقلام مصرفی و داروها ورود کالا حالت دسته جمعی هم داشته باشه که
+/// همه کالاها رو بنویسیم و در آخر ثبت بکنیم» — فرم حالا «فهرستی» کار
+/// می‌کند: قلم را جستجو و مشخصات بچ را پر می‌کنید → «افزودن به فهرست» →
+/// ردیف به جدول می‌نشیند و فرم برای قلم بعدی خالی می‌شود → در پایان
+/// «ثبت همه» ردیف‌ها را پشت‌سرهم ثبت می‌کند و نتیجهٔ هر ردیف را جدا
+/// گزارش می‌دهد (موفق‌ها از فهرست کنده می‌شوند؛ ناموفق‌ها برای اصلاح
+/// می‌مانند). رفتار تک‌ردیفی قبلی هم حفظ شد: اگر فهرست خالی باشد و
+/// فرم پُر باشد، ثبت همان یک ردیف است.
 /// </remarks>
 public partial class StockInFormViewModel : ObservableObject
 {
@@ -68,6 +116,26 @@ public partial class StockInFormViewModel : ObservableObject
     [ObservableProperty]
     private bool _isBusy;
 
+    /* ═══ چرخهٔ ۴۵ — حالت دسته‌جمعی ═══ */
+
+    /// <summary>ردیف‌های فهرست‌شده برای ثبت گروهی</summary>
+    public ObservableCollection<StockInBatchLine> BatchLines { get; } = new();
+
+    /// <summary>آیا ردیفی در فهرست هست؟ — نمایش جدول و متن دکمهٔ ثبت</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SaveButtonText))]
+    private bool _hasBatchLines;
+
+    /// <summary>متن خلاصهٔ فهرست — شمار ردیف و جمع خرید</summary>
+    public string BatchSummaryText => BatchLines.Count == 0
+        ? string.Empty
+        : $"{Sahand.ClinicPro.Desktop.Helpers.Money.ToPersianDigits(BatchLines.Count.ToString())} قلم در فهرست — جمع خرید {Sahand.ClinicPro.Desktop.Helpers.Money.Format(BatchLines.Sum(l => l.PurchaseTotal))}";
+
+    /// <summary>متن دکمهٔ ثبت — تک‌ردیفی یا گروهی</summary>
+    public string SaveButtonText => HasBatchLines
+        ? $"ثبت همه ({Sahand.ClinicPro.Desktop.Helpers.Money.ToPersianDigits(BatchLines.Count.ToString())} قلم)"
+        : "ثبت موجودی";
+
     /// <summary>رویداد بستن</summary>
     public event EventHandler? CloseRequested;
 
@@ -76,13 +144,13 @@ public partial class StockInFormViewModel : ObservableObject
 
     /// <summary>عنوان فرم — بافت‌دار (مصرفی/دارو)</summary>
     public string FormTitle => _isConsumableContext
-        ? "ورود کالای مصرفی (خرید)"
-        : "ورود دارو به انبار (خرید)";
+        ? "ورود کالای مصرفی (خرید) — تک‌ردیفی یا دسته‌جمعی"
+        : "ورود دارو به انبار (خرید) — تک‌ردیفی یا دسته‌جمعی";
 
     /// <summary>راهنمای بافت‌دار زیر عنوان</summary>
     public string FormHint => _isConsumableContext
-        ? "قلم مصرفی را جستجو کنید و بچ/تعداد/قیمت را ثبت کنید — موجودی فوراً در صفحهٔ لوازم مصرفی دیده می‌شود."
-        : "دارو را جستجو کنید و بچ/تعداد/قیمت را ثبت کنید — موجودی فوراً در تب «موجودی» داروخانه دیده می‌شود.";
+        ? "قلم را جستجو و مشخصات بچ را وارد کنید، با «افزودن به فهرست» ردیف بسازید و همه را یک‌جا ثبت کنید — موجودی فوراً در صفحهٔ لوازم مصرفی دیده می‌شود."
+        : "دارو را جستجو و مشخصات بچ را وارد کنید، با «افزودن به فهرست» ردیف بسازید و همه را یک‌جا ثبت کنید — موجودی فوراً در تب «موجودی» داروخانه دیده می‌شود.";
 
     /// <summary>
     /// سازنده با کلاینت API و بافت فراخواننده
@@ -118,60 +186,206 @@ public partial class StockInFormViewModel : ObservableObject
             : new ObservableCollection<MedicationOption>();
     }
 
-    /// <summary>ثبت ورود موجودی</summary>
+    /// <summary>
+    /// اعتبارسنجی فرم جاری (بدون پیام) — false یعنی فرم برای ردیف‌سازی
+    /// آماده نیست؛ پیام خطا در فراخواننده تنظیم می‌شود تا «افزودن» و «ثبت»
+    /// از یک منبع صدق کنند.
+    /// </summary>
+    private bool TryBuildLine(out StockInBatchLine? line, out string error)
+    {
+        line = null;
+        if (SelectedMedication is null)
+        {
+            error = "ابتدا قلم را از جستجو انتخاب کنید";
+            return false;
+        }
+        if (Quantity <= 0)
+        {
+            error = "تعداد باید بزرگ‌تر از صفر باشد";
+            return false;
+        }
+        if (SellPrice < 0 || PurchasePrice < 0)
+        {
+            error = "قیمت‌ها نمی‌توانند منفی باشند";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(ExpiryDateShamsi) || ExpiryDateShamsi.Trim().Length != 10)
+        {
+            error = "تاریخ انقضا شمسی الزامی است (مثال 1405/06/31)";
+            return false;
+        }
+
+        error = string.Empty;
+        line = new StockInBatchLine(
+            SelectedMedication,
+            string.IsNullOrWhiteSpace(BatchNumber) ? null : BatchNumber.Trim(),
+            Quantity,
+            PurchasePrice,
+            SellPrice,
+            ExpiryDateShamsi.Trim());
+        return true;
+    }
+
+    /// <summary>
+    /// افزودن ردیف جاری به فهرست دسته‌جمعی — چرخهٔ ۴۵.
+    /// ردیفِ همسان (قلم + بچ + انقضا) ادغام می‌شود (تعداد و قیمت‌ها جمع) تا
+    /// فهرست تمیز بماند؛ پس از افزودن، فیلدهای بچ برای قلم بعدی خالی می‌شوند.
+    /// </summary>
+    [RelayCommand]
+    private void AddLine()
+    {
+        ErrorMessage = string.Empty;
+        if (!TryBuildLine(out var built, out var error))
+        {
+            ErrorMessage = error;
+            return;
+        }
+        // اعتبارسنجی پاس شده — ردیف غیرتهی است
+        var line = built!;
+
+        // ادغام با ردیف همسان — همان قلم با همان بچ و انقضا
+        var twin = BatchLines.FirstOrDefault(l =>
+            l.Item.Id == line.Item.Id
+            && string.Equals(l.BatchNumber, line.BatchNumber, StringComparison.OrdinalIgnoreCase)
+            && l.ExpiryShamsi == line.ExpiryShamsi);
+        if (twin is not null)
+        {
+            BatchLines.Remove(twin);
+            line = new StockInBatchLine(twin.Item, twin.BatchNumber,
+                twin.Quantity + line.Quantity,
+                line.PurchasePrice, line.SellPrice, line.ExpiryShamsi);
+        }
+
+        BatchLines.Add(line);
+        RefreshBatchState();
+
+        // فرم برای قلم بعدی آماده — جستجو و نتایج هم پاک شود تا انتخابِ کهنه خطا نکند
+        SelectedMedication = null;
+        MedicationResults.Clear();
+        MedicationSearchTerm = string.Empty;
+        BatchNumber = null;
+        Quantity = 1;
+        PurchasePrice = 0;
+        SellPrice = 0;
+        ExpiryDateShamsi = null;
+    }
+
+    /// <summary>حذف یک ردیف از فهرست دسته‌جمعی</summary>
+    [RelayCommand]
+    private void RemoveLine(StockInBatchLine? line)
+    {
+        if (line is null) return;
+        BatchLines.Remove(line);
+        RefreshBatchState();
+    }
+
+    /// <summary>خالی‌کردن کل فهرست دسته‌جمعی (با تأیید فارسی خود برنامه)</summary>
+    [RelayCommand]
+    private void ClearLines()
+    {
+        if (BatchLines.Count == 0) return;
+        var confirmed = Views.AppDialog.Confirm("خالی‌کردن فهرست",
+            $"هر {Sahand.ClinicPro.Desktop.Helpers.Money.ToPersianDigits(BatchLines.Count.ToString())} ردیف فهرستِ ثبت‌نشده حذف شود؟",
+            Views.AppDialogIcon.Warning) == true;
+        if (!confirmed) return;
+
+        BatchLines.Clear();
+        RefreshBatchState();
+    }
+
+    /// <summary>نوسازی وضعیت فهرست (پرچم + متن‌های وابسته)</summary>
+    private void RefreshBatchState()
+    {
+        HasBatchLines = BatchLines.Count > 0;
+        OnPropertyChanged(nameof(BatchSummaryText));
+    }
+
+    /// <summary>
+    /// ثبت همه — چرخهٔ ۴۵: ردیف‌ها پشت‌سرهم به سرور می‌روند؛ موفق‌ها از
+    /// فهرست کنده می‌شوند و ناموفق‌ها با پیام فارسی می‌مانند. اگر فهرست خالی
+    /// است و فرم پُر است، همان رفتار تک‌ردیفی قبل از این چرخه اجرا می‌شود.
+    /// </summary>
     [RelayCommand]
     private async Task SaveAsync()
     {
         ErrorMessage = string.Empty;
 
-        if (SelectedMedication is null)
+        // فهرست خالی + فرم پُر = جریان تک‌ردیفیِ سابق (سازگاری رفتار)
+        if (BatchLines.Count == 0)
         {
-            ErrorMessage = "ابتدا قلم را از جستجو انتخاب کنید";
-            return;
-        }
-        if (Quantity <= 0)
-        {
-            ErrorMessage = "تعداد باید بزرگ‌تر از صفر باشد";
-            return;
-        }
-        if (SellPrice < 0 || PurchasePrice < 0)
-        {
-            ErrorMessage = "قیمت‌ها نمی‌توانند منفی باشند";
-            return;
-        }
-        if (string.IsNullOrWhiteSpace(ExpiryDateShamsi) || ExpiryDateShamsi.Trim().Length != 10)
-        {
-            ErrorMessage = "تاریخ انقضا شمسی الزامی است (مثال 1405/06/31)";
-            return;
+            if (!TryBuildLine(out var single, out var singleError))
+            {
+                ErrorMessage = singleError;
+                return;
+            }
+            BatchLines.Add(single!);
+            RefreshBatchState();
         }
 
         IsBusy = true;
-        var body = new
-        {
-            medicationId = SelectedMedication.Id,
-            batchNumber = string.IsNullOrWhiteSpace(BatchNumber) ? null : BatchNumber.Trim(),
-            quantity = Quantity,
-            purchasePrice = PurchasePrice,
-            sellPrice = SellPrice,
-            expiryDateShamsi = ExpiryDateShamsi.Trim(),
-            supplierId = (long?)null
-        };
-
-        // ═══ چرخهٔ ۴۳ — مسیر بر اساس بافت فرم ═══
-        // مصرفی‌ها: مسیر مستقل api/v1/consumables/inventory (بدون گیت لایسنس
-        // داروخانه؛ نوع «مصرفی» سمت سرور قفل است) — داروخانه: مسیر
-        // pharmacy/inventory (نوع «دارو» قفل است). هر دو به همان فرمان می‌رسند.
         var endpoint = _isConsumableContext ? "consumables/inventory" : "pharmacy/inventory";
-        var ok = await _api.PostAsync(endpoint, body);
+        var succeeded = 0;
+        var failures = new List<string>();
+
+        // ثبت ترتیبی — هر ردیف مستقل است؛ شکست یکی مانع بقیه نمی‌شود
+        foreach (var line in BatchLines.ToList())
+        {
+            var body = new
+            {
+                medicationId = line.Item.Id,
+                batchNumber = line.BatchNumber,
+                quantity = line.Quantity,
+                purchasePrice = line.PurchasePrice,
+                sellPrice = line.SellPrice,
+                expiryDateShamsi = line.ExpiryShamsi,
+                supplierId = (long?)null
+            };
+            var ok = await _api.PostAsync(endpoint, body);
+            if (ok)
+            {
+                succeeded++;
+                BatchLines.Remove(line);
+            }
+            else
+            {
+                failures.Add($"«{line.ItemDisplay}»: {_api.LastError ?? "خطای ناشناخته"}");
+            }
+        }
+
+        RefreshBatchState();
         IsBusy = false;
 
-        if (ok) SaveSucceeded?.Invoke(this, EventArgs.Empty);
-        else ErrorMessage = _api.LastError ?? "ثبت موجودی ناموفق بود";
+        if (failures.Count == 0)
+        {
+            // همه موفق — بستن فرم و خبر به صفحهٔ والد برای نوسازی
+            SaveSucceeded?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
+        // گزارش ناموفق‌ها — موفق‌ها ثبت شده‌اند و از فهرست کنده شده‌اند.
+        // فرم باز می‌ماند تا ردیف‌های ناموفق اصلاح و دوباره ثبت شوند؛ صفحهٔ
+        // والد پس از بسته‌شدن دیالوگ به‌هرحال نوسازی می‌شود (ShowDialog → LoadAsync)
+        // پس در این مسیر SaveSucceeded شلیک نمی‌شود — آن رویداد یعنی «همه ثبت شد؛
+        // ببند» و بستنِ پنجره، ردیف‌های ناموفقِ قابل‌اصلاح را از دست کاربر می‌برد.
+        var summary = succeeded > 0
+            ? $"{Sahand.ClinicPro.Desktop.Helpers.Money.ToPersianDigits(succeeded.ToString())} ردیف ثبت شد؛ {Sahand.ClinicPro.Desktop.Helpers.Money.ToPersianDigits(failures.Count.ToString())} ردیف ناموفق:"
+            : "هیچ ردیفی ثبت نشد:";
+        ErrorMessage = summary + "\n• " + string.Join("\n• ", failures);
     }
 
-    /// <summary>انصراف</summary>
+    /// <summary>انصراف — اگر ردیف ثبت‌نشده در فهرست هست، تأیید بگیرد (دیالوگ فارسی)</summary>
     [RelayCommand]
-    private void Cancel() => CloseRequested?.Invoke(this, EventArgs.Empty);
+    private void Cancel()
+    {
+        if (BatchLines.Count > 0)
+        {
+            var confirmed = Views.AppDialog.Confirm("خروج از فرم ورود کالا",
+                $"{Sahand.ClinicPro.Desktop.Helpers.Money.ToPersianDigits(BatchLines.Count.ToString())} ردیفِ هنوزثبت‌نشده در فهرست دارید — بدون ثبت خارج می‌شوید؟",
+                Views.AppDialogIcon.Warning) == true;
+            if (!confirmed) return;
+        }
+        CloseRequested?.Invoke(this, EventArgs.Empty);
+    }
 
     // ═══ DTOهای سبک محلی — هم‌شکل پاسخ واقعی سرور (چرخهٔ ۴۳) ═══
     // پیش‌تر از MedicationsResponse نسخه‌نویسی (nameFa/nameEn/…) استفاده می‌شد
