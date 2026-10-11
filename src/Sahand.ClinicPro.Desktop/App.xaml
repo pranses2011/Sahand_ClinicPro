@@ -269,7 +269,17 @@
                  Placement=Mouse — لنگر همان نقطهٔ نشانگر؛ آفست عمودی ۱۴px
                  (کمی پایین‌تر، همیشه خوانا) و افقی ۰؛ کارت گوشه‌گردِ تم با
                  سایهٔ نرم، فونت برنامه و عرض بیشینه تا متن‌های بلند شکسته شوند.
-                 InitialShowDelay=۴۰۰ms (خوانا ولی مزاحم نیست) و ShowDuration=۶s. -->
+                 InitialShowDelay=۴۰۰ms (خوانا ولی مزاحم نیست) و ShowDuration=۶s.
+                 ═══ چرخهٔ چهل‌وهفتم (گزارش مالک) — کنتراست قطعی ═══
+                 «تول تیپ ها(Tooltip) به خاطر رنگ فونت و زمینه شان خوانایی کمی
+                 دارند» — ریشه: پس‌زمینه از قلمِ MaterialDesign.Brush.ToolTip.
+                 Background خوانده می‌شد (در تم پایهٔ متریال «خاکستری تیره» است
+                 که متنِ سفید می‌خواهد) ولی متن از قلم Foreground عمومی تم
+                 (تیره) می‌آمد ⇒ در تم‌های روشن سفارشی، متنِ تیره روی زمینهٔ
+                 تیره/خاکستری می‌افتاد و خوانا نبود. اکنون جفتِ رنگ قطعی و
+                 مستقل از تم: زمینهٔ سرمه‌ای تیره #263238 + متن سفید — در هر
+                 تم و هر پس‌زمینهٔ صفحه‌ای بیشینهٔ خوانایی؛ نوار رنگی راست هم
+                 سفید ماند (نشان RTL هم‌زبان توست‌ها). -->
             <Style TargetType="ToolTip">
                 <Setter Property="Placement" Value="Mouse" />
                 <Setter Property="VerticalOffset" Value="14" />
@@ -279,16 +289,17 @@
                 <Setter Property="ToolTipService.ShowDuration" Value="6000" />
                 <Setter Property="ToolTipService.BetweenShowDelay" Value="200" />
                 <Setter Property="HasDropShadow" Value="True" />
-                <Setter Property="Foreground"
-                        Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                <!-- چرخهٔ ۴۷: جفتِ رنگ قطعی — متن سفید روی سرمه‌ای تیره، مستقل از تم -->
+                <Setter Property="Foreground" Value="#FFFFFF" />
                 <Setter Property="FontFamily" Value="{StaticResource App.FontFamily}" />
                 <Setter Property="FontSize" Value="11.5" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="ToolTip">
+                            <!-- چرخهٔ ۴۷: زمینهٔ قطعی سرمه‌ای — دیگر از قلم تم خوانده نمی‌شود -->
                             <Border x:Name="TipCard"
-                                    Background="{DynamicResource MaterialDesign.Brush.ToolTip.Background}"
-                                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                                    Background="#263238"
+                                    BorderBrush="#3E5468"
                                     BorderThickness="1"
                                     CornerRadius="8"
                                     Padding="10,6"
@@ -304,11 +315,16 @@
                                      معتبر نیست (خطای MC3015). -->
                                 <StackPanel Orientation="Horizontal">
                                     <Rectangle Width="3.5" RadiusX="2" RadiusY="2" Fill="#FFFFFFFF"
-                                               Opacity="0.35" VerticalAlignment="Stretch" />
+                                               Opacity="0.5" VerticalAlignment="Stretch" />
                                     <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center">
                                         <ContentPresenter.Resources>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="TextWrapping" Value="Wrap" />
+                                                <!-- چرخهٔ ۴۷: متنِ داخل قالب هم سفید —
+                                                     اتصال‌های خودکار TextBlockForeground توسط
+                                                     استایل قالب والد به ارث می‌رسد ولی صراحت
+                                                     قطعی‌تر است -->
+                                                <Setter Property="Foreground" Value="#FFFFFF" />
                                             </Style>
                                         </ContentPresenter.Resources>
                                     </ContentPresenter>
