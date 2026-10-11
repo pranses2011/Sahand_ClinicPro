@@ -81,7 +81,10 @@ public record AppointmentListRow(
     decimal EstimatedFee);
 
 /// <summary>
-/// بیمار انتخاب‌شده در رزرو سریع
+/// بیمار انتخاب‌شده در رزرو سریع — چرخهٔ ۴۴: شناسهٔ بیمهٔ اصلی پرونده
+/// (InsuranceCompanyId) با پارامتر اختیاری به رکورد اضافا شد تا هیچ نقطهٔ
+/// ساختِ موجود نشکند؛ فرم پذیرش با انتخاب بیمار، نوع بیمه را از همین
+/// شناسه به‌صورت خودکار انتخاب می‌کند (گزارش مالک).
 /// </summary>
 public record QuickPatient(
     long Id,
@@ -90,7 +93,8 @@ public record QuickPatient(
     string Mobile,
     string? InsuranceName,
     string? Allergies,
-    string? LastVisitDateShamsi);
+    string? LastVisitDateShamsi,
+    long? InsuranceCompanyId = null);
 
 /// <summary>
 /// ViewModel نوبت‌دهی — دو تب رزرو و فهرست — گام U4 طبق پرامپت UI بخش ۲ (فرم ۸ و ۹)

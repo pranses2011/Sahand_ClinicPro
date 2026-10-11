@@ -6,8 +6,9 @@ using Sahand.ClinicPro.Desktop.Services;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
-/// <summary>گزینه بیمار در نتیجه جستجو</summary>
-public record PatientOption(long Id, string DisplayName, string Detail);
+/// <summary>گزینه بیمار در نتیجه جستجو — چرخهٔ ۴۴: شناسه بیمهٔ اصلی پرونده
+/// هم برای انتخاب خودکار نوع بیمه در فرم پذیرش حمل می‌شود</summary>
+public record PatientOption(long Id, string DisplayName, string Detail, long? InsuranceCompanyId = null);
 
 /// <summary>
 /// ViewModel فرم ثبت نوبت — جستجوی بیمار + انتخاب پزشک + تاریخ و ساعت.
@@ -209,7 +210,7 @@ public partial class AppointmentFormViewModel : ObservableObject
         public List<PatientSearchDto>? Data { get; set; }
     }
 
-    /// <summary>DTO جستجوی بیمار</summary>
+    /// <summary>DTO جستجوی بیمار — چرخهٔ ۴۴: بیمهٔ اصلی بیمار هم برای انتخاب خودکار در پذیرش</summary>
     public sealed class PatientSearchDto
     {
         public long Id { get; set; }
@@ -218,6 +219,10 @@ public partial class AppointmentFormViewModel : ObservableObject
         public string LastName { get; set; } = string.Empty;
         public string NationalCode { get; set; } = string.Empty;
         public string Mobile { get; set; } = string.Empty;
+        /// <summary>شناسه بیمهٔ اصلی پروندهٔ بیمار — چرخهٔ ۴۴</summary>
+        public long? InsuranceCompanyId { get; set; }
+        /// <summary>نام بیمهٔ اصلی پرونده — چرخهٔ ۴۴ (نمایش در جزئیات)</summary>
+        public string? InsuranceName { get; set; }
     }
 
     /// <summary>پاسخ صفحهٔ فهرست پزشکان — چرخه بیستم</summary>

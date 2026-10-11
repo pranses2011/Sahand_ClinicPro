@@ -89,6 +89,10 @@ public partial class ReceptionFormViewModel : ObservableObject
         // پیش‌فرض: آزاد — کاربر در صورت داشتن بیمه، آن را انتخاب می‌کند
         if (InsuranceCompanies.Count > 0)
             InsuranceIndex = 0;
+
+        // چرخهٔ ۴۴ — بیمارِ از پیش انتخاب‌شده (فرم با بیمار ورودی باز شده)
+        // اکنون که فهرست بیمه‌ها آماده است، بیمهٔ پرونده‌اش روی کشو می‌نشیند
+        ApplyPatientInsurance(SelectedPatient);
     }
 
     /// <summary>جستجوی بیمار</summary>
@@ -105,8 +109,35 @@ public partial class ReceptionFormViewModel : ObservableObject
             ? new ObservableCollection<PatientOption>(response.Data.Select(p =>
                 new PatientOption(p.Id,
                     $"{p.FirstName} {p.LastName} — پرونده {p.MedicalRecordNo}",
-                    $"کد ملی {p.NationalCode} — موبایل {p.Mobile}")))
+                    $"کد ملی {p.NationalCode} — موبایل {p.Mobile}{(string.IsNullOrWhiteSpace(p.InsuranceName) ? "" : $" — بیمه {p.InsuranceName}")}",
+                    p.InsuranceCompanyId)))
             : new ObservableCollection<PatientOption>();
+    }
+
+    /// <summary>
+    /// تغییر بیمار انتخاب‌شده — چرخهٔ ۴۴ (گزارش مالک): «در فرم پذیرش وقتی بیمار
+    /// رو انتخاب می‌کنیم، نوع (بیمه) بر اساس بیمهٔ بیمار انتخاب بشه».
+    /// بیمهٔ اصلی پروندهٔ بیمار بی‌درنگ روی کشوی «نوع بیمه» می‌نشیند؛ بیمارِ
+    /// بدون بیمه روی «آزاد (بدون بیمه)» می‌ماند و کاربر می‌تواند عمداً عوض کند.
+    /// </summary>
+    partial void OnSelectedPatientChanged(PatientOption? value)
+        => ApplyPatientInsurance(value);
+
+    /// <summary>
+    /// نشاندن بیمهٔ پروندهٔ بیمار روی کشوی بیمه — چرخهٔ ۴۴ (هم‌الگوی
+    /// ReceptionsViewModel.ApplyPatientInsurance). اگر کشو هنوز پر نشده باشد،
+    /// پایان LoadInsuranceAsync هم دوباره صدا زده می‌شود (گارد مسابقه).
+    /// </summary>
+    private void ApplyPatientInsurance(PatientOption? patient)
+    {
+        if (patient is null) return;
+
+        var company = patient.InsuranceCompanyId is { } companyId
+            ? InsuranceCompanies.FirstOrDefault(c => c.Id == companyId)
+            : null;
+        var index = company is null ? 0 : InsuranceCompanies.IndexOf(company);
+        if (index < 0) index = 0;
+        InsuranceIndex = index;
     }
 
     /// <summary>ذخیره پذیرش</summary>

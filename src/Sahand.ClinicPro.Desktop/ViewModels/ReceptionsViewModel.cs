@@ -68,6 +68,35 @@ public partial class ReceptionsViewModel : ViewModelBase
         _snackbar.Success($"بیمار انتخاب شد: {value.FullName}");
     }
 
+    /// <summary>
+    /// تغییر بیمار یافته‌شده — چرخهٔ ۴۴ (گزارش مالک): «در فرم پذیرش وقتی بیمار
+    /// رو انتخاب می‌کنیم، نوع (بیمه) بر اساس بیمهٔ بیمار انتخاب بشه».
+    /// بیمهٔ اصلی ثبت‌شده در پروندهٔ بیمار، بی‌درنگ روی کشوی «نوع بیمه» نشست
+    /// می‌گیرد؛ بیمارِ بدون بیمه به «آزاد (بدون بیمه)» برمی‌گردد. کاربر
+    /// همچنان می‌تواند بعداً مقدار را عمداً عوض کند (مثلاً بیمهٔ تبعی).
+    /// </summary>
+    partial void OnFoundPatientChanged(QuickPatient? value)
+        => ApplyPatientInsurance(value);
+
+    /// <summary>
+    /// نشاندن بیمهٔ پروندهٔ بیمار روی کشوی بیمه — چرخهٔ ۴۴.
+    /// اگر کشو هنوز از سرور پر نشده باشد (جستجوی خیلی زودهنگام)، این متد
+    /// در پایان LoadInsuranceAsync هم دوباره صدا زده می‌شود تا بیمهٔ بیمار
+    /// پس از آماده‌شدن فهرست نیز اعمال شود (گارد مسابقهٔ بارگذاری).
+    /// </summary>
+    private void ApplyPatientInsurance(QuickPatient? patient)
+    {
+        if (patient is null) return;
+
+        // بیمهٔ پرونده → جایگاهش در کشو؛ نبود بیمه/نبود شرکت در فهرست → آزاد
+        var company = patient.InsuranceCompanyId is { } companyId
+            ? InsuranceCompanies.FirstOrDefault(c => c.Id == companyId)
+            : null;
+        var index = company is null ? 0 : InsuranceCompanies.IndexOf(company);
+        if (index < 0) index = 0; // شرکت در فهرست نیست (مثلاً غیرفعال شده) → آزاد
+        InsuranceIndex = index;
+    }
+
     /// <summary>نوبت فعال یافته‌شده — اگر بیمار نوبت داشته باشد</summary>
     [ObservableProperty]
     private string? _foundAppointmentInfo;
@@ -325,6 +354,10 @@ public partial class ReceptionsViewModel : ViewModelBase
             foreach (var c in companies.Data)
                 InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name));
 
+        // چرخهٔ ۴۴ — بیمارِ هم‌اکنون انتخاب‌شده (جستجوی زودهنگام پیش از آماده‌شدن
+        // کشو) اکنون که فهرست بیمه‌ها کامل است، بیمهٔ پرونده‌اش روی کشو می‌نشیند
+        ApplyPatientInsurance(FoundPatient);
+
         await LoadAsync();
     }
 
@@ -473,7 +506,7 @@ public partial class ReceptionsViewModel : ViewModelBase
 
         return response.Data
             .Select(p => new QuickPatient(p.Id, $"{p.FirstName} {p.LastName}", p.NationalCode, p.Mobile,
-                p.InsuranceName, p.Allergies, null))
+                p.InsuranceName, p.Allergies, null, p.InsuranceCompanyId))
             .ToList();
     }
 
