@@ -303,6 +303,12 @@
                         </Button>
                     </Grid>
 
+                    <!-- ═══ چرخهٔ ۴۷ (گزارش مالک) ═══
+                         «عنوان ستون ها و محتوای سلول ها رو وسط چین بکن» —
+                         سبک محلی روی همین گرید: سرستون‌ها و محتوای سلول‌ها
+                         (متن/چک‌باکس/انتخابگر) وسط‌چین؛ انتخابگرهای ساعت با
+                         تراز کششیِ خودشان می‌مانند (Stretch صریح بر تراز محتوا
+                         غلبه می‌کند) تا ستون‌های زمان مانند قبل تمام‌عرض باشند. -->
                     <DataGrid Grid.Row="1"
                               ItemsSource="{Binding ScheduleRows}"
                               AutoGenerateColumns="False"
@@ -310,6 +316,19 @@
                               HeadersVisibility="Column"
                               FontSize="12"
                               SelectedItem="{Binding SelectedScheduleRow, Mode=TwoWay}">
+                        <DataGrid.Resources>
+                            <!-- سرستون وسط‌چین — بر سبک ضمنی سراسری سوار می‌شود -->
+                            <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                            </Style>
+                        </DataGrid.Resources>
+                        <!-- سلول وسط‌چین — سبک ضمنی App (کشش محتوا) برای همین گرید بازنویسی می‌شود -->
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                            </Style>
+                        </DataGrid.CellStyle>
                         <DataGrid.Columns>
                             <DataGridTemplateColumn Header="روز" Width="90">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -390,7 +409,14 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="ظرفیت" Width="58"
+                            <!-- ═══ چرخهٔ ۴۷ (گزارش مالک) ═══
+                                 «در فیلد ظرفیت هر مقداری که مینویسم اعمال نمیشه
+                                 و با ترک سلول، مقدار پاک میشه» — ریشه: مبدل
+                                 PersianDigits در مسیر برگشت (ConvertBack) همیشه
+                                 Binding.DoNothing برمی‌گرداند و مقدار هرگز به
+                                 منبع نمی‌رسید؛ مبدل در چرخهٔ ۴۷ دوسویه شد و
+                                 ارقام فارسی/لاتین هر دو پذیرفته می‌شوند. -->
+                            <DataGridTextColumn Header="ظرفیت" Width="64"
                                 Binding="{Binding MaxPatients, UpdateSourceTrigger=PropertyChanged, TargetNullValue='', Converter={StaticResource PersianDigits}}" />
                         </DataGrid.Columns>
                     </DataGrid>
