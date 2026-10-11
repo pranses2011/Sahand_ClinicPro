@@ -883,8 +883,19 @@
                                                           Direction="270" Opacity="0.18"
                                                           Color="#0A1E3C" />
                                     </Border.Effect>
+                                    <!-- ═══ چرخهٔ ۴۵ (گزارش مالک: «پیام توست ناقص نمایش داده
+                                         می‌شود و قسمت پایینش بریده شده») ═══
+                                         ریشه: مقدارِ پایهٔ TranslateTransform «Y=14» بود —
+                                         RenderTransform جای چیدمان را جابه‌جا نمی‌کند؛ اگر
+                                         انیمیشن ورود به هر دلیلی اجرا/تثبیت نشود (یا ساعتش
+                                         کنسل شود)، کپسول برای همیشه ۱۴px پایین‌تر از جایگاه
+                                         خود رندر می‌شود و DropShadowEffect همین سرریز را در
+                                         مرز چیدمان می‌بُرَد → لبهٔ پایین (گوشه‌ها + حاشیه)
+                                         ناپدید. رفع: مقدار پایه «Y=0» (حالت سکونِ همیشه
+                                         درست) و انیمیشن با From=14 شروع می‌شود — حتی اگر
+                                         انیمیشن بیفتد، کپسول سرِ جای خود است. -->
                                     <Border.RenderTransform>
-                                        <TranslateTransform x:Name="ToastShift" Y="14" />
+                                        <TranslateTransform x:Name="ToastShift" Y="0" />
                                     </Border.RenderTransform>
 
                                     <!-- محتوا: [نوار رنگی][آیکون رنگی][متن][ضربدر بستن]
@@ -985,7 +996,8 @@
                                                 </DoubleAnimation>
                                                 <DoubleAnimation Storyboard.TargetName="ToastShift"
                                                                  Storyboard.TargetProperty="Y"
-                                                                 From="14" To="0" Duration="0:0:0.26">
+                                                                 From="14" To="0" Duration="0:0:0.26"
+                                                                 FillBehavior="HoldEnd">
                                                     <DoubleAnimation.EasingFunction>
                                                         <CubicEase EasingMode="EaseOut" />
                                                     </DoubleAnimation.EasingFunction>

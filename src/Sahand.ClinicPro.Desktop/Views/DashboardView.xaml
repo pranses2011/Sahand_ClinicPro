@@ -175,29 +175,72 @@
                             <TextBlock Text="میانبرهای سریع من" FontSize="14.5" FontWeight="Bold"
                                        Margin="8,0,0,0" VerticalAlignment="Center" />
                         </StackPanel>
-                        <!-- ═══ چرخهٔ ۴۳ (گزارش مالک: «دکمه میانبر جدید رو همانند حالت
-                             ویرایش بکن که فقط آیکون باشه تا زیباتر دیده بشه») ═══
-                             هر دو دکمهٔ مدیریتی حالا فقط-آیکون و هم‌شکل‌اند: دایرهٔ
-                             نرم ۳۴px با آیکون ۱۶px؛ «میانبر جدید» نارنجی پررنگ (کانون
-                             توجه) و «ویرایش» خاکستری کم‌رنگ که در حالت فعال پر می‌شود. -->
+                        <!-- ═══ چرخهٔ ۴۵ (گزارش مالک) — دکمه‌های مدیریتیِ کاملاً گرد ═══
+                             «دکمه میانبر جدید در داشبورد رو همانند دکمه حالت ویرایش بکن
+                             که گرد باشه و فقط آیکون باشه تا زیباتر دیده بشه» — هر دو
+                             دکمه حالا با قالب دایرهٔ کامل ۳۶px خودِ این پنل رندر می‌شوند
+                             (استایل‌های متریال گوشهٔ کم‌گرد می‌دادند نه دایرهٔ کامل):
+                             افزودن = دایرهٔ توپر نارنجی با آیکون سفید (کانون توجه)؛
+                             ویرایش = دایرهٔ کم‌رنگ که در حالت فعال با رنگ اصلی پر می‌شود؛
+                             هر دو Focusable=False و ClickMode=Press تا در هر بافتی پاسخگو
+                             باشند (الگوی چرخهٔ ۴۴). -->
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" HorizontalAlignment="Left"
                                     VerticalAlignment="Center">
-                            <!-- افزودن — فقط-آیکون؛ دایرهٔ نارنجی با تولتیپ راهنما -->
+                            <!-- افزودن — دایرهٔ توپر نارنجی؛ فقط-آیکون -->
                             <Button Command="{Binding AddShortcutCommand}"
-                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                    Width="34" Height="34" Padding="0" Margin="0,0,6,0"
-                                    Background="#F57C00" Foreground="White"
+                                    Width="36" Height="36" Padding="0" Margin="0,0,8,0"
+                                    Cursor="Hand" Focusable="False" ClickMode="Press"
                                     ToolTip="میانبر جدید — افزودن صفحهٔ دلخواه به این پنل">
-                                <materialDesign:PackIcon Kind="Plus" Width="16" Height="16" VerticalAlignment="Center"
-                                                         HorizontalAlignment="Center" />
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="AddCircle" Width="36" Height="36" CornerRadius="18"
+                                                Background="#F57C00">
+                                            <materialDesign:PackIcon Kind="Plus" Width="17" Height="17"
+                                                                     Foreground="White"
+                                                                     HorizontalAlignment="Center"
+                                                                     VerticalAlignment="Center" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="AddCircle" Property="Opacity" Value="0.85" />
+                                                <Setter TargetName="AddCircle" Property="Background" Value="#FB8C00" />
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="AddCircle" Property="Opacity" Value="0.7" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
                             </Button>
-                            <!-- ویرایش — فقط-آیکون؛ پایان خودکارِ حالت = ذخیره -->
+                            <!-- ویرایش — دایرهٔ کم‌رنگ؛ فعال = توپرِ رنگ اصلی؛ پایان خودکارِ حالت = ذخیره -->
                             <ToggleButton IsChecked="{Binding IsEditingShortcuts}"
-                                          Style="{StaticResource MaterialDesignFlatToggleButton}"
-                                          Width="34" Height="34" Padding="0"
+                                          Width="36" Height="36" Padding="0"
+                                          Cursor="Hand" Focusable="False" ClickMode="Press"
                                           ToolTip="حالت ویرایش — دکمهٔ حذف روی هر کاشی نمایان می‌شود؛ با پایان ویرایش، تغییرات ذخیره می‌شوند">
-                                <materialDesign:PackIcon Kind="PencilOutline" Width="15" Height="15"
-                                                         VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="EditCircle" Width="36" Height="36" CornerRadius="18"
+                                                Background="Transparent"
+                                                BorderBrush="#B0BEC5" BorderThickness="1.6">
+                                            <materialDesign:PackIcon x:Name="EditIcon" Kind="PencilOutline" Width="15" Height="15"
+                                                                     Foreground="#78909C"
+                                                                     HorizontalAlignment="Center"
+                                                                     VerticalAlignment="Center" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="EditCircle" Property="BorderBrush"
+                                                        Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                                <Setter TargetName="EditCircle" Property="Background"
+                                                        Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                                <Setter TargetName="EditIcon" Property="Foreground" Value="White" />
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="EditCircle" Property="Opacity" Value="0.8" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
                             </ToggleButton>
                         </StackPanel>
                     </DockPanel>
@@ -209,10 +252,14 @@
 
                     <!-- ═══ کاشی‌های میانبر — چرخهٔ ۴۳ بازطراحی (گزارش مالک:
                          «ظاهر دکمه‌های میانبر رو زیباتر بکن… دکمه‌های میانبر رو وسط
-                         چین بکن») ═══ کارت سفید با گوشهٔ ۱۴ و آیکون در «دایرهٔ توپرِ
-                         رنگ تأکیدی» + عنوان دوخطی‌شدنی؛ سایهٔ نرم هنگام هاور و
-                         برجسته‌شدن حاشیه با رنگ تأکیدی همان کاشی؛ چیدمان WrapPanel
-                         وسط‌چین تا کاشی‌ها همیشه زیر عنوان و در مرکز پنل بنشینند. -->
+                         چین بکن») ═══ بازطراحی مقاوم چرخهٔ ۴۵ (گزارش مالک: «دکمه‌های
+                         میانبر ناقص هستند و آیکون و عنوان مشخص نیست» — تصویر: کارت
+                         ~۳۱px، فقط ۸px از دایرهٔ آیکون و بدون عنوان):
+                         ① DropShadowEffect حذف شد از حالت سکون — افکت، محتوای سرریز
+                            از قالب چیدمان را در مرز می‌بُرید (سازوکار بریدن)
+                         ② MinHeight=96 روی خود قالب — دیوار کف ارتفاع؛ هر فشردگی
+                            چیدمانی در هر بافت/مقیاس/تم بی‌اثر می‌شود
+                         ③ حاشیهٔ پررنگ‌تر + هاورِ حاشیهٔ رنگ تأکیدی (بدون استوری‌بورد) -->
                     <ItemsControl ItemsSource="{Binding Shortcuts}"
                                   HorizontalAlignment="Center">
                         <ItemsControl.ItemsPanel>
@@ -222,7 +269,7 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="5,5,5,7" Width="118">
+                                <Grid Margin="5,5,5,7" Width="118" MinHeight="96">
                                     <!-- کاشی اصلی — کلیک = ناوبری مستقیم -->
                                     <Button Command="{Binding DataContext.OpenShortcutCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                             CommandParameter="{Binding}"
@@ -232,62 +279,41 @@
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="Tile"
                                                         CornerRadius="14" Background="#FFFFFF"
-                                                        BorderBrush="#E4E9F0" BorderThickness="1.2"
-                                                        Padding="0,12,0,10">
-                                                    <Border.Effect>
-                                                        <!-- سایهٔ همیشه‌نرم؛ با هاور عمیق‌تر و پایین‌تر می‌شود -->
-                                                        <DropShadowEffect x:Name="TileShadow" BlurRadius="10" ShadowDepth="2"
-                                                                          Direction="270" Opacity="0.10" Color="#25405E" />
-                                                    </Border.Effect>
-                                                    <StackPanel HorizontalAlignment="Center">
+                                                        BorderBrush="#D9E2EC" BorderThickness="1.4"
+                                                        Padding="0,12,0,10"
+                                                        MinHeight="96"
+                                                        UseLayoutRounding="True"
+                                                        SnapsToDevicePixels="True">
+                                                    <!-- ═══ چرخهٔ ۴۵: بدون DropShadowEffect — افکت،
+                                                         محتوای سرریز از قالب چیدمان را در مرز می‌بُرید
+                                                         (ریشهٔ «آیکون ناقص و عنوان ناموجود» در تصویر مالک) ═══ -->
+                                                    <StackPanel HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center">
                                                         <!-- دایرهٔ آیکون — توپر با رنگ تأکیدی کاشی -->
-                                                        <Border Width="42" Height="42" CornerRadius="21"
+                                                        <Border Width="44" Height="44" CornerRadius="22"
                                                                 Background="{Binding Accent, Converter={StaticResource HexToBrush}}"
                                                                 HorizontalAlignment="Center" Margin="0,0,0,7">
-                                                            <materialDesign:PackIcon Kind="{Binding Icon}" Width="21" Height="21"
+                                                            <materialDesign:PackIcon Kind="{Binding Icon}" Width="22" Height="22"
                                                                                      Foreground="White"
                                                                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                         </Border>
                                                         <TextBlock Text="{Binding Title}" FontSize="11" FontWeight="SemiBold"
                                                                    Foreground="#1F2937" Margin="6,0,6,0"
                                                                    HorizontalAlignment="Center" TextAlignment="Center"
-                                                                   TextTrimming="CharacterEllipsis" MaxWidth="104" />
+                                                                   TextWrapping="Wrap" MaxHeight="30" MaxWidth="104"
+                                                                   TextTrimming="CharacterEllipsis" />
                                                     </StackPanel>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
-                                                    <!-- هاور: سایهٔ نرم‌تر و بازشدن ملایم + حاشیهٔ رنگی کاشی -->
+                                                    <!-- هاور: حاشیهٔ رنگ تأکیدی کاشی + ته‌رنگ سرد -->
                                                     <Trigger Property="IsMouseOver" Value="True">
                                                         <Setter TargetName="Tile" Property="BorderBrush"
                                                                 Value="{Binding Accent, Converter={StaticResource HexToBrush}}" />
                                                         <Setter TargetName="Tile" Property="Background" Value="#FDFEFF" />
                                                     </Trigger>
                                                     <Trigger Property="IsPressed" Value="True">
-                                                        <Setter TargetName="Tile" Property="Opacity" Value="0.85" />
+                                                        <Setter TargetName="Tile" Property="Opacity" Value="0.88" />
                                                     </Trigger>
-                                                    <EventTrigger RoutedEvent="MouseEnter">
-                                                        <BeginStoryboard>
-                                                            <Storyboard>
-                                                                <DoubleAnimation Storyboard.TargetName="TileShadow"
-                                                                                 Storyboard.TargetProperty="Opacity"
-                                                                                 To="0.22" Duration="0:0:0.16" />
-                                                                <DoubleAnimation Storyboard.TargetName="TileShadow"
-                                                                                 Storyboard.TargetProperty="ShadowDepth"
-                                                                                 To="5" Duration="0:0:0.16" />
-                                                            </Storyboard>
-                                                        </BeginStoryboard>
-                                                    </EventTrigger>
-                                                    <EventTrigger RoutedEvent="MouseLeave">
-                                                        <BeginStoryboard>
-                                                            <Storyboard>
-                                                                <DoubleAnimation Storyboard.TargetName="TileShadow"
-                                                                                 Storyboard.TargetProperty="Opacity"
-                                                                                 To="0.10" Duration="0:0:0.16" />
-                                                                <DoubleAnimation Storyboard.TargetName="TileShadow"
-                                                                                 Storyboard.TargetProperty="ShadowDepth"
-                                                                                 To="2" Duration="0:0:0.16" />
-                                                            </Storyboard>
-                                                        </BeginStoryboard>
-                                                    </EventTrigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
                                         </Button.Template>
