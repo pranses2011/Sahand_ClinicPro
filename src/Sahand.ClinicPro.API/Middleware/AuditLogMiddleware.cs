@@ -2,8 +2,10 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Domain.Entities.Infrastructure;
+using Sahand.ClinicPro.Domain.Entities.Scheduling;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Infrastructure.Persistence;
+using Sahand.ClinicPro.Domain.Entities.Security;
 
 namespace Sahand.ClinicPro.API.Middleware;
 
@@ -283,6 +285,120 @@ public class AuditLogMiddleware
     // شناسه» در آینده هم شکسته نشود؛ TryCaptureOldValues به DbContext وابسته
     // است و در تست‌های یکپارچگی پوشش داده می‌شود.
 
+    /// <summary>
+    /// استخراج قطعهٔ زیرمنبع از مسیر — چرخهٔ چهل‌وهفتم.
+    /// الگوی هدف: «/api/v1/…/{والد}/{شناسه}/{زیرمنبع}» مثل
+    /// roles/5/permissions یا doctors/7/schedule؛ نخستین قطعهٔ عددی از
+    /// انتها پیدا می‌شود و اگر «بعد از آن» قطعهٔ غیرعدنی دیگری باشد،
+    /// همان قطعه زیرمنبع است (تهی یعنی مسیر سادهٔ /{والد}/{شناسه}).
+    /// </summary>
+    private static string? ExtractSubResource(PathString path)
+    {
+        var parts = path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (parts is not { Length: > 0 }) return null;
+
+        // نخستین قطعهٔ عددی از انتها (همان شناسهٔ رکورد)
+        for (var i = parts.Length - 1; i >= 0; i--)
+        {
+            if (long.TryParse(parts[i], out _))
+            {
+                // قطعهٔ بعد از شناسه — اگر موجود و غیرعددی باشد، زیرمنبع است
+                // (قطعه‌های «قطع مسیر» مثل «permissions/3» را پوشش نمی‌دهد —
+                // شناسهٔ انتهایی، همان شناسهٔ زیرمنبع می‌شود و والدِ آن، خودِ
+                // زیرمنبع؛ این مسیرها در دامنهٔ این متد نیستند)
+                return i + 1 < parts.Length ? parts[i + 1] : null;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// ثبت وضعیت فعلیِ «زیرمنبع‌های معنادار» — چرخهٔ چهل‌وهفتم (گزارش مالک:
+    /// «دسترسی نقش ها رو عوض کردم و در مقادیر قبلی، آی دی و نام نقش و
+    /// توضیحات نشون میده — اشتباهه»).
+    /// خواندن با پرس‌وجوی LINQ بدون‌ردیابی (AsNoTracking) انجام می‌شود تا
+    /// ChangeTracker هندلر آلوده نشود؛ خروجی JSON خوانا با برچسب‌های فارسی.
+    /// مقدار تهی یعنی «این جفت والد/زیرمنبع شناخته نشد» → سقوط به سطر والد.
+    /// </summary>
+    private static string? TryCaptureSubResourceOldValues(
+        ClinicProDbContext dbContext, string entitySegment, string subResource, long id)
+    {
+        try
+        {
+            // ═══ roles/{id}/permissions — فهرست مجوزهای فعلی نقش ═══
+            if (subResource.Equals("permissions", StringComparison.OrdinalIgnoreCase)
+                && entitySegment.Equals("roles", StringComparison.OrdinalIgnoreCase))
+            {
+                var role = dbContext.Roles
+                    .AsNoTracking()
+                    .Where(r => r.Id == id)
+                    .Select(r => new
+                    {
+                        r.Name,
+                        Permissions = r.Permissions
+                            .Select(rp => new { rp.Permission.Id, rp.Permission.Name })
+                            .OrderBy(p => p.Name)
+                            .ToList()
+                    })
+                    .FirstOrDefault();
+                if (role is null) return null;
+
+                var json = JsonSerializer.Serialize(new
+                {
+                    roleName = role.Name,
+                    permissionCount = role.Permissions.Count,
+                    // نام مجوزها «کلید» فهم تغییرند؛ شناسه‌ها هم برای تطبیق دقیق
+                    permissions = role.Permissions.Select(p => $"{p.Name} (#{p.Id})").ToList()
+                }, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+                return Truncate(json);
+            }
+
+            // ═══ doctors/{id}/schedule — ردیف‌های فعلی برنامهٔ کاری هفتگی ═══
+            if (subResource.Equals("schedule", StringComparison.OrdinalIgnoreCase)
+                && entitySegment.Equals("doctors", StringComparison.OrdinalIgnoreCase))
+            {
+                // ستون‌های خام اول واکشی می‌شوند (قالب‌بندی TimeOnly در پروجکشن
+                // به SQL ترجمه نمی‌شود) و سپس در حافظه به متن خوانا تبدیل می‌شوند
+                var rawRows = dbContext.Set<DoctorSchedule>()
+                    .AsNoTracking()
+                    .Where(d => d.DoctorId == id && !d.IsDeleted)
+                    .OrderBy(d => d.DayOfWeek)
+                    .Select(d => new
+                    {
+                        d.DayOfWeek, d.StartTime, d.EndTime, d.BreakStart, d.BreakEnd,
+                        d.RoomId, d.MaxPatients, d.IsActive
+                    })
+                    .ToList();
+                if (rawRows.Count == 0) return null;
+
+                var dayNames = new[] { "شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه" };
+                var json = JsonSerializer.Serialize(new
+                {
+                    weeklySchedule = rawRows.Select(d => new
+                    {
+                        day = d.DayOfWeek < dayNames.Length ? dayNames[d.DayOfWeek] : d.DayOfWeek.ToString(),
+                        startTime = d.StartTime.ToString("HH:mm"),
+                        endTime = d.EndTime.ToString("HH:mm"),
+                        breakRange = d.BreakStart.HasValue
+                            ? $"{d.BreakStart:HH:mm}-{d.BreakEnd:HH:mm}"
+                            : null,
+                        roomId = d.RoomId,
+                        maxPatients = d.MaxPatients,
+                        enabled = d.IsActive
+                    }).ToList()
+                }, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+                return Truncate(json);
+            }
+
+            return null; // زیرمنبع شناخته‌شده نبود — سقوط به سطر والد
+        }
+        catch
+        {
+            // بهترین تلاش — شکستِ ثبتِ زیرمنبع نباید مسیر والد را هم بپوشاند
+            return null;
+        }
+    }
+
     /// <summary>نمایش داخلی ExtractEntityName برای پروژهٔ تست</summary>
     internal static string? ExtractEntityNameForTest(PathString path) => ExtractEntityName(path);
 
@@ -429,6 +545,17 @@ public class AuditLogMiddleware
     /// زیرمنبعی (hr/employees، insurance/companies، lookups/rooms و…)
     /// نیز پوشش داده شوند — پیش‌تر فقط تطابق کامل تک‌قطعه بررسی می‌شد و
     /// بخش بزرگی از مسیرهای برنامه بی‌نتیجه می‌ماندند.
+    /// ═══ چرخهٔ چهل‌وهفتم (گزارش مالک) — زیرمنبع‌های معنادار ═══
+    /// «در لاگ عملیات مقادیر قبلی رو اشتباه ثبت میکنه. مثلاً من دسترسی
+    /// نقش ها رو عوض کردم و در مقادیر قبلی مشخصات دیگه ای مثل آی دی و
+    /// نام نقش و توضیحات فیلد نشون میده» — ریشه: مسیرِ ذخیرهٔ دسترسی‌های
+    /// نقش «PUT roles/{id}/permissions» است؛ الگوی عمومی، سطرِ خودِ نقش
+    /// (آی‌دی/نام/توضیحات) را به‌عنوان مقدار قبلی ثبت می‌کرد نه تغییر
+    /// واقعی یعنی فهرست مجوزها. اکنون مسیرهای زیرمنبعِ شناخته‌شده به
+    /// «وضعیت خودِ زیرمنبع» نگاشت می‌شوند (TryCaptureSubResourceOldValues):
+    ///   roles/{id}/permissions → فهرست مجوزهای فعلی نقش (نام + شناسه)
+    ///   doctors/{id}/schedule → ردیف‌های برنامهٔ کاری هفتگی فعلی پزشک
+    /// سایر زیرمنبع‌ها به همان رفتار قبلی (سطر والد) برمی‌گردند.
     /// روش: نگاشت نام موجودیت مسیر به جدول متناظر در مدل EF، سپس
     /// SELECT TOP 1 * با ADO خام (بدون ورود به ChangeTracker تا سطرهای
     /// هندلر آلوده نشوند) و ساخت JSON ستون/مقدار با حذف ستون‌های حساس
@@ -442,6 +569,18 @@ public class AuditLogMiddleware
             var id = ExtractId(path);
             if (string.IsNullOrEmpty(entitySegment) || id is null)
                 return null;
+
+            // ═══ چرخهٔ چهل‌وهفتم — زیرمنبع‌های معنادار ═══
+            // اگر مسیر الگوی «/{والد}/{شناسه}/{زیرمنبع}» داشته باشد، نخست
+            // تلاش می‌شود وضعیت خودِ زیرمنبع ثبت شود (مثلاً فهرست مجوزهای
+            // نقش)؛ اگر این مسیر زیرمنبع شناخته‌شده نبود، سقوط به سطر والد.
+            var subResource = ExtractSubResource(path);
+            if (subResource is not null)
+            {
+                var captured = TryCaptureSubResourceOldValues(dbContext, entitySegment, subResource, id.Value);
+                if (captured is not null)
+                    return captured;
+            }
 
             // والدِ قطعهٔ موجودیت — برای تطابق دوبستگی (گام ۱ زنجیره)؛
             // برای «insurance/companies/7» والدِ «companies» همان «insurance» است.
