@@ -417,28 +417,112 @@
                     </ScrollViewer>
                 </TabItem>
 
-                <!-- تب ۵: نسخه — هدایت -->
+                <!-- ═══ تب ۵: نسخه — عملیاتی (چرخهٔ ۴۸؛ گزارش مالک: «ارسال به نسخه‌نویسی») ═══
+                     فرم نسخه با بیمارِ همین ویزیت باز می‌شود؛ تداخل‌سنجی خودکار داروها
+                     و پایش حساسیت‌های بیمار در همان فرم با هر افزودن قلم اجرا می‌شود. -->
                 <TabItem Header="💊 نسخه">
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <materialDesign:PackIcon Kind="Prescription" Width="56" Height="56" Opacity="0.4" HorizontalAlignment="Center" />
-                        <TextBlock Text="نسخه‌نویسی در پنجره اختصاصی انجام می‌شود" FontSize="13" Opacity="0.7" Margin="0,10,0,0" HorizontalAlignment="Center" />
-                        <TextBlock Text="پس از ذخیره ویزیت از ماژول نسخه‌نویسی استفاده کنید" FontSize="11.5" Opacity="0.55" Margin="0,6,0,0" HorizontalAlignment="Center" />
+                    <StackPanel Margin="8,12" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <materialDesign:PackIcon Kind="Prescription" Width="52" Height="52" Opacity="0.45" HorizontalAlignment="Center" Foreground="#00897B" />
+                        <TextBlock Text="نسخه‌نویسی برای بیمار همین ویزیت" FontSize="13.5" FontWeight="SemiBold" Margin="0,12,0,0" HorizontalAlignment="Center" />
+                        <TextBlock Text="فرم نسخه با اطلاعات بیمار باز می‌شود؛ تداخل دارویی و حساسیت‌ها خودکار بررسی می‌شوند" FontSize="11.5" Opacity="0.65" Margin="0,6,0,0" HorizontalAlignment="Center" TextWrapping="Wrap" />
+                        <Button Command="{Binding OpenPrescriptionCommand}" Margin="0,14,0,0" HorizontalAlignment="Center"
+                                Style="{StaticResource MaterialDesignRaisedButton}" Background="#00897B" BorderBrush="#00897B" MinWidth="230">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="OpenInNew" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="باز کردن نسخه‌نویسی" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </TabItem>
 
-                <!-- تب ۶: آزمایش — هدایت -->
+                <!-- ═══ تب ۶: آزمایش — عملیاتی (چرخهٔ ۴۸؛ گزارش مالک: «ارسال به آزمایشگاه») ═══ -->
                 <TabItem Header="🧪 آزمایش">
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <materialDesign:PackIcon Kind="TestTube" Width="56" Height="56" Opacity="0.4" HorizontalAlignment="Center" />
-                        <TextBlock Text="درخواست آزمایش از ماژول آزمایشگاه ثبت می‌شود" FontSize="13" Opacity="0.7" Margin="0,10,0,0" HorizontalAlignment="Center" />
+                    <DockPanel Margin="8,10">
+                        <StackPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding LabClinicalInfo, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="توضیح بالینی برای آزمایشگاه (اختیاری)" Grid.Column="0" />
+                                <ComboBox Grid.Column="1" ItemsSource="{Binding LabPriorities}" SelectedIndex="{Binding LabPriorityIndex}"
+                                          Margin="10,0,0,0" MinWidth="110" materialDesign:HintAssist.Hint="اولویت" />
+                                <Button Grid.Column="2" Command="{Binding SendToLabCommand}" Margin="12,0,0,0"
+                                        Style="{StaticResource MaterialDesignRaisedButton}" MinWidth="190"
+                                        ToolTip="درخواست با بیمار/پزشک/شمارهٔ همین ویزیت به بخش آزمایشگاه ارسال می‌شود">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Send" Width="15" Height="15" VerticalAlignment="Center" />
+                                        <TextBlock Text="ارسال به آزمایشگاه" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                        <DockPanel>
+                            <TextBox DockPanel.Dock="Top" Text="{Binding LabTestSearch, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="🔍 جستجوی آزمایش (نام یا دسته)" Margin="0,0,0,8" />
+                            <!-- فهرست آزمایش‌ها با انتخاب چندگانه — بارگذاری در سازندهٔ فرم -->
+                            <ListBox ItemsSource="{Binding VisibleLabTests}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Margin="2,3">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding Category, Mode=OneWay, TargetNullValue=''}" Opacity="0.55" FontSize="10.5" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </CheckBox>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </DockPanel>
+                    </DockPanel>
+                </TabItem>
+
+                <!-- ═══ تب ۷: تصویربرداری — عملیاتی (چرخهٔ ۴۸؛ گزارش مالک: «ارسال به تصویربرداری») ═══ -->
+                <TabItem Header="📷 تصویربرداری">
+                    <StackPanel Margin="8,12">
+                        <TextBlock Text="درخواست تصویربرداری برای بیمار همین ویزیت" FontSize="12.5" FontWeight="SemiBold" Margin="0,0,0,10" />
+                        <UniformGrid Columns="2">
+                            <StackPanel Margin="0,0,8,8">
+                                <TextBlock Text="نوع تصویربرداری" FontSize="10.5" Opacity="0.6" Margin="0,0,0,3" />
+                                <ComboBox ItemsSource="{Binding ImagingModalities}" SelectedIndex="{Binding ImagingModalityIndex}" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="ناحیهٔ بدن" FontSize="10.5" Opacity="0.6" Margin="0,0,0,3" />
+                                <ComboBox ItemsSource="{Binding ImagingBodyParts}" SelectedIndex="{Binding ImagingBodyPartIndex}" />
+                            </StackPanel>
+                        </UniformGrid>
+                        <TextBlock Text="توضیح بالینی (اختیاری)" FontSize="10.5" Opacity="0.6" Margin="0,4,0,3" />
+                        <TextBox Text="{Binding ImagingClinicalInfo, UpdateSourceTrigger=PropertyChanged}" />
+                        <CheckBox Content="درخواست فوری (اولویت اورژانس)" IsChecked="{Binding ImagingUrgent}" Margin="0,10,0,0"
+                                  ToolTip="درخواست با اولویت اورژانس برای بخش تصویربرداری ثبت می‌شود" />
+                        <Button Command="{Binding SendToImagingCommand}" Margin="0,14,0,0" HorizontalAlignment="Left"
+                                Style="{StaticResource MaterialDesignRaisedButton}" MinWidth="220"
+                                ToolTip="درخواست با پذیرندهٔ پزشکِ همین ویزیت به بخش تصویربرداری ارسال می‌شود">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Send" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="ارسال به تصویربرداری" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </TabItem>
 
-                <!-- تب ۷: تصویربرداری — هدایت -->
-                <TabItem Header="📷 تصویربرداری">
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <materialDesign:PackIcon Kind="Radiology" Width="56" Height="56" Opacity="0.4" HorizontalAlignment="Center" />
-                        <TextBlock Text="درخواست تصویربرداری از ماژول پاراکلینیک ثبت می‌شود" FontSize="13" Opacity="0.7" Margin="0,10,0,0" HorizontalAlignment="Center" />
+                <!-- ═══ تب فیزیوتراپی — عملیاتی (چرخهٔ ۴۸؛ گزارش مالک: «ارسال به فیزیوتراپی») ═══ -->
+                <TabItem Header="🏃 فیزیوتراپی">
+                    <StackPanel Margin="8,12">
+                        <TextBlock Text="ارجاع بیمار همین ویزیت به بخش فیزیوتراپی" FontSize="12.5" FontWeight="SemiBold" Margin="0,0,0,10" />
+                        <TextBlock Text="شرح ارجاع — شکایت، تشخیص یا هدف درمان (اختیاری)" FontSize="10.5" Opacity="0.6" Margin="0,0,0,3" />
+                        <TextBox Text="{Binding PhysioReferralNote, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
+                                 TextWrapping="Wrap" Height="72" />
+                        <Button Command="{Binding SendToPhysioCommand}" Margin="0,14,0,0" HorizontalAlignment="Left"
+                                Style="{StaticResource MaterialDesignRaisedButton}" MinWidth="220"
+                                ToolTip="ارجاع در فهرست جلسات بخش فیزیوتراپی می‌نشیند و درمانگر ادامه می‌دهد">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Send" Width="15" Height="15" VerticalAlignment="Center" />
+                                <TextBlock Text="ارسال به فیزیوتراپی" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </TabItem>
 

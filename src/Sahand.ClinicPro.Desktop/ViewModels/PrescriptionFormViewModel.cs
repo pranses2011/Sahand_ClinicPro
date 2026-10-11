@@ -344,6 +344,31 @@ public partial class PrescriptionFormViewModel : ObservableObject
         _snackbar.Success($"بیمار: {Patient.FullName}");
     }
 
+    /// <summary>
+    /// پیش‌پرکردن بیمار با شناسه — چرخهٔ ۴۸ (گزارش مالک: «ارسال به نسخه‌نویسی»
+    /// از فرم ویزیت). پزشک از تب نسخهٔ ویزیت، فرم را برای همان بیمار باز می‌کند؛
+    /// جستجوی دستی حذف و زمینهٔ کامل بیمار (حساسیت‌ها برای پایش تداخل/آلرژی)
+    /// بی‌درنگ بارگذاری می‌شود. شکست بارگذاری بی‌صدا نادیده گرفته نمی‌شود.
+    /// </summary>
+    /// <param name="patientId">شناسهٔ بیمارِ ویزیت جاری</param>
+    public async Task PrefillPatientAsync(long patientId)
+    {
+        var envelope = await _api.GetAsync<PatientFormViewModel.PatientDetailEnvelope>($"patients/{patientId}");
+        var p = envelope?.Data;
+        if (p is null)
+        {
+            _snackbar.Error($"بازیابی پروندهٔ بیمار ناموفق بود — {_api.LastError ?? "خطای سرور"}");
+            return;
+        }
+        Patient = new QuickPatient(p.Id, $"{p.FirstName} {p.LastName}", p.NationalCode,
+            p.Mobile, p.InsuranceName, p.Allergies, null);
+        PatientSearch = !string.IsNullOrWhiteSpace(p.NationalCode) ? p.NationalCode : p.Mobile ?? "";
+        FormTitle = $"💊 نسخه‌نویسی — {Patient.FullName}";
+        _snackbar.Success($"بیمار ویزیت: {Patient.FullName}");
+        // بازبینی فوری تداخل/حساسیت — بیمار بدون اقلام هم باید از نظر آلرژی پایش شود
+        _ = CheckInteractionsAsync();
+    }
+
     /* ═══════════ جستجوی دارو با Debounce ۳۰۰ms ═══════════ */
 
     /// <summary>تغییر متن جستجو</summary>

@@ -413,7 +413,17 @@ public partial class MainWindowViewModel : ObservableObject
             ApplyPermissionFilter();
 
             // ۳) نخستین صفحهٔ مجاز — کاربر هرگز روی صفحهٔ ممنوع گیر نمی‌کند
-            NavigateToPage(HasPageAccess("dashboard") ? "dashboard" : FirstAllowedPageKey());
+            // ═══ چرخهٔ ۴۸ (گزارش مالک: «وقتی کاربری با نقش پزشک وارد برنامه می‌شود،
+            //      مستقیم صفحه میز کارش را بیاره تا بیمارانش رو ببینه و معالجه رو
+            //      شروع بکنه») ═══ کاربرِ دارای نقش «پزشک» به‌جای داشبورد مدیریتی،
+            //      مستقیم به «میزکار پزشک» می‌رود — صف بیماران خودش، فراخوان و شروع
+            //      معالجه؛ اگر به میزکار دسترسی نداشت، همان مسیر پیشین (داشبورد)
+            //      اعمال می‌شود.
+            var landingPage = _tokens.Roles.Contains("Doctor", StringComparer.OrdinalIgnoreCase)
+                              && HasPageAccess("doctor-visit")
+                ? "doctor-visit"
+                : "dashboard";
+            NavigateToPage(HasPageAccess(landingPage) ? landingPage : FirstAllowedPageKey());
 
             // ۴) بارگذاری‌های نشست — شکست هیچ‌کدام جریان را نمی‌شکند
             _ = LoadCurrentUserAsync();

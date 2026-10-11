@@ -171,6 +171,8 @@ public partial class VisitEditViewModel : ObservableObject
         _visitId = visitId;
         FormTitle = "ادامه ویزیت";
         _ = LoadAsync();
+        // چرخهٔ ۴۸ — فهرست آزمایش‌های مرجع برای تب ارسال به آزمایشگاه
+        _ = LoadLabTestsAsync();
     }
 
     /// <summary>سازنده — ویزیت جدید برای بیمار</summary>
@@ -181,6 +183,8 @@ public partial class VisitEditViewModel : ObservableObject
         _patientId = patientId;
         _doctorId = doctorId;
         _ = LoadPatientContextAsync();
+        // چرخهٔ ۴۸ — فهرست آزمایش‌های مرجع برای تب ارسال به آزمایشگاه
+        _ = LoadLabTestsAsync();
     }
 
     /// <summary>بارگذاری ویزیت موجود</summary>
@@ -444,6 +448,245 @@ public partial class VisitEditViewModel : ObservableObject
     {
         await SaveCoreAsync(silent: false);
         CloseRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /* ═════════════════════════════════════════════════════════════════
+       چرخهٔ ۴۸ — تب‌های ارجاع عملیاتی (گزارش مالک):
+       «این قابلیت‌ها که پزشک بیمارش را انتخاب کند و … ارسال به آزمایشگاه و
+       ارسال به تصویربرداری و ارسال به فیزیوتراپی و ارسال به نسخه‌نویسی و
+       تداخل‌سنجی خودکار داروها و پایش حساسیت‌های بیمار … پیاده‌سازی نشده».
+       تب‌های ۵ تا ۷ پیش‌تر فقط متن هدایت بودند؛ اکنون هر تب یک پنل عملیاتی
+       است که ارجاع را با زمینهٔ کامل همین ویزیت (بیمار/پزشک/ویزیت) ثبت می‌کند
+       و در ماژول مقصد (آزمایشگاه/تصویربرداری/فیزیوتراپی/داروخانه) دیده می‌شود.
+       تداخل‌سنجی و پایش حساسیت، در فرم نسخه‌نویسی که از تب ۵ باز می‌شود
+       خودکار اجرا می‌شود (کش محلی + بررسی سرور با آلرژی/بارداری/سن).
+       ═════════════════════════════════════════════════════════════════ */
+
+    /* ─── تب ۵: ارسال به آزمایشگاه ─── */
+
+    /// <summary>فیلتر زندهٔ نام آزمایش — پالایش سمت کلاینت روی فهرست بارگذاری‌شده</summary>
+    [ObservableProperty]
+    private string _labTestSearch = string.Empty;
+
+    /// <summary>آزمایش‌های قابل انتخاب — همان ردیف‌های فرم آزمایشگاه (Id/Name/Category/IsSelected)</summary>
+    public ObservableCollection<LabTestOptionRow> LabTests { get; } = new();
+
+    /// <summary>گزینه‌های اولویت — ترتیب با enum سرور هم‌خوان است (۱ اورژانس، ۲ بالا، ۳ عادی)</summary>
+    public string[] LabPriorities { get; } = { "اورژانس", "بالا", "عادی" };
+
+    /// <summary>نمایهٔ اولویت درخواست آزمایش — پیش‌فرض «عادی»</summary>
+    [ObservableProperty]
+    private int _labPriorityIndex = 2;
+
+    /// <summary>توضیح بالینی همراه درخواست آزمایش (اختیاری)</summary>
+    [ObservableProperty]
+    private string? _labClinicalInfo;
+
+    /// <summary>پالایش زندهٔ فهرست آزمایش‌ها با جستجو</summary>
+    partial void OnLabTestSearchChanged(string value)
+        => OnPropertyChanged(nameof(VisibleLabTests));
+
+    /// <summary>آزمایش‌های قابل دیدن پس از پالایش — فهرست صرفه‌جویانه با Any به‌جای شمارش کامل</summary>
+    public IEnumerable<LabTestOptionRow> VisibleLabTests
+    {
+        get
+        {
+            var term = LabTestSearch?.Trim();
+            return string.IsNullOrWhiteSpace(term)
+                ? LabTests
+                : LabTests.Where(t => t.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
+                                    || (t.Category?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+    }
+
+    /// <summary>بارگذاری آزمایش‌های فعال مرجع — یک‌بار در عمر فرم (۲۰۰ سقف سرور)</summary>
+    [RelayCommand]
+    private async Task LoadLabTestsAsync()
+    {
+        if (LabTests.Count > 0) return; // قبلاً بارگذاری شده
+        var response = await _api.GetAsync<LabOrderFormViewModel.LabTestsResponse>("lookups/lab-tests");
+        if (response?.Data is null) return;
+        foreach (var t in response.Data)
+            LabTests.Add(new LabTestOptionRow { Id = t.Id, Name = t.Name, Category = t.Category });
+        OnPropertyChanged(nameof(VisibleLabTests));
+    }
+
+    /// <summary>ارسال درخواست آزمایش با زمینهٔ همین ویزیت — در صف آزمایشگاه می‌نشیند</summary>
+    [RelayCommand]
+    private async Task SendToLabAsync()
+    {
+        var selected = LabTests.Where(t => t.IsSelected).Select(t => t.Id).ToList();
+        if (selected.Count == 0)
+        {
+            _snackbar.Error("حداقل یک آزمایش را از فهرست انتخاب کنید");
+            return;
+        }
+        if (_patientId <= 0)
+        {
+            _snackbar.Error("بیمار ویزیت مشخص نیست — ابتدا ویزیت را ذخیره کنید");
+            return;
+        }
+
+        IsBusy = true;
+        var ok = await _api.PostAsync("lab/orders", new
+        {
+            patientId = _patientId,
+            doctorId = _doctorId > 0 ? _doctorId : (long?)null,
+            visitId = _visitId,
+            testIds = selected,
+            priority = LabPriorityIndex + 1, // هم‌ترتیب با enum سرور: ۱ اورژانس، ۲ بالا، ۳ عادی
+            clinicalInfo = string.IsNullOrWhiteSpace(LabClinicalInfo) ? null : LabClinicalInfo.Trim()
+        });
+        IsBusy = false;
+
+        if (ok)
+        {
+            _snackbar.Success($"درخواست {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToPersianDigits(selected.Count.ToString())} آزمایش برای آزمایشگاه ارسال شد");
+            foreach (var t in LabTests.Where(t => t.IsSelected))
+                t.IsSelected = false;
+            LabClinicalInfo = null;
+        }
+        else
+            _snackbar.Error(_api.LastError ?? "ارسال درخواست آزمایش ناموفق بود");
+    }
+
+    /* ─── تب ۶: ارسال به تصویربرداری ─── */
+
+    /// <summary>مودالیته‌های تصویربرداری — ترتیب با enum سرور ImagingModality هم‌خوان است (۱ سونوگرافی، ۲ رادیوگرافی، ۳ CT، ۴ MRI)</summary>
+    public string[] ImagingModalities { get; } =
+        { "سونوگرافی", "رادیوگرافی (X-Ray)", "سی‌تی‌اسکن (CT)", "ام‌آر‌آی (MRI)" };
+
+    /// <summary>نمایهٔ مودالیتهٔ منتخب</summary>
+    [ObservableProperty]
+    private int _imagingModalityIndex;
+
+    /// <summary>نواحی بدن — همان گزینه‌های پیشنهادی صفحهٔ تصویربرداری</summary>
+    public string[] ImagingBodyParts { get; } =
+        { "سر و گردن", "قفسه سینه", "شکم و لگن", "ستون فقرات", "اندام فوقانی", "اندام تحتانی", "مفصل شانه", "مفصل زانو" };
+
+    /// <summary>نمایهٔ ناحیهٔ بدن</summary>
+    [ObservableProperty]
+    private int _imagingBodyPartIndex;
+
+    /// <summary>درخواست فوری است؟ — اولویت اورژانس به سرور می‌رود</summary>
+    [ObservableProperty]
+    private bool _imagingUrgent;
+
+    /// <summary>توضیح بالینی (اختیاری)</summary>
+    [ObservableProperty]
+    private string? _imagingClinicalInfo;
+
+    /// <summary>ارسال درخواست تصویربرداری با قرارداد درست سرور — با پذیرندهٔ پزشکِ همین ویزیت</summary>
+    [RelayCommand]
+    private async Task SendToImagingAsync()
+    {
+        if (_patientId <= 0)
+        {
+            _snackbar.Error("بیمار ویزیت مشخص نیست — ابتدا ویزیت را ذخیره کنید");
+            return;
+        }
+
+        IsBusy = true;
+        var ok = await _api.PostAsync("imaging/orders", new
+        {
+            patientId = _patientId,
+            referringDoctorId = _doctorId > 0 ? _doctorId : (long?)null,
+            modality = ImagingModalityIndex + 1,
+            bodyPart = ImagingBodyParts[ImagingBodyPartIndex],
+            priority = ImagingUrgent ? 1 : 3, // ۱ اورژانس، ۳ عادی
+            clinicalInfo = string.IsNullOrWhiteSpace(ImagingClinicalInfo) ? null : ImagingClinicalInfo.Trim()
+        });
+        IsBusy = false;
+
+        if (ok)
+        {
+            _snackbar.Success($"درخواست {ImagingModalities[ImagingModalityIndex]} ({ImagingBodyParts[ImagingBodyPartIndex]}) ارسال شد");
+            ImagingClinicalInfo = null;
+            ImagingUrgent = false;
+        }
+        else
+            _snackbar.Error(_api.LastError ?? "ارسال درخواست تصویربرداری ناموفق بود");
+    }
+
+    /* ─── تب فیزیوتراپی: ارسال به فیزیوتراپی ─── */
+
+    /// <summary>شرح ارجاع به فیزیوتراپی — شکایت/تشخیص/هدف درمان (اختیاری)</summary>
+    [ObservableProperty]
+    private string? _physioReferralNote;
+
+    /// <summary>
+    /// ارسال به فیزیوتراپی — چرخهٔ ۴۸: قرارداد فعلی سرور جلسه‌محور است
+    /// (RecordPhysioSessionCommand)؛ ارجاع به‌صورت نخستین جلسهٔ «ارجاعی» با
+    /// درمانگر تهی و برچسب واضح ثبت می‌شود تا در فهرست جلساتِ بخش فیزیوتراپی
+    /// دیده شود و درمانگر جلسات بعدی را با شمارهٔ ۲ به بعد ادامه دهد.
+    /// </summary>
+    [RelayCommand]
+    private async Task SendToPhysioAsync()
+    {
+        if (_patientId <= 0)
+        {
+            _snackbar.Error("بیمار ویزیت مشخص نیست — ابتدا ویزیت را ذخیره کنید");
+            return;
+        }
+
+        IsBusy = true;
+        var ok = await _api.PostAsync("physiotherapy/sessions", new
+        {
+            patientId = _patientId,
+            therapistId = (long?)null, // درمانگر هنوز مشخص نیست — ارجاع است نه جلسهٔ درمان
+            sessionNumber = 1,
+            treatments = string.IsNullOrWhiteSpace(PhysioReferralNote)
+                ? "ارجاع به فیزیوتراپی از ویزیت پزشک"
+                : $"ارجاع به فیزیوتراپی از ویزیت پزشک — {PhysioReferralNote.Trim()}",
+            duration = (int?)null,
+            painScore = (byte?)null
+        });
+        IsBusy = false;
+
+        if (ok)
+        {
+            _snackbar.Success("ارجاع به فیزیوتراپی ثبت شد — در فهرست جلسات بخش فیزیوتراپی دیده می‌شود");
+            PhysioReferralNote = null;
+        }
+        else
+            _snackbar.Error(_api.LastError ?? "ارسال به فیزیوتراپی ناموفق بود");
+    }
+
+    /* ─── تب ۵: گشودن نسخه‌نویسی با زمینهٔ ویزیت ─── */
+
+    /// <summary>
+    /// گشودن فرم نسخه‌نویسی برای بیمار همین ویزیت — چرخهٔ ۴۸. ابتدا ویزیت
+    /// ذخیره می‌شود تا مرجع کامل باشد، سپس فرم نسخه با بیمارِ پیش‌پرشده باز
+    /// می‌شود؛ تداخل‌سنجی خودکار داروها و پایش حساسیت‌های بیمار همان‌جا و
+    /// با هر افزودن قلم بی‌درنگ اجرا می‌شود (کش محلی + بررسی سرور).
+    /// </summary>
+    [RelayCommand]
+    private async Task OpenPrescriptionAsync()
+    {
+        if (_patientId <= 0)
+        {
+            _snackbar.Error("بیمار ویزیت مشخص نیست");
+            return;
+        }
+
+        // ویزیتِ در جریان ذخیره شود تا نسخه در پرونده به زمینهٔ کامل وصل باشد
+        await SaveCoreAsync(silent: true);
+
+        // پزشکان برای انتخاب صادرکننده — همان الگوی صفحهٔ نسخه‌ها
+        var doctors = new ObservableCollection<DoctorOption>();
+        var page = await _api.GetAsync<AppointmentsViewModel.DoctorsPage>("doctors?page=1&pageSize=200");
+        if (page?.Data is not null)
+            foreach (var d in page.Data)
+                doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
+
+        var vm = new PrescriptionFormViewModel(_api, _snackbar, doctors);
+        var window = new Views.PrescriptionFormWindow(vm)
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        // پیش‌پرکردن بیمار پس از نمایش قالب — پنجره با زمینهٔ ویزیت باز می‌شود
+        window.Loaded += async (_, _) => await vm.PrefillPatientAsync(_patientId);
+        window.ShowDialog();
     }
 
     /// <summary>هسته ذخیره — ساخت DTO و POST</summary>
