@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Application.Common.Helpers;
@@ -124,7 +126,35 @@ public partial class AccountingViewModel : ViewModelBase
         _snackbar = snackbar;
         EntryLines.Add(new JournalLineVM());
         EntryLines.Add(new JournalLineVM());
+
+        // ═══ چرخهٔ چهل‌وهفتم — ریشه‌یابی «عملیات مالی ایراد داره» ═══
+        // پیش‌تر جمع‌ها/توازن (EntryDebitTotal/IsBalanced) فقط با حذف سطر
+        // بازمحاسبه می‌شدند؛ ویرایش مبلغ سطرها هیچ نوتیفیکیشنی روی والد نمی‌فرستاد
+        // ⇒ دکمهٔ «ثبت سند» پس از تایپ مبالغ برای همیشه غیرفعال می‌ماند.
+        // اکنون هر سطرِ افزوده‌شده مشترک تغییراتش می‌شود و جمع‌ها/توازن بی‌درنگ به‌روز می‌شوند.
+        EntryLines.CollectionChanged += OnEntryLinesChanged;
+        foreach (var line in EntryLines)
+            line.PropertyChanged += OnLinePropertyChanged;
+
         _ = LoadAsync();
+    }
+
+    /// <summary>اشتراک/لغو اشتراک خودکار سطرهای مجموعه — با هر افزودن/حذف/بازنشانی</summary>
+    private void OnEntryLinesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.NewItems is not null)
+            foreach (JournalLineVM line in e.NewItems)
+                line.PropertyChanged += OnLinePropertyChanged;
+        if (e.OldItems is not null)
+            foreach (JournalLineVM line in e.OldItems)
+                line.PropertyChanged -= OnLinePropertyChanged;
+    }
+
+    /// <summary>تغییر مبلغ/شرح سطر → بازمحاسبهٔ جمع‌ها و توازن فرم سند</summary>
+    private void OnLinePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(JournalLineVM.Debit) or nameof(JournalLineVM.Credit))
+            RaiseTotals();
     }
 
     /// <summary>بارگذاری همه داده‌ها</summary>
@@ -193,6 +223,38 @@ public partial class AccountingViewModel : ViewModelBase
     /// <summary>باز کردن فرم سند</summary>
     [RelayCommand]
     private void NewEntry() => ShowEntryForm = true;
+
+    // ═══ چرخهٔ چهل‌وهفتم — بستن فرم سند بدون ثبت ═══
+    // پیش‌تر هیچ راهی برای بستن فرم سند (بدون ثبت) وجود نداشت و تنها راه،
+    // ثبت موفق یا خروج از تب بود؛ دکمهٔ بستن صریح به نوار فرم اضافه شد.
+    /// <summary>بستن فرم سند بدون ثبت</summary>
+    [RelayCommand]
+    private void HideEntryForm() => ShowEntryForm = false;
+
+    // ═══ چرخهٔ چهل‌وهفتم (گزارش مالک) ═══
+    // «در صفحه حسابداری و تب دفتر روزنامه، با دابل کلیک بر روی یک سند،
+    //  جزئیات کاملش رو بهمون نشون بده» — دیالوگ جزئیات با همهٔ سطرها و
+    // عنوان حساب هر سطر؛ از سطرهای دفتر روزنامه با دابل‌کلیک باز می‌شود
+    // (MouseBinding LeftDoubleClick روی گرید، هم‌الگوی نسخه‌ها).
+    /// <summary>نمایش جزئیات کامل سند انتخاب‌شدهٔ دفتر روزنامه</summary>
+    [RelayCommand]
+    private void ShowEntryDetails()
+    {
+        if (SelectedEntry is null)
+        {
+            _snackbar.Info("ابتدا یک سند را از فهرست انتخاب کنید");
+            return;
+        }
+
+        var owner = System.Windows.Application.Current?.Windows
+            .OfType<System.Windows.Window>()
+            .FirstOrDefault(w => w.IsActive);
+        var dialog = new Views.JournalEntryDetailWindow(SelectedEntry.Id, _api)
+        {
+            Owner = owner
+        };
+        dialog.ShowDialog();
+    }
 
     /// <summary>افزودن سطر خالی</summary>
     [RelayCommand]

@@ -6,29 +6,55 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
              mc:Ignorable="d"
-             d:DesignHeight="640" d:DesignWidth="1080"
+             d:DesignHeight="700" d:DesignWidth="1180"
              FlowDirection="RightToLeft">
-    <!-- ═══ حسابداری دوبل — گام U9 طبق فرم ۱۶: ۵ تب ═══ -->
+    <!-- ═══════════════════════════════════════════════════════════
+         حسابداری دوبل — بازطراحی حرفه‌ای چرخهٔ چهل‌وهفتم (گزارش مالک):
+         «ظاهر و چیدمان صفحه حسابداری رو کاملاً حرفه ای و زیبا بکن و
+         قوائد طراحی UI و UX رو در همه جا رعایت بکن» — زبان طراحی مشترک
+         چرخهٔ ۴۶ (نشان آیکونی + سربرگ + خط تأکیدی، کارت‌های یکدست،
+         نوارهای کادر بندی‌شده) + رفع سه باگ هم‌زمان:
+         ① دابل‌کلیک سند دفتر روزنامه → دیالوگ جزئیات کامل (گزارش مالک)
+         ② ماهیت حساب جدید — دکمه‌های رادیویی با مبدل غلط (BoolToVisibility روی
+            IsChecked) هرگز کار نمی‌کردند؛ الگوی استاندارد دوسویه + InvertBool
+         ③ صورت سود و زیان ساختاریافته — سطرهای عنوان/جمع از هم جدا می‌شوند
+            (قالب پیشین همهٔ ردیف‌ها را یکسان و تخت نشان می‌داد).
+         دقت پولی همهٔ ستون‌ها با CurrencyRial و ارقام فارسی با PersianDigits.
+         ═══════════════════════════════════════════════════════════ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <materialDesign:PackIcon Kind="BookOpenPageVariantOutline" Width="26" Height="26"
-                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
-                                     VerticalAlignment="Center" />
-            <TextBlock Text="حسابداری دوبل" FontSize="20" FontWeight="Bold"
-                       Margin="10,0,0,0" VerticalAlignment="Center" />
-            <Button Command="{Binding LoadCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
-                    Margin="14,0,0,0" VerticalAlignment="Center">
-                <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" />
+        <!-- ═══ سربرگ صفحه — هم‌زبان طراحی صفحات چرخهٔ ۴۶ ═══ -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <Border DockPanel.Dock="Right" Width="46" Height="46" CornerRadius="13"
+                    Background="#E8F0FE" VerticalAlignment="Center">
+                <materialDesign:PackIcon Kind="BookOpenPageVariantOutline" Width="24" Height="24"
+                                         Foreground="#1565C0"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <StackPanel VerticalAlignment="Center" Margin="12,0,0,0">
+                <TextBlock Text="حسابداری دوبل" FontSize="20" FontWeight="Bold" />
+                <Border Height="2.5" CornerRadius="1.2" Width="52" HorizontalAlignment="Right"
+                        Background="{DynamicResource MaterialDesign.Brush.Primary}" Margin="0,5,0,0" />
+                <TextBlock Text="دفتر روزنامه، دفتر کل، سرفصل‌ها، تراز آزمایشی و صورت سود و زیان"
+                           FontSize="11.5" Opacity="0.65" Margin="0,4,0,0" />
+            </StackPanel>
+            <Button DockPanel.Dock="Left" Command="{Binding LoadCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Margin="14,0,0,0" VerticalAlignment="Center" MinHeight="40"
+                    ToolTip="بارگذاری مجدد همهٔ داده‌ها">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" VerticalAlignment="Center" />
+                    <TextBlock Text="بازخوانی" Margin="7,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
             </Button>
-        </StackPanel>
+        </DockPanel>
 
         <TabControl Grid.Row="1" Style="{StaticResource MaterialDesignTabControl}">
-            <!-- تب ۱: دفتر روزنامه -->
+            <!-- ═══════════════ تب ۱: دفتر روزنامه ═══════════════ -->
             <TabItem Header="📒 دفتر روزنامه">
                 <Grid Margin="4,8">
                     <Grid.RowDefinitions>
@@ -36,28 +62,40 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
-                        <Button Command="{Binding NewEntryCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
+                    <!-- نوار ابزار: سند جدید + راهنمای دابل‌کلیک (چرخهٔ ۴۷) -->
+                    <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                        <Button DockPanel.Dock="Right" Command="{Binding NewEntryCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                MinHeight="40" MinWidth="130">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
-                                <TextBlock Text="سند جدید" Margin="7,0,0,0" />
+                                <TextBlock Text="سند جدید" Margin="7,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-                    </StackPanel>
+                        <TextBlock VerticalAlignment="Center" FontSize="11.5" Opacity="0.65" Margin="10,0,0,0"
+                                   Text="دابل‌کلیک روی هر سند = جزئیات کامل سطرها (چرخهٔ ۴۷)" />
+                    </DockPanel>
 
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedEntry}"
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                              HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                              HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD"
+                              GridLinesVisibility="Horizontal"
+                              materialDesign:DataGridAssist.CellPadding="8,6">
+                        <DataGrid.InputBindings>
+                            <!-- چرخهٔ ۴۷ (گزارش مالک): دابل‌کلیک → جزئیات کامل سند — هم‌الگوی نسخه‌ها -->
+                            <MouseBinding MouseAction="LeftDoubleClick"
+                                          Command="{Binding ShowEntryDetailsCommand}" />
+                        </DataGrid.InputBindings>
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="شماره سند" Binding="{Binding EntryNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="95" />
                             <DataGridTextColumn Header="شرح" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="جمع بدهکار" Binding="{Binding TotalDebit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="120" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="جمع بستانکار" Binding="{Binding TotalCredit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="120" FontFamily="{DynamicResource App.CodeFont}" />
+                            <DataGridTextColumn Header="جمع بدهکار" Binding="{Binding TotalDebit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="125" FontFamily="{DynamicResource App.CodeFont}" />
+                            <DataGridTextColumn Header="جمع بستانکار" Binding="{Binding TotalCredit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="125" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTemplateColumn Header="وضعیت" Width="95">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center"
+                                        <Border CornerRadius="10" Padding="8,2.5" HorizontalAlignment="Center"
                                                 Background="{Binding StatusColor}">
                                             <TextBlock Text="{Binding StatusText}" FontSize="11" />
                                         </Border>
@@ -67,14 +105,12 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <!-- فرم سند -->
-                    <Border Grid.Row="1" CornerRadius="12" Padding="14" Background="#FAFAFA"
-                            BorderBrush="#B0BEC5" BorderThickness="1"
+                    <!-- فرم سند — کارت روی گرید -->
+                    <Border Grid.Row="1" CornerRadius="12" Padding="14" Background="#FAFBFD"
+                            BorderBrush="#B0BEC5" BorderThickness="1.2"
                             Visibility="{Binding ShowEntryForm, Converter={StaticResource BoolToVisibility}}">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
@@ -84,21 +120,29 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="3*" />
                                     <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBox Grid.Column="0" Text="{Binding EntryDescription, UpdateSourceTrigger=PropertyChanged}"
                                          materialDesign:HintAssist.Hint="شرح سند — الزامی" />
                                 <Button Grid.Column="1" Command="{Binding SaveEntryCommand}" Margin="10,0,0,0"
                                         Style="{StaticResource MaterialDesignRaisedButton}"
-                                        IsEnabled="{Binding IsBalanced}">
+                                        MinHeight="40" IsEnabled="{Binding IsBalanced}"
+                                        ToolTip="فقط سند متوازن (جمع بدهکار = جمع بستانکار) قابل ثبت است">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="ContentSaveCheck" Width="15" Height="15" VerticalAlignment="Center" />
-                                        <TextBlock Text="ثبت سند" Margin="7,0,0,0" />
+                                        <TextBlock Text="ثبت سند" Margin="7,0,0,0" VerticalAlignment="Center" />
                                     </StackPanel>
+                                </Button>
+                                <Button Grid.Column="2" Command="{Binding HideEntryFormCommand}" Margin="8,0,0,0"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}" MinHeight="40"
+                                        ToolTip="بستن فرم سند بدون ثبت (چرخهٔ ۴۷)">
+                                    <materialDesign:PackIcon Kind="Close" Width="15" Height="15" />
                                 </Button>
                             </Grid>
 
                             <DataGrid Grid.Row="1" ItemsSource="{Binding EntryLines}" AutoGenerateColumns="False"
-                                      CanUserAddRows="False" HeadersVisibility="Column" FontSize="12" MinHeight="120">
+                                      CanUserAddRows="False" HeadersVisibility="Column" FontSize="12" MinHeight="120"
+                                      MaxHeight="260" GridLinesVisibility="Horizontal">
                                 <DataGrid.Columns>
                                     <DataGridTemplateColumn Header="حساب" Width="280">
                                         <DataGridTemplateColumn.CellTemplate>
@@ -110,6 +154,7 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
+                                    <!-- مبدل PersianDigits از چرخهٔ ۴۷ دوسویه است — ویرایش مبالغ واقعاً ذخیره می‌شود -->
                                     <DataGridTextColumn Header="شرح سطر" Binding="{Binding Description, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="*" />
                                     <DataGridTextColumn Header="بدهکار" Binding="{Binding Debit, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="{DynamicResource App.CodeFont}" />
                                     <DataGridTextColumn Header="بستانکار" Binding="{Binding Credit, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="{DynamicResource App.CodeFont}" />
@@ -129,7 +174,8 @@
                             </DataGrid>
 
                             <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
-                                <Button Command="{Binding AddLineCommand}" Style="{StaticResource MaterialDesignOutlinedButton}">
+                                <Button Command="{Binding AddLineCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        MinHeight="38">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" />
                                         <TextBlock Text="افزودن سطر" Margin="6,0,0,0" />
@@ -147,29 +193,43 @@
                 </Grid>
             </TabItem>
 
-            <!-- تب ۲: دفتر کل -->
+            <!-- ═══════════════ تب ۲: دفتر کل ═══════════════ -->
             <TabItem Header="📚 دفتر کل">
                 <Grid Margin="4,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
-                        <ComboBox ItemsSource="{Binding FlatAccounts}"
-                                  SelectedItem="{Binding LedgerAccount}"
-                                  DisplayMemberPath="Display" MinWidth="320" materialDesign:HintAssist.Hint="حساب دفتر کل"/>
-                        <!-- چرخه بیست‌وسوم: فیلدهای تاریخ دفتر کل از انتخابگر تاریخ شمسی
-                             (قابل «همهٔ فیلدهای تاریخ از کنترل انتخابگر استفاده بکنن») -->
-                        <controls:PersianDatePicker DateShamsiText="{Binding LedgerFrom, Mode=TwoWay}"
-                                                    Placeholder="از تاریخ" Width="125" Margin="10,0,0,0" />
-                        <controls:PersianDatePicker DateShamsiText="{Binding LedgerTo, Mode=TwoWay}"
-                                                    Placeholder="تا تاریخ" Width="125" Margin="8,0,0,0" />
-                        <Button Command="{Binding ShowLedgerCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="10,0,0,0">
-                            <TextBlock Text="نمایش" />
-                        </Button>
-                    </StackPanel>
+                    <Border Grid.Row="0" CornerRadius="10" Padding="12,10" Margin="0,0,0,8"
+                            Background="{DynamicResource MaterialDesign.Brush.Background}"
+                            BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                            BorderThickness="1">
+                        <StackPanel Orientation="Horizontal">
+                            <ComboBox ItemsSource="{Binding FlatAccounts}"
+                                      SelectedItem="{Binding LedgerAccount}"
+                                      DisplayMemberPath="Display" MinWidth="320"
+                                      materialDesign:HintAssist.Hint="حساب دفتر کل"
+                                      VerticalAlignment="Center" />
+                            <!-- فیلدهای تاریخ از انتخابگر شمسی (قانون ۵ مالک) -->
+                            <controls:PersianDatePicker DateShamsiText="{Binding LedgerFrom, Mode=TwoWay}"
+                                                        Placeholder="از تاریخ" Width="125" Margin="10,0,0,0"
+                                                        VerticalAlignment="Center" />
+                            <controls:PersianDatePicker DateShamsiText="{Binding LedgerTo, Mode=TwoWay}"
+                                                        Placeholder="تا تاریخ" Width="125" Margin="8,0,0,0"
+                                                        VerticalAlignment="Center" />
+                            <Button Command="{Binding ShowLedgerCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}" Margin="10,0,0,0"
+                                    MinHeight="40" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Magnify" Width="15" Height="15" VerticalAlignment="Center" />
+                                    <TextBlock Text="نمایش" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
                     <DataGrid Grid.Row="1" ItemsSource="{Binding LedgerRows}" AutoGenerateColumns="False"
-                              CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column" FontSize="12">
+                              CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column" FontSize="12"
+                              GridLinesVisibility="Horizontal" materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="110" />
                             <DataGridTextColumn Header="شماره سند" Binding="{Binding EntryNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="{DynamicResource App.CodeFont}" />
@@ -183,7 +243,7 @@
                 </Grid>
             </TabItem>
 
-            <!-- تب ۳: سرفصل‌ها -->
+            <!-- ═══════════════ تب ۳: سرفصل‌ها ═══════════════ -->
             <TabItem Header="📑 سرفصل‌ها">
                 <Grid Margin="4,8">
                     <Grid.ColumnDefinitions>
@@ -193,7 +253,9 @@
                     </Grid.ColumnDefinitions>
 
                     <Border Grid.Column="0" CornerRadius="12" Padding="10"
-                            Background="{DynamicResource MaterialDesign.Brush.Background}">
+                            Background="{DynamicResource MaterialDesign.Brush.Background}"
+                            BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                            BorderThickness="1">
                         <TreeView ItemsSource="{Binding AccountTree}">
                             <TreeView.ItemContainerStyle>
                                 <Style TargetType="TreeViewItem">
@@ -209,36 +271,54 @@
                         </TreeView>
                     </Border>
 
-                    <Border Grid.Column="2" CornerRadius="12" Padding="12"
-                            Background="{DynamicResource MaterialDesign.Brush.Background}">
+                    <Border Grid.Column="2" CornerRadius="12" Padding="14"
+                            Background="{DynamicResource MaterialDesign.Brush.Background}"
+                            BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                            BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="➕ حساب جدید" FontWeight="Bold" FontSize="14" Margin="0,0,0,8" />
+                            <DockPanel Margin="0,0,0,10">
+                                <materialDesign:PackIcon DockPanel.Dock="Right" Kind="PlusCircleOutline" Width="17" Height="17"
+                                                         Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+                                <TextBlock Text="حساب جدید" FontWeight="Bold" FontSize="14" Margin="2,0,8,0" VerticalAlignment="Center" />
+                            </DockPanel>
                             <TextBlock Text="والد (اختیاری — از درخت انتخاب کنید)" FontSize="10.5" Opacity="0.6" />
                             <ComboBox ItemsSource="{Binding FlatAccounts}"
                                       SelectedItem="{Binding SelectedAccount}"
-                                      DisplayMemberPath="Display" FontSize="11" Margin="0,2,0,6" />
+                                      DisplayMemberPath="Display" FontSize="11" Margin="0,2,0,8" />
                             <TextBlock Text="کد حساب" FontSize="10.5" Opacity="0.6" />
                             <TextBox Text="{Binding NewAccountCode, UpdateSourceTrigger=PropertyChanged}"
-                                     materialDesign:HintAssist.Hint="مثلاً ۱۰۱۰۳" Margin="0,2,0,6" />
+                                     materialDesign:HintAssist.Hint="مثلاً ۱۰۱۰۳" Margin="0,2,0,8" />
                             <TextBlock Text="عنوان" FontSize="10.5" Opacity="0.6" />
-                            <TextBox Text="{Binding NewAccountName, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" />
+                            <TextBox Text="{Binding NewAccountName, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8" />
                             <TextBlock Text="نوع حساب" FontSize="10.5" Opacity="0.6" />
-                            <ComboBox ItemsSource="{Binding AccountTypeLabels}" SelectedIndex="{Binding NewAccountTypeIndex}" Margin="0,2,0,6" />
+                            <ComboBox ItemsSource="{Binding AccountTypeLabels}" SelectedIndex="{Binding NewAccountTypeIndex}" Margin="0,2,0,8" />
                             <TextBlock Text="سطح" FontSize="10.5" Opacity="0.6" />
-                            <ComboBox ItemsSource="{Binding LevelLabels}" SelectedIndex="{Binding NewLevelIndex}" Margin="0,2,0,6" />
-                            <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
-                                <RadioButton Content="بدهکار" GroupName="Nature" IsChecked="{Binding NewNatureIsCredit, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}" />
-                                <RadioButton Content="بستانکار" GroupName="Nature" Margin="14,0,0,0" />
+                            <ComboBox ItemsSource="{Binding LevelLabels}" SelectedIndex="{Binding NewLevelIndex}" Margin="0,2,0,8" />
+                            <!-- ═══ چرخهٔ ۴۷ — رفع رادیوهای ماهیت ═══
+                                 پیش‌تر IsChecked با مبدل BoolToVisibility (خروجی Visibility!)
+                                 بسته می‌شد — اتصال همیشه شکست می‌خورد و «بدهکار» هرگز
+                                 انتخاب نمی‌شد؛ الگوی استاندارد دوسویه با InvertBool. -->
+                            <TextBlock Text="ماهیت حساب" FontSize="10.5" Opacity="0.6" Margin="0,2,0,2" />
+                            <StackPanel Orientation="Horizontal" Margin="0,2,0,10">
+                                <RadioButton Content="بدهکار (دارایی/هزینه)" GroupName="Nature"
+                                             IsChecked="{Binding NewNatureIsCredit, Converter={StaticResource InvertBool}}" />
+                                <RadioButton Content="بستانکار (بدهی/درآمد)" GroupName="Nature" Margin="14,0,0,0"
+                                             IsChecked="{Binding NewNatureIsCredit}" />
                             </StackPanel>
-                            <Button Command="{Binding SaveAccountCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
-                                <TextBlock Text="ثبت حساب" />
+                            <Button Command="{Binding SaveAccountCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    MinHeight="42" HorizontalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                                    <TextBlock Text="ثبت حساب" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
                             </Button>
                         </StackPanel>
                     </Border>
                 </Grid>
             </TabItem>
 
-            <!-- تب ۴: تراز -->
+            <!-- ═══════════════ تب ۴: تراز ═══════════════ -->
             <TabItem Header="⚖️ تراز">
                 <Grid Margin="4,8">
                     <Grid.RowDefinitions>
@@ -246,20 +326,29 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
-                        <!-- چرخه بیست‌وسوم: فیلدهای تاریخ سود و زیان از انتخابگر تاریخ شمسی -->
-                        <controls:PersianDatePicker DateShamsiText="{Binding IncomeFrom, Mode=TwoWay}"
-                                                    Placeholder="از تاریخ" Width="125" />
-                        <controls:PersianDatePicker DateShamsiText="{Binding IncomeTo, Mode=TwoWay}"
-                                                    Placeholder="تا تاریخ" Width="125" Margin="8,0,0,0" />
-                        <Button Command="{Binding RefreshReportsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="10,0,0,0">
-                            <TextBlock Text="به‌روزرسانی" />
-                        </Button>
-                        <TextBlock Text="{Binding TrialTotalText, Mode=OneWay}" FontWeight="Bold" Margin="16,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
+                    <Border Grid.Row="0" CornerRadius="10" Padding="12,10" Margin="0,0,0,8"
+                            Background="{DynamicResource MaterialDesign.Brush.Background}"
+                            BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                            BorderThickness="1">
+                        <StackPanel Orientation="Horizontal">
+                            <controls:PersianDatePicker DateShamsiText="{Binding IncomeFrom, Mode=TwoWay}"
+                                                        Placeholder="از تاریخ" Width="125" VerticalAlignment="Center" />
+                            <controls:PersianDatePicker DateShamsiText="{Binding IncomeTo, Mode=TwoWay}"
+                                                        Placeholder="تا تاریخ" Width="125" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            <Button Command="{Binding RefreshReportsCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}" Margin="10,0,0,0"
+                                    MinHeight="40" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" VerticalAlignment="Center" />
+                                    <TextBlock Text="به‌روزرسانی" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="{Binding TrialTotalText, Mode=OneWay}" FontWeight="Bold"
+                                       Margin="16,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
 
-                    <!-- ═══ بنر شکست بارگذاری — چرخهٔ ۳۸ (گزارش مالک: «در گزارش‌های
-                         مالی خروجی نشان نمی‌دهد»): علت داخل خود تب می‌ماند ═══ -->
+                    <!-- بنر شکست بارگذاری — چرخهٔ ۳۸ -->
                     <Border Grid.Row="1" Padding="12,8" CornerRadius="10" Background="#FDECEA"
                             Margin="0,0,0,8" HorizontalAlignment="Stretch"
                             Visibility="{Binding ReportsNotice, Converter={StaticResource StringToVisibility}}">
@@ -271,7 +360,8 @@
                         </StackPanel>
                     </Border>
                     <DataGrid Grid.Row="2" ItemsSource="{Binding TrialRows}" AutoGenerateColumns="False"
-                              CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column" FontSize="12">
+                              CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column" FontSize="12"
+                              GridLinesVisibility="Horizontal" materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="کد" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="100" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="عنوان" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" />
@@ -285,51 +375,108 @@
                 </Grid>
             </TabItem>
 
-            <!-- تب ۵: سود و زیان -->
+            <!-- ═══════════════ تب ۵: سود و زیان — ساختاریافته (چرخهٔ ۴۷) ═══════════════ -->
             <TabItem Header="💹 سود/زیان">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
-                    <!-- ═══ چرخهٔ چهلم (رفع خطای بیلد MC3089) ═══ ScrollViewer فقط یک فرزند
-                         می‌پذیرد؛ بنر شکست بارگذاری و کارت صورت سود/زیان دو فرزند مستقل
-                         بودند ⇒ «The object 'ScrollViewer' already has a child». هر دو داخل
-                         یک StackPanel عمودی قرار گرفتند تا هم ScrollViewer تک‌فرزند بماند و
-                         هم هر دو عنصر در ارتفاع محتوا پشت سر هم و با اسکرول دیده شوند. -->
                     <StackPanel>
-                    <!-- ═══ بنر شکست بارگذاری — چرخهٔ ۳۸ (همان تراز؛ سود و زیان هم
-                         با همان علت می‌شکند و پیام باید دیده شود) ═══ -->
-                    <Border Padding="12,8" CornerRadius="10" Background="#FDECEA"
-                            Margin="0,0,0,10" HorizontalAlignment="Stretch"
-                            Visibility="{Binding ReportsNotice, Converter={StaticResource StringToVisibility}}">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AlertCircle" Width="17" Height="17"
-                                                     Foreground="#C62828" VerticalAlignment="Center" Margin="0,0,8,0" />
-                            <TextBlock Text="{Binding ReportsNotice}" FontSize="12" Foreground="#8E2A20"
-                                       TextWrapping="Wrap" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Border>
-                    <Border CornerRadius="12" Padding="18" MaxWidth="560" HorizontalAlignment="Center"
-                            Background="{DynamicResource MaterialDesign.Brush.Background}" Margin="0,8,0,0">
-                        <StackPanel>
-                            <TextBlock Text="📊 صورت سود و زیان" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" />
-                            <TextBlock HorizontalAlignment="Center" FontSize="11" Opacity="0.6" Margin="0,4,0,14">
-                                <Run Text="{Binding IncomeFrom, Mode=OneWay}" /><Run Text=" تا " /><Run Text="{Binding IncomeTo, Mode=OneWay}" />
-                            </TextBlock>
-                            <ItemsControl ItemsSource="{Binding IncomeRows}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,3">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding Title}" FontSize="13" FontWeight="SemiBold" />
-                                            <TextBlock Grid.Column="1" Text="{Binding Amount, Mode=OneWay, Converter={StaticResource CurrencyRial}}"
-                                                       FontFamily="{DynamicResource App.CodeFont}" FontSize="12.5" Margin="24,0,0,0" />
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </Border>
+                        <!-- بنر شکست بارگذاری — چرخهٔ ۳۸ -->
+                        <Border Padding="12,8" CornerRadius="10" Background="#FDECEA"
+                                Margin="0,0,0,10" HorizontalAlignment="Stretch"
+                                Visibility="{Binding ReportsNotice, Converter={StaticResource StringToVisibility}}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="AlertCircle" Width="17" Height="17"
+                                                         Foreground="#C62828" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBlock Text="{Binding ReportsNotice}" FontSize="12" Foreground="#8E2A20"
+                                           TextWrapping="Wrap" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border CornerRadius="14" Padding="22,18" MaxWidth="620" HorizontalAlignment="Center"
+                                Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                                BorderThickness="1" Margin="0,4,0,0">
+                            <StackPanel>
+                                <!-- سربرگ صورت مالی -->
+                                <TextBlock Text="صورت سود و زیان" FontSize="17" FontWeight="Bold" HorizontalAlignment="Center" />
+                                <Border Height="2.5" CornerRadius="1.2" Width="48" HorizontalAlignment="Center"
+                                        Background="{DynamicResource MaterialDesign.Brush.Primary}" Margin="0,6,0,2" />
+                                <TextBlock HorizontalAlignment="Center" FontSize="11" Opacity="0.6" Margin="0,8,0,16">
+                                    <Run Text="{Binding IncomeFrom, Mode=OneWay}" /><Run Text=" تا " /><Run Text="{Binding IncomeTo, Mode=OneWay}" />
+                                </TextBlock>
+
+                                <!-- ═══ ردیف‌های ساختاریافته — چرخهٔ ۴۷ ═══
+                                     قالب پیشین همهٔ ردیف‌ها را یکسان (تخت و بی‌تفاوت)
+                                     نشان می‌داد؛ اکنون چهار لایهٔ بصری:
+                                     • عنوان بخش (IsHeader): کپسول رنگی + درشت
+                                     • ردیف جزئیات: معمولی
+                                     • جمع بخش (IsTotal): درشت + فاصلهٔ بالایی
+                                     • سود/زیان نهایی: کپسول رنگی سبز/قرمز (متن دقیق
+                                       سرور: «سود خالص» / «زیان خالص») -->
+                                <ItemsControl ItemsSource="{Binding IncomeRows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,3">
+                                                <!-- لایهٔ ۱: کپسول عنوان بخش -->
+                                                <Border x:Name="HeaderChip"
+                                                        CornerRadius="9" Padding="10,4.5"
+                                                        Background="#EDF3FA" BorderBrush="#C9DCEF" BorderThickness="1"
+                                                        HorizontalAlignment="Right"
+                                                        Visibility="Collapsed">
+                                                    <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="13"
+                                                               Foreground="#1565C0" />
+                                                </Border>
+
+                                                <!-- لایهٔ ۲/۳: ردیف جزئیات / جمع بخش -->
+                                                <Grid x:Name="Body">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock x:Name="TitleTb" Grid.Column="0"
+                                                               Text="{Binding Title}" FontSize="12.5"
+                                                               VerticalAlignment="Center" />
+                                                    <TextBlock x:Name="AmountTb" Grid.Column="1"
+                                                               Text="{Binding Amount, Mode=OneWay, Converter={StaticResource CurrencyRial}}"
+                                                               FontFamily="{DynamicResource App.CodeFont}" FontSize="12.5"
+                                                               Margin="24,0,0,0" VerticalAlignment="Center" />
+                                                </Grid>
+
+                                                <DataTemplate.Triggers>
+                                                    <!-- عنوان بخش → کپسول؛ بدنه پنهان -->
+                                                    <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                                                        <Setter TargetName="HeaderChip" Property="Visibility" Value="Visible" />
+                                                        <Setter TargetName="Body" Property="Visibility" Value="Collapsed" />
+                                                        <Setter TargetName="Body" Property="Margin" Value="0,2,0,4" />
+                                                    </DataTrigger>
+                                                    <!-- جمع بخش → درشت + تنفس بالایی -->
+                                                    <DataTrigger Binding="{Binding IsTotal}" Value="True">
+                                                        <Setter TargetName="TitleTb" Property="FontWeight" Value="Bold" />
+                                                        <Setter TargetName="AmountTb" Property="FontWeight" Value="Bold" />
+                                                        <Setter TargetName="Body" Property="Margin" Value="0,7,0,3" />
+                                                    </DataTrigger>
+                                                    <!-- سود خالص → کپسول سبز (متن دقیق سرور) -->
+                                                    <DataTrigger Binding="{Binding Title}" Value="سود خالص">
+                                                        <Setter TargetName="TitleTb" Property="Foreground" Value="#2E7D32" />
+                                                        <Setter TargetName="AmountTb" Property="Foreground" Value="#2E7D32" />
+                                                        <Setter TargetName="TitleTb" Property="FontSize" Value="14" />
+                                                        <Setter TargetName="AmountTb" Property="FontSize" Value="13.5" />
+                                                        <Setter TargetName="Body" Property="Margin" Value="0,12,0,0" />
+                                                    </DataTrigger>
+                                                    <!-- زیان خالص → کپسول قرمز -->
+                                                    <DataTrigger Binding="{Binding Title}" Value="زیان خالص">
+                                                        <Setter TargetName="TitleTb" Property="Foreground" Value="#C62828" />
+                                                        <Setter TargetName="AmountTb" Property="Foreground" Value="#C62828" />
+                                                        <Setter TargetName="TitleTb" Property="FontSize" Value="14" />
+                                                        <Setter TargetName="AmountTb" Property="FontSize" Value="13.5" />
+                                                        <Setter TargetName="Body" Property="Margin" Value="0,12,0,0" />
+                                                    </DataTrigger>
+                                                </DataTemplate.Triggers>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
