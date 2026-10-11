@@ -163,7 +163,11 @@ public partial class PharmacyViewModel : ViewModelBase
             return;
         }
 
-        var detail = await _api.GetAsync<DispenseDetail>($"prescriptions/{id}");
+        // ═══ چرخهٔ ۴۸ — پاکت استاندارد ApiResponse باز شود (قانون هم‌کلاسی‌ها) ═══
+        // نگاشت مستقیمِ پیشین یعنی PatientName/Items همیشه تهی — بارگذاری نسخه
+        // «موفق» دیده می‌شد اما فهرست اقلام برای تحویل همیشه خالی می‌ماند.
+        var envelope = await _api.GetAsync<DispenseDetailEnvelope>($"prescriptions/{id}");
+        var detail = envelope?.Data;
         if (detail is null)
         {
             ErrorMessage = _api.LastError ?? "نسخه یافت نشد";
@@ -229,7 +233,16 @@ public partial class PharmacyViewModel : ViewModelBase
         public int BatchCount { get; set; }
     }
 
-    /// <summary>جزئیات نسخه برای تحویل</summary>
+    /// <summary>
+    /// پاکت استاندارد پاسخ نسخه — چرخهٔ ۴۸: بدون این پوشش، اقلام نسخه هرگز
+    /// بایند نمی‌شدند و تحویل‌دارو همیشه فهرست خالی می‌دید.
+    /// </summary>
+    public sealed class DispenseDetailEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public DispenseDetail? Data { get; set; }
+    }
+
     public sealed class DispenseDetail
     {
         public long Id { get; set; }

@@ -237,8 +237,12 @@ public partial class VisitEditViewModel : ObservableObject
     private async Task LoadPatientContextAsync()
     {
         var patient = await _api.GetAsync<PatientFormViewModel.SearchResponse>($"patients/search?term={_patientId}");
-        // زمینه کامل از ویزیت فعلی یا جستجو
-        var detail = await _api.GetAsync<PatientFormViewModel.PatientDetail>($"patients/{_patientId}");
+        // ═══ چرخهٔ ۴۸ — پاکت استاندارد ApiResponse باز شود (قانون هم‌کلاسی‌ها) ═══
+        // نگاشت مستقیمِ پیشین یعنی همهٔ مشخصات بیمار همیشه پیش‌فرض — شمارهٔ
+        // پرونده، موبایل، بیمه و مهم‌تر از همه «حساسیت‌های دارویی/بیماری‌های
+        // مزمن» هرگز در فرم ویزیت دیده نمی‌شدند (پایش حساسیت بی‌اثر).
+        var patientEnvelope = await _api.GetAsync<PatientFormViewModel.PatientDetailEnvelope>($"patients/{_patientId}");
+        var detail = patientEnvelope?.Data;
         if (detail is not null && _visitId is null)
         {
             PatientMrn = detail.MedicalRecordNo;

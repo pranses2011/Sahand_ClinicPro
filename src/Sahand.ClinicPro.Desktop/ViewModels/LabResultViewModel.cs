@@ -52,7 +52,14 @@ public partial class LabResultViewModel : ObservableObject
     private async Task LoadAsync()
     {
         IsBusy = true;
-        var detail = await _api.GetAsync<LabOrderDetail>($"lab/orders/{_orderId}");
+        // ═══ چرخهٔ ۴۸ (گزارش مالک: «ثبت نتیجه آزمایش ایراد دارد و در لیست هیچ
+        //      قلمی نمی‌آورد تا انتخاب کنیم») ═══
+        // پاسخ سرور همیشه در پاکت استاندارد ApiResponse است: {isSuccess, message,
+        // data}. پیش‌تر پاکت مستقیماً به LabOrderDetail نگاشت می‌شد ⇒ هیچ ویژگی‌ای
+        // بایند نمی‌شد، «detail» تهی نمی‌شد (شیء خالی ساخته می‌شد) و Items همیشه
+        // تهی/خالی می‌ماند — جدول اقلام همیشه خالی و ثبت نتیجه ناممکن.
+        var response = await _api.GetAsync<LabOrderDetailEnvelope>($"lab/orders/{_orderId}");
+        var detail = response?.Data;
 
         if (detail is null)
         {
@@ -131,6 +138,17 @@ public partial class LabResultViewModel : ObservableObject
     /// <summary>بستن</summary>
     [RelayCommand]
     private void Close() => CloseRequested?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    /// پاکت استاندارد پاسخ جزئیات درخواست — چرخهٔ ۴۸:
+    /// همهٔ پاسخ‌های سرور در ApiResponse (isSuccess/message/data) پیچیده می‌شوند؛
+    /// بدون این پوشش، ویژگی‌ها هرگز بایند نمی‌شدند و جدول اقلام خالی می‌ماند.
+    /// </summary>
+    public sealed class LabOrderDetailEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public LabOrderDetail? Data { get; set; }
+    }
 
     /// <summary>جزئیات درخواست منطبق بر سرور</summary>
     public sealed class LabOrderDetail

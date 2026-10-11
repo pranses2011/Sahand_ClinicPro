@@ -68,8 +68,13 @@ public partial class PaymentWindowViewModel : ObservableObject
 
         IsBusy = true;
 
-        // ابتدا شناسه بیمار فاکتور گرفته می‌شود
-        var detail = await _api.GetAsync<InvoiceDetail>($"invoices/{_invoiceId}");
+        // ابتدا شناسهٔ بیمار فاکتور گرفته می‌شود
+        // ═══ چرخهٔ ۴۸ — پاکت استاندارد ApiResponse باز شود ═══
+        // پاسخ سرور در پاکت {isSuccess, data} است؛ نگاشت مستقیمِ پیشین یعنی
+        // PatientId/RemainingAmount همیشه پیش‌فرض (۰) — پرداخت با patientId=0
+        // ثبت می‌شد و به هیچ بیماری وصل نمی‌ماند.
+        var envelope = await _api.GetAsync<InvoiceDetailEnvelope>($"invoices/{_invoiceId}");
+        var detail = envelope?.Data;
         if (detail is null)
         {
             ErrorMessage = _api.LastError ?? "دریافت فاکتور ناموفق بود";
@@ -98,7 +103,17 @@ public partial class PaymentWindowViewModel : ObservableObject
     [RelayCommand]
     private void Cancel() => CloseRequested?.Invoke(this, EventArgs.Empty);
 
-    /// <summary>جزئیات فاکتور — فقط برای شناسه بیمار</summary>
+    /// <summary>
+    /// پاکت استاندارد پاسخ فاکتور — چرخهٔ ۴۸ (قانون هم‌کلاسی‌ها با باگ پاکت
+    /// «ثبت نتیجهٔ آزمایش»): بدون این پوشش، ویژگی‌های فاکتور هرگز بایند نمی‌شدند
+    /// و شناسهٔ بیمارِ ارسالی به سرور همیشه ۰ می‌ماند.
+    /// </summary>
+    public sealed class InvoiceDetailEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public InvoiceDetail? Data { get; set; }
+    }
+
     public sealed class InvoiceDetail
     {
         public long Id { get; set; }
