@@ -13,6 +13,14 @@
     <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)\..\..\docs\api</OpenApiDocumentsDirectory>
   </PropertyGroup>
 
+  <!-- ═══ چرخهٔ چهل‌وچهارم — دسترسی تست به متدهای داخلی میدلور لاگ ═══
+       پل تست ExtractEntityNameForTest/ExtractIdForTest (internal) برای
+       پروژهٔ تست یکپارچگی؛ الگوی «قطعهٔ نزدیک به شناسهٔ عددی» با تست قفل
+       می‌شود تا در بازنویسی‌های بعدی شکنسته نشود. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Sahand.ClinicPro.API.IntegrationTests" />
+  </ItemGroup>
+
   <ItemGroup>
     <!-- احراز هویت JWT (پیکربندی در گام ۴) -->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />

@@ -209,11 +209,43 @@ public class AuditLogMiddleware
         }
     }
 
-    /// <summary>استخراج نام موجودیت از مسیر مثل patients از /api/v1/patients/5</summary>
+    /// <summary>
+    /// استخراج نام موجودیت از مسیر — چرخهٔ چهل‌وچهارم (گزارش مالک):
+    /// «لاگ عملیات هنوز هم مقادیر قبلی رو نشون نمیده».
+    /// ═══ ریشهٔ قطعی که چند چرخه پنهان ماند ═══
+    /// پیش‌تر همیشه «قطعهٔ سوم» مسیر (parts[2]) نام موجودیت فرض می‌شد؛ اما
+    /// بخش بزرگی از کنترلرهای برنامه مسیرهای «زیرمنبعی» دارند:
+    ///   PUT /api/v1/hr/employees/5           → parts[2] = «hr»        ✗
+    ///   PUT /api/v1/insurance/companies/7    → parts[2] = «insurance» ✗
+    ///   PUT /api/v1/lookups/rooms/3          → parts[2] = «lookups»   ✗
+    ///   PUT /api/v1/prescriptions/templates/9→ parts[2] = «prescriptions» ✗
+    /// هیچ‌کدام به جدول دیتابیسی نگاشت نمی‌شدند ← OldValues همیشه تهی می‌ماند
+    /// (و نام موجودیت ثبت‌شده در لاگ هم بی‌معنا بود — «hr» به‌جای «employees»).
+    /// ═══ الگوی جدید: قطعهٔ «نزدیک‌ترین به شناسهٔ عددی» ═══
+    /// شناسهٔ عددی آخرین مسیر پیدا می‌شود (ExtractId) و قطعهٔ «یک قدم پیش از آن»
+    /// نام موجودیت است — «hr/employees/5» → employees، «insurance/companies/7»
+    /// → companies. مسیرهای سادهٔ «/patients/5» هم دقیقاً مثل قبل کار می‌کنند.
+    /// اگر شناسه‌ای در مسیر نبود، رفتار پیشین (parts[2]) حفظ می‌شود تا نام
+    /// موجودیتِ درخواست‌های بدون‌شناسه (مانند users/me/...) همچنان ثبت شود.
+    /// </summary>
     private static string? ExtractEntityName(PathString path)
     {
         var parts = path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        return parts is { Length: >= 3 } ? parts[2] : null;
+        if (parts is not { Length: >= 3 }) return null;
+
+        // نخستین قطعهٔ عددی از انتها (به‌جای api/v1) — همان شناسهٔ رکورد
+        for (var i = parts.Length - 1; i >= 2; i--)
+        {
+            if (long.TryParse(parts[i], out _))
+            {
+                // یک قدم پیش از شناسه — قطعهٔ نام موجودیت زیرمنبع
+                // (idIndex > 2 یعنی قطعهٔ نام، خودش جای parts[2] یا بعدش است)
+                return i > 2 ? parts[i - 1] : parts[2];
+            }
+        }
+
+        // بدون شناسه — رفتار پیشین (نام کنترلر/ماژول)
+        return parts[2];
     }
 
     /// <summary>استخراج شناسه از مسیر — چرخهٔ سی‌وپنجم: «آخرین قطعهٔ عددی»</summary>
@@ -245,14 +277,162 @@ public class AuditLogMiddleware
             ? value
             : value[..MaxValuesLength] + "… (بریده شد)";
 
+    // ═══ چرخهٔ چهل‌وچهارم — پل تست ═══
+    // دو متد «محض» استخراج نام موجودیت و شناسه برای تست‌های واحد نمایش داده
+    // می‌شوند (AuditLogEntityNameExtractionTests) تا الگوی «قطعهٔ نزدیک به
+    // شناسه» در آینده هم شکسته نشود؛ TryCaptureOldValues به DbContext وابسته
+    // است و در تست‌های یکپارچگی پوشش داده می‌شود.
+
+    /// <summary>نمایش داخلی ExtractEntityName برای پروژهٔ تست</summary>
+    internal static string? ExtractEntityNameForTest(PathString path) => ExtractEntityName(path);
+
+    /// <summary>نمایش داخلی ExtractId برای پروژهٔ تست</summary>
+    internal static long? ExtractIdForTest(PathString path) => ExtractId(path);
+
+    /// <summary>
+    /// نرمال‌سازی نام برای مقایسه — حذف جداکننده‌ها/آندرلاین، جمع‌زدایی و کوچک‌سازی.
+    /// «insurance-companies» و «InsuranceCompanies» هر دو «insurancecompanie» می‌شوند.
+    /// </summary>
+    private static string NormalizeName(string name) => name
+        .Replace("-", "", StringComparison.OrdinalIgnoreCase)
+        .Replace("_", "", StringComparison.OrdinalIgnoreCase)
+        .Replace(" ", "", StringComparison.OrdinalIgnoreCase)
+        .TrimEnd('s', 'S')
+        .ToLowerInvariant();
+
+    /// <summary>
+    /// یافتن جدول متناظر از نام قطعهٔ مسیر — چرخهٔ چهل‌وچهارم (گزارش مالک:
+    /// «مقادیر قبلی هنوز نشان داده نمی‌شود»).
+    /// ═══ چرا نگاشتِ قبلی شکست می‌خورد؟ ═══
+    /// فقط «تطابق کامل» نام قطعه با نام جدول/نوع بررسی می‌شد؛ این نام‌های واقعی
+    /// برنامه هرگز تطابق کامل ندارند:
+    ///   «companies» (از insurance/companies/7) در برابر جدول «InsuranceCompanies»
+    ///   «templates» (از prescriptions/templates/9) در برابر «PrescriptionTemplate»
+    ///   «files»     (از imaging/files/3)        در برابر «ImagingFile»
+    /// ═══ زنجیرهٔ چهارمرحله‌ای جدید ═══
+    /// ۱) تطابق دوبستگی «والد + موجودیت»: والدِ قطعهٔ موجودیت به آن می‌چسبد —
+    ///    insurance+companies → insurancecompanie ≡ InsuranceCompanies ✓
+    ///    prescriptions+templates → prescriptiontemplate ≡ PrescriptionTemplate ✓
+    ///    (این مرحله هم‌نام‌های مبهم را از هم جدا می‌کند — templates تنها می‌تواند
+    ///    هم PrintTemplate باشد هم PrescriptionTemplate؛ والد، مرجع را قاطع می‌کند)
+    /// ۲) تطابق کامل تک‌قطعه: employees ≡ Employees، rooms ≡ Rooms
+    /// ۳) تطابق پسوندی: قطعه، «پایانِ» نام جدول باشد — companies → InsuranceCompanies،
+    ///    care-plans → CarePlan؛ اگر چند جدول پسوند یکسان داشتند، «کوتاه‌ترین»
+    ///    (نزدیک‌ترین به نام قطعه) انتخاب می‌شود
+    /// ۴) واژه‌نامهٔ نام‌های مستعار برای موارد به‌هیچ‌وجه هم‌شکل‌نبودن (مثل
+    ///    consumables → Medications که نام مسیر و نام جدول بی‌ارتباطند)
+    /// همهٔ مقایسه‌ها پس از NormalizeName انجام می‌شوند (جداکننده و جمع بی‌اثر).
+    /// </summary>
+    private static (string? Table, string? Schema)? FindTargetTable(
+        ClinicProDbContext dbContext, string entitySegment, string? parentSegment)
+    {
+        var entityNorm = NormalizeName(entitySegment);
+        if (string.IsNullOrEmpty(entityNorm))
+            return null;
+
+        // نام‌های مستعار صریح — مواردی که هیچ الگوی خودکاریشان را پوشش نمی‌دهد
+        // (نام مسیر API و نام جدول کاملاً از هم جدا هستند)
+        var aliases = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            // مسیر مصرفی‌های مستقل روی موجودیت Medications (قلمِ ItemKind=مصرفی) کار می‌کند
+            ["consumables"] = "Medications",
+            // مسیر عکس پرسنل/بیمار روی جدول‌های People
+            ["people"] = "People"
+        };
+
+        string? aliasTable = null;
+        string? aliasSchema = null;
+        if (aliases.TryGetValue(entitySegment, out var wanted))
+        {
+            foreach (var entityType in dbContext.Model.GetEntityTypes())
+            {
+                var table = entityType.GetTableName();
+                if (table is null) continue;
+                if (NormalizeName(table) == NormalizeName(wanted)
+                    || NormalizeName(entityType.ClrType.Name) == NormalizeName(wanted))
+                {
+                    aliasTable = table;
+                    aliasSchema = entityType.GetSchema();
+                    break;
+                }
+            }
+            if (aliasTable is not null)
+                return (aliasTable, aliasSchema);
+        }
+
+        // نام دوبستگی «والد + موجودیت» — گام ۱ (گزاره‌های بالادستی گاهی بخشی
+        // از نام جدول‌اند: InsuranceCompanies = insurance + companies)
+        var joinedNorm = string.IsNullOrEmpty(parentSegment)
+            ? null
+            : NormalizeName(parentSegment + entitySegment);
+
+        // گام ۲ و ۳ — تک‌قطعه: ابتدا تطابق کامل، سپس پسوندی (کوتاه‌ترین برنده)
+        string? exactTable = null, exactSchema = null;
+        string? suffixTable = null, suffixSchema = null;
+        var suffixTableLength = int.MaxValue;
+
+        foreach (var entityType in dbContext.Model.GetEntityTypes())
+        {
+            var table = entityType.GetTableName();
+            if (table is null) continue;
+
+            var candidates = new[] { table, entityType.ClrType.Name };
+            foreach (var candidate in candidates)
+            {
+                var candidateNorm = NormalizeName(candidate);
+
+                // گام ۱ — دوبستگی
+                if (joinedNorm is not null
+                    && candidateNorm == joinedNorm
+                    && exactTable is null)
+                {
+                    exactTable = table;
+                    exactSchema = entityType.GetSchema();
+                }
+
+                // گام ۲ — تطابق کامل تک‌قطعه
+                if (candidateNorm == entityNorm
+                    && exactTable is null)
+                {
+                    exactTable = table;
+                    exactSchema = entityType.GetSchema();
+                }
+
+                // گام ۳ — پسوندی؛ کوتاه‌ترین نام (نزدیک‌ترین به قطعه) برنده است
+                if (candidateNorm.Length > entityNorm.Length
+                    && candidateNorm.EndsWith(entityNorm, StringComparison.Ordinal)
+                    && candidate.Length < suffixTableLength)
+                {
+                    suffixTable = table;
+                    suffixSchema = entityType.GetSchema();
+                    suffixTableLength = candidate.Length;
+                }
+            }
+
+            // اگر گام ۱ یا ۲ همین‌جا وفق یافت، ادامهٔ پیمایش برای تطابق کامل
+            // بی‌معناست ولی پسوندی ممکن است هنوز بهتر باشد — پیمایش ادامه می‌یابد
+        }
+
+        if (exactTable is not null)
+            return (exactTable, exactSchema);
+        if (suffixTable is not null)
+            return (suffixTable, suffixSchema);
+        return null;
+    }
+
     /// <summary>
     /// خواندن وضعیت فعلی سطر هدف از دیتابیس «پیش از» اجرای هندلر —
     /// چرخهٔ بیست‌وششم (گزارش هجدهم مالک): بخش «مقادیر قبلی» جزئیات لاگ
     /// عملیات همیشه خالی بود چون هیچ‌جا OldValues پر نمی‌شد.
-    /// روش: نگاشت نام موجودیت مسیر (مثل users یا insurance-companies) به
-    /// جدول متناظر در مدل EF، سپس SELECT TOP 1 * با ADO خام (بدون ورود به
-    /// ChangeTracker تا سطرهای هندلر آلوده نشوند) و ساخت JSON ستون/مقدار
-    /// با حذف ستون‌های حساس (هش رمز، توکن، …) و ستون‌های دودویی (RowVersion).
+    /// چرخهٔ چهل‌وچهارم: نگاشت نام موجودیت به جدول از زنجیرهٔ چندلایهٔ
+    /// FindTargetTable می‌گذرد (دوبستگی/کامل/پسوندی/مستعار) تا مسیرهای
+    /// زیرمنبعی (hr/employees، insurance/companies، lookups/rooms و…)
+    /// نیز پوشش داده شوند — پیش‌تر فقط تطابق کامل تک‌قطعه بررسی می‌شد و
+    /// بخش بزرگی از مسیرهای برنامه بی‌نتیجه می‌ماندند.
+    /// روش: نگاشت نام موجودیت مسیر به جدول متناظر در مدل EF، سپس
+    /// SELECT TOP 1 * با ADO خام (بدون ورود به ChangeTracker تا سطرهای
+    /// هندلر آلوده نشوند) و ساخت JSON ستون/مقدار با حذف ستون‌های حساس
+    /// (هش رمز، توکن، …) و ستون‌های دودویی (RowVersion).
     /// </summary>
     private static string? TryCaptureOldValues(ClinicProDbContext dbContext, PathString path)
     {
@@ -263,43 +443,17 @@ public class AuditLogMiddleware
             if (string.IsNullOrEmpty(entitySegment) || id is null)
                 return null;
 
-            // نرمال‌سازی نام: حذف جداکننده‌ها و «s» جمع — insurance-companies → insurancecompanie
-            var normalized = entitySegment.Replace("-", "", StringComparison.OrdinalIgnoreCase)
-                .Replace("_", "", StringComparison.OrdinalIgnoreCase)
-                .TrimEnd('s', 'S')
-                .ToLowerInvariant();
+            // والدِ قطعهٔ موجودیت — برای تطابق دوبستگی (گام ۱ زنجیره)؛
+            // برای «insurance/companies/7» والدِ «companies» همان «insurance» است.
+            // اگر قطعهٔ موجودیت خودش parts[2] باشد (مسیر ساده)، والدی نیست.
+            var parts = path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            var entityIndex = Array.IndexOf(parts!, entitySegment);
+            var parentSegment = entityIndex > 2 ? parts![entityIndex - 1] : null;
 
-            // یافتن جدول متناظر از مدل EF — با مقایسهٔ نام جدول یا نام نوع موجودیت
-            string? tableName = null;
-            string? schema = null;
-            foreach (var entityType in dbContext.Model.GetEntityTypes())
-            {
-                var table = entityType.GetTableName();
-                if (table is null) continue;
-
-                var candidates = new[]
-                {
-                    table,
-                    entityType.ClrType.Name
-                };
-                foreach (var candidate in candidates)
-                {
-                    var candidateNormalized = candidate
-                        .Replace("-", "", StringComparison.OrdinalIgnoreCase)
-                        .Replace("_", "", StringComparison.OrdinalIgnoreCase)
-                        .TrimEnd('s', 'S')
-                        .ToLowerInvariant();
-                    if (candidateNormalized != normalized) continue;
-                    tableName = table;
-                    schema = entityType.GetSchema();
-                    break;
-                }
-
-                if (tableName is not null) break;
-            }
-
-            if (tableName is null)
+            var target = FindTargetTable(dbContext, entitySegment, parentSegment);
+            if (target is not { Table: { } tableName })
                 return null; // مسیر به موجودیت مشخصی نگاشت نشد — بدون مقادیر قبلی
+            var schema = target.Value.Schema;
 
             // خواندن سطر با ADO خام — بدون ردیابی تغییرات، بدون تداخل با هندلر
             var connection = dbContext.Database.GetDbConnection();
