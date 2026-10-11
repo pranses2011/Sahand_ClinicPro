@@ -1,20 +1,23 @@
 using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Desktop.Helpers;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.Views;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
-/// <summary>ردیف سوابق ویزیت در پرونده بیمار</summary>
-public record PatientVisitRow(string DateShamsi, string DoctorName, string Diagnosis, string Status);
+/// <summary>ردیف سوابق ویزیت در پرونده بیمار — شناسه برای گشودن جزئیات با دابل‌کلیک (چرخهٔ ۴۸)</summary>
+public record PatientVisitRow(long Id, string DateShamsi, string DoctorName, string Diagnosis, string Status);
 
 /// <summary>ردیف نسخه‌های بیمار — چرخه بیست‌وچهارم: ستون «تعداد اقلام» با
 /// «کد نسخه» جایگزین شد زیرا PrescriptionListDto سرور شمارش قلم ندارد؛
 /// نام فیلدها هم عیناً منطبق بر سرور شد (نامقبستگی → خطای «پاسخ سرور
 /// قابل تفسیر نبود» در گزارش هفدهم مالک)</summary>
-public record PatientPrescriptionRow(string DateShamsi, string DoctorName, string Code, string Status);
+public record PatientPrescriptionRow(long Id, string DateShamsi, string DoctorName, string Code, string Status);
 
 /// <summary>ردیف نوبت‌های بیمار — چرخه بیست‌وسوم (گزارش شانزدهم مالک): تب نوبت‌ها واقعی شد</summary>
 public record PatientAppointmentRow(string DateShamsi, string Time, string DoctorName, string Specialty, string Status);
@@ -23,7 +26,7 @@ public record PatientAppointmentRow(string DateShamsi, string Time, string Docto
 public record PatientInvoiceRow(string InvoiceNumber, string DateShamsi, string TotalAmount, string PaidAmount, string Status);
 
 /// <summary>ردیف آزمایش‌های بیمار — چرخه بیست‌وسوم: تب آزمایش‌ها واقعی شد</summary>
-public record PatientLabRow(string OrderNumber, string DateShamsi, string DoctorName, int ItemsCount, string Status);
+public record PatientLabRow(long Id, string OrderNumber, string DateShamsi, string DoctorName, int ItemsCount, string Status);
 
 /// <summary>ردیف اسناد/سوابق آرشیوی بیمار — چرخه بیست‌وسوم: تب اسناد به آرشیو سرور وصل شد</summary>
 public record PatientDocumentRow(string SourceTable, string Title, string DateShamsi, string Summary);
@@ -37,6 +40,19 @@ public record AbnormalResultRow(
     string FlagColor,
     string DateShamsi,
     string Kind);
+
+/// <summary>
+/// ردیف سوابق پاراکلینیک پرونده (تصویربرداری/دندانپزشکی/چشم‌پزشکی/فیزیوتراپی) —
+/// چرخهٔ ۴۸ (گزارش مالک: «برای همشون تب جداگانه بزار و با دابل کلیک جزئیات
+/// کاملشون نمایش داده بشه»)
+/// </summary>
+public record PatientParaRow(
+    long RefId,
+    string DateShamsi,
+    string Title,
+    string Subtitle,
+    string KindLabel,
+    string DotColor);
 
 /// <summary>ردیف رویداد خط زمان — چرخه ۱۳ (درخواست ۱-۵)</summary>
 public record TimelineRow(
@@ -116,6 +132,18 @@ public partial class PatientDetailViewModel : ObservableObject
     [ObservableProperty]
     private string _abnormalSummaryText = string.Empty;
 
+    /// <summary>سوابق تصویربرداری بیمار — تب اختصاصی چرخهٔ ۴۸</summary>
+    public ObservableCollection<PatientParaRow> ImagingHistory { get; } = new();
+
+    /// <summary>سوابق دندانپزشکی بیمار — تب اختصاصی چرخهٔ ۴۸</summary>
+    public ObservableCollection<PatientParaRow> DentalHistory { get; } = new();
+
+    /// <summary>سوابق چشم‌پزشکی بیمار — تب اختصاصی چرخهٔ ۴۸</summary>
+    public ObservableCollection<PatientParaRow> EyeHistory { get; } = new();
+
+    /// <summary>سوابق فیزیوتراپی بیمار — تب اختصاصی چرخهٔ ۴۸</summary>
+    public ObservableCollection<PatientParaRow> PhysioHistory { get; } = new();
+
     /// <summary>رویدادهای خط زمان — چرخه ۱۳ (درخواست ۱-۵)</summary>
     public ObservableCollection<TimelineRow> Timeline { get; } = new();
 
@@ -138,6 +166,10 @@ public partial class PatientDetailViewModel : ObservableObject
     [ObservableProperty] private bool _tlReceptions = true;
     [ObservableProperty] private bool _tlInvoices = true;
     [ObservableProperty] private bool _tlPayments = true;
+    // چرخهٔ ۴۸ — سه نوع تازهٔ پاراکلینیک در فیلتر خط زمان
+    [ObservableProperty] private bool _tlDental = true;
+    [ObservableProperty] private bool _tlEye = true;
+    [ObservableProperty] private bool _tlPhysio = true;
 
     partial void OnTlVisitsChanged(bool value) => _ = LoadTimelineAsync(_patientIdCache);
     partial void OnTlLabsChanged(bool value) => _ = LoadTimelineAsync(_patientIdCache);
@@ -146,6 +178,9 @@ public partial class PatientDetailViewModel : ObservableObject
     partial void OnTlReceptionsChanged(bool value) => _ = LoadTimelineAsync(_patientIdCache);
     partial void OnTlInvoicesChanged(bool value) => _ = LoadTimelineAsync(_patientIdCache);
     partial void OnTlPaymentsChanged(bool value) => _ = LoadTimelineAsync(_patientIdCache);
+    partial void OnTlDentalChanged(bool value) => _ = LoadTimelineAsync(_patientIdCache);
+    partial void OnTlEyeChanged(bool value) => _ = LoadTimelineAsync(_patientIdCache);
+    partial void OnTlPhysioChanged(bool value) => _ = LoadTimelineAsync(_patientIdCache);
     partial void OnTimelineYearFilterChanged(int value) => _ = LoadTimelineAsync(_patientIdCache);
 
     private long _patientIdCache;
@@ -201,6 +236,7 @@ public partial class PatientDetailViewModel : ObservableObject
                 foreach (var v in visits.Data)
                 {
                     Visits.Add(new PatientVisitRow(
+                        v.Id,
                         v.VisitDateShamsi ?? "—",
                         v.DoctorName ?? "—",
                         v.ChiefComplaint ?? "—",
@@ -223,6 +259,7 @@ public partial class PatientDetailViewModel : ObservableObject
                 foreach (var p in prescriptions.Data)
                 {
                     Prescriptions.Add(new PatientPrescriptionRow(
+                        p.Id,
                         p.DateShamsi ?? "—",
                         p.DoctorName ?? "—",
                         string.IsNullOrWhiteSpace(p.PrescriptionCode) ? "—" : p.PrescriptionCode,
@@ -278,6 +315,7 @@ public partial class PatientDetailViewModel : ObservableObject
                 foreach (var l in labs.Data)
                 {
                     Labs.Add(new PatientLabRow(
+                        l.Id,
                         l.OrderNumber ?? "—",
                         l.DateShamsi ?? "—",
                         l.DoctorName ?? "—",
@@ -350,6 +388,19 @@ public partial class PatientDetailViewModel : ObservableObject
         catch (Exception ex)
         {
             RecordSectionError("خط زمان", ex);
+        }
+
+        // ═══ ۶) سوابق پاراکلینیک اختصاصی — چرخهٔ ۴۸ (گزارش مالک: «همهٔ موارد
+        //     شامل دندانپزشکی/چشم‌پزشکی/فیزیوتراپی/تصویربرداری هم در پروندهٔ
+        //     بیمار ثبت بشن و تب جداگانه داشته باشن») — از خط زمان گسترش‌یافتهٔ
+        //     سرور (سه نوع تازه) پر می‌شوند ═══
+        try
+        {
+            await LoadParaclinicalHistoryAsync(patientId);
+        }
+        catch (Exception ex)
+        {
+            RecordSectionError("سوابق پاراکلینیک", ex);
         }
     }
 
@@ -471,7 +522,10 @@ public partial class PatientDetailViewModel : ObservableObject
         if (TlReceptions) parts.Add("reception");
         if (TlInvoices) parts.Add("invoice");
         if (TlPayments) parts.Add("payment");
-        var qs = parts.Count == 7 ? "" : $"?kinds={string.Join(",", parts)}";
+        if (TlDental) parts.Add("dental");
+        if (TlEye) parts.Add("eye");
+        if (TlPhysio) parts.Add("physio");
+        var qs = parts.Count == 10 ? "" : $"?kinds={string.Join(",", parts)}";
         if (TimelineYearFilter > 0)
             qs += (qs.Length == 0 ? "?" : "&") + $"yearShamsi={TimelineYearFilter}";
 
@@ -494,6 +548,226 @@ public partial class PatientDetailViewModel : ObservableObject
                 DotColorOf(e.Kind)));
     }
 
+    /// <summary>
+    /// بارگذاری سوابق پاراکلینیک تب‌های اختصاصی — چرخهٔ ۴۸: یک درخواست از خط
+    /// زمانِ گسترش‌یافته با فیلتر چهار نوع، و تفکیک ردیف‌ها به کلکسیون هر تب.
+    /// </summary>
+    private async Task LoadParaclinicalHistoryAsync(long patientId)
+    {
+        var tl = await _api.GetAsync<TimelineEnvelope>(
+            $"patients/{patientId}/timeline?kinds=imaging,dental,eye,physio");
+        if (tl?.Data is null) return;
+
+        ImagingHistory.Clear();
+        DentalHistory.Clear();
+        EyeHistory.Clear();
+        PhysioHistory.Clear();
+        foreach (var e in tl.Data.Events ?? new List<TimelineEventApi>())
+        {
+            var row = new PatientParaRow(
+                e.RefId,
+                e.DateShamsi ?? "—",
+                e.Title ?? "—",
+                e.Subtitle ?? "",
+                e.KindLabel ?? "",
+                DotColorOf(e.Kind));
+            switch (e.Kind)
+            {
+                case "imaging": ImagingHistory.Add(row); break;
+                case "dental": DentalHistory.Add(row); break;
+                case "eye": EyeHistory.Add(row); break;
+                case "physio": PhysioHistory.Add(row); break;
+            }
+        }
+    }
+
+    /* ═══════════ دابل‌کلیک → جزئیات کامل — چرخهٔ ۴۸ (گزارش مالک) ═══════════ */
+
+    /// <summary>
+    /// جزئیات ویزیت با دابل‌کلیک — همان فرم کامل ویزیت (شرح حال/SOAP/حیاتی/
+    /// تشخیص/ارجاع‌ها) برای مرور و ویرایش باز می‌شود.
+    /// </summary>
+    [RelayCommand]
+    private void OpenVisitDetails(PatientVisitRow? row)
+    {
+        if (row is null || row.Id <= 0) return;
+        var snackbar = System.Windows.Application.Current is { } app
+            ? App.Services.GetRequiredService<ISnackbarService>()
+            : null;
+        if (snackbar is null) return;
+        var window = new Views.VisitWindow(new VisitEditViewModel(_api, snackbar, row.Id))
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        window.ShowDialog();
+    }
+
+    /// <summary>جزئیات آزمایش با دابل‌کلیک — پنجرهٔ ثبت/مشاهدهٔ نتایج قلم‌به‌قلم</summary>
+    [RelayCommand]
+    private void OpenLabDetails(PatientLabRow? row)
+    {
+        if (row is null || row.Id <= 0) return;
+        var window = new Views.LabResultWindow(new LabResultViewModel(_api, row.Id))
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        window.ShowDialog();
+    }
+
+    /// <summary>جزئیات نسخه با دابل‌کلیک — پنجرهٔ کامل اقلام و توضیحات نسخه</summary>
+    [RelayCommand]
+    private void OpenPrescriptionDetails(PatientPrescriptionRow? row)
+    {
+        if (row is null || row.Id <= 0) return;
+        var window = new Views.PrescriptionDetailWindow(new PrescriptionDetailViewModel(_api, row.Id))
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        window.ShowDialog();
+    }
+
+    /// <summary>
+    /// جزئیات ردیف‌های پاراکلینیک (تصویربرداری/دندان/چشم/فیزیو) با دابل‌کلیک —
+    /// چشم: معاینهٔ کامل از سابقهٔ سرور؛ دندان: چارت و ردیف‌های طرح درمان؛
+    /// بقیه: دیالوگ فارسی خود برنامه با همهٔ اطلاعات موجود همان رکورد.
+    /// </summary>
+    [RelayCommand]
+    private async Task OpenParaDetailsAsync(PatientParaRow? row)
+    {
+        if (row is null) return;
+
+        if (row.KindLabel.Contains("چشم"))
+        {
+            var full = await TryBuildEyeExamDetailsAsync(row.RefId);
+            if (full is not null)
+            {
+                AppDialog.Info($"جزئیات معاینه چشم — {row.DateShamsi}", full);
+                return;
+            }
+        }
+
+        if (row.KindLabel.Contains("دندان"))
+        {
+            var full = await TryBuildDentalDetailsAsync();
+            if (full is not null)
+            {
+                AppDialog.Info($"جزئیات طرح درمان دندان — {row.DateShamsi}", full);
+                return;
+            }
+        }
+
+        // تصویربرداری / فیزیوتراپی (و بازگشتی‌های تهی چشم/دندان) — همهٔ اطلاعات موجود
+        AppDialog.Info(
+            $"جزئیات {row.KindLabel.Trim()}",
+            $"عنوان: {row.Title}\n\nشرح: {row.Subtitle}\n\nتاریخ: {row.DateShamsi}");
+    }
+
+    /// <summary>
+    /// ساخت متن کامل معاینهٔ چشم از سابقهٔ سرور — یافتن رکورد با شناسه و
+    /// قالب‌بندی همهٔ فیلدهای تخصصی (عدسی/استوانه/محور/IOP/VA/PD/یافته‌ها).
+    /// </summary>
+    private async Task<string?> TryBuildEyeExamDetailsAsync(long examId)
+    {
+        try
+        {
+            var envelope = await _api.GetAsync<EyeExamsEnvelope>(
+                $"eye/exams?patientId={_patientIdCache}");
+            var exam = envelope?.Data?.FirstOrDefault(e => e.Id == examId);
+            if (exam is null) return null;
+
+            static string Side(EyeSideDto? s) => s is null
+                ? "—"
+                : $"عدسی {s.Sphere?.ToString() ?? "—"} / استوانه {s.Cylinder?.ToString() ?? "—"} / محور {s.Axis?.ToString() ?? "—"}";
+
+            return
+                $"چشم راست (OD):\n  {Side(exam.Od)}\n  حدت بینایی: {exam.Od?.Acuity ?? "—"} • فشار چشم: {exam.Od?.Iop?.ToString() ?? "—"}\n\n" +
+                $"چشم چپ (OS):\n  {Side(exam.Os)}\n  حدت بینایی: {exam.Os?.Acuity ?? "—"} • فشار چشم: {exam.Os?.Iop?.ToString() ?? "—"}\n\n" +
+                $"فاصلهٔ مردمک (PD): {exam.Pd?.ToString() ?? "—"}\n" +
+                $"دید رنگی: {exam.ColorVision ?? "—"}\n" +
+                (string.IsNullOrWhiteSpace(exam.Findings) ? "" : $"\nیافته‌ها:\n{exam.Findings}") +
+                (string.IsNullOrWhiteSpace(exam.EyewearPrescription) ? "" : $"\n\nنسخهٔ عینک:\n{exam.EyewearPrescription}");
+        }
+        catch
+        {
+            return null; // خطای شبکه → دیالوگ خلاصه‌ای پاراکلینیک
+        }
+    }
+
+    /// <summary>
+    /// ساخت متن کامل چارت دندان از آخرین طرح درمان سرور — برچسب وضعیت هر
+    /// دندان غیرسالم + ردیف‌های طرح (دندان/عملیات/قیمت/وضعیت).
+    /// </summary>
+    private async Task<string?> TryBuildDentalDetailsAsync()
+    {
+        try
+        {
+            var envelope = await _api.GetAsync<DentalChartEnvelope>(
+                $"dental/chart?patientId={_patientIdCache}");
+            var plan = envelope?.Data;
+            if (plan is null) return null;
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"هزینهٔ کل طرح: {Money.Format(plan.TotalCost)} — جلسات برآوردی: {plan.EstimatedSessions?.ToString() ?? "—"}");
+            sb.AppendLine();
+
+            // چارت وضعیت دندان‌ها از PlanDetails (JSON ذخیره‌شدهٔ دسکتاپ دندانپزشکی)
+            if (!string.IsNullOrWhiteSpace(plan.PlanDetails))
+            {
+                try
+                {
+                    using var doc = System.Text.Json.JsonDocument.Parse(plan.PlanDetails);
+                    if (doc.RootElement.TryGetProperty("teeth", out var teeth)
+                        && teeth.ValueKind == System.Text.Json.JsonValueKind.Object)
+                    {
+                        var labels = new Dictionary<string, string>
+                        {
+                            ["1"] = "پوسیدگی", ["2"] = "ترمیم‌شده", ["3"] = "درمان‌شده",
+                            ["4"] = "روکش", ["5"] = "کشیده‌شده", ["6"] = "ایمپلنت"
+                        };
+                        var affected = teeth.EnumerateObject()
+                            .Where(t => t.Value.ValueKind == System.Text.Json.JsonValueKind.Number
+                                     && t.Value.GetRawText() != "0"
+                                     && labels.TryGetValue(t.Value.GetRawText(), out _))
+                            .Select(t => $"{t.Name} ({labels[t.Value.GetRawText()]})")
+                            .ToList();
+                        sb.AppendLine(affected.Count > 0
+                            ? "دندان‌های دارای وضعیت ثبت‌شده:"
+                            : "همهٔ دندان‌ها سالم‌اند.");
+                        foreach (var a in affected)
+                            sb.AppendLine($"  • دندان {a}");
+                        sb.AppendLine();
+                    }
+
+                    if (doc.RootElement.TryGetProperty("rows", out var rows)
+                        && rows.ValueKind == System.Text.Json.JsonValueKind.Array)
+                    {
+                        sb.AppendLine("ردیف‌های طرح درمان:");
+                        foreach (var r in rows.EnumerateArray())
+                        {
+                            var tooth = r.TryGetProperty("tooth", out var t2) ? t2.ToString() : "—";
+                            var proc = r.TryGetProperty("procedure", out var p2) ? p2.ToString() : "—";
+                            var price = r.TryGetProperty("price", out var pr2) ? pr2.GetDecimal() : 0m;
+                            var status = r.TryGetProperty("status", out var s2) ? s2.ToString() : "";
+                            sb.AppendLine($"  • دندان {tooth} — {proc} — {Money.Format(price)}{(string.IsNullOrWhiteSpace(status) ? "" : $" ({status})")}");
+                        }
+                    }
+                }
+                catch
+                {
+                    // JSON ناقص/قدیمی — بخش متنی همان‌طور نمایش داده می‌شود
+                }
+            }
+
+            sb.AppendLine();
+            sb.AppendLine($"تاریخ ثبت طرح: {plan.CreatedShamsi ?? "—"}");
+            return sb.ToString();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     /// <summary>رنگ نقطه رویداد بر اساس نوع</summary>
     private static string DotColorOf(string? kind) => kind switch
     {
@@ -504,6 +778,9 @@ public partial class PatientDetailViewModel : ObservableObject
         "reception" => "#FB8C00",
         "invoice" => "#E53935",
         "payment" => "#3949AB",
+        "dental" => "#F4511E",
+        "eye" => "#039BE5",
+        "physio" => "#7CB342",
         _ => "#78909C"
     };
 
@@ -526,6 +803,53 @@ public partial class PatientDetailViewModel : ObservableObject
     }
 
     /* ── DTOهای سبک ── */
+
+    /// <summary>پاسخ سابقهٔ معاینه‌های چشم — چرخهٔ ۴۸ برای جزئیات دابل‌کلیک</summary>
+    public sealed class EyeExamsEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public List<EyeExamApi>? Data { get; set; }
+    }
+
+    /// <summary>معاینهٔ چشم از سرور — همان شکل صفحهٔ چشم‌پزشکی</summary>
+    public sealed class EyeExamApi
+    {
+        public long Id { get; set; }
+        public string? DateShamsi { get; set; }
+        public EyeSideDto? Od { get; set; }
+        public EyeSideDto? Os { get; set; }
+        public decimal? Pd { get; set; }
+        public string? ColorVision { get; set; }
+        public string? Findings { get; set; }
+        public string? EyewearPrescription { get; set; }
+    }
+
+    /// <summary>یک سمت معاینهٔ چشم</summary>
+    public sealed class EyeSideDto
+    {
+        public decimal? Sphere { get; set; }
+        public decimal? Cylinder { get; set; }
+        public int? Axis { get; set; }
+        public string? Acuity { get; set; }
+        public int? Iop { get; set; }
+    }
+
+    /// <summary>پاسخ چارت دندان — چرخهٔ ۴۸ برای جزئیات دابل‌کلیک</summary>
+    public sealed class DentalChartEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public DentalPlanApi? Data { get; set; }
+    }
+
+    /// <summary>طرح درمان دندان از سرور</summary>
+    public sealed class DentalPlanApi
+    {
+        public long Id { get; set; }
+        public decimal TotalCost { get; set; }
+        public int? EstimatedSessions { get; set; }
+        public string? PlanDetails { get; set; }
+        public string? CreatedShamsi { get; set; }
+    }
 
     /// <summary>پاسخ نوار نتایج غیرعادی — چرخه ۱۳</summary>
     public sealed class AbnormalEnvelope
@@ -582,6 +906,9 @@ public partial class PatientDetailViewModel : ObservableObject
         public string? Subtitle { get; set; }
         public string? DateShamsi { get; set; }
         public string? TimeShamsi { get; set; }
+
+        // چرخهٔ ۴۸ — شناسهٔ مرجع رکورد برای دابل‌کلیک جزئیات (ویزیت/آزمایش/نسخه/دندان/چشم/فیزیو…)
+        public long RefId { get; set; }
     }
 
     /// <summary>پاسخ فهرست ویزیت‌های بیمار</summary>
@@ -594,6 +921,8 @@ public partial class PatientDetailViewModel : ObservableObject
     /// <summary>ردیف ویزیت</summary>
     public sealed class VisitRow
     {
+        // چرخهٔ ۴۸ — شناسهٔ ویزیت برای گشودن فرم کامل با دابل‌کلیک
+        public long Id { get; set; }
         public string? VisitDateShamsi { get; set; }
         public string? DoctorName { get; set; }
         public string? ChiefComplaint { get; set; }

@@ -239,12 +239,19 @@
         <!-- ═══ تب‌های سوابق ═══ -->
         <TabControl Grid.Row="4" Background="Transparent">
             <!-- سوابق ویزیت -->
-            <TabItem Header="📋 سوابق ویزیت">
+            <!-- دابل‌کلیک روی هر ردیف ویزیت = گشودن فرم کامل ویزیت (چرخهٔ ۴۸؛ گزارش مالک) -->
+            <TabItem Header="📋 سوابق ویزیت" ToolTip="دابل‌کلیک: جزئیات کامل ویزیت">
                 <DataGrid ItemsSource="{Binding Visits}"
                           AutoGenerateColumns="False" IsReadOnly="True"
                           CanUserAddRows="False" FontSize="12"
                           HeadersVisibility="Column"
                           AlternatingRowBackground="#F7FAFD">
+                    <!-- چرخهٔ ۴۸ — دابل‌کلیک: فرم کامل ویزیت (شرح حال/SOAP/حیاتی/تشخیص/ارجاع‌ها) -->
+                    <DataGrid.InputBindings>
+                        <MouseBinding MouseAction="LeftDoubleClick"
+                                      Command="{Binding OpenVisitDetailsCommand}"
+                                      CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                    </DataGrid.InputBindings>
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="110" />
                         <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="160" />
@@ -255,10 +262,18 @@
             </TabItem>
 
             <!-- نسخه‌ها -->
-            <TabItem Header="💊 نسخه‌ها">
+            <TabItem Header="💊 نسخه‌ها" ToolTip="دابل‌کلیک: جزئیات کامل نسخه">
                 <DataGrid ItemsSource="{Binding Prescriptions}"
                           AutoGenerateColumns="False" IsReadOnly="True"
                           CanUserAddRows="False" FontSize="12"
+                          HeadersVisibility="Column"
+                          AlternatingRowBackground="#F7FAFD">
+                    <!-- چرخهٔ ۴۸ — دابل‌کلیک: پنجرهٔ کامل اقلام نسخه -->
+                    <DataGrid.InputBindings>
+                        <MouseBinding MouseAction="LeftDoubleClick"
+                                      Command="{Binding OpenPrescriptionDetailsCommand}"
+                                      CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                    </DataGrid.InputBindings>
                           HeadersVisibility="Column"
                           AlternatingRowBackground="#F7FAFD">
                     <DataGrid.Columns>
@@ -272,10 +287,18 @@
 
             <!-- آزمایش‌ها — چرخه بیست‌وسوم: اتصال واقعی به درخواست‌های آزمایش بیمار
                  (پیش‌تر EmptyState «در گام U10 متصل می‌شود» بود — تب خالی) -->
-            <TabItem Header="🧪 آزمایش‌ها">
+            <TabItem Header="🧪 آزمایش‌ها" ToolTip="دابل‌کلیک: نتایج قلم‌به‌قلم آزمایش">
                 <DataGrid ItemsSource="{Binding Labs}"
                           AutoGenerateColumns="False" IsReadOnly="True"
                           CanUserAddRows="False" FontSize="12"
+                          HeadersVisibility="Column"
+                          AlternatingRowBackground="#F7FAFD">
+                    <!-- چرخهٔ ۴۸ — دابل‌کلیک: پنجرهٔ نتایج آزمایش -->
+                    <DataGrid.InputBindings>
+                        <MouseBinding MouseAction="LeftDoubleClick"
+                                      Command="{Binding OpenLabDetailsCommand}"
+                                      CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                    </DataGrid.InputBindings>
                           HeadersVisibility="Column"
                           AlternatingRowBackground="#F7FAFD">
                     <DataGrid.Columns>
@@ -326,6 +349,68 @@
 
             <!-- اسناد — چرخه بیست‌وسوم: سوابق آرشیوی بیمار از سرور
                  (پیش‌تر EmptyState «در گام U15 متصل می‌شود» بود — تب خالی) -->
+            <!-- ═══ چهار تب اختصاصی پاراکلینیک — چرخهٔ ۴۸ (گزارش مالک: «در فرم پرونده
+                 بیمار برای همشون تب جداگانه بزار») + دابل‌کلیک برای جزئیات کامل ═══ -->
+            <TabItem Header="🩻 تصویربرداری" ToolTip="سوابق تصویربرداری بیمار — دابل‌کلیک: جزئیات">
+                <DataGrid ItemsSource="{Binding ImagingHistory}" Style="{StaticResource App.DataGrid}">
+                    <DataGrid.InputBindings>
+                        <MouseBinding MouseAction="LeftDoubleClick"
+                                      Command="{Binding OpenParaDetailsCommand}"
+                                      CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                    </DataGrid.InputBindings>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
+                        <DataGridTextColumn Header="نوع" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="*" />
+                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Subtitle, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="140" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <TabItem Header="🦷 دندانپزشکی" ToolTip="طرح‌های درمان دندان — دابل‌کلیک: چارت کامل و ردیف‌های طرح">
+                <DataGrid ItemsSource="{Binding DentalHistory}" Style="{StaticResource App.DataGrid}">
+                    <DataGrid.InputBindings>
+                        <MouseBinding MouseAction="LeftDoubleClick"
+                                      Command="{Binding OpenParaDetailsCommand}"
+                                      CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                    </DataGrid.InputBindings>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
+                        <DataGridTextColumn Header="طرح درمان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="*" />
+                        <DataGridTextColumn Header="هزینه و وضعیت" Binding="{Binding Subtitle, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="160" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <TabItem Header="👁️ چشم‌پزشکی" ToolTip="معاینه‌های چشم — دابل‌کلیک: جزئیات کامل عینک‌سنجی">
+                <DataGrid ItemsSource="{Binding EyeHistory}" Style="{StaticResource App.DataGrid}">
+                    <DataGrid.InputBindings>
+                        <MouseBinding MouseAction="LeftDoubleClick"
+                                      Command="{Binding OpenParaDetailsCommand}"
+                                      CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                    </DataGrid.InputBindings>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
+                        <DataGridTextColumn Header="معاینه" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="150" />
+                        <DataGridTextColumn Header="خلاصه (IOP/VA/یافته‌ها)" Binding="{Binding Subtitle, Converter={StaticResource PersianDigits}}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <TabItem Header="🏃 فیزیوتراپی" ToolTip="جلسات و ارجاع‌های فیزیوتراپی — دابل‌کلیک: جزئیات">
+                <DataGrid ItemsSource="{Binding PhysioHistory}" Style="{StaticResource App.DataGrid}">
+                    <DataGrid.InputBindings>
+                        <MouseBinding MouseAction="LeftDoubleClick"
+                                      Command="{Binding OpenParaDetailsCommand}"
+                                      CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                    </DataGrid.InputBindings>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
+                        <DataGridTextColumn Header="جلسه" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
+                        <DataGridTextColumn Header="تکنیک‌ها/شرح" Binding="{Binding Subtitle, Converter={StaticResource PersianDigits}}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
             <TabItem Header="📎 اسناد">
                 <DataGrid ItemsSource="{Binding Documents}"
                           AutoGenerateColumns="False" IsReadOnly="True"
@@ -361,6 +446,10 @@
                                 <CheckBox Content="🛎 پذیرش" IsChecked="{Binding TlReceptions}" FontSize="11" Margin="0,0,10,4" />
                                 <CheckBox Content="🧾 فاکتور" IsChecked="{Binding TlInvoices}" FontSize="11" Margin="0,0,10,4" />
                                 <CheckBox Content="💳 پرداخت" IsChecked="{Binding TlPayments}" FontSize="11" Margin="0,0,10,4" />
+                                <!-- چرخهٔ ۴۸ — انواع پاراکلینیک تازه در فیلتر خط زمان -->
+                                <CheckBox Content="🦷 دندان" IsChecked="{Binding TlDental}" FontSize="11" Margin="0,0,10,4" />
+                                <CheckBox Content="👁️ چشم" IsChecked="{Binding TlEye}" FontSize="11" Margin="0,0,10,4" />
+                                <CheckBox Content="🏃 فیزیو" IsChecked="{Binding TlPhysio}" FontSize="11" Margin="0,0,10,4" />
                             </WrapPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                                 <TextBlock Text="سال شمسی:" FontWeight="Bold" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,8,0" />

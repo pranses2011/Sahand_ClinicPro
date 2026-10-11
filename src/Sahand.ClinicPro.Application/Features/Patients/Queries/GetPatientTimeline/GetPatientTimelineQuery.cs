@@ -164,6 +164,78 @@ public class GetPatientTimelineQueryHandler
                 p.PaymentDate, p.Id)));
         }
 
+        // ═══ ۸) طرح‌های درمان دندانپزشکی — چرخهٔ ۴۸ (گزارش مالک: همهٔ موارد
+        //     شامل دندانپزشکی/چشم‌پزشکی/فیزیوتراپی هم در پروندهٔ بیمار ثبت شوند) ═══
+        if (kinds.Count == 0 || kinds.Contains("dental"))
+        {
+            var dental = await _unitOfWork.Repository<Domain.Entities.Paraclinical.DentalTreatmentPlan>()
+                .QueryableNoTracking
+                .Where(d => d.PatientId == pid && !d.IsDeleted)
+                .OrderByDescending(d => d.CreatedAt)
+                .Take(200)
+                .Select(d => new
+                {
+                    d.Id,
+                    At = (DateTime?)(d.CreatedDate.HasValue
+                        ? d.CreatedDate.Value.ToDateTime(TimeOnly.MinValue)
+                        : d.CreatedAt),
+                    d.TotalCost,
+                    d.EstimatedSessions,
+                    d.Status
+                })
+                .ToListAsync(cancellationToken);
+            events.AddRange(dental.Select(d => new TimelineEventDto(
+                "dental", "🦷 دندانپزشکی",
+                $"طرح درمان دندان — {(d.EstimatedSessions.HasValue ? $"{d.EstimatedSessions} جلسه" : "بدون برآورد جلسه")}",
+                $"{d.TotalCost:N0} ریال — {DentalStatusFa(d.Status)}",
+                d.At ?? DateTime.MinValue, d.Id)));
+        }
+
+        // ═══ ۹) معاینه‌های چشم‌پزشکی ═══
+        if (kinds.Count == 0 || kinds.Contains("eye"))
+        {
+            var eyes = await _unitOfWork.Repository<Domain.Entities.Paraclinical.EyeExamRecord>()
+                .QueryableNoTracking
+                .Where(e => e.PatientId == pid && !e.IsDeleted)
+                .OrderByDescending(e => e.CreatedAt)
+                .Take(200)
+                .Select(e => new
+                {
+                    e.Id,
+                    e.CreatedAt,
+                    e.RightIop,
+                    e.LeftIop,
+                    e.RightVisualAcuity,
+                    e.LeftVisualAcuity,
+                    e.Findings
+                })
+                .ToListAsync(cancellationToken);
+            events.AddRange(eyes.Select(e => new TimelineEventDto(
+                "eye", "👁️ چشم‌پزشکی",
+                "معاینه چشم و عینک‌سنجی",
+                string.IsNullOrWhiteSpace(e.Findings)
+                    ? $"IOP: {e.RightIop?.ToString() ?? "—"}/{e.LeftIop?.ToString() ?? "—"} • VA: {e.RightVisualAcuity ?? "—"}/{e.LeftVisualAcuity ?? "—"}"
+                    : e.Findings.Length > 80 ? e.Findings[..80] + "…" : e.Findings,
+                e.CreatedAt, e.Id)));
+        }
+
+        // ═══ ۱۰) جلسات فیزیوتراپی ═══
+        if (kinds.Count == 0 || kinds.Contains("physio"))
+        {
+            var physio = await _unitOfWork.Repository<Domain.Entities.Paraclinical.PhysiotherapySession>()
+                .QueryableNoTracking
+                .Where(s => s.PatientId == pid && !s.IsDeleted)
+                .OrderByDescending(s => s.SessionDate)
+                .Take(200)
+                .Select(s => new { s.Id, s.SessionDate, s.SessionNumber, s.Treatments })
+                .ToListAsync(cancellationToken);
+            events.AddRange(physio.Select(s => new TimelineEventDto(
+                "physio", "🏃 فیزیوتراپی",
+                $"جلسهٔ {s.SessionNumber}",
+                s.Treatments is { Length: > 80 } ? s.Treatments[..80] + "…" : s.Treatments,
+                s.SessionDate ?? DateTime.MinValue, s.Id)));
+        }
+
         // ═══ مرتب‌سازی نزولی + فیلتر سال شمسی + برچسب تاریخ ═══
         var ordered = events
             .Where(e => e.At > DateTime.MinValue)
@@ -187,6 +259,17 @@ public class GetPatientTimelineQueryHandler
         return Result<PatientTimelineDto>.Success(new PatientTimelineDto(
             result.Count, years, result));
     }
+
+    /// <summary>وضعیت طرح درمان دندان به فارسی — چرخهٔ ۴۸</summary>
+    private static string DentalStatusFa(TreatmentPlanStatus status) => status switch
+    {
+        TreatmentPlanStatus.Proposed => "پیشنهادی",
+        TreatmentPlanStatus.Approved => "تأییدشده",
+        TreatmentPlanStatus.InProgress => "در جریان",
+        TreatmentPlanStatus.Completed => "تکمیل‌شده",
+        TreatmentPlanStatus.Cancelled => "لغوشده",
+        _ => status.ToString()
+    };
 
     /// <summary>وضعیت آزمایش به فارسی</summary>
     private static string LabStatusFa(LabOrderStatus status) => status switch
