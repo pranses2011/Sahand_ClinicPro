@@ -133,6 +133,15 @@ public partial class ConsumablesViewModel : ViewModelBase
             Batches = new ObservableCollection<ConsumableBatchRow>(response.Data
                 .Select(MapRow));
 
+            // ═══ چرخهٔ ۴۸ (گزارش مالک: «بعد از ثبت و ورود اقلام جدید، در لیست
+            //      نشان داده نمی‌شود و حتی دکمهٔ به‌روزرسانی هم بی‌اثر است») ═══
+            // جدول به پراپرتی محاسباتیِ VisibleBatches بایند است نه خودِ Batches؛
+            // تعویض نمونهٔ Batches تنها اعلانِ همان نام را منتشر می‌کند و اتصالِ
+            // ارزیابی‌شدهٔ گرید همچنان به مجموعهٔ قدیمیِ (زیر پالایش قبلی) اشاره
+            // می‌کرد — جستجو تنها راهِ پنهانی دوباره‌ارزیابی بود. اعلان صریحِ
+            // VisibleBatches پس از هر بارگذاری، گرید را به دادهٔ تازه وصل می‌کند.
+            OnPropertyChanged(nameof(VisibleBatches));
+
             RefreshSummary();
         }
         finally

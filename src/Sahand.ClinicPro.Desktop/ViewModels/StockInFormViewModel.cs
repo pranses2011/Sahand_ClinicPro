@@ -297,6 +297,13 @@ public partial class StockInFormViewModel : ObservableObject
     private void RefreshBatchState()
     {
         HasBatchLines = BatchLines.Count > 0;
+        // ═══ چرخهٔ ۴۸ (گزارش مالک: «دکمهٔ ثبت همه فقط ۱ قلم نشان می‌دهد در حالی
+        //      که در لیست ۲ قلم هست و زیر خود لیست ۲ قلم را می‌نویسد») ═══
+        // متن دکمهٔ ثبت فقط از مسیر [NotifyPropertyChangedFor] روی HasBatchLines
+        // نوسازی می‌شد؛ این پرچم تنها در عبور از مرزِ صفر تغییر می‌کند ⇒ افزودن
+        // ردیف‌های بعدی (۱→۲→۳…) شمار درون دکمه را کهنه نگه می‌داشت در حالی که
+        // خلاصهٔ زیر جدول (BatchSummaryText) صریحاً اعلان می‌شود و درست بود.
+        OnPropertyChanged(nameof(SaveButtonText));
         OnPropertyChanged(nameof(BatchSummaryText));
     }
 
