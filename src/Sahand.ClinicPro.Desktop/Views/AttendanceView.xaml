@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1180"
              FlowDirection="RightToLeft">
@@ -235,93 +236,377 @@
                 </Grid>
             </TabItem>
 
-            <!-- ═══════════ تب ۳: شیفت‌ها و تخصیص ═══════════ -->
+            <!-- ═══════════ تب ۳: شیفت‌ها — بازسازی کامل چرخهٔ ۴۴ ═══════════
+                 گزارش مالک: «تعریف شیفت ها و تخصیص به پرسنل پیاده سازی نشده.
+                 بصورت حرفه ای و کامل و زیبا پیاده سازی بکن».
+                 چیدمان: کارت‌های رنگی شیفت‌ها (ویرایش/حذف) + جدول تخصیص‌های فعال
+                 (پایان تخصیص) + دو فرم حرفه‌ای با انتخابگر ساعت عقربه‌ای، انتخابگر
+                 تاریخ شمسی، کمبوی جستجویی پرسنل/شیفت، پالت رنگ و چیپ روزهای هفته.
+                 قوانین مالک: انتخابگر ساعت/تاریخ (۵) + دیالوگ فارسی (۴) + لیبل
+                 شناور همهٔ فیلدها (چرخهٔ ۴۳ — استایل ضمنی خودکار). -->
             <TabItem Header="⏰ شیفت‌ها">
                 <Grid Margin="0,12,0,0">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="2.2*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0">
+                    <!-- سربرگ تب: خلاصه + نوسازی -->
+                    <DockPanel Grid.Row="0" Margin="0,0,0,10">
+                        <Button DockPanel.Dock="Left" Command="{Binding LoadShiftsCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Refresh" Width="14" Height="14" VerticalAlignment="Center" />
+                                <TextBlock Text="بازخوانی" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="تعریف الگوهای زمانی کار و تخصیص آن‌ها به پرسنل — مبنای محاسبهٔ تأخیر، کارکرد و اضافه‌کاری"
+                                   FontSize="11.5" Opacity="0.65" VerticalAlignment="Center" Margin="10,0,0,0"
+                                   TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+
+                    <!-- بدنه دو ستونه: کارت‌های شیفت (راست) + تخصیص‌های فعال (چپ) -->
+                    <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="1*" MinWidth="330" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="1.35*" MinWidth="420" />
                         </Grid.ColumnDefinitions>
 
-                        <!-- شیفت‌ها -->
-                        <DataGrid Grid.Column="0" ItemsSource="{Binding Shifts}" IsReadOnly="True"
-                                  AutoGenerateColumns="False" CanUserAddRows="False" Margin="0,0,6,0"
-                                  Style="{StaticResource MaterialDesignDataGrid}" HeadersVisibility="Column">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="شیفت" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="1.6*" />
-                                <DataGridTextColumn Header="ساعت" Binding="{Binding TimeRange, Converter={StaticResource PersianDigits}}" Width="*" />
-                                <DataGridTextColumn Header="نوع" Binding="{Binding Kind, Converter={StaticResource PersianDigits}}" Width="*" />
-                                <DataGridTextColumn Header="تحمل" Binding="{Binding Grace, Converter={StaticResource PersianDigits}}" Width="*" />
-                                <DataGridTextColumn Header="تخصیص‌ها" Binding="{Binding Assigned, Converter={StaticResource PersianDigits}}" Width="0.8*" />
-                            </DataGrid.Columns>
-                        </DataGrid>
+                        <!-- ─── ستون راست: شیفت‌های تعریف‌شده — کارت‌های رنگی ─── -->
+                        <Border Grid.Column="0" CornerRadius="12" Padding="10"
+                                Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                                BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="🧭 شیفت‌های تعریف‌شده" FontWeight="Bold" FontSize="13" Margin="4,0,0,8" />
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl ItemsSource="{Binding Shifts}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Margin="3,4" Padding="10,8" CornerRadius="10"
+                                                        Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                                                        BorderThickness="1">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <!-- لبهٔ رنگی راستِ کارت = رنگ تقویمی شیفت -->
+                                                            <Setter Property="BorderBrush" Value="{Binding ColorHex, Converter={StaticResource HexToBrush}}" />
+                                                            <Setter Property="BorderThickness" Value="0,0,3.5,0" />
+                                                            <Style.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter Property="Background" Value="#F4F9FF" />
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="Auto" />
+                                                        </Grid.RowDefinitions>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <!-- نام + نوع -->
+                                                        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12.5" VerticalAlignment="Center" />
+                                                            <Border CornerRadius="8" Padding="7,1.5" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                                    Background="{Binding ColorHex, Converter={StaticResource HexBrush}, ConverterParameter=tint}"
+                                                                    BorderBrush="{Binding ColorHex, Converter={StaticResource HexToBrush}}" BorderThickness="1">
+                                                                <TextBlock Text="{Binding Kind}" FontSize="9.5" FontWeight="SemiBold"
+                                                                           Foreground="{Binding ColorHex, Converter={StaticResource HexToBrush}}" />
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <!-- دکمه‌های ویرایش/حذف -->
+                                                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+                                                            <Button Command="{Binding DataContext.EditShiftCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Style="{StaticResource App.RowIconButton}" Padding="4"
+                                                                    ToolTip="ویرایش این شیفت">
+                                                                <materialDesign:PackIcon Kind="PencilOutline" Width="14" Height="14" />
+                                                            </Button>
+                                                            <Button Command="{Binding DataContext.DeleteShiftCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Style="{StaticResource App.RowIconButton}" Padding="4"
+                                                                    Foreground="#C62828" ToolTip="حذف این شیفت">
+                                                                <materialDesign:PackIcon Kind="DeleteOutline" Width="14" Height="14" />
+                                                            </Button>
+                                                        </StackPanel>
+                                                        <!-- بازهٔ ساعتی + تحمل + شمار تخصیص -->
+                                                        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,5,0,0">
+                                                            <materialDesign:PackIcon Kind="ClockOutline" Width="13" Height="13" Opacity="0.6" VerticalAlignment="Center" />
+                                                            <TextBlock Text="{Binding TimeRange, Converter={StaticResource PersianDigits}}"
+                                                                       FontSize="11" Margin="5,0,10,0" VerticalAlignment="Center" />
+                                                            <TextBlock Text="{Binding Grace, Converter={StaticResource PersianDigits}}"
+                                                                       FontSize="10" Opacity="0.6" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                                            <Border CornerRadius="8" Padding="7,1.5" VerticalAlignment="Center"
+                                                                    Background="#EDF3FA" BorderBrush="#D3E2F0" BorderThickness="1">
+                                                                <TextBlock FontSize="9.5">
+                                                                    <Run Text="{Binding Assigned, Converter={StaticResource PersianDigits}}" />
+                                                                    <Run Text="پرسنل" />
+                                                                </TextBlock>
+                                                            </Border>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
 
-                        <!-- تخصیص‌های فعال -->
-                        <DataGrid Grid.Column="1" ItemsSource="{Binding Assignments}" IsReadOnly="True"
-                                  AutoGenerateColumns="False" CanUserAddRows="False" Margin="6,0,0,0"
-                                  Style="{StaticResource MaterialDesignDataGrid}" HeadersVisibility="Column">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="1.6*" />
-                                <DataGridTextColumn Header="شیفت" Binding="{Binding ShiftName, Converter={StaticResource PersianDigits}}" Width="*" />
-                                <DataGridTextColumn Header="بازه" Binding="{Binding Range, Converter={StaticResource PersianDigits}}" Width="1.6*" />
-                            </DataGrid.Columns>
-                        </DataGrid>
+                        <!-- ─── ستون چپ: تخصیص‌های فعال ─── -->
+                        <Border Grid.Column="2" CornerRadius="12" Padding="10"
+                                Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                                BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="👥 تخصیص‌های فعال شیفت‌ها" FontWeight="Bold" FontSize="13" Margin="4,0,0,8" />
+                                <DataGrid Grid.Row="1" ItemsSource="{Binding Assignments}" IsReadOnly="True"
+                                          AutoGenerateColumns="False" CanUserAddRows="False"
+                                          Style="{StaticResource MaterialDesignDataGrid}" HeadersVisibility="Column">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="1.5*" />
+                                        <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="0.9*" FontFamily="{DynamicResource App.CodeFont}" />
+                                        <DataGridTemplateColumn Header="شیفت" Width="1.1*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Ellipse Width="9" Height="9" VerticalAlignment="Center" Margin="0,0,6,0"
+                                                                 Fill="{Binding ShiftColor, Converter={StaticResource HexToBrush}}" />
+                                                        <TextBlock Text="{Binding ShiftName, Converter={StaticResource PersianDigits}}" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTextColumn Header="بازه" Binding="{Binding Range, Converter={StaticResource PersianDigits}}" Width="1.4*" />
+                                        <DataGridTextColumn Header="تکرار" Binding="{Binding Recurrence, Converter={StaticResource PersianDigits}}" Width="0.8*" />
+                                        <DataGridTextColumn Header="روزها" Binding="{Binding WeekDays, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="1*" />
+                                        <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="92">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Command="{Binding DataContext.EndAssignmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource App.RowIconButton}" Padding="6,3"
+                                                            Foreground="#C62828" ToolTip="پایان این تخصیص از امروز">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <materialDesign:PackIcon Kind="StopCircleOutline" Width="13" Height="13" VerticalAlignment="Center" />
+                                                            <TextBlock Text="پایان" FontSize="10.5" Margin="4,0,0,0" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </Border>
                     </Grid>
 
-                    <!-- فرم‌های ثبت -->
-                    <Grid Grid.Row="1" Margin="0,10,0,0">
+                    <!-- ─── دو فرم پایینی: تعریف/ویرایش شیفت + تخصیص ─── -->
+                    <Grid Grid.Row="2" Margin="0,12,0,0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="1*" MinWidth="330" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="1.35*" MinWidth="420" />
                         </Grid.ColumnDefinitions>
 
-                        <!-- فرم شیفت -->
-                        <Border Grid.Column="0" Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
-                                CornerRadius="8" Padding="12" Margin="0,0,6,0"
-                                BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
+                        <!-- فرم ۱: ثبت/ویرایش شیفت -->
+                        <Border Grid.Column="0" CornerRadius="12" Padding="12"
+                                Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                                BorderThickness="1">
                             <StackPanel>
-                                <TextBlock Text="تعریف شیفت جدید" FontWeight="Bold" FontSize="13" Margin="0,0,0,8" />
+                                <DockPanel Margin="0,0,0,8">
+                                    <materialDesign:PackIcon DockPanel.Dock="Right" Kind="ClockPlusOutline" Width="17" Height="17"
+                                                             Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding ShiftFormTitle}" FontWeight="Bold" FontSize="13"
+                                               Margin="2,0,8,0" VerticalAlignment="Center" />
+                                </DockPanel>
                                 <WrapPanel>
-                                    <TextBox materialDesign:HintAssist.Hint="نام شیفت" Text="{Binding ShiftName}"
-                                             Width="150" Margin="0,0,8,8" />
-                                    <TextBox materialDesign:HintAssist.Hint="شروع HH:MM" Text="{Binding ShiftStart}"
-                                             Width="100" Margin="0,0,8,8" />
-                                    <TextBox materialDesign:HintAssist.Hint="پایان HH:MM" Text="{Binding ShiftEnd}"
-                                             Width="100" Margin="0,0,8,8" />
-                                    <TextBox materialDesign:HintAssist.Hint="تحمل تأخیر" Text="{Binding ShiftLateGrace}"
-                                             Width="80" Margin="0,0,8,8" />
-                                    <TextBox materialDesign:HintAssist.Hint="تحمل تعجیل" Text="{Binding ShiftEarlyGrace}"
-                                             Width="80" Margin="0,0,8,8" />
-                                    <TextBox materialDesign:HintAssist.Hint="استراحت (دقیقه)" Text="{Binding ShiftBreak}"
-                                             Width="110" Margin="0,0,8,8" />
-                                    <CheckBox Content="شیفت شبانه" IsChecked="{Binding ShiftIsNight}"
-                                              VerticalAlignment="Center" Margin="0,0,10,8" />
-                                    <Button Command="{Binding SaveShiftCommand}" Content="💾 ثبت شیفت"
-                                            Style="{StaticResource MaterialDesignRaisedButton}" />
+                                    <!-- نام شیفت — عنوان شناور خودکار (استایل سراسری چرخهٔ ۴۳) -->
+                                    <TextBox materialDesign:HintAssist.Hint="نام شیفت (مثلاً صبح اداری)"
+                                             Text="{Binding ShiftName, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Width="200" Margin="0,0,8,8" />
+                                    <!-- ساعت شروع/پایان — انتخابگر عقربه‌ای (قانون ۵ مالک) -->
+                                    <StackPanel Margin="0,0,8,8">
+                                        <TextBlock Text="شروع" FontSize="10" Opacity="0.6" Margin="2,0,0,2" />
+                                        <controls:TimePicker TimeText="{Binding ShiftStart, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,8,8">
+                                        <TextBlock Text="پایان" FontSize="10" Opacity="0.6" Margin="2,0,0,2" />
+                                        <controls:TimePicker TimeText="{Binding ShiftEnd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+                                    <ToggleButton IsChecked="{Binding ShiftIsNight}" Margin="0,4,10,6" VerticalAlignment="Center"
+                                                  Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                  ToolTip="شیفت عبورکننده از نیمه‌شب — پایان کوچک‌تر از شروع یعنی فردا">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="WeatherNight" Width="14" Height="14" VerticalAlignment="Center" />
+                                            <TextBlock Text="شیفت شبانه" FontSize="11" Margin="5,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </ToggleButton>
                                 </WrapPanel>
+                                <WrapPanel>
+                                    <TextBox materialDesign:HintAssist.Hint="تحمل تأخیر (دقیقه)" Text="{Binding ShiftLateGrace, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="118" Margin="0,0,6,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="تحمل تعجیل (دقیقه)" Text="{Binding ShiftEarlyGrace, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="118" Margin="0,0,6,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="استراحت کسرشونده (دقیقه)" Text="{Binding ShiftBreak, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="150" Margin="0,0,6,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="اضافه‌کاری پس از (دقیقه)" Text="{Binding ShiftOvertimeAfter, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="150" Margin="0,0,6,8" />
+                                </WrapPanel>
+                                <!-- پالت رنگ تقویمی — ListBox بدون قلم: آیتم همان رشتهٔ هگز است و
+                                     SelectedItem دوسویه مستقیماً به ShiftColor بسته می‌شود؛ کلیک روی
+                                     نقطهٔ رنگی = انتخاب همان رنگ (بدون نیاز به مبدل مقایسه) -->
+                                <StackPanel Orientation="Horizontal" Margin="2,0,0,8">
+                                    <TextBlock Text="رنگ تقویم:" FontSize="10.5" Opacity="0.65" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <ListBox ItemsSource="{Binding ShiftColorPalette, Mode=OneWay}"
+                                             SelectedItem="{Binding ShiftColor, Mode=TwoWay}"
+                                             Background="Transparent" BorderThickness="0"
+                                             Focusable="False" Cursor="Hand"
+                                             ToolTip="رنگ نمایش شیفت در تقویم و کارت‌ها">
+                                        <ListBox.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal" />
+                                            </ItemsPanelTemplate>
+                                        </ListBox.ItemsPanel>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border x:Name="Dot" Width="22" Height="22" CornerRadius="11" Margin="0,0,7,0"
+                                                        Background="{Binding Converter={StaticResource HexToBrush}}"
+                                                        BorderThickness="2" BorderBrush="Transparent" />
+                                                <DataTemplate.Triggers>
+                                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
+                                                        <Setter TargetName="Dot" Property="BorderBrush" Value="#37474F" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsMouseOver}" Value="True">
+                                                        <Setter TargetName="Dot" Property="Opacity" Value="0.8" />
+                                                    </DataTrigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Command="{Binding SaveShiftCommand}"
+                                            Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                                            <!-- متن دکمه با حالت فرم هم‌قدم می‌شود: ثبت یا به‌روزرسانی -->
+                                            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="به‌روزرسانی شیفت" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding EditingShiftId}" Value="{x:Null}">
+                                                                <Setter Property="Text" Value="ثبت شیفت جدید" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Command="{Binding CancelShiftEditCommand}"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            Visibility="{Binding EditingShiftId, Converter={StaticResource NullToVisibility}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CloseCircleOutline" Width="14" Height="14" VerticalAlignment="Center" />
+                                            <TextBlock Text="انصراف ویرایش" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
 
-                        <!-- فرم تخصیص -->
-                        <Border Grid.Column="1" Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
-                                CornerRadius="8" Padding="12" Margin="6,0,0,0"
-                                BorderThickness="1" BorderBrush="{DynamicResource MaterialDesignDivider}">
+                        <!-- فرم ۲: تخصیص شیفت به پرسنل -->
+                        <Border Grid.Column="2" CornerRadius="12" Padding="12"
+                                Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                                BorderThickness="1">
                             <StackPanel>
-                                <TextBlock Text="تخصیص شیفت به پرسنل" FontWeight="Bold" FontSize="13" Margin="0,0,0,8" />
+                                <DockPanel Margin="0,0,0,8">
+                                    <materialDesign:PackIcon DockPanel.Dock="Right" Kind="AccountPlusOutline" Width="17" Height="17"
+                                                             Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+                                    <TextBlock Text="تخصیص شیفت به پرسنل" FontWeight="Bold" FontSize="13"
+                                               Margin="2,0,8,0" VerticalAlignment="Center" />
+                                </DockPanel>
                                 <WrapPanel>
-                                    <TextBox materialDesign:HintAssist.Hint="شناسه پرسنل" Text="{Binding AssignEmployeeId}"
-                                             Width="110" Margin="0,0,8,8" />
-                                    <TextBox materialDesign:HintAssist.Hint="شناسه شیفت" Text="{Binding AssignShiftId}"
-                                             Width="110" Margin="0,0,8,8" />
-                                    <Button Command="{Binding AssignShiftCommand}" Content="➕ تخصیص"
-                                            Style="{StaticResource MaterialDesignRaisedButton}" VerticalAlignment="Center" />
+                                    <!-- پرسنل — کمبوی جستجویی (تایپ = پالایش شامل؛ استایل چرخهٔ ۴۳) -->
+                                    <ComboBox materialDesign:HintAssist.Hint="جستجوی پرسنل (نام / کد پرسنلی)"
+                                              ItemsSource="{Binding Employees}"
+                                              SelectedItem="{Binding SelectedAssignEmployee}"
+                                              DisplayMemberPath="DisplayName"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                              Width="270" Margin="0,0,8,8"
+                                              ToolTip="با تایپ بخشی از نام یا کد پرسنلی، فهرست پالایش می‌شود" />
+                                    <!-- شیفت — کمبوی جستجویی -->
+                                    <ComboBox materialDesign:HintAssist.Hint="شیفت"
+                                              ItemsSource="{Binding ShiftOptions}"
+                                              SelectedItem="{Binding SelectedAssignShift}"
+                                              DisplayMemberPath="DisplayName"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                              Width="190" Margin="0,0,8,8" />
+                                    <!-- بازهٔ اعتبار — انتخابگر تاریخ شمسی (قانون ۵) -->
+                                    <StackPanel Margin="0,0,8,6">
+                                        <TextBlock Text="اعتبار از" FontSize="10" Opacity="0.6" Margin="2,0,0,2" />
+                                        <controls:PersianDatePicker DateShamsiText="{Binding AssignFromDate, Mode=TwoWay}"
+                                                                    Placeholder="تاریخ شروع *" Width="150" />
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,8,6">
+                                        <TextBlock Text="تا (اختیاری)" FontSize="10" Opacity="0.6" Margin="2,0,0,2" />
+                                        <controls:PersianDatePicker DateShamsiText="{Binding AssignToDate, Mode=TwoWay}"
+                                                                    Placeholder="بی‌پایان" Width="150" />
+                                    </StackPanel>
                                 </WrapPanel>
+                                <WrapPanel>
+                                    <!-- الگوی تکرار -->
+                                    <ComboBox materialDesign:HintAssist.Hint="الگوی تکرار"
+                                              ItemsSource="{Binding RecurrenceOptions}"
+                                              SelectedIndex="{Binding AssignRecurrenceIndex}"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                              Width="225" Margin="0,0,8,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="اولویت در تعارض (عدد بزرگ‌تر برنده)"
+                                             Text="{Binding AssignPriority, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="185" Margin="0,0,8,8" />
+                                    <TextBox materialDesign:HintAssist.Hint="یادداشت (اختیاری)"
+                                             Text="{Binding AssignNotes, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="240" Margin="0,0,0,8" />
+                                </WrapPanel>
+                                <!-- چیپ‌های روز هفته — فقط در حالت هفتگی/سفارشی -->
+                                <StackPanel Orientation="Horizontal" Margin="2,0,0,8"
+                                            Visibility="{Binding ShowWeekDays, Converter={StaticResource BoolToVisibility}}">
+                                    <TextBlock Text="روزهای فعال:" FontSize="10.5" Opacity="0.65" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <!-- دکمه‌های تاگل روز — بیت‌ها: شنبه=۱ … جمعه=۶۴ -->
+                                    <ToggleButton Content="شنبه" IsChecked="{Binding WeekSat}" Margin="0,0,5,0" Style="{StaticResource MaterialDesignFlatToggleButton}" FontSize="10.5" Padding="9,3" />
+                                    <ToggleButton Content="یکشنبه" IsChecked="{Binding WeekSun}" Margin="0,0,5,0" Style="{StaticResource MaterialDesignFlatToggleButton}" FontSize="10.5" Padding="9,3" />
+                                    <ToggleButton Content="دوشنبه" IsChecked="{Binding WeekMon}" Margin="0,0,5,0" Style="{StaticResource MaterialDesignFlatToggleButton}" FontSize="10.5" Padding="9,3" />
+                                    <ToggleButton Content="سه‌شنبه" IsChecked="{Binding WeekTue}" Margin="0,0,5,0" Style="{StaticResource MaterialDesignFlatToggleButton}" FontSize="10.5" Padding="9,3" />
+                                    <ToggleButton Content="چهارشنبه" IsChecked="{Binding WeekWed}" Margin="0,0,5,0" Style="{StaticResource MaterialDesignFlatToggleButton}" FontSize="10.5" Padding="9,3" />
+                                    <ToggleButton Content="پنجشنبه" IsChecked="{Binding WeekThu}" Margin="0,0,5,0" Style="{StaticResource MaterialDesignFlatToggleButton}" FontSize="10.5" Padding="9,3" />
+                                    <ToggleButton Content="جمعه" IsChecked="{Binding WeekFri}" Style="{StaticResource MaterialDesignFlatToggleButton}" FontSize="10.5" Padding="9,3" />
+                                </StackPanel>
+                                <Button Command="{Binding AssignShiftCommand}"
+                                        Style="{StaticResource MaterialDesignRaisedButton}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="LinkPlus" Width="15" Height="15" VerticalAlignment="Center" />
+                                        <TextBlock Text="ثبت تخصیص" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
                         </Border>
                     </Grid>
