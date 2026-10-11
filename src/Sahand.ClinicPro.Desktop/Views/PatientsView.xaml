@@ -18,6 +18,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -25,7 +26,9 @@
         <!-- نوار عنوان صفحه — با Badge تعداد -->
         <!-- ═══ چرخهٔ ۴۵ (گزارش مالک: «ظاهر صفحات بیماران… رو خیلی حرفه ای تر و
              زیباتر بکن») — سربرگ گرادیانی برند؛ هم‌الگوی پذیرش/نوبت‌دهی/نقش‌ها:
-             نشان شیشه‌ای + عنوان/زیرعنوان + چیپ شمار بیماران در گوشهٔ چپ فیزیکی ═══ -->
+             نشان شیشه‌ای + عنوان/زیرعنوان ═══
+             ═══ چرخهٔ ۴۶ — چیپ شمار از سربرگ به «ردیف کارت‌های آماری» منتقل شد
+             (زیر سربرگ): سربرگ خلوت‌تر ماند و اعداد حالت روایت قوی‌تری گرفت ═══ -->
         <Border Grid.Row="0" CornerRadius="14" Padding="16,12" Margin="0,0,0,10">
             <Border.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
@@ -36,35 +39,77 @@
             <Border.Effect>
                 <DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Opacity="0.16" Color="#1A237E" />
             </Border.Effect>
-            <DockPanel>
-                <!-- چیپ شمار بیماران — گوشهٔ چپ فیزیکی (RTL) -->
-                <Border DockPanel.Dock="Left" CornerRadius="9" Padding="10,3" VerticalAlignment="Center"
-                        Background="#26FFFFFF" BorderBrush="#59FFFFFF" BorderThickness="1">
-                    <TextBlock Foreground="White" FontSize="10.5" FontWeight="SemiBold">
-                        <Run Text="کل: " /><Run Text="{Binding TotalCount, Mode=OneWay}" /><Run Text=" بیمار" />
-                    </TextBlock>
+            <StackPanel Orientation="Horizontal">
+                <Border Width="46" Height="46" CornerRadius="23" VerticalAlignment="Center" Margin="0,0,12,0"
+                        Background="#33FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1">
+                    <materialDesign:PackIcon Kind="AccountGroup" Width="24" Height="24"
+                                             Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
-                <StackPanel Orientation="Horizontal">
-                    <Border Width="46" Height="46" CornerRadius="23" VerticalAlignment="Center" Margin="0,0,12,0"
-                            Background="#33FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1">
-                        <materialDesign:PackIcon Kind="AccountGroup" Width="24" Height="24"
-                                                 Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="لیست بیماران" FontSize="18" FontWeight="Bold" Foreground="White" />
-                        <TextBlock Text="مدیریت و جستجوی بیماران ثبت‌شده در سامانه"
-                                   FontSize="11" Foreground="#E4DBFF" Margin="0,3,0,0" />
-                    </StackPanel>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="لیست بیماران" FontSize="18" FontWeight="Bold" Foreground="White" />
+                    <TextBlock Text="مدیریت و جستجوی بیماران ثبت‌شده در سامانه"
+                               FontSize="11" Foreground="#E4DBFF" Margin="0,3,0,0" />
                 </StackPanel>
-            </DockPanel>
+            </StackPanel>
         </Border>
 
-        <!-- نوار ابزار -->
-        <Border Grid.Row="1"
-                Background="{DynamicResource MaterialDesign.Brush.Background}"
-                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
-                BorderThickness="1" CornerRadius="10"
-                Padding="10,8" Margin="0,0,0,10">
+        <!-- ═══ چرخهٔ ۴۶ (گزارش مالک: چیدمان حرفه‌ای) — ردیف کارت‌های آماری «وضعیت
+             در یک نگاه» با زبان طراحی مشترک (App.StatCard): کل پرونده‌ها، ردیف‌های
+             صفحهٔ فعلی و جایگاه صفحه در صفحه‌بندی — خواننده پیش از ورود به جدول،
+             مقیاس داده را می‌فهمد (قاعدهٔ UX: پیش‌نمایش کم‌تلاش) ═══ -->
+        <UniformGrid Grid.Row="1" Columns="3" Margin="0,0,0,10">
+            <!-- کارت ۱: کل بیماران ثبت‌شده در سامانه -->
+            <Border Style="{StaticResource App.StatCard}" Margin="0,0,6,0">
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                            Background="#E3F2FD" BorderBrush="#BBDEFB" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="AccountGroup" Width="21" Height="21"
+                                                 Foreground="#1565C0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource App.StatValue}"
+                                   Text="{Binding TotalCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                        <TextBlock Style="{StaticResource App.StatLabel}" Text="کل پرونده‌های ثبت‌شده" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <!-- کارت ۲: ردیف‌های بارگذاری‌شده در همین صفحه -->
+            <Border Style="{StaticResource App.StatCard}" Margin="6,0,6,0">
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                            Background="#F3E5F5" BorderBrush="#E1BEE7" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="FormatListBulleted" Width="21" Height="21"
+                                                 Foreground="#7B1FA2" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource App.StatValue}"
+                                   Text="{Binding Patients.Count, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                        <TextBlock Style="{StaticResource App.StatLabel}" Text="نمایش در این صفحه" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <!-- کارت ۳: جایگاه صفحهٔ فعلی در صفحه‌بندی سروری -->
+            <Border Style="{StaticResource App.StatCard}" Margin="6,0,0,0">
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                            Background="#E8F5E9" BorderBrush="#C8E6C9" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="BookOpenPageVariant" Width="21" Height="21"
+                                                 Foreground="#2E7D32" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <!-- دو مقدار صفحهٔ فعلی/کل صفحات در یک خط — بدون نیاز به
+                             پراپرتی جدید در ViewModel؛ اعداد فارسی با فونت کد -->
+                        <TextBlock Style="{StaticResource App.StatValue}">
+                            <Run Text="{Binding PageNumber, Mode=OneWay, Converter={StaticResource PersianDigits}}" /><Run Text=" از " /><Run Text="{Binding TotalPages, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                        </TextBlock>
+                        <TextBlock Style="{StaticResource App.StatLabel}" Text="صفحهٔ فعلی از کل صفحات" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+        </UniformGrid>
+
+        <!-- نوار ابزار — ظرف مشترک زبان طراحی (App.ToolBar) چرخهٔ ۴۶ -->
+        <Border Grid.Row="2" Style="{StaticResource App.ToolBar}" Margin="0,0,0,10">
             <DockPanel>
                 <!-- راست: دکمه‌های عملیات -->
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
@@ -90,7 +135,7 @@
                 </StackPanel>
 
                 <!-- چپ: جستجو با آیکون -->
-                <TextBox materialDesign:HintAssist.Hint="🔍 جستجو با نام، کد ملی، موبایل…"
+                <TextBox materialDesign:HintAssist.Hint="جستجو با نام، کد ملی، موبایل…"
                          Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
                          FontSize="13"
                          VerticalAlignment="Center"
@@ -103,35 +148,30 @@
         </Border>
 
         <!-- نوار انتظار -->
-        <ProgressBar Grid.Row="2" IsIndeterminate="True" Height="3"
+        <ProgressBar Grid.Row="3" IsIndeterminate="True" Height="3"
                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}"
                      Margin="0,0,0,6" />
 
-        <!-- جدول اطلاعات — ۹ ستون طبق مشخصات -->
-        <DataGrid Grid.Row="3"
+        <!-- جدول اطلاعات — ۹ ستون طبق مشخصات؛ استایل مشترک App.DataGrid چرخهٔ ۴۶:
+             ردیف‌های ۳۶px برای هدف‌گیری راحت + فونت ۱۲٫۵ + نوار یک‌درمیان ملایم -->
+        <DataGrid Grid.Row="4"
                   x:Name="PatientsGrid"
+                  Style="{StaticResource App.DataGrid}"
                   ItemsSource="{Binding Patients}"
                   SelectedItem="{Binding SelectedPatient}"
-                  AutoGenerateColumns="False"
                   CanUserSortColumns="True"
                   CanUserResizeColumns="True"
-                  IsReadOnly="True"
-                  CanUserAddRows="False"
-                  AlternatingRowBackground="#F7FAFD"
-                  HeadersVisibility="Column"
-                  MouseDoubleClick="OnRowDoubleClick"
-                  RowBackground="Transparent"
-                  FontSize="12">
+                  MouseDoubleClick="OnRowDoubleClick">
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
                     <Setter Property="ContextMenu">
                         <Setter.Value>
                             <ContextMenu>
-                                <MenuItem Header="👁️ مشاهده جزئیات" Command="{Binding ViewPatientCommand}" />
-                                <MenuItem Header="✏️ ویرایش" Command="{Binding EditPatientCommand}" />
-                                <MenuItem Header="📅 رزرو نوبت" Command="{Binding BookAppointmentCommand}" />
+                                <MenuItem Header="مشاهده جزئیات" Command="{Binding ViewPatientCommand}" />
+                                <MenuItem Header="ویرایش" Command="{Binding EditPatientCommand}" />
+                                <MenuItem Header="رزرو نوبت" Command="{Binding BookAppointmentCommand}" />
                                 <Separator />
-                                <MenuItem Header="🗑️ حذف" Command="{Binding DeletePatientCommand}" Foreground="#C62828" />
+                                <MenuItem Header="حذف" Command="{Binding DeletePatientCommand}" Foreground="#C62828" />
                             </ContextMenu>
                         </Setter.Value>
                     </Setter>
@@ -255,13 +295,13 @@
         </DataGrid>
 
         <!-- حالت خالی -->
-        <controls:EmptyState Grid.Row="3"
+        <controls:EmptyState Grid.Row="4"
                              Message="موردی یافت نشد — با تغییر عبارت جستجو دوباره تلاش کنید"
                              IconKind="AccountSearch"
                              Visibility="{Binding Patients.Count, Converter={StaticResource NullToVisibility}, ConverterParameter=Inverse}" />
 
         <!-- صفحه‌بندی سروری -->
-        <controls:PaginationBar Grid.Row="4"
+        <controls:PaginationBar Grid.Row="5"
                                 PageNumber="{Binding PageNumber, Mode=TwoWay}"
                                 TotalPages="{Binding TotalPages, Mode=OneWay}"
                                 TotalCount="{Binding TotalCount, Mode=OneWay}"

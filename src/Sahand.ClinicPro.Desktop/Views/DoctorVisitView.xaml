@@ -102,17 +102,54 @@
             </StackPanel>
         </Border>
 
-        <!-- کارت‌های آماری شخصی -->
+        <!-- ═══ چرخهٔ ۴۶ (گزارش مالک: چیدمان حرفه‌ای) — کارت‌های آماری شخصی هم‌الگو
+             با زبان طراحی مشترک؛ ایموجی‌های برچسب حذف شدند (رندر ناهماهنگ ویندوز) ═══ -->
         <UniformGrid Grid.Row="2" Columns="3" Margin="0,0,0,10">
-            <controls:StatCard IconKind="CheckCircle" Margin="0,0,8,0"
-                               Value="{Binding VisitedCount, Mode=OneWay}"
-                               Label="✅ ویزیت‌شدهٔ امروزِ شما" AccentBrush="#2E7D32" />
-            <controls:StatCard IconKind="QueueFirstInLastOut" Margin="0,0,8,0"
-                               Value="{Binding WaitingCount, Mode=OneWay}"
-                               Label="🟡 در صفِ شما" AccentBrush="#F9A825" />
-            <controls:StatCard IconKind="ClockFast"
-                               Value="{Binding AverageDisplay, Mode=OneWay}"
-                               Label="میانگین مدت ویزیت شما" AccentBrush="#6A1B9A" />
+            <!-- کارت ۱: ویزیت‌های تکمیل‌شدهٔ امروزِ همین پزشک -->
+            <Border Style="{StaticResource App.StatCard}" Margin="0,0,6,0">
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                            Background="#E8F5E9" BorderBrush="#C8E6C9" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="CheckCircle" Width="21" Height="21"
+                                                 Foreground="#2E7D32" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource App.StatValue}"
+                                   Text="{Binding VisitedCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                        <TextBlock Style="{StaticResource App.StatLabel}" Text="ویزیت‌شدهٔ امروز شما" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <!-- کارت ۲: صف انتظار اختصاصی همین پزشک -->
+            <Border Style="{StaticResource App.StatCard}" Margin="6,0,6,0">
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                            Background="#FFF8E1" BorderBrush="#FFE082" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="QueueFirstInLastOut" Width="21" Height="21"
+                                                 Foreground="#F57F17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource App.StatValue}" Foreground="#E65100"
+                                   Text="{Binding WaitingCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                        <TextBlock Style="{StaticResource App.StatLabel}" Text="در صف شما" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <!-- کارت ۳: میانگین زمانی که هر بیمار نزد این پزشک وقت می‌گذراند -->
+            <Border Style="{StaticResource App.StatCard}" Margin="6,0,0,0">
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                            Background="#F3E5F5" BorderBrush="#E1BEE7" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="ClockFast" Width="21" Height="21"
+                                                 Foreground="#6A1B9A" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource App.StatValue}"
+                                   Text="{Binding AverageDisplay, Mode=OneWay}" />
+                        <TextBlock Style="{StaticResource App.StatLabel}" Text="میانگین مدت ویزیت شما" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
         </UniformGrid>
 
         <!-- بیمار فعلی -->
@@ -124,8 +161,13 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <!-- نشان شمارهٔ نوبت — عدد درشت روی دایرهٔ آبی (چرخهٔ ۴۶: به‌جای
+                         ایموجی، عدد واقعی صف بیمار فعلی) -->
                     <Border Width="44" Height="44" CornerRadius="22" Background="#1565C0">
-                        <TextBlock Text="🩺" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding CurrentPatient.QueueNumber, Mode=OneWay}"
+                                       FontWeight="Bold" Foreground="White" />
+                        </Viewbox>
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock FontSize="15" FontWeight="Bold">
@@ -147,7 +189,7 @@
                             VerticalAlignment="Center"
                             Visibility="{Binding CurrentPatient.Allergies, Converter={StaticResource NullToVisibility}}">
                         <TextBlock FontSize="10.5" Foreground="#C62828">
-                            <Run Text="⚠️ " /><Run Text="{Binding CurrentPatient.Allergies, Mode=OneWay}" />
+                            <Run Text="" /><Run Text="{Binding CurrentPatient.Allergies, Mode=OneWay}" />
                         </TextBlock>
                     </Border>
                 </StackPanel>
@@ -155,7 +197,7 @@
                         Style="{StaticResource MaterialDesignRaisedButton}" FontSize="13">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FolderEditOutline" Width="16" Height="16" VerticalAlignment="Center" />
-                        <TextBlock Text="🩺 باز کردن فرم ویزیت" Margin="8,0,0,0" />
+                        <TextBlock Text="باز کردن فرم ویزیت" Margin="8,0,0,0" />
                     </StackPanel>
                 </Button>
             </Grid>
@@ -175,7 +217,7 @@
                     BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                     BorderThickness="1">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="🟡 بیماران در صفِ شما" FontWeight="Bold" FontSize="14" Margin="2,0,2,8" />
+                    <TextBlock DockPanel.Dock="Top" Text="بیماران در صف شما" FontWeight="Bold" FontSize="13.5" Margin="2,0,2,8" />
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding Waiting}">
                             <ItemsControl.ItemTemplate>
@@ -197,7 +239,7 @@
                                                 <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="13" />
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock FontSize="11" Opacity="0.7">
-                                                        <Run Text="⏰ " /><Run Text="{Binding AppointmentTime, Mode=OneWay}" />
+                                                        <Run Text="ساعت نوبت: " /><Run Text="{Binding AppointmentTime, Mode=OneWay}" />
                                                     </TextBlock>
                                                     <TextBlock FontSize="11" Opacity="0.7" Margin="12,0,0,0">
                                                         <Run Text="نوع: " /><Run Text="{Binding VisitTypeText, Mode=OneWay}" />
@@ -231,7 +273,7 @@
                     BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                     BorderThickness="1">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="✅ ویزیت‌شده‌های امروزِ شما" FontWeight="Bold" FontSize="14" Margin="2,0,2,8" />
+                    <TextBlock DockPanel.Dock="Top" Text="ویزیت‌شده‌های امروز شما" FontWeight="Bold" FontSize="13.5" Margin="2,0,2,8" />
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding Done}">
                             <ItemsControl.ItemTemplate>
@@ -268,7 +310,7 @@
                     FontSize="14" Padding="20,10">
                 <StackPanel Orientation="Horizontal">
                     <materialDesign:PackIcon Kind="BellRing" Width="18" Height="18" VerticalAlignment="Center" />
-                    <TextBlock Text="🔔 فراخوانی بیمار بعدی (Space)" Margin="10,0,0,0" />
+                    <TextBlock Text="فراخوانی بیمار بعدی (Space)" Margin="10,0,0,0" />
                 </StackPanel>
             </Button>
             <ProgressBar IsIndeterminate="True" Width="24" Height="18" Margin="12,0,0,0"

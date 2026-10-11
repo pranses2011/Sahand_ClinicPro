@@ -63,28 +63,71 @@
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <!-- ═══ کارت‌های آماری ═══ -->
+                <!-- ═══ کارت‌های آماری — چرخهٔ ۴۶: هم‌الگو با زبان طراحی مشترک برنامه
+                     (App.StatCard)؛ ایموجی‌های برچسب حذف شدند — رندر ناهماهنگ در ویندوز ═══ -->
                 <UniformGrid Columns="4" Margin="0,0,0,12">
-                    <controls:StatCard IconKind="AccountClock" Margin="0,0,8,0"
-                                       Value="{Binding WaitingCount, Mode=OneWay}"
-                                       Label="🧑 در انتظار پذیرش"
-                                       AccentBrush="#F57C00" />
-                    <controls:StatCard IconKind="AccountCheck" Margin="0,0,8,0"
-                                       Value="{Binding ReceivedCount, Mode=OneWay}"
-                                       Label="✅ پذیرش‌شده امروز"
-                                       AccentBrush="#43A047" />
-                    <controls:StatCard IconKind="QueueFirstInLastOut" Margin="0,0,8,0"
-                                       Value="{Binding InQueue, Mode=OneWay}"
-                                       Label="⏳ در صف فعلی"
-                                       AccentBrush="#1E88E5" />
-                    <controls:StatCard IconKind="CashMultiple"
-                                       Value="{Binding TodayRevenueDisplay, Mode=OneWay}"
-                                       AccentBrush="#00897B">
-                        <!-- چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان) — حذف هاردکد «(ریال)» -->
-                        <controls:StatCard.Label>
-                            <TextBlock><Run Text="💰 درآمد پذیرش (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
-                        </controls:StatCard.Label>
-                    </controls:StatCard>
+                    <!-- کارت ۱: بیماران در انتظار پذیرش — کهربایی فعال -->
+                    <Border Style="{StaticResource App.StatCard}" Margin="0,0,6,0">
+                        <DockPanel>
+                            <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                                    Background="#FFF3E0" BorderBrush="#FFE0B2" Margin="0,0,10,0">
+                                <materialDesign:PackIcon Kind="AccountClock" Width="21" Height="21"
+                                                         Foreground="#E65100" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource App.StatValue}"
+                                           Text="{Binding WaitingCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                                <TextBlock Style="{StaticResource App.StatLabel}" Text="در انتظار پذیرش" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <!-- کارت ۲: پذیرش‌های ثبت‌شدهٔ امروز — سبز موفقیت -->
+                    <Border Style="{StaticResource App.StatCard}" Margin="6,0,6,0">
+                        <DockPanel>
+                            <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                                    Background="#E8F5E9" BorderBrush="#C8E6C9" Margin="0,0,10,0">
+                                <materialDesign:PackIcon Kind="AccountCheck" Width="21" Height="21"
+                                                         Foreground="#2E7D32" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource App.StatValue}"
+                                           Text="{Binding ReceivedCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                                <TextBlock Style="{StaticResource App.StatLabel}" Text="پذیرش‌شدهٔ امروز" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <!-- کارت ۳: بیماران در صف فعلی — آبی جریان -->
+                    <Border Style="{StaticResource App.StatCard}" Margin="6,0,6,0">
+                        <DockPanel>
+                            <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                                    Background="#E3F2FD" BorderBrush="#BBDEFB" Margin="0,0,10,0">
+                                <materialDesign:PackIcon Kind="QueueFirstInLastOut" Width="21" Height="21"
+                                                         Foreground="#1565C0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource App.StatValue}"
+                                           Text="{Binding InQueue, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                                <TextBlock Style="{StaticResource App.StatLabel}" Text="در صف فعلی" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <!-- کارت ۴: درآمد پذیرش امروز — فیروزه‌ای مالی؛ واحد پول پویا از تنظیمات -->
+                    <Border Style="{StaticResource App.StatCard}" Margin="6,0,0,0">
+                        <DockPanel>
+                            <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                                    Background="#E0F2F1" BorderBrush="#B2DFDB" Margin="0,0,10,0">
+                                <materialDesign:PackIcon Kind="CashMultiple" Width="21" Height="21"
+                                                         Foreground="#00695C" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource App.StatValue}" FontSize="15" Foreground="#00695C"
+                                           Text="{Binding TodayRevenueDisplay, Mode=OneWay}" />
+                                <TextBlock Style="{StaticResource App.StatLabel}">
+                                    <Run Text="درآمد پذیرش (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" />
+                                </TextBlock>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
                 </UniformGrid>
 
                 <ProgressBar IsIndeterminate="True" Height="3" Margin="0,0,0,10"
@@ -119,7 +162,7 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="🔍 نام / کد ملی / موبایل / کد پیگیری (APT-…):"
+                            <TextBlock Grid.Column="0" Text="نام / کد ملی / موبایل / کد پیگیری (APT-…):"
                                        VerticalAlignment="Center" Margin="0,0,10,0" FontSize="12.5" />
                             <TextBox Grid.Column="1" Text="{Binding SmartSearch, UpdateSourceTrigger=PropertyChanged}"
                                      materialDesign:HintAssist.Hint="مثلاً «علی رضایی» یا ۰۰۱۲۳ یا ۰۹۱۲ یا APT-1024">
@@ -165,7 +208,7 @@
                                         <Border Grid.Column="2" Background="#E8F5E9" CornerRadius="8" Padding="8,1"
                                                 VerticalAlignment="Center">
                                             <TextBlock FontSize="11">
-                                                <Run Text="🏥 " /><Run Text="{Binding InsuranceName, Mode=OneWay, TargetNullValue=آزاد}" />
+                                                <Run Text="" /><Run Text="{Binding InsuranceName, Mode=OneWay, TargetNullValue=آزاد}" />
                                             </TextBlock>
                                         </Border>
                                     </Grid>
@@ -191,7 +234,7 @@
                                                    Text="{Binding FoundPatient.Mobile, Mode=OneWay}" />
                                         <Border Background="#E8F5E9" CornerRadius="8" Padding="8,1" Margin="14,0,0,0" VerticalAlignment="Center">
                                             <TextBlock FontSize="11">
-                                                <Run Text="🏥 " /><Run Text="{Binding FoundPatient.InsuranceName, Mode=OneWay, TargetNullValue=آزاد}" />
+                                                <Run Text="" /><Run Text="{Binding FoundPatient.InsuranceName, Mode=OneWay, TargetNullValue=آزاد}" />
                                             </TextBlock>
                                         </Border>
                                     </StackPanel>
@@ -199,7 +242,7 @@
                                             HorizontalAlignment="Left"
                                             Visibility="{Binding FoundPatient.Allergies, Converter={StaticResource NullToVisibility}}">
                                         <TextBlock FontSize="11" Foreground="#C62828">
-                                            <Run Text="⚠️ آلرژی: " /><Run Text="{Binding FoundPatient.Allergies, Mode=OneWay}" />
+                                            <Run Text="آلرژی: " /><Run Text="{Binding FoundPatient.Allergies, Mode=OneWay}" />
                                         </TextBlock>
                                     </Border>
                                     <TextBlock Text="{Binding FoundAppointmentInfo, Mode=OneWay}" FontSize="11.5"
@@ -229,7 +272,7 @@
 
                                 <!-- حالت ویزیت پزشک: پزشک + نوع ویزیت -->
                                 <StackPanel Visibility="{Binding ReceptionModeIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=0}">
-                                    <TextBlock Text="👨‍⚕️ پزشک" Style="{StaticResource FieldCaption}" />
+                                    <TextBlock Text="پزشک" Style="{StaticResource FieldCaption}" />
                                     <ComboBox ItemsSource="{Binding Doctors}"
                                               SelectedItem="{Binding SelectedDoctor}"
                                               DisplayMemberPath="Name" />
@@ -244,7 +287,7 @@
 
                                 <!-- حالت خدمت درمانی: خدمت از تعرفه‌ها + انجام‌دهندهٔ اختیاری + اتاق -->
                                 <StackPanel Visibility="{Binding ReceptionModeIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}">
-                                    <TextBlock Text="💉 خدمت درمانی (تزریقات/پانسمان/آزمایش/تصویربرداری/…)" Style="{StaticResource FieldCaption}" TextWrapping="Wrap" />
+                                    <TextBlock Text="خدمت درمانی (تزریقات/پانسمان/آزمایش/تصویربرداری/…)" Style="{StaticResource FieldCaption}" TextWrapping="Wrap" />
                                     <ComboBox ItemsSource="{Binding Services}"
                                               SelectedItem="{Binding SelectedService}"
                                               DisplayMemberPath="Name" />
@@ -256,7 +299,7 @@
                                          در برنامهٔ کاری پزشک مشخص می‌شود ولی برای خدمات درمانی نمی‌شود
                                          معین کرد» — انتخابگر اتاقِ محل انجام خدمت از اتاق‌های فعال؛
                                          نام اتاق پس از ثبت در ستون «اتاق» صف پذیرش امروز می‌نشیند -->
-                                    <TextBlock Text="🚪 اتاق انجام خدمت (اختیاری — از اتاق‌های درمانگاه)" Style="{StaticResource FieldCaption}" />
+                                    <TextBlock Text="اتاق انجام خدمت (اختیاری — از اتاق‌های درمانگاه)" Style="{StaticResource FieldCaption}" />
                                     <ComboBox ItemsSource="{Binding Rooms}"
                                               SelectedItem="{Binding SelectedRoom}"
                                               DisplayMemberPath="DisplayName" />
@@ -269,7 +312,7 @@
 
                             <!-- ستون چپ: بیمه -->
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="🏥 نوع بیمه" Style="{StaticResource FieldCaption}" />
+                                <TextBlock Text="نوع بیمه" Style="{StaticResource FieldCaption}" />
                                 <ComboBox ItemsSource="{Binding InsuranceCompanies}"
                                           SelectedIndex="{Binding InsuranceIndex}"
                                           DisplayMemberPath="Name" />
@@ -335,7 +378,7 @@
                                 Background="#E0F7FA" BorderBrush="#4DD0E1" BorderThickness="1"
                                 Visibility="{Binding ReceptionModeIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}">
                             <StackPanel>
-                                <TextBlock Text="🧰 لوازم مصرفی درمانگاه — برای مواردی که بیمار خودش همراه ندارد"
+                                <TextBlock Text="لوازم مصرفی درمانگاه — برای مواردی که بیمار خودش همراه ندارد"
                                            FontSize="12.5" FontWeight="Bold" Margin="0,0,0,8" />
 
                                 <!-- ردیف افزودن: قلم + تعداد + دکمه -->
@@ -417,7 +460,7 @@
                                 <Border Background="#B2EBF2" CornerRadius="8" Padding="10,5" Margin="0,6,0,0"
                                         Visibility="{Binding HasConsumables, Converter={StaticResource BoolToVisibility}}">
                                     <DockPanel>
-                                        <TextBlock DockPanel.Dock="Right" Text="🧾 جمع لوازم مصرفی (۱۰۰٪ بر عهدهٔ بیمار — بدون سهم بیمه):"
+                                        <TextBlock DockPanel.Dock="Right" Text="جمع لوازم مصرفی (۱۰۰٪ بر عهدهٔ بیمار — بدون سهم بیمه):"
                                                    FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
                                         <TextBlock Text="{Binding ConsumablesTotalDisplay, Mode=OneWay}"
                                                    FontFamily="{DynamicResource App.CodeFont}" FontSize="14.5" FontWeight="Bold"
@@ -442,13 +485,13 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock FontSize="11" Opacity="0.7"><Run Text="💰 حق ویزیت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                                        <TextBlock FontSize="11" Opacity="0.7"><Run Text="حق ویزیت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                                         <TextBlock Text="{Binding FeeDisplay, Mode=OneWay}" FontSize="15" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="1"
                                                 Visibility="{Binding HasInsurance, Converter={StaticResource BoolToVisibility}}">
                                         <TextBlock FontSize="11" Opacity="0.7">
-                                            <Run Text="🏥 سهم بیمه (" /><Run Text="{Binding CoveragePercent, Mode=OneWay}" /><Run Text="٪)" />
+                                            <Run Text="سهم بیمه (" /><Run Text="{Binding CoveragePercent, Mode=OneWay}" /><Run Text="٪)" />
                                         </TextBlock>
                                         <TextBlock Text="{Binding InsuranceShareDisplay, Mode=OneWay}" FontSize="15" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" Foreground="#2E7D32" />
                                     </StackPanel>
@@ -470,7 +513,7 @@
                                         </StackPanel.Style>
                                         <TextBlock FontSize="11" Opacity="0.7"
                                                    ToolTip="سهم بیمار از خدمت + هزینهٔ لوازم مصرفی درمانگاه (۱۰۰٪ بر عهدهٔ بیمار — چرخهٔ ۳۹)">
-                                            <Run Text="👤 قابل پرداخت بیمار (خدمت + لوازم) (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" />
+                                            <Run Text="قابل پرداخت بیمار (خدمت + لوازم) (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" />
                                         </TextBlock>
                                         <!-- چرخهٔ ۳۹ — مبلغ نهایی = سهم بیمار خدمت + جمع لوازم مصرفی؛
                                              بدون مصرفی همان سهم بیمار خدمت است -->
@@ -504,7 +547,7 @@
                                     ToolTip="ثبت پذیرش + صدور فاکتور — بدون ثبت پرداخت">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="FileDocumentOutline" Width="17" Height="17" VerticalAlignment="Center" />
-                                    <TextBlock Text="💾 پذیرش و فاکتور" Margin="8,0,0,0"
+                                    <TextBlock Text="پذیرش و فاکتور" Margin="8,0,0,0"
                                                TextWrapping="Wrap" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
@@ -515,7 +558,7 @@
                                     ToolTip="ثبت پذیرش + صدور فاکتور + پنجرهٔ انتخاب روش پرداخت (نقدی/کارتخوان)">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="CashCheck" Width="17" Height="17" VerticalAlignment="Center" />
-                                    <TextBlock Text="💳 پذیرش و پرداخت" Margin="8,0,0,0"
+                                    <TextBlock Text="پذیرش و پرداخت" Margin="8,0,0,0"
                                                TextWrapping="Wrap" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>

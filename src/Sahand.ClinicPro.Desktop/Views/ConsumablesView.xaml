@@ -89,45 +89,78 @@
         <TextBlock Grid.Row="1" FontSize="12" Opacity="0.65" Margin="2,0,0,8" TextWrapping="Wrap"
                    Text="سرنگ، سرم، گاز استریل و اقلام مشابه — هنگام پذیرش خدمتی مصرف می‌شوند و هزینه‌شان خودکار به فاکتور بیمار می‌نشیند. این صفحه مستقل از ماژول داروخانه است و به لایسنس Pharmacy نیازی ندارد." />
 
-        <!-- ═══ چیپ‌های خلاصه — همیشه از کل داده (مستقل از جستجو) ═══ -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
-            <Border Background="#E3F2FD" CornerRadius="10" Padding="14,6" Margin="0,0,8,0"
+        <!-- ═══ چرخهٔ ۴۶ (گزارش مالک: چیدمان حرفه‌ای) — چهار کارت آماری «وضعیت در یک نگاه» ═══
+             چیپ‌های تختِ پیشین به کارت‌های هم‌قدِ زبان طراحی مشترک ارتقا یافتند:
+             نشان آیکونی رنگی + عدد درشت فونت کد + زیرعنوان ریز — کاربر انباردار
+             پیش از اسکرول جدول، سلامت انبار را می‌فهمد. اعداد از کل داده‌اند
+             (مستقل از جستجو) تا پالایش، معنا را جابه‌جا نکند. -->
+        <UniformGrid Grid.Row="2" Columns="4" Margin="0,0,0,10">
+            <!-- کارت ۱: شمار اقلام تعریف‌شده (بچ‌ها به قلم تجمیع شده) -->
+            <Border Style="{StaticResource App.StatCard}" Margin="0,0,6,0"
                     ToolTip="شمار اقلام مصرفی تعریف‌شده (بچ‌ها به قلم تجمیع شده‌اند)">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="Syringe" Width="15" Height="15" Foreground="#1565C0" VerticalAlignment="Center" />
-                    <TextBlock Margin="7,0,0,0" FontSize="12.5" Foreground="#0D47A1" VerticalAlignment="Center">
-                        <Run Text="اقلام: " /><Run Text="{Binding ItemsCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontWeight="Bold" />
-                    </TextBlock>
-                </StackPanel>
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                            Background="#E3F2FD" BorderBrush="#BBDEFB" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="Syringe" Width="21" Height="21"
+                                                 Foreground="#1565C0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource App.StatValue}"
+                                   Text="{Binding ItemsCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                        <TextBlock Style="{StaticResource App.StatLabel}" Text="قلم تعریف‌شده" />
+                    </StackPanel>
+                </DockPanel>
             </Border>
-            <Border Background="#FFF3E0" CornerRadius="10" Padding="14,6" Margin="0,0,8,0"
+            <!-- کارت ۲: بچ‌های زیر نقطه سفارش — رنگ هشدار کهربایی -->
+            <Border Style="{StaticResource App.StatCard}" Margin="6,0,6,0"
                     ToolTip="بچ‌های زیر نقطه سفارش — پیش از اتمام، ورود کالا ثبت کنید">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="PackageDown" Width="15" Height="15" Foreground="#E65100" VerticalAlignment="Center" />
-                    <TextBlock Margin="7,0,0,0" FontSize="12.5" Foreground="#BF360C" VerticalAlignment="Center">
-                        <Run Text="کمبود: " /><Run Text="{Binding LowStockCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontWeight="Bold" />
-                    </TextBlock>
-                </StackPanel>
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                            Background="#FFF3E0" BorderBrush="#FFE0B2" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="PackageDown" Width="21" Height="21"
+                                                 Foreground="#E65100" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource App.StatValue}" Foreground="#BF360C"
+                                   Text="{Binding LowStockCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                        <TextBlock Style="{StaticResource App.StatLabel}" Text="کمبود موجودی" />
+                    </StackPanel>
+                </DockPanel>
             </Border>
-            <Border Background="#FCE4EC" CornerRadius="10" Padding="14,6" Margin="0,0,8,0"
+            <!-- کارت ۳: انقضای ۹۰ روز آینده — صورتی هشدار -->
+            <Border Style="{StaticResource App.StatCard}" Margin="6,0,6,0"
                     ToolTip="بچ‌هایی که در ۹۰ روز آینده منقضی می‌شوند">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="ClockAlertOutline" Width="15" Height="15" Foreground="#AD1457" VerticalAlignment="Center" />
-                    <TextBlock Margin="7,0,0,0" FontSize="12.5" Foreground="#880E4F" VerticalAlignment="Center">
-                        <Run Text="نزدیک انقضا: " /><Run Text="{Binding ExpiringCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontWeight="Bold" />
-                    </TextBlock>
-                </StackPanel>
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                            Background="#FCE4EC" BorderBrush="#F8BBD0" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="ClockAlertOutline" Width="21" Height="21"
+                                                 Foreground="#AD1457" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource App.StatValue}" Foreground="#880E4F"
+                                   Text="{Binding ExpiringCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                        <TextBlock Style="{StaticResource App.StatLabel}" Text="نزدیک انقضا" />
+                    </StackPanel>
+                </DockPanel>
             </Border>
-            <Border Background="#E8F5E9" CornerRadius="10" Padding="14,6"
+            <!-- کارت ۴: ارزش ریالی کل انبار مصرفی — سبز مالی -->
+            <Border Style="{StaticResource App.StatCard}" Margin="6,0,0,0"
                     ToolTip="جمع ارزش فروش کل موجودی مصرفی (موجودی × قیمت فروش هر بچ)">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="CashMultiple" Width="15" Height="15" Foreground="#2E7D32" VerticalAlignment="Center" />
-                    <TextBlock Margin="7,0,0,0" FontSize="12.5" Foreground="#1B5E20" VerticalAlignment="Center">
-                        <Run Text="ارزش انبار: " /><Run Text="{Binding TotalValueText, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
-                    </TextBlock>
-                </StackPanel>
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                            Background="#E8F5E9" BorderBrush="#C8E6C9" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="CashMultiple" Width="21" Height="21"
+                                                 Foreground="#2E7D32" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <!-- ارقام بلند فونت کد از ۱۵px می‌کاهد تا در عرض کارت جا شود -->
+                        <TextBlock Style="{StaticResource App.StatValue}" FontSize="15" Foreground="#1B5E20"
+                                   Text="{Binding TotalValueText, Mode=OneWay}" />
+                        <TextBlock Style="{StaticResource App.StatLabel}" Text="ارزش کل انبار" />
+                    </StackPanel>
+                </DockPanel>
             </Border>
-        </StackPanel>
+        </UniformGrid>
 
         <ProgressBar Grid.Row="3" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
@@ -148,7 +181,7 @@
                 <DockPanel Grid.Row="0" Margin="2,0,2,8">
                     <TextBox DockPanel.Dock="Right" Width="260" Margin="12,0,0,0" FontSize="12.5"
                              VerticalAlignment="Center"
-                             materialDesign:HintAssist.Hint="🔍 جستجوی قلم یا شماره بچ"
+                             materialDesign:HintAssist.Hint="جستجوی قلم یا شماره بچ"
                              Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
                              Style="{StaticResource MaterialDesignOutlinedTextBox}" />
                     <CheckBox DockPanel.Dock="Left" Content="فقط بچ‌های کمبود"
@@ -163,12 +196,10 @@
                            FontSize="12" TextWrapping="Wrap" Margin="2,0,2,6"
                            Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
 
-                <!-- جدول بچ‌ها — VisibleBatches شامل پالایش زندهٔ جستجوست -->
+                <!-- جدول بچ‌ها — استایل مشترک App.DataGrid چرخهٔ ۴۶؛ VisibleBatches
+                     شامل پالایش زندهٔ جستجوست -->
                 <DataGrid Grid.Row="2" ItemsSource="{Binding VisibleBatches}"
-                          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                          HeadersVisibility="Column" FontSize="12.5"
-                          GridLinesVisibility="Horizontal"
-                          AlternatingRowBackground="#F7FAFD">
+                          Style="{StaticResource App.DataGrid}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="قلم مصرفی" Binding="{Binding Name, Converter={StaticResource PersianDigits}}"
                                             Width="*" MinWidth="170" FontWeight="SemiBold" />

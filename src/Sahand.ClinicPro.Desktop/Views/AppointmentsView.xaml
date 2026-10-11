@@ -12,6 +12,7 @@
     <Grid Margin="16,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -53,9 +54,76 @@
             </DockPanel>
         </Border>
 
-        <TabControl Grid.Row="1" Style="{StaticResource MaterialDesignTabControl}">
+        <!-- ═══ چرخهٔ ۴۶ (گزارش مالک: چیدمان حرفه‌ای) — ردیف کارت آماری «وضعیت در
+             یک نگاه» پیش از تب‌ها؛ هر عدد از مجموعه‌های زندهٔ صفحه می‌آید و با
+             بارگذاری/پالایش خودکار تازه می‌شود (ObservableCollection هنگام
+             افزودن/پاک‌سازی رویداد Count صادر می‌کند) ═══ -->
+        <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,10">
+            <!-- کارت ۱: نوبت‌های ثبت‌شدهٔ امروز -->
+            <Border Style="{StaticResource App.StatCard}" Margin="0,0,6,0">
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                            Background="#E0F2F1" BorderBrush="#B2DFDB" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="CalendarCheck" Width="21" Height="21"
+                                                 Foreground="#00695C" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource App.StatValue}"
+                                   Text="{Binding TodayAppointments.Count, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                        <TextBlock Style="{StaticResource App.StatLabel}" Text="نوبت‌های امروز" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <!-- کارت ۲: درخواست‌های لیست انتظار (بدون زمان مشخص) -->
+            <Border Style="{StaticResource App.StatCard}" Margin="6,0,6,0">
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                            Background="#FFF3E0" BorderBrush="#FFE0B2" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="AccountClock" Width="21" Height="21"
+                                                 Foreground="#E65100" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource App.StatValue}" Foreground="#E65100"
+                                   Text="{Binding Waitlist.Count, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                        <TextBlock Style="{StaticResource App.StatLabel}" Text="در لیست انتظار" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <!-- کارت ۳: ظرفیت آزاد روز انتخاب‌شده در تقویم رزرو -->
+            <Border Style="{StaticResource App.StatCard}" Margin="6,0,6,0">
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                            Background="#E8F5E9" BorderBrush="#C8E6C9" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="ClockPlusOutline" Width="21" Height="21"
+                                                 Foreground="#2E7D32" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource App.StatValue}"
+                                   Text="{Binding Slots.Count, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                        <TextBlock Style="{StaticResource App.StatLabel}" Text="اسلات آزاد روز انتخابی" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <!-- کارت ۴: نتیجهٔ فیلتر فعلی تب فهرست نوبت‌ها -->
+            <Border Style="{StaticResource App.StatCard}" Margin="6,0,0,0">
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource App.StatIcon}"
+                            Background="#F3E5F5" BorderBrush="#E1BEE7" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="FormatListBulleted" Width="21" Height="21"
+                                                 Foreground="#7B1FA2" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource App.StatValue}"
+                                   Text="{Binding Rows.Count, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                        <TextBlock Style="{StaticResource App.StatLabel}" Text="نتیجهٔ فهرست نوبت‌ها" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+        </UniformGrid>
+
+        <TabControl Grid.Row="2" Style="{StaticResource MaterialDesignTabControl}">
             <!-- ═══════════ تب ۱: رزرو نوبت ═══════════ -->
-            <TabItem Header="📅 رزرو نوبت جدید">
+            <TabItem Header="رزرو نوبت جدید">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <Grid Margin="4,8">
                         <Grid.RowDefinitions>
@@ -76,7 +144,7 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                                    <TextBlock Text="🔍 جستجوی بیمار (کد ملی / نام / موبایل)" FontSize="12" Opacity="0.7" Margin="2,0,2,4" />
+                                    <TextBlock Text="جستجوی بیمار (کد ملی / نام / موبایل)" FontSize="12" Opacity="0.7" Margin="2,0,2,4" />
                                     <TextBox Text="{Binding PatientSearchText, UpdateSourceTrigger=PropertyChanged}"
                                              materialDesign:HintAssist.Hint="حداقل ۲ کاراکتر تایپ کنید…" />
                                     <!-- نتایج جستجو -->
@@ -100,7 +168,7 @@
                                     </ListBox>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Text="👨‍⚕️ پزشک" FontSize="12" Opacity="0.7" Margin="2,0,2,4" />
+                                    <TextBlock Text="پزشک" FontSize="12" Opacity="0.7" Margin="2,0,2,4" />
                                     <ComboBox ItemsSource="{Binding Doctors}"
                                               SelectedItem="{Binding SelectedDoctor}"
                                               DisplayMemberPath="Name" />
@@ -127,7 +195,7 @@
                                 <Border Background="#FFEBEE" CornerRadius="8" Padding="8,2" Margin="16,0,0,0"
                                         Visibility="{Binding SelectedPatient.Allergies, Converter={StaticResource NullToVisibility}}">
                                     <TextBlock FontSize="11" Foreground="#C62828">
-                                        <Run Text="⚠️ آلرژی: " /><Run Text="{Binding SelectedPatient.Allergies, Mode=OneWay}" />
+                                        <Run Text="آلرژی: " /><Run Text="{Binding SelectedPatient.Allergies, Mode=OneWay}" />
                                     </TextBlock>
                                 </Border>
                             </StackPanel>
@@ -316,7 +384,7 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                                        <TextBlock Text="📅 تاریخ" FontSize="10" Opacity="0.6" />
+                                        <TextBlock Text="تاریخ" FontSize="10" Opacity="0.6" />
                                         <TextBlock Text="{Binding SelectedDateShamsi, Mode=OneWay}" FontWeight="Bold" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Margin="0,0,16,0">
@@ -324,11 +392,11 @@
                                         <TextBlock Text="{Binding SelectedSlot.Time, Mode=OneWay, TargetNullValue=—, Converter={StaticResource PersianDigits}}" FontWeight="Bold" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Margin="0,0,16,0">
-                                        <TextBlock Text="🏥 اتاق" FontSize="10" Opacity="0.6" />
+                                        <TextBlock Text="اتاق" FontSize="10" Opacity="0.6" />
                                         <TextBlock Text="{Binding SelectedRoom, Mode=OneWay, TargetNullValue=—}" FontWeight="Bold" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="3" HorizontalAlignment="Left">
-                                        <TextBlock FontSize="10" Opacity="0.6"><Run Text="💰 تخمین هزینه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                                        <TextBlock FontSize="10" Opacity="0.6"><Run Text="تخمین هزینه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                                         <TextBlock Text="{Binding EstimatedFee, Mode=OneWay, Converter={StaticResource CurrencyRial}}" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
                                     </StackPanel>
                                 </Grid>
@@ -361,7 +429,7 @@
                                         Height="42" Margin="0,10,0,0">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <materialDesign:PackIcon Kind="CheckCircle" Width="18" Height="18" VerticalAlignment="Center" />
-                                        <TextBlock Text="✅ تایید و ثبت نوبت" Margin="10,0,0,0" FontSize="14" VerticalAlignment="Center" />
+                                        <TextBlock Text="تایید و ثبت نوبت" Margin="10,0,0,0" FontSize="14" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </Grid>
@@ -371,7 +439,7 @@
             </TabItem>
 
             <!-- ═══════════ تب ۲: فهرست نوبت‌ها ═══════════ -->
-            <TabItem Header="📋 فهرست نوبت‌ها">
+            <TabItem Header="فهرست نوبت‌ها">
                 <Grid Margin="4,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -467,14 +535,14 @@
                                 Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="MessageText" Width="15" Height="15" VerticalAlignment="Center" />
-                                <TextBlock Text="📱 ارسال SMS یادآوری (نوبت‌های فردا)" Margin="7,0,0,0" />
+                                <TextBlock Text="ارسال SMS یادآوری (نوبت‌های فردا)" Margin="7,0,0,0" />
                             </StackPanel>
                         </Button>
                         <Button Command="{Binding BatchCancelCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#C62828">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="CloseCircleOutline" Width="15" Height="15" VerticalAlignment="Center" />
-                                <TextBlock Text="❌ لغو دسته‌ای انتخاب‌شده‌ها" Margin="7,0,0,0" />
+                                <TextBlock Text="لغو دسته‌ای انتخاب‌شده‌ها" Margin="7,0,0,0" />
                             </StackPanel>
                         </Button>
                     </StackPanel>
@@ -530,13 +598,13 @@
                                             <Button Command="{Binding DataContext.ConfirmArrivalCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource App.RowIconButton}"
-                                                    ToolTip="✓ تأیید حضور">
+                                                    ToolTip="تأیید حضور">
                                                 <materialDesign:PackIcon Kind="AccountCheck" Width="15" Height="15" />
                                             </Button>
                                             <Button Command="{Binding DataContext.CancelOneCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource App.RowIconButton}"
-                                                    ToolTip="❌ لغو نوبت" Foreground="#C62828">
+                                                    ToolTip="لغو نوبت" Foreground="#C62828">
                                                 <materialDesign:PackIcon Kind="CloseCircleOutline" Width="15" Height="15" />
                                             </Button>
                                         </StackPanel>
@@ -556,7 +624,7 @@
             </TabItem>
 
             <!-- ═══ تب لیست انتظار — چرخه ۱۳ (درخواست ۳-۴) ═══ -->
-            <TabItem Header="⏳ لیست انتظار">
+            <TabItem Header="لیست انتظار">
                 <Grid Margin="4,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -567,7 +635,7 @@
                     <Border Grid.Row="0" CornerRadius="10" Padding="12,10" Margin="0,0,0,10"
                             Background="#F5F7FB" BorderBrush="#E1E8F2" BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="➕ افزودن بیمار به لیست انتظار" FontWeight="Bold" FontSize="13" Margin="0,0,0,8" />
+                            <TextBlock Text="افزودن بیمار به لیست انتظار" FontWeight="Bold" FontSize="13" Margin="0,0,0,8" />
                             <WrapPanel>
                                 <TextBox Text="{Binding WaitlistPatientSearch, UpdateSourceTrigger=PropertyChanged}"
                                          materialDesign:HintAssist.Hint="جستجوی بیمار (نام/کد ملی/موبایل)"

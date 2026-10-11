@@ -109,7 +109,7 @@
                                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="📊 داشبورد مدیریتی"
+                            <TextBlock Text="داشبورد مدیریتی"
                                        Style="{StaticResource SectionTitle}" Margin="0" />
                             <TextBlock Text="خلاصه وضعیت امروز درمانگاه"
                                        FontSize="12" Opacity="0.7" Margin="0,0,0,2" />
@@ -252,14 +252,18 @@
 
                     <!-- ═══ کاشی‌های میانبر — چرخهٔ ۴۳ بازطراحی (گزارش مالک:
                          «ظاهر دکمه‌های میانبر رو زیباتر بکن… دکمه‌های میانبر رو وسط
-                         چین بکن») ═══ بازطراحی مقاوم چرخهٔ ۴۵ (گزارش مالک: «دکمه‌های
-                         میانبر ناقص هستند و آیکون و عنوان مشخص نیست» — تصویر: کارت
-                         ~۳۱px، فقط ۸px از دایرهٔ آیکون و بدون عنوان):
-                         ① DropShadowEffect حذف شد از حالت سکون — افکت، محتوای سرریز
-                            از قالب چیدمان را در مرز می‌بُرید (سازوکار بریدن)
-                         ② MinHeight=96 روی خود قالب — دیوار کف ارتفاع؛ هر فشردگی
-                            چیدمانی در هر بافت/مقیاس/تم بی‌اثر می‌شود
-                         ③ حاشیهٔ پررنگ‌تر + هاورِ حاشیهٔ رنگ تأکیدی (بدون استوری‌بورد) -->
+                         چین بکن») ═══ بازطراحی مقاوم چرخهٔ ۴۵ (کاشی ~۳۱px با آیکون
+                         ناقص و بدون عنوان) و ═══ ارزیابی حساب‌شدهٔ چرخهٔ ۴۶ (گزارش
+                         مالک: «دکمه‌های میانبر و توست هیچ فرقی نکرده‌اند») ═══
+                         ریشهٔ باقی‌ماندهٔ بریدگی: حساب ارتفاعِ چرخهٔ ۴۵ کافی نبود —
+                         آیکون ۴۴ + فاصله ۷ + متن دوسطری ~۳۰ + حاشیهٔ عمودی ۲۲ =
+                         ~۱۰۳px ولی دیوار کف فقط ۹۶ بود ⇒ هر عنوان دوسطری هنوز
+                         در مرز می‌شکست و «عنوان مشخص نیست» باقی می‌ماند.
+                         رفع حساب‌شدهٔ چرخهٔ ۴۶: کف ۱۱۰px (۷px حاشیهٔ اطمینان)،
+                         MaxHeight متن حذف (MaxLines=2 جایگزین — برش تخت ناپدید)،
+                         و حذف کامل هر افکت/انیمیشنی که محتوا را به مرز چیدمان
+                         می‌راند. قواعد ۴۵ (بدون سایه/دیوار کف/هاور بی‌استوری‌بورد)
+                         همگی برقرار ماندند. -->
                     <ItemsControl ItemsSource="{Binding Shortcuts}"
                                   HorizontalAlignment="Center">
                         <ItemsControl.ItemsPanel>
@@ -269,7 +273,7 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="5,5,5,7" Width="118" MinHeight="96">
+                                <Grid Margin="5,5,5,7" Width="120" MinHeight="110">
                                     <!-- کاشی اصلی — کلیک = ناوبری مستقیم -->
                                     <Button Command="{Binding DataContext.OpenShortcutCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                             CommandParameter="{Binding}"
@@ -281,12 +285,15 @@
                                                         CornerRadius="14" Background="#FFFFFF"
                                                         BorderBrush="#D9E2EC" BorderThickness="1.4"
                                                         Padding="0,12,0,10"
-                                                        MinHeight="96"
+                                                        MinHeight="110"
                                                         UseLayoutRounding="True"
                                                         SnapsToDevicePixels="True">
                                                     <!-- ═══ چرخهٔ ۴۵: بدون DropShadowEffect — افکت،
                                                          محتوای سرریز از قالب چیدمان را در مرز می‌بُرید
-                                                         (ریشهٔ «آیکون ناقص و عنوان ناموجود» در تصویر مالک) ═══ -->
+                                                         (ریشهٔ «آیکون ناقص و عنوان ناموجود» در تصویر مالک).
+                                                         چرخهٔ ۴۶: ارتفاع محتوا حساب شد — کف ۱۱۰px مازادِ ۷px
+                                                         روی نیاز واقعی (~۱۰۳px) دارد تا هیچ فونت/مقیاسی
+                                                         عنوان را در مرز نچپاند. ═══ -->
                                                     <StackPanel HorizontalAlignment="Center"
                                                                 VerticalAlignment="Center">
                                                         <!-- دایرهٔ آیکون — توپر با رنگ تأکیدی کاشی -->
@@ -297,10 +304,14 @@
                                                                                      Foreground="White"
                                                                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                         </Border>
+                                                        <!-- چرخهٔ ۴۶: MaxHeight=30 حذف شد (خط دوم عنوان را
+                                                             برش می‌داد) — سقف حساب‌شدهٔ ۳۴px = دو سطر کامل
+                                                             ۱۵px؛ ۴۴+۷+۳۴+۲۲=۱۰۷ ≤ کفِ ۱۱۰px کاشی ⇒ هیچ
+                                                             سرریزی در مرز نمی‌ماند -->
                                                         <TextBlock Text="{Binding Title}" FontSize="11" FontWeight="SemiBold"
                                                                    Foreground="#1F2937" Margin="6,0,6,0"
                                                                    HorizontalAlignment="Center" TextAlignment="Center"
-                                                                   TextWrapping="Wrap" MaxHeight="30" MaxWidth="104"
+                                                                   TextWrapping="Wrap" MaxHeight="34" MaxWidth="106"
                                                                    TextTrimming="CharacterEllipsis" />
                                                     </StackPanel>
                                                 </Border>
@@ -445,7 +456,7 @@
                     <DockPanel Margin="0,0,0,8">
                         <materialDesign:PackIcon DockPanel.Dock="Right" Kind="TuneVertical" Width="18" Height="18"
                                                  Foreground="#E65100" VerticalAlignment="Center" />
-                        <TextBlock Text="🧩 حالت مدیریت چیدمان — تغییرات به‌صورت خودکار ذخیره می‌شوند"
+                        <TextBlock Text="حالت مدیریت چیدمان — تغییرات به‌صورت خودکار ذخیره می‌شوند"
                                    FontWeight="Bold" FontSize="13" Foreground="#E65100" Margin="2,0,8,0"
                                    VerticalAlignment="Center" />
                     </DockPanel>

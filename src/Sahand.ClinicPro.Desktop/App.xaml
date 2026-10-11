@@ -318,6 +318,108 @@
                     </Setter.Value>
                 </Setter>
             </Style>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 چرخهٔ چهل‌وششم (گزارش مالک: «ظاهر و چیدمان صفحات بیماران، لوازم
+                 مصرفی، ویزیت و معاینه، نوبت‌دهی، پذیرش و میز کار پزشک رو خیلی
+                 حرفه‌ای‌تر و زیباتر بکن») — زبان طراحی مشترک شش صفحهٔ اصلی.
+                 پیش از این هر چرخه فقط سربرگ گرادیانی می‌افزود؛ این چرخه یک
+                 «سیستم طراحی» واقعی تعریف می‌کند تا همهٔ صفحات از یک واژگان
+                 بصری (کارت آماری، نشان آیکونی، نوار کادر جستجو) استفاده کنند.
+                 قاعدهٔ ضدبریدگی چرخهٔ ۴۵ اینجا هم برقرار است: افکت سایهٔ کارت
+                 با Padding داخلی ۱۴px از مرز چیدمان فاصله دارد و محتوا هرگز
+                 سرریز نمی‌کند.
+                 ═══════════════════════════════════════════════════════════ -->
+
+            <!-- ─── ۱) کارت آماری صفحات — ظرف پایه ───
+                 هر صفحه ردیفی از این کارت‌ها را زیر سربرگ می‌نشیند تا کاربر
+                 وضعیت کل صفحه را «در یک نگاه» ببیند (قاعدهٔ شناختی UI:
+                 پیش‌نمایش کم‌ّتلاش قبل از تعامل). -->
+            <Style x:Key="App.StatCard" TargetType="Border">
+                <!-- پس‌زمینهٔ کارت تم — در حالت روشن/تیره خودش تعویض می‌شود -->
+                <Setter Property="Background"
+                        Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+                <Setter Property="BorderBrush"
+                        Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="12" />
+                <!-- Padding عمودی ۱۱ + افقی ۱۴: عدد بزرگ دیده می‌شود ولی کارت
+                     جمع‌وجور می‌ماند؛ ردیف کارت‌ها هرگز از ۶۴px بلندتر نمی‌شود -->
+                <Setter Property="Padding" Value="14,11" />
+                <!-- سایهٔ بسیار نرم — عمق بدون جلب توجه؛ عمق ۱٫۵px و کدورت ۱۰٪
+                     چون کارت‌ها کنار هم‌اند و سایهٔ سنگین حس «جدول» می‌داد -->
+                <Setter Property="Effect">
+                    <Setter.Value>
+                        <DropShadowEffect BlurRadius="9" ShadowDepth="1.5"
+                                          Direction="270" Opacity="0.10" Color="#31465E" />
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- ─── ۲) نشان آیکونی کارت آماری — مربع گوشه‌گرد همیشه‌متحرک ───
+                 پس‌زمینهٔ ملایمِ رنگ هویت هر صفحه (استفادهٔ مستقیم در صفحات:
+                 Background/Foreground هاردکد رنگی صفحه + این قالب اندازه/شکل) -->
+            <Style x:Key="App.StatIcon" TargetType="Border">
+                <Setter Property="Width" Value="40" />
+                <Setter Property="Height" Value="40" />
+                <Setter Property="CornerRadius" Value="12" />
+                <!-- قاب بسیار کم‌رنگِ همان رنگ پس‌زمینه — لبهٔ نشان در هر تم دیده شود -->
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="BorderBrush" Value="#26FFFFFF" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <!-- ─── ۳) متن عدد بزرگ کارت آماری ───
+                 فونت کد (ارقام هم‌عرض) تا اعداد لرزش افقی نداشته باشند و در
+                 همهٔ کارت‌ها یک‌قدر دیده شوند -->
+            <Style x:Key="App.StatValue" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="17" />
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
+                <Setter Property="Foreground"
+                        Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+            </Style>
+
+            <!-- ─── ۴) زیرعنوان ریز کارت آماری ─── -->
+            <Style x:Key="App.StatLabel" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="10.5" />
+                <Setter Property="Opacity" Value="0.62" />
+                <Setter Property="Margin" Value="0,2,0,0" />
+            </Style>
+
+            <!-- ─── ۵) نوار ابزار-جستجوی یکدست صفحات ───
+                 ظرف سفید تم با قاب ظریف که جعبهٔ جستجو + دکمه‌های صفحه را در
+                 خود دارد؛ هم‌قد سربرگ و با همان شعاع گوشه تا ستون‌بندی عمودی
+                 صفحه از بالا تا پایین یک ریتم داشته باشد -->
+            <Style x:Key="App.ToolBar" TargetType="Border">
+                <Setter Property="Background"
+                        Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+                <Setter Property="BorderBrush"
+                        Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="12" />
+                <Setter Property="Padding" Value="10,8" />
+            </Style>
+
+            <!-- ─── ۶) استایل مشترک جدول‌های صفحات (حس «حرفه‌ای» در بدنه) ───
+                 ارتفاع راحت ردیف‌ها (۳۶px) — هدف‌گیری موس روی دسکتاپ آسان‌تر و
+                 خوانایی بهتر؛ فونت ۱۲٫۵ توازن چگالی/خوانایی صفحه‌های داده‌محور -->
+            <Style x:Key="App.DataGrid" TargetType="DataGrid"
+                   BasedOn="{StaticResource {x:Type DataGrid}}">
+                <Setter Property="AutoGenerateColumns" Value="False" />
+                <Setter Property="CanUserAddRows" Value="False" />
+                <Setter Property="IsReadOnly" Value="True" />
+                <Setter Property="HeadersVisibility" Value="Column" />
+                <Setter Property="FontSize" Value="12.5" />
+                <Setter Property="RowHeight" Value="36" />
+                <Setter Property="GridLinesVisibility" Value="None" />
+                <Setter Property="BorderThickness" Value="0" />
+                <!-- نوار یک‌درمیان بسیار ملایم — راهنمای چشم در ردیف‌های پهن بدون
+                     حس «دفتر کل»؛ در تم تیره این رنگ خنثی خودش می‌نشیند -->
+                <Setter Property="AlternatingRowBackground" Value="#F6F9FC" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
+
