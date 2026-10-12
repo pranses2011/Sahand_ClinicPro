@@ -31,6 +31,7 @@ public class MigrationSnapshotComplianceTests
         "Cycle39MedicationItemKind",
         "Cycle41UserShortcuts",
         "Cycle42SeedPositionsDepartments",
+        "Cycle59PerformanceIndexes", // چرخهٔ ۵۹ — ایندکس‌های ترکیبی صف/فاکتور (P-02)
     };
 
     /// <summary>همهٔ کلاس‌های مایگریشن اسمبلی زیرساخت</summary>

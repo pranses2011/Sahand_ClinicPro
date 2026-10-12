@@ -27,6 +27,15 @@ public class ReceptionConfiguration : IEntityTypeConfiguration<Reception>
         builder.HasIndex(x => new { x.ReceptionNumber }).IsUnique().HasDatabaseName("IX_Reception_ReceptionNumber").HasFilter("[IsDeleted] = 0");
         builder.HasIndex(x => new { x.PatientId }).HasDatabaseName("IX_Reception_PatientId");
 
+        // ═══ چرخهٔ ۵۹ (P-02 نقشه راه ai-review) — ایندکس‌های ترکیبی صف پذیرش ═══
+        // داغ‌ترین پرس‌وجوی برنامه: «پذیرش‌های امروز» (صف + آمار صف) روی بازهٔ ReceptionDate
+        // — تا این چرخه هیچ ایندکسی روی ReceptionDate نبود و هر بازکردن صفحهٔ صف = Full Scan.
+        builder.HasIndex(x => new { x.ReceptionDate, x.Status })
+            .HasDatabaseName("IX_Reception_ReceptionDate_Status");
+        // میزکار پزشک/فهرست پذیرش هر پزشک در یک روز — ترکیب به‌جای دو جست‌وجوی مجزا
+        builder.HasIndex(x => new { x.DoctorId, x.ReceptionDate })
+            .HasDatabaseName("IX_Reception_DoctorId_ReceptionDate");
+
         // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — اتاق انجام خدمت در پذیرش خدمتی ═══
         // «اتاق معاینه برای پزشک در برنامهٔ کاری پزشک مشخص می‌شود ولی برای
         // خدمات درمانی نمی‌شود معین کرد» — ستون RoomId به جدول پذیرش‌ها

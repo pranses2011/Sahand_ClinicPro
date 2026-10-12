@@ -31,5 +31,10 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.HasIndex(x => new { x.InvoiceDate }).HasDatabaseName("IX_Invoice_InvoiceDate");
         builder.HasIndex(x => new { x.PatientId }).HasDatabaseName("IX_Invoice_PatientId");
         builder.HasIndex(x => new { x.PaymentStatus }).HasDatabaseName("IX_Invoice_PaymentStatus");
+        // ═══ چرخهٔ ۵۹ (P-02 نقشه راه ai-review) ═══
+        // صورتحساب بیمار به‌ترتیب تاریخ (صندوق/پرونده) — تا این چرخه PatientId و
+        // InvoiceDate دو ایندکس جدا بودند: یعنی Key Lookup + Sort در هر بار دیدن
+        builder.HasIndex(x => new { x.PatientId, x.InvoiceDate })
+            .HasDatabaseName("IX_Invoice_PatientId_InvoiceDate");
     }
 }

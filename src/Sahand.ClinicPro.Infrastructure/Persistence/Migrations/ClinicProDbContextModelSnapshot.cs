@@ -1301,6 +1301,9 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.HasIndex("PatientId")
                         .HasDatabaseName("IX_Invoice_PatientId");
 
+                    b.HasIndex("PatientId", "InvoiceDate")
+                        .HasDatabaseName("IX_Invoice_PatientId_InvoiceDate");
+
                     b.HasIndex("PaymentStatus")
                         .HasDatabaseName("IX_Invoice_PaymentStatus");
 
@@ -9500,6 +9503,12 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasFilter("[ReceptionNumber] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.HasIndex("RoomId");
+
+                    b.HasIndex("ReceptionDate", "Status")
+                        .HasDatabaseName("IX_Reception_ReceptionDate_Status");
+
+                    b.HasIndex("DoctorId", "ReceptionDate")
+                        .HasDatabaseName("IX_Reception_DoctorId_ReceptionDate");
 
                     b.ToTable("Receptions", null, t =>
                         {
