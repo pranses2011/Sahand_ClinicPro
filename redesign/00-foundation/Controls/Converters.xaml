@@ -1,0 +1,16 @@
+<!-- 🔄 مبدل‌های سراسری — در App.xaml ادغام می‌شود -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:c="clr-namespace:Sahand.ClinicPro.Desktop.Converters">
+
+    <c:NullToVisibilityConverter x:Key="NullToCollapsed" />
+    <c:NullToVisibilityConverter x:Key="NullToCollapsedInverted" Invert="True" />
+    <c:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+    <c:BoolToVisibilityConverter x:Key="BoolToVisibilityInverted" Invert="True" />
+    <c:EmptyToVisibilityConverter x:Key="EmptyToCollapsed" />
+    <c:EmptyToVisibilityConverter x:Key="EmptyToCollapsedInverted" Invert="True" />
+    <c:PersianDateConverter x:Key="PersianDate" />
+    <c:MoneyConverter x:Key="Money" />
+    <c:EnumDescriptionConverter x:Key="EnumDescription" />
+
+</ResourceDictionary>

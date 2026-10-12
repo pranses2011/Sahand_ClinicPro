@@ -1,0 +1,41 @@
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.SplashWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls;assembly=Sahand.ClinicPro.Desktop"
+    xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization;assembly=Sahand.ClinicPro.Desktop"
+    xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels.Redesign;assembly=Sahand.ClinicPro.Desktop"
+    mc:Ignorable="d"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    d:DataContext="{d:DesignInstance Type=vm:SplashViewModel}"
+    SnapsToDevicePixels="True"
+    Title="{loc:Loc Splash.Title}"
+    Style="{DynamicResource Window.Modern}"
+    FlowDirection="RightToLeft">
+
+    <!--
+    ═══════════════════════════════════════════════════════════════════════
+      🏥 در حال بارگذاری  —  بازطراحی شده
+    ═══════════════════════════════════════════════════════════════════════
+      • تمام رنگ‌ها از Tokens.xaml و با DynamicResource دریافت می‌شوند
+        → تعویض تمِ روشن/تاریک در لحظه بدون تغییر این فایل
+      • تمام متن‌ها از Strings.resx از طریق {loc:Loc} دریافت می‌شوند
+        → افزودن زبان جدید بدون تغییر این فایل
+      • وایرفریم مرجع:  02-wireframes-md/SplashWindow.md
+        وایرفریم گرافیکی: 01-wireframes-html/SplashWindow.html
+    ═══════════════════════════════════════════════════════════════════════
+    -->
+
+    <Grid Background="{DynamicResource Brush.Primary}">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="🏥" FontSize="72" HorizontalAlignment="Center" />
+            <TextBlock Text="{loc:Loc Common.AppName}"
+                       FontSize="32" FontWeight="Bold" Foreground="White"
+                       HorizontalAlignment="Center" Margin="0,16,0,4" />
+            <TextBlock Text="{loc:Loc Splash.Subtitle}"
+                       Foreground="White" Opacity="0.85"
+                       HorizontalAlignment="Center" />
+        </StackPanel>
+    </Grid>
+
+</Window>
