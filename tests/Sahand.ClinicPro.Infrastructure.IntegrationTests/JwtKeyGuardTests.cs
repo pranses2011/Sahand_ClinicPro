@@ -46,8 +46,10 @@ public class JwtKeyGuardTests
     }
 
     [Fact]
-    public void Production_WithMissingKey_MustThrow()
+    public void Production_WithMissingKey_MustThrowWithPersianMessage()
     {
+        // چرخهٔ ۴۹: پیام باید فارسی و راهنما (نام کلید پیکربندی) باشد تا
+        // نصب‌کنندهٔ سرور بدون مراجعه به مستندات بداند دقیقاً چه چیزی تنظیم کند
         var act = () =>
         {
             using var _ = new ServiceCollection()
@@ -55,7 +57,50 @@ public class JwtKeyGuardTests
                 .BuildServiceProvider();
         };
 
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*Jwt:SecretKey*");
+    }
+
+    /// <summary>
+    /// چرخهٔ ۴۹ (BUG-01): کلید هاردکدِ پیشین appsettings.json (نسخهٔ ۲.۱۲.۰ به قبل)
+    /// طولش از ۳۲ بایت بیشتر بود و عین ثابت DefaultKey هم نبود — یعنی از هر دو
+    /// گارد قبلی عبور می‌کرد و در تولید هم پذیرفته می‌شد. اکنون باید با تشخیص
+    /// الگو رد شود. این تست تا ابد مانع بازگشت این رگرسیون است.
+    /// </summary>
+    [Fact]
+    public void Production_WithOldRepoHardcodedKey_MustThrow()
+    {
+        var act = () =>
+        {
+            using var _ = new ServiceCollection()
+                .AddIdentityServices(MakeConfig(
+                    "SahandClinicPro-Development-Secret-Key-Change-In-Production-2026!@#x9KmQ",
+                    "Production"))
+                .BuildServiceProvider();
+        };
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*الگوی ناامن*");
+    }
+
+    /// <summary>
+    /// چرخهٔ ۴۹: هر کلیدی که صرفاً «بوی کلید توسعه» بدهد رد می‌شود — حتی بدون
+    /// پیشوند پروژه و با طول خیلی بیشتر از حداقل (پوشش خانوادهٔ کلیدهای مشابه)
+    /// </summary>
+    [Fact]
+    public void Production_WithInsecurePatternKey_MustThrow()
+    {
+        var act = () =>
+        {
+            using var _ = new ServiceCollection()
+                .AddIdentityServices(MakeConfig(
+                    "xK9-OurDevelopment-Secret-Key-2026-" + new string('a', 64),
+                    "Production"))
+                .BuildServiceProvider();
+        };
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*الگوی ناامن*");
     }
 
     [Fact]
