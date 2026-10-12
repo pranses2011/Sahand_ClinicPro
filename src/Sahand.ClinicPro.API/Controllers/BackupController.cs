@@ -424,6 +424,9 @@ public class BackupController : ApiBaseController
     /// <summary>سرویس ابری تنبل</summary>
     private Sahand.ClinicPro.Infrastructure.Services.Backup.Cloud.CloudBackupService? _cloudService;
 
+    /// <summary>قفل ساخت یک‌بارهٔ سرویس ابری — چرخهٔ ۵۰ (BUG-02): ساخت سرویس خودش async است (خواندن پیکربندی از دیتابیس)؛ قفل سبک SemaphoreSlim جایگزین انسداد رشته‌ای شد</summary>
+    private readonly SemaphoreSlim _cloudInitLock = new(1, 1);
+
     /// <summary>
     /// پیکربندی ادغامی ابری — چرخه بیستم (گزارش چهاردهم مالک):
     /// مقادیر ذخیره‌شدهٔ دیتابیس (دستهٔ BackupCloud) روی پیکربندی فایل
@@ -450,11 +453,31 @@ public class BackupController : ApiBaseController
         return builder.Build();
     }
 
-    /// <summary>دسترسی به سرویس پشتیبان ابری — با پیکربندی ادغامی دیتابیس + فایل</summary>
-    private Sahand.ClinicPro.Infrastructure.Services.Backup.Cloud.CloudBackupService CloudSvc =>
-        _cloudService ??= new Sahand.ClinicPro.Infrastructure.Services.Backup.Cloud.CloudBackupService(
-            BuildCloudConfigAsync(CancellationToken.None).GetAwaiter().GetResult(),
-            Microsoft.Extensions.Logging.Abstractions.NullLogger<Sahand.ClinicPro.Infrastructure.Services.Backup.Cloud.CloudBackupService>.Instance);
+    /// <summary>
+    /// دسترسی async به سرویس پشتیبان ابری — با پیکربندی ادغامی دیتابیس + فایل.
+    /// چرخهٔ ۵۰ (BUG-02): پیش‌تر این ساخت به‌صورت هم‌گامِ مسدودکننده انجام می‌شد
+    /// (فروش نتیجهٔ Task با تماس هم‌گام) — نخِ پردازش درخواست هنگام خواندن
+    /// دیتابیسِ پیکربندی قفل می‌شد و زیر بار همزمان بن‌بست رشته‌ای می‌ساخت؛
+    /// اکنون ساخت یک‌باره با قفل SemaphoreSlim و کاملاً بدون انسداد انجام
+    /// می‌شود (الگوی رسمی async lazy).
+    /// </summary>
+    private async Task<Sahand.ClinicPro.Infrastructure.Services.Backup.Cloud.CloudBackupService> GetCloudServiceAsync(CancellationToken ct)
+    {
+        if (_cloudService is not null) return _cloudService;
+        await _cloudInitLock.WaitAsync(ct);
+        try
+        {
+            // دوباره‌سنجی پس از گرفتن قفل — شاید نخِ دیگری هم‌زمان ساخته باشد
+            if (_cloudService is not null) return _cloudService;
+            return _cloudService = new Sahand.ClinicPro.Infrastructure.Services.Backup.Cloud.CloudBackupService(
+                await BuildCloudConfigAsync(ct),
+                Microsoft.Extensions.Logging.Abstractions.NullLogger<Sahand.ClinicPro.Infrastructure.Services.Backup.Cloud.CloudBackupService>.Instance);
+        }
+        finally
+        {
+            _cloudInitLock.Release();
+        }
+    }
 
     /// <summary>
     /// خواندن پیکربندی پشتیبان ابری — چرخه بیستم (گزارش چهاردهم مالک):
@@ -574,11 +597,13 @@ public class BackupController : ApiBaseController
             .OrderByDescending(b => b.CloudUploadedAt)
             .ToListAsync(ct);
 
+        // چرخهٔ ۵۰ (BUG-02): ساخت سرویس ابری به‌صورت async — بدون قفل رشته
+        var cloudSvc = await GetCloudServiceAsync(ct);
         return Ok(ApiResponse<object>.Success(new
         {
             enabled = !string.IsNullOrWhiteSpace(provider),
-            provider = CloudSvc.CreateStorage()?.ProviderName,
-            encrypted = CloudSvc.IsEncryptionEnabled,
+            provider = cloudSvc.CreateStorage()?.ProviderName,
+            encrypted = cloudSvc.IsEncryptionEnabled,
             lastUpload = cloudRecords.FirstOrDefault()?.CloudUploadedAt,
             lastFile = cloudRecords.FirstOrDefault()?.CloudFileName,
             versions = cloudRecords.Count,
@@ -591,7 +616,8 @@ public class BackupController : ApiBaseController
     [HasPermission("backup.view")]
     public async Task<IActionResult> CloudTest(CancellationToken ct)
     {
-        var storage = CloudSvc.CreateStorage();
+        // چرخهٔ ۵۰ (BUG-02): ساخت سرویس ابری به‌صورت async — بدون قفل رشته
+        var storage = (await GetCloudServiceAsync(ct)).CreateStorage();
         if (storage is null)
             return Ok(ApiResponse<object>.Success(new { ok = false, message = "پشتیبان ابری فعال نیست — Backup:Cloud:Provider را تنظیم کنید" }));
 
@@ -614,7 +640,8 @@ public class BackupController : ApiBaseController
 
         try
         {
-            var uploaded = await CloudSvc.UploadBackupAsync(latest, ct);
+            // چرخهٔ ۵۰ (BUG-02): ساخت سرویس ابری به‌صورت async — بدون قفل رشته
+            var uploaded = await (await GetCloudServiceAsync(ct)).UploadBackupAsync(latest, ct);
             await _unitOfWork.SaveEntitiesAsync(ct);
             return Ok(ApiResponse<object>.Success(new
             {
@@ -640,7 +667,8 @@ public class BackupController : ApiBaseController
         if (record?.CloudFileName is null)
             return BadRequest(ApiResponse<string>.Failure("این رکورد نسخه ابری ندارد"));
 
-        var (ok, message, plainSize) = await CloudSvc.VerifyRestoreAsync(record.CloudFileName, ct);
+        // چرخهٔ ۵۰ (BUG-02): ساخت سرویس ابری به‌صورت async — بدون قفل رشته
+        var (ok, message, plainSize) = await (await GetCloudServiceAsync(ct)).VerifyRestoreAsync(record.CloudFileName, ct);
         return Ok(ApiResponse<object>.Success(new { ok, message, plainSize }));
     }
 }
