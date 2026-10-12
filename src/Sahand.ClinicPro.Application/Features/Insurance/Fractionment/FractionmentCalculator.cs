@@ -52,13 +52,14 @@ public class FractionmentCalculator
     public FractionmentCalculator(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
     /// <summary>محاسبه تسویه یک فاکتور — با گزینه ثبت روی اقلام</summary>
-    public async Task<Result<FractionmentResultDto>> CalculateAsync(long invoiceId, bool persist)
+    public async Task<Result<FractionmentResultDto>> CalculateAsync(long invoiceId, bool persist,
+        CancellationToken ct = default)
     {
         var invoiceQuery = _unitOfWork.Repository<Invoice>().QueryableTracking
             .Include(i => i.Items.Where(it => !it.IsDeleted))
             .Include(i => i.Patient)
             .Where(i => i.Id == invoiceId && !i.IsDeleted);
-        var invoice = await invoiceQuery.FirstOrDefaultAsync();
+        var invoice = await invoiceQuery.FirstOrDefaultAsync(ct);
         if (invoice is null)
             return Result<FractionmentResultDto>.Failure(
                 new Error("INVOICE_NOT_FOUND", $"فاکتور با شناسه {invoiceId} یافت نشد"));
@@ -70,12 +71,12 @@ public class FractionmentCalculator
         var companyId = invoice.InsuranceCompanyId.Value;
 
         var company = await _unitOfWork.Repository<InsuranceCompany>().QueryableNoTracking
-            .FirstOrDefaultAsync(c => c.Id == companyId);
+            .FirstOrDefaultAsync(c => c.Id == companyId, ct);
 
         // همه قواعد فعال این بیمه — اختصاصی و عمومی
         var rules = await _unitOfWork.Repository<InsuranceFractionmentRule>().QueryableNoTracking
             .Where(r => r.InsuranceCompanyId == companyId && r.IsActive && !r.IsDeleted)
-            .ToListAsync();
+            .ToListAsync(ct);
         var specific = rules.Where(r => r.ServiceId is not null)
             .ToDictionary(r => r.ServiceId!.Value);
         var general = rules.FirstOrDefault(r => r.ServiceId is null);
@@ -86,7 +87,7 @@ public class FractionmentCalculator
                         (t.ValidTo == null || t.ValidTo >= DateOnly.FromDateTime(DateTime.UtcNow)) &&
                         (t.ValidFrom == null || t.ValidFrom <= DateOnly.FromDateTime(DateTime.UtcNow)))
             .OrderByDescending(t => t.Year)
-            .ToListAsync();
+            .ToListAsync(ct);
         var tariffByService = tariffs
             .GroupBy(t => t.ServiceId)
             .ToDictionary(g => g.Key, g => g.First());
