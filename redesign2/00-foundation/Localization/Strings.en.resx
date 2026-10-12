@@ -1,0 +1,3515 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="Accounting.Act_CloseYear" xml:space="preserve">
+    <value>بستن سال مالی</value>
+  </data>
+  <data name="Accounting.Act_NewVoucher" xml:space="preserve">
+    <value>سند جدید</value>
+  </data>
+  <data name="Accounting.Act_TrialBalance" xml:space="preserve">
+    <value>تراز آزمایشی</value>
+  </data>
+  <data name="Accounting.Col_Credit" xml:space="preserve">
+    <value>بستانکار</value>
+  </data>
+  <data name="Accounting.Col_Debit" xml:space="preserve">
+    <value>بدهکار</value>
+  </data>
+  <data name="Accounting.Col_Description" xml:space="preserve">
+    <value>شرح</value>
+  </data>
+  <data name="Accounting.Col_VoucherDate" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="Accounting.Col_VoucherNumber" xml:space="preserve">
+    <value>شماره سند</value>
+  </data>
+  <data name="Accounting.Filter_account" xml:space="preserve">
+    <value>حساب</value>
+  </data>
+  <data name="Accounting.Filter_fromDate" xml:space="preserve">
+    <value>از تاریخ</value>
+  </data>
+  <data name="Accounting.Filter_toDate" xml:space="preserve">
+    <value>تا تاریخ</value>
+  </data>
+  <data name="Accounting.Kpi1" xml:space="preserve">
+    <value>تعداد اسناد</value>
+  </data>
+  <data name="Accounting.Kpi2" xml:space="preserve">
+    <value>جمع بدهکار</value>
+  </data>
+  <data name="Accounting.Kpi3" xml:space="preserve">
+    <value>جمع بستانکار</value>
+  </data>
+  <data name="Accounting.Kpi4" xml:space="preserve">
+    <value>اختلاف</value>
+  </data>
+  <data name="Accounting.Subtitle" xml:space="preserve">
+    <value>دفتر کل، اسناد حسابداری و تراز</value>
+  </data>
+  <data name="Accounting.Tab1" xml:space="preserve">
+    <value>اسناد حسابداری</value>
+  </data>
+  <data name="Accounting.Tab2" xml:space="preserve">
+    <value>دفتر کل</value>
+  </data>
+  <data name="Accounting.Tab3" xml:space="preserve">
+    <value>تراز آزمایشی</value>
+  </data>
+  <data name="Accounting.Tab4" xml:space="preserve">
+    <value>سود و زیان</value>
+  </data>
+  <data name="Accounting.Title" xml:space="preserve">
+    <value>حسابداری</value>
+  </data>
+  <data name="AdhocReport.Act_Export" xml:space="preserve">
+    <value>خروجی Excel</value>
+  </data>
+  <data name="AdhocReport.Act_Run" xml:space="preserve">
+    <value>اجرای گزارش</value>
+  </data>
+  <data name="AdhocReport.Act_SaveTemplate" xml:space="preserve">
+    <value>ذخیره الگو</value>
+  </data>
+  <data name="AdhocReport.Col_Aggregate" xml:space="preserve">
+    <value>تجمیع</value>
+  </data>
+  <data name="AdhocReport.Col_DisplayName" xml:space="preserve">
+    <value>عنوان</value>
+  </data>
+  <data name="AdhocReport.Col_FieldName" xml:space="preserve">
+    <value>فیلد</value>
+  </data>
+  <data name="AdhocReport.Col_Include" xml:space="preserve">
+    <value>نمایش</value>
+  </data>
+  <data name="AdhocReport.Filter_entity" xml:space="preserve">
+    <value>موجودیت</value>
+  </data>
+  <data name="AdhocReport.Subtitle" xml:space="preserve">
+    <value>ساخت گزارش دلخواه با انتخاب فیلدها</value>
+  </data>
+  <data name="AdhocReport.Title" xml:space="preserve">
+    <value>گزارش‌ساز پویا</value>
+  </data>
+  <data name="Admin.Act_Save" xml:space="preserve">
+    <value>ذخیره</value>
+  </data>
+  <data name="Admin.Subtitle" xml:space="preserve">
+    <value>تنظیمات پیشرفته‌ی مدیریتی</value>
+  </data>
+  <data name="Admin.Tab1" xml:space="preserve">
+    <value>کاربران</value>
+  </data>
+  <data name="Admin.Tab2" xml:space="preserve">
+    <value>نقش‌ها</value>
+  </data>
+  <data name="Admin.Tab3" xml:space="preserve">
+    <value>شعب</value>
+  </data>
+  <data name="Admin.Tab4" xml:space="preserve">
+    <value>لاگ سیستم</value>
+  </data>
+  <data name="Admin.Tab5" xml:space="preserve">
+    <value>لایسنس</value>
+  </data>
+  <data name="Admin.Title" xml:space="preserve">
+    <value>مدیریت سیستم</value>
+  </data>
+  <data name="AdvancedEmr.Act_AddVital" xml:space="preserve">
+    <value>ثبت علائم</value>
+  </data>
+  <data name="AdvancedEmr.Act_Refresh" xml:space="preserve">
+    <value>تازه‌سازی</value>
+  </data>
+  <data name="AdvancedEmr.Kpi1" xml:space="preserve">
+    <value>فشار خون</value>
+  </data>
+  <data name="AdvancedEmr.Kpi2" xml:space="preserve">
+    <value>دما</value>
+  </data>
+  <data name="AdvancedEmr.Kpi3" xml:space="preserve">
+    <value>BMI</value>
+  </data>
+  <data name="AdvancedEmr.Kpi4" xml:space="preserve">
+    <value>قند خون</value>
+  </data>
+  <data name="AdvancedEmr.Subtitle" xml:space="preserve">
+    <value>نمودارهای حیاتی، روندها و محاسبات بالینی</value>
+  </data>
+  <data name="AdvancedEmr.Tab1" xml:space="preserve">
+    <value>علائم حیاتی</value>
+  </data>
+  <data name="AdvancedEmr.Tab2" xml:space="preserve">
+    <value>نمودار رشد</value>
+  </data>
+  <data name="AdvancedEmr.Tab3" xml:space="preserve">
+    <value>محاسبه‌گرها</value>
+  </data>
+  <data name="AdvancedEmr.Tab4" xml:space="preserve">
+    <value>هشدارها</value>
+  </data>
+  <data name="AdvancedEmr.Title" xml:space="preserve">
+    <value>پرونده بالینی پیشرفته</value>
+  </data>
+  <data name="AppointmentForm.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="AppointmentForm.Act_Save" xml:space="preserve">
+    <value>ذخیره نوبت</value>
+  </data>
+  <data name="AppointmentForm.Fld_AppointmentDate" xml:space="preserve">
+    <value>تاریخ نوبت</value>
+  </data>
+  <data name="AppointmentForm.Fld_DoctorId" xml:space="preserve">
+    <value>پزشک</value>
+  </data>
+  <data name="AppointmentForm.Fld_DurationMinutes" xml:space="preserve">
+    <value>مدت (دقیقه)</value>
+  </data>
+  <data name="AppointmentForm.Fld_IsFirstVisit" xml:space="preserve">
+    <value>ویزیت اول</value>
+  </data>
+  <data name="AppointmentForm.Fld_Notes" xml:space="preserve">
+    <value>یادداشت</value>
+  </data>
+  <data name="AppointmentForm.Fld_PatientId" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="AppointmentForm.Fld_Reason" xml:space="preserve">
+    <value>علت مراجعه</value>
+  </data>
+  <data name="AppointmentForm.Fld_RoomId" xml:space="preserve">
+    <value>اتاق</value>
+  </data>
+  <data name="AppointmentForm.Fld_ServiceId" xml:space="preserve">
+    <value>خدمت</value>
+  </data>
+  <data name="AppointmentForm.Fld_StartTime" xml:space="preserve">
+    <value>ساعت شروع</value>
+  </data>
+  <data name="AppointmentForm.Sec1" xml:space="preserve">
+    <value>بیمار و پزشک</value>
+  </data>
+  <data name="AppointmentForm.Sec2" xml:space="preserve">
+    <value>زمان‌بندی</value>
+  </data>
+  <data name="AppointmentForm.Sec3" xml:space="preserve">
+    <value>توضیحات</value>
+  </data>
+  <data name="AppointmentForm.Subtitle" xml:space="preserve">
+    <value>ایجاد یا ویرایش نوبت</value>
+  </data>
+  <data name="AppointmentForm.Title" xml:space="preserve">
+    <value>فرم نوبت</value>
+  </data>
+  <data name="Appointments.Act_New" xml:space="preserve">
+    <value>+ نوبت جدید</value>
+  </data>
+  <data name="Appointments.Act_SendReminder" xml:space="preserve">
+    <value>ارسال یادآوری</value>
+  </data>
+  <data name="Appointments.Act_TodayView" xml:space="preserve">
+    <value>نمای روز</value>
+  </data>
+  <data name="Appointments.Act_WeekView" xml:space="preserve">
+    <value>نمای هفته</value>
+  </data>
+  <data name="Appointments.Col_DoctorName" xml:space="preserve">
+    <value>پزشک</value>
+  </data>
+  <data name="Appointments.Col_Duration" xml:space="preserve">
+    <value>مدت</value>
+  </data>
+  <data name="Appointments.Col_PatientName" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="Appointments.Col_Room" xml:space="preserve">
+    <value>اتاق</value>
+  </data>
+  <data name="Appointments.Col_Service" xml:space="preserve">
+    <value>خدمت</value>
+  </data>
+  <data name="Appointments.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Appointments.Col_Time" xml:space="preserve">
+    <value>ساعت</value>
+  </data>
+  <data name="Appointments.Filter_date" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="Appointments.Filter_doctor" xml:space="preserve">
+    <value>پزشک</value>
+  </data>
+  <data name="Appointments.Filter_room" xml:space="preserve">
+    <value>اتاق</value>
+  </data>
+  <data name="Appointments.Filter_search" xml:space="preserve">
+    <value>جستجوی بیمار</value>
+  </data>
+  <data name="Appointments.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Appointments.Kpi1" xml:space="preserve">
+    <value>نوبت امروز</value>
+  </data>
+  <data name="Appointments.Kpi2" xml:space="preserve">
+    <value>در انتظار</value>
+  </data>
+  <data name="Appointments.Kpi3" xml:space="preserve">
+    <value>تأیید شده</value>
+  </data>
+  <data name="Appointments.Kpi4" xml:space="preserve">
+    <value>لغو شده</value>
+  </data>
+  <data name="Appointments.Notes" xml:space="preserve">
+    <value>نمای تقویمی با شبکه‌ی زمانی؛ تغییر وضعیت با کشیدن و رها کردن (Drag &amp; Drop).</value>
+  </data>
+  <data name="Appointments.Subtitle" xml:space="preserve">
+    <value>زمان‌بندی و مدیریت نوبت‌ها</value>
+  </data>
+  <data name="Appointments.Title" xml:space="preserve">
+    <value>نوبت‌دهی</value>
+  </data>
+  <data name="Attendance.Act_ManualEntry" xml:space="preserve">
+    <value>ثبت دستی</value>
+  </data>
+  <data name="Attendance.Act_Report" xml:space="preserve">
+    <value>گزارش ماهانه</value>
+  </data>
+  <data name="Attendance.Act_Sync" xml:space="preserve">
+    <value>همگام‌سازی دستگاه</value>
+  </data>
+  <data name="Attendance.Col_CheckIn" xml:space="preserve">
+    <value>ورود</value>
+  </data>
+  <data name="Attendance.Col_CheckOut" xml:space="preserve">
+    <value>خروج</value>
+  </data>
+  <data name="Attendance.Col_Date" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="Attendance.Col_EmployeeName" xml:space="preserve">
+    <value>کارمند</value>
+  </data>
+  <data name="Attendance.Col_Overtime" xml:space="preserve">
+    <value>اضافه‌کاری</value>
+  </data>
+  <data name="Attendance.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Attendance.Col_WorkHours" xml:space="preserve">
+    <value>ساعات کار</value>
+  </data>
+  <data name="Attendance.Filter_department" xml:space="preserve">
+    <value>بخش</value>
+  </data>
+  <data name="Attendance.Filter_employee" xml:space="preserve">
+    <value>کارمند</value>
+  </data>
+  <data name="Attendance.Filter_fromDate" xml:space="preserve">
+    <value>از تاریخ</value>
+  </data>
+  <data name="Attendance.Filter_toDate" xml:space="preserve">
+    <value>تا تاریخ</value>
+  </data>
+  <data name="Attendance.Kpi1" xml:space="preserve">
+    <value>حاضر</value>
+  </data>
+  <data name="Attendance.Kpi2" xml:space="preserve">
+    <value>تأخیر</value>
+  </data>
+  <data name="Attendance.Kpi3" xml:space="preserve">
+    <value>غایب</value>
+  </data>
+  <data name="Attendance.Kpi4" xml:space="preserve">
+    <value>ناهنجاری</value>
+  </data>
+  <data name="Attendance.Subtitle" xml:space="preserve">
+    <value>تردد پرسنل و همگام‌سازی با دستگاه</value>
+  </data>
+  <data name="Attendance.Title" xml:space="preserve">
+    <value>حضور و غیاب</value>
+  </data>
+  <data name="AuditLog.Act_Export" xml:space="preserve">
+    <value>خروجی Excel</value>
+  </data>
+  <data name="AuditLog.Act_VerifyChain" xml:space="preserve">
+    <value>بررسی زنجیره</value>
+  </data>
+  <data name="AuditLog.Col_Action" xml:space="preserve">
+    <value>عملیات</value>
+  </data>
+  <data name="AuditLog.Col_Description" xml:space="preserve">
+    <value>توضیح</value>
+  </data>
+  <data name="AuditLog.Col_EntityName" xml:space="preserve">
+    <value>موجودیت</value>
+  </data>
+  <data name="AuditLog.Col_Timestamp" xml:space="preserve">
+    <value>زمان</value>
+  </data>
+  <data name="AuditLog.Col_UserName" xml:space="preserve">
+    <value>کاربر</value>
+  </data>
+  <data name="AuditLog.Filter_action" xml:space="preserve">
+    <value>عملیات</value>
+  </data>
+  <data name="AuditLog.Filter_entity" xml:space="preserve">
+    <value>موجودیت</value>
+  </data>
+  <data name="AuditLog.Filter_fromDate" xml:space="preserve">
+    <value>از تاریخ</value>
+  </data>
+  <data name="AuditLog.Filter_user" xml:space="preserve">
+    <value>کاربر</value>
+  </data>
+  <data name="AuditLog.Subtitle" xml:space="preserve">
+    <value>ردیابی تغییرات و دسترسی کاربران</value>
+  </data>
+  <data name="AuditLog.Title" xml:space="preserve">
+    <value>گزارش حسابرسی</value>
+  </data>
+  <data name="Backup.Act_BackupNow" xml:space="preserve">
+    <value>پشتیبان‌گیری فوری</value>
+  </data>
+  <data name="Backup.Act_Restore" xml:space="preserve">
+    <value>بازیابی</value>
+  </data>
+  <data name="Backup.Act_UploadCloud" xml:space="preserve">
+    <value>ارسال به ابر</value>
+  </data>
+  <data name="Backup.Act_Verify" xml:space="preserve">
+    <value>بررسی سلامت</value>
+  </data>
+  <data name="Backup.Col_CreatedAt" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="Backup.Col_FileName" xml:space="preserve">
+    <value>نام فایل</value>
+  </data>
+  <data name="Backup.Col_SizeBytes" xml:space="preserve">
+    <value>حجم</value>
+  </data>
+  <data name="Backup.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Backup.Col_Type" xml:space="preserve">
+    <value>نوع</value>
+  </data>
+  <data name="Backup.Filter_fromDate" xml:space="preserve">
+    <value>از تاریخ</value>
+  </data>
+  <data name="Backup.Filter_type" xml:space="preserve">
+    <value>نوع</value>
+  </data>
+  <data name="Backup.Kpi1" xml:space="preserve">
+    <value>تعداد نسخه‌ها</value>
+  </data>
+  <data name="Backup.Kpi2" xml:space="preserve">
+    <value>حجم کل</value>
+  </data>
+  <data name="Backup.Kpi3" xml:space="preserve">
+    <value>آخرین نسخه</value>
+  </data>
+  <data name="Backup.Kpi4" xml:space="preserve">
+    <value>وضعیت ابری</value>
+  </data>
+  <data name="Backup.Subtitle" xml:space="preserve">
+    <value>تهیه، بازیابی و زمان‌بندی نسخه‌های پشتیبان</value>
+  </data>
+  <data name="Backup.Tab1" xml:space="preserve">
+    <value>نسخه‌های پشتیبان</value>
+  </data>
+  <data name="Backup.Tab2" xml:space="preserve">
+    <value>زمان‌بندی</value>
+  </data>
+  <data name="Backup.Tab3" xml:space="preserve">
+    <value>بازیابی</value>
+  </data>
+  <data name="Backup.Tab4" xml:space="preserve">
+    <value>تنظیمات ابری</value>
+  </data>
+  <data name="Backup.Title" xml:space="preserve">
+    <value>پشتیبان‌گیری</value>
+  </data>
+  <data name="Billing.Act_NewInvoice" xml:space="preserve">
+    <value>+ صورتحساب جدید</value>
+  </data>
+  <data name="Billing.Act_Pay" xml:space="preserve">
+    <value>دریافت وجه</value>
+  </data>
+  <data name="Billing.Act_Print" xml:space="preserve">
+    <value>چاپ</value>
+  </data>
+  <data name="Billing.Act_Refund" xml:space="preserve">
+    <value>استرداد</value>
+  </data>
+  <data name="Billing.Col_Balance" xml:space="preserve">
+    <value>مانده</value>
+  </data>
+  <data name="Billing.Col_InvoiceNumber" xml:space="preserve">
+    <value>شماره</value>
+  </data>
+  <data name="Billing.Col_IssueDate" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="Billing.Col_PaidAmount" xml:space="preserve">
+    <value>پرداختی</value>
+  </data>
+  <data name="Billing.Col_PatientName" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="Billing.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Billing.Col_TotalAmount" xml:space="preserve">
+    <value>مبلغ کل</value>
+  </data>
+  <data name="Billing.Filter_fromDate" xml:space="preserve">
+    <value>از تاریخ</value>
+  </data>
+  <data name="Billing.Filter_search" xml:space="preserve">
+    <value>جستجوی بیمار</value>
+  </data>
+  <data name="Billing.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Billing.Filter_toDate" xml:space="preserve">
+    <value>تا تاریخ</value>
+  </data>
+  <data name="Billing.Kpi1" xml:space="preserve">
+    <value>صورتحساب امروز</value>
+  </data>
+  <data name="Billing.Kpi2" xml:space="preserve">
+    <value>دریافت امروز</value>
+  </data>
+  <data name="Billing.Kpi3" xml:space="preserve">
+    <value>پرداخت‌نشده</value>
+  </data>
+  <data name="Billing.Kpi4" xml:space="preserve">
+    <value>استردادها</value>
+  </data>
+  <data name="Billing.Subtitle" xml:space="preserve">
+    <value>مدیریت صورتحساب‌ها و دریافت‌ها</value>
+  </data>
+  <data name="Billing.Title" xml:space="preserve">
+    <value>صورتحساب</value>
+  </data>
+  <data name="Branches.Act_New" xml:space="preserve">
+    <value>+ شعبه جدید</value>
+  </data>
+  <data name="Branches.Col_BranchCode" xml:space="preserve">
+    <value>کد</value>
+  </data>
+  <data name="Branches.Col_BranchName" xml:space="preserve">
+    <value>نام شعبه</value>
+  </data>
+  <data name="Branches.Col_City" xml:space="preserve">
+    <value>شهر</value>
+  </data>
+  <data name="Branches.Col_IsActive" xml:space="preserve">
+    <value>فعال</value>
+  </data>
+  <data name="Branches.Col_ManagerName" xml:space="preserve">
+    <value>مدیر</value>
+  </data>
+  <data name="Branches.Col_PhoneNumber" xml:space="preserve">
+    <value>تلفن</value>
+  </data>
+  <data name="Branches.Filter_search" xml:space="preserve">
+    <value>جستجو</value>
+  </data>
+  <data name="Branches.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Branches.Subtitle" xml:space="preserve">
+    <value>مدیریت شعب و مراکز درمانی</value>
+  </data>
+  <data name="Branches.Title" xml:space="preserve">
+    <value>شعب</value>
+  </data>
+  <data name="ChangePassword.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="ChangePassword.Act_Save" xml:space="preserve">
+    <value>تغییر رمز</value>
+  </data>
+  <data name="ChangePassword.Fld_ConfirmPassword" xml:space="preserve">
+    <value>تکرار رمز جدید</value>
+  </data>
+  <data name="ChangePassword.Fld_CurrentPassword" xml:space="preserve">
+    <value>رمز فعلی</value>
+  </data>
+  <data name="ChangePassword.Fld_NewPassword" xml:space="preserve">
+    <value>رمز جدید</value>
+  </data>
+  <data name="ChangePassword.Sec1" xml:space="preserve">
+    <value>رمز عبور</value>
+  </data>
+  <data name="ChangePassword.Subtitle" xml:space="preserve">
+    <value>تغییر رمز عبور کاربر جاری</value>
+  </data>
+  <data name="ChangePassword.Title" xml:space="preserve">
+    <value>تغییر رمز عبور</value>
+  </data>
+  <data name="ColorPicker.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="ColorPicker.Act_Select" xml:space="preserve">
+    <value>انتخاب</value>
+  </data>
+  <data name="ColorPicker.Subtitle" xml:space="preserve">
+    <value>انتخاب رنگ برای تنظیمات شخصی</value>
+  </data>
+  <data name="ColorPicker.Title" xml:space="preserve">
+    <value>انتخاب رنگ</value>
+  </data>
+  <data name="CommissionReport.Act_Export" xml:space="preserve">
+    <value>خروجی Excel</value>
+  </data>
+  <data name="CommissionReport.Act_Generate" xml:space="preserve">
+    <value>تهیه گزارش</value>
+  </data>
+  <data name="CommissionReport.Col_CommissionAmount" xml:space="preserve">
+    <value>کارمزد</value>
+  </data>
+  <data name="CommissionReport.Col_CommissionRate" xml:space="preserve">
+    <value>نرخ</value>
+  </data>
+  <data name="CommissionReport.Col_DoctorName" xml:space="preserve">
+    <value>پزشک</value>
+  </data>
+  <data name="CommissionReport.Col_GrossAmount" xml:space="preserve">
+    <value>ناخالص</value>
+  </data>
+  <data name="CommissionReport.Col_VisitCount" xml:space="preserve">
+    <value>تعداد ویزیت</value>
+  </data>
+  <data name="CommissionReport.Filter_doctor" xml:space="preserve">
+    <value>پزشک</value>
+  </data>
+  <data name="CommissionReport.Filter_fromDate" xml:space="preserve">
+    <value>از تاریخ</value>
+  </data>
+  <data name="CommissionReport.Filter_toDate" xml:space="preserve">
+    <value>تا تاریخ</value>
+  </data>
+  <data name="CommissionReport.Subtitle" xml:space="preserve">
+    <value>گزارش کارمزد پزشکان</value>
+  </data>
+  <data name="CommissionReport.Title" xml:space="preserve">
+    <value>گزارش کارمزد</value>
+  </data>
+  <data name="Common.Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Common.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Common.All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Common.Amount" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="Common.AppName" xml:space="preserve">
+    <value>Sahand</value>
+  </data>
+  <data name="Common.AppTagline" xml:space="preserve">
+    <value>Comprehensive clinic management</value>
+  </data>
+  <data name="Common.Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Common.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Common.Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Common.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Common.Code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="Common.ConfirmDelete" xml:space="preserve">
+    <value>Are you sure you want to delete this item?</value>
+  </data>
+  <data name="Common.Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Common.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Common.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Common.Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Common.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Common.EmptyMessage" xml:space="preserve">
+    <value>There is no data to display yet.</value>
+  </data>
+  <data name="Common.EmptyTitle" xml:space="preserve">
+    <value>Nothing found</value>
+  </data>
+  <data name="Common.Exit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="Common.Export" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="Common.Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="Common.Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="Common.Inactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="Common.Loading" xml:space="preserve">
+    <value>Loading…</value>
+  </data>
+  <data name="Common.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Common.New" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="Common.Next" xml:space="preserve">
+    <value>Next ›</value>
+  </data>
+  <data name="Common.No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Common.NoData" xml:space="preserve">
+    <value>No records found</value>
+  </data>
+  <data name="Common.Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Common.Of" xml:space="preserve">
+    <value>of</value>
+  </data>
+  <data name="Common.PageX" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="Common.Previous" xml:space="preserve">
+    <value>‹ Previous</value>
+  </data>
+  <data name="Common.Print" xml:space="preserve">
+    <value>Print</value>
+  </data>
+  <data name="Common.Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Common.Relations" xml:space="preserve">
+    <value>Relationships</value>
+  </data>
+  <data name="Common.Required" xml:space="preserve">
+    <value>This field is required</value>
+  </data>
+  <data name="Common.Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="Common.RowsPerPage" xml:space="preserve">
+    <value>Rows per page</value>
+  </data>
+  <data name="Common.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Common.SaveSuccess" xml:space="preserve">
+    <value>Saved successfully</value>
+  </data>
+  <data name="Common.Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Common.Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Common.Showing" xml:space="preserve">
+    <value>Showing</value>
+  </data>
+  <data name="Common.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Common.Submit" xml:space="preserve">
+    <value>Submit</value>
+  </data>
+  <data name="Common.ToggleLanguage" xml:space="preserve">
+    <value>Toggle language</value>
+  </data>
+  <data name="Common.ToggleTheme" xml:space="preserve">
+    <value>Toggle theme</value>
+  </data>
+  <data name="Common.Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Common.ValidationError" xml:space="preserve">
+    <value>Please correct the form errors</value>
+  </data>
+  <data name="Common.Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="CompanyForm.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="CompanyForm.Act_Save" xml:space="preserve">
+    <value>ذخیره</value>
+  </data>
+  <data name="CompanyForm.Fld_Address" xml:space="preserve">
+    <value>نشانی</value>
+  </data>
+  <data name="CompanyForm.Fld_CompanyCode" xml:space="preserve">
+    <value>کد شرکت</value>
+  </data>
+  <data name="CompanyForm.Fld_CompanyName" xml:space="preserve">
+    <value>نام شرکت</value>
+  </data>
+  <data name="CompanyForm.Fld_ContractNumber" xml:space="preserve">
+    <value>شماره قرارداد</value>
+  </data>
+  <data name="CompanyForm.Fld_IsActive" xml:space="preserve">
+    <value>فعال</value>
+  </data>
+  <data name="CompanyForm.Fld_PhoneNumber" xml:space="preserve">
+    <value>تلفن</value>
+  </data>
+  <data name="CompanyForm.Sec1" xml:space="preserve">
+    <value>شرکت بیمه</value>
+  </data>
+  <data name="CompanyForm.Subtitle" xml:space="preserve">
+    <value>ایجاد یا ویرایش شرکت بیمه</value>
+  </data>
+  <data name="CompanyForm.Title" xml:space="preserve">
+    <value>فرم شرکت بیمه</value>
+  </data>
+  <data name="Complementary.Act_New" xml:space="preserve">
+    <value>درخواست جدید</value>
+  </data>
+  <data name="Complementary.Col_Provider" xml:space="preserve">
+    <value>مرکز ارائه‌دهنده</value>
+  </data>
+  <data name="Complementary.Col_RequestDate" xml:space="preserve">
+    <value>تاریخ درخواست</value>
+  </data>
+  <data name="Complementary.Col_ServiceName" xml:space="preserve">
+    <value>خدمت</value>
+  </data>
+  <data name="Complementary.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Complementary.Filter_search" xml:space="preserve">
+    <value>جستجو</value>
+  </data>
+  <data name="Complementary.Filter_type" xml:space="preserve">
+    <value>نوع خدمت</value>
+  </data>
+  <data name="Complementary.Subtitle" xml:space="preserve">
+    <value>خدمات پاراکلینیکی و ارجاعات</value>
+  </data>
+  <data name="Complementary.Title" xml:space="preserve">
+    <value>خدمات تکمیلی</value>
+  </data>
+  <data name="Consumables.Act_Add" xml:space="preserve">
+    <value>ثبت مصرف</value>
+  </data>
+  <data name="Consumables.Col_ItemName" xml:space="preserve">
+    <value>کالا</value>
+  </data>
+  <data name="Consumables.Col_Quantity" xml:space="preserve">
+    <value>مقدار</value>
+  </data>
+  <data name="Consumables.Col_Unit" xml:space="preserve">
+    <value>واحد</value>
+  </data>
+  <data name="Consumables.Col_VisitDate" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="Consumables.Subtitle" xml:space="preserve">
+    <value>ثبت مصرف لوازم در اقدامات</value>
+  </data>
+  <data name="Consumables.Title" xml:space="preserve">
+    <value>لوازم مصرفی</value>
+  </data>
+  <data name="Dashboard.Act_NewAppointment" xml:space="preserve">
+    <value>نوبت جدید</value>
+  </data>
+  <data name="Dashboard.Act_NewReception" xml:space="preserve">
+    <value>پذیرش جدید</value>
+  </data>
+  <data name="Dashboard.Act_Refresh" xml:space="preserve">
+    <value>تازه‌سازی</value>
+  </data>
+  <data name="Dashboard.Kpi1" xml:space="preserve">
+    <value>بیماران امروز</value>
+  </data>
+  <data name="Dashboard.Kpi2" xml:space="preserve">
+    <value>نوبت‌های امروز</value>
+  </data>
+  <data name="Dashboard.Kpi3" xml:space="preserve">
+    <value>درآمد امروز</value>
+  </data>
+  <data name="Dashboard.Kpi4" xml:space="preserve">
+    <value>میانگین انتظار</value>
+  </data>
+  <data name="Dashboard.Notes" xml:space="preserve">
+    <value>چهار کارت شاخص در بالا، صف انتظار زنده در وسط، نمودار درآمد ۳۰ روزه و نوار هشدارها در پایین.</value>
+  </data>
+  <data name="Dashboard.Subtitle" xml:space="preserve">
+    <value>نمای کلی وضعیت امروز درمانگاه</value>
+  </data>
+  <data name="Dashboard.Title" xml:space="preserve">
+    <value>پیشخوان</value>
+  </data>
+  <data name="Dentistry.Act_Print" xml:space="preserve">
+    <value>چاپ چارت</value>
+  </data>
+  <data name="Dentistry.Act_Save" xml:space="preserve">
+    <value>ذخیره چارت</value>
+  </data>
+  <data name="Dentistry.Kpi1" xml:space="preserve">
+    <value>دندان‌های درمان‌شده</value>
+  </data>
+  <data name="Dentistry.Kpi2" xml:space="preserve">
+    <value>نیازمند درمان</value>
+  </data>
+  <data name="Dentistry.Notes" xml:space="preserve">
+    <value>چارت تعاملی ۳۲ دندان با استاندارد FDI و ثبت وضعیت هر دندان.</value>
+  </data>
+  <data name="Dentistry.Subtitle" xml:space="preserve">
+    <value>چارت دندانی و خدمات دندانپزشکی</value>
+  </data>
+  <data name="Dentistry.Tab1" xml:space="preserve">
+    <value>چارت دندانی</value>
+  </data>
+  <data name="Dentistry.Tab2" xml:space="preserve">
+    <value>خدمات</value>
+  </data>
+  <data name="Dentistry.Tab3" xml:space="preserve">
+    <value>تصاویر</value>
+  </data>
+  <data name="Dentistry.Title" xml:space="preserve">
+    <value>دندانپزشکی</value>
+  </data>
+  <data name="DicomViewer.Act_Measure" xml:space="preserve">
+    <value>اندازه‌گیری</value>
+  </data>
+  <data name="DicomViewer.Act_Pan" xml:space="preserve">
+    <value>جابه‌جایی</value>
+  </data>
+  <data name="DicomViewer.Act_Report" xml:space="preserve">
+    <value>گزارش</value>
+  </data>
+  <data name="DicomViewer.Act_WindowLevel" xml:space="preserve">
+    <value>روش/کنتراست</value>
+  </data>
+  <data name="DicomViewer.Act_ZoomIn" xml:space="preserve">
+    <value>بزرگ‌نمایی</value>
+  </data>
+  <data name="DicomViewer.Act_ZoomOut" xml:space="preserve">
+    <value>کوچک‌نمایی</value>
+  </data>
+  <data name="DicomViewer.Kpi1" xml:space="preserve">
+    <value>تعداد تصاویر</value>
+  </data>
+  <data name="DicomViewer.Notes" xml:space="preserve">
+    <value>پنجره‌ی اختصاصی با ابزارهای اندازه‌گیری، تنظیم روشنایی/کنتراست و پیمایش بین تصاویر.</value>
+  </data>
+  <data name="DicomViewer.Subtitle" xml:space="preserve">
+    <value>مشاهده و بررسی تصاویر DICOM</value>
+  </data>
+  <data name="DicomViewer.Title" xml:space="preserve">
+    <value>نمایشگر تصاویر پزشکی</value>
+  </data>
+  <data name="DoctorForm.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="DoctorForm.Act_Save" xml:space="preserve">
+    <value>ذخیره</value>
+  </data>
+  <data name="DoctorForm.Fld_Address" xml:space="preserve">
+    <value>نشانی مطب</value>
+  </data>
+  <data name="DoctorForm.Fld_BirthDate" xml:space="preserve">
+    <value>تاریخ تولد</value>
+  </data>
+  <data name="DoctorForm.Fld_CommissionPercent" xml:space="preserve">
+    <value>درصد کارمزد</value>
+  </data>
+  <data name="DoctorForm.Fld_ContractType" xml:space="preserve">
+    <value>نوع همکاری</value>
+  </data>
+  <data name="DoctorForm.Fld_Degree" xml:space="preserve">
+    <value>مدرک</value>
+  </data>
+  <data name="DoctorForm.Fld_Email" xml:space="preserve">
+    <value>ایمیل</value>
+  </data>
+  <data name="DoctorForm.Fld_FirstName" xml:space="preserve">
+    <value>نام</value>
+  </data>
+  <data name="DoctorForm.Fld_Gender" xml:space="preserve">
+    <value>جنسیت</value>
+  </data>
+  <data name="DoctorForm.Fld_IsActive" xml:space="preserve">
+    <value>فعال</value>
+  </data>
+  <data name="DoctorForm.Fld_LastName" xml:space="preserve">
+    <value>نام خانوادگی</value>
+  </data>
+  <data name="DoctorForm.Fld_MaxPatientsPerDay" xml:space="preserve">
+    <value>حداکثر بیمار</value>
+  </data>
+  <data name="DoctorForm.Fld_MedicalLicenseNumber" xml:space="preserve">
+    <value>شماره نظام پزشکی</value>
+  </data>
+  <data name="DoctorForm.Fld_MobileNumber" xml:space="preserve">
+    <value>موبایل</value>
+  </data>
+  <data name="DoctorForm.Fld_NationalCode" xml:space="preserve">
+    <value>کد ملی</value>
+  </data>
+  <data name="DoctorForm.Fld_PhoneNumber" xml:space="preserve">
+    <value>تلفن مطب</value>
+  </data>
+  <data name="DoctorForm.Fld_SpecialtyId" xml:space="preserve">
+    <value>تخصص</value>
+  </data>
+  <data name="DoctorForm.Fld_University" xml:space="preserve">
+    <value>دانشگاه محل تحصیل</value>
+  </data>
+  <data name="DoctorForm.Fld_VisitDurationMinutes" xml:space="preserve">
+    <value>مدت هر ویزیت</value>
+  </data>
+  <data name="DoctorForm.Fld_WorkingDays" xml:space="preserve">
+    <value>روزهای کاری</value>
+  </data>
+  <data name="DoctorForm.Sec1" xml:space="preserve">
+    <value>اطلاعات فردی</value>
+  </data>
+  <data name="DoctorForm.Sec2" xml:space="preserve">
+    <value>اطلاعات حرفه‌ای</value>
+  </data>
+  <data name="DoctorForm.Sec3" xml:space="preserve">
+    <value>اطلاعات تماس</value>
+  </data>
+  <data name="DoctorForm.Sec4" xml:space="preserve">
+    <value>برنامه‌ی کاری</value>
+  </data>
+  <data name="DoctorForm.Subtitle" xml:space="preserve">
+    <value>ایجاد یا ویرایش اطلاعات پزشک</value>
+  </data>
+  <data name="DoctorForm.Title" xml:space="preserve">
+    <value>فرم پزشک</value>
+  </data>
+  <data name="DoctorPerformance.Act_Export" xml:space="preserve">
+    <value>خروجی</value>
+  </data>
+  <data name="DoctorPerformance.Act_Generate" xml:space="preserve">
+    <value>تهیه گزارش</value>
+  </data>
+  <data name="DoctorPerformance.Col_AvgWaitTime" xml:space="preserve">
+    <value>میانگین انتظار</value>
+  </data>
+  <data name="DoctorPerformance.Col_DoctorName" xml:space="preserve">
+    <value>پزشک</value>
+  </data>
+  <data name="DoctorPerformance.Col_PatientCount" xml:space="preserve">
+    <value>تعداد بیمار</value>
+  </data>
+  <data name="DoctorPerformance.Col_Revenue" xml:space="preserve">
+    <value>درآمد</value>
+  </data>
+  <data name="DoctorPerformance.Col_Satisfaction" xml:space="preserve">
+    <value>رضایت</value>
+  </data>
+  <data name="DoctorPerformance.Filter_doctor" xml:space="preserve">
+    <value>پزشک</value>
+  </data>
+  <data name="DoctorPerformance.Filter_fromDate" xml:space="preserve">
+    <value>از تاریخ</value>
+  </data>
+  <data name="DoctorPerformance.Filter_toDate" xml:space="preserve">
+    <value>تا تاریخ</value>
+  </data>
+  <data name="DoctorPerformance.Subtitle" xml:space="preserve">
+    <value>شاخص‌های عملکردی پزشکان</value>
+  </data>
+  <data name="DoctorPerformance.Title" xml:space="preserve">
+    <value>عملکرد پزشکان</value>
+  </data>
+  <data name="Doctors.Act_Commission" xml:space="preserve">
+    <value>کارمزد</value>
+  </data>
+  <data name="Doctors.Act_New" xml:space="preserve">
+    <value>+ پزشک جدید</value>
+  </data>
+  <data name="Doctors.Act_Schedule" xml:space="preserve">
+    <value>برنامه کاری</value>
+  </data>
+  <data name="Doctors.Col_DoctorCode" xml:space="preserve">
+    <value>کد</value>
+  </data>
+  <data name="Doctors.Col_FullName" xml:space="preserve">
+    <value>نام پزشک</value>
+  </data>
+  <data name="Doctors.Col_MedicalLicense" xml:space="preserve">
+    <value>نظام پزشکی</value>
+  </data>
+  <data name="Doctors.Col_PhoneNumber" xml:space="preserve">
+    <value>تلفن</value>
+  </data>
+  <data name="Doctors.Col_Specialty" xml:space="preserve">
+    <value>تخصص</value>
+  </data>
+  <data name="Doctors.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Doctors.Filter_search" xml:space="preserve">
+    <value>جستجو</value>
+  </data>
+  <data name="Doctors.Filter_specialty" xml:space="preserve">
+    <value>تخصص</value>
+  </data>
+  <data name="Doctors.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Doctors.Subtitle" xml:space="preserve">
+    <value>مدیریت پزشکان، تخصص‌ها و برنامه‌ی کاری</value>
+  </data>
+  <data name="Doctors.Title" xml:space="preserve">
+    <value>پزشکان</value>
+  </data>
+  <data name="DoctorVisit.Act_CallNext" xml:space="preserve">
+    <value>فراخوان بعدی</value>
+  </data>
+  <data name="DoctorVisit.Act_StartVisit" xml:space="preserve">
+    <value>شروع ویزیت</value>
+  </data>
+  <data name="DoctorVisit.Col_PatientName" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="DoctorVisit.Col_Reason" xml:space="preserve">
+    <value>علت</value>
+  </data>
+  <data name="DoctorVisit.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="DoctorVisit.Col_Time" xml:space="preserve">
+    <value>ساعت</value>
+  </data>
+  <data name="DoctorVisit.Kpi1" xml:space="preserve">
+    <value>نوبت‌های امروز</value>
+  </data>
+  <data name="DoctorVisit.Kpi2" xml:space="preserve">
+    <value>ویزیت شده</value>
+  </data>
+  <data name="DoctorVisit.Kpi3" xml:space="preserve">
+    <value>باقی‌مانده</value>
+  </data>
+  <data name="DoctorVisit.Subtitle" xml:space="preserve">
+    <value>صفحه‌ی کاری روزانه‌ی پزشک</value>
+  </data>
+  <data name="DoctorVisit.Title" xml:space="preserve">
+    <value>ویزیت پزشک</value>
+  </data>
+  <data name="EmployeeForm.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="EmployeeForm.Act_Save" xml:space="preserve">
+    <value>ذخیره</value>
+  </data>
+  <data name="EmployeeForm.Fld_Address" xml:space="preserve">
+    <value>نشانی</value>
+  </data>
+  <data name="EmployeeForm.Fld_Allowances" xml:space="preserve">
+    <value>مزایا</value>
+  </data>
+  <data name="EmployeeForm.Fld_BankAccount" xml:space="preserve">
+    <value>شماره حساب</value>
+  </data>
+  <data name="EmployeeForm.Fld_BaseSalary" xml:space="preserve">
+    <value>حقوق پایه</value>
+  </data>
+  <data name="EmployeeForm.Fld_BirthDate" xml:space="preserve">
+    <value>تاریخ تولد</value>
+  </data>
+  <data name="EmployeeForm.Fld_DepartmentId" xml:space="preserve">
+    <value>بخش</value>
+  </data>
+  <data name="EmployeeForm.Fld_Email" xml:space="preserve">
+    <value>ایمیل</value>
+  </data>
+  <data name="EmployeeForm.Fld_EmployeeCode" xml:space="preserve">
+    <value>کد پرسنلی</value>
+  </data>
+  <data name="EmployeeForm.Fld_EmploymentType" xml:space="preserve">
+    <value>نوع استخدام</value>
+  </data>
+  <data name="EmployeeForm.Fld_FirstName" xml:space="preserve">
+    <value>نام</value>
+  </data>
+  <data name="EmployeeForm.Fld_Gender" xml:space="preserve">
+    <value>جنسیت</value>
+  </data>
+  <data name="EmployeeForm.Fld_HireDate" xml:space="preserve">
+    <value>تاریخ استخدام</value>
+  </data>
+  <data name="EmployeeForm.Fld_InsuranceNumber" xml:space="preserve">
+    <value>شماره بیمه</value>
+  </data>
+  <data name="EmployeeForm.Fld_LastName" xml:space="preserve">
+    <value>نام خانوادگی</value>
+  </data>
+  <data name="EmployeeForm.Fld_ManagerId" xml:space="preserve">
+    <value>مدیر مستقیم</value>
+  </data>
+  <data name="EmployeeForm.Fld_MaritalStatus" xml:space="preserve">
+    <value>وضعیت تأهل</value>
+  </data>
+  <data name="EmployeeForm.Fld_MobileNumber" xml:space="preserve">
+    <value>موبایل</value>
+  </data>
+  <data name="EmployeeForm.Fld_NationalCode" xml:space="preserve">
+    <value>کد ملی</value>
+  </data>
+  <data name="EmployeeForm.Fld_PositionId" xml:space="preserve">
+    <value>سمت</value>
+  </data>
+  <data name="EmployeeForm.Sec1" xml:space="preserve">
+    <value>اطلاعات فردی</value>
+  </data>
+  <data name="EmployeeForm.Sec2" xml:space="preserve">
+    <value>اطلاعات شغلی</value>
+  </data>
+  <data name="EmployeeForm.Sec3" xml:space="preserve">
+    <value>اطلاعات تماس</value>
+  </data>
+  <data name="EmployeeForm.Sec4" xml:space="preserve">
+    <value>حقوق و مزایا</value>
+  </data>
+  <data name="EmployeeForm.Subtitle" xml:space="preserve">
+    <value>ایجاد یا ویرایش اطلاعات کارمند</value>
+  </data>
+  <data name="EmployeeForm.Title" xml:space="preserve">
+    <value>فرم کارمند</value>
+  </data>
+  <data name="EmployeeSalaryEdit.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="EmployeeSalaryEdit.Act_Save" xml:space="preserve">
+    <value>ذخیره</value>
+  </data>
+  <data name="EmployeeSalaryEdit.Fld_BaseSalary" xml:space="preserve">
+    <value>حقوق پایه</value>
+  </data>
+  <data name="EmployeeSalaryEdit.Fld_EffectiveDate" xml:space="preserve">
+    <value>تاریخ اجرا</value>
+  </data>
+  <data name="EmployeeSalaryEdit.Fld_FamilyAllowance" xml:space="preserve">
+    <value>حق عائله‌مندی</value>
+  </data>
+  <data name="EmployeeSalaryEdit.Fld_HousingAllowance" xml:space="preserve">
+    <value>حق مسکن</value>
+  </data>
+  <data name="EmployeeSalaryEdit.Fld_OtherAllowance" xml:space="preserve">
+    <value>سایر مزایا</value>
+  </data>
+  <data name="EmployeeSalaryEdit.Fld_TransportAllowance" xml:space="preserve">
+    <value>حق ایاب‌وذهاب</value>
+  </data>
+  <data name="EmployeeSalaryEdit.Sec1" xml:space="preserve">
+    <value>حقوق</value>
+  </data>
+  <data name="EmployeeSalaryEdit.Subtitle" xml:space="preserve">
+    <value>تنظیم حقوق و مزایای کارمند</value>
+  </data>
+  <data name="EmployeeSalaryEdit.Title" xml:space="preserve">
+    <value>ویرایش حقوق</value>
+  </data>
+  <data name="EPrescription.Act_RefreshStatus" xml:space="preserve">
+    <value>به‌روزرسانی وضعیت</value>
+  </data>
+  <data name="EPrescription.Act_Send" xml:space="preserve">
+    <value>ارسال</value>
+  </data>
+  <data name="EPrescription.Col_PatientName" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="EPrescription.Col_SentAt" xml:space="preserve">
+    <value>زمان ارسال</value>
+  </data>
+  <data name="EPrescription.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="EPrescription.Col_TrackingCode" xml:space="preserve">
+    <value>کد رهگیری</value>
+  </data>
+  <data name="EPrescription.Filter_date" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="EPrescription.Filter_search" xml:space="preserve">
+    <value>جستجو</value>
+  </data>
+  <data name="EPrescription.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="EPrescription.Kpi1" xml:space="preserve">
+    <value>ارسال‌شده</value>
+  </data>
+  <data name="EPrescription.Kpi2" xml:space="preserve">
+    <value>تأیید شده</value>
+  </data>
+  <data name="EPrescription.Kpi3" xml:space="preserve">
+    <value>رد شده</value>
+  </data>
+  <data name="EPrescription.Subtitle" xml:space="preserve">
+    <value>ارسال و پیگیری نسخه‌های الکترونیک</value>
+  </data>
+  <data name="EPrescription.Title" xml:space="preserve">
+    <value>نسخه الکترونیک</value>
+  </data>
+  <data name="GuidedTour.Act_Next" xml:space="preserve">
+    <value>بعدی</value>
+  </data>
+  <data name="GuidedTour.Act_Skip" xml:space="preserve">
+    <value>رد کردن</value>
+  </data>
+  <data name="GuidedTour.Subtitle" xml:space="preserve">
+    <value>آموزش گام‌به‌گام محیط برنامه</value>
+  </data>
+  <data name="GuidedTour.Title" xml:space="preserve">
+    <value>راهنمای تعاملی</value>
+  </data>
+  <data name="Imaging.Act_NewOrder" xml:space="preserve">
+    <value>+ درخواست جدید</value>
+  </data>
+  <data name="Imaging.Act_OpenViewer" xml:space="preserve">
+    <value>نمایش تصاویر</value>
+  </data>
+  <data name="Imaging.Act_Upload" xml:space="preserve">
+    <value>بارگذاری تصویر</value>
+  </data>
+  <data name="Imaging.Col_BodyPart" xml:space="preserve">
+    <value>عضو</value>
+  </data>
+  <data name="Imaging.Col_Modality" xml:space="preserve">
+    <value>روش</value>
+  </data>
+  <data name="Imaging.Col_PatientName" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="Imaging.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Imaging.Col_StudyDate" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="Imaging.Col_StudyNumber" xml:space="preserve">
+    <value>شماره</value>
+  </data>
+  <data name="Imaging.Filter_date" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="Imaging.Filter_modality" xml:space="preserve">
+    <value>روش</value>
+  </data>
+  <data name="Imaging.Filter_search" xml:space="preserve">
+    <value>جستجوی بیمار</value>
+  </data>
+  <data name="Imaging.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Imaging.Subtitle" xml:space="preserve">
+    <value>مدیریت درخواست‌ها و تصاویر پزشکی</value>
+  </data>
+  <data name="Imaging.Title" xml:space="preserve">
+    <value>تصویربرداری</value>
+  </data>
+  <data name="Insurance.Act_FollowUp" xml:space="preserve">
+    <value>پیگیری</value>
+  </data>
+  <data name="Insurance.Act_NewClaim" xml:space="preserve">
+    <value>سند جدید</value>
+  </data>
+  <data name="Insurance.Act_Submit" xml:space="preserve">
+    <value>ارسال به بیمه</value>
+  </data>
+  <data name="Insurance.Col_Amount" xml:space="preserve">
+    <value>مبلغ</value>
+  </data>
+  <data name="Insurance.Col_ClaimNumber" xml:space="preserve">
+    <value>شماره</value>
+  </data>
+  <data name="Insurance.Col_CompanyName" xml:space="preserve">
+    <value>شرکت بیمه</value>
+  </data>
+  <data name="Insurance.Col_PatientName" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="Insurance.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Insurance.Col_SubmittedAt" xml:space="preserve">
+    <value>تاریخ ارسال</value>
+  </data>
+  <data name="Insurance.Filter_company" xml:space="preserve">
+    <value>شرکت بیمه</value>
+  </data>
+  <data name="Insurance.Filter_fromDate" xml:space="preserve">
+    <value>از تاریخ</value>
+  </data>
+  <data name="Insurance.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Insurance.Kpi1" xml:space="preserve">
+    <value>مطالبات جاری</value>
+  </data>
+  <data name="Insurance.Kpi2" xml:space="preserve">
+    <value>سررسید گذشته</value>
+  </data>
+  <data name="Insurance.Kpi3" xml:space="preserve">
+    <value>نرخ وصول</value>
+  </data>
+  <data name="Insurance.Subtitle" xml:space="preserve">
+    <value>مدیریت بیمه‌ها، اسناد و پیگیری مطالبات</value>
+  </data>
+  <data name="Insurance.Tab1" xml:space="preserve">
+    <value>شرکت‌های بیمه</value>
+  </data>
+  <data name="Insurance.Tab2" xml:space="preserve">
+    <value>اسناد ارسالی</value>
+  </data>
+  <data name="Insurance.Tab3" xml:space="preserve">
+    <value>پیری مطالبات</value>
+  </data>
+  <data name="Insurance.Tab4" xml:space="preserve">
+    <value>پیگیری</value>
+  </data>
+  <data name="Insurance.Title" xml:space="preserve">
+    <value>بیمه و مطالبات</value>
+  </data>
+  <data name="InvoiceForm.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="InvoiceForm.Act_Save" xml:space="preserve">
+    <value>صدور صورتحساب</value>
+  </data>
+  <data name="InvoiceForm.Act_SaveAndPay" xml:space="preserve">
+    <value>صدور و دریافت</value>
+  </data>
+  <data name="InvoiceForm.Fld_DiscountPercent" xml:space="preserve">
+    <value>درصد تخفیف</value>
+  </data>
+  <data name="InvoiceForm.Fld_DueDate" xml:space="preserve">
+    <value>سررسید</value>
+  </data>
+  <data name="InvoiceForm.Fld_InsuranceId" xml:space="preserve">
+    <value>بیمه</value>
+  </data>
+  <data name="InvoiceForm.Fld_InsuranceShare" xml:space="preserve">
+    <value>سهم بیمه</value>
+  </data>
+  <data name="InvoiceForm.Fld_IssueDate" xml:space="preserve">
+    <value>تاریخ صدور</value>
+  </data>
+  <data name="InvoiceForm.Fld_PatientId" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="InvoiceForm.Fld_PatientShare" xml:space="preserve">
+    <value>سهم بیمار</value>
+  </data>
+  <data name="InvoiceForm.Fld_Quantity" xml:space="preserve">
+    <value>تعداد</value>
+  </data>
+  <data name="InvoiceForm.Fld_ServiceId" xml:space="preserve">
+    <value>خدمت</value>
+  </data>
+  <data name="InvoiceForm.Fld_TaxAmount" xml:space="preserve">
+    <value>مالیات</value>
+  </data>
+  <data name="InvoiceForm.Fld_TotalAmount" xml:space="preserve">
+    <value>جمع کل</value>
+  </data>
+  <data name="InvoiceForm.Fld_UnitPrice" xml:space="preserve">
+    <value>قیمت واحد</value>
+  </data>
+  <data name="InvoiceForm.Fld_VisitId" xml:space="preserve">
+    <value>ویزیت</value>
+  </data>
+  <data name="InvoiceForm.Sec1" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="InvoiceForm.Sec2" xml:space="preserve">
+    <value>اقلام</value>
+  </data>
+  <data name="InvoiceForm.Sec3" xml:space="preserve">
+    <value>بیمه و جمع</value>
+  </data>
+  <data name="InvoiceForm.Subtitle" xml:space="preserve">
+    <value>ایجاد یا ویرایش صورتحساب</value>
+  </data>
+  <data name="InvoiceForm.Title" xml:space="preserve">
+    <value>فرم صورتحساب</value>
+  </data>
+  <data name="JournalEntryDetail.Act_Approve" xml:space="preserve">
+    <value>تأیید سند</value>
+  </data>
+  <data name="JournalEntryDetail.Act_Save" xml:space="preserve">
+    <value>ذخیره</value>
+  </data>
+  <data name="JournalEntryDetail.Col_AccountCode" xml:space="preserve">
+    <value>کد حساب</value>
+  </data>
+  <data name="JournalEntryDetail.Col_AccountName" xml:space="preserve">
+    <value>نام حساب</value>
+  </data>
+  <data name="JournalEntryDetail.Col_Credit" xml:space="preserve">
+    <value>بستانکار</value>
+  </data>
+  <data name="JournalEntryDetail.Col_Debit" xml:space="preserve">
+    <value>بدهکار</value>
+  </data>
+  <data name="JournalEntryDetail.Col_Description" xml:space="preserve">
+    <value>شرح</value>
+  </data>
+  <data name="JournalEntryDetail.Subtitle" xml:space="preserve">
+    <value>مشاهده و ویرایش ردیف‌های سند</value>
+  </data>
+  <data name="JournalEntryDetail.Title" xml:space="preserve">
+    <value>جزئیات سند حسابداری</value>
+  </data>
+  <data name="Lab.Act_EnterResult" xml:space="preserve">
+    <value>ثبت نتیجه</value>
+  </data>
+  <data name="Lab.Act_NewOrder" xml:space="preserve">
+    <value>+ درخواست جدید</value>
+  </data>
+  <data name="Lab.Act_PrintReport" xml:space="preserve">
+    <value>چاپ نتیجه</value>
+  </data>
+  <data name="Lab.Col_IsCritical" xml:space="preserve">
+    <value>بحرانی</value>
+  </data>
+  <data name="Lab.Col_LabNumber" xml:space="preserve">
+    <value>شماره</value>
+  </data>
+  <data name="Lab.Col_PatientName" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="Lab.Col_RequestDate" xml:space="preserve">
+    <value>تاریخ درخواست</value>
+  </data>
+  <data name="Lab.Col_ResultDate" xml:space="preserve">
+    <value>تاریخ پاسخ</value>
+  </data>
+  <data name="Lab.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Lab.Col_TestName" xml:space="preserve">
+    <value>آزمایش</value>
+  </data>
+  <data name="Lab.Filter_date" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="Lab.Filter_search" xml:space="preserve">
+    <value>جستجوی بیمار</value>
+  </data>
+  <data name="Lab.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Lab.Filter_testType" xml:space="preserve">
+    <value>نوع آزمایش</value>
+  </data>
+  <data name="Lab.Kpi1" xml:space="preserve">
+    <value>درخواست امروز</value>
+  </data>
+  <data name="Lab.Kpi2" xml:space="preserve">
+    <value>در انتظار</value>
+  </data>
+  <data name="Lab.Kpi3" xml:space="preserve">
+    <value>مقادیر بحرانی</value>
+  </data>
+  <data name="Lab.Kpi4" xml:space="preserve">
+    <value>نتایج آماده</value>
+  </data>
+  <data name="Lab.Notes" xml:space="preserve">
+    <value>مقادیر بحرانی با رنگ قرمز و هشدار فوری به پزشک نمایش داده می‌شوند.</value>
+  </data>
+  <data name="Lab.Subtitle" xml:space="preserve">
+    <value>مدیریت درخواست‌ها و نتایج آزمایش</value>
+  </data>
+  <data name="Lab.Title" xml:space="preserve">
+    <value>آزمایشگاه</value>
+  </data>
+  <data name="LabOrderForm.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="LabOrderForm.Act_Save" xml:space="preserve">
+    <value>ثبت درخواست</value>
+  </data>
+  <data name="LabOrderForm.Act_SaveAndPrint" xml:space="preserve">
+    <value>ثبت و چاپ برچسب</value>
+  </data>
+  <data name="LabOrderForm.Fld_ClinicalNotes" xml:space="preserve">
+    <value>توضیحات بالینی</value>
+  </data>
+  <data name="LabOrderForm.Fld_CollectionDate" xml:space="preserve">
+    <value>تاریخ نمونه‌گیری</value>
+  </data>
+  <data name="LabOrderForm.Fld_FastingRequired" xml:space="preserve">
+    <value>نیاز به ناشتایی</value>
+  </data>
+  <data name="LabOrderForm.Fld_PatientId" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="LabOrderForm.Fld_Priority" xml:space="preserve">
+    <value>اولویت</value>
+  </data>
+  <data name="LabOrderForm.Fld_RequestingDoctorId" xml:space="preserve">
+    <value>پزشک درخواست‌کننده</value>
+  </data>
+  <data name="LabOrderForm.Fld_SampleType" xml:space="preserve">
+    <value>نوع نمونه</value>
+  </data>
+  <data name="LabOrderForm.Fld_TestIds" xml:space="preserve">
+    <value>آزمایش‌های درخواستی</value>
+  </data>
+  <data name="LabOrderForm.Fld_VisitId" xml:space="preserve">
+    <value>ویزیت مرتبط</value>
+  </data>
+  <data name="LabOrderForm.Sec1" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="LabOrderForm.Sec2" xml:space="preserve">
+    <value>آزمایش‌ها</value>
+  </data>
+  <data name="LabOrderForm.Sec3" xml:space="preserve">
+    <value>نمونه و توضیحات</value>
+  </data>
+  <data name="LabOrderForm.Subtitle" xml:space="preserve">
+    <value>ثبت درخواست آزمایش برای بیمار</value>
+  </data>
+  <data name="LabOrderForm.Title" xml:space="preserve">
+    <value>درخواست آزمایش</value>
+  </data>
+  <data name="LabResult.Act_Approve" xml:space="preserve">
+    <value>تأیید نهایی</value>
+  </data>
+  <data name="LabResult.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="LabResult.Act_Save" xml:space="preserve">
+    <value>ذخیره</value>
+  </data>
+  <data name="LabResult.Fld_IsAbnormal" xml:space="preserve">
+    <value>غیرطبیعی</value>
+  </data>
+  <data name="LabResult.Fld_IsCritical" xml:space="preserve">
+    <value>مقدار بحرانی</value>
+  </data>
+  <data name="LabResult.Fld_ReferenceRange" xml:space="preserve">
+    <value>محدوده مرجع</value>
+  </data>
+  <data name="LabResult.Fld_ResultValue" xml:space="preserve">
+    <value>مقدار نتیجه</value>
+  </data>
+  <data name="LabResult.Fld_TechnicianNote" xml:space="preserve">
+    <value>یادداشت تکنسین</value>
+  </data>
+  <data name="LabResult.Fld_TestName" xml:space="preserve">
+    <value>آزمایش</value>
+  </data>
+  <data name="LabResult.Fld_Unit" xml:space="preserve">
+    <value>واحد</value>
+  </data>
+  <data name="LabResult.Sec1" xml:space="preserve">
+    <value>نتایج</value>
+  </data>
+  <data name="LabResult.Subtitle" xml:space="preserve">
+    <value>ورود و تأیید نتایج آزمایش</value>
+  </data>
+  <data name="LabResult.Title" xml:space="preserve">
+    <value>ثبت نتیجه آزمایش</value>
+  </data>
+  <data name="LicenseActivation.Act_Activate" xml:space="preserve">
+    <value>فعال‌سازی</value>
+  </data>
+  <data name="LicenseActivation.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="LicenseActivation.Fld_CustomerName" xml:space="preserve">
+    <value>نام مشتری</value>
+  </data>
+  <data name="LicenseActivation.Fld_Email" xml:space="preserve">
+    <value>ایمیل</value>
+  </data>
+  <data name="LicenseActivation.Fld_LicenseKey" xml:space="preserve">
+    <value>کلید لایسنس</value>
+  </data>
+  <data name="LicenseActivation.Sec1" xml:space="preserve">
+    <value>فعال‌سازی</value>
+  </data>
+  <data name="LicenseActivation.Subtitle" xml:space="preserve">
+    <value>وارد کردن کلید لایسنس</value>
+  </data>
+  <data name="LicenseActivation.Title" xml:space="preserve">
+    <value>فعال‌سازی لایسنس</value>
+  </data>
+  <data name="LicenseStatus.Act_Activate" xml:space="preserve">
+    <value>فعال‌سازی</value>
+  </data>
+  <data name="LicenseStatus.Act_Refresh" xml:space="preserve">
+    <value>به‌روزرسانی</value>
+  </data>
+  <data name="LicenseStatus.Kpi1" xml:space="preserve">
+    <value>نوع لایسنس</value>
+  </data>
+  <data name="LicenseStatus.Kpi2" xml:space="preserve">
+    <value>تاریخ انقضا</value>
+  </data>
+  <data name="LicenseStatus.Kpi3" xml:space="preserve">
+    <value>روزهای باقی‌مانده</value>
+  </data>
+  <data name="LicenseStatus.Kpi4" xml:space="preserve">
+    <value>ماژول‌های فعال</value>
+  </data>
+  <data name="LicenseStatus.Subtitle" xml:space="preserve">
+    <value>نمایش وضعیت مجوز و ماژول‌های فعال</value>
+  </data>
+  <data name="LicenseStatus.Tab1" xml:space="preserve">
+    <value>خلاصه</value>
+  </data>
+  <data name="LicenseStatus.Tab2" xml:space="preserve">
+    <value>ماژول‌ها</value>
+  </data>
+  <data name="LicenseStatus.Tab3" xml:space="preserve">
+    <value>تاریخچه</value>
+  </data>
+  <data name="LicenseStatus.Title" xml:space="preserve">
+    <value>وضعیت لایسنس</value>
+  </data>
+  <data name="Login.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="Login.Act_Login" xml:space="preserve">
+    <value>ورود</value>
+  </data>
+  <data name="Login.Fld_Password" xml:space="preserve">
+    <value>رمز عبور</value>
+  </data>
+  <data name="Login.Fld_RememberMe" xml:space="preserve">
+    <value>مرا به خاطر بسپار</value>
+  </data>
+  <data name="Login.Fld_UserName" xml:space="preserve">
+    <value>نام کاربری</value>
+  </data>
+  <data name="Login.Sec1" xml:space="preserve">
+    <value>ورود</value>
+  </data>
+  <data name="Login.Subtitle" xml:space="preserve">
+    <value>احراز هویت کاربر</value>
+  </data>
+  <data name="Login.Title" xml:space="preserve">
+    <value>ورود به برنامه</value>
+  </data>
+  <data name="Main.Notes" xml:space="preserve">
+    <value>شامل نوار کناری (Rail)، نوار بالا با جستجوی یکپارچه، اعلان‌ها و انتخاب‌گر تم و زبان.</value>
+  </data>
+  <data name="Main.Subtitle" xml:space="preserve">
+    <value>قاب اصلی برنامه شامل ناوبری و ناحیه‌ی محتوا</value>
+  </data>
+  <data name="Main.Title" xml:space="preserve">
+    <value>پنجره‌ی اصلی</value>
+  </data>
+  <data name="Notifications.Act_MarkAllRead" xml:space="preserve">
+    <value>خواندن همه</value>
+  </data>
+  <data name="Notifications.Act_Refresh" xml:space="preserve">
+    <value>تازه‌سازی</value>
+  </data>
+  <data name="Notifications.Col_Body" xml:space="preserve">
+    <value>متن</value>
+  </data>
+  <data name="Notifications.Col_CreatedAt" xml:space="preserve">
+    <value>زمان</value>
+  </data>
+  <data name="Notifications.Col_Icon" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Notifications.Col_Priority" xml:space="preserve">
+    <value>اولویت</value>
+  </data>
+  <data name="Notifications.Col_Title" xml:space="preserve">
+    <value>عنوان</value>
+  </data>
+  <data name="Notifications.Filter_read" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Notifications.Filter_search" xml:space="preserve">
+    <value>جستجو</value>
+  </data>
+  <data name="Notifications.Filter_type" xml:space="preserve">
+    <value>نوع</value>
+  </data>
+  <data name="Notifications.Subtitle" xml:space="preserve">
+    <value>مرکز اعلان‌های سیستم</value>
+  </data>
+  <data name="Notifications.Title" xml:space="preserve">
+    <value>اعلان‌ها</value>
+  </data>
+  <data name="Ophthalmology.Act_Save" xml:space="preserve">
+    <value>ذخیره</value>
+  </data>
+  <data name="Ophthalmology.Fld_LeftEyePressure" xml:space="preserve">
+    <value>فشار چشم چپ</value>
+  </data>
+  <data name="Ophthalmology.Fld_LeftEyeVision" xml:space="preserve">
+    <value>دید چشم چپ</value>
+  </data>
+  <data name="Ophthalmology.Fld_Notes" xml:space="preserve">
+    <value>یادداشت</value>
+  </data>
+  <data name="Ophthalmology.Fld_RightEyePressure" xml:space="preserve">
+    <value>فشار چشم راست</value>
+  </data>
+  <data name="Ophthalmology.Fld_RightEyeVision" xml:space="preserve">
+    <value>دید چشم راست</value>
+  </data>
+  <data name="Ophthalmology.Sec1" xml:space="preserve">
+    <value>معاینه</value>
+  </data>
+  <data name="Ophthalmology.Subtitle" xml:space="preserve">
+    <value>معاینات و اندازه‌گیری‌های چشمی</value>
+  </data>
+  <data name="Ophthalmology.Title" xml:space="preserve">
+    <value>چشم‌پزشکی</value>
+  </data>
+  <data name="PatientDetail.Act_Edit" xml:space="preserve">
+    <value>ویرایش</value>
+  </data>
+  <data name="PatientDetail.Act_NewVisit" xml:space="preserve">
+    <value>ویزیت جدید</value>
+  </data>
+  <data name="PatientDetail.Act_PrintRecord" xml:space="preserve">
+    <value>چاپ پرونده</value>
+  </data>
+  <data name="PatientDetail.Kpi1" xml:space="preserve">
+    <value>تعداد ویزیت</value>
+  </data>
+  <data name="PatientDetail.Kpi2" xml:space="preserve">
+    <value>نسخه‌ها</value>
+  </data>
+  <data name="PatientDetail.Kpi3" xml:space="preserve">
+    <value>آزمایش‌ها</value>
+  </data>
+  <data name="PatientDetail.Kpi4" xml:space="preserve">
+    <value>مجموع پرداخت</value>
+  </data>
+  <data name="PatientDetail.Subtitle" xml:space="preserve">
+    <value>نمای جامع پرونده‌ی بالینی بیمار</value>
+  </data>
+  <data name="PatientDetail.Tab1" xml:space="preserve">
+    <value>خلاصه</value>
+  </data>
+  <data name="PatientDetail.Tab2" xml:space="preserve">
+    <value>ویزیت‌ها</value>
+  </data>
+  <data name="PatientDetail.Tab3" xml:space="preserve">
+    <value>نسخه‌ها</value>
+  </data>
+  <data name="PatientDetail.Tab4" xml:space="preserve">
+    <value>آزمایش‌ها</value>
+  </data>
+  <data name="PatientDetail.Tab5" xml:space="preserve">
+    <value>تصویربرداری</value>
+  </data>
+  <data name="PatientDetail.Tab6" xml:space="preserve">
+    <value>مالی</value>
+  </data>
+  <data name="PatientDetail.Tab7" xml:space="preserve">
+    <value>مستندات</value>
+  </data>
+  <data name="PatientDetail.Tab8" xml:space="preserve">
+    <value>زمان‌خط</value>
+  </data>
+  <data name="PatientDetail.Title" xml:space="preserve">
+    <value>پرونده‌ی بیمار</value>
+  </data>
+  <data name="PatientForm.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="PatientForm.Act_Save" xml:space="preserve">
+    <value>ذخیره</value>
+  </data>
+  <data name="PatientForm.Act_SaveAndNew" xml:space="preserve">
+    <value>ذخیره و جدید</value>
+  </data>
+  <data name="PatientForm.Fld_Address" xml:space="preserve">
+    <value>نشانی</value>
+  </data>
+  <data name="PatientForm.Fld_Allergies" xml:space="preserve">
+    <value>حساسیت‌ها</value>
+  </data>
+  <data name="PatientForm.Fld_BirthDate" xml:space="preserve">
+    <value>تاریخ تولد</value>
+  </data>
+  <data name="PatientForm.Fld_BloodType" xml:space="preserve">
+    <value>گروه خون</value>
+  </data>
+  <data name="PatientForm.Fld_ChronicConditions" xml:space="preserve">
+    <value>بیماری‌های زمینه‌ای</value>
+  </data>
+  <data name="PatientForm.Fld_City" xml:space="preserve">
+    <value>شهر</value>
+  </data>
+  <data name="PatientForm.Fld_Email" xml:space="preserve">
+    <value>ایمیل</value>
+  </data>
+  <data name="PatientForm.Fld_EmergencyContactName" xml:space="preserve">
+    <value>نام فرد</value>
+  </data>
+  <data name="PatientForm.Fld_EmergencyContactPhone" xml:space="preserve">
+    <value>شماره تماس</value>
+  </data>
+  <data name="PatientForm.Fld_EmergencyRelation" xml:space="preserve">
+    <value>نسبت</value>
+  </data>
+  <data name="PatientForm.Fld_FirstName" xml:space="preserve">
+    <value>نام</value>
+  </data>
+  <data name="PatientForm.Fld_Gender" xml:space="preserve">
+    <value>جنسیت</value>
+  </data>
+  <data name="PatientForm.Fld_InsuranceId" xml:space="preserve">
+    <value>بیمه</value>
+  </data>
+  <data name="PatientForm.Fld_InsuranceNumber" xml:space="preserve">
+    <value>شماره بیمه</value>
+  </data>
+  <data name="PatientForm.Fld_LastName" xml:space="preserve">
+    <value>نام خانوادگی</value>
+  </data>
+  <data name="PatientForm.Fld_MaritalStatus" xml:space="preserve">
+    <value>وضعیت تأهل</value>
+  </data>
+  <data name="PatientForm.Fld_MobileNumber" xml:space="preserve">
+    <value>موبایل</value>
+  </data>
+  <data name="PatientForm.Fld_NationalCode" xml:space="preserve">
+    <value>کد ملی</value>
+  </data>
+  <data name="PatientForm.Fld_PhoneNumber" xml:space="preserve">
+    <value>تلفن ثابت</value>
+  </data>
+  <data name="PatientForm.Fld_ReferredBy" xml:space="preserve">
+    <value>معرف</value>
+  </data>
+  <data name="PatientForm.Sec1" xml:space="preserve">
+    <value>اطلاعات شناسایی</value>
+  </data>
+  <data name="PatientForm.Sec2" xml:space="preserve">
+    <value>اطلاعات تماس</value>
+  </data>
+  <data name="PatientForm.Sec3" xml:space="preserve">
+    <value>اطلاعات تکمیلی</value>
+  </data>
+  <data name="PatientForm.Sec4" xml:space="preserve">
+    <value>تماس اضطراری</value>
+  </data>
+  <data name="PatientForm.Subtitle" xml:space="preserve">
+    <value>ایجاد یا ویرایش پرونده‌ی بیمار</value>
+  </data>
+  <data name="PatientForm.Title" xml:space="preserve">
+    <value>فرم بیمار</value>
+  </data>
+  <data name="Patients.Act_Export" xml:space="preserve">
+    <value>خروجی Excel</value>
+  </data>
+  <data name="Patients.Act_New" xml:space="preserve">
+    <value>+ بیمار جدید</value>
+  </data>
+  <data name="Patients.Act_Print" xml:space="preserve">
+    <value>چاپ کارت</value>
+  </data>
+  <data name="Patients.Col_Age" xml:space="preserve">
+    <value>سن</value>
+  </data>
+  <data name="Patients.Col_Balance" xml:space="preserve">
+    <value>مانده</value>
+  </data>
+  <data name="Patients.Col_Code" xml:space="preserve">
+    <value>کد</value>
+  </data>
+  <data name="Patients.Col_FullName" xml:space="preserve">
+    <value>نام بیمار</value>
+  </data>
+  <data name="Patients.Col_Gender" xml:space="preserve">
+    <value>جنسیت</value>
+  </data>
+  <data name="Patients.Col_LastVisitDate" xml:space="preserve">
+    <value>آخرین ویزیت</value>
+  </data>
+  <data name="Patients.Col_MobileNumber" xml:space="preserve">
+    <value>موبایل</value>
+  </data>
+  <data name="Patients.Col_NationalCode" xml:space="preserve">
+    <value>کد ملی</value>
+  </data>
+  <data name="Patients.Filter_branch" xml:space="preserve">
+    <value>شعبه</value>
+  </data>
+  <data name="Patients.Filter_fromDate" xml:space="preserve">
+    <value>از تاریخ</value>
+  </data>
+  <data name="Patients.Filter_gender" xml:space="preserve">
+    <value>جنسیت</value>
+  </data>
+  <data name="Patients.Filter_search" xml:space="preserve">
+    <value>جستجوی نام/کد ملی/موبایل</value>
+  </data>
+  <data name="Patients.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Patients.Kpi1" xml:space="preserve">
+    <value>کل بیماران</value>
+  </data>
+  <data name="Patients.Kpi2" xml:space="preserve">
+    <value>جدید این ماه</value>
+  </data>
+  <data name="Patients.Kpi3" xml:space="preserve">
+    <value>فعال</value>
+  </data>
+  <data name="Patients.Notes" xml:space="preserve">
+    <value>جستجو با تأخیر ۳۵۰ میلی‌ثانیه انجام می‌شود و امکان فیلتر پیشرفته هم وجود دارد.</value>
+  </data>
+  <data name="Patients.Subtitle" xml:space="preserve">
+    <value>مدیریت پرونده‌ها و جستجوی بیماران</value>
+  </data>
+  <data name="Patients.Title" xml:space="preserve">
+    <value>بیماران</value>
+  </data>
+  <data name="Payment.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="Payment.Act_Confirm" xml:space="preserve">
+    <value>تأیید</value>
+  </data>
+  <data name="Payment.Fld_Amount" xml:space="preserve">
+    <value>مبلغ</value>
+  </data>
+  <data name="Payment.Fld_Description" xml:space="preserve">
+    <value>توضیحات</value>
+  </data>
+  <data name="Payment.Fld_PaymentMethod" xml:space="preserve">
+    <value>روش پرداخت</value>
+  </data>
+  <data name="Payment.Sec1" xml:space="preserve">
+    <value>پرداخت</value>
+  </data>
+  <data name="Payment.Subtitle" xml:space="preserve">
+    <value>دریافت وجه عمومی</value>
+  </data>
+  <data name="Payment.Title" xml:space="preserve">
+    <value>پرداخت</value>
+  </data>
+  <data name="Payroll.Act_Approve" xml:space="preserve">
+    <value>تأیید نهایی</value>
+  </data>
+  <data name="Payroll.Act_Calculate" xml:space="preserve">
+    <value>محاسبه حقوق</value>
+  </data>
+  <data name="Payroll.Act_PrintPayslips" xml:space="preserve">
+    <value>چاپ فیش‌ها</value>
+  </data>
+  <data name="Payroll.Col_BaseSalary" xml:space="preserve">
+    <value>حقوق پایه</value>
+  </data>
+  <data name="Payroll.Col_Deductions" xml:space="preserve">
+    <value>کسورات</value>
+  </data>
+  <data name="Payroll.Col_EmployeeCode" xml:space="preserve">
+    <value>کد</value>
+  </data>
+  <data name="Payroll.Col_EmployeeName" xml:space="preserve">
+    <value>نام کارمند</value>
+  </data>
+  <data name="Payroll.Col_NetSalary" xml:space="preserve">
+    <value>خالص پرداختی</value>
+  </data>
+  <data name="Payroll.Col_Overtime" xml:space="preserve">
+    <value>اضافه‌کاری</value>
+  </data>
+  <data name="Payroll.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Payroll.Filter_department" xml:space="preserve">
+    <value>بخش</value>
+  </data>
+  <data name="Payroll.Filter_period" xml:space="preserve">
+    <value>دوره</value>
+  </data>
+  <data name="Payroll.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Payroll.Kpi1" xml:space="preserve">
+    <value>تعداد پرسنل</value>
+  </data>
+  <data name="Payroll.Kpi2" xml:space="preserve">
+    <value>جمع حقوق</value>
+  </data>
+  <data name="Payroll.Kpi3" xml:space="preserve">
+    <value>تأیید شده</value>
+  </data>
+  <data name="Payroll.Subtitle" xml:space="preserve">
+    <value>محاسبه و مدیریت حقوق پرسنل</value>
+  </data>
+  <data name="Payroll.Title" xml:space="preserve">
+    <value>حقوق و دستمزد</value>
+  </data>
+  <data name="Payslip.Act_Close" xml:space="preserve">
+    <value>بستن</value>
+  </data>
+  <data name="Payslip.Act_ExportPdf" xml:space="preserve">
+    <value>خروجی PDF</value>
+  </data>
+  <data name="Payslip.Act_Print" xml:space="preserve">
+    <value>چاپ فیش</value>
+  </data>
+  <data name="Payslip.Subtitle" xml:space="preserve">
+    <value>مشاهده و چاپ فیش حقوقی</value>
+  </data>
+  <data name="Payslip.Title" xml:space="preserve">
+    <value>فیش حقوقی</value>
+  </data>
+  <data name="Personnel.Act_Contract" xml:space="preserve">
+    <value>قرارداد</value>
+  </data>
+  <data name="Personnel.Act_Edit" xml:space="preserve">
+    <value>ویرایش</value>
+  </data>
+  <data name="Personnel.Act_New" xml:space="preserve">
+    <value>+ کارمند جدید</value>
+  </data>
+  <data name="Personnel.Col_Department" xml:space="preserve">
+    <value>بخش</value>
+  </data>
+  <data name="Personnel.Col_EmployeeCode" xml:space="preserve">
+    <value>کد</value>
+  </data>
+  <data name="Personnel.Col_FullName" xml:space="preserve">
+    <value>نام</value>
+  </data>
+  <data name="Personnel.Col_HireDate" xml:space="preserve">
+    <value>تاریخ استخدام</value>
+  </data>
+  <data name="Personnel.Col_Position" xml:space="preserve">
+    <value>سمت</value>
+  </data>
+  <data name="Personnel.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Personnel.Filter_department" xml:space="preserve">
+    <value>بخش</value>
+  </data>
+  <data name="Personnel.Filter_position" xml:space="preserve">
+    <value>سمت</value>
+  </data>
+  <data name="Personnel.Filter_search" xml:space="preserve">
+    <value>جستجو</value>
+  </data>
+  <data name="Personnel.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Personnel.Kpi1" xml:space="preserve">
+    <value>تعداد پرسنل</value>
+  </data>
+  <data name="Personnel.Kpi2" xml:space="preserve">
+    <value>فعال</value>
+  </data>
+  <data name="Personnel.Kpi3" xml:space="preserve">
+    <value>قراردادهای رو به اتمام</value>
+  </data>
+  <data name="Personnel.Subtitle" xml:space="preserve">
+    <value>مدیریت کارکنان و قراردادها</value>
+  </data>
+  <data name="Personnel.Title" xml:space="preserve">
+    <value>پرسنل</value>
+  </data>
+  <data name="Pharmacy.Act_Export" xml:space="preserve">
+    <value>خروجی Excel</value>
+  </data>
+  <data name="Pharmacy.Act_NewItem" xml:space="preserve">
+    <value>+ قلم جدید</value>
+  </data>
+  <data name="Pharmacy.Act_StockIn" xml:space="preserve">
+    <value>ورود کالا</value>
+  </data>
+  <data name="Pharmacy.Act_Stocktaking" xml:space="preserve">
+    <value>انبارگردانی</value>
+  </data>
+  <data name="Pharmacy.Col_Category" xml:space="preserve">
+    <value>دسته</value>
+  </data>
+  <data name="Pharmacy.Col_CurrentStock" xml:space="preserve">
+    <value>موجودی</value>
+  </data>
+  <data name="Pharmacy.Col_DrugCode" xml:space="preserve">
+    <value>کد</value>
+  </data>
+  <data name="Pharmacy.Col_DrugName" xml:space="preserve">
+    <value>نام دارو</value>
+  </data>
+  <data name="Pharmacy.Col_ExpiryDate" xml:space="preserve">
+    <value>تاریخ انقضا</value>
+  </data>
+  <data name="Pharmacy.Col_GenericName" xml:space="preserve">
+    <value>نام ژنریک</value>
+  </data>
+  <data name="Pharmacy.Col_ReorderPoint" xml:space="preserve">
+    <value>نقطه سفارش</value>
+  </data>
+  <data name="Pharmacy.Col_UnitPrice" xml:space="preserve">
+    <value>قیمت واحد</value>
+  </data>
+  <data name="Pharmacy.Filter_category" xml:space="preserve">
+    <value>دسته</value>
+  </data>
+  <data name="Pharmacy.Filter_expiry" xml:space="preserve">
+    <value>انقضا</value>
+  </data>
+  <data name="Pharmacy.Filter_search" xml:space="preserve">
+    <value>جستجوی دارو</value>
+  </data>
+  <data name="Pharmacy.Filter_stockStatus" xml:space="preserve">
+    <value>وضعیت موجودی</value>
+  </data>
+  <data name="Pharmacy.Kpi1" xml:space="preserve">
+    <value>تعداد اقلام</value>
+  </data>
+  <data name="Pharmacy.Kpi2" xml:space="preserve">
+    <value>رو به اتمام</value>
+  </data>
+  <data name="Pharmacy.Kpi3" xml:space="preserve">
+    <value>نزدیک انقضا</value>
+  </data>
+  <data name="Pharmacy.Kpi4" xml:space="preserve">
+    <value>ارزش موجودی</value>
+  </data>
+  <data name="Pharmacy.Notes" xml:space="preserve">
+    <value>سطرهای دارای موجودیِ کمتر از نقطه‌ی سفارش با رنگ هشدار و انقضای نزدیک با رنگ قرمز نمایش داده می‌شوند.</value>
+  </data>
+  <data name="Pharmacy.Subtitle" xml:space="preserve">
+    <value>موجودی داروها و اقلام دارویی</value>
+  </data>
+  <data name="Pharmacy.Title" xml:space="preserve">
+    <value>داروخانه</value>
+  </data>
+  <data name="PharmacyItemForm.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="PharmacyItemForm.Act_Save" xml:space="preserve">
+    <value>ذخیره</value>
+  </data>
+  <data name="PharmacyItemForm.Act_SaveAndNew" xml:space="preserve">
+    <value>ذخیره و جدید</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_Barcode" xml:space="preserve">
+    <value>بارکد</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_Category" xml:space="preserve">
+    <value>دسته‌بندی</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_CurrentStock" xml:space="preserve">
+    <value>موجودی فعلی</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_DosageForm" xml:space="preserve">
+    <value>شکل دارویی</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_DrugCode" xml:space="preserve">
+    <value>کد دارو</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_DrugName" xml:space="preserve">
+    <value>نام دارو</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_ExpiryDate" xml:space="preserve">
+    <value>تاریخ انقضا</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_GenericName" xml:space="preserve">
+    <value>نام ژنریک</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_IsActive" xml:space="preserve">
+    <value>فعال</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_LastPurchasePrice" xml:space="preserve">
+    <value>آخرین قیمت خرید</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_MaxStock" xml:space="preserve">
+    <value>حداکثر موجودی</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_ReorderPoint" xml:space="preserve">
+    <value>نقطه سفارش</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_StorageConditions" xml:space="preserve">
+    <value>شرایط نگهداری</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_Strength" xml:space="preserve">
+    <value>دوز/قدرت</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_SupplierId" xml:space="preserve">
+    <value>تأمین‌کننده</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_Unit" xml:space="preserve">
+    <value>واحد</value>
+  </data>
+  <data name="PharmacyItemForm.Fld_UnitPrice" xml:space="preserve">
+    <value>قیمت واحد</value>
+  </data>
+  <data name="PharmacyItemForm.Sec1" xml:space="preserve">
+    <value>اطلاعات پایه</value>
+  </data>
+  <data name="PharmacyItemForm.Sec2" xml:space="preserve">
+    <value>موجودی و قیمت</value>
+  </data>
+  <data name="PharmacyItemForm.Sec3" xml:space="preserve">
+    <value>انقضا و تأمین</value>
+  </data>
+  <data name="PharmacyItemForm.Subtitle" xml:space="preserve">
+    <value>ایجاد یا ویرایش قلم دارویی</value>
+  </data>
+  <data name="PharmacyItemForm.Title" xml:space="preserve">
+    <value>فرم قلم دارویی</value>
+  </data>
+  <data name="PhotoViewer.Act_Close" xml:space="preserve">
+    <value>بستن</value>
+  </data>
+  <data name="PhotoViewer.Act_ZoomIn" xml:space="preserve">
+    <value>بزرگ‌نمایی</value>
+  </data>
+  <data name="PhotoViewer.Act_ZoomOut" xml:space="preserve">
+    <value>کوچک‌نمایی</value>
+  </data>
+  <data name="PhotoViewer.Subtitle" xml:space="preserve">
+    <value>مشاهده‌ی تصویر بیمار یا مدرک</value>
+  </data>
+  <data name="PhotoViewer.Title" xml:space="preserve">
+    <value>نمایش تصویر</value>
+  </data>
+  <data name="Physiotherapy.Act_NewSession" xml:space="preserve">
+    <value>جلسه جدید</value>
+  </data>
+  <data name="Physiotherapy.Col_Date" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="Physiotherapy.Col_Duration" xml:space="preserve">
+    <value>مدت</value>
+  </data>
+  <data name="Physiotherapy.Col_Exercises" xml:space="preserve">
+    <value>تمرینات</value>
+  </data>
+  <data name="Physiotherapy.Col_SessionNumber" xml:space="preserve">
+    <value>جلسه</value>
+  </data>
+  <data name="Physiotherapy.Kpi1" xml:space="preserve">
+    <value>جلسات انجام‌شده</value>
+  </data>
+  <data name="Physiotherapy.Kpi2" xml:space="preserve">
+    <value>جلسات باقی‌مانده</value>
+  </data>
+  <data name="Physiotherapy.Subtitle" xml:space="preserve">
+    <value>برنامه‌ی تمرینات و جلسات فیزیوتراپی</value>
+  </data>
+  <data name="Physiotherapy.Title" xml:space="preserve">
+    <value>فیزیوتراپی</value>
+  </data>
+  <data name="PrescriptionDetail.Act_Close" xml:space="preserve">
+    <value>بستن</value>
+  </data>
+  <data name="PrescriptionDetail.Act_Edit" xml:space="preserve">
+    <value>ویرایش</value>
+  </data>
+  <data name="PrescriptionDetail.Act_Print" xml:space="preserve">
+    <value>چاپ نسخه</value>
+  </data>
+  <data name="PrescriptionDetail.Subtitle" xml:space="preserve">
+    <value>مشاهده‌ی جزئیات و چاپ نسخه</value>
+  </data>
+  <data name="PrescriptionDetail.Title" xml:space="preserve">
+    <value>جزئیات نسخه</value>
+  </data>
+  <data name="PrescriptionForm.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="PrescriptionForm.Act_Save" xml:space="preserve">
+    <value>صدور نسخه</value>
+  </data>
+  <data name="PrescriptionForm.Act_SaveAndPrint" xml:space="preserve">
+    <value>صدور و چاپ</value>
+  </data>
+  <data name="PrescriptionForm.Fld_AllergyWarnings" xml:space="preserve">
+    <value>هشدار حساسیت</value>
+  </data>
+  <data name="PrescriptionForm.Fld_Diagnosis" xml:space="preserve">
+    <value>تشخیص</value>
+  </data>
+  <data name="PrescriptionForm.Fld_Dosage" xml:space="preserve">
+    <value>دوز</value>
+  </data>
+  <data name="PrescriptionForm.Fld_DrugId" xml:space="preserve">
+    <value>دارو</value>
+  </data>
+  <data name="PrescriptionForm.Fld_DurationDays" xml:space="preserve">
+    <value>تعداد روز</value>
+  </data>
+  <data name="PrescriptionForm.Fld_Frequency" xml:space="preserve">
+    <value>دفعات مصرف</value>
+  </data>
+  <data name="PrescriptionForm.Fld_Instructions" xml:space="preserve">
+    <value>دستور مصرف</value>
+  </data>
+  <data name="PrescriptionForm.Fld_InteractionWarnings" xml:space="preserve">
+    <value>هشدار تداخل</value>
+  </data>
+  <data name="PrescriptionForm.Fld_OverrideReason" xml:space="preserve">
+    <value>علت نادیده‌گرفتن هشدار</value>
+  </data>
+  <data name="PrescriptionForm.Fld_PatientId" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="PrescriptionForm.Fld_Quantity" xml:space="preserve">
+    <value>تعداد</value>
+  </data>
+  <data name="PrescriptionForm.Fld_VisitId" xml:space="preserve">
+    <value>ویزیت مرتبط</value>
+  </data>
+  <data name="PrescriptionForm.Notes" xml:space="preserve">
+    <value>هشدار تداخل داروییِ بحرانی به‌صورت دیالوگِ مسدودکننده نمایش داده می‌شود.</value>
+  </data>
+  <data name="PrescriptionForm.Sec1" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="PrescriptionForm.Sec2" xml:space="preserve">
+    <value>اقلام نسخه</value>
+  </data>
+  <data name="PrescriptionForm.Sec3" xml:space="preserve">
+    <value>بررسی ایمنی</value>
+  </data>
+  <data name="PrescriptionForm.Subtitle" xml:space="preserve">
+    <value>صدور نسخه با بررسی تداخل دارویی</value>
+  </data>
+  <data name="PrescriptionForm.Title" xml:space="preserve">
+    <value>فرم نسخه</value>
+  </data>
+  <data name="Prescriptions.Act_New" xml:space="preserve">
+    <value>+ نسخه جدید</value>
+  </data>
+  <data name="Prescriptions.Act_Print" xml:space="preserve">
+    <value>چاپ</value>
+  </data>
+  <data name="Prescriptions.Act_SendEPrescription" xml:space="preserve">
+    <value>ارسال به نسخه الکترونیک</value>
+  </data>
+  <data name="Prescriptions.Col_DoctorName" xml:space="preserve">
+    <value>پزشک</value>
+  </data>
+  <data name="Prescriptions.Col_DrugCount" xml:space="preserve">
+    <value>تعداد دارو</value>
+  </data>
+  <data name="Prescriptions.Col_IssueDate" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="Prescriptions.Col_PatientName" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="Prescriptions.Col_PrescriptionNumber" xml:space="preserve">
+    <value>شماره</value>
+  </data>
+  <data name="Prescriptions.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Prescriptions.Filter_date" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="Prescriptions.Filter_doctor" xml:space="preserve">
+    <value>پزشک</value>
+  </data>
+  <data name="Prescriptions.Filter_search" xml:space="preserve">
+    <value>جستجوی بیمار</value>
+  </data>
+  <data name="Prescriptions.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Prescriptions.Subtitle" xml:space="preserve">
+    <value>فهرست نسخه‌های صادرشده</value>
+  </data>
+  <data name="Prescriptions.Title" xml:space="preserve">
+    <value>نسخه‌ها</value>
+  </data>
+  <data name="ReceptionForm.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="ReceptionForm.Act_Save" xml:space="preserve">
+    <value>ثبت پذیرش</value>
+  </data>
+  <data name="ReceptionForm.Act_SaveAndPay" xml:space="preserve">
+    <value>ثبت و دریافت</value>
+  </data>
+  <data name="ReceptionForm.Fld_AdditionalServices" xml:space="preserve">
+    <value>خدمات تکمیلی</value>
+  </data>
+  <data name="ReceptionForm.Fld_DiscountAmount" xml:space="preserve">
+    <value>تخفیف</value>
+  </data>
+  <data name="ReceptionForm.Fld_DoctorId" xml:space="preserve">
+    <value>پزشک</value>
+  </data>
+  <data name="ReceptionForm.Fld_InsuranceId" xml:space="preserve">
+    <value>بیمه</value>
+  </data>
+  <data name="ReceptionForm.Fld_InsuranceShare" xml:space="preserve">
+    <value>سهم بیمه</value>
+  </data>
+  <data name="ReceptionForm.Fld_PatientId" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="ReceptionForm.Fld_PatientShare" xml:space="preserve">
+    <value>سهم بیمار</value>
+  </data>
+  <data name="ReceptionForm.Fld_ReferralNumber" xml:space="preserve">
+    <value>شماره ارجاع</value>
+  </data>
+  <data name="ReceptionForm.Fld_ServiceId" xml:space="preserve">
+    <value>خدمت اصلی</value>
+  </data>
+  <data name="ReceptionForm.Fld_TotalAmount" xml:space="preserve">
+    <value>مبلغ کل</value>
+  </data>
+  <data name="ReceptionForm.Sec1" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="ReceptionForm.Sec2" xml:space="preserve">
+    <value>خدمات</value>
+  </data>
+  <data name="ReceptionForm.Sec3" xml:space="preserve">
+    <value>پرداخت</value>
+  </data>
+  <data name="ReceptionForm.Subtitle" xml:space="preserve">
+    <value>ثبت پذیرش جدید</value>
+  </data>
+  <data name="ReceptionForm.Title" xml:space="preserve">
+    <value>فرم پذیرش</value>
+  </data>
+  <data name="ReceptionPay.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="ReceptionPay.Act_Confirm" xml:space="preserve">
+    <value>تأیید پرداخت</value>
+  </data>
+  <data name="ReceptionPay.Act_Print" xml:space="preserve">
+    <value>چاپ رسید</value>
+  </data>
+  <data name="ReceptionPay.Fld_CardNumber" xml:space="preserve">
+    <value>شماره کارت</value>
+  </data>
+  <data name="ReceptionPay.Fld_PaidAmount" xml:space="preserve">
+    <value>مبلغ پرداختی</value>
+  </data>
+  <data name="ReceptionPay.Fld_PaymentMethod" xml:space="preserve">
+    <value>روش پرداخت</value>
+  </data>
+  <data name="ReceptionPay.Fld_ReferenceNumber" xml:space="preserve">
+    <value>شماره مرجع</value>
+  </data>
+  <data name="ReceptionPay.Fld_RemainingAmount" xml:space="preserve">
+    <value>باقی‌مانده</value>
+  </data>
+  <data name="ReceptionPay.Fld_TotalAmount" xml:space="preserve">
+    <value>مبلغ قابل پرداخت</value>
+  </data>
+  <data name="ReceptionPay.Sec1" xml:space="preserve">
+    <value>مبالغ</value>
+  </data>
+  <data name="ReceptionPay.Sec2" xml:space="preserve">
+    <value>روش پرداخت</value>
+  </data>
+  <data name="ReceptionPay.Subtitle" xml:space="preserve">
+    <value>ثبت پرداختِ پذیرش</value>
+  </data>
+  <data name="ReceptionPay.Title" xml:space="preserve">
+    <value>دریافت وجه</value>
+  </data>
+  <data name="Receptions.Act_CallNext" xml:space="preserve">
+    <value>فراخوان بعدی</value>
+  </data>
+  <data name="Receptions.Act_CancelReception" xml:space="preserve">
+    <value>لغو پذیرش</value>
+  </data>
+  <data name="Receptions.Act_NewReception" xml:space="preserve">
+    <value>+ پذیرش جدید</value>
+  </data>
+  <data name="Receptions.Act_Pay" xml:space="preserve">
+    <value>دریافت وجه</value>
+  </data>
+  <data name="Receptions.Col_Amount" xml:space="preserve">
+    <value>مبلغ</value>
+  </data>
+  <data name="Receptions.Col_ArrivalTime" xml:space="preserve">
+    <value>زمان ورود</value>
+  </data>
+  <data name="Receptions.Col_DoctorName" xml:space="preserve">
+    <value>پزشک</value>
+  </data>
+  <data name="Receptions.Col_PatientName" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="Receptions.Col_QueueNumber" xml:space="preserve">
+    <value>نوبت</value>
+  </data>
+  <data name="Receptions.Col_Service" xml:space="preserve">
+    <value>خدمت</value>
+  </data>
+  <data name="Receptions.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Receptions.Col_WaitMinutes" xml:space="preserve">
+    <value>انتظار</value>
+  </data>
+  <data name="Receptions.Filter_date" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="Receptions.Filter_doctor" xml:space="preserve">
+    <value>پزشک</value>
+  </data>
+  <data name="Receptions.Filter_search" xml:space="preserve">
+    <value>جستجوی بیمار</value>
+  </data>
+  <data name="Receptions.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Receptions.Kpi1" xml:space="preserve">
+    <value>در صف</value>
+  </data>
+  <data name="Receptions.Kpi2" xml:space="preserve">
+    <value>پذیرش شده</value>
+  </data>
+  <data name="Receptions.Kpi3" xml:space="preserve">
+    <value>میانگین انتظار</value>
+  </data>
+  <data name="Receptions.Kpi4" xml:space="preserve">
+    <value>دریافت امروز</value>
+  </data>
+  <data name="Receptions.Notes" xml:space="preserve">
+    <value>صف به‌صورت بلادرنگ با SignalR به‌روزرسانی می‌شود.</value>
+  </data>
+  <data name="Receptions.Subtitle" xml:space="preserve">
+    <value>پذیرش بیماران و مدیریت صف انتظار</value>
+  </data>
+  <data name="Receptions.Title" xml:space="preserve">
+    <value>پذیرش و صف</value>
+  </data>
+  <data name="ReportBrowser.Act_Export" xml:space="preserve">
+    <value>خروجی</value>
+  </data>
+  <data name="ReportBrowser.Act_Run" xml:space="preserve">
+    <value>اجرا</value>
+  </data>
+  <data name="ReportBrowser.Act_Schedule" xml:space="preserve">
+    <value>زمان‌بندی</value>
+  </data>
+  <data name="ReportBrowser.Col_Category" xml:space="preserve">
+    <value>دسته</value>
+  </data>
+  <data name="ReportBrowser.Col_Description" xml:space="preserve">
+    <value>توضیح</value>
+  </data>
+  <data name="ReportBrowser.Col_LastRun" xml:space="preserve">
+    <value>آخرین اجرا</value>
+  </data>
+  <data name="ReportBrowser.Col_ReportName" xml:space="preserve">
+    <value>نام گزارش</value>
+  </data>
+  <data name="ReportBrowser.Filter_category" xml:space="preserve">
+    <value>دسته</value>
+  </data>
+  <data name="ReportBrowser.Filter_search" xml:space="preserve">
+    <value>جستجو</value>
+  </data>
+  <data name="ReportBrowser.Subtitle" xml:space="preserve">
+    <value>مرور و اجرای گزارشات تعریف‌شده</value>
+  </data>
+  <data name="ReportBrowser.Title" xml:space="preserve">
+    <value>مرورگر گزارشات</value>
+  </data>
+  <data name="Reports.Act_ExportExcel" xml:space="preserve">
+    <value>خروجی Excel</value>
+  </data>
+  <data name="Reports.Act_ExportPdf" xml:space="preserve">
+    <value>خروجی PDF</value>
+  </data>
+  <data name="Reports.Act_Generate" xml:space="preserve">
+    <value>تهیه گزارش</value>
+  </data>
+  <data name="Reports.Act_Print" xml:space="preserve">
+    <value>چاپ</value>
+  </data>
+  <data name="Reports.Filter_branch" xml:space="preserve">
+    <value>شعبه</value>
+  </data>
+  <data name="Reports.Filter_fromDate" xml:space="preserve">
+    <value>از تاریخ</value>
+  </data>
+  <data name="Reports.Filter_toDate" xml:space="preserve">
+    <value>تا تاریخ</value>
+  </data>
+  <data name="Reports.Subtitle" xml:space="preserve">
+    <value>گزارش‌های آماده و استاندارد</value>
+  </data>
+  <data name="Reports.Tab1" xml:space="preserve">
+    <value>مالی</value>
+  </data>
+  <data name="Reports.Tab2" xml:space="preserve">
+    <value>بالینی</value>
+  </data>
+  <data name="Reports.Tab3" xml:space="preserve">
+    <value>عملیاتی</value>
+  </data>
+  <data name="Reports.Tab4" xml:space="preserve">
+    <value>دارویی</value>
+  </data>
+  <data name="Reports.Tab5" xml:space="preserve">
+    <value>پرسنلی</value>
+  </data>
+  <data name="Reports.Title" xml:space="preserve">
+    <value>گزارشات</value>
+  </data>
+  <data name="RolePermission.Act_CopyRole" xml:space="preserve">
+    <value>کپی از نقش</value>
+  </data>
+  <data name="RolePermission.Act_NewRole" xml:space="preserve">
+    <value>نقش جدید</value>
+  </data>
+  <data name="RolePermission.Act_Save" xml:space="preserve">
+    <value>ذخیره دسترسی‌ها</value>
+  </data>
+  <data name="RolePermission.Col_Description" xml:space="preserve">
+    <value>توضیح</value>
+  </data>
+  <data name="RolePermission.Col_Module" xml:space="preserve">
+    <value>ماژول</value>
+  </data>
+  <data name="RolePermission.Col_PermissionName" xml:space="preserve">
+    <value>مجوز</value>
+  </data>
+  <data name="RolePermission.Filter_module" xml:space="preserve">
+    <value>ماژول</value>
+  </data>
+  <data name="RolePermission.Filter_search" xml:space="preserve">
+    <value>جستجو</value>
+  </data>
+  <data name="RolePermission.Kpi1" xml:space="preserve">
+    <value>تعداد نقش‌ها</value>
+  </data>
+  <data name="RolePermission.Kpi2" xml:space="preserve">
+    <value>تعداد مجوزها</value>
+  </data>
+  <data name="RolePermission.Subtitle" xml:space="preserve">
+    <value>تعریف نقش‌ها و تخصیص دسترسی‌ها</value>
+  </data>
+  <data name="RolePermission.Title" xml:space="preserve">
+    <value>نقش‌ها و مجوزها</value>
+  </data>
+  <data name="Rooms.Act_Manage" xml:space="preserve">
+    <value>مدیریت اتاق‌ها</value>
+  </data>
+  <data name="Rooms.Act_New" xml:space="preserve">
+    <value>+ اتاق جدید</value>
+  </data>
+  <data name="Rooms.Col_DoctorName" xml:space="preserve">
+    <value>پزشک مستقر</value>
+  </data>
+  <data name="Rooms.Col_Name" xml:space="preserve">
+    <value>نام اتاق</value>
+  </data>
+  <data name="Rooms.Col_RoomNumber" xml:space="preserve">
+    <value>شماره</value>
+  </data>
+  <data name="Rooms.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Rooms.Subtitle" xml:space="preserve">
+    <value>مدیریت اتاق‌های معاینه</value>
+  </data>
+  <data name="Rooms.Title" xml:space="preserve">
+    <value>اتاق‌ها</value>
+  </data>
+  <data name="RoomsManager.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="RoomsManager.Act_Save" xml:space="preserve">
+    <value>ذخیره</value>
+  </data>
+  <data name="RoomsManager.Subtitle" xml:space="preserve">
+    <value>تخصیص پزشکان به اتاق‌ها</value>
+  </data>
+  <data name="RoomsManager.Title" xml:space="preserve">
+    <value>مدیریت اتاق‌ها</value>
+  </data>
+  <data name="Sepas.Act_Refresh" xml:space="preserve">
+    <value>به‌روزرسانی وضعیت</value>
+  </data>
+  <data name="Sepas.Act_Send" xml:space="preserve">
+    <value>ارسال</value>
+  </data>
+  <data name="Sepas.Col_PatientName" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="Sepas.Col_SentAt" xml:space="preserve">
+    <value>زمان ارسال</value>
+  </data>
+  <data name="Sepas.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Sepas.Col_TransactionId" xml:space="preserve">
+    <value>شناسه</value>
+  </data>
+  <data name="Sepas.Filter_fromDate" xml:space="preserve">
+    <value>از تاریخ</value>
+  </data>
+  <data name="Sepas.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Sepas.Filter_toDate" xml:space="preserve">
+    <value>تا تاریخ</value>
+  </data>
+  <data name="Sepas.Kpi1" xml:space="preserve">
+    <value>ارسال‌شده</value>
+  </data>
+  <data name="Sepas.Kpi2" xml:space="preserve">
+    <value>تأیید شده</value>
+  </data>
+  <data name="Sepas.Kpi3" xml:space="preserve">
+    <value>خطا</value>
+  </data>
+  <data name="Sepas.Subtitle" xml:space="preserve">
+    <value>یکپارچه‌سازی با پرونده الکترونیک سلامت</value>
+  </data>
+  <data name="Sepas.Tab1" xml:space="preserve">
+    <value>ارسال‌ها</value>
+  </data>
+  <data name="Sepas.Tab2" xml:space="preserve">
+    <value>وضعیت اتصال</value>
+  </data>
+  <data name="Sepas.Tab3" xml:space="preserve">
+    <value>خطاها</value>
+  </data>
+  <data name="Sepas.Title" xml:space="preserve">
+    <value>سامانه سپاس</value>
+  </data>
+  <data name="Settings.Act_Reset" xml:space="preserve">
+    <value>بازگشت به پیش‌فرض</value>
+  </data>
+  <data name="Settings.Act_Save" xml:space="preserve">
+    <value>ذخیره تنظیمات</value>
+  </data>
+  <data name="Settings.Subtitle" xml:space="preserve">
+    <value>تنظیمات سراسری برنامه</value>
+  </data>
+  <data name="Settings.Tab1" xml:space="preserve">
+    <value>عمومی</value>
+  </data>
+  <data name="Settings.Tab2" xml:space="preserve">
+    <value>ظاهر</value>
+  </data>
+  <data name="Settings.Tab3" xml:space="preserve">
+    <value>چاپ</value>
+  </data>
+  <data name="Settings.Tab4" xml:space="preserve">
+    <value>اعلان‌ها</value>
+  </data>
+  <data name="Settings.Tab5" xml:space="preserve">
+    <value>پیامک</value>
+  </data>
+  <data name="Settings.Tab6" xml:space="preserve">
+    <value>پشتیبان</value>
+  </data>
+  <data name="Settings.Tab7" xml:space="preserve">
+    <value>پیشرفته</value>
+  </data>
+  <data name="Settings.Title" xml:space="preserve">
+    <value>تنظیمات</value>
+  </data>
+  <data name="ShiftClose.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="ShiftClose.Act_Confirm" xml:space="preserve">
+    <value>بستن شیفت</value>
+  </data>
+  <data name="ShiftClose.Fld_CountedAmount" xml:space="preserve">
+    <value>مبلغ شمارش‌شده</value>
+  </data>
+  <data name="ShiftClose.Fld_DifferenceAmount" xml:space="preserve">
+    <value>اختلاف</value>
+  </data>
+  <data name="ShiftClose.Fld_ExpectedAmount" xml:space="preserve">
+    <value>مبلغ مورد انتظار</value>
+  </data>
+  <data name="ShiftClose.Fld_ToleranceReason" xml:space="preserve">
+    <value>علت اختلاف</value>
+  </data>
+  <data name="ShiftClose.Kpi1" xml:space="preserve">
+    <value>مبلغ مورد انتظار</value>
+  </data>
+  <data name="ShiftClose.Kpi2" xml:space="preserve">
+    <value>مبلغ واقعی</value>
+  </data>
+  <data name="ShiftClose.Kpi3" xml:space="preserve">
+    <value>اختلاف</value>
+  </data>
+  <data name="ShiftClose.Sec1" xml:space="preserve">
+    <value>تسویه</value>
+  </data>
+  <data name="ShiftClose.Subtitle" xml:space="preserve">
+    <value>تسویه و بستن شیفت جاری</value>
+  </data>
+  <data name="ShiftClose.Title" xml:space="preserve">
+    <value>بستن شیفت</value>
+  </data>
+  <data name="ShiftReceiptPreview.Act_Close" xml:space="preserve">
+    <value>بستن</value>
+  </data>
+  <data name="ShiftReceiptPreview.Act_Print" xml:space="preserve">
+    <value>چاپ</value>
+  </data>
+  <data name="ShiftReceiptPreview.Subtitle" xml:space="preserve">
+    <value>پیش‌نمایش رسید تسویه‌ی شیفت</value>
+  </data>
+  <data name="ShiftReceiptPreview.Title" xml:space="preserve">
+    <value>پیش‌نمایش رسید شیفت</value>
+  </data>
+  <data name="Shifts.Act_CloseShift" xml:space="preserve">
+    <value>بستن شیفت</value>
+  </data>
+  <data name="Shifts.Act_OpenShift" xml:space="preserve">
+    <value>گشایش شیفت</value>
+  </data>
+  <data name="Shifts.Col_EndTime" xml:space="preserve">
+    <value>پایان</value>
+  </data>
+  <data name="Shifts.Col_ShiftName" xml:space="preserve">
+    <value>شیفت</value>
+  </data>
+  <data name="Shifts.Col_StartTime" xml:space="preserve">
+    <value>شروع</value>
+  </data>
+  <data name="Shifts.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Shifts.Col_TotalAmount" xml:space="preserve">
+    <value>مبلغ کل</value>
+  </data>
+  <data name="Shifts.Col_UserName" xml:space="preserve">
+    <value>کاربر</value>
+  </data>
+  <data name="Shifts.Filter_date" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="Shifts.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Shifts.Filter_user" xml:space="preserve">
+    <value>کاربر</value>
+  </data>
+  <data name="Shifts.Subtitle" xml:space="preserve">
+    <value>مدیریت شیفت‌های کاری</value>
+  </data>
+  <data name="Shifts.Title" xml:space="preserve">
+    <value>شیفت‌ها</value>
+  </data>
+  <data name="ShortcutPicker.Act_Clear" xml:space="preserve">
+    <value>پاک کردن</value>
+  </data>
+  <data name="ShortcutPicker.Act_Save" xml:space="preserve">
+    <value>ثبت</value>
+  </data>
+  <data name="ShortcutPicker.Fld_CommandName" xml:space="preserve">
+    <value>فرمان</value>
+  </data>
+  <data name="ShortcutPicker.Fld_Key" xml:space="preserve">
+    <value>کلید ترکیبی</value>
+  </data>
+  <data name="ShortcutPicker.Sec1" xml:space="preserve">
+    <value>میانبر</value>
+  </data>
+  <data name="ShortcutPicker.Subtitle" xml:space="preserve">
+    <value>تعریف میانبر صفحه‌کلید</value>
+  </data>
+  <data name="ShortcutPicker.Title" xml:space="preserve">
+    <value>انتخاب میانبر</value>
+  </data>
+  <data name="Sms.Act_Preview" xml:space="preserve">
+    <value>پیش‌نمایش</value>
+  </data>
+  <data name="Sms.Act_SaveTemplate" xml:space="preserve">
+    <value>ذخیره قالب</value>
+  </data>
+  <data name="Sms.Act_Send" xml:space="preserve">
+    <value>ارسال</value>
+  </data>
+  <data name="Sms.Fld_MessageText" xml:space="preserve">
+    <value>متن پیام</value>
+  </data>
+  <data name="Sms.Fld_Recipients" xml:space="preserve">
+    <value>گیرندگان</value>
+  </data>
+  <data name="Sms.Fld_RespectOptOut" xml:space="preserve">
+    <value>احترام به انصراف</value>
+  </data>
+  <data name="Sms.Fld_SendAt" xml:space="preserve">
+    <value>زمان ارسال</value>
+  </data>
+  <data name="Sms.Fld_TemplateId" xml:space="preserve">
+    <value>قالب</value>
+  </data>
+  <data name="Sms.Kpi1" xml:space="preserve">
+    <value>ارسال امروز</value>
+  </data>
+  <data name="Sms.Kpi2" xml:space="preserve">
+    <value>تحویل شده</value>
+  </data>
+  <data name="Sms.Kpi3" xml:space="preserve">
+    <value>ناموفق</value>
+  </data>
+  <data name="Sms.Kpi4" xml:space="preserve">
+    <value>هزینه</value>
+  </data>
+  <data name="Sms.Sec1" xml:space="preserve">
+    <value>ارسال</value>
+  </data>
+  <data name="Sms.Subtitle" xml:space="preserve">
+    <value>ارسال پیامک و مدیریت قالب‌ها</value>
+  </data>
+  <data name="Sms.Tab1" xml:space="preserve">
+    <value>ارسال جدید</value>
+  </data>
+  <data name="Sms.Tab2" xml:space="preserve">
+    <value>قالب‌ها</value>
+  </data>
+  <data name="Sms.Tab3" xml:space="preserve">
+    <value>گزارش ارسال</value>
+  </data>
+  <data name="Sms.Title" xml:space="preserve">
+    <value>پیامک</value>
+  </data>
+  <data name="Splash.Subtitle" xml:space="preserve">
+    <value>صفحه‌ی آغازین برنامه</value>
+  </data>
+  <data name="Splash.Title" xml:space="preserve">
+    <value>در حال بارگذاری</value>
+  </data>
+  <data name="StockInForm.Act_AddRow" xml:space="preserve">
+    <value>افزودن ردیف</value>
+  </data>
+  <data name="StockInForm.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="StockInForm.Act_Save" xml:space="preserve">
+    <value>ثبت ورود</value>
+  </data>
+  <data name="StockInForm.Fld_BatchNumber" xml:space="preserve">
+    <value>شماره بچ</value>
+  </data>
+  <data name="StockInForm.Fld_DrugId" xml:space="preserve">
+    <value>دارو</value>
+  </data>
+  <data name="StockInForm.Fld_ExpiryDate" xml:space="preserve">
+    <value>تاریخ انقضا</value>
+  </data>
+  <data name="StockInForm.Fld_InvoiceDate" xml:space="preserve">
+    <value>تاریخ فاکتور</value>
+  </data>
+  <data name="StockInForm.Fld_InvoiceNumber" xml:space="preserve">
+    <value>شماره فاکتور</value>
+  </data>
+  <data name="StockInForm.Fld_Quantity" xml:space="preserve">
+    <value>تعداد</value>
+  </data>
+  <data name="StockInForm.Fld_SupplierId" xml:space="preserve">
+    <value>تأمین‌کننده</value>
+  </data>
+  <data name="StockInForm.Fld_TotalAmount" xml:space="preserve">
+    <value>مبلغ کل</value>
+  </data>
+  <data name="StockInForm.Fld_UnitPrice" xml:space="preserve">
+    <value>قیمت واحد</value>
+  </data>
+  <data name="StockInForm.Sec1" xml:space="preserve">
+    <value>فاکتور</value>
+  </data>
+  <data name="StockInForm.Sec2" xml:space="preserve">
+    <value>اقلام</value>
+  </data>
+  <data name="StockInForm.Subtitle" xml:space="preserve">
+    <value>ثبت ورود دارو به انبار</value>
+  </data>
+  <data name="StockInForm.Title" xml:space="preserve">
+    <value>ورود کالا</value>
+  </data>
+  <data name="Stocktaking.Act_ApplyDiff" xml:space="preserve">
+    <value>اعمال مغایرت‌ها</value>
+  </data>
+  <data name="Stocktaking.Act_Export" xml:space="preserve">
+    <value>خروجی Excel</value>
+  </data>
+  <data name="Stocktaking.Act_NewCount" xml:space="preserve">
+    <value>شمارش جدید</value>
+  </data>
+  <data name="Stocktaking.Col_CountedStock" xml:space="preserve">
+    <value>موجودی شمارش‌شده</value>
+  </data>
+  <data name="Stocktaking.Col_Difference" xml:space="preserve">
+    <value>مغایرت</value>
+  </data>
+  <data name="Stocktaking.Col_DrugName" xml:space="preserve">
+    <value>نام دارو</value>
+  </data>
+  <data name="Stocktaking.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Stocktaking.Col_SystemStock" xml:space="preserve">
+    <value>موجودی سیستم</value>
+  </data>
+  <data name="Stocktaking.Filter_category" xml:space="preserve">
+    <value>دسته</value>
+  </data>
+  <data name="Stocktaking.Filter_search" xml:space="preserve">
+    <value>جستجو</value>
+  </data>
+  <data name="Stocktaking.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Stocktaking.Kpi1" xml:space="preserve">
+    <value>تعداد اقلام</value>
+  </data>
+  <data name="Stocktaking.Kpi2" xml:space="preserve">
+    <value>مغایرت‌ها</value>
+  </data>
+  <data name="Stocktaking.Kpi3" xml:space="preserve">
+    <value>تطبیق داده‌شده</value>
+  </data>
+  <data name="Stocktaking.Subtitle" xml:space="preserve">
+    <value>شمارش و تطبیق موجودی انبار</value>
+  </data>
+  <data name="Stocktaking.Title" xml:space="preserve">
+    <value>انبارگردانی</value>
+  </data>
+  <data name="Survey.Act_NewSurvey" xml:space="preserve">
+    <value>پرسش‌نامه جدید</value>
+  </data>
+  <data name="Survey.Act_Send" xml:space="preserve">
+    <value>ارسال</value>
+  </data>
+  <data name="Survey.Kpi1" xml:space="preserve">
+    <value>تعداد پاسخ</value>
+  </data>
+  <data name="Survey.Kpi2" xml:space="preserve">
+    <value>میانگین امتیاز</value>
+  </data>
+  <data name="Survey.Kpi3" xml:space="preserve">
+    <value>NPS</value>
+  </data>
+  <data name="Survey.Subtitle" xml:space="preserve">
+    <value>طراحی پرسش‌نامه و تحلیل پاسخ‌ها</value>
+  </data>
+  <data name="Survey.Tab1" xml:space="preserve">
+    <value>پرسش‌نامه‌ها</value>
+  </data>
+  <data name="Survey.Tab2" xml:space="preserve">
+    <value>پاسخ‌ها</value>
+  </data>
+  <data name="Survey.Tab3" xml:space="preserve">
+    <value>تحلیل</value>
+  </data>
+  <data name="Survey.Title" xml:space="preserve">
+    <value>نظرسنجی</value>
+  </data>
+  <data name="TariffForm.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="TariffForm.Act_Save" xml:space="preserve">
+    <value>ذخیره</value>
+  </data>
+  <data name="TariffForm.Fld_BasePrice" xml:space="preserve">
+    <value>قیمت پایه</value>
+  </data>
+  <data name="TariffForm.Fld_CashPrice" xml:space="preserve">
+    <value>قیمت نقدی</value>
+  </data>
+  <data name="TariffForm.Fld_EffectiveDate" xml:space="preserve">
+    <value>تاریخ اجرا</value>
+  </data>
+  <data name="TariffForm.Fld_InsuranceId" xml:space="preserve">
+    <value>بیمه</value>
+  </data>
+  <data name="TariffForm.Fld_InsurancePrice" xml:space="preserve">
+    <value>قیمت بیمه</value>
+  </data>
+  <data name="TariffForm.Fld_IsActive" xml:space="preserve">
+    <value>فعال</value>
+  </data>
+  <data name="TariffForm.Fld_ServiceId" xml:space="preserve">
+    <value>خدمت</value>
+  </data>
+  <data name="TariffForm.Sec1" xml:space="preserve">
+    <value>تعرفه</value>
+  </data>
+  <data name="TariffForm.Subtitle" xml:space="preserve">
+    <value>تعریف و ویرایش تعرفه‌ی خدمات</value>
+  </data>
+  <data name="TariffForm.Title" xml:space="preserve">
+    <value>تعرفه خدمات</value>
+  </data>
+  <data name="Themed.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="Themed.Act_Ok" xml:space="preserve">
+    <value>تأیید</value>
+  </data>
+  <data name="Themed.Notes" xml:space="preserve">
+    <value>جایگزین MessageBox بومی برای حفظ یکپارچگیِ بصری و پشتیبانی از تم و زبان.</value>
+  </data>
+  <data name="Themed.Subtitle" xml:space="preserve">
+    <value>دیالوگ عمومی با تم یکپارچه</value>
+  </data>
+  <data name="Themed.Title" xml:space="preserve">
+    <value>دیالوگ یکپارچه</value>
+  </data>
+  <data name="TrainingCenter.Act_Open" xml:space="preserve">
+    <value>مشاهده</value>
+  </data>
+  <data name="TrainingCenter.Col_Category" xml:space="preserve">
+    <value>دسته</value>
+  </data>
+  <data name="TrainingCenter.Col_Duration" xml:space="preserve">
+    <value>مدت</value>
+  </data>
+  <data name="TrainingCenter.Col_Progress" xml:space="preserve">
+    <value>پیشرفت</value>
+  </data>
+  <data name="TrainingCenter.Col_Title" xml:space="preserve">
+    <value>عنوان</value>
+  </data>
+  <data name="TrainingCenter.Filter_category" xml:space="preserve">
+    <value>دسته</value>
+  </data>
+  <data name="TrainingCenter.Filter_search" xml:space="preserve">
+    <value>جستجو</value>
+  </data>
+  <data name="TrainingCenter.Subtitle" xml:space="preserve">
+    <value>محتوای آموزشی و دوره‌ها</value>
+  </data>
+  <data name="TrainingCenter.Title" xml:space="preserve">
+    <value>مرکز آموزش</value>
+  </data>
+  <data name="UserForm.Act_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="UserForm.Act_Save" xml:space="preserve">
+    <value>ذخیره</value>
+  </data>
+  <data name="UserForm.Fld_BranchId" xml:space="preserve">
+    <value>شعبه</value>
+  </data>
+  <data name="UserForm.Fld_ConfirmPassword" xml:space="preserve">
+    <value>تکرار رمز</value>
+  </data>
+  <data name="UserForm.Fld_Email" xml:space="preserve">
+    <value>ایمیل</value>
+  </data>
+  <data name="UserForm.Fld_EmployeeId" xml:space="preserve">
+    <value>پرسنل مرتبط</value>
+  </data>
+  <data name="UserForm.Fld_IsActive" xml:space="preserve">
+    <value>فعال</value>
+  </data>
+  <data name="UserForm.Fld_MustChangePassword" xml:space="preserve">
+    <value>تغییر رمز در اولین ورود</value>
+  </data>
+  <data name="UserForm.Fld_Password" xml:space="preserve">
+    <value>رمز عبور</value>
+  </data>
+  <data name="UserForm.Fld_RoleId" xml:space="preserve">
+    <value>نقش اصلی</value>
+  </data>
+  <data name="UserForm.Fld_UserName" xml:space="preserve">
+    <value>نام کاربری</value>
+  </data>
+  <data name="UserForm.Sec1" xml:space="preserve">
+    <value>حساب کاربری</value>
+  </data>
+  <data name="UserForm.Sec2" xml:space="preserve">
+    <value>نقش‌ها و دسترسی</value>
+  </data>
+  <data name="UserForm.Subtitle" xml:space="preserve">
+    <value>ایجاد یا ویرایش حساب کاربری</value>
+  </data>
+  <data name="UserForm.Title" xml:space="preserve">
+    <value>فرم کاربر</value>
+  </data>
+  <data name="Users.Act_Deactivate" xml:space="preserve">
+    <value>غیرفعال‌سازی</value>
+  </data>
+  <data name="Users.Act_New" xml:space="preserve">
+    <value>+ کاربر جدید</value>
+  </data>
+  <data name="Users.Act_ResetPassword" xml:space="preserve">
+    <value>بازنشانی رمز</value>
+  </data>
+  <data name="Users.Col_Email" xml:space="preserve">
+    <value>ایمیل</value>
+  </data>
+  <data name="Users.Col_FullName" xml:space="preserve">
+    <value>نام کامل</value>
+  </data>
+  <data name="Users.Col_IsActive" xml:space="preserve">
+    <value>فعال</value>
+  </data>
+  <data name="Users.Col_LastLoginAt" xml:space="preserve">
+    <value>آخرین ورود</value>
+  </data>
+  <data name="Users.Col_RoleName" xml:space="preserve">
+    <value>نقش</value>
+  </data>
+  <data name="Users.Col_UserName" xml:space="preserve">
+    <value>نام کاربری</value>
+  </data>
+  <data name="Users.Filter_role" xml:space="preserve">
+    <value>نقش</value>
+  </data>
+  <data name="Users.Filter_search" xml:space="preserve">
+    <value>جستجو</value>
+  </data>
+  <data name="Users.Filter_status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Users.Subtitle" xml:space="preserve">
+    <value>مدیریت حساب‌های کاربری</value>
+  </data>
+  <data name="Users.Title" xml:space="preserve">
+    <value>کاربران</value>
+  </data>
+  <data name="Visit.Act_CancelVisit" xml:space="preserve">
+    <value>لغو ویزیت</value>
+  </data>
+  <data name="Visit.Act_Save" xml:space="preserve">
+    <value>ذخیره ویزیت</value>
+  </data>
+  <data name="Visit.Act_SaveAndLab" xml:space="preserve">
+    <value>ذخیره و آزمایش</value>
+  </data>
+  <data name="Visit.Act_SaveAndPrescribe" xml:space="preserve">
+    <value>ذخیره و نسخه</value>
+  </data>
+  <data name="Visit.Fld_AssessmentNotes" xml:space="preserve">
+    <value>یادداشت ارزیابی</value>
+  </data>
+  <data name="Visit.Fld_BloodPressure" xml:space="preserve">
+    <value>فشار خون</value>
+  </data>
+  <data name="Visit.Fld_Bmi" xml:space="preserve">
+    <value>BMI</value>
+  </data>
+  <data name="Visit.Fld_ChiefComplaint" xml:space="preserve">
+    <value>شکایت اصلی</value>
+  </data>
+  <data name="Visit.Fld_DifferentialDiagnosis" xml:space="preserve">
+    <value>تشخیص‌های افتراقی</value>
+  </data>
+  <data name="Visit.Fld_DrugHistory" xml:space="preserve">
+    <value>سوابق دارویی</value>
+  </data>
+  <data name="Visit.Fld_FamilyHistory" xml:space="preserve">
+    <value>سوابق خانوادگی</value>
+  </data>
+  <data name="Visit.Fld_FollowUpDate" xml:space="preserve">
+    <value>تاریخ پیگیری</value>
+  </data>
+  <data name="Visit.Fld_Height" xml:space="preserve">
+    <value>قد (سانتی‌متر)</value>
+  </data>
+  <data name="Visit.Fld_HistoryOfPresentIllness" xml:space="preserve">
+    <value>شرح بیماری فعلی</value>
+  </data>
+  <data name="Visit.Fld_ImagingOrders" xml:space="preserve">
+    <value>درخواست تصویربرداری</value>
+  </data>
+  <data name="Visit.Fld_LabOrders" xml:space="preserve">
+    <value>درخواست آزمایش</value>
+  </data>
+  <data name="Visit.Fld_OxygenSaturation" xml:space="preserve">
+    <value>اشباع اکسیژن</value>
+  </data>
+  <data name="Visit.Fld_PastMedicalHistory" xml:space="preserve">
+    <value>سوابق پزشکی</value>
+  </data>
+  <data name="Visit.Fld_PatientEducation" xml:space="preserve">
+    <value>آموزش به بیمار</value>
+  </data>
+  <data name="Visit.Fld_PhysicalExam" xml:space="preserve">
+    <value>یافته‌های معاینه</value>
+  </data>
+  <data name="Visit.Fld_Prescription" xml:space="preserve">
+    <value>داروها</value>
+  </data>
+  <data name="Visit.Fld_PrimaryDiagnosisCode" xml:space="preserve">
+    <value>تشخیص اصلی (ICD-10)</value>
+  </data>
+  <data name="Visit.Fld_Pulse" xml:space="preserve">
+    <value>نبض</value>
+  </data>
+  <data name="Visit.Fld_Referral" xml:space="preserve">
+    <value>ارجاع</value>
+  </data>
+  <data name="Visit.Fld_RespiratoryRate" xml:space="preserve">
+    <value>تعداد تنفس</value>
+  </data>
+  <data name="Visit.Fld_SecondaryDiagnoses" xml:space="preserve">
+    <value>تشخیص‌های فرعی</value>
+  </data>
+  <data name="Visit.Fld_SocialHistory" xml:space="preserve">
+    <value>سوابق اجتماعی</value>
+  </data>
+  <data name="Visit.Fld_Temperature" xml:space="preserve">
+    <value>دما</value>
+  </data>
+  <data name="Visit.Fld_TreatmentPlan" xml:space="preserve">
+    <value>طرح درمان</value>
+  </data>
+  <data name="Visit.Fld_Weight" xml:space="preserve">
+    <value>وزن (کیلوگرم)</value>
+  </data>
+  <data name="Visit.Sec1" xml:space="preserve">
+    <value>شرح‌حال (Subjective)</value>
+  </data>
+  <data name="Visit.Sec2" xml:space="preserve">
+    <value>معاینه (Objective)</value>
+  </data>
+  <data name="Visit.Sec3" xml:space="preserve">
+    <value>تشخیص (Assessment)</value>
+  </data>
+  <data name="Visit.Sec4" xml:space="preserve">
+    <value>طرح درمان (Plan)</value>
+  </data>
+  <data name="Visit.Subtitle" xml:space="preserve">
+    <value>ثبت شرح‌حال، معاینه، تشخیص و طرح درمان</value>
+  </data>
+  <data name="Visit.Title" xml:space="preserve">
+    <value>ویزیت (SOAP)</value>
+  </data>
+  <data name="Visits.Act_New" xml:space="preserve">
+    <value>ویزیت جدید</value>
+  </data>
+  <data name="Visits.Act_Open" xml:space="preserve">
+    <value>مشاهده</value>
+  </data>
+  <data name="Visits.Col_Diagnosis" xml:space="preserve">
+    <value>تشخیص</value>
+  </data>
+  <data name="Visits.Col_DoctorName" xml:space="preserve">
+    <value>پزشک</value>
+  </data>
+  <data name="Visits.Col_PatientName" xml:space="preserve">
+    <value>بیمار</value>
+  </data>
+  <data name="Visits.Col_Status" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Visits.Col_VisitDate" xml:space="preserve">
+    <value>تاریخ</value>
+  </data>
+  <data name="Visits.Filter_doctor" xml:space="preserve">
+    <value>پزشک</value>
+  </data>
+  <data name="Visits.Filter_fromDate" xml:space="preserve">
+    <value>از تاریخ</value>
+  </data>
+  <data name="Visits.Filter_search" xml:space="preserve">
+    <value>جستجوی بیمار</value>
+  </data>
+  <data name="Visits.Filter_toDate" xml:space="preserve">
+    <value>تا تاریخ</value>
+  </data>
+  <data name="Visits.Subtitle" xml:space="preserve">
+    <value>تاریخچه‌ی ویزیت‌های انجام‌شده</value>
+  </data>
+  <data name="Visits.Title" xml:space="preserve">
+    <value>فهرست ویزیت‌ها</value>
+  </data>
+</root>

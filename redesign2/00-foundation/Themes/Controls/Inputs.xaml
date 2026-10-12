@@ -1,0 +1,144 @@
+<!-- 📝 اتم: Input — TextBox، ComboBox، PasswordBox، CheckBox، DatePicker -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ══════════ 📝 TextBox ══════════ -->
+    <Style x:Key="Input.TextBox" TargetType="TextBox">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Regular}" />
+        <Setter Property="FontSize" Value="{DynamicResource Fs.Body}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource Brush.Primary}" />
+        <Setter Property="MinHeight" Value="{DynamicResource Size.InputHeight}" />
+        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="Margin" Value="0,0,0,4" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Grid>
+                        <Border x:Name="Bd"
+                                Background="{DynamicResource Brush.Surface}"
+                                BorderBrush="{DynamicResource Brush.BorderStrong}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="{DynamicResource R.Medium}"
+                                SnapsToDevicePixels="True" />
+                        <ScrollViewer x:Name="PART_ContentHost"
+                                      Margin="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center"
+                                      Focusable="False" />
+                        <TextBlock x:Name="Ph"
+                                   Text="{TemplateBinding Tag}"
+                                   Margin="14,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource Brush.TextMuted}"
+                                   IsHitTestVisible="False"
+                                   Visibility="Collapsed" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Text" Value="">
+                            <Setter TargetName="Ph" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource Brush.Primary}" />
+                        </Trigger>
+                        <Trigger Property="IsFocused" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource Brush.Focus}" />
+                            <Setter TargetName="Bd" Property="BorderThickness" Value="2" />
+                        </Trigger>
+                        <Trigger Property="Validation.HasError" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource Brush.Danger}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.TextDisabled}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ══════════ 🔽 ComboBox ══════════ -->
+    <Style x:Key="Input.ComboBox" TargetType="ComboBox">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Regular}" />
+        <Setter Property="FontSize" Value="{DynamicResource Fs.Body}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="MinHeight" Value="{DynamicResource Size.InputHeight}" />
+        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="Margin" Value="0,0,0,4" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderStrong}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
+    <!-- ══════════ 🔒 PasswordBox ══════════ -->
+    <Style x:Key="Input.Password" TargetType="PasswordBox">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Regular}" />
+        <Setter Property="FontSize" Value="{DynamicResource Fs.Body}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="MinHeight" Value="{DynamicResource Size.InputHeight}" />
+        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="Margin" Value="0,0,0,4" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderStrong}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <!-- ══════════ ☑ CheckBox ══════════ -->
+    <Style x:Key="Input.CheckBox" TargetType="CheckBox">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Regular}" />
+        <Setter Property="FontSize" Value="{DynamicResource Fs.Body}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Margin" Value="0,4" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <!-- ══════════ 🔘 RadioButton ══════════ -->
+    <Style x:Key="Input.Radio" TargetType="RadioButton">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Regular}" />
+        <Setter Property="FontSize" Value="{DynamicResource Fs.Body}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Margin" Value="0,4,16,4" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <!-- ══════════ 📅 DatePicker ══════════ -->
+    <Style x:Key="Input.Date" TargetType="DatePicker">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Regular}" />
+        <Setter Property="FontSize" Value="{DynamicResource Fs.Body}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="MinHeight" Value="{DynamicResource Size.InputHeight}" />
+        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="Margin" Value="0,0,0,4" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderStrong}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <!-- ══════════ 🏷 برچسب فیلد ══════════ -->
+    <Style x:Key="Input.Label" TargetType="TextBlock" BasedOn="{StaticResource Txt.Caption}">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        <Setter Property="Margin" Value="2,0,2,3" />
+    </Style>
+
+    <!-- ══════════ ⭐ برچسبِ اجباری ══════════ -->
+    <Style x:Key="Input.LabelRequired" TargetType="TextBlock" BasedOn="{StaticResource Input.Label}">
+        <Setter Property="Text" Value="*" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Danger}" />
+    </Style>
+
+    <!-- ══════════ ❗ پیام خطا ══════════ -->
+    <Style x:Key="Input.Error" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Regular}" />
+        <Setter Property="FontSize" Value="{DynamicResource Fs.Caption}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Danger}" />
+        <Setter Property="Margin" Value="2,1,2,0" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+</ResourceDictionary>

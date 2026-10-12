@@ -1,0 +1,20 @@
+<!--
+  🏷 اتم: StatusBadge — نشان رنگی وضعیت
+  ═══════════════════════════════════════════════════════════════════════
+    Text   — متن نشان
+    Level  — Success | Warning | Danger | Info | Neutral
+  ═══════════════════════════════════════════════════════════════════════
+-->
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Controls.StatusBadge"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Root"
+             FlowDirection="RightToLeft">
+    <Border x:Name="BadgeBorder"
+            Style="{DynamicResource Badge.Neutral}"
+            HorizontalAlignment="Right">
+        <TextBlock Text="{Binding Text, ElementName=Root}"
+                   Style="{DynamicResource Badge.Text}"
+                   x:Name="BadgeText" />
+    </Border>
+</UserControl>

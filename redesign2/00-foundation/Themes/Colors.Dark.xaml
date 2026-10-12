@@ -1,0 +1,63 @@
+<!--
+  ═══════════════════════════════════════════════════════════════════════
+  🌙 پالت رنگ — تم تاریک (Dark)
+  ═══════════════════════════════════════════════════════════════════════
+  کلیدهای این فایل دقیقاً با Colors.Light.xaml یکسان است تا
+  ThemeManager بتواند بدون خطا بین آن‌ها جابه‌جا شود.
+  ═══════════════════════════════════════════════════════════════════════
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 🎯 رنگ اصلی برند -->
+    <Color x:Key="C.Primary">#2DD4BF</Color>
+    <Color x:Key="C.PrimaryDark">#14B8A6</Color>
+    <Color x:Key="C.PrimaryLight">#134E4A</Color>
+    <Color x:Key="C.OnPrimary">#042F2E</Color>
+
+    <!-- 💜 رنگ ثانویه -->
+    <Color x:Key="C.Secondary">#A78BFA</Color>
+    <Color x:Key="C.SecondaryLight">#3B2A63</Color>
+    <Color x:Key="C.OnSecondary">#1E1B4B</Color>
+
+    <!-- 📊 رنگ‌های وضعیت -->
+    <Color x:Key="C.Success">#4ADE80</Color>
+    <Color x:Key="C.SuccessLight">#14532D</Color>
+    <Color x:Key="C.Warning">#FBBF24</Color>
+    <Color x:Key="C.WarningLight">#78350F</Color>
+    <Color x:Key="C.Danger">#FB7185</Color>
+    <Color x:Key="C.DangerLight">#881337</Color>
+    <Color x:Key="C.Info">#38BDF8</Color>
+    <Color x:Key="C.InfoLight">#0C4A6E</Color>
+
+    <!-- 🔤 رنگ‌های متن -->
+    <Color x:Key="C.Text">#F1F5F9</Color>
+    <Color x:Key="C.TextSecondary">#94A3B8</Color>
+    <Color x:Key="C.TextMuted">#64748B</Color>
+    <Color x:Key="C.TextDisabled">#475569</Color>
+
+    <!-- 🩶 رنگ‌های سطح -->
+    <Color x:Key="C.Surface">#1E293B</Color>
+    <Color x:Key="C.SurfaceAlt">#273549</Color>
+    <Color x:Key="C.SurfaceHover">#334155</Color>
+    <Color x:Key="C.Canvas">#0B1220</Color>
+    <Color x:Key="C.Sidebar">#0B3B37</Color>
+
+    <!-- 📏 رنگ‌های خطوط -->
+    <Color x:Key="C.Border">#334155</Color>
+    <Color x:Key="C.BorderStrong">#475569</Color>
+    <Color x:Key="C.Focus">#2DD4BF</Color>
+
+    <!-- 🏥 رنگ‌های تخصصی پزشکی -->
+    <Color x:Key="C.Med.Blood">#F87171</Color>
+    <Color x:Key="C.Med.Heart">#FB7185</Color>
+    <Color x:Key="C.Med.Bone">#D6D3D1</Color>
+    <Color x:Key="C.Med.Drug">#A78BFA</Color>
+    <Color x:Key="C.Med.Lab">#22D3EE</Color>
+    <Color x:Key="C.Med.Imaging">#94A3B8</Color>
+    <Color x:Key="C.Med.Dental">#38BDF8</Color>
+
+    <!-- 🌑 سایه -->
+    <Color x:Key="C.Shadow">#000000</Color>
+
+</ResourceDictionary>
