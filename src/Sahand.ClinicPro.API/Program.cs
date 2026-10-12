@@ -354,15 +354,23 @@ try
     await app.Services.InitializeDatabaseAsync();
 
     // نقطه بررسی سلامت — کلاینت WPF و مانیتورینگ از این مسیر استفاده می‌کنند
+    // چرخهٔ ۵۵ (BUG-20): نسخه از فرادادهٔ اسمبلی (Directory.Build.props) — نه هاردکد 1.0.0
     app.MapGet("/health", () => Results.Ok(new
     {
         status = "Healthy",
         message = "سامانه درمانگاه سهند فعال است",
         serverTime = DateTime.UtcNow,
-        version = "1.0.0"
+        version = System.Reflection.Assembly.GetEntryAssembly()?
+            .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion.Split('+')[0] ?? "unknown"
     }))
     .AllowAnonymous()
     .ExcludeFromDescription();
+
+    // ═══ چرخهٔ ۵۵ (BUG-20): نقاط سلامت استاندارد مانیتورینگ ═══
+    // /health/live فقط زنده‌بودن فرآیند — برای پراب restart؛
+    // /health/ready آمادگی سرویس‌دهی — دیتابیس + فضای دیسک پشتیبان + Hangfire
+    app.MapClinicProHealthChecks();
 
     Log.Information("✅ API درمانگاه سهند راه‌اندازی شد و در حال سرویس‌دهی است");
 
