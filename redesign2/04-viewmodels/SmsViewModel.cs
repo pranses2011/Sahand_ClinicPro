@@ -236,9 +236,9 @@ namespace Sahand.ClinicPro.Desktop.ViewModels
         /// </summary>
         private static IEnumerable<SmsRow> SampleData()
         {
-            yield return new SmsRow { Time = "۱۴۰۴/۰۷/۱۹ ۰۹:۰۰", Recipient = "سارا احمدی", RecipientSub = "۰۹۱۴-۴۲۲-۰۸۷۱", RecipientInitials = "سا", RecipientAvatar = Application.Current.TryFindResource("Brush.Info") as Brush, Template = "یادآوری نوبت", Cost = 300m, Status = "تحویل شد", StatusTone = "ok" };
-            yield return new SmsRow { Time = "۱۴۰۴/۰۷/۱۹ ۰۹:۰۲", Recipient = "محمد رضایی", RecipientSub = "۰۹۱۲-۳۳۵-۱۲۹۰", RecipientInitials = "مر", RecipientAvatar = Application.Current.TryFindResource("Brush.Primary") as Brush, Template = "یادآوری نوبت", Cost = 300m, Status = "تحویل شد", StatusTone = "ok" };
-            yield return new SmsRow { Time = "۱۴۰۴/۰۷/۱۹ ۰۹:۰۵", Recipient = "فاطمه کریمی", RecipientSub = "۰۹۳۸-۱۱۴-۲۳۴۵", RecipientInitials = "فک", RecipientAvatar = Application.Current.TryFindResource("Brush.Secondary") as Brush, Template = "نتیجه آزمایش", Cost = 300m, Status = "ناموفق", StatusTone = "dg" };
+            yield return new SmsRow { Time = "۱۴۰۴/۰۷/۱۹ ۰۹:۰۰", Recipient = "سارا احمدی", RecipientSub = "۰۹۱۴۴۲۲۰۴۳۰", RecipientInitials = "سا", RecipientAvatar = Application.Current.TryFindResource("Brush.Info") as Brush, Template = "یادآوری نوبت", Cost = 300m, Status = "تحویل شد", StatusTone = "ok" };
+            yield return new SmsRow { Time = "۱۴۰۴/۰۷/۱۹ ۰۹:۰۲", Recipient = "محمد رضایی", RecipientSub = "۰۹۱۴۴۲۲۰۴۳۰", RecipientInitials = "مر", RecipientAvatar = Application.Current.TryFindResource("Brush.Primary") as Brush, Template = "یادآوری نوبت", Cost = 300m, Status = "تحویل شد", StatusTone = "ok" };
+            yield return new SmsRow { Time = "۱۴۰۴/۰۷/۱۹ ۰۹:۰۵", Recipient = "فاطمه کریمی", RecipientSub = "۰۹۱۴۴۲۲۰۴۳۰", RecipientInitials = "فک", RecipientAvatar = Application.Current.TryFindResource("Brush.Secondary") as Brush, Template = "نتیجه آزمایش", Cost = 300m, Status = "ناموفق", StatusTone = "dg" };
         }
 
         /// <summary>

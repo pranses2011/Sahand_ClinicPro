@@ -1760,3 +1760,97 @@ _patch("ReportBrowserView",
         ["گزارش ویزیت‌های پزشک", "درمانی", who("سیستم", "خودکار", "س", ""), num("۱۸۹"), chip("آماده", "ok")],
         ["گزارش موجودی داروخانه", "عملیاتی", who("سیستم", "خودکار", "س", ""), num("۱۵۶"), chip("آماده", "ok")],
         ["تحلیل روند بیماران جدید", "درمانی", who("لیلا حسنی", "حسابدار", "لح", "b4"), num("۳۱"), chip("پیش‌نویس", "wn")]])
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# پاک‌سازیِ اطلاعاتِ تماس — قاعدهٔ ۸
+# ══════════════════════════════════════════════════════════════════════════
+#
+# «هیچ اطلاعاتِ تماسِ ساختگی در هیچ خروجی — فقط:
+#      سعید نجفی / سهند سرویس / ۰۴۱-۳۴۴۳۶۱۴۱ / ۰۹۱۴۴۲۲۰۴۳۰ /
+#      info@ea-fixer.ir / ea-fixer.ir»
+#                                                       (TODO-v1.6.md:77)
+#
+# دادهٔ نمونه در وایرفریم‌ها برای نمایشِ واقع‌گرایانه شماره تلفن و رایانامه
+# دارد؛ همه‌ی این مقادیر ساختگی‌اند و با این پاک‌ساز به تنها مقادیرِ مجاز
+# تبدیل می‌شوند. این کار در سطحِ مشخصات انجام می‌شود تا همه‌ی خروجی‌ها
+# (HTML، متنی، View و ViewModel) یک‌جا درست شوند.
+
+import re as _re
+
+#: تنها شماره‌های تماسِ مجاز
+ALLOWED_MOBILE = "۰۹۱۴۴۲۲۰۴۳۰"
+ALLOWED_PHONE = "۰۴۱-۳۴۴۳۶۱۴۱"
+ALLOWED_EMAIL = "info@ea-fixer.ir"
+ALLOWED_SITE = "ea-fixer.ir"
+
+# ارقامِ فارسی/عربی → لاتین، برای تشخیص
+_DIGIT_MAP = str.maketrans("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩",
+                           "01234567890123456789")
+
+_EMAIL_RE = _re.compile(r"[\w\.\-]+@[\w\.\-]+\.[A-Za-z]{2,}")
+# نخستین رقم می‌تواند لاتین یا فارسی باشد (دادهٔ نمونه فارسی است)
+_PHONE_RE = _re.compile(r"(?<![\w])[0\u06F0][\d\u06F0-\u06F9 \-–—]{8,17}(?![\w])")
+
+
+def _is_phone(value: str) -> bool:
+    """آیا رشته یک شماره تلفن است (تلفنِ همراه یا ثابت)"""
+    digits = value.translate(_DIGIT_MAP)
+    digits = _re.sub(r"[^\d]", "", digits)
+    if not 9 <= len(digits) <= 11:
+        return False
+    return digits.startswith("09") or digits.startswith("04") or digits.startswith("02") \
+        or digits.startswith("03") or digits.startswith("05") or digits.startswith("06") \
+        or digits.startswith("07") or digits.startswith("08") or digits.startswith("01")
+
+
+def _sanitize_scalar(value):
+    """پاک‌سازیِ یک مقدارِ اتمی"""
+    if not isinstance(value, str):
+        return value
+    original = value
+
+    # رایانامه
+    if _EMAIL_RE.search(value):
+        if ALLOWED_EMAIL not in value and ALLOWED_SITE not in value:
+            value = _EMAIL_RE.sub(ALLOWED_EMAIL, value)
+
+    # شماره تلفن
+    def _fix(m):
+        token = m.group(0).strip()
+        if not _is_phone(token):
+            return token
+        digits = _re.sub(r"[^\d]", "", token.translate(_DIGIT_MAP))
+        # تلفنِ ثابت (کدِ استان) در برابر همراه
+        return ALLOWED_PHONE if digits.startswith("0") and not digits.startswith("09") \
+            else ALLOWED_MOBILE
+
+    value = _PHONE_RE.sub(_fix, value)
+    return value
+
+
+def _sanitize_node(node):
+    """پاک‌سازیِ بازگشتیِ یک گره (dict / list / tuple / str)"""
+    if isinstance(node, str):
+        return _sanitize_scalar(node)
+    if isinstance(node, dict):
+        for k in list(node):
+            node[k] = _sanitize_node(node[k])
+        return node
+    if isinstance(node, tuple):
+        return tuple(_sanitize_node(x) for x in node)
+    if isinstance(node, list):
+        for i in range(len(node)):
+            node[i] = _sanitize_node(node[i])
+        return node
+    return node
+
+
+def sanitize_contacts(forms):
+    """اعمالِ قاعدهٔ ۸ روی همه‌ی فرم‌ها — بی‌درنگ و درجا"""
+    for form in forms:
+        _sanitize_node(form)
+    return forms
+
+
+sanitize_contacts(FORMS)

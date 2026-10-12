@@ -384,7 +384,7 @@
                                Style="{DynamicResource Input.Label}" />
                     <TextBox Style="{DynamicResource Input.TextBox}"
                              Text="{Binding Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                             Tag="m.nouri@example.com"
+                             Tag="info@ea-fixer.ir"
                              />
                 </StackPanel>
                 <!-- نشانی — TextBox (چندخطی) · پهنای 4/۱۲ -->

@@ -274,7 +274,7 @@
                                Style="{DynamicResource Input.Label}" />
                     <TextBox Style="{DynamicResource Input.TextBox}"
                              Text="{Binding Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                             Tag="s.ahmadi@example.com"
+                             Tag="info@ea-fixer.ir"
                              />
                 </StackPanel>
                 <!-- شماره اضطراری — TextBox · پهنای 3/۱۲ -->

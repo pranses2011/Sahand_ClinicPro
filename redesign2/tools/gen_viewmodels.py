@@ -145,7 +145,12 @@ def col_type(c: dict, values: list) -> str:
     if kind == "money":
         return "decimal" if all(numeric_literal(v) for v in values) else "string?"
     if kind == "num":
-        return "int" if all(numeric_literal(v) for v in values) else "string?"
+        if not all(numeric_literal(v) for v in values):
+            return "string?"
+        # اعدادِ بزرگ شناسه‌اند، نه کمیّت: شماره تلفن، کد ملی، شماره حساب.
+        # آن‌ها را نباید int گرفت (صفرِ پیشرو و ارزشِ ریاضی بی‌معناست).
+        width = max(len(numeric_literal(v) or "") for v in values)
+        return "int" if width <= 7 else "string?"
     if kind == "date":
         # تاریخ‌ها در وایرفریم از پیش شمسی‌اند → رشته نگه داشته می‌شوند
         return "string?"

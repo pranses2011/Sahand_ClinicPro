@@ -381,7 +381,7 @@
                             <TextBlock Grid.Column="0" Text="موبایل"
                                        Style="{DynamicResource Txt.Caption}"
                                        Margin="0,0,{StaticResource S.3},0" />
-                            <TextBlock Grid.Column="1" Text="۰۹۱۴-۱۲۳-۴۵۶۷"
+                            <TextBlock Grid.Column="1" Text="۰۹۱۴۴۲۲۰۴۳۰"
                                        Style="{DynamicResource Txt.Body}"
                                        TextAlignment="Right" />
                         </Grid>

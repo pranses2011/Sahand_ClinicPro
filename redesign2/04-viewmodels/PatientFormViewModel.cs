@@ -183,7 +183,7 @@ namespace Sahand.ClinicPro.Desktop.ViewModels
                 }
             }
         }
-        private string _phone = "۰۹۱۴۴۲۲۰۸۷۱";
+        private string _phone = "۰۹۱۴۴۲۲۰۴۳۰";
 
         /// <summary>تلفن ثابت</summary>
         public string HomePhone
@@ -197,7 +197,7 @@ namespace Sahand.ClinicPro.Desktop.ViewModels
                 }
             }
         }
-        private string _homePhone = "۰۴۱۳۳۳۳۲۲۱۱";
+        private string _homePhone = "۰۴۱-۳۴۴۳۶۱۴۱";
 
         /// <summary>رایانامه</summary>
         public string Email
@@ -211,7 +211,7 @@ namespace Sahand.ClinicPro.Desktop.ViewModels
                 }
             }
         }
-        private string _email = "s.ahmadi@example.com";
+        private string _email = "info@ea-fixer.ir";
 
         /// <summary>شماره اضطراری</summary>
         public string EmergencyContact
@@ -225,7 +225,7 @@ namespace Sahand.ClinicPro.Desktop.ViewModels
                 }
             }
         }
-        private string _emergencyContact = "۰۹۱۲۱۱۱۲۲۳۳";
+        private string _emergencyContact = "۰۹۱۴۴۲۲۰۴۳۰";
 
         /// <summary>استان</summary>
         public string Province

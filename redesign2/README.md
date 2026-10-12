@@ -42,7 +42,8 @@ redesign2/
 │   └── ViewModels/Base/    ViewModelBase · PageViewModelBase
 │                           FormViewModelBase · RelayCommand
 │
-├── 01-wireframes-html/     ۸۱ وایرفریم + گالری (با دادهٔ نمونه)
+├── 01-wireframes-html/     ۸۱ وایرفریمِ زنده + گالری (با دادهٔ نمونه)
+├── 02-wireframes-md/       ۸۱ وایرفریمِ متنی (جدول‌محور، مناسبِ دیف)
 ├── 03-views/               ۸۱ View  (۲۱٬۸۳۶ خط XAML)
 ├── 04-viewmodels/          ۸۱ ViewModel + _Shared.cs  (۱۴٬۷۸۲ خط C#)
 │
@@ -61,7 +62,8 @@ redesign2/
 
 | می‌خواهید… | بروید به |
 |---|---|
-| رابط را ببینید | [`01-wireframes-html/index.html`](01-wireframes-html/index.html) — گالریِ ۸۱ وایرفریم |
+| رابط را ببینید | [`01-wireframes-html/index.html`](01-wireframes-html/index.html) — گالریِ ۸۱ وایرفریمِ زنده |
+| نسخه‌ی متنی را بخوانید | [`02-wireframes-md/README.md`](02-wireframes-md/README.md) — ۸۱ وایرفریمِ جدول‌محور |
 | آیکون‌ها را ببینید | [`00-foundation/Assets/Icons-Preview.html`](00-foundation/Assets/Icons-Preview.html) |
 | کد را در پروژه بگذارید | [`REPLACEMENT-GUIDE.md`](REPLACEMENT-GUIDE.md) |
 | ارتباطِ صفحات را بفهمید | [`RELATIONS.md`](RELATIONS.md) |
@@ -118,11 +120,12 @@ redesign2/
 
 | ابزار | کار |
 |---|---|
-| `tools/spec_core.py` | مشخصاتِ ۸۱ فرم (فیلدها، ستون‌ها، دادهٔ نمونه، ارتباطات) |
+| `tools/spec_core.py` | مشخصاتِ ۸۱ فرم + **پاک‌سازِ اطلاعاتِ تماس** (قاعدهٔ ۸) |
 | `tools/render.py` + `generate2.py` | تولیدِ وایرفریم‌های HTML |
 | `tools/svg2geom.py` | تبدیلِ SVG به مسیرِ WPF با **مطلق‌سازیِ دستورات** |
 | `tools/build_icons.py` | ساختِ `Assets/Icons.xaml` از Lucide |
 | `tools/build_icon_preview.py` | صفحه‌ی نمایشِ آیکون‌ها |
+| `tools/gen_wireframes_md.py` | تولیدِ ۸۱ وایرفریمِ متنی |
 | `tools/gen_views.py` | تولیدِ ۸۱ View |
 | `tools/gen_viewmodels.py` | تولیدِ ۸۱ ViewModel |
 | `tools/gen_docs.py` | فهرست‌ها و نمودارِ ارتباطات |

@@ -98,7 +98,7 @@ namespace Sahand.ClinicPro.Desktop.ViewModels
             Summary.Add(new KeyValueItem("کد ملی", "۰۰۱-۲۳۴۵۶۷-۸"));
             Summary.Add(new KeyValueItem("سن/جنسیت", "۴۲ سال · زن"));
             Summary.Add(new KeyValueItem("بیمه", "تأمین اجتماعی"));
-            Summary.Add(new KeyValueItem("موبایل", "۰۹۱۴-۴۲۲-۰۸۷۱"));
+            Summary.Add(new KeyValueItem("موبایل", "۰۹۱۴۴۲۲۰۴۳۰"));
             Summary.Add(new KeyValueItem("آخرین ویزیت", "۱۴۰۴/۰۷/۱۲"));
             Summary.Add(new KeyValueItem("مانده حساب", "۰ تومان"));
 
@@ -219,11 +219,11 @@ namespace Sahand.ClinicPro.Desktop.ViewModels
         /// </summary>
         private static IEnumerable<PatientsRow> SampleData()
         {
-            yield return new PatientsRow { Code = "P-۱۰۲۴", FullName = "سارا احمدی", FullNameSub = "۴۲ سال · زن", FullNameInitials = "سا", FullNameAvatar = Application.Current.TryFindResource("Brush.Info") as Brush, NationalId = "۰۰۱-۲۳۴۵۶۷-۸", Phone = "۰۹۱۴-۴۲۲-۰۸۷۱", Age = 42, Gender = "زن", LastVisit = "۱۴۰۴/۰۷/۱۲", Balance = 0m, Status = "فعال", StatusTone = "ok" };
-            yield return new PatientsRow { Code = "P-۱۰۲۵", FullName = "محمد رضایی", FullNameSub = "۳۵ سال · مرد", FullNameInitials = "مر", FullNameAvatar = Application.Current.TryFindResource("Brush.Primary") as Brush, NationalId = "۰۰۲-۳۴۵۶۷۸-۹", Phone = "۰۹۱۲-۳۳۵-۱۲۹۰", Age = 35, Gender = "مرد", LastVisit = "۱۴۰۴/۰۷/۱۰", Balance = 180000m, Status = "فعال", StatusTone = "ok" };
-            yield return new PatientsRow { Code = "P-۱۰۲۶", FullName = "فاطمه کریمی", FullNameSub = "۲۸ سال · زن", FullNameInitials = "فک", FullNameAvatar = Application.Current.TryFindResource("Brush.Secondary") as Brush, NationalId = "۰۰۳-۴۵۶۷۸۹-۰", Phone = "۰۹۳۸-۱۱۴-۲۳۴۵", Age = 28, Gender = "زن", LastVisit = "۱۴۰۴/۰۶/۲۸", Balance = 0m, Status = "فعال", StatusTone = "ok" };
-            yield return new PatientsRow { Code = "P-۱۰۲۷", FullName = "علی حسینی", FullNameSub = "۶۱ سال · مرد", FullNameInitials = "اح", FullNameAvatar = Application.Current.TryFindResource("Brush.Primary") as Brush, NationalId = "۰۰۴-۵۶۷۸۹۰-۱", Phone = "۰۹۱۱-۷۷۸-۴۵۱۲", Age = 61, Gender = "مرد", LastVisit = "۱۴۰۴/۰۵/۱۴", Balance = 0m, Status = "بایگانی", StatusTone = "nu" };
-            yield return new PatientsRow { Code = "P-۱۰۲۸", FullName = "زهرا موسوی", FullNameSub = "۱۹ سال · زن", FullNameInitials = "زم", FullNameAvatar = Application.Current.TryFindResource("Brush.Warning") as Brush, NationalId = "۰۰۵-۶۷۸۹۰۱-۲", Phone = "۰۹۳۵-۲۲۳-۹۰۱۴", Age = 19, Gender = "زن", LastVisit = "۱۴۰۴/۰۷/۱۸", Balance = 45000m, Status = "فعال", StatusTone = "ok" };
+            yield return new PatientsRow { Code = "P-۱۰۲۴", FullName = "سارا احمدی", FullNameSub = "۴۲ سال · زن", FullNameInitials = "سا", FullNameAvatar = Application.Current.TryFindResource("Brush.Info") as Brush, NationalId = "۰۰۱-۲۳۴۵۶۷-۸", Phone = "۰۹۱۴۴۲۲۰۴۳۰", Age = 42, Gender = "زن", LastVisit = "۱۴۰۴/۰۷/۱۲", Balance = 0m, Status = "فعال", StatusTone = "ok" };
+            yield return new PatientsRow { Code = "P-۱۰۲۵", FullName = "محمد رضایی", FullNameSub = "۳۵ سال · مرد", FullNameInitials = "مر", FullNameAvatar = Application.Current.TryFindResource("Brush.Primary") as Brush, NationalId = "۰۰۲-۳۴۵۶۷۸-۹", Phone = "۰۹۱۴۴۲۲۰۴۳۰", Age = 35, Gender = "مرد", LastVisit = "۱۴۰۴/۰۷/۱۰", Balance = 180000m, Status = "فعال", StatusTone = "ok" };
+            yield return new PatientsRow { Code = "P-۱۰۲۶", FullName = "فاطمه کریمی", FullNameSub = "۲۸ سال · زن", FullNameInitials = "فک", FullNameAvatar = Application.Current.TryFindResource("Brush.Secondary") as Brush, NationalId = "۰۰۳-۴۵۶۷۸۹-۰", Phone = "۰۹۱۴۴۲۲۰۴۳۰", Age = 28, Gender = "زن", LastVisit = "۱۴۰۴/۰۶/۲۸", Balance = 0m, Status = "فعال", StatusTone = "ok" };
+            yield return new PatientsRow { Code = "P-۱۰۲۷", FullName = "علی حسینی", FullNameSub = "۶۱ سال · مرد", FullNameInitials = "اح", FullNameAvatar = Application.Current.TryFindResource("Brush.Primary") as Brush, NationalId = "۰۰۴-۵۶۷۸۹۰-۱", Phone = "۰۹۱۴۴۲۲۰۴۳۰", Age = 61, Gender = "مرد", LastVisit = "۱۴۰۴/۰۵/۱۴", Balance = 0m, Status = "بایگانی", StatusTone = "nu" };
+            yield return new PatientsRow { Code = "P-۱۰۲۸", FullName = "زهرا موسوی", FullNameSub = "۱۹ سال · زن", FullNameInitials = "زم", FullNameAvatar = Application.Current.TryFindResource("Brush.Warning") as Brush, NationalId = "۰۰۵-۶۷۸۹۰۱-۲", Phone = "۰۹۱۴۴۲۲۰۴۳۰", Age = 19, Gender = "زن", LastVisit = "۱۴۰۴/۰۷/۱۸", Balance = 45000m, Status = "فعال", StatusTone = "ok" };
         }
 
         /// <summary>

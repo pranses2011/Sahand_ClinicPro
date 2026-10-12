@@ -92,7 +92,7 @@ namespace Sahand.ClinicPro.Desktop.ViewModels
             Summary.Add(new KeyValueItem("کد ملی", "۰۰۹-۸۷۶۵۴۳-۲"));
             Summary.Add(new KeyValueItem("سمت", "کارشناس پذیرش"));
             Summary.Add(new KeyValueItem("دپارتمان", "پذیرش"));
-            Summary.Add(new KeyValueItem("موبایل", "۰۹۱۴-۱۲۳-۴۵۶۷"));
+            Summary.Add(new KeyValueItem("موبایل", "۰۹۱۴۴۲۲۰۴۳۰"));
             Summary.Add(new KeyValueItem("تاریخ استخدام", "۱۴۰۱/۰۲/۱۵"));
             Summary.Add(new KeyValueItem("حقوق پایه", "۱۲,۰۰۰,۰۰۰"));
 
@@ -183,10 +183,10 @@ namespace Sahand.ClinicPro.Desktop.ViewModels
         /// </summary>
         private static IEnumerable<PersonnelRow> SampleData()
         {
-            yield return new PersonnelRow { Code = "E-۱۰۰۱", Name = "مریم نوری", NameSub = "کارشناس پذیرش", NameInitials = "من", NameAvatar = Application.Current.TryFindResource("Brush.Secondary") as Brush, Position = "کارشناس پذیرش", Department = "پذیرش", Phone = "۰۹۱۴-۱۲۳-۴۵۶۷", HireDate = "۱۴۰۱/۰۲/۱۵", Status = "فعال", StatusTone = "ok" };
-            yield return new PersonnelRow { Code = "E-۱۰۰۲", Name = "احمد صادقی", NameSub = "مسئول پذیرش", NameInitials = "اص", NameAvatar = Application.Current.TryFindResource("Brush.Primary") as Brush, Position = "مسئول پذیرش", Department = "پذیرش", Phone = "۰۹۱۲-۹۸۷-۶۵۴۳", HireDate = "۱۴۰۰/۰۸/۰۱", Status = "فعال", StatusTone = "ok" };
-            yield return new PersonnelRow { Code = "E-۱۰۰۳", Name = "دکتر موسوی", NameSub = "متخصص داخلی", NameInitials = "دم", NameAvatar = Application.Current.TryFindResource("Brush.Warning") as Brush, Position = "متخصص داخلی", Department = "درمان", Phone = "۰۹۱۱-۴۵۶-۷۸۹۰", HireDate = "۱۳۹۸/۰۴/۱۰", Status = "فعال", StatusTone = "ok" };
-            yield return new PersonnelRow { Code = "E-۱۰۰۴", Name = "لیلا حسنی", NameSub = "حسابدار", NameInitials = "لح", NameAvatar = Application.Current.TryFindResource("Brush.Success") as Brush, Position = "حسابدار", Department = "مالی", Phone = "۰۹۳۵-۱۱۱-۲۲۳۳", HireDate = "۱۴۰۲/۰۱/۲۰", Status = "فعال", StatusTone = "ok" };
+            yield return new PersonnelRow { Code = "E-۱۰۰۱", Name = "مریم نوری", NameSub = "کارشناس پذیرش", NameInitials = "من", NameAvatar = Application.Current.TryFindResource("Brush.Secondary") as Brush, Position = "کارشناس پذیرش", Department = "پذیرش", Phone = "۰۹۱۴۴۲۲۰۴۳۰", HireDate = "۱۴۰۱/۰۲/۱۵", Status = "فعال", StatusTone = "ok" };
+            yield return new PersonnelRow { Code = "E-۱۰۰۲", Name = "احمد صادقی", NameSub = "مسئول پذیرش", NameInitials = "اص", NameAvatar = Application.Current.TryFindResource("Brush.Primary") as Brush, Position = "مسئول پذیرش", Department = "پذیرش", Phone = "۰۹۱۴۴۲۲۰۴۳۰", HireDate = "۱۴۰۰/۰۸/۰۱", Status = "فعال", StatusTone = "ok" };
+            yield return new PersonnelRow { Code = "E-۱۰۰۳", Name = "دکتر موسوی", NameSub = "متخصص داخلی", NameInitials = "دم", NameAvatar = Application.Current.TryFindResource("Brush.Warning") as Brush, Position = "متخصص داخلی", Department = "درمان", Phone = "۰۹۱۴۴۲۲۰۴۳۰", HireDate = "۱۳۹۸/۰۴/۱۰", Status = "فعال", StatusTone = "ok" };
+            yield return new PersonnelRow { Code = "E-۱۰۰۴", Name = "لیلا حسنی", NameSub = "حسابدار", NameInitials = "لح", NameAvatar = Application.Current.TryFindResource("Brush.Success") as Brush, Position = "حسابدار", Department = "مالی", Phone = "۰۹۱۴۴۲۲۰۴۳۰", HireDate = "۱۴۰۲/۰۱/۲۰", Status = "فعال", StatusTone = "ok" };
         }
 
         /// <summary>

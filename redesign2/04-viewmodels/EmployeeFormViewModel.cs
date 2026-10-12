@@ -333,7 +333,7 @@ namespace Sahand.ClinicPro.Desktop.ViewModels
                 }
             }
         }
-        private string _phone = "۰۹۱۴۱۲۳۴۵۶۷";
+        private string _phone = "۰۹۱۴۴۲۲۰۴۳۰";
 
         /// <summary>رایانامه</summary>
         public string Email
@@ -347,7 +347,7 @@ namespace Sahand.ClinicPro.Desktop.ViewModels
                 }
             }
         }
-        private string _email = "m.nouri@example.com";
+        private string _email = "info@ea-fixer.ir";
 
         /// <summary>نشانی</summary>
         public string Address
