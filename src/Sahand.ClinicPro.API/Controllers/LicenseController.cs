@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Sahand.ClinicPro.Application.Interfaces;
 
 namespace Sahand.ClinicPro.API.Controllers;
@@ -12,6 +13,11 @@ namespace Sahand.ClinicPro.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/v1/license")]
+// چرخهٔ ۴۹ (مرور AllowAnonymous): سقف ۲۰ درخواست در دقیقه از هر IP —
+// اندپوینت‌های این کنترلر پیش از ورود عمومی‌اند و همین سقف، سوءاستفاده
+// (به‌ویژه روی PUT settings و فعال‌سازی تکراری) را می‌شکند؛ پنجرهٔ فعال‌سازی
+// واقعی با ۲-۳ فراخوان در دقیقه کاملاً زیر سقف می‌ماند.
+[EnableRateLimiting("license")]
 public class LicenseController : ApiBaseController
 {
     private readonly ILicenseService _license;
