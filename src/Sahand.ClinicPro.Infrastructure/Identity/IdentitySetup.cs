@@ -31,14 +31,21 @@ public static class IdentitySetup
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
 
-        /* ── چرخه دوازدهم (بند ۴-۲ سند تحلیل): نگهبان کلید امضا ──
-           کلید پیش‌فرض/کوتاه در «تولید» یعنی هرکسی بتواند توکن جعلی بسازد؛
+        /* ── چرخه دوازدهم (بند ۴-۲ سند تحلیل) + چرخهٔ ۴۹ (BUG-01): نگهبان کلید امضا ──
+           کلید پیش‌فرض/کوتاه/الگوی ناامن در «تولید» یعنی هرکسی بتواند توکن جعلی بسازد؛
            در محیط تولید سرور با پیام روشن بالا نمی‌آید تا نصب‌کننده وادار به
-           تنظیم کلید قوی شود (تولید: متغیر محیطی/Secrets؛ توسعه: user-secrets).
-           حداقل: ۳۲ بایت (۲۵۶ بیت) و نامساوی مقدار پیش‌فرض. */
+           تنظیم کلید قوی شود (تولید: متغیر محیطی Jwt__SecretKey یا Secret Manager؛
+           توسعه: user-secrets یا خالی = کلید جایگزین توسعه).
+           حداقل: ۳۲ بایت (۲۵۶ بیت) و نامساوی مقدار پیش‌فرض.
+           چرخهٔ ۴۹: کلید هاردکد از appsettings.json حذف شد؛ علاوه بر ثابتِ
+           پیش‌فرض، هر کلیدی که «الگوی کلید توسعه» داشته باشد (مثل کلید پیشین
+           مخزن که از گارد قدیمی عبور می‌کرد) هم در تولید رد می‌شود. */
         const string DefaultKey = "SahandClinicPro-Development-Fallback-Secret-Key-Must-Change!2026";
         var isProduction = !string.Equals(
-            configuration["Environment"] ?? configuration["ASPNETCORE_ENVIRONMENT"] ?? "",
+            configuration["Environment"]
+            ?? configuration["ASPNETCORE_ENVIRONMENT"]
+            ?? configuration["DOTNET_ENVIRONMENT"]
+            ?? "",
             "Development", StringComparison.OrdinalIgnoreCase);
         var secret = string.IsNullOrEmpty(jwt.SecretKey) ? DefaultKey : jwt.SecretKey;
         if (isProduction)
@@ -46,11 +53,28 @@ public static class IdentitySetup
             if (string.IsNullOrEmpty(jwt.SecretKey) || jwt.SecretKey == DefaultKey)
                 throw new InvalidOperationException(
                     "⛔ کلید امضای JWT تنظیم نشده است (Jwt:SecretKey). در تولید، یک کلید تصادفی حداقل ۶۴ کاراکتری " +
-                    "به‌صورت متغیر محیطی یا Secret Manager تنظیم کنید — سرور برای ایمنی شما بالا نمی‌آید.");
+                    "به‌صورت متغیر محیطی (Jwt__SecretKey) یا Secret Manager تنظیم کنید — سرور برای ایمنی شما بالا نمی‌آید. " +
+                    "راهنمای کامل: docs/guides/deploy-jwt.md");
             if (System.Text.Encoding.UTF8.GetBytes(secret).Length < 32)
                 throw new InvalidOperationException(
                     "⛔ کلید امضای JWT کوتاه‌تر از ۳۲ بایت است (Jwt:SecretKey) — حداقل ۶۴ کاراکتر تصادفی لازم است. " +
                     "نمونه تولید: openssl rand -base64 48");
+            // چرخهٔ ۴۹ (BUG-01): تشخیص الگو — کلید پیشین مخزن
+            // (SahandClinicPro-Development-Secret-Key-Change-In-Production-…) بلندتر از
+            // ۳۲ بایت بود و از دو گارد قبلی عبور می‌کرد؛ این‌جا با تطبیق الگو رد می‌شود.
+            // الگوها کوچک‌سازی شده‌اند و در کلید تصادفیِ خالص (base64) هرگز ظاهر نمی‌شوند.
+            var lowered = secret.ToLowerInvariant();
+            string[] insecurePatterns =
+            {
+                "development-secret", "change-in-production", "must-change",
+                "fallback-secret", "sahandclinicpro-development",
+                "replaceme", "changeme"
+            };
+            if (Array.Exists(insecurePatterns, p => lowered.Contains(p, StringComparison.Ordinal)))
+                throw new InvalidOperationException(
+                    "⛔ کلید امضای JWT دارای الگوی ناامن تشخیص داده شد (Jwt:SecretKey) — کلیدهای حاوی عبارت‌هایی مثل " +
+                    "«Development-Secret / Change-In-Production / Must-Change» در تولید پذیرفته نمی‌شوند. " +
+                    "یک کلید تصادفی خالص بسازید (openssl rand -base64 48) — راهنما: docs/guides/deploy-jwt.md");
         }
 
         // احراز هویت JWT Bearer — با کلید از تنظیمات
