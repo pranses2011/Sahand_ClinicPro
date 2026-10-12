@@ -25,16 +25,17 @@ jobs:
         run: dotnet build Sahand.ClinicPro.sln --no-restore -c Release
 
       - name: اجرای تست‌ها + پوشش کد (B4 چرخه ۱۲)
-        run: dotnet test Sahand.ClinicPro.sln --no-build -c Release --logger "trx" --results-directory ./TestResults --collect:"XPlat Code Coverage" --results-directory ./TestResults/Coverage
+        run: dotnet test Sahand.ClinicPro.sln --no-build -c Release --logger "trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults
 
       - name: خلاصه پوشش
         if: always()
         run: |
           echo "## پوشش کد" >> $GITHUB_STEP_SUMMARY
-          for f in $(find TestResults -name "cobertura.xml" 2>/dev/null); do
+          # چرخهٔ ۵۸: این گام از این پس با نبود نتایج هم سبز می‌ماند (find با -e می‌میرد)
+          for f in $(find TestResults -name "cobertura.xml" 2>/dev/null || true); do
             echo "بیننده: $f" >> $GITHUB_STEP_SUMMARY
           done
-          find TestResults -name "cobertura.xml" -exec echo "آرتیفکت: {}" \;
+          find TestResults -name "cobertura.xml" -exec echo "آرتیفکت: {}" \; || true
 
       - name: تولید سند OpenAPI (چرخه دوازدهم B3)
         run: |
