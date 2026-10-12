@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Sahand.ClinicPro.Application.DTOs.Billing;
 using Sahand.ClinicPro.Application.Features.Billing.Commands.RecordPayment;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Entities.Accounting;

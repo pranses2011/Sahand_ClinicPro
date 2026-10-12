@@ -1,4 +1,5 @@
 ﻿using System.Threading.RateLimiting;
+using System.Reflection;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Sahand.ClinicPro.API.Filters;
+using Sahand.ClinicPro.API.Health;
 using Hangfire;
 using Sahand.ClinicPro.API.Middleware;
 using Sahand.ClinicPro.Application;
@@ -360,8 +362,8 @@ try
         status = "Healthy",
         message = "سامانه درمانگاه سهند فعال است",
         serverTime = DateTime.UtcNow,
-        version = System.Reflection.Assembly.GetEntryAssembly()?
-            .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?
+        version = Assembly.GetEntryAssembly()?
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
             .InformationalVersion.Split('+')[0] ?? "unknown"
     }))
     .AllowAnonymous()

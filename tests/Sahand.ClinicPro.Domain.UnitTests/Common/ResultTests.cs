@@ -41,7 +41,7 @@ public class ResultTests
     [Fact]
     public void Generic_Success_Should_Expose_Value()
     {
-        var result = Result.Success(42);
+        var result = Result<int>.Success(42);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Be(42);

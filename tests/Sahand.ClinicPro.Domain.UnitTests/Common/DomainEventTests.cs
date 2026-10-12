@@ -4,7 +4,6 @@ using Sahand.ClinicPro.Domain.Events;
 using Xunit;
 
 namespace Sahand.ClinicPro.Domain.UnitTests.Common;
-
 /// <summary>
 /// تست‌های مکانیزم رویدادهای دامنه — چرخهٔ ۵۱:
 /// صف رویداد BaseEntity (افزودن/حذف/پاک‌سازی/ترتیب)، مُهر زمانی UTC و
@@ -49,7 +48,9 @@ public class DomainEventTests
         entity.AddDomainEvent(second);
         entity.AddDomainEvent(third);
 
-        entity.DomainEvents.Should().ContainInOrder(first, second, third,
+        // روایت IEnumerable (نه params) تا because هم بگیرد
+        entity.DomainEvents.Should().ContainInOrder(
+            new IDomainEvent[] { first, second, third },
             because: "ترتیب انتشار رویدادها باید همان ترتیب وقوعشان باشد");
     }
 
@@ -107,11 +108,11 @@ public class DomainEventTests
     {
         // دو ویزیت یکسان (شناسه‌های برابر) — رویدادهای هم‌ارزش‌اند؛
         // این برابری پایهٔ دی‌دوپلیکیشن مصرف‌کننده‌ها در آینده است
-        var a = new VisitCompletedEvent(visitId: 10, patientId: 20, doctorId: 30);
-        var b = new VisitCompletedEvent(visitId: 10, patientId: 20, doctorId: 30);
+        var a = new VisitCompletedEvent(VisitId: 10, PatientId: 20, DoctorId: 30);
+        var b = new VisitCompletedEvent(VisitId: 10, PatientId: 20, DoctorId: 30);
 
         a.Should().Be(b);
-        a.Should().NotBe(new VisitCompletedEvent(visitId: 11, patientId: 20, doctorId: 30));
+        a.Should().NotBe(new VisitCompletedEvent(VisitId: 11, PatientId: 20, DoctorId: 30));
     }
 
     [Fact]
