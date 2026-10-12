@@ -104,15 +104,17 @@ public class DomainEventTests
     // ═══════════════ برابری مقداری رکورد رویداد ═══════════════
 
     [Fact]
-    public void Records_With_Same_Payload_Should_Be_Equal()
+    public void Records_With_Same_Payload_Should_Differ_By_Unique_Timestamp()
     {
-        // دو ویزیت یکسان (شناسه‌های برابر) — رویدادهای هم‌ارزش‌اند؛
-        // این برابری پایهٔ دی‌دوپلیکیشن مصرف‌کننده‌ها در آینده است
+        // بار مساوی، مُهر زمانی متفاوت: OccurredOn بخشی از برابریِ رکورد است —
+        // یعنی هر «رخداد» یکتاست حتی با دامنهٔ یکسان (قراردار طراحی درست:
+        // مصرف‌کننده‌ها هرگز نباید دو رخداد مجزا را «همان یک» بپندارند)
         var a = new VisitCompletedEvent(VisitId: 10, PatientId: 20, DoctorId: 30);
         var b = new VisitCompletedEvent(VisitId: 10, PatientId: 20, DoctorId: 30);
 
-        a.Should().Be(b);
-        a.Should().NotBe(new VisitCompletedEvent(VisitId: 11, PatientId: 20, DoctorId: 30));
+        a.Should().NotBe(b, because: "OccurredOn هر نمونه در ساختش مُهر می‌خورد");
+        a.VisitId.Should().Be(b.VisitId);
+        a.PatientId.Should().Be(b.PatientId);
     }
 
     [Fact]

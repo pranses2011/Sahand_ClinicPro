@@ -236,7 +236,7 @@ public class SurveyFlowTests
         var client = _factory.CreateClient();
         var login = await client.PostAsJsonAsync("/api/v1/auth/login",
             new { usernameOrEmail = "admin", password = "Admin@123" });
-        login.StatusCode.Should().Be(HttpStatusCode.OK, because: "بذر ادمین پیش‌فرض فعال است");
+        login.StatusCode.Should().Be(HttpStatusCode.OK, because: $"بذر ادمین پیش‌فرض فعال است — بدنه: {await login.Content.ReadAsStringAsync()}");
         var packet = await ReadAsync<LoginPacket>(login);
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", packet.Data.AccessToken);

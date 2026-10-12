@@ -38,7 +38,7 @@ public class BackupCloudConcurrencyTests
         var login = await loginClient.PostAsJsonAsync("/api/v1/auth/login",
             new { usernameOrEmail = "admin", password = "Admin@123" });
         login.StatusCode.Should().Be(HttpStatusCode.OK,
-            because: "بذر ادمین پیش‌فرض در محیط توسعه فعال است");
+            because: $"بذر ادمین پیش‌فرض در محیط توسعه فعال است — بدنه: {await login.Content.ReadAsStringAsync()}");
         var json = await login.Content.ReadFromJsonAsync<JsonElement>();
         var token = json.GetProperty("data").GetProperty("accessToken").GetString();
         token.Should().NotBeNullOrEmpty(because: "ورود موفق باید توکن بدهد");

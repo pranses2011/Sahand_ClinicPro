@@ -29,7 +29,7 @@ public class TrainingProgressEndpointTests
         var client = _factory.CreateClient();
         var login = await client.PostAsJsonAsync("/api/v1/auth/login",
             new { usernameOrEmail = "admin", password = "Admin@123" });
-        login.StatusCode.Should().Be(HttpStatusCode.OK, "بذر ادمین باید ورود را ممکن کند");
+        login.StatusCode.Should().Be(HttpStatusCode.OK, $"بذر ادمین باید ورود را ممکن کند — بدنه: {await login.Content.ReadAsStringAsync()}");
 
         var json = await login.Content.ReadFromJsonAsync<JsonElement>();
         var token = json.GetProperty("data").GetProperty("accessToken").GetString();

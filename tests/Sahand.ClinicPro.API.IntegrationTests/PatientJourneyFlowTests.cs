@@ -176,7 +176,7 @@ public class PatientJourneyFlowTests
         var loginResponse = await client.PostAsJsonAsync("/api/v1/auth/login",
             new { usernameOrEmail = "admin", password = "Admin@123" });
         loginResponse.StatusCode.Should().Be(HttpStatusCode.OK,
-            because: "بذر ادمین باید ورود را ممکن کند");
+            because: $"بذر ادمین باید ورود را ممکن کند — بدنه: {await login.Content.ReadAsStringAsync()}");
 
         var login = await ReadAsync<LoginPacket>(loginResponse);
         login.Data.AccessToken.Should().NotBeNullOrEmpty();

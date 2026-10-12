@@ -250,11 +250,21 @@ public partial class LicenseService : ILicenseService
     public async Task<bool> SetPortalUrlAsync(string portalUrl, CancellationToken ct = default)
     {
         var raw = (portalUrl ?? string.Empty).Trim();
-        if (raw.Length > 0 && !LicensePortalHelper.IsValidHttpUrl(
-                raw.StartsWith("http", StringComparison.OrdinalIgnoreCase)
-                    ? raw
-                    : "https://" + raw))
-            return false;
+        if (raw.Length > 0)
+        {
+            // ═══ چرخهٔ ۵۸ (گرفتهٔ تست مرزی API — ApiBoundaryTests) ═══
+            // پیش‌تر ورودیِ دارای طرحِ غیر http/https (مثل ftp://) با پیش‌افزودنِ
+            // ناخواستهٔ https به شکلی «معتبر» جلوه می‌کرد و ذخیره می‌شد — یعنی
+            // نشانی سرور لایسنس قابل هدایت به میزبان مهاجم بود (تنها ریسک قرمزِ
+            // مرور AllowAnonymous چرخهٔ ۴۹). اکنون: ورودی با هر «://» ناعاین
+            // باید خودش http/https معتبر باشد؛ فقط ورودیِ بدون طرح https می‌گیرد.
+            var candidate = raw.Contains("://", StringComparison.Ordinal)
+                            || raw.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                ? raw
+                : "https://" + raw;
+            if (!LicensePortalHelper.IsValidHttpUrl(candidate))
+                return false;
+        }
 
         var normalized = LicensePortalHelper.NormalizeApiUrl(raw);
         var key = "License.PortalUrl";
