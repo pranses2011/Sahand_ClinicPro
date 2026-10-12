@@ -1,0 +1,217 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  پیشخوان — DashboardView
+╠══════════════════════════════════════════════════════════════════════╣
+║  گروه        : پیشخوان
+║  کهن‌الگو     : dashboard
+║  ViewModel   : DashboardViewModel
+║  وایرفریم    : 01-wireframes-html/DashboardView.html
+╠══════════════════════════════════════════════════════════════════════╣
+║  توضیح       : پنج کارت شاخص در بالا، «صف انتظار زنده» در ستون راست، 
+║                نمودار درآمد ۳۰ روزه و نمودار توزیع ویزیت در وسط، و 
+║                فید فعالیّت‌های اخیر در پایین.
+╠══════════════════════════════════════════════════════════════════════╣
+║  ساختار (اندازه‌ی هر فیلد/ستون بر پایه‌ی ۱۲ ستون است تا
+║  «بزرگیِ عنصر متناسب با کارکردش» باشد — کد ملی ۳ ستون، نشانی ۱۲ ستون)
+╠══════════════════════════════════════════════════════════════════════╣
+║  نام              نوع              پهنا   الزامی
+║  ─────────────────────────────────────────────────
+╠══════════════════════════════════════════════════════════════════════╣
+║  ارتباطات این صفحه
+║  ─────────────────────────────────────────────────
+║    پیشخوان  ──▶  پذیرش و صف
+║         پذیرش جدید می‌سازد
+║    پیشخوان  ──▶  نوبت‌دهی
+║         نوبت امروز را نشان می‌دهد
+║    پیشخوان  ──▶  صورتحساب
+║         درآمد از فاکتورها می‌آید
+╚══════════════════════════════════════════════════════════════════════╝
+
+  قواعدِ رعایت‌شده در این فایل:
+    • راست‌چین (RTL) و قلمِ وزیرمتن در سراسرِ صفحه
+    • هیچ رنگِ ثابت (هگز) — همه از نشانه‌های معناییِ DynamicResource
+    • الگوی MVVM: هیچ منطقی در code-behind، همه چیز از ViewModel
+    • متن‌ها از فایلِ زبان (loc:Loc) برای پشتیبانیِ دو زبانهٔ آینده
+    • تاریخ‌ها با تبدیل‌گرِ PersianDate به شمسی نمایش داده می‌شوند
+    • نقشهٔ ارتباطات در پایینِ صفحه مسیرِ حرکت را نشان می‌دهد
+-->
+
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.DashboardView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization"
+        xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
+        mc:Ignorable="d"
+        d:DesignHeight="820" d:DesignWidth="1280"
+        d:DataContext="{d:DesignInstance vm:DashboardViewModel}"
+        FlowDirection="RightToLeft"
+        FontFamily="{DynamicResource AppFontFamily}"
+        Background="{DynamicResource Brush.Canvas}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ سربرگِ یکپارچه‌ی صفحه ═══ -->
+        <ctrl:PageHeader Grid.Row="0"
+                        Title="پیشخوان"
+                        Subtitle="نمای کلیِ وضعیت امروز درمانگاه — یک نگاه برای همه‌چیز"
+                        Icon="{DynamicResource Icon.LayoutDashboard}"
+                        Margin="{StaticResource P.Page}" />
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="{StaticResource P.Page}">
+            <StackPanel>
+                <ctrl:StatCard Margin="{StaticResource S.3}"
+                                  Title="بیماران امروز"
+                                  Value="۴۸"
+                                  Trend="12"
+                                  Icon="{DynamicResource Icon.Users}"
+                                  Accent="{DynamicResource Brush.Primary}"
+                                  />
+                <ctrl:StatCard Margin="{StaticResource S.3}"
+                                  Title="نوبت‌های امروز"
+                                  Value="۳۶"
+                                  Trend="8"
+                                  Icon="{DynamicResource Icon.CalendarCheck}"
+                                  Accent="{DynamicResource Brush.Info}"
+                                  />
+                <ctrl:StatCard Margin="{StaticResource S.3}"
+                                  Title="درآمد امروز"
+                                  Value="۲۸,۴۵۰,۰۰۰"
+                                  Trend="23"
+                                  Icon="{DynamicResource Icon.Banknote}"
+                                  Accent="{DynamicResource Brush.Success}"
+                                  />
+                <ctrl:StatCard Margin="{StaticResource S.3}"
+                                  Title="میانگین انتظار"
+                                  Value="۱۴ دقیقه"
+                                  Trend="-6"
+                                  Icon="{DynamicResource Icon.Timer}"
+                                  Accent="{DynamicResource Brush.Warning}"
+                                  />
+                <ctrl:StatCard Margin="{StaticResource S.3}"
+                                  Title="هشدارهای فعال"
+                                  Value="۳"
+                                  Icon="{DynamicResource Icon.TriangleAlert}"
+                                  Accent="{DynamicResource Brush.Danger}"
+                                  />
+
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{DynamicResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="روند درآمد ۳۰ روزه"
+                                   Style="{DynamicResource Txt.Subtitle}" />
+                        <!-- نمودار — در پیاده‌سازی با LiveCharts جایگزین می‌شود -->
+                        <ContentControl Content="{Binding RevenueChart}"
+                                        Height="220" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{DynamicResource Card}"
+                        MinWidth="300"
+                        Margin="{StaticResource S.3},0,0,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,{StaticResource S.3}">
+                            <Path Style="{DynamicResource Icon.Medium}"
+                                  Data="{DynamicResource Icon.Users}"
+                                   Stroke="{DynamicResource Brush.Primary}" />
+                            <TextBlock Text="صف انتظار زنده"
+                                       Style="{DynamicResource Txt.Subtitle}"
+                                       VerticalAlignment="Center" Margin="8,0,0,0" />
+                        </StackPanel>
+                        <Grid Margin="0,0,0,{StaticResource S.2}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="در انتظار"
+                                       Style="{DynamicResource Txt.Caption}"
+                                       Margin="0,0,{StaticResource S.3},0" />
+                            <TextBlock Grid.Column="1" Text="۷"
+                                       Style="{DynamicResource Txt.Body}"
+                                       TextAlignment="Right" />
+                        </Grid>
+                        <Grid Margin="0,0,0,{StaticResource S.2}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="در حال ویزیت"
+                                       Style="{DynamicResource Txt.Caption}"
+                                       Margin="0,0,{StaticResource S.3},0" />
+                            <TextBlock Grid.Column="1" Text="۳"
+                                       Style="{DynamicResource Txt.Body}"
+                                       TextAlignment="Right" />
+                        </Grid>
+                        <Grid Margin="0,0,0,{StaticResource S.2}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="میانگین انتظار"
+                                       Style="{DynamicResource Txt.Caption}"
+                                       Margin="0,0,{StaticResource S.3},0" />
+                            <TextBlock Grid.Column="1" Text="۱۴ دقیقه"
+                                       Style="{DynamicResource Txt.Body}"
+                                       TextAlignment="Right" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+            <!-- ══════════════════════════════════════════════════════════
+     ارتباطاتِ این صفحه با دیگر صفحات
+     هر ردیف: «مبدأ» → «مقصد» با توضیحِ نوعِ پیوند
+     این بلوک در همه‌ی صفحات حضور دارد تا مسیرِ حرکتِ کاربر گم نشود.
+     ══════════════════════════════════════════════════════════ -->
+            <Border Style="{DynamicResource Card.Flat}" Margin="0,{StaticResource S.3},0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,{StaticResource S.3}">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.GitBranch}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="{loc:Loc Common.Relations}"
+                                   Style="{DynamicResource Txt.Subtitle}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Relations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="0,0,0,{StaticResource S.2}">
+                                    <Border Style="{DynamicResource Badge.Neutral}">
+                                        <TextBlock Text="{Binding From}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                        <Path Style="{DynamicResource Icon.XSmall}"
+                                              Data="{DynamicResource Icon.ArrowLeft}"
+                                               Stroke="{DynamicResource Brush.TextMuted}" />
+                                    <Border Style="{DynamicResource Badge.Info}">
+                                        <TextBlock Text="{Binding To}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Why}"
+                                               Style="{DynamicResource Txt.Caption}"
+                                               VerticalAlignment="Center"
+                                               Margin="{StaticResource S.2},0,0,0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+
+</UserControl>

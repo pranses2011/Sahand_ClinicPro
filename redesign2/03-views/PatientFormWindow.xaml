@@ -1,0 +1,537 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  فرم بیمار — PatientFormWindow
+╠══════════════════════════════════════════════════════════════════════╣
+║  گروه        : بیماران
+║  کهن‌الگو     : form-std
+║  ViewModel   : PatientFormViewModel
+║  وایرفریم    : 01-wireframes-html/PatientFormWindow.html
+╠══════════════════════════════════════════════════════════════════════╣
+║  توضیح       : فیلدها بر اساس نقشِ خود اندازه گرفته‌اند: 
+║                نام/نام‌خانوادگی/کدملی/جنسیت هر یک ۳ ستون از ۱۲؛ نشانی 
+║                و حساسیت‌ها عرض کامل.
+╠══════════════════════════════════════════════════════════════════════╣
+║  ساختار (اندازه‌ی هر فیلد/ستون بر پایه‌ی ۱۲ ستون است تا
+║  «بزرگیِ عنصر متناسب با کارکردش» باشد — کد ملی ۳ ستون، نشانی ۱۲ ستون)
+╠══════════════════════════════════════════════════════════════════════╣
+║  نام              نوع              پهنا   الزامی
+║  ─────────────────────────────────────────────────
+║  ▸ اطلاعات هویتی
+║    FirstName       TextBox          3      بله
+║    LastName        TextBox          3      بله
+║    NationalId      TextBox          3      بله
+║    Gender          ComboBox         3      بله
+║    BirthDate       DatePicker       3      خیر
+║    MaritalStatus   ComboBox         3      خیر
+║    Occupation      TextBox          3      خیر
+║    Education       ComboBox         3      خیر
+║  ▸ اطلاعات تماس
+║    Phone           TextBox          3      بله
+║    HomePhone       TextBox          3      خیر
+║    Email           TextBox          3      خیر
+║    EmergencyContac TextBox          3      خیر
+║    Province        ComboBox         3      خیر
+║    City            ComboBox         3      خیر
+║    Address         TextBox (چندخطی  12     خیر
+║  ▸ اطلاعات بیمه و بالینی
+║    InsuranceId     ComboBox         4      خیر
+║    InsuranceNumber TextBox          4      خیر
+║    InsuranceExpiry DatePicker       4      خیر
+║    BloodType       ComboBox         3      خیر
+║    Weight          TextBox (عددی)   3      خیر
+║    Height          TextBox (عددی)   3      خیر
+║    ChronicDiseases ComboBox         3      خیر
+║    Allergies       TextBox (چندخطی  12     خیر
+╠══════════════════════════════════════════════════════════════════════╣
+║  ارتباطات این صفحه
+║  ─────────────────────────────────────────────────
+║    فرم بیمار  ──▶  بیماران
+║         پس از ذخیره به فهرست بازمی‌گردد
+║    فرم بیمار  ──▶  فرم پذیرش
+║         بیمه از پرونده می‌آید
+║    فرم بیمار  ──▶  ویزیت (SOAP)
+║         حساسیت‌ها در ویزیت نمایش داده می‌شود
+╚══════════════════════════════════════════════════════════════════════╝
+
+  قواعدِ رعایت‌شده در این فایل:
+    • راست‌چین (RTL) و قلمِ وزیرمتن در سراسرِ صفحه
+    • هیچ رنگِ ثابت (هگز) — همه از نشانه‌های معناییِ DynamicResource
+    • الگوی MVVM: هیچ منطقی در code-behind، همه چیز از ViewModel
+    • متن‌ها از فایلِ زبان (loc:Loc) برای پشتیبانیِ دو زبانهٔ آینده
+    • تاریخ‌ها با تبدیل‌گرِ PersianDate به شمسی نمایش داده می‌شوند
+    • نقشهٔ ارتباطات در پایینِ صفحه مسیرِ حرکت را نشان می‌دهد
+-->
+
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.PatientFormWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization"
+        xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
+        mc:Ignorable="d"
+        Title="فرم بیمار"
+        Style="{DynamicResource Window.Modern}"
+        WindowStartupLocation="CenterScreen"
+        Height="820" Width="960"
+        d:DataContext="{d:DesignInstance vm:PatientFormViewModel}"
+        FlowDirection="RightToLeft"
+        FontFamily="{DynamicResource AppFontFamily}"
+        Background="{DynamicResource Brush.Canvas}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ سربرگِ یکپارچه‌ی صفحه ═══ -->
+        <ctrl:PageHeader Grid.Row="0"
+                        Title="فرم بیمار"
+                        Subtitle="ایجاد یا ویرایش پرونده بیمار"
+                        Icon="{DynamicResource Icon.UserPlus}"
+                        Margin="{StaticResource P.Page}" />
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="{StaticResource P.Page}">
+            <StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <!-- ── بخش: اطلاعات هویتی ── -->
+                <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="12"
+                        Margin="0,{StaticResource S.2},0,{StaticResource S.3}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.IdCard}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="اطلاعات هویتی"
+                                   Style="{DynamicResource Txt.Title}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                </Border>
+                <!-- نام — TextBox · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="نام"
+                               Style="{DynamicResource Input.LabelRequired}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding FirstName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="سارا"
+                             />
+                    <!-- خطاهای اعتبارسنجی به‌صورت خودکار از INotifyDataErrorInfo نمایش داده می‌شوند -->
+                </StackPanel>
+                <!-- نام خانوادگی — TextBox · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="نام خانوادگی"
+                               Style="{DynamicResource Input.LabelRequired}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding LastName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="احمدی"
+                             />
+                    <!-- خطاهای اعتبارسنجی به‌صورت خودکار از INotifyDataErrorInfo نمایش داده می‌شوند -->
+                </StackPanel>
+                <!-- کد ملی — TextBox · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="1" Grid.Column="6" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="کد ملی"
+                               Style="{DynamicResource Input.LabelRequired}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding NationalId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             MaxLength="10"
+                             TextAlignment="Left"
+                             FlowDirection="LeftToRight" />
+                    <!-- خطاهای اعتبارسنجی به‌صورت خودکار از INotifyDataErrorInfo نمایش داده می‌شوند -->
+                </StackPanel>
+                <!-- جنسیت — ComboBox · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="1" Grid.Column="9" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="جنسیت"
+                               Style="{DynamicResource Input.LabelRequired}" />
+                    <ComboBox Style="{DynamicResource Input.ComboBox}"
+                              SelectedItem="{Binding Gender, Mode=TwoWay}">
+                        <ComboBoxItem Content="زن" IsSelected="True" />
+                        <ComboBoxItem Content="مرد" />
+                    </ComboBox>
+                    <!-- خطاهای اعتبارسنجی به‌صورت خودکار از INotifyDataErrorInfo نمایش داده می‌شوند -->
+                </StackPanel>
+                <!-- تاریخ تولد — DatePicker · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="تاریخ تولد"
+                               Style="{DynamicResource Input.Label}" />
+                    <DatePicker Style="{DynamicResource Input.Date}"
+                                SelectedDate="{Binding BirthDate, Mode=TwoWay}"
+                                SelectedDateFormat="Short" />
+                </StackPanel>
+                <!-- وضعیت تأهل — ComboBox · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="2" Grid.Column="3" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="وضعیت تأهل"
+                               Style="{DynamicResource Input.Label}" />
+                    <ComboBox Style="{DynamicResource Input.ComboBox}"
+                              SelectedItem="{Binding MaritalStatus, Mode=TwoWay}">
+                        <ComboBoxItem Content="مجرد" />
+                        <ComboBoxItem Content="متأهل" IsSelected="True" />
+                    </ComboBox>
+                </StackPanel>
+                <!-- شغل — TextBox · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="2" Grid.Column="6" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="شغل"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Occupation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="کارمند"
+                             />
+                </StackPanel>
+                <!-- تحصیلات — ComboBox · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="2" Grid.Column="9" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="تحصیلات"
+                               Style="{DynamicResource Input.Label}" />
+                    <ComboBox Style="{DynamicResource Input.ComboBox}"
+                              SelectedItem="{Binding Education, Mode=TwoWay}">
+                        <ComboBoxItem Content="زیردیپلم" />
+                        <ComboBoxItem Content="دیپلم" />
+                        <ComboBoxItem Content="کارشناسی" IsSelected="True" />
+                        <ComboBoxItem Content="ارشد" />
+                        <ComboBoxItem Content="دکتری" />
+                    </ComboBox>
+                </StackPanel>
+                <!-- ── بخش: اطلاعات تماس ── -->
+                <Border Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="12"
+                        Margin="0,{StaticResource S.2},0,{StaticResource S.3}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.Phone}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="اطلاعات تماس"
+                                   Style="{DynamicResource Txt.Title}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                </Border>
+                <!-- موبایل — TextBox · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="موبایل"
+                               Style="{DynamicResource Input.LabelRequired}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Phone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             MaxLength="11"
+                             TextAlignment="Left"
+                             FlowDirection="LeftToRight" />
+                    <!-- خطاهای اعتبارسنجی به‌صورت خودکار از INotifyDataErrorInfo نمایش داده می‌شوند -->
+                </StackPanel>
+                <!-- تلفن ثابت — TextBox · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="4" Grid.Column="3" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="تلفن ثابت"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding HomePhone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             MaxLength="11"
+                             TextAlignment="Left"
+                             FlowDirection="LeftToRight" />
+                </StackPanel>
+                <!-- رایانامه — TextBox · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="4" Grid.Column="6" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="رایانامه"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="s.ahmadi@example.com"
+                             />
+                </StackPanel>
+                <!-- شماره اضطراری — TextBox · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="4" Grid.Column="9" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="شماره اضطراری"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding EmergencyContact, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             MaxLength="11"
+                             TextAlignment="Left"
+                             FlowDirection="LeftToRight" />
+                </StackPanel>
+                <!-- استان — ComboBox · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="استان"
+                               Style="{DynamicResource Input.Label}" />
+                    <ComboBox Style="{DynamicResource Input.ComboBox}"
+                              SelectedItem="{Binding Province, Mode=TwoWay}">
+                        <ComboBoxItem Content="آذربایجان شرقی" IsSelected="True" />
+                        <ComboBoxItem Content="تهران" />
+                        <ComboBoxItem Content="اصفهان" />
+                    </ComboBox>
+                </StackPanel>
+                <!-- شهر — ComboBox · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="5" Grid.Column="3" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="شهر"
+                               Style="{DynamicResource Input.Label}" />
+                    <ComboBox Style="{DynamicResource Input.ComboBox}"
+                              SelectedItem="{Binding City, Mode=TwoWay}">
+                        <ComboBoxItem Content="تبریز" IsSelected="True" />
+                        <ComboBoxItem Content="تهران" />
+                        <ComboBoxItem Content="اصفهان" />
+                    </ComboBox>
+                </StackPanel>
+                <!-- نشانی کامل — TextBox (چندخطی) · پهنای 12/۱۲ -->
+                <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="12"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="نشانی کامل"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Address, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             MinHeight="88"
+                             VerticalContentAlignment="Top"
+                             Tag="تبریز، خیابان ولیعصر، کوچه گلستان، پلاک ۱۲"
+                             />
+                </StackPanel>
+                <!-- ── بخش: اطلاعات بیمه و بالینی ── -->
+                <Border Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="12"
+                        Margin="0,{StaticResource S.2},0,{StaticResource S.3}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.ShieldCheck}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="اطلاعات بیمه و بالینی"
+                                   Style="{DynamicResource Txt.Title}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                </Border>
+                <!-- بیمه پایه — ComboBox · پهنای 4/۱۲ -->
+                <StackPanel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="4"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="بیمه پایه"
+                               Style="{DynamicResource Input.Label}" />
+                    <ComboBox Style="{DynamicResource Input.ComboBox}"
+                              SelectedItem="{Binding InsuranceId, Mode=TwoWay}">
+                        <ComboBoxItem Content="آزاد" />
+                        <ComboBoxItem Content="تأمین اجتماعی" IsSelected="True" />
+                        <ComboBoxItem Content="سلامت" />
+                        <ComboBoxItem Content="نیروهای مسلح" />
+                    </ComboBox>
+                </StackPanel>
+                <!-- شماره بیمه — TextBox · پهنای 4/۱۲ -->
+                <StackPanel Grid.Row="8" Grid.Column="4" Grid.ColumnSpan="4"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="شماره بیمه"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding InsuranceNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="۱۲۳۴۵۶۷۸۹۰"
+                             />
+                </StackPanel>
+                <!-- تاریخ اعتبار — DatePicker · پهنای 4/۱۲ -->
+                <StackPanel Grid.Row="8" Grid.Column="8" Grid.ColumnSpan="4"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="تاریخ اعتبار"
+                               Style="{DynamicResource Input.Label}" />
+                    <DatePicker Style="{DynamicResource Input.Date}"
+                                SelectedDate="{Binding InsuranceExpiry, Mode=TwoWay}"
+                                SelectedDateFormat="Short" />
+                </StackPanel>
+                <!-- گروه خونی — ComboBox · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="گروه خونی"
+                               Style="{DynamicResource Input.Label}" />
+                    <ComboBox Style="{DynamicResource Input.ComboBox}"
+                              SelectedItem="{Binding BloodType, Mode=TwoWay}">
+                        <ComboBoxItem Content="O+" IsSelected="True" />
+                        <ComboBoxItem Content="O-" />
+                        <ComboBoxItem Content="A+" />
+                        <ComboBoxItem Content="A-" />
+                        <ComboBoxItem Content="B+" />
+                        <ComboBoxItem Content="B-" />
+                        <ComboBoxItem Content="AB+" />
+                        <ComboBoxItem Content="AB-" />
+                    </ComboBox>
+                </StackPanel>
+                <!-- وزن (کیلوگرم) — TextBox (عددی) · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="9" Grid.Column="3" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="وزن (کیلوگرم)"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Weight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             MaxLength="12"
+                             TextAlignment="Left"
+                             FlowDirection="LeftToRight" />
+                </StackPanel>
+                <!-- قد (سانتی‌متر) — TextBox (عددی) · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="9" Grid.Column="6" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="قد (سانتی‌متر)"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Height, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             MaxLength="12"
+                             TextAlignment="Left"
+                             FlowDirection="LeftToRight" />
+                </StackPanel>
+                <!-- بیماری‌های مزمن — ComboBox · پهنای 3/۱۲ -->
+                <StackPanel Grid.Row="9" Grid.Column="9" Grid.ColumnSpan="3"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="بیماری‌های مزمن"
+                               Style="{DynamicResource Input.Label}" />
+                    <ComboBox Style="{DynamicResource Input.ComboBox}"
+                              SelectedItem="{Binding ChronicDiseases, Mode=TwoWay}">
+                        <ComboBoxItem Content="ندارد" />
+                        <ComboBoxItem Content="دیابت" IsSelected="True" />
+                        <ComboBoxItem Content="فشار خون" />
+                        <ComboBoxItem Content="قلبی" />
+                    </ComboBox>
+                </StackPanel>
+                <!-- حساسیت‌های دارویی — TextBox (چندخطی) · پهنای 12/۱۲ -->
+                <StackPanel Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="12"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="حساسیت‌های دارویی"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Allergies, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             MinHeight="88"
+                             VerticalContentAlignment="Top"
+                             Tag="پنی‌سیلین — واکنش پوستی شدید"
+                             />
+                    <TextBlock Text="بررسی تداخل دارویی در نسخه بر این اساس انجام می‌شود"
+                               Style="{DynamicResource Txt.Caption}"
+                               Margin="0,{StaticResource S.1},0,0" />
+                </StackPanel>
+            </Grid>
+
+            <!-- ══════════════════════════════════════════════════════════
+     ارتباطاتِ این صفحه با دیگر صفحات
+     هر ردیف: «مبدأ» → «مقصد» با توضیحِ نوعِ پیوند
+     این بلوک در همه‌ی صفحات حضور دارد تا مسیرِ حرکتِ کاربر گم نشود.
+     ══════════════════════════════════════════════════════════ -->
+            <Border Style="{DynamicResource Card.Flat}" Margin="0,{StaticResource S.3},0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,{StaticResource S.3}">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.GitBranch}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="{loc:Loc Common.Relations}"
+                                   Style="{DynamicResource Txt.Subtitle}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Relations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="0,0,0,{StaticResource S.2}">
+                                    <Border Style="{DynamicResource Badge.Neutral}">
+                                        <TextBlock Text="{Binding From}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                        <Path Style="{DynamicResource Icon.XSmall}"
+                                              Data="{DynamicResource Icon.ArrowLeft}"
+                                               Stroke="{DynamicResource Brush.TextMuted}" />
+                                    <Border Style="{DynamicResource Badge.Info}">
+                                        <TextBlock Text="{Binding To}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Why}"
+                                               Style="{DynamicResource Txt.Caption}"
+                                               VerticalAlignment="Center"
+                                               Margin="{StaticResource S.2},0,0,0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ═══ نوارِ اقدام‌های ثابت ═══ -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource Brush.Surface}"
+                BorderBrush="{DynamicResource Brush.Border}"
+                BorderThickness="0,1,0,0"
+                Padding="{StaticResource S.4}">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Left">
+                <Button Style="{DynamicResource Btn.Primary}"
+                        Command="{Binding SaveCommand}"
+                        Margin="0,0,{StaticResource S.2},0"
+                        MinHeight="{StaticResource Size.ButtonHeight}"
+                        Padding="{StaticResource P.Button}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.Save}"
+                              Margin="0,0,{StaticResource S.2},0" />
+                        <TextBlock Text="ذخیره" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Style="{DynamicResource Btn.Secondary}"
+                        Command="{Binding SaveNewCommand}"
+                        Margin="0,0,{StaticResource S.2},0"
+                        MinHeight="{StaticResource Size.ButtonHeight}"
+                        Padding="{StaticResource P.Button}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.Plus}"
+                              Margin="0,0,{StaticResource S.2},0" />
+                        <TextBlock Text="ذخیره و جدید" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Style="{DynamicResource Btn.Ghost}"
+                        Command="{Binding CancelCommand}"
+                        Margin="0,0,{StaticResource S.2},0"
+                        MinHeight="{StaticResource Size.ButtonHeight}"
+                        Padding="{StaticResource P.Button}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="انصراف" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+
+</Window>

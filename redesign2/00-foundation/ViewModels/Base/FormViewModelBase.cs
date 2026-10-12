@@ -1,6 +1,16 @@
 using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+
+// ⚠ نکته‌ی مهم برای جلوگیری از ابهام:
+//    در همین فضای نام یک RelayCommand ساده هم تعریف شده است (فایل RelayCommand.cs)
+//    که برای پروژه‌های بدون CommunityToolkit کاربرد دارد. چون در زبان C# اعضایِ
+//    فضایِ نامِ جاری بر usingها مقدم‌اند، نامِ RelayCommand بدون این نام‌هایِ
+//    مستعار به کلاسِ محلی اشاره می‌کرد و کامپایل با خطای CS0266 شکست می‌خورد.
+//    بنابراین در این پایه‌ها صریحاً از نسخه‌ی CommunityToolkit استفاده می‌شود.
+using RelayCommand = CommunityToolkit.Mvvm.Input.RelayCommand;
+using AsyncRelayCommand = CommunityToolkit.Mvvm.Input.AsyncRelayCommand;
+
 using Microsoft.Extensions.Logging;
 
 namespace Sahand.ClinicPro.Desktop.Base

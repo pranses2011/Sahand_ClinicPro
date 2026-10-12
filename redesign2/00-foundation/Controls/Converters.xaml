@@ -12,5 +12,6 @@
     <c:PersianDateConverter x:Key="PersianDate" />
     <c:MoneyConverter x:Key="Money" />
     <c:EnumDescriptionConverter x:Key="EnumDescription" />
+    <c:StatusToneConverter x:Key="StatusTone" />
 
 </ResourceDictionary>

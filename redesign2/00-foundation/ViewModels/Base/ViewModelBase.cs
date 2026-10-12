@@ -202,6 +202,8 @@ namespace Sahand.ClinicPro.Desktop.Base
         }
 
         /// <summary>لغو عملیات در حال اجرا</summary>
+        protected void CancelOperation() => _cts?.Cancel();
+
         /// <summary>
         /// بارگذاریِ اولیهٔ داده‌ها.
         /// </summary>
@@ -211,8 +213,6 @@ namespace Sahand.ClinicPro.Desktop.Base
         /// فراخوانیِ این متد در سازنده امن است.
         /// </remarks>
         public virtual Task LoadAsync() => Task.CompletedTask;
-
-        protected void CancelOperation() => _cts?.Cancel();
 
         /// <summary>تبدیل استثنا به پیام قابل‌فهم برای کاربر</summary>
         protected virtual string DescribeException(Exception ex) => ex switch

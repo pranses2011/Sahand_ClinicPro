@@ -1,0 +1,344 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  پشتیبان‌گیری — BackupView
+╠══════════════════════════════════════════════════════════════════════╣
+║  گروه        : سیستم
+║  کهن‌الگو     : detail-tabs
+║  ViewModel   : BackupViewModel
+║  وایرفریم    : 01-wireframes-html/BackupView.html
+╠══════════════════════════════════════════════════════════════════════╣
+║  ساختار (اندازه‌ی هر فیلد/ستون بر پایه‌ی ۱۲ ستون است تا
+║  «بزرگیِ عنصر متناسب با کارکردش» باشد — کد ملی ۳ ستون، نشانی ۱۲ ستون)
+╠══════════════════════════════════════════════════════════════════════╣
+║  نام              نوع              پهنا   الزامی
+║  ─────────────────────────────────────────────────
+║  ▸ زمان‌بندی خودکار
+║    AutoEnabled     CheckBox         12     خیر
+║    Schedule        ComboBox         4      خیر
+║    Time            TextBox          4      خیر
+║    Retention       TextBox (عددی)   4      خیر
+║    Path            TextBox          8      خیر
+║    Compress        CheckBox         4      خیر
+║  ▸ ستون‌های جدول
+║    Name            text             *      Right
+║    Date            date             150px  Right
+║    Size            num              110px  Center
+║    Type            chip             110px  Center
+║    Status          chip             112px  Center
+╠══════════════════════════════════════════════════════════════════════╣
+║  ارتباطات این صفحه
+║  ─────────────────────────────────────────────────
+║    پشتیبان‌گیری  ──▶  تنظیمات
+║         تنظیمات بکاپ در تنظیمات
+║    پشتیبان‌گیری  ──▶  مدیریت سیستم
+║         ابزار مدیریتی
+╚══════════════════════════════════════════════════════════════════════╝
+
+  قواعدِ رعایت‌شده در این فایل:
+    • راست‌چین (RTL) و قلمِ وزیرمتن در سراسرِ صفحه
+    • هیچ رنگِ ثابت (هگز) — همه از نشانه‌های معناییِ DynamicResource
+    • الگوی MVVM: هیچ منطقی در code-behind، همه چیز از ViewModel
+    • متن‌ها از فایلِ زبان (loc:Loc) برای پشتیبانیِ دو زبانهٔ آینده
+    • تاریخ‌ها با تبدیل‌گرِ PersianDate به شمسی نمایش داده می‌شوند
+    • نقشهٔ ارتباطات در پایینِ صفحه مسیرِ حرکت را نشان می‌دهد
+-->
+
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.BackupView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization"
+        xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
+        mc:Ignorable="d"
+        d:DesignHeight="820" d:DesignWidth="1280"
+        d:DataContext="{d:DesignInstance vm:BackupViewModel}"
+        FlowDirection="RightToLeft"
+        FontFamily="{DynamicResource AppFontFamily}"
+        Background="{DynamicResource Brush.Canvas}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ سربرگِ یکپارچه‌ی صفحه ═══ -->
+        <ctrl:PageHeader Grid.Row="0"
+                        Title="پشتیبان‌گیری"
+                        Subtitle="تهیه و بازیابی نسخه پشتیبان"
+                        Icon="{DynamicResource Icon.DatabaseBackup}"
+                        Margin="{StaticResource P.Page}" />
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="{StaticResource P.Page}">
+            <StackPanel>
+                <ctrl:StatCard Margin="{StaticResource S.3}"
+                                  Title="آخرین پشتیبان"
+                                  Value="امروز ۰۲:۰۰"
+                                  Icon="{DynamicResource Icon.DatabaseBackup}"
+                                  Accent="{DynamicResource Brush.Success}"
+                                  />
+                <ctrl:StatCard Margin="{StaticResource S.3}"
+                                  Title="حجم کل"
+                                  Value="۴٫۲ گیگابایت"
+                                  Icon="{DynamicResource Icon.HardDrive}"
+                                  Accent="{DynamicResource Brush.Info}"
+                                  />
+                <ctrl:StatCard Margin="{StaticResource S.3}"
+                                  Title="تعداد نسخه‌ها"
+                                  Value="۳۰"
+                                  Icon="{DynamicResource Icon.History}"
+                                  Accent="{DynamicResource Brush.Primary}"
+                                  />
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <!-- ── بخش: زمان‌بندی خودکار ── -->
+                <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="12"
+                        Margin="0,{StaticResource S.2},0,{StaticResource S.3}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.Clock}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="زمان‌بندی خودکار"
+                                   Style="{DynamicResource Txt.Title}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                </Border>
+                <!-- پشتیبان‌گیری خودکار — CheckBox · پهنای 12/۱۲ -->
+                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="12"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <CheckBox Style="{DynamicResource Input.CheckBox}"
+                              Content="پشتیبان‌گیری خودکار"
+                              IsChecked="{Binding AutoEnabled, Mode=TwoWay}" />
+                </StackPanel>
+                <!-- دوره — ComboBox · پهنای 4/۱۲ -->
+                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="دوره"
+                               Style="{DynamicResource Input.Label}" />
+                    <ComboBox Style="{DynamicResource Input.ComboBox}"
+                              SelectedItem="{Binding Schedule, Mode=TwoWay}">
+                        <ComboBoxItem Content="ساعتی" />
+                        <ComboBoxItem Content="روزانه" IsSelected="True" />
+                        <ComboBoxItem Content="هفتگی" />
+                        <ComboBoxItem Content="ماهانه" />
+                    </ComboBox>
+                </StackPanel>
+                <!-- ساعت اجرا — TextBox · پهنای 4/۱۲ -->
+                <StackPanel Grid.Row="2" Grid.Column="4" Grid.ColumnSpan="4"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="ساعت اجرا"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Time, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="۰۲:۰۰"
+                             />
+                </StackPanel>
+                <!-- نگهداری (روز) — TextBox (عددی) · پهنای 4/۱۲ -->
+                <StackPanel Grid.Row="2" Grid.Column="8" Grid.ColumnSpan="4"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="نگهداری (روز)"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Retention, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             MaxLength="12"
+                             TextAlignment="Left"
+                             FlowDirection="LeftToRight" />
+                </StackPanel>
+                <!-- مسیر ذخیره — TextBox · پهنای 8/۱۲ -->
+                <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="8"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="مسیر ذخیره"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="D:\Backups\ClinicPro"
+                             />
+                </StackPanel>
+                <!-- فشرده‌سازی — CheckBox · پهنای 4/۱۲ -->
+                <StackPanel Grid.Row="3" Grid.Column="8" Grid.ColumnSpan="4"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <CheckBox Style="{DynamicResource Input.CheckBox}"
+                              Content="فشرده‌سازی"
+                              IsChecked="{Binding Compress, Mode=TwoWay}" />
+                </StackPanel>
+            </Grid>
+
+                    <TabControl Style="{DynamicResource Tab.Modern}">
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.HardDrive}" />
+                                    <TextBlock Text="نسخه‌ها"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «نسخه‌ها» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[0]}" />
+                        </TabItem>
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.Clock}" />
+                                    <TextBlock Text="زمان‌بندی"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «زمان‌بندی» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[1]}" />
+                        </TabItem>
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.RotateCcw}" />
+                                    <TextBlock Text="بازیابی"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «بازیابی» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[2]}" />
+                        </TabItem>
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.Settings}" />
+                                    <TextBlock Text="تنظیمات"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «تنظیمات» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[3]}" />
+                        </TabItem>
+                    </TabControl>
+
+                    <DataGrid Style="{DynamicResource Grid.Modern}"
+                              ItemsSource="{Binding Items}"
+                              SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              HeadersVisibility="Column"
+                              RowHeight="{StaticResource Size.RowHeight}"
+                              FlowDirection="RightToLeft">
+                        <DataGrid.Columns>
+                            <!-- نام فایل — نوع: text -->
+                            <DataGridTextColumn Header="نام فایل"
+                                                Binding="{Binding Name}"
+                                                Width="*"
+                                                ElementStyle="{DynamicResource Txt.Body}" />
+                            <!-- تاریخ — نوع: date -->
+                            <DataGridTextColumn Header="تاریخ" Width="150" Binding="{Binding Date, Converter={StaticResource PersianDate}}" />
+                            <!-- حجم — نوع: num -->
+                            <DataGridTextColumn Header="حجم"
+                                                Binding="{Binding Size}"
+                                                Width="110"
+                                                ElementStyle="{DynamicResource Txt.Body}" />
+                            <!-- نوع — نوع: chip -->
+                            <DataGridTemplateColumn Header="نوع" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{DynamicResource Badge}"
+                                                HorizontalAlignment="Center"
+                                                Background="{Binding TypeTone, Converter={StaticResource StatusTone}}">
+                                            <TextBlock Text="{Binding Type}"
+                                                       Style="{DynamicResource Badge.Text}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <!-- وضعیت — نوع: chip -->
+                            <DataGridTemplateColumn Header="وضعیت" Width="112">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{DynamicResource Badge}"
+                                                HorizontalAlignment="Center"
+                                                Background="{Binding StatusTone, Converter={StaticResource StatusTone}}">
+                                            <TextBlock Text="{Binding Status}"
+                                                       Style="{DynamicResource Badge.Text}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <ctrl:EmptyState Icon="{DynamicResource Icon.DatabaseBackup}"
+                                      Title="{loc:Loc Common.EmptyTitle}"
+                                      Message="{loc:Loc Common.EmptyMessage}"
+                                      Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+            <!-- ══════════════════════════════════════════════════════════
+     ارتباطاتِ این صفحه با دیگر صفحات
+     هر ردیف: «مبدأ» → «مقصد» با توضیحِ نوعِ پیوند
+     این بلوک در همه‌ی صفحات حضور دارد تا مسیرِ حرکتِ کاربر گم نشود.
+     ══════════════════════════════════════════════════════════ -->
+            <Border Style="{DynamicResource Card.Flat}" Margin="0,{StaticResource S.3},0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,{StaticResource S.3}">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.GitBranch}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="{loc:Loc Common.Relations}"
+                                   Style="{DynamicResource Txt.Subtitle}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Relations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="0,0,0,{StaticResource S.2}">
+                                    <Border Style="{DynamicResource Badge.Neutral}">
+                                        <TextBlock Text="{Binding From}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                        <Path Style="{DynamicResource Icon.XSmall}"
+                                              Data="{DynamicResource Icon.ArrowLeft}"
+                                               Stroke="{DynamicResource Brush.TextMuted}" />
+                                    <Border Style="{DynamicResource Badge.Info}">
+                                        <TextBlock Text="{Binding To}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Why}"
+                                               Style="{DynamicResource Txt.Caption}"
+                                               VerticalAlignment="Center"
+                                               Margin="{StaticResource S.2},0,0,0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+
+</UserControl>

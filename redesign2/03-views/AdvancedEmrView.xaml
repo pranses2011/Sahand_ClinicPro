@@ -1,0 +1,337 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  پرونده بالینی پیشرفته — AdvancedEmrView
+╠══════════════════════════════════════════════════════════════════════╣
+║  گروه        : بیماران
+║  کهن‌الگو     : detail-tabs
+║  ViewModel   : AdvancedEmrViewModel
+║  وایرفریم    : 01-wireframes-html/AdvancedEmrView.html
+╠══════════════════════════════════════════════════════════════════════╣
+║  ساختار (اندازه‌ی هر فیلد/ستون بر پایه‌ی ۱۲ ستون است تا
+║  «بزرگیِ عنصر متناسب با کارکردش» باشد — کد ملی ۳ ستون، نشانی ۱۲ ستون)
+╠══════════════════════════════════════════════════════════════════════╣
+║  نام              نوع              پهنا   الزامی
+║  ─────────────────────────────────────────────────
+║  ▸ شرح‌حالِ هدف‌دار
+║    ChiefComplaint  TextBox          8      بله
+║    Duration        ComboBox         4      خیر
+║    HistoryPresent  TextBox (چندخطی  8      خیر
+║    PastMedical     TextBox (چندخطی  4      خیر
+║    DrugHistory     TextBox (چندخطی  4      خیر
+║    FamilyHistory   TextBox (چندخطی  4      خیر
+║    SocialHistory   TextBox (چندخطی  4      خیر
+╠══════════════════════════════════════════════════════════════════════╣
+║  ارتباطات این صفحه
+║  ─────────────────────────────────────────────────
+║    پرونده بالینی  ──▶  ویزیت (SOAP)
+║         بخشی از ویزیت
+║    پرونده بالینی  ──▶  پرونده‌ی بیمار
+║         زیرمجموعه پرونده
+╚══════════════════════════════════════════════════════════════════════╝
+
+  قواعدِ رعایت‌شده در این فایل:
+    • راست‌چین (RTL) و قلمِ وزیرمتن در سراسرِ صفحه
+    • هیچ رنگِ ثابت (هگز) — همه از نشانه‌های معناییِ DynamicResource
+    • الگوی MVVM: هیچ منطقی در code-behind، همه چیز از ViewModel
+    • متن‌ها از فایلِ زبان (loc:Loc) برای پشتیبانیِ دو زبانهٔ آینده
+    • تاریخ‌ها با تبدیل‌گرِ PersianDate به شمسی نمایش داده می‌شوند
+    • نقشهٔ ارتباطات در پایینِ صفحه مسیرِ حرکت را نشان می‌دهد
+-->
+
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.AdvancedEmrView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization"
+        xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
+        mc:Ignorable="d"
+        d:DesignHeight="820" d:DesignWidth="1280"
+        d:DataContext="{d:DesignInstance vm:AdvancedEmrViewModel}"
+        FlowDirection="RightToLeft"
+        FontFamily="{DynamicResource AppFontFamily}"
+        Background="{DynamicResource Brush.Canvas}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ سربرگِ یکپارچه‌ی صفحه ═══ -->
+        <ctrl:PageHeader Grid.Row="0"
+                        Title="پرونده بالینی پیشرفته"
+                        Subtitle="ثبت شرح‌حال، معاینه، تشخیص و پیگیری"
+                        Icon="{DynamicResource Icon.NotebookPen}"
+                        Margin="{StaticResource P.Page}" />
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="{StaticResource P.Page}">
+            <StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <!-- ── بخش: شرح‌حالِ هدف‌دار ── -->
+                <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="12"
+                        Margin="0,{StaticResource S.2},0,{StaticResource S.3}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.ClipboardList}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="شرح‌حالِ هدف‌دار"
+                                   Style="{DynamicResource Txt.Title}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                </Border>
+                <!-- شکایت اصلی — TextBox · پهنای 8/۱۲ -->
+                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="8"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="شکایت اصلی"
+                               Style="{DynamicResource Input.LabelRequired}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding ChiefComplaint, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="درد شکمی از ۳ روز پیش"
+                             />
+                    <!-- خطاهای اعتبارسنجی به‌صورت خودکار از INotifyDataErrorInfo نمایش داده می‌شوند -->
+                </StackPanel>
+                <!-- مدت زمان — ComboBox · پهنای 4/۱۲ -->
+                <StackPanel Grid.Row="1" Grid.Column="8" Grid.ColumnSpan="4"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="مدت زمان"
+                               Style="{DynamicResource Input.Label}" />
+                    <ComboBox Style="{DynamicResource Input.ComboBox}"
+                              SelectedItem="{Binding Duration, Mode=TwoWay}">
+                        <ComboBoxItem Content="امروز" />
+                        <ComboBoxItem Content="۲ روز" />
+                        <ComboBoxItem Content="۳ روز" IsSelected="True" />
+                        <ComboBoxItem Content="یک هفته" />
+                        <ComboBoxItem Content="بیش از یک ماه" />
+                    </ComboBox>
+                </StackPanel>
+                <!-- شرح بیماری فعلی — TextBox (چندخطی) · پهنای 8/۱۲ -->
+                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="8"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="شرح بیماری فعلی"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding HistoryPresent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             MinHeight="88"
+                             VerticalContentAlignment="Top"
+                             Tag="درد مبهم در ناحیه اپی‌گاستر که پس از غذا تشدید می‌شود…"
+                             />
+                </StackPanel>
+                <!-- سابقه بیماری‌ها — TextBox (چندخطی) · پهنای 4/۱۲ -->
+                <StackPanel Grid.Row="2" Grid.Column="8" Grid.ColumnSpan="4"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="سابقه بیماری‌ها"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding PastMedical, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             MinHeight="88"
+                             VerticalContentAlignment="Top"
+                             Tag="دیابت نوع ۲ از ۵ سال پیش"
+                             />
+                </StackPanel>
+                <!-- سابقه دارویی — TextBox (چندخطی) · پهنای 4/۱۲ -->
+                <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="سابقه دارویی"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding DrugHistory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             MinHeight="88"
+                             VerticalContentAlignment="Top"
+                             Tag="متفورمین ۵۰۰"
+                             />
+                </StackPanel>
+                <!-- سابقه خانوادگی — TextBox (چندخطی) · پهنای 4/۱۲ -->
+                <StackPanel Grid.Row="3" Grid.Column="4" Grid.ColumnSpan="4"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="سابقه خانوادگی"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding FamilyHistory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             MinHeight="88"
+                             VerticalContentAlignment="Top"
+                             Tag="پدر: فشار خون"
+                             />
+                </StackPanel>
+                <!-- سابقه اجتماعی — TextBox (چندخطی) · پهنای 4/۱۲ -->
+                <StackPanel Grid.Row="3" Grid.Column="8" Grid.ColumnSpan="4"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="سابقه اجتماعی"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding SocialHistory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             MinHeight="88"
+                             VerticalContentAlignment="Top"
+                             Tag="غیرسیگاری"
+                             />
+                </StackPanel>
+            </Grid>
+
+                    <TabControl Style="{DynamicResource Tab.Modern}">
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.ClipboardList}" />
+                                    <TextBlock Text="شرح‌حال"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «شرح‌حال» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[0]}" />
+                        </TabItem>
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.Stethoscope}" />
+                                    <TextBlock Text="معاینه فیزیکی"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «معاینه فیزیکی» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[1]}" />
+                        </TabItem>
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.CircleCheck}" />
+                                    <TextBlock Text="تشخیص‌ها"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «تشخیص‌ها» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[2]}" />
+                        </TabItem>
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.Pill}" />
+                                    <TextBlock Text="داروهای جاری"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «داروهای جاری» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[3]}" />
+                        </TabItem>
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.NotebookPen}" />
+                                    <TextBlock Text="یادداشت‌ها"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «یادداشت‌ها» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[4]}" />
+                        </TabItem>
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.CalendarClock}" />
+                                    <TextBlock Text="پیگیری‌ها"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «پیگیری‌ها» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[5]}" />
+                        </TabItem>
+                    </TabControl>
+
+
+                    <ctrl:EmptyState Icon="{DynamicResource Icon.NotebookPen}"
+                                      Title="{loc:Loc Common.EmptyTitle}"
+                                      Message="{loc:Loc Common.EmptyMessage}"
+                                      Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+            <!-- ══════════════════════════════════════════════════════════
+     ارتباطاتِ این صفحه با دیگر صفحات
+     هر ردیف: «مبدأ» → «مقصد» با توضیحِ نوعِ پیوند
+     این بلوک در همه‌ی صفحات حضور دارد تا مسیرِ حرکتِ کاربر گم نشود.
+     ══════════════════════════════════════════════════════════ -->
+            <Border Style="{DynamicResource Card.Flat}" Margin="0,{StaticResource S.3},0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,{StaticResource S.3}">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.GitBranch}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="{loc:Loc Common.Relations}"
+                                   Style="{DynamicResource Txt.Subtitle}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Relations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="0,0,0,{StaticResource S.2}">
+                                    <Border Style="{DynamicResource Badge.Neutral}">
+                                        <TextBlock Text="{Binding From}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                        <Path Style="{DynamicResource Icon.XSmall}"
+                                              Data="{DynamicResource Icon.ArrowLeft}"
+                                               Stroke="{DynamicResource Brush.TextMuted}" />
+                                    <Border Style="{DynamicResource Badge.Info}">
+                                        <TextBlock Text="{Binding To}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Why}"
+                                               Style="{DynamicResource Txt.Caption}"
+                                               VerticalAlignment="Center"
+                                               Margin="{StaticResource S.2},0,0,0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+
+</UserControl>

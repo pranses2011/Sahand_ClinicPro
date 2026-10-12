@@ -1,0 +1,399 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  پرونده‌ی بیمار — PatientDetailWindow
+╠══════════════════════════════════════════════════════════════════════╣
+║  گروه        : بیماران
+║  کهن‌الگو     : detail-timeline
+║  ViewModel   : PatientDetailViewModel
+║  وایرفریم    : 01-wireframes-html/PatientDetailWindow.html
+╠══════════════════════════════════════════════════════════════════════╣
+║  توضیح       : سربرگ با کارتِ هویت، آمار و اطلاعات تماس؛ سپس تب‌ها؛ 
+║                تب نخست «خط زمان درمان» رویدادها را به ترتیب زمان نشان 
+║                می‌دهد.
+╠══════════════════════════════════════════════════════════════════════╣
+║  ساختار (اندازه‌ی هر فیلد/ستون بر پایه‌ی ۱۲ ستون است تا
+║  «بزرگیِ عنصر متناسب با کارکردش» باشد — کد ملی ۳ ستون، نشانی ۱۲ ستون)
+╠══════════════════════════════════════════════════════════════════════╣
+║  نام              نوع              پهنا   الزامی
+║  ─────────────────────────────────────────────────
+╠══════════════════════════════════════════════════════════════════════╣
+║  ارتباطات این صفحه
+║  ─────────────────────────────────────────────────
+║    پرونده بیمار  ──▶  ویزیت (SOAP)
+║         هر ویزیت در خط زمان
+║    پرونده بیمار  ──▶  صورتحساب
+║         مانده از فاکتورها
+║    پرونده بیمار  ──▶  آزمایشگاه
+║         نتایج آزمایش
+╚══════════════════════════════════════════════════════════════════════╝
+
+  قواعدِ رعایت‌شده در این فایل:
+    • راست‌چین (RTL) و قلمِ وزیرمتن در سراسرِ صفحه
+    • هیچ رنگِ ثابت (هگز) — همه از نشانه‌های معناییِ DynamicResource
+    • الگوی MVVM: هیچ منطقی در code-behind، همه چیز از ViewModel
+    • متن‌ها از فایلِ زبان (loc:Loc) برای پشتیبانیِ دو زبانهٔ آینده
+    • تاریخ‌ها با تبدیل‌گرِ PersianDate به شمسی نمایش داده می‌شوند
+    • نقشهٔ ارتباطات در پایینِ صفحه مسیرِ حرکت را نشان می‌دهد
+-->
+
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.PatientDetailWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization"
+        xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
+        mc:Ignorable="d"
+        Title="پرونده‌ی بیمار"
+        Style="{DynamicResource Window.Modern}"
+        WindowStartupLocation="CenterScreen"
+        Height="880" Width="1280"
+        d:DataContext="{d:DesignInstance vm:PatientDetailViewModel}"
+        FlowDirection="RightToLeft"
+        FontFamily="{DynamicResource AppFontFamily}"
+        Background="{DynamicResource Brush.Canvas}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ سربرگِ یکپارچه‌ی صفحه ═══ -->
+        <ctrl:PageHeader Grid.Row="0"
+                        Title="پرونده‌ی بیمار"
+                        Subtitle="پرونده کامل بیمار با خط زمان درمان"
+                        Icon="{DynamicResource Icon.IdCard}"
+                        Margin="{StaticResource P.Page}" />
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="{StaticResource P.Page}">
+            <StackPanel>
+            <Border Style="{DynamicResource Card}"
+                    Padding="{StaticResource S.6}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Width="72" Height="72"
+                            CornerRadius="{StaticResource R.Pill}"
+                            Background="{DynamicResource Brush.Primary}"
+                            Margin="0,0,{StaticResource S.4},0">
+                        <TextBlock Text="سا"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontSize="{StaticResource Fs.Title}"
+                                   Foreground="{DynamicResource Brush.OnPrimary}" />
+                    </Border>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="سارا احمدی"
+                                   Style="{DynamicResource Txt.Headline}" />
+                        <TextBlock Text="کد پرونده P-۱۰۲۴ · ۴۲ سال · زن"
+                                   Style="{DynamicResource Txt.Caption}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,{StaticResource S.3},0,0">
+                            <Border Style="{DynamicResource Badge.Neutral}}"
+                                    Margin="0,0,{StaticResource S.2},0">
+                                <TextBlock Text="تأمین اجتماعی"
+                                           Style="{DynamicResource Badge.Text}" />
+                            </Border>
+                            <Border Style="{DynamicResource Badge.Success}}"
+                                    Margin="0,0,{StaticResource S.2},0">
+                                <TextBlock Text="فعال"
+                                           Style="{DynamicResource Badge.Text}" />
+                            </Border>
+                            <Border Style="{DynamicResource Badge.Info}}"
+                                    Margin="0,0,{StaticResource S.2},0">
+                                <TextBlock Text="O+"
+                                           Style="{DynamicResource Badge.Text}" />
+                            </Border>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,{StaticResource S.4},0,0">
+                            <StackPanel Margin="0,0,{StaticResource S.6},0">
+                                <TextBlock Text="۱۸"
+                                           Style="{DynamicResource Txt.Title}" />
+                                <TextBlock Text="ویزیت‌ها"
+                                           Style="{DynamicResource Txt.Caption}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,{StaticResource S.6},0">
+                                <TextBlock Text="۲۴"
+                                           Style="{DynamicResource Txt.Title}" />
+                                <TextBlock Text="نوبت‌ها"
+                                           Style="{DynamicResource Txt.Caption}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,{StaticResource S.6},0">
+                                <TextBlock Text="۱۲,۴۵۰,۰۰۰"
+                                           Style="{DynamicResource Txt.Title}" />
+                                <TextBlock Text="پرداختی کل"
+                                           Style="{DynamicResource Txt.Caption}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <TabControl Style="{DynamicResource Tab.Modern}">
+                <TabItem Style="{DynamicResource Tab.Item}">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{DynamicResource Icon.Small}"
+                                  Data="{DynamicResource Icon.History}" />
+                            <TextBlock Text="خط زمان درمان"
+                                       VerticalAlignment="Center" Margin="6,0,0,0" />
+                            <Border Style="{DynamicResource Badge.Neutral}"
+                                    Margin="6,0,0,0">
+                                <TextBlock Text="8"
+                                           Style="{DynamicResource Badge.Text}" />
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <!-- محتوای تب «خط زمان درمان» در ViewModel تأمین می‌شود -->
+                    <ContentControl Content="{Binding TabContents[0]}" />
+                </TabItem>
+                <TabItem Style="{DynamicResource Tab.Item}">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{DynamicResource Icon.Small}"
+                                  Data="{DynamicResource Icon.Stethoscope}" />
+                            <TextBlock Text="ویزیت‌ها"
+                                       VerticalAlignment="Center" Margin="6,0,0,0" />
+                            <Border Style="{DynamicResource Badge.Neutral}"
+                                    Margin="6,0,0,0">
+                                <TextBlock Text="18"
+                                           Style="{DynamicResource Badge.Text}" />
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <!-- محتوای تب «ویزیت‌ها» در ViewModel تأمین می‌شود -->
+                    <ContentControl Content="{Binding TabContents[1]}" />
+                </TabItem>
+                <TabItem Style="{DynamicResource Tab.Item}">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{DynamicResource Icon.Small}"
+                                  Data="{DynamicResource Icon.CalendarDays}" />
+                            <TextBlock Text="نوبت‌ها"
+                                       VerticalAlignment="Center" Margin="6,0,0,0" />
+                            <Border Style="{DynamicResource Badge.Neutral}"
+                                    Margin="6,0,0,0">
+                                <TextBlock Text="24"
+                                           Style="{DynamicResource Badge.Text}" />
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <!-- محتوای تب «نوبت‌ها» در ViewModel تأمین می‌شود -->
+                    <ContentControl Content="{Binding TabContents[2]}" />
+                </TabItem>
+                <TabItem Style="{DynamicResource Tab.Item}">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{DynamicResource Icon.Small}"
+                                  Data="{DynamicResource Icon.FileText}" />
+                            <TextBlock Text="نسخه‌ها"
+                                       VerticalAlignment="Center" Margin="6,0,0,0" />
+                            <Border Style="{DynamicResource Badge.Neutral}"
+                                    Margin="6,0,0,0">
+                                <TextBlock Text="11"
+                                           Style="{DynamicResource Badge.Text}" />
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <!-- محتوای تب «نسخه‌ها» در ViewModel تأمین می‌شود -->
+                    <ContentControl Content="{Binding TabContents[3]}" />
+                </TabItem>
+                <TabItem Style="{DynamicResource Tab.Item}">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{DynamicResource Icon.Small}"
+                                  Data="{DynamicResource Icon.FlaskConical}" />
+                            <TextBlock Text="آزمایش‌ها"
+                                       VerticalAlignment="Center" Margin="6,0,0,0" />
+                            <Border Style="{DynamicResource Badge.Neutral}"
+                                    Margin="6,0,0,0">
+                                <TextBlock Text="6"
+                                           Style="{DynamicResource Badge.Text}" />
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <!-- محتوای تب «آزمایش‌ها» در ViewModel تأمین می‌شود -->
+                    <ContentControl Content="{Binding TabContents[4]}" />
+                </TabItem>
+                <TabItem Style="{DynamicResource Tab.Item}">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{DynamicResource Icon.Small}"
+                                  Data="{DynamicResource Icon.ScanLine}" />
+                            <TextBlock Text="تصویربرداری"
+                                       VerticalAlignment="Center" Margin="6,0,0,0" />
+                            <Border Style="{DynamicResource Badge.Neutral}"
+                                    Margin="6,0,0,0">
+                                <TextBlock Text="2"
+                                           Style="{DynamicResource Badge.Text}" />
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <!-- محتوای تب «تصویربرداری» در ViewModel تأمین می‌شود -->
+                    <ContentControl Content="{Binding TabContents[5]}" />
+                </TabItem>
+                <TabItem Style="{DynamicResource Tab.Item}">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{DynamicResource Icon.Small}"
+                                  Data="{DynamicResource Icon.Receipt}" />
+                            <TextBlock Text="صورتحساب‌ها"
+                                       VerticalAlignment="Center" Margin="6,0,0,0" />
+                            <Border Style="{DynamicResource Badge.Neutral}"
+                                    Margin="6,0,0,0">
+                                <TextBlock Text="9"
+                                           Style="{DynamicResource Badge.Text}" />
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <!-- محتوای تب «صورتحساب‌ها» در ViewModel تأمین می‌شود -->
+                    <ContentControl Content="{Binding TabContents[6]}" />
+                </TabItem>
+                <TabItem Style="{DynamicResource Tab.Item}">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{DynamicResource Icon.Small}"
+                                  Data="{DynamicResource Icon.Paperclip}" />
+                            <TextBlock Text="پیوست‌ها"
+                                       VerticalAlignment="Center" Margin="6,0,0,0" />
+                            <Border Style="{DynamicResource Badge.Neutral}"
+                                    Margin="6,0,0,0">
+                                <TextBlock Text="3"
+                                           Style="{DynamicResource Badge.Text}" />
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <!-- محتوای تب «پیوست‌ها» در ViewModel تأمین می‌شود -->
+                    <ContentControl Content="{Binding TabContents[7]}" />
+                </TabItem>
+            </TabControl>
+
+            <!-- خط زمانِ درمان -->
+            <ItemsControl ItemsSource="{Binding Timeline}"
+                          Margin="0,16,0,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="24" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Path Grid.Column="0"
+                                  Style="{DynamicResource Icon.Small}"
+                                  Data="{Binding Icon}"
+                                  Stroke="{DynamicResource Brush.Primary}" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding Date}"
+                                       Style="{DynamicResource Txt.Caption}"
+                                       Margin="8,0,12,0" />
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="{Binding Title}"
+                                           Style="{DynamicResource Txt.Body}" />
+                                <TextBlock Text="{Binding Detail}"
+                                           Style="{DynamicResource Txt.Caption}" />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <!-- ══════════════════════════════════════════════════════════
+     ارتباطاتِ این صفحه با دیگر صفحات
+     هر ردیف: «مبدأ» → «مقصد» با توضیحِ نوعِ پیوند
+     این بلوک در همه‌ی صفحات حضور دارد تا مسیرِ حرکتِ کاربر گم نشود.
+     ══════════════════════════════════════════════════════════ -->
+            <Border Style="{DynamicResource Card.Flat}" Margin="0,{StaticResource S.3},0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,{StaticResource S.3}">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.GitBranch}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="{loc:Loc Common.Relations}"
+                                   Style="{DynamicResource Txt.Subtitle}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Relations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="0,0,0,{StaticResource S.2}">
+                                    <Border Style="{DynamicResource Badge.Neutral}">
+                                        <TextBlock Text="{Binding From}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                        <Path Style="{DynamicResource Icon.XSmall}"
+                                              Data="{DynamicResource Icon.ArrowLeft}"
+                                               Stroke="{DynamicResource Brush.TextMuted}" />
+                                    <Border Style="{DynamicResource Badge.Info}">
+                                        <TextBlock Text="{Binding To}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Why}"
+                                               Style="{DynamicResource Txt.Caption}"
+                                               VerticalAlignment="Center"
+                                               Margin="{StaticResource S.2},0,0,0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ═══ نوارِ اقدام‌های ثابت ═══ -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource Brush.Surface}"
+                BorderBrush="{DynamicResource Brush.Border}"
+                BorderThickness="0,1,0,0"
+                Padding="{StaticResource S.4}">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Left">
+                <Button Style="{DynamicResource Btn.Primary}"
+                        Command="{Binding NewVisitCommand}"
+                        Margin="0,0,{StaticResource S.2},0"
+                        MinHeight="{StaticResource Size.ButtonHeight}"
+                        Padding="{StaticResource P.Button}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.Stethoscope}"
+                              Margin="0,0,{StaticResource S.2},0" />
+                        <TextBlock Text="ویزیت جدید" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Style="{DynamicResource Btn.Secondary}"
+                        Command="{Binding NewAppointmentCommand}"
+                        Margin="0,0,{StaticResource S.2},0"
+                        MinHeight="{StaticResource Size.ButtonHeight}"
+                        Padding="{StaticResource P.Button}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.CalendarPlus}"
+                              Margin="0,0,{StaticResource S.2},0" />
+                        <TextBlock Text="نوبت جدید" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Style="{DynamicResource Btn.Secondary}"
+                        Command="{Binding PrintCommand}"
+                        Margin="0,0,{StaticResource S.2},0"
+                        MinHeight="{StaticResource Size.ButtonHeight}"
+                        Padding="{StaticResource P.Button}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.Printer}"
+                              Margin="0,0,{StaticResource S.2},0" />
+                        <TextBlock Text="چاپ پرونده" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+
+</Window>

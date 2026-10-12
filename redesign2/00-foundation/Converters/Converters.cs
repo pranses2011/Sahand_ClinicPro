@@ -87,6 +87,10 @@ namespace Sahand.ClinicPro.Desktop.Converters
         /// <inheritdoc />
         public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
+            // رشته‌هایی که از پیش به شمسی قالب‌بندی شده‌اند، همان‌طور نمایش داده می‌شوند
+            if (value is string ready)
+                return ready;
+
             if (value is not DateTime dt)
                 return string.Empty;
 
@@ -148,6 +152,56 @@ namespace Sahand.ClinicPro.Desktop.Converters
                 .FirstOrDefault();
 
             return attribute?.Description ?? name;
+        }
+
+        /// <inheritdoc />
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+            => throw new NotSupportedException();
+    }
+
+    /// <summary>
+    /// تبدیلِ «تنِ وضعیت» به قلم‌موی نشانِ متناظر
+    /// </summary>
+    /// <remarks>
+    /// نشان‌های وضعیت در سراسرِ برنامه یکی از تن‌های زیر را دارند:
+    /// <list type="bullet">
+    /// <item><c>ok</c> موفقیت — سبز</item>
+    /// <item><c>wn</c> هشدار — کهربایی</item>
+    /// <item><c>dg</c> خطر — قرمز</item>
+    /// <item><c>in</c> اطلاعات — آبی</item>
+    /// <item><c>nu</c> خنثی — خاکستری</item>
+    /// </list>
+    /// نگاشتِ تن به رنگ از منابعِ تم خوانده می‌شود، بنابراین در تمِ تاریک
+    /// نیز بدون تغییر این کلاس درست کار می‌کند.
+    /// </remarks>
+    public class StatusToneConverter : IValueConverter
+    {
+        private static readonly Dictionary<string, string> ToneKeys = new()
+        {
+            ["ok"] = "Brush.SuccessLight",
+            ["wn"] = "Brush.WarningLight",
+            ["dg"] = "Brush.DangerLight",
+            ["in"] = "Brush.InfoLight",
+            ["nu"] = "Brush.SurfaceAlt",
+            ["pp"] = "Brush.SecondaryLight",
+            ["cy"] = "Brush.InfoLight",
+            ["te"] = "Brush.PrimaryLight",
+            ["bl"] = "Brush.InfoLight",
+            ["gr"] = "Brush.SuccessLight",
+            ["am"] = "Brush.WarningLight",
+            ["bk"] = "Brush.SurfaceAlt",
+        };
+
+        /// <inheritdoc />
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            var tone = (value as string ?? string.Empty).Trim().ToLowerInvariant();
+            if (!ToneKeys.TryGetValue(tone, out var key))
+                key = "Brush.SurfaceAlt";
+
+            return System.Windows.Application.Current.TryFindResource(key)
+                   as System.Windows.Media.Brush
+                   ?? System.Windows.Media.Brushes.Transparent;
         }
 
         /// <inheritdoc />

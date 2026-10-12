@@ -1,0 +1,300 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  سامانه سپاس — SepasView
+╠══════════════════════════════════════════════════════════════════════╣
+║  گروه        : سازمانی
+║  کهن‌الگو     : detail-tabs
+║  ViewModel   : SepasViewModel
+║  وایرفریم    : 01-wireframes-html/SepasView.html
+╠══════════════════════════════════════════════════════════════════════╣
+║  ساختار (اندازه‌ی هر فیلد/ستون بر پایه‌ی ۱۲ ستون است تا
+║  «بزرگیِ عنصر متناسب با کارکردش» باشد — کد ملی ۳ ستون، نشانی ۱۲ ستون)
+╠══════════════════════════════════════════════════════════════════════╣
+║  نام              نوع              پهنا   الزامی
+║  ─────────────────────────────────────────────────
+║  ▸ اتصال
+║    Endpoint        TextBox          8      بله
+║    Enabled         CheckBox         4      خیر
+║    Username        TextBox          6      خیر
+║    Password        PasswordBox      6      خیر
+║    Interval        ComboBox         6      خیر
+║    LastSync        TextBox          6      خیر
+║  ▸ ستون‌های جدول
+║    Time            date             150px  Right
+║    Type            text             150px  Right
+║    Records         num              96px   Center
+║    Result          chip             130px  Center
+╠══════════════════════════════════════════════════════════════════════╣
+║  ارتباطات این صفحه
+║  ─────────────────────────────────────────────────
+║    سامانه سپاس  ──▶  نسخه الکترونیک
+║         ارسال داده
+║    سامانه سپاس  ──▶  پرونده‌ی بیمار
+║         منبع داده
+╚══════════════════════════════════════════════════════════════════════╝
+
+  قواعدِ رعایت‌شده در این فایل:
+    • راست‌چین (RTL) و قلمِ وزیرمتن در سراسرِ صفحه
+    • هیچ رنگِ ثابت (هگز) — همه از نشانه‌های معناییِ DynamicResource
+    • الگوی MVVM: هیچ منطقی در code-behind، همه چیز از ViewModel
+    • متن‌ها از فایلِ زبان (loc:Loc) برای پشتیبانیِ دو زبانهٔ آینده
+    • تاریخ‌ها با تبدیل‌گرِ PersianDate به شمسی نمایش داده می‌شوند
+    • نقشهٔ ارتباطات در پایینِ صفحه مسیرِ حرکت را نشان می‌دهد
+-->
+
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.SepasView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization"
+        xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
+        mc:Ignorable="d"
+        d:DesignHeight="820" d:DesignWidth="1280"
+        d:DataContext="{d:DesignInstance vm:SepasViewModel}"
+        FlowDirection="RightToLeft"
+        FontFamily="{DynamicResource AppFontFamily}"
+        Background="{DynamicResource Brush.Canvas}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ سربرگِ یکپارچه‌ی صفحه ═══ -->
+        <ctrl:PageHeader Grid.Row="0"
+                        Title="سامانه سپاس"
+                        Subtitle="یکپارچه‌سازی با سامانه سپاس"
+                        Icon="{DynamicResource Icon.Link2}"
+                        Margin="{StaticResource P.Page}" />
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="{StaticResource P.Page}">
+            <StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <!-- ── بخش: اتصال ── -->
+                <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="12"
+                        Margin="0,{StaticResource S.2},0,{StaticResource S.3}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.Link2}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="اتصال"
+                                   Style="{DynamicResource Txt.Title}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                </Border>
+                <!-- نشانی سرویس — TextBox · پهنای 8/۱۲ -->
+                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="8"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="نشانی سرویس"
+                               Style="{DynamicResource Input.LabelRequired}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Endpoint, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="https://sepas.example.ir/api"
+                             />
+                    <!-- خطاهای اعتبارسنجی به‌صورت خودکار از INotifyDataErrorInfo نمایش داده می‌شوند -->
+                </StackPanel>
+                <!-- فعال — CheckBox · پهنای 4/۱۲ -->
+                <StackPanel Grid.Row="1" Grid.Column="8" Grid.ColumnSpan="4"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <CheckBox Style="{DynamicResource Input.CheckBox}"
+                              Content="فعال"
+                              IsChecked="{Binding Enabled, Mode=TwoWay}" />
+                </StackPanel>
+                <!-- نام کاربری — TextBox · پهنای 6/۱۲ -->
+                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="6"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="نام کاربری"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="clinic_sahand"
+                             />
+                </StackPanel>
+                <!-- رمز عبور — PasswordBox · پهنای 6/۱۲ -->
+                <StackPanel Grid.Row="2" Grid.Column="6" Grid.ColumnSpan="6"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="رمز عبور"
+                               Style="{DynamicResource Input.Label}" />
+                    <PasswordBox Style="{DynamicResource Input.Password}"
+                                 ctrl:PasswordHelper.Attach="True"
+                                 ctrl:PasswordHelper.Password="{Binding Password, Mode=TwoWay}" />
+                </StackPanel>
+                <!-- دوره ارسال — ComboBox · پهنای 6/۱۲ -->
+                <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="6"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="دوره ارسال"
+                               Style="{DynamicResource Input.Label}" />
+                    <ComboBox Style="{DynamicResource Input.ComboBox}"
+                              SelectedItem="{Binding Interval, Mode=TwoWay}">
+                        <ComboBoxItem Content="ساعتی" />
+                        <ComboBoxItem Content="روزانه" IsSelected="True" />
+                        <ComboBoxItem Content="هفتگی" />
+                    </ComboBox>
+                </StackPanel>
+                <!-- آخرین همگام‌سازی — TextBox · پهنای 6/۱۲ -->
+                <StackPanel Grid.Row="3" Grid.Column="6" Grid.ColumnSpan="6"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="آخرین همگام‌سازی"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding LastSync, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="۱۴۰۴/۰۷/۱۹ ۰۷:۰۰"
+                             />
+                </StackPanel>
+            </Grid>
+
+                    <TabControl Style="{DynamicResource Tab.Modern}">
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.Plug}" />
+                                    <TextBlock Text="تنظیمات اتصال"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «تنظیمات اتصال» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[0]}" />
+                        </TabItem>
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.Send}" />
+                                    <TextBlock Text="ارسال‌ها"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «ارسال‌ها» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[1]}" />
+                        </TabItem>
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.TriangleAlert}" />
+                                    <TextBlock Text="خطاها"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «خطاها» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[2]}" />
+                        </TabItem>
+                    </TabControl>
+
+                    <DataGrid Style="{DynamicResource Grid.Modern}"
+                              ItemsSource="{Binding Items}"
+                              SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              HeadersVisibility="Column"
+                              RowHeight="{StaticResource Size.RowHeight}"
+                              FlowDirection="RightToLeft">
+                        <DataGrid.Columns>
+                            <!-- زمان — نوع: date -->
+                            <DataGridTextColumn Header="زمان" Width="150" Binding="{Binding Time, Converter={StaticResource PersianDate}}" />
+                            <!-- نوع داده — نوع: text -->
+                            <DataGridTextColumn Header="نوع داده"
+                                                Binding="{Binding Type}"
+                                                Width="150"
+                                                ElementStyle="{DynamicResource Txt.Body}" />
+                            <!-- رکوردها — نوع: num -->
+                            <DataGridTextColumn Header="رکوردها"
+                                                Binding="{Binding Records}"
+                                                Width="96"
+                                                ElementStyle="{DynamicResource Txt.Body}" />
+                            <!-- نتیجه — نوع: chip -->
+                            <DataGridTemplateColumn Header="نتیجه" Width="130">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{DynamicResource Badge}"
+                                                HorizontalAlignment="Center"
+                                                Background="{Binding ResultTone, Converter={StaticResource StatusTone}}">
+                                            <TextBlock Text="{Binding Result}"
+                                                       Style="{DynamicResource Badge.Text}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <ctrl:EmptyState Icon="{DynamicResource Icon.Link2}"
+                                      Title="{loc:Loc Common.EmptyTitle}"
+                                      Message="{loc:Loc Common.EmptyMessage}"
+                                      Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+            <!-- ══════════════════════════════════════════════════════════
+     ارتباطاتِ این صفحه با دیگر صفحات
+     هر ردیف: «مبدأ» → «مقصد» با توضیحِ نوعِ پیوند
+     این بلوک در همه‌ی صفحات حضور دارد تا مسیرِ حرکتِ کاربر گم نشود.
+     ══════════════════════════════════════════════════════════ -->
+            <Border Style="{DynamicResource Card.Flat}" Margin="0,{StaticResource S.3},0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,{StaticResource S.3}">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.GitBranch}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="{loc:Loc Common.Relations}"
+                                   Style="{DynamicResource Txt.Subtitle}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Relations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="0,0,0,{StaticResource S.2}">
+                                    <Border Style="{DynamicResource Badge.Neutral}">
+                                        <TextBlock Text="{Binding From}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                        <Path Style="{DynamicResource Icon.XSmall}"
+                                              Data="{DynamicResource Icon.ArrowLeft}"
+                                               Stroke="{DynamicResource Brush.TextMuted}" />
+                                    <Border Style="{DynamicResource Badge.Info}">
+                                        <TextBlock Text="{Binding To}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Why}"
+                                               Style="{DynamicResource Txt.Caption}"
+                                               VerticalAlignment="Center"
+                                               Margin="{StaticResource S.2},0,0,0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+
+</UserControl>
