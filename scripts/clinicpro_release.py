@@ -35,6 +35,7 @@ GITHUB_API = "https://api.github.com/repos/pranses2011/Sahand_ClinicPro"
 ZIP_EXCLUDE_PREFIXES = (
     "docs/analysis/", "docs/screenshots/", "docs/prompts/",
     "docs/marketing/", "docs/design/", "docs/assets/",
+    "docs/roadmap/", "docs/changelog-archive.md",
     ".github/", "scripts/archive/",
 )
 # از scripts فقط امنیتی می‌رود؛ ابزارهای ممیزی و خودِ CLI نیستند
