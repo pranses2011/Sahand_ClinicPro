@@ -74,8 +74,11 @@ public class MigrationSnapshotComplianceTests
         // پیشوند yyyyMMddHHmmss — ترتیب رشته‌ای همان ترتیب زمانی است
         // (نسخهٔ بدون comparer برای سازگاری عرضی FluentAssertions 6.x)
         ids.Should().BeInAscendingOrder(because: "شناسه‌های زمان‌دار باید مرتب باشند؛ ناترتیبی یعنی دو مایگریشن هم‌زمان نوشته شده‌اند");
-        ids.Should().OnlyContain(id => id.Length >= 14 && long.TryParse(id[..14], out _),
+        // طول در درخت عبارت؛ بخش عددی پیشوند بیرون آن — discard/range در Expression مجاز نیست (CS8207/CS8790)
+        ids.Should().OnlyContain(id => id.Length >= 14,
             because: "پیشوند ۱۴ رقمی زمان (yyyyMMddHHmmss) الزامی است");
+        foreach (var id in ids)
+            long.TryParse(id[..14], out _).Should().BeTrue(because: $"پیشوند شناسهٔ {id} باید زمانِ ۱۴ رقمی باشد");
     }
 
     [Fact]
