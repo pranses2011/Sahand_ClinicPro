@@ -31,6 +31,19 @@ public static class IdentitySetup
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
 
+        /* ── چرخهٔ ۴۹ (تکمیلی — گرفتِ CI، رفع IDX10703) ──
+           جایگزینِ کلید توسعه باید به «خودِ» JwtOptions هم برسد: مولد توکن
+           IOptions<JwtOptions> را می‌خواند نه متغیر محلی پایین را. بدون این،
+           کلید خالیِ appsettings در توسعه ⟵ SymmetricSecurityKey طول صفر ⟵
+           هر لاگین موفق با ۵۰۰ «IDX10703: key length is zero» می‌افتاد.
+           PostConfigure فقط در تهی بودن مقدار واقعی پر می‌کند (تولید سرور
+           پیش از این گارد سه‌لایه کلید الزامی را رد می‌کند). */
+        services.PostConfigure<JwtOptions>(o =>
+        {
+            if (string.IsNullOrEmpty(o.SecretKey))
+                o.SecretKey = "SahandClinicPro-Development-Fallback-Secret-Key-Must-Change!2026";
+        });
+
         /* ── چرخه دوازدهم (بند ۴-۲ سند تحلیل) + چرخهٔ ۴۹ (BUG-01): نگهبان کلید امضا ──
            کلید پیش‌فرض/کوتاه/الگوی ناامن در «تولید» یعنی هرکسی بتواند توکن جعلی بسازد؛
            در محیط تولید سرور با پیام روشن بالا نمی‌آید تا نصب‌کننده وادار به
