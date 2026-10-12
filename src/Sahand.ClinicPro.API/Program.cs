@@ -235,6 +235,22 @@ try
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0
                 }));
+
+        // ═══ چرخهٔ ۴۹ (BUG-01 / مرور AllowAnonymous): سیاست لایسنس ═══
+        // اندپوینت‌های فعال‌سازی/تنظیم لایسنس به‌ناچار پیش از ورود عمومی‌اند
+        // (پنجرهٔ فعال‌سازی دسکتاپ، پیش از وجود توکن)؛ برای مقاوم‌سازی در برابر
+        // سوءاستفاده — به‌ویژه PUT settings که نشانی سرور لایسنس را تغییر می‌دهد —
+        // سقف ۲۰ درخواست در دقیقه از هر IP اعمال می‌شود (کلاینت واقعی در دقایق
+        // فعال‌سازی حداکثر ۲-۳ فراخوان دارد؛ فراتر از آن نشانهٔ سوءاستفاده است).
+        options.AddPolicy("license", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 20,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0
+                }));
     });
 
     var app = builder.Build();
