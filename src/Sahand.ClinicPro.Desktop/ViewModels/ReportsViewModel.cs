@@ -81,8 +81,12 @@ public partial class ReportsViewModel : ViewModelBase
         var perfTask = _api.GetAsync<PerformanceResponse>($"reports/doctor-performance?days={Days}");
         await Task.WhenAll(revenueTask, perfTask);
 
-        var revenue = revenueTask.Result;
-        var perf = perfTask.Result;
+        // چرخهٔ ۵۰ (BUG-03): خواندن نتیجهٔ هر دو Task با await — پیش‌تر نتیجه‌ها
+        // به‌صورت هم‌گام و مسدودکننده از Taskها بیرون کشیده می‌شد که در بدترین
+        // حالت (خطای شبکه) استثنای درون‌پیچیده به UI می‌رسید و رابط کاربری را
+        // هنگ می‌داد؛ await هم استثنا را عادی می‌کند و هم رشتهٔ UI را قفل نمی‌کند.
+        var revenue = await revenueTask;
+        var perf = await perfTask;
 
         if (revenue?.Data is not null)
         {
