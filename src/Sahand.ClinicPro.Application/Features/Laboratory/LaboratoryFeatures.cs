@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.Common.Helpers;
+using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Paraclinical;
 using Sahand.ClinicPro.Domain.Entities.People;
@@ -81,7 +82,13 @@ public class CreateLabOrderCommandHandler : IRequestHandler<CreateLabOrderComman
             order.Items.Add(new LabOrderItem
             {
                 TestId = test.Id,
-                NormalRange = test.Category,
+                // ═══ چرخهٔ ۶۹ — رفع باگ تاریخی: «دستهٔ تست» به‌عنوان بازهٔ طبیعی
+                //      ذخیره می‌شد (NormalRange = test.Category) و برگهٔ نتیجه
+                //      به‌جای «۱۳ تا ۱۷» چیزهایی مثل «بیوشیمی» چاپ می‌کرد! ═══
+                // اکنون متن بازهٔ عمومی تست (مرد/زن هر که ثبت شده) در لحظهٔ
+                // درخواست منجمد می‌شود؛ پس از ثبت نتیجه، هندلر تفسیر بازهٔ
+                // «مخصوص بیمار» را جایگزین می‌کند (F-28).
+                NormalRange = test.NormalRangeMale ?? test.NormalRangeFemale,
                 Unit = test.Unit,
                 Status = LabItemStatus.Pending
             });
@@ -95,7 +102,8 @@ public class CreateLabOrderCommandHandler : IRequestHandler<CreateLabOrderComman
 }
 
 /// <summary>
-/// فرمان ثبت نتیجه قلم آزمایش — با تشخیص خودکار غیرطبیعی بودن
+/// فرمان ثبت نتیجه قلم آزمایش — با تفسیر خودکار بر اساس مشخصات بیمار
+/// چرخهٔ ۶۹ (فاز ۳ / F-28+F-29): بازهٔ مرجع سنی/جنسیتی + مقدار بحرانی
 /// </summary>
 public record RecordLabResultCommand(RecordResultDto Dto) : IRequest<Result>;
 
@@ -103,9 +111,14 @@ public record RecordLabResultCommand(RecordResultDto Dto) : IRequest<Result>;
 public class RecordLabResultCommandHandler : IRequestHandler<RecordLabResultCommand, Result>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IRealtimeNotifier? _realtime;
 
-    /// <summary>سازنده با تزریق واحد کار</summary>
-    public RecordLabResultCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    /// <summary>سازنده با تزریق واحد کار و اعلان بلادرنگ (اختیاری — برای مقدار بحرانی)</summary>
+    public RecordLabResultCommandHandler(IUnitOfWork unitOfWork, IRealtimeNotifier? realtime = null)
+    {
+        _unitOfWork = unitOfWork;
+        _realtime = realtime;
+    }
 
     /// <summary>اجرای ثبت نتیجه</summary>
     public async Task<Result> Handle(RecordLabResultCommand request, CancellationToken cancellationToken)
@@ -115,6 +128,7 @@ public class RecordLabResultCommandHandler : IRequestHandler<RecordLabResultComm
         var item = await _unitOfWork.Repository<LabOrderItem>()
             .QueryableTracking
             .Include(i => i.LabOrder)
+            .Include(i => i.Test)
             .FirstOrDefaultAsync(i => i.Id == dto.ItemId, cancellationToken);
 
         if (item is null)
@@ -125,12 +139,33 @@ public class RecordLabResultCommandHandler : IRequestHandler<RecordLabResultComm
         item.Comment = dto.Comment;
         item.Status = LabItemStatus.Resulted;
 
-        // تشخیص خودکار غیرطبیعی — عدد خارج از بازه طبیعی
-        if (dto.ResultNumeric.HasValue)
+        // ═══ چرخهٔ ۶۹ (فاز ۳ / F-28): تفسیر خودکار بر اساس مشخصات بیمار ═══
+        // پیش از این: IsAbnormal فقط برای اعداد منفی (عملاً هرگز) true می‌شد و
+        // AbnormalFlag همیشه «H» — همهٔ نتایج «بالا» پرچم می‌خوردند و هیچ‌کدام
+        // غیرطبیعی شمرده نمی‌شدند! اکنون بازهٔ مرجع مخصوص بیمار (سن/جنسیت) از
+        // ستون‌های ساخت‌یافتهٔ تست خوانده و فلگ پنج‌حالته محاسبه می‌شود؛
+        // بازهٔ نمایشی هم «مخصوص همین بیمار» روی قلم ذخیره می‌شود (برگهٔ چاپ).
+        var patient = await _unitOfWork.Repository<Patient>()
+            .QueryableNoTracking
+            .FirstOrDefaultAsync(p => p.Id == item.LabOrder!.PatientId, cancellationToken);
+
+        LabResultFlag flag = LabResultFlag.Unknown;
+        if (item.Test is not null)
         {
-            item.IsAbnormal = dto.ResultNumeric < 0; // بازه در تست‌ها نگهداری می‌شود
-            item.AbnormalFlag = dto.ResultNumeric < 0 ? "L" : "H";
+            flag = LabResultInterpreter.Interpret(item.Test, dto.ResultNumeric, patient);
+            item.NormalRange = LabResultInterpreter.RangeDisplayText(item.Test, patient);
         }
+
+        item.IsAbnormal = flag is LabResultFlag.Low or LabResultFlag.High
+                              or LabResultFlag.CriticalLow or LabResultFlag.CriticalHigh;
+        item.AbnormalFlag = flag switch
+        {
+            LabResultFlag.Low => "L",
+            LabResultFlag.High => "H",
+            LabResultFlag.CriticalLow => "LL",
+            LabResultFlag.CriticalHigh => "HH",
+            _ => null // طبیعی یا غیرقابل‌تفسیر — بدون فلگ
+        };
 
         // اگر همه اقلام نتیجه‌دار شدند — وضعیت درخواست به آماده تغییر می‌کند
         var order = item.LabOrder;
@@ -139,13 +174,37 @@ public class RecordLabResultCommandHandler : IRequestHandler<RecordLabResultComm
             order.Status = LabOrderStatus.ResultReady;
             order.ResultReadyAt = DateTime.UtcNow;
 
-            var patient = await _unitOfWork.Repository<Patient>()
-                .GetByIdAsync(order.PatientId, cancellationToken);
             if (patient is not null)
                 order.AddDomainEvent(new LabResultReadyEvent(order.Id, patient.Id, patient.Mobile));
         }
 
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        // ═══ چرخهٔ ۶۹ (فاز ۳ / F-29): مقدار بحرانی → هشدار فوری همهٔ ایستگاه‌ها ═══
+        // پس از ذخیرهٔ موفق (هشدارِ پیش از ذخیره می‌تواند برای ردیفِ ذخیره‌نشده
+        // بلند شود) با پیشوند قراردادی «CRITICAL::» پخش می‌شود؛ کلاینت دسکتاپ
+        // این پیشوند را می‌شناسد و به‌جای توست، «دیالوگ مسدودکنندهٔ فارسی»
+        // نشان می‌دهد (قانون مالک: هرگز کادر پیام ویندوزی). پخشِ پس‌زمینه
+        // best-effort است — خطای آن ثبت نتیجه را نمی‌شکند.
+        if (flag is LabResultFlag.CriticalLow or LabResultFlag.CriticalHigh && _realtime is not null)
+        {
+            try
+            {
+                var testName = item.Test?.TestName ?? "آزمایش";
+                var patientName = patient is null ? "" : $"{patient.FirstName} {patient.LastName}";
+                var direction = flag == LabResultFlag.CriticalHigh ? "بالاتر از حد بحرانی" : "پایین‌تر از حد بحرانی";
+                await _realtime.BroadcastAlertAsync(
+                    $"CRITICAL::{testName}",
+                    $"نتیجهٔ {testName} برای بیمار {patientName} {direction} است " +
+                    $"({dto.ResultNumeric} {item.Unit ?? ""}) — تماس فوری با پزشک لازم است",
+                    cancellationToken);
+            }
+            catch
+            {
+                // پخش هشدار نباید ثبت نتیجه را شکست بخورد — نتیجه ذخیره شده است
+            }
+        }
+
         return Result.Success();
     }
 }

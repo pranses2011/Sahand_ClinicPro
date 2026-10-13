@@ -1,0 +1,157 @@
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.LabTestResultEntryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="ثبت نتیجه آزمایش"
+        Height="640" Width="620" MinHeight="560" MinWidth="560"
+        FlowDirection="RightToLeft"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         فرم اختصاصی ثبت نتیجهٔ «یک آزمایش» — چرخهٔ ۶۹ (گزارش مالک + فاز ۳ F-28)
+         «برای ثبت نتیجه باید روی آزمایش دابل کلیک کنیم تا در یک فرم دیگه که
+         مختص اون آزمایش هست، اطلاعات آزمایش رو نشون بده و نتیجه رو اونجا ثبت
+         بکنیم» — به‌جای جدول شلوغ همهٔ اقلام، این فرم فقط «همین آزمایش» را
+         با شناسنامهٔ بیمار و پنل رنگی «حد طبیعی مخصوص همین بیمار» (سن/جنسیت)
+         نشان می‌دهد و نتیجه در همین‌جا ثبت می‌شود.
+         ═══════════════════════════════════════════════════════════════ -->
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- سربرگ: نام آزمایش + شماره درخواست -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <materialDesign:PackIcon Kind="TestTube" Width="30" Height="30"
+                                     Foreground="#00897B" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding TestName}" FontSize="19" FontWeight="Bold"
+                       Margin="10,0,0,0" VerticalAlignment="Center" />
+            <Border CornerRadius="9" Padding="8,2" Background="#E0F2F1"
+                    BorderBrush="#00897B" BorderThickness="1"
+                    VerticalAlignment="Center" HorizontalAlignment="Left">
+                <TextBlock FontSize="11" Foreground="#00695C" FontFamily="{DynamicResource App.CodeFont}">
+                    <Run Text="درخواست " /><Run Text="{Binding OrderNumber, Mode=OneWay}" />
+                </TextBlock>
+            </Border>
+        </DockPanel>
+
+        <!-- شناسنامهٔ بیمار — مبنای بازهٔ مرجع سنی/جنسیتی -->
+        <Border Grid.Row="1" CornerRadius="12" Background="#F5F7FB"
+                BorderBrush="#E0E0E0" BorderThickness="1" Padding="12,8" Margin="0,0,0,10">
+            <DockPanel>
+                <materialDesign:PackIcon Kind="Account" Width="20" Height="20"
+                                         Foreground="#5C6BC0" VerticalAlignment="Center" />
+                <StackPanel Orientation="Vertical">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="بیمار:" FontSize="12" Opacity="0.6" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding PatientName}" FontSize="14" FontWeight="SemiBold"
+                                   Margin="6,0,0,0" VerticalAlignment="Center" />
+                        <Border CornerRadius="8" Padding="6,1" Margin="8,0,0,0" Background="#EDE7F6"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding PatientAgeText, Converter={StaticResource NullToVisibility}}">
+                            <TextBlock FontSize="11" Foreground="#5E35B1">
+                                <Run Text="{Binding PatientAgeText, Mode=OneWay}" />
+                            </TextBlock>
+                        </Border>
+                    </StackPanel>
+                    <TextBlock FontSize="10.5" Opacity="0.55" Margin="0,3,0,0">
+                        <Run Text="بازهٔ مرجع بر اساس سن و جنسیت همین بیمار محاسبه شده است" />
+                    </TextBlock>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ═══ پنل رنگی «حد طبیعی مخصوص همین بیمار» — قلب F-28 ═══
+             سبز = بازهٔ مرجع این بیمار (کودک/بزرگسال/مرد/زن)؛ سرور با موتور
+             واحد محاسبه می‌کند تا همهٔ ایستگاه‌ها یک عدد ببینند. -->
+        <Border Grid.Row="2" CornerRadius="12" Background="#E8F5E9"
+                BorderBrush="#66BB6A" BorderThickness="1.4" Padding="14,10" Margin="0,0,0,14">
+            <DockPanel>
+                <materialDesign:PackIcon Kind="ChartLine" Width="24" Height="24"
+                                         Foreground="#2E7D32" VerticalAlignment="Center" />
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="حد طبیعی برای این بیمار" FontSize="11.5"
+                               Foreground="#2E7D32" Opacity="0.85" />
+                    <TextBlock FontSize="17" FontWeight="Bold" Foreground="#1B5E20" FontFamily="{DynamicResource App.CodeFont}">
+                        <Run Text="{Binding PatientRangeText, Mode=OneWay}" />
+                    </TextBlock>
+                    <TextBlock FontSize="10.5" Foreground="#2E7D32" Opacity="0.7">
+                        <Run Text="بازهٔ عمومی تست: " /><Run Text="{Binding GeneralRange, Mode=OneWay, TargetNullValue=—}" />
+                    </TextBlock>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ورودی نتیجه — عددی درشت + متنی + توضیح -->
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,6,10">
+                <TextBlock Text="نتیجهٔ عددی" FontSize="12" FontWeight="SemiBold" Margin="2,0,0,4" />
+                <TextBox Text="{Binding ResultNumeric, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}"
+                         FontSize="20" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}"
+                         materialDesign:HintAssist.Hint="مثال: ۱۲/۵"
+                         TextAlignment="Center" />
+                <TextBlock FontSize="10.5" Opacity="0.6" HorizontalAlignment="Center" Margin="0,3,0,0"
+                           Text="{Binding Unit, Mode=OneWay, TargetNullValue={x:Null}}" />
+            </StackPanel>
+
+            <StackPanel Grid.Row="0" Grid.Column="1" Margin="6,0,0,10">
+                <TextBlock Text="نتیجهٔ متنی (آزمایش‌های کیفی)" FontSize="12" FontWeight="SemiBold" Margin="2,0,0,4" />
+                <TextBox Text="{Binding Result, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}"
+                         FontSize="16" materialDesign:HintAssist.Hint="مثال: منفی"
+                         TextAlignment="Center" />
+            </StackPanel>
+
+            <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,10">
+                <TextBlock Text="توضیح آزمایشگاه" FontSize="12" FontWeight="SemiBold" Margin="2,0,0,4" />
+                <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}"
+                         materialDesign:HintAssist.Hint="اختیاری — یادداشت تفسیرگر"
+                         AcceptsReturn="False" />
+            </StackPanel>
+        </Grid>
+
+        <!-- بج وضعیت نتیجهٔ ذخیره‌شده — سبز/نارنجی/قرمز از تفسیر سرور -->
+        <Border Grid.Row="4" CornerRadius="10" Padding="10,6" HorizontalAlignment="Center"
+                Background="{Binding SavedFlagBrush, Converter={StaticResource HexToBrush}}"
+                Visibility="{Binding HasSavedResult, Converter={StaticResource BoolToVis}}">
+            <TextBlock Text="{Binding SavedFlagText}" FontSize="13" FontWeight="Bold" Foreground="White" />
+        </Border>
+
+        <!-- پیام‌ها -->
+        <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,10,0,0">
+            <Button Command="{Binding SaveCommand}"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Height="42" MinWidth="130" Content="ثبت نتیجه" Margin="0,0,12,0" />
+            <Button Command="{Binding CloseCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Height="42" MinWidth="100" Content="بستن" Margin="0,0,12,0" />
+            <TextBlock Text="{Binding SuccessMessage}"
+                       Foreground="#2E7D32" FontSize="12.5" FontWeight="SemiBold"
+                       VerticalAlignment="Center" Margin="0,0,10,0" />
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="#C62828" FontSize="12.5" FontWeight="SemiBold"
+                       VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="240" />
+            <ProgressBar IsIndeterminate="True" Height="4" Width="120" Margin="10,0,0,0"
+                         VerticalAlignment="Center"
+                         Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+        </StackPanel>
+    </Grid>
+</Window>

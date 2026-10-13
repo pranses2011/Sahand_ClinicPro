@@ -220,13 +220,13 @@ public class DashboardController : ApiBaseController
                            && i.Quantity <= i.MinStock, ct);
 
         // پله‌های انقضا — فقط بچ‌های هنوز معتبر (منقضی‌شده سیاست مصرف ندارد، مرجوعی/اسقاط است)
-        int ExpiryCount(int days) => _unitOfWork
+        async Task<int> ExpiryCount(int days) => await _unitOfWork
             .Repository<Domain.Entities.Pharmacy.PharmacyInventory>()
             .QueryableNoTracking
-            .Count(i => i.IsActive
+            .CountAsync(i => i.IsActive
                      && i.ExpiryDate != null
                      && i.ExpiryDate >= today
-                     && i.ExpiryDate <= today.AddDays(days));
+                     && i.ExpiryDate <= today.AddDays(days), ct);
 
         var expiring7 = await ExpiryCount(7);
         var expiring30 = await ExpiryCount(30);
@@ -274,7 +274,9 @@ public class DashboardController : ApiBaseController
             .Take(20)
             .Select(i => new
             {
-                medicationName = i.Medication != null ? i.Medication.Name : "",
+                medicationName = i.Medication != null
+                    ? (i.Medication.GenericNameFa ?? i.Medication.GenericName)
+                    : "",
                 batchNumber = i.BatchNumber,
                 expiryDate = i.ExpiryDate,
                 quantity = i.Quantity
@@ -300,7 +302,9 @@ public class DashboardController : ApiBaseController
             .Take(20)
             .Select(i => new
             {
-                medicationName = i.Medication != null ? i.Medication.Name : "",
+                medicationName = i.Medication != null
+                    ? (i.Medication.GenericNameFa ?? i.Medication.GenericName)
+                    : "",
                 batchNumber = i.BatchNumber,
                 quantity = i.Quantity,
                 minStock = i.MinStock

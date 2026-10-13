@@ -308,13 +308,36 @@ public class GetLabTestsQueryHandler
 public record LabOrderItemDetailDto(
     long Id, string TestName, string? Unit, string? NormalRange,
     LabItemStatus Status, string? Result, decimal? ResultNumeric,
-    bool IsAbnormal, string? Comment);
+    bool IsAbnormal, string? Comment)
+{
+    /// <summary>
+    /// فلگ تفسیر آزمایشگاهی — چرخهٔ ۶۹ (فاز ۳ / F-28): L/H/LL/HH یا تهی برای
+    /// طبیعی/غیرقابل‌تفسیر؛ رنگ ردیف و بج وضعیت دسکتاپ از همین ساخته می‌شود.
+    /// </summary>
+    public string? AbnormalFlag { get; init; }
+
+    /// <summary>
+    /// بازهٔ مرجع «مخصوص بیمار» (سن/جنسیت) — چرخهٔ ۶۹: موتور تفسیر در سرور
+    /// محاسبه می‌کند تا فرم ثبت نتیجه حد طبیعی همین بیمار را رنگی نشان دهد.
+    /// </summary>
+    public string? PatientRangeText { get; init; }
+}
 
 /// <summary>جزئیات درخواست آزمایش با اقلام</summary>
 public record LabOrderDetailDto(
     long Id, string? OrderNumber, string PatientName, string DoctorName,
     string DateShamsi, LabOrderStatus Status, Priority Priority,
-    string? ClinicalInfo, List<LabOrderItemDetailDto> Items);
+    string? ClinicalInfo, List<LabOrderItemDetailDto> Items)
+{
+    /// <summary>شناسه بیمار — برای فرم اختصاصی ثبت نتیجه (چرخهٔ ۶۹)</summary>
+    public long PatientId { get; init; }
+
+    /// <summary>
+    /// سن بیمار به سال — چرخهٔ ۶۹: نمایش در فرم اختصاصی ثبت نتیجه و مبنای
+    /// بازهٔ کودک/بزرگسال (تفسیر سمت سرور با تاریخ دقیق تولد انجام می‌شود).
+    /// </summary>
+    public int? PatientAge { get; init; }
+}
 
 /// <summary>
 /// پرس‌وجوی جزئیات درخواست آزمایش — برای ثبت نتیجه قلم‌به‌قلم
@@ -345,6 +368,16 @@ public class GetLabOrderByIdQueryHandler
         if (order is null)
             return Result<LabOrderDetailDto>.Failure(Error.NotFound("درخواست آزمایش", request.Id));
 
+        // سن بیمار — نمایش در فرم ثبت نتیجه و مبنای بازهٔ کودک (چرخهٔ ۶۹ / F-28)
+        int? patientAge = null;
+        if (order.Patient?.BirthDate is { } birth)
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var age = today.Year - birth.Year;
+            if (birth > today.AddYears(-age)) age--;
+            patientAge = age;
+        }
+
         var dto = new LabOrderDetailDto(
             order.Id, order.OrderNumber,
             order.Patient != null ? order.Patient.FirstName + " " + order.Patient.LastName : "",
@@ -358,8 +391,20 @@ public class GetLabOrderByIdQueryHandler
                     i.Id,
                     i.Test != null ? i.Test.TestName : "آزمایش",
                     i.Unit, i.NormalRange, i.Status,
-                    i.Result, i.ResultNumeric, i.IsAbnormal, i.Comment))
-                .ToList());
+                    i.Result, i.ResultNumeric, i.IsAbnormal, i.Comment)
+                {
+                    // فلگ تفسیر و بازهٔ مخصوص بیمار — چرخهٔ ۶۹ (F-28): سرور محاسبه
+                    // می‌کند تا کلاینت منطق تفسیر را تکرار نکند و همهٔ ایستگاه‌ها
+                    // همیشه با یک موتور واحد رنگ/بازه ببینند.
+                    AbnormalFlag = i.AbnormalFlag,
+                    PatientRangeText = i.Test is null ? null
+                        : LabResultInterpreter.RangeDisplayText(i.Test, order.Patient)
+                })
+                .ToList())
+        {
+            PatientId = order.PatientId,
+            PatientAge = patientAge
+        };
 
         return Result<LabOrderDetailDto>.Success(dto);
     }

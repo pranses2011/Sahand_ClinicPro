@@ -3,14 +3,18 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="ثبت نتیجه آزمایش"
-        Height="620" Width="860"
+        Height="640" Width="940"
         FlowDirection="RightToLeft"
         WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
     <!-- ═══════════════════════════════════════════════════════════
-         ثبت نتیجه آزمایش — گام V6
+         ثبت نتیجه آزمایش — گام V6 · بازطراحی چرخهٔ ۶۹ (گزارش مالک + F-28):
+         ۱) دابل‌کلیک روی هر آزمایش = فرم اختصاصی همان آزمایش
+            (LabTestResultEntryWindow) با حد طبیعی مخصوص بیمار.
+         ۲) ستون «حد طبیعی این بیمار» از موتور تفسیر سرور (سن/جنسیت).
+         ۳) رنگ ردیف از فلگ تفسیر: سبز=طبیعی، کهربایی=L/H، قرمز=LL/HH.
          ═══════════════════════════════════════════════════════════ -->
     <Grid Margin="24">
         <Grid.RowDefinitions>
@@ -23,9 +27,15 @@
         <TextBlock Text="{Binding Header}" Style="{StaticResource SectionTitle}" />
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
-            <Button Command="{Binding SaveItemCommand}"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Content="ثبت نتیجه قلم انتخاب‌شده" Margin="0,0,12,0" />
+            <!-- ═══ چرخهٔ ۶۹: مسیر اصلی ثبت = دابل‌کلیک؛ دکمهٔ قدیمی برای عادت‌های قبلی می‌ماند ═══ -->
+            <Button Command="{Binding OpenItemEntryCommand}"
+                    Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,12,0"
+                    ToolTip="یا روی سطر آزمایش دابل‌کلیک کنید">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" VerticalAlignment="Center" />
+                    <TextBlock Text="ثبت نتیجه در فرم اختصاصی" Margin="7,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
             <!-- ═══ چرخهٔ ۶۷ (گزارش مالک: «امکان چاپ هم داشته باشه») ═══
                  چاپ برگهٔ نتیجهٔ همین درخواست — سند فارسی از LabResultPrinter
                  ساخته می‌شود و از دروازهٔ PrintFlow می‌گذرد (پیش‌نمایش اختیاری).
@@ -38,6 +48,13 @@
                     <TextBlock Text="چاپ برگهٔ نتیجه" Margin="7,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
+            <!-- راهنمای جریان جدید — چرخهٔ ۶۹ -->
+            <Border CornerRadius="9" Padding="8,3" Background="#E0F2F1" BorderBrush="#00897B"
+                    BorderThickness="1" VerticalAlignment="Center">
+                <TextBlock FontSize="10.5" Foreground="#00695C">
+                    <Run Text="💡 دابل‌کلیک روی هر آزمایش = فرم ثبت اختصاصی همان آزمایش" />
+                </TextBlock>
+            </Border>
             <TextBlock Text="{Binding StatusMessage}"
                        Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
                        FontSize="12" VerticalAlignment="Center" Margin="0,0,12,0" />
@@ -47,6 +64,7 @@
         </StackPanel>
 
         <DataGrid Grid.Row="2"
+                  x:Name="ItemsGrid"
                   ItemsSource="{Binding Items}"
                   SelectedItem="{Binding SelectedItem}"
                   AutoGenerateColumns="False"
@@ -54,15 +72,54 @@
                   SelectionMode="Single"
                   HeadersVisibility="Column"
                   GridLinesVisibility="Horizontal"
+                  IsReadOnly="True"
+                  MouseDoubleClick="ItemsGrid_MouseDoubleClick"
                   materialDesign:DataGridAssist.CellPadding="6,4">
+            <!-- ═══ رنگ ردیف از فلگ تفسیر — چرخهٔ ۶۹ (گزارش مالک: «رنگ ردیف
+                 آزمایش از نتیجهٔ آزمایش مشخص بشه») ═══ -->
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                    <Setter Property="Background" Value="#FFFFFF" />
+                    <Style.Triggers>
+                        <!-- غیرطبیعی — کهربایی بسیار روشن -->
+                        <DataTrigger Binding="{Binding AbnormalFlag}" Value="H">
+                            <Setter Property="Background" Value="#FFF8E1" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding AbnormalFlag}" Value="L">
+                            <Setter Property="Background" Value="#FFF8E1" />
+                        </DataTrigger>
+                        <!-- بحرانی — قرمز بسیار روشن -->
+                        <DataTrigger Binding="{Binding AbnormalFlag}" Value="HH">
+                            <Setter Property="Background" Value="#FFF5F5" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding AbnormalFlag}" Value="LL">
+                            <Setter Property="Background" Value="#FFF5F5" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="آزمایش" Binding="{Binding TestName, Converter={StaticResource PersianDigits}}" Width="2*" IsReadOnly="True" />
                 <DataGridTextColumn Header="واحد" Binding="{Binding Unit, Converter={StaticResource PersianDigits}}" Width="80" IsReadOnly="True" />
-                <DataGridTextColumn Header="بازه طبیعی" Binding="{Binding NormalRange, Converter={StaticResource PersianDigits}}" Width="110" IsReadOnly="True" />
-                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="100" IsReadOnly="True" />
-                <DataGridTextColumn Header="نتیجه متنی" Binding="{Binding Result, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="*" />
-                <DataGridTextColumn Header="نتیجه عددی" Binding="{Binding ResultNumeric, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="110" />
-                <DataGridTextColumn Header="توضیح" Binding="{Binding Comment, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="*" />
+                <!-- ═══ چرخهٔ ۶۹ (F-28): حد طبیعی «مخصوص همین بیمار» — از موتور تفسیر سرور ═══ -->
+                <DataGridTextColumn Header="حد طبیعی این بیمار" Binding="{Binding PatientRangeText, Converter={StaticResource PersianDigits}}" Width="140" IsReadOnly="True" />
+                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="95" IsReadOnly="True" />
+                <!-- بج تفسیر رنگی — سبز/نارنجی/قرمز (چرخهٔ ۶۹) -->
+                <DataGridTemplateColumn Header="تفسیر" Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border CornerRadius="8" Padding="7,2" HorizontalAlignment="Center"
+                                    Background="{Binding FlagBrush, Converter={StaticResource HexToBrush}}"
+                                    Visibility="{Binding FlagText, Converter={StaticResource NullToVisibility}}">
+                                <TextBlock Text="{Binding FlagText}" FontSize="10.5" Foreground="White" />
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="نتیجه متنی" Binding="{Binding Result, Converter={StaticResource PersianDigits}}" Width="*" IsReadOnly="True" />
+                <DataGridTextColumn Header="نتیجه عددی" Binding="{Binding ResultNumeric, Converter={StaticResource PersianDigits}}" Width="105" IsReadOnly="True" />
             </DataGrid.Columns>
         </DataGrid>
 

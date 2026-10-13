@@ -12,6 +12,7 @@ public partial class LabResultViewModel : ObservableObject
 {
     private readonly IApiClient _api;
     private readonly long _orderId;
+    private readonly ISnackbarService? _snackbar;
     /// <summary>آخرین جزئیات بارگذاری‌شده — برای چاپ برگهٔ نتیجه (چرخهٔ ۶۷)</summary>
     private LabOrderDetail? _lastDetail;
 
@@ -43,19 +44,53 @@ public partial class LabResultViewModel : ObservableObject
     [ObservableProperty]
     private bool _hasAnyResult;
 
+    /// <summary>نام کامل بیمار — زمینهٔ فرم اختصاصی ثبت نتیجه (چرخهٔ ۶۹)</summary>
+    [ObservableProperty]
+    private string _patientContext = string.Empty;
+
+    /// <summary>سن بیمار به متن فارسی — بازهٔ مرجع کودک/بزرگسال (چرخهٔ ۶۹ / F-28)</summary>
+    [ObservableProperty]
+    private string _patientAgeText = string.Empty;
+
+    /// <summary>شماره درخواست — زمینهٔ فرم اختصاصی ثبت نتیجه (چرخهٔ ۶۹)</summary>
+    [ObservableProperty]
+    private string _orderNumberText = string.Empty;
+
+    /// <summary>شناسه درخواست — برای باز کردن فرم اختصاصی قلم (چرخهٔ ۶۹)</summary>
+    public long OrderId => _orderId;
+
+    /// <summary>
+    /// دسترسی فقط‌خواندنی به کلاینت API — برای ساختن ViewModel فرم اختصاصی
+    /// قلم از سمت View میزبان (چرخهٔ ۶۹؛ تزریق سازنده باقی می‌ماند منبع اصلی).
+    /// </summary>
+    public IApiClient Api => _api;
+
     /// <summary>رویداد بستن</summary>
     public event EventHandler? CloseRequested;
 
-    /// <summary>سازنده با کلاینت API و شناسه درخواست</summary>
-    public LabResultViewModel(IApiClient api, long orderId)
+    /// <summary>
+    /// رویداد درخواست باز کردن فرم اختصاصی ثبت نتیجه — چرخهٔ ۶۹ (گزارش مالک:
+    /// «برای ثبت نتیجه باید روی آزمایش دابل کلیک کنیم تا در یک فرم دیگه که
+    /// مختص اون آزمایش هست، اطلاعات آزمایش رو نشون بده و نتیجه رو اونجا ثبت
+    /// بکنیم»)؛ View میزبان، پنجرهٔ LabTestResultEntryWindow را با زمینهٔ همین
+    /// قلم باز می‌کند و پس از ذخیرهٔ موفق، کل لیست تازه می‌شود.
+    /// </summary>
+    public event EventHandler<LabItemRow>? ItemEntryRequested;
+
+    /// <summary>سازنده با کلاینت API، شناسه درخواست و توست اختیاری (چرخهٔ ۶۹)</summary>
+    public LabResultViewModel(IApiClient api, long orderId, ISnackbarService? snackbar = null)
     {
         _api = api;
         _orderId = orderId;
+        _snackbar = snackbar;
         _ = LoadAsync();
     }
 
-    /// <summary>بارگذاری اقلام درخواست</summary>
-    private async Task LoadAsync()
+    /// <summary>
+    /// بارگذاری اقلام درخواست — عمومی از چرخهٔ ۶۹: پس از ذخیره در فرم اختصاصی
+    /// قلم، پنجرهٔ مادر همین متد را صدا می‌زند تا رنگ ردیف‌ها و بج‌ها تازه شوند.
+    /// </summary>
+    public async Task LoadAsync()
     {
         IsBusy = true;
         // ═══ چرخهٔ ۴۸ (گزارش مالک: «ثبت نتیجه آزمایش ایراد دارد و در لیست هیچ
@@ -74,12 +109,18 @@ public partial class LabResultViewModel : ObservableObject
         else
         {
             Header = $"{detail.OrderNumber ?? _orderId.ToString()} — {detail.PatientName}";
+            // زمینهٔ فرم اختصاصی ثبت نتیجه (چرخهٔ ۶۹) — نام/سن بیمار و شناسه درخواست
+            PatientContext = detail.PatientName;
+            PatientAgeText = detail.PatientAge is { } age ? $"{age} ساله" : "";
+            OrderNumberText = detail.OrderNumber ?? _orderId.ToString();
             Items = new ObservableCollection<LabItemRow>((detail.Items ?? new()).Select(i => new LabItemRow
             {
                 Id = i.Id,
                 TestName = i.TestName,
                 Unit = i.Unit,
                 NormalRange = i.NormalRange,
+                PatientRangeText = i.PatientRangeText,
+                AbnormalFlag = i.AbnormalFlag,
                 StatusText = ItemStatusText(i.Status),
                 Result = i.Result,
                 ResultNumeric = i.ResultNumeric?.ToString() ?? string.Empty,
@@ -150,6 +191,25 @@ public partial class LabResultViewModel : ObservableObject
     private void Close() => CloseRequested?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
+    /// باز کردن فرم اختصاصی ثبت نتیجه برای قلم انتخاب‌شده — چرخهٔ ۶۹ (گزارش
+    /// مالک: دابل‌کلیک روی آزمایش ← فرم مختص همان آزمایش با اطلاعات کامل و
+    /// ثبت نتیجه در همان‌جا)؛ View میزبان به این رویداد گوش می‌دهد.
+    /// </summary>
+    [RelayCommand]
+    private void OpenItemEntry(LabItemRow? row)
+    {
+        if (row is null)
+            row = SelectedItem; // مسیر دکمه (بدون پارامتر) — قلم انتخاب‌شدهٔ جدول
+        if (row is null)
+        {
+            _snackbar?.Warning("ابتدا یک آزمایش از جدول انتخاب کنید");
+            return;
+        }
+
+        ItemEntryRequested?.Invoke(this, row);
+    }
+
+    /// <summary>
     /// چاپ برگهٔ نتیجهٔ همین درخواست — چرخهٔ ۶۷ (گزارش مالک: «امکان چاپ هم
     /// داشته باشه"). سند فارسی از LabResultPrinter ساخته و از دروازهٔ PrintFlow
     /// (پیش‌نمایش اختیاری طبق تنظیمات چاپ) به چاپگر می‌رود.
@@ -187,6 +247,10 @@ public partial class LabResultViewModel : ObservableObject
         public int Status { get; set; }
         public string? ClinicalInfo { get; set; }
         public List<LabOrderItemDto>? Items { get; set; }
+
+        // ═══ چرخهٔ ۶۹ (فاز ۳ / F-28) — زمینهٔ فرم اختصاصی ثبت نتیجه ═══
+        public long PatientId { get; set; }
+        public int? PatientAge { get; set; }
     }
 
     /// <summary>قلم درخواست</summary>
@@ -201,5 +265,9 @@ public partial class LabResultViewModel : ObservableObject
         public decimal? ResultNumeric { get; set; }
         public bool IsAbnormal { get; set; }
         public string? Comment { get; set; }
+
+        // ═══ چرخهٔ ۶۹ (فاز ۳ / F-28) — فلگ تفسیر و بازهٔ مخصوص بیمار ═══
+        public string? AbnormalFlag { get; set; }
+        public string? PatientRangeText { get; set; }
     }
 }

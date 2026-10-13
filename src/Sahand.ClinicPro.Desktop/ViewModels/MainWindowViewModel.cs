@@ -353,8 +353,29 @@ public partial class MainWindowViewModel : ObservableObject
         };
 
         // هشدار سراسری → پیام شناور هشدار (کهربایی — نوع ساخت‌یافتهٔ چرخهٔ ۳۸)
+        // ═══ چرخهٔ ۶۹ (فاز ۳ / F-29 «مقادیر بحرانی آزمایش») ═══
+        // هشدارهای مقدار بحرانی با پیشوند قراردادی «CRITICAL::» از آزمایشگاه
+        // می‌رسند؛ این‌ها توست معمولی نیستند — «دیالوگ مسدودکنندهٔ فارسی»
+        // (قانون مالک: هرگز کادر پیام ویندوزی) تا کاربر آن را نبیند و تصدیق
+        // نکند، گذشت نمی‌شود؛ علت بالینی مهمی که پیامک/توست خودش گم می‌شود.
         _realtime.BroadcastAlert += (_, args) =>
-            _snackbar.Warning($"{args.Title}: {args.Message}");
+        {
+            const string criticalPrefix = "CRITICAL::";
+            if (args.Title is not null && args.Title.StartsWith(criticalPrefix, StringComparison.Ordinal))
+            {
+                var testName = args.Title[criticalPrefix.Length..];
+                System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+                {
+                    Views.AppDialog.Warn(
+                        $"مقدار بحرانی آزمایش: {testName}",
+                        args.Message + "\n\nاین هشدار تا تصدیق شما بسته نمی‌شود — با بیمار یا پزشک معالج تماس بگیرید.");
+                });
+            }
+            else
+            {
+                _snackbar.Warning($"{args.Title}: {args.Message}");
+            }
+        };
 
         // وضعیت اتصال بلادرنگ در StatusBar
         _realtime.ConnectionStateChanged += (_, _) =>

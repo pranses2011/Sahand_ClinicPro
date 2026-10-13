@@ -5946,6 +5946,50 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("decimal(18,0)")
                         .HasComment("قیمت");
 
+                    b.Property<decimal?>("RefMinAdultMale")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasComment("کف بازهٔ مرجع بزرگسال مرد — چرخهٔ ۶۹ (F-28)");
+
+                    b.Property<decimal?>("RefMaxAdultMale")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasComment("سقف بازهٔ مرجع بزرگسال مرد — چرخهٔ ۶۹ (F-28)");
+
+                    b.Property<decimal?>("RefMinAdultFemale")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasComment("کف بازهٔ مرجع بزرگسال زن — چرخهٔ ۶۹ (F-28)");
+
+                    b.Property<decimal?>("RefMaxAdultFemale")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasComment("سقف بازهٔ مرجع بزرگسال زن — چرخهٔ ۶۹ (F-28)");
+
+                    b.Property<decimal?>("RefMinChild")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasComment("کف بازهٔ مرجع کودک — چرخهٔ ۶۹ (F-28)");
+
+                    b.Property<decimal?>("RefMaxChild")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasComment("سقف بازهٔ مرجع کودک — چرخهٔ ۶۹ (F-28)");
+
+                    b.Property<int?>("ChildAgeMaxYears")
+                        .HasColumnType("int")
+                        .HasComment("سقف سن کودک به سال — چرخهٔ ۶۹ (F-28)");
+
+                    b.Property<decimal?>("CriticalLow")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasComment("کف مقدار بحرانی — چرخهٔ ۶۹ (F-29)");
+
+                    b.Property<decimal?>("CriticalHigh")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasComment("سقف مقدار بحرانی — چرخهٔ ۶۹ (F-29)");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()

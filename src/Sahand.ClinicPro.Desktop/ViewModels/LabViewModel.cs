@@ -42,8 +42,49 @@ public partial class LabItemRow : ObservableObject
     /// <summary>بازه طبیعی</summary>
     public string? NormalRange { get; init; }
 
+    /// <summary>
+    /// بازهٔ مرجع «مخصوص همین بیمار» (سن/جنسیت) — چرخهٔ ۶۹ (فاز ۳ / F-28)؛
+    /// سرور با موتور واحد محاسبه می‌کند و فرم اختصاصی ثبت نتیجه رنگی نشانش می‌دهد.
+    /// </summary>
+    public string? PatientRangeText { get; init; }
+
     /// <summary>وضعیت فعلی قلم</summary>
     public string StatusText { get; init; } = string.Empty;
+
+    /// <summary>
+    /// فلگ تفسیر آزمایشگاهی سرور — چرخهٔ ۶۹ (F-28): تهی/L/H/LL/HH؛
+    /// رنگ ردیف جدول از همین ساخته می‌شود (سبز طبیعی/زرد غیرطبیعی/قرمز بحرانی).
+    /// </summary>
+    public string? AbnormalFlag { get; init; }
+
+    /// <summary>
+    /// متن فارسی وضعیت نتیجه — چرخهٔ ۶۹: بج رنگی کنار نتیجه («طبیعی»، «بالاتر از
+    /// حد»، «پایین‌تر از حد»، «بحرانی بالا»، «بحرانی پایین»).
+    /// </summary>
+    public string FlagText => AbnormalFlag switch
+    {
+        "H" => "بالاتر از حد",
+        "L" => "پایین‌تر از حد",
+        "HH" => "بحرانی بالا",
+        "LL" => "بحرانی پایین",
+        _ => string.Empty
+    };
+
+    /// <summary>رنگ بج فلگ — قرمز بحرانی / نارنجی غیرطبیعی / سبز طبیعی</summary>
+    public string FlagBrush => AbnormalFlag switch
+    {
+        "HH" or "LL" => "#E53935",
+        "H" or "L" => "#FB8C00",
+        _ => "#43A047"
+    };
+
+    /// <summary>رنگ پس‌زمینهٔ ردیف — از فلگ تفسیر (چرخهٔ ۶۹ / گزارش مالک)</summary>
+    public string RowBrush => AbnormalFlag switch
+    {
+        "HH" or "LL" => "#FFF5F5",   // قرمز بسیار روشن — بحرانی
+        "H" or "L" => "#FFF8E1",     // کهربایی بسیار روشن — غیرطبیعی
+        _ => "#FFFFFF"               // سفید — طبیعی/بدون تفسیر
+    };
 
     /// <summary>نتیجه متنی</summary>
     [ObservableProperty]
@@ -162,7 +203,8 @@ public partial class LabViewModel : ViewModelBase
     {
         if (SelectedOrder is null) return;
 
-        var vm = new LabResultViewModel(_api, SelectedOrder.Id);
+        // چرخهٔ ۶۹: توست هم تزریق می‌شود تا هشدارهای فرم (انتخاب قلم و…) دیده شوند
+        var vm = new LabResultViewModel(_api, SelectedOrder.Id, _snackbar);
         var window = new LabResultWindow(vm)
         {
             Owner = System.Windows.Application.Current.MainWindow
