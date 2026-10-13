@@ -414,7 +414,11 @@ public partial class ReportBrowserViewModel : ViewModelBase
                         JsonValueKind.String => prop.Value.GetString() ?? "—",
                         _ => prop.Value.ToString()
                     };
-                    SummaryCards.Add(new ReportSummaryCard(prop.Name, value, "#1E88E5"));
+                    // ═══ چرخهٔ ۷۰ (گزارش مالک: «عنوان‌ها انگلیسی‌اند») ═══
+                    // کلید خلاصه (total/paid/count/…) از سرور انگلیسی می‌آید؛
+                    // در لحظهٔ نمایش از کاتالوگ به فارسی برمی‌گردد («جمع کل»)
+                    SummaryCards.Add(new ReportSummaryCard(
+                        Helpers.ReportLabelCatalog.Persianize(prop.Name), value, "#1E88E5"));
                 }
 
             Columns.Clear();

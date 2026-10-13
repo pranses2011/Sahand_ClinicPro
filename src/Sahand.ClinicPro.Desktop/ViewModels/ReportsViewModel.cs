@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -60,6 +61,32 @@ public partial class ReportsViewModel : ViewModelBase
     [ObservableProperty]
     private int _totalVisits;
 
+    /// <summary>
+    /// ═══ چرخهٔ ۷۰ (گزارش مالک) — «همه‌چیز صفر، کارت نمودار خالی» ═══
+    /// ریشه: شکست بارگذاری (شایع‌ترین علت: ماژول Reports در لایسنس فعال
+    /// نیست → ۴۰۳ از میدلور لایسنس) پیش‌تر «بی‌صدا» بود — کارت‌ها ۰ نشان
+    /// می‌دادند و نمودارها خالی می‌ماندند. اکنون: پرچم LoadFailed کارت‌ها
+    /// را به «—» می‌شاند، بنر خطا با علت فارسی (از LastError — همان پیام
+    /// میدلور: «ماژول Reports در لایسنس شما فعال نیست») بالا می‌آید و
+    /// دکمهٔ «تلاش دوباره» دارد.
+    /// </summary>
+    [ObservableProperty]
+    private bool _loadFailed;
+
+    /// <summary>نمایش جمع درآمد — «—» در شکست به‌جای ۰ گمراه‌کننده</summary>
+    public string TotalRevenueDisplay => LoadFailed ? "—" : Money.Format(TotalRevenue);
+
+    /// <summary>نمایش جمع وصولی</summary>
+    public string TotalPaidDisplay => LoadFailed ? "—" : Money.Format(TotalPaid);
+
+    /// <summary>نمایش جمع مانده</summary>
+    public string TotalRemainingDisplay => LoadFailed ? "—" : Money.Format(TotalRemaining);
+
+    /// <summary>نمایش جمع ویزیت‌ها</summary>
+    public string TotalVisitsDisplay => LoadFailed
+        ? "—"
+        : Money.ToPersianDigits(TotalVisits.ToString());
+
     /// <summary>سازنده با تزریق کلاینت API</summary>
     public ReportsViewModel(IApiClient api)
     {
@@ -88,23 +115,33 @@ public partial class ReportsViewModel : ViewModelBase
         var revenue = await revenueTask;
         var perf = await perfTask;
 
-        if (revenue?.Data is not null)
+        // چرخهٔ ۷۰ — هر دو گزارش باید بیایند؛ شکست هرکدام = بنر خطا + «—»
+        var revenueOk = revenue?.Data is not null;
+        var perfOk = perf?.Data is not null;
+        LoadFailed = !revenueOk || !perfOk;
+        OnPropertyChanged(nameof(TotalRevenueDisplay));
+        OnPropertyChanged(nameof(TotalPaidDisplay));
+        OnPropertyChanged(nameof(TotalRemainingDisplay));
+        OnPropertyChanged(nameof(TotalVisitsDisplay));
+
+        if (revenueOk && revenue!.Data is not null)
         {
-            var max = Math.Max(1m, revenue.Data.Count == 0 ? 1m : revenue.Data.Max(r => r.Total));
+            var rows = revenue.Data;
+            var max = Math.Max(1m, rows.Count == 0 ? 1m : rows.Max(r => r.Total));
             Revenue = new ObservableCollection<RevenuePoint>(
-                revenue.Data.Select(r => new RevenuePoint(
+                rows.Select(r => new RevenuePoint(
                     r.DateShamsi, r.Total, r.Paid, r.Remaining,
                     (double)(r.Total / max) * MaxBarHeight)));
-            TotalRevenue = revenue.Data.Sum(r => r.Total);
-            TotalPaid = revenue.Data.Sum(r => r.Paid);
-            TotalRemaining = revenue.Data.Sum(r => r.Remaining);
+            TotalRevenue = rows.Sum(r => r.Total);
+            TotalPaid = rows.Sum(r => r.Paid);
+            TotalRemaining = rows.Sum(r => r.Remaining);
         }
         else
         {
             ErrorMessage = _api.LastError ?? "دریافت گزارش درآمد ناموفق بود";
         }
 
-        if (perf?.Data is not null)
+        if (perfOk && perf!.Data is not null)
         {
             var max = Math.Max(1m, perf.Data.Count == 0 ? 1m : perf.Data.Max(p => p.TotalRevenue));
             Performance = new ObservableCollection<DoctorPerformanceRow>(
@@ -119,6 +156,29 @@ public partial class ReportsViewModel : ViewModelBase
 
     /// <summary>تغییر بازه — بارگذاری مجدد</summary>
     partial void OnRangeIndexChanged(int value) => _ = LoadAsync();
+
+    /* ─── چیپ‌های بازهٔ چرخهٔ ۷۰ — سه سوییچ خوانا به‌جای کمبوی عددی ─── */
+
+    /// <summary>بازهٔ هفت‌روزه</summary>
+    public bool IsWeekRange
+    {
+        get => RangeIndex == 0;
+        set { if (value && RangeIndex != 0) RangeIndex = 0; OnPropertyChanged(nameof(IsWeekRange)); }
+    }
+
+    /// <summary>بازهٔ سی‌روزه</summary>
+    public bool IsMonthRange
+    {
+        get => RangeIndex == 1;
+        set { if (value && RangeIndex != 1) RangeIndex = 1; OnPropertyChanged(nameof(IsMonthRange)); }
+    }
+
+    /// <summary>بازهٔ نودروزه</summary>
+    public bool IsQuarterRange
+    {
+        get => RangeIndex == 2;
+        set { if (value && RangeIndex != 2) RangeIndex = 2; OnPropertyChanged(nameof(IsQuarterRange)); }
+    }
 
     /// <summary>پاسخ درآمد</summary>
     public sealed class RevenueResponse
