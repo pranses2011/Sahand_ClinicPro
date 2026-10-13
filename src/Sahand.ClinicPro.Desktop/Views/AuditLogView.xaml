@@ -7,7 +7,11 @@
              mc:Ignorable="d"
              d:DesignHeight="640" d:DesignWidth="1080"
              FlowDirection="RightToLeft">
-    <!-- ═══ لاگ عملیات — گام U15 طبق فرم ۳۰: فیلترها + جدول + جزئیات ═══ -->
+    <!-- ═══ لاگ عملیات — بازطراحی کامل چرخهٔ ۷۰ ═══
+         گزارش مالک: ماژول همیشه «API»، موجودیت انگلیسی، شناسه خالی،
+         کاربر = کد، و مقادیر قبلی/جدید هر دو «اشتباه» (JSON خام با کلید
+         انگلیسی). ستون‌ها اکنون فارسی از سرور می‌آیند و پنل جزئیات به
+         «جدول مقایسهٔ فیلدها» ارتقا یافت: فقط فیلدهای تغییر‌یافته رنگی‌اند. -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -18,6 +22,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
+        <!-- سربرگ + شمارنده -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
             <materialDesign:PackIcon Kind="FileDocumentEditOutline" Width="26" Height="26"
                                      Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
@@ -25,11 +30,11 @@
             <TextBlock Text="{Binding CountText}" FontSize="12" Opacity="0.65" Margin="14,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
 
-        <!-- نوار فیلترها -->
+        <!-- نوار فیلترها — چرخهٔ ۷۰: راهنمای فیلد فارسی -->
         <WrapPanel Grid.Row="1" Margin="0,0,0,8">
-            <TextBox materialDesign:HintAssist.Hint="📦 ماژول / موجودیت"
+            <TextBox materialDesign:HintAssist.Hint="🔍 جستجو (ماژول / موجودیت / کاربر)"
                      Text="{Binding EntityFilter, UpdateSourceTrigger=PropertyChanged}"
-                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="170" Margin="0,0,8,6" />
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="230" Margin="0,0,8,6" />
             <ComboBox materialDesign:HintAssist.Hint="🔧 عملیات"
                       ItemsSource="{Binding ActionOptions}" SelectedItem="{Binding ActionFilter}"
                       Width="130" Margin="0,0,8,6" />
@@ -50,21 +55,19 @@
         <ProgressBar Grid.Row="2" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
 
-        <!-- جدول لاگ -->
-        <!-- چرخهٔ ۶۳ (P-08): مجازی‌سازی صریح + پیمایش تعویقی — فقط ردیف‌های دیدنی رندر می‌شوند؛ در فهرست‌های چند‌هزار ردیفی تفاوت چندثانیه‌ای -->
-    <DataGrid Grid.Row="3" ItemsSource="{Binding Logs}" SelectedItem="{Binding SelectedLog}"
+        <!-- جدول لاگ — چرخهٔ ۷۰: ستون‌های فارسی (ماژول واقعی، موجودیت فارسی،
+             شناسهٔ پرشده، نام کامل کاربر) -->
+        <DataGrid Grid.Row="3" ItemsSource="{Binding Logs}" SelectedItem="{Binding SelectedLog}"
                   VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
-                     EnableColumnVirtualization="True" ScrollViewer.IsDeferredScrollingEnabled="True"
+                  EnableColumnVirtualization="True" ScrollViewer.IsDeferredScrollingEnabled="True"
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                   HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
             <DataGrid.Columns>
-                <!-- زمان — چرخه ۲۴: متن شمسی آماده از VM می‌آید؛ مبدل ارقام فارسی کافی است -->
-                <DataGridTextColumn Header="زمان" Width="150"
+                <DataGridTextColumn Header="زمان" Width="160"
                                     Binding="{Binding CreatedAt, TargetNullValue=—, Converter={StaticResource PersianDigits}}" />
-                <DataGridTextColumn Header="کاربر" Binding="{Binding Username, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" />
-                <DataGridTextColumn Header="IP" Binding="{Binding IpAddress, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" FontSize="10.5" />
-                <DataGridTextColumn Header="ماژول" Binding="{Binding Module, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" />
-                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="110">
+                <DataGridTextColumn Header="کاربر" Binding="{Binding Username, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="150" />
+                <DataGridTextColumn Header="ماژول" Binding="{Binding Module, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" />
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding ActionText}" Foreground="{Binding ActionColor}"
@@ -74,30 +77,108 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="موجودیت" Binding="{Binding EntityName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" />
                 <DataGridTextColumn Header="شناسه" Binding="{Binding EntityId, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="70" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTextColumn Header="شرح" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" />
+                <DataGridTextColumn Header="شرح تغییرات" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" />
+                <DataGridTextColumn Header="IP" Binding="{Binding IpAddress, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" FontSize="10.5" />
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- ─── جزئیات ردیف انتخاب‌شده — Old/New JSON ─── -->
-        <TextBlock Grid.Row="4" Text="جزئیات تغییرات" FontSize="13.5" FontWeight="Bold" Margin="2,12,0,6" />
-        <Border Grid.Row="5" CornerRadius="10" Padding="12,8" Background="#F7FAFD"
+        <!-- ═══ پنل جزئیات — جدول مقایسهٔ فیلدها (چرخهٔ ۷۰) ═══
+             به‌جای دو بلوک JSON خام کنار هم: یک جدول «فیلد | مقدار قبلی |
+             مقدار جدید» — ردیف‌های تغییر‌یافته با ته‌رنگ ملایم و نقطهٔ رنگی
+             مشخص‌اند؛ مقادیر فارسی و قالب‌بندی‌شده‌اند (شمسی/بله-خیر/تومان). -->
+        <TextBlock Grid.Row="4" Text="جزئیات تغییرات — فیلدهای ویرایش‌شده" FontSize="13.5" FontWeight="Bold" Margin="2,12,0,6" />
+        <Border Grid.Row="5" CornerRadius="10" Padding="10,6" Background="#F7FAFD"
                 BorderBrush="#DCE7F0" BorderThickness="1">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="14" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="مقادیر قبلی (Old Values)" FontSize="11.5" FontWeight="SemiBold" Foreground="#C62828" Margin="0,0,0,4" />
-                    <TextBlock Text="{Binding SelectedLog.FormattedOld, TargetNullValue='— ردیفی انتخاب نشده —'}"
-                               FontFamily="{DynamicResource App.CodeFont}" FontSize="10.5" TextWrapping="Wrap" />
-                </StackPanel>
-                <StackPanel Grid.Column="2">
-                    <TextBlock Text="مقادیر جدید (New Values)" FontSize="11.5" FontWeight="SemiBold" Foreground="#2E7D32" Margin="0,0,0,4" />
-                    <TextBlock Text="{Binding SelectedLog.FormattedNew, TargetNullValue='—'}"
-                               FontFamily="{DynamicResource App.CodeFont}" FontSize="10.5" TextWrapping="Wrap" />
-                </StackPanel>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- جدول مقایسه -->
+                <DataGrid Grid.Row="0" ItemsSource="{Binding SelectedDiff}"
+                          MinHeight="120" MaxHeight="260"
+                          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                          HeadersVisibility="Column" FontSize="11.5"
+                          AlternatingRowBackground="#FDFEFF"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Changed}" Value="True">
+                                    <Setter Property="Background" Value="#FFF8E1" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="فیلد" Width="170">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="7" Height="7" Margin="0,0,6,0"
+                                                 VerticalAlignment="Center">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Setter Property="Fill" Value="#CFD8DC" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Changed}" Value="True">
+                                                            <Setter Property="Fill" Value="#F9A825" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                        <TextBlock Text="{Binding Field}" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="مقدار قبلی" Binding="{Binding OldDisplay, TargetNullValue=—}"
+                                            Width="*" Foreground="#B71C1C" />
+                        <DataGridTextColumn Header="مقدار جدید" Binding="{Binding NewDisplay, TargetNullValue=—}"
+                                            Width="*" Foreground="#1B5E20" />
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- حالت خالی — ردیفی انتخاب نشده (بدون مبدل: تریگر تهی‌بودن انتخاب) -->
+                <TextBlock Grid.Row="1" Text="برای مشاهدهٔ جزئیات، یک ردیف از جدول بالا انتخاب کنید"
+                           Opacity="0.55" FontSize="11.5" HorizontalAlignment="Center" Margin="0,10,0,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedLog}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <!-- نمایش خام JSON — برای پیگیری فنی -->
+                <Expander Grid.Row="2" Header="نمایش خام (JSON فنی)" FontSize="11" Margin="0,8,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="مقادیر قبلی" FontSize="11" FontWeight="SemiBold" Foreground="#C62828" Margin="0,0,0,4" />
+                            <TextBlock Text="{Binding SelectedLog.FormattedOld, TargetNullValue='—'}"
+                                       FontFamily="{DynamicResource App.CodeFont}" FontSize="10" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="مقادیر جدید" FontSize="11" FontWeight="SemiBold" Foreground="#2E7D32" Margin="0,0,0,4" />
+                            <TextBlock Text="{Binding SelectedLog.FormattedNew, TargetNullValue='—'}"
+                                       FontFamily="{DynamicResource App.CodeFont}" FontSize="10" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Expander>
             </Grid>
         </Border>
     </Grid>
