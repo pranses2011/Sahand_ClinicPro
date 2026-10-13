@@ -26,6 +26,8 @@
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.12.0" />
     <!-- نگاشت اشیاء — آخرین نسخه رایگان MIT (نسخه ۱۵+ تجاری است) -->
     <PackageVersion Include="Riok.Mapperly" Version="3.6.0" />
+    <!-- چرخهٔ ۶۹ (فاز ۳ / F-01): تولید QR برای چاپ نسخه و برچسب نمونه -->
+    <PackageVersion Include="QRCoder" Version="1.4.3" />
     <!-- انتزاع‌های DI برای کلاس‌های کتابخانه‌ای -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />

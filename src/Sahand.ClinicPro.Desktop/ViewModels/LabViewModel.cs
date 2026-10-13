@@ -237,6 +237,36 @@ public partial class LabViewModel : ViewModelBase
             _snackbar.Success($"برگهٔ نتیجهٔ «{row.Number ?? row.Id.ToString()}» به چاپگر ارسال شد");
     }
 
+    /// <summary>
+    /// چاپ برچسب نمونه‌های یک درخواست — چرخهٔ ۶۹ (فاز ۳ / F-02 نقشه راه ai-review)
+    /// «برچسب نمونه»: برای هر قلم، برچسب کوچکی با QR یکتای «درخواست + قلم» +
+    /// نام بیمار + نام آزمایش چاپ می‌شود که روی ظرف نمونه می‌چسبد؛ اسکن آن در
+    /// آزمایشگاه، قلم درست را پیدا می‌کند — خطای جابه‌جایی نمونه صفر می‌شود.
+    /// </summary>
+    [RelayCommand]
+    private async Task PrintSpecimenLabelsAsync(LabOrderRow? row)
+    {
+        if (row is null) return;
+
+        var response = await _api.GetAsync<LabResultViewModel.LabOrderDetailEnvelope>($"lab/orders/{row.Id}");
+        var detail = response?.Data;
+        if (detail is null)
+        {
+            _snackbar.Error(_api.LastError ?? "دریافت جزئیات درخواست برای برچسب ناموفق بود");
+            return;
+        }
+
+        if (detail.Items is null || detail.Items.Count == 0)
+        {
+            _snackbar.Warning("این درخواست قلمی برای چاپ برچسب ندارد");
+            return;
+        }
+
+        var printed = Services.SpecimenLabelPrinter.Print(detail, row.Id);
+        if (printed)
+            _snackbar.Success($"برچسب نمونه‌های «{row.Number ?? row.Id.ToString()}» به چاپگر ارسال شد");
+    }
+
     /// <summary>پاسخ درخواست‌ها</summary>
     public sealed class LabOrdersResponse
     {

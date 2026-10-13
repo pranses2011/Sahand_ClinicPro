@@ -150,7 +150,7 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="230">
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="330">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
@@ -169,10 +169,23 @@
                                 <Button Command="{Binding DataContext.PrintResultCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
                                         Visibility="{Binding CanPrint, Converter={StaticResource BoolToVisibility}}"
-                                        Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5">
+                                        Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5" Margin="0,0,6,0">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Printer" Width="13" Height="13" VerticalAlignment="Center" />
                                         <TextBlock Text="چاپ نتیجه" Margin="6,0,0,0" />
+                                    </StackPanel>
+                                </Button>
+                                <!-- ═══ چرخهٔ ۶۹ (فاز ۳ / F-02) — برچسب نمونه ═══
+                                     برای هر قلم این درخواست، برچسب کوچک با QR یکتای
+                                     «درخواست + قلم» + بیمار + نام آزمایش چاپ می‌شود تا
+                                     روی ظرف نمونه بچسبد؛ اسکن آن، جابه‌جایی نمونه را صفر می‌کند. -->
+                                <Button Command="{Binding DataContext.PrintSpecimenLabelsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5"
+                                        ToolTip="چاپ برچسب QR برای ظرف نمونه‌های این درخواست">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Barcode" Width="13" Height="13" VerticalAlignment="Center" />
+                                        <TextBlock Text="برچسب نمونه" Margin="6,0,0,0" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>

@@ -348,14 +348,87 @@ public static class PrescriptionPrintHelper
         doc.Blocks.Add(table);
         } // پایان بلوک طرح‌های جدول‌دار (کلاسیک/مدرن)
 
-        // ═══ پانویس و امضا ═══
-        var footer = new Paragraph { Margin = new Thickness(0, 18, 0, 0) };
-        footer.Inlines.Add(new Run("مهر و امضای پزشک: ")
+        // ═══ پانویس و امضا + QR راستی‌آزمایی — چرخهٔ ۶۹ (فاز ۳ / F-01+F-02) ═══
+        // پانویس از پاراگراف ساده به جدول دوسطسته ارتقا یافت:
+        //   ستون راست: «مهر و امضای پزشک» + تصویر امضای دیجیتال (در صورت تنظیم)
+        //   ستون چپ: QR راستی‌آزمایی نسخه (کد رهگیری + بیمار + تاریخ) — اسکن با
+        //             هر گوشی، جفتِ کاغذ/الکترونیک را تطبیق می‌دهد (F-01)
+        var footer = new Table { CellSpacing = 0, Margin = new Thickness(0, 18, 0, 0) };
+        footer.Columns.Add(new TableColumn { Width = new GridLength(2, GridUnitType.Star) });
+        footer.Columns.Add(new TableColumn { Width = new GridLength(1, GridUnitType.Auto) });
+        footer.RowGroups.Add(new TableRowGroup());
+        var footerRow = new TableRow();
+
+        // ستون امضا — متن و «تصویر امضای دیجیتال» از تنظیمات چاپ (F-02):
+        // کلید Printer.DoctorSignature مسیر فایل تصویر امضاست؛ تنظیم نشده =
+        // همان نقطه‌چین کلاسیک (رفتار پیشین حفظ می‌شود)
+        var signCell = new TableCell
+        {
+            Padding = new Thickness(0, 6, 0, 0),
+            BorderThickness = new Thickness(0)
+        };
+        var signPar = new Paragraph { Margin = new Thickness(0) };
+        signPar.Inlines.Add(new Run("مهر و امضای پزشک: ")
         {
             Foreground = MutedBrush,
             FontSize = 11
         });
-        footer.Inlines.Add(new Run("......................................") { Foreground = MutedBrush });
+
+        var signaturePath = LocalSettingsStore.Get("Printer.DoctorSignature");
+        if (!string.IsNullOrWhiteSpace(signaturePath) && System.IO.File.Exists(signaturePath))
+        {
+            try
+            {
+                var sig = new System.Windows.Controls.Image
+                {
+                    Source = LoadImageFromFile(signaturePath),
+                    Width = 110,
+                    Margin = new Thickness(0, 4, 0, 0)
+                };
+                signPar.Inlines.Add(new InlineUIContainer(sig) { BaselineAlignment = BaselineAlignment.Bottom });
+            }
+            catch
+            {
+                // فایل تصویر امضا خراب است — نقطه‌چین کلاسیک جایگزین می‌شود
+                signPar.Inlines.Add(new Run("......................................") { Foreground = MutedBrush });
+            }
+        }
+        else
+        {
+            signPar.Inlines.Add(new Run("......................................") { Foreground = MutedBrush });
+        }
+        signCell.Blocks.Add(signPar);
+        footerRow.Cells.Add(signCell);
+
+        // ستون QR — بار: CLINICPRO-RX|کد رهگیری|بیمار|تاریخ (F-01)
+        var qrCell = new TableCell
+        {
+            Padding = new Thickness(6, 0, 0, 0),
+            BorderThickness = new Thickness(0)
+        };
+        var qrPar = new Paragraph { Margin = new Thickness(0), TextAlignment = TextAlignment.Center };
+        var qrSource = Helpers.QrCodeHelper.Build(
+            Helpers.QrCodeHelper.RxPayload(trackingCode, patientName, dateShamsi), sizePx: 82);
+        if (qrSource is not null)
+        {
+            var qr = new System.Windows.Controls.Image
+            {
+                Source = qrSource,
+                Width = 82,
+                Height = 82
+            };
+            qrPar.Inlines.Add(new InlineUIContainer(qr));
+            qrPar.Inlines.Add(new LineBreak());
+            qrPar.Inlines.Add(new Run("راستی‌آزمایی نسخه")
+            {
+                FontSize = 8.5,
+                Foreground = MutedBrush
+            });
+        }
+        qrCell.Blocks.Add(qrPar);
+        footerRow.Cells.Add(qrCell);
+
+        footer.RowGroups[0].Rows.Add(footerRow);
         doc.Blocks.Add(footer);
 
         var note = new Paragraph { Margin = new Thickness(0, 8, 0, 0) };
@@ -368,6 +441,21 @@ public static class PrescriptionPrintHelper
         doc.Blocks.Add(note);
 
         return doc;
+    }
+
+    /// <summary>
+    /// بارگذاری تصویر امضای دیجیتال از فایل — چرخهٔ ۶۹ (F-02): فریز روی
+    /// بارگذاری کامل تا سند چاپی بتواند بی‌قفل روی نخ رندر شود.
+    /// </summary>
+    private static System.Windows.Media.Imaging.BitmapSource LoadImageFromFile(string path)
+    {
+        var image = new System.Windows.Media.Imaging.BitmapImage();
+        image.BeginInit();
+        image.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+        image.UriSource = new Uri(path, UriKind.Absolute);
+        image.EndInit();
+        image.Freeze();
+        return image;
     }
 
     /// <summary>

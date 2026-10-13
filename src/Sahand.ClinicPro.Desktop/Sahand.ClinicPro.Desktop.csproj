@@ -29,6 +29,8 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
     <!-- اتصال بلادرنگ SignalR — Hubهای صف و اعلان (گام R1) -->
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+    <!-- چرخهٔ ۶۹ (فاز ۳ / F-01/F-02): تولید QR چاپی — نسخه (راستی‌آزمایی) و برچسب نمونه -->
+    <PackageReference Include="QRCoder" />
   </ItemGroup>
 
   <ItemGroup>
