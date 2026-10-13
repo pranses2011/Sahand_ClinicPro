@@ -71,9 +71,15 @@ public class GetStocktakingsQueryHandler : IRequestHandler<GetStocktakingsQuery,
                 s.Id, s.TakingNumber, s.TakingDate, s.CreatedAt, s.Status, s.Notes, s.ItemKind,
                 TotalItems = s.Items.Count,
                 CountedItems = s.Items.Count(i => i.IsCounted),
-                Mismatches = s.Items.Count(i => i.IsCounted && i.Difference != 0),
-                Surplus = s.Items.Where(i => i.IsCounted && i.Difference > 0).Sum(i => i.Difference),
-                Shortage = s.Items.Where(i => i.IsCounted && i.Difference < 0).Sum(i => -i.Difference)
+                // ═══ چرخهٔ ۶۸: «Difference» پراپرتی محاسباتیِ نگاشت‌نشده است و EF Core
+                // نمی‌تواند آن را به SQL ترجمه کند (کرش ۵۰۰ فهرست انبارگردانی)؛
+                // عبارت معادل روی ستون‌های واقعی نوشته شد تا تجمیع در دیتابیس بماند.
+                // علامت‌ها عین فرمول Difference: مثبت = زیادگی، منفی = کسری.
+                Mismatches = s.Items.Count(i => i.IsCounted && (i.CountedQuantity - i.SystemQuantity) != 0),
+                Surplus = s.Items.Where(i => i.IsCounted && (i.CountedQuantity - i.SystemQuantity) > 0)
+                    .Sum(i => i.CountedQuantity - i.SystemQuantity),
+                Shortage = s.Items.Where(i => i.IsCounted && (i.CountedQuantity - i.SystemQuantity) < 0)
+                    .Sum(i => i.SystemQuantity - i.CountedQuantity)
             })
             .ToListAsync(cancellationToken);
 
