@@ -29,6 +29,15 @@ public class InMemoryApiFactory : WebApplicationFactory<Program>
     /// <summary>نام دیتابیس درون‌حافظه‌ای — در کلاس‌های مشتق قابل‌بازنویسی</summary>
     protected virtual string DatabaseName => "InMemoryApiTestsDb";
 
+    /// <summary>
+    /// ریشهٔ مشترک فروشگاه InMemory — چرخهٔ ۷۰ (تست سرتاسری گزارش‌ها).
+    /// بدون ریشهٔ مشترک، کانتکست گزارش و کانتکست اصلی دو InternalServiceProvider
+    /// جدا می‌گیرند و دو فروشگاهِ هم‌نام اما جدا می‌سازند؛ نتیجه: گزارش‌ها
+    /// همیشه ردیف تهی/جمع صفر برمی‌گردانند با اینکه دادهٔ اصلی نوشته شده —
+    /// بازتولیدِ همان «همه چیز صفر» مالک در محیط تست.
+    /// </summary>
+    private readonly Microsoft.EntityFrameworkCore.Storage.InMemoryDatabaseRoot _root = new();
+
     /// <summary>پیکربندی میزبان تست — دیتابیس درون‌حافظه‌ای</summary>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -46,17 +55,31 @@ public class InMemoryApiFactory : WebApplicationFactory<Program>
             var stale = services.Where(d =>
                 d.ServiceType == typeof(DbContextOptions<ClinicProDbContext>) ||
                 d.ServiceType == typeof(DbContextOptions<Sahand.ClinicPro.Infrastructure.Persistence.ReportingDbContext>) ||
+                // چرخهٔ ۷۰ — خودِ «نوع کانتکست گزارش» هم کنار می‌رود: ثبتِ اصلی
+                // AddDbContextPool است و کارخانهٔ TContextِ استخری می‌ماند که با
+                // IScopedDbContextLease (حذف‌شده) حل می‌شود → ۵۰۰ در گزارش‌ها؛
+                // پس از حذف، AddDbContext سادهٔ پایین بی‌رقیب نشسته و InMemory
+                // از همان فروشگاه مشترک می‌خواند.
+                d.ServiceType == typeof(Sahand.ClinicPro.Infrastructure.Persistence.ReportingDbContext) ||
                 d.ServiceType.IsGenericType && (
                     d.ServiceType.GetGenericArguments().FirstOrDefault() == typeof(Sahand.ClinicPro.Infrastructure.Persistence.ReportingDbContext) ||
                     d.ServiceType.Name.StartsWith("IDbContextOptionsConfiguration"))).ToList();
             foreach (var descriptor in stale)
                 services.Remove(descriptor);
 
-            services.AddDbContext<ClinicProDbContext>(options =>
-                options.UseInMemoryDatabase(DatabaseName)
+            services.AddDbContext<ClinicProDbContext>((sp, options) =>
+                options.UseInMemoryDatabase(DatabaseName, _root)
                     // تراکنش‌های رفتار MediatR روی InMemory پشتیبانی نمی‌شوند — نادیده
                     .ConfigureWarnings(w =>
-                        w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning)));
+                        w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
+                    // ═══ چرخهٔ ۷۰ — همان اینترسپتورهای تولید ═══ جراحی DI پیشین
+                    // AuditableEntityInterceptor را می‌انداخت؛ نتیجه: CreatedAt همهٔ
+                    // رکوردهای تست پیش‌فرض (0001-01-01) می‌ماند و «هر گزارشِ
+                    // تاریخ‌محور» (درآمد روزانه/صندوق/…) همهٔ ردیف‌ها را از دست
+                    // می‌داد — بازتولید همان «گزارش‌ها همه‌چیز صفر» مالک.
+                    .AddInterceptors(
+                        sp.GetRequiredService<Sahand.ClinicPro.Infrastructure.Persistence.Interceptors.AuditableEntityInterceptor>(),
+                        sp.GetRequiredService<Sahand.ClinicPro.Infrastructure.Persistence.Interceptors.SoftDeleteInterceptor>()));
 
             // ═══ چرخهٔ ۶۴ — کانتکست گزارش هم InMemory می‌شود ═══
             // گزارش‌ها از ReportingDbContext می‌خوانند؛ بدون این جایگزینی،
@@ -65,7 +88,7 @@ public class InMemoryApiFactory : WebApplicationFactory<Program>
             // دادهٔ نوشته‌شده از کانتکست اصلی برای گزارش‌ها دیده می‌شود
             // (همان رابطهٔ واقعی: هر دو کانتکست به یک دیتابیس وصل‌اند).
             services.AddDbContext<Sahand.ClinicPro.Infrastructure.Persistence.ReportingDbContext>(options =>
-                options.UseInMemoryDatabase(DatabaseName)
+                options.UseInMemoryDatabase(DatabaseName, _root)
                     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
         });
     }
@@ -136,10 +159,14 @@ public class FlowApiFactory : InMemoryApiFactory
                 MaxUsers = 100,
                 MaxDoctors = 100,
                 MaxPatients = 1_000_000,
+                // چرخهٔ ۷۰ — «Reports» افزوده شد: میدلور لایسنس مسیر api/v1/reports
+                // را می‌بندد و تست سرتاسری گزارش‌ها (ReportsEndToEndTests) بدون آن
+                // ۴۰۳ MODULE_NOT_LICENSED می‌گرفت — همان سناریویی که در ایستگاه مالک
+                // «گزارش‌ها کار نمی‌کنند/همه‌چیز صفر» را می‌سازد.
                 EnabledModules = System.Text.Json.JsonSerializer.Serialize(new[]
                 {
                     "Patients", "Appointments", "Receptions", "Visits",
-                    "Prescriptions", "Billing", "Dashboard"
+                    "Prescriptions", "Billing", "Dashboard", "Reports"
                 })
             });
             await context.SaveChangesAsync();
