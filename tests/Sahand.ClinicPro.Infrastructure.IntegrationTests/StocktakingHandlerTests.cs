@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Sahand.ClinicPro.Application.Features.Pharmacy;
@@ -303,5 +304,193 @@ public class StocktakingHandlerTests
 
         result.IsSuccess.Should().BeFalse("جلسه تکمیل‌شده قابل لغو نیست");
         result.Error.Code.Should().Be("NOT_IN_PROGRESS");
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   چرخهٔ ۶۸ — رگرسیون خطای ترجمهٔ فهرست انبارگردانی (کرش ۵۰۰ تولید)
+   باگ: بازطراحی P-04 چرخهٔ ۶۵ عضو محاسباتی «Difference» (پراپرتی بدون
+   ستون دیتابیس) را در پروجکشن سمت-سرور خواند و اندپوینت
+   GET /api/v1/stocktakings روی اس‌کیوال‌سرورِ تولید با
+   «Translation of member 'Difference' failed» یعنی HTTP 500 می‌مُرد.
+   چرا CI آن را ندید؟ این کلاس تا پیش از این فقط با provider «InMemory»
+   تست می‌شد که هرگز SQL تولید نمی‌کند و عضوهای نگاشت‌نشده را بی‌صدا
+   سمت-کاربر می‌خواند. تست‌های زیر همان کوئری را روی SQLite درون‌حافظه‌ای
+   اجرا می‌کنند — موتور ترجمهٔ واقعی LINQ→SQL که خطاهای عضو نگاشت‌نشده را
+   دقیقاً مثل اس‌کیوال‌سرور برمی‌گرداند — تا هر بازگشتِ این الگو همان‌جا
+   قرمز شود؛ به‌علاوه ترمیم جابه‌جایی کسری/زیادندی چرخهٔ ۶۸ را قفل می‌کنند.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/// <summary>تست‌های رگرسیون چرخهٔ ۶۸ — اجرای پرس‌وجوهای انبارگردانی روی provider رابطه‌ای واقعی</summary>
+public class StocktakingRelationalTranslationTests
+{
+    /// <summary>ساخت واحد کار روی SQLite درون‌حافظه‌ای با اتصال باز (الگوی اثبات‌شدهٔ چرخهٔ ۴۸)</summary>
+    private static (UnitOfWork UoW, ClinicProDbContext Context, SqliteConnection Connection) CreateSqliteUnitOfWork()
+    {
+        var connection = new SqliteConnection("DataSource=:memory:");
+        connection.Open(); // اتصال باید تا پایان تست باز بماند؛ در غیر این صورت دیتابیس درون‌حافظه‌ای نابود می‌شود
+        var options = new DbContextOptionsBuilder<ClinicProDbContext>()
+            .UseSqlite(connection)
+            .Options;
+        var context = new SqliteStocktakingDbContext(options);
+        context.Database.EnsureCreated(); // ساخت کامل اسکیمای رابطه‌ای از روی همان مدل تولید
+        var mediator = new Mock<MediatR.IMediator>().Object;
+        return (new UnitOfWork(context, mediator), context, connection);
+    }
+
+    /// <summary>
+    /// کانتکست ClinicPro روی SQLite — همان اصلاحات اثبات‌شدهٔ چرخهٔ ۴۸:
+    /// حذف سکانس‌ها (SQLite از CREATE SEQUENCE پشتیبانی نمی‌کند)، حذف
+    /// پیش‌فرض‌های T-SQL سکانس‌دار و پاک‌کردن nvarchar(max) تخصصی اس‌کیوال‌سرور.
+    /// </summary>
+    private sealed class SqliteStocktakingDbContext(DbContextOptions<ClinicProDbContext> options)
+        : ClinicProDbContext(options)
+    {
+        /// <summary>اعمال مدل کامل + حذف سازه‌های ناسازگار با SQLite</summary>
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // حذف همهٔ سکانس‌ها — SQLite معادل ندارد
+            foreach (var seq in modelBuilder.Model.GetSequences().ToList())
+                modelBuilder.Model.RemoveSequence(seq.Name, seq.Schema);
+
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+                foreach (var property in entityType.GetProperties())
+                {
+                    // پیش‌فرض‌های T-SQL سکانس‌دار (NEXT VALUE FOR …) — مقدار همهٔ
+                    // فیلدهای این تست‌ها در کد صریحاً تنظیم می‌شود
+                    if (!string.IsNullOrEmpty(property.GetDefaultValueSql()))
+                        property.SetDefaultValueSql(null);
+
+                    // nvarchar(max) روی SQLite خطای نحوی می‌دهد؛ پاک‌کردن نوع، نگاشت TEXT را فعال می‌کند
+                    var columnType = property.GetColumnType();
+                    if (!string.IsNullOrEmpty(columnType) &&
+                        columnType.Contains("(max)", StringComparison.OrdinalIgnoreCase))
+                        property.SetColumnType(null);
+
+                    // SQLite نوع decimal بومی ندارد و به TEXT نگاشت می‌شود؛ در نتیجه
+                    // تجمیع «Sum» روی عبارت‌های decimal به‌کلی غیرقابل ترجمه است
+                    // («SQLite cannot apply aggregate operator 'Sum' on … 'decimal'»).
+                    // راه‌حل: تبدیل مقدار decimal به double در لایهٔ نگاشت (تبدیل دوطرفه)
+                    // تا نوع اسکریِ ستون REAL شود و SUM رابطه‌ای ممکن گردد. در تولیدْ
+                    // دیتابیس SQL Server است و decimal با دقت کامل پشتیبانی می‌شود —
+                    // این تبدیل فقط محدودیت provider تست را برمی‌دارد.
+                    if (property.ClrType == typeof(decimal))
+                    {
+                        property.SetColumnType("REAL");
+                        modelBuilder.Entity(entityType.ClrType).Property(property.Name)
+                            .HasConversion<double>();
+                    }
+                    else if (property.ClrType == typeof(decimal?))
+                    {
+                        property.SetColumnType("REAL");
+                        modelBuilder.Entity(entityType.ClrType).Property(property.Name)
+                            .HasConversion<double?>(); // حالت تهی‌پذیر — تهی در SQL همان NULL می‌ماند
+                    }
+                }
+        }
+    }
+
+    /// <summary>کاربر جاری شبیه‌سازی‌شده</summary>
+    private static ICurrentUserService CurrentUser(long userId = 7)
+        => Mock.Of<ICurrentUserService>(s => s.UserId == userId);
+
+    /// <summary>بذر مشترک: یک دارو + سه بچ موجودی (سیستم: ۵۰ / ۳۰ / ۰)</summary>
+    private static async Task<List<PharmacyInventory>> SeedInventoryAsync(ClinicProDbContext context)
+    {
+        var med = new Medication { GenericName = "Acetaminophen", BrandName = "استامینوفن کدئین" };
+        context.Medications.Add(med);
+        await context.SaveChangesAsync();
+
+        var inventories = new List<PharmacyInventory>
+        {
+            new() { MedicationId = med.Id, BatchNumber = "B-100", Quantity = 50m, ReorderLevel = 10m, SellPrice = 5_000m },
+            new() { MedicationId = med.Id, BatchNumber = "B-101", Quantity = 30m, ReorderLevel = 10m, SellPrice = 5_000m },
+            new() { MedicationId = med.Id, BatchNumber = "B-102", Quantity = 0m, ReorderLevel = 5m, SellPrice = 5_000m }
+        };
+        context.PharmacyInventory.AddRange(inventories);
+        await context.SaveChangesAsync();
+        return inventories;
+    }
+
+    [Fact]
+    public async Task GetStocktakings_TranslatesOnRelationalProvider_WithCorrectAggregates()
+    {
+        var (uow, context, connection) = CreateSqliteUnitOfWork();
+        try
+        {
+            var invs = await SeedInventoryAsync(context);
+
+            // جلسهٔ انبارگردانی + سه شمارش:
+            // بچ اول:  ۴۶ در برابر سیستم ۵۰ = کسری ۴
+            // بچ دوم:  ۳۵ در برابر سیستم ۳۰ = زیادگی ۵
+            // بچ سوم:   ۰ در برابر سیستم ۰  = برابر (شمارش‌شده ولی بدون مغایرت)
+            var start = await new StartStocktakingCommandHandler(uow, CurrentUser())
+                .Handle(new StartStocktakingCommand(null), CancellationToken.None);
+            start.IsSuccess.Should().BeTrue("شروع جلسه روی دیتابیس رابطه‌ای باید موفق باشد");
+
+            var session = await uow.Repository<StockTaking>().QueryableNoTracking
+                .Include(s => s.Items).FirstAsync();
+
+            foreach (var (index, counted) in new[] { (0, 46m), (1, 35m), (2, 0m) })
+                (await new RecordCountCommandHandler(uow).Handle(
+                    new RecordCountCommand(session.Id, session.Items.First(i => i.InventoryId == invs[index].Id).Id, counted, null),
+                    CancellationToken.None)).IsSuccess.Should().BeTrue();
+
+            // ═══ گام رگرسیون چرخهٔ ۶۸ ═══
+            // پیش از رفع، همین سطر با InvalidOperationException («Translation of
+            // member 'Difference' failed») شکست می‌خورد؛ provider «InMemory» این
+            // خطا را هرگز نمی‌بیند چون SQL تولید نمی‌کند.
+            var list = await new GetStocktakingsQueryHandler(uow)
+                .Handle(new GetStocktakingsQuery(), CancellationToken.None);
+
+            list.IsSuccess.Should().BeTrue("کوئری فهرست باید روی موتور ترجمهٔ واقعی SQL اجرا شود");
+            var row = list.Value.Single();
+            row.TotalItems.Should().Be(3, "عکس فوری از هر سه بچ گرفته می‌شود");
+            row.CountedItems.Should().Be(3, "هر سه قلم شمارش شدند");
+            row.DifferenceItems.Should().Be(2, "فقط کسری ۴ و زیادگی ۵ مغایرت‌دارند؛ شمارش برابر (۰=۰) مغایرت نیست");
+            // قفل ترمیم جابه‌جایی چرخهٔ ۶۸: کسری به «TotalShortage» و زیادگی به «TotalSurplus»
+            row.TotalShortage.Should().Be(4m, "سیستم ۵۰ ← شمارش ۴۶ = کسری ۴");
+            row.TotalSurplus.Should().Be(5m, "سیستم ۳۰ ← شمارش ۳۵ = زیادگی ۵");
+        }
+        finally
+        {
+            await context.DisposeAsync();
+            await connection.DisposeAsync();
+        }
+    }
+
+    [Fact]
+    public async Task GetStocktakings_ZeroCounts_SumsToZero_WithoutCrash()
+    {
+        var (uow, context, connection) = CreateSqliteUnitOfWork();
+        try
+        {
+            await SeedInventoryAsync(context);
+
+            // جلسهٔ باز بدون حتی یک شمارش — یال دوم رگرسیون: «Sum» روی مجموعهٔ
+            // خالی در SQL واقعی NULL برمی‌گرداند و باید از سوی EF به صفر فروکش
+            // شود؛ نبودِ این COALESCE همین‌جا به استثنا یا خطای تبدیل نوع می‌انجامد.
+            var start = await new StartStocktakingCommandHandler(uow, CurrentUser())
+                .Handle(new StartStocktakingCommand(null), CancellationToken.None);
+            start.IsSuccess.Should().BeTrue();
+
+            var list = await new GetStocktakingsQueryHandler(uow)
+                .Handle(new GetStocktakingsQuery(), CancellationToken.None);
+
+            list.IsSuccess.Should().BeTrue();
+            var row = list.Value.Single();
+            row.TotalItems.Should().Be(3);
+            row.CountedItems.Should().Be(0, "هیچ قلمی هنوز شمارش نشده است");
+            row.DifferenceItems.Should().Be(0);
+            row.TotalShortage.Should().Be(0m, "Sum روی مجموعهٔ خالی باید صفر شود نه NULL");
+            row.TotalSurplus.Should().Be(0m, "Sum روی مجموعهٔ خالی باید صفر شود نه NULL");
+        }
+        finally
+        {
+            await context.DisposeAsync();
+            await connection.DisposeAsync();
+        }
     }
 }
