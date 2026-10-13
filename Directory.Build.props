@@ -69,7 +69,11 @@
          (BUG-03) + اسکنر ۶ گیته الگوهای ممنوعه scripts/security/scan_secrets.sh +
          راهنمای استقرار کلید docs/guides/deploy-jwt.md + ۳ تست رگرسیون امنیتی
          و ۴ تست رگرسیون پایداری (۵۰ درخواست همزمان ابری + گزارش‌ها) -->
-    <Version>2.15.0</Version>
+    <!-- نسخهٔ ۲.۱۵.۱: چرخهٔ ۶۸ «وصلهٔ انبارگردانی» — رفع کرش ۵۰۰ فهرست انبارگردانی
+         (خواندن پراپرتی محاسباتی Difference در پروجکشن سمت-سرور که قابل ترجمه به
+         SQL نبود) + ترمیم جابه‌جایی تاریخی کسری/زیادندی در فهرست و جزئیات +
+         دو تست رگرسیون SQLite (موتور ترجمهٔ واقعی؛ InMemory هرگز SQL تولید نمی‌کرد) -->
+    <Version>2.15.1</Version>
     <Authors>Sahand ClinicPro Team</Authors>
     <Company>Sahand</Company>
     <Product>Sahand ClinicPro</Product>
