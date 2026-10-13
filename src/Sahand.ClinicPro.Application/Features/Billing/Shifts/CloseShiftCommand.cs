@@ -213,3 +213,57 @@ public class GetShiftsQueryHandler : IRequestHandler<GetShiftsQuery, Result<List
         return Result<List<ShiftHistoryRowDto>>.Success(rows);
     }
 }
+
+/// <summary>ردیف گزینهٔ تحویل‌گیرنده — کاربر فعال با نام کامل نمایشی</summary>
+public record HandoverCandidateDto(long Id, string DisplayName);
+
+/// <summary>
+/// پرس‌وجوی گزینه‌های تحویل‌گیرندهٔ شیفت بعد — بازطراحی چرخهٔ ۷۰ (گزارش مالک:
+/// «در بستن شیفت تحویل‌گیرنده را نمی‌آورد و لیستش خالی است»).
+/// ═══ ریشه ═══ پنجرهٔ بستن شیفت فهرست تحویل‌گیرنده را از «GET users»
+/// می‌خواند که مجوز «users.view» (مدیریتی) می‌خواهد؛ صندوقداری که شیفت
+/// می‌بندد این مجوز را ندارد → پاسخ ۴۰۳ → فهرست خالی. حالا یک اندپوینت
+/// اختصاصی با همان مجوزِ «بستن شیفت» (payments.create) ساخته می‌شود:
+/// اگر می‌توانی شیفت ببندی، می‌توانی نام صندوقدارِ بعدی را ببینی.
+/// فقط کاربران «فعال و غیرقفل» برمی‌گردند (کاربر غیرفعال شیفت بعد نمی‌گیرد)
+/// و نام نمایشی = نام کامل پرسنل و در نبود پرسنل، نام کاربری.
+/// </summary>
+public record GetHandoverCandidatesQuery : IRequest<Result<List<HandoverCandidateDto>>>;
+
+/// <summary>گردانندهٔ گزینه‌های تحویل — فهرست کاربران فعال</summary>
+public class GetHandoverCandidatesQueryHandler
+    : IRequestHandler<GetHandoverCandidatesQuery, Result<List<HandoverCandidateDto>>>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده با تزریق واحد کار</summary>
+    public GetHandoverCandidatesQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>اجرا — کاربران فعال؛ نام کامل پرسنل و در نبودش نام کاربری</summary>
+    public async Task<Result<List<HandoverCandidateDto>>> Handle(GetHandoverCandidatesQuery request,
+        CancellationToken cancellationToken)
+    {
+        var users = await _unitOfWork.Repository<Domain.Entities.Security.User>().QueryableNoTracking
+            .Where(u => u.IsActive && !u.IsDeleted
+                        && (u.LockoutEnd == null || u.LockoutEnd < DateTime.UtcNow))
+            .Select(u => new
+            {
+                u.Id,
+                DisplayName = u.Employee != null
+                    ? (u.Employee.FirstName + " " + u.Employee.LastName).Trim()
+                    : u.Username
+            })
+            .ToListAsync(cancellationToken);
+
+        // نام نمایشی خالی (پرسنل بدون نام) به نام کاربری برمی‌گردد؛ مرتب‌شده
+        // بر اساس نام تا در کمبو سریع پیدا شود
+        var candidates = users
+            .Select(u => new HandoverCandidateDto(u.Id,
+                string.IsNullOrWhiteSpace(u.DisplayName) ? "—" : u.DisplayName))
+            .Where(c => c.DisplayName != "—")
+            .OrderBy(c => c.DisplayName, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        return Result<List<HandoverCandidateDto>>.Success(candidates);
+    }
+}

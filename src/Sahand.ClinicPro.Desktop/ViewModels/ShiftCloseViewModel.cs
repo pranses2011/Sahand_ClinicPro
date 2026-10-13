@@ -162,10 +162,26 @@ public partial class ShiftCloseViewModel : ObservableObject
     {
         IsBusy = true;
 
-        var users = await _api.GetAsync<UsersEnvelope>("users?pageSize=50");
+        // ═══ بازطراحی چرخهٔ ۷۰ (گزارش مالک: «تحویل‌گیرنده را نمی‌آورد و
+        //     لیستش خالی است») ═══ ریشه: فهرست از «GET users» خوانده می‌شد که
+        //     مجوز «users.view» (مدیریتی) می‌خواهد؛ صندوقدارِ شیفت‌بند این مجوز
+        //     را ندارد → ۴۰۳ → کمبو خالی. اکنون اندپوینت اختصاصیِ
+        //     shifts/handover-candidates با همان مجوزِ بستن شیفت خوانده می‌شود؛
+        //     اگر سرور قدیمی آن را نداشت (به‌روزرسانی نبود)، سقوط به رفتار پیشین.
         Users.Clear();
-        foreach (var u in users?.Data ?? new List<UserDto>())
-            Users.Add(new UserOption(u.Id, $"{u.FullName} ({u.Username})"));
+        var candidates = await _api.GetAsync<HandoverEnvelope>("payments/shifts/handover-candidates");
+        if (candidates?.Data is { Count: > 0 })
+        {
+            foreach (var c in candidates.Data)
+                Users.Add(new UserOption(c.Id, c.DisplayName));
+        }
+        else
+        {
+            // سازگاری با سرور قدیمی — فهرست کاربران عمومی (نیازمند users.view)
+            var users = await _api.GetAsync<UsersEnvelope>("users?pageSize=50");
+            foreach (var u in users?.Data ?? new List<UserDto>())
+                Users.Add(new UserOption(u.Id, $"{u.FullName} ({u.Username})"));
+        }
 
         // ═══ چرخهٔ ۳۹ — مبالغ امروز سیستم برای مغایرت‌گیری زنده ═══
         // شکست خواندن، بخش شمارش را بی‌اثر نمی‌کند — فقط ستون سیستم خالی می‌ماند
@@ -300,6 +316,20 @@ public partial class ShiftCloseViewModel : ObservableObject
     {
         public bool IsSuccess { get; set; }
         public List<UserDto>? Data { get; set; }
+    }
+
+    /// <summary>پاکت پاسخ گزینه‌های تحویل — shifts/handover-candidates (چرخهٔ ۷۰)</summary>
+    public sealed class HandoverEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public List<HandoverDto>? Data { get; set; }
+    }
+
+    /// <summary>ردیف گزینهٔ تحویل از سرور</summary>
+    public sealed class HandoverDto
+    {
+        public long Id { get; set; }
+        public string DisplayName { get; set; } = "";
     }
 
     /// <summary>پاسخ خلاصهٔ امروز صندوق — چرخهٔ ۳۹ (مبالغ سیستم بستن شیفت)</summary>

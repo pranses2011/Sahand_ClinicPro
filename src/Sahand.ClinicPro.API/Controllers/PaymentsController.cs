@@ -75,4 +75,20 @@ public async Task<IActionResult> GetTodayTransactions()
         var result = await _mediator.Send(new GetShiftsQuery());
         return ToResponse(result);
     }
+
+    /// <summary>
+    /// گزینه‌های تحویل‌گیرندهٔ شیفت بعد — بازطراحی چرخهٔ ۷۰ (گزارش مالک:
+    /// «در بستن شیفت تحویل‌گیرنده را نمی‌آورد و لیستش خالی است»).
+    /// ریشه: پنجرهٔ بستن شیفت فهرست را از «GET users» می‌خواند که مجوز
+    /// «users.view» (مدیریتی) می‌خواهد؛ صندوقدار این مجوز را ندارد → ۴۰۳ →
+    /// لیست خالی. این اندپوینت با همان مجوزِ بستن شیفت (payments.create)
+    /// کار می‌کند: اگر می‌توانی شیفت ببندی، می‌توانی صندوقدارِ بعدی را ببینی.
+    /// </summary>
+    [HttpGet("shifts/handover-candidates")]
+    [HasPermission("payments.create")]
+    public async Task<IActionResult> GetHandoverCandidates(CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(new GetHandoverCandidatesQuery(), ct);
+        return ToResponse(result);
+    }
 }
