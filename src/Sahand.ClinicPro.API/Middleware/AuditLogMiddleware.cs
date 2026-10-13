@@ -6,6 +6,7 @@ using Sahand.ClinicPro.Domain.Entities.Scheduling;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Infrastructure.Persistence;
 using Sahand.ClinicPro.Domain.Entities.Security;
+using Sahand.ClinicPro.Application.Common;
 
 namespace Sahand.ClinicPro.API.Middleware;
 
@@ -131,19 +132,39 @@ public class AuditLogMiddleware
 
                 var sanitized = Truncate(SanitizeBody(requestBody));
 
+                // ═══ بازطراحی چرخهٔ ۷۰ (گزارش مالک) — چهار اصلاح ستون‌های لاگ ═══
+                //   «ستون ماژول همه را API می‌نویسد» → ماژول واقعی از «ناحیهٔ مسیر»
+                //   گرفته و فارسی ذخیره می‌شود (داروخانه، پذیرش، مدیریت سیستم و…)
+                //   «ستون موجودیت انگلیسی است» → نام موجودیت از کاتالوگ معنایی
+                //   فارسی ذخیره می‌شود (بیمار، نوبت، فاکتور و…)
+                //   «ستون شناسه خالی می‌ماند» → برای ایجادها (POST) شناسه در مسیر
+                //   نیست؛ اکنون از «پاسخ سرور» استخراج می‌شود (data.id)
+                //   «ستون کاربر کد می‌نویسد (۱ برای admin)» → ادعای displayName
+                //   توکن (نام کامل پرسنل) جایگزین نام کاربری/کد شد؛
+                //   جایگزین: نام کامل و در نبودش، نام کاربری — هرگز «۱».
+                var displayUserName =
+                    context.User.FindFirstValue("displayName")
+                    ?? context.User.Identity?.Name
+                    ?? "سیستم";
+
+                // شناسهٔ رکورد: مسیر (ویرایش/حذف) و در نبودش، پاسخِ ایجاد
+                var entityId = ExtractId(context.Request.Path)
+                               ?? TryExtractIdFromResponse(responseBuffer);
+
                 dbContext.AuditLogs.Add(new AuditLog
                 {
                     UserId = userId,
-                    Username = context.User.Identity?.Name,
+                    Username = displayUserName,
                     ActionType = action,
-                    EntityName = ExtractEntityName(context.Request.Path),
-                    EntityId = ExtractId(context.Request.Path),
+                    EntityName = AuditSemanticCatalog.EntityFromPath(
+                        context.Request.Path.Value, ExtractEntityName(context.Request.Path)),
+                    EntityId = entityId,
                     OldValues = oldValues,
                     NewValues = sanitized,
                     IpAddress = context.Connection.RemoteIpAddress?.ToString(),
                     UserAgent = context.Request.Headers.UserAgent.ToString(),
                     Timestamp = DateTime.UtcNow,
-                    Module = "API",
+                    Module = AuditSemanticCatalog.ModuleFromPath(context.Request.Path.Value),
                     Severity = AuditSeverity.Info
                 });
 
@@ -407,6 +428,61 @@ public class AuditLogMiddleware
 
     /// <summary>نمایش داخلی ExtractId برای پروژهٔ تست</summary>
     internal static long? ExtractIdForTest(PathString path) => ExtractId(path);
+
+    /// <summary>
+    /// استخراج شناسهٔ رکورد از «پاسخ سرور» — بازطراحی چرخهٔ ۷۰ (گزارش مالک:
+    /// «ستون شناسه خالی می‌ماند»). ریشه: برای ایجادها (POST) شناسه هرگز در
+    /// مسیر نیست — شناسهٔ رکوردِ تازه‌ساخت در «پاسخ» برمی‌گردد. قالب پاسخ
+    /// برنامه پاکت ApiResponse است: { isSuccess, data, message } و «data»
+    /// گاهی شیءِ رکورد است (با ویژگی id)، گاهی خودِ عدد، و گاهی شیءِ دیگری.
+    /// ترتیب آزمودن: عددِ مستقیم → ویژگی id شیءِ data → ویژگی id ریشه.
+    /// هر خطا (پاسخ غیر JSON / پروندهٔ دودویی / خالی) بی‌صدا نادیده می‌گیرد —
+    /// شناسهٔ لاگ هرگز نباید درخواست اصلی را زخم بزند.
+    /// </summary>
+    private static long? TryExtractIdFromResponse(Stream responseBuffer)
+    {
+        try
+        {
+            if (responseBuffer is not { Length: > 2 })
+                return null;
+
+            responseBuffer.Seek(0, SeekOrigin.Begin);
+            using var doc = JsonDocument.Parse(responseBuffer);
+            var root = doc.RootElement;
+
+            // پاکت استاندارد — data را جدا می‌کنیم؛ بدون پاکت، خود ریشه معیار است
+            if (root.ValueKind == JsonValueKind.Object
+                && root.TryGetProperty("data", out var data))
+            {
+                if (data.ValueKind == JsonValueKind.Number && data.TryGetInt64(out var number))
+                    return number; // data خودش شناسه است (پاسخِ «id ساخته‌شده»)
+                if (data.ValueKind == JsonValueKind.Object
+                    && data.TryGetProperty("id", out var dataId)
+                    && dataId.ValueKind == JsonValueKind.Number
+                    && dataId.TryGetInt64(out var created))
+                    return created; // رکوردِ کامل برگشته — id داخلش
+            }
+
+            // پاسخ بدون پاکت — ویژگی id در ریشه
+            if (root.ValueKind == JsonValueKind.Object
+                && root.TryGetProperty("id", out var rootId)
+                && rootId.ValueKind == JsonValueKind.Number
+                && rootId.TryGetInt64(out var plain))
+                return plain;
+
+            return null;
+        }
+        catch
+        {
+            // پاسخ غیرJSON (پرونده/خالی/جریان قطع‌شده) — شناسه‌ای نیست
+            return null;
+        }
+        finally
+        {
+            // جریان برای مصرف‌کنندهٔ بعدی آماده شود
+            try { responseBuffer.Seek(0, SeekOrigin.Begin); } catch { /* جریان بسته — نادیده */ }
+        }
+    }
 
     /// <summary>
     /// نرمال‌سازی نام برای مقایسه — حذف جداکننده‌ها/آندرلاین، جمع‌زدایی و کوچک‌سازی.
