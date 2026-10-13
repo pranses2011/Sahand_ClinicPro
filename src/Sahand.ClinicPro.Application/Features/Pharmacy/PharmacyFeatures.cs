@@ -169,9 +169,15 @@ public class StockInCommandValidator : AbstractValidator<StockInCommand>
 public class StockInCommandHandler : IRequestHandler<StockInCommand, Result<long>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly Microsoft.Extensions.Logging.ILogger<StockInCommandHandler> _logger;
 
-    /// <summary>سازنده با تزریق واحد کار</summary>
-    public StockInCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    /// <summary>سازنده با تزریق واحد کار و لاگر (چرخهٔ ۶۷ — سند حسابداری ورود کالا)</summary>
+    public StockInCommandHandler(IUnitOfWork unitOfWork,
+        Microsoft.Extensions.Logging.ILogger<StockInCommandHandler> logger)
+    {
+        _unitOfWork = unitOfWork;
+        _logger = logger;
+    }
 
     /// <summary>
     /// اجرای ورود موجودی — چرخهٔ ۴۳ دو اصلاح ساختاری:
@@ -232,6 +238,19 @@ public class StockInCommandHandler : IRequestHandler<StockInCommand, Result<long
         }, cancellationToken);
 
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        // ═══ چرخهٔ ۶۷ (گزارش مالک: هزینه‌های سود و زیان صفر) ═══
+        // سند حسابداری ورود کالا — بدهکار 1104 موجودی انبار / بستانکار 2104
+        // بدهی تأمین‌کننده (نسیه) یا 1101 صندوق (نقدی). پس از نخستین ذخیره
+        // صدا می‌شود تا شناسهٔ واقعی بچ (inventory.Id) در مرجع سند بنشیند؛
+        // دومین ذخیره فقط وقتی چیزی برای ثبت مانده باشد عمل می‌کند.
+        await PharmacyJournalPoster.PostStockInAsync(
+            _unitOfWork, _logger, inventory.Id,
+            medication.GenericNameFa ?? medication.GenericName,
+            request.Quantity, request.PurchasePrice,
+            request.SupplierId, cancellationToken);
+        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+
         return Result<long>.Success(inventory.Id);
     }
 }

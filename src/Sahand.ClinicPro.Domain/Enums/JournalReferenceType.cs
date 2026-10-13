@@ -15,4 +15,7 @@ public enum JournalReferenceType : byte
     DoctorPayment = 4,
     /// <summary>دستی</summary>
     Manual = 5,
+    /// <summary>گردش انبار — ورود کالا یا مصرف اقلام (چرخهٔ ۶۷: هزینهٔ اقلام مصرفی
+    /// از این پس در دفاتر می‌نشیند و صورت سود و زیان هزینهٔ واقعی نشان می‌دهد)</summary>
+    Inventory = 6,
 }

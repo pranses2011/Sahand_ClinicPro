@@ -316,8 +316,14 @@ public partial class ShiftsViewModel : ViewModelBase
             id = EditingShiftId,
             shiftName = ShiftName.Trim(),
             shiftCode = (string?)null,
-            startTime = start.ToString("HH:mm"),
-            endTime = end.ToString("HH:mm"),
+            // ═══ چرخهٔ ۶۷ (گزارش مالک: «در مدیریت شیفت‌ها و ثبت شیفت خطای
+            //      "اطلاعات ارسالی نامعتبر است" میده») ═══
+            // ریشه: دیسریالایز بومی TimeOnly در System.Text.Json نسخهٔ net8.0
+            // فقط قالب کامل «HH:mm:ss» را می‌پذیرد؛ فرمت کوتاه «HH:mm» باعث
+            // JsonException → خطای ModelState → پیام عمومی ۴۰۰ می‌شد. ارسال با
+            // ثانیه، پارس را در هر نسخهٔ NET تضمین می‌کند.
+            startTime = start.ToString("HH:mm:ss"),
+            endTime = end.ToString("HH:mm:ss"),
             shiftType = ShiftIsNight ? 2 : 1,
             isNightShift = ShiftIsNight,
             lateGraceMinutes = ShiftLateGrace,

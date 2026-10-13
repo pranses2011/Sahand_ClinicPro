@@ -274,8 +274,6 @@
                                       Command="{Binding OpenPrescriptionDetailsCommand}"
                                       CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                     </DataGrid.InputBindings>
-                          HeadersVisibility="Column"
-                          AlternatingRowBackground="#F7FAFD">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="110" />
                         <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="160" />
@@ -299,8 +297,6 @@
                                       Command="{Binding OpenLabDetailsCommand}"
                                       CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                     </DataGrid.InputBindings>
-                          HeadersVisibility="Column"
-                          AlternatingRowBackground="#F7FAFD">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="شماره درخواست" Binding="{Binding OrderNumber, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
                         <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
@@ -479,9 +475,22 @@
 
                     <!-- خط زمان عمودی -->
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                        <!-- چرخهٔ ۶۳ (P-08): ItemsControl به‌طور پیش‌فرض مجازی‌سازی ندارد — خط زمانِ بیمارِ پرمراجعه بدون این صفات با هر رویداد سنگین‌تر می‌شد -->
-    <ItemsControl ItemsSource="{Binding Timeline}" Margin="4,4,4,10">
-                  VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                        <!-- ═══ چرخهٔ ۶۷ (گزارش مالک: کرش «Items collection must be empty
+                             before using ItemsSource» هنگام گشودن پروندهٔ بیمار) ═══
+                             ریشه: صفات مجازی‌سازی چرخهٔ ۶۳ به‌صورت «متن یتیم» بیرون تگ
+                             شروع ItemsControl مانده بودند — XAML متن داخل ItemsControl را
+                             «آیتم» می‌شمارد ⇒ دو آیتم رشته‌ای در Items نشست و با فعال‌شدن
+                             بایندینگ ItemsSource استثنا می‌داد. اکنون صفات داخل خود تگ
+                             نشسته‌اند و پنل مجازی‌سازی هم صریح شد (ItemsControl پیش‌فرض
+                             مجازی‌سازی ندارد — همان نکتهٔ چرخهٔ ۶۳، این‌بار درست). -->
+                        <ItemsControl ItemsSource="{Binding Timeline}" Margin="4,4,4,10"
+                                      VirtualizingPanel.IsVirtualizing="True"
+                                      VirtualizingPanel.VirtualizationMode="Recycling">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Margin="0,0,0,2">

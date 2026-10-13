@@ -766,8 +766,18 @@ public partial class LicenseService : ILicenseService
     /// </summary>
     private async Task SaveServerMessagesAsync(List<PortalMessage>? messages, CancellationToken ct)
     {
-        if (messages is null || messages.Count == 0)
-            return;
+        // ═══ چرخهٔ ۶۷ (گزارش مالک: «پیام‌های ارسالی از سرور لایسنس وقتی از روی
+        //      سرور پاک میشن هنوز در داشبورد میمانند») ═══
+        // پیام‌های داشبورد باید «تابع سرور» باشند — آینهٔ کامل وضعیت سرور.
+        // تمایز سه حالت (هماهنگ با پروتکل تازهٔ پنل PHP چرخهٔ ۶۷):
+        //   • messages == null → پرتال قدیمی که بلوک پیام را نمی‌فرستد —
+        //     «هیچ اطلاعی نداریم»؛ دستی به پیام‌های محلی نمی‌زنیم؛
+        //   • messages == [] (فهرست خالی) → سرور می‌گوید «پیامی نیست» —
+        //     همهٔ پیام‌های محلی پاک می‌شوند (رفع ریشهٔ گزارش مالک)؛
+        //   • فهرست غیرتهی → upsert همین پیام‌ها «+ حذف ردیف‌های محلی که
+        //     سرور دیگر نمی‌فرستد» (پیام تکیِ حذف‌شده از پنل هم پاک می‌شود).
+        if (messages is null)
+            return; // پرتال بدون بلوک پیام — نه تأیید، نه نفی؛ آینه دست‌نخورده می‌ماند
         try
         {
             await SaveSettingsWithRetryAsync(
@@ -779,14 +789,36 @@ public partial class LicenseService : ILicenseService
         }
     }
 
-    /// <summary>هستهٔ ذخیرهٔ پیام‌ها — بدون تلاش مجدد (پوشش آن در متد بیرونی)</summary>
+    /// <summary>هستهٔ ذخیرهٔ پیام‌ها — بدون تلاش مجدد (پوشش آن در متد بیرونی).
+    /// پیام ورودی هرگز null نیست (گارد «بی‌اطلاع» در متد بیرونی رد شده).</summary>
     private async Task SaveServerMessagesCoreAsync(List<PortalMessage> messages, CancellationToken ct)
     {
-            var fresh = new List<SystemSetting>();
-            foreach (var m in messages.Take(20))
+            // فهرست ورودی پاک‌سازی‌شده — پیام‌های بی‌عنوان رد و سقف ۲۰ رعایت می‌شود
+            // (messages در این نقطه null نیست — گام بیرونی حالت «بی‌اطلاع» را رد کرده)
+            var incoming = messages
+                .Where(m => !string.IsNullOrWhiteSpace(m.Title))
+                .Take(20)
+                .ToList();
+
+            // ═══ گام ۱ — حذف ردیف‌های محلی که سرور دیگر نمی‌فرستد (آینهٔ سرور) ═══
+            // شناسه‌های مجاز = همان چیزی که سرور همین الان فرستاده؛ هر ردیف محلی
+            // با شناسهٔ خارج از این مجموعه باید پاک شود. با فهرست تهیِ سرور، این
+            // پرس‌وجو «همهٔ» ردیف‌ها را برمی‌دارد (رفع ریشهٔ گزارش مالک چرخهٔ ۶۷).
+            var incomingIds = incoming.Select(m => $"ServerMessages.{m.Id}").ToHashSet();
+            var staleRows = await _context.SystemSettings
+                .Where(s => s.Category == "ServerMessages" && !s.IsDeleted && !incomingIds.Contains(s.Key))
+                .ToListAsync(ct);
+            if (staleRows.Count > 0)
             {
-                if (string.IsNullOrWhiteSpace(m.Title))
-                    continue;
+                _context.SystemSettings.RemoveRange(staleRows);
+                _logger.LogInformation("{Count} پیام پشتیبانی که از سرور لایسنس حذف شده بود، از داشبورد هم پاک شد",
+                    staleRows.Count);
+            }
+
+            // ═══ گام ۲ — upsert پیام‌های سرور (همان رفتار چرخهٔ ۳۵ به بعد) ═══
+            var fresh = new List<SystemSetting>();
+            foreach (var m in incoming)
+            {
                 var key = $"ServerMessages.{m.Id}";
                 // ═══ چرخهٔ سی‌وهفتم (گزارش مالک — «رنگ کادر با انتخاب پنل فرق داشت») ═══
                 // پیش از این چرخه پیامِ یک‌بار ذخیره‌شده برای همیشه «منجمد» می‌شد:
@@ -828,12 +860,17 @@ public partial class LicenseService : ILicenseService
             if (fresh.Count > 0)
             {
                 _context.SystemSettings.AddRange(fresh);
-                await _context.SaveChangesAsync(ct);
                 _logger.LogInformation("{Count} پیام پشتیبانی جدید از سرور لایسنس دریافت شد", fresh.Count);
             }
-            else if (_context.ChangeTracker.Entries<SystemSetting>().Any(e => e.State == EntityState.Modified))
+
+            // ═══ گام ۳ — ذخیرهٔ یکجا: هم حذف‌ها، هم درج‌ها، هم به‌روزرسانی‌ها ═══
+            // پیشتر ذخیره فقط برای «درج جدید» زده می‌شد؛ حذف ردیف‌های کهنه در
+            // پایگاه داده می‌ماند (نیمی از ریشهٔ گزارش مالک همین‌جا بود).
+            var hasChanges = fresh.Count > 0
+                || staleRows.Count > 0
+                || _context.ChangeTracker.Entries<SystemSetting>().Any(e => e.State == EntityState.Modified);
+            if (hasChanges)
             {
-                // ذخیرهٔ به‌روزرسانیِ ردیف‌های موجود (مسیر upsert)
                 await _context.SaveChangesAsync(ct);
             }
     }

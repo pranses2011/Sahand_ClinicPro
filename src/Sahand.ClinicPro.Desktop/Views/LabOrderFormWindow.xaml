@@ -84,7 +84,9 @@
                 <DataTemplate>
                     <CheckBox IsChecked="{Binding IsSelected}">
                         <TextBlock>
-                            <Run Text="{Binding Name}" FontWeight="Bold" />
+                            <!-- Mode=OneWay — چرخهٔ ۶۷: Run.Text پیش‌فرض TwoWay است؛
+                                 برای پراپرتی‌های init-only رکوردها هم یک‌طرفه باید باشد -->
+                            <Run Text="{Binding Name, Mode=OneWay}" FontWeight="Bold" />
                             <Run Text=" — " />
                             <Run Text="{Binding Category, Mode=OneWay}" FontSize="11" />
                         </TextBlock>

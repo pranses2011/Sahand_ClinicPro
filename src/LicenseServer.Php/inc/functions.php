@@ -688,11 +688,49 @@ function ls_validate_license(string $licenseKey, string $fingerprint, bool $bind
         ),
     ];
     // چرخه دوازدهم — پیام‌های مستقیم پشتیبانی به داشبورد درمانگاه (تحویل با همین تپ‌قلب)
+    // ═══ چرخهٔ ۶۷ (گزارش مالک: «پیام‌های ارسالی از سرور لایسنس وقتی از روی سرور
+    //      پاک میشن هنوز در داشبورد میمانند») ═══
+    // پیشتر فقط پیام‌های «تحویل‌نشده» ارسال می‌شد و کلید messages در نبودِ پیام
+    // جدید اصلاً در پاسخ نمی‌آمد ⇒ کلاینت هرگز از حذف پیام باخبر نمی‌شد و
+    // داشبوردش برای همیشه پیام حذف‌شده را نشان می‌داد. اکنون «فهرست کامل و
+    // فعلی» پیام‌های این لایسنس (تحویل‌شده + تحویل‌نشده، ۲۰ ردیف آخر) همیشه
+    // در پاسخ هست — کلاینت چرخهٔ ۶۷ دقیقاً همین فهرست را آینه می‌کند؛ حذف از
+    // پنل ⇒ حذف از داشبورد در نخستین تپ‌قلب بعدی. علامت‌گذاری «تحویل» همچنان
+    // با نخستین ارسال انجام می‌شود (نشان پنل تغییری نمی‌کند).
     $messages = ls_messages_fetch_and_deliver((int)$l['id']);
-    if (count($messages) > 0) {
-        $response['messages'] = $messages;
-    }
+    $response['messages'] = ls_messages_current_list((int)$l['id']);
     return $response;
+}
+
+/**
+ * فهرست کامل و «فعلی» پیام‌های یک لایسنس — تحویل‌شده و تحویل‌نشده، ۲۰ ردیف آخر.
+ * چرخهٔ ۶۷: این همان فهرستی است که کلاینت به‌عنوان آینهٔ داشبورد نگه می‌دارد؛
+ * حذف ردیف از پنل در نخستین تپ‌قلب بعدی از داشبورد بیمارستان هم پاک می‌شود.
+ * ساختار هر قلم دقیقاً هم‌قالب ls_messages_fetch_and_deliver است + فیلد color
+ * (چرخهٔ ۳۵ — رنگ انتخابی پنل).
+ */
+function ls_messages_current_list(int $licenseId): array
+{
+    try {
+        $stmt = ls_db()->prepare(
+            'SELECT id, title, body, level, color,
+                    DATE_FORMAT(created_at, "%Y-%m-%d") AS d
+             FROM ls_messages WHERE license_id = ?
+             ORDER BY id DESC LIMIT 20');
+        $stmt->execute([$licenseId]);
+        $rows = $stmt->fetchAll();
+        return array_map(static fn($r) => [
+            'id'    => (int)$r['id'],
+            'title' => (string)$r['title'],
+            'body'  => (string)$r['body'],
+            'level' => (string)$r['level'],
+            'date'  => (string)$r['d'],
+            'color' => $r['color'] !== null ? (string)$r['color'] : null,
+        ], $rows);
+    } catch (Throwable $e) {
+        ls_log_error('messages:current_list', $e); // شکست فهرست نباید تپ‌قلب را بزند
+        return [];
+    }
 }
 
 /** تولید محتوای فایل .lic برای فعال‌سازی آفلاین — JSON امضاشده */

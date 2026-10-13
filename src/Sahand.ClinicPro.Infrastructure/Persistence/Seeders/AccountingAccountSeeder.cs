@@ -54,6 +54,12 @@ public class AccountingAccountSeeder : IDataSeeder
             ("2101", "بدهی به بیمه‌ها", AccountType.Liability, AccountNature.Credit, true),
             ("2102", "بدهی به پرسنل (حقوق پرداختنی)", AccountType.Liability, AccountNature.Credit, true),
             ("2103", "پیش‌دریافت از بیماران", AccountType.Liability, AccountNature.Credit, true),
+            // ═══ چرخهٔ ۶۷ (گزارش مالک: «در تب سود و زیان، مبلغ هزینه‌ها صفر است
+            //      در حالی که برای خدمات درمانی اقلام مصرفی استفاده می‌شود») ═══
+            // ورود کالای تأمین‌کننده‌دار از این حساب بستانکار می‌شود (خرید نسیه)؛
+            // سندساز انبار چرخهٔ ۶۷ به آن ارجاع می‌دهد. upsert است — نصب‌های موجود
+            // در نخستین اجرا پس از به‌روزرسانی این حساب را می‌گیرند.
+            ("2104", "بدهی به تأمین‌کنندگان (نسیه)", AccountType.Liability, AccountNature.Credit, true),
 
             ("3", "حقوق صاحبان سهام", AccountType.Equity, AccountNature.Credit, false),
 

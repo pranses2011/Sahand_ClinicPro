@@ -148,7 +148,9 @@
                                                 <Border CornerRadius="8" Padding="7,1.5" VerticalAlignment="Center"
                                                         Background="#EDF3FA" BorderBrush="#D3E2F0" BorderThickness="1">
                                                     <TextBlock FontSize="9.5">
-                                                        <Run Text="{Binding Assigned, Converter={StaticResource PersianDigits}}" />
+                                                        <!-- Mode=OneWay — چرخهٔ ۶۷: Run.Text پیش‌فرض TwoWay است؛
+                                                             برای پراپرتی‌های init-only رکوردها هم یک‌طرفه باید باشد -->
+                                                        <Run Text="{Binding Assigned, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
                                                         <Run Text="پرسنل" />
                                                     </TextBlock>
                                                 </Border>

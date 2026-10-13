@@ -37,7 +37,12 @@
             <StackPanel VerticalAlignment="Center" Margin="12,0,0,0">
                 <TextBlock FontSize="16" FontWeight="Bold">
                     <Run Text="سند " />
-                    <Run Text="{Binding EntryNumberText}" FontFamily="{DynamicResource App.CodeFont}" />
+                    <!-- ═══ چرخهٔ ۶۷ (گزارش مالک: کرش XamlParseException با دابل‌کلیک روی سند) ═══
+                         بایندینگ Run.Text پیش‌فرض TwoWay است؛ EntryNumberText ست‌کنندهٔ private
+                         دارد (فقط‌خواندنی از دید بایندینگ) ⇒ InvalidOperationException هنگام
+                         InitializeComponent. Mode=OneWay صریح — هم‌الگوی TotalDebit/TotalCredit
+                         پایین همین فایل که از چرخهٔ ۴۷ درست‌اند. -->
+                    <Run Text="{Binding EntryNumberText, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
                 </TextBlock>
                 <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                     <TextBlock Text="{Binding DateText}" FontSize="11.5" Opacity="0.7" VerticalAlignment="Center" />

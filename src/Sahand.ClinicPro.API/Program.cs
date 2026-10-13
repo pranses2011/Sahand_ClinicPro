@@ -104,7 +104,19 @@ try
         options.MimeTypes = new[] { "application/json", "text/plain" });
 
     // کنترلرها با نام‌گذاری camelCase فارسی‌پسند
-    builder.Services.AddControllers();
+    // ═══ چرخهٔ ۶۷ (گزارش مالک: خطای «اطلاعات ارسالی نامعتبر است» ثبت شیفت) ═══
+    // مبدل‌های سهل‌گیر TimeOnly/DateOnly: پارس بومی TimeOnly در net8.0 فقط
+    // «HH:mm:ss» را می‌پذیرد و فرمت کوتاه «HH:mm» با JsonException رد می‌شد؛
+    // با این مبدل‌ها هر دو قالب (و کسر ثانیهٔ کامل) پذیرفته می‌شوند تا
+    // کلاینت‌های قدیمی هم بدون به‌روزرسانی اجباری کار کنند.
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(
+                new Sahand.ClinicPro.API.Common.Json.TimeOnlyLenientJsonConverter());
+            options.JsonSerializerOptions.Converters.Add(
+                new Sahand.ClinicPro.API.Common.Json.DateOnlyLenientJsonConverter());
+        });
 
     // کش حافظه‌ای — کش یک‌ساعته کاتالوگ گزارش‌ها (چرخه دوازدهم B5)
     builder.Services.AddMemoryCache();

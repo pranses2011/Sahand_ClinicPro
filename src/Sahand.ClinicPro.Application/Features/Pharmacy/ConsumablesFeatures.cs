@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Pharmacy;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
@@ -148,9 +149,14 @@ public record ConsumeStockCommand(
 public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, Result<ConsumeStockResultDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<ConsumeStockCommandHandler> _logger;
 
-    /// <summary>سازنده با تزریق واحد کار</summary>
-    public ConsumeStockCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    /// <summary>سازنده با تزریق واحد کار و لاگر (چرخهٔ ۶۷ — سند حسابداری مصرف)</summary>
+    public ConsumeStockCommandHandler(IUnitOfWork unitOfWork, ILogger<ConsumeStockCommandHandler> logger)
+    {
+        _unitOfWork = unitOfWork;
+        _logger = logger;
+    }
 
     /// <summary>اجرای مصرف — FEFO + تراکنش + هشدار کمبود + خروجی فاکتوری</summary>
     public async Task<Result<ConsumeStockResultDto>> Handle(ConsumeStockCommand request,
@@ -173,6 +179,9 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
 
         var now = DateTime.UtcNow;
         var resultItems = new List<ConsumeResultItemDto>();
+        // ═══ چرخهٔ ۶۷ — جمع بهای تمام‌شدهٔ اقلام مصرفی (قیمت خرید × تعداد) ═══
+        // مبنای سند حسابداری هزینه؛ قیمت فروش (taken) فقط برای نمایش خروجی است.
+        var totalCost = 0m;
 
         foreach (var item in request.Items)
         {
@@ -205,6 +214,9 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
                 batch.Quantity -= take;
                 remaining -= take;
                 taken += take * batch.SellPrice;
+                // چرخهٔ ۶۷: بهای تمام‌شده (خرید) — نه قیمت فروش؛ حسابداری هزینه
+                // باید به مبنای خرید باشد تا سود خالص واقعی باشد
+                totalCost += take * batch.PurchasePrice;
 
                 await _unitOfWork.Repository<PharmacyTransaction>().AddAsync(new PharmacyTransaction
                 {
@@ -241,6 +253,15 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
                 item.Quantity > 0 ? taken / item.Quantity : 0m,
                 taken));
         }
+
+        // ═══ چرخهٔ ۶۷ (گزارش مالک: «در تب سود و زیان مبلغ هزینه‌ها صفر است») ═══
+        // سند حسابداری هزینهٔ مصرف — بدهکار 5102 هزینهٔ خرید دارو و مواد /
+        // بستانکار 1104 موجودی انبار — پیش از ذخیرهٔ اصلی در همان تراکنش می‌نشیند؛
+        // شناسهٔ پذیرش واقعی است (رکورد موجود) پس مرجع سند درست می‌ماند.
+        await PharmacyJournalPoster.PostConsumptionAsync(
+            _unitOfWork, _logger, reception.Id,
+            reception.ReceptionNumber ?? reception.Id.ToString(),
+            totalCost, cancellationToken);
 
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
 
