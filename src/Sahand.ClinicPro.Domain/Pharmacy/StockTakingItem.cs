@@ -26,7 +26,9 @@ public class StockTakingItem : AuditableEntity, ISoftDeletable
     /// <summary>یادداشت شمارنده (مثلاً «بچ شکسته» یا «قلم ناقص»)</summary>
     public string? Notes { get; set; }
 
-    /// <summary>مغایرت مثبت = کسری انبار، منفی = زیادگی — ویژگی محاسباتی و در دیتابیس ذخیره نمی‌شود</summary>
+    /// <summary>مغایرت شمارش با سیستم (CountedQuantity - SystemQuantity) — مثبت = شمارش بیشتر از سیستم (زیادگی/اضافه انبار)، منفی = کمتر (کسری).
+    /// ⚠️ چرخهٔ ۶۸: ویژگی محاسباتی است و در دیتابیس ذخیره/نگاشت نمی‌شود؛ بنابراین استفاده از آن در کوئری‌های سمت-سرور
+    /// (پروجکشن/Where روی IQueryable) با خطای «Translation failed» شکست می‌خورد — عبارت معادل روی ستون‌ها بنویسید.</summary>
     public decimal Difference => CountedQuantity - SystemQuantity;
 
     /// <summary>جلسه والد</summary>
