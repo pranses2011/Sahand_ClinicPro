@@ -4,15 +4,20 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:behaviors="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
         Title="ثبت پرداخت"
-        Height="520" Width="480"
+        Width="480"
+        SizeToContent="Height" MinHeight="480" MaxHeight="680"
         FlowDirection="RightToLeft"
         WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
+    <!-- ═══ چرخهٔ ۷۰ (گزارش مالک — هم‌الگوی فرم پرداخت پذیرش) ═══
+         ارتفاع ثابت حذف و SizeToContent=Height نشست تا پیام خطا و نوار
+         مشغولیت، دکمه‌های ثبت/انصراف را از لبهٔ پایین بیرون نزند. -->
     <!-- ═══════════════════════════════════════════════════════════
          فرم ثبت پرداخت — گام V5
          ═══════════════════════════════════════════════════════════ -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="28">
         <TextBlock Text="ثبت پرداخت فاکتور" Style="{StaticResource SectionTitle}" />
 
@@ -68,4 +73,5 @@
         <ProgressBar IsIndeterminate="True" Height="4" Margin="0,16,0,0"
                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
     </StackPanel>
+    </ScrollViewer>
 </Window>

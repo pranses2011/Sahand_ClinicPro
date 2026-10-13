@@ -19,9 +19,16 @@ public partial class PaymentWindowViewModel : ObservableObject
     [ObservableProperty]
     private decimal _amount;
 
-    /// <summary>نمایه روش پرداخت</summary>
+    /// <summary>
+    /// نمایه روش پرداخت — ۰ نقدی تا ۴ حساب‌به‌حساب.
+    /// ═══ چرخهٔ ۷۰ (گزارش مالک) ═══ با «آخرین روش استفاده‌شده» از تنظیمات
+    /// محلی مقدار اولیه می‌گیرد (کلید مشترک با فرم پرداخت پذیرش) و پس از
+    /// هر ثبتِ موفق همان‌جا ذخیره می‌شود — باز شدن بعدی با روش قبلی شروع
+    /// می‌شود، نه همیشه نقدی.
+    /// </summary>
     [ObservableProperty]
-    private int _methodIndex;
+    private int _methodIndex = Services.LocalSettingsStore.Get("ui.payment.lastMethod") is { } last
+        && int.TryParse(last, out var li) && li is >= 0 and <= 4 ? li : 0;
 
     /// <summary>شماره پیگیری/مرجع</summary>
     [ObservableProperty]
@@ -95,7 +102,12 @@ public partial class PaymentWindowViewModel : ObservableObject
         var ok = await _api.PostAsync("payments", body);
         IsBusy = false;
 
-        if (ok) SaveSucceeded?.Invoke(this, EventArgs.Empty);
+        if (ok)
+        {
+            // چرخهٔ ۷۰ — ذخیرهٔ روشِ ثبت‌شده به‌عنوان آخرین روش استفاده‌شده
+            Services.LocalSettingsStore.Set("ui.payment.lastMethod", MethodIndex.ToString());
+            SaveSucceeded?.Invoke(this, EventArgs.Empty);
+        }
         else ErrorMessage = _api.LastError ?? "ثبت پرداخت ناموفق بود";
     }
 

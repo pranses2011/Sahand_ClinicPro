@@ -3,10 +3,19 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="پرداخت بیمار"
-        Height="480" Width="470"
+        Width="470"
+        SizeToContent="Height" MinHeight="440" MaxHeight="640"
         FlowDirection="RightToLeft"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize" ShowInTaskbar="False">
+    <!-- ═══ بازطراحی چرخهٔ ۷۰ (گزارش مالک) ═══
+         «وقتی روش پرداخت را روی کارتخوان می‌گذاریم دکمه‌های پایین هل داده
+         می‌شوند به پایین و دیده نمی‌شوند» — ریشه: ارتفاع ثابت ۴۸۰px؛ با
+         انتخاب کارتخوان، فیلدهای مرجع/کارت (~۱۲۰px) ظاهر می‌شدند و جمع
+         محتوا از پنجره بیرون می‌زد؛ NoResize هم دست کاربر را می‌بست.
+         رفع: SizeToContent=Height (پنجره با محتوا بزرگ/کوچک می‌شود)،
+         Min/Max برای جلوگیری از پنجرهٔ غول‌پیکر/ردیف، و اسکرول اضطراری
+         در سقف MaxHeight برای نمایشگرهای کوتاه. -->
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
@@ -16,6 +25,7 @@
          انتخاب روش (نقدی/کارتخوان) پیش از ثبت زنجیرهٔ پذیرش؛ مبلغ قابل
          پرداخت = سهم بیمار خدمت + لوازم مصرفی درمانگاه.
          ═══════════════════════════════════════════════════════════ -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="26">
         <TextBlock Text="ثبت پرداخت بیمار" FontSize="16" FontWeight="Bold" />
         <TextBlock Text="روش پرداخت را انتخاب و تأیید کنید — همراه ثبت پذیرش و صدور فاکتور انجام می‌شود."
@@ -75,4 +85,5 @@
             </Button>
         </UniformGrid>
     </StackPanel>
+    </ScrollViewer>
 </Window>

@@ -28,9 +28,16 @@ public partial class ReceptionPayViewModel : ObservableObject
     [ObservableProperty]
     private string _payableText = string.Empty;
 
-    /// <summary>نمایهٔ روش پرداخت — ۰ نقدی، ۱ کارتخوان</summary>
+    /// <summary>
+    /// نمایهٔ روش پرداخت — ۰ نقدی، ۱ کارتخوان.
+    /// ═══ چرخهٔ ۷۰ (گزارش مالک) ═══ «روش پرداخت را ذخیره کند تا وقتی دوباره
+    /// فرم باز می‌شود، روش قبلی را بیاورد — نه اینکه همیشه نقدی باشد»:
+    /// مقدار اولیه از «آخرین روش استفاده‌شده» در تنظیمات محلی خوانده می‌شود
+    /// (کلید مشترک با فرم پرداخت صورتحساب) و پس از هر تأییدِ موفق ذخیره
+    /// می‌شود. گARD: مقدار خارج از بازه (کلید خراب/از فرم دیگر) به ۰ می‌نشیند.
+    /// </summary>
     [ObservableProperty]
-    private int _methodIndex;
+    private int _methodIndex = LoadLastPaymentMethod(1);
 
     /// <summary>آیا روش پرداخت کارتخوان است؟ — نمایان‌سازی فیلدهای مرجع/کارت</summary>
     public bool IsCard => MethodIndex == 1;
@@ -61,7 +68,22 @@ public partial class ReceptionPayViewModel : ObservableObject
     }
 
     /// <summary>بازخورد تغییر روش → نوسازی نمایش فیلدهای کارتی</summary>
-    partial void OnMethodIndexChanged(int value)
+        /// <summary>
+    /// خواندن آخرین روش پرداخت از تنظیمات محلی — بازهٔ مجاز ورودی maxIndex
+    /// (۱ برای پذیرش: نقدی/کارتخوان؛ ۴ برای صورتحساب) و هر مقدار خارج از
+    /// بازه به «نقدی» (۰) برمی‌گردد تا کمبو هرگز تهی/نامعتبر نشود.
+    /// </summary>
+    private static int LoadLastPaymentMethod(int maxIndex)
+    {
+        var raw = Services.LocalSettingsStore.Get("ui.payment.lastMethod");
+        return int.TryParse(raw, out var idx) && idx >= 0 && idx <= maxIndex ? idx : 0;
+    }
+
+    /// <summary>ذخیرهٔ روش پرداخت به‌عنوان آخرین روش استفاده‌شدهٔ این ایستگاه</summary>
+    private static void SaveLastPaymentMethod(int index) =>
+        Services.LocalSettingsStore.Set("ui.payment.lastMethod", index.ToString());
+
+partial void OnMethodIndexChanged(int value)
     {
         OnPropertyChanged(nameof(IsCard));
         ErrorMessage = string.Empty;
@@ -85,6 +107,9 @@ public partial class ReceptionPayViewModel : ObservableObject
             string.IsNullOrWhiteSpace(ReferenceNumber) ? null : ReferenceNumber.Trim(),
             IsCard && !string.IsNullOrWhiteSpace(CardNumber) ? CardNumber.Trim() : null);
 
+        // چرخهٔ ۷۰ — این روشِ «تأییدشده» به‌عنوان آخرین روش استفاده‌شده ذخیره
+        // می‌شود تا باز شدن بعدی همین فرم با همان روش شروع شود (گزارش مالک)
+        SaveLastPaymentMethod(MethodIndex);
         RequestClose?.Invoke();
     }
 
