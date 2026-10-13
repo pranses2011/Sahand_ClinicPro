@@ -81,7 +81,15 @@
          QR راستی‌آزمایی نسخه + امضای دیجیتال پزشک + برچسب QR نمونهٔ آزمایشگاه ·
          کپی ویزیت قبلی + یادداشت سریع + برچسب بیمار (VIP/مزمن) · کیوسک سالن
          انتظار + رفع باگ تاریخی صف پیامک (ارسال کد قالب به بیمار) -->
-    <Version>2.17.0</Version>
+    <!-- نسخهٔ ۲.۱۷.۱: چرخهٔ ۷۱ «وصلهٔ راه‌اندازی سرور» — رفع سه لاگِ هر استارتِ
+         API: ERR «InvalidCastException Int32→Int64» (خط ~۲۵۵ InitializeDatabaseAsync)
+         + WRN «First/FirstOrDefault without OrderBy and filter» + WRN «پرکردن
+         سندهای قدیمی ناموفق». ریشه: کوئری شمارش با SqlQueryRaw<long> روی COUNT(*)
+         که در SQL Server همیشه int برمی‌گرداند و EF برای long سرراست GetInt64
+         می‌زند. رفع: حذف کوئری شمارش — تعداد ردیف‌های پرشده از خروجی خودِ
+         ExecuteSqlRawAsync (سطرهای تحت‌تأثیر UPDATE)؛ یک رفت‌وبرگشت کمتر و
+         بدون هشدار، حتی روی دیتابیسِ کاملاً سالم -->
+    <Version>2.17.1</Version>
     <Authors>Sahand ClinicPro Team</Authors>
     <Company>Sahand</Company>
     <Product>Sahand ClinicPro</Product>
