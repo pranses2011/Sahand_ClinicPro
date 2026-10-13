@@ -204,12 +204,23 @@ _DESKTOP_BIN_FILES = (
 
 def collect_bin_payload(changed_files: list[str]) -> list[tuple[str, str]]:
     """جمع‌آوری باینری‌های آمادهٔ نصب — (مسیر در زیپ، مسیر روی دیسک).
-    دسکتاپ: DLL برنامه + DLL‌های لایه‌ها (Application/Domain/Infrastructure/Shared)
-    و در تغییرِ نسخهٔ پکیج‌ها، کل DLL‌های ثالثِ خروجی.
-    سرور API: DLL خود کنترلرها. appsettings هرگز بازنویسی نمی‌شود (تنظیم محلی مالک)."""
-    import glob as _glob
+    دسکتاپ: DLL برنامه + پیکربندی میزبان + DLL‌های first-party خروجی
+    (کلاینت HTTP نازک است — Infrastructure فقط در سرور لازم است).
+    سرور API: همهٔ DLL‌های first-party خروجی سرور (API + Application + Domain
+    + Infrastructure + Shared) — جایگزینی ناقصِ فقط-API.dll باعث «نوع مفقود»
+    در بارگذاری می‌شد (درس همین چرخه).
+    در تغییرِ نسخهٔ پکیج‌ها، DLL‌های ثالثِ دسکتاپ هم کامل می‌روند.
+    appsettings هرگز بازنویسی نمی‌شود (تنظیم محلی مالک)."""
     root = pathlib.Path(REPO)
+    seen: set[str] = set()
     out: list[tuple[str, str]] = []
+
+    def add(arc: str, disk: pathlib.Path):
+        """افزودن یک‌باره — تکرارِ مسیر (سورس ∪ باینری) حذف می‌شود"""
+        if arc in seen or not disk.is_file():
+            return
+        seen.add(arc)
+        out.append((arc, str(disk)))
 
     desktop_dir = root / "src" / "Sahand.ClinicPro.Desktop" / "bin" / "Release" / "net8.0-windows"
     api_dir = root / "src" / "Sahand.ClinicPro.API" / "bin" / "Release" / "net8.0"
@@ -218,35 +229,26 @@ def collect_bin_payload(changed_files: list[str]) -> list[tuple[str, str]]:
     if not api_dir.is_dir():
         die("خروجی بیلد API پیدا نشد — پیش از ساخت زیپ، Release کامل بیلد شود")
 
-    # فایل‌های میزبان دسکتاپ
+    # دسکتاپ — پیکربندی میزبان + همهٔ first-party (تک‌گذر؛ بدون تکرار)
     for name in _DESKTOP_BIN_FILES:
-        src = desktop_dir / name
-        if src.is_file():
-            out.append((f"bin-update/desktop/{name}", str(src)))
-
-    # DLL‌های first-party از خروجی دسکتاپ (همهٔ لایه‌ها + خودِ Desktop)
+        add(f"bin-update/desktop/{name}", desktop_dir / name)
     for f in sorted(desktop_dir.glob("*.dll")):
         if f.name.startswith(_FIRSTPARTY_PREFIXES):
-            out.append((f"bin-update/desktop/{f.name}", str(f)))
+            add(f"bin-update/desktop/{f.name}", f)
 
-    # DLL سرور API
-    api_dll = api_dir / "Sahand.ClinicPro.API.dll"
-    if api_dll.is_file():
-        out.append(("bin-update/api/Sahand.ClinicPro.API.dll", str(api_dll)))
+    # سرور — همهٔ first-party خروجی سرور (شامل Infrastructure که فقط اینجاست)
+    for f in sorted(api_dir.glob("*.dll")):
+        if f.name.startswith(_FIRSTPARTY_PREFIXES):
+            add(f"bin-update/api/{f.name}", f)
 
-    # تغییر پکیج‌ها → DLL‌های ثالث هم کامل می‌روند (نسخهٔ جدید وابستگی‌ها)
+    # تغییر پکیج‌ها → DLL‌های ثالثِ دسکتاپ هم کامل می‌روند (نسخهٔ جدید وابستگی‌ها)
     packages_changed = any("Directory.Packages.props" in p for p in changed_files)
     if packages_changed:
         for f in sorted(desktop_dir.glob("*.dll")):
-            rel = f"bin-update/desktop/{f.name}"
-            if any(rel == z for z, _ in out):
-                continue
-            out.append((rel, str(f)))
+            add(f"bin-update/desktop/{f.name}", f)
 
     # اسکریپت بازنشانی کش بیلد — همیشه در زیپ است (پیش‌تر هرگز نمی‌رسید)
-    reset = root / "Tools" / "Reset-Build-Cache.ps1"
-    if reset.is_file():
-        out.append(("Tools/Reset-Build-Cache.ps1", str(reset)))
+    add("Tools/Reset-Build-Cache.ps1", root / "Tools" / "Reset-Build-Cache.ps1")
     return out
 
 
@@ -304,7 +306,10 @@ def cmd_update_zip(args: argparse.Namespace) -> None:
         bin_files = collect_bin_payload(files)
 
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zf:
+        payload_arcs = {a for a, _ in bin_files}
         for path in files:
+            if path in payload_arcs:
+                continue  # همین فایل در بستهٔ باینری/ابزار می‌رود — یک‌بار نوشته شود
             zf.write(REPO / path, path)
         for arc, disk in bin_files:
             zf.write(disk, arc)
