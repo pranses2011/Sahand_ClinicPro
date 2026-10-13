@@ -247,16 +247,33 @@ public static class DependencyInjection
                 {
                     if (db15.Database.IsSqlServer())
                     {
-                        await db15.Database.ExecuteSqlRawAsync(
+                        // ═══ چرخهٔ ۷۱ — رفع سه لاگِ اضافی/خطای هر استارتِ سرور ═══
+                        // گزارش مالک: در هر راه‌اندازی سرور API این سه لاگ می‌آمد:
+                        //  ۱) WRN «First/FirstOrDefault operator without OrderBy and filter»
+                        //  ۲) ERR «InvalidCastException: Unable to cast 'System.Int32' to
+                        //     'System.Int64'» در همین متد (خط ~۲۵۵)
+                        //  ۳) WRN «پرکردن شمارهٔ سندهای قدیمی ناموفق بود — ادامه بدون توقف»
+                        // ریشه: کوئری شمارشِ پس-از-پرکردن با SqlQueryRaw<long> نوشته شده
+                        // بود اما COUNT(*) در SQL Server همیشه «int» (Int32) برمی‌گرداند
+                        // و EF Core برای <long> سرراست SqlDataReader.GetInt64 صدا می‌زند →
+                        // InvalidCastException؛ یعنی کوئریِ صرفاً-تشخیصیِ «آیا ردیف تهی
+                        // ماند؟» روی هر استارتِ کاملاً سالم هم می‌شکست — حتی وقتی UPDATE
+                        // موفق بوده و هیچ تهی‌ای نمانده. FirstOrDefaultAsync بدون Where هم
+                        // هشدار EF (FirstWithoutOrderByAndFilter) را روشن می‌کرد.
+                        // رفع: کوئری دوم به‌کلی حذف شد — «تعداد ردیف‌های پرشده» از خروجیِ
+                        // خودِ ExecuteSqlRawAsync (تعداد سطرهای تحت‌تأثیر UPDATE) می‌آید:
+                        // یک رفت‌وبرگشتِ کمتر به دیتابیس، بدون خواندن اسکالر، بدون هشدار.
+                        // ضمناً «remaining» از اساس منطق مرده بود: تک‌UPDATE با WHERE IS
+                        // NULL همهٔ تهی‌ها را پر می‌کند؛ اگر می‌شکست استثنا بالا می‌آمد،
+                        // نه تهیِ مانده — پس شمارشِ تهیِ پس-از-UPDATE فقط هزینه بود.
+                        var filledCount = await db15.Database.ExecuteSqlRawAsync(
                             "UPDATE [JournalEntries] SET [EntryNumber] = " +
                             "CONCAT('JE-', RIGHT('000000' + CAST(NEXT VALUE FOR SeqJournalEntryNumber AS varchar(10)), 6)) " +
                             "WHERE [EntryNumber] IS NULL");
-                        // شمارش برای لاگ — پس از پرکردن
-                        var remaining = await db15.Database
-                            .SqlQueryRaw<long>("SELECT COUNT(*) AS Value FROM [JournalEntries] WHERE [EntryNumber] IS NULL")
-                            .FirstOrDefaultAsync();
-                        if (remaining > 0)
-                            logger15.LogWarning("پس از پرکردن، همچنان {Count} سند بدون شماره ماند", remaining);
+                        if (filledCount > 0)
+                            logger15.LogInformation(
+                                "پرکردن شمارهٔ سندهای قدیمی در راه‌اندازی: {Count} سندِ بدون شماره، شمارهٔ یکتای تازه گرفت",
+                                filledCount);
                     }
                 }
                 catch (Exception ex15)
