@@ -885,6 +885,30 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void OpenTraining() => NavigateToPage("training");
 
+    /// <summary>
+    /// گشودن جستجوی یکپارچه — چرخهٔ ۶۹ (فاز ۳ / F-06 نقشه راه ai-review)
+    /// «جستجوی یکپارچه Ctrl+K (بیمار/نوبت/نسخه)» — از هر جای برنامه با Ctrl+K؛
+    /// پنجرهٔ شناور با تایپ زنده، بیماران/نوبت‌های امروز/نسخه‌های اخیر را با هم
+    /// می‌گردد؛ پروندهٔ بیمار مستقیم باز می‌شود و نوبت/نسخه به صفحهٔ مقصد می‌رود.
+    /// </summary>
+    [RelayCommand]
+    private void OpenQuickSearch()
+    {
+        var vm = new QuickSearchViewModel(_api, _navigation, CloseQuickSearchHost);
+        _quickSearchWindow = new Views.QuickSearchWindow(vm)
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+        _quickSearchWindow.ShowDialog();
+        _quickSearchWindow = null;
+    }
+
+    /// <summary>پنجرهٔ باز جستجوی سریع — برای بستن از درون ViewModel</summary>
+    private Views.QuickSearchWindow? _quickSearchWindow;
+
+    /// <summary>بستن میزبان جستجو از درون ViewModel (بدون وابستگی دوردست)</summary>
+    private void CloseQuickSearchHost() => _quickSearchWindow?.Close();
+
     /* ═══ میزبان پیام‌های شناور — چرخهٔ سی‌وهشتم (گزارش مالک: ظاهر مطابق
        تصویر نمونهٔ ToastNotif.png با رنگبندی نوع) ═══ */
 

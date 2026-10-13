@@ -159,6 +159,13 @@
          ساختار: ستون کنار ۲۲۰px + TopBar (مسیر/ساعت/زنگ/تم/کاربر) + میزکار + StatusBar
          ═══════════════════════════════════════════════════════════ -->
     <Grid>
+        <!-- ═══ میان‌بر سراسری جستجوی یکپارچه — چرخهٔ ۶۹ (فاز ۳ / F-06) ═══
+             Ctrl+K از هر جای برنامه، پنجرهٔ جستجوی سریع (بیمار/نوبت/نسخه)
+             را باز می‌کند — بدون گشتن در منوها. -->
+        <Grid.InputBindings>
+            <KeyBinding Modifiers="Control" Key="K"
+                        Command="{Binding OpenQuickSearchCommand}" />
+        </Grid.InputBindings>
         <Grid.ColumnDefinitions>
             <!-- ستون کنار راست — ناوبری (RTL) طبق مشخصات: Width=220 -->
             <ColumnDefinition Width="220" />
