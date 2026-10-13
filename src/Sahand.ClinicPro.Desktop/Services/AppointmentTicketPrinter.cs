@@ -25,7 +25,11 @@ public static class AppointmentTicketPrinter
     private const double TicketHeight = 600;
 
     /// <summary>
-    /// چاپ مستقیم قبض نوبت — بدون نمایش دیالوگ؛ چاپگر مقصد از تنظیمات.
+    /// چاپ قبض نوبت — از دروازهٔ یکپارچهٔ PrintFlow (چرخهٔ ۶۷):
+    /// با تنظیم «نمایش پیش‌نمایش قبل از چاپ» روشن، پنجرهٔ پیش‌نمایش فارسی باز
+    /// می‌شود و کاربر بعد از دیدن، چاپ می‌کند؛ با خاموشیِ تنظیم، همان چاپ
+    /// مستقیمِ قبلی به چاپگر نوبت‌دهی. اندازهٔ کاغذ ۸۰ میلی در هر دو مسیر
+    /// حفظ می‌شود.
     /// </summary>
     /// <param name="printerName">نام چاپگر مقصد — تهی یعنی پیش‌فرض ویندوز</param>
     /// <param name="clinicName">نام درمانگاه — سربرگ قبض</param>
@@ -39,45 +43,15 @@ public static class AppointmentTicketPrinter
     public static bool Print(string? printerName, string clinicName, string code,
         string patientName, string doctorName, string dateShamsi, string time, string turnText)
     {
-        try
-        {
-            var dialog = new PrintDialog();
+        var doc = BuildTicket(clinicName, code, patientName, doctorName, dateShamsi, time, turnText);
+        doc.PageWidth = TicketWidth;
+        doc.PageHeight = TicketHeight;
 
-            // چاپگر مقصد — انتخاب تنظیمات یا پیش‌فرض ویندوز
-            if (!string.IsNullOrWhiteSpace(printerName))
-            {
-                var server = new LocalPrintServer();
-                var queue = server.GetPrintQueues()
-                    .FirstOrDefault(q => q.FullName == printerName);
-                if (queue is null)
-                {
-                    Views.AppDialog.Error("چاپ قبض نوبت",
-                        $"چاپگر «{printerName}» در دسترس نیست.{Environment.NewLine}در تنظیمات → چاپگر، چاپگر نوبت‌دهی را بررسی کنید.");
-                    return false;
-                }
-                dialog.PrintQueue = queue;
-            }
-
-            dialog.PrintTicket.PageMediaSize =
-                new PageMediaSize(PageMediaSizeWidth, TicketHeight);
-
-            var doc = BuildTicket(clinicName, code, patientName, doctorName, dateShamsi, time, turnText);
-            doc.PageWidth = TicketWidth;
-            doc.PageHeight = TicketHeight;
-
-            if (doc is IDocumentPaginatorSource src)
-                dialog.PrintDocument(src.DocumentPaginator, $"قبض نوبت {code}");
-
-            return true;
-        }
-        catch (Exception)
-        {
-            // خطای درایور/دسترسی — پیام فارسی برنامه به‌جای کرش (قانون دیالوگ فارسی)
-            Views.AppDialog.Error("چاپ قبض نوبت",
-                "ارسال قبض به چاپگر ناموفق بود." + Environment.NewLine +
-                "اتصال چاپگر را بررسی یا از پیش‌نمایش چاپ استفاده کنید.");
-            return false;
-        }
+        // ═══ چرخهٔ ۶۷ — گذر از دروازهٔ یکپارچهٔ چاپ (پیش‌نمایش اختیاری) ═══
+        // پیش‌تر این متد خودش PrintDialog می‌ساخت و مستقیم می‌فرستاد؛ حالا
+        // PrintFlow تنظیم Printer.ShowPreview را می‌خواند و بر اساس آن پیش‌نمایش
+        // فارسی نمایش می‌دهد یا همان چاپ مستقیم قدیمی را انجام می‌دهد.
+        return PrintFlow.Print(doc, $"قبض نوبت {code}", printerName, TicketWidth, TicketHeight);
     }
 
     /// <summary>عرض کاغذ فیش حرارتی ۸۰ میلی‌متری بر حسب پیکسل (۹۶dpi)</summary>

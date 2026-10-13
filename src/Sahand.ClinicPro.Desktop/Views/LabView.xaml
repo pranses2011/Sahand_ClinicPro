@@ -65,11 +65,16 @@
 
         <TabControl Grid.Row="2" Style="{StaticResource MaterialDesignTabControl}"
                     SelectionChanged="OnTabChanged">
-            <!-- تب ۱-۴: وضعیت‌ها -->
-            <TabItem Header="📋 درخواست‌ها" Tag="1" />
+            <!-- ═══ چرخهٔ ۶۷ (گزارش مالک: «بعد از ثبت نتیجه هم از لیست پاک نشه و
+                 قابل مشاهده باشه») — تب نخست از «سفارش‌شده» به «همهٔ درخواست‌ها»
+                 تغییر کرد: پیشتر درخواستی که نتیجه‌اش ثبت می‌شد از تب پیش‌فرض
+                 (وضعیت ۱) حذف می‌شد و کاربر فکر می‌کرد رکورد پاک شده است؛
+                 اکنون نمای پیش‌فرض همهٔ وضعیت‌ها را نشان می‌دهد و ثبت نتیجه
+                 فقط «وضعیت» ردیف را عوض می‌کند، نه حذفش را. ═══ -->
+            <TabItem Header="📋 همهٔ درخواست‌ها" Tag="0" />
             <TabItem Header="🧪 در حال انجام" Tag="3" />
             <TabItem Header="✅ نتایج آماده" Tag="4" />
-            <TabItem Header="📚 آرشیو" Tag="0" />
+            <TabItem Header="🕐 سفارش‌شده‌ها" Tag="1" />
 
             <!-- تب ۵: کاتالوگ تست‌ها -->
             <TabItem Header="📖 کاتالوگ تست‌ها" Tag="-1">
@@ -145,17 +150,32 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="110">
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="230">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Command="{Binding DataContext.RecordResultCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                    CommandParameter="{Binding}"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="ClipboardEditOutline" Width="13" Height="13" VerticalAlignment="Center" />
-                                    <TextBlock Text="ثبت نتیجه" Margin="6,0,0,0" />
-                                </StackPanel>
-                            </Button>
+                            <StackPanel Orientation="Horizontal">
+                                <!-- ═══ چرخهٔ ۶۷ — ثبت/مشاهدهٔ نتیجه (یک پنجره برای هر دو کار) ═══ -->
+                                <Button Command="{Binding DataContext.RecordResultCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5" Margin="0,0,6,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ClipboardEditOutline" Width="13" Height="13" VerticalAlignment="Center" />
+                                        <TextBlock Text="ثبت / مشاهده" Margin="6,0,0,0" />
+                                    </StackPanel>
+                                </Button>
+                                <!-- ═══ چرخهٔ ۶۷ (گزارش مالک: «امکان چاپ هم داشته باشه») ═══
+                                     چاپ برگهٔ نتیجه — برای درخواست‌های نتیجه‌دار نمایش داده می‌شود؛
+                                     سند فارسی از دروازهٔ PrintFlow می‌گذرد (پیش‌نمایش اختیاری طبق تنظیمات) -->
+                                <Button Command="{Binding DataContext.PrintResultCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Visibility="{Binding CanPrint, Converter={StaticResource BoolToVisibility}}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Printer" Width="13" Height="13" VerticalAlignment="Center" />
+                                        <TextBlock Text="چاپ نتیجه" Margin="6,0,0,0" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

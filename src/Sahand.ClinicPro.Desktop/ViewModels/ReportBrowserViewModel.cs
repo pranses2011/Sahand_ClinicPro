@@ -573,10 +573,11 @@ public partial class ReportBrowserViewModel : ViewModelBase
     {
         if (Rows.Count == 0) { _snackbar.Info("ابتدا گزارش را اجرا کنید تا نتیجه‌ای برای چاپ باشد"); return; }
 
-        // چاپگر پیش از ساخت سند لازم است — عرض قابل چاپ (DIP) ستون‌بندی را تعیین می‌کند
-        var dialog = new System.Windows.Controls.PrintDialog();
-        if (dialog.ShowDialog() != true) return; // انصراف کاربر
-
+        // ═══ چرخهٔ ۶۷ — دروازهٔ یکپارچهٔ چاپ (پیش‌نمایش اختیاری) ═══
+        // پیش‌تر دیالوگ چاپ ویندوز پیش از ساخت سند باز می‌شد (برای عرض قابل
+        // چاپ)؛ اکنون عرض استاندارد A4 (۷۹۳٫۷ − ۸۰ حاشیه = ~۷۱۳) مبناست و
+        // سند به PrintFlow می‌رود: تنظیم «نمایش پیش‌نمایش قبل از چاپ» روشن
+        // باشد پنجرهٔ پیش‌نمایش فارسی باز می‌شود، وگرنه چاپ مستقیم.
         var app = System.Windows.Application.Current;
         var font = app?.TryFindResource("App.FontFamily") as System.Windows.Media.FontFamily
                    ?? new System.Windows.Media.FontFamily("Tahoma");
@@ -628,10 +629,9 @@ public partial class ReportBrowserViewModel : ViewModelBase
             doc.Blocks.Add(summary);
         }
 
-        // ═══ جدول نتایج — عرض مساوی در عرض قابل چاپ ═══
+        // ═══ جدول نتایج — عرض مساوی در عرض قابل چاپ (A4 استاندارد) ═══
         var colCount = Math.Max(1, Columns.Count);
-        var usableWidth = Math.Max(300, dialog.PrintableAreaWidth
-            - doc.PagePadding.Left - doc.PagePadding.Right);
+        const double usableWidth = 713.7; // ۷۹۳٫۷ (A4/۹۶dpi) − ۸۰ حاشیهٔ افقی سند
         var colWidth = Math.Floor(usableWidth / colCount);
 
         var table = new System.Windows.Documents.Table
@@ -694,11 +694,13 @@ public partial class ReportBrowserViewModel : ViewModelBase
         table.RowGroups.Add(body);
         doc.Blocks.Add(table);
 
-        // ارسال به چاپگر — نام کار: عنوان گزارش
-        dialog.PrintDocument(
-            ((System.Windows.Documents.IDocumentPaginatorSource)doc).DocumentPaginator,
-            $"گزارش: {ReportTitle}");
-        _snackbar.Success($"«{ReportTitle}» به چاپگر ارسال شد");
+        // ارسال از دروازهٔ یکپارچه — پیش‌نمایش اختیاری؛ چاپگر پیش‌فرض تنظیمات
+        doc.PageWidth = 793.7;   // A4 — 210 میلی‌متر در ۹۶dpi
+        doc.PageHeight = 1122.5; // A4 — 297 میلی‌متر
+        var printed = Services.PrintFlow.Print(doc, $"گزارش: {ReportTitle}",
+            Services.LocalSettingsStore.Get("Printer.DefaultPrinter"));
+        if (printed)
+            _snackbar.Success($"«{ReportTitle}» به چاپگر ارسال شد");
     }
 
     /// <summary>گشودن پنجره گزارش‌ساز رایگانه (کوئری‌ساز گرافیکی) — چرخه سیزدهم (درخواست ۴-۳)</summary>

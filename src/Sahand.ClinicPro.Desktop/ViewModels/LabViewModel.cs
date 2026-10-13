@@ -7,6 +7,10 @@ using Sahand.ClinicPro.Desktop.Views;
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
 /// <summary>ردیف درخواست آزمایش</summary>
+/// <remarks>
+/// چرخهٔ ۶۷: پراپرتی <see cref="CanPrint"/> تعیین می‌کند دکمهٔ «چاپ نتیجه»
+/// برای این ردیف نمایش داده شود یا نه (وضعیت ۳=در جریان / ۴=نتیجه آماده).
+/// </remarks>
 public record LabOrderRow(
     long Id,
     string? Number,
@@ -14,7 +18,14 @@ public record LabOrderRow(
     string DoctorName,
     string Date,
     string StatusText,
-    int ItemsCount);
+    int ItemsCount,
+    int Status = 0)
+{
+    /// <summary>آیا دکمهٔ «چاپ نتیجه» برای این ردیف نمایش داده شود؟
+    /// چرخهٔ ۶۷ (گزارش مالک: «امکان چاپ هم داشته باشه») — وضعیت ۳ (در جریان)
+    /// و ۴ (نتیجه آماده) یعنی دست‌کم نتیجه‌ای ثبت شده که چاپش معنا دارد.</summary>
+    public bool CanPrint => Status is 3 or 4;
+}
 
 /// <summary>قلم آزمایش قابل ویرایش نتیجه</summary>
 public partial class LabItemRow : ObservableObject
@@ -53,6 +64,7 @@ public partial class LabItemRow : ObservableObject
 public partial class LabViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
+    private readonly ISnackbarService _snackbar;
 
     /// <summary>عنوان صفحه</summary>
     public override string Title => "آزمایشگاه";
@@ -76,10 +88,11 @@ public partial class LabViewModel : ViewModelBase
     /// <summary>پزشکان — برای فرم درخواست</summary>
     public ObservableCollection<DoctorOption> Doctors { get; } = new();
 
-    /// <summary>سازنده با تزریق کلاینت API</summary>
-    public LabViewModel(IApiClient api)
+    /// <summary>سازنده با تزریق کلاینت API و سرویس توست (چرخهٔ ۶۷ — چاپ نتیجه)</summary>
+    public LabViewModel(IApiClient api, ISnackbarService snackbar)
     {
         _api = api;
+        _snackbar = snackbar;
         _ = InitializeAsync();
     }
 
@@ -110,7 +123,7 @@ public partial class LabViewModel : ViewModelBase
         {
             Orders = new ObservableCollection<LabOrderRow>(response.Data.Select(o => new LabOrderRow(
                 o.Id, o.OrderNumber, o.PatientName, o.DoctorName, o.DateShamsi,
-                StatusTextOf(o.Status), o.ItemsCount)));
+                StatusTextOf(o.Status), o.ItemsCount, o.Status)));
         }
         else
         {
@@ -156,6 +169,30 @@ public partial class LabViewModel : ViewModelBase
         };
         window.ShowDialog();
         _ = LoadAsync();
+    }
+
+    /// <summary>
+    /// چاپ برگهٔ نتیجهٔ یک درخواست — چرخهٔ ۶۷ (گزارش مالک: «لیست آزمایشگاه
+    /// ... امکان چاپ هم داشته باشه»). جزئیات درخواست (بیمار/پزشک/اقلام با
+    /// نتایج ثبت‌شده) از سرور خوانده می‌شود، سند فارسی راست‌چین ساخته می‌شود
+    /// و از دروازهٔ PrintFlow می‌گذرد (پیش‌نمایش اختیاری طبق تنظیمات چاپ).
+    /// </summary>
+    [RelayCommand]
+    private async Task PrintResultAsync(LabOrderRow? row)
+    {
+        if (row is null) return;
+
+        var response = await _api.GetAsync<LabResultViewModel.LabOrderDetailEnvelope>($"lab/orders/{row.Id}");
+        var detail = response?.Data;
+        if (detail is null)
+        {
+            _snackbar.Error(_api.LastError ?? "دریافت جزئیات درخواست برای چاپ ناموفق بود");
+            return;
+        }
+
+        var printed = Services.LabResultPrinter.Print(detail, row.Id);
+        if (printed)
+            _snackbar.Success($"برگهٔ نتیجهٔ «{row.Number ?? row.Id.ToString()}» به چاپگر ارسال شد");
     }
 
     /// <summary>پاسخ درخواست‌ها</summary>

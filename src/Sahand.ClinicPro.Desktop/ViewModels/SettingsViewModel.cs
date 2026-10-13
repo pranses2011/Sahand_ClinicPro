@@ -729,6 +729,10 @@ public partial class SettingsViewModel : ViewModelBase
             LocalSettingsStore.Set("Printer.TicketPrinter", TicketPrinter ?? string.Empty);
             LocalSettingsStore.Set("Printer.AutoPrintTicket", AutoPrintTicket ? "true" : "false");
             LocalSettingsStore.Set("Printer.ClinicName", ClinicName ?? string.Empty);
+            // ═══ چرخهٔ ۶۷ — آینهٔ پرچم پیش‌نمایش برای دروازهٔ PrintFlow ═══
+            // همهٔ چاپ‌های عمومی (قبض/رسید/کارت/فیش/آزمایش) از PrintFlow
+            // می‌گذرند و بی‌درنگ (بدون درخواست شبکه) این مقدار را می‌خوانند.
+            LocalSettingsStore.Set("Printer.ShowPreview", ShowPreview ? "true" : "false");
         }
         catch
         {

@@ -26,6 +26,18 @@
             <Button Command="{Binding SaveItemCommand}"
                     Style="{StaticResource MaterialDesignRaisedButton}"
                     Content="ثبت نتیجه قلم انتخاب‌شده" Margin="0,0,12,0" />
+            <!-- ═══ چرخهٔ ۶۷ (گزارش مالک: «امکان چاپ هم داشته باشه») ═══
+                 چاپ برگهٔ نتیجهٔ همین درخواست — سند فارسی از LabResultPrinter
+                 ساخته می‌شود و از دروازهٔ PrintFlow می‌گذرد (پیش‌نمایش اختیاری).
+                 فقط وقتی نمایان است که دست‌کم یک قلم نتیجه داشته باشد. -->
+            <Button Command="{Binding PrintSheetCommand}"
+                    Visibility="{Binding HasAnyResult, Converter={StaticResource BoolToVis}}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,12,0">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Printer" Width="16" Height="16" VerticalAlignment="Center" />
+                    <TextBlock Text="چاپ برگهٔ نتیجه" Margin="7,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
             <TextBlock Text="{Binding StatusMessage}"
                        Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
                        FontSize="12" VerticalAlignment="Center" Margin="0,0,12,0" />
@@ -54,11 +66,12 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="3" Margin="0,12,0,0">
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,12,0,0">
             <Button Command="{Binding CloseCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
-                    Content="بستن" Height="40" />
-            <ProgressBar IsIndeterminate="True" Height="4" Margin="0,14,0,0"
+                    Content="بستن" Height="40" MinWidth="110" />
+            <ProgressBar IsIndeterminate="True" Height="4" Width="160" Margin="14,0,0,0"
+                         VerticalAlignment="Center"
                          Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
         </StackPanel>
     </Grid>

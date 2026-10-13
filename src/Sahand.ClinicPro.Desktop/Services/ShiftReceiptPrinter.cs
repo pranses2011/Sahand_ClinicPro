@@ -51,49 +51,33 @@ public static class ShiftReceiptPrinter
     private const double TicketHeight = 900;
 
     /// <summary>
-    /// چاپ مستقیم رسید — بدون دیالوگ؛ چاپگر مقصد از تنظیمات («Printer.Receipt»)
-    /// و در نبودش، همان چاپگر قبض نوبت و سپس پیش‌فرض ویندوز.
+    /// چاپ رسید — از دروازهٔ یکپارچهٔ PrintFlow (چرخهٔ ۶۷): تنظیم «نمایش
+    /// پیش‌نمایش قبل از چاپ» روشن باشد پنجرهٔ پیش‌نمایش فارسی باز می‌شود،
+    /// خاموش باشد همان چاپ مستقیم قبلی. چاپگر مقصد از تنظیمات
+    /// («Printer.Receipt») و در نبودش، همان چاپگر قبض نوبت و سپس پیش‌فرض ویندوز.
     /// </summary>
     /// <param name="receipt">داده‌های رسید</param>
     /// <param name="clinicName">نام درمانگاه — سربرگ رسید</param>
     /// <returns>true اگر چاپ با موفقیت ارسال شد</returns>
     public static bool Print(ShiftReceipt receipt, string clinicName)
     {
-        try
-        {
-            var dialog = new PrintDialog();
+        // چاپگر مقصد — اختصاصی رسید، یا قبض نوبت، یا پیش‌فرض
+        // (Get هرگز null نمی‌دهد — تهی یعنی تنظیم نشده؛ برعکسِ ?? قبلی که
+        // هرگز به چاپگر قبض نمی‌رسید چون رشتهٔ خالی تهی‌بودن را پنهان می‌کرد)
+        var receiptPrinter = LocalSettingsStore.Get("Printer.Receipt");
+        var ticketPrinter = LocalSettingsStore.Get("Printer.Ticket");
+        var printerName = !string.IsNullOrWhiteSpace(receiptPrinter)
+            ? receiptPrinter
+            : !string.IsNullOrWhiteSpace(ticketPrinter) ? ticketPrinter : null;
 
-            // چاپگر مقصد — اختصاصی رسید، یا قبض نوبت، یا پیش‌فرض
-            var preferred = LocalSettingsStore.Get("Printer.Receipt")
-                            ?? LocalSettingsStore.Get("Printer.Ticket");
-            if (!string.IsNullOrWhiteSpace(preferred))
-            {
-                var server = new LocalPrintServer();
-                var queue = server.GetPrintQueues()
-                    .FirstOrDefault(q => q.FullName == preferred);
-                if (queue is null)
-                {
-                    Views.AppDialog.Error("چاپ رسید شیفت",
-                        $"چاپگر «{preferred}» در دسترس نیست.{Environment.NewLine}در تنظیمات → چاپگر، چاپگر مقصد را بررسی کنید.");
-                    return false;
-                }
-                dialog.PrintQueue = queue;
-            }
+        var document = BuildReceipt(receipt, clinicName);
+        document.PagePadding = new Thickness(4, 8, 4, 12);
+        document.PageWidth = TicketWidth;
+        document.PageHeight = TicketHeight;
 
-            dialog.PrintTicket.PageOrientation = PageOrientation.Portrait;
-            var document = BuildReceipt(receipt, clinicName);
-            document.PagePadding = new Thickness(4, 8, 4, 12);
-            var paginator = ((IDocumentPaginatorSource)document).DocumentPaginator;
-            paginator.PageSize = new Size(TicketWidth, TicketHeight);
-            dialog.PrintDocument(paginator, $"رسید بستن شیفت {receipt.ReceiptNumber}");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Views.AppDialog.Error("چاپ رسید شیفت",
-                $"ارسال رسید به چاپگر ناموفق بود.{Environment.NewLine}{ex.Message}");
-            return false;
-        }
+        // ═══ چرخهٔ ۶۷ — گذر از دروازهٔ یکپارچهٔ چاپ (پیش‌نمایش اختیاری) ═══
+        return PrintFlow.Print(document, $"رسید بستن شیفت {receipt.ReceiptNumber}",
+            printerName, TicketWidth, TicketHeight);
     }
 
     /// <summary>ساخت سند رسید — ستون‌بندی دوسویهٔ راست‌چین با ارقام فارسی</summary>

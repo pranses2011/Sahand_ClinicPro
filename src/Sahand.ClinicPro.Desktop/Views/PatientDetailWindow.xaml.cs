@@ -35,9 +35,11 @@ public partial class PatientDetailWindow : Window
             return;
         }
 
-        var dialog = new System.Windows.Controls.PrintDialog();
-        if (dialog.ShowDialog() != true) return; // انصراف کاربر
-
+        // ═══ چرخهٔ ۶۷ — دروازهٔ یکپارچهٔ چاپ (پیش‌نمایش اختیاری) ═══
+        // پیش‌تر این مسیر ابتدا دیالوگ چاپ ویندوز را باز می‌کرد؛ اکنون اگر
+        // تنظیم «نمایش پیش‌نمایش قبل از چاپ» روشن باشد، پنجرهٔ پیش‌نمایش فارسی
+        // باز می‌شود و چاپ از همان‌جا (به چاپگر پیش‌فرض تنظیمات) انجام می‌شود؛
+        // با خاموشیِ تنظیم، چاپ مستقیم است.
         var app = System.Windows.Application.Current;
         var font = app?.TryFindResource("App.FontFamily") as System.Windows.Media.FontFamily
                    ?? new System.Windows.Media.FontFamily("Tahoma");
@@ -67,9 +69,10 @@ public partial class PatientDetailWindow : Window
         });
 
         // جدول دوسطونی مشخصات — برچسب‌ها درشت/خاکستری و مقادیر معمولی
+        // (چرخهٔ ۶۷: عرض از «صفحهٔ قابل چاپِ دیالوگ» به عرض استاندارد A4 تغییر کرد —
+        //  دیالوگ چاپ دیگر باز نمی‌شود؛ سند از دروازهٔ PrintFlow می‌گذرد)
         var table = new Table { CellSpacing = 0 };
-        var colWidth = Math.Floor((dialog.PrintableAreaWidth
-            - doc.PagePadding.Left - doc.PagePadding.Right - 4) / 2);
+        var colWidth = Math.Floor((713.7 - 4) / 2); // ۷۹۳٫۷ (A4) − ۸۰ حاشیهٔ افقی
         table.Columns.Add(new TableColumn { Width = new System.Windows.GridLength(colWidth, System.Windows.GridUnitType.Pixel) });
         table.Columns.Add(new TableColumn { Width = new System.Windows.GridLength(colWidth, System.Windows.GridUnitType.Pixel) });
 
@@ -114,7 +117,11 @@ public partial class PatientDetailWindow : Window
             Foreground = System.Windows.Media.Brushes.DarkSlateGray,
         });
 
-        dialog.PrintDocument(((IDocumentPaginatorSource)doc).DocumentPaginator, $"کارت بیمار: {vm.FullName}");
+        // ═══ چرخهٔ ۶۷ — پایان مسیر یکپارچه: سند به دروازهٔ PrintFlow سپرده می‌شود ═══
+        doc.PageWidth = 793.7;   // A4 — 210 میلی‌متر در ۹۶dpi
+        doc.PageHeight = 1122.5; // A4 — 297 میلی‌متر
+        Services.PrintFlow.Print(doc, $"کارت بیمار: {vm.FullName}",
+            Services.LocalSettingsStore.Get("Printer.DefaultPrinter"));
     }
 
     /// <summary>سلول «برچسب + مقدار» با قاب خاکستری — یک سلول از جدول کارت</summary>

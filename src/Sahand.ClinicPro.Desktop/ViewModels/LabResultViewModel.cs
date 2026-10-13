@@ -12,6 +12,8 @@ public partial class LabResultViewModel : ObservableObject
 {
     private readonly IApiClient _api;
     private readonly long _orderId;
+    /// <summary>آخرین جزئیات بارگذاری‌شده — برای چاپ برگهٔ نتیجه (چرخهٔ ۶۷)</summary>
+    private LabOrderDetail? _lastDetail;
 
     /// <summary>عنوان</summary>
     [ObservableProperty]
@@ -36,6 +38,10 @@ public partial class LabResultViewModel : ObservableObject
     /// <summary>در حال کار</summary>
     [ObservableProperty]
     private bool _isBusy;
+
+    /// <summary>چرخهٔ ۶۷: آیا دست‌کم یک قلم نتیجهٔ ثبت‌شده دارد؟ (نمایش دکمهٔ چاپ)</summary>
+    [ObservableProperty]
+    private bool _hasAnyResult;
 
     /// <summary>رویداد بستن</summary>
     public event EventHandler? CloseRequested;
@@ -79,6 +85,10 @@ public partial class LabResultViewModel : ObservableObject
                 ResultNumeric = i.ResultNumeric?.ToString() ?? string.Empty,
                 Comment = i.Comment
             }));
+            // چرخهٔ ۶۷ — دکمهٔ چاپ فقط وقتی معنا دارد که نتیجه‌ای ثبت شده باشد
+            HasAnyResult = Items.Any(i => !string.IsNullOrWhiteSpace(i.Result) || !string.IsNullOrWhiteSpace(i.ResultNumeric));
+            // نگه‌داشتن جزئیات خام برای سند چاپ (LabResultPrinter همان شکل سروری را می‌خواهد)
+            _lastDetail = detail;
         }
 
         IsBusy = false;
@@ -138,6 +148,22 @@ public partial class LabResultViewModel : ObservableObject
     /// <summary>بستن</summary>
     [RelayCommand]
     private void Close() => CloseRequested?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    /// چاپ برگهٔ نتیجهٔ همین درخواست — چرخهٔ ۶۷ (گزارش مالک: «امکان چاپ هم
+    /// داشته باشه"). سند فارسی از LabResultPrinter ساخته و از دروازهٔ PrintFlow
+    /// (پیش‌نمایش اختیاری طبق تنظیمات چاپ) به چاپگر می‌رود.
+    /// </summary>
+    [RelayCommand]
+    private void PrintSheet()
+    {
+        if (_lastDetail is null)
+        {
+            ErrorMessage = "جزئیات درخواست هنوز بارگذاری نشده است";
+            return;
+        }
+        Services.LabResultPrinter.Print(_lastDetail, _orderId);
+    }
 
     /// <summary>
     /// پاکت استاندارد پاسخ جزئیات درخواست — چرخهٔ ۴۸:
