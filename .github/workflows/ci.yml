@@ -130,7 +130,7 @@ jobs:
             sleep 2
           done
 
-      - name: اجرای تست‌های E2E سرور لایسنس (+۱۴ تست چرخهٔ ۶۶: بکاپ/چرخش کلید)
+      - name: "اجرای تست‌های E2E سرور لایسنس (+۲۱ تست چرخهٔ ۶۶/۶۷: بکاپ، چرخش کلید، آینهٔ پیام‌ها)"
         env:
           MYSQL_ROOT_PASSWORD: testroot
         run: bash scripts/licsrv-e2e-ci.sh
