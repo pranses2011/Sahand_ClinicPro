@@ -887,6 +887,10 @@ function ls_db_migrate(): array
             'delivered_at' => 'DATETIME NULL',
             'read_at'      => 'DATETIME NULL',
             'created_by'   => 'INT UNSIGNED NULL',
+            // ═══ چرخهٔ ۶۷ — تکمیل زنجیرهٔ رنگ پیام (چرخهٔ ۳۵) ═══
+            // ستون رنگ انتخابی فروشنده در نصب‌های قدیمی نبود؛ با همین مهاجرت
+            // خودکار اضافه می‌شود تا همراه فهرست کامل پیام‌ها به کلاینت برسد.
+            'color'        => 'VARCHAR(20) NULL',
         ],
         'ls_admins'     => [
             'failed_attempts' => 'INT NOT NULL DEFAULT 0',

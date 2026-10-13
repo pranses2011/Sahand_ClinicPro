@@ -59,7 +59,10 @@ public class Cycle46ConsumablesFlowTests
         }
 
         // ═══ گام ۲ — ورود دسته‌جمعی (فرم چرخهٔ ۴۵: چند ردیف پشت‌سرهم) ═══
-        var stockInHandler = new Sahand.ClinicPro.Application.Features.Pharmacy.StockInCommandHandler(uow);
+        // چرخهٔ ۶۷: هندلر اکنون ILogger هم می‌گیرد (سند حسابداری ورود کالا) — در تست، لاگر تهی
+        var stockInHandler = new Sahand.ClinicPro.Application.Features.Pharmacy.StockInCommandHandler(uow,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<
+                Sahand.ClinicPro.Application.Features.Pharmacy.StockInCommandHandler>.Instance);
         // سه ردیف اول: هر قلم یک بچ؛ ردیف چهارم: بچ دوم برای قلم اول (ادغام قلم‌محور)
         var lines = new (long medId, string? batch, decimal qty)[]
         {
@@ -105,7 +108,10 @@ public class Cycle46ConsumablesFlowTests
         await uow.SaveEntitiesAsync(CancellationToken.None);
 
         // ═══ گام ۵ — مصرف در پذیرش: ۳۰ عدد از قلم اول (بیش از بچ اول → FEFO دو بچ) ═══
-        var consumeHandler = new Sahand.ClinicPro.Application.Features.Pharmacy.ConsumeStockCommandHandler(uow);
+        // چرخهٔ ۶۷: هندلر اکنون ILogger هم می‌گیرد (سند حسابداری هزینهٔ مصرف) — در تست، لاگر تهی
+        var consumeHandler = new Sahand.ClinicPro.Application.Features.Pharmacy.ConsumeStockCommandHandler(uow,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<
+                Sahand.ClinicPro.Application.Features.Pharmacy.ConsumeStockCommandHandler>.Instance);
         var consumed = await consumeHandler.Handle(
             new Sahand.ClinicPro.Application.Features.Pharmacy.ConsumeStockCommand(
                 reception.Id,

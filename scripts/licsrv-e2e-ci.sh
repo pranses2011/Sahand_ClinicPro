@@ -303,6 +303,47 @@ BK_COUNT=$(ls $TESTDIR/data/backups/license-backup-*.sql.gz 2>/dev/null | wc -l)
 [ "$BK_CODE" = "302" ] && [ "$BK_COUNT" -ge 2 ] \
   && ok "بکاپ دستی از پنل اجرا شد (مجموع $BK_COUNT بکاپ)" || bad "بکاپ دستی: HTTP $BK_CODE · تعداد $BK_COUNT"
 
+# ═════════════════════════════════════════════════════════════════
+# چرخهٔ ۶۷ — تست آینهٔ پیام‌های پشتیبانی (حذف از پنل = حذف از داشبورد)
+# ═════════════════════════════════════════════════════════════════
+say "آینهٔ پیام‌های پشتیبانی (چرخهٔ ۶۷)"
+# ارسال پیام تازه با رنگ سفارشی → heartbeat باید همان پیام + color را برگرداند
+MSG_CSRF=$(get_csrf messages)
+MSG_CODE=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8899/index.php?page=messages" \
+  --data-urlencode "action=send_message" --data-urlencode "csrf=$MSG_CSRF" \
+  --data-urlencode "license_id=1" --data-urlencode "level=warning" \
+  --data-urlencode "custom_color=on" --data-urlencode "color=%23E53935" \
+  --data-urlencode "title=پیام تست آینه" --data-urlencode "body=این پیام برای تست حذف همگام است")
+[ "$MSG_CODE" = "302" ] && ok "پیام تست با رنگ سفارشی ارسال شد" || bad "ارسال پیام تست: HTTP $MSG_CODE"
+# heartbeat — بلوک messages باید همیشه حاضر باشد و پیام را با color برگرداند
+LIC_KEY=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); echo (string)$p->query("SELECT license_key FROM ls_licenses WHERE id=1")->fetchColumn();')
+FP=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); echo (string)$p->query("SELECT hardware_fingerprint FROM ls_licenses WHERE id=1")->fetchColumn();')
+HB1=$(curl -s -X POST "http://127.0.0.1:8899/api.php?action=heartbeat" \
+  -H "Content-Type: application/json" \
+  -d "{\"action\":\"heartbeat\",\"licenseKey\":\"$LIC_KEY\",\"fingerprint\":\"$FP\"}")
+echo "$HB1" | grep -q '"messages"' && ok "heartbeat بلوک messages را همیشه دارد (پروتکل چرخهٔ ۶۷)" || bad "بلوک messages در heartbeat نیست"
+echo "$HB1" | grep -q '"color":"#E53935"' && ok "رنگ سفارشی پیام در heartbeat رسید" || bad "رنگ سفارشی در heartbeat نیست"
+echo "$HB1" | grep -q 'پیام تست آینه' && ok "پیام تازه در فهرست heartbeat هست" || bad "پیام تازه در heartbeat نیست"
+# heartbeat دوم (تحویل‌شده) — پیام باید «بماند» (فهرست کامل، نه فقط تحویل‌نشده)
+HB2=$(curl -s -X POST "http://127.0.0.1:8899/api.php?action=heartbeat" \
+  -H "Content-Type: application/json" \
+  -d "{\"action\":\"heartbeat\",\"licenseKey\":\"$LIC_KEY\",\"fingerprint\":\"$FP\"}")
+echo "$HB2" | grep -q 'پیام تست آینه' && ok "پیام تحویل‌شده در تپ‌قلب دوم هم می‌ماند (فهرست کامل)" || bad "پیام پس از تحویل حذف شد — فهرست کامل کار نمی‌کند"
+# حذف پیام از پنل → heartbeat بعدی نباید آن را برگرداند (آینهٔ سرور)
+MSG_ID=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); echo (string)$p->query("SELECT id FROM ls_messages WHERE title=\"پیام تست آینه\" ORDER BY id DESC LIMIT 1")->fetchColumn();')
+DEL_CSRF=$(get_csrf messages)
+DEL_MSG=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8899/index.php?page=messages" \
+  --data-urlencode "action=delete_message" --data-urlencode "csrf=$DEL_CSRF" \
+  --data-urlencode "id=$MSG_ID")
+HB3=$(curl -s -X POST "http://127.0.0.1:8899/api.php?action=heartbeat" \
+  -H "Content-Type: application/json" \
+  -d "{\"action\":\"heartbeat\",\"licenseKey\":\"$LIC_KEY\",\"fingerprint\":\"$FP\"}")
+if echo "$HB3" | grep -q 'پیام تست آینه'; then
+  bad "پیام حذف‌شده هنوز برمی‌گردد!"
+else
+  ok "پیام حذف‌شده از پنل در heartbeat بعدی نیست (رفع گزارش مالک)"
+fi
+
 # ── پایان ──
 kill $SRV 2>/dev/null
 say "نتیجه نهایی"

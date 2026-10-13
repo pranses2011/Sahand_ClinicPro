@@ -194,6 +194,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $body = trim((string)($_POST['body'] ?? ''));
         $level = in_array($_POST['level'] ?? 'info', ['info', 'success', 'warning', 'danger'], true)
             ? (string)$_POST['level'] : 'info';
+        // ═══ چرخهٔ ۶۷ — تکمیل زنجیرهٔ رنگ پیام (چرخهٔ ۳۵) ═══
+        // رنگ سفارشی فقط با تیک چک‌باکس «رنگ سفارشی» ارسال می‌شود؛ فقط hex معتبر
+        // (#RRGGBB) پذیرفته می‌شود، وگرنه null = کلاینت به رنگ‌بندی سطح اهمیت برمی‌گردد
+        $colorRaw = ($_POST['custom_color'] ?? '') === 'on'
+            ? trim((string)($_POST['color'] ?? '')) : '';
+        $color = preg_match('/^#[0-9A-Fa-f]{6}$/', $colorRaw) === 1 ? strtoupper($colorRaw) : null;
         if (mb_strlen($title) < 2 || mb_strlen($body) < 2) {
             $_SESSION['flash'] = ['danger', 'عنوان و متن پیام حداقل ۲ کاراکتر باشد.'];
             ls_json_or_redirect('index.php?page=messages');
@@ -205,9 +211,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['flash'] = ['danger', 'لایسنس مقصد یافت نشد.'];
             ls_json_or_redirect('index.php?page=messages');
         }
-        ls_db()->prepare('INSERT INTO ls_messages (license_id, title, body, level, created_by, created_at)
-            VALUES (?, ?, ?, ?, ?, NOW())')
-            ->execute([$licenseId, mb_substr($title, 0, 200), mb_substr($body, 0, 3000), $level, $admin['id']]);
+        ls_db()->prepare('INSERT INTO ls_messages (license_id, title, body, level, color, created_by, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, NOW())')
+            ->execute([$licenseId, mb_substr($title, 0, 200), mb_substr($body, 0, 3000), $level, $color, $admin['id']]);
         ls_audit($admin['id'], 'send_message', 'message', (int)ls_db()->lastInsertId(),
             'پیام «' . mb_substr($title, 0, 60) . '» به ' . ((string)($target['clinic_name'] ?? $target['license_key'])));
         $_SESSION['flash'] = ['success', 'پیام برای «' . ((string)($target['clinic_name'] ?? $target['license_key'])) . '» ثبت شد — با تپ‌قلب بعدی روی داشبورد درمانگاه ظاهر می‌شود.'];

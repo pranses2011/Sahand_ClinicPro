@@ -60,6 +60,8 @@ CREATE TABLE IF NOT EXISTS ls_messages (
     title           VARCHAR(200) NOT NULL,
     body            TEXT NOT NULL,
     level           ENUM('info','success','warning','danger') NOT NULL DEFAULT 'info',
+    -- ═══ چرخهٔ ۶۷ — تکمیل زنجیرهٔ رنگ پیام (چرخهٔ ۳۵ سمت کلاینت آماده بود؛ ستون در پنل نبود) ═══
+    color           VARCHAR(20) NULL,
     created_by      INT UNSIGNED NULL,
     delivered_at    DATETIME NULL,
     read_at         DATETIME NULL,

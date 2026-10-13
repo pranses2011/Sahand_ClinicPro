@@ -25,7 +25,14 @@ jobs:
         run: dotnet build Sahand.ClinicPro.sln --no-restore -c Release
 
       - name: اجرای تست‌ها + پوشش کد (B4 چرخه ۱۲)
-        run: dotnet test Sahand.ClinicPro.sln --no-build -c Release --logger "trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults
+        # ═══ چرخهٔ ۶۷ — ریشهٔ قرمزیِ دائمی CI ═══
+        # پروژهٔ تست دسکتاپ net8.0-windows است و WPF روی لینوکس اجرا نمی‌شود
+        # («You must install or update .NET») — از اجرای ubuntu کنار گذاشته شد
+        # و در job ویندوزیِ جداگانهٔ پایین اجرا می‌شود؛ این تنها راه سبز شدن
+        # هر دو پلتفرم با حفظ پوشش کامل تست است.
+        run: dotnet test Sahand.ClinicPro.sln --no-build -c Release
+             --logger "trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults
+             --filter "FullyQualifiedName!~Sahand.ClinicPro.Desktop.UnitTests"
 
       - name: خلاصه پوشش
         if: always()
@@ -58,6 +65,36 @@ jobs:
           name: test-results
           path: ./TestResults
           retention-days: 7
+
+  # ═══ چرخهٔ ۶۷ — تست‌های دسکتاپ روی ویندوز ═══
+  # ریشهٔ قرمزیِ دائمی CI از روز اول: پروژهٔ Desktop.UnitTests (net8.0-windows)
+  # روی ubuntu اجرا نمی‌شود؛ اکنون در همین job ویندوزیِ اختصاصی اجرا می‌شود
+  # و job لینوکسیِ بالا با فیلتر، از آن عبور می‌کند.
+  desktop-tests:
+    runs-on: windows-latest
+    steps:
+      - name: دریافت سورس
+        uses: actions/checkout@v4
+
+      - name: نصب .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: بازیابی و ساخت پروژهٔ تست دسکتاپ
+        run: dotnet build tests/Sahand.ClinicPro.Desktop.UnitTests/Sahand.ClinicPro.Desktop.UnitTests.csproj -c Release
+
+      - name: اجرای تست‌های دسکتاپ (WPF — فقط ویندوز)
+        run: dotnet test tests/Sahand.ClinicPro.Desktop.UnitTests/Sahand.ClinicPro.Desktop.UnitTests.csproj --no-build -c Release --logger "trx"
+
+      - name: بارگذاری نتایج تست دسکتاپ
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: desktop-test-results
+          path: '**/TestResults/*.trx'
+          retention-days: 7
+          if-no-files-found: ignore
 
   # ═══ چرخه دوازدهم (C2 — بند ۴-۹): E2E سرور لایسنس PHP ═══
   # ═══ چرخهٔ ۶۶ (G-08 «بستن حلقه PHP»): +۱۴ تست بکاپ خودکار/چرخش کلید RSA ═══

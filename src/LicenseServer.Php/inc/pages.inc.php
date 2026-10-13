@@ -549,6 +549,14 @@ if ($page === 'messages') {
         . '<option value="warning">هشدار (نارنجی)</option>'
         . '<option value="danger">مهم/فوری (قرمز)</option>'
         . '</select></label>'
+        // ═══ چرخهٔ ۶۷ — تکمیل زنجیرهٔ رنگ پیام (چرخهٔ ۳۵) ═══
+        // انتخابگر رنگ سفارشی کادر پیام در داشبورد؛ بدون فعال‌سازی چک‌باکس،
+        // رنگی ارسال نمی‌شود و کلاینت به رنگ‌بندی سطح اهمیت برمی‌گردد
+        . '<label class="full2" style="display:flex;align-items:center;gap:8px;margin:0">'
+        . '<input type="checkbox" name="custom_color" style="width:auto;margin:0 6px 0 0"> '
+        . 'رنگ سفارشی کادر پیام '
+        . '<input type="color" name="color" value="#1E88E5" style="width:52px;height:34px;padding:2px" '
+        . 'title="رنگ کادر پیام در داشبورد درمانگاه — با فعال‌کردن چک‌باکس ارسال می‌شود"></label>'
         . '<label class="full2">عنوان<input type="text" name="title" required maxlength="200" placeholder="مثلاً: نسخه ۱.۹ منتشر شد"></label>'
         . '</div>'
         . '<label>متن پیام<textarea name="body" rows="4" required maxlength="3000" placeholder="متن پیام که در داشبورد درمانگاه نمایش داده می‌شود…"></textarea></label>'

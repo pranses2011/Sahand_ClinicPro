@@ -41,7 +41,9 @@ public class Cycle43StockInDiagnostics
         await uow.Repository<Medication>().AddAsync(med);
         await uow.SaveEntitiesAsync();
 
-        var handler = new Sahand.ClinicPro.Application.Features.Pharmacy.StockInCommandHandler(uow);
+        // چرخهٔ ۶۷: هندلر اکنون ILogger هم می‌گیرد (سند حسابداری ورود کالا) — در تست، لاگر تهی
+        var handler = new Sahand.ClinicPro.Application.Features.Pharmacy.StockInCommandHandler(uow,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<Sahand.ClinicPro.Application.Features.Pharmacy.StockInCommandHandler>.Instance);
         var result = await handler.Handle(
             new Sahand.ClinicPro.Application.Features.Pharmacy.StockInCommand(
                 med.Id, "B-100", 100m, 5000m, 6000m, "1406/05/20", null),
@@ -69,7 +71,9 @@ public class Cycle43StockInDiagnostics
         await uow.Repository<Medication>().AddAsync(med);
         await uow.SaveEntitiesAsync();
 
-        var handler = new Sahand.ClinicPro.Application.Features.Pharmacy.StockInCommandHandler(uow);
+        // چرخهٔ ۶۷: هندلر اکنون ILogger هم می‌گیرد (سند حسابداری ورود کالا) — در تست، لاگر تهی
+        var handler = new Sahand.ClinicPro.Application.Features.Pharmacy.StockInCommandHandler(uow,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<Sahand.ClinicPro.Application.Features.Pharmacy.StockInCommandHandler>.Instance);
         var result = await handler.Handle(
             new Sahand.ClinicPro.Application.Features.Pharmacy.StockInCommand(
                 med.Id, null, 50m, 1000m, 1200m, "۱۴۰۶/۰۵/۲۰", null),
