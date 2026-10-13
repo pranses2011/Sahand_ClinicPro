@@ -44,6 +44,19 @@
                     Visibility="{Binding SaveStateText, Converter={StaticResource StringToVisibility}}">
                 <TextBlock Text="{Binding SaveStateText, Mode=OneWay}" Foreground="#2E7D32" FontSize="11" />
             </Border>
+            <!-- ═══ چرخهٔ ۶۹ (فاز ۳ / F-15) — کپی ویزیت قبلی ═══
+                 شرح حال/سابقه/برنامهٔ درمانی/توصیه‌های پیگیری ویزیت قبلی همین بیمار
+                 با یک کلیک در فرم جاری؛ فقط با ویزیت قبلی موجود نمایان. -->
+            <Button DockPanel.Dock="Left" Command="{Binding CopyPreviousVisitCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11"
+                    Padding="10,4" Margin="10,0,0,0" VerticalAlignment="Center"
+                    Visibility="{Binding PreviousVisitId, Converter={StaticResource NullToVisibility}}"
+                    ToolTip="شرح حال، سابقه‌ها، برنامهٔ درمانی و توصیه‌های ویزیت قبلی در این فرم کپی می‌شود">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="ContentCopy" Width="14" Height="14" VerticalAlignment="Center" />
+                    <TextBlock Text="کپی از ویزیت قبلی" Margin="6,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
         </DockPanel>
 
         <!-- بدنه: سایدبار + تب‌ها -->

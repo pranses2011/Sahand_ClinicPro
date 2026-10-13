@@ -13,6 +13,11 @@ namespace Sahand.ClinicPro.Desktop.ViewModels;
 /// <summary>ردیف سوابق ویزیت در پرونده بیمار — شناسه برای گشودن جزئیات با دابل‌کلیک (چرخهٔ ۴۸)</summary>
 public record PatientVisitRow(long Id, string DateShamsi, string DoctorName, string Diagnosis, string Status);
 
+/// <summary>
+/// ردیف یادداشت سریع بیمار — چرخهٔ ۶۹ (فاز ۳ / F-17 «یادداشت سریع»)
+/// </summary>
+public record QuickNoteRow(long Id, string Text, string DateShamsi);
+
 /// <summary>ردیف نسخه‌های بیمار — چرخه بیست‌وچهارم: ستون «تعداد اقلام» با
 /// «کد نسخه» جایگزین شد زیرا PrescriptionListDto سرور شمارش قلم ندارد؛
 /// نام فیلدها هم عیناً منطبق بر سرور شد (نامقبستگی → خطای «پاسخ سرور
@@ -147,6 +152,33 @@ public partial class PatientDetailViewModel : ObservableObject
     /// <summary>رویدادهای خط زمان — چرخه ۱۳ (درخواست ۱-۵)</summary>
     public ObservableCollection<TimelineRow> Timeline { get; } = new();
 
+    /* ═══ چرخهٔ ۶۹ (فاز ۳ / F-17+F-18) — برچسب بیمار و یادداشت سریع ═══ */
+
+    /// <summary>برچسب‌های بیمار — چیپ‌های رنگی کنار نام (F-18)</summary>
+    public ObservableCollection<string> Tags { get; } = new();
+
+    /// <summary>متن برچسب‌ها برای ویرایش — CSV؛ خالی = بدون برچسب</summary>
+    [ObservableProperty]
+    private string _tagsEditText = string.Empty;
+
+    /// <summary>حالت ویرایش برچسب‌ها باز است؟</summary>
+    [ObservableProperty]
+    private bool _isEditingTags;
+
+    /// <summary>پیشنهادهای آمادهٔ برچسب — VIP/مزمن/باردار (F-18)</summary>
+    public string[] TagSuggestions { get; } = { "VIP", "مزمن", "باردار", "دیابت", "فشارخون" };
+
+    /// <summary>متن یادداشت سریع در حال تایپ (F-17)</summary>
+    [ObservableProperty]
+    private string _quickNoteText = string.Empty;
+
+    /// <summary>در حال ثبت یادداشت</summary>
+    [ObservableProperty]
+    private bool _isSavingNote;
+
+    /// <summary>یادداشت‌های سریع بیمار — جدیدترین اول (F-17)</summary>
+    public ObservableCollection<QuickNoteRow> QuickNotes { get; } = new();
+
     /// <summary>فیلترهای فعال خط زمان — رشته نوع‌ها با کاما</summary>
     [ObservableProperty]
     private string? _timelineFilterKinds;
@@ -185,13 +217,18 @@ public partial class PatientDetailViewModel : ObservableObject
 
     private long _patientIdCache;
 
-    /// <summary>سازنده با شناسه بیمار</summary>
-    public PatientDetailViewModel(IApiClient api, long patientId)
+    /// <summary>سازنده با شناسه بیمار — توست اختیاری برای بازخورد برچسب/یادداشت (چرخهٔ ۶۹)</summary>
+    public PatientDetailViewModel(IApiClient api, long patientId,
+        Services.ISnackbarService? snackbar = null)
     {
         _api = api;
+        _snackbar = snackbar;
         _patientIdCache = patientId;
         _ = LoadAsync(patientId);
     }
+
+    /// <summary>توست بازخورد — اختیاری (چرخهٔ ۶۹: برچسب/یادداشت سریع)</summary>
+    private readonly Services.ISnackbarService? _snackbar;
 
     /// <summary>بارگذاری پرونده + سوابق</summary>
     private async Task LoadAsync(long patientId)
@@ -222,6 +259,13 @@ public partial class PatientDetailViewModel : ObservableObject
         FillTags(Allergies, patient.Allergies);
         FillTags(ChronicDiseases, patient.ChronicDiseases);
         FillTags(CurrentMedications, patient.CurrentMedications);
+
+        // ═══ چرخهٔ ۶۹ (فاز ۳ / F-18) — برچسب‌های بیمار: چیپ‌های رنگی کنار نام ═══
+        FillTagsFromCsv(Tags, patient.Tags);
+        TagsEditText = patient.Tags ?? string.Empty;
+
+        // ═══ چرخهٔ ۶۹ (فاز ۳ / F-17) — یادداشت‌های سریع ═══
+        _ = LoadQuickNotesAsync(patientId);
 
         // چرخه بیست‌وسوم: هر بخش در try/catch مستقل خودش است تا شکست یک endpoint
         // بقیهٔ تب‌ها را خالی نکند (پیش‌تر نخستین خطا کل بارگذاری را قطع می‌کرد —
@@ -802,7 +846,110 @@ public partial class PatientDetailViewModel : ObservableObject
         }
     }
 
+    /* ═══ چرخهٔ ۶۹ (فاز ۳ / F-17+F-18) — فرمان‌های برچسب و یادداشت سریع ═══ */
+
+    /// <summary>پر کردن برچسب‌ها از CSV فارسی — «VIP، دیابت» (F-18)</summary>
+    private static void FillTagsFromCsv(ObservableCollection<string> target, string? csv)
+    {
+        target.Clear();
+        if (string.IsNullOrWhiteSpace(csv)) return;
+        foreach (var tag in csv.Split(new[] { ',', '،', ';' },
+                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            target.Add(tag);
+    }
+
+    /// <summary>باز/بستن حالت ویرایش برچسب‌ها (F-18)</summary>
+    [RelayCommand]
+    private void ToggleTagEditing() => IsEditingTags = !IsEditingTags;
+
+    /// <summary>افزودن یک پیشنهاد آماده به متن ویرایش (F-18)</summary>
+    [RelayCommand]
+    private void AddTagSuggestion(string tag)
+    {
+        var parts = TagsEditText.Split(new[] { ',', '،' },
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+        if (parts.Contains(tag, StringComparer.Ordinal))
+            return; // تکراری — چیپ دوباره اضافه نمی‌شود
+        parts.Add(tag);
+        TagsEditText = string.Join("، ", parts);
+    }
+
+    /// <summary>ذخیرهٔ برچسب‌ها در سرور و تازه‌سازی چیپ‌ها (F-18)</summary>
+    [RelayCommand]
+    private async Task SaveTagsAsync()
+    {
+        var ok = await _api.PutAsync($"patients/{_patientIdCache}/tags",
+            new { tags = TagsEditText });
+        if (!ok)
+        {
+            _snackbar?.Error(_api.LastError ?? "ذخیرهٔ برچسب‌ها ناموفق بود");
+            return;
+        }
+
+        FillTagsFromCsv(Tags, TagsEditText);
+        IsEditingTags = false;
+        _snackbar?.Success("برچسب‌های بیمار ذخیره شد");
+    }
+
+    /// <summary>بارگذاری یادداشت‌های سریع بیمار (F-17)</summary>
+    private async Task LoadQuickNotesAsync(long patientId)
+    {
+        try
+        {
+            var envelope = await _api.GetAsync<QuickNotesEnvelope>($"patients/{patientId}/notes");
+            QuickNotes.Clear();
+            if (envelope?.Data is null) return;
+            foreach (var n in envelope.Data)
+                QuickNotes.Add(new QuickNoteRow(n.Id, n.Text ?? "", n.DateShamsi ?? ""));
+        }
+        catch
+        {
+            // یادداشت‌ها بخش جانبی‌اند — خطای شبکه پرونده را خراب نمی‌کند
+        }
+    }
+
+    /// <summary>ثبت یادداشت سریع — بدون ساخت ویزیت کامل (F-17)</summary>
+    [RelayCommand]
+    private async Task AddQuickNoteAsync()
+    {
+        var text = QuickNoteText?.Trim();
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            _snackbar?.Warning("متن یادداشت را بنویسید");
+            return;
+        }
+
+        IsSavingNote = true;
+        var ok = await _api.PostAsync($"patients/{_patientIdCache}/notes", new { text });
+        IsSavingNote = false;
+
+        if (!ok)
+        {
+            _snackbar?.Error(_api.LastError ?? "ثبت یادداشت ناموفق بود");
+            return;
+        }
+
+        QuickNoteText = string.Empty;
+        await LoadQuickNotesAsync(_patientIdCache);
+        _snackbar?.Success("یادداشت ثبت شد");
+    }
+
     /* ── DTOهای سبک ── */
+
+    /// <summary>پاکت یادداشت‌های سریع بیمار — چرخهٔ ۶۹ (F-17)</summary>
+    public sealed class QuickNotesEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public List<QuickNoteDto>? Data { get; set; }
+    }
+
+    /// <summary>قلم یادداشت سریع — منطبق بر patients/{id}/notes</summary>
+    public sealed class QuickNoteDto
+    {
+        public long Id { get; set; }
+        public string? Text { get; set; }
+        public string? DateShamsi { get; set; }
+    }
 
     /// <summary>پاسخ سابقهٔ معاینه‌های چشم — چرخهٔ ۴۸ برای جزئیات دابل‌کلیک</summary>
     public sealed class EyeExamsEnvelope
@@ -1065,5 +1212,8 @@ public partial class PatientDetailViewModel : ObservableObject
         public string? Allergies { get; set; }
         public string? ChronicDiseases { get; set; }
         public string? CurrentMedications { get; set; }
+
+        /// <summary>برچسب‌های بیمار CSV — چرخهٔ ۶۹ (فاز ۳ / F-18)</summary>
+        public string? Tags { get; set; }
     }
 }

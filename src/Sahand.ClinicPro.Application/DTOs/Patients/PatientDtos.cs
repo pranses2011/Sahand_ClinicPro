@@ -46,6 +46,9 @@ public class PatientListDto
 
     /// <summary>تاریخ آخرین مراجعه شمسی</summary>
     public string? LastVisitDateShamsi { get; set; }
+
+    /// <summary>برچسب‌های بیمار (CSV) — چرخهٔ ۶۹ (فاز ۳ / F-18): چیپ‌های رنگی در فهرست/پرونده</summary>
+    public string? Tags { get; set; }
 }
 
 /// <summary>
@@ -145,4 +148,7 @@ public class PatientDetailDto
 
     /// <summary>تاریخ ثبت‌نام شمسی</summary>
     public string? RegistrationDateShamsi { get; set; }
+
+    /// <summary>برچسب‌های بیمار (CSV مثل «VIP، دیابت») — چرخهٔ ۶۹ (فاز ۳ / F-18)</summary>
+    public string? Tags { get; set; }
 }

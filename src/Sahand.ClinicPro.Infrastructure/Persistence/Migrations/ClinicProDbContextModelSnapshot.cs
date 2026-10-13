@@ -6737,6 +6737,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("tinyint")
                         .HasComment("وضعیت تأهل");
 
+                    b.Property<string>("Tags")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasComment("برچسب‌های بیمار CSV — چرخهٔ ۶۹ (F-18)");
+
                     b.Property<string>("MedicalRecordNo")
                         .IsRequired()
                         .ValueGeneratedOnAdd()

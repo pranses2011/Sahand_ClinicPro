@@ -272,9 +272,74 @@ public partial class VisitEditViewModel : ObservableObject
             foreach (var h in history.Data.Take(10))
                 VisitHistory.Add(new HistoryRow(h.Id, h.DateShamsi, h.DoctorName,
                     h.ChiefComplaint ?? "—"));
+
+            // چرخهٔ ۶۹ (فاز ۳ / F-15): ویزیت قبلیِ همین بیمار برای «کپی ویزیت قبلی»
+            // شناسه‌اش نگه داشته می‌شود — ویزیت جاری (اگر ادامه است) از فهرست کنار
+            // می‌رود تا «قبلی» واقعاً قبلیِ همین ویزیت باشد نه خودش.
+            PreviousVisitId = history.Data
+                .Where(h => h.Id != _visitId)
+                .OrderByDescending(h => h.Id)
+                .FirstOrDefault()?.Id;
+            PreviousVisitDate = history.Data
+                .Where(h => h.Id != _visitId)
+                .OrderByDescending(h => h.Id)
+                .FirstOrDefault()?.DateShamsi;
         }
 
         StartTimers();
+    }
+
+    /// <summary>
+    /// شناسهٔ ویزیت قبلی همین بیمار — برای «کپی ویزیت قبلی» (چرخهٔ ۶۹ / F-15)؛
+    /// تهی یعنی ویزیت قبلی وجود ندارد و دکمه مخفی می‌شود.
+    /// </summary>
+    [ObservableProperty]
+    private long? _previousVisitId;
+
+    /// <summary>تاریخ شمسی ویزیت قبلی — نمایش روی دکمهٔ کپی</summary>
+    [ObservableProperty]
+    private string? _previousVisitDate;
+
+    /// <summary>
+    /// کپی ویزیت قبلی — چرخهٔ ۶۹ (فاز ۳ / F-15 «کپی ویزیت قبلی»):
+    /// شرح حال/سابقه/برنامهٔ درمانی/توصیه‌های پیگیری ویزیت قبلی همین بیمار در
+    /// فرم جاری ریخته می‌شود تا پزشکِ ویزیت‌های تکراری (پیگیری مزمن) از صفر
+    /// تایپ نکند. نسخه و علائم حیاتی عمداً کپی «نمی‌شوند» — خطر بالینی دارند.
+    /// </summary>
+    [RelayCommand]
+    private async Task CopyPreviousVisitAsync()
+    {
+        if (PreviousVisitId is not { } prevId)
+            return;
+
+        // تأیید فارسی — بازنویسی نکردنی نیست ولی کاربر باید بداند فیلدها جایگزین می‌شوند
+        if (!Views.AppDialog.Confirm("کپی از ویزیت قبلی",
+                $"شرح حال، سابقه‌ها، برنامهٔ درمانی و توصیه‌های پیگیری ویزیت {PreviousVisitDate ?? "قبلی"} " +
+                "در فرم جاری جایگزین می‌شود. ادامه می‌دهید؟"))
+            return;
+
+        var response = await _api.GetAsync<VisitDetailResponse>($"visits/{prevId}");
+        var v = response?.Data;
+        if (v is null)
+        {
+            _snackbar.Error(_api.LastError ?? "دریافت ویزیت قبلی ناموفق بود");
+            return;
+        }
+
+        // فقط فیلدهای تکرارپذیر و کم‌خطر — نسخه/علائم حیاتی هرگز کپی نمی‌شوند
+        ChiefComplaint = v.ChiefComplaint;
+        Hpi = v.HistoryOfPresentIllness;
+        Pmh = v.PastMedicalHistory;
+        FamilyHistory = v.FamilyHistory;
+        SocialHistory = v.SocialHistory;
+        ReviewOfSystems = v.ReviewOfSystems;
+        TreatmentPlan = v.TreatmentPlan;
+        FollowUpInstructions = v.FollowUpInstructions;
+        if (v.PrimaryDiagnosisCode is not null)
+            PrimaryDiagnosis = new DiagnosisOption(0, v.PrimaryDiagnosisCode, v.PrimaryDiagnosisCode);
+        FillTags(SecondaryDiagnoses, v.SecondaryDiagnoses);
+
+        _snackbar.Success($"از ویزیت {PreviousVisitDate ?? "قبلی"} کپی شد — بازبینی و ویرایش کنید");
     }
 
     /// <summary>راه‌اندازی AutoSave و Stopwatch</summary>

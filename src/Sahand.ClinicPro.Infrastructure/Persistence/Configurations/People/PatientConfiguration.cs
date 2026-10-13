@@ -21,6 +21,9 @@ public class PatientConfiguration : IEntityTypeConfiguration<Patient>
         builder.Property(x => x.BirthDateShamsi).HasMaxLength(200).HasComment("تاریخ تولد شمسی موازی - فرمت 1358/04/15");
         builder.Property(x => x.BloodType).HasMaxLength(5).HasComment("گروه خونی مثل A+ یا O-");
         builder.Property(x => x.MaritalStatus).HasConversion<byte>().HasComment("وضعیت تأهل");
+
+        // برچسب‌های بیمار CSV — چرخهٔ ۶۹ (فاز ۳ / F-18 «برچسب بیمار (VIP/مزمن)»)
+        builder.Property(x => x.Tags).HasMaxLength(200).HasComment("برچسب‌های بیمار CSV — چرخهٔ ۶۹ (F-18)");
         builder.Property(x => x.Mobile).HasMaxLength(11).IsRequired().HasComment("شماره موبایل ۱۱ رقمی - الگوی 09XXXXXXXXX - ایندکس‌شده");
         builder.Property(x => x.Phone).HasMaxLength(15).HasComment("تلفن ثابت");
         builder.Property(x => x.Email).HasMaxLength(100).HasComment("ایمیل بیمار");

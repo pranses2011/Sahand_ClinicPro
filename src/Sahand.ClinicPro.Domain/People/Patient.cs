@@ -125,6 +125,14 @@ public class Patient : AuditableEntity, ISoftDeletable
     /// <summary>فعال یا غیرفعال</summary>
     public bool IsActive { get; set; } = true;
 
+    /// <summary>
+    /// برچسب‌های بیمار — CSV فارسی مثل «VIP، دیابت، فشارخون» — چرخهٔ ۶۹
+    /// (فاز ۳ / F-18 «برچسب بیمار (VIP/مزمن)»): چیپ‌های رنگی روی پرونده و
+    /// فهرست بیماران؛ پیشنهادهای آماده VIP/مزمن/باردار + دلخواه.
+    /// تهی = بدون برچسب. جستجو/فیلتر فهرست بر همین ستون می‌شود.
+    /// </summary>
+    public string? Tags { get; set; }
+
     /// <summary>شرکت بیمه اصلی بیمار</summary>
     public InsuranceCompany? InsuranceCompany { get; set; }
 

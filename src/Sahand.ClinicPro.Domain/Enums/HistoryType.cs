@@ -17,4 +17,9 @@ public enum HistoryType : byte
     Hospitalization = 5,
     /// <summary>دارویی</summary>
     Medication = 6,
+    /// <summary>
+    /// یادداشت سریع — چرخهٔ ۶۹ (فاز ۳ / F-17 «یادداشت سریع»): ثبت خلاصهٔ
+    /// مهم بدون ساخت ویزیت کامل (تماس تلفنی، توصیهٔ تلفنی، یادآور پیگیری…)
+    /// </summary>
+    Note = 7,
 }

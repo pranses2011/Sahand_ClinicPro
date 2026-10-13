@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Application.Common.Models;
 using Sahand.ClinicPro.Application.DTOs.Patients;
@@ -11,6 +12,7 @@ using Sahand.ClinicPro.Application.Features.Patients.Queries.GetAllPatients;
 using Sahand.ClinicPro.Application.Features.Patients.Queries.GetPatientTimeline;
 using Sahand.ClinicPro.Application.Features.Patients.Queries.GetPatientById;
 using Sahand.ClinicPro.Application.Features.Patients.Queries.SearchPatients;
+using Sahand.ClinicPro.Domain.Interfaces;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -25,8 +27,20 @@ public class PatientsController : ApiBaseController
 {
     private readonly IMediator _mediator;
 
-    /// <summary>سازنده با تزریق میانجی</summary>
-    public PatientsController(IMediator mediator) => _mediator = mediator;
+    /// <summary>واحد کار — برای یادداشت سریع و برچسب‌ها (چرخهٔ ۶۹ / F-17+F-18)</summary>
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>کاربر جاری — ثبت‌کنندهٔ یادداشت سریع (چرخهٔ ۶۹)</summary>
+    private readonly Application.Interfaces.ICurrentUserService _currentUser;
+
+    /// <summary>سازنده با تزریق میانجی، واحد کار و کاربر جاری</summary>
+    public PatientsController(IMediator mediator, IUnitOfWork unitOfWork,
+        Application.Interfaces.ICurrentUserService currentUser)
+    {
+        _mediator = mediator;
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <summary>
     /// فهرست صفحه‌بندی‌شده بیماران
@@ -137,4 +151,103 @@ public class PatientsController : ApiBaseController
         var result = await _mediator.Send(new GetPatientTimelineQuery(id, kinds, yearShamsi));
         return ToResponse(result);
     }
+
+    /* ═══ چرخهٔ ۶۹ (فاز ۳ / F-17+F-18 نقشه راه ai-review) — یادداشت سریع و برچسب بیمار ═══ */
+
+    /// <summary>
+    /// یادداشت‌های سریع بیمار — سابقه‌های از نوع Note (F-17 «یادداشت سریع»):
+    /// ثبت خلاصهٔ مهم بدون ساخت ویزیت کامل؛ جدیدترین اول.
+    /// </summary>
+    /// <param name="id">شناسه بیمار</param>
+    /// <param name="ct">توکن لغو</param>
+    [HttpGet("{id:long}/notes")]
+    [HasPermission("patients.view")]
+    public async Task<IActionResult> GetNotes(long id, CancellationToken ct)
+    {
+        var notes = await _unitOfWork.Repository<Domain.Entities.People.PatientHistory>()
+            .QueryableNoTracking
+            .Where(h => h.PatientId == id && !h.IsDeleted && h.HistoryType == Domain.Enums.HistoryType.Note)
+            .OrderByDescending(h => h.RecordedDate)
+            .Take(50)
+            .Select(h => new
+            {
+                id = h.Id,
+                text = h.Description,
+                dateShamsi = h.RecordedDate.HasValue
+                    ? Application.Common.Helpers.PersianDateHelper.ToShamsi(h.RecordedDate.Value)
+                    : ""
+            })
+            .ToListAsync(ct);
+
+        return Ok(ApiResponse<object>.Success(notes, "یادداشت‌های بیمار دریافت شد"));
+    }
+
+    /// <summary>
+    /// ثبت یادداشت سریع — یک سابقهٔ Note جدید با کاربر جاری (F-17)
+    /// </summary>
+    /// <param name="id">شناسه بیمار</param>
+    /// <param name="body">متن یادداشت — { text: "..." }</param>
+    /// <param name="ct">توکن لغو</param>
+    [HttpPost("{id:long}/notes")]
+    [HasPermission("patients.edit")]
+    public async Task<IActionResult> AddNote(long id, [FromBody] QuickNoteDto body, CancellationToken ct)
+    {
+        var text = body.Text?.Trim();
+        if (string.IsNullOrWhiteSpace(text))
+            return BadRequest(ApiResponse<object>.Failure("متن یادداشت خالی است"));
+
+        var patient = await _unitOfWork.Repository<Domain.Entities.People.Patient>()
+            .QueryableTracking.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, ct);
+        if (patient is null)
+            return NotFound(ApiResponse<object>.Failure("بیمار یافت نشد"));
+
+        await _unitOfWork.Repository<Domain.Entities.People.PatientHistory>().AddAsync(
+            new Domain.Entities.People.PatientHistory
+            {
+                PatientId = id,
+                HistoryType = Domain.Enums.HistoryType.Note,
+                Title = "یادداشت سریع",
+                Description = text,
+                RecordedDate = DateTime.UtcNow,
+                RecordedBy = _currentUser.UserId
+            });
+        await _unitOfWork.SaveEntitiesAsync(ct);
+
+        return Ok(ApiResponse<object>.Success(new { ok = true }, "یادداشت ثبت شد"));
+    }
+
+    /// <summary>
+    /// ذخیرهٔ برچسب‌های بیمار — CSV مثل «VIP، دیابت» (F-18 «برچسب بیمار»)
+    /// </summary>
+    /// <param name="id">شناسه بیمار</param>
+    /// <param name="body">برچسب‌ها — { tags: "VIP, دیابت" } یا تهی برای پاک‌کردن</param>
+    /// <param name="ct">توکن لغو</param>
+    [HttpPut("{id:long}/tags")]
+    [HasPermission("patients.edit")]
+    public async Task<IActionResult> SaveTags(long id, [FromBody] SaveTagsDto body, CancellationToken ct)
+    {
+        var patient = await _unitOfWork.Repository<Domain.Entities.People.Patient>()
+            .QueryableTracking.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, ct);
+        if (patient is null)
+            return NotFound(ApiResponse<object>.Failure("بیمار یافت نشد"));
+
+        // پاک‌سازی و نرمال‌سازی: حذف جداکننده‌های تکراری + سقف طول
+        var tags = string.Join("،", (body.Tags ?? string.Empty)
+            .Split(new[] { ',', '،', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Distinct()
+            .Take(8));
+        if (tags.Length > 200)
+            return BadRequest(ApiResponse<object>.Failure("برچسب‌ها بیش از حد طولانی است (حداکثر ۸ برچسب)"));
+
+        patient.Tags = string.IsNullOrWhiteSpace(tags) ? null : tags;
+        await _unitOfWork.SaveEntitiesAsync(ct);
+
+        return Ok(ApiResponse<object>.Success(new { tags = patient.Tags }, "برچسب‌های بیمار ذخیره شد"));
+    }
+
+    /// <summary>بدنهٔ ثبت یادداشت سریع (F-17)</summary>
+    public sealed record QuickNoteDto(string? Text);
+
+    /// <summary>بدنهٔ ذخیرهٔ برچسب‌ها (F-18)</summary>
+    public sealed record SaveTagsDto(string? Tags);
 }

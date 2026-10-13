@@ -76,6 +76,60 @@
                                        Foreground="White" FontSize="11"
                                        FontFamily="{DynamicResource App.CodeFont}" />
                         </Border>
+
+                        <!-- ═══ برچسب‌های بیمار — چرخهٔ ۶۹ (فاز ۳ / F-18) ═══
+                             چیپ‌های رنگی کنار نام: VIP طلایی / مزمن نارنجی / بقیه بنفش؛
+                             دکمهٔ + حالت ویرایش را باز می‌کند (متن CSV + پیشنهادهای آماده). -->
+                        <ItemsControl ItemsSource="{Binding Tags}" Margin="10,0,0,0"
+                                      VerticalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="9" Padding="8,2" Margin="0,0,5,0"
+                                            Background="#FFF8E1" BorderBrush="#F9A825" BorderThickness="1"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding}" FontSize="10.5" FontWeight="SemiBold"
+                                                   Foreground="#E65100" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Command="{Binding ToggleTagEditingCommand}"
+                                Style="{StaticResource MaterialDesignFlatButton}" Padding="4,0"
+                                Width="26" Height="26" VerticalAlignment="Center"
+                                ToolTip="ویرایش برچسب‌های بیمار (VIP/مزمن/…)">
+                            <materialDesign:PackIcon Kind="TagPlus" Width="15" Height="15" Foreground="#F57F17" />
+                        </Button>
+                        <!-- ویرایش برچسب‌ها — CSV + پیشنهادها -->
+                        <StackPanel Orientation="Horizontal"
+                                    Visibility="{Binding IsEditingTags, Converter={StaticResource BoolToVis}}"
+                                    VerticalAlignment="Center" Margin="8,0,0,0">
+                            <TextBox Text="{Binding TagsEditText, UpdateSourceTrigger=PropertyChanged}"
+                                     Width="220" FontSize="11.5" Padding="6,4"
+                                     materialDesign:HintAssist.Hint="مثال: VIP، دیابت" />
+                            <ItemsControl ItemsSource="{Binding TagSuggestions}" Margin="6,0,0,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.AddTagSuggestionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                FontSize="10" Padding="6,2" Margin="0,0,3,0" Content="{Binding}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button Command="{Binding SaveTagsCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}" FontSize="10.5"
+                                    Padding="8,4" Margin="6,0,0,0" Content="ذخیره" />
+                        </StackPanel>
                     </StackPanel>
 
                     <UniformGrid Columns="4" Margin="0,10,0,0" TextBlock.FontSize="11">
@@ -228,6 +282,46 @@
                                 <Border Background="#1E88E5" CornerRadius="11"
                                         Padding="10,2" Margin="0,0,6,4">
                                     <TextBlock Text="{Binding}" Foreground="White" FontSize="11" />
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- ═══ یادداشت‌های سریع — چرخهٔ ۶۹ (فاز ۳ / F-17) ═══
+                 «ثبت خلاصهٔ مهم بدون ساخت ویزیت کامل (تماس تلفنی، توصیهٔ تلفنی،
+                 یادآور پیگیری)» — جعبهٔ یک‌خطی + دکمهٔ ثبت؛ فهرست جدیدترین اول. -->
+            <Border Background="#F3E5F5" CornerRadius="10" Padding="12,8" Margin="0,6,0,0">
+                <StackPanel>
+                    <DockPanel>
+                        <TextBlock Text="📝 یادداشت سریع" Foreground="#4A148C"
+                                   FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                        <ProgressBar IsIndeterminate="True" Height="3" Width="60" Margin="8,0,0,0"
+                                     VerticalAlignment="Center"
+                                     Visibility="{Binding IsSavingNote, Converter={StaticResource BoolToVis}}" />
+                    </DockPanel>
+                    <DockPanel Margin="0,6,0,0">
+                        <Button Command="{Binding AddQuickNoteCommand}" DockPanel.Dock="Left"
+                                Style="{StaticResource MaterialDesignRaisedButton}" FontSize="11"
+                                Padding="10,4" Content="ثبت" Margin="6,0,0,0" />
+                        <TextBox Text="{Binding QuickNoteText, UpdateSourceTrigger=PropertyChanged}"
+                                 FontSize="11.5" Padding="6,5"
+                                 materialDesign:HintAssist.Hint="مثال: تماس تلفنی — قند ناشتا بهتر شد، پیگیری هفتهٔ بعد" />
+                    </DockPanel>
+                    <ItemsControl ItemsSource="{Binding QuickNotes}" Margin="0,6,0,0"
+                                  MaxHeight="130">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#FFFFFF" CornerRadius="8" Padding="8,4"
+                                        Margin="0,0,0,4" BorderBrush="#E1BEE7" BorderThickness="1">
+                                    <DockPanel>
+                                        <TextBlock Text="{Binding DateShamsi}" FontSize="9.5"
+                                                   Foreground="#7B1FA2" Opacity="0.8" VerticalAlignment="Top"
+                                                   FontFamily="{DynamicResource App.CodeFont}" DockPanel.Dock="Left" Margin="0,0,8,0" />
+                                        <TextBlock Text="{Binding Text}" FontSize="11.5"
+                                                   TextWrapping="Wrap" Foreground="#1F2937" />
+                                    </DockPanel>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
