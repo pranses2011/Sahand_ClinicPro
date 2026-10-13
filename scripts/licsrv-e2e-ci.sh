@@ -236,9 +236,83 @@ REISSUE=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.
 [ "$REISSUE" = "302" ] && ok "صدور پس از مهاجرت خودکار موفق (302)" || bad "صدور پس از مهاجرت: $REISSUE"
 $PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); $r=$p->query("SELECT clinic_name, clinic_city FROM ls_licenses ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC); echo ($r && $r["clinic_city"]=="تهران"?"MIGRATED-OK\n":"MIGRATED-BAD\n");' | grep -q 'MIGRATED-OK' && ok "لایسنس مهاجرت با شهر تهران ثبت شد" || bad "ثبت لایسنس مهاجرت ناقص"
 
+# ═════════════════════════════════════════════════════════════════
+# چرخهٔ ۶۶ — تست‌های بکاپ خودکار و چرخش کلید RSA
+# ═════════════════════════════════════════════════════════════════
+
+# ── بکاپ خودکار کرون: کلید رمزی درست → فایل بکاپ gzip ساخته می‌شود ──
+say "بکاپ خودکار کرون (چرخهٔ ۶۶)"
+# خواندن مطمئن کلید کرون — include خود فایل config (بدون regex شکننده)
+CRON_SECRET=$($PHP -r 'require "/tmp/lsc12/data/config.php"; echo defined("LS_CRON_SECRET") ? LS_CRON_SECRET : "";')
+if [ -n "$CRON_SECRET" ]; then
+  ok "کلید رمزی کرون از config.php خوانده شد"
+else
+  bad "کلید رمزی کرون یافت نشد"
+fi
+CRON_OUT=$(cd $TESTDIR && $PHP cron.php "$CRON_SECRET" 2>&1)
+echo "$CRON_OUT" | grep -q '"ok":true' && ok "کرون با کلید درست اجرا شد (JSON ok)" || bad "خروجی کرون: $CRON_OUT"
+echo "$CRON_OUT" | grep -q '"backup"' && ok "بلوک گزارش بکاپ در خروجی کرون موجود است" || bad "گزارش بکاپ در کرون نیست"
+BK_FILE=$(ls $TESTDIR/data/backups/license-backup-*.sql.gz 2>/dev/null | head -1)
+[ -n "$BK_FILE" ] && ok "فایل بکاپ gzip ساخته شد: $(basename "$BK_FILE")" || bad "هیچ فایل بکاپی ساخته نشد"
+# محتوای بکاپ باید جدول‌ها و INSERT داشته باشد (gzip -dc | grep)
+gzip -dc "$BK_FILE" 2>/dev/null | grep -q "CREATE TABLE" && ok "محتوای بکاپ شامل ساخت جدول‌ها است" || bad "محتوای بکاپ ناقص است"
+gzip -dc "$BK_FILE" 2>/dev/null | grep -q "INSERT INTO" && ok "محتوای بکاپ شامل داده‌ها (INSERT) است" || bad "بکاپ فاقد داده است"
+gzip -dc "$BK_FILE" 2>/dev/null | grep -q "ls_admins" && ok "جدول مدیران در بکاپ هست" || bad "جدول مدیران در بکاپ نیست"
+
+# ── کرون با کلید غلط → 403 Forbidden ──
+CRON_BAD=$(cd $TESTDIR && $PHP cron.php "wrong-secret-xyz" 2>&1)
+echo "$CRON_BAD" | grep -qi "forbidden" && ok "کرون با کلید غلط رد شد (Forbidden)" || bad "کرون با کلید غلط اجرا شد!"
+
+# ── چرخش جفت‌کلید RSA: امضای همهٔ لایسنس‌ها تازه + بایگانی کلید کهنه ──
+say "چرخش جفت‌کلید RSA (چرخهٔ ۶۶)"
+SIG_BEFORE=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); echo (string)$p->query("SELECT signature FROM ls_licenses ORDER BY id LIMIT 1")->fetchColumn();')
+ROT_CSRF=$(get_csrf settings)
+ROT_CODE=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8899/index.php?page=settings" \
+  --data-urlencode "action=rotate_keys" --data-urlencode "csrf=$ROT_CSRF" \
+  --data-urlencode "confirm_text=REGENERATE")
+[ "$ROT_CODE" = "302" ] && ok "چرخش کلید با تأیید REGENERATE انجام شد (302)" || bad "چرخش کلید: HTTP $ROT_CODE"
+SIG_AFTER=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); echo (string)$p->query("SELECT signature FROM ls_licenses ORDER BY id LIMIT 1")->fetchColumn();')
+[ -n "$SIG_BEFORE" ] && [ -n "$SIG_AFTER" ] && [ "$SIG_BEFORE" != "$SIG_AFTER" ] \
+  && ok "امضای لایسنس با کلید جدید عوض شد" || bad "امضای لایسنس تغییر نکرد (یا لایسنسی موجود نیست)"
+ls $TESTDIR/data/keys-archive/rsa_private-*.pem >/dev/null 2>&1 \
+  && ok "کلید خصوصی کهنه در keys-archive بایگانی شد" || bad "بایگانی کلید کهنه یافت نشد"
+# تأیید امضای جدید با کلید عمومی جدید — سازگاری PHP ↔ دات‌نت (قالب payload همان است)
+VERIFY=$($PHP -r '
+$c = file_get_contents("/tmp/lsc12/data/config.php");
+$db = new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12", "root", "");
+$l = $db->query("SELECT license_key, expiry_date, max_users, signature FROM ls_licenses ORDER BY id LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+$pub = file_get_contents("/tmp/lsc12/data/rsa_public.pem");
+$payload = $l["license_key"] . "|" . ($l["expiry_date"] ?? "") . "|" . $l["max_users"];
+echo openssl_verify($payload, base64_decode((string)$l["signature"]), $pub, OPENSSL_ALGO_SHA256) === 1 ? "VERIFY-OK\n" : "VERIFY-BAD\n";')
+echo "$VERIFY" | grep -q 'VERIFY-OK' && ok "امضای جدید با کلید عمومی جدید تأیید شد" || bad "تأیید امضا شکست خورد"
+# چرخش با عبارت تأیید غلط → رد: امضا نباید عوض شود
+SIG_BEFORE_BAD=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); echo (string)$p->query("SELECT signature FROM ls_licenses ORDER BY id LIMIT 1")->fetchColumn();')
+ROT_BAD_CSRF=$(get_csrf settings)
+ROT_BAD=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8899/index.php?page=settings" \
+  --data-urlencode "action=rotate_keys" --data-urlencode "csrf=$ROT_BAD_CSRF" \
+  --data-urlencode "confirm_text=NOPE")
+SIG_AFTER_BAD=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); echo (string)$p->query("SELECT signature FROM ls_licenses ORDER BY id LIMIT 1")->fetchColumn();')
+[ "$ROT_BAD" = "302" ] && [ "$SIG_BEFORE_BAD" = "$SIG_AFTER_BAD" ] \
+  && ok "چرخش با عبارت غلط رد شد (امضا دست‌نخورده ماند)" || bad "چرخش با عبارت غلط اجرا شد یا امضا عوض شد!"
+
+# ── بکاپ دستی از پنل (backup_now) ──
+BK_CSRF=$(get_csrf settings)
+BK_CODE=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8899/index.php?page=settings" \
+  --data-urlencode "action=backup_now" --data-urlencode "csrf=$BK_CSRF")
+BK_COUNT=$(ls $TESTDIR/data/backups/license-backup-*.sql.gz 2>/dev/null | wc -l)
+[ "$BK_CODE" = "302" ] && [ "$BK_COUNT" -ge 2 ] \
+  && ok "بکاپ دستی از پنل اجرا شد (مجموع $BK_COUNT بکاپ)" || bad "بکاپ دستی: HTTP $BK_CODE · تعداد $BK_COUNT"
+
 # ── پایان ──
 kill $SRV 2>/dev/null
 say "نتیجه نهایی"
 echo "════════════════════════════════"
 echo "PASS: $PASS | FAIL: $FAIL"
-[ $FAIL -eq 0 ] && echo "ALL-GREEN ✅" || echo "HAS-FAILURES ❌"
+# ═══ چرخهٔ ۶۶ — کد خروج برای CI: بدون این، job سی‌آی حتی با شکست تست‌ها سبز می‌ماند ═══
+if [ $FAIL -eq 0 ]; then
+  echo "ALL-GREEN ✅"
+  exit 0
+else
+  echo "HAS-FAILURES ❌"
+  exit 1
+fi

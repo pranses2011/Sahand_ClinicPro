@@ -60,6 +60,7 @@ jobs:
           retention-days: 7
 
   # ═══ چرخه دوازدهم (C2 — بند ۴-۹): E2E سرور لایسنس PHP ═══
+  # ═══ چرخهٔ ۶۶ (G-08 «بستن حلقه PHP»): +۱۴ تست بکاپ خودکار/چرخش کلید RSA ═══
   license-e2e:
     runs-on: ubuntu-latest
     services:
@@ -71,7 +72,7 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -prootpass"
+          --health-cmd="mysqladmin ping -ptestroot"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
@@ -92,7 +93,7 @@ jobs:
             sleep 2
           done
 
-      - name: اجرای ۳۴ تست E2E سرور لایسنس
+      - name: اجرای تست‌های E2E سرور لایسنس (+۱۴ تست چرخهٔ ۶۶: بکاپ/چرخش کلید)
         env:
           MYSQL_ROOT_PASSWORD: testroot
         run: bash scripts/licsrv-e2e-ci.sh
@@ -102,5 +103,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: licsrv-e2e-logs
-          path: /tmp/lsc12/data/error.log
+          path: |
+            /tmp/lsc12/data/error.log
+            /tmp/lsc12-server.log
           retention-days: 7
+          if-no-files-found: ignore

@@ -797,12 +797,44 @@ if ($page === 'settings') {
     echo '<h4>کلید عمومی — قالب XML (دات‌نت)</h4><pre class="code">' . ls_e(ls_public_key_xml()) . '</pre>';
     echo '<h4>کلید عمومی — قالب PEM</h4><pre class="code">' . ls_e(ls_public_key_pem()) . '</pre>';
 
-    echo '<h3>🔄 بازتولید کلیدها (خطرناک)</h3>';
-    echo '<form method="post" action="index.php?page=settings" onsubmit="return confirm(\'هشدار! همه امضاها با کلید قبلی نامعتبر می‌شوند و باید کلید عمومی جدید را در همه کلاینت‌ها به‌روز کنید. مطمئنید؟\')">'
+    /* ═══ چرخهٔ ۶۶ — بکاپ بانک: دکمهٔ دستی + راهنمای کرون خودکار ═══ */
+    echo '<h3>💾 بکاپ بانک اطلاعاتی</h3>';
+    echo '<div class="alert alert-info">بکاپ کامل بانک (کلیدها، مشتریان، پیام‌ها) به‌صورت فایل فشردهٔ '
+        . '<code>sql.gz</code> در پوشهٔ <code>data/backups</code> ذخیره می‌شود و ۱۴ نسخهٔ آخر نگه‌داشته می‌شود. '
+        . 'برای <b>بکاپ خودکار روزانه</b>، کار زمان‌بندی‌شدهٔ زیر را در cPanel → Cron Jobs ثبت کنید:'
+        . '<pre class="code" dir="ltr">php /home/USER/public_html/license/cron.php YOUR_SECRET</pre>'
+        . 'مقدار SECRET همان LS_CRON_SECRET فایل <code>data/config.php</code> است (توصیه: ۳:۳۰ بامداد). '
+        . 'همین کار کرون، پاک‌سازی لاگ‌های کهنه را هم انجام می‌دهد.</div>';
+    // فهرست بکاپ‌های موجود — شفافیت وضعیت برای مدیر
+    $backups = glob(LS_DATA_DIR . '/backups/license-backup-*.sql.gz') ?: [];
+    rsort($backups);
+    if (count($backups) > 0) {
+        echo '<table class="table reveal"><tr><th>فایل بکاپ</th><th>حجم</th><th>زمان</th></tr>';
+        foreach (array_slice($backups, 0, 10) as $bf) {
+            $bn = basename((string)$bf);
+            $sz = @filesize($bf) ?: 0;
+            // نام زمان‌دار — نمایش تاریخ از خود نام فایل
+            echo '<tr><td dir="ltr">' . ls_e($bn) . '</td><td>' . ls_fa_num(number_format($sz / 1024, 1)) . ' KB</td>'
+                . '<td class="dim">' . ls_e(mb_substr($bn, 15, 8)) . '</td></tr>';
+        }
+        echo '</table>';
+    } else {
+        echo '<div class="alert alert-warning">هنوز هیچ بکاپی موجود نیست — با دکمهٔ زیر نخستین بکاپ را بگیرید.</div>';
+    }
+    echo '<form method="post" action="index.php?page=settings">' . ls_csrf_field()
+        . '<input type="hidden" name="action" value="backup_now">'
+        . '<button class="btn btn-primary" type="submit">💾 بکاپ فوری همین حالا</button></form>';
+
+    /* ═══ چرخهٔ ۶۶ — چرخش امانت‌دار (جایگزین بازتولید ویرانگر) ═══ */
+    echo '<h3>🔄 چرخش کلیدهای RSA (امانت‌دار)</h3>';
+    echo '<div class="alert alert-info">چرخش کلید: کلید قدیمی در <code>data/keys-archive</code> بایگانی می‌شود، '
+        . 'جفت‌کلید جدید ساخته می‌شود و <b>همهٔ لایسنس‌های موجود به‌طور خودکار با کلید جدید امضا می‌شوند</b> — '
+        . 'بعد از جای‌گذاری کلید عمومی جدید در کلاینت‌ها، هیچ لایسنسی نامعتبر نمی‌شود. توصیه: چرخش سالانه.</div>';
+    echo '<form method="post" action="index.php?page=settings" onsubmit="return confirm(\'هشدار! کلید عمومی جدید باید در همه کلاینت‌ها (appsettings → License → RsaPublicKey) جای‌گذاری شود. لایسنس‌ها خودکار دوباره امضا می‌شوند. مطمئنید؟\')">'
         . ls_csrf_field()
-        . '<input type="hidden" name="action" value="regenerate_keys">'
+        . '<input type="hidden" name="action" value="rotate_keys">'
         . '<label>برای تأیید عبارت <code>REGENERATE</code> را بنویسید<input type="text" name="confirm_text" placeholder="REGENERATE"></label>'
-        . '<button class="btn btn-danger" type="submit">تولید جفت‌کلید جدید</button></form>';
+        . '<button class="btn btn-danger" type="submit">🔄 چرخش جفت‌کلید + امضای دوبارهٔ لایسنس‌ها</button></form>';
 
     echo '<h3>🔒 تغییر رمز عبور</h3>';
     echo '<form method="post" action="index.php?page=settings">' . ls_csrf_field()

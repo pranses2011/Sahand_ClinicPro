@@ -1084,3 +1084,278 @@ function ls_messages_pending_count(int $licenseId): int
         return 0;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   چرخهٔ شصت‌وششم — بستن حلقهٔ تاب‌آوری زیرساخت لایسنس (G-08)
+   ۱) بکاپ خودکار بانک MySQL (mysqldump یا فروکش PDO) + چرخش نسخه‌ها
+   ۲) چرخش امانت‌دار جفت‌کلید RSA (بایگانی کلید کهنه + امضای دوبارهٔ همهٔ لایسنس‌ها)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/** پوشهٔ بکاپ‌های بانک — data/backups */
+if (!defined('LS_BACKUP_DIR')) {
+    define('LS_BACKUP_DIR', LS_DATA_DIR . '/backups');
+}
+
+/** تعداد بکاپ نگه‌داشتنی در چرخش — قابل بازنویسی از config.php */
+if (!defined('LS_BACKUP_KEEP')) {
+    define('LS_BACKUP_KEEP', 14);
+}
+
+/**
+ * بکاپ کامل بانک لایسنس — چرخهٔ ۶۶ (G-08: «از دست رفتن دادهٔ لایسنس مشتریان»).
+ * دو مسیر با اولویت:
+ *   ۱) mysqldump بومی هاست (سریع و کامل — قفل‌های حداقلی، بدون جدول‌های سیستمی)
+ *   ۲) فروکش خالص PDO — SHOW TABLES → SHOW CREATE TABLE → INSERT ردیف‌ها
+ *      (سازگار با هاست‌های اشتراکی بدون دسترسی shell)
+ * خروجی gzip در data/backups/license-backup-YYYYMMDD-HHIISS.sql.gz + چرخش
+ * (نگه‌داشت LS_BACKUP_KEEP نسخهٔ آخر) + ثبت در لاگ حسابرسی پنل.
+ *
+ * @param int|null $adminId شناسهٔ مدیر برای لاگ حسابرسی (تهی = cron)
+ * @return array{ok:bool,file:string,size:int,method:string,kept:int,pruned:int,error?:string}
+ */
+function ls_backup_database(?int $adminId = null): array
+{
+    $result = ['ok' => false, 'file' => '', 'size' => 0, 'method' => '', 'kept' => 0, 'pruned' => 0];
+
+    // پوشهٔ بکاپ — ساخته شدن در هر فراخوانی (هاست ممکن است پاکش کند)
+    if (!is_dir(LS_BACKUP_DIR) && !@mkdir(LS_BACKUP_DIR, 0750, true)) {
+        $result['error'] = 'ساخت پوشهٔ بکاپ ممکن نیست — دسترسی data را بررسی کنید.';
+        ls_log_error_string('backup:mkdir', $result['error']);
+        return $result;
+    }
+    // قفل نوشتن هم‌زمان دو بکاپ (کرون و دکمهٔ دستی)
+    $lock = @fopen(LS_BACKUP_DIR . '/.lock', 'c');
+    if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
+        $result['error'] = 'یک بکاپ دیگر در حال اجراست — بعداً تلاش کنید.';
+        return $result;
+    }
+
+    try {
+        $sql = null;
+        $method = '';
+
+        // ── مسیر ۱: mysqldump بومی ──
+        // هاست‌های cPanel معمولاً mysqldump در PATH دارند؛ --no-tablespaces برای
+        // خطای PROCESS (MySQL 8 روی هاست اشتراکی) و --single-transaction برای
+        // ثبات خوانش بدون قفل نوشتن است.
+        $dump = trim((string)shell_exec('command -v mysqldump 2>/dev/null'));
+        if ($dump !== '' && is_executable($dump)) {
+            $port = (string)(defined('LS_DB_PORT') ? LS_DB_PORT : 3306);
+            $cmd = escapeshellarg($dump)
+                . ' --host=' . escapeshellarg(LS_DB_HOST)
+                . ' --port=' . escapeshellarg($port)
+                . ' --user=' . escapeshellarg(LS_DB_USER)
+                . ' --password=' . escapeshellarg(LS_DB_PASS)
+                . ' --single-transaction --no-tablespaces --routines --triggers'
+                . ' --default-character-set=utf8mb4 ' . escapeshellarg(LS_DB_NAME);
+            $proc = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+            if (is_resource($proc)) {
+                $sql = (string)stream_get_contents($pipes[1]);
+                fclose($pipes[1]);
+                $err = (string)stream_get_contents($pipes[2]);
+                fclose($pipes[2]);
+                $code = proc_close($proc);
+                if ($code === 0 && $sql !== '') {
+                    $method = 'mysqldump';
+                } else {
+                    ls_log_error_string('backup:mysqldump', "exit={$code} " . mb_substr($err, 0, 300));
+                    $sql = null; // سقوط به مسیر PDO
+                }
+            }
+        }
+
+        // ── مسیر ۲: فروکش PDO (بدون shell) ──
+        if ($sql === null) {
+            $sql = ls_backup_pdo_dump();
+            $method = 'pdo';
+        }
+
+        if ($sql === null || $sql === '') {
+            $result['error'] = 'تهیهٔ فایل بکاپ ناموفق بود — لاگ خطا را ببینید.';
+            return $result;
+        }
+
+        // فشرده‌سازی gzip + نوشتن اتمیک (نوشتن به tmp و سپس rename —
+        // بکاپ نیمه‌نوشته در چرخش بعدی به‌عنوان سالم شمرده نمی‌شود)
+        $name = 'license-backup-' . date('Ymd-His') . '.sql.gz';
+        $path = LS_BACKUP_DIR . '/' . $name;
+        $tmp  = $path . '.tmp';
+        $gz = @gzencode("-- Sahand ClinicPro License Server Backup\n-- Database: " . LS_DB_NAME
+            . "\n-- Generated: " . date('c') . "\n\n" . $sql, 6);
+        if ($gz === false || @file_put_contents($tmp, $gz, LOCK_EX) === false || !@rename($tmp, $path)) {
+            $result['error'] = 'نوشتن فایل بکاپ ناموفق بود — فضای دیسک data را بررسی کنید.';
+            ls_log_error_string('backup:write', $result['error']);
+            return $result;
+        }
+        @chmod($path, 0640);
+
+        $result['ok']     = true;
+        $result['file']   = $name;
+        $result['size']   = (int)@filesize($path);
+        $result['method'] = $method;
+
+        // ── چرخش نسخه‌ها — نگه‌داشت LS_BACKUP_KEEP بکاپ آخر ──
+        $files = glob(LS_BACKUP_DIR . '/license-backup-*.sql.gz') ?: [];
+        sort($files); // نام‌ها زمان‌دارند → مرتب‌سازی الفبایی = زمانی
+        $pruned = 0;
+        while (count($files) > max(1, (int)LS_BACKUP_KEEP)) {
+            @unlink(array_shift($files));
+            $pruned++;
+        }
+        $result['kept']  = count($files);
+        $result['pruned'] = $pruned;
+
+        // ثبت در حسابرسی — شناسهٔ تهی یعنی اجرای زمان‌بندی‌شده (cron)
+        if ($adminId !== null) {
+            ls_audit($adminId, 'backup_now', 'database', null,
+                'بکاپ دستی — ' . $result['method'] . ' · ' . number_format($result['size'] / 1024, 1) . ' KB');
+        } else {
+            ls_audit(0, 'cron_backup', 'database', null,
+                'بکاپ خودکار — ' . $result['method'] . ' · ' . number_format($result['size'] / 1024, 1) . ' KB');
+        }
+    } catch (Throwable $e) {
+        ls_log_error('backup:database', $e);
+        $result['error'] = 'خطای غیرمنتظره در بکاپ: ' . $e->getMessage();
+    } finally {
+        @flock($lock, LOCK_UN);
+        @fclose($lock);
+    }
+
+    return $result;
+}
+
+/**
+ * فروکش خالص PDO از کل بانک — بدون mysqldump (هاست بدون shell).
+ * ترتیب: SET نام‌گذاری → هر جدول: DROP IF EXISTS + CREATE TABLE + INSERT ها.
+ * ردیف‌ها با prepare مقادیر (نه الحاق رشته) ساخته می‌شوند تا کوتیشن‌ها امن بمانند.
+ */
+function ls_backup_pdo_dump(): ?string
+{
+    try {
+        $db = ls_db();
+        $out = "SET NAMES utf8mb4;\nSET FOREIGN_KEY_CHECKS=0;\n";
+
+        $tables = $db->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($tables as $table) {
+            $table = (string)$table;
+            // ساخت جدول
+            $create = $db->query('SHOW CREATE TABLE `' . str_replace('`', '', $table) . '`')->fetch(PDO::FETCH_NUM);
+            $out .= "\nDROP TABLE IF EXISTS `" . $table . "`;\n" . $create[1] . ";\n";
+
+            // ردیف‌ها — استریم‌وار با fetch تک‌تک (بانک بزرگ حافظه را پر نمی‌کند)
+            $stmt = $db->query('SELECT * FROM `' . $table . '`');
+            $buffer = '';
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $cols = '`' . implode('`, `', array_keys($row)) . '`';
+                $vals = implode(', ', array_map(static function ($v) use ($db) {
+                    return $v === null ? 'NULL' : $db->quote((string)$v);
+                }, array_values($row)));
+                $buffer .= "INSERT INTO `$table` ($cols) VALUES ($vals);\n";
+                if (strlen($buffer) > 65536) { // شست‌وشوی دوره‌ای بافر
+                    $out .= $buffer;
+                    $buffer = '';
+                }
+            }
+            $out .= $buffer;
+        }
+        $out .= "\nSET FOREIGN_KEY_CHECKS=1;\n";
+        return $out;
+    } catch (Throwable $e) {
+        ls_log_error('backup:pdo', $e);
+        return null;
+    }
+}
+
+/**
+ * چرخش امانت‌دار جفت‌کلید RSA — چرخهٔ ۶۶ (G-08: «عمر بی‌پایان کلید امضا»).
+ * فرقش با «بازتولید» قدیمی: کلید کهنه بایگانی می‌شود (نه حذف) و «همهٔ
+ * لایسنس‌های موجود با کلید جدید امضای دوباره می‌گیرند» تا پس از به‌روزرسانی
+ * کلید عمومی کلاینت‌ها هیچ لایسنسی نامعتبر نشود.
+ *
+ * گام‌ها:
+ *   ۱) بایگانی rsa_private.pem و rsa_public.pem در data/keys-archive/ با مهر زمانی
+ *   ۲) تولید جفت‌کلید تازهٔ RSA-2048 و نوشتن در data/
+ *   ۳) امضای دوبارهٔ تمام ردیف‌های ls_licenses (فیلد signature)
+ *   ۴) ثبت در حسابرسی + بازگرداندن کلید عمومی جدید برای نمایش به مدیر
+ *
+ * @param int $adminId شناسهٔ مدیر درخواست‌دهنده
+ * @return array{ok:bool,relicensed:int,publicXml:string,publicPem:string,archive:string,error?:string}
+ */
+function ls_rotate_rsa_keys(int $adminId): array
+{
+    $result = ['ok' => false, 'relicensed' => 0, 'publicXml' => '', 'publicPem' => '', 'archive' => ''];
+
+    $archiveDir = LS_DATA_DIR . '/keys-archive';
+    if (!is_dir($archiveDir) && !@mkdir($archiveDir, 0750, true)) {
+        $result['error'] = 'ساخت پوشهٔ بایگانی کلیدها ناموفق بود.';
+        return $result;
+    }
+
+    // ── ۱) بایگانی کلیدهای جاری (اگر وجود دارند) ──
+    $stamp = date('Ymd-His');
+    if (is_file(LS_DATA_DIR . '/rsa_private.pem')) {
+        @copy(LS_DATA_DIR . '/rsa_private.pem', $archiveDir . '/rsa_private-' . $stamp . '.pem');
+    }
+    if (is_file(LS_DATA_DIR . '/rsa_public.pem')) {
+        @copy(LS_DATA_DIR . '/rsa_public.pem', $archiveDir . '/rsa_public-' . $stamp . '.pem');
+    }
+    $result['archive'] = 'keys-archive/rsa_*-' . $stamp . '.pem';
+
+    // ── ۲) تولید جفت‌کلید تازه ──
+    $res = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
+    $private = '';
+    if ($res === false || !openssl_pkey_export($res, $private)) {
+        $result['error'] = 'تولید کلید جدید ناموفق بود — افزونهٔ openssl را بررسی کنید.';
+        return $result;
+    }
+    $details = openssl_pkey_get_details($res);
+    if ($details === false) {
+        $result['error'] = 'استخراج کلید عمومی جدید ناموفق بود.';
+        return $result;
+    }
+
+    // نوشتن اتمیک — اگر نوشتن کلید جدید شکست بخورد، کلیدهای قبلی دست‌نخورده می‌مانند
+    $tmpPriv = LS_DATA_DIR . '/rsa_private.pem.tmp';
+    $tmpPub  = LS_DATA_DIR . '/rsa_public.pem.tmp';
+    if (@file_put_contents($tmpPriv, $private, LOCK_EX) === false
+        || @file_put_contents($tmpPub, $details['key'], LOCK_EX) === false
+        || !@rename($tmpPriv, LS_DATA_DIR . '/rsa_private.pem')
+        || !@rename($tmpPub, LS_DATA_DIR . '/rsa_public.pem')) {
+        @unlink($tmpPriv);
+        @unlink($tmpPub);
+        $result['error'] = 'نوشتن فایل کلیدهای جدید ناموفق بود.';
+        return $result;
+    }
+    @chmod(LS_DATA_DIR . '/rsa_private.pem', 0640);
+    @chmod(LS_DATA_DIR . '/rsa_public.pem', 0644);
+
+    // ── ۳) امضای دوبارهٔ همهٔ لایسنس‌ها با کلید جدید ──
+    $db = ls_db();
+    $rows = $db->query('SELECT id, license_key, expiry_date, max_users FROM ls_licenses')->fetchAll();
+    $update = $db->prepare('UPDATE ls_licenses SET signature = ? WHERE id = ?');
+    $count = 0;
+    foreach ($rows as $row) {
+        $sig = ls_sign_license((string)$row['license_key'],
+            $row['expiry_date'] !== null ? (string)$row['expiry_date'] : null,
+            (int)$row['max_users']);
+        $update->execute([$sig, (int)$row['id']]);
+        $count++;
+    }
+
+    // ── ۴) حسابرسی + خروجی کلید عمومی جدید ──
+    ls_audit($adminId, 'rotate_keys', 'settings', null,
+        'چرخش جفت‌کلید RSA — ' . $count . ' لایسنس دوباره امضا شد؛ کلید قدیمی بایگانی شد');
+    $result['ok'] = true;
+    $result['relicensed'] = $count;
+    $result['publicPem'] = (string)$details['key'];
+    $result['publicXml'] = ls_public_key_xml();
+
+    return $result;
+}
+
+/** لاگ خطای متنی ساده (بدون استثنا) — برای خطاهای زیرساختی بکاپ */
+function ls_log_error_string(string $context, string $message): void
+{
+    $line = date('Y-m-d H:i:s') . "  [{$context}]  {$message}\n";
+    @file_put_contents(LS_DATA_DIR . '/error.log', $line, FILE_APPEND | LOCK_EX);
+}

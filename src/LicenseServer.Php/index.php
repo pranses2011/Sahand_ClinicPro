@@ -366,21 +366,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ls_json_or_redirect('index.php?page=settings');
     }
 
-    if ($act === 'regenerate_keys') {
+    if ($act === 'regenerate_keys' || $act === 'rotate_keys') {
         $confirmText = trim((string)($_POST['confirm_text'] ?? ''));
         if ($confirmText !== 'REGENERATE') {
             $_SESSION['flash'] = ['danger', 'عبارت تأیید دقیقاً باید REGENERATE باشد.'];
         } else {
-            // تولید مجدد جفت‌کلید — همه امضاها با کلید قبلی باطل می‌شوند
-            $res = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
-            $private = '';
-            openssl_pkey_export($res, $private);
-            $details = openssl_pkey_get_details($res);
-            file_put_contents(LS_DATA_DIR . '/rsa_private.pem', $private, LOCK_EX);
-            file_put_contents(LS_DATA_DIR . '/rsa_public.pem', $details['key'], LOCK_EX);
-            @chmod(LS_DATA_DIR . '/rsa_private.pem', 0640);
-            ls_audit($admin['id'], 'regenerate_keys', 'settings', null, 'بازتولید جفت‌کلید RSA — کلید عمومی جدید باید در کلاینت‌ها هم به‌روز شود');
-            $_SESSION['flash'] = ['warning', 'کلیدهای جدید ساخته شدند — کلید عمومی جدید را در تنظیمات کلاینت‌ها هم جای‌گذاری کنید.'];
+            /* ═══ چرخهٔ ۶۶ — چرخش امانت‌دار (به‌جای بازتولید ویرانگر) ═══
+               پیشتر: کلید جدید ساخته می‌شد ولی (۱) کلید قدیمی برای همیشه
+               گم می‌شد و (۲) هیچ لایسنسی دوباره امضا نمی‌شد ⇒ امضاهای
+               موجود با کلید عمومیِ جدیدِ کلاینت‌ها هرگز تأیید نمی‌شدند.
+               اکنون ls_rotate_rsa_keys: بایگانی کلید کهنه + امضای دوبارهٔ
+               همهٔ لایسنس‌ها + گزارش شفاف به مدیر. */
+            $rot = ls_rotate_rsa_keys((int)$admin['id']);
+            if ($rot['ok']) {
+                ls_log_error_string('rotate_keys', 'چرخش کلید موفق — ' . (int)$rot['relicensed'] . ' لایسنس دوباره امضا شد');
+                $_SESSION['flash'] = ['warning',
+                    'چرخش کلید انجام شد — ' . (int)$rot['relicensed'] . ' لایسنس با کلید جدید امضا شد و کلید قدیمی در '
+                    . $rot['archive'] . ' بایگانی شد. کلید عمومی جدید را در تنظیمات کلاینت‌ها جای‌گذاری کنید.'];
+            } else {
+                $_SESSION['flash'] = ['danger', 'چرخش کلید ناموفق بود: ' . ($rot['error'] ?? 'خطای ناشناخته')];
+            }
+        }
+        ls_json_or_redirect('index.php?page=settings');
+    }
+
+    /* ── بکاپ دستی بانک — چرخهٔ ۶۶ (همان موتور بکاپ کرون، با ثبت مدیر) ── */
+    if ($act === 'backup_now') {
+        $bk = ls_backup_database((int)$admin['id']);
+        if ($bk['ok']) {
+            $_SESSION['flash'] = ['success',
+                'بکاپ گرفته شد: ' . $bk['file'] . ' (' . number_format($bk['size'] / 1024, 1) . ' KB · روش '
+                . $bk['method'] . ') — ' . (int)$bk['kept'] . ' نسخه نگه‌داشته شد'];
+        } else {
+            $_SESSION['flash'] = ['danger', 'بکاپ ناموفق بود: ' . ($bk['error'] ?? 'خطای ناشناخته')];
         }
         ls_json_or_redirect('index.php?page=settings');
     }
