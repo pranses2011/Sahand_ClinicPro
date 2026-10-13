@@ -163,6 +163,77 @@ GUIDE_TEMPLATE = """<!DOCTYPE html>
 </div></body></html>"""
 
 
+# ═══════════════════ توزیع باینری آماده — چرخهٔ ۷۰ ═══════════════════
+# گزارش مالک (چرخه‌های ۴۳ تا ۶۹، پنج‌باره): «دکمه‌های میانبر و پیام توست
+# هنوز خراب‌اند» با این‌که رفع‌ها در مخزن بودند. ریشهٔ قطعی: مالک فقط فایل‌های
+# «سورس» را جایگزین می‌کند و Rebuild می‌زند؛ اما کشِ طراح ویژوال استودیو
+# (BAML منجمد) با Rebuild عادی پاک نمی‌شود و «XAML کهنه» در هر بیلدِ ظاهراً
+# تازه، دوباره داخل DLL می‌نشیند. راهنمای آپدیت به Clean-VS-Cache.bat ارجاع
+# می‌داد که هرگز در هیچ زیپی نبود (فایل‌های تغییرکرده فقط). از این چرخه:
+# زیپ آپدیت «باینری کامپایل‌شدهٔ همین بیلد» هم دارد (bin-update/) تا مالک
+# بدون ویژوال استودیو و بدون ریسکِ کش، فایل‌ها را جایگزین کند و برنامه
+# همان چیزی را اجرا کند که مخزن دارد — ریشه‌کن‌شدن قطعیِ «رفع‌ها بی‌اثرند».
+
+# فایل‌های first-party دسکتاپ — همیشه کامل (سازگاری قطعی)
+_FIRSTPARTY_PREFIXES = ("Sahand.ClinicPro.",)
+
+# خروجی‌های میزبان که نسخهٔ ویندوزی آن‌ها با بیلد مالک ساخته می‌شود؛
+# در بیلد لینوکسی فقط DLL/پیکربندی معتبرند — apphost لینوکسی بی‌فایده است
+_DESKTOP_BIN_FILES = (
+    "Sahand.ClinicPro.Desktop.dll",
+    "Sahand.ClinicPro.Desktop.deps.json",
+    "Sahand.ClinicPro.Desktop.runtimeconfig.json",
+)
+
+
+def collect_bin_payload(changed_files: list[str]) -> list[tuple[str, str]]:
+    """جمع‌آوری باینری‌های آمادهٔ نصب — (مسیر در زیپ، مسیر روی دیسک).
+    دسکتاپ: DLL برنامه + DLL‌های لایه‌ها (Application/Domain/Infrastructure/Shared)
+    و در تغییرِ نسخهٔ پکیج‌ها، کل DLL‌های ثالثِ خروجی.
+    سرور API: DLL خود کنترلرها. appsettings هرگز بازنویسی نمی‌شود (تنظیم محلی مالک)."""
+    import glob as _glob
+    root = pathlib.Path(REPO)
+    out: list[tuple[str, str]] = []
+
+    desktop_dir = root / "src" / "Sahand.ClinicPro.Desktop" / "bin" / "Release" / "net8.0-windows"
+    api_dir = root / "src" / "Sahand.ClinicPro.API" / "bin" / "Release" / "net8.0"
+    if not desktop_dir.is_dir():
+        die("خروجی بیلد دسکتاپ پیدا نشد — پیش از ساخت زیپ، Release کامل بیلد شود")
+    if not api_dir.is_dir():
+        die("خروجی بیلد API پیدا نشد — پیش از ساخت زیپ، Release کامل بیلد شود")
+
+    # فایل‌های میزبان دسکتاپ
+    for name in _DESKTOP_BIN_FILES:
+        src = desktop_dir / name
+        if src.is_file():
+            out.append((f"bin-update/desktop/{name}", str(src)))
+
+    # DLL‌های first-party از خروجی دسکتاپ (همهٔ لایه‌ها + خودِ Desktop)
+    for f in sorted(desktop_dir.glob("*.dll")):
+        if f.name.startswith(_FIRSTPARTY_PREFIXES):
+            out.append((f"bin-update/desktop/{f.name}", str(f)))
+
+    # DLL سرور API
+    api_dll = api_dir / "Sahand.ClinicPro.API.dll"
+    if api_dll.is_file():
+        out.append(("bin-update/api/Sahand.ClinicPro.API.dll", str(api_dll)))
+
+    # تغییر پکیج‌ها → DLL‌های ثالث هم کامل می‌روند (نسخهٔ جدید وابستگی‌ها)
+    packages_changed = any("Directory.Packages.props" in p for p in changed_files)
+    if packages_changed:
+        for f in sorted(desktop_dir.glob("*.dll")):
+            rel = f"bin-update/desktop/{f.name}"
+            if any(rel == z for z, _ in out):
+                continue
+            out.append((rel, str(f)))
+
+    # اسکریپت بازنشانی کش بیلد — همیشه در زیپ است (پیش‌تر هرگز نمی‌رسید)
+    reset = root / "Tools" / "Reset-Build-Cache.ps1"
+    if reset.is_file():
+        out.append(("Tools/Reset-Build-Cache.ps1", str(reset)))
+    return out
+
+
 def cmd_update_zip(args: argparse.Namespace) -> None:
     """ساخت بستهٔ آپدیت فقط با فایل‌های تغییرکرده + گاردهای انسجام."""
     to_version = args.to.lstrip("v")
@@ -211,14 +282,23 @@ def cmd_update_zip(args: argparse.Namespace) -> None:
         + "═" * 60 + "\n" + "\n".join(files)
         + f"\n\nلایه‌ها: سرور API={'دارد' if has_api else 'ندارد'} · دسکتاپ={'دارد' if has_desktop else 'ندارد'}\n")
 
+    # باینری‌های آمادهٔ نصب — چرخهٔ ۷۰؛ مگر با --skip-bin صریح
+    bin_files: list[tuple[str, str]] = []
+    if not getattr(args, "skip_bin", False):
+        bin_files = collect_bin_payload(files)
+
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zf:
         for path in files:
             zf.write(REPO / path, path)
+        for arc, disk in bin_files:
+            zf.write(disk, arc)
         zf.writestr(f"Update-Guide-{to_version}.html", guide)
-        zf.writestr("changed-files.txt", manifest)
+        zf.writestr("changed-files.txt", manifest
+                    + "\n\nباینری آمادهٔ نصب (bin-update/):\n"
+                    + "\n".join(a for a, _ in bin_files))
 
     ok(f"بستهٔ آپدیت ساخته شد: {out}")
-    ok(f"تعداد فایل‌ها: {len(files)} + راهنما + مانیفست — حجم: {out.stat().st_size:,} بایت")
+    ok(f"تعداد فایل‌ها: {len(files)} سورس + {len(bin_files)} باینری/ابزار + راهنما + مانیفست — حجم: {out.stat().st_size:,} بایت")
     print(f"   سرور API در بسته: {'✅' if has_api else '—'} · دسکتاپ در بسته: {'✅' if has_desktop else '—'}")
     for p in files:
         print("   •", p)
@@ -306,11 +386,14 @@ def main() -> None:
     p_zip.add_argument("--from", dest="from_tag", required=True, help="تگ مبدأ (مثال v2.13.0)")
     p_zip.add_argument("--to", required=True, help="نسخهٔ هدف (مثال 2.14.0)")
     p_zip.add_argument("--out", help="مسیر خروجی زیپ (پیش‌فرض: download کنار مخزن)")
+    p_zip.add_argument("--skip-bin", action="store_true",
+                        help="بدون باینری آماده (فقط سورس) — حالت توسعه‌دهندهٔ خالص")
 
     p_rel = sub.add_parser("release", help="doctor + زیپ + تگ + رلیز گیت‌هاب + بارگذاری")
     p_rel.add_argument("--from", dest="from_tag", required=True, help="تگ مبدأ (مثال v2.13.0)")
     p_rel.add_argument("--to", required=True, help="نسخه/تگ هدف (مثال 2.14.0)")
     p_rel.add_argument("--zip-out", help="مسیر خروجی زیپ")
+    p_rel.add_argument("--skip-bin", action="store_true", help="عبور از --skip-bin به update-zip")
     p_rel.add_argument("--skip-zip", action="store_true", help="بدون ساخت/بارگذاری زیپ (فقط تگ+رلیز)")
 
     args = parser.parse_args()
