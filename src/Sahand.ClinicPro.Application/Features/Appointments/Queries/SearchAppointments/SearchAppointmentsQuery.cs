@@ -31,6 +31,13 @@ public class SearchAppointmentsQueryHandler : IRequestHandler<SearchAppointments
         CancellationToken cancellationToken)
     {
         var f = request.Filter;
+
+        // ═══ چرخهٔ ۶۲ (P-03) — گارد صفحه‌بندی؛ مرز: صفحه ≥۱ و اندازه ≤۲۰۰ ═══
+        f = f with
+        {
+            PageNumber = Common.Helpers.PagingGuard.Page(f.PageNumber),
+            PageSize = Common.Helpers.PagingGuard.Size(f.PageSize, 200)
+        };
         IQueryable<Appointment> query = _unitOfWork.Repository<Appointment>().QueryableNoTracking
             .Include(a => a.Patient)
             .Include(a => a.Doctor).ThenInclude(d => d!.Employee)

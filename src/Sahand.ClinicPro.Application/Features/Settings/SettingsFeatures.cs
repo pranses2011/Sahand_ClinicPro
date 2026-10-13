@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.Common.Caching;
+using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Infrastructure;
 using Sahand.ClinicPro.Domain.Interfaces;
@@ -138,6 +139,12 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Resul
     public async Task<Result<List<AuditLogDto>>> Handle(GetAuditLogsQuery request,
         CancellationToken cancellationToken)
     {
+        // ═══ چرخهٔ ۶۲ (P-03) — گارد صفحه‌بندی ═══ اندازه/شمارهٔ معیوب هرگز
+        // به Skip/Take نمی‌رسد: صفحهٔ صفر Skip منفی (استثنای EF) می‌سازید و
+        // اندازهٔ غول‌پیکر پاسخ چند‌مگابایتی؛ مرز: صفحه ≥۱ و اندازه ≤۲۰۰
+        var pageNumber = Common.Helpers.PagingGuard.Page(request.Page);
+        var pageSize = Common.Helpers.PagingGuard.Size(request.PageSize, 200);
+
         IQueryable<Domain.Entities.Infrastructure.AuditLog> query =
             _unitOfWork.Repository<Domain.Entities.Infrastructure.AuditLog>().QueryableNoTracking;
 
@@ -151,8 +158,8 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Resul
 
         var items = await query
             .OrderByDescending(l => l.Timestamp)
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Skip(PagingGuard.Skip(pageNumber, pageSize))
+            .Take(pageSize)
             .Select(l => new AuditLogDto(
                 l.Id, l.Username,
                 l.ActionType.ToString(),
