@@ -7,9 +7,18 @@
              xmlns:charts="clr-namespace:Sahand.ClinicPro.Desktop.Controls.Charts"
              xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
              mc:Ignorable="d"
-             d:DesignHeight="660" d:DesignWidth="1140"
+             d:DesignHeight="700" d:DesignWidth="1180"
              FlowDirection="RightToLeft">
-    <!-- ═══ گزارش‌ساز — گام U16 طبق فرم ۲۷: سایدبار دسته‌ها + محتوا ═══ -->
+    <!-- ═══════════════════════════════════════════════════════════
+         گزارش‌ساز — بازطراحی تب‌بندی‌شدهٔ چرخهٔ ۷0 (گزارش مالک):
+         «گزینه‌ها به‌جای اینکه در کنار صفحه باشند، به‌صورت تب‌بندی‌شده
+         باشند تا ظاهر زیبا داشته باشد» — جایگزینی چیدمان سه‌ستونهٔ
+         (دسته‌ها | کاتالوگ | نتایج) با:
+           ردیف ۱: نوار ابزار (جستجو + فیلتر نوع + گزارش‌ساز رایگانه)
+           ردیف ۲: تب‌های دسته (۹ دسته با آیکون و نشان شمار)
+                    و درون هر تب، کارت‌های افقی گزارش‌های همان دسته
+           ردیف ۳: پنل پارامترها + نتایج (خلاصه‌های فارسی + نمودار + جدول)
+         ═══════════════════════════════════════════════════════════ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -17,233 +26,238 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <materialDesign:PackIcon Kind="FileChart" Width="26" Height="26"
-                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
-            <TextBlock Text="گزارش‌ساز" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
-            <!-- دکمه گزارش‌ساز رایگانه — چرخه سیزدهم (درخواست ۴-۳) -->
-            <Button Command="{Binding OpenAdhocBuilderCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
-                    Margin="16,0,0,0" ToolTip="کوئری‌ساز گرافیکی سه‌گامی — بدون نیاز به SQL گزارش دلخواه بسازید">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="ChartBoxOutline" Width="15" Height="15" VerticalAlignment="Center" />
-                    <TextBlock Text="⚙ گزارش‌ساز رایگانه" Margin="6,0,0,0" VerticalAlignment="Center" />
-                </StackPanel>
-            </Button>
-        </StackPanel>
+        <Grid.LayoutTransform>
+            <ScaleTransform ScaleX="0.96" ScaleY="0.96" />
+        </Grid.LayoutTransform>
 
-        <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
+        <!-- ═══ ردیف ۱: نوار ابزار ═══ -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                <Border Width="40" Height="40" CornerRadius="11" Background="#E8F5E9" VerticalAlignment="Center" Margin="0,0,10,0">
+                    <materialDesign:PackIcon Kind="FileChart" Width="21" Height="21" Foreground="#2E7D32"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="گزارش‌ساز" FontSize="19" FontWeight="Bold" VerticalAlignment="Center" />
+                <Button Command="{Binding OpenAdhocBuilderCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Margin="14,0,0,0" FontSize="12"
+                        ToolTip="کوئری‌ساز گرافیکی سه‌گامی — بدون نیاز به SQL گزارش دلخواه بسازید">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="ChartBoxOutline" Width="14" Height="14" VerticalAlignment="Center" />
+                        <TextBlock Text="گزارش‌ساز رایگانه" Margin="6,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <TextBox materialDesign:HintAssist.Hint="🔍 جستجوی گزارش…"
+                         Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="220" FontSize="12" />
+                <ComboBox controls:ComboBoxSearch.IsEnabled="False" materialDesign:HintAssist.Hint="نوع"
+                          ItemsSource="{Binding ReportTypeFilters}"
+                          SelectedIndex="{Binding TypeFilterIndex}"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          FontSize="12" Margin="8,0,0,0" MinWidth="150"
+                          ToolTip="جدولی‌ها خروجی چاپ/اکسل/PDF دارند؛ نموداری‌ها خروجی تصویری" />
+            </StackPanel>
+        </DockPanel>
+
+        <ProgressBar Grid.Row="0" Grid.Column="0" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
+                     VerticalAlignment="Bottom"
                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
 
-        <!-- گرید: سایدبار ۲۳۰px + کاتالوگ ۲۴۰px + محتوا -->
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="230" />
-                <ColumnDefinition Width="250" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <!-- ═══ ستون راست: دسته‌ها ═══ -->
-            <Border Grid.Column="0" CornerRadius="10" Margin="0,0,8,0"
-                    Background="{DynamicResource MaterialDesign.Brush.Separator.Background}" Padding="8">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <TextBox Grid.Row="0" materialDesign:HintAssist.Hint="🔍 جستجوی گزارش"
-                             Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="2,0,2,8" FontSize="12" />
-                    <!-- چرخهٔ ۴۱ (گزارش مالک) — «فیلتر نوع به چاپ/گزارش‌ها اضافه بکن»:
-                         جدولی = خروجی جدول با چاپ/اکسل/PDF؛ نموداری = گزارش‌های chart- -->
-                    <ComboBox controls:ComboBoxSearch.IsEnabled="False" Grid.Row="1" materialDesign:HintAssist.Hint="نوع گزارش"
-                              ItemsSource="{Binding ReportTypeFilters}"
-                              SelectedIndex="{Binding TypeFilterIndex}"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                              FontSize="12" Margin="2,0,2,8"
-                              ToolTip="فیلتر نوع گزارش — جدولی‌ها خروجی چاپ/اکسل/PDF دارند؛ نموداری‌ها خروجی تصویری" />
-                    <ListBox Grid.Row="2" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}"
-                             Background="Transparent" BorderThickness="0"
+        <!-- ═══ ردیف ۲: تب‌های دسته + کارت‌های گزارش همان دسته ═══ -->
+        <TabControl Grid.Row="1"
+                    ItemsSource="{Binding Categories}"
+                    SelectedItem="{Binding SelectedCategory}"
+                    materialDesign:ColorZoneAssist.Mode="PrimaryLight"
+                    MinHeight="190" MaxHeight="250">
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Margin="2,0">
+                        <TextBlock Text="{Binding Icon}" FontSize="14" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Title}" FontSize="12.5" Margin="7,0,0,0" VerticalAlignment="Center" />
+                        <Border CornerRadius="9" Background="#E3F2FD" Padding="7,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Count}" FontSize="10.5" Foreground="#1565C0"
+                                       FontFamily="{DynamicResource App.CodeFont}" />
+                        </Border>
+                    </StackPanel>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate>
+                    <!-- کارت‌های افقی گزارش‌های این دسته — انتخاب = اجرای پارامترها پایین -->
+                    <ListBox ItemsSource="{Binding Reports}"
+                             SelectedItem="{Binding DataContext.SelectedReport, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                             Background="Transparent" BorderThickness="0" Padding="4"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal" Margin="4,7">
-                                    <TextBlock Text="{Binding Icon}" FontSize="15" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Title}" FontSize="13" Margin="8,0,0,0" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Count}" FontSize="11" Opacity="0.55" Margin="8,0,0,0"
-                                               VerticalAlignment="Center" FontFamily="{DynamicResource App.CodeFont}" />
+                                <Border Width="215" Margin="4,5" Padding="11,9" CornerRadius="10"
+                                        Background="#FFFFFF" BorderBrush="#DCE7F0" BorderThickness="1.2"
+                                        Cursor="Hand">
+                    <StackPanel>
+                                    <DockPanel>
+                                        <TextBlock Text="📄" FontSize="13" DockPanel.Dock="Right" />
+                                        <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="SemiBold"
+                                                   TextWrapping="Wrap" TextTrimming="CharacterEllipsis" />
+                                    </DockPanel>
+                                    <TextBlock Text="{Binding Description}" FontSize="10" Opacity="0.62"
+                                               TextWrapping="Wrap" Margin="0,3,0,0" />
                                 </StackPanel>
+                                </Border>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                    <!-- حالت خالی — پالایش/جستجویی که هیچ گزارشی نیافت -->
-                    <TextBlock Grid.Row="2" Text="گزارشی با این فیلتر/جستجو یافت نشد"
-                               FontSize="11.5" Opacity="0.6" TextAlignment="Center"
-                               Margin="4,14,4,0" TextWrapping="Wrap"
-                               Visibility="{Binding Categories, Converter={StaticResource EmptyListToVisibility}}" />
-                </Grid>
-            </Border>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
 
-            <!-- ═══ ستون میانه: کاتالوگ گزارش‌های دسته ═══ -->
-            <Border Grid.Column="1" CornerRadius="10" Margin="0,0,8,0"
-                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1" Padding="6">
-                <ListBox ItemsSource="{Binding SelectedCategory.Reports}" SelectedItem="{Binding SelectedReport}"
-                         Background="Transparent" BorderThickness="0"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="2,6">
-                                <TextBlock Text="📄" FontSize="12" />
-                                <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                <TextBlock Text="{Binding Description}" FontSize="10" Opacity="0.6" TextWrapping="Wrap" Margin="0,2,0,0" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Border>
-
-            <!-- ═══ ستون چپ: پارامترها + نتایج ═══ -->
-            <Grid Grid.Column="2">
+        <!-- ═══ ردیف ۳: پنل اجرا + نتایج ═══ -->
+        <ScrollViewer Grid.Row="2" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto">
+            <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <!-- مشخصات گزارش -->
-                <StackPanel Grid.Row="0" Margin="2,2,2,10">
-                    <TextBlock Text="{Binding ReportTitle}" FontSize="17" FontWeight="Bold"
-                               Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
-                    <TextBlock Text="{Binding ReportDescription}" FontSize="11.5" Opacity="0.7" Margin="0,3,0,0" />
-                </StackPanel>
+                <!-- عنوان و توضیح گزارش انتخاب‌شده -->
+                <Border Grid.Row="0" CornerRadius="10" Background="#F5F9FD" BorderBrush="#DCE7F0"
+                        BorderThickness="1" Padding="14,10" Margin="0,0,0,10">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Top">
+                            <Border Width="34" Height="34" CornerRadius="10" Background="#E3F2FD" VerticalAlignment="Center" Margin="0,0,10,0">
+                                <materialDesign:PackIcon Kind="PlayCircleOutline" Width="19" Height="19" Foreground="#1565C0"
+                                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="{Binding ReportTitle}" FontSize="16.5" FontWeight="Bold"
+                                       Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
+                            <TextBlock Text="{Binding ReportDescription}" FontSize="11.5" Opacity="0.72" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
 
-                <!-- پارامترها — گام P1: پویا بر اساس گزارش انتخاب‌شده -->
-                <StackPanel Grid.Row="1" Margin="2,0,2,10"
-                            Visibility="{Binding IsReportAvailable, Converter={StaticResource BoolToVisibility}}">
-                    <WrapPanel>
-                        <!-- چرخه بیست‌وسوم: جایگزینی DatePicker میلادی ویندوز با انتخابگر شمسی -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,10,6"
-                                    Visibility="{Binding HasDateRange, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="از: " VerticalAlignment="Center" FontSize="12" />
-                            <controls:PersianDatePicker SelectedDate="{Binding FromDate}" Width="120" />
-                            <TextBlock Text=" تا: " VerticalAlignment="Center" FontSize="12" Margin="8,0,0,0" />
-                            <controls:PersianDatePicker SelectedDate="{Binding ToDate}" Width="120" />
-                        </StackPanel>
-                        <!-- تعداد ماه — گزارش انقضا / بدون مراجعه -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,10,6"
-                                    Visibility="{Binding HasMonthsParam, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="ماه: " VerticalAlignment="Center" FontSize="12" />
-                            <TextBox Text="{Binding Months, UpdateSourceTrigger=PropertyChanged}" Width="56" FontSize="12"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="۶" />
-                        </StackPanel>
-                        <!-- کد ICD — گزارش بیماری مزمن -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,10,6"
-                                    Visibility="{Binding HasIcdParam, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="کد ICD: " VerticalAlignment="Center" FontSize="12" />
-                            <TextBox Text="{Binding IcdCode, UpdateSourceTrigger=PropertyChanged}" Width="90" FontSize="12"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="مثلاً E11" />
-                        </StackPanel>
-                        <!-- حداقل مبلغ — لیست بدهکاران -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,10,6"
-                                    Visibility="{Binding HasMinAmountParam, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="حداقل مبلغ: " VerticalAlignment="Center" FontSize="12" />
-                            <!-- چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان) — حذف هاردکد -->
-                            <TextBox Text="{Binding MinAmount, UpdateSourceTrigger=PropertyChanged}" Width="110" FontSize="12"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="{DynamicResource App.CurrencyLabel}" />
-                        </StackPanel>
-                        <!-- سقف نتایج -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,10,6"
-                                    Visibility="{Binding HasTopParam, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="تعداد: " VerticalAlignment="Center" FontSize="12" />
-                            <TextBox Text="{Binding TopCount, UpdateSourceTrigger=PropertyChanged}" Width="56" FontSize="12"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="۲۰" />
-                        </StackPanel>
-                        <Button Command="{Binding ExecuteCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,6">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Play" Width="14" Height="14" VerticalAlignment="Center" />
-                                <TextBlock Text="اجرای گزارش" Margin="6,0,0,0" VerticalAlignment="Center" />
+                <!-- پارامترها + دکمه‌های اجرا/خروجی -->
+                <Border Grid.Row="1" CornerRadius="10" Padding="12,8" Margin="0,0,0,10"
+                        Background="#FFFFFF" BorderBrush="#DCE7F0" BorderThickness="1.2"
+                        Visibility="{Binding IsReportAvailable, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <WrapPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,10,8"
+                                        Visibility="{Binding HasDateRange, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="از: " VerticalAlignment="Center" FontSize="12" />
+                                <controls:PersianDatePicker SelectedDate="{Binding FromDate}" Width="125" />
+                                <TextBlock Text=" تا: " VerticalAlignment="Center" FontSize="12" Margin="8,0,0,0" />
+                                <controls:PersianDatePicker SelectedDate="{Binding ToDate}" Width="125" />
                             </StackPanel>
-                        </Button>
-                        <Button Command="{Binding ExportExcelCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="FileExcel" Width="14" Height="14" VerticalAlignment="Center" />
-                                <TextBlock Text="Excel" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" Margin="0,0,10,8"
+                                        Visibility="{Binding HasMonthsParam, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="ماه: " VerticalAlignment="Center" FontSize="12" />
+                                <TextBox Text="{Binding Months, UpdateSourceTrigger=PropertyChanged}" Width="56" FontSize="12"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="۶" />
                             </StackPanel>
-                        </Button>
-                        <!-- خروجی PDF با سربرگ درمانگاه — چرخه سیزدهم (درخواست ۴-۶) -->
-                        <Button Command="{Binding ExportPdfCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6"
-                                ToolTip="PDF صفحه‌آرایی‌شده با سربرگ رسمی درمانگاه و محل امضا">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="FilePdfBox" Width="14" Height="14" VerticalAlignment="Center" Foreground="#E53935" />
-                                <TextBlock Text="PDF" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" Margin="0,0,10,8"
+                                        Visibility="{Binding HasIcdParam, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="کد ICD: " VerticalAlignment="Center" FontSize="12" />
+                                <TextBox Text="{Binding IcdCode, UpdateSourceTrigger=PropertyChanged}" Width="90" FontSize="12"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="مثلاً E11" />
                             </StackPanel>
-                        </Button>
-                        <!-- ═══ خروجی تصویری — چرخهٔ ۴۸ (گزارش مالک: «برای گزارشات خروجی تصویر هم
-                             بزار با فرمت‌های مختلف قابل انتخاب توسط کاربر») — خلاصه‌ها + نمودار +
-                             جدول با هم در یک تصویر تمیز رندر می‌شوند؛ فرمت (PNG/JPEG/BMP/GIF/TIFF)
-                             از فهرست «نوع فایل» پنجرهٔ ذخیره انتخاب می‌شود ═══ -->
-                        <Button Command="{Binding ExportImageCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6"
-                                ToolTip="ذخیرهٔ تصویر نتایج (خلاصه‌ها + نمودار + جدول) — فرمت PNG/JPEG/BMP/GIF/TIFF هنگام ذخیره انتخاب می‌شود">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="FileImage" Width="14" Height="14" VerticalAlignment="Center" Foreground="#00897B" />
-                                <TextBlock Text="تصویر" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" Margin="0,0,10,8"
+                                        Visibility="{Binding HasMinAmountParam, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="حداقل مبلغ: " VerticalAlignment="Center" FontSize="12" />
+                                <TextBox Text="{Binding MinAmount, UpdateSourceTrigger=PropertyChanged}" Width="110" FontSize="12"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="{DynamicResource App.CurrencyLabel}" />
                             </StackPanel>
-                        </Button>
-                        <Button Command="{Binding PrintCommand}"
-                                Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6"
-                                ToolTip="چاپ مستقیم نتایج با سربرگ و تاریخ شمسی — چرخهٔ ۳۸">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Printer" Width="14" Height="14" VerticalAlignment="Center" />
-                                <TextBlock Text="چاپ" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" Margin="0,0,10,8"
+                                        Visibility="{Binding HasTopParam, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="تعداد: " VerticalAlignment="Center" FontSize="12" />
+                                <TextBox Text="{Binding TopCount, UpdateSourceTrigger=PropertyChanged}" Width="56" FontSize="12"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="۲۰" />
                             </StackPanel>
-                        </Button>
-                    </WrapPanel>
-                    <!-- انتخابگر بیمار — گزارش صورت‌حساب بیمار -->
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4"
-                                Visibility="{Binding HasPatientParam, Converter={StaticResource BoolToVisibility}}">
-                        <materialDesign:PackIcon Kind="AccountSearch" Width="18" Height="18" VerticalAlignment="Center"
-                                                 Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
-                        <TextBlock Text="بیمار: " VerticalAlignment="Center" FontSize="12" Margin="6,0,6,0" />
-                        <TextBox Text="{Binding PatientSearchTerm, UpdateSourceTrigger=PropertyChanged}" Width="220" FontSize="12"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 materialDesign:HintAssist.Hint="نام / کد ملی / موبایل / شماره پرونده">
-                            <!-- چرخه بیست‌وسوم (گزارش شانزدهم مالک): Enter = دکمهٔ جستجو -->
-                            <TextBox.InputBindings>
-                                <KeyBinding Key="Enter" Command="{Binding SearchPatientsCommand}" />
-                            </TextBox.InputBindings>
-                        </TextBox>
-                        <Button Command="{Binding SearchPatientsCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="6,0,0,0">
-                            <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />
-                        </Button>
-                        <ComboBox controls:ComboBoxSearch.IsEnabled="False" ItemsSource="{Binding PatientResults}" SelectedItem="{Binding SelectedPatient}"
-                                  Width="300" Margin="10,0,0,0" FontSize="12" materialDesign:HintAssist.Hint="بیمار یافت‌شده">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft">
-                                        <TextBlock Text="{Binding MedicalRecordNo}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11" Opacity="0.7" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding FirstName}" Margin="8,0,0,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding LastName}" Margin="4,0,0,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding NationalCode}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11" Opacity="0.55" Margin="8,0,0,0" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
+                            <Button Command="{Binding ExecuteCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,8">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Play" Width="14" Height="14" VerticalAlignment="Center" />
+                                    <TextBlock Text="اجرای گزارش" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding ExportExcelCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,8">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FileExcel" Width="14" Height="14" VerticalAlignment="Center" Foreground="#2E7D32" />
+                                    <TextBlock Text="اکسل" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding ExportPdfCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,8"
+                                    ToolTip="PDF صفحه‌آرایی‌شده با سربرگ رسمی درمانگاه و محل امضا">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FilePdfBox" Width="14" Height="14" VerticalAlignment="Center" Foreground="#E53935" />
+                                    <TextBlock Text="PDF" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding ExportImageCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,8"
+                                    ToolTip="ذخیرهٔ تصویر نتایج (خلاصه‌ها + نمودار + جدول) — فرمت PNG/JPEG/BMP/GIF/TIFF هنگام ذخیره انتخاب می‌شود">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FileImage" Width="14" Height="14" VerticalAlignment="Center" Foreground="#00897B" />
+                                    <TextBlock Text="تصویر" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding PrintCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,8"
+                                    ToolTip="چاپ مستقیم نتایج با سربرگ و تاریخ شمسی">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Printer" Width="14" Height="14" VerticalAlignment="Center" />
+                                    <TextBlock Text="چاپ" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+
+                        <!-- انتخابگر بیمار — گزارش صورت‌حساب بیمار -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4"
+                                    Visibility="{Binding HasPatientParam, Converter={StaticResource BoolToVisibility}}">
+                            <materialDesign:PackIcon Kind="AccountSearch" Width="18" Height="18" VerticalAlignment="Center"
+                                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
+                            <TextBlock Text="بیمار: " VerticalAlignment="Center" FontSize="12" Margin="6,0,6,0" />
+                            <TextBox Text="{Binding PatientSearchTerm, UpdateSourceTrigger=PropertyChanged}" Width="220" FontSize="12"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     materialDesign:HintAssist.Hint="نام / کد ملی / موبایل / شماره پرونده">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding SearchPatientsCommand}" />
+                                </TextBox.InputBindings>
+                            </TextBox>
+                            <Button Command="{Binding SearchPatientsCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="6,0,0,0">
+                                <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />
+                            </Button>
+                            <ComboBox controls:ComboBoxSearch.IsEnabled="False" ItemsSource="{Binding PatientResults}" SelectedItem="{Binding SelectedPatient}"
+                                      Width="300" Margin="10,0,0,0" FontSize="12" materialDesign:HintAssist.Hint="بیمار یافت‌شده">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft">
+                                            <TextBlock Text="{Binding MedicalRecordNo}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11" Opacity="0.7" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding FirstName}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding LastName}" Margin="4,0,0,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding NationalCode}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11" Opacity="0.55" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
                     </StackPanel>
-                </StackPanel>
+                </Border>
 
                 <!-- پیام گزارش در دسترس نیست -->
-                <Border Grid.Row="2" Padding="14,10" CornerRadius="10" Background="#FFF8E1" Margin="2,0,2,10"
+                <Border Grid.Row="2" Padding="14,10" CornerRadius="10" Background="#FFF8E1" Margin="0,0,0,10"
                         Visibility="{Binding IsReportAvailable, Converter={StaticResource InverseBoolToVisibility}}">
                     <TextBlock Text="{Binding UnavailableMessage, TargetNullValue='این گزارش هنوز داده واقعی ندارد'}"
                                FontSize="12" Foreground="#E65100" TextWrapping="Wrap" />
                 </Border>
 
-                <!-- ═══ پیام درون‌صفحه‌ای شکست/خطا — چرخهٔ ۳۸ (گزارش مالک: «گزارش‌ها
-                     چیزی نشان نمی‌دهند»): علت (خطای سرور/ماژول/مجوز) داخل خود
-                     صفحه می‌ماند نه فقط یک توست گذرا؛ پس‌زمینهٔ قرمز ملایم و متن
-                     راهنما — با رفع مشکل و اجرای موفق، خودش پنهان می‌شود ═══ -->
-                <Border Grid.Row="2" Padding="14,10" CornerRadius="10" Background="#FDECEA" Margin="2,0,2,10"
+                <!-- پیام شکست اجرا -->
+                <Border Grid.Row="2" Padding="14,10" CornerRadius="10" Background="#FDECEA" Margin="0,0,0,10"
                         Visibility="{Binding ResultNotice, Converter={StaticResource StringToVisibility}}">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="AlertCircle" Width="18" Height="18"
@@ -255,16 +269,16 @@
                     </StackPanel>
                 </Border>
 
-                <!-- نتایج -->
+                <!-- ═══ نتایج ═══ -->
                 <Grid Grid.Row="3" Visibility="{Binding IsReportAvailable, Converter={StaticResource BoolToVisibility}}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" MinHeight="220" />
                     </Grid.RowDefinitions>
 
-                    <!-- کارت‌های خلاصه -->
-                    <ItemsControl Grid.Row="0" ItemsSource="{Binding SummaryCards}">
+                    <!-- کارت‌های خلاصه — برچسب فارسی از کاتالوگ چرخهٔ ۷۰ -->
+                    <ItemsControl Grid.Row="0" ItemsSource="{Binding SummaryCards}" Margin="0,2,0,8">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel />
@@ -272,19 +286,20 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border CornerRadius="10" Padding="12,8" Margin="3" Background="#E3F2FD" MinWidth="130">
+                                <Border CornerRadius="10" Padding="13,9" Margin="3" Background="#E3F2FD" MinWidth="135">
                                     <StackPanel>
-                                        <TextBlock Text="{Binding Label}" FontSize="10.5" Opacity="0.7" />
-                                        <TextBlock Text="{Binding Value}" FontSize="16" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
+                                        <TextBlock Text="{Binding Label}" FontSize="10.5" Opacity="0.72" />
+                                        <TextBlock Text="{Binding Value}" FontSize="16" FontWeight="Bold"
+                                                   FontFamily="{DynamicResource App.CodeFont}" Foreground="#0D47A1" />
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <!-- ═══ کارت نمودار — چرخه یازدهم: نوع کنترل بر اساس ماهیت داده (اعلان سرور) ═══ -->
-                    <materialDesign:Card Grid.Row="1" UniformCornerRadius="12" Padding="14" Margin="2,8,2,8"
-                                        Visibility="{Binding HasChart, Converter={StaticResource BoolToVisibility}}">
+                    <!-- کارت نمودار -->
+                    <materialDesign:Card Grid.Row="1" UniformCornerRadius="12" Padding="14" Margin="2,2,2,8"
+                                         Visibility="{Binding HasChart, Converter={StaticResource BoolToVisibility}}">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -301,7 +316,6 @@
                             </DockPanel>
 
                             <Grid Grid.Row="1" Height="230">
-                                <!-- نمودار سطحی — روند زمانی -->
                                 <charts:AreaChart x:Name="AreaHost" Points="{Binding ChartPoints}" ValueFormat="N0"
                                                   Visibility="Collapsed">
                                     <charts:AreaChart.Style>
@@ -315,7 +329,6 @@
                                     </charts:AreaChart.Style>
                                 </charts:AreaChart>
 
-                                <!-- نمودار ستونی — مقایسه مقوله‌ای -->
                                 <charts:ColumnChart x:Name="ColumnHost" Points="{Binding ChartPoints}" ValueFormat="N0"
                                                     Visibility="Collapsed">
                                     <charts:ColumnChart.Style>
@@ -329,7 +342,6 @@
                                     </charts:ColumnChart.Style>
                                 </charts:ColumnChart>
 
-                                <!-- نمودار دونات — سهم از کل -->
                                 <charts:DoughnutChart x:Name="DoughnutHost" Points="{Binding ChartPoints}"
                                                       CenterText="{Binding ChartCenterText}"
                                                       CenterSubtext="{Binding ChartUnit}"
@@ -346,7 +358,6 @@
                                     </charts:DoughnutChart.Style>
                                 </charts:DoughnutChart>
 
-                                <!-- نمودار میله‌ای افقی — رتبه‌بندی -->
                                 <charts:HorizontalBarChart x:Name="HBarHost" Points="{Binding ChartPoints}"
                                                            BarMaxWidth="480"
                                                            Visibility="Collapsed">
@@ -364,12 +375,13 @@
                         </Grid>
                     </materialDesign:Card>
 
-                    <!-- جدول نتایج — ستون‌های داینامیک -->
+                    <!-- جدول نتایج — ستون‌های داینامیک از کد پشت -->
                     <DataGrid Grid.Row="2" ItemsSource="{Binding Rows}" AutoGenerateColumns="False" CanUserAddRows="False"
                               IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD"
+                              MinHeight="180" MaxHeight="330"
                               x:Name="ResultsGrid" />
                 </Grid>
             </Grid>
-        </Grid>
+        </ScrollViewer>
     </Grid>
 </UserControl>
