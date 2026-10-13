@@ -335,6 +335,13 @@ try
         Hangfire.RecurringJob.AddOrUpdate<Sahand.ClinicPro.Infrastructure.Services.Backup.BackupJob>(
             "backup-nightly", job => job.RunAsync(System.Threading.CancellationToken.None),
             Hangfire.Cron.Daily(2));
+
+        // یادآوری خودکار نوبت — هر ساعت، دو موج پیامک ۲۴ و ۲ ساعت قبل از نوبت
+        // با رعایت ساعات سکوت (پیش‌فرض ۲۲:۰۰-۰۷:۰۰) — چرخهٔ ۶۹ (فاز ۳ / F-03)؛
+        // فعال/غیرفعال و ساعات سکوت از SystemSetting بدون ری‌استارت قابل تغییر است
+        Hangfire.RecurringJob.AddOrUpdate<Sahand.ClinicPro.Infrastructure.Services.Scheduling.AppointmentReminderJob>(
+            "appointment-reminders", job => job.RunAsync(System.Threading.CancellationToken.None),
+            Hangfire.Cron.Hourly());
     }
 
     // Swagger فقط در محیط توسعه فعال است

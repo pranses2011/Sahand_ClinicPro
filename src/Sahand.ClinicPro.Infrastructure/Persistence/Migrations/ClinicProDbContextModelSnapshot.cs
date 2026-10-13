@@ -8992,6 +8992,9 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<bool>("ReminderSent")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("Reminder2Sent")
+                        .HasColumnType("bit");
+
                     b.Property<long?>("RoomId")
                         .HasColumnType("bigint");
 
