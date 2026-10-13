@@ -32,6 +32,9 @@ public class MigrationSnapshotComplianceTests
         "Cycle41UserShortcuts",
         "Cycle42SeedPositionsDepartments",
         "Cycle59PerformanceIndexes", // چرخهٔ ۵۹ — ایندکس‌های ترکیبی صف/فاکتور (P-02)
+        "Cycle69AutoReminders",      // چرخهٔ ۶۹ (F-03) — ستون Reminder2Sent نوبت
+        "Cycle69LabReferenceRanges", // چرخهٔ ۶۹ (F-28/F-29) — بازه‌های مرجع ساخت‌یافتهٔ آزمایش
+        "Cycle69PatientTags",        // چرخهٔ ۶۹ (F-18) — برچسب CSV بیمار
     };
 
     /// <summary>همهٔ کلاس‌های مایگریشن اسمبلی زیرساخت</summary>
