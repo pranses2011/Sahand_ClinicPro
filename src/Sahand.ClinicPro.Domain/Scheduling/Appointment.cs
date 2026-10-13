@@ -67,6 +67,13 @@ public class Appointment : AuditableEntity, ISoftDeletable
     /// <summary>پیامک یادآوری ارسال شده</summary>
     public bool ReminderSent { get; set; } = false;
 
+    /// <summary>
+    /// پیامک یادآوری دوم (۲ ساعت مانده به نوبت) ارسال شده — چرخهٔ ۶۹ (فاز ۳ / F-03)
+    /// «یادآوری خودکار نوبت»: دو موج پیامک (۲۴ ساعت و ۲ ساعت قبل) با رعایت ساعات سکوت؛
+    /// این پرچم مستقل از موج اول است تا بیمار هر دو را دریافت کند.
+    /// </summary>
+    public bool Reminder2Sent { get; set; } = false;
+
     /// <summary>توضیحات</summary>
     public string? Notes { get; set; }
 
