@@ -91,8 +91,11 @@ public class GetStocktakingsQueryHandler : IRequestHandler<GetStocktakingsQuery,
             s.TotalItems,
             s.CountedItems,
             s.Mismatches,
-            s.Surplus,
+            // چرخهٔ ۶۸ — ترمیم جابه‌جایی تاریخی: پارامتر نهم DTO «TotalShortage» (کل کسری) است
+            // ولی s.Surplus پاس می‌شد و s.Shortage به «TotalSurplus» می‌نشست؛ یعنی ستون‌های
+            // کسری/زیادندی در فهرست و خلاصهٔ جزئیات برای کاربر جابه‌جا دیده می‌شدند.
             s.Shortage,
+            s.Surplus,
             s.Notes,
             ScopeFa(s.ItemKind))).ToList();
 
@@ -170,8 +173,10 @@ public class GetStocktakingDetailQueryHandler : IRequestHandler<GetStocktakingDe
             items.Count,
             items.Count(i => i.IsCounted),
             items.Count(i => i.IsCounted && i.Difference != 0),
-            items.Where(i => i.IsCounted && i.Difference > 0).Sum(i => i.Difference),
+            // چرخهٔ ۶۸ — ترمیم همان جابه‌جایی در جزئیات: پارامتر نهم «TotalShortage» (کسری)
+            // است؛ جمعِ «Difference < 0» (شمارش کمتر از سیستم) باید در آن بنشیند.
             items.Where(i => i.IsCounted && i.Difference < 0).Sum(i => -i.Difference),
+            items.Where(i => i.IsCounted && i.Difference > 0).Sum(i => i.Difference),
             s.Notes, items, GetStocktakingsQueryHandler.ScopeFa(s.ItemKind));
 
         return Result<StocktakingDetailDto>.Success(dto);
