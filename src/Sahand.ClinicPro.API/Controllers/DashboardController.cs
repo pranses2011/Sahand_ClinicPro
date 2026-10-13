@@ -200,27 +200,38 @@ public class DashboardController : ApiBaseController
     }
 
     /// <summary>
-    /// هشدارهای داشبورد — موجودی کم، نزدیک انقضا، آزمایش در انتظار
+    /// هشدارهای داشبورد — موجودی کم، نزدیک انقضا (پلکانی ۹۰/۶۰/۳۰/۷)، آزمایش در انتظار
+    /// چرخهٔ ۶۹ (فاز ۳ / F-08): انقضا از «یک عدد ۳۰ روزه» به چهار پلهٔ رنگی ارتقا یافت —
+    /// هر پله سیاست عملیاتی متفاوتی دارد: ≤۷ روز (قرمز — مصرف فوری/مرجوعی) ·
+    /// ≤۳۰ روز (نارنجی — اولویت تجویز از این بچ‌ها) · ≤۶۰ روز (کهربایی —
+    /// برنامه‌ریزی سفارش مجدد) · ≤۹۰ روز (زرد — پایش).
     /// </summary>
     [HttpGet("alerts")]
     [HasPermission("dashboard.view")]
     public async Task<IActionResult> GetAlerts(CancellationToken ct)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var monthAhead = today.AddDays(30);
 
+        // موجودی کم — اقلام فعال زیر حداقل موجودی
         var lowStock = await _unitOfWork.Repository<Domain.Entities.Pharmacy.PharmacyInventory>()
             .QueryableNoTracking
             .CountAsync(i => i.IsActive
                            && i.MinStock > 0
                            && i.Quantity <= i.MinStock, ct);
 
-        var expiringSoon = await _unitOfWork.Repository<Domain.Entities.Pharmacy.PharmacyInventory>()
+        // پله‌های انقضا — فقط بچ‌های هنوز معتبر (منقضی‌شده سیاست مصرف ندارد، مرجوعی/اسقاط است)
+        int ExpiryCount(int days) => _unitOfWork
+            .Repository<Domain.Entities.Pharmacy.PharmacyInventory>()
             .QueryableNoTracking
-            .CountAsync(i => i.IsActive
-                           && i.ExpiryDate != null
-                           && i.ExpiryDate >= today
-                           && i.ExpiryDate <= monthAhead, ct);
+            .Count(i => i.IsActive
+                     && i.ExpiryDate != null
+                     && i.ExpiryDate >= today
+                     && i.ExpiryDate <= today.AddDays(days));
+
+        var expiring7 = await ExpiryCount(7);
+        var expiring30 = await ExpiryCount(30);
+        var expiring60 = await ExpiryCount(60);
+        var expiring90 = await ExpiryCount(90);
 
         var pendingLabOrders = await _unitOfWork.Repository<Domain.Entities.Paraclinical.LabOrder>()
             .QueryableNoTracking
@@ -229,9 +240,78 @@ public class DashboardController : ApiBaseController
         return Ok(Application.Common.Models.ApiResponse<object>.Success(new
         {
             lowStock,
-            expiringSoon,
+            // پله‌های انقضای پلکانی — چرخهٔ ۶۹ (F-08)
+            expiring7,
+            expiring30,
+            expiring60,
+            expiring90,
+            // نگه‌داشته شد برای سازگاری کلاینت‌های قبلی = مجموع پلهٔ ۳۰ روزه
+            expiringSoon = expiring30,
             pendingLabOrders,
         }, "هشدارهای داشبورد دریافت شد"));
+    }
+
+    /// <summary>
+    /// اقلام هشدار انبار — جزئیات مرکز هشدار داشبورد (چرخهٔ ۶۹ / فاز ۳ F-08)
+    /// دو فهرست برمی‌گرداند: بچ‌های در حال انقضا (مرتب از نزدیک‌ترین) با پلهٔ محاسبه‌شده
+    /// و اقلام زیر حداقل موجودی (مرتب از کم‌ترین) — هر کدام حداکثر ۲۰ ردیف.
+    /// </summary>
+    [HttpGet("alerts/inventory")]
+    [HasPermission("dashboard.view")]
+    public async Task<IActionResult> GetInventoryAlerts(CancellationToken ct)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // بچ‌های در حال انقضا — نام دارو + بچ + روزهای مانده + موجودی
+        // (روزهای مانده در حافظه محاسبه می‌شود نه با DateDiffDay — سازگار با
+        // هر provider تست؛ فقط ۲۰ ردیف هست و هزینه ناچیز است)
+        var expiringRaw = await _unitOfWork.Repository<Domain.Entities.Pharmacy.PharmacyInventory>()
+            .QueryableNoTracking
+            .Where(i => i.IsActive && i.ExpiryDate != null
+                     && i.ExpiryDate >= today
+                     && i.ExpiryDate <= today.AddDays(90))
+            .OrderBy(i => i.ExpiryDate)
+            .Take(20)
+            .Select(i => new
+            {
+                medicationName = i.Medication != null ? i.Medication.Name : "",
+                batchNumber = i.BatchNumber,
+                expiryDate = i.ExpiryDate,
+                quantity = i.Quantity
+            })
+            .ToListAsync(ct);
+
+        var expiring = expiringRaw
+            .Select(i => new
+            {
+                i.medicationName,
+                i.batchNumber,
+                i.expiryDate,
+                daysLeft = i.expiryDate!.Value.DayNumber - today.DayNumber,
+                i.quantity
+            })
+            .ToList();
+
+        // اقلام زیر حداقل موجودی — مرتب از بدترین وضعیت
+        var lowStockItems = await _unitOfWork.Repository<Domain.Entities.Pharmacy.PharmacyInventory>()
+            .QueryableNoTracking
+            .Where(i => i.IsActive && i.MinStock > 0 && i.Quantity <= i.MinStock)
+            .OrderBy(i => i.Quantity / i.MinStock)
+            .Take(20)
+            .Select(i => new
+            {
+                medicationName = i.Medication != null ? i.Medication.Name : "",
+                batchNumber = i.BatchNumber,
+                quantity = i.Quantity,
+                minStock = i.MinStock
+            })
+            .ToListAsync(ct);
+
+        return Ok(Application.Common.Models.ApiResponse<object>.Success(new
+        {
+            expiring,
+            lowStockItems
+        }, "اقلام هشدار انبار دریافت شد"));
     }
 
     /* ═══════════ داشبورد شخصی‌سازی‌شده — چرخه ۱۳ (درخواست ۴-۲) ═══════════ */

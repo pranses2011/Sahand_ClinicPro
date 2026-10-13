@@ -588,6 +588,161 @@
                                    AccentBrush="#5C6BC0" />
             </UniformGrid>
 
+            <!-- ═══ مرکز هشدار انبار — چرخهٔ ۶۹ (فاز ۳ / F-08 نقشه راه ai-review) ═══
+                 «هشدار موجودی/انقضا (آستانه ۹۰/۶۰/۳۰/۷ روز) + داشبورد هشدار» —
+                 چهار چیپ رنگی پلکانی + چیپ موجودی کم؛ هر پله سیاست عملیاتی خودش
+                 را دارد (قرمز=مصرف فوری/مرجوعی، نارنجی=اولویت تجویز، کهربایی=
+                 برنامه‌ریزی سفارش، زرد=پایش). کلیک روی سربرگ = باز/بستن فهرست
+                 اقلام جزئیات (نام دارو/بچ/تاریخ انقضای شمسی/روز مانده/موجودی).
+                 کارت وقتی هیچ هشداری نیست به‌کل مخفی می‌شود (سروصدا صفر). -->
+            <materialDesign:Card UniformCornerRadius="14" Padding="14,10" Margin="0,12,0,0"
+                                 Visibility="{Binding HasNoInventoryAlerts, Converter={StaticResource InverseBoolToVisibility}}">
+                <StackPanel>
+                    <!-- سربرگ کلیک‌پذیر — باز/بستن مرکز هشدار -->
+                    <Button Command="{Binding ToggleAlertCenterCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Right"
+                            Padding="4,2" ToolTip="باز/بستن فهرست اقلام هشدار">
+                        <DockPanel>
+                            <materialDesign:PackIcon Kind="BellAlert" Width="20" Height="20"
+                                                     Foreground="#E53935" VerticalAlignment="Center"
+                                                     Margin="0,0,0,0" />
+                            <TextBlock Text="مرکز هشدار انبار" FontSize="14" FontWeight="Bold"
+                                       Margin="8,0,0,0" VerticalAlignment="Center" />
+                            <!-- چیپ‌های پلکانی — قد هر پله جدا (تجمیعی‌ها منهای پلهٔ داخل‌تر) -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left"
+                                        VerticalAlignment="Center">
+                                <Border CornerRadius="9" Padding="8,2" Margin="4,0" Background="#FDECEA"
+                                        BorderBrush="#E53935" BorderThickness="1"
+                                        Visibility="{Binding Expiring7Count, Converter={StaticResource NullToVisibility}}">
+                                    <TextBlock FontSize="10.5" Foreground="#C62828" FontFamily="{DynamicResource App.CodeFont}">
+                                        <Run Text="بحرانی ≤۷روز: " /><Run Text="{Binding Expiring7Count, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                                    </TextBlock>
+                                </Border>
+                                <Border CornerRadius="9" Padding="8,2" Margin="4,0" Background="#FFF3E0"
+                                        BorderBrush="#FB8C00" BorderThickness="1"
+                                        Visibility="{Binding Expiring30Count, Converter={StaticResource NullToVisibility}}">
+                                    <TextBlock FontSize="10.5" Foreground="#E65100" FontFamily="{DynamicResource App.CodeFont}">
+                                        <Run Text="فوری ≤۳۰روز: " /><Run Text="{Binding Expiring30Count, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                                    </TextBlock>
+                                </Border>
+                                <Border CornerRadius="9" Padding="8,2" Margin="4,0" Background="#FFFDE7"
+                                        BorderBrush="#F9A825" BorderThickness="1"
+                                        Visibility="{Binding Expiring60Count, Converter={StaticResource NullToVisibility}}">
+                                    <TextBlock FontSize="10.5" Foreground="#F57F17" FontFamily="{DynamicResource App.CodeFont}">
+                                        <Run Text="هشدار ≤۶۰روز: " /><Run Text="{Binding Expiring60Count, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                                    </TextBlock>
+                                </Border>
+                                <Border CornerRadius="9" Padding="8,2" Margin="4,0" Background="#FFFDE7"
+                                        BorderBrush="#FBC02D" BorderThickness="1"
+                                        Visibility="{Binding Expiring90Count, Converter={StaticResource NullToVisibility}}">
+                                    <TextBlock FontSize="10.5" Foreground="#B58900" FontFamily="{DynamicResource App.CodeFont}">
+                                        <Run Text="پایش ≤۹۰روز: " /><Run Text="{Binding Expiring90Count, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                                    </TextBlock>
+                                </Border>
+                                <Border CornerRadius="9" Padding="8,2" Margin="4,0" Background="#E3F2FD"
+                                        BorderBrush="#1E88E5" BorderThickness="1"
+                                        Visibility="{Binding LowStockCount, Converter={StaticResource NullToVisibility}}">
+                                    <TextBlock FontSize="10.5" Foreground="#1565C0" FontFamily="{DynamicResource App.CodeFont}">
+                                        <Run Text="موجودی کم: " /><Run Text="{Binding LowStockCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                                    </TextBlock>
+                                </Border>
+                                <!-- فلش باز/بسته -->
+                                <materialDesign:PackIcon Kind="ChevronDown" Width="16" Height="16"
+                                                         VerticalAlignment="Center" Margin="4,0,0,0"
+                                                         Foreground="#78909C">
+                                    <materialDesign:PackIcon.Style>
+                                        <Style TargetType="materialDesign:PackIcon">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsAlertCenterOpen}" Value="True">
+                                                    <Setter Property="Kind" Value="ChevronUp" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </materialDesign:PackIcon.Style>
+                                </materialDesign:PackIcon>
+                            </StackPanel>
+                        </DockPanel>
+                    </Button>
+
+                    <!-- فهرست اقلام — فقط در حالت باز -->
+                    <StackPanel Visibility="{Binding IsAlertCenterOpen, Converter={StaticResource BoolToVis}}"
+                                Margin="2,8,2,0">
+                        <!-- بخش ۱: بچ‌های در حال انقضا -->
+                        <DockPanel Margin="2,0,2,4">
+                            <TextBlock Text="بچ‌های در حال انقضا (نزدیک‌ترین اول)" FontSize="12" FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Text="حداکثر ۲۰ قلم" FontSize="10" Opacity="0.5"
+                                       HorizontalAlignment="Left" VerticalAlignment="Center" Margin="6,0,0,0" />
+                        </DockPanel>
+                        <ItemsControl ItemsSource="{Binding ExpiringItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="8" Background="#FAFBFD" BorderBrush="#E8EDF3"
+                                            BorderThickness="1" Padding="8,4" Margin="0,0,0,4">
+                                        <DockPanel>
+                                            <!-- بج پلهٔ رنگی + روز مانده -->
+                                            <Border CornerRadius="8" Padding="7,2" DockPanel.Dock="Left"
+                                                    VerticalAlignment="Center"
+                                                    Background="{Binding TierBrush, Converter={StaticResource HexToBrush}}">
+                                                <TextBlock FontSize="10.5" Foreground="White" FontFamily="{DynamicResource App.CodeFont}">
+                                                    <Run Text="{Binding TierText, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding DaysLeft, Mode=OneWay, Converter={StaticResource PersianDigits}}" /><Run Text=" روز" />
+                                                </TextBlock>
+                                            </Border>
+                                            <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding MedicationName}" FontSize="12.5" FontWeight="SemiBold"
+                                                           Foreground="#1F2937" />
+                                                <StackPanel Orientation="Horizontal" Opacity="0.75">
+                                                    <TextBlock FontSize="10.5" FontFamily="{DynamicResource App.CodeFont}">
+                                                        <Run Text="بچ " /><Run Text="{Binding BatchNumber, Mode=OneWay, TargetNullValue=—}" /><Run Text=" · انقضا " /><Run Text="{Binding ExpiryDateShamsi, Mode=OneWay}" /><Run Text=" · موجودی " /><Run Text="{Binding QuantityText, Mode=OneWay}" />
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <controls:EmptyState Message="بچ در حال انقضایی در ۹۰ روز آینده نیست"
+                                             IconKind="CheckCircle"
+                                             Visibility="{Binding ExpiringItems.Count, Converter={StaticResource NullToVisibility}, ConverterParameter=Inverse}" />
+
+                        <!-- بخش ۲: اقلام زیر حداقل موجودی -->
+                        <DockPanel Margin="2,10,2,4">
+                            <TextBlock Text="زیر حداقل موجودی (بدترین وضعیت اول)" FontSize="12" FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                        </DockPanel>
+                        <ItemsControl ItemsSource="{Binding LowStockItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="8" Background="#FAFBFD" BorderBrush="#E8EDF3"
+                                            BorderThickness="1" Padding="8,4" Margin="0,0,0,4">
+                                        <DockPanel>
+                                            <Border CornerRadius="8" Padding="7,2" DockPanel.Dock="Left"
+                                                    VerticalAlignment="Center" Background="#E3F2FD">
+                                                <TextBlock FontSize="10.5" Foreground="#1565C0" FontFamily="{DynamicResource App.CodeFont}">
+                                                    <Run Text="کمبود" />
+                                                </TextBlock>
+                                            </Border>
+                                            <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding MedicationName}" FontSize="12.5" FontWeight="SemiBold"
+                                                           Foreground="#1F2937" />
+                                                <TextBlock FontSize="10.5" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}">
+                                                    <Run Text="بچ " /><Run Text="{Binding BatchNumber, Mode=OneWay, TargetNullValue=—}" /><Run Text=" · موجودی " /><Run Text="{Binding QuantityText, Mode=OneWay}" /><Run Text=" · حداقل " /><Run Text="{Binding MinStockText, Mode=OneWay}" />
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <controls:EmptyState Message="قلمی زیر حداقل موجودی نیست"
+                                             IconKind="CheckCircle"
+                                             Visibility="{Binding LowStockItems.Count, Converter={StaticResource NullToVisibility}, ConverterParameter=Inverse}" />
+                    </StackPanel>
+                </StackPanel>
+            </materialDesign:Card>
+
             <!-- ردیف ۳: نمودار درآمد (۲fr) + نوبت‌های پیش‌رو (۱fr) — نمایش قابل تنظیم (چرخه ۱۳) -->
             <Grid Margin="0,8,0,0">
                 <Grid.ColumnDefinitions>

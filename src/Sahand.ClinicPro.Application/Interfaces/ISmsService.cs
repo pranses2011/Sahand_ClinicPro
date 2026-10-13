@@ -28,6 +28,7 @@ public interface ISmsService
     /// <param name="message">متن کامل پیام</param>
     /// <param name="scheduledAt">زمان برنامه‌ریزی‌شدهٔ ارسال (UTC) — پیش‌فرض: فوری</param>
     /// <param name="priority">اولویت صف — عدد کوچک‌تر = زودتر (پیش‌فرض ۳ = عادی)</param>
+    /// <param name="ct">توکن لغو عملیات</param>
     Task EnqueueRawAsync(string recipient, string message,
         DateTime? scheduledAt = null, byte priority = 3,
         CancellationToken ct = default);

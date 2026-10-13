@@ -17,6 +17,18 @@ public record UpcomingAppointmentRow(
 /// <summary>ردیف جدول فعالیت‌های اخیر</summary>
 public record RecentActivityRow(string TimeShamsi, string User, string Action, string Entity);
 
+/// <summary>
+/// ردیف مرکز هشدار انبار — بچ در حال انقضا (چرخهٔ ۶۹ / فاز ۳ F-08)
+/// پلهٔ رنگی بر اساس روزهای مانده در ViewModel محاسبه و روی UI اعمال می‌شود.
+/// </summary>
+public record InventoryAlertRow(
+    string MedicationName, string? BatchNumber, string ExpiryDateShamsi,
+    int DaysLeft, string QuantityText, string TierBrush, string TierText);
+
+/// <summary>ردیف مرکز هشدار — قلم زیر حداقل موجودی (چرخهٔ ۶۹ / F-08)</summary>
+public record LowStockAlertRow(
+    string MedicationName, string? BatchNumber, string QuantityText, string MinStockText);
+
 /// <summary>کارت آمار داینامیک داشبورد — قابل چیدمان (چرخه ۱۳، درخواست ۴-۲)</summary>
 public partial class DashboardCardVM : ObservableObject
 {
@@ -102,6 +114,28 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private int _lowStockCount;
     [ObservableProperty] private int _todayPrescriptions;
     [ObservableProperty] private int _pendingLabOrders;
+
+    /* ── مرکز هشدار انقضای پلکانی — چرخهٔ ۶۹ (فاز ۳ / F-08) ──
+       چهار پلهٔ ۹۰/۶۰/۳۰/۷ روز + موجودی کم؛ پله‌ها جمع تجمعی هستند
+       (expiring30 شامل expiring7 هم هست) ولی «قد» هر پله جدا نمایش داده
+       می‌شود تا اولویت عملیاتی از رنگ پیداباشد: قرمز=۷، نارنجی=۳۰،
+       کهربایی=۶۰، زرد=۹۰. */
+    [ObservableProperty] private int _expiring7Count;
+    [ObservableProperty] private int _expiring30Count;
+    [ObservableProperty] private int _expiring60Count;
+    [ObservableProperty] private int _expiring90Count;
+
+    /// <summary>مرکز هشدار باز است؟ (پرش انیمیشنی فهرست اقلام)</summary>
+    [ObservableProperty] private bool _isAlertCenterOpen;
+
+    /// <summary>هیچ هشدار انباری نیست؟ (کارت جمع می‌شود)</summary>
+    [ObservableProperty] private bool _hasNoInventoryAlerts = true;
+
+    /// <summary>اقلام در حال انقضا — نزدیک‌ترین اول</summary>
+    public ObservableCollection<InventoryAlertRow> ExpiringItems { get; } = new();
+
+    /// <summary>اقلام زیر حداقل موجودی — بدترین وضعیت اول</summary>
+    public ObservableCollection<LowStockAlertRow> LowStockItems { get; } = new();
 
     /* ── عمومی ── */
     [ObservableProperty] private string _welcomeMessage = string.Empty;
@@ -769,12 +803,17 @@ public partial class DashboardViewModel : ViewModelBase
             ConnectionStatus = "آمار به‌روز شد";
         }
 
-        // ۲) هشدارها (موجودی کم و آزمایش در انتظار)
+        // ۲) هشدارها (موجودی کم، انقضای پلکانی و آزمایش در انتظار) — چرخهٔ ۶۹: پله‌های ۹۰/۶۰/۳۰/۷
         var alerts = UnwrapData(await _api.GetAsync<JsonElement>("dashboard/alerts"));
         if (alerts.ValueKind == JsonValueKind.Object)
         {
             LowStockCount = alerts.TryGetProperty("lowStock", out var low) ? low.GetInt32() : 0;
             PendingLabOrders = alerts.TryGetProperty("pendingLabOrders", out var lab) ? lab.GetInt32() : 0;
+            Expiring7Count = alerts.TryGetProperty("expiring7", out var e7) ? e7.GetInt32() : 0;
+            Expiring30Count = alerts.TryGetProperty("expiring30", out var e30) ? e30.GetInt32() : 0;
+            Expiring60Count = alerts.TryGetProperty("expiring60", out var e60) ? e60.GetInt32() : 0;
+            Expiring90Count = alerts.TryGetProperty("expiring90", out var e90) ? e90.GetInt32() : 0;
+            HasNoInventoryAlerts = LowStockCount == 0 && Expiring90Count == 0;
         }
 
         // به‌روزرسانی کارت‌های داینامیک چرخه ۱۳
@@ -852,6 +891,78 @@ public partial class DashboardViewModel : ViewModelBase
     {
         await LoadStatsAsync();
         _snackbar.Success("داشبورد به‌روزرسانی شد");
+    }
+
+    /// <summary>
+    /// باز/بستن مرکز هشدار انبار — چرخهٔ ۶۹ (فاز ۳ / F-08)
+    /// با نخستین باز شدن، اقلام جزئیات از endpoint ویژه خوانده می‌شوند؛
+    /// خطا فقط پیام فارسی می‌دهد و پنل باز می‌ماند (تلاش مجدد با کلیک بعدی).
+    /// </summary>
+    [RelayCommand]
+    private async Task ToggleAlertCenterAsync()
+    {
+        // بستن — فقط پرچم برمی‌گردد؛ داده برای باز شدن بعدی می‌ماند
+        if (IsAlertCenterOpen)
+        {
+            IsAlertCenterOpen = false;
+            return;
+        }
+
+        IsAlertCenterOpen = true;
+        try
+        {
+            var detail = UnwrapData(await _api.GetAsync<JsonElement>("dashboard/alerts/inventory"));
+
+            ExpiringItems.Clear();
+            if (detail.ValueKind == JsonValueKind.Object &&
+                detail.TryGetProperty("expiring", out var exp) && exp.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var i in exp.EnumerateArray())
+                {
+                    var daysLeft = i.TryGetProperty("daysLeft", out var dl) && dl.ValueKind == JsonValueKind.Number
+                        ? dl.GetInt32() : 0;
+                    var medication = i.TryGetProperty("medicationName", out var mn) ? mn.GetString() ?? "" : "";
+                    var batch = i.TryGetProperty("batchNumber", out var bn) && bn.ValueKind != JsonValueKind.Null
+                        ? bn.GetString() : null;
+                    var expiryShamsi = i.TryGetProperty("expiryDate", out var ed) && ed.ValueKind != JsonValueKind.Null
+                        ? Application.Common.Helpers.PersianDateHelper.ToShamsiFa(DateTime.Parse(ed.GetString()!)) : "—";
+                    var qty = i.TryGetProperty("quantity", out var q) && q.ValueKind != JsonValueKind.Null
+                        ? q.GetDecimal() : 0;
+
+                    // پلهٔ رنگی — همان سیاست چهارپله‌ای سرور: قرمز/نارنجی/کهربایی/زرد
+                    var (brush, tier) = daysLeft <= 7 ? ("#E53935", "بحرانی")
+                        : daysLeft <= 30 ? ("#FB8C00", "فوری")
+                        : daysLeft <= 60 ? ("#F9A825", "هشدار")
+                        : ("#FDD835", "پایش");
+
+                    ExpiringItems.Add(new InventoryAlertRow(
+                        medication, batch, expiryShamsi, daysLeft,
+                        Money.Format(qty), brush, tier));
+                }
+            }
+
+            LowStockItems.Clear();
+            if (detail.ValueKind == JsonValueKind.Object &&
+                detail.TryGetProperty("lowStockItems", out var ls) && ls.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var i in ls.EnumerateArray())
+                {
+                    LowStockItems.Add(new LowStockAlertRow(
+                        i.TryGetProperty("medicationName", out var mn) ? mn.GetString() ?? "" : "",
+                        i.TryGetProperty("batchNumber", out var bn) && bn.ValueKind != JsonValueKind.Null
+                            ? bn.GetString() : null,
+                        Money.Format(i.TryGetProperty("quantity", out var q) && q.ValueKind != JsonValueKind.Null
+                            ? q.GetDecimal() : 0),
+                        Money.Format(i.TryGetProperty("minStock", out var ms) && ms.ValueKind != JsonValueKind.Null
+                            ? ms.GetDecimal() : 0)));
+                }
+            }
+        }
+        catch
+        {
+            // خطای شبکه — مرکز هشدار باز می‌ماند با فهرست خالی؛ تلاش بعدی با کلیک دوباره
+            _snackbar.Error("بارگذاری اقلام هشدار انبار ناموفق بود — دوباره تلاش کنید");
+        }
     }
 
     /// <summary>
