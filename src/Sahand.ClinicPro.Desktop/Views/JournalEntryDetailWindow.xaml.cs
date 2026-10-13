@@ -105,7 +105,9 @@ public partial class JournalEntryDetailWindow : Window, INotifyPropertyChanged
             return;
         }
 
-        EntryNumberText = Helpers.Money.ToPersianDigits(dto.EntryNumber ?? "—");
+        // چرخهٔ ۷۰ — جایگزین خوانا به‌جای خط تیره برای سندهای هنوز-بدون-شماره
+        EntryNumberText = Helpers.Money.ToPersianDigits(
+            dto.EntryNumber ?? $"سند شمارهٔ {dto.Id}");
         DateText = Helpers.Money.ToPersianDigits(dto.DateShamsi ?? string.Empty);
         Description = dto.Description ?? "بدون شرح";
         TotalDebit = dto.TotalDebit;

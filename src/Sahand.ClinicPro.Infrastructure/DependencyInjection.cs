@@ -228,6 +228,45 @@ public static class DependencyInjection
                 }
             }
 
+            // ۱.۵) پرکردن شناسه‌دار ردیف‌های «بدون شمارهٔ سند» — چرخهٔ ۷۰
+            // گزارش مالک: «در تب دفتر روزنامه، در لیست اسناد شماره را نمی‌ناندازد
+            // و به جاش خط تیره می‌اندازد». ستون EntryNumber با مقدار پیش‌فرضِ
+            // دیتابیس (SeqJournalEntryNumber → JE-000NNN) پر می‌شود؛ ردیف‌هایی که
+            // پیش‌تر/به هر علتی NULL شده‌اند در اینجا یک‌باره و idempotent
+            // شناسه‌دار می‌شوند: هر ردیف NULL با «NEXT VALUE FOR» از همان توالی
+            // شمارهٔ یکتای تازه می‌گیرد (هر بار اجرا فقط ردیف‌های NULL را می‌گیرد؛
+            // اجرای مجدد بی‌اثر است و هیچ شماره‌ای دوباره مصرف نمی‌شود بی‌آنکه
+            // ردیفی بگیرد). فقط روی SQL Server — بقیهٔ ارائه‌دهنده‌ها چنین توالی/
+            // عبارتی ندارند و این گام برایشان بی‌اثر رد می‌شود.
+            using (var scope15 = serviceProvider.CreateScope())
+            {
+                var db15 = scope15.ServiceProvider.GetRequiredService<Persistence.ClinicProDbContext>();
+                var logger15 = scope15.ServiceProvider
+                    .GetRequiredService<ILogger<Microsoft.Extensions.DependencyInjection.ServiceProvider>>();
+                try
+                {
+                    if (db15.Database.IsSqlServer())
+                    {
+                        await db15.Database.ExecuteSqlRawAsync(
+                            "UPDATE [JournalEntries] SET [EntryNumber] = " +
+                            "CONCAT('JE-', RIGHT('000000' + CAST(NEXT VALUE FOR SeqJournalEntryNumber AS varchar(10)), 6)) " +
+                            "WHERE [EntryNumber] IS NULL");
+                        // شمارش برای لاگ — پس از پرکردن
+                        var remaining = await db15.Database
+                            .SqlQueryRaw<long>("SELECT COUNT(*) AS Value FROM [JournalEntries] WHERE [EntryNumber] IS NULL")
+                            .FirstOrDefaultAsync();
+                        if (remaining > 0)
+                            logger15.LogWarning("پس از پرکردن، همچنان {Count} سند بدون شماره ماند", remaining);
+                    }
+                }
+                catch (Exception ex15)
+                {
+                    // بهترین تلاش — نباید راه‌اندازی را متوقف کند؛ شماره‌گذاری
+                    // ردیف‌های تازه همچنان از مسیر پیش‌فرضِ INSERT کار می‌کند
+                    logger15.LogWarning(ex15, "پرکردن شمارهٔ سندهای قدیمی ناموفق بود — ادامه بدون توقف");
+                }
+            }
+
             // ۲) اجرای بذرها
             await DataSeederRunner.RunAllAsync(serviceProvider);
         }

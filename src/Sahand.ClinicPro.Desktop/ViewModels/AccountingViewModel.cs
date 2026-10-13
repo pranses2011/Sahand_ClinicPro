@@ -176,7 +176,13 @@ public partial class AccountingViewModel : ViewModelBase
         Entries.Clear();
         if (response?.Data is null) return;
         foreach (var e in response.Data)
-            Entries.Add(new JournalEntryRow(e.Id, e.EntryNumber, e.DateShamsi, e.Description,
+            // چرخهٔ ۷۰ (گزارش مالک: «شماره به‌جای خط تیره») — ردیف‌های قدیمیِ
+            // بدون EntryNumber پس از پرکردنِ راه‌اندازیِ سرور شماره دارند؛ اگر
+            // باز هم تهی ماند (مثلاً سرور هنوز ری‌استارت نشده)، شناسهٔ سند
+            // به‌عنوان جایگزین خوانا نمایش داده می‌شود — نه خط تیرهٔ خالی
+            Entries.Add(new JournalEntryRow(e.Id,
+                e.EntryNumber ?? $"سند شمارهٔ {Helpers.Money.ToPersianDigits(e.Id.ToString())}",
+                e.DateShamsi, e.Description,
                 e.TotalDebit, e.TotalCredit,
                 e.Status == 2 ? "تأییدشده" : "پیش‌نویس",
                 e.Status == 2 ? "#E8F5E9" : "#ECEFF1"));
