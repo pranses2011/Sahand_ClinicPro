@@ -113,11 +113,21 @@ public class SaveSettingCommandHandler : IRequestHandler<SaveSettingCommand, Res
 
 /// <summary>ردیف لاگ عملیات — چرخه بیست‌وچهارم (گزارش هفدهم مالک):
 /// «در صفحه لاگ عملیات چیزی نشان نمی‌دهد» — DTO غنی‌تر شد تا ستون‌های
-/// IP / مقادیر جدید / مقادیر قبیل جزئیات واقعی داشته باشند</summary>
+/// IP / مقادیر جدید / مقادیر قبلی جزئیات واقعی داشته باشند.
+/// ═══ چرخهٔ ۷۰ (بازطراحی لاگ) ═══ دو فیلد «فارسی» افزوده شد:
+/// PersianEntity/PersianModule — خروجی کاتالوگ معنایی روی نامِ ذخیره‌شده؛
+/// ردیف‌های قدیمی انگلیسی نیز در لحظهٔ خواندن فارسی می‌شوند.</summary>
 public record AuditLogDto(
-    long Id, string? Username, string Action, string? EntityName,
+    string? Username, string Action, string? EntityName,
     long? EntityId, string? Module, string TimeShamsi, string Time,
-    string? IpAddress, string? NewValues, string? OldValues);
+    string? IpAddress, string? NewValues, string? OldValues, long Id = 0)
+{
+    /// <summary>نام فارسی موجودیت — از کاتالوگ معنایی؛ ردیف‌های تازه از پیش فارسی‌اند</summary>
+    public string PersianEntity { get; set; } = string.Empty;
+
+    /// <summary>نام فارسی ماژول — از کاتالوگ معنایی؛ ردیف‌های تازه از پیش فارسی‌اند</summary>
+    public string PersianModule { get; set; } = string.Empty;
+}
 
 /// <summary>
 /// پرس‌وجوی لاگ عملیات با فیلتر کاربر، ماژول و نوع عملیات
@@ -161,13 +171,25 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Resul
             .Skip(PagingGuard.Skip(pageNumber, pageSize))
             .Take(pageSize)
             .Select(l => new AuditLogDto(
-                l.Id, l.Username,
+                l.Username,
                 l.ActionType.ToString(),
                 l.EntityName, l.EntityId, l.Module,
                 Common.Helpers.PersianDateHelper.ToShamsi(l.Timestamp),
                 l.Timestamp.ToString("HH:mm:ss"),
-                l.IpAddress, l.NewValues, l.OldValues))
+                l.IpAddress, l.NewValues, l.OldValues, l.Id))
             .ToListAsync(cancellationToken);
+
+        // ═══ بازطراحی چرخهٔ ۷۰ (گزارش مالک) — فارسی‌سازی ردیف‌های «قدیمی» ═══
+        // ردیف‌های پیش از این نسخه با نام انگلیسی موجودیت (patients/roles و…)
+        // و ماژول ثابت «API» در دیتابیس نشسته‌اند. به‌جای بازنویسی دیتابیس،
+        // در لحظهٔ خواندن از همان کاتالوگ معنایی ترجمه می‌شوند — ردیف‌های تازه
+        // از پیش فارسی‌اند و «بدون تغییر» پاس داده می‌شوند (PersianizeEntity/
+        // PersianizeModule هر دو «شفاف»‌اند: متن فارسی را دست‌نخورده برمی‌گردانند).
+        foreach (var row in items)
+        {
+            row.PersianEntity = Common.AuditSemanticCatalog.PersianizeEntity(row.EntityName);
+            row.PersianModule = Common.AuditSemanticCatalog.PersianizeModule(row.Module);
+        }
 
         return Result<List<AuditLogDto>>.Success(items);
     }

@@ -195,7 +195,61 @@ public class DashboardController : ApiBaseController
             })
             .ToListAsync(ct);
 
-        return Ok(Application.Common.Models.ApiResponse<object>.Success(list,
+        // ═══ بازطراحی چرخهٔ ۷۰ (گزارش مالک) — فارسی‌سازی ردیف‌های قدیمی ═══
+        // «ستون موجودیت همه انگلیسی است»: ردیف‌های پیش از این نسخه با نام
+        // انگلیسی در دیتابیس نشسته‌اند؛ در لحظهٔ خواندن از همان کاتالوگ معنایی
+        // ترجمه می‌شوند. ردیف‌های تازه از پیش فارسی‌اند و «شفاف» پاس داده می‌شوند
+        // (PersianizeEntity متن فارسی را دست‌نخورده برمی‌گرداند).
+        // ═══ نام کاربر ردیف‌های قدیمی ═══ پیش از این نسخه، میدلور «کد/نام
+        // کاربری» را در Username می‌نوشت (گزارش مالک: «به‌جای نام کامل، کد ۱»).
+        // ردیف‌هایی که Username آن‌ها خالصِ عددی است از همین محل با یک پرس‌وجوی
+        // کوچک به «نام کامل پرسنل» تبدیل می‌شوند (User → Employee: نام+نام‌خانوادگی)
+        // تا کارت فعالیت‌های اخیر نیز همان صفحهٔ لاگ عملیات را نشان دهد.
+        var legacyUserIds = list
+            .Where(l => l.user is not null && l.user.All(char.IsDigit) && l.user.Length > 0)
+            .Select(l => long.TryParse(l.user, out var id) ? id : 0)
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList();
+        var nameById = new Dictionary<long, string>();
+        if (legacyUserIds.Count > 0)
+        {
+            var displayNames = await _unitOfWork.Repository<Domain.Entities.Security.User>()
+                .QueryableNoTracking
+                .Where(u => legacyUserIds.Contains(u.Id))
+                .Select(u => new
+                {
+                    u.Id,
+                    Full = u.EmployeeId != null
+                        ? (u.Employee != null
+                            ? (u.Employee.FirstName + " " + u.Employee.LastName).Trim()
+                            : u.Username)
+                        : u.Username
+                })
+                .ToListAsync(ct);
+            nameById = displayNames
+                .GroupBy(d => d.Id)
+                .ToDictionary(g => g.Key, g => g.First().Full);
+        }
+
+        // خروجی نهایی — نام کاربر و موجودیت فارسی (anonymous جدید؛ عناصر
+        // «فهرست خام» فقط‌خواندنی‌اند و در این مرحله نگاشت می‌شوند)
+        var result = list.Select(l => new
+        {
+            l.time,
+            l.timeShamsi,
+            user = l.user is not null && l.user.All(char.IsDigit)
+                    && long.TryParse(l.user, out var uid)
+                    && nameById.TryGetValue(uid, out var full) && !string.IsNullOrWhiteSpace(full)
+                ? full
+                : l.user,
+            l.action,
+            entity = Application.Common.AuditSemanticCatalog.PersianizeEntity(l.entity),
+            l.entityId,
+            module = Application.Common.AuditSemanticCatalog.PersianizeModule(l.module),
+        }).ToList();
+
+        return Ok(Application.Common.Models.ApiResponse<object>.Success(result,
             "فعالیت‌های اخیر دریافت شد"));
     }
 
