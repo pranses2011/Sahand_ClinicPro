@@ -17,7 +17,7 @@ public partial class ReportsController
     /// <summary>۱) روند درآمد روزانه — ماهیت روند زمانی → نمودار سطحی</summary>
     private async Task<IActionResult> ChartRevenueTrendAsync(DateTime from, DateTime to)
     {
-        var invoices = await _unitOfWork.Repository<Domain.Entities.Billing.Invoice>().QueryableNoTracking
+        var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
             .Where(i => i.CreatedAt >= from && i.CreatedAt <= to && !i.IsDeleted)
             .Select(i => new { i.CreatedAt, i.TotalAmount })
             .ToListAsync();
@@ -52,7 +52,7 @@ public partial class ReportsController
     /// <summary>۲) درآمد ۱۲ ماه شمسی اخیر — ماهیت مقایسه ماه‌به‌ماه → ستونی</summary>
     private async Task<IActionResult> ChartRevenueMonthlyAsync(DateTime from, DateTime to)
     {
-        var invoices = await _unitOfWork.Repository<Domain.Entities.Billing.Invoice>().QueryableNoTracking
+        var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
             .Where(i => i.CreatedAt >= from && i.CreatedAt <= to && !i.IsDeleted)
             .Select(i => new { i.CreatedAt, i.TotalAmount })
             .ToListAsync();
@@ -91,7 +91,7 @@ public partial class ReportsController
     /// <summary>۳) سهم پزشکان از ویزیت — ماهیت سهم از کل → دونات</summary>
     private async Task<IActionResult> ChartDoctorShareAsync(DateTime from, DateTime to)
     {
-        var visits = await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>().QueryableNoTracking
+        var visits = await _reporting.Set<Domain.Entities.Clinical.Visit>().AsNoTracking()
             .Where(v => v.VisitDate >= from && v.VisitDate <= to && v.Doctor != null)
             .Select(v => new
             {
@@ -127,7 +127,7 @@ public partial class ReportsController
     /// <summary>۴) ترکیب خدمات از درآمد — ماهیت سهم از کل → دونات</summary>
     private async Task<IActionResult> ChartServiceMixAsync(DateTime from, DateTime to)
     {
-        var items = await _unitOfWork.Repository<Domain.Entities.Billing.InvoiceItem>().QueryableNoTracking
+        var items = await _reporting.Set<Domain.Entities.Billing.InvoiceItem>().AsNoTracking()
             .Where(it => it.Invoice!.CreatedAt >= from && it.Invoice!.CreatedAt <= to
                          && !it.Invoice!.IsDeleted && it.Service != null)
             .Select(it => new { Name = it.Service!.ServiceName, Price = it.TotalPrice })
@@ -159,7 +159,7 @@ public partial class ReportsController
     /// <summary>۵) الگوی ساعتی مراجعات — ماهیت مقایسه ساعت‌ها → ستونی</summary>
     private async Task<IActionResult> ChartVisitHourlyAsync(DateTime from, DateTime to)
     {
-        var appointments = await _unitOfWork.Repository<Domain.Entities.Scheduling.Appointment>().QueryableNoTracking
+        var appointments = await _reporting.Set<Domain.Entities.Scheduling.Appointment>().AsNoTracking()
             .Where(a => a.AppointmentDate >= DateOnly.FromDateTime(from.Date)
                      && a.AppointmentDate <= DateOnly.FromDateTime(to.Date)
                      && !a.IsDeleted)
@@ -195,7 +195,7 @@ public partial class ReportsController
     /// <summary>۶) الگوی روزهای هفته — مقایسه روزها → ستونی (هفته از شنبه)</summary>
     private async Task<IActionResult> ChartVisitWeekdayAsync(DateTime from, DateTime to)
     {
-        var appointments = await _unitOfWork.Repository<Domain.Entities.Scheduling.Appointment>().QueryableNoTracking
+        var appointments = await _reporting.Set<Domain.Entities.Scheduling.Appointment>().AsNoTracking()
             .Where(a => a.AppointmentDate >= DateOnly.FromDateTime(from.Date)
                      && a.AppointmentDate <= DateOnly.FromDateTime(to.Date)
                      && !a.IsDeleted)
@@ -243,7 +243,7 @@ public partial class ReportsController
     /// <summary>۷) سهم روش‌های پرداخت — ماهیت سهم از کل → دونات</summary>
     private async Task<IActionResult> ChartPaymentMethodsAsync(DateTime from, DateTime to)
     {
-        var payments = await _unitOfWork.Repository<Domain.Entities.Billing.Payment>().QueryableNoTracking
+        var payments = await _reporting.Set<Domain.Entities.Billing.Payment>().AsNoTracking()
             .Where(p => p.PaymentDate >= from && p.PaymentDate <= to && !p.IsDeleted)
             .Select(p => new { p.Method, p.Amount })
             .ToListAsync();
@@ -273,7 +273,7 @@ public partial class ReportsController
     /// <summary>۸) توزیع جنسیت بیماران — ماهیت سهم از کل → دونات</summary>
     private async Task<IActionResult> ChartGenderMixAsync()
     {
-        var patients = await _unitOfWork.Repository<Domain.Entities.People.Patient>().QueryableNoTracking
+        var patients = await _reporting.Set<Domain.Entities.People.Patient>().AsNoTracking()
             .Where(p => !p.IsDeleted)
             .Select(p => new { p.Gender })
             .ToListAsync();
@@ -307,7 +307,7 @@ public partial class ReportsController
     /// <summary>۹) توزیع سنی بیماران — مقایسه رده‌های سنی → ستونی</summary>
     private async Task<IActionResult> ChartAgeBracketsAsync()
     {
-        var patients = await _unitOfWork.Repository<Domain.Entities.People.Patient>().QueryableNoTracking
+        var patients = await _reporting.Set<Domain.Entities.People.Patient>().AsNoTracking()
             .Where(p => !p.IsDeleted && p.BirthDate != null)
             .Select(p => new { Birth = p.BirthDate!.Value })
             .ToListAsync();
@@ -347,7 +347,7 @@ public partial class ReportsController
     /// <summary>۱۰) پرمصرف‌ترین خدمات — ماهیت رتبه‌بندی → میله‌ای افقی</summary>
     private async Task<IActionResult> ChartTopServicesAsync(DateTime from, DateTime to, int top)
     {
-        var items = await _unitOfWork.Repository<Domain.Entities.Billing.InvoiceItem>().QueryableNoTracking
+        var items = await _reporting.Set<Domain.Entities.Billing.InvoiceItem>().AsNoTracking()
             .Where(it => it.Invoice!.CreatedAt >= from && it.Invoice!.CreatedAt <= to
                          && !it.Invoice!.IsDeleted && it.Service != null)
             .Select(it => new { Name = it.Service!.ServiceName, Price = it.TotalPrice })

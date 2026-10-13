@@ -76,6 +76,23 @@ public static class DependencyInjection
                 sp.GetRequiredService<SoftDeleteInterceptor>());
         });
 
+        // ═══ چرخهٔ ۶۴ (A-01 گام اول) — کانتکست فقط-خواندنی گزارش‌ها ═══
+        // استخر کانتکست (Pool) چون گزارش‌ها فقط می‌خوانند: بدون ردیابی، بدون
+        // رویداد دامنه، بدون اینترسپتور نوشتن — و NoTracking پیش‌فرض تا هر
+        // AsNoTrackingِ فراموش‌شده هم امن بماند.
+        services.AddDbContextPool<ReportingDbContext>((sp, options) =>
+        {
+            options.UseSqlServer(connectionString, sql =>
+            {
+                sql.CommandTimeout(120); // گزارش‌های سنگین چندجدولی — دو برابر زمانِ نوشتن
+            });
+            options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+            // همان سرکوب آگاهانهٔ MARS/Savepoint — گزارش‌ها در تراکنش نیستند ولی
+            // اگر روزی در تراکنشی خوانده شوند، هشدارِ بی‌خطر نباید لاگ را شلوغ کند
+            options.ConfigureWarnings(w => w.Ignore(
+                Microsoft.EntityFrameworkCore.Diagnostics.SqlServerEventId.SavepointsDisabledBecauseOfMARS));
+        });
+
         // اینترسپتورها و سرویس کاربر فعلی
         services.AddScoped<AuditableEntityInterceptor>();
         services.AddScoped<SoftDeleteInterceptor>();

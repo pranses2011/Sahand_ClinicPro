@@ -17,7 +17,7 @@ public partial class ReportsController
     /// <summary>۲۲) رشد ماه‌به‌ماه (MoM) — ماهیت مقایسه دوره‌ای → ستونی دوقلو (چرخه ۱۳، D1)</summary>
     private async Task<IActionResult> ChartGrowthMomAsync(DateTime from, DateTime to)
     {
-        var invoices = await _unitOfWork.Repository<Domain.Entities.Billing.Invoice>().QueryableNoTracking
+        var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
             .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted)
             .Select(i => new { i.InvoiceDate, i.TotalAmount })
             .ToListAsync();
@@ -104,7 +104,7 @@ public partial class ReportsController
     {
         // بازه را به کل ماه‌های شمسی درون‌داده گسترش می‌دهیم (تا سال قبل هم پوشش داده شود)
         var extendedFrom = from.AddYears(-1);
-        var invoices = await _unitOfWork.Repository<Domain.Entities.Billing.Invoice>().QueryableNoTracking
+        var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
             .Where(i => i.InvoiceDate >= extendedFrom && i.InvoiceDate <= to && !i.IsDeleted)
             .Select(i => new { i.InvoiceDate, i.TotalAmount })
             .ToListAsync();
@@ -180,7 +180,7 @@ public partial class ReportsController
     /// <summary>۲۴) تحلیل RFM بیماران — رده‌بندی ۸گانه برای پیامک هدفمند (چرخه ۱۳، D4)</summary>
     private async Task<IActionResult> ChartRfmAnalysisAsync(DateTime from, DateTime to)
     {
-        var invoices = await _unitOfWork.Repository<Domain.Entities.Billing.Invoice>().QueryableNoTracking
+        var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
             .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted)
             .Select(i => new { i.PatientId, i.InvoiceDate, i.TotalAmount })
             .ToListAsync();
@@ -217,7 +217,7 @@ public partial class ReportsController
             M = Quintile(monSorted, p.Monetary)
         }).ToList();
 
-        var patients = await _unitOfWork.Repository<Domain.Entities.People.Patient>().QueryableNoTracking
+        var patients = await _reporting.Set<Domain.Entities.People.Patient>().AsNoTracking()
             .Where(p => scored.Select(s => s.PatientId).Contains(p.Id))
             .ToDictionaryAsync(p => p.Id, p => $"{p.FirstName} {p.LastName}".Trim());
 
@@ -302,7 +302,7 @@ public partial class ReportsController
         // ماه‌های ۶گانه اخیر — مستقل از بازه انتخابی؛ بازه فقط برای خوانایی رابط کاربری است
         var now = DateTime.UtcNow;
         var start = now.AddMonths(-6);
-        var invoices = await _unitOfWork.Repository<Domain.Entities.Billing.Invoice>().QueryableNoTracking
+        var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
             .Where(i => i.InvoiceDate >= start && i.InvoiceDate <= now && !i.IsDeleted)
             .Select(i => new { i.InvoiceDate, i.TotalAmount })
             .ToListAsync();

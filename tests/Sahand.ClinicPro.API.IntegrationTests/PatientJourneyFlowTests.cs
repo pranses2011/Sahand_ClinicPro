@@ -38,10 +38,17 @@ public class InMemoryApiFactory : WebApplicationFactory<Program>
         {
             // حذف پیکربندی SQL Server موجود و جایگزینی با InMemory
             // نکته: IDbContextOptionsConfiguration در EF8 داخلی است — با اسکن بازتابی حذف می‌شود
+            // ═══ چرخهٔ ۶۴ — کانتکست گزارش: حذف کامل ثبت‌های «استخر» + گزینه‌ها ═══
+            // ثبت استخر (AddDbContextPool) در DI چند سرویس می‌گذارد (خودِ استخرِ
+            // Singleton + اجارهٔ Scoped + گزینه‌های Singleton)؛ برای جایگزینی با
+            // کانتکست InMemory ساده باید «همهٔ» آنها کنار برود، وگرنه اعتبارسنجی
+            // DI به «خوردنِ سرویس Scoped توسط Singleton» می‌افتد.
             var stale = services.Where(d =>
                 d.ServiceType == typeof(DbContextOptions<ClinicProDbContext>) ||
-                (d.ServiceType.IsGenericType &&
-                 d.ServiceType.Name.StartsWith("IDbContextOptionsConfiguration"))).ToList();
+                d.ServiceType == typeof(DbContextOptions<Sahand.ClinicPro.Infrastructure.Persistence.ReportingDbContext>) ||
+                d.ServiceType.IsGenericType && (
+                    d.ServiceType.GetGenericArguments().FirstOrDefault() == typeof(Sahand.ClinicPro.Infrastructure.Persistence.ReportingDbContext) ||
+                    d.ServiceType.Name.StartsWith("IDbContextOptionsConfiguration"))).ToList();
             foreach (var descriptor in stale)
                 services.Remove(descriptor);
 
@@ -50,6 +57,16 @@ public class InMemoryApiFactory : WebApplicationFactory<Program>
                     // تراکنش‌های رفتار MediatR روی InMemory پشتیبانی نمی‌شوند — نادیده
                     .ConfigureWarnings(w =>
                         w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning)));
+
+            // ═══ چرخهٔ ۶۴ — کانتکست گزارش هم InMemory می‌شود ═══
+            // گزارش‌ها از ReportingDbContext می‌خوانند؛ بدون این جایگزینی،
+            // تست‌های گزارش به SQL Server واقعی می‌رفتند. نام دیتابیس همان
+            // نام اصلی است — در InMemory، نام یکتا = فروشگاه مشترک؛ بذرها و
+            // دادهٔ نوشته‌شده از کانتکست اصلی برای گزارش‌ها دیده می‌شود
+            // (همان رابطهٔ واقعی: هر دو کانتکست به یک دیتابیس وصل‌اند).
+            services.AddDbContext<Sahand.ClinicPro.Infrastructure.Persistence.ReportingDbContext>(options =>
+                options.UseInMemoryDatabase(DatabaseName)
+                    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
         });
     }
 }

@@ -39,7 +39,7 @@ public partial class ReportsController
             return BadRequest(ApiResponse<string>.Failure("حداکثر ۲۰۰۰ ردیف برای PDF مجاز است — ابتدا با فیلتر محدوده کنید"));
 
         // سربرگ رسمی درمانگاه از تنظیمات — نبود آن fatal نیست؛ مقدار پیش‌فرض می‌نشیند
-        var clinic = await _unitOfWork.Repository<ClinicInfo>().QueryableNoTracking
+        var clinic = await _reporting.Set<ClinicInfo>().AsNoTracking()
             .OrderByDescending(c => c.Id)
             .FirstOrDefaultAsync(ct);
         byte[]? logo = null;

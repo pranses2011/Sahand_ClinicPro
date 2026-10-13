@@ -15,12 +15,12 @@ public partial class ReportsController
     /// <summary>۱۱) درآمد به تفکیک شعبه — ماهیت مقایسه شعبه‌ها → ستونی</summary>
     private async Task<IActionResult> ChartBranchRevenueAsync(DateTime from, DateTime to)
     {
-        var invoices = await _unitOfWork.Repository<Domain.Entities.Billing.Invoice>().QueryableNoTracking
+        var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
             .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted)
             .Select(i => new { i.BranchId, i.TotalAmount })
             .ToListAsync();
 
-        var branches = await _unitOfWork.Repository<Domain.Entities.People.Branch>().QueryableNoTracking
+        var branches = await _reporting.Set<Domain.Entities.People.Branch>().AsNoTracking()
             .Where(b => !b.IsDeleted)
             .Select(b => new { b.Id, b.BranchName })
             .ToDictionaryAsync(b => b.Id, b => b.BranchName);
@@ -59,13 +59,13 @@ public partial class ReportsController
     /// <summary>۱۲) سهم بیمه‌گران از فاکتورها — ماهیت سهم از کل → دونات</summary>
     private async Task<IActionResult> ChartInsuranceMixAsync(DateTime from, DateTime to)
     {
-        var invoices = await _unitOfWork.Repository<Domain.Entities.Billing.Invoice>().QueryableNoTracking
+        var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
             .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted
                         && i.InsuranceCompanyId != null)
             .Select(i => new { i.InsuranceCompanyId, i.TotalAmount })
             .ToListAsync();
 
-        var companies = await _unitOfWork.Repository<Domain.Entities.Billing.InsuranceCompany>().QueryableNoTracking
+        var companies = await _reporting.Set<Domain.Entities.Billing.InsuranceCompany>().AsNoTracking()
             .Where(c => !c.IsDeleted)
             .Select(c => new { c.Id, c.Name })
             .ToDictionaryAsync(c => c.Id, c => c.Name);
@@ -101,7 +101,7 @@ public partial class ReportsController
     private async Task<IActionResult> ChartReceivableAgingAsync()
     {
         var today = DateTime.UtcNow.Date;
-        var open = await _unitOfWork.Repository<Domain.Entities.Billing.Invoice>().QueryableNoTracking
+        var open = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
             .Where(i => !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.RemainingAmount > 0)
             .Select(i => new { i.InvoiceDate, i.RemainingAmount })
             .ToListAsync();
@@ -146,7 +146,7 @@ public partial class ReportsController
     /// <summary>۱۴) سهم ویزیت اول از کل نوبت‌ها — ماهیت سهم از کل → دونات</summary>
     private async Task<IActionResult> ChartNewVsReturningAsync(DateTime from, DateTime to)
     {
-        var appointments = await _unitOfWork.Repository<Domain.Entities.Scheduling.Appointment>().QueryableNoTracking
+        var appointments = await _reporting.Set<Domain.Entities.Scheduling.Appointment>().AsNoTracking()
             .Where(a => a.AppointmentDate >= DateOnly.FromDateTime(from.Date)
                      && a.AppointmentDate <= DateOnly.FromDateTime(to.Date)
                      && !a.IsDeleted)
@@ -184,7 +184,7 @@ public partial class ReportsController
     /// <summary>۱۵) روند ماهانه ثبت بیمار جدید — ماهیت روند زمانی → سطحی</summary>
     private async Task<IActionResult> ChartNewPatientsTrendAsync(DateTime from, DateTime to)
     {
-        var patients = await _unitOfWork.Repository<Domain.Entities.People.Patient>().QueryableNoTracking
+        var patients = await _reporting.Set<Domain.Entities.People.Patient>().AsNoTracking()
             .Where(p => !p.IsDeleted && p.CreatedAt >= from && p.CreatedAt <= to)
             .Select(p => new { p.CreatedAt })
             .ToListAsync();
@@ -223,7 +223,7 @@ public partial class ReportsController
     /// <summary>۱۶) بدهکاران برتر — ماهیت رتبه‌بندی → میله‌ای افقی</summary>
     private async Task<IActionResult> ChartTopDebtorsAsync(DateTime from, DateTime to, int top)
     {
-        var invoices = await _unitOfWork.Repository<Domain.Entities.Billing.Invoice>().QueryableNoTracking
+        var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
             .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted
                         && i.Status != InvoiceStatus.Cancelled && i.RemainingAmount > 0)
             .Select(i => new { i.PatientId, i.RemainingAmount, Patient = i.Patient })
@@ -256,7 +256,7 @@ public partial class ReportsController
     /// <summary>۱۷) ترکیب وضعیت نوبت‌ها — ماهیت سهم از کل → دونات</summary>
     private async Task<IActionResult> ChartAppointmentStatusAsync(DateTime from, DateTime to)
     {
-        var appointments = await _unitOfWork.Repository<Domain.Entities.Scheduling.Appointment>().QueryableNoTracking
+        var appointments = await _reporting.Set<Domain.Entities.Scheduling.Appointment>().AsNoTracking()
             .Where(a => a.AppointmentDate >= DateOnly.FromDateTime(from.Date)
                      && a.AppointmentDate <= DateOnly.FromDateTime(to.Date)
                      && !a.IsDeleted)
@@ -301,7 +301,7 @@ public partial class ReportsController
     /// <summary>۱۸) پرتکرارترین تست‌های آزمایشگاه — ماهیت رتبه‌بندی → میله‌ای افقی</summary>
     private async Task<IActionResult> ChartLabTopTestsAsync(DateTime from, DateTime to, int top)
     {
-        var items = await _unitOfWork.Repository<Domain.Entities.Paraclinical.LabOrderItem>().QueryableNoTracking
+        var items = await _reporting.Set<Domain.Entities.Paraclinical.LabOrderItem>().AsNoTracking()
             .Where(it => it.LabOrder!.OrderDate >= from && it.LabOrder!.OrderDate <= to
                          && !it.IsDeleted && it.Test != null)
             .Select(it => new { Name = it.Test!.TestName })
@@ -333,7 +333,7 @@ public partial class ReportsController
     /// <summary>۱۹) پرمصرف‌ترین داروهای نسخه — ماهیت رتبه‌بندی → میله‌ای افقی</summary>
     private async Task<IActionResult> ChartTopMedicationsAsync(DateTime from, DateTime to, int top)
     {
-        var items = await _unitOfWork.Repository<Domain.Entities.Clinical.PrescriptionItem>().QueryableNoTracking
+        var items = await _reporting.Set<Domain.Entities.Clinical.PrescriptionItem>().AsNoTracking()
             .Where(it => it.Prescription!.PrescriptionDate >= from && it.Prescription!.PrescriptionDate <= to
                          && !it.IsDeleted && it.Medication != null)
             .Select(it => new { Name = it.Medication!.GenericNameFa ?? it.Medication.BrandName ?? it.Medication.GenericName, it.Quantity })
@@ -365,7 +365,7 @@ public partial class ReportsController
     /// <summary>۲۰) سهم پرسنل از حقوق درصدی آخرین دوره — ماهیت سهم از کل → دونات</summary>
     private async Task<IActionResult> ChartSalaryShareAsync()
     {
-        var salaries = await _unitOfWork.Repository<Domain.Entities.Personnel.EmployeeSalary>().QueryableNoTracking
+        var salaries = await _reporting.Set<Domain.Entities.Personnel.EmployeeSalary>().AsNoTracking()
             .Where(s => !s.IsDeleted && s.ServiceCommission > 0)
             .Select(s => new { s.EmployeeId, s.PeriodYear, s.PeriodMonth, s.ServiceCommission })
             .ToListAsync();
@@ -378,7 +378,7 @@ public partial class ReportsController
         var period = $"{"۱۴" + latest.PeriodYear}/{latest.PeriodMonth}"; // نمایش دوره
         var periodRows = salaries.Where(s => s.PeriodYear == latest.PeriodYear && s.PeriodMonth == latest.PeriodMonth).ToList();
 
-        var employees = await _unitOfWork.Repository<Domain.Entities.People.Employee>().QueryableNoTracking
+        var employees = await _reporting.Set<Domain.Entities.People.Employee>().AsNoTracking()
             .Where(e => !e.IsDeleted)
             .Select(e => new { e.Id, e.FirstName, e.LastName })
             .ToDictionaryAsync(e => e.Id);
@@ -413,7 +413,7 @@ public partial class ReportsController
     /// <summary>۲۱) روند روزانه صدور نسخه — ماهیت روند زمانی → سطحی</summary>
     private async Task<IActionResult> ChartPrescriptionTrendAsync(DateTime from, DateTime to)
     {
-        var prescriptions = await _unitOfWork.Repository<Domain.Entities.Clinical.Prescription>().QueryableNoTracking
+        var prescriptions = await _reporting.Set<Domain.Entities.Clinical.Prescription>().AsNoTracking()
             .Where(p => p.PrescriptionDate >= from && p.PrescriptionDate <= to && !p.IsDeleted)
             .Select(p => new { Date = p.PrescriptionDate!.Value })
             .ToListAsync();

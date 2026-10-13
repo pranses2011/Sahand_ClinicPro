@@ -44,6 +44,43 @@ public class Cycle48ReportsExecutionTests
     }
 
     /// <summary>
+    /// کانتکست گزارش روی همان اتصال SQLite — چرخهٔ ۶۴.
+    /// مدل کامل (همان ۸۷ موجودیت) با همان اصلاحات SQLite (حذف سکانس‌ها)؛
+    /// کنترلر از این کانتکست می‌خواند — پیش‌دیدِ رفتار تولید.
+    /// </summary>
+    private sealed class SqliteReportingDbContext(DbContextOptions<ReportingDbContext> options)
+        : ReportingDbContext(options)
+    {
+        /// <summary>همان اصلاحات SQLite مدل اصلی — سکانس‌ها و پیش‌فرض‌های T-SQL حذف می‌شوند</summary>
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            foreach (var seq in modelBuilder.Model.GetSequences().ToList())
+                modelBuilder.Model.RemoveSequence(seq.Name, seq.Schema);
+
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (!string.IsNullOrEmpty(property.GetDefaultValueSql()))
+                        property.SetDefaultValueSql(null);
+
+                    var columnType = property.GetColumnType();
+                    if (!string.IsNullOrEmpty(columnType) &&
+                        columnType.Contains("(max)", StringComparison.OrdinalIgnoreCase))
+                        property.SetColumnType(null);
+                }
+        }
+    }
+
+    /// <summary>ساخت کانتکست گزارش روی همان اتصالِ واحد کار (بدون EnsureCreated تکراری)</summary>
+    private static ReportingDbContext CreateReportingContext(SqliteConnection connection)
+        => new SqliteReportingDbContext(new DbContextOptionsBuilder<ReportingDbContext>()
+            .UseSqlite(connection)
+            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+            .Options);
+
+    /// <summary>
     /// کانتکست آزمایشی SQLite — همان مدل کامل ۸۷ موجودیتی، فقط بدون ویژگی‌های
     /// اختصاصی اس‌کیوال‌سرور (۱۵ سکانس شمارهٔ یکتا + پیش‌فرض‌های T-SQL‌شان).
     /// این ویژگی‌ها صرفاً «تولید شمارهٔ یکتا هنگام درج» را ممکن می‌کنند و در مسیر
@@ -79,12 +116,13 @@ public class Cycle48ReportsExecutionTests
         }
     }
 
-    /// <summary>ساخت کنترلر گزارش‌ها با وابستگی‌های واقعی/سبک</summary>
-    private static ReportsController CreateController(UnitOfWork uow)
+    /// <summary>ساخت کنترلر گزارش‌ها با وابستگی‌های واقعی/سبک — کانتکست گزارش روی همان اتصال (چرخهٔ ۶۴)</summary>
+    private static ReportsController CreateController(UnitOfWork uow, SqliteConnection connection)
     {
         var services = new ServiceCollection().AddMemoryCache().BuildServiceProvider();
         var cache = services.GetRequiredService<IMemoryCache>();
-        return new ReportsController(new Mock<MediatR.IMediator>().Object, uow, cache);
+        return new ReportsController(new Mock<MediatR.IMediator>().Object, uow,
+            CreateReportingContext(connection), cache);
     }
 
     /// <summary>
@@ -148,7 +186,7 @@ public class Cycle48ReportsExecutionTests
         var (uow, connection) = CreateSqliteUnitOfWork();
         try
         {
-            var controller = CreateController(uow);
+            var controller = CreateController(uow, connection);
 
             // بازهٔ ۳۰ روز گذشته + پارامترهای عمومی معقول — همان مقادیر پیش‌فرض UI
             var action = await controller.ExecuteReport(reportId,
@@ -184,12 +222,26 @@ public class Cycle48ReportsExecutionTests
     [MemberData(nameof(DecimalAggregateReportIds))]
     public async Task Decimal_aggregate_reports_have_no_runtime_errors(string reportId)
     {
+        // نام یکتای این اجرا — هر دو کانتکست (اصلی و گزارش) روی همین نام
+        // می‌نشینند؛ در InMemory نام یکتا = فروشگاه مشترک (دو کانتکست، یک دیتابیس)
+        var dbName = $"ReportsDecimal_{Guid.NewGuid():N}";
+
         var options = new DbContextOptionsBuilder<ClinicProDbContext>()
-            .UseInMemoryDatabase($"ReportsDecimal_{Guid.NewGuid():N}")
+            .UseInMemoryDatabase(dbName)
             .Options;
         var context = new ClinicProDbContext(options);
         await using var uow = new UnitOfWork(context, new Mock<MediatR.IMediator>().Object);
-        var controller = CreateController(uow);
+
+        // چرخهٔ ۶۴ — کانتکست گزارش با NoTracking تولید روی همان فروشگاه
+        var reportingOptions = new DbContextOptionsBuilder<ReportingDbContext>()
+            .UseInMemoryDatabase(dbName)
+            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+            .Options;
+        var reportingContext = new SqliteReportingDbContext(reportingOptions);
+        var controller = new ReportsController(new Mock<MediatR.IMediator>().Object, uow,
+            reportingContext,
+            new ServiceCollection().AddMemoryCache().BuildServiceProvider()
+                .GetRequiredService<IMemoryCache>());
 
         var action = await controller.ExecuteReport(reportId,
             fromDate: DateTime.UtcNow.AddDays(-30),

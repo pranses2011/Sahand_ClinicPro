@@ -131,7 +131,7 @@ public partial class ReportsController
     [HasPermission("reports.view")]
     public async Task<IActionResult> AdhocList(CancellationToken ct)
     {
-        var list = await _unitOfWork.Repository<ReportDefinition>().QueryableNoTracking
+        var list = await _reporting.Set<ReportDefinition>().AsNoTracking()
             .Where(r => r.Category == "Adhoc" && !r.IsDeleted)
             .OrderByDescending(r => r.Id)
             .Select(r => new { r.Id, r.ReportName, r.Code, r.Parameters, r.CreatedAt })
