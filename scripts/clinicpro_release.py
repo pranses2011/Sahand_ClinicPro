@@ -142,23 +142,39 @@ GUIDE_TEMPLATE = """<!DOCTYPE html>
 <head><meta charset="UTF-8"><title>راهنمای آپدیت {TO_VER}</title>
 <style>
  body {{ font-family: Vazirmatn, Tahoma, sans-serif; background:#f8fafc; color:#0f172a; margin:0; padding:24px; line-height:1.9; }}
- .wrap {{ max-width:860px; margin:0 auto; }}
+ .wrap {{ max-width:900px; margin:0 auto; }}
  h1 {{ color:#0d9488; border-bottom:3px solid #0d9488; padding-bottom:12px; font-size:1.4rem; }}
  h2 {{ color:#be123c; margin-top:28px; font-size:1.1rem; }}
+ .ok {{ background:#ecfdf5; border:1px solid #6ee7b7; border-right:5px solid #059669; border-radius:8px; padding:14px 18px; margin:14px 0; }}
  .warn {{ background:#fff7ed; border:1px solid #fdba74; border-right:5px solid #ea580c; border-radius:8px; padding:14px 18px; margin:14px 0; }}
  code {{ background:#e2e8f0; border-radius:4px; padding:2px 8px; direction:ltr; display:inline-block; }}
  table {{ border-collapse:collapse; width:100%; margin:12px 0; }}
  th, td {{ border:1px solid #cbd5e1; padding:6px 10px; text-align:right; font-size:0.9em; }}
  th {{ background:#f1f5f9; }}
  ol li {{ margin:6px 0; }}
+ .step {{ background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:12px 16px; margin:10px 0; }}
 </style></head>
 <body><div class="wrap">
 <h1>📦 آپدیت {FROM_VER} → {TO_VER}</h1>
-<p>این بسته فقط <b>فایل‌های تغییرکرده</b> را دارد — روی سورس پروژه جایگزین کنید (ساختار مسیرها حفظ شده)، سپس <b>Clean + Rebuild</b> و در صورت تغییر سرور API، ری‌استارت آن.</p>
-<h2>📋 فایل‌های این بسته ({COUNT} فایل)</h2>
+
+<div class="ok">
+<b>راه سریع و مطمئن (پیشنهادی — بدون ویژوال استودیو):</b><br>
+۱) برنامه و سرور API را ببندید.<br>
+۲) محتویات <code>bin-update/desktop</code> را در پوشهٔ خروجی برنامه (کنار <code>Sahand.ClinicPro.Desktop.exe</code>) کپی و جایگزین کنید.<br>
+۳) <code>bin-update/api/Sahand.ClinicPro.API.dll</code> را در پوشهٔ خروجی سرور جایگزین کنید و سرور را ری‌استارت کنید.<br>
+این فایل‌ها از بیلد رسمی همین نسخه آماده شده‌اند — هر آنچه مخزن دارد، عیناً اجرا می‌شود؛ کش ویژوال استودیو دیگر نقشی ندارد.
+</div>
+
+<div class="warn">
+<b>راه توسعه‌دهنده (سورس + Rebuild):</b> فایل‌های سورس را با ساختار مسیرها جایگزین کنید، سپس
+<code>Tools/Reset-Build-Cache.ps1</code> را اجرا کنید و در ویژوال استودیو <b>Clean + Rebuild</b> بزنید.
+<b>بدون اجرای Reset، Rebuild عادی کشِ BAML کهنه را پاک نمی‌کند و «رفع‌ها بی‌اثر» می‌مانند — این همان علت سال‌های «میانبر/توست خراب» بود که این بسته برای همیشه بست.</b>
+</div>
+
+<h2>📋 فایل‌های سورس این بسته ({COUNT} فایل)</h2>
 <table><tr><th>مسیر</th><th>لایه</th></tr>{ROWS}</table>
-<h2>🧯 اگر پس از Rebuild خطا یا رفتار کهنه دیدید</h2>
-<div class="warn"><code>Clean-VS-Cache.bat</code> را در ریشهٔ سولوشن اجرا و دوباره Rebuild کنید — کش BAML/انجماد Visual Studio علت شناخته‌شدهٔ «رفع‌ها بی‌اثر» است.</div>
+<h2>⚙️ باینری آماده (بدون نیاز به بیلد)</h2>
+<p>فهرست کامل در <code>changed-files.txt</code> بخش «باینری آمادهٔ نصب» آمده است.</p>
 <p>جزئیات کامل کاربر-محور در <code>CHANGELOG.md</code> سرچشمهٔ v{TO_VER}.</p>
 </div></body></html>"""
 
