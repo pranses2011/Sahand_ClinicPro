@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.Application.Common.Caching;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Infrastructure;
 using Sahand.ClinicPro.Domain.Interfaces;
@@ -19,22 +20,36 @@ public class GetSettingsQueryHandler : IRequestHandler<GetSettingsQuery, Result<
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    /// <summary>سازنده با تزریق واحد کار</summary>
-    public GetSettingsQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    /// <summary>کش مرجع تنظیمات — چرخهٔ ۶۰؛ باطل با هر ذخیرهٔ تنظیم</summary>
+    private readonly IReferenceCache _cache;
 
-    /// <summary>اجرای پرس‌وجو</summary>
+    /// <summary>سازنده با تزریق واحد کار و کش مرجع</summary>
+    public GetSettingsQueryHandler(IUnitOfWork unitOfWork, IReferenceCache cache)
+    {
+        _unitOfWork = unitOfWork;
+        _cache = cache;
+    }
+
+    /// <summary>اجرای پرس‌وجو — از کش L1 با عمر ۹۰ ثانیه (چرخهٔ ۶۰)</summary>
     public async Task<Result<List<SettingDto>>> Handle(GetSettingsQuery request,
         CancellationToken cancellationToken)
     {
-        IQueryable<SystemSetting> query = _unitOfWork.Repository<SystemSetting>().QueryableNoTracking;
+        var items = await _cache.GetOrSetAsync(
+            ReferenceCacheKeys.Settings(request.Category),
+            async ct =>
+            {
+                IQueryable<SystemSetting> query = _unitOfWork.Repository<SystemSetting>().QueryableNoTracking;
 
-        if (!string.IsNullOrEmpty(request.Category))
-            query = query.Where(s => s.Category == request.Category);
+                if (!string.IsNullOrEmpty(request.Category))
+                    query = query.Where(s => s.Category == request.Category);
 
-        var items = await query
-            .OrderBy(s => s.Category).ThenBy(s => s.Key)
-            .Select(s => new SettingDto(s.Key, s.Value, s.Description, s.IsEncrypted))
-            .ToListAsync(cancellationToken);
+                return await query
+                    .OrderBy(s => s.Category).ThenBy(s => s.Key)
+                    .Select(s => new SettingDto(s.Key, s.Value, s.Description, s.IsEncrypted))
+                    .ToListAsync(ct);
+            },
+            TimeSpan.FromSeconds(90),
+            cancellationToken);
 
         return Result<List<SettingDto>>.Success(items);
     }
@@ -46,12 +61,23 @@ public class GetSettingsQueryHandler : IRequestHandler<GetSettingsQuery, Result<
 public record SaveSettingCommand(string Key, string? Value, string Category) : IRequest<Result>;
 
 /// <summary>گرداننده ذخیره تنظیم</summary>
+/// <remarks>
+/// ═══ چرخهٔ ۶۰ (P-06) ═══ پس از هر ذخیره، کل پیشوند تنظیمات باطل می‌شود
+/// («همهٔ دسته‌ها» + دستهٔ جاری) تا خوانندهٔ بعدی مقدار تازه بگیرد.
+/// </remarks>
 public class SaveSettingCommandHandler : IRequestHandler<SaveSettingCommand, Result>
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    /// <summary>سازنده با تزریق واحد کار</summary>
-    public SaveSettingCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    /// <summary>کش مرجع — باطل‌سازی پس از ذخیره</summary>
+    private readonly IReferenceCache _cache;
+
+    /// <summary>سازنده با تزریق واحد کار و کش مرجع</summary>
+    public SaveSettingCommandHandler(IUnitOfWork unitOfWork, IReferenceCache cache)
+    {
+        _unitOfWork = unitOfWork;
+        _cache = cache;
+    }
 
     /// <summary>اجرای ذخیره تنظیم</summary>
     public async Task<Result> Handle(SaveSettingCommand request, CancellationToken cancellationToken)
@@ -76,6 +102,10 @@ public class SaveSettingCommandHandler : IRequestHandler<SaveSettingCommand, Res
         }
 
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        // چرخهٔ ۶۰ — باطل‌سازی همهٔ کلیدهای تنظیمات (دستهٔ «همه» + هر دستهٔ دیگر)
+        _cache.EvictByPrefix(ReferenceCacheKeys.SettingsPrefix);
+
         return Result.Success();
     }
 }

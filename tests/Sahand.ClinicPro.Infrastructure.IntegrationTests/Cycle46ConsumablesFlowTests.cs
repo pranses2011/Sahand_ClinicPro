@@ -37,7 +37,10 @@ public class Cycle46ConsumablesFlowTests
     {
         // ═══ گام ۱ — تعریف سه قلم مصرفی جدید (مثل دکمهٔ «قلم جدید» صفحهٔ مصرفی‌ها) ═══
         var (uow, context) = CreateUnitOfWork();
-        var createHandler = new Sahand.ClinicPro.Application.Features.Lookups.CreatePharmacyItemCommandHandler(uow);
+        // چرخهٔ ۶۰ — کش مرجع تزریق می‌شود (بی‌اثر برای تست یا واقعی؛
+        // رفتار گردانندهٔ درج با هر دو یکسان است)
+        var createHandler = new Sahand.ClinicPro.Application.Features.Lookups.CreatePharmacyItemCommandHandler(
+            uow, new Sahand.ClinicPro.Application.Common.Caching.NoopReferenceCache());
 
         var createdIds = new List<long>();
         foreach (var (nameFa, form) in new[]

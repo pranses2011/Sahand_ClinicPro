@@ -56,6 +56,13 @@ public static class DependencyInjection
         // ثبت FluentValidation — اعتبارسنج‌های فارسی برای هر Command/Query
         services.AddValidatorsFromAssembly(assembly);
 
+        // ═══ چرخهٔ ۶۰ (P-06 نقشهٔ راه) — کش L1 داده‌های مرجع ═══
+        // AddMemoryCache خودش TryAdd است — اگر میزبان (API) قبلاً ثبت کرده
+        // باشد دوباره‌کاری نمی‌کند؛ پیاده‌سازی کش مرجع Singleton است چون
+        // بدون وضعیتِ درخواستی است و قفل‌های دانه‌ای خودش هم‌زمانی را می‌بندد.
+        services.AddMemoryCache();
+        services.TryAddSingleton<Common.Caching.IReferenceCache, Common.Caching.MemoryReferenceCache>();
+
         return services;
     }
 }

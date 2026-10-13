@@ -1,4 +1,5 @@
 using MediatR;
+using Sahand.ClinicPro.Application.Common.Caching;
 using Sahand.ClinicPro.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Domain.Common;
@@ -79,8 +80,15 @@ public class CreateInsuranceCompanyCommandHandler
 {
     private readonly IUnitOfWork _unitOfWork;
 
+    /// <summary>کش مرجع — باطل‌سازی پس از درج (چرخهٔ ۶۰)</summary>
+    private readonly IReferenceCache _cache;
+
     /// <summary>سازنده</summary>
-    public CreateInsuranceCompanyCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public CreateInsuranceCompanyCommandHandler(IUnitOfWork unitOfWork, IReferenceCache cache)
+    {
+        _unitOfWork = unitOfWork;
+        _cache = cache;
+    }
 
     /// <summary>اجرا — اعتبارسنجی نام یکتا و درج</summary>
     public async Task<Result<long>> Handle(CreateInsuranceCompanyCommand request,
@@ -105,6 +113,9 @@ public class CreateInsuranceCompanyCommandHandler
         };
         await _unitOfWork.Repository<InsuranceCompany>().AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        // چرخهٔ ۶۰ — فهرست کش‌شدهٔ بیمه‌ها معتبر نیست؛ باطل می‌شود
+        _cache.Evict(ReferenceCacheKeys.InsuranceCompanies);
         return Result<long>.Success(entity.Id);
     }
 }
@@ -124,8 +135,15 @@ public class UpdateInsuranceCompanyCommandHandler
 {
     private readonly IUnitOfWork _unitOfWork;
 
+    /// <summary>کش مرجع — باطل‌سازی پس از ویرایش (چرخهٔ ۶۰)</summary>
+    private readonly IReferenceCache _cache;
+
     /// <summary>سازنده</summary>
-    public UpdateInsuranceCompanyCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public UpdateInsuranceCompanyCommandHandler(IUnitOfWork unitOfWork, IReferenceCache cache)
+    {
+        _unitOfWork = unitOfWork;
+        _cache = cache;
+    }
 
     /// <summary>اجرا — بازیابی، اعتبارسنجی و به‌روزرسانی</summary>
     public async Task<Result> Handle(UpdateInsuranceCompanyCommand request,
@@ -151,6 +169,9 @@ public class UpdateInsuranceCompanyCommandHandler
         entity.DefaultCoveragePercent = request.CoveragePercent;
         entity.IsActive = request.IsActive;
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        // چرخهٔ ۶۰ — باطل‌سازی فهرست بیمه‌ها پس از ویرایش
+        _cache.Evict(ReferenceCacheKeys.InsuranceCompanies);
         return Result.Success();
     }
 }
@@ -164,8 +185,15 @@ public class DeactivateInsuranceCompanyCommandHandler
 {
     private readonly IUnitOfWork _unitOfWork;
 
+    /// <summary>کش مرجع — باطل‌سازی پس از غیرفعال‌سازی (چرخهٔ ۶۰)</summary>
+    private readonly IReferenceCache _cache;
+
     /// <summary>سازنده</summary>
-    public DeactivateInsuranceCompanyCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public DeactivateInsuranceCompanyCommandHandler(IUnitOfWork unitOfWork, IReferenceCache cache)
+    {
+        _unitOfWork = unitOfWork;
+        _cache = cache;
+    }
 
     /// <summary>اجرا — فقط غیرفعال می‌کند؛ سوابق پذیرش/فاکتور بیمه دست‌نخورده می‌مانند</summary>
     public async Task<Result> Handle(DeactivateInsuranceCompanyCommand request,
@@ -178,6 +206,9 @@ public class DeactivateInsuranceCompanyCommandHandler
 
         entity.IsActive = false;
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        // چرخهٔ ۶۰ — باطل‌سازی فهرست بیمه‌ها پس از غیرفعال‌سازی
+        _cache.Evict(ReferenceCacheKeys.InsuranceCompanies);
         return Result.Success();
     }
 }

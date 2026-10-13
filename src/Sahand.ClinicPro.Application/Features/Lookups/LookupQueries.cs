@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.Application.Common.Caching;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Enums;
@@ -40,24 +41,40 @@ public record LabTestOptionDto(long Id, string Name, string? Category, string? U
 public record GetInsuranceCompaniesQuery : IRequest<Result<List<InsuranceCompanyOptionDto>>>;
 
 /// <summary>گرداننده فهرست بیمه‌ها</summary>
+/// <remarks>
+/// ═══ چرخهٔ ۶۰ (P-06) — کش L1 ═══ این فهرست با هر باز شدن فرم پذیرش/بیمار/فاکتور
+/// خوانده می‌شود ولی نادراً تغییر می‌کند؛ روی کش مرجع با عمر ۵ دقیقه می‌نشیند و
+/// با هر نوشتن روی شرکت‌های بیمه (InsuranceCompanyCommands) باطل می‌شود.
+/// </remarks>
 public class GetInsuranceCompaniesQueryHandler
     : IRequestHandler<GetInsuranceCompaniesQuery, Result<List<InsuranceCompanyOptionDto>>>
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    /// <summary>سازنده با تزریق واحد کار</summary>
-    public GetInsuranceCompaniesQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    /// <summary>کش مرجع — باطل‌سازی توسط فرمان‌های نوشتن</summary>
+    private readonly IReferenceCache _cache;
 
-    /// <summary>اجرا — بیمه‌های فعال به ترتیب نام</summary>
+    /// <summary>سازنده با تزریق واحد کار و کش مرجع</summary>
+    public GetInsuranceCompaniesQueryHandler(IUnitOfWork unitOfWork, IReferenceCache cache)
+    {
+        _unitOfWork = unitOfWork;
+        _cache = cache;
+    }
+
+    /// <summary>اجرا — بیمه‌های فعال به ترتیب نام (از کش L1 با عمر ۵ دقیقه)</summary>
     public async Task<Result<List<InsuranceCompanyOptionDto>>> Handle(GetInsuranceCompaniesQuery request,
         CancellationToken cancellationToken)
     {
-        var items = await _unitOfWork.Repository<Domain.Entities.Billing.InsuranceCompany>()
-            .QueryableNoTracking
-            .Where(c => !c.IsDeleted)
-            .OrderBy(c => c.Name)
-            .Select(c => new InsuranceCompanyOptionDto(c.Id, c.Name, c.Code))
-            .ToListAsync(cancellationToken);
+        var items = await _cache.GetOrSetAsync(
+            ReferenceCacheKeys.InsuranceCompanies,
+            async ct => await _unitOfWork.Repository<Domain.Entities.Billing.InsuranceCompany>()
+                .QueryableNoTracking
+                .Where(c => !c.IsDeleted)
+                .OrderBy(c => c.Name)
+                .Select(c => new InsuranceCompanyOptionDto(c.Id, c.Name, c.Code))
+                .ToListAsync(ct),
+            TimeSpan.FromMinutes(5),
+            cancellationToken);
 
         return Result<List<InsuranceCompanyOptionDto>>.Success(items);
     }
@@ -72,19 +89,50 @@ public record GetDiagnosesQuery(string? Search = null, int Take = 30)
     : IRequest<Result<List<DiagnosisOptionDto>>>;
 
 /// <summary>گرداننده جستجوی تشخیص</summary>
+/// <remarks>
+/// ═══ چرخهٔ ۶۰ (P-06) ═══ فقط حالت «بدون جستجو» (کل ۳۰ ردیف نخست) کش
+/// می‌شود؛ جستجوی کاربر همیشه زنده از دیتابیس می‌رود (نتایج وابسته به ورودی‌اند).
+/// </remarks>
 public class GetDiagnosesQueryHandler
     : IRequestHandler<GetDiagnosesQuery, Result<List<DiagnosisOptionDto>>>
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    /// <summary>سازنده با تزریق واحد کار</summary>
-    public GetDiagnosesQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    /// <summary>کش مرجع — فقط حالت بدون جستجو</summary>
+    private readonly IReferenceCache _cache;
+
+    /// <summary>سازنده با تزریق واحد کار و کش مرجع</summary>
+    public GetDiagnosesQueryHandler(IUnitOfWork unitOfWork, IReferenceCache cache)
+    {
+        _unitOfWork = unitOfWork;
+        _cache = cache;
+    }
 
     /// <summary>اجرا — جستجو در کد و شرح فارسی و لاتین</summary>
     public async Task<Result<List<DiagnosisOptionDto>>> Handle(GetDiagnosesQuery request,
         CancellationToken cancellationToken)
     {
         var search = request.Search?.Trim();
+
+        // چرخهٔ ۶۰ — بدون جستجو: از کش (۲ دقیقه)؛ با جستجو: زنده از دیتابیس
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            var cached = await _cache.GetOrSetAsync(
+                ReferenceCacheKeys.Diagnoses,
+                async ct => await BuildDiagnosesAsync(null, Math.Clamp(request.Take, 1, 100), ct),
+                TimeSpan.FromMinutes(2),
+                cancellationToken);
+            return Result<List<DiagnosisOptionDto>>.Success(cached);
+        }
+
+        var items = await BuildDiagnosesAsync(search, Math.Clamp(request.Take, 1, 100), cancellationToken);
+        return Result<List<DiagnosisOptionDto>>.Success(items);
+    }
+
+    /// <summary>سازندهٔ مشترک فهرست/جستجوی تشخیص‌ها — جدا از Handle برای فراخوانی از دو مسیر</summary>
+    private async Task<List<DiagnosisOptionDto>> BuildDiagnosesAsync(string? search, int take,
+        CancellationToken cancellationToken)
+    {
         var query = _unitOfWork.Repository<Domain.Entities.Clinical.Icd10Code>()
             .QueryableNoTracking
             .Where(d => !d.IsDeleted);
@@ -95,16 +143,14 @@ public class GetDiagnosesQueryHandler
                 (d.DescriptionFa != null && d.DescriptionFa.Contains(search)) ||
                 d.Description.Contains(search));
 
-        var items = await query
+        return await query
             .OrderBy(d => d.Code)
-            .Take(Math.Clamp(request.Take, 1, 100))
+            .Take(take)
             .Select(d => new DiagnosisOptionDto(
                 d.Id, d.Code,
                 d.DescriptionFa ?? d.Description,
                 d.DescriptionFa != null ? d.Description : null))
             .ToListAsync(cancellationToken);
-
-        return Result<List<DiagnosisOptionDto>>.Success(items);
     }
 }
 
@@ -118,26 +164,57 @@ public record GetMedicationsQuery(string? Search = null, int Take = 30, Medicati
     : IRequest<Result<List<MedicationOptionDto>>>;
 
 /// <summary>گرداننده جستجوی دارو</summary>
+/// <remarks>
+/// ═══ چرخهٔ ۶۰ (P-06) ═══ فقط حالت «بدون جستجو» کش می‌شود (۳ دقیقه)؛
+/// جستجوی زنده از دیتابیس می‌رود. باطل‌سازی: هر فرمان نوشتن دارو/قلم انبار.
+/// </remarks>
 public class GetMedicationsQueryHandler
     : IRequestHandler<GetMedicationsQuery, Result<List<MedicationOptionDto>>>
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    /// <summary>سازنده با تزریق واحد کار</summary>
-    public GetMedicationsQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    /// <summary>کش مرجع — فقط حالت بدون جستجو</summary>
+    private readonly IReferenceCache _cache;
+
+    /// <summary>سازنده با تزریق واحد کار و کش مرجع</summary>
+    public GetMedicationsQueryHandler(IUnitOfWork unitOfWork, IReferenceCache cache)
+    {
+        _unitOfWork = unitOfWork;
+        _cache = cache;
+    }
 
     /// <summary>اجرا — جستجو در نام ژنریک فارسی/لاتین و برند</summary>
     public async Task<Result<List<MedicationOptionDto>>> Handle(GetMedicationsQuery request,
         CancellationToken cancellationToken)
     {
         var search = request.Search?.Trim();
+
+        // چرخهٔ ۶۰ — بدون جستجو: از کش؛ با جستجو: زنده
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            var cached = await _cache.GetOrSetAsync(
+                ReferenceCacheKeys.Medications,
+                async ct => await BuildMedicationsAsync(null, Math.Clamp(request.Take, 1, 100), request.ItemKind, ct),
+                TimeSpan.FromMinutes(3),
+                cancellationToken);
+            return Result<List<MedicationOptionDto>>.Success(cached);
+        }
+
+        var items = await BuildMedicationsAsync(search, Math.Clamp(request.Take, 1, 100), request.ItemKind, cancellationToken);
+        return Result<List<MedicationOptionDto>>.Success(items);
+    }
+
+    /// <summary>سازندهٔ مشترک فهرست/جستجوی داروها — جدا از Handle برای دو مسیر</summary>
+    private async Task<List<MedicationOptionDto>> BuildMedicationsAsync(string? search, int take,
+        MedicationItemKind? itemKind, CancellationToken cancellationToken)
+    {
         var query = _unitOfWork.Repository<Domain.Entities.Clinical.Medication>()
             .QueryableNoTracking
             .Where(m => !m.IsDeleted && m.IsActive);
 
         // چرخهٔ ۳۹ — فیلتر نوع قلم: داروخانه مصرفی فقط لوازم، نسخه‌نویسی فقط دارو
-        if (request.ItemKind.HasValue)
-            query = query.Where(m => m.ItemKind == request.ItemKind.Value);
+        if (itemKind.HasValue)
+            query = query.Where(m => m.ItemKind == itemKind.Value);
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(m =>
@@ -145,17 +222,15 @@ public class GetMedicationsQueryHandler
                 m.GenericName.Contains(search) ||
                 (m.BrandName != null && m.BrandName.Contains(search)));
 
-        var items = await query
+        return await query
             .OrderBy(m => m.GenericNameFa ?? m.GenericName)
-            .Take(Math.Clamp(request.Take, 1, 100))
+            .Take(take)
             .Select(m => new MedicationOptionDto(
                 m.Id, m.GenericNameFa ?? m.GenericName, m.Form, m.Strength, m.IsNarcotic,
                 // چرخهٔ ۳۹ — نوع قلم + متن فارسی آن (ترجمهٔ CASE به SQL)
                 (int)m.ItemKind,
                 m.ItemKind == MedicationItemKind.Consumable ? "لوازم مصرفی" : "دارو"))
             .ToListAsync(cancellationToken);
-
-        return Result<List<MedicationOptionDto>>.Success(items);
     }
 }
 
@@ -166,19 +241,51 @@ public class GetMedicationsQueryHandler
 public record GetLabTestsQuery(string? Search = null) : IRequest<Result<List<LabTestOptionDto>>>;
 
 /// <summary>گرداننده فهرست آزمایش‌ها</summary>
+/// <remarks>
+/// ═══ چرخهٔ ۶۰ (P-06) ═══ حالت بدون جستجو روی کش (۵ دقیقه) می‌نشیند؛
+/// منبع تغییر آزمایش‌ها فقط بذر است (فرمان نوشتن ندارد) اما باطل‌سازی
+/// پیش‌گیرانه در همان مسیر آینده انجام می‌شود.
+/// </remarks>
 public class GetLabTestsQueryHandler
     : IRequestHandler<GetLabTestsQuery, Result<List<LabTestOptionDto>>>
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    /// <summary>سازنده با تزریق واحد کار</summary>
-    public GetLabTestsQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    /// <summary>کش مرجع — فقط حالت بدون جستجو</summary>
+    private readonly IReferenceCache _cache;
+
+    /// <summary>سازنده با تزریق واحد کار و کش مرجع</summary>
+    public GetLabTestsQueryHandler(IUnitOfWork unitOfWork, IReferenceCache cache)
+    {
+        _unitOfWork = unitOfWork;
+        _cache = cache;
+    }
 
     /// <summary>اجرا — آزمایش‌های فعال به ترتیب دسته و نام</summary>
     public async Task<Result<List<LabTestOptionDto>>> Handle(GetLabTestsQuery request,
         CancellationToken cancellationToken)
     {
         var search = request.Search?.Trim();
+
+        // چرخهٔ ۶۰ — بدون جستجو: از کش؛ با جستجو: زنده از دیتابیس
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            var cached = await _cache.GetOrSetAsync(
+                ReferenceCacheKeys.LabTests,
+                async ct => await BuildLabTestsAsync(null, ct),
+                TimeSpan.FromMinutes(5),
+                cancellationToken);
+            return Result<List<LabTestOptionDto>>.Success(cached);
+        }
+
+        var items = await BuildLabTestsAsync(search, cancellationToken);
+        return Result<List<LabTestOptionDto>>.Success(items);
+    }
+
+    /// <summary>سازندهٔ مشترک فهرست/جستجوی آزمایش‌ها — جدا از Handle برای دو مسیر</summary>
+    private async Task<List<LabTestOptionDto>> BuildLabTestsAsync(string? search,
+        CancellationToken cancellationToken)
+    {
         var query = _unitOfWork.Repository<Domain.Entities.Paraclinical.LabTest>()
             .QueryableNoTracking
             .Where(t => !t.IsDeleted && t.IsActive);
@@ -189,13 +296,11 @@ public class GetLabTestsQueryHandler
                 (t.TestNameEn != null && t.TestNameEn.Contains(search)) ||
                 (t.TestCode != null && t.TestCode.Contains(search)));
 
-        var items = await query
+        return await query
             .OrderBy(t => t.Category).ThenBy(t => t.TestName)
             .Take(200)
             .Select(t => new LabTestOptionDto(t.Id, t.TestName, t.Category, t.Unit, t.Price))
             .ToListAsync(cancellationToken);
-
-        return Result<List<LabTestOptionDto>>.Success(items);
     }
 }
 

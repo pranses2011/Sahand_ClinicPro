@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.Application.Common.Caching;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Clinical;
 using Sahand.ClinicPro.Domain.Enums;
@@ -58,12 +59,23 @@ public class CreatePharmacyItemCommandValidator : AbstractValidator<CreatePharma
 }
 
 /// <summary>گردانندهٔ ثبت قلم جدید انبار</summary>
+/// <remarks>
+/// ═══ چرخهٔ ۶۰ (P-06) ═══ پس از درج، کلید «ref:lookups:medications» باطل
+/// می‌شود تا فهرست بدون جستجو قلم تازه را ببیند.
+/// </remarks>
 public class CreatePharmacyItemCommandHandler : IRequestHandler<CreatePharmacyItemCommand, Result<long>>
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    /// <summary>سازنده با تزریق واحد کار</summary>
-    public CreatePharmacyItemCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    /// <summary>کش مرجع — باطل‌سازی پس از درج</summary>
+    private readonly IReferenceCache _cache;
+
+    /// <summary>سازنده با تزریق واحد کار و کش مرجع</summary>
+    public CreatePharmacyItemCommandHandler(IUnitOfWork unitOfWork, IReferenceCache cache)
+    {
+        _unitOfWork = unitOfWork;
+        _cache = cache;
+    }
 
     /// <summary>
     /// اجرای ثبت — نام تکراریِ فعال رد می‌شود تا فهرست‌ها دوزبانگی نداشته باشند.
@@ -117,6 +129,9 @@ public class CreatePharmacyItemCommandHandler : IRequestHandler<CreatePharmacyIt
 
         await _unitOfWork.Repository<Medication>().AddAsync(item, cancellationToken);
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        // چرخهٔ ۶۰ — باطل‌سازی کش فهرست داروها (بدون جستجو)
+        _cache.Evict(ReferenceCacheKeys.Medications);
 
         return Result<long>.Success(item.Id);
     }

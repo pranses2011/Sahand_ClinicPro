@@ -21,6 +21,8 @@
     <PackageReference Include="Riok.Mapperly" PrivateAssets="all" />
     <!-- انتزاع‌های DI برای نوشتن متد الحاقی AddApplication -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <!-- کش L1 داده‌های مرجع — چرخهٔ ۶۰ نقشهٔ راه (P-06) -->
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <!-- برای ILogger در رفتار لاگ‌گذاری (گام ۵) -->
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
       <!-- پرس‌وجوهای LINQ صفحه‌بندی در Handlerها -->
