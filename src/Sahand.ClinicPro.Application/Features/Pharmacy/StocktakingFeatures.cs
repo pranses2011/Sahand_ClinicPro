@@ -55,23 +55,38 @@ public class GetStocktakingsQueryHandler : IRequestHandler<GetStocktakingsQuery,
     /// <summary>اجرای پرس‌وجو</summary>
     public async Task<Result<List<StocktakingListDto>>> Handle(GetStocktakingsQuery request, CancellationToken cancellationToken)
     {
-        var sessions = await _unitOfWork.Repository<StockTaking>().QueryableNoTracking
-            .Include(s => s.Items)
+        // ═══ چرخهٔ ۶۵ (P-04): بازطراحی برای حذف بارِ حافظه/شبکه ═══
+        // الگوی پیشین: ۱۰۰ جلسه با «همهٔ اقلامِ هر جلسه» در حافظه ماتریالیزه می‌شد
+        // (Include مجموعه‌ای + شمارش/جمع‌های سمت-کاربر) — انبارگردانیِ چند‌هزارقلمی
+        // یعنی انتقالِ بی‌دلیل همان ردیف‌ها به کلاینتِ API فقط برای «شمارش».
+        // الگوی جدید: همهٔ شمارش/جمع‌ها با پروجکشن در خود دیتابیس محاسبه می‌شوند
+        // (SQL تجمیعی) و هیچ ردیف قلمی به حافظه نمی‌آید؛ بار شبکه از
+        // «O(اقلام)» به «O(جلسات)» می‌افتد.
+        var projected = await _unitOfWork.Repository<StockTaking>().QueryableNoTracking
             .OrderByDescending(s => s.TakingDate)
             .ThenByDescending(s => s.Id)
             .Take(100)
+            .Select(s => new
+            {
+                s.Id, s.TakingNumber, s.TakingDate, s.CreatedAt, s.Status, s.Notes, s.ItemKind,
+                TotalItems = s.Items.Count,
+                CountedItems = s.Items.Count(i => i.IsCounted),
+                Mismatches = s.Items.Count(i => i.IsCounted && i.Difference != 0),
+                Surplus = s.Items.Where(i => i.IsCounted && i.Difference > 0).Sum(i => i.Difference),
+                Shortage = s.Items.Where(i => i.IsCounted && i.Difference < 0).Sum(i => -i.Difference)
+            })
             .ToListAsync(cancellationToken);
 
-        var rows = sessions.Select(s => new StocktakingListDto(
+        var rows = projected.Select(s => new StocktakingListDto(
             s.Id,
             s.TakingNumber,
             PersianDateHelper.ToShamsi((s.TakingDate ?? DateOnly.FromDateTime(s.CreatedAt)).ToDateTime(TimeOnly.MinValue)),
             StatusFa(s.Status), StatusColor(s.Status),
-            s.Items.Count,
-            s.Items.Count(i => i.IsCounted),
-            s.Items.Count(i => i.IsCounted && i.Difference != 0),
-            s.Items.Where(i => i.IsCounted && i.Difference > 0).Sum(i => i.Difference),
-            s.Items.Where(i => i.IsCounted && i.Difference < 0).Sum(i => -i.Difference),
+            s.TotalItems,
+            s.CountedItems,
+            s.Mismatches,
+            s.Surplus,
+            s.Shortage,
             s.Notes,
             ScopeFa(s.ItemKind))).ToList();
 
