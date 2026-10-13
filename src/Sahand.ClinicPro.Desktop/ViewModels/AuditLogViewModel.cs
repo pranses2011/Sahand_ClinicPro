@@ -2,73 +2,85 @@ using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Sahand.ClinicPro.Desktop.Helpers;
 using Sahand.ClinicPro.Desktop.Services;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
-/// <summary>ردیف لاگ عملیات با جزئیات Old/New — فرم ۳۰</summary>
+/// <summary>
+/// ردیف لاگ عملیات — بازطراحی چرخهٔ ۷۰:
+/// ستون‌های نمایش اکنون از سرور «فارسی» می‌آیند (PersianEntity/PersianModule
+/// که ردیف‌های قدیمی را هم در لحظهٔ خواندن ترجمه می‌کنند) و «شرح» به‌جای
+/// برش خام JSON، جملهٔ انسانی است: «ویرایش «بیمار» (#۱۲) — ۳ فیلد تغییر
+/// یافت: تلفن ثابت، نشانی، وضعیت تأهل».
+/// </summary>
 public partial class AuditDetailRow : ObservableObject
 {
-    /// <summary>شناسه</summary>
+    /// <summary>شناسهٔ رکورد لاگ</summary>
     public long Id { get; init; }
 
-    /// <summary>کاربر</summary>
+    /// <summary>نام کامل کاربر (از ادعای displayName سرور؛ ردیف‌های قدیمی: بازیابی از پرسنل)</summary>
     public string? Username { get; init; }
 
-    /// <summary>ماژول</summary>
+    /// <summary>ماژول — فارسی (داروخانه، پذیرش، مدیریت سیستم و…)</summary>
     public string? Module { get; init; }
 
-    /// <summary>عملیات</summary>
+    /// <summary>عملیات — فارسی</summary>
     public string? Action { get; init; }
 
-    /// <summary>نام موجودیت</summary>
+    /// <summary>موجودیت — فارسی (بیمار، نوبت، فاکتور و…)</summary>
     public string? EntityName { get; init; }
 
-    /// <summary>شناسه موجودیت</summary>
+    /// <summary>شناسهٔ رکورد — برای ایجادها از پاسخ سرور پر می‌شود</summary>
     public long? EntityId { get; init; }
 
-    /// <summary>شرح</summary>
-    public string? Description { get; init; }
+    /// <summary>شرح انسانی — جملهٔ خلاصهٔ تغییرات (پس از ساخت، از دیف پر می‌شود)</summary>
+    public string? Description { get; set; }
 
     /// <summary>آدرس IP</summary>
     public string? IpAddress { get; init; }
 
-    /// <summary>زمان وقوع (شمسی + ساعت) — متن آمادهٔ نمایش؛ چرخه ۲۴:
-    /// پیش‌تر DateTime UTC خام بود و از سرور هم ارسال نمی‌شد</summary>
+    /// <summary>زمان وقوع (شمسی + ساعت)</summary>
     public string? CreatedAt { get; init; }
 
-    /// <summary>مقادیر قبلی JSON</summary>
+    /// <summary>مقادیر قبلی JSON (خام)</summary>
     [ObservableProperty]
     private string? _oldValues;
 
-    /// <summary>مقادیر جدید JSON</summary>
+    /// <summary>مقادیر جدید JSON (خام)</summary>
     [ObservableProperty]
     private string? _newValues;
 
-    /// <summary>نشان رنگی عملیات — طبق فرم ۳۰</summary>
+    /// <summary>
+    /// جدول مقایسهٔ فیلدها — خروجی BuildDiff؛ با هر انتخابِ ردیف،
+    /// ViewModel این فهرست را برای پنل جزئیات باز می‌سازد.
+    /// </summary>
+    public List<AuditFieldChange> FieldDiff => AuditFieldCatalog.BuildDiff(Action, OldValues, NewValues);
+
+    /// <summary>شمار فیلدهای واقعاً تغییر‌یافته — برای جملهٔ شرح</summary>
+    public int ChangedFieldCount => FieldDiff.Count(f => f.Changed);
+
+    /// <summary>نشان رنگی عملیات</summary>
     public string ActionText => Action switch
     {
-        "Create" => "🟢 ایجاد", "Update" => "🔵 ویرایش", "Delete" => "🔴 حذف",
-        "View" => "⬜ مشاهده", "Login" => "🟡 ورود", "Logout" => "🟠 خروج",
-        "PasswordChange" => "🟣 تغییر رمز",
+        "ایجاد" => "➕ ایجاد", "ویرایش" => "✏️ ویرایش", "حذف" => "🗑 حذف",
+        "مشاهده" => "👁 مشاهده", "ورود" => "🔑 ورود", "خروج" => "🚪 خروج",
+        "تغییر رمز" => "🔒 تغییر رمز",
         _ => Action ?? "—"
     };
 
     /// <summary>رنگ نشان</summary>
     public string ActionColor => Action switch
     {
-        "Create" => "#2E7D32", "Update" => "#1565C0", "Delete" => "#C62828",
-        "Login" => "#F9A825", "Logout" => "#E65100", "PasswordChange" => "#8E24AA",
+        "ایجاد" => "#2E7D32", "ویرایش" => "#1565C0", "حذف" => "#C62828",
+        "ورود" => "#F9A825", "خروج" => "#E65100", "تغییر رمز" => "#8E24AA",
         _ => "#90A4AE"
     };
 
-    /// <summary>JSON قالب‌بندی‌شده مقادیر قبلی — برای جزئیات</summary>
+    /// <summary>JSON خام قبلی — برای اکسپندر «نمایش خام»</summary>
     public string FormattedOld => PrettyJson(OldValues);
 
-    /// <summary>JSON قالب‌بندی‌شده مقادیر جدید</summary>
-    public string FormattedNew => PrettyJson(NewValues);
-
-    /// <summary>قالب‌بندی JSON با تورفتگی</summary>
+    /// <summary>JSON خام جدید — برای اکسپندر «نمایش خام»</summary>
     private static string PrettyJson(string? json)
     {
         if (string.IsNullOrWhiteSpace(json)) return "—";
@@ -85,8 +97,8 @@ public partial class AuditDetailRow : ObservableObject
 }
 
 /// <summary>
-/// ViewModel لاگ عملیات — گام U15 طبق فرم ۳۰:
-/// فیلترها (تاریخ/کاربر/ماژول/عملیات/جستجو) + جدول + جزئیات Old/New
+/// ViewModel لاگ عملیات — بازطراحی چرخهٔ ۷۰:
+/// فیلترهای معنایی (ماژول/عملیات/جستجو) + جدول + پنل «جدول مقایسهٔ تغییرات».
 /// </summary>
 public partial class AuditLogViewModel : ViewModelBase
 {
@@ -100,17 +112,17 @@ public partial class AuditLogViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<AuditDetailRow> _logs = new();
 
-    /// <summary>لاگ انتخاب‌شده — نمایش جزئیات</summary>
+    /// <summary>لاگ انتخاب‌شده — پنل جزئیات زیر جدول را پر می‌کند</summary>
     [ObservableProperty]
     private AuditDetailRow? _selectedLog;
 
-    /// <summary>فیلتر نام موجودیت/ماژول</summary>
+    /// <summary>جدول مقایسهٔ ردیف انتخاب‌شده — بازسازی با هر انتخاب</summary>
+    [ObservableProperty]
+    private List<AuditFieldChange> _selectedDiff = new();
+
+    /// <summary>فیلتر جستجو (ماژول/موجودیت/کاربر)</summary>
     [ObservableProperty]
     private string? _entityFilter;
-
-    /// <summary>جستجو در شرح</summary>
-    [ObservableProperty]
-    private string? _search;
 
     /// <summary>شماره صفحه</summary>
     [ObservableProperty]
@@ -120,7 +132,7 @@ public partial class AuditLogViewModel : ViewModelBase
     [ObservableProperty]
     private string _countText = "—";
 
-    /// <summary>گزینه‌های فیلتر عملیات</summary>
+    /// <summary>گزینه‌های فیلتر عملیات — فارسی</summary>
     public List<string> ActionOptions { get; } = new()
         { "همه", "ایجاد", "ویرایش", "حذف", "مشاهده", "ورود", "خروج", "تغییر رمز" };
 
@@ -143,12 +155,6 @@ public partial class AuditLogViewModel : ViewModelBase
         IsBusy = true;
         try
         {
-            // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — «در صفحه لاگ عملیات چیزی
-            // نشان نمی‌دهد» ═══ دو ریشه داشت که هر دو رفع شد:
-            //   ۱) پاسخ سرور «تک‌لایه» است (data مستقیم آرایه است، نه شیءِ items)
-            // اما کلاینت ساختار دومرحله‌ای می‌خواند → خواندن همیشه خالی بود؛
-            //   ۲) فیلتر «عملیات» به پارامتر entityName فرستاده می‌شد که بی‌اثر بود —
-            // اکنون پارامتر مستقل action روی سرور اضافه و از این‌جا فرستاده می‌شود.
             var action = ActionFilter switch
             {
                 "ایجاد" => "Create", "ویرایش" => "Update", "حذف" => "Delete",
@@ -160,7 +166,6 @@ public partial class AuditLogViewModel : ViewModelBase
                         (string.IsNullOrWhiteSpace(EntityFilter) ? "" : $"&entityName={Uri.EscapeDataString(EntityFilter.Trim())}");
 
             var response = await _api.GetAsync<AuditResponse>(query);
-            // data مستقیم فهرست ردیف‌هاست (پاسخ ToResponse تک‌لایه)
             var rows = response?.Data ?? new List<AuditDto>();
             Logs = new ObservableCollection<AuditDetailRow>(rows.Select(MapRow));
             CountText = $"صفحه {Helpers.Money.ToPersianDigits(Page.ToString())} — {Helpers.Money.ToPersianDigits(Logs.Count.ToString())} ردیف";
@@ -171,26 +176,80 @@ public partial class AuditLogViewModel : ViewModelBase
         }
     }
 
-    /// <summary>نگاشت DTO به ردیف نمایش</summary>
-    private static AuditDetailRow MapRow(AuditDto a) => new()
+    /// <summary>
+    /// نگاشت DTO به ردیف نمایش — ستون‌های فارسی از سرور می‌آیند
+    /// (PersianEntity/PersianModule) و شرح، جملهٔ انسانی از دیف ساخته می‌شود.
+    /// </summary>
+    private static AuditDetailRow MapRow(AuditDto a)
     {
-        Id = a.Id,
-        Username = a.Username,
-        Module = a.Module,
-        Action = a.Action switch
+        var action = a.Action switch
         {
             "Create" => "ایجاد", "Update" => "ویرایش", "Delete" => "حذف",
             "View" => "مشاهده", "Login" => "ورود", "Logout" => "خروج",
             "PasswordChange" => "تغییر رمز", _ => a.Action
-        },
-        EntityName = a.EntityName,
-        EntityId = a.EntityId,
-        Description = a.NewValues is null ? "—" : (a.NewValues.Length > 60 ? a.NewValues[..60] + "…" : a.NewValues),
-        IpAddress = a.IpAddress,
-        CreatedAt = $"{a.TimeShamsi} {a.Time}",
-        OldValues = a.OldValues,
-        NewValues = a.NewValues
-    };
+        };
+        var row = new AuditDetailRow
+        {
+            Id = a.Id,
+            Username = a.Username,
+            // گارد: اگر سرور قدیمی فیلد فارسی نفرستاد، همان نگاشت محلی اجرا می‌شود
+            Module = string.IsNullOrWhiteSpace(a.PersianModule)
+                ? Application.Common.AuditSemanticCatalog.PersianizeModule(a.Module)
+                : a.PersianModule,
+            Action = action,
+            EntityName = string.IsNullOrWhiteSpace(a.PersianEntity)
+                ? Application.Common.AuditSemanticCatalog.PersianizeEntity(a.EntityName)
+                : a.PersianEntity,
+            EntityId = a.EntityId,
+            IpAddress = a.IpAddress,
+            CreatedAt = $"{a.TimeShamsi} {a.Time}",
+            OldValues = a.OldValues,
+            NewValues = a.NewValues,
+        };
+        row.Description = BuildHumanSummary(row);
+        return row;
+    }
+
+    /// <summary>
+    /// جملهٔ انسانی برای ستون «شرح» — به‌جای برش خام JSON:
+    ///   ویرایش: «۳ فیلد تغییر یافت: تلفن ثابت، نشانی»
+    ///   ایجاد:   «ثبت جدید با ۱۲ فیلد»
+    ///   حذف:     «حذف رکورد — ۱۲ فیلد ثبت بود»
+    ///   بدون دیف: «—»
+    /// </summary>
+    private static string BuildHumanSummary(AuditDetailRow row)
+    {
+        var diff = row.FieldDiff;
+        if (diff.Count == 0)
+            return "—";
+        var changed = diff.Where(f => f.Changed).ToList();
+        var entityPart = string.IsNullOrWhiteSpace(row.EntityName)
+            ? ""
+            : $"«{row.EntityName}»" + (row.EntityId is > 0 ? $" (#{Helpers.Money.ToPersianDigits(row.EntityId.Value.ToString())})" : "") + " — ";
+        switch (row.Action)
+        {
+            case "ایجاد":
+                return $"{entityPart}ثبت جدید با {Helpers.Money.ToPersianDigits(diff.Count.ToString())} فیلد";
+            case "حذف":
+                return $"{entityPart}حذف رکورد ({Helpers.Money.ToPersianDigits(diff.Count.ToString())} فیلد)";
+            case "ویرایش" when changed.Count > 0:
+            {
+                var names = string.Join("، ", changed.Take(4).Select(f => f.Field));
+                var more = changed.Count > 4 ? $" و {Helpers.Money.ToPersianDigits((changed.Count - 4).ToString())} مورد دیگر" : "";
+                return $"{entityPart}{Helpers.Money.ToPersianDigits(changed.Count.ToString())} فیلد تغییر یافت: {names}{more}";
+            }
+            default:
+                return changed.Count > 0
+                    ? $"{entityPart}{Helpers.Money.ToPersianDigits(changed.Count.ToString())} فیلد تغییر یافت"
+                    : "—";
+        }
+    }
+
+    /// <summary>با هر انتخاب ردیف، جدول مقایسه بازسازی می‌شود</summary>
+    partial void OnSelectedLogChanged(AuditDetailRow? value)
+    {
+        SelectedDiff = value?.FieldDiff ?? new List<AuditFieldChange>();
+    }
 
     /// <summary>صفحه بعد</summary>
     [RelayCommand]
@@ -210,16 +269,17 @@ public partial class AuditLogViewModel : ViewModelBase
 
     /* ─── پاسخ‌ها ─── */
 
-    /// <summary>پاسخ تک‌لایهٔ سرور — data مستقیماً فهرست ردیف‌هاست
-    /// (AdminController از ToResponse استفاده می‌کند: { isSuccess, data: [...] })</summary>
+    /// <summary>پاسخ تک‌لایهٔ سرور — data مستقیماً فهرست ردیف‌هاست</summary>
     private sealed class AuditResponse
     {
         public bool IsSuccess { get; set; }
         public List<AuditDto>? Data { get; set; }
     }
 
-    /// <summary>ردیف لاگ — منطبق بر AuditLogDto سرور (چرخه ۲۴: فیلدهای
-    /// TimeShamsi/Time/IpAddress/NewValues/OldValues هم‌نام سرور شدند)</summary>
+    /// <summary>
+    /// ردیف لاگ — منطبق بر AuditLogDto سرور (چرخهٔ ۷۰: PersianEntity/
+    /// PersianModule افزوده شدند؛ ردیف‌های قدیمی از همین محل فارسی می‌شوند).
+    /// </summary>
     private sealed class AuditDto
     {
         public long Id { get; set; }
@@ -228,6 +288,8 @@ public partial class AuditLogViewModel : ViewModelBase
         public string? EntityName { get; set; }
         public long? EntityId { get; set; }
         public string? Module { get; set; }
+        public string PersianEntity { get; set; } = string.Empty;
+        public string PersianModule { get; set; } = string.Empty;
         public string? TimeShamsi { get; set; }
         public string? Time { get; set; }
         public string? IpAddress { get; set; }
