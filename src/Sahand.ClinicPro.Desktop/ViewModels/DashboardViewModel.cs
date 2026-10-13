@@ -894,6 +894,23 @@ public partial class DashboardViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// گشودن نمایشگر سالن انتظار — چرخهٔ ۶۹ (فاز ۳ / F-14 «حالت کیوسک»):
+    /// پنجرهٔ تمام‌صفحهٔ تیره برای نمایشگر سالن (ساعت/تاریخ شمسی درشت +
+    /// «در حال ویزیت» و «نوبت‌های پیش‌رو» با تازه‌سازی بلادرنگ صف).
+    /// خروج از نمایشگر فقط با Escape است.
+    /// </summary>
+    [RelayCommand]
+    private void OpenWaitingRoomDisplay()
+    {
+        var window = new Views.WaitingRoomDisplayWindow
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+        window.Show(); // بدون ShowDialog — پشت آن کار ادامه دارد؛ سالن مستقل است
+        _snackbar.Info("نمایشگر سالن انتظار باز شد — خروج با کلید Esc");
+    }
+
+    /// <summary>
     /// باز/بستن مرکز هشدار انبار — چرخهٔ ۶۹ (فاز ۳ / F-08)
     /// با نخستین باز شدن، اقلام جزئیات از endpoint ویژه خوانده می‌شوند؛
     /// خطا فقط پیام فارسی می‌دهد و پنل باز می‌ماند (تلاش مجدد با کلیک بعدی).

@@ -86,16 +86,28 @@
         <StackPanel>
             <!-- نوار عنوان + دکمه بارگذاری مجدد -->
             <DockPanel Margin="0,0,0,10">
-                <Button DockPanel.Dock="Left"
-                        Command="{Binding RefreshCommand}"
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                        ToolTip="بارگذاری مجدد (به‌روزرسانی خودکار هر ۶۰ ثانیه)">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16"
-                                                 VerticalAlignment="Center" />
-                        <TextBlock Text="بارگذاری مجدد" Margin="6,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                    <Button Command="{Binding RefreshCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            ToolTip="بارگذاری مجدد (به‌روزرسانی خودکار هر ۶۰ ثانیه)">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16"
+                                                     VerticalAlignment="Center" />
+                            <TextBlock Text="بارگذاری مجدد" Margin="6,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <!-- ═══ چرخهٔ ۶۹ (فاز ۳ / F-14) — نمایشگر سالن انتظار ═══
+                         پنجرهٔ تمام‌صفحه برای نمایشگر سالن؛ خروج با Esc -->
+                    <Button Command="{Binding OpenWaitingRoomDisplayCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0"
+                            ToolTip="نمایش تمام‌صفحه برای نمایشگر سالن انتظار — خروج با Esc">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Monitor" Width="16" Height="16"
+                                                     VerticalAlignment="Center" />
+                            <TextBlock Text="نمایشگر سالن" Margin="6,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
 
                 <!-- ═══ چرخهٔ ۴۴ (گزارش مالک: «مدیریت داشبورد رو خیلی حرفه ای تر و
                      زیباتر پیاده سازی بکن») — سربرگ گرادیانی برند به‌جای عنوان سادهٔ
