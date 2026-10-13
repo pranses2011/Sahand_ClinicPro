@@ -582,7 +582,10 @@
                                 </StackPanel>
                             </Button>
                         </DockPanel>
-                        <DataGrid ItemsSource="{Binding Receptions}"
+                        <!-- چرخهٔ ۶۳ (P-08): مجازی‌سازی صریح + پیمایش تعویقی — فقط ردیف‌های دیدنی رندر می‌شوند؛ در فهرست‌های چند‌هزار ردیفی تفاوت چندثانیه‌ای -->
+    <DataGrid ItemsSource="{Binding Receptions}"
+                  VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                          ScrollViewer.IsDeferredScrollingEnabled="True"
                                   LoadingRow="OnQueueRowLoading"
                                   SelectedItem="{Binding SelectedReception}"
                                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"

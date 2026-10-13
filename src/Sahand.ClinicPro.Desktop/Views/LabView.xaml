@@ -96,7 +96,10 @@
         </TabControl>
 
         <!-- جدول درخواست‌ها — زیر تب‌های وضعیت -->
-        <DataGrid Grid.Row="2" x:Name="OrdersGrid"
+        <!-- چرخهٔ ۶۳ (P-08): مجازی‌سازی صریح + پیمایش تعویقی — فقط ردیف‌های دیدنی رندر می‌شوند؛ در فهرست‌های چند‌هزار ردیفی تفاوت چندثانیه‌ای -->
+    <DataGrid Grid.Row="2" x:Name="OrdersGrid"
+                  VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                  ScrollViewer.IsDeferredScrollingEnabled="True"
                   ItemsSource="{Binding Orders}"
                   SelectedItem="{Binding SelectedOrder}"
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"

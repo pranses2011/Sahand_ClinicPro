@@ -76,7 +76,10 @@
                                    Text="دابل‌کلیک روی هر سند = جزئیات کامل سطرها (چرخهٔ ۴۷)" />
                     </DockPanel>
 
-                    <DataGrid Grid.Row="1" ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedEntry}"
+                    <!-- چرخهٔ ۶۳ (P-08): مجازی‌سازی صریح + پیمایش تعویقی — فقط ردیف‌های دیدنی رندر می‌شوند؛ در فهرست‌های چند‌هزار ردیفی تفاوت چندثانیه‌ای -->
+    <DataGrid Grid.Row="1" ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedEntry}"
+                  VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                     EnableColumnVirtualization="True" ScrollViewer.IsDeferredScrollingEnabled="True"
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD"
                               GridLinesVisibility="Horizontal"

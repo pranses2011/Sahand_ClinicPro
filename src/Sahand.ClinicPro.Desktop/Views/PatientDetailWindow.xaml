@@ -479,7 +479,9 @@
 
                     <!-- خط زمان عمودی -->
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                        <ItemsControl ItemsSource="{Binding Timeline}" Margin="4,4,4,10">
+                        <!-- چرخهٔ ۶۳ (P-08): ItemsControl به‌طور پیش‌فرض مجازی‌سازی ندارد — خط زمانِ بیمارِ پرمراجعه بدون این صفات با هر رویداد سنگین‌تر می‌شد -->
+    <ItemsControl ItemsSource="{Binding Timeline}" Margin="4,4,4,10">
+                  VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Margin="0,0,0,2">

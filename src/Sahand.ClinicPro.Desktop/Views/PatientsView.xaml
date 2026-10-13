@@ -154,7 +154,10 @@
 
         <!-- جدول اطلاعات — ۹ ستون طبق مشخصات؛ استایل مشترک App.DataGrid چرخهٔ ۴۶:
              ردیف‌های ۳۶px برای هدف‌گیری راحت + فونت ۱۲٫۵ + نوار یک‌درمیان ملایم -->
-        <DataGrid Grid.Row="4"
+        <!-- چرخهٔ ۶۳ (P-08): مجازی‌سازی صریح + پیمایش تعویقی — فقط ردیف‌های دیدنی رندر می‌شوند؛ در فهرست‌های چند‌هزار ردیفی تفاوت چندثانیه‌ای -->
+    <DataGrid Grid.Row="4"
+                  VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                     EnableColumnVirtualization="True" ScrollViewer.IsDeferredScrollingEnabled="True"
                   x:Name="PatientsGrid"
                   Style="{StaticResource App.DataGrid}"
                   ItemsSource="{Binding Patients}"

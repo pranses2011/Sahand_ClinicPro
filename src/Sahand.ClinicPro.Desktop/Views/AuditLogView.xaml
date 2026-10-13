@@ -51,7 +51,10 @@
                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
 
         <!-- جدول لاگ -->
-        <DataGrid Grid.Row="3" ItemsSource="{Binding Logs}" SelectedItem="{Binding SelectedLog}"
+        <!-- چرخهٔ ۶۳ (P-08): مجازی‌سازی صریح + پیمایش تعویقی — فقط ردیف‌های دیدنی رندر می‌شوند؛ در فهرست‌های چند‌هزار ردیفی تفاوت چندثانیه‌ای -->
+    <DataGrid Grid.Row="3" ItemsSource="{Binding Logs}" SelectedItem="{Binding SelectedLog}"
+                  VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                     EnableColumnVirtualization="True" ScrollViewer.IsDeferredScrollingEnabled="True"
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                   HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
             <DataGrid.Columns>
