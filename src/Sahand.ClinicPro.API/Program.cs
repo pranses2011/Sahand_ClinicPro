@@ -171,6 +171,26 @@ try
     // لایه کاربرد: MediatR + رفتارها + نگاشتگر Mapperly + FluentValidation
     builder.Services.AddApplication();
 
+    // ═══ چرخهٔ ۶۱ (P-05) — کش دومرحله‌ای اختیاری دادهٔ مرجع ═══
+    // پیش‌فرض خاموش است (استقرار تک‌نمونه‌ای درمانگاه — L1 کفایت می‌کند).
+    // با «Cache:L2:Enabled=true» برای استقرار چندنمونه‌ای، IDistributedCache
+    // ثبت و IReferenceCache با نسخهٔ دومرحله‌ای جایگزین می‌شود؛ Provider=Redis
+    // در آینده فقط با ثبت AddStackExchangeRedisCache (قبل از این نقطه) فعال
+    // می‌شود — این بلوک هیچ تغییری نمی‌خواهد.
+    if (builder.Configuration.GetValue<bool>("Cache:L2:Enabled"))
+    {
+        // اگر میزبان IDistributedCache ثبت نکرده باشد، پشتیبان حافظه‌ای درون‌برنامه‌ای
+        // ثبت می‌شود (برای چند میزبان .NET جدا روی یک سرور مشترک هم مفید است)
+        builder.Services.AddDistributedMemoryCache();
+        var l1Ttl = TimeSpan.FromSeconds(builder.Configuration.GetValue("Cache:L2:L1TtlSeconds", 90));
+        var l2Ttl = TimeSpan.FromSeconds(builder.Configuration.GetValue("Cache:L2:L2TtlSeconds", 600));
+        builder.Services.AddSingleton<Sahand.ClinicPro.Application.Common.Caching.IReferenceCache>(sp =>
+            new Sahand.ClinicPro.Application.Common.Caching.TwoLevelReferenceCache(
+                sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),
+                sp.GetRequiredService<Microsoft.Extensions.Caching.Distributed.IDistributedCache>(),
+                l1Ttl, l2Ttl));
+    }
+
     // لایه زیرساخت: DbContext + ریپازیتوری + سرویس‌ها + بذرها
     builder.Services.AddInfrastructure(builder.Configuration);
 
