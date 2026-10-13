@@ -78,18 +78,66 @@ public class SmsService : ISmsService
         return result;
     }
 
-    /// <summary>افزودن به صف ارسال پس‌زمینه</summary>
+    /// <summary>
+    /// افزودن به صف ارسال پس‌زمینه — چرخهٔ ۶۹: رفع باگ تاریخی
+    /// پیش از این «کدِ قالب» عیناً در ستون Message صف می‌نشست و پردازشگر صف
+    /// همان رشتهٔ خام («APPOINTMENT_REMINDER») را برای بیمار پیامک می‌کرد!
+    /// اکنون قالب از دیتابیس خوانده و متغیرها جایگزین می‌شوند و «متن نهایی»
+    /// در صف می‌نشیند؛ اگر قالب فعال یافت نشد، صف رد می‌شود و خطا ثبت می‌شود
+    /// (پیام بی‌متن به بیمار نرود).
+    /// </summary>
     public async Task EnqueueAsync(string recipient, string templateCode,
         Dictionary<string, string> variables, DateTime? scheduledAt = null,
         CancellationToken ct = default)
     {
+        // رندر قالب پیش از صف‌کردن — متن واقعی باید در صف بنشیند نه کد قالب
+        var template = await _context.SmsTemplates
+            .FirstOrDefaultAsync(t => t.Code == templateCode && t.IsActive, ct);
+        if (template?.Content is null)
+        {
+            _logger.LogError(
+                "صف پیامک رد شد: قالب فعال {Code} یافت نشد — پیام بی‌متن برای {Recipient} ارسال نمی‌شود",
+                templateCode, recipient);
+            return;
+        }
+
+        var message = template.Content;
+        foreach (var (key, value) in variables)
+            message = message.Replace($"{{{key}}}", value);
+
         _context.SmsQueue.Add(new SmsQueueItem
         {
             Recipient = recipient,
-            Message = templateCode,
+            Message = message,
             ScheduledAt = scheduledAt ?? DateTime.UtcNow,
             Status = SmsStatus.Queued,
             Priority = 3
+        });
+        await _context.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// افزودن پیام آماده (بدون قالب) به صف — چرخهٔ ۶۹ (فاز ۳ / F-03)
+    /// برای پیام‌های پویا (یادآوری نوبت با تاریخ/ساعت/پزشک) که قالب دیتابیسی ندارند.
+    /// </summary>
+    public async Task EnqueueRawAsync(string recipient, string message,
+        DateTime? scheduledAt = null, byte priority = 3,
+        CancellationToken ct = default)
+    {
+        // گارد متن خالی — پیام بی‌متن هرگز وارد صف نمی‌شود (هم‌الگوی SendAsync)
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            _logger.LogWarning("صف پیامک خام رد شد: متن خالی برای {Recipient}", recipient);
+            return;
+        }
+
+        _context.SmsQueue.Add(new SmsQueueItem
+        {
+            Recipient = recipient,
+            Message = message,
+            ScheduledAt = scheduledAt ?? DateTime.UtcNow,
+            Status = SmsStatus.Queued,
+            Priority = priority
         });
         await _context.SaveChangesAsync(ct);
     }
