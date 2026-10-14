@@ -61,4 +61,38 @@ public class LabController : ApiBaseController
         var result = await _mediator.Send(new RecordLabResultCommand(dto));
         return ToResponse(result, "نتیجه ثبت شد");
     }
+
+    // ═══ چرخهٔ ۷۲ (گزارش مالک) — مدیریت کاتالوگ آزمایش‌ها ═══
+    // «بازه‌های مرجع و حدود بحرانی هر آزمایش رو بطور کامل و دقیق تکمیل کن…
+    // در صورت نیاز بتونم اصلاحشون بکنم» — کاتالوگ کامل (همهٔ بازه‌ها) برای
+    // جدول «کاتالوگ تست‌ها» و ویرایش توسط مالک.
+
+    /// <summary>
+    /// کاتالوگ کامل آزمایش‌ها با بازه‌های مرجع و حدود بحرانی — چرخهٔ ۷۲.
+    /// خروجی: همهٔ ستون‌های ساخت‌یافتهٔ بازه (مرد/زن/کودک + سقف سن کودک)
+    /// به‌همراه حدود بحرانی؛ جستجوی اختیاری روی نام فارسی/انگلیسی/کد.
+    /// </summary>
+    /// <param name="search">عبارت جستجو — اختیاری</param>
+    [HttpGet("tests/catalog")]
+    [HasPermission("lab.view")]
+    public async Task<IActionResult> GetTestCatalog([FromQuery] string? search)
+    {
+        var result = await _mediator.Send(new GetLabTestCatalogQuery(search));
+        return ToResponse(result);
+    }
+
+    /// <summary>
+    /// ویرایش یک ردیف کاتالوگ آزمایش — بازه‌های مرجع، حدود بحرانی، واحد،
+    /// قیمت و زمان جواب — چرخهٔ ۷۲. اعتبارسنجی کامل سمت Application:
+    /// کف ≤ سقف هر بازه + حدود بحرانی بیرون بازهٔ مرجع.
+    /// </summary>
+    /// <param name="id">شناسهٔ آزمایش</param>
+    /// <param name="dto">فیلدهای ویرایش‌شده</param>
+    [HttpPut("tests/{id:long}")]
+    [HasPermission("lab.edit")]
+    public async Task<IActionResult> UpdateTest(long id, [FromBody] UpdateLabTestCatalogDto dto)
+    {
+        var result = await _mediator.Send(new UpdateLabTestCatalogCommand(id, dto));
+        return ToResponse(result, "کاتالوگ آزمایش به‌روزرسانی شد");
+    }
 }
