@@ -32,6 +32,15 @@ public partial class MainWindow : Window
     private bool _closeAllowed;
 
     /// <summary>
+    /// پنجرهٔ مستقل پیام‌های شناور — چرخهٔ ۷۵ (هفتمین گزارش بریدگی پایین).
+    /// میزبانی توست‌ها از درخت بصری همین پنجره به یک پنجرهٔ ویندوزی مستقلِ
+    /// بی‌قاب و شفاف منتقل شد (الگوی اعلان‌های ویندوز ۱۱) — پنجرهٔ مستقل
+    /// سطح رندر خودش را دارد و هیچ لایه/حاشیه/هم‌پوشانی‌ای در پنجرهٔ اصلی
+    /// نمی‌تواند لبهٔ پایین کارت را clip کند. جزئیات کامل در ToastWindow.
+    /// </summary>
+    private Views.ToastWindow? _toastWindow;
+
+    /// <summary>
     /// دیالوگ تأیید خروج در حال نمایش است؟ — چرخهٔ ۴۴.
     /// دوبار فشردن X (یا Alt+F4) هنگام باز بودن دیالوگ، نباید دیالوگ دوم
     /// بسازد؛ درخواست بستنِ دوم فقط لغو می‌شود و منتظر پاسخ دیالوگ اول
@@ -45,6 +54,16 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = viewModel;
+
+        // ═══ چرخهٔ ۷۵ — میزبان پیام‌های شناور در پنجرهٔ مستقل ═══
+        // پس از آماده‌شدن درخت بصری (نوار بالا قابل اندازه‌گیری باشد) پنجرهٔ
+        // توست ساخته می‌شود؛ فهرست Toasts همان نمونهٔ ViewModel مشترک است و
+        // نمایش/پنهانی با آمدن و رفتن پیام‌ها خودکار است (ToastWindow داخلی).
+        Loaded += (_, _) =>
+        {
+            if (_toastWindow is null && DataContext is MainWindowViewModel vm)
+                _toastWindow = new Views.ToastWindow(this, vm);
+        };
 
         // تأیید خروج از برنامه — دکمهٔ X / Alt+F4 / Close از هر جای دیگر
         Closing += async (_, ce) =>
