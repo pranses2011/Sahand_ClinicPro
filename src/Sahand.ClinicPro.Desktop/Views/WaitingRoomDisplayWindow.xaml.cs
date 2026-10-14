@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -23,7 +24,8 @@ public record WaitingDisplayRow(
     Brush NumberBrush);
 
 /// <summary>
-/// کارت بخش نمایشگری — عنوان + ردیف‌های زنده
+/// کارت بخش نمایشگری — عنوان + ردیف‌های زنده + ستونِ میزبان (چرخهٔ ۷۵:
+/// کارت‌ها ستونی چیده می‌شوند؛ ستون میزبان برای رد کردن کارت هنگام تازه‌سازی)
 /// </summary>
 public class WaitingDisplaySection
 {
@@ -32,29 +34,31 @@ public class WaitingDisplaySection
 }
 
 /// <summary>
-/// ViewModel سبک نمایشگر — پرچم‌های نمایش ساعت/تاریخ + کارت‌های بخش برای XAML
+/// ViewModel سبک نمایشگر — پرچم‌های نمایش ساعت/تاریخ/تبلیغ + کارت‌های بخش برای XAML
 /// </summary>
 public class WaitingDisplayVm
 {
     public System.Windows.Visibility ShowAnalogClock { get; set; } = System.Windows.Visibility.Visible;
     public System.Windows.Visibility ShowDigitalClock { get; set; } = System.Windows.Visibility.Visible;
     public System.Windows.Visibility ShowLongDate { get; set; } = System.Windows.Visibility.Visible;
+    public System.Windows.Visibility ShowAdSubtitle { get; set; } = System.Windows.Visibility.Visible;
+    public System.Windows.Visibility ShowAdFeatures { get; set; } = System.Windows.Visibility.Collapsed;
+    public System.Windows.Visibility ShowAdVersion { get; set; } = System.Windows.Visibility.Collapsed;
     public ObservableCollection<WaitingDisplaySection> Sections { get; } = new();
 }
 
 /// <summary>
-/// کد پشت نمایشگر سالن انتظار — بازطراحی کامل چرخهٔ ۷۴.
-/// کارها:
-///   ۱) چیدمان سه‌ستونهٔ سفارشی مالک: راست = پشتهٔ ساعت (آنالوگ شکیل +
-///      دیجیتال کوچک + تاریخ بلند) / میانه = نام واقعی درمانگاه + کارت‌های
-///      بخش / چپ = تبلیغ نرم‌افزار (عضو ثابت)؛
-///   ۲) باز شدن روی مانیتور/تلویزیون انتخابی از تنظیمات (جابه‌جایی دقیق
-///      پیکسلی با MoveWindow + تمام‌صفحه) تا نرم‌افزار روی مانیتور اصلی
-///      قابل استفاده بماند؛
-///   ۳) بارگذاری زندهٔ بخش‌ها بر اساس نوع: صف پزشک (visits/queue) /
-///      صف خدمت (receptions/today با فیلتر ServiceId) / نوبت‌های امروز؛
-///   ۴) تازه‌سازی: هر ۳۰ ثانیه + رویداد بلادرنگ صف؛ خطای شبکه فهرست
-///      قبلی را نگه می‌دارد (نمایشگر عمومی هرگز خالی نمی‌شود).
+/// کد پشت نمایشگر سالن انتظار — چرخهٔ ۷۴ + بازآرایی چرخهٔ ۷۵.
+/// کارهای چرخهٔ ۷۵ (گزارش مالک):
+///   ۱) نوار بالا سه‌ستونه: راست = پشتهٔ ساعت / میانه = نام درمانگاه از سرور
+///      لایسنس + اعلانِ قابل‌تنظیم / چپ = تبلیغ فقط با تصویر و نام محصول؛
+///   ۲) ناحیهٔ پایین = کارت‌های صف‌ها با چیدمان «ستونی»: تعداد ستون از
+///      تنظیمات (۲ تا ۴) و هر ستون می‌تواند دو بخش را روی هم جا دهد؛
+///   ۳) در صف عمومی (بدون انتخاب پزشک) نام پزشک زیر نام بیمار می‌نشیند؛
+///   ۴) تازه‌سازی سریع‌تر (۱۵ ثانیه) + رویداد بلادرنگ + تازه‌سازی با focus؛
+///   ۵) نام درمانگاه: اولویت با نام همگام‌شده از سرور لایسنس (تنظیم ClinicInfo)
+///      است — «منظورم از نام درمانگاه همون نام درمانگاهی است که از سرور
+///      لایسنس میاد»؛ نام دستی تنظیمات فقط override صریح است.
 /// خروج: Escape — تنظیمات: راست‌کلیک (مخفی از دید مراجع).
 /// </summary>
 public partial class WaitingRoomDisplayWindow : Window
@@ -88,16 +92,28 @@ public partial class WaitingRoomDisplayWindow : Window
         _api = App.Services.GetRequiredService<IApiClient>();
         _config = WaitingRoomConfig.Load();
 
-        // پرچم‌های نمایش ساعت/تاریخ + کارت‌های بخش به DataContext
+        // پرچم‌های نمایش ساعت/تاریخ/تبلیغ + کارت‌های بخش به DataContext
         _vm.ShowAnalogClock = ToVis(_config.ShowAnalogClock);
         _vm.ShowDigitalClock = ToVis(_config.ShowDigitalClock);
         _vm.ShowLongDate = ToVis(_config.ShowLongDate);
+        _vm.ShowAdSubtitle = ToVis(_config.ShowAdSubtitle);
+        _vm.ShowAdFeatures = ToVis(_config.ShowAdFeatures);
+        _vm.ShowAdVersion = ToVis(_config.ShowAdVersion);
         BuildSectionCards();
         DataContext = _vm;
 
-        // نام واقعی درمانگاه — مستقل از تنظیمات یا نام چاپی
+        // نام درمانگاه — از سرور لایسنس (تنظیم ClinicInfo) به‌صورت پویا؛
+        // تا رسیدن پاسخ، مقدار محلی فوری نشانت می‌ماند که صفحه خالی نماند
         ClinicNameText.Text = _config.EffectiveClinicName();
-        VersionText.Text = $"نسخهٔ {Helpers.AppInfo.VersionText}";
+        _ = LoadClinicNameFromServerAsync();
+
+        // اعلان زیر نام درمانگاه — از تنظیمات نمایشگر (خالی = پیش‌فرض)
+        AnnouncementText.Text = string.IsNullOrWhiteSpace(_config.Announcement)
+            ? "لطفاً در سالن انتظار حضور داشته باشید و با فراخوانی شمارهٔ نوبت به اتاق مربوط مراجعه کنید"
+            : _config.Announcement.Trim();
+
+        // تبلیغ — نسخهٔ محصول (فقط اگر سوییچ روشن باشد دیده می‌شود)
+        AdVersionText.Text = Helpers.AppInfo.VersionText;
 
         // ساعت و تاریخ — هر ثانیه (دیجیتال ثانیه‌شمار دارد)
         _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -105,8 +121,10 @@ public partial class WaitingRoomDisplayWindow : Window
         _clockTimer.Start();
         UpdateClock();
 
-        // تازه‌سازی بخش‌ها — هر ۳۰ ثانیه
-        _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        // تازه‌سازی بخش‌ها — چرخهٔ ۷۵: ۳۰ → ۱۵ ثانیه (گزارش مالک: «بعد از
+        // پذیرش و نوبت‌دهی لیست‌ها بروز نمی‌شوند»؛ نصف‌کردن فاصله + سه محرک
+        // دیگر یعنی در بدبینانهٔ حالت ۱۵ ثانیه تأخیر، نه «تا ری‌استارت»)
+        _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
         _refreshTimer.Tick += (_, _) => _ = LoadAllSectionsAsync();
         _refreshTimer.Start();
 
@@ -119,8 +137,15 @@ public partial class WaitingRoomDisplayWindow : Window
         }
         catch
         {
-            // بدون بلادرنگ هم تایمر ۳۰ ثانیه کار را انجام می‌دهد
+            // بدون بلادرنگ هم تایمر ۱۵ ثانیه کار را انجام می‌دهد
         }
+
+        // تازه‌سازی با هر بار دیده‌شدن پنجره (بازگشت از تنظیمات/alt-tab اپراتور)
+        IsVisibleChanged += (_, _) =>
+        {
+            if (IsVisible)
+                _ = LoadAllSectionsAsync();
+        };
 
         Loaded += OnWindowLoaded;
     }
@@ -128,6 +153,30 @@ public partial class WaitingRoomDisplayWindow : Window
     /// <summary>تبدیل bool به Visibility برای اتصال XAML</summary>
     private static System.Windows.Visibility ToVis(bool value)
         => value ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+
+    /// <summary>
+    /// ═══ چرخهٔ ۷۵ — نام درمانگاه از سرور لایسنس ═══
+    /// «گفته بودم نام درمانگاه نام خود درمانگاه باشه نه نام نرم افزار و منظورم
+    /// از نام درمانگاه همون نام درمانگاهی است که از سرور لایسنس میاد» —
+    /// پنل لایسنس هنگام فعال‌سازی، نام درمانگاه را در تنظیم ClinicInfo ذخیره
+    /// می‌کند (تنها مرجع تغییر — چرخهٔ ۲۷)؛ اینجا همان مقدار خوانده می‌شود.
+    /// نام دستی تنظیمات نمایشگر همچنان اولویت نخستِ صریح است (override اپراتور).
+    /// </summary>
+    private async Task LoadClinicNameFromServerAsync()
+    {
+        try
+        {
+            var response = await _api.GetAsync<SettingsResponse>("settings?category=ClinicInfo");
+            var serverName = response?.Data?.FirstOrDefault(x => x.Key == "ClinicName")?.Value;
+            // فقط اگر اپراتور نام دستی ننوشته باشد، نام سرور لایسنس می‌نشیند
+            if (string.IsNullOrWhiteSpace(_config.ClinicName) && !string.IsNullOrWhiteSpace(serverName))
+                ClinicNameText.Text = serverName.Trim();
+        }
+        catch
+        {
+            // قطعی شبکه — نام محلیِ ازقبل‌نشانده می‌ماند
+        }
+    }
 
     /// <summary>
     /// پس از آماده‌شدن هندل پنجره — انتقال دقیق به مانیتور انتخابی.
@@ -138,7 +187,7 @@ public partial class WaitingRoomDisplayWindow : Window
     {
         try
         {
-            var target = FindTargetScreen();
+            var target = Helpers.Monitors.Find(_config.ScreenDeviceName);
             if (target is not null)
             {
                 var handle = new WindowInteropHelper(this).Handle;
@@ -153,19 +202,151 @@ public partial class WaitingRoomDisplayWindow : Window
         _ = LoadAllSectionsAsync();
     }
 
-    /// <summary>
-    /// یافتن مانیتور هدف بر اساس نام دستگاه ذخیره‌شده — تهی = مانیتور اصلی.
-    /// شمارش با P/Invoke سبک (Helpers/Monitors) — مستقل از DPI، مختصات پیکسلی.
-    /// </summary>
-    private static Helpers.MonitorInfo? FindTargetScreen()
-        => Helpers.Monitors.Find(WaitingRoomConfig.Load().ScreenDeviceName);
-
-    /// <summary>ساخت کارت‌های بخش مطابق پیکربندی — هم‌ترتیب با کشیدن‌ورهاکردنِ تنظیمات</summary>
+    /// <summary>ساخت کارت‌های بخش مطابق پیکربندی + چیدمان ستونی — چرخهٔ ۷۵</summary>
     private void BuildSectionCards()
     {
         _vm.Sections.Clear();
         foreach (var section in _config.Sections)
             _vm.Sections.Add(new WaitingDisplaySection { Title = SectionTitle(section) });
+        BuildColumnsLayout();
+    }
+
+    /// <summary>
+    /// ═══ چرخهٔ ۷۵ — چیدمان ستونی کارت‌های صف ═══
+    /// «بصورت ستونی قرار بگیرن نه سطری و بشه در یک ستون ۲ مورد هم قرار داد
+    /// (تعداد ستون‌ها هم از تنظیماتش قابل تنظیم باشه)»:
+    ///   • تعداد ستون از پیکربندی (۲/۳/۴ — پیش‌فرض ۳)؛
+    ///   • بخش‌ها به ترتیبِ Drag&amp;Drop تنظیمات، ستون‌پرشونده پر می‌شوند:
+    ///     هر ستون حداکثر دو بخش می‌گیرد (روی هم، فاصلهٔ ۱۲px)؛
+    ///   • هر بخش در گرید ستونش نصف ارتفاع (یا کامل اگر تنها است) می‌گیرد؛
+    ///   • با تغییر اندازهٔ پنجره چیزی بازسازی نمی‌شود (گرید کشسان است).
+    /// </summary>
+    private void BuildColumnsLayout()
+    {
+        ColumnsHost.ColumnDefinitions.Clear();
+        ColumnsHost.Children.Clear();
+
+        var columnCount = Math.Clamp(_config.ColumnCount, 1, 4);
+        for (var i = 0; i < columnCount; i++)
+            ColumnsHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+        // بخش‌ها ستون‌پرشونده توزیع می‌شوند — هر ستون حداکثر دو بخش
+        const int maxPerColumn = 2;
+        var cardIndex = 0;
+        for (var col = 0; col < columnCount && cardIndex < _vm.Sections.Count; col++)
+        {
+            var columnGrid = new Grid { Margin = new Thickness(col == 0 ? 0 : 12, 0, 0, 0) };
+            columnGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            columnGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+
+            var placed = 0;
+            while (placed < maxPerColumn && cardIndex < _vm.Sections.Count)
+            {
+                var card = CreateSectionCard(_vm.Sections[cardIndex], isAloneInColumn: false);
+                Grid.SetColumn(columnGrid, col);
+                Grid.SetRow(card, placed);
+                columnGrid.Children.Add(card);
+                placed++;
+                cardIndex++;
+            }
+
+            ColumnsHost.Children.Add(columnGrid);
+        }
+    }
+
+    /// <summary>
+    /// ساخت کارت بصری یک بخش — عنوان رنگی + ردیف‌های بیمار (همان زبان بصری
+    /// چرخهٔ ۷۴؛ جدا شده تا هم چیدمان ستونی جدید هم پیش‌نمایش از آن استفاده کنند).
+    /// </summary>
+    private static FrameworkElement CreateSectionCard(WaitingDisplaySection section, bool isAloneInColumn)
+    {
+        var card = new Border
+        {
+            Margin = new Thickness(0, 0, 0, 12),
+            Padding = new Thickness(16, 14),
+            CornerRadius = new CornerRadius(16),
+            Background = new SolidColorBrush(Color.FromRgb(0x10, 0x23, 0x3A)),
+            BorderBrush = new SolidColorBrush(Color.FromRgb(0x1E, 0x3A, 0x5C)),
+            BorderThickness = new Thickness(1.2),
+        };
+
+        var dock = new DockPanel();
+
+        // عنوان کارت
+        var header = new TextBlock
+        {
+            Text = section.Title,
+            FontSize = 19,
+            FontWeight = FontWeights.Bold,
+            Foreground = new SolidColorBrush(Color.FromRgb(0x7F, 0xC4, 0xFF)),
+            Margin = new Thickness(2, 0, 2, 10),
+        };
+        DockPanel.SetDock(header, Dock.Top);
+        dock.Children.Add(header);
+
+        // ردیف‌های بیمار — یک‌درمیان با فاصلهٔ نفس
+        var rowsHost = new ItemsControl { ItemsSource = section.Rows };
+        rowsHost.ItemTemplate = CreateRowTemplate();
+        dock.Children.Add(rowsHost);
+
+        card.Child = dock;
+        return card;
+    }
+
+    /// <summary>قالب ردیف بیمار — شمارهٔ دایره‌ای رنگی + نام + زیرعنوان</summary>
+    private static DataTemplate CreateRowTemplate()
+    {
+        // قالب در XAML (منبع مشترک پنجره) تعریف شده و اینجا فقط مرجع می‌شود؛
+        // برای استقلال از منابع، قالب معادل با کد ساخته می‌شود
+        var numberFactory = new FrameworkElementFactory(typeof(Border));
+        numberFactory.SetValue(Border.WidthProperty, 44.0);
+        numberFactory.SetValue(Border.HeightProperty, 44.0);
+        numberFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(22));
+        numberFactory.SetValue(Border.BackgroundProperty, new Binding("NumberBrush"));
+        numberFactory.SetValue(Border.VerticalAlignmentProperty, VerticalAlignment.Center);
+        var numberText = new FrameworkElementFactory(typeof(TextBlock));
+        numberText.SetValue(TextBlock.TextProperty, new Binding("Number"));
+        numberText.SetValue(TextBlock.FontSizeProperty, 18.0);
+        numberText.SetValue(TextBlock.FontWeightProperty, FontWeights.Bold);
+        numberText.SetValue(TextBlock.ForegroundProperty, Brushes.White);
+        numberText.SetValue(TextBlock.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+        numberText.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
+        numberText.SetValue(TextBlock.FontFamilyProperty, new DynamicResourceExtension("App.CodeFont"));
+        numberFactory.AppendChild(numberText);
+
+        var nameFactory = new FrameworkElementFactory(typeof(TextBlock));
+        nameFactory.SetValue(TextBlock.TextProperty, new Binding("Name"));
+        nameFactory.SetValue(TextBlock.FontSizeProperty, 19.0);
+        nameFactory.SetValue(TextBlock.FontWeightProperty, FontWeights.SemiBold);
+        nameFactory.SetValue(TextBlock.ForegroundProperty, new SolidColorBrush(Color.FromRgb(0xF0, 0xF6, 0xFC)));
+
+        var subtitleFactory = new FrameworkElementFactory(typeof(TextBlock));
+        subtitleFactory.SetValue(TextBlock.TextProperty, new Binding("Subtitle"));
+        subtitleFactory.SetValue(TextBlock.FontSizeProperty, 13.5);
+        subtitleFactory.SetValue(TextBlock.ForegroundProperty, new SolidColorBrush(Color.FromRgb(0x9D, 0xB8, 0xCF)));
+        subtitleFactory.SetValue(TextBlock.MarginProperty, new Thickness(0, 3, 0, 0));
+        // زیرعنوان فقط وقتی مقدار دارد جا بگیرد (صف عمومی: نام پزشک)
+        subtitleFactory.SetValue(TextBlock.VisibilityProperty,
+            new Binding("Subtitle") { Converter = EmptyToCollapsedConverter.Instance });
+
+        var patientStack = new FrameworkElementFactory(typeof(StackPanel));
+        patientStack.SetValue(StackPanel.MarginProperty, new Thickness(14, 0, 0, 0));
+        patientStack.SetValue(StackPanel.VerticalAlignmentProperty, VerticalAlignment.Center);
+        patientStack.AppendChild(nameFactory);
+        patientStack.AppendChild(subtitleFactory);
+
+        var rowDock = new FrameworkElementFactory(typeof(DockPanel));
+        rowDock.AppendChild(numberFactory);
+        rowDock.AppendChild(patientStack);
+
+        var rowBorder = new FrameworkElementFactory(typeof(Border));
+        rowBorder.SetValue(Border.BackgroundProperty, new Binding("RowBrush"));
+        rowBorder.SetValue(Border.CornerRadiusProperty, new CornerRadius(12));
+        rowBorder.SetValue(Border.PaddingProperty, new Thickness(13, 9, 13, 9));
+        rowBorder.SetValue(Border.MarginProperty, new Thickness(0, 0, 0, 8));
+        rowBorder.AppendChild(rowDock);
+
+        return new DataTemplate { VisualTree = rowBorder };
     }
 
     /// <summary>عنوان مؤثر بخش — عنوان دلخواه یا پیش‌فرضِ نوع‌محور</summary>
@@ -196,6 +377,8 @@ public partial class WaitingRoomDisplayWindow : Window
     /// بارگذاری دادهٔ همهٔ بخش‌ها — هر «کلید یکتا» فقط یک‌بار از سرور خوانده
     /// می‌شود (هر پزشک یک GET، خدمات یک GET، نوبت‌ها یک GET) و میان کارت‌های
     /// هم‌نوع تقسیم می‌شود؛ سپس همهٔ کارت‌ها با هم تازه می‌شوند (بدون چشمک).
+    /// چرخهٔ ۷۵: در صف عمومی، نام پزشک زیر نام بیمار می‌نشیند (DoctorName جدید
+    /// پاسخ سرور — فقط برای DoctorId تهی).
     /// </summary>
     private async Task LoadAllSectionsAsync()
     {
@@ -287,11 +470,19 @@ public partial class WaitingRoomDisplayWindow : Window
                         card.Rows.Clear();
                         if (queue.Current is { } current)
                             card.Rows.Add(new WaitingDisplayRow(
-                                PersianDigits(current.QueueNumber.ToString()), current.Name, "در حال ویزیت",
+                                PersianDigits(current.QueueNumber.ToString()), current.Name,
+                                string.IsNullOrWhiteSpace(current.DoctorName)
+                                    ? "در حال ویزیت"
+                                    : $"{current.DoctorName} — در حال ویزیت",
                                 CurrentRowBrush, GreenNumber));
                         foreach (var waiting in queue.Waiting.Take(7))
                             card.Rows.Add(new WaitingDisplayRow(
-                                PersianDigits(waiting.QueueNumber.ToString()), waiting.Name, waiting.Subtitle,
+                                PersianDigits(waiting.QueueNumber.ToString()), waiting.Name,
+                                // چرخهٔ ۷۵ — صف عمومی: نام پزشک زیر نام بیمار؛
+                                // صف یک پزشکِ مشخص: نوع ویزیت (همان رفتار قبل)
+                                section.DoctorId is null && !string.IsNullOrWhiteSpace(waiting.DoctorName)
+                                    ? waiting.DoctorName
+                                    : waiting.Subtitle,
                                 WaitingRowBrush, BlueNumber));
                         break;
                     }
@@ -326,13 +517,14 @@ public partial class WaitingRoomDisplayWindow : Window
             ? (d.ValueKind == JsonValueKind.Null ? default : d)
             : root;
 
-    /// <summary>ردیف خام صف ویزیت از JSON سرور</summary>
-    private sealed record QueueItemJson(string Name, string Subtitle, int QueueNumber)
+    /// <summary>ردیف خام صف ویزیت از JSON سرور — چرخهٔ ۷۵: DoctorName جدید</summary>
+    private sealed record QueueItemJson(string Name, string Subtitle, int QueueNumber, string? DoctorName)
     {
         public static QueueItemJson From(JsonElement e) => new(
             e.TryGetProperty("patientName", out var p) && p.ValueKind == JsonValueKind.String ? p.GetString() ?? "" : "",
             e.TryGetProperty("visitTypeText", out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() ?? "" : "",
-            e.TryGetProperty("queueNumber", out var q) && q.ValueKind == JsonValueKind.Number ? q.GetInt32() : 0);
+            e.TryGetProperty("queueNumber", out var q) && q.ValueKind == JsonValueKind.Number ? q.GetInt32() : 0,
+            e.TryGetProperty("doctorName", out var d) && d.ValueKind == JsonValueKind.String ? d.GetString() : null);
     }
 
     /// <summary>خروج با Escape — تنها راه بستن (بدون دکمهٔ قابل‌کلیک برای مراجع)</summary>
@@ -365,6 +557,20 @@ public partial class WaitingRoomDisplayWindow : Window
         return new string(chars);
     }
 
+    /// <summary>پاسخ تنظیمات ClinicInfo — برای نام درمانگاه از سرور لایسنس</summary>
+    private sealed class SettingsResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<SettingDto>? Data { get; set; }
+    }
+
+    /// <summary>ردیف تنظیم — کلید/مقدار</summary>
+    private sealed class SettingDto
+    {
+        public string Key { get; set; } = string.Empty;
+        public string? Value { get; set; }
+    }
+
     #region Native — انتقال دقیق پیکسلی پنجره به مانیتور هدف
 
     /// <summary>جابه‌جایی پنجره به مستطیل پیکسلی مانیتور (مستقل از DPI)</summary>
@@ -372,4 +578,23 @@ public partial class WaitingRoomDisplayWindow : Window
     private static extern bool MoveWindow(IntPtr hWnd, int x, int y, int width, int height, bool repaint);
 
     #endregion
+}
+
+/// <summary>
+/// مبدل «زیرعنوان خالی = جمع‌شده» — ردیف‌های بدون زیرعنوان (مثلاً صف عمومی وقتی
+/// پزشکی تعیین نشده و پاسخ هم نامی نداشته) ارتفاع اضافه نمی‌گیرند.
+/// </summary>
+public sealed class EmptyToCollapsedConverter : System.Windows.Data.IValueConverter
+{
+    public static readonly EmptyToCollapsedConverter Instance = new();
+
+    public object Convert(object? value, Type targetType, object? parameter,
+        System.Globalization.CultureInfo culture)
+        => string.IsNullOrWhiteSpace(value as string)
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter,
+        System.Globalization.CultureInfo culture)
+        => throw new NotSupportedException();
 }

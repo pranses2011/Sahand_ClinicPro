@@ -11,142 +11,117 @@
         KeyDown="Window_KeyDown"
         MouseRightButtonDown="Window_RightClick">
     <!-- ═══════════════════════════════════════════════════════════════
-         نمایشگر سالن انتظار — بازطراحی کامل چرخهٔ ۷۴ (گزارش مالک)
-         چیدمان سفارشی:
-           • ستون راست: ساعت آنالوگ شکیل (ثانیه‌شمار پیوسته) + ساعت دیجیتال
-             کوچک با ثانیه + تاریخ بلند «تاریخ امروز : ۲۳ مهر ماه ۱۴۰۵»
-           • ستون میانه: نام واقعی درمانگاه (سربرگ) + کارت‌های بخش‌های
-             قابل‌تنظیم (صف پزشک/صف خدمت/نوبت‌های امروز) با ترتیب D&D
-           • ستون چپ: تبلیغ نرم‌افزار با تصویر — «عضو ثابت» صفحه
-         نام درمانگاه از تنظیمات (مستقل یا نام چاپی) خوانده می‌شود؛
-         پنجره روی مانیتور/تلویزیون انتخابی از تنظیمات باز می‌شود (MoveWindow
-         دقیق پیکسلی + Maximized) تا نرم‌افزار روی مانیتور اصلی قابل استفاده
-         بماند. خروج: Escape — باز کردن تنظیمات: راست‌کلیک (مخفی از مراجع).
-         تازه‌سازی: هر ۳۰ ثانیه + هر رویداد بلادرنگ صف.
+         نمایشگر سالن انتظار — چرخهٔ ۷۴ + بازآرایی چرخهٔ ۷۵ (گزارش مالک)
+         «قسمت بالای صفحه رو سه ستون بکن و ساعت آنالوگ و دیجیتال و تاریخ رو
+         در سمت راست و تبلیغات رو در سمت چپ و نام درمانگاه و اعلان زیرش در
+         وسط باشه و قسمت پایین صفحه برای صفها باشه»:
+           • نوار بالا (سه ستون):
+               - راست بصری: ساعت آنالوگ (با خطوط ساعت/دقیقه — چرخهٔ ۷۵) +
+                 دیجیتال کوچک + تاریخ بلند — همه قابل خاموش‌کردن از تنظیمات
+               - میانه: نام واقعی درمانگاه از سرور لایسنس + اعلان قابل‌تنظیم
+               - چپ بصری: تبلیغ نرم‌افزار — فقط تصویر + نام محصول (سایر اقلام
+                 تبلیغ از تنظیمات انتخابی‌اند — چرخهٔ ۷۵)
+           • ناحیهٔ پایین: کارت‌های صف‌ها — چیدمان «ستونی» با تعداد ستونِ
+             قابل‌تنظیم و امکان نشستن دو بخش در یک ستون (چرخهٔ ۷۵)
+         تازه‌سازی: هر ۱۵ ثانیه + هر رویداد بلادرنگ صف + هر بار focus.
+         خروج: Escape — تنظیمات: راست‌کلیک (مخفی از مراجع).
          ═══════════════════════════════════════════════════════════════ -->
-    <Grid Margin="30">
-        <Grid.ColumnDefinitions>
-            <!-- راست بصری (RTL): پشتهٔ ساعت/تاریخ -->
-            <ColumnDefinition Width="Auto" />
-            <!-- میانه: نام درمانگاه + بخش‌ها -->
-            <ColumnDefinition Width="*" />
-            <!-- چپ بصری: تبلیغ نرم‌افزار — عضو ثابت -->
-            <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
+    <Grid Margin="26">
+        <Grid.RowDefinitions>
+            <!-- نوار بالا — هویت/ساعت/تبلیغ -->
+            <RowDefinition Height="Auto" />
+            <!-- ناحیهٔ صف‌ها — کل باقی صفحه -->
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-        <!-- ═══════════ ستون راست: ساعت آنالوگ + دیجیتال + تاریخ بلند ═══════════ -->
-        <StackPanel Grid.Column="0" Width="300" VerticalAlignment="Center" Margin="0,0,10,0">
-            <controls:AnalogClock Width="260" Height="260"
-                                  HorizontalAlignment="Center"
-                                  Visibility="{Binding ShowAnalogClock, Mode=OneWay}" />
-            <!-- ساعت دیجیتال کوچک با ثانیه — زیر آنالوگ -->
-            <TextBlock x:Name="DigitalClockText" Text="--:--:--"
-                       HorizontalAlignment="Center" Margin="0,18,0,0"
-                       FontSize="26" FontWeight="SemiBold" Foreground="#BBDEFB"
-                       FontFamily="{DynamicResource App.CodeFont}"
-                       Visibility="{Binding ShowDigitalClock, Mode=OneWay}" />
-            <!-- تاریخ بلند — «تاریخ امروز : ۲۳ مهر ماه ۱۴۰۵» -->
-            <TextBlock x:Name="LongDateText" Text="—"
-                       HorizontalAlignment="Center" Margin="0,10,0,0" TextWrapping="Wrap"
-                       FontSize="16.5" Foreground="#8FBFE8"
-                       Visibility="{Binding ShowLongDate, Mode=OneWay}" />
-        </StackPanel>
+        <!-- ═══════════ نوار بالا — سه ستون (راست: ساعت / میانه: درمانگاه / چپ: تبلیغ) ═══════════ -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <!-- راست بصری (RTL): پشتهٔ ساعت آنالوگ/دیجیتال/تاریخ -->
+                <ColumnDefinition Width="Auto" />
+                <!-- میانه: نام درمانگاه + اعلان -->
+                <ColumnDefinition Width="*" />
+                <!-- چپ بصری: تبلیغ نرم‌افزار -->
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
 
-        <!-- ═══════════ ستون میانه: نام درمانگاه + کارت‌های بخش‌ها ═══════════ -->
-        <DockPanel Grid.Column="1" Margin="16,0">
-            <!-- سربرگ: نام واقعی درمانگاه — درشت و آرمین -->
-            <StackPanel DockPanel.Dock="Top" Margin="0,0,0,22">
+            <!-- ─── راست: ساعت + تاریخ (عمودی وسط‌چین) ─── -->
+            <StackPanel Grid.Column="0" Width="250" VerticalAlignment="Center" Margin="0,0,16,0">
+                <controls:AnalogClock Width="215" Height="215"
+                                      HorizontalAlignment="Center"
+                                      Visibility="{Binding ShowAnalogClock, Mode=OneWay}" />
+                <TextBlock x:Name="DigitalClockText" Text="--:--:--"
+                           HorizontalAlignment="Center" Margin="0,12,0,0"
+                           FontSize="23" FontWeight="SemiBold" Foreground="#BBDEFB"
+                           FontFamily="{DynamicResource App.CodeFont}"
+                           Visibility="{Binding ShowDigitalClock, Mode=OneWay}" />
+                <TextBlock x:Name="LongDateText" Text="—"
+                           HorizontalAlignment="Center" Margin="0,8,0,0" TextWrapping="Wrap"
+                           FontSize="15.5" Foreground="#8FBFE8"
+                           Visibility="{Binding ShowLongDate, Mode=OneWay}" />
+            </StackPanel>
+
+            <!-- ─── میانه: نام درمانگاه (از سرور لایسنس) + اعلان قابل‌تنظیم ─── -->
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0">
                 <TextBlock x:Name="ClinicNameText" Text="درمانگاه"
-                           FontSize="42" FontWeight="Black" Foreground="#FFFFFF"
-                           HorizontalAlignment="Center" />
+                           FontSize="44" FontWeight="Black" Foreground="#FFFFFF"
+                           HorizontalAlignment="Center" TextWrapping="Wrap" />
                 <Border Height="4" CornerRadius="2" Width="240" Margin="0,12,0,0"
                         Background="#2C5F9E" HorizontalAlignment="Center" />
-                <TextBlock Text="لطفاً در سالن انتظار حضور داشته باشید و با فراخوانی شمارهٔ نوبت به اتاق مربوط مراجعه کنید"
-                           FontSize="14" Foreground="#6E8CA8" HorizontalAlignment="Center"
-                           Margin="0,14,0,0" />
+                <!-- اعلان زیر نام درمانگاه — متن از تنظیمات نمایشگر قابل تغییر است
+                     (گزارش مالک چرخهٔ ۷۵: «نوشته اعلان زیر نام درمانگاه هم از
+                     تنظیمات قابل تغییر باشه»)؛ خالی = پیش‌فرض مؤدبانه -->
+                <TextBlock x:Name="AnnouncementText"
+                           Text="لطفاً در سالن انتظار حضور داشته باشید و با فراخوانی شمارهٔ نوبت به اتاق مربوط مراجعه کنید"
+                           FontSize="15.5" Foreground="#7FA8CC" HorizontalAlignment="Center"
+                           Margin="0,14,0,0" TextWrapping="Wrap" MaxWidth="640"
+                           TextAlignment="Center" />
             </StackPanel>
 
-            <!-- کارت‌های بخش‌های قابل‌تنظیم — چیدمان جریانی (WrapPanel) -->
-            <ScrollViewer VerticalScrollBarVisibility="Hidden">
-                <ItemsControl x:Name="SectionsHost" ItemsSource="{Binding Sections, Mode=OneWay}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <!-- کارت بخش — عنوان رنگی + ردیف‌های بیمار -->
-                            <Border Width="300" MinHeight="170" MaxHeight="330"
-                                    Margin="0,0,12,12" Padding="14,12"
-                                    CornerRadius="16"
-                                    Background="#10233A" BorderBrush="#1E3A5C" BorderThickness="1.2">
-                                <DockPanel>
-                                    <TextBlock DockPanel.Dock="Top" Text="{Binding Title}"
-                                               FontSize="17" FontWeight="Bold" Foreground="#7FC4FF"
-                                               Margin="2,0,2,10" />
-                                    <ScrollViewer VerticalScrollBarVisibility="Hidden">
-                                        <ItemsControl ItemsSource="{Binding Rows}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border Background="{Binding RowBrush}"
-                                                            CornerRadius="11" Padding="12,8" Margin="0,0,0,7">
-                                                        <DockPanel>
-                                                            <Border Width="42" Height="42" CornerRadius="21"
-                                                                    Background="{Binding NumberBrush}"
-                                                                    VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding Number}" FontSize="17"
-                                                                           FontWeight="Bold" Foreground="White"
-                                                                           HorizontalAlignment="Center"
-                                                                           VerticalAlignment="Center"
-                                                                           FontFamily="{DynamicResource App.CodeFont}" />
-                                                            </Border>
-                                                            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding Name}" FontSize="17.5"
-                                                                           FontWeight="SemiBold" Foreground="#F0F6FC" />
-                                                                <TextBlock Text="{Binding Subtitle}" FontSize="12"
-                                                                           Foreground="#9DB8CF" Margin="0,3,0,0" />
-                                                            </StackPanel>
-                                                        </DockPanel>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </ScrollViewer>
-                                </DockPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </DockPanel>
-
-        <!-- ═══════════ ستون چپ: تبلیغ نرم‌افزار — عضو ثابت صفحه ═══════════ -->
-        <Border Grid.Column="2" Width="300" VerticalAlignment="Stretch"
-                Margin="10,0,0,0" Padding="22,26" CornerRadius="20"
-                Background="#0E2036" BorderBrush="#1E3A5C" BorderThickness="1.2">
-            <StackPanel>
-                <!-- لوگوی محصول -->
-                <Image Source="pack://application:,,,/Assets/Logo/ClinicPro-512.png"
-                       Width="120" Height="120" HorizontalAlignment="Center"
-                       RenderOptions.BitmapScalingMode="HighQuality" />
-                <TextBlock Text="سامانهٔ جامع اطلاعاتی" FontSize="17" FontWeight="Bold"
-                           Foreground="#E3F2FD" HorizontalAlignment="Center" Margin="0,16,0,0" />
-                <TextBlock Text="درمانگاه سهند" FontSize="23" FontWeight="Black"
-                           Foreground="#7FC4FF" HorizontalAlignment="Center" Margin="0,4,0,0" />
-                <Border Height="3" CornerRadius="2" Width="90" Margin="0,14,0,0"
-                        Background="#2C5F9E" HorizontalAlignment="Center" />
-                <!-- ویژگی‌ها -->
-                <StackPanel Margin="0,18,0,0">
-                    <TextBlock Text="✓ پروندهٔ الکترونیک بیمار" FontSize="13" Foreground="#9DB8CF" Margin="0,0,0,9" />
-                    <TextBlock Text="✓ نوبت‌دهی و پذیرش هوشمند" FontSize="13" Foreground="#9DB8CF" Margin="0,0,0,9" />
-                    <TextBlock Text="✓ نسخه‌نویسی الکترونیک" FontSize="13" Foreground="#9DB8CF" Margin="0,0,0,9" />
-                    <TextBlock Text="✓ آزمایشگاه و پاراکلینیک" FontSize="13" Foreground="#9DB8CF" Margin="0,0,0,9" />
-                    <TextBlock Text="✓ حسابداری و بیمه" FontSize="13" Foreground="#9DB8CF" Margin="0,0,0,9" />
+            <!-- ─── چپ: تبلیغ نرم‌افزار — فقط تصویر + نام محصول (چرخهٔ ۷۵) ───
+                 «در تبلیغات فقط تصویر و نام نرم افزار کفایت میکنه و بقیه موارد
+                 رو در تنظیمات برای نشون دادن بزار که انتخابی باشه» — زیرنویس
+                 «سامانهٔ جامع اطلاعاتی»، خط جداکننده، فهرست ویژگی‌ها و نسخه
+                 همه سوییچ‌های انتخابی تنظیمات‌اند. -->
+            <Border Grid.Column="2" Width="230" VerticalAlignment="Stretch"
+                    Margin="16,0,0,0" Padding="20,22" CornerRadius="20"
+                    Background="#0E2036" BorderBrush="#1E3A5C" BorderThickness="1.2">
+                <StackPanel VerticalAlignment="Center">
+                    <Image Source="pack://application:,,,/Assets/Logo/ClinicPro-512.png"
+                           Width="132" Height="132" HorizontalAlignment="Center"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
+                    <TextBlock x:Name="AdSubtitleText" Text="سامانهٔ جامع اطلاعاتی"
+                               FontSize="16" FontWeight="Bold"
+                               Foreground="#E3F2FD" HorizontalAlignment="Center"
+                               Margin="0,14,0,0"
+                               Visibility="{Binding ShowAdSubtitle, Mode=OneWay}" />
+                    <TextBlock Text="درمانگاه سهند" FontSize="22" FontWeight="Black"
+                               Foreground="#7FC4FF" HorizontalAlignment="Center" Margin="0,4,0,0" />
+                    <Border x:Name="AdDivider" Height="3" CornerRadius="2" Width="86" Margin="0,12,0,0"
+                            Background="#2C5F9E" HorizontalAlignment="Center"
+                            Visibility="{Binding ShowAdSubtitle, Mode=OneWay}" />
+                    <!-- فهرست ویژگی‌ها — انتخابی از تنظیمات -->
+                    <StackPanel x:Name="AdFeaturesPanel" Margin="0,14,0,0"
+                                Visibility="{Binding ShowAdFeatures, Mode=OneWay}">
+                        <TextBlock Text="✓ پروندهٔ الکترونیک بیمار" FontSize="12.5" Foreground="#9DB8CF" Margin="0,0,0,8" />
+                        <TextBlock Text="✓ نوبت‌دهی و پذیرش هوشمند" FontSize="12.5" Foreground="#9DB8CF" Margin="0,0,0,8" />
+                        <TextBlock Text="✓ نسخه‌نویسی الکترونیک" FontSize="12.5" Foreground="#9DB8CF" Margin="0,0,0,8" />
+                        <TextBlock Text="✓ آزمایشگاه و پاراکلینیک" FontSize="12.5" Foreground="#9DB8CF" Margin="0,0,0,8" />
+                        <TextBlock Text="✓ حسابداری و بیمه" FontSize="12.5" Foreground="#9DB8CF" Margin="0,0,0,8" />
+                    </StackPanel>
+                    <TextBlock x:Name="AdVersionText" Text="" FontSize="10.5" Foreground="#54718C"
+                               HorizontalAlignment="Center" Margin="0,14,0,0"
+                               Visibility="{Binding ShowAdVersion, Mode=OneWay}" />
                 </StackPanel>
-                <TextBlock x:Name="VersionText" Text="" FontSize="11" Foreground="#54718C"
-                           HorizontalAlignment="Center" Margin="0,16,0,0" />
-            </StackPanel>
-        </Border>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════ ناحیهٔ پایین — کارت‌های صف‌ها (چیدمان ستونی — چرخهٔ ۷۵) ═══════════
+             «مواردی که نمایشگر اضافه میشن رو … بصورت ستونی قرار بگیرن نه سطری و
+             بشه در یک ستون ۲ مورد هم قرار داد (تعداد ستون‌ها هم از تنظیماتش
+             قابل تنظیم باشه)» — پنل ستون‌ها در کد پشت ساخته می‌شود: تعداد ستون
+             پیکربندی + بخش‌ها ستون‌به‌ستون (هر ستون تا دو بخش؛ سرریز به ستون
+             بعدی) و هر کارت با ارتفاع برابر سهمش از ستون بالا می‌رود. -->
+        <Grid x:Name="ColumnsHost" Grid.Row="1" Margin="0,22,0,0" />
     </Grid>
 </Window>

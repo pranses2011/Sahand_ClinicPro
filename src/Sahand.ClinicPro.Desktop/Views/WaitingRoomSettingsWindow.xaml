@@ -36,8 +36,27 @@
                 <!-- نام درمانگاه -->
                 <TextBlock Text="نام درمانگاه روی نمایشگر" FontSize="11.5" Opacity="0.7" Margin="2,0,2,4" />
                 <TextBox x:Name="ClinicNameBox"
-                         materialDesign:HintAssist.Hint="خالی = نام چاپی تنظیمات (سربرگ برگه‌ها)" />
-                <TextBlock Text="نام واقعی درمانگاه خود را بنویسید — «درمانگاه سهند» نام نرم‌افزار است."
+                         materialDesign:HintAssist.Hint="خالی = نام همگام‌شده از سرور لایسنس" />
+                <TextBlock Text="خالی بگذارید تا نام درمانگاه از سرور لایسنس بیاید؛ «درمانگاه سهند» نام نرم‌افزار است."
+                           FontSize="10" Opacity="0.55" Margin="2,4,2,0" TextWrapping="Wrap" />
+
+                <!-- ═══ چرخهٔ ۷۵ — اعلان زیر نام درمانگاه ═══ -->
+                <TextBlock Text="اعلان زیر نام درمانگاه (اختیاری)" FontSize="11.5" Opacity="0.7" Margin="2,14,2,4" />
+                <TextBox x:Name="AnnouncementBox"
+                         materialDesign:HintAssist.Hint="مثلاً: امروز ویزیت اطفال برقرار است"
+                         TextWrapping="Wrap" MaxLength="180" />
+                <TextBlock Text="خالی = پیام پیش‌فرض «لطفاً در سالن انتظار حضور داشته باشید…»"
+                           FontSize="10" Opacity="0.55" Margin="2,4,2,0" TextWrapping="Wrap" />
+
+                <!-- ═══ چرخهٔ ۷۵ — تعداد ستون‌های ناحیهٔ صف‌ها ═══ -->
+                <TextBlock Text="تعداد ستون‌های صف‌ها (پایین نمایشگر)" FontSize="11.5" Opacity="0.7" Margin="2,14,2,4" />
+                <ComboBox x:Name="ColumnCountCombo" SelectedIndex="2" SelectionChanged="OnAnySettingChanged">
+                    <ComboBoxItem Content="۱ ستون" Tag="1" />
+                    <ComboBoxItem Content="۲ ستون" Tag="2" />
+                    <ComboBoxItem Content="۳ ستون (پیشنهادی)" Tag="3" />
+                    <ComboBoxItem Content="۴ ستون" Tag="4" />
+                </ComboBox>
+                <TextBlock Text="بخش‌ها ستونی چیده می‌شوند و هر ستون می‌تواند دو بخش را روی هم جا دهد."
                            FontSize="10" Opacity="0.55" Margin="2,4,2,0" TextWrapping="Wrap" />
 
                 <!-- مانیتور هدف -->
@@ -48,11 +67,17 @@
 
                 <!-- سوییچ‌های ساعت/تاریخ -->
                 <TextBlock Text="ساعت و تاریخ" FontSize="13" FontWeight="Bold" Margin="2,16,2,6" />
-                <CheckBox x:Name="AnalogClockCheck" Content="ساعت آنالوگ (شکیل، با ثانیه‌شمار پیوسته)" Margin="2,2" />
+                <CheckBox x:Name="AnalogClockCheck" Content="ساعت آنالوگ (خطوط ساعت/دقیقه + ثانیه‌شمار پیوسته)" Margin="2,2" />
                 <CheckBox x:Name="DigitalClockCheck" Content="ساعت دیجیتال کوچک (زیر آنالوگ، با ثانیه)" Margin="2,2" />
                 <CheckBox x:Name="LongDateCheck" Content="تاریخ بلند (تاریخ امروز : ۲۳ مهر ماه ۱۴۰۵)" Margin="2,2" />
-                <TextBlock Text="تبلیغ نرم‌افزار (ستون چپ) همیشه ثابت نمایش داده می‌شود و قابل حذف نیست."
-                           FontSize="10" Opacity="0.55" Margin="2,8,2,0" TextWrapping="Wrap" />
+
+                <!-- ═══ چرخهٔ ۷۵ — اقلام اختیاری تبلیغ (تصویر و نام همیشه ثابت‌اند) ═══ -->
+                <TextBlock Text="تبلیغ نرم‌افزار (ستون چپ)" FontSize="13" FontWeight="Bold" Margin="2,16,2,6" />
+                <TextBlock Text="تصویر و نام نرم‌افزار همیشه نمایش داده می‌شوند؛ اقلام زیر اختیاری‌اند:"
+                           FontSize="10" Opacity="0.55" Margin="2,0,2,4" TextWrapping="Wrap" />
+                <CheckBox x:Name="AdSubtitleCheck" Content="زیرنویس «سامانهٔ جامع اطلاعاتی»" Margin="2,2" />
+                <CheckBox x:Name="AdFeaturesCheck" Content="فهرست ویژگی‌های محصول" Margin="2,2" />
+                <CheckBox x:Name="AdVersionCheck" Content="نسخهٔ محصول در پایین کارت" Margin="2,2" />
 
                 <!-- بخش‌ها -->
                 <TextBlock Text="بخش‌های نمایشی (صف‌ها و لیست‌ها)" FontSize="13" FontWeight="Bold" Margin="2,16,2,6" />
@@ -177,27 +202,21 @@
                                    Foreground="#8FBFE8" HorizontalAlignment="Center" TextWrapping="Wrap"
                                    Margin="2,4,2,0" />
                     </StackPanel>
-                    <!-- میانه: نام درمانگاه + بخش‌ها -->
-                    <StackPanel Grid.Column="1" Margin="10,0">
-                        <TextBlock x:Name="PreviewClinicName" Text="درمانگاه" FontSize="15" FontWeight="Black"
-                                   Foreground="White" HorizontalAlignment="Center" />
-                        <ItemsControl x:Name="PreviewSections" Margin="0,8,0,0">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="#10233A" BorderBrush="#1E3A5C" BorderThickness="1"
-                                            CornerRadius="8" Padding="8,6" Margin="0,0,0,6">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Title}" FontSize="10" FontWeight="Bold"
-                                                       Foreground="#7FC4FF" />
-                                            <TextBlock Text="نمونهٔ ردیف بیمار — شمارهٔ صف" FontSize="7.5"
-                                                       Foreground="#9DB8CF" Margin="0,3,0,0" />
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                    <!-- چپ: تبلیغ — ثابت -->
+                    <!-- میانه: نام درمانگاه + اعلان + بخش‌های ستونی -->
+                    <DockPanel Grid.Column="1" Margin="10,0">
+                        <!-- بالا: نام درمانگاه + اعلان زیرش (چرخهٔ ۷۵) -->
+                        <StackPanel DockPanel.Dock="Top">
+                            <TextBlock x:Name="PreviewClinicName" Text="درمانگاه" FontSize="15" FontWeight="Black"
+                                       Foreground="White" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="PreviewAnnouncement" Text="لطفاً در سالن انتظار حضور داشته باشید…"
+                                       FontSize="6.5" Foreground="#7FA8CC" HorizontalAlignment="Center"
+                                       Margin="0,4,0,0" TextWrapping="Wrap" MaxWidth="220" TextAlignment="Center" />
+                        </StackPanel>
+                        <!-- پایین: بخش‌های صف در چیدمان ستونی (چرخهٔ ۷۵) —
+                             ستون‌ها و کارت‌ها در کد پشت ساخته می‌شوند -->
+                        <Grid x:Name="PreviewColumns" Margin="0,8,0,0" VerticalAlignment="Top" />
+                    </DockPanel>
+                    <!-- چپ: تبلیغ — تصویر + نام ثابت؛ اقلام دیگر اختیاری -->
                     <StackPanel Grid.Column="2">
                         <Border Background="#0E2036" BorderBrush="#1E3A5C" BorderThickness="1" CornerRadius="8"
                                 Padding="6">
@@ -205,14 +224,19 @@
                                 <Image Source="pack://application:,,,/Assets/Logo/ClinicPro-512.png"
                                        Width="52" Height="52" HorizontalAlignment="Center"
                                        RenderOptions.BitmapScalingMode="HighQuality" />
-                                <TextBlock Text="سامانهٔ جامع" FontSize="7.5" Foreground="#E3F2FD"
-                                           HorizontalAlignment="Center" Margin="0,5,0,0" />
+                                <TextBlock x:Name="PreviewAdSubtitle" Text="سامانهٔ جامع اطلاعاتی" FontSize="7.5"
+                                           Foreground="#E3F2FD" HorizontalAlignment="Center" Margin="0,5,0,0" />
                                 <TextBlock Text="درمانگاه سهند" FontSize="9" FontWeight="Black" Foreground="#7FC4FF"
                                            HorizontalAlignment="Center" />
-                                <TextBlock Text="عضو ثابت صفحه — همیشه نمایش" FontSize="6" Foreground="#54718C"
-                                           HorizontalAlignment="Center" Margin="0,5,0,0" TextWrapping="Wrap" />
+                                <TextBlock x:Name="PreviewAdFeatures" Text="✓ پروندهٔ الکترونیک …" FontSize="6.5"
+                                           Foreground="#9DB8CF" HorizontalAlignment="Center" Margin="0,5,0,0" />
+                                <TextBlock x:Name="PreviewAdVersion" Text="نسخهٔ ۲.۱۸.۰" FontSize="6"
+                                           Foreground="#54718C" HorizontalAlignment="Center" Margin="0,4,0,0" />
                             </StackPanel>
                         </Border>
+                        <TextBlock Text="تصویر و نام همیشه ثابت — بقیه اقلام از تنظیمات"
+                                   FontSize="6" Foreground="#54718C" HorizontalAlignment="Center"
+                                   Margin="0,5,0,0" TextWrapping="Wrap" />
                     </StackPanel>
                 </Grid>
                 <TextBlock Grid.Row="2" Text="خروج از نمایشگر: Esc — باز کردن تنظیمات: راست‌کلیک روی نمایشگر"

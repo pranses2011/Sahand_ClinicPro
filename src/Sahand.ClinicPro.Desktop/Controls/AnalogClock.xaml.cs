@@ -31,10 +31,84 @@ public partial class AnalogClock : UserControl
         _timer.Tick += (_, _) => UpdateHands();
         Loaded += (_, _) =>
         {
+            CreateTickMarks();
             UpdateHands(animate: false);
             _timer.Start();
         };
+        // تغییر اندازهٔ کنترل (پیش‌نمایش کوچک / تلویزیون بزرگ) — نشانگرها
+        // با شعاع تازه بازسازی می‌شوند تا نسبت‌ها در هر اندازه درست بماند
+        SizeChanged += (_, _) => CreateTickMarks();
         Unloaded += (_, _) => _timer.Stop();
+    }
+
+    /// <summary>
+    /// ═══ چرخهٔ ۷۵ — ساخت ۶۰ نشانگر ساعت/دقیقه روی صفحه ═══
+    /// گزارش مالک: «فقط ۴ شمارهٔ اصلی نوشته شده؛ خطوط ساعت و دقیقه هم
+    /// داشته باشه — خطوط ساعت کلفت‌تر». دو دسته خط ساخته می‌شود:
+    ///   • ۱۲ خطِ ساعت — هر ۳۰ درجه، پهنای ۳px، طول ۱۶px، روشن (#B9CFE6)
+    ///   • ۴۸ خطِ دقیقه — هر ۶ درجه (غیر از مضرب‌های ۳۰)، پهنای ۱٫۴px،
+    ///     طول ۸px، کم‌رنگ (#51708F)
+    /// خطوط از لبهٔ داخلی صفحه (شعاع ۱۱۷px در کنترل ۲۶۰pxی) به داخل
+    /// کشیده می‌شوند؛ با SizeChanged دوباره ساخته می‌شوند تا در هر اندازهٔ
+    /// کنترل (نمایشگر بزرگ/پیش‌نمایش کوچک) نسبت‌ها درست بمانند.
+    /// </summary>
+    private void CreateTickMarks()
+    {
+        var canvas = TickCanvas;
+        canvas.Children.Clear();
+
+        // شعاع مفثر صفحه — نصف کوچک‌ترین ضلع کنترل منهای حاشیهٔ حلقه
+        var size = Math.Min(ActualWidth, ActualHeight);
+        if (size <= 0) size = 260; // نخستین ترسیم پیش از layout — اندازهٔ طراحی
+        var radius = size / 2 - 12;
+        var center = size / 2;
+        canvas.Width = size;
+        canvas.Height = size;
+
+        for (var i = 0; i < 60; i++)
+        {
+            var isHour = i % 5 == 0;
+            var angleDeg = i * 6;
+            var angle = angleDeg * Math.PI / 180.0;
+
+            // طول و پهنا بر نوع نشانگر — ساعت‌ها کلفت و بلندتر
+            var length = isHour ? 16 : 8;
+            var width = isHour ? 3 : 1.4;
+
+            // نقطهٔ بیرونی (روی حلقه) و درونی (به سمت مرکز)
+            var outer = radius;
+            var inner = radius - length;
+            var x1 = center + outer * Math.Sin(angle);
+            var y1 = center - outer * Math.Cos(angle);
+            var x2 = center + inner * Math.Sin(angle);
+            var y2 = center - inner * Math.Cos(angle);
+
+            var line = new System.Windows.Shapes.Line
+            {
+                X1 = x1, Y1 = y1, X2 = x2, Y2 = y2,
+                StrokeThickness = width,
+                Stroke = isHour ? HourTickBrush : MinuteTickBrush,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+            };
+            line.IsHitTestVisible = false;
+            canvas.Children.Add(line);
+        }
+    }
+
+    /// <summary>قلم خطوط ساعت — روشن و کلفت (تشخیص از دور)</summary>
+    private static readonly System.Windows.Media.SolidColorBrush HourTickBrush = Frozen("#B9CFE6");
+
+    /// <summary>قلم خطوط دقیقه — نازک و کم‌رنگ (پس‌زمینهٔ ریتم صفحه)</summary>
+    private static readonly System.Windows.Media.SolidColorBrush MinuteTickBrush = Frozen("#51708F");
+
+    /// <summary>ساخت قلم فریزشده — بدون تخصیص در هر فریم رندر</summary>
+    private static System.Windows.Media.SolidColorBrush Frozen(string hex)
+    {
+        var brush = (System.Windows.Media.SolidColorBrush)
+            new System.Windows.Media.BrushConverter().ConvertFromString(hex);
+        brush.Freeze();
+        return brush;
     }
 
     /// <summary>

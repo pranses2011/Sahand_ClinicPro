@@ -9,6 +9,11 @@ using Sahand.ClinicPro.Domain.Interfaces;
 namespace Sahand.ClinicPro.Application.Features.Visits.GetVisitQueue;
 
 /// <summary>ردیف صف ویزیت</summary>
+/// <remarks>
+/// چرخهٔ ۷۵ (گزارش مالک): «در صف انتظار ویزیت اگه پزشک انتخاب نشده باشه و
+/// عمومی باشه، زیر اسم بیمار اسم پزشک هم نوشته بشه» — DoctorName اضافه شد؛
+/// در صفِ یک پزشکِ مشخص تهی می‌ماند (تکراری است) و فقط در صف عمومی پر می‌شود.
+/// </remarks>
 public record QueueItemDto(
     long VisitId,
     long PatientId,
@@ -20,7 +25,8 @@ public record QueueItemDto(
     string VisitTypeText,
     int WaitingMinutes,
     string? ChiefComplaint,
-    string? Allergies);
+    string? Allergies,
+    string? DoctorName = null);
 
 /// <summary>بخش‌های صف روز</summary>
 public record VisitQueueDto(
@@ -98,7 +104,14 @@ public class GetVisitQueueQueryHandler : IRequestHandler<GetVisitQueueQuery, Res
             var item = new QueueItemDto(
                 r.Id, r.PatientId, patientName, r.Patient?.Mobile ?? "",
                 queueNumber, appointmentTime, null, visitTypeText,
-                waitingMinutes, r.Notes, r.Patient?.Allergies);
+                waitingMinutes, r.Notes, r.Patient?.Allergies,
+                // چرخهٔ ۷۵ — نام پزشک فقط در صف عمومی معنا دارد؛ در صف یک پزشکِ
+                // مشخص همهٔ ردیف‌ها همان پزشک‌اند و تکرارش فقط نویز بصری است.
+                request.DoctorId == null
+                    ? (r.Doctor?.Employee != null
+                        ? $"دکتر {r.Doctor.Employee.FirstName} {r.Doctor.Employee.LastName}".Trim()
+                        : null)
+                    : null);
 
             var visit = visitsByReception.TryGetValue(r.Id, out var v) ? v : null;
             if (visit is not null && visit.Status == VisitStatus.InProgress)

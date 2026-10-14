@@ -62,9 +62,27 @@ public class WaitingRoomSection
 /// </summary>
 public class WaitingRoomConfig
 {
-    /// <summary>نام درمانگاه برای سربرگ — خالی یعنی از نام چاپی (Printer.ClinicName)</summary>
+    /// <summary>نام درمانگاه برای سربرگ — خالی یعنی نام همگام‌شده از سرور لایسنس</summary>
     [JsonPropertyName("clinicName")]
     public string ClinicName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// ═══ چرخهٔ ۷۵ — اعلان زیر نام درمانگاه (گزارش مالک) ═══
+    /// «نوشته اعلان زیر نام درمانگاه هم از تنظیمات قابل تغییر باشه» —
+    /// متن دلخواه اپراتور (مثلاً «امروز ویزیت اطفال برقرار است»)؛ خالی = متن
+    /// پیش‌فرض مؤدبانهٔ «لطفاً در سالن انتظار حضور داشته باشید…».
+    /// </summary>
+    [JsonPropertyName("announcement")]
+    public string Announcement { get; set; } = string.Empty;
+
+    /// <summary>
+    /// ═══ چرخهٔ ۷۵ — تعداد ستون‌های ناحیهٔ صف‌ها (گزارش مالک) ═══
+    /// «مواردی که نمایشگر اضافه میشن … بصورت ستونی قرار بگیرن نه سطری و بشه
+    /// در یک ستون ۲ مورد هم قرار داد (تعداد ستون‌ها هم از تنظیماتش قابل
+    /// تنظیم باشه)» — دامنهٔ ۱ تا ۴؛ پیش‌فرض ۳.
+    /// </summary>
+    [JsonPropertyName("columnCount")]
+    public int ColumnCount { get; set; } = 3;
 
     /// <summary>نام دستگاه نمایشگر هدف (پنجره روی همان مانیتور/تلویزیون باز می‌شود)</summary>
     [JsonPropertyName("screenDeviceName")]
@@ -81,6 +99,23 @@ public class WaitingRoomConfig
     /// <summary>تاریخ بلند (تاریخ امروز : ۲۳ مهر ماه ۱۴۰۵) نمایش داده شود؟</summary>
     [JsonPropertyName("showLongDate")]
     public bool ShowLongDate { get; set; } = true;
+
+    /// <summary>
+    /// ═══ چرخهٔ ۷۵ — تبلیغ فقط تصویر + نام محصول (گزارش مالک) ═══
+    /// «در تبلیغات فقط تصویر و نام نرم‌افزار کفایت میکنه و بقیه موارد رو در
+    /// تنظیمات برای نشون دادن بزار که انتخابی باشه» — سه سوییچ برای اقلام
+    /// اختیاری: زیرنویس «سامانهٔ جامع»، فهرست ویژگی‌ها و نسخهٔ محصول.
+    /// </summary>
+    [JsonPropertyName("showAdSubtitle")]
+    public bool ShowAdSubtitle { get; set; } = false;
+
+    /// <summary>فهرست ویژگی‌های تبلیغ — انتخابی (پیش‌فرض خاموش)</summary>
+    [JsonPropertyName("showAdFeatures")]
+    public bool ShowAdFeatures { get; set; } = false;
+
+    /// <summary>نسخهٔ محصول در پایین تبلیغ — انتخابی (پیش‌فرض خاموش)</summary>
+    [JsonPropertyName("showAdVersion")]
+    public bool ShowAdVersion { get; set; } = false;
 
     /// <summary>بخش‌های میانه — ترتیب همان ترتیبِ Drag &amp; Drop تنظیمات است</summary>
     [JsonPropertyName("sections")]
@@ -140,14 +175,16 @@ public class WaitingRoomConfig
 
     /// <summary>
     /// نام درمانگاه مؤثر — اولویت: نام مستقل تنظیمات ← نام چاپی ← «درمانگاه سهند».
-    /// گزارش مالک: «"درمانگاه سهند" مینویسه که اسم نرم افزار است و باید نام
-    /// واقعی خود درمانگاه رو بنویسه» — نام واقعی همان نام چاپی برگه‌هاست.
+    /// چرخهٔ ۷۵: مقدار نمایشی اولیه همین است؛ بلافاصله پس از باز شدن پنجره،
+    /// نام همگام‌شده از سرور لایسنس (تنظیم ClinicInfo) هم خوانده می‌شود و اگر
+    /// اپراتور نام دستی ننوشته باشد جایگزین می‌شود — «نام درمانگاه همان نامی
+    /// است که از سرور لایسنس می‌آید».
     /// </summary>
     public string EffectiveClinicName()
     {
         if (!string.IsNullOrWhiteSpace(ClinicName))
             return ClinicName.Trim();
         var printerName = LocalSettingsStore.Get("Printer.ClinicName");
-        return string.IsNullOrWhiteSpace(printerName) ? "درمانگاه سهند" : printerName.Trim();
+        return string.IsNullOrWhiteSpace(printerName) ? "درمانگاه" : printerName.Trim();
     }
 }

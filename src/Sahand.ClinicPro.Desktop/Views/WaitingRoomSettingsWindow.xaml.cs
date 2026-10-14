@@ -84,6 +84,13 @@ public partial class WaitingRoomSettingsWindow : Window
         DigitalClockCheck.IsChecked = _config.ShowDigitalClock;
         LongDateCheck.IsChecked = _config.ShowLongDate;
         ClinicNameBox.Text = _config.ClinicName;
+        // ═══ چرخهٔ ۷۵ — اعلان، تعداد ستون و اقلام اختیاری تبلیغ ═══
+        AnnouncementBox.Text = _config.Announcement;
+        ColumnCountCombo.SelectedIndex = Math.Clamp(_config.ColumnCount, 1, 4) - 1;
+        AdSubtitleCheck.IsChecked = _config.ShowAdSubtitle;
+        AdFeaturesCheck.IsChecked = _config.ShowAdFeatures;
+        AdVersionCheck.IsChecked = _config.ShowAdVersion;
+
         AnalogClockCheck.Checked += (_, _) => RefreshPreview();
         AnalogClockCheck.Unchecked += (_, _) => RefreshPreview();
         DigitalClockCheck.Checked += (_, _) => RefreshPreview();
@@ -91,6 +98,13 @@ public partial class WaitingRoomSettingsWindow : Window
         LongDateCheck.Checked += (_, _) => RefreshPreview();
         LongDateCheck.Unchecked += (_, _) => RefreshPreview();
         ClinicNameBox.TextChanged += (_, _) => RefreshPreview();
+        AnnouncementBox.TextChanged += (_, _) => RefreshPreview();
+        AdSubtitleCheck.Checked += (_, _) => RefreshPreview();
+        AdSubtitleCheck.Unchecked += (_, _) => RefreshPreview();
+        AdFeaturesCheck.Checked += (_, _) => RefreshPreview();
+        AdFeaturesCheck.Unchecked += (_, _) => RefreshPreview();
+        AdVersionCheck.Checked += (_, _) => RefreshPreview();
+        AdVersionCheck.Unchecked += (_, _) => RefreshPreview();
 
         // فهرست بخش‌ها
         foreach (var section in _config.Sections)
@@ -173,18 +187,89 @@ public partial class WaitingRoomSettingsWindow : Window
         return root.ValueKind == JsonValueKind.Array ? root : null;
     }
 
-    /// <summary>تازه‌سازی پیش‌نمایش زنده — نام/ساعت‌ها/بخش‌ها/تبلیغ</summary>
+    /// <summary>تازه‌سازی پیش‌نمایش زنده — نام/اعلان/ساعت‌ها/بخش‌های ستونی/تبلیغ</summary>
     private void RefreshPreview()
     {
         var clinicName = string.IsNullOrWhiteSpace(ClinicNameBox.Text)
             ? _config.EffectiveClinicName()
             : ClinicNameBox.Text.Trim();
         PreviewClinicName.Text = clinicName;
+        // چرخهٔ ۷۵ — اعلان زیر نام درمانگاه در پیش‌نمایش هم دیده شود
+        PreviewAnnouncement.Text = string.IsNullOrWhiteSpace(AnnouncementBox.Text)
+            ? "لطفاً در سالن انتظار حضور داشته باشید…"
+            : AnnouncementBox.Text.Trim();
         PreviewAnalogClock.Visibility = ToVis(AnalogClockCheck.IsChecked == true);
         PreviewDigital.Visibility = ToVis(DigitalClockCheck.IsChecked == true);
         PreviewDate.Visibility = ToVis(LongDateCheck.IsChecked == true);
-        PreviewSections.ItemsSource = _rows.Select(r => new { r.Title }).ToList();
+
+        // ═══ چرخهٔ ۷۵ — پیش‌نمایش چیدمان ستونی صف‌ها ═══
+        // همان الگوریتم نمایشگر: بخش‌ها ستون‌پرشونده، هر ستون حداکثر دو بخش
+        PreviewColumns.ColumnDefinitions.Clear();
+        PreviewColumns.Children.Clear();
+        var columnCount = Math.Clamp(ColumnCountCombo.SelectedIndex + 1, 1, 4);
+        for (var i = 0; i < columnCount; i++)
+            PreviewColumns.ColumnDefinitions.Add(
+                new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        const int maxPerColumn = 2;
+        var titles = _rows.Select(r => r.Title).ToList();
+        var idx = 0;
+        for (var col = 0; col < columnCount && idx < titles.Count; col++)
+        {
+            var columnStack = new StackPanel { Margin = new Thickness(col == 0 ? 0 : 6, 0, 0, 0) };
+            var placed = 0;
+            while (placed < maxPerColumn && idx < titles.Count)
+            {
+                columnStack.Children.Add(BuildPreviewCard(titles[idx]));
+                placed++;
+                idx++;
+            }
+            Grid.SetColumn(columnStack, col);
+            PreviewColumns.Children.Add(columnStack);
+        }
+
+        // ═══ چرخهٔ ۷۵ — اقلام اختیاری تبلیغ در پیش‌نمایش ═══
+        PreviewAdSubtitle.Visibility = ToVis(AdSubtitleCheck.IsChecked == true);
+        PreviewAdFeatures.Visibility = ToVis(AdFeaturesCheck.IsChecked == true);
+        PreviewAdVersion.Visibility = ToVis(AdVersionCheck.IsChecked == true);
     }
+
+    /// <summary>ساخت کارت پیش‌نمایش یک بخش — هم‌زبانِ بصری نمایشگر واقعی</summary>
+    private static Border BuildPreviewCard(string title)
+    {
+        var stack = new StackPanel();
+        stack.Children.Add(new TextBlock
+        {
+            Text = title,
+            FontSize = 10,
+            FontWeight = FontWeights.Bold,
+            Foreground = new System.Windows.Media.SolidColorBrush(
+                System.Windows.Media.Color.FromRgb(0x7F, 0xC4, 0xFF)),
+        });
+        stack.Children.Add(new TextBlock
+        {
+            Text = "نمونهٔ ردیف بیمار — شمارهٔ صف",
+            FontSize = 7.5,
+            Foreground = new System.Windows.Media.SolidColorBrush(
+                System.Windows.Media.Color.FromRgb(0x9D, 0xB8, 0xCF)),
+            Margin = new Thickness(0, 3, 0, 0),
+        });
+        return new Border
+        {
+            Background = new System.Windows.Media.SolidColorBrush(
+                System.Windows.Media.Color.FromRgb(0x10, 0x23, 0x3A)),
+            BorderBrush = new System.Windows.Media.SolidColorBrush(
+                System.Windows.Media.Color.FromRgb(0x1E, 0x3A, 0x5C)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(8, 6, 8, 6),
+            Margin = new Thickness(0, 0, 0, 6),
+            Child = stack,
+        };
+    }
+
+    /// <summary>تغییر هر تنظیم سراسری (مثل تعداد ستون) — فقط تازه‌سازی پیش‌نمایش</summary>
+    private void OnAnySettingChanged(object sender, SelectionChangedEventArgs e)
+        => RefreshPreview();
 
     /// <summary>تبدیل bool به Visibility</summary>
     private static Visibility ToVis(bool v)
@@ -428,11 +513,22 @@ public partial class WaitingRoomSettingsWindow : Window
         _config.ShowDigitalClock = fresh.ShowDigitalClock;
         _config.ShowLongDate = fresh.ShowLongDate;
         _config.Sections = fresh.Sections;
+        // چرخهٔ ۷۵ — تنظیمات جدید هم به پیش‌فرض برمی‌گردند
+        _config.Announcement = fresh.Announcement;
+        _config.ColumnCount = fresh.ColumnCount;
+        _config.ShowAdSubtitle = fresh.ShowAdSubtitle;
+        _config.ShowAdFeatures = fresh.ShowAdFeatures;
+        _config.ShowAdVersion = fresh.ShowAdVersion;
 
         ClinicNameBox.Text = string.Empty;
+        AnnouncementBox.Text = string.Empty;
+        ColumnCountCombo.SelectedIndex = Math.Clamp(_config.ColumnCount, 1, 4) - 1;
         AnalogClockCheck.IsChecked = true;
         DigitalClockCheck.IsChecked = true;
         LongDateCheck.IsChecked = true;
+        AdSubtitleCheck.IsChecked = false;
+        AdFeaturesCheck.IsChecked = false;
+        AdVersionCheck.IsChecked = false;
         _rows.Clear();
         foreach (var section in _config.Sections)
             _rows.Add(new SectionEditRow { Model = section });
@@ -450,6 +546,12 @@ public partial class WaitingRoomSettingsWindow : Window
         _config.ShowAnalogClock = AnalogClockCheck.IsChecked == true;
         _config.ShowDigitalClock = DigitalClockCheck.IsChecked == true;
         _config.ShowLongDate = LongDateCheck.IsChecked == true;
+        // چرخهٔ ۷۵ — اعلان/ستون/تبلیغ
+        _config.Announcement = AnnouncementBox.Text.Trim();
+        _config.ColumnCount = Math.Clamp(ColumnCountCombo.SelectedIndex + 1, 1, 4);
+        _config.ShowAdSubtitle = AdSubtitleCheck.IsChecked == true;
+        _config.ShowAdFeatures = AdFeaturesCheck.IsChecked == true;
+        _config.ShowAdVersion = AdVersionCheck.IsChecked == true;
         _config.Sections = _rows.Select(r => r.Model).ToList();
         if (ScreenCombo.SelectedItem is ScreenOption screen)
             _config.ScreenDeviceName = screen.DeviceName;

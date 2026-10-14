@@ -1,18 +1,22 @@
 <UserControl x:Class="Sahand.ClinicPro.Desktop.Controls.AnalogClock"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              d:DesignHeight="280" d:DesignWidth="280"
              FlowDirection="LeftToRight"
              x:Name="Root">
-    <!-- ═══ ساعت آنالوگ نمایشگر سالن انتظار — چرخهٔ ۷۴ ═══
-         گزارش مالک: «ساعت این صفحه ثانیه شمار هم داشته باشه و به نظر من یک
-         ساعت آنالوگ خیلی زیبا و شکیل براش بزار و ساعت دیجیتال رو بصورت
-         کوچک زیر بزار». صفحهٔ تیرهٔ شیشه‌ای با حلقهٔ دورانی روشن، اعداد
-         ۱۲/۳/۶/۹ فارسی، عقربه‌های ساعت/دقیقهٔ روشن و عقربهٔ ثانیهٔ سرخ با
-         حرکت پیوسته (سوپ نرم — روان از یک ثانیه به ثانیهٔ بعد). -->
+    <!-- ═══ ساعت آنالوگ نمایشگر سالن انتظار — چرخهٔ ۷۴ + اصلاحات چرخهٔ ۷۵ ═══
+         گزارش مالک چرخهٔ ۷۵ (دو ایراد):
+           ۱) «عقربه ثانیه تمام قطر ساعت است» — عقربهٔ قبلی تا لبهٔ صفحه می‌رسید؛
+              اکنون طول عقربهٔ ثانیه ~۷۰٪ شعاع است (هم‌نسبت ساعت‌های واقعی) و
+              دُم متعادل‌کنندهٔ کوتاه پشت مرکز دارد.
+           ۲) «فقط ۴ شمارهٔ اصلی را دارد؛ خطوط ساعت و دقیقه هم می‌خواهم — خطوط
+              ساعت کلفت‌تر» — ۶۰ خط نشانگر اضافه شد: ۱۲ خطِ ساعتِ کلفتِ روشن
+              (هر ۳۰ درجه) + ۴۸ خطِ دقیقهٔ نازک کم‌رنگ؛ به‌علاوه همان برچسب‌های
+              فارسی ۱۲/۳/۶/۹.
+         حرکت پیوستهٔ ثانیه (سوپ نرم) و رنگ‌بندی تیرهٔ کیوسک حفظ شد. -->
     <Grid>
         <!-- هالهٔ بیرونی — حلقهٔ روشن دور صفحه برای جدایی از پس‌زمینهٔ تیره -->
         <Ellipse Fill="#101F31"
@@ -37,24 +41,35 @@
             </Ellipse.Stroke>
         </Ellipse>
 
-        <!-- برچسب‌های ساعت — ۱۲ بالا / ۳ / ۶ / ۹ با ارقام فارسی -->
-        <TextBlock Text="۱۲" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
-                   HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,26,0,0" />
-        <TextBlock Text="۶" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
-                   HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,26" />
-        <TextBlock Text="۳" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
-                   HorizontalAlignment="Left" VerticalAlignment="Center" Margin="27,0,0,1" />
-        <TextBlock Text="۹" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
-                   HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,27,1" />
+        <!-- ═══ نشانگرهای ساعت و دقیقه — چرخهٔ ۷۵ ═══
+             ۱۲ خط کلفتِ ساعت (هر ۳۰ درجه) + ۴۸ خط نازک دقیقه؛ همه در کد
+             پشت ساخته می‌شوند (CreateTickMarks) تا هندسه دقیق بماند و
+             XAML شلوغ نشود. خطوط ساعت روشن‌تر/کلفت‌ترند (تشخیص فوری از دور). -->
+        <Canvas x:Name="TickCanvas"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                IsHitTestVisible="False" />
 
-        <!-- عقربه‌ها — حول مرکز؛ هر عقربه یک گرید چرخان است -->
+        <!-- برچسب‌های ساعت — ۱۲ بالا / ۳ / ۶ / ۹ با ارقام فارسی
+             (فاصله از لبه کمی بیشتر شد تا روی خطوط ساعتِ جدید ننشیند) -->
+        <TextBlock Text="۱۲" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
+                   HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,30,0,0" />
+        <TextBlock Text="۶" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
+                   HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,30" />
+        <TextBlock Text="۳" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
+                   HorizontalAlignment="Left" VerticalAlignment="Center" Margin="31,0,0,1" />
+        <TextBlock Text="۹" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
+                   HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,31,1" />
+
+        <!-- عقربه‌ها — حول مرکز؛ هر عقربه یک گرید چرخان است.
+             نسبت‌های ساعت واقعی: ساعت ~۵۰٪ / دقیقه ~۷۰٪ / ثانیه ~۷۵٪ شعاع. -->
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
              Width="4" Height="140" RenderTransformOrigin="0.5,0.5"
              x:Name="HourHand">
             <Grid.RenderTransform>
                 <RotateTransform x:Name="HourRotation" Angle="0" />
             </Grid.RenderTransform>
-            <Rectangle Width="4" Height="72" VerticalAlignment="Top" RadiusX="2.5" RadiusY="2.5">
+            <!-- عقربهٔ ساعت — کوتاه‌تر و پهن‌تر (۷۰px از ۱۴۰ = نصف قطر) -->
+            <Rectangle Width="4.5" Height="70" VerticalAlignment="Top" RadiusX="2.5" RadiusY="2.5">
                 <Rectangle.Fill>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                         <GradientStop Color="#F2F7FC" Offset="0" />
@@ -64,12 +79,13 @@
             </Rectangle>
         </Grid>
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
-             Width="3" Height="190" RenderTransformOrigin="0.5,0.5"
-             x:Name="MinuteHand">
+              Width="3" Height="190" RenderTransformOrigin="0.5,0.5"
+              x:Name="MinuteHand">
             <Grid.RenderTransform>
                 <RotateTransform x:Name="MinuteRotation" Angle="0" />
             </Grid.RenderTransform>
-            <Rectangle Width="3" Height="98" VerticalAlignment="Top" RadiusX="2" RadiusY="2">
+            <!-- عقربهٔ دقیقه — بلندتر (۹۶px از ۱۹۰ ≈ ۷۰٪ شعاع) -->
+            <Rectangle Width="3" Height="96" VerticalAlignment="Top" RadiusX="2" RadiusY="2">
                 <Rectangle.Fill>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                         <GradientStop Color="#F2F7FC" Offset="0" />
@@ -78,16 +94,19 @@
                 </Rectangle.Fill>
             </Rectangle>
         </Grid>
-        <!-- عقربهٔ ثانیه — سرخ نازک با دُم متعادل و حلقهٔ لغزش -->
+        <!-- ═══ عقربهٔ ثانیه — اصلاح چرخهٔ ۷۵ ═══
+             «تمام قطر ساعت بود» — قبلی ۱۷۰px تا لبه می‌رسید؛ اکنون نوکش
+             ۱۰۴px از مرکز است (~۷۵٪ شعاع — نسبت استاندارد ساعت) + دُم ۲۲px
+             متعادل‌کننده؛ حلقهٔ لغزش روی نوک حفظ شد (امضای بصری سوپِ نرم). -->
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
-              Width="2" Height="206" RenderTransformOrigin="0.5,0.5"
+              Width="2" Height="152" RenderTransformOrigin="0.5,0.5"
               x:Name="SecondHand">
             <Grid.RenderTransform>
                 <RotateTransform x:Name="SecondRotation" Angle="0" />
             </Grid.RenderTransform>
-            <Rectangle Width="2" Height="170" VerticalAlignment="Top" Fill="#FF5252" RadiusX="1" RadiusY="1" />
-            <Rectangle Width="2" Height="26" VerticalAlignment="Bottom" Fill="#FF8A80" RadiusX="1" RadiusY="1" />
-            <Ellipse Width="9" Height="9" VerticalAlignment="Top" Margin="0,31,0,0"
+            <Rectangle Width="2" Height="104" VerticalAlignment="Top" Fill="#FF5252" RadiusX="1" RadiusY="1" />
+            <Rectangle Width="2" Height="22" VerticalAlignment="Bottom" Fill="#FF8A80" RadiusX="1" RadiusY="1" />
+            <Ellipse Width="9" Height="9" VerticalAlignment="Top" Margin="0,12,0,0"
                      Stroke="#FF5252" StrokeThickness="2" Fill="#152A42" />
         </Grid>
 
