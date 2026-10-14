@@ -1,38 +1,58 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Sahand.ClinicPro.Application.Common.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.Controls;
 
 /// <summary>
-/// انتخابگر تاریخ شمسی — جعبه متن فقط-خواندنی + تقویم بازشو
-/// خروجی دوگانه: تاریخ میلادی (SelectedDate) + متن شمسی (SelectedShamsi)
+/// انتخابگر تاریخ شمسی — چرخهٔ ۷۲: ورودِ دوگانه
+/// (تایپ دستی در جعبهٔ متن + تقویم بازشو فقط از آیکون تقویم)
+/// خروجی چندگانه: تاریخ میلادی (SelectedDate) + متن شمسی (SelectedShamsi)
+/// + رشتهٔ شمسی لاتین‌رقم دوطرفه (DateShamsiText) برای فرم‌های رشته‌ای
 /// </summary>
 public partial class PersianDatePicker : UserControl
 {
     /// <summary>
-    /// آیا پاپ‌آپ هنگام فشردن دکمهٔ ماوس روی جعبهٔ متن باز بود؟ — چرخه بیست‌وسوم:
-    /// با StaysOpen=False، کلیک روی جعبهٔ متنِ (بیرونِ پاپ‌آپ) ابتدا پاپ‌آپ را
-    /// می‌بندد و سپس رویداد MouseUp دوباره بازش می‌کرد → به نظر می‌رسید «هیچ‌وقت
-    /// بسته نمی‌شود». با این پرچم، بازکردن دوبارهٔ بی‌درنگ متوقف می‌شود.
+    /// قاب پیش‌فرض جعبهٔ متن (از تم متریال) — برای بازگردانی پس از حالت خطا
+    /// در Load اولین بار ذخیره می‌شود
     /// </summary>
-    private bool _popupWasOpenOnMouseDown;
+    private Brush _defaultBoxBorder = Brushes.Transparent;
+
+    /// <summary>
+    /// آیا متنِ تایپ‌شدهٔ فعلی نامعتبر است؟ — برای رنگ‌آمیزی قاب و تولتیپ راهنما
+    /// و پاک‌سازی درست هنگام خروج از فیلد
+    /// </summary>
+    private bool _typedTextInvalid;
 
     /// <summary>سازنده — اتصال رویدادها</summary>
     public PersianDatePicker()
     {
         InitializeComponent();
+
+        // ── تقویم بازشو: باز/بسته با آیکون تقویم (چرخهٔ ۷۲ — یگانه راه گشودن) ──
         CalendarToggle.Checked += (_, _) => CalendarPopup.IsOpen = true;
         CalendarToggle.Unchecked += (_, _) => CalendarPopup.IsOpen = false;
         CalendarPopup.Closed += (_, _) => CalendarToggle.IsChecked = false;
         // چرخه بیست‌وسوم (گزارش شانزدهم مالک): «با کلیک روی تاریخ‌ها بسته شود» —
         // بستن پاپ‌آپ به محض انتخاب روز از تقویم
         PopupCalendar.DateSelected += (_, _) => CalendarPopup.IsOpen = false;
-        // ثبت وضعیت پاپ‌آپ پیش از فشردن دکمه — برای رفتار toggle صحیح جعبهٔ متن
-        ShamsiBox.PreviewMouseLeftButtonDown += (_, _) =>
-            _popupWasOpenOnMouseDown = CalendarPopup.IsOpen;
-        // بستن با کلید Escape — سازگاری صفحه‌کلید
+
+        // ═══ چرخهٔ ۷۲ — ورود تایپی دستی (گزارش مالک: «بصورت دستی هم بشه نوشت») ═══
+        // Enter = اعمال فوری متن تایپ‌شده؛ خروج از فیلد = اعمالِ مؤدبانه با بازخورد
+        ShamsiBox.PreviewKeyDown += OnShamsiBoxKeyDown;
+        ShamsiBox.LostFocus += (_, _) => ApplyTypedText();
+        // با شروع ویرایش تازه، حالت خطای قبلی پاک می‌شود (بازخورد زنده)
+        ShamsiBox.TextChanged += (_, _) =>
+        {
+            if (_typedTextInvalid)
+                SetInvalidState(false, null);
+        };
+        // اگر کاربر حین ویرایشِ متن، از تقویم تاریخی برگزیند، متن در حال ویرایش
+        // با نمایش استاندارد هم‌گام می‌شود (مسیر SelectedShamsi ← Binding یک‌طرفه)
+
+        // بستن پاپ‌آپ با Escape — سازگاری صفحه‌کلید
         PreviewKeyDown += (_, e) =>
         {
             if (e.Key == Key.Escape && CalendarPopup.IsOpen)
@@ -41,7 +61,13 @@ public partial class PersianDatePicker : UserControl
                 e.Handled = true;
             }
         };
-        Loaded += (_, _) => SyncShamsi();
+
+        // ذخیرهٔ قاب تم + هم‌گامی اولیه نمایش
+        Loaded += (_, _) =>
+        {
+            _defaultBoxBorder = ShamsiBox.BorderBrush;
+            SyncShamsi();
+        };
     }
 
     /* ─────────────  خصوصیت‌های وابستگی  ───────────── */
@@ -134,19 +160,69 @@ public partial class PersianDatePicker : UserControl
     /* ─────────────  منطق  ───────────── */
 
     /// <summary>
-    /// باز/بستن پاپ‌آپ با کلیک روی جعبهٔ متن — چرخه بیست‌وسوم:
-    /// اگر پاپ‌آپ هنگام فشردن دکمه باز بود، سیستم (StaysOpen=False) بندش داده
-    /// و اینجا نباید دوباره باز شود — کلیک روی فیلد = toggle (باز → بسته)
+    /// کلیدهای ویژهٔ جعبهٔ متن — چرخهٔ ۷۲:
+    /// Enter متن تایپ‌شده را بلافاصله اعمال می‌کند (بدون صبر تا خروج از فیلد)
+    /// تا کاربر سریع «۱۴۰۴/۰۷/۲۰ + Enter» بزند و به فیلد بعدی برود
     /// </summary>
-    private void OpenPopup(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    private void OnShamsiBoxKeyDown(object sender, KeyEventArgs e)
     {
-        if (_popupWasOpenOnMouseDown)
+        if (e.Key != Key.Enter)
+            return;
+        ApplyTypedText();
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// اعمال متن تایپ‌شدهٔ دستی — چرخهٔ ۷۲. سه پیامد:
+    /// متن خالی → پاک‌شدن تاریخ (فرم‌های اختیاری)؛
+    /// متن معتبر («۱۴۰۴/۰۷/۲۰» / «1404-07-20» / ارقام فارسی) → تاریخ + نرمال‌سازی
+    /// نمایش به فرمت استاندارد فارسی‌رقم؛
+    /// متن نامعتبر → قاب نارنجی + تولتیپ راهنما؛ تاریخ قبلی دست‌نخورده می‌ماند
+    /// (اعتبارسنجی الزامیِ فرم‌ها با همان تاریخ قبلی تصمیم می‌گیرد، نه با متن خام)
+    /// </summary>
+    private void ApplyTypedText()
+    {
+        var text = (ShamsiBox.Text ?? string.Empty).Trim();
+
+        // متن تهی = پاک‌کردن آگاهانهٔ تاریخ
+        if (text.Length == 0)
         {
-            // پاپ‌آپ همین حالا بسته شده است — بازکردن مجدد ممنوع
-            _popupWasOpenOnMouseDown = false;
+            SetInvalidState(false, null);
+            if (SelectedDate is not null)
+                SelectedDate = null; // مسیر OnSelectedDateChanged نمایش را هم پاک می‌کند
             return;
         }
-        CalendarPopup.IsOpen = true;
+
+        var parsed = PersianDateHelper.ToGregorian(text);
+        if (parsed is { } date)
+        {
+            SetInvalidState(false, null);
+            if (date != SelectedDate)
+                SelectedDate = date; // مسیر OnSelectedDateChanged → SyncShamsi + DateChanged
+            else
+                ShamsiBox.Text = PersianDateHelper.ToShamsiFa(date); // نرمال‌سازی نمایشِ همین تاریخ
+        }
+        else
+        {
+            // ═══ بازخورد خطای تایپی — بدون پرت‌کردن استثنا و بدون دست‌کاری تاریخ ═══
+            SetInvalidState(true,
+                "قالب تاریخ نامعتبر است — نمونهٔ درست: ۱۴۰۴/۰۷/۲۰ (یا 1404-07-20). " +
+                "برای انتخاب از تقویم روی آیکون تقویم کلیک کنید");
+        }
+    }
+
+    /// <summary>
+    /// رنگ‌آمیزی قاب جعبهٔ متن بر اساس اعتبار/بطلان متن تایپی + تولتیپ راهنما.
+    /// قاب تم در نخستین Load ذخیره می‌شود تا بازگردانی دقیق باشد
+    /// </summary>
+    private void SetInvalidState(bool invalid, string? message)
+    {
+        _typedTextInvalid = invalid;
+        ShamsiBox.BorderBrush = invalid
+            ? (TryFindResource("MaterialDesign.Brush.ValidationError") as Brush ?? Brushes.OrangeRed)
+            : _defaultBoxBorder;
+        // ToolTip سراسری (استایل App.xaml) هنگام hover نمایش داده می‌شود
+        ShamsiBox.ToolTip = invalid ? message : null;
     }
 
     /// <summary>هم‌گام‌سازی متن شمسی و جهت ماه نمایشی با تاریخ انتخاب‌شده</summary>

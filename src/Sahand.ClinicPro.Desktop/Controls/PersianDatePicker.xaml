@@ -10,29 +10,42 @@
              FlowDirection="RightToLeft"
 
              x:Name="Root">
-    <!-- انتخابگر تاریخ شمسی — جعبه متن فقط-خواندنی + تقویم بازشو -->
+    <!-- ═══ انتخابگر تاریخ شمسی — چرخهٔ ۷۲: ورودِ دوگانه (تایپ دستی + تقویم بازشو) ═══
+         گزارش مالک: «کنترل انتخابگر تاریخ رو طوری اصلاح بکن که بصورت دستی هم بشه
+         نوشت و نیازی به باز شدن تقویم نباشه و کنترل یک آیکون تقویم داشته باشه که
+         با کلیک روی اون تقویم انتخاب تاریخ رو باز بکنه».
+         پیش‌تر جعبهٔ متن فقط-خواندنی بود و کلیک روی خود فیلد هم تقویم را باز
+         می‌کرد؛ از این چرخه:
+           ۱) جعبهٔ متن قابل تایپ است — قالب‌های پذیرفته‌شده: «۱۴۰۴/۰۷/۲۰»،
+              «1404/07/20»، «1404-07-20» و ارقام فارسی/عربی (پارس با
+              PersianDateHelper.ToGregorian)؛ اعمال با Enter یا خروج از فیلد.
+           ۲) تقویم فقط از آیکون تقویم (سمت چپ) باز می‌شود — نه با کلیک روی فیلد.
+           ۳) متن نامعتبر: قاب نارنجی + راهنمای تولتیپ؛ تاریخ انتخابی قبلی
+              دست‌نخورده می‌ماند تا اصلاح شود. -->
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
-        <!-- نمایش شمسی تاریخ -->
+        <!-- نمایش/ورود شمسی تاریخ — مرکزچین تا تاریخ کامل خوانده شود -->
         <TextBox x:Name="ShamsiBox"
                  Grid.Column="0"
-                 IsReadOnly="True"
-                 Cursor="Hand"
+                 Cursor="IBeam"
+                 TextAlignment="Center"
                  Text="{Binding SelectedShamsi, ElementName=Root, Mode=OneWay}"
                  materialDesign:HintAssist.Hint="{Binding Placeholder, ElementName=Root}"
                  materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
                  VerticalContentAlignment="Center"
-                 PreviewMouseLeftButtonUp="OpenPopup" />
+                 IsReadOnly="False" />
 
-        <!-- دکمه باز کردن تقویم -->
+        <!-- دکمه باز کردن تقویم — یگانه راه گشودن تقویم از این چرخه
+             Focusable=False تا پیمایش Tab فرم‌ها روی دکمه نایستد -->
         <ToggleButton x:Name="CalendarToggle"
                       Grid.Column="1"
                       Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
-                      ToolTip="انتخاب از تقویم شمسی" Width="36" Height="32">
+                      ToolTip="انتخاب از تقویم شمسی" Width="36" Height="32"
+                      Focusable="False">
             <materialDesign:PackIcon Kind="CalendarMonth" />
         </ToggleButton>
 
