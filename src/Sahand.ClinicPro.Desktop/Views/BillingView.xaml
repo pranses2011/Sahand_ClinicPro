@@ -156,10 +156,10 @@
                                             </Grid.ColumnDefinitions>
                                             <StackPanel Grid.Column="0">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="12" />
-                                                    <TextBlock Text="{Binding MethodText}" FontSize="10.5" Opacity="0.7" Margin="10,0,0,0" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="12"  Foreground="#1F2937"/>
+                                                    <TextBlock Text="{Binding MethodText}" FontSize="10.5" Opacity="0.7" Margin="10,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
                                                 </StackPanel>
-                                                <TextBlock FontSize="10.5" Opacity="0.6" Margin="0,2,0,0">
+                                                <TextBlock FontSize="10.5" Opacity="0.6" Margin="0,2,0,0" Foreground="#1F2937">
                                                     <Run Text="ساعت " /><Run Text="{Binding Time, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
                                                     <Run Text=" — فاکتور " /><Run Text="{Binding InvoiceId, Mode=OneWay, TargetNullValue=—}" />
                                                 </TextBlock>

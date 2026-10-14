@@ -92,7 +92,7 @@
                                      FontFamily="{DynamicResource App.CodeFont}"
                                      ToolTip="قیمت آزمایش — جداکنندهٔ سه‌رقمی خودکار">
                                 <materialDesign:HintAssist.Hint>
-                                    <TextBlock>
+                                    <TextBlock Foreground="#1F2937">
                                         <Run Text="قیمت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" />
                                     </TextBlock>
                                 </materialDesign:HintAssist.Hint>
@@ -274,8 +274,8 @@
                             Background="#00695C" BorderBrush="#00695C" Foreground="White"
                             MinHeight="38" MinWidth="130" Cursor="Hand">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                            <TextBlock Text="ذخیرهٔ تغییرات" Margin="7,0,0,0" VerticalAlignment="Center" />
+                            <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                            <TextBlock Text="ذخیرهٔ تغییرات" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>

@@ -90,7 +90,7 @@
                                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <StackPanel>
-                        <TextBlock FontSize="11" Opacity="0.7"><Run Text="جمع درآمد (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                        <TextBlock FontSize="11" Opacity="0.7" Foreground="#1F2937"><Run Text="جمع درآمد (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                         <TextBlock Text="{Binding TotalRevenueDisplay}" FontSize="17" FontWeight="Bold" Foreground="#1B5E20"
                                    FontFamily="{DynamicResource App.CodeFont}" />
                     </StackPanel>
@@ -104,7 +104,7 @@
                                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <StackPanel>
-                        <TextBlock FontSize="11" Opacity="0.7"><Run Text="وصول‌شده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                        <TextBlock FontSize="11" Opacity="0.7" Foreground="#1F2937"><Run Text="وصول‌شده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                         <TextBlock Text="{Binding TotalPaidDisplay}" FontSize="17" FontWeight="Bold" Foreground="#0D47A1"
                                    FontFamily="{DynamicResource App.CodeFont}" />
                     </StackPanel>
@@ -118,7 +118,7 @@
                                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <StackPanel>
-                        <TextBlock FontSize="11" Opacity="0.7"><Run Text="مانده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                        <TextBlock FontSize="11" Opacity="0.7" Foreground="#1F2937"><Run Text="مانده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                         <TextBlock Text="{Binding TotalRemainingDisplay}" FontSize="17" FontWeight="Bold" Foreground="#B71C1C"
                                    FontFamily="{DynamicResource App.CodeFont}" />
                     </StackPanel>
@@ -132,7 +132,7 @@
                                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <StackPanel>
-                        <TextBlock Text="جمع ویزیت‌ها" FontSize="11" Opacity="0.7" />
+                        <TextBlock Text="جمع ویزیت‌ها" FontSize="11" Opacity="0.7"  Foreground="#1F2937"/>
                         <TextBlock Text="{Binding TotalVisitsDisplay}" FontSize="17" FontWeight="Bold" Foreground="#4A148C"
                                    FontFamily="{DynamicResource App.CodeFont}" />
                     </StackPanel>

@@ -207,7 +207,7 @@
                                         </StackPanel>
                                         <Border Grid.Column="2" Background="#E8F5E9" CornerRadius="8" Padding="8,1"
                                                 VerticalAlignment="Center">
-                                            <TextBlock FontSize="11">
+                                            <TextBlock FontSize="11" Foreground="#1F2937">
                                                 <Run Text="" /><Run Text="{Binding InsuranceName, Mode=OneWay, TargetNullValue=آزاد}" />
                                             </TextBlock>
                                         </Border>
@@ -227,13 +227,13 @@
                                 <StackPanel Grid.Column="0">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Account" Width="18" Height="18" Foreground="#1565C0" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding FoundPatient.FullName, Mode=OneWay}" FontWeight="Bold" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding FoundPatient.FullName, Mode=OneWay}" FontWeight="Bold" Margin="8,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
                                         <TextBlock Margin="18,0,0,0" VerticalAlignment="Center" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}"
-                                                   Text="{Binding FoundPatient.NationalCode, Mode=OneWay}" />
+                                                   Text="{Binding FoundPatient.NationalCode, Mode=OneWay}"  Foreground="#1F2937"/>
                                         <TextBlock Margin="18,0,0,0" VerticalAlignment="Center" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}"
-                                                   Text="{Binding FoundPatient.Mobile, Mode=OneWay}" />
+                                                   Text="{Binding FoundPatient.Mobile, Mode=OneWay}"  Foreground="#1F2937"/>
                                         <Border Background="#E8F5E9" CornerRadius="8" Padding="8,1" Margin="14,0,0,0" VerticalAlignment="Center">
-                                            <TextBlock FontSize="11">
+                                            <TextBlock FontSize="11" Foreground="#1F2937">
                                                 <Run Text="" /><Run Text="{Binding FoundPatient.InsuranceName, Mode=OneWay, TargetNullValue=آزاد}" />
                                             </TextBlock>
                                         </Border>
@@ -379,7 +379,7 @@
                                 Visibility="{Binding ReceptionModeIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}">
                             <StackPanel>
                                 <TextBlock Text="لوازم مصرفی درمانگاه — برای مواردی که بیمار خودش همراه ندارد"
-                                           FontSize="12.5" FontWeight="Bold" Margin="0,0,0,8" />
+                                           FontSize="12.5" FontWeight="Bold" Margin="0,0,0,8"  Foreground="#1F2937"/>
 
                                 <!-- ردیف افزودن: قلم + تعداد + دکمه -->
                                 <Grid>
@@ -403,8 +403,8 @@
                                             Margin="8,0,0,0" MinWidth="90" MinHeight="38" Padding="14,8"
                                             ToolTip="افزودن قلم مصرفی به فهرست مصرف این پذیرش">
                                         <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="Plus" Width="15" Height="15" VerticalAlignment="Center" />
-                                            <TextBlock Text="افزودن" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                            <materialDesign:PackIcon Kind="Plus" Width="15" Height="15" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                            <TextBlock Text="افزودن" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
                                         </StackPanel>
                                     </Button>
                                 </Grid>
@@ -432,7 +432,7 @@
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                                                         <materialDesign:PackIcon Kind="Syringe" Width="15" Height="15" Foreground="#00838F" VerticalAlignment="Center" />
-                                                        <TextBlock Text="{Binding Option.Name}" FontWeight="SemiBold" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Option.Name}" FontWeight="SemiBold" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
                                                     </StackPanel>
                                                     <!-- تعداد — قابل ویرایش؛ جمع همان لحظه تازه می‌شود -->
                                                     <TextBox Grid.Column="1" Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}"
@@ -448,7 +448,7 @@
                                                             Style="{StaticResource MaterialDesignFlatButton}"
                                                             Foreground="#C62828" Padding="6,2" Margin="8,0,0,0"
                                                             ToolTip="حذف این قلم از فهرست مصرف">
-                                                        <materialDesign:PackIcon Kind="Close" Width="14" Height="14" />
+                                                        <materialDesign:PackIcon Kind="Close" Width="14" Height="14"  Foreground="#1F2937"/>
                                                     </Button>
                                                 </Grid>
                                             </Border>
@@ -461,7 +461,7 @@
                                         Visibility="{Binding HasConsumables, Converter={StaticResource BoolToVisibility}}">
                                     <DockPanel>
                                         <TextBlock DockPanel.Dock="Right" Text="جمع لوازم مصرفی (۱۰۰٪ بر عهدهٔ بیمار — بدون سهم بیمه):"
-                                                   FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                                   FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"  Foreground="#1F2937"/>
                                         <TextBlock Text="{Binding ConsumablesTotalDisplay, Mode=OneWay}"
                                                    FontFamily="{DynamicResource App.CodeFont}" FontSize="14.5" FontWeight="Bold"
                                                    Foreground="#006064" VerticalAlignment="Center" HorizontalAlignment="Left" />
@@ -485,12 +485,12 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock FontSize="11" Opacity="0.7"><Run Text="حق ویزیت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
-                                        <TextBlock Text="{Binding FeeDisplay, Mode=OneWay}" FontSize="15" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
+                                        <TextBlock FontSize="11" Opacity="0.7" Foreground="#1F2937"><Run Text="حق ویزیت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                                        <TextBlock Text="{Binding FeeDisplay, Mode=OneWay}" FontSize="15" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}"  Foreground="#1F2937"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="1"
                                                 Visibility="{Binding HasInsurance, Converter={StaticResource BoolToVisibility}}">
-                                        <TextBlock FontSize="11" Opacity="0.7">
+                                        <TextBlock FontSize="11" Opacity="0.7" Foreground="#1F2937">
                                             <Run Text="سهم بیمه (" /><Run Text="{Binding CoveragePercent, Mode=OneWay}" /><Run Text="٪)" />
                                         </TextBlock>
                                         <TextBlock Text="{Binding InsuranceShareDisplay, Mode=OneWay}" FontSize="15" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" Foreground="#2E7D32" />
@@ -512,7 +512,7 @@
                                             </Style>
                                         </StackPanel.Style>
                                         <TextBlock FontSize="11" Opacity="0.7"
-                                                   ToolTip="سهم بیمار از خدمت + هزینهٔ لوازم مصرفی درمانگاه (۱۰۰٪ بر عهدهٔ بیمار — چرخهٔ ۳۹)">
+                                                   ToolTip="سهم بیمار از خدمت + هزینهٔ لوازم مصرفی درمانگاه (۱۰۰٪ بر عهدهٔ بیمار — چرخهٔ ۳۹)" Foreground="#1F2937">
                                             <Run Text="قابل پرداخت بیمار (خدمت + لوازم) (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" />
                                         </TextBlock>
                                         <!-- چرخهٔ ۳۹ — مبلغ نهایی = سهم بیمار خدمت + جمع لوازم مصرفی؛

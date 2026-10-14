@@ -262,8 +262,8 @@
                         <DataTemplate>
                             <Border CornerRadius="10" Padding="12,8" Margin="3" Background="#E3F2FD" MinWidth="130">
                                 <StackPanel>
-                                    <TextBlock Text="{Binding Label}" FontSize="10.5" Opacity="0.7" />
-                                    <TextBlock Text="{Binding Value}" FontSize="16" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
+                                    <TextBlock Text="{Binding Label}" FontSize="10.5" Opacity="0.7"  Foreground="#1F2937"/>
+                                    <TextBlock Text="{Binding Value}" FontSize="16" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}"  Foreground="#1F2937"/>
                                 </StackPanel>
                             </Border>
                         </DataTemplate>

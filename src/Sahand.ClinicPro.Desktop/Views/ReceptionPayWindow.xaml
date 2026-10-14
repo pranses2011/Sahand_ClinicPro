@@ -35,7 +35,7 @@
         <Border Background="#FFF8E1" BorderBrush="#FFE082" BorderThickness="1"
                 CornerRadius="10" Padding="14,10" Margin="0,0,0,14">
             <StackPanel>
-                <TextBlock FontSize="11.5" Opacity="0.75">
+                <TextBlock FontSize="11.5" Opacity="0.75" Foreground="#1F2937">
                     <Run Text="مبلغ قابل پرداخت (خدمت + لوازم مصرفی) — " /><Run Text="{DynamicResource App.CurrencyLabel}" />
                 </TextBlock>
                 <TextBlock Text="{Binding PayableText, Mode=OneWay}" FontSize="24" FontWeight="Bold"

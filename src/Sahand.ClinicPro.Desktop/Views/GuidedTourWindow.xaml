@@ -53,7 +53,7 @@
                     <TextBlock x:Name="StepTitle" Text="خوش آمدید" FontSize="17" FontWeight="Bold"
                                Foreground="#1565C0" Margin="8,0,0,0" VerticalAlignment="Center" />
                     <TextBlock x:Name="StepCounter" Text="۱ از ۸" FontSize="11" Opacity="0.55"
-                               VerticalAlignment="Center" DockPanel.Dock="Left" />
+                               VerticalAlignment="Center" DockPanel.Dock="Left"  Foreground="#1F2937"/>
                 </DockPanel>
                 <TextBlock x:Name="StepMessage" Text="" FontSize="13" LineHeight="24" TextWrapping="Wrap"
                            Foreground="#37474F" />

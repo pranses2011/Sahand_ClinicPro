@@ -46,7 +46,7 @@
                                 </Grid>
                                 <Border Background="#E3F2FD" CornerRadius="8" Padding="10,5" Margin="0,0,0,10"
                                         Visibility="{Binding ImagingPatient, Converter={StaticResource NullToVisibility}}">
-                                    <TextBlock Text="{Binding ImagingPatient.FullName, Mode=OneWay}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding ImagingPatient.FullName, Mode=OneWay}" FontWeight="SemiBold"  Foreground="#1F2937"/>
                                 </Border>
 
                                 <Grid>

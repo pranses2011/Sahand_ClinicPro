@@ -111,6 +111,15 @@ public class ThemeService : IThemeService
         // ═══ ظاهر عناصر تم — چرخه بیست + overrideهای مستقل چرخه بیست‌ویکم ═══
         var resources = System.Windows.Application.Current.Resources;
 
+        // ═══ چرخهٔ ۷۴ — قلم سطرهای یک‌درمیان (گوره‌خری) جدول‌ها ═══
+        // روشن: آبی‌فیروزه‌ای بسیار ملایم روی سفید / تیره: خاکستری-آبی روشن‌تر
+        // از زمینهٔ تیره؛ با جایگزینی کامل قلم، همهٔ جدول‌های برنامه بی‌درنگ
+        // (DynamicResource) نو می‌شوند
+        resources["App.ZebraRowBrush"] = new System.Windows.Media.SolidColorBrush(
+            dark
+                ? System.Windows.Media.Color.FromRgb(0x28, 0x30, 0x3A)
+                : System.Windows.Media.Color.FromRgb(0xF6, 0xF9, 0xFC));
+
         // شعاع گوشه: مقدار مستقل کاربر مقدم است؛ وگرنه از تم
         var radius = _appearance.CardRadiusOverride ?? picked.CardRadius;
         resources["App.CardRadius"] = new CornerRadius(radius);

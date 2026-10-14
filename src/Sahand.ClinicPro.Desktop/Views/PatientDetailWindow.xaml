@@ -197,11 +197,11 @@
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{Binding Kind, Mode=OneWay}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                    <TextBlock Grid.Column="1" Text="{Binding Title}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="0" Text="{Binding Kind, Mode=OneWay}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0"  Foreground="#1F2937"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Title}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"  Foreground="#1F2937"/>
                                     <TextBlock Grid.Column="2" Text="{Binding Value}" FontSize="11.5" Foreground="#B71C1C" FontWeight="SemiBold" Margin="10,0,10,0" VerticalAlignment="Center" />
-                                    <TextBlock Grid.Column="3" Text="{Binding Range, Mode=OneWay}" FontSize="10.5" Opacity="0.7" Margin="0,0,10,0" VerticalAlignment="Center" />
-                                    <TextBlock Grid.Column="4" Text="{Binding DateShamsi}" FontSize="10.5" Opacity="0.6" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="3" Text="{Binding Range, Mode=OneWay}" FontSize="10.5" Opacity="0.7" Margin="0,0,10,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                    <TextBlock Grid.Column="4" Text="{Binding DateShamsi}" FontSize="10.5" Opacity="0.6" VerticalAlignment="Center"  Foreground="#1F2937"/>
                                 </Grid>
                             </Border>
                         </DataTemplate>
@@ -529,7 +529,7 @@
                     <Border Grid.Row="0" Background="#F5F7FB" CornerRadius="10" Padding="10,8" Margin="0,0,0,8">
                         <StackPanel>
                             <WrapPanel Orientation="Horizontal">
-                                <TextBlock Text="نمایش:" FontWeight="Bold" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBlock Text="نمایش:" FontWeight="Bold" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,8,0"  Foreground="#1F2937"/>
                                 <CheckBox Content="📋 ویزیت" IsChecked="{Binding TlVisits}" FontSize="11" Margin="0,0,10,4" />
                                 <CheckBox Content="🧪 آزمایش" IsChecked="{Binding TlLabs}" FontSize="11" Margin="0,0,10,4" />
                                 <CheckBox Content="🩻 تصویر" IsChecked="{Binding TlImaging}" FontSize="11" Margin="0,0,10,4" />
@@ -543,13 +543,13 @@
                                 <CheckBox Content="🏃 فیزیو" IsChecked="{Binding TlPhysio}" FontSize="11" Margin="0,0,10,4" />
                             </WrapPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                <TextBlock Text="سال شمسی:" FontWeight="Bold" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBlock Text="سال شمسی:" FontWeight="Bold" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,8,0"  Foreground="#1F2937"/>
                                 <ComboBox controls:ComboBoxSearch.IsEnabled="False" ItemsSource="{Binding TimelineYears}"
                                           SelectedItem="{Binding TimelineYearFilter}"
                                           MinWidth="110" FontSize="11.5" VerticalAlignment="Center">
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate>
-                                            <TextBlock>
+                                            <TextBlock Foreground="#1F2937">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Text" Value="{Binding}" />
@@ -600,7 +600,7 @@
                                                 <TextBlock Text="{Binding DateShamsi}" FontSize="10.5" FontWeight="SemiBold"
                                                            Foreground="#16355E" HorizontalAlignment="Center" />
                                                 <TextBlock Text="{Binding TimeShamsi, Mode=OneWay}" FontSize="9.5" Opacity="0.55"
-                                                           HorizontalAlignment="Center" />
+                                                           HorizontalAlignment="Center"  Foreground="#1F2937"/>
                                             </StackPanel>
                                         </Border>
                                         <!-- کارت رویداد -->
@@ -615,10 +615,10 @@
                                                         <TextBlock Text="{Binding KindLabel, Mode=OneWay}" FontSize="10" FontWeight="Bold"
                                                                    Foreground="#5B708C" VerticalAlignment="Center" />
                                                         <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="SemiBold"
-                                                                   Margin="8,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                                   Margin="8,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap"  Foreground="#1F2937"/>
                                                     </StackPanel>
                                                     <TextBlock Text="{Binding Subtitle, Mode=OneWay}" FontSize="10.5" Opacity="0.65"
-                                                               Margin="0,2,0,0" TextWrapping="Wrap" />
+                                                               Margin="0,2,0,0" TextWrapping="Wrap"  Foreground="#1F2937"/>
                                                 </StackPanel>
                                             </StackPanel>
                                         </Border>

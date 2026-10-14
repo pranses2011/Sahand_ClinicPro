@@ -38,15 +38,15 @@
                 <StackPanel>
                     <!-- سربرگ درمانگاه -->
                     <TextBlock Text="{Binding ClinicName}" FontSize="15" FontWeight="Bold"
-                               HorizontalAlignment="Center" />
+                               HorizontalAlignment="Center"  Foreground="#1F2937"/>
                     <TextBlock Text="رسید بستن شیفت و تحویل صندوق" FontSize="12" FontWeight="Bold"
-                               HorizontalAlignment="Center" Margin="0,3,0,2" Opacity="0.75" />
+                               HorizontalAlignment="Center" Margin="0,3,0,2" Opacity="0.75"  Foreground="#1F2937"/>
                     <TextBlock Text="{Binding HeaderLine}" FontSize="10.5" Opacity="0.65"
-                               HorizontalAlignment="Center" Margin="0,0,0,4" />
+                               HorizontalAlignment="Center" Margin="0,0,0,4"  Foreground="#1F2937"/>
                     <Rectangle Height="1" Fill="#D9E2EC" Margin="0,4,0,8" />
 
                     <!-- مبالغ سیستم -->
-                    <TextBlock Text="▌ مبالغ سیستم (ثبت‌شده)" FontWeight="Bold" FontSize="11.5" Margin="0,0,0,5" />
+                    <TextBlock Text="▌ مبالغ سیستم (ثبت‌شده)" FontWeight="Bold" FontSize="11.5" Margin="0,0,0,5"  Foreground="#1F2937"/>
                     <ItemsControl ItemsSource="{Binding SystemLines}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -55,10 +55,10 @@
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Label}" FontSize="11" />
+                                    <TextBlock Text="{Binding Label}" FontSize="11"  Foreground="#1F2937"/>
                                     <TextBlock Text="{Binding Value}" Grid.Column="1" FontSize="11"
                                                FontWeight="SemiBold" HorizontalAlignment="Left"
-                                               FontFamily="{DynamicResource App.CodeFont}" />
+                                               FontFamily="{DynamicResource App.CodeFont}"  Foreground="#1F2937"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -66,7 +66,7 @@
                     <Rectangle Height="1" Fill="#D9E2EC" Margin="0,8" />
 
                     <!-- شمارش فیزیکی -->
-                    <TextBlock Text="▌ شمارش فیزیکی" FontWeight="Bold" FontSize="11.5" Margin="0,0,0,5" />
+                    <TextBlock Text="▌ شمارش فیزیکی" FontWeight="Bold" FontSize="11.5" Margin="0,0,0,5"  Foreground="#1F2937"/>
                     <ItemsControl ItemsSource="{Binding CountedLines}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -75,10 +75,10 @@
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Label}" FontSize="11" />
+                                    <TextBlock Text="{Binding Label}" FontSize="11"  Foreground="#1F2937"/>
                                     <TextBlock Text="{Binding Value}" Grid.Column="1" FontSize="11"
                                                FontWeight="SemiBold" HorizontalAlignment="Left"
-                                               FontFamily="{DynamicResource App.CodeFont}" />
+                                               FontFamily="{DynamicResource App.CodeFont}"  Foreground="#1F2937"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -86,7 +86,7 @@
                     <Rectangle Height="1" Fill="#D9E2EC" Margin="0,8" />
 
                     <!-- اختلاف‌ها -->
-                    <TextBlock Text="▌ اختلاف‌سنجی" FontWeight="Bold" FontSize="11.5" Margin="0,0,0,5" />
+                    <TextBlock Text="▌ اختلاف‌سنجی" FontWeight="Bold" FontSize="11.5" Margin="0,0,0,5"  Foreground="#1F2937"/>
                     <ItemsControl ItemsSource="{Binding DifferenceLines}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -95,10 +95,10 @@
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Label}" FontSize="11" />
+                                    <TextBlock Text="{Binding Label}" FontSize="11"  Foreground="#1F2937"/>
                                     <TextBlock Text="{Binding Value}" Grid.Column="1" FontSize="11"
                                                FontWeight="SemiBold" HorizontalAlignment="Left"
-                                               FontFamily="{DynamicResource App.CodeFont}" />
+                                               FontFamily="{DynamicResource App.CodeFont}"  Foreground="#1F2937"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -109,7 +109,7 @@
                     </Border>
 
                     <TextBlock Text="{Binding FooterLine}" FontSize="10.5" Opacity="0.7" Margin="2,10,2,0"
-                               TextWrapping="Wrap" />
+                               TextWrapping="Wrap"  Foreground="#1F2937"/>
 
                     <Rectangle Height="1" Fill="#D9E2EC" Margin="0,10,0,6" />
                     <Grid>
@@ -118,11 +118,11 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="امضای تحویل‌گیرنده" FontSize="10" Opacity="0.65" HorizontalAlignment="Center" />
+                            <TextBlock Text="امضای تحویل‌گیرنده" FontSize="10" Opacity="0.65" HorizontalAlignment="Center"  Foreground="#1F2937"/>
                             <Rectangle Height="30" />
                         </StackPanel>
                         <StackPanel Grid.Column="1">
-                            <TextBlock Text="امضای تحویل‌دهنده" FontSize="10" Opacity="0.65" HorizontalAlignment="Center" />
+                            <TextBlock Text="امضای تحویل‌دهنده" FontSize="10" Opacity="0.65" HorizontalAlignment="Center"  Foreground="#1F2937"/>
                             <Rectangle Height="30" />
                         </StackPanel>
                     </Grid>

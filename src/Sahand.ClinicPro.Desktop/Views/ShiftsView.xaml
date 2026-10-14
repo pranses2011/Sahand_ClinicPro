@@ -147,7 +147,7 @@
                                                            FontSize="10" Opacity="0.6" VerticalAlignment="Center" Margin="0,0,10,0" />
                                                 <Border CornerRadius="8" Padding="7,1.5" VerticalAlignment="Center"
                                                         Background="#EDF3FA" BorderBrush="#D3E2F0" BorderThickness="1">
-                                                    <TextBlock FontSize="9.5">
+                                                    <TextBlock FontSize="9.5" Foreground="#1F2937">
                                                         <!-- Mode=OneWay — چرخهٔ ۶۷: Run.Text پیش‌فرض TwoWay است؛
                                                              برای پراپرتی‌های init-only رکوردها هم یک‌طرفه باید باشد -->
                                                         <Run Text="{Binding Assigned, Mode=OneWay, Converter={StaticResource PersianDigits}}" />

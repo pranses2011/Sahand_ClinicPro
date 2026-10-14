@@ -132,14 +132,14 @@
                                         MinHeight="40" IsEnabled="{Binding IsBalanced}"
                                         ToolTip="فقط سند متوازن (جمع بدهکار = جمع بستانکار) قابل ثبت است">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="ContentSaveCheck" Width="15" Height="15" VerticalAlignment="Center" />
-                                        <TextBlock Text="ثبت سند" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                        <materialDesign:PackIcon Kind="ContentSaveCheck" Width="15" Height="15" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                        <TextBlock Text="ثبت سند" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
                                     </StackPanel>
                                 </Button>
                                 <Button Grid.Column="2" Command="{Binding HideEntryFormCommand}" Margin="8,0,0,0"
                                         Style="{StaticResource MaterialDesignOutlinedButton}" MinHeight="40"
                                         ToolTip="بستن فرم سند بدون ثبت (چرخهٔ ۴۷)">
-                                    <materialDesign:PackIcon Kind="Close" Width="15" Height="15" />
+                                    <materialDesign:PackIcon Kind="Close" Width="15" Height="15"  Foreground="#1F2937"/>
                                 </Button>
                             </Grid>
 
@@ -168,7 +168,7 @@
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource MaterialDesignIconForegroundButton}"
                                                         Foreground="#C62828" Padding="3">
-                                                    <materialDesign:PackIcon Kind="Delete" Width="13" Height="13" />
+                                                    <materialDesign:PackIcon Kind="Delete" Width="13" Height="13"  Foreground="#1F2937"/>
                                                 </Button>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
@@ -180,11 +180,11 @@
                                 <Button Command="{Binding AddLineCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
                                         MinHeight="38">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" />
-                                        <TextBlock Text="افزودن سطر" Margin="6,0,0,0" />
+                                        <materialDesign:PackIcon Kind="Plus" Width="13" Height="13"  Foreground="#1F2937"/>
+                                        <TextBlock Text="افزودن سطر" Margin="6,0,0,0"  Foreground="#1F2937"/>
                                     </StackPanel>
                                 </Button>
-                                <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontWeight="Bold">
+                                <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontWeight="Bold" Foreground="#1F2937">
                                     <Run Text="جمع بدهکار: " /><Run Text="{Binding EntryDebitTotal, Mode=OneWay, Converter={StaticResource CurrencyRial}}" FontFamily="{DynamicResource App.CodeFont}" />
                                     <Run Text="  |  جمع بستانکار: " /><Run Text="{Binding EntryCreditTotal, Mode=OneWay, Converter={StaticResource CurrencyRial}}" FontFamily="{DynamicResource App.CodeFont}" />
                                 </TextBlock>

@@ -46,7 +46,7 @@
                                 </Grid>
                                 <Border Background="#E3F2FD" CornerRadius="8" Padding="10,5" Margin="0,0,0,10"
                                         Visibility="{Binding PhysioPatient, Converter={StaticResource NullToVisibility}}">
-                                    <TextBlock Text="{Binding PhysioPatient.FullName, Mode=OneWay}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding PhysioPatient.FullName, Mode=OneWay}" FontWeight="SemiBold"  Foreground="#1F2937"/>
                                 </Border>
 
                                 <TextBlock Text="تکنیک‌های درمانی" FontWeight="Bold" FontSize="13" Margin="2,0,2,6" />

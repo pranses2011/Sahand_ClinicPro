@@ -36,9 +36,9 @@
                     <materialDesign:PackIcon Kind="AccountCheck" Width="16" Height="16"
                                              Foreground="#2E7D32" VerticalAlignment="Center" />
                     <TextBlock Text="{Binding SelectedPatient.DisplayName, Mode=OneWay}" FontWeight="SemiBold"
-                               VerticalAlignment="Center" Margin="8,0,0,0" />
+                               VerticalAlignment="Center" Margin="8,0,0,0"  Foreground="#1F2937"/>
                     <TextBlock Text="{Binding SelectedPatient.Detail, Mode=OneWay}" FontSize="11"
-                               Opacity="0.75" VerticalAlignment="Center" Margin="14,0,0,0" />
+                               Opacity="0.75" VerticalAlignment="Center" Margin="14,0,0,0"  Foreground="#1F2937"/>
                 </StackPanel>
             </Border>
             <ListBox ItemsSource="{Binding PatientResults}"

@@ -184,14 +184,14 @@
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="AccountCheck" Width="20" Height="20"
                                                          Foreground="#1565C0" VerticalAlignment="Center" />
-                                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold">
+                                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#1F2937">
                                     <Run Text="{Binding SelectedPatient.FullName, Mode=OneWay}" />
                                 </TextBlock>
-                                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Opacity="0.75">
+                                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Opacity="0.75" Foreground="#1F2937">
                                     <!-- چرخهٔ ۷۴: کد ملی با ارقام فارسی -->
                                     <Run Text="کد ملی: " /><Run Text="{Binding SelectedPatient.NationalCode, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
                                 </TextBlock>
-                                <TextBlock Margin="16,0,0,0" VerticalAlignment="Center" Opacity="0.75">
+                                <TextBlock Margin="16,0,0,0" VerticalAlignment="Center" Opacity="0.75" Foreground="#1F2937">
                                     <Run Text="بیمه: " /><Run Text="{Binding SelectedPatient.InsuranceName, Mode=OneWay, TargetNullValue=آزاد}" />
                                 </TextBlock>
                                 <Border Background="#FFEBEE" CornerRadius="8" Padding="8,2" Margin="16,0,0,0"
@@ -384,20 +384,20 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                                        <TextBlock Text="تاریخ" FontSize="10" Opacity="0.6" />
-                                        <TextBlock Text="{Binding SelectedDateShamsi, Mode=OneWay}" FontWeight="Bold" />
+                                        <TextBlock Text="تاریخ" FontSize="10" Opacity="0.6"  Foreground="#1F2937"/>
+                                        <TextBlock Text="{Binding SelectedDateShamsi, Mode=OneWay}" FontWeight="Bold"  Foreground="#1F2937"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                        <TextBlock Text="⏰ ساعت" FontSize="10" Opacity="0.6" />
-                                        <TextBlock Text="{Binding SelectedSlot.Time, Mode=OneWay, TargetNullValue=—, Converter={StaticResource PersianDigits}}" FontWeight="Bold" />
+                                        <TextBlock Text="⏰ ساعت" FontSize="10" Opacity="0.6"  Foreground="#1F2937"/>
+                                        <TextBlock Text="{Binding SelectedSlot.Time, Mode=OneWay, TargetNullValue=—, Converter={StaticResource PersianDigits}}" FontWeight="Bold"  Foreground="#1F2937"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Margin="0,0,16,0">
-                                        <TextBlock Text="اتاق" FontSize="10" Opacity="0.6" />
-                                        <TextBlock Text="{Binding SelectedRoom, Mode=OneWay, TargetNullValue=—}" FontWeight="Bold" />
+                                        <TextBlock Text="اتاق" FontSize="10" Opacity="0.6"  Foreground="#1F2937"/>
+                                        <TextBlock Text="{Binding SelectedRoom, Mode=OneWay, TargetNullValue=—}" FontWeight="Bold"  Foreground="#1F2937"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="3" HorizontalAlignment="Left">
-                                        <TextBlock FontSize="10" Opacity="0.6"><Run Text="تخمین هزینه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
-                                        <TextBlock Text="{Binding EstimatedFee, Mode=OneWay, Converter={StaticResource CurrencyRial}}" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
+                                        <TextBlock FontSize="10" Opacity="0.6" Foreground="#1F2937"><Run Text="تخمین هزینه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                                        <TextBlock Text="{Binding EstimatedFee, Mode=OneWay, Converter={StaticResource CurrencyRial}}" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}"  Foreground="#1F2937"/>
                                     </StackPanel>
                                 </Grid>
 
@@ -409,15 +409,15 @@
                                         <ColumnDefinition Width="1.4*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                                        <TextBlock Text="نوع ویزیت" FontSize="11" Opacity="0.7" />
+                                        <TextBlock Text="نوع ویزیت" FontSize="11" Opacity="0.7"  Foreground="#1F2937"/>
                                         <ComboBox ItemsSource="{Binding VisitTypes}" SelectedIndex="{Binding SelectedTypeIndex}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Margin="0,0,10,0">
-                                        <TextBlock Text="اولویت" FontSize="11" Opacity="0.7" />
+                                        <TextBlock Text="اولویت" FontSize="11" Opacity="0.7"  Foreground="#1F2937"/>
                                         <ComboBox ItemsSource="{Binding Priorities}" SelectedIndex="{Binding SelectedPriorityIndex}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="یادداشت" FontSize="11" Opacity="0.7" />
+                                        <TextBlock Text="یادداشت" FontSize="11" Opacity="0.7"  Foreground="#1F2937"/>
                                         <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" />
                                     </StackPanel>
                                 </Grid>
@@ -428,8 +428,8 @@
                                         Background="#2E7D32" BorderBrush="#2E7D32"
                                         Height="42" Margin="0,10,0,0">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <materialDesign:PackIcon Kind="CheckCircle" Width="18" Height="18" VerticalAlignment="Center" />
-                                        <TextBlock Text="تایید و ثبت نوبت" Margin="10,0,0,0" FontSize="14" VerticalAlignment="Center" />
+                                        <materialDesign:PackIcon Kind="CheckCircle" Width="18" Height="18" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                        <TextBlock Text="تایید و ثبت نوبت" Margin="10,0,0,0" FontSize="14" VerticalAlignment="Center"  Foreground="#1F2937"/>
                                     </StackPanel>
                                 </Button>
                             </Grid>
@@ -653,7 +653,7 @@
                     <Border Grid.Row="0" CornerRadius="10" Padding="12,10" Margin="0,0,0,10"
                             Background="#F5F7FB" BorderBrush="#E1E8F2" BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="افزودن بیمار به لیست انتظار" FontWeight="Bold" FontSize="13" Margin="0,0,0,8" />
+                            <TextBlock Text="افزودن بیمار به لیست انتظار" FontWeight="Bold" FontSize="13" Margin="0,0,0,8"  Foreground="#1F2937"/>
                             <WrapPanel>
                                 <TextBox Text="{Binding WaitlistPatientSearch, UpdateSourceTrigger=PropertyChanged}"
                                          materialDesign:HintAssist.Hint="جستجوی بیمار (نام/کد ملی/موبایل)"
@@ -666,7 +666,7 @@
                                 </TextBox>
                                 <Button Command="{Binding WaitlistPatientSearchCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
                                         FontSize="11" Margin="0,0,8,6" VerticalAlignment="Center">
-                                    <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />
+                                    <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14"  Foreground="#1F2937"/>
                                 </Button>
                                 <TextBlock Text="{Binding WaitlistPatient.FullName, Mode=OneWay, TargetNullValue='— بیماری انتخاب نشده —'}"
                                            FontWeight="SemiBold" Foreground="#1565C0" FontSize="12"
@@ -694,13 +694,13 @@
                                 <Button Command="{Binding AddToWaitlistCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
                                         FontSize="11.5" Margin="0,0,8,6" VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" VerticalAlignment="Center" />
-                                        <TextBlock Text="ثبت در لیست" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                        <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                        <TextBlock Text="ثبت در لیست" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
                                     </StackPanel>
                                 </Button>
                                 <Button Command="{Binding LoadWaitlistCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
                                         FontSize="11" Margin="0,0,0,6" VerticalAlignment="Center">
-                                    <materialDesign:PackIcon Kind="Refresh" Width="13" Height="13" />
+                                    <materialDesign:PackIcon Kind="Refresh" Width="13" Height="13"  Foreground="#1F2937"/>
                                 </Button>
                             </WrapPanel>
                             <TextBox Text="{Binding WaitlistNotes, UpdateSourceTrigger=PropertyChanged}"
@@ -716,9 +716,9 @@
                                                 CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}"
                                                 HorizontalContentAlignment="Right" FontSize="11.5">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding NationalCode, Converter={StaticResource PersianDigits}}" Opacity="0.55" Margin="12,0,0,0" FontFamily="{DynamicResource App.CodeFont}" />
-                                                <TextBlock Text="{Binding Mobile, Converter={StaticResource PersianDigits}}" Opacity="0.55" Margin="12,0,0,0" />
+                                                <TextBlock Text="{Binding FullName}" FontWeight="SemiBold"  Foreground="#1F2937"/>
+                                                <TextBlock Text="{Binding NationalCode, Converter={StaticResource PersianDigits}}" Opacity="0.55" Margin="12,0,0,0" FontFamily="{DynamicResource App.CodeFont}"  Foreground="#1F2937"/>
+                                                <TextBlock Text="{Binding Mobile, Converter={StaticResource PersianDigits}}" Opacity="0.55" Margin="12,0,0,0"  Foreground="#1F2937"/>
                                             </StackPanel>
                                         </Button>
                                     </DataTemplate>

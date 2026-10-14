@@ -47,7 +47,12 @@
                  اعمال می‌شود و همه‌چیز (متن/آیکون/فاصله‌ها) هماهنگ و پیوسته مقیاس
                  می‌گیرد؛ مقدار پایه = BaseFontSize ÷ ۱۳ و از سوی ThemeService
                  بازنویسی می‌شود (مثل زوم مرورگر). -->
-            <ScaleTransform x:Key="App.FontScaleTransform" ScaleX="1" ScaleY="1" />
+            <!-- ═══ چرخهٔ ۷۴ — قلم رنگ سطرهای یک‌درمیان (گوره‌خری) ═══
+                 گزارش مالک: «تمامی لیست ها در تمامی صفحات و فرم ها رو بصورت
+                 گوره خری (رنگ های یک در میان) دربیار تا زیباتر دیده بشه و تشخیص
+                 سطرها راحت باشه». این قلم با تم هم‌رنگ می‌شود (ThemeService):
+                 روشن = #F6F9FC (آبی‌فیروزه‌ای بسیار ملایم) / تیره = #28303A. -->
+            <SolidColorBrush x:Key="App.ZebraRowBrush" Color="#F6F9FC" />
             <!-- ═══ چرخهٔ سی‌وهفتم (ریشهٔ قطعی پنج گزارش پیاپی سایدبار + بریدگی ساعت) ═══
                  MaterialDesign3.Defaults.xaml (که در MergedDictionaries بالا ادغام شده)
                  برای «همهٔ ToggleButtonها» استایل ضمنی تعریف می‌کند:
@@ -435,10 +440,22 @@
                 <Setter Property="RowHeight" Value="36" />
                 <Setter Property="GridLinesVisibility" Value="None" />
                 <Setter Property="BorderThickness" Value="0" />
-                <!-- نوار یک‌درمیان بسیار ملایم — راهنمای چشم در ردیف‌های پهن بدون
-                     حس «دفتر کل»؛ در تم تیره این رنگ خنثی خودش می‌نشیند -->
-                <Setter Property="AlternatingRowBackground" Value="#F6F9FC" />
+                <!-- نوار یک‌درمیان بسیار ملایم — قلم پویای مشترک با استایل ضمنی
+                     زیر (چرخهٔ ۷۴) تا در تم تیره هم خودش را تنظیم کند -->
+                <Setter Property="AlternationCount" Value="2" />
+                <Setter Property="AlternatingRowBackground" Value="{DynamicResource App.ZebraRowBrush}" />
                 <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+
+            <!-- ═══ چرخهٔ ۷۴ — استایل ضمنی جدول‌ها: گوره‌خری سراسری ═══
+                 هر DataGrid در هر صفحه/فرم — حتی بی‌استایل — سطرهای یک‌درمیان
+                 می‌گیرد؛ سازوکار داخلی AlternatingRowBackground انتخاب سطر را
+                 بی‌وقفه نگه می‌دارد (هایلایت انتخاب در قالب ردیف، مقدم است).
+                 مقادیر محلی هر جدول (رنگ دلخواه یا بدون نوار) بر این پیش‌فرض
+                 مقدم می‌ماند. -->
+            <Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
+                <Setter Property="AlternationCount" Value="2" />
+                <Setter Property="AlternatingRowBackground" Value="{DynamicResource App.ZebraRowBrush}" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>

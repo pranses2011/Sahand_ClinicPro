@@ -186,7 +186,7 @@
                                  behaviors:MoneyInput.NumericValue="{Binding BaseSalary, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
                                  materialDesign:TextFieldAssist.PrefixText="{DynamicResource App.CurrencyLabel}">
                             <materialDesign:HintAssist.Hint>
-                                <TextBlock><Run Text="حقوق پایه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=") — ماهانه" /></TextBlock>
+                                <TextBlock Foreground="#1F2937"><Run Text="حقوق پایه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=") — ماهانه" /></TextBlock>
                             </materialDesign:HintAssist.Hint>
                     </TextBox>
                     <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="درصد از سود خدمات (٪)"

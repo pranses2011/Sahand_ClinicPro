@@ -78,13 +78,13 @@
                         <Border Background="#E3F2FD" CornerRadius="10" Padding="12,8" Margin="0,0,0,10"
                                 Visibility="{Binding DispensePatient, Converter={StaticResource StringToVisibility}}">
                             <StackPanel>
-                                <TextBlock Text="{Binding DispensePatient, Mode=OneWay}" FontWeight="Bold" FontSize="14" />
+                                <TextBlock Text="{Binding DispensePatient, Mode=OneWay}" FontWeight="Bold" FontSize="14"  Foreground="#1F2937"/>
                                 <ItemsControl ItemsSource="{Binding DispenseItems}" Margin="0,6,0,0">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border Background="#FFFFFF" CornerRadius="8" Padding="9,5" Margin="0,0,0,4"
                                                     BorderBrush="#90CAF9" BorderThickness="1" HorizontalAlignment="Left">
-                                                <TextBlock Text="{Binding}" FontSize="12" />
+                                                <TextBlock Text="{Binding}" FontSize="12"  Foreground="#1F2937"/>
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>

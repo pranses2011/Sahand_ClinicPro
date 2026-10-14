@@ -38,7 +38,7 @@
                          materialDesign:TextFieldAssist.PrefixText="﷼"
                          Margin="0,0,0,12">
                     <materialDesign:HintAssist.Hint>
-                        <TextBlock><Run Text="حقوق پایه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=") — ماهانه" /></TextBlock>
+                        <TextBlock Foreground="#1F2937"><Run Text="حقوق پایه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=") — ماهانه" /></TextBlock>
                     </materialDesign:HintAssist.Hint>
                 </TextBox>
                 <TextBox materialDesign:HintAssist.Hint="درصد حقوق از سود خدمات (٪) — فقط از سود خدمات انجامی خود این پرسنل"

@@ -166,18 +166,18 @@
                         Background="#E8F5E9" Visibility="{Binding IsInProgress, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="PencilBoxOutline" Width="16" Height="16" VerticalAlignment="Center" Foreground="#2E7D32" />
-                        <TextBlock Text="قلم انتخاب‌شده:" FontSize="12" VerticalAlignment="Center" Margin="8,0,6,0" />
+                        <TextBlock Text="قلم انتخاب‌شده:" FontSize="12" VerticalAlignment="Center" Margin="8,0,6,0"  Foreground="#1F2937"/>
                         <TextBlock Text="{Binding SelectedItem.Medication, TargetNullValue='—'}" FontSize="12.5" FontWeight="SemiBold"
-                                   VerticalAlignment="Center" MinWidth="150" />
-                        <TextBlock Text="موجودی سیستم:" FontSize="11" Opacity="0.7" VerticalAlignment="Center" Margin="16,0,6,0" />
-                        <TextBlock Text="{Binding SelectedItem.SystemQty, TargetNullValue='—'}" FontSize="12" FontFamily="{DynamicResource App.CodeFont}" VerticalAlignment="Center" />
-                        <TextBlock Text="شمارش من:" FontSize="12" VerticalAlignment="Center" Margin="16,0,6,0" />
+                                   VerticalAlignment="Center" MinWidth="150"  Foreground="#1F2937"/>
+                        <TextBlock Text="موجودی سیستم:" FontSize="11" Opacity="0.7" VerticalAlignment="Center" Margin="16,0,6,0"  Foreground="#1F2937"/>
+                        <TextBlock Text="{Binding SelectedItem.SystemQty, TargetNullValue='—'}" FontSize="12" FontFamily="{DynamicResource App.CodeFont}" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                        <TextBlock Text="شمارش من:" FontSize="12" VerticalAlignment="Center" Margin="16,0,6,0"  Foreground="#1F2937"/>
                         <TextBox Text="{Binding CountInput, UpdateSourceTrigger=PropertyChanged}" Width="90" FontSize="12"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="عدد" />
                         <TextBox Text="{Binding CountNote, UpdateSourceTrigger=PropertyChanged}" Width="180" FontSize="12" Margin="8,0,0,0"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="یادداشت (اختیاری)" />
                         <Button Command="{Binding SaveCountCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="8,0,0,0">
-                            <materialDesign:PackIcon Kind="ContentSaveCheckOutline" Width="15" Height="15" />
+                            <materialDesign:PackIcon Kind="ContentSaveCheckOutline" Width="15" Height="15"  Foreground="#1F2937"/>
                         </Button>
                     </StackPanel>
                 </Border>

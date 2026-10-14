@@ -846,18 +846,27 @@
              کوچک شده بود ولی ریشهٔ مکانیزم باقی مانده بود؛ این بار کامل حذف شد و عمق
              بصری با حاشیهٔ پررنگ‌تر (۱٫۵px) + زمینهٔ سفید جبران می‌شود — بدون هیچ
              افکتی، هیچ لبه‌ای هرگز بریده نمی‌شود. -->
+        <!-- ═══ چرخهٔ ۷۴ (ششمین گزارش بریدگی پایین): انتقال ساختاری به بالا ═══
+             پس از پنج اصلاحِ پایین‌محور (حاشیه، میزبان، پایهٔ TranslateTransform،
+             حذف DropShadowEffect، MinHeight) مالک همچنان «بریدگی زیرِ توست‌ها» را
+             گزارش می‌کرد؛ به‌جای شانزدهمین وصلهٔ عددی، توست‌ها به «بالای میزکار،
+             زیر نوار بالا» منتقل شدند: در این جایگاه هیچ لبهٔ پایینی برای بریده‌شدن
+             وجود ندارد (کف توست روی محتوای صفحه می‌نشیند، نه روی مرز لایه) و
+             سازوکار هر چه که در محیط مالک (DPI کسری/درایور گرافیک) لبهٔ پایین
+             را می‌بُرید، اساساً منتفی است — الگوی رایج اعلان‌های ویندوز ۱۱ هم
+             همین است. انیمیشن ورود هم به «از بالا به پایین» برگردانده شد. -->
         <ItemsControl ItemsSource="{Binding Toasts}"
                       Grid.Row="1"
-                      VerticalAlignment="Bottom"
+                      VerticalAlignment="Top"
                       HorizontalAlignment="Center"
-                      Margin="0,0,0,16"
+                      Margin="0,12,0,0"
                       Panel.ZIndex="60"
                       IsHitTestVisible="True"
                       Focusable="False">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <!-- انبارش عمودی از پایین؛ جدیدترین زیرِ قبلی می‌نشیند -->
-                    <StackPanel Orientation="Vertical" VerticalAlignment="Bottom" />
+                    <!-- انبارش عمودی از بالا؛ جدیدترین زیرِ قبلی می‌نشیند -->
+                    <StackPanel Orientation="Vertical" VerticalAlignment="Top" />
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
@@ -890,7 +899,7 @@
                                         BorderBrush="#CDD5E0"
                                         BorderThickness="1.5"
                                         Padding="0"
-                                        MinHeight="52"
+                                        MinHeight="56"
                                         MaxWidth="470"
                                         SnapsToDevicePixels="True"
                                         UseLayoutRounding="True"
@@ -950,13 +959,15 @@
                                             </Border>
 
                                             <!-- متن پیام — تیره، نیمه‌درشت، راست‌چین (RTL طبیعی) -->
+                                            <!-- چرخهٔ ۷۴: حاشیهٔ عمودی متن ۸ ← ۱۰ پیکسل
+                                                 (فضای تنفس نویسه‌های فارسی با دُم) -->
                                             <TextBlock Grid.Column="1"
                                                        Text="{Binding Text}"
                                                        FontSize="13.5" FontWeight="SemiBold"
                                                        Foreground="#1F2937"
                                                        TextWrapping="Wrap"
                                                        VerticalAlignment="Center"
-                                                       Margin="12,8,14,8"
+                                                       Margin="12,10,14,10"
                                                        MaxWidth="360" />
 
                                             <!-- ضربدرِ بستن — کم‌رنگ؛ با هاور پررنگ -->
@@ -1012,7 +1023,7 @@
                                                 </DoubleAnimation>
                                                 <DoubleAnimation Storyboard.TargetName="ToastShift"
                                                                  Storyboard.TargetProperty="Y"
-                                                                 From="14" To="0" Duration="0:0:0.26"
+                                                                 From="-14" To="0" Duration="0:0:0.26"
                                                                  FillBehavior="HoldEnd">
                                                     <DoubleAnimation.EasingFunction>
                                                         <CubicEase EasingMode="EaseOut" />

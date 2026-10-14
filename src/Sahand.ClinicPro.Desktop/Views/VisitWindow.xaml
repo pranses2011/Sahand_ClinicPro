@@ -35,7 +35,7 @@
             </Border>
             <Border DockPanel.Dock="Left" Background="#ECEFF1" CornerRadius="8" Padding="10,4"
                     VerticalAlignment="Center" Margin="10,0,0,0">
-                <TextBlock FontFamily="{DynamicResource App.CodeFont}" FontSize="13">
+                <TextBlock FontFamily="{DynamicResource App.CodeFont}" FontSize="13" Foreground="#1F2937">
                     <Run Text="⏱️ " /><Run Text="{Binding ElapsedText, Mode=OneWay}" FontWeight="Bold" />
                 </TextBlock>
             </Border>
@@ -84,21 +84,21 @@
                                 </Border>
                                 <TextBlock Text="{Binding PatientNationalCode, Mode=OneWay, FallbackValue=بیمار}"
                                            FontWeight="Bold" FontSize="13" TextWrapping="Wrap"
-                                           HorizontalAlignment="Center" />
+                                           HorizontalAlignment="Center"  Foreground="#1F2937"/>
                                 <TextBlock Text="{Binding PatientMrn, Mode=OneWay, FallbackValue=''}"
                                            FontSize="11" Opacity="0.7" FontFamily="{DynamicResource App.CodeFont}"
-                                           HorizontalAlignment="Center" Margin="0,2,0,0" />
+                                           HorizontalAlignment="Center" Margin="0,2,0,0"  Foreground="#1F2937"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
-                                    <TextBlock Text="{Binding PatientAgeGender, Mode=OneWay, FallbackValue=''}" FontSize="11" />
+                                    <TextBlock Text="{Binding PatientAgeGender, Mode=OneWay, FallbackValue=''}" FontSize="11"  Foreground="#1F2937"/>
                                     <TextBlock Text="{Binding PatientBloodType, Mode=OneWay, FallbackValue='', TargetNullValue=''}"
-                                               FontSize="11" Margin="8,0,0,0" />
+                                               FontSize="11" Margin="8,0,0,0"  Foreground="#1F2937"/>
                                 </StackPanel>
                                 <TextBlock Text="{Binding PatientMobile, Mode=OneWay, FallbackValue=''}"
                                            FontSize="10.5" Opacity="0.7" FontFamily="{DynamicResource App.CodeFont}"
-                                           HorizontalAlignment="Center" Margin="0,3,0,0" />
+                                           HorizontalAlignment="Center" Margin="0,3,0,0"  Foreground="#1F2937"/>
                                 <TextBlock Text="{Binding PatientInsurance, Mode=OneWay, FallbackValue=''}"
                                            FontSize="10.5" Opacity="0.7"
-                                           HorizontalAlignment="Center" Margin="0,2,0,0" />
+                                           HorizontalAlignment="Center" Margin="0,2,0,0"  Foreground="#1F2937"/>
                             </StackPanel>
                         </Border>
 
@@ -267,9 +267,9 @@
                                                 BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                                                 BorderThickness="1" Background="#FAFAFA">
                                             <StackPanel HorizontalAlignment="Center">
-                                                <TextBlock Text="{Binding Title}" FontSize="10" FontFamily="{DynamicResource App.CodeFont}" Opacity="0.6" HorizontalAlignment="Center" />
-                                                <TextBlock Text="{Binding PersianTitle}" FontSize="10.5" Opacity="0.75" HorizontalAlignment="Center" />
-                                                <TextBlock FontSize="16" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" HorizontalAlignment="Center" Margin="0,3,0,0">
+                                                <TextBlock Text="{Binding Title}" FontSize="10" FontFamily="{DynamicResource App.CodeFont}" Opacity="0.6" HorizontalAlignment="Center"  Foreground="#1F2937"/>
+                                                <TextBlock Text="{Binding PersianTitle}" FontSize="10.5" Opacity="0.75" HorizontalAlignment="Center"  Foreground="#1F2937"/>
+                                                <TextBlock FontSize="16" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" HorizontalAlignment="Center" Margin="0,3,0,0" Foreground="#1F2937">
                                                     <Run Text="{Binding Value, Mode=OneWay, FallbackValue=—}" />
                                                     <Run Text="{Binding Unit, Mode=OneWay}" FontSize="9" FontWeight="Normal" Foreground="#888888" />
                                                 </TextBlock>
@@ -367,7 +367,7 @@
                             </ListBox>
                             <Border Background="#E8F5E9" CornerRadius="8" Padding="10,5" Margin="0,8,0,0"
                                     Visibility="{Binding PrimaryDiagnosis, Converter={StaticResource NullToVisibility}}">
-                                <TextBlock FontSize="12.5">
+                                <TextBlock FontSize="12.5" Foreground="#1F2937">
                                     <Run Text="✅ تشخیص اصلی: " /><Run Text="{Binding PrimaryDiagnosis.Code, Mode=OneWay}" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
                                     <Run Text=" — " /><Run Text="{Binding PrimaryDiagnosis.Title, Mode=OneWay}" FontWeight="SemiBold" />
                                 </TextBlock>

@@ -61,7 +61,7 @@
                 <materialDesign:PackIcon Kind="TextSubject" Width="15" Height="15"
                                          Foreground="#1565C0" VerticalAlignment="Center" Margin="0,0,8,0" />
                 <TextBlock Text="{Binding Description}" FontSize="12.5"
-                           TextWrapping="Wrap" VerticalAlignment="Center" />
+                           TextWrapping="Wrap" VerticalAlignment="Center"  Foreground="#1F2937"/>
             </StackPanel>
         </Border>
 
@@ -91,7 +91,7 @@
             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                 <Border CornerRadius="10" Padding="12,7" Margin="0,0,8,0"
                         Background="#FFF8E1" BorderBrush="#F0E0A0" BorderThickness="1">
-                    <TextBlock FontSize="12" FontWeight="Bold">
+                    <TextBlock FontSize="12" FontWeight="Bold" Foreground="#1F2937">
                         <Run Text="جمع بدهکار: " />
                         <Run Text="{Binding TotalDebit, Mode=OneWay, Converter={StaticResource CurrencyRial}}"
                              FontFamily="{DynamicResource App.CodeFont}" />
@@ -99,7 +99,7 @@
                 </Border>
                 <Border CornerRadius="10" Padding="12,7"
                         Background="#E8F5E9" BorderBrush="#B7DFC0" BorderThickness="1">
-                    <TextBlock FontSize="12" FontWeight="Bold">
+                    <TextBlock FontSize="12" FontWeight="Bold" Foreground="#1F2937">
                         <Run Text="جمع بستانکار: " />
                         <Run Text="{Binding TotalCredit, Mode=OneWay, Converter={StaticResource CurrencyRial}}"
                              FontFamily="{DynamicResource App.CodeFont}" />

@@ -47,7 +47,7 @@
                                    HorizontalAlignment="Center" />
                         <TextBlock Text="{Binding DoctorName}" FontSize="9" Opacity="0.55"
                                    HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                   MaxWidth="80" />
+                                   MaxWidth="80"  Foreground="#1F2937"/>
                     </StackPanel>
 
                     <!-- نوار وضعیت رنگی — سمت راست -->
@@ -86,7 +86,7 @@
                         <StackPanel Margin="9,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold"
                                        FontSize="12.5" Foreground="#1F2937" />
-                            <TextBlock Text="{Binding StatusText}" FontSize="9.5" Opacity="0.6" />
+                            <TextBlock Text="{Binding StatusText}" FontSize="9.5" Opacity="0.6"  Foreground="#1F2937"/>
                         </StackPanel>
                     </StackPanel>
                 </DockPanel>
@@ -134,7 +134,7 @@
                                        Foreground="#102A43" FontFamily="{DynamicResource App.CodeFont}"
                                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                             <TextBlock Text="{Binding CompareText, Mode=OneWay}" FontSize="9.5"
-                                       Opacity="0.55" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
+                                       Opacity="0.55" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"  Foreground="#1F2937"/>
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -388,7 +388,7 @@
                                                      Foreground="#90A4AE" VerticalAlignment="Center" />
                             <TextBlock FontSize="11.5" Opacity="0.75" Margin="10,0,0,0" TextWrapping="Wrap"
                                        VerticalAlignment="Center"
-                                       Text="هنوز میانبری نساخته‌اید — صفحات پرکاربرد خود را با دکمهٔ نارنجی «+» به این پنل اضافه کنید تا بدون گشتن در منو، با یک کلیک باز شوند." />
+                                       Text="هنوز میانبری نساخته‌اید — صفحات پرکاربرد خود را با دکمهٔ نارنجی «+» به این پنل اضافه کنید تا بدون گشتن در منو، با یک کلیک باز شوند."  Foreground="#1F2937"/>
                         </StackPanel>
                     </Border>
 
@@ -401,7 +401,10 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,0,8,8" Width="168" MinHeight="76">
+                                <!-- چرخهٔ ۷۴: MinHeight ۷۶ ← ۸۴ و Padding عمودی ۸ ← ۱۰ —
+                                     فضای تنفس بیشتر برای زیرنویس دسته (گزارش مالک:
+                                     «کلیدهای میانبر هنوز هم بریدگی زیرشون رو دارند») -->
+                                <Grid Margin="0,0,8,8" Width="168" MinHeight="84">
                                     <!-- کاشی اصلی — کلیک = ناوبری مستقیم
                                          (چرخهٔ ۷۳: Height قطعی ۷۶ ← MinHeight؛ محتوا هرگز
                                          از مرز پایین کاشی بیرون نمی‌زند و زیرنویس دسته
@@ -416,7 +419,7 @@
                                                         Background="{Binding GroupColor, Converter={StaticResource HexBrush}, ConverterParameter=tint, FallbackValue=#F5F7FB}"
                                                         BorderBrush="{Binding GroupColor, Converter={StaticResource HexToBrush}, FallbackValue=#CFD8DC}"
                                                         BorderThickness="1.3"
-                                                        MinHeight="76" Padding="12,8"
+                                                        MinHeight="84" Padding="12,10"
                                                         UseLayoutRounding="True" SnapsToDevicePixels="True">
                                                     <DockPanel VerticalAlignment="Center">
                                                         <!-- چیپ آیکون — مربع گوشه‌گرد هم‌رنگ دسته -->
@@ -431,10 +434,10 @@
                                                         <StackPanel VerticalAlignment="Center">
                                                             <TextBlock Text="{Binding Title, TargetNullValue=بدون عنوان, FallbackValue=بدون عنوان}"
                                                                        FontSize="12" FontWeight="Bold" Foreground="#1F2937"
-                                                                       TextTrimming="CharacterEllipsis" MaxWidth="100" />
+                                                                       TextTrimming="CharacterEllipsis" />
                                                             <TextBlock Text="{Binding Group}" FontSize="9.5"
                                                                        Foreground="#78909C" Margin="0,3,0,0"
-                                                                       TextTrimming="CharacterEllipsis" MaxWidth="100" />
+                                                                       TextTrimming="CharacterEllipsis" />
                                                         </StackPanel>
                                                     </DockPanel>
                                                 </Border>
@@ -539,17 +542,17 @@
                     </DockPanel>
                     <WrapPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,3,14,3">
-                            <TextBlock Text="نمودار درآمد" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBlock Text="نمودار درآمد" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0"  Foreground="#1F2937"/>
                             <ToggleButton IsChecked="{Binding ShowRevenueChart}"
                                           Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,3,14,3">
-                            <TextBlock Text="نوبت‌های پیش‌رو" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBlock Text="نوبت‌های پیش‌رو" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0"  Foreground="#1F2937"/>
                             <ToggleButton IsChecked="{Binding ShowUpcoming}"
                                           Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,3,14,3">
-                            <TextBlock Text="فعالیت‌های اخیر" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBlock Text="فعالیت‌های اخیر" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0"  Foreground="#1F2937"/>
                             <ToggleButton IsChecked="{Binding ShowActivities}"
                                           Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
                         </StackPanel>
@@ -557,12 +560,12 @@
                                 Padding="10,2" FontSize="10.5" VerticalAlignment="Center"
                                 ToolTip="بازگشت همهٔ کارت‌ها و بخش‌ها به حالت پیش‌فرض">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Restore" Width="12" Height="12" VerticalAlignment="Center" />
-                                <TextBlock Text="چیدمان پیش‌فرض" Margin="5,0,0,0" VerticalAlignment="Center" />
+                                <materialDesign:PackIcon Kind="Restore" Width="12" Height="12" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                <TextBlock Text="چیدمان پیش‌فرض" Margin="5,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
                             </StackPanel>
                         </Button>
                         <TextBlock Text="با دکمه‌های ⬆⬇ پایین کارت‌ها ترتیب‌شان را جابه‌جا کنید و با سوییچ کنارشان پنهان‌شان کنید"
-                                   FontSize="10" Opacity="0.6" VerticalAlignment="Center" Margin="0,3,0,3" />
+                                   FontSize="10" Opacity="0.6" VerticalAlignment="Center" Margin="0,3,0,3"  Foreground="#1F2937"/>
                     </WrapPanel>
                 </StackPanel>
             </Border>
@@ -606,8 +609,8 @@
                                     <materialDesign:PackIcon Kind="ChartAreaspline" Width="15" Height="15" Foreground="#5E35B1"
                                                              HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Border>
-                                <TextBlock Text="روند درآمد" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0" />
-                                <TextBlock FontSize="10" Opacity="0.5" VerticalAlignment="Center" Margin="6,2,0,0">
+                                <TextBlock Text="روند درآمد" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0"  Foreground="#1F2937"/>
+                                <TextBlock FontSize="10" Opacity="0.5" VerticalAlignment="Center" Margin="6,2,0,0" Foreground="#1F2937">
                                     <Run Text="(" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" />
                                 </TextBlock>
                             </StackPanel>
@@ -641,7 +644,7 @@
                                 <materialDesign:PackIcon Kind="ChartDonut" Width="15" Height="15" Foreground="#1565C0"
                                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <TextBlock Text="وضعیت نوبت‌های امروز" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0" />
+                            <TextBlock Text="وضعیت نوبت‌های امروز" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0"  Foreground="#1F2937"/>
                         </StackPanel>
 
                         <charts:DoughnutChart Grid.Row="1" Points="{Binding StatusMix}"
@@ -676,7 +679,7 @@
                                 <materialDesign:PackIcon Kind="ChartBar" Width="15" Height="15" Foreground="#2E7D32"
                                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <TextBlock Text="ویزیت‌های ۷ روز اخیر" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0" />
+                            <TextBlock Text="ویزیت‌های ۷ روز اخیر" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0"  Foreground="#1F2937"/>
                         </StackPanel>
 
                         <charts:ColumnChart Grid.Row="1" Points="{Binding VisitsChart}" ValueFormat="N0"
@@ -699,7 +702,7 @@
                                 <materialDesign:PackIcon Kind="ClockFast" Width="15" Height="15" Foreground="#E65100"
                                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <TextBlock Text="نوبت‌های پیش‌رو" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0" />
+                            <TextBlock Text="نوبت‌های پیش‌رو" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0"  Foreground="#1F2937"/>
                         </StackPanel>
 
                         <ListBox Grid.Row="1" ItemsSource="{Binding UpcomingAppointments}"
@@ -733,7 +736,7 @@
                                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <TextBlock Text="مرکز هشدار انبار" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0"
-                                       VerticalAlignment="Center" />
+                                       VerticalAlignment="Center"  Foreground="#1F2937"/>
                             <!-- چیپ‌های پلکانی -->
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                                 <Border CornerRadius="9" Padding="8,2" Margin="4,0" Background="#FDECEA"
@@ -800,9 +803,9 @@
                     <StackPanel Visibility="{Binding IsAlertCenterOpen, Converter={StaticResource BoolToVis}}" Margin="2,8,2,0">
                         <DockPanel Margin="2,0,2,4">
                             <TextBlock Text="بچ‌های در حال انقضا (نزدیک‌ترین اول)" FontSize="12" FontWeight="SemiBold"
-                                       VerticalAlignment="Center" />
+                                       VerticalAlignment="Center"  Foreground="#1F2937"/>
                             <TextBlock Text="حداکثر ۲۰ قلم" FontSize="10" Opacity="0.5"
-                                       HorizontalAlignment="Left" VerticalAlignment="Center" Margin="6,0,0,0" />
+                                       HorizontalAlignment="Left" VerticalAlignment="Center" Margin="6,0,0,0"  Foreground="#1F2937"/>
                         </DockPanel>
                         <ItemsControl ItemsSource="{Binding ExpiringItems}">
                             <ItemsControl.ItemTemplate>
@@ -819,7 +822,7 @@
                                             </Border>
                                             <StackPanel Orientation="Vertical" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding MedicationName}" FontSize="12.5" FontWeight="SemiBold" Foreground="#1F2937" />
-                                                <TextBlock FontSize="10.5" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}">
+                                                <TextBlock FontSize="10.5" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}" Foreground="#1F2937">
                                                     <Run Text="بچ " /><Run Text="{Binding BatchNumber, Mode=OneWay, TargetNullValue=—}" /><Run Text=" · انقضا " /><Run Text="{Binding ExpiryDateShamsi, Mode=OneWay}" /><Run Text=" · موجودی " /><Run Text="{Binding QuantityText, Mode=OneWay}" />
                                                 </TextBlock>
                                             </StackPanel>
@@ -834,7 +837,7 @@
 
                         <DockPanel Margin="2,10,2,4">
                             <TextBlock Text="زیر حداقل موجودی (بدترین وضعیت اول)" FontSize="12" FontWeight="SemiBold"
-                                       VerticalAlignment="Center" />
+                                       VerticalAlignment="Center"  Foreground="#1F2937"/>
                         </DockPanel>
                         <ItemsControl ItemsSource="{Binding LowStockItems}">
                             <ItemsControl.ItemTemplate>
@@ -850,7 +853,7 @@
                                             </Border>
                                             <StackPanel Orientation="Vertical" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding MedicationName}" FontSize="12.5" FontWeight="SemiBold" Foreground="#1F2937" />
-                                                <TextBlock FontSize="10.5" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}">
+                                                <TextBlock FontSize="10.5" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}" Foreground="#1F2937">
                                                     <Run Text="بچ " /><Run Text="{Binding BatchNumber, Mode=OneWay, TargetNullValue=—}" /><Run Text=" · موجودی " /><Run Text="{Binding QuantityText, Mode=OneWay}" /><Run Text=" · حداقل " /><Run Text="{Binding MinStockText, Mode=OneWay}" />
                                                 </TextBlock>
                                             </StackPanel>
@@ -883,7 +886,7 @@
                             <materialDesign:PackIcon Kind="History" Width="15" Height="15" Foreground="#455A64"
                                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
-                        <TextBlock Text="فعالیت‌های اخیر" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0" />
+                        <TextBlock Text="فعالیت‌های اخیر" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0"  Foreground="#1F2937"/>
                     </StackPanel>
 
                     <DataGrid Grid.Row="1" ItemsSource="{Binding RecentActivities}"

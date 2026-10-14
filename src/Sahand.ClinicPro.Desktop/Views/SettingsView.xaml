@@ -150,8 +150,8 @@
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
-                                            <TextBlock Text="{Binding Name}" FontSize="14.5" FontWeight="Bold" VerticalAlignment="Center" />
-                                            <TextBlock Text="{Binding ConnectedText}" FontSize="11.5" Margin="12,0,0,0" VerticalAlignment="Center" Opacity="0.8" />
+                                            <TextBlock Text="{Binding Name}" FontSize="14.5" FontWeight="Bold" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                            <TextBlock Text="{Binding ConnectedText}" FontSize="11.5" Margin="12,0,0,0" VerticalAlignment="Center" Opacity="0.8"  Foreground="#1F2937"/>
                                         </StackPanel>
                                         <ToggleButton Grid.Row="0" Grid.Column="1" IsChecked="{Binding IsEnabled, Mode=TwoWay}"
                                                       Style="{StaticResource MaterialDesignSwitchToggleButton}" ToolTip="فعال" />
@@ -273,16 +273,16 @@
                                                     Cursor="Hand">
                                                 <StackPanel>
                                                     <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding Icon}" FontSize="17" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Icon}" FontSize="17" VerticalAlignment="Center"  Foreground="#1F2937"/>
                                                         <TextBlock Text="{Binding Title}" FontSize="12.5" Margin="7,0,4,0"
-                                                                   VerticalAlignment="Center" FontWeight="SemiBold" />
+                                                                   VerticalAlignment="Center" FontWeight="SemiBold"  Foreground="#1F2937"/>
                                                         <Ellipse Width="13" Height="13" VerticalAlignment="Center"
                                                                  Fill="{Binding PrimaryColor}"
                                                                  Stroke="#00000022" StrokeThickness="1" />
                                                     </StackPanel>
                                                     <!-- مشخصات ظاهری تم — گوشه و چگالی (چرخه بیستم) -->
                                                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                                        <TextBlock Text="{Binding DensityText, Mode=OneWay}" FontSize="10" Opacity="0.7" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding DensityText, Mode=OneWay}" FontSize="10" Opacity="0.7" VerticalAlignment="Center"  Foreground="#1F2937"/>
                                                     </StackPanel>
                                                 </StackPanel>
                                             </Border>

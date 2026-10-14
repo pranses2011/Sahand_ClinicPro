@@ -254,7 +254,7 @@
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding ModuleTitle}"
                                                        FontWeight="Bold" FontSize="12.5" Margin="0,0,0,4"
-                                                       TextTrimming="CharacterEllipsis" />
+                                                       TextTrimming="CharacterEllipsis"  Foreground="#1F2937"/>
                                             <!-- شمارندهٔ «n از m» — چرخهٔ ۴۴ -->
                                             <Border Grid.Row="0" Grid.Column="1" CornerRadius="8" Padding="7,1.5"
                                                     Background="#E8F1FB" BorderBrush="#CFE2F5" BorderThickness="1"
@@ -267,7 +267,7 @@
                                                  (درس چرخه بیستم — خطای TargetType mismatch) -->
                                             <ToggleButton Grid.Row="0" Grid.Column="2" Command="{Binding CheckAllCommand}"
                                                     Style="{StaticResource MaterialDesignFlatToggleButton}" ToolTip="انتخاب همه این ماژول" Margin="2,0">
-                                                <materialDesign:PackIcon Kind="CheckAll" Width="13" Height="13" />
+                                                <materialDesign:PackIcon Kind="CheckAll" Width="13" Height="13"  Foreground="#1F2937"/>
                                             </ToggleButton>
                                             <WrapPanel Grid.Row="1" Grid.ColumnSpan="3">
                                                 <ItemsControl ItemsSource="{Binding VisiblePermissions}">
@@ -279,7 +279,7 @@
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
                                                             <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" Margin="2,2,8,2" FontSize="11">
-                                                                <TextBlock Text="{Binding ActionTitle}" ToolTip="{Binding Name}" />
+                                                                <TextBlock Text="{Binding ActionTitle}" ToolTip="{Binding Name}"  Foreground="#1F2937"/>
                                                             </CheckBox>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
