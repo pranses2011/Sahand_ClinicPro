@@ -76,27 +76,118 @@
             <TabItem Header="✅ نتایج آماده" Tag="4" />
             <TabItem Header="🕐 سفارش‌شده‌ها" Tag="1" />
 
-            <!-- تب ۵: کاتالوگ تست‌ها -->
+            <!-- ═══ تب ۵: کاتالوگ تست‌ها — بازطراحی چرخهٔ ۷۲ ═══
+                 گزارش مالک: «بازه‌های مرجع و حدود بحرانی هر آزمایش رو بطور کامل
+                 و دقیق تکمیل کن… در صورت نیاز بتونم اصلاحشون بکنم» — ستون‌های
+                 بازهٔ مرد/زن/کودک + حدود بحرانی (قرمز) + جستجو + دکمهٔ ویرایش
+                 هر ردیف که فرم LabTestEditWindow را باز می‌کند. -->
             <TabItem Header="📖 کاتالوگ تست‌ها" Tag="-1">
-                <DataGrid ItemsSource="{Binding TestCatalog}"
-                          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                          HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="نام آزمایش" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="220" FontWeight="Bold" />
-                        <DataGridTextColumn Header="دسته" Binding="{Binding Category, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="130" />
-                        <DataGridTextColumn Header="واحد" Binding="{Binding Unit, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="90" />
-                        <DataGridTextColumn Width="120"><DataGridTextColumn.Header><TextBlock><Run Text="قیمت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
-                            <DataGridTextColumn.Binding>
-                                <Binding Path="Price" StringFormat="{}{0:N0}" />
-                            </DataGridTextColumn.Binding>
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <Grid Margin="0,8,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- نوار جستجو + نشان خلاصه -->
+                    <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                        <Border DockPanel.Dock="Left" CornerRadius="9" Padding="9,3" Background="#E8F5E9"
+                                BorderBrush="#A5D6A7" BorderThickness="1" VerticalAlignment="Center"
+                                ToolTip="شمار آزمایش‌ها / آزمایش‌های دارای بازهٔ ساخت‌یافته / آزمایش‌های دارای حد بحرانی">
+                            <TextBlock Text="{Binding CatalogSummaryText, Converter={StaticResource PersianDigits}}"
+                                       FontSize="11" Foreground="#1B5E20" />
+                        </Border>
+                        <TextBox materialDesign:HintAssist.Hint="🔍 جستجوی آزمایش (نام فارسی / انگلیسی / کد)"
+                                 Text="{Binding CatalogSearch, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Width="290" VerticalAlignment="Center">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding SearchCatalogCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
+                    </DockPanel>
+
+                    <!-- جدول کاتالوگ کامل — با بازه‌ها و حدود بحرانی -->
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding TestCatalog}"
+                              VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                              ScrollViewer.IsDeferredScrollingEnabled="True"
+                              AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                              HeadersVisibility="Column" FontSize="11.5" AlternatingRowBackground="#F7FAFD">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="نام آزمایش" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="200" FontWeight="Bold" />
+                            <DataGridTextColumn Header="کد" Binding="{Binding TestCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="80"
+                                                FontFamily="{DynamicResource App.CodeFont}" />
+                            <DataGridTextColumn Header="دسته" Binding="{Binding Category, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="105" />
+                            <DataGridTextColumn Header="بازهٔ مردان" Binding="{Binding RangeMaleText, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="105">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#1565C0" />
+                                        <Setter Property="HorizontalAlignment" Value="Center" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="بازهٔ زنان" Binding="{Binding RangeFemaleText, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="105">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#C2185B" />
+                                        <Setter Property="HorizontalAlignment" Value="Center" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="بازهٔ کودک" Binding="{Binding RangeChildText, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="130">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#E65100" />
+                                        <Setter Property="HorizontalAlignment" Value="Center" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <!-- حدود بحرانی — رنگ از CriticalBrush (قرمز = ثبت‌شده) -->
+                            <DataGridTemplateColumn Header="حدود بحرانی" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding CriticalText, Converter={StaticResource PersianDigits}}"
+                                                   Foreground="{Binding CriticalBrush, Converter={StaticResource HexToBrush}}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   FontWeight="SemiBold" FontFamily="{DynamicResource App.CodeFont}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="واحد" Binding="{Binding Unit, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="85" />
+                            <DataGridTextColumn Width="110">
+                                <DataGridTextColumn.Header>
+                                    <TextBlock>
+                                        <Run Text="قیمت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" />
+                                    </TextBlock>
+                                </DataGridTextColumn.Header>
+                                <DataGridTextColumn.Binding>
+                                    <Binding Path="Price" StringFormat="{}{0:N0}" />
+                                </DataGridTextColumn.Binding>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <!-- دکمهٔ ویرایش — بازکردن فرم بازه‌ها (مالک) -->
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.EditTestCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                MinHeight="30" MinWidth="78" Cursor="Hand" Focusable="False"
+                                                ToolTip="ویرایش بازه‌های مرجع و حدود بحرانی این آزمایش">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="Pencil" Width="13" Height="13" VerticalAlignment="Center" />
+                                                <TextBlock Text="ویرایش" Margin="5,0,0,0" VerticalAlignment="Center" FontSize="11" />
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
             </TabItem>
         </TabControl>
 

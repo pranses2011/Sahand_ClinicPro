@@ -286,37 +286,193 @@ public partial class LabViewModel : ViewModelBase
         public int ItemsCount { get; set; }
     }
 
-    /* ── کاتالوگ تست‌ها — تب ۵ گام U10 ── */
+    /* ── کاتالوگ تست‌ها — تب ۵ گام U10 + بازطراحی چرخهٔ ۷۲ ── */
 
-    /// <summary>آیتم کاتالوگ تست</summary>
-    public record TestCatalogRow(string Name, string? Category, string? Unit, decimal Price);
+    /* ═══ چرخهٔ ۷۲ (گزارش مالک) — کاتالوگ کامل با بازه‌های مرجع ═══
+       «بازه‌های مرجع و حدود بحرانی هر آزمایش رو بطور کامل و دقیق تکمیل کن…
+       در صورت نیاز بتونم اصلاحشون بکنم» — ردیف کاتالوگ از ۴ فیلد نمایشی
+       به همهٔ ستون‌های ساخت‌یافتهٔ بازه + حدود بحرانی ارتقا یافت و از
+       endpoint جدید lab/tests/catalog تغذیه می‌شود؛ دکمهٔ ویرایش هر ردیف
+       فرم LabTestEditWindow را برای مالک باز می‌کند. */
 
-    /// <summary>کاتالوگ تست‌های فعال</summary>
+    /// <summary>
+    /// آیتم کاتالوگ تست — نسخهٔ کامل چرخهٔ ۷۲ با بازه‌های ساخت‌یافته.
+    /// فیلدهای عددی تهی‌پذیرند (آزمایش کیفی بدون بازه)؛ رشته‌های نمایشی
+    /// بازه برای ستون «بازهٔ مرجع» جدول ساخته می‌شوند (RangeMale/Female/...).
+    /// </summary>
+    public record TestCatalogRow(
+        long Id,
+        string Name,
+        string? TestNameEn,
+        string? TestCode,
+        string? Category,
+        string? SampleType,
+        string? Unit,
+        decimal Price,
+        int? TurnAroundTime,
+        string? NormalRangeMale,
+        string? NormalRangeFemale,
+        decimal? RefMinAdultMale, decimal? RefMaxAdultMale,
+        decimal? RefMinAdultFemale, decimal? RefMaxAdultFemale,
+        decimal? RefMinChild, decimal? RefMaxChild, int? ChildAgeMaxYears,
+        decimal? CriticalLow, decimal? CriticalHigh,
+        bool IsActive)
+    {
+        /// <summary>متن بازهٔ مردان — «۱۳٫۵ تا ۱۷٫۵» یا «—»</summary>
+        public string RangeMaleText => FormatRange(RefMinAdultMale, RefMaxAdultMale);
+
+        /// <summary>متن بازهٔ زنان</summary>
+        public string RangeFemaleText => FormatRange(RefMinAdultFemale, RefMaxAdultFemale);
+
+        /// <summary>متن بازهٔ کودک + سن در پرانتز</summary>
+        public string RangeChildText
+        {
+            get
+            {
+                var txt = FormatRange(RefMinChild, RefMaxChild);
+                if (txt == "—" || ChildAgeMaxYears is not { } age)
+                    return txt;
+                return $"{txt} (تا {Helpers.Money.ToPersianDigits(age.ToString())} سال)";
+            }
+        }
+
+        /// <summary>متن حدود بحرانی — «کمتر از ۲٫۵ یا بیشتر از ۶٫۲»</summary>
+        public string CriticalText
+        {
+            get
+            {
+                // مقادیر محلی — تحلیل جریان کامپایلر با متغیرهای الگوی سوئیچ امن نیست
+                if (CriticalLow.HasValue && CriticalHigh.HasValue)
+                    return $"<{FaNum(CriticalLow.Value)} یا >{FaNum(CriticalHigh.Value)}";
+                if (CriticalLow.HasValue)
+                    return $"<{FaNum(CriticalLow.Value)}";
+                if (CriticalHigh.HasValue)
+                    return $">{FaNum(CriticalHigh.Value)}";
+                return "—";
+            }
+        }
+
+        /// <summary>رنگ ستون بحرانی — قرمز اگر حد ثبت شده باشد</summary>
+        public string CriticalBrush => CriticalLow.HasValue || CriticalHigh.HasValue ? "#C62828" : "#90A4AE";
+
+        /// <summary>قالب‌بندی یک بازهٔ تهی‌پذیر با ارقام فارسی</summary>
+        private static string FormatRange(decimal? min, decimal? max) => (min, max) switch
+        {
+            (null, null) => "—",
+            ({ } lo, { } hi) => $"{Helpers.Money.ToPersianDigits(lo.ToString("0.####"))} تا {Helpers.Money.ToPersianDigits(hi.ToString("0.####"))}",
+            ({ } lo, null) => $"از {Helpers.Money.ToPersianDigits(lo.ToString("0.####"))}",
+            (null, { } hi) => $"تا {Helpers.Money.ToPersianDigits(hi.ToString("0.####"))}"
+        };
+
+        /// <summary>عدد با ارقام فارسی و حداکثر ۴ رقم اعشار — برای متن بحرانی</summary>
+        private static string FaNum(decimal value)
+            => Helpers.Money.ToPersianDigits(value.ToString("0.####"));
+    }
+
+    /// <summary>کاتالوگ کامل تست‌ها (با بازه‌ها و حدود بحرانی)</summary>
     [ObservableProperty]
     private ObservableCollection<TestCatalogRow> _testCatalog = new();
 
-    /// <summary>بارگذاری کاتالوگ تست‌ها از داده مرجع</summary>
+    /// <summary>عبارت جستجوی کاتالوگ — فارسی/انگلیسی/کد</summary>
+    [ObservableProperty]
+    private string? _catalogSearch;
+
+    /// <summary>شمار تست‌های دارای بازهٔ ساخت‌یافته — نشان سربرگ کاتالوگ</summary>
+    [ObservableProperty]
+    private string _catalogSummaryText = "—";
+
+    /// <summary>
+    /// بارگذاری کاتالوگ کامل تست‌ها — چرخهٔ ۷۲ از endpoint جدید با همهٔ
+    /// بازه‌های مرجع و حدود بحرانی؛ خلاصهٔ «چند تست بازهٔ ثبت‌شده دارد» هم
+    /// برای نشان سربرگ ساخته می‌شود.
+    /// </summary>
     public async Task LoadCatalogAsync()
     {
-        var response = await _api.GetAsync<CatalogResponse>("lookups/lab-tests");
+        var query = "lab/tests/catalog" +
+                    (string.IsNullOrWhiteSpace(CatalogSearch) ? "" : $"?search={Uri.EscapeDataString(CatalogSearch.Trim())}");
+        var response = await _api.GetAsync<CatalogResponse>(query);
         if (response?.Data is null) return;
-        TestCatalog = new ObservableCollection<TestCatalogRow>(
-            response.Data.Select(t => new TestCatalogRow(t.Name, t.Category, t.Unit, t.Price)));
+
+        TestCatalog = new ObservableCollection<TestCatalogRow>(response.Data.Select(MapCatalogRow));
+
+        // نشان خلاصه — چند تست بازهٔ ساخت‌یافته/حد بحرانی دارد
+        var withRanges = TestCatalog.Count(t => t.RefMinAdultMale.HasValue || t.RefMaxAdultMale.HasValue
+                                                || t.RefMinAdultFemale.HasValue || t.RefMaxAdultFemale.HasValue);
+        var withCritical = TestCatalog.Count(t => t.CriticalLow.HasValue || t.CriticalHigh.HasValue);
+        CatalogSummaryText =
+            $"{Helpers.Money.ToPersianDigits(TestCatalog.Count.ToString())} آزمایش — " +
+            $"{Helpers.Money.ToPersianDigits(withRanges.ToString())} بازهٔ مرجع — " +
+            $"{Helpers.Money.ToPersianDigits(withCritical.ToString())} حد بحرانی";
     }
 
-    /// <summary>پاسخ کاتالوگ آزمایش‌ها</summary>
+    /// <summary>نگاشت DTO سرور به ردیف نمایش کاتالوگ</summary>
+    private static TestCatalogRow MapCatalogRow(CatalogItem t) => new(
+        t.Id, t.Name, t.TestNameEn, t.TestCode, t.Category, t.SampleType,
+        t.Unit, t.Price, t.TurnAroundTime,
+        t.NormalRangeMale, t.NormalRangeFemale,
+        t.RefMinAdultMale, t.RefMaxAdultMale,
+        t.RefMinAdultFemale, t.RefMaxAdultFemale,
+        t.RefMinChild, t.RefMaxChild, t.ChildAgeMaxYears,
+        t.CriticalLow, t.CriticalHigh,
+        t.IsActive);
+
+    /// <summary>جستجوی کاتالوگ — با تغییر متن، فهرست تازه‌سازی می‌شود</summary>
+    [RelayCommand]
+    private async Task SearchCatalogAsync() => await LoadCatalogAsync();
+
+    /// <summary>
+    /// ویرایش یک ردیف کاتالوگ — چرخهٔ ۷۲: فرم ویرایش بازه‌های مرجع/حدود
+    /// بحرانی برای مالک باز می‌شود؛ پس از ذخیرهٔ موفق کاتالوگ تازه‌سازی
+    /// می‌شود تا ستون‌های بازه همان لحظه به‌روز دیده شوند.
+    /// </summary>
+    [RelayCommand]
+    private void EditTest(TestCatalogRow? row)
+    {
+        if (row is null) return;
+
+        var vm = new LabTestEditViewModel(_api, row);
+        var window = new Views.LabTestEditWindow(vm)
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        vm.SaveSucceeded += (_, _) => _snackbar.Success($"بازه‌های «{row.Name}» ذخیره شد");
+        window.ShowDialog();
+
+        // اگر ذخیره‌ای بود، پشت‌صحنهٔ کاتالوگ تازه شود
+        if (vm.WasSaved)
+            _ = LoadCatalogAsync();
+    }
+
+    /// <summary>پاسخ کاتالوگ آزمایش‌ها — هم‌قالب LabTestCatalogDto سرور (چرخهٔ ۷۲)</summary>
     public sealed class CatalogResponse
     {
         public bool IsSuccess { get; set; }
         public List<CatalogItem>? Data { get; set; }
     }
 
-    /// <summary>آیتم آزمایش مرجع</summary>
+    /// <summary>آیتم آزمایش کامل — هر ۹ ستون بازه + حدود بحرانی</summary>
     public sealed class CatalogItem
     {
+        public long Id { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string? TestNameEn { get; set; }
+        public string? TestCode { get; set; }
         public string? Category { get; set; }
+        public string? SampleType { get; set; }
         public string? Unit { get; set; }
         public decimal Price { get; set; }
+        public int? TurnAroundTime { get; set; }
+        public string? NormalRangeMale { get; set; }
+        public string? NormalRangeFemale { get; set; }
+        public decimal? RefMinAdultMale { get; set; }
+        public decimal? RefMaxAdultMale { get; set; }
+        public decimal? RefMinAdultFemale { get; set; }
+        public decimal? RefMaxAdultFemale { get; set; }
+        public decimal? RefMinChild { get; set; }
+        public decimal? RefMaxChild { get; set; }
+        public int? ChildAgeMaxYears { get; set; }
+        public decimal? CriticalLow { get; set; }
+        public decimal? CriticalHigh { get; set; }
+        public bool IsActive { get; set; }
     }
 }
