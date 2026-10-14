@@ -118,23 +118,38 @@ public static class IdentitySetup
             // پاسخ فارسی برای توکن منقضی + پذیرش توکن Hub از query string (گام R1)
             options.Events = new JwtBearerEvents
             {
+                // ═══ چرخهٔ ۷۳ (گزارش مالک: «InvalidOperationException: StatusCode
+                //      cannot be set because the response has already started») ═══
+                // ریشهٔ یقینی خطا همین‌جا بود: WriteAsyncِ «بدون await»! جریان خراب‌کننده:
+                //   ۱) توکنِ منقضی در هدر می‌آید (مثلاً بعد از ۸ ساعت کار پیوسته،
+                //      عصرها!) ← SecurityTokenExpiredException
+                //   ۲) این رویداد اجرا می‌شد، StatusCode=401 می‌گذاشت و WriteAsync
+                //      را «شروع می‌کرد و منتظر نمی‌ماند» (fire-and-forget)
+                //   ۳) هندلر بلافاصله بازمی‌گشت و خط لوله ادامه می‌یافت؛ نوشتنِ
+                //      هم‌زمانِ بدنه، پاسخ را «پشتِ سرِ» ادامهٔ خط لوله آغاز می‌کرد
+                //      (سرآیندها flush می‌شد) — حتی برای اندپوینت‌های بی‌نام که
+                //      MVC به‌هرحال اجرا می‌شود
+                //   ۴) ObjectResult اکشن می‌خواست StatusCode بگذارد ← پاسخ از قبل
+                //      آغاز شده ← InvalidOperationException در ObjectResult.OnFormatting
+                //      — دقیقاً رد پشتهٔ گزارش مالک
+                // قانون اصلاح: «در رویدادهای احراز هویت هرگز پاسخ نوشته نمی‌شود» —
+                // این رویداد حتی برای اندپوینت‌های [AllowAnonymous] هم اجرا می‌شود
+                // و نوشتن پاسخ یعنی رقابت با خودِ اکشن. نقش صحیح این رویداد فقط
+                // «نشانه‌گذاری نتیجه» است: Fail استثنا را بدون بازپرتاب ثبت می‌کند:
+                //   • اندپوینت محافظت‌شده ← OnChallenge با پیام فارسی ۴۰۱ می‌دهد
+                //     (تشخیص «منقضی» از AuthenticateFailure در همان‌جا انجام می‌شود)
+                //   • اندپوینت بی‌نام ← اکشن عادی اجرا می‌شود، هیچ رقابتی نیست
+                //   • استثنا هرگز بازپرتاب نمی‌شود ← دیگر ۵۰۰ِ «خطای غیرمنتظره»
+                //     برای توکن منقضی/جعلی ثبت نمی‌شود
                 OnAuthenticationFailed = context =>
                 {
-                    if (context.Exception is SecurityTokenExpiredException)
-                    {
-                        // چرخه بیست‌وچهارم: اگر پاسخ قبلاً آغاز شده باشد نوشتن
-                        // دوبارهٔ آن استثنای ثانویه می‌اندازد (گزارش هفدهم مالک)
-                        if (!context.Response.HasStarted)
-                        {
-                            context.Response.StatusCode = 401;
-                            context.Response.ContentType = "application/json";
-                            context.Response.WriteAsync(JsonSerializer.Serialize(new
-                            {
-                                isSuccess = false,
-                                message = "توکن دسترسی منقضی شده است — دوباره وارد شوید"
-                            }));
-                        }
-                    }
+                    // همهٔ خطاهای اعتبارسنجی توکن (منقضی/امضای نامعتبر/قالب خراب)
+                    // یکسان رفتار می‌کنند: نتیجه = Fail؛ بدون نوشتن پاسخ و بدون بازپرتاب.
+                    // (Fail همان AuthenticateResult.Fail(exception) را می‌نشاند — پراپرتی
+                    // Result خودش فقط‌خواندنی است و ست کردن مستقیم کامپایل نمی‌شود؛
+                    // شکستِ ثبت‌شده بعداً از طریق AuthenticateFailure به OnChallenge
+                    // می‌رسد تا پیام «توکن منقضی» در جای درست ساخته شود)
+                    context.Fail(context.Exception);
                     return System.Threading.Tasks.Task.CompletedTask;
                 },
 
@@ -147,27 +162,40 @@ public static class IdentitySetup
                 // پیش‌فرض ۴۰۱ کرش می‌کرد و «unhandled exception» می‌شد.
                 // با شروعِ دستی رویداد، پاسخِ آغازشده را به چالش نمی‌فرستیم؛
                 // رفتار عادی (هدر WWW-Authenticate + ۴۰۱ JSON فارسی) حفظ شد.
-                OnChallenge = context =>
+                //
+                // ═══ چرخهٔ ۷۳ — دو اصلاح در همین رویداد ═══
+                //   ۱) WriteAsync پیش‌تر «بدون await» بود (همان رقابت مرگبارِ
+                //      OnAuthenticationFailed) — حالا لامبدا async است و نوشتنِ
+                //      کامل پیش از HandleResponse انجام می‌شود
+                //   ۲) پیام «توکن منقضی» که قبلاً در OnAuthenticationFailed نوشته
+                //      می‌شد، این‌جا از AuthenticateFailure تشخیص داده می‌شود —
+                //      جای درستش همین‌جاست چون فقط اندپوینت‌های محافظت‌شده به
+                //      چالش می‌رسند و پاسخ هنوز آغاز نشده است
+                OnChallenge = async context =>
                 {
                     if (context.Response.HasStarted)
                     {
                         // پاسخ آغاز شده — تعیین کد وضعیت ممکن نیست؛ فقط اعلان
                         // پیش‌فرض متوقف و درخواست خاتمه می‌یابد بدون استثنا
                         context.HandleResponse();
-                        return System.Threading.Tasks.Task.CompletedTask;
+                        return;
                     }
 
-                    // پاسخ فارسی استاندارد به‌جای Challenge خالی پیش‌فرض —
-                    // کلاینت WPF پیام روشن می‌گیرد (توکن نیست/منقضی/نامعتبر)
+                    // پیام فارسی استاندارد به‌جای Challenge خالی پیش‌فرض —
+                    // کلاینت WPF پیام روشن می‌گیرد (توکن نیست/منقضی/نامعتبر)؛
+                    // تشخیص «منقضی» از شکست اعتبارسنجی (نه متن خطای انگلیسی)
+                    var expired = context.AuthenticateFailure is SecurityTokenExpiredException;
                     context.Response.StatusCode = 401;
                     context.Response.ContentType = "application/json";
-                    context.Response.WriteAsync(JsonSerializer.Serialize(new
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(new
                     {
                         isSuccess = false,
                         statusCode = 401,
-                        message = string.IsNullOrEmpty(context.Error)
-                            ? "برای این عملیات باید وارد برنامه شوید"
-                            : "اعتبارنامه یا دسترسی شما معتبر نیست — دوباره وارد شوید",
+                        message = expired
+                            ? "توکن دسترسی منقضی شده است — دوباره وارد شوید"
+                            : string.IsNullOrEmpty(context.Error)
+                                ? "برای این عملیات باید وارد برنامه شوید"
+                                : "اعتبارنامه یا دسترسی شما معتبر نیست — دوباره وارد شوید",
                         errors = new List<string>(),
                         traceId = context.HttpContext.TraceIdentifier,
                         data = (object?)null,
@@ -176,7 +204,6 @@ public static class IdentitySetup
                     // جلوگیری از چالش پیش‌فرض (نوشتن سرآیند WWW-Authenticate
                     // و متن خالی) — بدنهٔ JSON خودمان پاسخ نهایی است
                     context.HandleResponse();
-                    return System.Threading.Tasks.Task.CompletedTask;
                 },
 
                 // کلاینت WPF SignalR نمی‌تواند هدر Authorization بفرستد؛
