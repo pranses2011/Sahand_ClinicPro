@@ -253,6 +253,106 @@ public class UsersController : ApiBaseController
         return Ok(ApiResponse<object>.Success(new { keys.Count }, "میانبرهای داشبورد ذخیره شد"));
     }
 
+    /* ═══════════ منوی کناری شخصی کاربر — چرخهٔ ۷۴ (گزارش مالک) ═══════════
+       «امکانی رو طراحی و پیاده سازی بکن که بتونم منوهای کناری رو به سلیقه
+       خودم مرتب بکنم و حتی بتونم منوی اصلی بسازم که صفه های مورد نظرم رو در
+       زیر منوی اون قرار بدم و همچنین دکمه برگشت به تنظیمات پیشفرض هم داشته
+       باشه و این تنظیمات به ازای هر کاربر باشه و در دیتابیس ذخیره بشه».
+       ذخیره‌سازی: جدول عمومی SystemSetting با کلید nav-layout:{userId}
+       (همان الگوی اثبات‌شدهٔ چیدمان داشبورد) — بدون مهاجرت جدید. */
+
+    /// <summary>کلید تنظیم چیدمان منوی کناری کاربر جاری</summary>
+    private string NavLayoutKey(long userId) => $"nav-layout:{userId}";
+
+    /// <summary>
+    /// چیدمان منوی کناری کاربر جاری — JSON ساختار (آیتم تکی/گروه دلخواه با
+    /// زیرمنو). Data تهی یعنی «چیدمان ذخیره‌شده‌ای نیست — منوی پیش‌فرض».
+    /// </summary>
+    [HttpGet("me/nav-layout")]
+    public async Task<IActionResult> GetMyNavLayout()
+    {
+        var userId = ResolveCurrentUserId();
+        if (userId is null)
+            return Unauthorized(ApiResponse<object>.Failure("نشست نامعتبر است — دوباره وارد شوید"));
+
+        var setting = await _unitOfWork.Repository<Domain.Entities.Infrastructure.SystemSetting>()
+            .QueryableNoTracking
+            .FirstOrDefaultAsync(x => x.Key == NavLayoutKey(userId.Value) && !x.IsDeleted);
+
+        // خرابی محتوا هرگز اندپوینت را نمی‌شکند — تهی برمی‌گردد و کلاینت منوی
+        // پیش‌فرض را می‌سازد (محافظه‌کارانه)
+        string? layout = null;
+        if (setting?.Value is { Length: > 0 } raw)
+        {
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(raw);
+                if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array)
+                    layout = raw; // ساختار معتبر — عیناً پاس می‌شود
+            }
+            catch
+            {
+                layout = null;
+            }
+        }
+
+        return Ok(ApiResponse<object>.Success(new { layout },
+            layout is null ? "چیدمان منو ذخیره نشده است" : "چیدمان منوی کناری"));
+    }
+
+    /// <summary>
+    /// ذخیرهٔ چیدمان منوی کناری کاربر جاری — هر کاربر ساختار مستقل خودش را
+    /// دارد؛ سقف ۸۰۰۰ نویسه (منو با گروه‌های دلخواه طولانی‌تر از چیدمان
+    /// داشبورد است) و اعتبارسنجی ساختارِ آرایه.
+    /// </summary>
+    /// <param name="request">JSON چیدمان — آرایهٔ آیتم/گروه</param>
+    [HttpPut("me/nav-layout")]
+    public async Task<IActionResult> SaveMyNavLayout([FromBody] SaveNavLayoutRequest request)
+    {
+        var userId = ResolveCurrentUserId();
+        if (userId is null)
+            return Unauthorized(ApiResponse<object>.Failure("نشست نامعتبر است — دوباره وارد شوید"));
+
+        if (string.IsNullOrWhiteSpace(request.Layout) || request.Layout.Length > 8000)
+            return BadRequest(ApiResponse<object>.Failure("چیدمان منو نامعتبر است (حداکثر ۸۰۰۰ نویسه)"));
+
+        // اعتبارسنجی ساختار — باید آرایهٔ JSON معتبر باشد
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(request.Layout);
+            if (doc.RootElement.ValueKind != System.Text.Json.JsonValueKind.Array)
+                return BadRequest(ApiResponse<object>.Failure("ساختار چیدمان منو نامعتبر است"));
+        }
+        catch
+        {
+            return BadRequest(ApiResponse<object>.Failure("JSON چیدمان منو قابل خواندن نیست"));
+        }
+
+        var setting = await _unitOfWork.Repository<Domain.Entities.Infrastructure.SystemSetting>()
+            .QueryableTracking
+            .FirstOrDefaultAsync(x => x.Key == NavLayoutKey(userId.Value) && !x.IsDeleted);
+
+        if (setting is null)
+        {
+            setting = new Domain.Entities.Infrastructure.SystemSetting
+            {
+                Category = "NavLayout",
+                Key = NavLayoutKey(userId.Value),
+                Value = request.Layout,
+                DataType = Domain.Enums.SettingDataType.Json,
+                Description = "چیدمان منوی کناری شخصی کاربر"
+            };
+            await _unitOfWork.Repository<Domain.Entities.Infrastructure.SystemSetting>().AddAsync(setting);
+        }
+        else
+        {
+            setting.Value = request.Layout;
+        }
+
+        await _unitOfWork.SaveEntitiesAsync();
+        return Ok(ApiResponse<object>.SuccessMessage("چیدمان منوی کناری ذخیره شد"));
+    }
+
     /// <summary>
     /// شناسهٔ کاربر جاری از ادعای NameIdentifier توکن — تهی یعنی نشست نامعتبر
     /// (همان الگوی GetCurrentUser؛ به‌صورت متد مشترک برای دو اندپوینت بالا).
@@ -569,6 +669,9 @@ public class UsersController : ApiBaseController
     /// به ترتیب چیدمان کاربر است (اولین عنصر = نخستین کاشی).
     /// </summary>
     public record SaveUserShortcutsRequest(List<string>? Keys);
+
+    /// <summary>درخواست ذخیرهٔ چیدمان منوی کناری — چرخهٔ ۷۴</summary>
+    public record SaveNavLayoutRequest(string Layout);
 
     /// <summary>
     /// میانبرهای ذخیره‌شدهٔ کاربر جاری — تهی بودن Keys یعنی هنوز رکوردی

@@ -63,7 +63,7 @@ public partial class DashboardCardVM : ObservableObject
 
 /// <summary>
 /// بخش قابل‌چیدمان داشبورد — چرخهٔ ۷۴ (گزارش مالک: «کنترل کامل و حرفه‌ای
-/// با Drag & Drop») — یک بلوک کامل داشبورد (نمودارها/ویزیت‌ها/فعالیت‌ها/
+/// با کشیدن‌ورهاکردن») — یک بلوک کامل داشبورد (نمودارها/ویزیت‌ها/فعالیت‌ها/
 /// میانبرها) با کلید قالب، عنوان برای دستگیرهٔ درگ و پرچم نمایش.
 /// </summary>
 public partial class DashboardSectionItem : ObservableObject

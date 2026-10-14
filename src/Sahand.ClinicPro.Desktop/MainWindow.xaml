@@ -594,6 +594,20 @@
                                    MaxWidth="135"
                                    ToolTip="{Binding CurrentUser}" />
                     </StackPanel>
+                    <!-- ═══ چرخهٔ ۷۴ — شخصی‌سازی منوی کناری (گزارش مالک) ═══
+                         «بتونم منوهای کناری رو به سلیقه خودم مرتب بکنم و حتی
+                         منوی اصلی بسازم که صفه های مورد نظرم رو در زیر منوی اون
+                         قرار بدم» — تنظیم per-user در دیتابیس ذخیره می‌شود -->
+                    <Button Command="{Binding OpenNavMenuEditorCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="White" BorderBrush="#66FFFFFF"
+                            HorizontalAlignment="Stretch" Margin="0,0,0,6"
+                            ToolTip="مرتب‌سازی منوها، ساخت گروه دلخواه با زیرمنو، بازگشت به پیش‌فرض — به‌ازای هر کاربر">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="TuneVertical" VerticalAlignment="Center" />
+                            <TextBlock Text="شخصی‌سازی منو" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button Command="{Binding LogoutCommand}"
                             Style="{StaticResource MaterialDesignOutlinedButton}"
                             Foreground="White" BorderBrush="#66FFFFFF"

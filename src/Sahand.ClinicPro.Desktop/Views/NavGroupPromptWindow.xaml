@@ -1,0 +1,44 @@
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.NavGroupPromptWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="گروه منوی جدید"
+        Width="420" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        FlowDirection="RightToLeft">
+    <!-- ═══ پنجرهٔ «گروه منوی جدید» — چرخهٔ ۷۴ ═══
+         عنوان دلخواه + انتخاب آیکون گروه از مجموعهٔ پیشنهادی؛
+         نتیجه با GroupTitle/SelectedIcon به فراخواننده برمی‌گردد. -->
+    <StackPanel Margin="18">
+        <TextBlock Text="گروه منوی جدید" FontSize="15" FontWeight="Bold" Margin="2,0,2,10" />
+        <TextBlock Text="عنوان گروه" FontSize="11.5" Opacity="0.7" Margin="2,0,2,4" />
+        <TextBox x:Name="TitleBox" materialDesign:HintAssist.Hint="مثلاً: کارهای روزانه من" />
+        <TextBlock Text="آیکون گروه" FontSize="11.5" Opacity="0.7" Margin="2,14,2,6" />
+        <ListBox x:Name="IconList" MaxHeight="190" SelectionMode="Single"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border Width="44" Height="44" CornerRadius="10" Margin="3"
+                            Background="#F5F7FB" BorderBrush="#E1E8F2" BorderThickness="1"
+                            Cursor="Hand" ToolTip="{Binding}">
+                        <materialDesign:PackIcon Kind="{Binding}" Width="20" Height="20"
+                                                 Foreground="#1565C0"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <StackPanel Orientation="Horizontal" Margin="2,16,2,0" HorizontalAlignment="Left">
+            <Button Click="OnConfirm" Style="{StaticResource MaterialDesignRaisedButton}" MinWidth="110"
+                    FontSize="12" Content="ایجاد گروه" />
+            <Button Click="OnCancel" Style="{StaticResource MaterialDesignFlatButton}" MinWidth="90"
+                    FontSize="12" Margin="10,0,0,0" Content="انصراف" />
+        </StackPanel>
+    </StackPanel>
+</Window>

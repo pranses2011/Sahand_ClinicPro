@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Application.Common.Helpers;
+using Sahand.ClinicPro.Desktop.Helpers;
 using Sahand.ClinicPro.Desktop.Services;
 using Sahand.ClinicPro.Desktop.Views;
 
@@ -427,6 +428,13 @@ public partial class MainWindowViewModel : ObservableObject
             RebuildNavItems();
             ApplyPermissionFilter();
 
+            // ═══ چرخهٔ ۷۴ — چیدمان شخصی منوی کناری کاربر (گزارش مالک) ═══
+            // «بتونم منوهای کناری رو به سلیقه خودم مرتب بکنم و حتی منوی اصلی
+            // بسازم که صفه های مورد نظرم رو در زیر منوی اون قرار بدم» — اگر
+            // کاربر چیدمان ذخیره‌شده داشته باشد (per-user در دیتابیس)، منو از
+            // همان ساخته می‌شود؛ وگرنه منوی پیش‌فرض برنامه می‌ماند.
+            await ApplyCustomNavLayoutAsync();
+
             // ۳) نخستین صفحهٔ مجاز — کاربر هرگز روی صفحهٔ ممنوع گیر نمی‌کند
             // ═══ چرخهٔ ۴۸ (گزارش مالک: «وقتی کاربری با نقش پزشک وارد برنامه می‌شود،
             //      مستقیم صفحه میز کارش را بیاره تا بیمارانش رو ببینه و معالجه رو
@@ -580,6 +588,139 @@ public partial class MainWindowViewModel : ObservableObject
             NavItems.Add(item);
     }
 
+    /* ═══════════ چرخهٔ ۷۴ — چیدمان شخصی منوی کناری (گزارش مالک) ═══════════ */
+
+    /// <summary>
+    /// پاسخ GET users/me/nav-layout — پاکت استاندارد با فیلد layout
+    /// </summary>
+    public sealed class NavLayoutEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public NavLayoutData? Data { get; set; }
+    }
+
+    /// <summary>دادهٔ چیدمان منو — JSON ساختار یا تهی (منوی پیش‌فرض)</summary>
+    public sealed class NavLayoutData
+    {
+        public string? Layout { get; set; }
+    }
+
+    /// <summary>
+    /// اعمال چیدمان شخصی منو — اگر کاربر چیدمان ذخیره‌شده داشته باشد، منو از
+    /// همان ساخته می‌شود (سپس پالایش دسترسی روی کلیدهای صفحه اعمال می‌شود تا
+    /// هیچ صفحهٔ ممنوعی از این مسیر وارد منو نشود). خطا/نبود = منوی پیش‌فرض.
+    /// ساختار JSON: آرایه‌ای از
+    ///   { "pageKey": "patients" }                                  ← آیتم تکی
+    ///   { "title": "گروه من", "icon": "Hospital", "pages": [...] }  ← گروه دلخواه
+    /// </summary>
+    private async Task ApplyCustomNavLayoutAsync()
+    {
+        try
+        {
+            var response = await _api.GetAsync<NavLayoutEnvelope>("users/me/nav-layout");
+            var json = response?.Data?.Layout;
+            if (string.IsNullOrWhiteSpace(json))
+                return; // بدون چیدمان ذخیره‌شده — منوی پیش‌فرض می‌ماند
+
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind != System.Text.Json.JsonValueKind.Array)
+                return;
+
+            var items = new ObservableCollection<NavItem>();
+            foreach (var element in doc.RootElement.EnumerateArray())
+            {
+                var item = ParseNavItem(element);
+                if (item is not null)
+                    items.Add(item);
+            }
+            if (items.Count == 0)
+                return;
+
+            NavItems.Clear();
+            foreach (var item in items)
+                NavItems.Add(item);
+
+            // پالایش دسترسی روی ساختار شخصی — همان امنیت منوی پیش‌فرض
+            ApplyPermissionFilter();
+        }
+        catch
+        {
+            // خطای شبکه/ساختار — منوی پیش‌فرض سالم می‌ماند
+        }
+    }
+
+    /// <summary>
+    /// ساخت یک NavItem از عناصر JSON چیدمان — آیتم تکی (pageKey) یا گروه
+    /// دلخواه (title/icon/pages). کلید نامعتبر → تهی (بی‌صدا حذف می‌شود).
+    /// </summary>
+    private NavItem? ParseNavItem(System.Text.Json.JsonElement element)
+    {
+        if (element.ValueKind != System.Text.Json.JsonValueKind.Object)
+            return null;
+
+        // گروه دلخواه — عنوان + آیکون + فهرست صفحات
+        if (element.TryGetProperty("pages", out var pages) && pages.ValueKind == System.Text.Json.JsonValueKind.Array)
+        {
+            var group = new NavItem
+            {
+                Title = element.TryGetProperty("title", out var t) && t.ValueKind == System.Text.Json.JsonValueKind.String
+                    ? t.GetString() ?? "گروه من"
+                    : "گروه من",
+                Icon = element.TryGetProperty("icon", out var ic) && ic.ValueKind == System.Text.Json.JsonValueKind.String
+                    ? ic.GetString() ?? "Folder"
+                    : "Folder",
+            };
+            foreach (var page in pages.EnumerateArray())
+            {
+                var key = page.ValueKind == System.Text.Json.JsonValueKind.String ? page.GetString() : null;
+                if (key is null) continue;
+                var entry = PageCatalog.All.FirstOrDefault(p => p.Key == key);
+                if (entry is null) continue;
+                group.Children.Add(new NavItem
+                {
+                    Title = entry.Title,
+                    PageKey = entry.Key,
+                    Icon = entry.Icon,
+                });
+            }
+            return group.Children.Count > 0 ? group : null; // گروه خالی معنا ندارد
+        }
+
+        // آیتم تکی
+        if (element.TryGetProperty("pageKey", out var pk) && pk.ValueKind == System.Text.Json.JsonValueKind.String)
+        {
+            var key = pk.GetString();
+            var entry = key is null ? null : PageCatalog.All.FirstOrDefault(p => p.Key == key);
+            if (entry is null)
+                return null;
+            return new NavItem
+            {
+                Title = entry.Title,
+                PageKey = entry.Key,
+                Icon = entry.Icon,
+            };
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// گشودن ادیتور منوی کناری — چرخهٔ ۷۴. پس از ذخیرهٔ موفق، منو بی‌درنگ از
+    /// چیدمان تازه بازسازی می‌شود (بدون نیاز به خروج/ورود).
+    /// </summary>
+    [RelayCommand]
+    private async Task OpenNavMenuEditorAsync()
+    {
+        var editor = new Views.NavMenuEditorWindow
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+        editor.ShowDialog();
+        // منو با چیدمان تازه (در صورت ذخیره) بازسازی می‌شود
+        RebuildNavItems();
+        ApplyPermissionFilter();
+        await ApplyCustomNavLayoutAsync();
+    }
+
     /// <summary>
     /// بارگذاری وضعیت لایسنس در نوار وضعیت + نمایش پیام سرور — چرخهٔ بیست‌وهفتم.
     /// خطا هرگز جریان برنامه را متوقف نمی‌کند (متن پیش‌فرض باقی می‌ماند).
@@ -622,7 +763,7 @@ public partial class MainWindowViewModel : ObservableObject
     /// گیت آزاد؛ در غیر این صورت دسترسی اتمی متناظر در فهرست نقش‌های توکن
     /// جست‌وجو می‌شود (چرخهٔ ۳۸).
     /// </summary>
-    private bool HasPageAccess(string pageKey)
+    public bool HasPageAccess(string pageKey)
     {
         if (_tokens.IsAdmin) return true;
         if (!PagePermissionMap.TryGetValue(pageKey, out var permission)) return true;
