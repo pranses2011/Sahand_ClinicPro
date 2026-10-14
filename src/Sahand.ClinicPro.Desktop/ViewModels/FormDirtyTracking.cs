@@ -23,6 +23,90 @@ public interface IHasUnsavedChanges
 }
 
 /// <summary>
+/// ═══ اسنپ‌شات عمومی فرم — چرخهٔ ۷۵ (گزارش مالک) ═══
+/// «قانون بررسی تغییر شدن فرم که برای کلید ESC بود عمل نمیکنه — چک نمیکنه
+/// ببینه که اطلاعات فرم تغییر کرده یا نه و در هر صورت خارج میشه بدون تایید
+/// کردن». ریشه: ردیاب FormViewModelBase فقط در ۲ فرم (پرسنل/تعرفه) نشسته
+/// بود و بقیهٔ فرم‌ها (بیمار/پذیرش/فاکتور/نوبت/…) هیچ ردیابی نداشتند. این
+/// اسنپ‌شاتِ ایستا همان منطق بازتابی را برای «هر ViewModel» فراهم می‌کند تا
+/// پوسته (App.xaml.cs) بدون وابستگی به قرارداد، همهٔ فرم‌ها را خودکار
+/// بپاید: اسنپ‌شات هنگام باز شدن + مقایسه هنگام ESC/بستن.
+/// </summary>
+public static class FormSnapshot
+{
+    /// <summary>
+    /// نام‌های پراپرتیِ «پرنوسان» — وضعیت‌های گذرای فرم که تغییرشان یعنی
+    /// کارِ پس‌زمینه (در حال ذخیره/بارگذاری/پیام‌ها) نه ورودی کاربر؛ از
+    /// اسنپ‌شات کنار گذاشته می‌شوند تا هشدار کاذب بسته‌شدن نیاید.
+    /// </summary>
+    private static readonly HashSet<string> VolatileNames = new(StringComparer.Ordinal)
+    {
+        "IsBusy", "IsLoading", "IsSaving", "BusyText", "IsInitialized",
+        "ErrorMessage", "StatusMessage", "SuccessMessage", "LoadFailed",
+        "HasErrors", "HasSavedResult", "SavedFlagText", "SavedFlagBrush",
+        "HasSavedResult", "UnsavedChangesTitle", "HasUnsavedChanges", "Title",
+    };
+
+    /// <summary>
+    /// گرفتن اسنپ‌شات JSON مرتب از پراپرتی‌های داده‌ای سادهٔ یک ViewModel —
+    /// رشته/عدد/بول/enum (+ تهی‌پذیرها) و «شمار» مجموعه‌ها؛ خروجی برای دو
+    /// وضعیت هم‌ارز دقیقاً یکسان است.
+    /// </summary>
+    /// <param name="viewModel">هر شیء — معمولاً DataContext فرم</param>
+    public static string? Capture(object? viewModel)
+    {
+        if (viewModel is null) return null;
+        try
+        {
+            var bag = new SortedDictionary<string, object?>();
+            foreach (var prop in viewModel.GetType()
+                         .GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (prop.GetIndexParameters().Length > 0) continue;
+                if (VolatileNames.Contains(prop.Name)) continue;
+
+                object? value;
+                try { value = prop.GetValue(viewModel); }
+                catch { continue; } // پراپرتی محاسباتی خطادار — نادیده
+
+                var type = prop.PropertyType;
+                var isSimple = type == typeof(string)
+                               || type == typeof(decimal) || type == typeof(decimal?)
+                               || type == typeof(int) || type == typeof(int?)
+                               || type == typeof(long) || type == typeof(long?)
+                               || type == typeof(bool) || type == typeof(bool?)
+                               || type == typeof(double) || type == typeof(double?)
+                               || type == typeof(DateTime) || type == typeof(DateTime?)
+                               || type.IsEnum
+                               || (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)
+                                   && Nullable.GetUnderlyingType(type)!.IsEnum);
+                if (isSimple)
+                {
+                    bag[prop.Name] = value;
+                    continue;
+                }
+
+                // مجموعه‌ها — فقط شمار اقلام (افزودن/حذف سریع ردیابی می‌شود)
+                if (value is System.Collections.ICollection col)
+                    bag[prop.Name] = $"#{col.Count}";
+            }
+
+            return JsonSerializer.Serialize(bag);
+        }
+        catch
+        {
+            return null; // بازتاب ناکام — بی‌خطر: فرم «بدون ردیابی» تلقی می‌شود
+        }
+    }
+
+    /// <summary>
+    /// آیا دو اسنپ‌شات هم‌ارزند؟ (تهی = بدون اسنپ‌شات = همیشه «بدون تغییر»)
+    /// </summary>
+    public static bool IsSame(string? baseline, string? current)
+        => string.Equals(baseline, current, StringComparison.Ordinal);
+}
+
+/// <summary>
 /// ردیاب عمومی تغییرات فرم با «اسنپ‌شات بازتابی» — چرخهٔ بیست‌وششم.
 /// در لحظهٔ آماده‌شدن فرم (پایان بارگذاری ویرایش یا فرم خالی جدید) یک
 /// اسنپ‌شات از همهٔ پراپرتی‌های داده‌ای سادهٔ ViewModel گرفته می‌شود و در

@@ -69,13 +69,35 @@ public partial class PersianDatePicker : UserControl
         };
 
         // ═══ چرخهٔ ۷۴ — اعتبارسنجی زنده حین تایپ ═══
-        // به‌محض کامل‌شدن قالب (طول ≥ ۸)، صحت تاریخ بررسی می‌شود تا کاربر
-        // همان لحظه بازخورد بگیرد، نه بعد از Enter یا خروج از فیلد
+        // به‌محض کامل‌شدن اجزای تاریخ، صحت بررسی می‌شود تا کاربر همان لحظه
+        // بازخورد بگیرد، نه بعد از Enter یا خروج از فیلد.
+        // ═══ چرخهٔ ۷۵ (گزارش مالک: «صحت اون تاریخ رو بصورت زنده کنترل بکنه») ═══
+        // پالایش: خطا فقط وقتی نشان داده می‌شود که «هر سه جزء حداقل یک رقم
+        // داشته باشند» (کاربر وسط تایپ نیست)؛ حالت ناقص بی‌صدا است تا چرخهٔ
+        // تایپ با فلش قرمز مزاحم نشود و بازخورد دقیقاً از لحظهٔ کامل‌شدن
+        // تاریخ شروع شود. عدد فارسی/لاتین هر دو پذیرفته می‌شود.
         ShamsiBox.TextChanged += (_, _) =>
         {
             if (_suppressTextEvents) return;
             var text = (ShamsiBox.Text ?? string.Empty).Trim();
-            if (text.Length < 8) return;
+            if (text.Length < 8)
+            {
+                // هنوز کامل نیست — حالت خطای قبلی پاک می‌شود (نه خطای تازه)
+                if (_typedTextInvalid)
+                    SetInvalidState(false, null);
+                return;
+            }
+
+            // هر سه جزء باید رقم داشته باشند تا «تاریخِ کامل» تلقی شود؛
+            // جزء خالی = وسط تایپ = سکوت (بدون فلش قرمز کاذب)
+            var parts = text.Replace('-', '/').Replace('.', '/').Split('/');
+            if (parts.Length == 3 && parts.Any(p => p.Trim().Length == 0))
+            {
+                if (_typedTextInvalid)
+                    SetInvalidState(false, null);
+                return;
+            }
+
             if (TryParseTyped(text, out _, out var liveError))
                 SetInvalidState(false, null);
             else

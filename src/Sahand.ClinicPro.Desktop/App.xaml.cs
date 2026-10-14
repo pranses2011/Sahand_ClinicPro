@@ -99,6 +99,20 @@ public partial class App : System.Windows.Application
         if (window is not Sahand.ClinicPro.Desktop.MainWindow
             && window is not Views.LoginWindow)
         {
+            // ═══ چرخهٔ ۷۵ (گزارش مالک) — اسنپ‌شات خودکار تغییرات فرم ═══
+            // «قانون بررسی تغییر شدن فرم که برای کلید ESC بود عمل نمیکنه —
+            // چک نمیکنه ببینه که اطلاعات فرم تغییر کرده یا نه» — ردیاب
+            // IHasUnsavedChanges فقط در دو فرم نشسته بود؛ اکنون پوسته برای
+            // «هر» پنجرهٔ فرم، در نخستین لحظهٔ رندر کامل یک اسنپ‌شات از
+            // DataContext می‌گیرد (FormSnapshot) و هنگام ESC/بستن مقایسه
+            // می‌کند: متفاوت = تأیید فارسی. تأخیر اولیه (Background) یعنی
+            // پس از پایان بارگذاری‌های اولیه؛ فرم‌های دارای قرارداد صریح همچنان
+            // رفتار غنی‌تر خود را حفظ می‌کنند (اولویت اول).
+            window.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                window.SetValue(FormBaselineProperty, ViewModels.FormSnapshot.Capture(window.DataContext));
+            }), System.Windows.Threading.DispatcherPriority.Background);
+
             window.PreviewKeyDown += (_, ke) =>
             {
                 if (ke.Key == System.Windows.Input.Key.Escape)
@@ -153,6 +167,14 @@ public partial class App : System.Windows.Application
     /// <summary>پرچم جلوگیری از وصل‌شدن دوبارهٔ فونت به همان پنجره</summary>
     private static readonly DependencyProperty FontHookedProperty =
         DependencyProperty.RegisterAttached("FontHooked", typeof(bool), typeof(App), new PropertyMetadata(false));
+
+    /// <summary>
+    /// ═══ چرخهٔ ۷۵ — اسنپ‌شات مبنا DataContext هر پنجرهٔ فرم ═══
+    /// در نخستین لحظهٔ باز شدن گرفته می‌شود و هنگام ESC/بستن با وضعیت فعلی
+    /// مقایسه می‌شود (ConfirmCloseIfDirty — مسیر ۲). تهی یعنی «بدون پایش».
+    /// </summary>
+    private static readonly DependencyProperty FormBaselineProperty =
+        DependencyProperty.RegisterAttached("FormBaseline", typeof(string), typeof(App), new PropertyMetadata(null));
 
     /// <summary>
     /// آیا «سطح درونی بازی» در پنجره وجود دارد که ESC باید نخست آن را ببندد؟ — چرخهٔ ۷۴.
@@ -256,16 +278,37 @@ public partial class App : System.Windows.Application
     /// </summary>
     private static bool ConfirmCloseIfDirty(Window window)
     {
-        if (window.DataContext is not ViewModels.IHasUnsavedChanges { HasUnsavedChanges: true } dirty)
-            return true; // فرم تمیز است یا قرارداد ندارد — بستن بی‌تأیید
+        // ۱) قرارداد صریح فرم (چرخهٔ ۲۶) — دقیق‌ترین منبع؛ نام فرم را هم می‌داند
+        if (window.DataContext is ViewModels.IHasUnsavedChanges { HasUnsavedChanges: true } dirty)
+        {
+            // دیالوگ فارسی خود برنامه — نه کادر پیام ویندوز (قانون مالک)
+            var answer = Views.AppDialog.Confirm(
+                "تغییرات ذخیره‌نشده",
+                $"در «{dirty.UnsavedChangesTitle}» تغییراتی وارد کرده‌اید که ذخیره نشده است.\n" +
+                "فرم بدون ذخیره بسته شود؟",
+                Views.AppDialogIcon.Warning);
+            return answer == true;
+        }
 
-        // دیالوگ فارسی خود برنامه — نه کادر پیام ویندوز (قانون مالک)
-        var answer = Views.AppDialog.Confirm(
+        // ۲) ═══ چرخهٔ ۷۵ — اسنپ‌شات عمومی ═══
+        // فرم‌های بدون قرارداد هم پایش می‌شوند: اسنپ‌شات مبنا (لحظهٔ باز شدن)
+        // با وضعیت فعلی DataContext مقایسه می‌شود؛ تفاوت = ورودی کاربر = تأیید.
+        // پنجره‌های بدون DataContext/فقط‌خواندنی (لیست‌ها) اسنپ‌شاتشان هرگز
+        // تغییر نمی‌کند و بی‌صدا رد می‌شوند.
+        var baseline = window.GetValue(FormBaselineProperty) as string;
+        if (baseline is null)
+            return true; // اسنپ‌شات نیست (مثلاً پنجرهٔ فقط‌خواندنی) — بستن بی‌تأیید
+        var current = ViewModels.FormSnapshot.Capture(window.DataContext);
+        if (ViewModels.FormSnapshot.IsSame(baseline, current))
+            return true; // هیچ چیز عوض نشده — بستن بی‌تأیید
+
+        var formTitle = window.Title;
+        var answer2 = Views.AppDialog.Confirm(
             "تغییرات ذخیره‌نشده",
-            $"در «{dirty.UnsavedChangesTitle}» تغییراتی وارد کرده‌اید که ذخیره نشده است.\n" +
+            $"در «{formTitle}» تغییراتی وارد کرده‌اید که احتمالاً ذخیره نشده است.\n" +
             "فرم بدون ذخیره بسته شود؟",
             Views.AppDialogIcon.Warning);
-        return answer == true;
+        return answer2 == true;
     }
 
     /// <summary>رویداد راه‌اندازی — ساخت کانتینر DI و انتخاب پنجره آغازین</summary>
