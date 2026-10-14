@@ -20,6 +20,30 @@ namespace Sahand.ClinicPro.API.Controllers;
 [Authorize]
 public class DashboardController : ApiBaseController
 {
+    // ═══ چرخهٔ ۷۲ (بازطراحی داشبورد) — منطقهٔ زمانی ایران ═══
+    // «امروزِ» داشبورد قبلاً با DateTime.UtcNow محاسبه می‌شد: در ایران
+    // (UTC+3:30 بدون ساعت تابستانی از ۱۴۰۱) یعنی روزِ داشبورد ۳:۵۰ بامداد
+    // می‌پرید و آمارِ «امروز» نیمه‌شب تا ۳:۳۰ را از دست می‌داد — همان خانوادهٔ
+    // باگ «همه‌چیز صفر» گزارش‌ها که در همین چرخه ریشه‌کن شد. مرزهای روز
+    // اکنون به وقت ایران است (هم‌الگوی ReportsController چرخهٔ ۷۲).
+    /// <summary>اختلاف زمانی ایران از UTC — ۳:۳۰ بدون ساعت تابستانی</summary>
+    private static readonly TimeSpan IranOffset = TimeSpan.FromHours(3.5);
+
+    /// <summary>تاریخ «امروز» به وقت ایران</summary>
+    private static DateOnly IranToday() => DateOnly.FromDateTime(DateTime.UtcNow + IranOffset);
+
+    /// <summary>شروع روز ایران (۰۰:۰۰ تهران) به UTC — برای ستون‌های DateTime</summary>
+    private static DateTime IranDayStartUtc(DateOnly iranDate) =>
+        iranDate.ToDateTime(TimeOnly.MinValue) - IranOffset;
+
+    /// <summary>پایان روز ایران (۲۳:۵۹:۵۹ تهران) به UTC</summary>
+    private static DateTime IranDayEndUtc(DateOnly iranDate) =>
+        iranDate.ToDateTime(TimeOnly.MinValue).AddDays(1) - IranOffset - TimeSpan.FromTicks(1);
+
+    /// <summary>برچسب شمسی یک روز ایران</summary>
+    private static string ShamsiLabel(DateOnly iranDate)
+        => Application.Common.Helpers.PersianDateHelper.ToShamsi(iranDate.ToDateTime(TimeOnly.MinValue));
+
     private readonly IUnitOfWork _unitOfWork;
     private readonly Application.Interfaces.ICurrentUserService _currentUser;
 
@@ -33,17 +57,24 @@ public class DashboardController : ApiBaseController
 
     /// <summary>
     /// آمار خلاصه امروز — بیماران ثبت‌شده، نوبت‌ها، ویزیت‌ها و درآمد
+    /// ═══ چرخهٔ ۷۲ — «امروز» به وقت ایران ═══ ستون‌های DateOnly با تاریخ
+    /// ایرانِ امروز مقایسه می‌شوند و ستون‌های DateTime (UTC) با مرز کامل
+    /// روز ایران (۰۰:۰۰ تا ۲۳:۵۹ تهران) — پیش‌تر نیمه‌شبِ UTC مرز بود و
+    /// آمار بین ۰۰:۰۰ تا ۳:۳۰ بامداد تهران گم می‌شد.
     /// </summary>
     [HttpGet("stats")]
     [HasPermission("dashboard.view")]
     public async Task<IActionResult> GetTodayStats(CancellationToken ct)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = IranToday();                     // تاریخ ایرانِ امروز
+        var dayStart = IranDayStartUtc(today);       // ۰۰:۰۰ تهران به UTC
+        var dayEnd = IranDayEndUtc(today);           // ۲۳:۵۹:۵۹ تهران به UTC
 
         var newPatients = await _unitOfWork.Repository<Patient>()
             .QueryableNoTracking
             .CountAsync(p => p.RegistrationDate != null
-                          && DateOnly.FromDateTime(p.RegistrationDate.Value) == today, ct);
+                          && p.RegistrationDate.Value >= dayStart
+                          && p.RegistrationDate.Value <= dayEnd, ct);
 
         var todayAppointments = await _unitOfWork.Repository<Appointment>()
             .QueryableNoTracking
@@ -58,13 +89,14 @@ public class DashboardController : ApiBaseController
 
         var todayRevenue = await _unitOfWork.Repository<Invoice>()
             .QueryableNoTracking
-            .Where(i => DateOnly.FromDateTime(i.InvoiceDate) == today
+            .Where(i => i.InvoiceDate >= dayStart
+                     && i.InvoiceDate <= dayEnd
                      && i.Status != InvoiceStatus.Cancelled)
             .SumAsync(i => (decimal?)i.PaidAmount, ct) ?? 0m;
 
         var todayVisits = await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>()
             .QueryableNoTracking
-            .CountAsync(v => DateOnly.FromDateTime(v.VisitDate) == today, ct);
+            .CountAsync(v => v.VisitDate >= dayStart && v.VisitDate <= dayEnd, ct);
 
         var stats = new
         {
@@ -73,7 +105,7 @@ public class DashboardController : ApiBaseController
             activeAppointments,
             todayVisits,
             todayRevenue,
-            todayDateShamsi = Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.UtcNow),
+            todayDateShamsi = ShamsiLabel(today),
             serverTime = DateTime.UtcNow
         };
 
@@ -84,6 +116,10 @@ public class DashboardController : ApiBaseController
     /// <summary>
     /// نمودار درآمد روزانه — مشخصات پرامپت UI بخش ۱ (فرم ۲)
     /// خروجی: برچسب شمسی + مبلغ پرداخت‌شده برای N روز اخیر
+    /// ═══ چرخهٔ ۷۲ — روزها به مرز ایران‌اند (همان رفعِ «تا-تاریخِ نیمه‌شبِ
+    /// UTC» گزارش‌ها): هر روز از ۰۰:۰۰ تا ۲۳:۵۹ تهران حساب می‌شود نه از
+    /// ۳:۳۰ بامداد؛ در غیر این صورت روزِ تقویمیِ کاربر و روزِ نمودار
+    /// اختلاف داشت و آخرین ستون همیشه ناقص/صفر می‌شد.
     /// </summary>
     [HttpGet("revenue-chart")]
     [HasPermission("dashboard.view")]
@@ -91,12 +127,11 @@ public class DashboardController : ApiBaseController
         CancellationToken ct = default)
     {
         days = Math.Clamp(days, 1, 90);
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = IranToday();
         var from = today.AddDays(-(days - 1));
 
-        // واکشی خام + گروه‌بندی سمت کاربر — از ترجمه SQL توابع تاریخ پرهیز می‌شود
-        var fromDateTime = from.ToDateTime(TimeOnly.MinValue);
-        var toDateTime = today.ToDateTime(TimeOnly.MaxValue);
+        var fromDateTime = IranDayStartUtc(from);
+        var toDateTime = IranDayEndUtc(today);
 
         var rows = await _unitOfWork.Repository<Invoice>()
             .QueryableNoTracking
@@ -110,11 +145,11 @@ public class DashboardController : ApiBaseController
             .Select(offset =>
             {
                 var day = from.AddDays(offset);
-                var dayStart = day.ToDateTime(TimeOnly.MinValue);
-                var dayEnd = day.ToDateTime(TimeOnly.MaxValue);
+                var dayStart = IranDayStartUtc(day);
+                var dayEnd = IranDayEndUtc(day);
                 return new
                 {
-                    label = Application.Common.Helpers.PersianDateHelper.ToShamsi(dayStart),
+                    label = ShamsiLabel(day),
                     amount = rows
                         .Where(r => r.InvoiceDate >= dayStart && r.InvoiceDate <= dayEnd)
                         .Sum(r => r.PaidAmount),
@@ -127,6 +162,94 @@ public class DashboardController : ApiBaseController
     }
 
     /// <summary>
+    /// نمودار ویزیت روزانه — چرخهٔ ۷۲ (بازطراحی داشبورد با کارت‌های آماری و
+    /// نموداری): تعداد ویزیت‌های هر روز برای N روز اخیر به مرز روز ایران؛
+    /// منبع کارت دوم «ویزیت‌شده» و نمودار ستونی داشبورد جدید.
+    /// </summary>
+    /// <param name="days">طول بازه — ۱ تا ۹۰ روز</param>
+    [HttpGet("visits-chart")]
+    [HasPermission("dashboard.view")]
+    public async Task<IActionResult> GetVisitsChart([FromQuery] int days = 7,
+        CancellationToken ct = default)
+    {
+        days = Math.Clamp(days, 1, 90);
+        var today = IranToday();
+        var from = today.AddDays(-(days - 1));
+
+        var rows = await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>()
+            .QueryableNoTracking
+            .Where(v => v.VisitDate >= IranDayStartUtc(from)
+                     && v.VisitDate <= IranDayEndUtc(today))
+            .Select(v => new { v.VisitDate })
+            .ToListAsync(ct);
+
+        var chart = Enumerable.Range(0, days)
+            .Select(offset =>
+            {
+                var day = from.AddDays(offset);
+                var dayStart = IranDayStartUtc(day);
+                var dayEnd = IranDayEndUtc(day);
+                return new
+                {
+                    label = ShamsiLabel(day),
+                    count = rows.Count(r => r.VisitDate >= dayStart && r.VisitDate <= dayEnd),
+                };
+            })
+            .ToList();
+
+        return Ok(Application.Common.Models.ApiResponse<object>.Success(chart,
+            "داده نمودار ویزیت دریافت شد"));
+    }
+
+    /// <summary>
+    /// ترکیب وضعیت نوبت‌های امروز — چرخهٔ ۷۲ (نمودار دونات داشبورد جدید):
+    /// توزیع نوبت‌های امروز بر اساس وضعیت (رزرو/تایید/حاضر/در حال ویزیت/
+    /// تمام‌شده/لغو/عدم حضور) — مرکز دونات جمع امروز را نشان می‌دهد.
+    /// </summary>
+    [HttpGet("status-mix")]
+    [HasPermission("dashboard.view")]
+    public async Task<IActionResult> GetStatusMix(CancellationToken ct)
+    {
+        var today = IranToday();
+
+        var rows = await _unitOfWork.Repository<Appointment>()
+            .QueryableNoTracking
+            .Where(a => a.AppointmentDate == today)
+            .Select(a => new { a.Status })
+            .ToListAsync(ct);
+
+        // نام فارسی وضعیت‌ها — همان واژگان نوبت‌دهی برنامه
+        string Fa(AppointmentStatus s) => s switch
+        {
+            AppointmentStatus.Booked => "رزرو شده",
+            AppointmentStatus.Confirmed => "تاییدشده",
+            AppointmentStatus.Arrived => "حاضر در مطب",
+            AppointmentStatus.InProgress => "در حال ویزیت",
+            AppointmentStatus.Completed => "تمام‌شده",
+            AppointmentStatus.Cancelled => "لغو شده",
+            AppointmentStatus.NoShow => "عدم حضور",
+            _ => s.ToString()
+        };
+
+        var mix = rows
+            .GroupBy(r => r.Status)
+            .Select(g => new
+            {
+                status = g.Key.ToString(),
+                label = Fa(g.Key),
+                count = g.Count()
+            })
+            .OrderByDescending(x => x.count)
+            .ToList();
+
+        return Ok(Application.Common.Models.ApiResponse<object>.Success(new
+        {
+            total = rows.Count,
+            mix
+        }, "ترکیب وضعیت نوبت‌های امروز دریافت شد"));
+    }
+
+    /// <summary>
     /// نوبت‌های امروز — مشخصات پرامپت UI بخش ۱ (فرم ۲: نوبت‌های پیش‌رو)
     /// </summary>
     [HttpGet("appointments-today")]
@@ -135,7 +258,7 @@ public class DashboardController : ApiBaseController
         CancellationToken ct = default)
     {
         limit = Math.Clamp(limit, 1, 50);
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = IranToday(); // چرخهٔ ۷۲ — مرز روز ایران
 
         var list = await _unitOfWork.Repository<Appointment>()
             .QueryableNoTracking
@@ -264,7 +387,7 @@ public class DashboardController : ApiBaseController
     [HasPermission("dashboard.view")]
     public async Task<IActionResult> GetAlerts(CancellationToken ct)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = IranToday(); // چرخهٔ ۷۲ — مرز روز ایران
 
         // موجودی کم — اقلام فعال زیر حداقل موجودی
         var lowStock = await _unitOfWork.Repository<Domain.Entities.Pharmacy.PharmacyInventory>()
@@ -314,7 +437,7 @@ public class DashboardController : ApiBaseController
     [HasPermission("dashboard.view")]
     public async Task<IActionResult> GetInventoryAlerts(CancellationToken ct)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = IranToday(); // چرخهٔ ۷۲ — مرز روز ایران
 
         // بچ‌های در حال انقضا — نام دارو + بچ + روزهای مانده + موجودی
         // (روزهای مانده در حافظه محاسبه می‌شود نه با DateDiffDay — سازگار با
