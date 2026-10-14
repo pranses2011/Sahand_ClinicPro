@@ -99,11 +99,16 @@
              ترتیب/نمایش را روی کارت می‌آورد (رفتار چرخهٔ ۱۳ حفظ شد). -->
         <DataTemplate x:Key="KpiCardTemplate">
             <Grid Margin="0,0,8,0">
+                <!-- ═══ چرخهٔ ۷۳ (گزارش مالک: «زیرشون ناقص دیده میشه») — ارتفاع قطعی ممنوع ═══
+                     پیشتر Height=112 قطعی بود؛ با متریک بلندِ قلم وزیرمتن (ارتفاع سطر ~۱٫۴ برابر
+                     اندازهٔ قلم) محتوا (سربرگ ۳۴ + عدد درشت ۲۵px + زیرنویس مقایسه) از ۱۱۲ تجاوز
+                     می‌کرد و زیرنویسِ زیرِ عدد بیرون از کارت می‌افتاد/بریده می‌شد. MinHeight همان
+                     بلوک بصری را حفظ می‌کند ولی در برابر فونت/مقیاس/DPI کشسان است. -->
                 <Border CornerRadius="14" Background="#FFFFFF" BorderBrush="#E2E8F0"
                         BorderThickness="1.2" Padding="14,12,12,12"
                         Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}"
                         UseLayoutRounding="True" SnapsToDevicePixels="True">
-                    <Border.Height>112</Border.Height>
+                    <Border.MinHeight>112</Border.MinHeight>
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -396,8 +401,11 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,0,8,8" Width="168" Height="76">
-                                    <!-- کاشی اصلی — کلیک = ناوبری مستقیم -->
+                                <Grid Margin="0,0,8,8" Width="168" MinHeight="76">
+                                    <!-- کاشی اصلی — کلیک = ناوبری مستقیم
+                                         (چرخهٔ ۷۳: Height قطعی ۷۶ ← MinHeight؛ محتوا هرگز
+                                         از مرز پایین کاشی بیرون نمی‌زند و زیرنویس دسته
+                                         کامل دیده می‌شود) -->
                                     <Button Command="{Binding DataContext.OpenShortcutCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                             CommandParameter="{Binding}"
                                             Cursor="Hand" Focusable="False"
@@ -408,7 +416,7 @@
                                                         Background="{Binding GroupColor, Converter={StaticResource HexBrush}, ConverterParameter=tint, FallbackValue=#F5F7FB}"
                                                         BorderBrush="{Binding GroupColor, Converter={StaticResource HexToBrush}, FallbackValue=#CFD8DC}"
                                                         BorderThickness="1.3"
-                                                        Height="76" Padding="12,0"
+                                                        MinHeight="76" Padding="12,8"
                                                         UseLayoutRounding="True" SnapsToDevicePixels="True">
                                                     <DockPanel VerticalAlignment="Center">
                                                         <!-- چیپ آیکون — مربع گوشه‌گرد هم‌رنگ دسته -->
