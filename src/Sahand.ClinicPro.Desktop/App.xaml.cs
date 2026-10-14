@@ -60,6 +60,13 @@ public partial class App : System.Windows.Application
         var fa = new System.Globalization.CultureInfo("fa-IR");
         System.Globalization.CultureInfo.DefaultThreadCurrentCulture = fa;
         System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = fa;
+
+        // ═══ چرخهٔ ۷۴ (گزارش مالک) — هدایت چرخ موس به والد قابل‌اسکرول ═══
+        // «روی بعضی از عناصر که اسکرول ندارند، wheel عمل نمی‌کند و صفحه اسکرول
+        // نمی‌شود مثل اینکه قفل شده باشد» — عناصر دارای ScrollView داخلی
+        // (جدول‌ها/لیست‌ها) رویداد چرخ را حتی در ناتوانی می‌خورند؛ این هدایت‌گر
+        // سراسری در سطح پنجره، چرخش را به نخستین والدِ توانمند می‌رساند.
+        Helpers.WheelScrollForwarder.Register();
     }
 
     /// <summary>
