@@ -79,6 +79,17 @@ public partial class VisitsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isCalling;
 
+    // ═══ چرخهٔ ۷۴ — ادغام «میزکار پزشک» در همین صفحه (گزارش مالک) ═══
+    // «صفحه ویزیت و معاینه و صفحه میز کار پزشک، هر دو صف و فراخوان رو نشون
+    // میدن و اگه این دو صفحه عملکرد متفاوتی ندارن ادغامشون بکن» — دو صفحه
+    // هم‌پوشانی کامل داشتند؛ اکنون همین صفحه، بهترینِ هر دو را دارد:
+    // اگر کاربرِ واردشده به پروندهٔ پزشکی متصل باشد، فیلتر پزشک «خودکار» روی
+    // همان پزشک می‌نشیند (رفتار میزکار شخصی) و منشی/اپراتور می‌تواند هر
+    // پزشک یا «همهٔ پزشکان» را برگزیند (رفتار نگاه مدیریتی).
+
+    /// <summary>شناسهٔ پزشک متصل به کاربر جاری — از users/me</summary>
+    private long? _linkedDoctorId;
+
     /// <summary>سازنده</summary>
     public VisitsViewModel(IApiClient api, ISnackbarService snackbar)
     {
@@ -94,6 +105,31 @@ public partial class VisitsViewModel : ViewModelBase
         if (doctors?.Data is not null)
             foreach (var d in doctors.Data)
                 Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
+
+        // ═══ چرخهٔ ۷۴ — تشخیص خودکار پزشکِ کاربر (رفتار میزکار شخصی) ═══
+        // users/me ← DoctorId؛ اگر متصل بود فیلتر روی همان پزشک می‌نشیند
+        try
+        {
+            var me = await _api.GetAsync<MeEnvelope>("users/me");
+            _linkedDoctorId = me?.Data?.DoctorId;
+            if (_linkedDoctorId is { } docId)
+            {
+                var index = 0;
+                foreach (var d in Doctors)
+                {
+                    index++;
+                    if (d.Id == docId)
+                    {
+                        DoctorFilterIndex = index;
+                        break;
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // بدون تشخیص پزشک هم صفحه کار می‌کند (فیلتر همه‌پزشکان)
+        }
 
         await LoadAsync();
 
@@ -127,11 +163,13 @@ public partial class VisitsViewModel : ViewModelBase
                 .Select(d => new DoneRow(d.VisitId, d.PatientName, d.TimeRange, d.DiagnosisText)));
     }
 
-    /// <summary>نگاشت ردیف صف</summary>
+    /// <summary>نگاشت ردیف صف — چرخهٔ ۷۴: زمان انتظار با ارقام فارسی</summary>
     private static QueueRow MapQueue(QueueItem q) => new(
         q.VisitId, q.PatientId, q.PatientName, q.Mobile, q.QueueNumber,
         q.AppointmentTime, q.InsuranceName, q.VisitTypeText, q.WaitingMinutes,
-        q.WaitingMinutes > 0 ? $"{q.WaitingMinutes} دقیقه" : "تازه رسیده",
+        q.WaitingMinutes > 0
+            ? $"{Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToPersianDigits(q.WaitingMinutes.ToString())} دقیقه"
+            : "تازه رسیده",
         q.Allergies);
 
     /// <summary>فراخوان بیمار بعدی — میانبر Space</summary>
@@ -151,7 +189,8 @@ public partial class VisitsViewModel : ViewModelBase
             return;
         }
 
-        _snackbar.Success($"بیمار بعدی فراخوانی شد — شماره {response.Data.VisitId % 100}");
+        // چرخهٔ ۷۴: شمارهٔ نوبت با ارقام فارسی
+        _snackbar.Success($"بیمار بعدی فراخوانی شد — شماره {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToPersianDigits((response.Data.VisitId % 100).ToString())}");
         await LoadAsync();
 
         // باز کردن فرم ویزیت برای بیمار فراخوانی‌شده
@@ -216,6 +255,21 @@ public partial class VisitsViewModel : ViewModelBase
         public string PatientName { get; set; } = string.Empty;
         public string TimeRange { get; set; } = string.Empty;
         public string? DiagnosisText { get; set; }
+    }
+
+    /// <summary>خروجی users/me — فقط فیلدهای لازم برای تشخیص پزشک متصل</summary>
+    public sealed class MeEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public MeProfile? Data { get; set; }
+    }
+
+    /// <summary>مشخصات کاربر جاری — نام کامل + پزشک متصل</summary>
+    public sealed class MeProfile
+    {
+        public string? FullName { get; set; }
+        public string? Username { get; set; }
+        public long? DoctorId { get; set; }
     }
 
     public sealed class CallNextResponse

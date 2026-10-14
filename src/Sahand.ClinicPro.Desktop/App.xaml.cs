@@ -509,7 +509,6 @@ public partial class App : System.Windows.Application
         services.AddTransient<ConsumablesViewModel>();
         services.AddTransient<VisitsViewModel>();
         // چرخهٔ بیست‌وهفتم — میزکار پزشک (صفحهٔ ویزیت پزشک — گزارش هجدهم مالک)
-        services.AddTransient<DoctorVisitViewModel>();
         services.AddTransient<PrescriptionsViewModel>();
         services.AddTransient<BillingViewModel>();
         services.AddTransient<AccountingViewModel>();

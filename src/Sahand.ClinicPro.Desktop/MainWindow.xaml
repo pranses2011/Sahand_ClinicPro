@@ -39,10 +39,6 @@
         <DataTemplate DataType="{x:Type vm:VisitsViewModel}">
             <views:VisitsView />
         </DataTemplate>
-        <!-- چرخهٔ بیست‌وهفتم — میزکار پزشک (صفحهٔ ویزیت پزشک) -->
-        <DataTemplate DataType="{x:Type vm:DoctorVisitViewModel}">
-            <views:DoctorVisitView />
-        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:PrescriptionsViewModel}">
             <views:PrescriptionsView />
         </DataTemplate>

@@ -32,12 +32,25 @@ public class CallNextPatientCommandHandler : IRequestHandler<CallNextPatientComm
     public async Task<Result<CallNextResult>> Handle(CallNextPatientCommand request,
         CancellationToken cancellationToken)
     {
-        var today = DateTime.Today;
+        // ═══ چرخهٔ ۷۴ (گزارش مالک) — ریشهٔ «بیماری در صف انتظار نیست» ═══
+        // «در صفحه ویزیت و معاینه، وقتی از لیست بیماران در صف انتظار روی دکمه
+        // فراخوان کلیک میکنم خطای 'بیماری در صف انتظار نیست' میده» — ریشهٔ قطعی:
+        // ثبت پذیرش (CreateReceptionCommand) وضعیت Admitted می‌گذارد، نمایش صف
+        // (GetVisitQueue) همهٔ وضعیت‌های غیر لغو را «منتظر» نشان می‌دهد، اما
+        // فراخوان فقط InQueue را برمی‌داشت و هیچ مسیری در برنامه InQueue
+        // ست نمی‌کرد ⇒ هر فراخوانی همیشه «صف خالی» برمی‌گشت.
+        // اصلاح: وضعیت‌های «منتظرِ فراخوان» = Admitted (تازه پذیرش‌شده) +
+        // InQueue (در صف اطلاحی) — هم‌تراز با منطق نمایش صف؛ به‌علاوه پذیرش‌های
+        // «خدمتی بدون پزشک» از فراخوان ویزیت پزشک کنار گذاشته می‌شوند
+        // (Visit.DoctorId صفر نامعتبر است — گارد پیش‌تر فقط در کامنت بود).
+        // مرز روز هم بر پایهٔ UTC همانند ثبت پذیرش و نمایش صف هم‌تراز شد.
+        var today = DateTime.UtcNow.Date;
         var tomorrow = today.AddDays(1);
 
         var next = await _unitOfWork.Repository<Reception>().QueryableTracking
             .Where(r => r.ReceptionDate >= today && r.ReceptionDate < tomorrow &&
-                        r.Status == ReceptionStatus.InQueue &&
+                        (r.Status == ReceptionStatus.Admitted || r.Status == ReceptionStatus.InQueue) &&
+                        r.DoctorId != null &&
                         (request.DoctorId == null || r.DoctorId == request.DoctorId))
             .OrderBy(r => r.Id)
             .FirstOrDefaultAsync(cancellationToken);

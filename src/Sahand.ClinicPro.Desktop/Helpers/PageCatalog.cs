@@ -54,7 +54,6 @@ public static class PageCatalog
         // پذیرش است و درمانگاهِ بدون ماژول داروخانه هم باید به آن دسترسی داشته باشد
         new PageCatalogEntry("consumables", "لوازم مصرفی درمانگاه", "Syringe", "receptions.view", Group: "جریان درمان"),
         new PageCatalogEntry("visits", "ویزیت و معاینه", "Stethoscope", "visits.view", Group: "جریان درمان"),
-        new PageCatalogEntry("doctor-visit", "میزکار پزشک", "Doctor", "visits.view", Group: "جریان درمان"),
         new PageCatalogEntry("emr-advanced", "پرونده بالینی پیشرفته", "HeartPulse", "emr.advanced", Group: "جریان درمان"),
 
         // ─── دارو و انبار ───

@@ -75,10 +75,11 @@ public partial class PersianDatePicker : UserControl
         {
             if (_suppressTextEvents) return;
             var text = (ShamsiBox.Text ?? string.Empty).Trim();
-            if (text.Length is >= 8 and <= 10 && TryParseTyped(text, out _, out var error))
+            if (text.Length < 8) return;
+            if (TryParseTyped(text, out _, out var liveError))
                 SetInvalidState(false, null);
-            else if (text.Length >= 8)
-                SetInvalidState(true, error);
+            else
+                SetInvalidState(true, liveError);
         };
 
         // بستن پاپ‌آپ با Escape — سازگاری صفحه‌کلید
@@ -259,7 +260,7 @@ public partial class PersianDatePicker : UserControl
 
         // روز — با طول واقعی همان ماه (۳۱/۳۰/۲۹/۳۰ کبیسه) — چرخهٔ ۷۴
         var monthLength = PersianDateHelper.GetJalaliMonthLength(y, m);
-        if (d is < 1 or > monthLength)
+        if (d < 1 || d > monthLength)
         {
             error = $"روز {PersianDateHelper.ToPersianDigits(d.ToString())} در «{PersianDateHelper.MonthNames[m - 1]} {PersianDateHelper.ToPersianDigits(y.ToString())}» وجود ندارد — این ماه {PersianDateHelper.ToPersianDigits(monthLength.ToString())} روز است";
             return false;

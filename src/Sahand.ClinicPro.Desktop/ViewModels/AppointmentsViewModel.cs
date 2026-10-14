@@ -153,6 +153,49 @@ public partial class AppointmentsViewModel : ViewModelBase
     [ObservableProperty]
     private string? _waitlistNotes;
 
+    /* ═══ چرخهٔ ۷۴ — مرتب‌سازی چندستونهٔ فهرست نوبت‌ها (گزارش مالک) ═══
+       وضعیت مرتب‌سازی به‌صورت فهرست اولویت‌دار (مسیر، جهت) نگهداری می‌شود؛
+       کلاینت View (AppointmentsView.OnGridSorting) آن را می‌سازد و اینجا روی
+       نمای مجموعهٔ Rows اعمال می‌شود؛ پس از هر جستجو/صفحه‌بندی جدید هم
+       بازاعمال می‌شود تا «مرتب‌سازی با هر جستجو ریست نشود». */
+
+    /// <summary>وضعیت مرتب‌سازی فعلی — فهرست اولویت‌دار (اول = اولویت اصلی)</summary>
+    private List<(string Path, System.ComponentModel.ListSortDirection Direction)> _sortState = new();
+
+    /// <summary>خواندن وضعیت مرتب‌سازی (کپی — برای منطق کلیک در View)</summary>
+    public List<(string Path, System.ComponentModel.ListSortDirection Direction)> GetSortState() => new(_sortState);
+
+    /// <summary>
+    /// نصب وضعیت مرتب‌سازی جدید + اعمال بی‌درنگ روی نمای مجموعهٔ ردیف‌ها —
+    /// پیکان‌های هدر ستون‌ها از روی SortDescriptions نما به‌روز می‌شوند
+    /// </summary>
+    public void SetSortState(List<(string Path, System.ComponentModel.ListSortDirection Direction)> state)
+    {
+        _sortState = state ?? new List<(string, System.ComponentModel.ListSortDirection)>();
+        ApplySortToView();
+    }
+
+    /// <summary>اعمال وضعیت مرتب‌سازی روی نمای مجموعهٔ Rows (در صورت آماده‌بودن)</summary>
+    private void ApplySortToView()
+    {
+        if (Rows.Count == 0 && _sortState.Count == 0) return;
+        try
+        {
+            var view = System.Windows.Data.CollectionViewSource.GetDefaultView(Rows);
+            if (view is null) return;
+            using (view.DeferRefresh())
+            {
+                view.SortDescriptions.Clear();
+                foreach (var (path, dir) in _sortState)
+                    view.SortDescriptions.Add(new System.ComponentModel.SortDescription(path, dir));
+            }
+        }
+        catch
+        {
+            // مسیر نامعتبر (مثلاً ستون حذف‌شده) — مرتب‌سازی نادیده؛ فهرست سالم می‌ماند
+        }
+    }
+
     /* ═══════════ تب ۱: رزرو نوبت ═══════════ */
 
     /// <summary>متن جستجوی بیمار</summary>
@@ -321,7 +364,7 @@ public partial class AppointmentsViewModel : ViewModelBase
         _ = InitializeAsync();
     }
 
-    /// <summary>بارگذاری اولیه — پزشکان + امروز</summary>
+    /// <summary>بارگذاری اولیه — پزشکان + امروز + لیست انتظار (چرخهٔ ۷۴)</summary>
     private async Task InitializeAsync()
     {
         var doctors = await _api.GetAsync<DoctorsPage>("doctors?pageSize=200");
@@ -330,6 +373,12 @@ public partial class AppointmentsViewModel : ViewModelBase
                 Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
         await LoadTodayAppointmentsAsync();
         await SearchListAsync();
+
+        // ═══ چرخهٔ ۷۴ (گزارش مالک) ═══ «با انتخاب بیمار و زدن دکمه ثبت در لیست،
+        // میگه ثبت شد ولی در لیست نشون نمیده» — ریشهٔ اصلی: تب «لیست انتظار»
+        // هرگز در شروع بارگذاری نمی‌شد (فقط با دکمهٔ نوسازی) و کاربر فهرستِ خالی
+        // می‌دید؛ اکنون هم‌زمان با باز شدن صفحه بارگذاری می‌شود.
+        await LoadWaitlistAsync();
     }
 
     /* ─── جستجوی بیمار با Debounce ۳۰۰ms ─── */
@@ -385,6 +434,36 @@ public partial class AppointmentsViewModel : ViewModelBase
             _ = LoadCalendarAsync();
     }
 
+    // ═══ چرخهٔ ۷۴ (گزارش مالک): «با انتخاب پزشک، در تقویم فقط برنامه ماه جاری ═══
+    // علامت گذاری میکنه و با عوض کردن ماه دیگه برنامه مشخص نیست» — ریشه:
+    // فلش‌های داخلی خودِ کنترل تقویم فقط DisplayMonth/Year را جابه‌جا می‌کردند
+    // و هیچ‌کس رویدادشان را به بارگذاری نشانگرها وصل نمی‌کرد؛ فقط دکمه‌های
+    // بیرونی (که حذف شدند) LoadCalendarAsync را صدا می‌زدند. اکنون تغییرِ ماه/
+    // سال از «هر مسیری» (فلش داخلی، ناوبری ماه/سال کنترل، مقداردهی فرم) با
+    // گارد ضدتلاطم (debounce ۲۵۰ms — جابه‌جایی دی→بهمن هم سال را عوض می‌کند)
+    // به بارگذاری نشانگرهای همان ماه می‌انجامد.
+    partial void OnDisplayMonthChanged(int value) => ScheduleCalendarReload();
+
+    /// <summary>تغییر سال نمایشی تقویم → بارگذاری نشانگرهای همان ماه</summary>
+    partial void OnDisplayYearChanged(int value) => ScheduleCalendarReload();
+
+    /// <summary>تایمر ضدتلاطم بارگذاری تقویم — هر تغییر پیاپیِ ماه/سال فقط یک GET</summary>
+    private System.Windows.Threading.DispatcherTimer? _calendarReloadDebounce;
+
+    /// <summary>زمان‌بندی بارگذاری نشانگرهای ماه نمایشی پس از توقف چرخش ماه/سال</summary>
+    private void ScheduleCalendarReload()
+    {
+        _calendarReloadDebounce?.Stop();
+        _calendarReloadDebounce = new System.Windows.Threading.DispatcherTimer
+            { Interval = TimeSpan.FromMilliseconds(250) };
+        _calendarReloadDebounce.Tick += (_, _) =>
+        {
+            _calendarReloadDebounce!.Stop();
+            _ = LoadCalendarAsync();
+        };
+        _calendarReloadDebounce.Start();
+    }
+
     /// <summary>بارگذاری نشانگرهای تقویم ماه جاری</summary>
     private async Task LoadCalendarAsync()
     {
@@ -408,23 +487,9 @@ public partial class AppointmentsViewModel : ViewModelBase
         DisabledDates = disabled;
     }
 
-    /// <summary>ماه بعد تقویم</summary>
-    [RelayCommand]
-    private void NextMonth()
-    {
-        DisplayMonth++;
-        if (DisplayMonth > 12) { DisplayMonth = 1; DisplayYear++; }
-        _ = LoadCalendarAsync();
-    }
-
-    /// <summary>ماه قبل تقویم</summary>
-    [RelayCommand]
-    private void PreviousMonth()
-    {
-        DisplayMonth--;
-        if (DisplayMonth < 1) { DisplayMonth = 12; DisplayYear--; }
-        _ = LoadCalendarAsync();
-    }
+    // چرخهٔ ۷۴: فرمان‌های بیرونی «ماه بعد/قبل» حذف شدند — ناوبری ماه از فلش‌های
+    // داخلی خودِ کنترل تقویم انجام می‌شود (دو ردیف دکمهٔ تکراری حذف شد) و
+    // بارگذاری نشانگرها با OnDisplayMonthChanged/OnDisplayYearChanged خودکار است.
 
     /// <summary>انتخاب تاریخ از تقویم → بارگذاری اسلات‌ها</summary>
     [RelayCommand]
@@ -570,6 +635,11 @@ public partial class AppointmentsViewModel : ViewModelBase
             PageNumber = response.PageNumber;
             TotalPages = response.TotalPages;
             TotalCount = response.TotalCount;
+
+            // ═══ چرخهٔ ۷۴ — مرتب‌سازی چندستونه پس از هر جستجو حفظ می‌شود ═══
+            // کلکشن Rows تازه‌سازی می‌شود و نمای پیشین از بین می‌رود؛ وضعیت
+            // ذخیره‌شده دوباره روی نمای مجموعهٔ جدید اعمال می‌شود
+            ApplySortToView();
         }
         else
         {
@@ -797,7 +867,14 @@ public partial class AppointmentsViewModel : ViewModelBase
     public async Task LoadWaitlistAsync()
     {
         var response = await _api.GetAsync<WaitlistEnvelope>("appointments/waitlist");
-        if (response?.Data is null) return;
+        // ═══ چرخهٔ ۷۴ (گزارش مالک) ═══ «میگه ثبت شد ولی در لیست نشون نمیده» —
+        // شکستِ بی‌صدای GET پیش‌تر فهرست قبلی/خالی را نگه می‌داشت و کاربر هیچ
+        // بازخوردی نمی‌گرفت؛ اکنون خطای شبکه/مجوز با توست فارسی اعلام می‌شود
+        if (response?.Data is null)
+        {
+            _snackbar.Error(_api.LastError ?? "دریافت لیست انتظار ناموفق بود");
+            return;
+        }
         Waitlist = new ObservableCollection<WaitlistRow>(
             response.Data.Select(w => new WaitlistRow(
                 w.Id, w.PatientName, w.PatientMobile, w.DoctorName,

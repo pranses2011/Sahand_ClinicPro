@@ -147,7 +147,8 @@
                          ایموجی، عدد واقعی صف بیمار فعلی) -->
                     <Border Width="44" Height="44" CornerRadius="22" Background="#1565C0">
                         <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding CurrentPatient.QueueNumber, Mode=OneWay}"
+                            <!-- چرخهٔ ۷۴: شماره صف با ارقام فارسی -->
+                            <TextBlock Text="{Binding CurrentPatient.QueueNumber, Mode=OneWay, Converter={StaticResource PersianDigits}}"
                                        FontWeight="Bold" Foreground="White" />
                         </Viewbox>
                     </Border>
@@ -156,14 +157,15 @@
                             <Run Text="{Binding CurrentPatient.PatientName, Mode=OneWay}" />
                         </TextBlock>
                         <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                            <!-- چرخهٔ ۷۴: ساعت و موبایل با ارقام فارسی -->
                             <TextBlock FontSize="11.5" Opacity="0.75">
-                                <Run Text="ساعت: " /><Run Text="{Binding CurrentPatient.AppointmentTime, Mode=OneWay}" />
+                                <Run Text="ساعت: " /><Run Text="{Binding CurrentPatient.AppointmentTime, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
                             </TextBlock>
                             <TextBlock FontSize="11.5" Opacity="0.75" Margin="14,0,0,0">
                                 <Run Text="نوع: " /><Run Text="{Binding CurrentPatient.VisitTypeText, Mode=OneWay}" />
                             </TextBlock>
                             <TextBlock FontSize="11.5" Opacity="0.75" Margin="14,0,0,0">
-                                <Run Text="موبایل: " /><Run Text="{Binding CurrentPatient.Mobile, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
+                                <Run Text="موبایل: " /><Run Text="{Binding CurrentPatient.Mobile, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontFamily="{DynamicResource App.CodeFont}" />
                             </TextBlock>
                         </StackPanel>
                     </StackPanel>
@@ -214,14 +216,16 @@
                                             </Grid.ColumnDefinitions>
                                             <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#F9A825"
                                                     VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding QueueNumber, Mode=OneWay}" FontWeight="Bold"
+                                                <!-- چرخهٔ ۷۴: شماره صف با ارقام فارسی -->
+                                                <TextBlock Text="{Binding QueueNumber, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontWeight="Bold"
                                                            Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Border>
                                             <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="13" />
                                                 <StackPanel Orientation="Horizontal">
+                                                    <!-- چرخهٔ ۷۴: ساعت نوبت با ارقام فارسی -->
                                                     <TextBlock FontSize="11" Opacity="0.7">
-                                                        <Run Text="ساعت نوبت: " /><Run Text="{Binding AppointmentTime, Mode=OneWay}" />
+                                                        <Run Text="ساعت نوبت: " /><Run Text="{Binding AppointmentTime, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
                                                     </TextBlock>
                                                     <TextBlock FontSize="11" Opacity="0.7" Margin="12,0,0,0">
                                                         <Run Text="نوع: " /><Run Text="{Binding VisitTypeText, Mode=OneWay}" />
@@ -270,7 +274,8 @@
                                                 <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="12.5" Margin="8,0,0,0" />
                                             </StackPanel>
                                             <TextBlock FontSize="11" Opacity="0.75" Margin="0,3,0,0" FontFamily="{DynamicResource App.CodeFont}">
-                                                <Run Text="{Binding TimeRange, Mode=OneWay}" />
+                                                <!-- چرخهٔ ۷۴: بازهٔ زمانی با ارقام فارسی -->
+                                                <Run Text="{Binding TimeRange, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
                                             </TextBlock>
                                             <TextBlock FontSize="11" Opacity="0.75" Margin="0,2,0,0">
                                                 <Run Text="تشخیص: " /><Run Text="{Binding DiagnosisText, Mode=OneWay, TargetNullValue=—}" />

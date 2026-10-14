@@ -160,7 +160,8 @@
                                                     <StackPanel Orientation="Horizontal">
                                                         <materialDesign:PackIcon Kind="Account" Width="16" Height="16" Opacity="0.6" VerticalAlignment="Center" />
                                                         <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" Margin="8,0,0,0" />
-                                                        <TextBlock Text="{Binding NationalCode}" Opacity="0.6" FontFamily="{DynamicResource App.CodeFont}" Margin="12,0,0,0" />
+                                                        <!-- چرخهٔ ۷۴: کد ملی با ارقام فارسی -->
+                                                        <TextBlock Text="{Binding NationalCode, Converter={StaticResource PersianDigits}}" Opacity="0.6" FontFamily="{DynamicResource App.CodeFont}" Margin="12,0,0,0" />
                                                     </StackPanel>
                                                 </Button>
                                             </DataTemplate>
@@ -186,8 +187,9 @@
                                 <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold">
                                     <Run Text="{Binding SelectedPatient.FullName, Mode=OneWay}" />
                                 </TextBlock>
-                                <TextBlock Margin="16,0,0,0" VerticalAlignment="Center" Opacity="0.75">
-                                    <Run Text="کد ملی: " /><Run Text="{Binding SelectedPatient.NationalCode, Mode=OneWay}" />
+                                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Opacity="0.75">
+                                    <!-- چرخهٔ ۷۴: کد ملی با ارقام فارسی -->
+                                    <Run Text="کد ملی: " /><Run Text="{Binding SelectedPatient.NationalCode, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
                                 </TextBlock>
                                 <TextBlock Margin="16,0,0,0" VerticalAlignment="Center" Opacity="0.75">
                                     <Run Text="بیمه: " /><Run Text="{Binding SelectedPatient.InsuranceName, Mode=OneWay, TargetNullValue=آزاد}" />
@@ -209,42 +211,23 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <!-- ستون تقویم -->
+                            <!-- ستون تقویم — چرخهٔ ۷۴: سربرگ ماه/سال بیرونی حذف شد
+                                 گزارش مالک: «چند تا تاریخ و عدد بصورت انگلیسی هستند» — عنوان
+                                 «۷ / ۱۴۰۴» با ارقام لاتین بود؛ خود کنترل تقویم سربرگ فارسی
+                                 (نام ماه + سال با ارقام فارسی) و فلش‌های ماه قبل/بعد و ناوبری
+                                 ماه/سال داخلی دارد؛ دو ردیف دکمهٔ تکراری هم حذف شد و ناوبری
+                                 داخلی تقویم با TwoWay بودن DisplayMonth/Year مستقیم VM را
+                                 همگام می‌کند (بارگذاری نشانگرها با OnDisplayMonthChanged) -->
                             <Border Grid.Column="0" CornerRadius="10" Padding="10" Margin="0,0,10,0"
                                     Background="{DynamicResource MaterialDesign.Brush.Background}">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-                                    <Grid Grid.Row="0" Margin="0,0,0,8">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Button Grid.Column="0" Command="{Binding PreviousMonthCommand}"
-                                                Style="{StaticResource MaterialDesignOutlinedButton}" Padding="6,4">
-                                            <materialDesign:PackIcon Kind="ChevronRight" Width="16" Height="16" />
-                                        </Button>
-                                        <TextBlock Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                   FontSize="14" FontWeight="Bold">
-                                            <Run Text="{Binding DisplayMonth, Mode=OneWay}" /><Run Text=" / " /><Run Text="{Binding DisplayYear, Mode=OneWay}" />
-                                        </TextBlock>
-                                        <Button Grid.Column="2" Command="{Binding NextMonthCommand}"
-                                                Style="{StaticResource MaterialDesignOutlinedButton}" Padding="6,4">
-                                            <materialDesign:PackIcon Kind="ChevronLeft" Width="16" Height="16" />
-                                        </Button>
-                                    </Grid>
-                                    <controls:PersianCalendarControl Grid.Row="1"
-                                        x:Name="Calendar"
-                                        SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
-                                        DisplayMonth="{Binding DisplayMonth, Mode=TwoWay}"
-                                        DisplayYear="{Binding DisplayYear, Mode=TwoWay}"
-                                        MarkedDates="{Binding MarkedDates, Mode=OneWay}"
-                                        DisabledDates="{Binding DisabledDates, Mode=OneWay}"
-                                        DateSelected="OnCalendarDateSelected" />
-                                </Grid>
+                                <controls:PersianCalendarControl Grid.Row="1"
+                                    x:Name="Calendar"
+                                    SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
+                                    DisplayMonth="{Binding DisplayMonth, Mode=TwoWay}"
+                                    DisplayYear="{Binding DisplayYear, Mode=TwoWay}"
+                                    MarkedDates="{Binding MarkedDates, Mode=OneWay}"
+                                    DisabledDates="{Binding DisabledDates, Mode=OneWay}"
+                                    DateSelected="OnCalendarDateSelected" />
                             </Border>
 
                             <!-- ستون اسلات‌ها — تمام عرض ستون راست -->
@@ -266,13 +249,15 @@
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <ToggleButton Width="66" Height="32" Margin="3"
+                                                    <ToggleButton Width="72" MinHeight="36" Margin="3"
                                                         IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                                         IsEnabled="{Binding IsAvailable}"
                                                         Command="{Binding DataContext.SelectSlotCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         CommandParameter="{Binding}"
                                                         ToolTip="{Binding PatientName, StringFormat='رزرو: {0}', TargetNullValue='آزاد — برای انتخاب کلیک کنید'}">
-                                                        <TextBlock Text="{Binding Time}" FontFamily="{DynamicResource App.CodeFont}" FontSize="12">
+                                                        <!-- چرخهٔ ۷۴: ساعت اسلات با ارقام فارسی
+                                                             (گزارش مالک: «چند تا تاریخ و عدد بصورت انگلیسی هستند») -->
+                                                        <TextBlock Text="{Binding Time, Converter={StaticResource PersianDigits}}" FontFamily="{DynamicResource App.CodeFont}" FontSize="12.5">
                                                             <TextBlock.Style>
                                                                 <Style TargetType="TextBlock">
                                                                     <Setter Property="TextDecorations" Value="None" />
@@ -280,29 +265,49 @@
                                                                         <DataTrigger Binding="{Binding IsSelected}" Value="True">
                                                                             <Setter Property="FontWeight" Value="Bold" />
                                                                         </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding IsAvailable}" Value="False">
+                                                                            <!-- رزروشده: خط‌خورده و قرمز تا با یک نگاه معلوم باشد -->
+                                                                            <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                                            <Setter Property="Foreground" Value="#C62828" />
+                                                                        </DataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
                                                             </TextBlock.Style>
                                                         </TextBlock>
                                                         <ToggleButton.Style>
-                                                            <!-- چرخه بیست‌ویکم: رنگ‌ها مطابق راهنما —
-                                                                 سبز کمرنگ = آزاد، خاکستری خط‌خورده = رزروشده (غیرفعال)،
-                                                                 خاکستری روشن = استراحت، آبی = انتخاب فعلی -->
+                                                            <!-- ═══ چرخهٔ ۷۴ (گزارش مالک): رنگ‌بندی پررنگ و فوری‌درچشم ═══
+                                                                 «رنگ بندی اونا طوریه که زیاد مشخص نمیشه و به چشم نمیاد
+                                                                 و باید رنگ ها طوری باشه که با یک نگاه فوری تو چشم بزنه
+                                                                 و مشخص باشه (از رنگ های خوبی استفاده بکن هم برای زمان
+                                                                 بندی ها و هم برای راهنمای رنگ زیر ساعت بندی ها)»
+                                                                 آزاد = سبز پررنگ‌تر (#A5D6A7 سبز ۲۰۰ + حاشیهٔ سبز)
+                                                                 رزروشده = قرمز روشن با متن خط‌خورده
+                                                                 استراحت = کهربایی (#FFE0B2)
+                                                                 انتخاب فعلی = آبی اشباع با متن سفید و ضخامت حاشیه ۲.۵ -->
                                                             <Style TargetType="ToggleButton" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
-                                                                <Setter Property="Background" Value="#E8F5E9" />
+                                                                <Setter Property="Background" Value="#A5D6A7" />
+                                                                <Setter Property="BorderBrush" Value="#2E7D32" />
+                                                                <Setter Property="BorderThickness" Value="1.4" />
+                                                                <Setter Property="Foreground" Value="#1B5E20" />
                                                                 <Style.Triggers>
                                                                     <DataTrigger Binding="{Binding IsAvailable}" Value="False">
-                                                                        <Setter Property="Background" Value="#ECEFF1" />
-                                                                        <Setter Property="Opacity" Value="0.6" />
+                                                                        <Setter Property="Background" Value="#FFCDD2" />
+                                                                        <Setter Property="BorderBrush" Value="#E53935" />
+                                                                        <Setter Property="Foreground" Value="#C62828" />
+                                                                        <Setter Property="Opacity" Value="0.85" />
                                                                     </DataTrigger>
                                                                     <DataTrigger Binding="{Binding IsBreak}" Value="True">
-                                                                        <Setter Property="Background" Value="#ECEFF1" />
-                                                                        <Setter Property="Opacity" Value="0.55" />
+                                                                        <Setter Property="Background" Value="#FFE0B2" />
+                                                                        <Setter Property="BorderBrush" Value="#F57C00" />
+                                                                        <Setter Property="Foreground" Value="#E65100" />
+                                                                        <Setter Property="Opacity" Value="0.85" />
                                                                     </DataTrigger>
                                                                     <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                        <Setter Property="Background" Value="#BBDEFB" />
-                                                                        <Setter Property="BorderBrush" Value="#1565C0" />
-                                                                        <Setter Property="BorderThickness" Value="2" />
+                                                                        <Setter Property="Background" Value="#1565C0" />
+                                                                        <Setter Property="BorderBrush" Value="#0D47A1" />
+                                                                        <Setter Property="BorderThickness" Value="2.5" />
+                                                                        <Setter Property="Foreground" Value="White" />
+                                                                        <Setter Property="FontWeight" Value="Bold" />
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
                                                             </Style>
@@ -324,11 +329,10 @@
                                         <WrapPanel.Resources>
                                             <!-- قالب مشترک چیپ/برچسب — هم‌نام با صفحات پاراکلینیک مستقل (چرخهٔ ۴۳) -->
                                             <Style x:Key="LegendChip" TargetType="Border">
-                                                <Setter Property="Width" Value="15" />
-                                                <Setter Property="Height" Value="15" />
+                                                <Setter Property="Width" Value="16" />
+                                                <Setter Property="Height" Value="16" />
                                                 <Setter Property="CornerRadius" Value="4" />
-                                                <Setter Property="BorderThickness" Value="1" />
-                                                <Setter Property="BorderBrush" Value="#90A4AE" />
+                                                <Setter Property="BorderThickness" Value="1.4" />
                                                 <Setter Property="VerticalAlignment" Value="Center" />
                                                 <Setter Property="Margin" Value="0,0,5,0" />
                                             </Style>
@@ -336,28 +340,24 @@
                                                 <Setter Property="FontSize" Value="11" />
                                                 <Setter Property="VerticalAlignment" Value="Center" />
                                                 <Setter Property="Margin" Value="0,0,12,2" />
-                                                <Setter Property="Opacity" Value="0.85" />
+                                                <Setter Property="FontWeight" Value="SemiBold" />
                                             </Style>
                                         </WrapPanel.Resources>
-                                        <!-- #E8F5E9 = پس‌زمینهٔ اسلات آزاد در استایل بالا -->
+                                        <!-- چرخهٔ ۷۴: چیپ‌ها دقیقاً همان رنگ‌های پررنگ جدید اسلات‌ها + حاشیهٔ همرنگ -->
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="اسلات فعال برای رزرو نوبت">
-                                            <Border Style="{StaticResource LegendChip}" Background="#E8F5E9" />
+                                            <Border Style="{StaticResource LegendChip}" Background="#A5D6A7" BorderBrush="#2E7D32" />
                                             <TextBlock Style="{StaticResource LegendLabel}" Text="آزاد" />
                                         </StackPanel>
-                                        <!-- #ECEFF1 با شفافیت = استراحت پزشک -->
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="زمان استراحت پزشک">
-                                            <Border Style="{StaticResource LegendChip}" Background="#ECEFF1" Opacity="0.55" />
+                                            <Border Style="{StaticResource LegendChip}" Background="#FFE0B2" BorderBrush="#F57C00" />
                                             <TextBlock Style="{StaticResource LegendLabel}" Text="استراحت" />
                                         </StackPanel>
-                                        <!-- #BBDEFB با حاشیهٔ آبی = اسلات انتخاب‌شدهٔ فعلی شما -->
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="اسلاتی که انتخاب کرده‌اید">
-                                            <Border Style="{StaticResource LegendChip}" Background="#BBDEFB"
-                                                    BorderBrush="#1565C0" BorderThickness="2" />
+                                            <Border Style="{StaticResource LegendChip}" Background="#1565C0" BorderBrush="#0D47A1" BorderThickness="2" />
                                             <TextBlock Style="{StaticResource LegendLabel}" Text="انتخاب شما" />
                                         </StackPanel>
-                                        <!-- #ECEFF1 کم‌رنگ = قبلاً رزرو شده / غیرفعال -->
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="قبلاً رزرو شده — قابل انتخاب نیست">
-                                            <Border Style="{StaticResource LegendChip}" Background="#ECEFF1" Opacity="0.35" />
+                                            <Border Style="{StaticResource LegendChip}" Background="#FFCDD2" BorderBrush="#E53935" />
                                             <TextBlock Style="{StaticResource LegendLabel}" Text="رزرو شده" />
                                         </StackPanel>
                                     </WrapPanel>
@@ -529,7 +529,13 @@
                         </Grid>
                     </Border>
 
-                    <!-- عملیات دسته‌ای -->
+                    <!-- ═══ چرخهٔ ۷۴ — راهنمای مرتب‌سازی چندگانه + جدول ═══
+                         گزارش مالک: «بتونم مرتب سازی چندگانه هم انجام بدم (مثلاً وقتی روی
+                         عنوان ستون تاریخ میزنم مرتب می‌شود ولی نمی‌توانم همزمان بر اساس
+                         ساعت و وضعیت هم مرتب کنم)». الگو: کلیک = مرتب‌سازی تک‌ستونه
+                         (صعودی → نزولی → حذف)؛ Shift+کلیک = افزودن ستون به مرتب‌سازی
+                         ترکیبی (اولویت از راست به چپ). پیکان‌های هدر ستون‌ها فعال می‌مانند
+                         و مرتب‌سازی پس از هر جستجوی جدید هم حفظ می‌شود. -->
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
                         <Button Command="{Binding SendRemindersCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0">
@@ -545,10 +551,20 @@
                                 <TextBlock Text="لغو دسته‌ای انتخاب‌شده‌ها" Margin="7,0,0,0" />
                             </StackPanel>
                         </Button>
+                        <Border Background="#E3F2FD" CornerRadius="8" Padding="8,3" Margin="12,0,0,0"
+                                VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="SortVariant" Width="13" Height="13" Foreground="#1565C0"
+                                                         VerticalAlignment="Center" />
+                                <TextBlock FontSize="10.5" Foreground="#1565C0" Margin="5,0,0,0" VerticalAlignment="Center"
+                                           Text="مرتب‌سازی چندگانه: هنگام کلیک روی عنوان ستون، Shift را نگه دارید تا آن ستون به مرتب‌سازی اضافه شود؛ کلیک ساده = مرتب‌سازی تک‌ستونه" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
 
                     <!-- جدول ۱۲ ستونه -->
                     <DataGrid Grid.Row="2"
+                              x:Name="AppointmentsGrid"
                               ItemsSource="{Binding Rows}"
                               SelectedItem="{Binding SelectedRow}"
                               AutoGenerateColumns="False"
@@ -556,6 +572,8 @@
                               CanUserAddRows="False"
                               HeadersVisibility="Column"
                               AlternatingRowBackground="#F7FAFD"
+                              GridLinesVisibility="Horizontal"
+                              MinRowHeight="30"
                               FontSize="12">
                         <DataGrid.Columns>
                             <DataGridCheckBoxColumn Header="" Width="36"
@@ -699,8 +717,8 @@
                                                 HorizontalContentAlignment="Right" FontSize="11.5">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding NationalCode}" Opacity="0.55" Margin="12,0,0,0" FontFamily="{DynamicResource App.CodeFont}" />
-                                                <TextBlock Text="{Binding Mobile}" Opacity="0.55" Margin="12,0,0,0" />
+                                                <TextBlock Text="{Binding NationalCode, Converter={StaticResource PersianDigits}}" Opacity="0.55" Margin="12,0,0,0" FontFamily="{DynamicResource App.CodeFont}" />
+                                                <TextBlock Text="{Binding Mobile, Converter={StaticResource PersianDigits}}" Opacity="0.55" Margin="12,0,0,0" />
                                             </StackPanel>
                                         </Button>
                                     </DataTemplate>

@@ -1160,15 +1160,24 @@ public partial class ReceptionsViewModel : ViewModelBase
         else
             _snackbar.Success($"پذیرش موفق — شماره صف: {queueNo} (فاکتور صادر شد)");
 
-        // پاک‌سازی فرم
+        // ═══ پاک‌سازی فرم — چرخهٔ ۷۴: پاک‌سازی کامل پس از ثبت موفق ═══
+        // گزارش مالک: «در پذیرش، بعد از پذیرش و پرداخت، هنوز اطلاعات بیمار در
+        // فیلدهای پذیرش باقی میمونه». سه نشتی قبلی:
+        //   ۱) PatientResults/SelectedSearchResult پاک نمی‌شد → با پاک‌شدن
+        //      FoundPatient، «نتایج جستجوی بیمار قبلی» دوباره نمایان می‌شد؛
+        //   ۲) SelectedDoctor پاک نمی‌شد → پزشکِ پذیرش قبل روی کشو می‌ماند؛
+        //   ۳) بخش هزینه (VisitFee/سهم بیمه/بیمار) اعداد پذیرش قبل را نگه می‌داشت.
         SmartSearch = string.Empty;
         FoundPatient = null;
         FoundAppointmentInfo = null;
+        PatientResults = new ObservableCollection<QuickPatient>();
+        SelectedSearchResult = null;
         InsuranceNumber = string.Empty;
         ReferralCode = null;
         ReceptionNotes = null;
         Inquiry = null;
         InsuranceIndex = 0;
+        SelectedDoctor = null;
         // چرخه ۲۴ — پاک‌سازی حالت خدمت
         SelectedService = null;
         SelectedPerformer = null;
@@ -1178,6 +1187,9 @@ public partial class ReceptionsViewModel : ViewModelBase
         ConsumableQty = 1;
         Consumables.Clear();
         RefreshConsumableTotals();
+        // صفرکردن صریح بخش هزینه — بدون پزشک/خدمت، RecalculateCost مقادیر را
+        // روی صفر می‌نشاند تا هیچ عددی از پذیرش قبلی روی صفحه نماند
+        RecalculateCost();
 
         await LoadAsync();
     }

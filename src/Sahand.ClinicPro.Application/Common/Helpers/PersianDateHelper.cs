@@ -123,7 +123,7 @@ public static class PersianDateHelper
 
         // ═══ چرخهٔ ۷۴ — روزِ ماه با طول واقعی همان ماه (کبیسه‌آگاه) کنترل می‌شود ═══
         var monthLength = GetJalaliMonthLength(jalaliYear, jalaliMonth);
-        if (jalaliDay is < 1 or > monthLength)
+        if (jalaliDay < 1 || jalaliDay > monthLength)
             throw new ArgumentOutOfRangeException(nameof(jalaliDay),
                 $"روز شمسی باید بین ۱ تا {monthLength} باشد (ماه {MonthNames[jalaliMonth - 1]} سال " +
                 $"{jalaliYear} فقط {monthLength} روز دارد)");

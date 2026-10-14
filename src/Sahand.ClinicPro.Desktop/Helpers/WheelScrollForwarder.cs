@@ -60,7 +60,7 @@ public static class WheelScrollForwarder
         if (CanScroll(chain[0], args)) return;
 
         // جابه‌جایی افقی با Shift — همان منطق با محور افقی
-        var horizontal = (args.KeyboardDevice.Modifiers & ModifierKeys.Shift) != 0;
+        var horizontal = (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift;
 
         // نخستین والدِ توانمند در همان جهت — اسکرول دستی
         for (var i = 1; i < chain.Count; i++)

@@ -141,8 +141,6 @@ public partial class MainWindowViewModel : ObservableObject
         // چرخهٔ ۴۱ — صفحهٔ مستقل لوازم مصرفی (بدون نیاز به ماژول داروخانه)
         ConsumablesViewModel consumablesVm,
         VisitsViewModel visitsVm,
-        // چرخهٔ بیست‌وهفتم — میزکار پزشک (صفحهٔ ویزیت پزشک)
-        DoctorVisitViewModel doctorVisitVm,
         PrescriptionsViewModel prescriptionsVm,
         BillingViewModel billingVm,
         AccountingViewModel accountingVm,
@@ -259,8 +257,6 @@ public partial class MainWindowViewModel : ObservableObject
             // چرخهٔ ۴۱ — لوازم مصرفی درمانگاه (صفحهٔ منوی کناری؛ مستقل از داروخانه)
             ["consumables"] = () => consumablesVm,
             ["visits"] = () => visitsVm,
-            // چرخهٔ بیست‌وهفتم — میزکار پزشک (گزارش هجدهم مالک)
-            ["doctor-visit"] = () => doctorVisitVm,
             ["prescriptions"] = () => prescriptionsVm,
             ["billing"] = () => billingVm,
             ["accounting"] = () => accountingVm,
@@ -341,8 +337,6 @@ public partial class MainWindowViewModel : ObservableObject
                 await receptions.LoadAsync();
             else if (page is VisitsViewModel visits)
                 await visits.LoadAsync();
-            else if (page is DoctorVisitViewModel doctorVisit)
-                await doctorVisit.LoadAsync();
         };
 
         // اعلان جدید → شمارنده زنگ + پیام شناور خبری (آبی)
@@ -440,9 +434,13 @@ public partial class MainWindowViewModel : ObservableObject
             //      مستقیم به «میزکار پزشک» می‌رود — صف بیماران خودش، فراخوان و شروع
             //      معالجه؛ اگر به میزکار دسترسی نداشت، همان مسیر پیشین (داشبورد)
             //      اعمال می‌شود.
+            // ═══ چرخهٔ ۷۴ — ادغام میزکار پزشک در «ویزیت و معاینه» ═══
+            // صفحهٔ مستقل doctor-visit حذف شد (هم‌پوشانی کامل)؛ کاربر پزشک به
+            // «ویزیت و معاینه» می‌رود که حالا فیلتر پزشکِ خودکار دارد
+            // (VisitsViewModel از users/me پزشک متصل را پیش‌فرض می‌کند)
             var landingPage = _tokens.Roles.Contains("Doctor", StringComparer.OrdinalIgnoreCase)
-                              && HasPageAccess("doctor-visit")
-                ? "doctor-visit"
+                              && HasPageAccess("visits")
+                ? "visits"
                 : "dashboard";
             NavigateToPage(HasPageAccess(landingPage) ? landingPage : FirstAllowedPageKey());
 
@@ -509,8 +507,6 @@ public partial class MainWindowViewModel : ObservableObject
                 // در گروه پذیرش و درمان (نه نسخه و دارو) تا جایگاهش در جریان درمان روشن باشد
                 new() { Title = "لوازم مصرفی", PageKey = "consumables", Icon = "Syringe" },
                 new() { Title = "ویزیت و معاینه", PageKey = "visits", Icon = "Stethoscope" },
-                // چرخهٔ بیست‌وهفتم — میزکار شخصی پزشک (صف و فراخوان و آمار خودش)
-                new() { Title = "میزکار پزشک", PageKey = "doctor-visit", Icon = "Doctor" },
                 new() { Title = "پرونده بالینی پیشرفته", PageKey = "emr-advanced", Icon = "HeartPulse" }),
 
             // ─── تجویز و دارو ───
