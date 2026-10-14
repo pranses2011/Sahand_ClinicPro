@@ -15,6 +15,9 @@
             <Setter Property="Opacity" Value="0.65" />
             <Setter Property="Margin" Value="2,6,2,3" />
         </Style>
+        <!-- سبک‌های نوار گام (WizCircle/WizNum/WizLabel/WizLink) در چرخهٔ ۷۶ به
+             App.xaml منتقل شدند (App.Wizard*) تا صفحهٔ نوبت‌دهی هم از همان‌ها
+             استفاده کند — کلیدهای قدیمی برای سازگاری به نسخهٔ سراسری نگاشت می‌شوند -->
     </UserControl.Resources>
 
     <Grid Margin="16,12">
@@ -42,7 +45,7 @@
                         Background="#26FFFFFF" BorderBrush="#59FFFFFF" BorderThickness="1">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="ArrowLeftBold" Width="12" Height="12" Foreground="White" VerticalAlignment="Center" />
-                        <TextBlock Text="جستجو ← انتخاب بیمار ← پذیرش" Foreground="White" FontSize="10.5"
+                        <TextBlock Text="بیمار ← خدمت ← بیمه و ثبت" Foreground="White" FontSize="10.5"
                                    FontWeight="SemiBold" Margin="5,0,0,0" VerticalAlignment="Center" />
                     </StackPanel>
                 </Border>
@@ -154,6 +157,169 @@
                             </StackPanel>
                         </DockPanel>
 
+                        <!-- ═══ چرخهٔ ۷۶ — نوار گام‌های ویزارد پذیرش ═══
+                             گزارش مالک چرخهٔ ۷۴: «ورود اطلاعات و ثبت به‌صورت مرحله‌ای (Wizard)».
+                             سه گام با دایرهٔ شماره و برچسب؛ وضعیت از WizardStep:
+                             جاری = آبی برند، انجام‌شده = سبز، آینده = کم‌رنگ. خط اتصال
+                             میان گام‌ها پس از گذر سبز می‌شود -->
+                        <Grid Margin="0,6,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="46" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="46" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- گام ۱ — بیمار (راست)؛ همیشه جاری یا انجام‌شده است -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Border>
+                                    <Border.Style>
+                                        <Style TargetType="Border" BasedOn="{StaticResource App.WizardCircle}">
+                                            <Setter Property="Background" Value="#2E7D32" />
+                                            <Setter Property="BorderBrush" Value="#1B5E20" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WizardStep}" Value="0">
+                                                    <Setter Property="Background" Value="#1565C0" />
+                                                    <Setter Property="BorderBrush" Value="#0D47A1" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="۱" Style="{StaticResource App.WizardNumber}" Foreground="White" />
+                                </Border>
+                                <TextBlock Text="انتخاب بیمار">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.WizardLabel}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WizardStep}" Value="0">
+                                                    <Setter Property="Opacity" Value="1" />
+                                                    <Setter Property="Foreground" Value="#1565C0" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <!-- اتصال گام ۱ → ۲ -->
+                            <Border Grid.Column="1">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource App.WizardLink}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="1">
+                                                <Setter Property="Background" Value="#2E7D32" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="2">
+                                                <Setter Property="Background" Value="#2E7D32" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border>
+
+                            <!-- گام ۲ — خدمت -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Border>
+                                    <Border.Style>
+                                        <Style TargetType="Border" BasedOn="{StaticResource App.WizardCircle}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WizardStep}" Value="1">
+                                                    <Setter Property="Background" Value="#1565C0" />
+                                                    <Setter Property="BorderBrush" Value="#0D47A1" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding WizardStep}" Value="2">
+                                                    <Setter Property="Background" Value="#2E7D32" />
+                                                    <Setter Property="BorderBrush" Value="#1B5E20" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="۲">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource App.WizardNumber}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding WizardStep}" Value="1">
+                                                        <Setter Property="Foreground" Value="White" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding WizardStep}" Value="2">
+                                                        <Setter Property="Foreground" Value="White" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                                <TextBlock Text="نوع خدمت / پزشک">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.WizardLabel}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WizardStep}" Value="1">
+                                                    <Setter Property="Opacity" Value="1" />
+                                                    <Setter Property="Foreground" Value="#1565C0" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <!-- اتصال گام ۲ → ۳ -->
+                            <Border Grid.Column="3">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource App.WizardLink}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="2">
+                                                <Setter Property="Background" Value="#2E7D32" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border>
+
+                            <!-- گام ۳ — ثبت (چپ) -->
+                            <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Border>
+                                    <Border.Style>
+                                        <Style TargetType="Border" BasedOn="{StaticResource App.WizardCircle}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WizardStep}" Value="2">
+                                                    <Setter Property="Background" Value="#1565C0" />
+                                                    <Setter Property="BorderBrush" Value="#0D47A1" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="۳">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource App.WizardNumber}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding WizardStep}" Value="2">
+                                                        <Setter Property="Foreground" Value="White" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                                <TextBlock Text="بیمه، هزینه و ثبت">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.WizardLabel}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WizardStep}" Value="2">
+                                                    <Setter Property="Opacity" Value="1" />
+                                                    <Setter Property="Foreground" Value="#1565C0" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- ═══ گام ۰ — بیمار: جستجوی هوشمند + نتایج + کارت پرونده ═══ -->
+                        <StackPanel Visibility="{Binding WizardStep, Converter={StaticResource SectionToVisibility}, ConverterParameter=0}">
+
                         <!-- جستجوی هوشمند — چرخه بیست‌وسوم: برچسب و راهنما برای جستجوی
                              نام/نام‌خانوادگی و تطبیق جزئی (پیش‌تر فقط کد ملی کامل جواب می‌داد) -->
                         <Grid Margin="0,0,0,6">
@@ -252,16 +418,13 @@
                             </Grid>
                         </Border>
 
-                        <!-- دو ستون فرم -->
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="24" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
+                        </StackPanel><!-- پایان گام ۰ — بیمار -->
 
-                            <!-- ستون راست: حالت پذیرش + پزشک/خدمت — چرخه ۲۴ -->
-                            <StackPanel Grid.Column="0">
+                        <!-- ═══ گام ۱ — خدمت: نوع پذیرش + پزشک/خدمت + انجام‌دهنده/اتاق + لوازم مصرفی ═══ -->
+                        <StackPanel Visibility="{Binding WizardStep, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}">
+
+                        <!-- حالت پذیرش + پزشک/خدمت — چرخه ۲۴ -->
+                        <StackPanel>
                                 <!-- ═══ چرخه ۲۴ (گزارش هفدهم مالک) — «پذیرش فقط پزشک دارد؛
                                      بیمار آمپول/سرم/پانسمان/آزمایش/عکس چه شود؟» — انتخابگر
                                      نوع پذیرش: ویزیت پزشک یا خدمت درمانی از تعرفه‌ها ═══ -->
@@ -305,67 +468,7 @@
                                               DisplayMemberPath="DisplayName" />
                                 </StackPanel>
 
-                                <TextBlock Text="یادداشت پذیرش" Style="{StaticResource FieldCaption}" />
-                                <TextBox Text="{Binding ReceptionNotes, UpdateSourceTrigger=PropertyChanged}"
-                                         AcceptsReturn="True" Height="56" TextWrapping="Wrap" />
                             </StackPanel>
-
-                            <!-- ستون چپ: بیمه -->
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="نوع بیمه" Style="{StaticResource FieldCaption}" />
-                                <ComboBox ItemsSource="{Binding InsuranceCompanies}"
-                                          SelectedIndex="{Binding InsuranceIndex}"
-                                          DisplayMemberPath="Name" />
-                                <TextBlock Text="شماره بیمه" Style="{StaticResource FieldCaption}" />
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox Grid.Column="0" Text="{Binding InsuranceNumber, UpdateSourceTrigger=PropertyChanged}" />
-                                    <Button Grid.Column="1" Command="{Binding VerifyInsuranceCommand}"
-                                            Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0"
-                                            ToolTip="استعلام برخط از سامانه بیمه">
-                                        <StackPanel Orientation="Horizontal">
-                                            <ProgressBar Width="16" Height="16" IsIndeterminate="True"
-                                                         Visibility="{Binding IsInquiring, Converter={StaticResource BoolToVisibility}}" />
-                                            <materialDesign:PackIcon Kind="LinkVariant" Width="14" Height="14"
-                                                                     VerticalAlignment="Center"
-                                                                     Visibility="{Binding IsInquiring, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}" />
-                                            <TextBlock Text="استعلام" Margin="6,0,0,0" />
-                                        </StackPanel>
-                                    </Button>
-                                </Grid>
-
-                                <!-- نتیجه استعلام -->
-                                <Border CornerRadius="8" Padding="10,6" Margin="0,8,0,0"
-                                        Visibility="{Binding Inquiry, Converter={StaticResource NullToVisibility}}">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#FFEBEE" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Inquiry.IsEligible}" Value="True">
-                                                    <Setter Property="Background" Value="#E8F5E9" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <StackPanel>
-                                        <TextBlock FontWeight="SemiBold" FontSize="12">
-                                            <Run Text="{Binding Inquiry.IsEligible, Mode=OneWay, Converter={StaticResource BoolToText}}" />
-                                            <Run Text=" — " /><Run Text="{Binding Inquiry.Message, Mode=OneWay}" />
-                                        </TextBlock>
-                                        <TextBlock FontSize="11" Opacity="0.8" Margin="0,3,0,0"
-                                                   Visibility="{Binding Inquiry.ApprovalCode, Converter={StaticResource NullToVisibility}}">
-                                            <Run Text="کد تأیید: " /><Run Text="{Binding Inquiry.ApprovalCode, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
-                                        </TextBlock>
-                                    </StackPanel>
-                                </Border>
-
-                                <TextBlock Text="کد ارجاع (اختیاری)" Style="{StaticResource FieldCaption}" />
-                                <TextBox Text="{Binding ReferralCode, UpdateSourceTrigger=PropertyChanged}" />
-                            </StackPanel>
-                        </Grid>
 
                         <!-- ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — لوازم مصرفی درمانگاه ═══
                              «سرنگ و سرم و گاز استریل و مواردی از این قبیل رو وقتی بیمار
@@ -470,6 +573,82 @@
                             </StackPanel>
                         </Border>
 
+                        </StackPanel><!-- پایان گام ۱ — خدمت -->
+
+                        <!-- ═══ گام ۲ — بیمه، هزینه و ثبت ═══ -->
+                        <StackPanel Visibility="{Binding WizardStep, Converter={StaticResource SectionToVisibility}, ConverterParameter=2}">
+
+                        <!-- بیمه + ارجاع + یادداشت — دو ستون (چرخهٔ ۷۶: از فرم قدیمی به گام ثبت منتقل شد) -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="24" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- ستون راست: بیمه و استعلام — بدون تغییر رفتار، فقط جابه‌جایی به گام ثبت -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="نوع بیمه" Style="{StaticResource FieldCaption}" />
+                                <ComboBox ItemsSource="{Binding InsuranceCompanies}"
+                                          SelectedIndex="{Binding InsuranceIndex}"
+                                          DisplayMemberPath="Name" />
+                                <TextBlock Text="شماره بیمه" Style="{StaticResource FieldCaption}" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding InsuranceNumber, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Button Grid.Column="1" Command="{Binding VerifyInsuranceCommand}"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0"
+                                            ToolTip="استعلام برخط از سامانه بیمه">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ProgressBar Width="16" Height="16" IsIndeterminate="True"
+                                                         Visibility="{Binding IsInquiring, Converter={StaticResource BoolToVisibility}}" />
+                                            <materialDesign:PackIcon Kind="LinkVariant" Width="14" Height="14"
+                                                                     VerticalAlignment="Center"
+                                                                     Visibility="{Binding IsInquiring, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}" />
+                                            <TextBlock Text="استعلام" Margin="6,0,0,0" />
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+
+                                <!-- نتیجه استعلام -->
+                                <Border CornerRadius="8" Padding="10,6" Margin="0,8,0,0"
+                                        Visibility="{Binding Inquiry, Converter={StaticResource NullToVisibility}}">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#FFEBEE" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Inquiry.IsEligible}" Value="True">
+                                                    <Setter Property="Background" Value="#E8F5E9" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold" FontSize="12">
+                                            <Run Text="{Binding Inquiry.IsEligible, Mode=OneWay, Converter={StaticResource BoolToText}}" />
+                                            <Run Text=" — " /><Run Text="{Binding Inquiry.Message, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <TextBlock FontSize="11" Opacity="0.8" Margin="0,3,0,0"
+                                                   Visibility="{Binding Inquiry.ApprovalCode, Converter={StaticResource NullToVisibility}}">
+                                            <Run Text="کد تأیید: " /><Run Text="{Binding Inquiry.ApprovalCode, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- ستون چپ: ارجاع + یادداشت -->
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="کد ارجاع (اختیاری)" Style="{StaticResource FieldCaption}" />
+                                <TextBox Text="{Binding ReferralCode, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="یادداشت پذیرش" Style="{StaticResource FieldCaption}" />
+                                <TextBox Text="{Binding ReceptionNotes, UpdateSourceTrigger=PropertyChanged}"
+                                         AcceptsReturn="True" Height="56" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+
                         <!-- ═══ محاسبه هزینه ═══ -->
                         <!-- چرخهٔ سی‌ودوم (گزارش مالک): «برای بیمهٔ آزاد هم سهم بیمه و سهم
                              بیمار می‌اندازد که اشتباه است» — در حالت «آزاد (بدون بیمه)»
@@ -563,6 +742,51 @@
                                 </StackPanel>
                             </Button>
                         </StackPanel>
+                        </StackPanel><!-- پایان گام ۲ — ثبت -->
+
+                        <!-- ═══ ناوبری ویزارد — چرخهٔ ۷۶ ═══
+                             «مرحلهٔ بعد» در سمت چپ (جهت پیشرفت در چیدمان راست‌به‌چپ)
+                             و در گام آخر مخفی؛ «مرحلهٔ قبل» در سمت راست و در گام نخست مخفی -->
+                        <DockPanel Margin="0,16,0,0" LastChildFill="False">
+                            <Button DockPanel.Dock="Left" Command="{Binding NextStepCommand}"
+                                    FontSize="13" Padding="22,10" MinWidth="170" MinHeight="44">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="2">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="مرحلهٔ بعد" VerticalAlignment="Center" />
+                                    <materialDesign:PackIcon Kind="ArrowLeftBold" Width="16" Height="16"
+                                                             VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                            <Button DockPanel.Dock="Right" Command="{Binding BackStepCommand}"
+                                    FontSize="13" Padding="18,10" MinWidth="140" MinHeight="44">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="1">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="2">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ArrowRightBold" Width="16" Height="16"
+                                                             VerticalAlignment="Center" />
+                                    <TextBlock Text="مرحلهٔ قبل" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </DockPanel>
                     </StackPanel>
                 </Border>
 

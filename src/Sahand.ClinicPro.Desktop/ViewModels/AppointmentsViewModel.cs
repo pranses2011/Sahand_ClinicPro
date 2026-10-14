@@ -272,6 +272,55 @@ public partial class AppointmentsViewModel : ViewModelBase
     [ObservableProperty]
     private decimal _estimatedFee;
 
+    // ═══ چرخهٔ ۷۶ (گزارش مالک چرخهٔ ۷۴) — فرم مرحله‌ای (ویزارد) نوبت‌دهی ═══
+    // «ورود اطلاعات و ثبت به‌صورت مرحله‌ای (Wizard) + چیدمان خیلی زیباتر و
+    // شکیل‌تر» — تب رزرو نوبت به سه گامِ گویا شکسته شد:
+    //   گام ۰ — بیمار و پزشک: جستجو + انتخاب + کارت پرونده + پزشک
+    //   گام ۱ — زمان: تقویم شمسی + اسلات‌های آزاد روز
+    //   گام ۲ — تأیید و ثبت: خلاصهٔ انتخاب + نوع/اولویت/یادداشت + دکمهٔ ثبت
+    // پیمایش با دکمه‌های «مرحلهٔ بعد/قبل» و اعتبارسنجیِ همان گام.
+
+    /// <summary>گام جاری ویزارد نوبت‌دهی — ۰ بیمار و پزشک، ۱ زمان، ۲ تأیید و ثبت</summary>
+    [ObservableProperty]
+    private int _wizardStep;
+
+    /// <summary>
+    /// رفتن به گام بعد — اعتبارسنجی گام جاری با پیام راهنمای فارسی؛
+    /// در گام آخر مخفی است و کار با دکمهٔ «تایید و ثبت نوبت» ادامه می‌یابد
+    /// </summary>
+    [RelayCommand]
+    private void NextStep()
+    {
+        if (WizardStep == 0)
+        {
+            if (SelectedPatient is null)
+            {
+                _snackbar.Error("ابتدا بیمار را انتخاب کنید");
+                return;
+            }
+            if (SelectedDoctor is null)
+            {
+                _snackbar.Error("ابتدا پزشک را انتخاب کنید");
+                return;
+            }
+        }
+        if (WizardStep == 1 && SelectedSlot is null)
+        {
+            _snackbar.Error("ابتدا ساعت نوبت را انتخاب کنید");
+            return;
+        }
+        if (WizardStep < 2)
+            WizardStep++;
+    }
+
+    /// <summary>بازگشت به گام قبل — در گام نخست مخفی است</summary>
+    [RelayCommand]
+    private void BackStep()
+    {
+        if (WizardStep > 0)
+            WizardStep--;
+    }
+
     /// <summary>نوبت‌های امروز</summary>
     public ObservableCollection<TodayRow> TodayAppointments { get; } = new();
 
@@ -597,6 +646,8 @@ public partial class AppointmentsViewModel : ViewModelBase
         Notes = string.Empty;
         SelectedSlot = null;
         foreach (var s in Slots) s.IsSelected = false;
+        // چرخهٔ ۷۶ — ویزارد برای نوبت بعدی به گام نخست بازمی‌گردد
+        WizardStep = 0;
         await LoadSlotsAsync();
         await LoadTodayAppointmentsAsync();
     }

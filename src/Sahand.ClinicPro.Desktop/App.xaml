@@ -385,6 +385,40 @@
                 </Setter>
             </Style>
 
+            <!-- ─── چرخهٔ ۷۶ — سبک‌های پایهٔ نوار گام‌های ویزارد (پذیرش/نوبت‌دهی) ───
+                 گزارش مالک چرخهٔ ۷۴: «ورود اطلاعات و ثبت به‌صورت مرحله‌ای (Wizard)».
+                 دایرهٔ شمارهٔ گام + شماره + برچسب + خط اتصال؛ حالت «آینده» پیش‌فرض
+                 است و حالت جاری/انجام‌شده با دیتاتریگر هر صفحه اعمال می‌شود. -->
+            <Style x:Key="App.WizardCircle" TargetType="Border">
+                <Setter Property="Width" Value="34" />
+                <Setter Property="Height" Value="34" />
+                <Setter Property="CornerRadius" Value="17" />
+                <Setter Property="BorderThickness" Value="1.6" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+            </Style>
+            <Style x:Key="App.WizardNumber" TargetType="TextBlock">
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="FontSize" Value="13.5" />
+                <Setter Property="Foreground" Value="#9E9E9E" />
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            <Style x:Key="App.WizardLabel" TargetType="TextBlock">
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="FontSize" Value="12.5" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Margin" Value="8,0,0,0" />
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                <Setter Property="Opacity" Value="0.55" />
+            </Style>
+            <Style x:Key="App.WizardLink" TargetType="Border">
+                <Setter Property="Height" Value="2.5" />
+                <Setter Property="CornerRadius" Value="1.2" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+            </Style>
+
             <!-- ─── ۲) نشان آیکونی کارت آماری — مربع گوشه‌گرد همیشه‌متحرک ───
                  پس‌زمینهٔ ملایمِ رنگ هویت هر صفحه (استفادهٔ مستقیم در صفحات:
                  Background/Foreground هاردکد رنگی صفحه + این قالب اندازه/شکل) -->

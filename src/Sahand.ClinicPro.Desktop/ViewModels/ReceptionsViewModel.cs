@@ -114,6 +114,57 @@ public partial class ReceptionsViewModel : ViewModelBase
     private string? _foundAppointmentInfo;
 
     /* ── فرم پذیرش ── */
+
+    // ═══ چرخهٔ ۷۶ (گزارش مالک چرخهٔ ۷۴) — فرم مرحله‌ای (ویزارد) پذیرش ═══
+    // «ورود اطلاعات و ثبت به‌صورت مرحله‌ای (Wizard) + چیدمان خیلی زیباتر و
+    // شکیل‌تر» — فرم بلندِ تک‌صفحه‌ای به سه گامِ گویا شکسته شد:
+    //   گام ۰ — بیمار: جستجوی هوشمند + انتخاب + کارت پرونده
+    //   گام ۱ — خدمت: نوع پذیرش + پزشک/خدمت + انجام‌دهنده/اتاق + لوازم مصرفی
+    //   گام ۲ — ثبت: بیمه/استعلام/ارجاع + یادداشت + محاسبهٔ هزینه + دکمه‌ها
+    // پیمایش با دکمه‌های «مرحلهٔ بعد/قبل» و اعتبارسنجیِ همان گام (همان پیام‌های
+    // راهنمای اسنک‌بار که پیش‌تر فقط هنگام ثبت دیده می‌شدند).
+
+    /// <summary>گام جاری ویزارد پذیرش — ۰ بیمار، ۱ خدمت، ۲ ثبت</summary>
+    [ObservableProperty]
+    private int _wizardStep;
+
+    /// <summary>
+    /// رفتن به گام بعد — اعتبارسنجی گام جاری با پیام راهنمای فارسی؛
+    /// در گام آخر (ثبت) مخفی است و کار با دکمه‌های زنجیرهٔ پذیرش ادامه می‌یابد
+    /// </summary>
+    [RelayCommand]
+    private void NextStep()
+    {
+        if (WizardStep == 0 && FoundPatient is null)
+        {
+            _snackbar.Error("ابتدا بیمار را جستجو و انتخاب کنید");
+            return;
+        }
+        if (WizardStep == 1)
+        {
+            if (ReceptionModeIndex == 1 && SelectedService is null)
+            {
+                _snackbar.Error("ابتدا خدمت درمانی را انتخاب کنید");
+                return;
+            }
+            if (ReceptionModeIndex == 0 && SelectedDoctor is null)
+            {
+                _snackbar.Error("ابتدا پزشک را انتخاب کنید");
+                return;
+            }
+        }
+        if (WizardStep < 2)
+            WizardStep++;
+    }
+
+    /// <summary>بازگشت به گام قبل — در گام نخست مخفی است</summary>
+    [RelayCommand]
+    private void BackStep()
+    {
+        if (WizardStep > 0)
+            WizardStep--;
+    }
+
     public ObservableCollection<DoctorOption> Doctors { get; } = new();
 
     // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — «پذیرش خدمت درمانی» ═══
@@ -1190,6 +1241,8 @@ public partial class ReceptionsViewModel : ViewModelBase
         // صفرکردن صریح بخش هزینه — بدون پزشک/خدمت، RecalculateCost مقادیر را
         // روی صفر می‌نشاند تا هیچ عددی از پذیرش قبلی روی صفحه نماند
         RecalculateCost();
+        // چرخهٔ ۷۶ — ویزارد برای پذیرش بعدی به گام نخست بازمی‌گردد
+        WizardStep = 0;
 
         await LoadAsync();
     }
