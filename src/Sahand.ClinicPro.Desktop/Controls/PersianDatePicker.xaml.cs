@@ -11,6 +11,17 @@ namespace Sahand.ClinicPro.Desktop.Controls;
 /// (تایپ دستی در جعبهٔ متن + تقویم بازشو فقط از آیکون تقویم)
 /// خروجی چندگانه: تاریخ میلادی (SelectedDate) + متن شمسی (SelectedShamsi)
 /// + رشتهٔ شمسی لاتین‌رقم دوطرفه (DateShamsiText) برای فرم‌های رشته‌ای
+/// ═══════════════════════════════════════════════════════════════════
+/// چرخهٔ ۷۴ (سه گزارش مالک — هر سه یک ریشه):
+///   ۱) «با انتخاب تاریخ از تقویم بسته می‌شود ولی تاریخ فیلد بروز نمی‌شود»
+///   ۲) «۱۳۶۳/۱۳/۳۶ مینویسم هم قبول می‌کند» (ماه و روز غلط)
+/// ریشهٔ مشترک: اتصالِ OneWay متن جعبه، با اولین کاراکترِ تایپی کاربر در WPF
+/// «کشته» می‌شود (مقدار محلی جای اتصال را می‌گیرد)؛ پس از آن هر به‌روزرسانیِ
+/// برنامه‌ای (انتخاب از تقویم) در فیلتـر منعکس نمی‌شد و متنِ تایپی — معتبر یا
+/// نامعتبر — تا ابد می‌ماند. رفع قطعی: همگام‌سازی متن از کد پشت
+/// (SyncShamsiBox) که در برابر تایپ کاربر مصون است + اعتبارسنجی کاملِ
+/// روز/ماه/سال با پیام فارسی دقیق + بازگرداندن متن نامعتبر به آخرین تاریخ
+/// معتبر هنگام خروج از فیلد (هیچ تاریخ غلطی هرگز «پذیرفته» نمی‌شود).
 /// </summary>
 public partial class PersianDatePicker : UserControl
 {
@@ -25,6 +36,12 @@ public partial class PersianDatePicker : UserControl
     /// و پاک‌سازی درست هنگام خروج از فیلد
     /// </summary>
     private bool _typedTextInvalid;
+
+    /// <summary>
+    /// پرچم همگام‌سازی برنامه‌ای متن — وقتی کد خودمان ShamsiBox.Text را
+    /// می‌نویسد نباید رویداد TextChanged حالت خطا را دست‌کاری کند
+    /// </summary>
+    private bool _suppressTextEvents;
 
     /// <summary>سازنده — اتصال رویدادها</summary>
     public PersianDatePicker()
@@ -42,17 +59,30 @@ public partial class PersianDatePicker : UserControl
         // ═══ چرخهٔ ۷۲ — ورود تایپی دستی (گزارش مالک: «بصورت دستی هم بشه نوشت») ═══
         // Enter = اعمال فوری متن تایپ‌شده؛ خروج از فیلد = اعمالِ مؤدبانه با بازخورد
         ShamsiBox.PreviewKeyDown += OnShamsiBoxKeyDown;
-        ShamsiBox.LostFocus += (_, _) => ApplyTypedText();
+        ShamsiBox.LostFocus += (_, _) => ApplyTypedText(revertInvalid: true);
         // با شروع ویرایش تازه، حالت خطای قبلی پاک می‌شود (بازخورد زنده)
         ShamsiBox.TextChanged += (_, _) =>
         {
+            if (_suppressTextEvents) return;
             if (_typedTextInvalid)
                 SetInvalidState(false, null);
         };
-        // اگر کاربر حین ویرایشِ متن، از تقویم تاریخی برگزیند، متن در حال ویرایش
-        // با نمایش استاندارد هم‌گام می‌شود (مسیر SelectedShamsi ← Binding یک‌طرفه)
+
+        // ═══ چرخهٔ ۷۴ — اعتبارسنجی زنده حین تایپ ═══
+        // به‌محض کامل‌شدن قالب (طول ≥ ۸)، صحت تاریخ بررسی می‌شود تا کاربر
+        // همان لحظه بازخورد بگیرد، نه بعد از Enter یا خروج از فیلد
+        ShamsiBox.TextChanged += (_, _) =>
+        {
+            if (_suppressTextEvents) return;
+            var text = (ShamsiBox.Text ?? string.Empty).Trim();
+            if (text.Length is >= 8 and <= 10 && TryParseTyped(text, out _, out var error))
+                SetInvalidState(false, null);
+            else if (text.Length >= 8)
+                SetInvalidState(true, error);
+        };
 
         // بستن پاپ‌آپ با Escape — سازگاری صفحه‌کلید
+        // (چرخهٔ ۷۴: هندلر ESC پنجره حالا اولویت را به همین کنترل می‌دهد)
         PreviewKeyDown += (_, e) =>
         {
             if (e.Key == Key.Escape && CalendarPopup.IsOpen)
@@ -62,11 +92,11 @@ public partial class PersianDatePicker : UserControl
             }
         };
 
-        // ذخیرهٔ قاب تم + هم‌گامی اولیه نمایش
+        // ذخیرهٔ قاب تم + همگامی اولیه نمایش
         Loaded += (_, _) =>
         {
             _defaultBoxBorder = ShamsiBox.BorderBrush;
-            SyncShamsi();
+            SyncShamsiBox();
         };
     }
 
@@ -166,21 +196,90 @@ public partial class PersianDatePicker : UserControl
     /// </summary>
     private void OnShamsiBoxKeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key == Key.Escape)
+        {
+            // چرخهٔ ۷۴: ESC داخل جعبهٔ متنِ در حال ویرایش، متن را به تاریخ
+            // معتبر فعلی برمی‌گرداند (لغو ویرایش) — رفتار طبیعی ویرایشگرها
+            if (_typedTextInvalid)
+            {
+                SyncShamsiBox();
+                SetInvalidState(false, null);
+                e.Handled = true;
+            }
+            return;
+        }
         if (e.Key != Key.Enter)
             return;
-        ApplyTypedText();
+        ApplyTypedText(revertInvalid: false);
         e.Handled = true;
     }
 
     /// <summary>
-    /// اعمال متن تایپ‌شدهٔ دستی — چرخهٔ ۷۲. سه پیامد:
+    /// تحلیل کامل متن تایپ‌شده — چرخهٔ ۷۴. برخلاف گذشته که فقط ToGregorian
+    /// صدا زده می‌شد و خطای «روز ناموجود» به‌صورت عمومی رد می‌شد، اینجا
+    /// اجزا جداگانه بررسی می‌شوند تا پیام خطا دقیق و راهنما باشد:
+    /// ماه > ۱۲؟ روز > طول همان ماه؟ سال بی‌معنا؟
+    /// </summary>
+    /// <param name="text">متن تایپ‌شده</param>
+    /// <param name="parsed">تاریخ میلادی معتبر (در صورت موفقیت)</param>
+    /// <param name="error">پیام خطای فارسی دقیق (در صورت نامعتبری)</param>
+    private static bool TryParseTyped(string text, out DateTime? parsed, out string error)
+    {
+        parsed = null;
+        error = string.Empty;
+
+        var parts = text.Trim().Replace('-', '/').Replace('.', '/').Split('/');
+        if (parts.Length != 3)
+        {
+            error = "قالب تاریخ نامعتبر است — نمونهٔ درست: ۱۴۰۴/۰۷/۲۰";
+            return false;
+        }
+
+        if (!int.TryParse(PersianDateHelper.ToLatinDigits(parts[0].Trim()), out var y) ||
+            !int.TryParse(PersianDateHelper.ToLatinDigits(parts[1].Trim()), out var m) ||
+            !int.TryParse(PersianDateHelper.ToLatinDigits(parts[2].Trim()), out var d))
+        {
+            error = "اجزای تاریخ باید عدد باشند — نمونهٔ درست: ۱۴۰۴/۰۷/۲۰";
+            return false;
+        }
+
+        // سال — بازهٔ منطقی پرونده‌های درمانگاه (تولد ۱۲۰۰ تا آیندهٔ نزدیک)
+        if (y is < 1200 or > 1500)
+        {
+            error = $"سال {PersianDateHelper.ToPersianDigits(y.ToString())} خارج از بازهٔ منطقی (۱۲۰۰ تا ۱۵۰۰) است";
+            return false;
+        }
+
+        // ماه — باید بین ۱ تا ۱۲ باشد (مثلاً ۱۳ که «ماه» ندارد)
+        if (m is < 1 or > 12)
+        {
+            error = $"ماه {PersianDateHelper.ToPersianDigits(m.ToString())} وجود ندارد — ماه باید بین ۱ تا ۱۲ باشد";
+            return false;
+        }
+
+        // روز — با طول واقعی همان ماه (۳۱/۳۰/۲۹/۳۰ کبیسه) — چرخهٔ ۷۴
+        var monthLength = PersianDateHelper.GetJalaliMonthLength(y, m);
+        if (d is < 1 or > monthLength)
+        {
+            error = $"روز {PersianDateHelper.ToPersianDigits(d.ToString())} در «{PersianDateHelper.MonthNames[m - 1]} {PersianDateHelper.ToPersianDigits(y.ToString())}» وجود ندارد — این ماه {PersianDateHelper.ToPersianDigits(monthLength.ToString())} روز است";
+            return false;
+        }
+
+        parsed = PersianDateHelper.ToGregorian(y, m, d);
+        return parsed is not null;
+    }
+
+    /// <summary>
+    /// اعمال متن تایپ‌شدهٔ دستی — چرخهٔ ۷۲ + بازگردانی چرخهٔ ۷۴. سه پیامد:
     /// متن خالی → پاک‌شدن تاریخ (فرم‌های اختیاری)؛
     /// متن معتبر («۱۴۰۴/۰۷/۲۰» / «1404-07-20» / ارقام فارسی) → تاریخ + نرمال‌سازی
     /// نمایش به فرمت استاندارد فارسی‌رقم؛
-    /// متن نامعتبر → قاب نارنجی + تولتیپ راهنما؛ تاریخ قبلی دست‌نخورده می‌ماند
-    /// (اعتبارسنجی الزامیِ فرم‌ها با همان تاریخ قبلی تصمیم می‌گیرد، نه با متن خام)
+    /// متن نامعتبر → قاب نارنجی + تولتیپ راهنما؛ تاریخ قبلی دست‌نخورده می‌ماند.
+    /// چرخهٔ ۷۴ — <paramref name="revertInvalid"/>: هنگام «خروج از فیلد»، متنِ
+    /// نامعتبر به آخرین تاریخ معتبر برمی‌گردد تا هیچ تاریخ غلطی در فرم نماند
+    /// (Enter این‌طور نیست — کاربر شاید در حال اصلاح است).
     /// </summary>
-    private void ApplyTypedText()
+    private void ApplyTypedText(bool revertInvalid)
     {
         var text = (ShamsiBox.Text ?? string.Empty).Trim();
 
@@ -193,21 +292,28 @@ public partial class PersianDatePicker : UserControl
             return;
         }
 
-        var parsed = PersianDateHelper.ToGregorian(text);
-        if (parsed is { } date)
+        if (TryParseTyped(text, out var parsed, out var error))
         {
             SetInvalidState(false, null);
-            if (date != SelectedDate)
-                SelectedDate = date; // مسیر OnSelectedDateChanged → SyncShamsi + DateChanged
-            else
-                ShamsiBox.Text = PersianDateHelper.ToShamsiFa(date); // نرمال‌سازی نمایشِ همین تاریخ
+            if (parsed is { } date)
+            {
+                if (date != SelectedDate)
+                    SelectedDate = date; // مسیر OnSelectedDateChanged → SyncShamsi + DateChanged
+                else
+                    SyncShamsiBox(); // نرمال‌سازی نمایشِ همین تاریخ
+            }
         }
         else
         {
             // ═══ بازخورد خطای تایپی — بدون پرت‌کردن استثنا و بدون دست‌کاری تاریخ ═══
-            SetInvalidState(true,
-                "قالب تاریخ نامعتبر است — نمونهٔ درست: ۱۴۰۴/۰۷/۲۰ (یا 1404-07-20). " +
-                "برای انتخاب از تقویم روی آیکون تقویم کلیک کنید");
+            SetInvalidState(true, error +
+                ". برای انتخاب از تقویم روی آیکون تقویم کلیک کنید");
+            if (revertInvalid)
+            {
+                // چرخهٔ ۷۴: خروج از فیلد با متن نامعتبر → بازگشت به تاریخ معتبرِ
+                // فعلی؛ قاب نارنجی می‌ماند تا کاربر بداند ویرایشش پذیرفته نشد
+                SyncShamsiBox();
+            }
         }
     }
 
@@ -229,7 +335,26 @@ public partial class PersianDatePicker : UserControl
     private void OnSelectedDateChanged()
     {
         SyncShamsi();
+        SyncShamsiBox();
         DateChanged?.Invoke(this, SelectedDate);
+    }
+
+    /// <summary>
+    /// نوشتن مستقیم متن شمسی در جعبهٔ متن — چرخهٔ ۷۴.
+    /// جایگزینِ اتصالِ OneWayِ کشته‌شده با تایپ کاربر؛ این مسیر همیشه کار
+    /// می‌کند (انتخاب از تقویم، مقداردهی فرم، پاک‌کردن فرم و…).
+    /// </summary>
+    private void SyncShamsiBox()
+    {
+        _suppressTextEvents = true;
+        try
+        {
+            ShamsiBox.Text = SelectedShamsi;
+        }
+        finally
+        {
+            _suppressTextEvents = false;
+        }
     }
 
     /// <summary>ورود متن شمسی از بیرون — تحلیل و تبدیل به تاریخ</summary>
@@ -244,7 +369,6 @@ public partial class PersianDatePicker : UserControl
         if (parsed is { } date)
         {
             SelectedDate = date;
-            SyncShamsi();
             DateChanged?.Invoke(this, date);
         }
         else
@@ -253,18 +377,11 @@ public partial class PersianDatePicker : UserControl
             //      قلم قبلی یکی باشد خطای "تاریخ انقضای شمسی الزامی است" می‌دهد») ═══
             // متن تهی/نامعتبر از بیرون آمده (مثلاً ViewModel فرمِ ورود کالا پس از
             // «افزودن به فهرست» فیلد را خالی می‌کند) اما پیش‌تر تاریخِ انتخابیِ قبلی
-            // دست‌نخورده باقی می‌ماند. نتیجهٔ زنجیره‌وار:
-            //   ۱) نمایش جعبهٔ متن همچنان تاریخ قبلی را نشان می‌داد؛
-            //   ۲) انتخاب «همان تاریخ» قبلی از تقویم، چون مقدار خاصیت وابستگی
-            //      تکراری است، هیچ رویداد تغییر نمی‌سازد؛
-            //   ۳) DateShamsiText هرگز به‌روز نمی‌شد و ViewModel تهی می‌ماند
-            //      ⇒ اعتبارسنجی «الزامی» به‌کرات خطا می‌داد.
-            // ریشه‌یابی‌شده: با پاک‌شدن متنِ متصل، تاریخ انتخابی و نمایش هم باید
-            // هم‌زمان پاک شوند تا انتخاب بعدیِ هر تاریخی (حتی تکراری) رویداد
-            // تغییر بسازد و به ViewModel برسد.
+            // دست‌نخورده باقی می‌ماند. ریشه‌یابی‌شده: با پاک‌شدن متنِ متصل، تاریخ
+            // انتخابی و نمایش هم باید هم‌زمان پاک شوند تا انتخاب بعدیِ هر تاریخی
+            // (حتی تکراری) رویداد تغییر بسازد و به ViewModel برسد.
             SelectedDate = null;
-            // SyncShamsi از مسیر OnSelectedDateChanged صدا زده می‌شود و نمایش را
-            // پاک می‌کند؛ رویداد DateChanged با تهی برای آگاهی فرم‌ها منتشر می‌شود
+            // رویداد DateChanged با تهی برای آگاهی فرم‌ها منتشر می‌شود
             DateChanged?.Invoke(this, null);
         }
     }
@@ -289,8 +406,6 @@ public partial class PersianDatePicker : UserControl
             // اگر تاریخ انتخابی تهی شود (پاک‌کردن فرم، مقداردهی اولیه) متنِ
             // متصلِ DateShamsiText هم باید خالی شود؛ وگرنه ViewModel رشتهٔ کهنه
             // را نگه می‌دارد و اعتبارسنجی «الزامی بودن» با نمایش ناسازگار می‌شود.
-            // تنظیم رشتهٔ تهی → بازگشتِ همان‌مسیر parse تهی با گارد «parsed ==
-            // SelectedDate» فوراً متوقف می‌شود ⇒ بدون حلقهٔ بی‌نهایت.
             if (!string.IsNullOrEmpty(DateShamsiText))
                 DateShamsiText = string.Empty;
         }

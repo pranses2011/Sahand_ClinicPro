@@ -109,14 +109,24 @@ public static class PersianDateHelper
     }
 
     /// <summary>
-    /// تبدیل تاریخ شمسی به میلادی
+    /// تبدیل تاریخ شمسی به میلادی — چرخهٔ ۷۴: اعتبارسنجی کامل روزِ ماه
+    /// گزارش مالک: «الان 1363/13/36 مینویسم هم قبول میکنه در حالی که هم ماه رو
+    /// اشتباه زدم و هم روز رو». پیش‌تر فقط «روز ≤ ۳۱» بررسی می‌شد و خطاهای ظریف
+    /// مثل «۳۱ مهر» یا «۳۰ اسفندِ سال غیرکبیسه» بی‌صدا به روزِ ماه بعد
+    /// سرریز می‌شدند (تاریخ جابه‌جا می‌شد!). اکنون طول دقیق ماه با تقویم مرجع
+    /// .NET کنترل می‌شود و روزِ ناموجود به‌جای سرریز، خطا می‌دهد.
     /// </summary>
     public static DateTime ToGregorian(int jalaliYear, int jalaliMonth, int jalaliDay)
     {
         if (jalaliMonth is < 1 or > 12)
             throw new ArgumentOutOfRangeException(nameof(jalaliMonth), "ماه شمسی باید بین ۱ تا ۱۲ باشد");
-        if (jalaliDay is < 1 or > 31)
-            throw new ArgumentOutOfRangeException(nameof(jalaliDay), "روز شمسی باید بین ۱ تا ۳۱ باشد");
+
+        // ═══ چرخهٔ ۷۴ — روزِ ماه با طول واقعی همان ماه (کبیسه‌آگاه) کنترل می‌شود ═══
+        var monthLength = GetJalaliMonthLength(jalaliYear, jalaliMonth);
+        if (jalaliDay is < 1 or > monthLength)
+            throw new ArgumentOutOfRangeException(nameof(jalaliDay),
+                $"روز شمسی باید بین ۱ تا {monthLength} باشد (ماه {MonthNames[jalaliMonth - 1]} سال " +
+                $"{jalaliYear} فقط {monthLength} روز دارد)");
 
         var gy = jalaliYear <= 979 ? 621 : 1600;
         var jy = jalaliYear - (jalaliYear <= 979 ? 0 : 979);
@@ -150,6 +160,33 @@ public static class PersianDateHelper
 
         return new DateTime(gy, gm, gd);
     }
+
+    /// <summary>
+    /// طول ماه شمسی با تقویم مرجع .NET — کبیسه‌آگاه (اسفند ۲۹ یا ۳۰ روز).
+    /// چرخهٔ ۷۴: منبع واحد اعتبارسنجی «روزِ ماه» در انتخابگر تاریخ و همهٔ
+    /// فرم‌ها؛ تقویم System.Globalization.PersianCalendar همان الگوریتم
+    /// حسابی ۳۳ سالهٔ این هلپتر است و برای سال‌های کاری (۱۳۰۰ تا ۱۵۰۰)
+    /// همیشه هم‌نتیجه است.
+    /// </summary>
+    /// <param name="jalaliYear">سال شمسی</param>
+    /// <param name="jalaliMonth">ماه شمسی ۱ تا ۱۲</param>
+    public static int GetJalaliMonthLength(int jalaliYear, int jalaliMonth)
+    {
+        if (jalaliMonth is < 1 or > 12)
+            throw new ArgumentOutOfRangeException(nameof(jalaliMonth), "ماه شمسی باید بین ۱ تا ۱۲ باشد");
+        return PersianCalendarReference.GetDaysInMonth(jalaliYear, jalaliMonth);
+    }
+
+    /// <summary>تقویم مرجع .NET — نمونهٔ اشتراکی فقط‌خواندنی (بدون وضعیت)</summary>
+    private static readonly System.Globalization.PersianCalendar PersianCalendarReference = new();
+
+    /// <summary>
+    /// آیا سال شمسی کبیسه است؟ (اسفند ۳۰ روزه) — چرخهٔ ۷۴.
+    /// «طول اسفند = ۳۰» همان تعریف کبیسه است؛ IsLeapDay(سال، ۱۲، ۳۰) در سال
+    /// غیرکبیسه به‌خاطر ناموجودبودنِ روز استثنا می‌دهد و اینجا به‌کار نمی‌رود.
+    /// </summary>
+    public static bool IsJalaliLeapYear(int jalaliYear)
+        => PersianCalendarReference.GetDaysInMonth(jalaliYear, 12) == 30;
 
     /// <summary>
     /// تبدیل رشته شمسی به میلادی — فرمت قابل قبول: 1403/07/12 یا 1403-07-12

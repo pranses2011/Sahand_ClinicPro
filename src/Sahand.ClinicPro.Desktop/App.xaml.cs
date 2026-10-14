@@ -96,6 +96,21 @@ public partial class App : System.Windows.Application
             {
                 if (ke.Key == System.Windows.Input.Key.Escape)
                 {
+                    // ═══ چرخهٔ ۷۴ (گزارش مالک) — لایه‌بندی ESC ═══
+                    // «وقتی کنترل انتخابگر تاریخ و یا انتخابگر ساعت رو باز
+                    // میکنم و میخوام ببندمش، با زدن کلید ESC به جای اینکه اول
+                    // کنترل باز شده رو ببنده و بعدش اگه دوباره زدم فرم رو
+                    // ببنده، از همون اول فرم رو میبنده (برای کومبوها هم صدق می‌کند)».
+                    // ریشه: PreviewKeyDown از ریشه (پنجره) «تونل» می‌خورد — هندلر
+                    // پنجره همیشه پیش از کنترل‌های درونی اجرا می‌شد و فرم را
+                    // می‌بست. رفع: اگر در درخت بصری پنجره «سطح درونی بازی»
+                    // (پاپ‌آپ تقویم/ساعت، دراپ‌داون کومبو، منوی باز) باشد، این‌بار
+                    // پنجره کاری نمی‌کند و رویداد به کنترل درونی تونل می‌خورد تا
+                    // خودش ESC را بخورد و سطح خودش را ببندد؛ ESC بعدی فرم را
+                    // می‌بندد — دقیقاً رفتار خواسته‌شده.
+                    if (HasOpenOverlaySurface(window))
+                        return;
+
                     // تغییرات ذخیره‌نشده؟ — ابتدا تأیید کاربر
                     if (!ConfirmCloseIfDirty(window))
                         return;
@@ -131,6 +146,89 @@ public partial class App : System.Windows.Application
     /// <summary>پرچم جلوگیری از وصل‌شدن دوبارهٔ فونت به همان پنجره</summary>
     private static readonly DependencyProperty FontHookedProperty =
         DependencyProperty.RegisterAttached("FontHooked", typeof(bool), typeof(App), new PropertyMetadata(false));
+
+    /// <summary>
+    /// آیا «سطح درونی بازی» در پنجره وجود دارد که ESC باید نخست آن را ببندد؟ — چرخهٔ ۷۴.
+    /// سطوح جست‌وجو‌شده در درخت بصری پنجره:
+    ///   ۱) پاپ‌آپ باز (تقویم انتخابگر تاریخ، صفحهٔ انتخابگر ساعت و هر Popup
+    ///      دیگری که IsOpen=true دارد — مثل پاپ‌آپ‌های پیش‌نمایش/انتخاب)؛
+    ///   ۲) کومبوباکس با دراپ‌داون باز (ComboBox استاندارد و متریال خودش ESC را
+    ///      می‌خورد و لیست را می‌بندد)؛
+    ///   ۳) منوی زمینه/منوی باز (ContextMenu.IsOpen).
+    /// توجه: پاپ‌آپ جست‌وجو از طریق منطق بازشدن کار می‌کند — «باز» یعنی همین
+    /// لحظه در پنجره فعال است و ESC به‌طور طبیعی باید نخست آن را ببندد.
+    /// </summary>
+    /// <param name="window">پنجرهٔ فعال</param>
+    /// <returns>true یعنی سطح درونی بازی هست؛ ESC نباید فرم را ببندد</returns>
+    private static bool HasOpenOverlaySurface(Window window)
+    {
+        try
+        {
+            // اگر تمرکز صفحه‌کلید در پنجرهٔ دیگری است (مثلاً پاپ‌آپِ پنجرهٔ دیگر)،
+            // پنجرهٔ جاری سطح بازی ندارد
+            if (!ReferenceEquals(System.Windows.Input.Keyboard.FocusedElement, null))
+            {
+                // عنصر متمرکز باید داخل همین پنجره باشد وگرنه سطح بازی متعلق به
+                // پنجرهٔ دیگری است که هندلر خودش آن را می‌بندد
+                var focused = System.Windows.Input.Keyboard.FocusedElement as DependencyObject;
+                var owner = FindAncestorWindow(focused);
+                if (owner is not null && !ReferenceEquals(owner, window))
+                    return false;
+            }
+
+            // پیمایش درخت بصری پنجره — یافتن پاپ‌آپ باز / کومبوی باز / منوی باز
+            var found = false;
+            VisitVisualTree(window, node =>
+            {
+                if (found) return;
+                switch (node)
+                {
+                    case System.Windows.Controls.Primitives.Popup
+                        { IsOpen: true } p when p.Child is not System.Windows.Controls.ToolTip:
+                        // پاپ‌آپ باز — تقویم/ساعت/پیش‌نمایش؛ پاپ‌آپِ tooltip مستثناست
+                        // چون خودش با حرکت موس بسته می‌شود و نباید ESC را نگه دارد
+                        found = true;
+                        break;
+                    case System.Windows.Controls.ComboBox { IsDropDownOpen: true }:
+                        found = true;
+                        break;
+                    case System.Windows.Controls.ContextMenu { IsOpen: true }:
+                        found = true;
+                        break;
+                }
+            });
+            return found;
+        }
+        catch
+        {
+            // هر خطای پیمایش (درخت در حال تغییر) — رفتار امن: فرم بسته نشود این‌بار
+            return true;
+        }
+    }
+
+    /// <summary>پیمایش عمقی درخت بصری — بازدید همهٔ فرزندان بصری عنصر</summary>
+    private static void VisitVisualTree(DependencyObject root, Action<DependencyObject> visit)
+    {
+        var count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(root);
+        for (var i = 0; i < count; i++)
+        {
+            var child = System.Windows.Media.VisualTreeHelper.GetChild(root, i);
+            visit(child);
+            VisitVisualTree(child, visit);
+        }
+    }
+
+    /// <summary>یافتن پنجرهٔ مالک عنصر — برای اطمینان از تعلق تمرکز به همین پنجره</summary>
+    private static Window? FindAncestorWindow(DependencyObject? node)
+    {
+        while (node is not null)
+        {
+            if (node is Window w)
+                return w;
+            node = System.Windows.Media.VisualTreeHelper.GetParent(node);
+        }
+        return null;
+    }
 
     /// <summary>
     /// پرچم «بستن مجاز» — پس از تأیید کاربر (یا فرم تمیز) روی پنجره گذاشته

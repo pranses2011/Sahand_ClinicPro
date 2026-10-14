@@ -28,12 +28,18 @@
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
-        <!-- نمایش/ورود شمسی تاریخ — مرکزچین تا تاریخ کامل خوانده شود -->
+        <!-- نمایش/ورود شمسی تاریخ — مرکزچین تا تاریخ کامل خوانده شود
+             ═══ چرخهٔ ۷۴ ═══ اتصالِ متن حذف شد و همگام‌سازی از کد پشت انجام
+             می‌شود (SyncShamsiBox). ریشه: اتصال یک‌طرفهٔ OneWay روی جعبهٔ متنِ
+             قابل‌ویرایش، با اولین کاراکتر تایپیِ کاربر «کشته» می‌شود (رفتار
+             شناخته‌شدهٔ WPF — مقدار محلی جای اتصال را می‌گیرد) و پس از آن
+             انتخاب تاریخ از تقویم هرگز در فیلد منعکس نمی‌شد؛ متنِ نامعتبرِ
+             تایپی‌شده هم تا ابد می‌ماند و به نظر می‌رسید «تاریخ غلط پذیرفته
+             شده». مسیر کدی در برابر تایپ کاربر مصون است. -->
         <TextBox x:Name="ShamsiBox"
                  Grid.Column="0"
                  Cursor="IBeam"
                  TextAlignment="Center"
-                 Text="{Binding SelectedShamsi, ElementName=Root, Mode=OneWay}"
                  materialDesign:HintAssist.Hint="{Binding Placeholder, ElementName=Root}"
                  materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
                  VerticalContentAlignment="Center"
