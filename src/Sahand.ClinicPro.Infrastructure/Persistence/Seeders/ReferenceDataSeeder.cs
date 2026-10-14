@@ -129,10 +129,25 @@ public class ReferenceDataSeeder : IDataSeeder
     }
 
     /// <summary>بذر کاتالوگ آزمایش‌ها با محدوده طبیعی وابسته به جنسیت</summary>
+    /// <remarks>
+    /// ═══ چرخهٔ ۷۲ (گزارش مالک) — بازه‌های ساخت‌یافته هنگام نصب ═══
+    /// «میخوام هنگام نصب داخل برنامه باشن و در صورت نیاز بتونم اصلاحشون بکنم»:
+    /// پس از بذرِ کاتالوگ (یا وجودش از قبل)، بازه‌های مرجع عددی و حدود بحرانی
+    /// از LabReferenceRangeSeedData روی ردیف‌های «بدون هیچ بازهٔ ثبت‌شده»
+    /// بک‌فیل می‌شوند. چون Seeder در هر راه‌اندازی سرور اجرا می‌شود، نصبِ
+    /// بستهٔ آپدیت + ری‌استارت API همانِِ «هنگام نصب» مالک است.
+    /// گارد مالکیت: فقط وقتی «هر ۹ ستون ساخت‌یافته تهی» است نوشته می‌شود —
+    /// اگر مالک حتی یک فیلد یک تست را ویرایش کرده باشد، آن تست دست‌نخورده
+    /// می‌ماند (بذرِ ویرایش مالک را هرگز بازنویسی نمی‌کند).
+    /// </remarks>
     private async Task SeedLabTestsAsync(CancellationToken ct)
     {
         if (await _context.LabTests.AsNoTracking().AnyAsync(ct))
+        {
+            // کاتالوگ از قبل هست — فقط بک‌فیل بازه‌های ساخت‌یافتهٔ چرخهٔ ۷۲
+            await BackfillLabReferenceRangesAsync(ct);
             return;
+        }
 
         var tests = LabTestSeedData.Rows
             .GroupBy(r => r.TestCode)
@@ -154,6 +169,62 @@ public class ReferenceDataSeeder : IDataSeeder
             .ToList();
 
         _context.LabTests.AddRange(tests);
+        await _context.SaveChangesAsync(ct);
+
+        // نصب تازه — بازه‌ها همان جلسهٔ نخست روی ردیف‌های تازه نشسته می‌شوند
+        await BackfillLabReferenceRangesAsync(ct);
+    }
+
+    /// <summary>
+    /// بک‌فیل بازه‌های مرجع ساخت‌یافته و حدود بحرانی — چرخهٔ ۷۲.
+    /// ردیف‌های «تازه‌بذرفشان‌شده» و «موجودِ بدون بازه» هر دو پوشش داده
+    /// می‌شوند؛ ردیفِ دارای حتی یک ستون پرشده (یعنی ویرایش‌شده توسط مالک
+    /// از «آزمایشگاه ← کاتالوگ ← ویرایش») عمداً نادیده گرفته می‌شود.
+    /// </summary>
+    /// <returns>شمار تست‌هایی که بازهٔ ساخت‌یافته گرفتند (برای لاگ)</returns>
+    private async Task<int> BackfillLabReferenceRangesAsync(CancellationToken ct)
+    {
+        // نگاشت کد→بازه با «اولین ردیف» (هم‌الگوی GroupBy کاتالوگ — کد تکراری نداریم اما گارد است)
+        var byCode = new Dictionary<string, LabReferenceRangeRow>(StringComparer.OrdinalIgnoreCase);
+        foreach (var row in LabReferenceRangeSeedData.Rows)
+            if (!byCode.ContainsKey(row.TestCode))
+                byCode[row.TestCode] = row;
+
+        if (byCode.Count == 0) return 0;
+
+        // ردیف‌های ردیابی‌شده — به‌روزرسانی درجا؛ فقط ستون‌های بازه خوانده می‌شوند
+        var tests = await _context.LabTests.ToListAsync(ct);
+        var applied = 0;
+
+        foreach (var test in tests)
+        {
+            if (string.IsNullOrWhiteSpace(test.TestCode)) continue;
+            if (!byCode.TryGetValue(test.TestCode, out var range)) continue;
+
+            // گارد مالکیت — «هر ۹ ستون تهی» یعنی هنوز دست‌نخورده از نسخهٔ قبل
+            var untouched = test.RefMinAdultMale is null && test.RefMaxAdultMale is null
+                            && test.RefMinAdultFemale is null && test.RefMaxAdultFemale is null
+                            && test.RefMinChild is null && test.RefMaxChild is null
+                            && test.ChildAgeMaxYears is null
+                            && test.CriticalLow is null && test.CriticalHigh is null;
+            if (!untouched) continue;
+
+            test.RefMinAdultMale = range.MinMale;
+            test.RefMaxAdultMale = range.MaxMale;
+            test.RefMinAdultFemale = range.MinFemale;
+            test.RefMaxAdultFemale = range.MaxFemale;
+            test.RefMinChild = range.MinChild;
+            test.RefMaxChild = range.MaxChild;
+            test.ChildAgeMaxYears = range.ChildAgeMaxYears;
+            test.CriticalLow = range.CriticalLow;
+            test.CriticalHigh = range.CriticalHigh;
+            applied++;
+        }
+
+        if (applied > 0)
+            await _context.SaveChangesAsync(ct);
+
+        return applied;
     }
 
     /// <summary>
