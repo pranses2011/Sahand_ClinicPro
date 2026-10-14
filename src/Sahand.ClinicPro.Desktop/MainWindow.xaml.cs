@@ -161,4 +161,38 @@ public partial class MainWindow : Window
         // رندر نمی‌شود و کلیک‌ها هم از میانش به رابط می‌رسند (hit-test شفاف)
         TourLayer.Children.Add(tour);
     }
+
+    /// <summary>
+    /// باز کردن فرم «درباره نرم‌افزار» — چرخهٔ ۷۵ (درخواست مالک):
+    /// «در یک نقطه از برنامه فرم زیبا و شکیل درباره نرم‌افزار رو تعبیه بکن
+    /// و داخلش اطلاعات پشتیبانی بصورت پویا هم باشه». فرم به‌صورت مودال روی
+    /// همین پنجره باز می‌شود؛ اطلاعات پشتیبانی و نام درمانگاه از سرور لایسنس
+    /// به‌صورت پویا خوانده می‌شوند (هیچ تماسی هاردکد نیست).
+    /// میانبر صفحه‌کلید F1 هم همین فرم را باز می‌کند — عرف رایج ویندوز.
+    /// </summary>
+    private void OnAboutClick(object sender, RoutedEventArgs e) => OpenAbout();
+
+    /// <summary>نمایش فرم درباره — از دکمهٔ نوار بالا یا کلید F1</summary>
+    private void OpenAbout()
+    {
+        var about = new Views.AboutWindow { Owner = this };
+        about.ShowDialog();
+    }
+
+    /// <summary>
+    /// میانبرهای صفحه‌کلید پنجرهٔ اصلی — F1 = دربارهٔ نرم‌افزار (چرخهٔ ۷۵).
+    /// رویداد KeyDown پنجره چون فرم‌های مودال باز، فوکوس را از این پنجره
+    /// نمی‌گیرند مگر خودشان هندل کنند؛ F1 عرف استاندارد راهنمای ویندوز است.
+    /// </summary>
+    protected override void OnKeyDown(System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.F1)
+        {
+            OpenAbout();
+            e.Handled = true;
+            return;
+        }
+
+        base.OnKeyDown(e);
+    }
 }

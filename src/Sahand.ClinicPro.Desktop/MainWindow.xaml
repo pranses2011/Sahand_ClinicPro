@@ -757,6 +757,17 @@
                             <materialDesign:PackIcon Kind="ThemeLightDark" />
                         </ToggleButton>
 
+                        <!-- ═══ چرخهٔ ۷۵ — دکمهٔ «درباره نرم‌افزار» (درخواست مالک) ═══
+                             فرم زیبا و شکیل دربارهٔ محصول با اطلاعات پشتیبانی پویا؛
+                             نشان نسخه/بیلد هم داخلش هست تا «کدام بیلد روی ایستگاه
+                             است» با یک نگاه مشخص باشد (کلید تشخیصی آپدیت‌ها). -->
+                        <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                Click="OnAboutClick"
+                                ToolTip="درباره نرم‌افزار (F1)"
+                                Margin="0,0,10,0">
+                            <materialDesign:PackIcon Kind="InformationOutline" />
+                        </Button>
+
                         <!-- زنگ اعلان — با Badge تعداد خوانده‌نشده -->
                         <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
                                 Command="{Binding ShowNotificationsCommand}"
