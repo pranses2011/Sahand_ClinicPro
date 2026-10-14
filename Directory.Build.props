@@ -95,7 +95,7 @@
          می‌زند. رفع: حذف کوئری شمارش — تعداد ردیف‌های پرشده از خروجی خودِ
          ExecuteSqlRawAsync (سطرهای تحت‌تأثیر UPDATE)؛ یک رفت‌وبرگشت کمتر و
          بدون هشدار، حتی روی دیتابیسِ کاملاً سالم -->
-    <Version>2.17.3</Version>
+    <Version>2.18.0</Version>
     <Authors>Sahand ClinicPro Team</Authors>
     <Company>Sahand</Company>
     <Product>Sahand ClinicPro</Product>
