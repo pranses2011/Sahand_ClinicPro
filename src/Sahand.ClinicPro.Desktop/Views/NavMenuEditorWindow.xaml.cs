@@ -3,8 +3,8 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 using Sahand.ClinicPro.Desktop.Helpers;
 using Sahand.ClinicPro.Desktop.Services;
@@ -14,7 +14,7 @@ namespace Sahand.ClinicPro.Desktop.Views;
 /// <summary>
 /// یک ردیف نمایشی در ساختار منو — گروه یا صفحه (تورفته زیر گروه خودش)
 /// </summary>
-public class NavRowVm
+public partial class NavRowVm : ObservableObject
 {
     /// <summary>کلید یکتای ردیف (برای نگاشت فرزند به گروه)</summary>
     public required string Id { get; init; }
@@ -47,44 +47,38 @@ public class NavRowVm
 
     /// <summary>برچسب نوع ردیف</summary>
     public string KindLabel => IsGroup ? "گروه منو" : "صفحه";
+
+    /// <summary>برچسب شمار فرزندان گروه («۳ صفحه») — پس از هر تغییر ساختار تازه می‌شود</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasChildren))]
+    private string _childrenLabel = string.Empty;
+
+    /// <summary>آیا گروه فرزندی دارد؟ — نمایش چیپ شمارنده</summary>
+    public bool HasChildren => ChildrenLabel.Length > 0;
 }
 
 /// <summary>
-/// کد پشت ادیتور منوی کناری — چرخهٔ ۷۴ (گزارش مالک):
-/// «بتونم منوهای کناری رو به سلیقه خودم مرتب بکنم و حتی بتونم منوی اصلی
-/// بسازم که صفه های مورد نظرم رو در زیر منوی اون قرار بدم و همچنین دکمه
-/// برگشت به تنظیمات پیشفرض هم داشته باشه و این تنظیمات به ازای هر کاربر
-/// باشه و در دیتابیس ذخیره بشه».
-/// سازوکار:
-///   • ستون راست: صفحات مجازِ در دسترس (PageCatalog با پالایش مجوز فعلی)؛
-///   • ستون چپ: ساختار فعلی منو به‌صورت ردیف‌های مسطح (گروه + فرزندان
-///     تورفته) — جابه‌جایی با درگ (DragDropReorder) یا پیکان‌ها؛
-///   • رهاکردنِ صفحهٔ در دسترس روی ردیف گروه → افزودن به زیرمنوی همان گروه؛
-///     روی فضای خالی یا ردیف سطح‌بالا → آیتم تکی؛
-///   • «گروه جدید» با عنوان دلخواه و آیکون انتخابی؛
-///   • ذخیره → PUT users/me/nav-layout (per-user در دیتابیس).
+/// کد پشت ادیتور منوی کناری — چرخهٔ ۷۶ (بازطراحی رویکرد).
+/// گزارش مالک چرخهٔ ۷۵: «شخصی‌سازی منوهای کناری — نوع فعلی خوب نیست و سخت
+/// است؛ رویکرد را عوض کن». ویرایشگر درگ‌ومحورِ چرخهٔ ۷۴ با الگوی «همه‌چیز با
+/// یک کلیک» جایگزین شد:
+///   • نوار بالا: کشوی صفحات در دسترس + «افزودن به انتها» + «گروه جدید»؛
+///   • هر ردیف ساختار دکمه‌های خودش را دارد:
+///       ➕ (فقط گروه‌ها) — افزودن صفحهٔ منتخب نوار بالا به همان گروه؛
+///       ▲/▼ — جابه‌جایی بلوک کامل (گروه + فرزندان)؛
+///       ✕ — حذف بلوک کامل؛
+///   • ساختار JSON و قرارداد سرور (PUT users/me/nav-layout، per-user) دست‌نخورده.
 /// </summary>
 public partial class NavMenuEditorWindow : Window
 {
-    /// <summary>ردیف‌های ساختار منو — قابل جابه‌جایی</summary>
+    /// <summary>ردیف‌های ساختار منو</summary>
     private readonly ObservableCollection<NavRowVm> _rows = new();
 
-    /// <summary>صفحات در دسترس (مجاز به کاربر جاری)</summary>
+    /// <summary>صفحات در دسترس (مجاز به کاربر جاری) — منبع کشوی نوار بالا</summary>
     private readonly ObservableCollection<NavRowVm> _available = new();
 
     /// <summary>سرویس API از DI</summary>
     private readonly IApiClient _api;
-
-    /// <summary>آیکون‌های پیشنهادی برای گروه دلخواه</summary>
-    private static readonly string[] GroupIcons =
-        { "Folder", "Hospital", "Prescription", "TestTube", "AccountTie", "CashMultiple",
-          "MessageTextOutline", "Cog", "Star", "HeartPulse", "School", "ViewDashboard" };
-
-    /// <summary>قالب دادهٔ درگِ صفحهٔ در دسترس</summary>
-    private const string PageDragFormat = "Sahand.ClinicPro.NavPageDrag";
-
-    /// <summary>قالب دادهٔ درگِ جابه‌جایی ردیف ساختار</summary>
-    private const string RowDragFormat = "Sahand.ClinicPro.NavRowDrag";
 
     /// <summary>سازنده — بارگذاری ساختار فعلی (سرور یا پیش‌فرض) + صفحات موجود</summary>
     public NavMenuEditorWindow()
@@ -92,7 +86,7 @@ public partial class NavMenuEditorWindow : Window
         InitializeComponent();
         _api = App.Services.GetRequiredService<IApiClient>();
         StructureList.ItemsSource = _rows;
-        AvailableList.ItemsSource = _available;
+        PageCombo.ItemsSource = _available;
         _ = LoadAsync();
     }
 
@@ -117,6 +111,7 @@ public partial class NavMenuEditorWindow : Window
                     if (_rows.Count > 0)
                     {
                         LoadAvailablePages();
+                        RefreshGroupCounts();
                         return;
                     }
                 }
@@ -128,6 +123,7 @@ public partial class NavMenuEditorWindow : Window
         }
         LoadDefaultStructure();
         LoadAvailablePages();
+        RefreshGroupCounts();
     }
 
     /// <summary>بارگذاری ساختار پیش‌فرض — همان منوی فعلی برنامه (مسطح)</summary>
@@ -217,108 +213,137 @@ public partial class NavMenuEditorWindow : Window
                 PageKey = page.Key, Icon = page.Icon,
             });
         }
+        if (_available.Count > 0)
+            PageCombo.SelectedIndex = 0;
     }
 
-    /* ═══════════ درگ از «صفحات در دسترس» ═══════════ */
-
-    /// <summary>شروع درگ صفحهٔ انتخاب‌شده از فهرست راست</summary>
-    private void OnAvailableDrag(object sender, MouseEventArgs e)
+    /// <summary>تازه‌سازی چیپ شمار فرزندان همهٔ گروه‌ها — پس از هر تغییر ساختار</summary>
+    private void RefreshGroupCounts()
     {
-        if (e.LeftButton != MouseButtonState.Pressed || AvailableList.SelectedItem is not NavRowVm page)
-            return;
-        DragDrop.DoDragDrop(AvailableList, new DataObject(PageDragFormat, page), DragDropEffects.Copy);
+        foreach (var group in _rows.Where(r => r.IsGroup))
+        {
+            var count = _rows.Count(r => r.ParentId == group.Id);
+            group.ChildrenLabel = count > 0 ? $"{count} صفحه" : string.Empty;
+        }
     }
 
-    /// <summary>شروع درگ جابه‌جایی ردیف ساختار</summary>
-    private void OnStructureDrag(object sender, MouseEventArgs e)
-    {
-        if (e.LeftButton != MouseButtonState.Pressed || StructureList.SelectedItem is not NavRowVm row)
-            return;
-        DragDrop.DoDragDrop(StructureList, new DataObject(RowDragFormat, row), DragDropEffects.Move);
-    }
+    /* ═══════════ نوار بالا: افزودن صفحه / گروه جدید ═══════════ */
 
-    /// <summary>نشانگر درگ روی ساختار</summary>
-    private void OnStructureDragOver(object sender, DragEventArgs e)
-        => e.Effects = e.Data.GetDataPresent(PageDragFormat) || e.Data.GetDataPresent(RowDragFormat)
-            ? (e.Data.GetDataPresent(PageDragFormat) ? DragDropEffects.Copy : DragDropEffects.Move)
-            : DragDropEffects.None;
+    /// <summary>صفحهٔ منتخب کشوی نوار بالا — تهی یعنی هنوز چیزی انتخاب نشده</summary>
+    private NavRowVm? SelectedPage => PageCombo.SelectedItem as NavRowVm;
 
     /// <summary>
-    /// رها کردن روی ساختار — دو حالت:
-    ///   ۱) صفحهٔ در دسترس (Copy): افزودن به گروه زیر ماوس، یا سطحِ بالا؛
-    ///   ۲) ردیف ساختار (Move): جابه‌جایی به جای ردیف مقصد (حفظ والد گروه).
+    /// افزودن صفحهٔ منتخب به «انتهای» ساختار (سطح بالا) — چرخهٔ ۷۶: جایگزین
+    /// درگ‌انداختنِ صفحه روی فضای خالی در ویرایشگر قدیمی
     /// </summary>
-    private void OnStructureDrop(object sender, DragEventArgs e)
+    private void OnAddPageToEnd(object sender, RoutedEventArgs e)
     {
-        // ── ۱) افزودن صفحهٔ جدید ──
-        if (e.Data.GetDataPresent(PageDragFormat) &&
-            e.Data.GetData(PageDragFormat) is NavRowVm page)
+        if (SelectedPage is not { } page)
         {
-            var target = RowUnderMouse(e);
-            if (target is { IsGroup: true })
-                InsertPageUnderGroup(page, target); // داخل گروه مقصد
-            else
-                _rows.Add(new NavRowVm // سطح بالا (یا انتهای فهرست)
-                {
-                    Id = Guid.NewGuid().ToString("N"), IsGroup = false,
-                    Title = page.Title, PageKey = page.PageKey, Icon = page.Icon,
-                });
-            e.Handled = true;
+            AppDialog.Info("صفحه‌ای انتخاب نشده", "ابتدا صفحهٔ مورد نظر را از کشوی «صفحهٔ مورد نظر» نوار بالا انتخاب کنید.");
             return;
         }
+        AppendPage(page, parentId: null);
+    }
 
-        // ── ۲) جابه‌جایی ردیف ──
-        if (e.Data.GetDataPresent(RowDragFormat) &&
-            e.Data.GetData(RowDragFormat) is NavRowVm source)
+    /// <summary>
+    /// دکمهٔ ➕ روی ردیف گروه — افزودن صفحهٔ منتخبِ نوار بالا به همین گروه
+    /// (چرخهٔ ۷۶: جایگزین درگ‌انداختنِ صفحه روی ردیف گروه در ویرایشگر قدیمی)
+    /// </summary>
+    private void OnRowAddToGroup(object sender, RoutedEventArgs e)
+    {
+        if (((System.Windows.Controls.Primitives.ButtonBase)sender).CommandParameter is not NavRowVm group || !group.IsGroup)
+            return;
+        if (SelectedPage is not { } page)
         {
-            var target = RowUnderMouse(e);
-            if (target is null || ReferenceEquals(source, target))
-                return;
+            AppDialog.Info("صفحه‌ای انتخاب نشده", "ابتدا صفحهٔ مورد نظر را از کشوی «صفحهٔ مورد نظر» نوار بالا انتخاب کنید، سپس دکمهٔ ➕ گروه دلخواه را بزنید.");
+            return;
+        }
+        AppendPage(page, group.Id);
+        StructureList.SelectedItem = _rows.FirstOrDefault(r => r.ParentId == group.Id);
+    }
 
-            // گروه‌ها با همهٔ فرزندانشان جابه‌جا می‌شوند (بلوک پیوسته)
-            var block = CollectBlock(source);
-            var targetIndex = _rows.IndexOf(target);
-            if (targetIndex < 0)
-                return;
-            // اگر مقصد داخل بلوک خود مبدأ است — کاری نکن
-            if (block.Contains(target))
-                return;
+    /// <summary>افزودن صفحه به ساختار — سطح بالا یا زیر گروه مشخص</summary>
+    private void AppendPage(NavRowVm page, string? parentId)
+    {
+        var row = new NavRowVm
+        {
+            Id = Guid.NewGuid().ToString("N"), IsGroup = false, ParentId = parentId,
+            Title = page.Title, PageKey = page.PageKey, Icon = page.Icon,
+            Indent = parentId is null ? new System.Windows.Thickness(2, 3, 2, 3) : new System.Windows.Thickness(24, 3, 2, 3),
+        };
+        if (parentId is null)
+        {
+            _rows.Add(row);
+        }
+        else
+        {
+            // درج پس از آخرین فرزند گروه (بلوک پیوستهٔ گروه)
+            var block = CollectBlock(_rows.First(r => r.Id == parentId));
+            _rows.Insert(_rows.IndexOf(block[^1]) + 1, row);
+        }
+        RefreshGroupCounts();
+    }
 
-            foreach (var r in block)
-                _rows.Remove(r);
-            // اگر ردیف مبدأ فرزند است و مقصد سطح‌بالا است، فرزندِ درگ‌شده به والدِ
-            // مقصد می‌چسبد (یا سطح بالا می‌ماند) — رفتاری ساده و پیش‌بین
-            var targetIndex2 = Math.Clamp(targetIndex, 0, _rows.Count);
-            var moved = block[0];
-            if (!source.IsGroup && target.IsGroup)
+    /// <summary>افزودن گروه دلخواه — عنوان + انتخاب آیکون</summary>
+    private void OnAddGroup(object sender, RoutedEventArgs e)
+    {
+        var dialog = new NavGroupPromptWindow { Owner = this };
+        if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.GroupTitle))
+        {
+            var group = new NavRowVm
             {
-                // فرزندِ رهاشده روی گروه → زیر گروه مقصد
-                moved = new NavRowVm
-                {
-                    Id = source.Id, IsGroup = false, ParentId = target.Id,
-                    Title = source.Title, PageKey = source.PageKey, Icon = source.Icon,
-                    Indent = new System.Windows.Thickness(24, 3, 2, 3),
-                };
-                block[0] = moved;
-            }
-            for (var i = 0; i < block.Count; i++)
-                _rows.Insert(Math.Clamp(targetIndex2 + i, 0, _rows.Count), block[i]);
-            StructureList.SelectedItem = moved;
-            e.Handled = true;
+                Id = Guid.NewGuid().ToString("N"), IsGroup = true,
+                Title = dialog.GroupTitle.Trim(), Icon = dialog.SelectedIcon,
+            };
+            _rows.Add(group);
+            RefreshGroupCounts();
+            StructureList.SelectedItem = group;
+            StructureList.ScrollIntoView(group);
         }
     }
 
-    /// <summary>درج یک صفحه زیر گروه مقصد (پیش از نخستین ردیفِ بعد از بلوک گروه)</summary>
-    private void InsertPageUnderGroup(NavRowVm page, NavRowVm group)
+    /* ═══════════ دکمه‌های ردیفی: جابه‌جایی / حذف ═══════════ */
+
+    /// <summary>دکمهٔ ✕ ردیف — حذف بلوک کامل (گروه با همهٔ فرزندانش)</summary>
+    private void OnRowRemove(object sender, RoutedEventArgs e)
     {
-        var block = CollectBlock(group);
-        var insertAt = _rows.IndexOf(block[^1]) + 1;
-        _rows.Insert(Math.Clamp(insertAt, 0, _rows.Count), new NavRowVm
-        {
-            Id = Guid.NewGuid().ToString("N"), IsGroup = false, ParentId = group.Id,
-            Title = page.Title, PageKey = page.PageKey, Icon = page.Icon,
-            Indent = new System.Windows.Thickness(24, 3, 2, 3),
-        });
+        if (((System.Windows.Controls.Primitives.ButtonBase)sender).CommandParameter is not NavRowVm row)
+            return;
+        foreach (var r in CollectBlock(row))
+            _rows.Remove(r);
+        RefreshGroupCounts();
+    }
+
+    /// <summary>دکمهٔ ▲ ردیف — جابه‌جایی بلوک کامل به بالا (پیش از بلوک قبلی)</summary>
+    private void OnRowMoveUp(object sender, RoutedEventArgs e)
+    {
+        if (((System.Windows.Controls.Primitives.ButtonBase)sender).CommandParameter is not NavRowVm row)
+            return;
+        var index = _rows.IndexOf(row);
+        if (index <= 0)
+            return;
+        // اگر ردیف بالایی فرزندِ گروهی است، باید جای بلوکِ سرگروه آن جابه‌جا شد
+        var above = _rows[index - 1];
+        var target = above.ParentId is { } pid && index >= 2 && _rows[index - 2].ParentId == pid
+            ? index - 2
+            : index - 1;
+        MoveBlockTo(row, target);
+        RefreshGroupCounts();
+    }
+
+    /// <summary>دکمهٔ ▼ ردیف — جابه‌جایی بلوک کامل به پایین (پس از بلوک بعدی)</summary>
+    private void OnRowMoveDown(object sender, RoutedEventArgs e)
+    {
+        if (((System.Windows.Controls.Primitives.ButtonBase)sender).CommandParameter is not NavRowVm row)
+            return;
+        var block = CollectBlock(row);
+        var afterEnd = _rows.IndexOf(block[^1]) + 1;
+        if (afterEnd >= _rows.Count)
+            return;
+        var nextBlock = CollectBlock(_rows[afterEnd]);
+        MoveBlockTo(row, _rows.IndexOf(nextBlock[0]));
+        RefreshGroupCounts();
     }
 
     /// <summary>بلوک پیوستهٔ یک ردیف — خودش + فرزندانش (برای گروه‌ها)</summary>
@@ -338,77 +363,7 @@ public partial class NavMenuEditorWindow : Window
         return block;
     }
 
-    /// <summary>ردیف ساختار زیر ماوس</summary>
-    private NavRowVm? RowUnderMouse(DragEventArgs e)
-    {
-        var hit = StructureList.InputHitTest(e.GetPosition(StructureList)) as DependencyObject;
-        while (hit is not null && !ReferenceEquals(hit, StructureList))
-        {
-            if (hit is ListBoxItem { Content: NavRowVm row })
-                return row;
-            hit = VisualTreeHelper.GetParent(hit);
-        }
-        return null;
-    }
-
-    /* ═══════════ دکمه‌ها ═══════════ */
-
-    /// <summary>افزودن گروه دلخواه — عنوان + انتخاب آیکون</summary>
-    private void OnAddGroup(object sender, RoutedEventArgs e)
-    {
-        var dialog = new NavGroupPromptWindow { Owner = this };
-        if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.GroupTitle))
-        {
-            _rows.Add(new NavRowVm
-            {
-                Id = Guid.NewGuid().ToString("N"), IsGroup = true,
-                Title = dialog.GroupTitle.Trim(), Icon = dialog.SelectedIcon,
-            });
-            StructureList.SelectedItem = _rows[^1];
-        }
-    }
-
-    /// <summary>حذف ردیف انتخابی — گروه با همهٔ فرزندانش</summary>
-    private void OnRemoveRow(object sender, RoutedEventArgs e)
-    {
-        if (StructureList.SelectedItem is not NavRowVm row)
-            return;
-        foreach (var r in CollectBlock(row))
-            _rows.Remove(r);
-    }
-
-    /// <summary>جابه‌جایی به بالا — بلوک کامل (گروه + فرزندان)</summary>
-    private void OnMoveRowUp(object sender, RoutedEventArgs e)
-    {
-        if (StructureList.SelectedItem is not NavRowVm row)
-            return;
-        var index = _rows.IndexOf(row);
-        if (index <= 0)
-            return;
-        // ردیف بالایی: اگر فرزندِ گروهی است، جابه‌جایی باید قبل از سرگروه باشد
-        var above = _rows[index - 1];
-        var target = above.ParentId is { } pid && index >= 2
-            ? _rows[index - 2].ParentId == pid ? index - 2 : index - 1
-            : index - 1;
-        MoveBlockTo(row, target);
-    }
-
-    /// <summary>جابه‌جایی به پایین — بلوک کامل</summary>
-    private void OnMoveRowDown(object sender, RoutedEventArgs e)
-    {
-        if (StructureList.SelectedItem is not NavRowVm row)
-            return;
-        var block = CollectBlock(row);
-        var afterEnd = _rows.IndexOf(block[^1]) + 1;
-        if (afterEnd >= _rows.Count)
-            return;
-        // مقصد: پس از بلوکِ ردیف بعدی
-        var nextBlock = CollectBlock(_rows[afterEnd]);
-        var target = _rows.IndexOf(nextBlock[0]);
-        MoveBlockTo(row, target);
-    }
-
-    /// <summary>جابه‌جایی بلوک به اندیس سرگروه مقصد</summary>
+    /// <summary>جابه‌جایی بلوک کامل به اندیس سرگروه مقصد</summary>
     private void MoveBlockTo(NavRowVm row, int targetIndex)
     {
         var block = CollectBlock(row);
@@ -417,11 +372,7 @@ public partial class NavMenuEditorWindow : Window
         foreach (var r in block)
             _rows.Insert(Math.Clamp(targetIndex, 0, _rows.Count), r);
         StructureList.SelectedItem = row;
-    }
-
-    /// <summary>بازسازی فهرست ساختار پس از تغییر انتخاب (بدون عمل — رزرو برای ویرایش عنوان)</summary>
-    private void OnStructureSelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
+        StructureList.ScrollIntoView(row);
     }
 
     /* ═══════════ ذخیره / پیش‌فرض / انصراف ═══════════ */
@@ -434,6 +385,16 @@ public partial class NavMenuEditorWindow : Window
     {
         try
         {
+            // گروه بی‌فرزند معنا ندارد — هشدار شفاف پیش از ذخیره
+            var emptyGroups = _rows.Where(r => r.IsGroup && _rows.All(x => x.ParentId != r.Id)).ToList();
+            if (emptyGroups.Count > 0)
+            {
+                var proceed = AppDialog.Confirm("گروه خالی",
+                    $"«{emptyGroups[0].Title}»" + (emptyGroups.Count > 1 ? $" و {emptyGroups.Count - 1} گروه دیگر" : "") +
+                    " هیچ صفحه‌ای ندارد و در منو نمایش داده نمی‌شود. همین‌طور ذخیره می‌کنید؟");
+                if (!proceed) return;
+            }
+
             using var buffer = new MemoryStream();
             using (var writer = new Utf8JsonWriter(buffer))
             {
@@ -503,6 +464,7 @@ public partial class NavMenuEditorWindow : Window
             return;
         }
         LoadDefaultStructure();
+        RefreshGroupCounts();
         AppDialog.Success("پیش‌فرض بازگشت", "پس از «ذخیره»، منوی پیش‌فرض اعمال می‌شود.");
     }
 
