@@ -171,7 +171,7 @@ public class UpdateLabTestCatalogCommandHandler
         CancellationToken cancellationToken)
     {
         var test = await _unitOfWork.Repository<LabTest>()
-            .Queryable
+            .QueryableTracking
             .FirstOrDefaultAsync(t => t.Id == request.TestId, cancellationToken);
 
         if (test is null)
