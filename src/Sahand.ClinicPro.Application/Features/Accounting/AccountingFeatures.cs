@@ -176,6 +176,55 @@ public class GetJournalEntriesQueryHandler
     public async Task<Result<List<JournalEntryListDto>>> Handle(GetJournalEntriesQuery request,
         CancellationToken cancellationToken)
     {
+        // ═══ چرخهٔ ۷۵ — ترمیم نمایش «فاکتور شماره —» در اسناد تاریخی ═══
+        // گزارش مالک: «در لیست اسناد، شماره فاکتور رو نمیندازه و به جاش خط
+        // تیره میندازه (مثلاً: فاکتور شماره - سعید نجفی)». اسنادِ پیش از این
+        // چرخه با شمارهٔ تهی ثبت شده‌اند (ریشه در CreateInvoiceCommand شرح
+        // داده شد و برای ثبت‌های تازه رفع شده)؛ برای اسناد قدیمی، شمارهٔ
+        // واقعی فاکتور از ReferenceId در همان لحظهٔ نمایش بازخوانی و جایگزین
+        // الگوی شکسته می‌شود — بدون بازنویسی دیتابیس.
+        var brokenIds = new List<long>(); // (مستندسازی الگو — شناسه‌ها در ادامه جمع می‌شوند)
+
+        var query = _unitOfWork.Repository<JournalEntry>()
+            .QueryableNoTracking
+            .OrderByDescending(e => e.Id)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize);
+
+        // نخست شناسهٔ فاکتورهای درگیرِ اسنادِ صفحهٔ جاری (برای یک پرس‌وجوی جمعی)
+        var refs = await query
+            .Where(e => e.ReferenceType == Domain.Enums.JournalReferenceType.Invoice && e.ReferenceId != null)
+            .Select(e => new { e.Id, e.ReferenceId, e.Description })
+            .ToListAsync(cancellationToken);
+
+        // الگوی شکسته = توضیح «فاکتور شماره …» که بعد از «شماره» فاصله و بعدش
+        // خط تیره/— است (شمارهٔ تهی). این اسناد در یک پرس‌وجو شمارهٔ واقعی می‌گیرند.
+        var broken = refs.Where(r =>
+            !string.IsNullOrEmpty(r.Description) &&
+            r.Description.Contains("فاکتور شماره", StringComparison.OrdinalIgnoreCase) &&
+            (r.Description.Contains("فاکتور شماره -", StringComparison.OrdinalIgnoreCase) ||
+             r.Description.Contains("فاکتور شماره —", StringComparison.OrdinalIgnoreCase) ||
+             r.Description.Contains("فاکتور شماره ‑", StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+        // نگاشت شناسهٔ سند ← شمارهٔ فاکتور واقعی (کلید = Id سند تا در فهرست
+        // نهایی مستقیماً قابل استفاده باشد)
+        var invoiceNumberByEntryId = new Dictionary<long, string>();
+        if (broken.Count > 0)
+        {
+            var invoiceIds = broken.Where(b => b.ReferenceId.HasValue)
+                .Select(b => b.ReferenceId!.Value).Distinct().ToList();
+            var numberById = (await _unitOfWork.Repository<Domain.Entities.Billing.Invoice>()
+                    .QueryableNoTracking
+                    .Where(i => invoiceIds.Contains(i.Id))
+                    .Select(i => new { i.Id, i.InvoiceNumber })
+                    .ToListAsync(cancellationToken))
+                .ToDictionary(x => x.Id, x => x.InvoiceNumber);
+            foreach (var b in broken)
+                if (b.ReferenceId.HasValue && numberById.TryGetValue(b.ReferenceId.Value, out var n)
+                    && !string.IsNullOrWhiteSpace(n))
+                    invoiceNumberByEntryId[b.Id] = n!;
+        }
+
         var items = await _unitOfWork.Repository<JournalEntry>()
             .QueryableNoTracking
             .OrderByDescending(e => e.Id)
@@ -187,7 +236,28 @@ public class GetJournalEntriesQueryHandler
                 e.Description, e.TotalDebit, e.TotalCredit, e.Status))
             .ToListAsync(cancellationToken);
 
-        return Result<List<JournalEntryListDto>>.Success(items);
+        // جایگزینی الگوی شکسته با شمارهٔ واقعی — فقط روی ردیف‌های درگیر همین صفحه؛
+        // DTO رکورد جایگزین‌پذیر است (with-expression) چون ویژگی‌های record فقط-خواندنی‌اند
+        var healed = new List<JournalEntryListDto>();
+        foreach (var dto in items)
+        {
+            if (invoiceNumberByEntryId.TryGetValue(dto.Id, out var number))
+            {
+                healed.Add(dto with
+                {
+                    Description = dto.Description!
+                        .Replace("فاکتور شماره -", $"فاکتور شماره {number}", StringComparison.OrdinalIgnoreCase)
+                        .Replace("فاکتور شماره —", $"فاکتور شماره {number}", StringComparison.OrdinalIgnoreCase)
+                        .Replace("فاکتور شماره ‑", $"فاکتور شماره {number}", StringComparison.OrdinalIgnoreCase)
+                });
+            }
+            else
+            {
+                healed.Add(dto);
+            }
+        }
+
+        return Result<List<JournalEntryListDto>>.Success(healed);
     }
 }
 

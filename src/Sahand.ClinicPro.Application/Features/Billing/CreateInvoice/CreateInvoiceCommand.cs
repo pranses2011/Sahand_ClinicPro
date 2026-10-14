@@ -208,12 +208,21 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
 
         await _unitOfWork.Repository<Invoice>().AddAsync(invoice, cancellationToken);
 
-        // ── سند حسابداری خودکار — قانون طلایی دوبل ──
-        await GenerateJournalEntryAsync(invoice, patient, cancellationToken);
-
+        // ═══ چرخهٔ ۷۵ — ریشهٔ «فاکتور شماره — سعید نجفی» در دفتر روزنامه ═══
+        // گزارش مالک: «در لیست اسناد، شماره فاکتور رو نمیندازه و به جاش خط
+        // تیره میندازه». ریشه: InvoiceNumber با «مقدار پیش‌فرض SQL» (سکانس
+        // SeqInvoiceNumber) فقط هنگام INSERT ساخته می‌شود؛ پیش‌تر سند حسابداری
+        // «پیش از» ذخیره تولید می‌شد و شماره هنوز تهی بود ⇒ توضیح سند با
+        // «فاکتور شماره (خالی)» ثبت می‌شد. اکنون: نخست فاکتور ذخیره می‌شود تا
+        // شمارهٔ واقعی از دیتابیس برگردد (EF مقدار پیش‌فرض تولیدی را پس از
+        // INSERT روی خود موجودیت برمی‌خواند)، سپس سند با همان شماره ساخته و
+        // در همان تراکنشِ فرمان (TransactionBehavior) ذخیره می‌شود — اتمیک.
         invoice.AddDomainEvent(new InvoiceCreatedEvent(
             invoice.Id, dto.PatientId, invoice.TotalAmount));
+        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
 
+        // ── سند حسابداری خودکار — قانون طلایی دوبل (اکنون با شمارهٔ واقعی) ──
+        await GenerateJournalEntryAsync(invoice, patient, cancellationToken);
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
 
         _logger.LogInformation(
