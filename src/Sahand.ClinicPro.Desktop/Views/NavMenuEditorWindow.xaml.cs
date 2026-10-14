@@ -426,8 +426,11 @@ public partial class NavMenuEditorWindow : Window
 
     /* ═══════════ ذخیره / پیش‌فرض / انصراف ═══════════ */
 
-    /// <summary>ذخیره — ساختار مسطح به JSON سلسله‌مراتبی و PUT به سرور</summary>
-    private async void OnSave(object sender, RoutedEventArgs e)
+    /// <summary>ذخیره — ساختار مسطح به JSON سلسله‌مراتبی و PUT به سرور (الگوی رویدادِ همگام + متد async مجزا — قانون پروژه)</summary>
+    private void OnSave(object sender, RoutedEventArgs e) => _ = SaveAsync();
+
+    /// <summary>منطق ذخیره — تمام خطاها درون همین متد مهار می‌شود</summary>
+    private async Task SaveAsync()
     {
         try
         {
@@ -482,8 +485,11 @@ public partial class NavMenuEditorWindow : Window
         }
     }
 
-    /// <summary>بازگشت به منوی پیش‌فرض — رکورد ذخیره‌شده پاک می‌شود</summary>
-    private async void OnReset(object sender, RoutedEventArgs e)
+    /// <summary>بازگشت به منوی پیش‌فرض — رکورد ذخیره‌شده پاک می‌شود (الگوی رویدادِ همگام + متد async مجزا — قانون پروژه)</summary>
+    private void OnReset(object sender, RoutedEventArgs e) => _ = ResetAsync();
+
+    /// <summary>منطق بازگشت به پیش‌فرض</summary>
+    private async Task ResetAsync()
     {
         if (!AppDialog.Confirm("بازگشت به پیش‌فرض",
                 "منوی شخصی شما حذف و منوی پیش‌فرض برنامه بازمی‌گردد. ادامه می‌کنید؟"))
