@@ -35,15 +35,18 @@
                 </StackPanel>
             </StackPanel>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
-                <!-- چیپ‌های بازه — سگمنت با سه گزینه -->
+                <!-- چیپ‌های بازه — سگمنت با سه گزینه
+                     (چرخهٔ ۷۳: کلید MaterialDesignFlatRadioButton در پکیج MaterialDesignThemes 5.3.2
+                      وجود ندارد — صفحهٔ گزارش‌ها هنگام باز شدن با XamlParseException می‌افتاد؛
+                      کلید صحیح مطابق مانیفست scripts/materialdesign-keys-5.3.2.txt) -->
                 <Border CornerRadius="22" Background="#F1F5F9" Padding="4" Margin="0,0,10,0">
                     <UniformGrid Columns="3">
                         <RadioButton Content="۷ روز" GroupName="range" IsChecked="{Binding IsWeekRange, Mode=TwoWay}"
-                                     Style="{StaticResource MaterialDesignFlatRadioButton}" FontSize="12" />
+                                     Style="{StaticResource MaterialDesignRadioButton}" FontSize="12" />
                         <RadioButton Content="۳۰ روز" GroupName="range" IsChecked="{Binding IsMonthRange, Mode=TwoWay}"
-                                     Style="{StaticResource MaterialDesignFlatRadioButton}" FontSize="12" />
+                                     Style="{StaticResource MaterialDesignRadioButton}" FontSize="12" />
                         <RadioButton Content="۹۰ روز" GroupName="range" IsChecked="{Binding IsQuarterRange, Mode=TwoWay}"
-                                     Style="{StaticResource MaterialDesignFlatRadioButton}" FontSize="12" />
+                                     Style="{StaticResource MaterialDesignRadioButton}" FontSize="12" />
                     </UniformGrid>
                 </Border>
                 <Button Command="{Binding LoadCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
