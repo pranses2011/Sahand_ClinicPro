@@ -150,12 +150,15 @@
                         Visibility="{Binding IsReportAvailable, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel>
                         <WrapPanel>
+                            <!-- ═══ چرخهٔ ۷۲ — عرض فیلدهای تاریخ: پیش‌تر Width=125 ثابت بود و
+                                 تاریخ کامل «۱۴۰۴/۰۷/۲۰» در DPI/زوم‌های مختلف بریده می‌شد؛
+                                 اکنون MinWidth=165 + عرض کشسان ⇒ تاریخ کامل همیشه خوانده می‌شود ═══ -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,10,8"
                                         Visibility="{Binding HasDateRange, Converter={StaticResource BoolToVisibility}}">
                                 <TextBlock Text="از: " VerticalAlignment="Center" FontSize="12" />
-                                <controls:PersianDatePicker SelectedDate="{Binding FromDate}" Width="125" />
-                                <TextBlock Text=" تا: " VerticalAlignment="Center" FontSize="12" Margin="8,0,0,0" />
-                                <controls:PersianDatePicker SelectedDate="{Binding ToDate}" Width="125" />
+                                <controls:PersianDatePicker SelectedDate="{Binding FromDate}" MinWidth="165" />
+                                <TextBlock Text=" تا: " VerticalAlignment="Center" FontSize="12" Margin="10,0,0,0" />
+                                <controls:PersianDatePicker SelectedDate="{Binding ToDate}" MinWidth="165" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,10,8"
                                         Visibility="{Binding HasMonthsParam, Converter={StaticResource BoolToVisibility}}">

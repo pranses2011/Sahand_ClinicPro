@@ -160,8 +160,8 @@ public partial class ReportsController
     private async Task<IActionResult> ChartVisitHourlyAsync(DateTime from, DateTime to)
     {
         var appointments = await _reporting.Set<Domain.Entities.Scheduling.Appointment>().AsNoTracking()
-            .Where(a => a.AppointmentDate >= DateOnly.FromDateTime(from.Date)
-                     && a.AppointmentDate <= DateOnly.FromDateTime(to.Date)
+            .Where(a => a.AppointmentDate >= IranDateOf(from)
+                     && a.AppointmentDate <= IranDateOf(to)
                      && !a.IsDeleted)
             .Select(a => new { a.AppointmentTime })
             .ToListAsync();
@@ -196,8 +196,8 @@ public partial class ReportsController
     private async Task<IActionResult> ChartVisitWeekdayAsync(DateTime from, DateTime to)
     {
         var appointments = await _reporting.Set<Domain.Entities.Scheduling.Appointment>().AsNoTracking()
-            .Where(a => a.AppointmentDate >= DateOnly.FromDateTime(from.Date)
-                     && a.AppointmentDate <= DateOnly.FromDateTime(to.Date)
+            .Where(a => a.AppointmentDate >= IranDateOf(from)
+                     && a.AppointmentDate <= IranDateOf(to)
                      && !a.IsDeleted)
             .Select(a => new { a.AppointmentDate })
             .ToListAsync();

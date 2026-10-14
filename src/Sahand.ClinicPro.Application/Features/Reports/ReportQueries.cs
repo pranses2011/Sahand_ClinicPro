@@ -29,7 +29,12 @@ public class GetDailyRevenueQueryHandler
     public async Task<Result<List<DailyRevenueReportDto>>> Handle(GetDailyRevenueQuery request,
         CancellationToken cancellationToken)
     {
-        var from = DateTime.UtcNow.Date.AddDays(-request.Days);
+        // ═══ چرخهٔ ۷۲ — شروع بازه به وقت ایران ═══
+        // پیش‌تر از نیمه‌شب UTC بود؛ در ایران (UTC+3:30) نیمه‌شب UTC یعنی
+        // ۳:۳۰ صبح — یعنی درآمد ثبت‌شدهٔ بین ۰۰:۰۰ تا ۳:۳۰ صبحِ روز اولِ بازه
+        // بی‌صدا حذف می‌شد و «امروزِ» گزارش همیشه ناقص بود.
+        // ایران از ۱۴۰۱ ساعت تابستانی ندارد → اختلاف ثابت +3:30.
+        var from = DateTime.UtcNow.Date.AddDays(-request.Days) - TimeSpan.FromHours(3.5);
 
         var rows = await _unitOfWork.Repository<Invoice>()
             .QueryableNoTracking
@@ -38,7 +43,10 @@ public class GetDailyRevenueQueryHandler
             .ToListAsync(cancellationToken);
 
         var result = rows
-            .GroupBy(r => DateOnly.FromDateTime(r.InvoiceDate))
+            // ═══ چرخهٔ ۷۲ — گروه‌بندی «روز» به وقت ایران ═══
+            // پیش‌تر نیمه‌شب UTC مرز روز بود؛ ردیف‌های پیش از ۳:۳۰ صبح در
+            // روزِ قبلیِ نمایش داده می‌شدند — روزِ شمسی با تقویم واقعی ناهماهنگ.
+            .GroupBy(r => DateOnly.FromDateTime(r.InvoiceDate + TimeSpan.FromHours(3.5)))
             .Select(g => new DailyRevenueReportDto(
                 g.Key.ToString("yyyy-MM-dd"),
                 Common.Helpers.PersianDateHelper.ToShamsi(g.Key.ToDateTime(TimeOnly.MinValue)),
@@ -74,7 +82,8 @@ public class GetDoctorPerformanceQueryHandler
     public async Task<Result<List<DoctorPerformanceDto>>> Handle(GetDoctorPerformanceQuery request,
         CancellationToken cancellationToken)
     {
-        var from = DateTime.UtcNow.Date.AddDays(-request.Days);
+        // ═══ چرخهٔ ۷۲ — شروع بازه به وقت ایران (همان درس GetDailyRevenue) ═══
+        var from = DateTime.UtcNow.Date.AddDays(-request.Days) - TimeSpan.FromHours(3.5);
 
         var performance = await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>()
             .QueryableNoTracking

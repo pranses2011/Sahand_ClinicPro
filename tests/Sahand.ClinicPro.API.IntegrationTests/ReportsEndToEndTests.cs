@@ -146,6 +146,82 @@ public class ReportsEndToEndTests : IClassFixture<FlowApiFactory>
             because: "ارزش نقطهٔ درآمد همان جمع فاکتور است");
     }
 
+    /// <summary>
+    /// ═══ چرخهٔ ۷۲ — رگرسیون «گرهِ نیمه‌شبِ تا تاریخ» (ریشهٔ اصلی «همه‌چیز صفر») ═══
+    /// گزارش مالک: «هیچکدام از گزارش‌ها کار نمیکنند و برای همه چیز صفر می‌نویسن».
+    /// ریشه: کلاینت «تا تاریخ» را yyyy-MM-dd می‌فرستاد؛ سرور آن را ۰۰:۰۰ همان
+    /// روز می‌پنداشت و کوئری‌های «CreatedAt کوچک‌تر-مساوی to» کل روزِ پایانی را حذف می‌کردند.
+    /// انتخاب «از = تا = امروزِ دادهٔ تازه» یعنی بازهٔ عملاً تهی ⇒ همه‌چیز صفر؛
+    /// حتی وقتی فاکتور همین امروز صادر شده بود. این تست دقیقاً همان سناریوی
+    /// مالک را می‌سازد: فاکتور همین حالا صادر می‌شود و گزارش با بازهٔ
+    /// «امروزِ ایران» (تک‌روزِ همین فاکتور) باید آن را ببیند.
+    /// تست‌ چرخهٔ ۷۰ با بازهٔ عریض ۲۰۰۰..۲۱۰۰ این حالت را پوشش نمی‌داد.
+    /// </summary>
+    [Fact]
+    public async Task Same_Day_Range_Should_Not_Drop_Todays_Data()
+    {
+        await _factory.SeedFlowDataAsync();
+        var client = _factory.CreateClient();
+
+        // ── ورود ادمین بذری ──
+        var loginResponse = await client.PostAsJsonAsync("/api/v1/auth/login",
+            new { usernameOrEmail = "admin", password = "Admin@123" });
+        loginResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var login = await ReadAsync<Packet<LoginData>>(loginResponse);
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", login.Data!.AccessToken);
+
+        // ── بیمار و فاکتورِ همین لحظه ──
+        var createPatient = await client.PostAsJsonAsync("/api/v1/patients", new
+        {
+            firstName = "نیمه‌شب",
+            lastName = "آزمایی",
+            nationalCode = "0061457981", // چک‌سام معتبر — 0061457992 ردِ اعتبارسنجی کد ملی (400)
+            mobile = "09121234597",
+            gender = 2,
+            birthDateShamsi = "1370/05/15"
+        });
+        createPatient.StatusCode.Should().Be(HttpStatusCode.Created);
+        var patient = await ReadAsync<Packet<JsonElement>>(createPatient);
+        var patientId = patient.Data!.ValueKind == JsonValueKind.Number
+            ? patient.Data.GetInt64()
+            : patient.Data.GetProperty("id").GetInt64();
+
+        var createInvoice = await client.PostAsJsonAsync("/api/v1/invoices", new
+        {
+            patientId,
+            type = 1,
+            taxPercent = 0m,
+            items = new[]
+            {
+                new { description = "حق ویزیت نیمه‌شب", quantity = 1m, unitPrice = 250000m, discountPercent = 0m }
+            }
+        });
+        createInvoice.StatusCode.Should().Be(HttpStatusCode.Created,
+            because: "فاکتور معتبر برای سناریوی بازهٔ تک‌روز صادر می‌شود");
+
+        // ── «امروز» به وقت ایران (تقویم کاربر) — نه نیمه‌شب UTC ──
+        var todayIran = (DateTime.UtcNow + TimeSpan.FromHours(3.5)).Date;
+        var range = $"fromDate={todayIran:yyyy-MM-dd}&toDate={todayIran:yyyy-MM-dd}";
+
+        // ── گزارش درآمد با بازهٔ تک‌روزِ همین فاکتور ──
+        var revenue = await client.GetAsync($"/api/v1/reports/execute/daily-revenue?{range}");
+        revenue.StatusCode.Should().Be(HttpStatusCode.OK);
+        var revenueBody = await ReadAsync<Packet<JsonElement>>(revenue);
+        var rev = revenueBody.Data!;
+        rev.GetProperty("available").GetBoolean().Should().BeTrue();
+
+        var total = rev.GetProperty("summary").GetProperty("total").GetDecimal();
+        total.Should().BeGreaterThan(0m,
+            because: "فاکتور همین امروز صادر شده است؛ «از = تا = امروز» نباید کل روز پایانی را " +
+                     "با پنداشتن نیمه‌شبِ آن حذف کند و همه‌چیز صفر برگرداند — " +
+                     "این دقیقاً ریشهٔ گزارش «همه گزارش‌ها صفر می‌نویسن» بود");
+
+        // ردیف روزانهٔ امروزِ ایران هم باید موجود باشد
+        rev.GetProperty("rows").GetArrayLength().Should().BeGreaterThan(0,
+            because: "بازهٔ تک‌روزِ شامل فاکتور تازه باید دست‌کم یک ردیف روزانه بسازد");
+    }
+
     /// <summary>خواندن پاسخ و نگاشت به پاکت</summary>
     private static async Task<T> ReadAsync<T>(HttpResponseMessage response)
     {

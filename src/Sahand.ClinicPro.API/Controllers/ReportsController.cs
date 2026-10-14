@@ -31,6 +31,33 @@ public partial class ReportsController : ApiBaseController
     /// </summary>
     private readonly Sahand.ClinicPro.Infrastructure.Persistence.ReportingDbContext _reporting;
 
+    // ═══ چرخهٔ ۷۲ — منطقهٔ زمانی رسمی ایران برای مرزبندی روزهای گزارش ═══
+    // گزارش مالک: «هیچکدام از گزارش‌ها کار نمیکنند و برای همه چیز صفر می‌نویسن».
+    // دو ریشهٔ زندهٔ صفر (ریشه‌یابی چرخهٔ ۷۲):
+    //   ۱) گرهِ نیمه‌شبِ «تا تاریخ»: کلاینت تاریخ را yyyy-MM-dd می‌فرستد؛ سرور
+    //      آن را ۰۰:۰۰ همان روز می‌پنداشت و کوئری‌های «...<= to» کل روزِ پایانی
+    //      را حذف می‌کردند — انتخاب «از = تا = امروز» یعنی بازهٔ عملاً تهی و
+    //      همهٔ جمع‌ها صفر؛ حتی وقتی دادهٔ امروز موجود بود.
+    //   ۲) اختلاف منطقهٔ زمانی: کاربر تاریخ را به تقویم شمسی (وقت ایران)
+    //      انتخاب می‌کند ولی ستون‌های زمانی دیتابیس (CreatedAt/InvoiceDate/
+    //      PaymentDate/...) UTC هستند؛ ایران UTC+3:30 است (از ۱۴۰۱ بدون
+    //      ساعت تابستانی) و مرز روزها ۳:۳۰ ساعت جابه‌جا می‌افتاد.
+    // راه‌حل: هر دو مرز بازه به «نیمه‌شب تا پایان‌روز به وقت ایران» تبدیل
+    // می‌شوند (ایران‌محور) — کلاس partial در همهٔ فایل‌های ReportsController.*
+    // به این اعضا دسترسی دارد.
+    /// <summary>اختلاف ساعت رسمی ایران با UTC — ثابت +3:30 (بدون ساعت تابستانی)</summary>
+    private static readonly TimeSpan IranOffset = TimeSpan.FromHours(3.5);
+
+    /// <summary>نیمه‌شب UTC روز آغازین به وقت ایران — برای ستون‌های زمانی UTC</summary>
+    private static DateTime IranDayStartUtc(DateTime iranDate) => iranDate.Date - IranOffset;
+
+    /// <summary>پایان روز ایران در UTC (۲۳:۵۹:۵۹.۹۹…) — سازگار با مقایسه‌های «کوچک‌تر-مساوی to»</summary>
+    private static DateTime IranDayEndUtc(DateTime iranDate)
+        => iranDate.Date.AddDays(1) - IranOffset - TimeSpan.FromTicks(1);
+
+    /// <summary>تاریخِ ایرانِ یک لحظهٔ UTC — برای فیلتر ستون‌های DateOnly</summary>
+    private static DateOnly IranDateOf(DateTime utc) => DateOnly.FromDateTime(utc + IranOffset);
+
     /// <summary>سازنده با تزریق میانجی، واحد کار (نوشتن‌های نادر) و کانتکست گزارش + کش حافظه‌ای (چرخه ۱۲ B5)</summary>
     public ReportsController(IMediator mediator, IUnitOfWork unitOfWork,
         Sahand.ClinicPro.Infrastructure.Persistence.ReportingDbContext reporting,
@@ -232,8 +259,16 @@ public partial class ReportsController : ApiBaseController
         [FromQuery] decimal? minAmount = null, [FromQuery] long? insuranceId = null,
         [FromQuery] long? doctorId = null)
     {
+        // ═══ چرخهٔ ۷۲ — بازهٔ «روزِ کامل به وقت ایران» (رفع دو ریشهٔ «همه‌چیز صفر») ═══
+        // تاریخ‌های ورودی کلاینت، تاریخِ تقویم شمسی به وقت ایران هستند؛ نیمه‌شبِ
+        // آن روز در UTC ذخیره می‌شود و پایان روز هم کاملِ همان روز را می‌پوشاند
+        // (پیش‌تر «تا تاریخ» = ۰۰:۰۰ همان روز بود و کل روزِ پایانی حذف می‌شد).
         var from = fromDate ?? DateTime.UtcNow.AddDays(-30);
         var to = toDate ?? DateTime.UtcNow;
+        if (fromDate.HasValue)
+            from = IranDayStartUtc(fromDate.Value);
+        if (toDate.HasValue)
+            to = IranDayEndUtc(toDate.Value);
         top = Math.Clamp(top, 1, 200);
         months = Math.Clamp(months, 1, 120);
 
@@ -244,7 +279,7 @@ public partial class ReportsController : ApiBaseController
                 await RevenueReportAsync(from, to),
             "patient-statement" => await PatientStatementAsync(patientId, from, to),
             "debtors-list" => await DebtorsReportAsync(minAmount),
-            "cashier-daily" => await CashierDailyReportAsync(date ?? DateTime.UtcNow),
+            "cashier-daily" => await CashierDailyReportAsync(date ?? (DateTime.UtcNow + IranOffset)),
             "doctor-commission" => await DoctorCommissionReportAsync(from, to),
             "profit-loss" => await ProfitLossReportAsync(from, to),
             "accounts-receivable" => await AccountsReceivableReportAsync(insuranceId),
@@ -436,9 +471,13 @@ public partial class ReportsController : ApiBaseController
     /// <summary>صندوق روزانه — گردش نقدی روز به تفکیک روش پرداخت با مرجوعی و خالص — گام P1</summary>
     private async Task<IActionResult> CashierDailyReportAsync(DateTime date)
     {
-        var nextDay = date.Date.AddDays(1);
+        // ═══ چرخهٔ ۷۲ — «روز» به وقت ایران (پیش‌تر مرز روزِ UTC بود و نیمی از
+        // روزِ کاری درمانگاه — که تا پاسیب شب ادامه دارد — در گزارش صندوق
+        // روزانه نمی‌افتاد یا به روز بعدی می‌افتاد) ═══
+        var dayStartUtc = IranDayStartUtc(date);   // ۰۰:۰۰ ایران روز انتخابی
+        var nextDayUtc = dayStartUtc.AddDays(1);    // ۰۰:۰۰ ایران روز بعد
         var payments = await _reporting.Set<Domain.Entities.Billing.Payment>().AsNoTracking()
-            .Where(p => !p.IsDeleted && p.PaymentDate >= date.Date && p.PaymentDate < nextDay)
+            .Where(p => !p.IsDeleted && p.PaymentDate >= dayStartUtc && p.PaymentDate < nextDayUtc)
             .Select(p => new { p.Method, p.Amount, p.IsReturned })
             .ToListAsync();
 
@@ -475,7 +514,7 @@ public partial class ReportsController : ApiBaseController
     private async Task<IActionResult> DoctorCommissionReportAsync(DateTime from, DateTime to)
     {
         var rows = await _reporting.Set<Domain.Entities.Billing.DoctorPayment>().AsNoTracking()
-            .Where(d => d.PeriodEnd != null && d.PeriodEnd >= DateOnly.FromDateTime(from) && d.PeriodEnd <= DateOnly.FromDateTime(to))
+            .Where(d => d.PeriodEnd != null && d.PeriodEnd >= IranDateOf(from) && d.PeriodEnd <= IranDateOf(to))
             .OrderByDescending(d => d.NetAmount)
             .Select(d => new
             {
@@ -518,7 +557,7 @@ public partial class ReportsController : ApiBaseController
             .SumAsync(i => (decimal?)i.TotalAmount) ?? 0m;
 
         var expenses = await _reporting.Set<Domain.Entities.Billing.Expense>().AsNoTracking()
-            .Where(e => e.ExpenseDate != null && e.ExpenseDate >= DateOnly.FromDateTime(from) && e.ExpenseDate <= DateOnly.FromDateTime(to))
+            .Where(e => e.ExpenseDate != null && e.ExpenseDate >= IranDateOf(from) && e.ExpenseDate <= IranDateOf(to))
             .GroupBy(e => e.Category)
             .Select(g => new { category = g.Key, amount = g.Sum(x => x.Amount) })
             .ToListAsync();
@@ -980,8 +1019,8 @@ public partial class ReportsController : ApiBaseController
     private async Task<IActionResult> NoShowReportAsync(DateTime from, DateTime to)
     {
         var rows = await _reporting.Set<Domain.Entities.Scheduling.Appointment>().AsNoTracking()
-            .Where(a => a.AppointmentDate >= DateOnly.FromDateTime(from) &&
-                        a.AppointmentDate <= DateOnly.FromDateTime(to) &&
+            .Where(a => a.AppointmentDate >= IranDateOf(from) &&
+                        a.AppointmentDate <= IranDateOf(to) &&
                         (a.Status == Domain.Enums.AppointmentStatus.NoShow ||
                          a.Status == Domain.Enums.AppointmentStatus.Cancelled))
             .OrderByDescending(a => a.AppointmentDate)

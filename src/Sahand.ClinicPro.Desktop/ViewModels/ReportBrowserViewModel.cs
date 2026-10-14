@@ -146,6 +146,14 @@ public partial class ReportBrowserViewModel : ViewModelBase
     [ObservableProperty]
     private bool _hasDateRange;
 
+    /// <summary>
+    /// گزارش پارامتر تک‌تاریخیِ «date» دارد (صندوق روزانه) — چرخهٔ ۷۲:
+    /// مقدار «از تاریخ» به پارامتر اختصاصی date هم ارسال می‌شود تا
+    /// گزارش صندوقِ روزِ انتخابی کاربر باشد، نه امروزِ UTC سرور
+    /// </summary>
+    [ObservableProperty]
+    private bool _hasSingleDateParam;
+
     /// <summary>نمایش انتخابگر بیمار — گام P1</summary>
     [ObservableProperty]
     private bool _hasPatientParam;
@@ -313,7 +321,12 @@ public partial class ReportBrowserViewModel : ViewModelBase
         if (value is null) return;
         ReportTitle = value.Title;
         ReportDescription = value.Description;
-        HasDateRange = value.ParamsList.Any(p => p.Contains("Date"));
+        HasDateRange = value.ParamsList.Any(p => p.Contains("Date", StringComparison.OrdinalIgnoreCase));
+        // ═══ چرخهٔ ۷۲ — گزارش «صندوق روزانه» پارامتر تک‌تاریخیِ «date» دارد ═══
+        // پیش‌تر چک Contains("Date") به «date» (حرف کوچک) نمی‌خورد ⇒ فیلد تاریخ
+        // اصلاً نمایش داده نمی‌شد و پارامتر date هرگز به سرور نمی‌رسید؛ سرور
+        // همیشه «امروزِ UTC» را می‌گرفت نه روزِ انتخابی کاربر.
+        HasSingleDateParam = value.ParamsList.Contains("date");
         // پارامترهای تخصصی گام P1 — بر اساس فهرست paramsList سرور
         HasPatientParam = value.ParamsList.Contains("patientId");
         HasMonthsParam = value.ParamsList.Contains("months");
@@ -381,6 +394,10 @@ public partial class ReportBrowserViewModel : ViewModelBase
             {
                 qs.Add($"fromDate={FromDate:yyyy-MM-dd}");
                 qs.Add($"toDate={ToDate:yyyy-MM-dd}");
+                // چرخهٔ ۷۲ — گزارش صندوق روزانه: روزِ انتخابیِ کاربر هم به
+                // پارامتر اختصاصی date برسد (پیش‌تر همیشه امروزِ UTC سرور می‌شد)
+                if (HasSingleDateParam)
+                    qs.Add($"date={FromDate:yyyy-MM-dd}");
             }
             if (HasPatientParam && SelectedPatient is not null) qs.Add($"patientId={SelectedPatient.Id}");
             if (HasMonthsParam) qs.Add($"months={Months}");
@@ -472,7 +489,18 @@ public partial class ReportBrowserViewModel : ViewModelBase
             }
 
             if (data.Available)
-                _snackbar.Success($"گزارش «{SelectedReport.Title}» اجرا شد — {Rows.Count} ردیف");
+            {
+                // ═══ چرخهٔ ۷۲ — تفکیک «اجرای موفقِ بدون داده» از «همه‌چیز صفر» ═══
+                // گزارش مالک: «برای همه چیز صفر می‌نویسن» — حالا که باگ نیمه‌شب و
+                // منطقهٔ زمانی رفع شده، اگر داده واقعاً نبود هم پیام روشن می‌دهد
+                // نه کارت‌های صفرِ بی‌توضیح.
+                if (Rows.Count == 0)
+                    _snackbar.Info($"گزارش اجرا شد ولی در این بازه ردیفی ثبت نشده است — " +
+                        $"بازهٔ «{Application.Common.Helpers.PersianDateHelper.ToShamsiFa(FromDate)} تا " +
+                        $"{Application.Common.Helpers.PersianDateHelper.ToShamsiFa(ToDate)}» را بازتر کنید");
+                else
+                    _snackbar.Success($"گزارش «{SelectedReport.Title}» اجرا شد — {Rows.Count} ردیف");
+            }
         }
         finally
         {

@@ -147,8 +147,8 @@ public partial class ReportsController
     private async Task<IActionResult> ChartNewVsReturningAsync(DateTime from, DateTime to)
     {
         var appointments = await _reporting.Set<Domain.Entities.Scheduling.Appointment>().AsNoTracking()
-            .Where(a => a.AppointmentDate >= DateOnly.FromDateTime(from.Date)
-                     && a.AppointmentDate <= DateOnly.FromDateTime(to.Date)
+            .Where(a => a.AppointmentDate >= IranDateOf(from)
+                     && a.AppointmentDate <= IranDateOf(to)
                      && !a.IsDeleted)
             .Select(a => new { a.IsFirstVisit })
             .ToListAsync();
@@ -257,8 +257,8 @@ public partial class ReportsController
     private async Task<IActionResult> ChartAppointmentStatusAsync(DateTime from, DateTime to)
     {
         var appointments = await _reporting.Set<Domain.Entities.Scheduling.Appointment>().AsNoTracking()
-            .Where(a => a.AppointmentDate >= DateOnly.FromDateTime(from.Date)
-                     && a.AppointmentDate <= DateOnly.FromDateTime(to.Date)
+            .Where(a => a.AppointmentDate >= IranDateOf(from)
+                     && a.AppointmentDate <= IranDateOf(to)
                      && !a.IsDeleted)
             .Select(a => new { a.Status })
             .ToListAsync();
