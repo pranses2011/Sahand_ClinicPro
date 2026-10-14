@@ -62,6 +62,40 @@ public partial class DashboardCardVM : ObservableObject
 }
 
 /// <summary>
+/// بخش قابل‌چیدمان داشبورد — چرخهٔ ۷۴ (گزارش مالک: «کنترل کامل و حرفه‌ای
+/// با Drag & Drop») — یک بلوک کامل داشبورد (نمودارها/ویزیت‌ها/فعالیت‌ها/
+/// میانبرها) با کلید قالب، عنوان برای دستگیرهٔ درگ و پرچم نمایش.
+/// </summary>
+public partial class DashboardSectionItem : ObservableObject
+{
+    /// <summary>سازنده</summary>
+    public DashboardSectionItem(string key, string title, string icon)
+    {
+        Key = key;
+        Title = title;
+        Icon = icon;
+    }
+
+    /// <summary>کلید بخش — انتخاب قالب و مبنای ذخیره ترتیب</summary>
+    public string Key { get; }
+
+    /// <summary>عنوان روی دستگیرهٔ درگ</summary>
+    public string Title { get; }
+
+    /// <summary>آیکن PackIcon دستگیره</summary>
+    public string Icon { get; }
+
+    /// <summary>نمایش بخش</summary>
+    [ObservableProperty]
+    private bool _visible = true;
+
+    partial void OnVisibleChanged(bool value) => VisibleChanged?.Invoke();
+
+    /// <summary>رویداد تغییر نمایش — برای ذخیرهٔ خودکار چیدمان (بدون آرگومان؛ سبک)</summary>
+    public event Action? VisibleChanged;
+}
+
+/// <summary>
 /// ویومدل داشبورد — گام U1 طبق پرامپت UI بخش ۱ (فرم ۲):
 /// ۴ کارت آمار اصلی + ۳ کارت فرعی + نمودار درآمد + نوبت‌های پیش‌رو + فعالیت‌های اخیر
 /// به‌روزرسانی خودکار هر ۶۰ ثانیه (Timer)
@@ -259,6 +293,37 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty]
     private bool _showActivities = true;
 
+    // ═══ چرخهٔ ۷۴ — بخش‌های قابل‌چیدمان داشبورد (گزارش مالک) ═══
+    // «مدیریت چیدمان داشبورد خیلی سطحی و ناقص هست و فقط چند کارت رو مخفی و
+    // یا آشکار میکنه. میخوام طوری پیاده سازیش بکنی که بصورت Drag & Drop باشه
+    // و بتونم کنترل کامل و حرفه‌ای روی داشبورد داشته باشم و همه چیزش رو کنترل
+    // بکنم» — چهار بلوک اصلی داشبورد (نمودارها / ویزیت‌ها و نوبت‌ها / فعالیت‌ها
+    // / میانبرها) به‌صورت آیتم‌های قابل‌کشیدن مدل شدند؛ ترتیب و نمایش هر بخش
+    // در همان JSON چیدمان per-user ذخیره می‌شود. کارت‌های KPI هم با درگ
+    // جابه‌جا می‌شوند (CollectionChanged → ذخیرهٔ خودکار).
+
+    /// <summary>بخش‌های قابل‌چیدمان — ترتیب همین ترتیبِ درگ‌شده است</summary>
+    public ObservableCollection<DashboardSectionItem> Sections { get; } = new();
+
+    /// <summary>ترتیب پیش‌فرض بخش‌ها</summary>
+    private static readonly string[] DefaultSectionOrder =
+        { "charts", "visits", "activities", "shortcuts" };
+
+    /// <summary>ساخت بخش‌های قابل‌چیدمان — ترتیب و وضعیت از چیدمان ذخیره‌شده اعمال می‌شود</summary>
+    private void InitializeSections()
+    {
+        Sections.Clear();
+        Sections.Add(new DashboardSectionItem("charts", "نمودارها", "ChartAreaspline"));
+        Sections.Add(new DashboardSectionItem("visits", "ویزیت‌ها و نوبت‌های پیش‌رو", "ChartBar"));
+        Sections.Add(new DashboardSectionItem("activities", "فعالیت‌های اخیر", "History"));
+        Sections.Add(new DashboardSectionItem("shortcuts", "میانبرهای سریع", "LightningBolt"));
+        // ذخیرهٔ خودکار پس از هر جابه‌جایی درگ/دکمه
+        Sections.CollectionChanged += (_, _) => _ = SaveLayoutAsync();
+        // ذخیرهٔ خودکار تغییر نمایش هر بخش
+        foreach (var section in Sections)
+            section.VisibleChanged += () => _ = SaveLayoutAsync();
+    }
+
     /// <summary>بازگشت به چیدمان پیش‌فرض</summary>
     [RelayCommand]
     private void ResetLayout()
@@ -268,10 +333,16 @@ public partial class DashboardViewModel : ViewModelBase
         ShowRevenueChart = true;
         ShowUpcoming = true;
         ShowActivities = true;
-        // ترتیب پیش‌فرض
+        // ترتیب پیش‌فرض کارت‌ها
         var ordered = MainCards.OrderBy(c => Array.IndexOf(DefaultOrder, c.Key)).ToList();
         MainCards.Clear();
         foreach (var c in ordered) MainCards.Add(c);
+        // ترتیب و نمایش پیش‌فرض بخش‌ها — چرخهٔ ۷۴
+        foreach (var s in Sections) s.Visible = true;
+        var orderedSections = Sections
+            .OrderBy(s => Array.IndexOf(DefaultSectionOrder, s.Key)).ToList();
+        Sections.Clear();
+        foreach (var s in orderedSections) Sections.Add(s);
         _ = SaveLayoutAsync();
         _snackbar.Success("چیدمان به حالت پیش‌فرض بازگشت");
     }
@@ -317,6 +388,18 @@ public partial class DashboardViewModel : ViewModelBase
         });
         foreach (var c in MainCards)
             c.VisibleChanged += (_, _) => _ = SaveLayoutAsync();
+        // ═══ چرخهٔ ۷۴ — ذخیرهٔ خودکار پس از جابه‌جایی درگ‌و‌دراپی کارت‌ها ═══
+        MainCards.CollectionChanged += (_, _) => _ = SaveLayoutAsync();
+    }
+
+    /// <summary>
+    /// پنهان/آشکار کردن یک بخش — دکمهٔ چشم روی دستگیرهٔ درگ (چرخهٔ ۷۴)
+    /// </summary>
+    [RelayCommand]
+    private void ToggleSectionVisibility(DashboardSectionItem? section)
+    {
+        if (section is null) return;
+        section.Visible = !section.Visible; // مسیر رویداد → ذخیرهٔ خودکار
     }
 
     /// <summary>به‌روزرسانی مقادیر کارت‌ها از آمار — چرخهٔ ۷۲: ارقام فارسی + کارت پنجم «بیمار جدید»</summary>
@@ -369,7 +452,10 @@ public partial class DashboardViewModel : ViewModelBase
                 showSecondary = ShowSecondaryCards,
                 showChart = ShowRevenueChart,
                 showUpcoming = ShowUpcoming,
-                showActivities = ShowActivities
+                showActivities = ShowActivities,
+                // ═══ چرخهٔ ۷۴ — ترتیب و نمایش بخش‌های قابل‌چیدمان ═══
+                sectionsOrder = Sections.Select(s => s.Key).ToList(),
+                sectionsHidden = Sections.Where(s => !s.Visible).Select(s => s.Key).ToList()
             });
             await _api.PutAsync("dashboard/layout", new { layout });
         }
@@ -414,6 +500,29 @@ public partial class DashboardViewModel : ViewModelBase
             if (root.TryGetProperty("showChart", out var chart)) ShowRevenueChart = chart.GetBoolean();
             if (root.TryGetProperty("showUpcoming", out var up)) ShowUpcoming = up.GetBoolean();
             if (root.TryGetProperty("showActivities", out var act)) ShowActivities = act.GetBoolean();
+
+            // ═══ چرخهٔ ۷۴ — ترتیب و نمایش بخش‌های قابل‌چیدمان ═══
+            if (root.TryGetProperty("sectionsOrder", out var sOrder) &&
+                sOrder.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                var ordered = new List<DashboardSectionItem>();
+                foreach (var keyEl in sOrder.EnumerateArray())
+                {
+                    var section = Sections.FirstOrDefault(s => s.Key == keyEl.GetString());
+                    if (section is not null && !ordered.Contains(section)) ordered.Add(section);
+                }
+                foreach (var s in Sections)
+                    if (!ordered.Contains(s)) ordered.Add(s);
+                Sections.Clear();
+                foreach (var s in ordered) Sections.Add(s);
+            }
+            if (root.TryGetProperty("sectionsHidden", out var sHidden) &&
+                sHidden.ValueKind == System.Text.Json.JsonValueKind.Array)
+                foreach (var keyEl in sHidden.EnumerateArray())
+                {
+                    var section = Sections.FirstOrDefault(s => s.Key == keyEl.GetString());
+                    if (section is not null) section.Visible = false;
+                }
         }
         catch
         {
@@ -463,6 +572,7 @@ public partial class DashboardViewModel : ViewModelBase
         _tokens = tokens;
         _navigation = navigation;
         InitializeCards();
+        InitializeSections(); // چرخهٔ ۷۴ — بخش‌های قابل‌چیدمان (پیش از بارگذاری ترتیب)
         _ = LoadLayoutAsync();
         // چرخهٔ ۴۱ — میانبرها از دیتابیس (با مهاجرت کش محلی و جانشینی آفلاین)
         _ = LoadShortcutsAsync();
@@ -549,6 +659,7 @@ public partial class DashboardViewModel : ViewModelBase
         // (InitializeCards علاوه بر ساخت خام، رویداد ذخیرهٔ خودکار چیدمان
         //  هر کارت را هم وصل می‌کند — الگوی همان سازنده)
         InitializeCards();
+        InitializeSections(); // چرخهٔ ۷۴ — بازسازی بخش‌ها برای کاربر تازه
         await LoadLayoutAsync();
         await LoadShortcutsAsync();
 

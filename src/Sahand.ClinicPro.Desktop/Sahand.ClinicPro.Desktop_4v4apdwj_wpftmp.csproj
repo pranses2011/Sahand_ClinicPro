@@ -1,0 +1,427 @@
+<Project>
+  <PropertyGroup>
+    <AssemblyName>Sahand.ClinicPro.Desktop</AssemblyName>
+    <IntermediateOutputPath>obj/Release/net8.0-windows/</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj/</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/</MSBuildProjectExtensionsPath>
+    <_TargetAssemblyProjectName>Sahand.ClinicPro.Desktop</_TargetAssemblyProjectName>
+  </PropertyGroup>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <!-- ═══════════════════════════════════════════════════════════════
+       کلاینت دسکتاپ (Desktop) — WPF + Material Design با الگوی MVVM
+       نکته: این پروژه به‌صورت دستی ساخته شده است زیرا قالب WPF
+       روی محیط لینوکسی CI موجود نیست. ویژگی EnableWindowsTargeting
+       (در Directory.Build.props) ساخت آن را روی لینوکس ممکن می‌کند.
+       راه‌اندازی کامل (تم، فونت وزیرمتن، ناوبری) در گام ۱۰ انجام می‌شود.
+       ═══════════════════════════════════════════════════════════════ -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- TFM بدون شماره نسخه = پشتیبانی از ویندوز ۷ به بالا؛
+         مناسب سیستم‌های قدیمی محیط درمانی که هنوز روی ویندوز ۷/۱۰ هستند -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- آیکون رسمی محصول (لوگوی ClinicPro) — در فایل exe جاسازی می‌شود
+         تا در Explorer، Taskbar و میانبرها نمایش داده شود -->
+    <ApplicationIcon>Assets\appicon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- کتابخانه رابط کاربری Material Design (MD3) -->
+    <PackageReference Include="MaterialDesignThemes" />
+    <!-- MVVM مدرن با Source Generator (ObservableObject، RelayCommand و...) -->
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <!-- تزریق وابستگی و پیکربندی سمت کلاینت -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+    <!-- اتصال بلادرنگ SignalR — Hubهای صف و اعلان (گام R1) -->
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+    <!-- چرخهٔ ۶۹ (فاز ۳ / F-01/F-02): تولید QR چاپی — نسخه (راستی‌آزمایی) و برچسب نمونه -->
+    <PackageReference Include="QRCoder" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- جاسازی آیکون به‌عنوان Resource وردپ‌اف — مرجع سبک سراسری Icon در App.xaml -->
+    <!-- چرخه ۲۴: لوگوی بزرگ باکیفیت از docs/assets/ClinicPro.png — سایدبار/لاگین/اسپلش -->
+    <!-- فونت وزیرمتن (مجوز آزاد OFL) به‌عنوان Resource داخل exe جاسازی می‌شود تا
+         بدون نصب فونت روی ویندوز کاربر، همه فرم‌ها با pack URI زیر آن را ببینند:
+         pack://application:,,,/Assets/Fonts/#Vazirmatn
+         نکته: ارجاع به «پوشه» (نه فایل تکی) عمدی است تا WPF همه وزن‌های
+         خانواده (Regular/SemiBold/Bold/Black) را هم‌زمان بارگیری کند.
+         گزارش هشتم مالک: فونت وزیر در هیچ فرمی اعمال نمی‌شد چون ارجاعِ
+         نامی «Vazirmatn» فقط فونت‌های نصب‌شدهٔ ویندوز را می‌بیند. -->
+  </ItemGroup>
+  <ItemGroup>
+    <!-- دسترسی به DTOها و قراردادهای مشترک (ارتباط با API از طریق REST) -->
+    <ProjectReference Include="..\Sahand.ClinicPro.Application\Sahand.ClinicPro.Application.csproj" />
+    <ProjectReference Include="..\Sahand.ClinicPro.Shared\Sahand.ClinicPro.Shared.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/Accessibility.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/closedxml/0.105.1/lib/netstandard2.1/ClosedXML.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/closedxml.parser/2.0.0/lib/netstandard2.1/ClosedXML.Parser.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/communitytoolkit.mvvm/8.4.2/lib/net8.0/CommunityToolkit.Mvvm.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/documentformat.openxml/3.1.1/lib/net8.0/DocumentFormat.OpenXml.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/documentformat.openxml.framework/3.1.1/lib/net8.0/DocumentFormat.OpenXml.Framework.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/excelnumberformat/1.1.0/lib/netstandard2.0/ExcelNumberFormat.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/fluentvalidation.dependencyinjectionextensions/11.12.0/lib/netstandard2.1/FluentValidation.DependencyInjectionExtensions.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/fluentvalidation/11.12.0/lib/net8.0/FluentValidation.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/materialdesigncolors/5.3.2/lib/net8.0-windows7.0/MaterialDesignColors.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/materialdesignthemes/5.3.2/lib/net8.0-windows7.0/MaterialDesignThemes.Wpf.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/mediatr.contracts/2.0.1/lib/netstandard2.0/MediatR.Contracts.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/mediatr/12.5.0/lib/net6.0/MediatR.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.aspnetcore.connections.abstractions/8.0.31/lib/net8.0/Microsoft.AspNetCore.Connections.Abstractions.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.aspnetcore.http.connections.client/8.0.31/lib/net8.0/Microsoft.AspNetCore.Http.Connections.Client.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.aspnetcore.http.connections.common/8.0.31/lib/net8.0/Microsoft.AspNetCore.Http.Connections.Common.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.aspnetcore.signalr.client.core/8.0.31/lib/net8.0/Microsoft.AspNetCore.SignalR.Client.Core.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.aspnetcore.signalr.client/8.0.31/lib/net8.0/Microsoft.AspNetCore.SignalR.Client.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.aspnetcore.signalr.common/8.0.31/lib/net8.0/Microsoft.AspNetCore.SignalR.Common.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.aspnetcore.signalr.protocols.json/8.0.31/lib/net8.0/Microsoft.AspNetCore.SignalR.Protocols.Json.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/Microsoft.CSharp.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.entityframeworkcore.abstractions/8.0.31/lib/net8.0/Microsoft.EntityFrameworkCore.Abstractions.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.entityframeworkcore/8.0.31/lib/net8.0/Microsoft.EntityFrameworkCore.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.caching.abstractions/8.0.0/lib/net8.0/Microsoft.Extensions.Caching.Abstractions.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.caching.memory/8.0.1/lib/net8.0/Microsoft.Extensions.Caching.Memory.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.configuration.abstractions/8.0.0/lib/net8.0/Microsoft.Extensions.Configuration.Abstractions.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.configuration.binder/8.0.2/lib/net8.0/Microsoft.Extensions.Configuration.Binder.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.configuration/8.0.0/lib/net8.0/Microsoft.Extensions.Configuration.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.configuration.fileextensions/8.0.1/lib/net8.0/Microsoft.Extensions.Configuration.FileExtensions.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.configuration.json/8.0.1/lib/net8.0/Microsoft.Extensions.Configuration.Json.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/8.0.2/lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.dependencyinjection/8.0.1/lib/net8.0/Microsoft.Extensions.DependencyInjection.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.diagnostics.abstractions/8.0.1/lib/net8.0/Microsoft.Extensions.Diagnostics.Abstractions.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.diagnostics/8.0.1/lib/net8.0/Microsoft.Extensions.Diagnostics.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.features/8.0.31/lib/net8.0/Microsoft.Extensions.Features.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.fileproviders.abstractions/8.0.0/lib/net8.0/Microsoft.Extensions.FileProviders.Abstractions.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.fileproviders.physical/8.0.0/lib/net8.0/Microsoft.Extensions.FileProviders.Physical.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.filesystemglobbing/8.0.0/lib/net8.0/Microsoft.Extensions.FileSystemGlobbing.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.http/8.0.1/lib/net8.0/Microsoft.Extensions.Http.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.logging.abstractions/8.0.3/lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.logging/8.0.1/lib/net8.0/Microsoft.Extensions.Logging.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.options.configurationextensions/8.0.0/lib/net8.0/Microsoft.Extensions.Options.ConfigurationExtensions.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.options/8.0.2/lib/net8.0/Microsoft.Extensions.Options.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.extensions.primitives/8.0.0/lib/net8.0/Microsoft.Extensions.Primitives.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/Microsoft.VisualBasic.Core.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/Microsoft.VisualBasic.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/Microsoft.Win32.Primitives.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/Microsoft.Win32.Registry.AccessControl.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/Microsoft.Win32.Registry.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/Microsoft.Win32.SystemEvents.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.xaml.behaviors.wpf/1.1.77/lib/net6.0-windows7.0/Microsoft.Xaml.Behaviors.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/mscorlib.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/netstandard.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/PresentationCore.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/PresentationFramework.Aero.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/PresentationFramework.Aero2.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/PresentationFramework.AeroLite.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/PresentationFramework.Classic.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/PresentationFramework.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/PresentationFramework.Luna.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/PresentationFramework.Royale.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/PresentationUI.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/qrcoder/1.4.3/lib/net6.0-windows7.0/QRCoder.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/rbush.signed/4.0.0/lib/net8.0/RBush.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/ReachFramework.dll" />
+    <ReferencePath Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Application/bin/Release/net8.0/Sahand.ClinicPro.Application.dll" />
+    <ReferencePath Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Domain/bin/Release/net8.0/Sahand.ClinicPro.Domain.dll" />
+    <ReferencePath Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Shared/bin/Release/net8.0/Sahand.ClinicPro.Shared.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/sixlabors.fonts/1.0.0/lib/netcoreapp3.1/SixLabors.Fonts.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.AppContext.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Buffers.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.CodeDom.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Collections.Concurrent.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Collections.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Collections.Immutable.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Collections.NonGeneric.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Collections.Specialized.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.ComponentModel.Annotations.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.ComponentModel.DataAnnotations.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.ComponentModel.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.ComponentModel.EventBasedAsync.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.ComponentModel.Primitives.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.ComponentModel.TypeConverter.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.Configuration.ConfigurationManager.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Configuration.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Console.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Core.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Data.Common.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Data.DataSetExtensions.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Data.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Diagnostics.Contracts.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Diagnostics.Debug.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Diagnostics.DiagnosticSource.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.Diagnostics.EventLog.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Diagnostics.FileVersionInfo.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.Diagnostics.PerformanceCounter.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Diagnostics.Process.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Diagnostics.StackTrace.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Diagnostics.TextWriterTraceListener.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Diagnostics.Tools.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Diagnostics.TraceSource.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Diagnostics.Tracing.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.DirectoryServices.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/system.drawing.common/6.0.0/lib/net6.0/System.Drawing.Common.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Drawing.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Drawing.Primitives.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Dynamic.Runtime.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Formats.Asn1.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Formats.Tar.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Globalization.Calendars.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Globalization.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Globalization.Extensions.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.IO.Compression.Brotli.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.IO.Compression.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.IO.Compression.FileSystem.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.IO.Compression.ZipFile.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.IO.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.IO.FileSystem.AccessControl.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.IO.FileSystem.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.IO.FileSystem.DriveInfo.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.IO.FileSystem.Primitives.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.IO.FileSystem.Watcher.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.IO.IsolatedStorage.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.IO.MemoryMappedFiles.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.IO.Packaging.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/system.io.pipelines/8.0.0/lib/net8.0/System.IO.Pipelines.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.IO.Pipes.AccessControl.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.IO.Pipes.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.IO.UnmanagedMemoryStream.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Linq.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Linq.Expressions.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Linq.Parallel.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Linq.Queryable.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Memory.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.Http.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.Http.Json.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.HttpListener.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.Mail.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.NameResolution.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.NetworkInformation.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.Ping.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.Primitives.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.Quic.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.Requests.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.Security.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.ServicePoint.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.Sockets.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.WebClient.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.WebHeaderCollection.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.WebProxy.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.WebSockets.Client.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Net.WebSockets.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Numerics.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Numerics.Vectors.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.ObjectModel.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.Printing.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Reflection.DispatchProxy.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Reflection.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Reflection.Emit.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Reflection.Emit.ILGeneration.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Reflection.Emit.Lightweight.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Reflection.Extensions.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Reflection.Metadata.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Reflection.Primitives.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Reflection.TypeExtensions.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.Resources.Extensions.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Resources.Reader.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Resources.ResourceManager.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Resources.Writer.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.CompilerServices.Unsafe.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.CompilerServices.VisualC.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.Extensions.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.Handles.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.InteropServices.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.InteropServices.JavaScript.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.InteropServices.RuntimeInformation.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.Intrinsics.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.Loader.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.Numerics.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.Serialization.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.Serialization.Formatters.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.Serialization.Json.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.Serialization.Primitives.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Runtime.Serialization.Xml.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Security.AccessControl.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Security.Claims.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Security.Cryptography.Algorithms.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Security.Cryptography.Cng.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Security.Cryptography.Csp.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Security.Cryptography.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Security.Cryptography.Encoding.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Security.Cryptography.OpenSsl.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.Security.Cryptography.Pkcs.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Security.Cryptography.Primitives.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.Security.Cryptography.ProtectedData.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Security.Cryptography.X509Certificates.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.Security.Cryptography.Xml.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Security.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.Security.Permissions.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Security.Principal.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Security.Principal.Windows.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Security.SecureString.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.ServiceModel.Web.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.ServiceProcess.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Text.Encoding.CodePages.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Text.Encoding.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Text.Encoding.Extensions.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Text.Encodings.Web.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Text.Json.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Text.RegularExpressions.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.Threading.AccessControl.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Threading.Channels.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Threading.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Threading.Overlapped.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Threading.Tasks.Dataflow.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Threading.Tasks.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Threading.Tasks.Extensions.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Threading.Tasks.Parallel.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Threading.Thread.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Threading.ThreadPool.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Threading.Timer.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Transactions.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Transactions.Local.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.ValueTuple.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Web.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Web.HttpUtility.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.Windows.Controls.Ribbon.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Windows.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.Windows.Extensions.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.Windows.Input.Manipulations.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.Windows.Presentation.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/System.Xaml.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Xml.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Xml.Linq.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Xml.ReaderWriter.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Xml.Serialization.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Xml.XDocument.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Xml.XmlDocument.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Xml.XmlSerializer.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Xml.XPath.dll" />
+    <ReferencePath Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/ref/net8.0/System.Xml.XPath.XDocument.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/UIAutomationClient.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/UIAutomationClientSideProviders.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/UIAutomationProvider.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/UIAutomationTypes.dll" />
+    <ReferencePath Include="/home/z/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.32/ref/net8.0/WindowsBase.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Controls/AnalogClock.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Controls/Charts/AreaChart.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Controls/Charts/ColumnChart.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Controls/Charts/DoughnutChart.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Controls/Charts/HorizontalBarChart.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Controls/EmptyState.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Controls/PaginationBar.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Controls/PersianCalendarControl.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Controls/PersianDatePicker.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Controls/StatCard.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Controls/TagInputControl.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Controls/TimePicker.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/MainWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/AccountingView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/AdhocReportWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/AdminView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/AdvancedEmrView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/AppointmentFormWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/AppointmentsView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/AttendanceView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/AuditLogView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/BackupView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/BillingView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/BranchesView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/ChangePasswordWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/ColorPickerWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/CommissionReportWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/CompanyFormWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/ComplementaryView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/ConsumablesView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/DashboardView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/DentistryView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/DicomViewerWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/DoctorFormWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/DoctorPerformanceWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/DoctorsView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/EmployeeFormWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/EmployeeSalaryEditWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/EPrescriptionView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/GuidedTourWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/ImagingView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/InsuranceView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/InvoiceFormWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/JournalEntryDetailWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/LabOrderFormWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/LabResultWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/LabTestEditWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/LabTestResultEntryWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/LabView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/LicenseActivationWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/LicenseStatusView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/LoginWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/NotificationsView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/OphthalmologyView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/PatientDetailWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/PatientFormWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/PatientsView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/PaymentWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/PayrollView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/PayslipWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/PersonnelView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/PharmacyItemFormWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/PharmacyView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/PhotoViewerWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/PhysiotherapyView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/PrescriptionDetailWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/PrescriptionFormWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/PrescriptionsView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/PrintPreviewWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/QuickSearchWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/ReceptionFormWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/ReceptionPayWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/ReceptionsView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/ReportBrowserView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/ReportsView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/RolePermissionView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/RoomsManagerWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/RoomsView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/SepasView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/SettingsView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/ShiftCloseWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/ShiftReceiptPreviewWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/ShiftsView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/ShortcutPickerWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/SmsView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/SplashWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/StockInFormWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/StocktakingView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/SurveyView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/TariffFormWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/ThemedDialog.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/TrainingCenterView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/UserFormWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/UsersView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/VisitsView.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/VisitWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/WaitingRoomDisplayWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Views/WaitingRoomSettingsWindow.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/App.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/Sahand.ClinicPro.Desktop_Content.g.cs" />
+    <Compile Include="/home/z/my-project/repo/src/Sahand.ClinicPro.Desktop/obj/Release/net8.0-windows/GeneratedInternalTypeHelper.g.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="/home/z/.dotnet/sdk/8.0.426/Sdks/Microsoft.NET.Sdk/targets/../analyzers/Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll" />
+    <Analyzer Include="/home/z/.dotnet/sdk/8.0.426/Sdks/Microsoft.NET.Sdk/targets/../analyzers/Microsoft.CodeAnalysis.NetAnalyzers.dll" />
+    <Analyzer Include="/home/z/.nuget/packages/communitytoolkit.mvvm/8.4.2/analyzers/dotnet/roslyn4.3/cs/CommunityToolkit.Mvvm.CodeFixers.dll" />
+    <Analyzer Include="/home/z/.nuget/packages/communitytoolkit.mvvm/8.4.2/analyzers/dotnet/roslyn4.3/cs/CommunityToolkit.Mvvm.SourceGenerators.dll" />
+    <Analyzer Include="/home/z/.nuget/packages/microsoft.entityframeworkcore.analyzers/8.0.31/analyzers/dotnet/cs/Microsoft.EntityFrameworkCore.Analyzers.dll" />
+    <Analyzer Include="/home/z/.nuget/packages/microsoft.extensions.logging.abstractions/8.0.3/analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Logging.Generators.dll" />
+    <Analyzer Include="/home/z/.nuget/packages/microsoft.extensions.options/8.0.2/analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Options.SourceGeneration.dll" />
+    <Analyzer Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/analyzers/dotnet/cs/Microsoft.Interop.ComInterfaceGenerator.dll" />
+    <Analyzer Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/analyzers/dotnet/cs/Microsoft.Interop.JavaScript.JSImportGenerator.dll" />
+    <Analyzer Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/analyzers/dotnet/cs/Microsoft.Interop.LibraryImportGenerator.dll" />
+    <Analyzer Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/analyzers/dotnet/cs/Microsoft.Interop.SourceGeneration.dll" />
+    <Analyzer Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/analyzers/dotnet/cs/System.Text.Json.SourceGeneration.dll" />
+    <Analyzer Include="/home/z/.dotnet/packs/Microsoft.NETCore.App.Ref/8.0.32/analyzers/dotnet/cs/System.Text.RegularExpressions.Generator.dll" />
+  </ItemGroup>
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+</Project>
