@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Sahand.ClinicPro.Application.Common.Helpers;
@@ -103,10 +104,10 @@ public partial class AnalogClock : UserControl
     private static readonly System.Windows.Media.SolidColorBrush MinuteTickBrush = Frozen("#51708F");
 
     /// <summary>ساخت قلم فریزشده — بدون تخصیص در هر فریم رندر</summary>
-    private static System.Windows.Media.SolidColorBrush Frozen(string hex)
+    private static SolidColorBrush Frozen(string hex)
     {
-        var brush = (System.Windows.Media.SolidColorBrush)
-            new System.Windows.Media.BrushConverter().ConvertFromString(hex);
+        if (new BrushConverter().ConvertFromString(hex) is not SolidColorBrush brush)
+            return Brushes.White; // کد رنگ ناشناخته — قلم امن (هرگز رخ نمی‌دهد)
         brush.Freeze();
         return brush;
     }

@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -263,7 +264,7 @@ public partial class WaitingRoomDisplayWindow : Window
         var card = new Border
         {
             Margin = new Thickness(0, 0, 0, 12),
-            Padding = new Thickness(16, 14),
+            Padding = new Thickness(16, 14, 16, 14),
             CornerRadius = new CornerRadius(16),
             Background = new SolidColorBrush(Color.FromRgb(0x10, 0x23, 0x3A)),
             BorderBrush = new SolidColorBrush(Color.FromRgb(0x1E, 0x3A, 0x5C)),
