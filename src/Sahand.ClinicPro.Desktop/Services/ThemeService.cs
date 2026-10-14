@@ -104,6 +104,28 @@ public class ThemeService : IThemeService
         theme.SetSecondaryColor((System.Windows.Media.Color)System.Windows.Media.ColorConverter
             .ConvertFromString(picked.SecondaryHex));
 
+        // ═══ چرخهٔ ۷۶ — کنتراست خوانایی تم تیره (گزارش مالک چرخهٔ ۷۵) ═══
+        // «کنتراست متن/زمینه به‌ویژه در زمینهٔ کارت‌ها به حدی کم است که خواندن
+        // سخت است». پالت تیرهٔ پیش‌فرض کتابخانه، سطح کارت و متن اصلی را نزدیک
+        // هم می‌گذارد. در حالت تیره سه قلم کلیدی صریحاً بازنویسی می‌شود:
+        //   • سطح صفحه (#16191E) تیره‌تر → کارت‌ها از پس‌زمینه جدا دیده می‌شوند؛
+        //   • سطح کارت  (#272D34) روشن‌تر → جعبهٔ خواندن روشن‌تر؛
+        //   • متن اصلی  (#F2F5F8) → نسبت کنتراست روی کارت ≈ ۱۲:۱ (WCAG AAA).
+        // بازنویسی روی خودِ شیء Theme انجام می‌شود تا همهٔ مصرف‌کننده‌ها
+        // (استایل‌های داخلی و بیرونی کتابخانه) مقدار واحد ببینند؛ در حالت روشن
+        // هیچ بازنویسی‌ای نمی‌شود و پالت کتابخانه دست‌نخورده می‌ماند
+        // (SetBaseTheme در هر فراخوانی مقادیر پایه را از نو می‌نویسد).
+        if (dark)
+        {
+            theme.Background = System.Windows.Media.Color.FromRgb(0x16, 0x19, 0x1E);
+            // متن روی کارت از قلم عمومی Foreground می‌آید؛ Card فقط سطح دارد
+            theme.Cards = new MaterialDesignThemes.Wpf.Theme.Card(theme)
+            {
+                Background = System.Windows.Media.Color.FromRgb(0x27, 0x2D, 0x34),
+            };
+            theme.Foreground = System.Windows.Media.Color.FromRgb(0xF2, 0xF5, 0xF8);
+        }
+
         _paletteHelper.SetTheme(theme);
         _isDark = dark;
         _currentThemeKey = picked.Key;
@@ -203,6 +225,18 @@ public class ThemeService : IThemeService
             (byte)(c.R * (1 - factor)),
             (byte)(c.G * (1 - factor)),
             (byte)(c.B * (1 - factor)));
+    }
+
+    /// <summary>
+    /// قلم رنگ یکدستِ فریزشده — برای بازنویسی قلم‌های تم (چرخهٔ ۷۶)؛ فریز
+    /// کردن قلم هم‌زمانیِ رندر چند نخ را بی‌دردسر می‌کند.
+    /// </summary>
+    private static System.Windows.Media.SolidColorBrush FrozenBrush(byte r, byte g, byte b)
+    {
+        var brush = new System.Windows.Media.SolidColorBrush(
+            System.Windows.Media.Color.FromRgb(r, g, b));
+        brush.Freeze();
+        return brush;
     }
 
     /// <summary>

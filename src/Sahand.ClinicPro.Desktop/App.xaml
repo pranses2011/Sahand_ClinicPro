@@ -410,7 +410,8 @@
                 <Setter Property="VerticalAlignment" Value="Center" />
                 <Setter Property="Margin" Value="8,0,0,0" />
                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-                <Setter Property="Opacity" Value="0.55" />
+                <!-- چرخهٔ ۷۶: ۰.۷ به‌جای ۰.۵۵ — در تم تیره متنِ نیمه‌محو ناخوانا بود -->
+                <Setter Property="Opacity" Value="0.7" />
             </Style>
             <Style x:Key="App.WizardLink" TargetType="Border">
                 <Setter Property="Height" Value="2.5" />
