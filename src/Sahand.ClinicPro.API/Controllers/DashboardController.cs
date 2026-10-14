@@ -167,6 +167,7 @@ public class DashboardController : ApiBaseController
     /// منبع کارت دوم «ویزیت‌شده» و نمودار ستونی داشبورد جدید.
     /// </summary>
     /// <param name="days">طول بازه — ۱ تا ۹۰ روز</param>
+    /// <param name="ct">توکن لغو هم‌زمان</param>
     [HttpGet("visits-chart")]
     [HasPermission("dashboard.view")]
     public async Task<IActionResult> GetVisitsChart([FromQuery] int days = 7,
