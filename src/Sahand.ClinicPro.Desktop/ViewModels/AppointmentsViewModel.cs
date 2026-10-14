@@ -59,7 +59,7 @@ public partial class SlotVM : ObservableObject
 }
 
 /// <summary>
-/// ردیف نوبت فهرست — ۱۲ ستون طبق فرم ۹
+/// ردیف نوبت فهرست — ۱۳ ستون طبق فرم ۹ + اولویت رنگی (چرخهٔ ۷۵)
 /// </summary>
 public record AppointmentListRow(
     long Id,
@@ -78,7 +78,11 @@ public record AppointmentListRow(
     string TypeText,
     int Source,
     string SourceText,
-    decimal EstimatedFee);
+    decimal EstimatedFee,
+    /// <summary>متن فارسی اولویت — «🚨 اورژانس / 🔥 فوری / معمولی» (چرخهٔ ۷۵)</summary>
+    string PriorityText = "معمولی",
+    /// <summary>رنگ اختصاصی اولویت — قرمز اورژانس / نارنجی فوری / خاکستری معمولی</summary>
+    string PriorityColor = "#78909C");
 
 /// <summary>
 /// بیمار انتخاب‌شده در رزرو سریع — چرخهٔ ۴۴: شناسهٔ بیمهٔ اصلی پرونده
@@ -648,14 +652,18 @@ public partial class AppointmentsViewModel : ViewModelBase
         IsBusy = false;
     }
 
-    /// <summary>نگاشت ردیف با Badge وضعیت</summary>
+    /// <summary>نگاشت ردیف با Badge وضعیت + بج رنگی اولویت (چرخهٔ ۷۵)</summary>
     private AppointmentListRow MapRow(AppointmentSearchItem a) => new(
         a.Id, false, a.AppointmentCode, a.PatientName, a.PatientMobile,
         a.DoctorName, a.SpecialtyName, a.DateShamsi, a.Time,
         a.Status, StatusText(a.Status), StatusColors[Math.Clamp(a.Status - 1, 0, 6)],
         a.Type, TypeLabels[Math.Clamp(a.Type - 1, 0, 3)],
         a.Source, SourceLabels[Math.Clamp(a.Source - 1, 0, 2)],
-        a.EstimatedFee);
+        a.EstimatedFee,
+        // ═══ چرخهٔ ۷۵ — اولویت با رنگ خودش (گزارش مالک: «اولویت رو هم با رنگ
+        // خودش در لیست نشون بده») — ۱ اورژانس/۲ فوری/۳ یا هر چیز دیگر معمولی ═══
+        a.Priority switch { 1 => "🚨 اورژانس", 2 => "🔥 فوری", _ => "معمولی" },
+        a.Priority switch { 1 => "#C62828", 2 => "#E65100", _ => "#78909C" });
 
     /// <summary>متن فارسی وضعیت</summary>
     private string StatusText(int status) =>
@@ -845,6 +853,8 @@ public partial class AppointmentsViewModel : ViewModelBase
         public int Type { get; set; }
         public int Source { get; set; }
         public decimal EstimatedFee { get; set; }
+        /// <summary>اولویت نوبت — ۱ اورژانس/۲ فوری/۳ معمولی (چرخهٔ ۷۵)</summary>
+        public int Priority { get; set; } = 3;
     }
 
     public sealed class BatchResponse

@@ -235,7 +235,7 @@
                                     Background="{DynamicResource MaterialDesign.Brush.Background}">
                                 <StackPanel>
                                     <TextBlock FontSize="13" FontWeight="Bold" Margin="0,0,0,6">
-                                        <Run Text="⏰ ساعت‌های " /><Run Text="{Binding SelectedDateShamsi, Mode=OneWay}" />
+                                        <Run Text="⏰ ساعت‌های " /><Run Text="{Binding SelectedDateShamsi, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
                                     </TextBlock>
                                     <!-- چرخه بیست‌ویکم (گزارش پانزدهم مالک): «ساعت‌ها را به‌جای
                                          کنار هم زیر هم نشان می‌دهد» — اسلات‌ها داخل WrapPanel
@@ -385,7 +385,7 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0" Margin="0,0,16,0">
                                         <TextBlock Text="تاریخ" FontSize="10" Opacity="0.6"  Foreground="#1F2937"/>
-                                        <TextBlock Text="{Binding SelectedDateShamsi, Mode=OneWay}" FontWeight="Bold"  Foreground="#1F2937"/>
+                                        <TextBlock Text="{Binding SelectedDateShamsi, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontWeight="Bold"  Foreground="#1F2937"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Margin="0,0,16,0">
                                         <TextBlock Text="⏰ ساعت" FontSize="10" Opacity="0.6"  Foreground="#1F2937"/>
@@ -598,6 +598,21 @@
                             <DataGridTextColumn Header="پزشک" Width="130" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" />
                             <DataGridTextColumn Header="تخصص" Width="100" Binding="{Binding SpecialtyName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" />
                             <DataGridTextColumn Header="نوع" Width="70" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" />
+                            <!-- ═══ چرخهٔ ۷۵ — ستون اولویت با رنگ خودش ═══
+                                 گزارش مالک: «اولویت در لیست نیست؛ اولویت رو هم با رنگ
+                                 خودش در لیست نشون بده» — قرمز اورژانس / نارنجی فوری /
+                                 خاکستری معمولی؛ هم‌الگوی بج وضعیت -->
+                            <DataGridTemplateColumn Header="اولویت" Width="85" SortMemberPath="PriorityText">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center"
+                                                Background="{Binding PriorityColor, Converter={StaticResource HexToBrush}}">
+                                            <TextBlock Text="{Binding PriorityText, Converter={StaticResource PersianDigits}}"
+                                                       FontSize="10.5" Foreground="White" HorizontalAlignment="Center" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTemplateColumn Header="وضعیت" Width="105" SortMemberPath="Status">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>

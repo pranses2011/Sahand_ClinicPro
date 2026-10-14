@@ -71,4 +71,8 @@ public record AppointmentSearchItemDto(
     int Status,
     int Type,
     int Source,
-    decimal EstimatedFee);
+    decimal EstimatedFee,
+    /// <summary>اولویت نوبت (۱ اورژانس/۲ فوری/۳ معمولی) — چرخهٔ ۷۵: نمایش
+    /// رنگی در فهرست نوبت‌ها (گزارش مالک: «اولویت در لیست نیست؛ اولویت رو هم
+    /// با رنگ خودش در لیست نشون بده»)</summary>
+    int Priority = 3);
