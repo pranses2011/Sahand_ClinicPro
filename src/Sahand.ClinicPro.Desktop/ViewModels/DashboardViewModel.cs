@@ -110,6 +110,65 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private int _waitingCount;
     [ObservableProperty] private string _todayRevenueText = "0";
 
+    /* ── چرخهٔ ۷۲ — بازطراحی داشبورد: بیمار جدید امروز (داده‌ای که سرور
+       از قبل می‌فرستاد ولی کارتی نداشت) ── */
+    [ObservableProperty] private int _newPatientsToday;
+
+    /* ── چرخهٔ ۷۲ — نمودار ویزیت روزانه (ستونی) و ترکیب وضعیت نوبت‌ها (دونات) ── */
+
+    /// <summary>نمودار ستونی ویزیت روزانه — از dashboard/visits-chart</summary>
+    public ObservableCollection<ChartPointData> VisitsChart { get; } = new();
+
+    /// <summary>نمودار دونات ترکیب وضعیت نوبت‌های امروز — از dashboard/status-mix</summary>
+    public ObservableCollection<ChartPointData> StatusMix { get; } = new();
+
+    /// <summary>متن مرکز دونات — جمع نوبت‌های امروز</summary>
+    [ObservableProperty]
+    private string _statusMixTotalText = "۰";
+
+    /// <summary>زیرنویس مرکز دونات</summary>
+    [ObservableProperty]
+    private string _statusMixSubText = "نوبت امروز";
+
+    /// <summary>گزینه‌های بازهٔ نمودار درآمد — چرخهٔ ۷۲</summary>
+    public int[] RevenueDaysOptions { get; } = { 7, 14, 30 };
+
+    /// <summary>بازهٔ منتخب نمودار درآمد — با تغییر، نمودار تازه‌سازی می‌شود</summary>
+    [ObservableProperty]
+    private int _selectedRevenueDays = 7;
+
+    /* ── سوییچ‌های چیپ بازهٔ نمودار — RadioButton دوطرفه روی سه بولین مشتق ── */
+
+    /// <summary>بازهٔ ۷ روزه فعال است؟</summary>
+    public bool IsRevenue7
+    {
+        get => SelectedRevenueDays == 7;
+        set { if (value) SelectedRevenueDays = 7; }
+    }
+
+    /// <summary>بازهٔ ۱۴ روزه فعال است؟</summary>
+    public bool IsRevenue14
+    {
+        get => SelectedRevenueDays == 14;
+        set { if (value) SelectedRevenueDays = 14; }
+    }
+
+    /// <summary>بازهٔ ۳۰ روزه فعال است؟</summary>
+    public bool IsRevenue30
+    {
+        get => SelectedRevenueDays == 30;
+        set { if (value) SelectedRevenueDays = 30; }
+    }
+
+    /// <summary>تغییر بازهٔ نمودار درآمد → اعلان سوییچ‌ها + بارگذاری مجدد نمودار</summary>
+    partial void OnSelectedRevenueDaysChanged(int value)
+    {
+        OnPropertyChanged(nameof(IsRevenue7));
+        OnPropertyChanged(nameof(IsRevenue14));
+        OnPropertyChanged(nameof(IsRevenue30));
+        _ = LoadRevenueChartAsync();
+    }
+
     /* ── آمار فرعی (ردیف دوم) ── */
     [ObservableProperty] private int _lowStockCount;
     [ObservableProperty] private int _todayPrescriptions;
@@ -130,6 +189,19 @@ public partial class DashboardViewModel : ViewModelBase
 
     /// <summary>هیچ هشدار انباری نیست؟ (کارت جمع می‌شود)</summary>
     [ObservableProperty] private bool _hasNoInventoryAlerts = true;
+
+    /// <summary>
+    /// هیچ هشداری برای مرکز هشدار نیست؟ — چرخهٔ ۷۲: «آزمایش در انتظار» هم
+    /// وضعیت هشداری است؛ کارت وقتی «نه انباری و نه آزمایشِ در انتظاری»
+    /// نباشد جمع می‌شود.
+    /// </summary>
+    public bool HasNoAlertsAtAll => HasNoInventoryAlerts && PendingLabOrders == 0;
+
+    /// <summary>اعلان تغییر وضعیت مرکز هشدار با تغییر منابع انبار</summary>
+    partial void OnHasNoInventoryAlertsChanged(bool value) => OnPropertyChanged(nameof(HasNoAlertsAtAll));
+
+    /// <summary>اعلان تغییر وضعیت مرکز هشدار با تغییر آزمایش‌های در انتظار</summary>
+    partial void OnPendingLabOrdersChanged(int value) => OnPropertyChanged(nameof(HasNoAlertsAtAll));
 
     /// <summary>اقلام در حال انقضا — نزدیک‌ترین اول</summary>
     public ObservableCollection<InventoryAlertRow> ExpiringItems { get; } = new();
@@ -204,52 +276,59 @@ public partial class DashboardViewModel : ViewModelBase
         _snackbar.Success("چیدمان به حالت پیش‌فرض بازگشت");
     }
 
-    /// <summary>ترتیب پیش‌فرض کارت‌ها</summary>
-    private static readonly string[] DefaultOrder = { "patients", "visits", "waiting", "revenue" };
+    /// <summary>ترتیب پیش‌فرض کارت‌ها — چرخهٔ ۷۲: بیمار جدید بین بیماران امروز و ویزیت‌ها</summary>
+    private static readonly string[] DefaultOrder =
+        { "patients", "newPatients", "visits", "waiting", "revenue" };
 
     partial void OnShowSecondaryCardsChanged(bool value) => _ = SaveLayoutAsync();
     partial void OnShowRevenueChartChanged(bool value) => _ = SaveLayoutAsync();
     partial void OnShowUpcomingChanged(bool value) => _ = SaveLayoutAsync();
     partial void OnShowActivitiesChanged(bool value) => _ = SaveLayoutAsync();
 
-    /// <summary>راه‌اندازی کارت‌های داینامیک</summary>
+    /// <summary>راه‌اندازی کارت‌های داینامیک — چرخهٔ ۷۲: پنج کارت با پالت هماهنگ</summary>
     private void InitializeCards()
     {
         MainCards.Clear();
         MainCards.Add(new DashboardCardVM
         {
-            Key = "patients", IconKind = "AccountGroup", Label = "بیماران امروز",
-            CompareText = "مجموع نوبت‌های ثبت‌شده امروز", Accent = "#1E88E5"
+            Key = "patients", IconKind = "AccountGroup", Label = "نوبت‌های امروز",
+            CompareText = "مجموع نوبت‌های ثبت‌شده امروز", Accent = "#1565C0"
+        });
+        MainCards.Add(new DashboardCardVM
+        {
+            Key = "newPatients", IconKind = "AccountPlus", Label = "بیمار جدید",
+            CompareText = "پرونده‌های ثبت‌شده امروز", Accent = "#00897B"
         });
         MainCards.Add(new DashboardCardVM
         {
             Key = "visits", IconKind = "Stethoscope", Label = "ویزیت‌شده",
-            CompareText = "ویزیت‌های انجام‌شده امروز", Accent = "#43A047"
+            CompareText = "ویزیت‌های انجام‌شده امروز", Accent = "#2E7D32"
         });
         MainCards.Add(new DashboardCardVM
         {
             Key = "waiting", IconKind = "ClockOutline", Label = "در انتظار",
-            CompareText = "در صف انتظار باقی‌مانده", Accent = "#FB8C00"
+            CompareText = "در صف انتظار باقی‌مانده", Accent = "#E65100"
         });
         MainCards.Add(new DashboardCardVM
         {
             // چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان) — حذف هاردکد
             Key = "revenue", IconKind = "CashMultiple", Label = $"درآمد امروز ({Money.UnitLabel})",
-            CompareText = "مجموع پرداخت‌های ثبت‌شده", Accent = "#8E24AA"
+            CompareText = "مجموع پرداخت‌های ثبت‌شده", Accent = "#6A1B9A"
         });
         foreach (var c in MainCards)
             c.VisibleChanged += (_, _) => _ = SaveLayoutAsync();
     }
 
-    /// <summary>به‌روزرسانی مقادیر کارت‌ها از آمار</summary>
+    /// <summary>به‌روزرسانی مقادیر کارت‌ها از آمار — چرخهٔ ۷۲: ارقام فارسی + کارت پنجم «بیمار جدید»</summary>
     private void UpdateCardValues()
     {
         foreach (var c in MainCards)
             c.Value = c.Key switch
             {
-                "patients" => TodayPatients.ToString(),
-                "visits" => TodayVisits.ToString(),
-                "waiting" => WaitingCount.ToString(),
+                "patients" => Helpers.Money.ToPersianDigits(TodayPatients.ToString()),
+                "newPatients" => Helpers.Money.ToPersianDigits(NewPatientsToday.ToString()),
+                "visits" => Helpers.Money.ToPersianDigits(TodayVisits.ToString()),
+                "waiting" => Helpers.Money.ToPersianDigits(WaitingCount.ToString()),
                 "revenue" => TodayRevenueText,
                 _ => "—"
             };
@@ -797,6 +876,9 @@ public partial class DashboardViewModel : ViewModelBase
             TodayPatients = stats.TryGetProperty("todayAppointments", out var appts) ? appts.GetInt32() : 0;
             TodayVisits = stats.TryGetProperty("todayVisits", out var visits) ? visits.GetInt32() : 0;
             WaitingCount = Math.Max(0, TodayPatients - TodayVisits);
+            // چرخهٔ ۷۲ — بیمار جدید امروز؛ کارت پنجم داشبورد جدید
+            NewPatientsToday = stats.TryGetProperty("newPatients", out var np) && np.ValueKind != JsonValueKind.Null
+                ? np.GetInt32() : 0;
             var revenue = stats.TryGetProperty("todayRevenue", out var rev) && rev.ValueKind != JsonValueKind.Null
                 ? rev.GetDecimal() : 0;
             TodayRevenueText = Money.Format(revenue);
@@ -819,21 +901,45 @@ public partial class DashboardViewModel : ViewModelBase
         // به‌روزرسانی کارت‌های داینامیک چرخه ۱۳
         UpdateCardValues();
 
-        // ۳) نمودار درآمد ۷ روز — چرخه یازدهم: میله‌ای سطح‌خورده بود؛
-        // برای «روند در طول زمان» نوع درست نمودار، سطحی/خطی است
-        var chart = UnwrapData(await _api.GetAsync<JsonElement>("dashboard/revenue-chart?days=7"));
-        RevenueChart.Clear();
-        if (chart.ValueKind == JsonValueKind.Array)
+        // ۳) نمودار درآمد — چرخهٔ ۷۲: بازهٔ قابل انتخاب (۷/۱۴/۳۰) و بارگذاری مستقل
+        await LoadRevenueChartAsync();
+
+        // ═══ چرخهٔ ۷۲ — داشبورد جدید: نمودار ویزیت + ترکیب وضعیت ═══
+
+        // ۳-ب) نمودار ستونی ویزیت روزانه
+        var visitsChart = UnwrapData(await _api.GetAsync<JsonElement>("dashboard/visits-chart?days=7"));
+        VisitsChart.Clear();
+        if (visitsChart.ValueKind == JsonValueKind.Array)
         {
-            foreach (var item in chart.EnumerateArray())
+            foreach (var item in visitsChart.EnumerateArray())
             {
                 var label = item.TryGetProperty("label", out var l) ? l.GetString() ?? "—" : "—";
-                var amount = item.TryGetProperty("amount", out var a) && a.ValueKind != JsonValueKind.Null
-                    ? (double)a.GetDecimal() : 0;
-                // چرخهٔ بیست‌وهفتم: قالب‌بندی مبلغ با واحد پویا + جداکنندهٔ فارسی
-                // (Money.FormatWithUnit همزمان تقسیم ۱۰ِ حالت تومان را هم اعمال می‌کند)
-                RevenueChart.Add(new ChartPointData(label, amount,
-                    $"{label}: {Money.FormatWithUnit((decimal)amount)}"));
+                var count = item.TryGetProperty("count", out var c) && c.ValueKind != JsonValueKind.Null
+                    ? (double)c.GetInt32() : 0;
+                VisitsChart.Add(new ChartPointData(label, count,
+                    $"{label}: {Helpers.Money.ToPersianDigits(((int)count).ToString())} ویزیت"));
+            }
+        }
+
+        // ۳-پ) ترکیب وضعیت نوبت‌های امروز — دونات + جمع مرکز
+        var statusMix = UnwrapData(await _api.GetAsync<JsonElement>("dashboard/status-mix"));
+        StatusMix.Clear();
+        if (statusMix.ValueKind == JsonValueKind.Object)
+        {
+            if (statusMix.TryGetProperty("total", out var total) && total.ValueKind != JsonValueKind.Null)
+                StatusMixTotalText = Helpers.Money.ToPersianDigits(total.GetInt32().ToString());
+
+            if (statusMix.TryGetProperty("mix", out var mix) && mix.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in mix.EnumerateArray())
+                {
+                    var label = item.TryGetProperty("label", out var l) ? l.GetString() ?? "—" : "—";
+                    var count = item.TryGetProperty("count", out var c) && c.ValueKind != JsonValueKind.Null
+                        ? (double)c.GetInt32() : 0;
+                    if (count <= 0) continue; // سهم صفر رسم نمی‌شود
+                    StatusMix.Add(new ChartPointData(label, count,
+                        $"{label}: {Helpers.Money.ToPersianDigits(((int)count).ToString())} نوبت"));
+                }
             }
         }
 
@@ -868,6 +974,28 @@ public partial class DashboardViewModel : ViewModelBase
                     act.TryGetProperty("action", out var ac) ? ac.GetString() ?? "" : "",
                     act.TryGetProperty("entity", out var en) ? en.GetString() ?? "" : ""));
             }
+        }
+    }
+
+    /// <summary>
+    /// بارگذاری نمودار درآمد با بازهٔ منتخب — چرخهٔ ۷۲: از LoadStats جدا شد تا
+    /// تعویض بازهٔ ۷/۱۴/۳۰ فقط همین درخواست را بشورد نه کل داشبورد را.
+    /// </summary>
+    private async Task LoadRevenueChartAsync()
+    {
+        var chart = UnwrapData(await _api.GetAsync<JsonElement>(
+            $"dashboard/revenue-chart?days={SelectedRevenueDays}"));
+        RevenueChart.Clear();
+        if (chart.ValueKind != JsonValueKind.Array) return;
+
+        foreach (var item in chart.EnumerateArray())
+        {
+            var label = item.TryGetProperty("label", out var l) ? l.GetString() ?? "—" : "—";
+            var amount = item.TryGetProperty("amount", out var a) && a.ValueKind != JsonValueKind.Null
+                ? (double)a.GetDecimal() : 0;
+            // چرخهٔ بیست‌وهفتم: قالب‌بندی مبلغ با واحد پویا + جداکنندهٔ فارسی
+            RevenueChart.Add(new ChartPointData(label, amount,
+                $"{label}: {Money.FormatWithUnit((decimal)amount)}"));
         }
     }
 

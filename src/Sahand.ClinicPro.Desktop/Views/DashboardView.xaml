@@ -9,32 +9,53 @@
              xmlns:helpers="clr-namespace:Sahand.ClinicPro.Desktop.Helpers"
              mc:Ignorable="d"
              FlowDirection="RightToLeft">
-    <!-- ═══════════════════════════════════════════════════════════
-         داشبورد مدیریتی — گام U1 طبق پرامپت UI بخش ۱ (فرم ۲)
-         نوار خوش‌آمد + ۴ کارت اصلی + ۳ کارت فرعی + نمودار درآمد ۷ روز
-         + نوبت‌های پیش‌رو + فعالیت‌های اخیر (به‌روزرسانی ۶۰ ثانیه)
-         ═══════════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════════════
+         داشبورد — بازطراحی کامل چرخهٔ ۷۲ (گزارش مالک: «داشبورد رو بازطراحی
+         بکن و خیلی حرفه ای و زیبا به همراه کارت های آماری و نموداری باشه و
+         سپس پنل مبانبرها رو هم بصورت حرفه ای و زیبا از اول طراحی بکن —
+         کدهای قبلی رو در نظر نگیر و کد جدید بنویس»)
+
+         ساختار جدید (کاملاً بازنویسی‌شده — هیچ قالبی از نسخهٔ قبل عایش نشده):
+           ۱) سربرگ قهرمان — گرادیان عمیق سرمه‌ای-فیروزه‌ای با خوش‌آمد، تاریخ
+              شمسی، نشان نسخه، وضعیت اتصال و دکمه‌های اقدام (تازه‌سازی /
+              نمایشگر سالن / شخصی‌سازی)
+           ۲) پنل میانبرهای سریع — طراحی صفرِ جدید: کاشی افقی «آیکون مربع‌گوشه
+              + عنوان + دسته» با ته‌رنگ ملایم دستهٔ هر صفحه؛ ارتفاع قطعی و
+              بدون افکت سایه (درس بریدگیِ چرخه‌های ۴۳-۴۷)
+           ۳) ردیف ۵ کارت KPI — نوار تأکید گرادیانی بالای هر کارت + عدد درشت
+              فارسی + زیرنویس؛ شخصی‌سازی (ترتیب/نمایش) حفظ شد
+           ۴) ردیف نمودارها — روند درآمد (سطحی، بازهٔ ۷/۱۴/۳۰) + ترکیب وضعیت
+              نوبت‌های امروز (دونات با جمع مرکز)
+           ۵) ردیف دوم نمودارها — ویزیت‌های روزانه (ستونی) + نوبت‌های پیش‌رو
+           ۶) مرکز هشدار انبار (پلکانی ۹۰/۶۰/۳۰/۷) — بازطراحی‌شده
+           ۷) فعالیت‌های اخیر + پیام‌های پشتیبانی
+         ═══════════════════════════════════════════════════════════════════ -->
     <UserControl.Resources>
-        <!-- مبدل دیدپذیری — چرخه شانزدهم (گزارش دهم مالک): این فایل در ۹ نقطه به
-             BoolToVis ارجاع می‌داد اما نه محلی تعریفش کرده بود و نه در App.xaml
-             موجود است؛ StaticResource فقط از منابع «همان فایل» یا App.xaml حل می‌شود
-             (تعریف در پنجره‌های دیگر — مثل ورود — برای این فایل بی‌اثر است) → نخستین
-             باز شدن داشبورد با XamlParseException می‌ریخت. الگوی ۱۳ فایل دیگر پروژه
-             (تعریف محلی BooleanToVisibilityConverter با کلید BoolToVis) اعمال شد. -->
+        <!-- مبدل‌های محلی — الگوی ثابت پروژه (هر نما BoolToVis خودش را تعریف می‌کند) -->
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
 
-        <!-- قالب ردیف نوبت‌های پیش‌رو — شماره صف دایره‌ای + نام + وضعیت -->
+        <!-- ═══ قالب ردیف نوبت‌های پیش‌رو — بازطراحی چرخهٔ ۷۲ ═══
+             کارت نازک با نوار وضعیت سمت راست، شمارهٔ صف درشت و زمان/پزشک چپ -->
         <DataTemplate x:Key="AppointmentItemTemplate">
-            <Border Background="{DynamicResource MaterialDesign.Brush.Background}"
-                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
-                    BorderThickness="0,0,0,1" CornerRadius="6" Padding="8,6" Margin="4,2">
+            <Border Background="#FBFCFE" BorderBrush="#E4EAF2" BorderThickness="1"
+                    CornerRadius="10" Padding="10,7" Margin="0,0,0,6">
                 <DockPanel>
-                    <!-- نشان وضعیت رنگی -->
-                    <Border DockPanel.Dock="Left" Width="10" Height="10" CornerRadius="5"
-                            VerticalAlignment="Center" Margin="0,0,8,0">
+                    <!-- زمان و پزشک — لبهٔ چپ فیزیکی -->
+                    <StackPanel DockPanel.Dock="Left" VerticalAlignment="Center" MinWidth="62">
+                        <TextBlock Text="{Binding Time}" FontSize="13.5" FontWeight="Bold"
+                                   Foreground="#37474F" FontFamily="{DynamicResource App.CodeFont}"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding DoctorName}" FontSize="9" Opacity="0.55"
+                                   HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                   MaxWidth="80" />
+                    </StackPanel>
+
+                    <!-- نوار وضعیت رنگی — سمت راست -->
+                    <Border DockPanel.Dock="Right" Width="4" CornerRadius="2" Margin="0,0,8,0"
+                            VerticalAlignment="Stretch">
                         <Border.Style>
                             <Style TargetType="Border">
-                                <Setter Property="Background" Value="#9E9E9E" />
+                                <Setter Property="Background" Value="#B0BEC5" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding Status}" Value="InProgress">
                                         <Setter Property="Background" Value="#1E88E5" />
@@ -53,225 +74,298 @@
                         </Border.Style>
                     </Border>
 
-                    <!-- زمان و پزشک -->
-                    <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Time}" FontSize="13" FontWeight="Bold"
-                                   FontFamily="{DynamicResource App.CodeFont}" HorizontalAlignment="Center" />
-                        <TextBlock Text="{Binding DoctorName}" FontSize="9" Opacity="0.6"
-                                   HorizontalAlignment="Center" />
-                    </StackPanel>
-
-                    <!-- شماره صف و نام بیمار -->
+                    <!-- شمارهٔ صف و نام بیمار -->
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="{DynamicResource MaterialDesign.Brush.Primary}"
-                                CornerRadius="11" Width="22" Height="22"
+                        <Border Background="#EEF2F8" CornerRadius="11" Width="26" Height="26"
                                 VerticalAlignment="Center">
-                            <TextBlock Text="{Binding QueueNumber}"
-                                       Foreground="White" FontSize="10"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding QueueNumber, TargetNullValue=—}"
+                                       Foreground="#37474F" FontSize="10.5" FontWeight="Bold"
+                                       FontFamily="{DynamicResource App.CodeFont}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
-                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                        <StackPanel Margin="9,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold"
-                                       FontSize="12" />
-                            <TextBlock Text="{Binding StatusText}" FontSize="9" Opacity="0.65" />
+                                       FontSize="12.5" Foreground="#1F2937" />
+                            <TextBlock Text="{Binding StatusText}" FontSize="9.5" Opacity="0.6" />
                         </StackPanel>
                     </StackPanel>
                 </DockPanel>
             </Border>
         </DataTemplate>
+
+        <!-- ═══ قالب کارت KPI — طراحی جدید چرخهٔ ۷۲ ═══
+             کارت سفید با نوار گرادیانی تأکید بالا، چیپ آیکون گردِ ته‌رنگ،
+             عدد درشت فارسی، عنوان و زیرنویس؛ حالت شخصی‌سازی دکمه‌های
+             ترتیب/نمایش را روی کارت می‌آورد (رفتار چرخهٔ ۱۳ حفظ شد). -->
+        <DataTemplate x:Key="KpiCardTemplate">
+            <Grid Margin="0,0,8,0">
+                <Border CornerRadius="14" Background="#FFFFFF" BorderBrush="#E2E8F0"
+                        BorderThickness="1.2" Padding="14,12,12,12"
+                        Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}"
+                        UseLayoutRounding="True" SnapsToDevicePixels="True">
+                    <Border.Height>112</Border.Height>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- سربرگ کارت — آیکون + عنوان -->
+                        <DockPanel Grid.Row="0" Margin="0,0,0,6">
+                            <Border Width="34" Height="34" CornerRadius="17" VerticalAlignment="Center"
+                                    Background="{Binding Accent, Converter={StaticResource HexToBrush}}">
+                                <materialDesign:PackIcon Kind="{Binding IconKind, TargetNullValue=ViewDashboard, FallbackValue=ViewDashboard}"
+                                                         Width="17" Height="17" Foreground="White"
+                                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="{Binding Label}" FontSize="11.5" FontWeight="SemiBold"
+                                       Foreground="#546E7A" Margin="9,0,0,0"
+                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
+
+                        <!-- مقدار درشت + زیرنویس -->
+                        <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Value, Mode=OneWay}" FontSize="25" FontWeight="Bold"
+                                       Foreground="#102A43" FontFamily="{DynamicResource App.CodeFont}"
+                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding CompareText, Mode=OneWay}" FontSize="9.5"
+                                       Opacity="0.55" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- نوار تأکید رنگ کارت — لایهٔ جدا روی قاب (بالای کارت) -->
+                <Border Height="4" CornerRadius="2,2,0,0" VerticalAlignment="Top" Margin="1,1,9,0"
+                        Background="{Binding Accent, Converter={StaticResource HexToBrush}, FallbackValue=#1565C0}"
+                        Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}" />
+
+                <!-- کنترل‌های چیدمان — فقط در حالت شخصی‌سازی (روی کارت) -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                            Margin="6,0,0,8"
+                            Visibility="{Binding DataContext.IsCustomizing, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource BoolToVis}}">
+                    <Button Command="{Binding DataContext.MoveCardUpCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                            CommandParameter="{Binding}"
+                            Style="{StaticResource MaterialDesignFlatButton}" Padding="3,1" ToolTip="جابه‌جایی به قبل">
+                        <materialDesign:PackIcon Kind="ChevronUp" Width="12" Height="12" />
+                    </Button>
+                    <Button Command="{Binding DataContext.MoveCardDownCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                            CommandParameter="{Binding}"
+                            Style="{StaticResource MaterialDesignFlatButton}" Padding="3,1" ToolTip="جابه‌جایی به بعد">
+                        <materialDesign:PackIcon Kind="ChevronDown" Width="12" Height="12" />
+                    </Button>
+                    <ToggleButton IsChecked="{Binding Visible}" Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                  Padding="2,0" ToolTip="نمایش/پنهان این کارت" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <!-- ═══ قالب چیپ بازهٔ نمودار درآمد — چیپ‌های ۷/۱۴/۳۰ روزه (چرخهٔ ۷۲) ═══ -->
+        <Style x:Key="RangeChipStyle" TargetType="RadioButton">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Chip" CornerRadius="10" Padding="11,4" MinWidth="40"
+                                Background="Transparent" BorderBrush="#CFD8DC" BorderThickness="1.2">
+                            <TextBlock x:Name="ChipText" Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Content}"
+                                       FontSize="11" FontWeight="SemiBold" Foreground="#607D8B"
+                                       HorizontalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Chip" Property="Background" Value="#0D47A1" />
+                                <Setter TargetName="Chip" Property="BorderBrush" Value="#0D47A1" />
+                                <Setter TargetName="ChipText" Property="Foreground" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chip" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ═══ سربرگ استاندارد کارت‌های داشبورد — بازطراحی چرخهٔ ۷۲ ═══ -->
+        <Style x:Key="CardHeaderTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13.5" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#1F2937" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,14">
         <StackPanel>
-            <!-- نوار عنوان + دکمه بارگذاری مجدد -->
-            <DockPanel Margin="0,0,0,10">
-                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-                    <Button Command="{Binding RefreshCommand}"
-                            Style="{StaticResource MaterialDesignOutlinedButton}"
-                            ToolTip="بارگذاری مجدد (به‌روزرسانی خودکار هر ۶۰ ثانیه)">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16"
-                                                     VerticalAlignment="Center" />
-                            <TextBlock Text="بارگذاری مجدد" Margin="6,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <!-- ═══ چرخهٔ ۶۹ (فاز ۳ / F-14) — نمایشگر سالن انتظار ═══
-                         پنجرهٔ تمام‌صفحه برای نمایشگر سالن؛ خروج با Esc -->
-                    <Button Command="{Binding OpenWaitingRoomDisplayCommand}"
-                            Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0"
-                            ToolTip="نمایش تمام‌صفحه برای نمایشگر سالن انتظار — خروج با Esc">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Monitor" Width="16" Height="16"
-                                                     VerticalAlignment="Center" />
-                            <TextBlock Text="نمایشگر سالن" Margin="6,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
 
-                <!-- ═══ چرخهٔ ۴۴ (گزارش مالک: «مدیریت داشبورد رو خیلی حرفه ای تر و
-                     زیباتر پیاده سازی بکن») — سربرگ گرادیانی برند به‌جای عنوان سادهٔ
-                     متنی؛ هم‌الگوی صفحهٔ نقش‌ها: نشان شیشه‌ای + عنوان + زیرعنوان +
-                     چیپ تاریخ شمسی امروز در گوشهٔ چپ فیزیکی -->
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <Border Width="42" Height="42" CornerRadius="21" VerticalAlignment="Center" Margin="0,0,10,0"
-                                Background="#331E88E5" BorderBrush="#661E88E5" BorderThickness="1">
-                            <materialDesign:PackIcon Kind="ViewDashboard" Width="21" Height="21"
-                                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
-                                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="داشبورد مدیریتی"
-                                       Style="{StaticResource SectionTitle}" Margin="0" />
-                            <TextBlock Text="خلاصه وضعیت امروز درمانگاه"
-                                       FontSize="12" Opacity="0.7" Margin="0,0,0,2" />
-                        </StackPanel>
-                        <!-- چیپ تاریخ امروز — گوشهٔ چپ فیزیکی (RTL) -->
-                        <Border CornerRadius="9" Padding="10,3" VerticalAlignment="Center" Margin="14,4,0,0"
-                                Background="{DynamicResource MaterialDesign.Brush.Separator.Background}"
-                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
-                            <TextBlock Text="{Binding TodayDateShamsi, Mode=OneWay}" FontSize="10.5"
-                                       Foreground="{DynamicResource MaterialDesign.Brush.Primary}" FontWeight="SemiBold" />
-                        </Border>
-                    </StackPanel>
-                </StackPanel>
-
-                <!-- چرخه ۱۳ (۴-۲): شخصی‌سازی داشبورد -->
-                <ToggleButton DockPanel.Dock="Left" IsChecked="{Binding IsCustomizing}" Margin="0,0,10,0"
-                              Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                              ToolTip="حالت شخصی‌سازی — جابه‌جایی/پنهان‌سازی کارت‌ها و بخش‌ها"
-                              VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="TuneVertical" Width="15" Height="15" VerticalAlignment="Center" />
-                        <TextBlock Text="شخصی‌سازی" FontSize="11.5" Margin="6,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
-                </ToggleButton>
-                <Button DockPanel.Dock="Left" Command="{Binding ResetLayoutCommand}"
-                        Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0"
-                        Visibility="{Binding IsCustomizing, Converter={StaticResource BoolToVis}}"
-                        ToolTip="بازگشت به چیدمان پیش‌فرض">
-                    <materialDesign:PackIcon Kind="Restore" Width="15" Height="15" />
-                </Button>
-            </DockPanel>
-
-            <!-- نوار خوش‌آمد -->
-            <Border Background="#E3F2FD" CornerRadius="10" Padding="14,8" Margin="0,0,0,12">
+            <!-- ╔══════════════════════════════════════════════════════════╗
+                 ║ ۱) سربرگ قهرمان — بازطراحی کامل چرخهٔ ۷۲                   ║
+                 ╚══════════════════════════════════════════════════════════╝ -->
+            <Border CornerRadius="18" Padding="20,14" Margin="0,0,0,12">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#1A237E" Offset="0" />
+                        <GradientStop Color="#0D47A1" Offset="0.55" />
+                        <GradientStop Color="#00695C" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="14" ShadowDepth="3" Direction="270"
+                                      Opacity="0.18" Color="#0D2A4E" />
+                </Border.Effect>
                 <DockPanel>
-                    <materialDesign:PackIcon Kind="LightbulbOn"
-                                             Width="20" Height="20"
-                                             Foreground="#1565C0"
-                                             VerticalAlignment="Center" />
-                    <TextBlock Text="{Binding WelcomeMessage}"
-                               Foreground="#1565C0" FontSize="12"
-                               Margin="10,0,0,0"
-                               VerticalAlignment="Center"
-                               TextWrapping="Wrap" />
-                </DockPanel>
-            </Border>
+                    <!-- دکمه‌های اقدام — لبهٔ چپ فیزیکی -->
+                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Command="{Binding RefreshCommand}" Width="40" Height="40" Padding="0"
+                                Cursor="Hand" Focusable="False" Margin="0,0,8,0"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="#26FFFFFF" BorderBrush="#40FFFFFF"
+                                ToolTip="تازه‌سازی کامل داشبورد (به‌روزرسانی خودکار هر ۶۰ ثانیه)">
+                            <materialDesign:PackIcon Kind="Refresh" Width="17" Height="17" Foreground="White" />
+                        </Button>
+                        <Button Command="{Binding OpenWaitingRoomDisplayCommand}" Width="40" Height="40" Padding="0"
+                                Cursor="Hand" Focusable="False" Margin="0,0,8,0"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="#26FFFFFF" BorderBrush="#40FFFFFF"
+                                ToolTip="نمایشگر سالن انتظار (حالت کیوسک — خروج با Esc)">
+                            <materialDesign:PackIcon Kind="MonitorDashboard" Width="17" Height="17" Foreground="White" />
+                        </Button>
+                        <ToggleButton IsChecked="{Binding IsCustomizing}" Width="40" Height="40" Padding="0"
+                                      Cursor="Hand" Focusable="False"
+                                      ToolTip="مدیریت چیدمان داشبورد — ترتیب و نمایش کارت‌ها و بخش‌ها">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="CustBtn" Width="40" Height="40" CornerRadius="20"
+                                            Background="Transparent" BorderBrush="#66FFFFFF" BorderThickness="1.4">
+                                        <materialDesign:PackIcon x:Name="CustIcon" Kind="TuneVertical" Width="17" Height="17"
+                                                                 Foreground="#E3F2FD"
+                                                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="CustBtn" Property="Background" Value="#FFFFFF" />
+                                            <Setter TargetName="CustBtn" Property="BorderBrush" Value="#FFFFFF" />
+                                            <Setter TargetName="CustIcon" Property="Foreground" Value="#0D47A1" />
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="CustBtn" Property="Opacity" Value="0.85" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                    </StackPanel>
 
-            <!-- ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — پنل میانبرهای سریع شخصی ═══
-                 «میخوام در داشبورد… دکمه‌های میانبر برای قسمت‌های مختلف رو داخلش
-                 ایجاد بکنم که در هنگام نیاز، داخل منو و صفحات دنبالشون نگردم و
-                 با کلیک بر روی اون دکمه مستقیم اون فرم باز بشه… برای هر کاربر
-                 مختص خودش ذخیره بشه» — کاشی‌های گوشه‌گرد با آیکون و رنگ چرخه‌ای؛
-                 حالت ویرایش دکمهٔ حذف هر کاشی را نمایان می‌کند؛ ذخیره خودکار در
-                 پایان ویرایش، در فایل محلی مختص کاربر واردشده. -->
-            <Border Background="#F5F7FB" CornerRadius="12" Padding="14,10" Margin="0,0,0,12"
-                    BorderBrush="#E0E0E0" BorderThickness="1">
-                <StackPanel>
-                    <!-- سربرگ پنل + دکمه‌های مدیریت -->
-                    <DockPanel Margin="0,0,0,8">
+                    <!-- خوش‌آمد + تاریخ + وضعیت -->
+                    <StackPanel VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="LightningBolt" Width="20" Height="20"
-                                                     Foreground="#F57C00" VerticalAlignment="Center" />
-                            <TextBlock Text="میانبرهای سریع من" FontSize="14.5" FontWeight="Bold"
-                                       Margin="8,0,0,0" VerticalAlignment="Center" />
-                            <!-- ═══ چرخهٔ ۴۷ (گزارش مالک: «دکمه‌های میانبر ناقص
-                                 هستند و آیکون و عنوان مشخص نیست») — نشان نسخهٔ
-                                 تشخیصی روی خود داشبورد ═══
-                                 ═══ چرخهٔ ۶۷ — ارتقای نشان به «نسخه + بیلد» ═══
-                                 تحلیل پیکسلی تصویر مالک نشان داد رندر ایستگاه با
-                                 XAML های چرخهٔ ۴۴ و قدیمی‌تر است (کاشی ~۳۳px و توستِ
-                                 بدون حاشیهٔ ۶۴px چرخهٔ ۴۳) در حالی که نسخهٔ نصب‌شده
-                                 «به‌روز» اعلام شده — یعنی فایل‌های UI جدید هرگز به
-                                 بیلد نرسیده‌اند (کش BAML/جایگزینی‌نشدن فایل). چون
-                                 «شمارهٔ نسخه» به‌تنهایی فریبنده بود (نسخهٔ جدید با
-                                 XAML کهنه در یک اسمبلی!)، اکنون «تاریخ و ساعت ساخت
-                                 فایل EXE» هم کنار نسخه نمایش داده می‌شود: اگر پس از
-                                 نصب آپدیت، تاریخ بیلد همان قبلی ماند یعنی فایل‌ها
-                                 جایگزین نشده‌اند یا Clean + Rebuild لازم است. -->
-                            <Border CornerRadius="9" Padding="8,2" Margin="10,0,0,0"
-                                    Background="#E3F2FD" BorderBrush="#90CAF9" BorderThickness="1"
+                            <materialDesign:PackIcon Kind="ViewDashboardVariant" Width="20" Height="20"
+                                                     Foreground="#80DEEA" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBlock Text="داشبورد مدیریت درمانگاه" FontSize="17" FontWeight="Bold"
+                                       Foreground="White" VerticalAlignment="Center" />
+                            <!-- نشان نسخه + تاریخ ساخت — تشخیصیِ جایگزینی فایل‌ها (چرخهٔ ۶۷) -->
+                            <Border CornerRadius="9" Padding="8,2" Margin="12,0,0,0"
+                                    Background="#26FFFFFF" BorderBrush="#40FFFFFF" BorderThickness="1"
                                     VerticalAlignment="Center"
                                     ToolTip="نسخه و تاریخ ساختِ بیلدِ در حال اجرا — پس از نصب هر بستهٔ آپدیت، تاریخ بیلد باید همان روزِ نصب باشد؛ اگر قدیم ماند، فایل‌های جدید جایگزین نشده‌اند و باید bin/obj را پاک و Clean + Rebuild انجام شود">
                                 <TextBlock Text="{x:Static helpers:AppInfo.VersionFullText}"
-                                           FontSize="10" Foreground="#1565C0"
+                                           FontSize="10" Foreground="#B3E5FC"
                                            FontFamily="{DynamicResource App.CodeFont}" />
                             </Border>
                         </StackPanel>
-                        <!-- ═══ چرخهٔ ۴۵ (گزارش مالک) — دکمه‌های مدیریتیِ کاملاً گرد ═══
-                             «دکمه میانبر جدید در داشبورد رو همانند دکمه حالت ویرایش بکن
-                             که گرد باشه و فقط آیکون باشه تا زیباتر دیده بشه» — هر دو
-                             دکمه حالا با قالب دایرهٔ کامل ۳۶px خودِ این پنل رندر می‌شوند
-                             (استایل‌های متریال گوشهٔ کم‌گرد می‌دادند نه دایرهٔ کامل):
-                             افزودن = دایرهٔ توپر نارنجی با آیکون سفید (کانون توجه)؛
-                             ویرایش = دایرهٔ کم‌رنگ که در حالت فعال با رنگ اصلی پر می‌شود؛
-                             هر دو Focusable=False و ClickMode=Press تا در هر بافتی پاسخگو
-                             باشند (الگوی چرخهٔ ۴۴). -->
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                            <materialDesign:PackIcon Kind="CalendarMonthOutline" Width="13" Height="13"
+                                                     Foreground="#80CBC4" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding TodayDateShamsi}" FontSize="12" Foreground="#E1F5FE"
+                                       Margin="6,0,0,0" VerticalAlignment="Center"
+                                       FontFamily="{DynamicResource App.CodeFont}" />
+                            <Ellipse Width="7" Height="7" Fill="#69F0AE" Margin="14,0,6,0"
+                                     VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding ConnectionStatus}" FontSize="10.5" Foreground="#B2DFDB"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- متن خوش‌آمد کامل — زیر سربرگ -->
+            <TextBlock Text="{Binding WelcomeMessage}" Foreground="#1565C0" FontSize="12"
+                       Margin="4,0,4,10" TextWrapping="Wrap" />
+
+            <!-- ╔══════════════════════════════════════════════════════════╗
+                 ║ ۲) پنل میانبرهای سریع — طراحی صفرِ جدید چرخهٔ ۷۲           ║
+                 ║ گزارش مالک: «پنل مبانبرها رو هم بصورت حرفه ای و زیبا از   ║
+                 ║ اول طراحی بکن (کدهای قبلی رو در نظر نگیر و کد جدید بنویس)» ║
+                 ║ کاشی افقی: چیپ آیکون مربع‌گوشه‌ی ته‌رنگِ دسته + عنوان +      ║
+                 ║ زیرنویس دسته؛ ارتفاع قطعی ۷۶px، بدون سایه/انیمیشن مرزبر  ║
+                 ╚══════════════════════════════════════════════════════════╝ -->
+            <Border Background="#FFFFFF" CornerRadius="16" Padding="14,10" Margin="0,0,0,12"
+                    BorderBrush="#E2E8F0" BorderThickness="1.2">
+                <StackPanel>
+                    <!-- سربرگ پنل — عنوان + دکمه‌های مدیریتی دایره‌ای -->
+                    <DockPanel Margin="2,0,2,6">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="30" Height="30" CornerRadius="9" VerticalAlignment="Center"
+                                    Background="#FFF3E0">
+                                <materialDesign:PackIcon Kind="LightningBolt" Width="15" Height="15"
+                                                         Foreground="#EF6C00"
+                                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="میانبرهای سریع من" FontSize="14" FontWeight="Bold"
+                                       Foreground="#1F2937" Margin="9,0,0,0" VerticalAlignment="Center" />
+                            <TextBlock Text="یک کلیک تا صفحهٔ مقصد" FontSize="10" Foreground="#90A4AE"
+                                       Margin="10,2,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <!-- دکمه‌های افزودن/ویرایش — دایره‌های کامل (الگوی چرخهٔ ۴۵) -->
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" HorizontalAlignment="Left"
                                     VerticalAlignment="Center">
-                            <!-- افزودن — دایرهٔ توپر نارنجی؛ فقط-آیکون -->
                             <Button Command="{Binding AddShortcutCommand}"
-                                    Width="36" Height="36" Padding="0" Margin="0,0,8,0"
+                                    Width="34" Height="34" Padding="0" Margin="0,0,7,0"
                                     Cursor="Hand" Focusable="False" ClickMode="Press"
                                     ToolTip="میانبر جدید — افزودن صفحهٔ دلخواه به این پنل">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
-                                        <Border x:Name="AddCircle" Width="36" Height="36" CornerRadius="18"
-                                                Background="#F57C00">
-                                            <materialDesign:PackIcon Kind="Plus" Width="17" Height="17"
+                                        <Border x:Name="AddCircle" Width="34" Height="34" CornerRadius="17"
+                                                Background="#EF6C00">
+                                            <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"
                                                                      Foreground="White"
                                                                      HorizontalAlignment="Center"
                                                                      VerticalAlignment="Center" />
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="AddCircle" Property="Opacity" Value="0.85" />
                                                 <Setter TargetName="AddCircle" Property="Background" Value="#FB8C00" />
                                             </Trigger>
                                             <Trigger Property="IsPressed" Value="True">
-                                                <Setter TargetName="AddCircle" Property="Opacity" Value="0.7" />
+                                                <Setter TargetName="AddCircle" Property="Opacity" Value="0.75" />
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </Button.Template>
                             </Button>
-                            <!-- ویرایش — دایرهٔ کم‌رنگ؛ فعال = توپرِ رنگ اصلی؛ پایان خودکارِ حالت = ذخیره -->
                             <ToggleButton IsChecked="{Binding IsEditingShortcuts}"
-                                          Width="36" Height="36" Padding="0"
+                                          Width="34" Height="34" Padding="0"
                                           Cursor="Hand" Focusable="False" ClickMode="Press"
-                                          ToolTip="حالت ویرایش — دکمهٔ حذف روی هر کاشی نمایان می‌شود؛ با پایان ویرایش، تغییرات ذخیره می‌شوند">
+                                          ToolTip="حالت ویرایش — دکمهٔ حذف روی هر کاشی نمایان می‌شود؛ پایان ویرایش = ذخیرهٔ خودکار">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
-                                        <Border x:Name="EditCircle" Width="36" Height="36" CornerRadius="18"
-                                                Background="Transparent"
-                                                BorderBrush="#B0BEC5" BorderThickness="1.6">
-                                            <materialDesign:PackIcon x:Name="EditIcon" Kind="PencilOutline" Width="15" Height="15"
+                                        <Border x:Name="EditCircle" Width="34" Height="34" CornerRadius="17"
+                                                Background="Transparent" BorderBrush="#B0BEC5" BorderThickness="1.5">
+                                            <materialDesign:PackIcon x:Name="EditIcon" Kind="PencilOutline" Width="14" Height="14"
                                                                      Foreground="#78909C"
-                                                                     HorizontalAlignment="Center"
-                                                                     VerticalAlignment="Center" />
+                                                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsChecked" Value="True">
-                                                <Setter TargetName="EditCircle" Property="BorderBrush"
-                                                        Value="{DynamicResource MaterialDesign.Brush.Primary}" />
-                                                <Setter TargetName="EditCircle" Property="Background"
-                                                        Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                                <Setter TargetName="EditCircle" Property="BorderBrush" Value="#EF6C00" />
+                                                <Setter TargetName="EditCircle" Property="Background" Value="#EF6C00" />
                                                 <Setter TargetName="EditIcon" Property="Foreground" Value="White" />
                                             </Trigger>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="EditCircle" Property="Opacity" Value="0.8" />
+                                                <Setter TargetName="EditCircle" Property="Opacity" Value="0.85" />
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -281,42 +375,28 @@
                     </DockPanel>
 
                     <!-- حالت خالی — دعوت به افزودن نخستین میانبر -->
-                    <TextBlock FontSize="12" Opacity="0.7" Margin="4,2,4,4" TextWrapping="Wrap"
-                               Text="هنوز میانبری نساخته‌اید — صفحات پرکاربرد خود را با «میانبر جدید» به این پنل اضافه کنید تا بدون گشتن در منو، با یک کلیک باز شوند."
-                               Visibility="{Binding HasShortcuts, Converter={StaticResource InverseBoolToVisibility}}" />
+                    <Border CornerRadius="12" Background="#F8FAFC" BorderBrush="#E8EDF3" BorderThickness="1"
+                            Padding="14,10" Margin="2,2,2,6"
+                            Visibility="{Binding HasShortcuts, Converter={StaticResource InverseBoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CursorDefaultClickOutline" Width="18" Height="18"
+                                                     Foreground="#90A4AE" VerticalAlignment="Center" />
+                            <TextBlock FontSize="11.5" Opacity="0.75" Margin="10,0,0,0" TextWrapping="Wrap"
+                                       VerticalAlignment="Center"
+                                       Text="هنوز میانبری نساخته‌اید — صفحات پرکاربرد خود را با دکمهٔ نارنجی «+» به این پنل اضافه کنید تا بدون گشتن در منو، با یک کلیک باز شوند." />
+                        </StackPanel>
+                    </Border>
 
-                    <!-- ═══ کاشی‌های میانبر — چرخهٔ ۴۳ بازطراحی (گزارش مالک:
-                         «ظاهر دکمه‌های میانبر رو زیباتر بکن… دکمه‌های میانبر رو وسط
-                         چین بکن») ═══ بازطراحی مقاوم چرخهٔ ۴۵ (کاشی ~۳۱px با آیکون
-                         ناقص و بدون عنوان) و ═══ ارزیابی حساب‌شدهٔ چرخهٔ ۴۶ (گزارش
-                         مالک: «دکمه‌های میانبر و توست هیچ فرقی نکرده‌اند») ═══
-                         ریشهٔ باقی‌ماندهٔ بریدگی: حساب ارتفاعِ چرخهٔ ۴۵ کافی نبود —
-                         آیکون ۴۴ + فاصله ۷ + متن دوسطری ~۳۰ + حاشیهٔ عمودی ۲۲ =
-                         ~۱۰۳px ولی دیوار کف فقط ۹۶ بود ⇒ هر عنوان دوسطری هنوز
-                         در مرز می‌شکست و «عنوان مشخص نیست» باقی می‌ماند.
-                         رفع حساب‌شدهٔ چرخهٔ ۴۶: کف ۱۱۰px (۷px حاشیهٔ اطمینان)،
-                         MaxHeight متن حذف (MaxLines=2 جایگزین — برش تخت ناپدید)،
-                         و حذف کامل هر افکت/انیمیشنی که محتوا را به مرز چیدمان
-                         می‌راند. قواعد ۴۵ (بدون سایه/دیوار کف/هاور بی‌استوری‌بورد)
-                         همگی برقرار ماندند. -->
-                    <!-- ═══ چرخهٔ ۴۷ — ارتفاع قطعی کاشی ═══
-                         «دکمه‌های میانبر ناقص هستند و آیکون و عنوان مشخص نیست» —
-                         تجربهٔ چرخه‌های ۴۵/۴۶ نشان داد «کف ارتفاع» (MinHeight) در
-                         برابر فشردگی‌های چیدمانیِ نامعمولِ ایستگاه‌های خاص کافی
-                         نیست؛ ارتفاعِ قطعی (Height) روی هر دو لایهٔ گرید و قالب
-                         تعیین می‌شود تا هیچ سنجه‌ای نتواند کاشی را له کند. هیچ
-                         افکت سایه‌ای هم روی کاشی نیست (سازوکار بریدن مرز — درس
-                         چرخهٔ ۴۵). -->
-                    <ItemsControl ItemsSource="{Binding Shortcuts}"
-                                  HorizontalAlignment="Center">
+                    <!-- کاشی‌های میانبر — طراحی جدید: عرض کشسان ۱۶۸px، ارتفاع قطعی ۷۶px -->
+                    <ItemsControl ItemsSource="{Binding Shortcuts}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <WrapPanel HorizontalAlignment="Center" />
+                                <WrapPanel />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="5,5,5,7" Width="120" Height="116">
+                                <Grid Margin="0,0,8,8" Width="168" Height="76">
                                     <!-- کاشی اصلی — کلیک = ناوبری مستقیم -->
                                     <Button Command="{Binding DataContext.OpenShortcutCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                             CommandParameter="{Binding}"
@@ -324,75 +404,69 @@
                                             ToolTip="{Binding Title, StringFormat=باز کردن {0}}">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
-                                                <!-- چرخهٔ ۴۷: Height قطعی (نه فقط کف) —
-                                                     ارتفاع ثابت ۱۱۶px روی قالب؛ محتوا
-                                                     (آیکون ۴۴ + فاصله ۷ + متن دوسطری ۳۴ +
-                                                     حاشیهٔ عمودی ۲۲ = ۱۰۷) با ۹px اطمینان جا
-                                                     می‌شود و هیچ چیدمانی نمی‌تواند آن را فشرده کند -->
-                                                <Border x:Name="Tile"
-                                                        CornerRadius="14" Background="#FFFFFF"
-                                                        BorderBrush="#D9E2EC" BorderThickness="1.4"
-                                                        Padding="0,12,0,10"
-                                                        Height="116"
-                                                        UseLayoutRounding="True"
-                                                        SnapsToDevicePixels="True">
-                                                    <!-- ═══ چرخهٔ ۴۵: بدون DropShadowEffect — افکت،
-                                                         محتوای سرریز از قالب چیدمان را در مرز می‌بُرید
-                                                         (ریشهٔ «آیکون ناقص و عنوان ناموجود» در تصویر مالک).
-                                                         چرخهٔ ۴۶: ارتفاع محتوا حساب شد — کف ۱۱۰px مازادِ ۷px
-                                                         روی نیاز واقعی (~۱۰۳px) دارد تا هیچ فونت/مقیاسی
-                                                         عنوان را در مرز نچپاند. ═══ -->
-                                                    <StackPanel HorizontalAlignment="Center"
-                                                                VerticalAlignment="Center">
-                                                        <!-- دایرهٔ آیکون — توپر با رنگ تأکیدی کاشی -->
-                                                        <Border Width="44" Height="44" CornerRadius="22"
-                                                                Background="{Binding Accent, Converter={StaticResource HexToBrush}}"
-                                                                HorizontalAlignment="Center" Margin="0,0,0,7">
-                                                            <!-- چرخهٔ ۴۷: گارد اتصال — میانبرِ
-                                                                 ذخیره‌شدهٔ کهنه با کلید حذف‌شده نباید
-                                                                 آیکون تهی بدهد؛ ViewDashboard پیش‌فرض -->
-                                                            <materialDesign:PackIcon Kind="{Binding Icon, TargetNullValue=ViewDashboard, FallbackValue=ViewDashboard}" Width="22" Height="22"
-                                                                                     Foreground="White"
+                                                <Border x:Name="Tile" CornerRadius="14"
+                                                        Background="{Binding GroupColor, Converter={StaticResource HexBrush}, ConverterParameter=tint, FallbackValue=#F5F7FB}"
+                                                        BorderBrush="{Binding GroupColor, Converter={StaticResource HexToBrush}, FallbackValue=#CFD8DC}"
+                                                        BorderThickness="1.3"
+                                                        Height="76" Padding="12,0"
+                                                        UseLayoutRounding="True" SnapsToDevicePixels="True">
+                                                    <DockPanel VerticalAlignment="Center">
+                                                        <!-- چیپ آیکون — مربع گوشه‌گرد هم‌رنگ دسته -->
+                                                        <Border Width="40" Height="40" CornerRadius="12"
+                                                                VerticalAlignment="Center" Margin="0,0,10,0"
+                                                                Background="{Binding GroupColor, Converter={StaticResource HexToBrush}, FallbackValue=#78909C}">
+                                                            <materialDesign:PackIcon Kind="{Binding Icon, TargetNullValue=ViewDashboard, FallbackValue=ViewDashboard}"
+                                                                                     Width="20" Height="20" Foreground="White"
                                                                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                         </Border>
-                                                        <!-- چرخهٔ ۴۶: MaxHeight=30 حذف شد (خط دوم عنوان را
-                                                             برش می‌داد) — سقف حساب‌شدهٔ ۳۴px = دو سطر کامل
-                                                             ۱۵px؛ ۴۴+۷+۳۴+۲۲=۱۰۷ ≤ کفِ ۱۱۰px کاشی ⇒ هیچ
-                                                             سرریزی در مرز نمی‌ماند -->
-                                                        <!-- چرخهٔ ۴۷: گارد اتصال عنوان — تهی
-                                                             یعنی «بدون عنوان» نه کاشی بی‌متن -->
-                                                        <TextBlock Text="{Binding Title, TargetNullValue=بدون عنوان, FallbackValue=بدون عنوان}" FontSize="11" FontWeight="SemiBold"
-                                                                   Foreground="#1F2937" Margin="6,0,6,0"
-                                                                   HorizontalAlignment="Center" TextAlignment="Center"
-                                                                   TextWrapping="Wrap" MaxHeight="34" MaxWidth="106"
-                                                                   TextTrimming="CharacterEllipsis" />
-                                                    </StackPanel>
+                                                        <!-- عنوان + دسته -->
+                                                        <StackPanel VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding Title, TargetNullValue=بدون عنوان, FallbackValue=بدون عنوان}"
+                                                                       FontSize="12" FontWeight="Bold" Foreground="#1F2937"
+                                                                       TextTrimming="CharacterEllipsis" MaxWidth="100" />
+                                                            <TextBlock Text="{Binding Group}" FontSize="9.5"
+                                                                       Foreground="#78909C" Margin="0,3,0,0"
+                                                                       TextTrimming="CharacterEllipsis" MaxWidth="100" />
+                                                        </StackPanel>
+                                                    </DockPanel>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
-                                                    <!-- هاور: حاشیهٔ رنگ تأکیدی کاشی + ته‌رنگ سرد -->
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="Tile" Property="BorderBrush"
-                                                                Value="{Binding Accent, Converter={StaticResource HexToBrush}}" />
-                                                        <Setter TargetName="Tile" Property="Background" Value="#FDFEFF" />
+                                                        <Setter TargetName="Tile" Property="BorderThickness" Value="2" />
+                                                        <Setter TargetName="Tile" Property="Opacity" Value="0.92" />
                                                     </Trigger>
                                                     <Trigger Property="IsPressed" Value="True">
-                                                        <Setter TargetName="Tile" Property="Opacity" Value="0.88" />
+                                                        <Setter TargetName="Tile" Property="Opacity" Value="0.8" />
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
                                         </Button.Template>
                                     </Button>
-                                    <!-- دکمهٔ حذف گوشه — فقط در حالت ویرایش (روی کاشی، مستقل از کلیک اصلی) -->
+
+                                    <!-- دکمهٔ حذف گوشه — فقط در حالت ویرایش -->
                                     <Button Command="{Binding DataContext.RemoveShortcutCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                             CommandParameter="{Binding}"
-                                            Style="{StaticResource App.RowIconButton}"
                                             Width="24" Height="24" Padding="0"
                                             HorizontalAlignment="Left" VerticalAlignment="Top"
-                                            Margin="0,-6,-6,0"
-                                            Background="#FFEBEE" Foreground="#C62828"
+                                            Margin="-6,-6,0,0"
+                                            Cursor="Hand" Focusable="False"
                                             ToolTip="حذف این میانبر"
-                                            Visibility="{Binding DataContext.IsEditingShortcuts, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource BoolToVisibility}}">
-                                        <materialDesign:PackIcon Kind="Close" Width="13" Height="13" />
+                                            Visibility="{Binding DataContext.IsEditingShortcuts, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource BoolToVis}}">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="DelCircle" Width="24" Height="24" CornerRadius="12"
+                                                        Background="#E53935" BorderBrush="White" BorderThickness="1.5">
+                                                    <materialDesign:PackIcon Kind="Close" Width="11" Height="11"
+                                                                             Foreground="White"
+                                                                             HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="DelCircle" Property="Background" Value="#C62828" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
                                     </Button>
                                 </Grid>
                             </DataTemplate>
@@ -400,111 +474,53 @@
                     </ItemsControl>
                 </StackPanel>
             </Border>
-
-            <!-- ═══ چرخه دوازدهم: کارت پیام‌های پشتیبانی — پیام‌های مستقیم پنل لایسنس ═══
-                 ═══ چرخهٔ سی‌وپنجم (گزارش مالک) ═══ رنگ کادر از EffectiveBrush (انتخاب پنل)
-                 ═══ چرخهٔ سی‌وهفتم (گزارش مالک — سه اصلاح) ═══
-                 ۱) «تاریخ زیر عنوان میلادی بود» — تجزیهٔ سه‌مرحله‌ای DateFa در DTO
-                    (تاریخ خالص، تاریخ+ساعت، برشِ بخش نخست) همهٔ قالب‌های پنل را شمسی می‌کند
-                 ۲) «تاریخ باید به‌صورت بج در گوشهٔ بالا و چپ کادر پیام باشد» — بجِ
-                    چیپیِ هم‌رنگ کادر؛ جای‌گذاری نهایی در چرخهٔ ۳۹ با گرید دوسطونه
-                    انجام شد (ستون آخر RTL = لبهٔ فیزیکی چپ) — کامنت درون قالب
-                 ۳) «رنگ کادر با انتخاب پنل یکی است ولی تیره است» — پس‌زمینه از «soft»
-                    (۱۴٪ آلفا — وابسته به پس‌زمینهٔ پشت) به «tint» (ترکیب کدر با سفید،
-                    همیشه روشن) تغییر کرد؛ حاشیهٔ بالایی رنگ تأکید می‌ماند -->
+            <!-- ╔══════════════════════════════════════════════════════════╗
+                 ║ پیام‌های پشتیبانی سرور لایسنس — کارت‌های رنگی سطح اهمیت    ║
+                 ╚══════════════════════════════════════════════════════════╝ -->
             <ItemsControl ItemsSource="{Binding SupportMessages}"
                           Visibility="{Binding HasSupportMessages, Converter={StaticResource BoolToVis}}"
                           Margin="0,0,0,12">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border CornerRadius="10" Padding="14,10" Margin="0,0,0,8"
-                                BorderThickness="0,3,0,0">
-                            <!-- رنگ کادر از سرور لایسنس: پس‌زمینهٔ روشنِ ثابت (tint) +
-                                 حاشیهٔ بالاییِ توپر همان رنگ؛ در نبود رنگ سرور، رنگ سطح اهمیت -->
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Setter Property="Background"
-                                            Value="{Binding EffectiveBrush, Converter={StaticResource HexBrush}, ConverterParameter=tint}" />
-                                    <Setter Property="BorderBrush"
-                                            Value="{Binding EffectiveBrush, Converter={StaticResource HexBrush}}" />
-                                </Style>
-                            </Border.Style>
-                            <!-- ═══ چرخهٔ چهلم (رفع خطای بیلد MC3089) ═══ Border فقط یک فرزند
-                                 محتوایی می‌پذیرد؛ گرید سربرگ (عنوان + بج تاریخ) و متن پیام دو
-                                 فرزند مستقل بودند ⇒ «The object 'Border' already has a child
-                                 and cannot add 'TextBlock'». هر دو داخل StackPanel عمودی
-                                 قرار گرفتند تا سربرگ و متن پشت سر هم و مرتب دیده شوند. -->
+                        <Border CornerRadius="12" Padding="14,10" Margin="0,0,0,8"
+                                BorderThickness="0,3.5,0,0"
+                                Background="{Binding EffectiveBrush, Converter={StaticResource HexBrush}, ConverterParameter=tint}"
+                                BorderBrush="{Binding EffectiveBrush, Converter={StaticResource HexBrush}}">
                             <StackPanel>
-                            <!-- ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — جای بج تاریخ ═══
-                                 «تاریخ رو گفته بودم در گوشه بالا و چپ کادر پیام قرار
-                                 بگیره ولی در سمت راست و بالای عنوان هست» — ریشه:
-                                 HorizontalAlignment در WPF «نسبت به جریان» است نه لبهٔ
-                                 فیزیکی؛ در ظرف RTL مقدار Left به لبهٔ فیزیکی «راست»
-                                 می‌نشیند (همان دلیلی که چرخهٔ ۳۷ تصور می‌کرد Left =
-                                 چپ فیزیکی ولی روی صفحه راست افتاد). رفع قطعی: سربرگ
-                                 کارت به گرید دوسطونه تبدیل شد — ستونِ نخستِ RTL از
-                                 راست شروع می‌شود (عنوان) و ستونِ آخرِ RTL به لبهٔ
-                                 فیزیکی «چپ» می‌رسد (بج تاریخ)؛ یعنی تاریخ دقیقاً در
-                                 گوشهٔ بالا-چپ کادر و هم‌ردیف عنوان می‌نشیند و دیگر
-                                 ردیف مجزایی اشغال نمی‌کند. -->
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <!-- ستون عنوان — در RTL سمت راست کارت -->
-                                    <ColumnDefinition Width="*" />
-                                    <!-- ستون بج تاریخ — در RTL لبهٔ فیزیکی چپ (گوشهٔ بالا-چپ) -->
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <!-- ردیف عنوان: آیکون سطح + عنوان پیام (راست) -->
-                                <StackPanel Grid.Column="0" Orientation="Horizontal"
-                                            Margin="0,0,12,0">
-                                    <TextBlock Text="{Binding LevelIcon}" FontSize="15"
-                                               VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Title}" FontSize="13.5" FontWeight="Bold"
-                                               Margin="8,0,0,0" VerticalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis" />
-                                </StackPanel>
-
-                                <!-- بج تاریخ ارسال — گوشهٔ بالا-چپ کادر؛ چیپِ هم‌رنگ کادر
-                                     (پس‌زمینهٔ tint + متن و حاشیهٔ رنگ تأکید) تا در هر رنگی
-                                     خوانا بماند؛ تاریخ شمسی/ارقام‌فارسی از DateFa -->
-                                <Border Grid.Column="1"
-                                        VerticalAlignment="Center"
-                                        CornerRadius="9" Padding="9,2.5"
-                                        Background="{Binding EffectiveBrush, Converter={StaticResource HexBrush}, ConverterParameter=tint}"
-                                        BorderBrush="{Binding EffectiveBrush, Converter={StaticResource HexBrush}}"
-                                        BorderThickness="1">
-                                    <TextBlock Text="{Binding DateFa, Mode=OneWay}" FontSize="9.5"
-                                               FontWeight="SemiBold"
-                                               Foreground="{Binding EffectiveBrush, Converter={StaticResource HexBrush}}"
-                                               FontFamily="{DynamicResource App.CodeFont}" />
-                                </Border>
-                            </Grid>
-                            <!-- متن پیام -->
-                            <TextBlock Text="{Binding Body}" FontSize="12" Margin="0,5,0,0"
-                                       Opacity="0.85" TextWrapping="Wrap" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,12,0">
+                                        <TextBlock Text="{Binding LevelIcon}" FontSize="15" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Title}" FontSize="13.5" FontWeight="Bold"
+                                                   Margin="8,0,0,0" VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <Border Grid.Column="1" VerticalAlignment="Center" CornerRadius="9" Padding="9,2.5"
+                                            Background="{Binding EffectiveBrush, Converter={StaticResource HexBrush}, ConverterParameter=tint}"
+                                            BorderBrush="{Binding EffectiveBrush, Converter={StaticResource HexBrush}}" BorderThickness="1">
+                                        <TextBlock Text="{Binding DateFa, Mode=OneWay}" FontSize="9.5" FontWeight="SemiBold"
+                                                   Foreground="{Binding EffectiveBrush, Converter={StaticResource HexBrush}}"
+                                                   FontFamily="{DynamicResource App.CodeFont}" />
+                                    </Border>
+                                </Grid>
+                                <TextBlock Text="{Binding Body}" FontSize="12" Margin="0,5,0,0"
+                                           Opacity="0.85" TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <!-- ═══ چرخهٔ ۴۴ (گزارش مالک: «مدیریت داشبورد رو حرفه‌ای‌تر بکن») —
-                 نوار مدیریت چرخهٔ شخصی‌سازی: به‌جای کادر زرد ساده با چک‌باکس‌های
-                 خام، نوار راهنمای ساختاریافته: عنوان راهنما + چیپ‌های نمایش/پنهان
-                 بخش‌ها (سوییچ متریال) + یادآوری ذخیرهٔ خودکار؛ فقط در حالت تنظیم -->
+            <!-- ╔══════════════════════════════════════════════════════════╗
+                 ║ نوار مدیریت چیدمان — فقط در حالت شخصی‌سازی                 ║
+                 ╚══════════════════════════════════════════════════════════╝ -->
             <Border CornerRadius="12" Padding="14,10" Margin="0,0,0,12"
                     Visibility="{Binding IsCustomizing, Converter={StaticResource BoolToVis}}"
-                    BorderThickness="1,3.5,1,1" BorderBrush="#F9A825">
-                <Border.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                        <GradientStop Color="#FFFDF5" Offset="0" />
-                        <GradientStop Color="#FFF8E1" Offset="1" />
-                    </LinearGradientBrush>
-                </Border.Background>
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Direction="270" Opacity="0.12" Color="#8D6E00" />
-                </Border.Effect>
+                    BorderThickness="1,3.5,1,1" BorderBrush="#F9A825"
+                    Background="#FFFDF5">
                 <StackPanel>
                     <DockPanel Margin="0,0,0,8">
                         <materialDesign:PackIcon DockPanel.Dock="Right" Kind="TuneVertical" Width="18" Height="18"
@@ -514,12 +530,6 @@
                                    VerticalAlignment="Center" />
                     </DockPanel>
                     <WrapPanel>
-                        <!-- چیپ‌های نمایش بخش‌ها — سوییچ‌های هم‌خانوادهٔ فرم‌ها -->
-                        <StackPanel Orientation="Horizontal" Margin="0,3,14,3">
-                            <TextBlock Text="کارت‌های فرعی" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0" />
-                            <ToggleButton IsChecked="{Binding ShowSecondaryCards}"
-                                          Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
-                        </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,3,14,3">
                             <TextBlock Text="نمودار درآمد" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0" />
                             <ToggleButton IsChecked="{Binding ShowRevenueChart}"
@@ -535,80 +545,174 @@
                             <ToggleButton IsChecked="{Binding ShowActivities}"
                                           Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
                         </StackPanel>
-                        <TextBlock Text="با دکمه‌های ⬆⬇ روی کارت‌های آمار، ترتیب‌شان را جابه‌جا کنید و با سوییچ کنارشان پنهان‌شان کنید"
+                        <Button Command="{Binding ResetLayoutCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Padding="10,2" FontSize="10.5" VerticalAlignment="Center"
+                                ToolTip="بازگشت همهٔ کارت‌ها و بخش‌ها به حالت پیش‌فرض">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Restore" Width="12" Height="12" VerticalAlignment="Center" />
+                                <TextBlock Text="چیدمان پیش‌فرض" Margin="5,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="با دکمه‌های ⬆⬇ پایین کارت‌ها ترتیب‌شان را جابه‌جا کنید و با سوییچ کنارشان پنهان‌شان کنید"
                                    FontSize="10" Opacity="0.6" VerticalAlignment="Center" Margin="0,3,0,3" />
                     </WrapPanel>
                 </StackPanel>
             </Border>
 
-            <!-- ردیف ۱: کارت‌های آمار اصلی — داینامیک با ترتیب قابل جابه‌جایی (چرخه ۱۳) -->
-            <ItemsControl ItemsSource="{Binding MainCards}">
+            <!-- ╔══════════════════════════════════════════════════════════╗
+                 ║ ۳) ردیف کارت‌های KPI — پنج کارت شخصی‌سازی‌پذیر (چرخهٔ ۷۲)  ║
+                 ╚══════════════════════════════════════════════════════════╝ -->
+            <ItemsControl ItemsSource="{Binding MainCards}"
+                          ItemTemplate="{StaticResource KpiCardTemplate}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <UniformGrid Columns="4" Rows="1" />
+                        <UniformGrid Columns="5" Rows="1" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Grid Margin="0,0,8,0">
-                            <!-- کارت آمار -->
-                            <controls:StatCard IconKind="{Binding IconKind, Mode=OneWay}"
-                                               Value="{Binding Value, Mode=OneWay}"
-                                               Label="{Binding Label, Mode=OneWay}"
-                                               CompareText="{Binding CompareText, Mode=OneWay}"
-                                               AccentBrush="{Binding Accent, Mode=OneWay}"
-                                               Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}" />
-                            <!-- کنترل‌های چیدمان — فقط در حالت شخصی‌سازی -->
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top"
-                                        Margin="4,2,0,0"
-                                        Visibility="{Binding DataContext.IsCustomizing, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource BoolToVis}}">
-                                <Button Command="{Binding DataContext.MoveCardUpCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                        CommandParameter="{Binding}"
-                                        Style="{StaticResource MaterialDesignFlatButton}" Padding="3,1" ToolTip="جابه‌جایی به قبل">
-                                    <materialDesign:PackIcon Kind="ChevronUp" Width="12" Height="12" />
-                                </Button>
-                                <Button Command="{Binding DataContext.MoveCardDownCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                        CommandParameter="{Binding}"
-                                        Style="{StaticResource MaterialDesignFlatButton}" Padding="3,1" ToolTip="جابه‌جایی به بعد">
-                                    <materialDesign:PackIcon Kind="ChevronDown" Width="12" Height="12" />
-                                </Button>
-                                <ToggleButton IsChecked="{Binding Visible}" Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                                              Padding="2,0" ToolTip="نمایش/پنهان این کارت" />
-                            </StackPanel>
-                        </Grid>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <!-- ردیف ۲: سه کارت فرعی — نمایش قابل تنظیم (چرخه ۱۳) -->
-            <UniformGrid Columns="3" Rows="1"
-                         Visibility="{Binding ShowSecondaryCards, Converter={StaticResource BoolToVis}}">
-                <controls:StatCard IconKind="AlertCircle"
-                                   Value="{Binding LowStockCount, Mode=OneWay}"
-                                   Label="موجودی کم دارو"
-                                   CompareText="اقلام زیر حداقل موجودی"
-                                   AccentBrush="#E53935" />
-                <controls:StatCard IconKind="Prescription"
-                                   Value="{Binding PendingLabOrders, Mode=OneWay}"
-                                   Label="آزمایش در انتظار"
-                                   CompareText="درخواست‌های بدون نتیجه"
-                                   AccentBrush="#1E88E5" />
-                <controls:StatCard IconKind="CalendarMonth"
-                                   Value="{Binding TodayPatients, Mode=OneWay}"
-                                   Label="نوبت‌های امروز"
-                                   CompareText="شامل همه وضعیت‌ها به‌جز لغو"
-                                   AccentBrush="#5C6BC0" />
-            </UniformGrid>
+            <!-- ╔══════════════════════════════════════════════════════════╗
+                 ║ ۴) ردیف نمودارهای اصلی — روند درآمد + ترکیب وضعیت نوبت‌ها ║
+                 ╚══════════════════════════════════════════════════════════╝ -->
+            <Grid Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="2*" />
+                </Grid.ColumnDefinitions>
 
-            <!-- ═══ مرکز هشدار انبار — چرخهٔ ۶۹ (فاز ۳ / F-08 نقشه راه ai-review) ═══
-                 «هشدار موجودی/انقضا (آستانه ۹۰/۶۰/۳۰/۷ روز) + داشبورد هشدار» —
-                 چهار چیپ رنگی پلکانی + چیپ موجودی کم؛ هر پله سیاست عملیاتی خودش
-                 را دارد (قرمز=مصرف فوری/مرجوعی، نارنجی=اولویت تجویز، کهربایی=
-                 برنامه‌ریزی سفارش، زرد=پایش). کلیک روی سربرگ = باز/بستن فهرست
-                 اقلام جزئیات (نام دارو/بچ/تاریخ انقضای شمسی/روز مانده/موجودی).
-                 کارت وقتی هیچ هشداری نیست به‌کل مخفی می‌شود (سروصدا صفر). -->
-            <materialDesign:Card UniformCornerRadius="14" Padding="14,10" Margin="0,12,0,0"
-                                 Visibility="{Binding HasNoInventoryAlerts, Converter={StaticResource InverseBoolToVisibility}}">
+                <!-- کارت روند درآمد — سطحی با چیپ‌های بازهٔ ۷/۱۴/۳۰ (چرخهٔ ۷۲) -->
+                <Border Grid.Column="0" CornerRadius="16" Background="#FFFFFF" Padding="16,12"
+                        BorderBrush="#E2E8F0" BorderThickness="1.2"
+                        Visibility="{Binding ShowRevenueChart, Converter={StaticResource BoolToVis}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- سربرگ + چیپ‌های بازه -->
+                        <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="28" Height="28" CornerRadius="9" Background="#EDE7F6" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="ChartAreaspline" Width="15" Height="15" Foreground="#5E35B1"
+                                                             HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Text="روند درآمد" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0" />
+                                <TextBlock FontSize="10" Opacity="0.5" VerticalAlignment="Center" Margin="6,2,0,0">
+                                    <Run Text="(" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" />
+                                </TextBlock>
+                            </StackPanel>
+                            <!-- چیپ‌های بازه — دکمه‌های رادیویی چیپی -->
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                <RadioButton Style="{StaticResource RangeChipStyle}" GroupName="RevDays"
+                                             IsChecked="{Binding IsRevenue7, Mode=TwoWay}" Content="۷ روز" />
+                                <RadioButton Style="{StaticResource RangeChipStyle}" GroupName="RevDays"
+                                             IsChecked="{Binding IsRevenue14, Mode=TwoWay}" Content="۱۴ روز" />
+                                <RadioButton Style="{StaticResource RangeChipStyle}" GroupName="RevDays"
+                                             IsChecked="{Binding IsRevenue30, Mode=TwoWay}" Content="۳۰ روز" />
+                            </StackPanel>
+                        </DockPanel>
+
+                        <!-- نمودار سطحی — نوع درست برای روند زمانی -->
+                        <charts:AreaChart Grid.Row="1" Points="{Binding RevenueChart}" ValueFormat="N0" MinHeight="210" />
+                    </Grid>
+                </Border>
+
+                <!-- کارت ترکیب وضعیت نوبت‌های امروز — دونات با جمع مرکز (چرخهٔ ۷۲) -->
+                <Border Grid.Column="2" CornerRadius="16" Background="#FFFFFF" Padding="16,12"
+                        BorderBrush="#E2E8F0" BorderThickness="1.2">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                            <Border Width="28" Height="28" CornerRadius="9" Background="#E3F2FD" VerticalAlignment="Center">
+                                <materialDesign:PackIcon Kind="ChartDonut" Width="15" Height="15" Foreground="#1565C0"
+                                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="وضعیت نوبت‌های امروز" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0" />
+                        </StackPanel>
+
+                        <charts:DoughnutChart Grid.Row="1" Points="{Binding StatusMix}"
+                                              CenterText="{Binding StatusMixTotalText, Mode=OneWay}"
+                                              CenterSubtext="{Binding StatusMixSubText, Mode=OneWay}"
+                                              MinHeight="210" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- ╔══════════════════════════════════════════════════════════╗
+                 ║ ۵) ردیف دوم — ویزیت‌های روزانه + نوبت‌های پیش‌رو           ║
+                 ╚══════════════════════════════════════════════════════════╝ -->
+            <Grid Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="3*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- کارت ویزیت‌های روزانه — ستونی (چرخهٔ ۷۲) -->
+                <Border Grid.Column="0" CornerRadius="16" Background="#FFFFFF" Padding="16,12"
+                        BorderBrush="#E2E8F0" BorderThickness="1.2">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                            <Border Width="28" Height="28" CornerRadius="9" Background="#E8F5E9" VerticalAlignment="Center">
+                                <materialDesign:PackIcon Kind="ChartBar" Width="15" Height="15" Foreground="#2E7D32"
+                                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="ویزیت‌های ۷ روز اخیر" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0" />
+                        </StackPanel>
+
+                        <charts:ColumnChart Grid.Row="1" Points="{Binding VisitsChart}" ValueFormat="N0"
+                                            ShowValues="False" MinHeight="180" />
+                    </Grid>
+                </Border>
+
+                <!-- کارت نوبت‌های پیش‌رو — نمایش قابل تنظیم -->
+                <Border Grid.Column="2" CornerRadius="16" Background="#FFFFFF" Padding="14,12"
+                        BorderBrush="#E2E8F0" BorderThickness="1.2"
+                        Visibility="{Binding ShowUpcoming, Converter={StaticResource BoolToVis}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="2,0,2,8">
+                            <Border Width="28" Height="28" CornerRadius="9" Background="#FFF3E0" VerticalAlignment="Center">
+                                <materialDesign:PackIcon Kind="ClockFast" Width="15" Height="15" Foreground="#E65100"
+                                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="نوبت‌های پیش‌رو" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0" />
+                        </StackPanel>
+
+                        <ListBox Grid.Row="1" ItemsSource="{Binding UpcomingAppointments}"
+                                 ItemTemplate="{StaticResource AppointmentItemTemplate}"
+                                 Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+
+                        <controls:EmptyState Grid.Row="1"
+                                             Message="امروز نوبتی ثبت نشده است"
+                                             IconKind="CalendarBlank"
+                                             Visibility="{Binding UpcomingAppointments.Count, Converter={StaticResource NullToVisibility}, ConverterParameter=Inverse}" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- ╔══════════════════════════════════════════════════════════╗
+                 ║ ۶) مرکز هشدار انبار — پلکانی ۹۰/۶۰/۳۰/۷ + موجودی کم       ║
+                 ╚══════════════════════════════════════════════════════════╝ -->
+            <Border CornerRadius="16" Background="#FFFFFF" Padding="14,10" Margin="0,12,0,0"
+                    BorderBrush="#F3C1BD" BorderThickness="1.2"
+                    Visibility="{Binding HasNoAlertsAtAll, Converter={StaticResource InverseBoolToVisibility}}">
                 <StackPanel>
                     <!-- سربرگ کلیک‌پذیر — باز/بستن مرکز هشدار -->
                     <Button Command="{Binding ToggleAlertCenterCommand}"
@@ -616,14 +720,14 @@
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Right"
                             Padding="4,2" ToolTip="باز/بستن فهرست اقلام هشدار">
                         <DockPanel>
-                            <materialDesign:PackIcon Kind="BellAlert" Width="20" Height="20"
-                                                     Foreground="#E53935" VerticalAlignment="Center"
-                                                     Margin="0,0,0,0" />
-                            <TextBlock Text="مرکز هشدار انبار" FontSize="14" FontWeight="Bold"
-                                       Margin="8,0,0,0" VerticalAlignment="Center" />
-                            <!-- چیپ‌های پلکانی — قد هر پله جدا (تجمیعی‌ها منهای پلهٔ داخل‌تر) -->
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left"
-                                        VerticalAlignment="Center">
+                            <Border Width="30" Height="30" CornerRadius="9" Background="#FDECEA" VerticalAlignment="Center">
+                                <materialDesign:PackIcon Kind="BellAlert" Width="16" Height="16" Foreground="#C62828"
+                                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="مرکز هشدار انبار" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0"
+                                       VerticalAlignment="Center" />
+                            <!-- چیپ‌های پلکانی -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                                 <Border CornerRadius="9" Padding="8,2" Margin="4,0" Background="#FDECEA"
                                         BorderBrush="#E53935" BorderThickness="1"
                                         Visibility="{Binding Expiring7Count, Converter={StaticResource NullToVisibility}}">
@@ -659,10 +763,17 @@
                                         <Run Text="موجودی کم: " /><Run Text="{Binding LowStockCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
                                     </TextBlock>
                                 </Border>
+                                <!-- چیپ آزمایش در انتظار — چرخهٔ ۷۲: از کارت‌های فرعی حذف‌شده به مرکز هشدار آمد -->
+                                <Border CornerRadius="9" Padding="8,2" Margin="4,0" Background="#EDE7F6"
+                                        BorderBrush="#5E35B1" BorderThickness="1"
+                                        Visibility="{Binding PendingLabOrders, Converter={StaticResource NullToVisibility}}">
+                                    <TextBlock FontSize="10.5" Foreground="#4527A0" FontFamily="{DynamicResource App.CodeFont}">
+                                        <Run Text="آزمایش در انتظار: " /><Run Text="{Binding PendingLabOrders, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                                    </TextBlock>
+                                </Border>
                                 <!-- فلش باز/بسته -->
                                 <materialDesign:PackIcon Kind="ChevronDown" Width="16" Height="16"
-                                                         VerticalAlignment="Center" Margin="4,0,0,0"
-                                                         Foreground="#78909C">
+                                                         VerticalAlignment="Center" Margin="4,0,0,0" Foreground="#78909C">
                                     <materialDesign:PackIcon.Style>
                                         <Style TargetType="materialDesign:PackIcon">
                                             <Style.Triggers>
@@ -678,9 +789,7 @@
                     </Button>
 
                     <!-- فهرست اقلام — فقط در حالت باز -->
-                    <StackPanel Visibility="{Binding IsAlertCenterOpen, Converter={StaticResource BoolToVis}}"
-                                Margin="2,8,2,0">
-                        <!-- بخش ۱: بچ‌های در حال انقضا -->
+                    <StackPanel Visibility="{Binding IsAlertCenterOpen, Converter={StaticResource BoolToVis}}" Margin="2,8,2,0">
                         <DockPanel Margin="2,0,2,4">
                             <TextBlock Text="بچ‌های در حال انقضا (نزدیک‌ترین اول)" FontSize="12" FontWeight="SemiBold"
                                        VerticalAlignment="Center" />
@@ -690,10 +799,9 @@
                         <ItemsControl ItemsSource="{Binding ExpiringItems}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border CornerRadius="8" Background="#FAFBFD" BorderBrush="#E8EDF3"
-                                            BorderThickness="1" Padding="8,4" Margin="0,0,0,4">
+                                    <Border CornerRadius="10" Background="#FBFCFE" BorderBrush="#E8EDF3"
+                                            BorderThickness="1" Padding="10,6" Margin="0,0,0,5">
                                         <DockPanel>
-                                            <!-- بج پلهٔ رنگی + روز مانده -->
                                             <Border CornerRadius="8" Padding="7,2" DockPanel.Dock="Left"
                                                     VerticalAlignment="Center"
                                                     Background="{Binding TierBrush, Converter={StaticResource HexToBrush}}">
@@ -702,13 +810,10 @@
                                                 </TextBlock>
                                             </Border>
                                             <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding MedicationName}" FontSize="12.5" FontWeight="SemiBold"
-                                                           Foreground="#1F2937" />
-                                                <StackPanel Orientation="Horizontal" Opacity="0.75">
-                                                    <TextBlock FontSize="10.5" FontFamily="{DynamicResource App.CodeFont}">
-                                                        <Run Text="بچ " /><Run Text="{Binding BatchNumber, Mode=OneWay, TargetNullValue=—}" /><Run Text=" · انقضا " /><Run Text="{Binding ExpiryDateShamsi, Mode=OneWay}" /><Run Text=" · موجودی " /><Run Text="{Binding QuantityText, Mode=OneWay}" />
-                                                    </TextBlock>
-                                                </StackPanel>
+                                                <TextBlock Text="{Binding MedicationName}" FontSize="12.5" FontWeight="SemiBold" Foreground="#1F2937" />
+                                                <TextBlock FontSize="10.5" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}">
+                                                    <Run Text="بچ " /><Run Text="{Binding BatchNumber, Mode=OneWay, TargetNullValue=—}" /><Run Text=" · انقضا " /><Run Text="{Binding ExpiryDateShamsi, Mode=OneWay}" /><Run Text=" · موجودی " /><Run Text="{Binding QuantityText, Mode=OneWay}" />
+                                                </TextBlock>
                                             </StackPanel>
                                         </DockPanel>
                                     </Border>
@@ -719,7 +824,6 @@
                                              IconKind="CheckCircle"
                                              Visibility="{Binding ExpiringItems.Count, Converter={StaticResource NullToVisibility}, ConverterParameter=Inverse}" />
 
-                        <!-- بخش ۲: اقلام زیر حداقل موجودی -->
                         <DockPanel Margin="2,10,2,4">
                             <TextBlock Text="زیر حداقل موجودی (بدترین وضعیت اول)" FontSize="12" FontWeight="SemiBold"
                                        VerticalAlignment="Center" />
@@ -727,8 +831,8 @@
                         <ItemsControl ItemsSource="{Binding LowStockItems}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border CornerRadius="8" Background="#FAFBFD" BorderBrush="#E8EDF3"
-                                            BorderThickness="1" Padding="8,4" Margin="0,0,0,4">
+                                    <Border CornerRadius="10" Background="#FBFCFE" BorderBrush="#E8EDF3"
+                                            BorderThickness="1" Padding="10,6" Margin="0,0,0,5">
                                         <DockPanel>
                                             <Border CornerRadius="8" Padding="7,2" DockPanel.Dock="Left"
                                                     VerticalAlignment="Center" Background="#E3F2FD">
@@ -737,8 +841,7 @@
                                                 </TextBlock>
                                             </Border>
                                             <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding MedicationName}" FontSize="12.5" FontWeight="SemiBold"
-                                                           Foreground="#1F2937" />
+                                                <TextBlock Text="{Binding MedicationName}" FontSize="12.5" FontWeight="SemiBold" Foreground="#1F2937" />
                                                 <TextBlock FontSize="10.5" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}">
                                                     <Run Text="بچ " /><Run Text="{Binding BatchNumber, Mode=OneWay, TargetNullValue=—}" /><Run Text=" · موجودی " /><Run Text="{Binding QuantityText, Mode=OneWay}" /><Run Text=" · حداقل " /><Run Text="{Binding MinStockText, Mode=OneWay}" />
                                                 </TextBlock>
@@ -753,115 +856,39 @@
                                              Visibility="{Binding LowStockItems.Count, Converter={StaticResource NullToVisibility}, ConverterParameter=Inverse}" />
                     </StackPanel>
                 </StackPanel>
-            </materialDesign:Card>
+            </Border>
 
-            <!-- ردیف ۳: نمودار درآمد (۲fr) + نوبت‌های پیش‌رو (۱fr) — نمایش قابل تنظیم (چرخه ۱۳) -->
-            <Grid Margin="0,8,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*" SharedSizeGroup="A" />
-                    <ColumnDefinition Width="16" />
-                    <ColumnDefinition Width="1*" />
-                </Grid.ColumnDefinitions>
-
-                <!-- کارت نمودار درآمد ۷ روز -->
-                <materialDesign:Card Grid.Column="0" UniformCornerRadius="14" Padding="16"
-                                     Visibility="{Binding ShowRevenueChart, Converter={StaticResource BoolToVis}}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-
-                        <DockPanel Grid.Row="0" Margin="0,0,0,4">
-                            <TextBlock Text="روند درآمد ۷ روز اخیر"
-                                       FontSize="14" FontWeight="Bold"
-                                       VerticalAlignment="Center" />
-                            <TextBlock FontSize="10" Opacity="0.5"
-                                       VerticalAlignment="Bottom"
-                                       Margin="6,0,0,2"><Run Text="(" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
-                        </DockPanel>
-
-                        <TextBlock Grid.Row="1" Text="{Binding ConnectionStatus}"
-                                   FontSize="10" Opacity="0.6" Margin="0,0,0,8" />
-
-                        <!-- نمودار سطحی — نوع درست برای روند زمانی (چرخه یازدهم) -->
-                        <charts:AreaChart Grid.Row="2"
-                                          Points="{Binding RevenueChart}"
-                                          ValueFormat="N0" />
-                    </Grid>
-                </materialDesign:Card>
-
-                <!-- کارت نوبت‌های پیش‌رو — نمایش قابل تنظیم (چرخه ۱۳) -->
-                <materialDesign:Card Grid.Column="2" UniformCornerRadius="14" Padding="12"
-                                     Visibility="{Binding ShowUpcoming, Converter={StaticResource BoolToVis}}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <DockPanel Grid.Row="0" Margin="4,0,4,6">
-                            <materialDesign:PackIcon Kind="ClockFast"
-                                                     Width="18" Height="18"
-                                                     VerticalAlignment="Center" />
-                            <TextBlock Text="نوبت‌های پیش‌رو"
-                                       FontSize="13" FontWeight="Bold"
-                                       Margin="8,0,0,0"
-                                       VerticalAlignment="Center" />
-                        </DockPanel>
-
-                        <ListBox Grid.Row="1"
-                                 ItemsSource="{Binding UpcomingAppointments}"
-                                 ItemTemplate="{StaticResource AppointmentItemTemplate}"
-                                 Background="Transparent"
-                                 BorderThickness="0"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
-
-                        <controls:EmptyState Grid.Row="1"
-                                             Message="امروز نوبتی ثبت نشده است"
-                                             IconKind="CalendarBlank"
-                                             Visibility="{Binding UpcomingAppointments.Count, Converter={StaticResource NullToVisibility}, ConverterParameter=Inverse}" />
-                    </Grid>
-                </materialDesign:Card>
-            </Grid>
-
-            <!-- ردیف ۴: فعالیت‌های اخیر — نمایش قابل تنظیم (چرخه ۱۳) -->
-            <materialDesign:Card UniformCornerRadius="14" Padding="16" Margin="0,14,0,4"
-                                 Visibility="{Binding ShowActivities, Converter={StaticResource BoolToVis}}">
+            <!-- ╔══════════════════════════════════════════════════════════╗
+                 ║ ۷) فعالیت‌های اخیر — نمایش قابل تنظیم                       ║
+                 ╚══════════════════════════════════════════════════════════╝ -->
+            <Border CornerRadius="16" Background="#FFFFFF" Padding="16,12" Margin="0,12,0,4"
+                    BorderBrush="#E2E8F0" BorderThickness="1.2"
+                    Visibility="{Binding ShowActivities, Converter={StaticResource BoolToVis}}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <DockPanel Grid.Row="0" Margin="0,0,0,8">
-                        <materialDesign:PackIcon Kind="History"
-                                                 Width="18" Height="18"
-                                                 VerticalAlignment="Center" />
-                        <TextBlock Text="فعالیت‌های اخیر"
-                                   FontSize="13" FontWeight="Bold"
-                                   Margin="8,0,0,0"
-                                   VerticalAlignment="Center" />
-                    </DockPanel>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                        <Border Width="28" Height="28" CornerRadius="9" Background="#ECEFF1" VerticalAlignment="Center">
+                            <materialDesign:PackIcon Kind="History" Width="15" Height="15" Foreground="#455A64"
+                                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="فعالیت‌های اخیر" Style="{StaticResource CardHeaderTitle}" Margin="9,0,0,0" />
+                    </StackPanel>
 
-                    <DataGrid Grid.Row="1"
-                              ItemsSource="{Binding RecentActivities}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              HeadersVisibility="Column"
-                              CanUserAddRows="False"
-                              MinHeight="120"
-                              MaxHeight="220"
-                              FontSize="11">
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding RecentActivities}"
+                              AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                              CanUserAddRows="False" MinHeight="120" MaxHeight="220" FontSize="11"
+                              AlternatingRowBackground="#F7FAFD" BorderThickness="0">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="زمان"
                                                 Binding="{Binding TimeShamsi, Converter={StaticResource PersianDigits}}"
-                                                Width="140" />
+                                                Width="150" />
                             <DataGridTextColumn Header="کاربر"
                                                 Binding="{Binding User, Converter={StaticResource PersianDigits}}"
-                                                Width="120" />
+                                                Width="130" />
                             <DataGridTextColumn Header="عملیات"
                                                 Binding="{Binding Action, Converter={StaticResource PersianDigits}}"
                                                 Width="110" />
@@ -871,7 +898,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
-            </materialDesign:Card>
+            </Border>
 
             <!-- پیام خطا در نبود سرور -->
             <TextBlock Text="{Binding ErrorMessage}"
