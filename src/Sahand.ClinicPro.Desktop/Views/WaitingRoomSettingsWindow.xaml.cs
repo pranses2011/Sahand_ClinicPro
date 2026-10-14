@@ -70,6 +70,14 @@ public partial class WaitingRoomSettingsWindow : Window
     /// <summary>گارد بازخورد ویرایشگر → جلوگیری از حلقهٔ رویداد هنگام بارگذاری برنامه‌ای</summary>
     private bool _loadingEditor;
 
+    // ═══ چرخهٔ ۷۶ — گارد آماده‌سازی نما ═══
+    // رویدادهای انتخاب (SelectionChanged) می‌توانند در میانهٔ InitializeComponent
+    // شعله‌ور شوند؛ پیش از پایان سازنده هیچ کنترلی تضمین‌شده آماده نیست و
+    // RefreshPreview باید بی‌صدا صرف‌نظر کند (رفع NullReferenceException
+    // گزارش‌شده روی دکمهٔ تنظیمات نمایشگر سالن).
+    /// <summary>نما تا پایان سازنده آماده نیست — رویدادهای زودهنگام نادیده گرفته می‌شوند</summary>
+    private bool _viewReady;
+
     /// <summary>ردیف در حال درگ — برای جابه‌جایی با درگ</summary>
     private SectionEditRow? _dragRow;
 
@@ -120,6 +128,7 @@ public partial class WaitingRoomSettingsWindow : Window
         // کاتالوگ پزشکان/خدمات — برای ویرایشگر بخش‌ها
         _ = LoadCatalogsAsync();
 
+        _viewReady = true; // از این پس رویدادها مجازند پیش‌نمایش را تازه کنند
         RefreshPreview();
     }
 
@@ -190,6 +199,9 @@ public partial class WaitingRoomSettingsWindow : Window
     /// <summary>تازه‌سازی پیش‌نمایش زنده — نام/اعلان/ساعت‌ها/بخش‌های ستونی/تبلیغ</summary>
     private void RefreshPreview()
     {
+        // چرخهٔ ۷۶ — رویداد زودهنگام (قبل از پایان سازنده) → نادیده
+        if (!_viewReady)
+            return;
         var clinicName = string.IsNullOrWhiteSpace(ClinicNameBox.Text)
             ? _config.EffectiveClinicName()
             : ClinicNameBox.Text.Trim();

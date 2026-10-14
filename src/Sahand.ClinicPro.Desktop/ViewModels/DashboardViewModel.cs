@@ -305,6 +305,23 @@ public partial class DashboardViewModel : ViewModelBase
     /// <summary>بخش‌های قابل‌چیدمان — ترتیب همین ترتیبِ درگ‌شده است</summary>
     public ObservableCollection<DashboardSectionItem> Sections { get; } = new();
 
+    // ═══ چرخهٔ ۷۶ — مدیریت درست ذخیرهٔ چیدمان ═══
+    // گزارش مالک: PUTهای پشت‌سرهم /api/v1/dashboard/layout روی سرور
+    // DbUpdateConcurrencyException می‌دادند. دو عامل سمت کلاینت:
+    // ۱) بارگذاری چیدمان (Clear/Add/Visible) خودش ده‌ها رویداد «ذخیرهٔ خودکار»
+    //    شعله‌ور می‌کرد — گارد _suppressLayoutSave آن را خاموش می‌کند؛
+    // ۲) هر تغییر جزئی یک PUT فوری بود — زمان‌سنج ادغام (Debounce) همهٔ
+    //    تغییرات ۸۰۰ میلی‌ثانیه‌ای را در «یک PUT آخرین‌وضعیت» ادغام می‌کند و
+    //    ذخیره‌ها صف‌بندی می‌شوند تا دو PUT هم‌پوشان هرگز در پرواز نباشند.
+    /// <summary>گارد خاموش‌کردن ذخیرهٔ خودکار هنگام اعمال برنامه‌ای چیدمان (بارگذاری)</summary>
+    private bool _suppressLayoutSave;
+
+    /// <summary>زمان‌سنج ادغام ذخیره‌های چیدمان — هر تغییر تازه تایمر را ریست می‌کند</summary>
+    private System.Threading.CancellationTokenSource? _layoutSaveDebounce;
+
+    /// <summary>پرچم «ذخیره‌ای در پرواز است» — صف‌بندی PUTهای پیاپی</summary>
+    private volatile bool _layoutSaveInFlight;
+
     /// <summary>ترتیب پیش‌فرض بخش‌ها</summary>
     private static readonly string[] DefaultSectionOrder =
         { "charts", "visits", "activities", "shortcuts" };
@@ -318,10 +335,10 @@ public partial class DashboardViewModel : ViewModelBase
         Sections.Add(new DashboardSectionItem("activities", "فعالیت‌های اخیر", "History"));
         Sections.Add(new DashboardSectionItem("shortcuts", "میانبرهای سریع", "LightningBolt"));
         // ذخیرهٔ خودکار پس از هر جابه‌جایی درگ/دکمه
-        Sections.CollectionChanged += (_, _) => _ = SaveLayoutAsync();
+        Sections.CollectionChanged += (_, _) => ScheduleSaveLayout();
         // ذخیرهٔ خودکار تغییر نمایش هر بخش
         foreach (var section in Sections)
-            section.VisibleChanged += () => _ = SaveLayoutAsync();
+            section.VisibleChanged += () => ScheduleSaveLayout();
     }
 
     /// <summary>بازگشت به چیدمان پیش‌فرض</summary>
@@ -343,7 +360,7 @@ public partial class DashboardViewModel : ViewModelBase
             .OrderBy(s => Array.IndexOf(DefaultSectionOrder, s.Key)).ToList();
         Sections.Clear();
         foreach (var s in orderedSections) Sections.Add(s);
-        _ = SaveLayoutAsync();
+        ScheduleSaveLayout();
         _snackbar.Success("چیدمان به حالت پیش‌فرض بازگشت");
     }
 
@@ -351,10 +368,10 @@ public partial class DashboardViewModel : ViewModelBase
     private static readonly string[] DefaultOrder =
         { "patients", "newPatients", "visits", "waiting", "revenue" };
 
-    partial void OnShowSecondaryCardsChanged(bool value) => _ = SaveLayoutAsync();
-    partial void OnShowRevenueChartChanged(bool value) => _ = SaveLayoutAsync();
-    partial void OnShowUpcomingChanged(bool value) => _ = SaveLayoutAsync();
-    partial void OnShowActivitiesChanged(bool value) => _ = SaveLayoutAsync();
+    partial void OnShowSecondaryCardsChanged(bool value) => ScheduleSaveLayout();
+    partial void OnShowRevenueChartChanged(bool value) => ScheduleSaveLayout();
+    partial void OnShowUpcomingChanged(bool value) => ScheduleSaveLayout();
+    partial void OnShowActivitiesChanged(bool value) => ScheduleSaveLayout();
 
     /// <summary>راه‌اندازی کارت‌های داینامیک — چرخهٔ ۷۲: پنج کارت با پالت هماهنگ</summary>
     private void InitializeCards()
@@ -387,9 +404,9 @@ public partial class DashboardViewModel : ViewModelBase
             CompareText = "مجموع پرداخت‌های ثبت‌شده", Accent = "#6A1B9A"
         });
         foreach (var c in MainCards)
-            c.VisibleChanged += (_, _) => _ = SaveLayoutAsync();
+            c.VisibleChanged += (_, _) => ScheduleSaveLayout();
         // ═══ چرخهٔ ۷۴ — ذخیرهٔ خودکار پس از جابه‌جایی درگ‌و‌دراپی کارت‌ها ═══
-        MainCards.CollectionChanged += (_, _) => _ = SaveLayoutAsync();
+        MainCards.CollectionChanged += (_, _) => ScheduleSaveLayout();
     }
 
     /// <summary>
@@ -425,7 +442,7 @@ public partial class DashboardViewModel : ViewModelBase
         var idx = MainCards.IndexOf(card);
         if (idx <= 0) return;
         MainCards.Move(idx, idx - 1);
-        _ = SaveLayoutAsync();
+        ScheduleSaveLayout();
     }
 
     /// <summary>جابه‌جایی کارت به پایین</summary>
@@ -436,38 +453,89 @@ public partial class DashboardViewModel : ViewModelBase
         var idx = MainCards.IndexOf(card);
         if (idx < 0 || idx >= MainCards.Count - 1) return;
         MainCards.Move(idx, idx + 1);
-        _ = SaveLayoutAsync();
+        ScheduleSaveLayout();
     }
 
-    /// <summary>ذخیره چیدمان در سرور</summary>
-    private async Task SaveLayoutAsync()
+    /// <summary>ساخت JSON چیدمان روی نخ رابط کاربری — مصون از تغییر هم‌زمان مجموعه‌ها (چرخهٔ ۷۶)</summary>
+    private string BuildLayoutJson() => JsonSerializer.Serialize(new
     {
+        order = MainCards.Select(c => c.Key).ToList(),
+        hidden = MainCards.Where(c => !c.Visible).Select(c => c.Key).ToList(),
+        showSecondary = ShowSecondaryCards,
+        showChart = ShowRevenueChart,
+        showUpcoming = ShowUpcoming,
+        showActivities = ShowActivities,
+        // ═══ چرخهٔ ۷۴ — ترتیب و نمایش بخش‌های قابل‌چیدمان ═══
+        sectionsOrder = Sections.Select(s => s.Key).ToList(),
+        sectionsHidden = Sections.Where(s => !s.Visible).Select(s => s.Key).ToList()
+    });
+
+    /// <summary>
+    /// زمان‌بندی ذخیرهٔ چیدمان با ادغام (Debounce) — چرخهٔ ۷۶.
+    /// جابه‌جایی/مخفی‌سازی پیاپی کارت‌ها در حالت شخصی‌سازی، ده‌ها رویداد در
+    /// چند صد میلی‌ثانیه تولید می‌کرد و هر رویداد یک PUT مستقل می‌فرستاد؛
+    /// PUTهای هم‌پوشان روی سرور برخورد هم‌زمانی می‌ساختند. اکنون تغییرات
+    /// ۸۰۰ میلی‌ثانیه‌ای ادغام می‌شوند، فقط «آخرین وضعیت» یک‌بار ارسال می‌شود
+    /// و ذخیره‌های پیاپی صف‌بندی می‌شوند تا هرگز دو PUT هم‌پوشان در پرواز نباشد.
+    /// </summary>
+    private void ScheduleSaveLayout()
+    {
+        if (_suppressLayoutSave)
+            return;
+
+        // JSON روی همین نخِ رابط کاربری ساخته می‌شود — مجموعه‌ها اینجا هم‌زمان تغییر نمی‌کنند
+        string layout;
         try
         {
-            var order = MainCards.Select(c => c.Key).ToList();
-            var layout = System.Text.Json.JsonSerializer.Serialize(new
-            {
-                order,
-                hidden = MainCards.Where(c => !c.Visible).Select(c => c.Key).ToList(),
-                showSecondary = ShowSecondaryCards,
-                showChart = ShowRevenueChart,
-                showUpcoming = ShowUpcoming,
-                showActivities = ShowActivities,
-                // ═══ چرخهٔ ۷۴ — ترتیب و نمایش بخش‌های قابل‌چیدمان ═══
-                sectionsOrder = Sections.Select(s => s.Key).ToList(),
-                sectionsHidden = Sections.Where(s => !s.Visible).Select(s => s.Key).ToList()
-            });
-            await _api.PutAsync("dashboard/layout", new { layout });
+            layout = BuildLayoutJson();
         }
         catch
         {
-            // ذخیره چیدمان بهترین‌حالتی است — خطا داشبورد را نمی‌شکند
+            return; // ذخیرهٔ چیدمان بهترین‌حالتی است
         }
+
+        _layoutSaveDebounce?.Cancel();
+        _layoutSaveDebounce = new System.Threading.CancellationTokenSource();
+        var token = _layoutSaveDebounce.Token;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(800, token); // ادغام تغییرات پیاپی در یک ذخیره
+
+                // فقط یک PUT هم‌زمان در پرواز — صف‌بندی تا خلاصیِ قبلی
+                while (_layoutSaveInFlight && !token.IsCancellationRequested)
+                    await Task.Delay(120, token);
+                if (token.IsCancellationRequested)
+                    return;
+
+                _layoutSaveInFlight = true;
+                try
+                {
+                    await _api.PutAsync("dashboard/layout", new { layout });
+                }
+                finally
+                {
+                    _layoutSaveInFlight = false;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // تغییر تازه‌تری رسیده و این ذخیره باطل شده — دنبالهٔ تازه خودش می‌آید
+            }
+            catch
+            {
+                // ذخیرهٔ چیدمان بهترین‌حالتی است — خطا داشبورد را نمی‌شکند
+            }
+        });
     }
 
     /// <summary>بارگذاری چیدمان ذخیره‌شده</summary>
     private async Task LoadLayoutAsync()
     {
+        // چرخهٔ ۷۶ — اعمال برنامه‌ای چیدمان نباید «ذخیرهٔ خودکار» شعله‌ور کند؛
+        // پیش‌تر هر Clear/Add/Visible=false هنگام بارگذاری یک PUT مستقل می‌فرستاد.
+        _suppressLayoutSave = true;
         try
         {
             var response = await _api.GetAsync<LayoutEnvelope>("dashboard/layout");
@@ -527,6 +595,10 @@ public partial class DashboardViewModel : ViewModelBase
         catch
         {
             // بدون چیدمان ذخیره‌شده — پیش‌فرض
+        }
+        finally
+        {
+            _suppressLayoutSave = false;
         }
     }
 

@@ -50,7 +50,11 @@
 
                 <!-- ═══ چرخهٔ ۷۵ — تعداد ستون‌های ناحیهٔ صف‌ها ═══ -->
                 <TextBlock Text="تعداد ستون‌های صف‌ها (پایین نمایشگر)" FontSize="11.5" Opacity="0.7" Margin="2,14,2,4" />
-                <ComboBox x:Name="ColumnCountCombo" SelectedIndex="2" SelectionChanged="OnAnySettingChanged">
+                <!-- ═══ چرخهٔ ۷۶ — SelectedIndex عمداً در XAML تنظیم نمی‌شود:
+                     مقداردهی در سازنده انجام می‌شود. تنظیم XAMLی رویداد
+                     SelectionChanged را «وسطِ InitializeComponent» شعله‌ور
+                     می‌کرد و پیش‌نمایش هنوز ساخته‌نشده بود → NullReference ═══ -->
+                <ComboBox x:Name="ColumnCountCombo" SelectionChanged="OnAnySettingChanged">
                     <ComboBoxItem Content="۱ ستون" Tag="1" />
                     <ComboBoxItem Content="۲ ستون" Tag="2" />
                     <ComboBoxItem Content="۳ ستون (پیشنهادی)" Tag="3" />

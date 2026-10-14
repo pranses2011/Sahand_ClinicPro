@@ -531,13 +531,27 @@ public class DashboardController : ApiBaseController
             return BadRequest(Application.Common.Models.ApiResponse<object>.Failure(
                 "چیدمان نامعتبر است (حداکثر ۴۰۰۰ نویسه)"));
 
-        var setting = await _unitOfWork.Repository<Domain.Entities.Infrastructure.SystemSetting>()
-            .QueryableTracking
-            .FirstOrDefaultAsync(x => x.Key == LayoutKey && !x.IsDeleted, ct);
+        // ═══ چرخهٔ ۷۶ — ریشه‌کن DbUpdateConcurrencyException روی PUT layout ═══
+        // چیدمان داشبورد «آخرین‌نوشتنی» است: هر درخواست JSON کامل را با خودش
+        // دارد. الگوی قبلی «بارگذاری با ChangeTracker + ذخیره» روی نشانگر
+        // همزمانی RowVersion اجرا می‌شد؛ کلاینت هنگام جابه‌جایی/مخفی‌سازی
+        // پیاپی کارت‌ها چند PUT پشت‌سرهم می‌فرستاد و درخواست‌های هم‌زمان
+        // روی همان RowVersion برخورد می‌کردند: «expected 1, affected 0»
+        // و خطای ۵۰۰ در لاگ سرور. راه‌حل: UPDATE اتمیِ مستقیم (بدون بارگذاری
+        // موجودیت و بدون توکن همزمانی در WHERE) — آخرین درخواست همیشه
+        // برنده است و برخوردی باقی نمی‌ماند.
+        var updated = await _unitOfWork.Repository<Domain.Entities.Infrastructure.SystemSetting>()
+            .QueryableNoTracking
+            .Where(x => x.Key == LayoutKey && !x.IsDeleted)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.Value, request.Layout)
+                .SetProperty(x => x.UpdatedAt, DateTime.UtcNow)
+                .SetProperty(x => x.UpdatedBy, _currentUser.UserId), ct);
 
-        if (setting is null)
+        // ردیفی نبود → اولین ذخیرهٔ چیدمان این کاربر؛ درج رکورد جدید
+        if (updated == 0)
         {
-            setting = new Domain.Entities.Infrastructure.SystemSetting
+            var setting = new Domain.Entities.Infrastructure.SystemSetting
             {
                 Category = "DashboardLayout",
                 Key = LayoutKey,
@@ -547,13 +561,9 @@ public class DashboardController : ApiBaseController
             };
             await _unitOfWork.Repository<Domain.Entities.Infrastructure.SystemSetting>()
                 .AddAsync(setting, ct);
-        }
-        else
-        {
-            setting.Value = request.Layout;
+            await _unitOfWork.SaveEntitiesAsync(ct);
         }
 
-        await _unitOfWork.SaveEntitiesAsync(ct);
         return Ok(Application.Common.Models.ApiResponse<object>.SuccessMessage("چیدمان داشبورد ذخیره شد"));
     }
 }
