@@ -108,6 +108,7 @@ public static class AuditFieldCatalog
         ["reception"] = "پذیرش", ["receptionid"] = "پذیرش", ["receptionnumber"] = "شماره پذیرش",
         ["queuenumber"] = "شماره نوبت",
         ["resultvalue"] = "مقدار نتیجه", ["result"] = "نتیجه", ["normalrange"] = "بازهٔ نرمال",
+        ["resultnumeric"] = "نتیجهٔ عددی", ["itemstatus"] = "وضعیت قلم آزمایش",
         ["unit"] = "واحد اندازه‌گیری", ["interpretation"] = "تفسیر", ["abnormalflag"] = "وضعیت غیرعادی",
         ["critical"] = "بحرانی", ["iscritical"] = "بحرانی", ["isabnormal"] = "غیرعادی",
         ["remark"] = "ملاحظات", ["comment"] = "توضیح", ["summary"] = "خلاصه",

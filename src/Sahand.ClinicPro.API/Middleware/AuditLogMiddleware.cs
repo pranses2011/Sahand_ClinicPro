@@ -88,13 +88,30 @@ public class AuditLogMiddleware
         // می‌شود تا در ستون OldValues ثبت شود؛ خواندن باید حتماً قبل از
         // _next باشد وگرنه مقادیر جدید روی سطر نوشته شده‌اند. بهترین تلاش
         // است — هر خطایی نادیده گرفته می‌شود و جریان درخواست سالم می‌ماند.
+        //
+        // ═══ چرخهٔ ۷۲ (گزارش مالک: «مقادیر قبلی رو نشون نمیده و به جاش خط
+        //      تیره میندازه») — دو شکاف پوشش ═══
+        //  ۱) POSTهای «زیرمنبعیِ تغییردهنده» هم شناسهٔ رکورد را در مسیر دارند
+        //     (users/5/lock، surveys/3/toggle-active، salaries/7/pay،
+        //     print-templates/9/set-default، prescriptions/4/submit-electronic
+        //     و…) ولی قبلاً فقط PUT/PATCH/DELETE مقادیر قبلی می‌گرفتند؛ اکنون
+        //     هر متد نوشتاریِ دارای شناسهٔ عددی در مسیر پوشش داده می‌شود.
+        //  ۲) مسیرهای «بدون شناسه» که هدفشان را در بدنه حمل می‌کنند:
+        //     PUT ~/api/v1/settings (کلید تنظیم) و PUT lab/results
+        //     (شناسهٔ قلم) — TryCaptureOldValuesFromBody همین دو الگو را
+        //     می‌شناسد؛ سایر مسیرها همان رفتار قبل (بدون مقدار قبلی) می‌مانند.
         string? oldValues = null;
-        var isWriteWithId = (context.Request.Method.Equals("PUT", StringComparison.OrdinalIgnoreCase)
-                             || context.Request.Method.Equals("PATCH", StringComparison.OrdinalIgnoreCase)
-                             || context.Request.Method.Equals("DELETE", StringComparison.OrdinalIgnoreCase))
-                            && ExtractId(context.Request.Path) is not null;
-        if (isWriteWithId)
+        var method = context.Request.Method.ToUpperInvariant();
+        // چرخهٔ ۷۲ — تصمیم «گرفتن از مسیر» به متد خالص منتقل شد تا واحد-تست شود
+        if (ShouldCaptureFromPath(method, context.Request.Path))
+        {
             oldValues = TryCaptureOldValues(dbContext, context.Request.Path);
+        }
+        else if (method is "PUT" or "POST")
+        {
+            // مسیر بدون شناسه — هدف در بدنه است (تنظیمات کلیددار / نتیجهٔ قلم آزمایش)
+            oldValues = TryCaptureOldValuesFromBody(dbContext, context.Request.Path, requestBody);
+        }
 
         var originalBody = context.Response.Body;
         using var responseBuffer = new MemoryStream();
@@ -122,7 +139,7 @@ public class AuditLogMiddleware
                 var userId = long.TryParse(
                     context.User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : (long?)null;
 
-                var action = context.Request.Method.ToUpperInvariant() switch
+                var action = method switch
                 {
                     "POST" => AuditActionType.Create,
                     "PUT" or "PATCH" => AuditActionType.Update,
@@ -177,6 +194,138 @@ public class AuditLogMiddleware
         }
     }
 
+    /// <summary>
+    /// آیا مقدار قبلی باید از «مسیر» خوانده شود؟ — چرخهٔ ۷۲ (گزارش مالک:
+    /// «مقادیر قبلی رو نشون نمیده و به جاش خط تیره میندازه»). پیش‌تر فقط
+    /// PUT/PATCH/DELETE با شناسه پوشش داشتند و POSTهای زیرمنبعیِ تغییردهنده
+    /// (users/5/lock، surveys/3/toggle-active، salaries/7/pay،
+    /// print-templates/9/set-default، prescriptions/4/submit-electronic و…)
+    /// همیشه بدون OldValues ثبت می‌شدند. اکنون هر متد نوشتاری که شناسهٔ
+    /// عددی در مسیر دارد پوشش داده می‌شود؛ POSTهای «ایجاد» بدون شناسه
+    /// (مثل patients) به‌درستی بدون مقدار قبلی می‌مانند — چیزی قبلاً نبوده.
+    /// internal برای تست واحد قواعد چرخهٔ ۷۲ (AuditLogCycle72Tests).
+    /// </summary>
+    internal static bool ShouldCaptureFromPath(string method, PathString path) =>
+        method is "PUT" or "PATCH" or "DELETE" or "POST"
+        && ExtractId(path) is not null;
+
+    /// <summary>
+    /// گرفتن مقدار قبلی برای مسیرهای «بدون شناسه» که هدف در بدنهٔ درخواست است —
+    /// چرخهٔ ۷۲ (گزارش مالک: «مقادیر قبلی رو نشون نمیده و به جاش خط تیره
+    /// میندازه»). دو الگوی شناخته‌شده:
+    ///   PUT ~/api/v1/settings — بدنه { key, value, category }؛ سطر
+    ///        SystemSettings همان کلید خوانده می‌شود (تنظیم قبلی).
+    ///   PUT lab/results — بدنه { itemId, … }؛ قلم LabOrderItem خوانده
+    ///        می‌شود (نتیجهٔ قبلی که قرار است بازنویسی شود).
+    /// بهترین تلاش است — هر خطایی بی‌صدا نادیده گرفته می‌شود.
+    /// </summary>
+    private static string? TryCaptureOldValuesFromBody(
+        ClinicProDbContext dbContext, PathString path, string? requestBody)
+    {
+        try
+        {
+            var pathValue = path.Value ?? string.Empty;
+
+            // ═══ ۱) ذخیرهٔ تنظیم — کلید از بدنه ═══
+            if (pathValue.EndsWith("/settings", StringComparison.OrdinalIgnoreCase)
+                && !string.IsNullOrEmpty(requestBody))
+            {
+                using var doc = JsonDocument.Parse(requestBody);
+                if (doc.RootElement.ValueKind == JsonValueKind.Object
+                    && doc.RootElement.TryGetProperty("key", out var keyEl)
+                    && keyEl.ValueKind == JsonValueKind.String)
+                {
+                    var key = keyEl.GetString();
+                    if (!string.IsNullOrWhiteSpace(key))
+                    {
+                        var setting = dbContext.Set<Domain.Entities.Infrastructure.SystemSetting>()
+                            .AsNoTracking()
+                            .Where(s => s.Key == key && !s.IsDeleted)
+                            .Select(s => new { s.Key, s.Value, s.Category, s.DataType })
+                            .FirstOrDefault();
+
+                        if (setting is not null)
+                        {
+                            // کلیدها آینهٔ بدنهٔ درخواست (key/value/category) —
+                            // جدول مقایسهٔ کلاینت «مقدار قبلی/جدید» را زوج می‌کند
+                            return Truncate(JsonSerializer.Serialize(new
+                            {
+                                key = setting.Key,
+                                value = setting.Value,
+                                category = setting.Category
+                            }, new JsonSerializerOptions
+                            {
+                                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                            }));
+                        }
+                        // تنظیم تازه — مقدار قبلی‌ای وجود ندارد (خالی)
+                        return JsonSerializer.Serialize(new { key, value = (string?)null },
+                            new JsonSerializerOptions
+                            {
+                                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                            });
+                    }
+                }
+                return null;
+            }
+
+            // ═══ ۲) ثبت نتیجهٔ آزمایش — شناسهٔ قلم از بدنه ═══
+            if (pathValue.EndsWith("/lab/results", StringComparison.OrdinalIgnoreCase)
+                && !string.IsNullOrEmpty(requestBody))
+            {
+                using var doc = JsonDocument.Parse(requestBody);
+                if (doc.RootElement.ValueKind == JsonValueKind.Object
+                    && doc.RootElement.TryGetProperty("itemId", out var idEl)
+                    && idEl.ValueKind == JsonValueKind.Number
+                    && idEl.TryGetInt64(out var itemId))
+                {
+                    var item = dbContext.Set<Domain.Entities.Paraclinical.LabOrderItem>()
+                        .AsNoTracking()
+                        .Where(i => i.Id == itemId)
+                        .Select(i => new
+                        {
+                            i.Result,
+                            i.ResultNumeric,
+                            i.AbnormalFlag,
+                            i.Status,
+                            i.Comment,
+                            TestName = i.Test != null ? i.Test.TestName : null,
+                            i.Unit
+                        })
+                        .FirstOrDefault();
+
+                    if (item is null)
+                        return null;
+
+                    // کلیدها آینهٔ بدنهٔ درخواست (result/resultNumeric/comment) —
+                    // جدول مقایسهٔ کلاینت «نتیجهٔ قبلی/جدید» را زوج می‌کند؛
+                    // فلگ و وضعیتِ فعلی هم برای مرجع ثبت می‌شوند.
+                    return Truncate(JsonSerializer.Serialize(new
+                    {
+                        testName = item.TestName,
+                        unit = item.Unit,
+                        result = item.Result,
+                        resultNumeric = item.ResultNumeric,
+                        abnormalFlag = item.AbnormalFlag,
+                        itemStatus = item.Status.ToString(),
+                        comment = item.Comment
+                    }, new JsonSerializerOptions
+                    {
+                        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                    }));
+                }
+                return null;
+            }
+
+            return null; // الگوی شناخته‌شده نبود
+        }
+        catch
+        {
+            // بهترین تلاش — شکستِ ثبتِ مقدار قبلی نباید درخواست اصلی را خراب کند
+            return null;
+        }
+    }
+
     /// <summary>حذف فیلدهای حساس از بدنه</summary>
     private static string? SanitizeBody(string? body)
     {
@@ -185,7 +334,15 @@ public class AuditLogMiddleware
         {
             using var doc = System.Text.Json.JsonDocument.Parse(body);
             using var stream = new MemoryStream();
-            using (var writer = new System.Text.Json.Utf8JsonWriter(stream))
+            // ═══ چرخهٔ ۷۲ — انکودر رهاشده: مقادیر جدید با نویسهٔ فارسیِ واقعی
+            //      ذخیره می‌شوند نه \u0631… ═══ پیش‌تر «نمایش خام (JSON فنی)»
+            //      پنل لاگ عملیات، فارسی را به‌صورت رشتهٔ فرار نشان می‌داد؛
+            //      اکنون خامِ خوانا + مقایسهٔ کلاینت با کلیدواژهٔ فارسی ممکن است.
+            using (var writer = new System.Text.Json.Utf8JsonWriter(stream,
+                       new System.Text.Json.JsonWriterOptions
+                       {
+                           Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                       }))
             {
                 WriteSanitized(writer, doc.RootElement);
             }

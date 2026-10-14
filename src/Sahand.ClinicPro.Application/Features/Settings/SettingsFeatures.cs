@@ -116,17 +116,29 @@ public class SaveSettingCommandHandler : IRequestHandler<SaveSettingCommand, Res
 /// IP / مقادیر جدید / مقادیر قبلی جزئیات واقعی داشته باشند.
 /// ═══ چرخهٔ ۷۰ (بازطراحی لاگ) ═══ دو فیلد «فارسی» افزوده شد:
 /// PersianEntity/PersianModule — خروجی کاتالوگ معنایی روی نامِ ذخیره‌شده؛
-/// ردیف‌های قدیمی انگلیسی نیز در لحظهٔ خواندن فارسی می‌شوند.</summary>
+/// ردیف‌های قدیمی انگلیسی نیز در لحظهٔ خواندن فارسی می‌شوند.
+/// ═══ چرخهٔ ۷۲ (گزارش مالک: «در لاگ عملیات به جای نام کامل، نام کاربری رو
+/// مینویسه») ═══ UserId به پروجکشن اضافه و UserDisplayName در هندلر از
+/// پرسنل متصل کاربر پر می‌شود — ردیف‌های قدیمی (که نام کاربری در ستون
+/// Username نشسته‌اند) هم در لحظهٔ خواندن نام کامل می‌گیرند و کلاینت
+/// UserDisplayName ?? Username را نشان می‌دهد.</summary>
 public record AuditLogDto(
     string? Username, string Action, string? EntityName,
     long? EntityId, string? Module, string TimeShamsi, string Time,
-    string? IpAddress, string? NewValues, string? OldValues, long Id = 0)
+    string? IpAddress, string? NewValues, string? OldValues, long Id = 0,
+    long? UserId = null)
 {
     /// <summary>نام فارسی موجودیت — از کاتالوگ معنایی؛ ردیف‌های تازه از پیش فارسی‌اند</summary>
     public string PersianEntity { get; set; } = string.Empty;
 
     /// <summary>نام فارسی ماژول — از کاتالوگ معنایی؛ ردیف‌های تازه از پیش فارسی‌اند</summary>
     public string PersianModule { get; set; } = string.Empty;
+
+    /// <summary>
+    /// نام کامل پرسنل متصل — چرخهٔ ۷۲؛ برای ردیف‌های قدیمی و جدید یکسان.
+    /// تهی یعنی پرسنل متصل نیست و کلاینت به Username برمی‌گردد.
+    /// </summary>
+    public string? UserDisplayName { get; set; }
 }
 
 /// <summary>
@@ -176,8 +188,37 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Resul
                 l.EntityName, l.EntityId, l.Module,
                 Common.Helpers.PersianDateHelper.ToShamsi(l.Timestamp),
                 l.Timestamp.ToString("HH:mm:ss"),
-                l.IpAddress, l.NewValues, l.OldValues, l.Id))
+                l.IpAddress, l.NewValues, l.OldValues, l.Id,
+                l.UserId))
             .ToListAsync(cancellationToken);
+
+        // ═══ چرخهٔ ۷۲ (گزارش مالک) — نام کامل پرسنل برای ردیف‌های قدیمی ═══
+        // ردیف‌های پیش از این نسخه، نام کاربری را در ستون Username دارند
+        // (ادعای displayName توکن قدیمی همان Username بود). UserId که اکنون
+        // به پروجکشن آمده، نگاشت به «نام کامل پرسنل متصل» را ممکن می‌کند؛
+        // فقط کاربران همین صفحهٔ جاری واکشی می‌شوند (≤۲۰۰ ردیف) — بدون
+        // هزینهٔ اضافه روی دیتابیس بزرگ لاگ.
+        var userIds = items.Where(i => i.UserId is > 0)
+            .Select(i => i.UserId!.Value).Distinct().ToList();
+        if (userIds.Count > 0)
+        {
+            var fullNames = await _unitOfWork.Repository<Domain.Entities.Security.User>()
+                .QueryableNoTracking
+                .Where(u => userIds.Contains(u.Id) && u.Employee != null)
+                .Select(u => new { u.Id, Name = u.Employee!.FirstName + " " + u.Employee!.LastName })
+                .ToListAsync(cancellationToken);
+
+            var nameMap = fullNames
+                .Where(n => !string.IsNullOrWhiteSpace(n.Name))
+                .GroupBy(n => n.Id)
+                .ToDictionary(g => g.Key, g => g.First().Name);
+
+            foreach (var row in items)
+            {
+                if (row.UserId is { } uid && nameMap.TryGetValue(uid, out var full))
+                    row.UserDisplayName = full;
+            }
+        }
 
         // ═══ بازطراحی چرخهٔ ۷۰ (گزارش مالک) — فارسی‌سازی ردیف‌های «قدیمی» ═══
         // ردیف‌های پیش از این نسخه با نام انگلیسی موجودیت (patients/roles و…)

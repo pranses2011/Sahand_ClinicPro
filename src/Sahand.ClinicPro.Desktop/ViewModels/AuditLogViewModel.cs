@@ -19,7 +19,7 @@ public partial class AuditDetailRow : ObservableObject
     /// <summary>شناسهٔ رکورد لاگ</summary>
     public long Id { get; init; }
 
-    /// <summary>نام کامل کاربر (از ادعای displayName سرور؛ ردیف‌های قدیمی: بازیابی از پرسنل)</summary>
+    /// <summary>نام کامل کاربر — چرخهٔ ۷۲: از سرور (نام پرسنل متصل)؛ در نبودش نام ذخیره‌شدهٔ ردیف</summary>
     public string? Username { get; init; }
 
     /// <summary>ماژول — فارسی (داروخانه، پذیرش، مدیریت سیستم و…)</summary>
@@ -191,7 +191,11 @@ public partial class AuditLogViewModel : ViewModelBase
         var row = new AuditDetailRow
         {
             Id = a.Id,
-            Username = a.Username,
+            // چرخهٔ ۷۲ — نام کامل پرسنل متصل (از سرور) با سقوط به مقدار ذخیره‌شده؛
+            // ردیف‌های قدیمی که Username دارند هم نام کامل می‌گیرند
+            Username = !string.IsNullOrWhiteSpace(a.UserDisplayName)
+                ? a.UserDisplayName
+                : a.Username,
             // گارد: اگر سرور قدیمی فیلد فارسی نفرستاد، همان نگاشت محلی اجرا می‌شود
             Module = string.IsNullOrWhiteSpace(a.PersianModule)
                 ? Application.Common.AuditSemanticCatalog.PersianizeModule(a.Module)
@@ -278,12 +282,15 @@ public partial class AuditLogViewModel : ViewModelBase
 
     /// <summary>
     /// ردیف لاگ — منطبق بر AuditLogDto سرور (چرخهٔ ۷۰: PersianEntity/
-    /// PersianModule افزوده شدند؛ ردیف‌های قدیمی از همین محل فارسی می‌شوند).
+    /// PersianModule افزوده شدند؛ ردیف‌های قدیمی از همین محل فارسی می‌شوند؛
+    /// چرخهٔ ۷۲: UserDisplayName/UserId برای نام کامل پرسنل متصل).
     /// </summary>
     private sealed class AuditDto
     {
         public long Id { get; set; }
         public string? Username { get; set; }
+        public string? UserDisplayName { get; set; }
+        public long? UserId { get; set; }
         public string? Action { get; set; }
         public string? EntityName { get; set; }
         public long? EntityId { get; set; }

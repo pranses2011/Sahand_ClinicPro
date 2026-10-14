@@ -49,8 +49,16 @@ public class IdentityService : IIdentityService
     {
         var normalized = usernameOrEmail.Trim().ToUpperInvariant();
 
+        // ═══ چرخهٔ ۷۲ (گزارش مالک: «در لاگ عملیات به جای نام کامل، نام کاربری رو
+        //      مینویسه») ═══ کاربر باید با «نام کامل پرسنل» شناسایی شود، نه کد
+        //      ورود. پیش‌تر ادعای displayName توکن به‌سادگی Username بود و
+        //      میدلور لاگ عملیات همان را در ستون کاربر می‌نوشت. اکنون پروفایل
+        //      پرسنلِ متصل (Employee.FirstName + LastName) با Include بارگذاری
+        //      و نام کامل در توکن نشسته می‌شود؛ بدون پرسنلِ متصل، نام کاربری
+        //      پابرجا می‌ماند (کاربر سیستمی مثل admin بدون پرسنل).
         var user = await _context.Users
             .Include(u => u.Roles).ThenInclude(ur => ur.Role)
+            .Include(u => u.Employee)
             .FirstOrDefaultAsync(u =>
                 u.Username.ToUpper() == normalized || u.Email.ToUpper() == normalized,
                 cancellationToken);
@@ -92,7 +100,11 @@ public class IdentityService : IIdentityService
 
         var roles = user.Roles.Select(r => r.Role!.Name).ToList();
         var permissions = await GetPermissionsAsync(user.Id, cancellationToken);
-        var displayName = user.Username; // در گام‌های بعد از پروفایل پرسنل تکمیل می‌شود
+
+        // نام کامل پرسنل متصل — چرخهٔ ۷۲: ریشهٔ «نام کاربری به‌جای نام کامل» در لاگ
+        // عملیات همین‌جاست؛ ادعای displayName توکن از این پس نام واقعی پرسنل است
+        // و میدلور لاگ عملیات آن را در ستون «کاربر» ثبت می‌کند.
+        var displayName = ResolveFullName(user);
 
         var (accessToken, _) = _tokenGenerator.GenerateAccessToken(user.Id, user.Username, displayName, roles, permissions);
         var (refreshToken, refreshExpiry) = _tokenGenerator.GenerateRefreshToken();
@@ -141,6 +153,7 @@ public class IdentityService : IIdentityService
 
         var user = await _context.Users
             .Include(u => u.Roles).ThenInclude(ur => ur.Role)
+            .Include(u => u.Employee) // چرخهٔ ۷۲ — نام کامل برای ادعای displayName توکن تازه
             .FirstOrDefaultAsync(u => u.Id == stored.UserId, cancellationToken);
 
         if (user is null || !user.IsActive)
@@ -151,7 +164,8 @@ public class IdentityService : IIdentityService
 
         var roles = user.Roles.Select(r => r.Role!.Name).ToList();
         var permissions = await GetPermissionsAsync(user.Id, cancellationToken);
-        var (accessToken, _) = _tokenGenerator.GenerateAccessToken(user.Id, user.Username, user.Username, roles, permissions);
+        // چرخهٔ ۷۲ — توکن تازه‌شده هم نام کامل پرسنل را حمل می‌کند (نه فقط ورود اول)
+        var (accessToken, _) = _tokenGenerator.GenerateAccessToken(user.Id, user.Username, ResolveFullName(user), roles, permissions);
         var (newRefresh, expiry) = _tokenGenerator.GenerateRefreshToken();
 
         _context.RefreshTokens.Add(new RefreshToken
@@ -223,6 +237,20 @@ public class IdentityService : IIdentityService
 
         await _context.SaveChangesAsync(cancellationToken);
         return Result.Success();
+    }
+
+    /// <summary>
+    /// نام کامل نمایشی کاربر — چرخهٔ ۷۲: پرسنل متصل (نام + نام خانوادگی)؛
+    /// کاربر بدون پرسنل (مثل admin اولیه) به نام کاربری‌اش برمی‌گردد.
+    /// </summary>
+    private static string ResolveFullName(Domain.Entities.Security.User user)
+    {
+        var employee = user.Employee;
+        if (employee is null)
+            return user.Username;
+
+        var full = $"{employee.FirstName} {employee.LastName}".Trim();
+        return string.IsNullOrEmpty(full) ? user.Username : full;
     }
 
     /// <summary>دسترسی‌های کاربر از نقش‌ها</summary>
