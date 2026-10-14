@@ -235,8 +235,12 @@
                                                     </TextBlock>
                                                 </StackPanel>
                                             </StackPanel>
-                                            <!-- چرخهٔ ۴۷: دیوار کف ارتفاع دکمهٔ ردیفی فراخوان (هم‌الگوی دکمهٔ اصلی) -->
-                                            <Button Grid.Column="2" Command="{Binding DataContext.CallNextCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            <!-- چرخهٔ ۴۷: دیوار کف ارتفاع دکمهٔ ردیفی فراخوان (هم‌الگوی دکمهٔ اصلی)
+                                                 چرخهٔ ۷۵: دکمهٔ ردیفی حالا «همان بیمار» را فراخوان می‌کند
+                                                 (CallPatientCommand با پارامتر ردیف) نه فرمان کورِ «بیمار بعدی» —
+                                                 ریشهٔ خطای «بیماری در صف انتظار نیست» هنگام کلیک روی ردیف. -->
+                                            <Button Grid.Column="2" Command="{Binding DataContext.CallPatientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
                                                     Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11" Padding="10,6"
                                                     MinWidth="92" MinHeight="34">
                                                 <StackPanel Orientation="Horizontal">

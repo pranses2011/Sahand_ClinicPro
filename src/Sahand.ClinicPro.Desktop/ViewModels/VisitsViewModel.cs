@@ -202,6 +202,62 @@ public partial class VisitsViewModel : ViewModelBase
         await LoadAsync();
     }
 
+    /// <summary>
+    /// ═══ چرخهٔ ۷۵ — فراخوان «همان بیمارِ ردیف انتخاب‌شده» (گزارش مالک) ═══
+    /// «وقتی از لیست بیماران در صف انتظار روی دکمه فراخوان کلیک میکنم خطای
+    /// 'بیماری در صف انتظار نیست' میده» — ریشه: دکمهٔ ردیفی به فرمان کورِ
+    /// «بیمار بعدی» وصل بود که بیمارِ همان ردیف را نمی‌دید و همیشه اولین پذیرشِ
+    /// پزشک را برمی‌داشت. اکنون دکمهٔ هر ردیف، همان پذیرش را با اندپوینت اختصاصی
+    /// visits/call/{id} فراخوان می‌کند؛ پاسخِ «ازقبل در جریان» یعنی همان ویزیت
+    /// باز می‌شود (فراخوان دوباره امن است) و پیام‌های خطا دقیقاً علت را می‌گویند.
+    /// </summary>
+    /// <param name="row">ردیف صف کلیک‌شده — بیمار همان ردیف فراخوان می‌شود</param>
+    [RelayCommand]
+    private async Task CallPatientAsync(QueueRow? row)
+    {
+        if (row is null) return;
+        if (IsCalling) return;
+        IsCalling = true;
+        var response = await _api.PostAsync<CallPatientResponse>($"visits/call/{row.ReceptionId}", new { });
+        IsCalling = false;
+
+        if (response?.Data is null)
+        {
+            _snackbar.Error(_api.LastError ?? "فراخوان این بیمار ممکن نشد");
+            await LoadAsync(); // وضعیت ردیف ممکن است تازه شده باشد (مثلاً ویزیت‌شده)
+            return;
+        }
+
+        _snackbar.Success(response.Data.AlreadyInProgress
+            ? $"«{row.PatientName}» در حال ویزیت است — همان ویزیت باز می‌شود"
+            : $"«{row.PatientName}» فراخوانی شد");
+        await LoadAsync();
+
+        // باز کردن فرم ویزیت همان بیمار (تازه یا در جریان)
+        var window = new VisitWindow(new VisitEditViewModel(_api, _snackbar, response.Data.VisitId))
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        window.ShowDialog();
+        await LoadAsync();
+    }
+
+    /// <summary>پاسخ فراخوان اختصاصی ردیف — چرخهٔ ۷۵</summary>
+    public sealed class CallPatientResponse
+    {
+        public bool IsSuccess { get; set; }
+        public CallPatientData? Data { get; set; }
+    }
+
+    /// <summary>دادهٔ فراخوان اختصاصی — شناسه ویزیت + پرچم ازقبل‌درجریان</summary>
+    public sealed class CallPatientData
+    {
+        public long VisitId { get; set; }
+        public long ReceptionId { get; set; }
+        public long PatientId { get; set; }
+        public bool AlreadyInProgress { get; set; }
+    }
+
     /// <summary>ادامه ویزیت بیمار فعلی</summary>
     [RelayCommand]
     private void OpenCurrentVisit()

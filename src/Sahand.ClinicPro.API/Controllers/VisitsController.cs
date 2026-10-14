@@ -73,4 +73,22 @@ public class VisitsController : ApiBaseController
         var result = await _mediator.Send(new CallNextPatientCommand(doctorId));
         return ToResponse(result, "بیمار بعدی فراخوانی شد");
     }
+
+    /// <summary>
+    /// ═══ چرخهٔ ۷۵ — فراخوان «همان بیمارِ ردیف انتخاب‌شده» ═══
+    /// گزارش مالک: «وقتی از لیست بیماران در صف انتظار روی دکمه فراخوان کلیک
+    /// میکنم خطای 'بیماری در صف انتظار نیست' میده» — ریشه: دکمهٔ ردیفی به
+    /// فرمان کور call-next وصل بود که بیمارِ ردیف را نمی‌دید. این اندپوینت
+    /// همان پذیرش را فراخوان می‌کند (ایدمپوتنت — دوباره‌زدن روی بیمارِ روی‌میز
+    /// همان ویزیت را برمی‌گرداند).
+    /// </summary>
+    /// <param name="receptionId">شناسه پذیرشِ ردیف صف</param>
+    [HttpPost("call/{receptionId:long}")]
+    [HasPermission("visits.create")]
+    public async Task<IActionResult> CallPatient(long receptionId)
+    {
+        var result = await _mediator.Send(
+            new Application.Features.Visits.CallPatient.CallPatientCommand(receptionId));
+        return ToResponse(result, "بیمار فراخوانی شد");
+    }
 }

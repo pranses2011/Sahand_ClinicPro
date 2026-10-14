@@ -124,6 +124,15 @@ public class GetVisitQueueQueryHandler : IRequestHandler<GetVisitQueueQuery, Res
                     $"{visit.StartTime:HH\\:mm}-{visit.EndTime:HH\\:mm}",
                     visit.PrimaryDiagnosis?.DescriptionFa));
             }
+            // ═══ چرخهٔ ۷۵ (گزارش مالک: «بیمار ویزیت‌شده از لیست صف پاک نمیشه») ═══
+            // پذیرشِ «ویزیت‌شده/ترخیص‌شده» هرگز به صف منتظر برنمی‌گردد — حتی اگر
+            // ویزیتش پیش‌نویس باشد (ذخیرهٔ بدون پایان) یا رکورد ویزیتش گم شده
+            // باشد؛ پیش‌تر چنین ردیفی دوباره در «در انتظار» می‌نشست.
+            else if (r.Status is ReceptionStatus.Visited or ReceptionStatus.Discharged)
+            {
+                // پایان‌یافته — نه در انتظار، نه فراخوان‌پذیر؛ فقط در صورت وجود
+                // ویزیتِ کامل‌شده در فهرست «ویزیت‌شده‌ها» دیده می‌شود
+            }
             else
             {
                 waiting.Add(item);
