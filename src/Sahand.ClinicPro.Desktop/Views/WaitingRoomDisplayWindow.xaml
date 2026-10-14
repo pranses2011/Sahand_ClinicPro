@@ -1,119 +1,152 @@
 <Window x:Class="Sahand.ClinicPro.Desktop.Views.WaitingRoomDisplayWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
         Title="نمایشگر سالن انتظار"
         WindowStyle="None"
-        WindowState="Maximized"
-        Background="#0D1B2A"
+        WindowStartupLocation="Manual"
+        Background="#0A1626"
         FlowDirection="RightToLeft"
         Cursor="None"
-        KeyDown="Window_KeyDown">
+        KeyDown="Window_KeyDown"
+        MouseRightButtonDown="Window_RightClick">
     <!-- ═══════════════════════════════════════════════════════════════
-         نمایشگر سالن انتظار — چرخهٔ ۶۹ (فاز ۳ / F-14 نقشه راه ai-review)
-         «حالت کیوسک سالن انتظار» — پنجرهٔ تمام‌صفحهٔ تیره برای نصب روی
-         نمایشگر سالن: ساعت و تاریخ شمسی درشت + بیماران «در حال ویزیت»
-         و نوبت‌های پیش‌رو (تازه‌سازی هر ۳۰ ثانیه + با هر رویداد بلادرنگ صف).
-         خروج با کلید Escape (مخفی از دید عمومی — دکمه ندارد).
+         نمایشگر سالن انتظار — بازطراحی کامل چرخهٔ ۷۴ (گزارش مالک)
+         چیدمان سفارشی:
+           • ستون راست: ساعت آنالوگ شکیل (ثانیه‌شمار پیوسته) + ساعت دیجیتال
+             کوچک با ثانیه + تاریخ بلند «تاریخ امروز : ۲۳ مهر ماه ۱۴۰۵»
+           • ستون میانه: نام واقعی درمانگاه (سربرگ) + کارت‌های بخش‌های
+             قابل‌تنظیم (صف پزشک/صف خدمت/نوبت‌های امروز) با ترتیب D&D
+           • ستون چپ: تبلیغ نرم‌افزار با تصویر — «عضو ثابت» صفحه
+         نام درمانگاه از تنظیمات (مستقل یا نام چاپی) خوانده می‌شود؛
+         پنجره روی مانیتور/تلویزیون انتخابی از تنظیمات باز می‌شود (MoveWindow
+         دقیق پیکسلی + Maximized) تا نرم‌افزار روی مانیتور اصلی قابل استفاده
+         بماند. خروج: Escape — باز کردن تنظیمات: راست‌کلیک (مخفی از مراجع).
+         تازه‌سازی: هر ۳۰ ثانیه + هر رویداد بلادرنگ صف.
          ═══════════════════════════════════════════════════════════════ -->
-    <Grid Margin="40">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <Grid Margin="30">
+        <Grid.ColumnDefinitions>
+            <!-- راست بصری (RTL): پشتهٔ ساعت/تاریخ -->
+            <ColumnDefinition Width="Auto" />
+            <!-- میانه: نام درمانگاه + بخش‌ها -->
+            <ColumnDefinition Width="*" />
+            <!-- چپ بصری: تبلیغ نرم‌افزار — عضو ثابت -->
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
 
-        <!-- سربرگ: نام درمانگاه + تاریخ و ساعت شمسی درشت -->
-        <DockPanel Grid.Row="0">
-            <StackPanel>
-                <TextBlock x:Name="ClockText" Text="۰۰:۰۰"
-                           FontSize="86" FontWeight="Bold" Foreground="#E3F2FD"
-                           FontFamily="{DynamicResource App.CodeFont}" />
-                <TextBlock x:Name="DateText" Text="—"
-                           FontSize="26" Foreground="#90CAF9" Margin="0,4,0,0" />
+        <!-- ═══════════ ستون راست: ساعت آنالوگ + دیجیتال + تاریخ بلند ═══════════ -->
+        <StackPanel Grid.Column="0" Width="300" VerticalAlignment="Center" Margin="0,0,10,0">
+            <controls:AnalogClock Width="260" Height="260"
+                                  HorizontalAlignment="Center"
+                                  Visibility="{Binding ShowAnalogClock, Mode=OneWay}" />
+            <!-- ساعت دیجیتال کوچک با ثانیه — زیر آنالوگ -->
+            <TextBlock x:Name="DigitalClockText" Text="--:--:--"
+                       HorizontalAlignment="Center" Margin="0,18,0,0"
+                       FontSize="26" FontWeight="SemiBold" Foreground="#BBDEFB"
+                       FontFamily="{DynamicResource App.CodeFont}"
+                       Visibility="{Binding ShowDigitalClock, Mode=OneWay}" />
+            <!-- تاریخ بلند — «تاریخ امروز : ۲۳ مهر ماه ۱۴۰۵» -->
+            <TextBlock x:Name="LongDateText" Text="—"
+                       HorizontalAlignment="Center" Margin="0,10,0,0" TextWrapping="Wrap"
+                       FontSize="16.5" Foreground="#8FBFE8"
+                       Visibility="{Binding ShowLongDate, Mode=OneWay}" />
+        </StackPanel>
+
+        <!-- ═══════════ ستون میانه: نام درمانگاه + کارت‌های بخش‌ها ═══════════ -->
+        <DockPanel Grid.Column="1" Margin="16,0">
+            <!-- سربرگ: نام واقعی درمانگاه — درشت و آرمین -->
+            <StackPanel DockPanel.Dock="Top" Margin="0,0,0,22">
+                <TextBlock x:Name="ClinicNameText" Text="درمانگاه"
+                           FontSize="42" FontWeight="Black" Foreground="#FFFFFF"
+                           HorizontalAlignment="Center" />
+                <Border Height="4" CornerRadius="2" Width="240" Margin="0,12,0,0"
+                        Background="#2C5F9E" HorizontalAlignment="Center" />
+                <TextBlock Text="لطفاً در سالن انتظار حضور داشته باشید و با فراخوانی شمارهٔ نوبت به اتاق مربوط مراجعه کنید"
+                           FontSize="14" Foreground="#6E8CA8" HorizontalAlignment="Center"
+                           Margin="0,14,0,0" />
             </StackPanel>
-            <TextBlock x:Name="ClinicNameText" Text="درمانگاه سهند"
-                       FontSize="34" FontWeight="Bold" Foreground="#FFFFFF"
-                       HorizontalAlignment="Left" VerticalAlignment="Center" />
+
+            <!-- کارت‌های بخش‌های قابل‌تنظیم — چیدمان جریانی (WrapPanel) -->
+            <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                <ItemsControl x:Name="SectionsHost" ItemsSource="{Binding Sections, Mode=OneWay}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <!-- کارت بخش — عنوان رنگی + ردیف‌های بیمار -->
+                            <Border Width="300" MinHeight="170" MaxHeight="330"
+                                    Margin="0,0,12,12" Padding="14,12"
+                                    CornerRadius="16"
+                                    Background="#10233A" BorderBrush="#1E3A5C" BorderThickness="1.2">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Top" Text="{Binding Title}"
+                                               FontSize="17" FontWeight="Bold" Foreground="#7FC4FF"
+                                               Margin="2,0,2,10" />
+                                    <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                                        <ItemsControl ItemsSource="{Binding Rows}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="{Binding RowBrush}"
+                                                            CornerRadius="11" Padding="12,8" Margin="0,0,0,7">
+                                                        <DockPanel>
+                                                            <Border Width="42" Height="42" CornerRadius="21"
+                                                                    Background="{Binding NumberBrush}"
+                                                                    VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Number}" FontSize="17"
+                                                                           FontWeight="Bold" Foreground="White"
+                                                                           HorizontalAlignment="Center"
+                                                                           VerticalAlignment="Center"
+                                                                           FontFamily="{DynamicResource App.CodeFont}" />
+                                                            </Border>
+                                                            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Name}" FontSize="17.5"
+                                                                           FontWeight="SemiBold" Foreground="#F0F6FC" />
+                                                                <TextBlock Text="{Binding Subtitle}" FontSize="12"
+                                                                           Foreground="#9DB8CF" Margin="0,3,0,0" />
+                                                            </StackPanel>
+                                                        </DockPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </DockPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
         </DockPanel>
 
-        <!-- جداکنندهٔ رنگی -->
-        <Border Grid.Row="1" Height="4" CornerRadius="2" Margin="0,16,0,20"
-                Background="#1565C0" />
-
-        <!-- میانه: در حال ویزیت + نوبت‌های پیش‌رو -->
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.2*" />
-                <ColumnDefinition Width="40" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <!-- ستون راست: در حال ویزیت — بزرگ و خوانا از فاصله -->
-            <StackPanel Grid.Column="0">
-                <TextBlock Text="در حال ویزیت" FontSize="24" FontWeight="Bold"
-                           Foreground="#4FC3F7" Margin="0,0,0,14" />
-                <ItemsControl x:Name="InProgressList">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="#13293D" CornerRadius="14" Padding="20,14"
-                                    Margin="0,0,0,12" BorderBrush="#1B4965" BorderThickness="1">
-                                <DockPanel>
-                                    <Border Width="56" Height="56" CornerRadius="28"
-                                            Background="#1565C0" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding QueueNumber}" FontSize="24" FontWeight="Bold"
-                                                   Foreground="White" HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   FontFamily="{DynamicResource App.CodeFont}" />
-                                    </Border>
-                                    <StackPanel VerticalAlignment="Center" Margin="14,0,0,0">
-                                        <TextBlock Text="{Binding PatientName}" FontSize="28" FontWeight="Bold"
-                                                   Foreground="#FFFFFF" />
-                                        <TextBlock Text="{Binding Subtitle}" FontSize="17" Foreground="#B0BEC5"
-                                                   Margin="0,4,0,0" />
-                                    </StackPanel>
-                                </DockPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                <TextBlock x:Name="InProgressEmpty" Text="در این لحظه ویزیتی در جریان نیست"
-                           FontSize="19" Foreground="#546E7A" Margin="6,10,0,0"
-                           Visibility="Collapsed" />
+        <!-- ═══════════ ستون چپ: تبلیغ نرم‌افزار — عضو ثابت صفحه ═══════════ -->
+        <Border Grid.Column="2" Width="300" VerticalAlignment="Stretch"
+                Margin="10,0,0,0" Padding="22,26" CornerRadius="20"
+                Background="#0E2036" BorderBrush="#1E3A5C" BorderThickness="1.2">
+            <StackPanel>
+                <!-- لوگوی محصول -->
+                <Image Source="pack://application:,,,/Assets/Logo/ClinicPro-512.png"
+                       Width="120" Height="120" HorizontalAlignment="Center"
+                       RenderOptions.BitmapScalingMode="HighQuality" />
+                <TextBlock Text="سامانهٔ جامع اطلاعاتی" FontSize="17" FontWeight="Bold"
+                           Foreground="#E3F2FD" HorizontalAlignment="Center" Margin="0,16,0,0" />
+                <TextBlock Text="درمانگاه سهند" FontSize="23" FontWeight="Black"
+                           Foreground="#7FC4FF" HorizontalAlignment="Center" Margin="0,4,0,0" />
+                <Border Height="3" CornerRadius="2" Width="90" Margin="0,14,0,0"
+                        Background="#2C5F9E" HorizontalAlignment="Center" />
+                <!-- ویژگی‌ها -->
+                <StackPanel Margin="0,18,0,0">
+                    <TextBlock Text="✓ پروندهٔ الکترونیک بیمار" FontSize="13" Foreground="#9DB8CF" Margin="0,0,0,9" />
+                    <TextBlock Text="✓ نوبت‌دهی و پذیرش هوشمند" FontSize="13" Foreground="#9DB8CF" Margin="0,0,0,9" />
+                    <TextBlock Text="✓ نسخه‌نویسی الکترونیک" FontSize="13" Foreground="#9DB8CF" Margin="0,0,0,9" />
+                    <TextBlock Text="✓ آزمایشگاه و پاراکلینیک" FontSize="13" Foreground="#9DB8CF" Margin="0,0,0,9" />
+                    <TextBlock Text="✓ حسابداری و بیمه" FontSize="13" Foreground="#9DB8CF" Margin="0,0,0,9" />
+                </StackPanel>
+                <TextBlock x:Name="VersionText" Text="" FontSize="11" Foreground="#54718C"
+                           HorizontalAlignment="Center" Margin="0,16,0,0" />
             </StackPanel>
-
-            <!-- ستون چپ: نوبت‌های پیش‌رو -->
-            <StackPanel Grid.Column="2">
-                <TextBlock Text="نوبت‌های پیش‌رو" FontSize="21" FontWeight="Bold"
-                           Foreground="#81C784" Margin="0,0,0,12" />
-                <ItemsControl x:Name="UpcomingList">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="#0F2417" CornerRadius="10" Padding="14,10"
-                                    Margin="0,0,0,8" BorderBrush="#1B5E20" BorderThickness="1">
-                                <DockPanel>
-                                    <TextBlock Text="{Binding Time}" FontSize="18" FontWeight="Bold"
-                                               Foreground="#A5D6A7" VerticalAlignment="Center"
-                                               FontFamily="{DynamicResource App.CodeFont}" />
-                                    <StackPanel VerticalAlignment="Center" Margin="12,0,0,0">
-                                        <TextBlock Text="{Binding PatientName}" FontSize="17"
-                                                   Foreground="#E8F5E9" FontWeight="SemiBold" />
-                                        <TextBlock Text="{Binding Subtitle}" FontSize="12.5"
-                                                   Foreground="#81C784" Margin="0,2,0,0" />
-                                    </StackPanel>
-                                </DockPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                <TextBlock x:Name="UpcomingEmpty" Text="نوبت دیگری برای امروز ثبت نشده است"
-                           FontSize="16" Foreground="#546E7A" Margin="6,8,0,0"
-                           Visibility="Collapsed" />
-            </StackPanel>
-        </Grid>
-
-        <!-- پانویس: راهنمای بیماران -->
-        <TextBlock Grid.Row="3" Text="لطفاً در سالن انتظار حضور داشته باشید و با فراخوانی شمارهٔ نوبت به اتاق موردنظر مراجعه کنید"
-                   FontSize="15" Foreground="#78909C" HorizontalAlignment="Center" Margin="0,14,0,0" />
+        </Border>
     </Grid>
 </Window>

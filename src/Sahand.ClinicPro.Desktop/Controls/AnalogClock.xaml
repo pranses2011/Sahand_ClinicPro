@@ -1,0 +1,100 @@
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Controls.AnalogClock"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="280" d:DesignWidth="280"
+             FlowDirection="LeftToRight"
+             x:Name="Root">
+    <!-- ═══ ساعت آنالوگ نمایشگر سالن انتظار — چرخهٔ ۷۴ ═══
+         گزارش مالک: «ساعت این صفحه ثانیه شمار هم داشته باشه و به نظر من یک
+         ساعت آنالوگ خیلی زیبا و شکیل براش بزار و ساعت دیجیتال رو بصورت
+         کوچک زیر بزار». صفحهٔ تیرهٔ شیشه‌ای با حلقهٔ دورانی روشن، اعداد
+         ۱۲/۳/۶/۹ فارسی، عقربه‌های ساعت/دقیقهٔ روشن و عقربهٔ ثانیهٔ سرخ با
+         حرکت پیوسته (سوپ نرم — روان از یک ثانیه به ثانیهٔ بعد). -->
+    <Grid>
+        <!-- هالهٔ بیرونی — حلقهٔ روشن دور صفحه برای جدایی از پس‌زمینهٔ تیره -->
+        <Ellipse Fill="#101F31"
+                 Stroke="#2C4A6E" StrokeThickness="2"
+                 Opacity="0.9" />
+
+        <!-- صفحهٔ اصلی — گرادیان شیشه‌ای تیره -->
+        <Ellipse Margin="9">
+            <Ellipse.Fill>
+                <RadialGradientBrush GradientOrigin="0.35,0.3" Center="0.5,0.45">
+                    <GradientStop Color="#22405F" Offset="0" />
+                    <GradientStop Color="#152A42" Offset="0.65" />
+                    <GradientStop Color="#0E1E31" Offset="1" />
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+            <Ellipse.Stroke>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#5B87B5" Offset="0" />
+                    <GradientStop Color="#27415F" Offset="0.5" />
+                    <GradientStop Color="#5B87B5" Offset="1" />
+                </LinearGradientBrush>
+            </Ellipse.Stroke>
+        </Ellipse>
+
+        <!-- برچسب‌های ساعت — ۱۲ بالا / ۳ / ۶ / ۹ با ارقام فارسی -->
+        <TextBlock Text="۱۲" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
+                   HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,26,0,0" />
+        <TextBlock Text="۶" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
+                   HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,26" />
+        <TextBlock Text="۳" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
+                   HorizontalAlignment="Left" VerticalAlignment="Center" Margin="27,0,0,1" />
+        <TextBlock Text="۹" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
+                   HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,27,1" />
+
+        <!-- عقربه‌ها — حول مرکز؛ هر عقربه یک گرید چرخان است -->
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
+             Width="4" Height="140" RenderTransformOrigin="0.5,0.5"
+             x:Name="HourHand">
+            <Grid.RenderTransform>
+                <RotateTransform x:Name="HourRotation" Angle="0" />
+            </Grid.RenderTransform>
+            <Rectangle Width="4" Height="72" VerticalAlignment="Top" RadiusX="2.5" RadiusY="2.5">
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#F2F7FC" Offset="0" />
+                        <GradientStop Color="#B9CCE0" Offset="1" />
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+        </Grid>
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
+             Width="3" Height="190" RenderTransformOrigin="0.5,0.5"
+             x:Name="MinuteHand">
+            <Grid.RenderTransform>
+                <RotateTransform x:Name="MinuteRotation" Angle="0" />
+            </Grid.RenderTransform>
+            <Rectangle Width="3" Height="98" VerticalAlignment="Top" RadiusX="2" RadiusY="2">
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#F2F7FC" Offset="0" />
+                        <GradientStop Color="#AECBE8" Offset="1" />
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+        </Grid>
+        <!-- عقربهٔ ثانیه — سرخ نازک با دُم متعادل و حلقهٔ لغزش -->
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
+              Width="2" Height="206" RenderTransformOrigin="0.5,0.5"
+              x:Name="SecondHand">
+            <Grid.RenderTransform>
+                <RotateTransform x:Name="SecondRotation" Angle="0" />
+            </Grid.RenderTransform>
+            <Rectangle Width="2" Height="170" VerticalAlignment="Top" Fill="#FF5252" RadiusX="1" RadiusY="1" />
+            <Rectangle Width="2" Height="26" VerticalAlignment="Bottom" Fill="#FF8A80" RadiusX="1" RadiusY="1" />
+            <Ellipse Width="9" Height="9" VerticalAlignment="Top" Margin="0,31,0,0"
+                     Stroke="#FF5252" StrokeThickness="2" Fill="#152A42" />
+        </Grid>
+
+        <!-- مرکز — پیچ نگه‌دارندهٔ عقربه‌ها -->
+        <Ellipse Width="13" Height="13" HorizontalAlignment="Center" VerticalAlignment="Center"
+                 Fill="#F2F7FC" />
+        <Ellipse Width="6" Height="6" HorizontalAlignment="Center" VerticalAlignment="Center"
+                 Fill="#FF5252" />
+    </Grid>
+</UserControl>

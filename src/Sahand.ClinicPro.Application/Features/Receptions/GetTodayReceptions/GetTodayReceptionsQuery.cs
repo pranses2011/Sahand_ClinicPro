@@ -73,7 +73,9 @@ public class GetTodayReceptionsQueryHandler
                 // چرخهٔ ۳۹ — نام نمایشی اتاق خدمت (نام کامل یا شماره)؛ پذیرش ویزیت
                 // پزشک تهی می‌ماند چون اتاق آن از برنامهٔ کاری خود پزشک می‌آید
                 RoomName = r.Room != null ? (r.Room.RoomName ?? r.Room.RoomNumber) : null,
-                r.WaitingTime
+                r.WaitingTime,
+                // چرخهٔ ۷۴ — شناسهٔ خدمت برای دسته‌بندی صف خدمات در نمایشگر سالن
+                r.ServiceId
             })
             .ToListAsync(cancellationToken);
 
@@ -90,7 +92,9 @@ public class GetTodayReceptionsQueryHandler
             // چرخهٔ ۳۹ — اتاق انجام خدمت
             r.RoomName,
             invoiceTotals.TryGetValue(r.Id, out var fin) ? fin.Total : 0m,
-            invoiceTotals.TryGetValue(r.Id, out var fin2) ? fin2.Paid : 0m)).ToList();
+            invoiceTotals.TryGetValue(r.Id, out var fin2) ? fin2.Paid : 0m,
+            // چرخهٔ ۷۴ — شناسهٔ خدمت (دسته‌بندی صف خدمات در نمایشگر سالن)
+            r.ServiceId)).ToList();
 
         return Result<List<ReceptionListDto>>.Success(items);
     }

@@ -237,6 +237,14 @@
                                 ToolTip="نمایشگر سالن انتظار (حالت کیوسک — خروج با Esc)">
                             <materialDesign:PackIcon Kind="MonitorDashboard" Width="17" Height="17" Foreground="White" />
                         </Button>
+                        <!-- چرخهٔ ۷۴ — تنظیمات نمایشگر سالن انتظار (بخش‌ها + ساعت/تاریخ + مانیتور هدف) -->
+                        <Button Command="{Binding OpenWaitingRoomSettingsCommand}" Width="40" Height="40" Padding="0"
+                                Cursor="Hand" Focusable="False" Margin="0,0,8,0"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="#26FFFFFF" BorderBrush="#40FFFFFF"
+                                ToolTip="تنظیمات نمایشگر سالن انتظار — بخش‌ها (Drag &amp; Drop)، ساعت/تاریخ و مانیتور هدف">
+                            <materialDesign:PackIcon Kind="Cog" Width="17" Height="17" Foreground="White" />
+                        </Button>
                         <ToggleButton IsChecked="{Binding IsCustomizing}" Width="40" Height="40" Padding="0"
                                       Cursor="Hand" Focusable="False"
                                       ToolTip="مدیریت چیدمان داشبورد — ترتیب و نمایش کارت‌ها و بخش‌ها">

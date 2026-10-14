@@ -1039,6 +1039,21 @@ public partial class DashboardViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// تنظیمات نمایشگر سالن انتظار — چرخهٔ ۷۴ (گزارش مالک):
+    /// بخش‌های نمایشی (صف پزشک/خدمت/نوبت‌ها) با ترتیب Drag &amp; Drop +
+    /// پیش‌نمایش زنده + ساعت آنالوگ/دیجیتال/تاریخ + نام درمانگاه + مانیتور هدف.
+    /// </summary>
+    [RelayCommand]
+    private void OpenWaitingRoomSettings()
+    {
+        var window = new Views.WaitingRoomSettingsWindow
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+        window.ShowDialog();
+    }
+
+    /// <summary>
     /// باز/بستن مرکز هشدار انبار — چرخهٔ ۶۹ (فاز ۳ / F-08)
     /// با نخستین باز شدن، اقلام جزئیات از endpoint ویژه خوانده می‌شوند؛
     /// خطا فقط پیام فارسی می‌دهد و پنل باز می‌ماند (تلاش مجدد با کلیک بعدی).
