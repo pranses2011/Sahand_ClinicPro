@@ -244,6 +244,9 @@
             <converters:InsuranceBrushConverter x:Key="InsuranceBrush" />
             <!-- چرخهٔ سی‌ونه‌م: مبدل فهرست خالی → دیدپذیری — راهنماهای حالت خالی (انبار مصرفی بدون قلم) -->
             <converters:EmptyListToVisibilityConverter x:Key="EmptyListToVisibility" />
+            <!-- چرخهٔ ۷۵: مبدل چندمقداری جای‌نگهدار کارت/بخش مخفی داشبورد —
+                 مخفی + حالت شخصی‌سازی = قاب نقطه‌چین راه بازگشت -->
+            <converters:HiddenPlaceholderVisibilityConverter x:Key="HiddenPlaceholderVis" />
             <!-- چرخهٔ بیست‌ونهم: مبدل کد HEX → قلم‌وی — نمونهٔ رنگِ مؤثر تنظیمات تم -->
             <converters:HexToBrushConverter x:Key="HexToBrush" />
             <!-- چرخهٔ سی‌وپنجم: مبدل هگز → براش با حالت «soft» (پس‌زمینهٔ ملایم ۱۴٪)

@@ -147,6 +147,31 @@
                         Background="{Binding Accent, Converter={StaticResource HexToBrush}, FallbackValue=#1565C0}"
                         Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}" />
 
+                <!-- ═══ چرخهٔ ۷۵ — جای‌نگهدار کارت مخفی (فقط در حالت شخصی‌سازی) ═══
+                     گزارش مالک: «دیگه نمیشه آشکارش کرد» — کارت مخفی در حالت شخصی‌سازی
+                     به‌صورت قاب نقطه‌چین با عنوان و سوییچ دیده می‌شود تا مسیر بازگشت
+                     همیشه پیدا باشد؛ در حالت عادی هیچ نمی‌کشد. دیده‌شدن = مخفی + شخصی‌سازی
+                     (هر دو شرط با MultiBinding و مبدل چندمقداری زیر) -->
+                <Border CornerRadius="14" BorderBrush="#C5D2DC" BorderThickness="1.4"
+                        Background="#F7FAFC" MinHeight="112" Padding="10">
+                    <Border.Visibility>
+                        <MultiBinding Converter="{StaticResource HiddenPlaceholderVis}">
+                            <Binding Path="Visible" />
+                            <Binding Path="DataContext.IsCustomizing"
+                                     RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                        </MultiBinding>
+                    </Border.Visibility>
+                    <StackPanel VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="EyeOff" Width="20" Height="20" Foreground="#78909C"
+                                                 HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding Label}" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="#78909C" HorizontalAlignment="Center" Margin="0,6,0,0" />
+                        <TextBlock Text="این کارت مخفی است — سوییچ پایین آن را آشکار می‌کند"
+                                   FontSize="9" Foreground="#90A4AE" HorizontalAlignment="Center"
+                                   Margin="0,3,0,0" TextWrapping="Wrap" TextAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
                 <!-- کنترل‌های چیدمان — فقط در حالت شخصی‌سازی (روی کارت) -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom"
                             Margin="6,0,0,8"
@@ -205,7 +230,10 @@
         </Style>
             <!-- ═══ قالب بخش «charts» — قابل کشیدن با Drag & Drop (چرخهٔ ۷۴) ═══ -->
             <DataTemplate x:Key="SectionTemplate_charts">
-                <StackPanel Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}">
+                <!-- چرخهٔ ۷۵ — Visibility از ریشه حذف شد: دستگیرهٔ چشمِ بخشِ مخفی باید در
+                 حالت شخصی‌سازی بماند تا دوباره آشکارکردن ممکن باشد (باگ «دیگر
+                 نمیشد آشکارش کرد»)؛ محتوا در پوشش پایین با Visible کنترل می‌شود -->
+                <StackPanel>
                     <!-- دستگیرهٔ درگ؛ فقط در حالت شخصی‌سازی؛ DC = آیتم بخش -->
                     <Border CornerRadius="10" Padding="12,6" Margin="2,8,2,6" Cursor="Hand"
                             Background="#FFFDF5" BorderBrush="#F9A825" BorderThickness="1.2"
@@ -230,8 +258,11 @@
                             </StackPanel>
                         </DockPanel>
                     </Border>
-                    <!-- محتوای اصلی بخش؛ DataContext به ویومدل داشبورد وصل می‌ماند -->
-                    <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ItemsControl}}">
+                    <!-- محتوای اصلی بخش؛ DataContext به ویومدل داشبورد وصل می‌ماند.
+                     چرخهٔ ۷۵: پوشش Visibility — فقط وقتی بخش نمایان است محتوا رندر می‌شود؛
+                     دستگیرهٔ بالا مستقل از این وضعیت در حالت شخصی‌سازی زنده می‌ماند -->
+                    <Grid Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}">
+                      <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ItemsControl}}">
                                     <!-- ╔══════════════════════════════════════════════════════════╗
                                          ║ ۴) ردیف نمودارهای اصلی — روند درآمد + ترکیب وضعیت نوبت‌ها ║
                                          ╚══════════════════════════════════════════════════════════╝ -->
@@ -305,13 +336,17 @@
                                         </Border>
                                     </Grid>
 
+                      </Grid>
                     </Grid>
                 </StackPanel>
             </DataTemplate>
 
             <!-- ═══ قالب بخش «visits» — قابل کشیدن با Drag & Drop (چرخهٔ ۷۴) ═══ -->
             <DataTemplate x:Key="SectionTemplate_visits">
-                <StackPanel Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}">
+                <!-- چرخهٔ ۷۵ — Visibility از ریشه حذف شد: دستگیرهٔ چشمِ بخشِ مخفی باید در
+                 حالت شخصی‌سازی بماند تا دوباره آشکارکردن ممکن باشد (باگ «دیگر
+                 نمیشد آشکارش کرد»)؛ محتوا در پوشش پایین با Visible کنترل می‌شود -->
+                <StackPanel>
                     <!-- دستگیرهٔ درگ؛ فقط در حالت شخصی‌سازی؛ DC = آیتم بخش -->
                     <Border CornerRadius="10" Padding="12,6" Margin="2,8,2,6" Cursor="Hand"
                             Background="#FFFDF5" BorderBrush="#F9A825" BorderThickness="1.2"
@@ -336,8 +371,11 @@
                             </StackPanel>
                         </DockPanel>
                     </Border>
-                    <!-- محتوای اصلی بخش؛ DataContext به ویومدل داشبورد وصل می‌ماند -->
-                    <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ItemsControl}}">
+                    <!-- محتوای اصلی بخش؛ DataContext به ویومدل داشبورد وصل می‌ماند.
+                     چرخهٔ ۷۵: پوشش Visibility — فقط وقتی بخش نمایان است محتوا رندر می‌شود؛
+                     دستگیرهٔ بالا مستقل از این وضعیت در حالت شخصی‌سازی زنده می‌ماند -->
+                    <Grid Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}">
+                      <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ItemsControl}}">
                                     <!-- ╔══════════════════════════════════════════════════════════╗
                                          ║ ۵) ردیف دوم — ویزیت‌های روزانه + نوبت‌های پیش‌رو           ║
                                          ╚══════════════════════════════════════════════════════════╝ -->
@@ -401,13 +439,17 @@
                                         </Border>
                                     </Grid>
 
+                      </Grid>
                     </Grid>
                 </StackPanel>
             </DataTemplate>
 
             <!-- ═══ قالب بخش «activities» — قابل کشیدن با Drag & Drop (چرخهٔ ۷۴) ═══ -->
             <DataTemplate x:Key="SectionTemplate_activities">
-                <StackPanel Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}">
+                <!-- چرخهٔ ۷۵ — Visibility از ریشه حذف شد: دستگیرهٔ چشمِ بخشِ مخفی باید در
+                 حالت شخصی‌سازی بماند تا دوباره آشکارکردن ممکن باشد (باگ «دیگر
+                 نمیشد آشکارش کرد»)؛ محتوا در پوشش پایین با Visible کنترل می‌شود -->
+                <StackPanel>
                     <!-- دستگیرهٔ درگ؛ فقط در حالت شخصی‌سازی؛ DC = آیتم بخش -->
                     <Border CornerRadius="10" Padding="12,6" Margin="2,8,2,6" Cursor="Hand"
                             Background="#FFFDF5" BorderBrush="#F9A825" BorderThickness="1.2"
@@ -432,8 +474,11 @@
                             </StackPanel>
                         </DockPanel>
                     </Border>
-                    <!-- محتوای اصلی بخش؛ DataContext به ویومدل داشبورد وصل می‌ماند -->
-                    <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ItemsControl}}">
+                    <!-- محتوای اصلی بخش؛ DataContext به ویومدل داشبورد وصل می‌ماند.
+                     چرخهٔ ۷۵: پوشش Visibility — فقط وقتی بخش نمایان است محتوا رندر می‌شود؛
+                     دستگیرهٔ بالا مستقل از این وضعیت در حالت شخصی‌سازی زنده می‌ماند -->
+                    <Grid Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}">
+                      <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ItemsControl}}">
                                     <!-- ╔══════════════════════════════════════════════════════════╗
                                          ║ ۷) فعالیت‌های اخیر — نمایش قابل تنظیم                       ║
                                          ╚══════════════════════════════════════════════════════════╝ -->
@@ -475,13 +520,17 @@
                                             </DataGrid>
                                         </Grid>
                                     </Border>
+                      </Grid>
                     </Grid>
                 </StackPanel>
             </DataTemplate>
 
             <!-- ═══ قالب بخش «shortcuts» — قابل کشیدن با Drag & Drop (چرخهٔ ۷۴) ═══ -->
             <DataTemplate x:Key="SectionTemplate_shortcuts">
-                <StackPanel Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}">
+                <!-- چرخهٔ ۷۵ — Visibility از ریشه حذف شد: دستگیرهٔ چشمِ بخشِ مخفی باید در
+                 حالت شخصی‌سازی بماند تا دوباره آشکارکردن ممکن باشد (باگ «دیگر
+                 نمیشد آشکارش کرد»)؛ محتوا در پوشش پایین با Visible کنترل می‌شود -->
+                <StackPanel>
                     <!-- دستگیرهٔ درگ؛ فقط در حالت شخصی‌سازی؛ DC = آیتم بخش -->
                     <Border CornerRadius="10" Padding="12,6" Margin="2,8,2,6" Cursor="Hand"
                             Background="#FFFDF5" BorderBrush="#F9A825" BorderThickness="1.2"
@@ -506,8 +555,11 @@
                             </StackPanel>
                         </DockPanel>
                     </Border>
-                    <!-- محتوای اصلی بخش؛ DataContext به ویومدل داشبورد وصل می‌ماند -->
-                    <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ItemsControl}}">
+                    <!-- محتوای اصلی بخش؛ DataContext به ویومدل داشبورد وصل می‌ماند.
+                     چرخهٔ ۷۵: پوشش Visibility — فقط وقتی بخش نمایان است محتوا رندر می‌شود؛
+                     دستگیرهٔ بالا مستقل از این وضعیت در حالت شخصی‌سازی زنده می‌ماند -->
+                    <Grid Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}">
+                      <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ItemsControl}}">
                                     <!-- ╔══════════════════════════════════════════════════════════╗
                                          ║ ۲) پنل میانبرهای سریع — طراحی صفرِ جدید چرخهٔ ۷۲           ║
                                          ║ گزارش مالک: «پنل مبانبرها رو هم بصورت حرفه ای و زیبا از   ║
@@ -694,6 +746,7 @@
                                             </ItemsControl>
                                         </StackPanel>
                                     </Border>
+                      </Grid>
                     </Grid>
                 </StackPanel>
             </DataTemplate>

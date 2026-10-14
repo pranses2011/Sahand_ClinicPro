@@ -317,3 +317,28 @@ public sealed class EmptyListToVisibilityConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => Binding.DoNothing;
 }
+
+// ═══ چرخهٔ ۷۵ (گزارش مالک: «کارت مخفی‌شده دیگر آشکار نمی‌شود») ═══
+// مبدل چندمقداری «جای‌نگهدار کارت مخفی» — نمایان فقط وقتی کارت مخفی است
+// (values[0]=Visible غلط) «و» حالت شخصی‌سازی چیدمان روشن است (values[1]).
+// در حالت عادی کارتِ مخفی هیچ نمی‌کشد (رفتار مورد انتظار مخفی‌سازی) و فقط
+// در حالت شخصی‌سازی، قاب نقطه‌چین راه بازگشت را نشان می‌دهد.
+/// <summary>
+/// مبدل چندمقداری جای‌نگهدار مخفی — مخفی + شخصی‌سازی = نمایان؛ وگرنه جمع‌شده
+/// </summary>
+public sealed class HiddenPlaceholderVisibilityConverter : System.Windows.Data.IMultiValueConverter
+{
+    /// <summary>تبدیل — values[0]=Visible کارت، values[1]=IsCustomizing داشبورد</summary>
+    public object Convert(object?[] values, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var visible = values is { Length: > 0 } && values[0] is bool v && v;
+        var customizing = values is { Length: > 1 } && values[1] is bool c && c;
+        return !visible && customizing
+            ? System.Windows.Visibility.Visible
+            : System.Windows.Visibility.Collapsed;
+    }
+
+    /// <summary>تبدیل معکوس پشتیبانی نمی‌شود (یک‌طرفه — نمایش صرف)</summary>
+    public object?[] ConvertBack(object? value, Type[] targetTypes, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
