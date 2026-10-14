@@ -114,12 +114,26 @@ public static class LabResultInterpreter
     /// <summary>
     /// متن نمایشی بازهٔ مرجع مخصوص بیمار — «۱۳ تا ۱۷ mg/dL»؛ برای فرم ثبت
     /// نتیجه (نمایش رنگی حد طبیعی این بیمار) و برگهٔ چاپی نتیجه.
+    /// ═══ چرخهٔ ۷۵ (گزارش مالک: «برای همه بیماران میگه حد طبیعی برای این
+    /// بیمار منفی میباشد — به جای عدد منفی مینویسه») ═══
+    /// آزمایش‌های کیفی (کشت/سرولوژی/اسمیر) عدد ندارند و «منفی» یعنی نتیجهٔ
+    /// طبیعیِ همان آزمایش — نه جای‌گزینِ عددِ گم‌شده! پیش‌تر فقط «منفی» چاپ
+    /// می‌شد و به نظر خطای نمایش عدد می‌رسید؛ اکنون با برچسب شفاف
+    /// «کیفی — نتیجهٔ طبیعی: منفی» نمایش می‌یابد تا معنای بالینی‌اش روشن باشد.
+    /// آزمایش‌های کمی همچنان «۱۳٫۵ تا ۱۷٫۵ g/dL» می‌گیرند.
     /// </summary>
     public static string RangeDisplayText(LabTest test, Patient? patient)
     {
         var (min, max) = GetPatientRange(test, patient);
         if (min is null && max is null)
-            return test.NormalRangeMale ?? test.NormalRangeFemale ?? "—";
+        {
+            var text = test.NormalRangeMale ?? test.NormalRangeFemale ?? "—";
+            // آزمایش کیفی — «منفی/مثبت/گزارش» یعنی ماهیت نتیجهٔ طبیعی؛ با
+            // برچسب روشن نمایش داده می‌شود تا با «عددِ درست» اشتباه نشود
+            if (text is "منفی" or "مثبت" or "گزارش")
+                return $"کیفی — نتیجهٔ طبیعی: {text}";
+            return text;
+        }
         var unit = string.IsNullOrWhiteSpace(test.Unit) ? "" : $" {test.Unit}";
         if (min is null) return $"تا {max}{unit}";
         if (max is null) return $"از {min}{unit}";

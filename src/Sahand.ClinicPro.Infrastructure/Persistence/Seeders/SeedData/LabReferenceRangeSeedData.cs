@@ -50,6 +50,17 @@ public static class LabReferenceRangeSeedData
     /// <summary>فهرست بازه‌های مرجع — کلید یکتا: TestCode</summary>
     public static readonly IReadOnlyList<LabReferenceRangeRow> Rows = new LabReferenceRangeRow[]
     {
+        /* ═════════════════ چرخهٔ ۷۵ — تکمیل پوشش تست‌های کمی جامانده ═════════════════ */
+
+        // فریتین — ذخیرهٔ آهن؛ مرد ۳۰-۳۰۰ / زن ۱۵-۲۰۰ ng/mL (کمبود = فقر آهن)
+        new("FERRITIN", 30, 300, 15, 200, 7, 140, 15, null, null),
+        // آنتی‌استرپتو‌لیزین O — تیتر بالا از ۲۰۰ یعنی عفونت استرپتوکوکی اخیر
+        new("ASO", null, 200, null, 200, null, 240, 12, null, null),
+        // عامل روماتوئید — تیتر بالای ۲۰ مثبت در نظر گرفته می‌شود
+        new("RF", null, 20, null, 20, null, null, null, null, null),
+        // آنتی‌بادی سطحی هپاتیت B (HBsAb) — بالای ۱۰ mIU/mL یعنی ایمنی محافظتی
+        new("HBsAb", 10, null, 10, null, 10, null, null, null, null),
+
         /* ═════════════════ هماتولوژی ═════════════════ */
 
         // گلبول سفید — بزرگسال ۴-۱۱، کودک ۵-۱۵؛ بحرانی: کمتر از ۲ (خطر عفونت) یا بیشتر از ۳۰
