@@ -79,9 +79,9 @@ public record AppointmentListRow(
     int Source,
     string SourceText,
     decimal EstimatedFee,
-    /// <summary>متن فارسی اولویت — «🚨 اورژانس / 🔥 فوری / معمولی» (چرخهٔ ۷۵)</summary>
+    // متن فارسی اولویت — «🚨 اورژانس / 🔥 فوری / معمولی» (چرخهٔ ۷۵)
     string PriorityText = "معمولی",
-    /// <summary>رنگ اختصاصی اولویت — قرمز اورژانس / نارنجی فوری / خاکستری معمولی</summary>
+    // رنگ اختصاصی اولویت — قرمز اورژانس / نارنجی فوری / خاکستری معمولی
     string PriorityColor = "#78909C");
 
 /// <summary>
@@ -853,7 +853,7 @@ public partial class AppointmentsViewModel : ViewModelBase
         public int Type { get; set; }
         public int Source { get; set; }
         public decimal EstimatedFee { get; set; }
-        /// <summary>اولویت نوبت — ۱ اورژانس/۲ فوری/۳ معمولی (چرخهٔ ۷۵)</summary>
+        // اولویت نوبت — ۱ اورژانس/۲ فوری/۳ معمولی (چرخهٔ ۷۵)
         public int Priority { get; set; } = 3;
     }
 
