@@ -45,12 +45,22 @@ public class MoneyFlowViewModelTests
     public async Task Payment_Save_ShouldPostToPaymentsWithInvoicePatientAndAmount()
     {
         // ترتیب: ابتدا جزئیات فاکتور، سپس ثبت پرداخت
+        // ═══ چرخهٔ ۷۳ — اصلاح شکل پاسخ کنسروی ═══
+        // ViewModel از چرخهٔ ۴۸ به بعد جزئیات فاکتور را درون پاکت استاندارد
+        // سرور {isSuccess, data:{...}} انتظار دارد (InvoiceDetailEnvelope).
+        // پاسخِ مسطحِ قبلی (id/patientId/remainingAmount در ریشه) باعث می‌شد
+        // Data نال شود، ذخیره با «دریافت فاکتور ناموفق بود» متوقف شود و
+        // رویداد موفقیت هرگز شلیک نشود — تست از v2.15.0 شکسته بود.
         var api = new FakeApiClient();
         api.CannedResponses["invoices/512"] = new
         {
-            id = 512,
-            patientId = 77,
-            remainingAmount = 250_000
+            isSuccess = true,
+            data = new
+            {
+                id = 512,
+                patientId = 77,
+                remainingAmount = 250_000
+            }
         };
         var vm = new PaymentWindowViewModel(api, invoiceId: 512, remainingAmount: 250_000m)
         {
