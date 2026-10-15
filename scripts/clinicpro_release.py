@@ -396,7 +396,83 @@ def cmd_release(args: argparse.Namespace) -> None:
     print(f"\n🎉 رلیز {to_tag} کامل شد: {release['html_url']}")
 
 
-# ═══════════════════════ ورودی اصلی ═══════════════════════
+# ═══════════════════ دستور ۴: full-zip — بستهٔ کامل نصب (چرخهٔ ۷۸) ═══════════════════
+
+def cmd_full_zip(args: argparse.Namespace) -> None:
+    """بستهٔ کامل نصب — تمام خروجی publish ویندوزی دسکتاپ + باینری سرور.
+
+    چرا این دستور لازم شد (تشخیص چرخهٔ ۷۸): بسته‌های آپدیت فقط «فایل‌های تغییرکرده»
+    را کنار نصب موجود می‌گذارند؛ اگر ایستگاه مالک EXE قدیمی (برنامهٔ 1.15.0 از
+    کدبیس دیگری) را اجرا کند، آن EXE هرگز DLL جدید را بار نمی‌کند و همهٔ
+    اصلاحات دیده نمی‌شوند. بستهٔ کامل = جایگزینی کل پوشه — هیچ فایلی از
+    نصب قدیمی باقی نمی‌ماند که نسخهٔ کهنه را نگه دارد.
+    """
+    to_version = args.to.lstrip("v")
+    if read_props_version() != to_version:
+        die(f"نسخهٔ Directory.Build.props ({read_props_version()}) != نسخهٔ هدف ({to_version})")
+
+    # خروجی publish ویندوزی دسکتاپ — باید از قبل ساخته شده باشد
+    # (دستور: dotnet publish src/Sahand.ClinicPro.Desktop -c Release -r win-x64 -p:EnableWindowsTargeting=true)
+    desktop_pub = REPO / "src" / "Sahand.ClinicPro.Desktop" / "bin" / "Release" / "net8.0-windows" / "win-x64" / "publish"
+    if not (desktop_pub / "Sahand.ClinicPro.Desktop.exe").is_file():
+        die("خروجی publish ویندوزی دسکتاپ پیدا نشد — ابتدا: dotnet publish src/Sahand.ClinicPro.Desktop "
+            "-c Release -r win-x64 -p:EnableWindowsTargeting=true")
+
+    api_dir = REPO / "src" / "Sahand.ClinicPro.API" / "bin" / "Release" / "net8.0"
+    if not api_dir.is_dir():
+        die("خروجی بیلد API پیدا نشد — ابتدا Release کامل بیلد شود")
+
+    out = pathlib.Path(args.out) if args.out else (
+        REPO.parent / "download" / f"SahandClinicPro-FULL-{to_version}.zip")
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    count = 0
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zf:
+        # ۱) کل خروجی publish دسکتاپ — EXE واقعی ویندوزی + همهٔ DLL/ران‌تایم‌ها
+        for f in sorted(desktop_pub.rglob("*")):
+            if f.is_file():
+                zf.write(f, f"app/{f.relative_to(desktop_pub)}")
+                count += 1
+        # ۲) باینری‌های first-party سرور (جایگزینی کامل سمت سرور)
+        for f in sorted(api_dir.glob("*.dll")):
+            if f.name.startswith(_FIRSTPARTY_PREFIXES):
+                zf.write(f, f"bin-update/api/{f.name}")
+                count += 1
+        # ۳) ابزار بازنشانی کش بیلد
+        zf.write(REPO / "Tools" / "Reset-Build-Cache.ps1", "Tools/Reset-Build-Cache.ps1")
+        count += 1
+        # ۴) راهنمای فارسی نصب کامل — چرا و چگونه
+        zf.writestr(f"INSTALL-FULL-{to_version}.html", FULL_INSTALL_GUIDE.format(
+            TO_VER=to_version,
+            BUILD_STAMP=__import__("datetime").datetime.now().strftime("%Y-%m-%d %H:%M")))
+
+    ok(f"بستهٔ کامل نصب ساخته شد: {out}")
+    ok(f"تعداد فایل‌ها: {count} + راهنما — حجم: {out.stat().st_size:,} بایت")
+
+
+FULL_INSTALL_GUIDE = """<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8">
+<title>راهنمای نصب کامل ClinicPro v{TO_VER}</title></head>
+<body style="font-family:Tahoma;direction:rtl;background:#f8fafc;padding:24px;line-height:1.9">
+<h1 style="color:#0f172a">📦 بستهٔ کامل ClinicPro — نسخهٔ {TO_VER}</h1>
+<p style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px">
+<b>این بسته «نصب کامل» است، نه آپدیت!</b> اگر پس از نصب بسته‌های آپدیت هنوز شمارهٔ
+<b>1.15.0</b> یا هر نسخه‌ای جز <b>{TO_VER}</b> را می‌بینید، یعنی برنامهٔ در حال اجرا
+نصب قدیمی است و فایل‌های جدید هرگز بارگذاری نمی‌شوند. این بسته مشکل را برای همیشه حل می‌کند.
+</p>
+<ol>
+<li>برنامه و سرور API را کاملاً ببندید (از نوار پایین ویندوز هم Exit کنید).</li>
+<li>از پوشهٔ نصب فعلی یک نسخهٔ پشتیبان کپی بگیرید (فقط برای اطمینان).</li>
+<li>محتوای پوشهٔ <b>app/</b> این بسته را در پوشهٔ نصب برنامه <b>کپی و «همه را جایگزین»</b> کنید.</li>
+<li>محتوای <b>bin-update/api/</b> را در پوشهٔ publish سرور API جایگزین کنید (فایل appsettings.json سرور دست نخورده می‌ماند).</li>
+<li>برنامه را از <b>Sahand.ClinicPro.Desktop.exe</b> اجرا کنید و میانبر دسکتاپ را به همین فایل اصلاح کنید.</li>
+<li><b>کنترل نهایی:</b> پایین پنجرهٔ اصلی باید «نسخهٔ {TO_VER}» درج باشد. اگر نبود، فایل EXE قدیمی اجرا می‌شود — مسیر میانبر را بررسی کنید.</li>
+</ol>
+<p style="color:#64748b;font-size:12px">ساخت این بسته: {BUILD_STAMP} — ClinicPro Release CLI (چرخهٔ ۷۸)</p>
+</body></html>"""
+
+
+# ═══════════════════ ورودی اصلی ═══════════════════
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -414,6 +490,10 @@ def main() -> None:
     p_zip.add_argument("--skip-bin", action="store_true",
                         help="بدون باینری آماده (فقط سورس) — حالت توسعه‌دهندهٔ خالص")
 
+    p_full = sub.add_parser("full-zip", help="بستهٔ کامل نصب (کل خروجی publish ویندوزی) — چرخهٔ ۷۸")
+    p_full.add_argument("--to", required=True, help="نسخهٔ هدف (مثال 2.20.0)")
+    p_full.add_argument("--out", help="مسیر خروجی زیپ (پیش‌فرض: download کنار مخزن)")
+
     p_rel = sub.add_parser("release", help="doctor + زیپ + تگ + رلیز گیت‌هاب + بارگذاری")
     p_rel.add_argument("--from", dest="from_tag", required=True, help="تگ مبدأ (مثال v2.13.0)")
     p_rel.add_argument("--to", required=True, help="نسخه/تگ هدف (مثال 2.14.0)")
@@ -426,6 +506,8 @@ def main() -> None:
         cmd_doctor(args)
     elif args.command == "update-zip":
         cmd_update_zip(args)
+    elif args.command == "full-zip":
+        cmd_full_zip(args)
     else:
         cmd_release(args)
 
