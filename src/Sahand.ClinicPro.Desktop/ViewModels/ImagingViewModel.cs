@@ -53,7 +53,14 @@ public partial class ImagingViewModel : ViewModelBase
     {
         _api = api;
         _snackbar = snackbar;
-        _ = LoadImagingOrdersAsync();
+        // ═══ چرخهٔ ۷۹ (گزارش مالک: «توست درخواست تصویربرداری همراه همه‌چیز
+        // نمایش داده می‌شود») — بارگذاریِ خودکارِ سازنده حذف شد ═══
+        // این ViewModel تک‌نمونه است و در سازندهٔ MainWindowViewModel (شروع
+        // برنامه) ساخته می‌شود؛ لودِ fire-and-forget قبلی یعنی «هر بار اجرای
+        // برنامه» یک توست آبی «امروز درخواستی ثبت نشده» روی صفحهٔ داشبورد
+        // می‌پرید — بی‌ربط به کنش کاربر. اکنون داده در «اولین ناوبری» به
+        // صفحهٔ تصویربرداری با فرمان استاندارد RefreshCommand (بی‌صدا) و یا
+        // با دکمهٔ صریح کاربر (با بازخورد) بارگذاری می‌شود.
     }
 
     /// <summary>ثبت درخواست تصویربرداری</summary>
@@ -176,15 +183,33 @@ public partial class ImagingViewModel : ViewModelBase
     [ObservableProperty]
     private ImagingFileRow? _selectedImagingFile;
 
-    /// <summary>بارگذاری فهرست درخواست‌های تصویر امروز</summary>
-    [RelayCommand]
-    private async Task LoadImagingOrdersAsync()
+    /// <summary>
+    /// بارگذاری فهرست درخواست‌های تصویر امروز
+    /// </summary>
+    /// <param name="notifyWhenEmpty">
+    /// چرخهٔ ۷۹: فقط کنش «صریح کاربر» (دکمهٔ درخواست‌های امروز) حق دارد پیام
+    /// «چیزی ثبت نشده» بدهد؛ بارگذاری‌های خودکار/ناوبری همیشه بی‌صدا هستند.
+    /// </param>
+    private async Task LoadImagingOrdersCoreAsync(bool notifyWhenEmpty)
     {
         var response = await _api.GetAsync<ImagingOrdersResponse>("imaging/orders");
         ImagingOrders = new ObservableCollection<ImagingOrderRow>((response?.Data ?? new List<ImagingOrderDto>())
             .Select(o => new ImagingOrderRow(o.Id, o.PatientName, o.Modality, o.BodyPart)));
-        if (ImagingOrders.Count == 0) _snackbar.Info("درخواست تصویربرداری برای امروز ثبت نشده است");
+        if (notifyWhenEmpty && ImagingOrders.Count == 0)
+            _snackbar.Info("درخواست تصویربرداری برای امروز ثبت نشده است");
     }
+
+    /// <summary>
+    /// نوسازی بی‌صدای فهرست درخواست‌ها — فرمان استاندارد RefreshCommand؛
+    /// پوستهٔ اصلی پس از هر ناوبری به این صفحه آن را اجرا می‌کند
+    /// (TryRefreshCurrentPageData) تا داده همیشه تازه و بدون توست مزاحم باشد.
+    /// </summary>
+    [RelayCommand]
+    private Task RefreshAsync() => LoadImagingOrdersCoreAsync(notifyWhenEmpty: false);
+
+    /// <summary>بارگذاری با کنش کاربر — بازخورد «خالی بودن» فقط این‌جا مجاز است</summary>
+    [RelayCommand]
+    private Task LoadImagingOrdersAsync() => LoadImagingOrdersCoreAsync(notifyWhenEmpty: true);
 
     /// <summary>بازخورد انتخاب درخواست — فهرست فایل‌های آن</summary>
     partial void OnSelectedImagingOrderChanged(ImagingOrderRow? value)

@@ -118,12 +118,17 @@ public partial class StocktakingViewModel : ViewModelBase
     {
         _api = api;
         _snackbar = snackbar;
-        _ = LoadSessionsAsync();
+        // ═══ چرخهٔ ۷۹: الگوی خواهرخواندهٔ توست مزاحم تصویربرداری ═══
+        // لود خودکار سازنده حذف شد؛ داده با فرمان استاندارد RefreshCommand
+        // در «اولین ناوبری» به صفحه بارگذاری می‌شود (TryRefreshCurrentPageData)
+        // و پیام «هنوز جلسه‌ای ثبت نشده» فقط با کنش صریح کاربر می‌آید.
     }
 
-    /// <summary>بارگذاری فهرست جلسات</summary>
-    [RelayCommand]
-    private async Task LoadSessionsAsync()
+    /// <summary>
+    /// بارگذاری فهرست جلسات
+    /// </summary>
+    /// <param name="notifyWhenEmpty">چرخهٔ ۷۹: پیام «خالی» فقط با کنش صریح کاربر</param>
+    private async Task LoadSessionsCoreAsync(bool notifyWhenEmpty)
     {
         IsBusy = true;
         try
@@ -135,10 +140,22 @@ public partial class StocktakingViewModel : ViewModelBase
                     s.Id, s.TakingNumber, s.DateShamsi, s.Status, s.StatusColor,
                     $"{s.CountedItems} از {s.TotalItems}", $"{s.DifferenceItems} مغایرت", s.Notes,
                     string.IsNullOrWhiteSpace(s.ItemKindText) ? "کل انبار" : s.ItemKindText));
-            if (Sessions.Count == 0) _snackbar.Info("هنوز جلسه انبارگردانی ثبت نشده است");
+            if (notifyWhenEmpty && Sessions.Count == 0)
+                _snackbar.Info("هنوز جلسه انبارگردانی ثبت نشده است");
         }
         finally { IsBusy = false; }
     }
+
+    /// <summary>
+    /// نوسازی بی‌صدای فهرست جلسات — فرمان استاندارد RefreshCommand؛ پوستهٔ اصلی
+    /// پس از هر ناوبری به این صفحه اجرایش می‌کند (تازهٔ داده بدون توست مزاحم).
+    /// </summary>
+    [RelayCommand]
+    private Task RefreshAsync() => LoadSessionsCoreAsync(notifyWhenEmpty: false);
+
+    /// <summary>بارگذاری با کنش کاربر — بازخورد «خالی بودن» فقط این‌جا مجاز است</summary>
+    [RelayCommand]
+    private Task LoadSessionsAsync() => LoadSessionsCoreAsync(notifyWhenEmpty: true);
 
     /// <summary>انتخاب جلسه → بارگذاری اقلام</summary>
     partial void OnSelectedSessionChanged(StockSessionRow? value)
