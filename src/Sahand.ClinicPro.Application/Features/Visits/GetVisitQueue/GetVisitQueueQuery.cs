@@ -85,6 +85,27 @@ public class GetVisitQueueQueryHandler : IRequestHandler<GetVisitQueueQuery, Res
             .OrderBy(r => r.Id)
             .ToListAsync(cancellationToken);
 
+        // ═══ چرخهٔ ۷۸ (گزارش مالک: «زیر نام بیماران اسم اتاق هم نوشته بشه») ═══
+        // پذیرش‌های پزشکی RoomId ندارند (اتاق فقط روی پذیرش خدمتی ست می‌شود)؛
+        // اتاق ویزیت هر پزشک از «برنامهٔ کاری هفتگی» او برای امروز حل می‌شود:
+        // DayOfWeek همان تقویم ایرانی (۰=شنبه..۶=جمعه) + بازهٔ اعتبار + فعال.
+        // نگاشت doctorId → نام اتاق، یک‌جا برای کل صف (بدون N+1).
+        var persianToday = (byte)((int)today.DayOfWeek + 1) % 7; // شنبه=.NET Saturday=6 → 0
+        var scheduleRooms = await _unitOfWork.Repository<DoctorSchedule>().QueryableNoTracking
+            .Where(s => s.IsActive
+                        && s.RoomId != null
+                        && s.DayOfWeek == persianToday
+                        && (s.ValidFrom == null || s.ValidFrom <= DateOnly.FromDateTime(today))
+                        && (s.ValidTo == null || s.ValidTo >= DateOnly.FromDateTime(today)))
+            .Select(s => new { s.DoctorId, RoomName = s.Room!.RoomName ?? s.Room.RoomNumber })
+            .ToListAsync(cancellationToken);
+        // اگر چند برنامهٔ هم‌روز اتاق‌های متفاوت داشتند، نخستین (پرانتخاب) برنده است؛
+        // ردیف‌های با نام تهی (اتاق بدون نام و شماره) کنار گذاشته می‌شوند
+        var roomByDoctor = scheduleRooms
+            .Where(s => !string.IsNullOrWhiteSpace(s.RoomName))
+            .GroupBy(s => s.DoctorId)
+            .ToDictionary(g => g.Key, g => g.First().RoomName!);
+
         var todayVisits = await _unitOfWork.Repository<Visit>().QueryableNoTracking
             .Where(v => v.VisitDate >= today && v.VisitDate < tomorrow &&
                         (request.DoctorId == null || v.DoctorId == request.DoctorId))
@@ -120,11 +141,13 @@ public class GetVisitQueueQueryHandler : IRequestHandler<GetVisitQueueQuery, Res
                         ? $"دکتر {r.Doctor.Employee.FirstName} {r.Doctor.Employee.LastName}".Trim()
                         : null)
                     : null,
-                // چرخهٔ ۷۸ — نام اتاق ویزیت (نمایشگر سالن: زیر نام بیمار)؛
-                // نام کامل مقدم بر شمارهٔ اتاق
-                r.Room is null
-                    ? null
-                    : (r.Room.RoomName ?? r.Room.RoomNumber));
+                // چرخهٔ ۷۸ — نام اتاق ویزیت: اول اتاق خود پذیرش (خدمتی)، وگرنه
+                // اتاق برنامهٔ امروز پزشک؛ نام کامل مقدم بر شمارهٔ اتاق
+                r.Room is null && r.DoctorId is not null && roomByDoctor.TryGetValue(r.DoctorId.Value, out var scheduledRoom)
+                    ? scheduledRoom
+                    : (r.Room is null
+                        ? null
+                        : (r.Room.RoomName ?? r.Room.RoomNumber)));
 
             var visit = visitsByReception.TryGetValue(r.Id, out var v) ? v : null;
             if (visit is not null && visit.Status == VisitStatus.InProgress)

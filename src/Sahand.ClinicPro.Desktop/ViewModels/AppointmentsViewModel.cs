@@ -603,6 +603,11 @@ public partial class AppointmentsViewModel : ViewModelBase
             time = SelectedSlot.Time,
             type = SelectedTypeIndex + 1,
             source = 1,
+            // ═══ چرخهٔ ۷۸ — اولویت انتخابی کاربر ارسال می‌شود ═══
+            // پیش‌تر ارسال نمی‌شد و سرور هم «عادی» ذخیره می‌کرد؛ در نتیجه تب
+            // «فهرست نوبت‌ها» همه را «معمولی» نشان می‌داد (گزارش مالک).
+            // نمایهٔ صفرم = عادی(۳) / نخست = بالا(۲) / دوم = اورژانس(۱).
+            priority = SelectedPriorityIndex switch { 2 => 1, 1 => 2, _ => 3 },
             notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim()
         };
 

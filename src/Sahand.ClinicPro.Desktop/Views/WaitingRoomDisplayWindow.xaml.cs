@@ -472,18 +472,26 @@ public partial class WaitingRoomDisplayWindow : Window
                         if (queue.Current is { } current)
                             card.Rows.Add(new WaitingDisplayRow(
                                 PersianDigits(current.QueueNumber.ToString()), current.Name,
-                                string.IsNullOrWhiteSpace(current.DoctorName)
-                                    ? "در حال ویزیت"
-                                    : $"{current.DoctorName} — در حال ویزیت",
+                                // ═══ چرخهٔ ۷۸ (گزارش مالک: «زیر نام بیماران اسم اتاق هم نوشته بشه") ═══
+                                // نام اتاق در همهٔ ردیف‌ها (در حال ویزیت + در انتظار) زیر نام
+                                // بیمار می‌نشیند — به متن وضعیت/پزشک با جداکنندهٔ نقطهٔ میانی می‌چسبد.
+                                WithRoom(
+                                    string.IsNullOrWhiteSpace(current.DoctorName)
+                                        ? "در حال ویزیت"
+                                        : $"{current.DoctorName} — در حال ویزیت",
+                                    current.RoomName),
                                 CurrentRowBrush, GreenNumber));
                         foreach (var waiting in queue.Waiting.Take(7))
                             card.Rows.Add(new WaitingDisplayRow(
                                 PersianDigits(waiting.QueueNumber.ToString()), waiting.Name,
                                 // چرخهٔ ۷۵ — صف عمومی: نام پزشک زیر نام بیمار؛
-                                // صف یک پزشکِ مشخص: نوع ویزیت (همان رفتار قبل)
-                                section.DoctorId is null && !string.IsNullOrWhiteSpace(waiting.DoctorName)
-                                    ? waiting.DoctorName
-                                    : waiting.Subtitle,
+                                // صف یک پزشکِ مشخص: نوع ویزیت (همان رفتار قبل) —
+                                // چرخهٔ ۷۸: نام اتاق همیشه در انتهای زیرنویس می‌نشیند
+                                WithRoom(
+                                    section.DoctorId is null && !string.IsNullOrWhiteSpace(waiting.DoctorName)
+                                        ? waiting.DoctorName
+                                        : waiting.Subtitle,
+                                    waiting.RoomName),
                                 WaitingRowBrush, BlueNumber));
                         break;
                     }
@@ -518,15 +526,28 @@ public partial class WaitingRoomDisplayWindow : Window
             ? (d.ValueKind == JsonValueKind.Null ? default : d)
             : root;
 
-    /// <summary>ردیف خام صف ویزیت از JSON سرور — چرخهٔ ۷۵: DoctorName جدید</summary>
-    private sealed record QueueItemJson(string Name, string Subtitle, int QueueNumber, string? DoctorName)
+    /// <summary>
+    /// ردیف خام صف ویزیت از JSON سرور — چرخهٔ ۷۵: DoctorName جدید؛
+    /// چرخهٔ ۷۸: RoomName جدید (گزارش مالک: «زیر نام بیماران اسم اتاق هم نوشته بشه»)
+    /// </summary>
+    private sealed record QueueItemJson(string Name, string Subtitle, int QueueNumber, string? DoctorName, string? RoomName)
     {
         public static QueueItemJson From(JsonElement e) => new(
             e.TryGetProperty("patientName", out var p) && p.ValueKind == JsonValueKind.String ? p.GetString() ?? "" : "",
             e.TryGetProperty("visitTypeText", out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() ?? "" : "",
             e.TryGetProperty("queueNumber", out var q) && q.ValueKind == JsonValueKind.Number ? q.GetInt32() : 0,
-            e.TryGetProperty("doctorName", out var d) && d.ValueKind == JsonValueKind.String ? d.GetString() : null);
+            e.TryGetProperty("doctorName", out var d) && d.ValueKind == JsonValueKind.String ? d.GetString() : null,
+            e.TryGetProperty("roomName", out var rm) && rm.ValueKind == JsonValueKind.String ? rm.GetString() : null);
     }
+
+    /// <summary>
+    /// چسباندن نام اتاق به انتهای زیرنویس ردیف صف — «دکتر احمدی · اتاق ۳».
+    /// چرخهٔ ۷۸: نمایشگر سالن — اگر اتاقی ثبت نشده باشد متن دست‌نخورده برمی‌گردد.
+    /// </summary>
+    private static string WithRoom(string subtitle, string? roomName) =>
+        string.IsNullOrWhiteSpace(roomName)
+            ? subtitle
+            : $"{subtitle} · اتاق {roomName}";
 
     /// <summary>خروج با Escape — تنها راه بستن (بدون دکمهٔ قابل‌کلیک برای مراجع)</summary>
     private void Window_KeyDown(object sender, KeyEventArgs e)

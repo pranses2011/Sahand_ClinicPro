@@ -82,38 +82,40 @@
                  «در تبلیغات فقط تصویر و نام نرم افزار کفایت میکنه و بقیه موارد
                  رو در تنظیمات برای نشون دادن بزار که انتخابی باشه» — زیرنویس
                  «سامانهٔ جامع اطلاعاتی»، خط جداکننده، فهرست ویژگی‌ها و نسخه
-                 همه سوییچ‌های انتخابی تنظیمات‌اند. -->
-            <Border Grid.Column="2" Width="230" VerticalAlignment="Stretch"
-                    Margin="16,0,0,0" Padding="20,22" CornerRadius="20"
-                    Background="#0E2036" BorderBrush="#1E3A5C" BorderThickness="1.2">
-                <StackPanel VerticalAlignment="Center">
-                    <Image Source="pack://application:,,,/Assets/Logo/ClinicPro-512.png"
-                           Width="132" Height="132" HorizontalAlignment="Center"
-                           RenderOptions.BitmapScalingMode="HighQuality" />
-                    <TextBlock x:Name="AdSubtitleText" Text="سامانهٔ جامع اطلاعاتی"
-                               FontSize="16" FontWeight="Bold"
-                               Foreground="#E3F2FD" HorizontalAlignment="Center"
-                               Margin="0,14,0,0"
-                               Visibility="{Binding ShowAdSubtitle, Mode=OneWay}" />
-                    <TextBlock Text="درمانگاه سهند" FontSize="22" FontWeight="Black"
-                               Foreground="#7FC4FF" HorizontalAlignment="Center" Margin="0,4,0,0" />
-                    <Border x:Name="AdDivider" Height="3" CornerRadius="2" Width="86" Margin="0,12,0,0"
-                            Background="#2C5F9E" HorizontalAlignment="Center"
-                            Visibility="{Binding ShowAdSubtitle, Mode=OneWay}" />
-                    <!-- فهرست ویژگی‌ها — انتخابی از تنظیمات -->
-                    <StackPanel x:Name="AdFeaturesPanel" Margin="0,14,0,0"
-                                Visibility="{Binding ShowAdFeatures, Mode=OneWay}">
-                        <TextBlock Text="✓ پروندهٔ الکترونیک بیمار" FontSize="12.5" Foreground="#9DB8CF" Margin="0,0,0,8" />
-                        <TextBlock Text="✓ نوبت‌دهی و پذیرش هوشمند" FontSize="12.5" Foreground="#9DB8CF" Margin="0,0,0,8" />
-                        <TextBlock Text="✓ نسخه‌نویسی الکترونیک" FontSize="12.5" Foreground="#9DB8CF" Margin="0,0,0,8" />
-                        <TextBlock Text="✓ آزمایشگاه و پاراکلینیک" FontSize="12.5" Foreground="#9DB8CF" Margin="0,0,0,8" />
-                        <TextBlock Text="✓ حسابداری و بیمه" FontSize="12.5" Foreground="#9DB8CF" Margin="0,0,0,8" />
-                    </StackPanel>
-                    <TextBlock x:Name="AdVersionText" Text="" FontSize="10.5" Foreground="#54718C"
-                               HorizontalAlignment="Center" Margin="0,14,0,0"
-                               Visibility="{Binding ShowAdVersion, Mode=OneWay}" />
+                 همه سوییچ‌های انتخابی تنظیمات‌اند.
+                 ═══ چرخهٔ ۷۸ (گزارش مالک: «در تبلیغات کادر زمینه رو حذف بکن») ═══
+                 کادر زمینهٔ تیرهٔ دور تبلیغ (Border با پس‌زمینهٔ #0E2036 و
+                 حاشیهٔ #1E3A5C) حذف شد — تصویر و متن حالا مستقیم روی زمینهٔ
+                 خود نمایشگر می‌نشینند؛ هم‌سبک ساعت و نام درمانگاه که هیچ
+                 کادری ندارند. فقط عرض/فاصلهٔ ستون حفظ شد تا چیدمان نپرد. -->
+            <StackPanel Grid.Column="2" Width="230" VerticalAlignment="Center"
+                        Margin="16,0,0,0">
+                <Image Source="pack://application:,,,/Assets/Logo/ClinicPro-512.png"
+                       Width="132" Height="132" HorizontalAlignment="Center"
+                       RenderOptions.BitmapScalingMode="HighQuality" />
+                <TextBlock x:Name="AdSubtitleText" Text="سامانهٔ جامع اطلاعاتی"
+                           FontSize="16" FontWeight="Bold"
+                           Foreground="#E3F2FD" HorizontalAlignment="Center"
+                           Margin="0,14,0,0"
+                           Visibility="{Binding ShowAdSubtitle, Mode=OneWay}" />
+                <TextBlock Text="درمانگاه سهند" FontSize="22" FontWeight="Black"
+                           Foreground="#7FC4FF" HorizontalAlignment="Center" Margin="0,4,0,0" />
+                <Border x:Name="AdDivider" Height="3" CornerRadius="2" Width="86" Margin="0,12,0,0"
+                        Background="#2C5F9E" HorizontalAlignment="Center"
+                        Visibility="{Binding ShowAdSubtitle, Mode=OneWay}" />
+                <!-- فهرست ویژگی‌ها — انتخابی از تنظیمات -->
+                <StackPanel x:Name="AdFeaturesPanel" Margin="0,14,0,0"
+                            Visibility="{Binding ShowAdFeatures, Mode=OneWay}">
+                    <TextBlock Text="✓ پروندهٔ الکترونیک بیمار" FontSize="12.5" Foreground="#9DB8CF" Margin="0,0,0,8" />
+                    <TextBlock Text="✓ نوبت‌دهی و پذیرش هوشمند" FontSize="12.5" Foreground="#9DB8CF" Margin="0,0,0,8" />
+                    <TextBlock Text="✓ نسخه‌نویسی الکترونیک" FontSize="12.5" Foreground="#9DB8CF" Margin="0,0,0,8" />
+                    <TextBlock Text="✓ آزمایشگاه و پاراکلینیک" FontSize="12.5" Foreground="#9DB8CF" Margin="0,0,0,8" />
+                    <TextBlock Text="✓ حسابداری و بیمه" FontSize="12.5" Foreground="#9DB8CF" Margin="0,0,0,8" />
                 </StackPanel>
-            </Border>
+                <TextBlock x:Name="AdVersionText" Text="" FontSize="10.5" Foreground="#54718C"
+                           HorizontalAlignment="Center" Margin="0,14,0,0"
+                           Visibility="{Binding ShowAdVersion, Mode=OneWay}" />
+            </StackPanel>
         </Grid>
 
         <!-- ═══════════ ناحیهٔ پایین — کارت‌های صف‌ها (چیدمان ستونی — چرخهٔ ۷۵) ═══════════

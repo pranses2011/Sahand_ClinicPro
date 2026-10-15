@@ -32,6 +32,9 @@ public class CreateAppointmentCommandValidator : AbstractValidator<CreateAppoint
             .Must(ShamsiValidationExtensions.IsValidShamsi).WithMessage("تاریخ نوبت شمسی نامعتبر است");
         RuleFor(x => x.Dto.Time)
             .Matches("^([01]?\\d|2[0-3]):[0-5]\\d$").WithMessage("ساعت نوبت نامعتبر است — الگوی 09:30");
+        // چرخهٔ ۷۸ — اولویت انتخابی کاربر باید در بازهٔ معتبر باشد (۱..۳)
+        RuleFor(x => (int)x.Dto.Priority)
+            .InclusiveBetween(1, 3).WithMessage("اولویت نوبت نامعتبر است — ۱ اورژانس / ۲ بالا / ۳ عادی");
     }
 }
 
@@ -118,7 +121,14 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
             AppointmentType = dto.Type,
             Source = dto.Source,
             IsFirstVisit = dto.IsFirstVisit,
-            Priority = Priority.Normal,
+            // ═══ چرخهٔ ۷۸ — اولویت واقعی انتخابی کاربر ذخیره می‌شود ═══
+            // پیش‌تر این خط «Priority.Normal» هاردکد بود و فیلد اولویت در DTO هم
+            // نبود؛ نتیجه: هر نوبتی با هر اولویتی ثبت می‌شد، در فهرست «معمولی»
+            // می‌نشست (گزارش مالک: «همشون رو معمولی نوشته»). گارد بازه هم برای
+            // مقادیر خارج ۱..۳ (همان الگوی امن WaitlistFeatures).
+            Priority = dto.Priority is Priority.Emergency or Priority.High or Priority.Normal
+                ? dto.Priority
+                : Priority.Normal,
             EstimatedFee = doctor.ConsultationFee,
             QueueNumber = activeCount + 1,
             Notes = dto.Notes

@@ -62,7 +62,10 @@ public class GetAppointmentsByDateQueryHandler
                 a.AppointmentTime.ToString("HH:mm"),
                 a.Status,
                 a.AppointmentType,
-                a.QueueNumber ?? 0))
+                a.QueueNumber ?? 0,
+                // چرخهٔ ۷۸ — اولویت واقعی نوبت برمی‌گردد (پیش‌تر حذف بود و کلاینت
+                // همیشه «عادی» را نمایش می‌داد)
+                a.Priority))
             .ToListAsync(cancellationToken);
 
         return Result<List<AppointmentListDto>>.Success(items);

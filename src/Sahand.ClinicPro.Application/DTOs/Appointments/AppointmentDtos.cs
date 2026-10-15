@@ -12,7 +12,11 @@ public record AppointmentListDto(
     string Time,
     AppointmentStatus Status,
     AppointmentType Type,
-    int QueueNumber);
+    int QueueNumber,
+    // اولویت نوبت — ۱ اورژانس / ۲ بالا / ۳ عادی. چرخهٔ ۷۸: پیش‌تر این فیلد
+    // برنمی‌گشت و کلاینت همیشه پیش‌فرض «عادی» را نمایش می‌داد (گزارش مالک:
+    // «اولویت رو اشتباه میاره — همشون رو معمولی نوشته»).
+    Priority Priority = Priority.Normal);
 
 /// <summary>جزئیات نوبت</summary>
 public record AppointmentDetailDto(
@@ -43,4 +47,8 @@ public record CreateAppointmentDto(
     AppointmentType Type = AppointmentType.Initial,
     AppointmentSource Source = AppointmentSource.InPerson,
     bool IsFirstVisit = false,
+    // اولویت نوبت — ۱ اورژانس / ۲ بالا / ۳ عادی (چرخهٔ ۷۸). پیش‌تر این فیلد
+    // در درخواست نبود و سرور همیشه «عادی» ذخیره می‌کرد — یعنی انتخاب کاربر
+    // در فرم نوبت‌دهی عملاً نادیده گرفته می‌شد.
+    Priority Priority = Priority.Normal,
     string? Notes = null);
