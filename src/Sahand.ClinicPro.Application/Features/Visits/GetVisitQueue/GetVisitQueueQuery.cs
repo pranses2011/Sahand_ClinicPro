@@ -13,6 +13,8 @@ namespace Sahand.ClinicPro.Application.Features.Visits.GetVisitQueue;
 /// چرخهٔ ۷۵ (گزارش مالک): «در صف انتظار ویزیت اگه پزشک انتخاب نشده باشه و
 /// عمومی باشه، زیر اسم بیمار اسم پزشک هم نوشته بشه» — DoctorName اضافه شد؛
 /// در صفِ یک پزشکِ مشخص تهی می‌ماند (تکراری است) و فقط در صف عمومی پر می‌شود.
+/// چرخهٔ ۷۸: RoomName برای «نام اتاق زیر نام بیمار» در نمایشگر سالن انتظار
+/// (گزارش مالک همین چرخه) اضافه شد — در صف ویزیت و صف خدمات هر دو.
 /// </remarks>
 public record QueueItemDto(
     long VisitId,
@@ -26,7 +28,8 @@ public record QueueItemDto(
     int WaitingMinutes,
     string? ChiefComplaint,
     string? Allergies,
-    string? DoctorName = null);
+    string? DoctorName = null,
+    string? RoomName = null);
 
 /// <summary>بخش‌های صف روز</summary>
 public record VisitQueueDto(
@@ -70,10 +73,15 @@ public class GetVisitQueueQueryHandler : IRequestHandler<GetVisitQueueQuery, Res
         var receptions = await _unitOfWork.Repository<Reception>().QueryableNoTracking
             .Where(r => r.ReceptionDate >= today && r.ReceptionDate < tomorrow &&
                         r.Status != ReceptionStatus.Cancelled &&
+                        // ═══ چرخهٔ ۷۸ (گزارش مالک): «در صفحه ویزیت و معاینه فقط صف
+                        // پذیرش‌های پزشکان رو نشون بده» — پذیرش‌های خدمتیِ بدون پزشک
+                        // از این صف کنار رفتند و به صفحهٔ مستقل «صف خدمات» رفتند ═══
+                        r.DoctorId != null &&
                         (request.DoctorId == null || r.DoctorId == request.DoctorId))
             .Include(r => r.Patient)
             .Include(r => r.Doctor).ThenInclude(d => d!.Employee)
             .Include(r => r.Appointment) // چرخه بیست‌ویکم: نوع ویزیت (اولیه/پیگیری/اورژانس) از نوبت مرتبط
+            .Include(r => r.Room) // چرخهٔ ۷۸: نام اتاق زیر نام بیمار (نمایشگر سالن)
             .OrderBy(r => r.Id)
             .ToListAsync(cancellationToken);
 
@@ -111,7 +119,12 @@ public class GetVisitQueueQueryHandler : IRequestHandler<GetVisitQueueQuery, Res
                     ? (r.Doctor?.Employee != null
                         ? $"دکتر {r.Doctor.Employee.FirstName} {r.Doctor.Employee.LastName}".Trim()
                         : null)
-                    : null);
+                    : null,
+                // چرخهٔ ۷۸ — نام اتاق ویزیت (نمایشگر سالن: زیر نام بیمار)؛
+                // نام کامل مقدم بر شمارهٔ اتاق
+                r.Room is null
+                    ? null
+                    : (r.Room.RoomName ?? r.Room.RoomNumber));
 
             var visit = visitsByReception.TryGetValue(r.Id, out var v) ? v : null;
             if (visit is not null && visit.Status == VisitStatus.InProgress)

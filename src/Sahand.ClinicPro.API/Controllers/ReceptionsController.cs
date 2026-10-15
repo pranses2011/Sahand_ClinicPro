@@ -74,4 +74,42 @@ public async Task<IActionResult> GetQueueStats()
         var result = await _mediator.Send(new GetQueueStatsQuery());
         return ToResponse(result);
     }
+
+    // ═════════════════════════════════════════════════════════════════
+    // چرخهٔ ۷۸ (گزارش مالک): «برای صف و انجام خدمات درمانی یک صفحهٔ
+    // جداگانه باشه» — سه اندپوینت صف مستقل خدمات درمانی:
+    // مشاهدهٔ صف / فراخوان به اتاق / اعلام انجام. پذیرش‌های خدمتیِ بدون پزشک
+    // از صف ویزیت (DoctorId != null) جدا شدند و اینجا مدیریت می‌شوند.
+    // ═════════════════════════════════════════════════════════════════
+
+    /// <summary>صف خدمات امروز — در انتظار / در حال انجام / انجام‌شده</summary>
+    [HttpGet("service-queue")]
+    [HasPermission("receptions.view")]
+    public async Task<IActionResult> GetServiceQueue()
+    {
+        var result = await _mediator.Send(new Application.Features.Receptions.ServiceQueue.GetServiceQueueQuery());
+        return ToResponse(result);
+    }
+
+    /// <summary>فراخوان بیمار خدمت به اتاق انجام</summary>
+    /// <param name="id">شناسه پذیرش خدمتی</param>
+    [HttpPost("service-call/{id:long}")]
+    [HasPermission("receptions.edit")]
+    public async Task<IActionResult> CallServicePatient(long id)
+    {
+        var result = await _mediator.Send(
+            new Application.Features.Receptions.ServiceQueue.CallServicePatientCommand(id));
+        return ToResponse(result, "بیمار به اتاق انجام خدمت فراخوانده شد");
+    }
+
+    /// <summary>اعلام انجام خدمت — پایان ردیف و انتقال به انجام‌شده‌ها</summary>
+    /// <param name="id">شناسه پذیرش خدمتی</param>
+    [HttpPost("service-complete/{id:long}")]
+    [HasPermission("receptions.edit")]
+    public async Task<IActionResult> CompleteService(long id)
+    {
+        var result = await _mediator.Send(
+            new Application.Features.Receptions.ServiceQueue.CompleteServiceReceptionCommand(id));
+        return ToResponse(result, "خدمت انجام شد و ثبت گردید");
+    }
 }
