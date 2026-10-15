@@ -113,7 +113,11 @@ public class GetVisitByIdQueryHandler : IRequestHandler<GetVisitByIdQuery, Resul
                 v.Patient.Allergies,
                 v.Patient.ChronicDiseases,
                 v.Patient.CurrentMedications),
-            vitals);
+            vitals,
+            // چرخهٔ ۷۸ — عنوان تشخیص اصلی (ترجیح فارسی، بازگشت به انگلیسی)
+            v.PrimaryDiagnosis is null
+                ? null
+                : v.PrimaryDiagnosis.DescriptionFa ?? v.PrimaryDiagnosis.Description);
 
         return Result<VisitDetailDto>.Success(dto);
     }

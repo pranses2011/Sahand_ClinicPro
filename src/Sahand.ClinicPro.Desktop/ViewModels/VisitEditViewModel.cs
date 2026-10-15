@@ -39,6 +39,16 @@ public partial class VisitEditViewModel : ObservableObject
     [ObservableProperty]
     private string _formTitle = "ثبت ویزیت جدید";
 
+    /// <summary>
+    /// ═══ چرخهٔ ۷۸ — ایندکس تب فعال فرم ویزیت ═══
+    /// برای «هدایت هوشمند» به کاربر: وقتی پایان ویزیت بدون تشخیص اصلی زده می‌شود،
+    /// فرم خودکار به تب «تشخیص» (ایندکس ۳) می‌پرد تا پزشک بلافاصله بفهمد چه چیزی
+    /// کم است — به‌جای نمایش خطای خام سرور (گزارش مالک: «پایان ویزیت همیشه
+    /// خطای تشخیص اصلی الزامی است می‌دهد»).
+    /// </summary>
+    [ObservableProperty]
+    private int _selectedTabIndex;
+
     /// <summary>مدت ویزیت زنده — Stopwatch</summary>
     [ObservableProperty]
     private string _elapsedText = "۰۰:۰۰";
@@ -215,10 +225,14 @@ public partial class VisitEditViewModel : ObservableObject
         FollowUpInstructions = v.FollowUpInstructions;
         FillTags(SecondaryDiagnoses, v.SecondaryDiagnoses);
         if (v.FollowUpDateShamsi is not null) FollowUpDateShamsi = v.FollowUpDateShamsi;
-        if (v.PrimaryDiagnosisCode is not null)
-            PrimaryDiagnosis = new DiagnosisOption(0, v.PrimaryDiagnosisCode, v.PrimaryDiagnosisCode);
-
-        // علائم حیاتی
+        // ═══ چرخهٔ ۷۸ — ریشهٔ «پایان ویزیت همیشه خطا می‌دهد» ═══
+        // پیش‌تر فقط Code خوانده می‌شد و جای‌نگهدارِ «Id=0» ساخته می‌شد؛ در ذخیره،
+        // Id=0 به تهی ترجمه می‌شد و اعتبارسنجِ سرورِ «تشخیص اصلی الزامی است»
+        // هر بار پایانِ ویزیتِ ویرایش‌شده را رد می‌کرد — هرچند تشخیص روی صفحه بود!
+        // اکنون «شناسهٔ واقعی» از DTO خوانده می‌شود و عنوان کامل هم نمایش داده می‌شود.
+        if (v.PrimaryDiagnosisCode is not null && v.PrimaryDiagnosisId is { } diagId)
+            PrimaryDiagnosis = new DiagnosisOption(diagId, v.PrimaryDiagnosisCode,
+                v.PrimaryDiagnosisTitle ?? v.PrimaryDiagnosisCode);
         if (v.VitalSigns is { } vit)
         {
             BpText = vit.BloodPressureSystolic.HasValue ? $"{vit.BloodPressureSystolic}/{vit.BloodPressureDiastolic}" : null;
@@ -335,8 +349,9 @@ public partial class VisitEditViewModel : ObservableObject
         ReviewOfSystems = v.ReviewOfSystems;
         TreatmentPlan = v.TreatmentPlan;
         FollowUpInstructions = v.FollowUpInstructions;
-        if (v.PrimaryDiagnosisCode is not null)
-            PrimaryDiagnosis = new DiagnosisOption(0, v.PrimaryDiagnosisCode, v.PrimaryDiagnosisCode);
+        if (v.PrimaryDiagnosisCode is not null && v.PrimaryDiagnosisId is { } copyDiagId)
+            PrimaryDiagnosis = new DiagnosisOption(copyDiagId, v.PrimaryDiagnosisCode,
+                v.PrimaryDiagnosisTitle ?? v.PrimaryDiagnosisCode);
         FillTags(SecondaryDiagnoses, v.SecondaryDiagnoses);
 
         _snackbar.Success($"از ویزیت {PreviousVisitDate ?? "قبلی"} کپی شد — بازبینی و ویرایش کنید");
@@ -499,6 +514,18 @@ public partial class VisitEditViewModel : ObservableObject
     [RelayCommand]
     private async Task CompleteVisitAsync()
     {
+        // ═══ چرخهٔ ۷۸ — گارد فارسی سمت کلاینت ═══ به‌جای خطای خام سرور
+        // («اطلاعات ارسالی نامعتبر است — برای تکمیل ویزیت ثبت تشخیص اصلی الزامی
+        // است»)، پزشک پیام راهنما می‌گیرد و فرم خودکار به تب تشخیص می‌پرد؛
+        // تشخیصِ جای‌نگهدارِ بی‌شناسه (Id=0 — از داده‌های قدیمی) هم مثل «نبودن»
+        // در نظر گرفته می‌شود تا دوباره انتخاب شود و شناسهٔ واقعی ارسال گردد
+        if (PrimaryDiagnosis is null || PrimaryDiagnosis.Id == 0)
+        {
+            SelectedTabIndex = 3; // تب «🏥 تشخیص» — چهارمین تب
+            _snackbar.Error("برای پایان ویزیت، ابتدا تشخیص اصلی را از تب «تشخیص» انتخاب کنید (جستجوی ICD-10)");
+            return;
+        }
+
         var ok = await SaveCoreAsync(silent: false, complete: true);
         if (ok)
         {
@@ -909,6 +936,11 @@ public partial class VisitEditViewModel : ObservableObject
         public string? TreatmentPlan { get; set; }
         public string? FollowUpDateShamsi { get; set; }
         public string? PrimaryDiagnosisCode { get; set; }
+        // ═══ چرخهٔ ۷۸ — شناسه و عنوان تشخیص اصلی از سرور ═══ پیش‌تر فقط Code
+        // می‌آمد و کلاینت جای‌نگهدار Id=0 می‌ساخت که در پایان ویزیت به تهی ترجمه
+        // می‌شد و اعتبارسنج سرور رد می‌کرد («تشخیص اصلی الزامی است»)
+        public long? PrimaryDiagnosisId { get; set; }
+        public string? PrimaryDiagnosisTitle { get; set; }
         public PatientContext? Patient { get; set; }
         public VitalSignsView? VitalSigns { get; set; }
     }

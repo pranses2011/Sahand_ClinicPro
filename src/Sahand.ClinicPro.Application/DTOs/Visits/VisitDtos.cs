@@ -40,7 +40,11 @@ public record VisitDetailDto(
     string? SecondaryDiagnoses = null,
     string? FollowUpInstructions = null,
     PatientContextDto? Patient = null,
-    VitalSignsViewDto? VitalSigns = null);
+    VitalSignsViewDto? VitalSigns = null,
+    // ═══ چرخهٔ ۷۸ — عنوان تشخیص اصلی ═══ کلاینت برای بازگرداندن شناسهٔ واقعی
+    // هنگام ویرایش ویزیت به آن نیاز دارد؛ پیش‌تر فقط Code می‌رفت و کلاینت
+    // جای‌نگهدارِ «Id=0» می‌ساخت که در پایان ویزیت به تهی ترجمه می‌شد
+    string? PrimaryDiagnosisTitle = null);
 
 /// <summary>درخواست شروع یا ذخیره ویزیت</summary>
 public record SaveVisitDto(

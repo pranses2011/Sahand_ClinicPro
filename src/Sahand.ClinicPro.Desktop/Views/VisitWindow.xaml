@@ -179,7 +179,10 @@
             </Border>
 
             <!-- ═══ تب‌ها ═══ -->
-            <TabControl Grid.Column="1" Style="{StaticResource MaterialDesignTabControl}">
+            <!-- چرخهٔ ۷۸ — SelectedIndex دوطرفه: هدایت خودکار به تب تشخیص هنگام
+                 پایان ویزیتِ بدون تشخیص اصلی (به‌جای خطای خام سرور) -->
+            <TabControl Grid.Column="1" Style="{StaticResource MaterialDesignTabControl}"
+                        SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
                 <!-- تب ۱: SOAP -->
                 <TabItem Header="📝 SOAP">
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="6">
