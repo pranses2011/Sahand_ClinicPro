@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Extensions.DependencyInjection;
 using Sahand.ClinicPro.Application.Common.Helpers;
@@ -55,6 +56,23 @@ public partial class AboutWindow : Window
         InitializeComponent();
         _api = App.Services.GetRequiredService<IApiClient>();
         Loaded += (_, _) => _ = LoadAllAsync();
+        // چرخهٔ ۷۸ — پنجرهٔ بدون قاب: بستن سریع با ESC (همان حسی که فرم‌های
+        // معمولی با دکمهٔ ضربدر دارند اینجا هم باید باشد)
+        PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Escape) Close();
+        };
+    }
+
+    /// <summary>
+    /// چرخهٔ ۷۸ (پنجرهٔ شفاف بدون قاب): جابه‌جایی پنجره با درگ روی شیشه —
+    /// چون دکمهٔ نوار عنوان حذف شده، خود کارت نقش نوار عنوان را بازی می‌کند.
+    /// </summary>
+    private void OnGlassMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ButtonState == MouseButtonState.Pressed)
+            try { DragMove(); }
+            catch { /* درگ در لحظهٔ رهاکردن موس — بی‌خطر */ }
     }
 
     /// <summary>
@@ -82,8 +100,9 @@ public partial class AboutWindow : Window
             LicenseKeyText.Text = s.LicenseKey is { Length: > 0 } k ? k : "—";
 
             _licenseStatus = s.IsValid ? "فعال" : "نامعتبر";
-            LicenseStatusText.Text = s.IsValid ? "✅ فعال" : "❌ نامعتبر";
-            LicenseStatusText.Foreground = BrushFromHex(s.IsValid ? "#2E7D32" : "#C62828");
+            // رنگ‌های روشن — متن روی شیشهٔ نیلی تیرهٔ فرم (چرخهٔ ۷۸)
+            LicenseStatusText.Text = _licenseStatus;
+            LicenseStatusText.Foreground = BrushFromHex(s.IsValid ? "#7EE0A8" : "#FF8A80");
 
             if (s.ExpiryDate is { } expiry)
             {
@@ -177,7 +196,9 @@ public partial class AboutWindow : Window
     /// </summary>
     private static Border BuildSupportRow(string iconKind, string label, string value, string? link)
     {
-        var brush = BrushFromHex("#1565C0");
+        // چرخهٔ ۷۸ — روی شیشهٔ نیلی تیره، آبیِ تیره خوانا نیست؛ آبی‌روشنِ
+        // هم‌خانوادهٔ اسپلش جایگزین شد (آیکون + هایپرلینک)
+        var brush = BrushFromHex("#8FD4FF");
 
         // مقدار — هایپرلینک اگر لینک هست، متن ساده وگرنه
         FrameworkElement valueElement;
@@ -247,7 +268,7 @@ public partial class AboutWindow : Window
                     {
                         Text = label,
                         FontSize = 11,
-                        Opacity = 0.62,
+                        Foreground = BrushFromHex("#B9CDE8"),
                         Margin = new Thickness(8, 0, 0, 0),
                         VerticalAlignment = VerticalAlignment.Center,
                     },
