@@ -113,7 +113,7 @@
                       SelectedItem="{Binding SelectedSummaryRow}"
                       AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                       Style="{StaticResource MaterialDesignDataGrid}"
-                      HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                      HeadersVisibility="Column">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="95" />
                     <DataGridTextColumn Header="نام و نام خانوادگی" Binding="{Binding FullName, Converter={StaticResource PersianDigits}}" Width="180" />
@@ -174,7 +174,7 @@
         <DataGrid Grid.Row="5" ItemsSource="{Binding DetailRows}"
                   AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                   Style="{StaticResource MaterialDesignDataGrid}"
-                  HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                  HeadersVisibility="Column">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="160" />
                 <DataGridTextColumn Header="شماره فاکتور" Binding="{Binding InvoiceNumber, Converter={StaticResource PersianDigits}}" Width="110" />

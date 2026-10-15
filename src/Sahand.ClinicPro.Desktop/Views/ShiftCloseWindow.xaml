@@ -227,7 +227,7 @@
                          هر ستون (مبالغ هزارگان و نام بستن‌دهنده) بدون بریدگی دیده
                          شوند؛ ستون وضعیت باقی عرض را می‌گیرد. ═══ -->
                     <DataGrid ItemsSource="{Binding History}" AutoGenerateColumns="False" CanUserAddRows="False"
-                              IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              IsReadOnly="True" HeadersVisibility="Column"
                               FontSize="11.5" FlowDirection="RightToLeft"
                               ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <DataGrid.Columns>

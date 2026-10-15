@@ -272,7 +272,7 @@
                     <!-- جدول تفکیک اقلام -->
                     <DataGrid Grid.Row="2" ItemsSource="{Binding FractionLines}" AutoGenerateColumns="False"
                               CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal" FlowDirection="RightToLeft">
+                              FlowDirection="RightToLeft">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="شرح خدمت" Binding="{Binding Description, Converter={StaticResource PersianDigits}}" Width="*" />
                             <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="60" />
@@ -329,7 +329,7 @@
                     <!-- جدول قواعد -->
                     <DataGrid Grid.Row="4" ItemsSource="{Binding FractionRules}" AutoGenerateColumns="False"
                               CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal" FlowDirection="RightToLeft" MinHeight="90">
+                              FlowDirection="RightToLeft" MinHeight="90">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="خدمت" Binding="{Binding ServiceName, Converter={StaticResource PersianDigits}}" Width="*" />
                             <DataGridTextColumn Header="نوع" Binding="{Binding RuleType, Converter={StaticResource PersianDigits}}" Width="80" />

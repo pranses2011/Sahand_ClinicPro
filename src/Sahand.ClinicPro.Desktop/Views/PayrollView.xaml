@@ -94,7 +94,7 @@
         <DataGrid Grid.Row="3" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}"
                   AutoGenerateColumns="False" IsReadOnly="True"
                   Style="{StaticResource MaterialDesignDataGrid}"
-                  HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                  HeadersVisibility="Column">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" />
                 <DataGridTextColumn Header="نام و نام خانوادگی" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" />

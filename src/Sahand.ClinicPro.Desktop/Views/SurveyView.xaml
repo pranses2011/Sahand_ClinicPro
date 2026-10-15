@@ -167,7 +167,7 @@
                               SelectedItem="{Binding SelectedSurvey}"
                               AutoGenerateColumns="False" IsReadOnly="True"
                               Style="{StaticResource MaterialDesignDataGrid}"
-                              HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column"
                               FontSize="12.5" SelectionMode="Single">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="عنوان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="2.4*" />

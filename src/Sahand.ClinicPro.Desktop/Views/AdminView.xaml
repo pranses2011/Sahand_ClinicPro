@@ -47,7 +47,7 @@
                               AutoGenerateColumns="False"
                               CanUserAddRows="False"
                               HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal">
+                             >
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="کلید" Binding="{Binding Key, Converter={StaticResource PersianDigits}}" Width="220" IsReadOnly="True" />
                             <DataGridTextColumn Header="شرح" Binding="{Binding Description, Converter={StaticResource PersianDigits}}" Width="*" IsReadOnly="True" />
@@ -90,7 +90,7 @@
                               IsReadOnly="True"
                               CanUserAddRows="False"
                               HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal">
+                             >
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="کاربر" Binding="{Binding Username, Converter={StaticResource PersianDigits}}" Width="130" />
                             <DataGridTextColumn Header="عملیات" Binding="{Binding Action, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
@@ -137,7 +137,7 @@
                               IsReadOnly="True"
                               CanUserAddRows="False"
                               HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal">
+                             >
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="نوع" Binding="{Binding Mode, Converter={StaticResource PersianDigits}}" Width="200" />
                             <DataGridTextColumn Header="زمان" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="180" />
@@ -198,7 +198,7 @@
                                   IsReadOnly="True"
                                   CanUserAddRows="False"
                                   HeadersVisibility="Column"
-                                  GridLinesVisibility="Horizontal"
+                                 
                                   FontSize="11.5">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="مقصد" Binding="{Binding TableTitle, Converter={StaticResource PersianDigits}}" Width="100" />

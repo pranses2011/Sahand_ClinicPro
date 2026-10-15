@@ -82,7 +82,7 @@
                      EnableColumnVirtualization="True" ScrollViewer.IsDeferredScrollingEnabled="True"
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD"
-                              GridLinesVisibility="Horizontal"
+                             
                               materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.InputBindings>
                             <!-- چرخهٔ ۴۷ (گزارش مالک): دابل‌کلیک → جزئیات کامل سند — هم‌الگوی نسخه‌ها -->
@@ -145,7 +145,7 @@
 
                             <DataGrid Grid.Row="1" ItemsSource="{Binding EntryLines}" AutoGenerateColumns="False"
                                       CanUserAddRows="False" HeadersVisibility="Column" FontSize="12" MinHeight="120"
-                                      MaxHeight="260" GridLinesVisibility="Horizontal">
+                                      MaxHeight="260">
                                 <DataGrid.Columns>
                                     <DataGridTemplateColumn Header="حساب" Width="280">
                                         <DataGridTemplateColumn.CellTemplate>
@@ -232,7 +232,7 @@
                     </Border>
                     <DataGrid Grid.Row="1" ItemsSource="{Binding LedgerRows}" AutoGenerateColumns="False"
                               CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column" FontSize="12"
-                              GridLinesVisibility="Horizontal" materialDesign:DataGridAssist.CellPadding="8,6">
+                              materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="110" />
                             <DataGridTextColumn Header="شماره سند" Binding="{Binding EntryNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="{DynamicResource App.CodeFont}" />
@@ -364,7 +364,7 @@
                     </Border>
                     <DataGrid Grid.Row="2" ItemsSource="{Binding TrialRows}" AutoGenerateColumns="False"
                               CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column" FontSize="12"
-                              GridLinesVisibility="Horizontal" materialDesign:DataGridAssist.CellPadding="8,6">
+                              materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="کد" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="100" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="عنوان" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" />

@@ -64,7 +64,7 @@
                   IsReadOnly="True"
                   CanUserAddRows="False"
                   HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal"
+                 
                   FontSize="12">
             <DataGrid.Columns>
                 <!-- ─── عکس: نمایش/تعویض/حذف — چرخه هجدهم / چرخهٔ سی‌وهفتم:

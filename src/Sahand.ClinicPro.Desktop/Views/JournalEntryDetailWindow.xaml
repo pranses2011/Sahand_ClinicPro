@@ -70,7 +70,7 @@
                   ItemsSource="{Binding Lines}"
                   AutoGenerateColumns="False" IsReadOnly="True"
                   CanUserAddRows="False" HeadersVisibility="Column"
-                  FontSize="12" GridLinesVisibility="Horizontal"
+                  FontSize="12"
                   materialDesign:DataGridAssist.CellPadding="8,6">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ردیف" Binding="{Binding LineNo, Converter={StaticResource PersianDigits}}" Width="60" FontFamily="{DynamicResource App.CodeFont}" />

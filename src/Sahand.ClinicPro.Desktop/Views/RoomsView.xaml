@@ -83,7 +83,7 @@
                       SelectedItem="{Binding SelectedRoom}"
                       AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                       HeadersVisibility="Column" FontSize="12.5"
-                      GridLinesVisibility="Horizontal"
+                     
                       AlternatingRowBackground="#F7FAFD">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="شماره" Binding="{Binding RoomNumber, Converter={StaticResource PersianDigits}}"

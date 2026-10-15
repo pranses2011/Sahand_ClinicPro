@@ -108,7 +108,8 @@
                         <Style TargetType="DataGridRow">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Changed}" Value="True">
-                                    <Setter Property="Background" Value="#FFF8E1" />
+                                    <!-- چرخهٔ ۷۸ — کهربایی نیمه‌شفاف؛ سازگار با تم تیره و روی نوار گوره‌خری -->
+                                    <Setter Property="Background" Value="#33FFB300" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>

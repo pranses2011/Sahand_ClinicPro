@@ -71,7 +71,7 @@
                   CanUserAddRows="False"
                   SelectionMode="Single"
                   HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal"
+                 
                   IsReadOnly="True"
                   MouseDoubleClick="ItemsGrid_MouseDoubleClick"
                   materialDesign:DataGridAssist.CellPadding="6,4">
@@ -79,22 +79,26 @@
                  آزمایش از نتیجهٔ آزمایش مشخص بشه») ═══ -->
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                    <Setter Property="Background" Value="#FFFFFF" />
+                    <!-- ═══ چرخهٔ ۷۸ (بندهای ۸/۹ مالک) ═══
+                         پس‌زمینهٔ پایهٔ سخت‌کد «سفید» حذف شد: هم گوره‌خری سراسری را
+                         می‌کشت و هم در تم تیره جدول را سفیدِ ناهماهنگ می‌کرد؛
+                         رنگ‌های وضعیت بالینی هم نیمه‌شفاف شدند تا روی هر دو تم
+                         خوانا و هماهنگ باشند. -->
                     <Style.Triggers>
-                        <!-- غیرطبیعی — کهربایی بسیار روشن -->
+                        <!-- غیرطبیعی — کهربایی نیمه‌شفاف -->
                         <DataTrigger Binding="{Binding AbnormalFlag}" Value="H">
-                            <Setter Property="Background" Value="#FFF8E1" />
+                            <Setter Property="Background" Value="#33FFB300" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding AbnormalFlag}" Value="L">
-                            <Setter Property="Background" Value="#FFF8E1" />
+                            <Setter Property="Background" Value="#33FFB300" />
                         </DataTrigger>
-                        <!-- بحرانی — قرمز بسیار روشن -->
+                        <!-- بحرانی — قرمز نیمه‌شفاف -->
                         <DataTrigger Binding="{Binding AbnormalFlag}" Value="HH">
-                            <Setter Property="Background" Value="#FFF5F5" />
+                            <Setter Property="Background" Value="#45E53935" />
                             <Setter Property="FontWeight" Value="SemiBold" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding AbnormalFlag}" Value="LL">
-                            <Setter Property="Background" Value="#FFF5F5" />
+                            <Setter Property="Background" Value="#45E53935" />
                             <Setter Property="FontWeight" Value="SemiBold" />
                         </DataTrigger>
                     </Style.Triggers>

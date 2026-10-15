@@ -186,7 +186,7 @@
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Revenue}"
                               AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                               HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD"
-                              GridLinesVisibility="Horizontal"
+                             
                               materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="تاریخ" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="120" />
@@ -247,7 +247,7 @@
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Performance}"
                               AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                               HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD"
-                              GridLinesVisibility="Horizontal"
+                             
                               materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="2*" />

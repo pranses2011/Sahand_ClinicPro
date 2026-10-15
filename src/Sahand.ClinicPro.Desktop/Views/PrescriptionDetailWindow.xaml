@@ -27,7 +27,7 @@
                   IsReadOnly="True"
                   CanUserAddRows="False"
                   HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal"
+                 
                   materialDesign:DataGridAssist.CellPadding="8,6">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="دارو" Binding="{Binding MedicationName, Converter={StaticResource PersianDigits}}" Width="2*" />

@@ -789,7 +789,7 @@
                               CanUserAddRows="False"
                               HeadersVisibility="Column"
                               AlternatingRowBackground="#F7FAFD"
-                              GridLinesVisibility="Horizontal"
+                             
                               MinRowHeight="30"
                               FontSize="12">
                         <DataGrid.Columns>
@@ -962,7 +962,7 @@
                     <!-- جدول لیست انتظار -->
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Waitlist}" AutoGenerateColumns="False"
                               CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal" FlowDirection="RightToLeft">
+                              FlowDirection="RightToLeft">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
                             <DataGridTextColumn Header="موبایل" Binding="{Binding PatientMobile, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="{DynamicResource App.CodeFont}" />
