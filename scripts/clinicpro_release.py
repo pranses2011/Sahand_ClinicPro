@@ -27,7 +27,11 @@ import zipfile
 
 REPO = pathlib.Path(__file__).resolve().parents[1]
 PROPS = REPO / "Directory.Build.props"
-CHANGELOG = REPO / "CHANGELOG.md"
+# فایل سرچشمهٔ فعال — از چرخهٔ ۷۸ (v2.20.0) تغییرات در جلد دوم ثبت می‌شود؛
+# جلد نخست (CHANGELOG.md) بایگانی شد و فقط تا v2.19.2 مدخل دارد.
+CHANGELOGS = [REPO / "CHANGELOG-2.md", REPO / "CHANGELOG.md"]
+# جستجو در هر دو جلد؛ جلد دوم اولویت دارد (فایل فعال)
+CHANGELOG = next((p for p in CHANGELOGS if p.exists()), CHANGELOGS[0])
 OLD_JWT_KEY = "SahandClinicPro-Development-Secret-Key-Change-In-Production-2026"
 GITHUB_API = "https://api.github.com/repos/pranses2011/Sahand_ClinicPro"
 
@@ -77,7 +81,7 @@ def cmd_doctor(args: argparse.Namespace) -> None:
     # ۲) سرچشمهٔ CHANGELOG با نسخهٔ فعلی همخوان است؟
     head = CHANGELOG.read_text(encoding="utf-8")[:4000]
     if f"## [v{version}]" in head:
-        ok(f"سرچشمهٔ CHANGELOG با v{version} همخوان است")
+        ok(f"سرچشمهٔ CHANGELOG ({CHANGELOG.name}) با v{version} همخوان است")
     else:
         die(f"CHANGELOG سرچشمهٔ «## [v{version}]» ندارد — ابتدا سرچشمهٔ فارسی بنویسید")
 
@@ -175,7 +179,7 @@ GUIDE_TEMPLATE = """<!DOCTYPE html>
 <table><tr><th>مسیر</th><th>لایه</th></tr>{ROWS}</table>
 <h2>⚙️ باینری آماده (بدون نیاز به بیلد)</h2>
 <p>فهرست کامل در <code>changed-files.txt</code> بخش «باینری آمادهٔ نصب» آمده است.</p>
-<p>جزئیات کامل کاربر-محور در <code>CHANGELOG.md</code> سرچشمهٔ v{TO_VER}.</p>
+<p>جزئیات کامل کاربر-محور در <code>{CHANGELOG.name}</code> سرچشمهٔ v{TO_VER}.</p>
 </div></body></html>"""
 
 

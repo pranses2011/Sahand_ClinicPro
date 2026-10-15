@@ -1,5 +1,7 @@
 # CHANGELOG — Sahand ClinicPro
 
+> ⚠️ **این جلد بایگانی شد (v2.19.2 آخرین مدخل).** از نسخهٔ بعدی، سرچشمهٔ تغییرات در **[CHANGELOG-2.md](CHANGELOG-2.md)** نوشته می‌شود — این فایل دیگر به‌روز نمی‌شود.
+
 تمام تغییرات مهم این پروژه در این فایل ثبت می‌شود.
 قالب بر اساس [Keep a Changelog](https://keepachangelog.com/fa/1.1.0/) و نسخه‌بندی [SemVer](https://semver.org/lang/fa/).
 
