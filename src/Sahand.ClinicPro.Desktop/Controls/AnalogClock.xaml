@@ -94,18 +94,26 @@
                 </Rectangle.Fill>
             </Rectangle>
         </Grid>
-        <!-- ═══ عقربهٔ ثانیه — اصلاح چرخهٔ ۷۵ ═══
-             «تمام قطر ساعت بود» — قبلی ۱۷۰px تا لبه می‌رسید؛ اکنون نوکش
-             ۱۰۴px از مرکز است (~۷۵٪ شعاع — نسبت استاندارد ساعت) + دُم ۲۲px
-             متعادل‌کننده؛ حلقهٔ لغزش روی نوک حفظ شد (امضای بصری سوپِ نرم). -->
+        <!-- ═══ عقربهٔ ثانیه — بازسازی هندسه چرخهٔ ۷۸ ═══
+             گزارش مالک: «عقربه ثانیه شمار ایراد دارد». ریشهٔ هندسی چرخهٔ ۷۵:
+             گرید ۱۵۲px با مرکزِ چرخش در ۷۶px، ولی نوک ۱۰۴px بالا-چسبیده (فقط
+             ۷۶px بالای محور) و دُم ۲۲px پایین-چسبیده (۵۴ تا ۷۶px زیر محور)
+             — یعنی «شکاف ۲۶px» وسط عقربه، دُمی معلق و جدا از بدنه، و نوکی
+             کوتاه‌تر از طرح. هندسهٔ درست: کل عقربه = نوک ۱۰۴px بالای محور +
+             دُم ۲۲px زیر محور = ۱۲۶px؛ محور چرخش دقیقاً روی مرز نوک/دُم
+             (RenderTransformOrigin=۰٫۵، 104/126). دُم با حاشیهٔ صریح بالای
+             خودش به انتهای نوک می‌چسبد — دیگر هیچ شکافی نیست. -->
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
-              Width="2" Height="152" RenderTransformOrigin="0.5,0.5"
+              Width="2" Height="126" RenderTransformOrigin="0.5,0.8254"
               x:Name="SecondHand">
             <Grid.RenderTransform>
                 <RotateTransform x:Name="SecondRotation" Angle="0" />
             </Grid.RenderTransform>
+            <!-- نوک — ۱۰۴px بالای محور (~۷۵٪ شعاع) -->
             <Rectangle Width="2" Height="104" VerticalAlignment="Top" Fill="#FF5252" RadiusX="1" RadiusY="1" />
-            <Rectangle Width="2" Height="22" VerticalAlignment="Bottom" Fill="#FF8A80" RadiusX="1" RadiusY="1" />
+            <!-- دُم متعادل‌کننده — ۲۲px زیر محور، چسبیده به نوک (بدون شکاف) -->
+            <Rectangle Width="2" Height="22" VerticalAlignment="Top" Margin="0,104,0,0" Fill="#FF8A80" RadiusX="1" RadiusY="1" />
+            <!-- حلقهٔ لغزش روی نوک — امضای بصری سوپِ نرم -->
             <Ellipse Width="9" Height="9" VerticalAlignment="Top" Margin="0,12,0,0"
                      Stroke="#FF5252" StrokeThickness="2" Fill="#152A42" />
         </Grid>
