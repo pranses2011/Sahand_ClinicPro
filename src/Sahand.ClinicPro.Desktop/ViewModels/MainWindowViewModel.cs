@@ -142,6 +142,8 @@ public partial class MainWindowViewModel : ObservableObject
         // چرخهٔ ۴۱ — صفحهٔ مستقل لوازم مصرفی (بدون نیاز به ماژول داروخانه)
         ConsumablesViewModel consumablesVm,
         VisitsViewModel visitsVm,
+        // چرخهٔ ۷۸ — صف مستقل خدمات درمانی (گزارش مالک: جدا شدن از صف ویزیت)
+        ServicesViewModel servicesVm,
         PrescriptionsViewModel prescriptionsVm,
         BillingViewModel billingVm,
         AccountingViewModel accountingVm,
@@ -258,6 +260,8 @@ public partial class MainWindowViewModel : ObservableObject
             // چرخهٔ ۴۱ — لوازم مصرفی درمانگاه (صفحهٔ منوی کناری؛ مستقل از داروخانه)
             ["consumables"] = () => consumablesVm,
             ["visits"] = () => visitsVm,
+            // چرخهٔ ۷۸ — صف خدمات درمانی (پذیرش‌های خدمتیِ بدون پزشک)
+            ["services"] = () => servicesVm,
             ["prescriptions"] = () => prescriptionsVm,
             ["billing"] = () => billingVm,
             ["accounting"] = () => accountingVm,
@@ -338,6 +342,10 @@ public partial class MainWindowViewModel : ObservableObject
                 await receptions.LoadAsync();
             else if (page is VisitsViewModel visits)
                 await visits.LoadAsync();
+            // چرخهٔ ۷۸ — صف خدمات هم با هر تغییر صف (فراخوان/انجام/پذیرش تازه)
+            // بی‌درنگ تازه می‌شود؛ پخش سرور شامل همهٔ صف‌هاست
+            else if (page is ServicesViewModel services)
+                await services.LoadAsync();
         };
 
         // اعلان جدید → شمارنده زنگ + پیام شناور خبری (آبی)
@@ -515,6 +523,9 @@ public partial class MainWindowViewModel : ObservableObject
                 // در گروه پذیرش و درمان (نه نسخه و دارو) تا جایگاهش در جریان درمان روشن باشد
                 new() { Title = "لوازم مصرفی", PageKey = "consumables", Icon = "Syringe" },
                 new() { Title = "ویزیت و معاینه", PageKey = "visits", Icon = "Stethoscope" },
+                // چرخهٔ ۷۸ — صف مستقل خدمات درمانی (گزارش مالک): تزریقات/پانسمان
+                // و خدمات پرستاری، بلافاصله پس از ویزیت در جریان درمان
+                new() { Title = "صف خدمات درمانی", PageKey = "services", Icon = "Needle" },
                 new() { Title = "پرونده بالینی پیشرفته", PageKey = "emr-advanced", Icon = "HeartPulse" }),
 
             // ─── تجویز و دارو ───
@@ -636,6 +647,17 @@ public partial class MainWindowViewModel : ObservableObject
             if (items.Count == 0)
                 return;
 
+            // ═══ چرخهٔ ۷۸ — مهاجرت یک‌بارهٔ «صف خدمات درمانی» به منوی شخصی ═══
+            // صفحهٔ جدید services فقط در منوی پیش‌فرض می‌آید؛ کاربرانی که چیدمان
+            // شخصی ذخیره کرده‌اند (از جمله مالک) هرگز آن را نمی‌دیدند مگر اینکه
+            // خودشان از ادیتور اضافه کنند — در حالی که درخواست صفحه از خود مالک
+            // بود. مهاجرت یک‌باره (با پرچم محلی): اگر چیدمان «ویزیت و معاینه» را
+            // دارد ولی «صف خدمات» را نه، آیتم بلافاصله پس از همان درج می‌شود؛
+            // کاربر آزاد است بعداً جابه‌جایش کند یا حذفش کند — فقط دیده‌شدنش
+            // تضمین می‌شود. پرچم حتی وقتی ویزیت در منو نیست هم ثابت می‌شود تا
+            // هر بار ورود، منوی کاربر دوباره دستکاری نشود.
+            MigrateServicesPageIntoCustomLayout(items);
+
             NavItems.Clear();
             foreach (var item in items)
                 NavItems.Add(item);
@@ -646,6 +668,68 @@ public partial class MainWindowViewModel : ObservableObject
         catch
         {
             // خطای شبکه/ساختار — منوی پیش‌فرض سالم می‌ماند
+        }
+    }
+
+    /// <summary>
+    /// مهاجرت یک‌بارهٔ صفحهٔ «صف خدمات درمانی» (چرخهٔ ۷۸) به چیدمان شخصی —
+    /// فقط بار اول پس از ارتقا؛ پرچم محلی NavMigration.Services78 مهاجرت را
+    /// برای همیشه قفل می‌کند. آیتم در همان گروهِ «ویزیت و معاینه» و بلافاصله
+    /// پس از آن درج می‌شود تا جایگاه منطقی‌اش در جریان درمان حفظ شود.
+    /// </summary>
+    private static void MigrateServicesPageIntoCustomLayout(ObservableCollection<NavItem> items)
+    {
+        try
+        {
+            if (LocalSettingsStore.Get("NavMigration.Services78") == "done")
+                return;
+
+            // آیا صفحهٔ خدمات از قبل در چیدمان هست؟ (کاربر زودتر خودش اضافه کرده)
+            var alreadyHas = items.Any(i =>
+                (i.PageKey == "services") || (i.HasChildren && i.Children.Any(c => c.PageKey == "services")));
+            if (!alreadyHas)
+            {
+                var servicesEntry = Helpers.PageCatalog.Find("services");
+                if (servicesEntry is not null)
+                {
+                    var newItem = new NavItem
+                    {
+                        Title = servicesEntry.Title,
+                        PageKey = servicesEntry.Key,
+                        Icon = servicesEntry.Icon,
+                    };
+
+                    // درج در گروهِ دارای «ویزیت و معاینه» — یا کنار آیتم تکی ویزیت
+                    var inserted = false;
+                    foreach (var nav in items)
+                    {
+                        if (nav.HasChildren)
+                        {
+                            var idx = nav.Children.ToList().FindIndex(c => c.PageKey == "visits");
+                            if (idx >= 0)
+                            {
+                                nav.Children.Insert(idx + 1, newItem);
+                                inserted = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!inserted)
+                    {
+                        var idxTop = items.ToList().FindIndex(i => i.PageKey == "visits");
+                        if (idxTop >= 0)
+                            items.Insert(idxTop + 1, newItem);
+                        // بدون ویزیت در منو، درج نمی‌شود — صفحه از ادیتور/میانبر قابل افزودن است
+                    }
+                }
+            }
+
+            // پرچم یک‌بارگی — چه درج شد چه نه (تا منو در ورودهای بعدی دست نخورد)
+            LocalSettingsStore.Set("NavMigration.Services78", "done");
+        }
+        catch
+        {
+            // مهاجرت اختیاری است — نباید بارگذاری منو را بلامحل کند
         }
     }
 

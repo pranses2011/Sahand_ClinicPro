@@ -39,6 +39,10 @@
         <DataTemplate DataType="{x:Type vm:VisitsViewModel}">
             <views:VisitsView />
         </DataTemplate>
+        <!-- چرخهٔ ۷۸ — صف مستقل خدمات درمانی (جدا شدن از صف ویزیت) -->
+        <DataTemplate DataType="{x:Type vm:ServicesViewModel}">
+            <views:ServicesView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:PrescriptionsViewModel}">
             <views:PrescriptionsView />
         </DataTemplate>

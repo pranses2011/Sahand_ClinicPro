@@ -551,6 +551,8 @@ public partial class App : System.Windows.Application
         // داروخانه؛ اندپوینت‌های api/v1/consumables خارج از گیت لایسنس)
         services.AddTransient<ConsumablesViewModel>();
         services.AddTransient<VisitsViewModel>();
+        // چرخهٔ ۷۸ — صف مستقل خدمات درمانی (گزارش مالک: جدا شدن از صف ویزیت)
+        services.AddTransient<ServicesViewModel>();
         // چرخهٔ بیست‌وهفتم — میزکار پزشک (صفحهٔ ویزیت پزشک — گزارش هجدهم مالک)
         services.AddTransient<PrescriptionsViewModel>();
         services.AddTransient<BillingViewModel>();

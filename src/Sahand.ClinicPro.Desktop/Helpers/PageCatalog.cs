@@ -54,6 +54,10 @@ public static class PageCatalog
         // پذیرش است و درمانگاهِ بدون ماژول داروخانه هم باید به آن دسترسی داشته باشد
         new PageCatalogEntry("consumables", "لوازم مصرفی درمانگاه", "Syringe", "receptions.view", Group: "جریان درمان"),
         new PageCatalogEntry("visits", "ویزیت و معاینه", "Stethoscope", "visits.view", Group: "جریان درمان"),
+        // ═══ چرخهٔ ۷۸ (گزارش مالک) — صف مستقل خدمات درمانی ═══ «برای صف و
+        // انجام خدمات درمانی یک صفحه جداگانه باشه» — پذیرش‌های خدمتیِ بدون
+        // پزشک از صف ویزیت جدا شدند؛ مجوز همان پذیرش است (جریان طبیعی خدمت)
+        new PageCatalogEntry("services", "صف خدمات درمانی", "Needle", "receptions.view", Group: "جریان درمان"),
         new PageCatalogEntry("emr-advanced", "پرونده بالینی پیشرفته", "HeartPulse", "emr.advanced", Group: "جریان درمان"),
 
         // ─── دارو و انبار ───
