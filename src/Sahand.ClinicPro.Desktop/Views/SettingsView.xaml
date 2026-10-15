@@ -105,7 +105,7 @@
                     <TextBlock Text="ماژول‌ها و وضعیت لایسنس" FontSize="16" FontWeight="Bold" Margin="2,0,4,12" />
                     <DataGrid ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule}"
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                              HeadersVisibility="Column" FontSize="12" MaxHeight="420" AlternatingRowBackground="#F7FAFD">
+                              HeadersVisibility="Column" FontSize="12" MaxHeight="420">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="ماژول" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="150" FontWeight="SemiBold" />
                             <DataGridTextColumn Header="وضعیت لایسنس" Binding="{Binding LicenseText, Converter={StaticResource PersianDigits}}" Width="110" />
@@ -137,7 +137,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Border Margin="2,6" Padding="16,12" CornerRadius="12" Background="#F7FAFD"
-                                        BorderBrush="#DCE7F0" BorderThickness="1">
+                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
@@ -150,8 +150,8 @@
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
-                                            <TextBlock Text="{Binding Name}" FontSize="14.5" FontWeight="Bold" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                                            <TextBlock Text="{Binding ConnectedText}" FontSize="11.5" Margin="12,0,0,0" VerticalAlignment="Center" Opacity="0.8"  Foreground="#1F2937"/>
+                                            <TextBlock Text="{Binding Name}" FontSize="14.5" FontWeight="Bold" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                            <TextBlock Text="{Binding ConnectedText}" FontSize="11.5" Margin="12,0,0,0" VerticalAlignment="Center" Opacity="0.8"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                         </StackPanel>
                                         <ToggleButton Grid.Row="0" Grid.Column="1" IsChecked="{Binding IsEnabled, Mode=TwoWay}"
                                                       Style="{StaticResource MaterialDesignSwitchToggleButton}" ToolTip="فعال" />
@@ -269,20 +269,20 @@
                                     <RadioButton.Template>
                                         <ControlTemplate TargetType="RadioButton">
                                             <Border x:Name="Bd" CornerRadius="{Binding Radius, FallbackValue=8}" Padding="12,8" Margin="2"
-                                                    BorderThickness="1.4" BorderBrush="#E0E0E0" Background="#FAFAFA"
+                                                    BorderThickness="1.4" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" Background="{DynamicResource MaterialDesign.Brush.Background}"
                                                     Cursor="Hand">
                                                 <StackPanel>
                                                     <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding Icon}" FontSize="17" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                                        <TextBlock Text="{Binding Icon}" FontSize="17" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                                         <TextBlock Text="{Binding Title}" FontSize="12.5" Margin="7,0,4,0"
-                                                                   VerticalAlignment="Center" FontWeight="SemiBold"  Foreground="#1F2937"/>
+                                                                   VerticalAlignment="Center" FontWeight="SemiBold"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                                         <Ellipse Width="13" Height="13" VerticalAlignment="Center"
                                                                  Fill="{Binding PrimaryColor}"
                                                                  Stroke="#00000022" StrokeThickness="1" />
                                                     </StackPanel>
                                                     <!-- مشخصات ظاهری تم — گوشه و چگالی (چرخه بیستم) -->
                                                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                                        <TextBlock Text="{Binding DensityText, Mode=OneWay}" FontSize="10" Opacity="0.7" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                                        <TextBlock Text="{Binding DensityText, Mode=OneWay}" FontSize="10" Opacity="0.7" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                                     </StackPanel>
                                                 </StackPanel>
                                             </Border>
@@ -402,7 +402,7 @@
                             CornerRadius="8" Padding="12,10" Margin="2,12">
                         <StackPanel>
                             <TextBlock Text="💠 پریست‌های شخصی (ذخیرهٔ ترکیب کامل و بازیابی با یک کلیک):"
-                                       FontSize="12.5" FontWeight="SemiBold" Foreground="#16355E" Margin="0,0,0,8" />
+                                       FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" Margin="0,0,0,8" />
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                 <TextBox materialDesign:HintAssist.Hint="نام پریست جدید"
                                          Text="{Binding PresetName, UpdateSourceTrigger=PropertyChanged}"

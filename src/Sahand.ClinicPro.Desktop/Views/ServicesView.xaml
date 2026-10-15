@@ -142,20 +142,20 @@
                                                            Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Border>
                                             <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="13" Foreground="#1F2937" />
+                                                <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
                                                 <!-- خدمت + اتاق + زمان انتظار — چرخهٔ ۷۸: نام اتاق همراه ردیف -->
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock FontSize="11" Foreground="#00695C" FontWeight="SemiBold">
                                                         <Run Text="{Binding ServiceName, Mode=OneWay}" />
                                                     </TextBlock>
-                                                    <TextBlock FontSize="11" Opacity="0.75" Margin="10,0,0,0" Foreground="#1F2937">
+                                                    <TextBlock FontSize="11" Opacity="0.75" Margin="10,0,0,0" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                                         <Run Text="{Binding RoomDisplay, Mode=OneWay}" />
                                                     </TextBlock>
                                                     <TextBlock FontSize="11" Foreground="#E65100" Margin="10,0,0,0">
                                                         <Run Text="انتظار: " /><Run Text="{Binding WaitingText, Mode=OneWay}" FontWeight="SemiBold" />
                                                     </TextBlock>
                                                 </StackPanel>
-                                                <TextBlock FontSize="10.5" Opacity="0.65" Margin="0,2,0,0" Foreground="#1F2937">
+                                                <TextBlock FontSize="10.5" Opacity="0.65" Margin="0,2,0,0" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                                     <Run Text="ساعت پذیرش: " /><Run Text="{Binding ReceptionTime, Mode=OneWay}" />
                                                 </TextBlock>
                                             </StackPanel>
@@ -165,8 +165,8 @@
                                                     Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11" Padding="10,6"
                                                     MinWidth="104" MinHeight="34">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <materialDesign:PackIcon Kind="BellRing" Width="13" Height="13" VerticalAlignment="Center" Foreground="#1F2937" />
-                                                    <TextBlock Text="فراخوان به اتاق" Margin="6,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="#1F2937" />
+                                                    <materialDesign:PackIcon Kind="BellRing" Width="13" Height="13" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                                                    <TextBlock Text="فراخوان به اتاق" Margin="6,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
                                                 </StackPanel>
                                             </Button>
                                         </Grid>
@@ -195,12 +195,12 @@
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon Kind="AccountConvert" Width="15" Height="15" Foreground="#00838F" VerticalAlignment="Center" />
-                                                <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="12.5" Margin="8,0,0,0" Foreground="#1F2937" />
+                                                <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="12.5" Margin="8,0,0,0" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
                                             </StackPanel>
                                             <TextBlock FontSize="11" Foreground="#00695C" Margin="0,3,0,0" FontWeight="SemiBold">
                                                 <Run Text="{Binding ServiceName, Mode=OneWay}" />
                                             </TextBlock>
-                                            <TextBlock FontSize="10.5" Opacity="0.75" Margin="0,2,0,0" Foreground="#1F2937">
+                                            <TextBlock FontSize="10.5" Opacity="0.75" Margin="0,2,0,0" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                                 <Run Text="{Binding RoomDisplay, Mode=OneWay}" />
                                             </TextBlock>
                                             <!-- اعلام انجام — پایان خدمت و انتقال به انجام‌شده‌ها -->
@@ -240,12 +240,12 @@
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon Kind="CheckCircle" Width="15" Height="15" Foreground="#2E7D32" VerticalAlignment="Center" />
-                                                <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="12.5" Margin="8,0,0,0" Foreground="#1F2937" />
+                                                <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="12.5" Margin="8,0,0,0" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
                                             </StackPanel>
-                                            <TextBlock FontSize="11" Opacity="0.8" Margin="0,3,0,0" Foreground="#1F2937">
+                                            <TextBlock FontSize="11" Opacity="0.8" Margin="0,3,0,0" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                                 <Run Text="{Binding ServiceName, Mode=OneWay}" />
                                             </TextBlock>
-                                            <TextBlock FontSize="10.5" Opacity="0.65" Margin="0,2,0,0" Foreground="#1F2937">
+                                            <TextBlock FontSize="10.5" Opacity="0.65" Margin="0,2,0,0" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                                 <Run Text="{Binding RoomDisplay, Mode=OneWay, TargetNullValue=—}" />
                                             </TextBlock>
                                         </StackPanel>

@@ -217,7 +217,7 @@
                                 <TextBlock Text="👁 پیش‌نمایش زنده با داده نمونه" Margin="8,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-                        <Border Grid.Row="1" CornerRadius="10" BorderBrush="#E1E8F2" BorderThickness="1" Background="#FAFBFD" ClipToBounds="True">
+                        <Border Grid.Row="1" CornerRadius="10" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1" Background="{DynamicResource MaterialDesign.Brush.Background}" ClipToBounds="True">
                             <WebBrowser x:Name="PreviewBrowser" Visibility="Collapsed" />
                         </Border>
                         <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -282,8 +282,8 @@
                                                 Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11.5"
                                                 Padding="10,5" Margin="0,0,6,4" ToolTip="{Binding Description}">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Icon}" FontSize="14" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                                                <TextBlock Text="{Binding Title}" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                                <TextBlock Text="{Binding Icon}" FontSize="14" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                                <TextBlock Text="{Binding Title}" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             </StackPanel>
                                         </Button>
                                     </DataTemplate>
@@ -322,7 +322,7 @@
                                 <ItemsControl ItemsSource="{Binding DesignerQuestions}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border CornerRadius="8" Background="#FFFFFF" BorderBrush="#E3F2FD"
+                                            <Border CornerRadius="8" Background="{DynamicResource MaterialDesign.Brush.Card.Background}" BorderBrush="#E3F2FD"
                                                     BorderThickness="1" Padding="8" Margin="0,0,0,6">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
@@ -371,8 +371,8 @@
                                 <Button Command="{Binding SaveSurveyDesignerCommand}"
                                         Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,4">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                                        <TextBlock Text="💾 ذخیرهٔ نظرسنجی" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                        <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                        <TextBlock Text="💾 ذخیرهٔ نظرسنجی" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                     </StackPanel>
                                 </Button>
                                 <Button Content="بستن طراح" Command="{Binding CancelSurveyDesignerCommand}"
@@ -383,7 +383,7 @@
 
                     <DataGrid Grid.Row="3" ItemsSource="{Binding Surveys}" SelectedItem="{Binding SelectedSurvey}"
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                              HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                              HeadersVisibility="Column" FontSize="12">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="عنوان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="220" FontWeight="SemiBold" />
                             <DataGridTextColumn Header="توضیح" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" />

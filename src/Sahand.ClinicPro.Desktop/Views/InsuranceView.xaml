@@ -51,7 +51,7 @@
                     </StackPanel>
                     <DataGrid ItemsSource="{Binding Companies}" SelectedItem="{Binding SelectedCompany}"
                               AutoGenerateColumns="False" CanUserAddRows="False"
-                              IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                              IsReadOnly="True" HeadersVisibility="Column" FontSize="12">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="نام شرکت" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
                             <DataGridTextColumn Header="کد" Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="100" FontFamily="{DynamicResource App.CodeFont}" />
@@ -102,7 +102,7 @@
                     </StackPanel>
                     <DataGrid ItemsSource="{Binding Tariffs}" SelectedItem="{Binding SelectedTariff}"
                               AutoGenerateColumns="False" CanUserAddRows="False"
-                              IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                              IsReadOnly="True" HeadersVisibility="Column" FontSize="12">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="کد خدمت" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="110" />
                             <DataGridTextColumn Header="نام خدمت" Binding="{Binding ServiceName, Converter={StaticResource PersianDigits}}" Width="*" />
@@ -173,7 +173,7 @@
                     </Button>
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Claims}" SelectedItem="{Binding SelectedClaim}"
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                              HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                              HeadersVisibility="Column" FontSize="12">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="شماره مطالبه" Binding="{Binding ClaimNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="بیمه" Binding="{Binding InsuranceName, Converter={StaticResource PersianDigits}}" Width="150" />
@@ -266,7 +266,7 @@
                     <Border Grid.Row="1" Background="#E8F0FE" CornerRadius="10" Padding="11,8" Margin="0,0,0,8"
                             Visibility="{Binding FractionSummaryText, Converter={StaticResource NullToVisibility}}">
                         <TextBlock Text="{Binding FractionSummaryText}" FontSize="12" FontWeight="SemiBold"
-                                   Foreground="#16355E" TextWrapping="Wrap" />
+                                   Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" TextWrapping="Wrap" />
                     </Border>
 
                     <!-- جدول تفکیک اقلام -->

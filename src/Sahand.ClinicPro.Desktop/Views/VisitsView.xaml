@@ -153,18 +153,18 @@
                         </Viewbox>
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                        <TextBlock FontSize="15" FontWeight="Bold" Foreground="#1F2937">
+                        <TextBlock FontSize="15" FontWeight="Bold" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                             <Run Text="{Binding CurrentPatient.PatientName, Mode=OneWay}" />
                         </TextBlock>
                         <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
                             <!-- چرخهٔ ۷۴: ساعت و موبایل با ارقام فارسی -->
-                            <TextBlock FontSize="11.5" Opacity="0.75" Foreground="#1F2937">
+                            <TextBlock FontSize="11.5" Opacity="0.75" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                 <Run Text="ساعت: " /><Run Text="{Binding CurrentPatient.AppointmentTime, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
                             </TextBlock>
-                            <TextBlock FontSize="11.5" Opacity="0.75" Margin="14,0,0,0" Foreground="#1F2937">
+                            <TextBlock FontSize="11.5" Opacity="0.75" Margin="14,0,0,0" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                 <Run Text="نوع: " /><Run Text="{Binding CurrentPatient.VisitTypeText, Mode=OneWay}" />
                             </TextBlock>
-                            <TextBlock FontSize="11.5" Opacity="0.75" Margin="14,0,0,0" Foreground="#1F2937">
+                            <TextBlock FontSize="11.5" Opacity="0.75" Margin="14,0,0,0" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                 <Run Text="موبایل: " /><Run Text="{Binding CurrentPatient.Mobile, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontFamily="{DynamicResource App.CodeFont}" />
                             </TextBlock>
                         </StackPanel>
@@ -180,8 +180,8 @@
                 <Button Grid.Column="1" Command="{Binding OpenCurrentVisitCommand}"
                         Style="{StaticResource MaterialDesignRaisedButton}" FontSize="13">
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="FolderEditOutline" Width="16" Height="16" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                        <TextBlock Text="باز کردن فرم ویزیت" Margin="8,0,0,0"  Foreground="#1F2937"/>
+                        <materialDesign:PackIcon Kind="FolderEditOutline" Width="16" Height="16" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                        <TextBlock Text="باز کردن فرم ویزیت" Margin="8,0,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                     </StackPanel>
                 </Button>
             </Grid>
@@ -221,13 +221,13 @@
                                                            Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Border>
                                             <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="13"  Foreground="#1F2937"/>
+                                                <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="13"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                                 <StackPanel Orientation="Horizontal">
                                                     <!-- چرخهٔ ۷۴: ساعت نوبت با ارقام فارسی -->
-                                                    <TextBlock FontSize="11" Opacity="0.7" Foreground="#1F2937">
+                                                    <TextBlock FontSize="11" Opacity="0.7" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                                         <Run Text="ساعت نوبت: " /><Run Text="{Binding AppointmentTime, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
                                                     </TextBlock>
-                                                    <TextBlock FontSize="11" Opacity="0.7" Margin="12,0,0,0" Foreground="#1F2937">
+                                                    <TextBlock FontSize="11" Opacity="0.7" Margin="12,0,0,0" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                                         <Run Text="نوع: " /><Run Text="{Binding VisitTypeText, Mode=OneWay}" />
                                                     </TextBlock>
                                                     <TextBlock FontSize="11" Foreground="#E65100" Margin="12,0,0,0">
@@ -244,9 +244,9 @@
                                                     Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11" Padding="10,6"
                                                     MinWidth="92" MinHeight="34">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <materialDesign:PackIcon Kind="BellRing" Width="13" Height="13" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                                    <materialDesign:PackIcon Kind="BellRing" Width="13" Height="13" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                                     <TextBlock Text="فراخوان" Margin="6,0,0,0"
-                                                               TextWrapping="Wrap" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                                               TextWrapping="Wrap" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                                 </StackPanel>
                                             </Button>
                                         </Grid>
@@ -275,13 +275,13 @@
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon Kind="CheckCircle" Width="15" Height="15" Foreground="#2E7D32" VerticalAlignment="Center" />
-                                                <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="12.5" Margin="8,0,0,0"  Foreground="#1F2937"/>
+                                                <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="12.5" Margin="8,0,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             </StackPanel>
-                                            <TextBlock FontSize="11" Opacity="0.75" Margin="0,3,0,0" FontFamily="{DynamicResource App.CodeFont}" Foreground="#1F2937">
+                                            <TextBlock FontSize="11" Opacity="0.75" Margin="0,3,0,0" FontFamily="{DynamicResource App.CodeFont}" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                                 <!-- چرخهٔ ۷۴: بازهٔ زمانی با ارقام فارسی -->
                                                 <Run Text="{Binding TimeRange, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
                                             </TextBlock>
-                                            <TextBlock FontSize="11" Opacity="0.75" Margin="0,2,0,0" Foreground="#1F2937">
+                                            <TextBlock FontSize="11" Opacity="0.75" Margin="0,2,0,0" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                                 <Run Text="تشخیص: " /><Run Text="{Binding DiagnosisText, Mode=OneWay, TargetNullValue=—}" />
                                             </TextBlock>
                                         </StackPanel>

@@ -57,9 +57,9 @@
                                             Visibility="{Binding EyePatient, Converter={StaticResource NullToVisibility}}">
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="AccountCheck" Width="16" Height="16" Foreground="#2E7D32" VerticalAlignment="Center" />
-                                            <TextBlock Text="{Binding EyePatient.FullName, Mode=OneWay}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"  Foreground="#1F2937"/>
+                                            <TextBlock Text="{Binding EyePatient.FullName, Mode=OneWay}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <TextBlock Text="{Binding EyePatient.NationalCode, Mode=OneWay}" Opacity="0.7" FontSize="11"
-                                                       VerticalAlignment="Center" Margin="10,0,0,0"  Foreground="#1F2937"/>
+                                                       VerticalAlignment="Center" Margin="10,0,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                         </StackPanel>
                                     </Border>
                                     <Button Grid.Column="3" Command="{Binding ClearEyePatientCommand}"
@@ -78,16 +78,16 @@
                                     <!-- OD -->
                                     <Border Grid.Column="0" CornerRadius="12" Padding="14" Background="#E3F2FD">
                                         <StackPanel>
-                                            <TextBlock Text="چشم راست (OD)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8"  Foreground="#1F2937"/>
+                                            <TextBlock Text="چشم راست (OD)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <UniformGrid Columns="2">
-                                                <StackPanel Margin="0,0,6,6"><TextBlock Text="عدسی (Sphere)" FontSize="10.5" Opacity="0.6"  Foreground="#1F2937"/><TextBox Text="{Binding OdSphere, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
-                                                <StackPanel Margin="0,0,0,6"><TextBlock Text="استوانه (Cylinder)" FontSize="10.5" Opacity="0.6"  Foreground="#1F2937"/><TextBox Text="{Binding OdCylinder, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
-                                                <StackPanel Margin="0,0,6,0"><TextBlock Text="محور (Axis)" FontSize="10.5" Opacity="0.6"  Foreground="#1F2937"/><TextBox Text="{Binding OdAxis, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
-                                                <StackPanel><TextBlock Text="افزوده نزدیک‌بین (Add)" FontSize="10.5" Opacity="0.6"  Foreground="#1F2937"/><TextBox Text="{Binding OdAdd, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,6,6"><TextBlock Text="عدسی (Sphere)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OdSphere, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,0,6"><TextBlock Text="استوانه (Cylinder)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OdCylinder, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,6,0"><TextBlock Text="محور (Axis)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OdAxis, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel><TextBlock Text="افزوده نزدیک‌بین (Add)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OdAdd, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
                                             </UniformGrid>
-                                            <TextBlock Text="حدت بینایی بدون اصلاح (Visual Acuity)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="#1F2937"/>
+                                            <TextBlock Text="حدت بینایی بدون اصلاح (Visual Acuity)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OdVisionIndex}" />
-                                            <TextBlock Text="فشار داخل چشم (IOP — mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="#1F2937"/>
+                                            <TextBlock Text="فشار داخل چشم (IOP — mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <TextBox Text="{Binding OdIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
                                             <TextBlock Text="{Binding OdIopWarning, Mode=OneWay}" Foreground="#C62828" FontWeight="Bold" FontSize="11.5" Margin="0,4,0,0"
                                                        Visibility="{Binding OdIopWarning, Converter={StaticResource StringToVisibility}}" />
@@ -96,16 +96,16 @@
                                     <!-- OS -->
                                     <Border Grid.Column="2" CornerRadius="12" Padding="14" Background="#F3E5F5">
                                         <StackPanel>
-                                            <TextBlock Text="چشم چپ (OS)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8"  Foreground="#1F2937"/>
+                                            <TextBlock Text="چشم چپ (OS)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <UniformGrid Columns="2">
-                                                <StackPanel Margin="0,0,6,6"><TextBlock Text="عدسی (Sphere)" FontSize="10.5" Opacity="0.6"  Foreground="#1F2937"/><TextBox Text="{Binding OsSphere, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
-                                                <StackPanel Margin="0,0,0,6"><TextBlock Text="استوانه (Cylinder)" FontSize="10.5" Opacity="0.6"  Foreground="#1F2937"/><TextBox Text="{Binding OsCylinder, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
-                                                <StackPanel Margin="0,0,6,0"><TextBlock Text="محور (Axis)" FontSize="10.5" Opacity="0.6"  Foreground="#1F2937"/><TextBox Text="{Binding OsAxis, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
-                                                <StackPanel><TextBlock Text="افزوده نزدیک‌بین (Add)" FontSize="10.5" Opacity="0.6"  Foreground="#1F2937"/><TextBox Text="{Binding OsAdd, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,6,6"><TextBlock Text="عدسی (Sphere)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OsSphere, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,0,6"><TextBlock Text="استوانه (Cylinder)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OsCylinder, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,6,0"><TextBlock Text="محور (Axis)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OsAxis, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel><TextBlock Text="افزوده نزدیک‌بین (Add)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OsAdd, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
                                             </UniformGrid>
-                                            <TextBlock Text="حدت بینایی بدون اصلاح (Visual Acuity)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="#1F2937"/>
+                                            <TextBlock Text="حدت بینایی بدون اصلاح (Visual Acuity)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OsVisionIndex}" />
-                                            <TextBlock Text="فشار داخل چشم (IOP — mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="#1F2937"/>
+                                            <TextBlock Text="فشار داخل چشم (IOP — mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <TextBox Text="{Binding OsIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
                                             <TextBlock Text="{Binding OsIopWarning, Mode=OneWay}" Foreground="#C62828" FontWeight="Bold" FontSize="11.5" Margin="0,4,0,0"
                                                        Visibility="{Binding OsIopWarning, Converter={StaticResource StringToVisibility}}" />
@@ -153,13 +153,13 @@
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                             <materialDesign:PackIcon Kind="History" Width="18" Height="18" Foreground="#5E35B1" VerticalAlignment="Center" />
                                             <TextBlock Text="سابقهٔ معاینه‌های چشم (۲۰ مورد آخر — از پروندهٔ بیمار)" FontSize="13"
-                                                       FontWeight="Bold" VerticalAlignment="Center" Margin="8,0,0,0"  Foreground="#1F2937"/>
+                                                       FontWeight="Bold" VerticalAlignment="Center" Margin="8,0,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                         </StackPanel>
                                         <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="170">
                                             <ItemsControl ItemsSource="{Binding EyeHistory}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Border CornerRadius="8" Background="#FFFFFF" Padding="9,6" Margin="0,0,0,5">
+                                                        <Border CornerRadius="8" Background="{DynamicResource MaterialDesign.Brush.Card.Background}" Padding="9,6" Margin="0,0,0,5">
                                                             <StackPanel>
                                                                 <Grid>
                                                                     <Grid.ColumnDefinitions>
@@ -167,16 +167,16 @@
                                                                         <ColumnDefinition Width="*" />
                                                                     </Grid.ColumnDefinitions>
                                                                     <TextBlock Grid.Column="0" Text="{Binding DateShamsi, Mode=OneWay}" FontWeight="SemiBold"
-                                                                               FontFamily="{DynamicResource App.CodeFont}" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                                                               FontFamily="{DynamicResource App.CodeFont}" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                                                     <TextBlock Grid.Column="1" HorizontalAlignment="Left" FontSize="10.5" Opacity="0.8"
-                                                                               VerticalAlignment="Center" Margin="14,0,0,0" Foreground="#1F2937">
+                                                                               VerticalAlignment="Center" Margin="14,0,0,0" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                                                         <Run Text="OD: " /><Run Text="{Binding OdSummary, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
                                                                         <Run Text="   OS: " /><Run Text="{Binding OsSummary, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
                                                                     </TextBlock>
                                                                 </Grid>
                                                                 <TextBlock Text="{Binding Findings, Mode=OneWay, TargetNullValue=''}" FontSize="10.5" Opacity="0.7"
                                                                            TextWrapping="Wrap" Margin="0,3,0,0"
-                                                                           Visibility="{Binding Findings, Converter={StaticResource StringToVisibility}}"  Foreground="#1F2937"/>
+                                                                           Visibility="{Binding Findings, Converter={StaticResource StringToVisibility}}"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                                             </StackPanel>
                                                         </Border>
                                                     </DataTemplate>

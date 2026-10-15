@@ -97,16 +97,16 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Border Width="215" Margin="4,5" Padding="11,9" CornerRadius="10"
-                                        Background="#FFFFFF" BorderBrush="#DCE7F0" BorderThickness="1.2"
+                                        Background="{DynamicResource MaterialDesign.Brush.Card.Background}" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1.2"
                                         Cursor="Hand">
                     <StackPanel>
                                     <DockPanel>
-                                        <TextBlock Text="📄" FontSize="13" DockPanel.Dock="Right"  Foreground="#1F2937"/>
+                                        <TextBlock Text="📄" FontSize="13" DockPanel.Dock="Right"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                         <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="SemiBold"
-                                                   TextWrapping="Wrap" TextTrimming="CharacterEllipsis"  Foreground="#1F2937"/>
+                                                   TextWrapping="Wrap" TextTrimming="CharacterEllipsis"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                     </DockPanel>
                                     <TextBlock Text="{Binding Description}" FontSize="10" Opacity="0.62"
-                                               TextWrapping="Wrap" Margin="0,3,0,0"  Foreground="#1F2937"/>
+                                               TextWrapping="Wrap" Margin="0,3,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 </StackPanel>
                                 </Border>
                             </DataTemplate>
@@ -127,7 +127,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- عنوان و توضیح گزارش انتخاب‌شده -->
-                <Border Grid.Row="0" CornerRadius="10" Background="#F5F9FD" BorderBrush="#DCE7F0"
+                <Border Grid.Row="0" CornerRadius="10" Background="#F5F9FD" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                         BorderThickness="1" Padding="14,10" Margin="0,0,0,10">
                     <DockPanel>
                         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Top">
@@ -139,14 +139,14 @@
                         <StackPanel>
                             <TextBlock Text="{Binding ReportTitle}" FontSize="16.5" FontWeight="Bold"
                                        Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
-                            <TextBlock Text="{Binding ReportDescription}" FontSize="11.5" Opacity="0.72" Margin="0,3,0,0" TextWrapping="Wrap"  Foreground="#1F2937"/>
+                            <TextBlock Text="{Binding ReportDescription}" FontSize="11.5" Opacity="0.72" Margin="0,3,0,0" TextWrapping="Wrap"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                         </StackPanel>
                     </DockPanel>
                 </Border>
 
                 <!-- پارامترها + دکمه‌های اجرا/خروجی -->
                 <Border Grid.Row="1" CornerRadius="10" Padding="12,8" Margin="0,0,0,10"
-                        Background="#FFFFFF" BorderBrush="#DCE7F0" BorderThickness="1.2"
+                        Background="{DynamicResource MaterialDesign.Brush.Card.Background}" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1.2"
                         Visibility="{Binding IsReportAvailable, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel>
                         <WrapPanel>
@@ -155,66 +155,66 @@
                                  اکنون MinWidth=165 + عرض کشسان ⇒ تاریخ کامل همیشه خوانده می‌شود ═══ -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,10,8"
                                         Visibility="{Binding HasDateRange, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="از: " VerticalAlignment="Center" FontSize="12"  Foreground="#1F2937"/>
+                                <TextBlock Text="از: " VerticalAlignment="Center" FontSize="12"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 <controls:PersianDatePicker SelectedDate="{Binding FromDate}" MinWidth="165" />
-                                <TextBlock Text=" تا: " VerticalAlignment="Center" FontSize="12" Margin="10,0,0,0"  Foreground="#1F2937"/>
+                                <TextBlock Text=" تا: " VerticalAlignment="Center" FontSize="12" Margin="10,0,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 <controls:PersianDatePicker SelectedDate="{Binding ToDate}" MinWidth="165" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,10,8"
                                         Visibility="{Binding HasMonthsParam, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="ماه: " VerticalAlignment="Center" FontSize="12"  Foreground="#1F2937"/>
+                                <TextBlock Text="ماه: " VerticalAlignment="Center" FontSize="12"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 <TextBox Text="{Binding Months, UpdateSourceTrigger=PropertyChanged}" Width="56" FontSize="12"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="۶" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,10,8"
                                         Visibility="{Binding HasIcdParam, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="کد ICD: " VerticalAlignment="Center" FontSize="12"  Foreground="#1F2937"/>
+                                <TextBlock Text="کد ICD: " VerticalAlignment="Center" FontSize="12"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 <TextBox Text="{Binding IcdCode, UpdateSourceTrigger=PropertyChanged}" Width="90" FontSize="12"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="مثلاً E11" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,10,8"
                                         Visibility="{Binding HasMinAmountParam, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="حداقل مبلغ: " VerticalAlignment="Center" FontSize="12"  Foreground="#1F2937"/>
+                                <TextBlock Text="حداقل مبلغ: " VerticalAlignment="Center" FontSize="12"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 <TextBox Text="{Binding MinAmount, UpdateSourceTrigger=PropertyChanged}" Width="110" FontSize="12"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="{DynamicResource App.CurrencyLabel}" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,10,8"
                                         Visibility="{Binding HasTopParam, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="تعداد: " VerticalAlignment="Center" FontSize="12"  Foreground="#1F2937"/>
+                                <TextBlock Text="تعداد: " VerticalAlignment="Center" FontSize="12"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 <TextBox Text="{Binding TopCount, UpdateSourceTrigger=PropertyChanged}" Width="56" FontSize="12"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="۲۰" />
                             </StackPanel>
                             <Button Command="{Binding ExecuteCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,8">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Play" Width="14" Height="14" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                                    <TextBlock Text="اجرای گزارش" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                    <materialDesign:PackIcon Kind="Play" Width="14" Height="14" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                    <TextBlock Text="اجرای گزارش" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 </StackPanel>
                             </Button>
                             <Button Command="{Binding ExportExcelCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,8">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="FileExcel" Width="14" Height="14" VerticalAlignment="Center" Foreground="#2E7D32" />
-                                    <TextBlock Text="اکسل" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                    <TextBlock Text="اکسل" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 </StackPanel>
                             </Button>
                             <Button Command="{Binding ExportPdfCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,8"
                                     ToolTip="PDF صفحه‌آرایی‌شده با سربرگ رسمی درمانگاه و محل امضا">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="FilePdfBox" Width="14" Height="14" VerticalAlignment="Center" Foreground="#E53935" />
-                                    <TextBlock Text="PDF" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                    <TextBlock Text="PDF" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 </StackPanel>
                             </Button>
                             <Button Command="{Binding ExportImageCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,8"
                                     ToolTip="ذخیرهٔ تصویر نتایج (خلاصه‌ها + نمودار + جدول) — فرمت PNG/JPEG/BMP/GIF/TIFF هنگام ذخیره انتخاب می‌شود">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="FileImage" Width="14" Height="14" VerticalAlignment="Center" Foreground="#00897B" />
-                                    <TextBlock Text="تصویر" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                    <TextBlock Text="تصویر" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 </StackPanel>
                             </Button>
                             <Button Command="{Binding PrintCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,8"
                                     ToolTip="چاپ مستقیم نتایج با سربرگ و تاریخ شمسی">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Printer" Width="14" Height="14" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                                    <TextBlock Text="چاپ" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                    <materialDesign:PackIcon Kind="Printer" Width="14" Height="14" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                    <TextBlock Text="چاپ" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 </StackPanel>
                             </Button>
                         </WrapPanel>
@@ -224,7 +224,7 @@
                                     Visibility="{Binding HasPatientParam, Converter={StaticResource BoolToVisibility}}">
                             <materialDesign:PackIcon Kind="AccountSearch" Width="18" Height="18" VerticalAlignment="Center"
                                                      Foreground="{DynamicResource MaterialDesign.Brush.Primary}" />
-                            <TextBlock Text="بیمار: " VerticalAlignment="Center" FontSize="12" Margin="6,0,6,0"  Foreground="#1F2937"/>
+                            <TextBlock Text="بیمار: " VerticalAlignment="Center" FontSize="12" Margin="6,0,6,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                             <TextBox Text="{Binding PatientSearchTerm, UpdateSourceTrigger=PropertyChanged}" Width="220" FontSize="12"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      materialDesign:HintAssist.Hint="نام / کد ملی / موبایل / شماره پرونده">
@@ -233,17 +233,17 @@
                                 </TextBox.InputBindings>
                             </TextBox>
                             <Button Command="{Binding SearchPatientsCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="6,0,0,0">
-                                <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14"  Foreground="#1F2937"/>
+                                <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                             </Button>
                             <ComboBox controls:ComboBoxSearch.IsEnabled="False" ItemsSource="{Binding PatientResults}" SelectedItem="{Binding SelectedPatient}"
                                       Width="300" Margin="10,0,0,0" FontSize="12" materialDesign:HintAssist.Hint="بیمار یافت‌شده">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft">
-                                            <TextBlock Text="{Binding MedicalRecordNo}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11" Opacity="0.7" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                                            <TextBlock Text="{Binding FirstName}" Margin="8,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                                            <TextBlock Text="{Binding LastName}" Margin="4,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                                            <TextBlock Text="{Binding NationalCode}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11" Opacity="0.55" Margin="8,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                            <TextBlock Text="{Binding MedicalRecordNo}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11" Opacity="0.7" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                            <TextBlock Text="{Binding FirstName}" Margin="8,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                            <TextBlock Text="{Binding LastName}" Margin="4,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                            <TextBlock Text="{Binding NationalCode}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11" Opacity="0.55" Margin="8,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
@@ -291,7 +291,7 @@
                             <DataTemplate>
                                 <Border CornerRadius="10" Padding="13,9" Margin="3" Background="#E3F2FD" MinWidth="135">
                                     <StackPanel>
-                                        <TextBlock Text="{Binding Label}" FontSize="10.5" Opacity="0.72"  Foreground="#1F2937"/>
+                                        <TextBlock Text="{Binding Label}" FontSize="10.5" Opacity="0.72"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                         <TextBlock Text="{Binding Value}" FontSize="16" FontWeight="Bold"
                                                    FontFamily="{DynamicResource App.CodeFont}" Foreground="#0D47A1" />
                                     </StackPanel>
@@ -380,7 +380,7 @@
 
                     <!-- جدول نتایج — ستون‌های داینامیک از کد پشت -->
                     <DataGrid Grid.Row="2" ItemsSource="{Binding Rows}" AutoGenerateColumns="False" CanUserAddRows="False"
-                              IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD"
+                              IsReadOnly="True" HeadersVisibility="Column" FontSize="12"
                               MinHeight="180" MaxHeight="330"
                               x:Name="ResultsGrid" />
                 </Grid>

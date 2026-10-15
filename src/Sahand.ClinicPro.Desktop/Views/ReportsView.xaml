@@ -39,7 +39,7 @@
                      (چرخهٔ ۷۳: کلید MaterialDesignFlatRadioButton در پکیج MaterialDesignThemes 5.3.2
                       وجود ندارد — صفحهٔ گزارش‌ها هنگام باز شدن با XamlParseException می‌افتاد؛
                       کلید صحیح مطابق مانیفست scripts/materialdesign-keys-5.3.2.txt) -->
-                <Border CornerRadius="22" Background="#F1F5F9" Padding="4" Margin="0,0,10,0">
+                <Border CornerRadius="22" Background="{DynamicResource MaterialDesign.Brush.Background}" Padding="4" Margin="0,0,10,0">
                     <UniformGrid Columns="3">
                         <RadioButton Content="۷ روز" GroupName="range" IsChecked="{Binding IsWeekRange, Mode=TwoWay}"
                                      Style="{StaticResource MaterialDesignRadioButton}" FontSize="12" />
@@ -81,8 +81,8 @@
 
         <!-- ═══ کارت‌های آماری — آیکون‌دار با رنگ تأکیدی؛ «—» در شکست ═══ -->
         <UniformGrid Grid.Row="2" Columns="4" Margin="0,0,0,14">
-            <Border CornerRadius="12" Padding="14,10" Margin="0,0,8,0" Background="#FFFFFF"
-                    BorderBrush="#DCE7F0" BorderThickness="1.2">
+            <Border CornerRadius="12" Padding="14,10" Margin="0,0,8,0" Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1.2">
                 <DockPanel>
                     <Border DockPanel.Dock="Right" Width="34" Height="34" CornerRadius="10" Background="#E8F5E9"
                             VerticalAlignment="Top" Margin="0,0,0,0">
@@ -90,49 +90,49 @@
                                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <StackPanel>
-                        <TextBlock FontSize="11" Opacity="0.7" Foreground="#1F2937"><Run Text="جمع درآمد (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                        <TextBlock FontSize="11" Opacity="0.7" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"><Run Text="جمع درآمد (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                         <TextBlock Text="{Binding TotalRevenueDisplay}" FontSize="17" FontWeight="Bold" Foreground="#1B5E20"
                                    FontFamily="{DynamicResource App.CodeFont}" />
                     </StackPanel>
                 </DockPanel>
             </Border>
-            <Border CornerRadius="12" Padding="14,10" Margin="0,0,8,0" Background="#FFFFFF"
-                    BorderBrush="#DCE7F0" BorderThickness="1.2">
+            <Border CornerRadius="12" Padding="14,10" Margin="0,0,8,0" Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1.2">
                 <DockPanel>
                     <Border DockPanel.Dock="Right" Width="34" Height="34" CornerRadius="10" Background="#E3F2FD" VerticalAlignment="Top">
                         <materialDesign:PackIcon Kind="CreditCardCheckOutline" Width="19" Height="19" Foreground="#1565C0"
                                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <StackPanel>
-                        <TextBlock FontSize="11" Opacity="0.7" Foreground="#1F2937"><Run Text="وصول‌شده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                        <TextBlock FontSize="11" Opacity="0.7" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"><Run Text="وصول‌شده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                         <TextBlock Text="{Binding TotalPaidDisplay}" FontSize="17" FontWeight="Bold" Foreground="#0D47A1"
                                    FontFamily="{DynamicResource App.CodeFont}" />
                     </StackPanel>
                 </DockPanel>
             </Border>
-            <Border CornerRadius="12" Padding="14,10" Margin="0,0,8,0" Background="#FFFFFF"
-                    BorderBrush="#DCE7F0" BorderThickness="1.2">
+            <Border CornerRadius="12" Padding="14,10" Margin="0,0,8,0" Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1.2">
                 <DockPanel>
                     <Border DockPanel.Dock="Right" Width="34" Height="34" CornerRadius="10" Background="#FFF3E0" VerticalAlignment="Top">
                         <materialDesign:PackIcon Kind="ReceiptTextClockOutline" Width="19" Height="19" Foreground="#E65100"
                                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <StackPanel>
-                        <TextBlock FontSize="11" Opacity="0.7" Foreground="#1F2937"><Run Text="مانده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
+                        <TextBlock FontSize="11" Opacity="0.7" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"><Run Text="مانده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                         <TextBlock Text="{Binding TotalRemainingDisplay}" FontSize="17" FontWeight="Bold" Foreground="#B71C1C"
                                    FontFamily="{DynamicResource App.CodeFont}" />
                     </StackPanel>
                 </DockPanel>
             </Border>
-            <Border CornerRadius="12" Padding="14,10" Background="#FFFFFF"
-                    BorderBrush="#DCE7F0" BorderThickness="1.2">
+            <Border CornerRadius="12" Padding="14,10" Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1.2">
                 <DockPanel>
                     <Border DockPanel.Dock="Right" Width="34" Height="34" CornerRadius="10" Background="#F3E5F5" VerticalAlignment="Top">
                         <materialDesign:PackIcon Kind="Stethoscope" Width="19" Height="19" Foreground="#7B1FA2"
                                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <StackPanel>
-                        <TextBlock Text="جمع ویزیت‌ها" FontSize="11" Opacity="0.7"  Foreground="#1F2937"/>
+                        <TextBlock Text="جمع ویزیت‌ها" FontSize="11" Opacity="0.7"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                         <TextBlock Text="{Binding TotalVisitsDisplay}" FontSize="17" FontWeight="Bold" Foreground="#4A148C"
                                    FontFamily="{DynamicResource App.CodeFont}" />
                     </StackPanel>
@@ -164,7 +164,7 @@
                                                 ToolTip="{Binding Date, StringFormat=درآمد {0}}">
                                         <TextBlock Text="{Binding Total, Mode=OneWay, Converter={StaticResource CurrencyRial}}"
                                                    FontSize="8.5" HorizontalAlignment="Center"
-                                                   Foreground="#37474F" TextTrimming="CharacterEllipsis" />
+                                                   Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" TextTrimming="CharacterEllipsis" />
                                         <Border Height="{Binding BarHeight}"
                                                 CornerRadius="4,4,0,0" VerticalAlignment="Bottom" Margin="0,3">
                                             <Border.Background>
@@ -185,7 +185,7 @@
                     <!-- جدول درآمد -->
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Revenue}"
                               AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                              HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD"
+                              HeadersVisibility="Column" FontSize="12"
                              
                               materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>
@@ -225,7 +225,7 @@
                                     <StackPanel Width="76" Margin="3,0" VerticalAlignment="Bottom"
                                                 ToolTip="{Binding DoctorName}">
                                         <TextBlock Text="{Binding DoctorName}" FontSize="9" HorizontalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" Foreground="#37474F" />
+                                                   TextTrimming="CharacterEllipsis" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
                                         <Border Height="{Binding BarHeight}"
                                                 CornerRadius="4,4,0,0" VerticalAlignment="Bottom" Margin="0,3">
                                             <Border.Background>
@@ -246,7 +246,7 @@
                     <!-- جدول عملکرد -->
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Performance}"
                               AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                              HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD"
+                              HeadersVisibility="Column" FontSize="12"
                              
                               materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>

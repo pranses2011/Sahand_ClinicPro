@@ -197,11 +197,11 @@
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{Binding Kind, Mode=OneWay}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0"  Foreground="#1F2937"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding Title}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                    <TextBlock Grid.Column="0" Text="{Binding Kind, Mode=OneWay}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Title}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                     <TextBlock Grid.Column="2" Text="{Binding Value}" FontSize="11.5" Foreground="#B71C1C" FontWeight="SemiBold" Margin="10,0,10,0" VerticalAlignment="Center" />
-                                    <TextBlock Grid.Column="3" Text="{Binding Range, Mode=OneWay}" FontSize="10.5" Opacity="0.7" Margin="0,0,10,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                                    <TextBlock Grid.Column="4" Text="{Binding DateShamsi}" FontSize="10.5" Opacity="0.6" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding Range, Mode=OneWay}" FontSize="10.5" Opacity="0.7" Margin="0,0,10,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                    <TextBlock Grid.Column="4" Text="{Binding DateShamsi}" FontSize="10.5" Opacity="0.6" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 </Grid>
                             </Border>
                         </DataTemplate>
@@ -314,14 +314,14 @@
                                   MaxHeight="130">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="#FFFFFF" CornerRadius="8" Padding="8,4"
+                                <Border Background="{DynamicResource MaterialDesign.Brush.Card.Background}" CornerRadius="8" Padding="8,4"
                                         Margin="0,0,0,4" BorderBrush="#E1BEE7" BorderThickness="1">
                                     <DockPanel>
                                         <TextBlock Text="{Binding DateShamsi}" FontSize="9.5"
                                                    Foreground="#7B1FA2" Opacity="0.8" VerticalAlignment="Top"
                                                    FontFamily="{DynamicResource App.CodeFont}" DockPanel.Dock="Left" Margin="0,0,8,0" />
                                         <TextBlock Text="{Binding Text}" FontSize="11.5"
-                                                   TextWrapping="Wrap" Foreground="#1F2937" />
+                                                   TextWrapping="Wrap" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
                                     </DockPanel>
                                 </Border>
                             </DataTemplate>
@@ -339,8 +339,7 @@
                 <DataGrid ItemsSource="{Binding Visits}"
                           AutoGenerateColumns="False" IsReadOnly="True"
                           CanUserAddRows="False" FontSize="12"
-                          HeadersVisibility="Column"
-                          AlternatingRowBackground="#F7FAFD">
+                          HeadersVisibility="Column">
                     <!-- چرخهٔ ۴۸ — دابل‌کلیک: فرم کامل ویزیت (شرح حال/SOAP/حیاتی/تشخیص/ارجاع‌ها) -->
                     <DataGrid.InputBindings>
                         <MouseBinding MouseAction="LeftDoubleClick"
@@ -361,8 +360,7 @@
                 <DataGrid ItemsSource="{Binding Prescriptions}"
                           AutoGenerateColumns="False" IsReadOnly="True"
                           CanUserAddRows="False" FontSize="12"
-                          HeadersVisibility="Column"
-                          AlternatingRowBackground="#F7FAFD">
+                          HeadersVisibility="Column">
                     <!-- چرخهٔ ۴۸ — دابل‌کلیک: پنجرهٔ کامل اقلام نسخه -->
                     <DataGrid.InputBindings>
                         <MouseBinding MouseAction="LeftDoubleClick"
@@ -384,8 +382,7 @@
                 <DataGrid ItemsSource="{Binding Labs}"
                           AutoGenerateColumns="False" IsReadOnly="True"
                           CanUserAddRows="False" FontSize="12"
-                          HeadersVisibility="Column"
-                          AlternatingRowBackground="#F7FAFD">
+                          HeadersVisibility="Column">
                     <!-- چرخهٔ ۴۸ — دابل‌کلیک: پنجرهٔ نتایج آزمایش -->
                     <DataGrid.InputBindings>
                         <MouseBinding MouseAction="LeftDoubleClick"
@@ -408,8 +405,7 @@
                 <DataGrid ItemsSource="{Binding Invoices}"
                           AutoGenerateColumns="False" IsReadOnly="True"
                           CanUserAddRows="False" FontSize="12"
-                          HeadersVisibility="Column"
-                          AlternatingRowBackground="#F7FAFD">
+                          HeadersVisibility="Column">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="شماره فاکتور" Binding="{Binding InvoiceNumber, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
                         <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
@@ -426,8 +422,7 @@
                 <DataGrid ItemsSource="{Binding Appointments}"
                           AutoGenerateColumns="False" IsReadOnly="True"
                           CanUserAddRows="False" FontSize="12"
-                          HeadersVisibility="Column"
-                          AlternatingRowBackground="#F7FAFD">
+                          HeadersVisibility="Column">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
                         <DataGridTextColumn Header="ساعت" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="70" />
@@ -506,8 +501,7 @@
                 <DataGrid ItemsSource="{Binding Documents}"
                           AutoGenerateColumns="False" IsReadOnly="True"
                           CanUserAddRows="False" FontSize="12"
-                          HeadersVisibility="Column"
-                          AlternatingRowBackground="#F7FAFD">
+                          HeadersVisibility="Column">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="نوع" Binding="{Binding SourceTable, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="100" />
                         <DataGridTextColumn Header="عنوان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="160" />
@@ -526,10 +520,10 @@
                     </Grid.RowDefinitions>
 
                     <!-- نوار فیلترها -->
-                    <Border Grid.Row="0" Background="#F5F7FB" CornerRadius="10" Padding="10,8" Margin="0,0,0,8">
+                    <Border Grid.Row="0" Background="{DynamicResource MaterialDesign.Brush.Background}" CornerRadius="10" Padding="10,8" Margin="0,0,0,8">
                         <StackPanel>
                             <WrapPanel Orientation="Horizontal">
-                                <TextBlock Text="نمایش:" FontWeight="Bold" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,8,0"  Foreground="#1F2937"/>
+                                <TextBlock Text="نمایش:" FontWeight="Bold" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,8,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 <CheckBox Content="📋 ویزیت" IsChecked="{Binding TlVisits}" FontSize="11" Margin="0,0,10,4" />
                                 <CheckBox Content="🧪 آزمایش" IsChecked="{Binding TlLabs}" FontSize="11" Margin="0,0,10,4" />
                                 <CheckBox Content="🩻 تصویر" IsChecked="{Binding TlImaging}" FontSize="11" Margin="0,0,10,4" />
@@ -543,13 +537,13 @@
                                 <CheckBox Content="🏃 فیزیو" IsChecked="{Binding TlPhysio}" FontSize="11" Margin="0,0,10,4" />
                             </WrapPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                <TextBlock Text="سال شمسی:" FontWeight="Bold" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,8,0"  Foreground="#1F2937"/>
+                                <TextBlock Text="سال شمسی:" FontWeight="Bold" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,8,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 <ComboBox controls:ComboBoxSearch.IsEnabled="False" ItemsSource="{Binding TimelineYears}"
                                           SelectedItem="{Binding TimelineYearFilter}"
                                           MinWidth="110" FontSize="11.5" VerticalAlignment="Center">
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate>
-                                            <TextBlock Foreground="#1F2937">
+                                            <TextBlock Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Text" Value="{Binding}" />
@@ -594,18 +588,18 @@
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
                                         <!-- ستون تاریخ -->
-                                        <Border Grid.Column="0" Width="118" Margin="0,0,10,0" Background="#FFFFFF"
-                                                CornerRadius="8" Padding="6,4" BorderBrush="#E1E8F2" BorderThickness="1">
+                                        <Border Grid.Column="0" Width="118" Margin="0,0,10,0" Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                                                CornerRadius="8" Padding="6,4" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
                                             <StackPanel>
                                                 <TextBlock Text="{Binding DateShamsi}" FontSize="10.5" FontWeight="SemiBold"
-                                                           Foreground="#16355E" HorizontalAlignment="Center" />
+                                                           Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" HorizontalAlignment="Center" />
                                                 <TextBlock Text="{Binding TimeShamsi, Mode=OneWay}" FontSize="9.5" Opacity="0.55"
-                                                           HorizontalAlignment="Center"  Foreground="#1F2937"/>
+                                                           HorizontalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             </StackPanel>
                                         </Border>
                                         <!-- کارت رویداد -->
-                                        <Border Grid.Column="1" Background="#FFFFFF" CornerRadius="9"
-                                                Padding="11,7" BorderBrush="#E1E8F2" BorderThickness="1">
+                                        <Border Grid.Column="1" Background="{DynamicResource MaterialDesign.Brush.Card.Background}" CornerRadius="9"
+                                                Padding="11,7" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
                                             <StackPanel Orientation="Horizontal">
                                                 <Ellipse Width="13" Height="13" VerticalAlignment="Center" Margin="0,0,9,0"
                                                          Fill="{Binding DotColor, Mode=OneWay}"
@@ -615,10 +609,10 @@
                                                         <TextBlock Text="{Binding KindLabel, Mode=OneWay}" FontSize="10" FontWeight="Bold"
                                                                    Foreground="#5B708C" VerticalAlignment="Center" />
                                                         <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="SemiBold"
-                                                                   Margin="8,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap"  Foreground="#1F2937"/>
+                                                                   Margin="8,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                                     </StackPanel>
                                                     <TextBlock Text="{Binding Subtitle, Mode=OneWay}" FontSize="10.5" Opacity="0.65"
-                                                               Margin="0,2,0,0" TextWrapping="Wrap"  Foreground="#1F2937"/>
+                                                               Margin="0,2,0,0" TextWrapping="Wrap"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                                 </StackPanel>
                                             </StackPanel>
                                         </Border>

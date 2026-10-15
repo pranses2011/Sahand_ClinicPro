@@ -46,16 +46,16 @@
         </DockPanel>
 
         <!-- شناسنامهٔ بیمار — مبنای بازهٔ مرجع سنی/جنسیتی -->
-        <Border Grid.Row="1" CornerRadius="12" Background="#F5F7FB"
-                BorderBrush="#E0E0E0" BorderThickness="1" Padding="12,8" Margin="0,0,0,10">
+        <Border Grid.Row="1" CornerRadius="12" Background="{DynamicResource MaterialDesign.Brush.Background}"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1" Padding="12,8" Margin="0,0,0,10">
             <DockPanel>
                 <materialDesign:PackIcon Kind="Account" Width="20" Height="20"
                                          Foreground="#5C6BC0" VerticalAlignment="Center" />
                 <StackPanel Orientation="Vertical">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="بیمار:" FontSize="12" Opacity="0.6" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                        <TextBlock Text="بیمار:" FontSize="12" Opacity="0.6" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                         <TextBlock Text="{Binding PatientName}" FontSize="14" FontWeight="SemiBold"
-                                   Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                   Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                         <Border CornerRadius="8" Padding="6,1" Margin="8,0,0,0" Background="#EDE7F6"
                                 VerticalAlignment="Center"
                                 Visibility="{Binding PatientAgeText, Converter={StaticResource NullToVisibility}}">
@@ -64,7 +64,7 @@
                             </TextBlock>
                         </Border>
                     </StackPanel>
-                    <TextBlock FontSize="10.5" Opacity="0.55" Margin="0,3,0,0" Foreground="#1F2937">
+                    <TextBlock FontSize="10.5" Opacity="0.55" Margin="0,3,0,0" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                         <Run Text="بازهٔ مرجع بر اساس سن و جنسیت همین بیمار محاسبه شده است" />
                     </TextBlock>
                 </StackPanel>

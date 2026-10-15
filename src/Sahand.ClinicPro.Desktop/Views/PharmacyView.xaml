@@ -78,13 +78,13 @@
                         <Border Background="#E3F2FD" CornerRadius="10" Padding="12,8" Margin="0,0,0,10"
                                 Visibility="{Binding DispensePatient, Converter={StaticResource StringToVisibility}}">
                             <StackPanel>
-                                <TextBlock Text="{Binding DispensePatient, Mode=OneWay}" FontWeight="Bold" FontSize="14"  Foreground="#1F2937"/>
+                                <TextBlock Text="{Binding DispensePatient, Mode=OneWay}" FontWeight="Bold" FontSize="14"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 <ItemsControl ItemsSource="{Binding DispenseItems}" Margin="0,6,0,0">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="#FFFFFF" CornerRadius="8" Padding="9,5" Margin="0,0,0,4"
+                                            <Border Background="{DynamicResource MaterialDesign.Brush.Card.Background}" CornerRadius="8" Padding="9,5" Margin="0,0,0,4"
                                                     BorderBrush="#90CAF9" BorderThickness="1" HorizontalAlignment="Left">
-                                                <TextBlock Text="{Binding}" FontSize="12"  Foreground="#1F2937"/>
+                                                <TextBlock Text="{Binding}" FontSize="12"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -133,7 +133,7 @@
                                  Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
                     <DataGrid Grid.Row="2" ItemsSource="{Binding Inventory}"
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                              HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                              HeadersVisibility="Column" FontSize="12">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="قلم" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
                             <!-- چرخهٔ ۴۳ — ستون نوع حذف شد (فقط دارو) و ستون شمار بچ جای آن نشست -->
@@ -216,7 +216,7 @@
                     <DataGrid Grid.Row="1" ItemsSource="{Binding LowStockItems}"
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12"
-                              RowBackground="#FFF8E1">
+                              RowBackground="#2EF9A825">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="دارو" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
                             <DataGridTextColumn Header="موجودی فعلی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="{DynamicResource App.CodeFont}" />

@@ -42,8 +42,7 @@
                   IsReadOnly="True"
                   CanUserAddRows="False"
                   HeadersVisibility="Column"
-                  FontSize="12"
-                  AlternatingRowBackground="#F7FAFD">
+                  FontSize="12">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="شماره" Binding="{Binding RoomNumber, Converter={StaticResource PersianDigits}}"
                                     Width="Auto" MinWidth="60" FontFamily="{DynamicResource App.CodeFont}" />

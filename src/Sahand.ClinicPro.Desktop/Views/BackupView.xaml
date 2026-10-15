@@ -68,8 +68,7 @@
                 <TextBlock Text="تاریخچه پشتیبان‌ها" FontSize="14.5" FontWeight="Bold" Margin="2,14,2,8" />
                 <DataGrid ItemsSource="{Binding History}" SelectedItem="{Binding SelectedBackup}"
                           AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                          HeadersVisibility="Column" FontSize="12" MaxHeight="220"
-                          AlternatingRowBackground="#F7FAFD">
+                          HeadersVisibility="Column" FontSize="12" MaxHeight="220">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="تاریخ" Binding="{Binding DateText, Converter={StaticResource PersianDigits}}" Width="140" />
                         <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="90" />
@@ -101,7 +100,7 @@
                             <materialDesign:PackIcon Kind="InformationOutline" Width="18" Height="18"
                                                      Foreground="#1565C0" VerticalAlignment="Center" />
                             <TextBlock Margin="7,0,0,0" VerticalAlignment="Center" FontWeight="Bold"
-                                       FontSize="13" Foreground="#1F2937">
+                                       FontSize="13" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                 <Run Text="جزئیات پشتیبان — " /><Run Text="{Binding SelectedBackup.DateText, Mode=OneWay}" />
                             </TextBlock>
                         </StackPanel>
@@ -118,24 +117,24 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="نوع: " Opacity="0.65" FontSize="11.5"  Foreground="#1F2937"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedBackup.TypeText, Mode=OneWay}" FontSize="11.5"  Foreground="#1F2937"/>
-                            <TextBlock Grid.Row="0" Grid.Column="3" Text="حالت: " Opacity="0.65" FontSize="11.5"  Foreground="#1F2937"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="نوع: " Opacity="0.65" FontSize="11.5"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedBackup.TypeText, Mode=OneWay}" FontSize="11.5"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                            <TextBlock Grid.Row="0" Grid.Column="3" Text="حالت: " Opacity="0.65" FontSize="11.5"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                             <TextBlock Grid.Row="0" Grid.Column="4" FontSize="11.5"
-                                       Text="{Binding SelectedBackup.IsAutomatic, Mode=OneWay, Converter={StaticResource BoolToText}}"  Foreground="#1F2937"/>
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="پایان: " Opacity="0.65" FontSize="11.5" Margin="0,4,0,0"  Foreground="#1F2937"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedBackup.CompletedText, Mode=OneWay}" FontSize="11.5" Margin="0,4,0,0"  Foreground="#1F2937"/>
-                            <TextBlock Grid.Row="1" Grid.Column="3" Text="محل ذخیره: " Opacity="0.65" FontSize="11.5" Margin="0,4,0,0"  Foreground="#1F2937"/>
-                            <TextBlock Grid.Row="1" Grid.Column="4" Text="{Binding SelectedBackup.StorageText, Mode=OneWay}" FontSize="11.5" Margin="0,4,0,0"  Foreground="#1F2937"/>
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="فایل: " Opacity="0.65" FontSize="11.5" Margin="0,4,0,0"  Foreground="#1F2937"/>
+                                       Text="{Binding SelectedBackup.IsAutomatic, Mode=OneWay, Converter={StaticResource BoolToText}}"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="پایان: " Opacity="0.65" FontSize="11.5" Margin="0,4,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedBackup.CompletedText, Mode=OneWay}" FontSize="11.5" Margin="0,4,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="3" Text="محل ذخیره: " Opacity="0.65" FontSize="11.5" Margin="0,4,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="4" Text="{Binding SelectedBackup.StorageText, Mode=OneWay}" FontSize="11.5" Margin="0,4,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="فایل: " Opacity="0.65" FontSize="11.5" Margin="0,4,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                             <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4" Margin="0,4,0,0"
                                        Text="{Binding SelectedBackup.FilePath, Mode=OneWay, TargetNullValue=—}"
-                                       FontFamily="{DynamicResource App.CodeFont}" FontSize="11" TextWrapping="Wrap"  Foreground="#1F2937"/>
+                                       FontFamily="{DynamicResource App.CodeFont}" FontSize="11" TextWrapping="Wrap"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                         </Grid>
                         <!-- فایل ابری — فقط پشتیبان‌های ابری -->
                         <TextBlock Margin="0,6,0,0" FontSize="11.5" Opacity="0.8"
                                    Text="{Binding SelectedBackup.CloudFileName, Mode=OneWay, TargetNullValue=''}"
-                                   Visibility="{Binding SelectedBackup.CloudFileName, Converter={StaticResource NullToVisibility}}"  Foreground="#1F2937"/>
+                                   Visibility="{Binding SelectedBackup.CloudFileName, Converter={StaticResource NullToVisibility}}"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                         <!-- پیام خطا — فقط پشتیبان‌های ناموفق -->
                         <Border Background="#FFEBEE" CornerRadius="8" Padding="9,6" Margin="0,8,0,0"
                                 Visibility="{Binding SelectedBackup.ErrorMessage, Converter={StaticResource NullToVisibility}}">
@@ -167,8 +166,8 @@
                             <Button DockPanel.Dock="Left" Command="{Binding RestoreSelectedFileCommand}"
                                     Style="{StaticResource MaterialDesignRaisedButton}" Padding="10,4" FontSize="12">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="FileRestore" Width="15" Height="15" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                                    <TextBlock Text="بازیابی فایل انتخاب‌شده" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                    <materialDesign:PackIcon Kind="FileRestore" Width="15" Height="15" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                    <TextBlock Text="بازیابی فایل انتخاب‌شده" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 </StackPanel>
                             </Button>
                             <!-- ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک): «امکان انتخاب فایل
@@ -178,20 +177,20 @@
                                     Style="{StaticResource MaterialDesignOutlinedButton}" Padding="10,4"
                                     FontSize="12" Margin="8,0,0,0">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Usb" Width="15" Height="15" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                                    <TextBlock Text="بازیابی از هارد / فلش…" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                    <materialDesign:PackIcon Kind="Usb" Width="15" Height="15" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                    <TextBlock Text="بازیابی از هارد / فلش…" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 </StackPanel>
                             </Button>
                             <TextBlock Text="📂 فایل‌های پشتیبان پوشهٔ ذخیره (ZIP/BAK — نام شمسی) — برای بازیابی یا حذف، یکی را انتخاب کنید:"
                                        FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"
-                                       Margin="0,0,12,0" TextWrapping="Wrap" MaxWidth="420"  Foreground="#1F2937"/>
+                                       Margin="0,0,12,0" TextWrapping="Wrap" MaxWidth="420"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                             <!-- چرخه ۲۴ — حذف دستی فایل پشتیبان قدیمی (گزارش هفدهم مالک) -->
                             <Button Command="{Binding DeleteBackupFileCommand}"
                                     Style="{StaticResource MaterialDesignFlatButton}"
                                     Foreground="#C62828" DockPanel.Dock="Right" Margin="0,0,0,0">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Delete" Width="14" Height="14" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                                    <TextBlock Text="🗑 حذف فایل انتخاب‌شده" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                    <materialDesign:PackIcon Kind="Delete" Width="14" Height="14" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                    <TextBlock Text="🗑 حذف فایل انتخاب‌شده" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 </StackPanel>
                             </Button>
                         </DockPanel>
@@ -200,7 +199,7 @@
                                   SelectedItem="{Binding SelectedBackupFile}"
                                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                                   HeadersVisibility="Column" FontSize="11.5" MaxHeight="190"
-                                  Margin="0,9,0,0" AlternatingRowBackground="#F7FAFD">
+                                  Margin="0,9,0,0">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="نام فایل" Binding="{Binding FileName, Converter={StaticResource PersianDigits}}" Width="*" />
                                 <DataGridTextColumn Header="نوع" Binding="{Binding Kind}" Width="Auto" MinWidth="90" />
@@ -277,14 +276,14 @@
                                   Margin="0,10,0,0" IsExpanded="False">
                             <Border Padding="12,10" CornerRadius="10" Background="#F7FAFD">
                                 <StackPanel MaxWidth="640" HorizontalAlignment="Stretch">
-                                    <TextBlock Text="ارائه‌دهندهٔ مقصد ابری:" FontSize="11.5" Margin="2,4,2,4"  Foreground="#1F2937"/>
+                                    <TextBlock Text="ارائه‌دهندهٔ مقصد ابری:" FontSize="11.5" Margin="2,4,2,4"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                     <ComboBox ItemsSource="{Binding CloudProviderOptions}"
                                               SelectedIndex="{Binding CloudProviderIndex}"
                                               />
 
                                     <!-- فیلدهای S3 — فقط وقتی ارائه‌دهندهٔ S3 انتخاب شده -->
                                     <StackPanel Visibility="{Binding CloudProviderIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}" Margin="0,8,0,0">
-                                        <TextBlock Text="نشانی نقطهٔ اتصال (Endpoint) — مثل s3.ir-thr-at1.arvanstorage.ir" FontSize="11" Margin="2,6,2,3"  Foreground="#1F2937"/>
+                                        <TextBlock Text="نشانی نقطهٔ اتصال (Endpoint) — مثل s3.ir-thr-at1.arvanstorage.ir" FontSize="11" Margin="2,6,2,3"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                         <TextBox Text="{Binding CloudEndpoint, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
                                         <Grid Margin="0,6,0,0">
                                             <Grid.ColumnDefinitions>
@@ -293,21 +292,21 @@
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
                                             <StackPanel Grid.Column="0">
-                                                <TextBlock Text="نام سطل (Bucket)" FontSize="11" Margin="2,4,2,3"  Foreground="#1F2937"/>
+                                                <TextBlock Text="نام سطل (Bucket)" FontSize="11" Margin="2,4,2,3"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                                 <TextBox Text="{Binding CloudBucket, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
                                             </StackPanel>
                                             <StackPanel Grid.Column="2">
-                                                <TextBlock Text="ناحیه (Region)" FontSize="11" Margin="2,4,2,3"  Foreground="#1F2937"/>
+                                                <TextBlock Text="ناحیه (Region)" FontSize="11" Margin="2,4,2,3"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                                 <TextBox Text="{Binding CloudRegion, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
                                             </StackPanel>
                                         </Grid>
-                                        <TextBlock Text="پیشوند کلیدها در سطل (Prefix)" FontSize="11" Margin="2,8,2,3"  Foreground="#1F2937"/>
+                                        <TextBlock Text="پیشوند کلیدها در سطل (Prefix)" FontSize="11" Margin="2,8,2,3"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                         <TextBox Text="{Binding CloudPrefix, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
                                     </StackPanel>
 
                                     <!-- پوشهٔ محلی — فقط وقتی ارائه‌دهندهٔ local انتخاب شده -->
                                     <StackPanel Visibility="{Binding CloudProviderIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=2}" Margin="0,8,0,0">
-                                        <TextBlock Text="پوشهٔ مقصد (روی سرور — مثل D:\CloudBackups یا مسیر شبکه)" FontSize="11" Margin="2,4,2,3"  Foreground="#1F2937"/>
+                                        <TextBlock Text="پوشهٔ مقصد (روی سرور — مثل D:\CloudBackups یا مسیر شبکه)" FontSize="11" Margin="2,4,2,3"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                         <TextBox Text="{Binding CloudLocalFolder, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
                                     </StackPanel>
 
@@ -319,19 +318,19 @@
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="کلید دسترسی (Access Key)" FontSize="11" Margin="2,4,2,3"  Foreground="#1F2937"/>
+                                            <TextBlock Text="کلید دسترسی (Access Key)" FontSize="11" Margin="2,4,2,3"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <TextBox Text="{Binding CloudAccessKey, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="کلید رمزی (Secret Key)" FontSize="11" Margin="2,4,2,3"  Foreground="#1F2937"/>
+                                            <TextBlock Text="کلید رمزی (Secret Key)" FontSize="11" Margin="2,4,2,3"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <TextBox Text="{Binding CloudSecretKey, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
                                         </StackPanel>
                                     </Grid>
                                     <TextBlock FontSize="10" Opacity="0.6" Margin="2,4,0,0" TextWrapping="Wrap"
-                                               Text="{Binding CloudHasStoredKeys, Converter={StaticResource BoolToText}, ConverterParameter=YesNo, Mode=OneWay}"  Foreground="#1F2937"/>
-                                    <TextBlock Text="«بله» یعنی کلیدها از قبل ذخیره‌اند — کادرهای خالی مقدار قبلی را حفظ می‌کنند." FontSize="10" Opacity="0.55" Margin="2,2,0,6" TextWrapping="Wrap"  Foreground="#1F2937"/>
+                                               Text="{Binding CloudHasStoredKeys, Converter={StaticResource BoolToText}, ConverterParameter=YesNo, Mode=OneWay}"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                    <TextBlock Text="«بله» یعنی کلیدها از قبل ذخیره‌اند — کادرهای خالی مقدار قبلی را حفظ می‌کنند." FontSize="10" Opacity="0.55" Margin="2,2,0,6" TextWrapping="Wrap"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
 
-                                    <TextBlock Text="کلید رمزنگاری AES-256 فایل‌ها (اختیاری — برای رمزنگاری نسخه‌های ابری)" FontSize="11" Margin="2,4,2,3"  Foreground="#1F2937"/>
+                                    <TextBlock Text="کلید رمزنگاری AES-256 فایل‌ها (اختیاری — برای رمزنگاری نسخه‌های ابری)" FontSize="11" Margin="2,4,2,3"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                     <TextBox Text="{Binding CloudEncryptionKey, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
 
                                     <CheckBox Content="بارگذاری خودکار به ابر پس از هر پشتیبان موفق" IsChecked="{Binding CloudAutoUpload}" Margin="2,10,2,6" />
@@ -339,14 +338,14 @@
                                     <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
                                         <Button Command="{Binding SaveCloudConfigCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
                                             <StackPanel Orientation="Horizontal">
-                                                <materialDesign:PackIcon Kind="ContentSave" Width="14" Height="14" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                                                <TextBlock Text="ذخیرهٔ تنظیمات ابری" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                                <materialDesign:PackIcon Kind="ContentSave" Width="14" Height="14" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                                <TextBlock Text="ذخیرهٔ تنظیمات ابری" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             </StackPanel>
                                         </Button>
                                         <Button Command="{Binding CloudTestCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0">
                                             <StackPanel Orientation="Horizontal">
-                                                <materialDesign:PackIcon Kind="Plug" Width="14" Height="14" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                                                <TextBlock Text="تست اتصال" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                                <materialDesign:PackIcon Kind="Plug" Width="14" Height="14" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                                <TextBlock Text="تست اتصال" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             </StackPanel>
                                         </Button>
                                     </StackPanel>
@@ -372,7 +371,7 @@
                             <TextBox Text="{Binding LogHours}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="{DynamicResource App.CodeFont}" materialDesign:HintAssist.Hint="فاصلهٔ بکاپ لاگ (ساعت)"/>
 
-                            <TextBlock Text="مسیر ذخیره محلی:" FontSize="12" Margin="2,10,0,4"  Foreground="#1F2937"/>
+                            <TextBlock Text="مسیر ذخیره محلی:" FontSize="12" Margin="2,10,0,4"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                             <TextBox Text="{Binding BackupPath}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
 
@@ -385,15 +384,15 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
-                                    <TextBlock Text="نگهداری کامل (روز)" FontSize="11" Opacity="0.7"  Foreground="#1F2937"/>
+                                    <TextBlock Text="نگهداری کامل (روز)" FontSize="11" Opacity="0.7"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                     <TextBox Text="{Binding KeepFullDays}" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="{DynamicResource App.CodeFont}" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
-                                    <TextBlock Text="نگهداری Diff (روز)" FontSize="11" Opacity="0.7"  Foreground="#1F2937"/>
+                                    <TextBlock Text="نگهداری Diff (روز)" FontSize="11" Opacity="0.7"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                     <TextBox Text="{Binding KeepDiffDays}" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="{DynamicResource App.CodeFont}" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="4">
-                                    <TextBlock Text="نگهداری Log (ساعت)" FontSize="11" Opacity="0.7"  Foreground="#1F2937"/>
+                                    <TextBlock Text="نگهداری Log (ساعت)" FontSize="11" Opacity="0.7"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                     <TextBox Text="{Binding KeepLogHours}" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontFamily="{DynamicResource App.CodeFont}" />
                                 </StackPanel>
                             </Grid>
@@ -404,8 +403,8 @@
                             <Button Command="{Binding SaveAutoSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
                                     HorizontalAlignment="Left" Margin="0,12,0,4">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center"  Foreground="#1F2937"/>
-                                    <TextBlock Text="💾 ذخیره تنظیمات" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                    <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                    <TextBlock Text="💾 ذخیره تنظیمات" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>

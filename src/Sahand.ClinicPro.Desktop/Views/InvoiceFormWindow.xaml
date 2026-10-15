@@ -63,7 +63,7 @@
                                 </Grid>
                                 <Border Background="#E3F2FD" CornerRadius="8" Padding="9,4" Margin="0,6,0,0"
                                         Visibility="{Binding Patient, Converter={StaticResource NullToVisibility}}">
-                                    <TextBlock Text="{Binding Patient.FullName, Mode=OneWay}" FontWeight="SemiBold" FontSize="12.5"  Foreground="#1F2937"/>
+                                    <TextBlock Text="{Binding Patient.FullName, Mode=OneWay}" FontWeight="SemiBold" FontSize="12.5"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 </Border>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Margin="0,0,10,0">

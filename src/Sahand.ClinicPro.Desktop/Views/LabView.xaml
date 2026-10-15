@@ -111,7 +111,7 @@
                               VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
                               ScrollViewer.IsDeferredScrollingEnabled="True"
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                              HeadersVisibility="Column" FontSize="11.5" AlternatingRowBackground="#F7FAFD">
+                              HeadersVisibility="Column" FontSize="11.5">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="نام آزمایش" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="200" FontWeight="Bold" />
                             <DataGridTextColumn Header="کد" Binding="{Binding TestCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="80"
@@ -199,7 +199,7 @@
                   ItemsSource="{Binding Orders}"
                   SelectedItem="{Binding SelectedOrder}"
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                  HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD"
+                  HeadersVisibility="Column" FontSize="12"
                   MouseDoubleClick="OnOrderDoubleClick">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="شماره درخواست" Binding="{Binding Number, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="{DynamicResource App.CodeFont}" />

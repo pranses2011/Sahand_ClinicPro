@@ -69,9 +69,9 @@
                                         Visibility="{Binding DentalPatient, Converter={StaticResource NullToVisibility}}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="AccountCheck" Width="16" Height="16" Foreground="#2E7D32" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding DentalPatient.FullName, Mode=OneWay}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"  Foreground="#1F2937"/>
+                                        <TextBlock Text="{Binding DentalPatient.FullName, Mode=OneWay}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                         <TextBlock Text="{Binding DentalPatient.NationalCode, Mode=OneWay}" Opacity="0.7" FontSize="11"
-                                                   VerticalAlignment="Center" Margin="10,0,0,0"  Foreground="#1F2937"/>
+                                                   VerticalAlignment="Center" Margin="10,0,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                         <TextBlock Text="{Binding DentalPatient.Allergies, Mode=OneWay, TargetNullValue='', FallbackValue=''}" Foreground="#C62828"
                                                    FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0"
                                                    Visibility="{Binding DentalPatient.Allergies, Converter={StaticResource StringToVisibility}}" />
@@ -407,11 +407,11 @@
                                                     <DataTemplate>
                                                         <Border CornerRadius="8" Padding="9,6" Margin="0,0,0,5" Background="#FFF8E1">
                                                             <StackPanel>
-                                                                <TextBlock FontSize="12" Foreground="#1F2937">
+                                                                <TextBlock FontSize="12" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                                                     <Run Text="دندان " /><Run Text="{Binding Tooth, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" FontWeight="Bold" />
                                                                     <Run Text=" — " /><Run Text="{Binding Procedure, Mode=OneWay}" FontWeight="SemiBold" />
                                                                 </TextBlock>
-                                                                <TextBlock FontSize="10.5" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}" Foreground="#1F2937">
+                                                                <TextBlock FontSize="10.5" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                                                     <!-- چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان) — حذف هاردکد -->
                                                                     <Run Text="{Binding Price, Mode=OneWay, Converter={StaticResource CurrencyRial}}" /><Run Text=" " /><Run Text="{DynamicResource App.CurrencyLabel}" />
                                                                 </TextBlock>

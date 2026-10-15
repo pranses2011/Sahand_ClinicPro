@@ -8,7 +8,7 @@
         FlowDirection="RightToLeft"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize" ShowInTaskbar="False"
-        Background="#FAFBFD">
+        Background="{DynamicResource MaterialDesign.Brush.Background}">
     <!-- ═══════════════════════════════════════════════════════════
          انتخابگر میانبر داشبورد — چرخهٔ سی‌ونه‌م: فهرست سادهٔ تک‌انتخابی.
          ═══ چرخهٔ چهل‌ودوم (گزارش مالک) ═══
@@ -40,8 +40,8 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
                         <Border x:Name="Card" CornerRadius="12"
-                                Background="#FFFFFF"
-                                BorderBrush="#E4E8EE" BorderThickness="1"
+                                Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
                                 Padding="10,9" Margin="2,3"
                                 Cursor="Hand"
                                 SnapsToDevicePixels="True">
@@ -77,7 +77,7 @@
                                             VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Title}" FontSize="13.5"
                                                FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
-                                               ToolTip="{Binding Title}"  Foreground="#1F2937"/>
+                                               ToolTip="{Binding Title}"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                     <!-- چیپ خطی دسته — حاشیه و متن به رنگ دسته -->
                                     <Border CornerRadius="8" BorderBrush="{Binding GroupColor}"
                                             BorderThickness="1" Background="Transparent"
@@ -248,8 +248,8 @@
         </Grid>
 
         <!-- ═══ فوتر: انصراف + افزودن هوشمند ═══ -->
-        <Border Grid.Row="2" BorderBrush="#E4E8EE" BorderThickness="0,1,0,0"
-                Background="#FFFFFF" Padding="18,10,18,12">
+        <Border Grid.Row="2" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="0,1,0,0"
+                Background="{DynamicResource MaterialDesign.Brush.Card.Background}" Padding="18,10,18,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />

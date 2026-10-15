@@ -100,7 +100,7 @@
                     <DataGrid ItemsSource="{Binding Invoices}"
                               SelectedItem="{Binding SelectedInvoice}"
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                              HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                              HeadersVisibility="Column" FontSize="12">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="شماره" Binding="{Binding InvoiceNumber, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="85" />
@@ -146,7 +146,7 @@
                         <ItemsControl ItemsSource="{Binding Transactions}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border CornerRadius="8" Padding="9,7" Margin="0,0,0,5" Background="#FAFAFA"
+                                    <Border CornerRadius="8" Padding="9,7" Margin="0,0,0,5" Background="{DynamicResource MaterialDesign.Brush.Background}"
                                             BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                                             BorderThickness="1">
                                         <Grid>
@@ -156,10 +156,10 @@
                                             </Grid.ColumnDefinitions>
                                             <StackPanel Grid.Column="0">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="12"  Foreground="#1F2937"/>
-                                                    <TextBlock Text="{Binding MethodText}" FontSize="10.5" Opacity="0.7" Margin="10,0,0,0" VerticalAlignment="Center"  Foreground="#1F2937"/>
+                                                    <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" FontSize="12"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                                    <TextBlock Text="{Binding MethodText}" FontSize="10.5" Opacity="0.7" Margin="10,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                                 </StackPanel>
-                                                <TextBlock FontSize="10.5" Opacity="0.6" Margin="0,2,0,0" Foreground="#1F2937">
+                                                <TextBlock FontSize="10.5" Opacity="0.6" Margin="0,2,0,0" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
                                                     <Run Text="ساعت " /><Run Text="{Binding Time, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
                                                     <Run Text=" — فاکتور " /><Run Text="{Binding InvoiceId, Mode=OneWay, TargetNullValue=—}" />
                                                 </TextBlock>

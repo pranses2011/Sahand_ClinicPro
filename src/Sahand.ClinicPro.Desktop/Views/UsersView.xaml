@@ -68,7 +68,7 @@
         <!-- فهرست کاربران -->
         <DataGrid Grid.Row="3" ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}"
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                  HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                  HeadersVisibility="Column" FontSize="12">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="نام کاربری" Binding="{Binding Username, Converter={StaticResource PersianDigits}}" Width="130" FontWeight="SemiBold" FontFamily="{DynamicResource App.CodeFont}" />
                 <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="170" />
