@@ -58,6 +58,35 @@ public partial class ReportsController : ApiBaseController
     /// <summary>تاریخِ ایرانِ یک لحظهٔ UTC — برای فیلتر ستون‌های DateOnly</summary>
     private static DateOnly IranDateOf(DateTime utc) => DateOnly.FromDateTime(utc + IranOffset);
 
+    /// <summary>
+    /// ═══ چرخهٔ ۷۹ — گارد تاریخِ جلالیِ ارسالی از کلاینت‌های قدیمی ═══
+    /// ریشهٔ واقعی «گزارش‌های همه-صفر» (هشتمین گزارش مالک): نسخه‌های پیشین
+    /// دسکتاپ به‌دلیل تقویمِ فرهنگ fa-IR، رشتهٔ «yyyy-MM-dd» با اجزای جلالی
+    /// می‌فرستادند (مثلاً 1405-07-22 به‌جای 2026-10-14)؛ مدل‌بایند [FromQuery]
+    /// آن را «سال ۱۴۰۵ میلادی» بی‌صدا می‌پنداشت → بازهٔ قرن پانزدهم → همهٔ
+    /// کوئری‌ها تهی → همهٔ گزارش‌ها صفر با پیام «در این بازه ردیفی ثبت نشده».
+    /// سالِ میلادیِ ۱۳۰۰..۱۵۰۰ برای داده‌های درمانگاه هرگز معتبر نیست؛ چنین
+    /// مقداری به‌عنوان «جلالی» شناسایی و به میلادی واقعی برگردانده می‌شود تا
+    /// ایستگاه‌هایی که هنوز بیلد قدیمی اجرا می‌کنند هم گزارش درست بگیرند.
+    /// </summary>
+    private static DateTime NormalizeClientDate(DateTime d)
+    {
+        if (d.Year is >= 1300 and <= 1500)
+        {
+            try
+            {
+                return Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper
+                    .ToGregorian(d.Year, d.Month, d.Day);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                // روز/ماه جلالی نامعتبر — همان مقدار خام برگردد (بازهٔ تهی می‌ماند
+                // ولی لاگ‌پذیر است؛ سرور نباید با ورودی خراب کرش کند)
+            }
+        }
+        return d;
+    }
+
     /// <summary>سازنده با تزریق میانجی، واحد کار (نوشتن‌های نادر) و کانتکست گزارش + کش حافظه‌ای (چرخه ۱۲ B5)</summary>
     public ReportsController(IMediator mediator, IUnitOfWork unitOfWork,
         Sahand.ClinicPro.Infrastructure.Persistence.ReportingDbContext reporting,
@@ -263,12 +292,15 @@ public partial class ReportsController : ApiBaseController
         // تاریخ‌های ورودی کلاینت، تاریخِ تقویم شمسی به وقت ایران هستند؛ نیمه‌شبِ
         // آن روز در UTC ذخیره می‌شود و پایان روز هم کاملِ همان روز را می‌پوشاند
         // (پیش‌تر «تا تاریخ» = ۰۰:۰۰ همان روز بود و کل روزِ پایانی حذف می‌شد).
+        // ═══ چرخهٔ ۷۹ — ابتدا گارد جلالی: کلاینت قدیمی اجزای جلالی فرستاده؟ ═══
         var from = fromDate ?? DateTime.UtcNow.AddDays(-30);
         var to = toDate ?? DateTime.UtcNow;
         if (fromDate.HasValue)
-            from = IranDayStartUtc(fromDate.Value);
+            from = IranDayStartUtc(NormalizeClientDate(fromDate.Value));
         if (toDate.HasValue)
-            to = IranDayEndUtc(toDate.Value);
+            to = IranDayEndUtc(NormalizeClientDate(toDate.Value));
+        if (date.HasValue)
+            date = NormalizeClientDate(date.Value);
         top = Math.Clamp(top, 1, 200);
         months = Math.Clamp(months, 1, 120);
 

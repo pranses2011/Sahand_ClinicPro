@@ -63,10 +63,17 @@ public sealed class TimeOnlyLenientJsonConverter : JsonConverter<TimeOnly>
 /// DateOnly بومی فقط «yyyy-MM-dd» می‌پذیرد؛ این مبدل همان قالب را نگه می‌دارد
 /// و فقط پیام خطای فارسیِ شفاف اضافه می‌کند (تاریخ شمسی مثل «1404/07/21»
 /// نباید بی‌توضیح رد شود — پیام روشن می‌کند قالب درست چیست).
+/// ═══ چرخهٔ ۷۹ — تحمل تاریخ جلالیِ کلاینت‌های قدیمی ═══
+/// نسخ‌های پیشین دسکتاپ (قبل از v2.21.0) به‌دلیل تقویمِ فرهنگ fa-IR، اجزای
+/// «جلالی» با قالب میلادی می‌فرستادند (مثلاً 1405-07-22). سال میلادی در بازهٔ
+/// ۱۳۰۰ تا ۱۵۰۰ برای درمانگاه هرگز معتبر نیست؛ چنین مقداری به‌عنوان تاریخ
+/// جلالی شناسایی و به میلادی واقعی برگردانده می‌شود تا داده‌های ثبت‌شدهٔ
+/// ایستگاه‌ها با بیلد قدیمی هم بی‌خطا و «درست» ذخیره شوند (قاعدهٔ مالک:
+/// «خطاهایی که برطرف می‌کنی را در جاهای دیگر هم برطرف کن»).
 /// </remarks>
 public sealed class DateOnlyLenientJsonConverter : JsonConverter<DateOnly>
 {
-    /// <summary>خواندن — فقط قالب استاندارد ISO؛ خطا با پیام فارسی روشن</summary>
+    /// <summary>خواندن — قالب استاندارد ISO؛ سالِ جلالیِ خطاپیشه به میلادی برمی‌گردد</summary>
     public override DateOnly Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         var raw = reader.GetString();
@@ -74,12 +81,29 @@ public sealed class DateOnlyLenientJsonConverter : JsonConverter<DateOnly>
             throw new JsonException("مقدار تاریخ تهی است");
 
         if (DateOnly.TryParseExact(raw.Trim(), "yyyy-MM-dd", out var parsed))
+        {
+            // کلاینت قدیمی اجزای جلالی فرستاده (مثل 1405-07-22) — سال میلادیِ
+            // ۱۳۰۰..۱۵۰۰ در دامنهٔ داده‌های درمانگاه معنا ندارد؛ به میلادی برمی‌گردد.
+            if (parsed.Year is >= 1300 and <= 1500)
+            {
+                try
+                {
+                    var g = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper
+                        .ToGregorian(parsed.Year, parsed.Month, parsed.Day);
+                    return DateOnly.FromDateTime(g);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    // روز/ماه جلالی نامعتبر است — به خطای پایین بیفتد تا معلوم بماند
+                }
+            }
             return parsed;
+        }
 
         throw new JsonException($"قالب تاریخ نامعتبر است: «{raw}» — قالب مجاز: yyyy-MM-dd (میلادی)");
     }
 
-    /// <summary>نوشتن — قالب استاندارد ISO «yyyy-MM-dd»</summary>
+    /// <summary>نوشتن — قالب استاندارد ISO «yyyy-MM-dd» (صریحاً فرهنگ خنثی)</summary>
     public override void Write(Utf8JsonWriter writer, DateOnly value, JsonSerializerOptions options)
-        => writer.WriteStringValue(value.ToString("yyyy-MM-dd"));
+        => writer.WriteStringValue(value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
 }

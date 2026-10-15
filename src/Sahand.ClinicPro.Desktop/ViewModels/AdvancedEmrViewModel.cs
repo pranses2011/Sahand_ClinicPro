@@ -221,7 +221,8 @@ public partial class AdvancedEmrViewModel : ViewModelBase
             var ok = await _api.PostAsync("emr/growth", new
             {
                 patientId = SelectedPatient.Id,
-                measuredAt = measuredAt.Value.ToString("yyyy-MM-dd"),
+                // چرخهٔ ۷۹: قالب‌بندی صریح با فرهنگ خنثی — مقاوم در برابر تقویم فرهنگ جاری
+                measuredAt = measuredAt.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
                 weightKg = weight,
                 heightCm = height,
                 headCircumferenceCm = head,
@@ -438,8 +439,9 @@ public partial class AdvancedEmrViewModel : ViewModelBase
                 patientId = SelectedPatient.Id,
                 diseaseTitle = DiseaseTitle.Trim(),
                 icd10Code = string.IsNullOrWhiteSpace(CareIcd10) ? null : CareIcd10.Trim(),
-                startDate = start.Value.ToString("yyyy-MM-dd"),
-                nextReviewDate = nextReview?.ToString("yyyy-MM-dd"),
+                // چرخهٔ ۷۹: قالب‌بندی صریح با فرهنگ خنثی — مقاوم در برابر تقویم فرهنگ جاری
+                startDate = start.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+                nextReviewDate = nextReview?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
                 goals = EmptyToNull(Goals),
                 actions = EmptyToNull(Actions),
                 careTeam = EmptyToNull(CareTeam),

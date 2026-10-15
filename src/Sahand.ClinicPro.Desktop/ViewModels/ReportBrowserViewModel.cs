@@ -392,12 +392,17 @@ public partial class ReportBrowserViewModel : ViewModelBase
             var qs = new List<string>();
             if (HasDateRange)
             {
-                qs.Add($"fromDate={FromDate:yyyy-MM-dd}");
-                qs.Add($"toDate={ToDate:yyyy-MM-dd}");
+                // چرخهٔ ۷۹ (ریشه‌کنی «گزارش‌های همه-صفر»): قالب‌بندی تاریخ ارسالی
+                // «صریحاً» با فرهنگ خنثی (InvariantCulture) انجام می‌شود — هرگز
+                // به فرهنگ جاری رشته‌ها تکیه نکنید؛ تقویمِ فرهنگ‌های محلی (مثل
+                // fa-IR با PersianCalendar) اجزای جلالی تولید می‌کند و سرور آن
+                // را سالِ میلادیِ ۱۴۰۵ پنداشته → بازهٔ تهی → همهٔ گزارش‌ها صفر.
+                qs.Add($"fromDate={FromDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)}");
+                qs.Add($"toDate={ToDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)}");
                 // چرخهٔ ۷۲ — گزارش صندوق روزانه: روزِ انتخابیِ کاربر هم به
                 // پارامتر اختصاصی date برسد (پیش‌تر همیشه امروزِ UTC سرور می‌شد)
                 if (HasSingleDateParam)
-                    qs.Add($"date={FromDate:yyyy-MM-dd}");
+                    qs.Add($"date={FromDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)}");
             }
             if (HasPatientParam && SelectedPatient is not null) qs.Add($"patientId={SelectedPatient.Id}");
             if (HasMonthsParam) qs.Add($"months={Months}");

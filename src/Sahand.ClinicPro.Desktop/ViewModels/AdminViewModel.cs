@@ -493,8 +493,13 @@ public partial class AdminViewModel : ViewModelBase
                 new BackupRow(
                     b.Status == "Completed" ? "موفق" : b.Status == "Failed" ? "ناموفق" : "در جریان",
                     // چرخه هجدهم: تاریخ نمایشی پشتیبان با ارقام فارسی
+                    // چرخهٔ ۷۹: پیش‌تر این نمایش به تقویمِ فرهنگ fa-IR تکیه داشت
+                    // (ToString با تقویم شمسی) — حالا که تقویم قالبِ فرهنگ به
+                    // میلادی برگشت، تبدیل شمسی «صریح» با PersianDateHelper انجام
+                    // می‌شود تا نمایش پشتیبان‌ها همچنان شمسی با ارقام فارسی بماند.
                     b.StartedAt is { } sa
-                        ? Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToPersianDigits(sa.ToString("yyyy/MM/dd HH:mm"))
+                        ? Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsiFa(sa)
+                          + " " + Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(sa, withSeconds: false)
                         : "—",
                     $"{(b.IsAutomatic ? "خودکار" : "دستی")} — {b.Type ?? string.Empty}")));
         else
@@ -605,7 +610,8 @@ public partial class AdminViewModel : ViewModelBase
             var lines = d.Items.Select(i =>
                 $"• {i.Title}: {i.Candidates:N0} ردیف قابل انتقال" +
                 (i.Blocked > 0 ? $" ({i.Blocked:N0} مسدود به‌دلیل ارجاع جدیدتر)" : "")).ToList();
-            ArchiveReport = $"پیش‌نمایش آرشیو سال {d.Year} — برش از {d.Cutoff:yyyy-MM-dd}\n" +
+            // چرخهٔ ۷۹: نمایش برش آرشیو شمسی با ارقام فارسی (PersianDateHelper صریح)
+            ArchiveReport = $"پیش‌نمایش آرشیو سال {d.Year} — برش از {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsiFa(d.Cutoff)}\n" +
                             string.Join("\n", lines) +
                             $"\nمجموع: {d.TotalCandidates:N0} قابل انتقال، {d.TotalBlocked:N0} مسدود";
         }
@@ -633,7 +639,8 @@ public partial class AdminViewModel : ViewModelBase
             var d = response?.Data;
             if (d is null) { ErrorMessage = _api.LastError ?? "اجرای آرشیو ناموفق بود"; return; }
 
-            ArchiveReport = $"آرشیو سال {d.YearJalali} تکمیل شد — {d.TotalArchived:N0} ردیف منتقل شد (برش {d.Cutoff:yyyy-MM-dd})\n" +
+            // چرخهٔ ۷۹: نمایش برش آرشیو شمسی با ارقام فارسی (PersianDateHelper صریح)
+            ArchiveReport = $"آرشیو سال {d.YearJalali} تکمیل شد — {d.TotalArchived:N0} ردیف منتقل شد (برش {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsiFa(d.Cutoff)})\n" +
                             string.Join("\n", d.Items.Select(i =>
                                 $"• {i.Title}: {i.Archived:N0} منتقل" +
                                 (i.Blocked > 0 ? $"، {i.Blocked:N0} مسدود" : "") +

@@ -421,8 +421,9 @@ public partial class ShiftsViewModel : ViewModelBase
         {
             employeeId = SelectedAssignEmployee.Id,
             shiftId = SelectedAssignShift.Id,
-            fromDate = fromDate.ToString("yyyy-MM-dd"),
-            toDate = toDate?.ToString("yyyy-MM-dd"),
+            // چرخهٔ ۷۹: قالب‌بندی صریح با فرهنگ خنثی — مقاوم در برابر تقویم فرهنگ جاری
+            fromDate = fromDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            toDate = toDate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
             recurrence,
             weekDaysMask = mask,
             priority = AssignPriority,
@@ -456,7 +457,8 @@ public partial class ShiftsViewModel : ViewModelBase
         if (!confirmed) return;
 
         var ok = await _api.PostAsync($"attendance/shift-assignments/{row.Id}/end",
-            new { endDate = DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd") });
+            // چرخهٔ ۷۹: قالب‌بندی صریح با فرهنگ خنثی — مقاوم در برابر تقویم فرهنگ جاری
+            new { endDate = DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) });
         if (ok)
         {
             _snackbar.Success($"تخصیص شیفت «{row.ShiftName}» پایان یافت");

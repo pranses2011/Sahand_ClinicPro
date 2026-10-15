@@ -983,8 +983,12 @@ public partial class AppointmentsViewModel : ViewModelBase
                 ? Doctors[WaitlistDoctorIndex].Id
                 : (long?)null,
             specialtyId = (long?)null,
-            preferredFrom = from.ToString("yyyy-MM-dd"),
-            preferredTo = to.ToString("yyyy-MM-dd"),
+            // چرخهٔ ۷۹ (ریشه‌کنی «سال ۰۷۸۴ ستون بازهٔ دلخواه»): تاریخ‌های ارسالی
+            // به سرور «صریحاً» با فرهنگ خنثی قالب‌بندی می‌شوند — پیش‌تر تقویمِ
+            // فرهنگ fa-IR اجزای جلالی می‌فرستاد (1405-07-22) و سرور آن را سال
+            // ۱۴۰۵ میلادی می‌پنداشت؛ نمایش مجدد شمسی سال ۰۷۸۴ می‌ساخت.
+            preferredFrom = from.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            preferredTo = to.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
             preferredTimeOfDay = WaitlistTimeIndex switch { 1 => "صبح", 2 => "عصر", 3 => "شب", _ => (string?)null },
             priority = WaitlistPriorityIndex switch { 2 => 1, 1 => 2, _ => 3 },
             notes = WaitlistNotes

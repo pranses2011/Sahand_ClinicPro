@@ -55,9 +55,22 @@ public partial class App : System.Windows.Application
                 System.Windows.Markup.XmlLanguage.GetLanguage("fa-IR"),
                 System.Windows.FrameworkPropertyMetadataOptions.Inherits));
 
-        // فرهنگ جاری رشته‌ها هم فارسی شود — پارس ورودی‌های عددی ارقام فارسی را
-        // می‌پذیرد و قالب‌بندی پیش‌فرض اعداد/تاریخ‌ها شمسی می‌شود
+        // ═══ چرخهٔ ۷۹ (ریشه‌کنی «گزارش‌های همه-صفر» و «سال ۰۷۸۴ لیست انتظار») ═══
+        // فرهنگ جاری رشته‌ها فارسی می‌شود — پارس ورودی‌های عددی ارقام فارسی را
+        // می‌پذیرد و قالب‌بندی پیش‌فرض اعداد ارقام فارسی می‌گیرد.
+        // ⚠️ درس حیاتی این چرخه: تقویمِ پیش‌فرضِ فرهنگ fa-IR در NET 8
+        // «PersianCalendar» است؛ در نتیجه هر «ToString("yyyy-MM-dd")» اجزای
+        // «جلالی» تولید می‌کرد (مثلاً 1405-07-22 به‌جای 2026-10-14) و سرور آن
+        // رشته را سال ۱۴۰۵ «میلادی» می‌پنداشت → بازهٔ تهی → همهٔ گزارش‌ها صفر
+        // («در این بازه ردیفی ثبت نشده است») و بازهٔ دلخواه لیست انتظار با سال
+        // ۰۷۸۴ ثبت می‌شد (۱۴۰۵−۶۲۱=۰۷۸۴ در نمایش مجدد شمسی).
+        // راه‌حل استاندارد مایکروسافتی: فرهنگ fa-IR «نوشتنی» ساخته می‌شود و فقط
+        // «تقویم قالب تاریخ» آن به میلادی برمی‌گردد — ارقام فارسی، جداکننده‌ها و
+        // پارس اعداد فارسی دست‌نخورده می‌مانند؛ اما قالب‌بندی پیش‌فرض تاریخها
+        // همیشه میلادی/ISO است. نمایش شمسی در سراسر برنامه از ابتدا از طریق
+        // PersianDateHelper (تبدیل صریح) انجام می‌شود و بی‌تغییر می‌ماند.
         var fa = new System.Globalization.CultureInfo("fa-IR");
+        fa.DateTimeFormat.Calendar = new System.Globalization.GregorianCalendar();
         System.Globalization.CultureInfo.DefaultThreadCurrentCulture = fa;
         System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = fa;
 
