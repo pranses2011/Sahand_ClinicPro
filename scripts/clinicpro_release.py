@@ -179,7 +179,7 @@ GUIDE_TEMPLATE = """<!DOCTYPE html>
 <table><tr><th>مسیر</th><th>لایه</th></tr>{ROWS}</table>
 <h2>⚙️ باینری آماده (بدون نیاز به بیلد)</h2>
 <p>فهرست کامل در <code>changed-files.txt</code> بخش «باینری آمادهٔ نصب» آمده است.</p>
-<p>جزئیات کامل کاربر-محور در <code>{CHANGELOG.name}</code> سرچشمهٔ v{TO_VER}.</p>
+<p>جزئیات کامل کاربر-محور در <code>{CHANGELOG_NAME}</code> سرچشمهٔ v{TO_VER}.</p>
 </div></body></html>"""
 
 
@@ -298,7 +298,8 @@ def cmd_update_zip(args: argparse.Namespace) -> None:
         for p in files)
 
     guide = GUIDE_TEMPLATE.format(
-        FROM_VER=from_tag.lstrip("v"), TO_VER=to_version, COUNT=len(files), ROWS=rows)
+        FROM_VER=from_tag.lstrip("v"), TO_VER=to_version, COUNT=len(files), ROWS=rows,
+        CHANGELOG_NAME=CHANGELOG.name)
     manifest = (
         f"فایل‌های تغییرکرده {from_tag} → v{to_version} (ClinicPro Release CLI — چرخهٔ ۵۳)\n"
         + "═" * 60 + "\n" + "\n".join(files)
