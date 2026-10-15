@@ -73,14 +73,22 @@
                                      HorizontalAlignment="Left" Margin="6,0,0,0" />
             </UniformGrid>
 
-            <!-- نوع نوبت -->
-            <ComboBox materialDesign:HintAssist.Hint="نوع نوبت"
-                      SelectedIndex="{Binding TypeIndex}"
-                      Margin="0,0,0,12">
-                <ComboBoxItem Content="اولیه" />
-                <ComboBoxItem Content="پیگیری" />
-                <ComboBoxItem Content="اورژانسی" />
-            </ComboBox>
+            <!-- نوع نوبت + اولویت — چرخهٔ ۷۹: انتخابگر اولویت (عادی/بالا/اورژانس)
+                 به فرم کلاسیک هم اضافه شد؛ پیش‌تر فقط ویزارد نوبت‌دهی اولویت می‌فرستاد
+                 و نوبت‌های این فرم همیشه «عادی» ثبت می‌شدند (گزارش مالک) -->
+            <UniformGrid Columns="2" Margin="0,0,0,12">
+                <ComboBox materialDesign:HintAssist.Hint="نوع نوبت"
+                          SelectedIndex="{Binding TypeIndex}"
+                          Margin="0,0,6,0">
+                    <ComboBoxItem Content="اولیه" />
+                    <ComboBoxItem Content="پیگیری" />
+                    <ComboBoxItem Content="اورژانسی" />
+                </ComboBox>
+                <ComboBox materialDesign:HintAssist.Hint="اولویت"
+                          ItemsSource="{Binding Priorities}"
+                          SelectedIndex="{Binding PriorityIndex}"
+                          Margin="6,0,0,0" />
+            </UniformGrid>
 
             <CheckBox Content="نخستین مراجعه بیمار"
                       IsChecked="{Binding IsFirstVisit}"

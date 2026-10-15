@@ -51,6 +51,18 @@ public partial class AppointmentFormViewModel : ObservableObject
     [ObservableProperty]
     private int _typeIndex;
 
+    // ═══ چرخهٔ ۷۹ (گزارش مالک: «اولویت نوبت‌ها اشتباه است — همشون معمولی
+    // ثبت می‌شوند») — فرم کلاسیک ثبت نوبت (از صفحهٔ بیماران) هیچ انتخابگر
+    // اولویتی نداشت و بدنهٔ POST هم priority نمی‌فرستاد ⇒ سرور همیشه پیش‌فرض
+    // «عادی» ذخیره می‌کرد. اکنون همان سه گزینهٔ ویزارد نوبت‌دهی این‌جا هم
+    // هست و مقدار انتخابی واقعاً به سرور می‌رسد (واژگان یکدست «عادی/بالا/اورژانس»). ═══
+    /// <summary>گزینه‌های اولویت — دقیقاً هم‌سانِ ویزارد نوبت‌دهی</summary>
+    public string[] Priorities { get; } = { "عادی", "بالا", "اورژانس" };
+
+    /// <summary>نمایه اولویت — ۰ عادی، ۱ بالا، ۲ اورژانس (پیش‌فرض عادی)</summary>
+    [ObservableProperty]
+    private int _priorityIndex;
+
     /// <summary>نوبت‌گیری نخستین مراجعه است</summary>
     [ObservableProperty]
     private bool _isFirstVisit;
@@ -189,6 +201,9 @@ public partial class AppointmentFormViewModel : ObservableObject
             type = TypeIndex + 1,
             source = 1,
             isFirstVisit = IsFirstVisit,
+            // چرخهٔ ۷۹: اولویت واقعی انتخاب کاربر — نمایه ۰/۱/۲ به enum سرور
+            // (۳ عادی / ۲ بالا / ۱ اورژانس) نگاشت می‌شود؛ پیش‌تر اصلاً ارسال نمی‌شد
+            priority = PriorityIndex switch { 2 => 1, 1 => 2, _ => 3 },
             notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim()
         };
 

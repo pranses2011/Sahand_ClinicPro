@@ -146,7 +146,10 @@ public class AddToWaitlistCommandHandler : IRequestHandler<AddToWaitlistCommand,
             $"{PersianDateHelper.ToShamsi(e.PreferredFrom.ToDateTime(TimeOnly.MinValue))} تا " +
             $"{PersianDateHelper.ToShamsi(e.PreferredTo.ToDateTime(TimeOnly.MinValue))}" +
             (string.IsNullOrWhiteSpace(e.PreferredTimeOfDay) ? "" : $" ({e.PreferredTimeOfDay})"),
-            e.Priority == Priority.Emergency ? "🚨 اورژانس" : e.Priority == Priority.High ? "🔥 فوری" : "معمولی",
+            // چرخهٔ ۷۹: واژگان اولویت یکدست در کل برنامه — «عادی / بالا / اورژانس»
+            // (پیش‌تر این‌جا «معمولی/فوری» بود ولی فرم ثبت «عادی/بالا/اورژانس»
+            // نشان می‌داد و کاربر فکر می‌کرد انتخابش اعمال نشده است)
+            e.Priority == Priority.Emergency ? "🚨 اورژانس" : e.Priority == Priority.High ? "⬆ بالا" : "عادی",
             statusText, statusColor,
             e.NotifiedAt is { } n ? PersianDateHelper.ToShamsiWithTime(n) : "—",
             e.Notes);
@@ -167,8 +170,17 @@ public class GetWaitlistQueryHandler : IRequestHandler<GetWaitlistQuery, Result<
     {
         var query = _unitOfWork.Repository<WaitlistEntry>().QueryableNoTracking
             .Where(w => !w.IsDeleted);
+        // ═══ چرخهٔ ۷۹ (گزارش مالک: «دکمهٔ حذف لیست انتظار کار نمی‌کند و بیمار
+        // در لیست می‌ماند») — ریشه: «لغو» فقط Status را به Cancelled تغییر می‌دهد
+        // (لغو نرم) ولی این کوئری بدون فیلتر وضعیت، ردیف‌های لغوشده را هم
+        // برمی‌گرداند ⇒ پس از حذفِ «موفق»، همان ردیف با بج «لغوشده» دوباره در
+        // جدول می‌نشست و از دید کاربر «حذف بی‌اثر» بود. اکنون فهرست پیش‌فرض
+        // فقط ردیف‌های «زنده» را برمی‌گرداند؛ درخواست صریح وضعیت (مثلاً برای
+        // گزارش لغوها) همچنان از همان مسیر قدیمی پاسخ می‌گیرد. ═══
         if (request.Status is { } st)
             query = query.Where(w => w.Status == st);
+        else
+            query = query.Where(w => w.Status != WaitlistStatus.Cancelled);
 
         var entries = await query
             .OrderBy(w => w.Priority) // اورژانس=۱ کوچک‌تر = اولویت بالاتر

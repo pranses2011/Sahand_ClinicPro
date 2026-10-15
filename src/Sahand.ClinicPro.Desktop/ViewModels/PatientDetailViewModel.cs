@@ -281,10 +281,10 @@ public partial class PatientDetailViewModel : ObservableObject
                 {
                     Visits.Add(new PatientVisitRow(
                         v.Id,
-                        v.VisitDateShamsi ?? "—",
+                        v.DateShamsi ?? "—",
                         v.DoctorName ?? "—",
                         v.ChiefComplaint ?? "—",
-                        v.Status ?? "—"));
+                        VisitStatusText(v.Status)));
                 }
             }
         }
@@ -539,6 +539,18 @@ public partial class PatientDetailViewModel : ObservableObject
         "Receptions" => "پذیرش",
         "Invoices" => "فاکتور",
         _ => source ?? "—"
+    };
+
+    /// <summary>متن فارسی وضعیت ویزیت — چرخهٔ ۷۹: سرور enum VisitStatus را عددی
+    /// می‌فرستد (۱ شروع‌شده، ۲ در حال انجام، ۳ تکمیل‌شده، ۴ ذخیره موقت)؛
+    /// نگاشت عیناً هم‌ارز برچسب‌های صف ویزیت تا واژه‌ها یکدست بماند</summary>
+    private static string VisitStatusText(int status) => status switch
+    {
+        1 => "شروع شده",
+        2 => "در حال انجام",
+        3 => "تکمیل شده",
+        4 => "ذخیره موقت",
+        _ => "نامشخص"
     };
 
     /// <summary>متن فارسی وضعیت نسخه — چرخه بیست‌وچهارم: سرور enum را عددی
@@ -1070,10 +1082,19 @@ public partial class PatientDetailViewModel : ObservableObject
     {
         // چرخهٔ ۴۸ — شناسهٔ ویزیت برای گشودن فرم کامل با دابل‌کلیک
         public long Id { get; set; }
-        public string? VisitDateShamsi { get; set; }
+        // ═══ چرخهٔ ۷۹ (گزارش مالک: «سوابق ویزیت نمی‌آید — پاسخ سرور قابل تفسیر
+        // نبود») — هم‌راستاسازی با VisitListDto سرور ═══
+        // دو ناهم‌خوانی مرگبار قبلی: نام فیلد تاریخ VisitDateShamsi بود ولی سرور
+        // «dateShamsi» می‌فرستاد (ستون تاریخ همیشه «—» می‌شد) و Status رشته‌ای
+        // بود ولی سرور enum را «عدد» سریال می‌کند (بدون مبدل رشته‌ای) ⇒
+        // JsonException ⇒ کل پاکت شکست ⇒ «پاسخ سرور قابل تفسیر نبود». دقیقاً
+        // همان کلاس باگی که چرخهٔ ۲۴ برای تب نسخه‌ها رفع شد (قاعدهٔ مالک:
+        // خطاهای مشابه را همه‌جا برطرف کن).
+        public string? DateShamsi { get; set; }
         public string? DoctorName { get; set; }
         public string? ChiefComplaint { get; set; }
-        public string? Status { get; set; }
+        /// <summary>وضعیت ویزیت — عدد enum سرور (VisitStatus)؛ متن فارسی سمت کلاینت</summary>
+        public int Status { get; set; }
     }
 
     /// <summary>پاسخ فهرست نسخه‌های بیمار</summary>

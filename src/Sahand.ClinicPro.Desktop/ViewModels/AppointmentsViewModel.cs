@@ -79,9 +79,9 @@ public record AppointmentListRow(
     int Source,
     string SourceText,
     decimal EstimatedFee,
-    // متن فارسی اولویت — «🚨 اورژانس / 🔥 فوری / معمولی» (چرخهٔ ۷۵)
-    string PriorityText = "معمولی",
-    // رنگ اختصاصی اولویت — قرمز اورژانس / نارنجی فوری / خاکستری معمولی
+    // متن فارسی اولویت — «🚨 اورژانس / ⬆ بالا / عادی» (چرخهٔ ۷۵؛ واژگان یکدست چرخهٔ ۷۹)
+    string PriorityText = "عادی",
+    // رنگ اختصاصی اولویت — قرمز اورژانس / نارنجی بالا / خاکستری عادی
     string PriorityColor = "#78909C");
 
 /// <summary>
@@ -717,8 +717,9 @@ public partial class AppointmentsViewModel : ViewModelBase
         a.Source, SourceLabels[Math.Clamp(a.Source - 1, 0, 2)],
         a.EstimatedFee,
         // ═══ چرخهٔ ۷۵ — اولویت با رنگ خودش (گزارش مالک: «اولویت رو هم با رنگ
-        // خودش در لیست نشون بده») — ۱ اورژانس/۲ فوری/۳ یا هر چیز دیگر معمولی ═══
-        a.Priority switch { 1 => "🚨 اورژانس", 2 => "🔥 فوری", _ => "معمولی" },
+        // خودش در لیست نشون بده») — ۱ اورژانس/۲ بالا/۳ یا هر چیز دیگر عادی.
+        // چرخهٔ ۷۹: واژگان دقیقاً هم‌سانِ فرم ثبت («عادی/بالا/اورژانس») ═══
+        a.Priority switch { 1 => "🚨 اورژانس", 2 => "⬆ بالا", _ => "عادی" },
         a.Priority switch { 1 => "#C62828", 2 => "#E65100", _ => "#78909C" });
 
     /// <summary>متن فارسی وضعیت</summary>
