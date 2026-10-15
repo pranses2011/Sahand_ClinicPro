@@ -218,13 +218,17 @@
                                         <DataGridTextColumn Header="شناسه دستگاه" Binding="{Binding EnrollNumber, Converter={StaticResource PersianDigits}}" Width="*" />
                                         <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="2*" />
                                         <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="*" />
-                                        <DataGridTemplateColumn Header="" Width="70">
+                                        <DataGridTemplateColumn Header="" Width="Auto" MinWidth="70">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Button Content="🗑" Command="{Binding DataContext.DeleteMappingCommand,
+                                                    <!-- چرخهٔ ۷۹: کلید عملیاتی آیکونی (هم‌الگوی لیست بیماران) -->
+                                                    <Button Command="{Binding DataContext.DeleteMappingCommand,
                                                         RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         CommandParameter="{Binding}"
-                                                        Style="{StaticResource MaterialDesignFlatButton}" />
+                                                        Style="{StaticResource App.RowIconButton}"
+                                                        Foreground="#C62828" ToolTip="حذف اتصال دستگاه">
+                                                        <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                                    </Button>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
@@ -281,20 +285,27 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="اقدام" Width="150">
+                            <DataGridTemplateColumn Header="اقدام" Width="Auto" MinWidth="100">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
+                                        <!-- چرخهٔ ۷۹: کلیدهای عملیاتی آیکونی (هم‌الگوی لیست بیماران) -->
                                         <StackPanel Orientation="Horizontal" Visibility="{Binding Pending, Converter={StaticResource BoolToVisibility}}">
-                                            <Button Content="✅" ToolTip="تأیید و اعمال"
+                                            <Button ToolTip="تأیید و اعمال"
                                                     Command="{Binding DataContext.ApproveCorrectionCommand,
                                                         RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource MaterialDesignFlatButton}" />
-                                            <Button Content="❌" ToolTip="رد"
+                                                    Style="{StaticResource App.RowIconButton}"
+                                                    Foreground="#2E7D32">
+                                                <materialDesign:PackIcon Kind="Check" Width="15" Height="15" />
+                                            </Button>
+                                            <Button ToolTip="رد"
                                                     Command="{Binding DataContext.RejectCorrectionCommand,
                                                         RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource MaterialDesignFlatButton}" />
+                                                    Style="{StaticResource App.RowIconButton}"
+                                                    Foreground="#C62828">
+                                                <materialDesign:PackIcon Kind="Close" Width="15" Height="15" />
+                                            </Button>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

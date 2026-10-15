@@ -335,14 +335,15 @@
                             <DataGridTextColumn Header="نوع" Binding="{Binding RuleType, Converter={StaticResource PersianDigits}}" Width="80" />
                             <DataGridTextColumn Header="جزئیات" Binding="{Binding Detail, Converter={StaticResource PersianDigits}}" Width="150" />
                             <DataGridTextColumn Header="فرانشیز" Binding="{Binding Franchise, Converter={StaticResource PersianDigits}}" Width="130" />
-                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="90">
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
+                                        <!-- چرخهٔ ۷۹: کلید عملیاتی آیکونی (هم‌الگوی لیست بیماران) -->
                                         <Button Command="{Binding DataContext.DeleteRuleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
-                                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                FontSize="10" Foreground="#C62828">
-                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="12" Height="12" />
+                                                Style="{StaticResource App.RowIconButton}"
+                                                Foreground="#C62828" ToolTip="حذف قانون">
+                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
                                         </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

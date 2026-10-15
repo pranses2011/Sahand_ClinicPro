@@ -7,7 +7,21 @@
              mc:Ignorable="d"
              d:DesignHeight="680" d:DesignWidth="1080"
              FlowDirection="RightToLeft">
-    <!-- ═══ تنظیمات سیستم — گام U15 طبق فرم ۲۸: سایدبار + بخش‌ها ═══ -->
+    <!-- ═══════════════════════════════════════════════════════════════
+         تنظیمات سیستم — بازطراحی حرفه‌ای چرخهٔ ۷۹ (گزارش مالک:
+         «صفحه تنظیمات سیستم رو بصورت حرفه ای و زیبا و شکیل بازطراحی بکن»)
+         معماری تازه — الگوی «تنظیمات ویندوز ۱۱ / پنل‌های مدرن»:
+           • سربرگ قهرمان گرادیانی: هویت صفحه + کلید سریع روشن/تاریک
+           • نوار کناری ناوبری (راست در RTL): شش بخش با آیکون دایره‌ای +
+             عنوان + زیرعنوان توضیحی؛ انتخاب‌شدهٔ جاری با رنگ اصلی هایلایت
+           • محتوا: هر بخش در «کارت‌های بخش» تم‌خور (Card.Background +
+             حاشیهٔ جداکننده + سربرگ آیکون‌دار) — هماهنگ با هر دو تم
+         سازوکار داده دست‌نخورده ماند: همان SectionIndex ویومدل؛ نوار کناری
+         (ListBox) و TabControl بی‌سربرگ هر دو به آن بایندند و هم‌گام‌اند.
+         تاریخچه: گام U15 (سایدبار نخستین) → چرخهٔ ۲۷ (تب‌بندی به‌جای سایدبار
+         به درخواست مالک) → چرخهٔ ۷۹ (سایدبار حرفه‌ای دوباره — با چیدمان
+         کارت‌محور و سربرگ قهرمان؛ خواستهٔ صریح بازطراحی شکیل).
+         ═══════════════════════════════════════════════════════════════ -->
     <Grid Margin="16,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -15,480 +29,704 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <materialDesign:PackIcon Kind="Cog" Width="26" Height="26"
-                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
-            <TextBlock Text="تنظیمات سیستم" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
-        </StackPanel>
-
-        <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
-                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
-
-        <!-- ═══ چرخهٔ بیست‌وهفتم (گزارش هجدهم مالک) — تب‌بندی تنظیمات ═══
-             «صفحهٔ تنظیمات تب‌بندی شود نه سایدبار» — همان الگوی AdminView؛
-             SectionIndex همان ایندکس تب است و منطق ViewModel دست‌نخورده ماند ═══ -->
-        <TabControl Grid.Row="2" SelectedIndex="{Binding SectionIndex}"
-                    materialDesign:ColorZoneAssist.Mode="PrimaryLight">
-
-                <!-- ─── بخش ۰: اطلاعات درمانگاه ─── -->
-                <TabItem Header="🏥 اطلاعات درمانگاه">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8,4">
-                    <StackPanel Margin="4,8">
-                    <TextBlock Text="اطلاعات درمانگاه" FontSize="16" FontWeight="Bold" Margin="2,0,0,6" />
-
-                    <!-- ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) ═══
-                         «در تنظیمات و اطلاعات درمانگاه فقط اطلاعات درمانگاه را نشان
-                         بده و همه این اطلاعات را از لایسنس بخوان و در اولین چک کردن
-                         لایسنس در تنظیمات قرار بده و فقط از سرور لایسنس قابل تغییر
-                         باشند» — کل بخش فقط‌خواندنی شد: مقادیر هنگام هر اعتبارسنجی
-                         موفق لایسنس به‌صورت خودکار از پنل مدیریت لایسنس همگام
-                         می‌شوند و دکمهٔ ذخیره حذف شد؛ تغییر تنها از پنل لایسنس است. -->
-                    <Border Background="#FFF8E1" BorderBrush="#FFE082" BorderThickness="1"
-                            CornerRadius="8" Padding="10,8" Margin="2,0,2,12">
+        <!-- ═══ سربرگ قهرمان — هویت صفحه + کلید سریع تم ═══ -->
+        <Border Grid.Row="0" CornerRadius="16" Padding="18,12" Margin="0,0,0,12">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#37474F" Offset="0" />
+                    <GradientStop Color="#263238" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Opacity="0.16" Color="#1A2630" />
+            </Border.Effect>
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                    <!-- کلید سریع روشن/تاریک — پرکاربردترین تنظیم همیشه زیر دست -->
+                    <Button Command="{Binding ToggleDarkModeCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="White" BorderBrush="#80FFFFFF" BorderThickness="1.2"
+                            MinHeight="36" Margin="0,0,6,0" VerticalAlignment="Center"
+                            ToolTip="تعویض سریع حالت روشن/تاریک (همان تنظیم بخش «تم و ظاهر»)">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="InformationOutline" Width="18" Height="18"
-                                                     Foreground="#E65100" VerticalAlignment="Center" />
-                            <TextBlock Text="این اطلاعات از «سرور لایسنس» خوانده می‌شود و با هر بررسی لایسنس به‌طور خودکار همگام می‌گردد؛ برای تغییر، از پنل مدیریت لایسنس اقدام کنید."
-                                       FontSize="11.5" Foreground="#795548" TextWrapping="Wrap"
-                                       Margin="8,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Border>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="16" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <TextBox materialDesign:HintAssist.Hint="نام درمانگاه (الزامی)"
-                                     Text="{Binding ClinicName, Mode=OneWay}" IsReadOnly="True"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
-                            <TextBox materialDesign:HintAssist.Hint="شماره مجوز"
-                                     Text="{Binding LicenseNumber, Mode=OneWay}" IsReadOnly="True"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
-                            <TextBox materialDesign:HintAssist.Hint="کد اقتصادی"
-                                     Text="{Binding EconomicCode, Mode=OneWay}" IsReadOnly="True"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
-                            <TextBox materialDesign:HintAssist.Hint="شناسه ملی"
-                                     Text="{Binding NationalId, Mode=OneWay}" IsReadOnly="True"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <TextBox materialDesign:HintAssist.Hint="نام مدیر"
-                                     Text="{Binding ManagerName, Mode=OneWay}" IsReadOnly="True"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
-                            <TextBox materialDesign:HintAssist.Hint="تلفن"
-                                     Text="{Binding Phone, Mode=OneWay}" IsReadOnly="True"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
-                            <!-- چرخهٔ بیست‌وهفتم: شهر از پنل لایسنس همگام می‌شود ولی نمایش داده نمی‌شد -->
-                            <TextBox materialDesign:HintAssist.Hint="شهر"
-                                     Text="{Binding City, Mode=OneWay}" IsReadOnly="True"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
-                            <TextBox materialDesign:HintAssist.Hint="ایمیل"
-                                     Text="{Binding Email, Mode=OneWay}" IsReadOnly="True"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
-                            <TextBox materialDesign:HintAssist.Hint="آدرس"
-                                     Text="{Binding Address, Mode=OneWay}" IsReadOnly="True"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     AcceptsReturn="True" Height="70" TextWrapping="Wrap" VerticalContentAlignment="Top" />
-                        </StackPanel>
-                    </Grid>
-                    <!-- چرخه ۲۴ — دکمهٔ ذخیره حذف شد: داده‌ها فقط از سرور لایسنس همگام می‌شوند -->
-                </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-
-                <!-- ─── بخش ۱: ماژول‌ها ─── -->
-                <TabItem Header="🧩 ماژول‌ها">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8,4">
-                    <StackPanel Margin="4,8">
-                    <TextBlock Text="ماژول‌ها و وضعیت لایسنس" FontSize="16" FontWeight="Bold" Margin="2,0,4,12" />
-                    <DataGrid ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule}"
-                              AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                              HeadersVisibility="Column" FontSize="12" MaxHeight="420">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="ماژول" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="150" FontWeight="SemiBold" />
-                            <DataGridTextColumn Header="وضعیت لایسنس" Binding="{Binding LicenseText, Converter={StaticResource PersianDigits}}" Width="110" />
-                            <DataGridTemplateColumn Header="فعال در سیستم" Width="110">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <ToggleButton IsChecked="{Binding IsEnabled, Mode=TwoWay}"
-                                                      IsEnabled="{Binding IsToggleEnabled}"
-                                                      Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                                                      HorizontalAlignment="Center" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="عملیات" Binding="{Binding ActionText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                    <TextBlock Text="Core: غیرقابل غیرفعال‌سازی — ماژول بدون لایسنس قفل است و دکمه «خرید ماژول» به License Portal متصل می‌شود"
-                               FontSize="10.5" Opacity="0.6" Margin="2,10,0,0" TextWrapping="Wrap" />
-                </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-
-                <!-- ─── بخش ۲: سامانه‌های دولتی ─── -->
-                <TabItem Header="🔗 سامانه‌های دولتی">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8,4">
-                    <StackPanel Margin="4,8">
-                    <TextBlock Text="سامانه‌های دولتی" FontSize="16" FontWeight="Bold" Margin="2,0,4,12" />
-                    <ItemsControl ItemsSource="{Binding GovSystems}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Margin="2,6" Padding="16,12" CornerRadius="12" Background="#F7FAFD"
-                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                        </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
-                                            <TextBlock Text="{Binding Name}" FontSize="14.5" FontWeight="Bold" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                            <TextBlock Text="{Binding ConnectedText}" FontSize="11.5" Margin="12,0,0,0" VerticalAlignment="Center" Opacity="0.8"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                        </StackPanel>
-                                        <ToggleButton Grid.Row="0" Grid.Column="1" IsChecked="{Binding IsEnabled, Mode=TwoWay}"
-                                                      Style="{StaticResource MaterialDesignSwitchToggleButton}" ToolTip="فعال" />
-                                        <TextBox Grid.Row="1" Grid.ColumnSpan="2" materialDesign:HintAssist.Hint="آدرس API"
-                                                 Text="{Binding ApiUrl, UpdateSourceTrigger=PropertyChanged}"
-                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10,0,8" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
-                                        <Grid Grid.Row="2" Grid.ColumnSpan="2">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="10" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="نام کاربری"
-                                                     Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
-                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" />
-                                            <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="رمز عبور (ورود جدید)"
-                                                     Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
-                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" />
-                                        </Grid>
-                                        <Button Grid.Row="3" Grid.ColumnSpan="2"
-                                                Command="{Binding DataContext.SaveGovSystemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}"
-                                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                HorizontalAlignment="Left" Margin="0,10,0,0" Content="💾 ذخیره این سامانه" />
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-
-                <!-- ─── بخش ۳: چاپگر و چاپ ─── -->
-                <TabItem Header="🖨️ چاپگر و چاپ">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8,4">
-                    <StackPanel Margin="4,8" MaxWidth="520" HorizontalAlignment="Stretch">
-                    <TextBlock Text="چاپگر و چاپ" FontSize="16" FontWeight="Bold" Margin="2,0,0,12" />
-
-                    <!-- ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — «فیلدهای چاپگرها
-                         خالی هستند و نمی‌شود چاپگر انتخاب کرد» ═══ چاپگرهای نصب‌شدهٔ
-                         ویندوز در ComboBox قابل انتخاب‌اند (ویرایش‌پذیر برای نام‌های
-                         دستی/شبکه)؛ «چاپگر نوبت‌دهی» برای قبض‌های نوبت اضافه شد. -->
-                    <ComboBox materialDesign:HintAssist.Hint="چاپگر پیش‌فرض"
-                              ItemsSource="{Binding PrinterNames}"
-                              IsEditable="True" StaysOpenOnEdit="True"
-                              Text="{Binding DefaultPrinter, UpdateSourceTrigger=PropertyChanged}"
-                              Margin="0,0,0,10" />
-                    <ComboBox materialDesign:HintAssist.Hint="چاپگر فاکتور"
-                              ItemsSource="{Binding PrinterNames}"
-                              IsEditable="True" StaysOpenOnEdit="True"
-                              Text="{Binding InvoicePrinter, UpdateSourceTrigger=PropertyChanged}"
-                              Margin="0,0,0,10" />
-                    <ComboBox materialDesign:HintAssist.Hint="چاپگر نسخه"
-                              ItemsSource="{Binding PrinterNames}"
-                              IsEditable="True" StaysOpenOnEdit="True"
-                              Text="{Binding PrescriptionPrinter, UpdateSourceTrigger=PropertyChanged}"
-                              Margin="0,0,0,10" />
-                    <ComboBox materialDesign:HintAssist.Hint="چاپگر نوبت‌دهی — قبض‌های نوبت با این چاپ می‌شوند"
-                              ItemsSource="{Binding PrinterNames}"
-                              IsEditable="True" StaysOpenOnEdit="True"
-                              Text="{Binding TicketPrinter, UpdateSourceTrigger=PropertyChanged}"
-                              Margin="0,0,0,10" />
-                    <ComboBox materialDesign:HintAssist.Hint="سایز کاغذ فاکتور"
-                              ItemsSource="{Binding PaperSizes}" SelectedItem="{Binding InvoicePaperSize}"
-                              Margin="0,0,0,12" />
-                    <CheckBox Content="نمایش پیش‌نمایش قبل از چاپ" IsChecked="{Binding ShowPreview}" Margin="2,3" />
-                    <CheckBox Content="چاپ خودکار بعد از ثبت فاکتور" IsChecked="{Binding AutoPrintInvoice}" Margin="2,3" />
-                    <!-- چرخه ۲۴: چاپ خودکار قبض نوبت پس از ثبت موفق — با چاپگر نوبت‌دهی بالا -->
-                    <CheckBox Content="چاپ خودکار قبض نوبت پس از ثبت (با چاپگر نوبت‌دهی)" IsChecked="{Binding AutoPrintTicket}" Margin="2,3" />
-                    <StackPanel Orientation="Horizontal" Margin="2,10">
-                        <TextBlock Text="تعداد نسخه چاپ: " VerticalAlignment="Center" FontSize="12.5" />
-                        <TextBox Text="{Binding PrintCopies, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
-                        <Button Command="{Binding SavePrinterSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                                <TextBlock Text="ذخیره" Margin="7,0,0,0" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button Command="{Binding TestPrintCommand}" Style="{StaticResource MaterialDesignOutlinedButton}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Printer" Width="15" Height="15" VerticalAlignment="Center" />
-                                <TextBlock Text="🖨️ تست چاپ" Margin="7,0,0,0" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-
-                <!-- ─── بخش ۴: تم و ظاهر ─── -->
-                <TabItem Header="🎨 تم و ظاهر">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8,4">
-                    <StackPanel Margin="4,8" MaxWidth="640" HorizontalAlignment="Stretch">
-                    <TextBlock Text="تم و ظاهر" FontSize="16" FontWeight="Bold" Margin="2,0,0,12" />
-
-                    <!-- چرخه ۱۹ + بیستم: انتخاب تم از کاتالوگ — هر تم علاوه بر رنگ،
-                         شعاع گوشه و چگالی خودش را دارد تا چهرهٔ همهٔ عناصر عوض شود.
-                         با کلیک بلافاصله روی کل برنامه اعمال می‌شود -->
-                    <TextBlock Text="پوستهٔ برنامه (با کلیک فوری اعمال می‌شود — رنگ + گوشه‌ها + چگالی):" FontSize="12.5" Margin="2,8,2,6" TextWrapping="Wrap" />
-                    <ItemsControl ItemsSource="{Binding ThemeOptions}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <RadioButton GroupName="AppTheme" Margin="3"
-                                             IsChecked="{Binding IsSelected, Mode=OneWay}"
-                                             Command="{Binding DataContext.SelectThemeCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                             CommandParameter="{Binding Key}">
-                                    <RadioButton.Template>
-                                        <ControlTemplate TargetType="RadioButton">
-                                            <Border x:Name="Bd" CornerRadius="{Binding Radius, FallbackValue=8}" Padding="12,8" Margin="2"
-                                                    BorderThickness="1.4" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" Background="{DynamicResource MaterialDesign.Brush.Background}"
-                                                    Cursor="Hand">
-                                                <StackPanel>
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding Icon}" FontSize="17" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                                        <TextBlock Text="{Binding Title}" FontSize="12.5" Margin="7,0,4,0"
-                                                                   VerticalAlignment="Center" FontWeight="SemiBold"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                                        <Ellipse Width="13" Height="13" VerticalAlignment="Center"
-                                                                 Fill="{Binding PrimaryColor}"
-                                                                 Stroke="#00000022" StrokeThickness="1" />
-                                                    </StackPanel>
-                                                    <!-- مشخصات ظاهری تم — گوشه و چگالی (چرخه بیستم) -->
-                                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                                        <TextBlock Text="{Binding DensityText, Mode=OneWay}" FontSize="10" Opacity="0.7" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                                    </StackPanel>
-                                                </StackPanel>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsChecked" Value="True">
-                                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
-                                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource MaterialDesign.Brush.Primary.Light}" />
-                                                </Trigger>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </RadioButton.Template>
-                                </RadioButton>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-
-                    <StackPanel Orientation="Horizontal" Margin="2,12,0,0">
-                        <TextBlock Text="حالت روشن/تاریک: " VerticalAlignment="Center" FontSize="12.5" />
-                        <RadioButton Content="☀️ روشن" GroupName="Theme" IsChecked="{Binding IsDarkTheme, Converter={StaticResource InvertBool}, Mode=OneWay}" Margin="10,0,0,0" VerticalAlignment="Center" />
-                        <RadioButton Content="🌙 تاریک" GroupName="Theme" IsChecked="{Binding IsDarkTheme}" Margin="10,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
-                    <ComboBox materialDesign:HintAssist.Hint="فونت برنامه — وزیرمتن داخلی + فونت‌های نصب‌شدهٔ ویندوز"
-                              ItemsSource="{Binding FontOptions}" SelectedItem="{Binding SelectedFont}"
-                              Margin="0,10" />
-                    <StackPanel Orientation="Horizontal" Margin="2,8">
-                        <TextBlock Text="سایز فونت پایه: " VerticalAlignment="Center" FontSize="12.5" />
-                        <Slider Minimum="11" Maximum="18" Value="{Binding BaseFontSize}" Width="220"
-                                TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Margin="8,0" />
-                        <TextBlock Text="{Binding BaseFontSize, Converter={StaticResource PersianDigits}}" VerticalAlignment="Center"
-                                   FontFamily="{DynamicResource App.CodeFont}" FontSize="13" />
-                    </StackPanel>
-
-                    <!-- ═══ سفارشی‌سازی تفکیکی عناصر — چرخه بیست‌ویکم (گزارش پانزدهم مالک) ═══
-                         «هر کدام را بتوان بصورت جداگانه تغییر داد، نه اینکه با انتخاب
-                         یک گزینه همه عوض شود» — هر عنصر کنترل مستقل خودش را دارد و
-                         مقدار «همگام با تم» یعنی آن عنصر از تم انتخابی پیروی می‌کند. -->
-                    <Border BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
-                            BorderThickness="0,1" Margin="2,12" />
-                    <TextBlock Text="سفارشی‌سازی تفکیکی عناصر (مستقل از تم)"
-                               FontSize="13" FontWeight="Bold" Margin="2,10" />
-
-                    <!-- رنگ منوی کناری — مستقل از تم؛ چرخهٔ ۲۹: نمونهٔ رنگ زنده + انتخاب‌گر حرفه‌ای -->
-                    <StackPanel Orientation="Horizontal" Margin="2,8">
-                        <TextBlock Text="رنگ منوی کناری: " VerticalAlignment="Center" FontSize="12.5" />
-                        <ComboBox ItemsSource="{Binding SidebarColorOptions}"
-                                  SelectedIndex="{Binding SidebarColorIndex}" MinWidth="150"
-                                  Margin="6,0,0,0" />
-                        <!-- نمونهٔ رنگ مؤثر — شامل رنگ دلخواه انتخاب‌شده -->
-                        <Border Width="20" Height="20" CornerRadius="5" Margin="8,0,0,0"
-                                VerticalAlignment="Center" BorderBrush="#33000000" BorderThickness="1"
-                                Background="{Binding SidebarSwatchHex, Converter={StaticResource HexToBrush}}"
-                                ToolTip="رنگ فعلی منوی کناری" />
-                        <Button Command="{Binding PickSidebarColorCommand}"
-                                Style="{StaticResource MaterialDesignFlatButton}" Padding="8,4"
-                                ToolTip="انتخاب رنگ دلخواه با انتخاب‌گر حرفه‌ای (پالت + RGB + کد HEX)"
-                                Content="🎨" Margin="2,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
-
-                    <!-- چگالی عناصر — مستقل از تم -->
-                    <StackPanel Orientation="Horizontal" Margin="2,8">
-                        <TextBlock Text="چگالی عناصر: " VerticalAlignment="Center" FontSize="12.5" />
-                        <ComboBox ItemsSource="{Binding DensityOptions}"
-                                  SelectedIndex="{Binding DensityIndex}" MinWidth="150"
-                                  Margin="6,0,0,0" />
-                    </StackPanel>
-
-                    <!-- گوشهٔ کارت‌ها — فعال‌سازی مستقل با چک‌باکس + اسلایدر -->
-                    <StackPanel Orientation="Horizontal" Margin="2,8">
-                        <CheckBox Content="گوشهٔ کارت‌ها (شعاع):" IsChecked="{Binding UseCustomRadius}"
-                                  VerticalAlignment="Center" FontSize="12.5" />
-                        <Slider Minimum="0" Maximum="24" Value="{Binding CustomCardRadius}" Width="170"
-                                TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"
-                                Margin="10,0" IsEnabled="{Binding UseCustomRadius}" />
-                        <TextBlock Text="{Binding CustomCardRadius, Converter={StaticResource PersianDigits}}" VerticalAlignment="Center"
-                                   FontFamily="{DynamicResource App.CodeFont}" FontSize="13" MinWidth="20" />
-                    </StackPanel>
-
-                    <!-- ═══ چرخه ۲۴ — شخصی‌سازی حرفه‌ای: رنگ اصلی سفارشی + حالت آیکون‌ها ═══ -->
-                    <StackPanel Orientation="Horizontal" Margin="2,8">
-                        <TextBlock Text="رنگ اصلی دکمه‌ها/هایلایت‌ها: " VerticalAlignment="Center" FontSize="12.5" />
-                        <ComboBox ItemsSource="{Binding CustomPrimaryOptions}"
-                                  SelectedIndex="{Binding CustomPrimaryIndex}" MinWidth="150"
-                                  Margin="6,0,0,0" />
-                        <!-- چرخهٔ ۲۹: نمونهٔ رنگ زندهٔ مؤثر + انتخاب‌گر حرفه‌ای -->
-                        <Border Width="20" Height="20" CornerRadius="5" Margin="8,0,0,0"
-                                VerticalAlignment="Center" BorderBrush="#33000000" BorderThickness="1"
-                                Background="{Binding PrimarySwatchHex, Converter={StaticResource HexToBrush}}"
-                                ToolTip="رنگ اصلی فعلی" />
-                        <Button Command="{Binding PickPrimaryColorCommand}"
-                                Style="{StaticResource MaterialDesignFlatButton}" Padding="8,4"
-                                ToolTip="انتخاب رنگ اصلی دلخواه با انتخاب‌گر حرفه‌ای (پالت + RGB + کد HEX)"
-                                Content="🎨" Margin="2,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="2,8">
-                        <TextBlock Text="آیکون‌های منوی کناری: " VerticalAlignment="Center" FontSize="12.5" />
-                        <ComboBox SelectedIndex="{Binding IconColorModeIndex}" MinWidth="150"
-                                  Margin="6,0,0,0">
-                            <ComboBoxItem Content="یکدست (هم‌رنگ منو)" />
-                            <ComboBoxItem Content="🎨 رنگی و شاداب" />
-                        </ComboBox>
-                        <!-- ═══ چرخهٔ بیست‌وهفتم — مجموعهٔ آیکون‌ها (تعویض یکجای شکل، نه فقط رنگ) ═══ -->
-                        <TextBlock Text="مجموعهٔ آیکون‌ها: " VerticalAlignment="Center" FontSize="12.5" Margin="18,0,0,0" />
-                        <ComboBox SelectedIndex="{Binding IconSetIndex}" MinWidth="150"
-                                  Margin="6,0,0,0">
-                            <ComboBoxItem Content="کلاسیک (پرپشت)" />
-                            <ComboBoxItem Content="خط‌نازک مدرن" />
-                            <ComboBoxItem Content="مینیمال ساده" />
-                        </ComboBox>
-                    </StackPanel>
-
-                    <!-- ═══ چرخه ۲۴ — پریست‌های شخصی تم: ذخیره/اعمال/حذف ═══
-                         «تنظیمات شخصی رو بتونیم ذخیره و بعداً استفاده بکنیم» -->
-                    <Border Background="#F5F9FF" BorderBrush="#CFE2F5" BorderThickness="1"
-                            CornerRadius="8" Padding="12,10" Margin="2,12">
-                        <StackPanel>
-                            <TextBlock Text="💠 پریست‌های شخصی (ذخیرهٔ ترکیب کامل و بازیابی با یک کلیک):"
-                                       FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" Margin="0,0,0,8" />
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <TextBox materialDesign:HintAssist.Hint="نام پریست جدید"
-                                         Text="{Binding PresetName, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Width="200" VerticalAlignment="Center" />
-                                <Button Command="{Binding SaveThemePresetCommand}"
-                                        Style="{StaticResource MaterialDesignRaisedButton}"
-                                        Content="💾 ذخیرهٔ پریست" Padding="12,6" Margin="8,0,0,0" VerticalAlignment="Center" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <ComboBox ItemsSource="{Binding ThemePresets}"
-                                          SelectedItem="{Binding SelectedThemePreset}"
-                                          materialDesign:HintAssist.Hint="پریست‌های ذخیره‌شده"
-                                          MinWidth="200" VerticalAlignment="Center"
-                                          />
-                                <Button Command="{Binding ApplyThemePresetCommand}"
-                                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                                        Content="▶️ اعمال" Padding="12,6" Margin="8,0,0,0" VerticalAlignment="Center" />
-                                <Button Command="{Binding DeleteThemePresetCommand}"
-                                        Style="{StaticResource MaterialDesignFlatButton}"
-                                        Content="🗑 حذف" Foreground="#C62828" Padding="10,6" Margin="8,0,0,0" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- واحد پول نمایشی — چرخه بیستم: تعویض ریال/تومان فقط نمایشی است.
-                         چرخه بیست‌ویکم (گزارش پانزدهم مالک): متن «محاسبات همیشه ریالی است»
-                         به درخواست حذف شد -->
-                    <StackPanel Orientation="Horizontal" Margin="2,10">
-                        <TextBlock Text="واحد پول نمایشی: " VerticalAlignment="Center" FontSize="12.5" />
-                        <ComboBox ItemsSource="{Binding CurrencyUnitOptions}"
-                                  SelectedIndex="{Binding CurrencyUnitIndex}" MinWidth="130"
-                                  Margin="4,0,0,0" />
-                    </StackPanel>
-                    <CheckBox Content="انیمیشن‌ها فعال" IsChecked="{Binding AnimationsEnabled}" Margin="2,10" />
-                    <StackPanel Orientation="Horizontal" Margin="2,8">
-                        <TextBlock Text="زبان: فارسی 🇮🇷 (انگلیسی در نسخه بعدی)" FontSize="12.5" Opacity="0.7" VerticalAlignment="Center" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
-                        <Button Command="{Binding ApplyThemeCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" Content="👁️ پیش‌نمایش فوری" />
-                        <Button Command="{Binding SaveThemeSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Content="💾 ذخیره" />
-                    </StackPanel>
-                </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-
-                <!-- ─── بخش ۵: امنیت ─── -->
-                <TabItem Header="🔐 امنیت">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8,4">
-                    <StackPanel Margin="4,8" MaxWidth="560" HorizontalAlignment="Stretch">
-                    <TextBlock Text="امنیت" FontSize="16" FontWeight="Bold" Margin="2,0,0,12" />
-                    <StackPanel Orientation="Horizontal" Margin="2,6">
-                        <TextBlock Text="حداقل طول رمز عبور: " VerticalAlignment="Center" FontSize="12.5" Width="170" />
-                        <TextBox Text="{Binding MinPasswordLength, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
-                    </StackPanel>
-                    <CheckBox Content="الزام حروف بزرگ + کوچک" IsChecked="{Binding RequireMixedCase}" Margin="2,8" />
-                    <CheckBox Content="الزام عدد" IsChecked="{Binding RequireDigit}" Margin="2,8" />
-                    <CheckBox Content="الزام کاراکتر خاص" IsChecked="{Binding RequireSpecialChar}" Margin="2,8" />
-                    <StackPanel Orientation="Horizontal" Margin="2,10">
-                        <TextBlock Text="تلاش ناموفق تا قفل: " VerticalAlignment="Center" FontSize="12.5" Width="170" />
-                        <TextBox Text="{Binding MaxFailedAttempts, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="2,6">
-                        <TextBlock Text="مدت قفل (دقیقه): " VerticalAlignment="Center" FontSize="12.5" Width="170" />
-                        <TextBox Text="{Binding LockoutMinutes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="2,6">
-                        <TextBlock Text="انقضای رمز (روز — ۰ غیرفعال): " VerticalAlignment="Center" FontSize="12.5" Width="170" />
-                        <TextBox Text="{Binding PasswordExpiryDays, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="2,6">
-                        <TextBlock Text="انقضای نشست (دقیقه): " VerticalAlignment="Center" FontSize="12.5" Width="170" />
-                        <TextBox Text="{Binding SessionTimeoutMinutes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
-                    </StackPanel>
-                    <CheckBox Content="ثبت Audit Log برای همه عملیات" IsChecked="{Binding AuditLogEnabled}" Margin="2,10" />
-                    <CheckBox Content="رمزنگاری داده‌های حساس بیمار" IsChecked="True" IsEnabled="False" Margin="2,8" />
-                    <Button Command="{Binding SaveSecuritySettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
-                            HorizontalAlignment="Left" Margin="0,14,0,0">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                            <TextBlock Text="💾 ذخیره تنظیمات امنیت" Margin="7,0,0,0" VerticalAlignment="Center" />
+                            <materialDesign:PackIcon Kind="ThemeLightDark" Width="15" Height="15" VerticalAlignment="Center" />
+                            <TextBlock Text="روشن / تاریک" Margin="7,0,0,0" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="46" Height="46" CornerRadius="23" VerticalAlignment="Center" Margin="0,0,12,0"
+                            Background="#33FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1">
+                        <materialDesign:PackIcon Kind="Cog" Width="23" Height="23"
+                                                 Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="تنظیمات سیستم" FontSize="18" FontWeight="Bold" Foreground="White" />
+                        <TextBlock Text="هویت درمانگاه، ماژول‌ها، اتصال‌های دولتی، چاپ، ظاهر برنامه و سیاست‌های امنیتی"
+                                   FontSize="10.5" Foreground="#CFD8DC" Margin="0,2,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,0,0,10"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+
+        <!-- ═══ بدنه: نوار کناری ناوبری (راست) + محتوای بخش (چپ) ═══ -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <!-- نوار کناری — در RTL ستون نخست سمت راست است -->
+                <ColumnDefinition Width="248" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ─── نوار کناری: شش بخش با آیکون و زیرعنوان ───
+                 SelectedIndex ↔ SectionIndex ویومدل (دوسویه)؛ همان ایندکسی که
+                 پیش‌تر به TabControl بایند بود — سازگاری کامل با منطق موجود.
+                 کانتینر انتخاب‌شده با رنگ اصلی و پس‌زمینهٔ ملایم هایلایت می‌شود. -->
+            <Border Grid.Column="0" CornerRadius="14" Padding="8"
+                    Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
+                <ListBox x:Name="NavList" SelectedIndex="{Binding SectionIndex, Mode=TwoWay}"
+                         Background="Transparent" BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem" BasedOn="{StaticResource MaterialDesignListBoxItem}">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0,2" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="Bd" CornerRadius="10" Padding="10,9" Margin="1"
+                                                Background="Transparent" BorderThickness="0"
+                                                Cursor="Hand"
+                                                TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
+                                            <ContentPresenter />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource MaterialDesign.Brush.Primary.Light}" />
+                                                <Setter TargetName="Bd" Property="BorderThickness" Value="0" />
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+
+                    <!-- آیتم ناوبری: دایرهٔ آیکون + عنوان + زیرعنوان -->
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="34" Height="34" CornerRadius="17" VerticalAlignment="Center"
+                                    Background="#E3F2FD">
+                                <materialDesign:PackIcon Kind="HospitalBuilding" Width="17" Height="17"
+                                                         Foreground="#1565C0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="اطلاعات درمانگاه" FontWeight="SemiBold" FontSize="12.5" />
+                                <TextBlock Text="هویت درمانگاه از سرور لایسنس" FontSize="10" Opacity="0.62" />
+                            </StackPanel>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="34" Height="34" CornerRadius="17" VerticalAlignment="Center"
+                                    Background="#E8F5E9">
+                                <materialDesign:PackIcon Kind="ViewModule" Width="17" Height="17"
+                                                         Foreground="#2E7D32" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="ماژول‌ها" FontWeight="SemiBold" FontSize="12.5" />
+                                <TextBlock Text="فعال/غیرفعال و وضعیت لایسنس" FontSize="10" Opacity="0.62" />
+                            </StackPanel>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="34" Height="34" CornerRadius="17" VerticalAlignment="Center"
+                                    Background="#FFF3E0">
+                                <materialDesign:PackIcon Kind="LinkVariant" Width="17" Height="17"
+                                                         Foreground="#E65100" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="سامانه‌های دولتی" FontWeight="SemiBold" FontSize="12.5" />
+                                <TextBlock Text="اتصال و اعتبار سرویس‌های دولتی" FontSize="10" Opacity="0.62" />
+                            </StackPanel>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="34" Height="34" CornerRadius="17" VerticalAlignment="Center"
+                                    Background="#E0F2F1">
+                                <materialDesign:PackIcon Kind="Printer" Width="17" Height="17"
+                                                         Foreground="#00695C" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="چاپگر و چاپ" FontWeight="SemiBold" FontSize="12.5" />
+                                <TextBlock Text="چاپگرها، کاغذ و پیش‌نمایش" FontSize="10" Opacity="0.62" />
+                            </StackPanel>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="34" Height="34" CornerRadius="17" VerticalAlignment="Center"
+                                    Background="#F3E5F5">
+                                <materialDesign:PackIcon Kind="Palette" Width="17" Height="17"
+                                                         Foreground="#7B1FA2" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="تم و ظاهر" FontWeight="SemiBold" FontSize="12.5" />
+                                <TextBlock Text="پوسته، رنگ‌ها، فونت و پریست" FontSize="10" Opacity="0.62" />
+                            </StackPanel>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="34" Height="34" CornerRadius="17" VerticalAlignment="Center"
+                                    Background="#FFEBEE">
+                                <materialDesign:PackIcon Kind="ShieldCheck" Width="17" Height="17"
+                                                         Foreground="#C62828" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="امنیت" FontWeight="SemiBold" FontSize="12.5" />
+                                <TextBlock Text="رمز عبور، قفل و سیاست نشست" FontSize="10" Opacity="0.62" />
+                            </StackPanel>
+                        </StackPanel>
+                    </ListBoxItem>
+                </ListBox>
+            </Border>
+
+            <!-- ─── محتوای بخش‌ها: TabControl بی‌سربرگ (نمایش‌دهندهٔ انتخاب نوار کناری) ───
+                 قالب صرفاً محتوای تبِ انتخاب‌شده را نشان می‌دهد؛ سربرگ‌های پیشین
+                 با نوار کناری بالا جایگزین شدند. SelectedIndex همان SectionIndex است. -->
+            <TabControl Grid.Column="2" SelectedIndex="{Binding SectionIndex}"
+                        materialDesign:ColorZoneAssist.Mode="PrimaryLight">
+                <TabControl.Resources>
+                    <Style TargetType="TabControl">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="TabControl">
+                                    <!-- فقط محتوای منتخب — بدون نوار سربرگ -->
+                                    <ContentPresenter ContentSource="SelectedContent" />
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                    <!-- ═══ قالب کارت بخش — سربرگ آیکون‌دار + بدنه؛ مشترک بین بخش‌ها ═══ -->
+                    <Style x:Key="SettingsCard" TargetType="Border">
+                        <Setter Property="CornerRadius" Value="14" />
+                        <Setter Property="Padding" Value="16,13" />
+                        <Setter Property="Margin" Value="0,0,0,12" />
+                        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                        <Setter Property="BorderThickness" Value="1" />
+                    </Style>
+                </TabControl.Resources>
+
+                <!-- ─── بخش ۰: اطلاعات درمانگاه (فقط‌خواندنی از سرور لایسنس) ─── -->
+                <TabItem>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="0,2">
+
+                            <!-- ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) ═══
+                                 «در تنظیمات و اطلاعات درمانگاه فقط اطلاعات درمانگاه را نشان
+                                 بده و همه این اطلاعات را از لایسنس بخوان… فقط از سرور لایسنس
+                                 قابل تغییر باشند» — کل بخش فقط‌خواندنی؛ مقادیر هنگام هر
+                                 اعتبارسنجی موفق لایسنس همگام می‌شوند؛ تغییر تنها از پنل لایسنس. -->
+                            <Border Background="#FFF8E1" BorderBrush="#FFE082" BorderThickness="1"
+                                    CornerRadius="10" Padding="12,9" Margin="0,0,0,12">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="InformationOutline" Width="18" Height="18"
+                                                             Foreground="#E65100" VerticalAlignment="Center" />
+                                    <TextBlock Text="این اطلاعات از «سرور لایسنس» خوانده می‌شود و با هر بررسی لایسنس به‌طور خودکار همگام می‌گردد؛ برای تغییر، از پنل مدیریت لایسنس اقدام کنید."
+                                               FontSize="11.5" Foreground="#795548" TextWrapping="Wrap"
+                                               Margin="8,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource SettingsCard}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <materialDesign:PackIcon Kind="HospitalBuilding" Width="17" Height="17"
+                                                                 Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+                                        <TextBlock Text="هویت درمانگاه" FontSize="14" FontWeight="Bold"
+                                                   Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="16" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBox materialDesign:HintAssist.Hint="نام درمانگاه (الزامی)"
+                                                     Text="{Binding ClinicName, Mode=OneWay}" IsReadOnly="True"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                                            <TextBox materialDesign:HintAssist.Hint="شماره مجوز"
+                                                     Text="{Binding LicenseNumber, Mode=OneWay}" IsReadOnly="True"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                                            <TextBox materialDesign:HintAssist.Hint="کد اقتصادی"
+                                                     Text="{Binding EconomicCode, Mode=OneWay}" IsReadOnly="True"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                                            <TextBox materialDesign:HintAssist.Hint="شناسه ملی"
+                                                     Text="{Binding NationalId, Mode=OneWay}" IsReadOnly="True"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBox materialDesign:HintAssist.Hint="نام مدیر"
+                                                     Text="{Binding ManagerName, Mode=OneWay}" IsReadOnly="True"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                                            <TextBox materialDesign:HintAssist.Hint="تلفن"
+                                                     Text="{Binding Phone, Mode=OneWay}" IsReadOnly="True"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                                            <!-- چرخهٔ بیست‌وهفتم: شهر از پنل لایسنس همگام می‌شود ولی نمایش داده نمی‌شد -->
+                                            <TextBox materialDesign:HintAssist.Hint="شهر"
+                                                     Text="{Binding City, Mode=OneWay}" IsReadOnly="True"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                                            <TextBox materialDesign:HintAssist.Hint="ایمیل"
+                                                     Text="{Binding Email, Mode=OneWay}" IsReadOnly="True"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
+                                            <TextBox materialDesign:HintAssist.Hint="آدرس"
+                                                     Text="{Binding Address, Mode=OneWay}" IsReadOnly="True"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                     AcceptsReturn="True" Height="70" TextWrapping="Wrap" VerticalContentAlignment="Top" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <!-- چرخه ۲۴ — دکمهٔ ذخیره حذف شد: داده‌ها فقط از سرور لایسنس همگام می‌شوند -->
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
                     </ScrollViewer>
                 </TabItem>
-        </TabControl>
+
+                <!-- ─── بخش ۱: ماژول‌ها ─── -->
+                <TabItem>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Border Style="{StaticResource SettingsCard}" Margin="0,2,0,0">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <materialDesign:PackIcon Kind="ViewModule" Width="17" Height="17"
+                                                             Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+                                    <TextBlock Text="ماژول‌ها و وضعیت لایسنس" FontSize="14" FontWeight="Bold"
+                                               Margin="8,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <DataGrid ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule}"
+                                          Style="{StaticResource App.DataGrid}"
+                                          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                                          HeadersVisibility="Column" FontSize="12" MaxHeight="420">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="ماژول" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="150" FontWeight="SemiBold" />
+                                        <DataGridTextColumn Header="وضعیت لایسنس" Binding="{Binding LicenseText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
+                                        <DataGridTemplateColumn Header="فعال در سیستم" Width="Auto" MinWidth="110">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <ToggleButton IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                                                                  IsEnabled="{Binding IsToggleEnabled}"
+                                                                  Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                                                  HorizontalAlignment="Center" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTextColumn Header="عملیات" Binding="{Binding ActionText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <TextBlock Text="Core: غیرقابل غیرفعال‌سازی — ماژول بدون لایسنس قفل است و دکمه «خرید ماژول» به License Portal متصل می‌شود"
+                                           FontSize="10.5" Opacity="0.6" Margin="2,10,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ─── بخش ۲: سامانه‌های دولتی ─── -->
+                <TabItem>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding GovSystems}" Margin="0,2,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="2,0,2,12" Padding="16,12" CornerRadius="14"
+                                            Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                                            BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}" FontSize="14.5" FontWeight="Bold" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                                                <TextBlock Text="{Binding ConnectedText}" FontSize="11.5" Margin="12,0,0,0" VerticalAlignment="Center" Opacity="0.8" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                                            </StackPanel>
+                                            <ToggleButton Grid.Row="0" Grid.Column="1" IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                                                          Style="{StaticResource MaterialDesignSwitchToggleButton}" ToolTip="فعال" />
+                                            <TextBox Grid.Row="1" Grid.ColumnSpan="2" materialDesign:HintAssist.Hint="آدرس API"
+                                                     Text="{Binding ApiUrl, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10,0,8" FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
+                                            <Grid Grid.Row="2" Grid.ColumnSpan="2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="10" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="نام کاربری"
+                                                         Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                                                         Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                                                <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="رمز عبور (ورود جدید)"
+                                                         Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                                                         Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                                            </Grid>
+                                            <Button Grid.Row="3" Grid.ColumnSpan="2"
+                                                    Command="{Binding DataContext.SaveGovSystemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                    HorizontalAlignment="Left" Margin="0,10,0,0" Content="💾 ذخیره این سامانه" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ─── بخش ۳: چاپگر و چاپ ─── -->
+                <TabItem>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Border Style="{StaticResource SettingsCard}" Margin="0,2,6,0" MaxWidth="560" HorizontalAlignment="Stretch">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <materialDesign:PackIcon Kind="Printer" Width="17" Height="17"
+                                                             Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+                                    <TextBlock Text="چاپگرها و رفتار چاپ" FontSize="14" FontWeight="Bold"
+                                               Margin="8,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+
+                                <!-- ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — «فیلدهای چاپگرها
+                                     خالی هستند و نمی‌شود چاپگر انتخاب کرد» ═══ چاپگرهای نصب‌شدهٔ
+                                     ویندوز در ComboBox قابل انتخاب‌اند (ویرایش‌پذیر برای نام‌های
+                                     دستی/شبکه)؛ «چاپگر نوبت‌دهی» برای قبض‌های نوبت اضافه شد. -->
+                                <ComboBox materialDesign:HintAssist.Hint="چاپگر پیش‌فرض"
+                                          ItemsSource="{Binding PrinterNames}"
+                                          IsEditable="True" StaysOpenOnEdit="True"
+                                          Text="{Binding DefaultPrinter, UpdateSourceTrigger=PropertyChanged}"
+                                          Margin="0,0,0,10" />
+                                <ComboBox materialDesign:HintAssist.Hint="چاپگر فاکتور"
+                                          ItemsSource="{Binding PrinterNames}"
+                                          IsEditable="True" StaysOpenOnEdit="True"
+                                          Text="{Binding InvoicePrinter, UpdateSourceTrigger=PropertyChanged}"
+                                          Margin="0,0,0,10" />
+                                <ComboBox materialDesign:HintAssist.Hint="چاپگر نسخه"
+                                          ItemsSource="{Binding PrinterNames}"
+                                          IsEditable="True" StaysOpenOnEdit="True"
+                                          Text="{Binding PrescriptionPrinter, UpdateSourceTrigger=PropertyChanged}"
+                                          Margin="0,0,0,10" />
+                                <ComboBox materialDesign:HintAssist.Hint="چاپگر نوبت‌دهی — قبض‌های نوبت با این چاپ می‌شوند"
+                                          ItemsSource="{Binding PrinterNames}"
+                                          IsEditable="True" StaysOpenOnEdit="True"
+                                          Text="{Binding TicketPrinter, UpdateSourceTrigger=PropertyChanged}"
+                                          Margin="0,0,0,10" />
+                                <ComboBox materialDesign:HintAssist.Hint="سایز کاغذ فاکتور"
+                                          ItemsSource="{Binding PaperSizes}" SelectedItem="{Binding InvoicePaperSize}"
+                                          Margin="0,0,0,12" />
+                                <CheckBox Content="نمایش پیش‌نمایش قبل از چاپ" IsChecked="{Binding ShowPreview}" Margin="2,3" />
+                                <CheckBox Content="چاپ خودکار بعد از ثبت فاکتور" IsChecked="{Binding AutoPrintInvoice}" Margin="2,3" />
+                                <!-- چرخه ۲۴: چاپ خودکار قبض نوبت پس از ثبت موفق — با چاپگر نوبت‌دهی بالا -->
+                                <CheckBox Content="چاپ خودکار قبض نوبت پس از ثبت (با چاپگر نوبت‌دهی)" IsChecked="{Binding AutoPrintTicket}" Margin="2,3" />
+                                <StackPanel Orientation="Horizontal" Margin="2,10">
+                                    <TextBlock Text="تعداد نسخه چاپ: " VerticalAlignment="Center" FontSize="12.5" />
+                                    <TextBox Text="{Binding PrintCopies, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                    <Button Command="{Binding SavePrinterSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                                            <TextBlock Text="ذخیره" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Command="{Binding TestPrintCommand}" Style="{StaticResource MaterialDesignOutlinedButton}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Printer" Width="15" Height="15" VerticalAlignment="Center" />
+                                            <TextBlock Text="تست چاپ" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ─── بخش ۴: تم و ظاهر ─── -->
+                <TabItem>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="0,2,6,0" MaxWidth="660" HorizontalAlignment="Stretch">
+
+                            <!-- کارت ۱: پوستهٔ برنامه -->
+                            <Border Style="{StaticResource SettingsCard}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <materialDesign:PackIcon Kind="Palette" Width="17" Height="17"
+                                                                 Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+                                        <TextBlock Text="پوستهٔ برنامه (با کلیک فوری اعمال می‌شود — رنگ + گوشه‌ها + چگالی)" FontSize="13.5" FontWeight="Bold"
+                                                   Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <!-- چرخه ۱۹ + بیستم: انتخاب تم از کاتالوگ — هر تم علاوه بر رنگ،
+                                         شعاع گوشه و چگالی خودش را دارد تا چهرهٔ همهٔ عناصر عوض شود -->
+                                    <ItemsControl ItemsSource="{Binding ThemeOptions}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <RadioButton GroupName="AppTheme" Margin="3"
+                                                             IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                                             Command="{Binding DataContext.SelectThemeCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                             CommandParameter="{Binding Key}">
+                                                    <RadioButton.Template>
+                                                        <ControlTemplate TargetType="RadioButton">
+                                                            <Border x:Name="Bd" CornerRadius="{Binding Radius, FallbackValue=8}" Padding="12,8" Margin="2"
+                                                                    BorderThickness="1.4" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                                                    Cursor="Hand">
+                                                                <StackPanel>
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <TextBlock Text="{Binding Icon}" FontSize="17" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                                                                        <TextBlock Text="{Binding Title}" FontSize="12.5" Margin="7,0,4,0"
+                                                                                   VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                                                                        <Ellipse Width="13" Height="13" VerticalAlignment="Center"
+                                                                                 Fill="{Binding PrimaryColor}"
+                                                                                 Stroke="#00000022" StrokeThickness="1" />
+                                                                    </StackPanel>
+                                                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                                        <TextBlock Text="{Binding DensityText, Mode=OneWay}" FontSize="10" Opacity="0.7" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                                                                    </StackPanel>
+                                                                </StackPanel>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsChecked" Value="True">
+                                                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource MaterialDesign.Brush.Primary.Light}" />
+                                                                </Trigger>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </RadioButton.Template>
+                                                </RadioButton>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <StackPanel Orientation="Horizontal" Margin="2,12,0,0">
+                                        <TextBlock Text="حالت روشن/تاریک: " VerticalAlignment="Center" FontSize="12.5" />
+                                        <RadioButton Content="☀️ روشن" GroupName="Theme" IsChecked="{Binding IsDarkTheme, Converter={StaticResource InvertBool}, Mode=OneWay}" Margin="10,0,0,0" VerticalAlignment="Center" />
+                                        <RadioButton Content="🌙 تاریک" GroupName="Theme" IsChecked="{Binding IsDarkTheme}" Margin="10,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <ComboBox materialDesign:HintAssist.Hint="فونت برنامه — وزیرمتن داخلی + فونت‌های نصب‌شدهٔ ویندوز"
+                                              ItemsSource="{Binding FontOptions}" SelectedItem="{Binding SelectedFont}"
+                                              Margin="0,10" />
+                                    <StackPanel Orientation="Horizontal" Margin="2,8">
+                                        <TextBlock Text="سایز فونت پایه: " VerticalAlignment="Center" FontSize="12.5" />
+                                        <Slider Minimum="11" Maximum="18" Value="{Binding BaseFontSize}" Width="220"
+                                                TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Margin="8,0" />
+                                        <TextBlock Text="{Binding BaseFontSize, Converter={StaticResource PersianDigits}}" VerticalAlignment="Center"
+                                                   FontFamily="{DynamicResource App.CodeFont}" FontSize="13" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- کارت ۲: سفارشی‌سازی تفکیکی عناصر -->
+                            <Border Style="{StaticResource SettingsCard}">
+                                <StackPanel>
+                                    <!-- ═══ سفارشی‌سازی تفکیکی عناصر — چرخه بیست‌ویکم (گزارش پانزدهم مالک) ═══
+                                         «هر کدام را بتوان بصورت جداگانه تغییر داد» — هر عنصر کنترل مستقل
+                                         خودش را دارد و مقدار «همگام با تم» یعنی پیروی از تم انتخابی. -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <materialDesign:PackIcon Kind="TuneVertical" Width="17" Height="17"
+                                                                 Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+                                        <TextBlock Text="سفارشی‌سازی تفکیکی عناصر (مستقل از تم)" FontSize="13.5" FontWeight="Bold"
+                                                   Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <!-- رنگ منوی کناری — مستقل از تم؛ چرخهٔ ۲۹: نمونهٔ رنگ زنده + انتخاب‌گر حرفه‌ای -->
+                                    <StackPanel Orientation="Horizontal" Margin="2,8">
+                                        <TextBlock Text="رنگ منوی کناری: " VerticalAlignment="Center" FontSize="12.5" />
+                                        <ComboBox ItemsSource="{Binding SidebarColorOptions}"
+                                                  SelectedIndex="{Binding SidebarColorIndex}" MinWidth="150"
+                                                  Margin="6,0,0,0" />
+                                        <Border Width="20" Height="20" CornerRadius="5" Margin="8,0,0,0"
+                                                VerticalAlignment="Center" BorderBrush="#33000000" BorderThickness="1"
+                                                Background="{Binding SidebarSwatchHex, Converter={StaticResource HexToBrush}}"
+                                                ToolTip="رنگ فعلی منوی کناری" />
+                                        <Button Command="{Binding PickSidebarColorCommand}"
+                                                Style="{StaticResource MaterialDesignFlatButton}" Padding="8,4"
+                                                ToolTip="انتخاب رنگ دلخواه با انتخاب‌گر حرفه‌ای (پالت + RGB + کد HEX)"
+                                                Content="🎨" Margin="2,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <!-- چگالی عناصر — مستقل از تم -->
+                                    <StackPanel Orientation="Horizontal" Margin="2,8">
+                                        <TextBlock Text="چگالی عناصر: " VerticalAlignment="Center" FontSize="12.5" />
+                                        <ComboBox ItemsSource="{Binding DensityOptions}"
+                                                  SelectedIndex="{Binding DensityIndex}" MinWidth="150"
+                                                  Margin="6,0,0,0" />
+                                    </StackPanel>
+
+                                    <!-- گوشهٔ کارت‌ها — فعال‌سازی مستقل با چک‌باکس + اسلایدر -->
+                                    <StackPanel Orientation="Horizontal" Margin="2,8">
+                                        <CheckBox Content="گوشهٔ کارت‌ها (شعاع):" IsChecked="{Binding UseCustomRadius}"
+                                                  VerticalAlignment="Center" FontSize="12.5" />
+                                        <Slider Minimum="0" Maximum="24" Value="{Binding CustomCardRadius}" Width="170"
+                                                TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                                Margin="10,0" IsEnabled="{Binding UseCustomRadius}" />
+                                        <TextBlock Text="{Binding CustomCardRadius, Converter={StaticResource PersianDigits}}" VerticalAlignment="Center"
+                                                   FontFamily="{DynamicResource App.CodeFont}" FontSize="13" MinWidth="20" />
+                                    </StackPanel>
+
+                                    <!-- ═══ چرخه ۲۴ — شخصی‌سازی حرفه‌ای: رنگ اصلی سفارشی + حالت آیکون‌ها ═══ -->
+                                    <StackPanel Orientation="Horizontal" Margin="2,8">
+                                        <TextBlock Text="رنگ اصلی دکمه‌ها/هایلایت‌ها: " VerticalAlignment="Center" FontSize="12.5" />
+                                        <ComboBox ItemsSource="{Binding CustomPrimaryOptions}"
+                                                  SelectedIndex="{Binding CustomPrimaryIndex}" MinWidth="150"
+                                                  Margin="6,0,0,0" />
+                                        <Border Width="20" Height="20" CornerRadius="5" Margin="8,0,0,0"
+                                                VerticalAlignment="Center" BorderBrush="#33000000" BorderThickness="1"
+                                                Background="{Binding PrimarySwatchHex, Converter={StaticResource HexToBrush}}"
+                                                ToolTip="رنگ اصلی فعلی" />
+                                        <Button Command="{Binding PickPrimaryColorCommand}"
+                                                Style="{StaticResource MaterialDesignFlatButton}" Padding="8,4"
+                                                ToolTip="انتخاب رنگ اصلی دلخواه با انتخاب‌گر حرفه‌ای (پالت + RGB + کد HEX)"
+                                                Content="🎨" Margin="2,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="2,8">
+                                        <TextBlock Text="آیکون‌های منوی کناری: " VerticalAlignment="Center" FontSize="12.5" />
+                                        <ComboBox SelectedIndex="{Binding IconColorModeIndex}" MinWidth="150"
+                                                  Margin="6,0,0,0">
+                                            <ComboBoxItem Content="یکدست (هم‌رنگ منو)" />
+                                            <ComboBoxItem Content="🎨 رنگی و شاداب" />
+                                        </ComboBox>
+                                        <!-- ═══ چرخهٔ بیست‌وهفتم — مجموعهٔ آیکون‌ها ═══ -->
+                                        <TextBlock Text="مجموعهٔ آیکون‌ها: " VerticalAlignment="Center" FontSize="12.5" Margin="18,0,0,0" />
+                                        <ComboBox SelectedIndex="{Binding IconSetIndex}" MinWidth="150"
+                                                  Margin="6,0,0,0">
+                                            <ComboBoxItem Content="کلاسیک (پرپشت)" />
+                                            <ComboBoxItem Content="خط‌نازک مدرن" />
+                                            <ComboBoxItem Content="مینیمال ساده" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="2,10">
+                                        <TextBlock Text="واحد پول نمایشی: " VerticalAlignment="Center" FontSize="12.5" />
+                                        <ComboBox ItemsSource="{Binding CurrencyUnitOptions}"
+                                                  SelectedIndex="{Binding CurrencyUnitIndex}" MinWidth="130"
+                                                  Margin="4,0,0,0" />
+                                        <!-- چرخه بیست‌ویکم: متن «محاسبات همیشه ریالی است» به درخواست حذف شد -->
+                                    </StackPanel>
+                                    <CheckBox Content="انیمیشن‌ها فعال" IsChecked="{Binding AnimationsEnabled}" Margin="2,10" />
+                                    <StackPanel Orientation="Horizontal" Margin="2,8">
+                                        <TextBlock Text="زبان: فارسی 🇮🇷 (انگلیسی در نسخه بعدی)" FontSize="12.5" Opacity="0.7" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- کارت ۳: پریست‌های شخصی — چرخه ۲۴: «تنظیمات شخصی رو بتونیم ذخیره و بعداً استفاده بکنیم» -->
+                            <Border Style="{StaticResource SettingsCard}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <materialDesign:PackIcon Kind="ContentSaveOutline" Width="17" Height="17"
+                                                                 Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+                                        <TextBlock Text="💠 پریست‌های شخصی (ذخیرهٔ ترکیب کامل و بازیابی با یک کلیک)" FontSize="13" FontWeight="SemiBold"
+                                                   Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <TextBox materialDesign:HintAssist.Hint="نام پریست جدید"
+                                                 Text="{Binding PresetName, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                 Width="200" VerticalAlignment="Center" />
+                                        <Button Command="{Binding SaveThemePresetCommand}"
+                                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                                Content="💾 ذخیرهٔ پریست" Padding="12,6" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <ComboBox ItemsSource="{Binding ThemePresets}"
+                                                  SelectedItem="{Binding SelectedThemePreset}"
+                                                  materialDesign:HintAssist.Hint="پریست‌های ذخیره‌شده"
+                                                  MinWidth="200" VerticalAlignment="Center" />
+                                        <Button Command="{Binding ApplyThemePresetCommand}"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                Content="▶️ اعمال" Padding="12,6" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                        <Button Command="{Binding DeleteThemePresetCommand}"
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                Content="🗑 حذف" Foreground="#C62828" Padding="10,6" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <StackPanel Orientation="Horizontal" Margin="2,2,0,0">
+                                <Button Command="{Binding ApplyThemeCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" Content="👁️ پیش‌نمایش فوری" />
+                                <Button Command="{Binding SaveThemeSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Content="💾 ذخیره" />
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ─── بخش ۵: امنیت ─── -->
+                <TabItem>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Border Style="{StaticResource SettingsCard}" Margin="0,2,6,0" MaxWidth="580" HorizontalAlignment="Stretch">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <materialDesign:PackIcon Kind="ShieldCheck" Width="17" Height="17"
+                                                             Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+                                    <TextBlock Text="سیاست‌های رمز عبور و نشست" FontSize="14" FontWeight="Bold"
+                                               Margin="8,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="2,6">
+                                    <TextBlock Text="حداقل طول رمز عبور: " VerticalAlignment="Center" FontSize="12.5" Width="170" />
+                                    <TextBox Text="{Binding MinPasswordLength, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
+                                </StackPanel>
+                                <CheckBox Content="الزام حروف بزرگ + کوچک" IsChecked="{Binding RequireMixedCase}" Margin="2,8" />
+                                <CheckBox Content="الزام عدد" IsChecked="{Binding RequireDigit}" Margin="2,8" />
+                                <CheckBox Content="الزام کاراکتر خاص" IsChecked="{Binding RequireSpecialChar}" Margin="2,8" />
+                                <StackPanel Orientation="Horizontal" Margin="2,10">
+                                    <TextBlock Text="تلاش ناموفق تا قفل: " VerticalAlignment="Center" FontSize="12.5" Width="170" />
+                                    <TextBox Text="{Binding MaxFailedAttempts, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="2,6">
+                                    <TextBlock Text="مدت قفل (دقیقه): " VerticalAlignment="Center" FontSize="12.5" Width="170" />
+                                    <TextBox Text="{Binding LockoutMinutes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="2,6">
+                                    <TextBlock Text="انقضای رمز (روز — ۰ غیرفعال): " VerticalAlignment="Center" FontSize="12.5" Width="170" />
+                                    <TextBox Text="{Binding PasswordExpiryDays, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="2,6">
+                                    <TextBlock Text="انقضای نشست (دقیقه): " VerticalAlignment="Center" FontSize="12.5" Width="170" />
+                                    <TextBox Text="{Binding SessionTimeoutMinutes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="80" />
+                                </StackPanel>
+                                <CheckBox Content="ثبت Audit Log برای همه عملیات" IsChecked="{Binding AuditLogEnabled}" Margin="2,10" />
+                                <CheckBox Content="رمزنگاری داده‌های حساس بیمار" IsChecked="True" IsEnabled="False" Margin="2,8" />
+                                <Button Command="{Binding SaveSecuritySettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                                        HorizontalAlignment="Left" Margin="0,14,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                                        <TextBlock Text="💾 ذخیره تنظیمات امنیت" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+        </Grid>
     </Grid>
 </UserControl>

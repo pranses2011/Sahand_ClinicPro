@@ -181,19 +181,17 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <!-- دکمهٔ ویرایش — بازکردن فرم بازه‌ها (مالک) -->
-                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="90">
+                            <!-- دکمهٔ ویرایش — بازکردن فرم بازه‌ها (مالک)؛ چرخهٔ ۷۹: آیکونی
+                                 هم‌الگوی لیست بیماران (درخواست مالک: کلیدهای عملیاتی آیکونی) -->
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Command="{Binding DataContext.EditTestCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                 CommandParameter="{Binding}"
-                                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                MinHeight="30" MinWidth="78" Cursor="Hand" Focusable="False"
+                                                Style="{StaticResource App.RowIconButton}"
+                                                Cursor="Hand" Focusable="False"
                                                 ToolTip="ویرایش بازه‌های مرجع و حدود بحرانی این آزمایش">
-                                            <StackPanel Orientation="Horizontal">
-                                                <materialDesign:PackIcon Kind="Pencil" Width="13" Height="13" VerticalAlignment="Center" />
-                                                <TextBlock Text="ویرایش" Margin="5,0,0,0" VerticalAlignment="Center" FontSize="11" />
-                                            </StackPanel>
+                                            <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" />
                                         </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -254,18 +252,17 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="330">
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="140">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <!-- ═══ چرخهٔ ۶۷ — ثبت/مشاهدهٔ نتیجه (یک پنجره برای هر دو کار) ═══ -->
+                                <!-- ═══ چرخهٔ ۶۷ — ثبت/مشاهدهٔ نتیجه (یک پنجره برای هر دو کار)؛
+                                     چرخهٔ ۷۹: آیکونی هم‌الگوی لیست بیماران ═══ -->
                                 <Button Command="{Binding DataContext.RecordResultCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
-                                        Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5" Margin="0,0,6,0">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="ClipboardEditOutline" Width="13" Height="13" VerticalAlignment="Center" />
-                                        <TextBlock Text="ثبت / مشاهده" Margin="6,0,0,0" />
-                                    </StackPanel>
+                                        Style="{StaticResource App.RowIconButton}" Margin="0,0,6,0"
+                                        ToolTip="ثبت / مشاهدهٔ نتیجه">
+                                    <materialDesign:PackIcon Kind="ClipboardEditOutline" Width="15" Height="15" />
                                 </Button>
                                 <!-- ═══ چرخهٔ ۶۷ (گزارش مالک: «امکان چاپ هم داشته باشه») ═══
                                      چاپ برگهٔ نتیجه — برای درخواست‌های نتیجه‌دار نمایش داده می‌شود؛
@@ -273,11 +270,9 @@
                                 <Button Command="{Binding DataContext.PrintResultCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
                                         Visibility="{Binding CanPrint, Converter={StaticResource BoolToVisibility}}"
-                                        Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5" Margin="0,0,6,0">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Printer" Width="13" Height="13" VerticalAlignment="Center" />
-                                        <TextBlock Text="چاپ نتیجه" Margin="6,0,0,0" />
-                                    </StackPanel>
+                                        Style="{StaticResource App.RowIconButton}" Margin="0,0,6,0"
+                                        ToolTip="چاپ برگهٔ نتیجه">
+                                    <materialDesign:PackIcon Kind="Printer" Width="15" Height="15" />
                                 </Button>
                                 <!-- ═══ چرخهٔ ۶۹ (فاز ۳ / F-02) — برچسب نمونه ═══
                                      برای هر قلم این درخواست، برچسب کوچک با QR یکتای
@@ -285,12 +280,9 @@
                                      روی ظرف نمونه بچسبد؛ اسکن آن، جابه‌جایی نمونه را صفر می‌کند. -->
                                 <Button Command="{Binding DataContext.PrintSpecimenLabelsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
-                                        Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5"
+                                        Style="{StaticResource App.RowIconButton}"
                                         ToolTip="چاپ برچسب QR برای ظرف نمونه‌های این درخواست">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Barcode" Width="13" Height="13" VerticalAlignment="Center" />
-                                        <TextBlock Text="برچسب نمونه" Margin="6,0,0,0" />
-                                    </StackPanel>
+                                    <materialDesign:PackIcon Kind="Barcode" Width="15" Height="15" />
                                 </Button>
                             </StackPanel>
                         </DataTemplate>

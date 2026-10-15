@@ -797,6 +797,14 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     private void ApplyTheme() => _theme.SetTheme(IsDarkTheme);
 
+    /// <summary>
+    /// چرخهٔ ۷۹ (بازطراحی صفحهٔ تنظیمات) — کلید سریع «روشن/تاریک» در سربرگ
+    /// قهرمان تنظیمات: فقط مقدار IsDarkTheme را برمی‌گرداند؛ partial
+    /// OnIsDarkThemeChanged اعمالِ پوسته و ذخیرهٔ سروری را انجام می‌دهد.
+    /// </summary>
+    [RelayCommand]
+    private void ToggleDarkMode() => IsDarkTheme = !IsDarkTheme;
+
     /// <summary>انتخاب تم رنگی از کاتالوگ — اعمال فوری + ذخیره (چرخه ۱۹)</summary>
     [RelayCommand]
     private void SelectTheme(string? key)
