@@ -473,8 +473,32 @@ public partial class VisitEditViewModel : ObservableObject
     private static int ParseInt(string? text) =>
         int.TryParse(new string((text ?? "").Where(char.IsDigit).ToArray()), out var v) ? v : 0;
 
-    private static decimal ParseDec(string? text) =>
-        decimal.TryParse(new string((text ?? "").Where(c => char.IsDigit(c) || c == '.').ToArray()), out var v) ? v : 0;
+    /// <summary>
+    /// پارس عدد اعشاری ورودی علائم حیاتی — چرخهٔ ۷۹ (گزارش مالک: «وقتی دما را
+    /// می‌نویسم، مانند بقیه علائم وضعیتش در پایین صفحه نمی‌افتد»).
+    /// ریشه: دما «تنها» علامت حیاتی اعشاری است و decimal.TryParse با فرهنگ
+    /// جاری fa-IR اجرا می‌شد که جداکنندهٔ اعشارش «٫» (U+066B) است — «37.5»
+    /// رد می‌شد (نتیجه ۰ ⇒ بدون وضعیت و بدون ذخیره) و «۳۷٫۵» هم بعد از پالایش
+    /// کاراکترها به «۳۷۵» تبدیل می‌شد! اکنون ارقام فارسی/عربی و جداکننده‌های
+    /// «٫» و «،» و «/» همه به قالب خنثی نرمال‌سازی و با InvariantCulture
+    /// پارس می‌شوند — هر دو مسیر «کارت وضعیت زنده» و «ذخیرهٔ ویزیت» سالم‌اند.
+    /// </summary>
+    private static decimal ParseDec(string? text)
+    {
+        // گام ۱: ارقام فارسی/عربی → لاتین (پارس خنثی فقط ارقام ASCII می‌پذیرد)
+        var latin = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToLatinDigits(text ?? string.Empty);
+        // گام ۲: نگه‌داشتن ارقام و همهٔ جداکننده‌های اعشاری رایج + یکسان‌سازی‌شان
+        var cleaned = new string(latin
+            .Where(c => char.IsDigit(c) || c is '.' or '٫' or ',' or '/' or '٬')
+            .ToArray())
+            .Replace('٫', '.').Replace('٬', '.').Replace(',', '.').Replace('/', '.');
+        // گام ۳: فقط نخستین نقطه اعشار می‌ماند — بقیه حذف (ورودی مثل ۳۷.۵.۲)
+        var firstDot = cleaned.IndexOf('.');
+        if (firstDot >= 0)
+            cleaned = cleaned[..(firstDot + 1)] + cleaned[(firstDot + 1)..].Replace(".", "");
+        return decimal.TryParse(cleaned, System.Globalization.NumberStyles.Number,
+            System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0;
+    }
 
     /* ═══════════ تب ۴: جستجوی تشخیص ═══════════ */
 

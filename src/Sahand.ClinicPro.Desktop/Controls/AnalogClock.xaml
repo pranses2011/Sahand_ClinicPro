@@ -7,61 +7,37 @@
              d:DesignHeight="280" d:DesignWidth="280"
              FlowDirection="LeftToRight"
              x:Name="Root">
-    <!-- ═══ ساعت آنالوگ نمایشگر سالن انتظار — چرخهٔ ۷۴ + اصلاحات چرخهٔ ۷۵ ═══
-         گزارش مالک چرخهٔ ۷۵ (دو ایراد):
-           ۱) «عقربه ثانیه تمام قطر ساعت است» — عقربهٔ قبلی تا لبهٔ صفحه می‌رسید؛
-              اکنون طول عقربهٔ ثانیه ~۷۰٪ شعاع است (هم‌نسبت ساعت‌های واقعی) و
-              دُم متعادل‌کنندهٔ کوتاه پشت مرکز دارد.
-           ۲) «فقط ۴ شمارهٔ اصلی را دارد؛ خطوط ساعت و دقیقه هم می‌خواهم — خطوط
-              ساعت کلفت‌تر» — ۶۰ خط نشانگر اضافه شد: ۱۲ خطِ ساعتِ کلفتِ روشن
-              (هر ۳۰ درجه) + ۴۸ خطِ دقیقهٔ نازک کم‌رنگ؛ به‌علاوه همان برچسب‌های
-              فارسی ۱۲/۳/۶/۹.
-         حرکت پیوستهٔ ثانیه (سوپ نرم) و رنگ‌بندی تیرهٔ کیوسک حفظ شد. -->
+    <!-- ═══ ساعت آنالوگ نمایشگر سالن انتظار — چرخهٔ ۷۴ + ۷۵ + ۷۸ + ۷۹ ═══
+         چرخهٔ ۷۹ (گزارش مالک: «برای ساعت هم تنظیمات بزار تا هم بتونیم صفحه
+         ساعت و هم رنگشو تغییر بدیم»): دو ویژگی‌گی وابستگی تازه —
+           • ClockFaceStyle: ۰ کلاسیک (۶۰ خط + اعداد ۱۲/۳/۶/۹) · ۱ اعداد کامل
+             (۱۲ عدد فارسی) · ۲ مینیمال (فقط ۱۲ خط کلفت ساعت) — همه در کد
+             پشت روی TickCanvas ساخته می‌شوند.
+           • ClockColorTheme: ۰ نیلی (پیش‌فرض) · ۱ زمردی · ۲ کهربایی ·
+             ۳ یاقوتی · ۴ نقره‌ای — همهٔ رنگ‌های صفحه/خطوط/اعداد/عقربه‌ها از
+             پالت کد پشت اعمال می‌شوند؛ رنگ ثابتی در XAML نمانده است.
+         اصلاح حیاتی چرخهٔ ۷۹ (گزارش مالک + اسکرین‌شات Clock.png): محور چرخش
+         عقربهٔ ثانیه ۴۱px پایین‌تر از مرکز ساعت بود — گرید با مارجین −۴۱ بالا
+         رفت تا مرز نوک/دُم دقیقاً روی مرکز بنشیند (شرح در کامنت عقربه).
+         حرکت پیوستهٔ ثانیه (سوپ نرم چرخهٔ ۷۴) حفظ شد. -->
     <Grid>
-        <!-- هالهٔ بیرونی — حلقهٔ روشن دور صفحه برای جدایی از پس‌زمینهٔ تیره -->
-        <Ellipse Fill="#101F31"
-                 Stroke="#2C4A6E" StrokeThickness="2"
+        <!-- هالهٔ بیرونی — حلقهٔ دور صفحه؛ رنگ از پالت (ApplyTheme) -->
+        <Ellipse x:Name="OuterRing"
+                 StrokeThickness="2"
                  Opacity="0.9" />
 
-        <!-- صفحهٔ اصلی — گرادیان شیشه‌ای تیره -->
-        <Ellipse Margin="9">
-            <Ellipse.Fill>
-                <RadialGradientBrush GradientOrigin="0.35,0.3" Center="0.5,0.45">
-                    <GradientStop Color="#22405F" Offset="0" />
-                    <GradientStop Color="#152A42" Offset="0.65" />
-                    <GradientStop Color="#0E1E31" Offset="1" />
-                </RadialGradientBrush>
-            </Ellipse.Fill>
-            <Ellipse.Stroke>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                    <GradientStop Color="#5B87B5" Offset="0" />
-                    <GradientStop Color="#27415F" Offset="0.5" />
-                    <GradientStop Color="#5B87B5" Offset="1" />
-                </LinearGradientBrush>
-            </Ellipse.Stroke>
-        </Ellipse>
+        <!-- صفحهٔ اصلی — گرادیان شیشه‌ای؛ گرادیان از پالت ساخته می‌شود -->
+        <Ellipse x:Name="FaceEllipse" Margin="9" StrokeThickness="1.4" />
 
-        <!-- ═══ نشانگرهای ساعت و دقیقه — چرخهٔ ۷۵ ═══
-             ۱۲ خط کلفتِ ساعت (هر ۳۰ درجه) + ۴۸ خط نازک دقیقه؛ همه در کد
-             پشت ساخته می‌شوند (CreateTickMarks) تا هندسه دقیق بماند و
-             XAML شلوغ نشود. خطوط ساعت روشن‌تر/کلفت‌ترند (تشخیص فوری از دور). -->
+        <!-- نشانگرها و اعداد — چرخهٔ ۷۹: همهٔ اقلام صفحه (خطوط ساعت/دقیقه و
+             اعداد فارسی) بسته به ClockFaceStyle در کد پشت ساخته می‌شوند -->
         <Canvas x:Name="TickCanvas"
                 HorizontalAlignment="Center" VerticalAlignment="Center"
                 IsHitTestVisible="False" />
 
-        <!-- برچسب‌های ساعت — ۱۲ بالا / ۳ / ۶ / ۹ با ارقام فارسی
-             (فاصله از لبه کمی بیشتر شد تا روی خطوط ساعتِ جدید ننشیند) -->
-        <TextBlock Text="۱۲" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
-                   HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,30,0,0" />
-        <TextBlock Text="۶" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
-                   HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,30" />
-        <TextBlock Text="۳" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
-                   HorizontalAlignment="Left" VerticalAlignment="Center" Margin="31,0,0,1" />
-        <TextBlock Text="۹" FontSize="21" FontWeight="Bold" Foreground="#DCE9F7"
-                   HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,31,1" />
-
         <!-- عقربه‌ها — حول مرکز؛ هر عقربه یک گرید چرخان است.
-             نسبت‌های ساعت واقعی: ساعت ~۵۰٪ / دقیقه ~۷۰٪ / ثانیه ~۷۵٪ شعاع. -->
+             نسبت‌های ساعت واقعی: ساعت ~۵۰٪ / دقیقه ~۷۰٪ / ثانیه ~۷۵٪ شعاع.
+             رنگ مستطیل‌ها از پالت (ApplyTheme) اعمال می‌شود. -->
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
              Width="4" Height="140" RenderTransformOrigin="0.5,0.5"
              x:Name="HourHand">
@@ -69,14 +45,7 @@
                 <RotateTransform x:Name="HourRotation" Angle="0" />
             </Grid.RenderTransform>
             <!-- عقربهٔ ساعت — کوتاه‌تر و پهن‌تر (۷۰px از ۱۴۰ = نصف قطر) -->
-            <Rectangle Width="4.5" Height="70" VerticalAlignment="Top" RadiusX="2.5" RadiusY="2.5">
-                <Rectangle.Fill>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#F2F7FC" Offset="0" />
-                        <GradientStop Color="#B9CCE0" Offset="1" />
-                    </LinearGradientBrush>
-                </Rectangle.Fill>
-            </Rectangle>
+            <Rectangle x:Name="HourRect" Width="4.5" Height="70" VerticalAlignment="Top" RadiusX="2.5" RadiusY="2.5" />
         </Grid>
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
               Width="3" Height="190" RenderTransformOrigin="0.5,0.5"
@@ -85,43 +54,35 @@
                 <RotateTransform x:Name="MinuteRotation" Angle="0" />
             </Grid.RenderTransform>
             <!-- عقربهٔ دقیقه — بلندتر (۹۶px از ۱۹۰ ≈ ۷۰٪ شعاع) -->
-            <Rectangle Width="3" Height="96" VerticalAlignment="Top" RadiusX="2" RadiusY="2">
-                <Rectangle.Fill>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#F2F7FC" Offset="0" />
-                        <GradientStop Color="#AECBE8" Offset="1" />
-                    </LinearGradientBrush>
-                </Rectangle.Fill>
-            </Rectangle>
+            <Rectangle x:Name="MinuteRect" Width="3" Height="96" VerticalAlignment="Top" RadiusX="2" RadiusY="2" />
         </Grid>
-        <!-- ═══ عقربهٔ ثانیه — بازسازی هندسه چرخهٔ ۷۸ ═══
-             گزارش مالک: «عقربه ثانیه شمار ایراد دارد». ریشهٔ هندسی چرخهٔ ۷۵:
-             گرید ۱۵۲px با مرکزِ چرخش در ۷۶px، ولی نوک ۱۰۴px بالا-چسبیده (فقط
-             ۷۶px بالای محور) و دُم ۲۲px پایین-چسبیده (۵۴ تا ۷۶px زیر محور)
-             — یعنی «شکاف ۲۶px» وسط عقربه، دُمی معلق و جدا از بدنه، و نوکی
-             کوتاه‌تر از طرح. هندسهٔ درست: کل عقربه = نوک ۱۰۴px بالای محور +
-             دُم ۲۲px زیر محور = ۱۲۶px؛ محور چرخش دقیقاً روی مرز نوک/دُم
-             (RenderTransformOrigin=۰٫۵، 104/126). دُم با حاشیهٔ صریح بالای
-             خودش به انتهای نوک می‌چسبد — دیگر هیچ شکافی نیست. -->
+        <!-- ═══ عقربهٔ ثانیه — بازسازی هندسه چرخهٔ ۷۸ + اصلاح محور چرخهٔ ۷۹ ═══
+             گزارش مالک (اسکرین‌شات Clock.png): «عقربه ثانیه‌شمار سر جای خودش نیست —
+             محورش از مرکز ساعت جابجاست». ریشهٔ دقیق چرخهٔ ۷۸: RenderTransformOrigin
+             محور چرخش را «درون گرید» به ۱۰۴px از بالا (مرز نوک/دُم) می‌برد؛ ولی خود
+             گرید همچنان با VerticalAlignment=Center روی «مرکز ساعت» مرکزچین بود —
+             یعنی محورِ چرخش ۴۱px (104−63) «پایین‌تر از مرکز ساعت» قرار می‌گرفت و
+             عقربه حول نقطه‌ای غلط می‌چرخید! اصلاح چرخهٔ ۷۹: گرید با مارجین بالای
+             منفی −۴۱ دقیقاً به بالا می‌رود تا مرز نوک/دُم (محور) روی مرکز ساعت
+             بنشیند — نوک ۱۰۴px بالای مرکز، دُم ۲۲px زیر مرکز، بدون شکاف. -->
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
               Width="2" Height="126" RenderTransformOrigin="0.5,0.8254"
+              Margin="0,-41,0,0"
               x:Name="SecondHand">
             <Grid.RenderTransform>
                 <RotateTransform x:Name="SecondRotation" Angle="0" />
             </Grid.RenderTransform>
             <!-- نوک — ۱۰۴px بالای محور (~۷۵٪ شعاع) -->
-            <Rectangle Width="2" Height="104" VerticalAlignment="Top" Fill="#FF5252" RadiusX="1" RadiusY="1" />
+            <Rectangle x:Name="SecondTipRect" Width="2" Height="104" VerticalAlignment="Top" RadiusX="1" RadiusY="1" />
             <!-- دُم متعادل‌کننده — ۲۲px زیر محور، چسبیده به نوک (بدون شکاف) -->
-            <Rectangle Width="2" Height="22" VerticalAlignment="Top" Margin="0,104,0,0" Fill="#FF8A80" RadiusX="1" RadiusY="1" />
+            <Rectangle x:Name="SecondTailRect" Width="2" Height="22" VerticalAlignment="Top" Margin="0,104,0,0" RadiusX="1" RadiusY="1" />
             <!-- حلقهٔ لغزش روی نوک — امضای بصری سوپِ نرم -->
-            <Ellipse Width="9" Height="9" VerticalAlignment="Top" Margin="0,12,0,0"
-                     Stroke="#FF5252" StrokeThickness="2" Fill="#152A42" />
+            <Ellipse x:Name="SecondBalanceRing" Width="9" Height="9" VerticalAlignment="Top" Margin="0,12,0,0"
+                     StrokeThickness="2" />
         </Grid>
 
         <!-- مرکز — پیچ نگه‌دارندهٔ عقربه‌ها -->
-        <Ellipse Width="13" Height="13" HorizontalAlignment="Center" VerticalAlignment="Center"
-                 Fill="#F2F7FC" />
-        <Ellipse Width="6" Height="6" HorizontalAlignment="Center" VerticalAlignment="Center"
-                 Fill="#FF5252" />
+        <Ellipse x:Name="CenterOuter" Width="13" Height="13" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <Ellipse x:Name="CenterInner" Width="6" Height="6" HorizontalAlignment="Center" VerticalAlignment="Center" />
     </Grid>
 </UserControl>

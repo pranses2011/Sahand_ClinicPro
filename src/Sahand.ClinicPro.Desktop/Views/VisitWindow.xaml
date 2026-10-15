@@ -579,6 +579,9 @@
                         <StackPanel>
                             <TextBlock Text="هر ناحیه را یا «نرمال» علامت بزنید یا یافتهٔ غیرنرمال را بنویسید — با علامت‌زدن نرمال، جعبهٔ یافته قفل می‌شود"
                                        FontSize="11" Opacity="0.6" Margin="4,4,0,10" />
+                            <!-- چرخهٔ ۷۹: جعبه‌های یافته از Height=46 ثابت به MinHeight=76 کشسان
+                                 تغییر کردند — گزارش مالک: «فیلدها ارتفاع مناسب ندارن و متن
+                                 داخلشون خونده نمیشه»؛ اکنون متن با چند سطر خوانا و رشد‌پذیر است -->
                             <UniformGrid Columns="2">
                                 <!-- سر و گردن -->
                                 <Border Style="{StaticResource SectionCard}" Margin="0,0,7,8">
@@ -591,7 +594,8 @@
                                         <TextBox Text="{Binding HeadNeckFindings, UpdateSourceTrigger=PropertyChanged}"
                                                  materialDesign:HintAssist.Hint="یافتهٔ غیرنرمال…"
                                                  IsEnabled="{Binding HeadNeckNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
-                                                 Margin="0,6,0,0" Height="46" AcceptsReturn="True" TextWrapping="Wrap" />
+                                                 Margin="0,6,0,0" MinHeight="76" AcceptsReturn="True" TextWrapping="Wrap"
+                                                 VerticalContentAlignment="Top" />
                                     </StackPanel>
                                 </Border>
                                 <!-- قفسهٔ سینه -->
@@ -605,7 +609,8 @@
                                         <TextBox Text="{Binding ChestFindings, UpdateSourceTrigger=PropertyChanged}"
                                                  materialDesign:HintAssist.Hint="مثلاً رال پایهٔ ریه چپ"
                                                  IsEnabled="{Binding ChestNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
-                                                 Margin="0,6,0,0" Height="46" AcceptsReturn="True" TextWrapping="Wrap" />
+                                                 Margin="0,6,0,0" MinHeight="76" AcceptsReturn="True" TextWrapping="Wrap"
+                                                 VerticalContentAlignment="Top" />
                                     </StackPanel>
                                 </Border>
                                 <!-- شکم -->
@@ -619,7 +624,8 @@
                                         <TextBox Text="{Binding AbdomenFindings, UpdateSourceTrigger=PropertyChanged}"
                                                  materialDesign:HintAssist.Hint="یافتهٔ غیرنرمال…"
                                                  IsEnabled="{Binding AbdomenNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
-                                                 Margin="0,6,0,0" Height="46" AcceptsReturn="True" TextWrapping="Wrap" />
+                                                 Margin="0,6,0,0" MinHeight="76" AcceptsReturn="True" TextWrapping="Wrap"
+                                                 VerticalContentAlignment="Top" />
                                     </StackPanel>
                                 </Border>
                                 <!-- اندام‌ها -->
@@ -633,7 +639,8 @@
                                         <TextBox Text="{Binding LimbsFindings, UpdateSourceTrigger=PropertyChanged}"
                                                  materialDesign:HintAssist.Hint="یافتهٔ غیرنرمال…"
                                                  IsEnabled="{Binding LimbsNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
-                                                 Margin="0,6,0,0" Height="46" AcceptsReturn="True" TextWrapping="Wrap" />
+                                                 Margin="0,6,0,0" MinHeight="76" AcceptsReturn="True" TextWrapping="Wrap"
+                                                 VerticalContentAlignment="Top" />
                                     </StackPanel>
                                 </Border>
                             </UniformGrid>

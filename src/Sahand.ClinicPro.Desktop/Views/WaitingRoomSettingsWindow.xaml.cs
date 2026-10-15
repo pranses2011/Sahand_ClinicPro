@@ -98,6 +98,9 @@ public partial class WaitingRoomSettingsWindow : Window
         AdSubtitleCheck.IsChecked = _config.ShowAdSubtitle;
         AdFeaturesCheck.IsChecked = _config.ShowAdFeatures;
         AdVersionCheck.IsChecked = _config.ShowAdVersion;
+        // ═══ چرخهٔ ۷۹ — قالب صفحه و رنگ ساعت (گزارش مالک) ═══
+        ClockFaceStyleCombo.SelectedIndex = Math.Clamp(_config.ClockFaceStyle, 0, 2);
+        ClockColorThemeCombo.SelectedIndex = Math.Clamp(_config.ClockColorTheme, 0, 4);
 
         AnalogClockCheck.Checked += (_, _) => RefreshPreview();
         AnalogClockCheck.Unchecked += (_, _) => RefreshPreview();
@@ -214,6 +217,19 @@ public partial class WaitingRoomSettingsWindow : Window
         PreviewDigital.Visibility = ToVis(DigitalClockCheck.IsChecked == true);
         PreviewDate.Visibility = ToVis(LongDateCheck.IsChecked == true);
 
+        // ═══ چرخهٔ ۷۹ — قالب صفحه و رنگ ساعت در پیش‌نمایش واقعی AnalogClock ═══
+        PreviewAnalogClock.ClockFaceStyle = Math.Clamp(ClockFaceStyleCombo.SelectedIndex, 0, 2);
+        PreviewAnalogClock.ClockColorTheme = Math.Clamp(ClockColorThemeCombo.SelectedIndex, 0, 4);
+        // رنگ متن ساعت دیجیتال/تاریخ پیش‌نمایش هماهنگ با تم — همان نگاشت نمایشگر
+        (PreviewDigital.Foreground, PreviewDate.Foreground) = Math.Clamp(ClockColorThemeCombo.SelectedIndex, 0, 4) switch
+        {
+            1 => (PreviewBrush("#B7E2CC"), PreviewBrush("#7FCFA3")),
+            2 => (PreviewBrush("#E8D5AE"), PreviewBrush("#C9AE7E")),
+            3 => (PreviewBrush("#E3C8EB"), PreviewBrush("#C39BD1")),
+            4 => (PreviewBrush("#DDE5EC"), PreviewBrush("#AEBECB")),
+            _ => (PreviewBrush("#BBDEFB"), PreviewBrush("#8FBFE8")),
+        };
+
         // ═══ چرخهٔ ۷۵ — پیش‌نمایش چیدمان ستونی صف‌ها ═══
         // همان الگوریتم نمایشگر: بخش‌ها ستون‌پرشونده، هر ستون حداکثر دو بخش
         PreviewColumns.ColumnDefinitions.Clear();
@@ -243,6 +259,28 @@ public partial class WaitingRoomSettingsWindow : Window
         PreviewAdSubtitle.Visibility = ToVis(AdSubtitleCheck.IsChecked == true);
         PreviewAdFeatures.Visibility = ToVis(AdFeaturesCheck.IsChecked == true);
         PreviewAdVersion.Visibility = ToVis(AdVersionCheck.IsChecked == true);
+    }
+
+    /// <summary>ساخت قلم ساده از هگز — برای رنگ‌بندی پیش‌نمایش ساعت (چرخهٔ ۷۹)</summary>
+    private static System.Windows.Media.SolidColorBrush PreviewBrush(string hex)
+    {
+        var brush = new System.Windows.Media.SolidColorBrush(
+            (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex));
+        brush.Freeze();
+        return brush;
+    }
+
+    /// <summary>
+    /// چرخهٔ ۷۹ — تغییر قالب صفحه یا رنگ ساعت: بلافاصله روی پیش‌نمایش واقعی
+    /// ساعت اعمال می‌شود (کنترل AnalogClock خودش صفحه را بازسازی می‌کند).
+    /// </summary>
+    private void OnClockFaceOrThemeChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_viewReady)
+            return;
+        PreviewAnalogClock.ClockFaceStyle = Math.Clamp(ClockFaceStyleCombo.SelectedIndex, 0, 2);
+        PreviewAnalogClock.ClockColorTheme = Math.Clamp(ClockColorThemeCombo.SelectedIndex, 0, 4);
+        RefreshPreview();
     }
 
     /// <summary>ساخت کارت پیش‌نمایش یک بخش — هم‌زبانِ بصری نمایشگر واقعی</summary>
@@ -524,6 +562,11 @@ public partial class WaitingRoomSettingsWindow : Window
         _config.ShowAnalogClock = fresh.ShowAnalogClock;
         _config.ShowDigitalClock = fresh.ShowDigitalClock;
         _config.ShowLongDate = fresh.ShowLongDate;
+        // چرخهٔ ۷۹ — بازگشت قالب/رنگ ساعت به پیش‌فرض (کلاسیک نیلی)
+        _config.ClockFaceStyle = fresh.ClockFaceStyle;
+        _config.ClockColorTheme = fresh.ClockColorTheme;
+        ClockFaceStyleCombo.SelectedIndex = _config.ClockFaceStyle;
+        ClockColorThemeCombo.SelectedIndex = _config.ClockColorTheme;
         _config.Sections = fresh.Sections;
         // چرخهٔ ۷۵ — تنظیمات جدید هم به پیش‌فرض برمی‌گردند
         _config.Announcement = fresh.Announcement;
@@ -564,6 +607,9 @@ public partial class WaitingRoomSettingsWindow : Window
         _config.ShowAdSubtitle = AdSubtitleCheck.IsChecked == true;
         _config.ShowAdFeatures = AdFeaturesCheck.IsChecked == true;
         _config.ShowAdVersion = AdVersionCheck.IsChecked == true;
+        // چرخهٔ ۷۹ — قالب صفحه و رنگ ساعت
+        _config.ClockFaceStyle = Math.Clamp(ClockFaceStyleCombo.SelectedIndex, 0, 2);
+        _config.ClockColorTheme = Math.Clamp(ClockColorThemeCombo.SelectedIndex, 0, 4);
         _config.Sections = _rows.Select(r => r.Model).ToList();
         if (ScreenCombo.SelectedItem is ScreenOption screen)
             _config.ScreenDeviceName = screen.DeviceName;

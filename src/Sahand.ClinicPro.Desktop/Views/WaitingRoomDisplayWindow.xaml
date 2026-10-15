@@ -47,7 +47,7 @@
 
             <!-- ─── راست: ساعت + تاریخ (عمودی وسط‌چین) ─── -->
             <StackPanel Grid.Column="0" Width="250" VerticalAlignment="Center" Margin="0,0,16,0">
-                <controls:AnalogClock Width="215" Height="215"
+                <controls:AnalogClock x:Name="MainAnalogClock" Width="215" Height="215"
                                       HorizontalAlignment="Center"
                                       Visibility="{Binding ShowAnalogClock, Mode=OneWay}" />
                 <TextBlock x:Name="DigitalClockText" Text="--:--:--"
@@ -81,7 +81,7 @@
             <!-- ─── چپ: تبلیغ نرم‌افزار — فقط تصویر + نام محصول (چرخهٔ ۷۵) ───
                  «در تبلیغات فقط تصویر و نام نرم افزار کفایت میکنه و بقیه موارد
                  رو در تنظیمات برای نشون دادن بزار که انتخابی باشه» — زیرنویس
-                 «سامانهٔ جامع اطلاعاتی»، خط جداکننده، فهرست ویژگی‌ها و نسخه
+                 «سامانهٔ جامع مدیریتی»، خط جداکننده، فهرست ویژگی‌ها و نسخه
                  همه سوییچ‌های انتخابی تنظیمات‌اند.
                  ═══ چرخهٔ ۷۸ (گزارش مالک: «در تبلیغات کادر زمینه رو حذف بکن») ═══
                  کادر زمینهٔ تیرهٔ دور تبلیغ (Border با پس‌زمینهٔ #0E2036 و
@@ -93,7 +93,7 @@
                 <Image Source="pack://application:,,,/Assets/Logo/ClinicPro-512.png"
                        Width="132" Height="132" HorizontalAlignment="Center"
                        RenderOptions.BitmapScalingMode="HighQuality" />
-                <TextBlock x:Name="AdSubtitleText" Text="سامانهٔ جامع اطلاعاتی"
+                <TextBlock x:Name="AdSubtitleText" Text="سامانهٔ جامع مدیریتی"
                            FontSize="16" FontWeight="Bold"
                            Foreground="#E3F2FD" HorizontalAlignment="Center"
                            Margin="0,14,0,0"

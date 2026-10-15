@@ -103,6 +103,21 @@ public partial class WaitingRoomDisplayWindow : Window
         BuildSectionCards();
         DataContext = _vm;
 
+        // ═══ چرخهٔ ۷۹ (گزارش مالک: «برای ساعت هم تنظیمات بزار تا هم بتونیم
+        // صفحه ساعت و هم رنگشو تغییر بدیم») — قالب صفحه و تم رنگی ساعت ═══
+        MainAnalogClock.ClockFaceStyle = _config.ClockFaceStyle;
+        MainAnalogClock.ClockColorTheme = _config.ClockColorTheme;
+        // رنگ متن ساعت دیجیتال و تاریخ بلند هماهنگ با تم ساعت — پالت مشترک
+        // (نمایشگر متناظر تم: ۰..۴ همان ترتیب AnalogClock)
+        (DigitalClockText.Foreground, LongDateText.Foreground) = _config.ClockColorTheme switch
+        {
+            1 => (FrozenBrush("#B7E2CC"), FrozenBrush("#7FCFA3")),
+            2 => (FrozenBrush("#E8D5AE"), FrozenBrush("#C9AE7E")),
+            3 => (FrozenBrush("#E3C8EB"), FrozenBrush("#C39BD1")),
+            4 => (FrozenBrush("#DDE5EC"), FrozenBrush("#AEBECB")),
+            _ => (FrozenBrush("#BBDEFB"), FrozenBrush("#8FBFE8")),
+        };
+
         // نام درمانگاه — از سرور لایسنس (تنظیم ClinicInfo) به‌صورت پویا؛
         // تا رسیدن پاسخ، مقدار محلی فوری نشانت می‌ماند که صفحه خالی نماند
         ClinicNameText.Text = _config.EffectiveClinicName();
@@ -154,6 +169,16 @@ public partial class WaitingRoomDisplayWindow : Window
     /// <summary>تبدیل bool به Visibility برای اتصال XAML</summary>
     private static System.Windows.Visibility ToVis(bool value)
         => value ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+
+    /// <summary>ساخت قلم فریزشده از هگز — برای رنگ‌بندی تم ساعت دیجیتال/تاریخ (چرخهٔ ۷۹)</summary>
+    private static System.Windows.Media.SolidColorBrush FrozenBrush(string hex)
+    {
+        if (new System.Windows.Media.BrushConverter().ConvertFromString(hex)
+            is not System.Windows.Media.SolidColorBrush brush)
+            return System.Windows.Media.Brushes.White;
+        brush.Freeze();
+        return brush;
+    }
 
     /// <summary>
     /// ═══ چرخهٔ ۷۵ — نام درمانگاه از سرور لایسنس ═══
@@ -484,11 +509,13 @@ public partial class WaitingRoomDisplayWindow : Window
                         foreach (var waiting in queue.Waiting.Take(7))
                             card.Rows.Add(new WaitingDisplayRow(
                                 PersianDigits(waiting.QueueNumber.ToString()), waiting.Name,
-                                // چرخهٔ ۷۵ — صف عمومی: نام پزشک زیر نام بیمار؛
-                                // صف یک پزشکِ مشخص: نوع ویزیت (همان رفتار قبل) —
-                                // چرخهٔ ۷۸: نام اتاق همیشه در انتهای زیرنویس می‌نشیند
+                                // ═══ چرخهٔ ۷۹ (گزارش مالک: «زیر نام بیماران نام پزشک و
+                                // نام اتاق نیست و بجاش نوشته «اولیه» هست») ═══
+                                // اولویت زیرنویس در «همهٔ» صف‌ها (عمومی و اختصاصی):
+                                // ۱) نام پزشک  ۲) زیرنویس سرور (نوع ویزیت). نام اتاق
+                                // همیشه در انتهای زیرنویس می‌نشیند (چرخهٔ ۷۸).
                                 WithRoom(
-                                    section.DoctorId is null && !string.IsNullOrWhiteSpace(waiting.DoctorName)
+                                    !string.IsNullOrWhiteSpace(waiting.DoctorName)
                                         ? waiting.DoctorName
                                         : waiting.Subtitle,
                                     waiting.RoomName),

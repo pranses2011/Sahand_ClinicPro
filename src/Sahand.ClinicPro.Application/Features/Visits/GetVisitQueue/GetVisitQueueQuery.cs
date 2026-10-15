@@ -134,12 +134,14 @@ public class GetVisitQueueQueryHandler : IRequestHandler<GetVisitQueueQuery, Res
                 r.Id, r.PatientId, patientName, r.Patient?.Mobile ?? "",
                 queueNumber, appointmentTime, null, visitTypeText,
                 waitingMinutes, r.Notes, r.Patient?.Allergies,
-                // چرخهٔ ۷۵ — نام پزشک فقط در صف عمومی معنا دارد؛ در صف یک پزشکِ
-                // مشخص همهٔ ردیف‌ها همان پزشک‌اند و تکرارش فقط نویز بصری است.
-                request.DoctorId == null
-                    ? (r.Doctor?.Employee != null
-                        ? $"دکتر {r.Doctor.Employee.FirstName} {r.Doctor.Employee.LastName}".Trim()
-                        : null)
+                // ═══ چرخهٔ ۷۹ (گزارش مالک: «زیر نام بیماران نام پزشک و نام اتاق
+                // نیست و بجاش نوشته «اولیه» هست») ═══
+                // پیش‌تر نام پزشک «فقط در صف عمومی» پر می‌شد و در صف یک پزشکِ
+                // مشخص تهی می‌ماند ⇒ نمایشگر سالن به‌جای نام پزشک به زیرنویس
+                // نوع ویزیت («اولیه») می‌افتاد. اکنون نام پزشک «همیشه» ارسال
+                // می‌شود و مصرف‌کننده (نمایشگر سالن/صف ویزیت) خودش تصمیم می‌گیرد.
+                r.Doctor?.Employee != null
+                    ? $"دکتر {r.Doctor.Employee.FirstName} {r.Doctor.Employee.LastName}".Trim()
                     : null,
                 // چرخهٔ ۷۸ — نام اتاق ویزیت: اول اتاق خود پذیرش (خدمتی)، وگرنه
                 // اتاق برنامهٔ امروز پزشک؛ نام کامل مقدم بر شمارهٔ اتاق

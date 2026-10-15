@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
         Title="تنظیمات نمایشگر سالن انتظار"
         Width="1060" Height="700"
         WindowStartupLocation="CenterScreen"
@@ -69,17 +70,37 @@
                 <TextBlock Text="نمایشگر روی همان صفحهٔ انتخابی تمام‌صفحه باز می‌شود تا نرم‌افزار روی مانیتور اصلی آزاد بماند."
                            FontSize="10" Opacity="0.55" Margin="2,4,2,0" TextWrapping="Wrap" />
 
-                <!-- سوییچ‌های ساعت/تاریخ -->
+                <!-- سوییچ‌های ساعت/تاریخ + تنظیمات قالب و رنگ ساعت (چرخهٔ ۷۹) -->
                 <TextBlock Text="ساعت و تاریخ" FontSize="13" FontWeight="Bold" Margin="2,16,2,6" />
                 <CheckBox x:Name="AnalogClockCheck" Content="ساعت آنالوگ (خطوط ساعت/دقیقه + ثانیه‌شمار پیوسته)" Margin="2,2" />
                 <CheckBox x:Name="DigitalClockCheck" Content="ساعت دیجیتال کوچک (زیر آنالوگ، با ثانیه)" Margin="2,2" />
                 <CheckBox x:Name="LongDateCheck" Content="تاریخ بلند (تاریخ امروز : ۲۳ مهر ماه ۱۴۰۵)" Margin="2,2" />
 
+                <!-- ═══ چرخهٔ ۷۹ — تنظیمات قالب صفحه و رنگ ساعت ═══
+                     گزارش مالک: «برای ساعت هم تنظیمات بزار تا هم بتونیم صفحه
+                     ساعت و هم رنگشو تغییر بدیم» — پیش‌نمایش زنده در ستون راست
+                     همان کنترل واقعی AnalogClock است (نه دایرهٔ ساده) و بلافاصله
+                     با تغییر هر تنظیم تازه می‌شود. -->
+                <TextBlock Text="قالب صفحهٔ ساعت آنالوگ" FontSize="11.5" Opacity="0.7" Margin="2,10,2,4" />
+                <ComboBox x:Name="ClockFaceStyleCombo" SelectionChanged="OnClockFaceOrThemeChanged">
+                    <ComboBoxItem Content="کلاسیک — خطوط ساعت/دقیقه + اعداد ۱۲/۳/۶/۹ (پیش‌فرض)" Tag="0" />
+                    <ComboBoxItem Content="اعداد کامل — ۱۲ عدد فارسی روی صفحه" Tag="1" />
+                    <ComboBoxItem Content="مینیمال — فقط خطوط کلفت ساعت، بدون عدد" Tag="2" />
+                </ComboBox>
+                <TextBlock Text="رنگ ساعت (صفحه، عقربه‌ها، اعداد و متن ساعت دیجیتال)" FontSize="11.5" Opacity="0.7" Margin="2,10,2,4" />
+                <ComboBox x:Name="ClockColorThemeCombo" SelectionChanged="OnClockFaceOrThemeChanged">
+                    <ComboBoxItem Content="نیلی (پیش‌فرض)" Tag="0" />
+                    <ComboBoxItem Content="زمردی" Tag="1" />
+                    <ComboBoxItem Content="کهربایی — مناسب سالن کم‌نور" Tag="2" />
+                    <ComboBoxItem Content="یاقوتی — تشخیص بالا از دور" Tag="3" />
+                    <ComboBoxItem Content="نقره‌ای" Tag="4" />
+                </ComboBox>
+
                 <!-- ═══ چرخهٔ ۷۵ — اقلام اختیاری تبلیغ (تصویر و نام همیشه ثابت‌اند) ═══ -->
                 <TextBlock Text="تبلیغ نرم‌افزار (ستون چپ)" FontSize="13" FontWeight="Bold" Margin="2,16,2,6" />
                 <TextBlock Text="تصویر و نام نرم‌افزار همیشه نمایش داده می‌شوند؛ اقلام زیر اختیاری‌اند:"
                            FontSize="10" Opacity="0.55" Margin="2,0,2,4" TextWrapping="Wrap" />
-                <CheckBox x:Name="AdSubtitleCheck" Content="زیرنویس «سامانهٔ جامع اطلاعاتی»" Margin="2,2" />
+                <CheckBox x:Name="AdSubtitleCheck" Content="زیرنویس «سامانهٔ جامع مدیریتی»" Margin="2,2" />
                 <CheckBox x:Name="AdFeaturesCheck" Content="فهرست ویژگی‌های محصول" Margin="2,2" />
                 <CheckBox x:Name="AdVersionCheck" Content="نسخهٔ محصول در پایین کارت" Margin="2,2" />
 
@@ -196,10 +217,13 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="96" />
                     </Grid.ColumnDefinitions>
-                    <!-- راست: پشتهٔ ساعت -->
+                    <!-- راست: پشتهٔ ساعت — چرخهٔ ۷۹: پیش‌نمایش ساعت آنالوگ حالا
+                         «کنترل واقعی» است؛ قالب صفحه و رنگ انتخابی بلافاصله
+                         همان‌جا دیده می‌شود (پیش‌تر فقط یک دایرهٔ ساده بود) -->
                     <StackPanel Grid.Column="0">
-                        <Ellipse x:Name="PreviewAnalogClock" Width="74" Height="74" Margin="0,4,0,8"
-                                 Fill="#152A42" Stroke="#5B87B5" StrokeThickness="2" />
+                        <controls:AnalogClock x:Name="PreviewAnalogClock" Width="74" Height="74" Margin="0,4,0,8"
+                                              HorizontalAlignment="Center"
+                                              Visibility="{Binding ShowAnalogClock, Mode=OneWay}" />
                         <TextBlock x:Name="PreviewDigital" Text="۱۴:۳۵:۰۵" FontSize="9.5" Foreground="#BBDEFB"
                                    HorizontalAlignment="Center" FontFamily="{DynamicResource App.CodeFont}" />
                         <TextBlock x:Name="PreviewDate" Text="تاریخ امروز : ۲۳ مهر ماه ۱۴۰۵" FontSize="6.5"
@@ -228,7 +252,7 @@
                                 <Image Source="pack://application:,,,/Assets/Logo/ClinicPro-512.png"
                                        Width="52" Height="52" HorizontalAlignment="Center"
                                        RenderOptions.BitmapScalingMode="HighQuality" />
-                                <TextBlock x:Name="PreviewAdSubtitle" Text="سامانهٔ جامع اطلاعاتی" FontSize="7.5"
+                                <TextBlock x:Name="PreviewAdSubtitle" Text="سامانهٔ جامع مدیریتی" FontSize="7.5"
                                            Foreground="#E3F2FD" HorizontalAlignment="Center" Margin="0,5,0,0" />
                                 <TextBlock Text="درمانگاه سهند" FontSize="9" FontWeight="Black" Foreground="#7FC4FF"
                                            HorizontalAlignment="Center" />
