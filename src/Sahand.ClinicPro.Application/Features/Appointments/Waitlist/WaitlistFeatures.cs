@@ -182,9 +182,23 @@ public class GetWaitlistQueryHandler : IRequestHandler<GetWaitlistQuery, Result<
         var patients = await _unitOfWork.Repository<Domain.Entities.People.Patient>().QueryableNoTracking
             .Where(p => patientIds.Contains(p.Id))
             .ToDictionaryAsync(p => p.Id, p => new { Name = $"{p.FirstName} {p.LastName}".Trim(), p.Mobile }, cancellationToken);
-        var doctors = await _unitOfWork.Repository<Domain.Entities.People.Doctor>().QueryableNoTracking
-            .Where(d => doctorIds.Contains(d.Id) && d.Employee != null)
-            .ToDictionaryAsync(d => d.Id, d => d.Employee!.FirstName + " " + d.Employee.LastName, cancellationToken);
+
+        // ═══ چرخهٔ ۷۸ — رفع NullReferenceException اندپوینت فهرست لیست انتظار ═══
+        // گزارش مالک + لاگ سرور: «ثبت در لیست می‌گوید ثبت شد ولی در لیست نشان نمی‌دهد
+        // و خطای NullReferenceException می‌دهد» — استک: GetWaitlistQueryHandler خط ۱۸۷
+        // در lambda انتخاب عنصرِ ToDictionaryAsync. ریشه: «d.Employee!.FirstName» در
+        // سلکتور عنصرِ ToDictionaryAsync «سمت کلاینت» روی موجودیت‌های متریالزه ارزیابی
+        // می‌شود؛ شرط Where(d.Employee != null) فقط در SQL به EmployeeId NOT NULL
+        // ترجمه می‌شود و ناوبری Employee روی موجودیت بارگذاری‌شده «تهی» است (نه
+        // Include هست و نه lazy-loading فعال) ⇒ همان‌جا NRE و پاسخ ۵۰۰؛ در نتیجه
+        // پنل لیست انتظار پس از هر ثبت موفق، خالی می‌ماند. رفع: پیش‌پردازش با
+        // Select سمت SQL (ترجمه‌پذیر به کوئری واحد؛ همان الگوی امن ToRowAsync همین
+        // فایل و GetVisitQueue چرخهٔ ۷۵) و سپس دیکشنری‌سازی در حافظه — بدون N+1.
+        var doctors = (await _unitOfWork.Repository<Domain.Entities.People.Doctor>().QueryableNoTracking
+                .Where(d => doctorIds.Contains(d.Id) && d.Employee != null)
+                .Select(d => new { d.Id, Name = (d.Employee!.FirstName + " " + d.Employee.LastName).Trim() })
+                .ToListAsync(cancellationToken))
+            .ToDictionary(x => x.Id, x => x.Name);
 
         var rows = entries.Select(e =>
         {

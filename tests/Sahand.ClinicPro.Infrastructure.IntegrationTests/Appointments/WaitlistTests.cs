@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Sahand.ClinicPro.Application.Features.Appointments.Waitlist;
@@ -153,5 +154,135 @@ public class WaitlistTests
             CancellationToken.None)).Value;
 
         result.Should().Be(1); // قدیمی‌تر
+    }
+}
+
+/// <summary>
+/// تست‌های رگرسیون رابطه‌ای چرخهٔ ۷۸ — ریشه‌یابی NullReferenceException واقعی مالک:
+/// «ثبت در لیست انتظار می‌گوید ثبت شد ولی لیست نشان نمی‌دهد و خطای
+/// NullReferenceException می‌دهد» (لاگ سرور: GetWaitlistQueryHandler خط ۱۸۷).
+/// ریشه: dereference سمت کلاینتِ ناوبری Employee در سلکتور عنصر ToDictionaryAsync
+/// روی موجودیت‌های متریالزهٔ provider رابطه‌ای (بدون Include و بدون lazy-loading).
+/// بازتولید این سناریو فقط روی provider رابطه‌ای ممکن است — InMemory ارجاع‌های
+/// ناوبری ذخیره‌شده را عیناً برمی‌گرداند و باگ را می‌پوشاند؛ SQLite درون‌حافظه‌ای
+/// مثل SQL Server رفتار متریال‌سازی بدون ناوبری دارد (الگوی اثبات‌شدهٔ چرخهٔ ۴۸/۶۸).
+/// </summary>
+public class WaitlistRelationalRegressionTests
+{
+    /// <summary>ساخت واحد کار روی SQLite درون‌حافظه‌ای با اتصال باز — الگوی چرخهٔ ۴۸</summary>
+    private static (UnitOfWork UoW, ClinicProDbContext Context, SqliteConnection Connection) CreateSqliteUnitOfWork()
+    {
+        var connection = new SqliteConnection("DataSource=:memory:");
+        connection.Open(); // اتصال تا پایان تست باز می‌ماند وگرنه دیتابیس نابود می‌شود
+        var options = new DbContextOptionsBuilder<ClinicProDbContext>()
+            .UseSqlite(connection)
+            .Options;
+        var context = new SqliteWaitlistDbContext(options);
+        context.Database.EnsureCreated();
+        var mediator = new Mock<MediatR.IMediator>().Object;
+        return (new UnitOfWork(context, mediator), context, connection);
+    }
+
+    /// <summary>
+    /// کانتکست ClinicPro روی SQLite — همان اصلاحات اثبات‌شدهٔ چرخهٔ ۴۸/۶۸:
+    /// حذف سکانس‌ها، پیش‌فرض‌های T-SQL سکانس‌دار، nvarchar(max) و تبدیل decimal.
+    /// </summary>
+    private sealed class SqliteWaitlistDbContext(DbContextOptions<ClinicProDbContext> options)
+        : ClinicProDbContext(options)
+    {
+        /// <summary>اعمال مدل کامل + حذف سازه‌های ناسازگار با SQLite</summary>
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            foreach (var seq in modelBuilder.Model.GetSequences().ToList())
+                modelBuilder.Model.RemoveSequence(seq.Name, seq.Schema);
+
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (!string.IsNullOrEmpty(property.GetDefaultValueSql()))
+                        property.SetDefaultValueSql(null);
+
+                    var columnType = property.GetColumnType();
+                    if (!string.IsNullOrEmpty(columnType) &&
+                        columnType.Contains("(max)", StringComparison.OrdinalIgnoreCase))
+                        property.SetColumnType(null);
+
+                    if (property.ClrType == typeof(decimal))
+                    {
+                        property.SetColumnType("REAL");
+                        modelBuilder.Entity(entityType.ClrType).Property(property.Name)
+                            .HasConversion<double>();
+                    }
+                    else if (property.ClrType == typeof(decimal?))
+                    {
+                        property.SetColumnType("REAL");
+                        modelBuilder.Entity(entityType.ClrType).Property(property.Name)
+                            .HasConversion<double?>(); // تهی در SQL همان NULL می‌ماند
+                    }
+                }
+        }
+    }
+
+    /// <summary>
+    /// فهرست لیست انتظار با ردیفِ «همراه با پزشک» نباید NRE بدهد —
+    /// پیش از رفع چرخهٔ ۷۸ همین فراخوانی روی provider رابطه‌ای
+    /// NullReferenceException می‌داد و اندپوینت ۵۰۰ برمی‌گشت؛
+    /// در نتیجه پنل پس از هر ثبت موفق خالی می‌ماند.
+    /// </summary>
+    [Fact]
+    public async Task GetWaitlist_WithDoctorEntry_ShouldNotThrowAndShowDoctorName()
+    {
+        var (uow, ctx, connection) = CreateSqliteUnitOfWork();
+        try
+        {
+            // بذر: کارمند + پزشکِ او + بیمار + ردیف لیست انتظار با DoctorId پر
+            // (فیلدهای متنی اجباری Patient هم مقدار می‌گیرند — ستون‌های NOT NULL در SQLite)
+            var employee = new Employee { Id = 501, FirstName = "سهند", LastName = "احمدی" };
+            var doctor = new Doctor { Id = 502, EmployeeId = 501, IsActive = true };
+            var patient = new Patient
+            {
+                Id = 503,
+                MedicalRecordNo = "MR-0778",
+                NationalCode = "1234567890",
+                FirstName = "زهرا",
+                LastName = "کریمی",
+                Mobile = "09140000001"
+            };
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            ctx.Employees.Add(employee);
+            ctx.Doctors.Add(doctor);
+            ctx.Patients.Add(patient);
+            ctx.WaitlistEntries.Add(new WaitlistEntry
+            {
+                Id = 504,
+                PatientId = 503,
+                DoctorId = 502,
+                PreferredFrom = today.AddDays(-1),
+                PreferredTo = today.AddDays(5),
+                Priority = Priority.Normal,
+                Status = WaitlistStatus.Waiting,
+                ContactMobile = "09140000001"
+            });
+            await ctx.SaveChangesAsync();
+
+            var handler = new GetWaitlistQueryHandler(uow);
+            var act = () => handler.Handle(new GetWaitlistQuery(), CancellationToken.None);
+
+            // با کد قدیمی همین‌جا NRE پرواز می‌کرد؛ اکنون باید موفق برگردد
+            var result = await act();
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().HaveCount(1);
+            // نام پزشکِ سمت سرور از Employee خوانده شد — نه «هر پزشک»
+            result.Value[0].DoctorName.Should().Be("دکتر سهند احمدی");
+            result.Value[0].PatientName.Should().Be("زهرا کریمی");
+        }
+        finally
+        {
+            // بستن اتصال درون‌حافظه‌ای — آزادسازی منبع
+            await ctx.DisposeAsync();
+            await connection.DisposeAsync();
+        }
     }
 }
