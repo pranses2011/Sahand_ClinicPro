@@ -81,8 +81,12 @@ public class GetServiceQueueQueryHandler : IRequestHandler<GetServiceQueueQuery,
             .Select(r => new
             {
                 r.Id, r.PatientId, r.Status,
-                PatientName = r.Patient.FirstName + " " + r.Patient.LastName,
-                Mobile = r.Patient.Mobile,
+                // گارد تهی: پذیرشِ بی‌بیمار نباید پرس‌وجو را بترکاند (همان درس
+                // NRE لیست انتظار همین چرخه) — نام جایگزین «بیمار ناشناس»
+                PatientName = r.Patient != null
+                    ? r.Patient.FirstName + " " + r.Patient.LastName
+                    : "بیمار ناشناس",
+                Mobile = r.Patient != null ? r.Patient.Mobile : "",
                 ServiceName = r.ServiceName != null ? r.ServiceName : "خدمت درمانی",
                 RoomName = r.Room != null
                     ? (r.Room.RoomName != null ? r.Room.RoomName : r.Room.RoomNumber)
