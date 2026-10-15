@@ -180,6 +180,15 @@ public class ReferenceDataSeeder : IDataSeeder
     /// ردیف‌های «تازه‌بذرفشان‌شده» و «موجودِ بدون بازه» هر دو پوشش داده
     /// می‌شوند؛ ردیفِ دارای حتی یک ستون پرشده (یعنی ویرایش‌شده توسط مالک
     /// از «آزمایشگاه ← کاتالوگ ← ویرایش») عمداً نادیده گرفته می‌شود.
+    /// ═══ چرخهٔ ۷۸ (گزارش مالک: «برای همه بیماران میگه حد طبیعی منفی میباشد») ═══
+    /// دو گسترش تعیین‌کننده:
+    ///  ۱) تطبیق دو مرحله‌ای — اول TestCode؛ اگر نبود یا برخورد نداشت،
+    ///     «نام فارسی نرمال‌شده» تست با نام کاتالوگ بذر تطبیق می‌شود؛ تست‌های
+    ///     دست‌ساز مالک بدون کد هم به این ترتیب بازهٔ عددی می‌گیرند؛
+    ///  ۲) گارد مالکیت فقط روی هشت ستونِ «بازه و حد بحرانی» — سقف سن کودک
+    ///     پرشده به‌تنهایی دیگر مانع بک‌فیل نمی‌شود (پیش‌تر کل ردیف را برای
+    ///     همیشه قفل می‌کرد).
+    /// نرمال‌سازی نام: حذف فاصله‌های تکراری + یکسان‌سازی ی/ک عربی و نیم‌فاصله.
     /// </summary>
     /// <returns>شمار تست‌هایی که بازهٔ ساخت‌یافته گرفتند (برای لاگ)</returns>
     private async Task<int> BackfillLabReferenceRangesAsync(CancellationToken ct)
@@ -192,20 +201,43 @@ public class ReferenceDataSeeder : IDataSeeder
 
         if (byCode.Count == 0) return 0;
 
+        // ═══ چرخهٔ ۷۸ — نگاشت نام فارسی نرمال‌شده → کد تست (از کاتالوگ بذر) ═══
+        var nameToCode = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var t in LabTestSeedData.Rows)
+        {
+            var key = NormalizeFa(t.TestNameFa);
+            if (key.Length > 0 && !nameToCode.ContainsKey(key))
+                nameToCode[key] = t.TestCode;
+        }
+
         // ردیف‌های ردیابی‌شده — به‌روزرسانی درجا؛ فقط ستون‌های بازه خوانده می‌شوند
         var tests = await _context.LabTests.ToListAsync(ct);
         var applied = 0;
 
         foreach (var test in tests)
         {
-            if (string.IsNullOrWhiteSpace(test.TestCode)) continue;
-            if (!byCode.TryGetValue(test.TestCode, out var range)) continue;
+            // تطبیق مرحلهٔ ۱ — کد تست؛ مرحلهٔ ۲ — نام فارسی نرمال‌شده (چرخهٔ ۷۸)
+            LabReferenceRangeRow? range = null;
+            if (!string.IsNullOrWhiteSpace(test.TestCode) &&
+                byCode.TryGetValue(test.TestCode, out var byCodeRow))
+            {
+                range = byCodeRow;
+            }
+            else
+            {
+                var nameKey = NormalizeFa(test.TestName);
+                if (nameKey.Length > 0 && nameToCode.TryGetValue(nameKey, out var code) &&
+                    byCode.TryGetValue(code, out var byNameRow))
+                    range = byNameRow;
+            }
+            if (range is null) continue;
 
-            // گارد مالکیت — «هر ۹ ستون تهی» یعنی هنوز دست‌نخورده از نسخهٔ قبل
+            // گارد مالکیت (چرخهٔ ۷۸) — فقط هشت ستون بازه/بحرانی «همه تهی» یعنی
+            // دست‌نخورده؛ سقف سن کودک از گارد خارج شد تا ردیف‌های نیمه‌پرِ قفل‌شده
+            // هم بازه بگیرند. ویرایش مالک روی هر ستون بازه = احترام کامل.
             var untouched = test.RefMinAdultMale is null && test.RefMaxAdultMale is null
                             && test.RefMinAdultFemale is null && test.RefMaxAdultFemale is null
                             && test.RefMinChild is null && test.RefMaxChild is null
-                            && test.ChildAgeMaxYears is null
                             && test.CriticalLow is null && test.CriticalHigh is null;
             if (!untouched) continue;
 
@@ -225,6 +257,24 @@ public class ReferenceDataSeeder : IDataSeeder
             await _context.SaveChangesAsync(ct);
 
         return applied;
+    }
+
+    /// <summary>
+    /// نرمال‌سازی نام فارسی برای تطبیق — چرخهٔ ۷۸: ی و ک عربی به فارسی،
+    /// نیم‌فاصله/تب به فاصله، حذف فاصله‌های تکراری و حاشیه؛ حروف نیز کوچک
+    /// می‌شوند تا اختلاف بزرگ/کوچک انگلیسی هم بی‌اثر باشد.
+    /// </summary>
+    private static string NormalizeFa(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+        var s = text.Trim()
+            .Replace('ي', 'ی')   // ی عربی → فارسی
+            .Replace('ك', 'ک')   // ک عربی → فارسی
+            .Replace('\u200c', ' ')  // نیم‌فاصله → فاصله (تطبیق آسان‌تر)
+            .Replace('\t', ' ');
+        while (s.Contains("  "))
+            s = s.Replace("  ", " ");
+        return s.ToLowerInvariant();
     }
 
     /// <summary>
