@@ -57,6 +57,14 @@ public partial class VisitEditViewModel : ObservableObject
     [ObservableProperty]
     private string? _allergyWarning;
 
+    /// <summary>
+    /// ═══ چرخهٔ ۷۸ (بازطراحی فرم ویزیت) ═══ نام و نام خانوادگی بیمار — هویت
+    /// اصلی کارت سربرگ و سایدبار؛ پیش‌تر کد ملی به‌جای نام در سایدبار نشسته
+    /// بود و نام فقط داخل عنوان پنجره دیده می‌شد.
+    /// </summary>
+    [ObservableProperty]
+    private string _patientName = "بیمار";
+
     /// <summary>پرونده بیمار — MRN</summary>
     [ObservableProperty]
     private string _patientMrn = string.Empty;
@@ -247,6 +255,7 @@ public partial class VisitEditViewModel : ObservableObject
 
         await LoadPatientContextAsync();
         FormTitle = $"🩺 ویزیت بیمار: {v.Patient?.FullName ?? ""} [🔴 در حال ضبط]";
+        PatientName = v.Patient?.FullName ?? PatientName;
         IsBusy = false;
         StartTimers();
     }
@@ -275,7 +284,8 @@ public partial class VisitEditViewModel : ObservableObject
             AllergyWarning = AllergyTags.Count > 0
                 ? $"⚠️ بیمار به {string.Join("، ", AllergyTags)} آلرژی دارد"
                 : null;
-            FormTitle = $"🩺 ویزیت بیمار: {detail.FirstName} {detail.LastName} [🔴 در حال ضبط]";
+            PatientName = $"{detail.FirstName} {detail.LastName}".Trim();
+            FormTitle = $"🩺 ویزیت بیمار: {PatientName} [🔴 در حال ضبط]";
         }
 
         // سوابق ویزیت

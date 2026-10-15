@@ -4,457 +4,847 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
         Title="{Binding FormTitle, Mode=OneWay}"
-        Width="1180" Height="780"
+        Width="1200" Height="800" MinWidth="1080" MinHeight="700"
         WindowStartupLocation="CenterOwner"
         FlowDirection="RightToLeft">
-    <!-- ═══ فرم ویزیت بیمار — گام U6 طبق پرامپت UI بخش ۲ (فرم ۱۱) ═══
-         سایدبار ۲۸۰px: عکس + اطلاعات + آلرژی قرمز + مزمن نارنجی + دارو آبی + سوابق
-         ۸ تب: SOAP / حیاتی / معاینه / تشخیص / نسخه / آزمایش / تصویر / فایل
-         AutoSave ۶۰s + Stopwatch + بیمار بعدی + پایان (Ctrl+Enter) -->
+    <!-- ═══════════════════════════════════════════════════════════
+         ═══ چرخهٔ ۷۸ (بند مالک) — بازطراحی حرفه‌ای فرم ویزیت ═══
+         «چینش و طراحی فرم ویزیت بیمار رو بصورت حرفه‌ای و زیبا درست بکن
+         که ترتیب همه چیز اصولی باشه». اصول چیدمان جدید:
+           • سربرگ گرادیانی هویت: چهرهٔ بیمار، نام بزرگ، چیپ‌های شناسنامه
+             (پرونده/سن/خون/بیمه/موبایل)، کرنومتر ویزیت و وضعیت ذخیره —
+             پزشک همیشه می‌داند «با چه بیماری» کار می‌کند؛
+           • بنر قرمز آلرژی زیر سربرگ — هشدار ایمنی بالینی همیشه جلوی چشم؛
+           • ترتیب تب‌ها = روند بالینی واقعی: حیاتی ← شرح حال ← معاینه ←
+             تشخیص و طرح درمان ← اقدامات (نسخه/آزمایش/تصویر/فیزیو) ← فایل‌ها.
+             تب «تشخیص» همان ایندکس ۳ قبلی مانده و هدایت خودکارِ «پایان ویزیت
+             بدون تشخیص» همچنان درست کار می‌کند؛
+           • هر بخش در کارت مستقل با سرشاخصِ آیکون‌دار — اسکن بصری آسان؛
+           • تب تشخیص: «یک» فهرست نتایج با دو کنش هر ردیف (ستاره = تشخیص
+             اصلی، بعلاوه = ثانویه) — رفع دو فهرستِ تکراری و گیج‌کنندهٔ قبلی؛
+           • تاریخ پیگیری با انتخابگر تاریخ شمسی برنامه (قانون مالک)؛
+           • همهٔ رنگ‌ها از منابع پویای تم — در تم تیره هم درست دیده می‌شود.
+         ═══════════════════════════════════════════════════════════ -->
     <Window.InputBindings>
         <KeyBinding Modifiers="Control" Key="S" Command="{Binding SaveDraftCommand}" />
         <KeyBinding Modifiers="Control" Key="Enter" Command="{Binding CompleteVisitCommand}" />
     </Window.InputBindings>
 
-    <Grid Margin="10">
+    <Window.Resources>
+        <!-- کارت بخش — پوستهٔ یکدست همهٔ گروه‌های اطلاعاتی فرم -->
+        <Style x:Key="SectionCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="14,12,14,14" />
+        </Style>
+        <!-- سرشاخص کارت — آیکون رنگی + عنوان درشت -->
+        <Style x:Key="CardTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <!-- برچسب فیلد — یکدست و کم‌رنگ -->
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Opacity" Value="0.72" />
+            <Setter Property="Margin" Value="2,0,0,5" />
+        </Style>
+        <!-- چیپ اطلاعات روی سربرگ گرادیانی — شیشهٔ سفید نیمه‌شفاف -->
+        <Style x:Key="HeaderChip" TargetType="Border">
+            <Setter Property="Background" Value="#29FFFFFF" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <!-- چیپ رنگی سایدبار (آلرژی/مزمن/دارو) — نیمه‌شفافِ سازگار با هر دو تم -->
+        <Style x:Key="TagChip" TargetType="Border">
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="Margin" Value="2,2" />
+        </Style>
+        <!-- شمارهٔ گام در سرشاخص تب‌ها — دایرهٔ کوچک شماره‌دار -->
+        <Style x:Key="StepBadge" TargetType="Border">
+            <Setter Property="Width" Value="21" />
+            <Setter Property="Height" Value="21" />
+            <Setter Property="CornerRadius" Value="11" />
+            <Setter Property="Background" Value="#261565C0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="12">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- هدر: عنوان + مدت + هشدار آلرژی -->
-        <DockPanel Grid.Row="0" Margin="0,0,0,8">
-            <TextBlock Text="{Binding FormTitle, Mode=OneWay}" FontSize="17" FontWeight="Bold"
-                       VerticalAlignment="Center" />
-            <Border DockPanel.Dock="Left" Background="#FFEBEE" CornerRadius="8" Padding="10,4"
-                    VerticalAlignment="Center" Margin="12,0,0,0"
-                    Visibility="{Binding AllergyWarning, Converter={StaticResource StringToVisibility}}">
-                <TextBlock Text="{Binding AllergyWarning, Mode=OneWay}" Foreground="#C62828"
-                           FontWeight="Bold" FontSize="12" />
-            </Border>
-            <Border DockPanel.Dock="Left" Background="#ECEFF1" CornerRadius="8" Padding="10,4"
-                    VerticalAlignment="Center" Margin="10,0,0,0">
-                <TextBlock FontFamily="{DynamicResource App.CodeFont}" FontSize="13" Foreground="#1F2937">
-                    <Run Text="⏱️ " /><Run Text="{Binding ElapsedText, Mode=OneWay}" FontWeight="Bold" />
-                </TextBlock>
-            </Border>
-            <Border DockPanel.Dock="Left" Background="#E8F5E9" CornerRadius="8" Padding="10,4"
-                    VerticalAlignment="Center" Margin="10,0,0,0"
-                    Visibility="{Binding SaveStateText, Converter={StaticResource StringToVisibility}}">
-                <TextBlock Text="{Binding SaveStateText, Mode=OneWay}" Foreground="#2E7D32" FontSize="11" />
-            </Border>
-            <!-- ═══ چرخهٔ ۶۹ (فاز ۳ / F-15) — کپی ویزیت قبلی ═══
-                 شرح حال/سابقه/برنامهٔ درمانی/توصیه‌های پیگیری ویزیت قبلی همین بیمار
-                 با یک کلیک در فرم جاری؛ فقط با ویزیت قبلی موجود نمایان. -->
-            <Button DockPanel.Dock="Left" Command="{Binding CopyPreviousVisitCommand}"
-                    Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11"
-                    Padding="10,4" Margin="10,0,0,0" VerticalAlignment="Center"
-                    Visibility="{Binding PreviousVisitId, Converter={StaticResource NullToVisibility}}"
-                    ToolTip="شرح حال، سابقه‌ها، برنامهٔ درمانی و توصیه‌های ویزیت قبلی در این فرم کپی می‌شود">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="ContentCopy" Width="14" Height="14" VerticalAlignment="Center" />
-                    <TextBlock Text="کپی از ویزیت قبلی" Margin="6,0,0,0" VerticalAlignment="Center" />
+        <!-- ═══ سربرگ گرادیانی هویت بیمار ═══ -->
+        <Border Grid.Row="0" CornerRadius="14" Padding="16,12,16,10">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#0D47A1" Offset="0" />
+                    <GradientStop Color="#1565C0" Offset="0.55" />
+                    <GradientStop Color="#1E88E5" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <DockPanel>
+                <!-- سمت چپ: کرنومتر + وضعیت ذخیره + کپی ویزیت قبلی -->
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="#29FFFFFF" CornerRadius="10" Padding="10,5" VerticalAlignment="Center"
+                            ToolTip="مدت زمان سپری‌شده از شروع ویزیت">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="TimerOutline" Width="15" Height="15" Foreground="#EAF3FE" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding ElapsedText, Mode=OneWay}" Foreground="#FFFFFF" FontWeight="Bold"
+                                       FontFamily="{DynamicResource App.CodeFont}" FontSize="13" Margin="6,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                    <Border Background="#2666BB6A" CornerRadius="10" Padding="10,5" Margin="8,0,0,0" VerticalAlignment="Center"
+                            Visibility="{Binding SaveStateText, Converter={StaticResource StringToVisibility}}">
+                        <TextBlock Text="{Binding SaveStateText, Mode=OneWay}" Foreground="#DCEDC8" FontSize="11" VerticalAlignment="Center" />
+                    </Border>
+                    <!-- کپی از ویزیت قبلی — چرخهٔ ۶۹ (F-15)؛ فقط با وجود ویزیت قبلی -->
+                    <Button Command="{Binding CopyPreviousVisitCommand}" Margin="10,0,0,0" VerticalAlignment="Center"
+                            Background="#33FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1" Foreground="#FFFFFF"
+                            Cursor="Hand" FontSize="11" Padding="10,4"
+                            Visibility="{Binding PreviousVisitId, Converter={StaticResource NullToVisibility}}"
+                            ToolTip="شرح حال، سابقه‌ها، برنامهٔ درمانی و توصیه‌های ویزیت قبلی در این فرم کپی می‌شود">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="CopyBd" Background="#33FFFFFF" CornerRadius="9" BorderBrush="#66FFFFFF"
+                                        BorderThickness="1" Padding="11,5">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ContentCopy" Width="14" Height="14" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                        <TextBlock Text="کپی از ویزیت قبلی" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="CopyBd" Property="Background" Value="#4DFFFFFF" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
                 </StackPanel>
-            </Button>
-        </DockPanel>
 
-        <!-- بدنه: سایدبار + تب‌ها -->
-        <Grid Grid.Row="1">
+                <!-- سمت راست: چهره + نام + چیپ‌های شناسنامه -->
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="48" Height="48" CornerRadius="24" Background="#FFFFFF" Opacity="0.96" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="Account" Width="27" Height="27" Foreground="#1565C0"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center" Margin="12,0,0,0">
+                        <TextBlock Text="{Binding PatientName, Mode=OneWay, FallbackValue=بیمار}"
+                                   FontSize="17" FontWeight="Bold" Foreground="#FFFFFF" />
+                        <!-- چیپ‌های شناسنامه — پرونده / سن / خون / بیمه / موبایل -->
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Border Style="{StaticResource HeaderChip}">
+                                <TextBlock FontSize="10.5" Foreground="#EAF3FE" FontFamily="{DynamicResource App.CodeFont}">
+                                    <Run Text="پرونده " /><Run Text="{Binding PatientMrn, Mode=OneWay, FallbackValue=—}" FontWeight="Bold" />
+                                </TextBlock>
+                            </Border>
+                            <Border Style="{StaticResource HeaderChip}">
+                                <TextBlock Text="{Binding PatientAgeGender, Mode=OneWay, FallbackValue=—}"
+                                           FontSize="10.5" Foreground="#EAF3FE" />
+                            </Border>
+                            <Border Style="{StaticResource HeaderChip}"
+                                    Visibility="{Binding PatientBloodType, Converter={StaticResource StringToVisibility}}">
+                                <TextBlock FontSize="10.5" Foreground="#FFCDD2" FontWeight="Bold"
+                                           FontFamily="{DynamicResource App.CodeFont}">
+                                    <Run Text="خون " /><Run Text="{Binding PatientBloodType, Mode=OneWay}" />
+                                </TextBlock>
+                            </Border>
+                            <Border Style="{StaticResource HeaderChip}">
+                                <TextBlock Text="{Binding PatientInsurance, Mode=OneWay, FallbackValue=آزاد}"
+                                           FontSize="10.5" Foreground="#EAF3FE" />
+                            </Border>
+                            <Border Style="{StaticResource HeaderChip}"
+                                    Visibility="{Binding PatientMobile, Converter={StaticResource StringToVisibility}}">
+                                <TextBlock Text="{Binding PatientMobile, Mode=OneWay}" FontSize="10.5"
+                                           Foreground="#EAF3FE" FontFamily="{DynamicResource App.CodeFont}" />
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ═══ بنر قرمز آلرژی — هشدار ایمنی بالینی، همیشه جلوی چشم ═══ -->
+        <Border Grid.Row="1" CornerRadius="10" Padding="12,7" Margin="0,8,0,0"
+                Background="#26C62828" BorderBrush="#66C62828" BorderThickness="1"
+                Visibility="{Binding AllergyWarning, Converter={StaticResource StringToVisibility}}">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="AlertOctagon" Width="17" Height="17" Foreground="#E53935"
+                                         VerticalAlignment="Center" />
+                <TextBlock Text="{Binding AllergyWarning, Mode=OneWay}" Foreground="#E53935" FontWeight="Bold"
+                           FontSize="12" Margin="8,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <!-- ═══ بدنه: سایدبار زمینهٔ بیمار + تب‌های روند بالینی ═══ -->
+        <Grid Grid.Row="2" Margin="0,10,0,0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="280" />
+                <ColumnDefinition Width="272" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!-- ═══ سایدبار ═══ -->
-            <Border Grid.Column="0" CornerRadius="12" Padding="10" Margin="0,0,8,0"
-                    Background="{DynamicResource MaterialDesign.Brush.Background}"
-                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
-                    BorderThickness="1">
+            <!-- ─── سایدبار: زمینهٔ بالینی بیمار ─── -->
+            <Border Grid.Column="0" Style="{StaticResource SectionCard}" Margin="0,0,8,0" Padding="12">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <!-- کارت هویت -->
-                        <Border CornerRadius="10" Padding="10" Background="#E3F2FD">
-                            <StackPanel>
-                                <Border Width="64" Height="64" CornerRadius="32" Background="#1565C0"
-                                        HorizontalAlignment="Center" Margin="0,0,0,6">
-                                    <materialDesign:PackIcon Kind="Account" Width="34" Height="34"
-                                                             Foreground="White"
-                                                             HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </Border>
-                                <TextBlock Text="{Binding PatientNationalCode, Mode=OneWay, FallbackValue=بیمار}"
-                                           FontWeight="Bold" FontSize="13" TextWrapping="Wrap"
-                                           HorizontalAlignment="Center"  Foreground="#1F2937"/>
-                                <TextBlock Text="{Binding PatientMrn, Mode=OneWay, FallbackValue=''}"
-                                           FontSize="11" Opacity="0.7" FontFamily="{DynamicResource App.CodeFont}"
-                                           HorizontalAlignment="Center" Margin="0,2,0,0"  Foreground="#1F2937"/>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
-                                    <TextBlock Text="{Binding PatientAgeGender, Mode=OneWay, FallbackValue=''}" FontSize="11"  Foreground="#1F2937"/>
-                                    <TextBlock Text="{Binding PatientBloodType, Mode=OneWay, FallbackValue='', TargetNullValue=''}"
-                                               FontSize="11" Margin="8,0,0,0"  Foreground="#1F2937"/>
-                                </StackPanel>
-                                <TextBlock Text="{Binding PatientMobile, Mode=OneWay, FallbackValue=''}"
-                                           FontSize="10.5" Opacity="0.7" FontFamily="{DynamicResource App.CodeFont}"
-                                           HorizontalAlignment="Center" Margin="0,3,0,0"  Foreground="#1F2937"/>
-                                <TextBlock Text="{Binding PatientInsurance, Mode=OneWay, FallbackValue=''}"
-                                           FontSize="10.5" Opacity="0.7"
-                                           HorizontalAlignment="Center" Margin="0,2,0,0"  Foreground="#1F2937"/>
+                        <!-- شناسنامهٔ کامل — ردیف‌های آیکون‌دار -->
+                        <StackPanel>
+                            <TextBlock Text="شناسنامهٔ بیمار" Style="{StaticResource CardTitle}" Margin="4,0,0,2" />
+                            <!-- کد ملی -->
+                            <StackPanel Orientation="Horizontal" Margin="4,7,0,0">
+                                <materialDesign:PackIcon Kind="CardAccountDetails" Width="14" Height="14"
+                                                         Foreground="#1565C0" VerticalAlignment="Center" />
+                                <TextBlock Text="کد ملی:" FontSize="10.5" Opacity="0.65" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding PatientNationalCode, Mode=OneWay, FallbackValue=—}"
+                                           FontSize="11" Margin="7,0,0,0" VerticalAlignment="Center"
+                                           FontFamily="{DynamicResource App.CodeFont}" FontWeight="SemiBold" />
                             </StackPanel>
-                        </Border>
+                            <!-- موبایل -->
+                            <StackPanel Orientation="Horizontal" Margin="4,5,0,0"
+                                        Visibility="{Binding PatientMobile, Converter={StaticResource StringToVisibility}}">
+                                <materialDesign:PackIcon Kind="Phone" Width="14" Height="14"
+                                                         Foreground="#1565C0" VerticalAlignment="Center" />
+                                <TextBlock Text="موبایل:" FontSize="10.5" Opacity="0.65" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding PatientMobile, Mode=OneWay}"
+                                           FontSize="11" Margin="7,0,0,0" VerticalAlignment="Center"
+                                           FontFamily="{DynamicResource App.CodeFont}" />
+                            </StackPanel>
+                            <!-- بیمه -->
+                            <StackPanel Orientation="Horizontal" Margin="4,5,0,0">
+                                <materialDesign:PackIcon Kind="ShieldCheck" Width="14" Height="14"
+                                                         Foreground="#1565C0" VerticalAlignment="Center" />
+                                <TextBlock Text="بیمه:" FontSize="10.5" Opacity="0.65" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding PatientInsurance, Mode=OneWay, FallbackValue=آزاد}"
+                                           FontSize="11" Margin="7,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
 
                         <!-- آلرژی‌ها — قرمز -->
-                        <TextBlock Text="⚠️ آلرژی‌ها" FontSize="11.5" FontWeight="Bold" Foreground="#C62828"
-                                   Margin="4,10,0,4"
-                                   Visibility="{Binding AllergyTags.Count, Converter={StaticResource NullToVisibility}}" />
-                        <ItemsControl ItemsSource="{Binding AllergyTags}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="#FFEBEE" CornerRadius="8" Padding="8,3" Margin="2,2">
-                                        <TextBlock Text="{Binding}" FontSize="10.5" Foreground="#C62828" FontWeight="SemiBold" />
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <StackPanel Margin="0,4,0,0"
+                                    Visibility="{Binding AllergyTags.Count, Converter={StaticResource NullToVisibility}}">
+                            <Separator Margin="0,10,0,8" Background="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="AlertCircle" Width="14" Height="14" Foreground="#E53935" VerticalAlignment="Center" />
+                                <TextBlock Text="آلرژی‌ها" FontSize="11.5" FontWeight="Bold" Foreground="#E53935"
+                                           Margin="6,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <ItemsControl ItemsSource="{Binding AllergyTags}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource TagChip}" Background="#26C62828">
+                                            <TextBlock Text="{Binding}" FontSize="10.5" Foreground="#E53935" FontWeight="SemiBold" />
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
 
-                        <!-- مزمن‌ها — نارنجی -->
-                        <TextBlock Text="🏥 بیماری‌های مزمن" FontSize="11.5" FontWeight="Bold" Foreground="#E65100"
-                                   Margin="4,8,0,4"
-                                   Visibility="{Binding ChronicTags.Count, Converter={StaticResource NullToVisibility}}" />
-                        <ItemsControl ItemsSource="{Binding ChronicTags}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="#FFF3E0" CornerRadius="8" Padding="8,3" Margin="2,2">
-                                        <TextBlock Text="{Binding}" FontSize="10.5" Foreground="#E65100" />
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <!-- بیماری‌های مزمن — نارنجی -->
+                        <StackPanel Margin="0,4,0,0"
+                                    Visibility="{Binding ChronicTags.Count, Converter={StaticResource NullToVisibility}}">
+                            <Separator Margin="0,10,0,8" Background="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="HospitalBoxOutline" Width="14" Height="14" Foreground="#EF6C00" VerticalAlignment="Center" />
+                                <TextBlock Text="بیماری‌های مزمن" FontSize="11.5" FontWeight="Bold" Foreground="#EF6C00"
+                                           Margin="6,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <ItemsControl ItemsSource="{Binding ChronicTags}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource TagChip}" Background="#26E65100">
+                                            <TextBlock Text="{Binding}" FontSize="10.5" Foreground="#EF6C00" />
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
 
                         <!-- داروهای فعلی — آبی -->
-                        <TextBlock Text="💊 داروهای فعلی" FontSize="11.5" FontWeight="Bold" Foreground="#1565C0"
-                                   Margin="4,8,0,4"
-                                   Visibility="{Binding MedicationTags.Count, Converter={StaticResource NullToVisibility}}" />
-                        <ItemsControl ItemsSource="{Binding MedicationTags}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="#E3F2FD" CornerRadius="8" Padding="8,3" Margin="2,2">
-                                        <TextBlock Text="{Binding}" FontSize="10.5" Foreground="#1565C0" />
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <StackPanel Margin="0,4,0,0"
+                                    Visibility="{Binding MedicationTags.Count, Converter={StaticResource NullToVisibility}}">
+                            <Separator Margin="0,10,0,8" Background="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Pill" Width="14" Height="14" Foreground="#1976D2" VerticalAlignment="Center" />
+                                <TextBlock Text="داروهای فعلی" FontSize="11.5" FontWeight="Bold" Foreground="#1976D2"
+                                           Margin="6,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <ItemsControl ItemsSource="{Binding MedicationTags}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource TagChip}" Background="#261565C0">
+                                            <TextBlock Text="{Binding}" FontSize="10.5" Foreground="#1976D2" />
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
 
                         <!-- سوابق ویزیت -->
-                        <TextBlock FontSize="11.5" FontWeight="Bold" Margin="4,12,0,4"
-                                   Visibility="{Binding VisitHistory.Count, Converter={StaticResource NullToVisibility}}">
-                            <Run Text="📜 سوابق ویزیت (" /><Run Text="{Binding VisitHistory.Count, Mode=OneWay}" /><Run Text=")" />
-                        </TextBlock>
-                        <ItemsControl ItemsSource="{Binding VisitHistory}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border CornerRadius="8" Padding="8,6" Margin="0,0,0,5"
-                                            Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
-                                            BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
-                                            BorderThickness="1">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding DateShamsi}" FontSize="11" FontWeight="SemiBold" />
-                                            <TextBlock Text="{Binding DoctorName}" FontSize="10.5" Opacity="0.7" />
-                                            <TextBlock Text="{Binding Complaint}" FontSize="10.5" Opacity="0.65" TextWrapping="Wrap" />
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <StackPanel Margin="0,4,0,0"
+                                    Visibility="{Binding VisitHistory.Count, Converter={StaticResource NullToVisibility}}">
+                            <Separator Margin="0,10,0,8" Background="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="History" Width="14" Height="14"
+                                                         Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" Opacity="0.7"
+                                                                         VerticalAlignment="Center" />
+                                <TextBlock FontSize="11.5" FontWeight="Bold" Margin="6,0,0,0" VerticalAlignment="Center">
+                                    <Run Text="سوابق ویزیت (" /><Run Text="{Binding VisitHistory.Count, Mode=OneWay}" /><Run Text=")" />
+                                </TextBlock>
+                            </StackPanel>
+                            <ItemsControl ItemsSource="{Binding VisitHistory}" Margin="0,8,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="9" Padding="9,7" Margin="0,0,0,6"
+                                                Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                                                BorderThickness="1">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding DateShamsi}" FontSize="11" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding DoctorName}" FontSize="10.5" Opacity="0.7" />
+                                                <TextBlock Text="{Binding Complaint}" FontSize="10.5" Opacity="0.65" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </Border>
 
-            <!-- ═══ تب‌ها ═══ -->
+            <!-- ═══ تب‌ها — به ترتیب روند بالینی ═══ -->
             <!-- چرخهٔ ۷۸ — SelectedIndex دوطرفه: هدایت خودکار به تب تشخیص هنگام
                  پایان ویزیتِ بدون تشخیص اصلی (به‌جای خطای خام سرور) -->
             <TabControl Grid.Column="1" Style="{StaticResource MaterialDesignTabControl}"
                         SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
-                <!-- تب ۱: SOAP -->
-                <TabItem Header="📝 SOAP">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="6">
-                        <StackPanel>
-                            <TextBlock Text="🗣️ شکایت اصلی (CC)" FontSize="12" FontWeight="Bold" Margin="2,6,0,3" />
-                            <TextBox Text="{Binding ChiefComplaint, UpdateSourceTrigger=PropertyChanged}"
-                                     materialDesign:HintAssist.Hint="مثلاً سردرد شدید از ۳ روز قبل" MaxLength="500" />
-                            <TextBlock Text="📖 شرح بیماری فعلی (HPI)" FontSize="12" FontWeight="Bold" Margin="2,10,0,3" />
-                            <TextBox Text="{Binding Hpi, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
-                                     TextWrapping="Wrap" Height="100" VerticalScrollBarVisibility="Auto" />
-                            <TextBlock Text="📚 سوابق پزشکی (PMH)" FontSize="12" FontWeight="Bold" Margin="2,10,0,3" />
-                            <TextBox Text="{Binding Pmh, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
-                                     TextWrapping="Wrap" Height="66" VerticalScrollBarVisibility="Auto" />
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="12" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="👨‍👩‍👧 سوابق خانوادگی (FH)" FontSize="12" FontWeight="Bold" Margin="2,10,0,3" />
-                                    <TextBox Text="{Binding FamilyHistory, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
-                                             TextWrapping="Wrap" Height="52" VerticalScrollBarVisibility="Auto" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="🚬 سوابق اجتماعی (SH)" FontSize="12" FontWeight="Bold" Margin="2,10,0,3" />
-                                    <TextBox Text="{Binding SocialHistory, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
-                                             TextWrapping="Wrap" Height="52" VerticalScrollBarVisibility="Auto" />
-                                </StackPanel>
-                            </Grid>
-                            <TextBlock Text="🔎 مرور سیستم‌ها (ROS)" FontSize="12" FontWeight="Bold" Margin="2,10,0,3" />
-                            <TextBox Text="{Binding ReviewOfSystems, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
-                                     TextWrapping="Wrap" Height="66" VerticalScrollBarVisibility="Auto" />
+                <!-- ═══ گام ۱: علائم حیاتی — نخستین دادهٔ هر ویزیت ═══ -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource StepBadge}">
+                                <TextBlock Text="۱" FontSize="11" FontWeight="Bold" Foreground="#1565C0"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="علائم حیاتی" Margin="7,0,0,0" VerticalAlignment="Center" FontSize="12" />
                         </StackPanel>
-                    </ScrollViewer>
-                </TabItem>
-
-                <!-- تب ۲: علائم حیاتی -->
-                <TabItem Header="💓 حیاتی">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="6">
+                    </TabItem.Header>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="2">
                         <StackPanel>
-                            <UniformGrid Columns="4" Margin="0,4,0,8">
-                                <StackPanel Margin="0,0,6,8">
-                                    <TextBlock Text="BP — فشار خون" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding BpText, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="130/85" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
-                                </StackPanel>
-                                <StackPanel Margin="0,0,6,8">
-                                    <TextBlock Text="HR — ضربان" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding HrText, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="78" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
-                                </StackPanel>
-                                <StackPanel Margin="0,0,6,8">
-                                    <TextBlock Text="Temp — دما" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding TempText, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="37.2" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
-                                </StackPanel>
-                                <StackPanel Margin="0,0,0,8">
-                                    <TextBlock Text="SpO2 — اکسیژن" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding Spo2Text, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="98" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
-                                </StackPanel>
-                                <StackPanel Margin="0,0,6,8">
-                                    <TextBlock Text="Weight — وزن (kg)" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding WeightText, UpdateSourceTrigger=PropertyChanged}" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
-                                </StackPanel>
-                                <StackPanel Margin="0,0,6,8">
-                                    <TextBlock Text="Height — قد (cm)" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding HeightText, UpdateSourceTrigger=PropertyChanged}" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
-                                </StackPanel>
-                                <StackPanel Margin="0,0,6,8">
-                                    <TextBlock Text="BMI — شاخص توده" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding BmiDisplay, Mode=OneWay}" IsReadOnly="True" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" Background="#FAFAFA" />
-                                </StackPanel>
-                                <StackPanel Margin="0,0,0,8">
-                                    <TextBlock Text="BS — قند خون" FontSize="11" Opacity="0.65" />
-                                    <TextBox Text="{Binding BsText, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="140" FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
-                                </StackPanel>
-                            </UniformGrid>
-
-                            <!-- کارت‌های خلاصه وضعیت -->
-                            <ItemsControl ItemsSource="{Binding VitalCards}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Width="105" CornerRadius="10" Padding="8,6" Margin="0,0,7,7"
-                                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
-                                                BorderThickness="1" Background="#FAFAFA">
-                                            <StackPanel HorizontalAlignment="Center">
-                                                <TextBlock Text="{Binding Title}" FontSize="10" FontFamily="{DynamicResource App.CodeFont}" Opacity="0.6" HorizontalAlignment="Center"  Foreground="#1F2937"/>
-                                                <TextBlock Text="{Binding PersianTitle}" FontSize="10.5" Opacity="0.75" HorizontalAlignment="Center"  Foreground="#1F2937"/>
-                                                <TextBlock FontSize="16" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" HorizontalAlignment="Center" Margin="0,3,0,0" Foreground="#1F2937">
-                                                    <Run Text="{Binding Value, Mode=OneWay, FallbackValue=—}" />
-                                                    <Run Text="{Binding Unit, Mode=OneWay}" FontSize="9" FontWeight="Normal" Foreground="#888888" />
-                                                </TextBlock>
-                                                <TextBlock Text="{Binding StatusText, Mode=OneWay}" FontSize="10" HorizontalAlignment="Center" Foreground="{Binding StatusColor, Mode=OneWay}" />
+                            <!-- کارت ورود علائم حیاتی -->
+                            <Border Style="{StaticResource SectionCard}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="2,0,0,2">
+                                        <materialDesign:PackIcon Kind="HeartPulse" Width="16" Height="16" Foreground="#1565C0" VerticalAlignment="Center" />
+                                        <TextBlock Text="ثبت علائم حیاتی" Style="{StaticResource CardTitle}" Margin="8,0,0,0" />
+                                        <TextBlock Text="اندازه‌گیری‌های امروز — BMI خودکار محاسبه می‌شود" FontSize="10.5"
+                                                   Opacity="0.55" Margin="12,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <UniformGrid Columns="4" Margin="0,10,0,0">
+                                        <Border Background="{DynamicResource MaterialDesign.Brush.Background}" CornerRadius="10"
+                                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
+                                                Padding="8,8,8,9" Margin="0,0,7,8">
+                                            <StackPanel>
+                                                <TextBlock Text="فشار خون (mmHg)" Style="{StaticResource FieldLabel}" />
+                                                <TextBox Text="{Binding BpText, UpdateSourceTrigger=PropertyChanged}"
+                                                         materialDesign:HintAssist.Hint="130/85" FontSize="15"
+                                                         FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
                                             </StackPanel>
                                         </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                            <!-- هشدارها -->
-                            <ItemsControl ItemsSource="{Binding VitalWarnings}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding}" Foreground="#E65100" FontSize="12" Margin="2,3,0,0" FontWeight="SemiBold" />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </ScrollViewer>
-                </TabItem>
-
-                <!-- تب ۳: معاینه فیزیکی -->
-                <TabItem Header="🔬 معاینه">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="6">
-                        <StackPanel>
-                            <TextBlock Text="گروه‌بندی معاینه — هر ناحیه: نرمال یا یافته غیرنرمال" FontSize="11.5" Opacity="0.65" Margin="2,4,0,8" />
-                            <UniformGrid Columns="2">
-                                <Border CornerRadius="10" Padding="10" Margin="0,0,6,6" BorderThickness="1"
-                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}">
-                                    <StackPanel>
-                                        <CheckBox Content="سر و گردن: نرمال" IsChecked="{Binding HeadNeckNormal}" FontWeight="SemiBold" />
-                                        <TextBox Text="{Binding HeadNeckFindings, UpdateSourceTrigger=PropertyChanged}"
-                                                 materialDesign:HintAssist.Hint="یافته غیرنرمال…"
-                                                 IsEnabled="{Binding HeadNeckNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
-                                                 Margin="0,5,0,0" Height="44" AcceptsReturn="True" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                </Border>
-                                <Border CornerRadius="10" Padding="10" Margin="0,0,0,6" BorderThickness="1"
-                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}">
-                                    <StackPanel>
-                                        <CheckBox Content="قفسه سینه: نرمال" IsChecked="{Binding ChestNormal}" FontWeight="SemiBold" />
-                                        <TextBox Text="{Binding ChestFindings, UpdateSourceTrigger=PropertyChanged}"
-                                                 materialDesign:HintAssist.Hint="مثلاً رال پایه ریه چپ"
-                                                 IsEnabled="{Binding ChestNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
-                                                 Margin="0,5,0,0" Height="44" AcceptsReturn="True" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                </Border>
-                                <Border CornerRadius="10" Padding="10" Margin="0,0,6,0" BorderThickness="1"
-                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}">
-                                    <StackPanel>
-                                        <CheckBox Content="شکم: نرمال" IsChecked="{Binding AbdomenNormal}" FontWeight="SemiBold" />
-                                        <TextBox Text="{Binding AbdomenFindings, UpdateSourceTrigger=PropertyChanged}"
-                                                 materialDesign:HintAssist.Hint="یافته غیرنرمال…"
-                                                 IsEnabled="{Binding AbdomenNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
-                                                 Margin="0,5,0,0" Height="44" AcceptsReturn="True" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                </Border>
-                                <Border CornerRadius="10" Padding="10" BorderThickness="1"
-                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}">
-                                    <StackPanel>
-                                        <CheckBox Content="اندام‌ها: نرمال" IsChecked="{Binding LimbsNormal}" FontWeight="SemiBold" />
-                                        <TextBox Text="{Binding LimbsFindings, UpdateSourceTrigger=PropertyChanged}"
-                                                 materialDesign:HintAssist.Hint="یافته غیرنرمال…"
-                                                 IsEnabled="{Binding LimbsNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
-                                                 Margin="0,5,0,0" Height="44" AcceptsReturn="True" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                </Border>
-                            </UniformGrid>
-                        </StackPanel>
-                    </ScrollViewer>
-                </TabItem>
-
-                <!-- تب ۴: تشخیص -->
-                <TabItem Header="🏥 تشخیص">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="6">
-                        <StackPanel>
-                            <TextBlock Text="۱. تشخیص اصلی — جستجو در ICD-10" FontSize="12" FontWeight="Bold" Margin="2,6,0,3" />
-                            <TextBox Text="{Binding DiagnosisSearch, UpdateSourceTrigger=PropertyChanged}"
-                                     materialDesign:HintAssist.Hint="مثلاً E11 یا دیابت" />
-                            <ListBox ItemsSource="{Binding DiagnosisResults}" MaxHeight="150" Margin="0,5,0,0"
-                                     Visibility="{Binding DiagnosisResults.Count, Converter={StaticResource NullToVisibility}}">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Button Command="{Binding DataContext.SelectDiagnosisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                CommandParameter="{Binding}"
-                                                Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Right">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Code}" FontFamily="{DynamicResource App.CodeFont}" FontWeight="Bold" Foreground="#1565C0" />
-                                                <TextBlock Text="{Binding Title}" Margin="12,0,0,0" />
+                                        <Border Background="{DynamicResource MaterialDesign.Brush.Background}" CornerRadius="10"
+                                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
+                                                Padding="8,8,8,9" Margin="0,0,7,8">
+                                            <StackPanel>
+                                                <TextBlock Text="ضربان قلب (bpm)" Style="{StaticResource FieldLabel}" />
+                                                <TextBox Text="{Binding HrText, UpdateSourceTrigger=PropertyChanged}"
+                                                         materialDesign:HintAssist.Hint="78" FontSize="15"
+                                                         FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
                                             </StackPanel>
-                                        </Button>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                            <Border Background="#E8F5E9" CornerRadius="8" Padding="10,5" Margin="0,8,0,0"
-                                    Visibility="{Binding PrimaryDiagnosis, Converter={StaticResource NullToVisibility}}">
-                                <TextBlock FontSize="12.5" Foreground="#1F2937">
-                                    <Run Text="✅ تشخیص اصلی: " /><Run Text="{Binding PrimaryDiagnosis.Code, Mode=OneWay}" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}" />
-                                    <Run Text=" — " /><Run Text="{Binding PrimaryDiagnosis.Title, Mode=OneWay}" FontWeight="SemiBold" />
-                                </TextBlock>
+                                        </Border>
+                                        <Border Background="{DynamicResource MaterialDesign.Brush.Background}" CornerRadius="10"
+                                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
+                                                Padding="8,8,8,9" Margin="0,0,7,8">
+                                            <StackPanel>
+                                                <TextBlock Text="دما (°C)" Style="{StaticResource FieldLabel}" />
+                                                <TextBox Text="{Binding TempText, UpdateSourceTrigger=PropertyChanged}"
+                                                         materialDesign:HintAssist.Hint="37.2" FontSize="15"
+                                                         FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Background="{DynamicResource MaterialDesign.Brush.Background}" CornerRadius="10"
+                                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
+                                                Padding="8,8,8,9" Margin="0,0,0,8">
+                                            <StackPanel>
+                                                <TextBlock Text="اشباع اکسیژن (٪)" Style="{StaticResource FieldLabel}" />
+                                                <TextBox Text="{Binding Spo2Text, UpdateSourceTrigger=PropertyChanged}"
+                                                         materialDesign:HintAssist.Hint="98" FontSize="15"
+                                                         FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Background="{DynamicResource MaterialDesign.Brush.Background}" CornerRadius="10"
+                                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
+                                                Padding="8,8,8,9" Margin="0,0,7,8">
+                                            <StackPanel>
+                                                <TextBlock Text="وزن (kg)" Style="{StaticResource FieldLabel}" />
+                                                <TextBox Text="{Binding WeightText, UpdateSourceTrigger=PropertyChanged}"
+                                                         FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Background="{DynamicResource MaterialDesign.Brush.Background}" CornerRadius="10"
+                                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
+                                                Padding="8,8,8,9" Margin="0,0,7,8">
+                                            <StackPanel>
+                                                <TextBlock Text="قد (cm)" Style="{StaticResource FieldLabel}" />
+                                                <TextBox Text="{Binding HeightText, UpdateSourceTrigger=PropertyChanged}"
+                                                         FontSize="15" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Background="{DynamicResource MaterialDesign.Brush.Background}" CornerRadius="10"
+                                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
+                                                Padding="8,8,8,9" Margin="0,0,7,8">
+                                            <StackPanel>
+                                                <TextBlock Text="شاخص توده بدن (BMI)" Style="{StaticResource FieldLabel}" />
+                                                <TextBox Text="{Binding BmiDisplay, Mode=OneWay}" IsReadOnly="True" FontSize="15"
+                                                         FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" Opacity="0.8" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Background="{DynamicResource MaterialDesign.Brush.Background}" CornerRadius="10"
+                                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
+                                                Padding="8,8,8,9" Margin="0,0,0,8">
+                                            <StackPanel>
+                                                <TextBlock Text="قند خون (mg/dL)" Style="{StaticResource FieldLabel}" />
+                                                <TextBox Text="{Binding BsText, UpdateSourceTrigger=PropertyChanged}"
+                                                         materialDesign:HintAssist.Hint="140" FontSize="15"
+                                                         FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                    </UniformGrid>
+                                </StackPanel>
                             </Border>
 
-                            <TextBlock Text="۲. تشخیص‌های ثانویه — از نتایج جستجو انتخاب کنید" FontSize="12" FontWeight="Bold" Margin="2,12,0,3" />
-                            <ItemsControl ItemsSource="{Binding SecondaryDiagnoses}">
+                            <!-- کارت‌های خلاصهٔ وضعیت -->
+                            <ItemsControl ItemsSource="{Binding VitalCards}" Margin="0,10,0,0">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="#E3F2FD" CornerRadius="8" Padding="8,3" Margin="2,2">
-                                            <TextBlock Text="{Binding}" FontSize="11" Foreground="#1565C0" />
+                                        <Border Width="108" CornerRadius="10" Padding="8,7" Margin="0,0,7,7"
+                                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                                                BorderThickness="1"
+                                                Background="{DynamicResource MaterialDesign.Brush.Background}">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding PersianTitle}" FontSize="10.5" Opacity="0.75" HorizontalAlignment="Center" />
+                                                <TextBlock FontSize="16" FontWeight="Bold" FontFamily="{DynamicResource App.CodeFont}"
+                                                           HorizontalAlignment="Center" Margin="0,3,0,0">
+                                                    <Run Text="{Binding Value, Mode=OneWay, FallbackValue=—}" />
+                                                    <Run Text="{Binding Unit, Mode=OneWay}" FontSize="9" FontWeight="Normal" />
+                                                </TextBlock>
+                                                <TextBlock Text="{Binding StatusText, Mode=OneWay}" FontSize="10"
+                                                           HorizontalAlignment="Center" Foreground="{Binding StatusColor, Mode=OneWay}" />
+                                            </StackPanel>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <ListBox ItemsSource="{Binding DiagnosisResults}" MaxHeight="90" Margin="0,4,0,0"
-                                     Visibility="{Binding DiagnosisResults.Count, Converter={StaticResource NullToVisibility}}">
-                                <ListBox.ItemTemplate>
+
+                            <!-- هشدارهای مقادیر بحرانی -->
+                            <ItemsControl ItemsSource="{Binding VitalWarnings}" Margin="2,3,0,0">
+                                <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Button Command="{Binding DataContext.AddSecondaryDiagnosisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                CommandParameter="{Binding}"
-                                                Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Right" FontSize="11">
+                                        <Border Background="#26E65100" CornerRadius="8" Padding="10,5" Margin="0,0,0,5"
+                                                BorderBrush="#59E65100" BorderThickness="1">
                                             <StackPanel Orientation="Horizontal">
-                                                <materialDesign:PackIcon Kind="PlusCircleOutline" Width="13" Height="13" />
-                                                <TextBlock Text="{Binding Code}" FontFamily="{DynamicResource App.CodeFont}" Margin="8,0,0,0" />
-                                                <TextBlock Text="{Binding Title}" Margin="10,0,0,0" />
+                                                <materialDesign:PackIcon Kind="Alert" Width="14" Height="14" Foreground="#EF6C00" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding}" Foreground="#EF6C00" FontSize="12" Margin="8,0,0,0"
+                                                           FontWeight="SemiBold" VerticalAlignment="Center" />
                                             </StackPanel>
-                                        </Button>
+                                        </Border>
                                     </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+                <!-- ═══ گام ۲: شرح حال (SOAP) — مصاحبهٔ بالینی ═══ -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource StepBadge}">
+                                <TextBlock Text="۲" FontSize="11" FontWeight="Bold" Foreground="#1565C0"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="شرح حال" Margin="7,0,0,0" VerticalAlignment="Center" FontSize="12" />
+                        </StackPanel>
+                    </TabItem.Header>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="2">
+                        <StackPanel>
+                            <!-- شکایت اصلی و شرح بیماری فعلی — قلب مصاحبه -->
+                            <Border Style="{StaticResource SectionCard}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="14" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="شکایت اصلی (CC)" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Text="{Binding ChiefComplaint, UpdateSourceTrigger=PropertyChanged}"
+                                                 materialDesign:HintAssist.Hint="مثلاً سردرد شدید از ۳ روز قبل" MaxLength="500" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="شرح بیماری فعلی (HPI)" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Text="{Binding Hpi, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
+                                                 TextWrapping="Wrap" Height="104" VerticalScrollBarVisibility="Auto"
+                                                 materialDesign:HintAssist.Hint="شروع، شدت، همراه‌ها، عوامل تشدیدکننده و تسکین‌دهنده…" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
 
-                            <TextBlock Text="۳. برنامه درمانی" FontSize="12" FontWeight="Bold" Margin="2,12,0,3" />
-                            <TextBox Text="{Binding TreatmentPlan, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
-                                     TextWrapping="Wrap" Height="76" VerticalScrollBarVisibility="Auto" />
+                            <!-- سوابق پزشکی و مرور سیستم‌ها -->
+                            <Border Style="{StaticResource SectionCard}" Margin="0,10,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="14" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="سوابق پزشکی (PMH)" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Text="{Binding Pmh, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
+                                                 TextWrapping="Wrap" Height="88" VerticalScrollBarVisibility="Auto" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="مرور سیستم‌ها (ROS)" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Text="{Binding ReviewOfSystems, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
+                                                 TextWrapping="Wrap" Height="88" VerticalScrollBarVisibility="Auto" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
 
-                            <Grid Margin="0,8,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="۴. تاریخ مراجعه بعدی (شمسی)" FontSize="12" FontWeight="Bold" Margin="2,4,0,3" />
-                                    <TextBox Text="{Binding FollowUpDateShamsi, UpdateSourceTrigger=PropertyChanged}"
-                                             materialDesign:HintAssist.Hint="۱۴۰۴/۰۴/۱۵" Width="200" HorizontalAlignment="Left" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Margin="12,0,0,0">
-                                    <CheckBox Content="رزرو خودکار نوبت" IsChecked="{Binding AutoBookFollowUp}" />
-                                </StackPanel>
-                            </Grid>
-
-                            <TextBlock Text="۵. دستورات پیگیری" FontSize="12" FontWeight="Bold" Margin="2,10,0,3" />
-                            <TextBox Text="{Binding FollowUpInstructions, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
-                                     TextWrapping="Wrap" Height="56" VerticalScrollBarVisibility="Auto"
-                                     materialDesign:HintAssist.Hint="مثلاً کنترل قند خون ناشتا بعد از ۲ هفته" />
+                            <!-- سوابق خانوادگی و اجتماعی -->
+                            <Border Style="{StaticResource SectionCard}" Margin="0,10,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="14" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="سوابق خانوادگی (FH)" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Text="{Binding FamilyHistory, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
+                                                 TextWrapping="Wrap" Height="70" VerticalScrollBarVisibility="Auto" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="سوابق اجتماعی (SH)" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Text="{Binding SocialHistory, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
+                                                 TextWrapping="Wrap" Height="70" VerticalScrollBarVisibility="Auto" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
 
-                <!-- ═══ تب ۵: نسخه — عملیاتی (چرخهٔ ۴۸؛ گزارش مالک: «ارسال به نسخه‌نویسی») ═══
-                     فرم نسخه با بیمارِ همین ویزیت باز می‌شود؛ تداخل‌سنجی خودکار داروها
-                     و پایش حساسیت‌های بیمار در همان فرم با هر افزودن قلم اجرا می‌شود. -->
-                <TabItem Header="💊 نسخه">
-                    <StackPanel Margin="8,12" VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <materialDesign:PackIcon Kind="Prescription" Width="52" Height="52" Opacity="0.45" HorizontalAlignment="Center" Foreground="#00897B" />
-                        <TextBlock Text="نسخه‌نویسی برای بیمار همین ویزیت" FontSize="13.5" FontWeight="SemiBold" Margin="0,12,0,0" HorizontalAlignment="Center" />
-                        <TextBlock Text="فرم نسخه با اطلاعات بیمار باز می‌شود؛ تداخل دارویی و حساسیت‌ها خودکار بررسی می‌شوند" FontSize="11.5" Opacity="0.65" Margin="0,6,0,0" HorizontalAlignment="Center" TextWrapping="Wrap" />
-                        <Button Command="{Binding OpenPrescriptionCommand}" Margin="0,14,0,0" HorizontalAlignment="Center"
-                                Style="{StaticResource MaterialDesignRaisedButton}" Background="#00897B" BorderBrush="#00897B" MinWidth="230">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="OpenInNew" Width="15" Height="15" VerticalAlignment="Center" />
-                                <TextBlock Text="باز کردن نسخه‌نویسی" Margin="8,0,0,0" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
+                <!-- ═══ گام ۳: معاینه فیزیکی — چهار ناحیهٔ استاندارد ═══ -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource StepBadge}">
+                                <TextBlock Text="۳" FontSize="11" FontWeight="Bold" Foreground="#1565C0"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="معاینه" Margin="7,0,0,0" VerticalAlignment="Center" FontSize="12" />
+                        </StackPanel>
+                    </TabItem.Header>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="2">
+                        <StackPanel>
+                            <TextBlock Text="هر ناحیه را یا «نرمال» علامت بزنید یا یافتهٔ غیرنرمال را بنویسید — با علامت‌زدن نرمال، جعبهٔ یافته قفل می‌شود"
+                                       FontSize="11" Opacity="0.6" Margin="4,4,0,10" />
+                            <UniformGrid Columns="2">
+                                <!-- سر و گردن -->
+                                <Border Style="{StaticResource SectionCard}" Margin="0,0,7,8">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="FaceMan" Width="16" Height="16" Foreground="#1565C0" VerticalAlignment="Center" />
+                                            <TextBlock Text="سر و گردن" Style="{StaticResource CardTitle}" Margin="8,0,0,0" />
+                                        </StackPanel>
+                                        <CheckBox Content="نرمال" IsChecked="{Binding HeadNeckNormal}" FontWeight="SemiBold" Margin="2,8,0,0" />
+                                        <TextBox Text="{Binding HeadNeckFindings, UpdateSourceTrigger=PropertyChanged}"
+                                                 materialDesign:HintAssist.Hint="یافتهٔ غیرنرمال…"
+                                                 IsEnabled="{Binding HeadNeckNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
+                                                 Margin="0,6,0,0" Height="46" AcceptsReturn="True" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+                                <!-- قفسهٔ سینه -->
+                                <Border Style="{StaticResource SectionCard}" Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Lungs" Width="16" Height="16" Foreground="#1565C0" VerticalAlignment="Center" />
+                                            <TextBlock Text="قفسهٔ سینه و ریه" Style="{StaticResource CardTitle}" Margin="8,0,0,0" />
+                                        </StackPanel>
+                                        <CheckBox Content="نرمال" IsChecked="{Binding ChestNormal}" FontWeight="SemiBold" Margin="2,8,0,0" />
+                                        <TextBox Text="{Binding ChestFindings, UpdateSourceTrigger=PropertyChanged}"
+                                                 materialDesign:HintAssist.Hint="مثلاً رال پایهٔ ریه چپ"
+                                                 IsEnabled="{Binding ChestNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
+                                                 Margin="0,6,0,0" Height="46" AcceptsReturn="True" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+                                <!-- شکم -->
+                                <Border Style="{StaticResource SectionCard}" Margin="0,0,7,0">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Stomach" Width="16" Height="16" Foreground="#1565C0" VerticalAlignment="Center" />
+                                            <TextBlock Text="شکم" Style="{StaticResource CardTitle}" Margin="8,0,0,0" />
+                                        </StackPanel>
+                                        <CheckBox Content="نرمال" IsChecked="{Binding AbdomenNormal}" FontWeight="SemiBold" Margin="2,8,0,0" />
+                                        <TextBox Text="{Binding AbdomenFindings, UpdateSourceTrigger=PropertyChanged}"
+                                                 materialDesign:HintAssist.Hint="یافتهٔ غیرنرمال…"
+                                                 IsEnabled="{Binding AbdomenNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
+                                                 Margin="0,6,0,0" Height="46" AcceptsReturn="True" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+                                <!-- اندام‌ها -->
+                                <Border Style="{StaticResource SectionCard}">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Human" Width="16" Height="16" Foreground="#1565C0" VerticalAlignment="Center" />
+                                            <TextBlock Text="اندام‌ها و پوست" Style="{StaticResource CardTitle}" Margin="8,0,0,0" />
+                                        </StackPanel>
+                                        <CheckBox Content="نرمال" IsChecked="{Binding LimbsNormal}" FontWeight="SemiBold" Margin="2,8,0,0" />
+                                        <TextBox Text="{Binding LimbsFindings, UpdateSourceTrigger=PropertyChanged}"
+                                                 materialDesign:HintAssist.Hint="یافتهٔ غیرنرمال…"
+                                                 IsEnabled="{Binding LimbsNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
+                                                 Margin="0,6,0,0" Height="46" AcceptsReturn="True" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
+                        </StackPanel>
+                    </ScrollViewer>
                 </TabItem>
 
-                <!-- ═══ تب ۶: آزمایش — عملیاتی (چرخهٔ ۴۸؛ گزارش مالک: «ارسال به آزمایشگاه») ═══ -->
-                <TabItem Header="🧪 آزمایش">
-                    <DockPanel Margin="8,10">
-                        <StackPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                <!-- ═══ گام ۴: تشخیص و طرح درمان — قلب ویزیت ═══ -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource StepBadge}" Background="#262E7D32">
+                                <TextBlock Text="۴" FontSize="11" FontWeight="Bold" Foreground="#2E7D32"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="تشخیص و درمان" Margin="7,0,0,0" VerticalAlignment="Center" FontSize="12" />
+                        </StackPanel>
+                    </TabItem.Header>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="2">
+                        <StackPanel>
+                            <!-- ۱. جستجوی تشخیص ICD-10 — فهرست واحد با دو کنش در هر ردیف -->
+                            <Border Style="{StaticResource SectionCard}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Doctor" Width="16" Height="16" Foreground="#1565C0" VerticalAlignment="Center" />
+                                        <TextBlock Text="تشخیص اصلی — جستجو در ICD-10" Style="{StaticResource CardTitle}" Margin="8,0,0,0" />
+                                        <Border Background="#26E53935" CornerRadius="8" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="برای «پایان ویزیت» الزامی است" FontSize="9.5" Foreground="#E53935" />
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBox Text="{Binding DiagnosisSearch, UpdateSourceTrigger=PropertyChanged}"
+                                             materialDesign:HintAssist.Hint="کد یا عنوان بنویسید — مثلاً E11 یا دیابت" Margin="2,10,2,0" />
+                                    <!-- نتایج: هر ردیف یک کنش «اصلی» (ستاره) و یک کنش «ثانویه» (بعلاوه) دارد -->
+                                    <ListBox ItemsSource="{Binding DiagnosisResults}" MaxHeight="190" Margin="2,8,2,0"
+                                             ScrollViewer.CanContentScroll="False"
+                                             Visibility="{Binding DiagnosisResults.Count, Converter={StaticResource NullToVisibility}}">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border CornerRadius="8" Padding="8,5" Margin="0,2"
+                                                        Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                                        BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                                                        BorderThickness="1">
+                                                    <DockPanel>
+                                                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                                                            <Button Command="{Binding DataContext.SelectDiagnosisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Style="{StaticResource MaterialDesignFlatButton}" FontSize="10.5"
+                                                                    ToolTip="به‌عنوان تشخیص اصلی ثبت شود">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <materialDesign:PackIcon Kind="Star" Width="13" Height="13" Foreground="#2E7D32" VerticalAlignment="Center" />
+                                                                    <TextBlock Text="اصلی" Margin="5,0,0,0" Foreground="#2E7D32" FontWeight="SemiBold" />
+                                                                </StackPanel>
+                                                            </Button>
+                                                            <Button Command="{Binding DataContext.AddSecondaryDiagnosisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Style="{StaticResource MaterialDesignFlatButton}" FontSize="10.5" Margin="6,0,0,0"
+                                                                    ToolTip="به فهرست تشخیص‌های ثانویه اضافه شود">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <materialDesign:PackIcon Kind="PlusCircleOutline" Width="13" Height="13" VerticalAlignment="Center" />
+                                                                    <TextBlock Text="ثانویه" Margin="5,0,0,0" />
+                                                                </StackPanel>
+                                                            </Button>
+                                                        </StackPanel>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Border Background="#261565C0" CornerRadius="7" Padding="8,2" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Code}" FontFamily="{DynamicResource App.CodeFont}"
+                                                                           FontWeight="Bold" FontSize="12" Foreground="#1976D2" />
+                                                            </Border>
+                                                            <TextBlock Text="{Binding Title}" Margin="12,0,10,0" VerticalAlignment="Center" FontSize="12.5" />
+                                                        </StackPanel>
+                                                    </DockPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                    <!-- تأیید تشخیص اصلی انتخاب‌شده -->
+                                    <Border Background="#262E7D32" CornerRadius="10" Padding="12,8" Margin="2,10,2,0"
+                                            BorderBrush="#662E7D32" BorderThickness="1"
+                                            Visibility="{Binding PrimaryDiagnosis, Converter={StaticResource NullToVisibility}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CheckCircle" Width="17" Height="17" Foreground="#2E7D32" VerticalAlignment="Center" />
+                                            <TextBlock FontSize="13" VerticalAlignment="Center" Margin="9,0,0,0">
+                                                <Run Text="تشخیص اصلی: " FontWeight="Bold" />
+                                                <Run Text="{Binding PrimaryDiagnosis.Code, Mode=OneWay}" FontWeight="Bold"
+                                                     FontFamily="{DynamicResource App.CodeFont}" Foreground="#1976D2" />
+                                                <Run Text=" — " />
+                                                <Run Text="{Binding PrimaryDiagnosis.Title, Mode=OneWay}" FontWeight="SemiBold" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ۲. تشخیص‌های ثانویه -->
+                            <Border Style="{StaticResource SectionCard}" Margin="0,10,0,0">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Layers" Width="16" Height="16" Foreground="#1565C0" VerticalAlignment="Center" />
+                                        <TextBlock Text="تشخیص‌های ثانویه" Style="{StaticResource CardTitle}" Margin="8,0,0,0" />
+                                        <TextBlock Text="در نتایج جستجو، دکمهٔ «ثانویه» را بزنید" FontSize="10.5"
+                                                   Opacity="0.55" Margin="12,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <ItemsControl ItemsSource="{Binding SecondaryDiagnoses}" Margin="2,10,2,0">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource TagChip}" Background="#261565C0">
+                                                    <TextBlock Text="{Binding}" FontSize="11" Foreground="#1976D2" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Text="هنوز تشخیص ثانویه‌ای اضافه نشده است — در صورت نیاز از جستجوی بالا اضافه کنید"
+                                               FontSize="10.5" Opacity="0.5" Margin="2,8,2,0" TextWrapping="Wrap"
+                                               Visibility="{Binding SecondaryDiagnoses.Count, Converter={StaticResource NullToVisibility}, ConverterParameter=Inverse}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ۳. برنامهٔ درمانی و دستورات پیگیری -->
+                            <Border Style="{StaticResource SectionCard}" Margin="0,10,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="14" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="برنامهٔ درمانی" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Text="{Binding TreatmentPlan, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
+                                                 TextWrapping="Wrap" Height="88" VerticalScrollBarVisibility="Auto"
+                                                 materialDesign:HintAssist.Hint="اقدامات درمانی امروز و داروهای تجویزی…" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="دستورات پیگیری" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Text="{Binding FollowUpInstructions, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
+                                                 TextWrapping="Wrap" Height="88" VerticalScrollBarVisibility="Auto"
+                                                 materialDesign:HintAssist.Hint="مثلاً کنترل قند خون ناشتا بعد از ۲ هفته" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- ۴. مراجعهٔ بعدی — انتخابگر تاریخ شمسی (قانون مالک) -->
+                            <Border Style="{StaticResource SectionCard}" Margin="0,10,0,0">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="CalendarClock" Width="16" Height="16" Foreground="#1565C0" VerticalAlignment="Center" />
+                                        <TextBlock Text="مراجعهٔ بعدی" Style="{StaticResource CardTitle}" Margin="8,0,0,0" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="2,10,0,0">
+                                        <controls:PersianDatePicker DateShamsiText="{Binding FollowUpDateShamsi, Mode=TwoWay}"
+                                                                    Placeholder="تاریخ مراجعهٔ بعدی" Width="230" />
+                                        <CheckBox Content="رزرو خودکار نوبت برای همین تاریخ" IsChecked="{Binding AutoBookFollowUp}"
+                                                  Margin="18,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+                <!-- ═══ گام ۵: نسخه — کارت اقدام عملیاتی (چرخهٔ ۴۸) ═══ -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource StepBadge}" Background="#2600897B">
+                                <TextBlock Text="۵" FontSize="11" FontWeight="Bold" Foreground="#00897B"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="نسخه" Margin="7,0,0,0" VerticalAlignment="Center" FontSize="12" />
+                        </StackPanel>
+                    </TabItem.Header>
+                    <!-- فرم نسخه با بیمارِ همین ویزیت باز می‌شود؛ تداخل‌سنجی خودکار داروها
+                         و پایش حساسیت‌های بیمار در همان فرم با هر افزودن قلم اجرا می‌شود -->
+                    <Border Style="{StaticResource SectionCard}" VerticalAlignment="Center" Margin="30,20"
+                            Background="{DynamicResource MaterialDesign.Brush.Background}">
+                        <StackPanel HorizontalAlignment="Center">
+                            <Border Width="64" Height="64" CornerRadius="32" Background="#2600897B" HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="Prescription" Width="34" Height="34" Foreground="#00897B"
+                                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="نسخه‌نویسی برای بیمار همین ویزیت" FontSize="14.5" FontWeight="Bold"
+                                       Margin="0,14,0,0" HorizontalAlignment="Center" />
+                            <TextBlock Text="فرم نسخه با اطلاعات بیمار باز می‌شود؛ تداخل دارویی و حساسیت‌ها خودکار بررسی می‌شوند"
+                                       FontSize="11.5" Opacity="0.65" Margin="0,7,0,0" HorizontalAlignment="Center"
+                                       TextWrapping="Wrap" TextAlignment="Center" />
+                            <Button Command="{Binding OpenPrescriptionCommand}" Margin="0,16,0,0" HorizontalAlignment="Center"
+                                    Style="{StaticResource MaterialDesignRaisedButton}" Background="#00897B" BorderBrush="#00897B" MinWidth="240">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="OpenInNew" Width="15" Height="15" VerticalAlignment="Center" />
+                                    <TextBlock Text="باز کردن نسخه‌نویسی" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </TabItem>
+
+                <!-- ═══ گام ۶: آزمایش — انتخاب چندگانه + ارسال (چرخهٔ ۴۸) ═══ -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource StepBadge}" Background="#268E24AA">
+                                <TextBlock Text="۶" FontSize="11" FontWeight="Bold" Foreground="#8E24AA"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="آزمایش" Margin="7,0,0,0" VerticalAlignment="Center" FontSize="12" />
+                        </StackPanel>
+                    </TabItem.Header>
+                    <DockPanel Margin="2,8">
+                        <!-- نوار ارسال — پایین ثابت -->
+                        <Border DockPanel.Dock="Bottom" Style="{StaticResource SectionCard}" Margin="0,10,0,0" Padding="12,10">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -466,7 +856,7 @@
                                 <ComboBox Grid.Column="1" ItemsSource="{Binding LabPriorities}" SelectedIndex="{Binding LabPriorityIndex}"
                                           Margin="10,0,0,0" MinWidth="110" materialDesign:HintAssist.Hint="اولویت" />
                                 <Button Grid.Column="2" Command="{Binding SendToLabCommand}" Margin="12,0,0,0"
-                                        Style="{StaticResource MaterialDesignRaisedButton}" MinWidth="190"
+                                        Style="{StaticResource MaterialDesignRaisedButton}" MinWidth="200" Background="#8E24AA" BorderBrush="#8E24AA"
                                         ToolTip="درخواست با بیمار/پزشک/شمارهٔ همین ویزیت به بخش آزمایشگاه ارسال می‌شود">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Send" Width="15" Height="15" VerticalAlignment="Center" />
@@ -474,20 +864,27 @@
                                     </StackPanel>
                                 </Button>
                             </Grid>
-                        </StackPanel>
+                        </Border>
+                        <!-- جستجو + فهرست انتخاب چندگانه -->
                         <DockPanel>
                             <TextBox DockPanel.Dock="Top" Text="{Binding LabTestSearch, UpdateSourceTrigger=PropertyChanged}"
-                                     materialDesign:HintAssist.Hint="🔍 جستجوی آزمایش (نام یا دسته)" Margin="0,0,0,8" />
-                            <!-- فهرست آزمایش‌ها با انتخاب چندگانه — بارگذاری در سازندهٔ فرم -->
-                            <ListBox ItemsSource="{Binding VisibleLabTests}">
+                                     materialDesign:HintAssist.Hint="جستجوی آزمایش (نام یا دسته)…" Margin="0,0,0,8" />
+                            <ListBox ItemsSource="{Binding VisibleLabTests}" ScrollViewer.CanContentScroll="False"
+                                     Background="Transparent" BorderThickness="0">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Margin="2,3">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding Category, Mode=OneWay, TargetNullValue=''}" Opacity="0.55" FontSize="10.5" Margin="8,0,0,0" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </CheckBox>
+                                        <Border CornerRadius="8" Padding="8,5" Margin="0,2"
+                                                Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                                                BorderThickness="1">
+                                            <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Margin="2,2">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding Category, Mode=OneWay, TargetNullValue=''}"
+                                                               Opacity="0.55" FontSize="10.5" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </CheckBox>
+                                        </Border>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
@@ -495,92 +892,157 @@
                     </DockPanel>
                 </TabItem>
 
-                <!-- ═══ تب ۷: تصویربرداری — عملیاتی (چرخهٔ ۴۸؛ گزارش مالک: «ارسال به تصویربرداری») ═══ -->
-                <TabItem Header="📷 تصویربرداری">
-                    <StackPanel Margin="8,12">
-                        <TextBlock Text="درخواست تصویربرداری برای بیمار همین ویزیت" FontSize="12.5" FontWeight="SemiBold" Margin="0,0,0,10" />
-                        <UniformGrid Columns="2">
-                            <StackPanel Margin="0,0,8,8">
-                                <TextBlock Text="نوع تصویربرداری" FontSize="10.5" Opacity="0.6" Margin="0,0,0,3" />
-                                <ComboBox ItemsSource="{Binding ImagingModalities}" SelectedIndex="{Binding ImagingModalityIndex}" />
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="ناحیهٔ بدن" FontSize="10.5" Opacity="0.6" Margin="0,0,0,3" />
-                                <ComboBox ItemsSource="{Binding ImagingBodyParts}" SelectedIndex="{Binding ImagingBodyPartIndex}" />
-                            </StackPanel>
-                        </UniformGrid>
-                        <TextBlock Text="توضیح بالینی (اختیاری)" FontSize="10.5" Opacity="0.6" Margin="0,4,0,3" />
-                        <TextBox Text="{Binding ImagingClinicalInfo, UpdateSourceTrigger=PropertyChanged}" />
-                        <CheckBox Content="درخواست فوری (اولویت اورژانس)" IsChecked="{Binding ImagingUrgent}" Margin="0,10,0,0"
-                                  ToolTip="درخواست با اولویت اورژانس برای بخش تصویربرداری ثبت می‌شود" />
-                        <Button Command="{Binding SendToImagingCommand}" Margin="0,14,0,0" HorizontalAlignment="Left"
-                                Style="{StaticResource MaterialDesignRaisedButton}" MinWidth="220"
-                                ToolTip="درخواست با پذیرندهٔ پزشکِ همین ویزیت به بخش تصویربرداری ارسال می‌شود">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Send" Width="15" Height="15" VerticalAlignment="Center" />
-                                <TextBlock Text="ارسال به تصویربرداری" Margin="8,0,0,0" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
+                <!-- ═══ گام ۷: تصویربرداری — درخواست (چرخهٔ ۴۸) ═══ -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource StepBadge}" Background="#26F4511E">
+                                <TextBlock Text="۷" FontSize="11" FontWeight="Bold" Foreground="#F4511E"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="تصویربرداری" Margin="7,0,0,0" VerticalAlignment="Center" FontSize="12" />
+                        </StackPanel>
+                    </TabItem.Header>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="2">
+                        <StackPanel>
+                            <Border Style="{StaticResource SectionCard}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Camera" Width="16" Height="16" Foreground="#F4511E" VerticalAlignment="Center" />
+                                        <TextBlock Text="درخواست تصویربرداری برای بیمار همین ویزیت" Style="{StaticResource CardTitle}" Margin="8,0,0,0" />
+                                    </StackPanel>
+                                    <Grid Margin="2,10,2,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="14" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="نوع تصویربرداری" Style="{StaticResource FieldLabel}" />
+                                            <ComboBox ItemsSource="{Binding ImagingModalities}" SelectedIndex="{Binding ImagingModalityIndex}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="ناحیهٔ بدن" Style="{StaticResource FieldLabel}" />
+                                            <ComboBox ItemsSource="{Binding ImagingBodyParts}" SelectedIndex="{Binding ImagingBodyPartIndex}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Text="توضیح بالینی (اختیاری)" Style="{StaticResource FieldLabel}" Margin="2,12,0,5" />
+                                    <TextBox Text="{Binding ImagingClinicalInfo, UpdateSourceTrigger=PropertyChanged}" />
+                                    <CheckBox Content="درخواست فوری (اولویت اورژانس)" IsChecked="{Binding ImagingUrgent}" Margin="2,12,0,0"
+                                              ToolTip="درخواست با اولویت اورژانس برای بخش تصویربرداری ثبت می‌شود" />
+                                    <Button Command="{Binding SendToImagingCommand}" Margin="2,16,0,0" HorizontalAlignment="Left"
+                                            Style="{StaticResource MaterialDesignRaisedButton}" MinWidth="230" Background="#F4511E" BorderBrush="#F4511E"
+                                            ToolTip="درخواست با پذیرندهٔ پزشکِ همین ویزیت به بخش تصویربرداری ارسال می‌شود">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Send" Width="15" Height="15" VerticalAlignment="Center" />
+                                            <TextBlock Text="ارسال به تصویربرداری" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
                 </TabItem>
 
-                <!-- ═══ تب فیزیوتراپی — عملیاتی (چرخهٔ ۴۸؛ گزارش مالک: «ارسال به فیزیوتراپی») ═══ -->
-                <TabItem Header="🏃 فیزیوتراپی">
-                    <StackPanel Margin="8,12">
-                        <TextBlock Text="ارجاع بیمار همین ویزیت به بخش فیزیوتراپی" FontSize="12.5" FontWeight="SemiBold" Margin="0,0,0,10" />
-                        <TextBlock Text="شرح ارجاع — شکایت، تشخیص یا هدف درمان (اختیاری)" FontSize="10.5" Opacity="0.6" Margin="0,0,0,3" />
-                        <TextBox Text="{Binding PhysioReferralNote, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
-                                 TextWrapping="Wrap" Height="72" />
-                        <Button Command="{Binding SendToPhysioCommand}" Margin="0,14,0,0" HorizontalAlignment="Left"
-                                Style="{StaticResource MaterialDesignRaisedButton}" MinWidth="220"
-                                ToolTip="ارجاع در فهرست جلسات بخش فیزیوتراپی می‌نشیند و درمانگر ادامه می‌دهد">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Send" Width="15" Height="15" VerticalAlignment="Center" />
-                                <TextBlock Text="ارسال به فیزیوتراپی" Margin="8,0,0,0" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
+                <!-- ═══ گام ۸: فیزیوتراپی — ارجاع (چرخهٔ ۴۸) ═══ -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource StepBadge}" Background="#265E35B1">
+                                <TextBlock Text="۸" FontSize="11" FontWeight="Bold" Foreground="#5E35B1"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="فیزیوتراپی" Margin="7,0,0,0" VerticalAlignment="Center" FontSize="12" />
+                        </StackPanel>
+                    </TabItem.Header>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="2">
+                        <StackPanel>
+                            <Border Style="{StaticResource SectionCard}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Run" Width="16" Height="16" Foreground="#5E35B1" VerticalAlignment="Center" />
+                                        <TextBlock Text="ارجاع بیمار همین ویزیت به بخش فیزیوتراپی" Style="{StaticResource CardTitle}" Margin="8,0,0,0" />
+                                    </StackPanel>
+                                    <TextBlock Text="شرح ارجاع — شکایت، تشخیص یا هدف درمان (اختیاری)" Style="{StaticResource FieldLabel}" Margin="2,12,0,5" />
+                                    <TextBox Text="{Binding PhysioReferralNote, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
+                                             TextWrapping="Wrap" Height="86" VerticalScrollBarVisibility="Auto" />
+                                    <Button Command="{Binding SendToPhysioCommand}" Margin="2,16,0,0" HorizontalAlignment="Left"
+                                            Style="{StaticResource MaterialDesignRaisedButton}" MinWidth="230" Background="#5E35B1" BorderBrush="#5E35B1"
+                                            ToolTip="ارجاع در فهرست جلسات بخش فیزیوتراپی می‌نشیند و درمانگر ادامه می‌دهد">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Send" Width="15" Height="15" VerticalAlignment="Center" />
+                                            <TextBlock Text="ارسال به فیزیوتراپی" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
                 </TabItem>
 
-                <!-- تب ۸: فایل‌ها -->
-                <TabItem Header="📎 فایل‌ها">
+                <!-- ═══ گام ۹: فایل‌ها — جای‌نگهدار آینده ═══ -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource StepBadge}">
+                                <TextBlock Text="۹" FontSize="11" FontWeight="Bold" Foreground="#1565C0"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="فایل‌ها" Margin="7,0,0,0" VerticalAlignment="Center" FontSize="12" />
+                        </StackPanel>
+                    </TabItem.Header>
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <materialDesign:PackIcon Kind="FileDocumentMultipleOutline" Width="56" Height="56" Opacity="0.4" HorizontalAlignment="Center" />
-                        <TextBlock Text="پیوست اسناد به ویزیت در نسخه بعدی فعال می‌شود" FontSize="13" Opacity="0.7" Margin="0,10,0,0" HorizontalAlignment="Center" />
+                        <Border Width="64" Height="64" CornerRadius="32" Background="#261565C0" HorizontalAlignment="Center">
+                            <materialDesign:PackIcon Kind="FileDocumentMultipleOutline" Width="32" Height="32"
+                                                     Foreground="#1565C0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="پیوست اسناد به ویزیت در نسخهٔ بعدی فعال می‌شود" FontSize="13"
+                                   Opacity="0.7" Margin="0,12,0,0" HorizontalAlignment="Center" />
                     </StackPanel>
                 </TabItem>
             </TabControl>
         </Grid>
 
-        <!-- نوار پایین -->
-        <DockPanel Grid.Row="2" Margin="0,10,0,0">
-            <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" FontSize="12" VerticalAlignment="Center"
-                       Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                <Button Command="{Binding NextPatientCommand}"
-                        Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" FontSize="13">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="SkipNext" Width="16" Height="16" VerticalAlignment="Center" />
-                        <TextBlock Text="⏭️ بیمار بعدی" Margin="8,0,0,0" />
-                    </StackPanel>
-                </Button>
-                <Button Command="{Binding SaveDraftCommand}"
-                        Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" FontSize="13"
-                        ToolTip="میانبر: Ctrl+S">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="ContentSave" Width="16" Height="16" VerticalAlignment="Center" />
-                        <TextBlock Text="💾 ذخیره موقت" Margin="8,0,0,0" />
-                    </StackPanel>
-                </Button>
-                <Button Command="{Binding CompleteVisitCommand}"
-                        Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32"
-                        FontSize="13" ToolTip="میانبر: Ctrl+Enter">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="CheckCircle" Width="16" Height="16" VerticalAlignment="Center" />
-                        <TextBlock Text="✅ پایان ویزیت" Margin="8,0,0,0" />
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-        </DockPanel>
+        <!-- ═══ نوار فرمان پایین ═══ -->
+        <Border Grid.Row="3" Margin="0,10,0,0" Padding="14,10,14,10" CornerRadius="12"
+                Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
+            <DockPanel>
+                <!-- خطا — سمت راست، قرمز -->
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right"
+                            Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}">
+                    <materialDesign:PackIcon Kind="CloseCircle" Width="15" Height="15" Foreground="#E53935" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#E53935" FontSize="12" Margin="6,0,0,0"
+                               VerticalAlignment="Center" TextWrapping="Wrap" />
+                </StackPanel>
+                <!-- کنش‌ها — سمت چپ -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <Button Command="{Binding NextPatientCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" FontSize="12.5"
+                            ToolTip="ذخیرهٔ وضعیت فعلی و رفتن به بیمار بعدی صف">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="SkipNext" Width="16" Height="16" VerticalAlignment="Center" />
+                            <TextBlock Text="بیمار بعدی" Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding SaveDraftCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" FontSize="12.5"
+                            ToolTip="میانبر: Ctrl+S">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentSave" Width="16" Height="16" VerticalAlignment="Center" />
+                            <TextBlock Text="ذخیرهٔ موقت" Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding CompleteVisitCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32"
+                            FontSize="12.5" ToolTip="میانبر: Ctrl+Enter — پایان و ثبت کامل ویزیت (تشخیص اصلی الزامی است)">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CheckCircle" Width="16" Height="16" VerticalAlignment="Center" />
+                            <TextBlock Text="پایان ویزیت" Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+        </Border>
     </Grid>
 </Window>
