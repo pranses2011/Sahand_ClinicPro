@@ -88,6 +88,15 @@
                     <TextBlock FontSize="10.5" Foreground="#2E7D32" Opacity="0.7">
                         <Run Text="بازهٔ عمومی تست: " /><Run Text="{Binding GeneralRange, Mode=OneWay, TargetNullValue=—}" />
                     </TextBlock>
+                    <!-- ═══ چرخهٔ ۷۹ — حدود بحرانی آزمایش (گزارش مالک: «حدود بحرانی
+                         موقع ثبت نتیجه هم دیده بشه») — قرمزِ هشدار؛ آزمایش بدون
+                         بحرانیِ ثبت‌شده این خط را نمی‌بیند ═══ -->
+                    <TextBlock FontSize="10.5" FontWeight="SemiBold" Foreground="#C62828"
+                               Margin="0,3,0,0"
+                               Visibility="{Binding CriticalRangeText, Converter={StaticResource StringToVisibility}, FallbackValue=Collapsed}">
+                        <Run Text="⚠ حدود بحرانی: " />
+                        <Run Text="{Binding CriticalRangeText, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
+                    </TextBlock>
                 </StackPanel>
             </DockPanel>
         </Border>

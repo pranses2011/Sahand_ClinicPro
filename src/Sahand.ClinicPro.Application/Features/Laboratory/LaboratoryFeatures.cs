@@ -88,7 +88,11 @@ public class CreateLabOrderCommandHandler : IRequestHandler<CreateLabOrderComman
                 // اکنون متن بازهٔ عمومی تست (مرد/زن هر که ثبت شده) در لحظهٔ
                 // درخواست منجمد می‌شود؛ پس از ثبت نتیجه، هندلر تفسیر بازهٔ
                 // «مخصوص بیمار» را جایگزین می‌کند (F-28).
-                NormalRange = test.NormalRangeMale ?? test.NormalRangeFemale,
+                // ═══ چرخهٔ ۷۹ (گزارش مالک: «بازه‌ها باید عددی باشند حتی در چاپ
+                //      اقلام درانتظار») — از موتور تفسیر استفاده می‌شود: اگر
+                //      ستون‌های عددی Ref* پر شده‌اند «۱۳٫۵ تا ۱۷٫۵ g/dL» منجمد
+                //      می‌شود (نه متن قدیمی)؛ کیفی‌ها برچسب شفاف می‌گیرند. ═══
+                NormalRange = LabResultInterpreter.RangeDisplayText(test, null),
                 Unit = test.Unit,
                 Status = LabItemStatus.Pending
             });

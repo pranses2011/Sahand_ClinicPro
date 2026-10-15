@@ -43,6 +43,14 @@ public partial class LabTestResultEntryViewModel : ObservableObject
     [ObservableProperty]
     private string _patientRangeText = "—";
 
+    /// <summary>
+    /// حدود بحرانی آزمایش — چرخهٔ ۷۹ (گزارش مالک): «کمتر از ۲٫۵ / بیشتر از ۶٫۲»؛
+    /// هنگام ثبت نتیجه دیده می‌شود تا آزمایشگر پیش از ثبت هشدار بحرانی را بداند.
+    /// تهی = آزمایش بحرانی ثبت‌نشده دارد و خط پنهان می‌شود.
+    /// </summary>
+    [ObservableProperty]
+    private string? _criticalRangeText;
+
     /// <summary>نام کامل بیمار</summary>
     [ObservableProperty]
     private string _patientName = string.Empty;
@@ -119,6 +127,8 @@ public partial class LabTestResultEntryViewModel : ObservableObject
         Unit = item.Unit;
         GeneralRange = item.NormalRange;
         PatientRangeText = item.PatientRangeText ?? item.NormalRange ?? "—";
+        // چرخهٔ ۷۹ — حدود بحرانی در فرم ثبت نتیجه (هشدار پیش از ثبت)
+        CriticalRangeText = item.CriticalRangeText;
         PatientName = patientName;
         PatientAgeText = patientAgeText;
         OrderNumber = orderNumber;

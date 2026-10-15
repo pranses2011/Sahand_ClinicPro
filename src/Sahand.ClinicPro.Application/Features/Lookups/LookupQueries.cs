@@ -33,7 +33,11 @@ public record MedicationOptionDto(
     string KindText = "دارو");
 
 /// <summary>گزینه آزمایش برای درخواست</summary>
-public record LabTestOptionDto(long Id, string Name, string? Category, string? Unit, decimal Price);
+/// <remarks>چرخهٔ ۷۹ (گزارش مالک: «بازه‌های مرجع موقع ثبت درخواست هم دیده
+/// بشوند») — RangeText از موتور تفسیر سرور ساخته می‌شود: کمی «۱۳٫۵ تا ۱۷٫۵
+/// g/dL» و کیفی «کیفی — نتیجهٔ طبیعی: منفی» — نه فقط نام و دسته.</remarks>
+public record LabTestOptionDto(long Id, string Name, string? Category, string? Unit, decimal Price,
+    string? RangeText = null);
 
 /// <summary>
 /// پرس‌وجوی شرکت‌های بیمه فعال — برای ComboBox فرم‌ها
@@ -296,11 +300,18 @@ public class GetLabTestsQueryHandler
                 (t.TestNameEn != null && t.TestNameEn.Contains(search)) ||
                 (t.TestCode != null && t.TestCode.Contains(search)));
 
-        return await query
+        // چرخهٔ ۷۹ — متریالزه سپس نگاشت در حافظه: متن بازه با موتور تفسیر ساخته
+        // می‌شود (متد C# است و به SQL ترجمه نمی‌شود؛ به همین دلیل Select سمت
+        // سرور فقط ردیف خام می‌آورد و متن این‌جا ساخته می‌شود)
+        var rows = await query
             .OrderBy(t => t.Category).ThenBy(t => t.TestName)
             .Take(200)
-            .Select(t => new LabTestOptionDto(t.Id, t.TestName, t.Category, t.Unit, t.Price))
             .ToListAsync(cancellationToken);
+
+        return rows.Select(t => new LabTestOptionDto(
+            t.Id, t.TestName, t.Category, t.Unit, t.Price,
+            // چرخهٔ ۷۹ — بازهٔ مرجع (عددی برای کمی؛ برچسب شفاف برای کیفی)
+            LabResultInterpreter.RangeDisplayText(t, null))).ToList();
     }
 }
 
@@ -321,6 +332,13 @@ public record LabOrderItemDetailDto(
     /// محاسبه می‌کند تا فرم ثبت نتیجه حد طبیعی همین بیمار را رنگی نشان دهد.
     /// </summary>
     public string? PatientRangeText { get; init; }
+
+    /// <summary>
+    /// حدود بحرانی آزمایش — چرخهٔ ۷۹ (گزارش مالک: «حدود بحرانی هم موقع ثبت
+    /// نتیجه دیده بشه») — «کمتر از ۲٫۵ / بیشتر از ۶٫۲»؛ تهی یعنی بحرانی
+    /// ثبت نشده و خط پنهان می‌شود.
+    /// </summary>
+    public string? CriticalRangeText { get; init; }
 }
 
 /// <summary>جزئیات درخواست آزمایش با اقلام</summary>
@@ -398,7 +416,15 @@ public class GetLabOrderByIdQueryHandler
                     // همیشه با یک موتور واحد رنگ/بازه ببینند.
                     AbnormalFlag = i.AbnormalFlag,
                     PatientRangeText = i.Test is null ? null
-                        : LabResultInterpreter.RangeDisplayText(i.Test, order.Patient)
+                        : LabResultInterpreter.RangeDisplayText(i.Test, order.Patient),
+                    // چرخهٔ ۷۹ — حدود بحرانی برای فرم ثبت نتیجه (هشدار پیش از ثبت)
+                    CriticalRangeText = i.Test is null || (i.Test.CriticalLow is null && i.Test.CriticalHigh is null)
+                        ? null
+                        : string.Join(" / ", new[]
+                        {
+                            i.Test.CriticalLow is { } cl ? $"کمتر از {cl}" : null,
+                            i.Test.CriticalHigh is { } ch ? $"بیشتر از {ch}" : null,
+                        }.Where(s => s is not null))
                 })
                 .ToList())
         {

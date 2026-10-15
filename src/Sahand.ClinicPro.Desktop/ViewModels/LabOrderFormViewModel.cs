@@ -17,6 +17,12 @@ public partial class LabTestOptionRow : ObservableObject
     /// <summary>دسته</summary>
     public string? Category { get; init; }
 
+    /// <summary>متن بازهٔ مرجع از موتور تفسیر سرور — چرخهٔ ۷۹ (نمایش در فهرست انتخاب)</summary>
+    public string? RangeText { get; init; }
+
+    /// <summary>واحد اندازه‌گیری — چرخهٔ ۷۹</summary>
+    public string? Unit { get; init; }
+
     /// <summary>انتخاب‌شده</summary>
     [ObservableProperty]
     private bool _isSelected;
@@ -94,7 +100,10 @@ public partial class LabOrderFormViewModel : ObservableObject
             foreach (var t in response.Data)
                 Tests.Add(new LabTestOptionRow
                 {
-                    Id = t.Id, Name = t.Name, Category = t.Category
+                    Id = t.Id, Name = t.Name, Category = t.Category,
+                    // چرخهٔ ۷۹ — بازهٔ مرجع/واحد در فهرست انتخاب (گزارش مالک:
+                    // «بازه‌ها موقع ثبت درخواست هم دیده بشن»)
+                    RangeText = t.RangeText, Unit = t.Unit,
                 });
     }
 
@@ -177,5 +186,7 @@ public partial class LabOrderFormViewModel : ObservableObject
         public string? Category { get; set; }
         public string? Unit { get; set; }
         public decimal Price { get; set; }
+        /// <summary>متن بازهٔ مرجع از موتور تفسیر سرور — چرخهٔ ۷۹</summary>
+        public string? RangeText { get; set; }
     }
 }

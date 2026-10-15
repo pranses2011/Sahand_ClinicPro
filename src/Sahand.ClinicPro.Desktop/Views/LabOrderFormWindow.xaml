@@ -83,13 +83,24 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <CheckBox IsChecked="{Binding IsSelected}">
-                        <TextBlock>
+                        <StackPanel>
+                            <TextBlock>
                             <!-- Mode=OneWay — چرخهٔ ۶۷: Run.Text پیش‌فرض TwoWay است؛
                                  برای پراپرتی‌های init-only رکوردها هم یک‌طرفه باید باشد -->
                             <Run Text="{Binding Name, Mode=OneWay}" FontWeight="Bold" />
                             <Run Text=" — " />
                             <Run Text="{Binding Category, Mode=OneWay}" FontSize="11" />
-                        </TextBlock>
+                            </TextBlock>
+                            <!-- ═══ چرخهٔ ۷۹ — بازهٔ مرجع و واحد زیر نام هر آزمایش ═══
+                                 گزارش مالک: «بازه‌های مرجع موقع ثبت درخواست هم دیده
+                                 بشن» — متن از موتور تفسیر سرور (عددی برای کمی؛
+                                 برچسب شفاف برای کیفی) -->
+                            <TextBlock FontSize="10.5" Opacity="0.72" Margin="0,1,0,0">
+                                <Run Text="حد طبیعی: " />
+                                <Run Text="{Binding RangeText, Mode=OneWay, TargetNullValue=—}"
+                                     FontFamily="{DynamicResource App.CodeFont}" />
+                            </TextBlock>
+                        </StackPanel>
                     </CheckBox>
                 </DataTemplate>
             </ListBox.ItemTemplate>

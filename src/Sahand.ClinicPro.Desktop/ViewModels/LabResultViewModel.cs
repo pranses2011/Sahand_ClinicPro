@@ -120,6 +120,7 @@ public partial class LabResultViewModel : ObservableObject
                 Unit = i.Unit,
                 NormalRange = i.NormalRange,
                 PatientRangeText = i.PatientRangeText,
+                CriticalRangeText = i.CriticalRangeText,
                 AbnormalFlag = i.AbnormalFlag,
                 StatusText = ItemStatusText(i.Status),
                 Result = i.Result,
@@ -269,5 +270,7 @@ public partial class LabResultViewModel : ObservableObject
         // ═══ چرخهٔ ۶۹ (فاز ۳ / F-28) — فلگ تفسیر و بازهٔ مخصوص بیمار ═══
         public string? AbnormalFlag { get; set; }
         public string? PatientRangeText { get; set; }
+        /// <summary>حدود بحرانی آزمایش — چرخهٔ ۷۹ (هشدار پیش از ثبت نتیجه)</summary>
+        public string? CriticalRangeText { get; set; }
     }
 }

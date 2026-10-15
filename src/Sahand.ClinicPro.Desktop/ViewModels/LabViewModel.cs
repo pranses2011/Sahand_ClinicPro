@@ -48,6 +48,12 @@ public partial class LabItemRow : ObservableObject
     /// </summary>
     public string? PatientRangeText { get; init; }
 
+    /// <summary>
+    /// حدود بحرانی آزمایش — چرخهٔ ۷۹ (گزارش مالک: «حدود بحرانی موقع ثبت نتیجه
+    /// هم دیده بشه») — «کمتر از ۲٫۵ / بیشتر از ۶٫۲»؛ تهی = بدون بحرانی.
+    /// </summary>
+    public string? CriticalRangeText { get; init; }
+
     /// <summary>وضعیت فعلی قلم</summary>
     public string StatusText { get; init; } = string.Empty;
 
