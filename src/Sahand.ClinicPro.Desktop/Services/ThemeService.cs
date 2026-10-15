@@ -107,22 +107,41 @@ public class ThemeService : IThemeService
         // ═══ چرخهٔ ۷۶ — کنتراست خوانایی تم تیره (گزارش مالک چرخهٔ ۷۵) ═══
         // «کنتراست متن/زمینه به‌ویژه در زمینهٔ کارت‌ها به حدی کم است که خواندن
         // سخت است». پالت تیرهٔ پیش‌فرض کتابخانه، سطح کارت و متن اصلی را نزدیک
-        // هم می‌گذارد. در حالت تیره سه قلم کلیدی صریحاً بازنویسی می‌شود:
+        // هم می‌گذارد. در حالت تیره چهار قلم کلیدی صریحاً بازنویسی می‌شود:
         //   • سطح صفحه (#16191E) تیره‌تر → کارت‌ها از پس‌زمینه جدا دیده می‌شوند؛
         //   • سطح کارت  (#272D34) روشن‌تر → جعبهٔ خواندن روشن‌تر؛
+        //   • حاشیهٔ کارت (#39424C) هم‌خانوادهٔ پالت تیرهٔ جدید (پیش‌فرض
+        //     کتابخانه #868686 خاکستری روشن است که روی سطح تیرهٔ جدید
+        //     ناهماهنگ و زننده دیده می‌شود)؛
         //   • متن اصلی  (#F2F5F8) → نسبت کنتراست روی کارت ≈ ۱۲:۱ (WCAG AAA).
-        // بازنویسی روی خودِ شیء Theme انجام می‌شود تا همهٔ مصرف‌کننده‌ها
-        // (استایل‌های داخلی و بیرونی کتابخانه) مقدار واحد ببینند؛ در حالت روشن
-        // هیچ بازنویسی‌ای نمی‌شود و پالت کتابخانه دست‌نخورده می‌ماند
-        // (SetBaseTheme در هر فراخوانی مقادیر پایه را از نو می‌نویسد).
+        //
+        // ⚠️ رفع خطای راه‌اندازی چرخهٔ ۷۷ («ColorReference does not contain any
+        // color» — برنامه با تم تیرهٔ ذخیره‌شده اصلاً بالا نمی‌آمد):
+        // پیش‌تر «کل شیء Cards» با نمونهٔ نو جایگزین می‌شد
+        // (theme.Cards = new Theme.Card(theme) { Background = … }). کلاس Card
+        // دو مرجع رنگ دارد: Background و Border؛ جایگزینیِ شیء، Borderِ
+        // مقداردهی‌شده توسط SetBaseTheme را دور می‌انداخت و مرجعِ خالیِ
+        // پیش‌فرض (ColorReference بدون رنگ) باقی می‌ماند؛ سپس هنگام
+        // SetTheme، متد ApplyThemeColors کتابخانه هر دو مرجع را به Color
+        // تبدیل می‌کند و مرجع خالی همان‌جا استثنای «هیچ رنگی ندارد» می‌داد
+        // و برنامه در همان OnStartup می‌مُرد. راه درست همان است که خود
+        // کتابخانه (SetDarkTheme) به کار می‌برد: «تغییر درجا» — فقط
+        // پراپرتی لازم روی همان شیء موجود بازنویسی می‌شود و بقیهٔ مراجع
+        // (از جمله Border) دست‌نخورده و معتبر می‌مانند.
+        // در حالت روشن هیچ بازنویسی‌ای نمی‌شود و پالت کتابخانه دست‌نخورده
+        // می‌ماند (SetBaseTheme در هر فراخوانی مقادیر پایه را از نو می‌نویسد).
         if (dark)
         {
+            // سطح صفحهٔ تیرهٔ جدید
             theme.Background = System.Windows.Media.Color.FromRgb(0x16, 0x19, 0x1E);
-            // متن روی کارت از قلم عمومی Foreground می‌آید؛ Card فقط سطح دارد
-            theme.Cards = new MaterialDesignThemes.Wpf.Theme.Card(theme)
-            {
-                Background = System.Windows.Media.Color.FromRgb(0x27, 0x2D, 0x34),
-            };
+
+            // سطح کارت — تغییر درجا روی شیء موجود؛ Border معتبر می‌ماند
+            theme.Cards.Background = System.Windows.Media.Color.FromRgb(0x27, 0x2D, 0x34);
+
+            // حاشیهٔ کارت — هم‌پالتهٔ سطح تیرهٔ جدید به‌جای خاکستری روشن پیش‌فرض
+            theme.Cards.Border = System.Windows.Media.Color.FromRgb(0x39, 0x42, 0x4C);
+
+            // متن اصلی — روشن و پرکنتراست روی سطح کارت
             theme.Foreground = System.Windows.Media.Color.FromRgb(0xF2, 0xF5, 0xF8);
         }
 
@@ -225,18 +244,6 @@ public class ThemeService : IThemeService
             (byte)(c.R * (1 - factor)),
             (byte)(c.G * (1 - factor)),
             (byte)(c.B * (1 - factor)));
-    }
-
-    /// <summary>
-    /// قلم رنگ یکدستِ فریزشده — برای بازنویسی قلم‌های تم (چرخهٔ ۷۶)؛ فریز
-    /// کردن قلم هم‌زمانیِ رندر چند نخ را بی‌دردسر می‌کند.
-    /// </summary>
-    private static System.Windows.Media.SolidColorBrush FrozenBrush(byte r, byte g, byte b)
-    {
-        var brush = new System.Windows.Media.SolidColorBrush(
-            System.Windows.Media.Color.FromRgb(r, g, b));
-        brush.Freeze();
-        return brush;
     }
 
     /// <summary>
