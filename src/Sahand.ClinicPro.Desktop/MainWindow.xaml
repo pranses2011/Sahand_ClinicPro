@@ -290,7 +290,17 @@
                          ItemsSource="{Binding NavItems}"
                          Background="Transparent"
                          BorderThickness="0"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.CanContentScroll="False"
+                         ScrollViewer.PanningMode="VerticalOnly">
+                    <!-- ═══ چرخهٔ ۷۸ (بند مالک: «اسکرول منوی کناری رو روان بکن
+                         چون الان با پرش اسکرول میکنه») ═══
+                         ریشهٔ پرش: اسکرول پیش‌فرضِ ListBox «منطقی» است — چرخ موس
+                         به‌جای چند پیکسل، یک «آیتمِ» کامل (که با زیرمنوهای باز
+                         چند صد پیکسل بلند است) می‌پرد. CanContentScroll=False
+                         اسکرولِ «پیکسلی روان» را فعال می‌کند و PanningMode هم
+                         لمسِ لمس‌پنل‌ها را نرم می‌کند؛ چیدمانِ ~۶۰ آیتمِ منو
+                         بدون مجازی‌سازی هم سبک است. -->
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Foreground" Value="#DCE9FA" />

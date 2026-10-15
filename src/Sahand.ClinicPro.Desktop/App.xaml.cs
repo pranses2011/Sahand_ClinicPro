@@ -93,9 +93,9 @@ public partial class App : System.Windows.Application
         // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) ═══ «باید قبل از بستن بررسی
         // کنه که تغییری داده نشده باشه و اگه تغییری باشه، با تایید کاربر فرم
         // رو ببنده»: اگر ViewModel فرم قرارداد IHasUnsavedChanges را پیاده
-        // کرده و تغییرات ذخیره‌نشده دارد، ابتدا تأیید فارسی خود برنامه پرسیده
-        // می‌شود — با دیالوگ برنامه (قانون مالک) نه کادر پیام ویندوز. همان
-        // بررسی روی دکمهٔ بستن (X) پنجره هم از رویداد Closing رد می‌شود.
+        // کرده و تغییرات ذخیره‌نشده دارد، هنگام ESC ابتدا تأیید فارسی خود
+        // برنامه پرسیده می‌شود — با دیالوگ برنامه (قانون مالک) نه کادر پیام
+        // ویندوز. (چرخهٔ ۷۸: این بررسی فقط روی مسیر ESC می‌ماند.)
         if (window is not Sahand.ClinicPro.Desktop.MainWindow
             && window is not Views.LoginWindow)
         {
@@ -104,14 +104,41 @@ public partial class App : System.Windows.Application
             // چک نمیکنه ببینه که اطلاعات فرم تغییر کرده یا نه» — ردیاب
             // IHasUnsavedChanges فقط در دو فرم نشسته بود؛ اکنون پوسته برای
             // «هر» پنجرهٔ فرم، در نخستین لحظهٔ رندر کامل یک اسنپ‌شات از
-            // DataContext می‌گیرد (FormSnapshot) و هنگام ESC/بستن مقایسه
+            // DataContext می‌گیرد (FormSnapshot) و هنگام ESC مقایسه
             // می‌کند: متفاوت = تأیید فارسی. تأخیر اولیه (Background) یعنی
             // پس از پایان بارگذاری‌های اولیه؛ فرم‌های دارای قرارداد صریح همچنان
             // رفتار غنی‌تر خود را حفظ می‌کنند (اولویت اول).
+            // ═══ چرخهٔ ۷۸ (بند مالک: «با بیرون رفتن از فرم‌ها بدون زدن کلید ESC
+            // هم خطا رو نشون میده») — دو اصلاح ریشه‌ای ═══
+            // ۱) دوباره‌ثبتی مبنا: بارگذاری‌های async فرم (لیست پزشکان/خدمات و…)
+            //     پیش‌تر «بعد از» اسنپ‌شات اولیه می‌رسیدند و فرمِ دست‌نخورده را
+            //     «کثیف» جلوه می‌دادند؛ حالا ~۲.۵ ثانیه بعد — پس از نشستن
+            //     داده‌های async — مبنا یک‌بار دیگر تازه می‌شود؛ اگر کاربر در این
+            //     مدت شروع به تایپ کرده باشد تازه‌سازی لغو می‌شود تا ورودی او
+            //     بلعیده نشود.
+            // ۲) دامنهٔ قانون فقط ESC: بستن با دکمهٔ X یا دکمه‌های انصراف عمدی
+            //     است و بی‌سؤال بسته می‌شود (درخواست صریح مالک — رویداد
+            //     Closing دیگر بررسی نمی‌کند).
             window.Dispatcher.BeginInvoke(new Action(() =>
             {
                 window.SetValue(FormBaselineProperty, ViewModels.FormSnapshot.Capture(window.DataContext));
             }), System.Windows.Threading.DispatcherPriority.Background);
+
+            // تازه‌سازی دوم مبنا — پس از نشستن بارگذاری‌های async فرم
+            var userTyped = false; // اولین تایپِ واقعی کاربر، تازه‌سازی را لغو می‌کند
+            window.PreviewTextInput += (_, _) => userTyped = true;
+            var baselineRefresher = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(2.5)
+            };
+            baselineRefresher.Tick += (_, _) =>
+            {
+                baselineRefresher.Stop();
+                if (!userTyped && window.IsLoaded)
+                    window.SetValue(FormBaselineProperty,
+                        ViewModels.FormSnapshot.Capture(window.DataContext));
+            };
+            baselineRefresher.Start();
 
             window.PreviewKeyDown += (_, ke) =>
             {
@@ -135,24 +162,19 @@ public partial class App : System.Windows.Application
                     // تغییرات ذخیره‌نشده؟ — ابتدا تأیید کاربر
                     if (!ConfirmCloseIfDirty(window))
                         return;
-                    AllowClose(window);
                     window.Close();
                     ke.Handled = true;
                 }
             };
 
-            // دکمهٔ بستن (X) هم همان تأیید را می‌گیرد — قانون «قبل از بستن بررسی شود»
-            // چرخهٔ بیست‌وهفتم: رفع هشدار CA2013 — ReferenceEquals روی bool شکسته‌شده
-            // همیشه false برمی‌گرداند (boxing) و پرچم مجوز بستن هرگز خوانده نمی‌شد؛
-            // الگوی استاندارد «is not true» جایگزین شد (همان الگوی FontHookedProperty بالا)
-            window.Closing += (_, ce) =>
-            {
-                if (window.GetValue(CloseAllowedProperty) is not true
-                    && !ConfirmCloseIfDirty(window))
-                    ce.Cancel = true;
-                else
-                    AllowClose(window);
-            };
+            // ═══ چرخهٔ ۷۸ — دامنهٔ قانون «تغییرات ذخیره‌نشده» فقط ESC است ═══
+            // درخواست صریح مالک: «قانون بررسی تغییر کردن فرم که برای کلید ESC
+            // بود درست عمل نمیکنه — با بیرون رفتن از فرم‌ها بدون زدن کلید ESC
+            // هم خطا رو نشون میده». بستن با دکمهٔ X یا دکمه‌های انصراف، اقدامی
+            // عمدی و آگاهانه است و بی‌سؤال بسته می‌شود؛ تنها ESC — میان‌برِ
+            // سریعِ بستن — است که پیش از بستن، تأیید «تغییرات ذخیره‌نشده»
+            // می‌گیرد (رویداد Closing قبلاً همین بررسی را تکرار می‌کرد و
+            // حذف شد — پرچم CloseAllowed هم بی‌استفاده و حذف شد).
         }
         // ═══ چرخه بیست‌وچهارم — مقیاس سراسری رابط ═══ «اندازهٔ فونت فقط صفحهٔ تم
         // را تغییر می‌داد»: پنجرهٔ اصلی، محتوایش به تبدیل مقیاس پویا وصل می‌شود
@@ -258,16 +280,6 @@ public partial class App : System.Windows.Application
         }
         return null;
     }
-
-    /// <summary>
-    /// پرچم «بستن مجاز» — پس از تأیید کاربر (یا فرم تمیز) روی پنجره گذاشته
-    /// می‌شود تا رویداد Closing دوباره تأیید نخواهد؛ چرخهٔ بیست‌وششم
-    /// </summary>
-    private static readonly DependencyProperty CloseAllowedProperty =
-        DependencyProperty.RegisterAttached("CloseAllowed", typeof(bool), typeof(App), new PropertyMetadata(false));
-
-    /// <summary>علامت‌گذاری پنجره به‌عنوان مجاز به بستن — پرهیز از تأیید تکراری</summary>
-    private static void AllowClose(Window window) => window.SetValue(CloseAllowedProperty, true);
 
     /// <summary>
     /// بررسی تغییرات ذخیره‌نشده پیش از بستن پنجره — چرخهٔ بیست‌وششم:

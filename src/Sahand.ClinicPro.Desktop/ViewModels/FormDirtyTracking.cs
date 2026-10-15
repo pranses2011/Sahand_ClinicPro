@@ -48,6 +48,21 @@ public static class FormSnapshot
     };
 
     /// <summary>
+    /// ═══ چرخهٔ ۷۸ — پیشوندهای «ناوبری، نه ویرایش» ═══
+    /// کلیک روی ردیف‌های فهرست‌های داخل فرم (SelectedPatient، SelectedRow و…)
+    /// و تایپ در جعبه‌های جست‌وجوی داخل فرم (SearchText، FilterText و…)
+    /// «ورود داده» نیست — کاربر فقط در فرم می‌گردد؛ اگر وارد اسنپ‌شات شوند
+    /// فرمِ دست‌نخورده «کثیف» جلوه می‌کند و تأییدِ بی‌دلیل می‌خواهد.
+    /// فرم‌هایی که مقدار واقعی‌شان از همین انتخاب‌ها می‌آید (مثلاً شناسهٔ
+    /// پزشک که با انتخاب از لیست پر می‌شود) معمولاً قرارداد صریح
+    /// IHasUnsavedChanges دارند و از مسیر دقیق‌تر خودشان ردیابی می‌شوند.
+    /// </summary>
+    private static readonly string[] NavigationPrefixes =
+    {
+        "Selected", "Search", "Filter", "Query", "ActiveTab", "CurrentTab",
+    };
+
+    /// <summary>
     /// گرفتن اسنپ‌شات JSON مرتب از پراپرتی‌های داده‌ای سادهٔ یک ViewModel —
     /// رشته/عدد/بول/enum (+ تهی‌پذیرها) و «شمار» مجموعه‌ها؛ خروجی برای دو
     /// وضعیت هم‌ارز دقیقاً یکسان است.
@@ -64,6 +79,12 @@ public static class FormSnapshot
             {
                 if (prop.GetIndexParameters().Length > 0) continue;
                 if (VolatileNames.Contains(prop.Name)) continue;
+
+                // چرخهٔ ۷۸ — پراپرتی‌های ناوبری/جست‌وجو «ویرایش» نیستند
+                var skip = false;
+                foreach (var prefix in NavigationPrefixes)
+                    if (prop.Name.StartsWith(prefix, StringComparison.Ordinal)) { skip = true; break; }
+                if (skip) continue;
 
                 object? value;
                 try { value = prop.GetValue(viewModel); }
