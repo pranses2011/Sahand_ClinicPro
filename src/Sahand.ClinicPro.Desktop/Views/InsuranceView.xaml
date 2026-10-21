@@ -142,7 +142,7 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="٪ سهم بیمار" Width="110">
+                            <DataGridTextColumn Header="٪ سهم بیمار" Width="Auto">
                                 <DataGridTextColumn.Binding><Binding Path="PatientShare" StringFormat="{}{0} ٪" /></DataGridTextColumn.Binding>
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -276,7 +276,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="شرح خدمت" Binding="{Binding Description, Converter={StaticResource PersianDigits}}" Width="*" />
                             <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="60" />
-                            <DataGridTextColumn Binding="{Binding ItemTotal, Converter={StaticResource PersianDigits}}" Width="120"><DataGridTextColumn.Header><TextBlock><Run Text="مبلغ قلم (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
+                            <DataGridTextColumn Binding="{Binding ItemTotal, Converter={StaticResource PersianDigits}}" Width="Auto"><DataGridTextColumn.Header><TextBlock><Run Text="مبلغ قلم (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
                             <DataGridTextColumn Header="فرانشیز" Binding="{Binding Franchise, Converter={StaticResource PersianDigits}}" Width="100" />
                             <DataGridTextColumn Header="سهم بیمه" Binding="{Binding InsuranceShare, Converter={StaticResource PersianDigits}}" Width="110">
                                 <DataGridTextColumn.ElementStyle>
@@ -296,7 +296,7 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="نوع قاعده" Binding="{Binding RuleType, Converter={StaticResource PersianDigits}}" Width="80" />
+                            <DataGridTextColumn Header="نوع قاعده" Binding="{Binding RuleType, Converter={StaticResource PersianDigits}}" Width="Auto" />
                             <DataGridTextColumn Header="مأخذ محاسبه" Binding="{Binding RuleSource, Converter={StaticResource PersianDigits}}" Width="150" />
                         </DataGrid.Columns>
                     </DataGrid>

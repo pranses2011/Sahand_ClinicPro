@@ -509,7 +509,7 @@
                             <DataGridTextColumn Header="تا ساعت" Binding="{Binding ToTime, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="75" />
                             <DataGridTextColumn Header="نوع" Binding="{Binding AbsenceTypeName, Converter={StaticResource PersianDigits}}" Width="85" />
                             <DataGridTextColumn Header="دلیل" Binding="{Binding Reason, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="150" />
-                            <DataGridTemplateColumn Header="نوبت‌های درگیر" Width="100">
+                            <DataGridTemplateColumn Header="نوبت‌های درگیر" Width="Auto">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center"

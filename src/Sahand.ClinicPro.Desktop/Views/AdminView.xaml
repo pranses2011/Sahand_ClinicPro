@@ -52,7 +52,7 @@
                             <DataGridTextColumn Header="کلید" Binding="{Binding Key, Converter={StaticResource PersianDigits}}" Width="220" IsReadOnly="True" />
                             <DataGridTextColumn Header="شرح" Binding="{Binding Description, Converter={StaticResource PersianDigits}}" Width="*" IsReadOnly="True" />
                             <DataGridTextColumn Header="مقدار" Binding="{Binding Value, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="2*" />
-                            <DataGridCheckBoxColumn Header="رمزنگاری‌شده" Binding="{Binding IsEncrypted}" Width="110" IsReadOnly="True" />
+                            <DataGridCheckBoxColumn Header="رمزنگاری‌شده" Binding="{Binding IsEncrypted}" Width="Auto" IsReadOnly="True" />
                         </DataGrid.Columns>
                     </DataGrid>
                     <Button Grid.Row="2"

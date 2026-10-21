@@ -208,7 +208,7 @@
                         <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}"
                                             Width="80" FontFamily="{DynamicResource App.CodeFont}" />
                         <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel, Converter={StaticResource PersianDigits}}"
-                                            Width="85" FontFamily="{DynamicResource App.CodeFont}" />
+                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
                         <DataGridTextColumn Header="قیمت فروش" Binding="{Binding SellPrice, Converter={StaticResource CurrencyRial}}"
                                             Width="100" FontFamily="{DynamicResource App.CodeFont}" />
                         <DataGridTextColumn Header="قیمت خرید" Binding="{Binding PurchasePrice, Converter={StaticResource CurrencyRial}}"

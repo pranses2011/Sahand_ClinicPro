@@ -225,6 +225,11 @@
                 <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
                 <Setter Property="BorderThickness" Value="0" />
                 <Style.Triggers>
+                    <!-- AlternationIndex روی خود DataGridRow است؛ تریگر ردیف
+                         حتی با قالب MaterialDesign هم زبرا را قطعی نگه می‌دارد. -->
+                    <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                        <Setter Property="Background" Value="{DynamicResource App.ZebraRowBrush}" />
+                    </Trigger>
                     <Trigger Property="IsSelected" Value="True">
                         <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Primary.Light}" />
                     </Trigger>
@@ -512,6 +517,9 @@
                 <Setter Property="GridLinesVisibility" Value="None" />
                 <Setter Property="HeadersVisibility" Value="Column" />
                 <Setter Property="RowHeaderWidth" Value="0" />
+                <!-- Auto بر اساس عنوان و محتوای سلول اندازه می‌گیرد؛ ستون‌های دارای
+                     Width صریح فقط جایی باقی می‌مانند که عمداً چگال چیده شده‌اند. -->
+                <Setter Property="ColumnWidth" Value="Auto" />
                 <Setter Property="FontSize" Value="12.5" />
                 <Setter Property="RowHeight" Value="40" />
                 <Setter Property="AlternationCount" Value="2" />

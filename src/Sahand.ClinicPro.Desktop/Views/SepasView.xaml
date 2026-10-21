@@ -110,7 +110,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="تلاش مجدد" Binding="{Binding RetryCount, Converter={StaticResource PersianDigits}}" Width="80" />
+                            <DataGridTextColumn Header="تلاش مجدد" Binding="{Binding RetryCount, Converter={StaticResource PersianDigits}}" Width="Auto" />
                             <DataGridTextColumn Header="ارسال" Width="150">
                                 <DataGridTextColumn.Binding>
                                     <Binding Path="SentAt" Converter="{StaticResource ShamsiDateTime}" TargetNullValue="—" />

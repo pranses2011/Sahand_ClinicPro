@@ -827,7 +827,7 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
                                 <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="150" />
-                                <DataGridTextColumn Header="ساعت پذیرش" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" Width="100" />
+                                <DataGridTextColumn Header="ساعت پذیرش" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" Width="Auto" />
                                 <DataGridTextColumn Header="بیمه" Binding="{Binding InsuranceName, TargetNullValue=آزاد, Converter={StaticResource PersianDigits}}" Width="110" />
                                 <!-- چرخهٔ ۳۹ — اتاق محل انجام خدمت (پذیرش خدمتی) -->
                                 <DataGridTextColumn Header="اتاق" Binding="{Binding RoomName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" />
@@ -846,7 +846,7 @@
                                      نمایش داده نمیشود» — دو ستون مالی برای هر پذیرش روز:
                                      جمع فاکتور + پرداخت‌شده (مبدل ریالی با ارقام فارسی) و
                                      برچسب وضعیت مالی (تسویه/پرداخت‌نشده/بدون فاکتور) ═══ -->
-                                <DataGridTextColumn Binding="{Binding InvoiceTotal, Converter={StaticResource CurrencyRial}}" Width="115">
+                                <DataGridTextColumn Binding="{Binding InvoiceTotal, Converter={StaticResource CurrencyRial}}" Width="Auto">
                                     <DataGridTextColumn.Header>
                                         <TextBlock><Run Text="مبلغ فاکتور (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                                     </DataGridTextColumn.Header>
@@ -857,7 +857,7 @@
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Binding="{Binding PaidAmount, Converter={StaticResource CurrencyRial}}" Width="110">
+                                <DataGridTextColumn Binding="{Binding PaidAmount, Converter={StaticResource CurrencyRial}}" Width="Auto">
                                     <DataGridTextColumn.Header>
                                         <TextBlock><Run Text="پرداخت‌شده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                                     </DataGridTextColumn.Header>

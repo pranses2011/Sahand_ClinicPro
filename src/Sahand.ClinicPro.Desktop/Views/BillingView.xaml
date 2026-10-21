@@ -105,7 +105,7 @@
                             <DataGridTextColumn Header="شماره" Binding="{Binding InvoiceNumber, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="85" />
                             <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Binding="{Binding Total, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="110"><DataGridTextColumn.Header><TextBlock><Run Text="مبلغ (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
+                            <DataGridTextColumn Binding="{Binding Total, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto"><DataGridTextColumn.Header><TextBlock><Run Text="مبلغ (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
@@ -113,7 +113,7 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Binding="{Binding Paid, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="105"><DataGridTextColumn.Header><TextBlock><Run Text="پرداخت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
+                            <DataGridTextColumn Binding="{Binding Paid, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto"><DataGridTextColumn.Header><TextBlock><Run Text="پرداخت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />

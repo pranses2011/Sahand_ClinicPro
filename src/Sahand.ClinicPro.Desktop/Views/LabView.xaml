@@ -130,7 +130,7 @@
                             <DataGridTextColumn Header="کد" Binding="{Binding TestCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="80"
                                                 FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="دسته" Binding="{Binding Category, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="105" />
-                            <DataGridTextColumn Header="بازهٔ مردان" Binding="{Binding RangeMaleText, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="105">
+                            <DataGridTextColumn Header="بازهٔ مردان" Binding="{Binding RangeMaleText, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#1565C0" />
@@ -166,7 +166,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                             <DataGridTextColumn Header="واحد" Binding="{Binding Unit, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="85" />
-                            <DataGridTextColumn Width="110">
+                            <DataGridTextColumn Width="Auto">
                                 <DataGridTextColumn.Header>
                                     <TextBlock>
                                         <Run Text="قیمت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" />
@@ -213,7 +213,7 @@
                   HeadersVisibility="Column" FontSize="12"
                   MouseDoubleClick="OnOrderDoubleClick">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="شماره درخواست" Binding="{Binding Number, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="{DynamicResource App.CodeFont}" />
+                <DataGridTextColumn Header="شماره درخواست" Binding="{Binding Number, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
                 <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="180" FontWeight="SemiBold" />
                 <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="160" />
                 <DataGridTextColumn Header="تعداد تست" Binding="{Binding ItemsCount, Converter={StaticResource PersianDigits}}" Width="85">

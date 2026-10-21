@@ -370,7 +370,7 @@
                             <DataGridTextColumn Header="عنوان" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" />
                             <DataGridTextColumn Header="مانده اول" Binding="{Binding Opening, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="115" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="بدهکار دوره" Binding="{Binding Debit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="115" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="بستانکار دوره" Binding="{Binding Credit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="115" FontFamily="{DynamicResource App.CodeFont}" />
+                            <DataGridTextColumn Header="بستانکار دوره" Binding="{Binding Credit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="مانده پایان" Binding="{Binding Closing, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="115" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="نوع" Binding="{Binding BalanceType, Converter={StaticResource PersianDigits}}" Width="85" />
                         </DataGrid.Columns>

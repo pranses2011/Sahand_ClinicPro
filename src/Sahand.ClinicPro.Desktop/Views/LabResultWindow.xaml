@@ -108,7 +108,7 @@
                 <DataGridTextColumn Header="آزمایش" Binding="{Binding TestName, Converter={StaticResource PersianDigits}}" Width="2*" IsReadOnly="True" />
                 <DataGridTextColumn Header="واحد" Binding="{Binding Unit, Converter={StaticResource PersianDigits}}" Width="80" IsReadOnly="True" />
                 <!-- ═══ چرخهٔ ۶۹ (F-28): حد طبیعی «مخصوص همین بیمار» — از موتور تفسیر سرور ═══ -->
-                <DataGridTextColumn Header="حد طبیعی این بیمار" Binding="{Binding PatientRangeText, Converter={StaticResource PersianDigits}}" Width="140" IsReadOnly="True" />
+                <DataGridTextColumn Header="حد طبیعی این بیمار" Binding="{Binding PatientRangeText, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" />
                 <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="95" IsReadOnly="True" />
                 <!-- بج تفسیر رنگی — سبز/نارنجی/قرمز (چرخهٔ ۶۹) -->
                 <DataGridTemplateColumn Header="تفسیر" Width="120">

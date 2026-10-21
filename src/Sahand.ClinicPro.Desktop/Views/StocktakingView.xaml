@@ -210,8 +210,8 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="دارو" Binding="{Binding Medication, Converter={StaticResource PersianDigits}}" Width="*" />
                             <DataGridTextColumn Header="بچ" Binding="{Binding Batch, Converter={StaticResource PersianDigits}}" Width="110" />
-                            <DataGridTextColumn Header="موجودی سیستم" Binding="{Binding SystemQty, Converter={StaticResource PersianDigits}}" Width="100" />
-                            <DataGridTextColumn Header="شمارش واقعی" Binding="{Binding CountedQty, Converter={StaticResource PersianDigits}}" Width="100" />
+                            <DataGridTextColumn Header="موجودی سیستم" Binding="{Binding SystemQty, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                            <DataGridTextColumn Header="شمارش واقعی" Binding="{Binding CountedQty, Converter={StaticResource PersianDigits}}" Width="Auto" />
                             <DataGridTextColumn Header="مغایرت" Binding="{Binding DiffText, Converter={StaticResource PersianDigits}}" Width="110">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">

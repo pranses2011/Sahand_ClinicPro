@@ -121,11 +121,11 @@
                     <DataGridTextColumn Header="سمت" Binding="{Binding PositionName, Converter={StaticResource PersianDigits}}" Width="110" />
                     <DataGridTextColumn Header="پزشک متصل" Binding="{Binding DoctorNames, Converter={StaticResource PersianDigits}}" Width="150" />
                     <DataGridTextColumn Header="اقلام" Binding="{Binding ServiceCount, Converter={StaticResource PersianDigits}}" Width="60" />
-                    <DataGridTextColumn Binding="{Binding TotalRevenueText, Converter={StaticResource PersianDigits}}" Width="120"><DataGridTextColumn.Header><TextBlock><Run Text="جمع فروش (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
-                    <DataGridTextColumn Binding="{Binding TotalCostText, Converter={StaticResource PersianDigits}}" Width="120"><DataGridTextColumn.Header><TextBlock><Run Text="جمع هزینه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
-                    <DataGridTextColumn Binding="{Binding TotalProfitText, Converter={StaticResource PersianDigits}}" Width="120"><DataGridTextColumn.Header><TextBlock><Run Text="سود خدمات (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
+                    <DataGridTextColumn Binding="{Binding TotalRevenueText, Converter={StaticResource PersianDigits}}" Width="Auto"><DataGridTextColumn.Header><TextBlock><Run Text="جمع فروش (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
+                    <DataGridTextColumn Binding="{Binding TotalCostText, Converter={StaticResource PersianDigits}}" Width="Auto"><DataGridTextColumn.Header><TextBlock><Run Text="جمع هزینه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
+                    <DataGridTextColumn Binding="{Binding TotalProfitText, Converter={StaticResource PersianDigits}}" Width="Auto"><DataGridTextColumn.Header><TextBlock><Run Text="سود خدمات (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
                     <DataGridTextColumn Header="درصد" Binding="{Binding CommissionPercentText, Converter={StaticResource PersianDigits}}" Width="60" />
-                    <DataGridTextColumn Binding="{Binding ServiceCommissionText, Converter={StaticResource PersianDigits}}" Width="125"><DataGridTextColumn.Header><TextBlock><Run Text="حقوق درصدی (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
+                    <DataGridTextColumn Binding="{Binding ServiceCommissionText, Converter={StaticResource PersianDigits}}" Width="Auto"><DataGridTextColumn.Header><TextBlock><Run Text="حقوق درصدی (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="FontWeight" Value="SemiBold" />
@@ -177,15 +177,15 @@
                   HeadersVisibility="Column">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="160" />
-                <DataGridTextColumn Header="شماره فاکتور" Binding="{Binding InvoiceNumber, Converter={StaticResource PersianDigits}}" Width="110" />
+                <DataGridTextColumn Header="شماره فاکتور" Binding="{Binding InvoiceNumber, Converter={StaticResource PersianDigits}}" Width="Auto" />
                 <DataGridTextColumn Header="تاریخ" Binding="{Binding InvoiceDateShamsi, Converter={StaticResource PersianDigits}}" Width="95" />
                 <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="150" />
                 <DataGridTextColumn Header="خدمت" Binding="{Binding ServiceName, Converter={StaticResource PersianDigits}}" Width="180" />
-                <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="55" />
+                <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="Auto" />
                 <DataGridTextColumn Header="قیمت واحد" Binding="{Binding UnitPriceText, Converter={StaticResource PersianDigits}}" Width="105" />
                 <DataGridTextColumn Header="هزینه واحد" Binding="{Binding UnitCostText, Converter={StaticResource PersianDigits}}" Width="105" />
-                <DataGridTextColumn Binding="{Binding TotalPriceText, Converter={StaticResource PersianDigits}}" Width="115"><DataGridTextColumn.Header><TextBlock><Run Text="مبلغ قلم (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
-                <DataGridTextColumn Binding="{Binding ProfitText, Converter={StaticResource PersianDigits}}" Width="110"><DataGridTextColumn.Header><TextBlock><Run Text="سود قلم (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
+                <DataGridTextColumn Binding="{Binding TotalPriceText, Converter={StaticResource PersianDigits}}" Width="Auto"><DataGridTextColumn.Header><TextBlock><Run Text="مبلغ قلم (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header></DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding ProfitText, Converter={StaticResource PersianDigits}}" Width="Auto"><DataGridTextColumn.Header><TextBlock><Run Text="سود قلم (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="FontWeight" Value="SemiBold" />

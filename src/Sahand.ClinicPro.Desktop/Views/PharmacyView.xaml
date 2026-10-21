@@ -171,7 +171,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="{DynamicResource App.CodeFont}" />
+                            <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="انقضا" Binding="{Binding ExpiryDateShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="100" />
                             <DataGridTemplateColumn Header="هشدار" Width="110" SortMemberPath="IsExpiringSoon">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -219,9 +219,9 @@
                               RowBackground="#2EF9A825">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="دارو" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
-                            <DataGridTextColumn Header="موجودی فعلی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="{DynamicResource App.CodeFont}" />
+                            <DataGridTextColumn Header="موجودی فعلی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
                             <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="پیشنهاد سفارش" Width="115">
+                            <DataGridTextColumn Header="پیشنهاد سفارش" Width="Auto">
                                 <DataGridTextColumn.Binding>
                                     <Binding Path="SuggestedOrder" StringFormat="{}{0:N0}" />
                                 </DataGridTextColumn.Binding>

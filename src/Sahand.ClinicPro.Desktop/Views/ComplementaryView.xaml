@@ -388,7 +388,7 @@
                             <DataGridTextColumn Header="عنوان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="220" FontWeight="SemiBold" />
                             <DataGridTextColumn Header="توضیح" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" />
                             <DataGridTextColumn Header="پاسخ‌ها" Binding="{Binding ResponseCount, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTemplateColumn Header="میانگین امتیاز" Width="120">
+                            <DataGridTemplateColumn Header="میانگین امتیاز" Width="Auto">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding RatingText}" Foreground="{Binding RatingColor}"

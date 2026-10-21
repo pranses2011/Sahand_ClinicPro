@@ -161,7 +161,7 @@
                 <DataGridTextColumn Header="فوق‌تخصص"
                                     Binding="{Binding SubSpecialtyName, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
                                     Width="120" />
-                <DataGridTextColumn Binding="{Binding FeeDisplay, Converter={StaticResource PersianDigits}}" Width="120"><DataGridTextColumn.Header><TextBlock><Run Text="حق ویزیت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
+                <DataGridTextColumn Binding="{Binding FeeDisplay, Converter={StaticResource PersianDigits}}" Width="Auto"><DataGridTextColumn.Header><TextBlock><Run Text="حق ویزیت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Left" />
@@ -171,7 +171,7 @@
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="مدت (دقیقه)"
                                     Binding="{Binding VisitDuration, Converter={StaticResource PersianDigits}}"
-                                    Width="85">
+                                    Width="Auto">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center" />
@@ -180,7 +180,7 @@
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="درصد سهم"
                                     Binding="{Binding DoctorPercentage, Converter={StaticResource PersianDigits}}"
-                                    Width="75">
+                                    Width="Auto">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center" />
