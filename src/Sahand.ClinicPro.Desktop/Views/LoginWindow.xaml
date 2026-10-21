@@ -21,28 +21,53 @@
         <SolidColorBrush x:Key="Login.Text.Muted" Color="#718096" />
         <SolidColorBrush x:Key="Login.Accent" Color="#1769C2" />
 
-        <Style x:Key="Login.CloseButton" TargetType="Button"
-               BasedOn="{StaticResource MaterialDesignIconForegroundButton}">
-            <Setter Property="Width" Value="34" />
-            <Setter Property="Height" Value="34" />
+        <Style x:Key="Login.CloseButton" TargetType="Button">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
             <Setter Property="Padding" Value="0" />
-            <Setter Property="Foreground" Value="#64748B" />
-            <Setter Property="Background" Value="#EFFFFFFF" />
+            <Setter Property="Foreground" Value="#B42318" />
+            <Setter Property="Background" Value="#FFFDE8E7" />
+            <Setter Property="BorderBrush" Value="#FFF2B8B5" />
+            <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="CloseSurface" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="18">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CloseSurface" Property="Background" Value="#FFFAC9C6" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="CloseSurface" Property="Background" Value="#FFF2AAA5" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Window.Resources>
 
     <!-- زمینهٔ پنجره و فضای پشت لوگو کاملاً شفاف است -->
     <Grid Margin="18">
         <!-- فرم شناور؛ بدون BorderBrush یا قاب مستطیلی دور فرم -->
-        <Border x:Name="LoginCard"
-                Width="500"
-                Margin="0,142,0,14"
-                VerticalAlignment="Stretch"
-                Background="#FCFFFFFF"
-                CornerRadius="28"
-                Padding="42,119,42,22"
-                SnapsToDevicePixels="True">
+        <Grid Width="500" Margin="0,142,0,14" HorizontalAlignment="Center">
+          <Border x:Name="LoginCard"
+                  MouseLeftButtonDown="OnDragWindow"
+                  CornerRadius="28"
+                  Padding="42,119,42,22"
+                  SnapsToDevicePixels="True">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#E6F0FB" Offset="0" />
+                    <GradientStop Color="#F1F6FC" Offset="0.55" />
+                    <GradientStop Color="#E4F3F1" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
             <Border.Effect>
                 <DropShadowEffect BlurRadius="30" ShadowDepth="9" Opacity="0.20" Color="#243B59" />
             </Border.Effect>
@@ -54,8 +79,8 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0" VerticalAlignment="Center">
-                    <!-- دستگیرهٔ جابه‌جایی فقط در سربرگ؛ ورودی‌ها پنجره را جابه‌جا نمی‌کنند -->
-                    <StackPanel MouseLeftButtonDown="OnDragWindow">
+                    <!-- فرم از فضای خالی کارت قابل‌کشیدن است؛ کنترل‌های تعاملی مستثنا هستند -->
+                    <StackPanel>
                         <TextBlock Text="خوش آمدید"
                                    FontSize="25" FontWeight="Bold"
                                    Foreground="{StaticResource Login.Text.Primary}"
@@ -197,7 +222,18 @@
                                FontSize="10" Foreground="#A1ACB9" />
                 </StackPanel>
             </Grid>
-        </Border>
+          </Border>
+
+          <!-- دکمهٔ بستن با رنگ متضاد، داخل گوشهٔ فرم -->
+          <Button x:Name="CloseButton"
+                  Style="{StaticResource Login.CloseButton}"
+                  HorizontalAlignment="Left" VerticalAlignment="Top"
+                  Margin="18,16,0,0"
+                  Panel.ZIndex="3"
+                  ToolTip="بستن برنامه" Click="OnCloseClick">
+              <materialDesign:PackIcon Kind="Close" Width="15" Height="15" />
+          </Button>
+        </Grid>
 
         <!-- لوگوی PNG شفاف؛ هیچ Border/Brushای پشت تصویر نیست.
              نیمهٔ بالایی در فضای کاملاً شفاف پنجره و نیمهٔ پایینی روی کارت قرار می‌گیرد. -->
@@ -211,12 +247,5 @@
                Panel.ZIndex="2"
                ToolTip="نشان سامانهٔ مدیریت درمانگاه سهند" />
 
-        <!-- دکمهٔ بستن شناور روی فضای شفاف -->
-        <Button x:Name="CloseButton"
-                Style="{StaticResource Login.CloseButton}"
-                HorizontalAlignment="Left" VerticalAlignment="Top"
-                Margin="10" ToolTip="بستن برنامه" Click="OnCloseClick">
-            <materialDesign:PackIcon Kind="Close" Width="15" Height="15" />
-        </Button>
     </Grid>
 </Window>
