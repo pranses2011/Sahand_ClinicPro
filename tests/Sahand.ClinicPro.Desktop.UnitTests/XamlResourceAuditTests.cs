@@ -196,9 +196,13 @@ public class XamlResourceAuditTests
             "گرد کردن اندازه‌گیری در سطح پنجره خطای نیم‌پیکسل در DPIهای کسری را مهار می‌کند");
         mainWindow.Should().Contain("MinHeight=\"60\"",
             "کارت توست باید حداقل فضای عمودی امن برای متن و آیکون داشته باشد");
+        mainWindow.Should().Contain("Margin=\"16,0,16,54\"",
+            "توست باید با فاصلهٔ امن بالای نوار وضعیت قرار گیرد، نه روی لبهٔ پنجره");
         mainWindow.Should().NotContain("MaxHeight=\"",
             "ارتفاع توست نباید سقف ثابت داشته باشد؛ پیام بلند باید رشد کند");
         dashboard.Should().Contain("UseLayoutRounding=\"True\"");
+        dashboard.Should().Contain("CanContentScroll=\"False\"",
+            "اسکرول پیکسلی باید امکان رساندن کامل آخرین ردیف میانبرها به viewport را بدهد");
         dashboard.Should().Contain("Width=\"168\" MinHeight=\"96\"",
             "کاشی باید ارتفاع کشسان و فضای کافی برای فونت/مقیاس داشته باشد");
         dashboard.Should().Contain("TextWrapping=\"Wrap\"",

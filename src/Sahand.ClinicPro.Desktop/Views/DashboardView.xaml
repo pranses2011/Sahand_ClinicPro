@@ -672,6 +672,7 @@
                                                                  کامل دیده می‌شود) -->
                                                             <Button Command="{Binding DataContext.OpenShortcutCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                     CommandParameter="{Binding}"
+                                                                    MinHeight="96" VerticalContentAlignment="Stretch"
                                                                     Cursor="Hand" Focusable="False"
                                                                     ToolTip="{Binding Title, StringFormat=باز کردن {0}}">
                                                                 <Button.Template>
@@ -752,7 +753,12 @@
             </DataTemplate>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,14">
+    <!-- اسکرول فیزیکی + فضای انتهایی: بخش‌های پایین داشبورد (به‌ویژه کاشی‌های
+         میانبر) باید تا پایان از زیر لبهٔ viewport بیرون آورده شوند؛ اسکرول
+         منطقی روی StackPanel گاهی آیتمِ آخر را نیمه‌نمایان باقی می‌گذارد. -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  CanContentScroll="False"
+                  Padding="20,14,20,96">
         <StackPanel>
 
             <!-- ╔══════════════════════════════════════════════════════════╗
