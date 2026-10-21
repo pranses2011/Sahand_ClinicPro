@@ -106,12 +106,12 @@
             </DataGrid.RowStyle>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="آزمایش" Binding="{Binding TestName, Converter={StaticResource PersianDigits}}" Width="2*" IsReadOnly="True" />
-                <DataGridTextColumn Header="واحد" Binding="{Binding Unit, Converter={StaticResource PersianDigits}}" Width="80" IsReadOnly="True" />
+                <DataGridTextColumn Header="واحد" Binding="{Binding Unit, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" />
                 <!-- ═══ چرخهٔ ۶۹ (F-28): حد طبیعی «مخصوص همین بیمار» — از موتور تفسیر سرور ═══ -->
                 <DataGridTextColumn Header="حد طبیعی این بیمار" Binding="{Binding PatientRangeText, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" />
-                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="95" IsReadOnly="True" />
+                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" />
                 <!-- بج تفسیر رنگی — سبز/نارنجی/قرمز (چرخهٔ ۶۹) -->
-                <DataGridTemplateColumn Header="تفسیر" Width="120">
+                <DataGridTemplateColumn Header="تفسیر" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border CornerRadius="8" Padding="7,2" HorizontalAlignment="Center"
@@ -123,7 +123,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="نتیجه متنی" Binding="{Binding Result, Converter={StaticResource PersianDigits}}" Width="*" IsReadOnly="True" />
-                <DataGridTextColumn Header="نتیجه عددی" Binding="{Binding ResultNumeric, Converter={StaticResource PersianDigits}}" Width="105" IsReadOnly="True" />
+                <DataGridTextColumn Header="نتیجه عددی" Binding="{Binding ResultNumeric, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" />
             </DataGrid.Columns>
         </DataGrid>
 

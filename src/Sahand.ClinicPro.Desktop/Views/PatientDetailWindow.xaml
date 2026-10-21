@@ -347,10 +347,10 @@
                                       CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                     </DataGrid.InputBindings>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="110" />
-                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="160" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" />
                         <DataGridTextColumn Header="شکایت / تشخیص" Binding="{Binding Diagnosis, Converter={StaticResource PersianDigits}}" Width="*" />
-                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status, Converter={StaticResource PersianDigits}}" Width="110" />
+                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status, Converter={StaticResource PersianDigits}}" Width="Auto" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
@@ -368,9 +368,9 @@
                                       CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                     </DataGrid.InputBindings>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="110" />
-                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="160" />
-                        <DataGridTextColumn Header="کد نسخه" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="120" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                        <DataGridTextColumn Header="کد نسخه" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="Auto" />
                         <DataGridTextColumn Header="وضعیت" Binding="{Binding Status, Converter={StaticResource PersianDigits}}" Width="*" />
                     </DataGrid.Columns>
                 </DataGrid>

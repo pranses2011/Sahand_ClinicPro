@@ -178,6 +178,7 @@
             <Style x:Key="App.TableDataGridCell" TargetType="DataGridCell"
                    BasedOn="{StaticResource {x:Type DataGridCell}}">
                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="VerticalAlignment" Value="Stretch" />
                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                 <Setter Property="Padding" Value="10,6" />
                 <Setter Property="Background" Value="Transparent" />
@@ -191,8 +192,9 @@
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
                                     Padding="{TemplateBinding Padding}"
+                                    VerticalAlignment="Stretch"
                                     SnapsToDevicePixels="True">
-                                <ContentPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                <ContentPresenter VerticalAlignment="Center"
                                                   HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                                   SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                             </Border>
@@ -205,11 +207,12 @@
             <!-- سرستون‌ها — کنتراست خوانا، ارتفاع ثابت و جداکنندهٔ یک‌پیکسلی -->
             <Style x:Key="App.TableDataGridColumnHeader" TargetType="DataGridColumnHeader"
                    BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
-                <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+                <Setter Property="Background" Value="{DynamicResource App.ZebraRowBrush}" />
                 <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
-                <Setter Property="FontWeight" Value="SemiBold" />
-                <Setter Property="Padding" Value="12,10" />
-                <Setter Property="MinHeight" Value="42" />
+                <Setter Property="FontSize" Value="12.5" />
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="Padding" Value="10,10" />
+                <Setter Property="MinHeight" Value="48" />
                 <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
                 <Setter Property="BorderThickness" Value="0,0,0,1" />
                 <Setter Property="HorizontalContentAlignment" Value="Center" />

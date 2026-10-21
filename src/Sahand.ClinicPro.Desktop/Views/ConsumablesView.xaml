@@ -204,18 +204,18 @@
                         <DataGridTextColumn Header="قلم مصرفی" Binding="{Binding Name, Converter={StaticResource PersianDigits}}"
                                             Width="*" MinWidth="170" FontWeight="SemiBold" />
                         <DataGridTextColumn Header="تعداد بچ" Binding="{Binding BatchCount, Converter={StaticResource PersianDigits}}"
-                                            Width="90" FontFamily="{DynamicResource App.CodeFont}" />
+                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
                         <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}"
-                                            Width="80" FontFamily="{DynamicResource App.CodeFont}" />
+                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
                         <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel, Converter={StaticResource PersianDigits}}"
                                             Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
                         <DataGridTextColumn Header="قیمت فروش" Binding="{Binding SellPrice, Converter={StaticResource CurrencyRial}}"
-                                            Width="100" FontFamily="{DynamicResource App.CodeFont}" />
+                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
                         <DataGridTextColumn Header="قیمت خرید" Binding="{Binding PurchasePrice, Converter={StaticResource CurrencyRial}}"
-                                            Width="100" FontFamily="{DynamicResource App.CodeFont}" />
+                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
                         <DataGridTextColumn Header="انقضا" Binding="{Binding ExpiryShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
-                                            Width="95" FontFamily="{DynamicResource App.CodeFont}" />
-                        <DataGridTemplateColumn Header="وضعیت" Width="110">
+                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
+                        <DataGridTemplateColumn Header="وضعیت" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <!-- رنگ وضعیت با تریگر — مبدل اختصاصی لازم نیست (الگوی اتاق‌ها) -->

@@ -86,13 +86,13 @@
                  
                   materialDesign:DataGridAssist.CellPadding="8,6">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="کد نسخه" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="110" />
+                <DataGridTextColumn Header="کد نسخه" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="Auto" />
                 <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="*" />
                 <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="*" />
-                <DataGridTextColumn Header="تاریخ" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="100" />
-                <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="100" />
-                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="110" />
-                <DataGridTextColumn Header="رسانه" Binding="{Binding MediaText, Converter={StaticResource PersianDigits}}" Width="90" />
+                <DataGridTextColumn Header="تاریخ" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                <DataGridTextColumn Header="رسانه" Binding="{Binding MediaText, Converter={StaticResource PersianDigits}}" Width="Auto" />
             </DataGrid.Columns>
             <DataGrid.InputBindings>
                 <MouseBinding MouseAction="LeftDoubleClick"

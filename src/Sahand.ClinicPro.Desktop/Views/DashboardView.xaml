@@ -507,13 +507,13 @@
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn Header="زمان"
                                                                         Binding="{Binding TimeShamsi, Converter={StaticResource PersianDigits}}"
-                                                                        Width="150" />
+                                                                        Width="Auto" />
                                                     <DataGridTextColumn Header="کاربر"
                                                                         Binding="{Binding User, Converter={StaticResource PersianDigits}}"
-                                                                        Width="130" />
+                                                                        Width="Auto" />
                                                     <DataGridTextColumn Header="عملیات"
                                                                         Binding="{Binding Action, Converter={StaticResource PersianDigits}}"
-                                                                        Width="110" />
+                                                                        Width="Auto" />
                                                     <DataGridTextColumn Header="موجودیت"
                                                                         Binding="{Binding Entity, Converter={StaticResource PersianDigits}}"
                                                                         Width="*" />

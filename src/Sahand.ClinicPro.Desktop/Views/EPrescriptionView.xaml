@@ -67,10 +67,10 @@
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                   HeadersVisibility="Column" FontSize="12">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="شناسه" Binding="{Binding Id, Converter={StaticResource PersianDigits}}" Width="70" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTextColumn Header="نسخه" Binding="{Binding PrescriptionId, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTextColumn Header="کد رهگیری" Binding="{Binding TrackingCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="160" FontFamily="{DynamicResource App.CodeFont}" FontWeight="SemiBold" />
-                <DataGridTemplateColumn Header="وضعیت" Width="130">
+                <DataGridTextColumn Header="شناسه" Binding="{Binding Id, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
+                <DataGridTextColumn Header="نسخه" Binding="{Binding PrescriptionId, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
+                <DataGridTextColumn Header="کد رهگیری" Binding="{Binding TrackingCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" FontWeight="SemiBold" />
+                <DataGridTemplateColumn Header="وضعیت" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
@@ -80,7 +80,7 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="ارسال" Width="160">
+                <DataGridTextColumn Header="ارسال" Width="Auto">
                     <DataGridTextColumn.Binding>
                         <Binding Path="SentAt" Converter="{StaticResource ShamsiDateTime}" TargetNullValue="—" />
                     </DataGridTextColumn.Binding>

@@ -815,8 +815,8 @@
                                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                                   HeadersVisibility="Column" FontSize="12" MinHeight="150">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="شماره" Binding="{Binding Number, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="{DynamicResource App.CodeFont}" />
-                                <DataGridTemplateColumn Header="بیمار" Width="180" SortMemberPath="PatientName">
+                                <DataGridTextColumn Header="شماره" Binding="{Binding Number, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
+                                <DataGridTemplateColumn Header="بیمار" Width="Auto" SortMemberPath="PatientName">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
@@ -826,12 +826,12 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="150" />
+                                <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" />
                                 <DataGridTextColumn Header="ساعت پذیرش" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                                <DataGridTextColumn Header="بیمه" Binding="{Binding InsuranceName, TargetNullValue=آزاد, Converter={StaticResource PersianDigits}}" Width="110" />
+                                <DataGridTextColumn Header="بیمه" Binding="{Binding InsuranceName, TargetNullValue=آزاد, Converter={StaticResource PersianDigits}}" Width="Auto" />
                                 <!-- چرخهٔ ۳۹ — اتاق محل انجام خدمت (پذیرش خدمتی) -->
-                                <DataGridTextColumn Header="اتاق" Binding="{Binding RoomName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" />
-                                <DataGridTemplateColumn Header="وضعیت" Width="110" SortMemberPath="StatusId">
+                                <DataGridTextColumn Header="اتاق" Binding="{Binding RoomName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                                <DataGridTemplateColumn Header="وضعیت" Width="Auto" SortMemberPath="StatusId">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
@@ -841,7 +841,7 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="انتظار" Binding="{Binding WaitingText, Converter={StaticResource PersianDigits}}" Width="90" />
+                                <DataGridTextColumn Header="انتظار" Binding="{Binding WaitingText, Converter={StaticResource PersianDigits}}" Width="Auto" />
                                 <!-- ═══ چرخه سی‌ویکم (گزارش مالک): «هیچ مبلغی در هیچ‌کجای برنامه
                                      نمایش داده نمیشود» — دو ستون مالی برای هر پذیرش روز:
                                      جمع فاکتور + پرداخت‌شده (مبدل ریالی با ارقام فارسی) و
@@ -868,7 +868,7 @@
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTemplateColumn Header="وضعیت مالی" Width="105" SortMemberPath="FinancialText">
+                                <DataGridTemplateColumn Header="وضعیت مالی" Width="Auto" SortMemberPath="FinancialText">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center">

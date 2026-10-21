@@ -70,9 +70,9 @@
                           AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                           HeadersVisibility="Column" FontSize="12" MaxHeight="220">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateText, Converter={StaticResource PersianDigits}}" Width="140" />
-                        <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="90" />
-                        <DataGridTemplateColumn Header="وضعیت" Width="100">
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateText, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                        <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                        <DataGridTemplateColumn Header="وضعیت" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
@@ -82,9 +82,9 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="سایز" Binding="{Binding SizeText, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="{DynamicResource App.CodeFont}" />
+                        <DataGridTextColumn Header="سایز" Binding="{Binding SizeText, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
                         <DataGridTextColumn Header="مسیر" Binding="{Binding FilePath, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" FontFamily="{DynamicResource App.CodeFont}" FontSize="10.5" />
-                        <DataGridTextColumn Header="حالت" Binding="{Binding IsAutomatic, Converter={StaticResource PersianDigits}}" Width="80" />
+                        <DataGridTextColumn Header="حالت" Binding="{Binding IsAutomatic, Converter={StaticResource PersianDigits}}" Width="Auto" />
                     </DataGrid.Columns>
                 </DataGrid>
 

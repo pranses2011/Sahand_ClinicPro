@@ -73,12 +73,12 @@
                   FontSize="12"
                   materialDesign:DataGridAssist.CellPadding="8,6">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="ردیف" Binding="{Binding LineNo, Converter={StaticResource PersianDigits}}" Width="60" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTextColumn Header="کد حساب" Binding="{Binding AccountCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="100" FontFamily="{DynamicResource App.CodeFont}" />
+                <DataGridTextColumn Header="ردیف" Binding="{Binding LineNo, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
+                <DataGridTextColumn Header="کد حساب" Binding="{Binding AccountCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
                 <DataGridTextColumn Header="حساب" Binding="{Binding AccountName, Converter={StaticResource PersianDigits}}" Width="2*" />
                 <DataGridTextColumn Header="شرح سطر" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="1.6*" />
-                <DataGridTextColumn Header="بدهکار" Binding="{Binding Debit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="130" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTextColumn Header="بستانکار" Binding="{Binding Credit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="130" FontFamily="{DynamicResource App.CodeFont}" />
+                <DataGridTextColumn Header="بدهکار" Binding="{Binding Debit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
+                <DataGridTextColumn Header="بستانکار" Binding="{Binding Credit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
             </DataGrid.Columns>
         </DataGrid>
 

@@ -48,12 +48,12 @@
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                   HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="{DynamicResource App.ZebraRowBrush}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="نام شعبه" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="200" FontWeight="SemiBold" />
-                <DataGridTextColumn Header="کد" Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="100" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTextColumn Header="شهر" Binding="{Binding City, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" />
-                <DataGridTextColumn Header="استان" Binding="{Binding Province, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" />
-                <DataGridTextColumn Header="تلفن" Binding="{Binding Phone, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="130" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTextColumn Header="اصلی" Binding="{Binding MainText, Converter={StaticResource PersianDigits}}" Width="90" />
+                <DataGridTextColumn Header="نام شعبه" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="Auto" FontWeight="SemiBold" />
+                <DataGridTextColumn Header="کد" Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
+                <DataGridTextColumn Header="شهر" Binding="{Binding City, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                <DataGridTextColumn Header="استان" Binding="{Binding Province, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                <DataGridTextColumn Header="تلفن" Binding="{Binding Phone, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
+                <DataGridTextColumn Header="اصلی" Binding="{Binding MainText, Converter={StaticResource PersianDigits}}" Width="Auto" />
                 <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="180">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

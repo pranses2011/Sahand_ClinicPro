@@ -189,7 +189,7 @@
                              
                               materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="تاریخ" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="120" />
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="Auto" />
                             <DataGridTextColumn Binding="{Binding Total, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="*">
                                 <DataGridTextColumn.Header><TextBlock><Run Text="درآمد (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                             </DataGridTextColumn>

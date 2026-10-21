@@ -70,15 +70,15 @@
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                   HeadersVisibility="Column" FontSize="12">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="نام کاربری" Binding="{Binding Username, Converter={StaticResource PersianDigits}}" Width="130" FontWeight="SemiBold" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="170" />
-                <DataGridTextColumn Header="نقش‌ها" Binding="{Binding RolesText, Converter={StaticResource PersianDigits}}" Width="180" />
-                <DataGridTextColumn Header="آخرین ورود" Width="150">
+                <DataGridTextColumn Header="نام کاربری" Binding="{Binding Username, Converter={StaticResource PersianDigits}}" Width="Auto" FontWeight="SemiBold" FontFamily="{DynamicResource App.CodeFont}" />
+                <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                <DataGridTextColumn Header="نقش‌ها" Binding="{Binding RolesText, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                <DataGridTextColumn Header="آخرین ورود" Width="Auto">
                     <DataGridTextColumn.Binding>
                         <Binding Path="LastLoginAt" Converter="{StaticResource ShamsiDateTime}" TargetNullValue="—" />
                     </DataGridTextColumn.Binding>
                 </DataGridTextColumn>
-                <DataGridTemplateColumn Header="وضعیت" Width="100">
+                <DataGridTemplateColumn Header="وضعیت" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"

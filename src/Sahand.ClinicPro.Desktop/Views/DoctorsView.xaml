@@ -97,7 +97,7 @@
             <DataGrid.Columns>
                 <!-- ─── عکس — چرخه هجدهم: تعویض از پرسنل مرتبط / چرخهٔ سی‌وهفتم:
                      بندانگشتی دایره‌ایِ قابل‌کلیک به‌جای آیکون «نمایش بزرگ» ─── -->
-                <DataGridTemplateColumn Header="عکس" Width="96">
+                <DataGridTemplateColumn Header="عکس" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -142,8 +142,8 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="شماره نظام"
                                     Binding="{Binding MedicalLicenseNo, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
-                                    Width="105" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTemplateColumn Header="نام و نام‌خانوادگی" Width="170" SortMemberPath="FullName">
+                                    Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
+                <DataGridTemplateColumn Header="نام و نام‌خانوادگی" Width="Auto" SortMemberPath="FullName">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
@@ -157,10 +157,10 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="تخصص"
                                     Binding="{Binding SpecialtyName, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
-                                    Width="120" />
+                                    Width="Auto" />
                 <DataGridTextColumn Header="فوق‌تخصص"
                                     Binding="{Binding SubSpecialtyName, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
-                                    Width="120" />
+                                    Width="Auto" />
                 <DataGridTextColumn Binding="{Binding FeeDisplay, Converter={StaticResource PersianDigits}}" Width="Auto"><DataGridTextColumn.Header><TextBlock><Run Text="حق ویزیت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
@@ -187,7 +187,7 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTemplateColumn Header="وضعیت" Width="80" SortMemberPath="IsActive">
+                <DataGridTemplateColumn Header="وضعیت" Width="Auto" SortMemberPath="IsActive">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center">
@@ -209,7 +209,7 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="امتیاز"
                                     Binding="{Binding RatingDisplay, Converter={StaticResource PersianDigits}}"
-                                    Width="70">
+                                    Width="Auto">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center" />
