@@ -4,17 +4,17 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:helpers="clr-namespace:Sahand.ClinicPro.Desktop.Helpers"
         Title="ورود به سامانه درمانگاه سهند"
-        Height="720" Width="1020"
+        Height="800" Width="620"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         WindowStyle="None"
-        Background="#EEF3F9"
-        TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+        AllowsTransparency="True"
+        Background="Transparent"
         FlowDirection="RightToLeft"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True">
-    <!-- پنجرهٔ ورود بازطراحی‌شده: قاب روشن و خلوت، فرم خوانا و پنل برند مستقل.
-         لوگوی PNG دارای کانال آلفاست و بدون هیچ قاب/پس‌زمینهٔ تصویری نمایش داده می‌شود. -->
+    <!-- لوگو مانند Splash بدون پنل یا پس‌زمینهٔ پشت خودش شناور است؛ نیمهٔ بالایی
+         آن بیرون کارت فرم می‌ماند. فرم نیز قاب/حاشیهٔ مستطیلی ندارد و فقط سایهٔ نرم دارد. -->
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <SolidColorBrush x:Key="Login.Text.Primary" Color="#172B4D" />
@@ -23,254 +23,200 @@
 
         <Style x:Key="Login.CloseButton" TargetType="Button"
                BasedOn="{StaticResource MaterialDesignIconForegroundButton}">
-            <Setter Property="Width" Value="36" />
-            <Setter Property="Height" Value="36" />
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Foreground" Value="#64748B" />
-            <Setter Property="Background" Value="#F1F5F9" />
+            <Setter Property="Background" Value="#EFFFFFFF" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
     </Window.Resources>
 
+    <!-- زمینهٔ پنجره و فضای پشت لوگو کاملاً شفاف است -->
     <Grid Margin="18">
-        <!-- سایهٔ قاب اصلی -->
-        <Border CornerRadius="26"
-                Background="#FFFFFF"
-                BorderBrush="#DCE5EF"
-                BorderThickness="1"
+        <!-- فرم شناور؛ بدون BorderBrush یا قاب مستطیلی دور فرم -->
+        <Border x:Name="LoginCard"
+                Width="500"
+                Margin="0,142,0,14"
+                VerticalAlignment="Stretch"
+                Background="#FCFFFFFF"
+                CornerRadius="28"
+                Padding="42,119,42,22"
                 SnapsToDevicePixels="True">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="28" ShadowDepth="8" Opacity="0.16" Color="#17365D" />
+                <DropShadowEffect BlurRadius="30" ShadowDepth="9" Opacity="0.20" Color="#243B59" />
             </Border.Effect>
+
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <!-- در RTL ستون صفر پنل برند در سمت راست پنجره است -->
-                    <ColumnDefinition Width="0.95*" />
-                    <ColumnDefinition Width="1.05*" />
-                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <!-- پنل برند؛ لوگو با پس‌زمینهٔ شفاف روی زمینهٔ گرادیانی قرار می‌گیرد -->
-                <Border Grid.Column="0"
-                        CornerRadius="0,25,25,0"
-                        MouseLeftButtonDown="OnDragWindow"
-                        ClipToBounds="True">
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#102A50" Offset="0" />
-                            <GradientStop Color="#145BA8" Offset="0.58" />
-                            <GradientStop Color="#087E83" Offset="1" />
-                        </LinearGradientBrush>
-                    </Border.Background>
-                    <Grid>
-                        <!-- دایره‌های تزئینی کم‌رنگ -->
-                        <Ellipse Width="330" Height="330" HorizontalAlignment="Right" VerticalAlignment="Top"
-                                 Margin="0,-145,-130,0" Fill="#12FFFFFF" IsHitTestVisible="False" />
-                        <Ellipse Width="250" Height="250" HorizontalAlignment="Left" VerticalAlignment="Bottom"
-                                 Margin="-115,0,0,-100" Fill="#10FFFFFF" IsHitTestVisible="False" />
+                <StackPanel Grid.Row="0" VerticalAlignment="Center">
+                    <!-- دستگیرهٔ جابه‌جایی فقط در سربرگ؛ ورودی‌ها پنجره را جابه‌جا نمی‌کنند -->
+                    <StackPanel MouseLeftButtonDown="OnDragWindow">
+                        <TextBlock Text="خوش آمدید"
+                                   FontSize="25" FontWeight="Bold"
+                                   Foreground="{StaticResource Login.Text.Primary}"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Text="برای ادامه، به حساب کاربری خود وارد شوید."
+                                   FontSize="12.5" Foreground="{StaticResource Login.Text.Muted}"
+                                   HorizontalAlignment="Center" Margin="0,6,0,22" />
+                    </StackPanel>
 
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="38,28">
-                            <Border HorizontalAlignment="Center" CornerRadius="20" Padding="13,7"
-                                    Background="#20FFFFFF" BorderBrush="#35FFFFFF" BorderThickness="1">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="HospitalBuilding" Width="16" Height="16"
-                                                             Foreground="#B9F3E4" VerticalAlignment="Center" />
-                                    <TextBlock Text="سامانهٔ هوشمند درمانگاه"
-                                               Foreground="#E4F5FF" FontSize="11.5" FontWeight="SemiBold"
-                                               Margin="7,0,0,0" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Border>
+                    <!-- نام کاربری -->
+                    <TextBlock Text="نام کاربری" FontSize="11.5" FontWeight="SemiBold"
+                               Foreground="#52647A" Margin="2,0,0,6" />
+                    <TextBox x:Name="UsernameBox"
+                             materialDesign:HintAssist.Hint="نام کاربری خود را وارد کنید"
+                             materialDesign:TextFieldAssist.HasClearButton="True"
+                             Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                             MaxLength="50"
+                             FlowDirection="LeftToRight"
+                             TextAlignment="Left"
+                             FontSize="14" Padding="12,9"
+                             Margin="0,0,0,14">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding LoginCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
 
-                            <!-- تصویر ۲۵۶/۵۱۲ شفاف؛ بزرگ‌تر از نسخهٔ قبلی ۱۱۰px -->
-                            <Image Source="/Assets/Logo/ClinicPro-512.png"
-                                   Width="230" Height="230"
-                                   HorizontalAlignment="Center" Margin="0,18,0,8"
-                                   Stretch="Uniform"
-                                   RenderOptions.BitmapScalingMode="HighQuality"
-                                   ToolTip="نشان سامانهٔ مدیریت درمانگاه سهند" />
-
-                            <TextBlock Text="ClinicPro"
-                                       FontSize="29" FontWeight="Black"
-                                       Foreground="White"
-                                       HorizontalAlignment="Center" />
-                            <TextBlock Text="سامانهٔ جامع مدیریت درمانگاه سهند"
-                                       FontSize="15" FontWeight="SemiBold"
-                                       Foreground="#E4F1FF"
-                                       HorizontalAlignment="Center" Margin="0,5,0,0" />
-                            <TextBlock Text="مدیریت یکپارچهٔ پذیرش، نوبت‌دهی و خدمات درمانی"
-                                       FontSize="11.5" Foreground="#C8D9EC" Opacity="0.92"
-                                       TextAlignment="Center" TextWrapping="Wrap"
-                                       HorizontalAlignment="Center" Margin="0,10,0,0" />
-
-                            <Border Height="1" Width="190" Background="#42FFFFFF" Margin="0,24,0,16" />
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <materialDesign:PackIcon Kind="ShieldCheckOutline" Width="15" Height="15"
-                                                         Foreground="#9AE6D0" VerticalAlignment="Center" />
-                                <TextBlock Text="محیط امن و یکپارچهٔ درمانگاه"
-                                           FontSize="10.5" Foreground="#D6E8F5"
-                                           Margin="7,0,0,0" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </StackPanel>
+                    <!-- رمز عبور و دکمهٔ نمایش؛ همگام‌سازی امن PasswordBox حفظ شده است -->
+                    <TextBlock Text="رمز عبور" FontSize="11.5" FontWeight="SemiBold"
+                               Foreground="#52647A" Margin="2,0,0,6" />
+                    <Grid Margin="0,0,0,7" FlowDirection="LeftToRight">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid Grid.Column="0">
+                            <PasswordBox x:Name="PasswordBox"
+                                         materialDesign:HintAssist.Hint="رمز عبور خود را وارد کنید"
+                                         MaxLength="100"
+                                         FontSize="14" Padding="12,9"
+                                         FlowDirection="LeftToRight"
+                                         Visibility="Visible"
+                                         KeyDown="OnPasswordKeyDown" />
+                            <TextBox x:Name="PasswordRevealBox"
+                                     materialDesign:HintAssist.Hint="رمز عبور خود را وارد کنید"
+                                     Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                                     FontSize="14" Padding="12,9"
+                                     FlowDirection="LeftToRight"
+                                     TextAlignment="Left"
+                                     Visibility="Collapsed"
+                                     IsReadOnly="False" />
+                        </Grid>
+                        <ToggleButton x:Name="EyeToggle"
+                                      Grid.Column="1"
+                                      Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
+                                      Margin="7,0,0,0"
+                                      Width="40" Height="40"
+                                      VerticalAlignment="Center"
+                                      ToolTip="نمایش یا پنهان‌کردن رمز"
+                                      Checked="OnEyeToggled"
+                                      Unchecked="OnEyeToggled">
+                            <materialDesign:PackIcon Kind="EyeOutline" Width="18" Height="18" />
+                        </ToggleButton>
                     </Grid>
-                </Border>
 
-                <!-- پنل ورود -->
-                <Grid Grid.Column="1" Margin="58,42,58,34">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+                    <Grid Margin="0,7,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <CheckBox Grid.Column="0"
+                                  Content="مرا به خاطر بسپار"
+                                  IsChecked="{Binding RememberMe}"
+                                  FontSize="12" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="فراموشی رمز؟"
+                                   FontSize="11.5" Foreground="{StaticResource Login.Accent}"
+                                   Cursor="Hand" VerticalAlignment="Center"
+                                   ToolTip="در صورت فراموشی رمز با مدیر سیستم تماس بگیرید" />
+                    </Grid>
 
-                    <Button x:Name="CloseButton"
-                            Grid.Row="0"
-                            Style="{StaticResource Login.CloseButton}"
-                            HorizontalAlignment="Left" VerticalAlignment="Top"
-                            ToolTip="بستن برنامه"
-                            Click="OnCloseClick">
-                        <materialDesign:PackIcon Kind="Close" Width="16" Height="16" />
+                    <!-- پیام خطا -->
+                    <Border Background="#FFF1F0" BorderBrush="#F7C7C3" BorderThickness="1"
+                            CornerRadius="9" Padding="10,8" Margin="0,12,0,0"
+                            Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding ErrorMessage}"
+                                   Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
+                                   FontSize="12" TextWrapping="Wrap" />
+                    </Border>
+
+                    <!-- دکمهٔ ورود -->
+                    <Button Command="{Binding LoginCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Height="48" Margin="0,16,0,0"
+                            FontSize="14" FontWeight="Bold"
+                            Background="#1769C2" Foreground="White"
+                            IsDefault="True">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="ورود به سامانه" VerticalAlignment="Center" />
+                            <materialDesign:PackIcon Kind="ArrowLeft" Width="18" Height="18"
+                                                     Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
                     </Button>
 
-                    <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                        <TextBlock Text="خوش آمدید"
-                                   FontSize="28" FontWeight="Bold"
-                                   Foreground="{StaticResource Login.Text.Primary}" />
-                        <TextBlock Text="برای ادامه، به حساب کاربری خود وارد شوید."
-                                   FontSize="13" Foreground="{StaticResource Login.Text.Muted}"
-                                   Margin="0,7,0,28" />
+                    <ProgressBar IsIndeterminate="True"
+                                 Height="3" Margin="0,10,0,0"
+                                 Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
 
-                        <!-- نام کاربری -->
-                        <TextBlock Text="نام کاربری" FontSize="11.5" FontWeight="SemiBold"
-                                   Foreground="#52647A" Margin="2,0,0,7" />
-                        <TextBox x:Name="UsernameBox"
-                                 materialDesign:HintAssist.Hint="نام کاربری خود را وارد کنید"
-                                 materialDesign:TextFieldAssist.HasClearButton="True"
-                                 Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
-                                 MaxLength="50"
-                                 FlowDirection="LeftToRight"
-                                 TextAlignment="Left"
-                                 FontSize="14" Padding="12,10"
-                                 Margin="0,0,0,18">
-                            <TextBox.InputBindings>
-                                <KeyBinding Key="Enter" Command="{Binding LoginCommand}" />
-                            </TextBox.InputBindings>
-                        </TextBox>
+                    <!-- مسیر فعال‌سازی لایسنس -->
+                    <Grid Margin="0,18,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Height="1" Background="#E5EAF0" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="دسترسی و فعال‌سازی" FontSize="10.5"
+                                   Foreground="#8794A5" Margin="12,0" />
+                        <Border Grid.Column="2" Height="1" Background="#E5EAF0" VerticalAlignment="Center" />
+                    </Grid>
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Command="{Binding ActivateLicenseCommand}"
+                            Height="42" FontSize="12.5" FontWeight="SemiBold"
+                            BorderBrush="#C8D8EA" Foreground="#315A83"
+                            ToolTip="در صورت نداشتن لایسنس فعال، از اینجا شروع کنید">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <materialDesign:PackIcon Kind="KeyVariant" Width="17" Height="17"
+                                                     Margin="0,0,8,0" VerticalAlignment="Center" />
+                            <TextBlock Text="فعال‌سازی لایسنس" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
 
-                        <!-- رمز عبور و دکمهٔ نمایش؛ همگام‌سازی PasswordBox در code-behind حفظ شده است -->
-                        <TextBlock Text="رمز عبور" FontSize="11.5" FontWeight="SemiBold"
-                                   Foreground="#52647A" Margin="2,0,0,7" />
-                        <Grid Margin="0,0,0,8" FlowDirection="LeftToRight">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Grid Grid.Column="0">
-                                <PasswordBox x:Name="PasswordBox"
-                                             materialDesign:HintAssist.Hint="رمز عبور خود را وارد کنید"
-                                             MaxLength="100"
-                                             FontSize="14" Padding="12,10"
-                                             FlowDirection="LeftToRight"
-                                             Visibility="Visible"
-                                             KeyDown="OnPasswordKeyDown" />
-                                <TextBox x:Name="PasswordRevealBox"
-                                         materialDesign:HintAssist.Hint="رمز عبور خود را وارد کنید"
-                                         Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
-                                         FontSize="14" Padding="12,10"
-                                         FlowDirection="LeftToRight"
-                                         TextAlignment="Left"
-                                         Visibility="Collapsed"
-                                         IsReadOnly="False" />
-                            </Grid>
-                            <ToggleButton x:Name="EyeToggle"
-                                          Grid.Column="1"
-                                          Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
-                                          Margin="8,0,0,0"
-                                          Width="42" Height="42"
-                                          VerticalAlignment="Center"
-                                          ToolTip="نمایش یا پنهان‌کردن رمز"
-                                          Checked="OnEyeToggled"
-                                          Unchecked="OnEyeToggled">
-                                <materialDesign:PackIcon Kind="EyeOutline" Width="19" Height="19" />
-                            </ToggleButton>
-                        </Grid>
-
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <CheckBox Grid.Column="0"
-                                      Content="مرا به خاطر بسپار"
-                                      IsChecked="{Binding RememberMe}"
-                                      FontSize="12" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="1"
-                                       Text="فراموشی رمز؟"
-                                       FontSize="11.5" Foreground="{StaticResource Login.Accent}"
-                                       Cursor="Hand" VerticalAlignment="Center"
-                                       ToolTip="در صورت فراموشی رمز با مدیر سیستم تماس بگیرید" />
-                        </Grid>
-
-                        <!-- پیام خطا -->
-                        <Border Background="#FFF1F0" BorderBrush="#F7C7C3" BorderThickness="1"
-                                CornerRadius="9" Padding="10,8" Margin="0,16,0,0"
-                                Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding ErrorMessage}"
-                                       Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
-                                       FontSize="12" TextWrapping="Wrap" />
-                        </Border>
-
-                        <!-- دکمهٔ ورود -->
-                        <Button Command="{Binding LoginCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                Height="50" Margin="0,20,0,0"
-                                FontSize="14" FontWeight="Bold"
-                                Background="#1769C2" Foreground="White"
-                                IsDefault="True">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <TextBlock Text="ورود به سامانه" VerticalAlignment="Center" />
-                                <materialDesign:PackIcon Kind="ArrowLeft" Width="18" Height="18"
-                                                         Margin="10,0,0,0" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-
-                        <ProgressBar IsIndeterminate="True"
-                                     Height="3" Margin="0,12,0,0"
-                                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
-
-                        <!-- مسیر فعال‌سازی لایسنس -->
-                        <Grid Margin="0,25,0,13">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Height="1" Background="#E5EAF0" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="1" Text="دسترسی و فعال‌سازی" FontSize="10.5"
-                                       Foreground="#8794A5" Margin="12,0" />
-                            <Border Grid.Column="2" Height="1" Background="#E5EAF0" VerticalAlignment="Center" />
-                        </Grid>
-                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Command="{Binding ActivateLicenseCommand}"
-                                Height="44" FontSize="12.5" FontWeight="SemiBold"
-                                BorderBrush="#C8D8EA" Foreground="#315A83"
-                                ToolTip="در صورت نداشتن لایسنس فعال، از اینجا شروع کنید">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <materialDesign:PackIcon Kind="KeyVariant" Width="17" Height="17"
-                                                         Margin="0,0,8,0" VerticalAlignment="Center" />
-                                <TextBlock Text="فعال‌سازی لایسنس" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center"
-                                Margin="0,18,0,0">
-                        <TextBlock Text="{x:Static helpers:AppInfo.VersionText}"
-                                   FontSize="10.5" Foreground="#8492A4" />
-                        <TextBlock Text="  ·  " FontSize="10.5" Foreground="#B1BBC8" />
-                        <TextBlock Text="{x:Static helpers:AppInfo.CopyrightText}"
-                                   FontSize="10" Foreground="#A1ACB9" />
-                    </StackPanel>
-                </Grid>
+                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center"
+                            Margin="0,14,0,0">
+                    <TextBlock Text="{x:Static helpers:AppInfo.VersionText}"
+                               FontSize="10.5" Foreground="#8492A4" />
+                    <TextBlock Text="  ·  " FontSize="10.5" Foreground="#B1BBC8" />
+                    <TextBlock Text="{x:Static helpers:AppInfo.CopyrightText}"
+                               FontSize="10" Foreground="#A1ACB9" />
+                </StackPanel>
             </Grid>
         </Border>
+
+        <!-- لوگوی PNG شفاف؛ هیچ Border/Brushای پشت تصویر نیست.
+             نیمهٔ بالایی در فضای کاملاً شفاف پنجره و نیمهٔ پایینی روی کارت قرار می‌گیرد. -->
+        <Image x:Name="LogoImage"
+               Source="/Assets/Logo/ClinicPro-512.png"
+               Width="236" Height="236"
+               HorizontalAlignment="Center" VerticalAlignment="Top"
+               Margin="0,10,0,0"
+               Stretch="Uniform"
+               RenderOptions.BitmapScalingMode="HighQuality"
+               Panel.ZIndex="2"
+               ToolTip="نشان سامانهٔ مدیریت درمانگاه سهند" />
+
+        <!-- دکمهٔ بستن شناور روی فضای شفاف -->
+        <Button x:Name="CloseButton"
+                Style="{StaticResource Login.CloseButton}"
+                HorizontalAlignment="Left" VerticalAlignment="Top"
+                Margin="10" ToolTip="بستن برنامه" Click="OnCloseClick">
+            <materialDesign:PackIcon Kind="Close" Width="15" Height="15" />
+        </Button>
     </Grid>
 </Window>
