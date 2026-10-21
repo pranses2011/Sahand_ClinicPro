@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -189,14 +189,11 @@ public partial class App : System.Windows.Application
             // می‌گیرد (رویداد Closing قبلاً همین بررسی را تکرار می‌کرد و
             // حذف شد — پرچم CloseAllowed هم بی‌استفاده و حذف شد).
         }
-        // ═══ چرخه بیست‌وچهارم — مقیاس سراسری رابط ═══ «اندازهٔ فونت فقط صفحهٔ تم
-        // را تغییر می‌داد»: پنجرهٔ اصلی، محتوایش به تبدیل مقیاس پویا وصل می‌شود
-        // تا تغییر اندازهٔ فونت، همهٔ عناصر برنامه را هماهنگ بزرگ/کوچک کند (زوم
-        // پیوسته مثل مرورگر). پنجره‌های دیالوگ اندازهٔ ثابت دارند و مقیاس متنشان
-        // از همان FontSize ارثی تأمین می‌شود تا فرم‌ها بریده نشوند.
-        if (window is Sahand.ClinicPro.Desktop.MainWindow && window.Content is FrameworkElement rootContent)
-            rootContent.SetResourceReference(
-                FrameworkElement.LayoutTransformProperty, "App.FontScaleTransform");
+        // مقیاس زوم به PageHost اعمال می‌شود (نه به ریشهٔ پنجره): اعمال
+        // LayoutTransform روی کل ریشه، لایه‌های هم‌پوشان مانند ToastLayer را
+        // همراه محتوای صفحه تغییر اندازه می‌دهد و می‌تواند آن‌ها را در لبهٔ
+        // پنجره ببرد. MainWindow فقط محتوای صفحه را مقیاس می‌کند؛ نوارها و
+        // اعلان‌ها در فضای واقعی پنجره باقی می‌مانند.
     }
 
     /// <summary>پرچم جلوگیری از وصل‌شدن دوبارهٔ فونت به همان پنجره</summary>

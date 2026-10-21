@@ -184,8 +184,14 @@ public class XamlResourceAuditTests
         dir.Should().NotBeNull("ریشه مخزن با Directory.Build.props یافت نشد");
         var desktop = Path.Combine(dir!.FullName, "src", "Sahand.ClinicPro.Desktop");
         var mainWindow = File.ReadAllText(Path.Combine(desktop, "MainWindow.xaml"));
+        var mainWindowCode = File.ReadAllText(Path.Combine(desktop, "MainWindow.xaml.cs"));
+        var appCode = File.ReadAllText(Path.Combine(desktop, "App.xaml.cs"));
         var dashboard = File.ReadAllText(Path.Combine(desktop, "Views", "DashboardView.xaml"));
 
+        mainWindowCode.Should().Contain("PageHost.SetResourceReference(FrameworkElement.LayoutTransformProperty",
+            "مقیاس رابط باید به محتوای قابل‌اسکرول محدود باشد، نه ریشهٔ پنجره و اعلان‌های رویی");
+        appCode.Should().NotContain("rootContent.SetResourceReference(\n                FrameworkElement.LayoutTransformProperty",
+            "LayoutTransform روی ریشهٔ پنجره می‌تواند توست پایین صفحه را از قاب بیرون ببرد");
         mainWindow.Should().Contain("UseLayoutRounding=\"True\"",
             "گرد کردن اندازه‌گیری در سطح پنجره خطای نیم‌پیکسل در DPIهای کسری را مهار می‌کند");
         mainWindow.Should().Contain("MinHeight=\"60\"",
