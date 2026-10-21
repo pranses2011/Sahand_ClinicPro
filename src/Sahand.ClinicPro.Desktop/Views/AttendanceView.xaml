@@ -90,7 +90,7 @@
                     <!-- جدول پرسنل -->
                     <DataGrid Grid.Row="1" ItemsSource="{Binding BoardRows}" IsReadOnly="True"
                               AutoGenerateColumns="False" CanUserAddRows="False"
-                              Style="{StaticResource MaterialDesignDataGrid}"
+                              Style="{StaticResource App.TableDataGrid}"
                               HeadersVisibility="Column">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="پرسنل" Binding="{Binding FullName, Converter={StaticResource PersianDigits}}" Width="2*" />
@@ -126,7 +126,7 @@
 
                     <DataGrid Grid.Row="0" ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}"
                               IsReadOnly="True" AutoGenerateColumns="False" CanUserAddRows="False"
-                              Style="{StaticResource MaterialDesignDataGrid}"
+                              Style="{StaticResource App.TableDataGrid}"
                               HeadersVisibility="Column" MinHeight="180">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="نام دستگاه" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="1.6*" />
@@ -213,7 +213,7 @@
                                 </WrapPanel>
                                 <DataGrid Grid.Row="2" ItemsSource="{Binding Mappings}" IsReadOnly="True"
                                           AutoGenerateColumns="False" CanUserAddRows="False" MaxHeight="140"
-                                          Style="{StaticResource MaterialDesignDataGrid}" HeadersVisibility="Column">
+                                          Style="{StaticResource App.TableDataGrid}" HeadersVisibility="Column">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="شناسه دستگاه" Binding="{Binding EnrollNumber, Converter={StaticResource PersianDigits}}" Width="*" />
                                         <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="2*" />
@@ -268,7 +268,7 @@
 
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Corrections}" IsReadOnly="True"
                               AutoGenerateColumns="False" CanUserAddRows="False"
-                              Style="{StaticResource MaterialDesignDataGrid}" HeadersVisibility="Column">
+                              Style="{StaticResource App.TableDataGrid}" HeadersVisibility="Column">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="1.6*" />
                             <DataGridTextColumn Header="تاریخ" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="*" />
@@ -346,7 +346,7 @@
 
                     <DataGrid Grid.Row="1" ItemsSource="{Binding MonthlyRows}" IsReadOnly="True"
                               AutoGenerateColumns="False" CanUserAddRows="False"
-                              Style="{StaticResource MaterialDesignDataGrid}" HeadersVisibility="Column">
+                              Style="{StaticResource App.TableDataGrid}" HeadersVisibility="Column">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="پرسنل" Binding="{Binding FullName, Converter={StaticResource PersianDigits}}" Width="1.8*" />
                             <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="*" />

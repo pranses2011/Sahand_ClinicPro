@@ -159,7 +159,7 @@ public class ThemeService : IThemeService
         resources["App.ZebraRowBrush"] = new System.Windows.Media.SolidColorBrush(
             dark
                 ? System.Windows.Media.Color.FromRgb(0x28, 0x30, 0x3A)
-                : System.Windows.Media.Color.FromRgb(0xF6, 0xF9, 0xFC));
+                : System.Windows.Media.Color.FromRgb(0xF1, 0xF6, 0xFC));
 
         // شعاع گوشه: مقدار مستقل کاربر مقدم است؛ وگرنه از تم
         var radius = _appearance.CardRadiusOverride ?? picked.CardRadius;

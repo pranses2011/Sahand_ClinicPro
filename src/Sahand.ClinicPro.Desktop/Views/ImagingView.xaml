@@ -101,7 +101,7 @@
 
                                 <DataGrid ItemsSource="{Binding ImagingFiles}" SelectedItem="{Binding SelectedImagingFile}"
                                           AutoGenerateColumns="False" IsReadOnly="True" MaxHeight="220"
-                                          Style="{StaticResource MaterialDesignDataGrid}"
+                                          Style="{StaticResource App.TableDataGrid}"
                                           HeadersVisibility="Column">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="نام فایل" Binding="{Binding FileName, Converter={StaticResource PersianDigits}}" />

@@ -46,7 +46,7 @@
 
         <DataGrid Grid.Row="3" ItemsSource="{Binding Branches}" SelectedItem="{Binding SelectedBranch}"
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                  HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                  HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="{DynamicResource App.ZebraRowBrush}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="نام شعبه" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="200" FontWeight="SemiBold" />
                 <DataGridTextColumn Header="کد" Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="100" FontFamily="{DynamicResource App.CodeFont}" />

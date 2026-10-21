@@ -90,7 +90,7 @@
                   CanUserSortColumns="True"
                   IsReadOnly="True"
                   CanUserAddRows="False"
-                  AlternatingRowBackground="#F7FAFD"
+                  AlternatingRowBackground="{DynamicResource App.ZebraRowBrush}"
                   HeadersVisibility="Column"
                   RowBackground="Transparent"
                   FontSize="12">

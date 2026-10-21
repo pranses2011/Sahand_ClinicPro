@@ -51,8 +51,8 @@
                  گزارش مالک: «تمامی لیست ها در تمامی صفحات و فرم ها رو بصورت
                  گوره خری (رنگ های یک در میان) دربیار تا زیباتر دیده بشه و تشخیص
                  سطرها راحت باشه». این قلم با تم هم‌رنگ می‌شود (ThemeService):
-                 روشن = #F6F9FC (آبی‌فیروزه‌ای بسیار ملایم) / تیره = #28303A. -->
-            <SolidColorBrush x:Key="App.ZebraRowBrush" Color="#F6F9FC" />
+                 روشن = #F1F6FC (آبی بسیار ملایم) / تیره = #28303A. -->
+            <SolidColorBrush x:Key="App.ZebraRowBrush" Color="#F1F6FC" />
             <!-- ═══ چرخهٔ سی‌وهفتم (ریشهٔ قطعی پنج گزارش پیاپی سایدبار + بریدگی ساعت) ═══
                  MaterialDesign3.Defaults.xaml (که در MergedDictionaries بالا ادغام شده)
                  برای «همهٔ ToggleButtonها» استایل ضمنی تعریف می‌کند:
@@ -174,9 +174,16 @@
                  تراز افقی را از آن می‌خواند — محتوای قالبیِ همهٔ سلول‌ها (نه فقط
                  انتخابگر ساعت) در تمام عرض سلول می‌نشیند؛ در غیر این صورت عنصر
                  قالب بدون تراز صریح، در تراز پیش‌فرض قالب کتابخانه می‌ماند. -->
-            <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+            <!-- سلول جدول: فاصلهٔ تنفسی، جداکنندهٔ ظریف و تراز استاندارد محتوا -->
+            <Style x:Key="App.TableDataGridCell" TargetType="DataGridCell"
+                   BasedOn="{StaticResource {x:Type DataGridCell}}">
                 <Setter Property="VerticalContentAlignment" Value="Center" />
                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Padding" Value="10,6" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                <Setter Property="BorderThickness" Value="0,0,0,1" />
+                <Setter Property="SnapsToDevicePixels" Value="True" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="DataGridCell">
@@ -192,6 +199,36 @@
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
+            </Style>
+            <Style TargetType="DataGridCell" BasedOn="{StaticResource App.TableDataGridCell}" />
+
+            <!-- سرستون‌ها — کنتراست خوانا، ارتفاع ثابت و جداکنندهٔ یک‌پیکسلی -->
+            <Style x:Key="App.TableDataGridColumnHeader" TargetType="DataGridColumnHeader"
+                   BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Padding" Value="12,10" />
+                <Setter Property="MinHeight" Value="42" />
+                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                <Setter Property="BorderThickness" Value="0,0,0,1" />
+                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="SnapsToDevicePixels" Value="True" />
+            </Style>
+
+            <!-- ردیف‌ها — فاصله‌گذاری یکدست، انتخاب آبی ملایم، زبرا از DataGrid -->
+            <Style x:Key="App.TableDataGridRow" TargetType="DataGridRow"
+                   BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                <Setter Property="MinHeight" Value="40" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Style.Triggers>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Primary.Light}" />
+                    </Trigger>
+                </Style.Triggers>
             </Style>
 
             <!-- ═══ سبک دکمه‌های آیکونی ردیف‌های جدول ═══
@@ -465,58 +502,69 @@
                 <Setter Property="Padding" Value="10,8" />
             </Style>
 
-            <!-- ─── ۶) استایل مشترک جدول‌های صفحات (حس «حرفه‌ای» در بدنه) ───
-                 ارتفاع راحت ردیف‌ها (۳۶px) — هدف‌گیری موس روی دسکتاپ آسان‌تر و
-                 خوانایی بهتر؛ فونت ۱۲٫۵ توازن چگالی/خوانایی صفحه‌های داده‌محور -->
+            <!-- ظاهر مشترک جدول‌ها بر پایهٔ نمونهٔ تأییدشده: سرستون واضح، ردیف‌های
+                 راحت و گوره‌خری ملایم، جداکننده‌های ظریف و انتخاب آبی ملایم. -->
+            <Style x:Key="App.TableDataGrid" TargetType="DataGrid"
+                   BasedOn="{StaticResource MaterialDesignDataGrid}">
+                <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="GridLinesVisibility" Value="None" />
+                <Setter Property="HeadersVisibility" Value="Column" />
+                <Setter Property="RowHeaderWidth" Value="0" />
+                <Setter Property="FontSize" Value="12.5" />
+                <Setter Property="RowHeight" Value="40" />
+                <Setter Property="AlternationCount" Value="2" />
+                <Setter Property="RowBackground" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+                <Setter Property="AlternatingRowBackground" Value="{DynamicResource App.ZebraRowBrush}" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="CanUserResizeRows" Value="False" />
+                <Setter Property="SnapsToDevicePixels" Value="True" />
+                <Setter Property="ColumnHeaderStyle" Value="{StaticResource App.TableDataGridColumnHeader}" />
+                <Setter Property="RowStyle" Value="{StaticResource App.TableDataGridRow}" />
+                <Setter Property="CellStyle" Value="{StaticResource App.TableDataGridCell}" />
+            </Style>
+
+            <!-- حفظ قرارداد قبلی App.DataGrid برای فهرست‌های فقط‌خواندنی -->
             <Style x:Key="App.DataGrid" TargetType="DataGrid"
-                   BasedOn="{StaticResource {x:Type DataGrid}}">
+                   BasedOn="{StaticResource App.TableDataGrid}">
                 <Setter Property="AutoGenerateColumns" Value="False" />
                 <Setter Property="CanUserAddRows" Value="False" />
                 <Setter Property="IsReadOnly" Value="True" />
-                <Setter Property="HeadersVisibility" Value="Column" />
-                <Setter Property="FontSize" Value="12.5" />
-                <Setter Property="RowHeight" Value="36" />
-                <Setter Property="GridLinesVisibility" Value="None" />
-                <Setter Property="BorderThickness" Value="0" />
-                <!-- نوار یک‌درمیان بسیار ملایم — قلم پویای مشترک با استایل ضمنی
-                     زیر (چرخهٔ ۷۴) تا در تم تیره هم خودش را تنظیم کند -->
-                <Setter Property="AlternationCount" Value="2" />
-                <Setter Property="AlternatingRowBackground" Value="{DynamicResource App.ZebraRowBrush}" />
-                <Setter Property="VerticalContentAlignment" Value="Center" />
             </Style>
 
-            <!-- ═══ چرخهٔ ۷۴ — استایل ضمنی جدول‌ها: گوره‌خری سراسری ═══
-                 هر DataGrid در هر صفحه/فرم — حتی بی‌استایل — سطرهای یک‌درمیان
-                 می‌گیرد؛ سازوکار داخلی AlternatingRowBackground انتخاب سطر را
-                 بی‌وقفه نگه می‌دارد (هایلایت انتخاب در قالب ردیف، مقدم است).
-                 مقادیر محلی هر جدول (رنگ دلخواه یا بدون نوار) بر این پیش‌فرض
-                 مقدم می‌ماند.
-                 ═══ چرخهٔ ۷۵ (گزارش مالک: «برای لیستها خطوط اطراف کشیده شده
-                 که با رنگ تم هماهنگ نیست — یا کمرنگش کن و یا پاکش کن») ═══
-                 قاب دور جدول‌ها حذف شد (BorderThickness=0) — جداکنندهٔ بصری
-                 همان کارتِ درونش است؛ در تم تیره دیگر خط خاکستری روشنِ ناهماهنگ
-                 دور جدول دیده نمی‌شود. -->
-            <Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
-                <Setter Property="AlternationCount" Value="2" />
-                <Setter Property="AlternatingRowBackground" Value="{DynamicResource App.ZebraRowBrush}" />
-                <Setter Property="BorderThickness" Value="0" />
-                <Setter Property="BorderBrush" Value="Transparent" />
-            </Style>
+            <!-- پیش‌فرض ضمنی برای جدول‌هایی که استایل محلی ندارند -->
+            <Style TargetType="DataGrid" BasedOn="{StaticResource App.TableDataGrid}" />
 
-            <!-- ═══ چرخهٔ ۷۵ — گوره‌خری ListBox/ListView (گزارش مالک: «در برخی
-                 از لیست ها اعمال نشده») ═══ فهرست‌های ساده (نتایج جستجو، صف‌ها،
-                 لیست‌های فرم‌ها) که DataGrid نیستند هم سطرهای یک‌درمیان می‌گیرند؛
-                 استایل کانتینر روی استایل پیش‌فرض ListBoxItem سوار است تا انتخاب/
-                 هاور دست‌نخورده بماند و هر فهرستی که ItemContainerStyle محلی خودش
-                 را دارد همان مقدم می‌ماند (مقدار محلی بر Setter استایل می‌چربد). -->
+            <!-- ظاهر فهرست‌های ساده: سطح تم‌خور و کانتینرهای خوانا؛ قالب‌های
+                 سفارشی محلی (کارت انتخاب/ناوبری) همچنان بر این پیش‌فرض مقدم‌اند. -->
             <Style TargetType="ListBox" BasedOn="{StaticResource {x:Type ListBox}}">
+                <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                <Setter Property="BorderThickness" Value="0" />
                 <Setter Property="AlternationCount" Value="2" />
                 <Setter Property="ItemContainerStyle">
                     <Setter.Value>
                         <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                            <Setter Property="MinHeight" Value="36" />
+                            <Setter Property="Padding" Value="10,6" />
+                            <Setter Property="Margin" Value="1,1" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderBrush" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="1" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="VerticalContentAlignment" Value="Center" />
                             <Style.Triggers>
                                 <Trigger Property="ItemsControl.AlternationIndex" Value="1">
                                     <Setter Property="Background" Value="{DynamicResource App.ZebraRowBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                                    <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Primary.Light}" />
+                                    <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -524,18 +572,58 @@
                 </Setter>
             </Style>
             <Style TargetType="ListView" BasedOn="{StaticResource {x:Type ListView}}">
+                <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                <Setter Property="BorderThickness" Value="0" />
                 <Setter Property="AlternationCount" Value="2" />
                 <Setter Property="ItemContainerStyle">
                     <Setter.Value>
                         <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+                            <Setter Property="MinHeight" Value="36" />
+                            <Setter Property="Padding" Value="10,6" />
+                            <Setter Property="Margin" Value="1,1" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderBrush" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="1" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="VerticalContentAlignment" Value="Center" />
                             <Style.Triggers>
                                 <Trigger Property="ItemsControl.AlternationIndex" Value="1">
                                     <Setter Property="Background" Value="{DynamicResource App.ZebraRowBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                                    <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Primary.Light}" />
+                                    <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
                     </Setter.Value>
                 </Setter>
+            </Style>
+
+            <!-- درخت‌های حسابداری/ساختاری از همان سطوح تم‌خور و انتخاب مشخص استفاده می‌کنند -->
+            <Style TargetType="TreeView" BasedOn="{StaticResource {x:Type TreeView}}">
+                <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                <Setter Property="BorderThickness" Value="0" />
+            </Style>
+            <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                <Setter Property="MinHeight" Value="36" />
+                <Setter Property="Padding" Value="8,5" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Style.Triggers>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Primary.Light}" />
+                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                    </Trigger>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                    </Trigger>
+                </Style.Triggers>
             </Style>
         </ResourceDictionary>
     </Application.Resources>

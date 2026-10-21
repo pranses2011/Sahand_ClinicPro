@@ -318,13 +318,13 @@
                               SelectedItem="{Binding SelectedScheduleRow, Mode=TwoWay}">
                         <DataGrid.Resources>
                             <!-- سرستون وسط‌چین — بر سبک ضمنی سراسری سوار می‌شود -->
-                            <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                            <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource App.TableDataGridColumnHeader}">
                                 <Setter Property="HorizontalContentAlignment" Value="Center" />
                             </Style>
                         </DataGrid.Resources>
                         <!-- سلول وسط‌چین — سبک ضمنی App (کشش محتوا) برای همین گرید بازنویسی می‌شود -->
                         <DataGrid.CellStyle>
-                            <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource App.TableDataGridCell}">
                                 <Setter Property="HorizontalContentAlignment" Value="Center" />
                                 <Setter Property="VerticalContentAlignment" Value="Center" />
                             </Style>

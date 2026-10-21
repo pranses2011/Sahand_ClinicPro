@@ -196,7 +196,7 @@
                               HeadersVisibility="Column" FontSize="12"
                               EnableRowVirtualization="True" VirtualizingPanel.IsVirtualizing="True">
                         <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource App.TableDataGridRow}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding DiffColor}" Value="#E53935">
                                         <Setter Property="Background" Value="#45E53935" /> <!-- چرخهٔ ۷۸ — نیمه‌شفاف؛ سازگار با تم تیره -->

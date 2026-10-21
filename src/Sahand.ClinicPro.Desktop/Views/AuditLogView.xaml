@@ -61,7 +61,7 @@
                   VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
                   EnableColumnVirtualization="True" ScrollViewer.IsDeferredScrollingEnabled="True"
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                  HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                  HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="{DynamicResource App.ZebraRowBrush}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="زمان" Width="160"
                                     Binding="{Binding CreatedAt, TargetNullValue=—, Converter={StaticResource PersianDigits}}" />
@@ -101,11 +101,11 @@
                           MinHeight="120" MaxHeight="260"
                           AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                           HeadersVisibility="Column" FontSize="11.5"
-                          AlternatingRowBackground="#FDFEFF"
+                          AlternatingRowBackground="{DynamicResource App.ZebraRowBrush}"
                           VirtualizingPanel.IsVirtualizing="True"
                           ScrollViewer.VerticalScrollBarVisibility="Auto">
                     <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow">
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource App.TableDataGridRow}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Changed}" Value="True">
                                     <!-- چرخهٔ ۷۸ — کهربایی نیمه‌شفاف؛ سازگار با تم تیره و روی نوار گوره‌خری -->

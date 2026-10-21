@@ -17,6 +17,16 @@
         <TextBlock Text="آیکون گروه" FontSize="11.5" Opacity="0.7" Margin="2,14,2,6" />
         <ListBox x:Name="IconList" MaxHeight="190" SelectionMode="Single"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <!-- کاشی‌های آیکون در WrapPanel اندازهٔ ثابت خود را حفظ می‌کنند. -->
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                    <Setter Property="MinHeight" Value="0" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="Margin" Value="0" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="0" />
+                </Style>
+            </ListBox.ItemContainerStyle>
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapPanel />

@@ -78,7 +78,7 @@
             <!-- ═══ رنگ ردیف از فلگ تفسیر — چرخهٔ ۶۹ (گزارش مالک: «رنگ ردیف
                  آزمایش از نتیجهٔ آزمایش مشخص بشه») ═══ -->
             <DataGrid.RowStyle>
-                <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                <Style TargetType="DataGridRow" BasedOn="{StaticResource App.TableDataGridRow}">
                     <!-- ═══ چرخهٔ ۷۸ (بندهای ۸/۹ مالک) ═══
                          پس‌زمینهٔ پایهٔ سخت‌کد «سفید» حذف شد: هم گوره‌خری سراسری را
                          می‌کشت و هم در تم تیره جدول را سفیدِ ناهماهنگ می‌کرد؛

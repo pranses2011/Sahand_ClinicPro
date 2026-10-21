@@ -136,7 +136,7 @@
                     <!-- جدول اندازه‌گیری‌ها با z-score -->
                     <DataGrid Grid.Row="3" ItemsSource="{Binding GrowthRows}" SelectedItem="{Binding SelectedGrowthRow}"
                               AutoGenerateColumns="False" IsReadOnly="True"
-                              Style="{StaticResource MaterialDesignDataGrid}"
+                              Style="{StaticResource App.TableDataGrid}"
                               HeadersVisibility="Column">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" />
@@ -200,7 +200,7 @@
                     <!-- فهرست -->
                     <DataGrid Grid.Row="1" ItemsSource="{Binding FamilyRows}" SelectedItem="{Binding SelectedFamilyRow}"
                               AutoGenerateColumns="False" IsReadOnly="True"
-                              Style="{StaticResource MaterialDesignDataGrid}"
+                              Style="{StaticResource App.TableDataGrid}"
                               HeadersVisibility="Column">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="خویشاوند" Binding="{Binding Relative, Converter={StaticResource PersianDigits}}" />
@@ -261,10 +261,10 @@
                     <!-- فهرست طرح‌ها -->
                     <DataGrid Grid.Row="1" ItemsSource="{Binding CarePlanRows}" SelectedItem="{Binding SelectedCarePlan}"
                               AutoGenerateColumns="False" IsReadOnly="True"
-                              Style="{StaticResource MaterialDesignDataGrid}"
+                              Style="{StaticResource App.TableDataGrid}"
                               HeadersVisibility="Column">
                         <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow">
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource App.TableDataGridRow}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsReviewOverdue}" Value="True">
                                         <Setter Property="Background" Value="#33FB8C00" /> <!-- چرخهٔ ۷۸ — نارنجی نیمه‌شفاف؛ سازگار با تم تیره -->

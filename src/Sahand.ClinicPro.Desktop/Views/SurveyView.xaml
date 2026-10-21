@@ -166,7 +166,7 @@
                     <DataGrid Grid.Row="2" ItemsSource="{Binding Surveys}"
                               SelectedItem="{Binding SelectedSurvey}"
                               AutoGenerateColumns="False" IsReadOnly="True"
-                              Style="{StaticResource MaterialDesignDataGrid}"
+                              Style="{StaticResource App.TableDataGrid}"
                               HeadersVisibility="Column"
                               FontSize="12.5" SelectionMode="Single">
                         <DataGrid.Columns>

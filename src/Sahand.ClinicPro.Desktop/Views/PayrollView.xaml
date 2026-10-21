@@ -93,7 +93,7 @@
         <!-- جدول حقوق -->
         <DataGrid Grid.Row="3" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}"
                   AutoGenerateColumns="False" IsReadOnly="True"
-                  Style="{StaticResource MaterialDesignDataGrid}"
+                  Style="{StaticResource App.TableDataGrid}"
                   HeadersVisibility="Column">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" />

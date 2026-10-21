@@ -166,7 +166,7 @@
                   CanUserResizeColumns="True"
                   MouseDoubleClick="OnRowDoubleClick">
             <DataGrid.RowStyle>
-                <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                <Style TargetType="DataGridRow" BasedOn="{StaticResource App.TableDataGridRow}">
                     <Setter Property="ContextMenu">
                         <Setter.Value>
                             <ContextMenu>
