@@ -75,7 +75,7 @@ public partial class LoginWindow : Window
     {
         while (element is not null)
         {
-            if (element is ButtonBase or TextBoxBase or PasswordBox or ComboBox)
+            if (element is ButtonBase or TextBoxBase or System.Windows.Controls.PasswordBox or ComboBox)
                 return true;
 
             element = element switch
