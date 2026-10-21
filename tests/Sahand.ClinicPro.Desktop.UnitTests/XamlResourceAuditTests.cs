@@ -171,4 +171,31 @@ public class XamlResourceAuditTests
             string.Join("، ", scopeViolations.Select(kv =>
                 $"{kv.Key} در {string.Join("، ", kv.Value.Distinct())}")));
     }
+
+    [Fact]
+    public void کاشی_میانبر_و_توست_در_مقیاس_های_مختلف_به_قاب_ثابت_بریده_نمی‌شوند()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "Directory.Build.props")))
+        {
+            dir = dir.Parent!;
+        }
+
+        dir.Should().NotBeNull("ریشه مخزن با Directory.Build.props یافت نشد");
+        var desktop = Path.Combine(dir!.FullName, "src", "Sahand.ClinicPro.Desktop");
+        var mainWindow = File.ReadAllText(Path.Combine(desktop, "MainWindow.xaml"));
+        var dashboard = File.ReadAllText(Path.Combine(desktop, "Views", "DashboardView.xaml"));
+
+        mainWindow.Should().Contain("UseLayoutRounding=\"True\"",
+            "گرد کردن اندازه‌گیری در سطح پنجره خطای نیم‌پیکسل در DPIهای کسری را مهار می‌کند");
+        mainWindow.Should().Contain("MinHeight=\"60\"",
+            "کارت توست باید حداقل فضای عمودی امن برای متن و آیکون داشته باشد");
+        mainWindow.Should().NotContain("MaxHeight=\"",
+            "ارتفاع توست نباید سقف ثابت داشته باشد؛ پیام بلند باید رشد کند");
+        dashboard.Should().Contain("UseLayoutRounding=\"True\"");
+        dashboard.Should().Contain("Width=\"168\" MinHeight=\"96\"",
+            "کاشی باید ارتفاع کشسان و فضای کافی برای فونت/مقیاس داشته باشد");
+        dashboard.Should().Contain("TextWrapping=\"Wrap\"",
+            "عنوان و زیرعنوان بلند باید به‌جای خروج از قاب در چند خط نمایش داده شوند");
+    }
 }
