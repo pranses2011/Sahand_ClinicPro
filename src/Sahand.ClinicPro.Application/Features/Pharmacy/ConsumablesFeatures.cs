@@ -224,6 +224,7 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
                     TransactionType = PharmacyTransactionType.StockOut,
                     Quantity = take,
                     UnitPrice = batch.SellPrice,
+                    PurchaseUnitCost = batch.PurchasePrice,
                     TotalPrice = take * batch.SellPrice,
                     TransactionDate = now,
                     ReferenceType = PharmacyReferenceType.Reception,

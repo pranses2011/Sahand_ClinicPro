@@ -100,7 +100,7 @@
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="8,2.5" HorizontalAlignment="Center"
                                                 Background="{Binding StatusColor}" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding StatusText}" FontSize="11" />
+                                            <TextBlock Text="{Binding StatusText}" FontSize="11" VerticalAlignment="Center"/>
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -153,7 +153,7 @@
                                                 <ComboBox ItemsSource="{Binding DataContext.FlatAccounts, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                           SelectedValuePath="Id"
                                                           SelectedValue="{Binding AccountId, UpdateSourceTrigger=PropertyChanged}"
-                                                          DisplayMemberPath="Display" FontSize="11" />
+                                                          DisplayMemberPath="Display" FontSize="11" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -167,8 +167,8 @@
                                                 <Button Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                                        Foreground="#C62828" Padding="3">
-                                                    <materialDesign:PackIcon Kind="Delete" Width="13" Height="13"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                                        Foreground="#C62828" Padding="3" VerticalAlignment="Center">
+                                                    <materialDesign:PackIcon Kind="Delete" Width="13" Height="13"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" VerticalAlignment="Center"/>
                                                 </Button>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>

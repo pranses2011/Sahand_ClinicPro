@@ -83,7 +83,7 @@
                         <DataTemplate>
                             <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
                                     Background="{Binding StatusColor}" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="White" />
+                                <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="White" VerticalAlignment="Center"/>
                             </Border>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -91,27 +91,27 @@
                 <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="230" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         Command="{Binding DataContext.EditUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        CommandParameter="{Binding}" ToolTip="ویرایش اطلاعات" Margin="2,0">
-                                    <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" />
+                                        CommandParameter="{Binding}" ToolTip="ویرایش اطلاعات" Margin="2,0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         Command="{Binding DataContext.ResetPasswordCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        CommandParameter="{Binding}" ToolTip="ریست رمز عبور" Margin="2,0">
-                                    <materialDesign:PackIcon Kind="Key" Width="15" Height="15" />
+                                        CommandParameter="{Binding}" ToolTip="ریست رمز عبور" Margin="2,0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Key" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         Command="{Binding DataContext.ToggleLockCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        CommandParameter="{Binding}" ToolTip="قفل / آزادسازی" Margin="2,0">
-                                    <materialDesign:PackIcon Kind="Lock" Width="15" Height="15" />
+                                        CommandParameter="{Binding}" ToolTip="قفل / آزادسازی" Margin="2,0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Lock" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         Command="{Binding DataContext.DeleteUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}" ToolTip="غیرفعال‌سازی" Margin="2,0"
-                                        Foreground="#C62828">
-                                    <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                        Foreground="#C62828" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>

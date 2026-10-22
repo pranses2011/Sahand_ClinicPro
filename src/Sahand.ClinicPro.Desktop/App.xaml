@@ -56,8 +56,9 @@
             <SolidColorBrush x:Key="App.ZebraRowBrush" Color="#F1F6FC" />
             <!-- سرستون‌ها باید از ردیف‌ها متمایز باشند؛ این دو قلم در ThemeService
                  برای حالت روشن/تیره هماهنگ به‌روزرسانی می‌شوند. -->
-            <SolidColorBrush x:Key="App.TableHeaderBackgroundBrush" Color="#DCEBFA" />
-            <SolidColorBrush x:Key="App.TableHeaderForegroundBrush" Color="#173B65" />
+            <SolidColorBrush x:Key="App.TableHeaderBackgroundBrush" Color="#BED4EC" />
+            <SolidColorBrush x:Key="App.TableHeaderForegroundBrush" Color="#123352" />
+            <SolidColorBrush x:Key="App.TableHeaderHoverBrush" Color="#A9C6E5" />
             <DataTemplate x:Key="App.TableHeaderContentTemplate">
                 <TextBlock Text="{Binding}"
                            TextWrapping="Wrap"
@@ -237,17 +238,68 @@
                 <Setter Property="Background" Value="{DynamicResource App.TableHeaderBackgroundBrush}" />
                 <Setter Property="Foreground" Value="{DynamicResource App.TableHeaderForegroundBrush}" />
                 <Setter Property="ContentTemplateSelector" Value="{StaticResource App.TableHeaderTemplateSelector}" />
-                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontSize" Value="13.5" />
                 <Setter Property="FontWeight" Value="Bold" />
-                <Setter Property="Padding" Value="12,12" />
-                <Setter Property="MinHeight" Value="58" />
+                <Setter Property="Padding" Value="12,10" />
+                <Setter Property="MinHeight" Value="54" />
                 <Setter Property="MaxHeight" Value="112" />
                 <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
-                <Setter Property="BorderThickness" Value="0,0,0,1" />
+                <Setter Property="BorderThickness" Value="0,0,1,2" />
                 <Setter Property="HorizontalContentAlignment" Value="Center" />
                 <Setter Property="VerticalContentAlignment" Value="Center" />
                 <Setter Property="SnapsToDevicePixels" Value="True" />
+                <!-- قالب صریح: پس‌زمینهٔ سرستون حتی با قالب پیش‌فرض MaterialDesign
+                     و Headerهای سفارشیِ TextBlock/Run واقعاً رندر می‌شود. -->
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="DataGridColumnHeader">
+                            <Border x:Name="HeaderSurface"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    Padding="{TemplateBinding Padding}"
+                                    SnapsToDevicePixels="True">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <ContentPresenter Grid.Column="0"
+                                                      Content="{TemplateBinding Content}"
+                                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                      ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
+                                                      RecognizesAccessKey="True"
+                                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                    <TextBlock x:Name="SortGlyph" Grid.Column="1" Text="▲"
+                                               Visibility="Collapsed" Margin="6,0,0,0"
+                                               FontSize="10" FontWeight="Black"
+                                               Foreground="{TemplateBinding Foreground}"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="HeaderSurface" Property="Background"
+                                            Value="{DynamicResource App.TableHeaderHoverBrush}" />
+                                </Trigger>
+                                <Trigger Property="SortDirection" Value="Ascending">
+                                    <Setter TargetName="SortGlyph" Property="Text" Value="▲" />
+                                    <Setter TargetName="SortGlyph" Property="Visibility" Value="Visible" />
+                                </Trigger>
+                                <Trigger Property="SortDirection" Value="Descending">
+                                    <Setter TargetName="SortGlyph" Property="Text" Value="▼" />
+                                    <Setter TargetName="SortGlyph" Property="Visibility" Value="Visible" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
+            <!-- سبک ضمنی هم تضمین می‌کند هدر جدول‌هایی که Style محلی دارند
+                 همچنان کنتراست و قلم یکسان بگیرند. -->
+            <Style TargetType="DataGridColumnHeader"
+                   BasedOn="{StaticResource App.TableDataGridColumnHeader}" />
 
             <!-- ردیف‌ها — فاصله‌گذاری یکدست، انتخاب آبی ملایم، زبرا از DataGrid -->
             <Style x:Key="App.TableDataGridRow" TargetType="DataGridRow"

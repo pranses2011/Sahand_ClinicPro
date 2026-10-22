@@ -222,14 +222,14 @@
                                                 VerticalAlignment="Center">
                                         <Button Style="{StaticResource App.RowIconButton}" ToolTip="ویرایش خدمت"
                                                 Command="{Binding DataContext.EditServiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}" Foreground="#1565C0">
-                                            <materialDesign:PackIcon Kind="Pencil" Width="17" Height="17" />
+                                                CommandParameter="{Binding}" Foreground="#1565C0" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="Pencil" Width="17" Height="17" VerticalAlignment="Center"/>
                                         </Button>
                                         <Button Style="{StaticResource App.RowIconButton}" ToolTip="حذف نرم / غیرفعال‌سازی"
                                                 Command="{Binding DataContext.DeleteServiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}" Foreground="#C62828"
-                                                Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
-                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="17" Height="17" />
+                                                Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="17" Height="17" VerticalAlignment="Center"/>
                                         </Button>
                                     </StackPanel>
                                 </DataTemplate>

@@ -57,16 +57,16 @@
                 <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="180" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         Command="{Binding DataContext.SetMainCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        CommandParameter="{Binding}" ToolTip="تعیین به‌عنوان شعبه اصلی" Margin="2,0">
-                                    <materialDesign:PackIcon Kind="StarOutline" Width="15" Height="15" />
+                                        CommandParameter="{Binding}" ToolTip="تعیین به‌عنوان شعبه اصلی" Margin="2,0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="StarOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         Command="{Binding DataContext.DeleteBranchCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        CommandParameter="{Binding}" ToolTip="حذف شعبه" Foreground="#C62828" Margin="2,0">
-                                    <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                        CommandParameter="{Binding}" ToolTip="حذف شعبه" Foreground="#C62828" Margin="2,0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>

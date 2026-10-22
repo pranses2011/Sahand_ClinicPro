@@ -97,7 +97,7 @@
                                                 <ComboBox ItemsSource="{Binding DataContext.Performers, RelativeSource={RelativeSource AncestorType=Window}}"
                                                           SelectedItem="{Binding Performer, UpdateSourceTrigger=PropertyChanged}"
                                                           DisplayMemberPath="FullName"
-                                                          FontSize="11.5" />
+                                                          FontSize="11.5" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -111,8 +111,8 @@
                                                 <Button Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                                        Foreground="#C62828" Padding="4">
-                                                    <materialDesign:PackIcon Kind="Delete" Width="14" Height="14" />
+                                                        Foreground="#C62828" Padding="4" VerticalAlignment="Center">
+                                                    <materialDesign:PackIcon Kind="Delete" Width="14" Height="14" VerticalAlignment="Center"/>
                                                 </Button>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>

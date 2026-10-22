@@ -144,7 +144,7 @@
                             <DataGridTemplateColumn Header="وضعیت موجودی" Width="Auto" SortMemberPath="IsLowStock" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center">
+                                        <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <Border.Style>
                                                 <Style TargetType="Border">
                                                     <Setter Property="Background" Value="#C8E6C9" />
@@ -155,7 +155,7 @@
                                                     </Style.Triggers>
                                                 </Style>
                                             </Border.Style>
-                                            <TextBlock FontSize="11">
+                                            <TextBlock FontSize="11" VerticalAlignment="Center">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Text" Value="🟢 موجود" />
@@ -177,8 +177,8 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="#FFF3E0" CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
-                                                Visibility="{Binding IsExpiringSoon, Converter={StaticResource BoolToVisibility}}">
-                                            <TextBlock Text="⏰ نزدیک انقضا" FontSize="10.5" Foreground="#E65100" />
+                                                Visibility="{Binding IsExpiringSoon, Converter={StaticResource BoolToVisibility}}" VerticalAlignment="Center">
+                                            <TextBlock Text="⏰ نزدیک انقضا" FontSize="10.5" Foreground="#E65100" VerticalAlignment="Center"/>
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

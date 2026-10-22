@@ -1261,8 +1261,28 @@ public partial class ReceptionsViewModel : ViewModelBase
             // چرخه ۲۴ — قلم فاکتور: در حالت خدمتی، خودِ خدمت با قیمت تعرفه؛
             // در حالت ویزیت، ویزیت پزشک (رفتار پیشین)
             isServiceMode
-                ? new { serviceId = (long?)SelectedService!.Id, description = SelectedService.Name, quantity = 1, unitPrice = SelectedService.Price, discountPercent = 0m }
-                : new { serviceId = (long?)null, description = $"ویزیت {SelectedDoctor!.Name}", quantity = 1, unitPrice = VisitFee, discountPercent = 0m }
+                ? new
+                {
+                    serviceId = (long?)SelectedService!.Id,
+                    doctorId = (long?)null,
+                    performedById = SelectedPerformer?.Id,
+                    medicationId = (long?)null,
+                    description = SelectedService.Name,
+                    quantity = 1m,
+                    unitPrice = SelectedService.Price,
+                    discountPercent = 0m
+                }
+                : new
+                {
+                    serviceId = (long?)null,
+                    doctorId = (long?)SelectedDoctor!.Id,
+                    performedById = (long?)null,
+                    medicationId = (long?)null,
+                    description = $"ویزیت {SelectedDoctor!.Name}",
+                    quantity = 1m,
+                    unitPrice = VisitFee,
+                    discountPercent = 0m
+                }
         };
 
         // چرخهٔ ۳۹ — اقلام مصرفی با قیمت واقعی برداشت از بچ‌ها؛ معاف از بیمه
@@ -1271,6 +1291,9 @@ public partial class ReceptionsViewModel : ViewModelBase
             items.Add(new
             {
                 serviceId = (long?)null,
+                doctorId = (long?)null,
+                performedById = isServiceMode ? SelectedPerformer?.Id : (long?)null,
+                medicationId = (long?)consumed.MedicationId,
                 description = $"لوازم مصرفی: {consumed.Name}",
                 quantity = consumed.Quantity,
                 unitPrice = consumed.UnitPrice,

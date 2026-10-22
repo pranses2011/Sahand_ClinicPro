@@ -27,7 +27,9 @@ public record InvoiceItemDto(
     // چرخهٔ ۳۹ — معافیت بیمه‌ای قلم: برای اقلام کالایی (لوازم مصرفی درمانگاه)
     // که سهم بیمه ندارند و ۱۰۰٪ بر عهدهٔ بیمار است؛ پیش‌فرض false یعنی رفتار
     // پیشین (سهم بیمه از درصد شرکت بیمه) کاملاً دست‌نخورده می‌ماند
-    bool IsInsuranceExempt = false);
+    bool IsInsuranceExempt = false,
+    // شناسه قلم مصرفیِ مصرف‌شده در پذیرش برای بازیابی بهای خرید واقعی انبار
+    long? MedicationId = null);
 
 /// <summary>درخواست صدور فاکتور</summary>
 public record CreateInvoiceDto(

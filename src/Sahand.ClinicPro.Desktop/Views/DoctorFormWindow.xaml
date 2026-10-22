@@ -333,7 +333,7 @@
                             <DataGridTemplateColumn Header="روز" Width="Auto" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                             <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
                                                       VerticalAlignment="Center" Margin="0,0,8,0" />
                                             <TextBlock Text="{Binding DayName}" FontWeight="SemiBold"
@@ -405,7 +405,7 @@
                                                   SelectedValuePath="Id"
                                                   SelectedValue="{Binding RoomId, UpdateSourceTrigger=PropertyChanged}"
                                                   DisplayMemberPath="DisplayName"
-                                                  FontSize="11" />
+                                                  FontSize="11" VerticalAlignment="Center"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -513,9 +513,9 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center"
-                                                Background="#FFF3E0" Visibility="{Binding BookedAppointments, Converter={StaticResource ZeroToCollapsed}}">
+                                                Background="#FFF3E0" Visibility="{Binding BookedAppointments, Converter={StaticResource ZeroToCollapsed}}" VerticalAlignment="Center">
                                             <TextBlock FontSize="11" Foreground="#E65100"
-                                                       Text="{Binding BookedAppointments}" />
+                                                       Text="{Binding BookedAppointments}" VerticalAlignment="Center"/>
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -526,8 +526,8 @@
                                         <Button Command="{Binding DataContext.DeleteAbsenceCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource App.RowIconButton}"
-                                                ToolTip="حذف غیبت" Foreground="#C62828">
-                                            <materialDesign:PackIcon Kind="Delete" Width="15" Height="15" />
+                                                ToolTip="حذف غیبت" Foreground="#C62828" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="Delete" Width="15" Height="15" VerticalAlignment="Center"/>
                                         </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

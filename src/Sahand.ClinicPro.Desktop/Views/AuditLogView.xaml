@@ -118,7 +118,7 @@
                         <DataGridTemplateColumn Header="فیلد" Width="Auto" MaxWidth="420">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <Ellipse Width="7" Height="7" Margin="0,0,6,0"
                                                  VerticalAlignment="Center">
                                             <Ellipse.Style>

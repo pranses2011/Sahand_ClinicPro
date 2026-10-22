@@ -5,6 +5,7 @@ using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Billing;
 using Sahand.ClinicPro.Domain.Entities.People;
+using Sahand.ClinicPro.Domain.Entities.Pharmacy;
 using Sahand.ClinicPro.Domain.Entities.Personnel;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Domain.Interfaces;
@@ -98,7 +99,7 @@ public sealed class GenerateSalariesCommandHandler
                 .Select(d => d.Id)
                 .ToListAsync(cancellationToken);
 
-            var serviceProfitBase = await _unitOfWork.Repository<InvoiceItem>().QueryableNoTracking
+            var attributedItems = await _unitOfWork.Repository<InvoiceItem>().QueryableNoTracking
                 .Where(i => !i.IsDeleted &&
                             i.Invoice != null && !i.Invoice.IsDeleted &&
                             i.Invoice.InvoiceDate >= rangeFromDt && i.Invoice.InvoiceDate < rangeToDt &&
@@ -106,9 +107,43 @@ public sealed class GenerateSalariesCommandHandler
                              i.Invoice.Status == InvoiceStatus.PartiallyPaid ||
                              i.Invoice.Status == InvoiceStatus.Paid) &&
                             (i.PerformedById == employee.Id ||
-                             (i.DoctorId != null && linkedDoctorIds.Contains(i.DoctorId.Value))))
-                .SumAsync(i => (decimal?)(i.TotalPrice - i.UnitCost * i.Quantity),
-                    cancellationToken) ?? 0m;
+                             (i.DoctorId != null && linkedDoctorIds.Contains(i.DoctorId.Value)) ||
+                             (i.Invoice.Reception != null &&
+                              i.Invoice.Reception.PerformedByEmployeeId == employee.Id) ||
+                             (i.Invoice.Reception != null && i.Invoice.Reception.DoctorId != null &&
+                              linkedDoctorIds.Contains(i.Invoice.Reception.DoctorId.Value))))
+                .Select(i => new
+                {
+                    i.TotalPrice, i.UnitCost, i.Quantity, i.Description,
+                    ReceptionId = i.Invoice!.ReceptionId
+                })
+                .ToListAsync(cancellationToken);
+
+            var serviceProfitBase = attributedItems.Sum(i => i.TotalPrice - i.UnitCost * i.Quantity);
+
+            // فاکتورهای قدیمی‌تر ممکن است اقلام مصرفی را با UnitCost=0 ثبت کرده
+            // باشند. هزینهٔ همان پذیرش از عکس‌فوری تراکنش مصرف (و برای سوابق خیلی
+            // قدیمی‌تر از بهای خرید بچ) یک‌بار از سود پرسنل کسر می‌شود.
+            var legacyConsumableReceptionIds = attributedItems
+                .Where(i => i.UnitCost == 0m && i.ReceptionId.HasValue &&
+                            i.Description != null && i.Description.StartsWith("لوازم مصرفی:"))
+                .Select(i => i.ReceptionId!.Value).Distinct().ToList();
+            if (legacyConsumableReceptionIds.Count > 0)
+            {
+                var legacyConsumableCosts = await _unitOfWork.Repository<PharmacyTransaction>().QueryableNoTracking
+                    .Where(t => !t.IsDeleted &&
+                                t.ReferenceType == PharmacyReferenceType.Reception &&
+                                t.ReferenceId.HasValue && legacyConsumableReceptionIds.Contains(t.ReferenceId.Value) &&
+                                t.TransactionType == PharmacyTransactionType.StockOut && t.Inventory != null)
+                    .Select(t => new
+                    {
+                        ReceptionId = t.ReferenceId!.Value,
+                        t.Quantity,
+                        UnitCost = t.PurchaseUnitCost ?? t.Inventory!.PurchasePrice
+                    })
+                    .ToListAsync(cancellationToken);
+                serviceProfitBase -= legacyConsumableCosts.Sum(t => t.Quantity * t.UnitCost);
+            }
 
             // محاسبه با قواعد ۱۴۰۴ + حقوق درصدی از سود خدمات انجامی
             var result = PayrollCalculator.Calculate(

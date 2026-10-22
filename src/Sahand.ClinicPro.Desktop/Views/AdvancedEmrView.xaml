@@ -156,8 +156,8 @@
                                         <Button Command="{Binding DataContext.DeleteGrowthCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource App.RowIconButton}" Foreground="#C62828"
-                                                ToolTip="حذف ردیف رشد">
-                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                                ToolTip="حذف ردیف رشد" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                         </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -218,8 +218,8 @@
                                         <Button Command="{Binding DataContext.DeleteFamilyHistoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource App.RowIconButton}" Foreground="#C62828"
-                                                ToolTip="حذف سابقه خانوادگی">
-                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                                ToolTip="حذف سابقه خانوادگی" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                         </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -284,30 +284,30 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <!-- چرخهٔ ۷۹: کلیدهای عملیاتی آیکونی (هم‌الگوی لیست بیماران) -->
-                                        <StackPanel Orientation="Horizontal">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                             <Button Margin="0,0,4,0" ToolTip="تکمیل"
                                                     Command="{Binding DataContext.ChangePlanStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="Completed"
-                                                    Style="{StaticResource App.RowIconButton}" Foreground="#2E7D32">
-                                                <materialDesign:PackIcon Kind="Check" Width="15" Height="15" />
+                                                    Style="{StaticResource App.RowIconButton}" Foreground="#2E7D32" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="Check" Width="15" Height="15" VerticalAlignment="Center"/>
                                             </Button>
                                             <Button Margin="0,0,4,0" ToolTip="بازبینی شد"
                                                     Command="{Binding DataContext.ChangePlanStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="Active"
-                                                    Style="{StaticResource App.RowIconButton}" Foreground="#1565C0">
-                                                <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" />
+                                                    Style="{StaticResource App.RowIconButton}" Foreground="#1565C0" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" VerticalAlignment="Center"/>
                                             </Button>
                                             <Button Margin="0,0,4,0" ToolTip="متوقف"
                                                     Command="{Binding DataContext.ChangePlanStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="Discontinued"
-                                                    Style="{StaticResource App.RowIconButton}" Foreground="#E65100">
-                                                <materialDesign:PackIcon Kind="Pause" Width="15" Height="15" />
+                                                    Style="{StaticResource App.RowIconButton}" Foreground="#E65100" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="Pause" Width="15" Height="15" VerticalAlignment="Center"/>
                                             </Button>
                                             <Button ToolTip="حذف طرح مراقبت"
                                                     Command="{Binding DataContext.DeleteCarePlanCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource App.RowIconButton}" Foreground="#C62828">
-                                                <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                                    Style="{StaticResource App.RowIconButton}" Foreground="#C62828" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                             </Button>
                                         </StackPanel>
                                     </DataTemplate>

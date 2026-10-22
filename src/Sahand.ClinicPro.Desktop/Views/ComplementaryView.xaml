@@ -401,30 +401,30 @@
                             <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="210" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                             <!-- ✏️ طراح سوالات — بارگذاری سوالات موجود و ویرایش (چرخهٔ ۲۸) -->
                                             <Button Style="{StaticResource App.RowIconButton}"
                                                     Command="{Binding DataContext.OpenSurveyDesignerCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding}" ToolTip="طراحی/ویرایش سوالات">
-                                                <materialDesign:PackIcon Kind="PlaylistEdit" Width="15" Height="15" Foreground="#1565C0" />
+                                                    CommandParameter="{Binding}" ToolTip="طراحی/ویرایش سوالات" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="PlaylistEdit" Width="15" Height="15" Foreground="#1565C0" VerticalAlignment="Center"/>
                                             </Button>
                                             <!-- 📊 نتایج — دیالوگ خلاصه + توزیع ستاره (چرخهٔ ۲۸) -->
                                             <Button Style="{StaticResource App.RowIconButton}"
                                                     Command="{Binding DataContext.ShowSurveyResultsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding}" ToolTip="نتایج و آمار">
-                                                <materialDesign:PackIcon Kind="ChartBar" Width="15" Height="15" Foreground="#2E7D32" />
+                                                    CommandParameter="{Binding}" ToolTip="نتایج و آمار" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="ChartBar" Width="15" Height="15" Foreground="#2E7D32" VerticalAlignment="Center"/>
                                             </Button>
                                             <!-- ⏯ فعال/غیرفعال -->
                                             <Button Style="{StaticResource App.RowIconButton}"
                                                     Command="{Binding DataContext.ToggleSurveyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding}" ToolTip="فعال/غیرفعال">
-                                                <materialDesign:PackIcon Kind="ToggleSwitch" Width="15" Height="15" Foreground="#F9A825" />
+                                                    CommandParameter="{Binding}" ToolTip="فعال/غیرفعال" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="ToggleSwitch" Width="15" Height="15" Foreground="#F9A825" VerticalAlignment="Center"/>
                                             </Button>
                                             <!-- 🗑 حذف نرم با تأییدیهٔ فارسی (چرخهٔ ۲۸) -->
                                             <Button Style="{StaticResource App.RowIconButton}"
                                                     Command="{Binding DataContext.DeleteSurveyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding}" ToolTip="حذف نظرسنجی">
-                                                <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" Foreground="#C62828" />
+                                                    CommandParameter="{Binding}" ToolTip="حذف نظرسنجی" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" Foreground="#C62828" VerticalAlignment="Center"/>
                                             </Button>
                                         </StackPanel>
                                     </DataTemplate>

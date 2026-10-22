@@ -94,7 +94,7 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <!-- رنگ وضعیت با تریگر — مبدل اختصاصی لازم نیست -->
-                                <Border CornerRadius="10" Padding="10,2.5" HorizontalAlignment="Center">
+                                <Border CornerRadius="10" Padding="10,2.5" HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="#FFEBEE" />
@@ -105,7 +105,7 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
-                                    <TextBlock Text="{Binding StatusText, Converter={StaticResource PersianDigits}}" FontSize="11.5" />
+                                    <TextBlock Text="{Binding StatusText, Converter={StaticResource PersianDigits}}" FontSize="11.5" VerticalAlignment="Center"/>
                                 </Border>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>

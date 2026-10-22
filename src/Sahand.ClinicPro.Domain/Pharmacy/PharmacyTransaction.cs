@@ -19,8 +19,11 @@ public class PharmacyTransaction : AuditableEntity, ISoftDeletable
     /// <summary>تعداد</summary>
     public decimal Quantity { get; set; } = 0m;
 
-    /// <summary>قیمت واحد</summary>
+    /// <summary>قیمت واحد ثبت‌شده برای تراکنش (قیمت فروش/ورود)</summary>
     public decimal UnitPrice { get; set; } = 0m;
+
+    /// <summary>عکس‌فوری بهای خرید واحد برای محاسبهٔ سود مصرفی‌ها (ریال)</summary>
+    public decimal? PurchaseUnitCost { get; set; }
 
     /// <summary>قیمت کل</summary>
     public decimal TotalPrice { get; set; } = 0m;

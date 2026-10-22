@@ -8,6 +8,7 @@ using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Accounting;
 using Sahand.ClinicPro.Domain.Entities.Billing;
 using Sahand.ClinicPro.Domain.Entities.People;
+using Sahand.ClinicPro.Domain.Entities.Pharmacy;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Domain.Events;
 using Sahand.ClinicPro.Domain.Interfaces;
@@ -146,6 +147,47 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                 .ToDictionaryAsync(s => s.Id, s => s.DefaultCost, cancellationToken);
         }
 
+        // بهای تمام‌شدهٔ لوازم مصرفی از تراکنش‌های واقعی برداشت همان پذیرش
+        // خوانده می‌شود؛ هیچ هزینه‌ای از کلاینت پذیرفته نمی‌شود.
+        var medicationIds = dto.Items.Where(i => i.MedicationId.HasValue)
+            .Select(i => i.MedicationId!.Value).Distinct().ToList();
+        var consumableCostByMedication = new Dictionary<long, (decimal Quantity, decimal TotalCost)>();
+        if (medicationIds.Count > 0)
+        {
+            if (!dto.ReceptionId.HasValue)
+                return Result<long>.Failure(new Error("BILLING.CONSUMABLE_RECEPTION",
+                    "ثبت لوازم مصرفی در فاکتور نیازمند پذیرش مرتبط است"));
+
+            var consumedRows = await _unitOfWork.Repository<PharmacyTransaction>().QueryableNoTracking
+                .Where(t => !t.IsDeleted &&
+                            t.ReferenceType == PharmacyReferenceType.Reception &&
+                            t.ReferenceId == dto.ReceptionId.Value &&
+                            t.TransactionType == PharmacyTransactionType.StockOut &&
+                            t.Inventory != null && medicationIds.Contains(t.Inventory.MedicationId))
+                .Select(t => new
+                {
+                    MedicationId = t.Inventory!.MedicationId,
+                    t.Quantity,
+                    UnitCost = t.PurchaseUnitCost ?? t.Inventory!.PurchasePrice
+                })
+                .ToListAsync(cancellationToken);
+
+            consumableCostByMedication = consumedRows
+                .GroupBy(x => x.MedicationId)
+                .ToDictionary(g => g.Key,
+                    g => (g.Sum(x => x.Quantity), g.Sum(x => x.Quantity * x.UnitCost)));
+
+            foreach (var requested in dto.Items.Where(i => i.MedicationId.HasValue)
+                         .GroupBy(i => i.MedicationId!.Value))
+            {
+                var requestedQuantity = requested.Sum(i => i.Quantity);
+                if (!consumableCostByMedication.TryGetValue(requested.Key, out var consumed) ||
+                    consumed.Quantity < requestedQuantity)
+                    return Result<long>.Failure(new Error("BILLING.CONSUMABLE_NOT_CONSUMED",
+                        "اقلام مصرفی فاکتور باید پیش‌تر در همین پذیرش از انبار برداشت شده باشند"));
+            }
+        }
+
         decimal subTotal = 0, totalDiscount = 0, totalInsuranceShare = 0;
 
         foreach (var item in dto.Items)
@@ -192,8 +234,13 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                 DoctorShareAmount = net * item.DoctorSharePercent / 100m,
                 PerformedById = performedById,
                 UnitCost = item.ServiceId.HasValue &&
-                           costById.TryGetValue(item.ServiceId.Value, out var unitCost)
-                    ? unitCost : 0m
+                           costById.TryGetValue(item.ServiceId.Value, out var serviceUnitCost)
+                    ? serviceUnitCost
+                    : item.MedicationId.HasValue &&
+                      consumableCostByMedication.TryGetValue(item.MedicationId.Value, out var consumedCost) &&
+                      consumedCost.Quantity > 0m
+                        ? consumedCost.TotalCost / consumedCost.Quantity
+                        : 0m
             });
         }
 

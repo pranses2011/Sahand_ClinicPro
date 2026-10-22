@@ -6,6 +6,7 @@ using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Billing;
 using Sahand.ClinicPro.Domain.Entities.Infrastructure;
 using Sahand.ClinicPro.Domain.Entities.People;
+using Sahand.ClinicPro.Domain.Entities.Pharmacy;
 using Sahand.ClinicPro.Domain.Entities.Personnel;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Domain.Interfaces;
@@ -177,11 +178,19 @@ internal static class CommissionDetailReportBuilder
                         (i.Invoice.Status == InvoiceStatus.Issued ||
                          i.Invoice.Status == InvoiceStatus.PartiallyPaid ||
                          i.Invoice.Status == InvoiceStatus.Paid) &&
-                        (i.PerformedById != null && employeeIds.Contains(i.PerformedById.Value) ||
-                         (i.DoctorId != null && doctorIdsAll.Contains(i.DoctorId.Value))))
+                        ((i.PerformedById != null && employeeIds.Contains(i.PerformedById.Value)) ||
+                         (i.DoctorId != null && doctorIdsAll.Contains(i.DoctorId.Value)) ||
+                         (i.Invoice.Reception != null &&
+                          i.Invoice.Reception.PerformedByEmployeeId != null &&
+                          employeeIds.Contains(i.Invoice.Reception.PerformedByEmployeeId.Value)) ||
+                         (i.Invoice.Reception != null &&
+                          i.Invoice.Reception.DoctorId != null &&
+                          doctorIdsAll.Contains(i.Invoice.Reception.DoctorId.Value))))
             .Select(i => new ItemProjection(
-                i.Id, i.PerformedById, i.DoctorId, i.Quantity,
-                i.UnitPrice, i.UnitCost, i.TotalPrice,
+                i.Id, i.PerformedById, i.DoctorId, i.Invoice!.ReceptionId,
+                i.Invoice.Reception != null ? i.Invoice.Reception.PerformedByEmployeeId : null,
+                i.Invoice.Reception != null ? i.Invoice.Reception.DoctorId : null,
+                i.Quantity, i.UnitPrice, i.UnitCost, i.TotalPrice,
                 i.Service != null ? i.Service.ServiceName :
                     (i.Description ?? "خدمت بدون عنوان"),
                 i.Invoice!.InvoiceNumber ?? "—",
@@ -204,6 +213,47 @@ internal static class CommissionDetailReportBuilder
         var employeeNames = employees.ToDictionary(e => e.Id,
             e => e.FirstName + " " + e.LastName);
 
+        // سوابق قدیمیِ لوازم مصرفی UnitCost ندارند؛ هزینهٔ مصرف همان پذیرش را
+        // از عکس‌فوری تراکنش انبار می‌خوانیم و برای نمایش جزئیات، میان اقلام
+        // مصرفی همان پذیرش به نسبت تعداد توزیع می‌کنیم.
+        var legacyReceptionIds = items
+            .Where(i => i.UnitCost == 0m && i.ReceptionId.HasValue &&
+                        i.ServiceName.StartsWith("لوازم مصرفی:"))
+            .Select(i => i.ReceptionId!.Value).Distinct().ToList();
+        if (legacyReceptionIds.Count > 0)
+        {
+            var legacyCosts = await unitOfWork.Repository<PharmacyTransaction>().QueryableNoTracking
+                .Where(t => !t.IsDeleted &&
+                            t.ReferenceType == PharmacyReferenceType.Reception &&
+                            t.ReferenceId.HasValue && legacyReceptionIds.Contains(t.ReferenceId.Value) &&
+                            t.TransactionType == PharmacyTransactionType.StockOut && t.Inventory != null)
+                .Select(t => new
+                {
+                    ReceptionId = t.ReferenceId!.Value,
+                    t.Quantity,
+                    UnitCost = t.PurchaseUnitCost ?? t.Inventory!.PurchasePrice
+                })
+                .ToListAsync(ct);
+            var costsByReception = legacyCosts.GroupBy(t => t.ReceptionId)
+                .ToDictionary(g => g.Key, g => g.Sum(t => t.Quantity * t.UnitCost));
+            var quantitiesByReception = items
+                .Where(i => i.UnitCost == 0m && i.ReceptionId.HasValue &&
+                            i.ServiceName.StartsWith("لوازم مصرفی:"))
+                .GroupBy(i => i.ReceptionId!.Value)
+                .ToDictionary(g => g.Key, g => g.Sum(i => i.Quantity));
+
+            items = items.Select(item =>
+            {
+                if (item.UnitCost == 0m && item.ReceptionId.HasValue &&
+                    item.ServiceName.StartsWith("لوازم مصرفی:") &&
+                    costsByReception.TryGetValue(item.ReceptionId.Value, out var totalCost) &&
+                    quantitiesByReception.TryGetValue(item.ReceptionId.Value, out var totalQuantity) &&
+                    totalQuantity > 0m)
+                    return item with { UnitCost = totalCost / totalQuantity };
+                return item;
+            }).ToList();
+        }
+
         var details = new List<CommissionDetailRow>();
         // تجمیع به تفکیک پرسنل: (تعداد، فروش، هزینه، سود)
         var agg = employees.ToDictionary(e => e.Id,
@@ -213,23 +263,24 @@ internal static class CommissionDetailReportBuilder
         {
             var profit = item.TotalPrice - item.UnitCost * item.Quantity;
             var cost = item.UnitCost * item.Quantity;
+            var performerId = item.PerformedById ?? item.ReceptionPerformerId;
+            var doctorId = item.DoctorId ?? item.ReceptionDoctorId;
 
-            // مسیر ۱ — انجام‌دهنده صریح
-            if (item.PerformedById.HasValue &&
-                employeeNames.ContainsKey(item.PerformedById.Value))
+            // مسیر ۱ — انجام‌دهندهٔ صریح یا انجام‌دهندهٔ پذیرش برای فاکتورهای قدیمی
+            if (performerId.HasValue && employeeNames.ContainsKey(performerId.Value))
             {
-                var empId = item.PerformedById.Value;
+                var empId = performerId.Value;
                 AddAttributed(details, agg, empId, employeeNames[empId], item, profit, cost,
-                    item.DoctorId.HasValue && doctorToEmployee.GetValueOrDefault(item.DoctorId.Value) == empId
+                    doctorId.HasValue && doctorToEmployee.GetValueOrDefault(doctorId.Value) == empId
                         ? "انجام‌دهنده + پزشک"
                         : "انجام‌دهنده مستقیم");
             }
 
             // مسیر ۲ — پزشک متصل (فقط اگر با مسیر ۱ یکی نباشد تا دوبار شمرده نشود)
-            if (item.DoctorId.HasValue &&
-                doctorToEmployee.TryGetValue(item.DoctorId.Value, out var doctorEmpId) &&
+            if (doctorId.HasValue &&
+                doctorToEmployee.TryGetValue(doctorId.Value, out var doctorEmpId) &&
                 employeeNames.ContainsKey(doctorEmpId) &&
-                doctorEmpId != item.PerformedById)
+                doctorEmpId != performerId)
             {
                 AddAttributed(details, agg, doctorEmpId, employeeNames[doctorEmpId], item, profit, cost,
                     "خدمت پزشک");
@@ -313,7 +364,8 @@ internal static class CommissionDetailReportBuilder
 
     /// <summary>برش اقلام فاکتور برای انتساب درون‌حافظه‌ای</summary>
     private sealed record ItemProjection(
-        long Id, long? PerformedById, long? DoctorId, decimal Quantity,
+        long Id, long? PerformedById, long? DoctorId, long? ReceptionId,
+        long? ReceptionPerformerId, long? ReceptionDoctorId, decimal Quantity,
         decimal UnitPrice, decimal UnitCost, decimal TotalPrice,
         string ServiceName, string InvoiceNumber, string? InvoiceDateShamsi, string PatientName);
 }

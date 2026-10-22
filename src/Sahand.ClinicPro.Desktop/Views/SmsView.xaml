@@ -123,7 +123,7 @@
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
                                                 Background="{Binding StatusColor}" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="White" />
+                                            <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="White" VerticalAlignment="Center"/>
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -141,8 +141,8 @@
                                     <DataTemplate>
                                         <Button Style="{StaticResource App.RowIconButton}"
                                                 Command="{Binding DataContext.ResendCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}" ToolTip="بازارسال">
-                                            <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" />
+                                                CommandParameter="{Binding}" ToolTip="بازارسال" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" VerticalAlignment="Center"/>
                                         </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

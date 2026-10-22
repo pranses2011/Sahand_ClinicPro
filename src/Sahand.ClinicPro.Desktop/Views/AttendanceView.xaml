@@ -104,8 +104,8 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="{Binding StatusHex}" CornerRadius="10"
-                                                Padding="10,3" HorizontalAlignment="Center" Margin="0,4">
-                                            <TextBlock Text="{Binding Status}" Foreground="White" FontSize="11.5" FontWeight="Bold" />
+                                                Padding="10,3" HorizontalAlignment="Center" Margin="0,4" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Status}" Foreground="White" FontSize="11.5" FontWeight="Bold" VerticalAlignment="Center"/>
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -137,8 +137,8 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="{Binding StatusHex}" CornerRadius="10"
-                                                Padding="10,3" HorizontalAlignment="Center" Margin="0,4">
-                                            <TextBlock Text="{Binding Status}" Foreground="White" FontSize="11.5" FontWeight="Bold" />
+                                                Padding="10,3" HorizontalAlignment="Center" Margin="0,4" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Status}" Foreground="White" FontSize="11.5" FontWeight="Bold" VerticalAlignment="Center"/>
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -226,8 +226,8 @@
                                                         RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource App.RowIconButton}"
-                                                        Foreground="#C62828" ToolTip="حذف اتصال دستگاه">
-                                                        <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                                        Foreground="#C62828" ToolTip="حذف اتصال دستگاه" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                                     </Button>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
@@ -279,8 +279,8 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="{Binding StatusHex}" CornerRadius="10"
-                                                Padding="10,3" HorizontalAlignment="Center" Margin="0,4">
-                                            <TextBlock Text="{Binding Status}" Foreground="White" FontSize="11.5" FontWeight="Bold" />
+                                                Padding="10,3" HorizontalAlignment="Center" Margin="0,4" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Status}" Foreground="White" FontSize="11.5" FontWeight="Bold" VerticalAlignment="Center"/>
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -289,22 +289,22 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <!-- چرخهٔ ۷۹: کلیدهای عملیاتی آیکونی (هم‌الگوی لیست بیماران) -->
-                                        <StackPanel Orientation="Horizontal" Visibility="{Binding Pending, Converter={StaticResource BoolToVisibility}}">
+                                        <StackPanel Orientation="Horizontal" Visibility="{Binding Pending, Converter={StaticResource BoolToVisibility}}" VerticalAlignment="Center">
                                             <Button ToolTip="تأیید و اعمال"
                                                     Command="{Binding DataContext.ApproveCorrectionCommand,
                                                         RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource App.RowIconButton}"
-                                                    Foreground="#2E7D32">
-                                                <materialDesign:PackIcon Kind="Check" Width="15" Height="15" />
+                                                    Foreground="#2E7D32" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="Check" Width="15" Height="15" VerticalAlignment="Center"/>
                                             </Button>
                                             <Button ToolTip="رد"
                                                     Command="{Binding DataContext.RejectCorrectionCommand,
                                                         RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource App.RowIconButton}"
-                                                    Foreground="#C62828">
-                                                <materialDesign:PackIcon Kind="Close" Width="15" Height="15" />
+                                                    Foreground="#C62828" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="Close" Width="15" Height="15" VerticalAlignment="Center"/>
                                             </Button>
                                         </StackPanel>
                                     </DataTemplate>

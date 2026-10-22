@@ -808,11 +808,11 @@
                             <DataGridTemplateColumn Header="بیمار" Width="Auto" MinWidth="140" SortMemberPath="PatientName" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                             <materialDesign:PackIcon Kind="Account" Width="14" Height="14" Opacity="0.5" VerticalAlignment="Center" />
                                             <StackPanel Margin="6,0,0,0" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding PatientMobile, TargetNullValue='', Converter={StaticResource PersianDigits}}" FontSize="10" Opacity="0.55" FontFamily="{DynamicResource App.CodeFont}" />
+                                                <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding PatientMobile, TargetNullValue='', Converter={StaticResource PersianDigits}}" FontSize="10" Opacity="0.55" FontFamily="{DynamicResource App.CodeFont}" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </StackPanel>
                                     </DataTemplate>
@@ -831,7 +831,7 @@
                                         <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center"
                                                 Background="{Binding PriorityColor, Converter={StaticResource HexToBrush}}" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding PriorityText, Converter={StaticResource PersianDigits}}"
-                                                       FontSize="10.5" Foreground="White" HorizontalAlignment="Center" />
+                                                       FontSize="10.5" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -841,7 +841,7 @@
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
                                                 Background="{Binding StatusColor}" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding StatusText}" FontSize="11" />
+                                            <TextBlock Text="{Binding StatusText}" FontSize="11" VerticalAlignment="Center"/>
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -850,18 +850,18 @@
                             <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="130" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <Button Command="{Binding DataContext.ConfirmArrivalCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource App.RowIconButton}"
-                                                    ToolTip="تأیید حضور">
-                                                <materialDesign:PackIcon Kind="AccountCheck" Width="15" Height="15" />
+                                                    ToolTip="تأیید حضور" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="AccountCheck" Width="15" Height="15" VerticalAlignment="Center"/>
                                             </Button>
                                             <Button Command="{Binding DataContext.CancelOneCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource App.RowIconButton}"
-                                                    ToolTip="لغو نوبت" Foreground="#C62828">
-                                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="15" Height="15" />
+                                                    ToolTip="لغو نوبت" Foreground="#C62828" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                             </Button>
                                         </StackPanel>
                                     </DataTemplate>
@@ -997,8 +997,8 @@
                                         <Button Command="{Binding DataContext.CancelWaitlistCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource App.RowIconButton}"
-                                                Foreground="#C62828" ToolTip="حذف از لیست انتظار">
-                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                                Foreground="#C62828" ToolTip="حذف از لیست انتظار" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                         </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

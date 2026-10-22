@@ -126,7 +126,7 @@
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center"
                                                 Background="{Binding PaymentStatusColor}" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding PaymentStatusText}" FontSize="10.5" />
+                                            <TextBlock Text="{Binding PaymentStatusText}" FontSize="10.5" VerticalAlignment="Center"/>
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

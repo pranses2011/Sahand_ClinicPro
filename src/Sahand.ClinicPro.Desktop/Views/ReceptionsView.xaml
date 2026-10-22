@@ -819,7 +819,7 @@
                                 <DataGridTemplateColumn Header="بیمار" Width="Auto" SortMemberPath="PatientName" MaxWidth="420">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <materialDesign:PackIcon Kind="Account" Width="14" Height="14" Opacity="0.5" VerticalAlignment="Center" />
                                                 <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" Margin="7,0,0,0" VerticalAlignment="Center" />
                                             </StackPanel>
@@ -836,7 +836,7 @@
                                         <DataTemplate>
                                             <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
                                                     Background="{Binding StatusColor}" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding StatusText}" FontSize="11" />
+                                                <TextBlock Text="{Binding StatusText}" FontSize="11" VerticalAlignment="Center"/>
                                             </Border>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -871,7 +871,7 @@
                                 <DataGridTemplateColumn Header="وضعیت مالی" Width="Auto" SortMemberPath="FinancialText" MaxWidth="420">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center">
+                                            <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
                                                         <Setter Property="Background" Value="#ECEFF1" />
@@ -886,7 +886,7 @@
                                                         </Style.Triggers>
                                                     </Style>
                                                 </Border.Style>
-                                                <TextBlock Text="{Binding FinancialText}" FontSize="11" />
+                                                <TextBlock Text="{Binding FinancialText}" FontSize="11" VerticalAlignment="Center"/>
                                             </Border>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>

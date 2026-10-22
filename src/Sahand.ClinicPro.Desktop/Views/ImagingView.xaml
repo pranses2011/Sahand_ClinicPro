@@ -114,8 +114,8 @@
                                                     <Button Command="{Binding DataContext.DeleteImagingFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                             CommandParameter="{Binding}"
                                                             Style="{StaticResource App.RowIconButton}" Foreground="#C62828"
-                                                            ToolTip="حذف فایل تصویر">
-                                                        <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                                            ToolTip="حذف فایل تصویر" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                                     </Button>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>

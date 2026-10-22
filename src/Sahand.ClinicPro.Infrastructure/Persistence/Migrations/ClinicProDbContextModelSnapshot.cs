@@ -8193,6 +8193,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("decimal(18,0)")
                         .HasComment("قیمت واحد");
 
+                    b.Property<decimal?>("PurchaseUnitCost")
+                        .HasPrecision(18)
+                        .HasColumnType("decimal(18,0)")
+                        .HasComment("عکس‌فوری بهای خرید واحد برای محاسبهٔ سود مصرفی‌ها");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 

@@ -185,7 +185,7 @@
                             <DataGridTemplateColumn Header="شیفت" Width="Auto" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                             <Ellipse Width="9" Height="9" VerticalAlignment="Center" Margin="0,0,6,0"
                                                      Fill="{Binding ShiftColor, Converter={StaticResource HexToBrush}}" />
                                             <TextBlock Text="{Binding ShiftName, Converter={StaticResource PersianDigits}}" VerticalAlignment="Center" />
@@ -202,8 +202,8 @@
                                         <Button Command="{Binding DataContext.EndAssignmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource App.RowIconButton}" Padding="6,3"
-                                                Foreground="#C62828" ToolTip="پایان این تخصیص از امروز">
-                                            <StackPanel Orientation="Horizontal">
+                                                Foreground="#C62828" ToolTip="پایان این تخصیص از امروز" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <materialDesign:PackIcon Kind="StopCircleOutline" Width="13" Height="13" VerticalAlignment="Center" />
                                                 <TextBlock Text="پایان" FontSize="10.5" Margin="4,0,0,0" VerticalAlignment="Center" />
                                             </StackPanel>

@@ -237,7 +237,7 @@
                             <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
                                     Background="{Binding InsuranceName, TargetNullValue=آزاد, Converter={StaticResource InsuranceBrush}}" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding InsuranceName, TargetNullValue=آزاد}"
-                                           FontSize="11" />
+                                           FontSize="11" VerticalAlignment="Center"/>
                             </Border>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -264,31 +264,31 @@
                 <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="170" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Button Command="{Binding DataContext.ViewPatientCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource App.RowIconButton}"
-                                        ToolTip="مشاهده جزئیات بیمار">
-                                    <materialDesign:PackIcon Kind="EyeOutline" Width="16" Height="16" />
+                                        ToolTip="مشاهده جزئیات بیمار" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="EyeOutline" Width="16" Height="16" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Command="{Binding DataContext.EditPatientCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource App.RowIconButton}"
-                                        ToolTip="ویرایش اطلاعات بیمار">
-                                    <materialDesign:PackIcon Kind="Pencil" Width="16" Height="16" />
+                                        ToolTip="ویرایش اطلاعات بیمار" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Pencil" Width="16" Height="16" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Command="{Binding DataContext.BookAppointmentCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource App.RowIconButton}"
-                                        ToolTip="رزرو نوبت برای این بیمار">
-                                    <materialDesign:PackIcon Kind="CalendarPlus" Width="16" Height="16" />
+                                        ToolTip="رزرو نوبت برای این بیمار" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="CalendarPlus" Width="16" Height="16" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Command="{Binding DataContext.DeletePatientCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource App.RowIconButton}"
                                         ToolTip="حذف بیمار"
-                                        Foreground="#C62828">
-                                    <materialDesign:PackIcon Kind="Delete" Width="16" Height="16" />
+                                        Foreground="#C62828" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Delete" Width="16" Height="16" VerticalAlignment="Center"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>

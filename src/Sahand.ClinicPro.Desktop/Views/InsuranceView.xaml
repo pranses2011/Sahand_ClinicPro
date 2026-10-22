@@ -212,7 +212,7 @@
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
                                                 Background="{Binding StatusColor}" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding StatusText}" FontSize="11" />
+                                            <TextBlock Text="{Binding StatusText}" FontSize="11" VerticalAlignment="Center"/>
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -342,8 +342,8 @@
                                         <Button Command="{Binding DataContext.DeleteRuleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource App.RowIconButton}"
-                                                Foreground="#C62828" ToolTip="حذف قانون">
-                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                                Foreground="#C62828" ToolTip="حذف قانون" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                         </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
