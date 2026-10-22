@@ -104,6 +104,7 @@
                 <DataGridTextColumn Header="حقوق درصدی" Binding="{Binding ServiceCommission, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
+                            <Setter Property="VerticalAlignment" Value="Center" />
                             <Setter Property="FontWeight" Value="SemiBold" />
                             <Setter Property="Foreground" Value="#8E24AA" />
                         </Style>
@@ -111,11 +112,12 @@
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="اضافه‌کاری" Binding="{Binding Overtime, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
                 <DataGridTextColumn Header="پاداش" Binding="{Binding Bonus, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
-                <DataGridTextColumn Header="بیمه ۷٪" Binding="{Binding Insurance, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="بیمه" Binding="{Binding Insurance, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                 <DataGridTextColumn Header="مالیات" Binding="{Binding Tax, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                 <DataGridTextColumn Header="خالص پرداختی" Binding="{Binding NetAmount, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
+                            <Setter Property="VerticalAlignment" Value="Center" />
                             <Setter Property="FontWeight" Value="Bold" />
                             <Setter Property="Foreground" Value="#2E7D32" />
                         </Style>
@@ -125,7 +127,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border Background="{Binding StatusColor}" CornerRadius="9" Padding="9,2.5"
-                                    HorizontalAlignment="Center">
+                                    HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding StatusText}" Foreground="White" FontSize="10.5" />
                             </Border>
                         </DataTemplate>

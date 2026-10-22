@@ -251,9 +251,10 @@ public static class PersianDateHelper
     }
 
     /// <summary>
-    /// بازه تقویمی میلادیِ یک ماه شمسی — [از، تا) برای فیلتر کوئری‌های دوره‌ای
-    /// (تولید حقوق، حضوروغیاب، گزارش سود و حقوق درصدی و ...)
-    /// تقویم شمسی: فروردین از حدود ۲۱ مارس شروع می‌شود؛ تقریب ابتدای ماه میلادی کافی است.
+    /// بازهٔ دقیق میلادیِ یک ماه شمسی — [از، تا) برای فیلتر کوئری‌های دوره‌ای
+    /// (تولید حقوق، حضوروغیاب، گزارش سود و حقوق درصدی و ...). تاریخ ابتدا و
+    /// انتهای بازه با تبدیل واقعی تقویم شمسی محاسبه می‌شوند؛ استفاده از ابتدای
+    /// ماه میلادی باعث جابه‌جایی فاکتورهای ابتدا/انتهای ماه بین دو فیش می‌شود.
     /// </summary>
     /// <param name="jalaliYear">سال شمسی دوره</param>
     /// <param name="jalaliMonth">ماه شمسی دوره — ۱ تا ۱۲</param>
@@ -264,21 +265,11 @@ public static class PersianDateHelper
         if (jalaliMonth is < 1 or > 12)
             throw new ArgumentOutOfRangeException(nameof(jalaliMonth), "ماه شمسی باید بین ۱ تا ۱۲ باشد");
 
-        // نگاشت ماه شمسی به ماه میلادی آغازین: فروردین→مارس(3) ... بهمن→ژانویه(1) اسفند→فوریه(2)
-        var gregorianMonth = jalaliMonth switch
-        {
-            1 => 3, 2 => 4, 3 => 5, 4 => 6, 5 => 7, 6 => 8,
-            7 => 9, 8 => 10, 9 => 11, 10 => 12, 11 => 1, _ => 2
-        };
+        var fromGregorian = ToGregorian(jalaliYear, jalaliMonth, 1);
+        var nextYear = jalaliMonth == 12 ? jalaliYear + 1 : jalaliYear;
+        var nextMonth = jalaliMonth == 12 ? 1 : jalaliMonth + 1;
+        var toGregorian = ToGregorian(nextYear, nextMonth, 1);
 
-        // ⚠️ رفع باگ چرخه نهم: فرمول قبلی «سال − ۶۲۲» سال‌های بی‌معنی (مثلاً ۷۸۲)
-        // تولید می‌کرد و بازه دوره هیچ‌وقت به فاکتورهای واقعی نمی‌رسید.
-        // رابطه درست: ۱ فروردین ۱ شمسی = ۲۲ مارس ۶۲۲ میلادی →
-        // میلادی = شمسی + ۶۲۱ ؛ بهمن/اسفند به سال میلادی بعدی تعلق دارند (+۶۲۲)
-        var gregorianYear = jalaliYear + 621;
-        if (jalaliMonth is 11 or 12) gregorianYear++;
-
-        var from = new DateOnly(gregorianYear, gregorianMonth, 1);
-        return (from, from.AddMonths(1));
+        return (DateOnly.FromDateTime(fromGregorian), DateOnly.FromDateTime(toGregorian));
     }
 }

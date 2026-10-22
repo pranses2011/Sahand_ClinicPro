@@ -193,6 +193,9 @@
                              Text="{Binding CommissionPercent, UpdateSourceTrigger=PropertyChanged}"
                              materialDesign:TextFieldAssist.SuffixText="٪" />
                 </Grid>
+                <CheckBox Content="مشمول بیمه تأمین اجتماعی (کسر ۷٪ از فیش حقوقی)"
+                          IsChecked="{Binding IsInsured, UpdateSourceTrigger=PropertyChanged}"
+                          Margin="0,10,0,0" Foreground="#16355E" />
                 <TextBlock Text="ℹ️ حقوق درصدی از «سود» خدمت محاسبه می‌شود (مبلغ خدمت منهای هزینه آن)؛ نه از کل فروش. صفر = فقط حقوق پایه."
                            FontSize="10.5" TextWrapping="Wrap" Foreground="#5B7290" Margin="0,8,0,0" />
             </StackPanel>

@@ -829,7 +829,7 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center"
-                                                Background="{Binding PriorityColor, Converter={StaticResource HexToBrush}}">
+                                                Background="{Binding PriorityColor, Converter={StaticResource HexToBrush}}" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding PriorityText, Converter={StaticResource PersianDigits}}"
                                                        FontSize="10.5" Foreground="White" HorizontalAlignment="Center" />
                                         </Border>
@@ -840,7 +840,7 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
-                                                Background="{Binding StatusColor}">
+                                                Background="{Binding StatusColor}" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding StatusText}" FontSize="11" />
                                         </Border>
                                     </DataTemplate>

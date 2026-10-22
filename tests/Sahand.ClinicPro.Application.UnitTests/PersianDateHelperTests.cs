@@ -116,16 +116,16 @@ public class PersianDateHelperTests
     }
 
     [Fact]
-    public void MonthRange_Mehr1404_Should_Cover_September2025()
+    public void MonthRange_Mehr1404_Should_Use_ExactPersianMonthBoundaries()
     {
-        // مهر ۱۴۰۴ ≈ ۲۳ سپتامبر تا ۲۲ اکتبر ۲۰۲۵ — تقریب ابتدای ماه میلادی
+        // مهر ۱۴۰۴ دقیقاً از ۲۳ سپتامبر تا ۲۳ اکتبر ۲۰۲۵ است.
         var (from, to) = PersianDateHelper.MonthRange(1404, 7);
 
-        from.Should().Be(new DateOnly(2025, 9, 1));
-        to.Should().Be(new DateOnly(2025, 10, 1));
+        from.Should().Be(new DateOnly(2025, 9, 23));
+        to.Should().Be(new DateOnly(2025, 10, 23));
 
-        // فاکتور ۱۵ سپتامبر داخل بازه و ۱۵ اوت خارج از آن است
-        var sample = new DateTime(2025, 9, 15);
+        // فاکتور ۵ اکتبر داخل بازه و ۱۵ اوت خارج از آن است
+        var sample = new DateTime(2025, 10, 5);
         (sample >= from.ToDateTime(TimeOnly.MinValue) &&
          sample < to.ToDateTime(TimeOnly.MinValue)).Should().BeTrue();
     }

@@ -235,7 +235,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
-                                    Background="{Binding InsuranceName, TargetNullValue=آزاد, Converter={StaticResource InsuranceBrush}}">
+                                    Background="{Binding InsuranceName, TargetNullValue=آزاد, Converter={StaticResource InsuranceBrush}}" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding InsuranceName, TargetNullValue=آزاد}"
                                            FontSize="11" />
                             </Border>

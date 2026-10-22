@@ -1,4 +1,4 @@
-﻿using Sahand.ClinicPro.Domain.Enums;
+using Sahand.ClinicPro.Domain.Enums;
 
 namespace Sahand.ClinicPro.Domain.Entities.People;
 
@@ -74,6 +74,9 @@ public class Employee : AuditableEntity, ISoftDeletable
     /// صفر = فقط حقوق پایه (بدون حقوق درصدی)
     /// </summary>
     public decimal CommissionPercent { get; set; } = 0m;
+
+    /// <summary>شمول بیمه تأمین اجتماعی؛ در حالت غیرفعال از فیش حقوقی کسری بابت بیمه نمی‌شود</summary>
+    public bool IsInsured { get; set; }
 
     /// <summary>نام بانک</summary>
     public string? BankName { get; set; }

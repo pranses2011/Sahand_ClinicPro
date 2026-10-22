@@ -833,7 +833,7 @@
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ViewDashboardVariant" Width="20" Height="20"
                                                      Foreground="#80DEEA" VerticalAlignment="Center" Margin="0,0,8,0" />
-                            <TextBlock Text="داشبورد مدیریت درمانگاه" FontSize="17" FontWeight="Bold"
+                            <TextBlock Text="{Binding ClinicHeader}" FontSize="17" FontWeight="Bold"
                                        Foreground="White" VerticalAlignment="Center" />
                             <!-- نشان نسخه + تاریخ ساخت — تشخیصیِ جایگزینی فایل‌ها (چرخهٔ ۶۷) -->
                             <Border CornerRadius="9" Padding="8,2" Margin="12,0,0,0"

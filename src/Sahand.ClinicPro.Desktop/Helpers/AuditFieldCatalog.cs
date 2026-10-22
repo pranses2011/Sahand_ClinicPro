@@ -249,8 +249,7 @@ public static class AuditFieldCatalog
                       && !key.Contains("phone", StringComparison.OrdinalIgnoreCase);
         if (isMoney && value.TryGetDecimal(out var dec))
         {
-            var separated = dec.ToString("N0"); // جداکنندهٔ سه‌رقمی
-            return Application.Common.Helpers.PersianDateHelper.ToPersianDigits(separated) + " تومان";
+            return Money.FormatWithUnit(dec);
         }
         // اعداد صحیح کوچک (شمارش/شناسه) — فقط ارقام فارسی
         return Application.Common.Helpers.PersianDateHelper.ToPersianDigits(value.ToString());

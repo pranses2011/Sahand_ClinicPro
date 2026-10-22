@@ -116,7 +116,7 @@
                         <DataTemplate>
                             <Border CornerRadius="8" Padding="7,2" HorizontalAlignment="Center"
                                     Background="{Binding FlagBrush, Converter={StaticResource HexToBrush}}"
-                                    Visibility="{Binding FlagText, Converter={StaticResource NullToVisibility}}">
+                                    Visibility="{Binding FlagText, Converter={StaticResource NullToVisibility}}" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding FlagText}" FontSize="10.5" Foreground="White" />
                             </Border>
                         </DataTemplate>

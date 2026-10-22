@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sahand.ClinicPro.Domain.Entities.People;
 
@@ -27,6 +27,7 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         builder.Property(x => x.ContractType).HasConversion<byte>().HasComment("نوع قرارداد");
         builder.Property(x => x.BaseSalary).HasPrecision(18, 0).HasComment("حقوق پایه به ریال");
         builder.Property(x => x.CommissionPercent).HasPrecision(5, 2).HasComment("درصد حقوق از سود خدمات انجامی خود پرسنل (نه کل دریافتی) — صفر = فقط حقوق پایه");
+        builder.Property(x => x.IsInsured).HasDefaultValue(false).HasComment("شمول بیمه سهم کارمند در محاسبه فیش حقوقی");
         builder.Property(x => x.BankName).HasMaxLength(50).HasComment("نام بانک");
         builder.Property(x => x.BankAccount).HasMaxLength(50).HasComment("شماره حساب بانکی");
         builder.Property(x => x.Sheba).HasMaxLength(26).HasComment("شماره شبا ۲۶ کاراکتری");

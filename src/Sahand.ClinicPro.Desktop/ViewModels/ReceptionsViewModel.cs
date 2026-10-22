@@ -1189,7 +1189,7 @@ public partial class ReceptionsViewModel : ViewModelBase
                 paymentFailed = true;
                 IsBusy = false;
                 Views.AppDialog.Error("ثبت پرداخت ناموفق",
-                    $"فاکتور صادر شد اما ثبت پرداخت {payable:N0} ریال شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}پرداخت را بعداً از ماژول «صندوق و فاکتور» تکمیل کنید.");
+                    $"فاکتور صادر شد اما ثبت پرداخت {Money.FormatWithUnit(payable)} شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}پرداخت را بعداً از ماژول «صندوق و فاکتور» تکمیل کنید.");
             }
         }
 

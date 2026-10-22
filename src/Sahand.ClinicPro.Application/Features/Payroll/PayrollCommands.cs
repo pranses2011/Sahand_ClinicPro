@@ -115,7 +115,8 @@ public sealed class GenerateSalariesCommandHandler
                 new PayrollCalculator.PayrollInput(
                     baseSalary, overtimeHours,
                     CommissionPercent: employee.CommissionPercent,
-                    ServiceProfit: serviceProfitBase));
+                    ServiceProfit: serviceProfitBase,
+                    IsInsured: employee.IsInsured));
 
             // ثبت یا به‌روزرسانی — idempotent برای هر کارمند×دوره
             var existing = await _unitOfWork.Repository<EmployeeSalary>().QueryableTracking

@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 using Sahand.ClinicPro.Application.Common.Helpers;
@@ -102,7 +102,7 @@ public partial class PayslipWindow : Window
         // ردیف‌های زوج — مزایا در ستون‌های راست، کسورات در چپ
         var body = new TableRowGroup();
         table.RowGroups.Add(body);
-        body.Rows.Add(PairRow("حقوق پایه", baseSalary, "بیمه سهم کارمند (۷٪)", insurance));
+        body.Rows.Add(PairRow("حقوق پایه", baseSalary, "بیمه سهم کارمند", insurance));
         body.Rows.Add(PairRow(
             $"حقوق درصدی از سود خدمات ({commissionPercent:0.##}٪)",
             serviceCommission, "مالیات حقوق", tax));
@@ -125,7 +125,7 @@ public partial class PayslipWindow : Window
         // ── یادداشت پایه محاسبه ──
         doc.Blocks.Add(new Paragraph(new Run(
             "مبنا: ساعت کار قانونی ۱۹۲ ساعت در ماه؛ اضافه‌کاری ۱/۴ برابر نرخ ساعت عادی؛ " +
-            "بیمه سهم کارمند ۷٪؛ پلکان مالیات حقوق مصوب بودجه ۱۴۰۴. " +
+            "بیمه سهم کارمند ۷٪ در صورت انتخاب شمول بیمه برای پرسنل؛ پلکان مالیات حقوق مصوب بودجه ۱۴۰۴. " +
             $"حقوق درصدی: {commissionPercent:0.##}٪ از سود خدمات انجام‌شده توسط خودِ این پرسنل در دوره " +
             $"(مبنای سود خدمات: {Money.FormatWithUnit(serviceProfitBase)}) — نه از کل دریافتی درمانگاه. " +
             "این فیش به‌صورت سیستمی صادر شده است.")

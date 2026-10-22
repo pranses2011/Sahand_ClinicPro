@@ -192,6 +192,10 @@ public partial class EmployeeFormViewModel : FormViewModelBase
     [ObservableProperty]
     private string _commissionPercent = "0";
 
+    /// <summary>آیا این پرسنل مشمول کسر بیمه از فیش حقوقی است؟</summary>
+    [ObservableProperty]
+    private bool _isInsured;
+
     /// <summary>نمایه نوع استخدام — ۰ تمام‌وقت</summary>
     [ObservableProperty]
     private int _employmentTypeIndex;
@@ -395,6 +399,7 @@ public partial class EmployeeFormViewModel : FormViewModelBase
         // کادر مبلغ دوباره تقسیم می‌کرد (نمایش ۱۰ برابر کوچک‌تر) ═══
         BaseSalary = d.BaseSalary.ToString("0", System.Globalization.CultureInfo.InvariantCulture);
         CommissionPercent = d.CommissionPercent.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+        IsInsured = d.IsInsured;
 
         // تاریخ استخدام میلادی → شمسی متن
         if (d.HireDate is { } hd)
@@ -451,6 +456,7 @@ public partial class EmployeeFormViewModel : FormViewModelBase
         public int EmploymentType { get; set; }
         public decimal BaseSalary { get; set; }
         public decimal CommissionPercent { get; set; }
+        public bool IsInsured { get; set; }
         public string? PersonnelCode { get; set; }
         public DateTime? HireDate { get; set; }
         public int? EducationLevel { get; set; }
@@ -558,6 +564,7 @@ public partial class EmployeeFormViewModel : FormViewModelBase
             employmentType = EmploymentTypeIndex + 1,
             baseSalary,
             commissionPercent,
+            isInsured = IsInsured,
             // چرخه ۲۴ — فیلدهای تکمیلی مطابق اسکرین‌شات
             personnelCode = string.IsNullOrWhiteSpace(PersonnelCode) ? null : PersonnelCode.Trim(),
             hireDate,

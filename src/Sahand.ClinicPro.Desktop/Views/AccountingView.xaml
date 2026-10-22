@@ -99,7 +99,7 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="8,2.5" HorizontalAlignment="Center"
-                                                Background="{Binding StatusColor}">
+                                                Background="{Binding StatusColor}" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding StatusText}" FontSize="11" />
                                         </Border>
                                     </DataTemplate>

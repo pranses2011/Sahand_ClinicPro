@@ -26,10 +26,10 @@ namespace Sahand.ClinicPro.Infrastructure.IntegrationTests;
 /// </summary>
 public class CommissionCycle10Tests
 {
-    // دوره آزمون: مهر ۱۴۰۴ → بازه میلادی [2025-09-01, 2025-10-01)
+    // دوره آزمون: مهر ۱۴۰۴ → بازه دقیق میلادی [2025-09-23, 2025-10-23)
     private const int PeriodYear = 1404;
     private const int PeriodMonth = 7;
-    private static readonly DateTime InPeriod = new(2025, 9, 15, 10, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime InPeriod = new(2025, 10, 5, 10, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime OutOfPeriod = new(2025, 8, 15, 10, 0, 0, DateTimeKind.Utc);
 
     /// <summary>ساخت UnitOfWork روی دیتابیس درون‌حافظه‌ای</summary>

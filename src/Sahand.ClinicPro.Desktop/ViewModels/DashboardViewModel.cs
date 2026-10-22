@@ -135,8 +135,17 @@ public partial class DashboardViewModel : ViewModelBase
     private readonly System.Windows.Threading.DispatcherTimer _refresh =
         new() { Interval = TimeSpan.FromSeconds(60) };
 
+    /// <summary>نام درمانگاه از تنظیمات لایسنس؛ در نبود پاسخ نام پیش‌فرض نمایش داده می‌شود</summary>
+    [ObservableProperty]
+    private string _clinicName = "درمانگاه";
+
+    /// <summary>عنوان درمانگاه در سربرگ داشبورد</summary>
+    public string ClinicHeader => $"داشبورد مدیریت {ClinicName}";
+
     /// <summary>عنوان صفحه در هدر</summary>
     public override string Title => "داشبورد";
+
+    partial void OnClinicNameChanged(string value) => OnPropertyChanged(nameof(ClinicHeader));
 
     /* ── آمار اصلی (ردیف اول) ── */
     [ObservableProperty] private int _todayPatients;
@@ -657,6 +666,7 @@ public partial class DashboardViewModel : ViewModelBase
         _ = LoadLayoutAsync();
         // چرخهٔ ۴۱ — میانبرها از دیتابیس (با مهاجرت کش محلی و جانشینی آفلاین)
         _ = LoadShortcutsAsync();
+        _ = LoadClinicNameAsync();
         _refresh.Tick += async (_, _) => await LoadStatsAsync();
         _refresh.Start();
         _ = LoadStatsAsync();
@@ -1040,6 +1050,35 @@ public partial class DashboardViewModel : ViewModelBase
         Shortcuts.Remove(tile);
         OnPropertyChanged(nameof(HasShortcuts));
         SaveShortcuts();
+    }
+
+    /// <summary>خواندن نام درمانگاه از تنظیمات همگام‌شده با لایسنس.</summary>
+    private async Task LoadClinicNameAsync()
+    {
+        try
+        {
+            var response = await _api.GetAsync<ClinicSettingsResponse>("settings?category=ClinicInfo");
+            var name = response?.Data?.FirstOrDefault(x => x.Key == "ClinicName")?.Value;
+            if (!string.IsNullOrWhiteSpace(name))
+                ClinicName = name.Trim();
+        }
+        catch
+        {
+            // بهترین تلاش: اگر تنظیمات لایسنس در دسترس نبود، عنوان عمومی بماند.
+        }
+    }
+
+    /// <summary>پاسخ تنظیمات درمانگاه که از سرور لایسنس همگام شده‌اند.</summary>
+    private sealed class ClinicSettingsResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<ClinicSetting>? Data { get; set; }
+    }
+
+    private sealed class ClinicSetting
+    {
+        public string Key { get; set; } = string.Empty;
+        public string? Value { get; set; }
     }
 
     /// <summary>بارگذاری کامل همه بخش‌ها — طبق LoadAsync پرامپت</summary>
