@@ -102,26 +102,26 @@
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="شماره" Binding="{Binding InvoiceNumber, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                            <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Binding="{Binding Total, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto"><DataGridTextColumn.Header><TextBlock><Run Text="مبلغ (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
+                            <DataGridTextColumn Header="شماره" Binding="{Binding InvoiceNumber, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Binding="{Binding Total, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" MaxWidth="420"><DataGridTextColumn.Header><TextBlock><Run Text="مبلغ (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                                         <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
                                         <Setter Property="HorizontalAlignment" Value="Left" />
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Binding="{Binding Paid, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto"><DataGridTextColumn.Header><TextBlock><Run Text="پرداخت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
+                            <DataGridTextColumn Binding="{Binding Paid, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" MaxWidth="420"><DataGridTextColumn.Header><TextBlock><Run Text="پرداخت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                                         <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
                                         <Setter Property="HorizontalAlignment" Value="Left" />
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTemplateColumn Header="وضعیت" Width="Auto">
+                            <DataGridTemplateColumn Header="وضعیت" Width="Auto" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center"

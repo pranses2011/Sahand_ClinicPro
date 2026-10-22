@@ -385,10 +385,10 @@
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="عنوان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" FontWeight="SemiBold" />
-                            <DataGridTextColumn Header="توضیح" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="پاسخ‌ها" Binding="{Binding ResponseCount, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTemplateColumn Header="میانگین امتیاز" Width="Auto">
+                            <DataGridTextColumn Header="عنوان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" FontWeight="SemiBold" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="توضیح" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="پاسخ‌ها" Binding="{Binding ResponseCount, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="میانگین امتیاز" Width="Auto" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding RatingText}" Foreground="{Binding RatingColor}"
@@ -397,8 +397,8 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="وضعیت" Binding="{Binding ActiveText, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="210">
+                            <DataGridTextColumn Header="وضعیت" Binding="{Binding ActiveText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="210" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">

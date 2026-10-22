@@ -104,10 +104,10 @@
                                           Style="{StaticResource App.TableDataGrid}"
                                           HeadersVisibility="Column">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="نام فایل" Binding="{Binding FileName, Converter={StaticResource PersianDigits}}" />
-                                        <DataGridTextColumn Header="نوع" Binding="{Binding KindText, Converter={StaticResource PersianDigits}}" />
-                                        <DataGridTextColumn Header="حجم" Binding="{Binding SizeText, Converter={StaticResource PersianDigits}}" />
-                                        <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70">
+                                        <DataGridTextColumn Header="نام فایل" Binding="{Binding FileName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                        <DataGridTextColumn Header="نوع" Binding="{Binding KindText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                        <DataGridTextColumn Header="حجم" Binding="{Binding SizeText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                        <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70" MaxWidth="420">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <!-- چرخهٔ ۷۹: کلید عملیاتی آیکونی (هم‌الگوی لیست بیماران) -->

@@ -97,7 +97,7 @@
             <DataGrid.Columns>
                 <!-- ─── عکس — چرخه هجدهم: تعویض از پرسنل مرتبط / چرخهٔ سی‌وهفتم:
                      بندانگشتی دایره‌ایِ قابل‌کلیک به‌جای آیکون «نمایش بزرگ» ─── -->
-                <DataGridTemplateColumn Header="عکس" Width="Auto">
+                <DataGridTemplateColumn Header="عکس" Width="Auto" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -142,8 +142,8 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="شماره نظام"
                                     Binding="{Binding MedicalLicenseNo, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
-                                    Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTemplateColumn Header="نام و نام‌خانوادگی" Width="Auto" SortMemberPath="FullName">
+                                    Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTemplateColumn Header="نام و نام‌خانوادگی" Width="Auto" SortMemberPath="FullName" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
@@ -157,13 +157,13 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="تخصص"
                                     Binding="{Binding SpecialtyName, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
-                                    Width="Auto" />
+                                    Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                 <DataGridTextColumn Header="فوق‌تخصص"
                                     Binding="{Binding SubSpecialtyName, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
-                                    Width="Auto" />
-                <DataGridTextColumn Binding="{Binding FeeDisplay, Converter={StaticResource PersianDigits}}" Width="Auto"><DataGridTextColumn.Header><TextBlock><Run Text="حق ویزیت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
+                                    Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Binding="{Binding FeeDisplay, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420"><DataGridTextColumn.Header><TextBlock><Run Text="حق ویزیت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                             <Setter Property="HorizontalAlignment" Value="Left" />
                             <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
                         </Style>
@@ -171,23 +171,23 @@
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="مدت (دقیقه)"
                                     Binding="{Binding VisitDuration, Converter={StaticResource PersianDigits}}"
-                                    Width="Auto">
+                                    Width="Auto" MaxWidth="420">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                             <Setter Property="HorizontalAlignment" Value="Center" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="درصد سهم"
                                     Binding="{Binding DoctorPercentage, Converter={StaticResource PersianDigits}}"
-                                    Width="Auto">
+                                    Width="Auto" MaxWidth="420">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                             <Setter Property="HorizontalAlignment" Value="Center" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTemplateColumn Header="وضعیت" Width="Auto" SortMemberPath="IsActive">
+                <DataGridTemplateColumn Header="وضعیت" Width="Auto" SortMemberPath="IsActive" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center">
@@ -209,9 +209,9 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="امتیاز"
                                     Binding="{Binding RatingDisplay, Converter={StaticResource PersianDigits}}"
-                                    Width="Auto">
+                                    Width="Auto" MaxWidth="420">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                             <Setter Property="HorizontalAlignment" Value="Center" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
@@ -220,7 +220,7 @@
                      چهار دکمهٔ آیکونی با پدینگ استاندارد متریال در ۱۷۰px بریده می‌شدند
                      و «ناقص دیده می‌شدند»؛ چرخهٔ بیست‌ونهم: پنجمین کلید «مشخصات کاربری»
                      (گزارش هجدهم مالک) — عرض به ۲۶۶ رسید -->
-                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="266">
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="266" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

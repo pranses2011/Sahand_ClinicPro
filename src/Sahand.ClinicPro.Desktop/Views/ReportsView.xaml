@@ -189,14 +189,14 @@
                              
                               materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="تاریخ" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                            <DataGridTextColumn Binding="{Binding Total, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="*">
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Binding="{Binding Total, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}">
                                 <DataGridTextColumn.Header><TextBlock><Run Text="درآمد (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Binding="{Binding Paid, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="*">
+                            <DataGridTextColumn Binding="{Binding Paid, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}">
                                 <DataGridTextColumn.Header><TextBlock><Run Text="وصولی (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Binding="{Binding Remaining, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="*">
+                            <DataGridTextColumn Binding="{Binding Remaining, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}">
                                 <DataGridTextColumn.Header><TextBlock><Run Text="مانده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                             </DataGridTextColumn>
                         </DataGrid.Columns>
@@ -250,12 +250,12 @@
                              
                               materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="2*" />
-                            <DataGridTextColumn Header="تعداد ویزیت" Binding="{Binding VisitsCount, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                            <DataGridTextColumn Binding="{Binding TotalRevenue, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="*">
+                            <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="تعداد ویزیت" Binding="{Binding VisitsCount, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Binding="{Binding TotalRevenue, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}">
                                 <DataGridTextColumn.Header><TextBlock><Run Text="درآمد (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Binding="{Binding DoctorShare, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="*">
+                            <DataGridTextColumn Binding="{Binding DoctorShare, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}">
                                 <DataGridTextColumn.Header><TextBlock><Run Text="سهم پزشک (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                             </DataGridTextColumn>
                         </DataGrid.Columns>

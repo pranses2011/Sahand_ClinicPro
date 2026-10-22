@@ -34,6 +34,7 @@
              (پس‌زمینهٔ آبیِ ملایم + حاشیهٔ برند) روی خود ListBoxItem تا
              کلیک هر جای کارت، انتخاب را تاگل کند -->
         <Style x:Key="ShortcutCardStyle" TargetType="ListBoxItem">
+            <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Foreground" Value="#1F2937" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Template">

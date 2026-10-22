@@ -70,15 +70,15 @@
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                   HeadersVisibility="Column" FontSize="12">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="نام کاربری" Binding="{Binding Username, Converter={StaticResource PersianDigits}}" Width="Auto" FontWeight="SemiBold" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                <DataGridTextColumn Header="نقش‌ها" Binding="{Binding RolesText, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                <DataGridTextColumn Header="آخرین ورود" Width="Auto">
+                <DataGridTextColumn Header="نام کاربری" Binding="{Binding Username, Converter={StaticResource PersianDigits}}" Width="Auto" FontWeight="SemiBold" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="نقش‌ها" Binding="{Binding RolesText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="آخرین ورود" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}">
                     <DataGridTextColumn.Binding>
                         <Binding Path="LastLoginAt" Converter="{StaticResource ShamsiDateTime}" TargetNullValue="—" />
                     </DataGridTextColumn.Binding>
                 </DataGridTextColumn>
-                <DataGridTemplateColumn Header="وضعیت" Width="Auto">
+                <DataGridTemplateColumn Header="وضعیت" Width="Auto" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
@@ -88,7 +88,7 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="230">
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="230" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

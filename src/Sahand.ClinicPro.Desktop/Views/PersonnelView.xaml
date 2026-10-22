@@ -69,7 +69,7 @@
             <DataGrid.Columns>
                 <!-- ─── عکس: نمایش/تعویض/حذف — چرخه هجدهم / چرخهٔ سی‌وهفتم:
                      بندانگشتی دایره‌ایِ قابل‌کلیک به‌جای آیکون «نمایش بزرگ» ─── -->
-                <DataGridTemplateColumn Header="عکس" Width="Auto" MinWidth="160">
+                <DataGridTemplateColumn Header="عکس" Width="Auto" MinWidth="160" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -120,23 +120,23 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="100" />
-                <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="170" />
-                <DataGridTextColumn Header="سمت" Binding="{Binding PositionName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="120" />
-                <DataGridTextColumn Header="دپارتمان" Binding="{Binding DepartmentName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="120" />
-                <DataGridTextColumn Header="موبایل" Binding="{Binding Mobile, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
-                <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="90" />
+                <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="100" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="170" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="سمت" Binding="{Binding PositionName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="120" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="دپارتمان" Binding="{Binding DepartmentName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="120" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="موبایل" Binding="{Binding Mobile, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="90" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                 <!-- حقوق پایه — مبدل مبلغ (واحد پول + ارقام فارسی + جداکننده) به‌جای StringFormat -->
-                <DataGridTextColumn Header="حقوق پایه" Binding="{Binding BaseSalary, Converter={StaticResource CurrencyRial}}" Width="Auto" MinWidth="120">
+                <DataGridTextColumn Header="حقوق پایه" Binding="{Binding BaseSalary, Converter={StaticResource CurrencyRial}}" Width="Auto" MinWidth="120" MaxWidth="420">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                             <Setter Property="HorizontalAlignment" Value="Right" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="درصد از سود (٪)" Binding="{Binding CommissionPercent, StringFormat='{}{0:0.##}'}" Width="Auto" MinWidth="105">
+                <DataGridTextColumn Header="درصد از سود (٪)" Binding="{Binding CommissionPercent, StringFormat='{}{0:0.##}'}" Width="Auto" MinWidth="105" MaxWidth="420">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                             <Setter Property="HorizontalAlignment" Value="Center" />
                             <Setter Property="Foreground" Value="#8E24AA" />
                             <Setter Property="FontWeight" Value="SemiBold" />
@@ -147,7 +147,7 @@
                      «امکان ویرایش پرسنل وجود ندارد و کلیدهای عملیاتی ناقص‌اند» —
                      ویرایش کامل (فرم ثبت در حالت ویرایش) + ویرایش حقوقی + حذف نرم
                      چرخهٔ بیست‌ونهم: کلید «مشخصات کاربری» — حسابِ ورودِ متصل ═══ -->
-                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="264">
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="264" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">

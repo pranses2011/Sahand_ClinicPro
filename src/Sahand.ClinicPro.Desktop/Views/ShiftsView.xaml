@@ -180,9 +180,9 @@
                               AutoGenerateColumns="False" CanUserAddRows="False"
                               Style="{StaticResource App.TableDataGrid}" HeadersVisibility="Column">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="1.5*" />
-                            <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="0.9*" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTemplateColumn Header="شیفت" Width="1.1*">
+                            <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="شیفت" Width="Auto" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -193,10 +193,10 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="بازه" Binding="{Binding Range, Converter={StaticResource PersianDigits}}" Width="1.4*" />
-                            <DataGridTextColumn Header="تکرار" Binding="{Binding Recurrence, Converter={StaticResource PersianDigits}}" Width="0.8*" />
-                            <DataGridTextColumn Header="روزها" Binding="{Binding WeekDays, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="1*" />
-                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="92">
+                            <DataGridTextColumn Header="بازه" Binding="{Binding Range, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="تکرار" Binding="{Binding Recurrence, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="روزها" Binding="{Binding WeekDays, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="92" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Command="{Binding DataContext.EndAssignmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
@@ -283,6 +283,7 @@
                             <!-- پالت نقطه‌ای است، نه فهرست متنی؛ فاصلهٔ ردیف‌های معمول را خنثی می‌کنیم. -->
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                    <Setter Property="VerticalContentAlignment" Value="Center" />
                                     <Setter Property="MinHeight" Value="0" />
                                     <Setter Property="Padding" Value="0" />
                                     <Setter Property="Margin" Value="0" />

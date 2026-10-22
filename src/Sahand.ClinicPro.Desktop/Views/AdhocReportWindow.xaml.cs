@@ -49,7 +49,9 @@ public partial class AdhocReportWindow : Window
             var column = new DataGridTextColumn
             {
                 Header = vm.Columns[i],
-                Width = i == 0 ? DataGridLength.Auto : DataGridLength.SizeToCells,
+                Width = DataGridLength.Auto,
+                MaxWidth = 420,
+                ElementStyle = (Style)FindResource("App.TableCellTextBlock"),
                 // سلول‌ها با نمای‌ساز سفارشی از ردیف استخراج می‌شوند
                 Binding = new Binding
                 {

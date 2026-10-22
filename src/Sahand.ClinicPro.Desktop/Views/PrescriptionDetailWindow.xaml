@@ -30,12 +30,12 @@
                  
                   materialDesign:DataGridAssist.CellPadding="8,6">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="دارو" Binding="{Binding MedicationName, Converter={StaticResource PersianDigits}}" Width="2*" />
-                <DataGridTextColumn Header="دوز" Binding="{Binding Dosage, Converter={StaticResource PersianDigits}}" Width="*" />
-                <DataGridTextColumn Header="تکرار" Binding="{Binding Frequency, Converter={StaticResource PersianDigits}}" Width="*" />
-                <DataGridTextColumn Header="مدت" Binding="{Binding Duration, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                <DataGridTextColumn Header="دستور مصرف" Binding="{Binding Instructions, Converter={StaticResource PersianDigits}}" Width="2*" />
+                <DataGridTextColumn Header="دارو" Binding="{Binding MedicationName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="دوز" Binding="{Binding Dosage, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="تکرار" Binding="{Binding Frequency, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="مدت" Binding="{Binding Duration, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="دستور مصرف" Binding="{Binding Instructions, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
             </DataGrid.Columns>
         </DataGrid>
 

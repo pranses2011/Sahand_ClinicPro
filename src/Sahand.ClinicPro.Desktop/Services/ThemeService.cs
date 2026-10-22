@@ -160,6 +160,15 @@ public class ThemeService : IThemeService
             dark
                 ? System.Windows.Media.Color.FromRgb(0x28, 0x30, 0x3A)
                 : System.Windows.Media.Color.FromRgb(0xF1, 0xF6, 0xFC));
+        // سرستون‌ها آبی ملایمِ متمایز دارند، با متن پرکنتراست در هر دو تم.
+        resources["App.TableHeaderBackgroundBrush"] = new System.Windows.Media.SolidColorBrush(
+            dark
+                ? System.Windows.Media.Color.FromRgb(0x2D, 0x45, 0x60)
+                : System.Windows.Media.Color.FromRgb(0xDC, 0xEB, 0xFA));
+        resources["App.TableHeaderForegroundBrush"] = new System.Windows.Media.SolidColorBrush(
+            dark
+                ? System.Windows.Media.Color.FromRgb(0xEF, 0xF6, 0xFF)
+                : System.Windows.Media.Color.FromRgb(0x17, 0x3B, 0x65));
 
         // شعاع گوشه: مقدار مستقل کاربر مقدم است؛ وگرنه از تم
         var radius = _appearance.CardRadiusOverride ?? picked.CardRadius;

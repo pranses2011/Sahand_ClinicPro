@@ -798,14 +798,14 @@
                                  گزارش مالک: «عناوین بعضی ستون‌ها مشخص نیست» — عرض‌های پیکسلی ثابت
                                  جمعشون ۱۱۱۱px بود (بیشتر از فضای موجود) و هدرها بی‌سروصدا
                                  بریده می‌شدند؛ الگوی مرجع لیست بیماران اعمال شد:
-                                 Width=Auto + MinWidth از عرض عنوان/محتوا + ستون * کشسان -->
+                                 Width=Auto + سقف ۴۲۰ + پیچش چندخطی تا عنوان/محتوا بریده نشود -->
                             <DataGridCheckBoxColumn Header="" Width="Auto" MinWidth="36"
-                                Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
+                                Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" MaxWidth="420" />
                             <DataGridTextColumn Header="کد پیگیری" Width="Auto" MinWidth="100"
-                                Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="تاریخ" Width="Auto" MinWidth="98" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="ساعت" Width="Auto" MinWidth="62" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTemplateColumn Header="بیمار" Width="*" MinWidth="140" SortMemberPath="PatientName">
+                                Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="تاریخ" Width="Auto" MinWidth="98" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="ساعت" Width="Auto" MinWidth="62" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="بیمار" Width="Auto" MinWidth="140" SortMemberPath="PatientName" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -818,14 +818,14 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="پزشک" Width="Auto" MinWidth="110" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="تخصص" Width="Auto" MinWidth="90" Binding="{Binding SpecialtyName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="نوع" Width="Auto" MinWidth="70" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" />
+                            <DataGridTextColumn Header="پزشک" Width="Auto" MinWidth="110" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="تخصص" Width="Auto" MinWidth="90" Binding="{Binding SpecialtyName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="نوع" Width="Auto" MinWidth="70" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                             <!-- ═══ چرخهٔ ۷۵ — ستون اولویت با رنگ خودش ═══
                                  گزارش مالک: «اولویت در لیست نیست؛ اولویت رو هم با رنگ
                                  خودش در لیست نشون بده» — قرمز اورژانس / نارنجی فوری /
                                  خاکستری معمولی؛ هم‌الگوی بج وضعیت -->
-                            <DataGridTemplateColumn Header="اولویت" Width="Auto" MinWidth="82" SortMemberPath="PriorityText">
+                            <DataGridTemplateColumn Header="اولویت" Width="Auto" MinWidth="82" SortMemberPath="PriorityText" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center"
@@ -836,7 +836,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="وضعیت" Width="Auto" MinWidth="95" SortMemberPath="Status">
+                            <DataGridTemplateColumn Header="وضعیت" Width="Auto" MinWidth="95" SortMemberPath="Status" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
@@ -846,8 +846,8 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="منبع" Width="Auto" MinWidth="70" Binding="{Binding SourceText, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="130">
+                            <DataGridTextColumn Header="منبع" Width="Auto" MinWidth="70" Binding="{Binding SourceText, Converter={StaticResource PersianDigits}}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="130" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -974,24 +974,24 @@
                               FlowDirection="RightToLeft">
                         <DataGrid.Columns>
                             <!-- ═══ چرخهٔ ۷۹ — قانون عرض ستون از «عنوان و محتوای سلول» (الگوی لیست بیماران) ═══ -->
-                            <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="*" MinWidth="130" FontWeight="SemiBold" />
-                            <DataGridTextColumn Header="موبایل" Binding="{Binding PatientMobile, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="پزشک/تخصص" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
-                            <DataGridTextColumn Header="بازه دلخواه" Binding="{Binding PreferredText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="190" />
-                            <DataGridTextColumn Header="اولویت" Binding="{Binding PriorityText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="80" />
-                            <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105">
+                            <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="130" FontWeight="SemiBold" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="موبایل" Binding="{Binding PatientMobile, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="پزشک/تخصص" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="بازه دلخواه" Binding="{Binding PreferredText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="190" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="اولویت" Binding="{Binding PriorityText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="80" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" MaxWidth="420">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                                         <Setter Property="FontWeight" Value="SemiBold" />
                                         <Setter Property="HorizontalAlignment" Value="Right" />
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="زمان پیامک" Binding="{Binding NotifiedText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
-                            <DataGridTextColumn Header="یادداشت" Binding="{Binding Notes, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="130" />
+                            <DataGridTextColumn Header="زمان پیامک" Binding="{Binding NotifiedText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="یادداشت" Binding="{Binding Notes, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="130" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                             <!-- چرخهٔ ۷۹: کلید عملیاتی آیکونی (هم‌الگوی لیست بیماران و فهرست
                                  نوبت‌ها — درخواست مالک: «تمامی کلیدهای عملیاتی لیست‌ها آیکونی باشند») -->
-                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70">
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Command="{Binding DataContext.CancelWaitlistCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"

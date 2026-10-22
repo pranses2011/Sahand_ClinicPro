@@ -347,10 +347,10 @@
                                       CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                     </DataGrid.InputBindings>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                        <DataGridTextColumn Header="شکایت / تشخیص" Binding="{Binding Diagnosis, Converter={StaticResource PersianDigits}}" Width="*" />
-                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="شکایت / تشخیص" Binding="{Binding Diagnosis, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
@@ -368,10 +368,10 @@
                                       CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                     </DataGrid.InputBindings>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                        <DataGridTextColumn Header="کد نسخه" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status, Converter={StaticResource PersianDigits}}" Width="*" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="کد نسخه" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
@@ -390,11 +390,11 @@
                                       CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                     </DataGrid.InputBindings>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="شماره درخواست" Binding="{Binding OrderNumber, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
-                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
-                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="140" />
-                        <DataGridTextColumn Header="تعداد اقلام" Binding="{Binding ItemsCount, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="80" />
-                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status, Converter={StaticResource PersianDigits}}" Width="*" />
+                        <DataGridTextColumn Header="شماره درخواست" Binding="{Binding OrderNumber, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="140" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="تعداد اقلام" Binding="{Binding ItemsCount, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="80" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
@@ -407,11 +407,11 @@
                           CanUserAddRows="False" FontSize="12"
                           HeadersVisibility="Column">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="شماره فاکتور" Binding="{Binding InvoiceNumber, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
-                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
-                        <DataGridTextColumn Header="مبلغ کل" Binding="{Binding TotalAmount, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="120" />
-                        <DataGridTextColumn Header="پرداخت‌شده" Binding="{Binding PaidAmount, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="120" />
-                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status, Converter={StaticResource PersianDigits}}" Width="*" />
+                        <DataGridTextColumn Header="شماره فاکتور" Binding="{Binding InvoiceNumber, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="مبلغ کل" Binding="{Binding TotalAmount, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="120" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="پرداخت‌شده" Binding="{Binding PaidAmount, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="120" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
@@ -424,11 +424,11 @@
                           CanUserAddRows="False" FontSize="12"
                           HeadersVisibility="Column">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
-                        <DataGridTextColumn Header="ساعت" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="70" />
-                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="140" />
-                        <DataGridTextColumn Header="تخصص" Binding="{Binding Specialty, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
-                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status, Converter={StaticResource PersianDigits}}" Width="*" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="ساعت" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="70" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="140" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="تخصص" Binding="{Binding Specialty, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Status, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
@@ -445,9 +445,9 @@
                                       CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                     </DataGrid.InputBindings>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
-                        <DataGridTextColumn Header="نوع" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="*" />
-                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Subtitle, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="140" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="نوع" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="وضعیت" Binding="{Binding Subtitle, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="140" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
@@ -460,9 +460,9 @@
                                       CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                     </DataGrid.InputBindings>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
-                        <DataGridTextColumn Header="طرح درمان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="*" />
-                        <DataGridTextColumn Header="هزینه و وضعیت" Binding="{Binding Subtitle, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="160" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="طرح درمان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="هزینه و وضعیت" Binding="{Binding Subtitle, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="160" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
@@ -475,9 +475,9 @@
                                       CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                     </DataGrid.InputBindings>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
-                        <DataGridTextColumn Header="معاینه" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="150" />
-                        <DataGridTextColumn Header="خلاصه (IOP/VA/یافته‌ها)" Binding="{Binding Subtitle, Converter={StaticResource PersianDigits}}" Width="*" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="معاینه" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="150" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="خلاصه (IOP/VA/یافته‌ها)" Binding="{Binding Subtitle, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
@@ -490,9 +490,9 @@
                                       CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                     </DataGrid.InputBindings>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
-                        <DataGridTextColumn Header="جلسه" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
-                        <DataGridTextColumn Header="تکنیک‌ها/شرح" Binding="{Binding Subtitle, Converter={StaticResource PersianDigits}}" Width="*" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="جلسه" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="تکنیک‌ها/شرح" Binding="{Binding Subtitle, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
@@ -503,10 +503,10 @@
                           CanUserAddRows="False" FontSize="12"
                           HeadersVisibility="Column">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="نوع" Binding="{Binding SourceTable, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="100" />
-                        <DataGridTextColumn Header="عنوان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="160" />
-                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
-                        <DataGridTextColumn Header="خلاصه" Binding="{Binding Summary, Converter={StaticResource PersianDigits}}" Width="*" />
+                        <DataGridTextColumn Header="نوع" Binding="{Binding SourceTable, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="100" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="عنوان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="160" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="خلاصه" Binding="{Binding Summary, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>

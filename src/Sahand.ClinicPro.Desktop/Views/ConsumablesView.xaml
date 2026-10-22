@@ -202,20 +202,20 @@
                           Style="{StaticResource App.DataGrid}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="قلم مصرفی" Binding="{Binding Name, Converter={StaticResource PersianDigits}}"
-                                            Width="*" MinWidth="170" FontWeight="SemiBold" />
+                                            Width="Auto" MinWidth="170" FontWeight="SemiBold" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                         <DataGridTextColumn Header="تعداد بچ" Binding="{Binding BatchCount, Converter={StaticResource PersianDigits}}"
-                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
+                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                         <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}"
-                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
+                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                         <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel, Converter={StaticResource PersianDigits}}"
-                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
+                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                         <DataGridTextColumn Header="قیمت فروش" Binding="{Binding SellPrice, Converter={StaticResource CurrencyRial}}"
-                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
+                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                         <DataGridTextColumn Header="قیمت خرید" Binding="{Binding PurchasePrice, Converter={StaticResource CurrencyRial}}"
-                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
+                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                         <DataGridTextColumn Header="انقضا" Binding="{Binding ExpiryShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
-                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
-                        <DataGridTemplateColumn Header="وضعیت" Width="Auto">
+                                            Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTemplateColumn Header="وضعیت" Width="Auto" MaxWidth="420">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <!-- رنگ وضعیت با تریگر — مبدل اختصاصی لازم نیست (الگوی اتاق‌ها) -->

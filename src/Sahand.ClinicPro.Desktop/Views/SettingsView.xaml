@@ -93,6 +93,7 @@
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem" BasedOn="{StaticResource MaterialDesignListBoxItem}">
                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="VerticalContentAlignment" Value="Center" />
                             <Setter Property="Padding" Value="0" />
                             <Setter Property="Margin" Value="0,2" />
                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -103,7 +104,8 @@
                                                 Background="Transparent" BorderThickness="0"
                                                 Cursor="Hand"
                                                 TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
-                                            <ContentPresenter />
+                                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsSelected" Value="True">
@@ -321,9 +323,9 @@
                                           AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                                           HeadersVisibility="Column" FontSize="12" MaxHeight="420">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="ماژول" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="150" FontWeight="SemiBold" />
-                                        <DataGridTextColumn Header="وضعیت لایسنس" Binding="{Binding LicenseText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
-                                        <DataGridTemplateColumn Header="فعال در سیستم" Width="Auto" MinWidth="110">
+                                        <DataGridTextColumn Header="ماژول" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="150" FontWeight="SemiBold" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                        <DataGridTextColumn Header="وضعیت لایسنس" Binding="{Binding LicenseText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                        <DataGridTemplateColumn Header="فعال در سیستم" Width="Auto" MinWidth="110" MaxWidth="420">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <ToggleButton IsChecked="{Binding IsEnabled, Mode=TwoWay}"
@@ -333,7 +335,7 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        <DataGridTextColumn Header="عملیات" Binding="{Binding ActionText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
+                                        <DataGridTextColumn Header="عملیات" Binding="{Binding ActionText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                                 <TextBlock Text="Core: غیرقابل غیرفعال‌سازی — ماژول بدون لایسنس قفل است و دکمه «خرید ماژول» به License Portal متصل می‌شود"

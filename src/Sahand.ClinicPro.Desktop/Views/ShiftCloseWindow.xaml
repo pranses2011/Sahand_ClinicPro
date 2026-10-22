@@ -231,17 +231,17 @@
                               FontSize="11.5" FlowDirection="RightToLeft"
                               ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="رسید" Binding="{Binding ReceiptNumber, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="80" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="صندوق" Binding="{Binding RegisterName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="100" />
-                            <DataGridTextColumn Header="زمان بستن" Binding="{Binding ClosedText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="130" />
-                            <DataGridTextColumn Header="بستن‌دهنده" Binding="{Binding ClosedByName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="115" />
-                            <DataGridTextColumn Header="نقد" Binding="{Binding TotalCash, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="کارت" Binding="{Binding TotalCard, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="آنلاین" Binding="{Binding TotalOnline, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="100" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="اختلاف" Binding="{Binding Difference, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="100" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="وضعیت اختلاف" Binding="{Binding DifferenceState, Converter={StaticResource PersianDigits}}" Width="*">
+                            <DataGridTextColumn Header="رسید" Binding="{Binding ReceiptNumber, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="80" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="صندوق" Binding="{Binding RegisterName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="100" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="زمان بستن" Binding="{Binding ClosedText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="130" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="بستن‌دهنده" Binding="{Binding ClosedByName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="115" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="نقد" Binding="{Binding TotalCash, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="کارت" Binding="{Binding TotalCard, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="آنلاین" Binding="{Binding TotalOnline, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="100" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="اختلاف" Binding="{Binding Difference, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="100" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="وضعیت اختلاف" Binding="{Binding DifferenceState, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                                         <Setter Property="FontWeight" Value="SemiBold" />
                                         <Setter Property="HorizontalAlignment" Value="Right" />
                                     </Style>

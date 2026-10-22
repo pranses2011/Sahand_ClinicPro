@@ -93,14 +93,14 @@
                               Style="{StaticResource App.TableDataGrid}"
                               HeadersVisibility="Column">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="پرسنل" Binding="{Binding FullName, Converter={StaticResource PersianDigits}}" Width="2*" />
-                            <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="بخش" Binding="{Binding Department, Converter={StaticResource PersianDigits}}" Width="1.4*" />
-                            <DataGridTextColumn Header="شیفت" Binding="{Binding Shift, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="ورود" Binding="{Binding CheckIn, Converter={StaticResource PersianDigits}}" Width="0.7*" />
-                            <DataGridTextColumn Header="خروج" Binding="{Binding CheckOut, Converter={StaticResource PersianDigits}}" Width="0.7*" />
-                            <DataGridTextColumn Header="تأخیر" Binding="{Binding Late, Converter={StaticResource PersianDigits}}" Width="0.9*" />
-                            <DataGridTemplateColumn Header="وضعیت" Width="*">
+                            <DataGridTextColumn Header="پرسنل" Binding="{Binding FullName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="بخش" Binding="{Binding Department, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="شیفت" Binding="{Binding Shift, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="ورود" Binding="{Binding CheckIn, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="خروج" Binding="{Binding CheckOut, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="تأخیر" Binding="{Binding Late, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="وضعیت" Width="Auto" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="{Binding StatusHex}" CornerRadius="10"
@@ -110,7 +110,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridCheckBoxColumn Header="دستی؟" Binding="{Binding Edited}" Width="0.6*" />
+                            <DataGridCheckBoxColumn Header="دستی؟" Binding="{Binding Edited}" Width="Auto" MaxWidth="420" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -129,11 +129,11 @@
                               Style="{StaticResource App.TableDataGrid}"
                               HeadersVisibility="Column" MinHeight="180">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="نام دستگاه" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="1.6*" />
-                            <DataGridTextColumn Header="برند" Binding="{Binding Brand, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="نشانی" Binding="{Binding EndPoint, Converter={StaticResource PersianDigits}}" Width="1.2*" />
-                            <DataGridTextColumn Header="محل" Binding="{Binding Location, Converter={StaticResource PersianDigits}}" Width="1.4*" />
-                            <DataGridTemplateColumn Header="وضعیت" Width="*">
+                            <DataGridTextColumn Header="نام دستگاه" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="برند" Binding="{Binding Brand, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="نشانی" Binding="{Binding EndPoint, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="محل" Binding="{Binding Location, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="وضعیت" Width="Auto" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="{Binding StatusHex}" CornerRadius="10"
@@ -143,8 +143,8 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="آخرین سینک" Binding="{Binding LastSync, Converter={StaticResource PersianDigits}}" Width="1.5*" />
-                            <DataGridTextColumn Header="کاربران" Binding="{Binding MappedUsers, Converter={StaticResource PersianDigits}}" Width="0.7*" />
+                            <DataGridTextColumn Header="آخرین سینک" Binding="{Binding LastSync, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="کاربران" Binding="{Binding MappedUsers, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                         </DataGrid.Columns>
                     </DataGrid>
 
@@ -215,10 +215,10 @@
                                           AutoGenerateColumns="False" CanUserAddRows="False" MaxHeight="140"
                                           Style="{StaticResource App.TableDataGrid}" HeadersVisibility="Column">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="شناسه دستگاه" Binding="{Binding EnrollNumber, Converter={StaticResource PersianDigits}}" Width="*" />
-                                        <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="2*" />
-                                        <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="*" />
-                                        <DataGridTemplateColumn Header="" Width="Auto" MinWidth="70">
+                                        <DataGridTextColumn Header="شناسه دستگاه" Binding="{Binding EnrollNumber, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                        <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                        <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                        <DataGridTemplateColumn Header="" Width="Auto" MinWidth="70" MaxWidth="420">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <!-- چرخهٔ ۷۹: کلید عملیاتی آیکونی (هم‌الگوی لیست بیماران) -->
@@ -270,12 +270,12 @@
                               AutoGenerateColumns="False" CanUserAddRows="False"
                               Style="{StaticResource App.TableDataGrid}" HeadersVisibility="Column">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="1.6*" />
-                            <DataGridTextColumn Header="تاریخ" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="فیلد" Binding="{Binding Field, Converter={StaticResource PersianDigits}}" Width="0.7*" />
-                            <DataGridTextColumn Header="تغییر" Binding="{Binding Change, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="دلیل" Binding="{Binding Reason, Converter={StaticResource PersianDigits}}" Width="2*" />
-                            <DataGridTemplateColumn Header="وضعیت" Width="*">
+                            <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="فیلد" Binding="{Binding Field, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="تغییر" Binding="{Binding Change, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="دلیل" Binding="{Binding Reason, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="وضعیت" Width="Auto" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="{Binding StatusHex}" CornerRadius="10"
@@ -285,7 +285,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="اقدام" Width="Auto" MinWidth="100">
+                            <DataGridTemplateColumn Header="اقدام" Width="Auto" MinWidth="100" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <!-- چرخهٔ ۷۹: کلیدهای عملیاتی آیکونی (هم‌الگوی لیست بیماران) -->
@@ -348,15 +348,15 @@
                               AutoGenerateColumns="False" CanUserAddRows="False"
                               Style="{StaticResource App.TableDataGrid}" HeadersVisibility="Column">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="پرسنل" Binding="{Binding FullName, Converter={StaticResource PersianDigits}}" Width="1.8*" />
-                            <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="بخش" Binding="{Binding Department, Converter={StaticResource PersianDigits}}" Width="1.3*" />
-                            <DataGridTextColumn Header="روز حاضر" Binding="{Binding Present, Converter={StaticResource PersianDigits}}" Width="0.8*" />
-                            <DataGridTextColumn Header="تأخیرها" Binding="{Binding LateCount, Converter={StaticResource PersianDigits}}" Width="0.7*" />
-                            <DataGridTextColumn Header="مجموع تأخیر" Binding="{Binding LateTotal, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="کارکرد (ساعت)" Binding="{Binding Worked, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="اضافه‌کاری (ساعت)" Binding="{Binding Overtime, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="غیبت" Binding="{Binding Absent, Converter={StaticResource PersianDigits}}" Width="0.6*" />
+                            <DataGridTextColumn Header="پرسنل" Binding="{Binding FullName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="بخش" Binding="{Binding Department, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="روز حاضر" Binding="{Binding Present, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="تأخیرها" Binding="{Binding LateCount, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="مجموع تأخیر" Binding="{Binding LateTotal, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="کارکرد (ساعت)" Binding="{Binding Worked, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="اضافه‌کاری (ساعت)" Binding="{Binding Overtime, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="غیبت" Binding="{Binding Absent, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>

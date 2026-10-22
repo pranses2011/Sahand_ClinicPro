@@ -507,16 +507,16 @@
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn Header="زمان"
                                                                         Binding="{Binding TimeShamsi, Converter={StaticResource PersianDigits}}"
-                                                                        Width="Auto" />
+                                                                        Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                                                     <DataGridTextColumn Header="کاربر"
                                                                         Binding="{Binding User, Converter={StaticResource PersianDigits}}"
-                                                                        Width="Auto" />
+                                                                        Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                                                     <DataGridTextColumn Header="عملیات"
                                                                         Binding="{Binding Action, Converter={StaticResource PersianDigits}}"
-                                                                        Width="Auto" />
+                                                                        Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                                                     <DataGridTextColumn Header="موجودیت"
                                                                         Binding="{Binding Entity, Converter={StaticResource PersianDigits}}"
-                                                                        Width="*" />
+                                                                        Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                                                 </DataGrid.Columns>
                                             </DataGrid>
                                         </Grid>

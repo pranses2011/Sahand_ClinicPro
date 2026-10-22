@@ -105,13 +105,13 @@
                 </Style>
             </DataGrid.RowStyle>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="آزمایش" Binding="{Binding TestName, Converter={StaticResource PersianDigits}}" Width="2*" IsReadOnly="True" />
-                <DataGridTextColumn Header="واحد" Binding="{Binding Unit, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" />
+                <DataGridTextColumn Header="آزمایش" Binding="{Binding TestName, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="واحد" Binding="{Binding Unit, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                 <!-- ═══ چرخهٔ ۶۹ (F-28): حد طبیعی «مخصوص همین بیمار» — از موتور تفسیر سرور ═══ -->
-                <DataGridTextColumn Header="حد طبیعی این بیمار" Binding="{Binding PatientRangeText, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" />
-                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" />
+                <DataGridTextColumn Header="حد طبیعی این بیمار" Binding="{Binding PatientRangeText, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                 <!-- بج تفسیر رنگی — سبز/نارنجی/قرمز (چرخهٔ ۶۹) -->
-                <DataGridTemplateColumn Header="تفسیر" Width="Auto">
+                <DataGridTemplateColumn Header="تفسیر" Width="Auto" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border CornerRadius="8" Padding="7,2" HorizontalAlignment="Center"
@@ -122,8 +122,8 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="نتیجه متنی" Binding="{Binding Result, Converter={StaticResource PersianDigits}}" Width="*" IsReadOnly="True" />
-                <DataGridTextColumn Header="نتیجه عددی" Binding="{Binding ResultNumeric, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" />
+                <DataGridTextColumn Header="نتیجه متنی" Binding="{Binding Result, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="نتیجه عددی" Binding="{Binding ResultNumeric, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
             </DataGrid.Columns>
         </DataGrid>
 

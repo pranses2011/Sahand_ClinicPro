@@ -85,12 +85,12 @@
                       HeadersVisibility="Column" FontSize="12.5">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="شماره" Binding="{Binding RoomNumber, Converter={StaticResource PersianDigits}}"
-                                        Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
+                                        Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                     <DataGridTextColumn Header="نام اتاق" Binding="{Binding DisplayName, Converter={StaticResource PersianDigits}}"
-                                        Width="*" MinWidth="180" FontWeight="SemiBold" />
+                                        Width="Auto" MinWidth="180" FontWeight="SemiBold" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                     <DataGridTextColumn Header="طبقه" Binding="{Binding Floor, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
-                                        Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
-                    <DataGridTemplateColumn Header="وضعیت" Width="Auto" SortMemberPath="IsActive">
+                                        Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                    <DataGridTemplateColumn Header="وضعیت" Width="Auto" SortMemberPath="IsActive" MaxWidth="420">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <!-- رنگ وضعیت با تریگر — مبدل اختصاصی لازم نیست -->

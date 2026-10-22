@@ -20,6 +20,7 @@
             <!-- کاشی‌های آیکون در WrapPanel اندازهٔ ثابت خود را حفظ می‌کنند. -->
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
                     <Setter Property="MinHeight" Value="0" />
                     <Setter Property="Padding" Value="0" />
                     <Setter Property="Margin" Value="0" />

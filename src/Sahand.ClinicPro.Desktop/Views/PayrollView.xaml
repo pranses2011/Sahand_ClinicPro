@@ -96,32 +96,32 @@
                   Style="{StaticResource App.TableDataGrid}"
                   HeadersVisibility="Column">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" />
-                <DataGridTextColumn Header="نام و نام خانوادگی" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" />
-                <DataGridTextColumn Header="حقوق پایه" Binding="{Binding BaseSalary, Converter={StaticResource PersianDigits}}" />
-                <DataGridTextColumn Header="درصد از سود" Binding="{Binding CommissionPercent, Converter={StaticResource PersianDigits}}" />
-                <DataGridTextColumn Header="سود خدمات دوره" Binding="{Binding ServiceProfitBase, Converter={StaticResource PersianDigits}}" />
-                <DataGridTextColumn Header="حقوق درصدی" Binding="{Binding ServiceCommission, Converter={StaticResource PersianDigits}}">
+                <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="نام و نام خانوادگی" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="حقوق پایه" Binding="{Binding BaseSalary, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="درصد از سود" Binding="{Binding CommissionPercent, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="سود خدمات دوره" Binding="{Binding ServiceProfitBase, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="حقوق درصدی" Binding="{Binding ServiceCommission, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                             <Setter Property="FontWeight" Value="SemiBold" />
                             <Setter Property="Foreground" Value="#8E24AA" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="اضافه‌کاری" Binding="{Binding Overtime, Converter={StaticResource PersianDigits}}" />
-                <DataGridTextColumn Header="پاداش" Binding="{Binding Bonus, Converter={StaticResource PersianDigits}}" />
-                <DataGridTextColumn Header="بیمه ۷٪" Binding="{Binding Insurance, Converter={StaticResource PersianDigits}}" />
-                <DataGridTextColumn Header="مالیات" Binding="{Binding Tax, Converter={StaticResource PersianDigits}}" />
-                <DataGridTextColumn Header="خالص پرداختی" Binding="{Binding NetAmount, Converter={StaticResource PersianDigits}}">
+                <DataGridTextColumn Header="اضافه‌کاری" Binding="{Binding Overtime, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="پاداش" Binding="{Binding Bonus, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="بیمه ۷٪" Binding="{Binding Insurance, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="مالیات" Binding="{Binding Tax, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="خالص پرداختی" Binding="{Binding NetAmount, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                             <Setter Property="FontWeight" Value="Bold" />
                             <Setter Property="Foreground" Value="#2E7D32" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTemplateColumn Header="وضعیت">
+                <DataGridTemplateColumn Header="وضعیت" Width="Auto" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border Background="{Binding StatusColor}" CornerRadius="9" Padding="9,2.5"

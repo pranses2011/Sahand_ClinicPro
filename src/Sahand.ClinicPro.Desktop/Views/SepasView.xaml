@@ -97,10 +97,10 @@
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="بیمار" Binding="{Binding Patient, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                            <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                            <DataGridTextColumn Header="شناسه ارجاع" Binding="{Binding ReferenceId, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTemplateColumn Header="وضعیت" Width="Auto">
+                            <DataGridTextColumn Header="بیمار" Binding="{Binding Patient, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="شناسه ارجاع" Binding="{Binding ReferenceId, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="وضعیت" Width="Auto" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
@@ -110,13 +110,13 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="تلاش مجدد" Binding="{Binding RetryCount, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                            <DataGridTextColumn Header="ارسال" Width="Auto">
+                            <DataGridTextColumn Header="تلاش مجدد" Binding="{Binding RetryCount, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="ارسال" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}">
                                 <DataGridTextColumn.Binding>
                                     <Binding Path="SentAt" Converter="{StaticResource ShamsiDateTime}" TargetNullValue="—" />
                                 </DataGridTextColumn.Binding>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="خطا" Binding="{Binding Error, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" FontSize="10.5" />
+                            <DataGridTextColumn Header="خطا" Binding="{Binding Error, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontSize="10.5" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -159,17 +159,17 @@
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="سرویس" Binding="{Binding Service, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                            <DataGridTextColumn Header="Endpoint" Binding="{Binding Endpoint, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" FontFamily="{DynamicResource App.CodeFont}" FontSize="10.5" />
-                            <DataGridTextColumn Header="متد" Binding="{Binding Method, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="کد" Binding="{Binding StatusCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="مدت (ms)" Binding="{Binding DurationMs, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="زمان" Width="Auto">
+                            <DataGridTextColumn Header="سرویس" Binding="{Binding Service, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="Endpoint" Binding="{Binding Endpoint, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" FontSize="10.5" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="متد" Binding="{Binding Method, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="کد" Binding="{Binding StatusCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="مدت (ms)" Binding="{Binding DurationMs, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="زمان" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}">
                                 <DataGridTextColumn.Binding>
                                     <Binding Path="CalledAt" Converter="{StaticResource ShamsiDateTime}" TargetNullValue="—" />
                                 </DataGridTextColumn.Binding>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="نتیجه" Binding="{Binding IsSuccess, Converter={StaticResource PersianDigits}}" Width="Auto" />
+                            <DataGridTextColumn Header="نتیجه" Binding="{Binding IsSuccess, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                         </DataGrid.Columns>
                     </DataGrid>
                     <TextBlock Grid.Row="2" Text="جزئیات فراخوانی انتخاب‌شده:" FontSize="12.5" FontWeight="SemiBold" Margin="2,10,0,6" />

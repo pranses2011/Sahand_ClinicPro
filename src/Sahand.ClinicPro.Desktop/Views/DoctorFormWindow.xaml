@@ -330,7 +330,7 @@
                             </Style>
                         </DataGrid.CellStyle>
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="روز" Width="Auto">
+                            <DataGridTemplateColumn Header="روز" Width="Auto" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -362,7 +362,7 @@
                                  ۱۵۶→۱۰۶ و مجموع ستون‌ها ≈ ۷۰۰px — در پنجرهٔ ۹۰۰px
                                  بدون اسکرول افقی جا می‌شوند. تاریخچهٔ چرخه‌های ۲۳/۲۱/
                                  ۲۸/۳۳ برای ثبت رشد قبلی عرض‌ها حفظ شد. -->
-                            <DataGridTemplateColumn Header="شروع" Width="Auto" SortMemberPath="StartTime">
+                            <DataGridTemplateColumn Header="شروع" Width="Auto" SortMemberPath="StartTime" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <controls:TimePicker TimeText="{Binding StartTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -371,7 +371,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="پایان" Width="Auto" SortMemberPath="EndTime">
+                            <DataGridTemplateColumn Header="پایان" Width="Auto" SortMemberPath="EndTime" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <controls:TimePicker TimeText="{Binding EndTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -380,7 +380,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="استراحت از" Width="Auto" SortMemberPath="BreakStart">
+                            <DataGridTemplateColumn Header="استراحت از" Width="Auto" SortMemberPath="BreakStart" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <controls:TimePicker TimeText="{Binding BreakStart, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -389,7 +389,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="استراحت تا" Width="Auto" SortMemberPath="BreakEnd">
+                            <DataGridTemplateColumn Header="استراحت تا" Width="Auto" SortMemberPath="BreakEnd" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <controls:TimePicker TimeText="{Binding BreakEnd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -398,7 +398,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="اتاق" Width="Auto">
+                            <DataGridTemplateColumn Header="اتاق" Width="Auto" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <ComboBox ItemsSource="{Binding DataContext.Rooms, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -417,7 +417,7 @@
                                  منبع نمی‌رسید؛ مبدل در چرخهٔ ۴۷ دوسویه شد و
                                  ارقام فارسی/لاتین هر دو پذیرفته می‌شوند. -->
                             <DataGridTextColumn Header="ظرفیت" Width="Auto"
-                                Binding="{Binding MaxPatients, UpdateSourceTrigger=PropertyChanged, TargetNullValue='', Converter={StaticResource PersianDigits}}" />
+                                Binding="{Binding MaxPatients, UpdateSourceTrigger=PropertyChanged, TargetNullValue='', Converter={StaticResource PersianDigits}}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                         </DataGrid.Columns>
                     </DataGrid>
 
@@ -504,12 +504,12 @@
                               HeadersVisibility="Column"
                               FontSize="12">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                            <DataGridTextColumn Header="از ساعت" Binding="{Binding FromTime, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                            <DataGridTextColumn Header="تا ساعت" Binding="{Binding ToTime, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                            <DataGridTextColumn Header="نوع" Binding="{Binding AbsenceTypeName, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                            <DataGridTextColumn Header="دلیل" Binding="{Binding Reason, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" />
-                            <DataGridTemplateColumn Header="نوبت‌های درگیر" Width="Auto">
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="از ساعت" Binding="{Binding FromTime, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="تا ساعت" Binding="{Binding ToTime, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="نوع" Binding="{Binding AbsenceTypeName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="دلیل" Binding="{Binding Reason, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="نوبت‌های درگیر" Width="Auto" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center"
@@ -520,7 +520,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70">
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Command="{Binding DataContext.DeleteAbsenceCommand, RelativeSource={RelativeSource AncestorType=Window}}"
