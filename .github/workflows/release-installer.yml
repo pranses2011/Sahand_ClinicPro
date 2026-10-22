@@ -53,12 +53,19 @@ jobs:
       - name: Build Inno Setup executable
         shell: pwsh
         run: |
-          choco install innosetup --yes --no-progress
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           New-Item -ItemType Directory -Force dist | Out-Null
-          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6/ISCC.exe'
-          if (-not (Test-Path $iscc)) { throw "Inno Setup compiler not found: $iscc" }
-          & $iscc "/DMyAppVersion=${{ steps.version.outputs.version }}" installer/SahandClinicPro.iss
+          $iscc = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+          if ($iscc) {
+            $isccPath = $iscc.Source
+          } else {
+            $candidates = @(
+              (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6/ISCC.exe'),
+              (Join-Path $env:ProgramFiles 'Inno Setup 6/ISCC.exe')
+            )
+            $isccPath = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          }
+          if (-not $isccPath) { throw 'Inno Setup 6 compiler is not installed on this Windows runner.' }
+          & $isccPath "/DMyAppVersion=${{ steps.version.outputs.version }}" installer/SahandClinicPro.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Publish self-contained API server
