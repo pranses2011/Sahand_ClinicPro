@@ -89,12 +89,17 @@ jobs:
           Set-Content -Path "$package/RELEASE-INSTALL-GUIDE.txt" -Value $guide -Encoding UTF8
           Compress-Archive -Path "$package/*" -DestinationPath "dist/SahandClinicPro-Server-v$version.zip" -Force
 
-      - name: Upload Windows installer assets
-        uses: actions/upload-artifact@v4
-        with:
-          name: SahandClinicPro-Windows-v${{ steps.version.outputs.version }}
-          path: |
-            dist/SahandClinicPro-Setup-v${{ steps.version.outputs.version }}.exe
-            dist/SahandClinicPro-Server-v${{ steps.version.outputs.version }}.zip
-          if-no-files-found: error
-          retention-days: 30
+      - name: Create GitHub Release with built installers
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          $notes = (Get-Content installer/RELEASE-NOTES.md -Raw).Replace('{VERSION}', $version)
+          Set-Content -Path dist/release-notes.md -Value $notes -Encoding UTF8
+          $title = "v$version — نصب نسخه درمانگاه"
+          gh release create "v$version" `
+            "dist/SahandClinicPro-Setup-v$version.exe" `
+            "dist/SahandClinicPro-Server-v$version.zip" `
+            --verify-tag --title $title --notes-file dist/release-notes.md
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
