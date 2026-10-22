@@ -2,7 +2,7 @@
 chcp 65001 >nul
 setlocal
 title ساخت بسته نصب درمانگاه سهند
-set "APP_VERSION=2.22.0"
+set "APP_VERSION=2.22.1"
 if not "%CI%"=="" set "CI_MODE=1"
 
 echo ===========================================================
@@ -51,7 +51,7 @@ robocopy publish\server dist\SahandClinicPro-Server-v%APP_VERSION%\Server /E >nu
 if errorlevel 8 goto :fail
 copy /y installer\Install-Server-Package.bat dist\SahandClinicPro-Server-v%APP_VERSION%\ >nul
 copy /y installer\Install-Server-Package.ps1 dist\SahandClinicPro-Server-v%APP_VERSION%\ >nul
-powershell -NoProfile -Command "$guide = (Get-Content 'installer\RELEASE-INSTALL-GUIDE.txt' -Raw).Replace('2.22.0', '%APP_VERSION%'); Set-Content 'dist\SahandClinicPro-Server-v%APP_VERSION%\RELEASE-INSTALL-GUIDE.txt' $guide -Encoding UTF8"
+powershell -NoProfile -Command "$guide = (Get-Content 'installer\RELEASE-INSTALL-GUIDE.txt' -Raw).Replace('{VERSION}', '%APP_VERSION%'); Set-Content 'dist\SahandClinicPro-Server-v%APP_VERSION%\RELEASE-INSTALL-GUIDE.txt' $guide -Encoding UTF8"
 if errorlevel 1 goto :fail
 powershell -NoProfile -Command "Compress-Archive -Path 'dist\SahandClinicPro-Server-v%APP_VERSION%\*' -DestinationPath 'dist\SahandClinicPro-Server-v%APP_VERSION%.zip' -Force"
 if errorlevel 1 goto :fail

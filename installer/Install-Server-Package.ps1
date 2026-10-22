@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 $serviceName = 'SahandClinicPro.API'
 $target = 'C:\SahandClinicPro\Server'
 $source = Join-Path $PSScriptRoot 'Server'
