@@ -41,6 +41,9 @@ public partial class ServiceCatalogViewModel : ViewModelBase
     /// <summary>تعداد خدمت‌های غیرفعال.</summary>
     [ObservableProperty] private int _inactiveCount;
 
+    /// <summary>تعداد نتایج منطبق با جستجو و فیلتر.</summary>
+    [ObservableProperty] private int _resultCount;
+
     /// <summary>وضعیت بارگذاری/ذخیره.</summary>
     [ObservableProperty] private bool _isBusy;
 
@@ -245,9 +248,11 @@ public partial class ServiceCatalogViewModel : ViewModelBase
             filtered = filtered.Where(x => x.ServiceName.Contains(term, StringComparison.CurrentCultureIgnoreCase)
                 || (x.ServiceCode?.Contains(term, StringComparison.CurrentCultureIgnoreCase) ?? false));
 
+        var filteredRows = filtered.ToList();
         Rows.Clear();
-        foreach (var row in filtered)
+        foreach (var row in filteredRows)
             Rows.Add(row);
+        ResultCount = filteredRows.Count;
     }
 
     /// <summary>پاکت پاسخ فهرست خدمت‌ها.</summary>
