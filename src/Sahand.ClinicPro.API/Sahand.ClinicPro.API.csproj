@@ -24,6 +24,8 @@
   <ItemGroup>
     <!-- احراز هویت JWT (پیکربندی در گام ۴) -->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <!-- اجرای درست API به‌عنوان Windows Service در استقرار درمانگاه -->
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
     <!-- لاگ‌گذاری ساختاریافته Serilog + خروجی Seq -->
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Serilog.Sinks.Seq" />

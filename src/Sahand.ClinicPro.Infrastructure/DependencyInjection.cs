@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
@@ -174,7 +175,7 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// اجرای مهاجرت‌های معلق + بذرها پس از راه‌اندازی — خطاها ثبت می‌شوند اما برنامه را متوقف نمی‌کنند.
+    /// در تولید، ساخت/ارتقای خودکار دیتابیس پیش از سرویس‌دهی الزامی است و شکست آن راه‌اندازی را متوقف می‌کند.
     /// چرخه بیستم (گزارش چهاردهم مالک): پیش‌تر مهاجرت‌ها فقط با دستور «dotnet ef database
     /// update» روی سرور اعمال می‌شدند؛ مالک فقط فایل‌های تغییرکرده را جایگزین می‌کند و
     /// ابزار توسعه در اختیار ندارد. اکنون مهاجرت‌های معلق در همان راه‌اندازی سرور
@@ -190,41 +191,28 @@ public static class DependencyInjection
                 var db = scope.ServiceProvider.GetRequiredService<Persistence.ClinicProDbContext>();
                 var logger = scope.ServiceProvider
                     .GetRequiredService<ILogger<Microsoft.Extensions.DependencyInjection.ServiceProvider>>();
-                try
+                var pending = db.Database.GetPendingMigrations().ToList();
+                if (pending.Count > 0)
                 {
-                    var pending = db.Database.GetPendingMigrations().ToList();
-                    if (pending.Count > 0)
-                    {
-                        logger.LogInformation(
-                            "اعمال {Count} مهاجرت معلق دیتابیس در راه‌اندازی…",
-                            pending.Count);
-                        await db.Database.MigrateAsync();
-
-                        // ═══ چرخه ۲۵ — گارد پس از مهاجرت (درس‌گرفته از خطای
-                        // «Invalid column name 'ServiceId'» سرور مالک) ═══
-                        // اگر پس از MigrateAsync هنوز مهاجرت معلق بماند، یعنی
-                        // اسکیمای دیتابیس از کد عقب است و پرس‌وجوها به‌زودی با
-                        // SqlException 207 «Invalid column name» می‌شکنند؛ این
-                        // وضعیت باید همان‌جا با بلندترین سطح لاگ اعلام شود تا
-                        // پیش از خطاهای زمانِ اجرا دیده و پیگیری شود.
-                        var stillPending = db.Database.GetPendingMigrations().ToList();
-                        if (stillPending.Count > 0)
-                        {
-                            logger.LogCritical(
-                                "اسکیمای دیتابیس از کد عقب مانده است: {Count} مهاجرت اعمال‌نشده ({Migrations}). " +
-                                "پرس‌وجوها با خطای «Invalid column name» شکست خواهند خورد — " +
-                                "لاگ خطای مهاجرت را در بالا ببینید، علت را رفع کنید و سرور را ری‌استارت کنید",
-                                stillPending.Count, string.Join(", ", stillPending));
-                        }
-                    }
+                    logger.LogInformation(
+                        "اعمال {Count} تغییر دیتابیس در راه‌اندازی اولیه/ارتقا…",
+                        pending.Count);
+                    // در نصب نخست، همین فراخوانی دیتابیس و تمام جدول‌های نسخهٔ فعلی
+                    // را می‌سازد؛ در ارتقا فقط تغییراتِ باقی‌مانده را اعمال می‌کند.
+                    // هیچ ابزار dotnet-ef یا اجرای دستی از طرف درمانگاه لازم نیست.
+                    await db.Database.MigrateAsync();
                 }
-                catch (Exception ex)
+
+                // سرور نباید با اسکیمای ناقص آمادهٔ سرویس‌دهی شود. شکست اتصال،
+                // مجوز ناکافی یا خطای DDL راه‌اندازی را متوقف می‌کند تا نصب‌کننده
+                // علت را رفع کند؛ ادامهٔ خاموش با خطاهای پراکندهٔ زمان اجرا خطرناک است.
+                var stillPending = db.Database.GetPendingMigrations().ToList();
+                if (stillPending.Count > 0)
                 {
-                    // خطای مهاجرت جلوی اجرای سرویس را نمی‌گیرد — لاگ و ادامه
-                    // (مثلاً سرور در حال اجرا با اتصال موقتاً قطع‌شده)
-                    logger.LogError(ex,
-                        "اعمال مهاجرت‌های دیتابیس در راه‌اندازی ناموفق بود — اسکیمای دیتابیس " +
-                        "ممکن است از کد عقب بماند و پرس‌وجوها با خطای «Invalid column name» شکست بخورند");
+                    var message = $"پس از اعمال خودکار، هنوز {stillPending.Count} تغییر دیتابیس اعمال‌نشده است: " +
+                                  string.Join(", ", stillPending);
+                    logger.LogCritical("{DatabaseMigrationFailure}", message);
+                    throw new InvalidOperationException(message);
                 }
             }
 
@@ -287,10 +275,17 @@ public static class DependencyInjection
             // ۲) اجرای بذرها
             await DataSeederRunner.RunAllAsync(serviceProvider);
         }
-        catch
+        catch (Exception ex)
         {
-            // در محیط بدون دیتابیس (تست یا CI) بی‌صدا عبور می‌کنیم —
-            // خطای واقعی توسط لاگر داخل RunAllAsync ثبت شده است
+            var logger = serviceProvider
+                .GetRequiredService<ILogger<Microsoft.Extensions.DependencyInjection.ServiceProvider>>();
+            var environment = serviceProvider.GetRequiredService<Microsoft.Extensions.Hosting.IHostEnvironment>();
+            logger.LogError(ex, "راه‌اندازی دیتابیس/بذرها با خطا روبه‌رو شد");
+
+            // در استقرار درمانگاه نباید API با اسکیمای ناقص آمادهٔ سرویس‌دهی شود.
+            // در Development و تست، نبود SQL Server می‌تواند عمدی باشد.
+            if (environment.IsProduction())
+                throw;
         }
     }
 }
