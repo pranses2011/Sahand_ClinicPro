@@ -513,7 +513,7 @@ public partial class ReportBrowserViewModel : ViewModelBase
                         $"بازهٔ «{Application.Common.Helpers.PersianDateHelper.ToShamsiFa(FromDate)} تا " +
                         $"{Application.Common.Helpers.PersianDateHelper.ToShamsiFa(ToDate)}» را بازتر کنید");
                 else
-                    _snackbar.Success($"گزارش «{SelectedReport.Title}» اجرا شد — {Rows.Count} ردیف");
+                    _snackbar.Success($"گزارش «{SelectedReport?.Title ?? "انتخاب‌شده"}» اجرا شد — {Rows.Count} ردیف");
             }
         }
         finally

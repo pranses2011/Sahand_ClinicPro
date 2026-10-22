@@ -110,9 +110,9 @@ public class ReportsEndToEndTests : IClassFixture<FlowApiFactory>
             var dashboardChart = await client.GetAsync($"/api/v1/dashboard/revenue-chart?days={days}");
             dashboardChart.StatusCode.Should().Be(HttpStatusCode.OK);
             var chartPacket = await ReadAsync<Packet<JsonElement>>(dashboardChart);
-            chartPacket.Data!.Value.GetArrayLength().Should().Be(days,
+            chartPacket.Data!.GetArrayLength().Should().Be(days,
                 $"انتخاب {days} روز باید دقیقاً {days} نقطهٔ روزانه در نمودار بسازد");
-            chartPacket.Data.Value[days - 1].GetProperty("amount").GetDecimal().Should().Be(300000m,
+            chartPacket.Data[days - 1].GetProperty("amount").GetDecimal().Should().Be(300000m,
                 "درآمد روز باید بر اساس تاریخ پرداخت واقعی باشد، نه تاریخ صدور فاکتور");
         }
 
@@ -137,8 +137,8 @@ public class ReportsEndToEndTests : IClassFixture<FlowApiFactory>
             var response = await client.GetAsync($"/api/v1/reports/execute/{reportId}?fromDate=2000-01-01&toDate=2100-01-01");
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var packet = await ReadAsync<Packet<JsonElement>>(response);
-            AssertRowsMatchColumns(packet.Data!.Value, $"گزارش {reportId}");
-            packet.Data.Value.GetProperty("rows").GetArrayLength().Should().BeGreaterThan(0,
+            AssertRowsMatchColumns(packet.Data!, $"گزارش {reportId}");
+            packet.Data.GetProperty("rows").GetArrayLength().Should().BeGreaterThan(0,
                 $"فاکتور بذری باید در گزارش «{reportId}» دیده شود");
         }
 
@@ -175,9 +175,9 @@ public class ReportsEndToEndTests : IClassFixture<FlowApiFactory>
             "/api/v1/reports/execute/chart-revenue-monthly?fromDate=2000-01-01&toDate=2100-01-01");
         monthlyChartResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var monthlyChart = await ReadAsync<Packet<JsonElement>>(monthlyChartResponse);
-        monthlyChart.Data!.Value.GetProperty("chart").GetProperty("points").GetArrayLength()
+        monthlyChart.Data!.GetProperty("chart").GetProperty("points").GetArrayLength()
             .Should().Be(12, "گزارش ۱۲ ماهه باید برای هر ماه یک نقطه داشته باشد");
-        AssertRowsMatchColumns(monthlyChart.Data.Value, "گزارش نموداری درآمد ماهانه");
+        AssertRowsMatchColumns(monthlyChart.Data, "گزارش نموداری درآمد ماهانه");
     }
 
     /// <summary>
