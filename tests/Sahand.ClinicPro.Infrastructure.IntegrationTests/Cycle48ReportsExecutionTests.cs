@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -134,8 +135,8 @@ public class Cycle48ReportsExecutionTests
     {
         // ── مالی (شش مورد تجمیع decimal در SQLite قابل ترجمه نیستند؛ پایین‌تر
         //    به‌صورت جداگانه و مستند آزموده می‌شوند) ──
-        "daily-revenue", "monthly-revenue", "detailed-revenue", "revenue-trend",
-        "cashier-daily", "payment-methods",
+        "daily-revenue", "monthly-revenue", "detailed-revenue", "revenue-trend", "patient-statement",
+        "cashier-daily", "payment-methods", "insurance-claims",
         // ── بیماران ──
         "patient-demographics", "new-patients", "frequent-visitors",
         "patient-insurance", "chronic-diseases", "vip-patients", "inactive-patients",
@@ -204,6 +205,7 @@ public class Cycle48ReportsExecutionTests
             // OkObjectResult = ۲۰۰ — پاسخ موفق استاندارد همهٔ گزارش‌ها
             action.Should().BeAssignableTo<Microsoft.AspNetCore.Mvc.OkObjectResult>(
                 $"گزارش «{reportId}» نباید خطای سرور بدهد؛ خطای ترجمهٔ کوئری یا استثنای زمان-اجرا یعنی همان ۵۰۰ای که مالک می‌بیند");
+            AssertReportTableShape(action, reportId);
         }
         finally
         {
@@ -252,5 +254,33 @@ public class Cycle48ReportsExecutionTests
 
         action.Should().BeAssignableTo<Microsoft.AspNetCore.Mvc.OkObjectResult>(
             $"گزارش «{reportId}» نباید خطای زمان-اجرا بدهد");
+        AssertReportTableShape(action, reportId);
+    }
+
+    /// <summary>هر ردیف جدول API باید دقیقاً یک مقدار برای هر سرستون داشته باشد</summary>
+    private static void AssertReportTableShape(IActionResult action, string reportId)
+    {
+        var packet = ((Microsoft.AspNetCore.Mvc.OkObjectResult)action).Value;
+        packet.Should().NotBeNull();
+        var data = packet!.GetType().GetProperty("Data")?.GetValue(packet);
+        data.Should().NotBeNull();
+
+        var columnsValue = data!.GetType().GetProperty("columns")?.GetValue(data)
+                           ?? data.GetType().GetProperty("Columns")?.GetValue(data);
+        var rowsValue = data.GetType().GetProperty("rows")?.GetValue(data)
+                        ?? data.GetType().GetProperty("Rows")?.GetValue(data);
+        if (columnsValue is not System.Collections.IEnumerable columns ||
+            rowsValue is not System.Collections.IEnumerable rows)
+            return; // پاسخ بدون جدول (مثلاً گزارش وابسته به بیمارِ انتخاب‌نشده)
+
+        var columnCount = columns.Cast<object>().Count();
+        foreach (var row in rows)
+        {
+            var cellCount = row is System.Collections.IDictionary dictionary
+                ? dictionary.Count
+                : row?.GetType().GetProperties().Length ?? 0;
+            cellCount.Should().Be(columnCount,
+                $"گزارش «{reportId}» باید در هر ردیف به تعداد دقیق ستون‌ها مقدار داشته باشد");
+        }
     }
 }

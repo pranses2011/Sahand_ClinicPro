@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.Common.Helpers;
+using Sahand.ClinicPro.Domain.Enums;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -18,12 +19,12 @@ public partial class ReportsController
     private async Task<IActionResult> ChartRevenueTrendAsync(DateTime from, DateTime to)
     {
         var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
-            .Where(i => i.CreatedAt >= from && i.CreatedAt <= to && !i.IsDeleted)
-            .Select(i => new { i.CreatedAt, i.TotalAmount })
+            .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded)
+            .Select(i => new { i.InvoiceDate, i.TotalAmount })
             .ToListAsync();
 
         var daily = invoices
-            .GroupBy(i => i.CreatedAt.Date)
+            .GroupBy(i => (i.InvoiceDate + IranOffset).Date)
             .Select(g => new { label = PersianDateHelper.ToShamsi(g.Key), value = g.Sum(x => (double)x.TotalAmount) })
             .OrderBy(p => p.label)
             .ToList();
@@ -50,21 +51,44 @@ public partial class ReportsController
     }
 
     /// <summary>۲) درآمد ۱۲ ماه شمسی اخیر — ماهیت مقایسه ماه‌به‌ماه → ستونی</summary>
-    private async Task<IActionResult> ChartRevenueMonthlyAsync(DateTime from, DateTime to)
+    private async Task<IActionResult> ChartRevenueMonthlyAsync()
     {
+        var iranToday = (DateTime.UtcNow + IranOffset).Date;
+        var jalaliToday = PersianDateHelper.ToJalali(iranToday);
+        var firstMonthIndex = jalaliToday.Year * 12 + jalaliToday.Month - 1 - 11;
+        var firstYear = firstMonthIndex / 12;
+        var firstMonth = firstMonthIndex % 12 + 1;
+        var rangeStart = IranDayStartUtc(PersianDateHelper.ToGregorian(firstYear, firstMonth, 1));
+        var rangeEnd = IranDayEndUtc(iranToday);
+
         var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
-            .Where(i => i.CreatedAt >= from && i.CreatedAt <= to && !i.IsDeleted)
-            .Select(i => new { i.CreatedAt, i.TotalAmount })
+            .Where(i => i.InvoiceDate >= rangeStart && i.InvoiceDate <= rangeEnd && !i.IsDeleted &&
+                        i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded)
+            .Select(i => new { i.InvoiceDate, i.TotalAmount })
             .ToListAsync();
 
-        // گروه‌بندی ماه شمسی در حافظه (EF تقویم جلالی را نمی‌فهمد)
-        var monthly = invoices
-            .Select(i => (PersianDateHelper.ToJalali(i.CreatedAt), (double)i.TotalAmount))
-            .GroupBy(t => new { Y = t.Item1.Year, M = t.Item1.Month })
-            .Select(g => new { ym = (g.Key.Y, g.Key.M), value = g.Sum(t => t.Item2) })
-            .OrderBy(x => x.ym.Y).ThenBy(x => x.ym.M)
-            .TakeLast(12)
-            .Select(x => new { label = PersianDateHelper.MonthNames[x.ym.M - 1] + " " + x.ym.Y, value = x.value })
+        // گروه‌بندی ماه شمسی در حافظه (EF تقویم جلالی را نمی‌فهمد)،
+        // سپس ساخت ۱۲ نقطهٔ کامل تا ماه جاری؛ ماه‌های بی‌درآمد هم صفر می‌گیرند.
+        var totalsByMonth = invoices
+            .Select(i =>
+            {
+                var jalali = PersianDateHelper.ToJalali(i.InvoiceDate + IranOffset);
+                return (Year: jalali.Year, Month: jalali.Month, Amount: (double)i.TotalAmount);
+            })
+            .GroupBy(x => (x.Year, x.Month))
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Amount));
+        var monthly = Enumerable.Range(0, 12)
+            .Select(offset =>
+            {
+                var monthIndex = firstMonthIndex + offset;
+                var year = monthIndex / 12;
+                var month = monthIndex % 12 + 1;
+                return new
+                {
+                    label = PersianDateHelper.MonthNames[month - 1] + " " + year,
+                    value = totalsByMonth.GetValueOrDefault((year, month))
+                };
+            })
             .ToList();
 
         return Ok(ApiResponse<object>.Success(new
@@ -128,8 +152,10 @@ public partial class ReportsController
     private async Task<IActionResult> ChartServiceMixAsync(DateTime from, DateTime to)
     {
         var items = await _reporting.Set<Domain.Entities.Billing.InvoiceItem>().AsNoTracking()
-            .Where(it => it.Invoice!.CreatedAt >= from && it.Invoice!.CreatedAt <= to
-                         && !it.Invoice!.IsDeleted && it.Service != null)
+            .Where(it => it.Invoice!.InvoiceDate >= from && it.Invoice!.InvoiceDate <= to
+                         && !it.Invoice!.IsDeleted && it.Invoice.Status != InvoiceStatus.Cancelled &&
+                         it.Invoice.Status != InvoiceStatus.Draft && it.Invoice.Status != InvoiceStatus.Refunded &&
+                         it.Service != null)
             .Select(it => new { Name = it.Service!.ServiceName, Price = it.TotalPrice })
             .ToListAsync();
 
@@ -245,12 +271,12 @@ public partial class ReportsController
     {
         var payments = await _reporting.Set<Domain.Entities.Billing.Payment>().AsNoTracking()
             .Where(p => p.PaymentDate >= from && p.PaymentDate <= to && !p.IsDeleted)
-            .Select(p => new { p.Method, p.Amount })
+            .Select(p => new { p.Method, p.Amount, p.IsReturned })
             .ToListAsync();
 
         var byMethod = payments
             .GroupBy(p => p.Method)
-            .Select(g => new { label = PaymentMethodName(g.Key), value = (double)g.Sum(x => x.Amount) })
+            .Select(g => new { label = PaymentMethodName(g.Key), value = (double)g.Sum(x => x.IsReturned ? -x.Amount : x.Amount) })
             .OrderByDescending(s => s.value)
             .ToList();
 
@@ -348,8 +374,10 @@ public partial class ReportsController
     private async Task<IActionResult> ChartTopServicesAsync(DateTime from, DateTime to, int top)
     {
         var items = await _reporting.Set<Domain.Entities.Billing.InvoiceItem>().AsNoTracking()
-            .Where(it => it.Invoice!.CreatedAt >= from && it.Invoice!.CreatedAt <= to
-                         && !it.Invoice!.IsDeleted && it.Service != null)
+            .Where(it => it.Invoice!.InvoiceDate >= from && it.Invoice!.InvoiceDate <= to
+                         && !it.Invoice!.IsDeleted && it.Invoice.Status != InvoiceStatus.Cancelled &&
+                         it.Invoice.Status != InvoiceStatus.Draft && it.Invoice.Status != InvoiceStatus.Refunded &&
+                         it.Service != null)
             .Select(it => new { Name = it.Service!.ServiceName, Price = it.TotalPrice })
             .ToListAsync();
 
@@ -357,7 +385,7 @@ public partial class ReportsController
             .GroupBy(it => it.Name)
             .Select(g => new { label = g.Key, value = (double)g.Sum(x => x.Price) })
             .OrderByDescending(r => r.value)
-            .Take(Math.Clamp(top, 3, 15))
+            .Take(Math.Clamp(top, 1, 100))
             .ToList();
 
         return Ok(ApiResponse<object>.Success(new

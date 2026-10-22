@@ -87,12 +87,10 @@ public class DashboardController : ApiBaseController
                               || a.Status == AppointmentStatus.Confirmed
                               || a.Status == AppointmentStatus.Arrived), ct);
 
-        var todayRevenue = await _unitOfWork.Repository<Invoice>()
+        var todayRevenue = await _unitOfWork.Repository<Payment>()
             .QueryableNoTracking
-            .Where(i => i.InvoiceDate >= dayStart
-                     && i.InvoiceDate <= dayEnd
-                     && i.Status != InvoiceStatus.Cancelled)
-            .SumAsync(i => (decimal?)i.PaidAmount, ct) ?? 0m;
+            .Where(p => !p.IsDeleted && p.PaymentDate >= dayStart && p.PaymentDate <= dayEnd)
+            .SumAsync(p => (decimal?)(p.IsReturned ? -p.Amount : p.Amount), ct) ?? 0m;
 
         var todayVisits = await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>()
             .QueryableNoTracking
@@ -114,8 +112,8 @@ public class DashboardController : ApiBaseController
     }
 
     /// <summary>
-    /// نمودار درآمد روزانه — مشخصات پرامپت UI بخش ۱ (فرم ۲)
-    /// خروجی: برچسب شمسی + مبلغ پرداخت‌شده برای N روز اخیر
+    /// نمودار درآمد روزانه — دریافتی واقعی روز بر مبنای تاریخ پرداخت
+    /// خروجی: برچسب شمسی + خالص پرداخت‌ها (پس از مرجوعی) برای N روز اخیر
     /// ═══ چرخهٔ ۷۲ — روزها به مرز ایران‌اند (همان رفعِ «تا-تاریخِ نیمه‌شبِ
     /// UTC» گزارش‌ها): هر روز از ۰۰:۰۰ تا ۲۳:۵۹ تهران حساب می‌شود نه از
     /// ۳:۳۰ بامداد؛ در غیر این صورت روزِ تقویمیِ کاربر و روزِ نمودار
@@ -133,12 +131,10 @@ public class DashboardController : ApiBaseController
         var fromDateTime = IranDayStartUtc(from);
         var toDateTime = IranDayEndUtc(today);
 
-        var rows = await _unitOfWork.Repository<Invoice>()
+        var rows = await _unitOfWork.Repository<Payment>()
             .QueryableNoTracking
-            .Where(i => i.InvoiceDate >= fromDateTime
-                     && i.InvoiceDate <= toDateTime
-                     && i.Status != InvoiceStatus.Cancelled)
-            .Select(i => new { i.InvoiceDate, i.PaidAmount })
+            .Where(p => !p.IsDeleted && p.PaymentDate >= fromDateTime && p.PaymentDate <= toDateTime)
+            .Select(p => new { p.PaymentDate, p.Amount, p.IsReturned })
             .ToListAsync(ct);
 
         var chart = Enumerable.Range(0, days)
@@ -151,8 +147,8 @@ public class DashboardController : ApiBaseController
                 {
                     label = ShamsiLabel(day),
                     amount = rows
-                        .Where(r => r.InvoiceDate >= dayStart && r.InvoiceDate <= dayEnd)
-                        .Sum(r => r.PaidAmount),
+                        .Where(r => r.PaymentDate >= dayStart && r.PaymentDate <= dayEnd)
+                        .Sum(r => r.IsReturned ? -r.Amount : r.Amount),
                 };
             })
             .ToList();

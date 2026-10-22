@@ -616,7 +616,7 @@
                                                     <ToggleButton IsChecked="{Binding IsEditingShortcuts}"
                                                                   Width="34" Height="34" Padding="0"
                                                                   Cursor="Hand" Focusable="False" ClickMode="Press"
-                                                                  ToolTip="حالت ویرایش — دکمهٔ حذف روی هر کاشی نمایان می‌شود؛ پایان ویرایش = ذخیرهٔ خودکار">
+                                                                  ToolTip="حالت ویرایش — کاشی‌ها را برای جابه‌جایی بکشید؛ دکمهٔ حذف نیز نمایان می‌شود و با پایان ویرایش ترتیب ذخیره می‌شود">
                                                         <ToggleButton.Template>
                                                             <ControlTemplate TargetType="ToggleButton">
                                                                 <Border x:Name="EditCircle" Width="34" Height="34" CornerRadius="17"
@@ -655,10 +655,11 @@
                                             </Border>
 
                                             <!-- کاشی‌های میانبر — عرض ۱۶۸px، ارتفاع پایهٔ کشسان و متن چندسطری -->
-                                            <ItemsControl ItemsSource="{Binding Shortcuts}">
+                                            <ItemsControl ItemsSource="{Binding Shortcuts}"
+                                                          helpers:DragDropReorder.Enabled="{Binding IsEditingShortcuts}">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
-                                                        <WrapPanel />
+                                                        <WrapPanel HorizontalAlignment="Center" />
                                                     </ItemsPanelTemplate>
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>
@@ -948,6 +949,27 @@
                 </StackPanel>
             </Border>
 
+            <!-- میانبرها مستقل از KPIها در ابتدای محتوای داشبورد قرار دارند؛
+                 همین آیتم در فهرست بخش‌های پایین پنهان می‌شود تا دوبار دیده نشود. -->
+            <ItemsControl ItemsSource="{Binding Sections}" Margin="0,0,0,10">
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Key}" Value="shortcuts">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <ContentControl Content="{Binding}"
+                                        ContentTemplateSelector="{StaticResource DashboardSectionSelector}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
             <!-- ╔══════════════════════════════════════════════════════════╗
                  ║ ۳) ردیف کارت‌های KPI — پنج کارت شخصی‌سازی‌پذیر (چرخهٔ ۷۲)  ║
                  ╚══════════════════════════════════════════════════════════╝ -->
@@ -967,6 +989,15 @@
             <ItemsControl ItemsSource="{Binding Sections}"
                           helpers:DragDropReorder.Enabled="True"
                           Margin="0,12,0,0">
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Key}" Value="shortcuts">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <ContentControl Content="{Binding}"

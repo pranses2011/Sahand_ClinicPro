@@ -48,9 +48,8 @@ public partial class ReportBrowserView : UserControl
     /// <summary>ساخت مجدد ستون‌های جدول بر اساس فهرست ستون‌های VM</summary>
     private void RebuildColumns(ReportBrowserViewModel vm)
     {
-        if (vm.Columns.Count == 0) return;
-
         ResultsGrid.Columns.Clear();
+        if (vm.Columns.Count == 0) return;
         for (var i = 0; i < vm.Columns.Count; i++)
         {
             var index = i;

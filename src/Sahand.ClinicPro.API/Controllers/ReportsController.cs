@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -191,13 +191,14 @@ public partial class ReportsController : ApiBaseController
             {
                 new { id = "daily-revenue", title = "درآمد روزانه", description = "گزارش درآمد روزانه درمانگاه به تفکیک روز", paramsList = new[] { "fromDate", "toDate", "doctorId", "insuranceId" } },
                 new { id = "monthly-revenue", title = "درآمد ماهانه", description = "روند ماهانه درآمد", paramsList = new[] { "fromDate", "toDate" } },
-                new { id = "detailed-revenue", title = "درآمد تفصیلی", description = "تفکیک کامل درآمد با فیلترهای کامل", paramsList = new[] { "fromDate", "toDate", "doctorId", "insuranceId", "groupBy" } },
+                new { id = "detailed-revenue", title = "درآمد تفصیلی", description = "جزئیات هر فاکتور در بازهٔ انتخاب‌شده", paramsList = new[] { "fromDate", "toDate" } },
                 new { id = "patient-statement", title = "صورت‌حساب بیمار", description = "گردش حساب بیمار در بازه", paramsList = new[] { "patientId", "fromDate", "toDate" } },
                 new { id = "debtors-list", title = "لیست بدهکاران", description = "بیماران دارای مانده بدهی", paramsList = new[] { "minAmount" } },
                 new { id = "cashier-daily", title = "گزارش صندوق روزانه", description = "گردش صندوق در روز", paramsList = new[] { "date" } },
                 new { id = "doctor-commission", title = "کارانه پزشکان", description = "محاسبه سهم پزشکان", paramsList = new[] { "fromDate", "toDate" } },
                 new { id = "profit-loss", title = "سود و زیان", description = "صورت سود و زیان دوره", paramsList = new[] { "fromDate", "toDate" } },
-                new { id = "accounts-receivable", title = "مطالبات بیمه‌ای", description = "مطالبات از بیمه‌ها", paramsList = new[] { "insuranceId" } },
+                new { id = "accounts-receivable", title = "مطالبات بیمه‌ای", description = "ماندهٔ مطالبات باز هر بیمه‌گر", paramsList = new[] { "insuranceId" } },
+                new { id = "insurance-claims", title = "گردش مطالبات بیمه", description = "ریز وضعیت و مبالغ مطالبات بیمه در بازهٔ ارسال/ثبت", paramsList = new[] { "fromDate", "toDate", "insuranceId" } },
                 new { id = "payment-methods", title = "تفکیک روش‌های پرداخت", description = "پرداخت‌ها به تفکیک روش", paramsList = new[] { "fromDate", "toDate" } }
             }},
             new { category = "👤 بیماران", icon = "👤", reports = new[]
@@ -205,7 +206,7 @@ public partial class ReportsController : ApiBaseController
                 new { id = "patient-demographics", title = "آمار جمعیت‌شناسی", description = "توزیع سنی و جنسی بیماران", paramsList = new[] { "fromDate", "toDate" } },
                 new { id = "new-patients", title = "بیماران جدید", description = "بیماران ثبت‌شده در دوره", paramsList = new[] { "fromDate", "toDate" } },
                 new { id = "frequent-visitors", title = "پرمراجعه‌ترین‌ها", description = "بیماران با بیشترین ویزیت", paramsList = new[] { "top" } },
-                new { id = "patient-insurance", title = "تفکیک بیمه‌ای بیماران", description = "توزیع بیماران بر اساس بیمه", paramsList = Array.Empty<string>() },
+                new { id = "patient-insurance", title = "تفکیک بیمه‌ای بیماران", description = "توزیع پوشش اصلی و تکمیلی و بیماران فاقد بیمه", paramsList = Array.Empty<string>() },
                 new { id = "chronic-diseases", title = "بیماری‌های مزمن", description = "بیماران با تشخیص مزمن", paramsList = new[] { "icd10" } },
                 new { id = "vip-patients", title = "بیماران VIP", description = "بیماران ویژه", paramsList = Array.Empty<string>() },
                 new { id = "inactive-patients", title = "بیماران بدون مراجعه", description = "بیماران غیرفعال بیش از ۶ ماه", paramsList = new[] { "months" } }
@@ -240,7 +241,7 @@ public partial class ReportsController : ApiBaseController
             new { category = "📈 گزارش‌های نموداری", icon = "📈", reports = new[]
             {
                 new { id = "chart-revenue-trend", title = "روند درآمد روزانه", description = "نمودار سطحی روند درآمد در بازه — مناسب پایش رشد", paramsList = new[] { "fromDate", "toDate" } },
-                new { id = "chart-revenue-monthly", title = "درآمد ۱۲ ماه اخیر", description = "نمودار ستونی مقایسه ماه‌به‌ماه (تقویم شمسی)", paramsList = new[] { "fromDate", "toDate" } },
+                new { id = "chart-revenue-monthly", title = "درآمد ۱۲ ماه اخیر", description = "مقایسهٔ درآمد ۱۲ ماه شمسی تا امروز", paramsList = Array.Empty<string>() },
                 new { id = "chart-doctor-share", title = "سهم پزشکان از ویزیت", description = "نمودار دونات سهم هر پزشک از کل ویزیت‌ها", paramsList = new[] { "fromDate", "toDate" } },
                 new { id = "chart-service-mix", title = "ترکیب خدمات از درآمد", description = "نمودار دونات سهم خدمات از درآمد", paramsList = new[] { "fromDate", "toDate" } },
                 new { id = "chart-visit-hourly", title = "الگوی ساعتی مراجعات", description = "نمودار ستونی تعداد نوبت هر ساعت روز", paramsList = new[] { "fromDate", "toDate" } },
@@ -307,14 +308,17 @@ public partial class ReportsController : ApiBaseController
         return reportId switch
         {
             // ── مالی ──
-            "daily-revenue" or "monthly-revenue" or "detailed-revenue" or "revenue-trend" =>
-                await RevenueReportAsync(from, to),
+            "daily-revenue" => await DailyRevenueReportAsync(from, to),
+            "monthly-revenue" => await MonthlyRevenueReportAsync(from, to),
+            "detailed-revenue" => await DetailedRevenueReportAsync(from, to),
+            "revenue-trend" => await RevenueTrendReportAsync(from, to),
             "patient-statement" => await PatientStatementAsync(patientId, from, to),
             "debtors-list" => await DebtorsReportAsync(minAmount),
             "cashier-daily" => await CashierDailyReportAsync(date ?? (DateTime.UtcNow + IranOffset)),
             "doctor-commission" => await DoctorCommissionReportAsync(from, to),
             "profit-loss" => await ProfitLossReportAsync(from, to),
             "accounts-receivable" => await AccountsReceivableReportAsync(insuranceId),
+            "insurance-claims" => await InsuranceClaimsReportAsync(from, to, insuranceId),
             "payment-methods" => await PaymentMethodsReportAsync(from, to),
             // ── بیماران ──
             "patient-demographics" => await DemographicsReportAsync(from, to),
@@ -325,14 +329,17 @@ public partial class ReportsController : ApiBaseController
             "vip-patients" => await VipPatientsReportAsync(),
             "inactive-patients" => await InactivePatientsReportAsync(months),
             // ── پزشکان ──
-            "doctor-performance" or "doctor-revenue" or "doctor-comparison" =>
-                await DoctorPerformanceDetailedAsync(from, to),
+            "doctor-performance" => await DoctorReportAsync(from, to, "performance"),
+            "doctor-revenue" => await DoctorReportAsync(from, to, "revenue"),
+            "doctor-comparison" => await DoctorReportAsync(from, to, "comparison"),
             "avg-visit-duration" => await AvgVisitDurationReportAsync(from, to),
             // ── نوبت‌دهی ──
             "appointment-statistics" => await AppointmentStatsReportAsync(from, to),
-            "no-show-report" or "cancellation-report" => await NoShowReportAsync(from, to),
+            "no-show-report" => await NoShowReportAsync(from, to),
+            "cancellation-report" => await CancellationReportAsync(from, to),
             // ── داروخانه ──
-            "low-stock" or "inventory-report" => await LowStockReportAsync(),
+            "low-stock" => await LowStockReportAsync(),
+            "inventory-report" => await InventoryReportAsync(),
             "expiry-report" => await ExpiryReportAsync(months),
             "top-medications" => await TopMedicationsReportAsync(from, to, top),
             // ── هوش تجاری ──
@@ -340,7 +347,7 @@ public partial class ReportsController : ApiBaseController
             "service-mix" => await ServiceMixReportAsync(from, to),
             // ── گزارش‌های نموداری — چرخه یازدهم ──
             "chart-revenue-trend" => await ChartRevenueTrendAsync(from, to),
-            "chart-revenue-monthly" => await ChartRevenueMonthlyAsync(from, to),
+            "chart-revenue-monthly" => await ChartRevenueMonthlyAsync(),
             "chart-doctor-share" => await ChartDoctorShareAsync(from, to),
             "chart-service-mix" => await ChartServiceMixAsync(from, to),
             "chart-visit-hourly" => await ChartVisitHourlyAsync(from, to),
@@ -378,25 +385,24 @@ public partial class ReportsController : ApiBaseController
        بخش ۱ — گزارش‌های مالی
        ═══════════════════════════════════════════════════════════ */
 
-    /// <summary>گزارش درآمد بازه‌ای — ردیف روزانه + جمع‌ها</summary>
-    private async Task<IActionResult> RevenueReportAsync(DateTime from, DateTime to)
+    /// <summary>درآمد روزانه بر مبنای تاریخ صدور فاکتور (نه زمان ایجاد رکورد)</summary>
+    private async Task<IActionResult> DailyRevenueReportAsync(DateTime from, DateTime to)
     {
         var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
-            .Where(i => i.CreatedAt >= from && i.CreatedAt <= to)
+            .Where(i => !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded &&
+                        i.InvoiceDate >= from && i.InvoiceDate <= to)
+            .Select(i => new { i.InvoiceDate, i.TotalAmount, i.PaidAmount })
             .ToListAsync();
 
-        var rows = invoices
-            .GroupBy(i => i.CreatedAt.Date)
+        var rows = invoices.GroupBy(i => (i.InvoiceDate + IranOffset).Date)
+            .OrderBy(g => g.Key)
             .Select(g => new
             {
-                date = g.Key,
-                shamsi = Application.Common.Helpers.PersianDateHelper.ToShamsi(g.Key),
+                date = Application.Common.Helpers.PersianDateHelper.ToShamsi(g.Key),
                 invoiceCount = g.Count(),
                 totalAmount = g.Sum(i => i.TotalAmount),
                 paidAmount = g.Sum(i => i.PaidAmount)
-            })
-            .OrderBy(r => r.date)
-            .ToList();
+            }).ToList();
 
         return Ok(ApiResponse<object>.Success(new
         {
@@ -408,6 +414,118 @@ public partial class ReportsController : ApiBaseController
                 count = rows.Sum(r => r.invoiceCount)
             },
             columns = new[] { "تاریخ", "تعداد فاکتور", "مبلغ کل", "پرداخت‌شده" },
+            rows
+        }));
+    }
+
+    /// <summary>درآمد ماهانه — تجمیع واقعی در ماه‌های تقویم شمسی</summary>
+    private async Task<IActionResult> MonthlyRevenueReportAsync(DateTime from, DateTime to)
+    {
+        var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
+            .Where(i => !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded &&
+                        i.InvoiceDate >= from && i.InvoiceDate <= to)
+            .Select(i => new { i.InvoiceDate, i.TotalAmount, i.PaidAmount })
+            .ToListAsync();
+
+        var rows = invoices
+            .Select(i => new { Invoice = i, Jalali = Application.Common.Helpers.PersianDateHelper.ToJalali(i.InvoiceDate + IranOffset) })
+            .GroupBy(x => (x.Jalali.Year, x.Jalali.Month))
+            .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
+            .Select(g => new
+            {
+                month = $"{g.Key.Year:0000}/{g.Key.Month:00}",
+                invoiceCount = g.Count(),
+                totalAmount = g.Sum(x => x.Invoice.TotalAmount),
+                paidAmount = g.Sum(x => x.Invoice.PaidAmount)
+            }).ToList();
+
+        return Ok(ApiResponse<object>.Success(new
+        {
+            available = true,
+            summary = new { total = rows.Sum(r => r.totalAmount), paid = rows.Sum(r => r.paidAmount), months = rows.Count },
+            columns = new[] { "ماه", "تعداد فاکتور", "مبلغ کل", "پرداخت‌شده" },
+            rows
+        }));
+    }
+
+    /// <summary>روند تجمعی درآمد روزانه — تاریخ صدور فاکتور و حذف فاکتورهای ابطال‌شده</summary>
+    private async Task<IActionResult> RevenueTrendReportAsync(DateTime from, DateTime to)
+    {
+        var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
+            .Where(i => !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded &&
+                        i.InvoiceDate >= from && i.InvoiceDate <= to)
+            .Select(i => new { i.InvoiceDate, i.TotalAmount })
+            .ToListAsync();
+
+        var daily = invoices.GroupBy(i => (i.InvoiceDate + IranOffset).Date)
+            .OrderBy(g => g.Key)
+            .Select(g => new { date = g.Key, amount = g.Sum(i => i.TotalAmount) })
+            .ToList();
+        decimal cumulative = 0m;
+        var rows = daily.Select(d =>
+        {
+            cumulative += d.amount;
+            return new
+            {
+                date = Application.Common.Helpers.PersianDateHelper.ToShamsi(d.date),
+                dailyRevenue = d.amount,
+                cumulativeRevenue = cumulative
+            };
+        }).ToList();
+
+        return Ok(ApiResponse<object>.Success(new
+        {
+            available = true,
+            summary = new { total = cumulative, days = rows.Count },
+            columns = new[] { "تاریخ", "درآمد روز", "درآمد تجمعی" },
+            rows
+        }));
+    }
+
+    /// <summary>جزئیات فاکتورهای بازه — یک ردیف برای هر فاکتور، ستون‌ها و داده‌ها هم‌تعداد</summary>
+    private async Task<IActionResult> DetailedRevenueReportAsync(DateTime from, DateTime to)
+    {
+        var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
+            .Where(i => !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded &&
+                        i.InvoiceDate >= from && i.InvoiceDate <= to)
+            .OrderByDescending(i => i.InvoiceDate)
+            .Select(i => new
+            {
+                i.InvoiceDate,
+                i.InvoiceNumber,
+                patient = i.Patient != null ? i.Patient.FirstName + " " + i.Patient.LastName : "—",
+                doctor = i.Visit != null && i.Visit.Doctor != null && i.Visit.Doctor.Employee != null
+                    ? i.Visit.Doctor.Employee.FirstName + " " + i.Visit.Doctor.Employee.LastName : "—",
+                insurance = i.InsuranceCompany != null ? i.InsuranceCompany.Name : "—",
+                i.TotalAmount,
+                i.PaidAmount,
+                i.RemainingAmount
+            })
+            .Take(500)
+            .ToListAsync();
+        var rows = invoices.Select(i => new
+        {
+            date = Application.Common.Helpers.PersianDateHelper.ToShamsi(i.InvoiceDate + IranOffset),
+            invoiceNumber = i.InvoiceNumber ?? "—",
+            i.patient,
+            i.doctor,
+            i.insurance,
+            totalAmount = i.TotalAmount,
+            paidAmount = i.PaidAmount,
+            remainingAmount = i.RemainingAmount
+        }).ToList();
+
+        return Ok(ApiResponse<object>.Success(new
+        {
+            available = true,
+            summary = new
+            {
+                invoices = rows.Count,
+                total = rows.Sum(r => r.totalAmount),
+                paid = rows.Sum(r => r.paidAmount),
+                remaining = rows.Sum(r => r.remainingAmount)
+            },
+            columns = new[] { "تاریخ", "شماره فاکتور", "بیمار", "پزشک", "بیمه‌گر", "مبلغ کل", "پرداخت‌شده", "مانده" },
             rows
         }));
     }
@@ -424,31 +542,40 @@ public partial class ReportsController : ApiBaseController
             return Ok(ApiResponse<object>.Success(new { available = false, message = "بیماری با این شناسه یافت نشد" }));
 
         var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
-            .Where(i => i.PatientId == patientId && i.CreatedAt >= from && i.CreatedAt <= to)
-            .Select(i => new { i.Id, i.InvoiceNumber, i.CreatedAt, i.TotalAmount, i.PaidAmount })
+            .Where(i => i.PatientId == patientId && !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded &&
+                        i.InvoiceDate <= to)
+            .Select(i => new { i.InvoiceNumber, i.InvoiceDate, i.TotalAmount })
             .ToListAsync();
 
         var payments = await _reporting.Set<Domain.Entities.Billing.Payment>().AsNoTracking()
-            .Where(p => p.PatientId == patientId && !p.IsDeleted && p.PaymentDate >= from && p.PaymentDate <= to)
-            .Select(p => new { p.PaymentNumber, p.PaymentDate, p.Amount, p.Method })
+            .Where(p => p.PatientId == patientId && !p.IsDeleted && p.PaymentDate <= to)
+            .Select(p => new { p.PaymentNumber, p.PaymentDate, p.Amount, p.Method, p.IsReturned })
             .ToListAsync();
 
-        // رویدادهای گردش حساب: فاکتور = بدهی بیمار، پرداخت = بستانکار
-        var events = new List<(DateTime at, string kind, string desc, decimal debit, decimal credit)>();
-        foreach (var i in invoices)
-            events.Add((i.CreatedAt, "فاکتور", "فاکتور " + i.InvoiceNumber, i.TotalAmount, 0m));
-        foreach (var p in payments)
-            events.Add((p.PaymentDate, "پرداخت", "پرداخت " + (p.PaymentNumber ?? "") + " — " + PaymentMethodName(p.Method), 0m, p.Amount));
-        events.Sort((a, b) => a.at.CompareTo(b.at));
+        // ماندهٔ افتتاحیه شامل گردش‌های پیش از بازه است؛ مرجوعی وجه نیز
+        // بدهی بیمار را افزایش می‌دهد و نباید مانند یک پرداخت عادی کسر شود.
+        var openingBalance = invoices.Where(i => i.InvoiceDate < from).Sum(i => i.TotalAmount)
+            - payments.Where(p => p.PaymentDate < from && !p.IsReturned).Sum(p => p.Amount)
+            + payments.Where(p => p.PaymentDate < from && p.IsReturned).Sum(p => p.Amount);
 
-        decimal balance = 0m;
+        var events = new List<(DateTime at, string kind, string desc, decimal debit, decimal credit)>();
+        foreach (var i in invoices.Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to))
+            events.Add((i.InvoiceDate, "فاکتور", "فاکتور " + i.InvoiceNumber, i.TotalAmount, 0m));
+        foreach (var p in payments.Where(p => p.PaymentDate >= from && p.PaymentDate <= to))
+            events.Add((p.PaymentDate, p.IsReturned ? "مرجوعی پرداخت" : "پرداخت",
+                "پرداخت " + (p.PaymentNumber ?? "") + " — " + PaymentMethodName(p.Method),
+                p.IsReturned ? p.Amount : 0m, p.IsReturned ? 0m : p.Amount));
+        events = events.OrderBy(e => e.at)
+            .ThenBy(e => e.kind == "فاکتور" ? 0 : 1)
+            .ToList();
+
+        decimal balance = openingBalance;
         var rows = events.Select(e =>
         {
             balance += e.debit - e.credit;
             return new
             {
-                date = e.at,
-                shamsi = Application.Common.Helpers.PersianDateHelper.ToShamsi(e.at),
+                date = Application.Common.Helpers.PersianDateHelper.ToShamsi(e.at + IranOffset),
                 kind = e.kind,
                 desc = e.desc,
                 debit = e.debit,
@@ -464,8 +591,9 @@ public partial class ReportsController : ApiBaseController
             {
                 patient = patient.FirstName + " " + patient.LastName,
                 mrn = patient.MedicalRecordNo,
-                invoices = invoices.Count,
-                payments = payments.Count,
+                invoices = invoices.Count(i => i.InvoiceDate >= from && i.InvoiceDate <= to),
+                payments = payments.Count(p => p.PaymentDate >= from && p.PaymentDate <= to),
+                openingBalance,
                 closingBalance = balance
             },
             columns = new[] { "تاریخ", "نوع", "شرح", "بدهی", "بستانکار", "مانده" },
@@ -478,13 +606,13 @@ public partial class ReportsController : ApiBaseController
     {
         var threshold = minAmount ?? 0m;
         var rows = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
-            .Where(i => i.PaymentStatus == Domain.Enums.PaymentStatus.Unpaid && i.Patient != null)
+            .Where(i => !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded && i.RemainingAmount > 0 && i.Patient != null)
             .GroupBy(i => new { i.PatientId, Name = i.Patient!.FirstName + " " + i.Patient.LastName })
             .Select(g => new
             {
                 patient = g.Key.Name,
                 invoiceCount = g.Count(),
-                balance = g.Sum(i => i.TotalAmount - i.PaidAmount)
+                balance = g.Sum(i => i.RemainingAmount)
             })
             .Where(r => r.balance > threshold)
             .OrderByDescending(r => r.balance)
@@ -545,7 +673,7 @@ public partial class ReportsController : ApiBaseController
     /// <summary>کارانه پزشکان — از رکوردهای DoctorPayment با وضعیت پرداخت — گام P1</summary>
     private async Task<IActionResult> DoctorCommissionReportAsync(DateTime from, DateTime to)
     {
-        var rows = await _reporting.Set<Domain.Entities.Billing.DoctorPayment>().AsNoTracking()
+        var source = await _reporting.Set<Domain.Entities.Billing.DoctorPayment>().AsNoTracking()
             .Where(d => d.PeriodEnd != null && d.PeriodEnd >= IranDateOf(from) && d.PeriodEnd <= IranDateOf(to))
             .OrderByDescending(d => d.NetAmount)
             .Select(d => new
@@ -553,18 +681,29 @@ public partial class ReportsController : ApiBaseController
                 doctor = d.Doctor != null && d.Doctor.Employee != null
                     ? d.Doctor.Employee.FirstName + " " + d.Doctor.Employee.LastName
                     : "پزشک #" + d.DoctorId,
-                period = d.PeriodStart.HasValue && d.PeriodEnd.HasValue
-                    ? Application.Common.Helpers.PersianDateHelper.ToShamsi(d.PeriodStart.Value.ToDateTime(TimeOnly.MinValue)) +
-                      " تا " + Application.Common.Helpers.PersianDateHelper.ToShamsi(d.PeriodEnd.Value.ToDateTime(TimeOnly.MinValue))
-                    : "—",
+                d.PeriodStart,
+                d.PeriodEnd,
                 visits = d.TotalVisits,
                 gross = d.GrossAmount,
                 deduction = d.DeductionAmount,
                 net = d.NetAmount,
-                status = d.PaidAt != null ? "پرداخت شده" : "در انتظار پرداخت"
+                paidAt = d.PaidAt
             })
             .Take(200)
             .ToListAsync();
+        var rows = source.Select(d => new
+        {
+            d.doctor,
+            period = d.PeriodStart.HasValue && d.PeriodEnd.HasValue
+                ? Application.Common.Helpers.PersianDateHelper.ToShamsi(d.PeriodStart.Value.ToDateTime(TimeOnly.MinValue)) +
+                  " تا " + Application.Common.Helpers.PersianDateHelper.ToShamsi(d.PeriodEnd.Value.ToDateTime(TimeOnly.MinValue))
+                : "—",
+            d.visits,
+            d.gross,
+            d.deduction,
+            d.net,
+            status = d.paidAt != null ? "پرداخت شده" : "در انتظار پرداخت"
+        }).ToList();
 
         return Ok(ApiResponse<object>.Success(new
         {
@@ -585,7 +724,7 @@ public partial class ReportsController : ApiBaseController
     private async Task<IActionResult> ProfitLossReportAsync(DateTime from, DateTime to)
     {
         var revenue = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
-            .Where(i => i.CreatedAt >= from && i.CreatedAt <= to)
+            .Where(i => !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded && i.InvoiceDate >= from && i.InvoiceDate <= to)
             .SumAsync(i => (decimal?)i.TotalAmount) ?? 0m;
 
         var expenses = await _reporting.Set<Domain.Entities.Billing.Expense>().AsNoTracking()
@@ -660,23 +799,92 @@ public partial class ReportsController : ApiBaseController
         }));
     }
 
+    /// <summary>ریز گردش مطالبات بیمه، شامل مبالغ ارسال، تأیید، رد و دریافت‌شده</summary>
+    private async Task<IActionResult> InsuranceClaimsReportAsync(DateTime from, DateTime to, long? insuranceId)
+    {
+        var query = _reporting.Set<Domain.Entities.Billing.InsuranceClaim>().AsNoTracking()
+            .Where(c => !c.IsDeleted && (c.SubmittedAt ?? c.CreatedAt) >= from &&
+                        (c.SubmittedAt ?? c.CreatedAt) <= to);
+        if (insuranceId is > 0)
+            query = query.Where(c => c.InsuranceCompanyId == insuranceId);
+
+        var claims = await query
+            .Select(c => new
+            {
+                c.ClaimNumber,
+                insurance = c.InsuranceCompany != null ? c.InsuranceCompany.Name : "—",
+                c.PeriodStart,
+                c.PeriodEnd,
+                c.TotalAmount,
+                c.ApprovedAmount,
+                c.RejectedAmount,
+                c.ReceivedAmount,
+                c.Status,
+                claimDate = c.SubmittedAt ?? c.CreatedAt
+            })
+            .OrderByDescending(c => c.claimDate)
+            .ToListAsync();
+
+        var rows = claims.Select(c => new
+        {
+            claimNumber = string.IsNullOrWhiteSpace(c.ClaimNumber) ? "—" : c.ClaimNumber,
+            insurance = c.insurance,
+            claimDate = Application.Common.Helpers.PersianDateHelper.ToShamsiFa(c.claimDate + IranOffset),
+            periodStart = c.PeriodStart.HasValue
+                ? Application.Common.Helpers.PersianDateHelper.ToShamsiFa(c.PeriodStart.Value.ToDateTime(TimeOnly.MinValue)) : "—",
+            periodEnd = c.PeriodEnd.HasValue
+                ? Application.Common.Helpers.PersianDateHelper.ToShamsiFa(c.PeriodEnd.Value.ToDateTime(TimeOnly.MinValue)) : "—",
+            status = c.Status switch
+            {
+                ClaimStatus.Draft => "پیش‌نویس",
+                ClaimStatus.Submitted => "ارسال‌شده",
+                ClaimStatus.Approved => "تأییدشده",
+                ClaimStatus.PartiallyApproved => "تأیید جزئی",
+                ClaimStatus.Rejected => "ردشده",
+                ClaimStatus.Paid => "دریافت‌شده",
+                _ => "نامشخص"
+            },
+            totalAmount = c.TotalAmount,
+            approvedAmount = c.ApprovedAmount,
+            rejectedAmount = c.RejectedAmount,
+            receivedAmount = c.ReceivedAmount,
+            remainingAmount = c.TotalAmount - c.ReceivedAmount
+        }).ToList();
+
+        return Ok(ApiResponse<object>.Success(new
+        {
+            available = true,
+            summary = new
+            {
+                claims = rows.Count,
+                totalAmount = rows.Sum(r => r.totalAmount),
+                approvedAmount = rows.Sum(r => r.approvedAmount),
+                rejectedAmount = rows.Sum(r => r.rejectedAmount),
+                receivedAmount = rows.Sum(r => r.receivedAmount),
+                remainingAmount = rows.Sum(r => r.remainingAmount)
+            },
+            columns = new[] { "شماره مطالبه", "بیمه‌گر", "تاریخ", "شروع دوره", "پایان دوره", "وضعیت", "مبلغ مطالبه", "تأییدشده", "ردشده", "دریافتی", "مانده" },
+            rows
+        }));
+    }
+
     /// <summary>تفکیک روش‌های پرداخت با سهم درصدی — گام P1</summary>
     private async Task<IActionResult> PaymentMethodsReportAsync(DateTime from, DateTime to)
     {
         var payments = await _reporting.Set<Domain.Entities.Billing.Payment>().AsNoTracking()
             .Where(p => !p.IsDeleted && p.PaymentDate >= from && p.PaymentDate <= to)
-            .Select(p => new { p.Method, p.Amount })
+            .Select(p => new { p.Method, p.Amount, p.IsReturned })
             .ToListAsync();
 
-        var total = payments.Sum(p => p.Amount);
+        var total = payments.Sum(p => p.IsReturned ? -p.Amount : p.Amount);
         var rows = payments
             .GroupBy(p => p.Method)
             .Select(g => new
             {
                 method = PaymentMethodName(g.Key),
                 count = g.Count(),
-                amount = g.Sum(p => p.Amount),
-                share = total > 0 ? Math.Round(g.Sum(p => p.Amount) * 100m / total, 1).ToString("0.#") + "٪" : "—"
+                amount = g.Sum(p => p.IsReturned ? -p.Amount : p.Amount),
+                share = total > 0 ? Math.Round(g.Sum(p => p.IsReturned ? -p.Amount : p.Amount) * 100m / total, 1).ToString("0.#") + "٪" : "—"
             })
             .OrderByDescending(r => r.amount)
             .ToList();
@@ -697,19 +905,28 @@ public partial class ReportsController : ApiBaseController
     /// <summary>بیماران جدید دوره</summary>
     private async Task<IActionResult> NewPatientsReportAsync(DateTime from, DateTime to)
     {
-        var rows = await _reporting.Set<Domain.Entities.People.Patient>().AsNoTracking()
-            .Where(p => p.CreatedAt >= from && p.CreatedAt <= to)
-            .OrderByDescending(p => p.CreatedAt)
+        var patients = await _reporting.Set<Domain.Entities.People.Patient>().AsNoTracking()
+            .Where(p => !p.IsDeleted && p.RegistrationDate != null &&
+                        p.RegistrationDate >= from && p.RegistrationDate <= to)
+            .OrderByDescending(p => p.RegistrationDate)
             .Select(p => new
             {
                 mrn = p.MedicalRecordNo,
                 name = p.FirstName + " " + p.LastName,
                 mobile = p.Mobile,
-                gender = p.Gender.ToString(),
-                createdAt = p.CreatedAt
+                p.Gender,
+                registered = p.RegistrationDate
             })
             .Take(200)
             .ToListAsync();
+        var rows = patients.Select(p => new
+        {
+            p.mrn,
+            p.name,
+            p.mobile,
+            gender = p.Gender == Gender.Male ? "مرد" : p.Gender == Gender.Female ? "زن" : "نامشخص",
+            p.registered
+        }).ToList();
 
         return Ok(ApiResponse<object>.Success(new
         {
@@ -724,7 +941,7 @@ public partial class ReportsController : ApiBaseController
     private async Task<IActionResult> FrequentVisitorsReportAsync(int top)
     {
         var rows = await _reporting.Set<Domain.Entities.Clinical.Visit>().AsNoTracking()
-            .Where(v => v.Patient != null)
+            .Where(v => !v.IsDeleted && v.Patient != null)
             .GroupBy(v => new { v.PatientId, Name = v.Patient!.FirstName + " " + v.Patient.LastName })
             .Select(g => new { patient = g.Key.Name, visits = g.Count(), lastVisit = g.Max(v => v.VisitDate) })
             .OrderByDescending(r => r.visits)
@@ -744,7 +961,8 @@ public partial class ReportsController : ApiBaseController
     private async Task<IActionResult> DemographicsReportAsync(DateTime from, DateTime to)
     {
         var patients = await _reporting.Set<Domain.Entities.People.Patient>().AsNoTracking()
-            .Where(p => p.BirthDate != null && p.CreatedAt >= from && p.CreatedAt <= to)
+            .Where(p => !p.IsDeleted && p.BirthDate != null && p.RegistrationDate != null &&
+                        p.RegistrationDate >= from && p.RegistrationDate <= to)
             .Select(p => new { p.BirthDate, p.Gender })
             .ToListAsync();
 
@@ -799,27 +1017,43 @@ public partial class ReportsController : ApiBaseController
     private async Task<IActionResult> PatientInsuranceReportAsync()
     {
         var patients = await _reporting.Set<Domain.Entities.People.Patient>().AsNoTracking()
+            .Where(p => !p.IsDeleted)
             .Select(p => new { p.InsuranceCompanyId, p.SupplementaryInsuranceId })
             .ToListAsync();
 
         var companies = await _reporting.Set<Domain.Entities.Billing.InsuranceCompany>().AsNoTracking()
+            .Where(c => !c.IsDeleted)
             .ToDictionaryAsync(c => c.Id, c => c.Name);
 
-        var rows = patients
-            .Where(p => p.InsuranceCompanyId != null)
-            .GroupBy(p => p.InsuranceCompanyId!.Value)
+        var coverageRows = patients
+            .SelectMany(p => new[]
+            {
+                (InsuranceId: p.InsuranceCompanyId, Type: "اصلی"),
+                (InsuranceId: p.SupplementaryInsuranceId, Type: "تکمیلی")
+            })
+            .Where(x => x.InsuranceId.HasValue)
+            .GroupBy(x => new { InsuranceId = x.InsuranceId!.Value, x.Type })
             .Select(g => new
             {
-                insurance = companies.TryGetValue(g.Key, out var n) ? n : "بیمه‌گر #" + g.Key,
+                insurance = companies.TryGetValue(g.Key.InsuranceId, out var name) ? name : "بیمه‌گر #" + g.Key.InsuranceId,
+                coverageType = g.Key.Type,
                 patients = g.Count(),
-                share = Math.Round(g.Count() * 100m / patients.Count, 1).ToString("0.#") + "٪"
+                share = patients.Count == 0 ? "۰٪" :
+                    Math.Round(g.Count() * 100m / patients.Count, 1).ToString("0.#") + "٪"
             })
             .OrderByDescending(r => r.patients)
+            .Cast<object>()
             .ToList();
 
-        var without = patients.Count(p => p.InsuranceCompanyId == null);
+        var without = patients.Count(p => p.InsuranceCompanyId == null && p.SupplementaryInsuranceId == null);
         if (without > 0)
-            rows.Add(new { insurance = "بدون بیمه", patients = without, share = Math.Round(without * 100m / patients.Count, 1).ToString("0.#") + "٪" });
+            coverageRows.Add(new
+            {
+                insurance = "بدون بیمه",
+                coverageType = "—",
+                patients = without,
+                share = Math.Round(without * 100m / patients.Count, 1).ToString("0.#") + "٪"
+            });
 
         return Ok(ApiResponse<object>.Success(new
         {
@@ -827,11 +1061,13 @@ public partial class ReportsController : ApiBaseController
             summary = new
             {
                 patients = patients.Count,
-                insured = patients.Count(p => p.InsuranceCompanyId != null),
-                supplementary = patients.Count(p => p.SupplementaryInsuranceId != null)
+                insured = patients.Count(p => p.InsuranceCompanyId != null || p.SupplementaryInsuranceId != null),
+                primaryInsured = patients.Count(p => p.InsuranceCompanyId != null),
+                supplementary = patients.Count(p => p.SupplementaryInsuranceId != null),
+                uninsured = without
             },
-            columns = new[] { "بیمه‌گر", "تعداد بیمار", "سهم" },
-            rows
+            columns = new[] { "بیمه‌گر", "نوع پوشش", "تعداد بیمار", "سهم از کل بیماران" },
+            rows = coverageRows
         }));
     }
 
@@ -970,37 +1206,97 @@ public partial class ReportsController : ApiBaseController
        بخش ۳ — گزارش‌های پزشکان و نوبت‌دهی
        ═══════════════════════════════════════════════════════════ */
 
-    /// <summary>عملکرد پزشکان در بازه</summary>
-    private async Task<IActionResult> DoctorPerformanceDetailedAsync(DateTime from, DateTime to)
+    /// <summary>گزارش‌های پزشک: عملکرد، درآمد مستقل و مقایسهٔ هر دو سنجه</summary>
+    private async Task<IActionResult> DoctorReportAsync(DateTime from, DateTime to, string mode)
     {
-        var rows = await _reporting.Set<Domain.Entities.Clinical.Visit>().AsNoTracking()
-            .Where(v => v.VisitDate >= from && v.VisitDate <= to && v.Doctor != null)
-            .GroupBy(v => new { v.DoctorId, Name = v.Doctor!.Employee != null ? v.Doctor.Employee.FirstName + " " + v.Doctor.Employee.LastName : "پزشک #" + v.DoctorId })
-            .Select(g => new { doctor = g.Key.Name, visits = g.Count() })
-            .OrderByDescending(r => r.visits)
+        var visits = await _reporting.Set<Domain.Entities.Clinical.Visit>().AsNoTracking()
+            .Where(v => !v.IsDeleted && v.VisitDate >= from && v.VisitDate <= to && v.Doctor != null)
+            .Select(v => new { v.DoctorId, name = v.Doctor!.Employee != null
+                ? v.Doctor.Employee.FirstName + " " + v.Doctor.Employee.LastName
+                : "پزشک #" + v.DoctorId })
             .ToListAsync();
+        var visitCounts = visits.GroupBy(v => v.DoctorId)
+            .ToDictionary(g => g.Key, g => new { name = g.First().name, count = g.Count() });
+
+        var billedItems = await _reporting.Set<Domain.Entities.Billing.InvoiceItem>().AsNoTracking()
+            .Where(i => !i.IsDeleted && i.DoctorId != null && i.Invoice != null && !i.Invoice.IsDeleted &&
+                        i.Invoice.Status != InvoiceStatus.Cancelled && i.Invoice.Status != InvoiceStatus.Draft && i.Invoice.Status != InvoiceStatus.Refunded &&
+                        i.Invoice.InvoiceDate >= from && i.Invoice.InvoiceDate <= to)
+            .Select(i => new { doctorId = i.DoctorId!.Value, i.TotalPrice })
+            .ToListAsync();
+        var itemGroups = billedItems.GroupBy(i => i.doctorId).ToList();
+        var revenues = itemGroups.ToDictionary(g => g.Key, g => g.Sum(i => i.TotalPrice));
+        var itemCounts = itemGroups.ToDictionary(g => g.Key, g => g.Count());
+        var doctorIds = visitCounts.Keys.Union(revenues.Keys).Distinct().ToList();
+        var names = await _reporting.Set<Domain.Entities.People.Doctor>().AsNoTracking()
+            .Where(d => doctorIds.Contains(d.Id) && !d.IsDeleted)
+            .Select(d => new { d.Id, name = d.Employee != null
+                ? d.Employee.FirstName + " " + d.Employee.LastName : "پزشک #" + d.Id })
+            .ToDictionaryAsync(d => d.Id, d => d.name);
+
+        var rows = doctorIds.Select(id => new
+            {
+                doctor = visitCounts.TryGetValue(id, out var visit) ? visit.name : names.GetValueOrDefault(id, "پزشک #" + id),
+                visits = visitCounts.GetValueOrDefault(id)?.count ?? 0,
+                invoiceItems = itemCounts.GetValueOrDefault(id),
+                revenue = revenues.GetValueOrDefault(id)
+            })
+            .OrderByDescending(r => mode == "revenue" ? r.revenue : r.visits)
+            .ToList();
+
+        var columns = mode switch
+        {
+            "revenue" => new[] { "پزشک", "تعداد اقلام فاکتور", "درآمد ثبت‌شده" },
+            "comparison" => new[] { "پزشک", "تعداد ویزیت", "درآمد ثبت‌شده", "درآمد به‌ازای ویزیت" },
+            _ => new[] { "پزشک", "تعداد ویزیت", "درآمد ثبت‌شده" }
+        };
+        object resultRows = mode switch
+        {
+            "revenue" => rows.Select(r => new { r.doctor, r.invoiceItems, r.revenue }).ToList(),
+            "comparison" => rows.Select(r => new
+            {
+                r.doctor,
+                r.visits,
+                r.revenue,
+                revenuePerVisit = r.visits > 0 ? Math.Round(r.revenue / r.visits, 0) : 0m
+            }).ToList(),
+            _ => rows.Select(r => new { r.doctor, r.visits, r.revenue }).ToList()
+        };
 
         return Ok(ApiResponse<object>.Success(new
         {
             available = true,
-            summary = new { doctors = rows.Count, visits = rows.Sum(r => r.visits) },
-            columns = new[] { "پزشک", "تعداد ویزیت" },
-            rows
+            summary = new
+            {
+                doctors = rows.Count,
+                visits = rows.Sum(r => r.visits),
+                revenue = rows.Sum(r => r.revenue)
+            },
+            columns,
+            rows = resultRows
         }));
     }
 
     /// <summary>میانگین مدت ویزیت هر پزشک — از ویزیت‌های با زمان شروع/پایان ثبت‌شده — گام P1</summary>
     private async Task<IActionResult> AvgVisitDurationReportAsync(DateTime from, DateTime to)
     {
-        var visits = await _reporting.Set<Domain.Entities.Clinical.Visit>().AsNoTracking()
-            .Where(v => v.VisitDate >= from && v.VisitDate <= to &&
+        var timedVisits = await _reporting.Set<Domain.Entities.Clinical.Visit>().AsNoTracking()
+            .Where(v => !v.IsDeleted && v.VisitDate >= from && v.VisitDate <= to &&
                         v.StartTime != null && v.EndTime != null && v.Doctor != null)
             .Select(v => new
             {
                 doctor = v.Doctor!.Employee != null ? v.Doctor.Employee.FirstName + " " + v.Doctor.Employee.LastName : "پزشک #" + v.DoctorId,
-                minutes = EF.Functions.DateDiffMinute(v.StartTime!.Value, v.EndTime!.Value)
+                start = v.StartTime!.Value,
+                end = v.EndTime!.Value
             })
             .ToListAsync();
+
+        // محاسبه پس از materialize برای استقلال از توابع اختصاصی SQL Server.
+        var visits = timedVisits.Select(v => new
+        {
+            v.doctor,
+            minutes = Math.Max(0, (int)(v.end - v.start).TotalMinutes)
+        }).ToList();
 
         var rows = visits
             .GroupBy(v => v.doctor)
@@ -1032,11 +1328,12 @@ public partial class ReportsController : ApiBaseController
     /// <summary>آمار نوبت‌ها به تفکیک وضعیت</summary>
     private async Task<IActionResult> AppointmentStatsReportAsync(DateTime from, DateTime to)
     {
-        var rows = await _reporting.Set<Domain.Entities.Scheduling.Appointment>().AsNoTracking()
-            .Where(a => a.CreatedAt >= from && a.CreatedAt <= to)
+        var grouped = await _reporting.Set<Domain.Entities.Scheduling.Appointment>().AsNoTracking()
+            .Where(a => !a.IsDeleted && a.AppointmentDate >= IranDateOf(from) && a.AppointmentDate <= IranDateOf(to))
             .GroupBy(a => a.Status)
-            .Select(g => new { status = g.Key.ToString(), count = g.Count() })
+            .Select(g => new { status = g.Key, count = g.Count() })
             .ToListAsync();
+        var rows = grouped.Select(g => new { status = AppointmentStatusName(g.status), g.count }).ToList();
 
         return Ok(ApiResponse<object>.Success(new
         {
@@ -1048,13 +1345,19 @@ public partial class ReportsController : ApiBaseController
     }
 
     /// <summary>عدم مراجعه و لغو نوبت</summary>
-    private async Task<IActionResult> NoShowReportAsync(DateTime from, DateTime to)
+    private Task<IActionResult> NoShowReportAsync(DateTime from, DateTime to)
+        => AppointmentStatusDetailReportAsync(from, to, Domain.Enums.AppointmentStatus.NoShow);
+
+    /// <summary>لغو نوبت‌ها با دلیل لغو</summary>
+    private Task<IActionResult> CancellationReportAsync(DateTime from, DateTime to)
+        => AppointmentStatusDetailReportAsync(from, to, Domain.Enums.AppointmentStatus.Cancelled);
+
+    private async Task<IActionResult> AppointmentStatusDetailReportAsync(
+        DateTime from, DateTime to, Domain.Enums.AppointmentStatus status)
     {
-        var rows = await _reporting.Set<Domain.Entities.Scheduling.Appointment>().AsNoTracking()
-            .Where(a => a.AppointmentDate >= IranDateOf(from) &&
-                        a.AppointmentDate <= IranDateOf(to) &&
-                        (a.Status == Domain.Enums.AppointmentStatus.NoShow ||
-                         a.Status == Domain.Enums.AppointmentStatus.Cancelled))
+        var source = await _reporting.Set<Domain.Entities.Scheduling.Appointment>().AsNoTracking()
+            .Where(a => !a.IsDeleted && a.AppointmentDate >= IranDateOf(from) &&
+                        a.AppointmentDate <= IranDateOf(to) && a.Status == status)
             .OrderByDescending(a => a.AppointmentDate)
             .Select(a => new
             {
@@ -1062,11 +1365,20 @@ public partial class ReportsController : ApiBaseController
                 code = a.AppointmentCode,
                 patient = a.Patient != null ? a.Patient.FirstName + " " + a.Patient.LastName : "—",
                 doctor = a.Doctor != null && a.Doctor.Employee != null ? a.Doctor.Employee.FirstName + " " + a.Doctor.Employee.LastName : "—",
-                status = a.Status.ToString(),
+                a.Status,
                 reason = a.CancellationReason
             })
             .Take(200)
             .ToListAsync();
+        var rows = source.Select(a => new
+        {
+            a.date,
+            a.code,
+            a.patient,
+            a.doctor,
+            status = AppointmentStatusName(a.Status),
+            a.reason
+        }).ToList();
 
         return Ok(ApiResponse<object>.Success(new
         {
@@ -1101,6 +1413,33 @@ public partial class ReportsController : ApiBaseController
             available = true,
             summary = new { lowStock = rows.Count },
             columns = new[] { "دارو", "موجودی", "نقطه سفارش" },
+            rows
+        }));
+    }
+
+    /// <summary>موجودی کامل داروخانه — همهٔ بچ‌ها و وضعیت موجودی</summary>
+    private async Task<IActionResult> InventoryReportAsync()
+    {
+        var rows = await _reporting.Set<Domain.Entities.Pharmacy.PharmacyInventory>().AsNoTracking()
+            .Where(i => !i.IsDeleted && i.Medication != null)
+            .OrderBy(i => i.Medication!.BrandName ?? i.Medication.GenericName)
+            .ThenBy(i => i.ExpiryDate)
+            .Select(i => new
+            {
+                medication = i.Medication!.BrandName ?? i.Medication.GenericName,
+                batch = i.BatchNumber,
+                onHand = i.Quantity,
+                reorder = i.ReorderLevel,
+                expiry = i.ExpiryDate
+            })
+            .Take(1000)
+            .ToListAsync();
+
+        return Ok(ApiResponse<object>.Success(new
+        {
+            available = true,
+            summary = new { items = rows.Count, totalOnHand = rows.Sum(r => r.onHand) },
+            columns = new[] { "دارو", "بچ", "موجودی", "نقطه سفارش", "انقضا" },
             rows
         }));
     }
@@ -1179,9 +1518,10 @@ public partial class ReportsController : ApiBaseController
     private async Task<IActionResult> VisitPatternsReportAsync(DateTime from, DateTime to)
     {
         var visits = await _reporting.Set<Domain.Entities.Clinical.Visit>().AsNoTracking()
-            .Where(v => v.VisitDate >= from && v.VisitDate <= to)
+            .Where(v => !v.IsDeleted && v.VisitDate >= from && v.VisitDate <= to)
             .Select(v => v.VisitDate)
             .ToListAsync();
+        var periodDays = Math.Max(1, (IranDateOf(to).DayNumber - IranDateOf(from).DayNumber) + 1);
 
         // بازه‌های ساعتی کاری درمانگاه
         var buckets = new (int fromHour, int toHour, string label)[]
@@ -1231,7 +1571,7 @@ public partial class ReportsController : ApiBaseController
                 busiestDay = visits.Count > 0
                     ? dayNames[visits.GroupBy(PersianDayIndex).OrderByDescending(g => g.Count()).First().Key]
                     : "—",
-                avgPerDay = visits.Count > 0 ? Math.Round(visits.Count / 6.0, 1) : 0
+                avgPerDay = visits.Count > 0 ? Math.Round(visits.Count / (double)periodDays, 1) : 0
             },
             columns = new[] { "بازه ساعتی" }.Concat(dayNames).Append("جمع").ToArray(),
             rows
@@ -1242,7 +1582,8 @@ public partial class ReportsController : ApiBaseController
     private async Task<IActionResult> ServiceMixReportAsync(DateTime from, DateTime to)
     {
         var items = await _reporting.Set<Domain.Entities.Billing.InvoiceItem>().AsNoTracking()
-            .Where(i => i.ServiceId != null && i.Invoice != null && i.Invoice.CreatedAt >= from && i.Invoice.CreatedAt <= to)
+            .Where(i => !i.IsDeleted && i.ServiceId != null && i.Invoice != null && !i.Invoice.IsDeleted &&
+                        i.Invoice.Status != InvoiceStatus.Cancelled && i.Invoice.Status != InvoiceStatus.Draft && i.Invoice.Status != InvoiceStatus.Refunded && i.Invoice.InvoiceDate >= from && i.Invoice.InvoiceDate <= to)
             .Select(i => new
             {
                 service = i.Service != null ? i.Service.ServiceName : "خدمت #" + i.ServiceId,
@@ -1294,6 +1635,19 @@ public partial class ReportsController : ApiBaseController
         PaymentMethod.BankTransfer => "انتقال بانکی",
         PaymentMethod.Insurance => "بیمه",
         _ => method.ToString()
+    };
+
+    /// <summary>نام فارسی وضعیت نوبت — در جدول و آمار گزارش</summary>
+    private static string AppointmentStatusName(Domain.Enums.AppointmentStatus status) => status switch
+    {
+        Domain.Enums.AppointmentStatus.Booked => "رزروشده",
+        Domain.Enums.AppointmentStatus.Confirmed => "تأییدشده",
+        Domain.Enums.AppointmentStatus.Arrived => "حاضر",
+        Domain.Enums.AppointmentStatus.InProgress => "در حال ویزیت",
+        Domain.Enums.AppointmentStatus.Completed => "تکمیل‌شده",
+        Domain.Enums.AppointmentStatus.Cancelled => "لغوشده",
+        Domain.Enums.AppointmentStatus.NoShow => "عدم مراجعه",
+        _ => status.ToString()
     };
 
     /// <summary>نام فارسی دسته هزینه</summary>

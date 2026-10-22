@@ -18,7 +18,7 @@ public partial class ReportsController
     private async Task<IActionResult> ChartGrowthMomAsync(DateTime from, DateTime to)
     {
         var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
-            .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted)
+            .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded)
             .Select(i => new { i.InvoiceDate, i.TotalAmount })
             .ToListAsync();
 
@@ -26,7 +26,7 @@ public partial class ReportsController
         var byMonth = invoices
             .GroupBy(i =>
             {
-                var j = PersianDateHelper.ToJalali(i.InvoiceDate);
+                var j = PersianDateHelper.ToJalali(i.InvoiceDate + IranOffset);
                 return (j.Year, j.Month);
             })
             .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
@@ -105,14 +105,14 @@ public partial class ReportsController
         // بازه را به کل ماه‌های شمسی درون‌داده گسترش می‌دهیم (تا سال قبل هم پوشش داده شود)
         var extendedFrom = from.AddYears(-1);
         var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
-            .Where(i => i.InvoiceDate >= extendedFrom && i.InvoiceDate <= to && !i.IsDeleted)
+            .Where(i => i.InvoiceDate >= extendedFrom && i.InvoiceDate <= to && !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded)
             .Select(i => new { i.InvoiceDate, i.TotalAmount })
             .ToListAsync();
 
         var byMonth = invoices
             .Select(i => new
             {
-                J = PersianDateHelper.ToJalali(i.InvoiceDate),
+                J = PersianDateHelper.ToJalali(i.InvoiceDate + IranOffset),
                 Amount = (double)i.TotalAmount
             })
             .GroupBy(x => (x.J.Year, x.J.Month))
@@ -181,7 +181,7 @@ public partial class ReportsController
     private async Task<IActionResult> ChartRfmAnalysisAsync(DateTime from, DateTime to)
     {
         var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
-            .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted)
+            .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded)
             .Select(i => new { i.PatientId, i.InvoiceDate, i.TotalAmount })
             .ToListAsync();
 
@@ -303,12 +303,12 @@ public partial class ReportsController
         var now = DateTime.UtcNow;
         var start = now.AddMonths(-6);
         var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
-            .Where(i => i.InvoiceDate >= start && i.InvoiceDate <= now && !i.IsDeleted)
+            .Where(i => i.InvoiceDate >= start && i.InvoiceDate <= now && !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded)
             .Select(i => new { i.InvoiceDate, i.TotalAmount })
             .ToListAsync();
 
         var monthly = invoices
-            .Select(i => new { J = PersianDateHelper.ToJalali(i.InvoiceDate), Amount = (double)i.TotalAmount })
+            .Select(i => new { J = PersianDateHelper.ToJalali(i.InvoiceDate + IranOffset), Amount = (double)i.TotalAmount })
             .GroupBy(x => (x.J.Year, x.J.Month))
             .Select(g => new { Year = g.Key.Year, Month = g.Key.Month, Revenue = g.Sum(x => x.Amount) })
             .OrderBy(m => m.Year).ThenBy(m => m.Month)

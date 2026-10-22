@@ -16,7 +16,7 @@ public partial class ReportsController
     private async Task<IActionResult> ChartBranchRevenueAsync(DateTime from, DateTime to)
     {
         var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
-            .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted)
+            .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded)
             .Select(i => new { i.BranchId, i.TotalAmount })
             .ToListAsync();
 
@@ -60,7 +60,7 @@ public partial class ReportsController
     private async Task<IActionResult> ChartInsuranceMixAsync(DateTime from, DateTime to)
     {
         var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
-            .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted
+            .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded
                         && i.InsuranceCompanyId != null)
             .Select(i => new { i.InsuranceCompanyId, i.TotalAmount })
             .ToListAsync();
@@ -100,9 +100,9 @@ public partial class ReportsController
     /// <summary>۱۳) سن بدهی مطالبات — ماهیت مقایسه رده‌های زمانی → ستونی</summary>
     private async Task<IActionResult> ChartReceivableAgingAsync()
     {
-        var today = DateTime.UtcNow.Date;
+        var today = (DateTime.UtcNow + IranOffset).Date;
         var open = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
-            .Where(i => !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.RemainingAmount > 0)
+            .Where(i => !i.IsDeleted && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded && i.RemainingAmount > 0)
             .Select(i => new { i.InvoiceDate, i.RemainingAmount })
             .ToListAsync();
 
@@ -117,7 +117,7 @@ public partial class ReportsController
             label = b.Label,
             value = (double)open.Where(i =>
             {
-                var age = (today - i.InvoiceDate.Date).Days;
+                var age = (today - (i.InvoiceDate + IranOffset).Date).Days;
                 return age >= b.Min && age <= b.Max;
             }).Sum(i => i.RemainingAmount)
         }).ToList();
@@ -185,13 +185,14 @@ public partial class ReportsController
     private async Task<IActionResult> ChartNewPatientsTrendAsync(DateTime from, DateTime to)
     {
         var patients = await _reporting.Set<Domain.Entities.People.Patient>().AsNoTracking()
-            .Where(p => !p.IsDeleted && p.CreatedAt >= from && p.CreatedAt <= to)
-            .Select(p => new { p.CreatedAt })
+            .Where(p => !p.IsDeleted && p.RegistrationDate != null &&
+                        p.RegistrationDate >= from && p.RegistrationDate <= to)
+            .Select(p => new { registered = p.RegistrationDate!.Value })
             .ToListAsync();
 
-        // گروه‌بندی ماه شمسی در حافظه
+        // گروه‌بندی ماه شمسی در حافظه بر مبنای تاریخ ثبت پرونده
         var monthly = patients
-            .Select(p => PersianDateHelper.ToJalali(p.CreatedAt))
+            .Select(p => PersianDateHelper.ToJalali(p.registered + IranOffset))
             .GroupBy(j => new { Y = j.Year, M = j.Month })
             .Select(g => new { ym = (g.Key.Y, g.Key.M), value = (double)g.Count() })
             .OrderBy(x => x.ym.Y).ThenBy(x => x.ym.M)
@@ -224,8 +225,8 @@ public partial class ReportsController
     private async Task<IActionResult> ChartTopDebtorsAsync(DateTime from, DateTime to, int top)
     {
         var invoices = await _reporting.Set<Domain.Entities.Billing.Invoice>().AsNoTracking()
-            .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted
-                        && i.Status != InvoiceStatus.Cancelled && i.RemainingAmount > 0)
+            .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to && !i.IsDeleted &&
+                        i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Draft && i.Status != InvoiceStatus.Refunded && i.RemainingAmount > 0)
             .Select(i => new { i.PatientId, i.RemainingAmount, Patient = i.Patient })
             .ToListAsync();
 
@@ -234,7 +235,7 @@ public partial class ReportsController
             .GroupBy(i => new { i.PatientId, Name = i.Patient!.FirstName + " " + i.Patient.LastName })
             .Select(g => new { label = g.Key.Name, value = (double)g.Sum(x => x.RemainingAmount) })
             .OrderByDescending(r => r.value)
-            .Take(Math.Clamp(top, 3, 15))
+            .Take(Math.Clamp(top, 1, 100))
             .ToList();
 
         return Ok(ApiResponse<object>.Success(new
@@ -311,7 +312,7 @@ public partial class ReportsController
             .GroupBy(it => it.Name)
             .Select(g => new { label = g.Key, value = (double)g.Count() })
             .OrderByDescending(r => r.value)
-            .Take(Math.Clamp(top, 3, 15))
+            .Take(Math.Clamp(top, 1, 100))
             .ToList();
 
         return Ok(ApiResponse<object>.Success(new
@@ -343,7 +344,7 @@ public partial class ReportsController
             .GroupBy(it => it.Name)
             .Select(g => new { label = g.Key, value = (double)g.Sum(x => x.Quantity) })
             .OrderByDescending(r => r.value)
-            .Take(Math.Clamp(top, 3, 15))
+            .Take(Math.Clamp(top, 1, 100))
             .ToList();
 
         return Ok(ApiResponse<object>.Success(new
@@ -419,7 +420,7 @@ public partial class ReportsController
             .ToListAsync();
 
         var daily = prescriptions
-            .GroupBy(p => p.Date.Date)
+            .GroupBy(p => (p.Date + IranOffset).Date)
             .Select(g => new { label = PersianDateHelper.ToShamsi(g.Key), value = (double)g.Count() })
             .OrderBy(p => p.label)
             .ToList();

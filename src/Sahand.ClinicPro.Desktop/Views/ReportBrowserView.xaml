@@ -210,7 +210,7 @@
                                     <TextBlock Text="تصویر" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 </StackPanel>
                             </Button>
-                            <Button Command="{Binding PrintCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,8"
+                            <Button Command="{Binding PrintReportCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,8"
                                     ToolTip="چاپ مستقیم نتایج با سربرگ و تاریخ شمسی">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="Printer" Width="14" Height="14" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
@@ -319,10 +319,10 @@
                             </DockPanel>
 
                             <Grid Grid.Row="1" Height="230">
-                                <charts:AreaChart x:Name="AreaHost" Points="{Binding ChartPoints}" ValueFormat="N0"
-                                                  Visibility="Collapsed">
+                                <charts:AreaChart x:Name="AreaHost" Points="{Binding ChartPoints}" ValueFormat="N0">
                                     <charts:AreaChart.Style>
                                         <Style TargetType="charts:AreaChart">
+                                            <Setter Property="Visibility" Value="Collapsed" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding ChartKind}" Value="area">
                                                     <Setter Property="Visibility" Value="Visible" />
@@ -332,10 +332,10 @@
                                     </charts:AreaChart.Style>
                                 </charts:AreaChart>
 
-                                <charts:ColumnChart x:Name="ColumnHost" Points="{Binding ChartPoints}" ValueFormat="N0"
-                                                    Visibility="Collapsed">
+                                <charts:ColumnChart x:Name="ColumnHost" Points="{Binding ChartPoints}" ValueFormat="N0">
                                     <charts:ColumnChart.Style>
                                         <Style TargetType="charts:ColumnChart">
+                                            <Setter Property="Visibility" Value="Collapsed" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding ChartKind}" Value="column">
                                                     <Setter Property="Visibility" Value="Visible" />
@@ -348,10 +348,10 @@
                                 <charts:DoughnutChart x:Name="DoughnutHost" Points="{Binding ChartPoints}"
                                                       CenterText="{Binding ChartCenterText}"
                                                       CenterSubtext="{Binding ChartUnit}"
-                                                      RingSize="170"
-                                                      Visibility="Collapsed">
+                                                      RingSize="170">
                                     <charts:DoughnutChart.Style>
                                         <Style TargetType="charts:DoughnutChart">
+                                            <Setter Property="Visibility" Value="Collapsed" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding ChartKind}" Value="doughnut">
                                                     <Setter Property="Visibility" Value="Visible" />
@@ -362,10 +362,10 @@
                                 </charts:DoughnutChart>
 
                                 <charts:HorizontalBarChart x:Name="HBarHost" Points="{Binding ChartPoints}"
-                                                           BarMaxWidth="480"
-                                                           Visibility="Collapsed">
+                                                           BarMaxWidth="480">
                                     <charts:HorizontalBarChart.Style>
                                         <Style TargetType="charts:HorizontalBarChart">
+                                            <Setter Property="Visibility" Value="Collapsed" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding ChartKind}" Value="hbar">
                                                     <Setter Property="Visibility" Value="Visible" />

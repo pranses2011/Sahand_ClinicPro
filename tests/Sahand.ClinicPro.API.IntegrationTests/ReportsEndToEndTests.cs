@@ -104,6 +104,18 @@ public class ReportsEndToEndTests : IClassFixture<FlowApiFactory>
         pay.StatusCode.Should().Be(HttpStatusCode.Created,
             because: "پرداخت معتبر باید ثبت شود");
 
+        // ═══ بازهٔ نمودار داشبورد باید تعداد روز انتخاب‌شده را برگرداند ═══
+        foreach (var days in new[] { 14, 30 })
+        {
+            var dashboardChart = await client.GetAsync($"/api/v1/dashboard/revenue-chart?days={days}");
+            dashboardChart.StatusCode.Should().Be(HttpStatusCode.OK);
+            var chartPacket = await ReadAsync<Packet<JsonElement>>(dashboardChart);
+            chartPacket.Data!.Value.GetArrayLength().Should().Be(days,
+                $"انتخاب {days} روز باید دقیقاً {days} نقطهٔ روزانه در نمودار بسازد");
+            chartPacket.Data.Value[days - 1].GetProperty("amount").GetDecimal().Should().Be(300000m,
+                "درآمد روز باید بر اساس تاریخ پرداخت واقعی باشد، نه تاریخ صدور فاکتور");
+        }
+
         // ═══ گزارش ۱ (جدولی): درآمد روزانه — خلاصه باید غیرصفر باشد ═══
         var revenue = await client.GetAsync("/api/v1/reports/execute/daily-revenue?fromDate=2000-01-01&toDate=2100-01-01");
         revenue.StatusCode.Should().Be(HttpStatusCode.OK,
@@ -117,6 +129,18 @@ public class ReportsEndToEndTests : IClassFixture<FlowApiFactory>
         total.Should().Be(500000m, because: "فاکتور ۵۰۰٬۰۰۰ ریالی در بازه است و جمع درآمد همان می‌شود");
         revSummary.GetProperty("paid").GetDecimal().Should().Be(300000m, "پرداخت ۳۰۰٬۰۰۰ ثبت شد");
         rev.GetProperty("rows").GetArrayLength().Should().BeGreaterThan(0, "ردیف روزانه باید موجود باشد");
+        AssertRowsMatchColumns(rev, "گزارش درآمد روزانه");
+
+        // ═══ گزارش‌های مالی باید واقعاً خروجی متفاوت و هم‌اندازهٔ ستون‌های خود داشته باشند ═══
+        foreach (var reportId in new[] { "monthly-revenue", "detailed-revenue", "revenue-trend" })
+        {
+            var response = await client.GetAsync($"/api/v1/reports/execute/{reportId}?fromDate=2000-01-01&toDate=2100-01-01");
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var packet = await ReadAsync<Packet<JsonElement>>(response);
+            AssertRowsMatchColumns(packet.Data!.Value, $"گزارش {reportId}");
+            packet.Data.Value.GetProperty("rows").GetArrayLength().Should().BeGreaterThan(0,
+                $"فاکتور بذری باید در گزارش «{reportId}» دیده شود");
+        }
 
         // ═══ گزارش ۲ (جدولی): روش‌های پرداخت — نقدی باید ۳۰۰٬۰۰۰ بدهد ═══
         var methods = await client.GetAsync("/api/v1/reports/execute/payment-methods?fromDate=2000-01-01&toDate=2100-01-01");
@@ -144,6 +168,16 @@ public class ReportsEndToEndTests : IClassFixture<FlowApiFactory>
         var firstPoint = chartBlock.GetProperty("points")[0];
         firstPoint.GetProperty("value").GetDouble().Should().Be(500000.0,
             because: "ارزش نقطهٔ درآمد همان جمع فاکتور است");
+
+        // گزارش «۱۲ ماه اخیر» باید تمام ماه‌ها (حتی ماه‌های بدون درآمد) را
+        // برگرداند، نه فقط یک ماه از بازهٔ پیش‌فرض ۳۰روزهٔ صفحه.
+        var monthlyChartResponse = await client.GetAsync(
+            "/api/v1/reports/execute/chart-revenue-monthly?fromDate=2000-01-01&toDate=2100-01-01");
+        monthlyChartResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var monthlyChart = await ReadAsync<Packet<JsonElement>>(monthlyChartResponse);
+        monthlyChart.Data!.Value.GetProperty("chart").GetProperty("points").GetArrayLength()
+            .Should().Be(12, "گزارش ۱۲ ماهه باید برای هر ماه یک نقطه داشته باشد");
+        AssertRowsMatchColumns(monthlyChart.Data.Value, "گزارش نموداری درآمد ماهانه");
     }
 
     /// <summary>
@@ -220,6 +254,15 @@ public class ReportsEndToEndTests : IClassFixture<FlowApiFactory>
         // ردیف روزانهٔ امروزِ ایران هم باید موجود باشد
         rev.GetProperty("rows").GetArrayLength().Should().BeGreaterThan(0,
             because: "بازهٔ تک‌روزِ شامل فاکتور تازه باید دست‌کم یک ردیف روزانه بسازد");
+    }
+
+    /// <summary>هر ردیف JSON باید دقیقاً یک مقدار به‌ازای هر سرستون داشته باشد</summary>
+    private static void AssertRowsMatchColumns(JsonElement data, string reportName)
+    {
+        var columnCount = data.GetProperty("columns").GetArrayLength();
+        foreach (var row in data.GetProperty("rows").EnumerateArray())
+            row.EnumerateObject().Count().Should().Be(columnCount,
+                $"{reportName} نباید ستون‌های خالی یا مقادیر جابه‌جا داشته باشد");
     }
 
     /// <summary>خواندن پاسخ و نگاشت به پاکت</summary>
