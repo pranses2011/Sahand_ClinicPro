@@ -176,7 +176,7 @@
                              materialDesign:HintAssist.Hint="جستجو بر اساس نام یا کد"
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
                     <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Foreground="#607D8B">
-                        <Run Text="نتیجه: " /><Run Text="{Binding Rows.Count}" />
+                        <Run Text="نتیجه: " /><Run Text="{Binding Rows.Count, Mode=OneWay}" />
                     </TextBlock>
                 </DockPanel>
                 <DataGrid Grid.Row="1" ItemsSource="{Binding Rows}"
