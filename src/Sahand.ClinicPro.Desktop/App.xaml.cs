@@ -575,6 +575,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<VisitsViewModel>();
         // چرخهٔ ۷۸ — صف مستقل خدمات درمانی (گزارش مالک: جدا شدن از صف ویزیت)
         services.AddTransient<ServicesViewModel>();
+        services.AddTransient<ServiceCatalogViewModel>();
         // چرخهٔ بیست‌وهفتم — میزکار پزشک (صفحهٔ ویزیت پزشک — گزارش هجدهم مالک)
         services.AddTransient<PrescriptionsViewModel>();
         services.AddTransient<BillingViewModel>();

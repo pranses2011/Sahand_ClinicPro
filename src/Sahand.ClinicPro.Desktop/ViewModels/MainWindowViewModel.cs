@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Media;
@@ -144,6 +144,7 @@ public partial class MainWindowViewModel : ObservableObject
         VisitsViewModel visitsVm,
         // چرخهٔ ۷۸ — صف مستقل خدمات درمانی (گزارش مالک: جدا شدن از صف ویزیت)
         ServicesViewModel servicesVm,
+        ServiceCatalogViewModel serviceCatalogVm,
         PrescriptionsViewModel prescriptionsVm,
         BillingViewModel billingVm,
         AccountingViewModel accountingVm,
@@ -262,6 +263,7 @@ public partial class MainWindowViewModel : ObservableObject
             ["visits"] = () => visitsVm,
             // چرخهٔ ۷۸ — صف خدمات درمانی (پذیرش‌های خدمتیِ بدون پزشک)
             ["services"] = () => servicesVm,
+            ["service-catalog"] = () => serviceCatalogVm,
             ["prescriptions"] = () => prescriptionsVm,
             ["billing"] = () => billingVm,
             ["accounting"] = () => accountingVm,
@@ -570,6 +572,7 @@ public partial class MainWindowViewModel : ObservableObject
             // ─── مدیریت و تنظیمات سامانه ───
             Group("مدیریت سامانه", "Cog",
                 new() { Title = "مدیریت سامانه (تب‌بندی کامل)", PageKey = "admin", Icon = "ViewDashboardOutline" },
+                new() { Title = "مدیریت خدمات", PageKey = "service-catalog", Icon = "ClipboardList" },
                 new() { Title = "کاربران", PageKey = "users", Icon = "AccountKey" },
                 new() { Title = "نقش‌ها", PageKey = "roles", Icon = "ShieldAccount" },
                 new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog" },
@@ -657,6 +660,20 @@ public partial class MainWindowViewModel : ObservableObject
             // تضمین می‌شود. پرچم حتی وقتی ویزیت در منو نیست هم ثابت می‌شود تا
             // هر بار ورود، منوی کاربر دوباره دستکاری نشود.
             MigrateServicesPageIntoCustomLayout(items);
+            var catalogAdded = MigrateServiceCatalogPageIntoCustomLayout(items);
+            if (catalogAdded)
+            {
+                try
+                {
+                    var migratedLayout = SerializeNavLayout(items);
+                    if (await _api.PutAsync("users/me/nav-layout", new { layout = migratedLayout }))
+                        LocalSettingsStore.Set(ServiceCatalogMigrationKey, "done");
+                }
+                catch
+                {
+                    // ذخیرهٔ مهاجرت اختیاری است؛ منوی شخصی همین نشست همچنان نمایش داده می‌شود.
+                }
+            }
 
             NavItems.Clear();
             foreach (var item in items)
@@ -731,6 +748,65 @@ public partial class MainWindowViewModel : ObservableObject
         {
             // مهاجرت اختیاری است — نباید بارگذاری منو را بلامحل کند
         }
+    }
+
+    /// <summary>کلید محلی مهاجرت کاتالوگ خدمات برای کاربر جاری.</summary>
+    private string ServiceCatalogMigrationKey => "NavMigration.ServiceCatalog." + (_tokens.Username ?? "unknown");
+
+    /// <summary>افزودن یک‌بارهٔ صفحهٔ مدیریت خدمات به چیدمان‌های شخصی ذخیره‌شده.</summary>
+    private bool MigrateServiceCatalogPageIntoCustomLayout(ObservableCollection<NavItem> items)
+    {
+        try
+        {
+            if (LocalSettingsStore.Get(ServiceCatalogMigrationKey) == "done")
+                return false;
+
+            var alreadyHas = items.Any(i => i.PageKey == "service-catalog" ||
+                (i.HasChildren && i.Children.Any(c => c.PageKey == "service-catalog")));
+            if (alreadyHas)
+            {
+                LocalSettingsStore.Set(ServiceCatalogMigrationKey, "done");
+                return false;
+            }
+
+            var entry = Helpers.PageCatalog.Find("service-catalog");
+            if (entry is null)
+                return false;
+
+            var newItem = new NavItem { Title = entry.Title, PageKey = entry.Key, Icon = entry.Icon };
+            var adminGroup = items.FirstOrDefault(i => i.HasChildren &&
+                i.Children.Any(c => c.PageKey is "admin" or "settings" or "roles"));
+            if (adminGroup is not null)
+            {
+                var adminIndex = adminGroup.Children.ToList().FindIndex(c => c.PageKey == "admin");
+                adminGroup.Children.Insert(adminIndex >= 0 ? adminIndex + 1 : 0, newItem);
+            }
+            else
+            {
+                items.Add(newItem);
+            }
+
+            return true;
+        }
+        catch
+        {
+            // مهاجرت نمایشی است؛ خرابی آن نباید ورود/بارگذاری منو را متوقف کند.
+            return false;
+        }
+    }
+
+    /// <summary>تبدیل NavItemها به ساختار JSON مورد انتظار ذخیره‌سازی منو.</summary>
+    private static string SerializeNavLayout(IEnumerable<NavItem> items)
+    {
+        var serializedItems = new List<object>();
+        foreach (var item in items)
+        {
+            if (item.HasChildren)
+                serializedItems.Add(new { title = item.Title, icon = item.Icon, pages = item.Children.Select(child => child.PageKey).ToArray() });
+            else
+                serializedItems.Add(new { pageKey = item.PageKey });
+        }
+        return System.Text.Json.JsonSerializer.Serialize(serializedItems);
     }
 
     /// <summary>

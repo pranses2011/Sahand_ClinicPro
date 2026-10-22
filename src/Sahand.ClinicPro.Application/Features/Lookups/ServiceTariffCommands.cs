@@ -58,7 +58,8 @@ public record ServiceTariffManageDto(
     decimal InsuranceShare,
     decimal PatientShare,
     bool IsActive,
-    bool HasTargetTariff = false);
+    bool HasTargetTariff = false,
+    decimal DefaultCost = 0m);
 
 /// <summary>پرس‌وجوی فهرست خدمت‌های تعرفه‌دار (پنجرهٔ مدیریت تعرفه‌ها) — شامل غیرفعال.
 /// چرخه بیست‌وچهارم: پارامتر InsuranceCompanyId هدف را تعیین می‌کند — تهی = آزاد.</summary>
@@ -139,7 +140,7 @@ public class GetServicesTariffsForManageQueryHandler
                 isFreeTarget ? 100m
                     : isDedicatedRow ? t!.PatientShare
                     : fallbackPatientPercent,
-                s.IsActive, hasTarget);
+                s.IsActive, hasTarget, s.DefaultCost);
         }).ToList();
 
         return Result<List<ServiceTariffManageDto>>.Success(items);
@@ -157,7 +158,8 @@ public record CreateServiceTariffCommand(
     decimal Price,
     decimal InsuranceShare,
     decimal PatientShare,
-    long? InsuranceCompanyId = null) : IRequest<Result<long>>;
+    long? InsuranceCompanyId = null,
+    decimal DefaultCost = 0m) : IRequest<Result<long>>;
 
 /// <summary>گردانندهٔ ساخت خدمت تعرفه‌دار</summary>
 public class CreateServiceTariffCommandHandler
@@ -174,6 +176,8 @@ public class CreateServiceTariffCommandHandler
     {
         if (string.IsNullOrWhiteSpace(request.ServiceName))
             return Result<long>.Failure(new Error("TARIFF.NAME", "نام خدمت الزامی است"));
+        if (request.Price < 0m || request.DefaultCost < 0m)
+            return Result<long>.Failure(new Error("TARIFF.PRICE", "قیمت و هزینه خدمت نمی‌توانند منفی باشند"));
 
         // کد خدمت اگر داده شود باید یکتا باشد
         if (!string.IsNullOrWhiteSpace(request.ServiceCode))
@@ -190,7 +194,8 @@ public class CreateServiceTariffCommandHandler
             ServiceCode = string.IsNullOrWhiteSpace(request.ServiceCode) ? null : request.ServiceCode.Trim(),
             // نوع پیش‌فرض «ویزیت» — از پنجرهٔ مدیریت تعرفه صرفاً قیمت مدنظر است
             ServiceType = ServiceType.Visit,
-            DefaultPrice = request.Price
+            DefaultPrice = request.Price,
+            DefaultCost = request.DefaultCost
         };
         await _unitOfWork.Repository<Service>().AddAsync(service, cancellationToken);
 
@@ -228,7 +233,8 @@ public record UpdateServiceTariffCommand(
     decimal InsuranceShare,
     decimal PatientShare,
     bool IsActive,
-    long? InsuranceCompanyId = null) : IRequest<Result>;
+    long? InsuranceCompanyId = null,
+    decimal? DefaultCost = null) : IRequest<Result>;
 
 /// <summary>گردانندهٔ ویرایش خدمت تعرفه‌دار</summary>
 public class UpdateServiceTariffCommandHandler
@@ -250,6 +256,9 @@ public class UpdateServiceTariffCommandHandler
         if (string.IsNullOrWhiteSpace(request.ServiceName))
             return Result.Failure(new Error("TARIFF.NAME", "نام خدمت الزامی است"));
 
+        if (request.Price < 0m || (request.DefaultCost.HasValue && request.DefaultCost.Value < 0m))
+            return Result.Failure(new Error("TARIFF.PRICE", "قیمت و هزینه خدمت نمی‌توانند منفی باشند"));
+
         // کد یکتا — به‌جز خود رکورد
         if (!string.IsNullOrWhiteSpace(request.ServiceCode))
         {
@@ -262,6 +271,8 @@ public class UpdateServiceTariffCommandHandler
         service.ServiceName = request.ServiceName.Trim();
         service.ServiceCode = string.IsNullOrWhiteSpace(request.ServiceCode) ? null : request.ServiceCode.Trim();
         service.DefaultPrice = request.Price;
+        if (request.DefaultCost.HasValue)
+            service.DefaultCost = request.DefaultCost.Value;
         service.IsActive = request.IsActive;
 
         // ═══ چرخه ۲۴: upsert تعرفهٔ هدف منتخب (بیمه یا آزاد) سال جاری ═══

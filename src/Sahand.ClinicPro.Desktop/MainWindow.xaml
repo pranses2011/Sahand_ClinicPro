@@ -45,6 +45,9 @@
         <DataTemplate DataType="{x:Type vm:ServicesViewModel}">
             <views:ServicesView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ServiceCatalogViewModel}">
+            <views:ServiceCatalogView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:PrescriptionsViewModel}">
             <views:PrescriptionsView />
         </DataTemplate>
