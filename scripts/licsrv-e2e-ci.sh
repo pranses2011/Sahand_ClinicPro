@@ -181,11 +181,32 @@ echo "$ACT" | grep -q '"isValid":true' && ok "فعال‌سازی موفق" || b
 echo "$ACT" | grep -q '"messages"' && ok "بلاک messages در پاسخ فعال‌سازی هست" || bad "بلاک messages نیست"
 echo "$ACT" | grep -q 'نسخه ۱.۹.۰' && ok "عنوان پیام در پاسخ هست" || bad "عنوان پیام در پاسخ نیست"
 
-# تپ‌قلب دوم — نباید پیام تکراری بیاید
+# تپ‌قلب دوم — «تحویل تک‌بار» باید برقرار بماند
 HB=$(curl -s -X POST "http://127.0.0.1:8899/api.php" -H "Content-Type: application/json" \
   -d "{\"action\":\"heartbeat\",\"licenseKey\":\"$LKEY\",\"fingerprint\":\"$FP\"}")
 echo "$HB" | grep -q '"isValid":true' && ok "تپ‌قلب دوم معتبر" || bad "تپ‌قلب دوم رد شد"
-echo "$HB" | grep -q '"messages"' && bad "پیام تکراری تحویل شد!" || ok "پیام تکراری تحویل نشد (تحویل تک‌بار)"
+# ═══ ریشه‌یابی (چرخهٔ ۸۰) ═══
+# این بررسی پیش‌تر «نبودن کلید messages» را نشانهٔ تحویل تک‌بار می‌گرفت، ولی
+# چرخهٔ ۶۷ عمداً پروتکل را عوض کرد: فهرست کامل پیام‌ها (تحویل‌شده + تحویل‌نشده)
+# همیشه در پاسخ هست تا داشبورد آینهٔ پنل بماند. بنابراین نبودِ messages دیگر
+# درست نیست و باید «تکرار نشدن خودِ پیام» سنجیده شود: عنوان دقیقاً یک بار در
+# payload + تعداد ردیف‌های جدول بدون تغییر + delivered_at ست شده باشد.
+MSG_ROWS_BEFORE=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:""));
+echo (string)$p->query("SELECT COUNT(*) FROM ls_messages WHERE license_id=1")->fetchColumn();')
+HB_TITLE_COUNT=$(printf '%s' "$HB" | grep -o 'نسخه ۱.۹.۰' | wc -l | tr -d ' ')
+[ "$HB_TITLE_COUNT" = "1" ] \
+  && ok "پیام در تپ‌قلب دوم تک‌بار برگشت (تکرار $HB_TITLE_COUNT)" \
+  || bad "پیام تکراری در payload تپ‌قلب دوم! (تکرار: $HB_TITLE_COUNT)"
+MSG_ROWS_AFTER=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:""));
+echo (string)$p->query("SELECT COUNT(*) FROM ls_messages WHERE license_id=1")->fetchColumn();')
+[ "$MSG_ROWS_BEFORE" = "$MSG_ROWS_AFTER" ] \
+  && ok "تپ‌قلب دوم ردیف پیام تازه نساخت (تحویل تک‌بار)" \
+  || bad "تپ‌قلب دوم ردیف پیام تازه ساخت! ($MSG_ROWS_BEFORE → $MSG_ROWS_AFTER)"
+MSG_DELIVERED=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:""));
+echo (string)$p->query("SELECT COUNT(*) FROM ls_messages WHERE license_id=1 AND delivered_at IS NOT NULL")->fetchColumn();')
+[ "$MSG_DELIVERED" -ge 1 ] \
+  && ok "پیام پس از نخستین تحویل delivered_at گرفت ($MSG_DELIVERED ردیف)" \
+  || bad "delivered_at پیام ست نشد"
 
 # ── صفحات نموداری ──
 say "صفحات داشبورد/گزارش‌ها با نمودار SVG"

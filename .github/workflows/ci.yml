@@ -110,14 +110,33 @@ jobs:
       # بالا می‌برد (fail-fast تولید) → کل هدف شکست می‌خورد؛ در حالی که سند
       # OpenAPI هیچ ربطی به دیتابیس ندارد. با Development + خاموش‌کردن مهاجرت
       # خودکار، میزبان بدون دیتابیس بالا می‌آید و سند ساخته می‌شود.
+      #
+      # ═══ چرخهٔ ۸۱-ب — ریشهٔ «exit code 127» ═══
+      # گام قبلی برای دسترسی به dotnet، PATH را کامل بازنویسی می‌کرد:
+      #     PATH: ${{ env.PATH }}:/usr/share/dotnet
+      # چون در سطح workflow متغیر PATH تعریف نشده، ${{ env.PATH }} تهی می‌شد و
+      # PATH به «:/usr/share/dotnet» تبدیل می‌گردید؛ dotnet پیدا می‌شد ولی tee
+      # و mv نه ⇒ ۱۲۷ و نبودِ openapi.log. اکنون PATH دست‌نخورده می‌ماند
+      # (setup-dotnet پیش‌تر آن را تنظیم کرده) و ساخت سند با dotnet build
+      # انجام می‌شود که سوییچ استاندارد --no-restore را می‌پذیرد
+      # (dotnet msbuild آن را نمی‌شناسد و MSB1001 می‌داد).
       - name: تولید سند OpenAPI (چرخه دوازدهم B3)
         run: |
           set -o pipefail
-          dotnet msbuild src/Sahand.ClinicPro.API/Sahand.ClinicPro.API.csproj \
-            -t:GenerateOpenApiDocuments --no-restore 2>&1 | tee openapi.log
-          mv docs/api/Sahand.ClinicPro.API.json docs/api/openapi.json || true
+          mkdir -p docs/api
+          dotnet build src/Sahand.ClinicPro.API/Sahand.ClinicPro.API.csproj \
+            -t:GenerateOpenApiDocuments --no-restore \
+            -p:OpenApiDocumentsDirectory="$PWD/docs/api" 2>&1 | tee openapi.log
+          # چرخهٔ ۸۱ — بی‌سر‌و‌صدا نگه‌داشتن سند کهنه ممنوع: نبودِ فایل خروجی
+          # یعنی هدف تولید اجرا نشده و باید صریحاً شکست اعلام شود.
+          if [ -f docs/api/Sahand.ClinicPro.API.json ]; then
+            mv docs/api/Sahand.ClinicPro.API.json docs/api/openapi.json
+            echo "سند OpenAPI تولید شد: $(wc -c < docs/api/openapi.json) بایت"
+          else
+            echo "::error::فایل سند OpenAPI تولید نشد — openapi.log را ببینید"
+            exit 1
+          fi
         env:
-          PATH: ${{ env.PATH }}:/usr/share/dotnet
           ASPNETCORE_ENVIRONMENT: Development
           Database__AutoMigrateOnStartup: 'false'
 

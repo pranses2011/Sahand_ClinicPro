@@ -21,6 +21,18 @@ declare(strict_types=1);
 
 require __DIR__ . '/inc/functions.php';
 
+/*
+ * ═══ ریشه‌یابی (چرخهٔ ۸۰): «کرون هرگز اجرا نمی‌شد» ═══
+ * cron.php تا امروز پیکربندی را بارگذاری نمی‌کرد؛ فقط functions.php را
+ * require می‌کرد. در نتیجه LS_CRON_SECRET هیچ‌وقت define نمی‌شد و شرط زیر
+ * برای هر فراخوانی — حتی با کلید درست cPanel — «Forbidden» برمی‌گرداند:
+ *   • بکاپ خودکار روزانه هرگز ساخته نمی‌شد (بازشدن دوبارهٔ ریسک G-08)
+ *   • گزارش JSON کرون هیچ‌وقت خروجی نمی‌داد
+ * index.php و api.php از همان ابتدا ls_load_config() را صدا می‌زنند؛
+ * cron.php جاافتاده بود. اکنون پیش از هر بررسی، پیکربندی بارگذاری می‌شود.
+ */
+ls_load_config();
+
 // احراز فراخوانی با کلید رمزی
 $secret = (string)($_SERVER['argv'][1] ?? $_GET['secret'] ?? '');
 if (!defined('LS_CRON_SECRET') || $secret === '' || !hash_equals(LS_CRON_SECRET, $secret)) {

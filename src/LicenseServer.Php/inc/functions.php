@@ -831,7 +831,8 @@ function ls_add_column(PDO $db, string $table, string $column, string $definitio
  * مهاجرت/ترمیم خودکار اسکیمای سرور لایسنس — کاملاً idempotent و بی‌خطر برای داده‌ها:
  *   ۱) همه جداول با CREATE TABLE IF NOT EXISTS ساخته می‌شوند (روی جداول موجود بی‌اثر).
  *   ۲) ستون‌های موردانتظار سنجیده و ستون جاافتاده با ALTER TABLE اضافه می‌شود.
- *   ۳) تنظیمات پیش‌فرضِ گمشده فقط وقتی کلید وجود نداشته باشد درج می‌شود.
+ *   ۳) لایسنس‌های بدون امضا یک‌بار امضا می‌شوند (چرخهٔ ۸۰ — پرشدن عقب‌رو).
+ *   ۴) تنظیمات پیش‌فرضِ گمشده فقط وقتی کلید وجود نداشته باشد درج می‌شود.
  * ریشه‌یابی: خطای «HTTP 500» هنگام صدور لایسنس در استقرارهایی رخ می‌دهد که بانک
  * اطلاعاتی‌شان با نسخه قدیمی ساخته شده (ستون/جدول ناقص) ولی فایل‌های PHP به‌روزند.
  * @return array فهرست اعمال انجام‌شده — برای نمایش در پنل
@@ -882,6 +883,11 @@ function ls_db_migrate(): array
             // قدیمی هم به‌صورت خودکار افزوده می‌شوند (نصب مجدد لازم نیست)
             'economic_code'        => 'VARCHAR(50) NULL',
             'national_id'          => 'VARCHAR(20) NULL',
+            // ═══ چرخهٔ ۸۰ — ستون امضای لایسنس ═══
+            // چرخهٔ ۶۶ در چرخش کلید، این ستون را UPDATE می‌کرد ولی هرگز در
+            // اسکیما نبود؛ نتیجه: SQLSTATE[42S22] و ترکِ نیمه‌کارهٔ چرخش.
+            // TEXT (نه VARCHAR) تا سقف اندازهٔ ردیف InnoDB حفظ شود.
+            'signature'            => 'TEXT NULL',
         ],
         'ls_messages'   => [
             'delivered_at' => 'DATETIME NULL',
@@ -912,7 +918,34 @@ function ls_db_migrate(): array
         }
     }
 
-    // ۳) تنظیمات پیش‌فرض گمشده — بدون بازنویسی مقدار موجود
+    // ۳) امضای لایسنس‌های بدون امضا — «پرشدن عقب‌رو» چرخهٔ ۸۰
+    //    نصب‌هایی که پیش از افزوده‌شدن ستون signature ساخته شده‌اند (یا چرخش
+    //    کلیدشان نیمه‌کاره مانده) ردیف‌هایی با امضای تهی دارند. بدون این گام،
+    //    اولین چرخش بعدی «قبل/بعد» یکسان نشان می‌دهد و اعتبار امضا قابل سنجش
+    //    نیست. فقط ردیف‌های تهی امضا می‌شوند (کم‌هزینه و idempotent) و خطای
+    //    رمزنگاری هرگز کل مهاجرت/صفحه را نمی‌شکند.
+    try {
+        $unsigned = $db->query("SELECT id, license_key, expiry_date, max_users FROM ls_licenses
+                                WHERE signature IS NULL OR signature = ''")->fetchAll();
+        if (count($unsigned) > 0) {
+            $update = $db->prepare('UPDATE ls_licenses SET signature = ? WHERE id = ?');
+            foreach ($unsigned as $row) {
+                $update->execute([
+                    ls_sign_license(
+                        (string)$row['license_key'],
+                        $row['expiry_date'] !== null ? (string)$row['expiry_date'] : null,
+                        (int)$row['max_users']
+                    ),
+                    (int)$row['id'],
+                ]);
+            }
+            $done[] = 'ls_licenses.signature (' . count($unsigned) . ' مورد امضا شد)';
+        }
+    } catch (Throwable $e) {
+        ls_log_error('migrate:signature', $e);
+    }
+
+    // ۴) تنظیمات پیش‌فرض گمشده — بدون بازنویسی مقدار موجود
     foreach (['api_rate_max' => '60', 'api_rate_window' => '600', 'offline_grace_days' => '30'] as $k => $v) {
         if (ls_setting($k, '') === '') {
             ls_setting_set($k, $v);
@@ -1334,13 +1367,16 @@ function ls_rotate_rsa_keys(int $adminId): array
     }
 
     // ── ۱) بایگانی کلیدهای جاری (اگر وجود دارند) ──
+    //    پرچم‌ها برای «برگشت» نگه داشته می‌شوند: اگر گام ۳ شکست بخورد، کلیدهای
+    //    قبلی به data/ بازگردانده می‌شوند تا وضعیت نیمه‌چرخیده (کلید نو +
+    //    امضاهای کهنه) باقی نماند — همان چیزی که در چرخهٔ ۸۰ در CI دیده شد.
     $stamp = date('Ymd-His');
-    if (is_file(LS_DATA_DIR . '/rsa_private.pem')) {
-        @copy(LS_DATA_DIR . '/rsa_private.pem', $archiveDir . '/rsa_private-' . $stamp . '.pem');
-    }
-    if (is_file(LS_DATA_DIR . '/rsa_public.pem')) {
-        @copy(LS_DATA_DIR . '/rsa_public.pem', $archiveDir . '/rsa_public-' . $stamp . '.pem');
-    }
+    $oldPrivate = $archiveDir . '/rsa_private-' . $stamp . '.pem';
+    $oldPublic  = $archiveDir . '/rsa_public-' . $stamp . '.pem';
+    $hadPrivate = is_file(LS_DATA_DIR . '/rsa_private.pem')
+        && @copy(LS_DATA_DIR . '/rsa_private.pem', $oldPrivate);
+    $hadPublic  = is_file(LS_DATA_DIR . '/rsa_public.pem')
+        && @copy(LS_DATA_DIR . '/rsa_public.pem', $oldPublic);
     $result['archive'] = 'keys-archive/rsa_*-' . $stamp . '.pem';
 
     // ── ۲) تولید جفت‌کلید تازه ──
@@ -1372,16 +1408,35 @@ function ls_rotate_rsa_keys(int $adminId): array
     @chmod(LS_DATA_DIR . '/rsa_public.pem', 0644);
 
     // ── ۳) امضای دوبارهٔ همهٔ لایسنس‌ها با کلید جدید ──
-    $db = ls_db();
-    $rows = $db->query('SELECT id, license_key, expiry_date, max_users FROM ls_licenses')->fetchAll();
-    $update = $db->prepare('UPDATE ls_licenses SET signature = ? WHERE id = ?');
+    //    ریشه‌یابی چرخهٔ ۸۰: این گام روی ستونی می‌نوشت که در اسکیما نبود
+    //    (Unknown column 'signature') ⇒ چرخش با کلید نو ولی امضاهای کهنه
+    //    نیمه‌کاره می‌ماند و صفحهٔ تنظیمات ۵۰۰ می‌داد. اکنون:
+    //    ۱) شکست بازامضا ⇒ بازگرداندن کلیدهای بایگانی‌شده به data/
+    //    ۲) پیام خطای فارسی + ثبت در error.log به‌جای استثنای خام
     $count = 0;
-    foreach ($rows as $row) {
-        $sig = ls_sign_license((string)$row['license_key'],
-            $row['expiry_date'] !== null ? (string)$row['expiry_date'] : null,
-            (int)$row['max_users']);
-        $update->execute([$sig, (int)$row['id']]);
-        $count++;
+    try {
+        $db = ls_db();
+        $rows = $db->query('SELECT id, license_key, expiry_date, max_users FROM ls_licenses')->fetchAll();
+        $update = $db->prepare('UPDATE ls_licenses SET signature = ? WHERE id = ?');
+        foreach ($rows as $row) {
+            $sig = ls_sign_license((string)$row['license_key'],
+                $row['expiry_date'] !== null ? (string)$row['expiry_date'] : null,
+                (int)$row['max_users']);
+            $update->execute([$sig, (int)$row['id']]);
+            $count++;
+        }
+    } catch (Throwable $e) {
+        ls_log_error('rotate_keys:resign', $e);
+        // برگشت کلیدها — اگر بایگانی در دسترس باشد
+        if ($hadPrivate) {
+            @copy($oldPrivate, LS_DATA_DIR . '/rsa_private.pem');
+        }
+        if ($hadPublic) {
+            @copy($oldPublic, LS_DATA_DIR . '/rsa_public.pem');
+        }
+        $result['error'] = 'بازامضای لایسنس‌ها ناموفق بود؛ کلیدهای قبلی بازگردانده شدند. '
+            . 'جزئیات در data/error.log ثبت شد.';
+        return $result;
     }
 
     // ── ۴) حسابرسی + خروجی کلید عمومی جدید ──
