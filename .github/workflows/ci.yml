@@ -124,8 +124,12 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p docs/api
+          # چرخهٔ ۸۱-ج — «deps.json does not exist»: هدف GenerateOpenApiDocuments
+          # خودش Build را اجرا نمی‌کند و به bin/<config> موجود تکیه دارد؛ گام
+          # «ساخت کامل Solution» با -c Release ساخته است، بنابراین همان
+          # Configuration پاس داده می‌شود (پیش‌فرض Debug⇒bin خالی⇒MSB3073).
           dotnet build src/Sahand.ClinicPro.API/Sahand.ClinicPro.API.csproj \
-            -t:GenerateOpenApiDocuments --no-restore \
+            -c Release -t:GenerateOpenApiDocuments --no-restore \
             -p:OpenApiDocumentsDirectory="$PWD/docs/api" 2>&1 | tee openapi.log
           # چرخهٔ ۸۱ — بی‌سر‌و‌صدا نگه‌داشتن سند کهنه ممنوع: نبودِ فایل خروجی
           # یعنی هدف تولید اجرا نشده و باید صریحاً شکست اعلام شود.

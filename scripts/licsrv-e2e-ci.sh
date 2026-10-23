@@ -351,14 +351,18 @@ MSG_CODE=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127
 # heartbeat — بلوک messages باید همیشه حاضر باشد و پیام را با color برگرداند
 LIC_KEY=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); echo (string)$p->query("SELECT license_key FROM ls_licenses WHERE id=1")->fetchColumn();')
 FP=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); echo (string)$p->query("SELECT hardware_fingerprint FROM ls_licenses WHERE id=1")->fetchColumn();')
-HB1=$(curl -s -X POST "http://127.0.0.1:8899/api.php?action=heartbeat" \
+# چرخهٔ ۸۰ — مسیر مستند: action داخل بدنهٔ JSON و آدرس بدون query string.
+# پیش‌تر «?action=heartbeat» در URL بود و چون api.php بدنه را فقط در نبودِ
+# action در query می‌خواند، licenseKey/fingerprint خالی می‌ماند و پاسخ ۴۰۰
+# «قالب کلید لایسنس نامعتبر است» برمی‌گشت ⇒ هر سه بررسی پیام ❌ می‌شد.
+HB1=$(curl -s -X POST "http://127.0.0.1:8899/api.php" \
   -H "Content-Type: application/json" \
   -d "{\"action\":\"heartbeat\",\"licenseKey\":\"$LIC_KEY\",\"fingerprint\":\"$FP\"}")
-echo "$HB1" | grep -q '"messages"' && ok "heartbeat بلوک messages را همیشه دارد (پروتکل چرخهٔ ۶۷)" || bad "بلوک messages در heartbeat نیست"
-echo "$HB1" | grep -q '"color":"#E53935"' && ok "رنگ سفارشی پیام در heartbeat رسید" || bad "رنگ سفارشی در heartbeat نیست"
-echo "$HB1" | grep -q 'پیام تست آینه' && ok "پیام تازه در فهرست heartbeat هست" || bad "پیام تازه در heartbeat نیست"
+echo "$HB1" | grep -q '"messages"' && ok "heartbeat بلوک messages را همیشه دارد (پروتکل چرخهٔ ۶۷)" || bad "بلوک messages در heartbeat نیست — پاسخ: $(printf '%.240s' "$HB1")"
+echo "$HB1" | grep -q '"color":"#E53935"' && ok "رنگ سفارشی پیام در heartbeat رسید" || bad "رنگ سفارشی در heartbeat نیست — پاسخ: $(printf '%.240s' "$HB1")"
+echo "$HB1" | grep -q 'پیام تست آینه' && ok "پیام تازه در فهرست heartbeat هست" || bad "پیام تازه در heartbeat نیست — پاسخ: $(printf '%.240s' "$HB1")"
 # heartbeat دوم (تحویل‌شده) — پیام باید «بماند» (فهرست کامل، نه فقط تحویل‌نشده)
-HB2=$(curl -s -X POST "http://127.0.0.1:8899/api.php?action=heartbeat" \
+HB2=$(curl -s -X POST "http://127.0.0.1:8899/api.php" \
   -H "Content-Type: application/json" \
   -d "{\"action\":\"heartbeat\",\"licenseKey\":\"$LIC_KEY\",\"fingerprint\":\"$FP\"}")
 echo "$HB2" | grep -q 'پیام تست آینه' && ok "پیام تحویل‌شده در تپ‌قلب دوم هم می‌ماند (فهرست کامل)" || bad "پیام پس از تحویل حذف شد — فهرست کامل کار نمی‌کند"
@@ -368,7 +372,7 @@ DEL_CSRF=$(get_csrf messages)
 DEL_MSG=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8899/index.php?page=messages" \
   --data-urlencode "action=delete_message" --data-urlencode "csrf=$DEL_CSRF" \
   --data-urlencode "id=$MSG_ID")
-HB3=$(curl -s -X POST "http://127.0.0.1:8899/api.php?action=heartbeat" \
+HB3=$(curl -s -X POST "http://127.0.0.1:8899/api.php" \
   -H "Content-Type: application/json" \
   -d "{\"action\":\"heartbeat\",\"licenseKey\":\"$LIC_KEY\",\"fingerprint\":\"$FP\"}")
 if echo "$HB3" | grep -q 'پیام تست آینه'; then
