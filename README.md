@@ -460,6 +460,17 @@ Sahand_ClinicPro/
 
 ## 📄 مجوز
 
+<div dir="rtl">
+
+**پروانهٔ فارسیِ استفاده** — همان متنی که هنگام نصب روی صفحهٔ «پروانه» نمایش
+داده می‌شود، در فایل [`LICENSE-fa.md`](LICENSE-fa.md) نگه‌داری می‌شود (منبع
+واحد: [`installer/LICENSE.txt`](installer/LICENSE.txt)).
+
+متن انگلیسی در قالب MIT برای سازگاری با مخزن در [LICENSE](LICENSE) است؛ در
+صورت اختلاف، متن فارسیِ پروانه ملاک است.
+
+</div>
+
 MIT — جزئیات در [LICENSE](LICENSE)
 
 </div>
