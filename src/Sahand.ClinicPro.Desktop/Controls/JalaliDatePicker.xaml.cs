@@ -110,6 +110,15 @@ public partial class JalaliDatePicker : UserControl
     /// «کلیکِ بستن» از «کلیکِ باز کردن» روی آیکون تقویم است
     /// </summary>
     private DateTime _popupClosedAt = DateTime.MinValue;
+    /// <summary>
+    /// پنجرهٔ میزبان — چرخهٔ ۸۲: برای بستن تقویم با کلیک بیرون از فیلد و
+    /// با غیرفعال‌شدن پنجره (Alt+Tab). پاپ‌آپ در پنجرهٔ جدا رندر می‌شود، پس
+    /// کلیک بیرون از فیلد هیچ رویدادی در خود کنترل تولید نمی‌کند.
+    /// </summary>
+    private Window? _hostWindow;
+
+    /// <summary>هندلر ذخیره‌شده — برای RemoveHandler دقیق در Unloaded</summary>
+    private MouseButtonEventHandler? _hostMouseDownHandler;
 
     /// <summary>سازنده — اتصال رویدادها</summary>
     public JalaliDatePicker()
@@ -126,12 +135,16 @@ public partial class JalaliDatePicker : UserControl
 
         // ── باز/بستن پاپ‌آپ ──
         CalendarButton.PreviewMouseDown += (_, _) => _popupWasOpenOnMouseDown = CalendarPopup.IsOpen;
-        // کلیک روی خود فیلد هم تقویم را باز می‌کند (اگر فوکوس از دست رفته باشد
-        // و GotKeyboardFocus دوباره رخ ندهد) — با احترام به پنجرهٔ «تازه بستم»
-        ShamsiBox.PreviewMouseLeftButtonDown += (_, _) =>
+        // ═══ چرخهٔ ۸۲ — ریشهٔ «کلیک روی کنترل فوکوس نمی‌دهد و تایپ نمی‌شود» ═══
+        // پیش‌تر همین‌جا پاپ‌آپ باز می‌شد و چون Popup با StaysOpen=False ماوس را
+        // capture می‌کرد، MouseDown به TextBox نمی‌رسید: نه مکان‌نما می‌نشست و نه
+        // فوکوس صفحه‌کلید به جعبه می‌رفت. اکنون کلیک فقط فوکوس را به جعبه
+        // می‌دهد؛ بازشدن تقویم در GotKeyboardFocus (با تأخیر یک تیک) انجام
+        // می‌شود تا کلیک کامل شود و کاربر بتواند همان لحظه تایپ کند.
+        FieldBorder.PreviewMouseLeftButtonDown += (_, _) =>
         {
-            if (!CalendarPopup.IsOpen && !WasPopupClosedJustNow())
-                OpenPopup();
+            if (!ShamsiBox.IsKeyboardFocusWithin)
+                ShamsiBox.Focus();
         };
         CalendarButton.Click += (_, _) => TogglePopup();
         CalendarPopup.Closed += OnPopupClosed;
@@ -254,7 +267,60 @@ public partial class JalaliDatePicker : UserControl
         _fridayBrush = (Brush)FindResource("Jdp.Friday");
 
         SyncFromSelectedDate(rewriteBox: true);
+
+        // چرخهٔ ۸۲ — بستن تقویم با کلیک بیرون / غیرفعال‌شدن پنجرهٔ میزبان
+        HookHostWindow();
     }
+
+    /// <summary>
+    /// اتصال به پنجرهٔ میزبان — PreviewMouseDown سراسری پنجره (با
+    /// handledEventsToo) تا کلیک روی هر کنترل دیگری تقویم را ببندد، و
+    /// Deactivated تا با رفتن به برنامهٔ دیگر هم تقویم باز نماند.
+    /// </summary>
+    private void HookHostWindow()
+    {
+        _hostWindow = Window.GetWindow(this);
+        if (_hostWindow is null)
+            return;
+
+        _hostMouseDownHandler = OnHostPreviewMouseDown;
+        _hostWindow.AddHandler(PreviewMouseDownEvent, _hostMouseDownHandler, handledEventsToo: true);
+        _hostWindow.Deactivated += OnHostDeactivated;
+
+        Unloaded += (_, _) =>
+        {
+            if (_hostWindow is null)
+                return;
+
+            if (_hostMouseDownHandler is not null)
+                _hostWindow.RemoveHandler(PreviewMouseDownEvent, _hostMouseDownHandler);
+            _hostWindow.Deactivated -= OnHostDeactivated;
+            _hostWindow = null;
+            _hostMouseDownHandler = null;
+        };
+    }
+
+    /// <summary>کلیک بیرونِ فیلد و تقویم ⇒ بستن تقویم (چرخهٔ ۸۲)</summary>
+    private void OnHostPreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!CalendarPopup.IsOpen)
+            return;
+
+        if (e.OriginalSource is not DependencyObject src)
+            return;
+
+        if (IsWithin(src, FieldBorder) || IsWithin(src, PopupSurface))
+            return;
+
+        ClosePopup();
+    }
+
+    /// <summary>غیرفعال‌شدن پنجرهٔ میزبان (Alt+Tab) ⇒ بستن تقویم</summary>
+    private void OnHostDeactivated(object? sender, EventArgs e) => ClosePopup();
+
+    /// <summary>آیا گره در زیرشاخهٔ ریشه است؟ (خودِ ریشه هم شامل)</summary>
+    private static bool IsWithin(DependencyObject node, DependencyObject root) =>
+        ReferenceEquals(node, root) || root.IsAncestorOf(node);
 
     /* ═══════════════ باز/بستن پاپ‌آپ ═══════════════ */
 
@@ -360,7 +426,20 @@ public partial class JalaliDatePicker : UserControl
         if (_suppressFocusOpen || CalendarPopup.IsOpen || WasPopupClosedJustNow())
             return;
 
-        OpenPopup();
+        // ═══ چرخهٔ ۸۲ ═══ بازکردن در پایان چرخهٔ ورودی: اگر همین لحظه (وسط
+        // MouseDown) باز شود، چیدمان فیلد جابه‌جا می‌شود و کلیکِ در جریان،
+        // فوکوس/مکان‌نمای جعبه را از دست می‌دهد. با Background، اول کلیک و
+        // نشاندن مکان‌نما کامل می‌شود، بعد تقویم باز می‌شود.
+        Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+        {
+            if (_suppressFocusOpen || CalendarPopup.IsOpen)
+                return;
+
+            // فوکوس را در جعبه نگه دار تا تایپ بلافاصله ممکن باشد
+            ShamsiBox.Focus();
+            OpenPopup();
+            ShamsiBox.CaretIndex = ShamsiBox.Text.Length;
+        }));
     }
 
     /* ═══════════════ تایپ دستی ═══════════════ */
@@ -474,6 +553,22 @@ public partial class JalaliDatePicker : UserControl
 
         if (ParseTyped(ShamsiBox.Text, out _, out _, out _, out _) == ParseState.Valid)
             NormalizeBoxText();
+
+        // ═══ چرخهٔ ۸۲ — «با خروج فوکوس، تقویم بسته نمی‌شد» ═══
+        // پیش‌تر StaysOpen=False فقط با کلیکِ ماوس بیرون می‌بست؛ Tab/Shift+Tab یا
+        // رفتن فوکوس به کنترل دیگر (بدون کلیک) تقویم را باز می‌گذاشت. اکنون
+        // اگر فوکوس جدید نه در جعبه و نه در تقویم باشد، پاپ‌آپ صریحاً بسته
+        // می‌شود.
+        Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+        {
+            if (!CalendarPopup.IsOpen)
+                return;
+
+            if (ShamsiBox.IsKeyboardFocusWithin || IsFocusInsidePopup())
+                return;
+
+            ClosePopup();
+        }));
     }
 
     /// <summary>آیا فوکوس صفحه‌کلید داخل پاپ‌آپ است؟ (کلیک روی روز/ماه/سال)</summary>
