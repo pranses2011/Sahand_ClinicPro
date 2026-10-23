@@ -19,6 +19,14 @@ public record GetSettingsQuery(string? Category = null) : IRequest<Result<List<S
 /// <summary>گرداننده فهرست تنظیمات</summary>
 public class GetSettingsQueryHandler : IRequestHandler<GetSettingsQuery, Result<List<SettingDto>>>
 {
+    private static readonly string[] SecuritySettingKeys =
+    [
+        "MinPasswordLength",
+        "RequireMixedCase",
+        "RequireDigit",
+        "RequireSpecialChar"
+    ];
+
     private readonly IUnitOfWork _unitOfWork;
 
     /// <summary>کش مرجع تنظیمات — چرخهٔ ۶۰؛ باطل با هر ذخیرهٔ تنظیم</summary>
@@ -42,7 +50,11 @@ public class GetSettingsQueryHandler : IRequestHandler<GetSettingsQuery, Result<
                 IQueryable<SystemSetting> query = _unitOfWork.Repository<SystemSetting>().QueryableNoTracking;
 
                 if (!string.IsNullOrEmpty(request.Category))
-                    query = query.Where(s => s.Category == request.Category);
+                {
+                    query = request.Category == "Security"
+                        ? query.Where(s => s.Category == request.Category || SecuritySettingKeys.Contains(s.Key))
+                        : query.Where(s => s.Category == request.Category);
+                }
 
                 return await query
                     .OrderBy(s => s.Category).ThenBy(s => s.Key)
@@ -100,6 +112,10 @@ public class SaveSettingCommandHandler : IRequestHandler<SaveSettingCommand, Res
         else
         {
             setting.Value = request.Value;
+            // SystemSetting.Key is globally unique; update a supplied category as well so
+            // legacy rows are visible to category-scoped readers (including security policy).
+            if (!string.IsNullOrWhiteSpace(request.Category))
+                setting.Category = request.Category;
         }
 
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);

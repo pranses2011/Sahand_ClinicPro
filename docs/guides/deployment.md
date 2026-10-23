@@ -1,11 +1,11 @@
-# راهنمای استقرار — Sahand ClinicPro v2.22.4
+# راهنمای استقرار — Sahand ClinicPro v2.22.5
 
 ## نصب درمانگاهی از GitHub Release
 
 بستهٔ آماده برای نصب درمانگاه در GitHub Release شامل این فایل‌هاست:
 
-- `SahandClinicPro-Server-v2.22.4.zip` — API خودبسنده برای Windows x64 و نصب‌کنندهٔ سرویس.
-- `SahandClinicPro-Setup-v2.22.4.exe` — کلاینت WPF خودبسنده برای Windows x64.
+- `SahandClinicPro-Server-v2.22.5.zip` — API خودبسنده برای Windows x64 و نصب‌کنندهٔ سرویس.
+- `SahandClinicPro-Setup-v2.22.5.exe` — کلاینت WPF خودبسنده برای Windows x64.
 
 ### رایانهٔ مرکزی درمانگاه
 
@@ -19,7 +19,7 @@
 
 ### رایانه‌های کلاینت
 
-1. `SahandClinicPro-Setup-v2.22.4.exe` را اجرا کنید.
+1. `SahandClinicPro-Setup-v2.22.5.exe` را اجرا کنید.
 2. در رایانه‌های دیگر (نه روی سرور)، فایل `appsettings.json` کنار برنامه را باز کنید و مقدار زیر را به IP سرور تغییر دهید:
 
 ```json
@@ -56,7 +56,7 @@ dotnet tool restore
 dotnet ef database update --project ../Sahand.ClinicPro.Infrastructure --startup-project .
 ```
 
-ساخت رسمی Windows installer با GitHub Actions در `.github/workflows/release-installer.yml` انجام می‌شود. Tag نسخهٔ Release، مثلاً `v2.22.4`، دو asset قابل دانلود منتشر می‌کند: Setup EXE و Server ZIP.
+ساخت رسمی Windows installer با GitHub Actions در `.github/workflows/release-installer.yml` انجام می‌شود. Tag نسخهٔ Release، مثلاً `v2.22.5`، دو asset قابل دانلود منتشر می‌کند: Setup EXE و Server ZIP.
 
 ## پشتیبان‌گیری و چک‌لیست راه‌اندازی
 

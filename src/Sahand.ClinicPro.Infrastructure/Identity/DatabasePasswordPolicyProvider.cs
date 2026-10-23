@@ -8,6 +8,14 @@ namespace Sahand.ClinicPro.Infrastructure.Identity;
 /// <summary>سیاست رمز را مستقیم از تنظیمات جاری پایگاه‌داده می‌خواند.</summary>
 public sealed class DatabasePasswordPolicyProvider : IPasswordPolicyProvider
 {
+    private static readonly string[] PolicySettingKeys =
+    [
+        "MinPasswordLength",
+        "RequireMixedCase",
+        "RequireDigit",
+        "RequireSpecialChar"
+    ];
+
     private const string Category = "Security";
     private readonly IUnitOfWork _unitOfWork;
 
@@ -16,7 +24,7 @@ public sealed class DatabasePasswordPolicyProvider : IPasswordPolicyProvider
     public async Task<PasswordPolicy> GetCurrentAsync(CancellationToken cancellationToken = default)
     {
         var settings = await _unitOfWork.Repository<SystemSetting>().QueryableNoTracking
-            .Where(s => !s.IsDeleted && s.Category == Category)
+            .Where(s => !s.IsDeleted && (s.Category == Category || PolicySettingKeys.Contains(s.Key)))
             .Select(s => new { s.Key, s.Value })
             .ToListAsync(cancellationToken);
         return PasswordPolicy.FromSettings(settings.Select(s =>
