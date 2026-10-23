@@ -58,7 +58,13 @@ public class FractionmentCalculatorTests
                 Description = desc,
                 Quantity = qty,
                 UnitPrice = price,
-                TotalPrice = qty * price
+                TotalPrice = qty * price,
+                // ═══ چرخهٔ ۸۰ — snapshot صلاحیت بیمه در زمان صدور ═══
+                // موتور تسویه از این چرخه اقلامی را که درصد بیمهٔ ذخیره‌شده‌شان
+                // صفر است «معاف/غیربیمه» می‌داند و سهم بیمه را صفر می‌گذارد
+                // (همان قاعده‌ای که CreateInvoice هنگام صدور فاکتور می‌نویسد).
+                // بدون این مقدار، همهٔ این تست‌ها سهم بیمهٔ صفر می‌گرفتند.
+                InsurancePercent = 100m
             });
         return inv;
     }

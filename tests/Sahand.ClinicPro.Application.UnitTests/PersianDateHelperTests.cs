@@ -112,7 +112,17 @@ public class PersianDateHelperTests
         from.Year.Should().Be(expectedGYear,
             because: $"ماه {jalaliMonth} سال {jalaliYear} شمسی باید در {expectedGYear} میلادی بیفتد");
         from.Month.Should().Be(expectedGMonth);
-        to.Should().Be(from.AddMonths(1), because: "بازه [از، تا) یک ماه کامل است");
+
+        // چرخهٔ ۸۱: بازه [از، تا) دقیقاً «اول این ماه شمسی تا اول ماه شمسی بعد»
+        // است؛ معادلِ «from.AddMonths(1)» فقط یک تقریب میلادی بود و در
+        // ماه‌هایی که مرزشان با مرز ماه میلادی یکی نیست (اسفند/دی/بهمن) شکست
+        // می‌خورد — طول ماه شمسی ۲۹ تا ۳۱ روز است، نه ۲۸ تا ۳۱ روز میلادی.
+        var nextMonth = jalaliMonth == 12 ? 1 : jalaliMonth + 1;
+        var nextYear = jalaliMonth == 12 ? jalaliYear + 1 : jalaliYear;
+        to.Should().Be(DateOnly.FromDateTime(PersianDateHelper.ToGregorian(nextYear, nextMonth, 1)),
+            because: "پایان بازه، اولِ ماه شمسی بعد است");
+        (to.DayNumber - from.DayNumber).Should().BeInRange(29, 31,
+            because: "هر ماه شمسی ۲۹ تا ۳۱ روز است");
     }
 
     [Fact]
