@@ -52,6 +52,22 @@ jobs:
              --logger "trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults
              --filter "FullyQualifiedName!~Sahand.ClinicPro.Desktop.UnitTests"
 
+      - name: گزارش تست‌های ناموفق (annotation)
+        if: failure()
+        shell: pwsh
+        run: |
+          $trx = Get-ChildItem -Path ./TestResults -Recurse -Filter *.trx -ErrorAction SilentlyContinue
+          if (-not $trx) { Write-Host 'فایل trx یافت نشد'; exit 0 }
+          foreach ($f in $trx) {
+            [xml]$doc = Get-Content $f.FullName
+            foreach ($r in ($doc.SelectNodes("//*[local-name()='UnitTestResult' and @outcome='Failed']") | Select-Object -First 30)) {
+              $msg = ''
+              $node = $r.SelectSingleNode(".//*[local-name()='ErrorInfo']/*[local-name()='Message']")
+              if ($node) { $msg = ($node.InnerText -replace "\s+", ' ').Trim() }
+              Write-Host "::error::$($r.testName): $msg"
+            }
+          }
+
       - name: خلاصه پوشش
         if: always()
         run: |
@@ -112,10 +128,10 @@ jobs:
           $trx = Get-ChildItem -Recurse -Filter *.trx -ErrorAction SilentlyContinue | Select-Object -First 1
           if ($null -eq $trx) { Write-Host 'فایل trx یافت نشد'; exit 0 }
           [xml]$doc = Get-Content $trx.FullName
-          $failed = $doc.SelectNodes("//*[local-name()='UnitTestResult' and @outcome='Failed']")
-          foreach ($r in ($failed | Select-Object -First 25)) {
-            $msg = $r.Output.ErrorInfo.Message
-            if ($msg) { $msg = ($msg -replace "\s+", ' ').Trim() }
+          foreach ($r in ($doc.SelectNodes("//*[local-name()='UnitTestResult' and @outcome='Failed']") | Select-Object -First 25)) {
+            $msg = ''
+            $node = $r.SelectSingleNode(".//*[local-name()='ErrorInfo']/*[local-name()='Message']")
+            if ($node) { $msg = ($node.InnerText -replace "\s+", ' ').Trim() }
             Write-Host "::error::$($r.testName): $msg"
           }
 
