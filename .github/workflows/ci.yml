@@ -103,12 +103,35 @@ jobs:
           done
           find TestResults -name "cobertura.xml" -exec echo "آرتیفکت: {}" \; || true
 
+      # ═══ چرخهٔ ۸۱ — ریشهٔ قرمزیِ این گام ═══
+      # هدف GenerateOpenApiDocuments برنامه را در حالت «GetDocument» اجرا می‌کند
+      # تا سند را از خودِ میزبان بگیرد. در محیط Production، Program.cs در
+      # InitializeDatabaseAsync به SQL Server وصل می‌شود و نبودِ آن، استثنا را
+      # بالا می‌برد (fail-fast تولید) → کل هدف شکست می‌خورد؛ در حالی که سند
+      # OpenAPI هیچ ربطی به دیتابیس ندارد. با Development + خاموش‌کردن مهاجرت
+      # خودکار، میزبان بدون دیتابیس بالا می‌آید و سند ساخته می‌شود.
       - name: تولید سند OpenAPI (چرخه دوازدهم B3)
         run: |
-          dotnet msbuild src/Sahand.ClinicPro.API/Sahand.ClinicPro.API.csproj -t:GenerateOpenApiDocuments
+          set -o pipefail
+          dotnet msbuild src/Sahand.ClinicPro.API/Sahand.ClinicPro.API.csproj \
+            -t:GenerateOpenApiDocuments --no-restore 2>&1 | tee openapi.log
           mv docs/api/Sahand.ClinicPro.API.json docs/api/openapi.json || true
         env:
           PATH: ${{ env.PATH }}:/usr/share/dotnet
+          ASPNETCORE_ENVIRONMENT: Development
+          Database__AutoMigrateOnStartup: 'false'
+
+      - name: گزارش خطای سند OpenAPI (annotation)
+        if: failure()
+        shell: bash
+        run: |
+          if [ ! -f openapi.log ]; then
+            echo "::error::فایل openapi.log یافت نشد"
+            exit 0
+          fi
+          { grep -E "error |Exception|Unhandled|fail:" openapi.log || true; tail -20 openapi.log || true; } \
+            | head -40 | while IFS= read -r line; do echo "::error::${line}"; done || true
+          exit 0
 
       - name: بارگذاری سند OpenAPI
         uses: actions/upload-artifact@v4
@@ -206,7 +229,21 @@ jobs:
       - name: "اجرای تست‌های E2E سرور لایسنس (+۲۱ تست چرخهٔ ۶۶/۶۷: بکاپ، چرخش کلید، آینهٔ پیام‌ها)"
         env:
           MYSQL_ROOT_PASSWORD: testroot
-        run: bash scripts/licsrv-e2e-ci.sh
+        run: |
+          set -o pipefail
+          bash scripts/licsrv-e2e-ci.sh 2>&1 | tee licsrv-e2e.log
+
+      - name: گزارش تست‌های ناموفق E2E (annotation)
+        if: failure()
+        shell: bash
+        run: |
+          if [ ! -f licsrv-e2e.log ]; then
+            echo "::error::فایل licsrv-e2e.log یافت نشد"
+            exit 0
+          fi
+          { grep -E "❌|DB-FAIL|PASS:|Fatal error|Uncaught|Warning:" licsrv-e2e.log || true; tail -15 licsrv-e2e.log || true; } \
+            | head -40 | while IFS= read -r line; do echo "::error::${line}"; done || true
+          exit 0
 
       - name: شکست در صورت خطای تست
         if: failure()

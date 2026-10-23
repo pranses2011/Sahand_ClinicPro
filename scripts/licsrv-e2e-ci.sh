@@ -15,6 +15,11 @@
 set -u
 
 
+# ═══ چرخهٔ ۸۱ — ریشهٔ قرمزیِ دائمیِ این job ═══
+# سرویس MySQL در CI رمز root را «testroot» می‌گذارد (MYSQL_ROOT_PASSWORD)، ولی
+# همهٔ اتصال‌های این اسکریپت با رمز خالی («root», "") باز می‌شدند؛ نتیجه: هر
+# پرس‌وجو Access denied → همهٔ بررسی‌ها ❌ و خروج با کد ۱. اکنون رمز از همان
+# متغیر محیطی خوانده می‌شود (روی ماشین محلی با رمز خالی هم کار می‌کند).
 PHP=php
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LS="$SCRIPT_DIR/../src/LicenseServer.Php"
@@ -33,11 +38,18 @@ rm -rf $TESTDIR/data && mkdir -p $TESTDIR/data
 chmod 777 $TESTDIR/data
 MYSQL="$PHP -r"
 $PHP -r '
-try { $p = new PDO("mysql:host=127.0.0.1;port=3306", "root", "");
+try { $p = new PDO("mysql:host=127.0.0.1;port=3306", "root", (getenv("MYSQL_ROOT_PASSWORD") ?: ""));
   $p->exec("DROP DATABASE IF EXISTS lsc12");
   $p->exec("CREATE DATABASE lsc12 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
   echo "DB-OK\n";
-} catch (Exception $e) { die("DB-FAIL: " . $e->getMessage() . "\n"); }'
+} catch (Exception $e) { die("DB-FAIL: " . $e->getMessage() . "\n"); }' | tee /tmp/lsc12-db-bootstrap.log
+# گارد صریح: اگر ساخت دیتابیس شکست بخورد، ادامهٔ ۳۰ بررسی بعدی فقط «❌» تولید
+# می‌کند و ریشه (رمز/سرویس MySQL) در انبوه خروجی گم می‌شود
+if ! grep -q 'DB-OK' /tmp/lsc12-db-bootstrap.log; then
+  echo "❌ آماده‌سازی دیتابیس MySQL شکست خورد — رمز root (MYSQL_ROOT_PASSWORD) یا سرویس را بررسی کنید"
+  cat /tmp/lsc12-db-bootstrap.log
+  exit 1
+fi
 
 cat > $TESTDIR/data/config.php <<CFG
 <?php
@@ -68,7 +80,7 @@ echo "INSTALL-RAN\n";' 2>&1 | grep -q 'INSTALL-RAN' || true
 # راستی‌آزمایی از روی خود دیتابیس — ادمین + جداول + ستون‌های جدید
 $PHP -r '
 try {
-  $p = new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12", "root", "");
+  $p = new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12", "root", (getenv("MYSQL_ROOT_PASSWORD") ?: ""));
   $admins = (int)$p->query("SELECT COUNT(*) FROM ls_admins")->fetchColumn();
   $tables = array_flip($p->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN));
   $cols = array_flip($p->query("SHOW COLUMNS FROM ls_licenses")->fetchAll(PDO::FETCH_COLUMN));
@@ -204,17 +216,17 @@ WRONG=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.0.
   --data-urlencode "id=1" --data-urlencode "confirm_key=WRONG-KEY")
 [ "$WRONG" = "302" ] && ok "کلید غلط پذیرفته نشد (بازگشت با فلش خطا)" || bad "کلید غلط: $WRONG"
 # بررسی اینکه لایسنس هنوز هست
-$PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); $c=$p->query("SELECT COUNT(*) FROM ls_licenses")->fetchColumn(); echo ($c==1?"EXISTS\n":"GONE\n");' | grep -q EXISTS && ok "لایسنس با کلید غلط حذف نشد (حفاظت فعال)" || bad "لایسنس با کلید غلط حذف شد!"
+$PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); $c=$p->query("SELECT COUNT(*) FROM ls_licenses")->fetchColumn(); echo ($c==1?"EXISTS\n":"GONE\n");' | grep -q EXISTS && ok "لایسنس با کلید غلط حذف نشد (حفاظت فعال)" || bad "لایسنس با کلید غلط حذف شد!"
 
 RIGHT=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8899/index.php?page=license_view&id=1" \
   --data-urlencode "action=delete_license" --data-urlencode "csrf=$CSRF" \
   --data-urlencode "id=1" --data-urlencode "confirm_key=$LKEY")
 [ "$RIGHT" = "302" ] && ok "حذف با کلید درست موفق" || bad "حذف: $RIGHT"
-$PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); $c=$p->query("SELECT COUNT(*) FROM ls_licenses")->fetchColumn(); echo ($c==0?"GONE\n":"EXISTS\n");' | grep -q GONE && ok "لایسنس واقعاً حذف شد" || bad "لایسنس حذف نشد"
+$PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); $c=$p->query("SELECT COUNT(*) FROM ls_licenses")->fetchColumn(); echo ($c==0?"GONE\n":"EXISTS\n");' | grep -q GONE && ok "لایسنس واقعاً حذف شد" || bad "لایسنس حذف نشد"
 
 # ── استقرار قدیمی: حذف ستون جدید → مهاجرت خودکار ──
 say "شبیه‌سازی استقرار قدیمی (حذف ستون clinic_city)"
-$PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); $p->exec("ALTER TABLE ls_licenses DROP COLUMN clinic_city"); echo "COL-DROPPED\n";' | grep -q COL-DROPPED && ok "ستون clinic_city حذف شد"
+$PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); $p->exec("ALTER TABLE ls_licenses DROP COLUMN clinic_city"); echo "COL-DROPPED\n";' | grep -q COL-DROPPED && ok "ستون clinic_city حذف شد"
 
 # نشست تازه = بازدید بعدی مدیر؛ مهاجرت خودکار (یک‌بار-به‌نشست) باید ستون را بازسازی کند
 rm -f $COOKIE
@@ -225,7 +237,7 @@ curl -s -b $COOKIE -c $COOKIE -o /dev/null -X POST "http://127.0.0.1:8899/index.
   --data-urlencode "username=admin" --data-urlencode "password=Admin12345"
 # دیدن داشبورد در نشست تازه → اجرای مهاجرت خودکار
 curl -s -b $COOKIE -o /dev/null "http://127.0.0.1:8899/index.php?page=dashboard"
-$PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); $c=$p->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=\"ls_licenses\" AND COLUMN_NAME=\"clinic_city\"")->fetchColumn(); echo ($c==1?"REBUILT\n":"MISSING\n");' | grep -q REBUILT && ok "مهاجرت خودکار در نشست تازه ستون را بازسازی کرد" || bad "ستون clinic_city بازسازی نشد"
+$PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); $c=$p->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=\"ls_licenses\" AND COLUMN_NAME=\"clinic_city\"")->fetchColumn(); echo ($c==1?"REBUILT\n":"MISSING\n");' | grep -q REBUILT && ok "مهاجرت خودکار در نشست تازه ستون را بازسازی کرد" || bad "ستون clinic_city بازسازی نشد"
 
 CSRF=$(get_csrf license_new)
 REISSUE=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8899/index.php?page=license_new" \
@@ -234,7 +246,7 @@ REISSUE=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.
   --data-urlencode "clinic_name=کلینیک مهاجرت" --data-urlencode "clinic_city=تهران" \
   --data-urlencode "modules[]=Dashboard" --data-urlencode "modules[]=Patients")
 [ "$REISSUE" = "302" ] && ok "صدور پس از مهاجرت خودکار موفق (302)" || bad "صدور پس از مهاجرت: $REISSUE"
-$PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); $r=$p->query("SELECT clinic_name, clinic_city FROM ls_licenses ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC); echo ($r && $r["clinic_city"]=="تهران"?"MIGRATED-OK\n":"MIGRATED-BAD\n");' | grep -q 'MIGRATED-OK' && ok "لایسنس مهاجرت با شهر تهران ثبت شد" || bad "ثبت لایسنس مهاجرت ناقص"
+$PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); $r=$p->query("SELECT clinic_name, clinic_city FROM ls_licenses ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC); echo ($r && $r["clinic_city"]=="تهران"?"MIGRATED-OK\n":"MIGRATED-BAD\n");' | grep -q 'MIGRATED-OK' && ok "لایسنس مهاجرت با شهر تهران ثبت شد" || bad "ثبت لایسنس مهاجرت ناقص"
 
 # ═════════════════════════════════════════════════════════════════
 # چرخهٔ ۶۶ — تست‌های بکاپ خودکار و چرخش کلید RSA
@@ -265,13 +277,13 @@ echo "$CRON_BAD" | grep -qi "forbidden" && ok "کرون با کلید غلط ر�
 
 # ── چرخش جفت‌کلید RSA: امضای همهٔ لایسنس‌ها تازه + بایگانی کلید کهنه ──
 say "چرخش جفت‌کلید RSA (چرخهٔ ۶۶)"
-SIG_BEFORE=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); echo (string)$p->query("SELECT signature FROM ls_licenses ORDER BY id LIMIT 1")->fetchColumn();')
+SIG_BEFORE=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); echo (string)$p->query("SELECT signature FROM ls_licenses ORDER BY id LIMIT 1")->fetchColumn();')
 ROT_CSRF=$(get_csrf settings)
 ROT_CODE=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8899/index.php?page=settings" \
   --data-urlencode "action=rotate_keys" --data-urlencode "csrf=$ROT_CSRF" \
   --data-urlencode "confirm_text=REGENERATE")
 [ "$ROT_CODE" = "302" ] && ok "چرخش کلید با تأیید REGENERATE انجام شد (302)" || bad "چرخش کلید: HTTP $ROT_CODE"
-SIG_AFTER=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); echo (string)$p->query("SELECT signature FROM ls_licenses ORDER BY id LIMIT 1")->fetchColumn();')
+SIG_AFTER=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); echo (string)$p->query("SELECT signature FROM ls_licenses ORDER BY id LIMIT 1")->fetchColumn();')
 [ -n "$SIG_BEFORE" ] && [ -n "$SIG_AFTER" ] && [ "$SIG_BEFORE" != "$SIG_AFTER" ] \
   && ok "امضای لایسنس با کلید جدید عوض شد" || bad "امضای لایسنس تغییر نکرد (یا لایسنسی موجود نیست)"
 ls $TESTDIR/data/keys-archive/rsa_private-*.pem >/dev/null 2>&1 \
@@ -279,19 +291,19 @@ ls $TESTDIR/data/keys-archive/rsa_private-*.pem >/dev/null 2>&1 \
 # تأیید امضای جدید با کلید عمومی جدید — سازگاری PHP ↔ دات‌نت (قالب payload همان است)
 VERIFY=$($PHP -r '
 $c = file_get_contents("/tmp/lsc12/data/config.php");
-$db = new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12", "root", "");
+$db = new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12", "root", (getenv("MYSQL_ROOT_PASSWORD") ?: ""));
 $l = $db->query("SELECT license_key, expiry_date, max_users, signature FROM ls_licenses ORDER BY id LIMIT 1")->fetch(PDO::FETCH_ASSOC);
 $pub = file_get_contents("/tmp/lsc12/data/rsa_public.pem");
 $payload = $l["license_key"] . "|" . ($l["expiry_date"] ?? "") . "|" . $l["max_users"];
 echo openssl_verify($payload, base64_decode((string)$l["signature"]), $pub, OPENSSL_ALGO_SHA256) === 1 ? "VERIFY-OK\n" : "VERIFY-BAD\n";')
 echo "$VERIFY" | grep -q 'VERIFY-OK' && ok "امضای جدید با کلید عمومی جدید تأیید شد" || bad "تأیید امضا شکست خورد"
 # چرخش با عبارت تأیید غلط → رد: امضا نباید عوض شود
-SIG_BEFORE_BAD=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); echo (string)$p->query("SELECT signature FROM ls_licenses ORDER BY id LIMIT 1")->fetchColumn();')
+SIG_BEFORE_BAD=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); echo (string)$p->query("SELECT signature FROM ls_licenses ORDER BY id LIMIT 1")->fetchColumn();')
 ROT_BAD_CSRF=$(get_csrf settings)
 ROT_BAD=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8899/index.php?page=settings" \
   --data-urlencode "action=rotate_keys" --data-urlencode "csrf=$ROT_BAD_CSRF" \
   --data-urlencode "confirm_text=NOPE")
-SIG_AFTER_BAD=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); echo (string)$p->query("SELECT signature FROM ls_licenses ORDER BY id LIMIT 1")->fetchColumn();')
+SIG_AFTER_BAD=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); echo (string)$p->query("SELECT signature FROM ls_licenses ORDER BY id LIMIT 1")->fetchColumn();')
 [ "$ROT_BAD" = "302" ] && [ "$SIG_BEFORE_BAD" = "$SIG_AFTER_BAD" ] \
   && ok "چرخش با عبارت غلط رد شد (امضا دست‌نخورده ماند)" || bad "چرخش با عبارت غلط اجرا شد یا امضا عوض شد!"
 
@@ -316,8 +328,8 @@ MSG_CODE=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127
   --data-urlencode "title=پیام تست آینه" --data-urlencode "body=این پیام برای تست حذف همگام است")
 [ "$MSG_CODE" = "302" ] && ok "پیام تست با رنگ سفارشی ارسال شد" || bad "ارسال پیام تست: HTTP $MSG_CODE"
 # heartbeat — بلوک messages باید همیشه حاضر باشد و پیام را با color برگرداند
-LIC_KEY=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); echo (string)$p->query("SELECT license_key FROM ls_licenses WHERE id=1")->fetchColumn();')
-FP=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); echo (string)$p->query("SELECT hardware_fingerprint FROM ls_licenses WHERE id=1")->fetchColumn();')
+LIC_KEY=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); echo (string)$p->query("SELECT license_key FROM ls_licenses WHERE id=1")->fetchColumn();')
+FP=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); echo (string)$p->query("SELECT hardware_fingerprint FROM ls_licenses WHERE id=1")->fetchColumn();')
 HB1=$(curl -s -X POST "http://127.0.0.1:8899/api.php?action=heartbeat" \
   -H "Content-Type: application/json" \
   -d "{\"action\":\"heartbeat\",\"licenseKey\":\"$LIC_KEY\",\"fingerprint\":\"$FP\"}")
@@ -330,7 +342,7 @@ HB2=$(curl -s -X POST "http://127.0.0.1:8899/api.php?action=heartbeat" \
   -d "{\"action\":\"heartbeat\",\"licenseKey\":\"$LIC_KEY\",\"fingerprint\":\"$FP\"}")
 echo "$HB2" | grep -q 'پیام تست آینه' && ok "پیام تحویل‌شده در تپ‌قلب دوم هم می‌ماند (فهرست کامل)" || bad "پیام پس از تحویل حذف شد — فهرست کامل کار نمی‌کند"
 # حذف پیام از پنل → heartbeat بعدی نباید آن را برگرداند (آینهٔ سرور)
-MSG_ID=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",""); echo (string)$p->query("SELECT id FROM ls_messages WHERE title=\"پیام تست آینه\" ORDER BY id DESC LIMIT 1")->fetchColumn();')
+MSG_ID=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); echo (string)$p->query("SELECT id FROM ls_messages WHERE title=\"پیام تست آینه\" ORDER BY id DESC LIMIT 1")->fetchColumn();')
 DEL_CSRF=$(get_csrf messages)
 DEL_MSG=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8899/index.php?page=messages" \
   --data-urlencode "action=delete_message" --data-urlencode "csrf=$DEL_CSRF" \
