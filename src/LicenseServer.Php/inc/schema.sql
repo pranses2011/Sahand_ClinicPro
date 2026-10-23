@@ -44,6 +44,12 @@ CREATE TABLE IF NOT EXISTS ls_licenses (
     last_heartbeat_at   DATETIME NULL,
     last_validated_at   DATETIME NULL,
     activation_count    INT NOT NULL DEFAULT 0,
+    -- چرخهٔ ۸۰ — امضای RSA لایسنس (license_key|expiry_date|max_users).
+    -- چرخهٔ ۶۶ «امضای دوبارهٔ همهٔ لایسنس‌ها پس از چرخش کلید» را روی این ستون
+    -- نوشته بود ولی ستون در اسکیما هرگز ساخته نشده بود ⇒ هر بار چرخش کلید با
+    -- SQLSTATE[42S22] Unknown column 'signature' می‌شکست و لایسنس‌ها
+    -- بازامضا نمی‌شدند. TEXT انتخاب شد تا به سقف اندازهٔ ردیف InnoDB نخوریم.
+    signature           TEXT NULL,
     notes               TEXT NULL,
     created_at          DATETIME NOT NULL,
     updated_at          DATETIME NOT NULL,

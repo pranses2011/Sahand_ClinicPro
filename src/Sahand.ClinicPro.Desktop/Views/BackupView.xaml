@@ -70,21 +70,21 @@
                           AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                           HeadersVisibility="Column" FontSize="12" MaxHeight="220">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateText, Converter={StaticResource PersianDigits}}" Width="140" />
-                        <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="90" />
-                        <DataGridTemplateColumn Header="وضعیت" Width="100">
+                        <DataGridTextColumn Header="تاریخ" Binding="{Binding DateText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTemplateColumn Header="وضعیت" Width="Auto" MaxWidth="420">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
-                                            Background="{Binding StatusColor}">
-                                        <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="White" />
+                                            Background="{Binding StatusColor}" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="White" VerticalAlignment="Center"/>
                                     </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="سایز" Binding="{Binding SizeText, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="{DynamicResource App.CodeFont}" />
-                        <DataGridTextColumn Header="مسیر" Binding="{Binding FilePath, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" FontFamily="{DynamicResource App.CodeFont}" FontSize="10.5" />
-                        <DataGridTextColumn Header="حالت" Binding="{Binding IsAutomatic, Converter={StaticResource PersianDigits}}" Width="80" />
+                        <DataGridTextColumn Header="سایز" Binding="{Binding SizeText, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="مسیر" Binding="{Binding FilePath, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" FontSize="10.5" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                        <DataGridTextColumn Header="حالت" Binding="{Binding IsAutomatic, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                     </DataGrid.Columns>
                 </DataGrid>
 
@@ -201,10 +201,10 @@
                                   HeadersVisibility="Column" FontSize="11.5" MaxHeight="190"
                                   Margin="0,9,0,0">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="نام فایل" Binding="{Binding FileName, Converter={StaticResource PersianDigits}}" Width="*" />
-                                <DataGridTextColumn Header="نوع" Binding="{Binding Kind}" Width="Auto" MinWidth="90" />
-                                <DataGridTextColumn Header="حجم" Binding="{Binding SizeText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" />
-                                <DataGridTextColumn Header="تاریخ فایل" Binding="{Binding DateShamsi}" Width="Auto" MinWidth="110" />
+                                <DataGridTextColumn Header="نام فایل" Binding="{Binding FileName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                <DataGridTextColumn Header="نوع" Binding="{Binding Kind}" Width="Auto" MinWidth="90" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                <DataGridTextColumn Header="حجم" Binding="{Binding SizeText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="105" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                <DataGridTextColumn Header="تاریخ فایل" Binding="{Binding DateShamsi}" Width="Auto" MinWidth="110" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </StackPanel>

@@ -91,7 +91,7 @@
                     <TextBox behaviors:MoneyInput.IsEnabled="True" behaviors:MoneyInput.NumericValue="{Binding SellPrice, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}" Margin="6,0,0,0"><materialDesign:HintAssist.Hint><TextBlock><Run Text="قیمت فروش (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></materialDesign:HintAssist.Hint></TextBox>
                 </UniformGrid>
                 <!-- تاریخ انقضا — فیلد تاریخ از انتخابگر تاریخ شمسی (چرخه ۲۳؛ قانون مالک) -->
-                <controls:PersianDatePicker DateShamsiText="{Binding ExpiryDateShamsi, Mode=TwoWay}"
+                <controls:JalaliDatePicker DateShamsiText="{Binding ExpiryDateShamsi, Mode=TwoWay}"
                                             Placeholder="تاریخ انقضا شمسی *"
                                             HorizontalAlignment="Left" MinWidth="180"
                                             Margin="0,0,0,10" />

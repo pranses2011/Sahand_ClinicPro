@@ -1,105 +1,91 @@
-# 🚀 راهنمای استقرار — Sahand ClinicPro
+# راهنمای استقرار — Sahand ClinicPro v2.23.1
 
-## ۱. پیش‌نیازهای سرور
+## نصب درمانگاهی از GitHub Release
 
-| مورد | حداقل | توصیه |
-|------|-------|-------|
-| OS | Windows Server 2016 / Ubuntu 22.04 | Windows Server 2022 |
-| CPU | 4 هسته | 8 هسته |
-| RAM | 8 GB | 16 GB |
-| SQL Server | 2022 Express | 2022 Standard |
-| .NET | 8 Runtime (Hosting Bundle) | 8 SDK برای به‌روزرسانی |
+بستهٔ آماده برای نصب درمانگاه در GitHub Release شامل این فایل‌هاست:
 
-## ۲. دیتابیس
+- `SahandClinicPro-Server-v2.23.1.zip` — API خودبسنده برای Windows x64 و نصب‌کنندهٔ سرویس.
+- `SahandClinicPro-Setup-v2.23.1.exe` — کلاینت WPF خودبسنده برای Windows x64.
+
+### رایانهٔ مرکزی درمانگاه
+
+1. SQL Server را نصب و اجرا کنید. برای سازگاری با schema، SQL Server 2019 یا جدیدتر توصیه می‌شود.
+2. ZIP سرور را استخراج و `Install-Server-Package.bat` را با دسترسی Administrator اجرا کنید.
+3. رشته اتصال SQL را وارد کنید. حساب SQL باید اجازهٔ ساخت دیتابیس و جدول‌ها را داشته باشد.
+4. نصب‌کننده کلید JWT تصادفی تولید می‌کند و API را با گزینهٔ `--migrate-database` به‌صورت خودکار اجرا می‌کند. دیتابیس تازه و تمام تغییرهای schema لازم ساخته می‌شوند؛ سپس Windows Service نصب و شروع می‌شود.
+5. بررسی آمادگی کامل سرور و دیتابیس: `http://localhost:5000/health/ready` باید وضعیت `Healthy` بدهد.
+
+نیازی به نصب .NET Runtime/SDK، Visual Studio، `dotnet-ef` یا اجرای دستی migration نیست. نصب‌کننده کلاینت نیز خودبسنده است. در نصب مجدد، فایل تنظیمات و لاگ‌های سرور حفظ می‌شوند؛ دیتابیس حذف نمی‌شود.
+
+### رایانه‌های کلاینت
+
+1. `SahandClinicPro-Setup-v2.23.1.exe` را اجرا کنید.
+2. در رایانه‌های دیگر (نه روی سرور)، فایل `appsettings.json` کنار برنامه را باز کنید و مقدار زیر را به IP سرور تغییر دهید:
+
+```json
+{
+  "ApiSettings": {
+    "BaseUrl": "http://192.168.1.10:5000/api/v1",
+    "TimeoutSeconds": 30
+  }
+}
+```
+
+3. پورت TCP 5000 باید بین کلاینت و سرور در دسترس باشد. نصب‌کننده برای Windows Firewall سرور قاعدهٔ ورودی می‌سازد.
+
+## به‌روزرسانی سرور و schema
+
+برای هر نسخهٔ جدید، ZIP همان نسخه را استخراج و `Install-Server-Package.bat` را دوباره اجرا کنید. نصب‌کننده سرویس قبلی را متوقف می‌کند، فایل‌های سرور را به‌روز می‌کند، تنظیمات موجود را نگه می‌دارد و تغییرهای دیتابیس نسخهٔ جدید را خودکار اعمال می‌کند؛ سپس سرویس را برمی‌گرداند. پیش از ارتقا از دیتابیس پشتیبان بگیرید.
+
+> تاریخچهٔ EF migrations در سورس نگه داشته شده تا ارتقای دیتابیس‌های موجود ایمن بماند. این تاریخچه فقط جزئیات فنی داخلی است؛ درمانگاه در نصب تازه یا ارتقا migration دستی اجرا نمی‌کند.
+
+## عیب‌یابی نصب سرور
+
+### خطای «Property 'MS_Description' already exists» (کد ۱۵۲۳۳)
+
+نشانه: در گام «ساخت دیتابیس و اعمال خودکار تغییرهای لازم»، لاگ سرور این خطا را می‌دهد و نصب با پیام «نصب کامل نشد» متوقف می‌شود:
+
+```text
+Microsoft.Data.SqlClient.SqlException (0x80131904): Property cannot be added.
+Property 'MS_Description' already exists for 'dbo.InsuranceCompanies.IsContracted'.
+Error Number:15233
+```
+
+ریشه: تولیدگر مهاجرت EF Core برای `AlterColumn`، وقتی وضعیت قبلیِ توضیح ستون (`oldComment`) اعلام نشده باشد، فرمان `sp_addextendedproperty` را حتی برای ستونی که توضیحش از قبل موجود است می‌نویسد؛ SQL Server آن را رد می‌کند، تراکنش مهاجرت عقب می‌گردد و **کل** مهاجرت اعمال نمی‌شود (اسکیما عقب می‌ماند و نصب شکست می‌خورد). این خطا به رشته اتصال یا مجوز `CREATE DATABASE` مربوط نیست.
+
+از نسخهٔ v2.22.6 رفع شده است:
+
+1. بستهٔ سرور v2.22.6 یا بالاتر را جای‌گذاری و `Install-Server-Package.bat` را دوباره اجرا کنید. چون مهاجرت شکست‌خورده در `__EFMigrationsHistory` ثبت نشده، همان مهاجرت این‌بار کامل اعمال می‌شود و **نیازی به پاک‌کردن دیتابیس نیست**.
+2. اگر با وجود v2.22.6 باز هم همین خطا را دیدید، یعنی مهاجرت جدیدی با `migrationBuilder.Sql` مستقیم `sp_addextendedproperty`/`sp_dropextendedproperty` اجرا می‌کند؛ لاگ `Critical` سرور نام ستون و کد خطا را نشان می‌دهد.
+
+> نکته برای توسعه‌دهنده: در مهاجرت‌های دست‌نویس هنگام نوشتن `comment:` برای `AlterColumn`، همیشه `oldComment:` را هم بنویسید (مقدار قبلی؛ اگر ستون توضیح نداشت، مقدار تهی صریح). گارد خودکار: `MigrationCommentIdempotencyTests`.
+
+## تنظیمات تولید
+
+نصب‌کنندهٔ سرور رشتهٔ اتصال و کلید JWT را در `C:\SahandClinicPro\Server\appsettings.json` نگه می‌دارد. دسترسی به این فایل را محدود کنید؛ رشته اتصال ممکن است رمز SQL داشته باشد. برای سرویس پیامک، بکاپ شبکه‌ای/ابری یا اتصال‌های دولتی، تنظیمات متناظر را با روش امن در همان پیکربندی یا متغیرهای محیطی Windows اضافه کنید.
+
+کلید JWT تصادفی و حداقل ۶۴ کاراکتری توسط نصب‌کننده تولید می‌شود و در به‌روزرسانی حفظ خواهد شد. آن را منتشر یا در Git ثبت نکنید.
+
+## توسعه و ساخت از سورس (فقط تیم فنی)
+
+دستورات EF Core فقط برای توسعه‌دهندگان و تست هستند؛ برای نصب درمانگاه از آن‌ها استفاده نکنید:
 
 ```powershell
-# بار اول: بازیابی ابزار dotnet-ef از manifest محلی پروژه (.config/dotnet-tools.json — نسخه 8.0.11)
-# ⚠️ الزامی: manifest محلی بر نصب سراسری (--global) اولویت دارد؛ بدون این مرحله خطای
-#    Run "dotnet tool restore" to make the "dotnet-ef" command available می‌گیرید
-dotnet tool restore
-
-# ساخت دیتابیس با Migration
+# در صورت نیاز برای کار توسعه‌ای، داخل مخزن سورس
 cd src/Sahand.ClinicPro.API
+dotnet tool restore
 dotnet ef database update --project ../Sahand.ClinicPro.Infrastructure --startup-project .
-
-# یا با SQL (خروجی اسکریپت)
-dotnet ef migrations script --idempotent `
-  --project ../Sahand.ClinicPro.Infrastructure --startup-project . `
-  -o ../../deploy/sahand-clinicpro-db.sql
 ```
 
-نکته: کاربر سرویس SQL باید دسترسی `db_datareader` + `db_datawriter` + `db_ddladmin` داشته باشد.
+ساخت رسمی Windows installer با GitHub Actions در `.github/workflows/release-installer.yml` انجام می‌شود. Tag نسخهٔ Release، مثلاً `v2.23.1`، سه asset قابل دانلود منتشر می‌کند: Setup EXE، Server ZIP و LicenseServer ZIP (سورس PHP سرور لایسنس — بدون `data/config.php` و فایل‌های حساس).
 
-## ۳. پیکربندی تولید
+## پشتیبان‌گیری و چک‌لیست راه‌اندازی
 
-هرگز در appsettings.json ذخیره نکنید — از متغیرهای محیطی:
-
-```powershell
-$env:ConnectionStrings__DefaultConnection="Server=...;Database=SahandClinicProDb;..."
-$env:Jwt__SecretKey="<کلید ۲۵۶ بیتی تصادفی>"
-$env:Jobs__Enabled="true"
-$env:Sms__Kavenegar__ApiKey="<کلید پنل>"
-# اختیاری — داشبورد لاگ ساختاریافته Seq (بدون تنظیم، سینک Seq فعال نمی‌شود — چرخه ۱۲)
-$env:SEQ_SERVER_URL="http://your-seq-server:5341"
-# اختیاری — سهمیه نگهداشت نسخه‌های پشتیبان خودکار (پیش‌فرض ۱۴ — چرخه ۱۲)
-$env:Backup__RetentionCount="30"
-$env:Backup__Directory="D:/Backups/SahandClinicPro"
-```
-
-تولید کلید JWT: `[Convert]::ToBase64String((1..64 | %{Get-Random -Max 256} | %{[byte]$_}))`
-
-> ⚠️ **چرخه ۱۲ — نگهبان کلید JWT:** بدون `Jwt__SecretKey` معتبر (حداقل ۳۲ بایت)، سرور در محیط
-> تولید با پیام خطای فارسی بالا نمی‌آید. این رفتار عمدی است تا استقرار ناامن ممکن نباشد.
-
-### ۳-۱. کارهای زمان‌بندی‌شده (Hangfire) — چه چیزی با `Jobs:Enabled` فعال می‌شود؟
-
-`Jobs__Enabled="true"` چهار کار پس‌زمینه را ثبت می‌کند؛ بدون آن هیچ‌کدام اجرا نمی‌شوند:
-
-| شناسه جاب | زمان‌بندی | کارکرد | پیامد غیرفعال‌بودن |
-|:---|:---|:---|:---|
-| `sms-queue` | هر دقیقه | ارسال صف پیامک‌های زمان‌دار (یادآوری نوبت و…) | پیامک‌ها در صف می‌مانند و ارسال نمی‌شوند |
-| `license-heartbeat` | روزانه ۳ بامداد | تپ‌قلب به سرور لایسنس + دریافت پیام‌های پشتیبانی و تازه‌سازی ماژول‌ها | مهلت آفلاین ۳۰ روزه شروع به شمارش معکوس می‌کند؛ پیام‌های پشتیبانی دریافت نمی‌شوند |
-| `attendance-sync` | هر دقیقه | کشیدن ضربه‌ها از دستگاه‌های حضور و غیاب (ZKTeco) | ضربه‌های جدید از دستگاه خوانده نمی‌شوند |
-| `backup-nightly` | روزانه ۲ بامداد | ثبت پشتیبان خودکار + پاک‌سازی نسخه‌های فراتر از `Backup:RetentionCount` | پشتیبان‌گیری خودکار انجام نمی‌شود (فقط دستی) |
-
-داشبورد پایش جاب‌ها: با فعال‌بودن `Jobs:Enabled` مسیر `/jobs` (Hangfire Dashboard) در دسترس
-مدیران سیستم قرار می‌گیرد — سوابق اجرا، خطاها و زمان‌بندی هر جاب قابل مشاهده است.
-
-## ۴. سرویس ویندوز (Windows Service)
-
-```xml
-<!-- در csproj API موجود است -->
-<PropertyGroup>
-  <SelfContained>false</SelfContained>
-  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-</PropertyGroup>
-```
-
-```powershell
-sc create SahandClinicProApi binPath= "C:\Apps\SahandClinicPro\Sahand.ClinicPro.API.exe"
-sc start SahandClinicProApi
-```
-
-## ۵. کلاینت WPF
-
-1. انتشار: `dotnet publish src/Sahand.ClinicPro.Desktop -c Release -r win-x64`
-2. فونت وزیرمتن را در پوشه `Fonts` کنار exe قرار دهید
-3. `appsettings.json` کلاینت: نشانی سرور + پورت
-4. تست دسترسی: منوی «تنظیمات» ← «بررسی اتصال»
-
-## ۶. پشتیبان‌گیری
-
-- برنامه‌ریزی سه‌سطحی: کامل روزانه + افزایشی ۶ساعته + لاگ
-- مسیر پیش‌فرض: `Backup:Directory` در تنظیمات (خروجی از سرور قابل تغییر)
-- نگهداری: حداقل ۳۰ نسخه کامل + انتقال هفتگی به اشتراک شبکه
-
-## ۷. چک‌لیست راه‌اندازی اول
-
-- [ ] دیتابیس ساخته شد و Migration اجرا شد
-- [ ] ورود ادمین موفق و رمز تغییر یافت
-- [ ] اطلاع درمانگاه (Settings) تکمیل شد
-- [ ] پنل پیامک فعال و اعتبار بررسی شد
-- [ ] کاربران نقش‌ها دریافت کردند
-- [ ] تست چاپی فاکتور و نسخه
-- [ ] بکاپ خودکار زمان‌بندی و تست بازیابی شد
-- [ ] لایسنس فعال شد (برخط یا برون‌خط)
+- مسیر پیش‌فرض بکاپ از `Backup:Directory` در پیکربندی سرور خوانده می‌شود.
+- پشتیبان‌گیری زمان‌بندی‌شده را پس از نصب بررسی و یک‌بار بازیابی آزمایشی انجام دهید.
+- [ ] `/health` وضعیت سالم نشان می‌دهد.
+- [ ] دیتابیس و جدول‌ها در SQL Server دیده می‌شوند.
+- [ ] ورود اولیه موفق است و رمز مدیر تغییر می‌کند.
+- [ ] اطلاعات درمانگاه و لایسنس تکمیل می‌شوند.
+- [ ] پورت 5000 از کلاینت‌ها در دسترس است.
+- [ ] چاپ و تهیه/بازیابی پشتیبان آزمایش می‌شوند.

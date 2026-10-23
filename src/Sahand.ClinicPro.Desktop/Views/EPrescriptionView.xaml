@@ -67,32 +67,32 @@
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                   HeadersVisibility="Column" FontSize="12">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="شناسه" Binding="{Binding Id, Converter={StaticResource PersianDigits}}" Width="70" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTextColumn Header="نسخه" Binding="{Binding PrescriptionId, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTextColumn Header="کد رهگیری" Binding="{Binding TrackingCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="160" FontFamily="{DynamicResource App.CodeFont}" FontWeight="SemiBold" />
-                <DataGridTemplateColumn Header="وضعیت" Width="130">
+                <DataGridTextColumn Header="شناسه" Binding="{Binding Id, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="نسخه" Binding="{Binding PrescriptionId, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="کد رهگیری" Binding="{Binding TrackingCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" FontWeight="SemiBold" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTemplateColumn Header="وضعیت" Width="Auto" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
-                                    Background="{Binding StatusColor}">
-                                <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="White" />
+                                    Background="{Binding StatusColor}" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="White" VerticalAlignment="Center"/>
                             </Border>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="ارسال" Width="160">
+                <DataGridTextColumn Header="ارسال" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}">
                     <DataGridTextColumn.Binding>
                         <Binding Path="SentAt" Converter="{StaticResource ShamsiDateTime}" TargetNullValue="—" />
                     </DataGridTextColumn.Binding>
                 </DataGridTextColumn>
-                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="110">
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="110" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Style="{StaticResource App.RowIconButton}"
                                     Command="{Binding DataContext.ResendCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                     CommandParameter="{Binding}" ToolTip="بازارسال به سامانه"
-                                    Foreground="#1565C0">
-                                <materialDesign:PackIcon Kind="CloudRefresh" Width="16" Height="16" />
+                                    Foreground="#1565C0" VerticalAlignment="Center">
+                                <materialDesign:PackIcon Kind="CloudRefresh" Width="16" Height="16" VerticalAlignment="Center"/>
                             </Button>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

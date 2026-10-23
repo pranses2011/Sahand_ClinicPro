@@ -56,6 +56,11 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContext = viewModel;
 
+        // مقیاس زوم فقط روی محتوای قابل‌اسکرول صفحه اعمال می‌شود؛ اعمال آن
+        // به Grid ریشه، ToastLayer را هم مقیاس می‌کرد و اعلان پایین پنجره
+        // را از ناحیهٔ قابل‌نمایش بیرون می‌راند.
+        PageHost.SetResourceReference(FrameworkElement.LayoutTransformProperty, "App.FontScaleTransform");
+
         // ═══ چرخهٔ ۷۹ — توست‌ها در لایهٔ درون‌پنجره‌ای ToastLayer (XAML) می‌نشینند ═══
         // دیگر هیچ پنجرهٔ مستقلی ساخته نمی‌شود؛ فهرست Toasts همان نمونهٔ
         // ViewModel مشترک است و بایندینگ مستقیم XAML نمایش/حذف را انجام می‌دهد.

@@ -47,7 +47,7 @@
                       Margin="0,0,0,12" />
             <ComboBox materialDesign:HintAssist.Hint="بیمه"
                       ItemsSource="{Binding InsuranceCompanies}"
-                      DisplayMemberPath="Name"
+                      DisplayMemberPath="DisplayName"
                       SelectedIndex="{Binding InsuranceIndex}"
                       Margin="0,0,0,12" />
 

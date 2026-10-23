@@ -22,7 +22,26 @@ jobs:
         run: dotnet restore Sahand.ClinicPro.sln
 
       - name: ساخت کامل Solution
-        run: dotnet build Sahand.ClinicPro.sln --no-restore -c Release
+        # لاگ در فایل ذخیره می‌شود تا گام بعدی بتواند خطاها را به‌صورت
+        # «annotation» روی چک منتشر کند (دانلود لاگ خام گاهی در دسترس نیست
+        # — مثلاً در محیط‌های محدود به میزبان‌های مجاز)
+        run: |
+          set -o pipefail
+          dotnet build Sahand.ClinicPro.sln --no-restore -c Release 2>&1 | tee build-solution.log
+
+      - name: گزارش خطاهای ساخت (annotation)
+        if: failure()
+        shell: bash
+        run: |
+          if [ ! -f build-solution.log ]; then
+            echo "::error::فایل لاگ ساخت یافت نشد"
+            exit 0
+          fi
+          # هر خطِ خطا/هشدار کامپایلر به یک annotation جدا تبدیل می‌شود
+          { grep -E ": (error|warning) [A-Z]+[0-9]+" build-solution.log || true; } | head -40 | while IFS= read -r line; do
+            echo "::error::${line}"
+          done || true
+          exit 0
 
       - name: اجرای تست‌ها + پوشش کد (B4 چرخه ۱۲)
         # ═══ چرخهٔ ۶۷ — ریشهٔ قرمزیِ دائمی CI ═══
@@ -30,9 +49,49 @@ jobs:
         # («You must install or update .NET») — از اجرای ubuntu کنار گذاشته شد
         # و در job ویندوزیِ جداگانهٔ پایین اجرا می‌شود؛ این تنها راه سبز شدن
         # هر دو پلتفرم با حفظ پوشش کامل تست است.
-        run: dotnet test Sahand.ClinicPro.sln --no-build -c Release
-             --logger "trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults
-             --filter "FullyQualifiedName!~Sahand.ClinicPro.Desktop.UnitTests"
+        # ═══ چرخهٔ ۸۱ — ریشهٔ نهاییِ «Test Run Aborted» ═══
+        # dotnet test روی Solution، پروژهٔ تست دسکتاپ (net8.0-windows/WPF) را هم
+        # روی لینوکس اجرا می‌کرد و میزبان تست با «You must install or update .NET»
+        # می‌مرد؛ --filter فقط تست‌ها را فیلتر می‌کند نه خودِ پروژه را. اکنون
+        # پروژه‌به‌پروژه اجرا می‌شود و دسکتاپ (که در job ویندوزی اجرا می‌شود)
+        # کنار گذاشته می‌شود.
+        run: |
+          set -o pipefail
+          set +e
+          status=0
+          for project in \
+            tests/Sahand.ClinicPro.Domain.UnitTests/Sahand.ClinicPro.Domain.UnitTests.csproj \
+            tests/Sahand.ClinicPro.Application.UnitTests/Sahand.ClinicPro.Application.UnitTests.csproj \
+            tests/Sahand.ClinicPro.Infrastructure.IntegrationTests/Sahand.ClinicPro.Infrastructure.IntegrationTests.csproj \
+            tests/Sahand.ClinicPro.API.IntegrationTests/Sahand.ClinicPro.API.IntegrationTests.csproj; do
+            echo "::group::$(basename "$project")"
+            dotnet test "$project" --no-build -c Release \
+              --logger "trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults || status=1
+            echo "::endgroup::"
+          done 2>&1 | tee test-run.log
+          exit $status
+
+      - name: گزارش تست‌های ناموفق (annotation)
+        if: failure()
+        shell: bash
+        run: |
+          # نام تست‌های ناموفق و پیام خطا از خروجی کنسول dotnet test خوانده
+          # می‌شود (فایل trx هم موجود است ولی این مسیر ساده‌تر و مقاوم‌تر است)
+          if [ ! -f test-run.log ]; then
+            echo "::error::فایل test-run.log یافت نشد"
+            exit 0
+          fi
+          # نکته: گام‌های bash در اکسِن‌ها با -e -o pipefail اجرا می‌شوند؛ بدون
+          # || true، «نبودِ تطابق» یا بستن زودهنگام لوله به دست head (SIGPIPE)
+          # خودِ گام گزارش را قرمز می‌کرد و هیچ annotation منتشر نمی‌شد.
+          {
+            grep -E "^[[:space:]]*Failed |Error Message:|Aborted|Unhandled exception|error [A-Z]+[0-9]+" test-run.log || true
+            echo '─── پایان لاگ (۳۰ خط آخر) ───'
+            tail -30 test-run.log || true
+          } | head -60 | while IFS= read -r line; do
+            echo "::error::${line}"
+          done || true
+          exit 0
 
       - name: خلاصه پوشش
         if: always()
@@ -44,12 +103,58 @@ jobs:
           done
           find TestResults -name "cobertura.xml" -exec echo "آرتیفکت: {}" \; || true
 
+      # ═══ چرخهٔ ۸۱ — ریشهٔ قرمزیِ این گام ═══
+      # هدف GenerateOpenApiDocuments برنامه را در حالت «GetDocument» اجرا می‌کند
+      # تا سند را از خودِ میزبان بگیرد. در محیط Production، Program.cs در
+      # InitializeDatabaseAsync به SQL Server وصل می‌شود و نبودِ آن، استثنا را
+      # بالا می‌برد (fail-fast تولید) → کل هدف شکست می‌خورد؛ در حالی که سند
+      # OpenAPI هیچ ربطی به دیتابیس ندارد. با Development + خاموش‌کردن مهاجرت
+      # خودکار، میزبان بدون دیتابیس بالا می‌آید و سند ساخته می‌شود.
+      #
+      # ═══ چرخهٔ ۸۱-ب — ریشهٔ «exit code 127» ═══
+      # گام قبلی برای دسترسی به dotnet، PATH را کامل بازنویسی می‌کرد:
+      #     PATH: ${{ env.PATH }}:/usr/share/dotnet
+      # چون در سطح workflow متغیر PATH تعریف نشده، ${{ env.PATH }} تهی می‌شد و
+      # PATH به «:/usr/share/dotnet» تبدیل می‌گردید؛ dotnet پیدا می‌شد ولی tee
+      # و mv نه ⇒ ۱۲۷ و نبودِ openapi.log. اکنون PATH دست‌نخورده می‌ماند
+      # (setup-dotnet پیش‌تر آن را تنظیم کرده) و ساخت سند با dotnet build
+      # انجام می‌شود که سوییچ استاندارد --no-restore را می‌پذیرد
+      # (dotnet msbuild آن را نمی‌شناسد و MSB1001 می‌داد).
       - name: تولید سند OpenAPI (چرخه دوازدهم B3)
         run: |
-          dotnet msbuild src/Sahand.ClinicPro.API/Sahand.ClinicPro.API.csproj -t:GenerateOpenApiDocuments
-          mv docs/api/Sahand.ClinicPro.API.json docs/api/openapi.json || true
+          set -o pipefail
+          mkdir -p docs/api
+          # چرخهٔ ۸۱-ج — «deps.json does not exist»: هدف GenerateOpenApiDocuments
+          # خودش Build را اجرا نمی‌کند و به bin/<config> موجود تکیه دارد؛ گام
+          # «ساخت کامل Solution» با -c Release ساخته است، بنابراین همان
+          # Configuration پاس داده می‌شود (پیش‌فرض Debug⇒bin خالی⇒MSB3073).
+          dotnet build src/Sahand.ClinicPro.API/Sahand.ClinicPro.API.csproj \
+            -c Release -t:GenerateOpenApiDocuments --no-restore \
+            -p:OpenApiDocumentsDirectory="$PWD/docs/api" 2>&1 | tee openapi.log
+          # چرخهٔ ۸۱ — بی‌سر‌و‌صدا نگه‌داشتن سند کهنه ممنوع: نبودِ فایل خروجی
+          # یعنی هدف تولید اجرا نشده و باید صریحاً شکست اعلام شود.
+          if [ -f docs/api/Sahand.ClinicPro.API.json ]; then
+            mv docs/api/Sahand.ClinicPro.API.json docs/api/openapi.json
+            echo "سند OpenAPI تولید شد: $(wc -c < docs/api/openapi.json) بایت"
+          else
+            echo "::error::فایل سند OpenAPI تولید نشد — openapi.log را ببینید"
+            exit 1
+          fi
         env:
-          PATH: ${{ env.PATH }}:/usr/share/dotnet
+          ASPNETCORE_ENVIRONMENT: Development
+          Database__AutoMigrateOnStartup: 'false'
+
+      - name: گزارش خطای سند OpenAPI (annotation)
+        if: failure()
+        shell: bash
+        run: |
+          if [ ! -f openapi.log ]; then
+            echo "::error::فایل openapi.log یافت نشد"
+            exit 0
+          fi
+          { grep -E "error |Exception|Unhandled|fail:" openapi.log || true; tail -20 openapi.log || true; } \
+            | head -40 | while IFS= read -r line; do echo "::error::${line}"; done || true
+          exit 0
 
       - name: بارگذاری سند OpenAPI
         uses: actions/upload-artifact@v4
@@ -86,6 +191,20 @@ jobs:
 
       - name: اجرای تست‌های دسکتاپ (WPF — فقط ویندوز)
         run: dotnet test tests/Sahand.ClinicPro.Desktop.UnitTests/Sahand.ClinicPro.Desktop.UnitTests.csproj --no-build -c Release --logger "trx"
+
+      - name: گزارش تست‌های ناموفق دسکتاپ (annotation)
+        if: failure()
+        shell: pwsh
+        run: |
+          $trx = Get-ChildItem -Recurse -Filter *.trx -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($null -eq $trx) { Write-Host 'فایل trx یافت نشد'; exit 0 }
+          [xml]$doc = Get-Content $trx.FullName
+          foreach ($r in ($doc.SelectNodes("//*[local-name()='UnitTestResult' and @outcome='Failed']") | Select-Object -First 25)) {
+            $msg = ''
+            $node = $r.SelectSingleNode(".//*[local-name()='ErrorInfo']/*[local-name()='Message']")
+            if ($node) { $msg = ($node.InnerText -replace "\s+", ' ').Trim() }
+            Write-Host "::error::$($r.testName): $msg"
+          }
 
       - name: بارگذاری نتایج تست دسکتاپ
         uses: actions/upload-artifact@v4
@@ -133,7 +252,21 @@ jobs:
       - name: "اجرای تست‌های E2E سرور لایسنس (+۲۱ تست چرخهٔ ۶۶/۶۷: بکاپ، چرخش کلید، آینهٔ پیام‌ها)"
         env:
           MYSQL_ROOT_PASSWORD: testroot
-        run: bash scripts/licsrv-e2e-ci.sh
+        run: |
+          set -o pipefail
+          bash scripts/licsrv-e2e-ci.sh 2>&1 | tee licsrv-e2e.log
+
+      - name: گزارش تست‌های ناموفق E2E (annotation)
+        if: failure()
+        shell: bash
+        run: |
+          if [ ! -f licsrv-e2e.log ]; then
+            echo "::error::فایل licsrv-e2e.log یافت نشد"
+            exit 0
+          fi
+          { grep -E "❌|DB-FAIL|PASS:|Fatal error|Uncaught|Warning:" licsrv-e2e.log || true; tail -15 licsrv-e2e.log || true; } \
+            | head -40 | while IFS= read -r line; do echo "::error::${line}"; done || true
+          exit 0
 
       - name: شکست در صورت خطای تست
         if: failure()

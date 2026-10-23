@@ -66,7 +66,7 @@
                  باید از انتخابگر تاریخ شمسی و همهٔ فیلدهای ساعت از انتخابگر ساعت
                  استفاده کنند؛ پیش‌تر این دو فیلد TextBox تایپ دستی بودند -->
             <UniformGrid Columns="2" Margin="0,0,0,12">
-                <controls:PersianDatePicker DateShamsiText="{Binding DateShamsi, Mode=TwoWay}"
+                <controls:JalaliDatePicker DateShamsiText="{Binding DateShamsi, Mode=TwoWay}"
                                             Placeholder="تاریخ نوبت *"
                                             Margin="0,0,6,0" />
                 <controls:TimePicker TimeText="{Binding Time, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"

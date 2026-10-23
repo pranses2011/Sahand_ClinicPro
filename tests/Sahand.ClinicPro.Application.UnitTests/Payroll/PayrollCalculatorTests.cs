@@ -15,10 +15,22 @@ public class PayrollCalculatorTests
     public void Insurance_IsSevenPercent_OfGrossEarnings()
     {
         var result = PayrollCalculator.Calculate(new PayrollCalculator.PayrollInput(
-            BaseSalary: 300_000_000m, OvertimeHours: 0, Bonus: 0));
+            BaseSalary: 300_000_000m, OvertimeHours: 0, Bonus: 0, IsInsured: true));
 
         // ۳۰۰م × ۷٪ = ۲۱م ریال
         result.Insurance.Should().Be(21_000_000m);
+    }
+
+    /// <summary>بدون انتخاب بیمه، سهم بیمه از فیش کسر نمی‌شود</summary>
+    [Fact]
+    public void Insurance_IsZero_WhenEmployeeIsNotInsured()
+    {
+        var result = PayrollCalculator.Calculate(new PayrollCalculator.PayrollInput(
+            BaseSalary: 300_000_000m, IsInsured: false));
+
+        result.Insurance.Should().Be(0m);
+        result.TaxableBase.Should().Be(result.GrossEarnings);
+        result.TotalDeductions.Should().Be(result.Tax);
     }
 
     /// <summary>اضافه‌کاری ۱/۴ برابر نرخ ساعت عادی (پایه ÷ ۱۹۲)</summary>
@@ -48,7 +60,7 @@ public class PayrollCalculatorTests
     {
         // مبنای مشمول: ۳۰۰م − بیمه ۲۱م = ۲۷۹م → مازاد بر ۲۴۰م = ۳۹م → مالیات ۳/۹م
         var result = PayrollCalculator.Calculate(new PayrollCalculator.PayrollInput(
-            BaseSalary: 300_000_000m));
+            BaseSalary: 300_000_000m, IsInsured: true));
 
         result.Tax.Should().Be(3_900_000m);
     }
@@ -152,11 +164,12 @@ public class PayrollCalculatorTests
     public void Commission_IsIncludedInGross_AndSubjectToInsurance()
     {
         var without = PayrollCalculator.Calculate(new PayrollCalculator.PayrollInput(
-            BaseSalary: 200_000_000m));
+            BaseSalary: 200_000_000m, IsInsured: true));
         var with = PayrollCalculator.Calculate(new PayrollCalculator.PayrollInput(
             BaseSalary: 200_000_000m,
             CommissionPercent: 25m,
-            ServiceProfit: 80_000_000m)); // کمیسیون ۲۰م
+            ServiceProfit: 80_000_000m,
+            IsInsured: true)); // کمیسیون ۲۰م
 
         // جمع مزایا دقیقاً به اندازه کمیسیون رشد می‌کند
         with.GrossEarnings.Should().Be(without.GrossEarnings + 20_000_000m);

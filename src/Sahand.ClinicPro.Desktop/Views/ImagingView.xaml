@@ -101,21 +101,21 @@
 
                                 <DataGrid ItemsSource="{Binding ImagingFiles}" SelectedItem="{Binding SelectedImagingFile}"
                                           AutoGenerateColumns="False" IsReadOnly="True" MaxHeight="220"
-                                          Style="{StaticResource MaterialDesignDataGrid}"
+                                          Style="{StaticResource App.TableDataGrid}"
                                           HeadersVisibility="Column">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="نام فایل" Binding="{Binding FileName, Converter={StaticResource PersianDigits}}" />
-                                        <DataGridTextColumn Header="نوع" Binding="{Binding KindText, Converter={StaticResource PersianDigits}}" />
-                                        <DataGridTextColumn Header="حجم" Binding="{Binding SizeText, Converter={StaticResource PersianDigits}}" />
-                                        <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70">
+                                        <DataGridTextColumn Header="نام فایل" Binding="{Binding FileName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                        <DataGridTextColumn Header="نوع" Binding="{Binding KindText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                        <DataGridTextColumn Header="حجم" Binding="{Binding SizeText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                        <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70" MaxWidth="420">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <!-- چرخهٔ ۷۹: کلید عملیاتی آیکونی (هم‌الگوی لیست بیماران) -->
                                                     <Button Command="{Binding DataContext.DeleteImagingFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                             CommandParameter="{Binding}"
                                                             Style="{StaticResource App.RowIconButton}" Foreground="#C62828"
-                                                            ToolTip="حذف فایل تصویر">
-                                                        <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                                            ToolTip="حذف فایل تصویر" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                                     </Button>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>

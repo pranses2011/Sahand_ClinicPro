@@ -70,48 +70,48 @@
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                   HeadersVisibility="Column" FontSize="12">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="نام کاربری" Binding="{Binding Username, Converter={StaticResource PersianDigits}}" Width="130" FontWeight="SemiBold" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="170" />
-                <DataGridTextColumn Header="نقش‌ها" Binding="{Binding RolesText, Converter={StaticResource PersianDigits}}" Width="180" />
-                <DataGridTextColumn Header="آخرین ورود" Width="150">
+                <DataGridTextColumn Header="نام کاربری" Binding="{Binding Username, Converter={StaticResource PersianDigits}}" Width="Auto" FontWeight="SemiBold" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="نقش‌ها" Binding="{Binding RolesText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="آخرین ورود" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}">
                     <DataGridTextColumn.Binding>
                         <Binding Path="LastLoginAt" Converter="{StaticResource ShamsiDateTime}" TargetNullValue="—" />
                     </DataGridTextColumn.Binding>
                 </DataGridTextColumn>
-                <DataGridTemplateColumn Header="وضعیت" Width="100">
+                <DataGridTemplateColumn Header="وضعیت" Width="Auto" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
-                                    Background="{Binding StatusColor}">
-                                <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="White" />
+                                    Background="{Binding StatusColor}" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="White" VerticalAlignment="Center"/>
                             </Border>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="230">
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="230" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         Command="{Binding DataContext.EditUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        CommandParameter="{Binding}" ToolTip="ویرایش اطلاعات" Margin="2,0">
-                                    <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" />
+                                        CommandParameter="{Binding}" ToolTip="ویرایش اطلاعات" Margin="2,0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         Command="{Binding DataContext.ResetPasswordCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        CommandParameter="{Binding}" ToolTip="ریست رمز عبور" Margin="2,0">
-                                    <materialDesign:PackIcon Kind="Key" Width="15" Height="15" />
+                                        CommandParameter="{Binding}" ToolTip="ریست رمز عبور" Margin="2,0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Key" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         Command="{Binding DataContext.ToggleLockCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        CommandParameter="{Binding}" ToolTip="قفل / آزادسازی" Margin="2,0">
-                                    <materialDesign:PackIcon Kind="Lock" Width="15" Height="15" />
+                                        CommandParameter="{Binding}" ToolTip="قفل / آزادسازی" Margin="2,0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Lock" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         Command="{Binding DataContext.DeleteUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}" ToolTip="غیرفعال‌سازی" Margin="2,0"
-                                        Foreground="#C62828">
-                                    <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                        Foreground="#C62828" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>

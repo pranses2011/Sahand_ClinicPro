@@ -196,7 +196,7 @@
                               HeadersVisibility="Column" FontSize="12"
                               EnableRowVirtualization="True" VirtualizingPanel.IsVirtualizing="True">
                         <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource App.TableDataGridRow}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding DiffColor}" Value="#E53935">
                                         <Setter Property="Background" Value="#45E53935" /> <!-- چرخهٔ ۷۸ — نیمه‌شفاف؛ سازگار با تم تیره -->
@@ -208,19 +208,19 @@
                             </Style>
                         </DataGrid.RowStyle>
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="دارو" Binding="{Binding Medication, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="بچ" Binding="{Binding Batch, Converter={StaticResource PersianDigits}}" Width="110" />
-                            <DataGridTextColumn Header="موجودی سیستم" Binding="{Binding SystemQty, Converter={StaticResource PersianDigits}}" Width="100" />
-                            <DataGridTextColumn Header="شمارش واقعی" Binding="{Binding CountedQty, Converter={StaticResource PersianDigits}}" Width="100" />
-                            <DataGridTextColumn Header="مغایرت" Binding="{Binding DiffText, Converter={StaticResource PersianDigits}}" Width="110">
+                            <DataGridTextColumn Header="دارو" Binding="{Binding Medication, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="بچ" Binding="{Binding Batch, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="موجودی سیستم" Binding="{Binding SystemQty, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="شمارش واقعی" Binding="{Binding CountedQty, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="مغایرت" Binding="{Binding DiffText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                                         <Setter Property="HorizontalAlignment" Value="Center" />
                                         <Setter Property="FontWeight" Value="SemiBold" />
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="وضعیت" Binding="{Binding Notes, Converter={StaticResource PersianDigits}}" Width="140" />
+                            <DataGridTextColumn Header="وضعیت" Binding="{Binding Notes, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>

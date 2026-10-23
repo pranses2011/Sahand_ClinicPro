@@ -126,36 +126,36 @@
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="11.5">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="نام آزمایش" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="200" FontWeight="Bold" />
-                            <DataGridTextColumn Header="کد" Binding="{Binding TestCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="80"
-                                                FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="دسته" Binding="{Binding Category, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="105" />
-                            <DataGridTextColumn Header="بازهٔ مردان" Binding="{Binding RangeMaleText, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="105">
+                            <DataGridTextColumn Header="نام آزمایش" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="Auto" FontWeight="Bold" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="کد" Binding="{Binding TestCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto"
+                                                FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="دسته" Binding="{Binding Category, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="بازهٔ مردان" Binding="{Binding RangeMaleText, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                                         <Setter Property="Foreground" Value="#1565C0" />
                                         <Setter Property="HorizontalAlignment" Value="Center" />
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="بازهٔ زنان" Binding="{Binding RangeFemaleText, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="105">
+                            <DataGridTextColumn Header="بازهٔ زنان" Binding="{Binding RangeFemaleText, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                                         <Setter Property="Foreground" Value="#C2185B" />
                                         <Setter Property="HorizontalAlignment" Value="Center" />
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="بازهٔ کودک" Binding="{Binding RangeChildText, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="130">
+                            <DataGridTextColumn Header="بازهٔ کودک" Binding="{Binding RangeChildText, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                                         <Setter Property="Foreground" Value="#E65100" />
                                         <Setter Property="HorizontalAlignment" Value="Center" />
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             <!-- حدود بحرانی — رنگ از CriticalBrush (قرمز = ثبت‌شده) -->
-                            <DataGridTemplateColumn Header="حدود بحرانی" Width="120">
+                            <DataGridTemplateColumn Header="حدود بحرانی" Width="Auto" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding CriticalText, Converter={StaticResource PersianDigits}}"
@@ -165,8 +165,8 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="واحد" Binding="{Binding Unit, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="85" />
-                            <DataGridTextColumn Width="110">
+                            <DataGridTextColumn Header="واحد" Binding="{Binding Unit, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Width="Auto" MaxWidth="420">
                                 <DataGridTextColumn.Header>
                                     <TextBlock>
                                         <Run Text="قیمت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" />
@@ -176,22 +176,22 @@
                                     <Binding Path="Price" StringFormat="{}{0:N0}" />
                                 </DataGridTextColumn.Binding>
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                                         <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                             <!-- دکمهٔ ویرایش — بازکردن فرم بازه‌ها (مالک)؛ چرخهٔ ۷۹: آیکونی
                                  هم‌الگوی لیست بیماران (درخواست مالک: کلیدهای عملیاتی آیکونی) -->
-                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70">
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Command="{Binding DataContext.EditTestCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource App.RowIconButton}"
                                                 Cursor="Hand" Focusable="False"
-                                                ToolTip="ویرایش بازه‌های مرجع و حدود بحرانی این آزمایش">
-                                            <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" />
+                                                ToolTip="ویرایش بازه‌های مرجع و حدود بحرانی این آزمایش" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" VerticalAlignment="Center"/>
                                         </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -213,21 +213,21 @@
                   HeadersVisibility="Column" FontSize="12"
                   MouseDoubleClick="OnOrderDoubleClick">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="شماره درخواست" Binding="{Binding Number, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="180" FontWeight="SemiBold" />
-                <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="160" />
-                <DataGridTextColumn Header="تعداد تست" Binding="{Binding ItemsCount, Converter={StaticResource PersianDigits}}" Width="85">
+                <DataGridTextColumn Header="شماره درخواست" Binding="{Binding Number, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="بیمار" Binding="{Binding PatientName, Converter={StaticResource PersianDigits}}" Width="Auto" FontWeight="SemiBold" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="تعداد تست" Binding="{Binding ItemsCount, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                             <Setter Property="HorizontalAlignment" Value="Center" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="تاریخ" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="100" />
-                <DataGridTemplateColumn Header="وضعیت" Width="120">
+                <DataGridTextColumn Header="تاریخ" Binding="{Binding Date, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTemplateColumn Header="وضعیت" Width="Auto" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center">
+                            <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Border.Style>
                                     <Style TargetType="Border">
                                         <Setter Property="Background" Value="#ECEFF1" />
@@ -247,22 +247,22 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <TextBlock Text="{Binding StatusText}" FontSize="11" />
+                                <TextBlock Text="{Binding StatusText}" FontSize="11" VerticalAlignment="Center"/>
                             </Border>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="140">
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="140" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <!-- ═══ چرخهٔ ۶۷ — ثبت/مشاهدهٔ نتیجه (یک پنجره برای هر دو کار)؛
                                      چرخهٔ ۷۹: آیکونی هم‌الگوی لیست بیماران ═══ -->
                                 <Button Command="{Binding DataContext.RecordResultCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource App.RowIconButton}" Margin="0,0,6,0"
-                                        ToolTip="ثبت / مشاهدهٔ نتیجه">
-                                    <materialDesign:PackIcon Kind="ClipboardEditOutline" Width="15" Height="15" />
+                                        ToolTip="ثبت / مشاهدهٔ نتیجه" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="ClipboardEditOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                                 <!-- ═══ چرخهٔ ۶۷ (گزارش مالک: «امکان چاپ هم داشته باشه») ═══
                                      چاپ برگهٔ نتیجه — برای درخواست‌های نتیجه‌دار نمایش داده می‌شود؛
@@ -271,8 +271,8 @@
                                         CommandParameter="{Binding}"
                                         Visibility="{Binding CanPrint, Converter={StaticResource BoolToVisibility}}"
                                         Style="{StaticResource App.RowIconButton}" Margin="0,0,6,0"
-                                        ToolTip="چاپ برگهٔ نتیجه">
-                                    <materialDesign:PackIcon Kind="Printer" Width="15" Height="15" />
+                                        ToolTip="چاپ برگهٔ نتیجه" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Printer" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                                 <!-- ═══ چرخهٔ ۶۹ (فاز ۳ / F-02) — برچسب نمونه ═══
                                      برای هر قلم این درخواست، برچسب کوچک با QR یکتای
@@ -281,8 +281,8 @@
                                 <Button Command="{Binding DataContext.PrintSpecimenLabelsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource App.RowIconButton}"
-                                        ToolTip="چاپ برچسب QR برای ظرف نمونه‌های این درخواست">
-                                    <materialDesign:PackIcon Kind="Barcode" Width="15" Height="15" />
+                                        ToolTip="چاپ برچسب QR برای ظرف نمونه‌های این درخواست" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Barcode" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>

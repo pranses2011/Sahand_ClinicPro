@@ -53,8 +53,10 @@ public class SaveDoctorScheduleCommandHandler : IRequestHandler<SaveDoctorSchedu
                 !TimeOnly.TryParse(row.EndTime, out var end))
                 return Result.Failure(new Error("SCHEDULE.TIME", "قالب ساعت نامعتبر است — نمونه صحیح: 08:30"));
 
-            if (end <= start)
-                return Result.Failure(new Error("SCHEDULE.RANGE", "ساعت پایان باید بعد از ساعت شروع باشد"));
+            // پایان زودتر از شروع یعنی شیفت از نیمه‌شب عبور می‌کند؛
+            // فقط ساعت‌های برابر بازهٔ صفر/نامعتبر محسوب می‌شوند.
+            if (!DoctorScheduleTime.IsValidRange(start, end))
+                return Result.Failure(new Error("SCHEDULE.RANGE", "ساعت شروع و پایان نمی‌توانند برابر باشند"));
 
             TimeOnly? breakStart = null, breakEnd = null;
             if (!string.IsNullOrWhiteSpace(row.BreakStart) && !string.IsNullOrWhiteSpace(row.BreakEnd))

@@ -1,0 +1,140 @@
+name: Build and publish Windows installer
+
+on:
+  push:
+    tags:
+      - 'v2.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout tagged source
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Derive release version
+        id: version
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME -replace '^v', ''
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Validate server installer PowerShell encoding and syntax
+        shell: powershell
+        run: |
+          $path = (Resolve-Path installer/Install-Server-Package.ps1).Path
+          $bytes = [System.IO.File]::ReadAllBytes($path)
+          if ($bytes.Length -lt 3 -or $bytes[0] -ne 0xEF -or $bytes[1] -ne 0xBB -or $bytes[2] -ne 0xBF) {
+            throw 'Install-Server-Package.ps1 must be UTF-8 with BOM for Windows PowerShell 5.1.'
+          }
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+
+      - name: Publish self-contained desktop client
+        shell: pwsh
+        run: |
+          dotnet publish src/Sahand.ClinicPro.Desktop/Sahand.ClinicPro.Desktop.csproj `
+            -c Release -r win-x64 --self-contained true `
+            -p:PublishSingleFile=false -o publish/desktop
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force publish/desktop/docs | Out-Null
+          Copy-Item docs/guides/*.html publish/desktop/docs/ -Force
+          New-Item -ItemType Directory -Force publish/desktop/assets, publish/desktop/assets/fonts, publish/desktop/screenshots | Out-Null
+          Copy-Item docs/assets/ClinicPro.png publish/desktop/assets/ -Force
+          Copy-Item docs/assets/fonts/* publish/desktop/assets/fonts/ -Force
+          $screenshots = @(
+            'docs/screenshots/01-login.png',
+            'docs/screenshots/11-attendance-devices.png',
+            'docs/screenshots/14-license.png',
+            'docs/screenshots/install-api-console.png',
+            'docs/screenshots/install-firewall.png',
+            'docs/screenshots/install-network-map.png',
+            'docs/screenshots/install-sql-server.png'
+          )
+          Copy-Item -Path $screenshots -Destination publish/desktop/screenshots/ -Force
+
+      - name: Build Inno Setup executable
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          $iscc = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+          if ($iscc) {
+            $isccPath = $iscc.Source
+          } else {
+            $candidates = @(
+              (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6/ISCC.exe'),
+              (Join-Path $env:ProgramFiles 'Inno Setup 6/ISCC.exe')
+            )
+            $isccPath = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          }
+          if (-not $isccPath) { throw 'Inno Setup 6 compiler is not installed on this Windows runner.' }
+          & $isccPath "/DMyAppVersion=${{ steps.version.outputs.version }}" installer/SahandClinicPro.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Publish self-contained API server
+        shell: pwsh
+        run: |
+          dotnet publish src/Sahand.ClinicPro.API/Sahand.ClinicPro.API.csproj `
+            -c Release -r win-x64 --self-contained true `
+            -p:PublishSingleFile=false -o publish/server
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Package server installer
+        shell: pwsh
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          $package = "dist/SahandClinicPro-Server-v$version"
+          New-Item -ItemType Directory -Force "$package/Server" | Out-Null
+          Copy-Item publish/server/* "$package/Server/" -Recurse -Force
+          Copy-Item installer/Install-Server-Package.bat $package/ -Force
+          Copy-Item installer/Install-Server-Package.ps1 $package/ -Force
+          $guide = (Get-Content installer/RELEASE-INSTALL-GUIDE.txt -Raw).Replace('{VERSION}', $version)
+          Set-Content -Path "$package/RELEASE-INSTALL-GUIDE.txt" -Value $guide -Encoding UTF8
+          Compress-Archive -Path "$package/*" -DestinationPath "dist/SahandClinicPro-Server-v$version.zip" -Force
+
+      - name: Package license server (PHP) ‏— چرخهٔ ۸۱
+        shell: pwsh
+        run: |
+          # بستهٔ مستقل سرور لایسنس — اصلاح‌های چرخهٔ ۸۱ فقط در همین بخش PHP است
+          # (بارگذاری پیکربندی در cron.php، ستون signature، پشتیبانی از بدنهٔ
+          # JSON در api.php و نام یکتای بکاپ) و باید جداگانه قابل دانلود باشد.
+          # data/config.php هرگز در مخزن نیست؛ با این حال محتوای حساس حذف می‌شود.
+          $version = '${{ steps.version.outputs.version }}'
+          $src = "src/LicenseServer.Php"
+          $out = "dist/license-server"
+          New-Item -ItemType Directory -Force $out | Out-Null
+          Copy-Item "$src/*" $out -Recurse -Force
+          Remove-Item "$out/data/config.php" -Force -ErrorAction SilentlyContinue
+          Remove-Item "$out/data/install.lock" -Force -ErrorAction SilentlyContinue
+          Remove-Item "$out/data/error.log" -Force -ErrorAction SilentlyContinue
+          Remove-Item "$out/data/backups" -Recurse -Force -ErrorAction SilentlyContinue
+          Compress-Archive -Path "$out/*" -DestinationPath "dist/SahandClinicPro-LicenseServer-v$version.zip" -Force
+
+      - name: Create GitHub Release with built installers
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          $notes = (Get-Content installer/RELEASE-NOTES.md -Raw).Replace('{VERSION}', $version)
+          Set-Content -Path dist/release-notes.md -Value $notes -Encoding UTF8
+          $title = "v$version — نصب نسخه درمانگاه"
+          gh release create "v$version" `
+            "dist/SahandClinicPro-Setup-v$version.exe" `
+            "dist/SahandClinicPro-Server-v$version.zip" `
+            "dist/SahandClinicPro-LicenseServer-v$version.zip" `
+            --verify-tag --title $title --notes-file dist/release-notes.md
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

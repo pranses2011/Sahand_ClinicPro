@@ -32,7 +32,8 @@ public record EmployeeDetailDto(
     long? DepartmentId, long? PositionId, string? PositionName, string? DepartmentName,
     EmploymentType EmploymentType, decimal BaseSalary, decimal CommissionPercent,
     string? PersonnelCode, DateOnly? HireDate, EducationLevel? EducationLevel,
-    string? FieldOfStudy, string? EmergencyContact, string? EmergencyPhone, bool HasPhoto);
+    string? FieldOfStudy, string? EmergencyContact, string? EmergencyPhone, bool HasPhoto,
+    bool IsInsured = false);
 
 /// <summary>درخواست ثبت پرسنل — چرخه بیست‌وچهارم (گزارش هفدهم مالک):
 /// فیلدهای «چند مورد دیگر» فرم پرسنل مطابق اسکرین‌شات افزوده شدند:
@@ -48,7 +49,8 @@ public record CreateEmployeeDto(
     EducationLevel? EducationLevel = null,
     string? FieldOfStudy = null,
     string? EmergencyContact = null,
-    string? EmergencyPhone = null);
+    string? EmergencyPhone = null,
+    bool IsInsured = false);
 
 /// <summary>
 /// فرمان ثبت پرسنل جدید
@@ -102,6 +104,7 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
             EmploymentType = dto.EmploymentType,
             BaseSalary = dto.BaseSalary,
             CommissionPercent = dto.CommissionPercent,
+            IsInsured = dto.IsInsured,
             // چرخه بیست‌وچهارم: فیلدهای تکمیلی فرم پرسنل — پیش‌تر ارسال
             // می‌شدند اما نادیده گرفته می‌شدند (فرم اصلاً آنها را نداشت)
             PersonnelCode = dto.PersonnelCode,
@@ -158,7 +161,8 @@ public class GetEmployeeByIdQueryHandler : IRequestHandler<GetEmployeeByIdQuery,
                 e.BaseSalary, e.CommissionPercent,
                 e.PersonnelCode, e.HireDate, e.EducationLevel,
                 e.FieldOfStudy, e.EmergencyContact, e.EmergencyPhone,
-                e.ProfilePicture != null && e.ProfilePicture != ""))
+                e.ProfilePicture != null && e.ProfilePicture != "",
+                e.IsInsured))
             .FirstOrDefaultAsync(cancellationToken);
 
         return dto is null
@@ -228,6 +232,7 @@ public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeComman
         employee.EmploymentType = dto.EmploymentType;
         employee.BaseSalary = dto.BaseSalary;
         employee.CommissionPercent = dto.CommissionPercent;
+        employee.IsInsured = dto.IsInsured;
         employee.PersonnelCode = dto.PersonnelCode;
         employee.HireDate = dto.HireDate ?? employee.HireDate; // تهی = بدون تغییر
         employee.EducationLevel = dto.EducationLevel;

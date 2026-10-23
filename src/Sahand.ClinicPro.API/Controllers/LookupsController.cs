@@ -246,7 +246,8 @@ public class LookupsController : ApiBaseController
     {
         var result = await _mediator.Send(new CreateServiceTariffCommand(
             request.ServiceName, request.ServiceCode, request.Price,
-            request.InsuranceShare, request.PatientShare, request.InsuranceCompanyId));
+            request.InsuranceShare, request.PatientShare, request.InsuranceCompanyId,
+            request.DefaultCost ?? 0m));
         return ToResponse(result, "خدمت/تعرفه ثبت شد");
     }
 
@@ -260,7 +261,7 @@ public class LookupsController : ApiBaseController
         var result = await _mediator.Send(new UpdateServiceTariffCommand(
             id, request.ServiceName, request.ServiceCode, request.Price,
             request.InsuranceShare, request.PatientShare, request.IsActive,
-            request.InsuranceCompanyId));
+            request.InsuranceCompanyId, request.DefaultCost));
         return ToResponse(result, "خدمت/تعرفه به‌روزرسانی شد");
     }
 
@@ -286,6 +287,9 @@ public sealed class SaveServiceTariffRequest
 
     /// <summary>قیمت تعرفه‌ای</summary>
     public decimal Price { get; set; }
+
+    /// <summary>هزینهٔ تمام‌شدهٔ پایه برای محاسبهٔ سود خدمت</summary>
+    public decimal? DefaultCost { get; set; }
 
     /// <summary>درصد سهم بیمه (۰-۱۰۰)</summary>
     public decimal InsuranceShare { get; set; }

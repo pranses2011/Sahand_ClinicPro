@@ -1,4 +1,4 @@
-﻿using System.Threading.RateLimiting;
+using System.Threading.RateLimiting;
 using System.Reflection;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
@@ -66,6 +66,11 @@ try
     Log.Information("🚀 در حال راه‌اندازی API سامانه درمانگاه سهند");
 
     var builder = WebApplication.CreateBuilder(args);
+
+    // پشتیبانی رسمی از Service Control Manager ویندوز؛ بدون این میزبان،
+    // نصب با sc.exe بعد از مهلت کوتاه با خطای 1053 متوقف می‌شد.
+    builder.Host.UseWindowsService(options =>
+        options.ServiceName = "SahandClinicPro.API");
 
     // ── سرویس‌ها ──
 
@@ -364,7 +369,20 @@ try
     // نشانی https واقعی در پیکربندی موجود باشد (نشانی‌های برنامه یا
     // متغیر محیطی استاندارد ASPNETCORE_HTTPS_PORT) — در استقرار‌های HTTPS
     // دار هم رفتار دست‌نخورده باقی می‌ماند.
-    var hasHttpsEndpoint = app.Urls.Any(u => u.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+    // ═══ چرخهٔ ۸۱ — ریشهٔ شکست تولید سند OpenAPI ═══
+    // app.Urls پیش از اجرای میزبان به IServerAddressesFeature نیاز دارد و اگر
+    // سرور ساخته نشده باشد استثنا می‌دهد:
+    //   InvalidOperationException: Feature 'IServerAddressesFeature' is not present
+    // ابزار GetDocument (هدف GenerateOpenApiDocuments) برنامه را فقط تا لحظهٔ
+    // ساخت Host اجرا می‌کند و Run را انجام نمی‌دهد؛ بنابراین خواندن app.Urls
+    // این‌جا کل تولید سند را می‌شکست. نشانی‌ها از همان منابع پیکربندی خوانده
+    // می‌شوند که WebApplication.Urls از آن‌ها پر می‌شود (بدون وابستگی به سرور).
+    var configuredUrls = builder.Configuration["urls"]
+                         ?? builder.Configuration["ASPNETCORE_URLS"]
+                         ?? string.Empty;
+    var hasHttpsEndpoint = configuredUrls
+                               .Split(';', StringSplitOptions.RemoveEmptyEntries)
+                               .Any(u => u.Trim().StartsWith("https://", StringComparison.OrdinalIgnoreCase))
                            || !string.IsNullOrWhiteSpace(
                                Environment.GetEnvironmentVariable("ASPNETCORE_HTTPS_PORT"));
     if (hasHttpsEndpoint)
@@ -390,9 +408,24 @@ try
     app.MapHub<Sahand.ClinicPro.API.Hubs.QueueHub>("/hubs/queue");
     app.MapHub<Sahand.ClinicPro.API.Hubs.NotificationHub>("/hubs/notifications");
 
-    // بذرافشان داده‌های اولیه — نقش‌ها، دسترسی‌ها، ادمین، داده‌های پایه
-    // در نبود دیتابیس (محیط تست) خطا ثبت و عبور می‌شود
-    await app.Services.InitializeDatabaseAsync();
+    // نصب‌کننده با --migrate-database ساخت/ارتقای دیتابیس را صریحاً و خودکار
+    // پیش از ثبت سرویس انجام می‌دهد. این جداسازی مانع مهلت‌تمام‌شدن SCM ویندوز
+    // هنگام ساخت اولیهٔ schema می‌شود. در اجرای عادی، خودکارسازی روشن است مگر
+    // نصب‌کنندهٔ سرویس آن را پس از اجرای موفق همین گام خاموش کرده باشد.
+    var migrateDatabaseOnly = args.Any(arg =>
+        string.Equals(arg, "--migrate-database", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(arg, "--migrate-database=true", StringComparison.OrdinalIgnoreCase));
+    var autoMigrateOnStartup = builder.Configuration.GetValue("Database:AutoMigrateOnStartup", true);
+    if (migrateDatabaseOnly || autoMigrateOnStartup)
+        await app.Services.InitializeDatabaseAsync();
+    else
+        Log.Information("اعمال دیتابیس هنگام نصب/ارتقا مدیریت می‌شود؛ اجرای خودکار startup خاموش است");
+
+    if (migrateDatabaseOnly)
+    {
+        Log.Information("✅ ساخت/به‌روزرسانی خودکار دیتابیس کامل شد؛ خروج موفق");
+        return;
+    }
 
     // نقطه بررسی سلامت — کلاینت WPF و مانیتورینگ از این مسیر استفاده می‌کنند
     // چرخهٔ ۵۵ (BUG-20): نسخه از فرادادهٔ اسمبلی (Directory.Build.props) — نه هاردکد 1.0.0

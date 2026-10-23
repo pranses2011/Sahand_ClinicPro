@@ -1,4 +1,4 @@
-﻿using System.Collections.Specialized;
+using System.Collections.Specialized;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -48,9 +48,8 @@ public partial class ReportBrowserView : UserControl
     /// <summary>ساخت مجدد ستون‌های جدول بر اساس فهرست ستون‌های VM</summary>
     private void RebuildColumns(ReportBrowserViewModel vm)
     {
-        if (vm.Columns.Count == 0) return;
-
         ResultsGrid.Columns.Clear();
+        if (vm.Columns.Count == 0) return;
         for (var i = 0; i < vm.Columns.Count; i++)
         {
             var index = i;
@@ -69,7 +68,9 @@ public partial class ReportBrowserView : UserControl
             var column = new DataGridTextColumn
             {
                 Header = vm.Columns[i],
-                Width = i == 0 ? DataGridLength.Auto : DataGridLength.SizeToCells,
+                Width = DataGridLength.Auto,
+                MaxWidth = 420,
+                ElementStyle = (Style)FindResource("App.TableCellTextBlock"),
                 // سلول‌ها با نمای‌ساز سفارشی از ردیف استخراج می‌شوند
                 Binding = new Binding
                 {

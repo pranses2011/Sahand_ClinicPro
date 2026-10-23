@@ -11,6 +11,4 @@ public interface IPasswordHasher
     /// <summary>بررسی تطابق رمز ورودی با هش ذخیره‌شده</summary>
     bool Verify(string password, string hash);
 
-    /// <summary>آیا رمز عبور سیاست امنیتی را برآورده می‌کند — حداقل ۸ کاراکتر با حرف و رقم</summary>
-    bool MeetsPolicy(string password, out string errorMessage);
 }

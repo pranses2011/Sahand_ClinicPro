@@ -58,6 +58,7 @@ public static class PageCatalog
         // انجام خدمات درمانی یک صفحه جداگانه باشه» — پذیرش‌های خدمتیِ بدون
         // پزشک از صف ویزیت جدا شدند؛ مجوز همان پذیرش است (جریان طبیعی خدمت)
         new PageCatalogEntry("services", "صف خدمات درمانی", "Needle", "receptions.view", Group: "جریان درمان"),
+        new PageCatalogEntry("service-catalog", "مدیریت خدمات", "ClipboardList", "settings.view", Group: "مدیریت سامانه"),
         new PageCatalogEntry("emr-advanced", "پرونده بالینی پیشرفته", "HeartPulse", "emr.advanced", Group: "جریان درمان"),
 
         // ─── دارو و انبار ───

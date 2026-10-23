@@ -72,20 +72,52 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
             _ => 0
         };
 
-        var schedule = await _unitOfWork.Repository<DoctorSchedule>().QueryableNoTracking
-            .Where(s => s.DoctorId == request.DoctorId && s.IsActive && s.DayOfWeek == dayIndex)
+        // برنامه همان روز و شیفت شبِ روز قبل را با هم می‌خوانیم؛ بخش بعد از
+        // نیمه‌شبِ شیفت روز قبل باید در تقویم روز جاری هم قابل نوبت‌دهی باشد.
+        var previousDayIndex = (dayIndex + 6) % 7;
+        var schedules = await _unitOfWork.Repository<DoctorSchedule>().QueryableNoTracking
+            .Where(s => s.DoctorId == request.DoctorId && s.IsActive &&
+                        (s.DayOfWeek == dayIndex || s.DayOfWeek == previousDayIndex))
             .OrderByDescending(s => s.Id)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (schedule is null)
+            .ToListAsync(cancellationToken);
+
+        var todaySchedule = schedules.FirstOrDefault(s => s.DayOfWeek == dayIndex);
+        var previousNightSchedule = schedules.FirstOrDefault(s =>
+            s.DayOfWeek == previousDayIndex && s.EndTime < s.StartTime);
+        var windows = new List<ScheduleWindow>();
+
+        if (todaySchedule is not null)
+        {
+            var startMinute = ToMinute(todaySchedule.StartTime);
+            var endMinute = ToMinute(todaySchedule.EndTime);
+            if (endMinute > startMinute)
+                windows.Add(new ScheduleWindow(todaySchedule, startMinute, endMinute, startMinute));
+            else if (endMinute < startMinute)
+                windows.Add(new ScheduleWindow(todaySchedule, startMinute, 24 * 60, startMinute));
+        }
+
+        if (previousNightSchedule is not null)
+        {
+            var endMinute = ToMinute(previousNightSchedule.EndTime);
+            if (endMinute > 0)
+            {
+                var previousStartMinute = ToMinute(previousNightSchedule.StartTime) - 24 * 60;
+                windows.Add(new ScheduleWindow(previousNightSchedule, 0, endMinute, previousStartMinute));
+            }
+        }
+
+        if (windows.Count == 0)
             return Result<List<SlotDto>>.Success(new List<SlotDto>());
 
-        var room = schedule.RoomId is null ? null :
-            await _unitOfWork.Repository<ExaminationRoom>().QueryableNoTracking
-                .FirstOrDefaultAsync(r => r.Id == schedule.RoomId, cancellationToken);
+        var roomIds = windows.Select(w => w.Schedule.RoomId).Where(id => id.HasValue)
+            .Select(id => id!.Value).Distinct().ToList();
+        var rooms = roomIds.Count == 0
+            ? new Dictionary<long, ExaminationRoom>()
+            : await _unitOfWork.Repository<ExaminationRoom>().QueryableNoTracking
+                .Where(r => roomIds.Contains(r.Id))
+                .ToDictionaryAsync(r => r.Id, cancellationToken);
 
-        var slotDuration = doctor.VisitDuration > 0 ? doctor.VisitDuration : schedule.SlotDuration;
-
-        // ═══ نوبت‌های همان روز — با «مدت» برای تداخل بازه‌ای (چرخه ۲۸) ═══
+        // نوبت‌های همان روز — تداخل بازه‌ای با مدت واقعی نوبت
         var booked = await _unitOfWork.Repository<Appointment>().QueryableNoTracking
             .Where(a => a.DoctorId == request.DoctorId && a.AppointmentDate == date &&
                         a.Status != AppointmentStatus.Cancelled &&
@@ -93,22 +125,16 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
             .Select(a => new
             {
                 a.AppointmentTime,
-                // مدت واقعی نوبت؛ صفر = همان گام اسلات (حداقل یک اسلات اشغال)
-                Duration = a.Duration > 0 ? a.Duration : slotDuration,
+                a.Duration,
                 PatientName = a.Patient!.FirstName + " " + a.Patient.LastName
             })
             .ToListAsync(cancellationToken);
 
-        // ═══ پذیرش‌های حضوری همان روز برای همین پزشک — چرخه ۲۸ ═══
-        // بیمارِ پذیرش‌شده از صفحهٔ پذیرش هم وقت پزشک را می‌گیرد؛ ساعتِ مراجعه
-        // از خود ReceptionDate (شامل ساعت ثبت) و در نبود آن EnterTime خوانده
-        // می‌شود؛ پذیرش‌های لغو/ترخیص‌شده غالباً جای پزشک را آزاد کرده‌اند اما
-        // برای اطمینانِ ظرفیت، همهٔ پذیرش‌های فعال روز لحاظ می‌شوند
+        // پذیرش حضوری همان روز هم بازهٔ پزشک را اشغال می‌کند.
         var dayStart = date.ToDateTime(TimeOnly.MinValue);
         var dayEnd = dayStart.AddDays(1);
         var receptions = await _unitOfWork.Repository<Reception>().QueryableNoTracking
-            .Where(r => r.DoctorId == request.DoctorId &&
-                        !r.IsDeleted &&
+            .Where(r => r.DoctorId == request.DoctorId && !r.IsDeleted &&
                         r.ReceptionDate >= dayStart && r.ReceptionDate < dayEnd)
             .Select(r => new
             {
@@ -119,43 +145,106 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
             })
             .ToListAsync(cancellationToken);
 
-        // غیبت ساعتی
         var hourAbsence = await _unitOfWork.Repository<DoctorAbsence>().QueryableNoTracking
-            .Where(a => a.DoctorId == request.DoctorId && a.AbsenceDate == date && a.FromTime != null && a.ToTime != null)
+            .Where(a => a.DoctorId == request.DoctorId && a.AbsenceDate == date &&
+                        a.FromTime != null && a.ToTime != null)
             .Select(a => new { a.FromTime, a.ToTime })
             .ToListAsync(cancellationToken);
 
-        var slots = new List<SlotDto>();
+        var slots = new List<(int Minute, SlotDto Slot)>();
+        var addedSlotMinutes = new HashSet<int>();
 
-        for (var time = schedule.StartTime; time < schedule.EndTime; time = time.AddMinutes(slotDuration))
+        foreach (var window in windows.OrderBy(w => w.StartMinute))
         {
-            var slotEnd = time.AddMinutes(slotDuration);
-            var isBreak = schedule.BreakStart is not null && schedule.BreakEnd is not null &&
-                          time >= schedule.BreakStart && time < schedule.BreakEnd;
-            var inAbsence = hourAbsence.Any(a => time >= a.FromTime && time < a.ToTime);
+            var windowSlotDuration = doctor.VisitDuration > 0
+                ? doctor.VisitDuration
+                : window.Schedule.SlotDuration;
+            if (windowSlotDuration <= 0) continue;
 
-            // ═══ تداخل بازه‌ای — چرخه ۲۸ ═══
-            // بازهٔ نوبت [t, t+d) با بازهٔ اسلات [شروع، پایان) هر تلاقی داشت،
-            // اسلات «پر» است — حالت‌های ساعتِ آزاد و گامِ متفاوت هم پوشش
-            // داده می‌شوند؛ نام بیمار نخستین نوبتِ تصادمی برای تولتیپ
-            var bookedHit = booked.FirstOrDefault(b =>
-                b.AppointmentTime < slotEnd && time < b.AppointmentTime.AddMinutes(b.Duration));
-            var receptionHit = receptions.FirstOrDefault(r =>
-                r.Time < slotEnd && time < r.Time.AddMinutes(slotDuration));
+            var breakRange = GetBreakRange(window);
+            for (var minute = window.StartMinute; minute < window.EndMinute; minute += windowSlotDuration)
+            {
+                // اگر دو شیفت روی یک ساعت افتادند، یک گزینه نمایش داده شود.
+                if (!addedSlotMinutes.Add(minute)) continue;
 
-            var isBooked = bookedHit is not null || receptionHit is not null;
-            var patient = bookedHit?.PatientName ?? receptionHit?.PatientName;
+                var slotEnd = minute + windowSlotDuration;
+                var isBreak = breakRange is { } br && RangesOverlap(minute, slotEnd, br.Start, br.End);
+                var inAbsence = hourAbsence.Any(a =>
+                    TimeRangeOverlaps(minute, slotEnd, a.FromTime, a.ToTime));
 
-            slots.Add(new SlotDto(
-                time.ToString("HH:mm"),
-                !isBreak && !isBooked && !inAbsence,
-                patient,
-                isBreak || inAbsence,
-                room is null ? null :
-                    (string.IsNullOrWhiteSpace(room.RoomName) ? $"اتاق {room.RoomNumber}" : room.RoomName),
-                doctor.ConsultationFee));
+                var bookedHit = booked.FirstOrDefault(b =>
+                {
+                    var bookedStart = ToMinute(b.AppointmentTime);
+                    var bookedDuration = b.Duration > 0 ? b.Duration : windowSlotDuration;
+                    return bookedStart < slotEnd && minute < bookedStart + bookedDuration;
+                });
+                var receptionHit = receptions.FirstOrDefault(r =>
+                {
+                    var receptionStart = ToMinute(r.Time);
+                    return receptionStart < slotEnd && minute < receptionStart + windowSlotDuration;
+                });
+
+                var patient = bookedHit?.PatientName ?? receptionHit?.PatientName;
+                var isBooked = bookedHit is not null || receptionHit is not null;
+                var displayMinute = minute % (24 * 60);
+                var timeText = TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(displayMinute)).ToString("HH:mm");
+                var roomName = window.Schedule.RoomId is long roomId && rooms.TryGetValue(roomId, out var room)
+                    ? (string.IsNullOrWhiteSpace(room.RoomName)
+                        ? $"اتاق {room.RoomNumber}"
+                        : room.RoomName)
+                    : null;
+
+                slots.Add((minute, new SlotDto(
+                    timeText,
+                    !isBreak && !isBooked && !inAbsence,
+                    patient,
+                    isBreak || inAbsence,
+                    roomName,
+                    doctor.ConsultationFee)));
+            }
         }
 
-        return Result<List<SlotDto>>.Success(slots);
+        return Result<List<SlotDto>>.Success(slots.OrderBy(s => s.Minute).Select(s => s.Slot).ToList());
     }
+
+    private sealed record ScheduleWindow(
+        DoctorSchedule Schedule,
+        int StartMinute,
+        int EndMinute,
+        int ShiftStartMinute);
+
+    private static int ToMinute(TimeOnly time) => time.Hour * 60 + time.Minute;
+
+    private static (int Start, int End)? GetBreakRange(ScheduleWindow window)
+    {
+        var start = window.Schedule.BreakStart;
+        var end = window.Schedule.BreakEnd;
+        if (start is null || end is null || start == end) return null;
+
+        var shiftStartClock = ToMinute(window.Schedule.StartTime);
+        var breakStart = window.ShiftStartMinute + Modulo(ToMinute(start.Value) - shiftStartClock, 24 * 60);
+        var breakEnd = window.ShiftStartMinute + Modulo(ToMinute(end.Value) - shiftStartClock, 24 * 60);
+        if (breakEnd <= breakStart) breakEnd += 24 * 60;
+        return (breakStart, breakEnd);
+    }
+
+    private static bool TimeRangeOverlaps(int slotStart, int slotEnd, TimeOnly? from, TimeOnly? to)
+    {
+        if (from is null || to is null || from == to) return false;
+        var rangeStart = ToMinute(from.Value);
+        var rangeEnd = ToMinute(to.Value);
+        if (rangeEnd < rangeStart)
+        {
+            rangeEnd += 24 * 60;
+            return RangesOverlap(slotStart, slotEnd, rangeStart, rangeEnd) ||
+                   RangesOverlap(slotStart, slotEnd, rangeStart - 24 * 60, rangeEnd - 24 * 60);
+        }
+        return RangesOverlap(slotStart, slotEnd, rangeStart, rangeEnd);
+    }
+
+    private static bool RangesOverlap(int firstStart, int firstEnd, int secondStart, int secondEnd) =>
+        firstStart < secondEnd && secondStart < firstEnd;
+
+    private static int Modulo(int value, int modulus) => (value % modulus + modulus) % modulus;
+
 }

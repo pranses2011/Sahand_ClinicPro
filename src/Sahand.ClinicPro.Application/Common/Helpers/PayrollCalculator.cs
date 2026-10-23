@@ -7,7 +7,7 @@ namespace Sahand.ClinicPro.Application.Common.Helpers;
 /// مفروضات قانونی (قابل تنظیم با ثابت‌های این کلاس):
 /// ۱. ساعت کار ماهانه قانونی: ۱۹۲ ساعت (۴۴ ساعت در هفته × ۴.۳۴)
 /// ۲. نرخ اضافه‌کاری: ۱/۴ برابر نرخ ساعت عادی (ماده ۵۹ قانون کار)
-/// ۳. بیمه سهم کارمند: ۷٪ کل مزایای مشمول (ماده ۲۸ قانون تأمین اجتماعی)
+/// ۳. بیمه سهم کارمند: در صورت انتخاب شمول بیمه برای پرسنل، ۷٪ مزایای مشمول (ماده ۲۸ قانون تأمین اجتماعی)
 /// ۴. پلکان ماهانه مالیات حقوق ۱۴۰۴ (ماده ۸۴ ق.ب. ۱۴۰۴ — ارقام ریال):
 ///    تا ۲۴۰م ریال معاف | ۲۴۰ تا ۳۶۰م: ۱۰٪ | ۳۶۰ تا ۶۰۰م: ۱۵٪ | بالاتر: ۲۰٪
 ///    (پلکان نرخی تجمعی — نه نرخ مؤثر بر کل مبلغ)
@@ -53,7 +53,8 @@ public static class PayrollCalculator
         decimal Bonus = 0m,
         decimal OtherDeductions = 0m,
         decimal CommissionPercent = 0m,
-        decimal ServiceProfit = 0m);
+        decimal ServiceProfit = 0m,
+        bool IsInsured = false);
 
     /// <summary>خروجی محاسبه — همه مبالغ ریال</summary>
     public sealed record PayrollResult(
@@ -83,8 +84,10 @@ public static class PayrollCalculator
         // کل مزایای مشمول بیمه و مالیات (پورسانت هم جزو مزایای مشمول است)
         var gross = input.BaseSalary + overtimePay + input.Bonus + serviceCommission;
 
-        // بیمه ۷٪ سهم کارمند
-        var insurance = Math.Round(gross * EmployeeInsuranceRate, 0);
+        // بیمه سهم کارمند فقط برای پرسنلی کسر می‌شود که در پرونده‌اش بیمه فعال است.
+        var insurance = input.IsInsured
+            ? Math.Round(gross * EmployeeInsuranceRate, 0)
+            : 0m;
 
         // مبنای مشمول مالیات پس از کسر بیمه
         var taxableBase = gross - insurance;

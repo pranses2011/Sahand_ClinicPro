@@ -90,17 +90,17 @@
                                           Command="{Binding ShowEntryDetailsCommand}" />
                         </DataGrid.InputBindings>
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="شماره سند" Binding="{Binding EntryNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="95" />
-                            <DataGridTextColumn Header="شرح" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="جمع بدهکار" Binding="{Binding TotalDebit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="125" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="جمع بستانکار" Binding="{Binding TotalCredit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="125" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTemplateColumn Header="وضعیت" Width="95">
+                            <DataGridTextColumn Header="شماره سند" Binding="{Binding EntryNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="شرح" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="جمع بدهکار" Binding="{Binding TotalDebit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="جمع بستانکار" Binding="{Binding TotalCredit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="وضعیت" Width="Auto" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="8,2.5" HorizontalAlignment="Center"
-                                                Background="{Binding StatusColor}">
-                                            <TextBlock Text="{Binding StatusText}" FontSize="11" />
+                                                Background="{Binding StatusColor}" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding StatusText}" FontSize="11" VerticalAlignment="Center"/>
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -147,28 +147,28 @@
                                       CanUserAddRows="False" HeadersVisibility="Column" FontSize="12" MinHeight="120"
                                       MaxHeight="260">
                                 <DataGrid.Columns>
-                                    <DataGridTemplateColumn Header="حساب" Width="280">
+                                    <DataGridTemplateColumn Header="حساب" Width="Auto" MaxWidth="420">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <ComboBox ItemsSource="{Binding DataContext.FlatAccounts, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                           SelectedValuePath="Id"
                                                           SelectedValue="{Binding AccountId, UpdateSourceTrigger=PropertyChanged}"
-                                                          DisplayMemberPath="Display" FontSize="11" />
+                                                          DisplayMemberPath="Display" FontSize="11" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <!-- مبدل PersianDigits از چرخهٔ ۴۷ دوسویه است — ویرایش مبالغ واقعاً ذخیره می‌شود -->
-                                    <DataGridTextColumn Header="شرح سطر" Binding="{Binding Description, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="*" />
-                                    <DataGridTextColumn Header="بدهکار" Binding="{Binding Debit, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="{DynamicResource App.CodeFont}" />
-                                    <DataGridTextColumn Header="بستانکار" Binding="{Binding Credit, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="120" FontFamily="{DynamicResource App.CodeFont}" />
-                                    <DataGridTemplateColumn Header="" Width="46">
+                                    <DataGridTextColumn Header="شرح سطر" Binding="{Binding Description, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                    <DataGridTextColumn Header="بدهکار" Binding="{Binding Debit, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                    <DataGridTextColumn Header="بستانکار" Binding="{Binding Credit, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                    <DataGridTemplateColumn Header="" Width="Auto" MaxWidth="420">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Button Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                                        Foreground="#C62828" Padding="3">
-                                                    <materialDesign:PackIcon Kind="Delete" Width="13" Height="13"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                                        Foreground="#C62828" Padding="3" VerticalAlignment="Center">
+                                                    <materialDesign:PackIcon Kind="Delete" Width="13" Height="13"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" VerticalAlignment="Center"/>
                                                 </Button>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
@@ -214,10 +214,10 @@
                                       materialDesign:HintAssist.Hint="حساب دفتر کل"
                                       VerticalAlignment="Center" />
                             <!-- فیلدهای تاریخ از انتخابگر شمسی (قانون ۵ مالک) -->
-                            <controls:PersianDatePicker DateShamsiText="{Binding LedgerFrom, Mode=TwoWay}"
+                            <controls:JalaliDatePicker DateShamsiText="{Binding LedgerFrom, Mode=TwoWay}"
                                                         Placeholder="از تاریخ" Width="125" Margin="10,0,0,0"
                                                         VerticalAlignment="Center" />
-                            <controls:PersianDatePicker DateShamsiText="{Binding LedgerTo, Mode=TwoWay}"
+                            <controls:JalaliDatePicker DateShamsiText="{Binding LedgerTo, Mode=TwoWay}"
                                                         Placeholder="تا تاریخ" Width="125" Margin="8,0,0,0"
                                                         VerticalAlignment="Center" />
                             <Button Command="{Binding ShowLedgerCommand}"
@@ -234,13 +234,13 @@
                               CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column" FontSize="12"
                               materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="110" />
-                            <DataGridTextColumn Header="شماره سند" Binding="{Binding EntryNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="شرح" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="بدهکار" Binding="{Binding Debit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="110" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="بستانکار" Binding="{Binding Credit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="110" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="مانده" Binding="{Binding Balance, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="115" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="نوع" Binding="{Binding BalanceType, Converter={StaticResource PersianDigits}}" Width="85" />
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="شماره سند" Binding="{Binding EntryNumber, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="شرح" Binding="{Binding Description, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="بدهکار" Binding="{Binding Debit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="بستانکار" Binding="{Binding Credit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="مانده" Binding="{Binding Balance, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="نوع" Binding="{Binding BalanceType, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -334,9 +334,9 @@
                             BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                             BorderThickness="1">
                         <StackPanel Orientation="Horizontal">
-                            <controls:PersianDatePicker DateShamsiText="{Binding IncomeFrom, Mode=TwoWay}"
+                            <controls:JalaliDatePicker DateShamsiText="{Binding IncomeFrom, Mode=TwoWay}"
                                                         Placeholder="از تاریخ" Width="125" VerticalAlignment="Center" />
-                            <controls:PersianDatePicker DateShamsiText="{Binding IncomeTo, Mode=TwoWay}"
+                            <controls:JalaliDatePicker DateShamsiText="{Binding IncomeTo, Mode=TwoWay}"
                                                         Placeholder="تا تاریخ" Width="125" Margin="8,0,0,0" VerticalAlignment="Center" />
                             <Button Command="{Binding RefreshReportsCommand}"
                                     Style="{StaticResource MaterialDesignRaisedButton}" Margin="10,0,0,0"
@@ -366,13 +366,13 @@
                               CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column" FontSize="12"
                               materialDesign:DataGridAssist.CellPadding="8,6">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="کد" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="100" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="عنوان" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="مانده اول" Binding="{Binding Opening, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="115" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="بدهکار دوره" Binding="{Binding Debit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="115" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="بستانکار دوره" Binding="{Binding Credit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="115" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="مانده پایان" Binding="{Binding Closing, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="115" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="نوع" Binding="{Binding BalanceType, Converter={StaticResource PersianDigits}}" Width="85" />
+                            <DataGridTextColumn Header="کد" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="عنوان" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="مانده اول" Binding="{Binding Opening, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="بدهکار دوره" Binding="{Binding Debit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="بستانکار دوره" Binding="{Binding Credit, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="مانده پایان" Binding="{Binding Closing, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="نوع" Binding="{Binding BalanceType, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>

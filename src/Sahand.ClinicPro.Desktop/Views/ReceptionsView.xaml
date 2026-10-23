@@ -465,7 +465,7 @@
                                     <TextBlock Text="اتاق انجام خدمت (اختیاری — از اتاق‌های درمانگاه)" Style="{StaticResource FieldCaption}" />
                                     <ComboBox ItemsSource="{Binding Rooms}"
                                               SelectedItem="{Binding SelectedRoom}"
-                                              DisplayMemberPath="DisplayName" />
+                                              DisplayMemberPath="Name" />
                                 </StackPanel>
 
                             </StackPanel>
@@ -591,7 +591,7 @@
                                 <TextBlock Text="نوع بیمه" Style="{StaticResource FieldCaption}" />
                                 <ComboBox ItemsSource="{Binding InsuranceCompanies}"
                                           SelectedIndex="{Binding InsuranceIndex}"
-                                          DisplayMemberPath="Name" />
+                                          DisplayMemberPath="DisplayName" />
                                 <TextBlock Text="شماره بیمه" Style="{StaticResource FieldCaption}" />
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -815,63 +815,63 @@
                                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                                   HeadersVisibility="Column" FontSize="12" MinHeight="150">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="شماره" Binding="{Binding Number, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="80" FontFamily="{DynamicResource App.CodeFont}" />
-                                <DataGridTemplateColumn Header="بیمار" Width="180" SortMemberPath="PatientName">
+                                <DataGridTextColumn Header="شماره" Binding="{Binding Number, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                <DataGridTemplateColumn Header="بیمار" Width="Auto" SortMemberPath="PatientName" MaxWidth="420">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <materialDesign:PackIcon Kind="Account" Width="14" Height="14" Opacity="0.5" VerticalAlignment="Center" />
                                                 <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" Margin="7,0,0,0" VerticalAlignment="Center" />
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="150" />
-                                <DataGridTextColumn Header="ساعت پذیرش" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" Width="100" />
-                                <DataGridTextColumn Header="بیمه" Binding="{Binding InsuranceName, TargetNullValue=آزاد, Converter={StaticResource PersianDigits}}" Width="110" />
+                                <DataGridTextColumn Header="پزشک" Binding="{Binding DoctorName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                <DataGridTextColumn Header="ساعت پذیرش" Binding="{Binding Time, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                <DataGridTextColumn Header="بیمه" Binding="{Binding InsuranceName, TargetNullValue=آزاد, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                                 <!-- چرخهٔ ۳۹ — اتاق محل انجام خدمت (پذیرش خدمتی) -->
-                                <DataGridTextColumn Header="اتاق" Binding="{Binding RoomName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="110" />
-                                <DataGridTemplateColumn Header="وضعیت" Width="110" SortMemberPath="StatusId">
+                                <DataGridTextColumn Header="اتاق" Binding="{Binding RoomName, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                <DataGridTemplateColumn Header="وضعیت" Width="Auto" SortMemberPath="StatusId" MaxWidth="420">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
-                                                    Background="{Binding StatusColor}">
-                                                <TextBlock Text="{Binding StatusText}" FontSize="11" />
+                                                    Background="{Binding StatusColor}" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding StatusText}" FontSize="11" VerticalAlignment="Center"/>
                                             </Border>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="انتظار" Binding="{Binding WaitingText, Converter={StaticResource PersianDigits}}" Width="90" />
+                                <DataGridTextColumn Header="انتظار" Binding="{Binding WaitingText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                                 <!-- ═══ چرخه سی‌ویکم (گزارش مالک): «هیچ مبلغی در هیچ‌کجای برنامه
                                      نمایش داده نمیشود» — دو ستون مالی برای هر پذیرش روز:
                                      جمع فاکتور + پرداخت‌شده (مبدل ریالی با ارقام فارسی) و
                                      برچسب وضعیت مالی (تسویه/پرداخت‌نشده/بدون فاکتور) ═══ -->
-                                <DataGridTextColumn Binding="{Binding InvoiceTotal, Converter={StaticResource CurrencyRial}}" Width="115">
+                                <DataGridTextColumn Binding="{Binding InvoiceTotal, Converter={StaticResource CurrencyRial}}" Width="Auto" MaxWidth="420">
                                     <DataGridTextColumn.Header>
                                         <TextBlock><Run Text="مبلغ فاکتور (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                                     </DataGridTextColumn.Header>
                                     <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                                             <Setter Property="HorizontalAlignment" Value="Center" />
                                             <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Binding="{Binding PaidAmount, Converter={StaticResource CurrencyRial}}" Width="110">
+                                <DataGridTextColumn Binding="{Binding PaidAmount, Converter={StaticResource CurrencyRial}}" Width="Auto" MaxWidth="420">
                                     <DataGridTextColumn.Header>
                                         <TextBlock><Run Text="پرداخت‌شده (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                                     </DataGridTextColumn.Header>
                                     <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                                             <Setter Property="HorizontalAlignment" Value="Center" />
                                             <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTemplateColumn Header="وضعیت مالی" Width="105" SortMemberPath="FinancialText">
+                                <DataGridTemplateColumn Header="وضعیت مالی" Width="Auto" SortMemberPath="FinancialText" MaxWidth="420">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center">
+                                            <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
                                                         <Setter Property="Background" Value="#ECEFF1" />
@@ -886,7 +886,7 @@
                                                         </Style.Triggers>
                                                     </Style>
                                                 </Border.Style>
-                                                <TextBlock Text="{Binding FinancialText}" FontSize="11" />
+                                                <TextBlock Text="{Binding FinancialText}" FontSize="11" VerticalAlignment="Center"/>
                                             </Border>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>

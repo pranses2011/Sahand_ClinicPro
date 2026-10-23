@@ -46,27 +46,27 @@
 
         <DataGrid Grid.Row="3" ItemsSource="{Binding Branches}" SelectedItem="{Binding SelectedBranch}"
                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                  HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD">
+                  HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="{DynamicResource App.ZebraRowBrush}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="نام شعبه" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="200" FontWeight="SemiBold" />
-                <DataGridTextColumn Header="کد" Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="100" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTextColumn Header="شهر" Binding="{Binding City, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" />
-                <DataGridTextColumn Header="استان" Binding="{Binding Province, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="120" />
-                <DataGridTextColumn Header="تلفن" Binding="{Binding Phone, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="130" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTextColumn Header="اصلی" Binding="{Binding MainText, Converter={StaticResource PersianDigits}}" Width="90" />
-                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="180">
+                <DataGridTextColumn Header="نام شعبه" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="Auto" FontWeight="SemiBold" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="کد" Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="شهر" Binding="{Binding City, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="استان" Binding="{Binding Province, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="تلفن" Binding="{Binding Phone, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="اصلی" Binding="{Binding MainText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="180" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         Command="{Binding DataContext.SetMainCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        CommandParameter="{Binding}" ToolTip="تعیین به‌عنوان شعبه اصلی" Margin="2,0">
-                                    <materialDesign:PackIcon Kind="StarOutline" Width="15" Height="15" />
+                                        CommandParameter="{Binding}" ToolTip="تعیین به‌عنوان شعبه اصلی" Margin="2,0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="StarOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         Command="{Binding DataContext.DeleteBranchCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        CommandParameter="{Binding}" ToolTip="حذف شعبه" Foreground="#C62828" Margin="2,0">
-                                    <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                        CommandParameter="{Binding}" ToolTip="حذف شعبه" Foreground="#C62828" Margin="2,0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>

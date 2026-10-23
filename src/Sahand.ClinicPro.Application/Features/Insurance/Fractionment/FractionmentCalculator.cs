@@ -72,7 +72,6 @@ public class FractionmentCalculator
 
         var company = await _unitOfWork.Repository<InsuranceCompany>().QueryableNoTracking
             .FirstOrDefaultAsync(c => c.Id == companyId, ct);
-
         // همه قواعد فعال این بیمه — اختصاصی و عمومی
         var rules = await _unitOfWork.Repository<InsuranceFractionmentRule>().QueryableNoTracking
             .Where(r => r.InsuranceCompanyId == companyId && r.IsActive && !r.IsDeleted)
@@ -96,6 +95,17 @@ public class FractionmentCalculator
         foreach (var item in invoice.Items)
         {
             var itemTotal = item.TotalPrice > 0 ? item.TotalPrice : item.Quantity * item.UnitPrice;
+            // درصد ذخیره‌شده هنگام صدور، snapshot صلاحیت این قلم برای بیمه است.
+            // این کار هم اقلام معاف و هم دسته‌های غیرفعال‌شده را از محاسبهٔ مجدد
+            // خارج می‌کند، بی‌آنکه تغییرات قرارداد/تنظیمات امروز را به سوابق مالی
+            // گذشته تحمیل کند.
+            if (item.InsurancePercent <= 0m)
+            {
+                AddLine(item, itemTotal, 0m, 0m, FractionmentKind.Percent,
+                    "بدون سهم بیمه در زمان صدور", lines, persist);
+                continue;
+            }
+
             string ruleSource;
             FractionmentKind kind;
 

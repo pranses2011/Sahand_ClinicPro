@@ -70,7 +70,7 @@
                                 <TextBlock Text="پزشک (اختیاری)" Style="{StaticResource FieldCaption}" />
                                 <ComboBox ItemsSource="{Binding Doctors}" SelectedIndex="{Binding DoctorIndex}" DisplayMemberPath="Name" />
                                 <TextBlock Text="بیمه" Style="{StaticResource FieldCaption}" />
-                                <ComboBox ItemsSource="{Binding InsuranceCompanies}" SelectedIndex="{Binding InsuranceIndex}" DisplayMemberPath="Name" />
+                                <ComboBox ItemsSource="{Binding InsuranceCompanies}" SelectedIndex="{Binding InsuranceIndex}" DisplayMemberPath="DisplayName" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="نرخ مالیات (٪)" Style="{StaticResource FieldCaption}" />
@@ -89,30 +89,30 @@
                                       CanUserAddRows="False" HeadersVisibility="Column" FontSize="12"
                                       MinHeight="90">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="کد" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="85" FontFamily="{DynamicResource App.CodeFont}" IsReadOnly="True" />
-                                    <DataGridTextColumn Header="شرح خدمت" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" IsReadOnly="True" />
-                                    <DataGridTemplateColumn Header="انجام‌دهنده" Width="150">
+                                    <DataGridTextColumn Header="کد" Binding="{Binding Code, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" IsReadOnly="True" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                    <DataGridTextColumn Header="شرح خدمت" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                    <DataGridTemplateColumn Header="انجام‌دهنده" Width="Auto" MaxWidth="420">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <ComboBox ItemsSource="{Binding DataContext.Performers, RelativeSource={RelativeSource AncestorType=Window}}"
                                                           SelectedItem="{Binding Performer, UpdateSourceTrigger=PropertyChanged}"
                                                           DisplayMemberPath="FullName"
-                                                          FontSize="11.5" />
+                                                          FontSize="11.5" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="60" />
-                                    <DataGridTextColumn Header="قیمت واحد" Binding="{Binding UnitPrice, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="110" IsReadOnly="True" FontFamily="{DynamicResource App.CodeFont}" />
-                                    <DataGridTextColumn Header="سهم بیمه" Binding="{Binding TotalInsurance, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="100" IsReadOnly="True" FontFamily="{DynamicResource App.CodeFont}" />
-                                    <DataGridTextColumn Header="سهم بیمار" Binding="{Binding TotalPatient, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="100" IsReadOnly="True" FontFamily="{DynamicResource App.CodeFont}" />
-                                    <DataGridTemplateColumn Header="" Width="50">
+                                    <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                    <DataGridTextColumn Header="قیمت واحد" Binding="{Binding UnitPrice, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" IsReadOnly="True" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                    <DataGridTextColumn Header="سهم بیمه" Binding="{Binding TotalInsurance, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" IsReadOnly="True" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                    <DataGridTextColumn Header="سهم بیمار" Binding="{Binding TotalPatient, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" IsReadOnly="True" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                    <DataGridTemplateColumn Header="" Width="Auto" MaxWidth="420">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Button Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                                        Foreground="#C62828" Padding="4">
-                                                    <materialDesign:PackIcon Kind="Delete" Width="14" Height="14" />
+                                                        Foreground="#C62828" Padding="4" VerticalAlignment="Center">
+                                                    <materialDesign:PackIcon Kind="Delete" Width="14" Height="14" VerticalAlignment="Center"/>
                                                 </Button>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>

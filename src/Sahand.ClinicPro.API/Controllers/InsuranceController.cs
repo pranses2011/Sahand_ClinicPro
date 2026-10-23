@@ -189,7 +189,7 @@ public class InsuranceController : ApiBaseController
     public async Task<IActionResult> CreateCompany([FromBody] SaveInsuranceCompanyRequest request)
     {
         var result = await _mediator.Send(new Application.Features.Lookups.CreateInsuranceCompanyCommand(
-            request.Name, request.Code, request.Type, request.CoveragePercent, request.IsActive));
+            request.Name, request.Code, request.Type, request.CoveragePercent, request.IsActive, request.IsContracted));
         return ToResponse(result, "شرکت بیمه ثبت شد");
     }
 
@@ -201,7 +201,7 @@ public class InsuranceController : ApiBaseController
     public async Task<IActionResult> UpdateCompany(long id, [FromBody] SaveInsuranceCompanyRequest request)
     {
         var result = await _mediator.Send(new Application.Features.Lookups.UpdateInsuranceCompanyCommand(
-            id, request.Name, request.Code, request.Type, request.CoveragePercent, request.IsActive));
+            id, request.Name, request.Code, request.Type, request.CoveragePercent, request.IsActive, request.IsContracted));
         return ToResponse(result, "شرکت بیمه به‌روزرسانی شد");
     }
 
@@ -234,6 +234,9 @@ public sealed class SaveInsuranceCompanyRequest
 
     /// <summary>وضعیت فعال — در ویرایش معنا دارد</summary>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>طرف قرارداد درمانگاه</summary>
+    public bool? IsContracted { get; set; }
 }
 
 /// <summary>ردیف قاعده تسویه</summary>

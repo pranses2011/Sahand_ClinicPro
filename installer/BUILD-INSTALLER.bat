@@ -1,42 +1,71 @@
 @echo off
 chcp 65001 >nul
-title ساخت نصب‌کننده درمانگاه سهند v1.7.0
-echo ═══════════════════════════════════════════════════
-echo   ساخت نصب‌کننده کلاینت — درمانگاه سهند v1.7.0
-echo ═══════════════════════════════════════════════════
-echo.
+setlocal
+title ساخت بسته نصب درمانگاه سهند
+set "APP_VERSION=2.23.0"
+if not "%CI%"=="" set "CI_MODE=1"
 
-REM ── پیش‌نیاز: .NET 8 SDK روی همین رایانه ──
+echo ===========================================================
+echo   ساخت بسته نصب درمانگاه سهند v%APP_VERSION%
+echo ===========================================================
+
 where dotnet >nul 2>&1
 if errorlevel 1 (
-    echo [خطا] .NET 8 SDK یافت نشد — از dotnet.microsoft.com نصب کنید
-    pause & exit /b 1
+  echo [خطا] .NET 8 SDK یافت نشد.
+  goto :fail
 )
 
-echo [1/3] انتشار کلاینت WPF...
 cd /d "%~dp0.."
-dotnet publish src\Sahand.ClinicPro.Desktop\Sahand.ClinicPro.Desktop.csproj ^
-    -c Release -r win-x64 --self-contained false ^
-    -o publish\desktop
-if errorlevel 1 ( echo [خطا] انتشار ناموفق & pause & exit /b 1 )
+if not exist dist mkdir dist
 
-echo [2/3] کپی مستندات داخل نصب‌کننده...
+echo [1/4] انتشار خودبسنده کلاینت WPF برای Windows x64...
+dotnet publish src\Sahand.ClinicPro.Desktop\Sahand.ClinicPro.Desktop.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o publish\desktop
+if errorlevel 1 goto :fail
 if not exist publish\desktop\docs mkdir publish\desktop\docs
-copy /y docs\guides\*.html publish\desktop\docs\ >nul 2>&1
+copy /y docs\guides\*.html publish\desktop\docs\ >nul
+mkdir publish\desktop\assets 2>nul
+copy /y docs\assets\ClinicPro.png publish\desktop\assets\ >nul
+mkdir publish\desktop\assets\fonts 2>nul
+copy /y docs\assets\fonts\* publish\desktop\assets\fonts\ >nul
+mkdir publish\desktop\screenshots 2>nul
+for %%F in (01-login.png 11-attendance-devices.png 14-license.png install-api-console.png install-firewall.png install-network-map.png install-sql-server.png) do copy /y docs\screenshots\%%F publish\desktop\screenshots\ >nul
 
-echo [3/3] ساخت EXE نصب‌کننده با Inno Setup...
+echo [2/4] ساخت EXE نصب کلاینت...
 set "ISCC=%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
 if not exist "%ISCC%" set "ISCC=%ProgramFiles%\Inno Setup 6\ISCC.exe"
-if exist "%ISCC%" (
-    "%ISCC%" installer\SahandClinicPro.iss
-    if errorlevel 1 ( echo [خطا] کامپایل Inno Setup ناموفق & pause & exit /b 1 )
-    echo.
-    echo ═══════════════════════════════════════════════════
-    echo   نصب‌کننده آماده: dist\SahandClinicPro-Setup-v1.7.0.exe
-    echo ═══════════════════════════════════════════════════
-) else (
-    echo [توجه] Inno Setup 6 یافت نشد — فایل‌های منتشرشده در publish\desktop آماده‌اند
-    echo         برای EXE نهایی، Inno Setup 6 را از jrsoftware.org/isdl نصب کنید و دوباره اجرا کنید
+if not exist "%ISCC%" (
+  echo [خطا] Inno Setup 6 نصب نیست.
+  goto :fail
 )
+"%ISCC%" /DMyAppVersion=%APP_VERSION% installer\SahandClinicPro.iss
+if errorlevel 1 goto :fail
+
+echo [3/4] انتشار خودبسنده API برای سرور Windows x64...
+dotnet publish src\Sahand.ClinicPro.API\Sahand.ClinicPro.API.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o publish\server
+if errorlevel 1 goto :fail
+
+echo [4/4] بسته‌بندی سرور و ابزار نصب خودکار...
+if exist dist\SahandClinicPro-Server-v%APP_VERSION% rmdir /s /q dist\SahandClinicPro-Server-v%APP_VERSION%
+mkdir dist\SahandClinicPro-Server-v%APP_VERSION%\Server
+robocopy publish\server dist\SahandClinicPro-Server-v%APP_VERSION%\Server /E >nul
+if errorlevel 8 goto :fail
+copy /y installer\Install-Server-Package.bat dist\SahandClinicPro-Server-v%APP_VERSION%\ >nul
+copy /y installer\Install-Server-Package.ps1 dist\SahandClinicPro-Server-v%APP_VERSION%\ >nul
+powershell -NoProfile -Command "$guide = (Get-Content 'installer\RELEASE-INSTALL-GUIDE.txt' -Raw).Replace('{VERSION}', '%APP_VERSION%'); Set-Content 'dist\SahandClinicPro-Server-v%APP_VERSION%\RELEASE-INSTALL-GUIDE.txt' $guide -Encoding UTF8"
+if errorlevel 1 goto :fail
+powershell -NoProfile -Command "Compress-Archive -Path 'dist\SahandClinicPro-Server-v%APP_VERSION%\*' -DestinationPath 'dist\SahandClinicPro-Server-v%APP_VERSION%.zip' -Force"
+if errorlevel 1 goto :fail
+
 echo.
-pause
+echo ===========================================================
+echo   کلاینت: dist\SahandClinicPro-Setup-v%APP_VERSION%.exe
+echo   سرور:   dist\SahandClinicPro-Server-v%APP_VERSION%.zip
+echo ===========================================================
+if not defined CI_MODE pause
+exit /b 0
+
+:fail
+echo.
+echo [خطا] ساخت بسته ناموفق بود. پیام‌های بالا را بررسی کنید.
+if not defined CI_MODE pause
+exit /b 1

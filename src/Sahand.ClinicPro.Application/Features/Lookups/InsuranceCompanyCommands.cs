@@ -25,7 +25,8 @@ public record InsuranceCompanyManageDto(
     int Type,
     string TypeName,
     decimal CoveragePercent,
-    bool IsActive);
+    bool IsActive,
+    bool IsContracted);
 
 /// <summary>پرس‌وجوی فهرست کامل بیمه‌ها (پنجرهٔ مدیریت بیمه‌ها)</summary>
 public record GetInsuranceCompaniesForManageQuery
@@ -50,7 +51,7 @@ public class GetInsuranceCompaniesForManageQueryHandler
 
         var items = companies.Select(c => new InsuranceCompanyManageDto(
             c.Id, c.Name, c.Code, (int)c.Type, TypeNameFa(c.Type),
-            c.DefaultCoveragePercent, c.IsActive)).ToList();
+            c.DefaultCoveragePercent, c.IsActive, c.IsContracted)).ToList();
 
         return Result<List<InsuranceCompanyManageDto>>.Success(items);
     }
@@ -72,7 +73,8 @@ public record CreateInsuranceCompanyCommand(
     string? Code,
     int Type,
     decimal CoveragePercent,
-    bool IsActive = true) : IRequest<Result<long>>;
+    bool IsActive = true,
+    bool? IsContracted = null) : IRequest<Result<long>>;
 
 /// <summary>گردانندهٔ ساخت بیمه</summary>
 public class CreateInsuranceCompanyCommandHandler
@@ -109,7 +111,8 @@ public class CreateInsuranceCompanyCommandHandler
             Code = string.IsNullOrWhiteSpace(request.Code) ? null : request.Code.Trim(),
             Type = (InsuranceType)request.Type,
             DefaultCoveragePercent = request.CoveragePercent,
-            IsActive = request.IsActive
+            IsActive = request.IsActive,
+            IsContracted = request.IsContracted ?? false
         };
         await _unitOfWork.Repository<InsuranceCompany>().AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
@@ -127,7 +130,8 @@ public record UpdateInsuranceCompanyCommand(
     string? Code,
     int Type,
     decimal CoveragePercent,
-    bool IsActive) : IRequest<Result>;
+    bool IsActive,
+    bool? IsContracted = null) : IRequest<Result>;
 
 /// <summary>گردانندهٔ ویرایش بیمه</summary>
 public class UpdateInsuranceCompanyCommandHandler
@@ -168,6 +172,7 @@ public class UpdateInsuranceCompanyCommandHandler
         entity.Type = (InsuranceType)request.Type;
         entity.DefaultCoveragePercent = request.CoveragePercent;
         entity.IsActive = request.IsActive;
+        if (request.IsContracted.HasValue) entity.IsContracted = request.IsContracted.Value;
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
 
         // چرخهٔ ۶۰ — باطل‌سازی فهرست بیمه‌ها پس از ویرایش

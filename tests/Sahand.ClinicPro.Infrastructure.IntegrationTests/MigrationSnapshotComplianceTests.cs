@@ -8,7 +8,7 @@ namespace Sahand.ClinicPro.Infrastructure.IntegrationTests;
 
 /// <summary>
 /// تست‌های سازگاری Snapshot مایگریشن‌ها — چرخهٔ ۵۴ (BUG-10):
-/// هفت مایگریشنِ دست‌نویس فایل Designer (و مدل هدفِ snapshot) ندارند؛
+/// مایگریشن‌های دست‌نویسِ ثبت‌شده در فهرست طلایی فایل Designer (و مدل هدفِ snapshot) ندارند؛
 /// این توسط خودشان با ویژگی‌های [DbContext]/[Migration] پوشش داده شده و
 /// گارد کشفِ چرخهٔ ۲۵ (MigrationDiscoveryGuardTests) رابطهٔ EF را می‌سنجد.
 /// این‌جا سه گارد تکمیلی: یکتایی شناسه‌ها، ترتیب زمانی، و «فهرست طلایی» —
@@ -35,6 +35,9 @@ public class MigrationSnapshotComplianceTests
         "Cycle69AutoReminders",      // چرخهٔ ۶۹ (F-03) — ستون Reminder2Sent نوبت
         "Cycle69LabReferenceRanges", // چرخهٔ ۶۹ (F-28/F-29) — بازه‌های مرجع ساخت‌یافتهٔ آزمایش
         "Cycle69PatientTags",        // چرخهٔ ۶۹ (F-18) — برچسب CSV بیمار
+        "AddEmployeeInsuranceFlag",  // گزینهٔ شمول بیمه در پروندهٔ پرسنل
+        "PharmacyConsumptionPurchaseCost", // v2.22.4 — عکس‌فوری بهای خرید اقلام مصرفی (سود حقوق درصدی)
+        "AddInsuranceContractStatus",      // v2.22.4 — وضعیت «طرف قرارداد» بیمه‌ها (وابستگی: اصلاح oldComment)
     };
 
     /// <summary>همهٔ کلاس‌های مایگریشن اسمبلی زیرساخت</summary>

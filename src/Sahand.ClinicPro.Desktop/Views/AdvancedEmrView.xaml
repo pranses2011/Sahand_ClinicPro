@@ -117,7 +117,7 @@
                     <!-- فرم ثبت اندازه‌گیری جدید — چرخه بیست‌وسوم: فیلد تاریخ از
                          انتخابگر تاریخ شمسی استفاده می‌کند (قابل «همهٔ فیلدهای تاریخ») -->
                     <WrapPanel Grid.Row="2" Margin="0,0,0,8">
-                        <controls:PersianDatePicker DateShamsiText="{Binding NewDateShamsi, Mode=TwoWay}"
+                        <controls:JalaliDatePicker DateShamsiText="{Binding NewDateShamsi, Mode=TwoWay}"
                                                     Placeholder="تاریخ اندازه‌گیری" MinWidth="135"
                                                     Margin="0,0,10,0" />
                         <TextBox materialDesign:HintAssist.Hint="وزن (kg)" MinWidth="95"
@@ -136,28 +136,28 @@
                     <!-- جدول اندازه‌گیری‌ها با z-score -->
                     <DataGrid Grid.Row="3" ItemsSource="{Binding GrowthRows}" SelectedItem="{Binding SelectedGrowthRow}"
                               AutoGenerateColumns="False" IsReadOnly="True"
-                              Style="{StaticResource MaterialDesignDataGrid}"
+                              Style="{StaticResource App.TableDataGrid}"
                               HeadersVisibility="Column">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="سن (ماه)" Binding="{Binding AgeMonths, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="وزن kg" Binding="{Binding WeightKg, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="z وزن" Binding="{Binding ZWeight, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="وضعیت وزن" Binding="{Binding StatusWeight, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="قد cm" Binding="{Binding HeightCm, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="z قد" Binding="{Binding ZHeight, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="وضعیت قد" Binding="{Binding StatusHeight, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="محیط سر" Binding="{Binding HeadCirc, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="z سر" Binding="{Binding ZHead, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70">
+                            <DataGridTextColumn Header="تاریخ" Binding="{Binding DateShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="سن (ماه)" Binding="{Binding AgeMonths, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="وزن kg" Binding="{Binding WeightKg, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="z وزن" Binding="{Binding ZWeight, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="وضعیت وزن" Binding="{Binding StatusWeight, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="قد cm" Binding="{Binding HeightCm, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="z قد" Binding="{Binding ZHeight, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="وضعیت قد" Binding="{Binding StatusHeight, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="محیط سر" Binding="{Binding HeadCirc, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="z سر" Binding="{Binding ZHead, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <!-- چرخهٔ ۷۹: کلید عملیاتی آیکونی (هم‌الگوی لیست بیماران) -->
                                         <Button Command="{Binding DataContext.DeleteGrowthCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource App.RowIconButton}" Foreground="#C62828"
-                                                ToolTip="حذف ردیف رشد">
-                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                                ToolTip="حذف ردیف رشد" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                         </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -200,26 +200,26 @@
                     <!-- فهرست -->
                     <DataGrid Grid.Row="1" ItemsSource="{Binding FamilyRows}" SelectedItem="{Binding SelectedFamilyRow}"
                               AutoGenerateColumns="False" IsReadOnly="True"
-                              Style="{StaticResource MaterialDesignDataGrid}"
+                              Style="{StaticResource App.TableDataGrid}"
                               HeadersVisibility="Column">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="خویشاوند" Binding="{Binding Relative, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="بیماری" Binding="{Binding Disease, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="کد ICD" Binding="{Binding Icd10, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="سن شروع" Binding="{Binding OnsetAge, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="ارثی" Binding="{Binding IsGenetic, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="فوت" Binding="{Binding IsDeceased, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="سن فوت" Binding="{Binding DeathAge, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="یادداشت" Binding="{Binding Notes, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70">
+                            <DataGridTextColumn Header="خویشاوند" Binding="{Binding Relative, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="بیماری" Binding="{Binding Disease, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="کد ICD" Binding="{Binding Icd10, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="سن شروع" Binding="{Binding OnsetAge, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="ارثی" Binding="{Binding IsGenetic, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="فوت" Binding="{Binding IsDeceased, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="سن فوت" Binding="{Binding DeathAge, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="یادداشت" Binding="{Binding Notes, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="70" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <!-- چرخهٔ ۷۹: کلید عملیاتی آیکونی (هم‌الگوی لیست بیماران) -->
                                         <Button Command="{Binding DataContext.DeleteFamilyHistoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource App.RowIconButton}" Foreground="#C62828"
-                                                ToolTip="حذف سابقه خانوادگی">
-                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                                ToolTip="حذف سابقه خانوادگی" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                         </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -261,10 +261,10 @@
                     <!-- فهرست طرح‌ها -->
                     <DataGrid Grid.Row="1" ItemsSource="{Binding CarePlanRows}" SelectedItem="{Binding SelectedCarePlan}"
                               AutoGenerateColumns="False" IsReadOnly="True"
-                              Style="{StaticResource MaterialDesignDataGrid}"
+                              Style="{StaticResource App.TableDataGrid}"
                               HeadersVisibility="Column">
                         <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow">
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource App.TableDataGridRow}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsReviewOverdue}" Value="True">
                                         <Setter Property="Background" Value="#33FB8C00" /> <!-- چرخهٔ ۷۸ — نارنجی نیمه‌شفاف؛ سازگار با تم تیره -->
@@ -273,41 +273,41 @@
                             </Style>
                         </DataGrid.RowStyle>
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="بیماری" Binding="{Binding DiseaseTitle, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="ICD-10" Binding="{Binding Icd10, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="شروع" Binding="{Binding StartShamsi, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="بازبینی بعدی" Binding="{Binding NextReviewShamsi, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="اهداف" Binding="{Binding Goals, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTextColumn Header="تیم مراقبت" Binding="{Binding CareTeam, Converter={StaticResource PersianDigits}}" />
-                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="130">
+                            <DataGridTextColumn Header="بیماری" Binding="{Binding DiseaseTitle, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="ICD-10" Binding="{Binding Icd10, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="شروع" Binding="{Binding StartShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="بازبینی بعدی" Binding="{Binding NextReviewShamsi, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="اهداف" Binding="{Binding Goals, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="تیم مراقبت" Binding="{Binding CareTeam, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="130" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <!-- چرخهٔ ۷۹: کلیدهای عملیاتی آیکونی (هم‌الگوی لیست بیماران) -->
-                                        <StackPanel Orientation="Horizontal">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                             <Button Margin="0,0,4,0" ToolTip="تکمیل"
                                                     Command="{Binding DataContext.ChangePlanStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="Completed"
-                                                    Style="{StaticResource App.RowIconButton}" Foreground="#2E7D32">
-                                                <materialDesign:PackIcon Kind="Check" Width="15" Height="15" />
+                                                    Style="{StaticResource App.RowIconButton}" Foreground="#2E7D32" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="Check" Width="15" Height="15" VerticalAlignment="Center"/>
                                             </Button>
                                             <Button Margin="0,0,4,0" ToolTip="بازبینی شد"
                                                     Command="{Binding DataContext.ChangePlanStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="Active"
-                                                    Style="{StaticResource App.RowIconButton}" Foreground="#1565C0">
-                                                <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" />
+                                                    Style="{StaticResource App.RowIconButton}" Foreground="#1565C0" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="Refresh" Width="15" Height="15" VerticalAlignment="Center"/>
                                             </Button>
                                             <Button Margin="0,0,4,0" ToolTip="متوقف"
                                                     Command="{Binding DataContext.ChangePlanStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="Discontinued"
-                                                    Style="{StaticResource App.RowIconButton}" Foreground="#E65100">
-                                                <materialDesign:PackIcon Kind="Pause" Width="15" Height="15" />
+                                                    Style="{StaticResource App.RowIconButton}" Foreground="#E65100" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="Pause" Width="15" Height="15" VerticalAlignment="Center"/>
                                             </Button>
                                             <Button ToolTip="حذف طرح مراقبت"
                                                     Command="{Binding DataContext.DeleteCarePlanCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource App.RowIconButton}" Foreground="#C62828">
-                                                <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" />
+                                                    Style="{StaticResource App.RowIconButton}" Foreground="#C62828" VerticalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="DeleteOutline" Width="15" Height="15" VerticalAlignment="Center"/>
                                             </Button>
                                         </StackPanel>
                                     </DataTemplate>

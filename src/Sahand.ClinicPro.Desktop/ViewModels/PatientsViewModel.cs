@@ -26,7 +26,10 @@ public record PatientRow(
 /// <summary>
 /// مدل کمکی بیمه در ComboBox
 /// </summary>
-public record InsuranceOption(long Id, string Name);
+public record InsuranceOption(long Id, string Name, bool IsContracted = true, decimal CoveragePercent = 0m)
+{
+    public string DisplayName => Id == 0 ? Name : IsContracted ? Name : $"{Name} — غیرطرف قرارداد / آزاد";
+}
 
 /// <summary>
 /// ViewModel فهرست بیماران — گام U2: نوار ابزار کامل + Badge تعداد +
@@ -371,7 +374,7 @@ public partial class PatientFormViewModel : ObservableObject
         var companies = await _api.GetAsync<LookupCompanies>("lookups/insurance-companies");
         if (companies?.Data is not null)
             foreach (var c in companies.Data)
-                InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name));
+                InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name, c.IsContracted, c.CoveragePercent));
         if (_patientId.HasValue)
         {
             // چرخه بیستم (گزارش چهاردهم مالک): پاسخ در پاکت ApiResponse پیچیده
@@ -604,6 +607,8 @@ public partial class PatientFormViewModel : ObservableObject
     {
         public long Id { get; set; }
         public string Name { get; set; } = string.Empty;
+        public bool IsContracted { get; set; }
+        public decimal CoveragePercent { get; set; }
     }
 
     /// <summary>پاسخ جستجوی بیمار</summary>

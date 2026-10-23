@@ -29,22 +29,29 @@ header('Referrer-Policy: no-referrer');
 
 /* ─────────  ورودی  ───────── */
 
-$action = isset($_GET['action']) ? (string)$_GET['action'] : '';
+/*
+ * ═══ ریشه‌یابی (چرخهٔ ۸۰): «heartbeat با ?action= در URL همیشه 400 می‌داد» ═══
+ * پیش‌تر بدنهٔ JSON فقط وقتی خوانده می‌شد که action در query string نبود. اگر
+ * فراخواننده action را در URL می‌گذاشت و پارامترها را در بدنهٔ JSON می‌فرستاد
+ * (حالت رایج HttpClient/curl)، licenseKey و fingerprint خالی می‌ماند و پاسخ
+ * ۴۰۰ «قالب کلید لایسنس نامعتبر است» بود — نه ۲۰۰ با بلوک messages. اکنون
+ * بدنهٔ JSON همیشه خوانده می‌شود و با query string ادغام می‌گردد (بدنه اولویت
+ * دارد). این هم مسیر مستند (بدنهٔ JSON) و هم مسیر query را پشتیبانی می‌کند.
+ */
+$raw     = (string)file_get_contents('php://input');
+$decoded = json_decode($raw, true);
+$json    = is_array($decoded) ? $decoded : [];
 
+$action = (string)($_GET['action'] ?? '');
 if ($action === '') {
-    // خواندن بدنه JSON — سازگار با HttpClient دات‌نت
-    $raw = (string)file_get_contents('php://input');
-    $json = json_decode($raw, true);
-    if (!is_array($json)) {
+    if ($raw !== '' && $decoded === null) {
         ls_json_out(['isValid' => false, 'status' => 'bad_request',
             'message' => 'بدنه درخواست باید JSON معتبر باشد.'], 400);
     }
     $action = (string)($json['action'] ?? '');
-    $_REQUEST = $json;
-} else {
-    // پشتیبانی از query string برای پینگ
-    $_REQUEST = array_merge($_GET, $_REQUEST);
 }
+// پارامترها: query string + بدنهٔ JSON (بدنه اولویت دارد)
+$_REQUEST = array_merge($_GET, $json);
 
 /* ─────────  اقدام: پینگ — بدون Rate Limit  ───────── */
 

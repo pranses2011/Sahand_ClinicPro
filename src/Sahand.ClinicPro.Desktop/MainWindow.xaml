@@ -13,6 +13,8 @@
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
         FlowDirection="RightToLeft"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
         Background="{DynamicResource MaterialDesign.Brush.Background}">
     <Window.Resources>
@@ -42,6 +44,9 @@
         <!-- چرخهٔ ۷۸ — صف مستقل خدمات درمانی (جدا شدن از صف ویزیت) -->
         <DataTemplate DataType="{x:Type vm:ServicesViewModel}">
             <views:ServicesView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ServiceCatalogViewModel}">
+            <views:ServiceCatalogView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:PrescriptionsViewModel}">
             <views:PrescriptionsView />
@@ -887,8 +892,8 @@
                • میزبان: Grid تمام-صفحه بدون پس‌زمینه → نواحی خالیِ لایه
                  کلیک را از میان خود به رابط زیر می‌رسانند (hit-test شفاف)؛
                  فقط خود کارت‌ها (دکمه) کلیک‌خور و قابل بستن‌اند.
-               • لنگر: پایین-میانه با ۱۸px فاصله از لبهٔ پنجره — جدیدترین
-                 پیام همیشه در پایین‌ترین نقطه می‌نشیند (الگوی اعلان ویندوز).
+               • لنگر: پایین-میانه با ۵۴px فاصله از لبهٔ پنجره؛ توست بالای
+                 نوار وضعیت قرار می‌گیرد تا لبهٔ پایین پنجره آن را نبُرد.
                • رشد: StackPanel لنگر-پایین؛ کارتِ بلندتر «به بالا» رشد
                  می‌کند (VerticalAlignment=Bottom) و چون داخل پنجرهٔ اصلی
                  است، هیچ سازوکار قفل‌اندازه‌ای وجود ندارد — ارتفاع کارت
@@ -900,7 +905,7 @@
             <ItemsControl ItemsSource="{Binding Toasts}"
                           VerticalAlignment="Bottom"
                           HorizontalAlignment="Center"
-                          Margin="16,0,16,18"
+                          Margin="16,0,16,54"
                           Focusable="False">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -915,6 +920,7 @@
                         <!-- کل کپسول یک دکمه است: کلیک روی هر جای توست = بستن -->
                         <Button Command="{Binding DataContext.DismissToastCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                 CommandParameter="{Binding}"
+                                MinHeight="60" VerticalContentAlignment="Stretch"
                                 Cursor="Hand" Margin="0,0,0,10"
                                 HorizontalAlignment="Center"
                                 Focusable="False"
@@ -930,7 +936,7 @@
                                             BorderBrush="#CDD5E0"
                                             BorderThickness="1.5"
                                             Padding="0"
-                                            MinHeight="56"
+                                            MinHeight="60"
                                             MaxWidth="480"
                                             SnapsToDevicePixels="True"
                                             UseLayoutRounding="True"

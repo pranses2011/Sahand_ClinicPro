@@ -330,7 +330,7 @@
                     </materialDesign:Card>
 
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Rows}" AutoGenerateColumns="False" CanUserAddRows="False"
-                              IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="#F7FAFD"
+                              IsReadOnly="True" HeadersVisibility="Column" FontSize="12" AlternatingRowBackground="{DynamicResource App.ZebraRowBrush}"
                               x:Name="ResultsGrid" />
                 </Grid>
 

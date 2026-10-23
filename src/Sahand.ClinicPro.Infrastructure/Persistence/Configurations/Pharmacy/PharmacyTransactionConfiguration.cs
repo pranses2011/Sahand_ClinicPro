@@ -16,6 +16,8 @@ public class PharmacyTransactionConfiguration : IEntityTypeConfiguration<Pharmac
         builder.Property(x => x.TransactionType).HasConversion<byte>().HasComment("نوع تراکنش");
         builder.Property(x => x.Quantity).HasPrecision(10, 2).HasComment("تعداد");
         builder.Property(x => x.UnitPrice).HasPrecision(18, 0).HasComment("قیمت واحد");
+        builder.Property(x => x.PurchaseUnitCost).HasPrecision(18, 0)
+            .HasComment("عکس‌فوری بهای خرید واحد برای محاسبهٔ سود مصرفی‌ها");
         builder.Property(x => x.TotalPrice).HasPrecision(18, 0).HasComment("قیمت کل");
         builder.Property(x => x.ReferenceType).HasConversion<byte>().HasComment("منشأ تراکنش");
 

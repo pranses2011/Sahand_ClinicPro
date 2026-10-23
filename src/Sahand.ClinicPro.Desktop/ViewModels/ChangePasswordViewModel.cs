@@ -20,7 +20,11 @@ public partial class ChangePasswordViewModel : ObservableObject
     /// <summary>
     /// سازنده با تزریق کلاینت API
     /// </summary>
-    public ChangePasswordViewModel(IApiClient api) => _api = api;
+    public ChangePasswordViewModel(IApiClient api)
+    {
+        _api = api;
+        _ = LoadPasswordPolicyAsync();
+    }
 
     /// <summary>نام کاربریِ واردشده — فقط برای نمایش در سربرگ پنجره</summary>
     public string Username { get; set; } = string.Empty;
@@ -29,7 +33,7 @@ public partial class ChangePasswordViewModel : ObservableObject
     [ObservableProperty]
     private string _currentPassword = string.Empty;
 
-    /// <summary>رمز عبور جدید — حداقل ۸ کاراکتر با حرف و رقم (سیاست سرور)</summary>
+    /// <summary>رمز عبور جدید — ارزیابی قطعی مطابق سیاست جاری سرور</summary>
     [ObservableProperty]
     private string _newPassword = string.Empty;
 
@@ -115,15 +119,43 @@ public partial class ChangePasswordViewModel : ObservableObject
         }
     }
 
+    [ObservableProperty]
+    private string _passwordPolicyHint = "رمز جدید باید با سیاست امنیتی درمانگاه سازگار باشد و با رمزهای اخیر یکسان نباشد.";
+
+    private async Task LoadPasswordPolicyAsync()
+    {
+        var response = await _api.GetAsync<PasswordPolicyResponse>("users/password-policy");
+        if (response?.Data is not { } policy) return;
+        var requirements = new List<string> { $"حداقل {policy.MinPasswordLength} نویسه" };
+        if (policy.RequireMixedCase) requirements.Add("حروف کوچک و بزرگ");
+        if (policy.RequireDigit) requirements.Add("عدد");
+        if (policy.RequireSpecialChar) requirements.Add("نویسهٔ ویژه");
+        requirements.Add("متفاوت با رمزهای اخیر");
+        PasswordPolicyHint = string.Join("، ", requirements);
+    }
+
+    private sealed class PasswordPolicyResponse
+    {
+        public bool IsSuccess { get; set; }
+        public PasswordPolicyDto? Data { get; set; }
+    }
+
+    private sealed class PasswordPolicyDto
+    {
+        public int MinPasswordLength { get; set; }
+        public bool RequireMixedCase { get; set; }
+        public bool RequireDigit { get; set; }
+        public bool RequireSpecialChar { get; set; }
+    }
+
     /// <summary>
-    /// امکان ثبت — هر سه کادر پر باشد و رمز جدید حداقل ۸ کاراکتر داشته باشد؛
-    /// سیاست کامل (حرف بزرگ/کوچک/عدد/علامت و تاریخچه رمزها) در سرور اعمال می‌شود
-    /// و پیام خطای فارسی همان‌جا ساخته می‌شود
+    /// امکان ثبت — هر سه کادر پر باشد؛ تمام محدودیت‌های پویا در سرور بررسی
+    /// می‌شوند تا حداقل‌طول یا الزام غیرفعال‌شده از تنظیمات نقض نشود
     /// </summary>
     private bool CanChange() =>
         !IsBusy
         && !string.IsNullOrEmpty(CurrentPassword)
-        && NewPassword.Length >= 8
+        && !string.IsNullOrEmpty(NewPassword)
         && !string.IsNullOrEmpty(ConfirmPassword);
 
     /// <summary>به‌روزرسانی امکان دکمه با تغییر کادرها</summary>

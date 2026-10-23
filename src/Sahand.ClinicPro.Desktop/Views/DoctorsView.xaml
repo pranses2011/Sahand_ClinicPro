@@ -90,14 +90,14 @@
                   CanUserSortColumns="True"
                   IsReadOnly="True"
                   CanUserAddRows="False"
-                  AlternatingRowBackground="#F7FAFD"
+                  AlternatingRowBackground="{DynamicResource App.ZebraRowBrush}"
                   HeadersVisibility="Column"
                   RowBackground="Transparent"
                   FontSize="12">
             <DataGrid.Columns>
                 <!-- ─── عکس — چرخه هجدهم: تعویض از پرسنل مرتبط / چرخهٔ سی‌وهفتم:
                      بندانگشتی دایره‌ایِ قابل‌کلیک به‌جای آیکون «نمایش بزرگ» ─── -->
-                <DataGridTemplateColumn Header="عکس" Width="96">
+                <DataGridTemplateColumn Header="عکس" Width="Auto" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -113,16 +113,16 @@
                                         ToolTip="نمایش بزرگ عکس"
                                         Command="{Binding DataContext.ViewDoctorPhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
-                                        Padding="0" Margin="0,0,8,0" Cursor="Hand">
+                                        Padding="0" Margin="0,0,8,0" Cursor="Hand" VerticalAlignment="Center">
                                     <Grid Width="34" Height="34">
                                         <!-- زمینهٔ روشن + حلقهٔ دور بندانگشتی -->
-                                        <Ellipse Width="34" Height="34" Fill="#ECEFF1" Stroke="#B0BEC5" StrokeThickness="1" />
+                                        <Ellipse Width="34" Height="34" Fill="#ECEFF1" Stroke="#B0BEC5" StrokeThickness="1" VerticalAlignment="Center"/>
                                         <!-- جای‌نگهدار آدمک — زیر لایهٔ عکس -->
                                         <materialDesign:PackIcon Kind="Account" Width="20" Height="20"
                                                                  HorizontalAlignment="Center" VerticalAlignment="Center"
                                                                  Foreground="#90A4AE" />
                                         <!-- بندانگشتی عکس — لایهٔ رویی؛ با پر شدن Photo آدمک را می‌پوشاند -->
-                                        <Ellipse Width="34" Height="34">
+                                        <Ellipse Width="34" Height="34" VerticalAlignment="Center">
                                             <Ellipse.Fill>
                                                 <ImageBrush ImageSource="{Binding Photo}" Stretch="UniformToFill" />
                                             </Ellipse.Fill>
@@ -133,8 +133,8 @@
                                         ToolTip="انتخاب / تعویض عکس"
                                         Command="{Binding DataContext.ChangeDoctorPhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
-                                        Foreground="#2E7D32" Padding="4,2">
-                                    <materialDesign:PackIcon Kind="ImagePlus" Width="18" Height="18" />
+                                        Foreground="#2E7D32" Padding="4,2" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="ImagePlus" Width="18" Height="18" VerticalAlignment="Center"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>
@@ -142,11 +142,11 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="شماره نظام"
                                     Binding="{Binding MedicalLicenseNo, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
-                                    Width="105" FontFamily="{DynamicResource App.CodeFont}" />
-                <DataGridTemplateColumn Header="نام و نام‌خانوادگی" Width="170" SortMemberPath="FullName">
+                                    Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTemplateColumn Header="نام و نام‌خانوادگی" Width="Auto" SortMemberPath="FullName" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <materialDesign:PackIcon Kind="Account" Width="15" Height="15"
                                                          Opacity="0.55" VerticalAlignment="Center" />
                                 <TextBlock Text="{Binding FullName}" FontWeight="SemiBold"
@@ -157,13 +157,13 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="تخصص"
                                     Binding="{Binding SpecialtyName, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
-                                    Width="120" />
+                                    Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                 <DataGridTextColumn Header="فوق‌تخصص"
                                     Binding="{Binding SubSpecialtyName, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
-                                    Width="120" />
-                <DataGridTextColumn Binding="{Binding FeeDisplay, Converter={StaticResource PersianDigits}}" Width="120"><DataGridTextColumn.Header><TextBlock><Run Text="حق ویزیت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
+                                    Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Binding="{Binding FeeDisplay, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420"><DataGridTextColumn.Header><TextBlock><Run Text="حق ویزیت (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></DataGridTextColumn.Header>
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                             <Setter Property="HorizontalAlignment" Value="Left" />
                             <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
                         </Style>
@@ -171,26 +171,26 @@
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="مدت (دقیقه)"
                                     Binding="{Binding VisitDuration, Converter={StaticResource PersianDigits}}"
-                                    Width="85">
+                                    Width="Auto" MaxWidth="420">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                             <Setter Property="HorizontalAlignment" Value="Center" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="درصد سهم"
                                     Binding="{Binding DoctorPercentage, Converter={StaticResource PersianDigits}}"
-                                    Width="75">
+                                    Width="Auto" MaxWidth="420">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                             <Setter Property="HorizontalAlignment" Value="Center" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTemplateColumn Header="وضعیت" Width="80" SortMemberPath="IsActive">
+                <DataGridTemplateColumn Header="وضعیت" Width="Auto" SortMemberPath="IsActive" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center">
+                            <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Border.Style>
                                     <Style TargetType="Border">
                                         <Setter Property="Background" Value="#FFCDD2" />
@@ -202,16 +202,16 @@
                                     </Style>
                                 </Border.Style>
                                 <TextBlock FontSize="11"
-                                           Text="{Binding IsActive, Converter={StaticResource BoolToText}}" />
+                                           Text="{Binding IsActive, Converter={StaticResource BoolToText}}" VerticalAlignment="Center"/>
                             </Border>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="امتیاز"
                                     Binding="{Binding RatingDisplay, Converter={StaticResource PersianDigits}}"
-                                    Width="70">
+                                    Width="Auto" MaxWidth="420">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                             <Setter Property="HorizontalAlignment" Value="Center" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
@@ -220,33 +220,33 @@
                      چهار دکمهٔ آیکونی با پدینگ استاندارد متریال در ۱۷۰px بریده می‌شدند
                      و «ناقص دیده می‌شدند»؛ چرخهٔ بیست‌ونهم: پنجمین کلید «مشخصات کاربری»
                      (گزارش هجدهم مالک) — عرض به ۲۶۶ رسید -->
-                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="266">
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="266" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Button Command="{Binding DataContext.EditDoctorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource App.RowIconButton}"
-                                        ToolTip="ویرایش پزشک (۵ تب کامل)" Margin="1,0">
-                                    <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" />
+                                        ToolTip="ویرایش پزشک (۵ تب کامل)" Margin="1,0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Command="{Binding DataContext.ShowPerformanceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource App.RowIconButton}"
-                                        ToolTip="آمار عملکرد ویزیت و درآمد" Margin="1,0">
-                                    <materialDesign:PackIcon Kind="ChartBar" Width="15" Height="15" />
+                                        ToolTip="آمار عملکرد ویزیت و درآمد" Margin="1,0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="ChartBar" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Command="{Binding DataContext.EditDoctorScheduleCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource App.RowIconButton}"
-                                        ToolTip="برنامه کاری هفتگی — باز شدن مستقیم روی تب برنامهٔ کاری (چرخهٔ ۳۷)" Margin="1,0">
-                                    <materialDesign:PackIcon Kind="CalendarClock" Width="15" Height="15" />
+                                        ToolTip="برنامه کاری هفتگی — باز شدن مستقیم روی تب برنامهٔ کاری (چرخهٔ ۳۷)" Margin="1,0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="CalendarClock" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Command="{Binding DataContext.ShowPerformanceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource App.RowIconButton}"
-                                        ToolTip="محاسبه کارانه (داخل آمار عملکرد)" Margin="1,0">
-                                    <materialDesign:PackIcon Kind="CashMultiple" Width="15" Height="15" />
+                                        ToolTip="محاسبه کارانه (داخل آمار عملکرد)" Margin="1,0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="CashMultiple" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                                 <!-- مشخصات کاربری — چرخهٔ بیست‌ونهم (گزارش هجدهم مالک):
                                      حسابِ ورودِ متصل به پرسنلِ همین پزشک را ویرایش یا می‌سازد -->
@@ -254,8 +254,8 @@
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource App.RowIconButton}"
                                         ToolTip="مشخصات کاربری — ویرایش حساب ورودِ متصل یا ساخت حساب جدید" Margin="1,0"
-                                        Foreground="#00695C">
-                                    <materialDesign:PackIcon Kind="AccountKey" Width="15" Height="15" />
+                                        Foreground="#00695C" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="AccountKey" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>

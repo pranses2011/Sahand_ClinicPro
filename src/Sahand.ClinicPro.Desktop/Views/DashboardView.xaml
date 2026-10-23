@@ -9,7 +9,9 @@
              xmlns:helpers="clr-namespace:Sahand.ClinicPro.Desktop.Helpers"
              xmlns:local="clr-namespace:Sahand.ClinicPro.Desktop"
              mc:Ignorable="d"
-             FlowDirection="RightToLeft">
+             FlowDirection="RightToLeft"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True">
     <!-- ═══════════════════════════════════════════════════════════════════
          داشبورد — بازطراحی کامل چرخهٔ ۷۲ (گزارش مالک: «داشبورد رو بازطراحی
          بکن و خیلی حرفه ای و زیبا به همراه کارت های آماری و نموداری باشه و
@@ -505,16 +507,16 @@
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn Header="زمان"
                                                                         Binding="{Binding TimeShamsi, Converter={StaticResource PersianDigits}}"
-                                                                        Width="150" />
+                                                                        Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                                                     <DataGridTextColumn Header="کاربر"
                                                                         Binding="{Binding User, Converter={StaticResource PersianDigits}}"
-                                                                        Width="130" />
+                                                                        Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                                                     <DataGridTextColumn Header="عملیات"
                                                                         Binding="{Binding Action, Converter={StaticResource PersianDigits}}"
-                                                                        Width="110" />
+                                                                        Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                                                     <DataGridTextColumn Header="موجودیت"
                                                                         Binding="{Binding Entity, Converter={StaticResource PersianDigits}}"
-                                                                        Width="*" />
+                                                                        Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                                                 </DataGrid.Columns>
                                             </DataGrid>
                                         </Grid>
@@ -564,7 +566,7 @@
                                          ║ گزارش مالک: «پنل مبانبرها رو هم بصورت حرفه ای و زیبا از   ║
                                          ║ اول طراحی بکن (کدهای قبلی رو در نظر نگیر و کد جدید بنویس)» ║
                                          ║ کاشی افقی: چیپ آیکون مربع‌گوشه‌ی ته‌رنگِ دسته + عنوان +      ║
-                                         ║ زیرنویس دسته؛ ارتفاع قطعی ۷۶px، بدون سایه/انیمیشن مرزبر  ║
+                                         ║ زیرنویس دسته؛ ارتفاع پایهٔ کشسان برای فونت/DPI، بدون سایه ║
                                          ╚══════════════════════════════════════════════════════════╝ -->
                                     <Border Background="{DynamicResource MaterialDesign.Brush.Card.Background}" CornerRadius="16" Padding="14,10" Margin="0,0,0,12"
                                             BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1.2">
@@ -614,7 +616,7 @@
                                                     <ToggleButton IsChecked="{Binding IsEditingShortcuts}"
                                                                   Width="34" Height="34" Padding="0"
                                                                   Cursor="Hand" Focusable="False" ClickMode="Press"
-                                                                  ToolTip="حالت ویرایش — دکمهٔ حذف روی هر کاشی نمایان می‌شود؛ پایان ویرایش = ذخیرهٔ خودکار">
+                                                                  ToolTip="حالت ویرایش — کاشی‌ها را برای جابه‌جایی بکشید؛ دکمهٔ حذف نیز نمایان می‌شود و با پایان ویرایش ترتیب ذخیره می‌شود">
                                                         <ToggleButton.Template>
                                                             <ControlTemplate TargetType="ToggleButton">
                                                                 <Border x:Name="EditCircle" Width="34" Height="34" CornerRadius="17"
@@ -652,25 +654,26 @@
                                                 </StackPanel>
                                             </Border>
 
-                                            <!-- کاشی‌های میانبر — طراحی جدید: عرض کشسان ۱۶۸px، ارتفاع قطعی ۷۶px -->
-                                            <ItemsControl ItemsSource="{Binding Shortcuts}">
+                                            <!-- کاشی‌های میانبر — عرض ۱۶۸px، ارتفاع پایهٔ کشسان و متن چندسطری -->
+                                            <ItemsControl ItemsSource="{Binding Shortcuts}"
+                                                          helpers:DragDropReorder.Enabled="{Binding IsEditingShortcuts}">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
-                                                        <WrapPanel />
+                                                        <WrapPanel HorizontalAlignment="Center" />
                                                     </ItemsPanelTemplate>
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <!-- چرخهٔ ۷۴: MinHeight ۷۶ ← ۸۴ و Padding عمودی ۸ ← ۱۰ —
-                                                             فضای تنفس بیشتر برای زیرنویس دسته (گزارش مالک:
-                                                             «کلیدهای میانبر هنوز هم بریدگی زیرشون رو دارند») -->
-                                                        <Grid Margin="0,0,8,8" Width="168" MinHeight="84">
+                                                        <!-- فضای عمودی کشسان و متن چندسطری برای اطمینان از نمایش کامل کاشی
+                                                             در فونت‌ها و DPIهای مختلف (گزارش مالک: بریدگی پایین میانبرها). -->
+                                                        <Grid Margin="0,0,8,8" Width="168" MinHeight="96">
                                                             <!-- کاشی اصلی — کلیک = ناوبری مستقیم
                                                                  (چرخهٔ ۷۳: Height قطعی ۷۶ ← MinHeight؛ محتوا هرگز
                                                                  از مرز پایین کاشی بیرون نمی‌زند و زیرنویس دسته
                                                                  کامل دیده می‌شود) -->
                                                             <Button Command="{Binding DataContext.OpenShortcutCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                     CommandParameter="{Binding}"
+                                                                    MinHeight="96" VerticalContentAlignment="Stretch"
                                                                     Cursor="Hand" Focusable="False"
                                                                     ToolTip="{Binding Title, StringFormat=باز کردن {0}}">
                                                                 <Button.Template>
@@ -679,7 +682,7 @@
                                                                                 Background="{Binding GroupColor, Converter={StaticResource HexBrush}, ConverterParameter=tint, FallbackValue=#F5F7FB}"
                                                                                 BorderBrush="{Binding GroupColor, Converter={StaticResource HexToBrush}, FallbackValue=#CFD8DC}"
                                                                                 BorderThickness="1.3"
-                                                                                MinHeight="84" Padding="12,10"
+                                                                                MinHeight="96" Padding="12,12"
                                                                                 UseLayoutRounding="True" SnapsToDevicePixels="True">
                                                                             <DockPanel VerticalAlignment="Center">
                                                                                 <!-- چیپ آیکون — مربع گوشه‌گرد هم‌رنگ دسته -->
@@ -694,10 +697,10 @@
                                                                                 <StackPanel VerticalAlignment="Center">
                                                                                     <TextBlock Text="{Binding Title, TargetNullValue=بدون عنوان, FallbackValue=بدون عنوان}"
                                                                                                FontSize="12" FontWeight="Bold" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-                                                                                               TextTrimming="CharacterEllipsis" />
+                                                                                               TextWrapping="Wrap" />
                                                                                     <TextBlock Text="{Binding Group}" FontSize="9.5"
                                                                                                Foreground="#78909C" Margin="0,3,0,0"
-                                                                                               TextTrimming="CharacterEllipsis" />
+                                                                                               TextWrapping="Wrap" />
                                                                                 </StackPanel>
                                                                             </DockPanel>
                                                                         </Border>
@@ -751,7 +754,12 @@
             </DataTemplate>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,14">
+    <!-- اسکرول فیزیکی + فضای انتهایی: بخش‌های پایین داشبورد (به‌ویژه کاشی‌های
+         میانبر) باید تا پایان از زیر لبهٔ viewport بیرون آورده شوند؛ اسکرول
+         منطقی روی StackPanel گاهی آیتمِ آخر را نیمه‌نمایان باقی می‌گذارد. -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  CanContentScroll="False"
+                  Padding="20,14,20,96">
         <StackPanel>
 
             <!-- ╔══════════════════════════════════════════════════════════╗
@@ -825,7 +833,7 @@
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ViewDashboardVariant" Width="20" Height="20"
                                                      Foreground="#80DEEA" VerticalAlignment="Center" Margin="0,0,8,0" />
-                            <TextBlock Text="داشبورد مدیریت درمانگاه" FontSize="17" FontWeight="Bold"
+                            <TextBlock Text="{Binding ClinicHeader}" FontSize="17" FontWeight="Bold"
                                        Foreground="White" VerticalAlignment="Center" />
                             <!-- نشان نسخه + تاریخ ساخت — تشخیصیِ جایگزینی فایل‌ها (چرخهٔ ۶۷) -->
                             <Border CornerRadius="9" Padding="8,2" Margin="12,0,0,0"
@@ -941,6 +949,27 @@
                 </StackPanel>
             </Border>
 
+            <!-- میانبرها مستقل از KPIها در ابتدای محتوای داشبورد قرار دارند؛
+                 همین آیتم در فهرست بخش‌های پایین پنهان می‌شود تا دوبار دیده نشود. -->
+            <ItemsControl ItemsSource="{Binding Sections}" Margin="0,0,0,10">
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Key}" Value="shortcuts">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <ContentControl Content="{Binding}"
+                                        ContentTemplateSelector="{StaticResource DashboardSectionSelector}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
             <!-- ╔══════════════════════════════════════════════════════════╗
                  ║ ۳) ردیف کارت‌های KPI — پنج کارت شخصی‌سازی‌پذیر (چرخهٔ ۷۲)  ║
                  ╚══════════════════════════════════════════════════════════╝ -->
@@ -960,6 +989,15 @@
             <ItemsControl ItemsSource="{Binding Sections}"
                           helpers:DragDropReorder.Enabled="True"
                           Margin="0,12,0,0">
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Key}" Value="shortcuts">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <ContentControl Content="{Binding}"

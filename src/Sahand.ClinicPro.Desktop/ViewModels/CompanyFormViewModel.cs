@@ -46,6 +46,10 @@ public partial class CompanyFormViewModel : ObservableObject
     [ObservableProperty]
     private decimal _coveragePercent = 70m;
 
+    /// <summary>آیا شرکت طرف قرارداد درمانگاه است؟</summary>
+    [ObservableProperty]
+    private bool _isContracted;
+
     /// <summary>فعال باشد؟ (فقط در ویرایش)</summary>
     [ObservableProperty]
     private bool _isActive = true;
@@ -74,6 +78,7 @@ public partial class CompanyFormViewModel : ObservableObject
             Code = editTarget.Code;
             CoveragePercent = editTarget.CoveragePercent;
             IsActive = editTarget.IsActive;
+            IsContracted = editTarget.IsContracted;
             // یافتن نمایهٔ گزینهٔ متناظر با نوع فعلی
             var idx = Array.FindIndex(TypeOptions, t => t.Value == editTarget.Type);
             TypeIndex = idx >= 0 ? idx : 3;
@@ -105,7 +110,8 @@ public partial class CompanyFormViewModel : ObservableObject
             code = string.IsNullOrWhiteSpace(Code) ? null : Code.Trim(),
             type = TypeOptions[TypeIndex].Value,
             coveragePercent = CoveragePercent,
-            isActive = IsActive
+            isActive = IsActive,
+            isContracted = IsContracted
         };
 
         bool ok;

@@ -166,15 +166,15 @@
                     <DataGrid Grid.Row="2" ItemsSource="{Binding Surveys}"
                               SelectedItem="{Binding SelectedSurvey}"
                               AutoGenerateColumns="False" IsReadOnly="True"
-                              Style="{StaticResource MaterialDesignDataGrid}"
+                              Style="{StaticResource App.TableDataGrid}"
                               HeadersVisibility="Column"
                               FontSize="12.5" SelectionMode="Single">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="عنوان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="2.4*" />
-                            <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="وضعیت" Binding="{Binding ActiveText, Converter={StaticResource PersianDigits}}" Width="*" />
-                            <DataGridTextColumn Header="پاسخ‌ها" Binding="{Binding ResponseCount, Converter={StaticResource PersianDigits}}" Width="0.7*" />
-                            <DataGridTextColumn Header="میانگین امتیاز" Binding="{Binding AverageText, Converter={StaticResource PersianDigits}}" Width="*" />
+                            <DataGridTextColumn Header="عنوان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="وضعیت" Binding="{Binding ActiveText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="پاسخ‌ها" Binding="{Binding ResponseCount, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="میانگین امتیاز" Binding="{Binding AverageText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>

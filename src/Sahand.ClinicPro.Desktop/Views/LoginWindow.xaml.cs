@@ -1,6 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Media3D;
 using Sahand.ClinicPro.Desktop.Services;
 using Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -47,11 +51,42 @@ public partial class LoginWindow : Window
         };
     }
 
-    /// <summary>کشیدن پنجره بدون نوار عنوان — دکمه ماوس روی پس‌زمینه</summary>
+    /// <summary>
+    /// کشیدن فرم از سطح خالی کارت. رویداد روی کارت قرار دارد، اما ورودی‌ها و
+    /// دکمه‌های داخل آن نباید با شروع DragMove از کار بیفتند.
+    /// </summary>
     private void OnDragWindow(object sender, MouseButtonEventArgs e)
     {
-        if (e.ButtonState == MouseButtonState.Pressed)
+        if (e.ButtonState != MouseButtonState.Pressed || IsInteractiveSource(e.OriginalSource as DependencyObject))
+            return;
+
+        try
+        {
             DragMove();
+            e.Handled = true;
+        }
+        catch (InvalidOperationException)
+        {
+            // اگر سیستم پنجره در همان لحظه در حال تغییر حالت بود، کلیک عادی بماند.
+        }
+    }
+
+    private static bool IsInteractiveSource(DependencyObject? element)
+    {
+        while (element is not null)
+        {
+            if (element is ButtonBase or TextBoxBase or System.Windows.Controls.PasswordBox or ComboBox)
+                return true;
+
+            element = element switch
+            {
+                Visual or Visual3D => VisualTreeHelper.GetParent(element),
+                ContentElement content => ContentOperations.GetParent(content) ?? LogicalTreeHelper.GetParent(content),
+                _ => LogicalTreeHelper.GetParent(element)
+            };
+        }
+
+        return false;
     }
 
     /// <summary>دکمه بستن پنجره</summary>

@@ -7,7 +7,7 @@ namespace Sahand.ClinicPro.Desktop.ViewModels;
 
 /// <summary>
 /// ViewModel تنظیمات سیستم — گام U15 طبق فرم ۲۸:
-/// سایدبار منو + بخش‌ها: اطلاعات درمانگاه / ماژول‌ها / سامانه‌های دولتی / چاپگر / تم / امنیت
+/// سایدبار منو + بخش‌ها: اطلاعات درمانگاه / ماژول‌ها / سامانه‌های دولتی / چاپگر / تم / امنیت / بیمه
 /// </summary>
 public partial class SettingsViewModel : ViewModelBase
 {
@@ -25,7 +25,7 @@ public partial class SettingsViewModel : ViewModelBase
     /// <summary>عنوان صفحه</summary>
     public override string Title => "تنظیمات";
 
-    /// <summary>بخش فعال سایدبار — ۰ اطلاعات، ۱ ماژول‌ها، ۲ دولتی، ۳ چاپگر، ۴ تم، ۵ امنیت</summary>
+    /// <summary>بخش فعال سایدبار — ۰ اطلاعات، ۱ ماژول‌ها، ۲ دولتی، ۳ چاپگر، ۴ تم، ۵ امنیت، ۶ بیمه</summary>
     [ObservableProperty]
     private int _sectionIndex;
 
@@ -476,6 +476,14 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private int _sessionTimeoutMinutes = 20;
 
+    /// <summary>اعمال سهم بیمه برای ویزیت پزشکان</summary>
+    [ObservableProperty]
+    private bool _applyInsuranceToDoctorVisits = true;
+
+    /// <summary>اعمال سهم بیمه برای خدمات درمانی</summary>
+    [ObservableProperty]
+    private bool _applyInsuranceToMedicalServices = true;
+
     /// <summary>ثبت Audit Log</summary>
     [ObservableProperty]
     private bool _auditLogEnabled = true;
@@ -550,6 +558,8 @@ public partial class SettingsViewModel : ViewModelBase
         if (value == 0) _ = RefreshThenLoadClinicInfoAsync();
         else if (value == 1) _ = RefreshThenLoadModulesAsync();
         else if (value == 2) _ = LoadGovSystemsAsync();
+        else if (value == 5) _ = LoadSecuritySettingsAsync();
+        else if (value == 6) _ = LoadInsuranceSettingsAsync();
     }
 
     /// <summary>
@@ -1204,6 +1214,39 @@ public partial class SettingsViewModel : ViewModelBase
             ["AuditLogEnabled"] = AuditLogEnabled ? "true" : "false"
         });
     }
+
+    /// <summary>خواندن تنظیمات امنیت برای جلوگیری از ذخیرهٔ مقادیر پیش‌فرض ناخواسته</summary>
+    private async Task LoadSecuritySettingsAsync()
+    {
+        var response = await _api.GetAsync<SettingsResponse>("settings?category=Security");
+        var items = response?.Data ?? new List<SettingDto>();
+        if (int.TryParse(Value(items, "MinPasswordLength"), out var minLength)) MinPasswordLength = Math.Clamp(minLength, 1, 128);
+        if (bool.TryParse(Value(items, "RequireMixedCase"), out var mixedCase)) RequireMixedCase = mixedCase;
+        if (bool.TryParse(Value(items, "RequireDigit"), out var requireDigit)) RequireDigit = requireDigit;
+        if (bool.TryParse(Value(items, "RequireSpecialChar"), out var requireSpecial)) RequireSpecialChar = requireSpecial;
+        if (int.TryParse(Value(items, "MaxFailedAttempts"), out var attempts)) MaxFailedAttempts = attempts;
+        if (int.TryParse(Value(items, "LockoutMinutes"), out var lockout)) LockoutMinutes = lockout;
+        if (int.TryParse(Value(items, "PasswordExpiryDays"), out var expiry)) PasswordExpiryDays = expiry;
+        if (int.TryParse(Value(items, "SessionTimeoutMinutes"), out var timeout)) SessionTimeoutMinutes = timeout;
+        if (bool.TryParse(Value(items, "AuditLogEnabled"), out var audit)) AuditLogEnabled = audit;
+    }
+
+    /// <summary>خواندن تنظیمات تفکیکی بیمه</summary>
+    private async Task LoadInsuranceSettingsAsync()
+    {
+        var response = await _api.GetAsync<SettingsResponse>("settings?category=Insurance");
+        var items = response?.Data ?? new List<SettingDto>();
+        if (bool.TryParse(Value(items, "ApplyToDoctorVisits"), out var visits)) ApplyInsuranceToDoctorVisits = visits;
+        if (bool.TryParse(Value(items, "ApplyToMedicalServices"), out var services)) ApplyInsuranceToMedicalServices = services;
+    }
+
+    /// <summary>ذخیرهٔ تنظیمات بیمه بدون وابستگی دو دسته به هم</summary>
+    [RelayCommand]
+    private Task SaveInsuranceSettingsAsync() => SaveSettingsBatchAsync("Insurance", new Dictionary<string, string?>
+    {
+        ["ApplyToDoctorVisits"] = ApplyInsuranceToDoctorVisits ? "true" : "false",
+        ["ApplyToMedicalServices"] = ApplyInsuranceToMedicalServices ? "true" : "false"
+    });
 
     /* ─── کمکی ─── */
 

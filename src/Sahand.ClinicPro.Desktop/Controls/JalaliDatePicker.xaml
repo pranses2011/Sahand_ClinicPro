@@ -1,0 +1,319 @@
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Controls.JalaliDatePicker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="46" d:DesignWidth="240"
+             FlowDirection="RightToLeft"
+             Background="Transparent"
+             FontFamily="{StaticResource App.FontFamily}"
+             x:Name="Root">
+    <!-- ═══════════════════════════════════════════════════════════════════
+         انتخابگر تاریخ شمسی + میلادی هم‌زمان — بازطراحی کامل (چرخهٔ ۸۱)
+         ───────────────────────────────────────────────────────────────────
+         گزارش مالک: «ظاهرش مانند اسکرین‌شات‌ها باشد و رفتار دقیقاً از روی نمونهٔ
+         کارِ آماده (jalali-datepicker.html)»؛ سه نمای سلسله‌مراتبی:
+             نمای روز  ← کلیک روی عنوان ← نمای ماه (۳×۴ فصلی)
+                        ← کلیک روی عنوان ← نمای سال (۴×۳، بازهٔ ۱۲ساله)
+         سبک بصری: تخت و مینیمال Windows 10 — گوشهٔ تیز، بدون گرادیان،
+         آبی Accent #0078D7 و قرمز جمعه #D13438 (رنگ‌های برند در منابع زیر).
+         رنگ‌های سطح/متن از منابع پویای تم خوانده می‌شوند تا حالت تاریک هم
+         درست دیده شود (قانون چرخهٔ ۷۹: هیچ رنگ سخت‌کدِ تم‌شکن).
+         ═══════════════════════════════════════════════════════════════════ -->
+    <UserControl.Resources>
+        <!-- رنگ‌های ثابت طراحی (مشخصات: آبی ویندوز ۱۰ و قرمز جمعه) -->
+        <SolidColorBrush x:Key="Jdp.Accent" Color="#0078D7" />
+        <SolidColorBrush x:Key="Jdp.AccentDark" Color="#106EBE" />
+        <SolidColorBrush x:Key="Jdp.AccentSoft" Color="#EAF3FC" />
+        <SolidColorBrush x:Key="Jdp.Friday" Color="#D13438" />
+
+        <!-- دکمهٔ آیکون تقویم — تخت، بدون حاشیه، پس‌زمینهٔ ملایم در هاور
+             Focusable=False تا پیمایش Tab فرم‌ها روی آن نایستد -->
+        <Style x:Key="Jdp.IconButton" TargetType="Button">
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Foreground" Value="{StaticResource Jdp.Accent}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="2">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Jdp.AccentSoft}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- دکمهٔ ناوبری ماه/سال (فلش‌های چرخش) -->
+        <Style x:Key="Jdp.NavButton" TargetType="Button" BasedOn="{StaticResource Jdp.IconButton}">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        </Style>
+
+        <!-- عنوان کلیک‌پذیر سربرگ (نام ماه/سال — دو خط) -->
+        <Style x:Key="Jdp.TitleButton" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="2" Padding="6,4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Jdp.AccentSoft}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- خانه‌های شبکه (روز/ماه/سال) — کادر نازک، هاور آبی ملایم -->
+        <Style x:Key="Jdp.CellButton" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <!-- Focusable=False: فوکوس صفحه‌کلید در جعبهٔ متن می‌ماند تا کاربر
+                 بتواند با تقویمِ باز هم تایپ کند (پرش زندهٔ نما) و پیمایش Tab
+                 فرم‌ها روی ۴۲ خانه گیر نکند -->
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Padding" Value="3,2" />
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Jdp.AccentSoft}" />
+                            </Trigger>
+                            <!-- روز/ماه/سالِ انتخاب‌شده: پرشده آبی با متن سفید.
+                                 Tag=selected از کد پشت ست می‌شود. ترتیب تریگرها
+                                 مهم است (آخری برنده): هاور → انتخاب → هاورِ انتخاب،
+                                 تا هاورِ خانهٔ انتخابی رنگ سفیدِ متن را ناخوانا نکند. -->
+                            <Trigger Property="Tag" Value="selected">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Jdp.Accent}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Jdp.Accent}" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="Tag" Value="selected" />
+                                    <Condition Property="IsMouseOver" Value="True" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Jdp.AccentDark}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Jdp.AccentDark}" />
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ فیلد ورودی: متن شمسی (قابل تایپ) + معادل میلادی + آیکون تقویم ═══ -->
+        <Border x:Name="FieldBorder"
+                VerticalAlignment="Center"
+                Padding="8,4">
+            <!-- قاب فیلد: حالت عادی ← حاشیهٔ تم؛ فوکوس ← آبی اکسنت (مانند
+                 :focus-within در نمونهٔ HTML)؛ Tag="err" ← قرمز خطا.
+                 چون کد پشت دیگر مقدار محلی نمی‌گذارد، تریگرها اثر می‌کنند
+                 و اولویت آخر = خطا بر فوکوس. -->
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Style.Triggers>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                            <Setter Property="BorderBrush" Value="{StaticResource Jdp.Accent}" />
+                        </Trigger>
+                        <Trigger Property="Tag" Value="err">
+                            <Setter Property="BorderBrush" Value="{StaticResource Jdp.Friday}" />
+                            <Setter Property="BorderThickness" Value="1.5" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="2,0,0,0">
+                    <Grid>
+                        <TextBox x:Name="ShamsiBox"
+                                 Cursor="IBeam"
+                                 BorderThickness="0"
+                                 Background="Transparent"
+                                 Padding="0"
+                                 FontSize="15"
+                                 FontWeight="Bold"
+                                 Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                 VerticalContentAlignment="Center"
+                                 TextAlignment="Right"
+                                 InputMethod.IsInputMethodEnabled="False"
+                                 SpellCheck.IsEnabled="False" />
+                        <!-- Placeholder — فقط وقتی متن خالی است دیده می‌شود
+                             (بدون تبدیل‌کننده: DataTrigger روی Text خودِ جعبه) -->
+                        <TextBlock x:Name="PlaceholderText"
+                                   Text="{Binding Placeholder, ElementName=Root}"
+                                   Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                   Opacity="0.45"
+                                   FontSize="11.5"
+                                   VerticalAlignment="Center"
+                                   IsHitTestVisible="False"
+                                   TextTrimming="CharacterEllipsis">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=ShamsiBox}" Value="">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                    <!-- معادل میلادی — متن کوچک خاکستری (لایو با تایپ/انتخاب) -->
+                    <TextBlock x:Name="GregorianCaption"
+                               FontSize="10"
+                               Opacity="0.65"
+                               FlowDirection="LeftToRight"
+                               TextAlignment="Left"
+                               TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+
+                <Button x:Name="CalendarButton"
+                        Grid.Column="1"
+                        Style="{StaticResource Jdp.IconButton}"
+                        VerticalAlignment="Center"
+                        ToolTip="باز کردن تقویم شمسی">
+                    <!-- آیکون تقویم — برداری (بدون تصویر خارجی) -->
+                    <Path Width="14" Height="14"
+                          Stroke="{StaticResource Jdp.Accent}"
+                          StrokeThickness="1.3"
+                          Stretch="Uniform"
+                          Data="M1.5,3 H15.5 V15.5 H1.5 Z M1.5,6.3 H15.5 M5,1 V4 M12,1 V4 M4.4,9.2 H4.6 M8.4,9.2 H8.6 M12.4,9.2 H12.6 M4.4,12.4 H4.6 M8.4,12.4 H8.6" />
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- ═══ پنجرهٔ تقویم ═══ -->
+        <Popup x:Name="CalendarPopup"
+               PlacementTarget="{Binding ElementName=FieldBorder}"
+               Placement="Bottom"
+               StaysOpen="False"
+               AllowsTransparency="True"
+               PopupAnimation="None">
+            <Border x:Name="PopupSurface"
+                    Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                    BorderThickness="1"
+                    Margin="0,4,0,0"
+                    Padding="12">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="14" ShadowDepth="3" Opacity="0.22" Direction="270" />
+                </Border.Effect>
+                <Grid Width="300">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- سربرگ: [قبلی] عنوان کلیک‌پذیر [بعدی] — در RTL قبلی سمت راست -->
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="PrevButton" Grid.Column="0"
+                                Style="{StaticResource Jdp.NavButton}"
+                                ToolTip="قبلی">
+                            <Path Width="9" Height="14" Stretch="Uniform" StrokeThickness="1.8"
+                                  Stroke="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                  Data="M4,1 L10,7 L4,13" />
+                        </Button>
+
+                        <Button x:Name="TitleButton" Grid.Column="1"
+                                Style="{StaticResource Jdp.TitleButton}"
+                                ToolTip="نمای بالاتر">
+                            <StackPanel>
+                                <TextBlock x:Name="TitleMainText"
+                                           FontSize="15"
+                                           FontWeight="Bold"
+                                           TextAlignment="Center"
+                                           Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                                <TextBlock x:Name="TitleSubText"
+                                           FontSize="10"
+                                           Opacity="0.7"
+                                           TextAlignment="Center"
+                                           FlowDirection="LeftToRight"
+                                           Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="NextButton" Grid.Column="2"
+                                Style="{StaticResource Jdp.NavButton}"
+                                ToolTip="بعدی">
+                            <Path Width="9" Height="14" Stretch="Uniform" StrokeThickness="1.8"
+                                  Stroke="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                  Data="M10,1 L4,7 L10,13" />
+                        </Button>
+                    </Grid>
+
+                    <!-- سربرگ روزها: ش ی د س چ پ ج — جمعه قرمز -->
+                    <UniformGrid x:Name="WeekDaysRow" Grid.Row="1" Columns="7" Margin="0,0,0,4">
+                        <TextBlock Text="ش" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
+                        <TextBlock Text="ی" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
+                        <TextBlock Text="د" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
+                        <TextBlock Text="س" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
+                        <TextBlock Text="چ" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
+                        <TextBlock Text="پ" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
+                        <TextBlock Text="ج" TextAlignment="Center" FontSize="11" FontWeight="Bold"
+                                   Foreground="{StaticResource Jdp.Friday}" />
+                    </UniformGrid>
+
+                    <!-- شبکهٔ خانه‌ها — ستون/سطر بسته به نما در کد پشت تنظیم می‌شود -->
+                    <UniformGrid x:Name="CellsGrid" Grid.Row="2" Columns="7" />
+                </Grid>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

@@ -16,9 +16,6 @@ public class ChangePasswordCommandValidator : AbstractValidator<ChangePasswordCo
 
         RuleFor(x => x.NewPassword)
             .NotEmpty().WithMessage("رمز عبور جدید الزامی است")
-            .MinimumLength(8).WithMessage("رمز عبور باید حداقل ۸ کاراکتر باشد")
-            .Matches("[a-zA-Z]").WithMessage("رمز عبور باید شامل حرف باشد")
-            .Matches("\\d").WithMessage("رمز عبور باید شامل رقم باشد")
             .NotEqual(x => x.CurrentPassword).WithMessage("رمز جدید نباید با رمز فعلی یکسان باشد");
     }
 }

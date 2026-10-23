@@ -1,51 +1,42 @@
-# 📦 بسته تولید نصب‌کننده — درمانگاه سهند v1.7.0
+# بستهٔ نصب درمانگاه سهند — v2.23.0
 
 <div dir="rtl">
 
-این پوشه همه‌چیزِ لازم برای ساخت **فایل نصبی (EXE)** نرم‌افزار روی یک رایانه ویندوزی را دارد.
+## نصب نسخهٔ آمادهٔ درمانگاه
 
-## 🚀 سریع‌ترین راه
+در GitHub Release نسخهٔ `v2.23.0` دو فایل ویندوزی منتشر می‌شود:
 
-1. این مخزن را روی رایانه **ویندوز ۱۰/۱۱** کلون/استخراج کنید
-2. [`BUILD-INSTALLER.bat`](BUILD-INSTALLER.bat) را **دابل‌کلیک** کنید
-3. خروجی نهایی: `dist\SahandClinicPro-Setup-v1.7.0.exe`
+- `SahandClinicPro-Setup-v2.23.0.exe` — نصب خودبسندهٔ کلاینت؛ نیازی به نصب جداگانهٔ .NET Desktop Runtime نیست.
+- `SahandClinicPro-Server-v2.23.0.zip` — API خودبسنده + نصب‌کنندهٔ سرویس ویندوز + راهنمای نصب.
 
-> **مهم:** فایل EXE نهایی فقط روی ویندوز ساخته می‌شود (WPF مایکروسافت روی لینوکس کامپایل نمی‌شود) — به همین دلیل در این مخزن EXE از پیش ساخته‌شده وجود ندارد و این بسته آن را با یک کلیک می‌سازد.
+### ترتیب نصب پیشنهادی
 
-## 🔧 پیش‌نیازهای رایانه ساخت
+1. روی رایانهٔ مرکزی، SQL Server را نصب و راه‌اندازی کنید.
+2. ZIP سرور را استخراج کنید و `Install-Server-Package.bat` را با **Run as administrator** اجرا کنید.
+3. رشته اتصال SQL را وارد کنید. نصب‌کننده یک کلید JWT امن می‌سازد، دیتابیس را در اولین اجرا آماده می‌کند، تمام schema نسخهٔ فعلی را خودکار اعمال می‌کند و API را به شکل Windows Service راه می‌اندازد.
+4. فایل EXE کلاینت را روی رایانه‌های لازم نصب کنید. در کلاینت‌های دیگر از `appsettings.json` کنار برنامه، نشانی `http://IP-سرور:5000/api/v1` را تنظیم کنید.
+5. بررسی آمادگی کامل سرور (شامل اتصال دیتابیس): `http://localhost:5000/health/ready` باید `Healthy` نشان دهد. مسیر `/health` فقط زنده‌بودن API را بررسی می‌کند.
 
-| نرم‌افزار | نسخه | اجباری؟ | نشانی |
-|:---|:---|:---:|:---|
-| .NET SDK | 8.0+ | ✅ | dotnet.microsoft.com/download |
-| Inno Setup | 6.x | ✅ برای EXE | jrsoftware.org/isdl |
-| فونت Vazirmatn | — | توصیه | روی کلاینت نصب است |
+> درمانگاه نیازی به .NET SDK، ابزار `dotnet-ef`، Visual Studio یا اجرای دستی migration ندارد. دیتابیس ساخته و تغییرات schema هنگام نصب سرور خودکار اعمال می‌شوند. اگر SQL در دسترس نباشد یا مجوز ساخت دیتابیس نداشته باشد، نصب متوقف می‌شود تا سرویس با اسکیمای ناقص بالا نیاید.
 
-## 📁 فایل‌ها
+## ساخت بسته‌ها از سورس
+
+روی Windows 10/11 به .NET 8 SDK و Inno Setup 6 نیاز دارید. اجرای `BUILD-INSTALLER.bat` خروجی زیر را می‌سازد:
+
+- `dist\SahandClinicPro-Setup-v2.23.0.exe`
+- `dist\SahandClinicPro-Server-v2.23.0.zip`
+
+ساخت Release رسمی نیز در `.github/workflows/release-installer.yml` با Windows runner انجام می‌شود.
+
+## محتویات
 
 | فایل | کاربرد |
-|:---|:---|
-| `BUILD-INSTALLER.bat` | انتشار WPF + کامپایل Inno Setup → EXE نهایی |
-| `SahandClinicPro.iss` | اسکریپت نصب‌کننده — رابط فارسی + بررسی .NET 8 Desktop Runtime |
-| `INSTALL-SERVER.bat` | نصب سرور API روی ویندوز: انتشار + کپی + مهاجرت دیتابیس + سرویس ویندوز خودکار |
-| `appsettings.client.example.json` | پیکربندی نمونه کلاینت (نشانی سرور + لایسنس) |
-| `LICENSE.txt` | متن مجوز داخل نصب‌کننده |
-
-## 🎛 گزینه‌های خط فرمان نصب‌کننده
-
-| سوییچ | کارکرد |
-|:---|:---|
-| `/SILENT` | نصب بدون پرسش — فقط نوار پیشرفت (برای نصب گروهی) |
-| `/VERYSILENT` | کاملاً بی‌صدا — مناسب PDQ/GPO |
-| `/DIR="C:\مسیر"` | نصب در مسیر دلخواه |
-| `/MERGETASKS=!desktopicon` | نصب بدون آیکون دسکتاپ |
-
-## 🖥 نصب سرور
-
-نصب سرور روی رایانه مرکزی با [`INSTALL-SERVER.bat`](INSTALL-SERVER.bat):
-1. انتشار API در `C:\SahandClinicPro\Server`
-2. اجرای مهاجرت‌های EF (ساخت ۹۴ جدول)
-3. ثبت سرویس ویندوز `SahandClinicPro.API` با شروع خودکار
-
-پیش از اجرا، رشته اتصال SQL و کلید JWT را در `appsettings.json` تنظیم کنید — راهنمای کامل: `docs/guides/install-guide.html`
+|---|---|
+| `BUILD-INSTALLER.bat` | انتشار خودبسندهٔ WPF و API، سپس بسته‌بندی EXE و ZIP سرور |
+| `SahandClinicPro.iss` | تنظیمات Inno Setup، زبان فارسی و میانبرهای راهنما |
+| `Install-Server-Package.bat/.ps1` | نصب سرور بسته‌بندی‌شده، ساخت خودکار DB و راه‌اندازی Windows Service |
+| `INSTALL-SERVER.bat` | انتشار و نصب سرور از سورس برای تیم فنی |
+| `appsettings.client.example.json` | نمونهٔ نشانی API برای کلاینت |
+| `RELEASE-INSTALL-GUIDE.txt` | راهنمای کوتاه نصب برای درمانگاه |
 
 </div>

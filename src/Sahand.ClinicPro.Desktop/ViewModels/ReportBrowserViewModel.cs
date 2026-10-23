@@ -430,12 +430,7 @@ public partial class ReportBrowserViewModel : ViewModelBase
             if (data.Summary is not null)
                 foreach (var prop in data.Summary.Value.EnumerateObject())
                 {
-                    var value = prop.Value.ValueKind switch
-                    {
-                        JsonValueKind.Number => FormatNumber(prop.Value.GetDecimal()),
-                        JsonValueKind.String => prop.Value.GetString() ?? "—",
-                        _ => prop.Value.ToString()
-                    };
+                    var value = FormatReportValue(prop.Value, prop.Name, SelectedReport?.Id);
                     // ═══ چرخهٔ ۷۰ (گزارش مالک: «عنوان‌ها انگلیسی‌اند») ═══
                     // کلید خلاصه (total/paid/count/…) از سرور انگلیسی می‌آید؛
                     // در لحظهٔ نمایش از کاتالوگ به فارسی برمی‌گردد («جمع کل»)
@@ -445,7 +440,7 @@ public partial class ReportBrowserViewModel : ViewModelBase
 
             Columns.Clear();
             foreach (var col in data.Columns ?? new List<string>())
-                Columns.Add(col);
+                Columns.Add(Money.IsToman ? col.Replace("ریال", "تومان", StringComparison.Ordinal) : col);
 
             Rows.Clear();
             if (data.Rows is not null)
@@ -453,18 +448,25 @@ public partial class ReportBrowserViewModel : ViewModelBase
                 foreach (var row in data.Rows)
                 {
                     var cells = new List<ReportResultCell>();
-                    foreach (var cell in row.EnumerateObject())
-                    {
-                        var text = cell.Value.ValueKind switch
-                        {
-                            JsonValueKind.Number => cell.Value.TryGetInt64(out var l)
-                                ? Money.Format(l)
-                                : FormatNumber(cell.Value.GetDecimal()),
-                            JsonValueKind.String => cell.Value.GetString() ?? "—",
-                            _ => cell.Value.ToString()
-                        };
-                        cells.Add(new ReportResultCell(text));
-                    }
+                    var fields = row.EnumerateObject().ToList();
+                    var columnCount = data.Columns?.Count ?? fields.Count;
+
+                    // پاسخ‌های قدیمی ممکن است تاریخ میلادی و شمسی را هم‌زمان
+                    // بفرستند، درحالی‌که کاتالوگ فقط یک ستون تاریخ دارد.
+                    // نسخهٔ شمسی برای نمایش نگه داشته می‌شود.
+                    if (fields.Count > columnCount &&
+                        fields.Any(f => f.Name.Equals("shamsi", StringComparison.OrdinalIgnoreCase)) &&
+                        fields.Any(f => f.Name.Equals("date", StringComparison.OrdinalIgnoreCase)))
+                        fields.RemoveAll(f => f.Name.Equals("date", StringComparison.OrdinalIgnoreCase));
+
+                    foreach (var field in fields.Take(columnCount))
+                        cells.Add(new ReportResultCell(FormatReportValue(field.Value, field.Name, SelectedReport?.Id)));
+
+                    // تضمین یک سلول به‌ازای هر سرستون؛ خروجی چاپ/CSV هم همین
+                    // ماتریس هم‌اندازه را مصرف می‌کند.
+                    while (cells.Count < columnCount)
+                        cells.Add(new ReportResultCell("—"));
+
                     Rows.Add(new ReportResultRow(cells));
                 }
             }
@@ -478,6 +480,8 @@ public partial class ReportBrowserViewModel : ViewModelBase
                 ChartKind = c.TryGetProperty("type", out var t) ? t.GetString() ?? "column" : "column";
                 ChartTitle = c.TryGetProperty("title", out var ti) ? ti.GetString() ?? "" : "";
                 ChartUnit = c.TryGetProperty("unit", out var u) ? u.GetString() ?? "" : "";
+                if (Money.IsToman)
+                    ChartUnit = ChartUnit.Replace("ریال", "تومان", StringComparison.Ordinal);
                 var pts = new List<ChartPointData>();
                 if (c.TryGetProperty("points", out var arr) && arr.ValueKind == JsonValueKind.Array)
                 {
@@ -486,11 +490,16 @@ public partial class ReportBrowserViewModel : ViewModelBase
                         var label = p.TryGetProperty("label", out var l) ? l.GetString() ?? "—" : "—";
                         var value = p.TryGetProperty("value", out var v) && v.ValueKind == JsonValueKind.Number
                             ? v.GetDouble() : 0;
-                        pts.Add(new ChartPointData(label, value, $"{label}: {value:N0} {ChartUnit}"));
+                        var formattedValue = IsCurrencyUnit(ChartUnit)
+                            ? Money.Format((decimal)value)
+                            : FormatPlainNumber((decimal)value);
+                        pts.Add(new ChartPointData(label, value, $"{label}: {formattedValue} {ChartUnit}"));
                     }
                 }
                 ChartPoints = pts;
-                ChartCenterText = pts.Count > 0 ? Money.Format((decimal)pts.Sum(x => x.Value)) : "";
+                var chartTotal = (decimal)pts.Sum(x => x.Value);
+                ChartCenterText = pts.Count == 0 ? "" :
+                    IsCurrencyUnit(ChartUnit) ? Money.Format(chartTotal) : FormatPlainNumber(chartTotal);
             }
 
             if (data.Available)
@@ -504,7 +513,7 @@ public partial class ReportBrowserViewModel : ViewModelBase
                         $"بازهٔ «{Application.Common.Helpers.PersianDateHelper.ToShamsiFa(FromDate)} تا " +
                         $"{Application.Common.Helpers.PersianDateHelper.ToShamsiFa(ToDate)}» را بازتر کنید");
                 else
-                    _snackbar.Success($"گزارش «{SelectedReport.Title}» اجرا شد — {Rows.Count} ردیف");
+                    _snackbar.Success($"گزارش «{SelectedReport?.Title ?? "انتخاب‌شده"}» اجرا شد — {Rows.Count} ردیف");
             }
         }
         finally
@@ -608,7 +617,7 @@ public partial class ReportBrowserViewModel : ViewModelBase
     [RelayCommand]
     private void PrintReport()
     {
-        if (Rows.Count == 0) { _snackbar.Info("ابتدا گزارش را اجرا کنید تا نتیجه‌ای برای چاپ باشد"); return; }
+        if (Rows.Count == 0 && !HasChart) { _snackbar.Info("ابتدا گزارش را اجرا کنید تا نتیجه‌ای برای چاپ باشد"); return; }
 
         // ═══ چرخهٔ ۶۷ — دروازهٔ یکپارچهٔ چاپ (پیش‌نمایش اختیاری) ═══
         // پیش‌تر دیالوگ چاپ ویندوز پیش از ساخت سند باز می‌شد (برای عرض قابل
@@ -664,6 +673,31 @@ public partial class ReportBrowserViewModel : ViewModelBase
             summary.Inlines.Add(string.Join("    |    ",
                 SummaryCards.Select(c => $"{c.Label}: {c.Value}")));
             doc.Blocks.Add(summary);
+        }
+
+        // نمودار هم در نسخهٔ چاپی قرار می‌گیرد؛ برای گزارش‌های نموداریِ
+        // بدون ردیف (مثلاً سهم‌بندیِ بدون داده) خودِ نمودار/پیام آن همچنان چاپ‌پذیر است.
+        if (HasChart && ChartPoints is { Count: > 0 })
+        {
+            System.Windows.FrameworkElement chart = ChartKind switch
+            {
+                "doughnut" => new DoughnutChart
+                {
+                    Width = 620, Height = 280, CenterText = ChartCenterText,
+                    CenterSubtext = ChartUnit, Points = ChartPoints
+                },
+                "hbar" => new HorizontalBarChart
+                {
+                    Width = 650, Height = Math.Min(420, 44.0 * ChartPoints.Count + 36),
+                    Points = ChartPoints
+                },
+                "column" => new ColumnChart { Width = 650, Height = 280, Points = ChartPoints },
+                _ => new AreaChart { Width = 650, Height = 280, Points = ChartPoints }
+            };
+            doc.Blocks.Add(new System.Windows.Documents.BlockUIContainer(chart)
+            {
+                Margin = new System.Windows.Thickness(0, 0, 0, 12)
+            });
         }
 
         // ═══ جدول نتایج — عرض مساوی در عرض قابل چاپ (A4 استاندارد) ═══
@@ -749,9 +783,111 @@ public partial class ReportBrowserViewModel : ViewModelBase
         window.Show();
     }
 
-    /// <summary>قالب‌بندی عدد با جداکننده</summary>
-    private static string FormatNumber(decimal value)
-        => value == Math.Truncate(value) ? Money.Format(value) : value.ToString("N2");
+    /// <summary>قالب‌بندی مقدار گزارش بر اساس نام فیلد؛ شمارنده‌ها هرگز به واحد پول تبدیل نمی‌شوند</summary>
+    private static string FormatReportValue(JsonElement value, string fieldName, string? reportId)
+    {
+        if (value.ValueKind == JsonValueKind.Number)
+        {
+            var number = value.GetDecimal();
+            return IsCurrencyField(fieldName, reportId)
+                ? Money.Format(number)
+                : FormatPlainNumber(number);
+        }
+
+        if (value.ValueKind == JsonValueKind.String)
+        {
+            var text = value.GetString() ?? "—";
+            if (IsDateField(fieldName) && text.Length >= 10 && text[4] == '-' && text[7] == '-' &&
+                DateTime.TryParse(text, System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.RoundtripKind, out var date))
+            {
+                // تاریخ‌های حاوی ساعت از API به UTC هستند؛ فقط timestamp را
+                // به روز ایران می‌بریم. DateOnlyها بدون جابه‌جایی باقی می‌مانند.
+                if (text.Contains('T')) date = date.AddHours(3.5);
+                return Application.Common.Helpers.PersianDateHelper.ToShamsiFa(date);
+            }
+            return PersianizeEnumValue(text);
+        }
+
+        return value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined ? "—" : value.ToString();
+    }
+
+    /// <summary>فقط فیلدهای مالی از تبدیل نمایشی ریال/تومان استفاده می‌کنند</summary>
+    private static bool IsCurrencyField(string fieldName, string? reportId)
+    {
+        var key = fieldName.ToLowerInvariant();
+        if (key is "amount" or "totalamount" or "paidamount" or "remainingamount" or
+            "gross" or "refunds" or "net" or "balance" or "openingbalance" or "closingbalance" or
+            "revenue" or "dailyrevenue" or "cumulativerevenue" or "expenses" or
+            "profit" or "claimed" or "approved" or "rejected" or "received" or
+            "outstanding" or "debit" or "credit" or "deduction" or "commission" or
+            "totalprice" or "unitprice" or "doctorrevenue" or "revenuepervisit" or "doctorshareamount" or
+            "remaining" or "paid")
+            return true;
+
+        if (key == "total")
+            return reportId is "daily-revenue" or "monthly-revenue" or "detailed-revenue" or
+                "revenue-trend" or "profit-loss" or "accounts-receivable" or "payment-methods" or
+                "chart-revenue-trend" or "chart-revenue-monthly" or "chart-branch-revenue" or
+                "chart-payment-methods" or "chart-top-debtors" or "chart-insurance-mix" or
+                "chart-receivable-aging" or "chart-salary-share" or "chart-growth-mom";
+
+        if (key is "dailyavg" or "monthavg" or "forecastnextmonth" or "confidencelow" or
+            "confidencehigh" or "totalthisyear" or "totallastyear")
+            return reportId is "chart-revenue-trend" or "chart-revenue-monthly" or
+                "chart-revenue-forecast" or "chart-growth-mom" or "chart-growth-yoy";
+
+        if (key == "value")
+            return reportId is "chart-revenue-trend" or "chart-revenue-monthly";
+
+        return false;
+    }
+
+    /// <summary>نام واحد نمودار بیانگر مبلغ است</summary>
+    private static bool IsCurrencyUnit(string? unit) =>
+        !string.IsNullOrWhiteSpace(unit) &&
+        (unit.Contains("ریال", StringComparison.OrdinalIgnoreCase) ||
+         unit.Contains("تومان", StringComparison.OrdinalIgnoreCase) ||
+         unit.Contains("مبلغ", StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>نمایش فارسی نام enumهایی که API در ستون‌های گزارش ارسال می‌کند</summary>
+    private static string PersianizeEnumValue(string value) => value switch
+    {
+        "Male" => "مرد",
+        "Female" => "زن",
+        "Booked" => "رزروشده",
+        "Confirmed" => "تأییدشده",
+        "Arrived" => "حاضر",
+        "InProgress" => "در حال ویزیت",
+        "Completed" => "تکمیل‌شده",
+        "Cancelled" => "لغوشده",
+        "NoShow" => "عدم مراجعه",
+        "Draft" => "پیش‌نویس",
+        "Issued" => "صادرشده",
+        "PartiallyPaid" => "پرداخت جزئی",
+        "Paid" => "پرداخت‌شده",
+        "Refunded" => "مستردشده",
+        _ => Money.ToPersianDigits(value)
+    };
+
+    /// <summary>فیلدهای زمانی که رشتهٔ ISO آن‌ها باید با تاریخ شمسی نمایش داده شود</summary>
+    private static bool IsDateField(string fieldName)
+    {
+        var key = fieldName.ToLowerInvariant();
+        return key is "date" or "claimdate" or "periodstart" or "periodend" or "createdat" or
+            "lastvisit" or "lastuse" or "registered" or "expiry" or "at" or
+            "invoicedate" or "paymentdate" or "appointmentdate";
+    }
+
+    /// <summary>قالب‌بندی شمارنده/سنجه با جداکنندهٔ فارسی، بدون تبدیل پولی</summary>
+    private static string FormatPlainNumber(decimal value)
+    {
+        var pattern = value == Math.Truncate(value) ? "#,0" : "#,0.##";
+        var formatted = value.ToString(pattern, System.Globalization.CultureInfo.InvariantCulture)
+            .Replace(',', '٬')
+            .Replace('.', '٫');
+        return Money.ToPersianDigits(formatted);
+    }
 
     /* ─── پاسخ‌ها ─── */
 

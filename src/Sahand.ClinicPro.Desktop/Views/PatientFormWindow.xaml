@@ -101,7 +101,7 @@
                                      خیلی کوچک است و دیده نمی‌شود»: کمبو پیش‌تر در ستون ۱
                                      (ستون فاصله‌انداز ۱۲ پیکسلی!) نشسته بود؛ به ستون ۲
                                      منتقل شد و اکنون نیمهٔ چپ ردیف را مثل تاریخ تولد می‌گیرد -->
-                                <controls:PersianDatePicker Grid.Column="0"
+                                <controls:JalaliDatePicker Grid.Column="0"
                                                             Placeholder="تاریخ تولد"
                                                             DateShamsiText="{Binding BirthDateShamsi, Mode=TwoWay}" />
                                 <ComboBox Grid.Column="2"
@@ -167,7 +167,7 @@
                 <StackPanel Margin="4,14" MaxWidth="460" HorizontalAlignment="Center">
                     <ComboBox materialDesign:HintAssist.Hint="شرکت بیمه اصلی"
                               ItemsSource="{Binding InsuranceCompanies}"
-                              DisplayMemberPath="Name"
+                              DisplayMemberPath="DisplayName"
                               SelectedValuePath="Id"
                               SelectedValue="{Binding InsuranceCompanyId}" />
                     <TextBox materialDesign:HintAssist.Hint="شماره دفترچه / بیمه"

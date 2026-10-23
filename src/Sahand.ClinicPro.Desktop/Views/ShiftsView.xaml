@@ -178,14 +178,14 @@
 
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Assignments}" IsReadOnly="True"
                               AutoGenerateColumns="False" CanUserAddRows="False"
-                              Style="{StaticResource MaterialDesignDataGrid}" HeadersVisibility="Column">
+                              Style="{StaticResource App.TableDataGrid}" HeadersVisibility="Column">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="1.5*" />
-                            <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="0.9*" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTemplateColumn Header="شیفت" Width="1.1*">
+                            <DataGridTextColumn Header="پرسنل" Binding="{Binding EmployeeName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="شیفت" Width="Auto" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                             <Ellipse Width="9" Height="9" VerticalAlignment="Center" Margin="0,0,6,0"
                                                      Fill="{Binding ShiftColor, Converter={StaticResource HexToBrush}}" />
                                             <TextBlock Text="{Binding ShiftName, Converter={StaticResource PersianDigits}}" VerticalAlignment="Center" />
@@ -193,17 +193,17 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="بازه" Binding="{Binding Range, Converter={StaticResource PersianDigits}}" Width="1.4*" />
-                            <DataGridTextColumn Header="تکرار" Binding="{Binding Recurrence, Converter={StaticResource PersianDigits}}" Width="0.8*" />
-                            <DataGridTextColumn Header="روزها" Binding="{Binding WeekDays, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="1*" />
-                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="92">
+                            <DataGridTextColumn Header="بازه" Binding="{Binding Range, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="تکرار" Binding="{Binding Recurrence, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="روزها" Binding="{Binding WeekDays, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="92" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Command="{Binding DataContext.EndAssignmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource App.RowIconButton}" Padding="6,3"
-                                                Foreground="#C62828" ToolTip="پایان این تخصیص از امروز">
-                                            <StackPanel Orientation="Horizontal">
+                                                Foreground="#C62828" ToolTip="پایان این تخصیص از امروز" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <materialDesign:PackIcon Kind="StopCircleOutline" Width="13" Height="13" VerticalAlignment="Center" />
                                                 <TextBlock Text="پایان" FontSize="10.5" Margin="4,0,0,0" VerticalAlignment="Center" />
                                             </StackPanel>
@@ -280,6 +280,17 @@
                                  Background="Transparent" BorderThickness="0"
                                  Focusable="False" Cursor="Hand"
                                  ToolTip="رنگ نمایش شیفت در تقویم و کارت‌ها">
+                            <!-- پالت نقطه‌ای است، نه فهرست متنی؛ فاصلهٔ ردیف‌های معمول را خنثی می‌کنیم. -->
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                                    <Setter Property="MinHeight" Value="0" />
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="Margin" Value="0" />
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderThickness" Value="0" />
+                                </Style>
+                            </ListBox.ItemContainerStyle>
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Orientation="Horizontal" />
@@ -367,12 +378,12 @@
                         <!-- بازهٔ اعتبار — انتخابگر تاریخ شمسی (قانون ۵) -->
                         <StackPanel Margin="0,0,8,6">
                             <TextBlock Text="اعتبار از" FontSize="10" Opacity="0.6" Margin="2,0,0,2" />
-                            <controls:PersianDatePicker DateShamsiText="{Binding AssignFromDate, Mode=TwoWay}"
+                            <controls:JalaliDatePicker DateShamsiText="{Binding AssignFromDate, Mode=TwoWay}"
                                                         Placeholder="تاریخ شروع *" Width="150" />
                         </StackPanel>
                         <StackPanel Margin="0,0,8,6">
                             <TextBlock Text="تا (اختیاری)" FontSize="10" Opacity="0.6" Margin="2,0,0,2" />
-                            <controls:PersianDatePicker DateShamsiText="{Binding AssignToDate, Mode=TwoWay}"
+                            <controls:JalaliDatePicker DateShamsiText="{Binding AssignToDate, Mode=TwoWay}"
                                                         Placeholder="بی‌پایان" Width="150" />
                         </StackPanel>
                     </WrapPanel>

@@ -11,7 +11,7 @@ namespace Sahand.ClinicPro.Desktop.ViewModels;
 /// برای «تعریف بیمه جدید + ویرایش بیمه‌های موجود» افزوده شد
 /// </summary>
 public record CompanyRow(long Id, string Name, string? Code, decimal CoveragePercent,
-    int Type = 4, string TypeName = "خصوصی", bool IsActive = true)
+    int Type = 4, string TypeName = "خصوصی", bool IsActive = true, bool IsContracted = false)
 {
     /// <summary>متن فارسی وضعیت برای ستون گرید — بدون نیاز به مبدل (قابل‌حل بودن استاتیک XAML)</summary>
     public string StatusText => IsActive ? "فعال" : "غیرفعال";
@@ -198,7 +198,7 @@ public partial class InsuranceViewModel : ViewModelBase
         var companies = await _api.GetAsync<CompaniesManageResponse>("insurance/companies/manage");
         Companies = new ObservableCollection<CompanyRow>(
             (companies?.Data ?? new List<CompanyManageDto>()).Select(c =>
-                new CompanyRow(c.Id, c.Name, c.Code, c.CoveragePercent, c.Type, c.TypeName, c.IsActive)));
+                new CompanyRow(c.Id, c.Name, c.Code, c.CoveragePercent, c.Type, c.TypeName, c.IsActive, c.IsContracted)));
 
         // چرخه ۲۴: فهرست اهداف تعرفه — «آزاد» + بیمه‌ها؛ انتخاب فعلی معتبر نگه
         // می‌ماند اگر هنوز در بازه باشد (بعد از حذف بیمه ممکن است بیرون بیفتد)
@@ -248,6 +248,34 @@ public partial class InsuranceViewModel : ViewModelBase
        «در صفحه بیمه، بتوان بیمه جدید تعریف کرد و یا بیمه‌های موجود را ویرایش کرد»
        «در صفحه بیمه، بتوان تعرفه جدید تعریف کرد و یا تعرفه‌های موجود را ویرایش کرد»
        — فرم‌های مدیریتی مودال باز می‌شوند و پس از ذخیرهٔ موفق، فهرست تازه می‌شود */
+
+    /// <summary>تغییر سریع طرف قرارداد از همان فهرست بیمه‌ها.</summary>
+    [RelayCommand]
+    private async Task ToggleCompanyContractAsync(CompanyRow? row)
+    {
+        if (row is null) return;
+        var updated = row with { IsContracted = !row.IsContracted };
+        var ok = await _api.PutAsync($"insurance/companies/{row.Id}", new
+        {
+            name = row.Name,
+            code = row.Code,
+            type = row.Type,
+            coveragePercent = row.CoveragePercent,
+            isActive = row.IsActive,
+            isContracted = updated.IsContracted
+        });
+        if (!ok)
+        {
+            _snackbar.Error(_api.LastError ?? "به‌روزرسانی وضعیت قرارداد ناموفق بود");
+            return;
+        }
+        var index = Companies.IndexOf(row);
+        if (index >= 0) Companies[index] = updated;
+        if (SelectedCompany?.Id == row.Id) SelectedCompany = updated;
+        _snackbar.Success(updated.IsContracted
+            ? $"{row.Name} به‌عنوان بیمهٔ طرف قرارداد ثبت شد"
+            : $"قرارداد {row.Name} غیرفعال شد؛ محاسبه از این پس آزاد است");
+    }
 
     /// <summary>باز کردن فرم بیمهٔ جدید</summary>
     [RelayCommand]
@@ -465,6 +493,7 @@ public partial class InsuranceViewModel : ViewModelBase
         public string TypeName { get; set; } = string.Empty;
         public decimal CoveragePercent { get; set; }
         public bool IsActive { get; set; }
+        public bool IsContracted { get; set; }
     }
 
     /// <summary>پاکت پاسخ فهرست تعرفه‌ها برای مدیریت</summary>

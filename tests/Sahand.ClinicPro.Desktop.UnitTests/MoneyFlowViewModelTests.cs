@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using FluentAssertions;
+using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Desktop.Services;
 using Sahand.ClinicPro.Desktop.ViewModels;
 using Xunit;
@@ -139,13 +140,20 @@ public class MoneyFlowViewModelTests
     [Fact]
     public async Task CommissionReport_Load_ShouldCallEndpointWithYearMonthAndEmployeeFilter()
     {
+        // دوره پیش‌فرض گزارش = دورهٔ جاری شمسی؛ تست نباید ماه/سال ۱۴۰۵/۰۷ را
+        // ثابت فرض کند (با گذشتن از مهر ۱۴۰۵ تست قرمز می‌شد — نوسان تاریخ‌محور)
+        var today = PersianDateHelper.ToJalali(DateTime.Today);
+        var currentYear = today.Year;
+        var currentMonth = today.Month;
+        var endpoint = $"reports/commission-detail?year={currentYear}&month={currentMonth}&employeeId=5";
+
         var api = new FakeApiClient();
         api.CannedResponses["hr/employees"] = new { isSuccess = true, data = new[] { new { id = 5, fullName = "مهدی قلی‌زاده" } } };
-        api.CannedResponses["reports/commission-detail?year=1405&month=7&employeeId=5"] = new
+        api.CannedResponses[endpoint] = new
         {
             data = new
             {
-                year = 1405, month = 7,
+                year = currentYear, month = currentMonth,
                 periodText = "مهر ۱۴۰۵",
                 generatedAtShamsi = "۱۴۰۵/۰۷/۱۳",
                 clinicName = "درمانگاه سهند",
@@ -172,8 +180,7 @@ public class MoneyFlowViewModelTests
         vm.SelectedEmployeeIndex = 1; // «همه پرسنل» = 0؛ پرسنل ۵ = ۱
         await vm.LoadCommand.ExecuteAsync(null);
 
-        api.Calls.Should().Contain(c =>
-            c.Method == "GET" && c.Endpoint == "reports/commission-detail?year=1405&month=7&employeeId=5");
+        api.Calls.Should().Contain(c => c.Method == "GET" && c.Endpoint == endpoint);
         vm.TotalCommission.Should().Be(75_000_000m);
         vm.TotalProfit.Should().Be(300_000_000m);
         vm.CommissionChartPoints.Should().NotBeEmpty("دونات سهم پرسنل باید پر شود");

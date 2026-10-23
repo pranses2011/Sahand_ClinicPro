@@ -85,16 +85,16 @@
                       HeadersVisibility="Column" FontSize="12.5">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="شماره" Binding="{Binding RoomNumber, Converter={StaticResource PersianDigits}}"
-                                        Width="90" FontFamily="{DynamicResource App.CodeFont}" />
+                                        Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                     <DataGridTextColumn Header="نام اتاق" Binding="{Binding DisplayName, Converter={StaticResource PersianDigits}}"
-                                        Width="*" MinWidth="180" FontWeight="SemiBold" />
+                                        Width="Auto" MinWidth="180" FontWeight="SemiBold" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                     <DataGridTextColumn Header="طبقه" Binding="{Binding Floor, TargetNullValue=—, Converter={StaticResource PersianDigits}}"
-                                        Width="80" FontFamily="{DynamicResource App.CodeFont}" />
-                    <DataGridTemplateColumn Header="وضعیت" Width="110" SortMemberPath="IsActive">
+                                        Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                    <DataGridTemplateColumn Header="وضعیت" Width="Auto" SortMemberPath="IsActive" MaxWidth="420">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <!-- رنگ وضعیت با تریگر — مبدل اختصاصی لازم نیست -->
-                                <Border CornerRadius="10" Padding="10,2.5" HorizontalAlignment="Center">
+                                <Border CornerRadius="10" Padding="10,2.5" HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="#FFEBEE" />
@@ -105,7 +105,7 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
-                                    <TextBlock Text="{Binding StatusText, Converter={StaticResource PersianDigits}}" FontSize="11.5" />
+                                    <TextBlock Text="{Binding StatusText, Converter={StaticResource PersianDigits}}" FontSize="11.5" VerticalAlignment="Center"/>
                                 </Border>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>

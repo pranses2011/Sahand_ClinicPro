@@ -25,6 +25,13 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<ClinicProD
         var optionsBuilder = new DbContextOptionsBuilder<ClinicProDbContext>();
         optionsBuilder.UseSqlServer(
             "Server=.;Database=ClinicProDesignTime;Trusted_Connection=True;TrustServerCertificate=True");
+
+        // همان تولیدگر idempotent توضیحاتِ جدول/ستون که در زمان اجرا ثبت می‌شود؛
+        // «dotnet ef migrations script» هم باید اسکریپتی بسازد که اجرای بعدی‌اش
+        // با خطای ۱۵۲۳۳ (توضیح تکراری) نشکند.
+        optionsBuilder.ReplaceService<Microsoft.EntityFrameworkCore.Migrations.IMigrationsSqlGenerator,
+            Migrations.ClinicProMigrationsSqlGenerator>();
+
         return new ClinicProDbContext(optionsBuilder.Options);
     }
 }

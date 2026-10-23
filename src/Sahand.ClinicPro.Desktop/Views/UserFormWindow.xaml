@@ -61,7 +61,7 @@
                                        FontSize="11.5" FontWeight="SemiBold" Margin="10,0,0,0"
                                        Foreground="{Binding StrengthColor, Mode=OneWay}" VerticalAlignment="Center" />
                         </Grid>
-                        <TextBlock Text="حداقل ۸ کاراکتر با حروف بزرگ + کوچک + عدد + علامت" FontSize="10.5" Opacity="0.6" Margin="2,0,0,12" />
+                        <TextBlock Text="{Binding PasswordPolicyHint}" FontSize="10.5" Opacity="0.6" Margin="2,0,0,12" />
 
                         <TextBox materialDesign:HintAssist.Hint="موبایل"
                                  Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"

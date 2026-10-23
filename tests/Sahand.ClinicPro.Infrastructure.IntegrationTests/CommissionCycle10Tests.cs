@@ -26,10 +26,10 @@ namespace Sahand.ClinicPro.Infrastructure.IntegrationTests;
 /// </summary>
 public class CommissionCycle10Tests
 {
-    // دوره آزمون: مهر ۱۴۰۴ → بازه میلادی [2025-09-01, 2025-10-01)
+    // دوره آزمون: مهر ۱۴۰۴ → بازه دقیق میلادی [2025-09-23, 2025-10-23)
     private const int PeriodYear = 1404;
     private const int PeriodMonth = 7;
-    private static readonly DateTime InPeriod = new(2025, 9, 15, 10, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime InPeriod = new(2025, 10, 5, 10, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime OutOfPeriod = new(2025, 8, 15, 10, 0, 0, DateTimeKind.Utc);
 
     /// <summary>ساخت UnitOfWork روی دیتابیس درون‌حافظه‌ای</summary>
@@ -182,6 +182,95 @@ public class CommissionCycle10Tests
         salary.ServiceCommission.Should().Be(0m);
     }
 
+    [Fact]
+    public async Task GenerateSalaries_ServiceReception_AttributesPerformerAndDeductsConsumableCost()
+    {
+        var (uow, context) = CreateUnitOfWork();
+        var patient = await SeedPatientAsync(context);
+        var employee = await SeedEmployeeAsync(context, "مریم", "احمدی", 20m);
+        var medication = new Sahand.ClinicPro.Domain.Entities.Clinical.Medication
+        {
+            GenericName = "Syringe",
+            GenericNameFa = "سرنگ",
+            ItemKind = MedicationItemKind.Consumable,
+            IsActive = true
+        };
+        context.Medications.Add(medication);
+        await context.SaveChangesAsync();
+
+        var inventory = new Sahand.ClinicPro.Domain.Entities.Pharmacy.PharmacyInventory
+        {
+            MedicationId = medication.Id,
+            PurchasePrice = 100_000m,
+            SellPrice = 150_000m,
+            Quantity = 0m
+        };
+        context.PharmacyInventory.Add(inventory);
+        var reception = new Sahand.ClinicPro.Domain.Entities.Scheduling.Reception
+        {
+            PatientId = patient.Id,
+            PerformedByEmployeeId = employee.Id,
+            ReceptionDate = InPeriod,
+            ReceptionNumber = "RCP-COMMISSION"
+        };
+        context.Receptions.Add(reception);
+        await context.SaveChangesAsync();
+
+        var invoice = new Invoice
+        {
+            PatientId = patient.Id,
+            ReceptionId = reception.Id,
+            Reception = reception,
+            InvoiceDate = InPeriod,
+            InvoiceDateShamsi = "1404/07/23",
+            InvoiceType = InvoiceType.Other,
+            Status = InvoiceStatus.Issued,
+            PaymentStatus = PaymentStatus.Unpaid
+        };
+        invoice.Items.Add(new InvoiceItem
+        {
+            Description = "تزریق",
+            Quantity = 1m,
+            UnitPrice = 1_000_000m,
+            UnitCost = 200_000m,
+            TotalPrice = 1_000_000m
+        });
+        // ردیف قدیمی بدون UnitCost — هزینه‌اش از رسید انبار همان پذیرش بازیابی می‌شود.
+        invoice.Items.Add(new InvoiceItem
+        {
+            Description = "لوازم مصرفی: سرنگ",
+            Quantity = 2m,
+            UnitPrice = 150_000m,
+            UnitCost = 0m,
+            TotalPrice = 300_000m
+        });
+        context.Invoices.Add(invoice);
+        context.PharmacyTransactions.Add(new Sahand.ClinicPro.Domain.Entities.Pharmacy.PharmacyTransaction
+        {
+            InventoryId = inventory.Id,
+            Inventory = inventory,
+            TransactionType = PharmacyTransactionType.StockOut,
+            Quantity = 2m,
+            UnitPrice = 150_000m,
+            PurchaseUnitCost = 100_000m,
+            TotalPrice = 300_000m,
+            ReferenceType = PharmacyReferenceType.Reception,
+            ReferenceId = reception.Id,
+            TransactionDate = InPeriod
+        });
+        await context.SaveChangesAsync();
+
+        var handler = new GenerateSalariesCommandHandler(uow);
+        await handler.Handle(new GenerateSalariesCommand(PeriodYear, PeriodMonth), CancellationToken.None);
+
+        var salary = await context.EmployeeSalaries.SingleAsync(s => s.EmployeeId == employee.Id &&
+            s.PeriodYear == PeriodYear && s.PeriodMonth == PeriodMonth);
+        salary.ServiceProfitBase.Should().Be(900_000m,
+            "۸۰۰٬۰۰۰ سود خدمت + ۳۰۰٬۰۰۰ فروش مصرفی − ۲۰۰٬۰۰۰ بهای خرید مصرفی");
+        salary.ServiceCommission.Should().Be(180_000m,
+            "حقوق درصدی باید از سود خالص خدمت و مصرفی، نه از دریافتی ناخالص، محاسبه شود");
+    }
+
     // ═══════════════════════════════════════════════════════════
     // ۲ و ۳) انتساب خودکار در صدور فاکتور
     // ═══════════════════════════════════════════════════════════
@@ -219,6 +308,71 @@ public class CommissionCycle10Tests
             because: "قلم پزشک‌دار بدون انجام‌دهنده صریح باید به پرسنل مرتبط پزشک منتسب شود");
         item.UnitCost.Should().Be(300_000m,
             because: "عکس‌فوری هزینه تمام‌شده در لحظه صدور ثبت می‌شود");
+    }
+
+    [Fact]
+    public async Task CreateInvoice_ConsumableCost_IsSnapshottedFromReceptionStockOut()
+    {
+        var (uow, context) = CreateUnitOfWork();
+        var patient = await SeedPatientAsync(context);
+        var employee = await SeedEmployeeAsync(context, "نگار", "موسوی", 20m);
+        var medication = new Sahand.ClinicPro.Domain.Entities.Clinical.Medication
+        {
+            GenericName = "Gauze",
+            GenericNameFa = "گاز استریل",
+            ItemKind = MedicationItemKind.Consumable,
+            IsActive = true
+        };
+        context.Medications.Add(medication);
+        await context.SaveChangesAsync();
+
+        var inventory = new Sahand.ClinicPro.Domain.Entities.Pharmacy.PharmacyInventory
+        {
+            MedicationId = medication.Id,
+            PurchasePrice = 80_000m,
+            SellPrice = 120_000m,
+            Quantity = 0m
+        };
+        context.PharmacyInventory.Add(inventory);
+        var reception = new Sahand.ClinicPro.Domain.Entities.Scheduling.Reception
+        {
+            PatientId = patient.Id,
+            PerformedByEmployeeId = employee.Id,
+            ReceptionDate = InPeriod,
+            ReceptionNumber = "RCP-COST-SNAPSHOT"
+        };
+        context.Receptions.Add(reception);
+        await context.SaveChangesAsync();
+        context.PharmacyTransactions.Add(new Sahand.ClinicPro.Domain.Entities.Pharmacy.PharmacyTransaction
+        {
+            InventoryId = inventory.Id,
+            Inventory = inventory,
+            TransactionType = PharmacyTransactionType.StockOut,
+            Quantity = 2m,
+            UnitPrice = 120_000m,
+            PurchaseUnitCost = 80_000m,
+            TotalPrice = 240_000m,
+            ReferenceType = PharmacyReferenceType.Reception,
+            ReferenceId = reception.Id,
+            TransactionDate = InPeriod
+        });
+        await context.SaveChangesAsync();
+
+        var handler = new CreateInvoiceCommandHandler(uow,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<CreateInvoiceCommandHandler>.Instance);
+        var result = await handler.Handle(new CreateInvoiceCommand(new CreateInvoiceDto(
+            patient.Id, reception.Id, null, InvoiceType.Other, null, 0m,
+            new List<InvoiceItemDto>
+            {
+                new(null, "لوازم مصرفی: گاز استریل", 2m, 120_000m, 0m, null, 0m,
+                    PerformedById: employee.Id, IsInsuranceExempt: true, MedicationId: medication.Id)
+            })), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        var invoiceItem = await context.InvoiceItems.SingleAsync(i => i.InvoiceId == result.Value);
+        invoiceItem.UnitCost.Should().Be(80_000m,
+            "فاکتور باید بهای خرید واقعی همان مصرف را نگه دارد، نه قیمت فروش به بیمار");
+        invoiceItem.PerformedById.Should().Be(employee.Id);
     }
 
     [Fact]

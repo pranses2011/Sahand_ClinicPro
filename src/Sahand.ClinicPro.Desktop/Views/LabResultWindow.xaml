@@ -78,7 +78,7 @@
             <!-- ═══ رنگ ردیف از فلگ تفسیر — چرخهٔ ۶۹ (گزارش مالک: «رنگ ردیف
                  آزمایش از نتیجهٔ آزمایش مشخص بشه») ═══ -->
             <DataGrid.RowStyle>
-                <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                <Style TargetType="DataGridRow" BasedOn="{StaticResource App.TableDataGridRow}">
                     <!-- ═══ چرخهٔ ۷۸ (بندهای ۸/۹ مالک) ═══
                          پس‌زمینهٔ پایهٔ سخت‌کد «سفید» حذف شد: هم گوره‌خری سراسری را
                          می‌کشت و هم در تم تیره جدول را سفیدِ ناهماهنگ می‌کرد؛
@@ -105,25 +105,25 @@
                 </Style>
             </DataGrid.RowStyle>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="آزمایش" Binding="{Binding TestName, Converter={StaticResource PersianDigits}}" Width="2*" IsReadOnly="True" />
-                <DataGridTextColumn Header="واحد" Binding="{Binding Unit, Converter={StaticResource PersianDigits}}" Width="80" IsReadOnly="True" />
+                <DataGridTextColumn Header="آزمایش" Binding="{Binding TestName, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="واحد" Binding="{Binding Unit, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                 <!-- ═══ چرخهٔ ۶۹ (F-28): حد طبیعی «مخصوص همین بیمار» — از موتور تفسیر سرور ═══ -->
-                <DataGridTextColumn Header="حد طبیعی این بیمار" Binding="{Binding PatientRangeText, Converter={StaticResource PersianDigits}}" Width="140" IsReadOnly="True" />
-                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="95" IsReadOnly="True" />
+                <DataGridTextColumn Header="حد طبیعی این بیمار" Binding="{Binding PatientRangeText, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                 <!-- بج تفسیر رنگی — سبز/نارنجی/قرمز (چرخهٔ ۶۹) -->
-                <DataGridTemplateColumn Header="تفسیر" Width="120">
+                <DataGridTemplateColumn Header="تفسیر" Width="Auto" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border CornerRadius="8" Padding="7,2" HorizontalAlignment="Center"
                                     Background="{Binding FlagBrush, Converter={StaticResource HexToBrush}}"
-                                    Visibility="{Binding FlagText, Converter={StaticResource NullToVisibility}}">
-                                <TextBlock Text="{Binding FlagText}" FontSize="10.5" Foreground="White" />
+                                    Visibility="{Binding FlagText, Converter={StaticResource NullToVisibility}}" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding FlagText}" FontSize="10.5" Foreground="White" VerticalAlignment="Center"/>
                             </Border>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="نتیجه متنی" Binding="{Binding Result, Converter={StaticResource PersianDigits}}" Width="*" IsReadOnly="True" />
-                <DataGridTextColumn Header="نتیجه عددی" Binding="{Binding ResultNumeric, Converter={StaticResource PersianDigits}}" Width="105" IsReadOnly="True" />
+                <DataGridTextColumn Header="نتیجه متنی" Binding="{Binding Result, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="نتیجه عددی" Binding="{Binding ResultNumeric, Converter={StaticResource PersianDigits}}" Width="Auto" IsReadOnly="True" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
             </DataGrid.Columns>
         </DataGrid>
 

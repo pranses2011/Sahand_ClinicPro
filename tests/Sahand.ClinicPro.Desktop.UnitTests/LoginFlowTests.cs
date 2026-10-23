@@ -282,12 +282,29 @@ public class ChangePasswordViewModelTests
     }
 
     [Fact]
-    public void Change_ShortPassword_DisablesCommand()
+    public void Change_ShortPassword_DoesNotDisableCommand()
     {
+        // چرخهٔ ۷۹: حداقل طول ثابتِ ۸ نویسه از ViewModel برداشته شد؛ سیاست رمز
+        // کاملاً از تنظیمات سرور («users/password-policy») می‌آید و ممکن است
+        // ۶، ۸ یا ۱۲ نویسه باشد. پس کلاینت نباید با عدد ثابت، دکمه را قفل کند
+        // (این تست همان گاردِ برگشت ناخواستهٔ حداقل ثابت است).
         var (vm, _) = Create();
         vm.CurrentPassword = "Old@12345";
         vm.NewPassword = "short";
         vm.ConfirmPassword = "short";
+
+        Assert.True(vm.ChangePasswordCommand.CanExecute(null),
+            "ارزیابی طول رمز فقط وظیفهٔ سرور است، نه عدد ثابت در کلاینت");
+    }
+
+    [Fact]
+    public void Change_EmptyPassword_DisablesCommand()
+    {
+        // گارد اصلی که باید بماند: کادر خالی ⇒ دکمهٔ ثبت قفل
+        var (vm, _) = Create();
+        vm.CurrentPassword = "Old@12345";
+        vm.NewPassword = "";
+        vm.ConfirmPassword = "";
 
         Assert.False(vm.ChangePasswordCommand.CanExecute(null));
     }

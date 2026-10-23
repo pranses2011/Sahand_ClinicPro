@@ -10,7 +10,10 @@
     <TargetFramework>net8.0</TargetFramework>
     <!-- چرخه دوازدهم (B3 — بند ۴-۸): تولید خودکار openapi.json هنگام بیلد
          به docs/api برای مشتری‌ها و اتصال‌دهندگان — بدون نیاز به اجرای سرور -->
-    <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)\..\..\docs\api</OpenApiDocumentsDirectory>
+    <!-- چرخهٔ ۸۱ — مسیر با «/» نوشته می‌شود: MSBuild روی ویندوز هر دو را
+         می‌پذیرد، ولی ابزار GetDocument روی لینوکس بک‌اسلش را جداکننده
+         نمی‌شناسد و پوشه‌ای عجیب با نام «..\..\docs» می‌ساخت. -->
+    <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/../../docs/api</OpenApiDocumentsDirectory>
   </PropertyGroup>
 
   <!-- ═══ چرخهٔ چهل‌وچهارم — دسترسی تست به متدهای داخلی میدلور لاگ ═══
@@ -24,6 +27,8 @@
   <ItemGroup>
     <!-- احراز هویت JWT (پیکربندی در گام ۴) -->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <!-- اجرای درست API به‌عنوان Windows Service در استقرار درمانگاه -->
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
     <!-- لاگ‌گذاری ساختاریافته Serilog + خروجی Seq -->
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Serilog.Sinks.Seq" />

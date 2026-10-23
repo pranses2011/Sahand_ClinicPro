@@ -69,7 +69,7 @@
             <DataGrid.Columns>
                 <!-- ─── عکس: نمایش/تعویض/حذف — چرخه هجدهم / چرخهٔ سی‌وهفتم:
                      بندانگشتی دایره‌ایِ قابل‌کلیک به‌جای آیکون «نمایش بزرگ» ─── -->
-                <DataGridTemplateColumn Header="عکس" Width="Auto" MinWidth="160">
+                <DataGridTemplateColumn Header="عکس" Width="Auto" MinWidth="160" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -85,16 +85,16 @@
                                         ToolTip="نمایش بزرگ عکس"
                                         Command="{Binding DataContext.ViewPhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
-                                        Padding="0" Margin="0,0,8,0" Cursor="Hand">
+                                        Padding="0" Margin="0,0,8,0" Cursor="Hand" VerticalAlignment="Center">
                                     <Grid Width="34" Height="34">
                                         <!-- زمینهٔ روشن + حلقهٔ دور بندانگشتی -->
-                                        <Ellipse Width="34" Height="34" Fill="#ECEFF1" Stroke="#B0BEC5" StrokeThickness="1" />
+                                        <Ellipse Width="34" Height="34" Fill="#ECEFF1" Stroke="#B0BEC5" StrokeThickness="1" VerticalAlignment="Center"/>
                                         <!-- جای‌نگهدار آدمک — زیر لایهٔ عکس -->
                                         <materialDesign:PackIcon Kind="Account" Width="20" Height="20"
                                                                  HorizontalAlignment="Center" VerticalAlignment="Center"
                                                                  Foreground="#90A4AE" />
                                         <!-- بندانگشتی عکس — لایهٔ رویی؛ با پر شدن Photo آدمک را می‌پوشاند -->
-                                        <Ellipse Width="34" Height="34">
+                                        <Ellipse Width="34" Height="34" VerticalAlignment="Center">
                                             <Ellipse.Fill>
                                                 <ImageBrush ImageSource="{Binding Photo}" Stretch="UniformToFill" />
                                             </Ellipse.Fill>
@@ -105,38 +105,38 @@
                                         ToolTip="انتخاب / تعویض عکس"
                                         Command="{Binding DataContext.ChangePhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
-                                        Foreground="#2E7D32" Padding="4,2">
-                                    <materialDesign:PackIcon Kind="ImagePlus" Width="18" Height="18" />
+                                        Foreground="#2E7D32" Padding="4,2" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="ImagePlus" Width="18" Height="18" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
                                         ToolTip="حذف عکس"
                                         Command="{Binding DataContext.DeletePhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
                                         Foreground="#C62828" Padding="4,2"
-                                        Visibility="{Binding HasPhoto, Converter={StaticResource BoolToVisibility}}">
-                                    <materialDesign:PackIcon Kind="ImageRemove" Width="18" Height="18" />
+                                        Visibility="{Binding HasPhoto, Converter={StaticResource BoolToVisibility}}" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="ImageRemove" Width="18" Height="18" VerticalAlignment="Center"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="100" />
-                <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="170" />
-                <DataGridTextColumn Header="سمت" Binding="{Binding PositionName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="120" />
-                <DataGridTextColumn Header="دپارتمان" Binding="{Binding DepartmentName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="120" />
-                <DataGridTextColumn Header="موبایل" Binding="{Binding Mobile, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" />
-                <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="90" />
+                <DataGridTextColumn Header="کد پرسنلی" Binding="{Binding PersonnelCode, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="100" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="نام کامل" Binding="{Binding FullName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="170" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="سمت" Binding="{Binding PositionName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="120" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="دپارتمان" Binding="{Binding DepartmentName, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="120" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="موبایل" Binding="{Binding Mobile, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="110" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="Auto" MinWidth="90" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                 <!-- حقوق پایه — مبدل مبلغ (واحد پول + ارقام فارسی + جداکننده) به‌جای StringFormat -->
-                <DataGridTextColumn Header="حقوق پایه" Binding="{Binding BaseSalary, Converter={StaticResource CurrencyRial}}" Width="Auto" MinWidth="120">
+                <DataGridTextColumn Header="حقوق پایه" Binding="{Binding BaseSalary, Converter={StaticResource CurrencyRial}}" Width="Auto" MinWidth="120" MaxWidth="420">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                             <Setter Property="HorizontalAlignment" Value="Right" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="درصد از سود (٪)" Binding="{Binding CommissionPercent, StringFormat='{}{0:0.##}'}" Width="Auto" MinWidth="105">
+                <DataGridTextColumn Header="درصد از سود (٪)" Binding="{Binding CommissionPercent, StringFormat='{}{0:0.##}'}" Width="Auto" MinWidth="105" MaxWidth="420">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                             <Setter Property="HorizontalAlignment" Value="Center" />
                             <Setter Property="Foreground" Value="#8E24AA" />
                             <Setter Property="FontWeight" Value="SemiBold" />
@@ -147,37 +147,37 @@
                      «امکان ویرایش پرسنل وجود ندارد و کلیدهای عملیاتی ناقص‌اند» —
                      ویرایش کامل (فرم ثبت در حالت ویرایش) + ویرایش حقوقی + حذف نرم
                      چرخهٔ بیست‌ونهم: کلید «مشخصات کاربری» — حسابِ ورودِ متصل ═══ -->
-                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="264">
+                <DataGridTemplateColumn Header="عملیات" Width="Auto" MinWidth="264" MaxWidth="420">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         ToolTip="ویرایش کامل اطلاعات پرسنل"
                                         Command="{Binding DataContext.EditEmployeeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" Foreground="#1565C0">
-                                    <materialDesign:PackIcon Kind="AccountEdit" Width="18" Height="18" />
+                                        CommandParameter="{Binding}" Foreground="#1565C0" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="AccountEdit" Width="18" Height="18" VerticalAlignment="Center"/>
                                 </Button>
                                 <!-- اصلاح چرخهٔ سی‌ویکم: آکولاد باز جاافتاده در StaticResource باعث
                                      XamlParseException (رشته به‌جای Style) و کرش کل صفحهٔ پرسنل می‌شد -->
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         ToolTip="ویرایش اطلاعات حقوقی — حقوق پایه و درصد از سود"
                                         Command="{Binding DataContext.EditSalaryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" Foreground="#2E7D32">
-                                    <materialDesign:PackIcon Kind="CurrencyUsd" Width="18" Height="18" />
+                                        CommandParameter="{Binding}" Foreground="#2E7D32" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="CurrencyUsd" Width="18" Height="18" VerticalAlignment="Center"/>
                                 </Button>
                                 <!-- مشخصات کاربری — چرخهٔ بیست‌ونهم (گزارش هجدهم مالک):
                                      حسابِ ورودِ متصل به همین پرسنل را ویرایش یا می‌سازد -->
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         ToolTip="مشخصات کاربری — ویرایش حساب ورودِ متصل یا ساخت حساب جدید"
                                         Command="{Binding DataContext.ManageAccountCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" Foreground="#00695C">
-                                    <materialDesign:PackIcon Kind="AccountKey" Width="18" Height="18" />
+                                        CommandParameter="{Binding}" Foreground="#00695C" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="AccountKey" Width="18" Height="18" VerticalAlignment="Center"/>
                                 </Button>
                                 <Button Style="{StaticResource App.RowIconButton}"
                                         ToolTip="حذف پرسنل (حذف نرم — سابقه‌ها سالم می‌مانند)"
                                         Command="{Binding DataContext.DeleteEmployeeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" Foreground="#C62828">
-                                    <materialDesign:PackIcon Kind="AccountRemove" Width="18" Height="18" />
+                                        CommandParameter="{Binding}" Foreground="#C62828" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="AccountRemove" Width="18" Height="18" VerticalAlignment="Center"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>

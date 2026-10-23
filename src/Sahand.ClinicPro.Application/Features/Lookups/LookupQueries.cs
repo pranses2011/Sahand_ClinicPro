@@ -2,17 +2,19 @@
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.Common.Caching;
 using Sahand.ClinicPro.Application.Common.Helpers;
+using Sahand.ClinicPro.Application.Common.Security;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Domain.Interfaces;
 using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
 using Sahand.ClinicPro.Domain.Entities.Billing;
+using Sahand.ClinicPro.Domain.Entities.Infrastructure;
 
 namespace Sahand.ClinicPro.Application.Features.Lookups;
 
 /// <summary>گزینه بیمه برای فهرست انتخاب</summary>
-public record InsuranceCompanyOptionDto(long Id, string Name, string? Code);
+public record InsuranceCompanyOptionDto(long Id, string Name, string? Code, bool IsContracted = false, decimal CoveragePercent = 0m);
 
 /// <summary>گزینه تشخیص ICD-10</summary>
 public record DiagnosisOptionDto(long Id, string Code, string Title, string? Description);
@@ -73,9 +75,11 @@ public class GetInsuranceCompaniesQueryHandler
             ReferenceCacheKeys.InsuranceCompanies,
             async ct => await _unitOfWork.Repository<Domain.Entities.Billing.InsuranceCompany>()
                 .QueryableNoTracking
-                .Where(c => !c.IsDeleted)
+                .Where(c => c.IsActive && !c.IsDeleted)
                 .OrderBy(c => c.Name)
-                .Select(c => new InsuranceCompanyOptionDto(c.Id, c.Name, c.Code))
+                .Select(c => new InsuranceCompanyOptionDto(c.Id, c.Name, c.Code, c.IsContracted,
+                    c.DefaultCoveragePercent > 0 ? c.DefaultCoveragePercent :
+                    c.DefaultInsuranceShare > 0 ? c.DefaultInsuranceShare : 70m))
                 .ToListAsync(ct),
             TimeSpan.FromMinutes(5),
             cancellationToken);
@@ -590,6 +594,20 @@ public class GetServicesQueryHandler : IRequestHandler<GetServicesQuery, Result<
     public async Task<Result<List<ServiceTariffOptionDto>>> Handle(GetServicesQuery request,
         CancellationToken cancellationToken)
     {
+        var requestedCompany = request.InsuranceCompanyId is long requestedId
+            ? await _unitOfWork.Repository<InsuranceCompany>().QueryableNoTracking
+                .FirstOrDefaultAsync(c => c.Id == requestedId && c.IsActive && !c.IsDeleted, cancellationToken)
+            : null;
+        var insuranceSettings = await _unitOfWork.Repository<SystemSetting>().QueryableNoTracking
+            .Where(s => !s.IsDeleted && s.Category == "Insurance")
+            .Select(s => new { s.Key, s.Value }).ToListAsync(cancellationToken);
+        var billingPolicy = InsuranceBillingPolicy.FromSettings(insuranceSettings.Select(s =>
+            new KeyValuePair<string, string?>(s.Key, s.Value)));
+        var effectiveInsuranceCompanyId = requestedCompany is { IsActive: true, IsContracted: true } &&
+                                          billingPolicy.ApplyToMedicalServices
+            ? request.InsuranceCompanyId
+            : null;
+
         var query = _unitOfWork.Repository<Service>().QueryableNoTracking
             .Where(x => x.IsActive);
         if (!string.IsNullOrWhiteSpace(request.Search))
@@ -608,14 +626,14 @@ public class GetServicesQueryHandler : IRequestHandler<GetServicesQuery, Result<
         // حل‌کننده: ۱) تعرفهٔ بیمهٔ منتخب ۲) تعرفهٔ آزاد ۳) قیمت پایهٔ خدمت
         var tariffs = await _unitOfWork.Repository<Tariff>().QueryableNoTracking
             .Where(t => serviceIds.Contains(t.ServiceId) && t.IsActive &&
-                        (t.InsuranceCompanyId == request.InsuranceCompanyId ||
-                         (request.InsuranceCompanyId != null && t.InsuranceCompanyId == null)))
+                        (t.InsuranceCompanyId == effectiveInsuranceCompanyId ||
+                         (effectiveInsuranceCompanyId != null && t.InsuranceCompanyId == null)))
             .ToListAsync(cancellationToken);
         var tariffByService = tariffs.GroupBy(t => t.ServiceId)
             .ToDictionary(g => g.Key, g => g
                 // اولویت: ردیف بیمهٔ منتخب (تهی نبودن InsuranceCompanyId) بالاتر از آزاد
-                .OrderByDescending(t => t.InsuranceCompanyId == request.InsuranceCompanyId &&
-                                        request.InsuranceCompanyId != null)
+                .OrderByDescending(t => t.InsuranceCompanyId == effectiveInsuranceCompanyId &&
+                                        effectiveInsuranceCompanyId != null)
                 .ThenByDescending(t => t.Year)
                 .First());
 
@@ -627,10 +645,7 @@ public class GetServicesQueryHandler : IRequestHandler<GetServicesQuery, Result<
         // ردیفِ «پایه» از تنظیمات خودِ بیمه (DefaultCoveragePercent و
         // هم‌خانواده‌ها — همان الگوی تسویه و پنجرهٔ مدیریت) محاسبه می‌شود؛
         // ردیف اختصاصی بیمه همچنان مقدم و بی‌تغییر است.
-        InsuranceCompany? targetCompany = request.InsuranceCompanyId is long companyId
-            ? await _unitOfWork.Repository<InsuranceCompany>().QueryableNoTracking
-                .FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken)
-            : null;
+        InsuranceCompany? targetCompany = effectiveInsuranceCompanyId is not null ? requestedCompany : null;
         var fallbackInsurancePercent = TariffFallbackShares.InsurancePercentOf(targetCompany);
         var fallbackPatientPercent = 100m - fallbackInsurancePercent;
 
@@ -644,7 +659,7 @@ public class GetServicesQueryHandler : IRequestHandler<GetServicesQuery, Result<
             // ذخیره‌شده‌ای (ازجمله ردیف‌های قدیمیِ با درصدهای بیمه‌ای پیش از
             // مهاجرت سی‌ودوم) نادیده گرفته و همیشه ۰٪ بیمه / ۱۰۰٪ بیمار
             // برمی‌گردد — دفاع در عمق؛ درصد سهم فقط برای بیمهٔ واقعی معنا دارد.
-            var isFreeTarget = request.InsuranceCompanyId is null;
+            var isFreeTarget = effectiveInsuranceCompanyId is null;
             // ردیف حل‌شده «اختصاصیِ همین بیمه» است یا سقوط به تعرفهٔ پایه؟
             // (برای هدف بیمه‌ای، هر ردیف حل‌شده با InsuranceCompanyId مقداری،
             // همان ردیف اختصاصیِ بیمهٔ هدف است — شرط کوئری بالا)

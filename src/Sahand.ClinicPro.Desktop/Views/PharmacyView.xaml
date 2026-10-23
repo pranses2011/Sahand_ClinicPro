@@ -135,16 +135,16 @@
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               HeadersVisibility="Column" FontSize="12">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="قلم" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="قلم" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="Auto" FontWeight="SemiBold" MaxWidth="420"  ElementStyle="{StaticResource App.TableCellTextBlock}" />
                             <!-- چرخهٔ ۴۳ — ستون نوع حذف شد (فقط دارو) و ستون شمار بچ جای آن نشست -->
-                            <DataGridTextColumn Header="تعداد بچ" Binding="{Binding BatchCount, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="{DynamicResource App.CodeFont}" />
+                            <DataGridTextColumn Header="تعداد بچ" Binding="{Binding BatchCount, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                             <!-- چرخهٔ ۴۳ — ستون بچ حذف شد (ردیف‌ها قلم‌اند)؛ موجودی = جمع بچ‌ها -->
-                            <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="100" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTemplateColumn Header="وضعیت موجودی" Width="130" SortMemberPath="IsLowStock">
+                            <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="موجودی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="وضعیت موجودی" Width="Auto" SortMemberPath="IsLowStock" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center">
+                                        <Border CornerRadius="10" Padding="9,2" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <Border.Style>
                                                 <Style TargetType="Border">
                                                     <Setter Property="Background" Value="#C8E6C9" />
@@ -155,7 +155,7 @@
                                                     </Style.Triggers>
                                                 </Style>
                                             </Border.Style>
-                                            <TextBlock FontSize="11">
+                                            <TextBlock FontSize="11" VerticalAlignment="Center">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Text" Value="🟢 موجود" />
@@ -171,14 +171,14 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel, Converter={StaticResource PersianDigits}}" Width="90" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="انقضا" Binding="{Binding ExpiryDateShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="100" />
-                            <DataGridTemplateColumn Header="هشدار" Width="110" SortMemberPath="IsExpiringSoon">
+                            <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="انقضا" Binding="{Binding ExpiryDateShamsi, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="هشدار" Width="Auto" SortMemberPath="IsExpiringSoon" MaxWidth="420">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="#FFF3E0" CornerRadius="10" Padding="9,2" HorizontalAlignment="Center"
-                                                Visibility="{Binding IsExpiringSoon, Converter={StaticResource BoolToVisibility}}">
-                                            <TextBlock Text="⏰ نزدیک انقضا" FontSize="10.5" Foreground="#E65100" />
+                                                Visibility="{Binding IsExpiringSoon, Converter={StaticResource BoolToVisibility}}" VerticalAlignment="Center">
+                                            <TextBlock Text="⏰ نزدیک انقضا" FontSize="10.5" Foreground="#E65100" VerticalAlignment="Center"/>
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -218,15 +218,15 @@
                               HeadersVisibility="Column" FontSize="12"
                               RowBackground="#2EF9A825">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="دارو" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="*" FontWeight="SemiBold" />
-                            <DataGridTextColumn Header="موجودی فعلی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel, Converter={StaticResource PersianDigits}}" Width="110" FontFamily="{DynamicResource App.CodeFont}" />
-                            <DataGridTextColumn Header="پیشنهاد سفارش" Width="115">
+                            <DataGridTextColumn Header="دارو" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="Auto" FontWeight="SemiBold" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="موجودی فعلی" Binding="{Binding Quantity, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="نقطه سفارش" Binding="{Binding ReorderLevel, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="پیشنهاد سفارش" Width="Auto" MaxWidth="420">
                                 <DataGridTextColumn.Binding>
                                     <Binding Path="SuggestedOrder" StringFormat="{}{0:N0}" />
                                 </DataGridTextColumn.Binding>
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource App.TableCellTextBlock}">
                                         <Setter Property="FontFamily" Value="{DynamicResource App.CodeFont}" />
                                         <Setter Property="FontWeight" Value="Bold" />
                                         <Setter Property="Foreground" Value="#E65100" />

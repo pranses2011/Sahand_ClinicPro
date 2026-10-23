@@ -110,6 +110,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mb_substr(trim((string)($_POST['notes'] ?? '')), 0, 1000) ?: null,
         ]);
         $newId = (int)$db->lastInsertId();
+        // ═══ چرخهٔ ۸۰ — امضا از لحظهٔ صدور ذخیره می‌شود ═══
+        // پیش‌تر ستون signature فقط در «چرخش کلید» نوشته می‌شد؛ لایسنس تازه‌صادر
+        // تا نخستین چرخش امضای ذخیره‌شده نداشت. اکنون همان payload‌ای که در
+        // پاسخ API امضا می‌شود (license_key|expiry_date|max_users) ذخیره می‌گردد.
+        try {
+            $db->prepare('UPDATE ls_licenses SET signature = ? WHERE id = ?')->execute([
+                ls_sign_license($key, $expiry, max(1, (int)($_POST['max_users'] ?? 5))),
+                $newId,
+            ]);
+        } catch (Throwable $e) {
+            ls_log_error('license:sign', $e); // شکست امضا نباید صدور لایسنس را بزند
+        }
         ls_audit($admin['id'], 'issue_license', 'license', $newId,
             'صدور ' . ($type === 'perpetual' ? 'دائمی' : 'اشتراکی ' . $months . ' ماهه') . ' — ' . $key);
         $_SESSION['flash'] = ['success', 'لایسنس «' . $key . '» صادر شد.'];
@@ -158,6 +170,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mb_substr(trim((string)($_POST['notes'] ?? '')), 0, 1000) ?: null,
             $id,
         ]);
+        // ═══ چرخهٔ ۸۰ — بازامضا پس از تغییر سقف کاربران ═══
+        // payload امضا شامل max_users است؛ بدون این گام، سقف کاربر بالا می‌رفت
+        // ولی امضای ذخیره‌شده (و .lic آفلاین صادرشده) کهنه می‌ماند.
+        try {
+            ls_db()->prepare('UPDATE ls_licenses SET signature = ? WHERE id = ?')->execute([
+                ls_sign_license(
+                    (string)$l['license_key'],
+                    $l['expiry_date'] !== null ? (string)$l['expiry_date'] : null,
+                    max(1, (int)($_POST['max_users'] ?? $l['max_users']))
+                ),
+                $id,
+            ]);
+        } catch (Throwable $e) {
+            ls_log_error('license:resign', $e);
+        }
         ls_audit($admin['id'], 'update_license', 'license', $id,
             'ویرایش اطلاعات لایسنس ' . (string)$l['license_key']);
         $_SESSION['flash'] = ['success', 'تغییرات لایسنس ذخیره شد — سقف‌ها و ماژول‌ها از تپ‌قلب بعدی در کلاینت اعمال می‌شود.'];

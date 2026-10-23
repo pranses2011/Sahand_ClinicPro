@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace Sahand.ClinicPro.Desktop.Helpers;
 
@@ -75,7 +76,10 @@ public static class DragDropReorder
 
         if (sender is not ItemsControl items)
             return;
-        var container = ContainerUnderMouse(items, position);
+        var itemPosition = e.GetPosition(items);
+        if (HasNestedEnabledItemsControl(items, itemPosition))
+            return; // فهرست بیرونی نباید درگِ آیتم‌های فهرست تو‌در‌تو را بقاپد
+        var container = ContainerUnderMouse(items, itemPosition);
         if (container is null)
             return;
 
@@ -128,6 +132,19 @@ public static class DragDropReorder
         list.RemoveAt(sourceIndex);
         list.Insert(targetIndex, sourceItem);
         e.Handled = true;
+    }
+
+    /// <summary>آیا نقطهٔ درگ داخل ItemsControl تو‌در‌توی فعال قرار دارد؟</summary>
+    private static bool HasNestedEnabledItemsControl(ItemsControl owner, Point position)
+    {
+        var hit = owner.InputHitTest(position) as DependencyObject;
+        while (hit is not null && hit != owner)
+        {
+            if (hit is ItemsControl nested && GetEnabled(nested))
+                return true;
+            hit = VisualTreeHelper.GetParent(hit);
+        }
+        return false;
     }
 
     /// <summary>
