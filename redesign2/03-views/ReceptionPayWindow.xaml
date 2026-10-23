@@ -1,0 +1,268 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  دریافت وجه — ReceptionPayWindow
+╠══════════════════════════════════════════════════════════════════════╣
+║  گروه        : پذیرش
+║  کهن‌الگو     : form-narrow
+║  ViewModel   : ReceptionPayViewModel
+║  وایرفریم    : 01-wireframes-html/ReceptionPayWindow.html
+╠══════════════════════════════════════════════════════════════════════╣
+║  ساختار (اندازه‌ی هر فیلد/ستون بر پایه‌ی ۱۲ ستون است تا
+║  «بزرگیِ عنصر متناسب با کارکردش» باشد — کد ملی ۳ ستون، نشانی ۱۲ ستون)
+╠══════════════════════════════════════════════════════════════════════╣
+║  نام              نوع              پهنا   الزامی
+║  ─────────────────────────────────────────────────
+║  ▸ مبالغ
+║    Total           TextBox          6      خیر
+║    Insurance       TextBox          6      خیر
+║    PatientPay      TextBox          6      بله
+║    Discount        TextBox          6      خیر
+║    PayMethod       ComboBox         12     بله
+║    Ref             TextBox          12     خیر
+╠══════════════════════════════════════════════════════════════════════╣
+║  ارتباطات این صفحه
+║  ─────────────────────────────────────────────────
+║    دریافت وجه  ──▶  صورتحساب
+║         فاکتور صادر می‌شود
+║    دریافت وجه  ──▶  بستن شیفت
+║         در پایان شیفت جمع‌بندی می‌شود
+╚══════════════════════════════════════════════════════════════════════╝
+
+  قواعدِ رعایت‌شده در این فایل:
+    • راست‌چین (RTL) و قلمِ وزیرمتن در سراسرِ صفحه
+    • هیچ رنگِ ثابت (هگز) — همه از نشانه‌های معناییِ DynamicResource
+    • الگوی MVVM: هیچ منطقی در code-behind، همه چیز از ViewModel
+    • متن‌ها از فایلِ زبان (loc:Loc) برای پشتیبانیِ دو زبانهٔ آینده
+    • تاریخ‌ها با تبدیل‌گرِ PersianDate به شمسی نمایش داده می‌شوند
+    • نقشهٔ ارتباطات در پایینِ صفحه مسیرِ حرکت را نشان می‌دهد
+-->
+
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.ReceptionPayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization"
+        xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
+        mc:Ignorable="d"
+        Title="دریافت وجه"
+        Style="{DynamicResource Window.Modern}"
+        WindowStartupLocation="CenterScreen"
+        Height="720" Width="520"
+        d:DataContext="{d:DesignInstance vm:ReceptionPayViewModel}"
+        FlowDirection="RightToLeft"
+        FontFamily="{DynamicResource AppFontFamily}"
+        Background="{DynamicResource Brush.Canvas}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ سربرگِ یکپارچه‌ی صفحه ═══ -->
+        <ctrl:PageHeader Grid.Row="0"
+                        Title="دریافت وجه"
+                        Subtitle="تسویه حساب پذیرش"
+                        Icon="{DynamicResource Icon.HandCoins}"
+                        Margin="{StaticResource P.Page}" />
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="{StaticResource P.Page}">
+            <StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <!-- ── بخش: مبالغ ── -->
+                <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="12"
+                        Margin="0,{StaticResource S.2},0,{StaticResource S.3}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.Wallet}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="مبالغ"
+                                   Style="{DynamicResource Txt.Title}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                </Border>
+                <!-- جمع کل — TextBox · پهنای 6/۱۲ -->
+                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="6"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="جمع کل"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Total, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             TextAlignment="Left"
+                             FlowDirection="LeftToRight" />
+                </StackPanel>
+                <!-- سهم بیمه — TextBox · پهنای 6/۱۲ -->
+                <StackPanel Grid.Row="1" Grid.Column="6" Grid.ColumnSpan="6"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="سهم بیمه"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Insurance, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             TextAlignment="Left"
+                             FlowDirection="LeftToRight" />
+                </StackPanel>
+                <!-- قابل پرداخت — TextBox · پهنای 6/۱۲ -->
+                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="6"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="قابل پرداخت"
+                               Style="{DynamicResource Input.LabelRequired}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding PatientPay, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             TextAlignment="Left"
+                             FlowDirection="LeftToRight" />
+                    <!-- خطاهای اعتبارسنجی به‌صورت خودکار از INotifyDataErrorInfo نمایش داده می‌شوند -->
+                </StackPanel>
+                <!-- تخفیف — TextBox · پهنای 6/۱۲ -->
+                <StackPanel Grid.Row="2" Grid.Column="6" Grid.ColumnSpan="6"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="تخفیف"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Discount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             TextAlignment="Left"
+                             FlowDirection="LeftToRight" />
+                </StackPanel>
+                <!-- شیوه پرداخت — ComboBox · پهنای 12/۱۲ -->
+                <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="12"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="شیوه پرداخت"
+                               Style="{DynamicResource Input.LabelRequired}" />
+                    <ComboBox Style="{DynamicResource Input.ComboBox}"
+                              SelectedItem="{Binding PayMethod, Mode=TwoWay}">
+                        <ComboBoxItem Content="نقد" IsSelected="True" />
+                        <ComboBoxItem Content="کارت‌خوان" />
+                        <ComboBoxItem Content="کارت به کارت" />
+                        <ComboBoxItem Content="اعتباری" />
+                    </ComboBox>
+                    <!-- خطاهای اعتبارسنجی به‌صورت خودکار از INotifyDataErrorInfo نمایش داده می‌شوند -->
+                </StackPanel>
+                <!-- شماره پیگیری — TextBox · پهنای 12/۱۲ -->
+                <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="12"
+                            Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                    <TextBlock Text="شماره پیگیری"
+                               Style="{DynamicResource Input.Label}" />
+                    <TextBox Style="{DynamicResource Input.TextBox}"
+                             Text="{Binding Ref, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             />
+                </StackPanel>
+            </Grid>
+            <!-- ══════════════════════════════════════════════════════════
+     ارتباطاتِ این صفحه با دیگر صفحات
+     هر ردیف: «مبدأ» → «مقصد» با توضیحِ نوعِ پیوند
+     این بلوک در همه‌ی صفحات حضور دارد تا مسیرِ حرکتِ کاربر گم نشود.
+     ══════════════════════════════════════════════════════════ -->
+            <Border Style="{DynamicResource Card.Flat}" Margin="0,{StaticResource S.3},0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,{StaticResource S.3}">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.GitBranch}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="{loc:Loc Common.Relations}"
+                                   Style="{DynamicResource Txt.Subtitle}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Relations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="0,0,0,{StaticResource S.2}">
+                                    <Border Style="{DynamicResource Badge.Neutral}">
+                                        <TextBlock Text="{Binding From}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                        <Path Style="{DynamicResource Icon.XSmall}"
+                                              Data="{DynamicResource Icon.ArrowLeft}"
+                                               Stroke="{DynamicResource Brush.TextMuted}" />
+                                    <Border Style="{DynamicResource Badge.Info}">
+                                        <TextBlock Text="{Binding To}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Why}"
+                                               Style="{DynamicResource Txt.Caption}"
+                                               VerticalAlignment="Center"
+                                               Margin="{StaticResource S.2},0,0,0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ═══ نوارِ اقدام‌های ثابت ═══ -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource Brush.Surface}"
+                BorderBrush="{DynamicResource Brush.Border}"
+                BorderThickness="0,1,0,0"
+                Padding="{StaticResource S.4}">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Left">
+                <Button Style="{DynamicResource Btn.Primary}"
+                        Command="{Binding PayCommand}"
+                        Margin="0,0,{StaticResource S.2},0"
+                        MinHeight="{StaticResource Size.ButtonHeight}"
+                        Padding="{StaticResource P.Button}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.Check}"
+                              Margin="0,0,{StaticResource S.2},0" />
+                        <TextBlock Text="ثبت پرداخت" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Style="{DynamicResource Btn.Secondary}"
+                        Command="{Binding PrintCommand}"
+                        Margin="0,0,{StaticResource S.2},0"
+                        MinHeight="{StaticResource Size.ButtonHeight}"
+                        Padding="{StaticResource P.Button}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.Printer}"
+                              Margin="0,0,{StaticResource S.2},0" />
+                        <TextBlock Text="چاپ رسید" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Style="{DynamicResource Btn.Ghost}"
+                        Command="{Binding CancelCommand}"
+                        Margin="0,0,{StaticResource S.2},0"
+                        MinHeight="{StaticResource Size.ButtonHeight}"
+                        Padding="{StaticResource P.Button}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="انصراف" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+
+</Window>

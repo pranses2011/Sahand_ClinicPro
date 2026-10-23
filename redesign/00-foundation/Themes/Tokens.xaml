@@ -1,0 +1,116 @@
+<!--
+  ═══════════════════════════════════════════════════════════════════════
+  🎨 توکن‌های معنایی — نقطه‌ی ورود اصلی سیستم طراحی
+  ═══════════════════════════════════════════════════════════════════════
+  این فایل «رنگ‌های خام» را به «نقش‌های معنایی» تبدیل می‌کند.
+
+  ⚠️ قانون طلایی: در Viewها فقط از کلیدهای این فایل استفاده کنید
+     (مانند {DynamicResource Brush.Primary}) و هرگز مستقیماً
+     از C.Primary یا کد هگزادنویسی استفاده نکنید.
+
+  🔄 تعویض تم: ThemeManager کلیدهای Colors.*.xaml را در همین
+     فایل کپی می‌کند و همه‌ی DynamicResourceها به‌روزرسانی می‌شوند.
+  ═══════════════════════════════════════════════════════════════════════
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <ResourceDictionary.MergedDictionaries>
+        <!-- 🎨 رنگ‌ها — ThemeManager این ورودی را جابه‌جا می‌کند -->
+        <ResourceDictionary Source="Themes/Colors.Light.xaml" />
+        <ResourceDictionary Source="Themes/Typography.xaml" />
+        <ResourceDictionary Source="Themes/Controls/Buttons.xaml" />
+        <ResourceDictionary Source="Themes/Controls/Inputs.xaml" />
+        <ResourceDictionary Source="Themes/Controls/DataDisplay.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- ══════════ قلم‌موهای اصلی ══════════ -->
+    <SolidColorBrush x:Key="Brush.Primary"        Color="{DynamicResource C.Primary}" />
+    <SolidColorBrush x:Key="Brush.PrimaryDark"    Color="{DynamicResource C.PrimaryDark}" />
+    <SolidColorBrush x:Key="Brush.PrimaryLight"   Color="{DynamicResource C.PrimaryLight}" />
+    <SolidColorBrush x:Key="Brush.OnPrimary"      Color="{DynamicResource C.OnPrimary}" />
+    <SolidColorBrush x:Key="Brush.Secondary"      Color="{DynamicResource C.Secondary}" />
+    <SolidColorBrush x:Key="Brush.SecondaryLight" Color="{DynamicResource C.SecondaryLight}" />
+    <SolidColorBrush x:Key="Brush.OnSecondary"    Color="{DynamicResource C.OnSecondary}" />
+
+    <!-- ══════════ قلم‌موهای وضعیت ══════════ -->
+    <SolidColorBrush x:Key="Brush.Success"      Color="{DynamicResource C.Success}" />
+    <SolidColorBrush x:Key="Brush.SuccessLight" Color="{DynamicResource C.SuccessLight}" />
+    <SolidColorBrush x:Key="Brush.Warning"      Color="{DynamicResource C.Warning}" />
+    <SolidColorBrush x:Key="Brush.WarningLight" Color="{DynamicResource C.WarningLight}" />
+    <SolidColorBrush x:Key="Brush.Danger"       Color="{DynamicResource C.Danger}" />
+    <SolidColorBrush x:Key="Brush.DangerLight"  Color="{DynamicResource C.DangerLight}" />
+    <SolidColorBrush x:Key="Brush.Info"         Color="{DynamicResource C.Info}" />
+    <SolidColorBrush x:Key="Brush.InfoLight"    Color="{DynamicResource C.InfoLight}" />
+
+    <!-- ══════════ قلم‌موهای متن ══════════ -->
+    <SolidColorBrush x:Key="Brush.Text"          Color="{DynamicResource C.Text}" />
+    <SolidColorBrush x:Key="Brush.TextSecondary" Color="{DynamicResource C.TextSecondary}" />
+    <SolidColorBrush x:Key="Brush.TextMuted"     Color="{DynamicResource C.TextMuted}" />
+    <SolidColorBrush x:Key="Brush.TextDisabled"  Color="{DynamicResource C.TextDisabled}" />
+
+    <!-- ══════════ قلم‌موهای سطح ══════════ -->
+    <SolidColorBrush x:Key="Brush.Surface"      Color="{DynamicResource C.Surface}" />
+    <SolidColorBrush x:Key="Brush.SurfaceAlt"   Color="{DynamicResource C.SurfaceAlt}" />
+    <SolidColorBrush x:Key="Brush.SurfaceHover" Color="{DynamicResource C.SurfaceHover}" />
+    <SolidColorBrush x:Key="Brush.Canvas"       Color="{DynamicResource C.Canvas}" />
+    <SolidColorBrush x:Key="Brush.Sidebar"      Color="{DynamicResource C.Sidebar}" />
+
+    <!-- ══════════ قلم‌موهای خطوط ══════════ -->
+    <SolidColorBrush x:Key="Brush.Border"       Color="{DynamicResource C.Border}" />
+    <SolidColorBrush x:Key="Brush.BorderStrong" Color="{DynamicResource C.BorderStrong}" />
+    <SolidColorBrush x:Key="Brush.Focus"        Color="{DynamicResource C.Focus}" />
+
+    <!-- ══════════ قلم‌موهای تخصصی پزشکی ══════════ -->
+    <SolidColorBrush x:Key="Brush.Med.Blood"   Color="{DynamicResource C.Med.Blood}" />
+    <SolidColorBrush x:Key="Brush.Med.Heart"   Color="{DynamicResource C.Med.Heart}" />
+    <SolidColorBrush x:Key="Brush.Med.Bone"    Color="{DynamicResource C.Med.Bone}" />
+    <SolidColorBrush x:Key="Brush.Med.Drug"    Color="{DynamicResource C.Med.Drug}" />
+    <SolidColorBrush x:Key="Brush.Med.Lab"     Color="{DynamicResource C.Med.Lab}" />
+    <SolidColorBrush x:Key="Brush.Med.Imaging" Color="{DynamicResource C.Med.Imaging}" />
+    <SolidColorBrush x:Key="Brush.Med.Dental"  Color="{DynamicResource C.Med.Dental}" />
+
+    <!-- ══════════ 📐 مقیاس فاصله‌گذاری (پایه ۴ پیکسل) ══════════ -->
+    <sys:Double x:Key="S.0">0</sys:Double>
+    <sys:Double x:Key="S.1">4</sys:Double>
+    <sys:Double x:Key="S.2">8</sys:Double>
+    <sys:Double x:Key="S.3">12</sys:Double>
+    <sys:Double x:Key="S.4">16</sys:Double>
+    <sys:Double x:Key="S.5">20</sys:Double>
+    <sys:Double x:Key="S.6">24</sys:Double>
+    <sys:Double x:Key="S.8">32</sys:Double>
+    <sys:Double x:Key="S.10">40</sys:Double>
+    <sys:Double x:Key="S.12">48</sys:Double>
+
+    <Thickness x:Key="P.Card">16</Thickness>
+    <Thickness x:Key="P.Page">24</Thickness>
+    <Thickness x:Key="P.Row">8,6</Thickness>
+    <Thickness x:Key="P.Button">20,9</Thickness>
+
+    <!-- ══════════ 🔘 شعاع گوشه ══════════ -->
+    <CornerRadius x:Key="R.None">0</CornerRadius>
+    <CornerRadius x:Key="R.Small">4</CornerRadius>
+    <CornerRadius x:Key="R.Medium">8</CornerRadius>
+    <CornerRadius x:Key="R.Large">12</CornerRadius>
+    <CornerRadius x:Key="R.XLarge">16</CornerRadius>
+    <CornerRadius x:Key="R.Pill">999</CornerRadius>
+
+    <!-- ══════════ ⚡ زمان‌بندی انیمیشن ══════════ -->
+    <Duration x:Key="D.Fast">0:0:0.12</Duration>
+    <Duration x:Key="D.Normal">0:0:0.22</Duration>
+    <Duration x:Key="D.Slow">0:0:0.40</Duration>
+
+    <!-- ══════════ 📐 ابعاد استاندارد ══════════ -->
+    <sys:Double x:Key="Size.Icon">20</sys:Double>
+    <sys:Double x:Key="Size.IconSmall">16</sys:Double>
+    <sys:Double x:Key="Size.IconLarge">28</sys:Double>
+    <sys:Double x:Key="Size.ButtonHeight">38</sys:Double>
+    <sys:Double x:Key="Size.InputHeight">38</sys:Double>
+    <sys:Double x:Key="Size.RowHeight">44</sys:Double>
+    <sys:Double x:Key="Size.HeaderHeight">56</sys:Double>
+    <sys:Double x:Key="Size.SidebarWidth">240</sys:Double>
+    <sys:Double x:Key="Size.SidebarCollapsed">64</sys:Double>
+    <sys:Double x:Key="Size.MinTouchTarget">44</sys:Double>
+
+</ResourceDictionary>

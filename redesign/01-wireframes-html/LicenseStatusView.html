@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>وایرفریم وضعیت لایسنس — سهند</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Vazirmatn","Segoe UI",Tahoma,sans-serif;background:#F1F5F9;
+     color:#1E293B;direction:rtl;padding:32px;line-height:1.7}
+.wrap{max-width:1280px;margin:0 auto}
+.doc-head{background:#0D9488;color:#fff;padding:28px 32px;border-radius:16px 16px 0 0}
+.doc-head h1{font-size:26px;font-weight:700;margin-bottom:6px}
+.doc-head p{opacity:.9;font-size:14px}
+.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.tag{background:rgba(255,255,255,.18);padding:4px 12px;border-radius:999px;font-size:12px}
+.body{background:#fff;padding:32px;border-radius:0 0 16px 16px;
+      box-shadow:0 8px 28px rgba(15,23,42,.10)}
+.frame{border:2px dashed #94A3B8;border-radius:14px;background:#F8FAFC;
+       padding:20px;margin-bottom:26px}
+.cap{font-size:12px;color:#64748B;margin-bottom:10px;font-weight:600;
+     letter-spacing:.3px;text-transform:uppercase}
+.app{background:#EFF3F8;border:1px solid #CBD5E1;border-radius:12px;
+     overflow:hidden;background:#fff}
+.topbar{background:#0F766E;color:#fff;padding:10px 16px;display:flex;
+        align-items:center;gap:14px;font-size:13px}
+.topbar .brand{font-weight:700}
+.topbar .sp{flex:1}
+.topbar .pill{background:rgba(255,255,255,.16);padding:3px 10px;border-radius:999px}
+.shell{display:flex;min-height:430px}
+.side{width:190px;background:#0F766E;color:#CFE9E5;padding:16px 12px;font-size:13px}
+.side .item{padding:8px 12px;border-radius:8px;margin-bottom:4px;display:flex;gap:8px}
+.side .item.on{background:rgba(255,255,255,.16);color:#fff;font-weight:600}
+.main{flex:1;padding:18px;background:#F8FAFC;overflow:hidden}
+.hdr{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.hdr .ico{width:44px;height:44px;border-radius:12px;background:#CCFBF1;
+          display:flex;align-items:center;justify-content:center;font-size:22px}
+.hdr h2{font-size:19px}
+.hdr .sub{font-size:12px;color:#64748B}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+      gap:12px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:12px 14px}
+.kpi .lb{font-size:11px;color:#64748B}
+.kpi .vl{font-size:22px;font-weight:700;color:#0F766E}
+.kpi .tr{font-size:11px;color:#15803D}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.fld{background:#fff;border:1px solid #CBD5E1;border-radius:8px;padding:7px 12px;
+     font-size:12px;min-width:130px;color:#64748B}
+.fld.wide{flex:1;min-width:200px}
+.btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600}
+.btn.p{background:#0D9488;color:#fff}
+.btn.s{background:#fff;color:#334155;border:1px solid #CBD5E1}
+.btn.d{background:#BE123C;color:#fff}
+.btn.g{background:#15803D;color:#fff}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;background:#fff;
+     border-radius:10px;overflow:hidden}
+.tbl th{background:#F1F5F9;text-align:right;padding:9px 12px;color:#64748B;
+        font-weight:600;border-bottom:1px solid #E2E8F0}
+.tbl td{padding:9px 12px;border-bottom:1px solid #E2E8F0}
+.tbl tr:nth-child(even) td{background:#F8FAFC}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600}
+.b.ok{background:#DCFCE7;color:#15803D}
+.b.warn{background:#FEF3C7;color:#B45309}
+.b.err{background:#FFE4E6;color:#BE123C}
+.b.info{background:#E0F2FE;color:#0369A1}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:14px}
+.card h4{font-size:13px;margin-bottom:10px;color:#0F766E;
+         border-bottom:1px solid #E2E8F0;padding-bottom:6px}
+.row{display:flex;flex-direction:column;gap:3px;margin-bottom:9px}
+.row label{font-size:11px;color:#64748B}
+.row .in{border:1px solid #CBD5E1;border-radius:8px;padding:7px 11px;
+         background:#fff;font-size:12px;color:#1E293B}
+.row .in.ta{min-height:56px}
+.tabs{display:flex;gap:4px;border-bottom:2px solid #E2E8F0;margin-bottom:12px;flex-wrap:wrap}
+.tabs .t{padding:8px 15px;font-size:12px;color:#64748B;border-radius:8px 8px 0 0}
+.tabs .t.on{color:#0D9488;font-weight:700;border-bottom:2px solid #0D9488;
+            margin-bottom:-2px;background:#CCFBF1}
+.foot{display:flex;justify-content:space-between;align-items:center;
+      margin-top:12px;padding-top:12px;border-top:1px solid #E2E8F0;font-size:12px}
+.acts{display:flex;gap:8px}
+.empty{text-align:center;padding:34px;color:#94A3B8;font-size:13px}
+.empty .ic{font-size:44px;display:block;margin-bottom:8px;opacity:.6}
+.pager{display:flex;gap:6px;align-items:center;font-size:12px;color:#64748B}
+.pager .pg{border:1px solid #CBD5E1;border-radius:6px;padding:3px 9px;background:#fff}
+.pager .pg.on{background:#0D9488;color:#fff;border-color:#0D9488}
+.legend{margin-top:26px;background:#F8FAFC;border:1px solid #E2E8F0;
+        border-radius:12px;padding:18px 22px}
+.legend h3{font-size:15px;margin-bottom:10px;color:#0F766E}
+.legend table{width:100%;border-collapse:collapse;font-size:12.5px}
+.legend th{text-align:right;padding:6px 8px;border-bottom:1px solid #E2E8F0;color:#64748B}
+.legend td{padding:6px 8px;border-bottom:1px solid #F1F5F9}
+.notes{background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;
+       padding:12px 16px;font-size:13px;color:#78350F;margin-top:14px}
+.foot-doc{text-align:center;color:#94A3B8;font-size:12px;margin-top:22px}
+@media print{body{background:#fff;padding:0}.frame{border-style:solid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="doc-head">
+    <h1>🔑 وضعیت لایسنس</h1>
+    <p>نمایش وضعیت مجوز و ماژول‌های فعال</p>
+    <div class="meta">
+      <span class="tag">📄 LicenseStatusView</span>
+      <span class="tag">🧩 صفحه‌ی جزئیات</span>
+      <span class="tag">🗂 سیستم</span>
+      <span class="tag">🔑 LicenseStatus</span>
+      <span class="tag">🎨 تم‌پذیر · دو زبانه</span>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <div class="frame">
+      <div class="cap">نمای بصری پیشنهادی</div>
+      <div class="app"><div class="topbar"><span class="brand">🏥 سهند</span><span class="pill">🔍 جستجو</span><span class="sp"></span><span class="pill">🔔 ۳</span><span class="pill">👤 کاربر</span><span class="pill">🌙</span></div><div class="shell"><div class="side"><div class="item"><span>🏠</span><span>پیشخوان</span></div>
+<div class="item"><span>🔑</span><span>تغییر رمز عبور</span></div>
+<div class="item"><span>⚙</span><span>تنظیمات</span></div>
+<div class="item"><span>🔔</span><span>اعلان‌ها</span></div>
+<div class="item"><span>🎓</span><span>مرکز آموزش</span></div>
+<div class="item"><span>👥</span><span>بیماران</span></div>
+<div class="item"><span>👤</span><span>فرم بیمار</span></div>
+<div class="item"><span>📁</span><span>پرونده‌ی بیمار</span></div>
+<div class="item"><span>❤</span><span>پرونده بالینی پیشرفته</span></div>
+<div class="item"><span>📅</span><span>نوبت‌دهی</span></div>
+<div class="item"><span>🗓</span><span>فرم نوبت</span></div>
+<div class="item"><span>🩺</span><span>ویزیت پزشک</span></div>
+<div class="item"><span>🛎</span><span>پذیرش و صف</span></div>
+<div class="item"><span>📝</span><span>فرم پذیرش</span></div></div><div class="main"><div class="hdr"><div class="ico">🔑</div><div><h2>وضعیت لایسنس</h2><div class="sub">نمایش وضعیت مجوز و ماژول‌های فعال</div></div></div>
+<div class="kpis">
+<div class="kpi"><div class="lb">🔑 نوع لایسنس</div><div class="vl">—</div><div class="tr">▲ ۱۲٪</div></div>
+<div class="kpi"><div class="lb">📅 تاریخ انقضا</div><div class="vl">—</div><div class="tr">▲ ۱۲٪</div></div>
+<div class="kpi"><div class="lb">⏳ روزهای باقی‌مانده</div><div class="vl">۰</div><div class="tr">▲ ۱۲٪</div></div>
+<div class="kpi"><div class="lb">🧩 ماژول‌های فعال</div><div class="vl">۰</div><div class="tr">▲ ۱۲٪</div></div>
+</div>
+<div class="tabs">
+<div class="t on">📋 خلاصه</div>
+<div class="t">🧩 ماژول‌ها</div>
+<div class="t">🕐 تاریخچه</div>
+</div>
+<div class="bar">
+<div style="flex:1"></div>
+<div class="btn p">فعال‌سازی</div>
+<div class="btn s">به‌روزرسانی</div>
+</div>
+<div class="foot"><div></div><div class="acts">
+<div class="btn p">فعال‌سازی</div>
+<div class="btn s">به‌روزرسانی</div>
+</div></div></div></div></div>
+    </div>
+
+    
+
+    <div class="legend">
+      <h3>📐 المان‌ها و مشخصات</h3>
+      <table><thead><tr><th>برچسب</th><th>نام/نوع</th><th>المان</th><th>نقش</th></tr></thead><tbody><tr><td>فعال‌سازی</td><td><code>Activate</code></td><td>اقدام</td><td>دکمه‌ی Primary — اجرای فرمان</td></tr>
+<tr><td>به‌روزرسانی</td><td><code>Refresh</code></td><td>اقدام</td><td>دکمه‌ی Secondary — اجرای فرمان</td></tr></tbody></table>
+    </div>
+
+    <div class="foot-doc">
+      📅 ۱۴۰۴/۰۷/۱۹ · 🔖 v1.0 · بازطراحی رابط کاربر سهند
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

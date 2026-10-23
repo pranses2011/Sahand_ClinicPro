@@ -1,0 +1,65 @@
+<Application x:Class="Sahand.ClinicPro.Desktop.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             StartupUri="Views/MainWindow.xaml">
+
+    <!--
+    ╔══════════════════════════════════════════════════════════════════════╗
+    ║  نقطه‌ی تجمیعِ منابعِ سراسریِ برنامه                                    ║
+    ║                                                                      ║
+    ║  ترتیبِ ادغام مهم است:                                                ║
+    ║    ۱. رنگ‌های تم (روشن یا تاریک)   ← اولین لایه، پایه‌ی همه چیز       ║
+    ║    ۲. توکن‌های معنایی              ← به رنگ‌ها ارجاع می‌دهند           ║
+    ║    ۳. تایپوگرافی                   ← اندازه و وزن قلم                 ║
+    ║    ۴. سبک‌های کنترل‌ها             ← از توکن‌ها استفاده می‌کنند         ║
+    ║    ۵. تبدیل‌گرها                   ← منابعِ StaticResource             ║
+    ╚══════════════════════════════════════════════════════════════════════╝
+    -->
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+
+                <!-- ═══ ۱. پالت رنگ ══════════════════════════════════════
+                     برای تغییر تم، کافی است این یک خط را عوض کنید:
+                       Themes/Colors.Light.xaml  →  Themes/Colors.Dark.xaml
+                     یا در زمان اجرا از ThemeManager استفاده کنید.
+                -->
+                <ResourceDictionary Source="Themes/Colors.Light.xaml" />
+
+                <!-- ═══ ۲. توکن‌های معنایی (فاصله، شعاع، اندازه، قلم‌مو) ═══ -->
+                <ResourceDictionary Source="Themes/Tokens.xaml" />
+
+                <!-- ═══ ۳. سبک‌های تایپوگرافی ═══════════════════════════ -->
+                <ResourceDictionary Source="Themes/Typography.xaml" />
+
+                <!-- ═══ ۴. سبک‌های کنترل‌های پایه ═══════════════════════ -->
+                <ResourceDictionary Source="Themes/Controls/Buttons.xaml" />
+                <ResourceDictionary Source="Themes/Controls/Inputs.xaml" />
+                <ResourceDictionary Source="Themes/Controls/DataDisplay.xaml" />
+
+                <!-- ═══ ۵. تبدیل‌گرها ════════════════════════════════════ -->
+                <ResourceDictionary Source="Controls/Converters.xaml" />
+
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- ══════════════════════════════════════════════════════════
+                 تنظیمات سراسریِ برنامه
+            ═══════════════════════════════════════════════════════════ -->
+
+            <!-- جهتِ پیش‌فرضِ رابط: از مدیرِ زبان خوانده می‌شود -->
+            <FlowDirection x:Key="AppFlowDirection">RightToLeft</FlowDirection>
+
+            <!-- خانواده‌ی قلمِ پیش‌فرض (در صورت نصب‌بودن روی ویندوز) -->
+            <FontFamily x:Key="AppFontFamily">Vazirmatn, Segoe UI, Tahoma, Arial</FontFamily>
+
+            <!-- تم و زبان در فایل تنظیمات کاربر ذخیره می‌شوند؛
+                 مقادیر زیر فقط پیش‌فرضِ نخستین اجرا هستند. -->
+            <sys:String x:Key="DefaultTheme">Light</sys:String>
+            <sys:String x:Key="DefaultLanguage">fa-IR</sys:String>
+
+        </ResourceDictionary>
+    </Application.Resources>
+
+</Application>

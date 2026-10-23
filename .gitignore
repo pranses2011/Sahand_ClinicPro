@@ -172,3 +172,7 @@ scripts/_mockups13/
 
 # ═══ چرخه دوازدهم (D2): آرشیو LicensePortal — فقط تاریخچه، بدون بیلد/توسعه ═══
 src/Sahand.ClinicPro.LicensePortal/
+
+# پوشه‌های کش پایتون
+__pycache__/
+*.pyc

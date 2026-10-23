@@ -1,0 +1,189 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  مدیریت سیستم — AdminView
+╠══════════════════════════════════════════════════════════════════════╣
+║  گروه        : منابع انسانی
+║  کهن‌الگو     : settings
+║  ViewModel   : AdminViewModel
+║  وایرفریم    : 01-wireframes-html/AdminView.html
+╠══════════════════════════════════════════════════════════════════════╣
+║  ساختار (اندازه‌ی هر فیلد/ستون بر پایه‌ی ۱۲ ستون است تا
+║  «بزرگیِ عنصر متناسب با کارکردش» باشد — کد ملی ۳ ستون، نشانی ۱۲ ستون)
+╠══════════════════════════════════════════════════════════════════════╣
+║  نام              نوع              پهنا   الزامی
+║  ─────────────────────────────────────────────────
+║  ▸ عملیات
+║    ClearCache      CheckBox         12     خیر
+║    Reindex         CheckBox         12     خیر
+║    MaintenanceMode CheckBox         12     خیر
+╠══════════════════════════════════════════════════════════════════════╣
+║  ارتباطات این صفحه
+║  ─────────────────────────────────────────────────
+║    مدیریت سیستم  ──▶  نقش‌ها و مجوزها
+║         مدیریت دسترسی
+║    مدیریت سیستم  ──▶  گزارش حسابرسی
+║         ردپای عملیات
+╚══════════════════════════════════════════════════════════════════════╝
+
+  قواعدِ رعایت‌شده در این فایل:
+    • راست‌چین (RTL) و قلمِ وزیرمتن در سراسرِ صفحه
+    • هیچ رنگِ ثابت (هگز) — همه از نشانه‌های معناییِ DynamicResource
+    • الگوی MVVM: هیچ منطقی در code-behind، همه چیز از ViewModel
+    • متن‌ها از فایلِ زبان (loc:Loc) برای پشتیبانیِ دو زبانهٔ آینده
+    • تاریخ‌ها با تبدیل‌گرِ PersianDate به شمسی نمایش داده می‌شوند
+    • نقشهٔ ارتباطات در پایینِ صفحه مسیرِ حرکت را نشان می‌دهد
+-->
+
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.AdminView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization"
+        xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
+        mc:Ignorable="d"
+        d:DesignHeight="820" d:DesignWidth="1280"
+        d:DataContext="{d:DesignInstance vm:AdminViewModel}"
+        FlowDirection="RightToLeft"
+        FontFamily="{DynamicResource AppFontFamily}"
+        Background="{DynamicResource Brush.Canvas}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ سربرگِ یکپارچه‌ی صفحه ═══ -->
+        <ctrl:PageHeader Grid.Row="0"
+                        Title="مدیریت سیستم"
+                        Subtitle="تنظیمات پیشرفته و ابزارهای مدیریتی"
+                        Icon="{DynamicResource Icon.Settings2}"
+                        Margin="{StaticResource P.Page}" />
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="{StaticResource P.Page}">
+            <StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="220" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <!-- فهرستِ بخش‌های تنظیمات -->
+                <ListBox Grid.Column="0"
+                         ItemsSource="{Binding Sections}"
+                         SelectedItem="{Binding SelectedSection, Mode=TwoWay}"
+                         Margin="0,0,12,0" />
+                <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <!-- ── بخش: عملیات ── -->
+                        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="12"
+                                Margin="0,{StaticResource S.2},0,{StaticResource S.3}">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Style="{DynamicResource Icon.Small}"
+                                      Data="{DynamicResource Icon.Wrench}"
+                                       Stroke="{DynamicResource Brush.Primary}" />
+                                <TextBlock Text="عملیات"
+                                           Style="{DynamicResource Txt.Title}"
+                                           VerticalAlignment="Center"
+                                           Margin="{StaticResource S.2},0,0,0" />
+                            </StackPanel>
+                        </Border>
+                        <!-- پاک‌سازی حافظه پنهان — CheckBox · پهنای 12/۱۲ -->
+                        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="12"
+                                    Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                            <CheckBox Style="{DynamicResource Input.CheckBox}"
+                                      Content="پاک‌سازی حافظه پنهان"
+                                      IsChecked="{Binding ClearCache, Mode=TwoWay}" />
+                        </StackPanel>
+                        <!-- بازسازی نمایه‌ها — CheckBox · پهنای 12/۱۲ -->
+                        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="12"
+                                    Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                            <CheckBox Style="{DynamicResource Input.CheckBox}"
+                                      Content="بازسازی نمایه‌ها"
+                                      IsChecked="{Binding Reindex, Mode=TwoWay}" />
+                        </StackPanel>
+                        <!-- حالت نگهداری — CheckBox · پهنای 12/۱۲ -->
+                        <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="12"
+                                    Margin="0,0,{StaticResource S.3},{StaticResource S.3}">
+                            <CheckBox Style="{DynamicResource Input.CheckBox}"
+                                      Content="حالت نگهداری"
+                                      IsChecked="{Binding MaintenanceMode, Mode=TwoWay}" />
+                        </StackPanel>
+                    </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- ══════════════════════════════════════════════════════════
+     ارتباطاتِ این صفحه با دیگر صفحات
+     هر ردیف: «مبدأ» → «مقصد» با توضیحِ نوعِ پیوند
+     این بلوک در همه‌ی صفحات حضور دارد تا مسیرِ حرکتِ کاربر گم نشود.
+     ══════════════════════════════════════════════════════════ -->
+            <Border Style="{DynamicResource Card.Flat}" Margin="0,{StaticResource S.3},0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,{StaticResource S.3}">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.GitBranch}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="{loc:Loc Common.Relations}"
+                                   Style="{DynamicResource Txt.Subtitle}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Relations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="0,0,0,{StaticResource S.2}">
+                                    <Border Style="{DynamicResource Badge.Neutral}">
+                                        <TextBlock Text="{Binding From}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                        <Path Style="{DynamicResource Icon.XSmall}"
+                                              Data="{DynamicResource Icon.ArrowLeft}"
+                                               Stroke="{DynamicResource Brush.TextMuted}" />
+                                    <Border Style="{DynamicResource Badge.Info}">
+                                        <TextBlock Text="{Binding To}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Why}"
+                                               Style="{DynamicResource Txt.Caption}"
+                                               VerticalAlignment="Center"
+                                               Margin="{StaticResource S.2},0,0,0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+
+</UserControl>

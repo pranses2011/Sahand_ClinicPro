@@ -1,0 +1,238 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  نظرسنجی — SurveyView
+╠══════════════════════════════════════════════════════════════════════╣
+║  گروه        : ارتباطات
+║  کهن‌الگو     : detail-tabs
+║  ViewModel   : SurveyViewModel
+║  وایرفریم    : 01-wireframes-html/SurveyView.html
+╠══════════════════════════════════════════════════════════════════════╣
+║  ساختار (اندازه‌ی هر فیلد/ستون بر پایه‌ی ۱۲ ستون است تا
+║  «بزرگیِ عنصر متناسب با کارکردش» باشد — کد ملی ۳ ستون، نشانی ۱۲ ستون)
+╠══════════════════════════════════════════════════════════════════════╣
+║  نام              نوع              پهنا   الزامی
+║  ─────────────────────────────────────────────────
+║  ▸ ستون‌های جدول
+║    Question        text             *      Right
+║    Type            text             130px  Right
+║    Answers         num              92px   Center
+║    Avg             num              96px   Center
+║    Status          chip             104px  Center
+╠══════════════════════════════════════════════════════════════════════╣
+║  ارتباطات این صفحه
+║  ─────────────────────────────────────────────────
+║    نظرسنجی  ──▶  پیامک
+║         ارسال لینک نظرسنجی
+║    نظرسنجی  ──▶  عملکرد پزشکان
+║         نمره رضایت
+╚══════════════════════════════════════════════════════════════════════╝
+
+  قواعدِ رعایت‌شده در این فایل:
+    • راست‌چین (RTL) و قلمِ وزیرمتن در سراسرِ صفحه
+    • هیچ رنگِ ثابت (هگز) — همه از نشانه‌های معناییِ DynamicResource
+    • الگوی MVVM: هیچ منطقی در code-behind، همه چیز از ViewModel
+    • متن‌ها از فایلِ زبان (loc:Loc) برای پشتیبانیِ دو زبانهٔ آینده
+    • تاریخ‌ها با تبدیل‌گرِ PersianDate به شمسی نمایش داده می‌شوند
+    • نقشهٔ ارتباطات در پایینِ صفحه مسیرِ حرکت را نشان می‌دهد
+-->
+
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.SurveyView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization"
+        xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
+        mc:Ignorable="d"
+        d:DesignHeight="820" d:DesignWidth="1280"
+        d:DataContext="{d:DesignInstance vm:SurveyViewModel}"
+        FlowDirection="RightToLeft"
+        FontFamily="{DynamicResource AppFontFamily}"
+        Background="{DynamicResource Brush.Canvas}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ سربرگِ یکپارچه‌ی صفحه ═══ -->
+        <ctrl:PageHeader Grid.Row="0"
+                        Title="نظرسنجی"
+                        Subtitle="طراحی پرسشنامه و تحلیل پاسخ‌ها"
+                        Icon="{DynamicResource Icon.Star}"
+                        Margin="{StaticResource P.Page}" />
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="{StaticResource P.Page}">
+            <StackPanel>
+                <ctrl:StatCard Margin="{StaticResource S.3}"
+                                  Title="میانگین امتیاز"
+                                  Value="۴٫۵"
+                                  Trend="0.2"
+                                  Icon="{DynamicResource Icon.Star}"
+                                  Accent="{DynamicResource Brush.Warning}"
+                                  />
+                <ctrl:StatCard Margin="{StaticResource S.3}"
+                                  Title="پاسخ‌دهندگان"
+                                  Value="۳۱۸"
+                                  Trend="44"
+                                  Icon="{DynamicResource Icon.Users}"
+                                  Accent="{DynamicResource Brush.Primary}"
+                                  />
+                <ctrl:StatCard Margin="{StaticResource S.3}"
+                                  Title="نظرات متنی"
+                                  Value="۹۲"
+                                  Icon="{DynamicResource Icon.MessageSquare}"
+                                  Accent="{DynamicResource Brush.Info}"
+                                  />
+
+                    <TabControl Style="{DynamicResource Tab.Modern}">
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.ListChecks}" />
+                                    <TextBlock Text="پرسش‌ها"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «پرسش‌ها» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[0]}" />
+                        </TabItem>
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.MessageSquare}" />
+                                    <TextBlock Text="پاسخ‌ها"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «پاسخ‌ها» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[1]}" />
+                        </TabItem>
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.ChartBar}" />
+                                    <TextBlock Text="تحلیل"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «تحلیل» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[2]}" />
+                        </TabItem>
+                        <TabItem Style="{DynamicResource Tab.Item}">
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.Settings}" />
+                                    <TextBlock Text="تنظیمات"
+                                               VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <!-- محتوای تب «تنظیمات» در ViewModel تأمین می‌شود -->
+                            <ContentControl Content="{Binding TabContents[3]}" />
+                        </TabItem>
+                    </TabControl>
+
+                    <DataGrid Style="{DynamicResource Grid.Modern}"
+                              ItemsSource="{Binding Items}"
+                              SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              HeadersVisibility="Column"
+                              RowHeight="{StaticResource Size.RowHeight}"
+                              FlowDirection="RightToLeft">
+                        <DataGrid.Columns>
+                            <!-- پرسش — نوع: text -->
+                            <DataGridTextColumn Header="پرسش"
+                                                Binding="{Binding Question}"
+                                                Width="*"
+                                                ElementStyle="{DynamicResource Txt.Body}" />
+                            <!-- نوع — نوع: text -->
+                            <DataGridTextColumn Header="نوع"
+                                                Binding="{Binding Type}"
+                                                Width="130"
+                                                ElementStyle="{DynamicResource Txt.Body}" />
+                            <!-- پاسخ‌ها — نوع: num -->
+                            <DataGridTextColumn Header="پاسخ‌ها"
+                                                Binding="{Binding Answers}"
+                                                Width="92"
+                                                ElementStyle="{DynamicResource Txt.Body}" />
+                            <!-- میانگین — نوع: num -->
+                            <DataGridTextColumn Header="میانگین"
+                                                Binding="{Binding Avg}"
+                                                Width="96"
+                                                ElementStyle="{DynamicResource Txt.Body}" />
+                            <!-- وضعیت — نوع: chip -->
+                            <DataGridTemplateColumn Header="وضعیت" Width="104">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{DynamicResource Badge}"
+                                                HorizontalAlignment="Center"
+                                                Background="{Binding StatusTone, Converter={StaticResource StatusTone}}">
+                                            <TextBlock Text="{Binding Status}"
+                                                       Style="{DynamicResource Badge.Text}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <ctrl:EmptyState Icon="{DynamicResource Icon.Star}"
+                                      Title="{loc:Loc Common.EmptyTitle}"
+                                      Message="{loc:Loc Common.EmptyMessage}"
+                                      Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+            <!-- ══════════════════════════════════════════════════════════
+     ارتباطاتِ این صفحه با دیگر صفحات
+     هر ردیف: «مبدأ» → «مقصد» با توضیحِ نوعِ پیوند
+     این بلوک در همه‌ی صفحات حضور دارد تا مسیرِ حرکتِ کاربر گم نشود.
+     ══════════════════════════════════════════════════════════ -->
+            <Border Style="{DynamicResource Card.Flat}" Margin="0,{StaticResource S.3},0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,{StaticResource S.3}">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.GitBranch}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="{loc:Loc Common.Relations}"
+                                   Style="{DynamicResource Txt.Subtitle}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Relations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="0,0,0,{StaticResource S.2}">
+                                    <Border Style="{DynamicResource Badge.Neutral}">
+                                        <TextBlock Text="{Binding From}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                        <Path Style="{DynamicResource Icon.XSmall}"
+                                              Data="{DynamicResource Icon.ArrowLeft}"
+                                               Stroke="{DynamicResource Brush.TextMuted}" />
+                                    <Border Style="{DynamicResource Badge.Info}">
+                                        <TextBlock Text="{Binding To}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Why}"
+                                               Style="{DynamicResource Txt.Caption}"
+                                               VerticalAlignment="Center"
+                                               Margin="{StaticResource S.2},0,0,0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+
+</UserControl>

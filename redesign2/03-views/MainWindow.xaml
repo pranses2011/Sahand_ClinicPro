@@ -1,0 +1,151 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  پنجره‌ی اصلی — MainWindow
+╠══════════════════════════════════════════════════════════════════════╣
+║  گروه        : پیشخوان
+║  کهن‌الگو     : shell
+║  ViewModel   : MainViewModel
+║  وایرفریم    : 01-wireframes-html/MainWindow.html
+╠══════════════════════════════════════════════════════════════════════╣
+║  توضیح       : نوار کناری با گروه‌بندیِ ۱۵گانه و شمارندهٔ آیتم؛ نوار 
+║                بالا با جستجوی یکپارچه، زنگولهٔ اعلان، انتخاب‌گر تم و 
+║                زبان و منوی کاربر.
+╠══════════════════════════════════════════════════════════════════════╣
+║  ساختار (اندازه‌ی هر فیلد/ستون بر پایه‌ی ۱۲ ستون است تا
+║  «بزرگیِ عنصر متناسب با کارکردش» باشد — کد ملی ۳ ستون، نشانی ۱۲ ستون)
+╠══════════════════════════════════════════════════════════════════════╣
+║  نام              نوع              پهنا   الزامی
+║  ─────────────────────────────────────────────────
+╠══════════════════════════════════════════════════════════════════════╣
+║  ارتباطات این صفحه
+║  ─────────────────────────────────────────────────
+╚══════════════════════════════════════════════════════════════════════╝
+
+  قواعدِ رعایت‌شده در این فایل:
+    • راست‌چین (RTL) و قلمِ وزیرمتن در سراسرِ صفحه
+    • هیچ رنگِ ثابت (هگز) — همه از نشانه‌های معناییِ DynamicResource
+    • الگوی MVVM: هیچ منطقی در code-behind، همه چیز از ViewModel
+    • متن‌ها از فایلِ زبان (loc:Loc) برای پشتیبانیِ دو زبانهٔ آینده
+    • تاریخ‌ها با تبدیل‌گرِ PersianDate به شمسی نمایش داده می‌شوند
+    • نقشهٔ ارتباطات در پایینِ صفحه مسیرِ حرکت را نشان می‌دهد
+-->
+
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization"
+        xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
+        mc:Ignorable="d"
+        Title="پنجره‌ی اصلی"
+        Style="{DynamicResource Window.Modern}"
+        WindowStartupLocation="CenterScreen"
+        Height="900" Width="1440"
+        SizeToContent="Manual"
+        d:DataContext="{d:DesignInstance vm:MainViewModel}"
+        FlowDirection="RightToLeft"
+        FontFamily="{DynamicResource AppFontFamily}"
+        Background="{DynamicResource Brush.Canvas}">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- نوارِ بالا -->
+        <Border Grid.Row="0" Grid.ColumnSpan="2"
+                Height="{StaticResource Size.HeaderHeight}"
+                Background="{DynamicResource Brush.Surface}"
+                BorderBrush="{DynamicResource Brush.Border}"
+                BorderThickness="0,0,0,1">
+            <Grid Margin="{StaticResource S.4}">
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Path Style="{DynamicResource Icon.Medium}"
+                          Data="{DynamicResource Icon.HeartPulse}"
+                          Stroke="{DynamicResource Brush.Primary}" />
+                    <TextBlock Text="{Binding AppName}"
+                               Style="{DynamicResource Txt.Title}"
+                               VerticalAlignment="Center"
+                               Margin="8,0,0,0" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                    <Button Style="{DynamicResource Btn.Icon}"
+                            Command="{Binding ToggleThemeCommand}">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.SunMoon}" />
+                    </Button>
+                    <Button Style="{DynamicResource Btn.Icon}"
+                            Command="{Binding ToggleLanguageCommand}">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.Languages}" />
+                    </Button>
+                    <Button Style="{DynamicResource Btn.Icon}"
+                            Command="{Binding NotificationsCommand}">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.Bell}" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- منوی کناری -->
+        <Border Grid.Row="1" Grid.Column="0"
+                Width="{StaticResource Size.SidebarWidth}"
+                Background="{DynamicResource Brush.Sidebar}">
+            <ItemsControl ItemsSource="{Binding MenuGroups}"
+                          Margin="{StaticResource S.3}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0,0,0,16">
+                            <TextBlock Text="{Binding Title}"
+                                       Style="{DynamicResource Txt.Overline}"
+                                       Margin="0,0,0,8" />
+                            <ItemsControl ItemsSource="{Binding Items}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{DynamicResource Btn.Ghost}"
+                                                Command="{Binding OpenCommand}"
+                                                HorizontalContentAlignment="Right"
+                                                Margin="0,0,0,2">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Path Style="{DynamicResource Icon.Small}"
+                                                      Data="{Binding Icon}"
+                                                      Margin="0,0,8,0" />
+                                                <TextBlock Text="{Binding Title}" />
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
+
+        <!-- ناحیه‌ی محتوا -->
+        <ContentControl Grid.Row="1" Grid.Column="1"
+                        Content="{Binding CurrentPage}"
+                        Margin="{StaticResource P.Page}" />
+
+        <!-- نوارِ وضعیت -->
+        <Border Grid.Row="2" Grid.ColumnSpan="2"
+                Padding="{StaticResource S.3}"
+                Background="{DynamicResource Brush.SurfaceAlt}">
+            <TextBlock Text="{Binding StatusText}"
+                       Style="{DynamicResource Txt.Caption}" />
+        </Border>
+    </Grid>
+
+</Window>

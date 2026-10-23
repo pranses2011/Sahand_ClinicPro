@@ -1,0 +1,44 @@
+<!--
+  🗒 مولکول: EmptyState — وضعیتِ تهی برای جداول و لیست‌های خالی
+  ═══════════════════════════════════════════════════════════════════════
+    Icon     — شکلک بزرگ
+    Title    — عنوان
+    Message  — توضیح
+    Action   — دکمه‌ی اقدام (اختیاری)
+  ═══════════════════════════════════════════════════════════════════════
+-->
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Controls.EmptyState"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Root"
+             FlowDirection="RightToLeft">
+    <StackPanel HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Margin="24,48">
+        <Path Data="{Binding Icon, ElementName=Root}"
+                  Width="52" Height="52"
+                  Stretch="Uniform"
+                  HorizontalAlignment="Center"
+                  Stroke="{DynamicResource Brush.TextMuted}"
+                      StrokeThickness="0.81"
+                      StrokeStartLineCap="Round"
+                      StrokeEndLineCap="Round"
+                      StrokeLineJoin="Round"
+                  Opacity="0.55" />
+        <TextBlock Text="{Binding Title, ElementName=Root}"
+                   Style="{DynamicResource Txt.Subtitle}"
+                   HorizontalAlignment="Center"
+                   Margin="0,14,0,4" />
+        <TextBlock Text="{Binding Message, ElementName=Root}"
+                   Style="{DynamicResource Txt.Caption}"
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"
+                   MaxWidth="380"
+                   Visibility="{Binding Message, ElementName=Root,
+                                Converter={StaticResource NullToCollapsed}}" />
+        <ContentPresenter Content="{Binding Action, ElementName=Root}"
+                          HorizontalAlignment="Center"
+                          Margin="0,16,0,0" />
+    </StackPanel>
+</UserControl>

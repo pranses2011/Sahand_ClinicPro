@@ -1,0 +1,106 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  نمایش تصویر — PhotoViewerWindow
+╠══════════════════════════════════════════════════════════════════════╣
+║  گروه        : بیماران
+║  کهن‌الگو     : viewer
+║  ViewModel   : PhotoViewerViewModel
+║  وایرفریم    : 01-wireframes-html/PhotoViewerWindow.html
+╠══════════════════════════════════════════════════════════════════════╣
+║  توضیح       : ریل ابزارِ عمودی (بزرگ‌نمایی، چرخش، آینه، تنظیم نور، 
+║                برش، ذخیره) و پس‌زمینه تیره برای دید بهتر.
+╠══════════════════════════════════════════════════════════════════════╣
+║  ساختار (اندازه‌ی هر فیلد/ستون بر پایه‌ی ۱۲ ستون است تا
+║  «بزرگیِ عنصر متناسب با کارکردش» باشد — کد ملی ۳ ستون، نشانی ۱۲ ستون)
+╠══════════════════════════════════════════════════════════════════════╣
+║  نام              نوع              پهنا   الزامی
+║  ─────────────────────────────────────────────────
+╠══════════════════════════════════════════════════════════════════════╣
+║  ارتباطات این صفحه
+║  ─────────────────────────────────────────────────
+╚══════════════════════════════════════════════════════════════════════╝
+
+  قواعدِ رعایت‌شده در این فایل:
+    • راست‌چین (RTL) و قلمِ وزیرمتن در سراسرِ صفحه
+    • هیچ رنگِ ثابت (هگز) — همه از نشانه‌های معناییِ DynamicResource
+    • الگوی MVVM: هیچ منطقی در code-behind، همه چیز از ViewModel
+    • متن‌ها از فایلِ زبان (loc:Loc) برای پشتیبانیِ دو زبانهٔ آینده
+    • تاریخ‌ها با تبدیل‌گرِ PersianDate به شمسی نمایش داده می‌شوند
+    • نقشهٔ ارتباطات در پایینِ صفحه مسیرِ حرکت را نشان می‌دهد
+-->
+
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.PhotoViewerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization"
+        xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
+        mc:Ignorable="d"
+        Title="نمایش تصویر"
+        Style="{DynamicResource Window.Modern}"
+        WindowStartupLocation="CenterScreen"
+        Height="800" Width="1180"
+        d:DataContext="{d:DesignInstance vm:PhotoViewerViewModel}"
+        FlowDirection="RightToLeft"
+        FontFamily="{DynamicResource AppFontFamily}"
+        Background="{DynamicResource Brush.Canvas}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ سربرگِ یکپارچه‌ی صفحه ═══ -->
+        <ctrl:PageHeader Grid.Row="0"
+                        Title="نمایش تصویر"
+                        Subtitle="نمایشگر تمام‌صفحهٔ تصویر"
+                        Icon="{DynamicResource Icon.Image}"
+                        Margin="{StaticResource P.Page}" />
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="{StaticResource P.Page}">
+            <StackPanel>
+            <Border Style="{DynamicResource Card}" Padding="0">
+                <Grid>
+                    <Image Source="{Binding CurrentImage}"
+                           Stretch="Uniform" />
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Bottom"
+                                Margin="0,0,0,16">
+                        <Button Style="{DynamicResource Btn.Icon}"
+                                Command="{Binding ZoomOutCommand}">
+                            <Path Style="{DynamicResource Icon.Small}"
+                                  Data="{DynamicResource Icon.ZoomOut}" />
+                        </Button>
+                        <Button Style="{DynamicResource Btn.Icon}"
+                                Command="{Binding ZoomInCommand}">
+                            <Path Style="{DynamicResource Icon.Small}"
+                                  Data="{DynamicResource Icon.ZoomIn}" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ═══ نوارِ اقدام‌های ثابت ═══ -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource Brush.Surface}"
+                BorderBrush="{DynamicResource Brush.Border}"
+                BorderThickness="0,1,0,0"
+                Padding="{StaticResource S.4}">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Left">
+
+            </StackPanel>
+        </Border>
+    </Grid>
+
+</Window>

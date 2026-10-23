@@ -1,0 +1,224 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  نوبت‌دهی — AppointmentsView
+╠══════════════════════════════════════════════════════════════════════╣
+║  گروه        : نوبت‌دهی
+║  کهن‌الگو     : kanban
+║  ViewModel   : AppointmentsViewModel
+║  وایرفریم    : 01-wireframes-html/AppointmentsView.html
+╠══════════════════════════════════════════════════════════════════════╣
+║  توضیح       : چهار ستون کانبان: در انتظار · تأیید شده · حاضر شده · 
+║                لغو شده. هر کارت شامل نام بیمار، ساعت، پزشک، نوع ویزیت 
+║                و نشان وضعیت.
+╠══════════════════════════════════════════════════════════════════════╣
+║  ساختار (اندازه‌ی هر فیلد/ستون بر پایه‌ی ۱۲ ستون است تا
+║  «بزرگیِ عنصر متناسب با کارکردش» باشد — کد ملی ۳ ستون، نشانی ۱۲ ستون)
+╠══════════════════════════════════════════════════════════════════════╣
+║  نام              نوع              پهنا   الزامی
+║  ─────────────────────────────────────────────────
+║  ▸ ستون‌های جدول
+║    Patient         who              *      Right
+║    Time            date             86px   Center
+║    Doctor          text             140px  Right
+║    Type            text             130px  Right
+║    Status          chip             104px  Center
+╠══════════════════════════════════════════════════════════════════════╣
+║  ارتباطات این صفحه
+║  ─────────────────────────────────────────────────
+║    نوبت‌دهی  ──▶  بیماران
+║         نوبت برای بیمار
+║    نوبت‌دهی  ──▶  پذیرش و صف
+║         تأیید نوبت → پذیرش
+║    نوبت‌دهی  ──▶  پزشکان
+║         ظرفیت برنامه هفتگی
+╚══════════════════════════════════════════════════════════════════════╝
+
+  قواعدِ رعایت‌شده در این فایل:
+    • راست‌چین (RTL) و قلمِ وزیرمتن در سراسرِ صفحه
+    • هیچ رنگِ ثابت (هگز) — همه از نشانه‌های معناییِ DynamicResource
+    • الگوی MVVM: هیچ منطقی در code-behind، همه چیز از ViewModel
+    • متن‌ها از فایلِ زبان (loc:Loc) برای پشتیبانیِ دو زبانهٔ آینده
+    • تاریخ‌ها با تبدیل‌گرِ PersianDate به شمسی نمایش داده می‌شوند
+    • نقشهٔ ارتباطات در پایینِ صفحه مسیرِ حرکت را نشان می‌دهد
+-->
+
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.AppointmentsView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization"
+        xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
+        mc:Ignorable="d"
+        d:DesignHeight="820" d:DesignWidth="1280"
+        d:DataContext="{d:DesignInstance vm:AppointmentsViewModel}"
+        FlowDirection="RightToLeft"
+        FontFamily="{DynamicResource AppFontFamily}"
+        Background="{DynamicResource Brush.Canvas}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ سربرگِ یکپارچه‌ی صفحه ═══ -->
+        <ctrl:PageHeader Grid.Row="0"
+                        Title="نوبت‌دهی"
+                        Subtitle="تقویم و صف نوبت‌ها در ستون‌های وضعیت"
+                        Icon="{DynamicResource Icon.CalendarDays}"
+                        Margin="{StaticResource P.Page}" />
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="{StaticResource P.Page}">
+            <StackPanel>
+            <!-- ستون‌های کانبان: هر ستون یک وضعیت -->
+            <ItemsControl ItemsSource="{Binding Columns}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="1" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{DynamicResource Card}"
+                                Margin="{StaticResource S.2}"
+                                MinWidth="260">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Title}"
+                                           Style="{DynamicResource Txt.Subtitle}" />
+                                <ItemsControl ItemsSource="{Binding Cards}"
+                                              Margin="0,8,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{DynamicResource Card.Flat}"
+                                                    Padding="{StaticResource S.3}"
+                                                    Margin="0,0,0,8">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Title}"
+                                                               Style="{DynamicResource Txt.Body}" />
+                                                    <TextBlock Text="{Binding Sub}"
+                                                               Style="{DynamicResource Txt.Caption}" />
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+                    <DataGrid Style="{DynamicResource Grid.Modern}"
+                              ItemsSource="{Binding Items}"
+                              SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              HeadersVisibility="Column"
+                              RowHeight="{StaticResource Size.RowHeight}"
+                              FlowDirection="RightToLeft">
+                        <DataGrid.Columns>
+                            <!-- بیمار — نوع: who -->
+                            <DataGridTemplateColumn Header="بیمار" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- نشانِ تصویریِ بیمار/کاربر -->
+                                            <Border Width="30" Height="30"
+                                                    CornerRadius="{StaticResource R.Pill}"
+                                                    Background="{Binding PatientAvatar}"
+                                                    Margin="0,0,{StaticResource S.2},0">
+                                                <TextBlock Text="{Binding PatientInitials}"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource Brush.OnPrimary}"
+                                                           FontSize="{StaticResource Fs.Caption}" />
+                                            </Border>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Patient}"
+                                                           Style="{DynamicResource Txt.Body}" />
+                                                <TextBlock Text="{Binding PatientSub}"
+                                                           Style="{DynamicResource Txt.Caption}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <!-- ساعت — نوع: date -->
+                            <DataGridTextColumn Header="ساعت" Width="86" Binding="{Binding Time, Converter={StaticResource PersianDate}}" />
+                            <!-- پزشک — نوع: text -->
+                            <DataGridTextColumn Header="پزشک"
+                                                Binding="{Binding Doctor}"
+                                                Width="140"
+                                                ElementStyle="{DynamicResource Txt.Body}" />
+                            <!-- نوع ویزیت — نوع: text -->
+                            <DataGridTextColumn Header="نوع ویزیت"
+                                                Binding="{Binding Type}"
+                                                Width="130"
+                                                ElementStyle="{DynamicResource Txt.Body}" />
+                            <!-- وضعیت — نوع: chip -->
+                            <DataGridTemplateColumn Header="وضعیت" Width="104">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{DynamicResource Badge}"
+                                                HorizontalAlignment="Center"
+                                                Background="{Binding StatusTone, Converter={StaticResource StatusTone}}">
+                                            <TextBlock Text="{Binding Status}"
+                                                       Style="{DynamicResource Badge.Text}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+            <!-- ══════════════════════════════════════════════════════════
+     ارتباطاتِ این صفحه با دیگر صفحات
+     هر ردیف: «مبدأ» → «مقصد» با توضیحِ نوعِ پیوند
+     این بلوک در همه‌ی صفحات حضور دارد تا مسیرِ حرکتِ کاربر گم نشود.
+     ══════════════════════════════════════════════════════════ -->
+            <Border Style="{DynamicResource Card.Flat}" Margin="0,{StaticResource S.3},0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,{StaticResource S.3}">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.GitBranch}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="{loc:Loc Common.Relations}"
+                                   Style="{DynamicResource Txt.Subtitle}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Relations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="0,0,0,{StaticResource S.2}">
+                                    <Border Style="{DynamicResource Badge.Neutral}">
+                                        <TextBlock Text="{Binding From}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                        <Path Style="{DynamicResource Icon.XSmall}"
+                                              Data="{DynamicResource Icon.ArrowLeft}"
+                                               Stroke="{DynamicResource Brush.TextMuted}" />
+                                    <Border Style="{DynamicResource Badge.Info}">
+                                        <TextBlock Text="{Binding To}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Why}"
+                                               Style="{DynamicResource Txt.Caption}"
+                                               VerticalAlignment="Center"
+                                               Margin="{StaticResource S.2},0,0,0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+
+</UserControl>

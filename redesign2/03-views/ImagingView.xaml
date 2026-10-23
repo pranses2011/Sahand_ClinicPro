@@ -1,0 +1,306 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  تصویربرداری — ImagingView
+╠══════════════════════════════════════════════════════════════════════╣
+║  گروه        : تصویربرداری
+║  کهن‌الگو     : list-dense
+║  ViewModel   : ImagingViewModel
+║  وایرفریم    : 01-wireframes-html/ImagingView.html
+╠══════════════════════════════════════════════════════════════════════╣
+║  ساختار (اندازه‌ی هر فیلد/ستون بر پایه‌ی ۱۲ ستون است تا
+║  «بزرگیِ عنصر متناسب با کارکردش» باشد — کد ملی ۳ ستون، نشانی ۱۲ ستون)
+╠══════════════════════════════════════════════════════════════════════╣
+║  نام              نوع              پهنا   الزامی
+║  ─────────────────────────────────────────────────
+║  ▸ ستون‌های جدول
+║    Code            text             100px  Right
+║    Patient         who              *      Right
+║    Modality        text             130px  Right
+║    BodyPart        text             130px  Right
+║    Date            date             112px  Right
+║    Images          num              86px   Center
+║    Status          chip             112px  Center
+╠══════════════════════════════════════════════════════════════════════╣
+║  ارتباطات این صفحه
+║  ─────────────────────────────────────────────────
+║    تصویربرداری  ──▶  نمایشگر تصاویر پزشکی
+║         مشاهده DICOM
+║    تصویربرداری  ──▶  پرونده‌ی بیمار
+║         تصاویر در پرونده
+╚══════════════════════════════════════════════════════════════════════╝
+
+  قواعدِ رعایت‌شده در این فایل:
+    • راست‌چین (RTL) و قلمِ وزیرمتن در سراسرِ صفحه
+    • هیچ رنگِ ثابت (هگز) — همه از نشانه‌های معناییِ DynamicResource
+    • الگوی MVVM: هیچ منطقی در code-behind، همه چیز از ViewModel
+    • متن‌ها از فایلِ زبان (loc:Loc) برای پشتیبانیِ دو زبانهٔ آینده
+    • تاریخ‌ها با تبدیل‌گرِ PersianDate به شمسی نمایش داده می‌شوند
+    • نقشهٔ ارتباطات در پایینِ صفحه مسیرِ حرکت را نشان می‌دهد
+-->
+
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.ImagingView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
+        xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization"
+        xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
+        mc:Ignorable="d"
+        d:DesignHeight="820" d:DesignWidth="1280"
+        d:DataContext="{d:DesignInstance vm:ImagingViewModel}"
+        FlowDirection="RightToLeft"
+        FontFamily="{DynamicResource AppFontFamily}"
+        Background="{DynamicResource Brush.Canvas}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══ سربرگِ یکپارچه‌ی صفحه ═══ -->
+        <ctrl:PageHeader Grid.Row="0"
+                        Title="تصویربرداری"
+                        Subtitle="مدیریت درخواست‌ها و تصاویر پزشکی"
+                        Icon="{DynamicResource Icon.ScanLine}"
+                        Margin="{StaticResource P.Page}" />
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="{StaticResource P.Page}">
+            <StackPanel>
+            <Border Style="{DynamicResource Card.Flat}"
+                    Padding="{StaticResource S.3}"
+                    Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <!-- جستجو -->
+                    <StackPanel Margin="0,0,{StaticResource S.3},0">
+                        <TextBlock Text="جستجو"
+                                   Style="{DynamicResource Input.Label}" />
+                        <ctrl:SearchBox Width="260"
+                                        Text="{Binding SearchText, Mode=TwoWay}"
+                                        Placeholder="نام بیمار یا کد…" />
+                    </StackPanel>
+                    <!-- نوع تصویر -->
+                    <StackPanel Margin="0,0,{StaticResource S.3},0">
+                        <TextBlock Text="نوع تصویر"
+                                   Style="{DynamicResource Input.Label}" />
+                        <ComboBox Width="160"
+                                  Style="{DynamicResource Input.ComboBox}"
+                                  SelectedItem="{Binding Filter2, Mode=TwoWay}">
+                            <ComboBoxItem Content="همه" IsSelected="True" />
+                            <ComboBoxItem Content="رادیوگرافی" />
+                            <ComboBoxItem Content="سونوگرافی" />
+                            <ComboBoxItem Content="CT" />
+                            <ComboBoxItem Content="MRI" />
+                        </ComboBox>
+                    </StackPanel>
+                    <!-- تاریخ -->
+                    <StackPanel Margin="0,0,{StaticResource S.3},0">
+                        <TextBlock Text="تاریخ"
+                                   Style="{DynamicResource Input.Label}" />
+                        <DatePicker Width="160"
+                                    Style="{DynamicResource Input.Date}"
+                                    SelectedDate="{Binding Filter3, Mode=TwoWay}" />
+                    </StackPanel>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                HorizontalAlignment="Left">
+                    <Button Style="{DynamicResource Btn.Primary}"
+                            Command="{Binding NewCommand}"
+                            Margin="0,0,{StaticResource S.2},0"
+                            MinHeight="{StaticResource Size.ButtonHeight}"
+                            Padding="{StaticResource P.Button}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{DynamicResource Icon.Small}"
+                                  Data="{DynamicResource Icon.Plus}"
+                                  Margin="0,0,{StaticResource S.2},0" />
+                            <TextBlock Text="درخواست جدید" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{DynamicResource Btn.Secondary}"
+                            Command="{Binding OpenCommand}"
+                            Margin="0,0,{StaticResource S.2},0"
+                            MinHeight="{StaticResource Size.ButtonHeight}"
+                            Padding="{StaticResource P.Button}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{DynamicResource Icon.Small}"
+                                  Data="{DynamicResource Icon.Monitor}"
+                                  Margin="0,0,{StaticResource S.2},0" />
+                            <TextBlock Text="نمایش تصاویر" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{DynamicResource Btn.Secondary}"
+                            Command="{Binding ReportCommand}"
+                            Margin="0,0,{StaticResource S.2},0"
+                            MinHeight="{StaticResource Size.ButtonHeight}"
+                            Padding="{StaticResource P.Button}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{DynamicResource Icon.Small}"
+                                  Data="{DynamicResource Icon.FileCheck}"
+                                  Margin="0,0,{StaticResource S.2},0" />
+                            <TextBlock Text="ثبت گزارش" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+                    <DataGrid Style="{DynamicResource Grid.Modern}"
+                              ItemsSource="{Binding Items}"
+                              SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              HeadersVisibility="Column"
+                              RowHeight="{StaticResource Size.RowHeight}"
+                              FlowDirection="RightToLeft">
+                        <DataGrid.Columns>
+                            <!-- کد — نوع: text -->
+                            <DataGridTextColumn Header="کد"
+                                                Binding="{Binding Code}"
+                                                Width="100"
+                                                ElementStyle="{DynamicResource Txt.Body}" />
+                            <!-- بیمار — نوع: who -->
+                            <DataGridTemplateColumn Header="بیمار" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- نشانِ تصویریِ بیمار/کاربر -->
+                                            <Border Width="30" Height="30"
+                                                    CornerRadius="{StaticResource R.Pill}"
+                                                    Background="{Binding PatientAvatar}"
+                                                    Margin="0,0,{StaticResource S.2},0">
+                                                <TextBlock Text="{Binding PatientInitials}"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource Brush.OnPrimary}"
+                                                           FontSize="{StaticResource Fs.Caption}" />
+                                            </Border>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Patient}"
+                                                           Style="{DynamicResource Txt.Body}" />
+                                                <TextBlock Text="{Binding PatientSub}"
+                                                           Style="{DynamicResource Txt.Caption}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <!-- نوع — نوع: text -->
+                            <DataGridTextColumn Header="نوع"
+                                                Binding="{Binding Modality}"
+                                                Width="130"
+                                                ElementStyle="{DynamicResource Txt.Body}" />
+                            <!-- ناحیه — نوع: text -->
+                            <DataGridTextColumn Header="ناحیه"
+                                                Binding="{Binding BodyPart}"
+                                                Width="130"
+                                                ElementStyle="{DynamicResource Txt.Body}" />
+                            <!-- تاریخ — نوع: date -->
+                            <DataGridTextColumn Header="تاریخ" Width="112" Binding="{Binding Date, Converter={StaticResource PersianDate}}" />
+                            <!-- تصاویر — نوع: num -->
+                            <DataGridTextColumn Header="تصاویر"
+                                                Binding="{Binding Images}"
+                                                Width="86"
+                                                ElementStyle="{DynamicResource Txt.Body}" />
+                            <!-- وضعیت — نوع: chip -->
+                            <DataGridTemplateColumn Header="وضعیت" Width="112">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{DynamicResource Badge}"
+                                                HorizontalAlignment="Center"
+                                                Background="{Binding StatusTone, Converter={StaticResource StatusTone}}">
+                                            <TextBlock Text="{Binding Status}"
+                                                       Style="{DynamicResource Badge.Text}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <ctrl:EmptyState Icon="{DynamicResource Icon.ScanLine}"
+                                      Title="{loc:Loc Common.EmptyTitle}"
+                                      Message="{loc:Loc Common.EmptyMessage}"
+                                      Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+                    <Border Style="{DynamicResource Card.Flat}"
+                            Padding="{StaticResource S.3}"
+                            Margin="0,{StaticResource S.3},0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding PageSummary}"
+                                       Style="{DynamicResource Txt.Caption}"
+                                       VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                <Button Style="{DynamicResource Btn.Icon}"
+                                        Command="{Binding PreviousPageCommand}"
+                                        ToolTip="{loc:Loc Common.Previous}">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.ChevronRight}" />
+                                </Button>
+                                <Button Style="{DynamicResource Btn.Icon}"
+                                        Command="{Binding NextPageCommand}"
+                                        ToolTip="{loc:Loc Common.Next}">
+                                    <Path Style="{DynamicResource Icon.Small}"
+                                          Data="{DynamicResource Icon.ChevronLeft}" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+            <!-- ══════════════════════════════════════════════════════════
+     ارتباطاتِ این صفحه با دیگر صفحات
+     هر ردیف: «مبدأ» → «مقصد» با توضیحِ نوعِ پیوند
+     این بلوک در همه‌ی صفحات حضور دارد تا مسیرِ حرکتِ کاربر گم نشود.
+     ══════════════════════════════════════════════════════════ -->
+            <Border Style="{DynamicResource Card.Flat}" Margin="0,{StaticResource S.3},0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,{StaticResource S.3}">
+                        <Path Style="{DynamicResource Icon.Small}"
+                              Data="{DynamicResource Icon.GitBranch}"
+                               Stroke="{DynamicResource Brush.Primary}" />
+                        <TextBlock Text="{loc:Loc Common.Relations}"
+                                   Style="{DynamicResource Txt.Subtitle}"
+                                   VerticalAlignment="Center"
+                                   Margin="{StaticResource S.2},0,0,0" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Relations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="0,0,0,{StaticResource S.2}">
+                                    <Border Style="{DynamicResource Badge.Neutral}">
+                                        <TextBlock Text="{Binding From}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                        <Path Style="{DynamicResource Icon.XSmall}"
+                                              Data="{DynamicResource Icon.ArrowLeft}"
+                                               Stroke="{DynamicResource Brush.TextMuted}" />
+                                    <Border Style="{DynamicResource Badge.Info}">
+                                        <TextBlock Text="{Binding To}"
+                                                   Style="{DynamicResource Badge.Text}" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Why}"
+                                               Style="{DynamicResource Txt.Caption}"
+                                               VerticalAlignment="Center"
+                                               Margin="{StaticResource S.2},0,0,0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+
+</UserControl>

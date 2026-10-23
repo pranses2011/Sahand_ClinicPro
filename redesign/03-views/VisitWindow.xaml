@@ -1,0 +1,325 @@
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.VisitWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls;assembly=Sahand.ClinicPro.Desktop"
+    xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization;assembly=Sahand.ClinicPro.Desktop"
+    xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels.Redesign;assembly=Sahand.ClinicPro.Desktop"
+    mc:Ignorable="d"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    d:DataContext="{d:DesignInstance Type=vm:VisitViewModel}"
+    SnapsToDevicePixels="True"
+    Title="{loc:Loc Visit.Title}"
+    Style="{DynamicResource Window.Modern}"
+    FlowDirection="RightToLeft">
+
+    <!--
+    ═══════════════════════════════════════════════════════════════════════
+      🩻 ویزیت (SOAP)  —  بازطراحی شده
+    ═══════════════════════════════════════════════════════════════════════
+      • تمام رنگ‌ها از Tokens.xaml و با DynamicResource دریافت می‌شوند
+        → تعویض تمِ روشن/تاریک در لحظه بدون تغییر این فایل
+      • تمام متن‌ها از Strings.resx از طریق {loc:Loc} دریافت می‌شوند
+        → افزودن زبان جدید بدون تغییر این فایل
+      • وایرفریم مرجع:  02-wireframes-md/VisitWindow.md
+        وایرفریم گرافیکی: 01-wireframes-html/VisitWindow.html
+    ═══════════════════════════════════════════════════════════════════════
+    -->
+
+    <Grid Background="{DynamicResource Brush.Canvas}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 🧭 هدر -->
+        <Border Grid.Row="0" Background="{DynamicResource Brush.Surface}"
+                BorderBrush="{DynamicResource Brush.Border}"
+                BorderThickness="0,0,0,1"
+                Padding="20,14">
+            <Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="🩻" FontSize="24" Margin="0,0,10,0" />
+                    <StackPanel>
+                        <TextBlock Text="{Binding WindowTitle}"
+                                   Style="{DynamicResource Txt.Headline}" />
+                        <TextBlock Text="{loc:Loc Visit.Subtitle}"
+                                   Style="{DynamicResource Txt.Caption}" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 📝 محتوا -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                      Padding="20,16">
+            <StackPanel MaxWidth="960">
+
+                    <!-- 💬 شرح‌حال (Subjective) -->
+                    <Border Style="{DynamicResource Card}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="{loc:Loc Visit.Sec1}"
+                                       Style="{DynamicResource Txt.Subtitle}"
+                                       Margin="0,0,0,12" />
+                            <UniformGrid Columns="2">
+                            <StackPanel Grid.Column="0"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_ChiefComplaint}"/> <Run Text="*" Foreground="{DynamicResource Brush.Danger}" />
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding ChiefComplaint, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="88" VerticalContentAlignment="Top" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_HistoryOfPresentIllness}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding HistoryOfPresentIllness, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="88" VerticalContentAlignment="Top" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="0"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_PastMedicalHistory}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding PastMedicalHistory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="88" VerticalContentAlignment="Top" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_DrugHistory}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding DrugHistory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="88" VerticalContentAlignment="Top" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="0"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_FamilyHistory}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding FamilyHistory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="88" VerticalContentAlignment="Top" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_SocialHistory}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding SocialHistory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="88" VerticalContentAlignment="Top" />
+                            </StackPanel>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 🔍 معاینه (Objective) -->
+                    <Border Style="{DynamicResource Card}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="{loc:Loc Visit.Sec2}"
+                                       Style="{DynamicResource Txt.Subtitle}"
+                                       Margin="0,0,0,12" />
+                            <UniformGrid Columns="2">
+                            <StackPanel Grid.Column="0"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_BloodPressure}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding BloodPressure, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_Pulse}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding Pulse, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" HorizontalContentAlignment="Right" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="0"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_Temperature}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding Temperature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" HorizontalContentAlignment="Right" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_RespiratoryRate}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding RespiratoryRate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" HorizontalContentAlignment="Right" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="0"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_OxygenSaturation}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding OxygenSaturation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" HorizontalContentAlignment="Right" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_Weight}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding Weight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" HorizontalContentAlignment="Right" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="0"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_Height}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding Height, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" HorizontalContentAlignment="Right" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_Bmi}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding Bmi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="0"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_PhysicalExam}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding PhysicalExam, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="88" VerticalContentAlignment="Top" />
+                            </StackPanel>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 🎯 تشخیص (Assessment) -->
+                    <Border Style="{DynamicResource Card}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="{loc:Loc Visit.Sec3}"
+                                       Style="{DynamicResource Txt.Subtitle}"
+                                       Margin="0,0,0,12" />
+                            <UniformGrid Columns="2">
+                            <StackPanel Grid.Column="0"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_PrimaryDiagnosisCode}"/> <Run Text="*" Foreground="{DynamicResource Brush.Danger}" />
+                                </TextBlock>
+                                <ctrl:SearchBox Text="{Binding PrimaryDiagnosisCodeText, Mode=TwoWay}" Placeholder="جستجو و انتخاب…" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_SecondaryDiagnoses}"/>
+                                </TextBlock>
+                                <ctrl:SearchBox Text="{Binding SecondaryDiagnosesText, Mode=TwoWay}" Placeholder="جستجو و انتخاب…" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="0"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_DifferentialDiagnosis}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding DifferentialDiagnosis, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="88" VerticalContentAlignment="Top" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_AssessmentNotes}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding AssessmentNotes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="88" VerticalContentAlignment="Top" />
+                            </StackPanel>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 📋 طرح درمان (Plan) -->
+                    <Border Style="{DynamicResource Card}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="{loc:Loc Visit.Sec4}"
+                                       Style="{DynamicResource Txt.Subtitle}"
+                                       Margin="0,0,0,12" />
+                            <UniformGrid Columns="2">
+                            <StackPanel Grid.Column="0"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_TreatmentPlan}"/> <Run Text="*" Foreground="{DynamicResource Brush.Danger}" />
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding TreatmentPlan, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="88" VerticalContentAlignment="Top" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_Prescription}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding Prescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="88" VerticalContentAlignment="Top" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="0"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_LabOrders}"/>
+                                </TextBlock>
+                                <ctrl:SearchBox Text="{Binding LabOrdersText, Mode=TwoWay}" Placeholder="جستجو و انتخاب…" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_ImagingOrders}"/>
+                                </TextBlock>
+                                <ctrl:SearchBox Text="{Binding ImagingOrdersText, Mode=TwoWay}" Placeholder="جستجو و انتخاب…" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="0"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_Referral}"/>
+                                </TextBlock>
+                                <ctrl:SearchBox Text="{Binding ReferralText, Mode=TwoWay}" Placeholder="جستجو و انتخاب…" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_FollowUpDate}"/>
+                                </TextBlock>
+                                <DatePicker Style="{DynamicResource Input.Date}" SelectedDate="{Binding FollowUpDate, Mode=TwoWay}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="0"
+                                        Margin="0,0,12,10">
+                                <TextBlock Style="{DynamicResource Input.Label}">
+                                    <Run Text="{loc:Loc Visit.Fld_PatientEducation}"/>
+                                </TextBlock>
+                                <TextBox Style="{DynamicResource Input.TextBox}" Text="{Binding PatientEducation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="88" VerticalContentAlignment="Top" />
+                            </StackPanel>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ⚡ نوار اقدام -->
+        <Border Grid.Row="2" Background="{DynamicResource Brush.Surface}"
+                BorderBrush="{DynamicResource Brush.Border}"
+                BorderThickness="0,1,0,0" Padding="20,12">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                <Button Style="{DynamicResource Btn.Primary}"
+                        Content="{loc:Loc Visit.Act_Save}"
+                        Command="{Binding SaveCommand}"
+                        MinHeight="{DynamicResource Size.ButtonHeight}" />
+                <Button Style="{DynamicResource Btn.Success}"
+                        Content="{loc:Loc Visit.Act_SaveAndPrescribe}"
+                        Command="{Binding SaveAndPrescribeCommand}"
+                        MinHeight="{DynamicResource Size.ButtonHeight}" />
+                <Button Style="{DynamicResource Btn.Secondary}"
+                        Content="{loc:Loc Visit.Act_SaveAndLab}"
+                        Command="{Binding SaveAndLabCommand}"
+                        MinHeight="{DynamicResource Size.ButtonHeight}" />
+                <Button Style="{DynamicResource Btn.Danger}"
+                        Content="{loc:Loc Visit.Act_CancelVisit}"
+                        Command="{Binding CancelVisitCommand}"
+                        MinHeight="{DynamicResource Size.ButtonHeight}" />
+            </StackPanel>
+        </Border>
+
+        <!-- نشانگر بارگذاری -->
+        <Border Grid.Row="0" Grid.RowSpan="3"
+                Background="{DynamicResource Brush.Canvas}" Opacity="0.6"
+                Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="⏳" FontSize="32" HorizontalAlignment="Center" />
+                <TextBlock Text="{Binding BusyMessage}"
+                           Style="{DynamicResource Txt.Body}" Margin="0,8,0,0" />
+            </StackPanel>
+        </Border>
+    </Grid>
+
+</Window>

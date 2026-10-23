@@ -1,0 +1,129 @@
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.JournalEntryDetailWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctrl="clr-namespace:Sahand.ClinicPro.Desktop.Controls;assembly=Sahand.ClinicPro.Desktop"
+    xmlns:loc="clr-namespace:Sahand.ClinicPro.Desktop.Localization;assembly=Sahand.ClinicPro.Desktop"
+    xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels.Redesign;assembly=Sahand.ClinicPro.Desktop"
+    mc:Ignorable="d"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    d:DataContext="{d:DesignInstance Type=vm:JournalEntryDetailViewModel}"
+    SnapsToDevicePixels="True"
+    Title="{loc:Loc JournalEntryDetail.Title}"
+    Style="{DynamicResource Window.Modern}"
+    FlowDirection="RightToLeft">
+
+    <!--
+    ═══════════════════════════════════════════════════════════════════════
+      📄 جزئیات سند حسابداری  —  بازطراحی شده
+    ═══════════════════════════════════════════════════════════════════════
+      • تمام رنگ‌ها از Tokens.xaml و با DynamicResource دریافت می‌شوند
+        → تعویض تمِ روشن/تاریک در لحظه بدون تغییر این فایل
+      • تمام متن‌ها از Strings.resx از طریق {loc:Loc} دریافت می‌شوند
+        → افزودن زبان جدید بدون تغییر این فایل
+      • وایرفریم مرجع:  02-wireframes-md/JournalEntryDetailWindow.md
+        وایرفریم گرافیکی: 01-wireframes-html/JournalEntryDetailWindow.html
+    ═══════════════════════════════════════════════════════════════════════
+    -->
+
+    <Grid Background="{DynamicResource Brush.Canvas}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 🧭 هدر -->
+        <Border Grid.Row="0" Background="{DynamicResource Brush.Surface}"
+                BorderBrush="{DynamicResource Brush.Border}"
+                BorderThickness="0,0,0,1"
+                Padding="20,14">
+            <Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="📄" FontSize="24" Margin="0,0,10,0" />
+                    <StackPanel>
+                        <TextBlock Text="{Binding WindowTitle}"
+                                   Style="{DynamicResource Txt.Headline}" />
+                        <TextBlock Text="{loc:Loc JournalEntryDetail.Subtitle}"
+                                   Style="{DynamicResource Txt.Caption}" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 📝 محتوا -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                      Padding="20,16">
+            <StackPanel MaxWidth="960">
+                <TextBlock Text="{{loc:Loc JournalEntryDetail.Subtitle}}" Style="{{DynamicResource Txt.Secondary}}" />
+
+
+            <!-- 📋 جدول داده‌ها -->
+            <Border Grid.Row="3" Style="{DynamicResource Card}"
+                    Padding="0" ClipToBounds="True">
+                <Grid>
+                    <DataGrid Style="{DynamicResource Grid.Modern}"
+                              ColumnHeaderStyle="{DynamicResource Grid.Header}"
+                              RowStyle="{DynamicResource Grid.Row}"
+                              CellStyle="{DynamicResource Grid.Cell}"
+                              ItemsSource="{Binding Items}"
+                              SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                              BorderThickness="0"
+                              HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                    <DataGridTextColumn Header="{loc:Loc JournalEntryDetail.Col_AccountCode}"
+                                        Binding="{Binding AccountCode}"
+                                        Width="100" />
+                    <DataGridTextColumn Header="{loc:Loc JournalEntryDetail.Col_AccountName}"
+                                        Binding="{Binding AccountName}"
+                                        Width="*" />
+                    <DataGridTextColumn Header="{loc:Loc JournalEntryDetail.Col_Debit}"
+                                        Binding="{Binding Debit}"
+                                        Width="130" />
+                    <DataGridTextColumn Header="{loc:Loc JournalEntryDetail.Col_Credit}"
+                                        Binding="{Binding Credit}"
+                                        Width="130" />
+                    <DataGridTextColumn Header="{loc:Loc JournalEntryDetail.Col_Description}"
+                                        Binding="{Binding Description}"
+                                        Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- وضعیت تهی -->
+                    <ctrl:EmptyState Icon="🗒"
+                                     Title="{loc:Loc Common.NoData}"
+                                     Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+                </Grid>
+            </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ⚡ نوار اقدام -->
+        <Border Grid.Row="2" Background="{DynamicResource Brush.Surface}"
+                BorderBrush="{DynamicResource Brush.Border}"
+                BorderThickness="0,1,0,0" Padding="20,12">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                <Button Style="{DynamicResource Btn.Primary}"
+                        Content="{loc:Loc JournalEntryDetail.Act_Save}"
+                        Command="{Binding SaveCommand}"
+                        MinHeight="{DynamicResource Size.ButtonHeight}" />
+                <Button Style="{DynamicResource Btn.Success}"
+                        Content="{loc:Loc JournalEntryDetail.Act_Approve}"
+                        Command="{Binding ApproveCommand}"
+                        MinHeight="{DynamicResource Size.ButtonHeight}" />
+            </StackPanel>
+        </Border>
+
+        <!-- نشانگر بارگذاری -->
+        <Border Grid.Row="0" Grid.RowSpan="3"
+                Background="{DynamicResource Brush.Canvas}" Opacity="0.6"
+                Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="⏳" FontSize="32" HorizontalAlignment="Center" />
+                <TextBlock Text="{Binding BusyMessage}"
+                           Style="{DynamicResource Txt.Body}" Margin="0,8,0,0" />
+            </StackPanel>
+        </Border>
+    </Grid>
+
+</Window>
