@@ -105,6 +105,24 @@ jobs:
           Set-Content -Path "$package/RELEASE-INSTALL-GUIDE.txt" -Value $guide -Encoding UTF8
           Compress-Archive -Path "$package/*" -DestinationPath "dist/SahandClinicPro-Server-v$version.zip" -Force
 
+      - name: Package license server (PHP) ‏— چرخهٔ ۸۱
+        shell: pwsh
+        run: |
+          # بستهٔ مستقل سرور لایسنس — اصلاح‌های چرخهٔ ۸۱ فقط در همین بخش PHP است
+          # (بارگذاری پیکربندی در cron.php، ستون signature، پشتیبانی از بدنهٔ
+          # JSON در api.php و نام یکتای بکاپ) و باید جداگانه قابل دانلود باشد.
+          # data/config.php هرگز در مخزن نیست؛ با این حال محتوای حساس حذف می‌شود.
+          $version = '${{ steps.version.outputs.version }}'
+          $src = "src/LicenseServer.Php"
+          $out = "dist/license-server"
+          New-Item -ItemType Directory -Force $out | Out-Null
+          Copy-Item "$src/*" $out -Recurse -Force
+          Remove-Item "$out/data/config.php" -Force -ErrorAction SilentlyContinue
+          Remove-Item "$out/data/install.lock" -Force -ErrorAction SilentlyContinue
+          Remove-Item "$out/data/error.log" -Force -ErrorAction SilentlyContinue
+          Remove-Item "$out/data/backups" -Recurse -Force -ErrorAction SilentlyContinue
+          Compress-Archive -Path "$out/*" -DestinationPath "dist/SahandClinicPro-LicenseServer-v$version.zip" -Force
+
       - name: Create GitHub Release with built installers
         shell: pwsh
         env:
@@ -117,5 +135,6 @@ jobs:
           gh release create "v$version" `
             "dist/SahandClinicPro-Setup-v$version.exe" `
             "dist/SahandClinicPro-Server-v$version.zip" `
+            "dist/SahandClinicPro-LicenseServer-v$version.zip" `
             --verify-tag --title $title --notes-file dist/release-notes.md
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
