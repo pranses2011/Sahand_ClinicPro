@@ -84,7 +84,13 @@ public class GetCalendarSummaryQueryHandler : IRequestHandler<GetCalendarSummary
                 _ => 6
             };
 
-            if (!scheduleByDay.TryGetValue((byte)dayIndex, out var schedule) || !schedule.IsActive)
+            var previousDayIndex = (dayIndex + 6) % 7;
+            scheduleByDay.TryGetValue((byte)dayIndex, out var schedule);
+            scheduleByDay.TryGetValue((byte)previousDayIndex, out var previousSchedule);
+            if (previousSchedule is not null && previousSchedule.EndTime >= previousSchedule.StartTime)
+                previousSchedule = null; // فقط بخشِ پس از نیمه‌شبِ شیفت شبِ روز قبل
+
+            if (schedule is null && previousSchedule is null)
             {
                 days.Add(new CalendarDayDto(shamsi, true, 0, false));
                 continue;
@@ -96,8 +102,24 @@ public class GetCalendarSummaryQueryHandler : IRequestHandler<GetCalendarSummary
                 continue;
             }
 
-            var total = schedule.MaxPatients ??
-                        (int)((schedule.EndTime - schedule.StartTime).TotalMinutes / Math.Max(10, schedule.SlotDuration));
+            var total = 0;
+            if (schedule is not null)
+            {
+                var shiftMinutes = GetShiftDurationMinutes(schedule);
+                var slotMinutes = Math.Max(10, schedule.SlotDuration);
+                total += schedule.MaxPatients ?? (shiftMinutes / slotMinutes);
+            }
+            if (previousSchedule is not null)
+            {
+                var tailMinutes = (int)previousSchedule.EndTime.ToTimeSpan().TotalMinutes;
+                var fullMinutes = GetShiftDurationMinutes(previousSchedule);
+                var slotMinutes = Math.Max(10, previousSchedule.SlotDuration);
+                var tailCapacity = previousSchedule.MaxPatients is int maxPatients && fullMinutes > 0
+                    ? (int)Math.Ceiling(maxPatients * (double)tailMinutes / fullMinutes)
+                    : tailMinutes / slotMinutes;
+                total += tailCapacity;
+            }
+
             var booked = bookedMap.GetValueOrDefault(date);
             var free = Math.Max(0, total - booked);
             days.Add(new CalendarDayDto(shamsi, free == 0, free, true));
@@ -105,4 +127,7 @@ public class GetCalendarSummaryQueryHandler : IRequestHandler<GetCalendarSummary
 
         return Result<CalendarSummaryDto>.Success(new CalendarSummaryDto(days));
     }
+
+    private static int GetShiftDurationMinutes(DoctorSchedule schedule) =>
+        DoctorScheduleTime.DurationMinutes(schedule.StartTime, schedule.EndTime);
 }

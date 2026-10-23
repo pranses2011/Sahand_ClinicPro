@@ -95,7 +95,7 @@ $healthy = $false
 do {
     Start-Sleep -Seconds 3
     try {
-        $response = Invoke-RestMethod -Uri 'http://localhost:5000/health' -TimeoutSec 3
+        $response = Invoke-RestMethod -Uri 'http://localhost:5000/health/ready' -TimeoutSec 3
         $healthy = $response.status -eq 'Healthy'
     } catch { }
 } while (-not $healthy -and (Get-Date) -lt $deadline)
@@ -103,5 +103,5 @@ if (-not $healthy) {
     throw 'سرویس نصب شد اما API در مهلت انتظار آماده نشد. Windows Event Viewer و C:\SahandClinicPro\Server\Logs را بررسی کنید.'
 }
 
-Write-Host "سرور آماده است: http://localhost:5000/health" -ForegroundColor Green
+Write-Host "سرور آماده است: http://localhost:5000/health/ready" -ForegroundColor Green
 Write-Host 'برای کلاینت‌های دیگر، نشانی سرور را در appsettings.json کلاینت به‌صورت http://<IP-سرور>:5000/api/v1 وارد کنید.'

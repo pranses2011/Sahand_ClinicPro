@@ -4,7 +4,7 @@
 
 <p><img src="docs/assets/ClinicPro.png" width="140" alt="لوگوی درمانگاه سهند"></p>
 
-<h3>Sahand ClinicPro — v2.22.2</h3>
+<h3>Sahand ClinicPro — v2.22.3</h3>
 
 **نخستین سامانه یکپارچه فارسی‌زبان درمانگاه با اتصال مستقیم به دستگاه حضور و غیاب، سامانه‌های دولتی، نسخه الکترونیک و پشتیبانی زنده یکپارچه**
 
@@ -14,7 +14,7 @@
 [![WPF](https://img.shields.io/badge/WPF-MaterialDesign-512BD4?logo=windows&logoColor=white)](https://materialdesigninxaml.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-270%20.NET%20%E2%9C%85-2EA44F)](#%EF%B8%8F-تست‌ها)
-[![Version](https://img.shields.io/badge/release-v2.22.2-blue)](https://github.com/pranses2011/Sahand_ClinicPro/releases)
+[![Version](https://img.shields.io/badge/release-v2.22.3-blue)](https://github.com/pranses2011/Sahand_ClinicPro/releases)
 [![Coverage](https://img.shields.io/badge/coverage-36%25%20cobertura-orange)](#%EF%B8%8F-تست‌ها)
 [![Forms](https://img.shields.io/badge/forms-64%20%E2%9C%85-7C3AED)](#%EF%B8%8F-تصاویر-محیط-نرم‌افزار)
 
@@ -234,11 +234,11 @@
 ### نصب درمانگاهی از GitHub Release
 
 1. روی رایانهٔ مرکزی SQL Server را نصب و اجرا کنید.
-2. فایل `SahandClinicPro-Server-v2.22.2.zip` را از [صفحهٔ Releases](https://github.com/pranses2011/Sahand_ClinicPro/releases/latest) دانلود، استخراج و `Install-Server-Package.bat` را با دسترسی مدیر اجرا کنید. رشته اتصال SQL را وارد کنید؛ ساخت دیتابیس و اعمال خودکار schema در همین فرایند انجام می‌شود و migration دستی لازم نیست.
-3. فایل `SahandClinicPro-Setup-v2.22.2.exe` را روی رایانه‌های کاربران نصب کنید. این نصب‌کننده خودبسنده است و نیاز به نصب جداگانهٔ .NET ندارد.
+2. فایل `SahandClinicPro-Server-v2.22.3.zip` را از [صفحهٔ Releases](https://github.com/pranses2011/Sahand_ClinicPro/releases/latest) دانلود، استخراج و `Install-Server-Package.bat` را با دسترسی مدیر اجرا کنید. رشته اتصال SQL را وارد کنید؛ ساخت دیتابیس و اعمال خودکار schema در همین فرایند انجام می‌شود و migration دستی لازم نیست.
+3. فایل `SahandClinicPro-Setup-v2.22.3.exe` را روی رایانه‌های کاربران نصب کنید. این نصب‌کننده خودبسنده است و نیاز به نصب جداگانهٔ .NET ندارد.
 4. برای کلاینت‌های غیر از رایانهٔ سرور، `ApiSettings:BaseUrl` در فایل `appsettings.json` کنار برنامه را به `http://IP-سرور:5000/api/v1` تغییر دهید.
 
-بررسی سرور: `http://localhost:5000/health` باید `Healthy` نشان دهد. جزئیات در [`راهنمای نصب`](docs/guides/deployment.md) آمده است.
+بررسی آمادگی کامل سرور و اتصال دیتابیس: `http://localhost:5000/health/ready` باید `Healthy` نشان دهد. جزئیات در [`راهنمای نصب`](docs/guides/deployment.md) آمده است.
 
 ### ساخت و اجرای توسعه‌ای از سورس (فقط تیم فنی)
 
@@ -261,7 +261,7 @@ dotnet run
 | نشانی | شرح |
 |:---|:---|
 | `http://localhost:5000/swagger` | مستندات تعاملی API |
-| `http://localhost:5000/health` | سنجه سلامت |
+| `http://localhost:5000/health/ready` | آمادگی کامل API و دیتابیس |
 | `http://localhost:5000/hangfire` | داشبورد کارهای زمان‌بندی |
 
 بذرهای خودکار: ۸ نقش، **۱۶۰+ دسترسی**، ادمین، ۱۴ تخصص، ICD-10، ۸ بیمه، **۳۰ ماژول لایسنس**

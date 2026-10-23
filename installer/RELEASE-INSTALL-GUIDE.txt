@@ -16,7 +16,7 @@ Sahand ClinicPro v{VERSION} — راهنمای نصب نسخه درمانگاه
 - در همان رایانه سرور، مقدار پیش‌فرض localhost:5000 مناسب است.
 
 ۳) بررسی نصب
-- روی سرور http://localhost:5000/health باید status برابر Healthy نشان دهد.
+- روی سرور http://localhost:5000/health/ready باید status برابر Healthy نشان دهد.
 - اگر نصب متوقف شد، رشته اتصال و دسترسی CREATE DATABASE را بررسی کنید؛ لاگ API در C:\SahandClinicPro\Server\Logs قرار دارد.
 
 نکته مهم: از دیتابیس پیش از ارتقای نسخه پشتیبان بگیرید. نصب‌کننده فایل‌های برنامه را به‌روز می‌کند اما دیتابیس را حذف نمی‌کند.

@@ -1,11 +1,11 @@
-# راهنمای استقرار — Sahand ClinicPro v2.22.2
+# راهنمای استقرار — Sahand ClinicPro v2.22.3
 
 ## نصب درمانگاهی از GitHub Release
 
 بستهٔ آماده برای نصب درمانگاه در GitHub Release شامل این فایل‌هاست:
 
-- `SahandClinicPro-Server-v2.22.2.zip` — API خودبسنده برای Windows x64 و نصب‌کنندهٔ سرویس.
-- `SahandClinicPro-Setup-v2.22.2.exe` — کلاینت WPF خودبسنده برای Windows x64.
+- `SahandClinicPro-Server-v2.22.3.zip` — API خودبسنده برای Windows x64 و نصب‌کنندهٔ سرویس.
+- `SahandClinicPro-Setup-v2.22.3.exe` — کلاینت WPF خودبسنده برای Windows x64.
 
 ### رایانهٔ مرکزی درمانگاه
 
@@ -13,13 +13,13 @@
 2. ZIP سرور را استخراج و `Install-Server-Package.bat` را با دسترسی Administrator اجرا کنید.
 3. رشته اتصال SQL را وارد کنید. حساب SQL باید اجازهٔ ساخت دیتابیس و جدول‌ها را داشته باشد.
 4. نصب‌کننده کلید JWT تصادفی تولید می‌کند و API را با گزینهٔ `--migrate-database` به‌صورت خودکار اجرا می‌کند. دیتابیس تازه و تمام تغییرهای schema لازم ساخته می‌شوند؛ سپس Windows Service نصب و شروع می‌شود.
-5. بررسی سلامت: `http://localhost:5000/health` باید وضعیت `Healthy` بدهد.
+5. بررسی آمادگی کامل سرور و دیتابیس: `http://localhost:5000/health/ready` باید وضعیت `Healthy` بدهد.
 
 نیازی به نصب .NET Runtime/SDK، Visual Studio، `dotnet-ef` یا اجرای دستی migration نیست. نصب‌کننده کلاینت نیز خودبسنده است. در نصب مجدد، فایل تنظیمات و لاگ‌های سرور حفظ می‌شوند؛ دیتابیس حذف نمی‌شود.
 
 ### رایانه‌های کلاینت
 
-1. `SahandClinicPro-Setup-v2.22.2.exe` را اجرا کنید.
+1. `SahandClinicPro-Setup-v2.22.3.exe` را اجرا کنید.
 2. در رایانه‌های دیگر (نه روی سرور)، فایل `appsettings.json` کنار برنامه را باز کنید و مقدار زیر را به IP سرور تغییر دهید:
 
 ```json
@@ -56,7 +56,7 @@ dotnet tool restore
 dotnet ef database update --project ../Sahand.ClinicPro.Infrastructure --startup-project .
 ```
 
-ساخت رسمی Windows installer با GitHub Actions در `.github/workflows/release-installer.yml` انجام می‌شود. Tag نسخهٔ Release، مثلاً `v2.22.2`، دو asset قابل دانلود منتشر می‌کند: Setup EXE و Server ZIP.
+ساخت رسمی Windows installer با GitHub Actions در `.github/workflows/release-installer.yml` انجام می‌شود. Tag نسخهٔ Release، مثلاً `v2.22.3`، دو asset قابل دانلود منتشر می‌کند: Setup EXE و Server ZIP.
 
 ## پشتیبان‌گیری و چک‌لیست راه‌اندازی
 

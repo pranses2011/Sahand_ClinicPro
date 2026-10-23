@@ -1,13 +1,13 @@
-# بستهٔ نصب درمانگاه سهند — v2.22.2
+# بستهٔ نصب درمانگاه سهند — v2.22.3
 
 <div dir="rtl">
 
 ## نصب نسخهٔ آمادهٔ درمانگاه
 
-در GitHub Release نسخهٔ `v2.22.2` دو فایل ویندوزی منتشر می‌شود:
+در GitHub Release نسخهٔ `v2.22.3` دو فایل ویندوزی منتشر می‌شود:
 
-- `SahandClinicPro-Setup-v2.22.2.exe` — نصب خودبسندهٔ کلاینت؛ نیازی به نصب جداگانهٔ .NET Desktop Runtime نیست.
-- `SahandClinicPro-Server-v2.22.2.zip` — API خودبسنده + نصب‌کنندهٔ سرویس ویندوز + راهنمای نصب.
+- `SahandClinicPro-Setup-v2.22.3.exe` — نصب خودبسندهٔ کلاینت؛ نیازی به نصب جداگانهٔ .NET Desktop Runtime نیست.
+- `SahandClinicPro-Server-v2.22.3.zip` — API خودبسنده + نصب‌کنندهٔ سرویس ویندوز + راهنمای نصب.
 
 ### ترتیب نصب پیشنهادی
 
@@ -15,7 +15,7 @@
 2. ZIP سرور را استخراج کنید و `Install-Server-Package.bat` را با **Run as administrator** اجرا کنید.
 3. رشته اتصال SQL را وارد کنید. نصب‌کننده یک کلید JWT امن می‌سازد، دیتابیس را در اولین اجرا آماده می‌کند، تمام schema نسخهٔ فعلی را خودکار اعمال می‌کند و API را به شکل Windows Service راه می‌اندازد.
 4. فایل EXE کلاینت را روی رایانه‌های لازم نصب کنید. در کلاینت‌های دیگر از `appsettings.json` کنار برنامه، نشانی `http://IP-سرور:5000/api/v1` را تنظیم کنید.
-5. بررسی سلامت سرور: `http://localhost:5000/health` باید `Healthy` نشان دهد.
+5. بررسی آمادگی کامل سرور (شامل اتصال دیتابیس): `http://localhost:5000/health/ready` باید `Healthy` نشان دهد. مسیر `/health` فقط زنده‌بودن API را بررسی می‌کند.
 
 > درمانگاه نیازی به .NET SDK، ابزار `dotnet-ef`، Visual Studio یا اجرای دستی migration ندارد. دیتابیس ساخته و تغییرات schema هنگام نصب سرور خودکار اعمال می‌شوند. اگر SQL در دسترس نباشد یا مجوز ساخت دیتابیس نداشته باشد، نصب متوقف می‌شود تا سرویس با اسکیمای ناقص بالا نیاید.
 
@@ -23,8 +23,8 @@
 
 روی Windows 10/11 به .NET 8 SDK و Inno Setup 6 نیاز دارید. اجرای `BUILD-INSTALLER.bat` خروجی زیر را می‌سازد:
 
-- `dist\SahandClinicPro-Setup-v2.22.2.exe`
-- `dist\SahandClinicPro-Server-v2.22.2.zip`
+- `dist\SahandClinicPro-Setup-v2.22.3.exe`
+- `dist\SahandClinicPro-Server-v2.22.3.zip`
 
 ساخت Release رسمی نیز در `.github/workflows/release-installer.yml` با Windows runner انجام می‌شود.
 

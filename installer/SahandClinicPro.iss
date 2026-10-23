@@ -6,7 +6,7 @@
 #define MyAppName "سامانه درمانگاه سهند"
 #define MyAppNameEn "Sahand ClinicPro"
 #ifndef MyAppVersion
-  #define MyAppVersion "2.22.2"
+  #define MyAppVersion "2.22.3"
 #endif
 #define MyAppPublisher "Sahand ClinicPro Team"
 #define MyAppURL "https://sahand-clinicpro.ir"

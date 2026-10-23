@@ -81,7 +81,7 @@ p, td, li, th { overflow-wrap:break-word; word-break:break-word; }
 <table>
 <tr><th>مشکل</th><th>یعنی چه؟</th><th>چه کار کنم؟</th></tr>
 <tr><td>Install-Server-Package.bat خطای SQL می‌دهد</td><td>رشته اتصال اشتباه است، SQL خاموش است یا حساب دسترسی ساخت دیتابیس ندارد</td><td>رشته اتصال و مجوزهای حساب را بررسی کنید و نصب‌کننده را دوباره اجرا کنید؛ اجرای دوباره امن است و دیتابیس حذف نمی‌شود</td></tr>
-<tr><td><code>http://localhost:5000/health</code> باز نمی‌شود</td><td>Windows Service اجرا نشده یا راه‌اندازی دیتابیس ناموفق بوده است</td><td>در <code>services.msc</code> سرویس <code>SahandClinicPro.API</code> را بررسی کنید؛ خطاها در Event Viewer و <code>C:\SahandClinicPro\Server\Logs</code> ثبت می‌شوند</td></tr>
+<tr><td><code>http://localhost:5000/health/ready</code> باز نمی‌شود</td><td>Windows Service اجرا نشده یا راه‌اندازی دیتابیس ناموفق بوده است</td><td>در <code>services.msc</code> سرویس <code>SahandClinicPro.API</code> را بررسی کنید؛ خطاها در Event Viewer و <code>C:\SahandClinicPro\Server\Logs</code> ثبت می‌شوند</td></tr>
 <tr><td>ورود اولیهٔ admin ناموفق است</td><td>رمز قبلاً تغییر کرده یا بذرهای اولیه اجرا نشده‌اند</td><td>اگر دیتابیس تازه است، <code>Admin@123</code> را امتحان کنید؛ اگر نه، وضعیت راه‌اندازی دیتابیس و لاگ API را بررسی کنید</td></tr>
 <tr><td>کلاینت رایانهٔ دیگر به سرور وصل نمی‌شود</td><td>BaseUrl هنوز localhost است یا پورت API در شبکه بسته است</td><td>در <code>appsettings.json</code> کلاینت، <code>ApiSettings:BaseUrl</code> را به <code>http://IP-سرور:5000/api/v1</code> تغییر دهید و TCP 5000 را بررسی کنید. SQL را به کلاینت‌ها باز نکنید.</td></tr>
 <tr><td>بعد از تغییر تنظیمات تغییری نمی‌بینم</td><td>تنظیم‌ها فقط هنگام شروع فرایند خوانده می‌شوند</td><td>برنامهٔ کلاینت را کامل ببندید و دوباره اجرا کنید؛ برای تنظیم سرور، Windows Service را راه‌اندازی مجدد کنید</td></tr>
@@ -108,7 +108,7 @@ p, td, li, th { overflow-wrap:break-word; word-break:break-word; }
 <tr><td>☐</td><td>SSMS وصل می‌شود</td><td>Connect با نام نمونه (قدم ۲) بدون خطا انجام می‌شود</td></tr>
 <tr><td>☐</td><td>رشته اتصال درست است</td><td>نصب‌کننده رشته اتصال SQL را دریافت کرده و API بدون خطای دیتابیس اجرا می‌شود</td></tr>
 <tr><td>☐</td><td>دیتابیس ساخته شده</td><td>در SSMS دیتابیس SahandClinicProDb با حدود ۹۴ جدول دیده می‌شود</td></tr>
-<tr><td>☐</td><td>سرور برنامه روشن است</td><td>سرویس SahandClinicPro.API در حال اجراست و <code>http://localhost:5000/health</code> وضعیت Healthy می‌دهد</td></tr>
+<tr><td>☐</td><td>سرور برنامه روشن است</td><td>سرویس SahandClinicPro.API در حال اجراست و <code>http://localhost:5000/health/ready</code> وضعیت Healthy می‌دهد</td></tr>
 <tr><td>☐</td><td>اولین ورود موفق بود</td><td>با admin وارد شدید و برنامه داشبورد را نشان داد</td></tr>
 <tr><td>☐</td><td>رمز مدیر عوض شد</td><td>رمز جدید در جای امن (دفترچه قفل یا نرم‌افزار رمز عبور) یادداشت شد</td></tr>
 <tr><td>☐</td><td>پشتیبان‌گیری در برنامه پلان است</td><td>هرچند امروز زود است، قرار شد طبق راهنمای نصب، پشتیبان خودکار شبانه فعال شود — اطلاعات بیماران بی‌بازگشت است</td></tr>

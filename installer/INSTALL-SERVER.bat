@@ -2,7 +2,7 @@
 chcp 65001 >nul
 setlocal
 title ساخت و نصب سرور درمانگاه سهند
-set "APP_VERSION=2.22.2"
+set "APP_VERSION=2.22.3"
 
 where dotnet >nul 2>&1
 if errorlevel 1 (
