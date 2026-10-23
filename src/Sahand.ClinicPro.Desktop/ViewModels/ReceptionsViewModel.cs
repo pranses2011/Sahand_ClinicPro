@@ -320,6 +320,12 @@ public partial class ReceptionsViewModel : ViewModelBase
     [ObservableProperty]
     private int _insuranceIndex;
 
+    /// <summary>تنظیم مستقل اعمال بیمه برای ویزیت</summary>
+    private bool ApplyInsuranceToDoctorVisits { get; set; } = true;
+
+    /// <summary>تنظیم مستقل اعمال بیمه برای خدمات درمانی</summary>
+    private bool ApplyInsuranceToMedicalServices { get; set; } = true;
+
     /// <summary>شماره بیمه</summary>
     [ObservableProperty]
     private string _insuranceNumber = string.Empty;
@@ -396,13 +402,12 @@ public partial class ReceptionsViewModel : ViewModelBase
         _api = api;
         _snackbar = snackbar;
         _ = InitializeAsync();
-        // چرخه ۲۴: خدمات تعرفه‌دار + پرسنل برای «پذیرش خدمت درمانی»
-        _ = LoadServicesAndPerformersAsync();
     }
 
     /// <summary>بارگذاری اولیه</summary>
     private async Task InitializeAsync()
     {
+        await LoadInsuranceBillingPolicyAsync();
         var doctors = await _api.GetAsync<AppointmentsViewModel.DoctorsPage>("doctors?page=1&pageSize=200");
         if (doctors?.Data is not null)
             foreach (var d in doctors.Data)
@@ -418,14 +423,15 @@ public partial class ReceptionsViewModel : ViewModelBase
         // «آزاد (بدون بیمه)» با شناسهٔ صفر در ابتدای کشو درج می‌شود تا نمایهٔ صفر
         // واقعاً آزاد باشد و شرکت‌ها از نمایهٔ ۱ به بعد دقیق ثبت شوند (هم‌الگوی
         // پنجرهٔ فرم پذیرش — ReceptionFormViewModel).
-        InsuranceCompanies.Add(new InsuranceOption(0, "آزاد (بدون بیمه)"));
+        InsuranceCompanies.Add(new InsuranceOption(0, "آزاد (بدون بیمه)", false));
         if (companies?.Data is not null)
             foreach (var c in companies.Data)
-                InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name));
+                InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name, c.IsContracted, c.CoveragePercent));
 
         // چرخهٔ ۴۴ — بیمارِ هم‌اکنون انتخاب‌شده (جستجوی زودهنگام پیش از آماده‌شدن
         // کشو) اکنون که فهرست بیمه‌ها کامل است، بیمهٔ پرونده‌اش روی کشو می‌نشیند
         ApplyPatientInsurance(FoundPatient);
+        await LoadServicesAndPerformersAsync(GetEffectiveServiceInsuranceCompanyId(InsuranceIndex));
 
         await LoadAsync();
     }
@@ -591,6 +597,7 @@ public partial class ReceptionsViewModel : ViewModelBase
 
     /// <summary>تغییر پزشک → محاسبه هزینه</summary>
     partial void OnSelectedDoctorChanged(DoctorOption? value) => RecalculateCost();
+    partial void OnCoveragePercentChanged(decimal value) => RecalculateCost();
 
     /// <summary>
     /// بارگذاری خدمات تعرفه‌دار و پرسنل — چرخه ۲۴: برای پذیرش خدمت درمانی.
@@ -601,6 +608,36 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// بارگذاری می‌شود؛ در حالت آزاد تعرفهٔ آزاد (سهم بیمار ۱۰۰٪) می‌آید.
     /// </summary>
     /// <param name="insuranceCompanyId">شناسهٔ بیمهٔ منتخب — تهی = آزاد</param>
+    private long? GetEffectiveServiceInsuranceCompanyId(int index)
+    {
+        if (!ApplyInsuranceToMedicalServices || index < 0 || index >= InsuranceCompanies.Count) return null;
+        var company = InsuranceCompanies[index];
+        return company is { Id: > 0, IsContracted: true } ? company.Id : null;
+    }
+
+    private async Task LoadInsuranceBillingPolicyAsync()
+    {
+        var response = await _api.GetAsync<InsurancePolicySettingsResponse>("settings/insurance-policy");
+        var settings = response?.Data ?? new List<InsurancePolicySetting>();
+        var visits = settings.FirstOrDefault(x => x.Key == "ApplyToDoctorVisits")?.Value;
+        var services = settings.FirstOrDefault(x => x.Key == "ApplyToMedicalServices")?.Value;
+        if (bool.TryParse(visits, out var applyVisits)) ApplyInsuranceToDoctorVisits = applyVisits;
+        if (bool.TryParse(services, out var applyServices)) ApplyInsuranceToMedicalServices = applyServices;
+        RecalculateCost();
+    }
+
+    private sealed class InsurancePolicySettingsResponse
+    {
+        public bool IsSuccess { get; set; }
+        public List<InsurancePolicySetting>? Data { get; set; }
+    }
+
+    private sealed class InsurancePolicySetting
+    {
+        public string Key { get; set; } = string.Empty;
+        public string? Value { get; set; }
+    }
+
     private async Task LoadServicesAndPerformersAsync(long? insuranceCompanyId = null)
     {
         // خدمات فعال با تعرفهٔ هدفِ منتخب — سهم‌های بیمه/بیمار همراه قیمت می‌آید
@@ -862,16 +899,17 @@ public partial class ReceptionsViewModel : ViewModelBase
     partial void OnInsuranceIndexChanged(int value)
     {
         Inquiry = null;
+        var selectedCompany = value >= 0 && value < InsuranceCompanies.Count
+            ? InsuranceCompanies[value]
+            : null;
+        CoveragePercent = selectedCompany?.CoveragePercent ?? 0m;
         RecalculateCost();
 
         // ═══ چرخهٔ بیست‌وششم ═══ تعرفه‌ها بیمه‌محورند — با تغییر بیمه، فهرست
         // خدمات با تعرفهٔ همان بیمه بازخوانی می‌شود و خدمتِ قبلی هم اگر هنوز
         // موجود باشد دوباره انتخاب می‌شود تا قیمت‌ها بی‌درنگ درست بمانند.
         // (نمایهٔ صفر = آزاد → بیمهٔ تهی به سرور می‌رود)
-        var selectedCompany = value >= 0 && value < InsuranceCompanies.Count
-            ? InsuranceCompanies[value]
-            : null;
-        var companyId = selectedCompany is { Id: > 0 } ? selectedCompany.Id : (long?)null;
+        var companyId = GetEffectiveServiceInsuranceCompanyId(value);
         var previousServiceName = SelectedService?.Name;
         _ = LoadServicesAndPerformersAsync(companyId).ContinueWith(_ =>
         {
@@ -895,6 +933,17 @@ public partial class ReceptionsViewModel : ViewModelBase
         // انتخابی بیمار در پذیرش قعر می‌رفت (ریشهٔ «تامین اجتماعی زدم ولی
         // آزاد ثبت می‌شود» در صف پذیرش)؛ اکنون خودِ نمایه خوانده می‌شود
         var company = InsuranceCompanies[InsuranceIndex];
+        if (!company.IsContracted)
+        {
+            _snackbar.Error("این شرکت طرف قرارداد نیست؛ محاسبه به‌صورت آزاد انجام می‌شود");
+            return;
+        }
+        if (ReceptionModeIndex == 0 && !ApplyInsuranceToDoctorVisits ||
+            ReceptionModeIndex == 1 && !ApplyInsuranceToMedicalServices)
+        {
+            _snackbar.Info("اعمال بیمه برای این دسته در تنظیمات درمانگاه غیرفعال است");
+            return;
+        }
         IsInquiring = true;
         try
         {
@@ -964,9 +1013,14 @@ public partial class ReceptionsViewModel : ViewModelBase
         var selectedCompany = InsuranceIndex >= 0 && InsuranceIndex < InsuranceCompanies.Count
             ? InsuranceCompanies[InsuranceIndex]
             : null;
-        var isFree = selectedCompany is not { Id: > 0 };
-        // حالت نمایشی بخش هزینه — برای آزاد، ستون سهم بیمه پنهان می‌شود
-        HasInsurance = !isFree;
+        var hasContractedInsurance = selectedCompany is { Id: > 0, IsContracted: true };
+        var categoryEnabled = ReceptionModeIndex == 1
+            ? ApplyInsuranceToMedicalServices
+            : ApplyInsuranceToDoctorVisits;
+        var hasApplicableInsurance = hasContractedInsurance && categoryEnabled;
+        // ستون سهم بیمه فقط وقتی دیده می‌شود که شرکت طرف قرارداد باشد و
+        // تنظیم مستقل همان دستهٔ ویزیت/خدمت اجازهٔ اعمال بیمه بدهد.
+        HasInsurance = hasApplicableInsurance;
 
         if (ReceptionModeIndex == 1)
         {
@@ -974,7 +1028,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             // قیمت = تعرفهٔ خدمت برای بیمهٔ منتخب؛ سهم‌ها از درصدهای تعرفهٔ همان
             // خدمت — مگر در حالت آزاد که کل مبلغ سهم بیمار است (۰٪ بیمه)
             VisitFee = SelectedService?.Price ?? 0;
-            var insurancePercent = !isFree ? SelectedService?.TariffInsuranceShare ?? 0m : 0m;
+            var insurancePercent = hasApplicableInsurance ? SelectedService?.TariffInsuranceShare ?? 0m : 0m;
             InsuranceShare = Math.Round(VisitFee * insurancePercent / 100m);
             PatientShare = VisitFee - InsuranceShare;
         }
@@ -985,7 +1039,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             VisitFee = SelectedDoctor?.ConsultationFee ?? 0;
 
             // درصد پوشش: از استعلام یا صفر برای آزاد
-            var percent = isFree ? 0 : CoveragePercent;
+            var percent = hasApplicableInsurance ? CoveragePercent : 0m;
             InsuranceShare = Math.Round(VisitFee * percent / 100m);
             PatientShare = VisitFee - InsuranceShare;
         }

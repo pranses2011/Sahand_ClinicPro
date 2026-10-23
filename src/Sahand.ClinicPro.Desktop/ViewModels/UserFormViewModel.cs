@@ -54,6 +54,10 @@ public partial class UserFormViewModel : ViewModelBase
     [ObservableProperty]
     private string _password = string.Empty;
 
+    /// <summary>راهنمای سیاست جاری رمز عبور از سرور</summary>
+    [ObservableProperty]
+    private string _passwordPolicyHint = "رمز عبور باید مطابق سیاست امنیتی تنظیم‌شده باشد.";
+
     /// <summary>تکرار رمز عبور</summary>
     [ObservableProperty]
     private string _confirmPassword = string.Empty;
@@ -93,10 +97,22 @@ public partial class UserFormViewModel : ViewModelBase
         // فراخوانی‌های بعدی (LoadForEdit) همان نمونه را منتظر بمانند نه
         // درخواست موازی دوم که با پاک‌سازی دیرهنگام، تیک‌ها را می‌خورد
         _ = LoadRolesAsync();
+        _ = LoadPasswordPolicyAsync();
     }
 
     /// <summary>آیا حالت ویرایش است — رمز و نام کاربری غیرقابل تغییر</summary>
     public bool IsEdit => EditUserId is not null;
+
+    private async Task LoadPasswordPolicyAsync()
+    {
+        var response = await _api.GetAsync<PasswordPolicyResponse>("users/password-policy");
+        if (response?.Data is not { } policy) return;
+        var requirements = new List<string> { $"حداقل {policy.MinPasswordLength} نویسه" };
+        if (policy.RequireMixedCase) requirements.Add("حروف کوچک و بزرگ");
+        if (policy.RequireDigit) requirements.Add("عدد");
+        if (policy.RequireSpecialChar) requirements.Add("نویسهٔ ویژه");
+        PasswordPolicyHint = "الزامات رمز: " + string.Join("، ", requirements);
+    }
 
     /* ─── سنجه قدرت رمز ۵ سطحی — طبق فرم ۲۴ ─── */
 
@@ -254,11 +270,8 @@ public partial class UserFormViewModel : ViewModelBase
 
         if (!IsEdit)
         {
-            if (Password.Length < 8)
-            { ErrorMessage = "رمز عبور حداقل ۸ کاراکتر است"; return; }
-            if (!Password.Any(char.IsUpper) || !Password.Any(char.IsLower) ||
-                !Password.Any(char.IsDigit) || !Password.Any(c => "!@#$%^&*()-_=+[]{};:,.?/\\|~`\"'".Contains(c)))
-            { ErrorMessage = "رمز باید شامل حروف بزرگ و کوچک، عدد و علامت باشد"; return; }
+            if (string.IsNullOrWhiteSpace(Password))
+            { ErrorMessage = "رمز عبور الزامی است"; return; }
             if (Password != ConfirmPassword)
             { ErrorMessage = "تکرار رمز با رمز عبور یکسان نیست"; return; }
         }
@@ -352,6 +365,20 @@ public partial class UserFormViewModel : ViewModelBase
         public List<string>? Roles { get; set; }
         public bool IsActive { get; set; }
         public bool MustChangePassword { get; set; }
+    }
+
+    private sealed class PasswordPolicyResponse
+    {
+        public bool IsSuccess { get; set; }
+        public PasswordPolicyDto? Data { get; set; }
+    }
+
+    private sealed class PasswordPolicyDto
+    {
+        public int MinPasswordLength { get; set; }
+        public bool RequireMixedCase { get; set; }
+        public bool RequireDigit { get; set; }
+        public bool RequireSpecialChar { get; set; }
     }
 
     private sealed class CheckResponse

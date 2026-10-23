@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Sahand.ClinicPro.Application.Interfaces;
+using Sahand.ClinicPro.Application.Common.Security;
 
 namespace Sahand.ClinicPro.Infrastructure.Identity;
 
@@ -30,6 +31,7 @@ public static class IdentitySetup
         services.AddScoped<JwtTokenGenerator>();
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IPasswordPolicyProvider, DatabasePasswordPolicyProvider>();
 
         /* ── چرخهٔ ۴۹ (تکمیلی — گرفتِ CI، رفع IDX10703) ──
            جایگزینِ کلید توسعه باید به «خودِ» JwtOptions هم برسد: مولد توکن

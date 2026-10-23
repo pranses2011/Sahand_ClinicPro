@@ -114,6 +114,12 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsContracted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasComment("طرف قرارداد درمانگاه");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 

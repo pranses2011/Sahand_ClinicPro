@@ -79,12 +79,12 @@ public partial class ReceptionFormViewModel : ObservableObject
         // چرخه بیست‌ویکم (گزارش پانزدهم مالک): «در پذیرش، نوع بیمه گزینهٔ آزاد هم
         // باشد که اگر کسی بیمه نداشت آن را انتخاب کنیم» — گزینهٔ آزاد با شناسهٔ ۰
         // در ابتدای کشو قرار می‌گیرد و به سرور به‌صورت ۰ ارسال می‌شود (۰ = آزادِ صریح).
-        InsuranceCompanies.Add(new InsuranceOption(0, "آزاد (بدون بیمه)"));
+        InsuranceCompanies.Add(new InsuranceOption(0, "آزاد (بدون بیمه)", false));
 
         var response = await _api.GetAsync<InsuranceResponse>("lookups/insurance-companies");
         if (response?.Data is not null)
             foreach (var c in response.Data)
-                InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name));
+                InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name, c.IsContracted, c.CoveragePercent));
 
         // پیش‌فرض: آزاد — کاربر در صورت داشتن بیمه، آن را انتخاب می‌کند
         if (InsuranceCompanies.Count > 0)
@@ -210,5 +210,7 @@ public partial class ReceptionFormViewModel : ObservableObject
         public long Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Code { get; set; }
+        public bool IsContracted { get; set; }
+        public decimal CoveragePercent { get; set; }
     }
 }

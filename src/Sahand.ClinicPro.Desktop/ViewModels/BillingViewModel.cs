@@ -393,10 +393,10 @@ public partial class InvoiceFormViewModel : ObservableObject
         // «آزاد» بود و نمایهٔ صفر (نخستین شرکت سرور) به‌عنوان بدون‌بیمه تفسیر می‌شد؛
         // آیتم صریح آزاد با شناسهٔ صفر در ابتدا درج شد تا انتخاب آزاد واقعی و
         // ثبت دقیق شرکت انتخابی (نمایهٔ ۱ به بعد) هر دو ممکن شود.
-        InsuranceCompanies.Add(new InsuranceOption(0, "آزاد (بدون بیمه)"));
+        InsuranceCompanies.Add(new InsuranceOption(0, "آزاد (بدون بیمه)", false));
         if (companies?.Data is not null)
             foreach (var c in companies.Data)
-                InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name));
+                InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name, c.IsContracted, c.CoveragePercent));
 
         // پرسنل فعال برای انتخاب انجام‌دهنده هر قلم — چرخه نهم
         var employees = await _api.GetAsync<EmployeesPage>("hr/employees");

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Sahand.ClinicPro.Application.Common.Models;
+using Sahand.ClinicPro.Application.Common.Security;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Security;
@@ -28,6 +29,7 @@ public class IdentityService : IIdentityService
     private readonly ClinicProDbContext _context;
     private readonly JwtTokenGenerator _tokenGenerator;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IPasswordPolicyProvider _passwordPolicyProvider;
     private readonly ILogger<IdentityService> _logger;
 
     /// <summary>سازنده با تزریق وابستگی‌ها</summary>
@@ -35,11 +37,13 @@ public class IdentityService : IIdentityService
         ClinicProDbContext context,
         JwtTokenGenerator tokenGenerator,
         IPasswordHasher passwordHasher,
+        IPasswordPolicyProvider passwordPolicyProvider,
         ILogger<IdentityService> logger)
     {
         _context = context;
         _tokenGenerator = tokenGenerator;
         _passwordHasher = passwordHasher;
+        _passwordPolicyProvider = passwordPolicyProvider;
         _logger = logger;
     }
 
@@ -209,7 +213,9 @@ public class IdentityService : IIdentityService
         if (!_passwordHasher.Verify(currentPassword, user.PasswordHash))
             return Result.Failure(new Error("WRONG_PASSWORD", "رمز عبور فعلی نادرست است"));
 
-        if (!_passwordHasher.MeetsPolicy(newPassword, out var policyError))
+        var policy = await _passwordPolicyProvider.GetCurrentAsync(cancellationToken);
+        var policyError = policy.Validate(newPassword);
+        if (policyError is not null)
             return Result.Failure(new Error("WEAK_PASSWORD", policyError));
 
         // جلوگیری از تکرار پنج رمز اخیر

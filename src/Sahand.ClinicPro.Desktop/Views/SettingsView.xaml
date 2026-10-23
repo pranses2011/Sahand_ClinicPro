@@ -12,7 +12,7 @@
          «صفحه تنظیمات سیستم رو بصورت حرفه ای و زیبا و شکیل بازطراحی بکن»)
          معماری تازه — الگوی «تنظیمات ویندوز ۱۱ / پنل‌های مدرن»:
            • سربرگ قهرمان گرادیانی: هویت صفحه + کلید سریع روشن/تاریک
-           • نوار کناری ناوبری (راست در RTL): شش بخش با آیکون دایره‌ای +
+           • نوار کناری ناوبری (راست در RTL): هفت بخش با آیکون دایره‌ای +
              عنوان + زیرعنوان توضیحی؛ انتخاب‌شدهٔ جاری با رنگ اصلی هایلایت
            • محتوا: هر بخش در «کارت‌های بخش» تم‌خور (Card.Background +
              حاشیهٔ جداکننده + سربرگ آیکون‌دار) — هماهنگ با هر دو تم
@@ -61,7 +61,7 @@
                     </Border>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="تنظیمات سیستم" FontSize="18" FontWeight="Bold" Foreground="White" />
-                        <TextBlock Text="هویت درمانگاه، ماژول‌ها، اتصال‌های دولتی، چاپ، ظاهر برنامه و سیاست‌های امنیتی"
+                        <TextBlock Text="هویت درمانگاه، ماژول‌ها، اتصال‌های دولتی، چاپ، ظاهر برنامه و سیاست‌های امنیتی و بیمه"
                                    FontSize="10.5" Foreground="#CFD8DC" Margin="0,2,0,0" />
                     </StackPanel>
                 </StackPanel>
@@ -80,7 +80,7 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!-- ─── نوار کناری: شش بخش با آیکون و زیرعنوان ───
+            <!-- ─── نوار کناری: هفت بخش با آیکون و زیرعنوان ───
                  SelectedIndex ↔ SectionIndex ویومدل (دوسویه)؛ همان ایندکسی که
                  پیش‌تر به TabControl بایند بود — سازگاری کامل با منطق موجود.
                  کانتینر انتخاب‌شده با رنگ اصلی و پس‌زمینهٔ ملایم هایلایت می‌شود. -->
@@ -198,6 +198,19 @@
                             <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="امنیت" FontWeight="SemiBold" FontSize="12.5" />
                                 <TextBlock Text="رمز عبور، قفل و سیاست نشست" FontSize="10" Opacity="0.62" />
+                            </StackPanel>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="34" Height="34" CornerRadius="17" VerticalAlignment="Center"
+                                    Background="#E0F2F1">
+                                <materialDesign:PackIcon Kind="ShieldAccount" Width="17" Height="17"
+                                                         Foreground="#00796B" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="بیمه و قرارداد" FontWeight="SemiBold" FontSize="12.5" />
+                                <TextBlock Text="ویزیت، خدمات و طرف قرارداد" FontSize="10" Opacity="0.62" />
                             </StackPanel>
                         </StackPanel>
                     </ListBoxItem>
@@ -722,6 +735,35 @@
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
                                         <TextBlock Text="💾 ذخیره تنظیمات امنیت" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ─── بخش ۶: اعمال بیمه ─── -->
+                <TabItem>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Border Style="{StaticResource SettingsCard}" Margin="0,2,6,0" MaxWidth="620" HorizontalAlignment="Stretch">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <materialDesign:PackIcon Kind="ShieldAccount" Width="18" Height="18"
+                                                             Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+                                    <TextBlock Text="سیاست اعمال بیمه" FontSize="14" FontWeight="Bold"
+                                               Margin="8,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="این دو گزینه مستقل‌اند. فقط شرکت‌هایی که در فهرست بیمه‌ها «طرف قرارداد» شده‌اند سهم بیمه می‌پذیرند؛ سایر موارد با تعرفهٔ آزاد محاسبه می‌شوند."
+                                           TextWrapping="Wrap" Opacity="0.72" FontSize="12" Margin="2,0,2,14" />
+                                <CheckBox Content="اعمال سهم بیمه برای ویزیت پزشکان"
+                                          IsChecked="{Binding ApplyInsuranceToDoctorVisits}" Margin="2,8" />
+                                <CheckBox Content="اعمال سهم بیمه برای خدمات درمانی"
+                                          IsChecked="{Binding ApplyInsuranceToMedicalServices}" Margin="2,8" />
+                                <Button Command="{Binding SaveInsuranceSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                                        HorizontalAlignment="Left" Margin="0,14,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                                        <TextBlock Text="ذخیره تنظیمات بیمه" Margin="7,0,0,0" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>

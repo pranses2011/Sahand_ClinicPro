@@ -58,11 +58,14 @@ public class InsuranceCompany : AuditableEntity, ISoftDeletable
     /// <summary>نشانی</summary>
     public string? Address { get; set; }
 
-    /// <summary>فعال</summary>
-/// <summary>درصد پوشش پیش‌فرض — برای محاسبه سهم بیمه در پذیرش</summary>
+    /// <summary>آیا شرکت طرف قرارداد جاری درمانگاه است؟</summary>
+    public bool IsContracted { get; set; }
+
+    /// <summary>درصد پوشش پیش‌فرض — برای محاسبه سهم بیمه در پذیرش</summary>
     public decimal DefaultCoveragePercent { get; set; } = 70m;
 
-        public bool IsActive { get; set; } = true;
+    /// <summary>فعال</summary>
+    public bool IsActive { get; set; } = true;
 
     /// <summary>بیماران با این بیمه اصلی</summary>
     public ICollection<Patient> Patients { get; set; } = new List<Patient>();

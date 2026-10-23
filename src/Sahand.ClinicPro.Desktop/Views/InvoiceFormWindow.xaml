@@ -70,7 +70,7 @@
                                 <TextBlock Text="پزشک (اختیاری)" Style="{StaticResource FieldCaption}" />
                                 <ComboBox ItemsSource="{Binding Doctors}" SelectedIndex="{Binding DoctorIndex}" DisplayMemberPath="Name" />
                                 <TextBlock Text="بیمه" Style="{StaticResource FieldCaption}" />
-                                <ComboBox ItemsSource="{Binding InsuranceCompanies}" SelectedIndex="{Binding InsuranceIndex}" DisplayMemberPath="Name" />
+                                <ComboBox ItemsSource="{Binding InsuranceCompanies}" SelectedIndex="{Binding InsuranceIndex}" DisplayMemberPath="DisplayName" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="نرخ مالیات (٪)" Style="{StaticResource FieldCaption}" />

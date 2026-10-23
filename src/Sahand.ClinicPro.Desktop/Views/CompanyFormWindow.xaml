@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="{Binding Header}"
-        Height="470" Width="440"
+        Height="510" Width="440"
         FlowDirection="RightToLeft"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
@@ -64,10 +64,13 @@
                  Text="{Binding CoveragePercent, UpdateSourceTrigger=PropertyChanged}"
                  Margin="0,0,0,12" />
 
-        <!-- فعال -->
-        <CheckBox Grid.Row="5" Content="فعال باشد (در فرم‌های پذیرش قابل انتخاب است)"
-                  IsChecked="{Binding IsActive}"
-                  Margin="0,0,0,12" />
+        <!-- قرارداد و وضعیت -->
+        <StackPanel Grid.Row="5" Margin="0,0,0,10">
+            <CheckBox Content="طرف قرارداد درمانگاه است (سهم بیمه محاسبه شود)"
+                      IsChecked="{Binding IsContracted}" Margin="0,0,0,8" />
+            <CheckBox Content="فعال باشد (در فرم‌های پذیرش قابل انتخاب است)"
+                      IsChecked="{Binding IsActive}" />
+        </StackPanel>
 
         <!-- خطا + دکمه‌ها -->
         <StackPanel Grid.Row="6">

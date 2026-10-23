@@ -465,7 +465,7 @@
                                     <TextBlock Text="اتاق انجام خدمت (اختیاری — از اتاق‌های درمانگاه)" Style="{StaticResource FieldCaption}" />
                                     <ComboBox ItemsSource="{Binding Rooms}"
                                               SelectedItem="{Binding SelectedRoom}"
-                                              DisplayMemberPath="DisplayName" />
+                                              DisplayMemberPath="Name" />
                                 </StackPanel>
 
                             </StackPanel>
@@ -591,7 +591,7 @@
                                 <TextBlock Text="نوع بیمه" Style="{StaticResource FieldCaption}" />
                                 <ComboBox ItemsSource="{Binding InsuranceCompanies}"
                                           SelectedIndex="{Binding InsuranceIndex}"
-                                          DisplayMemberPath="Name" />
+                                          DisplayMemberPath="DisplayName" />
                                 <TextBlock Text="شماره بیمه" Style="{StaticResource FieldCaption}" />
                                 <Grid>
                                     <Grid.ColumnDefinitions>

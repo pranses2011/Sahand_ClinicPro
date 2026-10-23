@@ -13,6 +13,7 @@ public class InsuranceCompanyConfiguration : IEntityTypeConfiguration<InsuranceC
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Name).HasMaxLength(200).IsRequired().HasComment("نام شرکت بیمه");
+        builder.Property(x => x.IsContracted).HasDefaultValue(false).HasComment("طرف قرارداد درمانگاه");
         builder.Property(x => x.Code).HasMaxLength(20).HasComment("کد یکتای بیمه");
         builder.Property(x => x.Type).HasConversion<byte>().HasComment("نوع بیمه");
         builder.Property(x => x.LogoPath).HasMaxLength(500).HasComment("مسیر لوگو");

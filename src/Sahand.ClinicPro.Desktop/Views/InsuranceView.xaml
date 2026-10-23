@@ -55,6 +55,30 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="نام شرکت" Binding="{Binding Name, Converter={StaticResource PersianDigits}}" Width="Auto" FontWeight="SemiBold" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                             <DataGridTextColumn Header="کد" Binding="{Binding Code, TargetNullValue=—, Converter={StaticResource PersianDigits}}" Width="Auto" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTemplateColumn Header="طرف قرارداد" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.ToggleCompanyContractCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}" ToolTip="تغییر وضعیت طرف قرارداد"
+                                                Style="{StaticResource MaterialDesignFlatButton}" Padding="4">
+                                            <materialDesign:PackIcon Width="20" Height="20">
+                                                <materialDesign:PackIcon.Style>
+                                                    <Style TargetType="materialDesign:PackIcon">
+                                                        <Setter Property="Kind" Value="CheckboxBlankOutline" />
+                                                        <Setter Property="Foreground" Value="#9E9E9E" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsContracted}" Value="True">
+                                                                <Setter Property="Kind" Value="CheckboxMarkedOutline" />
+                                                                <Setter Property="Foreground" Value="#2E7D32" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </materialDesign:PackIcon.Style>
+                                            </materialDesign:PackIcon>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="نوع" Binding="{Binding TypeName, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                             <DataGridTextColumn Header="درصد پوشش" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}">
                                 <DataGridTextColumn.Binding>

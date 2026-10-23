@@ -150,6 +150,13 @@ public class RecordInquiryCommandHandler : IRequestHandler<RecordInquiryCommand,
         if (patient is null)
             return Result<InsuranceInquiryResultDto>.Failure(Error.NotFound("بیمار", dto.PatientId));
 
+        var company = await _unitOfWork.Repository<Domain.Entities.Billing.InsuranceCompany>()
+            .QueryableNoTracking
+            .FirstOrDefaultAsync(c => c.Id == dto.InsuranceCompanyId && !c.IsDeleted, cancellationToken);
+        if (company is not { IsActive: true, IsContracted: true })
+            return Result<InsuranceInquiryResultDto>.Failure(
+                new Error("INSURANCE_NOT_CONTRACTED", "این شرکت بیمه فعال و طرف قرارداد درمانگاه نیست"));
+
         var eligibility = await _eligibility.CheckAsync(new InsuranceEligibilityRequest(
             dto.PatientId, dto.InsuranceCompanyId, patient.NationalCode, dto.InsuranceNumber),
             cancellationToken);
@@ -171,12 +178,9 @@ public class RecordInquiryCommandHandler : IRequestHandler<RecordInquiryCommand,
         // درصد پوشش بیمه از قرارداد محلی — برای محاسبه سهم بیمار در فرم پذیرش
         decimal coveragePercent = 0m;
         if (eligibility.IsEligible)
-        {
-            var contract = await _unitOfWork.Repository<Domain.Entities.Billing.InsuranceCompany>()
-                .QueryableNoTracking
-                .FirstOrDefaultAsync(c => c.Id == dto.InsuranceCompanyId, cancellationToken);
-            coveragePercent = contract?.DefaultCoveragePercent ?? 0m;
-        }
+            coveragePercent = company.DefaultCoveragePercent > 0
+                ? company.DefaultCoveragePercent
+                : company.DefaultInsuranceShare > 0 ? company.DefaultInsuranceShare : 70m;
 
         return Result<InsuranceInquiryResultDto>.Success(new InsuranceInquiryResultDto(
             inquiry.Id, eligibility.IsEligible, eligibility.WasOnline, eligibility.Message,

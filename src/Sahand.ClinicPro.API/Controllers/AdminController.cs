@@ -32,6 +32,14 @@ public class AdminController : ApiBaseController
         return ToResponse(result);
     }
 
+    /// <summary>تنظیمات غیرحساس اعمال بیمه برای رابط پذیرش</summary>
+    [HttpGet("~/api/v1/settings/insurance-policy")]
+    public async Task<IActionResult> GetInsurancePolicy()
+    {
+        var result = await _mediator.Send(new GetSettingsQuery("Insurance"));
+        return ToResponse(result);
+    }
+
     /// <summary>ذخیره تنظیم — ایجاد یا ویرایش — مسیر مطلق با ~/</summary>
     [HttpPut("~/api/v1/settings")]
     [HasPermission("settings.edit")]

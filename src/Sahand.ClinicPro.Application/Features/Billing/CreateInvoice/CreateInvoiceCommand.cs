@@ -3,12 +3,14 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Sahand.ClinicPro.Application.Common.Helpers;
+using Sahand.ClinicPro.Application.Common.Security;
 using Sahand.ClinicPro.Application.DTOs.Billing;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Accounting;
 using Sahand.ClinicPro.Domain.Entities.Billing;
 using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Entities.Pharmacy;
+using Sahand.ClinicPro.Domain.Entities.Infrastructure;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Domain.Events;
 using Sahand.ClinicPro.Domain.Interfaces;
@@ -77,14 +79,26 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         if (patient is null)
             return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
 
-        // درصد سهم بیمه از شرکت بیمه — پیش‌فرض صفر (آزاد)
-        decimal insurancePercent = 0;
-        if (dto.InsuranceCompanyId.HasValue)
-        {
-            var insurance = await _unitOfWork.Repository<InsuranceCompany>()
-                .GetByIdAsync(dto.InsuranceCompanyId.Value, cancellationToken);
-            insurancePercent = insurance?.DefaultInsuranceShare ?? 0;
-        }
+        // بیمه فقط وقتی مؤثر است که شرکت طرف قرارداد باشد و تنظیمات درمانگاه
+        // برای دست‌کم یک دستهٔ موجود در فاکتور اجازهٔ اعمال بیمه بدهد.
+        var requestedInsurance = dto.InsuranceCompanyId is long requestedInsuranceId
+            ? await _unitOfWork.Repository<InsuranceCompany>().QueryableNoTracking
+                .FirstOrDefaultAsync(c => c.Id == requestedInsuranceId && c.IsActive && !c.IsDeleted, cancellationToken)
+            : null;
+        var insuranceSettings = await _unitOfWork.Repository<SystemSetting>().QueryableNoTracking
+            .Where(s => !s.IsDeleted && s.Category == "Insurance")
+            .Select(s => new { s.Key, s.Value }).ToListAsync(cancellationToken);
+        var billingPolicy = InsuranceBillingPolicy.FromSettings(insuranceSettings.Select(s =>
+            new KeyValuePair<string, string?>(s.Key, s.Value)));
+        var insurance = requestedInsurance is { IsActive: true, IsContracted: true } ? requestedInsurance : null;
+        var hasInsuranceEligibleItems = insurance is not null && dto.Items.Any(item =>
+            !item.IsInsuranceExempt && (item.DoctorId.HasValue && !item.ServiceId.HasValue
+                ? billingPolicy.ApplyToDoctorVisits
+                : billingPolicy.ApplyToMedicalServices));
+        var invoiceInsuranceCompanyId = hasInsuranceEligibleItems ? insurance!.Id : (long?)null;
+        var defaultInsurancePercent = insurance is null ? 0m
+            : insurance.DefaultCoveragePercent > 0 ? insurance.DefaultCoveragePercent
+            : insurance.DefaultInsuranceShare > 0 ? insurance.DefaultInsuranceShare : 70m;
 
         var now = DateTime.UtcNow;
         var invoice = new Invoice
@@ -95,7 +109,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
             InvoiceDate = now,
             InvoiceDateShamsi = PersianDateHelper.ToShamsi(now),
             InvoiceType = dto.Type,
-            InsuranceCompanyId = dto.InsuranceCompanyId,
+            InsuranceCompanyId = invoiceInsuranceCompanyId,
             Status = InvoiceStatus.Issued,
             PaymentStatus = PaymentStatus.Unpaid,
             Description = dto.Description
@@ -139,6 +153,17 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         // سود هر قلم بعداً از همین عکس‌فوری محاسبه می‌شود (حقوق درصدی)
         var serviceIds = dto.Items.Where(i => i.ServiceId.HasValue)
             .Select(i => i.ServiceId!.Value).Distinct().ToList();
+        var insuredTariffShareByService = new Dictionary<long, decimal>();
+        if (insurance is not null && billingPolicy.ApplyToMedicalServices && serviceIds.Count > 0)
+        {
+            var insuredTariffs = await _unitOfWork.Repository<Tariff>().QueryableNoTracking
+                .Where(t => serviceIds.Contains(t.ServiceId) && t.InsuranceCompanyId == insurance.Id &&
+                            t.IsActive && !t.IsDeleted)
+                .OrderByDescending(t => t.Year)
+                .ToListAsync(cancellationToken);
+            insuredTariffShareByService = insuredTariffs
+                .GroupBy(t => t.ServiceId).ToDictionary(g => g.Key, g => g.First().InsuranceShare);
+        }
         var costById = new Dictionary<long, decimal>();
         if (serviceIds.Count > 0)
         {
@@ -200,9 +225,16 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
             // درمانگاه: سرنگ/سرم/گاز و…) سهم بیمه ندارند و ۱۰۰٪ بر عهدهٔ بیمارند؛
             // این پرچم فقط از پذیرش خدمتی برای اقلام مصرفی true می‌آید و سایر
             // فراخوانی‌ها (بدون پرچم = false) دقیقاً رفتار پیشین را می‌بینند.
-            var insuranceShare = item.IsInsuranceExempt
+            var isDoctorVisit = item.DoctorId.HasValue && !item.ServiceId.HasValue;
+            var categoryEnabled = isDoctorVisit
+                ? billingPolicy.ApplyToDoctorVisits
+                : billingPolicy.ApplyToMedicalServices;
+            var itemInsurancePercent = insurance is null || item.IsInsuranceExempt || !categoryEnabled
                 ? 0m
-                : net * insurancePercent / 100m;
+                : item.ServiceId is long itemServiceId && insuredTariffShareByService.TryGetValue(itemServiceId, out var tariffShare)
+                    ? tariffShare
+                    : defaultInsurancePercent;
+            var insuranceShare = net * itemInsurancePercent / 100m;
             var patientShare = net - insuranceShare;
 
             subTotal += gross;
@@ -226,7 +258,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                 DiscountAmount = discount,
                 DiscountPercent = item.DiscountPercent,
                 InsuranceShare = insuranceShare,
-                InsurancePercent = insurancePercent,
+                InsurancePercent = itemInsurancePercent,
                 PatientShare = patientShare,
                 TotalPrice = net,
                 DoctorId = item.DoctorId,

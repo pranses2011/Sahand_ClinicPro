@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Application.Interfaces;
+using Sahand.ClinicPro.Application.Common.Security;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Entities.Security;
@@ -24,12 +25,23 @@ public class UsersController : ApiBaseController
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHasher _hasher;
+    private readonly IPasswordPolicyProvider _passwordPolicyProvider;
 
     /// <summary>سازنده با تزریق واحد کار و هشکننده رمز</summary>
-    public UsersController(IUnitOfWork unitOfWork, IPasswordHasher hasher)
+    public UsersController(IUnitOfWork unitOfWork, IPasswordHasher hasher, IPasswordPolicyProvider passwordPolicyProvider)
     {
         _unitOfWork = unitOfWork;
         _hasher = hasher;
+        _passwordPolicyProvider = passwordPolicyProvider;
+    }
+
+    /// <summary>سیاست جاری رمز عبور برای فرم‌های کاربری</summary>
+    [HttpGet("password-policy")]
+    public async Task<IActionResult> GetPasswordPolicy(CancellationToken cancellationToken)
+    {
+        var policy = await _passwordPolicyProvider.GetCurrentAsync(cancellationToken);
+        return Ok(ApiResponse<PasswordPolicyDto>.Success(new PasswordPolicyDto(
+            policy.MinPasswordLength, policy.RequireMixedCase, policy.RequireDigit, policy.RequireSpecialChar)));
     }
 
     /// <summary>فهرست کاربران — جستجو و فیلتر نقش و وضعیت با صفحه‌بندی</summary>
@@ -425,7 +437,9 @@ public class UsersController : ApiBaseController
         if (duplicate)
             return BadRequest(ApiResponse<object>.Failure("این نام کاربری قبلاً استفاده شده است"));
 
-        if (!_hasher.MeetsPolicy(request.Password, out var policyError))
+        var policy = await _passwordPolicyProvider.GetCurrentAsync(HttpContext.RequestAborted);
+        var policyError = policy.Validate(request.Password);
+        if (policyError is not null)
             return BadRequest(ApiResponse<object>.Failure(policyError));
 
         // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — «فیلد نام کامل وجود ندارد» ═══
@@ -654,6 +668,8 @@ public class UsersController : ApiBaseController
     public record PagedResult<T>(List<T> Items, int TotalCount, int Page, int PageSize);
 
     /// <summary>درخواست ثبت کاربر — FullName نام کامل (چرخه ۲۴)</summary>
+    public record PasswordPolicyDto(int MinPasswordLength, bool RequireMixedCase, bool RequireDigit, bool RequireSpecialChar);
+
     public record CreateUserRequest(string Username, string? Email, string Password, string? Phone,
         string? FullName, long? EmployeeId, List<long>? RoleIds,
         bool MustChangePassword, bool TwoFactorEnabled, bool IsActive);
