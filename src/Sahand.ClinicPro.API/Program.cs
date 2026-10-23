@@ -1,4 +1,4 @@
-﻿using System.Threading.RateLimiting;
+using System.Threading.RateLimiting;
 using System.Reflection;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
@@ -369,7 +369,20 @@ try
     // نشانی https واقعی در پیکربندی موجود باشد (نشانی‌های برنامه یا
     // متغیر محیطی استاندارد ASPNETCORE_HTTPS_PORT) — در استقرار‌های HTTPS
     // دار هم رفتار دست‌نخورده باقی می‌ماند.
-    var hasHttpsEndpoint = app.Urls.Any(u => u.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+    // ═══ چرخهٔ ۸۱ — ریشهٔ شکست تولید سند OpenAPI ═══
+    // app.Urls پیش از اجرای میزبان به IServerAddressesFeature نیاز دارد و اگر
+    // سرور ساخته نشده باشد استثنا می‌دهد:
+    //   InvalidOperationException: Feature 'IServerAddressesFeature' is not present
+    // ابزار GetDocument (هدف GenerateOpenApiDocuments) برنامه را فقط تا لحظهٔ
+    // ساخت Host اجرا می‌کند و Run را انجام نمی‌دهد؛ بنابراین خواندن app.Urls
+    // این‌جا کل تولید سند را می‌شکست. نشانی‌ها از همان منابع پیکربندی خوانده
+    // می‌شوند که WebApplication.Urls از آن‌ها پر می‌شود (بدون وابستگی به سرور).
+    var configuredUrls = builder.Configuration["urls"]
+                         ?? builder.Configuration["ASPNETCORE_URLS"]
+                         ?? string.Empty;
+    var hasHttpsEndpoint = configuredUrls
+                               .Split(';', StringSplitOptions.RemoveEmptyEntries)
+                               .Any(u => u.Trim().StartsWith("https://", StringComparison.OrdinalIgnoreCase))
                            || !string.IsNullOrWhiteSpace(
                                Environment.GetEnvironmentVariable("ASPNETCORE_HTTPS_PORT"));
     if (hasHttpsEndpoint)

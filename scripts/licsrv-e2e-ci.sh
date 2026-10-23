@@ -329,28 +329,56 @@ SIG_AFTER_BAD=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12
   && ok "چرخش با عبارت غلط رد شد (امضا دست‌نخورده ماند)" || bad "چرخش با عبارت غلط اجرا شد یا امضا عوض شد!"
 
 # ── بکاپ دستی از پنل (backup_now) ──
+# ═══ ریشه‌یابی (چرخهٔ ۸۰) ═══
+# سنجش قبلی «حداقل ۲ فایل» بود و به شمارش قبلی تکیه داشت؛ اگر نام فایل بکاپ
+# (مهر زمانی ثانیه‌ای) با فایل کرون یکی می‌شد، فایل بازنویسی می‌شد و شمارش
+# ۱ می‌ماند ⇒ ❌ گمراه‌کننده. اکنون «افزایش دقیقاً یک فایل» سنجیده می‌شود و
+# در صورت شکست، متن فلش پنل هم چاپ می‌شود تا ریشه (قفل/دسترسی/دیتابیس) دیده شود.
+BK_BEFORE=$(ls $TESTDIR/data/backups/license-backup-*.sql.gz 2>/dev/null | wc -l)
 BK_CSRF=$(get_csrf settings)
 BK_CODE=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8899/index.php?page=settings" \
   --data-urlencode "action=backup_now" --data-urlencode "csrf=$BK_CSRF")
-BK_COUNT=$(ls $TESTDIR/data/backups/license-backup-*.sql.gz 2>/dev/null | wc -l)
-[ "$BK_CODE" = "302" ] && [ "$BK_COUNT" -ge 2 ] \
-  && ok "بکاپ دستی از پنل اجرا شد (مجموع $BK_COUNT بکاپ)" || bad "بکاپ دستی: HTTP $BK_CODE · تعداد $BK_COUNT"
+BK_AFTER=$(ls $TESTDIR/data/backups/license-backup-*.sql.gz 2>/dev/null | wc -l)
+BK_FLASH=$(curl -s -b $COOKIE "http://127.0.0.1:8899/index.php?page=settings" | grep -o "بکاپ[^<]\{0,120\}" | head -2 | tr "\n" " ")
+if [ "$BK_CODE" = "302" ] && [ "$BK_AFTER" -gt "$BK_BEFORE" ]; then
+  ok "بکاپ دستی از پنل اجرا شد (مجموع $BK_AFTER بکاپ)"
+else
+  bad "بکاپ دستی: HTTP $BK_CODE · تعداد $BK_BEFORE→$BK_AFTER · فلش: $(printf '%.200s' "$BK_FLASH")"
+fi
 
 # ═════════════════════════════════════════════════════════════════
 # چرخهٔ ۶۷ — تست آینهٔ پیام‌های پشتیبانی (حذف از پنل = حذف از داشبورد)
 # ═════════════════════════════════════════════════════════════════
 say "آینهٔ پیام‌های پشتیبانی (چرخهٔ ۶۷)"
+# ═══ ریشه‌یابی (چرخهٔ ۸۰): «قالب کلید لایسنس نامعتبر است» ═══
+# این بخش لایسنس id=1 را فرض می‌کرد، در حالی که تست «حذف لایسنس» چند خط
+# بالاتر همان لایسنس را پاک می‌کند (۳ بررسی حذف، همگی ✅). از آن لحظه ردیفی
+# با id=1 وجود ندارد؛ پس $LIC_KEY تهی می‌شد، پیام به license_id ناموجود
+# فرستاده می‌شد و heartbeat با ۴۰۰ برمی‌گشت ⇒ چهار بررسی آینه ❌.
+# اکنون «تازه‌ترین لایسنس» (کلینیک مهاجرت) انتخاب و فعال می‌شود و پیام/تپ‌قلب
+# روی همان انجام می‌گیرد — دقیقاً همان چیزی که کلاینت واقعی تجربه می‌کند.
+LIC_INFO=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:""));
+$r=$p->query("SELECT id, license_key FROM ls_licenses ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+echo $r ? $r["id"] . "|" . $r["license_key"] : "";')
+LIC_ID=${LIC_INFO%%|*}
+LIC_KEY=${LIC_INFO#*|}
+echo "لایسنس مرجع آینه: id=$LIC_ID کلید=$LIC_KEY"
+FP="FINGERPRINT-C67-MIRROR-0123456789ABCDEF"
+ACT67=$(curl -s -X POST "http://127.0.0.1:8899/api.php" -H "Content-Type: application/json" \
+  -d "{\"action\":\"activate\",\"licenseKey\":\"$LIC_KEY\",\"fingerprint\":\"$FP\",\"clinicName\":\"کلینیک مهاجرت\",\"appVersion\":\"1.9.0\"}")
+echo "$ACT67" | grep -q '"isValid":true' \
+  && ok "فعال‌سازی لایسنس مرجع آینه موفق (id=$LIC_ID)" \
+  || bad "فعال‌سازی لایسنس مرجع آینه ناموفق — پاسخ: $(printf '%.240s' "$ACT67")"
+
 # ارسال پیام تازه با رنگ سفارشی → heartbeat باید همان پیام + color را برگرداند
 MSG_CSRF=$(get_csrf messages)
 MSG_CODE=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8899/index.php?page=messages" \
   --data-urlencode "action=send_message" --data-urlencode "csrf=$MSG_CSRF" \
-  --data-urlencode "license_id=1" --data-urlencode "level=warning" \
+  --data-urlencode "license_id=$LIC_ID" --data-urlencode "level=warning" \
   --data-urlencode "custom_color=on" --data-urlencode "color=%23E53935" \
   --data-urlencode "title=پیام تست آینه" --data-urlencode "body=این پیام برای تست حذف همگام است")
 [ "$MSG_CODE" = "302" ] && ok "پیام تست با رنگ سفارشی ارسال شد" || bad "ارسال پیام تست: HTTP $MSG_CODE"
 # heartbeat — بلوک messages باید همیشه حاضر باشد و پیام را با color برگرداند
-LIC_KEY=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); echo (string)$p->query("SELECT license_key FROM ls_licenses WHERE id=1")->fetchColumn();')
-FP=$($PHP -r '$p=new PDO("mysql:host=127.0.0.1;port=3306;dbname=lsc12","root",(getenv("MYSQL_ROOT_PASSWORD")?:"")); echo (string)$p->query("SELECT hardware_fingerprint FROM ls_licenses WHERE id=1")->fetchColumn();')
 # چرخهٔ ۸۰ — مسیر مستند: action داخل بدنهٔ JSON و آدرس بدون query string.
 # پیش‌تر «?action=heartbeat» در URL بود و چون api.php بدنه را فقط در نبودِ
 # action در query می‌خواند، licenseKey/fingerprint خالی می‌ماند و پاسخ ۴۰۰

@@ -1252,7 +1252,16 @@ function ls_backup_database(?int $adminId = null): array
 
         // فشرده‌سازی gzip + نوشتن اتمیک (نوشتن به tmp و سپس rename —
         // بکاپ نیمه‌نوشته در چرخش بعدی به‌عنوان سالم شمرده نمی‌شود)
-        $name = 'license-backup-' . date('Ymd-His') . '.sql.gz';
+        // ═══ چرخهٔ ۸۰ — نام یکتا برای بکاپ ═══
+        // مهر زمانی فقط تا «ثانیه» بود؛ اگر بکاپ کرون و بکاپ دستی در یک ثانیه
+        // اجرا می‌شدند، فایل دوم فایل اول را بازنویسی می‌کرد و یکی از بکاپ‌ها
+        // بی‌صدا از دست می‌رفت (در CI دقیقاً همین اتفاق افتاد: تعداد بکاپ ۱
+        // ماند). اکنون در صورت تکرار، پسوند ترتیبی اضافه می‌شود.
+        $base = 'license-backup-' . date('Ymd-His');
+        $name = $base . '.sql.gz';
+        for ($i = 2; file_exists(LS_BACKUP_DIR . '/' . $name); $i++) {
+            $name = $base . '-' . $i . '.sql.gz';
+        }
         $path = LS_BACKUP_DIR . '/' . $name;
         $tmp  = $path . '.tmp';
         $gz = @gzencode("-- Sahand ClinicPro License Server Backup\n-- Database: " . LS_DB_NAME
