@@ -48,25 +48,26 @@ jobs:
         # («You must install or update .NET») — از اجرای ubuntu کنار گذاشته شد
         # و در job ویندوزیِ جداگانهٔ پایین اجرا می‌شود؛ این تنها راه سبز شدن
         # هر دو پلتفرم با حفظ پوشش کامل تست است.
-        run: dotnet test Sahand.ClinicPro.sln --no-build -c Release
-             --logger "trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults
-             --filter "FullyQualifiedName!~Sahand.ClinicPro.Desktop.UnitTests"
+        run: |
+          set -o pipefail
+          dotnet test Sahand.ClinicPro.sln --no-build -c Release \
+             --logger "trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults \
+             --filter "FullyQualifiedName!~Sahand.ClinicPro.Desktop.UnitTests" 2>&1 | tee test-run.log
 
       - name: گزارش تست‌های ناموفق (annotation)
         if: failure()
-        shell: pwsh
+        shell: bash
         run: |
-          $trx = Get-ChildItem -Path ./TestResults -Recurse -Filter *.trx -ErrorAction SilentlyContinue
-          if (-not $trx) { Write-Host 'فایل trx یافت نشد'; exit 0 }
-          foreach ($f in $trx) {
-            [xml]$doc = Get-Content $f.FullName
-            foreach ($r in ($doc.SelectNodes("//*[local-name()='UnitTestResult' and @outcome='Failed']") | Select-Object -First 30)) {
-              $msg = ''
-              $node = $r.SelectSingleNode(".//*[local-name()='ErrorInfo']/*[local-name()='Message']")
-              if ($node) { $msg = ($node.InnerText -replace "\s+", ' ').Trim() }
-              Write-Host "::error::$($r.testName): $msg"
-            }
-          }
+          # نام تست‌های ناموفق و پیام خطا از خروجی کنسول dotnet test خوانده
+          # می‌شود (فایل trx هم موجود است ولی این مسیر ساده‌تر و مقاوم‌تر است)
+          if [ ! -f test-run.log ]; then
+            echo "::error::فایل test-run.log یافت نشد"
+            exit 0
+          fi
+          grep -E "^[[:space:]]*Failed |Error Message:" test-run.log | head -40 | while IFS= read -r line; do
+            echo "::error::${line}"
+          done
+          exit 0
 
       - name: خلاصه پوشش
         if: always()
