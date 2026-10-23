@@ -205,7 +205,7 @@ public class CommissionCycle10Tests
             SellPrice = 150_000m,
             Quantity = 0m
         };
-        context.PharmacyInventories.Add(inventory);
+        context.PharmacyInventory.Add(inventory);
         var reception = new Sahand.ClinicPro.Domain.Entities.Scheduling.Reception
         {
             PatientId = patient.Id,
@@ -333,7 +333,7 @@ public class CommissionCycle10Tests
             SellPrice = 120_000m,
             Quantity = 0m
         };
-        context.PharmacyInventories.Add(inventory);
+        context.PharmacyInventory.Add(inventory);
         var reception = new Sahand.ClinicPro.Domain.Entities.Scheduling.Reception
         {
             PatientId = patient.Id,
