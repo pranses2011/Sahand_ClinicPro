@@ -599,15 +599,8 @@ public partial class ReceptionsViewModel : ViewModelBase
     partial void OnSelectedDoctorChanged(DoctorOption? value) => RecalculateCost();
     partial void OnCoveragePercentChanged(decimal value) => RecalculateCost();
 
-    /// <summary>
-    /// بارگذاری خدمات تعرفه‌دار و پرسنل — چرخه ۲۴: برای پذیرش خدمت درمانی.
-    /// ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) ═══ «تعرفه خدمات رو نمیاره؛
-    /// باید با فیلتر بیمه و خدمات، تعرفهٔ اون خدمات رو بیاره» — تعرفه‌ها
-    /// اکنون به‌ازای بیمهٔ منتخب از سرور خوانده می‌شود (تعرفهٔ بیمه → در
-    /// نبود، تعرفهٔ آزاد → در نبود، قیمت پایه) و با هر تغییر بیمه/حالت دوباره
-    /// بارگذاری می‌شود؛ در حالت آزاد تعرفهٔ آزاد (سهم بیمار ۱۰۰٪) می‌آید.
-    /// </summary>
-    /// <param name="insuranceCompanyId">شناسهٔ بیمهٔ منتخب — تهی = آزاد</param>
+    /// <summary>شناسهٔ مؤثر بیمه برای تعرفهٔ خدمت؛ فقط شرکت طرف‌قرارداد و سیاست فعال پذیرفته می‌شود.</summary>
+    /// <param name="index">نمایهٔ شرکت در فهرست بیمه‌ها — نمایهٔ صفر یا نامعتبر به معنی تعرفهٔ آزاد است.</param>
     private long? GetEffectiveServiceInsuranceCompanyId(int index)
     {
         if (!ApplyInsuranceToMedicalServices || index < 0 || index >= InsuranceCompanies.Count) return null;
@@ -638,6 +631,8 @@ public partial class ReceptionsViewModel : ViewModelBase
         public string? Value { get; set; }
     }
 
+    /// <summary>بارگذاری خدمات، تعرفهٔ مؤثر و پرسنل پذیرش خدمت درمانی.</summary>
+    /// <param name="insuranceCompanyId">شناسهٔ شرکت طرف‌قرارداد؛ تهی یعنی تعرفهٔ آزاد.</param>
     private async Task LoadServicesAndPerformersAsync(long? insuranceCompanyId = null)
     {
         // خدمات فعال با تعرفهٔ هدفِ منتخب — سهم‌های بیمه/بیمار همراه قیمت می‌آید
