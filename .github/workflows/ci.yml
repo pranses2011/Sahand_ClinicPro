@@ -22,7 +22,25 @@ jobs:
         run: dotnet restore Sahand.ClinicPro.sln
 
       - name: ساخت کامل Solution
-        run: dotnet build Sahand.ClinicPro.sln --no-restore -c Release
+        # لاگ در فایل ذخیره می‌شود تا گام بعدی بتواند خطاها را به‌صورت
+        # «annotation» روی چک منتشر کند (دانلود لاگ خام گاهی در دسترس نیست
+        # — مثلاً در محیط‌های محدود به میزبان‌های مجاز)
+        run: |
+          set -o pipefail
+          dotnet build Sahand.ClinicPro.sln --no-restore -c Release 2>&1 | tee build-solution.log
+
+      - name: گزارش خطاهای ساخت (annotation)
+        if: failure()
+        shell: bash
+        run: |
+          if [ ! -f build-solution.log ]; then
+            echo "::error::فایل لاگ ساخت یافت نشد"
+            exit 0
+          fi
+          # هر خطِ خطا/هشدار کامپایلر به یک annotation جدا تبدیل می‌شود
+          grep -E ": (error|warning) [A-Z]+[0-9]+" build-solution.log | head -40 | while IFS= read -r line; do
+            echo "::error::${line}"
+          done
 
       - name: اجرای تست‌ها + پوشش کد (B4 چرخه ۱۲)
         # ═══ چرخهٔ ۶۷ — ریشهٔ قرمزیِ دائمی CI ═══
@@ -86,6 +104,20 @@ jobs:
 
       - name: اجرای تست‌های دسکتاپ (WPF — فقط ویندوز)
         run: dotnet test tests/Sahand.ClinicPro.Desktop.UnitTests/Sahand.ClinicPro.Desktop.UnitTests.csproj --no-build -c Release --logger "trx"
+
+      - name: گزارش تست‌های ناموفق دسکتاپ (annotation)
+        if: failure()
+        shell: pwsh
+        run: |
+          $trx = Get-ChildItem -Recurse -Filter *.trx -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($null -eq $trx) { Write-Host 'فایل trx یافت نشد'; exit 0 }
+          [xml]$doc = Get-Content $trx.FullName
+          $failed = $doc.SelectNodes("//*[local-name()='UnitTestResult' and @outcome='Failed']")
+          foreach ($r in ($failed | Select-Object -First 25)) {
+            $msg = $r.Output.ErrorInfo.Message
+            if ($msg) { $msg = ($msg -replace "\s+", ' ').Trim() }
+            Write-Host "::error::$($r.testName): $msg"
+          }
 
       - name: بارگذاری نتایج تست دسکتاپ
         uses: actions/upload-artifact@v4
