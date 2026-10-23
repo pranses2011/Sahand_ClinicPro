@@ -371,11 +371,16 @@ echo "$ACT67" | grep -q '"isValid":true' \
   || bad "فعال‌سازی لایسنس مرجع آینه ناموفق — پاسخ: $(printf '%.240s' "$ACT67")"
 
 # ارسال پیام تازه با رنگ سفارشی → heartbeat باید همان پیام + color را برگرداند
+# ═══ ریشه‌یابی (چرخهٔ ۸۰) — «رنگ سفارشی در heartbeat نیست» ═══
+# تست، مقدار را «%23E53935» می‌فرستاد؛ --data-urlencode همین رشته را دوباره
+# کدگذاری می‌کند و سرور «%23E53935» (نه «#E53935») می‌دید ⇒ regex رنگ رد
+# می‌شد و color=NULL ذخیره می‌گشت. اکنون همان چیزی فرستاده می‌شود که فرم پنل
+# می‌فرستد: رنگ خام با #.
 MSG_CSRF=$(get_csrf messages)
 MSG_CODE=$(curl -s -b $COOKIE -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8899/index.php?page=messages" \
   --data-urlencode "action=send_message" --data-urlencode "csrf=$MSG_CSRF" \
   --data-urlencode "license_id=$LIC_ID" --data-urlencode "level=warning" \
-  --data-urlencode "custom_color=on" --data-urlencode "color=%23E53935" \
+  --data-urlencode "custom_color=on" --data-urlencode "color=#E53935" \
   --data-urlencode "title=پیام تست آینه" --data-urlencode "body=این پیام برای تست حذف همگام است")
 [ "$MSG_CODE" = "302" ] && ok "پیام تست با رنگ سفارشی ارسال شد" || bad "ارسال پیام تست: HTTP $MSG_CODE"
 # heartbeat — بلوک messages باید همیشه حاضر باشد و پیام را با color برگرداند
