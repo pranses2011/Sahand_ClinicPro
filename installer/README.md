@@ -1,13 +1,13 @@
-# بستهٔ نصب درمانگاه سهند — v2.22.5
+# بستهٔ نصب درمانگاه سهند — v2.22.6
 
 <div dir="rtl">
 
 ## نصب نسخهٔ آمادهٔ درمانگاه
 
-در GitHub Release نسخهٔ `v2.22.5` دو فایل ویندوزی منتشر می‌شود:
+در GitHub Release نسخهٔ `v2.22.6` دو فایل ویندوزی منتشر می‌شود:
 
-- `SahandClinicPro-Setup-v2.22.5.exe` — نصب خودبسندهٔ کلاینت؛ نیازی به نصب جداگانهٔ .NET Desktop Runtime نیست.
-- `SahandClinicPro-Server-v2.22.5.zip` — API خودبسنده + نصب‌کنندهٔ سرویس ویندوز + راهنمای نصب.
+- `SahandClinicPro-Setup-v2.22.6.exe` — نصب خودبسندهٔ کلاینت؛ نیازی به نصب جداگانهٔ .NET Desktop Runtime نیست.
+- `SahandClinicPro-Server-v2.22.6.zip` — API خودبسنده + نصب‌کنندهٔ سرویس ویندوز + راهنمای نصب.
 
 ### ترتیب نصب پیشنهادی
 
@@ -23,8 +23,8 @@
 
 روی Windows 10/11 به .NET 8 SDK و Inno Setup 6 نیاز دارید. اجرای `BUILD-INSTALLER.bat` خروجی زیر را می‌سازد:
 
-- `dist\SahandClinicPro-Setup-v2.22.5.exe`
-- `dist\SahandClinicPro-Server-v2.22.5.zip`
+- `dist\SahandClinicPro-Setup-v2.22.6.exe`
+- `dist\SahandClinicPro-Server-v2.22.6.zip`
 
 ساخت Release رسمی نیز در `.github/workflows/release-installer.yml` با Windows runner انجام می‌شود.
 

@@ -15,6 +15,30 @@
 
 <!-- سرچشمهٔ نسخه‌های جدید از اینجا به پایین اضافه می‌شود -->
 
+## [v2.22.6] — 2026-10-23 (وصلهٔ نصب سرور — خطای ۱۵۲۳۳ «توضیح تکراریِ ستون»)
+
+> نصب بستهٔ سرور (`Install-Server-Package.ps1`) در گام «ساخت دیتابیس و اعمال خودکار تغییرهای لازم» با خطای SQL Server و کد `-532462766` شکست می‌خورد و پیام «نصب کامل نشد» می‌آمد؛ ریشه یک مهاجرت دست‌نویس بود که توضیح ستون را دوباره «می‌افزود» و کل مهاجرت (پس از عقب‌گرد تراکنش) اعمال نمی‌شد.
+
+### Fixed — 🐞 «Property 'MS_Description' already exists for 'dbo.InsuranceCompanies.IsContracted'» (SQL 15233)
+
+- گزارش مالک: هنگام نصب سرور، ساخت خودکار دیتابیس با این استثنا متوقف می‌شد:
+  `Microsoft.Data.SqlClient.SqlException (0x80131904): Property cannot be added. Property 'MS_Description' already exists for 'dbo.InsuranceCompanies.IsContracted'.` (`Error Number: 15233`)
+- **ریشه (تحلیل SQL تولیدی و سورس EF Core 8):** در `SqlServerMigrationsSqlGenerator` برای `AlterColumn`، فرمان توضیح ستون فقط وقتی نوشته می‌شود که `OldColumn.Comment != Comment` باشد، ولی اگر نوشته شود **همیشه** `EXEC sp_addextendedproperty` است. مهاجرت `AddInsuranceContractStatus` (v2.22.4) ستون `IsContracted` را با توضیح «طرف قرارداد درمانگاه» می‌سازد و سپس در همان مهاجرت `AlterColumn` را برای `nullable → NOT NULL` **بدون `oldComment:`** صدا می‌زند؛ EF توضیح را «از قبل ناموجود» می‌پندارد و دوباره می‌افزاید → SQL Server با ۱۵۲۳۳ رد می‌کند → تراکنش مهاجرت عقب می‌گردد → اسکیمای سرور عقب می‌ماند و نصب شکست می‌خورد.
+- **رفع لایهٔ ۱ (خودِ مهاجرت):** `oldComment: "طرف قرارداد درمانگاه"` به `AlterColumn` افزوده شد؛ EF دیگر هیچ فرمان توضیحی برای این ستون تولید نمی‌کند و فقط `ALTER COLUMN` + `DEFAULT` اجرا می‌شود. چون مهاجرت شکست‌خورده در `__EFMigrationsHistory` ثبت نشده، اجرای دوبارهٔ نصب‌کننده همان مهاجرت را کامل اعمال می‌کند — **نیازی به پاک‌کردن دیتابیس نیست**.
+- **رفع لایهٔ ۲ (گارد سراسری):** تولیدگر اختصاصی `ClinicProMigrationsSqlGenerator` (زیرکلاس `SqlServerMigrationsSqlGenerator`) متدهای `AddDescription`/`DropDescription` را بازنویسی می‌کند تا افزودن/حذف توضیح جدول و ستون idempotent شود:
+  `IF EXISTS (SELECT 1 FROM [sys].[extended_properties] …) → sp_updateextendedproperty` و در غیر این صورت `sp_addextendedproperty`؛ حذف نیز فقط با وجودسنجی (جلوگیری از خطای ۱۵۱۹۷). ثبت با `ReplaceService<IMigrationsSqlGenerator, …>` در `AddInfrastructure` و در `DesignTimeDbContextFactory`.
+- **بدون اثر بر داده یا اسکیمای واقعی:** `MS_Description` فقط فرادادهٔ مستندسازی است؛ هیچ ستون، ایندکس، قید یا ردیفی تغییر نمی‌کند.
+
+### Fixed — 🧾 پیام خطای گویا برای ۱۵۲۳۳/۱۵۱۹۷
+
+- در `InitializeDatabaseAsync` اگر مهاجرت با `SqlException.Number` ۱۵۲۳۳ یا ۱۵۱۹۷ شکست بخورد، به‌جای پیام عمومی «راه‌اندازی دیتابیس با خطا روبه‌رو شد»، لاگ `Critical` با کد خطا، نام ستون و راه‌حل (استفاده از `AlterColumn(comment:, oldComment:)` به‌جای `sp_addextendedproperty` دستی در `migrationBuilder.Sql`) نوشته می‌شود؛ نصب‌کننده هم پیام «رشته اتصال/مجوز CREATE DATABASE را بررسی کنید» گمراه‌کننده را برای این خطا تکرار نمی‌کند.
+
+### Tests — ✅ گاردهای رگرسیون
+
+- `MigrationCommentIdempotencyTests` (جدید): (۱) خودِ مهاجرت `AddInsuranceContractStatus` باید `oldComment` برابر `comment` داشته باشد؛ (۲) شبیه‌سازی کل تاریخچهٔ مهاجرت‌ها با ردیابی توضیح هر ستون — هیچ مهاجرتی نباید توضیحِ موجود را دوباره بیفزاید (این گارد همین باگ را روی نسخهٔ قبل از اصلاح شناسایی می‌کند)؛ (۳) تولیدگر ثبت‌شده در کانتینر واقعی DI همان `ClinicProMigrationsSqlGenerator` باشد؛ (۴) SQL تولیدی برای AlterColumn با توضیح موجود، `sp_updateextendedproperty` + وجودسنجی دارد.
+- `MigrationSnapshotComplianceTests`: دو مهاجرت دست‌نویس `PharmacyConsumptionPurchaseCost` و `AddInsuranceContractStatus` که در فهرست طلایی جا افتاده بودند اضافه شدند (تست «فهرست طلایی» روی نسخهٔ قبل قرمز بود).
+
+
 ## [v2.22.5] — 2026-10-23 (اصلاح اعمال سیاست رمز)
 
 ### Fixed — 🔐 تنظیمات امنیتی و تغییر رمز

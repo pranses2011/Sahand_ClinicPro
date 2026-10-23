@@ -1,11 +1,11 @@
-# راهنمای استقرار — Sahand ClinicPro v2.22.5
+# راهنمای استقرار — Sahand ClinicPro v2.22.6
 
 ## نصب درمانگاهی از GitHub Release
 
 بستهٔ آماده برای نصب درمانگاه در GitHub Release شامل این فایل‌هاست:
 
-- `SahandClinicPro-Server-v2.22.5.zip` — API خودبسنده برای Windows x64 و نصب‌کنندهٔ سرویس.
-- `SahandClinicPro-Setup-v2.22.5.exe` — کلاینت WPF خودبسنده برای Windows x64.
+- `SahandClinicPro-Server-v2.22.6.zip` — API خودبسنده برای Windows x64 و نصب‌کنندهٔ سرویس.
+- `SahandClinicPro-Setup-v2.22.6.exe` — کلاینت WPF خودبسنده برای Windows x64.
 
 ### رایانهٔ مرکزی درمانگاه
 
@@ -19,7 +19,7 @@
 
 ### رایانه‌های کلاینت
 
-1. `SahandClinicPro-Setup-v2.22.5.exe` را اجرا کنید.
+1. `SahandClinicPro-Setup-v2.22.6.exe` را اجرا کنید.
 2. در رایانه‌های دیگر (نه روی سرور)، فایل `appsettings.json` کنار برنامه را باز کنید و مقدار زیر را به IP سرور تغییر دهید:
 
 ```json
@@ -39,6 +39,27 @@
 
 > تاریخچهٔ EF migrations در سورس نگه داشته شده تا ارتقای دیتابیس‌های موجود ایمن بماند. این تاریخچه فقط جزئیات فنی داخلی است؛ درمانگاه در نصب تازه یا ارتقا migration دستی اجرا نمی‌کند.
 
+## عیب‌یابی نصب سرور
+
+### خطای «Property 'MS_Description' already exists» (کد ۱۵۲۳۳)
+
+نشانه: در گام «ساخت دیتابیس و اعمال خودکار تغییرهای لازم»، لاگ سرور این خطا را می‌دهد و نصب با پیام «نصب کامل نشد» متوقف می‌شود:
+
+```text
+Microsoft.Data.SqlClient.SqlException (0x80131904): Property cannot be added.
+Property 'MS_Description' already exists for 'dbo.InsuranceCompanies.IsContracted'.
+Error Number:15233
+```
+
+ریشه: تولیدگر مهاجرت EF Core برای `AlterColumn`، وقتی وضعیت قبلیِ توضیح ستون (`oldComment`) اعلام نشده باشد، فرمان `sp_addextendedproperty` را حتی برای ستونی که توضیحش از قبل موجود است می‌نویسد؛ SQL Server آن را رد می‌کند، تراکنش مهاجرت عقب می‌گردد و **کل** مهاجرت اعمال نمی‌شود (اسکیما عقب می‌ماند و نصب شکست می‌خورد). این خطا به رشته اتصال یا مجوز `CREATE DATABASE` مربوط نیست.
+
+از نسخهٔ v2.22.6 رفع شده است:
+
+1. بستهٔ سرور v2.22.6 یا بالاتر را جای‌گذاری و `Install-Server-Package.bat` را دوباره اجرا کنید. چون مهاجرت شکست‌خورده در `__EFMigrationsHistory` ثبت نشده، همان مهاجرت این‌بار کامل اعمال می‌شود و **نیازی به پاک‌کردن دیتابیس نیست**.
+2. اگر با وجود v2.22.6 باز هم همین خطا را دیدید، یعنی مهاجرت جدیدی با `migrationBuilder.Sql` مستقیم `sp_addextendedproperty`/`sp_dropextendedproperty` اجرا می‌کند؛ لاگ `Critical` سرور نام ستون و کد خطا را نشان می‌دهد.
+
+> نکته برای توسعه‌دهنده: در مهاجرت‌های دست‌نویس هنگام نوشتن `comment:` برای `AlterColumn`، همیشه `oldComment:` را هم بنویسید (مقدار قبلی؛ اگر ستون توضیح نداشت، مقدار تهی صریح). گارد خودکار: `MigrationCommentIdempotencyTests`.
+
 ## تنظیمات تولید
 
 نصب‌کنندهٔ سرور رشتهٔ اتصال و کلید JWT را در `C:\SahandClinicPro\Server\appsettings.json` نگه می‌دارد. دسترسی به این فایل را محدود کنید؛ رشته اتصال ممکن است رمز SQL داشته باشد. برای سرویس پیامک، بکاپ شبکه‌ای/ابری یا اتصال‌های دولتی، تنظیمات متناظر را با روش امن در همان پیکربندی یا متغیرهای محیطی Windows اضافه کنید.
@@ -56,7 +77,7 @@ dotnet tool restore
 dotnet ef database update --project ../Sahand.ClinicPro.Infrastructure --startup-project .
 ```
 
-ساخت رسمی Windows installer با GitHub Actions در `.github/workflows/release-installer.yml` انجام می‌شود. Tag نسخهٔ Release، مثلاً `v2.22.5`، دو asset قابل دانلود منتشر می‌کند: Setup EXE و Server ZIP.
+ساخت رسمی Windows installer با GitHub Actions در `.github/workflows/release-installer.yml` انجام می‌شود. Tag نسخهٔ Release، مثلاً `v2.22.6`، دو asset قابل دانلود منتشر می‌کند: Setup EXE و Server ZIP.
 
 ## پشتیبان‌گیری و چک‌لیست راه‌اندازی
 

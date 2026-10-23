@@ -36,6 +36,8 @@ public class MigrationSnapshotComplianceTests
         "Cycle69LabReferenceRanges", // چرخهٔ ۶۹ (F-28/F-29) — بازه‌های مرجع ساخت‌یافتهٔ آزمایش
         "Cycle69PatientTags",        // چرخهٔ ۶۹ (F-18) — برچسب CSV بیمار
         "AddEmployeeInsuranceFlag",  // گزینهٔ شمول بیمه در پروندهٔ پرسنل
+        "PharmacyConsumptionPurchaseCost", // v2.22.4 — عکس‌فوری بهای خرید اقلام مصرفی (سود حقوق درصدی)
+        "AddInsuranceContractStatus",      // v2.22.4 — وضعیت «طرف قرارداد» بیمه‌ها (وابستگی: اصلاح oldComment)
     };
 
     /// <summary>همهٔ کلاس‌های مایگریشن اسمبلی زیرساخت</summary>

@@ -74,7 +74,16 @@ $apiExe = Join-Path $target 'Sahand.ClinicPro.API.exe'
 Push-Location $target
 try {
     & $apiExe --migrate-database=true
-    if ($LASTEXITCODE -ne 0) { throw "اعمال خودکار ساختار دیتابیس شکست خورد (کد $LASTEXITCODE). رشته اتصال و مجوز CREATE DATABASE را بررسی کنید." }
+    if ($LASTEXITCODE -ne 0) {
+        # پیام خطای واقعی (SQL Server / مهاجرت) درست بالای همین خط در کنسول چاپ شده است؛
+        # پیام قبلی فقط «رشته اتصال و مجوز CREATE DATABASE» را متهم می‌کرد و برای خطاهای
+        # مهاجرت (مثل 15233 «MS_Description already exists» یا 207 «Invalid column name»)
+        # گمراه‌کننده بود — گزارش مالک هنگام نصب v2.22.5.
+        throw ("اعمال خودکار ساختار دیتابیس شکست خورد (کد $LASTEXITCODE). " +
+               "علت دقیق در خطاهای بالا و فایل‌های C:\SahandClinicPro\Server\Logs آمده است. " +
+               "اگر خطا درباره «MS_Description»، «Invalid column name» یا «migration» بود، مشکل از " +
+               "رشته اتصال یا مجوز CREATE DATABASE نیست؛ بستهٔ سرور v2.22.6 یا بالاتر را نصب کنید.")
+    }
 }
 finally { Pop-Location }
 

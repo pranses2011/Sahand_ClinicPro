@@ -56,6 +56,24 @@ public static class DependencyInjection
                 sql.CommandTimeout(60);
             });
 
+            // ═══ رفع خطای نصب سرور ۱۵۲۳۳ «Property 'MS_Description' already exists» ═══
+            // گزارش مالک (v2.22.5): Install-Server-Package.ps1 هنگام «ساخت دیتابیس و
+            // اعمال خودکار تغییرهای لازم» با این خطا شکست می‌خورد و نصب کامل نمی‌شد:
+            //   SqlException 15233 — Property cannot be added. Property 'MS_Description'
+            //   already exists for 'dbo.InsuranceCompanies.IsContracted'.
+            // ریشه: تولیدگر پیش‌فرض مهاجرت SQL Server برای AlterColumn، هرگاه
+            // OldColumn.Comment با Comment برابر نباشد (مهاجرت دست‌نویس بدون پارامتر
+            // oldComment)، بی‌قید EXEC sp_addextendedproperty می‌نویسد؛ اگر ستون از قبل
+            // توضیح داشته باشد SQL Server آن را با ۱۵۲۳۳ رد می‌کند، تراکنش مهاجرت عقب
+            // می‌گردد و «کل» مهاجرت اعمال نمی‌شود.
+            // لایهٔ ۱: خودِ مهاجرت AddInsuranceContractStatus اصلاح شد (oldComment).
+            // لایهٔ ۲ (این‌جا): تولیدگر اختصاصی که افزودن/حذف توضیح جدول و ستون را
+            // idempotent می‌کند — IF EXISTS → sp_updateextendedproperty، وگرنه
+            // sp_addextendedproperty. توضیحات ستون فقط فرادادهٔ مستندسازی‌اند؛ این
+            // تغییر هیچ اثری بر داده یا اسکیمای واقعی جداول ندارد.
+            options.ReplaceService<Microsoft.EntityFrameworkCore.Migrations.IMigrationsSqlGenerator,
+                Persistence.Migrations.ClinicProMigrationsSqlGenerator>();
+
             // ═══ چرخهٔ سی‌امین — هشدار «Savepoints are disabled because
             // Multiple Active Result Sets (MARS) is enabled» ═══
             // ریشهٔ هشدار: رشتهٔ اتصال MultipleActiveResultSets=true دارد و
@@ -200,7 +218,32 @@ public static class DependencyInjection
                     // در نصب نخست، همین فراخوانی دیتابیس و تمام جدول‌های نسخهٔ فعلی
                     // را می‌سازد؛ در ارتقا فقط تغییراتِ باقی‌مانده را اعمال می‌کند.
                     // هیچ ابزار dotnet-ef یا اجرای دستی از طرف درمانگاه لازم نیست.
-                    await db.Database.MigrateAsync();
+                    try
+                    {
+                        await db.Database.MigrateAsync();
+                    }
+                    catch (Microsoft.Data.SqlClient.SqlException sqlEx) when (sqlEx.Number is 15233 or 15197)
+                    {
+                        // ═══ خطای «توضیح ستون/جدول» (MS_Description) — گزارش نصب v2.22.5 ═══
+                        // 15233: افزودن توضیحی که از قبل هست؛ 15197: حذف توضیحی که نیست.
+                        // هر دو نشانهٔ مهاجرتِ دست‌نویس با AlterColumn(comment:) بدون
+                        // oldComment است (توضیح: ClinicProMigrationsSqlGenerator). پیام
+                        // صریح داده می‌شود تا نصب‌کننده/مالک بداند مشکل از رشتهٔ اتصال یا
+                        // مجوز CREATE DATABASE نیست و ریشه‌یابی ساعت‌ها طول نکشد.
+                        logger.LogCritical(sqlEx,
+                            "مهاجرت دیتابیس به‌دلیل «توضیح ستون/جدول» (MS_Description) شکست خورد " +
+                            "(کد {Number}) — اسکیمای دیتابیس از کد عقب می‌ماند. " +
+                            "افزودن/حذف توضیح در این نسخه idempotent شده است؛ اگر این پیام را " +
+                            "می‌بینید یعنی مهاجرت با migrationBuilder.Sql فرمان " +
+                            "sp_addextendedproperty/sp_dropextendedproperty را دستی اجرا می‌کند — " +
+                            "آن را به AlterColumn(comment:, oldComment:) / AlterTable(comment:) " +
+                            "تغییر دهید. متن خطای SQL Server: {Message}",
+                            sqlEx.Number, sqlEx.Message);
+
+                        throw new InvalidOperationException(
+                            $"اعمال تغییر دیتابیس ناموفق بود — توضیح ستون/جدول تکراری یا ناموجود " +
+                            $"(SQL {sqlEx.Number}: {sqlEx.Message})", sqlEx);
+                    }
                 }
 
                 // سرور نباید با اسکیمای ناقص آمادهٔ سرویس‌دهی شود. شکست اتصال،
