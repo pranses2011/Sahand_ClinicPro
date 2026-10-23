@@ -38,9 +38,10 @@ jobs:
             exit 0
           fi
           # هر خطِ خطا/هشدار کامپایلر به یک annotation جدا تبدیل می‌شود
-          grep -E ": (error|warning) [A-Z]+[0-9]+" build-solution.log | head -40 | while IFS= read -r line; do
+          { grep -E ": (error|warning) [A-Z]+[0-9]+" build-solution.log || true; } | head -40 | while IFS= read -r line; do
             echo "::error::${line}"
-          done
+          done || true
+          exit 0
 
       - name: اجرای تست‌ها + پوشش کد (B4 چرخه ۱۲)
         # ═══ چرخهٔ ۶۷ — ریشهٔ قرمزیِ دائمی CI ═══
@@ -64,9 +65,12 @@ jobs:
             echo "::error::فایل test-run.log یافت نشد"
             exit 0
           fi
-          grep -E "^[[:space:]]*Failed |Error Message:" test-run.log | head -40 | while IFS= read -r line; do
+          # نکته: گام‌های bash در اکسِن‌ها با -e -o pipefail اجرا می‌شوند؛ بدون
+          # || true، «نبودِ تطابق» یا بستن زودهنگام لوله به دست head (SIGPIPE)
+          # خودِ گام گزارش را قرمز می‌کرد و هیچ annotation منتشر نمی‌شد.
+          { grep -E "^[[:space:]]*Failed |Error Message:" test-run.log || true; } | head -40 | while IFS= read -r line; do
             echo "::error::${line}"
-          done
+          done || true
           exit 0
 
       - name: خلاصه پوشش
