@@ -378,12 +378,12 @@
                         <!-- بازهٔ اعتبار — انتخابگر تاریخ شمسی (قانون ۵) -->
                         <StackPanel Margin="0,0,8,6">
                             <TextBlock Text="اعتبار از" FontSize="10" Opacity="0.6" Margin="2,0,0,2" />
-                            <controls:PersianDatePicker DateShamsiText="{Binding AssignFromDate, Mode=TwoWay}"
+                            <controls:JalaliDatePicker DateShamsiText="{Binding AssignFromDate, Mode=TwoWay}"
                                                         Placeholder="تاریخ شروع *" Width="150" />
                         </StackPanel>
                         <StackPanel Margin="0,0,8,6">
                             <TextBlock Text="تا (اختیاری)" FontSize="10" Opacity="0.6" Margin="2,0,0,2" />
-                            <controls:PersianDatePicker DateShamsiText="{Binding AssignToDate, Mode=TwoWay}"
+                            <controls:JalaliDatePicker DateShamsiText="{Binding AssignToDate, Mode=TwoWay}"
                                                         Placeholder="بی‌پایان" Width="150" />
                         </StackPanel>
                     </WrapPanel>

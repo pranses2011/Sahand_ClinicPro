@@ -145,7 +145,7 @@
             <!-- ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک): «تاریخ استخدام از کنترل
                  انتخابگر تاریخ استفاده بکن» — کنترل انتخابگر شمسی جایگزین TextBox
                  متن‌خالی شد؛ DateShamsiText همان رشتهٔ شمسی را دوسویه نگه می‌دارد ═══ -->
-            <controls:PersianDatePicker Grid.Row="4" Grid.Column="0" Margin="0,12,0,0"
+            <controls:JalaliDatePicker Grid.Row="4" Grid.Column="0" Margin="0,12,0,0"
                                          DateShamsiText="{Binding HireDateShamsi, Mode=TwoWay}"
                                          Placeholder="تاریخ استخدام شمسی (خالی = امروز)" />
             <ComboBox Grid.Row="4" Grid.Column="2" Margin="0,12,0,0"

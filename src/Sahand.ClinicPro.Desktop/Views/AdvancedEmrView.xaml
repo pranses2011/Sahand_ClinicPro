@@ -117,7 +117,7 @@
                     <!-- فرم ثبت اندازه‌گیری جدید — چرخه بیست‌وسوم: فیلد تاریخ از
                          انتخابگر تاریخ شمسی استفاده می‌کند (قابل «همهٔ فیلدهای تاریخ») -->
                     <WrapPanel Grid.Row="2" Margin="0,0,0,8">
-                        <controls:PersianDatePicker DateShamsiText="{Binding NewDateShamsi, Mode=TwoWay}"
+                        <controls:JalaliDatePicker DateShamsiText="{Binding NewDateShamsi, Mode=TwoWay}"
                                                     Placeholder="تاریخ اندازه‌گیری" MinWidth="135"
                                                     Margin="0,0,10,0" />
                         <TextBox materialDesign:HintAssist.Hint="وزن (kg)" MinWidth="95"

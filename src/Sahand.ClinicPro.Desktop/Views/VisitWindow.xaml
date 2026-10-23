@@ -792,7 +792,7 @@
                                         <TextBlock Text="مراجعهٔ بعدی" Style="{StaticResource CardTitle}" Margin="8,0,0,0" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="2,10,0,0">
-                                        <controls:PersianDatePicker DateShamsiText="{Binding FollowUpDateShamsi, Mode=TwoWay}"
+                                        <controls:JalaliDatePicker DateShamsiText="{Binding FollowUpDateShamsi, Mode=TwoWay}"
                                                                     Placeholder="تاریخ مراجعهٔ بعدی" Width="230" />
                                         <CheckBox Content="رزرو خودکار نوبت برای همین تاریخ" IsChecked="{Binding AutoBookFollowUp}"
                                                   Margin="18,0,0,0" VerticalAlignment="Center" />

@@ -685,12 +685,12 @@
                                 <TextBlock Text="از تاریخ" FontSize="10" Opacity="0.6" Margin="2,0,2,2" />
                                 <!-- چرخهٔ ۷۹: عرض ۱۷۵ — تاریخ کامل «۱۴۰۴/۰۴/۳۱» بدون بریدگی دیده می‌شود
                                      (گزارش مالک: «انتخابگر تاریخ تاریخ را بصورت کامل نشان نمی‌دهد») -->
-                                <controls:PersianDatePicker Width="175"
+                                <controls:JalaliDatePicker Width="175"
                                                             DateShamsiText="{Binding FromDateShamsi, Mode=TwoWay}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Margin="0,0,8,0">
                                 <TextBlock Text="تا تاریخ" FontSize="10" Opacity="0.6" Margin="2,0,2,2" />
-                                <controls:PersianDatePicker Width="175"
+                                <controls:JalaliDatePicker Width="175"
                                                             DateShamsiText="{Binding ToDateShamsi, Mode=TwoWay}" />
                             </StackPanel>
                             <StackPanel Grid.Column="2" Margin="0,0,8,0">
@@ -915,9 +915,9 @@
                                 <!-- چرخه بیست‌وسوم: جایگزینی DatePicker میلادی ویندوز با
                                      انتخابگر تاریخ شمسی (قابل «همهٔ فیلدهای تاریخ»)؛
                                      چرخهٔ ۷۹: عرض ۱۷۵ برای نمایش کامل تاریخ بدون بریدگی -->
-                                <controls:PersianDatePicker SelectedDate="{Binding WaitlistFromDate}"
+                                <controls:JalaliDatePicker SelectedDate="{Binding WaitlistFromDate}"
                                                             Placeholder="از تاریخ" Width="175" Margin="0,0,8,6" />
-                                <controls:PersianDatePicker SelectedDate="{Binding WaitlistToDate}"
+                                <controls:JalaliDatePicker SelectedDate="{Binding WaitlistToDate}"
                                                             Placeholder="تا تاریخ" Width="175" Margin="0,0,8,6" />
                                 <ComboBox SelectedIndex="{Binding WaitlistTimeIndex}" Width="105" FontSize="11.5" Margin="0,0,8,6" materialDesign:HintAssist.Hint="ساعت پیشنهادی">
                                     <ComboBoxItem Content="هر ساعت" />
