@@ -209,53 +209,70 @@ public static class DependencyInjection
                 var db = scope.ServiceProvider.GetRequiredService<Persistence.ClinicProDbContext>();
                 var logger = scope.ServiceProvider
                     .GetRequiredService<ILogger<Microsoft.Extensions.DependencyInjection.ServiceProvider>>();
-                var pending = db.Database.GetPendingMigrations().ToList();
-                if (pending.Count > 0)
+
+                // ═══ گارد ارائه‌دهندهٔ دیتابیس — چرخهٔ ۸۱ ═══
+                // GetPendingMigrations/MigrateAsync فقط در ارائه‌دهنده‌های رابطه‌ای
+                // معنا دارند؛ روی InMemory (تست‌های یکپارچگی API) استثنا می‌دهند.
+                // چون این استثنا پیش از گام «۲) اجرای بذرها» رخ می‌داد و catch آن را
+                // در محیط غیرتولیدی می‌بلعید، هیچ بذری اجرا نمی‌شد: کاربر admin ساخته
+                // نمی‌شد و لاگین همهٔ تست‌های API با ۴۰۰ «نام کاربری یا رمز عبور
+                // نادرست است» شکست می‌خورد (در تولید SQL Server است و مسیر عوض نمی‌شود).
+                if (!db.Database.IsRelational())
                 {
                     logger.LogInformation(
-                        "اعمال {Count} تغییر دیتابیس در راه‌اندازی اولیه/ارتقا…",
-                        pending.Count);
-                    // در نصب نخست، همین فراخوانی دیتابیس و تمام جدول‌های نسخهٔ فعلی
-                    // را می‌سازد؛ در ارتقا فقط تغییراتِ باقی‌مانده را اعمال می‌کند.
-                    // هیچ ابزار dotnet-ef یا اجرای دستی از طرف درمانگاه لازم نیست.
-                    try
-                    {
-                        await db.Database.MigrateAsync();
-                    }
-                    catch (Microsoft.Data.SqlClient.SqlException sqlEx) when (sqlEx.Number is 15233 or 15197)
-                    {
-                        // ═══ خطای «توضیح ستون/جدول» (MS_Description) — گزارش نصب v2.22.5 ═══
-                        // 15233: افزودن توضیحی که از قبل هست؛ 15197: حذف توضیحی که نیست.
-                        // هر دو نشانهٔ مهاجرتِ دست‌نویس با AlterColumn(comment:) بدون
-                        // oldComment است (توضیح: ClinicProMigrationsSqlGenerator). پیام
-                        // صریح داده می‌شود تا نصب‌کننده/مالک بداند مشکل از رشتهٔ اتصال یا
-                        // مجوز CREATE DATABASE نیست و ریشه‌یابی ساعت‌ها طول نکشد.
-                        logger.LogCritical(sqlEx,
-                            "مهاجرت دیتابیس به‌دلیل «توضیح ستون/جدول» (MS_Description) شکست خورد " +
-                            "(کد {Number}) — اسکیمای دیتابیس از کد عقب می‌ماند. " +
-                            "افزودن/حذف توضیح در این نسخه idempotent شده است؛ اگر این پیام را " +
-                            "می‌بینید یعنی مهاجرت با migrationBuilder.Sql فرمان " +
-                            "sp_addextendedproperty/sp_dropextendedproperty را دستی اجرا می‌کند — " +
-                            "آن را به AlterColumn(comment:, oldComment:) / AlterTable(comment:) " +
-                            "تغییر دهید. متن خطای SQL Server: {Message}",
-                            sqlEx.Number, sqlEx.Message);
-
-                        throw new InvalidOperationException(
-                            $"اعمال تغییر دیتابیس ناموفق بود — توضیح ستون/جدول تکراری یا ناموجود " +
-                            $"(SQL {sqlEx.Number}: {sqlEx.Message})", sqlEx);
-                    }
+                        "ارائه‌دهندهٔ دیتابیس رابطه‌ای نیست ({Provider}) — مهاجرت رد شد و بذرها اجرا می‌شوند",
+                        db.Database.ProviderName ?? "نامشخص");
                 }
-
-                // سرور نباید با اسکیمای ناقص آمادهٔ سرویس‌دهی شود. شکست اتصال،
-                // مجوز ناکافی یا خطای DDL راه‌اندازی را متوقف می‌کند تا نصب‌کننده
-                // علت را رفع کند؛ ادامهٔ خاموش با خطاهای پراکندهٔ زمان اجرا خطرناک است.
-                var stillPending = db.Database.GetPendingMigrations().ToList();
-                if (stillPending.Count > 0)
+                else
                 {
-                    var message = $"پس از اعمال خودکار، هنوز {stillPending.Count} تغییر دیتابیس اعمال‌نشده است: " +
-                                  string.Join(", ", stillPending);
-                    logger.LogCritical("{DatabaseMigrationFailure}", message);
-                    throw new InvalidOperationException(message);
+                    var pending = db.Database.GetPendingMigrations().ToList();
+                    if (pending.Count > 0)
+                    {
+                        logger.LogInformation(
+                            "اعمال {Count} تغییر دیتابیس در راه‌اندازی اولیه/ارتقا…",
+                            pending.Count);
+                        // در نصب نخست، همین فراخوانی دیتابیس و تمام جدول‌های نسخهٔ فعلی
+                        // را می‌سازد؛ در ارتقا فقط تغییراتِ باقی‌مانده را اعمال می‌کند.
+                        // هیچ ابزار dotnet-ef یا اجرای دستی از طرف درمانگاه لازم نیست.
+                        try
+                        {
+                            await db.Database.MigrateAsync();
+                        }
+                        catch (Microsoft.Data.SqlClient.SqlException sqlEx) when (sqlEx.Number is 15233 or 15197)
+                        {
+                            // ═══ خطای «توضیح ستون/جدول» (MS_Description) — گزارش نصب v2.22.5 ═══
+                            // 15233: افزودن توضیحی که از قبل هست؛ 15197: حذف توضیحی که نیست.
+                            // هر دو نشانهٔ مهاجرتِ دست‌نویس با AlterColumn(comment:) بدون
+                            // oldComment است (توضیح: ClinicProMigrationsSqlGenerator). پیام
+                            // صریح داده می‌شود تا نصب‌کننده/مالک بداند مشکل از رشتهٔ اتصال یا
+                            // مجوز CREATE DATABASE نیست و ریشه‌یابی ساعت‌ها طول نکشد.
+                            logger.LogCritical(sqlEx,
+                                "مهاجرت دیتابیس به‌دلیل «توضیح ستون/جدول» (MS_Description) شکست خورد " +
+                                "(کد {Number}) — اسکیمای دیتابیس از کد عقب می‌ماند. " +
+                                "افزودن/حذف توضیح در این نسخه idempotent شده است؛ اگر این پیام را " +
+                                "می‌بینید یعنی مهاجرت با migrationBuilder.Sql فرمان " +
+                                "sp_addextendedproperty/sp_dropextendedproperty را دستی اجرا می‌کند — " +
+                                "آن را به AlterColumn(comment:, oldComment:) / AlterTable(comment:) " +
+                                "تغییر دهید. متن خطای SQL Server: {Message}",
+                                sqlEx.Number, sqlEx.Message);
+
+                            throw new InvalidOperationException(
+                                $"اعمال تغییر دیتابیس ناموفق بود — توضیح ستون/جدول تکراری یا ناموجود " +
+                                $"(SQL {sqlEx.Number}: {sqlEx.Message})", sqlEx);
+                        }
+                    }
+
+                    // سرور نباید با اسکیمای ناقص آمادهٔ سرویس‌دهی شود. شکست اتصال،
+                    // مجوز ناکافی یا خطای DDL راه‌اندازی را متوقف می‌کند تا نصب‌کننده
+                    // علت را رفع کند؛ ادامهٔ خاموش با خطاهای پراکندهٔ زمان اجرا خطرناک است.
+                    var stillPending = db.Database.GetPendingMigrations().ToList();
+                    if (stillPending.Count > 0)
+                    {
+                        var message = $"پس از اعمال خودکار، هنوز {stillPending.Count} تغییر دیتابیس اعمال‌نشده است: " +
+                                      string.Join(", ", stillPending);
+                        logger.LogCritical("{DatabaseMigrationFailure}", message);
+                        throw new InvalidOperationException(message);
+                    }
                 }
             }
 
