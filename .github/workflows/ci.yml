@@ -49,11 +49,27 @@ jobs:
         # («You must install or update .NET») — از اجرای ubuntu کنار گذاشته شد
         # و در job ویندوزیِ جداگانهٔ پایین اجرا می‌شود؛ این تنها راه سبز شدن
         # هر دو پلتفرم با حفظ پوشش کامل تست است.
+        # ═══ چرخهٔ ۸۱ — ریشهٔ نهاییِ «Test Run Aborted» ═══
+        # dotnet test روی Solution، پروژهٔ تست دسکتاپ (net8.0-windows/WPF) را هم
+        # روی لینوکس اجرا می‌کرد و میزبان تست با «You must install or update .NET»
+        # می‌مرد؛ --filter فقط تست‌ها را فیلتر می‌کند نه خودِ پروژه را. اکنون
+        # پروژه‌به‌پروژه اجرا می‌شود و دسکتاپ (که در job ویندوزی اجرا می‌شود)
+        # کنار گذاشته می‌شود.
         run: |
           set -o pipefail
-          dotnet test Sahand.ClinicPro.sln --no-build -c Release \
-             --logger "trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults \
-             --filter "FullyQualifiedName!~Sahand.ClinicPro.Desktop.UnitTests" 2>&1 | tee test-run.log
+          set +e
+          status=0
+          for project in \
+            tests/Sahand.ClinicPro.Domain.UnitTests/Sahand.ClinicPro.Domain.UnitTests.csproj \
+            tests/Sahand.ClinicPro.Application.UnitTests/Sahand.ClinicPro.Application.UnitTests.csproj \
+            tests/Sahand.ClinicPro.Infrastructure.IntegrationTests/Sahand.ClinicPro.Infrastructure.IntegrationTests.csproj \
+            tests/Sahand.ClinicPro.API.IntegrationTests/Sahand.ClinicPro.API.IntegrationTests.csproj; do
+            echo "::group::$(basename "$project")"
+            dotnet test "$project" --no-build -c Release \
+              --logger "trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults || status=1
+            echo "::endgroup::"
+          done 2>&1 | tee test-run.log
+          exit $status
 
       - name: گزارش تست‌های ناموفق (annotation)
         if: failure()
