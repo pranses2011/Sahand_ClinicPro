@@ -387,6 +387,7 @@
                                  همگام می‌کند (بارگذاری نشانگرها با OnDisplayMonthChanged) -->
                             <Border Grid.Column="0" CornerRadius="10" Padding="10" Margin="0,0,10,0"
                                     Background="{DynamicResource MaterialDesign.Brush.Background}">
+                                <StackPanel>
                                 <controls:PersianCalendarControl Grid.Row="1"
                                     x:Name="Calendar"
                                     SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
@@ -410,7 +411,8 @@
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
-                            </Border>
+                            </StackPanel>
+                                </Border>
 
                             <!-- ستون اسلات‌ها — طرح تأییدشدهٔ مالک: کاشی‌های فشردهٔ گروه‌بندی‌شده
                                  (صبح/ظهر/عصر) با روبان مورب گوشه، هاشور رزرو/استراحت، آمار روز
