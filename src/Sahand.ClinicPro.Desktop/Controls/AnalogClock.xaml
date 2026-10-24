@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Controls.AnalogClock"
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Controls.AnalogClock"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -20,7 +20,15 @@
          عقربهٔ ثانیه ۴۱px پایین‌تر از مرکز ساعت بود — گرید با مارجین −۴۱ بالا
          رفت تا مرز نوک/دُم دقیقاً روی مرکز بنشیند (شرح در کامنت عقربه).
          حرکت پیوستهٔ ثانیه (سوپ نرم چرخهٔ ۷۴) حفظ شد. -->
-    <Grid>
+    <!-- ═══ بوم ثابت ۲۸۰×۲۸۰ داخل Viewbox ═══
+         گزارش مالک: عقربه‌ها با صفحه هماهنگ نبودند و بزرگ‌تر دیده می‌شدند و
+         ضخامت خطوط ساعت/دقیقه هم ناهماهنگ بود. ریشه: عقربه‌ها اندازهٔ ثابت
+         پیکسلی داشتند ولی صفحه با اندازهٔ واقعی کنترل ساخته می‌شد؛ در هر
+         اندازه‌ای جز ~۲۶۰px نسبت‌ها به‌هم می‌ریخت. اکنون کل ساعت روی بوم
+         ثابت ۲۸۰ طراحی و با Viewbox یکدست مقیاس می‌شود؛ نسبت‌ها در همهٔ
+         اندازه‌ها (۷۴ تا ۳۴۰) دقیقاً یکی می‌مانند. -->
+    <Viewbox Stretch="Uniform">
+    <Grid Width="280" Height="280">
         <!-- هالهٔ بیرونی — حلقهٔ دور صفحه؛ رنگ از پالت (ApplyTheme) -->
         <Ellipse x:Name="OuterRing"
                  StrokeThickness="2"
@@ -39,36 +47,36 @@
              نسبت‌های ساعت واقعی: ساعت ~۵۰٪ / دقیقه ~۷۰٪ / ثانیه ~۷۵٪ شعاع.
              رنگ مستطیل‌ها از پالت (ApplyTheme) اعمال می‌شود. -->
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
-             Width="4" Height="140" RenderTransformOrigin="0.5,0.5"
+             Width="6" Height="128" RenderTransformOrigin="0.5,0.5"
              x:Name="HourHand">
             <Grid.RenderTransform>
                 <RotateTransform x:Name="HourRotation" Angle="0" />
             </Grid.RenderTransform>
-            <!-- عقربهٔ ساعت — کوتاه‌تر و پهن‌تر (۷۰px از ۱۴۰ = نصف قطر) -->
-            <Rectangle x:Name="HourRect" Width="4.5" Height="70" VerticalAlignment="Top" RadiusX="2.5" RadiusY="2.5" />
+            <!-- عقربهٔ ساعت — ۶۴px = ۵۰٪ شعاع صفحه؛ پهن‌تر از دقیقه -->
+            <Rectangle x:Name="HourRect" Width="6" Height="64" VerticalAlignment="Top" RadiusX="3" RadiusY="3" />
         </Grid>
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
-              Width="3" Height="190" RenderTransformOrigin="0.5,0.5"
+              Width="4" Height="176" RenderTransformOrigin="0.5,0.5"
               x:Name="MinuteHand">
             <Grid.RenderTransform>
                 <RotateTransform x:Name="MinuteRotation" Angle="0" />
             </Grid.RenderTransform>
-            <!-- عقربهٔ دقیقه — بلندتر (۹۶px از ۱۹۰ ≈ ۷۰٪ شعاع) -->
-            <Rectangle x:Name="MinuteRect" Width="3" Height="96" VerticalAlignment="Top" RadiusX="2" RadiusY="2" />
+            <!-- عقربهٔ دقیقه — ۸۸px = ۶۹٪ شعاع؛ باریک‌تر از ساعت -->
+            <Rectangle x:Name="MinuteRect" Width="4" Height="88" VerticalAlignment="Top" RadiusX="2" RadiusY="2" />
         </Grid>
         <!-- عقربهٔ ثانیه حول نقطهٔ مرکزیِ گرید می‌چرخد: گرید ۲۰۸px ارتفاع دارد،
              پس مرکز چرخش در ۱۰۴px از بالا و دقیقاً روی مرکز ساعت است؛ نوک ۱۰۴px
              به سمت بالا و دُم ۲۲px به سمت پایین امتداد می‌یابد. -->
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
-              Width="2" Height="208" RenderTransformOrigin="0.5,0.5"
+              Width="2" Height="192" RenderTransformOrigin="0.5,0.5"
               x:Name="SecondHand">
             <Grid.RenderTransform>
                 <RotateTransform x:Name="SecondRotation" Angle="0" />
             </Grid.RenderTransform>
-            <!-- نوک — ۱۰۴px بالای محور (~۷۵٪ شعاع) -->
-            <Rectangle x:Name="SecondTipRect" Width="2" Height="104" VerticalAlignment="Top" RadiusX="1" RadiusY="1" />
-            <!-- دُم متعادل‌کننده — ۲۲px زیر محور، چسبیده به نوک (بدون شکاف) -->
-            <Rectangle x:Name="SecondTailRect" Width="2" Height="22" VerticalAlignment="Top" Margin="0,104,0,0" RadiusX="1" RadiusY="1" />
+            <!-- نوک — ۹۶px بالای محور (۷۵٪ شعاع) -->
+            <Rectangle x:Name="SecondTipRect" Width="2" Height="96" VerticalAlignment="Top" RadiusX="1" RadiusY="1" />
+            <!-- دُم متعادل‌کننده — ۲۴px زیر محور، چسبیده به نوک (بدون شکاف) -->
+            <Rectangle x:Name="SecondTailRect" Width="2" Height="24" VerticalAlignment="Top" Margin="0,96,0,0" RadiusX="1" RadiusY="1" />
             <!-- حلقهٔ لغزش روی نوک — امضای بصری سوپِ نرم -->
             <Ellipse x:Name="SecondBalanceRing" Width="9" Height="9" VerticalAlignment="Top" Margin="0,12,0,0"
                      StrokeThickness="2" />
@@ -78,4 +86,5 @@
         <Ellipse x:Name="CenterOuter" Width="13" Height="13" HorizontalAlignment="Center" VerticalAlignment="Center" />
         <Ellipse x:Name="CenterInner" Width="6" Height="6" HorizontalAlignment="Center" VerticalAlignment="Center" />
     </Grid>
+    </Viewbox>
 </UserControl>

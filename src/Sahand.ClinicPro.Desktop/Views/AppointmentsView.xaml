@@ -387,6 +387,7 @@
                                  همگام می‌کند (بارگذاری نشانگرها با OnDisplayMonthChanged) -->
                             <Border Grid.Column="0" CornerRadius="10" Padding="10" Margin="0,0,10,0"
                                     Background="{DynamicResource MaterialDesign.Brush.Background}">
+                                <StackPanel>
                                 <controls:PersianCalendarControl Grid.Row="1"
                                     x:Name="Calendar"
                                     SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
@@ -397,7 +398,21 @@
                                     DayStats="{Binding DayStats, Mode=OneWay}"
                                     MonthStats="{Binding MonthStats, Mode=OneWay}"
                                     DateSelected="OnCalendarDateSelected" />
-                            </Border>
+                                <TextBlock Text="{Binding CalendarStatus}" FontSize="10.5" FontWeight="SemiBold"
+                                           Foreground="#B45309" TextWrapping="Wrap" Margin="2,8,2,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CalendarStatus}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                                </Border>
 
                             <!-- ستون اسلات‌ها — طرح تأییدشدهٔ مالک: کاشی‌های فشردهٔ گروه‌بندی‌شده
                                  (صبح/ظهر/عصر) با روبان مورب گوشه، هاشور رزرو/استراحت، آمار روز

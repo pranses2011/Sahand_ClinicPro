@@ -485,6 +485,17 @@ public partial class AppointmentsViewModel : ViewModelBase
         if (doctors?.Data is not null)
             foreach (var d in doctors.Data)
                 Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
+        // روز پیش‌فرض «امروز» و انتخاب خودکار نخستین پزشک تا تقویم و برنامهٔ
+        // پزشک همان لحظهٔ بازشدن صفحه پر شوند (گزارش مالک: «روزها و برنامهٔ
+        // پزشک انتخابی نمی‌آید» — پیش‌تر تا کلیک کاربر روی یک روز/پزشک، هیچ
+        // بارگذاری‌ای رخ نمی‌داد).
+        if (SelectedDate is null)
+        {
+            SelectedDate = DateTime.Today;
+            SelectedDateShamsi = PersianDateHelper.ToShamsi(DateTime.Today);
+        }
+        if (SelectedDoctor is null && Doctors.Count > 0)
+            SelectedDoctor = Doctors[0];
         await LoadTodayAppointmentsAsync();
         await SearchListAsync();
 
@@ -541,11 +552,19 @@ public partial class AppointmentsViewModel : ViewModelBase
         }
     }
 
-    /// <summary>تغییر پزشک → بارگذاری تقویم ماه</summary>
+    /// <summary>پیام وضعیت تقویم/برنامهٔ پزشک — زیر تقویم دیده می‌شود تا اگر
+    /// برنامه‌ای بارگذاری نشد، علت (قطع سرور/نبود برنامه) بی‌صدا نماند.</summary>
+    [ObservableProperty]
+    private string _calendarStatus = string.Empty;
+
+    /// <summary>تغییر پزشک → بارگذاری تقویم ماه + اسلات‌های روز انتخابی</summary>
     partial void OnSelectedDoctorChanged(DoctorOption? value)
     {
         if (value is not null)
+        {
             _ = LoadCalendarAsync();
+            _ = LoadSlotsAsync();
+        }
     }
 
     // ═══ چرخهٔ ۷۴ (گزارش مالک): «با انتخاب پزشک، در تقویم فقط برنامه ماه جاری ═══
@@ -589,7 +608,15 @@ public partial class AppointmentsViewModel : ViewModelBase
         {
         var response = await _api.GetAsync<CalendarSummaryResponse>(
             $"doctors/{SelectedDoctor.Id}/calendar-summary?year={DisplayYear}&month={DisplayMonth}");
-        if (response?.Data?.Days is null) return;
+        if (response?.Data?.Days is null)
+        {
+            CalendarStatus = "برنامهٔ پزشک از سرور دریافت نشد — اتصال سرور را بررسی کنید و دوباره تلاش کنید.";
+            return;
+        }
+        var scheduledDays = response.Data.Days.Count(d => d.HasSchedule && !d.IsOff);
+        CalendarStatus = scheduledDays == 0
+            ? "برای این پزشک در این ماه برنامهٔ کاری ثبت نشده است (از صفحهٔ پزشکان، برنامهٔ هفتگی را ثبت کنید)."
+            : string.Empty;
 
         var marked = new Dictionary<DateTime, int>();
         var disabled = new List<DateTime>();
@@ -616,6 +643,7 @@ public partial class AppointmentsViewModel : ViewModelBase
             System.Diagnostics.Debug.WriteLine($"LoadCalendar failed: {ex.Message}");
             MarkedDates ??= new Dictionary<DateTime, int>();
             DayStats ??= new Dictionary<DateTime, CalendarDayStat>();
+            CalendarStatus = "خطا در دریافت برنامهٔ پزشک — اتصال به سرور برقرار نیست یا سرور پاسخ نمی‌دهد.";
         }
     }
 

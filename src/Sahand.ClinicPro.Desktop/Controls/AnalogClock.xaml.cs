@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -189,9 +189,9 @@ public partial class AnalogClock : UserControl
         var canvas = TickCanvas;
         canvas.Children.Clear();
 
-        // شعاع مفثر صفحه — نصف کوچک‌ترین ضلع کنترل منهای حاشیهٔ حلقه
-        var size = Math.Min(ActualWidth, ActualHeight);
-        if (size <= 0) size = 260; // نخستین ترسیم پیش از layout — اندازهٔ طراحی
+        // بوم طراحی ثابت ۲۸۰ است و Viewbox آن را مقیاس می‌کند — شعاع همیشه
+        // ۱۲۸ می‌ماند تا عقربه‌ها و خطوط در هر اندازه دقیقاً هم‌نسبت باشند.
+        const double size = 280;
         var radius = size / 2 - 12;
         var center = size / 2;
         canvas.Width = size;
@@ -208,7 +208,7 @@ public partial class AnalogClock : UserControl
                 // خط دقیقه فقط برای خانه‌های غیرعددی رسم می‌شود
                 if (style == 1 && i % 5 == 0) continue;
                 AddTick(canvas, center, radius, i * 6,
-                    length: 8, width: 1.4, brushHex: _tickMinuteHex);
+                    length: 7, width: 1.2, brushHex: _tickMinuteHex);
             }
         }
 
@@ -242,7 +242,7 @@ public partial class AnalogClock : UserControl
         {
             for (var h = 0; h < 12; h++)
                 AddTick(canvas, center, radius, h * 30,
-                    length: style == 2 ? 20 : 16, width: style == 2 ? 3.6 : 3, brushHex: _tickHourHex);
+                    length: style == 2 ? 19 : 15, width: style == 2 ? 3.4 : 3, brushHex: _tickHourHex);
         }
     }
 
