@@ -1,4 +1,5 @@
-﻿$ErrorActionPreference = 'Stop'
+﻿param([switch]$UpdateMode)
+$ErrorActionPreference = 'Stop'
 $serviceName = 'SahandClinicPro.API'
 $target = 'C:\SahandClinicPro\Server'
 $source = Join-Path $PSScriptRoot 'Server'
@@ -22,7 +23,14 @@ $settingsPath = Join-Path $target 'appsettings.json'
 $hadSettings = Test-Path $settingsPath
 
 # به‌روزرسانی فایل‌های برنامه، بدون حذف تنظیمات/لاگ‌های موجود.
-& robocopy $source $target /MIR /COPY:DAT /R:2 /W:2 /XF appsettings.json /XD Logs /NFL /NDL /NJH /NJS
+# در حالت به‌روزرسانی (بستهٔ کم‌حجمِ وابسته به فریم‌ورک) نباید آینه‌ای کپی
+# شود: فایل‌های Runtime نصب کامل در مقصد می‌مانند و فقط فایل‌های برنامه
+# جایگزین می‌شوند؛ در نصب کامل همان رفتار آینه‌ای پیشین برقرار است.
+if ($UpdateMode) {
+    & robocopy $source $target /E /COPY:DAT /R:2 /W:2 /XF appsettings.json /XD Logs /NFL /NDL /NJH /NJS
+} else {
+    & robocopy $source $target /MIR /COPY:DAT /R:2 /W:2 /XF appsettings.json /XD Logs /NFL /NDL /NJH /NJS
+}
 if ($LASTEXITCODE -ge 8) { throw "کپی فایل‌های سرور ناموفق بود (robocopy $LASTEXITCODE)." }
 
 if (-not $hadSettings) {
