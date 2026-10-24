@@ -1,4 +1,4 @@
-<Window x:Class="Sahand.ClinicPro.Desktop.Views.LoginWindow"
+﻿<Window x:Class="Sahand.ClinicPro.Desktop.Views.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -80,7 +80,9 @@
 
                 <StackPanel Grid.Row="0" VerticalAlignment="Center">
                     <!-- فرم از فضای خالی کارت قابل‌کشیدن است؛ کنترل‌های تعاملی مستثنا هستند -->
-                    <StackPanel>
+                    <!-- چرخهٔ ۸۲: با باز شدن پنل «فراموشی رمز» فرم کنار می‌رود -->
+                    <StackPanel x:Name="LoginFormPanel"
+                                Visibility="{Binding IsLoginFormVisible, Converter={StaticResource BoolToVis}}">
                         <TextBlock Text="خوش آمدید"
                                    FontSize="25" FontWeight="Bold"
                                    Foreground="{StaticResource Login.Text.Primary}"
@@ -154,11 +156,18 @@
                                   Content="مرا به خاطر بسپار"
                                   IsChecked="{Binding RememberMe}"
                                   FontSize="12" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="1"
-                                   Text="فراموشی رمز؟"
-                                   FontSize="11.5" Foreground="{StaticResource Login.Accent}"
-                                   Cursor="Hand" VerticalAlignment="Center"
-                                   ToolTip="در صورت فراموشی رمز با مدیر سیستم تماس بگیرید" />
+                        <!-- ═══ چرخهٔ ۸۲ (گزارش مالک) — «فراموشی رمز کار نمی‌کند» ═══
+                             پیش‌تر این فقط یک TextBlock با ToolTip بود و هیچ
+                             اقدامی انجام نمی‌داد؛ اکنون دکمهٔ واقعی پنل بازیابی
+                             را باز می‌کند. -->
+                        <Button Grid.Column="1"
+                                Command="{Binding OpenForgotCommand}"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Content="فراموشی رمز؟"
+                                FontSize="11.5" Foreground="{StaticResource Login.Accent}"
+                                Padding="6,2" MinWidth="0" Height="26"
+                                Cursor="Hand" VerticalAlignment="Center"
+                                ToolTip="ارسال رمز موقت به ایمیل ثبت‌شدهٔ حساب شما" />
                     </Grid>
 
                     <!-- پیام خطا -->
@@ -212,6 +221,63 @@
                         </StackPanel>
                     </Button>
                 </StackPanel>
+
+                <!-- ═══ چرخهٔ ۸۲ — پنل «بازیابی رمز عبور» (گزارش مالک) ═══
+                     کاربر نام کاربری یا ایمیل خود را می‌دهد؛ سرور رمز موقت تازه
+                     می‌سازد و به ایمیل ثبت‌شدهٔ همان حساب می‌فرستد. رمزها فقط
+                     هش‌شده ذخیره می‌شوند و ارسال «رمز فعلی» از نظر امنیتی ممکن
+                     نیست؛ پس از ورود با رمز موقت، سامانه تغییر رمز را الزام می‌کند. -->
+                <Border Grid.Row="0" VerticalAlignment="Center" Margin="0,8,0,0"
+                        Visibility="{Binding IsForgotOpen, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="KeyVariant" Width="40" Height="40"
+                                                 HorizontalAlignment="Center"
+                                                 Foreground="{StaticResource Login.Accent}" />
+                        <TextBlock Text="بازیابی رمز عبور"
+                                   FontSize="21" FontWeight="Bold"
+                                   Foreground="{StaticResource Login.Text.Primary}"
+                                   HorizontalAlignment="Center" Margin="0,10,0,4" />
+                        <TextBlock Text="نام کاربری یا ایمیل حساب خود را وارد کنید؛ رمز موقت به ایمیل ثبت‌شدهٔ همان حساب فرستاده می‌شود."
+                                   FontSize="12" Foreground="{StaticResource Login.Text.Muted}"
+                                   TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,16" />
+
+                        <TextBlock Text="نام کاربری یا ایمیل" FontSize="11.5" FontWeight="SemiBold"
+                                   Foreground="#52647A" Margin="2,0,0,6" />
+                        <TextBox Text="{Binding ForgotInput, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="مثال: admin یا name@clinic.ir"
+                                 materialDesign:TextFieldAssist.HasClearButton="True"
+                                 MaxLength="256"
+                                 FlowDirection="LeftToRight" TextAlignment="Left"
+                                 FontSize="14" Padding="12,9" Margin="0,0,0,12">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding SendForgotCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
+
+                        <Border Background="#EAF3FC" BorderBrush="#BBD9F5" BorderThickness="1"
+                                CornerRadius="9" Padding="10,8" Margin="0,0,0,12"
+                                Visibility="{Binding HasForgotMessage, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding ForgotMessage}" TextWrapping="Wrap"
+                                       FontSize="12" Foreground="{Binding ForgotMessageColor}" />
+                        </Border>
+
+                        <Button Command="{Binding SendForgotCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Height="44" FontSize="13" FontWeight="SemiBold">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="EmailOutline" Width="17" Height="17"
+                                                         Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="ارسال رمز موقت به ایمیل" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding CloseForgotCommand}"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Content="بازگشت به صفحهٔ ورود"
+                                FontSize="12" Foreground="{StaticResource Login.Text.Muted}"
+                                Height="34" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
 
                 <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center"
                             Margin="0,14,0,0">

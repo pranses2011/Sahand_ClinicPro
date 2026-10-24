@@ -133,4 +133,92 @@ public partial class LoginViewModel : ObservableObject
     {
         LicenseActivationRequested?.Invoke(this, EventArgs.Empty);
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // چرخهٔ ۸۲ (گزارش مالک) — «فراموشی رمز» صفحهٔ ورود
+    // «در صفحهٔ ورود، فراموشی رمز کار نمی‌کند؛ رمز را به ایمیل کاربر بفرست»
+    // ═══════════════════════════════════════════════════════════════════
+    // پیش‌تر «فراموشی رمز؟» فقط یک TextBlock با ToolTip بود («با مدیر تماس
+    // بگیرید»). اکنون یک پنل درون‌کارتی باز می‌شود: کاربر نام کاربری یا ایمیل
+    // می‌دهد، سامانه رمز موقت را به ایمیل ثبت‌شده می‌فرستد و پاسخ همیشه یکسان
+    // است (ضد افشای وجود حساب).
+
+    /// <summary>پنل «فراموشی رمز» باز است؟</summary>
+    [ObservableProperty]
+    private bool _isForgotOpen;
+
+    /// <summary>ورودی بازیابی — نام کاربری یا ایمیل</summary>
+    [ObservableProperty]
+    private string _forgotInput = string.Empty;
+
+    /// <summary>پیام نتیجهٔ ارسال نامهٔ بازیابی</summary>
+    [ObservableProperty]
+    private string _forgotMessage = string.Empty;
+
+    /// <summary>رنگ پیام بازیابی — سبز موفق، قرمز خطا</summary>
+    [ObservableProperty]
+    private string _forgotMessageColor = "#2E7D32";
+
+    /// <summary>نمایش پیام نتیجه؟</summary>
+    public bool HasForgotMessage => !string.IsNullOrEmpty(ForgotMessage);
+
+    /// <summary>فرم ورود دیده شود؟ — هنگام باز بودن پنل بازیابی پنهان می‌شود</summary>
+    public bool IsLoginFormVisible => !IsForgotOpen;
+
+    /// <summary>اطلاع‌رسانی به رابط — پنل بازیابی و فرم ورود جای یکدیگر را می‌گیرند</summary>
+    partial void OnIsForgotOpenChanged(bool value) => OnPropertyChanged(nameof(IsLoginFormVisible));
+
+    /// <summary>باز کردن پنل — ورودی با نام کاربریِ فعلی فرم پیش‌پر می‌شود</summary>
+    [RelayCommand]
+    private void OpenForgot()
+    {
+        ForgotInput = Username;
+        ForgotMessage = string.Empty;
+        OnPropertyChanged(nameof(HasForgotMessage));
+        IsForgotOpen = true;
+    }
+
+    /// <summary>بستن پنل و بازگشت به فرم ورود</summary>
+    [RelayCommand]
+    private void CloseForgot()
+    {
+        IsForgotOpen = false;
+        ForgotMessage = string.Empty;
+        OnPropertyChanged(nameof(HasForgotMessage));
+    }
+
+    /// <summary>
+    /// ارسال درخواست بازیابی — فراخوانی ناشناس (کاربر هنوز وارد نشده است).
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanSendForgot))]
+    private async Task SendForgotAsync()
+    {
+        IsBusy = true;
+        ForgotMessage = string.Empty;
+
+        var ok = await _api.PostAnonymousAsync("auth/forgot-password",
+            new { usernameOrEmail = ForgotInput.Trim() });
+
+        IsBusy = false;
+        if (ok)
+        {
+            ForgotMessageColor = "#2E7D32";
+            ForgotMessage = "اگر حسابی با این مشخصات وجود داشته باشد، رمز موقت به ایمیل ثبت‌شدهٔ آن ارسال شد. "
+                + "پس از دریافت، با همان رمز وارد شوید و رمز تازه بگذارید (پوشهٔ هرزنامه را هم ببینید).";
+        }
+        else
+        {
+            ForgotMessageColor = "#C62828";
+            ForgotMessage = _api.LastError ?? "ارسال نامهٔ بازیابی ناموفق بود — با مدیر سامانه تماس بگیرید";
+        }
+
+        OnPropertyChanged(nameof(HasForgotMessage));
+        SendForgotCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>امکان ارسال — ورودی پر و درخواست در جریان نباشد</summary>
+    private bool CanSendForgot() => !IsBusy && !string.IsNullOrWhiteSpace(ForgotInput);
+
+    /// <summary>به‌روزرسانی امکان دکمهٔ ارسال با تغییر ورودی</summary>
+    partial void OnForgotInputChanged(string value) => SendForgotCommand.NotifyCanExecuteChanged();
 }

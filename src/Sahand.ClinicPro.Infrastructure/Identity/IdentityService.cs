@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Application.Common.Models;
 using Sahand.ClinicPro.Application.Common.Security;
 using Sahand.ClinicPro.Application.Interfaces;
@@ -30,6 +31,7 @@ public class IdentityService : IIdentityService
     private readonly JwtTokenGenerator _tokenGenerator;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IPasswordPolicyProvider _passwordPolicyProvider;
+    private readonly IEmailSender _emailSender;
     private readonly ILogger<IdentityService> _logger;
 
     /// <summary>سازنده با تزریق وابستگی‌ها</summary>
@@ -38,12 +40,14 @@ public class IdentityService : IIdentityService
         JwtTokenGenerator tokenGenerator,
         IPasswordHasher passwordHasher,
         IPasswordPolicyProvider passwordPolicyProvider,
+        IEmailSender emailSender,
         ILogger<IdentityService> logger)
     {
         _context = context;
         _tokenGenerator = tokenGenerator;
         _passwordHasher = passwordHasher;
         _passwordPolicyProvider = passwordPolicyProvider;
+        _emailSender = emailSender;
         _logger = logger;
     }
 
@@ -257,6 +261,141 @@ public class IdentityService : IIdentityService
 
         var full = $"{employee.FirstName} {employee.LastName}".Trim();
         return string.IsNullOrEmpty(full) ? user.Username : full;
+    }
+
+    /// <summary>
+    /// بازیابی رمز با ایمیل — چرخهٔ ۸۲ (گزارش مالک): «فراموشی رمز» کار نمی‌کرد.
+    /// رمز عبور فقط هش‌شده ذخیره می‌شود و بازیابی متن اصلی رمز ممکن نیست؛ این
+    /// متد «رمز موقت» تازه می‌سازد، آن را به ایمیل ثبت‌شدهٔ همان کاربر می‌فرستد
+    /// و پرچم تغییر اجباری رمز را روشن می‌کند.
+    /// </summary>
+    /// <remarks>
+    /// ═══ ترتیب کارها عمدی است ═══
+    /// اول ایمیل ارسال می‌شود و «فقط پس از موفقیت ارسال» هش رمز عوض می‌شود؛
+    /// اگر SMTP تنظیم نباشد یا ارسال شکست بخورد، رمز قبلی کاربر دست‌نخورده
+    /// می‌ماند و او با همان رمز همیشگی وارد می‌شود — هیچ کاربری قفل نمی‌شود.
+    /// برای جلوگیری از افشای فهرست کاربران، نبودِ حساب هم «موفق» برگردانده
+    /// می‌شود و پیام یکسان است.
+    /// </remarks>
+    public async Task<Result> SendPasswordRecoveryAsync(string usernameOrEmail,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(usernameOrEmail))
+            return Result.Failure(new Error("RECOVERY_INVALID",
+                "نام کاربری یا ایمیل را وارد کنید"));
+
+        var normalized = usernameOrEmail.Trim().ToUpperInvariant();
+        var user = await _context.Users
+            .Include(u => u.Employee)
+            .FirstOrDefaultAsync(u => !u.IsDeleted &&
+                (u.Username.ToUpper() == normalized || u.Email.ToUpper() == normalized),
+                cancellationToken);
+
+        // حساب ناشناخته/غیرفعال — پاسخ یکسان با حساب معتبر (ضد افشای فهرست کاربران)
+        if (user is null || !user.IsActive || string.IsNullOrWhiteSpace(user.Email))
+        {
+            _logger.LogWarning("درخواست بازیابی رمز برای حساب ناشناخته یا بی‌ایمیل: {Input}",
+                usernameOrEmail.Trim());
+            return Result.Success();
+        }
+
+        if (!_emailSender.IsConfigured)
+            return Result.Failure(new Error("RECOVERY_EMAIL_DISABLED",
+                "سرویس ایمیل سرور تنظیم نشده است — بخش Email در appsettings را پر کنید یا با مدیر سامانه تماس بگیرید"));
+
+        var temporaryPassword = GenerateTemporaryPassword();
+        var displayName = ResolveFullName(user);
+
+        var email = await _emailSender.SendAsync(
+            user.Email,
+            "بازیابی رمز عبور — سامانه جامع مدیریت درمانگاه سهند",
+            BuildRecoveryEmailBody(displayName, user.Username, temporaryPassword),
+            null,
+            cancellationToken);
+
+        if (!email.Success)
+        {
+            _logger.LogWarning("ارسال ایمیل بازیابی رمز برای {User} ناموفق بود: {Error}",
+                user.Username, email.Error);
+            return Result.Failure(new Error("RECOVERY_EMAIL_FAILED",
+                email.Error ?? "ارسال ایمیل ناموفق بود"));
+        }
+
+        // حالا که نامه رسیده است، رمز عوض می‌شود
+        user.PasswordHash = _passwordHasher.Hash(temporaryPassword);
+        user.PasswordChangedAt = DateTime.UtcNow;
+        user.MustChangePassword = true;      // ورود بعدی: تغییر اجباری رمز
+        user.SecurityStamp = Guid.NewGuid().ToString("N");
+        user.FailedLoginAttempts = 0;
+        user.LockoutEnd = null;
+
+        // ابطال نشست‌های باز — رمز موقت نباید در دستگاه‌های قبلی کار کند
+        var tokens = await _context.RefreshTokens
+            .Where(t => t.UserId == user.Id && !t.IsRevoked)
+            .ToListAsync(cancellationToken);
+        foreach (var token in tokens)
+            token.IsRevoked = true;
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("رمز موقت برای کاربر {User} صادر و به ایمیل ثبت‌شده ارسال شد",
+            user.Username);
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// ساخت رمز موقت خوانا — بدون کاراکترهای اشتباه‌شدنی (O/0 و l/1) و با ترکیب
+    /// حرف بزرگ، حرف کوچک، رقم و نماد تا سیاست رمز عبور را هم برآورده کند.
+    /// </summary>
+    private static string GenerateTemporaryPassword()
+    {
+        const string upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+        const string lower = "abcdefghijkmnopqrstuvwxyz";
+        const string digits = "23456789";
+        const string symbols = "@#$%&*!";
+        const string all = upper + lower + digits;
+
+        var chars = new char[12];
+        chars[0] = upper[System.Security.Cryptography.RandomNumberGenerator.GetInt32(upper.Length)];
+        chars[1] = lower[System.Security.Cryptography.RandomNumberGenerator.GetInt32(lower.Length)];
+        chars[2] = digits[System.Security.Cryptography.RandomNumberGenerator.GetInt32(digits.Length)];
+        chars[3] = symbols[System.Security.Cryptography.RandomNumberGenerator.GetInt32(symbols.Length)];
+        for (var i = 4; i < chars.Length; i++)
+            chars[i] = all[System.Security.Cryptography.RandomNumberGenerator.GetInt32(all.Length)];
+
+        // جابه‌جایی تصادفی — نماد و رقم همیشه در جای ثابت نباشند
+        for (var i = chars.Length - 1; i > 0; i--)
+        {
+            var j = System.Security.Cryptography.RandomNumberGenerator.GetInt32(i + 1);
+            (chars[i], chars[j]) = (chars[j], chars[i]);
+        }
+
+        return new string(chars);
+    }
+
+    /// <summary>بدنهٔ فارسی و راست‌چین ایمیل بازیابی — بدون وابستگی به قالب بیرونی</summary>
+    private static string BuildRecoveryEmailBody(string displayName, string username,
+        string temporaryPassword)
+    {
+        var now = PersianDateHelper.ToShamsiWithTime(DateTime.Now);
+        return $"""
+        <div dir="rtl" style="font-family:Tahoma,Segoe UI,sans-serif;text-align:right;line-height:1.9;
+                    color:#263238;background:#F7FAFD;padding:18px;border-radius:12px">
+          <h2 style="margin:0 0 10px;color:#0078D7">بازیابی رمز عبور</h2>
+          <p>کاربر گرامی <b>{displayName}</b>،</p>
+          <p>درخواست بازیابی رمز برای حساب «<b>{username}</b>» در سامانهٔ درمانگاه سهند ثبت شد.</p>
+          <p style="margin:14px 0">رمز موقت شما:
+            <b style="font-family:Consolas,monospace;font-size:18px;letter-spacing:1px;
+                      background:#EAF3FC;border:1px solid #0078D7;border-radius:6px;padding:3px 8px;
+                      color:#0D47A1">{temporaryPassword}</b>
+          </p>
+          <p>با این رمز وارد شوید؛ سامانه در نخستین ورود، شما را به انتخاب رمز تازه راهنمایی می‌کند.</p>
+          <p style="color:#B71C1C">اگر این درخواست از سوی شما نبوده است، همین حالا با مدیر سامانه
+             تماس بگیرید.</p>
+          <hr style="border:none;border-top:1px dashed #B0BEC5" />
+          <p style="font-size:12px;color:#78909C">زمان درخواست: {now} — این نامه به‌صورت خودکار ارسال شده است.</p>
+        </div>
+        """;
     }
 
     /// <summary>دسترسی‌های کاربر از نقش‌ها</summary>

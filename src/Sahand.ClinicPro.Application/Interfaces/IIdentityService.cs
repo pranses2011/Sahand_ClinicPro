@@ -23,6 +23,23 @@ public interface IIdentityService
     Task<Result> ChangePasswordAsync(long userId, string currentPassword, string newPassword,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// بازیابی رمز عبور با ایمیل — چرخهٔ ۸۲ (گزارش مالک: «فراموشی رمز کار
+    /// نمی‌کند؛ رمز فعلی به ایمیل کاربر ارسال شود»).
+    /// </summary>
+    /// <remarks>
+    /// رمزها فقط به‌صورت هش BCrypt ذخیره می‌شوند و «رمز فعلی» قابل بازیابی نیست
+    /// (خودِ همین ویژگی، امنیت حساب‌ها را حفظ می‌کند). بنابراین جریان درست و
+    /// صنعتی این است: تولید «رمز موقت» تازه، ارسال آن به ایمیل ثبت‌شدهٔ کاربر،
+    /// و اجبار به تغییر رمز در نخستین ورود بعدی (MustChangePassword).
+    /// اگر ایمیل ارسال نشود، هیچ تغییری در پایگاه داده انجام نمی‌شود تا کاربر
+    /// با رمز قبلی خود قفل نشود.
+    /// </remarks>
+    /// <param name="usernameOrEmail">نام کاربری یا ایمیل ثبت‌شده</param>
+    /// <param name="cancellationToken">توکن لغو</param>
+    Task<Result> SendPasswordRecoveryAsync(string usernameOrEmail,
+        CancellationToken cancellationToken = default);
+
     /// <summary>گرفتن دسترسی‌های کاربر — از نقش‌های او</summary>
     Task<IReadOnlyList<string>> GetPermissionsAsync(long userId, CancellationToken cancellationToken = default);
 
