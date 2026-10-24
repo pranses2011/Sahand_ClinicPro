@@ -1,4 +1,4 @@
-name: Build and publish Windows installer
+﻿name: Build and publish Windows installer
 
 on:
   push:
@@ -66,6 +66,20 @@ jobs:
           )
           Copy-Item -Path $screenshots -Destination publish/desktop/screenshots/ -Force
 
+      - name: Publish framework-dependent desktop update
+        shell: pwsh
+        run: |
+          # بستهٔ به‌روزرسانی کم‌حجم کلاینت — بدون Runtime؛ روی نصب کامل سوار می‌شود
+          dotnet publish src/Sahand.ClinicPro.Desktop/Sahand.ClinicPro.Desktop.csproj `
+            -c Release -r win-x64 --self-contained false `
+            -p:PublishSingleFile=false -o publish/desktop-update
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force publish/desktop-update/docs | Out-Null
+          Copy-Item docs/guides/*.html publish/desktop-update/docs/ -Force
+          New-Item -ItemType Directory -Force publish/desktop-update/assets, publish/desktop-update/assets/fonts | Out-Null
+          Copy-Item docs/assets/ClinicPro.png publish/desktop-update/assets/ -Force
+          Copy-Item docs/assets/fonts/* publish/desktop-update/assets/fonts/ -Force
+
       - name: Build Inno Setup executable
         shell: pwsh
         run: |
@@ -83,20 +97,6 @@ jobs:
           if (-not $isccPath) { throw 'Inno Setup 6 compiler is not installed on this Windows runner.' }
           & $isccPath "/DMyAppVersion=${{ steps.version.outputs.version }}" installer/SahandClinicPro.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Publish framework-dependent desktop update
-        shell: pwsh
-        run: |
-          # بستهٔ به‌روزرسانی کم‌حجم کلاینت — بدون Runtime؛ روی نصب کامل سوار می‌شود
-          dotnet publish src/Sahand.ClinicPro.Desktop/Sahand.ClinicPro.Desktop.csproj `
-            -c Release -r win-x64 --self-contained false `
-            -p:PublishSingleFile=false -o publish/desktop-update
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          New-Item -ItemType Directory -Force publish/desktop-update/docs | Out-Null
-          Copy-Item docs/guides/*.html publish/desktop-update/docs/ -Force
-          New-Item -ItemType Directory -Force publish/desktop-update/assets, publish/desktop-update/assets/fonts | Out-Null
-          Copy-Item docs/assets/ClinicPro.png publish/desktop-update/assets/ -Force
-          Copy-Item docs/assets/fonts/* publish/desktop-update/assets/fonts/ -Force
 
       - name: Build Inno Setup update executable
         shell: pwsh
@@ -136,13 +136,13 @@ jobs:
           Set-Content -Path "$package/RELEASE-INSTALL-GUIDE.txt" -Value $guide -Encoding UTF8
           Compress-Archive -Path "$package/*" -DestinationPath "dist/SahandClinicPro-Server-v$version.zip" -Force
 
-      - name: Publish framework-dependent API and package server update
+      - name: Publish self-contained API and package server update
         shell: pwsh
         run: |
           # بستهٔ به‌روزرسانی کم‌حجم سرور — بدون Runtime؛ اسکریپت نصب با
           # -UpdateMode فایل‌های Runtime نصب موجود را نگه می‌دارد
           dotnet publish src/Sahand.ClinicPro.API/Sahand.ClinicPro.API.csproj `
-            -c Release -r win-x64 --self-contained false `
+            -c Release -r win-x64 --self-contained true `
             -p:PublishSingleFile=false -o publish/server-update
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $version = '${{ steps.version.outputs.version }}'
