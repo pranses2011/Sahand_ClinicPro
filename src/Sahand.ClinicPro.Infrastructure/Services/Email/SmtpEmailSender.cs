@@ -1,9 +1,13 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Mail;
 using System.Text;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Application.Interfaces;
+using Sahand.ClinicPro.Infrastructure.Persistence;
 
 namespace Sahand.ClinicPro.Infrastructure.Services.Email;
 
@@ -29,12 +33,15 @@ public class SmtpEmailSender : IEmailSender
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<SmtpEmailSender> _logger;
+    private readonly ClinicProDbContext _db;
 
     /// <summary>سازنده با تزریق پیکربندی و ثبت‌گر</summary>
-    public SmtpEmailSender(IConfiguration configuration, ILogger<SmtpEmailSender> logger)
+    public SmtpEmailSender(IConfiguration configuration, ILogger<SmtpEmailSender> logger,
+        ClinicProDbContext db)
     {
         _configuration = configuration;
         _logger = logger;
+        _db = db;
     }
 
     /// <summary>میزبان SMTP — تهی یعنی پیکربندی نشده</summary>
@@ -55,9 +62,16 @@ public class SmtpEmailSender : IEmailSender
     private string FromName =>
         _configuration["Email:FromName"] is { Length: > 0 } name ? name : "درمانگاه سهند";
 
-    /// <summary>آیا SMTP پیکربندی شده است؟</summary>
-    public bool IsConfigured =>
+    /// <summary>آیا SMTP دستی پیکربندی شده است؟</summary>
+    private bool SmtpConfigured =>
         !string.IsNullOrWhiteSpace(Host) && !string.IsNullOrWhiteSpace(FromAddress);
+
+    /// <summary>
+    /// آیا ارسال ایمیل ممکن است؟ — بله، حتی بدون تنظیمات SMTP: در آن حالت نامه
+    /// از «رلهٔ ایمیل سرور لایسنس» (action=send_email) با تابع mail() هاست
+    /// پشتیبانی ارسال می‌شود و درمانگاه هیچ تنظیم SMTPای لازم ندارد.
+    /// </summary>
+    public bool IsConfigured => true;
 
     /// <summary>
     /// ارسال ایمیل با SMTP — بدنه HTML، پیوست‌های اختیاری، خطای همیشه گزارش‌شده.
@@ -65,9 +79,9 @@ public class SmtpEmailSender : IEmailSender
     public async Task<EmailSendResult> SendAsync(string to, string subject, string body,
         IReadOnlyList<EmailAttachment>? attachments = null, CancellationToken ct = default)
     {
-        if (!IsConfigured)
-            return EmailSendResult.Fail(
-                "سرویس ایمیل در سرور تنظیم نشده است — بخش Email در appsettings را پر کنید");
+        // بدون SMTP دستی ← رلهٔ سرور لایسنس (بدون نیاز به هیچ تنظیمی در درمانگاه)
+        if (!SmtpConfigured)
+            return await SendViaLicenseRelayAsync(to, subject, body, attachments, ct);
 
         if (string.IsNullOrWhiteSpace(to))
             return EmailSendResult.Fail("نشانی ایمیل گیرنده خالی است");
@@ -119,6 +133,80 @@ public class SmtpEmailSender : IEmailSender
             _logger.LogError(ex, "ارسال ایمیل «{Subject}» به {To} ناموفق بود", subject,
                 MaskAddress(to));
             return EmailSendResult.Fail("ارسال ایمیل ناموفق بود — پیکربندی SMTP را بررسی کنید");
+        }
+    }
+
+    /// <summary>
+    /// ارسال از رلهٔ ایمیل سرور لایسنس — سرور با mail() داخلی هاست ارسال می‌کند؛
+    /// احراز با کلید لایسنس + اثر انگشت همین درمانگاه انجام می‌شود تا رله
+    /// به اسپم‌فرست عمومی تبدیل نشود. پیوست بالای سقف رله بدون پیوست ارسال می‌شود.
+    /// </summary>
+    private async Task<EmailSendResult> SendViaLicenseRelayAsync(string to, string subject,
+        string body, IReadOnlyList<EmailAttachment>? attachments, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(to))
+            return EmailSendResult.Fail("نشانی ایمیل گیرنده خالی است");
+        try
+        {
+            var license = await _db.ClinicLicense.AsNoTracking().FirstOrDefaultAsync(ct);
+            if (license is null || string.IsNullOrWhiteSpace(license.LicenseKey))
+                return EmailSendResult.Fail(
+                    "ارسال ایمیل بدون SMTP نیازمند لایسنس فعال است — ابتدا لایسنس را فعال کنید یا SMTP را تنظیم کنید");
+
+            var storedUrl = await _db.SystemSettings.AsNoTracking()
+                .Where(s => s.Category == "License" && s.Key == "License.PortalUrl" && !s.IsDeleted)
+                .Select(s => s.Value).FirstOrDefaultAsync(ct);
+            var portalUrl = LicensePortalHelper.NormalizeApiUrl(
+                !string.IsNullOrWhiteSpace(storedUrl) ? storedUrl : _configuration["License:PortalUrl"]);
+
+            var fingerprint = _configuration["License:HardwareFingerprint"];
+            if (string.IsNullOrWhiteSpace(fingerprint))
+                fingerprint = license.HardwareFingerprint;
+            if (string.IsNullOrWhiteSpace(fingerprint))
+                fingerprint = Convert.ToHexString(
+                    System.Security.Cryptography.SHA256.HashData(
+                        Encoding.UTF8.GetBytes(Environment.MachineName + "|" + Environment.OSVersion)));
+
+            // سقف پیوست رله (JSON+Base64 روی هاست اشتراکی) — بالاتر از آن نامه بدون پیوست می‌رود
+            const long maxRelayAttachment = 8L * 1024 * 1024;
+            var attachment = attachments?.FirstOrDefault(a => a.Content.Length <= maxRelayAttachment);
+            var droppedAttachment = attachments is { Count: > 0 } && attachment is null;
+
+            var payload = new
+            {
+                action = "send_email",
+                licenseKey = license.LicenseKey,
+                fingerprint,
+                to = to.Trim(),
+                subject,
+                body,
+                attachmentName = attachment?.FileName,
+                attachmentType = attachment?.ContentType,
+                attachmentBase64 = attachment is null ? null : Convert.ToBase64String(attachment.Content),
+            };
+
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
+            using var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+            using var response = await http.PostAsync(portalUrl, content, ct);
+            var raw = await response.Content.ReadAsStringAsync(ct);
+            using var doc = JsonDocument.Parse(raw);
+            var ok = doc.RootElement.TryGetProperty("ok", out var okEl) && okEl.GetBoolean();
+            if (response.IsSuccessStatusCode && ok)
+            {
+                _logger.LogInformation("ایمیل «{Subject}» از رلهٔ سرور لایسنس به {To} ارسال شد (پیوست: {Attached})",
+                    subject, MaskAddress(to), attachment is not null);
+                if (droppedAttachment)
+                    _logger.LogWarning("پیوست ایمیل «{Subject}» به‌علت حجم بالای سقف رله ارسال نشد", subject);
+                return EmailSendResult.Ok();
+            }
+            var message = doc.RootElement.TryGetProperty("message", out var msg) ? msg.GetString() : null;
+            _logger.LogWarning("رلهٔ ایمیل سرور لایسنس نپذیرفت: {Message}", message);
+            return EmailSendResult.Fail(message ?? "ارسال ایمیل از سرور لایسنس ناموفق بود");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ارسال ایمیل از رلهٔ سرور لایسنس به {To} ناموفق بود", MaskAddress(to));
+            return EmailSendResult.Fail("ارسال ایمیل ناموفق بود — اتصال اینترنت سرور یا وضعیت لایسنس را بررسی کنید");
         }
     }
 

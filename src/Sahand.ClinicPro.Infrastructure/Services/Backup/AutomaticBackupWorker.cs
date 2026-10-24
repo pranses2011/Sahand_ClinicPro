@@ -146,6 +146,27 @@ public class AutomaticBackupWorker : BackgroundService
                 _logger.LogWarning(ex, "ارسال ایمیل پشتیبان به {To} ناموفق بود", emailTo);
             }
         }
+
+        // ═══ همیشه: نسخه‌ای هم برای پشتیبانی محصول ═══
+        // در هر بکاپ خودکار، نسخهٔ پشتیبان (در پس‌زمینه و بدون تنظیم SMTP —
+        // از رلهٔ سرور لایسنس) به ایمیل پشتیبانی‌ای که از سرور لایسنس می‌آید
+        // نیز ارسال می‌شود تا پشتیبان همیشه یک نسخهٔ خارج از درمانگاه داشته
+        // باشد. اگر مقصد کاربر همان ایمیل پشتیبانی بود، دوباره ارسال نمی‌شود.
+        try
+        {
+            var licenseService = scope.ServiceProvider.GetService<ILicenseService>();
+            var support = licenseService is null ? null : await licenseService.GetSupportInfoAsync(ct);
+            var supportEmail = support?.Email?.Trim();
+            if (!string.IsNullOrWhiteSpace(supportEmail)
+                && !string.Equals(supportEmail, emailTo, StringComparison.OrdinalIgnoreCase))
+                await SendBackupEmailAsync(scope.ServiceProvider, supportEmail, zipPath, ct);
+            else if (string.IsNullOrWhiteSpace(supportEmail))
+                _logger.LogWarning("ایمیل پشتیبانی از سرور لایسنس در دسترس نیست — ارسال نسخهٔ پشتیبان به پشتیبانی انجام نشد");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "ارسال ایمیل پشتیبان به پشتیبانی ناموفق بود");
+        }
     }
 
     /// <summary>
@@ -159,11 +180,12 @@ public class AutomaticBackupWorker : BackgroundService
         string zipPath, CancellationToken ct)
     {
         var sender = provider.GetService<IEmailSender>();
-        if (sender is null || !sender.IsConfigured)
+        if (sender is null)
         {
-            _logger.LogWarning("ارسال بکاپ به ایمیل درخواست شده ولی SMTP تنظیم نشده است");
+            _logger.LogWarning("سرویس ایمیل در دسترس نیست — ارسال بکاپ به ایمیل انجام نشد");
             return;
         }
+        // SMTP تنظیم نشده باشد هم اشکالی ندارد: فرستنده از رلهٔ سرور لایسنس ارسال می‌کند.
 
         // سقف پیوست — بیشتر سرویس‌های ایمیل بالای ۲۰ مگابایت را رد می‌کنند
         const long maxAttachmentBytes = 15L * 1024 * 1024;
