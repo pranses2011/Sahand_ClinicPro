@@ -23,7 +23,7 @@ public class AdminSeeder : IDataSeeder
         var adminExists = await _context.Users.AnyAsync(u => u.Username == "admin", cancellationToken);
         if (adminExists) return;
 
-        var adminRole = await _context.Roles.FirstAsync(r => r.Name == "Admin", cancellationToken);
+        var adminRole = await _context.Roles.FirstAsync(r => r.Name == SystemRoles.Admin, cancellationToken);
 
         var admin = new User
         {

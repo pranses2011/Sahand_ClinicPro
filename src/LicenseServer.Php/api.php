@@ -104,6 +104,75 @@ if (strlen($fingerprint) < 16 || strlen($fingerprint) > 150) {
         'message' => 'اثر انگشت سخت‌افزار نامعتبر است.'], 400);
 }
 
+/* ─────────  اقدام: send_email — رلهٔ ایمیل بدون نیاز به SMTP درمانگاه  ─────────
+   درمانگاهِ بدون تنظیمات SMTP نامه را اینجا می‌فرستد و هاست پشتیبانی با
+   mail() داخلی ارسال می‌کند. احراز: همان اعتبارسنجی لایسنس (کلید + اثر
+   انگشت) — رلهٔ باز نیست. پیوست یک فایل با سقف ۸ مگابایت (Base64 در JSON). */
+if ($action === 'send_email') {
+    try {
+        $check = ls_validate_license($licenseKey, $fingerprint, false);
+        if (empty($check['isValid'])) {
+            ls_json_out(['ok' => false, 'status' => $check['status'] ?? 'invalid',
+                'message' => $check['message'] ?? 'لایسنس معتبر نیست.'], 403);
+        }
+        $to      = trim((string)($_REQUEST['to'] ?? ''));
+        $subject = trim((string)($_REQUEST['subject'] ?? ''));
+        $body    = (string)($_REQUEST['body'] ?? '');
+        if (!filter_var($to, FILTER_VALIDATE_EMAIL) || $subject === '' || $body === ''
+            || strlen($subject) > 300 || strlen($body) > 200000) {
+            ls_json_out(['ok' => false, 'status' => 'bad_request',
+                'message' => 'گیرنده، موضوع یا بدنهٔ ایمیل نامعتبر است.'], 400);
+        }
+        $support = ls_support_info();
+        $from = filter_var((string)($support['email'] ?? ''), FILTER_VALIDATE_EMAIL)
+            ? (string)$support['email'] : 'no-reply@localhost';
+        $fromName = (string)($support['company'] ?? 'Sahand ClinicPro');
+
+        $attName = trim((string)($_REQUEST['attachmentName'] ?? ''));
+        $attB64  = (string)($_REQUEST['attachmentBase64'] ?? '');
+        $attType = trim((string)($_REQUEST['attachmentType'] ?? 'application/octet-stream'));
+        $boundary = '=_Sahand_' . bin2hex(random_bytes(12));
+        $headers = [
+            'From: =?UTF-8?B?' . base64_encode($fromName) . '?= <' . $from . '>',
+            'MIME-Version: 1.0',
+        ];
+        $isHtml = str_contains($body, '<') && str_contains($body, '>');
+        $bodyPart = $isHtml ? $body : nl2br(htmlspecialchars($body, ENT_QUOTES, 'UTF-8'));
+
+        if ($attName !== '' && $attB64 !== '') {
+            $decoded = base64_decode($attB64, true);
+            if ($decoded === false || strlen($decoded) > 8 * 1024 * 1024) {
+                ls_json_out(['ok' => false, 'status' => 'bad_request',
+                    'message' => 'پیوست ایمیل نامعتبر یا بزرگ‌تر از ۸ مگابایت است.'], 400);
+            }
+            $safeName = preg_replace('/[^A-Za-z0-9._-]/', '_', basename($attName));
+            $headers[] = 'Content-Type: multipart/mixed; boundary="' . $boundary . '"';
+            $mime = "--$boundary\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n"
+                . chunk_split(base64_encode($bodyPart))
+                . "--$boundary\r\nContent-Type: $attType; name=\"$safeName\"\r\n"
+                . "Content-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"$safeName\"\r\n\r\n"
+                . chunk_split(base64_encode($decoded))
+                . "--$boundary--";
+        } else {
+            $headers[] = 'Content-Type: text/html; charset=UTF-8';
+            $mime = $bodyPart;
+        }
+
+        $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+        $sent = mail($to, $encodedSubject, $mime, implode("\r\n", $headers));
+        if (!$sent) {
+            ls_json_out(['ok' => false, 'status' => 'mail_failed',
+                'message' => 'ارسال ایمیل روی سرور پشتیبانی ناموفق بود.'], 502);
+        }
+        ls_json_out(['ok' => true, 'status' => 'sent',
+            'message' => 'ایمیل ارسال شد.']);
+    } catch (Throwable $e) {
+        ls_log_error('api:send_email', $e);
+        ls_json_out(['ok' => false, 'status' => 'server_error',
+            'message' => 'خطای داخلی سرور — بعداً تلاش کنید.'], 500);
+    }
+}
+
 /* ─────────  اجرای اقدام  ───────── */
 
 if ($action === 'activate' || $action === 'heartbeat') {

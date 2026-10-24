@@ -109,12 +109,31 @@
                      اندازهٔ قلم) محتوا (سربرگ ۳۴ + عدد درشت ۲۵px + زیرنویس مقایسه) از ۱۱۲ تجاوز
                      می‌کرد و زیرنویسِ زیرِ عدد بیرون از کارت می‌افتاد/بریده می‌شد. MinHeight همان
                      بلوک بصری را حفظ می‌کند ولی در برابر فونت/مقیاس/DPI کشسان است. -->
+                <!-- ═══ چرخهٔ ۸۲ — ریشهٔ «نوار رنگی بالای کارت‌ها سر جای خودش نیست» ═══
+                     پیش‌تر نوار یک Border جداگانه «روی» کارت بود (خواهرِ آن در همان
+                     Grid) با Margin نامتقارن 1,1,9,0 و گوشهٔ ۲px؛ چون کارت گوشهٔ ۱۴px
+                     دارد و دو لایه مستقل چیده می‌شدند، نوار نسبت به قاب جابه‌جا
+                     می‌افتاد و از گوشه‌ها بیرون می‌زد. اکنون نوار «داخل» خودِ کارت
+                     است: ردیف اول ارتفاع ثابت ۵px، ردیف دوم محتوا، و نوار با همان
+                     شعاع گوشهٔ بالای کارت (۱۳) دقیقاً روی لبه می‌نشیند. -->
                 <Border CornerRadius="14" Background="{DynamicResource MaterialDesign.Brush.Card.Background}" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
-                        BorderThickness="1.2" Padding="14,12,12,12"
+                        BorderThickness="1.2" Padding="0" ClipToBounds="True"
                         Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}"
                         UseLayoutRounding="True" SnapsToDevicePixels="True">
                     <Border.MinHeight>112</Border.MinHeight>
                     <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="5" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- نوار تأکید رنگ — درون قاب، تمام‌عرض و هم‌گوشه با کارت -->
+                        <Border Grid.Row="0"
+                                CornerRadius="13,13,0,0"
+                                Background="{Binding Accent, Converter={StaticResource HexToBrush}, FallbackValue=#1565C0}"
+                                Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}" />
+
+                        <Grid Grid.Row="1" Margin="14,7,12,12">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
@@ -141,13 +160,9 @@
                             <TextBlock Text="{Binding CompareText, Mode=OneWay}" FontSize="9.5"
                                        Opacity="0.55" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                         </StackPanel>
+                        </Grid>
                     </Grid>
                 </Border>
-
-                <!-- نوار تأکید رنگ کارت — لایهٔ جدا روی قاب (بالای کارت) -->
-                <Border Height="4" CornerRadius="2,2,0,0" VerticalAlignment="Top" Margin="1,1,9,0"
-                        Background="{Binding Accent, Converter={StaticResource HexToBrush}, FallbackValue=#1565C0}"
-                        Visibility="{Binding Visible, Converter={StaticResource BoolToVis}}" />
 
                 <!-- ═══ چرخهٔ ۷۵ — جای‌نگهدار کارت مخفی (فقط در حالت شخصی‌سازی) ═══
                      گزارش مالک: «دیگه نمیشه آشکارش کرد» — کارت مخفی در حالت شخصی‌سازی

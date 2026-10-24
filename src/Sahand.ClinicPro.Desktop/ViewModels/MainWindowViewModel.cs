@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Media;
@@ -456,7 +456,7 @@ public partial class MainWindowViewModel : ObservableObject
             // صفحهٔ مستقل doctor-visit حذف شد (هم‌پوشانی کامل)؛ کاربر پزشک به
             // «ویزیت و معاینه» می‌رود که حالا فیلتر پزشکِ خودکار دارد
             // (VisitsViewModel از users/me پزشک متصل را پیش‌فرض می‌کند)
-            var landingPage = _tokens.Roles.Contains("Doctor", StringComparer.OrdinalIgnoreCase)
+            var landingPage = _tokens.Roles.Contains(Sahand.ClinicPro.Domain.Entities.Security.SystemRoles.Doctor, StringComparer.OrdinalIgnoreCase)
                               && HasPageAccess("visits")
                 ? "visits"
                 : "dashboard";

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Sahand.ClinicPro.API.Controllers;
 using Sahand.ClinicPro.Application.DTOs.Auth;
 using Sahand.ClinicPro.Application.Features.Auth.Commands.ChangePassword;
+using Sahand.ClinicPro.Application.Features.Auth.Commands.ForgotPassword;
 using Sahand.ClinicPro.Application.Features.Auth.Commands.Login;
 using Sahand.ClinicPro.Application.Features.Auth.Commands.Logout;
 using Sahand.ClinicPro.Application.Features.Auth.Commands.RefreshToken;
@@ -71,6 +72,28 @@ public class AuthController : ApiBaseController
     {
         await _mediator.Send(new LogoutCommand(request.RefreshToken));
         return ToResponse(Domain.Common.Result.Success(), "خروج با موفقیت انجام شد");
+    }
+
+    /// <summary>
+    /// فراموشی رمز — ارسال رمز موقت به ایمیل ثبت‌شدهٔ حساب
+    /// </summary>
+    /// <remarks>
+    /// چرخهٔ ۸۲ (گزارش مالک): «فراموشی رمز» در صفحهٔ ورود بی‌اثر بود. رمزها فقط
+    /// هش‌شده ذخیره می‌شوند، پس «رمز فعلی» قابل ارسال نیست؛ سرور رمز موقت تازه
+    /// می‌سازد، آن را به ایمیل همان حساب می‌فرستد و ورود بعدی را ملزم به تغییر
+    /// رمز می‌کند. پاسخ برای حساب موجود و ناموجود یکسان است تا فهرست کاربران
+    /// افشا نشود؛ تنها خطای ممکن، پیکربندی‌نبودن SMTP است.
+    /// </remarks>
+    [HttpPost("forgot-password")]
+    [EnableRateLimiting("auth")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
+    {
+        var result = await _mediator.Send(new ForgotPasswordCommand(request.UsernameOrEmail));
+        return ToResponse(result,
+            "اگر حسابی با این مشخصات وجود داشته باشد، رمز موقت به ایمیل ثبت‌شدهٔ آن ارسال شد");
     }
 
     /// <summary>

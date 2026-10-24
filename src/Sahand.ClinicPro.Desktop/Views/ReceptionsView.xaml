@@ -463,9 +463,16 @@
                                          معین کرد» — انتخابگر اتاقِ محل انجام خدمت از اتاق‌های فعال؛
                                          نام اتاق پس از ثبت در ستون «اتاق» صف پذیرش امروز می‌نشیند -->
                                     <TextBlock Text="اتاق انجام خدمت (اختیاری — از اتاق‌های درمانگاه)" Style="{StaticResource FieldCaption}" />
+                                    <!-- ═══ چرخهٔ ۸۲ — ریشهٔ «نام اتاق‌ها نمایش داده نمی‌شود
+                                         ولی به تعداد اتاق‌ها آیتم خالی می‌آید» ═══
+                                         RoomOption در ReceptionsViewModel فقط Id و
+                                         DisplayName دارد (بدون Name). DisplayMemberPath="Name"
+                                         یعنی هیچ ستونی برای نمایش پیدا نمی‌شود؛ WPF برای هر
+                                         آیتم یک ردیف خالی می‌کشد ⇒ دقیقاً همان چیزی که مالک
+                                         دید. مسیر درست: DisplayName (همان قرارداد فرم پزشک). -->
                                     <ComboBox ItemsSource="{Binding Rooms}"
                                               SelectedItem="{Binding SelectedRoom}"
-                                              DisplayMemberPath="Name" />
+                                              DisplayMemberPath="DisplayName" />
                                 </StackPanel>
 
                             </StackPanel>

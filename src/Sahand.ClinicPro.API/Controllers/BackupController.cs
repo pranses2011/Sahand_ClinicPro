@@ -361,7 +361,10 @@ public class BackupController : ApiBaseController
         {
             enabled = string.Equals(Value("AutoEnabled"), "true", StringComparison.OrdinalIgnoreCase),
             hour = int.TryParse(Value("AutoHour"), out var h) ? h : 2,
-            directory = Value("Directory") ?? _configuration["Backup:Directory"] ?? "C:/Backups/SahandClinicPro"
+            directory = Value("Directory") ?? _configuration["Backup:Directory"] ?? "C:/Backups/SahandClinicPro",
+            // چرخهٔ ۸۲ — «ارسال به ایمیل»: مقصد ارسال نسخهٔ شبانه
+            emailEnabled = string.Equals(Value("EmailEnabled"), "true", StringComparison.OrdinalIgnoreCase),
+            emailTo = Value("EmailTo") ?? string.Empty
         }));
     }
 
@@ -404,6 +407,19 @@ public class BackupController : ApiBaseController
         if (!string.IsNullOrWhiteSpace(request.Directory))
             await UpsertAsync("Directory", request.Directory.Trim());
 
+        // ═══ چرخهٔ ۸۲ (گزارش مالک) — «ارسال به ایمیل» بکاپ خودکار ═══
+        // «در تنظیمات بکاپ‌گیری خودکار، گزینهٔ ارسال به ایمیل و یک فیلد برای
+        // ایمیل مقصد بگذار». کلیدها در همان دستهٔ Backup می‌نشینند تا کارگر
+        // پس‌زمینه (AutomaticBackupWorker) آن‌ها را در هر چرخه بخواند.
+        if (request.EmailEnabled is { } emailEnabled)
+            await UpsertAsync("EmailEnabled", emailEnabled ? "true" : "false");
+        if (request.EmailTo is not null)
+        {
+            // خالی‌کردن صریح فیلد هم باید ذخیره شود (غیرفعال‌سازی مقصد)
+            var target = request.EmailTo.Trim();
+            await UpsertAsync("EmailTo", target);
+        }
+
         await _unitOfWork.SaveEntitiesAsync(ct);
         return Ok(ApiResponse<object>.SuccessMessage("تنظیمات پشتیبان‌گیری خودکار ذخیره شد"));
     }
@@ -417,6 +433,12 @@ public class BackupController : ApiBaseController
         public int? Hour { get; set; }
         /// <summary>پوشهٔ ذخیرهٔ فایل‌های پشتیبان</summary>
         public string? Directory { get; set; }
+
+        /// <summary>ارسال نسخهٔ پشتیبان خودکار به ایمیل — چرخهٔ ۸۲</summary>
+        public bool? EmailEnabled { get; set; }
+
+        /// <summary>نشانی ایمیل مقصد — رشتهٔ خالی یعنی پاک‌کردن مقصد</summary>
+        public string? EmailTo { get; set; }
     }
 
     // ═══ پشتیبان ابری — چرخه سیزدهم (درخواست ۷-۳) + تنظیم از برنامه (چرخه بیستم) ═══

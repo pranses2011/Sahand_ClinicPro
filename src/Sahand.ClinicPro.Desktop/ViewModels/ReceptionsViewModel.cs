@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -1259,6 +1259,66 @@ public partial class ReceptionsViewModel : ViewModelBase
             _snackbar.Success($"پذیرش موفق — شماره صف: {queueNo} (فاکتور و پرداخت {(payment.Method == 2 ? "کارتخوان" : "نقدی")} ثبت شد)");
         else
             _snackbar.Success($"پذیرش موفق — شماره صف: {queueNo} (فاکتور صادر شد)");
+
+        // ═══ چرخهٔ ۸۲ (گزارش مالک) — چاپ قبض پذیرش پس از پرداخت ═══
+        // «بعد از پذیرش و پرداخت و انتخاب روش پرداخت و تأیید، قبضی چاپ نمیشه؛
+        // یک قبض کامل و شیک برای پرینتر حرارتی ۸ سانتی می‌خوام». قبض فقط وقتی
+        // معنا دارد که هم فاکتور صادر شده و هم پرداخت واقعاً ثبت شده باشد؛ در
+        // شکست فاکتور/پرداخت، چاپ قبضِ جعلی ممنوع است (همان قانون صداقت چرخهٔ ۳۱).
+        // چاپ از دروازهٔ PrintFlow می‌گذرد، پس تنظیم «پیش‌نمایش قبل از چاپ» هم
+        // رعایت می‌شود. خطای چاپ نباید زنجیرهٔ ثبت‌شده را زیر سؤال ببرد، لذا در
+        // try/catch جدا و با پیام ملایم اعلام می‌شود.
+        if (!invoiceFailed && !paymentFailed && payment is not null && invoice?.Data is { } invoiceNo)
+        {
+            try
+            {
+                // اقلام قبض — همان اقلام فاکتور (خدمت/ویزیت + لوازم مصرفی با قیمت بچ)
+                var lines = new List<ReceptionReceiptItem>();
+                if (isServiceMode)
+                    lines.Add(new ReceptionReceiptItem(SelectedService!.Name, 1m, SelectedService.Price));
+                else
+                    lines.Add(new ReceptionReceiptItem($"ویزیت {SelectedDoctor!.Name}", 1m, VisitFee));
+                foreach (var consumed in consumeResult?.Items ?? new List<ConsumeItemResultDto>())
+                    lines.Add(new ReceptionReceiptItem($"لوازم مصرفی: {consumed.Name}",
+                        consumed.Quantity, consumed.UnitPrice));
+
+                var paidNow = PatientShare + (consumeResult?.TotalCost ?? 0m);
+                var invoiceTotal = lines.Sum(l => l.Total);
+                var now = DateTime.Now;
+
+                var receipt = new ReceptionReceipt(
+                    QueueNumber: queueNo ?? 0,
+                    InvoiceNumber: invoiceNo,
+                    PatientName: FoundPatient?.FullName ?? "—",
+                    NationalCode: FoundPatient?.NationalCode,
+                    Mobile: FoundPatient?.Mobile,
+                    DoctorName: isServiceMode
+                        ? (SelectedPerformer?.FullName ?? "—")
+                        : (SelectedDoctor?.Name ?? "—"),
+                    ServiceName: isServiceMode ? SelectedService?.Name : null,
+                    RoomName: SelectedRoom?.DisplayName,
+                    InsuranceName: company?.Name ?? "آزاد (بدون بیمه)",
+                    DateText: Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper
+                        .ToShamsi(now),
+                    TimeText: now.ToString("HH:mm"),
+                    Items: lines,
+                    ItemsTotal: invoiceTotal,
+                    InsuranceShare: InsuranceShare,
+                    PatientShare: PatientShare,
+                    Payable: paidNow,
+                    Paid: paidNow,
+                    PaymentMethod: payment.Method,
+                    ReferenceNumber: payment.ReferenceNumber,
+                    CardNumber: payment.CardNumber);
+
+                ReceptionReceiptPrinter.Print(receipt);
+            }
+            catch (Exception ex)
+            {
+                // چاپ یک کار جانبی است — ثبت مالی انجام شده و نباید پیام خطا بدهد
+                _snackbar.Info($"پذیرش ثبت شد؛ چاپ قبض انجام نشد: {ex.Message}");
+            }
+        }
 
         // ═══ پاک‌سازی فرم — چرخهٔ ۷۴: پاک‌سازی کامل پس از ثبت موفق ═══
         // گزارش مالک: «در پذیرش، بعد از پذیرش و پرداخت، هنوز اطلاعات بیمار در

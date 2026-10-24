@@ -176,6 +176,8 @@
                     <Grid>
                         <TextBox x:Name="ShamsiBox"
                                  Cursor="IBeam"
+                                 Focusable="True"
+                                 IsReadOnly="False"
                                  BorderThickness="0"
                                  Background="Transparent"
                                  Padding="0"
@@ -233,10 +235,17 @@
         </Border>
 
         <!-- ═══ پنجرهٔ تقویم ═══ -->
+        <!-- ═══ چرخهٔ ۸۲ — ریشهٔ «کلیک روی کنترل فوکوس نمی‌دهد و تایپ نمی‌شود» ═══
+             پیش‌تر StaysOpen=False بود؛ پاپ‌آپ به‌محض باز شدن، ماوس را capture
+             می‌کند و کلیکِ MouseDown هرگز به خودِ TextBox نمی‌رسد ⇒ مکان‌نما
+             نمی‌نشیند و تایپ ممکن نیست. اکنون پاپ‌آپ خودش capture نمی‌کند و
+             بسته‌شدنش صریح است: کلیک بیرونِ فیلد/تقویم، خروج فوکوس یا
+             غیرفعال‌شدن پنجره (OnHostPreviewMouseDown / OnHostDeactivated
+             در کد پشت). -->
         <Popup x:Name="CalendarPopup"
                PlacementTarget="{Binding ElementName=FieldBorder}"
                Placement="Bottom"
-               StaysOpen="False"
+               StaysOpen="True"
                AllowsTransparency="True"
                PopupAnimation="None">
             <Border x:Name="PopupSurface"
@@ -266,7 +275,13 @@
                         <Button x:Name="PrevButton" Grid.Column="0"
                                 Style="{StaticResource Jdp.NavButton}"
                                 ToolTip="قبلی">
+                            <!-- چرخهٔ ۸۲ — «نوک فلش‌ها رو به داخل است»: هندسهٔ Path در
+                                 چیدمان راست‌به‌چپ آینه می‌شد و «>» به «<» تبدیل می‌گشت.
+                                 FlowDirection=LeftToRight روی خودِ Path mirroring را
+                                 خنثی می‌کند؛ دکمهٔ «قبلی» در RTL سمت راست است و
+                                 باید نوکش رو به راست (بیرون) بماند. -->
                             <Path Width="9" Height="14" Stretch="Uniform" StrokeThickness="1.8"
+                                  FlowDirection="LeftToRight"
                                   Stroke="{DynamicResource MaterialDesign.Brush.Foreground}"
                                   Data="M4,1 L10,7 L4,13" />
                         </Button>
@@ -293,6 +308,7 @@
                                 Style="{StaticResource Jdp.NavButton}"
                                 ToolTip="بعدی">
                             <Path Width="9" Height="14" Stretch="Uniform" StrokeThickness="1.8"
+                                  FlowDirection="LeftToRight"
                                   Stroke="{DynamicResource MaterialDesign.Brush.Foreground}"
                                   Data="M10,1 L4,7 L10,13" />
                         </Button>

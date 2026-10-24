@@ -163,6 +163,11 @@ public static class DependencyInjection
         services.AddScoped<Application.Interfaces.ISmsService, Services.SMS.SmsService>();
         services.AddScoped<Services.SMS.SmsQueueProcessor>();
 
+        // ── سرویس ایمیل (SMTP) — چرخهٔ ۸۲: بازیابی رمز + ارسال بکاپ به ایمیل ──
+        // پیکربندی از بخش «Email» در appsettings خوانده می‌شود؛ بدون آن
+        // IsConfigured نادرست است و مسیرهای بالادست پیام فارسی روشن می‌دهند.
+        services.AddScoped<Application.Interfaces.IEmailSender, Services.Email.SmtpEmailSender>();
+
         // سرویس‌های انتزاعی Application پیاده‌سازی‌شده در زیرساخت
         services.AddScoped<ITransactionManager, TransactionManager>();
         services.AddSingleton<IDateTimeService, Services.DateTimeService>();
@@ -171,6 +176,7 @@ public static class DependencyInjection
         // بذرهای داده اولیه
         services.AddTransient<IDataSeeder, RoleSeeder>();
         services.AddTransient<IDataSeeder, PermissionSeeder>();
+        services.AddTransient<IDataSeeder, RolePermissionSeeder>(); // دسترسی‌های پیش‌فرض نقش‌های فارسی
         services.AddTransient<IDataSeeder, AdminSeeder>();
         services.AddTransient<IDataSeeder, BasicDataSeeder>();
         services.AddTransient<IDataSeeder, AccountingAccountSeeder>();

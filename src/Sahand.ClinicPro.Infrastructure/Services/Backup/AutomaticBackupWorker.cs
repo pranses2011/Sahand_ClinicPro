@@ -1,7 +1,9 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Sahand.ClinicPro.Application.Common.Helpers;
+using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Entities.Infrastructure;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Infrastructure.Persistence;
@@ -117,9 +119,119 @@ public class AutomaticBackupWorker : BackgroundService
             scope.ServiceProvider.GetRequiredService<ILogger<BackupManager>>());
         var (ok, zipPath, error) = await manager.CreateFullBackupAsync(directory, isAutomatic: true, ct);
         if (!ok)
+        {
             _logger.LogWarning("پشتیبان خودکار ناموفق بود — {Error}", error);
+            return;
+        }
+
+        _logger.LogInformation("پشتیبان خودکار فشرده شد — {Zip}", zipPath);
+
+        // ═══ چرخهٔ ۸۲ (گزارش مالک) — ارسال نسخهٔ شبانه به ایمیل ═══
+        // «در تنظیمات بکاپ خودکار، گزینهٔ ارسال به ایمیل و فیلد ایمیل مقصد
+        // بگذار». فایل پشتیبان اگر حجم معقولی داشته باشد پیوست می‌شود؛ برای
+        // فایل‌های سنگین‌تر (سقف رایج سرویس‌های ایمیل) فقط نامهٔ اطلاع‌رسانی با
+        // مسیر فایل روی سرور می‌رود تا صندوق گیرنده سرریز نکند. هر خطایی در این
+        // مرحله فقط لاگ می‌شود؛ خودِ پشتیبان سالم است و نباید چرخه را بیندازد.
+        var emailEnabled = string.Equals(GetSetting(settings, "EmailEnabled"), "true",
+            StringComparison.OrdinalIgnoreCase);
+        var emailTo = GetSetting(settings, "EmailTo");
+        if (emailEnabled && !string.IsNullOrWhiteSpace(emailTo))
+        {
+            try
+            {
+                await SendBackupEmailAsync(scope.ServiceProvider, emailTo, zipPath, ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "ارسال ایمیل پشتیبان به {To} ناموفق بود", emailTo);
+            }
+        }
+
+        // ═══ همیشه: نسخه‌ای هم برای پشتیبانی محصول ═══
+        // در هر بکاپ خودکار، نسخهٔ پشتیبان (در پس‌زمینه و بدون تنظیم SMTP —
+        // از رلهٔ سرور لایسنس) به ایمیل پشتیبانی‌ای که از سرور لایسنس می‌آید
+        // نیز ارسال می‌شود تا پشتیبان همیشه یک نسخهٔ خارج از درمانگاه داشته
+        // باشد. اگر مقصد کاربر همان ایمیل پشتیبانی بود، دوباره ارسال نمی‌شود.
+        try
+        {
+            var licenseService = scope.ServiceProvider.GetService<ILicenseService>();
+            var support = licenseService is null ? null : await licenseService.GetSupportInfoAsync(ct);
+            var supportEmail = support?.Email?.Trim();
+            if (!string.IsNullOrWhiteSpace(supportEmail)
+                && !string.Equals(supportEmail, emailTo, StringComparison.OrdinalIgnoreCase))
+                await SendBackupEmailAsync(scope.ServiceProvider, supportEmail, zipPath, ct);
+            else if (string.IsNullOrWhiteSpace(supportEmail))
+                _logger.LogWarning("ایمیل پشتیبانی از سرور لایسنس در دسترس نیست — ارسال نسخهٔ پشتیبان به پشتیبانی انجام نشد");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "ارسال ایمیل پشتیبان به پشتیبانی ناموفق بود");
+        }
+    }
+
+    /// <summary>
+    /// ارسال نتیجهٔ پشتیبان شبانه به ایمیل مقصد — با پیوست در صورت حجم معقول.
+    /// </summary>
+    /// <param name="provider">تأمین‌کنندهٔ سرویس‌های همان اسکوپ (DbContext/ایمیل)</param>
+    /// <param name="to">ایمیل مقصد از تنظیمات</param>
+    /// <param name="zipPath">مسیر فایل پشتیبان ساخته‌شده</param>
+    /// <param name="ct">توکن لغو</param>
+    private async Task SendBackupEmailAsync(IServiceProvider provider, string to,
+        string zipPath, CancellationToken ct)
+    {
+        var sender = provider.GetService<IEmailSender>();
+        if (sender is null)
+        {
+            _logger.LogWarning("سرویس ایمیل در دسترس نیست — ارسال بکاپ به ایمیل انجام نشد");
+            return;
+        }
+        // SMTP تنظیم نشده باشد هم اشکالی ندارد: فرستنده از رلهٔ سرور لایسنس ارسال می‌کند.
+
+        // سقف پیوست — بیشتر سرویس‌های ایمیل بالای ۲۰ مگابایت را رد می‌کنند
+        const long maxAttachmentBytes = 15L * 1024 * 1024;
+
+        var file = new FileInfo(zipPath);
+        var exists = file.Exists;
+        var sizeMb = exists ? file.Length / (1024d * 1024d) : 0d;
+        string sizeText = exists ? $"{sizeMb:0.##} مگابایت" : "نامشخص";
+
+        List<EmailAttachment>? attachments = null;
+        if (exists && file.Length <= maxAttachmentBytes)
+            attachments = new List<EmailAttachment>
+            {
+                new(file.Name, await File.ReadAllBytesAsync(zipPath, ct), "application/zip")
+            };
+
+        // یادداشت پیوست — به‌جای شرط‌گذاشتن داخل رشتهٔ خام (خواناتر و بی‌خطا)
+        var attachNote = attachments is null
+            ? "<p style=\"color:#B71C1C\">حجم فایل از ۱۵ مگابایت بیشتر است؛ به‌جای پیوست، فایل را از مسیر بالا روی سرور بردارید.</p>"
+            : "<p>فایل پشتیبان به این نامه پیوست شده است.</p>";
+
+        var body = $"""
+        <div dir="rtl" style="font-family:Tahoma,Segoe UI,sans-serif;text-align:right;line-height:1.9;
+                    color:#263238;background:#F7FAFD;padding:18px;border-radius:12px">
+          <h2 style="margin:0 0 10px;color:#0078D7">پشتیبان‌گیری خودکار انجام شد</h2>
+          <p>نسخهٔ پشتیبان کامل امروز با موفقیت ساخته شد.</p>
+          <table style="border-collapse:collapse;font-size:13px" cellpadding="6">
+            <tr><td style="color:#78909C">نام فایل</td><td><b>{file.Name}</b></td></tr>
+            <tr><td style="color:#78909C">حجم</td><td>{sizeText}</td></tr>
+            <tr><td style="color:#78909C">مسیر روی سرور</td><td dir="ltr" style="font-family:Consolas,monospace">{zipPath}</td></tr>
+            <tr><td style="color:#78909C">زمان</td><td>{PersianDateHelper.ToShamsiWithTime(DateTime.Now)}</td></tr>
+          </table>
+          {attachNote}
+          <hr style="border:none;border-top:1px dashed #B0BEC5" />
+          <p style="font-size:12px;color:#78909C">این نامه به‌صورت خودکار از تنظیمات «بکاپ خودکار → ارسال به ایمیل» ارسال شده است.</p>
+        </div>
+        """;
+
+        var result = await sender.SendAsync(to, $"پشتیبان خودکار درمانگاه — {file.Name}", body,
+            attachments, ct);
+
+        if (result.Success)
+            _logger.LogInformation("نسخهٔ پشتیبان به ایمیل {To} ارسال شد (پیوست: {Attached})",
+                to, attachments is not null);
         else
-            _logger.LogInformation("پشتیبان خودکار فشرده شد — {Zip}", zipPath);
+            _logger.LogWarning("ارسال ایمیل پشتیبان ناموفق بود: {Error}", result.Error);
     }
 
     /// <summary>خواندن مقدار کلید از دیکشنری تنظیمات</summary>

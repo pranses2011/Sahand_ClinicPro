@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 
 namespace Sahand.ClinicPro.Desktop.Services;
@@ -65,7 +65,7 @@ public class TokenManager : ITokenManager
     public IReadOnlyList<string> Permissions => _store?.Permissions ?? (IReadOnlyList<string>)Array.Empty<string>();
 
     /// <summary>آیا نقش مدیر کل را دارد — فیلتر منو برای او بی‌معناست (همه‌چیز مجاز)</summary>
-    public bool IsAdmin => _store?.Roles.Contains("Admin", StringComparer.OrdinalIgnoreCase) == true;
+    public bool IsAdmin => _store?.Roles.Contains(Sahand.ClinicPro.Domain.Entities.Security.SystemRoles.Admin, StringComparer.OrdinalIgnoreCase) == true;
 
     /// <summary>آیا توکن معتبر موجود است</summary>
     public bool HasValidToken =>

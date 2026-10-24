@@ -408,6 +408,7 @@ Sahand_ClinicPro/
 | 📐 سند طراحی حضور و غیاب | [docs/design/07-attendance-module.md](docs/design/07-attendance-module.md) |
 | 📐 سایر اسناد طراحی | [docs/design/](docs/design/) |
 | 📋 گام‌های توسعه | [PROGRESS.md](PROGRESS.md) — ۸ چرخه کامل |
+| ✉️ راه‌اندازی ایمیل (بازیابی رمز + بکاپ ایمیلی) | [docs/guides/email-setup.md](docs/guides/email-setup.md) |
 | 🔄 تاریخ تغییرات | [CHANGELOG.md](CHANGELOG.md) |
 | 🗺 نقشه راه | [TODO.md](TODO.md) + [TODO-v1.6.md](TODO-v1.6.md) |
 
@@ -459,6 +460,17 @@ Sahand_ClinicPro/
 </div>
 
 ## 📄 مجوز
+
+<div dir="rtl">
+
+**پروانهٔ فارسیِ استفاده** — همان متنی که هنگام نصب روی صفحهٔ «پروانه» نمایش
+داده می‌شود، در فایل [`LICENSE-fa.md`](LICENSE-fa.md) نگه‌داری می‌شود (منبع
+واحد: [`installer/LICENSE.txt`](installer/LICENSE.txt)).
+
+متن انگلیسی در قالب MIT برای سازگاری با مخزن در [LICENSE](LICENSE) است؛ در
+صورت اختلاف، متن فارسیِ پروانه ملاک است.
+
+</div>
 
 MIT — جزئیات در [LICENSE](LICENSE)
 
