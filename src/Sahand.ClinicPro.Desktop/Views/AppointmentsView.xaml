@@ -397,6 +397,19 @@
                                     DayStats="{Binding DayStats, Mode=OneWay}"
                                     MonthStats="{Binding MonthStats, Mode=OneWay}"
                                     DateSelected="OnCalendarDateSelected" />
+                                <TextBlock Text="{Binding CalendarStatus}" FontSize="10.5" FontWeight="SemiBold"
+                                           Foreground="#B45309" TextWrapping="Wrap" Margin="2,8,2,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CalendarStatus}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </Border>
 
                             <!-- ستون اسلات‌ها — طرح تأییدشدهٔ مالک: کاشی‌های فشردهٔ گروه‌بندی‌شده
