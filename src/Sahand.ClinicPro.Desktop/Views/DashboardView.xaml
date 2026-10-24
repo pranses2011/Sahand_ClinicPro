@@ -37,6 +37,7 @@
     <UserControl.Resources>
         <!-- مبدل‌های محلی — الگوی ثابت پروژه (هر نما BoolToVis خودش را تعریف می‌کند) -->
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <converters:SpanWidthConverter x:Key="SpanWidth" />
         <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis" />
 
         <!-- ═══ قالب ردیف نوبت‌های پیش‌رو — بازطراحی چرخهٔ ۷۲ ═══
@@ -207,6 +208,15 @@
                     </Button>
                     <ToggleButton IsChecked="{Binding Visible}" Style="{StaticResource MaterialDesignSwitchToggleButton}"
                                   Padding="2,0" ToolTip="نمایش/پنهان این کارت" />
+                    <Button Command="{Binding DataContext.CycleCardSpanCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                            CommandParameter="{Binding}"
+                            Style="{StaticResource MaterialDesignFlatButton}" Padding="3,1"
+                            ToolTip="پهنای ستونی کارت (۱ تا ۳ ستون) — برای تغییر کلیک کنید">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ViewColumnOutline" Width="12" Height="12" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Span, Converter={StaticResource PersianDigits}}" FontSize="10" FontWeight="Bold" Margin="3,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </DataTemplate>
@@ -264,6 +274,16 @@
                                     Style="{StaticResource MaterialDesignOutlinedButton}"
                                     FontSize="10" Padding="8,2" ToolTip="پنهان/آشکار کردن این بخش">
                                 <materialDesign:PackIcon Kind="Eye" Width="13" Height="13" />
+                            </Button>
+                            <Button DockPanel.Dock="Left" HorizontalAlignment="Left" Margin="6,0,0,0"
+                                    Command="{Binding DataContext.CycleSectionSpanCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    FontSize="10" Padding="8,2" ToolTip="پهنای ستونی بخش: نیم‌عرض / تمام‌عرض">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ViewColumnOutline" Width="13" Height="13" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Span, Converter={StaticResource PersianDigits}}" FontSize="10" FontWeight="Bold" Margin="4,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
                             </Button>
                             <StackPanel Orientation="Horizontal" Cursor="Hand">
                                 <materialDesign:PackIcon Kind="DragVertical" Width="16" Height="16"
@@ -378,6 +398,16 @@
                                     FontSize="10" Padding="8,2" ToolTip="پنهان/آشکار کردن این بخش">
                                 <materialDesign:PackIcon Kind="Eye" Width="13" Height="13" />
                             </Button>
+                            <Button DockPanel.Dock="Left" HorizontalAlignment="Left" Margin="6,0,0,0"
+                                    Command="{Binding DataContext.CycleSectionSpanCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    FontSize="10" Padding="8,2" ToolTip="پهنای ستونی بخش: نیم‌عرض / تمام‌عرض">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ViewColumnOutline" Width="13" Height="13" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Span, Converter={StaticResource PersianDigits}}" FontSize="10" FontWeight="Bold" Margin="4,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
                             <StackPanel Orientation="Horizontal" Cursor="Hand">
                                 <materialDesign:PackIcon Kind="DragVertical" Width="16" Height="16"
                                                          Foreground="#E65100" VerticalAlignment="Center" />
@@ -481,6 +511,16 @@
                                     FontSize="10" Padding="8,2" ToolTip="پنهان/آشکار کردن این بخش">
                                 <materialDesign:PackIcon Kind="Eye" Width="13" Height="13" />
                             </Button>
+                            <Button DockPanel.Dock="Left" HorizontalAlignment="Left" Margin="6,0,0,0"
+                                    Command="{Binding DataContext.CycleSectionSpanCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    FontSize="10" Padding="8,2" ToolTip="پهنای ستونی بخش: نیم‌عرض / تمام‌عرض">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ViewColumnOutline" Width="13" Height="13" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Span, Converter={StaticResource PersianDigits}}" FontSize="10" FontWeight="Bold" Margin="4,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
                             <StackPanel Orientation="Horizontal" Cursor="Hand">
                                 <materialDesign:PackIcon Kind="DragVertical" Width="16" Height="16"
                                                          Foreground="#E65100" VerticalAlignment="Center" />
@@ -560,6 +600,16 @@
                                     Style="{StaticResource MaterialDesignOutlinedButton}"
                                     FontSize="10" Padding="8,2" ToolTip="پنهان/آشکار کردن این بخش">
                                 <materialDesign:PackIcon Kind="Eye" Width="13" Height="13" />
+                            </Button>
+                            <Button DockPanel.Dock="Left" HorizontalAlignment="Left" Margin="6,0,0,0"
+                                    Command="{Binding DataContext.CycleSectionSpanCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    FontSize="10" Padding="8,2" ToolTip="پهنای ستونی بخش: نیم‌عرض / تمام‌عرض">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ViewColumnOutline" Width="13" Height="13" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Span, Converter={StaticResource PersianDigits}}" FontSize="10" FontWeight="Bold" Margin="4,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
                             </Button>
                             <StackPanel Orientation="Horizontal" Cursor="Hand">
                                 <materialDesign:PackIcon Kind="DragVertical" Width="16" Height="16"
@@ -1059,7 +1109,7 @@
                                 <TextBlock Text="چیدمان پیش‌فرض" Margin="5,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                             </StackPanel>
                         </Button>
-                        <TextBlock Text="با دکمه‌های ⬆⬇ پایین کارت‌ها ترتیب‌شان را جابه‌جا کنید و با سوییچ کنارشان پنهان‌شان کنید"
+                        <TextBlock Text="جابه‌جایی: ⬆⬇ روی کارت‌ها یا کشیدن دستگیرهٔ بخش‌ها · پنهان‌سازی: سوییچ/چشم · پهنا: دکمهٔ ستون روی هر کارت و بخش (KPI: ۱ تا ۳ ستون، بخش‌ها: نیم‌عرض/تمام‌عرض)"
                                    FontSize="10" Opacity="0.6" VerticalAlignment="Center" Margin="0,3,0,3"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                     </WrapPanel>
                 </StackPanel>
@@ -1094,9 +1144,21 @@
                           helpers:DragDropReorder.Enabled="True">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <UniformGrid Columns="5" Rows="1" />
+                        <WrapPanel />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="Width">
+                            <Setter.Value>
+                                <MultiBinding Converter="{StaticResource SpanWidth}" ConverterParameter="5">
+                                    <Binding Path="Span" />
+                                    <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                                </MultiBinding>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
             </ItemsControl>
 
             <!-- ═══ بخش‌های قابل‌چیدمان داشبورد؛ Drag & Drop (چرخهٔ ۷۴) ═══
@@ -1105,8 +1167,21 @@
             <ItemsControl ItemsSource="{Binding Sections}"
                           helpers:DragDropReorder.Enabled="True"
                           Margin="0,12,0,0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemContainerStyle>
                     <Style TargetType="ContentPresenter">
+                        <Setter Property="Width">
+                            <Setter.Value>
+                                <MultiBinding Converter="{StaticResource SpanWidth}" ConverterParameter="2">
+                                    <Binding Path="Span" />
+                                    <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                                </MultiBinding>
+                            </Setter.Value>
+                        </Setter>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Key}" Value="shortcuts">
                                 <Setter Property="Visibility" Value="Collapsed" />

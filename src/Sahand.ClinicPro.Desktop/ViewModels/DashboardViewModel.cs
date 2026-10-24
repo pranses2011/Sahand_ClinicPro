@@ -59,6 +59,15 @@ public partial class DashboardCardVM : ObservableObject
 
     /// <summary>رویداد تغییر نمایش — برای ذخیره خودکار چیدمان</summary>
     public event EventHandler? VisibleChanged;
+
+    /// <summary>پهنای ستونی کارت در نوار ۵ستونی داشبورد (۱ تا ۳ ستون)</summary>
+    [ObservableProperty]
+    private int _span = 1;
+
+    partial void OnSpanChanged(int value) => SpanChanged?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>رویداد تغییر پهنا — برای ذخیره خودکار چیدمان</summary>
+    public event EventHandler? SpanChanged;
 }
 
 /// <summary>
@@ -93,6 +102,15 @@ public partial class DashboardSectionItem : ObservableObject
 
     /// <summary>رویداد تغییر نمایش — برای ذخیرهٔ خودکار چیدمان (بدون آرگومان؛ سبک)</summary>
     public event Action? VisibleChanged;
+
+    /// <summary>پهنای ستونی بخش در نوار ۲ستونی (۱ = نیم‌عرض، ۲ = تمام‌عرض)</summary>
+    [ObservableProperty]
+    private int _span = 2;
+
+    partial void OnSpanChanged(int value) => SpanChanged?.Invoke();
+
+    /// <summary>رویداد تغییر پهنا — برای ذخیره خودکار چیدمان</summary>
+    public event Action? SpanChanged;
 }
 
 /// <summary>
@@ -432,14 +450,18 @@ public partial class DashboardViewModel : ViewModelBase
         Sections.CollectionChanged += (_, _) => ScheduleSaveLayout();
         // ذخیرهٔ خودکار تغییر نمایش هر بخش
         foreach (var section in Sections)
+        {
             section.VisibleChanged += () => ScheduleSaveLayout();
+            section.SpanChanged += () => ScheduleSaveLayout();
+        }
     }
 
     /// <summary>بازگشت به چیدمان پیش‌فرض</summary>
     [RelayCommand]
     private void ResetLayout()
     {
-        foreach (var c in MainCards) c.Visible = true;
+        foreach (var c in MainCards) { c.Visible = true; c.Span = 1; }
+        foreach (var s in Sections) s.Span = 2;
         ShowSecondaryCards = true;
         ShowRevenueChart = true;
         ShowUpcoming = true;
@@ -499,6 +521,7 @@ public partial class DashboardViewModel : ViewModelBase
         });
         foreach (var c in MainCards)
             c.VisibleChanged += (_, _) => ScheduleSaveLayout();
+            c.SpanChanged += (_, _) => ScheduleSaveLayout();
         // ═══ چرخهٔ ۷۴ — ذخیرهٔ خودکار پس از جابه‌جایی درگ‌و‌دراپی کارت‌ها ═══
         MainCards.CollectionChanged += (_, _) => ScheduleSaveLayout();
     }
@@ -511,6 +534,22 @@ public partial class DashboardViewModel : ViewModelBase
     {
         if (section is null) return;
         section.Visible = !section.Visible; // مسیر رویداد → ذخیرهٔ خودکار
+    }
+
+    /// <summary>چرخش پهنای ستونی کارت KPI (۱ ← ۲ ← ۳ ← ۱)</summary>
+    [RelayCommand]
+    private void CycleCardSpan(DashboardCardVM? card)
+    {
+        if (card is null) return;
+        card.Span = card.Span >= 3 ? 1 : card.Span + 1;
+    }
+
+    /// <summary>چرخش پهنای ستونی بخش (نیم‌عرض ↔ تمام‌عرض)</summary>
+    [RelayCommand]
+    private void CycleSectionSpan(DashboardSectionItem? section)
+    {
+        if (section is null) return;
+        section.Span = section.Span >= 2 ? 1 : 2;
     }
 
     /// <summary>به‌روزرسانی مقادیر کارت‌ها از آمار — چرخهٔ ۷۲: ارقام فارسی + کارت پنجم «بیمار جدید»</summary>
@@ -561,7 +600,10 @@ public partial class DashboardViewModel : ViewModelBase
         showActivities = ShowActivities,
         // ═══ چرخهٔ ۷۴ — ترتیب و نمایش بخش‌های قابل‌چیدمان ═══
         sectionsOrder = Sections.Select(s => s.Key).ToList(),
-        sectionsHidden = Sections.Where(s => !s.Visible).Select(s => s.Key).ToList()
+        sectionsHidden = Sections.Where(s => !s.Visible).Select(s => s.Key).ToList(),
+        // پهنای ستونی کارت‌ها و بخش‌ها (مدیریت داشبورد)
+        spans = MainCards.ToDictionary(c => c.Key, c => c.Span),
+        sectionSpans = Sections.ToDictionary(s => s.Key, s => s.Span)
     });
 
     /// <summary>
@@ -690,6 +732,21 @@ public partial class DashboardViewModel : ViewModelBase
                 {
                     var section = Sections.FirstOrDefault(s => s.Key == keyEl.GetString());
                     if (section is not null) section.Visible = false;
+                }
+            // پهنای ستونی ذخیره‌شدهٔ کارت‌ها و بخش‌ها
+            if (root.TryGetProperty("spans", out var spans) && spans.ValueKind == System.Text.Json.JsonValueKind.Object)
+                foreach (var prop in spans.EnumerateObject())
+                {
+                    var card = MainCards.FirstOrDefault(c => c.Key == prop.Name);
+                    if (card is not null && prop.Value.TryGetInt32(out var n))
+                        card.Span = Math.Clamp(n, 1, 3);
+                }
+            if (root.TryGetProperty("sectionSpans", out var sSpans) && sSpans.ValueKind == System.Text.Json.JsonValueKind.Object)
+                foreach (var prop in sSpans.EnumerateObject())
+                {
+                    var section = Sections.FirstOrDefault(s => s.Key == prop.Name);
+                    if (section is not null && prop.Value.TryGetInt32(out var n))
+                        section.Span = Math.Clamp(n, 1, 2);
                 }
             var shortcutsAtTop = Sections.FirstOrDefault(s => s.Key == "shortcuts");
             if (shortcutsAtTop is not null && Sections.IndexOf(shortcutsAtTop) > 0)
