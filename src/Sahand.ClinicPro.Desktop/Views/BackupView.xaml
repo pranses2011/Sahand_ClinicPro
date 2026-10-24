@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.BackupView"
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.BackupView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -374,6 +374,24 @@
                             <TextBlock Text="مسیر ذخیره محلی:" FontSize="12" Margin="2,10,0,4"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                             <TextBox Text="{Binding BackupPath}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
+
+                            <!-- ═══ چرخهٔ ۸۲ (گزارش مالک) — «ارسال به ایمیل» بکاپ خودکار ═══
+                                 گزینه + فیلد ایمیل مقصد؛ تنظیم با دکمهٔ «ذخیرهٔ تنظیمات
+                                 خودکار» در همان دستهٔ Backup روی سرور ذخیره می‌شود و
+                                 کارگر شبانه پس از هر پشتیبان موفق نامه می‌فرستد. -->
+                            <CheckBox Content="ارسال نسخهٔ پشتیبان به ایمیل"
+                                      IsChecked="{Binding EmailBackupEnabled}" Margin="2,14,2,4"
+                                      Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                            <TextBox Text="{Binding EmailBackupTo, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     IsEnabled="{Binding EmailBackupEnabled}"
+                                     FlowDirection="LeftToRight" TextAlignment="Left"
+                                     Margin="26,2,0,6"
+                                     materialDesign:HintAssist.Hint="نشانی ایمیل مقصد — مثال: backups@clinic.ir" />
+                            <TextBlock Text="نسخهٔ شبانه پس از ساخت به این نشانی فرستاده می‌شود: فایل‌های تا ۱۵ مگابایت پیوست می‌شوند و بزرگ‌تر از آن، فقط نامهٔ اطلاع‌رسانی با مسیر فایل روی سرور ارسال می‌شود. نیازمند پیکربندی SMTP در سرور است."
+                                       FontSize="10.5" Opacity="0.75" TextWrapping="Wrap"
+                                       Margin="26,0,2,6"
+                                       Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
 
                             <Grid Margin="2,12,2,0">
                                 <Grid.ColumnDefinitions>

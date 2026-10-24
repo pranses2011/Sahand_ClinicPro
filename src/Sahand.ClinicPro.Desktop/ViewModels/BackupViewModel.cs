@@ -111,6 +111,20 @@ public partial class BackupViewModel : ViewModelBase
     [ObservableProperty]
     private bool _notifyOnError = true;
 
+    // ═══ چرخهٔ ۸۲ (گزارش مالک) — «ارسال بکاپ به ایمیل» ═══
+    // «در تنظیمات بکاپ‌گیری خودکار، گزینهٔ ارسال به ایمیل و یک فیلد برای ایمیل
+    // مقصد بگذار» — کلیدها در SystemSettings دستهٔ Backup ذخیره می‌شوند و کارگر
+    // شبانهٔ سرور پس از هر پشتیبان موفق، فایل را (تا سقف ۱۵ مگابایت) پیوست
+    // می‌کند یا نامهٔ اطلاع‌رسانی با مسیر فایل می‌فرستد.
+
+    /// <summary>ارسال نسخهٔ پشتیبان خودکار به ایمیل</summary>
+    [ObservableProperty]
+    private bool _emailBackupEnabled;
+
+    /// <summary>نشانی ایمیل مقصد پشتیبان</summary>
+    [ObservableProperty]
+    private string? _emailBackupTo;
+
     /// <summary>متن پیشرفت بازیابی</summary>
     [ObservableProperty]
     private string _restoreStatus = string.Empty;
@@ -343,11 +357,21 @@ public partial class BackupViewModel : ViewModelBase
             hour = Math.Clamp(h, 0, 23);
 
         IsBusy = true;
+        // اعتبارسنجی سبک مقصد ایمیل — از ارسال به نشانی نامعتبر جلوگیری می‌کند
+        var emailTo = EmailBackupTo?.Trim();
+        if (EmailBackupEnabled && (string.IsNullOrWhiteSpace(emailTo) || !emailTo.Contains('@')))
+        {
+            _snackbar.Error("برای «ارسال به ایمیل»، نشانی ایمیل مقصد را کامل وارد کنید");
+            return;
+        }
+
         var ok = await _api.PutAsync("backup/auto-config", new
         {
             enabled = DailyFullEnabled,
             hour,
-            directory = BackupPath
+            directory = BackupPath,
+            emailEnabled = EmailBackupEnabled,
+            emailTo = emailTo ?? string.Empty
         });
         IsBusy = false;
         if (ok) _snackbar.Success("تنظیمات پشتیبان‌گیری خودکار ذخیره شد");
@@ -368,6 +392,8 @@ public partial class BackupViewModel : ViewModelBase
         DailyFullTime = $"{d.Hour:00}:00";
         if (!string.IsNullOrWhiteSpace(d.Directory))
             BackupPath = d.Directory;
+        EmailBackupEnabled = d.EmailEnabled;
+        EmailBackupTo = d.EmailTo;
     }
 
     /// <summary>
@@ -717,6 +743,12 @@ public partial class BackupViewModel : ViewModelBase
         public bool Enabled { get; set; }
         public int Hour { get; set; }
         public string? Directory { get; set; }
+
+        /// <summary>ارسال بکاپ خودکار به ایمیل — چرخهٔ ۸۲</summary>
+        public bool EmailEnabled { get; set; }
+
+        /// <summary>ایمیل مقصد بکاپ — چرخهٔ ۸۲</summary>
+        public string? EmailTo { get; set; }
     }
 
     private sealed class CloudStatusResponse
