@@ -602,7 +602,10 @@ public partial class PersianCalendarControl : UserControl
         var stats = DayStats ?? new Dictionary<DateTime, CalendarDayStat>();
         var marked = MarkedDates ?? new Dictionary<DateTime, int>();
 
-        var firstOfMonth = PersianDateHelper.ToGregorian(DisplayYear, DisplayMonth, 1);
+        // تبدیل روزها با PersianCalendar استاندارد دات‌نت — مستقل از الگوریتم
+        // دستی کمکی تا رندر روزها تحت هیچ شرایطی خالی نماند (گزارش مالک:
+        // «تقویم روزها را نمی‌آورد»).
+        var firstOfMonth = Persian.ToDateTime(DisplayYear, DisplayMonth, 1, 0, 0, 0, 0);
         var daysInMonth = Persian.GetDaysInMonth(DisplayYear, DisplayMonth);
         var firstCol = ((int)firstOfMonth.DayOfWeek + 1) % 7;
 
@@ -613,7 +616,7 @@ public partial class PersianCalendarControl : UserControl
 
         for (var day = 1; day <= daysInMonth; day++)
         {
-            var date = PersianDateHelper.ToGregorian(DisplayYear, DisplayMonth, day);
+            var date = Persian.ToDateTime(DisplayYear, DisplayMonth, day, 0, 0, 0, 0);
             var isFriday = date.DayOfWeek == DayOfWeek.Friday;
             var isOff = disabled.Contains(date);
             var hasStat = stats.TryGetValue(date, out var stat);
