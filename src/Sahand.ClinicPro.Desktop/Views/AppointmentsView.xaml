@@ -418,6 +418,19 @@
                                             </GeometryDrawing>
                                         </DrawingBrush.Drawing>
                                     </DrawingBrush>
+                                    <!-- هاشور خاکستری اسلات‌های گذشته (درخواست مالک) -->
+                                    <DrawingBrush x:Key="PastHatch" TileMode="Tile" Viewport="0,0,7,7" ViewportUnits="Absolute">
+                                        <DrawingBrush.Drawing>
+                                            <GeometryDrawing>
+                                                <GeometryDrawing.Pen>
+                                                    <Pen Brush="#4D94A3B8" Thickness="1.6" />
+                                                </GeometryDrawing.Pen>
+                                                <GeometryDrawing.Geometry>
+                                                    <PathGeometry Figures="M0,7 L7,0" />
+                                                </GeometryDrawing.Geometry>
+                                            </GeometryDrawing>
+                                        </DrawingBrush.Drawing>
+                                    </DrawingBrush>
                                     <DrawingBrush x:Key="BreakHatch" TileMode="Tile" Viewport="0,0,7,7" ViewportUnits="Absolute">
                                         <DrawingBrush.Drawing>
                                             <GeometryDrawing>
@@ -596,6 +609,18 @@
                                                                                             <Setter Property="Visibility" Value="Collapsed" />
                                                                                             <Style.Triggers>
                                                                                                 <DataTrigger Binding="{Binding IsBooked}" Value="True">
+                                                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                                                </DataTrigger>
+                                                                                            </Style.Triggers>
+                                                                                        </Style>
+                                                                                    </Border.Style>
+                                                                                </Border>
+                                                                                <Border Background="{StaticResource PastHatch}" CornerRadius="11">
+                                                                                    <Border.Style>
+                                                                                        <Style TargetType="Border">
+                                                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                                                            <Style.Triggers>
+                                                                                                <DataTrigger Binding="{Binding IsPast}" Value="True">
                                                                                                     <Setter Property="Visibility" Value="Visible" />
                                                                                                 </DataTrigger>
                                                                                             </Style.Triggers>
