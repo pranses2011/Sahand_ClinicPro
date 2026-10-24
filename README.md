@@ -408,6 +408,7 @@ Sahand_ClinicPro/
 | 📐 سند طراحی حضور و غیاب | [docs/design/07-attendance-module.md](docs/design/07-attendance-module.md) |
 | 📐 سایر اسناد طراحی | [docs/design/](docs/design/) |
 | 📋 گام‌های توسعه | [PROGRESS.md](PROGRESS.md) — ۸ چرخه کامل |
+| ✉️ راه‌اندازی ایمیل (بازیابی رمز + بکاپ ایمیلی) | [docs/guides/email-setup.md](docs/guides/email-setup.md) |
 | 🔄 تاریخ تغییرات | [CHANGELOG.md](CHANGELOG.md) |
 | 🗺 نقشه راه | [TODO.md](TODO.md) + [TODO-v1.6.md](TODO-v1.6.md) |
 

@@ -176,9 +176,9 @@ public static class ReceptionReceiptPrinter
         var infoRows = new TableRowGroup();
         AddInfoRow(infoRows, "بیمار", r.PatientName);
         if (!string.IsNullOrWhiteSpace(r.NationalCode))
-            AddInfoRow(infoRows, "کد ملی", Persian(r.NationalCode));
+            AddInfoRow(infoRows, "کد ملی", Persian(r.NationalCode!));
         if (!string.IsNullOrWhiteSpace(r.Mobile))
-            AddInfoRow(infoRows, "موبایل", Persian(r.Mobile));
+            AddInfoRow(infoRows, "موبایل", Persian(r.Mobile!));
         AddInfoRow(infoRows, string.IsNullOrWhiteSpace(r.ServiceName) ? "پزشک" : "خدمت",
             string.IsNullOrWhiteSpace(r.ServiceName) ? r.DoctorName : r.ServiceName!);
         // در حالت خدمتی، انجام‌دهنده جدا نمایش داده می‌شود (پزشک = انجام‌دهنده)
@@ -364,32 +364,38 @@ public static class ReceptionReceiptPrinter
     }
 
     /// <summary>سرستون جدول اقلام</summary>
-    private static TableCell HeaderCell(string text, TextAlignment align) => new(
-        new Paragraph(new Run(text) { FontWeight = FontWeights.Bold, FontSize = 9 })
+    private static TableCell HeaderCell(string text, TextAlignment align)
+    {
+        var paragraph = new Paragraph(new Run(text) { FontWeight = FontWeights.Bold, FontSize = 9 })
         {
             Margin = new Thickness(0),
             TextAlignment = align,
-        })
-    {
-        Padding = new Thickness(4, 2.5, 4, 2.5),
-        BorderBrush = Brush("#B0BEC5"),
-        BorderThickness = new Thickness(0.5),
-    };
+        };
+        return new TableCell(paragraph)
+        {
+            Padding = new Thickness(4, 2.5, 4, 2.5),
+            BorderBrush = Brush("#B0BEC5"),
+            BorderThickness = new Thickness(0.5),
+        };
+    }
 
     /// <summary>سلول دادهٔ جدول اقلام</summary>
-    private static TableCell BodyCell(string text, TextAlignment align, bool bold = false) => new(
-        new Paragraph(new Run(text)
+    private static TableCell BodyCell(string text, TextAlignment align, bool bold = false)
+    {
+        var paragraph = new Paragraph(new Run(text)
         {
             Margin = new Thickness(0),
             FontSize = 9.5,
             FontWeight = bold ? FontWeights.SemiBold : FontWeights.Normal,
             TextAlignment = align,
-        })
-    {
-        Padding = new Thickness(4, 2.5, 4, 2.5),
-        BorderBrush = Brush("#E0E0E0"),
-        BorderThickness = new Thickness(0.5),
-    };
+        });
+        return new TableCell(paragraph)
+        {
+            Padding = new Thickness(4, 2.5, 4, 2.5),
+            BorderBrush = Brush("#E0E0E0"),
+            BorderThickness = new Thickness(0.5),
+        };
+    }
 
     /// <summary>سطر سادهٔ «برچسب: مقدار» — بخش پرداخت</summary>
     private static Paragraph Line(string label, string value)
