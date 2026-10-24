@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -256,6 +256,18 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private string _welcomeMessage = string.Empty;
     [ObservableProperty] private string _todayDateShamsi = string.Empty;
     [ObservableProperty] private string _connectionStatus = "در حال بارگذاری…";
+
+    /// <summary>
+    /// پوشش بارگذاری نخست داشبورد در حال نمایش است؟ — فقط تا نخستین
+    /// بارگذاری کامل؛ تازه‌سازی‌های دوره‌ای (۶۰ ثانیه) پوشش نمی‌گیرند.
+    /// </summary>
+    [ObservableProperty] private bool _isLoading = true;
+
+    /// <summary>متن مرحلهٔ جاری بارگذاری — زیر انیمیشن داشبورد</summary>
+    [ObservableProperty] private string _loadingStatus = "در حال آماده‌سازی داشبورد…";
+
+    /// <summary>نخستین بارگذاری کامل انجام شده است؟</summary>
+    private bool _hasLoadedOnce;
     [ObservableProperty] private string _errorMessage = string.Empty;
 
     /// <summary>داده نمودار درآمد ۷ روز — نمودار سطحی (نوع درست برای روند زمانی)</summary>
@@ -754,6 +766,11 @@ public partial class DashboardViewModel : ViewModelBase
         await LoadLayoutAsync();
         await LoadShortcutsAsync();
 
+        // کاربر تازه: پوشش بارگذاری از نو نشان داده شود تا بارگذاری کامل او
+        _hasLoadedOnce = false;
+        IsLoading = true;
+        LoadingStatus = "در حال آماده‌سازی داشبورد…";
+
         // آمار داشبورد نیز برای کاربر تازه بی‌درنگ تازه شود (نه منتظر تیک ۶۰ ثانیه)
         _ = LoadStatsAsync();
     }
@@ -1084,13 +1101,25 @@ public partial class DashboardViewModel : ViewModelBase
     /// <summary>بارگذاری کامل همه بخش‌ها — طبق LoadAsync پرامپت</summary>
     public async Task LoadStatsAsync()
     {
+      try
+      {
+        // پوشش انیمیشن فقط برای نخستین بارگذاری — کاربر بداند باید صبر کند
+        var firstLoad = !_hasLoadedOnce;
+        if (firstLoad)
+        {
+            IsLoading = true;
+            LoadingStatus = "در حال اتصال به سرور و آماده‌سازی داشبورد…";
+        }
+
         // چرخه هجدهم (گزارش دوازدهم): ساعت و تاریخ داشبورد با ارقام فارسی
         WelcomeMessage = $"خوش آمدید! امروز {Application.Common.Helpers.PersianDateHelper.ToClockFa(DateTime.Now, withSeconds: false)} — وضعیت درمانگاه به‌روزرسانی شد.";
         TodayDateShamsi = Application.Common.Helpers.PersianDateHelper.ToShamsiFa(DateTime.Now);
         ErrorMessage = string.Empty;
 
         // ۰) چرخه دوازدهم — پیام‌های پشتیبانی دریافتی از سرور لایسنس (best-effort)
+        if (firstLoad) LoadingStatus = "در حال دریافت پیام‌های پشتیبانی…";
         await LoadSupportMessagesAsync();
+        if (firstLoad) LoadingStatus = "در حال بارگذاری آمار امروز درمانگاه…";
 
         // ═══ چرخهٔ سی‌ودوم (گزارش مالک — قانون هم‌کلاسی‌ها) ═══ همهٔ اندپوینت‌های
         // داشبورد پاسخ را در پاکت استاندارد ApiResponse ({isSuccess, data}) می‌فرستند
@@ -1116,6 +1145,7 @@ public partial class DashboardViewModel : ViewModelBase
             ConnectionStatus = "آمار به‌روز شد";
         }
 
+        if (firstLoad) LoadingStatus = "در حال بارگذاری هشدارها و نمودارها…";
         // ۲) هشدارها (موجودی کم، انقضای پلکانی و آزمایش در انتظار) — چرخهٔ ۶۹: پله‌های ۹۰/۶۰/۳۰/۷
         var alerts = UnwrapData(await _api.GetAsync<JsonElement>("dashboard/alerts"));
         if (alerts.ValueKind == JsonValueKind.Object)
@@ -1174,6 +1204,7 @@ public partial class DashboardViewModel : ViewModelBase
             }
         }
 
+        if (firstLoad) LoadingStatus = "در حال بارگذاری نوبت‌های امروز و فعالیت‌های اخیر…";
         // ۴) نوبت‌های امروز
         var appointments = UnwrapData(await _api.GetAsync<JsonElement>("dashboard/appointments-today?limit=8"));
         UpcomingAppointments.Clear();
@@ -1206,6 +1237,13 @@ public partial class DashboardViewModel : ViewModelBase
                     act.TryGetProperty("entity", out var en) ? en.GetString() ?? "" : ""));
             }
         }
+      }
+      finally
+      {
+          // پوشش فقط با «پایان» بارگذاری (موفق یا ناموفق) برداشته می‌شود
+          _hasLoadedOnce = true;
+          IsLoading = false;
+      }
     }
 
     /// <summary>
