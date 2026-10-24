@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Documents;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Desktop.Helpers;
@@ -384,11 +384,13 @@ public static class ReceptionReceiptPrinter
     {
         var paragraph = new Paragraph(new Run(text)
         {
-            Margin = new Thickness(0),
             FontSize = 9.5,
             FontWeight = bold ? FontWeights.SemiBold : FontWeights.Normal,
+        })
+        {
+            Margin = new Thickness(0),
             TextAlignment = align,
-        });
+        };
         return new TableCell(paragraph)
         {
             Padding = new Thickness(4, 2.5, 4, 2.5),

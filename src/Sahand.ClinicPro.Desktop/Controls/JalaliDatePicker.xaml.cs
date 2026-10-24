@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -319,8 +319,17 @@ public partial class JalaliDatePicker : UserControl
     private void OnHostDeactivated(object? sender, EventArgs e) => ClosePopup();
 
     /// <summary>آیا گره در زیرشاخهٔ ریشه است؟ (خودِ ریشه هم شامل)</summary>
-    private static bool IsWithin(DependencyObject node, DependencyObject root) =>
-        ReferenceEquals(node, root) || root.IsAncestorOf(node);
+    private static bool IsWithin(DependencyObject node, DependencyObject root)
+    {
+        // پیمایش والدهای بصری/منطقی — IsAncestorOf روی DependencyObject در دسترس نیست
+        for (DependencyObject? current = node; current is not null;)
+        {
+            if (ReferenceEquals(current, root)) return true;
+            current = System.Windows.Media.VisualTreeHelper.GetParent(current)
+                      ?? LogicalTreeHelper.GetParent(current);
+        }
+        return false;
+    }
 
     /* ═══════════════ باز/بستن پاپ‌آپ ═══════════════ */
 

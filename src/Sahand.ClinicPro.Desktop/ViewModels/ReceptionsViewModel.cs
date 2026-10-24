@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -1287,7 +1287,7 @@ public partial class ReceptionsViewModel : ViewModelBase
                 var now = DateTime.Now;
 
                 var receipt = new ReceptionReceipt(
-                    QueueNumber: queueNo,
+                    QueueNumber: queueNo ?? 0,
                     InvoiceNumber: invoiceNo,
                     PatientName: FoundPatient?.FullName ?? "—",
                     NationalCode: FoundPatient?.NationalCode,
