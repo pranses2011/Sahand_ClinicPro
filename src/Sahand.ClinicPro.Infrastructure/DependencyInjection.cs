@@ -193,6 +193,7 @@ public static class DependencyInjection
         // «بکاپ خودکار انجام نمی‌شود» — هیچ کارگر پس‌زمینه‌ای وجود نداشت؛
         // این HostedService بر اساس تنظیمات (SystemSettings دستهٔ Backup) هر روز
         // در ساعت مقرر BACKUP DATABASE واقعی می‌گیرد و پوشهٔ مقصد را در نبود می‌سازد.
+        services.AddScoped<Services.Backup.BackupEmailNotifier>();
         services.AddHostedService<Services.Backup.AutomaticBackupWorker>();
 
         return services;

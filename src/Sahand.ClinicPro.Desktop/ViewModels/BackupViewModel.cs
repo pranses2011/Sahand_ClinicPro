@@ -286,7 +286,10 @@ public partial class BackupViewModel : ViewModelBase
         {
             _snackbar.Success((BackupFormatIndex == 1
                 ? "پشتیبان خام BAK با نام شمسی ذخیره شد: "
-                : "پشتیبان فشرده با نام شمسی ذخیره شد: ") + response.Data?.FileName);
+                : "پشتیبان فشرده با نام شمسی ذخیره شد: ") + response.Data?.FileName
+                + (string.IsNullOrWhiteSpace(response.Data?.EmailNote)
+                    ? string.Empty
+                    : $" — {response.Data.EmailNote}"));
             await LoadAsync();
             await LoadBackupFilesAsync();
         }
@@ -338,6 +341,12 @@ public partial class BackupViewModel : ViewModelBase
     {
         public string? FileName { get; set; }
         public string? FilePath { get; set; }
+        /// <summary>ایمیل پشتیبان به پشتیبانی ارسال شد؟ (همیشه تلاش می‌شود)</summary>
+        public bool EmailSupportSent { get; set; }
+        /// <summary>ایمیل پشتیبان به ایمیل تعریف‌شدهٔ درمانگاه ارسال شد؟ (فقط با تنظیم کاربر)</summary>
+        public bool EmailUserSent { get; set; }
+        /// <summary>یادداشت فارسی وضعیت ایمیل‌ها</summary>
+        public string? EmailNote { get; set; }
     }
 
     /// <summary>
