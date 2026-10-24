@@ -1,8 +1,9 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Application.Common.Helpers;
+using Sahand.ClinicPro.Desktop.Controls;
 using Sahand.ClinicPro.Desktop.Services;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
@@ -244,6 +245,17 @@ public partial class AppointmentsViewModel : ViewModelBase
     /// <summary>روزهای غیرفعال تقویم</summary>
     [ObservableProperty]
     private IEnumerable<DateTime>? _disabledDates;
+
+    /// <summary>آمار ظرفیت روزانه برای تقویم تازه — تاریخ ← (رزروشده، کل ظرفیت)</summary>
+    [ObservableProperty]
+    private IDictionary<DateTime, CalendarDayStat>? _dayStats;
+
+    /// <summary>آمار ماه‌های سال نمایشی برای نمای انتخاب ماه تقویم</summary>
+    [ObservableProperty]
+    private IDictionary<int, CalendarMonthStat>? _monthStats;
+
+    /// <summary>کلید کش آمار سالانه (پزشک|سال) — بارگذاری تکراری نشود</summary>
+    private string _monthStatsKey = string.Empty;
 
     /// <summary>اسلات‌های روز انتخابی</summary>
     public ObservableCollection<SlotVM> Slots { get; } = new();
@@ -527,17 +539,56 @@ public partial class AppointmentsViewModel : ViewModelBase
 
         var marked = new Dictionary<DateTime, int>();
         var disabled = new List<DateTime>();
+        var stats = new Dictionary<DateTime, CalendarDayStat>();
         foreach (var day in response.Data.Days)
         {
             var g = PersianDateHelper.ToGregorian(day.DateShamsi);
             if (g is null) continue;
+            var date = g.Value.Date;
+            if (day.HasSchedule && !day.IsOff && day.TotalSlots > 0)
+                stats[date] = new CalendarDayStat(day.BookedSlots, day.TotalSlots);
             if (day.IsDisabled)
-                disabled.Add(g.Value.Date);
+                disabled.Add(date);
             else if (day.FreeSlots > 0)
-                marked[g.Value.Date] = day.FreeSlots;
+                marked[date] = day.FreeSlots;
         }
         MarkedDates = marked;
         DisabledDates = disabled;
+        DayStats = stats;
+        _ = LoadMonthStatsAsync();
+    }
+
+    /// <summary>
+    /// آمار ۱۲ ماه سال نمایشی برای نمای انتخاب ماه تقویم — یک بار برای هر
+    /// (پزشک، سال)؛ جمع نوبت‌ها، ظرفیت کل و روزهای کاری هر ماه.
+    /// </summary>
+    private async Task LoadMonthStatsAsync()
+    {
+        if (SelectedDoctor is null) return;
+        var key = $"{SelectedDoctor.Id}|{DisplayYear}";
+        if (_monthStatsKey == key) return;
+        _monthStatsKey = key;
+        var doctorId = SelectedDoctor.Id;
+        var year = DisplayYear;
+        var result = new Dictionary<int, CalendarMonthStat>();
+        for (var month = 1; month <= 12; month++)
+        {
+            var response = await _api.GetAsync<CalendarSummaryResponse>(
+                $"doctors/{doctorId}/calendar-summary?year={year}&month={month}");
+            if (response?.Data?.Days is null) continue;
+            var booked = 0; var total = 0; var workDays = 0;
+            foreach (var day in response.Data.Days)
+            {
+                if (!day.HasSchedule || day.IsOff) continue;
+                workDays++;
+                booked += day.BookedSlots;
+                total += day.TotalSlots;
+            }
+            result[month] = new CalendarMonthStat(booked, total, workDays);
+        }
+        // پاسخ دیررسِ پزشک/سال قبلی روی وضعیت فعلی ننشیند
+        if (SelectedDoctor?.Id == doctorId && DisplayYear == year)
+            MonthStats = result;
     }
 
     // چرخهٔ ۷۴: فرمان‌های بیرونی «ماه بعد/قبل» حذف شدند — ناوبری ماه از فلش‌های
@@ -840,6 +891,10 @@ public partial class AppointmentsViewModel : ViewModelBase
         public string DateShamsi { get; set; } = string.Empty;
         public bool IsDisabled { get; set; }
         public int FreeSlots { get; set; }
+        public bool HasSchedule { get; set; }
+        public int TotalSlots { get; set; }
+        public int BookedSlots { get; set; }
+        public bool IsOff { get; set; }
     }
 
     public sealed class SlotsResponse
