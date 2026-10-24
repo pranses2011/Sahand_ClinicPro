@@ -14,12 +14,18 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <!-- انتخاب‌گر پوشهٔ استاندارد ویندوز (FolderBrowserDialog) برای دکمهٔ
-         «انتخاب پوشه» بکاپ — دیالوگ پوشهٔ WPF روی برخی نصب‌ها خطا می‌داد -->
-    <UseWindowsForms>true</UseWindowsForms>
+         «انتخاب پوشه» بکاپ — توجه: UseWindowsForms فعال نمی‌شود چون usingهای
+         سراسری ویندوزفرم (Brush/Color/UserControl و…) با WPF تداخل ساخت
+         می‌دهند؛ فقط ارجاع اسمبلی ویندوزفرم افزوده می‌شود (همان فریم‌ورک
+         اشتراکی WindowsDesktop که WPF هم از آن می‌آید). -->
     <!-- آیکون رسمی محصول (لوگوی ClinicPro) — در فایل exe جاسازی می‌شود
          تا در Explorer، Taskbar و میانبرها نمایش داده شود -->
     <ApplicationIcon>Assets\appicon.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- کتابخانه رابط کاربری Material Design (MD3) -->
