@@ -29,6 +29,21 @@ public static class DataSeederRunner
             catch (Exception ex)
             {
                 logger.LogError(ex, "خطا در اجرای بذرافشان {Seeder}", seeder.GetType().Name);
+
+                // ═══ چرخهٔ ۸۳ — مسمومیت ردیاب EF پس از بذر ناموفق ═══
+                // همهٔ بذرها یک DbContext اسکوپ‌شده را شریک‌اند؛ اگر تغییر
+                // ناموفق یک بذر در ردیاب بماند، SaveChanges بذرهای بعدی همان
+                // دستور خراب را دوباره می‌فرستد و همه پشت‌سرهم سقوط می‌کنند
+                // (در نصب ۲.۲۴.۰ دقیقاً همین زنجیره دیده شد). پاک‌کردن ردیاب
+                // شکست را به همان یک بذر محدود می‌کند.
+                try
+                {
+                    sp.GetService<ClinicProDbContext>()?.ChangeTracker.Clear();
+                }
+                catch
+                {
+                    // پاک‌سازی ردیاب هرگز نباید اجراکنندهٔ بذرها را متوقف کند
+                }
             }
         }
     }
