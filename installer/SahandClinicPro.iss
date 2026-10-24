@@ -73,7 +73,7 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 ; خروجی publish دسکتاپ — توسط BUILD-INSTALLER.bat ساخته می‌شود
 Source: "..\publish\desktop\*"; DestDir: "{app}"; Excludes: "appsettings.json"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: WantFullInstall
 ; فقط فایل‌های به‌روزشده: خروجی سبک بدون Runtime؛ runtimeconfig نصب قبلی دست نمی‌خورد
-Source: "..\publish\desktop-update\*"; DestDir: "{app}"; Excludes: "appsettings.json,Sahand.ClinicPro.Desktop.runtimeconfig.json"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: WantUpdateOnly
+Source: "..\publish\desktop-update\*"; DestDir: "{app}"; Excludes: "appsettings.json,Sahand.ClinicPro.Desktop.runtimeconfig.json,Sahand.ClinicPro.Desktop.deps.json"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: WantUpdateOnly
 ; پیکربندی کلاینت فقط در نصب اول ایجاد شود تا به‌روزرسانی نشانی سرور را بازنویسی نکند
 Source: "appsettings.client.example.json"; DestDir: "{app}"; Flags: ignoreversion onlyifdoesntexist; DestName: "appsettings.json"
 
@@ -152,7 +152,7 @@ begin
       True, False);
     InstallChoicePage.Add('نصب کامل — همهٔ فایل‌ها و Runtime از نو نصب می‌شوند (مطمئن‌تر، کمی طولانی‌تر)');
     InstallChoicePage.Add('فقط فایل‌های به‌روزرسانی‌شده از نسخهٔ ' + ExistingVersion + ' به بعد — سریع‌تر (Runtime نصب قبلی می‌ماند)');
-    if FileExists(ExistingDir + '\hostfxr.dll') then
+    if FileExists(ExistingDir + '\hostfxr.dll') and FileExists(ExistingDir + '\coreclr.dll') and FileExists(ExistingDir + '\hostpolicy.dll') then
       InstallChoicePage.Values[1] := True
     else
       InstallChoicePage.Values[0] := True;
@@ -178,9 +178,9 @@ begin
   if (InstallChoicePage <> nil) and (CurPageID = InstallChoicePage.ID) and InstallChoicePage.Values[1] then
   begin
     ExistingDir := GetExistingInstallDir();
-    if (ExistingDir = '') or not FileExists(ExistingDir + '\hostfxr.dll') then
+    if (ExistingDir = '') or not FileExists(ExistingDir + '\hostfxr.dll') or not FileExists(ExistingDir + '\coreclr.dll') or not FileExists(ExistingDir + '\hostpolicy.dll') then
     begin
-      MsgBox('برای گزینهٔ «فقط فایل‌های به‌روزرسانی‌شده»، Runtime نصب قبلی (hostfxr.dll) لازم است و پیدا نشد.' + #13#10 +
+      MsgBox('برای گزینهٔ «فقط فایل‌های به‌روزرسانی‌شده»، Runtime کامل نصب قبلی (hostfxr.dll/coreclr.dll/hostpolicy.dll) لازم است و پیدا نشد.' + #13#10 +
              'لطفاً گزینهٔ «نصب کامل» را انتخاب کنید.', mbError, MB_OK);
       Result := False;
     end;
