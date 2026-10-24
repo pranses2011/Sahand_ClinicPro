@@ -27,6 +27,18 @@ public class PermissionSeeder : IDataSeeder
             "settings", "backup", "auditlogs", "license", "dashboard", "attendance"
         };
         var actions = new[] { "view", "create", "edit", "delete", "print", "export" };
+        var persianModules = new Dictionary<string, string>
+        {
+            ["patients"] = "بیماران", ["doctors"] = "پزشکان", ["appointments"] = "نوبت‌دهی",
+            ["receptions"] = "پذیرش", ["visits"] = "ویزیت", ["prescriptions"] = "نسخه‌نویسی",
+            ["invoices"] = "صندوق و فاکتور", ["payments"] = "پرداخت‌ها", ["accounting"] = "حسابداری",
+            ["insurance"] = "بیمه", ["lab"] = "آزمایشگاه", ["imaging"] = "تصویربرداری",
+            ["dental"] = "دندانپزشکی", ["eye"] = "چشم‌پزشکی", ["physiotherapy"] = "فیزیوتراپی",
+            ["pharmacy"] = "داروخانه", ["sms"] = "پیامک", ["reports"] = "گزارش‌ها",
+            ["users"] = "کاربران", ["roles"] = "نقش‌ها", ["settings"] = "تنظیمات",
+            ["backup"] = "پشتیبان‌گیری", ["auditlogs"] = "لاگ عملیات", ["license"] = "لایسنس",
+            ["dashboard"] = "داشبورد", ["attendance"] = "حضور و غیاب"
+        };
         var persianActions = new Dictionary<string, string>
         {
             ["view"] = "مشاهده", ["create"] = "ایجاد", ["edit"] = "ویرایش",
@@ -47,7 +59,7 @@ public class PermissionSeeder : IDataSeeder
                         Module = module,
                         Action = action,
                         Category = "ماژول اصلی",
-                        Description = $"{persianActions[action]} ماژول {module}"
+                        Description = $"{persianActions[action]} {persianModules[module]}"
                     });
                 }
             }

@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Helpers;
@@ -65,7 +65,7 @@ public partial class ConsumablesViewModel : ViewModelBase
     /// اعمال می‌کند، اینجا فقط برای پنهان‌کردن دکمه‌ها بازتابی شده است.
     /// </summary>
     public bool CanManage =>
-        _tokens.IsAdmin || _tokens.Roles.Contains("Manager", StringComparer.OrdinalIgnoreCase);
+        _tokens.IsAdmin || _tokens.Roles.Contains(Sahand.ClinicPro.Domain.Entities.Security.SystemRoles.Manager, StringComparer.OrdinalIgnoreCase);
 
     /// <summary>بچ‌های اقلام مصرفی — هر ردیف یک ورود کالا</summary>
     [ObservableProperty]

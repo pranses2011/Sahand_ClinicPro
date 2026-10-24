@@ -13,6 +13,6 @@ public class HangfireDashboardAuthFilter : IDashboardAuthorizationFilter
     {
         var http = context.GetHttpContext();
         return http.User.Identity?.IsAuthenticated == true
-               && http.User.IsInRole("Admin");
+               && http.User.IsInRole(Sahand.ClinicPro.Domain.Entities.Security.SystemRoles.Admin);
     }
 }

@@ -176,6 +176,7 @@ public static class DependencyInjection
         // بذرهای داده اولیه
         services.AddTransient<IDataSeeder, RoleSeeder>();
         services.AddTransient<IDataSeeder, PermissionSeeder>();
+        services.AddTransient<IDataSeeder, RolePermissionSeeder>(); // دسترسی‌های پیش‌فرض نقش‌های فارسی
         services.AddTransient<IDataSeeder, AdminSeeder>();
         services.AddTransient<IDataSeeder, BasicDataSeeder>();
         services.AddTransient<IDataSeeder, AccountingAccountSeeder>();
