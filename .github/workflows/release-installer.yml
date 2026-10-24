@@ -1,4 +1,4 @@
-name: Build and publish Windows installer
+﻿name: Build and publish Windows installer
 
 on:
   push:
@@ -136,13 +136,13 @@ jobs:
           Set-Content -Path "$package/RELEASE-INSTALL-GUIDE.txt" -Value $guide -Encoding UTF8
           Compress-Archive -Path "$package/*" -DestinationPath "dist/SahandClinicPro-Server-v$version.zip" -Force
 
-      - name: Publish framework-dependent API and package server update
+      - name: Publish self-contained API and package server update
         shell: pwsh
         run: |
           # بستهٔ به‌روزرسانی کم‌حجم سرور — بدون Runtime؛ اسکریپت نصب با
           # -UpdateMode فایل‌های Runtime نصب موجود را نگه می‌دارد
           dotnet publish src/Sahand.ClinicPro.API/Sahand.ClinicPro.API.csproj `
-            -c Release -r win-x64 --self-contained false `
+            -c Release -r win-x64 --self-contained true `
             -p:PublishSingleFile=false -o publish/server-update
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $version = '${{ steps.version.outputs.version }}'

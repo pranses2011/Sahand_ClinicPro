@@ -26,7 +26,29 @@ $hadSettings = Test-Path $settingsPath
 # در حالت به‌روزرسانی (بستهٔ کم‌حجمِ وابسته به فریم‌ورک) نباید آینه‌ای کپی
 # شود: فایل‌های Runtime نصب کامل در مقصد می‌مانند و فقط فایل‌های برنامه
 # جایگزین می‌شوند؛ در نصب کامل همان رفتار آینه‌ای پیشین برقرار است.
-if ($UpdateMode) {
+# تشخیص نصب قبلی و انتخاب نوع نصب (درخواست مالک): اگر سرور از قبل نصب است،
+# کاربر انتخاب می‌کند «نصب کامل» شود یا «فقط فایل‌های به‌روزرسانی‌شده از نسخهٔ
+# نصب‌شده به بعد» کپی شوند. نسخهٔ نصب‌شده از version.txt (که هر نصب می‌نویسد)
+# یا از نسخهٔ فایل exe خوانده می‌شود. robocopy در حالت /E فقط فایل‌های
+# تغییرکرده/جدید را کپی می‌کند — یعنی دقیقاً همان فایل‌های به‌روزشده.
+$installedExe = Join-Path $target 'Sahand.ClinicPro.API.exe'
+$installedVersion = $null
+if (Test-Path $installedExe) {
+    $vf = Join-Path $target 'version.txt'
+    if (Test-Path $vf) { $installedVersion = (Get-Content $vf -Raw).Trim() }
+    if (-not $installedVersion) {
+        try { $installedVersion = (Get-Item $installedExe).VersionInfo.ProductVersion } catch { }
+    }
+}
+$effectiveUpdate = [bool]$UpdateMode
+if (-not $UpdateMode -and $installedVersion) {
+    Write-Host "نسخهٔ $installedVersion از سرور روی این رایانه نصب است." -ForegroundColor Yellow
+    Write-Host '  [1] نصب کامل — همهٔ فایل‌ها از نو کپی می‌شوند (پیش‌فرض Enter)'
+    Write-Host "  [2] فقط فایل‌های به‌روزرسانی‌شده از نسخهٔ $installedVersion به بعد — سریع‌تر"
+    $choice = Read-Host 'انتخاب شما (1 یا 2)'
+    if ($choice -eq '2') { $effectiveUpdate = $true }
+}
+if ($effectiveUpdate) {
     & robocopy $source $target /E /COPY:DAT /R:2 /W:2 /XF appsettings.json /XD Logs /NFL /NDL /NJH /NJS
 } else {
     & robocopy $source $target /MIR /COPY:DAT /R:2 /W:2 /XF appsettings.json /XD Logs /NFL /NDL /NJH /NJS
@@ -181,5 +203,11 @@ if (-not $healthy) {
     throw "سرویس نصب شد اما API در مهلت انتظار (۵ دقیقه) آماده نشد. گزارش تشخیصی در $diagPath ذخیره شد — همان فایل را برای پشتیبانی بفرستید."
 }
 
+# ثبت نسخهٔ نصب‌شده تا اجرای بعدی نصب‌کننده نسخهٔ فعلی را بشناسد و انتخاب
+# «نصب کامل / فقط فایل‌های به‌روزشده» را پیشنهاد بدهد.
+try {
+    $newVersion = (Get-Item (Join-Path $target 'Sahand.ClinicPro.API.exe')).VersionInfo.ProductVersion
+    if ($newVersion) { Set-Content -Path (Join-Path $target 'version.txt') -Value $newVersion -Encoding ASCII }
+} catch { }
 Write-Host "سرور آماده است: http://localhost:5000/health/ready" -ForegroundColor Green
 Write-Host 'برای کلاینت‌های دیگر، نشانی سرور را در appsettings.json کلاینت به‌صورت http://<IP-سرور>:5000/api/v1 وارد کنید.'

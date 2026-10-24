@@ -63,7 +63,7 @@ if errorlevel 1 goto :fail
 if errorlevel 1 goto :fail
 
 echo [6/6] انتشار وابسته به فریم‌ورک API و بسته‌بندی به‌روزرسانی کم‌حجم سرور...
-dotnet publish src\Sahand.ClinicPro.API\Sahand.ClinicPro.API.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=false -o publish\server-update
+dotnet publish src\Sahand.ClinicPro.API\Sahand.ClinicPro.API.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o publish\server-update
 if errorlevel 1 goto :fail
 if exist dist\SahandClinicPro-ServerUpdate-v%APP_VERSION% rmdir /s /q dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%
 mkdir dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server
