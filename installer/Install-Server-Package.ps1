@@ -89,8 +89,21 @@ finally { Pop-Location }
 
 # نصب به‌عنوان Windows Service؛ API از UseWindowsService پشتیبانی می‌کند.
 $binaryPath = '"' + $apiExe + '"'
-New-Service -Name $serviceName -BinaryPathName $binaryPath -DisplayName 'Sahand ClinicPro API' -Description 'سرور سامانه جامع مدیریت درمانگاه سهند' -StartupType Automatic | Out-Null
-sc.exe description $serviceName 'سرور سامانه جامع مدیریت درمانگاه سهند' | Out-Null
+# شمارهٔ نسخه در توضیحات سرویس ویندوز — تا در صفحهٔ Services معلوم باشد
+# سرویسِ در حال کار کدام نسخه است (گزارش مالک). نسخه از خود فایل منتشرشدهٔ
+# API خوانده می‌شود تا هیچ‌وقت با نسخهٔ واقعیِ نصب‌شده ناهماهنگ نشود.
+$apiVersion = $null
+try {
+    $apiDll = Join-Path $target 'Sahand.ClinicPro.API.dll'
+    if (Test-Path $apiDll) { $apiVersion = (Get-Item $apiDll).VersionInfo.ProductVersion }
+    if (-not $apiVersion) { $apiVersion = (Get-Item $apiExe).VersionInfo.ProductVersion }
+} catch { }
+if ($apiVersion) { $apiVersion = ($apiVersion -split '\+')[0].Trim() }
+if (-not $apiVersion) { $apiVersion = 'نامشخص' }
+$serviceDescription = "سرور سامانه جامع مدیریت درمانگاه سهند — نسخه $apiVersion"
+Write-Host "نسخهٔ سرویس API: $apiVersion" -ForegroundColor Cyan
+New-Service -Name $serviceName -BinaryPathName $binaryPath -DisplayName 'Sahand ClinicPro API' -Description $serviceDescription -StartupType Automatic | Out-Null
+sc.exe description $serviceName $serviceDescription | Out-Null
 
 # بازکردن پورت API برای اتصال رایانه‌های کلاینت در شبکه درمانگاه.
 $ruleName = 'Sahand ClinicPro API TCP 5000'

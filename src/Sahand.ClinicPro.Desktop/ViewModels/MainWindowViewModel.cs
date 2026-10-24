@@ -33,6 +33,19 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private ViewModelBase? _currentPage;
 
+    /// <summary>
+    /// پوشش بارگذاری سراسری پوسته در حال نمایش است؟ — از لحظهٔ بازشدن
+    /// پنجرهٔ اصلی (پیش از ساخته‌شدن هر صفحه) تا لود کامل صفحهٔ آغازین.
+    /// پیش‌تر انیمیشن فقط داخل خود داشبورد بود و تا ساخته‌شدن داشبورد
+    /// صفحهٔ خالی دیده می‌شد (گزارش مالک).
+    /// </summary>
+    [ObservableProperty]
+    private bool _isShellLoading = true;
+
+    /// <summary>متن مرحلهٔ جاری بارگذاری پوسته — زیر انیمیشن سراسری</summary>
+    [ObservableProperty]
+    private string _shellLoadingStatus = "در حال آماده‌سازی محیط کار…";
+
     /// <summary>کلید صفحهٔ جاری — برای بازسازی صفحه پس از تغییر ظاهر/واحد پول (چرخه بیست‌وسوم)</summary>
     private string _currentPageKey = string.Empty;
 
@@ -424,6 +437,9 @@ public partial class MainWindowViewModel : ObservableObject
         // شروع دیگری در جریان است — دادهٔ همین فراخوانی در آن ادغام شده است
         if (System.Threading.Interlocked.CompareExchange(ref _sessionStarting, 1, 0) != 0)
             return;
+        // پوشش سراسری از همین لحظه — هیچ فریم خالی‌ای دیده نمی‌شود
+        IsShellLoading = true;
+        ShellLoadingStatus = "در حال آماده‌سازی محیط کار و بررسی دسترسی‌ها…";
         try
         {
             // ۱) هویت نمایشی تازه بی‌درنگ — کاربر قبلی همین حالا پاک می‌شود؛
@@ -444,6 +460,7 @@ public partial class MainWindowViewModel : ObservableObject
             // کاربر چیدمان ذخیره‌شده داشته باشد (per-user در دیتابیس)، منو از
             // همان ساخته می‌شود؛ وگرنه منوی پیش‌فرض برنامه می‌ماند.
             await ApplyCustomNavLayoutAsync();
+            ShellLoadingStatus = "در حال گشودن صفحهٔ آغازین…";
 
             // ۳) نخستین صفحهٔ مجاز — کاربر هرگز روی صفحهٔ ممنوع گیر نمی‌کند
             // ═══ چرخهٔ ۴۸ (گزارش مالک: «وقتی کاربری با نقش پزشک وارد برنامه می‌شود،
@@ -470,7 +487,16 @@ public partial class MainWindowViewModel : ObservableObject
             // ۵) داشبورد کاربر تازه — میانبرها (دیتابیس/کش محلی) و چیدمان
             //    کارت‌ها؛ تک‌نمونه بودن DashboardViewModel یعنی بدون این
             //    نوسازی، میانبرهای کارور قبلی نمایش داده می‌شد
+            ShellLoadingStatus = "در حال بارگذاری داشبورد و اطلاعات درمانگاه…";
             await _dashboardVm.OnSessionStartedAsync();
+
+            // اگر صفحهٔ آغازین داشبورد است، پوشش سراسری تا «لود کامل»
+            // داشبورد می‌ماند (تسک نخستین بارگذاری)؛ خطای آن جریان را نمی‌بندد
+            if (string.Equals(_currentPageKey, "dashboard", StringComparison.OrdinalIgnoreCase))
+            {
+                try { await _dashboardVm.FirstLoadTask; }
+                catch { /* داشبورد خطایش را خودش گزارش می‌کند */ }
+            }
 
             // ۶) اتصال بلادرنگ با توکن تازه — لاگ‌اوت قبلی StopAsync کرده بود
             _ = _realtime.StartAsync();
@@ -482,6 +508,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
         finally
         {
+            IsShellLoading = false;
             System.Threading.Volatile.Write(ref _sessionStarting, 0);
         }
     }
