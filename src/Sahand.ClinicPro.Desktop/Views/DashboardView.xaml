@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.DashboardView"
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.DashboardView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -772,6 +772,7 @@
     <!-- اسکرول فیزیکی + فضای انتهایی: بخش‌های پایین داشبورد (به‌ویژه کاشی‌های
          میانبر) باید تا پایان از زیر لبهٔ viewport بیرون آورده شوند؛ اسکرول
          منطقی روی StackPanel گاهی آیتمِ آخر را نیمه‌نمایان باقی می‌گذارد. -->
+    <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto"
                   CanContentScroll="False"
                   Padding="20,14,20,96">
@@ -1180,4 +1181,35 @@
                        TextWrapping="Wrap" Margin="4,12,4,0" />
         </StackPanel>
     </ScrollViewer>
+
+        <!-- ═══ پوشش بارگذاری نخست داشبورد — انیمیشن + متن مرحله ═══
+             تا بارگذاری کامل همهٔ بخش‌ها روی داشبورد می‌ماند تا کاربر بداند
+             باید صبر کند؛ پس از نخستین بارگذاری کامل برای همیشه برداشته
+             می‌شود (تازه‌سازی‌های دوره‌ای آن را برنمی‌گردانند). -->
+        <Border Panel.ZIndex="50"
+                Background="#EAF2F7FA"
+                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="420">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                             IsIndeterminate="True"
+                             Width="58" Height="58"
+                             Foreground="#0D47A1"
+                             HorizontalAlignment="Center" />
+                <TextBlock Text="در حال بارگذاری داشبورد…"
+                           FontSize="17" FontWeight="Bold"
+                           Foreground="#172B4D"
+                           HorizontalAlignment="Center" Margin="0,18,0,6" />
+                <TextBlock Text="{Binding LoadingStatus}"
+                           FontSize="12.5"
+                           Foreground="#315A83"
+                           HorizontalAlignment="Center" Margin="0,0,0,8" />
+                <TextBlock Text="لطفاً چند لحظه صبر کنید — اطلاعات درمانگاه در حال دریافت از سرور است و داشبورد به‌زودی کامل نمایش داده می‌شود."
+                           FontSize="11.5" Opacity="0.75"
+                           Foreground="#52647A"
+                           TextWrapping="Wrap" TextAlignment="Center" />
+                <ProgressBar IsIndeterminate="True" Height="3" Margin="30,16,30,0"
+                             Foreground="#0D47A1" Background="#220D47A1" />
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>
