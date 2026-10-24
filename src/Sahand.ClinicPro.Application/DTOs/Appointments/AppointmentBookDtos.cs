@@ -24,7 +24,10 @@ public record CalendarDayDto(
     string DateShamsi,
     bool IsDisabled,
     int FreeSlots,
-    bool HasSchedule);
+    bool HasSchedule,
+    int TotalSlots,
+    int BookedSlots,
+    bool IsOff);
 
 /// <summary>
 /// نتیجه عملیات دسته‌ای

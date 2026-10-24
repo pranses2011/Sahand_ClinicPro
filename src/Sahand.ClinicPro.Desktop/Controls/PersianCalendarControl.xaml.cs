@@ -6,26 +6,32 @@ using Sahand.ClinicPro.Application.Common.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.Controls;
 
+/// <summary>آمار ظرفیت یک روز — نوبت‌های رزروشده از کل ظرفیت روز</summary>
+public readonly record struct CalendarDayStat(int Booked, int Total);
+
+/// <summary>آمار یک ماه برای نمای انتخاب ماه — رزروشده، کل ظرفیت و روزهای کاری</summary>
+public readonly record struct CalendarMonthStat(int Booked, int Total, int WorkDays);
+
 /// <summary>
-/// کنترل تقویم شمسی — مشخصات پرامپت UI بخش ۲:
-/// نمایش ماهانه با دکمه‌های روز؛ شنبه تا جمعه؛ جمعه قرمز؛ امروز متمایز؛
-/// MarkedDates برای نشانگر تعداد نوبت و DisabledDates برای تعطیلات و غیبت‌ها.
-/// ═══ چرخه بیست‌ویکم (گزارش پانزدهم مالک) ═══
-/// «در کنترل انتخابگر تاریخ بتوان ماه و سال را هم انتخاب کرد همانند کنترل
-/// انتخاب تاریخ ویندوز ۱۰» — سه نمای سلسله‌مراتبی:
-///   نمای روزها —کلیک روی عنوان ماه→ نمای انتخاب ماه (۱۲ ماه)
-///   —کلیک روی عنوان سال→ نمای انتخاب سال (گرید ۱۲ ساله با ناوبری دهه)
-/// فلش‌های چپ/راست در نمای روز ماه را، در نمای ماه سال را و در نمای سال دهه را جابه‌جا می‌کنند.
+/// کنترل تقویم شمسی نوبت‌دهی — طراحی تازه (تأیید مالک روی پیش‌نمایش تعاملی):
+/// سربرگ گرادیانی برند، خانه‌های روز با نوار ظرفیت طیفی (سبزِ ظرفیت خالی
+/// تا قرمزِ تکمیل، بر اساس درصد پرشدن)، شمار نوبت، حالت هاشور «تعطیل»،
+/// برچسب «امروز»، انتخاب گرادیانی و نمای ماه‌ها با آمار گرافیکی هر ماه.
+/// قرارداد داده‌ای پیشین (SelectedDate / DisplayMonth / DisplayYear /
+/// MarkedDates / DisabledDates / MinDate / MaxDate) حفظ شده و ورودی‌های
+/// DayStats و MonthStats برای ظرفیت و آمار افزوده شده‌اند.
+/// فونت از فونت انتخابی کاربر در تنظیمات ظاهر به ارث می‌رسد؛ هیچ فونت
+/// ثابتی در این کنترل نیست.
 /// </summary>
 public partial class PersianCalendarControl : UserControl
 {
     /// <summary>تقویم فارسی دات‌نت — برای طول دقیق ماه‌های شمسی</summary>
     private static readonly System.Globalization.PersianCalendar Persian = new();
 
-    /// <summary>نمای فعلی تقویم — روزها / انتخاب ماه / انتخاب سال (چرخه بیست‌ویکم)</summary>
+    /// <summary>نمای فعلی تقویم — روزها / انتخاب ماه / انتخاب سال</summary>
     private enum CalendarViewMode
     {
-        /// <summary>شبکهٔ روزهای ماه — نمای عادی</summary>
+        /// <summary>شبکهٔ روزهای ماه</summary>
         Days,
         /// <summary>انتخاب ماه از میان ۱۲ ماه سال</summary>
         Months,
@@ -36,7 +42,7 @@ public partial class PersianCalendarControl : UserControl
     /// <summary>نمای فعلی — پیش‌فرض روزها</summary>
     private CalendarViewMode _viewMode = CalendarViewMode.Days;
 
-    /// <summary>سال مبنای گرید انتخاب سال (شروع بازهٔ ۱۲ ساله) — چرخه بیست‌ویکم</summary>
+    /// <summary>سال مبنای گرید انتخاب سال (شروع بازهٔ ۱۲ ساله)</summary>
     private int _yearGridBase;
 
     /// <summary>سازنده — اتصال رویدادها و رندر اولیه</summary>
@@ -44,10 +50,10 @@ public partial class PersianCalendarControl : UserControl
     {
         InitializeComponent();
         Loaded += (_, _) => Render();
-        PrevMonthButton.Click += (_, _) => Navigate(-1);
-        NextMonthButton.Click += (_, _) => Navigate(+1);
-        // چرخه بیست‌ویکم: عنوان ماه → نمای ماه → نمای سال → بازگشت به روزها
-        MonthTitleButton.Click += (_, _) => TitleClicked();
+        PrevButton.MouseLeftButtonUp += (_, _) => Navigate(-1);
+        NextButton.MouseLeftButtonUp += (_, _) => Navigate(+1);
+        TitleButton.MouseLeftButtonUp += (_, _) => TitleClicked();
+        GoTodayButton.MouseLeftButtonUp += (_, _) => GoToToday();
     }
 
     /* ─────────────  خصوصیت‌های وابستگی  ───────────── */
@@ -75,14 +81,24 @@ public partial class PersianCalendarControl : UserControl
         DependencyProperty.Register(nameof(SelectedShamsi), typeof(string),
             typeof(PersianCalendarControl), new PropertyMetadata(string.Empty));
 
-    /// <summary>تاریخ‌های دارای ناپ (کلید میلادی نیم‌روز، مقدار = تعداد)</summary>
+    /// <summary>تاریخ‌های دارای نشانگر (سازگاری پیشین)</summary>
     public static readonly DependencyProperty MarkedDatesProperty =
         DependencyProperty.Register(nameof(MarkedDates), typeof(IDictionary<DateTime, int>),
             typeof(PersianCalendarControl), new PropertyMetadata(null, OnDisplayChanged));
 
-    /// <summary>تاریخ‌های غیرفعال (تعطیلات و غیبت‌ها)</summary>
+    /// <summary>تاریخ‌های غیرفعال (تعطیلات و غیبت‌ها و روزهای تکمیل)</summary>
     public static readonly DependencyProperty DisabledDatesProperty =
         DependencyProperty.Register(nameof(DisabledDates), typeof(IEnumerable<DateTime>),
+            typeof(PersianCalendarControl), new PropertyMetadata(null, OnDisplayChanged));
+
+    /// <summary>آمار ظرفیت روزانه — تاریخ ← (رزروشده، کل ظرفیت)</summary>
+    public static readonly DependencyProperty DayStatsProperty =
+        DependencyProperty.Register(nameof(DayStats), typeof(IDictionary<DateTime, CalendarDayStat>),
+            typeof(PersianCalendarControl), new PropertyMetadata(null, OnDisplayChanged));
+
+    /// <summary>آمار ماه‌های سال نمایشی — شمارهٔ ماه ← آمار آن ماه</summary>
+    public static readonly DependencyProperty MonthStatsProperty =
+        DependencyProperty.Register(nameof(MonthStats), typeof(IDictionary<int, CalendarMonthStat>),
             typeof(PersianCalendarControl), new PropertyMetadata(null, OnDisplayChanged));
 
     /// <summary>حد پایین مجاز</summary>
@@ -147,6 +163,20 @@ public partial class PersianCalendarControl : UserControl
         set => SetValue(DisabledDatesProperty, value);
     }
 
+    /// <summary>آمار ظرفیت روزانه</summary>
+    public IDictionary<DateTime, CalendarDayStat>? DayStats
+    {
+        get => (IDictionary<DateTime, CalendarDayStat>?)GetValue(DayStatsProperty);
+        set => SetValue(DayStatsProperty, value);
+    }
+
+    /// <summary>آمار ماه‌های سال نمایشی</summary>
+    public IDictionary<int, CalendarMonthStat>? MonthStats
+    {
+        get => (IDictionary<int, CalendarMonthStat>?)GetValue(MonthStatsProperty);
+        set => SetValue(MonthStatsProperty, value);
+    }
+
     /// <summary>حد پایین</summary>
     public DateTime? MinDate
     {
@@ -163,14 +193,37 @@ public partial class PersianCalendarControl : UserControl
 
     /* ─────────────  منطق  ───────────── */
 
-    /// <summary>بازخورد تغییر ماه یا سال نمایشی</summary>
+    /// <summary>بازخورد تغییر نمایشی</summary>
     private static void OnDisplayChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         => ((PersianCalendarControl)d).Render();
 
-    /// <summary>
-    /// ناوبری فلش‌های چپ/راست بر اساس نمای فعلی — چرخه بیست‌ویکم:
-    /// روزها → ماه قبل/بعد؛ ماه‌ها → سال قبل/بعد؛ سال‌ها → دهه قبل/بعد.
-    /// </summary>
+    /// <summary>رنگ نوار ظرفیت بر اساس نسبت پرشدن — سبز (خالی) تا قرمز (تکمیل)</summary>
+    internal static Color CapacityColor(double ratio)
+    {
+        var hue = 125d - Math.Clamp(ratio, 0d, 1d) * 125d;
+        return HslToColor(hue, 0.72d, 0.40d);
+    }
+
+    /// <summary>تبدیل HSL به رنگ WPF</summary>
+    private static Color HslToColor(double hue, double saturation, double lightness)
+    {
+        var chroma = (1 - Math.Abs(2 * lightness - 1)) * saturation;
+        var x = chroma * (1 - Math.Abs(hue / 60d % 2 - 1));
+        var m = lightness - chroma / 2;
+        double r, g, b;
+        if (hue < 60) { r = chroma; g = x; b = 0; }
+        else if (hue < 120) { r = x; g = chroma; b = 0; }
+        else if (hue < 180) { r = 0; g = chroma; b = x; }
+        else if (hue < 240) { r = 0; g = x; b = chroma; }
+        else if (hue < 300) { r = x; g = 0; b = chroma; }
+        else { r = chroma; g = 0; b = x; }
+        return Color.FromRgb(
+            (byte)Math.Round((r + m) * 255),
+            (byte)Math.Round((g + m) * 255),
+            (byte)Math.Round((b + m) * 255));
+    }
+
+    /// <summary>ناوبری فلش‌ها بر اساس نمای فعلی</summary>
     private void Navigate(int delta)
     {
         switch (_viewMode)
@@ -179,23 +232,18 @@ public partial class PersianCalendarControl : UserControl
                 ShiftMonth(delta);
                 break;
             case CalendarViewMode.Months:
-                // جابه‌جایی سال در نمای انتخاب ماه
                 DisplayYear += delta;
                 MonthChanged?.Invoke(this, EventArgs.Empty);
                 Render();
                 break;
-            case CalendarViewMode.Years:
-                // جابه‌جایی بازهٔ ۱۲ ساله در نمای انتخاب سال
+            default:
                 _yearGridBase += delta * 12;
                 Render();
                 break;
         }
     }
 
-    /// <summary>
-    /// کلیک روی عنوان — حرکت سلسله‌مراتبی نماها (چرخه بیست‌ویکم):
-    /// روزها → ماه‌ها → سال‌ها → روزها.
-    /// </summary>
+    /// <summary>کلیک عنوان — روزها ← ماه‌ها ← سال‌ها ← روزها</summary>
     private void TitleClicked()
     {
         _viewMode = _viewMode switch
@@ -205,10 +253,21 @@ public partial class PersianCalendarControl : UserControl
             _ => CalendarViewMode.Days,
         };
         if (_viewMode == CalendarViewMode.Years)
-        {
-            // مبنای گرید سال: از ۶ سال قبل شروع شود تا سال فعلی وسط گرید باشد
             _yearGridBase = DisplayYear - 6;
-        }
+        Render();
+    }
+
+    /// <summary>رفتن به امروز — ماه جاری و انتخاب خود امروز</summary>
+    private void GoToToday()
+    {
+        var (y, m, _) = PersianDateHelper.ToJalali(DateTime.Today);
+        DisplayYear = y;
+        DisplayMonth = m;
+        _viewMode = CalendarViewMode.Days;
+        SelectedDate = DateTime.Today;
+        SelectedShamsi = PersianDateHelper.ToShamsiFa(DateTime.Today);
+        DateSelected?.Invoke(this, DateTime.Today);
+        MonthChanged?.Invoke(this, EventArgs.Empty);
         Render();
     }
 
@@ -225,16 +284,15 @@ public partial class PersianCalendarControl : UserControl
         Render();
     }
 
-    /// <summary>رندر بر اساس نمای فعلی — روزها/ماه‌ها/سال‌ها (چرخه بیست‌ویکم)</summary>
+    /// <summary>رندر بر اساس نمای فعلی</summary>
     private void Render()
     {
         if (DaysGrid is null)
             return;
-
-        // نرمال‌سازی ماه نمایشی
         if (DisplayMonth is < 1 or > 12)
             DisplayMonth = 1;
 
+        TodayFullText.Text = TodayFullTextValue();
         switch (_viewMode)
         {
             case CalendarViewMode.Months:
@@ -249,13 +307,72 @@ public partial class PersianCalendarControl : UserControl
         }
     }
 
-    /// <summary>نمای انتخاب ماه — ۱۲ دکمهٔ ماه با عنوان سال (چرخه بیست‌ویکم)</summary>
+    /// <summary>متن کامل امروز برای چیپ سربرگ</summary>
+    private static string TodayFullTextValue()
+    {
+        var now = DateTime.Today;
+        var (y, m, d) = PersianDateHelper.ToJalali(now);
+        var weekday = PersianDateHelper.DayNames[((int)now.DayOfWeek + 1) % 7];
+        return "امروز: " + PersianDateHelper.ToPersianDigits(
+            $"{weekday} {d} {PersianDateHelper.MonthNames[m - 1]} {y}");
+    }
+
+    /// <summary>قلم‌موی هاشور روزهای تعطیل / غیبت</summary>
+    private static Brush HatchBrush()
+    {
+        var drawing = new GeometryDrawing
+        {
+            Brush = new SolidColorBrush(Color.FromRgb(0xEC, 0xEF, 0xF4)),
+            Geometry = Geometry.Parse("M0,0 L8,0 L8,8 L0,8 Z"),
+        };
+        var lines = new GeometryDrawing
+        {
+            Pen = new Pen(new SolidColorBrush(Color.FromRgb(0xDD, 0xE3, 0xEC)), 1.6),
+            Geometry = Geometry.Parse("M-2,2 L2,-2 M0,8 L8,0 M6,10 L10,6"),
+        };
+        return new DrawingBrush(new DrawingGroup { Children = { drawing, lines } })
+        {
+            TileMode = TileMode.Tile,
+            Viewport = new Rect(0, 0, 8, 8),
+            ViewportUnits = BrushMappingMode.Absolute,
+        };
+    }
+
+    /// <summary>ساخت نوار ظرفیت با نسبت پرشدن و رنگ طیفی سبز تا قرمز</summary>
+    private static Grid BuildCapacityBar(double ratio, bool onDark)
+    {
+        var clamped = Math.Clamp(ratio, 0d, 1d);
+        var grid = new Grid { Margin = new Thickness(5, 3, 5, 0) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(clamped, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1 - clamped, GridUnitType.Star) });
+        var track = new Border
+        {
+            Height = 4.5,
+            CornerRadius = new CornerRadius(2.25),
+            Background = new SolidColorBrush(onDark
+                ? Color.FromArgb(0x4D, 0xFF, 0xFF, 0xFF)
+                : Color.FromRgb(0xE3, 0xEA, 0xF2)),
+        };
+        Grid.SetColumnSpan(track, 2);
+        var fill = new Border
+        {
+            Height = 4.5,
+            CornerRadius = new CornerRadius(2.25),
+            Background = new SolidColorBrush(CapacityColor(clamped)),
+        };
+        Grid.SetColumn(fill, 0);
+        grid.Children.Add(track);
+        grid.Children.Add(fill);
+        return grid;
+    }
+
+    /// <summary>نمای انتخاب ماه — هر ماه با آمار گرافیکی (عدد نوبت + نوار ظرفیت + روزهای کاری)</summary>
     private void RenderMonthsView()
     {
-        // عنوان: سال نمایشی — کلیک بعدی → نمای سال
         MonthTitleText.Text = $"سال {PersianDateHelper.ToPersianDigits(DisplayYear.ToString())}";
-        // مخفی‌کردن ردیف نام روزها و تغییر شبکه به ۳ ستون × ۴ ردیف
         WeekDaysRow.Visibility = Visibility.Collapsed;
+        LegendPanel.Visibility = Visibility.Collapsed;
+        SummaryPanel.Visibility = Visibility.Collapsed;
         DaysGrid.Columns = 3;
         DaysGrid.Rows = 4;
         DaysGrid.Children.Clear();
@@ -264,45 +381,135 @@ public partial class PersianCalendarControl : UserControl
         {
             var captured = month;
             var isCurrent = month == DisplayMonth;
-            var btn = new Button
+            var stat = MonthStatFor(month);
+
+            var name = new TextBlock
             {
-                Content = new TextBlock
-                {
-                    Text = PersianDateHelper.MonthNames[month - 1],
-                    TextAlignment = TextAlignment.Center,
-                    FontSize = 12,
-                },
-                Margin = new Thickness(2),
-                MinHeight = 38,
-                Padding = new Thickness(0),
-                Cursor = Cursors.Hand,
-                Style = (Style)FindResource("MaterialDesignFlatLightButton"),
+                Text = PersianDateHelper.MonthNames[month - 1],
+                FontSize = 12.5,
+                FontWeight = FontWeights.Bold,
+                TextAlignment = TextAlignment.Center,
+                Foreground = isCurrent ? Brushes.White : new SolidColorBrush(Color.FromRgb(0x31, 0x51, 0x7A)),
             };
-            if (isCurrent)
+            var stack = new StackPanel { Margin = new Thickness(4, 7, 4, 6), Children = { name } };
+
+            if (stat is { } s && s.Total > 0)
             {
-                btn.Style = (Style)FindResource("MaterialDesignRaisedLightButton");
+                var ratio = (double)s.Booked / s.Total;
+                stack.Children.Add(new TextBlock
+                {
+                    Text = PersianDateHelper.ToPersianDigits(s.Booked.ToString()),
+                    FontSize = 16,
+                    FontWeight = FontWeights.Bold,
+                    TextAlignment = TextAlignment.Center,
+                    Foreground = isCurrent ? Brushes.White : new SolidColorBrush(Color.FromRgb(0x17, 0x2B, 0x4D)),
+                    Margin = new Thickness(0, 2, 0, 0),
+                });
+                stack.Children.Add(new TextBlock
+                {
+                    Text = "نوبت",
+                    FontSize = 8.5,
+                    TextAlignment = TextAlignment.Center,
+                    Foreground = isCurrent ? Brushes.White : new SolidColorBrush(Color.FromRgb(0x62, 0x74, 0x8E)),
+                });
+                // نوار ظرفیت ماه با دو ستون ستاره‌ای (نسبت واقعی) و رنگ طیفی
+                var barGrid = new Grid { Margin = new Thickness(8, 4, 8, 3) };
+                barGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(Math.Clamp(ratio, 0, 1), GridUnitType.Star) });
+                barGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1 - Math.Clamp(ratio, 0, 1), GridUnitType.Star) });
+                var track = new Border
+                {
+                    Height = 5,
+                    CornerRadius = new CornerRadius(2.5),
+                    Background = new SolidColorBrush(isCurrent
+                        ? Color.FromArgb(0x4D, 0xFF, 0xFF, 0xFF)
+                        : Color.FromRgb(0xE1, 0xE8, 0xF0)),
+                };
+                Grid.SetColumnSpan(track, 2);
+                var fill = new Border
+                {
+                    Height = 5,
+                    CornerRadius = new CornerRadius(2.5),
+                    Background = new SolidColorBrush(CapacityColor(ratio)),
+                };
+                Grid.SetColumn(fill, 0);
+                barGrid.Children.Add(track);
+                barGrid.Children.Add(fill);
+                stack.Children.Add(barGrid);
+                stack.Children.Add(new TextBlock
+                {
+                    Text = PersianDateHelper.ToPersianDigits(
+                        $"{Math.Round(ratio * 100)}٪ ظرفیت • {s.WorkDays} روز کاری"),
+                    FontSize = 8.5,
+                    TextAlignment = TextAlignment.Center,
+                    Foreground = isCurrent ? Brushes.White : new SolidColorBrush(Color.FromRgb(0x62, 0x74, 0x8E)),
+                });
             }
-            btn.Click += (_, _) =>
+            else
             {
-                // انتخاب ماه → بازگشت به نمای روزهای همان ماه
+                stack.Children.Add(new TextBlock
+                {
+                    Text = "—",
+                    FontSize = 13,
+                    TextAlignment = TextAlignment.Center,
+                    Foreground = isCurrent ? Brushes.White : new SolidColorBrush(Color.FromRgb(0x9A, 0xA7, 0xBB)),
+                    Margin = new Thickness(0, 4, 0, 0),
+                });
+            }
+
+            var cell = new Border
+            {
+                CornerRadius = new CornerRadius(12),
+                Margin = new Thickness(3),
+                Cursor = Cursors.Hand,
+                BorderThickness = new Thickness(1.4),
+                BorderBrush = new SolidColorBrush(isCurrent
+                    ? Color.FromRgb(0x00, 0x4D, 0x40)
+                    : Color.FromRgb(0xD7, 0xE0, 0xEA)),
+                Background = isCurrent
+                    ? new LinearGradientBrush(Color.FromRgb(0x00, 0x89, 0x7B), Color.FromRgb(0x00, 0x4D, 0x40), 45)
+                    : Brushes.White,
+                Child = stack,
+            };
+            cell.MouseLeftButtonUp += (_, _) =>
+            {
                 DisplayMonth = captured;
                 _viewMode = CalendarViewMode.Days;
                 MonthChanged?.Invoke(this, EventArgs.Empty);
                 Render();
             };
-            DaysGrid.Children.Add(btn);
+            DaysGrid.Children.Add(cell);
         }
     }
 
-    /// <summary>نمای انتخاب سال — گرید ۱۲ ساله با ناوبری بازه (چرخه بیست‌ویکم)</summary>
+    /// <summary>آمار یک ماه — از MonthStats؛ برای ماه نمایشی از DayStats هم قابل استخراج است</summary>
+    private CalendarMonthStat? MonthStatFor(int month)
+    {
+        if (MonthStats is not null && MonthStats.TryGetValue(month, out var stat))
+            return stat;
+        if (month != DisplayMonth || DayStats is null)
+            return null;
+        var booked = 0; var total = 0; var workDays = 0;
+        foreach (var (date, dayStat) in DayStats)
+        {
+            var (_, m, _) = PersianDateHelper.ToJalali(date);
+            if (m != month) continue;
+            booked += dayStat.Booked;
+            total += dayStat.Total;
+            if (dayStat.Total > 0) workDays++;
+        }
+        return total > 0 ? new CalendarMonthStat(booked, total, workDays) : null;
+    }
+
+    /// <summary>نمای انتخاب سال — گرید ۱۲ ساله با ناوبری بازه</summary>
     private void RenderYearsView()
     {
-        // عنوان بازهٔ ۱۲ سالهٔ فعلی
         var fromYear = _yearGridBase;
         var toYear = _yearGridBase + 11;
         MonthTitleText.Text =
             $"{PersianDateHelper.ToPersianDigits(fromYear.ToString())} — {PersianDateHelper.ToPersianDigits(toYear.ToString())}";
         WeekDaysRow.Visibility = Visibility.Collapsed;
+        LegendPanel.Visibility = Visibility.Collapsed;
+        SummaryPanel.Visibility = Visibility.Collapsed;
         DaysGrid.Columns = 3;
         DaysGrid.Rows = 4;
         DaysGrid.Children.Clear();
@@ -311,160 +518,224 @@ public partial class PersianCalendarControl : UserControl
         {
             var year = _yearGridBase + i;
             var isCurrent = year == DisplayYear;
-            var btn = new Button
+            var cell = new Border
             {
-                Content = new TextBlock
+                CornerRadius = new CornerRadius(12),
+                Margin = new Thickness(3),
+                Cursor = Cursors.Hand,
+                BorderThickness = new Thickness(1.4),
+                BorderBrush = new SolidColorBrush(isCurrent
+                    ? Color.FromRgb(0x00, 0x4D, 0x40)
+                    : Color.FromRgb(0xD7, 0xE0, 0xEA)),
+                Background = isCurrent
+                    ? new LinearGradientBrush(Color.FromRgb(0x00, 0x89, 0x7B), Color.FromRgb(0x00, 0x4D, 0x40), 45)
+                    : Brushes.White,
+                Child = new TextBlock
                 {
                     Text = PersianDateHelper.ToPersianDigits(year.ToString()),
+                    FontSize = 13.5,
+                    FontWeight = FontWeights.Bold,
                     TextAlignment = TextAlignment.Center,
-                    FontSize = 12.5,
-                    // چرخهٔ ۲۶: فونت هاردکد حذف — سال شمسی با ارقام فارسی باید با
-                    // فونت وزیرمتن برنامه رسم شود نه فونت لاتین بدون ارقام فارسی
-                    FontFamily = Sahand.ClinicPro.Desktop.Helpers.FontAssets.Vazirmatn,
+                    Foreground = isCurrent ? Brushes.White : new SolidColorBrush(Color.FromRgb(0x31, 0x51, 0x7A)),
+                    Margin = new Thickness(0, 10, 0, 10),
                 },
-                Margin = new Thickness(2),
-                MinHeight = 38,
-                Padding = new Thickness(0),
-                Cursor = Cursors.Hand,
-                Style = (Style)FindResource("MaterialDesignFlatLightButton"),
             };
-            if (isCurrent)
+            cell.MouseLeftButtonUp += (_, _) =>
             {
-                btn.Style = (Style)FindResource("MaterialDesignRaisedLightButton");
-            }
-            btn.Click += (_, _) =>
-            {
-                // انتخاب سال → نمای انتخاب ماه همان سال
                 DisplayYear = year;
                 _viewMode = CalendarViewMode.Months;
                 MonthChanged?.Invoke(this, EventArgs.Empty);
                 Render();
             };
-            DaysGrid.Children.Add(btn);
+            DaysGrid.Children.Add(cell);
         }
     }
 
-    /// <summary>نمای اصلی روزهای ماه — رفتار پیشین، چرخه بیست‌ویکم از Render تفکیک شد</summary>
+    /// <summary>نمای روزهای ماه — خانه‌های طراحی تازه با نوار ظرفیت طیفی</summary>
     private void RenderDaysView()
     {
-        // بازگشت چیدمان روزها: نمایش ردیف هفته + شبکهٔ ۷×۶
         WeekDaysRow.Visibility = Visibility.Visible;
+        LegendPanel.Visibility = Visibility.Visible;
+        SummaryPanel.Visibility = Visibility.Visible;
         DaysGrid.Columns = 7;
         DaysGrid.Rows = 6;
-
-        // چرخه ۱۹ (گزارش سیزدهم مالک): اعداد تقویم با ارقام فارسی نمایش داده می‌شوند
         MonthTitleText.Text =
             $"{PersianDateHelper.MonthNames[DisplayMonth - 1]} {PersianDateHelper.ToPersianDigits(DisplayYear.ToString())}";
         DaysGrid.Children.Clear();
 
         var today = DateTime.Today;
-        var disabled = DisabledDates?
-            .Select(d => d.Date)
-            .ToHashSet() ?? new HashSet<DateTime>();
+        var disabled = DisabledDates?.Select(d => d.Date).ToHashSet() ?? new HashSet<DateTime>();
+        var stats = DayStats ?? new Dictionary<DateTime, CalendarDayStat>();
         var marked = MarkedDates ?? new Dictionary<DateTime, int>();
 
         var firstOfMonth = PersianDateHelper.ToGregorian(DisplayYear, DisplayMonth, 1);
-        // طول ماه شمسی — نه میلادی! (۶ ماه اول ۳۱، ۵ ماه بعد ۳۰، اسفند ۲۹ یا ۳۰)
         var daysInMonth = Persian.GetDaysInMonth(DisplayYear, DisplayMonth);
-
-        // جابه‌جایی ستون: شنبه = ۰ … جمعه = ۶
         var firstCol = ((int)firstOfMonth.DayOfWeek + 1) % 7;
 
-        // خانه‌های خالی ابتدای ماه
         for (var i = 0; i < firstCol; i++)
             DaysGrid.Children.Add(new Border());
+
+        var monthBooked = 0; var monthTotal = 0; var monthWorkDays = 0;
 
         for (var day = 1; day <= daysInMonth; day++)
         {
             var date = PersianDateHelper.ToGregorian(DisplayYear, DisplayMonth, day);
             var isFriday = date.DayOfWeek == DayOfWeek.Friday;
-            var isDisabled = disabled.Contains(date)
-                             || (MinDate is { } min && date < min)
-                             || (MaxDate is { } max && date > max);
+            var isOff = disabled.Contains(date);
+            var hasStat = stats.TryGetValue(date, out var stat);
+            var isFull = hasStat && stat.Total > 0 && stat.Booked >= stat.Total;
+            if (isFull) isOff = true;
+            var outOfRange = (MinDate is { } min && date < min) || (MaxDate is { } max && date > max);
+            if (outOfRange) isOff = true;
             var isSelected = SelectedDate?.Date == date;
             var isToday = today == date;
+            var isPast = date < today;
 
-            var btn = new Button
+            if (hasStat && stat.Total > 0 && !disabled.Contains(date))
             {
-                // چرخه ۱۹: روز با ارقام فارسی + عرض/مرکزگیری صریح سلول تا روزهای دو‌رقمی کامل دیده شوند
-                Content = new TextBlock
-                {
-                    Text = PersianDateHelper.ToPersianDigits(day.ToString()),
-                    TextAlignment = TextAlignment.Center,
-                },
-                FontSize = 12,
-                Margin = new Thickness(1),
-                MinHeight = 30,
-                MinWidth = 30,
-                Padding = new Thickness(0),
-                HorizontalContentAlignment = HorizontalAlignment.Center,
-                VerticalContentAlignment = VerticalAlignment.Center,
-                Cursor = isDisabled ? Cursors.No : Cursors.Hand,
-                IsEnabled = !isDisabled,
-                Tag = date,
-            };
-
-            // سبک‌ها — اولویت: انتخاب > امروز > جمعه > عادی > غیرفعال
-            if (isSelected)
-            {
-                btn.Style = (Style)FindResource("MaterialDesignRaisedLightButton");
+                monthBooked += stat.Booked;
+                monthTotal += stat.Total;
+                monthWorkDays++;
             }
-            else if (isToday)
+
+            var number = new TextBlock
             {
-                btn.Style = (Style)FindResource("MaterialDesignOutlinedButton");
-                btn.BorderThickness = new Thickness(2);
-                btn.BorderBrush = new SolidColorBrush(Color.FromRgb(0x1E, 0x88, 0xE5));
+                Text = PersianDateHelper.ToPersianDigits(day.ToString()),
+                FontSize = 13.5,
+                FontWeight = FontWeights.Bold,
+                TextAlignment = TextAlignment.Center,
+                Foreground = isSelected
+                    ? Brushes.White
+                    : isOff
+                        ? new SolidColorBrush(Color.FromRgb(0x9A, 0xA7, 0xBB))
+                        : isFriday
+                            ? new SolidColorBrush(Color.FromRgb(0xE5, 0x39, 0x35))
+                            : new SolidColorBrush(Color.FromRgb(0x17, 0x2B, 0x4D)),
+                Margin = new Thickness(0, 5, 0, 0),
+            };
+            var content = new StackPanel { Children = { number } };
+
+            if (isOff && !isFull)
+            {
+                content.Children.Add(new TextBlock
+                {
+                    Text = "تعطیل",
+                    FontSize = 8,
+                    FontWeight = FontWeights.SemiBold,
+                    TextAlignment = TextAlignment.Center,
+                    Foreground = new SolidColorBrush(Color.FromRgb(0xB0, 0x39, 0x2E)),
+                    Margin = new Thickness(0, 3, 0, 4),
+                });
+            }
+            else if (hasStat && stat.Total > 0)
+            {
+                var ratio = (double)stat.Booked / stat.Total;
+                content.Children.Add(BuildCapacityBar(ratio, isSelected));
+                content.Children.Add(new TextBlock
+                {
+                    Text = isFull
+                        ? "تکمیل"
+                        : PersianDateHelper.ToPersianDigits($"{stat.Booked} نوبت"),
+                    FontSize = 8,
+                    FontWeight = isFull ? FontWeights.Bold : FontWeights.SemiBold,
+                    TextAlignment = TextAlignment.Center,
+                    Foreground = isSelected
+                        ? Brushes.White
+                        : isFull
+                            ? new SolidColorBrush(Color.FromRgb(0xC6, 0x28, 0x28))
+                            : new SolidColorBrush(Color.FromRgb(0x5A, 0x6B, 0x84)),
+                    Margin = new Thickness(0, 2, 0, 4),
+                });
+            }
+            else if (marked.TryGetValue(date, out var count))
+            {
+                content.Children.Add(new TextBlock
+                {
+                    Text = PersianDateHelper.ToPersianDigits($"{count} نوبت"),
+                    FontSize = 8,
+                    FontWeight = FontWeights.SemiBold,
+                    TextAlignment = TextAlignment.Center,
+                    Foreground = isSelected
+                        ? Brushes.White
+                        : new SolidColorBrush(Color.FromRgb(0x2E, 0x7D, 0x32)),
+                    Margin = new Thickness(0, 3, 0, 4),
+                });
             }
             else
             {
-                btn.Style = (Style)FindResource("MaterialDesignFlatLightButton");
-                if (isFriday)
-                    btn.Foreground = new SolidColorBrush(Color.FromRgb(0xE5, 0x39, 0x35));
+                content.Children.Add(new Border { Height = 15 });
             }
 
-            if (isDisabled)
-                btn.Opacity = 0.35;
-
-            // نشانگر تعداد نوبت + راهنمای ماوس
-            if (marked.TryGetValue(date, out var count))
+            var cellGrid = new Grid();
+            cellGrid.Children.Add(content);
+            if (isToday)
             {
-                btn.ToolTip = $"{PersianDateHelper.ToShamsiFa(date)} — {PersianDateHelper.ToPersianDigits(count.ToString())} نوبت";
-                btn.Content = new StackPanel
+                var badge = new Border
                 {
-                    Children =
+                    CornerRadius = new CornerRadius(7),
+                    Background = new SolidColorBrush(isSelected
+                        ? Color.FromRgb(0xFF, 0xC4, 0x00)
+                        : Color.FromRgb(0x1E, 0x88, 0xE5)),
+                    Padding = new Thickness(5, 0.5, 5, 0.5),
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Thickness(0, -6, 3, 0),
+                    Child = new TextBlock
                     {
-                        new TextBlock { Text = PersianDateHelper.ToPersianDigits(day.ToString()), FontSize = 12, HorizontalAlignment = HorizontalAlignment.Center },
-                        new Border
-                        {
-                            CornerRadius = new CornerRadius(5),
-                            Background = new SolidColorBrush(Color.FromRgb(0x43, 0xA0, 0x47)),
-                            Padding = new Thickness(4, 0, 4, 0),
-                            HorizontalAlignment = HorizontalAlignment.Center,
-                            Margin = new Thickness(0, 1, 0, 0),
-                            Child = new TextBlock
-                            {
-                                Text = PersianDateHelper.ToPersianDigits(count.ToString()),
-                                FontSize = 8,
-                                Foreground = Brushes.White,
-                            },
-                        },
+                        Text = "امروز",
+                        FontSize = 7.5,
+                        FontWeight = FontWeights.Bold,
+                        Foreground = isSelected
+                            ? new SolidColorBrush(Color.FromRgb(0x4E, 0x34, 0x2E))
+                            : Brushes.White,
                     },
                 };
-            }
-            else if (!isDisabled)
-            {
-                btn.ToolTip = PersianDateHelper.ToShamsiFa(date);
+                cellGrid.Children.Add(badge);
             }
 
-            btn.Click += (_, _) =>
+            var cell = new Border
             {
-                SelectedDate = date;
-                SelectedShamsi = PersianDateHelper.ToShamsiFa(date);
-                DateSelected?.Invoke(this, date);
-                Render();
+                CornerRadius = new CornerRadius(13),
+                Margin = new Thickness(2.5),
+                MinHeight = 50,
+                BorderThickness = new Thickness(isToday || isSelected ? 1.6 : 1.2),
+                BorderBrush = new SolidColorBrush(isSelected
+                    ? Color.FromRgb(0x00, 0x4D, 0x40)
+                    : isToday
+                        ? Color.FromRgb(0x1E, 0x88, 0xE5)
+                        : Colors.Transparent),
+                Background = isSelected
+                    ? new LinearGradientBrush(Color.FromRgb(0x00, 0x89, 0x7B), Color.FromRgb(0x00, 0x4D, 0x40), 45)
+                    : isOff && !isFull
+                        ? HatchBrush()
+                        : Brushes.White,
+                Opacity = isPast && !isSelected ? 0.45 : 1,
+                Cursor = isOff ? Cursors.No : Cursors.Hand,
+                ToolTip = isFull
+                    ? $"{PersianDateHelper.ToShamsiFa(date)} — ظرفیت تکمیل است"
+                    : isOff
+                        ? $"{PersianDateHelper.ToShamsiFa(date)} — تعطیل / عدم حضور"
+                        : hasStat
+                            ? PersianDateHelper.ToPersianDigits(
+                                $"{PersianDateHelper.ToShamsiFa(date)} — {stat.Booked} نوبت از {stat.Total}")
+                            : PersianDateHelper.ToShamsiFa(date),
+                Child = cellGrid,
             };
-
-            DaysGrid.Children.Add(btn);
+            if (!isOff)
+            {
+                cell.MouseLeftButtonUp += (_, _) =>
+                {
+                    SelectedDate = date;
+                    SelectedShamsi = PersianDateHelper.ToShamsiFa(date);
+                    DateSelected?.Invoke(this, date);
+                    Render();
+                };
+            }
+            DaysGrid.Children.Add(cell);
         }
+
+        MonthBookedText.Text = PersianDateHelper.ToPersianDigits(monthBooked.ToString());
+        MonthWorkDaysText.Text = PersianDateHelper.ToPersianDigits(monthWorkDays.ToString());
+        MonthFreeText.Text = PersianDateHelper.ToPersianDigits(Math.Max(0, monthTotal - monthBooked).ToString());
     }
 }

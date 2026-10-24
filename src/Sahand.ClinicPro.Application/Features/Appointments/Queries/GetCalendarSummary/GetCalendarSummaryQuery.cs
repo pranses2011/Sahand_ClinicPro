@@ -92,13 +92,13 @@ public class GetCalendarSummaryQueryHandler : IRequestHandler<GetCalendarSummary
 
             if (schedule is null && previousSchedule is null)
             {
-                days.Add(new CalendarDayDto(shamsi, true, 0, false));
+                days.Add(new CalendarDayDto(shamsi, true, 0, false, 0, 0, true));
                 continue;
             }
 
             if (absenceSet.Contains(date))
             {
-                days.Add(new CalendarDayDto(shamsi, true, 0, true));
+                days.Add(new CalendarDayDto(shamsi, true, 0, true, 0, 0, true));
                 continue;
             }
 
@@ -122,7 +122,7 @@ public class GetCalendarSummaryQueryHandler : IRequestHandler<GetCalendarSummary
 
             var booked = bookedMap.GetValueOrDefault(date);
             var free = Math.Max(0, total - booked);
-            days.Add(new CalendarDayDto(shamsi, free == 0, free, true));
+            days.Add(new CalendarDayDto(shamsi, free == 0, free, true, total, booked, false));
         }
 
         return Result<CalendarSummaryDto>.Success(new CalendarSummaryDto(days));

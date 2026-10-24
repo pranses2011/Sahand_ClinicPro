@@ -5,59 +5,165 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
-             d:DesignHeight="280" d:DesignWidth="300"
+             d:DesignHeight="430" d:DesignWidth="340"
              FlowDirection="RightToLeft">
-    <!-- کنترل تقویم شمسی — مشخصات پرامپت UI بخش ۲ (فرم ۸) -->
-    <Border Background="{DynamicResource MaterialDesign.Brush.Background}"
+    <!-- ═══ تقویم نوبت‌دهی — طراحی تازه (تأیید مالک روی پیش‌نمایش) ═══
+         سربرگ گرادیانی برند با ناوبری گرد و دکمهٔ «برو به امروز»؛ خانه‌های
+         روز با نوار ظرفیت طیفی (سبزِ ظرفیت خالی تا قرمزِ تکمیل بر اساس
+         درصد پرشدن)، شمار نوبت، حالت هاشور «تعطیل»، برچسب «امروز» و
+         انتخاب گرادیانی؛ نمای ماه‌ها با آمار گرافیکی هر ماه.
+         فونت از فونت انتخابی کاربر در تنظیمات ظاهر به ارث می‌رسد و هیچ
+         فونت ثابتی در کنترل نیست. قرارداد داده‌ای پیشین حفظ شده و دو
+         ورودی تازه DayStats/MonthStats برای ظرفیت و آمار افزوده شده است. -->
+    <Border CornerRadius="18" ClipToBounds="True"
+            Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
             BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
-            BorderThickness="1" CornerRadius="10" Padding="8">
+            BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- سربرگ: ماه قبل | عنوان ماه | ماه بعد -->
-            <Grid Grid.Row="0" Margin="2,4">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Button x:Name="PrevMonthButton" Grid.Column="0"
-                        Style="{StaticResource MaterialDesignIconForegroundButton}"
-                        ToolTip="ماه قبل" Width="34" Height="30">
-                    <materialDesign:PackIcon Kind="ChevronRight" />
-                </Button>
-                <Button x:Name="MonthTitleButton" Grid.Column="1"
-                        Style="{StaticResource MaterialDesignFlatMidBgButton}"
-                        HorizontalAlignment="Center" FontSize="14" FontWeight="Bold"
-                        ToolTip="ماه و سال نمایشی">
-                    <TextBlock x:Name="MonthTitleText" Text="—" />
-                </Button>
-                <Button x:Name="NextMonthButton" Grid.Column="2"
-                        Style="{StaticResource MaterialDesignIconForegroundButton}"
-                        ToolTip="ماه بعد" Width="34" Height="30">
-                    <materialDesign:PackIcon Kind="ChevronLeft" />
-                </Button>
-            </Grid>
+            <!-- سربرگ گرادیانی -->
+            <Border Grid.Row="0" Padding="14,12,14,12">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#00897B" Offset="0" />
+                        <GradientStop Color="#00695C" Offset="0.55" />
+                        <GradientStop Color="#004D40" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-            <!-- ردیف نام روزهای هفته: ش ی د س چ پ ج — چرخه بیست‌ویکم: در نمای
-                 انتخاب ماه/سال مخفی می‌شود (نام‌گذاری برای دسترسی کد) -->
-            <UniformGrid x:Name="WeekDaysRow" Grid.Row="1" Columns="7" Margin="0,4">
-                <TextBlock Text="ش" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
-                <TextBlock Text="ی" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
-                <TextBlock Text="د" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
-                <TextBlock Text="س" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
-                <TextBlock Text="چ" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
-                <TextBlock Text="پ" TextAlignment="Center" FontSize="11" FontWeight="Bold" />
-                <TextBlock Text="ج" TextAlignment="Center" FontSize="11" FontWeight="Bold"
-                           Foreground="#e53935" />
-            </UniformGrid>
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
-            <!-- شبکه روزها -->
-            <UniformGrid x:Name="DaysGrid" Grid.Row="2" Columns="7" Rows="6" />
+                        <!-- فلش‌ها طبق بازخورد مالک نسبت به نسخهٔ پیشین برعکس شدند -->
+                        <Border x:Name="PrevButton" Grid.Column="0" Width="36" Height="36" CornerRadius="18"
+                                Background="#24FFFFFF" BorderBrush="#59FFFFFF" BorderThickness="1"
+                                Cursor="Hand" ToolTip="ماه قبل">
+                            <materialDesign:PackIcon Kind="ChevronLeft" Width="20" Height="20" Foreground="White"
+                                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+
+                        <Border x:Name="TitleButton" Grid.Column="1" Cursor="Hand" Background="Transparent"
+                                ToolTip="انتخاب ماه و سال" Margin="6,0">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock x:Name="MonthTitleText" Text="—" TextAlignment="Center"
+                                           FontSize="17" FontWeight="Bold" Foreground="White" />
+                                <TextBlock Text="برای انتخاب ماه و سال کلیک کنید" TextAlignment="Center"
+                                           FontSize="9" Foreground="#C8E6C9" Margin="0,1,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border x:Name="NextButton" Grid.Column="2" Width="36" Height="36" CornerRadius="18"
+                                Background="#24FFFFFF" BorderBrush="#59FFFFFF" BorderThickness="1"
+                                Cursor="Hand" ToolTip="ماه بعد">
+                            <materialDesign:PackIcon Kind="ChevronRight" Width="20" Height="20" Foreground="White"
+                                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="1" Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" CornerRadius="11" Padding="9,3" HorizontalAlignment="Right"
+                                Background="#29FFFFFF" BorderBrush="#4DFFFFFF" BorderThickness="1">
+                            <TextBlock x:Name="TodayFullText" Text="امروز: —" FontSize="10.5" Foreground="White" />
+                        </Border>
+                        <Border x:Name="GoTodayButton" Grid.Column="1" CornerRadius="11" Padding="11,3"
+                                Background="White" Cursor="Hand" ToolTip="رفتن به ماه و روز امروز">
+                            <TextBlock Text="برو به امروز" FontSize="10.5" FontWeight="Bold" Foreground="#00695C" />
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- بدنه: روزهای هفته + شبکه + راهنما + خلاصهٔ ماه -->
+            <StackPanel Grid.Row="1" Margin="10,8,10,10">
+                <UniformGrid x:Name="WeekDaysRow" Columns="7" Margin="0,0,0,4">
+                    <TextBlock Text="شنبه" TextAlignment="Center" FontSize="9.5" FontWeight="Bold" Foreground="#8193AC" />
+                    <TextBlock Text="یکشنبه" TextAlignment="Center" FontSize="9.5" FontWeight="Bold" Foreground="#8193AC" />
+                    <TextBlock Text="دوشنبه" TextAlignment="Center" FontSize="9.5" FontWeight="Bold" Foreground="#8193AC" />
+                    <TextBlock Text="سه‌شنبه" TextAlignment="Center" FontSize="9.5" FontWeight="Bold" Foreground="#8193AC" />
+                    <TextBlock Text="چهارشنبه" TextAlignment="Center" FontSize="9.5" FontWeight="Bold" Foreground="#8193AC" />
+                    <TextBlock Text="پنجشنبه" TextAlignment="Center" FontSize="9.5" FontWeight="Bold" Foreground="#8193AC" />
+                    <TextBlock Text="جمعه" TextAlignment="Center" FontSize="9.5" FontWeight="Bold" Foreground="#E53935" />
+                </UniformGrid>
+
+                <UniformGrid x:Name="DaysGrid" Columns="7" Rows="6" />
+
+                <!-- راهنمای حالت‌ها -->
+                <WrapPanel x:Name="LegendPanel" Margin="2,9,2,0">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,10,2" VerticalAlignment="Center">
+                        <Border Width="15" Height="15" CornerRadius="4.5" BorderThickness="1.2" BorderBrush="#8FA6BF">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="#2E9E4F" Offset="0" />
+                                    <GradientStop Color="#FFC400" Offset="0.5" />
+                                    <GradientStop Color="#E67E22" Offset="0.78" />
+                                    <GradientStop Color="#C62828" Offset="1" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <TextBlock Text="نوار ظرفیت: سبز ← قرمز" FontSize="9" FontWeight="SemiBold" Margin="5,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,10,2" VerticalAlignment="Center">
+                        <Border Width="15" Height="15" CornerRadius="4.5" Background="#ECEFF4" BorderBrush="#9AA7BB" BorderThickness="1.2" />
+                        <TextBlock Text="تعطیل / غیبت" FontSize="9" FontWeight="SemiBold" Margin="5,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,10,2" VerticalAlignment="Center">
+                        <Border Width="15" Height="15" CornerRadius="4.5" Background="White" BorderBrush="#1E88E5" BorderThickness="1.6" />
+                        <TextBlock Text="امروز" FontSize="9" FontWeight="SemiBold" Margin="5,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,2" VerticalAlignment="Center">
+                        <Border Width="15" Height="15" CornerRadius="4.5" BorderBrush="#004D40" BorderThickness="1.2">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#00897B" Offset="0" />
+                                    <GradientStop Color="#004D40" Offset="1" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <TextBlock Text="انتخاب‌شده" FontSize="9" FontWeight="SemiBold" Margin="5,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </WrapPanel>
+
+                <!-- خلاصهٔ ماه نمایشی -->
+                <Border x:Name="SummaryPanel" CornerRadius="12" Margin="0,8,0,0" Padding="6,6"
+                        Background="#F2F7F5" BorderBrush="#D9E8E1" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock x:Name="MonthBookedText" Text="—" TextAlignment="Center" FontSize="14" FontWeight="Bold" Foreground="#00695C" />
+                            <TextBlock Text="نوبت این ماه" TextAlignment="Center" FontSize="8.8" Foreground="#62748E" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock x:Name="MonthWorkDaysText" Text="—" TextAlignment="Center" FontSize="14" FontWeight="Bold" Foreground="#00695C" />
+                            <TextBlock Text="روز کاری" TextAlignment="Center" FontSize="8.8" Foreground="#62748E" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock x:Name="MonthFreeText" Text="—" TextAlignment="Center" FontSize="14" FontWeight="Bold" Foreground="#00695C" />
+                            <TextBlock Text="ظرفیت باقی‌مانده" TextAlignment="Center" FontSize="8.8" Foreground="#62748E" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </StackPanel>
         </Grid>
     </Border>
 </UserControl>
