@@ -159,7 +159,13 @@ public class AutomaticBackupWorker : BackgroundService
             var supportEmail = support?.Email?.Trim();
             if (!string.IsNullOrWhiteSpace(supportEmail)
                 && !string.Equals(supportEmail, emailTo, StringComparison.OrdinalIgnoreCase))
-                await SendBackupEmailAsync(scope.ServiceProvider, supportEmail, zipPath, ct);
+            {
+                // مشخصات درمانگاهِ استفاده‌کننده هم در نامه می‌آید تا پشتیبانی
+                // بکاپ درمانگاه‌های مختلف را از هم تشخیص دهد (گزارش مالک)
+                var clinicIdentity = await BuildClinicIdentityAsync(db, ct);
+                await SendBackupEmailAsync(scope.ServiceProvider, supportEmail, zipPath, ct,
+                    clinicIdentity);
+            }
             else if (string.IsNullOrWhiteSpace(supportEmail))
                 _logger.LogWarning("ایمیل پشتیبانی از سرور لایسنس در دسترس نیست — ارسال نسخهٔ پشتیبان به پشتیبانی انجام نشد");
         }
@@ -176,8 +182,51 @@ public class AutomaticBackupWorker : BackgroundService
     /// <param name="to">ایمیل مقصد از تنظیمات</param>
     /// <param name="zipPath">مسیر فایل پشتیبان ساخته‌شده</param>
     /// <param name="ct">توکن لغو</param>
+    /// <summary>
+    /// مشخصات درمانگاه استفاده‌کننده برای نامهٔ پشتیبانی — از تنظیمات
+    /// ClinicInfo (همگام‌شده از سرور لایسنس) + رکورد لایسنس محلی.
+    /// </summary>
+    private async Task<(string Name, string Html)> BuildClinicIdentityAsync(
+        ClinicProDbContext db, CancellationToken ct)
+    {
+        var rows = await db.SystemSettings.AsNoTracking()
+            .Where(s => !s.IsDeleted && s.Category == "ClinicInfo")
+            .Select(s => new { s.Key, s.Value }).ToListAsync(ct);
+        var map = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        foreach (var row in rows)
+            if (!string.IsNullOrEmpty(row.Key) && !map.ContainsKey(row.Key))
+                map[row.Key] = row.Value;
+
+        var license = await db.ClinicLicense.AsNoTracking().FirstOrDefaultAsync(ct);
+
+        string Get(string key) => map.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v)
+            ? System.Net.WebUtility.HtmlEncode(v.Trim()) : "—";
+        var nameRaw = map.TryGetValue("ClinicName", out var n) && !string.IsNullOrWhiteSpace(n)
+            ? n.Trim() : "درمانگاه (نام ثبت نشده)";
+        var expiry = license?.ExpiryDate is { } e
+            ? PersianDateHelper.ToShamsi(new DateTime(e.Year, e.Month, e.Day)) : "—";
+
+        var html = $"""
+          <h3 style="margin:14px 0 6px;color:#0078D7">مشخصات درمانگاه استفاده‌کننده</h3>
+          <table style="border-collapse:collapse;font-size:13px" cellpadding="6">
+            <tr><td style="color:#78909C">نام درمانگاه</td><td><b>{System.Net.WebUtility.HtmlEncode(nameRaw)}</b></td></tr>
+            <tr><td style="color:#78909C">شماره/کلید لایسنس</td><td dir="ltr" style="font-family:Consolas,monospace">{Get("LicenseNumber")}</td></tr>
+            <tr><td style="color:#78909C">شهر</td><td>{Get("City")}</td></tr>
+            <tr><td style="color:#78909C">مدیر درمانگاه</td><td>{Get("ManagerName")}</td></tr>
+            <tr><td style="color:#78909C">تلفن</td><td>{Get("Phone")}</td></tr>
+            <tr><td style="color:#78909C">ایمیل درمانگاه</td><td dir="ltr">{Get("Email")}</td></tr>
+            <tr><td style="color:#78909C">نشانی</td><td>{Get("Address")}</td></tr>
+            <tr><td style="color:#78909C">کد اقتصادی / شناسهٔ ملی</td><td>{Get("EconomicCode")} / {Get("NationalId")}</td></tr>
+            <tr><td style="color:#78909C">انقضای لایسنس</td><td>{expiry}</td></tr>
+            <tr><td style="color:#78909C">نام ماشین سرور</td><td dir="ltr" style="font-family:Consolas,monospace">{System.Net.WebUtility.HtmlEncode(Environment.MachineName)}</td></tr>
+          </table>
+          """;
+        return (nameRaw, html);
+    }
+
     private async Task SendBackupEmailAsync(IServiceProvider provider, string to,
-        string zipPath, CancellationToken ct)
+        string zipPath, CancellationToken ct,
+        (string Name, string Html)? clinicIdentity = null)
     {
         var sender = provider.GetService<IEmailSender>();
         if (sender is null)
@@ -218,13 +267,17 @@ public class AutomaticBackupWorker : BackgroundService
             <tr><td style="color:#78909C">مسیر روی سرور</td><td dir="ltr" style="font-family:Consolas,monospace">{zipPath}</td></tr>
             <tr><td style="color:#78909C">زمان</td><td>{PersianDateHelper.ToShamsiWithTime(DateTime.Now)}</td></tr>
           </table>
+          {clinicIdentity?.Html ?? string.Empty}
           {attachNote}
           <hr style="border:none;border-top:1px dashed #B0BEC5" />
           <p style="font-size:12px;color:#78909C">این نامه به‌صورت خودکار از تنظیمات «بکاپ خودکار → ارسال به ایمیل» ارسال شده است.</p>
         </div>
         """;
 
-        var result = await sender.SendAsync(to, $"پشتیبان خودکار درمانگاه — {file.Name}", body,
+        var subject = clinicIdentity is { } ci
+            ? $"پشتیبان خودکار — {ci.Name} — {file.Name}"
+            : $"پشتیبان خودکار درمانگاه — {file.Name}";
+        var result = await sender.SendAsync(to, subject, body,
             attachments, ct);
 
         if (result.Success)

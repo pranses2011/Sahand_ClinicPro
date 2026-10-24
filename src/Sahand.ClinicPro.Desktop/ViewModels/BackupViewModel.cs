@@ -454,6 +454,23 @@ public partial class BackupViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// انتخاب پوشهٔ ذخیرهٔ محلی بکاپ خودکار با دیالوگ پوشهٔ ویندوز —
+    /// گزارش مالک: «برای محل ذخیره محلی دکمه انتخاب پوشه هم باشه».
+    /// </summary>
+    [RelayCommand]
+    private void BrowseBackupPath()
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "انتخاب پوشهٔ ذخیرهٔ نسخه‌های پشتیبان",
+        };
+        if (!string.IsNullOrWhiteSpace(BackupPath) && System.IO.Directory.Exists(BackupPath))
+            dialog.InitialDirectory = BackupPath;
+        if (dialog.ShowDialog() == true)
+            BackupPath = dialog.FolderName;
+    }
+
+    /// <summary>
     /// انتخاب فایل پشتیبان از دیسک/فلش و بازیابی — چرخهٔ بیست‌وششم (گزارش
     /// هجدهم مالک): «امکان انتخاب فایل پشتیبانی که در لیست نیست وجود ندارد
     /// و می‌خوام از هارد یا فلش انتخاب کنم». با دیالوگ انتخاب فایل ویندوز

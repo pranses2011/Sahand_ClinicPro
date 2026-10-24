@@ -87,8 +87,26 @@ public class IdentityService : IIdentityService
             return AuthResult.Failure($"حساب به دلیل تلاش‌های ناموفق قفل شده است — {remaining + 1} دقیقه دیگر تلاش کنید");
         }
 
-        if (!_passwordHasher.Verify(password, user.PasswordHash))
+        // ═══ چرخهٔ ۸۴ — رمز موقت بازیابی «در انتظار» ═══
+        // رمز اصلی همیشه اولویت دارد. رمز موقتِ ایمیل‌شده فقط وقتی پذیرفته
+        // می‌شود که کاربر واقعاً با خودش وارد شود؛ در همان لحظه جایگزین رمز
+        // اصلی و تغییرش اجباری می‌شود. اگر نامه نادیده گرفته شود، رمز اصلی
+        // سر جایش است و ورود با آن، رمز موقتِ در انتظار را هم باطل می‌کند.
+        var mainPasswordOk = _passwordHasher.Verify(password, user.PasswordHash);
+        var recoveryPending = !string.IsNullOrEmpty(user.PendingRecoveryPasswordHash)
+            && user.PendingRecoveryExpiresAt.HasValue
+            && user.PendingRecoveryExpiresAt.Value > DateTime.UtcNow;
+        var recoveryPasswordOk = !mainPasswordOk && recoveryPending
+            && _passwordHasher.Verify(password, user.PendingRecoveryPasswordHash!);
+
+        if (!mainPasswordOk && !recoveryPasswordOk)
         {
+            // رمز موقت منقضی پاک می‌شود تا برای همیشه معتبر نماند
+            if (!string.IsNullOrEmpty(user.PendingRecoveryPasswordHash) && !recoveryPending)
+            {
+                user.PendingRecoveryPasswordHash = null;
+                user.PendingRecoveryExpiresAt = null;
+            }
             user.FailedLoginAttempts++;
             if (user.FailedLoginAttempts >= MaxFailedAttempts)
             {
@@ -99,6 +117,19 @@ public class IdentityService : IIdentityService
             await _context.SaveChangesAsync(cancellationToken);
             return AuthResult.Failure("نام کاربری یا رمز عبور نادرست است");
         }
+
+        if (recoveryPasswordOk)
+        {
+            // همین لحظه (و فقط همین لحظه) رمز عوض می‌شود — با تغییر اجباری
+            user.PasswordHash = user.PendingRecoveryPasswordHash!;
+            user.PasswordChangedAt = DateTime.UtcNow;
+            user.MustChangePassword = true;
+            user.SecurityStamp = Guid.NewGuid().ToString("N");
+            _logger.LogInformation("ورود با رمز موقت بازیابی برای کاربر {User} — تغییر رمز اجباری شد", user.Username);
+        }
+        // چه با رمز اصلی وارد شده باشد چه با موقت، «در انتظار» دیگر معنا ندارد
+        user.PendingRecoveryPasswordHash = null;
+        user.PendingRecoveryExpiresAt = null;
 
         // ورود موفق — بازنشانی شمارنده‌ها
         user.FailedLoginAttempts = 0;
@@ -244,6 +275,9 @@ public class IdentityService : IIdentityService
         user.PasswordChangedAt = DateTime.UtcNow;
         user.MustChangePassword = false;
         user.SecurityStamp = Guid.NewGuid().ToString("N");
+        // رمز تازه، هر رمز موقتِ بازیابیِ در انتظار را هم باطل می‌کند
+        user.PendingRecoveryPasswordHash = null;
+        user.PendingRecoveryExpiresAt = null;
 
         await _context.SaveChangesAsync(cancellationToken);
         return Result.Success();
@@ -321,24 +355,19 @@ public class IdentityService : IIdentityService
                 email.Error ?? "ارسال ایمیل ناموفق بود"));
         }
 
-        // حالا که نامه رسیده است، رمز عوض می‌شود
-        user.PasswordHash = _passwordHasher.Hash(temporaryPassword);
-        user.PasswordChangedAt = DateTime.UtcNow;
-        user.MustChangePassword = true;      // ورود بعدی: تغییر اجباری رمز
-        user.SecurityStamp = Guid.NewGuid().ToString("N");
-        user.FailedLoginAttempts = 0;
-        user.LockoutEnd = null;
-
-        // ابطال نشست‌های باز — رمز موقت نباید در دستگاه‌های قبلی کار کند
-        var tokens = await _context.RefreshTokens
-            .Where(t => t.UserId == user.Id && !t.IsRevoked)
-            .ToListAsync(cancellationToken);
-        foreach (var token in tokens)
-            token.IsRevoked = true;
+        // ═══ چرخهٔ ۸۴ — رمز «همین لحظه» عوض نمی‌شود ═══
+        // گزارش مالک: «احتمال دارد شخصی اشتباهاً نام کاربری دیگری را بزند و
+        // رمز او عوض شود؛ اگر نامه نادیده گرفته شد، کاربر با رمز قبلی خودش
+        // وارد شود.» پس رمز موقت فقط در ستونِ «در انتظار» می‌نشیند (۲ ساعت
+        // اعتبار)؛ رمز اصلی، پرچم تغییر اجباری، قفل حساب و نشست‌های باز همگی
+        // دست‌نخورده می‌مانند. جایگزینی فقط هنگام ورودِ واقعی با رمز موقت
+        // در AuthenticateAsync اتفاق می‌افتد.
+        user.PendingRecoveryPasswordHash = _passwordHasher.Hash(temporaryPassword);
+        user.PendingRecoveryExpiresAt = DateTime.UtcNow.AddHours(2);
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("رمز موقت برای کاربر {User} صادر و به ایمیل ثبت‌شده ارسال شد",
+        _logger.LogInformation("رمز موقت بازیابی (در انتظار، ۲ ساعت) برای کاربر {User} به ایمیل ثبت‌شده ارسال شد",
             user.Username);
         return Result.Success();
     }
@@ -390,8 +419,9 @@ public class IdentityService : IIdentityService
                       color:#0D47A1">{temporaryPassword}</b>
           </p>
           <p>با این رمز وارد شوید؛ سامانه در نخستین ورود، شما را به انتخاب رمز تازه راهنمایی می‌کند.</p>
-          <p style="color:#B71C1C">اگر این درخواست از سوی شما نبوده است، همین حالا با مدیر سامانه
-             تماس بگیرید.</p>
+          <p>این رمز موقت فقط <b>۲ ساعت</b> اعتبار دارد و تا وقتی با آن وارد نشوید، رمز قبلی شما همچنان کار می‌کند.</p>
+          <p style="color:#B71C1C">اگر این درخواست از سوی شما نبوده است، کافی است این نامه را
+             نادیده بگیرید — رمز شما تغییر نکرده است.</p>
           <hr style="border:none;border-top:1px dashed #B0BEC5" />
           <p style="font-size:12px;color:#78909C">زمان درخواست: {now} — این نامه به‌صورت خودکار ارسال شده است.</p>
         </div>

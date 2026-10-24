@@ -57,6 +57,18 @@ public class User : AuditableEntity, ISoftDeletable
     /// <summary>باید رمز را عوض کند</summary>
     public bool MustChangePassword { get; set; } = false;
 
+    /// <summary>
+    /// هش رمز موقتِ بازیابیِ در انتظار — چرخهٔ ۸۴: رمز موقتِ ایمیل‌شده «جدا»
+    /// از رمز اصلی نگه داشته می‌شود تا اگر کاربر نامه را نادیده گرفت، با
+    /// همان رمز قبلی خودش وارد شود و رمز هیچ‌کس با اشتباهِ دیگری عوض نشود.
+    /// فقط وقتی کاربر واقعاً با رمز موقت وارد شود، آن رمز جایگزین رمز اصلی
+    /// می‌شود و تغییر رمز اجباری می‌گیرد.
+    /// </summary>
+    public string? PendingRecoveryPasswordHash { get; set; }
+
+    /// <summary>انقضای رمز موقت بازیابی — پس از آن فقط رمز اصلی کار می‌کند</summary>
+    public DateTime? PendingRecoveryExpiresAt { get; set; }
+
     /// <summary>فعال</summary>
     public bool IsActive { get; set; } = true;
 

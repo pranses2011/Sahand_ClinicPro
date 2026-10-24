@@ -90,7 +90,13 @@
                         <TextBlock Text="برای ادامه، به حساب کاربری خود وارد شوید."
                                    FontSize="12.5" Foreground="{StaticResource Login.Text.Muted}"
                                    HorizontalAlignment="Center" Margin="0,6,0,22" />
-                    </StackPanel>
+                    <!-- ═══ چرخهٔ ۸۴ — «فرم بازیابی با فرم لاگین مخلوط می‌شود» ═══
+                         پنل LoginFormPanel باید «همهٔ» کنترل‌های ورود (نام کاربری،
+                         رمز، دکمه‌ها) را دربر بگیرد؛ قبلاً فقط عنوان‌ها داخلش بود
+                         و بقیهٔ فرم هنگام بازیابی هم روی کارت می‌ماند و دو فرم
+                         درهم و ناخوانا دیده می‌شدند. از اینجا تا دکمهٔ فعال‌سازی
+                         لایسنس، همه داخل همین پنل‌اند و با بازشدن بازیابی، کلّاً
+                         Collapsed می‌شوند. -->
 
                     <!-- نام کاربری -->
                     <TextBlock Text="نام کاربری" FontSize="11.5" FontWeight="SemiBold"
@@ -222,6 +228,8 @@
                     </Button>
                 </StackPanel>
 
+                    </StackPanel><!-- /LoginFormPanel — پایان فرم ورود -->
+
                 <!-- ═══ چرخهٔ ۸۲ — پنل «بازیابی رمز عبور» (گزارش مالک) ═══
                      کاربر نام کاربری یا ایمیل خود را می‌دهد؛ سرور رمز موقت تازه
                      می‌سازد و به ایمیل ثبت‌شدهٔ همان حساب می‌فرستد. رمزها فقط
@@ -237,7 +245,7 @@
                                    FontSize="21" FontWeight="Bold"
                                    Foreground="{StaticResource Login.Text.Primary}"
                                    HorizontalAlignment="Center" Margin="0,10,0,4" />
-                        <TextBlock Text="نام کاربری یا ایمیل حساب خود را وارد کنید؛ رمز موقت به ایمیل ثبت‌شدهٔ همان حساب فرستاده می‌شود."
+                        <TextBlock Text="نام کاربری یا ایمیل حساب خود را وارد کنید؛ رمز موقت به ایمیل ثبت‌شدهٔ همان حساب فرستاده می‌شود. رمز فعلی شما تا وقتی با رمز موقت وارد نشوید، تغییر نمی‌کند."
                                    FontSize="12" Foreground="{StaticResource Login.Text.Muted}"
                                    TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,16" />
 
