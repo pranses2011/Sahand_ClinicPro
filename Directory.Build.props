@@ -104,7 +104,7 @@
          کتابخانه هنگام تبدیل به Color منفجر می‌شد. رفع: تغییر درجا
          (Cards.Background/Cards.Border روی همان شیء موجود) + حاشیهٔ کارت
          تیره به‌جای خاکستری روشن پیش‌فرض کتابخانه -->
-    <Version>2.24.0</Version>
+    <Version>2.24.1</Version>
     <Authors>Sahand ClinicPro Team</Authors>
     <Company>Sahand</Company>
     <Product>Sahand ClinicPro</Product>
