@@ -608,6 +608,34 @@ public partial class ReceptionsViewModel : ViewModelBase
         return company is { Id: > 0, IsContracted: true } ? company.Id : null;
     }
 
+    /// <summary>نام درمانگاه برای عنوان قبض — کش‌شده از تنظیم ClinicInfo لایسنس</summary>
+    private string? _receiptClinicName;
+
+    /// <summary>
+    /// نام درمانگاهِ عنوان قبض پذیرش — از تنظیمات ClinicInfo (همگام‌شده از
+    /// سرور لایسنس) خوانده و کش می‌شود؛ در قطعی شبکه نام چاپی محلی و در
+    /// نبود هر دو «درمانگاه» برمی‌گردد (هرگز نام نرم‌افزار روی قبض نمی‌آید).
+    /// </summary>
+    private async Task<string> GetReceiptClinicNameAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_receiptClinicName))
+            return _receiptClinicName;
+        try
+        {
+            var response = await _api.GetAsync<InsurancePolicySettingsResponse>(
+                "settings?category=ClinicInfo");
+            var name = response?.Data?.FirstOrDefault(x => x.Key == "ClinicName")?.Value;
+            if (!string.IsNullOrWhiteSpace(name))
+                return _receiptClinicName = name.Trim();
+        }
+        catch
+        {
+            // بهترین تلاش — قبض به نام چاپی محلی یا عنوان خنثی چاپ می‌شود
+        }
+        var local = LocalSettingsStore.Get("Printer.ClinicName");
+        return string.IsNullOrWhiteSpace(local) ? "درمانگاه" : local.Trim();
+    }
+
     private async Task LoadInsuranceBillingPolicyAsync()
     {
         var response = await _api.GetAsync<InsurancePolicySettingsResponse>("settings/insurance-policy");
@@ -1309,7 +1337,8 @@ public partial class ReceptionsViewModel : ViewModelBase
                     Paid: paidNow,
                     PaymentMethod: payment.Method,
                     ReferenceNumber: payment.ReferenceNumber,
-                    CardNumber: payment.CardNumber);
+                    CardNumber: payment.CardNumber,
+                    ClinicName: await GetReceiptClinicNameAsync());
 
                 ReceptionReceiptPrinter.Print(receipt);
             }

@@ -60,7 +60,9 @@ public sealed record ReceptionReceipt(
     decimal Paid,
     int PaymentMethod,
     string? ReferenceNumber,
-    string? CardNumber);
+    string? CardNumber,
+    // نام درمانگاه از سرور لایسنس (تنظیم ClinicInfo) — عنوان قبض؛ نه نام نرم‌افزار
+    string? ClinicName = null);
 
 /// <summary>
 /// چاپ قبض پذیرش و پرداخت — چرخهٔ ۸۲ (گزارش مالک):
@@ -139,8 +141,13 @@ public static class ReceptionReceiptPrinter
         };
 
         // ─── سربرگ درمانگاه ───
-        var clinic = LocalSettingsStore.Get("Printer.ClinicName");
-        doc.Blocks.Add(Center(string.IsNullOrWhiteSpace(clinic) ? "درمانگاه سهند" : clinic,
+        // عنوان قبض «نام خودِ درمانگاه» است (از سرور لایسنس می‌آید)، نه نام
+        // نرم‌افزار؛ اولویّت: نامی که از ClinicInfo لایسنس رسیده ← نام چاپی
+        // دستی تنظیمات ← عنوان خنثی «درمانگاه» (هرگز نام نرم‌افزار).
+        var clinic = !string.IsNullOrWhiteSpace(r.ClinicName)
+            ? r.ClinicName!.Trim()
+            : LocalSettingsStore.Get("Printer.ClinicName");
+        doc.Blocks.Add(Center(string.IsNullOrWhiteSpace(clinic) ? "درمانگاه" : clinic,
             15.5, FontWeights.Bold, Accent));
         doc.Blocks.Add(Center("قبض پذیرش و پرداخت", 11.5, FontWeights.SemiBold, "#37474F"));
         doc.Blocks.Add(Divider());
