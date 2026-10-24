@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -489,8 +489,32 @@ public partial class SettingsViewModel : ViewModelBase
     private bool _auditLogEnabled = true;
 
     /// <summary>سازنده</summary>
+    /* ── کارت ساعت و تاریخ داشبورد: انتخاب تقویم‌های مناسبت‌های روز ──
+       کلیدها با DashboardViewModel مشترک‌اند (LocalSettingsStore) تا تغییر
+       در تنظیمات بی‌درنگ روی کارت داشبورد اعمال شود. */
+
+    /// <summary>نمایش مناسبت‌های شمسی در کارت ساعت داشبورد</summary>
+    [ObservableProperty] private bool _showJalaliOccasions = true;
+
+    /// <summary>نمایش مناسبت‌های قمری در کارت ساعت داشبورد</summary>
+    [ObservableProperty] private bool _showHijriOccasions = true;
+
+    /// <summary>نمایش مناسبت‌های میلادی در کارت ساعت داشبورد</summary>
+    [ObservableProperty] private bool _showGregorianOccasions = true;
+
+    partial void OnShowJalaliOccasionsChanged(bool value)
+        => LocalSettingsStore.Set("Dashboard.Occasions.Jalali", value ? "true" : "false");
+    partial void OnShowHijriOccasionsChanged(bool value)
+        => LocalSettingsStore.Set("Dashboard.Occasions.Hijri", value ? "true" : "false");
+    partial void OnShowGregorianOccasionsChanged(bool value)
+        => LocalSettingsStore.Set("Dashboard.Occasions.Gregorian", value ? "true" : "false");
+
     public SettingsViewModel(IApiClient api, ISnackbarService snackbar, IThemeService theme)
     {
+        // مقدار اولیهٔ انتخاب تقویم‌های مناسبت از ذخیرهٔ محلی (پیش‌فرض: هر سه فعال)
+        _showJalaliOccasions = LocalSettingsStore.Get("Dashboard.Occasions.Jalali") != "false";
+        _showHijriOccasions = LocalSettingsStore.Get("Dashboard.Occasions.Hijri") != "false";
+        _showGregorianOccasions = LocalSettingsStore.Get("Dashboard.Occasions.Gregorian") != "false";
         _api = api;
         _snackbar = snackbar;
         _theme = theme;

@@ -8,6 +8,7 @@
              xmlns:charts="clr-namespace:Sahand.ClinicPro.Desktop.Controls.Charts"
              xmlns:helpers="clr-namespace:Sahand.ClinicPro.Desktop.Helpers"
              xmlns:local="clr-namespace:Sahand.ClinicPro.Desktop"
+             xmlns:converters="clr-namespace:Sahand.ClinicPro.Desktop.Converters"
              mc:Ignorable="d"
              FlowDirection="RightToLeft"
              UseLayoutRounding="True"
@@ -36,6 +37,7 @@
     <UserControl.Resources>
         <!-- مبدل‌های محلی — الگوی ثابت پروژه (هر نما BoolToVis خودش را تعریف می‌کند) -->
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis" />
 
         <!-- ═══ قالب ردیف نوبت‌های پیش‌رو — بازطراحی چرخهٔ ۷۲ ═══
              کارت نازک با نوار وضعیت سمت راست، شمارهٔ صف درشت و زمان/پزشک چپ -->
@@ -879,6 +881,104 @@
             <!-- متن خوش‌آمد کامل — زیر سربرگ -->
             <TextBlock Text="{Binding WelcomeMessage}" Foreground="#1565C0" FontSize="12"
                        Margin="4,0,4,10" TextWrapping="Wrap" />
+
+            <!-- ╔══════════════════════════════════════════════════════════╗
+                 ║ کارت ساعت و تاریخ امروز — دو ستونه: راست ساعت آنالوگ و    ║
+                 ║ زیرش ساعت دیجیتال؛ چپ تاریخ بلند شمسی، میلادی، قمری و     ║
+                 ║ مناسبت‌های روز. انتخاب تقویم‌های مناسبت از تنظیمات سیستم. ║
+                 ╚══════════════════════════════════════════════════════════╝ -->
+            <Border CornerRadius="14" Padding="16,12" Margin="0,0,0,12"
+                    Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
+                    BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <!-- ستون راست (اول در RTL): ساعت‌ها -->
+                        <ColumnDefinition Width="190" />
+                        <ColumnDefinition Width="14" />
+                        <!-- ستون چپ: تاریخ‌ها و مناسبت‌ها -->
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- ستون راست: آنالوگ + دیجیتال -->
+                    <StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <controls:AnalogClock Width="150" Height="150" />
+                        <TextBlock Text="{Binding DigitalClockText}"
+                                   FontSize="21" FontWeight="Bold"
+                                   FontFamily="{DynamicResource App.CodeFont}"
+                                   Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                   HorizontalAlignment="Center" Margin="0,8,0,0" />
+                        <TextBlock Text="ساعت رسمی کشور"
+                                   FontSize="10" Opacity="0.55"
+                                   Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                   HorizontalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- جداکنندهٔ عمودی -->
+                    <Border Grid.Column="1" Width="1" Margin="0,6"
+                            Background="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+
+                    <!-- ستون چپ: تاریخ‌های بلند + مناسبت‌ها -->
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CalendarToday" Width="16" Height="16"
+                                                     Foreground="#1565C0" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding TodayJalaliLong}" FontSize="16.5" FontWeight="Bold"
+                                       Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                       Margin="7,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <materialDesign:PackIcon Kind="Earth" Width="14" Height="14"
+                                                     Foreground="#00897B" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding TodayGregorianLong}" FontSize="12.5"
+                                       Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                       Margin="7,0,0,0" VerticalAlignment="Center" />
+                            <TextBlock Text="•" Opacity="0.4" Margin="8,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                            <materialDesign:PackIcon Kind="MoonWaxingCrescent" Width="14" Height="14"
+                                                     Foreground="#6A1B9A" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding TodayHijriLong}" FontSize="12.5"
+                                       Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                       Margin="7,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <Border Height="1" Margin="0,10"
+                                Background="{DynamicResource MaterialDesign.Brush.Separator.Background}" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <materialDesign:PackIcon Kind="PartyPopper" Width="14" Height="14"
+                                                     Foreground="#E65100" VerticalAlignment="Center" />
+                            <TextBlock Text="مناسبت‌های امروز" FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                       Margin="7,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding TodayOccasions}"
+                                      Visibility="{Binding HasTodayOccasions, Converter={StaticResource BoolToVis}}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                        <Border CornerRadius="7" Padding="7,1.5" VerticalAlignment="Center"
+                                                Background="#FFF3E0" BorderBrush="#FFE0B2" BorderThickness="1">
+                                            <TextBlock Text="{Binding CalendarLabel}" FontSize="9.5"
+                                                       Foreground="#E65100" FontWeight="SemiBold" />
+                                        </Border>
+                                        <TextBlock Text="{Binding Title}" FontSize="12"
+                                                   Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                                   Margin="8,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="امروز مناسبت خاصی در تقویم‌های فعال ثبت نشده است."
+                                   FontSize="11.5" Opacity="0.6"
+                                   Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                   Visibility="{Binding HasTodayOccasions, Converter={StaticResource InverseBoolToVis}}" />
+                        <TextBlock Text="انتخاب تقویم‌های مناسبت (شمسی، قمری، میلادی) از «تنظیمات ← داشبورد و مناسبت‌ها» انجام می‌شود."
+                                   FontSize="10" Opacity="0.5" Margin="0,8,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
 
             <!-- ╔══════════════════════════════════════════════════════════╗
                  ║ پیام‌های پشتیبانی سرور لایسنس — کارت‌های رنگی سطح اهمیت    ║
