@@ -398,7 +398,7 @@
                                  گزینه + فیلد ایمیل مقصد؛ تنظیم با دکمهٔ «ذخیرهٔ تنظیمات
                                  خودکار» در همان دستهٔ Backup روی سرور ذخیره می‌شود و
                                  کارگر شبانه پس از هر پشتیبان موفق نامه می‌فرستد. -->
-                            <CheckBox Content="ارسال نسخهٔ پشتیبان به ایمیل"
+                            <CheckBox Content="ارسال نسخهٔ پشتیبان به ایمیل من (ایمیل درمانگاه)"
                                       IsChecked="{Binding EmailBackupEnabled}" Margin="2,14,2,4"
                                       Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
                             <TextBox Text="{Binding EmailBackupTo, UpdateSourceTrigger=PropertyChanged}"
@@ -407,7 +407,7 @@
                                      FlowDirection="LeftToRight" TextAlignment="Left"
                                      Margin="26,2,0,6"
                                      materialDesign:HintAssist.Hint="نشانی ایمیل مقصد — مثال: backups@clinic.ir" />
-                            <TextBlock Text="نسخهٔ شبانه پس از ساخت به این نشانی فرستاده می‌شود: فایل‌های تا ۱۵ مگابایت پیوست می‌شوند و بزرگ‌تر از آن، فقط نامهٔ اطلاع‌رسانی با مسیر فایل روی سرور ارسال می‌شود. نیازمند پیکربندی SMTP در سرور است."
+                            <TextBlock Text="هر پشتیبان (خودکار یا فوری) پس از ساخت به این نشانی هم فرستاده می‌شود: فایل‌های تا ۱۵ مگابایت پیوست می‌شوند و بزرگ‌تر از آن، فقط نامهٔ اطلاع‌رسانی با مسیر فایل روی سرور می‌رود. توجه: این تنظیم فقط برای ایمیل خودتان است — نسخهٔ پشتیبان «همیشه» و بدون نیاز به این تنظیم، همراه مشخصات درمانگاه به ایمیل پشتیبانی (از سرور لایسنس) هم ارسال می‌شود. بدون SMTP هم از رلهٔ سرور لایسنس ارسال می‌شود."
                                        FontSize="10.5" Opacity="0.75" TextWrapping="Wrap"
                                        Margin="26,0,2,6"
                                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />

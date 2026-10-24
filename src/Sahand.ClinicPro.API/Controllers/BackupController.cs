@@ -133,12 +133,23 @@ public class BackupController : ApiBaseController
         if (!ok)
             return BadRequest(ApiResponse<object>.Failure($"پشتیبان‌گیری ناموفق بود: {error}"));
 
+        // ═══ بکاپ فوری هم ایمیل می‌شود (گزارش مالک) ═══
+        // از همان مسیر مشترک بکاپ خودکار: ایمیل پشتیبانی «همیشه و در همه
+        // حال» (بدون تنظیم، با مشخصات درمانگاه) و ایمیل کاربر فقط اگر در
+        // تنظیمات بکاپ خودکار فعالش کرده باشد. شکست ایمیل، بکاپ موفق را
+        // ناموفق نمی‌کند — فقط در پیام پاسخ گزارش می‌شود.
+        var notice = await _services.GetRequiredService<BackupEmailNotifier>()
+            .NotifyAsync(zipPath, isAutomatic: false, ct);
+
         return Ok(ApiResponse<object>.Success(new
         {
             fileName = System.IO.Path.GetFileName(zipPath),
             filePath = zipPath,
-            message = "پشتیبان‌گیری با موفقیت انجام شد — نسخهٔ فشردهٔ ZIP با نام شمسی ذخیره شد"
-        }, "پشتیبان‌گیری با موفقیت انجام شد"));
+            emailSupportSent = notice.SupportSent,
+            emailUserSent = notice.UserSent,
+            emailNote = notice.Note,
+            message = $"پشتیبان‌گیری با موفقیت انجام شد — {notice.Note}"
+        }, $"پشتیبان‌گیری با موفقیت انجام شد — {notice.Note}"));
     }
 
     // ═══ فهرست و بازیابی فایل‌های پشتیبان — چرخه بیست‌وسوم (گزارش شانزدهم مالک) ═══

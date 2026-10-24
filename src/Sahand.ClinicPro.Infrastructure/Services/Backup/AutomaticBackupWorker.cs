@@ -126,165 +126,20 @@ public class AutomaticBackupWorker : BackgroundService
 
         _logger.LogInformation("پشتیبان خودکار فشرده شد — {Zip}", zipPath);
 
-        // ═══ چرخهٔ ۸۲ (گزارش مالک) — ارسال نسخهٔ شبانه به ایمیل ═══
-        // «در تنظیمات بکاپ خودکار، گزینهٔ ارسال به ایمیل و فیلد ایمیل مقصد
-        // بگذار». فایل پشتیبان اگر حجم معقولی داشته باشد پیوست می‌شود؛ برای
-        // فایل‌های سنگین‌تر (سقف رایج سرویس‌های ایمیل) فقط نامهٔ اطلاع‌رسانی با
-        // مسیر فایل روی سرور می‌رود تا صندوق گیرنده سرریز نکند. هر خطایی در این
-        // مرحله فقط لاگ می‌شود؛ خودِ پشتیبان سالم است و نباید چرخه را بیندازد.
-        var emailEnabled = string.Equals(GetSetting(settings, "EmailEnabled"), "true",
-            StringComparison.OrdinalIgnoreCase);
-        var emailTo = GetSetting(settings, "EmailTo");
-        if (emailEnabled && !string.IsNullOrWhiteSpace(emailTo))
-        {
-            try
-            {
-                await SendBackupEmailAsync(scope.ServiceProvider, emailTo, zipPath, ct);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "ارسال ایمیل پشتیبان به {To} ناموفق بود", emailTo);
-            }
-        }
-
-        // ═══ همیشه: نسخه‌ای هم برای پشتیبانی محصول ═══
-        // در هر بکاپ خودکار، نسخهٔ پشتیبان (در پس‌زمینه و بدون تنظیم SMTP —
-        // از رلهٔ سرور لایسنس) به ایمیل پشتیبانی‌ای که از سرور لایسنس می‌آید
-        // نیز ارسال می‌شود تا پشتیبان همیشه یک نسخهٔ خارج از درمانگاه داشته
-        // باشد. اگر مقصد کاربر همان ایمیل پشتیبانی بود، دوباره ارسال نمی‌شود.
+        // اطلاع‌رسانی ایمیل از مسیر مشترک BackupEmailNotifier:
+        // ایمیل پشتیبانی «همیشه» (بدون هیچ تنظیمی، با مشخصات درمانگاه) و
+        // ایمیل کاربر فقط اگر در تنظیمات بکاپ خودکار فعالش کرده باشد.
+        // همان مسیر را بکاپ فوری هم استفاده می‌کند تا رفتار یکی باشد.
         try
         {
-            var licenseService = scope.ServiceProvider.GetService<ILicenseService>();
-            var support = licenseService is null ? null : await licenseService.GetSupportInfoAsync(ct);
-            var supportEmail = support?.Email?.Trim();
-            if (!string.IsNullOrWhiteSpace(supportEmail)
-                && !string.Equals(supportEmail, emailTo, StringComparison.OrdinalIgnoreCase))
-            {
-                // مشخصات درمانگاهِ استفاده‌کننده هم در نامه می‌آید تا پشتیبانی
-                // بکاپ درمانگاه‌های مختلف را از هم تشخیص دهد (گزارش مالک)
-                var clinicIdentity = await BuildClinicIdentityAsync(db, ct);
-                await SendBackupEmailAsync(scope.ServiceProvider, supportEmail, zipPath, ct,
-                    clinicIdentity);
-            }
-            else if (string.IsNullOrWhiteSpace(supportEmail))
-                _logger.LogWarning("ایمیل پشتیبانی از سرور لایسنس در دسترس نیست — ارسال نسخهٔ پشتیبان به پشتیبانی انجام نشد");
+            var notifier = scope.ServiceProvider.GetRequiredService<BackupEmailNotifier>();
+            var notice = await notifier.NotifyAsync(zipPath, isAutomatic: true, ct);
+            _logger.LogInformation("اطلاع‌رسانی ایمیل بکاپ خودکار: {Note}", notice.Note);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "ارسال ایمیل پشتیبان به پشتیبانی ناموفق بود");
+            _logger.LogWarning(ex, "اطلاع‌رسانی ایمیل بکاپ خودکار ناموفق بود");
         }
-    }
-
-    /// <summary>
-    /// ارسال نتیجهٔ پشتیبان شبانه به ایمیل مقصد — با پیوست در صورت حجم معقول.
-    /// </summary>
-    /// <param name="provider">تأمین‌کنندهٔ سرویس‌های همان اسکوپ (DbContext/ایمیل)</param>
-    /// <param name="to">ایمیل مقصد از تنظیمات</param>
-    /// <param name="zipPath">مسیر فایل پشتیبان ساخته‌شده</param>
-    /// <param name="ct">توکن لغو</param>
-    /// <summary>
-    /// مشخصات درمانگاه استفاده‌کننده برای نامهٔ پشتیبانی — از تنظیمات
-    /// ClinicInfo (همگام‌شده از سرور لایسنس) + رکورد لایسنس محلی.
-    /// </summary>
-    private async Task<(string Name, string Html)> BuildClinicIdentityAsync(
-        ClinicProDbContext db, CancellationToken ct)
-    {
-        var rows = await db.SystemSettings.AsNoTracking()
-            .Where(s => !s.IsDeleted && s.Category == "ClinicInfo")
-            .Select(s => new { s.Key, s.Value }).ToListAsync(ct);
-        var map = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
-        foreach (var row in rows)
-            if (!string.IsNullOrEmpty(row.Key) && !map.ContainsKey(row.Key))
-                map[row.Key] = row.Value;
-
-        var license = await db.ClinicLicense.AsNoTracking().FirstOrDefaultAsync(ct);
-
-        string Get(string key) => map.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v)
-            ? System.Net.WebUtility.HtmlEncode(v.Trim()) : "—";
-        var nameRaw = map.TryGetValue("ClinicName", out var n) && !string.IsNullOrWhiteSpace(n)
-            ? n.Trim() : "درمانگاه (نام ثبت نشده)";
-        var expiry = license?.ExpiryDate is { } e
-            ? PersianDateHelper.ToShamsi(new DateTime(e.Year, e.Month, e.Day)) : "—";
-
-        var html = $"""
-          <h3 style="margin:14px 0 6px;color:#0078D7">مشخصات درمانگاه استفاده‌کننده</h3>
-          <table style="border-collapse:collapse;font-size:13px" cellpadding="6">
-            <tr><td style="color:#78909C">نام درمانگاه</td><td><b>{System.Net.WebUtility.HtmlEncode(nameRaw)}</b></td></tr>
-            <tr><td style="color:#78909C">شماره/کلید لایسنس</td><td dir="ltr" style="font-family:Consolas,monospace">{Get("LicenseNumber")}</td></tr>
-            <tr><td style="color:#78909C">شهر</td><td>{Get("City")}</td></tr>
-            <tr><td style="color:#78909C">مدیر درمانگاه</td><td>{Get("ManagerName")}</td></tr>
-            <tr><td style="color:#78909C">تلفن</td><td>{Get("Phone")}</td></tr>
-            <tr><td style="color:#78909C">ایمیل درمانگاه</td><td dir="ltr">{Get("Email")}</td></tr>
-            <tr><td style="color:#78909C">نشانی</td><td>{Get("Address")}</td></tr>
-            <tr><td style="color:#78909C">کد اقتصادی / شناسهٔ ملی</td><td>{Get("EconomicCode")} / {Get("NationalId")}</td></tr>
-            <tr><td style="color:#78909C">انقضای لایسنس</td><td>{expiry}</td></tr>
-            <tr><td style="color:#78909C">نام ماشین سرور</td><td dir="ltr" style="font-family:Consolas,monospace">{System.Net.WebUtility.HtmlEncode(Environment.MachineName)}</td></tr>
-          </table>
-          """;
-        return (nameRaw, html);
-    }
-
-    private async Task SendBackupEmailAsync(IServiceProvider provider, string to,
-        string zipPath, CancellationToken ct,
-        (string Name, string Html)? clinicIdentity = null)
-    {
-        var sender = provider.GetService<IEmailSender>();
-        if (sender is null)
-        {
-            _logger.LogWarning("سرویس ایمیل در دسترس نیست — ارسال بکاپ به ایمیل انجام نشد");
-            return;
-        }
-        // SMTP تنظیم نشده باشد هم اشکالی ندارد: فرستنده از رلهٔ سرور لایسنس ارسال می‌کند.
-
-        // سقف پیوست — بیشتر سرویس‌های ایمیل بالای ۲۰ مگابایت را رد می‌کنند
-        const long maxAttachmentBytes = 15L * 1024 * 1024;
-
-        var file = new FileInfo(zipPath);
-        var exists = file.Exists;
-        var sizeMb = exists ? file.Length / (1024d * 1024d) : 0d;
-        string sizeText = exists ? $"{sizeMb:0.##} مگابایت" : "نامشخص";
-
-        List<EmailAttachment>? attachments = null;
-        if (exists && file.Length <= maxAttachmentBytes)
-            attachments = new List<EmailAttachment>
-            {
-                new(file.Name, await File.ReadAllBytesAsync(zipPath, ct), "application/zip")
-            };
-
-        // یادداشت پیوست — به‌جای شرط‌گذاشتن داخل رشتهٔ خام (خواناتر و بی‌خطا)
-        var attachNote = attachments is null
-            ? "<p style=\"color:#B71C1C\">حجم فایل از ۱۵ مگابایت بیشتر است؛ به‌جای پیوست، فایل را از مسیر بالا روی سرور بردارید.</p>"
-            : "<p>فایل پشتیبان به این نامه پیوست شده است.</p>";
-
-        var body = $"""
-        <div dir="rtl" style="font-family:Tahoma,Segoe UI,sans-serif;text-align:right;line-height:1.9;
-                    color:#263238;background:#F7FAFD;padding:18px;border-radius:12px">
-          <h2 style="margin:0 0 10px;color:#0078D7">پشتیبان‌گیری خودکار انجام شد</h2>
-          <p>نسخهٔ پشتیبان کامل امروز با موفقیت ساخته شد.</p>
-          <table style="border-collapse:collapse;font-size:13px" cellpadding="6">
-            <tr><td style="color:#78909C">نام فایل</td><td><b>{file.Name}</b></td></tr>
-            <tr><td style="color:#78909C">حجم</td><td>{sizeText}</td></tr>
-            <tr><td style="color:#78909C">مسیر روی سرور</td><td dir="ltr" style="font-family:Consolas,monospace">{zipPath}</td></tr>
-            <tr><td style="color:#78909C">زمان</td><td>{PersianDateHelper.ToShamsiWithTime(DateTime.Now)}</td></tr>
-          </table>
-          {clinicIdentity?.Html ?? string.Empty}
-          {attachNote}
-          <hr style="border:none;border-top:1px dashed #B0BEC5" />
-          <p style="font-size:12px;color:#78909C">این نامه به‌صورت خودکار از تنظیمات «بکاپ خودکار → ارسال به ایمیل» ارسال شده است.</p>
-        </div>
-        """;
-
-        var subject = clinicIdentity is { } ci
-            ? $"پشتیبان خودکار — {ci.Name} — {file.Name}"
-            : $"پشتیبان خودکار درمانگاه — {file.Name}";
-        var result = await sender.SendAsync(to, subject, body,
-            attachments, ct);
-
-        if (result.Success)
-            _logger.LogInformation("نسخهٔ پشتیبان به ایمیل {To} ارسال شد (پیوست: {Attached})",
-                to, attachments is not null);
-        else
-            _logger.LogWarning("ارسال ایمیل پشتیبان ناموفق بود: {Error}", result.Error);
     }
 
     /// <summary>خواندن مقدار کلید از دیکشنری تنظیمات</summary>
