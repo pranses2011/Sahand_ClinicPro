@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -96,9 +96,11 @@ public static class ClinicProHealthChecks
                         freeGb = Math.Round(freeGb, 1),
                         note = okSpace ? "فضای دیسک کافی است" : "فضای دیسک پشتیبان‌گیری کمتر از ۱ گیگابایت است",
                     };
+                    // کمبود فضای دیسک فقط «هشدار» است و نباید آمادگی کل سرور را
+                    // قرمز کند — وگرنه نصب‌کننده روی ماشینی که API سالم بالا آمده
+                    // «نصب ناموفق» گزارش می‌کند (گزارش مالک، نصب ۲.۲۸.۳).
                     if (!okSpace)
                     {
-                        allHealthy = false;
                         anyDegraded = true;
                     }
                 }
@@ -139,7 +141,7 @@ public static class ClinicProHealthChecks
                 checks["jobs"] = new { healthy = true, note = "سنجش Hangfire نادیده گرفته شد" };
             }
 
-            var status = allHealthy ? "Healthy" : anyDegraded ? "Degraded" : "Unhealthy";
+            var status = !allHealthy ? "Unhealthy" : anyDegraded ? "Degraded" : "Healthy";
             var payload = new
             {
                 status,
@@ -147,6 +149,8 @@ public static class ClinicProHealthChecks
                 serverTime = DateTime.UtcNow,
                 version = ProductVersion(),
             };
+            // فقط ناسالم‌بودن سخت (دیتابیس/Hangfire) ۵۰۳ می‌دهد؛ Degraded (مثل
+            // کمبود فضای دیسک) با ۲۰۰ و بدنهٔ هشدار برمی‌گردد.
             return allHealthy
                 ? Results.Ok(payload)
                 : Results.Json(payload, statusCode: StatusCodes.Status503ServiceUnavailable);

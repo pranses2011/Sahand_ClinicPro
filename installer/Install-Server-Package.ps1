@@ -148,8 +148,15 @@ if (-not (Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContin
 # در پایانِ ناموفق، به‌جای پیام کلی، گزارش تشخیصی واقعی (وضعیت سرویس +
 # خطاهای Event Viewer + انتهای فایل‌های لاگ) در فایل گزارش نوشته می‌شود.
 Start-Service -Name $serviceName
+# ═══ معیار موفقیت نصب: زنده‌بودن API (/health/live) ═══
+# پیش‌تر موفقیت فقط با Healthy شدن /health/ready سنجیده می‌شد؛ اما آن نقطه
+# فضای دیسک پشتیبان‌گیری و Hangfire را هم می‌سنجد و روی ماشینی که API کاملاً
+# سالم بالا آمده بود (لاگ‌ها و تپ‌قلب موفق) نصب «ناموفق» گزارش شد. اکنون:
+# زنده‌بودن فرآیند = نصب موفق؛ نتیجهٔ readiness فقط برای هشدار/گزارش خوانده
+# می‌شود و هرگز نصب سالم را شکست نمی‌دهد.
 $deadline = (Get-Date).AddSeconds(300)
-$healthy = $false
+$alive = $false
+$readyNote = ''
 $restartTried = $false
 $waited = 0
 do {
@@ -164,16 +171,37 @@ do {
         }
     } catch { }
     try {
-        $response = Invoke-RestMethod -Uri 'http://localhost:5000/health/ready' -TimeoutSec 3
-        $healthy = $response.status -eq 'Healthy'
+        $live = Invoke-RestMethod -Uri 'http://localhost:5000/health/live' -TimeoutSec 3
+        if ($live.status) { $alive = $true }
     } catch { }
-    if (-not $healthy -and ($waited % 30) -eq 0) {
+    if ($alive) {
+        try {
+            $ready = Invoke-RestMethod -Uri 'http://localhost:5000/health/ready' -TimeoutSec 3
+            $readyNote = "readiness: $($ready.status)"
+            if ($ready.status -ne 'Healthy') {
+                Write-Host "توجه: API بالا است اما آمادگی کامل گزارش نشد ($($ready.status)) — جزئیات در install-diagnostics.txt" -ForegroundColor Yellow
+            }
+        } catch {
+            $body = ''
+            try {
+                $resp = $_.Exception.Response
+                if ($resp) {
+                    $sr = New-Object System.IO.StreamReader($resp.GetResponseStream())
+                    $body = $sr.ReadToEnd()
+                }
+            } catch { }
+            $readyNote = "readiness پاسخ کامل نداد: $($_.Exception.Message) $body"
+            Write-Host 'توجه: API بالا است اما نقطهٔ آمادگی پاسخ کامل نداد — نصب ادامه پیدا می‌کند؛ جزئیات در install-diagnostics.txt' -ForegroundColor Yellow
+        }
+    }
+    if (-not $alive -and ($waited % 30) -eq 0) {
         Write-Host "در انتظار آماده‌شدن API… ($waited ثانیه)" -ForegroundColor DarkGray
     }
-} while (-not $healthy -and (Get-Date) -lt $deadline)
-if (-not $healthy) {
+} while (-not $alive -and (Get-Date) -lt $deadline)
+if (-not $alive) {
     $diag = New-Object System.Collections.Generic.List[string]
     $diag.Add("گزارش تشخیصی نصب سرور — $(Get-Date -Format 'yyyy/MM/dd HH:mm:ss')")
+    $diag.Add($readyNote)
     try {
         $svcEnd = Get-Service -Name $serviceName -ErrorAction Stop
         $diag.Add("وضعیت سرویس: $($svcEnd.Status)")
@@ -200,8 +228,13 @@ if (-not $healthy) {
     $diagPath = Join-Path $target 'install-diagnostics.txt'
     try { Set-Content -Path $diagPath -Value $diag -Encoding UTF8 } catch { }
     $diag | ForEach-Object { Write-Host $_ -ForegroundColor DarkYellow }
-    throw "سرویس نصب شد اما API در مهلت انتظار (۵ دقیقه) آماده نشد. گزارش تشخیصی در $diagPath ذخیره شد — همان فایل را برای پشتیبانی بفرستید."
+    throw "سرویس نصب شد اما API در مهلت انتظار (۵ دقیقه) پاسخ نداد. گزارش تشخیصی در $diagPath ذخیره شد — همان فایل را برای پشتیبانی بفرستید."
 }
+# گزارش آمادگی (حتی در نصب موفق) برای پشتیبانی نگه داشته می‌شود.
+try {
+    $diagOk = @("نصب سرور موفق — $(Get-Date -Format 'yyyy/MM/dd HH:mm:ss')", $readyNote)
+    Set-Content -Path (Join-Path $target 'install-diagnostics.txt') -Value $diagOk -Encoding UTF8
+} catch { }
 
 # ثبت نسخهٔ نصب‌شده تا اجرای بعدی نصب‌کننده نسخهٔ فعلی را بشناسد و انتخاب
 # «نصب کامل / فقط فایل‌های به‌روزشده» را پیشنهاد بدهد.

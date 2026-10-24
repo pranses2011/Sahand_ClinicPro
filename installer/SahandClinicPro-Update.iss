@@ -77,7 +77,7 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 
 [Files]
 ; خروجی publish دسکتاپ — توسط BUILD-INSTALLER.bat ساخته می‌شود
-Source: "..\publish\desktop-update\*"; DestDir: "{app}"; Excludes: "appsettings.json,Sahand.ClinicPro.Desktop.runtimeconfig.json"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\publish\desktop-update\*"; DestDir: "{app}"; Excludes: "appsettings.json,Sahand.ClinicPro.Desktop.runtimeconfig.json,Sahand.ClinicPro.Desktop.deps.json"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; پیکربندی کلاینت فقط در نصب اول ایجاد شود تا به‌روزرسانی نشانی سرور را بازنویسی نکند
 Source: "appsettings.client.example.json"; DestDir: "{app}"; Flags: ignoreversion onlyifdoesntexist; DestName: "appsettings.json"
 
@@ -157,9 +157,9 @@ begin
     Result := False;
     Exit;
   end;
-  if not FileExists(AppDir + '\hostfxr.dll') then
+  if not FileExists(AppDir + '\hostfxr.dll') or not FileExists(AppDir + '\coreclr.dll') or not FileExists(AppDir + '\hostpolicy.dll') then
   begin
-    MsgBox('در مسیر نصب برنامه، Runtime پیدا نشد (hostfxr.dll).' + #13#10 +
+    MsgBox('در مسیر نصب برنامه، Runtime کامل نیست (hostfxr.dll/coreclr.dll/hostpolicy.dll).' + #13#10 +
            'احتمالاً نصب قبلی ناقص است؛ فایل نصب کامل (Setup) نسخهٔ جدید را اجرا کنید — خودش نصب قبلی را پیدا می‌کند و می‌توانید «نصب کامل» را انتخاب کنید.',
            mbError, MB_OK);
     Result := False;
