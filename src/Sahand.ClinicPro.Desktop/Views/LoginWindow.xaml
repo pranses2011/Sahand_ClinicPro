@@ -176,14 +176,18 @@
                                 ToolTip="ارسال رمز موقت به ایمیل ثبت‌شدهٔ حساب شما" />
                     </Grid>
 
-                    <!-- پیام خطا -->
-                    <Border Background="#FFF1F0" BorderBrush="#F7C7C3" BorderThickness="1"
-                            CornerRadius="9" Padding="10,8" Margin="0,12,0,0"
-                            Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="{Binding ErrorMessage}"
-                                   Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
-                                   FontSize="12" TextWrapping="Wrap" />
-                    </Border>
+                    <!-- پیام خطا — داخل محفظهٔ ارتفاع‌ثابت رزروشده: ظاهر/ناپدیدشدن
+                         پیام دیگر هیچ عنصری از صفحه را بالا/پایین نمی‌برد و
+                         چیزی از بالا/پایین بریده نمی‌شود (گزارش مالک) -->
+                    <Grid Height="52" Margin="0,12,0,0">
+                        <Border Background="#FFF1F0" BorderBrush="#F7C7C3" BorderThickness="1"
+                                CornerRadius="9" Padding="10,8" VerticalAlignment="Top"
+                                Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding ErrorMessage}"
+                                       Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
+                                       FontSize="12" TextWrapping="Wrap" />
+                        </Border>
+                    </Grid>
 
                     <!-- دکمهٔ ورود -->
                     <Button Command="{Binding LoginCommand}"
@@ -199,9 +203,11 @@
                         </StackPanel>
                     </Button>
 
-                    <ProgressBar IsIndeterminate="True"
-                                 Height="3" Margin="0,10,0,0"
-                                 Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+                    <!-- نوار پیشرفت هم داخل فضای رزروشده تا نمایش آن صفحه را تکان ندهد -->
+                    <Grid Height="13" Margin="0,10,0,0">
+                        <ProgressBar IsIndeterminate="True" Height="3" VerticalAlignment="Top"
+                                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+                    </Grid>
 
                     <!-- مسیر فعال‌سازی لایسنس -->
                     <Grid Margin="0,18,0,10">
@@ -262,12 +268,14 @@
                             </TextBox.InputBindings>
                         </TextBox>
 
-                        <Border Background="#EAF3FC" BorderBrush="#BBD9F5" BorderThickness="1"
-                                CornerRadius="9" Padding="10,8" Margin="0,0,0,12"
-                                Visibility="{Binding HasForgotMessage, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding ForgotMessage}" TextWrapping="Wrap"
-                                       FontSize="12" Foreground="{Binding ForgotMessageColor}" />
-                        </Border>
+                        <Grid Height="52" Margin="0,0,0,12">
+                            <Border Background="#EAF3FC" BorderBrush="#BBD9F5" BorderThickness="1"
+                                    CornerRadius="9" Padding="10,8" VerticalAlignment="Top"
+                                    Visibility="{Binding HasForgotMessage, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="{Binding ForgotMessage}" TextWrapping="Wrap"
+                                           FontSize="12" Foreground="{Binding ForgotMessageColor}" />
+                            </Border>
+                        </Grid>
 
                         <Button Command="{Binding SendForgotCommand}"
                                 Style="{StaticResource MaterialDesignRaisedButton}"
