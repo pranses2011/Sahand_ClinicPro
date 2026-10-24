@@ -111,18 +111,66 @@ if (-not (Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContin
     New-NetFirewallRule -DisplayName $ruleName -Direction Inbound -Protocol TCP -LocalPort 5000 -Action Allow | Out-Null
 }
 
+# انتظار آمادگی API — در نصب نخست، ساخت دیتابیس و مهاجرت‌ها روی SQL Server
+# ممکن است چند دقیقه طول بکشد؛ مهلت پیشین (۱۲۰ ثانیه) روی بسیاری سیستم‌ها
+# کم بود و نصب در آخرین گام خطا می‌داد. اکنون تا ۵ دقیقه با نمایش پیشرفت
+# صبر می‌شود؛ اگر سرویس وسط کار متوقف شده باشد یک بار دیگر روشن می‌شود و
+# در پایانِ ناموفق، به‌جای پیام کلی، گزارش تشخیصی واقعی (وضعیت سرویس +
+# خطاهای Event Viewer + انتهای فایل‌های لاگ) در فایل گزارش نوشته می‌شود.
 Start-Service -Name $serviceName
-$deadline = (Get-Date).AddSeconds(120)
+$deadline = (Get-Date).AddSeconds(300)
 $healthy = $false
+$restartTried = $false
+$waited = 0
 do {
     Start-Sleep -Seconds 3
+    $waited += 3
+    try {
+        $svcNow = Get-Service -Name $serviceName -ErrorAction Stop
+        if ($svcNow.Status -eq 'Stopped' -and -not $restartTried) {
+            $restartTried = $true
+            Write-Host 'سرویس در حین راه‌اندازی متوقف شده بود — تلاش دوباره…' -ForegroundColor Yellow
+            Start-Service -Name $serviceName -ErrorAction SilentlyContinue
+        }
+    } catch { }
     try {
         $response = Invoke-RestMethod -Uri 'http://localhost:5000/health/ready' -TimeoutSec 3
         $healthy = $response.status -eq 'Healthy'
     } catch { }
+    if (-not $healthy -and ($waited % 30) -eq 0) {
+        Write-Host "در انتظار آماده‌شدن API… ($waited ثانیه)" -ForegroundColor DarkGray
+    }
 } while (-not $healthy -and (Get-Date) -lt $deadline)
 if (-not $healthy) {
-    throw 'سرویس نصب شد اما API در مهلت انتظار آماده نشد. Windows Event Viewer و C:\SahandClinicPro\Server\Logs را بررسی کنید.'
+    $diag = New-Object System.Collections.Generic.List[string]
+    $diag.Add("گزارش تشخیصی نصب سرور — $(Get-Date -Format 'yyyy/MM/dd HH:mm:ss')")
+    try {
+        $svcEnd = Get-Service -Name $serviceName -ErrorAction Stop
+        $diag.Add("وضعیت سرویس: $($svcEnd.Status)")
+    } catch { $diag.Add("وضعیت سرویس: یافت نشد ($($_.Exception.Message))") }
+    $diag.Add('')
+    $diag.Add('— آخرین خطاهای Event Viewer (برنامه‌ها) —')
+    try {
+        $events = Get-WinEvent -FilterHashtable @{ LogName = 'Application'; Level = 1, 2; StartTime = (Get-Date).AddMinutes(-30) } -MaxEvents 15 -ErrorAction Stop
+        foreach ($ev in $events) { $diag.Add("[$($ev.TimeCreated)] $($ev.ProviderName): $($ev.Message)"); $diag.Add('') }
+    } catch { $diag.Add("خواندن Event Viewer ناموفق بود: $($_.Exception.Message)") }
+    $diag.Add('')
+    $diag.Add('— انتهای فایل‌های لاگ سرور —')
+    try {
+        $logDir = Join-Path $target 'Logs'
+        $logFiles = @(Get-ChildItem -Path $logDir -Filter '*.log' -ErrorAction Stop |
+            Sort-Object LastWriteTime -Descending | Select-Object -First 3)
+        foreach ($lf in $logFiles) {
+            $diag.Add("### $($lf.Name)")
+            foreach ($line in @(Get-Content -Path $lf.FullName -Tail 80 -ErrorAction SilentlyContinue)) { $diag.Add([string]$line) }
+            $diag.Add('')
+        }
+        if ($logFiles.Count -eq 0) { $diag.Add('فایل لاگی در پوشهٔ Logs یافت نشد.') }
+    } catch { $diag.Add("خواندن لاگ‌ها ناموفق بود: $($_.Exception.Message)") }
+    $diagPath = Join-Path $target 'install-diagnostics.txt'
+    try { Set-Content -Path $diagPath -Value $diag -Encoding UTF8 } catch { }
+    $diag | ForEach-Object { Write-Host $_ -ForegroundColor DarkYellow }
+    throw "سرویس نصب شد اما API در مهلت انتظار (۵ دقیقه) آماده نشد. گزارش تشخیصی در $diagPath ذخیره شد — همان فایل را برای پشتیبانی بفرستید."
 }
 
 Write-Host "سرور آماده است: http://localhost:5000/health/ready" -ForegroundColor Green
