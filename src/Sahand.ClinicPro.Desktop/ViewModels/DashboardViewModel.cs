@@ -520,8 +520,10 @@ public partial class DashboardViewModel : ViewModelBase
             CompareText = "مجموع پرداخت‌های ثبت‌شده", Accent = "#6A1B9A"
         });
         foreach (var c in MainCards)
+        {
             c.VisibleChanged += (_, _) => ScheduleSaveLayout();
             c.SpanChanged += (_, _) => ScheduleSaveLayout();
+        }
         // ═══ چرخهٔ ۷۴ — ذخیرهٔ خودکار پس از جابه‌جایی درگ‌و‌دراپی کارت‌ها ═══
         MainCards.CollectionChanged += (_, _) => ScheduleSaveLayout();
     }
