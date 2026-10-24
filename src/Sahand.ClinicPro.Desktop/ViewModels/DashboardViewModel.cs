@@ -255,6 +255,73 @@ public partial class DashboardViewModel : ViewModelBase
     /* ── عمومی ── */
     [ObservableProperty] private string _welcomeMessage = string.Empty;
     [ObservableProperty] private string _todayDateShamsi = string.Empty;
+
+    /* ── کارت «ساعت و تاریخ امروز» — ساعت آنالوگ/دیجیتال + تاریخ بلند
+       شمسی و میلادی + مناسبت‌های روز (شمسی/قمری/میلادی).
+       انتخاب تقویم‌های مناسبت از تنظیمات سیستم؛ کلیدها در LocalSettingsStore
+       با SettingsViewModel مشترک‌اند تا هر دو صفحه یک مقدار ببینند. ── */
+
+    /// <summary>ساعت دیجیتال لحظه‌ای با ارقام فارسی (HH:mm:ss)</summary>
+    [ObservableProperty] private string _digitalClockText = string.Empty;
+
+    /// <summary>تاریخ بلند شمسی کارت ساعت — «شنبه ۲۴ آبان ۱۴۰۵»</summary>
+    [ObservableProperty] private string _todayJalaliLong = string.Empty;
+
+    /// <summary>تاریخ بلند میلادی کارت ساعت به فارسی</summary>
+    [ObservableProperty] private string _todayGregorianLong = string.Empty;
+
+    /// <summary>تاریخ بلند قمری کارت ساعت</summary>
+    [ObservableProperty] private string _todayHijriLong = string.Empty;
+
+    /// <summary>مناسبت‌های امروز (بر اساس تقویم‌های فعال در تنظیمات)</summary>
+    public ObservableCollection<DayOccasion> TodayOccasions { get; } = new();
+
+    /// <summary>امروز مناسبتی برای نمایش هست؟</summary>
+    [ObservableProperty] private bool _hasTodayOccasions;
+
+    /// <summary>نمایش مناسبت‌های شمسی در کارت ساعت (تنظیمات سیستم)</summary>
+    [ObservableProperty] private bool _showJalaliOccasions = true;
+
+    /// <summary>نمایش مناسبت‌های قمری در کارت ساعت (تنظیمات سیستم)</summary>
+    [ObservableProperty] private bool _showHijriOccasions = true;
+
+    /// <summary>نمایش مناسبت‌های میلادی در کارت ساعت (تنظیمات سیستم)</summary>
+    [ObservableProperty] private bool _showGregorianOccasions = true;
+
+    partial void OnShowJalaliOccasionsChanged(bool value)
+    { LocalSettingsStore.Set("Dashboard.Occasions.Jalali", value ? "true" : "false"); RefreshDayCard(); }
+    partial void OnShowHijriOccasionsChanged(bool value)
+    { LocalSettingsStore.Set("Dashboard.Occasions.Hijri", value ? "true" : "false"); RefreshDayCard(); }
+    partial void OnShowGregorianOccasionsChanged(bool value)
+    { LocalSettingsStore.Set("Dashboard.Occasions.Gregorian", value ? "true" : "false"); RefreshDayCard(); }
+
+    /// <summary>خواندن انتخاب تقویم‌های مناسبت از تنظیمات محلی (پیش‌فرض: هر سه فعال)</summary>
+    private void LoadOccasionSettings()
+    {
+        ShowJalaliOccasions = LocalSettingsStore.Get("Dashboard.Occasions.Jalali") != "false";
+        ShowHijriOccasions = LocalSettingsStore.Get("Dashboard.Occasions.Hijri") != "false";
+        ShowGregorianOccasions = LocalSettingsStore.Get("Dashboard.Occasions.Gregorian") != "false";
+    }
+
+    /// <summary>به‌روزرسانی ساعت دیجیتال، تاریخ‌های بلند و مناسبت‌های امروز</summary>
+    private void RefreshDayCard()
+    {
+        var now = DateTime.Now;
+        DigitalClockText = Application.Common.Helpers.PersianDateHelper.ToPersianDigits(
+            $"{now.Hour:D2}:{now.Minute:D2}:{now.Second:D2}");
+        TodayJalaliLong = DayOccasions.JalaliLong(now);
+        TodayGregorianLong = DayOccasions.GregorianLong(now);
+        TodayHijriLong = DayOccasions.HijriLong(now);
+        TodayOccasions.Clear();
+        foreach (var occasion in DayOccasions.ForToday(now,
+                     ShowJalaliOccasions, ShowHijriOccasions, ShowGregorianOccasions))
+            TodayOccasions.Add(occasion);
+        HasTodayOccasions = TodayOccasions.Count > 0;
+    }
+
+    /// <summary>تایمر یک‌ثانیه‌ای ساعت دیجیتال کارت (تاریخ/مناسبت هم با همان ضرب‌آهنگ تازه می‌شود تا گذر نیمه‌شب درست دیده شود)</summary>
+    private readonly System.Windows.Threading.DispatcherTimer _clockTimer =
+        new() { Interval = TimeSpan.FromSeconds(1) };
     [ObservableProperty] private string _connectionStatus = "در حال بارگذاری…";
 
     /// <summary>
@@ -687,6 +754,11 @@ public partial class DashboardViewModel : ViewModelBase
         _ = LoadClinicNameAsync();
         _refresh.Tick += async (_, _) => await LoadStatsAsync();
         _refresh.Start();
+        // کارت ساعت و تاریخ: انتخاب تقویم‌ها از تنظیمات + ضرب‌آهنگ یک‌ثانیه‌ای
+        LoadOccasionSettings();
+        RefreshDayCard();
+        _clockTimer.Tick += (_, _) => RefreshDayCard();
+        _clockTimer.Start();
         FirstLoadTask = LoadStatsAsync();
     }
 

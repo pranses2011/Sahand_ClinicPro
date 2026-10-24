@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.API.Filters;
@@ -9,6 +9,7 @@ using Sahand.ClinicPro.Application.Features.Insurance.Fractionment;
 using Sahand.ClinicPro.Domain.Entities.Billing;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Domain.Interfaces;
+using Sahand.ClinicPro.Domain.Entities.Security;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -185,7 +186,7 @@ public class InsuranceController : ApiBaseController
     /// <summary>ساخت شرکت بیمه جدید</summary>
     /// <param name="request">داده بیمه (نام/کد/نوع/درصد پوشش)</param>
     [HttpPost("companies")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = SystemRoles.Admin + "," + SystemRoles.Manager)]
     public async Task<IActionResult> CreateCompany([FromBody] SaveInsuranceCompanyRequest request)
     {
         var result = await _mediator.Send(new Application.Features.Lookups.CreateInsuranceCompanyCommand(
@@ -197,7 +198,7 @@ public class InsuranceController : ApiBaseController
     /// <param name="id">شناسه بیمه</param>
     /// <param name="request">داده بیمه</param>
     [HttpPut("companies/{id:long}")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = SystemRoles.Admin + "," + SystemRoles.Manager)]
     public async Task<IActionResult> UpdateCompany(long id, [FromBody] SaveInsuranceCompanyRequest request)
     {
         var result = await _mediator.Send(new Application.Features.Lookups.UpdateInsuranceCompanyCommand(
@@ -208,7 +209,7 @@ public class InsuranceController : ApiBaseController
     /// <summary>غیرفعال‌سازی (حذف نرم) بیمه — سوابق مالی حفظ می‌شوند</summary>
     /// <param name="id">شناسه بیمه</param>
     [HttpDelete("companies/{id:long}")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = SystemRoles.Admin + "," + SystemRoles.Manager)]
     public async Task<IActionResult> DeactivateCompany(long id)
     {
         var result = await _mediator.Send(

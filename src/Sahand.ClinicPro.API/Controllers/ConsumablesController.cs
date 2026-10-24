@@ -5,6 +5,7 @@ using Sahand.ClinicPro.Application.Features.Lookups;
 using Sahand.ClinicPro.Application.Features.Pharmacy;
 using Sahand.ClinicPro.Domain.Enums;
 using System.Security.Claims;
+using Sahand.ClinicPro.Domain.Entities.Security;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -79,7 +80,7 @@ public class ConsumablesController : ApiBaseController
     /// </summary>
     /// <param name="command">مشخصات قلم — نام فارسی/ژنریک، نوع و مشخصات اختیاری</param>
     [HttpPost("items")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = SystemRoles.Admin + "," + SystemRoles.Manager)]
     public async Task<IActionResult> CreateItem([FromBody] CreatePharmacyItemCommand command)
     {
         var result = await _mediator.Send(command);
@@ -98,7 +99,7 @@ public class ConsumablesController : ApiBaseController
     /// </summary>
     /// <param name="command">شناسهٔ قلم + بچ/تعداد/قیمت‌ها/انقضای شمسی</param>
     [HttpPost("inventory")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = SystemRoles.Admin + "," + SystemRoles.Manager)]
     public async Task<IActionResult> StockIn([FromBody] StockInCommand command)
     {
         var result = await _mediator.Send(command with { ExpectedItemKind = MedicationItemKind.Consumable });
