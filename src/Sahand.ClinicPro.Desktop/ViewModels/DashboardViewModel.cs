@@ -268,6 +268,12 @@ public partial class DashboardViewModel : ViewModelBase
 
     /// <summary>نخستین بارگذاری کامل انجام شده است؟</summary>
     private bool _hasLoadedOnce;
+
+    /// <summary>
+    /// تسک نخستین بارگذاری — پوستهٔ اصلی (MainWindow) روی همین تسک منتظر
+    /// می‌ماند تا پوشش بارگذاری سراسری را فقط پس از لود کامل داشبورد بردارد.
+    /// </summary>
+    public Task FirstLoadTask { get; private set; } = Task.CompletedTask;
     [ObservableProperty] private string _errorMessage = string.Empty;
 
     /// <summary>داده نمودار درآمد ۷ روز — نمودار سطحی (نوع درست برای روند زمانی)</summary>
@@ -681,7 +687,7 @@ public partial class DashboardViewModel : ViewModelBase
         _ = LoadClinicNameAsync();
         _refresh.Tick += async (_, _) => await LoadStatsAsync();
         _refresh.Start();
-        _ = LoadStatsAsync();
+        FirstLoadTask = LoadStatsAsync();
     }
 
     // ═════════════════ چرخهٔ ۳۹ — میانبرهای شخصی داشبورد ═════════════════
@@ -772,7 +778,7 @@ public partial class DashboardViewModel : ViewModelBase
         LoadingStatus = "در حال آماده‌سازی داشبورد…";
 
         // آمار داشبورد نیز برای کاربر تازه بی‌درنگ تازه شود (نه منتظر تیک ۶۰ ثانیه)
-        _ = LoadStatsAsync();
+        FirstLoadTask = LoadStatsAsync();
     }
 
     /// <summary>تغییر حالت ویرایش → ذخیره در خاموشی حالت (تجربهٔ ایمن)</summary>

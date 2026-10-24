@@ -1,4 +1,4 @@
-<Window x:Class="Sahand.ClinicPro.Desktop.MainWindow"
+﻿<Window x:Class="Sahand.ClinicPro.Desktop.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -1062,6 +1062,37 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </Grid>
+
+        <!-- ═══ پوشش بارگذاری سراسری پوسته — از لحظهٔ بازشدن پنجره ═══
+             پیش‌تر انیمیشن فقط داخل داشبورد بود و تا ساخته‌شدن داشبورد
+             صفحهٔ خالی دیده می‌شد؛ اکنون این پوشش از نخستین فریم پنجرهٔ
+             اصلی (با IsShellLoading=true پیش‌فرض) تا لود کامل صفحهٔ
+             آغازین روی کل پنجره می‌ماند و متن مرحله را نشان می‌دهد. -->
+        <Border Grid.ColumnSpan="2" Panel.ZIndex="90"
+                Background="#EEF2F7FA"
+                Visibility="{Binding IsShellLoading, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="440">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                             IsIndeterminate="True"
+                             Width="60" Height="60"
+                             Foreground="#0D47A1"
+                             HorizontalAlignment="Center" />
+                <TextBlock Text="در حال بارگذاری داشبورد…"
+                           FontSize="18" FontWeight="Bold"
+                           Foreground="#172B4D"
+                           HorizontalAlignment="Center" Margin="0,18,0,6" />
+                <TextBlock Text="{Binding ShellLoadingStatus}"
+                           FontSize="12.5"
+                           Foreground="#315A83"
+                           HorizontalAlignment="Center" Margin="0,0,0,8" />
+                <TextBlock Text="لطفاً چند لحظه صبر کنید — برنامه در حال آماده‌سازی و دریافت اطلاعات از سرور است؛ داشبورد به‌زودی به‌طور کامل نمایش داده می‌شود."
+                           FontSize="11.5" Opacity="0.75"
+                           Foreground="#52647A"
+                           TextWrapping="Wrap" TextAlignment="Center" />
+                <ProgressBar IsIndeterminate="True" Height="3" Margin="30,16,30,0"
+                             Foreground="#0D47A1" Background="#220D47A1" />
+            </StackPanel>
+        </Border>
 
     </Grid>
 </Window>
