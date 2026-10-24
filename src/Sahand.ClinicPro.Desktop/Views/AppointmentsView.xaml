@@ -399,104 +399,427 @@
                                     DateSelected="OnCalendarDateSelected" />
                             </Border>
 
-                            <!-- ستون اسلات‌ها — تمام عرض ستون راست -->
+                            <!-- ستون اسلات‌ها — طرح تأییدشدهٔ مالک: کاشی‌های فشردهٔ گروه‌بندی‌شده
+                                 (صبح/ظهر/عصر) با روبان مورب گوشه، هاشور رزرو/استراحت، آمار روز
+                                 و نوار جزئیات بیمار (هاور موقت / کلیک = سنجاق)؛ بدون حق ویزیت -->
                             <Border Grid.Column="1" CornerRadius="10" Padding="12,10"
                                     Background="{DynamicResource MaterialDesign.Brush.Background}">
+                                <Border.Resources>
+                                    <!-- هاشور ۴۵ درجه برای اسلات‌های غیرآزاد -->
+                                    <DrawingBrush x:Key="BookedHatch" TileMode="Tile" Viewport="0,0,7,7" ViewportUnits="Absolute">
+                                        <DrawingBrush.Drawing>
+                                            <GeometryDrawing>
+                                                <GeometryDrawing.Pen>
+                                                    <Pen Brush="#33BE123C" Thickness="1.6" />
+                                                </GeometryDrawing.Pen>
+                                                <GeometryDrawing.Geometry>
+                                                    <PathGeometry Figures="M0,7 L7,0" />
+                                                </GeometryDrawing.Geometry>
+                                            </GeometryDrawing>
+                                        </DrawingBrush.Drawing>
+                                    </DrawingBrush>
+                                    <DrawingBrush x:Key="BreakHatch" TileMode="Tile" Viewport="0,0,7,7" ViewportUnits="Absolute">
+                                        <DrawingBrush.Drawing>
+                                            <GeometryDrawing>
+                                                <GeometryDrawing.Pen>
+                                                    <Pen Brush="#40B45309" Thickness="1.6" />
+                                                </GeometryDrawing.Pen>
+                                                <GeometryDrawing.Geometry>
+                                                    <PathGeometry Figures="M0,7 L7,0" />
+                                                </GeometryDrawing.Geometry>
+                                            </GeometryDrawing>
+                                        </DrawingBrush.Drawing>
+                                    </DrawingBrush>
+                                    <!-- چیپ فیلتر -->
+                                    <Style x:Key="SlotFilterChip" TargetType="Button">
+                                        <Setter Property="Padding" Value="10,3" />
+                                        <Setter Property="Margin" Value="0,0,5,0" />
+                                        <Setter Property="FontSize" Value="10.5" />
+                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                        <Setter Property="Cursor" Value="Hand" />
+                                        <Setter Property="Background" Value="#ECEFF1" />
+                                        <Setter Property="Foreground" Value="#37474F" />
+                                        <Setter Property="BorderBrush" Value="#B0BEC5" />
+                                        <Setter Property="BorderThickness" Value="1" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10"
+                                                            Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Border.Resources>
                                 <StackPanel>
-                                    <TextBlock FontSize="13" FontWeight="Bold" Margin="0,0,0,6">
-                                        <Run Text="⏰ ساعت‌های " /><Run Text="{Binding SelectedDateShamsi, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
-                                    </TextBlock>
-                                    <!-- چرخه بیست‌ویکم (گزارش پانزدهم مالک): «ساعت‌ها را به‌جای
-                                         کنار هم زیر هم نشان می‌دهد» — اسلات‌ها داخل WrapPanel
-                                         با عرض کامل ستون؛ حداکثر ۴ ردیف و سپس اسکرول عمودی داخلی -->
-                                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="170">
-                                        <ItemsControl ItemsSource="{Binding Slots}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <WrapPanel />
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <ToggleButton Width="72" MinHeight="36" Margin="3"
-                                                        IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                                        IsEnabled="{Binding IsAvailable}"
-                                                        Command="{Binding DataContext.SelectSlotCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip="{Binding PatientName, StringFormat='رزرو: {0}', TargetNullValue='آزاد — برای انتخاب کلیک کنید'}">
-                                                        <!-- چرخهٔ ۷۴: ساعت اسلات با ارقام فارسی
-                                                             (گزارش مالک: «چند تا تاریخ و عدد بصورت انگلیسی هستند») -->
-                                                        <TextBlock Text="{Binding Time, Converter={StaticResource PersianDigits}}" FontFamily="{DynamicResource App.CodeFont}" FontSize="12.5">
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="TextDecorations" Value="None" />
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                            <Setter Property="FontWeight" Value="Bold" />
-                                                                        </DataTrigger>
-                                                                        <DataTrigger Binding="{Binding IsAvailable}" Value="False">
-                                                                            <!-- رزروشده: خط‌خورده و قرمز تا با یک نگاه معلوم باشد -->
-                                                                            <Setter Property="TextDecorations" Value="Strikethrough" />
-                                                                            <Setter Property="Foreground" Value="#C62828" />
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
-                                                        <ToggleButton.Style>
-                                                            <!-- ═══ چرخهٔ ۷۴ (گزارش مالک): رنگ‌بندی پررنگ و فوری‌درچشم ═══
-                                                                 «رنگ بندی اونا طوریه که زیاد مشخص نمیشه و به چشم نمیاد
-                                                                 و باید رنگ ها طوری باشه که با یک نگاه فوری تو چشم بزنه
-                                                                 و مشخص باشه (از رنگ های خوبی استفاده بکن هم برای زمان
-                                                                 بندی ها و هم برای راهنمای رنگ زیر ساعت بندی ها)»
-                                                                 آزاد = سبز پررنگ‌تر (#A5D6A7 سبز ۲۰۰ + حاشیهٔ سبز)
-                                                                 رزروشده = قرمز روشن با متن خط‌خورده
-                                                                 استراحت = کهربایی (#FFE0B2)
-                                                                 انتخاب فعلی = آبی اشباع با متن سفید و ضخامت حاشیه ۲.۵ -->
-                                                            <Style TargetType="ToggleButton" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
-                                                                <Setter Property="Background" Value="#A5D6A7" />
-                                                                <Setter Property="BorderBrush" Value="#2E7D32" />
-                                                                <Setter Property="BorderThickness" Value="1.4" />
-                                                                <Setter Property="Foreground" Value="#1B5E20" />
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsAvailable}" Value="False">
-                                                                        <Setter Property="Background" Value="#FFCDD2" />
-                                                                        <Setter Property="BorderBrush" Value="#E53935" />
-                                                                        <Setter Property="Foreground" Value="#C62828" />
-                                                                        <Setter Property="Opacity" Value="0.85" />
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding IsBreak}" Value="True">
-                                                                        <Setter Property="Background" Value="#FFE0B2" />
-                                                                        <Setter Property="BorderBrush" Value="#F57C00" />
-                                                                        <Setter Property="Foreground" Value="#E65100" />
-                                                                        <Setter Property="Opacity" Value="0.85" />
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                        <Setter Property="Background" Value="#1565C0" />
-                                                                        <Setter Property="BorderBrush" Value="#0D47A1" />
-                                                                        <Setter Property="BorderThickness" Value="2.5" />
-                                                                        <Setter Property="Foreground" Value="White" />
-                                                                        <Setter Property="FontWeight" Value="Bold" />
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </ToggleButton.Style>
-                                                    </ToggleButton>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
+                                    <!-- سربرگ: عنوان + آمار روز + نوار پرشدن -->
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" FontSize="13" FontWeight="Bold" VerticalAlignment="Center">
+                                            <Run Text="⏰ ساعت‌های " /><Run Text="{Binding SelectedDateShamsi, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                                        </TextBlock>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock FontSize="10.5" Foreground="#047857" FontWeight="Bold" Margin="8,0,0,0">
+                                                <Run Text="آزاد " /><Run Text="{Binding FreeCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                                            </TextBlock>
+                                            <TextBlock FontSize="10.5" Foreground="#BE123C" FontWeight="Bold" Margin="8,0,0,0">
+                                                <Run Text="رزرو " /><Run Text="{Binding BookedCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                                            </TextBlock>
+                                            <TextBlock FontSize="10.5" Foreground="#B45309" FontWeight="Bold" Margin="8,0,0,0">
+                                                <Run Text="استراحت " /><Run Text="{Binding BreakCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,7">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="پرشدن روز" FontSize="9.5" Foreground="#78909C" VerticalAlignment="Center" />
+                                        <ProgressBar Grid.Column="1" Height="6" Margin="7,0" Minimum="0" Maximum="100"
+                                                     Value="{Binding OccupancyPercent, Mode=OneWay}" Foreground="#F59E0B" Background="#ECEFF1" />
+                                        <TextBlock Grid.Column="2" FontSize="9.5" Foreground="#78909C" VerticalAlignment="Center">
+                                            <Run Text="{Binding OccupancyPercent, Mode=OneWay, Converter={StaticResource PersianDigits}}" /><Run Text="٪" />
+                                        </TextBlock>
+                                    </Grid>
+                                    <!-- چیپ‌های فیلتر (بدون فیلتر استراحت — طبق طرح تأییدشده) -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,7">
+                                        <Button Content="همه" Command="{Binding SetSlotFilterCommand}" CommandParameter="all">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource SlotFilterChip}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding SlotFilter}" Value="all">
+                                                            <Setter Property="Background" Value="#0F766E" /><Setter Property="Foreground" Value="White" /><Setter Property="BorderBrush" Value="#0F766E" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                        <Button Content="فقط آزادها" Command="{Binding SetSlotFilterCommand}" CommandParameter="free">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource SlotFilterChip}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding SlotFilter}" Value="free">
+                                                            <Setter Property="Background" Value="#047857" /><Setter Property="Foreground" Value="White" /><Setter Property="BorderBrush" Value="#047857" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                        <Button Content="رزروشده‌ها" Command="{Binding SetSlotFilterCommand}" CommandParameter="booked">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource SlotFilterChip}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding SlotFilter}" Value="booked">
+                                                            <Setter Property="Background" Value="#BE123C" /><Setter Property="Foreground" Value="White" /><Setter Property="BorderBrush" Value="#BE123C" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </StackPanel>
+
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="400">
+                                        <StackPanel>
+                                            <ItemsControl ItemsSource="{Binding SlotGroups}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Margin="0,0,0,8">
+                                                            <!-- سرخط گروه صبح/ظهر/عصر -->
+                                                            <Grid Margin="1,2,1,4">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="12" VerticalAlignment="Center" />
+                                                                <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="11.5" FontWeight="Bold" Margin="4,0,0,0" VerticalAlignment="Center" />
+                                                                <Border Grid.Column="2" CornerRadius="7" Background="#ECEFF1" Padding="6,0" Margin="6,0,0,0" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding Count, Converter={StaticResource PersianDigits}}" FontSize="9.5" Foreground="#546E7A" FontWeight="Bold" />
+                                                                </Border>
+                                                                <Border Grid.Column="3" Height="1" Background="#E0E7EB" VerticalAlignment="Center" Margin="8,0,0,0" />
+                                                            </Grid>
+                                                            <ItemsControl ItemsSource="{Binding Items}">
+                                                                <ItemsControl.ItemsPanel>
+                                                                    <ItemsPanelTemplate>
+                                                                        <WrapPanel />
+                                                                    </ItemsPanelTemplate>
+                                                                </ItemsControl.ItemsPanel>
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <!-- کاشی فشردهٔ اسلات -->
+                                                                        <Border x:Name="TileRoot" Width="92" MinHeight="48" Margin="3" CornerRadius="11"
+                                                                                BorderThickness="1.5" Cursor="Hand" ClipToBounds="True"
+                                                                                MouseEnter="OnSlotMouseEnter" MouseLeave="OnSlotMouseLeave"
+                                                                                MouseLeftButtonUp="OnSlotMouseUp"
+                                                                                ToolTip="{Binding PatientName, StringFormat='رزرو: {0}', TargetNullValue='برای رزرو کلیک کنید'}">
+                                                                            <Border.Style>
+                                                                                <Style TargetType="Border">
+                                                                                    <Setter Property="Background" Value="#E8F7EE" />
+                                                                                    <Setter Property="BorderBrush" Value="#047857" />
+                                                                                    <Style.Triggers>
+                                                                                        <DataTrigger Binding="{Binding IsBooked}" Value="True">
+                                                                                            <Setter Property="Background" Value="#FDECEC" />
+                                                                                            <Setter Property="BorderBrush" Value="#E7A6B4" />
+                                                                                        </DataTrigger>
+                                                                                        <DataTrigger Binding="{Binding IsBreak}" Value="True">
+                                                                                            <Setter Property="Background" Value="#FEF3C7" />
+                                                                                            <Setter Property="BorderBrush" Value="#D9A441" />
+                                                                                        </DataTrigger>
+                                                                                        <DataTrigger Binding="{Binding IsPast}" Value="True">
+                                                                                            <Setter Property="Background" Value="#F1F5F9" />
+                                                                                            <Setter Property="BorderBrush" Value="#CBD5E1" />
+                                                                                            <Setter Property="Opacity" Value="0.75" />
+                                                                                            <Setter Property="Cursor" Value="Arrow" />
+                                                                                        </DataTrigger>
+                                                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                                            <Setter Property="Background" Value="#1565C0" />
+                                                                                            <Setter Property="BorderBrush" Value="#0D47A1" />
+                                                                                            <Setter Property="BorderThickness" Value="2.2" />
+                                                                                        </DataTrigger>
+                                                                                    </Style.Triggers>
+                                                                                </Style>
+                                                                            </Border.Style>
+                                                                            <Grid>
+                                                                                <!-- هاشور -->
+                                                                                <Border Background="{StaticResource BookedHatch}" CornerRadius="11">
+                                                                                    <Border.Style>
+                                                                                        <Style TargetType="Border">
+                                                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                                                            <Style.Triggers>
+                                                                                                <DataTrigger Binding="{Binding IsBooked}" Value="True">
+                                                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                                                </DataTrigger>
+                                                                                            </Style.Triggers>
+                                                                                        </Style>
+                                                                                    </Border.Style>
+                                                                                </Border>
+                                                                                <Border Background="{StaticResource BreakHatch}" CornerRadius="11">
+                                                                                    <Border.Style>
+                                                                                        <Style TargetType="Border">
+                                                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                                                            <Style.Triggers>
+                                                                                                <DataTrigger Binding="{Binding IsBreak}" Value="True">
+                                                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                                                </DataTrigger>
+                                                                                            </Style.Triggers>
+                                                                                        </Style>
+                                                                                    </Border.Style>
+                                                                                </Border>
+                                                                                <!-- متن کاشی -->
+                                                                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2,7,2,5">
+                                                                                    <TextBlock Text="{Binding Time, Converter={StaticResource PersianDigits}}"
+                                                                                               FontFamily="{DynamicResource App.CodeFont}" FontSize="14" FontWeight="Bold"
+                                                                                               HorizontalAlignment="Center">
+                                                                                        <TextBlock.Style>
+                                                                                            <Style TargetType="TextBlock">
+                                                                                                <Setter Property="Foreground" Value="#065F46" />
+                                                                                                <Style.Triggers>
+                                                                                                    <DataTrigger Binding="{Binding IsBooked}" Value="True">
+                                                                                                        <Setter Property="Foreground" Value="#9F1239" />
+                                                                                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                                                                    </DataTrigger>
+                                                                                                    <DataTrigger Binding="{Binding IsBreak}" Value="True">
+                                                                                                        <Setter Property="Foreground" Value="#92400E" />
+                                                                                                    </DataTrigger>
+                                                                                                    <DataTrigger Binding="{Binding IsPast}" Value="True">
+                                                                                                        <Setter Property="Foreground" Value="#94A3B8" />
+                                                                                                    </DataTrigger>
+                                                                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                                                        <Setter Property="Foreground" Value="White" />
+                                                                                                        <Setter Property="TextDecorations" Value="None" />
+                                                                                                    </DataTrigger>
+                                                                                                </Style.Triggers>
+                                                                                            </Style>
+                                                                                        </TextBlock.Style>
+                                                                                    </TextBlock>
+                                                                                    <TextBlock Text="{Binding SubText, Converter={StaticResource PersianDigits}}" FontSize="9"
+                                                                                               HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="84">
+                                                                                        <TextBlock.Style>
+                                                                                            <Style TargetType="TextBlock">
+                                                                                                <Setter Property="Foreground" Value="#2F7D5B" />
+                                                                                                <Style.Triggers>
+                                                                                                    <DataTrigger Binding="{Binding IsBooked}" Value="True">
+                                                                                                        <Setter Property="Foreground" Value="#9F1239" />
+                                                                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                                                                    </DataTrigger>
+                                                                                                    <DataTrigger Binding="{Binding IsBreak}" Value="True">
+                                                                                                        <Setter Property="Foreground" Value="#92400E" />
+                                                                                                    </DataTrigger>
+                                                                                                    <DataTrigger Binding="{Binding IsPast}" Value="True">
+                                                                                                        <Setter Property="Foreground" Value="#94A3B8" />
+                                                                                                    </DataTrigger>
+                                                                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                                                        <Setter Property="Foreground" Value="#DCEEFF" />
+                                                                                                    </DataTrigger>
+                                                                                                </Style.Triggers>
+                                                                                            </Style>
+                                                                                        </TextBlock.Style>
+                                                                                    </TextBlock>
+                                                                                </StackPanel>
+                                                                                <!-- روبان مورب ۴۵ درجه در گوشهٔ کاشی -->
+                                                                                <Border HorizontalAlignment="Left" VerticalAlignment="Top" Width="86"
+                                                                                        Margin="-30,11,0,0" Padding="0,1.5" CornerRadius="0"
+                                                                                        RenderTransformOrigin="0.5,0.5">
+                                                                                    <Border.RenderTransform>
+                                                                                        <RotateTransform Angle="-45" />
+                                                                                    </Border.RenderTransform>
+                                                                                    <Border.Style>
+                                                                                        <Style TargetType="Border">
+                                                                                            <Setter Property="Background" Value="#047857" />
+                                                                                            <Style.Triggers>
+                                                                                                <DataTrigger Binding="{Binding IsBooked}" Value="True">
+                                                                                                    <Setter Property="Background" Value="#BE123C" />
+                                                                                                </DataTrigger>
+                                                                                                <DataTrigger Binding="{Binding IsBreak}" Value="True">
+                                                                                                    <Setter Property="Background" Value="#B45309" />
+                                                                                                </DataTrigger>
+                                                                                                <DataTrigger Binding="{Binding IsPast}" Value="True">
+                                                                                                    <Setter Property="Background" Value="#94A3B8" />
+                                                                                                </DataTrigger>
+                                                                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                                                    <Setter Property="Background" Value="#FACC15" />
+                                                                                                </DataTrigger>
+                                                                                            </Style.Triggers>
+                                                                                        </Style>
+                                                                                    </Border.Style>
+                                                                                    <TextBlock Text="{Binding RibbonText}" FontSize="7.8" FontWeight="Bold"
+                                                                                               HorizontalAlignment="Center" TextAlignment="Center">
+                                                                                        <TextBlock.Style>
+                                                                                            <Style TargetType="TextBlock">
+                                                                                                <Setter Property="Foreground" Value="White" />
+                                                                                                <Style.Triggers>
+                                                                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                                                        <Setter Property="Foreground" Value="#3F3003" />
+                                                                                                    </DataTrigger>
+                                                                                                </Style.Triggers>
+                                                                                            </Style>
+                                                                                        </TextBlock.Style>
+                                                                                    </TextBlock>
+                                                                                </Border>
+                                                                                <!-- قاب متحرک اسلات سنجاق‌شده (خانوادهٔ قرمز) -->
+                                                                                <Border CornerRadius="11" BorderThickness="2.6" IsHitTestVisible="False"
+                                                                                        Visibility="{Binding IsPinned, Converter={StaticResource BoolToVisibility}}">
+                                                                                    <Border.BorderBrush>
+                                                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                                                            <GradientStop Color="#881337" Offset="0" />
+                                                                                            <GradientStop Color="#F43F5E" Offset="0.5" />
+                                                                                            <GradientStop Color="#FDA4AF" Offset="1" />
+                                                                                        </LinearGradientBrush>
+                                                                                    </Border.BorderBrush>
+                                                                                    <Border.Triggers>
+                                                                                        <EventTrigger RoutedEvent="Border.Loaded">
+                                                                                            <BeginStoryboard>
+                                                                                                <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                                                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.55" To="1" Duration="0:0:1.2" />
+                                                                                                </Storyboard>
+                                                                                            </BeginStoryboard>
+                                                                                        </EventTrigger>
+                                                                                    </Border.Triggers>
+                                                                                </Border>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                            <!-- راهنمای فیلتر خالی -->
+                                            <Border BorderBrush="#B0BEC5" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="2,4">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding FilteredCount}" Value="0">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="در این فیلتر ساعتی نیست — فیلتر «همه» را بزنید." FontSize="10.5" Foreground="#78909C" HorizontalAlignment="Center" />
+                                            </Border>
+                                        </StackPanel>
                                     </ScrollViewer>
-                                    <!-- ═══ راهنمای رنگ‌های اسلات نوبت — چرخهٔ سی‌وپنجم (گزارش مالک) ═══
-                                         «راهنمای رنگی که در دندانپزشکی درست کردی را در هر جای دیگری
-                                         که راهنمای رنگی دارد هم اعمال کن» — قانون هم‌کلاسی‌ها:
-                                         همان الگوی چیپ رنگی واقعی چارت دندان (LegendChip چرخهٔ ۳۳)
-                                         به‌جای متنِ «سبز = آزاد | خاکستری = …»؛ رنگ چیپ‌ها عیناً از
-                                         همان استایل‌های DataTrigger بالا کپی شده تا راهنما همیشه
-                                         با خود دکمه‌ها یکی باشد (نویسه و ایموجی در فونت فارسی
-                                         نمی‌ماند، چیپ در هر فونتی می‌ماند) -->
+
+                                    <!-- نوار جزئیات بیمار: هاور = موقت، کلیک = سنجاق؛ خروج موس برمی‌گردد به سنجاق‌شده -->
+                                    <Border CornerRadius="9" Padding="10,7" Margin="0,8,0,0" BorderThickness="1.2">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#FAFAFA" />
+                                                <Setter Property="BorderBrush" Value="#CFD8DC" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding DetailSlot, Converter={StaticResource NullToVisibility}}" Value="Visible">
+                                                        <Setter Property="Background" Value="#FFF5F6" />
+                                                        <Setter Property="BorderBrush" Value="#F3B7C4" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Grid>
+                                            <TextBlock FontSize="10.5" Foreground="#90A4AE" VerticalAlignment="Center"
+                                                       Text="👤 برای دیدن جزئیات بیمار، موس را روی ساعت رزروشده نگه دارید — با کلیک، جزئیات سنجاق می‌شود."
+                                                       Visibility="{Binding DetailSlot, Converter={StaticResource NullToVisibility}, ConverterParameter=Inverse}" />
+                                            <Grid Visibility="{Binding DetailSlot, Converter={StaticResource NullToVisibility}}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0" Width="38" Height="38" CornerRadius="19" Margin="0,0,9,0"
+                                                        Background="#FCE7F3" BorderBrush="#F9A8D4" BorderThickness="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding DetailSlot.GenderIcon}" FontSize="17"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding DetailSlot.PatientName}" FontSize="12" FontWeight="Bold" Foreground="#7F1D2D" />
+                                                        <TextBlock FontSize="10.5" Foreground="#9F1239" Margin="7,0,0,0" VerticalAlignment="Center">
+                                                            <Run Text="🕐 " /><Run Text="{Binding DetailSlot.Time, Converter={StaticResource PersianDigits}}" />
+                                                            <Run Text=" • " /><Run Text="{Binding DetailSlot.RoomName, TargetNullValue='—'}" />
+                                                        </TextBlock>
+                                                        <Border CornerRadius="7" Background="#BE123C" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                                Visibility="{Binding DetailSlot.IsPinned, Converter={StaticResource BoolToVisibility}}">
+                                                            <TextBlock Text="📌 سنجاق شده" FontSize="9" Foreground="White" FontWeight="Bold" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <!-- جزئیات در یک ردیف پخش‌شده در تمام عرض -->
+                                                    <Grid Margin="0,5,0,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" FontSize="10.5" Foreground="#57122A" HorizontalAlignment="Left">
+                                                            <Run Text="🎂 " /><Run Text="{Binding DetailSlot.PatientAge, Converter={StaticResource PersianDigits}, TargetNullValue='—'}" /><Run Text=" ساله" />
+                                                        </TextBlock>
+                                                        <TextBlock Grid.Column="1" FontSize="10.5" Foreground="#57122A" HorizontalAlignment="Center">
+                                                            <Run Text="🛡️ " /><Run Text="{Binding DetailSlot.PatientInsurance, TargetNullValue='—'}" />
+                                                        </TextBlock>
+                                                        <TextBlock Grid.Column="2" FontSize="10.5" Foreground="#57122A" HorizontalAlignment="Center">
+                                                            <Run Text="🆔 " /><Run Text="{Binding DetailSlot.PatientNationalCode, Converter={StaticResource PersianDigits}, TargetNullValue='—'}" />
+                                                        </TextBlock>
+                                                        <TextBlock Grid.Column="3" FontSize="10.5" Foreground="#57122A" HorizontalAlignment="Right" FontWeight="Bold">
+                                                            <Run Text="📱 " /><Run Text="{Binding DetailSlot.PatientPhone, Converter={StaticResource PersianDigits}, TargetNullValue='—'}" />
+                                                        </TextBlock>
+                                                    </Grid>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- راهنمای رنگ — چیپ‌ها عین رنگ کاشی‌ها -->
                                     <WrapPanel Margin="2,10,2,0">
                                         <WrapPanel.Resources>
-                                            <!-- قالب مشترک چیپ/برچسب — هم‌نام با صفحات پاراکلینیک مستقل (چرخهٔ ۴۳) -->
                                             <Style x:Key="LegendChip" TargetType="Border">
                                                 <Setter Property="Width" Value="16" />
                                                 <Setter Property="Height" Value="16" />
@@ -512,22 +835,25 @@
                                                 <Setter Property="FontWeight" Value="SemiBold" />
                                             </Style>
                                         </WrapPanel.Resources>
-                                        <!-- چرخهٔ ۷۴: چیپ‌ها دقیقاً همان رنگ‌های پررنگ جدید اسلات‌ها + حاشیهٔ همرنگ -->
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="اسلات فعال برای رزرو نوبت">
-                                            <Border Style="{StaticResource LegendChip}" Background="#A5D6A7" BorderBrush="#2E7D32" />
+                                            <Border Style="{StaticResource LegendChip}" Background="#E8F7EE" BorderBrush="#047857" />
                                             <TextBlock Style="{StaticResource LegendLabel}" Text="آزاد" />
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="زمان استراحت پزشک">
-                                            <Border Style="{StaticResource LegendChip}" Background="#FFE0B2" BorderBrush="#F57C00" />
+                                            <Border Style="{StaticResource LegendChip}" Background="#FEF3C7" BorderBrush="#B45309" />
                                             <TextBlock Style="{StaticResource LegendLabel}" Text="استراحت" />
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="اسلاتی که انتخاب کرده‌اید">
                                             <Border Style="{StaticResource LegendChip}" Background="#1565C0" BorderBrush="#0D47A1" BorderThickness="2" />
                                             <TextBlock Style="{StaticResource LegendLabel}" Text="انتخاب شما" />
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="قبلاً رزرو شده — قابل انتخاب نیست">
-                                            <Border Style="{StaticResource LegendChip}" Background="#FFCDD2" BorderBrush="#E53935" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="قبلاً رزرو شده — جزئیات با هاور/کلیک در نوار پایین">
+                                            <Border Style="{StaticResource LegendChip}" Background="#FDECEC" BorderBrush="#BE123C" />
                                             <TextBlock Style="{StaticResource LegendLabel}" Text="رزرو شده" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="ساعتش گذشته و قابل رزرو نیست">
+                                            <Border Style="{StaticResource LegendChip}" Background="#F1F5F9" BorderBrush="#94A3B8" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="گذشته" />
                                         </StackPanel>
                                     </WrapPanel>
                                 </StackPanel>

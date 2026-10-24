@@ -126,7 +126,12 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
             {
                 a.AppointmentTime,
                 a.Duration,
-                PatientName = a.Patient!.FirstName + " " + a.Patient.LastName
+                PatientName = a.Patient!.FirstName + " " + a.Patient.LastName,
+                Gender = a.Patient!.Gender.ToString(),
+                a.Patient.BirthDate,
+                Insurance = a.Patient.InsuranceType ?? (a.Patient.InsuranceCompany != null ? a.Patient.InsuranceCompany.Name : null),
+                a.Patient.NationalCode,
+                Phone = a.Patient.Mobile
             })
             .ToListAsync(cancellationToken);
 
@@ -141,7 +146,12 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
                 Time = r.EnterTime != null
                     ? TimeOnly.FromDateTime(r.EnterTime.Value)
                     : TimeOnly.FromDateTime(r.ReceptionDate),
-                PatientName = r.Patient != null ? r.Patient.FirstName + " " + r.Patient.LastName : ""
+                PatientName = r.Patient != null ? r.Patient.FirstName + " " + r.Patient.LastName : "",
+                Gender = r.Patient != null ? r.Patient.Gender.ToString() : null,
+                BirthDate = r.Patient != null ? r.Patient.BirthDate : null,
+                Insurance = r.Patient != null ? (r.Patient.InsuranceType ?? (r.Patient.InsuranceCompany != null ? r.Patient.InsuranceCompany.Name : null)) : null,
+                NationalCode = r.Patient != null ? r.Patient.NationalCode : null,
+                Phone = r.Patient != null ? r.Patient.Mobile : null
             })
             .ToListAsync(cancellationToken);
 
@@ -186,6 +196,15 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
 
                 var patient = bookedHit?.PatientName ?? receptionHit?.PatientName;
                 var isBooked = bookedHit is not null || receptionHit is not null;
+                // جزئیات بیمار برای نوار جزئیات اسلات (جنسیت/سن/بیمه/کد ملی/تلفن)
+                var pGender = bookedHit?.Gender ?? receptionHit?.Gender;
+                var pBirth = bookedHit?.BirthDate ?? receptionHit?.BirthDate;
+                int? pAge = pBirth is { } bd
+                    ? date.Year - bd.Year - (date.Month < bd.Month || (date.Month == bd.Month && date.Day < bd.Day) ? 1 : 0)
+                    : null;
+                var pInsurance = bookedHit?.Insurance ?? receptionHit?.Insurance;
+                var pNational = bookedHit?.NationalCode ?? receptionHit?.NationalCode;
+                var pPhone = bookedHit?.Phone ?? receptionHit?.Phone;
                 var displayMinute = minute % (24 * 60);
                 var timeText = TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(displayMinute)).ToString("HH:mm");
                 var roomName = window.Schedule.RoomId is long roomId && rooms.TryGetValue(roomId, out var room)
@@ -200,7 +219,8 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
                     patient,
                     isBreak || inAbsence,
                     roomName,
-                    doctor.ConsultationFee)));
+                    doctor.ConsultationFee,
+                    pGender, pAge, pInsurance, pNational, pPhone)));
             }
         }
 

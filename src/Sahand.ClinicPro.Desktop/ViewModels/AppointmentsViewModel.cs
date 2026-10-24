@@ -45,9 +45,28 @@ public partial class SlotVM : ObservableObject
     /// <summary>نام بیمار رزروکننده — برای ToolTip</summary>
     public string? PatientName { get; init; }
 
+    /// <summary>جنسیت بیمار (Male/Female) — آیکن نوار جزئیات</summary>
+    public string? PatientGender { get; init; }
+
+    /// <summary>سن بیمار</summary>
+    public int? PatientAge { get; init; }
+
+    /// <summary>نوع/شرکت بیمهٔ بیمار</summary>
+    public string? PatientInsurance { get; init; }
+
+    /// <summary>کد ملی بیمار</summary>
+    public string? PatientNationalCode { get; init; }
+
+    /// <summary>تلفن بیمار</summary>
+    public string? PatientPhone { get; init; }
+
     /// <summary>انتخاب فعلی کاربر</summary>
     [ObservableProperty]
     private bool _isSelected;
+
+    /// <summary>سنجاق‌شده در نوار جزئیات (کلیک روی اسلات رزروشده)</summary>
+    [ObservableProperty]
+    private bool _isPinned;
 
     /// <summary>اتاق ویزیت</summary>
     public string? RoomName { get; init; }
@@ -55,8 +74,38 @@ public partial class SlotVM : ObservableObject
     /// <summary>هزینه تخمینی</summary>
     public decimal Fee { get; init; }
 
-    /// <summary>گروه صبح/عصر</summary>
-    public string Group => Time.Length >= 2 && int.TryParse(Time[..2], out var h) && h < 12 ? "صبح" : "عصر";
+    /// <summary>رزروشده است (بیمار دارد و استراحت نیست)</summary>
+    public bool IsBooked => !IsAvailable && !IsBreak && !string.IsNullOrWhiteSpace(PatientName);
+
+    /// <summary>ساعت این اسلات گذشته است (امروز و قبل از اکنون) — هنگام بارگذاری ست می‌شود</summary>
+    public bool IsPast { get; set; }
+
+    /// <summary>آیکن جنسیت برای نوار جزئیات</summary>
+    public string GenderIcon => PatientGender == "Female" ? "👩" : "👨";
+
+    /// <summary>متن روبان مورب گوشهٔ کاشی</summary>
+    public string RibbonText => IsSelected ? "✓ انتخاب" : IsPast ? "گذشته" : IsBreak ? "استراحت" : IsBooked ? "رزرو" : "آزاد";
+
+    /// <summary>زیرعنوان کاشی</summary>
+    public string SubText => IsPast ? "سپری شده" : IsBreak ? "🌙 استراحت" : IsBooked ? PatientName ?? "" : (string.IsNullOrWhiteSpace(RoomName) ? "آزاد" : "🩺 " + RoomName);
+
+    /// <summary>ساعت عددی</summary>
+    public int Hour => Time.Length >= 2 && int.TryParse(Time[..2], out var h) ? h : 0;
+
+    /// <summary>گروه صبح/ظهر/عصر</summary>
+    public string Group => Hour < 12 ? "صبح" : Hour < 16 ? "ظهر" : "عصر";
+
+    partial void OnIsSelectedChanged(bool value) => OnPropertyChanged(nameof(RibbonText));
+    partial void OnIsPinnedChanged(bool value) => OnPropertyChanged(nameof(RibbonText));
+}
+
+/// <summary>گروه اسلات‌ها (صبح/ظهر/عصر) برای نمای گروه‌بندی‌شده</summary>
+public sealed class SlotGroup
+{
+    public string Title { get; init; } = "";
+    public string Icon { get; init; } = "";
+    public System.Collections.ObjectModel.ObservableCollection<SlotVM> Items { get; } = new();
+    public int Count => Items.Count;
 }
 
 /// <summary>
@@ -629,6 +678,9 @@ public partial class AppointmentsViewModel : ViewModelBase
     private async Task LoadSlotsAsync()
     {
         Slots.Clear();
+        SlotGroups.Clear();
+        _pinnedSlot = null;
+        DetailSlot = null;
         SelectedSlot = null;
         if (SelectedDoctor is null || SelectedDate is null) return;
         try
@@ -636,16 +688,29 @@ public partial class AppointmentsViewModel : ViewModelBase
         var response = await _api.GetAsync<SlotsResponse>(
             $"appointments/doctor/{SelectedDoctor.Id}/available-slots?date={Uri.EscapeDataString(SelectedDateShamsi)}");
         if (response?.Data is null) return;
+        var isToday = SelectedDate?.Date == DateTime.Today;
+        var nowTime = TimeOnly.FromDateTime(DateTime.Now);
         foreach (var s in response.Data)
+        {
+            var past = isToday && TimeOnly.TryParse(s.Time, out var st) && st < nowTime;
             Slots.Add(new SlotVM
             {
                 Time = s.Time,
-                IsAvailable = s.IsAvailable,
+                IsAvailable = s.IsAvailable && !past,
                 IsBreak = s.IsBreak,
                 PatientName = s.PatientName,
                 RoomName = s.RoomName,
-                Fee = s.Fee
+                Fee = s.Fee,
+                PatientGender = s.PatientGender,
+                PatientAge = s.PatientAge,
+                PatientInsurance = s.PatientInsurance,
+                PatientNationalCode = s.PatientNationalCode,
+                PatientPhone = s.PatientPhone,
+                IsPast = past
             });
+        }
+        RefreshSlotStats();
+        BuildSlotGroups();
         }
         catch (Exception ex)
         {
@@ -657,12 +722,103 @@ public partial class AppointmentsViewModel : ViewModelBase
     [RelayCommand]
     private void SelectSlot(SlotVM slot)
     {
-        if (!slot.IsAvailable) return;
+        if (!slot.IsAvailable || slot.IsPast) return;
         foreach (var s in Slots) s.IsSelected = false;
         slot.IsSelected = true;
         SelectedSlot = slot;
         SelectedRoom = slot.RoomName;
         EstimatedFee = slot.Fee;
+    }
+
+    /// <summary>گروه‌های ناحیه‌ای اسلات (صبح/ظهر/عصر)</summary>
+    public System.Collections.ObjectModel.ObservableCollection<SlotGroup> SlotGroups { get; } = new();
+
+    /// <summary>فیلتر فعلی اسلات‌ها: all/free/booked</summary>
+    [ObservableProperty]
+    private string _slotFilter = "all";
+
+    /// <summary>اسلاتی که نوار جزئیات اکنون نشان می‌دهد (هاور موقت یا سنجاق‌شده)</summary>
+    [ObservableProperty]
+    private SlotVM? _detailSlot;
+
+    /// <summary>اسلات سنجاق‌شده با کلیک</summary>
+    private SlotVM? _pinnedSlot;
+
+    /// <summary>آمار روز اسلات‌ها</summary>
+    [ObservableProperty] private int _freeCount;
+    [ObservableProperty] private int _bookedCount;
+    [ObservableProperty] private int _breakCount;
+    [ObservableProperty] private int _occupancyPercent;
+    [ObservableProperty] private int _filteredCount;
+
+    /// <summary>بازسازی آمار سربرگ اسلات‌ها (آزاد/رزرو/استراحت/درصد پرشدن)</summary>
+    private void RefreshSlotStats()
+    {
+        FreeCount = Slots.Count(s => s.IsAvailable && !s.IsBreak && !s.IsPast);
+        BookedCount = Slots.Count(s => s.IsBooked);
+        BreakCount = Slots.Count(s => s.IsBreak);
+        var denom = Slots.Count(s => !s.IsBreak);
+        OccupancyPercent = denom == 0 ? 0 : (int)Math.Round(100.0 * Slots.Count(s => s.IsBooked || s.IsPast) / denom);
+    }
+
+    /// <summary>بازسازی گروه‌های ناحیه‌ای بر پایهٔ فیلتر فعلی (بدون دست‌کاری انتخاب)</summary>
+    public void BuildSlotGroups()
+    {
+        SlotGroups.Clear();
+        IEnumerable<SlotVM> q = Slots;
+        q = SlotFilter switch
+        {
+            "free" => q.Where(s => s.IsAvailable && !s.IsBreak && !s.IsPast),
+            "booked" => q.Where(s => s.IsBooked),
+            _ => q
+        };
+        var list = q.ToList();
+        FilteredCount = list.Count;
+        foreach (var (title, icon) in new[] { ("صبح", "🌅"), ("ظهر", "☀️"), ("عصر", "🌇") })
+        {
+            var g = new SlotGroup { Title = title, Icon = icon };
+            foreach (var s in list.Where(s => s.Group == title)) g.Items.Add(s);
+            if (g.Items.Count > 0) SlotGroups.Add(g);
+        }
+    }
+
+    /// <summary>تغییر فیلتر اسلات‌ها از چیپ‌های فیلتر</summary>
+    [RelayCommand]
+    private void SetSlotFilter(string? filter)
+    {
+        SlotFilter = string.IsNullOrWhiteSpace(filter) ? "all" : filter;
+        BuildSlotGroups();
+    }
+
+    /// <summary>هاور روی اسلات رزروشده: نمایش موقت در نوار جزئیات</summary>
+    public void HoverSlot(SlotVM slot)
+    {
+        if (slot.IsBooked) DetailSlot = slot;
+    }
+
+    /// <summary>خروج موس: بازگشت به اسلات سنجاق‌شده (یا خالی)</summary>
+    public void UnhoverSlot(SlotVM slot)
+    {
+        if (ReferenceEquals(DetailSlot, slot)) DetailSlot = _pinnedSlot;
+    }
+
+    /// <summary>کلیک روی اسلات رزروشده: سنجاق/برداشتن سنجاق نوار جزئیات</summary>
+    public void TogglePinSlot(SlotVM slot)
+    {
+        if (!slot.IsBooked) return;
+        if (ReferenceEquals(_pinnedSlot, slot))
+        {
+            slot.IsPinned = false;
+            _pinnedSlot = null;
+            DetailSlot = null;
+        }
+        else
+        {
+            if (_pinnedSlot is not null) _pinnedSlot.IsPinned = false;
+            _pinnedSlot = slot;
+            slot.IsPinned = true;
+            DetailSlot = slot;
+        }
     }
 
     /// <summary>ثبت نهایی نوبت — اعتبارسنجی + POST</summary>
@@ -938,6 +1094,11 @@ public partial class AppointmentsViewModel : ViewModelBase
         public bool IsBreak { get; set; }
         public string? RoomName { get; set; }
         public decimal Fee { get; set; }
+        public string? PatientGender { get; set; }
+        public int? PatientAge { get; set; }
+        public string? PatientInsurance { get; set; }
+        public string? PatientNationalCode { get; set; }
+        public string? PatientPhone { get; set; }
     }
 
     public sealed class BookResponse

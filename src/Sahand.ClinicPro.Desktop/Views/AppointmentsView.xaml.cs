@@ -40,6 +40,29 @@ public partial class AppointmentsView : UserControl
     }
 
     /// <summary>رویداد انتخاب تاریخ از تقویم شمسی</summary>
+    // ═══ طرح جدید اسلات‌ها: هاور = نمایش موقت جزئیات، خروج موس = بازگشت به
+    // سنجاق‌شده، کلیک روی رزروشده = سنجاق/برداشتن، کلیک روی آزاد = انتخاب.
+    // فقط همان کاشی دست می‌خورد؛ کل شبکه دوباره رندر نمی‌شود. ═══
+    private void OnSlotMouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: SlotVM slot } && DataContext is AppointmentsViewModel vm)
+            vm.HoverSlot(slot);
+    }
+
+    private void OnSlotMouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: SlotVM slot } && DataContext is AppointmentsViewModel vm)
+            vm.UnhoverSlot(slot);
+    }
+
+    private void OnSlotMouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: SlotVM slot } || DataContext is not AppointmentsViewModel vm)
+            return;
+        if (slot.IsBooked) vm.TogglePinSlot(slot);
+        else if (vm.SelectSlotCommand.CanExecute(slot)) vm.SelectSlotCommand.Execute(slot);
+    }
+
     private void OnCalendarDateSelected(object? sender, DateTime? e)
     {
         if (DataContext is AppointmentsViewModel vm)
