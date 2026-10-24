@@ -9,7 +9,13 @@ public record SlotDto(
     string? PatientName,
     bool IsBreak,
     string? RoomName,
-    decimal Fee);
+    decimal Fee,
+    // جزئیات بیمار رزروکننده برای نوار جزئیات اسلات‌ها (طرح تأییدشدهٔ مالک)
+    string? PatientGender = null,
+    int? PatientAge = null,
+    string? PatientInsurance = null,
+    string? PatientNationalCode = null,
+    string? PatientPhone = null);
 
 /// <summary>
 /// خلاصه ماه تقویم نوبت‌دهی — برای نشانگرهای PersianCalendar
