@@ -245,7 +245,7 @@
                                    FontSize="21" FontWeight="Bold"
                                    Foreground="{StaticResource Login.Text.Primary}"
                                    HorizontalAlignment="Center" Margin="0,10,0,4" />
-                        <TextBlock Text="نام کاربری یا ایمیل حساب خود را وارد کنید؛ رمز موقت به ایمیل ثبت‌شدهٔ همان حساب فرستاده می‌شود."
+                        <TextBlock Text="نام کاربری یا ایمیل حساب خود را وارد کنید؛ رمز موقت به ایمیل ثبت‌شدهٔ همان حساب فرستاده می‌شود. رمز فعلی شما تا وقتی با رمز موقت وارد نشوید، تغییر نمی‌کند."
                                    FontSize="12" Foreground="{StaticResource Login.Text.Muted}"
                                    TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,16" />
 

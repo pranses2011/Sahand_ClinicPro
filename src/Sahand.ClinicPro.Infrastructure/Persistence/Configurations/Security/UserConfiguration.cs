@@ -15,6 +15,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.Username).HasMaxLength(50).IsRequired().HasComment("نام کاربری - یکتا");
         builder.Property(x => x.Email).HasMaxLength(100).IsRequired().HasComment("ایمیل - یکتا");
         builder.Property(x => x.PasswordHash).HasMaxLength(500).IsRequired().HasComment("هش رمز عبور با BCrypt - ضریب ۱۲");
+        builder.Property(x => x.PendingRecoveryPasswordHash).HasMaxLength(500).HasComment("هش رمز موقت بازیابی در انتظار — جدا از رمز اصلی");
         builder.Property(x => x.SecurityStamp).HasMaxLength(100).HasComment("مهر امنیتی برای ابطال توکن‌ها");
         builder.Property(x => x.TwoFactorSecret).HasMaxLength(200).HasComment("کلید دومرحله‌ای");
         builder.Property(x => x.PhoneNumber).HasMaxLength(20).HasComment("موبایل کاربر");
