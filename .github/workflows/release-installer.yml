@@ -84,6 +84,37 @@ jobs:
           & $isccPath "/DMyAppVersion=${{ steps.version.outputs.version }}" installer/SahandClinicPro.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Publish framework-dependent desktop update
+        shell: pwsh
+        run: |
+          # بستهٔ به‌روزرسانی کم‌حجم کلاینت — بدون Runtime؛ روی نصب کامل سوار می‌شود
+          dotnet publish src/Sahand.ClinicPro.Desktop/Sahand.ClinicPro.Desktop.csproj `
+            -c Release -r win-x64 --self-contained false `
+            -p:PublishSingleFile=false -o publish/desktop-update
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force publish/desktop-update/docs | Out-Null
+          Copy-Item docs/guides/*.html publish/desktop-update/docs/ -Force
+          New-Item -ItemType Directory -Force publish/desktop-update/assets, publish/desktop-update/assets/fonts | Out-Null
+          Copy-Item docs/assets/ClinicPro.png publish/desktop-update/assets/ -Force
+          Copy-Item docs/assets/fonts/* publish/desktop-update/assets/fonts/ -Force
+
+      - name: Build Inno Setup update executable
+        shell: pwsh
+        run: |
+          $iscc = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+          if ($iscc) {
+            $isccPath = $iscc.Source
+          } else {
+            $candidates = @(
+              (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6/ISCC.exe'),
+              (Join-Path $env:ProgramFiles 'Inno Setup 6/ISCC.exe')
+            )
+            $isccPath = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          }
+          if (-not $isccPath) { throw 'Inno Setup 6 compiler is not installed on this Windows runner.' }
+          & $isccPath "/DMyAppVersion=${{ steps.version.outputs.version }}" installer/SahandClinicPro-Update.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Publish self-contained API server
         shell: pwsh
         run: |
@@ -104,6 +135,23 @@ jobs:
           $guide = (Get-Content installer/RELEASE-INSTALL-GUIDE.txt -Raw).Replace('{VERSION}', $version)
           Set-Content -Path "$package/RELEASE-INSTALL-GUIDE.txt" -Value $guide -Encoding UTF8
           Compress-Archive -Path "$package/*" -DestinationPath "dist/SahandClinicPro-Server-v$version.zip" -Force
+
+      - name: Publish framework-dependent API and package server update
+        shell: pwsh
+        run: |
+          # بستهٔ به‌روزرسانی کم‌حجم سرور — بدون Runtime؛ اسکریپت نصب با
+          # -UpdateMode فایل‌های Runtime نصب موجود را نگه می‌دارد
+          dotnet publish src/Sahand.ClinicPro.API/Sahand.ClinicPro.API.csproj `
+            -c Release -r win-x64 --self-contained false `
+            -p:PublishSingleFile=false -o publish/server-update
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $version = '${{ steps.version.outputs.version }}'
+          $package = "dist/SahandClinicPro-ServerUpdate-v$version"
+          New-Item -ItemType Directory -Force "$package/Server" | Out-Null
+          Copy-Item publish/server-update/* "$package/Server/" -Recurse -Force
+          Copy-Item installer/Install-Server-Package.ps1 $package/ -Force
+          Copy-Item installer/Update-Server-Package.bat $package/ -Force
+          Compress-Archive -Path "$package/*" -DestinationPath "dist/SahandClinicPro-Server-Update-v$version.zip" -Force
 
       - name: Package license server (PHP) ‏— چرخهٔ ۸۱
         shell: pwsh
@@ -134,7 +182,9 @@ jobs:
           $title = "v$version — نصب نسخه درمانگاه"
           gh release create "v$version" `
             "dist/SahandClinicPro-Setup-v$version.exe" `
+            "dist/SahandClinicPro-Update-v$version.exe" `
             "dist/SahandClinicPro-Server-v$version.zip" `
+            "dist/SahandClinicPro-Server-Update-v$version.zip" `
             "dist/SahandClinicPro-LicenseServer-v$version.zip" `
             --verify-tag --title $title --notes-file dist/release-notes.md
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -529,10 +529,15 @@ public partial class AppointmentsViewModel : ViewModelBase
         _calendarReloadDebounce.Start();
     }
 
-    /// <summary>بارگذاری نشانگرهای تقویم ماه جاری</summary>
+    /// <summary>
+    /// بارگذاری نشانگرهای تقویم ماه جاری — خطای سرور/شبکه نباید برنامه را
+    /// ببندد یا تقویم را خالی از روز کند: روزها با دادهٔ خالی هم رندر می‌شوند.
+    /// </summary>
     private async Task LoadCalendarAsync()
     {
         if (SelectedDoctor is null) return;
+        try
+        {
         var response = await _api.GetAsync<CalendarSummaryResponse>(
             $"doctors/{SelectedDoctor.Id}/calendar-summary?year={DisplayYear}&month={DisplayMonth}");
         if (response?.Data?.Days is null) return;
@@ -556,6 +561,13 @@ public partial class AppointmentsViewModel : ViewModelBase
         DisabledDates = disabled;
         DayStats = stats;
         _ = LoadMonthStatsAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"LoadCalendar failed: {ex.Message}");
+            MarkedDates ??= new Dictionary<DateTime, int>();
+            DayStats ??= new Dictionary<DateTime, CalendarDayStat>();
+        }
     }
 
     /// <summary>
@@ -570,6 +582,8 @@ public partial class AppointmentsViewModel : ViewModelBase
         _monthStatsKey = key;
         var doctorId = SelectedDoctor.Id;
         var year = DisplayYear;
+        try
+        {
         var result = new Dictionary<int, CalendarMonthStat>();
         for (var month = 1; month <= 12; month++)
         {
@@ -589,6 +603,12 @@ public partial class AppointmentsViewModel : ViewModelBase
         // پاسخ دیررسِ پزشک/سال قبلی روی وضعیت فعلی ننشیند
         if (SelectedDoctor?.Id == doctorId && DisplayYear == year)
             MonthStats = result;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"LoadMonthStats failed: {ex.Message}");
+            _monthStatsKey = string.Empty; // دفعهٔ بعد دوباره تلاش شود
+        }
     }
 
     // چرخهٔ ۷۴: فرمان‌های بیرونی «ماه بعد/قبل» حذف شدند — ناوبری ماه از فلش‌های
@@ -611,6 +631,8 @@ public partial class AppointmentsViewModel : ViewModelBase
         Slots.Clear();
         SelectedSlot = null;
         if (SelectedDoctor is null || SelectedDate is null) return;
+        try
+        {
         var response = await _api.GetAsync<SlotsResponse>(
             $"appointments/doctor/{SelectedDoctor.Id}/available-slots?date={Uri.EscapeDataString(SelectedDateShamsi)}");
         if (response?.Data is null) return;
@@ -624,6 +646,11 @@ public partial class AppointmentsViewModel : ViewModelBase
                 RoomName = s.RoomName,
                 Fee = s.Fee
             });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"LoadSlots failed: {ex.Message}");
+        }
     }
 
     /// <summary>انتخاب اسلات</summary>

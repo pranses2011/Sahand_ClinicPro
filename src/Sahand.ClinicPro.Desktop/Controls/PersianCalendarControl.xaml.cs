@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -257,18 +257,42 @@ public partial class PersianCalendarControl : UserControl
         Render();
     }
 
-    /// <summary>رفتن به امروز — ماه جاری و انتخاب خود امروز</summary>
+    /// <summary>پرچم اجرای «برو به امروز» — کلیک پیاپی/هم‌زمان دوباره وارد نشود</summary>
+    private bool _goingToToday;
+
+    /// <summary>
+    /// رفتن به امروز — ماه جاری و انتخاب خود امروز.
+    /// گزارش مالک: کلیک روی «امروز» از برنامه خارج می‌کرد. این مسیر اکنون
+    /// محافظت‌شده است: پرچم ضدورود هم‌زمان، انتساب فقط در صورت تغییر، ترتیب
+    /// امن (نخست نما، بعد ماه/سال، آخر انتخاب) و پوشش خطا؛ هیچ خطایی از این
+    /// دکمه نباید به کاربر برسد یا برنامه را ببندد.
+    /// </summary>
     private void GoToToday()
     {
-        var (y, m, _) = PersianDateHelper.ToJalali(DateTime.Today);
-        DisplayYear = y;
-        DisplayMonth = m;
-        _viewMode = CalendarViewMode.Days;
-        SelectedDate = DateTime.Today;
-        SelectedShamsi = PersianDateHelper.ToShamsiFa(DateTime.Today);
-        DateSelected?.Invoke(this, DateTime.Today);
-        MonthChanged?.Invoke(this, EventArgs.Empty);
-        Render();
+        if (_goingToToday) return;
+        _goingToToday = true;
+        try
+        {
+            _viewMode = CalendarViewMode.Days;
+            var (y, m, _) = PersianDateHelper.ToJalali(DateTime.Today);
+            if (DisplayYear != y) DisplayYear = y;
+            if (DisplayMonth != m) DisplayMonth = m;
+            if (SelectedDate?.Date != DateTime.Today)
+            {
+                SelectedDate = DateTime.Today;
+                SelectedShamsi = PersianDateHelper.ToShamsiFa(DateTime.Today);
+                DateSelected?.Invoke(this, DateTime.Today);
+            }
+            Render();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"GoToToday failed: {ex}");
+        }
+        finally
+        {
+            _goingToToday = false;
+        }
     }
 
     /// <summary>جابه‌جایی ماه نمایشی</summary>
@@ -284,8 +308,18 @@ public partial class PersianCalendarControl : UserControl
         Render();
     }
 
-    /// <summary>رندر بر اساس نمای فعلی</summary>
+    /// <summary>
+    /// رندر بر اساس نمای فعلی — هرگز نباید استثنا به بالا پرتاب شود؛ خطای
+    /// رندر تقویم (دادهٔ ناقص/نبود سرور) نباید برنامه را ببندد.
+    /// </summary>
     private void Render()
+    {
+        try { RenderCore(); }
+        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Calendar render failed: {ex}"); }
+    }
+
+    /// <summary>رندر واقعی بر اساس نمای فعلی</summary>
+    private void RenderCore()
     {
         if (DaysGrid is null)
             return;
