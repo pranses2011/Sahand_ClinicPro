@@ -469,70 +469,46 @@ public partial class BackupViewModel : ViewModelBase
     [RelayCommand]
     private void BrowseBackupPath()
     {
-        // ═══ رفع «با کلیک برنامه بسته می‌شود» ═══
-        // OpenFolderDialog روی برخی نصب‌های ویندوز/درایورها استثنا پرتاب
-        // می‌کند؛ چون دستور رله بدون try/catch بود، استثنا به نخ رابط
-        // می‌رسید و کل برنامه بسته می‌شد. اکنون: ۱) دیالوگ با مالکِ پنجرهٔ
-        // اصلی باز می‌شود، ۲) هر خطایی گرفته و با پیام فارسی گزارش می‌شود،
-        // ۳) در خطا، انتخاب پوشه با دیالوگ فایلِ قدیمی (مسیر مطمئن روی همهٔ
-        // ویندوزها) انجام می‌شود — برنامه هرگز بسته نمی‌شود.
+        // ═══ انتخاب‌گر پوشهٔ استاندارد ویندوز (FolderBrowserDialog) ═══
+        // مسیر قبلی (OpenFolderDialog وُPF و جایگزین دیالوگ فایل) روی سیستم
+        // مالک هر دو خطا می‌دادند و فقط پیغام کلی نشان داده می‌شد. اکنون از
+        // انتخاب‌گر پوشهٔ بومی ویندوزفرم — همان کادری که همهٔ برنامه‌های
+        // ویندوزی برای انتخاب پوشه نشان می‌دهند — با مالکِ پنجرهٔ اصلی
+        // استفاده می‌شود و متن خطای واقعی هم در پیغام می‌آید تا اگر باز هم
+        // مشکلی بود علتش دیده شود، نه پیغام کلی.
         try
         {
-            var dialog = new Microsoft.Win32.OpenFolderDialog
+            using var dialog = new System.Windows.Forms.FolderBrowserDialog
             {
-                Title = "انتخاب پوشهٔ ذخیرهٔ نسخه‌های پشتیبان",
+                Description = "پوشهٔ ذخیرهٔ نسخه‌های پشتیبان را انتخاب کنید",
+                UseDescriptionForTitle = true,
+                ShowNewFolderButton = true,
             };
             if (!string.IsNullOrWhiteSpace(BackupPath) && System.IO.Directory.Exists(BackupPath))
-                dialog.InitialDirectory = BackupPath;
+                dialog.SelectedPath = BackupPath;
 
             var owner = System.Windows.Application.Current?.MainWindow;
-            var accepted = owner is not null ? dialog.ShowDialog(owner) : dialog.ShowDialog();
-            if (accepted == true && !string.IsNullOrWhiteSpace(dialog.FolderName))
-                BackupPath = dialog.FolderName;
+            var result = owner is not null
+                ? dialog.ShowDialog(new WinFormsWindowOwner(owner))
+                : dialog.ShowDialog();
+            if (result == System.Windows.Forms.DialogResult.OK
+                && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
+                BackupPath = dialog.SelectedPath;
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"OpenFolderDialog failed: {ex}");
-            BrowseBackupPathFallback();
+            System.Diagnostics.Debug.WriteLine($"FolderBrowserDialog failed: {ex}");
+            _snackbar.Error($"باز کردن کادر انتخاب پوشه ناموفق بود: {ex.Message} — مسیر پوشه را دستی بنویسید");
         }
     }
 
-    /// <summary>
-    /// انتخاب پوشه با دیالوگ فایل کلاسیک — کاربر یک فایل داخل پوشهٔ مقصد را
-    /// انتخاب می‌کند و مسیرِ همان پوشه برداشته می‌شود. روی همهٔ نسخه‌های
-    /// ویندوز کار می‌کند و جایگزین امنِ دیالوگ پوشه است.
-    /// </summary>
-    private void BrowseBackupPathFallback()
+    /// <summary>مالک ویندوزفرمی پنجرهٔ WPF — برای نمایش صحیح مدال دیالوگ پوشه</summary>
+    private sealed class WinFormsWindowOwner : System.Windows.Forms.IWin32Window
     {
-        try
-        {
-            var dialog = new Microsoft.Win32.OpenFileDialog
-            {
-                Title = "یک فایل داخل پوشهٔ مقصد را انتخاب کنید (فقط پوشه برداشته می‌شود)",
-                CheckFileExists = false,
-                CheckPathExists = true,
-                ValidateNames = false,
-                FileName = "انتخاب این پوشه",
-                Filter = "پوشهٔ مقصد|*.folder",
-            };
-            if (!string.IsNullOrWhiteSpace(BackupPath) && System.IO.Directory.Exists(BackupPath))
-                dialog.InitialDirectory = BackupPath;
+        public WinFormsWindowOwner(System.Windows.Window window)
+            => Handle = new System.Windows.Interop.WindowInteropHelper(window).Handle;
 
-            var owner = System.Windows.Application.Current?.MainWindow;
-            var accepted = owner is not null ? dialog.ShowDialog(owner) : dialog.ShowDialog();
-            if (accepted != true || string.IsNullOrWhiteSpace(dialog.FileName))
-                return;
-
-            var directory = System.IO.Path.GetDirectoryName(dialog.FileName);
-            if (!string.IsNullOrWhiteSpace(directory))
-                BackupPath = directory;
-        }
-        catch (Exception ex)
-        {
-            // آخرین خط دفاع: خطا فقط پیام می‌شود، هرگز برنامه بسته نمی‌شود
-            System.Diagnostics.Debug.WriteLine($"BrowseBackupPathFallback failed: {ex}");
-            _snackbar.Error("باز کردن پنجرهٔ انتخاب پوشه ناموفق بود — مسیر پوشه را دستی بنویسید");
-        }
+        public IntPtr Handle { get; }
     }
 
     /// <summary>

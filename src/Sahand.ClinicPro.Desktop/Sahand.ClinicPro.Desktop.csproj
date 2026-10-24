@@ -13,6 +13,9 @@
          مناسب سیستم‌های قدیمی محیط درمانی که هنوز روی ویندوز ۷/۱۰ هستند -->
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <!-- انتخاب‌گر پوشهٔ استاندارد ویندوز (FolderBrowserDialog) برای دکمهٔ
+         «انتخاب پوشه» بکاپ — دیالوگ پوشهٔ WPF روی برخی نصب‌ها خطا می‌داد -->
+    <UseWindowsForms>true</UseWindowsForms>
     <!-- آیکون رسمی محصول (لوگوی ClinicPro) — در فایل exe جاسازی می‌شود
          تا در Explorer، Taskbar و میانبرها نمایش داده شود -->
     <ApplicationIcon>Assets\appicon.ico</ApplicationIcon>
