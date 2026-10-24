@@ -27,7 +27,7 @@ AppVerName={#MyAppNameEn} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
-DefaultDirName={autopf}\SahandClinicPro
+DefaultDirName={code:GetInstallDirDefault}
 DefaultGroupName={#MyAppNameEn}
 UninstallDisplayName={#MyAppNameEn}
 OutputDir=..\dist
@@ -77,7 +77,7 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 
 [Files]
 ; خروجی publish دسکتاپ — توسط BUILD-INSTALLER.bat ساخته می‌شود
-Source: "..\publish\desktop-update\*"; DestDir: "{app}"; Excludes: "appsettings.json"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\publish\desktop-update\*"; DestDir: "{app}"; Excludes: "appsettings.json,Sahand.ClinicPro.Desktop.runtimeconfig.json"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; پیکربندی کلاینت فقط در نصب اول ایجاد شود تا به‌روزرسانی نشانی سرور را بازنویسی نکند
 Source: "appsettings.client.example.json"; DestDir: "{app}"; Flags: ignoreversion onlyifdoesntexist; DestName: "appsettings.json"
 
@@ -101,18 +101,71 @@ Type: filesandordirs; Name: "{app}\logs"
 
 
 [Code]
-// به‌روزرسانی فقط روی نصب کامل سوار می‌شود (Runtime کنار برنامه از نصب کامل می‌ماند)
+const
+  UninstallKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{7C2E9F3A-5B84-4D61-9A17-3E5C8D4F2B96}_is1';
+
+function ReadUninstallValue(const ValueName: String): String;
+var
+  S: String;
+begin
+  Result := '';
+  if RegQueryStringValue(HKLM, UninstallKey, ValueName, S) then Result := S
+  else if RegQueryStringValue(HKLM32, UninstallKey, ValueName, S) then Result := S
+  else if RegQueryStringValue(HKLM64, UninstallKey, ValueName, S) then Result := S
+  else if RegQueryStringValue(HKCU, UninstallKey, ValueName, S) then Result := S;
+end;
+
+function GetExistingInstallDir(): String;
+var
+  S: String;
+begin
+  S := ReadUninstallValue('InstallLocation');
+  if (Length(S) > 3) and (Copy(S, Length(S), 1) = '\') then
+    Delete(S, Length(S), 1);
+  Result := S;
+end;
+
+function GetInstallDirDefault(Param: String): String;
+begin
+  Result := GetExistingInstallDir();
+  if Result = '' then
+    Result := ExpandConstant('{autopf}\SahandClinicPro');
+end;
+
+function GetExistingVersion(): String;
+begin
+  Result := ReadUninstallValue('DisplayVersion');
+end;
+
+// به‌روزرسانی فقط روی نصب کامل سوار می‌شود. مسیر نصب از رجیستری خوانده
+// می‌شود (نصب قبلی ممکن است در مسیر دلخواه باشد، نه لزوماً Program Files).
+// runtimeconfig نصب کامل نباید با نسخهٔ وابسته به فریم‌ورک بازنویسی شود؛
+// Runtime کنار برنامه (hostfxr.dll و فایل‌های همراهش) میزبان برنامه است.
 function InitializeSetup(): Boolean;
 var
-  AppDir: String;
+  AppDir, Ver: String;
 begin
   Result := True;
-  AppDir := ExpandConstant('{autopf}\SahandClinicPro');
-  if not FileExists(AppDir + '\hostfxr.dll') then
+  AppDir := GetExistingInstallDir();
+  if AppDir = '' then
+    AppDir := ExpandConstant('{autopf}\SahandClinicPro');
+  if not FileExists(AppDir + '\Sahand.ClinicPro.Desktop.exe') then
   begin
-    MsgBox('نصب کامل سامانه درمانگاه سهند روی این رایانه پیدا نشد.' + #13#10 +
-           'این فایل فقط «به‌روزرسانی» است و حجم کمی دارد؛ ابتدا فایل نصب کامل (Setup) را نصب کنید و سپس این به‌روزرسانی را اجرا کنید.',
+    MsgBox('نصب سامانه درمانگاه سهند روی این رایانه پیدا نشد (در مسیر ' + AppDir + ').' + #13#10 +
+           'این فایل فقط «به‌روزرسانی» است؛ ابتدا فایل نصب کامل (Setup) را نصب کنید و سپس این به‌روزرسانی را اجرا کنید.',
            mbError, MB_OK);
     Result := False;
+    Exit;
   end;
+  if not FileExists(AppDir + '\hostfxr.dll') then
+  begin
+    MsgBox('در مسیر نصب برنامه، Runtime پیدا نشد (hostfxr.dll).' + #13#10 +
+           'احتمالاً نصب قبلی ناقص است؛ فایل نصب کامل (Setup) نسخهٔ جدید را اجرا کنید — خودش نصب قبلی را پیدا می‌کند و می‌توانید «نصب کامل» را انتخاب کنید.',
+           mbError, MB_OK);
+    Result := False;
+    Exit;
+  end;
+  Ver := GetExistingVersion();
+  if Ver <> '' then
+    Log('نسخهٔ نصب‌شدهٔ شناسایی‌شده: ' + Ver + ' در ' + AppDir);
 end;

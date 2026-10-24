@@ -30,6 +30,10 @@ copy /y docs\assets\fonts\* publish\desktop\assets\fonts\ >nul
 mkdir publish\desktop\screenshots 2>nul
 for %%F in (01-login.png 11-attendance-devices.png 14-license.png install-api-console.png install-firewall.png install-network-map.png install-sql-server.png) do copy /y docs\screenshots\%%F publish\desktop\screenshots\ >nul
 
+echo [1.5/6] انتشار سبک کلاینت (برای حالت «فقط فایل‌های به‌روزشده» در نصب کامل)...
+dotnet publish src\Sahand.ClinicPro.Desktop\Sahand.ClinicPro.Desktop.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=false -o publish\desktop-update
+if errorlevel 1 goto :fail
+
 echo [2/6] ساخت EXE نصب کلاینت...
 set "ISCC=%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
 if not exist "%ISCC%" set "ISCC=%ProgramFiles%\Inno Setup 6\ISCC.exe"
@@ -56,13 +60,11 @@ if errorlevel 1 goto :fail
 powershell -NoProfile -Command "Compress-Archive -Path 'dist\SahandClinicPro-Server-v%APP_VERSION%\*' -DestinationPath 'dist\SahandClinicPro-Server-v%APP_VERSION%.zip' -Force"
 if errorlevel 1 goto :fail
 
-echo [5/6] انتشار وابسته به فریم‌ورک کلاینت و ساخت EXE به‌روزرسانی کم‌حجم...
-dotnet publish src\Sahand.ClinicPro.Desktop\Sahand.ClinicPro.Desktop.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=false -o publish\desktop-update
-if errorlevel 1 goto :fail
+echo [5/6] ساخت EXE به‌روزرسانی کم‌حجم کلاینت...
 "%ISCC%" /DMyAppVersion=%APP_VERSION% installer\SahandClinicPro-Update.iss
 if errorlevel 1 goto :fail
 
-echo [6/6] انتشار وابسته به فریم‌ورک API و بسته‌بندی به‌روزرسانی کم‌حجم سرور...
+echo [6/6] انتشار خودبسنده API و بسته‌بندی به‌روزرسانی سرور...
 dotnet publish src\Sahand.ClinicPro.API\Sahand.ClinicPro.API.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o publish\server-update
 if errorlevel 1 goto :fail
 if exist dist\SahandClinicPro-ServerUpdate-v%APP_VERSION% rmdir /s /q dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%
