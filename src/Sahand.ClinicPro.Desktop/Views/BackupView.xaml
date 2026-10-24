@@ -372,8 +372,27 @@
                                      Width="110" HorizontalAlignment="Left" Margin="26,2,0,8" FontFamily="{DynamicResource App.CodeFont}" materialDesign:HintAssist.Hint="فاصلهٔ بکاپ لاگ (ساعت)"/>
 
                             <TextBlock Text="مسیر ذخیره محلی:" FontSize="12" Margin="2,10,0,4"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                            <TextBox Text="{Binding BackupPath}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding BackupPath}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         FontFamily="{DynamicResource App.CodeFont}" FontSize="11.5" />
+                                <Button Grid.Column="2" Command="{Binding BrowseBackupPathCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        VerticalAlignment="Stretch"
+                                        ToolTip="انتخاب پوشه با پنجرهٔ انتخاب پوشهٔ ویندوز">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="FolderOpen" Width="15" Height="15" VerticalAlignment="Center" />
+                                        <TextBlock Text="انتخاب پوشه…" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                            <TextBlock Text="پوشه روی ماشینی انتخاب می‌شود که این برنامه روی آن اجراست؛ اگر سرور روی ماشین دیگری است، مسیر شبکه (مثل \\SERVER\Backups) را دستی بنویسید."
+                                       FontSize="10.5" Opacity="0.75" TextWrapping="Wrap" Margin="2,4,2,0"
+                                       Foreground="{DynamicResource MaterialDesign.Brush.Foreground}" />
 
                             <!-- ═══ چرخهٔ ۸۲ (گزارش مالک) — «ارسال به ایمیل» بکاپ خودکار ═══
                                  گزینه + فیلد ایمیل مقصد؛ تنظیم با دکمهٔ «ذخیرهٔ تنظیمات
