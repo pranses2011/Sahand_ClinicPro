@@ -216,6 +216,26 @@ public sealed class PersianDigitsConverter : IValueConverter
 /// مبدل bool → متن فارسی «فعال / غیرفعال» — چرخه بیست‌وسوم (گزارش شانزدهم
 /// مالک): ستون وضعیت جدول‌های بیمه/تعرفهٔ صفحهٔ بیمه؛ برچسب‌ها فارسی.
 /// </summary>
+/// <summary>
+/// مبدل امن تول‌تیپ‌ها — ارقام لاتینِ متن یا مقدار عددی تول‌تیپ را فارسی
+/// می‌کند ولی محتوای غیرمتنی (مثل StackPanel یا آیکون داخل ToolTip) را
+/// دست‌نخورده عبور می‌دهد تا قالب سراسری تول‌تیپ چیزی را خراب نکند.
+/// </summary>
+public sealed class TooltipPersianDigitsConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value switch
+        {
+            null => null,
+            string s => Money.ToPersianDigits(s),
+            IFormattable f => Money.ToPersianDigits(f.ToString(null, CultureInfo.InvariantCulture)),
+            _ => value
+        };
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value ?? Binding.DoNothing;
+}
+
 public sealed class BoolToFaTextConverter : IValueConverter
 {
     /// <summary>true → فعال | false → غیرفعال | null → —</summary>
