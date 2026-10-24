@@ -460,14 +460,70 @@ public partial class BackupViewModel : ViewModelBase
     [RelayCommand]
     private void BrowseBackupPath()
     {
-        var dialog = new Microsoft.Win32.OpenFolderDialog
+        // ═══ رفع «با کلیک برنامه بسته می‌شود» ═══
+        // OpenFolderDialog روی برخی نصب‌های ویندوز/درایورها استثنا پرتاب
+        // می‌کند؛ چون دستور رله بدون try/catch بود، استثنا به نخ رابط
+        // می‌رسید و کل برنامه بسته می‌شد. اکنون: ۱) دیالوگ با مالکِ پنجرهٔ
+        // اصلی باز می‌شود، ۲) هر خطایی گرفته و با پیام فارسی گزارش می‌شود،
+        // ۳) در خطا، انتخاب پوشه با دیالوگ فایلِ قدیمی (مسیر مطمئن روی همهٔ
+        // ویندوزها) انجام می‌شود — برنامه هرگز بسته نمی‌شود.
+        try
         {
-            Title = "انتخاب پوشهٔ ذخیرهٔ نسخه‌های پشتیبان",
-        };
-        if (!string.IsNullOrWhiteSpace(BackupPath) && System.IO.Directory.Exists(BackupPath))
-            dialog.InitialDirectory = BackupPath;
-        if (dialog.ShowDialog() == true)
-            BackupPath = dialog.FolderName;
+            var dialog = new Microsoft.Win32.OpenFolderDialog
+            {
+                Title = "انتخاب پوشهٔ ذخیرهٔ نسخه‌های پشتیبان",
+            };
+            if (!string.IsNullOrWhiteSpace(BackupPath) && System.IO.Directory.Exists(BackupPath))
+                dialog.InitialDirectory = BackupPath;
+
+            var owner = System.Windows.Application.Current?.MainWindow;
+            var accepted = owner is not null ? dialog.ShowDialog(owner) : dialog.ShowDialog();
+            if (accepted == true && !string.IsNullOrWhiteSpace(dialog.FolderName))
+                BackupPath = dialog.FolderName;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"OpenFolderDialog failed: {ex}");
+            BrowseBackupPathFallback();
+        }
+    }
+
+    /// <summary>
+    /// انتخاب پوشه با دیالوگ فایل کلاسیک — کاربر یک فایل داخل پوشهٔ مقصد را
+    /// انتخاب می‌کند و مسیرِ همان پوشه برداشته می‌شود. روی همهٔ نسخه‌های
+    /// ویندوز کار می‌کند و جایگزین امنِ دیالوگ پوشه است.
+    /// </summary>
+    private void BrowseBackupPathFallback()
+    {
+        try
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = "یک فایل داخل پوشهٔ مقصد را انتخاب کنید (فقط پوشه برداشته می‌شود)",
+                CheckFileExists = false,
+                CheckPathExists = true,
+                ValidateNames = false,
+                FileName = "انتخاب این پوشه",
+                Filter = "پوشهٔ مقصد|*.folder",
+            };
+            if (!string.IsNullOrWhiteSpace(BackupPath) && System.IO.Directory.Exists(BackupPath))
+                dialog.InitialDirectory = BackupPath;
+
+            var owner = System.Windows.Application.Current?.MainWindow;
+            var accepted = owner is not null ? dialog.ShowDialog(owner) : dialog.ShowDialog();
+            if (accepted != true || string.IsNullOrWhiteSpace(dialog.FileName))
+                return;
+
+            var directory = System.IO.Path.GetDirectoryName(dialog.FileName);
+            if (!string.IsNullOrWhiteSpace(directory))
+                BackupPath = directory;
+        }
+        catch (Exception ex)
+        {
+            // آخرین خط دفاع: خطا فقط پیام می‌شود، هرگز برنامه بسته نمی‌شود
+            System.Diagnostics.Debug.WriteLine($"BrowseBackupPathFallback failed: {ex}");
+            _snackbar.Error("باز کردن پنجرهٔ انتخاب پوشه ناموفق بود — مسیر پوشه را دستی بنویسید");
+        }
     }
 
     /// <summary>
