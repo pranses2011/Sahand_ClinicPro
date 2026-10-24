@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sahand.ClinicPro.Application.Features.Lookups;
+using Sahand.ClinicPro.Domain.Entities.Security;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -67,7 +68,7 @@ public class LookupsController : ApiBaseController
     /// </summary>
     /// <param name="request">مشخصات قلم — نام فارسی/ژنریک، نوع و مشخصات اختیاری</param>
     [HttpPost("medications")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = SystemRoles.Admin + "," + SystemRoles.Manager)]
     public async Task<IActionResult> CreateMedication([FromBody] CreatePharmacyItemCommand request)
     {
         var result = await _mediator.Send(request);
@@ -116,7 +117,7 @@ public class LookupsController : ApiBaseController
 
     /// <summary>ساخت اتاق معاینه جدید</summary>
     [HttpPost("rooms")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = SystemRoles.Admin + "," + SystemRoles.Manager)]
     public async Task<IActionResult> CreateRoom([FromBody] CreateRoomRequest request)
     {
         var result = await _mediator.Send(
@@ -126,7 +127,7 @@ public class LookupsController : ApiBaseController
 
     /// <summary>ویرایش اتاق معاینه</summary>
     [HttpPut("rooms/{id:long}")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = SystemRoles.Admin + "," + SystemRoles.Manager)]
     public async Task<IActionResult> UpdateRoom(long id, [FromBody] CreateRoomRequest request)
     {
         var result = await _mediator.Send(
@@ -136,7 +137,7 @@ public class LookupsController : ApiBaseController
 
     /// <summary>غیرفعال‌سازی (حذف نرم) اتاق</summary>
     [HttpDelete("rooms/{id:long}")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = SystemRoles.Admin + "," + SystemRoles.Manager)]
     public async Task<IActionResult> DeactivateRoom(long id)
     {
         var result = await _mediator.Send(new DeactivateRoomCommand(id));
@@ -190,7 +191,7 @@ public class LookupsController : ApiBaseController
 
     /// <summary>ساخت دپارتمان جدید (یا بازگشت شناسهٔ موجود هم‌نام)</summary>
     [HttpPost("departments")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = SystemRoles.Admin + "," + SystemRoles.Manager)]
     public async Task<IActionResult> CreateDepartment([FromBody] CreateLookupRequest request)
     {
         var result = await _mediator.Send(new CreateDepartmentIfMissingCommand(request.Name));
@@ -199,7 +200,7 @@ public class LookupsController : ApiBaseController
 
     /// <summary>ساخت سمت جدید (یا بازگشت شناسهٔ موجود هم‌عنوان)</summary>
     [HttpPost("positions")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = SystemRoles.Admin + "," + SystemRoles.Manager)]
     public async Task<IActionResult> CreatePosition([FromBody] CreateLookupRequest request)
     {
         var result = await _mediator.Send(new CreatePositionIfMissingCommand(request.Name));
@@ -241,7 +242,7 @@ public class LookupsController : ApiBaseController
     /// (چرخه ۲۴: insuranceCompanyId تهی = تعرفهٔ آزاد، مقدار = تعرفهٔ بیمه)</summary>
     /// <param name="request">داده خدمت/تعرفه</param>
     [HttpPost("services")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = SystemRoles.Admin + "," + SystemRoles.Manager)]
     public async Task<IActionResult> CreateService([FromBody] SaveServiceTariffRequest request)
     {
         var result = await _mediator.Send(new CreateServiceTariffCommand(
@@ -255,7 +256,7 @@ public class LookupsController : ApiBaseController
     /// <param name="id">شناسه خدمت</param>
     /// <param name="request">داده خدمت/تعرفه</param>
     [HttpPut("services/{id:long}")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = SystemRoles.Admin + "," + SystemRoles.Manager)]
     public async Task<IActionResult> UpdateService(long id, [FromBody] SaveServiceTariffRequest request)
     {
         var result = await _mediator.Send(new UpdateServiceTariffCommand(
@@ -268,7 +269,7 @@ public class LookupsController : ApiBaseController
     /// <summary>غیرفعال‌سازی (حذف نرم) خدمت — سوابق فاکتور حفظ می‌شوند</summary>
     /// <param name="id">شناسه خدمت</param>
     [HttpDelete("services/{id:long}")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = SystemRoles.Admin + "," + SystemRoles.Manager)]
     public async Task<IActionResult> DeactivateService(long id)
     {
         var result = await _mediator.Send(new DeactivateServiceCommand(id));
