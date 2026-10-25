@@ -2,7 +2,7 @@
 chcp 65001 >nul
 setlocal
 title ساخت بسته نصب درمانگاه سهند
-set "APP_VERSION=2.28.5"
+set "APP_VERSION=2.28.6"
 if not "%CI%"=="" set "CI_MODE=1"
 
 echo ===========================================================
@@ -64,12 +64,15 @@ echo [5/6] ساخت EXE به‌روزرسانی کم‌حجم کلاینت...
 "%ISCC%" /DMyAppVersion=%APP_VERSION% installer\SahandClinicPro-Update.iss
 if errorlevel 1 goto :fail
 
-echo [6/6] انتشار خودبسنده API و بسته‌بندی به‌روزرسانی سرور...
-dotnet publish src\Sahand.ClinicPro.API\Sahand.ClinicPro.API.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o publish\server-update
+echo [6/6] انتشار سبک API و بسته‌بندی به‌روزرسانی کم‌حجم سرور...
+dotnet publish src\Sahand.ClinicPro.API\Sahand.ClinicPro.API.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=false -o publish\server-update
 if errorlevel 1 goto :fail
 if exist dist\SahandClinicPro-ServerUpdate-v%APP_VERSION% rmdir /s /q dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%
 mkdir dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server
 robocopy publish\server-update dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server /E >nul
+rem فایل‌های میزبان Runtime نباید روی نصب خودبسنده بازنویسی شوند
+del /q dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server\Sahand.ClinicPro.API.runtimeconfig.json 2>nul
+del /q dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server\Sahand.ClinicPro.API.deps.json 2>nul
 if errorlevel 8 goto :fail
 copy /y installer\Install-Server-Package.ps1 dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\ >nul
 copy /y installer\Update-Server-Package.bat dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\ >nul

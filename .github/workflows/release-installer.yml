@@ -136,19 +136,23 @@ jobs:
           Set-Content -Path "$package/RELEASE-INSTALL-GUIDE.txt" -Value $guide -Encoding UTF8
           Compress-Archive -Path "$package/*" -DestinationPath "dist/SahandClinicPro-Server-v$version.zip" -Force
 
-      - name: Publish self-contained API and package server update
+      - name: Publish framework-dependent API and package server update
         shell: pwsh
         run: |
           # بستهٔ به‌روزرسانی کم‌حجم سرور — بدون Runtime؛ اسکریپت نصب با
           # -UpdateMode فایل‌های Runtime نصب موجود را نگه می‌دارد
           dotnet publish src/Sahand.ClinicPro.API/Sahand.ClinicPro.API.csproj `
-            -c Release -r win-x64 --self-contained true `
+            -c Release -r win-x64 --self-contained false `
             -p:PublishSingleFile=false -o publish/server-update
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $version = '${{ steps.version.outputs.version }}'
           $package = "dist/SahandClinicPro-ServerUpdate-v$version"
           New-Item -ItemType Directory -Force "$package/Server" | Out-Null
           Copy-Item publish/server-update/* "$package/Server/" -Recurse -Force
+          # فایل‌های میزبان Runtime نباید روی نصب خودبسنده بازنویسی شوند
+          # (علت خرابی آپدیت ۲.۲۸.۲: runtimeconfig وابسته به فریم‌ورک)
+          Remove-Item "$package/Server/Sahand.ClinicPro.API.runtimeconfig.json" -Force -ErrorAction SilentlyContinue
+          Remove-Item "$package/Server/Sahand.ClinicPro.API.deps.json" -Force -ErrorAction SilentlyContinue
           Copy-Item installer/Install-Server-Package.ps1 $package/ -Force
           Copy-Item installer/Update-Server-Package.bat $package/ -Force
           Compress-Archive -Path "$package/*" -DestinationPath "dist/SahandClinicPro-Server-Update-v$version.zip" -Force
