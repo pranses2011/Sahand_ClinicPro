@@ -130,6 +130,7 @@ public class ParaclinicalController : ApiBaseController
         // { "teeth": {"11": 2, ...}, "rows": [{"tooth":11,"procedure":"ترمیم","price":1500000,"status":"پیشنهاد"}] }
         var teeth = new Dictionary<string, int>();
         var rows = new List<object>();
+        object? extras = null;
         if (!string.IsNullOrWhiteSpace(plan.PlanDetails))
         {
             try
@@ -146,8 +147,22 @@ public class ParaclinicalController : ApiBaseController
                             tooth = row.TryGetProperty("tooth", out var t) && t.TryGetInt32(out var tv) ? tv : 0,
                             procedure = row.TryGetProperty("procedure", out var pr) ? pr.GetString() : null,
                             price = row.TryGetProperty("price", out var p) && p.TryGetDecimal(out var pv) ? pv : 0m,
-                            status = row.TryGetProperty("status", out var s) ? s.GetString() : null
+                            status = row.TryGetProperty("status", out var s) ? s.GetString() : null,
+                            surface = row.TryGetProperty("surface", out var sf) ? sf.GetString() : null,
+                            schedule = row.TryGetProperty("schedule", out var sc) ? sc.GetString() : null
                         });
+                // بخش‌های تازهٔ ماژول دندانپزشکی (پریودنتال/پزشکی/نسخه/رادیوگرافی/رضایت)
+                if (doc.RootElement.TryGetProperty("extras", out var ex))
+                {
+                    extras = new
+                    {
+                        perio = ex.TryGetProperty("perio", out var pe) ? pe.GetString() : null,
+                        medical = ex.TryGetProperty("medical", out var me) ? me.GetString() : null,
+                        prescription = ex.TryGetProperty("prescription", out var rx) ? rx.GetString() : null,
+                        radio = ex.TryGetProperty("radio", out var ra) ? ra.GetString() : null,
+                        consent = ex.TryGetProperty("consent", out var co) && co.ValueKind == System.Text.Json.JsonValueKind.True
+                    };
+                }
             }
             catch (System.Text.Json.JsonException)
             {
@@ -163,6 +178,7 @@ public class ParaclinicalController : ApiBaseController
                 : null,
             teeth,
             rows,
+            extras,
             note = (string?)null
         }));
     }
