@@ -129,7 +129,9 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
                 PatientName = a.Patient!.FirstName + " " + a.Patient.LastName,
                 Gender = a.Patient!.Gender.ToString(),
                 a.Patient.BirthDate,
-                Insurance = a.Patient.InsuranceType ?? (a.Patient.InsuranceCompany != null ? a.Patient.InsuranceCompany.Name : null),
+                // نوع بیمه یعنی نام بیمه‌گر (شرکت بیمه)؛ فیلد InsuranceType بیمار
+                // «نسبت بیمه‌ای» است (اصلی/تبعی) و نباید اینجا بیاید (گزارش مالک)
+                Insurance = a.Patient.InsuranceCompany != null ? a.Patient.InsuranceCompany.Name : null,
                 a.Patient.NationalCode,
                 Phone = a.Patient.Mobile
             })
@@ -149,7 +151,7 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
                 PatientName = r.Patient != null ? r.Patient.FirstName + " " + r.Patient.LastName : "",
                 Gender = r.Patient != null ? r.Patient.Gender.ToString() : null,
                 BirthDate = r.Patient != null ? r.Patient.BirthDate : null,
-                Insurance = r.Patient != null ? (r.Patient.InsuranceType ?? (r.Patient.InsuranceCompany != null ? r.Patient.InsuranceCompany.Name : null)) : null,
+                Insurance = r.Patient != null ? (r.Patient.InsuranceCompany != null ? r.Patient.InsuranceCompany.Name : null) : null,
                 NationalCode = r.Patient != null ? r.Patient.NationalCode : null,
                 Phone = r.Patient != null ? r.Patient.Mobile : null
             })

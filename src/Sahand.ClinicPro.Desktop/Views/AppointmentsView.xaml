@@ -596,7 +596,12 @@
                                                                 </ItemsControl.ItemsPanel>
                                                                 <ItemsControl.ItemTemplate>
                                                                     <DataTemplate>
-                                                                        <!-- کاشی فشردهٔ اسلات -->
+                                                                        <!-- کاشی فشردهٔ اسلات — قاب بیرونی بدون برش تا قاب
+                                                                             متحرک سنجاق بتواند دور کارت (بیرون آن) بنشیند؛
+                                                                             FlowDirection چپ‌به‌راست یعنی جای فیزیکی عناصر
+                                                                             دقیقاً همانِ طرح است: روبان در گوشهٔ چپ (گزارش مالک:
+                                                                             روبان سمت راست افتاده بود) -->
+                                                                        <Grid Width="98" MinHeight="54" FlowDirection="LeftToRight">
                                                                         <Border x:Name="TileRoot" Width="92" MinHeight="48" Margin="3" CornerRadius="11"
                                                                                 BorderThickness="1.5" Cursor="Hand" ClipToBounds="True"
                                                                                 MouseEnter="OnSlotMouseEnter" MouseLeave="OnSlotMouseLeave"
@@ -758,28 +763,38 @@
                                                                                         </TextBlock.Style>
                                                                                     </TextBlock>
                                                                                 </Border>
-                                                                                <!-- قاب متحرک اسلات سنجاق‌شده (خانوادهٔ قرمز) -->
-                                                                                <Border CornerRadius="11" BorderThickness="2.6" IsHitTestVisible="False"
-                                                                                        Visibility="{Binding IsPinned, Converter={StaticResource BoolToVisibility}}">
-                                                                                    <Border.BorderBrush>
-                                                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                                                            <GradientStop Color="#881337" Offset="0" />
-                                                                                            <GradientStop Color="#F43F5E" Offset="0.5" />
-                                                                                            <GradientStop Color="#FDA4AF" Offset="1" />
-                                                                                        </LinearGradientBrush>
-                                                                                    </Border.BorderBrush>
-                                                                                    <Border.Triggers>
-                                                                                        <EventTrigger RoutedEvent="Border.Loaded">
-                                                                                            <BeginStoryboard>
-                                                                                                <Storyboard RepeatBehavior="Forever" AutoReverse="True">
-                                                                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.55" To="1" Duration="0:0:1.2" />
-                                                                                                </Storyboard>
-                                                                                            </BeginStoryboard>
-                                                                                        </EventTrigger>
-                                                                                    </Border.Triggers>
-                                                                                </Border>
                                                                             </Grid>
                                                                         </Border>
+                                                                        <!-- قاب متحرک اسلات سنجاق‌شده — دورِ کارت و بیرون
+                                                                             مرز آن (گزارش مالک: انیمیشن داخل کارت می‌افتاد)؛
+                                                                             گرادیان خانوادهٔ قرمز روی قاب می‌چرخد -->
+                                                                        <Border CornerRadius="14" BorderThickness="2.8" IsHitTestVisible="False"
+                                                                                Visibility="{Binding IsPinned, Converter={StaticResource BoolToVisibility}}">
+                                                                            <Border.BorderBrush>
+                                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                                                    <GradientStop Color="#881337" Offset="0" />
+                                                                                    <GradientStop Color="#F43F5E" Offset="0.5" />
+                                                                                    <GradientStop Color="#FDA4AF" Offset="1" />
+                                                                                </LinearGradientBrush>
+                                                                            </Border.BorderBrush>
+                                                                            <Border.Effect>
+                                                                                <DropShadowEffect BlurRadius="9" ShadowDepth="0" Opacity="0.55" Color="#F43F5E" />
+                                                                            </Border.Effect>
+                                                                            <Border.Triggers>
+                                                                                <EventTrigger RoutedEvent="Border.Loaded">
+                                                                                    <BeginStoryboard>
+                                                                                        <Storyboard RepeatBehavior="Forever">
+                                                                                            <PointAnimation Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.StartPoint)"
+                                                                                                            From="0,0" To="1,1" Duration="0:0:2.8" AutoReverse="True" />
+                                                                                            <PointAnimation Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.EndPoint)"
+                                                                                                            From="1,1" To="0,0" Duration="0:0:2.8" AutoReverse="True" />
+                                                                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.7" To="1" Duration="0:0:1.4" AutoReverse="True" />
+                                                                                        </Storyboard>
+                                                                                    </BeginStoryboard>
+                                                                                </EventTrigger>
+                                                                            </Border.Triggers>
+                                                                        </Border>
+                                                                        </Grid>
                                                                     </DataTemplate>
                                                                 </ItemsControl.ItemTemplate>
                                                             </ItemsControl>
