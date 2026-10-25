@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -154,6 +154,27 @@ public partial class LabViewModel : ViewModelBase
         await LoadAsync();
     }
 
+    /// <summary>ردیف نمودار بار کاری روزانه — طراحی نسخهٔ ۳ آزمایشگاه (تأیید مالک)</summary>
+    public record LabWorkloadDay(string Label, int Count, double BarWidth);
+
+    /// <summary>شمار همهٔ درخواست‌ها — کارت آمار</summary>
+    [ObservableProperty] private int _statAllCount;
+    /// <summary>شمار سفارش‌شده‌ها — کارت آمار</summary>
+    [ObservableProperty] private int _statOrderedCount;
+    /// <summary>شمار نمونه‌گیری‌شده‌ها — کارت آمار</summary>
+    [ObservableProperty] private int _statSampledCount;
+    /// <summary>شمار در جریان — کارت آمار</summary>
+    [ObservableProperty] private int _statInProgressCount;
+    /// <summary>شمار نتایج آماده — کارت آمار</summary>
+    [ObservableProperty] private int _statDoneCount;
+
+    /// <summary>نمودار بار کاری ۷ روز اخیر (بر اساس تاریخ شمسی درخواست‌ها)</summary>
+    [ObservableProperty]
+    private ObservableCollection<LabWorkloadDay> _workloadDays = new();
+
+    /// <summary>متن شاخص‌های خلاصه — میانگین تست/درخواست و درصد نتایج آماده</summary>
+    [ObservableProperty] private string _kpiSummaryText = "—";
+
     /// <summary>بارگذاری درخواست‌ها</summary>
     [RelayCommand]
     public async Task LoadAsync()
@@ -177,7 +198,40 @@ public partial class LabViewModel : ViewModelBase
             ErrorMessage = _api.LastError ?? "دریافت درخواست‌ها ناموفق بود";
         }
 
+        await LoadStatsAsync();
         IsBusy = false;
+    }
+
+    /// <summary>
+    /// آمار کارت‌ها و نمودار بار کاری — از فهرست بدون فیلتر ساخته می‌شود تا
+    /// با عوض‌کردن تب، عدد کارت‌ها تکان نخورد (طراحی نسخهٔ ۳ — تأیید مالک).
+    /// </summary>
+    private async Task LoadStatsAsync()
+    {
+        var all = await _api.GetAsync<LabOrdersResponse>("lab/orders");
+        if (all?.Data is null) return;
+        var rows = all.Data;
+        StatAllCount = rows.Count;
+        StatOrderedCount = rows.Count(o => o.Status == 1);
+        StatSampledCount = rows.Count(o => o.Status == 2);
+        StatInProgressCount = rows.Count(o => o.Status == 3);
+        StatDoneCount = rows.Count(o => o.Status == 4);
+
+        // بار کاری: ۷ تاریخ شمسی اخیر (رشتهٔ yyyy/MM/dd شمسی مرتب‌سازی لغوی درستی دارد)
+        var byDate = rows.GroupBy(o => o.DateShamsi ?? "")
+            .Where(g => g.Key.Length > 0)
+            .OrderByDescending(g => g.Key)
+            .Take(7).OrderBy(g => g.Key).ToList();
+        var max = byDate.Count == 0 ? 1 : Math.Max(1, byDate.Max(g => g.Count()));
+        WorkloadDays = new ObservableCollection<LabWorkloadDay>(byDate.Select(g =>
+            new LabWorkloadDay(g.Key.Length >= 10 ? g.Key[5..] : g.Key, g.Count(), 130d * g.Count() / max)));
+
+        var avgTests = rows.Count == 0 ? 0d : rows.Average(o => o.ItemsCount);
+        var donePct = rows.Count == 0 ? 0 : (int)Math.Round(100d * StatDoneCount / rows.Count);
+        KpiSummaryText =
+            $"میانگین {Helpers.Money.ToPersianDigits(avgTests.ToString("0.0"))} تست در هر درخواست · " +
+            $"{Helpers.Money.ToPersianDigits(donePct.ToString())}٪ نتایج آماده · " +
+            $"{Helpers.Money.ToPersianDigits(StatOrderedCount.ToString())} در انتظار نمونه‌گیری";
     }
 
     /// <summary>متن فارسی وضعیت</summary>
