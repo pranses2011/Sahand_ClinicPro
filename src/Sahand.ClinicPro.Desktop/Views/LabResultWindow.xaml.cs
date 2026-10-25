@@ -46,7 +46,8 @@ public partial class LabResultWindow : Window
             _viewModel.Api, item, _viewModel.OrderId,
             _viewModel.PatientContext, _viewModel.PatientAgeText,
             _viewModel.OrderNumberText,
-            onSaved: _viewModel.LoadAsync);
+            onSaved: _viewModel.LoadAsync,
+            patientId: _viewModel.PatientId, orderStatus: _viewModel.OrderStatus);
 
         var window = new LabTestResultEntryWindow(entryVm)
         {

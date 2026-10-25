@@ -63,6 +63,24 @@ public partial class LabTestResultEntryViewModel : ObservableObject
     [ObservableProperty]
     private string _orderNumber = string.Empty;
 
+    /// <summary>
+    /// خط زمانی نمونه — طراحی نسخهٔ ۳ (تأیید مالک): مراحل درخواست تا نتیجه
+    /// با علامت مرحلهٔ طی‌شده/جاری، از وضعیت عددی درخواست ساخته می‌شود.
+    /// </summary>
+    [ObservableProperty]
+    private string _timelineText = string.Empty;
+
+    /// <summary>ردیف سابقهٔ قبلی همین آزمایش برای همین بیمار — طراحی نسخهٔ ۳</summary>
+    public record LabHistoryRow(string Date, string ResultText, string FlagText, string FlagBrush, double BarWidth);
+
+    /// <summary>سوابق قبلی همین آزمایش (روند بیمار) — از درخواست‌های قبلی بیمار</summary>
+    [ObservableProperty]
+    private System.Collections.ObjectModel.ObservableCollection<LabHistoryRow> _historyRows = new();
+
+    /// <summary>آیا سابقهٔ قبلی برای نمایش روند وجود دارد؟</summary>
+    [ObservableProperty]
+    private bool _hasHistory;
+
     /// <summary>نتیجهٔ عددی — فیلد اصلی (فارسی‌نویس با جداکنندهٔ اعشار)</summary>
     [ObservableProperty]
     private string _resultNumeric = string.Empty;
@@ -116,12 +134,15 @@ public partial class LabTestResultEntryViewModel : ObservableObject
     /// <param name="onSaved">فراخوانی پس از ذخیرهٔ موفق (تازه‌سازی لیست مادر)</param>
     public LabTestResultEntryViewModel(IApiClient api, LabItemRow item, long orderId,
         string patientName, string patientAgeText, string orderNumber,
-        Func<Task>? onSaved = null)
+        Func<Task>? onSaved = null, long patientId = 0, int orderStatus = 0)
     {
         _api = api;
         _itemId = item.Id;
         _orderId = orderId;
         _onSaved = onSaved;
+        TimelineText = BuildTimelineText(orderStatus);
+        if (patientId > 0)
+            _ = LoadHistoryAsync(patientId, item.TestName);
 
         TestName = item.TestName;
         Unit = item.Unit;
@@ -139,6 +160,79 @@ public partial class LabTestResultEntryViewModel : ObservableObject
         // اگر از قبل نتیجه داشته، بج وضعیت نتیجهٔ قبلی را نشان بده
         if (!string.IsNullOrWhiteSpace(Result) || !string.IsNullOrWhiteSpace(ResultNumeric))
             ShowFlag(item.AbnormalFlag);
+    }
+
+    /// <summary>ساخت متن خط زمانی نمونه از وضعیت درخواست — طراحی نسخهٔ ۳</summary>
+    private static string BuildTimelineText(int status)
+    {
+        string Step(string label, int stepStatus) =>
+            status >= stepStatus ? $"✓ {label}" : $"○ {label}";
+        var current = status switch
+        {
+            1 => "مرحلهٔ جاری: در انتظار نمونه‌گیری",
+            2 => "مرحلهٔ جاری: نمونه‌گیری‌شده",
+            3 => "مرحلهٔ جاری: در حال انجام",
+            4 => "مرحلهٔ جاری: نتیجه آماده",
+            _ => ""
+        };
+        return $"{Step("ثبت درخواست", 1)} ← {Step("نمونه‌گیری", 2)} ← {Step("در حال انجام", 3)} ← {Step("نتیجه آماده", 4)}" +
+               (string.IsNullOrEmpty(current) ? "" : $" · {current}");
+    }
+
+    /// <summary>
+    /// بارگذاری سوابق قبلی همین آزمایش برای همین بیمار — طراحی نسخهٔ ۳:
+    /// فهرست درخواست‌های بیمار از سرور گرفته می‌شود و از جزئیات چند درخواست
+    /// اخیر، نتیجه‌های قبلی همین آزمایش (با تفسیر رنگی و میلهٔ روند) ساخته
+    /// می‌شود تا آزمایشگر افت/خیز بیمار را پیش از ثبت نتیجه ببیند.
+    /// </summary>
+    private async Task LoadHistoryAsync(long patientId, string testName)
+    {
+        try
+        {
+            var ordersResp = await _api.GetAsync<LabViewModel.LabOrdersResponse>(
+                $"lab/orders?patientId={patientId}");
+            var orders = ordersResp?.Data;
+            if (orders is null || orders.Count == 0) return;
+
+            var found = new List<(string Date, decimal Value, string? Flag)>();
+            foreach (var order in orders.Where(o => o.Id != _orderId).Take(8))
+            {
+                var detailResp = await _api.GetAsync<LabResultViewModel.LabOrderDetailEnvelope>(
+                    $"lab/orders/{order.Id}");
+                var items = detailResp?.Data?.Items;
+                if (items is null) continue;
+                foreach (var it in items.Where(i => i.TestName == testName && i.ResultNumeric.HasValue))
+                    found.Add((detailResp!.Data!.DateShamsi ?? order.DateShamsi,
+                        it.ResultNumeric!.Value, it.AbnormalFlag));
+            }
+            if (found.Count == 0) return;
+
+            var max = Math.Max(1m, found.Max(f => Math.Abs(f.Value)));
+            HistoryRows = new System.Collections.ObjectModel.ObservableCollection<LabHistoryRow>(
+                found.Take(5).Select(f => new LabHistoryRow(
+                    f.Date,
+                    Helpers.Money.ToPersianDigits(f.Value.ToString("0.####")),
+                    f.Flag switch
+                    {
+                        "H" => "بالاتر از حد",
+                        "L" => "پایین‌تر از حد",
+                        "HH" => "بحرانی بالا",
+                        "LL" => "بحرانی پایین",
+                        _ => "طبیعی"
+                    },
+                    f.Flag switch
+                    {
+                        "HH" or "LL" => "#E53935",
+                        "H" or "L" => "#FB8C00",
+                        _ => "#43A047"
+                    },
+                    140d * (double)(Math.Abs(f.Value) / max))));
+            HasHistory = HistoryRows.Count > 0;
+        }
+        catch
+        {
+            // روند سابقه بخش کمکی فرم است؛ خطای آن نباید فرم ثبت نتیجه را مختل کند
+        }
     }
 
     /// <summary>ذخیرهٔ نتیجهٔ همین قلم در سرور</summary>

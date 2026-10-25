@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -58,6 +58,18 @@ public partial class LabResultViewModel : ObservableObject
 
     /// <summary>شناسه درخواست — برای باز کردن فرم اختصاصی قلم (چرخهٔ ۶۹)</summary>
     public long OrderId => _orderId;
+
+    /// <summary>شناسه بیمار — طراحی نسخهٔ ۳: بارگذاری سوابق قبلی همین آزمایش در فرم اختصاصی</summary>
+    [ObservableProperty]
+    private long _patientId;
+
+    /// <summary>وضعیت عددی درخواست — طراحی نسخهٔ ۳: خط زمانی نمونه در فرم اختصاصی</summary>
+    [ObservableProperty]
+    private int _orderStatus;
+
+    /// <summary>متن خلاصهٔ اقلام — طراحی نسخهٔ ۳: «۶ قلم · ۴ ثبت‌شده · ۱ غیرطبیعی · ۰ بحرانی»</summary>
+    [ObservableProperty]
+    private string _itemsSummaryText = "—";
 
     /// <summary>
     /// دسترسی فقط‌خواندنی به کلاینت API — برای ساختن ViewModel فرم اختصاصی
@@ -129,6 +141,17 @@ public partial class LabResultViewModel : ObservableObject
             }));
             // چرخهٔ ۶۷ — دکمهٔ چاپ فقط وقتی معنا دارد که نتیجه‌ای ثبت شده باشد
             HasAnyResult = Items.Any(i => !string.IsNullOrWhiteSpace(i.Result) || !string.IsNullOrWhiteSpace(i.ResultNumeric));
+            // طراحی نسخهٔ ۳ — زمینهٔ فرم اختصاصی: بیمار/وضعیت + خلاصهٔ اقلام
+            PatientId = detail.PatientId;
+            OrderStatus = detail.Status;
+            var doneCount = Items.Count(i => !string.IsNullOrWhiteSpace(i.Result) || !string.IsNullOrWhiteSpace(i.ResultNumeric));
+            var abnormalCount = Items.Count(i => i.AbnormalFlag is "H" or "L");
+            var criticalCount = Items.Count(i => i.AbnormalFlag is "HH" or "LL");
+            ItemsSummaryText =
+                $"{Helpers.Money.ToPersianDigits(Items.Count.ToString())} قلم · " +
+                $"{Helpers.Money.ToPersianDigits(doneCount.ToString())} ثبت‌شده · " +
+                $"{Helpers.Money.ToPersianDigits(abnormalCount.ToString())} غیرطبیعی · " +
+                $"{Helpers.Money.ToPersianDigits(criticalCount.ToString())} بحرانی";
             // نگه‌داشتن جزئیات خام برای سند چاپ (LabResultPrinter همان شکل سروری را می‌خواهد)
             _lastDetail = detail;
         }
