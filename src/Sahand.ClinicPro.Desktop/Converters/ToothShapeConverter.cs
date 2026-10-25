@@ -45,6 +45,26 @@ public sealed class ToothShapeConverter : IValueConverter
         "L31.5,28.3 C34,27.5 35.5,25 35,21 L35,10 C35,6 33,3 29,3 " +
         "L26.5,5.5 L23,3.5 L20,6 L17,3.5 L13.5,5.5 Z");
 
+    /// <summary>آسیای کوچک دوشاخه — همان تاج آسیای کوچک، با دو ریشهٔ جدا (آسیای کوچک اول فک بالا)</summary>
+    private static readonly Geometry PremolarTwoRoot = Geometry.Parse(
+        "M11,3 C7,3 5,6 5,10 L4.5,21 C4,25 6,27.5 8.5,28.3 L13,28.8 " +
+        "C13.6,29 14,30 14.1,31.5 L13.4,42 C13.1,46.2 14.4,48.4 16,47.8 " +
+        "C17.6,47.2 18.1,43 18.3,38.2 C18.5,35.6 19,34 20,34 " +
+        "C21,34 21.5,35.6 21.7,38.2 C21.9,43 22.4,47.2 24,47.8 " +
+        "C25.6,48.4 26.9,46.2 26.6,42 L25.9,31.5 C26,30 26.4,29 27,28.8 " +
+        "L31.5,28.3 C34,27.5 35.5,25 35,21 L35,10 C35,6 33,3 29,3 " +
+        "L26.5,5.5 L23,3.5 L20,6 L17,3.5 L13.5,5.5 Z");
+
+    /// <summary>آسیای سه‌ریشه — همان تاج پهن آسیا، با سه ریشهٔ جدا (آسیاهای فک بالا)</summary>
+    private static readonly Geometry MolarThreeRoot = Geometry.Parse(
+        "M20,2 C12,2 6,4 5,9 C4,13 5,18 5,22 C5,25 6,26.5 8,27.5 " +
+        "L6.5,33 C5.5,39 5,44 6.5,47.5 C7.5,50 10.6,50 11.1,47 " +
+        "C11.9,43.4 11.1,38 12.1,34.6 C12.7,32.9 14.6,32.2 16.1,33.2 " +
+        "L17.1,40.5 C17.5,44.8 18.2,48.5 20,48.5 C21.8,48.5 22.5,44.8 22.9,40.5 " +
+        "L23.9,33.2 C25.4,32.2 27.3,32.9 27.9,34.6 C28.9,38 28.1,43.4 28.9,47 " +
+        "C29.4,50 32.5,50 33.5,47.5 C35,44 34.5,39 33.5,33 " +
+        "L32,27.5 C34,26.5 35,25 35,22 C35,18 36,13 35,9 C34,4 28,2 20,2 Z");
+
     /// <summary>نیش (کانین) — تاج نوک‌دار و یک ریشهٔ بلند مرکزی</summary>
     private static readonly Geometry Canine = Geometry.Parse(
         "M20,2.5 C17,3 13,5 11,9 L5,22 C4,25.5 6,27.5 8.5,28 " +
@@ -67,12 +87,49 @@ public sealed class ToothShapeConverter : IValueConverter
     {
         var number = value is int n ? n : 0;
         var position = number % 10;
+        // تعداد ریشهٔ واقعی: آسیاهای بالا سه‌ریشه، آسیاهای پایین دوری‌شه،
+        // آسیای کوچک اول بالا دوشاخه و بقیه تک‌ریشه‌اند — فرم دندان از روی
+        // همین تعداد انتخاب می‌شود تا شکل، آناتومی واقعی را نشان دهد.
+        var roots = RootCount(number);
         return position switch
         {
             1 or 2 => Incisor,
             3 => Canine,
-            4 or 5 => Premolar,
-            _ => Molar
+            4 or 5 => roots == 2 ? PremolarTwoRoot : Premolar,
+            _ => roots >= 3 ? MolarThreeRoot : Molar
+        };
+    }
+
+    /// <summary>تعداد ریشهٔ استاندارد هر دندان FDI (ربع ۱ و ۲ = فک بالا)</summary>
+    internal static int RootCount(int number)
+    {
+        var position = number % 10;
+        var upper = number / 10 is 1 or 2;
+        return position switch
+        {
+            >= 6 => upper ? 3 : 2, // آسیاها: بالا سه‌ریشه، پایین دوری‌شه
+            4 => upper ? 2 : 1,    // آسیای کوچک اول بالا دوشاخه است
+            _ => 1
+        };
+    }
+
+    /// <summary>
+    /// تعداد کانال استاندارد هر دندان FDI — در درمان ریشه راهنمای دندانپزشک:
+    /// آسیای بزرگ اول بالا ۴ کانال (مزیوباکال دوکاناله)، آسیای کوچک دوم بالا
+    /// و آسیاهای پایین (به‌جز عقل) ریشهٔ کمتر ولی کانال بیشتر از ریشه دارند.
+    /// </summary>
+    internal static int CanalCount(int number)
+    {
+        var position = number % 10;
+        var upper = number / 10 is 1 or 2;
+        return position switch
+        {
+            6 => upper ? 4 : 3,
+            7 => 3,
+            8 => upper ? 3 : 2,
+            4 => upper ? 2 : 1,
+            5 => upper ? 2 : 1,
+            _ => 1
         };
     }
 
