@@ -37,6 +37,12 @@ public partial class AppointmentsView : UserControl
         if (e.NewValue is AppointmentsViewModel vm)
         {
             vm.SelectDateCommand.Execute(null);
+            // اگر دیتاکانتکست بعد از Loaded ست شد، تازه‌سازی تقویم از اینجا
+            if (!_activationHooked)
+            {
+                _activationHooked = true;
+                _ = vm.RefreshOnActivatedAsync();
+            }
         }
     }
 
@@ -69,9 +75,11 @@ public partial class AppointmentsView : UserControl
     private void OnViewLoadedForCalendar(object sender, RoutedEventArgs e)
     {
         if (_activationHooked) return;
-        _activationHooked = true;
         if (DataContext is AppointmentsViewModel vm)
+        {
+            _activationHooked = true;
             _ = vm.RefreshOnActivatedAsync();
+        }
     }
 
     private void OnCalendarDateSelected(object? sender, DateTime? e)
