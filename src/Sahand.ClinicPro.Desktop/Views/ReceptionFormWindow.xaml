@@ -17,6 +17,19 @@
         <StackPanel Margin="28">
             <TextBlock Text="ثبت پذیرش بیمار" Style="{StaticResource SectionTitle}" />
 
+            <!-- گام‌های کلیک‌پذیر پذیرش (طرح تأییدشده) -->
+            <UniformGrid Columns="3" Margin="0,10,0,6">
+                <Button Command="{Binding GoToStepCommand}" CommandParameter="0" Margin="2" Content="۱ · بیمار" />
+                <Button Command="{Binding GoToStepCommand}" CommandParameter="1" Margin="2" Content="۲ · پزشک و بیمه" />
+                <Button Command="{Binding GoToStepCommand}" CommandParameter="2" Margin="2" Content="۳ · جزئیات و ثبت" />
+            </UniformGrid>
+            <!-- بخش‌های اختیاری — فقط با تیک بالای فرم نشان داده می‌شوند -->
+            <WrapPanel Margin="0,2,0,12">
+                <CheckBox IsChecked="{Binding ShowAppointmentSection}" Content="نوبت مرتبط" Margin="0,0,14,0" />
+                <CheckBox IsChecked="{Binding ShowReferralSection}" Content="کد معرفی‌نامه بیمه" Margin="0,0,14,0" />
+                <CheckBox IsChecked="{Binding ShowNotesSection}" Content="یادداشت" />
+            </WrapPanel>
+
             <!-- جستجوی بیمار -->
             <TextBox materialDesign:HintAssist.Hint="جستجوی بیمار: نام یا کد ملی یا موبایل *"
                      Text="{Binding PatientSearchTerm, UpdateSourceTrigger=PropertyChanged}"
@@ -53,13 +66,16 @@
 
             <TextBox materialDesign:HintAssist.Hint="شناسه نوبت مرتبط (اختیاری — برای پذیرش نوبتی)"
                      Text="{Binding AppointmentId, UpdateSourceTrigger=PropertyChanged}"
+                     Visibility="{Binding ShowAppointmentSection, Converter={StaticResource BoolToVis}}"
                      Margin="0,0,0,12" />
             <TextBox materialDesign:HintAssist.Hint="کد معرفی‌نامه بیمه (اختیاری)"
                      Text="{Binding ReferralCode, UpdateSourceTrigger=PropertyChanged}"
+                     Visibility="{Binding ShowReferralSection, Converter={StaticResource BoolToVis}}"
                      Margin="0,0,0,12" />
             <TextBox materialDesign:HintAssist.Hint="یادداشت"
                      Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}"
                      TextWrapping="Wrap" AcceptsReturn="False"
+                     Visibility="{Binding ShowNotesSection, Converter={StaticResource BoolToVis}}"
                      Margin="0,0,0,16" />
 
             <!-- پیام خطا -->
