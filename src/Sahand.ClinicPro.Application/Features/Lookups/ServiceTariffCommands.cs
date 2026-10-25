@@ -244,7 +244,18 @@ public class CreateServiceTariffCommandHandler
         };
         await _unitOfWork.Repository<Tariff>().AddAsync(tariff, cancellationToken);
 
-        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+        try
+        {
+            await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            // خطای دیتابیس (یکتایی/طول/محدودیت) نباید «خطای غیرمنتظره» شود —
+            // جزئیات کوتاهِ واقعی به کاربر برمی‌گردد تا علت دیده شود
+            var detail = ex.InnerException?.Message ?? ex.Message;
+            if (detail.Length > 200) detail = detail[..200] + "…";
+            return Result<long>.Failure(new Error("TARIFF.DB", $"ذخیرهٔ خدمت در دیتابیس ناموفق بود: {detail}"));
+        }
         return Result<long>.Success(service.Id);
     }
 }
