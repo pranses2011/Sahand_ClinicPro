@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Sahand.ClinicPro.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Domain.Common;
@@ -227,6 +227,29 @@ public class CreateServiceTariffCommandHandler
             DefaultCost = request.DefaultCost
         };
         await _unitOfWork.Repository<Service>().AddAsync(service, cancellationToken);
+
+        // ═══ ذخیرهٔ دو مرحله‌ای (گزارش مالک — خطای FK_Tariffs_Services_ServiceId) ═══
+        // پیش‌تر تعرفه در همان ذخیرهٔ اول با ServiceId = service.Id ساخته می‌شد؛
+        // اما شناسهٔ خدمت پیش از ذخیره هنوز مقدار موقتِ EF است و روی SQL Server
+        // واقعی (برخلاف InMemory که کلید خارجی را کنترل نمی‌کند) انتشار شناسهٔ
+        // موقت به ردیف تعرفه همیشه قابل اتکا نیست و درج تعرفه با شناسه‌ای انجام
+        // می‌شد که در جدول Services وجود نداشت → خطای کلید خارجی. اکنون اول خودِ
+        // خدمت ذخیره می‌شود تا شناسهٔ واقعی از دیتابیس برگردد، بعد تعرفه با همان
+        // شناسهٔ قطعی ساخته و ذخیره می‌شود.
+        try
+        {
+            await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            var detail = ex.InnerException?.Message ?? ex.Message;
+            if (detail.Length > 200) detail = detail[..200] + "…";
+            return Result<long>.Failure(new Error("TARIFF.DB", $"ذخیرهٔ خدمت در دیتابیس ناموفق بود: {detail}"));
+        }
+
+        if (service.Id <= 0)
+            return Result<long>.Failure(new Error("TARIFF.DB",
+                "شناسهٔ خدمت از دیتابیس برنگشت؛ ساختار جدول Services روی سرور نیازمند بررسی است (ستون Id باید Identity باشد)"));
 
         // ردیف تعرفهٔ هدف منتخب سال جاری — InsuranceCompanyId تهی یعنی تعرفهٔ آزاد
         // ═══ چرخهٔ سی‌ودوم ═══ تعرفهٔ آزاد همیشه ۱۰۰٪ سهم بیمار است — سهم‌های
