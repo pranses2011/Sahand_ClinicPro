@@ -478,6 +478,49 @@ public partial class AppointmentsViewModel : ViewModelBase
         _ = InitializeAsync();
     }
 
+    /// <summary>
+    /// تازه‌سازی هنگام هر بار دیده‌شدن صفحهٔ نوبت‌دهی — ویومدل صفحه یک بار
+    /// هنگام ساخت پنجرهٔ اصلی ساخته می‌شود و بارگذاری اولیه‌اش ممکن است با
+    /// آماده‌نبودن سرور/توکن هم‌زمان شده باشد؛ پیش‌تر در آن حالت فهرست
+    /// پزشکان و تقویم برای همیشه خالی می‌ماندند (گزارش مکرر مالک: «تقویم
+    /// روزها و برنامهٔ پزشک را نمی‌آورد»). اکنون هر بار ورود به صفحه:
+    /// پزشکان (اگر خالی‌اند) + تقویم ماه + اسلات‌های روز از نو خوانده می‌شوند.
+    /// </summary>
+    public async Task RefreshOnActivatedAsync()
+    {
+        try
+        {
+            if (Doctors.Count == 0)
+            {
+                var doctors = await _api.GetAsync<DoctorsPage>("doctors?pageSize=200");
+                if (doctors?.Data is not null)
+                    foreach (var d in doctors.Data)
+                        Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
+                if (SelectedDoctor is null && Doctors.Count > 0)
+                    SelectedDoctor = Doctors[0];
+            }
+            if (SelectedDate is null)
+            {
+                SelectedDate = DateTime.Today;
+                SelectedDateShamsi = PersianDateHelper.ToShamsi(DateTime.Today);
+            }
+            if (SelectedDoctor is not null)
+            {
+                await LoadCalendarAsync();
+                await LoadSlotsAsync();
+            }
+            else
+            {
+                CalendarStatus = "فهرست پزشکان از سرور دریافت نشد — اتصال سرور را بررسی کنید؛ صفحه را دوباره باز کنید.";
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"RefreshOnActivated failed: {ex.Message}");
+            CalendarStatus = "خطا در برقراری ارتباط با سرور هنگام بارگذاری تقویم.";
+        }
+    }
+
     /// <summary>بارگذاری اولیه — پزشکان + امروز + لیست انتظار (چرخهٔ ۷۴)</summary>
     private async Task InitializeAsync()
     {
@@ -557,6 +600,10 @@ public partial class AppointmentsViewModel : ViewModelBase
     [ObservableProperty]
     private string _calendarStatus = string.Empty;
 
+    /// <summary>خط اطلاعات تقویم هنگام بارگذاری موفق برنامه (روزهای کاری/نوبت‌ها)</summary>
+    [ObservableProperty]
+    private string _calendarInfo = string.Empty;
+
     /// <summary>تغییر پزشک → بارگذاری تقویم ماه + اسلات‌های روز انتخابی</summary>
     partial void OnSelectedDoctorChanged(DoctorOption? value)
     {
@@ -614,9 +661,14 @@ public partial class AppointmentsViewModel : ViewModelBase
             return;
         }
         var scheduledDays = response.Data.Days.Count(d => d.HasSchedule && !d.IsOff);
+        var totalAppointments = response.Data.Days.Sum(d => d.BookedSlots);
         CalendarStatus = scheduledDays == 0
             ? "برای این پزشک در این ماه برنامهٔ کاری ثبت نشده است (از صفحهٔ پزشکان، برنامهٔ هفتگی را ثبت کنید)."
             : string.Empty;
+        CalendarInfo = scheduledDays > 0
+            ? $"برنامهٔ این ماه بارگذاری شد: {scheduledDays} روز کاری، {totalAppointments} نوبت ثبت‌شده."
+            : string.Empty;
+        if (scheduledDays == 0) CalendarInfo = string.Empty;
 
         var marked = new Dictionary<DateTime, int>();
         var disabled = new List<DateTime>();
@@ -644,6 +696,7 @@ public partial class AppointmentsViewModel : ViewModelBase
             MarkedDates ??= new Dictionary<DateTime, int>();
             DayStats ??= new Dictionary<DateTime, CalendarDayStat>();
             CalendarStatus = "خطا در دریافت برنامهٔ پزشک — اتصال به سرور برقرار نیست یا سرور پاسخ نمی‌دهد.";
+            CalendarInfo = string.Empty;
         }
     }
 
