@@ -124,9 +124,135 @@ public partial class ReceptionsViewModel : ViewModelBase
     // پیمایش با دکمه‌های «مرحلهٔ بعد/قبل» و اعتبارسنجیِ همان گام (همان پیام‌های
     // راهنمای اسنک‌بار که پیش‌تر فقط هنگام ثبت دیده می‌شدند).
 
-    /// <summary>گام جاری ویزارد پذیرش — ۰ بیمار، ۱ خدمت، ۲ ثبت</summary>
+    /// <summary>
+    /// گام جاری ویزارد پذیرش — بازطراحی مالک: ۰ نوع پذیرش (ویزیت پزشک یا
+    /// خدمات درمانی با دکمه‌های بزرگ)، ۱ بیمار، ۲ پزشک/خدمت، ۳ ثبت
+    /// </summary>
     [ObservableProperty]
     private int _wizardStep;
+
+    /// <summary>حالت ویزیت پزشک فعال است؟ (برای برجسته‌سازی کارت نوع پذیرش)</summary>
+    public bool IsDoctorMode => ReceptionModeIndex == 0;
+
+    /// <summary>حالت خدمات درمانی فعال است؟</summary>
+    public bool IsServiceMode => ReceptionModeIndex == 1;
+
+    /// <summary>انتخاب «ویزیت پزشک» در گام نوع پذیرش — رفتن خودکار به گام بیمار</summary>
+    [RelayCommand]
+    private void SelectDoctorMode()
+    {
+        ReceptionModeIndex = 0;
+        WizardStep = 1;
+    }
+
+    /// <summary>انتخاب «خدمات درمانی» در گام نوع پذیرش — رفتن خودکار به گام بیمار</summary>
+    [RelayCommand]
+    private void SelectServiceMode()
+    {
+        ReceptionModeIndex = 1;
+        WizardStep = 1;
+    }
+
+    /// <summary>
+    /// رفتن مستقیم به گام با کلیک روی عنوان گام — هوشمند: اگر پیش‌نیاز گام
+    /// کامل نباشد، کاربر به اولین گام ناتمام برده می‌شود و پیام راهنما می‌بیند
+    /// </summary>
+    [RelayCommand]
+    private void GoToStep(object? parameter)
+    {
+        if (!int.TryParse(parameter?.ToString(), out var step)) return;
+        step = Math.Clamp(step, 0, 3);
+        if (step >= 2 && FoundPatient is null)
+        {
+            _snackbar.Error("ابتدا در گام بیمار، بیمار را جستجو و انتخاب کنید");
+            WizardStep = 1;
+            return;
+        }
+        if (step >= 3 && ReceptionModeIndex == 0 && SelectedDoctor is null)
+        {
+            _snackbar.Error("ابتدا پزشک را انتخاب کنید");
+            WizardStep = 2;
+            return;
+        }
+        if (step >= 3 && ReceptionModeIndex == 1 && SelectedService is null)
+        {
+            _snackbar.Error("ابتدا خدمت درمانی را انتخاب کنید");
+            WizardStep = 2;
+            return;
+        }
+        WizardStep = step;
+    }
+
+    /* ── بخش‌های اختیاری صفحه (پنل مدیریت بالای فرم؛ انتخاب کاربر در
+       تنظیمات محلی ذخیره می‌شود تا دفعهٔ بعد همان‌طور بماند) ── */
+
+    /// <summary>نمایش آمار امروز بالای صفحه</summary>
+    [ObservableProperty]
+    private bool _showStatsPanel = true;
+
+    /// <summary>نمایش صف پذیرش امروز</summary>
+    [ObservableProperty]
+    private bool _showQueuePanel = true;
+
+    /// <summary>نمایش مراجعه‌کننده‌های اخیر</summary>
+    [ObservableProperty]
+    private bool _showRecentPanel;
+
+    /// <summary>نمایش نوبت‌های امروز</summary>
+    [ObservableProperty]
+    private bool _showAppointmentsPanel;
+
+    /// <summary>نمایش خلاصهٔ مالی امروز</summary>
+    [ObservableProperty]
+    private bool _showFinancePanel;
+
+    partial void OnShowStatsPanelChanged(bool value) => SavePanelPrefs();
+    partial void OnShowQueuePanelChanged(bool value) => SavePanelPrefs();
+    partial void OnShowRecentPanelChanged(bool value) => SavePanelPrefs();
+    partial void OnShowAppointmentsPanelChanged(bool value) => SavePanelPrefs();
+    partial void OnShowFinancePanelChanged(bool value) => SavePanelPrefs();
+
+    private void SavePanelPrefs()
+    {
+        LocalSettingsStore.Set("Reception.Panel.Stats", ShowStatsPanel.ToString());
+        LocalSettingsStore.Set("Reception.Panel.Queue", ShowQueuePanel.ToString());
+        LocalSettingsStore.Set("Reception.Panel.Recent", ShowRecentPanel.ToString());
+        LocalSettingsStore.Set("Reception.Panel.Appointments", ShowAppointmentsPanel.ToString());
+        LocalSettingsStore.Set("Reception.Panel.Finance", ShowFinancePanel.ToString());
+    }
+
+    private void LoadPanelPrefs()
+    {
+        if (bool.TryParse(LocalSettingsStore.Get("Reception.Panel.Stats"), out var s)) ShowStatsPanel = s;
+        if (bool.TryParse(LocalSettingsStore.Get("Reception.Panel.Queue"), out var q)) ShowQueuePanel = q;
+        if (bool.TryParse(LocalSettingsStore.Get("Reception.Panel.Recent"), out var r)) ShowRecentPanel = r;
+        if (bool.TryParse(LocalSettingsStore.Get("Reception.Panel.Appointments"), out var a)) ShowAppointmentsPanel = a;
+        if (bool.TryParse(LocalSettingsStore.Get("Reception.Panel.Finance"), out var f)) ShowFinancePanel = f;
+    }
+
+    /// <summary>مراجعه‌کننده‌های اخیر (از پذیرش‌های امروز) برای انتخاب یک‌کلیکه</summary>
+    public ObservableCollection<string> RecentPatients { get; } = new();
+
+    /// <summary>انتخاب مراجعه‌کنندهٔ اخیر — نامش جستجو و انتخاب می‌شود</summary>
+    [RelayCommand]
+    private async Task SelectRecentPatient(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return;
+        SmartSearch = name;
+        WizardStep = 1;
+        await SmartSearchAsync();
+    }
+
+    /// <summary>نوبت‌های امروز (برای پنل اختیاری بالای صفحه)</summary>
+    public ObservableCollection<MiniAppointmentRow> TodayAppointmentsMini { get; } = new();
+
+    /// <summary>جمع فاکتورهای امروز (متن نمایشی پنل مالی)</summary>
+    [ObservableProperty]
+    private string _todayInvoicedText = "—";
+
+    /// <summary>جمع پرداخت‌شدهٔ امروز (متن نمایشی پنل مالی)</summary>
+    [ObservableProperty]
+    private string _todayPaidText = "—";
 
     /// <summary>
     /// رفتن به گام بعد — اعتبارسنجی گام جاری با پیام راهنمای فارسی؛
@@ -135,12 +261,13 @@ public partial class ReceptionsViewModel : ViewModelBase
     [RelayCommand]
     private void NextStep()
     {
-        if (WizardStep == 0 && FoundPatient is null)
+        // گام ۰ (نوع پذیرش) پیش‌نیاز ندارد — حالت پیش‌فرض «ویزیت پزشک» است
+        if (WizardStep == 1 && FoundPatient is null)
         {
             _snackbar.Error("ابتدا بیمار را جستجو و انتخاب کنید");
             return;
         }
-        if (WizardStep == 1)
+        if (WizardStep == 2)
         {
             if (ReceptionModeIndex == 1 && SelectedService is null)
             {
@@ -153,7 +280,7 @@ public partial class ReceptionsViewModel : ViewModelBase
                 return;
             }
         }
-        if (WizardStep < 2)
+        if (WizardStep < 3)
             WizardStep++;
     }
 
@@ -183,7 +310,12 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// ویزیت پزشک و خدمت درمانی، بخش هزینه را از حق ویزیت پزشک به تعرفهٔ
     /// خدمت منتخب (و برعکس) سوییچ می‌کند
     /// </summary>
-    partial void OnReceptionModeIndexChanged(int value) => RecalculateCost();
+    partial void OnReceptionModeIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(IsDoctorMode));
+        OnPropertyChanged(nameof(IsServiceMode));
+        RecalculateCost();
+    }
 
     /// <summary>گزینه‌های حالت پذیرش</summary>
     public string[] ReceptionModes { get; } = { "🩺 ویزیت پزشک", "💉 خدمت درمانی (تزریقات/پانسمان/آزمایش/…)" };
@@ -401,6 +533,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     {
         _api = api;
         _snackbar = snackbar;
+        LoadPanelPrefs();
         _ = InitializeAsync();
     }
 
@@ -457,9 +590,30 @@ public partial class ReceptionsViewModel : ViewModelBase
 
         var response = await _api.GetAsync<ReceptionsResponse>("receptions/today");
         if (response?.Data is not null)
+        {
             Receptions = new ObservableCollection<ReceptionRow>(response.Data.Select(MapRow));
+            // مراجعه‌کننده‌های اخیر + جمع‌های مالی پنل‌های اختیاری
+            RecentPatients.Clear();
+            foreach (var name in response.Data.Select(r => r.PatientName)
+                         .Where(n => !string.IsNullOrWhiteSpace(n)).Distinct().Take(8))
+                RecentPatients.Add(name);
+            TodayInvoicedText = Money.Format(response.Data.Sum(r => r.InvoiceTotal));
+            TodayPaidText = Money.Format(response.Data.Sum(r => r.PaidAmount));
+        }
         else
             ErrorMessage = _api.LastError ?? string.Empty;
+
+        // نوبت‌های امروز برای پنل اختیاری (بهترین تلاش؛ خطا بی‌صدا رد می‌شود)
+        try
+        {
+            var appts = await _api.GetAsync<AppointmentsViewModel.TodayResponse>("appointments");
+            TodayAppointmentsMini.Clear();
+            if (appts?.Data is not null)
+                foreach (var a in appts.Data.Take(10))
+                    TodayAppointmentsMini.Add(new MiniAppointmentRow(
+                        a.Time, a.PatientName, a.DoctorName, MiniApptStatusText(a.Status)));
+        }
+        catch { /* پنل نوبت‌ها نباید جریان پذیرش را متوقف کند */ }
 
         // ═══ چرخهٔ ۴۵ (گزارش مالک: «در پذیرش، لیست اقلام مصرفی رو نمیاره و
         //    نمیتونم انتخاب بکنم») ═══ ریشه: ReceptionsViewModel تک‌نمونه است و
@@ -489,6 +643,13 @@ public partial class ReceptionsViewModel : ViewModelBase
         r.InvoiceTotal > 0
             ? (r.PaidAmount >= r.InvoiceTotal ? "تسویه" : "پرداخت‌نشده")
             : "بدون فاکتور");
+
+    /// <summary>متن وضعیت نوبت (پنل نوبت‌های امروز)</summary>
+    private static string MiniApptStatusText(int status) => status switch
+    {
+        1 => "رزروشده", 2 => "تأییدشده", 3 => "حاضر", 4 => "در ویزیت",
+        5 => "تکمیل‌شده", 6 => "لغوشده", 7 => "عدم حضور", _ => "نامشخص"
+    };
 
     /// <summary>متن وضعیت</summary>
     private static string StatusTextOf(int status) => status switch
@@ -1522,6 +1683,9 @@ public partial class ReceptionsViewModel : ViewModelBase
 /// <summary>
 /// ردیف صف پذیرش — با رنگ‌بندی وضعیت
 /// </summary>
+/// <summary>ردیف خلاصهٔ نوبت امروز — پنل اختیاری «نوبت‌های امروز» در صفحهٔ پذیرش</summary>
+public record MiniAppointmentRow(string Time, string PatientName, string DoctorName, string StatusText);
+
 public record ReceptionRow(
     long Id,
     string? Number,
