@@ -174,7 +174,8 @@ public record SaveEyeExamCommand(
     int? RightIop, int? LeftIop,
     string? RightVisualAcuity, string? LeftVisualAcuity,
     decimal? PupilDistance, string? ColorVision,
-    string? Findings, string? EyewearPrescription) : IRequest<Result<long>>;
+    string? Findings, string? EyewearPrescription,
+    string? VisualField = null) : IRequest<Result<long>>;
 
 /// <summary>گرداننده ثبت معاینه چشم</summary>
 public class SaveEyeExamCommandHandler : IRequestHandler<SaveEyeExamCommand, Result<long>>
@@ -203,6 +204,7 @@ public class SaveEyeExamCommandHandler : IRequestHandler<SaveEyeExamCommand, Res
             RightVisualAcuity = request.RightVisualAcuity,
             LeftVisualAcuity = request.LeftVisualAcuity,
             PupilDistance = request.PupilDistance,
+            VisualField = request.VisualField,
             ColorVision = request.ColorVision,
             Findings = request.Findings,
             EyewearPrescription = request.EyewearPrescription
