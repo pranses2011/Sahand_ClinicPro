@@ -66,6 +66,15 @@
                     <TextBlock Text="چاپ برگهٔ نتیجه" Margin="7,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
+            <!-- چاپ برچسب QR ظرف‌های نمونه — درخواست مالک: در کلیدهای عملیاتی باشد -->
+            <Button Command="{Binding PrintSpecimenLabelsCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,12,0"
+                    ToolTip="برای هر قلم، برچسب QR یکتا روی ظرف نمونه چاپ می‌شود">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Qrcode" Width="16" Height="16" VerticalAlignment="Center" />
+                    <TextBlock Text="چاپ QR ظرف‌های نمونه" Margin="7,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
             <!-- راهنمای جریان جدید — چرخهٔ ۶۹ -->
             <Border CornerRadius="9" Padding="8,3" Background="#E0F2F1" BorderBrush="#00897B"
                     BorderThickness="1" VerticalAlignment="Center">
