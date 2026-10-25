@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Sahand.ClinicPro.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Domain.Common;
@@ -161,6 +161,28 @@ public record CreateServiceTariffCommand(
     long? InsuranceCompanyId = null,
     decimal DefaultCost = 0m) : IRequest<Result<long>>;
 
+/// <summary>
+/// ساخت کد خودکار خدمت — قالب SRV-0001 و یکتا. وقتی کاربر فیلد کد را خالی
+/// می‌گذارد صدا زده می‌شود؛ روی کد خدمت ایندکس یکتا هست و SQL Server فقط
+/// یک کد خالی (NULL) را می‌پذیرد، پس خالی‌گذاشتن کد پیش‌تر با خدمت دوم به
+/// خطای دیتابیس و پیام «خطای غیرمنتظره در سرور» می‌رسید (گزارش مالک).
+/// </summary>
+internal static class ServiceCodeGenerator
+{
+    public static async Task<string> GenerateAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken)
+    {
+        var repo = unitOfWork.Repository<Service>();
+        var next = await repo.QueryableNoTracking.CountAsync(cancellationToken) + 1;
+        while (true)
+        {
+            var code = $"SRV-{next:0000}";
+            if (!await repo.QueryableNoTracking.AnyAsync(s => s.ServiceCode == code, cancellationToken))
+                return code;
+            next++;
+        }
+    }
+}
+
 /// <summary>گردانندهٔ ساخت خدمت تعرفه‌دار</summary>
 public class CreateServiceTariffCommandHandler
     : IRequestHandler<CreateServiceTariffCommand, Result<long>>
@@ -176,6 +198,10 @@ public class CreateServiceTariffCommandHandler
     {
         if (string.IsNullOrWhiteSpace(request.ServiceName))
             return Result<long>.Failure(new Error("TARIFF.NAME", "نام خدمت الزامی است"));
+        if (request.ServiceName.Trim().Length > 50)
+            return Result<long>.Failure(new Error("TARIFF.NAME", "نام خدمت حداکثر ۵۰ نویسه می‌تواند باشد"));
+        if (!string.IsNullOrWhiteSpace(request.ServiceCode) && request.ServiceCode.Trim().Length > 20)
+            return Result<long>.Failure(new Error("TARIFF.CODE", "کد خدمت حداکثر ۲۰ نویسه می‌تواند باشد"));
         if (request.Price < 0m || request.DefaultCost < 0m)
             return Result<long>.Failure(new Error("TARIFF.PRICE", "قیمت و هزینه خدمت نمی‌توانند منفی باشند"));
 
@@ -191,7 +217,10 @@ public class CreateServiceTariffCommandHandler
         var service = new Service
         {
             ServiceName = request.ServiceName.Trim(),
-            ServiceCode = string.IsNullOrWhiteSpace(request.ServiceCode) ? null : request.ServiceCode.Trim(),
+            // کد خالی = ساخت خودکار کد یکتا (SRV-0001...) — درخواست مالک
+            ServiceCode = string.IsNullOrWhiteSpace(request.ServiceCode)
+                ? await ServiceCodeGenerator.GenerateAsync(_unitOfWork, cancellationToken)
+                : request.ServiceCode.Trim(),
             // نوع پیش‌فرض «ویزیت» — از پنجرهٔ مدیریت تعرفه صرفاً قیمت مدنظر است
             ServiceType = ServiceType.Visit,
             DefaultPrice = request.Price,
@@ -255,6 +284,10 @@ public class UpdateServiceTariffCommandHandler
 
         if (string.IsNullOrWhiteSpace(request.ServiceName))
             return Result.Failure(new Error("TARIFF.NAME", "نام خدمت الزامی است"));
+        if (request.ServiceName.Trim().Length > 50)
+            return Result.Failure(new Error("TARIFF.NAME", "نام خدمت حداکثر ۵۰ نویسه می‌تواند باشد"));
+        if (!string.IsNullOrWhiteSpace(request.ServiceCode) && request.ServiceCode.Trim().Length > 20)
+            return Result.Failure(new Error("TARIFF.CODE", "کد خدمت حداکثر ۲۰ نویسه می‌تواند باشد"));
 
         if (request.Price < 0m || (request.DefaultCost.HasValue && request.DefaultCost.Value < 0m))
             return Result.Failure(new Error("TARIFF.PRICE", "قیمت و هزینه خدمت نمی‌توانند منفی باشند"));
@@ -269,7 +302,11 @@ public class UpdateServiceTariffCommandHandler
         }
 
         service.ServiceName = request.ServiceName.Trim();
-        service.ServiceCode = string.IsNullOrWhiteSpace(request.ServiceCode) ? null : request.ServiceCode.Trim();
+        // کد خالی در ویرایش: اگر خدمت از قبل کد دارد همان می‌ماند، وگرنه
+        // خودکار ساخته می‌شود تا ردیف بدون کد (NULL دوم = خطای ایندکس یکتا) نماند
+        service.ServiceCode = string.IsNullOrWhiteSpace(request.ServiceCode)
+            ? service.ServiceCode ?? await ServiceCodeGenerator.GenerateAsync(_unitOfWork, cancellationToken)
+            : request.ServiceCode.Trim();
         service.DefaultPrice = request.Price;
         if (request.DefaultCost.HasValue)
             service.DefaultCost = request.DefaultCost.Value;
