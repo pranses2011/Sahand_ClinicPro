@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -176,7 +176,12 @@ public partial class ServiceCatalogViewModel : ViewModelBase
 
             if (!saved)
             {
-                ErrorMessage = _api.LastError ?? "ذخیرهٔ خدمت ناموفق بود";
+                var err = _api.LastError ?? "ذخیرهٔ خدمت ناموفق بود";
+                // پیام عمومیِ بدون جزئیات یعنی سرور قدیمی است (نسخه‌های تازه
+                // جزئیات واقعی خطا را بعد از خط تیره می‌فرستند) — راهنما بده
+                if (err.Contains("غیرمنتظره") && !err.Contains(" — "))
+                    err += "\nاگر همین پیام را می‌بینید، سرور درمانگاه را هم با بستهٔ «به‌روزرسانی سرور» به آخرین نسخه برسانید؛ اصلاح ثبت خدمت سمت سرور است.";
+                ErrorMessage = err;
                 return;
             }
 
