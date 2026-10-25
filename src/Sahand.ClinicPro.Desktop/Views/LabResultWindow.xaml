@@ -26,6 +26,24 @@
 
         <TextBlock Text="{Binding Header}" Style="{StaticResource SectionTitle}" />
 
+        <!-- کارت زمینهٔ بیمار + خلاصهٔ اقلام — طراحی نسخهٔ ۳ (تأیید مالک) -->
+        <Border CornerRadius="11" Padding="12,8" Margin="0,0,0,10"
+                Background="{DynamicResource MaterialDesign.Brush.Background}"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
+            <DockPanel>
+                <Border DockPanel.Dock="Left" CornerRadius="9" Padding="9,3" Background="#E8F5E9"
+                        BorderBrush="#A5D6A7" BorderThickness="1" VerticalAlignment="Center" Margin="0,0,8,0">
+                    <TextBlock Text="{Binding ItemsSummaryText, Converter={StaticResource PersianDigits}}"
+                               FontSize="11" Foreground="#1B5E20" />
+                </Border>
+                <TextBlock FontSize="12" VerticalAlignment="Center">
+                    <Run Text="بیمار: " /><Run Text="{Binding PatientContext}" FontWeight="SemiBold" />
+                    <Run Text=" · " /><Run Text="{Binding PatientAgeText}" />
+                    <Run Text=" · درخواست " /><Run Text="{Binding OrderNumberText}" FontFamily="{DynamicResource App.CodeFont}" />
+                </TextBlock>
+            </DockPanel>
+        </Border>
+
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
             <!-- ═══ چرخهٔ ۶۹: مسیر اصلی ثبت = دابل‌کلیک؛ دکمهٔ قدیمی برای عادت‌های قبلی می‌ماند ═══ -->
             <Button Command="{Binding OpenItemEntryCommand}"

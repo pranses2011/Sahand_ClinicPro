@@ -21,7 +21,19 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="درخواست آزمایش جدید" Style="{StaticResource SectionTitle}" />
+        <!-- سربرگ — طراحی نسخهٔ ۳ (تأیید مالک) -->
+        <Border CornerRadius="12" Padding="14,10" Margin="0,0,0,10">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#6A1B9A" Offset="0" />
+                    <GradientStop Color="#311B92" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <StackPanel>
+                <TextBlock Text="🧪 درخواست آزمایش جدید" FontSize="16" FontWeight="Bold" Foreground="White" />
+                <TextBlock Text="بیمار ← پزشک و اولویت ← انتخاب آزمایش‌ها" FontSize="10.5" Foreground="#E1BEE7" Margin="0,3,0,0" />
+            </StackPanel>
+        </Border>
 
         <!-- بیمار و پزشک -->
         <Grid Grid.Row="1" Margin="0,0,0,12">
@@ -108,6 +120,11 @@
 
         <!-- پاورقی -->
         <StackPanel Grid.Row="4" Margin="0,12,0,0">
+            <!-- خلاصهٔ زندهٔ انتخاب — طراحی نسخهٔ ۳ -->
+            <Border CornerRadius="10" Padding="11,7" Background="#F3E5F5" BorderBrush="#CE93D8" BorderThickness="1" Margin="0,0,0,9">
+                <TextBlock Text="{Binding SelectedSummaryText, Converter={StaticResource PersianDigits}}"
+                           FontSize="11.5" TextWrapping="Wrap" LineHeight="19" />
+            </Border>
             <TextBlock Text="{Binding ErrorMessage}"
                        Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
                        FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" />

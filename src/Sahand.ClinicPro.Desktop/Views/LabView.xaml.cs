@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -21,17 +21,35 @@ public partial class LabView : UserControl
 
         if (status < 0)
         {
-            // کاتالوگ تست‌ها — جدول اصلی مخفی و کاتالوگ نمایان
+            // کاتالوگ تست‌ها — جدول اصلی و پنل بینش مخفی و کاتالوگ نمایان
             OrdersGrid.Visibility = Visibility.Collapsed;
+            InsightPanel.Visibility = Visibility.Collapsed;
             _ = vm.LoadCatalogAsync();
         }
         else
         {
             OrdersGrid.Visibility = Visibility.Visible;
+            InsightPanel.Visibility = Visibility.Visible;
             vm.StatusFilterIndex = status;
             _ = vm.LoadAsync();
         }
     }
+
+    /// <summary>کارت آمار «همه» — تب همهٔ درخواست‌ها (طراحی نسخهٔ ۳)</summary>
+    private void OnStatAllClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        => MainTabs.SelectedIndex = 0;
+
+    /// <summary>کارت آمار «سفارش‌شده» — تب سفارش‌شده‌ها</summary>
+    private void OnStatOrderedClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        => MainTabs.SelectedIndex = 3;
+
+    /// <summary>کارت آمار «در حال انجام» — تب در حال انجام</summary>
+    private void OnStatProgressClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        => MainTabs.SelectedIndex = 1;
+
+    /// <summary>کارت آمار «نتایج آماده» — تب نتایج آماده</summary>
+    private void OnStatDoneClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        => MainTabs.SelectedIndex = 2;
 
     /// <summary>
     /// چرخهٔ ۷۹ — دکمهٔ مستقل «مدیریت بازه‌های مرجع» در نوار ابزار:
