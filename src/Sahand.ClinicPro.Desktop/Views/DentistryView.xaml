@@ -370,6 +370,38 @@
                                             <TextBlock Style="{StaticResource LegendLabel}" Text="ایمپلنت" />
                                         </StackPanel>
                                     </WrapPanel>
+
+                                    <!-- ═══ قابلیت‌های تازهٔ ماژول کامل دندانپزشکی (تأیید مالک) ═══ -->
+                                    <Expander Margin="2,12,2,0" Header="📏 چارت پریودنتال (لثه)">
+                                        <TextBox Text="{Binding PerioSummary, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="52" Margin="0,6,0,0"
+                                                 ToolTip="عمق پاکت شش‌نقطه‌ای، خونریزی هنگام پروب (BOP)، لقی و تحلیل لثه — مثلاً: ۱۶: DL=۵، خونریزی دارد" />
+                                    </Expander>
+                                    <Expander Margin="2,6,2,0" Header="🩻 رادیوگرافی پیوندخورده به دندان">
+                                        <TextBox Text="{Binding RadioNote, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="44" Margin="0,6,0,0"
+                                                 ToolTip="مثلاً: پری‌اپیکال دندان ۱۶ در ۱۴۰۵/۰۷/۱۸ — از بخش تصویربرداری" />
+                                    </Expander>
+                                    <Expander Margin="2,6,2,0" Header="💊 نسخه و دستورات پس از درمان">
+                                        <TextBox Text="{Binding PrescriptionText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="52" Margin="0,6,0,0"
+                                                 ToolTip="داروها و دستورات پس از درمان این بیمار" />
+                                    </Expander>
+                                    <Expander Margin="2,6,2,0" Header="📄 فرم پزشکی و رضایت‌نامه">
+                                        <StackPanel Margin="0,6,0,0">
+                                            <TextBox Text="{Binding MedicalSummary, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="48"
+                                                     ToolTip="بیماری‌های زمینه‌ای، داروهای مصرفی و حساسیت‌ها" />
+                                            <CheckBox IsChecked="{Binding ConsentSigned}" Content="رضایت‌نامهٔ درمان امضا شده است" Margin="0,6,0,0" />
+                                        </StackPanel>
+                                    </Expander>
+                                    <Expander Margin="2,6,2,0" Header="📖 کاتالوگ خدمات و تعرفه‌ها">
+                                        <ItemsControl ItemsSource="{Binding CatalogItems}" Margin="0,6,0,0">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock FontSize="11" Margin="0,1">
+                                                        <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" · " /><Run Text="{Binding Category, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding DurationMin, Mode=OneWay}" /><Run Text=" دقیقه · " /><Run Text="{Binding Price, Mode=OneWay, Converter={StaticResource CurrencyRial}}" /><Run Text=" " /><Run Text="{DynamicResource App.CurrencyLabel}" />
+                                                    </TextBlock>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Expander>
                                 </StackPanel>
                             </Border>
 
@@ -388,6 +420,18 @@
                                         </TextBlock>
                                         <TextBlock Text="وضعیت" FontSize="10.5" Opacity="0.6" />
                                         <ComboBox ItemsSource="{Binding ToothConditions}" SelectedIndex="{Binding ToothConditionIndex}" />
+                                        <!-- آناتومی واقعی دندان انتخابی: جنس، تعداد ریشه و کانال -->
+                                        <Border Background="#E3F2FD" CornerRadius="6" Padding="8,4" Margin="0,8,0,0">
+                                            <TextBlock Text="{Binding SelectedTooth.AnatomyText, Mode=OneWay, TargetNullValue=—}" FontSize="11" FontWeight="SemiBold" Foreground="#0D47A1" />
+                                        </Border>
+                                        <TextBlock Text="خدمت از کاتالوگ دندانپزشکی" FontSize="10.5" Opacity="0.6" Margin="0,8,0,0" />
+                                        <ComboBox ItemsSource="{Binding CatalogItems}" SelectedItem="{Binding SelectedCatalogItem}" DisplayMemberPath="Display" />
+                                        <TextBlock Text="سطح درگیر" FontSize="10.5" Opacity="0.6" Margin="0,6,0,0" />
+                                        <ComboBox ItemsSource="{Binding SurfaceOptions}" SelectedItem="{Binding SelectedSurface}" />
+                                        <TextBlock Text="نوبت پیشنهادی این قلم (روز و ساعت)" FontSize="10.5" Opacity="0.6" Margin="0,6,0,0" />
+                                        <TextBox Text="{Binding PlanScheduleText, UpdateSourceTrigger=PropertyChanged}" ToolTip="مثلاً: شنبه ۱۰:۰۰" />
+                                        <TextBlock Text="یادداشت بالینی دندان" FontSize="10.5" Opacity="0.6" Margin="0,6,0,0" />
+                                        <TextBox Text="{Binding ClinicalNote, UpdateSourceTrigger=PropertyChanged}" ToolTip="مثلاً: پوسیدگی سطح مزیال، حساس به سرما" />
                                         <Button Command="{Binding AddDentalPlanCommand}" Margin="0,10,0,0"
                                                 Style="{StaticResource MaterialDesignRaisedButton}">
                                             <StackPanel Orientation="Horizontal">
@@ -400,7 +444,12 @@
                                 <Border Grid.Row="1" CornerRadius="12" Padding="10"
                                         Background="{DynamicResource MaterialDesign.Brush.Background}">
                                     <DockPanel>
-                                        <TextBlock DockPanel.Dock="Top" Text="طرح درمان" FontWeight="Bold" FontSize="13" Margin="2,0,2,6" />
+                                        <DockPanel DockPanel.Dock="Top" Margin="2,0,2,6">
+                                            <TextBlock Text="طرح درمان" FontWeight="Bold" FontSize="13" />
+                                            <TextBlock HorizontalAlignment="Right" FontSize="11.5" FontWeight="SemiBold" Foreground="#00695C">
+                                                <Run Text="جمع: " /><Run Text="{Binding PlanTotalText, Mode=OneWay}" /><Run Text=" " /><Run Text="{DynamicResource App.CurrencyLabel}" />
+                                            </TextBlock>
+                                        </DockPanel>
                                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                                             <ItemsControl ItemsSource="{Binding DentalPlan}">
                                                 <ItemsControl.ItemTemplate>
@@ -415,6 +464,13 @@
                                                                     <!-- چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان) — حذف هاردکد -->
                                                                     <Run Text="{Binding Price, Mode=OneWay, Converter={StaticResource CurrencyRial}}" /><Run Text=" " /><Run Text="{DynamicResource App.CurrencyLabel}" />
                                                                 </TextBlock>
+                                                                <TextBlock FontSize="10.5" Opacity="0.75" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
+                                                                    <Run Text="سطح: " /><Run Text="{Binding Surface, Mode=OneWay}" /><Run Text=" · نوبت: " /><Run Text="{Binding Schedule, Mode=OneWay}" />
+                                                                </TextBlock>
+                                                                <Button Command="{Binding DataContext.RemoveDentalPlanCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                                                        Style="{StaticResource MaterialDesignFlatButton}" Padding="4,1" HorizontalAlignment="Left" Margin="0,2,0,0" ToolTip="حذف این ردیف از طرح درمان">
+                                                                    <TextBlock Text="✕ حذف ردیف" FontSize="10.5" Foreground="#C62828" />
+                                                                </Button>
                                                             </StackPanel>
                                                         </Border>
                                                     </DataTemplate>
