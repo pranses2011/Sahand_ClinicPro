@@ -585,7 +585,8 @@ public partial class PersianCalendarControl : UserControl
         }
     }
 
-    /// <summary>نمای روزهای ماه — خانه‌های طراحی تازه با نوار ظرفیت طیفی</summary>
+    /// <summary>نمای روزهای ماه — خانه‌های طراحی تازه با نوار ظرفیت طیفی.
+    /// هر خانه در try جدا ساخته می‌شود تا خطای یک روز کل ماه را خالی نکند.</summary>
     private void RenderDaysView()
     {
         WeekDaysRow.Visibility = Visibility.Visible;
@@ -593,6 +594,13 @@ public partial class PersianCalendarControl : UserControl
         SummaryPanel.Visibility = Visibility.Visible;
         DaysGrid.Columns = 7;
         DaysGrid.Rows = 6;
+        // گارد تاریخ نامعتبر: نمای ماه/سال صفر یا بیرون از بازه یعنی «امروز»
+        if (DisplayYear < 1300 || DisplayYear > 1500 || DisplayMonth is < 1 or > 12)
+        {
+            var (ty, tm, _) = PersianDateHelper.ToJalali(DateTime.Today);
+            DisplayYear = ty;
+            DisplayMonth = tm;
+        }
         MonthTitleText.Text =
             $"{PersianDateHelper.MonthNames[DisplayMonth - 1]} {PersianDateHelper.ToPersianDigits(DisplayYear.ToString())}";
         DaysGrid.Children.Clear();
@@ -602,9 +610,6 @@ public partial class PersianCalendarControl : UserControl
         var stats = DayStats ?? new Dictionary<DateTime, CalendarDayStat>();
         var marked = MarkedDates ?? new Dictionary<DateTime, int>();
 
-        // تبدیل روزها با PersianCalendar استاندارد دات‌نت — مستقل از الگوریتم
-        // دستی کمکی تا رندر روزها تحت هیچ شرایطی خالی نماند (گزارش مالک:
-        // «تقویم روزها را نمی‌آورد»).
         var firstOfMonth = Persian.ToDateTime(DisplayYear, DisplayMonth, 1, 0, 0, 0, 0);
         var daysInMonth = Persian.GetDaysInMonth(DisplayYear, DisplayMonth);
         var firstCol = ((int)firstOfMonth.DayOfWeek + 1) % 7;
@@ -613,166 +618,199 @@ public partial class PersianCalendarControl : UserControl
             DaysGrid.Children.Add(new Border());
 
         var monthBooked = 0; var monthTotal = 0; var monthWorkDays = 0;
-
         for (var day = 1; day <= daysInMonth; day++)
         {
-            var date = Persian.ToDateTime(DisplayYear, DisplayMonth, day, 0, 0, 0, 0);
-            var isFriday = date.DayOfWeek == DayOfWeek.Friday;
-            var isOff = disabled.Contains(date);
-            var hasStat = stats.TryGetValue(date, out var stat);
-            var isFull = hasStat && stat.Total > 0 && stat.Booked >= stat.Total;
-            if (isFull) isOff = true;
-            var outOfRange = (MinDate is { } min && date < min) || (MaxDate is { } max && date > max);
-            if (outOfRange) isOff = true;
-            var isSelected = SelectedDate?.Date == date;
-            var isToday = today == date;
-            var isPast = date < today;
-
-            if (hasStat && stat.Total > 0 && !disabled.Contains(date))
+            try
             {
-                monthBooked += stat.Booked;
-                monthTotal += stat.Total;
-                monthWorkDays++;
+                var cell = BuildDayCell(day, today, disabled, stats, marked,
+                    ref monthBooked, ref monthTotal, ref monthWorkDays);
+                if (cell is not null) DaysGrid.Children.Add(cell);
             }
-
-            var number = new TextBlock
+            catch (Exception ex)
             {
-                Text = PersianDateHelper.ToPersianDigits(day.ToString()),
-                FontSize = 13.5,
-                FontWeight = FontWeights.Bold,
-                TextAlignment = TextAlignment.Center,
-                Foreground = isSelected
-                    ? Brushes.White
-                    : isOff
-                        ? new SolidColorBrush(Color.FromRgb(0x9A, 0xA7, 0xBB))
-                        : isFriday
-                            ? new SolidColorBrush(Color.FromRgb(0xE5, 0x39, 0x35))
-                            : new SolidColorBrush(Color.FromRgb(0x17, 0x2B, 0x4D)),
-                Margin = new Thickness(0, 5, 0, 0),
-            };
-            var content = new StackPanel { Children = { number } };
-
-            if (isOff && !isFull)
-            {
-                content.Children.Add(new TextBlock
+                System.Diagnostics.Debug.WriteLine($"Calendar day cell {day} failed: {ex.Message}");
+                // خانهٔ جایگزین حداقلی — عدد روز در هر شرایطی دیده شود
+                DaysGrid.Children.Add(new Border
                 {
-                    Text = "تعطیل",
-                    FontSize = 8,
-                    FontWeight = FontWeights.SemiBold,
-                    TextAlignment = TextAlignment.Center,
-                    Foreground = new SolidColorBrush(Color.FromRgb(0xB0, 0x39, 0x2E)),
-                    Margin = new Thickness(0, 3, 0, 4),
-                });
-            }
-            else if (hasStat && stat.Total > 0)
-            {
-                var ratio = (double)stat.Booked / stat.Total;
-                content.Children.Add(BuildCapacityBar(ratio, isSelected));
-                content.Children.Add(new TextBlock
-                {
-                    Text = isFull
-                        ? "تکمیل"
-                        : PersianDateHelper.ToPersianDigits($"{stat.Booked} نوبت"),
-                    FontSize = 8,
-                    FontWeight = isFull ? FontWeights.Bold : FontWeights.SemiBold,
-                    TextAlignment = TextAlignment.Center,
-                    Foreground = isSelected
-                        ? Brushes.White
-                        : isFull
-                            ? new SolidColorBrush(Color.FromRgb(0xC6, 0x28, 0x28))
-                            : new SolidColorBrush(Color.FromRgb(0x5A, 0x6B, 0x84)),
-                    Margin = new Thickness(0, 2, 0, 4),
-                });
-            }
-            else if (marked.TryGetValue(date, out var count))
-            {
-                content.Children.Add(new TextBlock
-                {
-                    Text = PersianDateHelper.ToPersianDigits($"{count} نوبت"),
-                    FontSize = 8,
-                    FontWeight = FontWeights.SemiBold,
-                    TextAlignment = TextAlignment.Center,
-                    Foreground = isSelected
-                        ? Brushes.White
-                        : new SolidColorBrush(Color.FromRgb(0x2E, 0x7D, 0x32)),
-                    Margin = new Thickness(0, 3, 0, 4),
-                });
-            }
-            else
-            {
-                content.Children.Add(new Border { Height = 15 });
-            }
-
-            var cellGrid = new Grid();
-            cellGrid.Children.Add(content);
-            if (isToday)
-            {
-                var badge = new Border
-                {
-                    CornerRadius = new CornerRadius(7),
-                    Background = new SolidColorBrush(isSelected
-                        ? Color.FromRgb(0xFF, 0xC4, 0x00)
-                        : Color.FromRgb(0x1E, 0x88, 0xE5)),
-                    Padding = new Thickness(5, 0.5, 5, 0.5),
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    VerticalAlignment = VerticalAlignment.Top,
-                    Margin = new Thickness(0, -6, 3, 0),
+                    CornerRadius = new CornerRadius(13),
+                    Margin = new Thickness(2.5),
+                    MinHeight = 50,
+                    Background = Brushes.White,
                     Child = new TextBlock
                     {
-                        Text = "امروز",
-                        FontSize = 7.5,
+                        Text = PersianDateHelper.ToPersianDigits(day.ToString()),
+                        FontSize = 13.5,
                         FontWeight = FontWeights.Bold,
-                        Foreground = isSelected
-                            ? new SolidColorBrush(Color.FromRgb(0x4E, 0x34, 0x2E))
-                            : Brushes.White,
+                        TextAlignment = TextAlignment.Center,
+                        Margin = new Thickness(0, 5, 0, 0),
                     },
-                };
-                cellGrid.Children.Add(badge);
+                });
             }
-
-            var cell = new Border
-            {
-                CornerRadius = new CornerRadius(13),
-                Margin = new Thickness(2.5),
-                MinHeight = 50,
-                BorderThickness = new Thickness(isToday || isSelected ? 1.6 : 1.2),
-                BorderBrush = new SolidColorBrush(isSelected
-                    ? Color.FromRgb(0x00, 0x4D, 0x40)
-                    : isToday
-                        ? Color.FromRgb(0x1E, 0x88, 0xE5)
-                        : Colors.Transparent),
-                Background = isSelected
-                    ? new LinearGradientBrush(Color.FromRgb(0x00, 0x89, 0x7B), Color.FromRgb(0x00, 0x4D, 0x40), 45)
-                    : isOff && !isFull
-                        ? HatchBrush()
-                        : Brushes.White,
-                Opacity = isPast && !isSelected ? 0.45 : 1,
-                Cursor = isOff ? Cursors.No : Cursors.Hand,
-                ToolTip = isFull
-                    ? $"{PersianDateHelper.ToShamsiFa(date)} — ظرفیت تکمیل است"
-                    : isOff
-                        ? $"{PersianDateHelper.ToShamsiFa(date)} — تعطیل / عدم حضور"
-                        : hasStat
-                            ? PersianDateHelper.ToPersianDigits(
-                                $"{PersianDateHelper.ToShamsiFa(date)} — {stat.Booked} نوبت از {stat.Total}")
-                            : PersianDateHelper.ToShamsiFa(date),
-                Child = cellGrid,
-            };
-            if (!isOff)
-            {
-                cell.MouseLeftButtonUp += (_, _) =>
-                {
-                    SelectedDate = date;
-                    SelectedShamsi = PersianDateHelper.ToShamsiFa(date);
-                    DateSelected?.Invoke(this, date);
-                    Render();
-                };
-            }
-            DaysGrid.Children.Add(cell);
         }
 
         MonthBookedText.Text = PersianDateHelper.ToPersianDigits(monthBooked.ToString());
         MonthWorkDaysText.Text = PersianDateHelper.ToPersianDigits(monthWorkDays.ToString());
         MonthFreeText.Text = PersianDateHelper.ToPersianDigits(Math.Max(0, monthTotal - monthBooked).ToString());
     }
+
+    /// <summary>ساخت خانهٔ یک روز — عدد، نوار ظرفیت، برچسب امروز و کلیک انتخاب</summary>
+    private Border? BuildDayCell(int day, DateTime today, HashSet<DateTime> disabled,
+        IDictionary<DateTime, CalendarDayStat> stats, IDictionary<DateTime, int> marked,
+        ref int monthBooked, ref int monthTotal, ref int monthWorkDays)
+    {
+        var date = Persian.ToDateTime(DisplayYear, DisplayMonth, day, 0, 0, 0, 0);
+        var isFriday = date.DayOfWeek == DayOfWeek.Friday;
+        var isOff = disabled.Contains(date);
+        var hasStat = stats.TryGetValue(date, out var stat);
+        var isFull = hasStat && stat.Total > 0 && stat.Booked >= stat.Total;
+        if (isFull) isOff = true;
+        var outOfRange = (MinDate is { } min && date < min) || (MaxDate is { } max && date > max);
+        if (outOfRange) isOff = true;
+        var isSelected = SelectedDate?.Date == date;
+        var isToday = today == date;
+        var isPast = date < today;
+
+        if (hasStat && stat.Total > 0 && !disabled.Contains(date))
+        {
+            monthBooked += stat.Booked;
+            monthTotal += stat.Total;
+            monthWorkDays++;
+        }
+
+        var number = new TextBlock
+        {
+            Text = PersianDateHelper.ToPersianDigits(day.ToString()),
+            FontSize = 13.5,
+            FontWeight = FontWeights.Bold,
+            TextAlignment = TextAlignment.Center,
+            Foreground = isSelected
+                ? Brushes.White
+                : isOff
+                    ? new SolidColorBrush(Color.FromRgb(0x9A, 0xA7, 0xBB))
+                    : isFriday
+                        ? new SolidColorBrush(Color.FromRgb(0xE5, 0x39, 0x35))
+                        : new SolidColorBrush(Color.FromRgb(0x17, 0x2B, 0x4D)),
+            Margin = new Thickness(0, 5, 0, 0),
+        };
+        var content = new StackPanel { Children = { number } };
+
+        if (isOff && !isFull)
+        {
+            content.Children.Add(new TextBlock
+            {
+                Text = "تعطیل",
+                FontSize = 8,
+                FontWeight = FontWeights.SemiBold,
+                TextAlignment = TextAlignment.Center,
+                Foreground = new SolidColorBrush(Color.FromRgb(0xB0, 0x39, 0x2E)),
+                Margin = new Thickness(0, 3, 0, 4),
+            });
+        }
+        else if (hasStat && stat.Total > 0)
+        {
+            var ratio = (double)stat.Booked / stat.Total;
+            content.Children.Add(BuildCapacityBar(ratio, isSelected));
+            content.Children.Add(new TextBlock
+            {
+                Text = isFull
+                    ? "تکمیل"
+                    : PersianDateHelper.ToPersianDigits($"{stat.Booked} نوبت"),
+                FontSize = 8,
+                FontWeight = isFull ? FontWeights.Bold : FontWeights.SemiBold,
+                TextAlignment = TextAlignment.Center,
+                Foreground = isSelected
+                    ? Brushes.White
+                    : isFull
+                        ? new SolidColorBrush(Color.FromRgb(0xC6, 0x28, 0x28))
+                        : new SolidColorBrush(Color.FromRgb(0x5A, 0x6B, 0x84)),
+                Margin = new Thickness(0, 2, 0, 4),
+            });
+        }
+        else if (marked.TryGetValue(date, out var count))
+        {
+            content.Children.Add(new TextBlock
+            {
+                Text = PersianDateHelper.ToPersianDigits($"{count} نوبت"),
+                FontSize = 8,
+                FontWeight = FontWeights.SemiBold,
+                TextAlignment = TextAlignment.Center,
+                Foreground = isSelected
+                    ? Brushes.White
+                    : new SolidColorBrush(Color.FromRgb(0x2E, 0x7D, 0x32)),
+                Margin = new Thickness(0, 3, 0, 4),
+            });
+        }
+        else
+        {
+            content.Children.Add(new Border { Height = 15 });
+        }
+
+        var cellGrid = new Grid();
+        cellGrid.Children.Add(content);
+        if (isToday)
+        {
+            var badge = new Border
+            {
+                CornerRadius = new CornerRadius(7),
+                Background = new SolidColorBrush(isSelected
+                    ? Color.FromRgb(0xFF, 0xC4, 0x00)
+                    : Color.FromRgb(0x1E, 0x88, 0xE5)),
+                Padding = new Thickness(5, 0.5, 5, 0.5),
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(0, -6, 3, 0),
+                Child = new TextBlock
+                {
+                    Text = "امروز",
+                    FontSize = 7.5,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = isSelected
+                        ? new SolidColorBrush(Color.FromRgb(0x4E, 0x34, 0x2E))
+                        : Brushes.White,
+                },
+            };
+            cellGrid.Children.Add(badge);
+        }
+
+        var cell = new Border
+        {
+            CornerRadius = new CornerRadius(13),
+            Margin = new Thickness(2.5),
+            MinHeight = 50,
+            BorderThickness = new Thickness(isToday || isSelected ? 1.6 : 1.2),
+            BorderBrush = new SolidColorBrush(isSelected
+                ? Color.FromRgb(0x00, 0x4D, 0x40)
+                : isToday
+                    ? Color.FromRgb(0x1E, 0x88, 0xE5)
+                    : Colors.Transparent),
+            Background = isSelected
+                ? new LinearGradientBrush(Color.FromRgb(0x00, 0x89, 0x7B), Color.FromRgb(0x00, 0x4D, 0x40), 45)
+                : isOff && !isFull
+                    ? HatchBrush()
+                    : Brushes.White,
+            Opacity = isPast && !isSelected ? 0.45 : 1,
+            Cursor = isOff ? Cursors.No : Cursors.Hand,
+            ToolTip = isFull
+                ? $"{PersianDateHelper.ToShamsiFa(date)} — ظرفیت تکمیل است"
+                : isOff
+                    ? $"{PersianDateHelper.ToShamsiFa(date)} — تعطیل / عدم حضور"
+                    : hasStat
+                        ? PersianDateHelper.ToPersianDigits(
+                            $"{PersianDateHelper.ToShamsiFa(date)} — {stat.Booked} نوبت از {stat.Total}")
+                        : PersianDateHelper.ToShamsiFa(date),
+            Child = cellGrid,
+        };
+        if (!isOff)
+        {
+            cell.MouseLeftButtonUp += (_, _) =>
+            {
+                SelectedDate = date;
+                SelectedShamsi = PersianDateHelper.ToShamsiFa(date);
+                DateSelected?.Invoke(this, date);
+                Render();
+            };
+        }
+        return cell;
+    }
+
 }

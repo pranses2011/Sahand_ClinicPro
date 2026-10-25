@@ -26,6 +26,7 @@ public partial class AppointmentsView : UserControl
     public AppointmentsView()
     {
         InitializeComponent();
+        Loaded += OnViewLoadedForCalendar;
         DataContextChanged += OnDataContextChanged;
         Loaded += (_, _) => HookGridSorting();
     }
@@ -36,6 +37,12 @@ public partial class AppointmentsView : UserControl
         if (e.NewValue is AppointmentsViewModel vm)
         {
             vm.SelectDateCommand.Execute(null);
+            // اگر دیتاکانتکست بعد از Loaded ست شد، تازه‌سازی تقویم از اینجا
+            if (!_activationHooked)
+            {
+                _activationHooked = true;
+                _ = vm.RefreshOnActivatedAsync();
+            }
         }
     }
 
@@ -61,6 +68,18 @@ public partial class AppointmentsView : UserControl
             return;
         if (slot.IsBooked) vm.TogglePinSlot(slot);
         else if (vm.SelectSlotCommand.CanExecute(slot)) vm.SelectSlotCommand.Execute(slot);
+    }
+
+    /// <summary>هر بار دیده‌شدن صفحه — تازه‌سازی تقویم/برنامه/اسلات‌ها</summary>
+    private bool _activationHooked;
+    private void OnViewLoadedForCalendar(object sender, RoutedEventArgs e)
+    {
+        if (_activationHooked) return;
+        if (DataContext is AppointmentsViewModel vm)
+        {
+            _activationHooked = true;
+            _ = vm.RefreshOnActivatedAsync();
+        }
     }
 
     private void OnCalendarDateSelected(object? sender, DateTime? e)

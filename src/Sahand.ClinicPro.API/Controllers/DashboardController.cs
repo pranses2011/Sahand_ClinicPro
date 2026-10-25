@@ -96,6 +96,31 @@ public class DashboardController : ApiBaseController
             .QueryableNoTracking
             .CountAsync(v => v.VisitDate >= dayStart && v.VisitDate <= dayEnd, ct);
 
+        // آمار تکمیلی برای کارت‌های قابل‌افزودن داشبورد (مدیریت داشبورد)
+        var cancelledToday = await _unitOfWork.Repository<Appointment>()
+            .QueryableNoTracking
+            .CountAsync(a => a.AppointmentDate == today
+                          && a.Status == AppointmentStatus.Cancelled, ct);
+        var noShowToday = await _unitOfWork.Repository<Appointment>()
+            .QueryableNoTracking
+            .CountAsync(a => a.AppointmentDate == today
+                          && a.Status == AppointmentStatus.NoShow, ct);
+        var tomorrowAppointments = await _unitOfWork.Repository<Appointment>()
+            .QueryableNoTracking
+            .CountAsync(a => a.AppointmentDate == today.AddDays(1)
+                          && a.Status != AppointmentStatus.Cancelled, ct);
+        var totalPatients = await _unitOfWork.Repository<Patient>()
+            .QueryableNoTracking
+            .CountAsync(p => p.IsActive, ct);
+        var activeDoctors = await _unitOfWork.Repository<Doctor>()
+            .QueryableNoTracking
+            .CountAsync(d => d.IsActive, ct);
+        var revenue30Start = dayStart.AddDays(-29);
+        var revenueLast30Days = await _unitOfWork.Repository<Payment>()
+            .QueryableNoTracking
+            .Where(p => !p.IsDeleted && p.PaymentDate >= revenue30Start && p.PaymentDate <= dayEnd)
+            .SumAsync(p => (decimal?)(p.IsReturned ? -p.Amount : p.Amount), ct) ?? 0m;
+
         var stats = new
         {
             newPatients,
@@ -103,6 +128,12 @@ public class DashboardController : ApiBaseController
             activeAppointments,
             todayVisits,
             todayRevenue,
+            cancelledToday,
+            noShowToday,
+            tomorrowAppointments,
+            totalPatients,
+            activeDoctors,
+            revenueLast30Days,
             todayDateShamsi = ShamsiLabel(today),
             serverTime = DateTime.UtcNow
         };

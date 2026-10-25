@@ -167,6 +167,14 @@ public partial class DashboardViewModel : ViewModelBase
 
     /* ── آمار اصلی (ردیف اول) ── */
     [ObservableProperty] private int _todayPatients;
+
+    /// <summary>آمار کارت‌های قابل‌افزودن داشبورد</summary>
+    [ObservableProperty] private int _cancelledToday;
+    [ObservableProperty] private int _noShowToday;
+    [ObservableProperty] private int _tomorrowCount;
+    [ObservableProperty] private int _totalPatientsCount;
+    [ObservableProperty] private int _activeDoctorsCount;
+    [ObservableProperty] private string _revenue30Text = "—";
     [ObservableProperty] private int _todayVisits;
     [ObservableProperty] private int _waitingCount;
     [ObservableProperty] private string _todayRevenueText = "0";
@@ -462,6 +470,18 @@ public partial class DashboardViewModel : ViewModelBase
     {
         foreach (var c in MainCards) { c.Visible = true; c.Span = 1; }
         foreach (var s in Sections) s.Span = 2;
+        // بازگشت مجموعهٔ پیش‌فرض کارت‌ها (کارت‌های افزوده به کاتالوگ برمی‌گردند)
+        var pool = MainCards.Concat(AvailableCards).ToList();
+        MainCards.Clear();
+        AvailableCards.Clear();
+        foreach (var def in CardCatalog)
+        {
+            var card = pool.FirstOrDefault(c => c.Key == def.Key) ?? CreateCard(def);
+            card.Visible = true; card.Span = 1;
+            if (DefaultCardKeys.Contains(def.Key)) MainCards.Add(card);
+            else AvailableCards.Add(card);
+        }
+        UpdateCardValues();
         ShowSecondaryCards = true;
         ShowRevenueChart = true;
         ShowUpcoming = true;
@@ -489,40 +509,105 @@ public partial class DashboardViewModel : ViewModelBase
     partial void OnShowUpcomingChanged(bool value) => ScheduleSaveLayout();
     partial void OnShowActivitiesChanged(bool value) => ScheduleSaveLayout();
 
+    /// <summary>تعریف یک نوع کارت در کاتالوگ داشبورد</summary>
+    private sealed record CardDef(string Key, string Label, string Icon, string Accent, string Compare);
+
+    /// <summary>همهٔ انواع کارت‌های داشبورد — پنج کارت پیش‌فرض + کارت‌های قابل‌افزودن از مدیریت داشبورد</summary>
+    private static readonly CardDef[] CardCatalog =
+    {
+        new("patients", "نوبت‌های امروز", "AccountGroup", "#1565C0", "مجموع نوبت‌های ثبت‌شده امروز"),
+        new("newPatients", "بیمار جدید", "AccountPlus", "#00897B", "پرونده‌های ثبت‌شده امروز"),
+        new("visits", "ویزیت‌شده", "Stethoscope", "#2E7D32", "ویزیت‌های انجام‌شده امروز"),
+        new("waiting", "در انتظار", "ClockOutline", "#E65100", "در صف انتظار باقی‌مانده"),
+        new("revenue", "درآمد امروز", "CashMultiple", "#6A1B9A", "مجموع پرداخت‌های ثبت‌شده"),
+        new("cancelled", "لغوشده‌های امروز", "CalendarRemove", "#C62828", "نوبت‌های لغوشده امروز"),
+        new("noshow", "عدم حضور امروز", "AccountOff", "#AD1457", "بیمارانی که امروز نیامدند"),
+        new("tomorrow", "نوبت‌های فردا", "CalendarArrowRight", "#3949AB", "نوبت‌های ثبت‌شده برای فردا"),
+        new("totalPatients", "کل پرونده‌های بیمار", "FolderAccount", "#455A64", "همهٔ پرونده‌های فعال درمانگاه"),
+        new("doctors", "پزشکان فعال", "Doctor", "#00695C", "پزشکان فعال درمانگاه"),
+        new("revenue30", "درآمد ۳۰ روز اخیر", "ChartLine", "#4E342E", "مجموع دریافتی ۳۰ روز گذشته"),
+        new("labPending", "آزمایش‌های در انتظار", "FlaskOutline", "#6D4C41", "درخواست‌های آزمایش باز"),
+        new("lowStock", "اقلام کم‌موجودی", "PackageVariantClosedAlert", "#EF6C00", "اقلام نزدیک به اتمام انبار"),
+    };
+
+    /// <summary>کلیدهای روی داشبورد به‌صورت پیش‌فرض</summary>
+    private static readonly string[] DefaultCardKeys =
+        { "patients", "newPatients", "visits", "waiting", "revenue" };
+
+    /// <summary>کارت‌های قابل‌افزودن (در کاتالوگ مدیریت داشبورد فهرست می‌شوند)</summary>
+    public ObservableCollection<DashboardCardVM> AvailableCards { get; } = new();
+
+    /// <summary>ساخت نمونهٔ کارت از تعریف کاتالوگ</summary>
+    private DashboardCardVM CreateCard(CardDef def) => new()
+    {
+        Key = def.Key,
+        IconKind = def.Icon,
+        Label = def.Key == "revenue" ? $"درآمد امروز ({Money.UnitLabel})" : def.Label,
+        CompareText = def.Compare,
+        Accent = def.Accent
+    };
+
+    /// <summary>افزودن کارت از کاتالوگ به داشبورد</summary>
+    [RelayCommand]
+    private void AddCard(DashboardCardVM? card)
+    {
+        if (card is null || MainCards.Any(c => c.Key == card.Key)) return;
+        AvailableCards.Remove(card);
+        MainCards.Add(card);
+        UpdateCardValues();
+        ScheduleSaveLayout();
+        _snackbar.Success($"کارت «{card.Label}» به داشبورد افزوده شد");
+    }
+
+    /// <summary>حذف کارت از داشبورد (برمی‌گردد به کاتالوگ مدیریت داشبورد)</summary>
+    [RelayCommand]
+    private void RemoveCard(DashboardCardVM? card)
+    {
+        if (card is null) return;
+        MainCards.Remove(card);
+        if (!AvailableCards.Any(c => c.Key == card.Key))
+        {
+            var idx = CardCatalog.ToList().FindIndex(d => d.Key == card.Key);
+            var pos = AvailableCards.Count(c => CardCatalog.ToList().FindIndex(d => d.Key == c.Key) < idx);
+            AvailableCards.Insert(Math.Max(0, pos), card);
+        }
+        ScheduleSaveLayout();
+    }
+
+    /// <summary>جابه‌جایی بخش به بالا (دکمه‌های مدیریت داشبورد)</summary>
+    [RelayCommand]
+    private void MoveSectionUp(DashboardSectionItem? section)
+    {
+        if (section is null) return;
+        var idx = Sections.IndexOf(section);
+        if (idx <= 0) return;
+        Sections.Move(idx, idx - 1);
+        ScheduleSaveLayout();
+    }
+
+    /// <summary>جابه‌جایی بخش به پایین</summary>
+    [RelayCommand]
+    private void MoveSectionDown(DashboardSectionItem? section)
+    {
+        if (section is null) return;
+        var idx = Sections.IndexOf(section);
+        if (idx < 0 || idx >= Sections.Count - 1) return;
+        Sections.Move(idx, idx + 1);
+        ScheduleSaveLayout();
+    }
+
     /// <summary>راه‌اندازی کارت‌های داینامیک — چرخهٔ ۷۲: پنج کارت با پالت هماهنگ</summary>
     private void InitializeCards()
     {
         MainCards.Clear();
-        MainCards.Add(new DashboardCardVM
+        AvailableCards.Clear();
+        foreach (var def in CardCatalog)
         {
-            Key = "patients", IconKind = "AccountGroup", Label = "نوبت‌های امروز",
-            CompareText = "مجموع نوبت‌های ثبت‌شده امروز", Accent = "#1565C0"
-        });
-        MainCards.Add(new DashboardCardVM
-        {
-            Key = "newPatients", IconKind = "AccountPlus", Label = "بیمار جدید",
-            CompareText = "پرونده‌های ثبت‌شده امروز", Accent = "#00897B"
-        });
-        MainCards.Add(new DashboardCardVM
-        {
-            Key = "visits", IconKind = "Stethoscope", Label = "ویزیت‌شده",
-            CompareText = "ویزیت‌های انجام‌شده امروز", Accent = "#2E7D32"
-        });
-        MainCards.Add(new DashboardCardVM
-        {
-            Key = "waiting", IconKind = "ClockOutline", Label = "در انتظار",
-            CompareText = "در صف انتظار باقی‌مانده", Accent = "#E65100"
-        });
-        MainCards.Add(new DashboardCardVM
-        {
-            // چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان) — حذف هاردکد
-            Key = "revenue", IconKind = "CashMultiple", Label = $"درآمد امروز ({Money.UnitLabel})",
-            CompareText = "مجموع پرداخت‌های ثبت‌شده", Accent = "#6A1B9A"
-        });
-        foreach (var c in MainCards)
-        {
-            c.VisibleChanged += (_, _) => ScheduleSaveLayout();
-            c.SpanChanged += (_, _) => ScheduleSaveLayout();
+            var card = CreateCard(def);
+            card.VisibleChanged += (_, _) => ScheduleSaveLayout();
+            card.SpanChanged += (_, _) => ScheduleSaveLayout();
+            if (DefaultCardKeys.Contains(def.Key)) MainCards.Add(card);
+            else AvailableCards.Add(card);
         }
         // ═══ چرخهٔ ۷۴ — ذخیرهٔ خودکار پس از جابه‌جایی درگ‌و‌دراپی کارت‌ها ═══
         MainCards.CollectionChanged += (_, _) => ScheduleSaveLayout();
@@ -565,6 +650,14 @@ public partial class DashboardViewModel : ViewModelBase
                 "visits" => Helpers.Money.ToPersianDigits(TodayVisits.ToString()),
                 "waiting" => Helpers.Money.ToPersianDigits(WaitingCount.ToString()),
                 "revenue" => TodayRevenueText,
+                "cancelled" => Helpers.Money.ToPersianDigits(CancelledToday.ToString()),
+                "noshow" => Helpers.Money.ToPersianDigits(NoShowToday.ToString()),
+                "tomorrow" => Helpers.Money.ToPersianDigits(TomorrowCount.ToString()),
+                "totalPatients" => Helpers.Money.ToPersianDigits(TotalPatientsCount.ToString()),
+                "doctors" => Helpers.Money.ToPersianDigits(ActiveDoctorsCount.ToString()),
+                "revenue30" => Revenue30Text,
+                "labPending" => Helpers.Money.ToPersianDigits(PendingLabOrders.ToString()),
+                "lowStock" => Helpers.Money.ToPersianDigits(LowStockCount.ToString()),
                 _ => "—"
             };
     }
@@ -604,6 +697,7 @@ public partial class DashboardViewModel : ViewModelBase
         sectionsOrder = Sections.Select(s => s.Key).ToList(),
         sectionsHidden = Sections.Where(s => !s.Visible).Select(s => s.Key).ToList(),
         // پهنای ستونی کارت‌ها و بخش‌ها (مدیریت داشبورد)
+        cards = MainCards.Select(c => c.Key).ToList(),
         spans = MainCards.ToDictionary(c => c.Key, c => c.Span),
         sectionSpans = Sections.ToDictionary(s => s.Key, s => s.Span)
     });
@@ -682,6 +776,24 @@ public partial class DashboardViewModel : ViewModelBase
             using var doc = System.Text.Json.JsonDocument.Parse(json);
             var root = doc.RootElement;
 
+            // مجموعهٔ کارت‌های روی داشبورد (افزوده/حذف‌شده از مدیریت داشبورد)
+            if (root.TryGetProperty("cards", out var cardsEl) && cardsEl.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                var pool = MainCards.Concat(AvailableCards).ToList();
+                var onDash = new List<DashboardCardVM>();
+                foreach (var keyEl in cardsEl.EnumerateArray())
+                {
+                    var card = pool.FirstOrDefault(c => c.Key == keyEl.GetString());
+                    if (card is not null && !onDash.Contains(card)) onDash.Add(card);
+                }
+                if (onDash.Count > 0)
+                {
+                    MainCards.Clear();
+                    foreach (var c in onDash) MainCards.Add(c);
+                    AvailableCards.Clear();
+                    foreach (var c in pool.Where(c => !onDash.Contains(c))) AvailableCards.Add(c);
+                }
+            }
             if (root.TryGetProperty("order", out var order) && order.ValueKind == System.Text.Json.JsonValueKind.Array)
             {
                 var ordered = new List<DashboardCardVM>();
@@ -1279,6 +1391,14 @@ public partial class DashboardViewModel : ViewModelBase
             var revenue = stats.TryGetProperty("todayRevenue", out var rev) && rev.ValueKind != JsonValueKind.Null
                 ? rev.GetDecimal() : 0;
             TodayRevenueText = Money.Format(revenue);
+            CancelledToday = stats.TryGetProperty("cancelledToday", out var cx) ? cx.GetInt32() : 0;
+            NoShowToday = stats.TryGetProperty("noShowToday", out var ns) ? ns.GetInt32() : 0;
+            TomorrowCount = stats.TryGetProperty("tomorrowAppointments", out var tm) ? tm.GetInt32() : 0;
+            TotalPatientsCount = stats.TryGetProperty("totalPatients", out var tp) ? tp.GetInt32() : 0;
+            ActiveDoctorsCount = stats.TryGetProperty("activeDoctors", out var ad) ? ad.GetInt32() : 0;
+            var rev30 = stats.TryGetProperty("revenueLast30Days", out var r30) && r30.ValueKind != JsonValueKind.Null
+                ? r30.GetDecimal() : 0;
+            Revenue30Text = Money.Format(rev30);
             ConnectionStatus = "آمار به‌روز شد";
         }
 
