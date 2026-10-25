@@ -35,6 +35,24 @@ public partial class ToothVM : ObservableObject
     /// <summary>شمارهٔ دندان با ارقام فارسی — «همهٔ اعداد بدون استثنا فارسی» (گزارش هفدهم)</summary>
     public string NumberFa => Helpers.Money.ToPersianDigits(Number.ToString());
 
+    /// <summary>نام جنس دندان بر اساس رقم یکان FDI</summary>
+    public string TypeName => (Number % 10) switch
+    {
+        1 => "پیشین مرکزی", 2 => "پیشین کناری", 3 => "نیش",
+        4 => "آسیاب کوچک اول", 5 => "آسیاب کوچک دوم",
+        6 => "آسیاب بزرگ اول", 7 => "آسیاب بزرگ دوم", _ => "عقل"
+    };
+
+    /// <summary>تعداد ریشهٔ واقعی این دندان (از جدول آناتومی مبدل شکل دندان)</summary>
+    public int RootCount => Converters.ToothShapeConverter.RootCount(Number);
+
+    /// <summary>تعداد کانال واقعی این دندان (از جدول آناتومی مبدل شکل دندان)</summary>
+    public int CanalCount => Converters.ToothShapeConverter.CanalCount(Number);
+
+    /// <summary>متن آناتومی برای پنل دندان انتخابی — مثلاً «آسیاب بزرگ اول · ۳ ریشه · ۴ کانال»</summary>
+    public string AnatomyText =>
+        $"{TypeName} · {Helpers.Money.ToPersianDigits(RootCount.ToString())} ریشه · {Helpers.Money.ToPersianDigits(CanalCount.ToString())} کانال";
+
     /// <summary>متن فارسی وضعیت — برای تولتیپ و نمایش</summary>
     public string ConditionText => Condition switch
     {
@@ -57,7 +75,15 @@ public partial class ToothVM : ObservableObject
 }
 
 /// <summary>ردیف طرح درمان دندان</summary>
-public record DentalPlanRow(int Tooth, string Procedure, decimal Price, string StatusText, string StatusColor);
+public record DentalPlanRow(int Tooth, string Procedure, decimal Price, string StatusText, string StatusColor,
+    string Surface = "—", string Schedule = "بدون نوبت");
+
+/// <summary>قلم کاتالوگ خدمات دندانپزشکی — نام، دسته، مدت جلسه و تعرفه</summary>
+public record DentalCatalogItem(string Name, string Category, int DurationMin, decimal Price)
+{
+    /// <summary>متن نمایشی کاتالوگ در فهرست کشویی</summary>
+    public string Display => $"{Name} · {Helpers.Money.ToPersianDigits(DurationMin.ToString())} دقیقه";
+}
 
 /// <summary>
 /// ViewModel صفحهٔ مستقل «دندانپزشکی» — چرخهٔ چهل‌وسوم (گزارش مالک)
@@ -96,6 +122,57 @@ public partial class DentistryViewModel : ViewModelBase
     /// <summary>ردیف‌های طرح درمان بیمار</summary>
     public ObservableCollection<DentalPlanRow> DentalPlan { get; } = new();
 
+    /// <summary>کاتالوگ خدمات دندانپزشکی (تعرفه و مدت جلسه) — قابلیت تازهٔ تأییدشده</summary>
+    public DentalCatalogItem[] CatalogItems { get; } =
+    {
+        new("ترمیم کامپوزیت", "ترمیمی", 30, 1_200_000m),
+        new("ترمیم آمالگام", "ترمیمی", 30, 900_000m),
+        new("عصب‌کشی (درمان ریشه)", "درمان ریشه", 45, 1_850_000m),
+        new("روکش زیرکونیا", "پروتز", 40, 1_800_000m),
+        new("روکش PFM", "پروتز", 40, 1_400_000m),
+        new("ایمپلنت + روکش", "جراحی", 60, 9_500_000m),
+        new("کشیدن ساده", "جراحی", 20, 700_000m),
+        new("جراحی دندان عقل", "جراحی", 45, 2_500_000m),
+        new("جرم‌گیری و بروساژ", "پیشگیری", 30, 800_000m),
+        new("بلیچینگ", "زیبایی", 45, 3_000_000m),
+    };
+
+    /// <summary>خدمت برگزیده از کاتالوگ برای افزودن به طرح درمان</summary>
+    [ObservableProperty] private DentalCatalogItem? _selectedCatalogItem;
+
+    /// <summary>سطوح قابل انتخاب دندان (استاندارد M/O/D/B/L)</summary>
+    public string[] SurfaceOptions { get; } = { "O · اکلوزال", "M · مزیال", "D · دیستال", "B · باکال", "L · لینگوال", "MOD · سه‌سطحی" };
+
+    /// <summary>سطح درگیر برگزیده</summary>
+    [ObservableProperty] private string _selectedSurface = "O · اکلوزال";
+
+    /// <summary>نوبت پیشنهادی قلم تازهٔ طرح درمان (روز و ساعت جلسه)</summary>
+    [ObservableProperty] private string _planScheduleText = string.Empty;
+
+    /// <summary>یادداشت بالینی دندان انتخابی</summary>
+    [ObservableProperty] private string _clinicalNote = string.Empty;
+
+    /// <summary>خلاصهٔ چارت پریودنتال (عمق پاکت، خونریزی، لقی) — همراه چارت ذخیره می‌شود</summary>
+    [ObservableProperty] private string _perioSummary = string.Empty;
+
+    /// <summary>خلاصهٔ فرم پزشکی و حساسیت‌ها — همراه چارت ذخیره می‌شود</summary>
+    [ObservableProperty] private string _medicalSummary = string.Empty;
+
+    /// <summary>متن نسخه و دستورات پس از درمان — همراه چارت ذخیره می‌شود</summary>
+    [ObservableProperty] private string _prescriptionText = string.Empty;
+
+    /// <summary>یادداشت رادیوگرافی پیوندخورده به دندان‌ها — همراه چارت ذخیره می‌شود</summary>
+    [ObservableProperty] private string _radioNote = string.Empty;
+
+    /// <summary>رضایت‌نامهٔ درمان امضا شده است؟</summary>
+    [ObservableProperty] private bool _consentSigned;
+
+    /// <summary>جمع کل طرح درمان — با هر تغییر ردیف‌ها تازه می‌شود</summary>
+    public decimal PlanTotal => DentalPlan.Sum(r => r.Price);
+
+    /// <summary>جمع کل طرح با ارقام فارسی برای نمایش</summary>
+    public string PlanTotalText => Helpers.Money.ToPersianDigits(PlanTotal.ToString("N0"));
+
     /* ── بیمار و ماندگاری چارت (چرخهٔ ۲۸) ── */
 
     /// <summary>عبارت جستجوی بیمار دندانپزشکی</summary>
@@ -121,6 +198,12 @@ public partial class DentistryViewModel : ViewModelBase
             LowerTeeth.Add(new ToothVM { Number = n });
         foreach (var n in new[] { 31, 32, 33, 34, 35, 36, 37, 38 })
             LowerTeeth.Add(new ToothVM { Number = n });
+        SelectedCatalogItem = CatalogItems[0];
+        DentalPlan.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(PlanTotal));
+            OnPropertyChanged(nameof(PlanTotalText));
+        };
     }
 
     /// <summary>انتخاب دندان از چارت</summary>
@@ -149,19 +232,27 @@ public partial class DentistryViewModel : ViewModelBase
             SelectedTooth.Condition = value;
     }
 
-    /// <summary>افزودن به طرح درمان</summary>
+    /// <summary>افزودن به طرح درمان — از کاتالوگ خدمات، با سطح درگیر و نوبت پیشنهادی</summary>
     [RelayCommand]
     private void AddDentalPlan()
     {
         if (SelectedTooth is null) { _snackbar.Error("ابتدا دندان را از چارت انتخاب کنید"); return; }
-        var procedures = new[] { "معاینه", "ترمیم", "عصب‌کشی", "روکش", "کشیدن ساده", "کشیدن جراحی" };
-        var price = SelectedTooth.Condition switch
-        {
-            1 => 1_500_000m, 3 => 5_000_000m, 4 => 8_000_000m, 5 => 2_000_000m, _ => 1_000_000m
-        };
-        DentalPlan.Add(new DentalPlanRow(SelectedTooth.Number,
-            procedures[Math.Clamp(SelectedTooth.Condition, 0, 5)],
-            price, "پیشنهاد", "#FFF3E0"));
+        var item = SelectedCatalogItem ?? CatalogItems[0];
+        // درمان ریشه: نام خدمت با تعداد کانال واقعی همان دندان کامل می‌شود
+        var procedure = item.Name.Contains("عصب‌کشی")
+            ? $"{item.Name} — {Helpers.Money.ToPersianDigits(SelectedTooth.CanalCount.ToString())} کانال"
+            : item.Name;
+        var surface = (SelectedSurface ?? "—").Split(' ')[0];
+        var schedule = string.IsNullOrWhiteSpace(PlanScheduleText) ? "بدون نوبت" : PlanScheduleText.Trim();
+        DentalPlan.Add(new DentalPlanRow(SelectedTooth.Number, procedure, item.Price,
+            "پیشنهاد", "#FFF3E0", surface, schedule));
+    }
+
+    /// <summary>حذف یک ردیف از طرح درمان</summary>
+    [RelayCommand]
+    private void RemoveDentalPlan(DentalPlanRow? row)
+    {
+        if (row is not null) DentalPlan.Remove(row);
     }
 
     /// <summary>
@@ -200,7 +291,17 @@ public partial class DentistryViewModel : ViewModelBase
         if (chart.Rows is not null)
             foreach (var r in chart.Rows)
                 DentalPlan.Add(new DentalPlanRow(r.Tooth, r.Procedure ?? "—", r.Price,
-                    r.Status ?? "پیشنهاد", "#FFF3E0"));
+                    r.Status ?? "پیشنهاد", "#FFF3E0", r.Surface ?? "—", r.Schedule ?? "بدون نوبت"));
+
+        // بخش‌های تازه (پریودنتال/پزشکی/نسخه/رادیوگرافی/رضایت) — داخل همان JSON طرح
+        if (chart.Extras is not null)
+        {
+            PerioSummary = chart.Extras.Perio ?? string.Empty;
+            MedicalSummary = chart.Extras.Medical ?? string.Empty;
+            PrescriptionText = chart.Extras.Prescription ?? string.Empty;
+            RadioNote = chart.Extras.Radio ?? string.Empty;
+            ConsentSigned = chart.Extras.Consent;
+        }
 
         DentalChartInfo = string.IsNullOrWhiteSpace(chart.CreatedDateShamsi)
             ? "چارتی برای این بیمار ثبت نشده — نخستین ثبت"
@@ -224,10 +325,20 @@ public partial class DentistryViewModel : ViewModelBase
             .ToDictionary(t => t.Number.ToString(), t => t.Condition);
 
         // ردیف‌های طرح درمان — متن/قیمت/وضعیت
-        var rows = DentalPlan.Select(r => new { tooth = r.Tooth, procedure = r.Procedure, price = r.Price, status = r.StatusText })
+        var rows = DentalPlan.Select(r => new
+            {
+                tooth = r.Tooth, procedure = r.Procedure, price = r.Price, status = r.StatusText,
+                surface = r.Surface, schedule = r.Schedule
+            })
             .ToList();
 
-        var planDetails = System.Text.Json.JsonSerializer.Serialize(new { teeth, rows });
+        // بخش‌های تازه داخل همان PlanDetails ذخیره می‌شوند — بدون تغییر دیتابیس
+        var extras = new
+        {
+            perio = PerioSummary, medical = MedicalSummary,
+            prescription = PrescriptionText, radio = RadioNote, consent = ConsentSigned
+        };
+        var planDetails = System.Text.Json.JsonSerializer.Serialize(new { teeth, rows, extras });
         var ok = await _api.PostAsync("dental/plans", new
         {
             patientId = DentalPatient.Id,
@@ -251,6 +362,9 @@ public partial class DentistryViewModel : ViewModelBase
         DentalPatient = null;
         DentalPatientSearch = string.Empty;
         DentalPlan.Clear();
+        PerioSummary = MedicalSummary = PrescriptionText = RadioNote = string.Empty;
+        ConsentSigned = false;
+        PlanScheduleText = string.Empty;
         foreach (var t in UpperTeeth.Concat(LowerTeeth)) t.Condition = 0;
         SelectedTooth = null;
         DentalChartInfo = "بیمار را جستجو کنید تا چارت ذخیره‌شدهٔ او بارگذاری شود";
@@ -271,6 +385,7 @@ public partial class DentistryViewModel : ViewModelBase
         /// <summary>نقشهٔ شمارهٔ دندان → وضعیت (۰ سالم تا ۶ ایمپلنت)</summary>
         public Dictionary<string, int>? Teeth { get; set; }
         public List<DentalPlanRowDto>? Rows { get; set; }
+        public DentalExtrasDto? Extras { get; set; }
         public string? Note { get; set; }
     }
 
@@ -280,5 +395,17 @@ public partial class DentistryViewModel : ViewModelBase
         public string? Procedure { get; set; }
         public decimal Price { get; set; }
         public string? Status { get; set; }
+        public string? Surface { get; set; }
+        public string? Schedule { get; set; }
+    }
+
+    /// <summary>بخش‌های تازهٔ ذخیره‌شده در JSON طرح — پریودنتال/پزشکی/نسخه/رادیوگرافی/رضایت</summary>
+    private sealed class DentalExtrasDto
+    {
+        public string? Perio { get; set; }
+        public string? Medical { get; set; }
+        public string? Prescription { get; set; }
+        public string? Radio { get; set; }
+        public bool Consent { get; set; }
     }
 }

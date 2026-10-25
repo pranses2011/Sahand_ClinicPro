@@ -250,6 +250,29 @@ public partial class LabResultViewModel : ObservableObject
     }
 
     /// <summary>
+    /// چاپ برچسب‌های QR ظرف‌های نمونهٔ همین درخواست — درخواست مالک:
+    /// «چاپ کد QR برای ظروف آزمایش در کلیدهای عملیاتی هم باشد»؛ برای هر قلم
+    /// یک برچسب با QR یکتای «درخواست + قلم» چاپ می‌شود تا روی ظرف نمونه بچسبد.
+    /// </summary>
+    [RelayCommand]
+    private void PrintSpecimenLabels()
+    {
+        if (_lastDetail is null)
+        {
+            ErrorMessage = "جزئیات درخواست هنوز بارگذاری نشده است";
+            return;
+        }
+        if (_lastDetail.Items is null || _lastDetail.Items.Count == 0)
+        {
+            ErrorMessage = "این درخواست قلمی برای چاپ برچسب ندارد";
+            return;
+        }
+        var printed = Services.SpecimenLabelPrinter.Print(_lastDetail, _orderId);
+        if (printed)
+            StatusMessage = "برچسب‌های QR ظرف‌های نمونه به چاپگر ارسال شد";
+    }
+
+    /// <summary>
     /// پاکت استاندارد پاسخ جزئیات درخواست — چرخهٔ ۴۸:
     /// همهٔ پاسخ‌های سرور در ApiResponse (isSuccess/message/data) پیچیده می‌شوند؛
     /// بدون این پوشش، ویژگی‌ها هرگز بایند نمی‌شدند و جدول اقلام خالی می‌ماند.

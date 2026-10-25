@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -42,8 +42,9 @@ public partial class DashboardCardVM : ObservableObject
     [ObservableProperty]
     private string _value = "…";
 
-    /// <summary>عنوان</summary>
-    public string Label { get; init; } = "";
+    /// <summary>عنوان — قابل تازه‌سازی زنده (واحد پول کارت درآمد از تنظیم کاربر می‌آید)</summary>
+    [ObservableProperty]
+    private string _label = "";
 
     /// <summary>متن مقایسه</summary>
     public string CompareText { get; init; } = "";
@@ -542,7 +543,7 @@ public partial class DashboardViewModel : ViewModelBase
     {
         Key = def.Key,
         IconKind = def.Icon,
-        Label = def.Key == "revenue" ? $"درآمد امروز ({Money.UnitLabel})" : def.Label,
+        Label = def.Label,
         CompareText = def.Compare,
         Accent = def.Accent
     };
@@ -642,6 +643,18 @@ public partial class DashboardViewModel : ViewModelBase
     /// <summary>به‌روزرسانی مقادیر کارت‌ها از آمار — چرخهٔ ۷۲: ارقام فارسی + کارت پنجم «بیمار جدید»</summary>
     private void UpdateCardValues()
     {
+        // واحد پول کارت‌های درآمدی در هر تازه‌سازی از تنظیم فعلی خوانده می‌شود —
+        // پیش‌تر برچسب هنگام ساخت کارت یک‌بار با واحد همان لحظه ساخته می‌شد و
+        // با تعویض واحد پولی در تنظیمات، کارت داشبورد تا ابد «ریال» می‌ماند
+        // (گزارش مالک). مقدارها هم از Money.Format می‌آیند که واحد جاری را دارد.
+        foreach (var c in MainCards.Concat(AvailableCards))
+        {
+            if (c.Key == "revenue")
+                c.Label = $"درآمد امروز ({Money.UnitLabel})";
+            else if (c.Key == "revenue30")
+                c.Label = $"درآمد ۳۰ روز اخیر ({Money.UnitLabel})";
+        }
+
         foreach (var c in MainCards)
             c.Value = c.Key switch
             {

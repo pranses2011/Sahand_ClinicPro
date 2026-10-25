@@ -384,8 +384,8 @@
                                 <Button Command="{Binding DataContext.PrintSpecimenLabelsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource App.RowIconButton}"
-                                        ToolTip="چاپ برچسب QR برای ظرف نمونه‌های این درخواست" VerticalAlignment="Center">
-                                    <materialDesign:PackIcon Kind="Barcode" Width="15" Height="15" VerticalAlignment="Center"/>
+                                        ToolTip="چاپ برچسب QR برای ظرف‌های نمونهٔ این درخواست" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Qrcode" Width="15" Height="15" VerticalAlignment="Center"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>
