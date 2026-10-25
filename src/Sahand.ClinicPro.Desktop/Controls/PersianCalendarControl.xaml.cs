@@ -629,8 +629,10 @@ public partial class PersianCalendarControl : UserControl
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Calendar day cell {day} failed: {ex.Message}");
-                // خانهٔ جایگزین حداقلی — عدد روز در هر شرایطی دیده شود
-                DaysGrid.Children.Add(new Border
+                // خانهٔ جایگزین حداقلی — عدد روز در هر شرایطی دیده شود و
+                // کلیک انتخاب روز هم کار کند تا هیچ روزی قفل نماند
+                var fallbackDate = Persian.ToDateTime(DisplayYear, DisplayMonth, day, 0, 0, 0, 0);
+                var fallbackCell = new Border
                 {
                     CornerRadius = new CornerRadius(13),
                     Margin = new Thickness(2.5),
@@ -644,7 +646,15 @@ public partial class PersianCalendarControl : UserControl
                         TextAlignment = TextAlignment.Center,
                         Margin = new Thickness(0, 5, 0, 0),
                     },
-                });
+                };
+                fallbackCell.MouseLeftButtonUp += (_, _) =>
+                {
+                    SelectedDate = fallbackDate;
+                    SelectedShamsi = PersianDateHelper.ToShamsiFa(fallbackDate);
+                    DateSelected?.Invoke(this, fallbackDate);
+                    Render();
+                };
+                DaysGrid.Children.Add(fallbackCell);
             }
         }
 
@@ -795,8 +805,7 @@ public partial class PersianCalendarControl : UserControl
                 : isOff
                     ? $"{PersianDateHelper.ToShamsiFa(date)} — تعطیل / عدم حضور"
                     : hasStat
-                        ? PersianDateHelper.ToPersianDigits(
-                            $"{PersianDateHelper.ToShamsiFa(date)} — {stat.Booked} نوبت از {stat.Total}")
+                        ? $"{PersianDateHelper.ToShamsiFa(date)} — {PersianDateHelper.ToPersianDigits(stat.Booked.ToString())} نوبت از {PersianDateHelper.ToPersianDigits(stat.Total.ToString())}"
                         : PersianDateHelper.ToShamsiFa(date),
             Child = cellGrid,
         };

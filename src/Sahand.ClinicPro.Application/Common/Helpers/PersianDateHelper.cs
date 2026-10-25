@@ -228,7 +228,12 @@ public static class PersianDateHelper
     public static string ToPersianDigits(string input)
     {
         var persian = "۰۱۲۳۴۵۶۷۸۹";
-        var chars = input.Select(c => char.IsDigit(c) ? persian[c - '0'] : c);
+        // فقط ارقام لاتین (0-9) تبدیل می‌شوند — char.IsDigit ارقام فارسی و
+        // عربی را هم «رقم» می‌داند و c-'0' برای آن‌ها ایندکس بیرون از آرایه
+        // می‌داد؛ رشته‌ای که از قبل ارقام فارسی دارد (مثل خروجی ToShamsiFa)
+        // با این نسخه بدون خطا دست‌نخورده می‌ماند (ریشهٔ خالی‌شدن خانه‌های
+        // تقویم نوبت‌دهی — گزارش مالک با اسکرین‌شات).
+        var chars = input.Select(c => c is >= '0' and <= '9' ? persian[c - '0'] : c);
         return new string(chars.ToArray());
     }
 
