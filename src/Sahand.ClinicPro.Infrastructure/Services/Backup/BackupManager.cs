@@ -254,6 +254,59 @@ public class BackupManager
             {
                 var databaseName = connection.Database;
 
+                // ═══ بازیابی نسخه‌های قدیمی (گزارش مالک: «بازیابی از فایل
+                // پشتیبان نسخه‌های قبلی خطا می‌دهد») ═══ فایل BAK نسخه‌های
+                // قدیمی/نصب دیگر، مسیر فیزیکی فایل‌های دیتابیس همان نصب
+                // قبلی را در خودش دارد؛ RESTORE بدون MOVE به همان مسیرهای
+                // قدیمی می‌رود و با خطای دسترسی/نبود مسیر شکست می‌خورد.
+                // راه‌حل استاندارد: فهرست منطقی فایل‌های داخل BAK خوانده و
+                // هر فایل با MOVE به مسیر فیزیکی فعلی همین دیتابیس نگاشت
+                // می‌شود — مسیر مقصد همیشه مسیر زندهٔ نصب فعلی است.
+                var currentFiles = new List<(string Name, string Physical, string Type)>();
+                using (var filesCmd = connection.CreateCommand())
+                {
+                    filesCmd.CommandText =
+                        "SELECT name, physical_name, CAST(type AS int) FROM sys.database_files ORDER BY file_id";
+                    using var filesReader = await filesCmd.ExecuteReaderAsync(ct);
+                    while (await filesReader.ReadAsync(ct))
+                        currentFiles.Add((filesReader.GetString(0), filesReader.GetString(1),
+                            filesReader.GetInt32(2) == 1 ? "L" : "D"));
+                }
+
+                var backupFiles = new List<(string Logical, string Type)>();
+                using (var listCmd = connection.CreateCommand())
+                {
+                    listCmd.CommandText = "RESTORE FILELISTONLY FROM DISK = @path";
+                    var listParam = listCmd.CreateParameter();
+                    listParam.ParameterName = "@path";
+                    listParam.Value = bakPath;
+                    listCmd.Parameters.Add(listParam);
+                    using var listReader = await listCmd.ExecuteReaderAsync(ct);
+                    var logicalOrdinal = listReader.GetOrdinal("LogicalName");
+                    var typeOrdinal = listReader.GetOrdinal("Type");
+                    while (await listReader.ReadAsync(ct))
+                        backupFiles.Add((listReader.GetString(logicalOrdinal),
+                            listReader.GetString(typeOrdinal)));
+                }
+
+                var dataTargets = currentFiles.Where(f => f.Type == "D").Select(f => f.Physical).ToList();
+                var logTargets = currentFiles.Where(f => f.Type == "L").Select(f => f.Physical).ToList();
+                var moveClauses = new List<string>();
+                var dataIndex = 0;
+                var logIndex = 0;
+                foreach (var (logical, type) in backupFiles)
+                {
+                    string? target;
+                    if (type == "L")
+                        target = logIndex < logTargets.Count ? logTargets[logIndex++] : logTargets.FirstOrDefault();
+                    else
+                        target = dataIndex < dataTargets.Count ? dataTargets[dataIndex++] : dataTargets.FirstOrDefault();
+                    if (string.IsNullOrEmpty(target)) continue;
+                    moveClauses.Add(
+                        "MOVE '" + logical.Replace("'", "''") + "' TO '" + target.Replace("'", "''") + "'");
+                }
+                var moveSql = moveClauses.Count == 0 ? "" : ", " + string.Join(", ", moveClauses);
+
                 // تک‌کاربر + قطع اتصال‌های دیگر — الزام بازیابی با REPLACE
                 using var singleUser = connection.CreateCommand();
                 singleUser.CommandText =
@@ -266,7 +319,7 @@ public class BackupManager
                     using var restore = connection.CreateCommand();
                     restore.CommandText =
                         "USE master; RESTORE DATABASE [" + databaseName.Replace("]", "]]") + "] " +
-                        "FROM DISK = @path WITH REPLACE, RECOVERY, STATS = 25";
+                        "FROM DISK = @path WITH REPLACE, RECOVERY" + moveSql + ", STATS = 25";
                     var param = restore.CreateParameter();
                     param.ParameterName = "@path";
                     param.Value = bakPath;
