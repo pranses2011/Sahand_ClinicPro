@@ -217,6 +217,12 @@
                             <TextBlock Text="{Binding Span, Converter={StaticResource PersianDigits}}" FontSize="10" FontWeight="Bold" Margin="3,0,0,0" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    <Button Command="{Binding DataContext.RemoveCardCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                            CommandParameter="{Binding}"
+                            Style="{StaticResource MaterialDesignFlatButton}" Padding="3,1" Foreground="#C62828"
+                            ToolTip="حذف کارت از داشبورد (از مدیریت داشبورد برمی‌گردد)">
+                        <materialDesign:PackIcon Kind="CloseCircleOutline" Width="13" Height="13" />
+                    </Button>
                 </StackPanel>
             </Grid>
         </DataTemplate>
@@ -1071,47 +1077,223 @@
             </ItemsControl>
 
             <!-- ╔══════════════════════════════════════════════════════════╗
-                 ║ نوار مدیریت چیدمان — فقط در حالت شخصی‌سازی                 ║
+                 ║ مدیریت کامل داشبورد — بازنویسی مفصل (گزارش مالک)            ║
+                 ║ کارت‌ها: افزودن از کاتالوگ، حذف، جابه‌جایی، نمایش، پهنا     ║
+                 ║ بخش‌ها: جابه‌جایی، نمایش، پهنا · ذخیرهٔ خودکار چیدمان       ║
                  ╚══════════════════════════════════════════════════════════╝ -->
-            <Border CornerRadius="12" Padding="14,10" Margin="0,0,0,12"
+            <Border CornerRadius="14" Padding="16,12" Margin="0,0,0,12"
                     Visibility="{Binding IsCustomizing, Converter={StaticResource BoolToVis}}"
                     BorderThickness="1,3.5,1,1" BorderBrush="#F9A825"
                     Background="#FFFDF5">
                 <StackPanel>
-                    <DockPanel Margin="0,0,0,8">
-                        <materialDesign:PackIcon DockPanel.Dock="Right" Kind="TuneVertical" Width="18" Height="18"
-                                                 Foreground="#E65100" VerticalAlignment="Center" />
-                        <TextBlock Text="حالت مدیریت چیدمان — تغییرات به‌صورت خودکار ذخیره می‌شوند"
-                                   FontWeight="Bold" FontSize="13" Foreground="#E65100" Margin="2,0,8,0"
-                                   VerticalAlignment="Center" />
-                    </DockPanel>
-                    <WrapPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,3,14,3">
-                            <TextBlock Text="نمودار درآمد" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                            <ToggleButton IsChecked="{Binding ShowRevenueChart}"
-                                          Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,3,14,3">
-                            <TextBlock Text="نوبت‌های پیش‌رو" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                            <ToggleButton IsChecked="{Binding ShowUpcoming}"
-                                          Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,3,14,3">
-                            <TextBlock Text="فعالیت‌های اخیر" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                            <ToggleButton IsChecked="{Binding ShowActivities}"
-                                          Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
-                        </StackPanel>
-                        <Button Command="{Binding ResetLayoutCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                    <!-- سربرگ مدیریت -->
+                    <DockPanel Margin="0,0,0,4">
+                        <Button DockPanel.Dock="Left" Command="{Binding ResetLayoutCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
                                 Padding="10,2" FontSize="10.5" VerticalAlignment="Center"
-                                ToolTip="بازگشت همهٔ کارت‌ها و بخش‌ها به حالت پیش‌فرض">
+                                ToolTip="بازگشت همه‌چیز (کارت‌ها، بخش‌ها، ترتیب و پهناها) به حالت پیش‌فرض">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Restore" Width="12" Height="12" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                <TextBlock Text="چیدمان پیش‌فرض" Margin="5,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                <materialDesign:PackIcon Kind="Restore" Width="12" Height="12" VerticalAlignment="Center" />
+                                <TextBlock Text="چیدمان پیش‌فرض" Margin="5,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-                        <TextBlock Text="جابه‌جایی: ⬆⬇ روی کارت‌ها یا کشیدن دستگیرهٔ بخش‌ها · پنهان‌سازی: سوییچ/چشم · پهنا: دکمهٔ ستون روی هر کارت و بخش (KPI: ۱ تا ۳ ستون، بخش‌ها: نیم‌عرض/تمام‌عرض)"
-                                   FontSize="10" Opacity="0.6" VerticalAlignment="Center" Margin="0,3,0,3"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ViewDashboardEdit" Width="20" Height="20"
+                                                     Foreground="#E65100" VerticalAlignment="Center" />
+                            <TextBlock Text="مدیریت داشبورد" FontWeight="Bold" FontSize="14" Foreground="#E65100"
+                                       Margin="7,0,0,0" VerticalAlignment="Center" />
+                            <TextBlock Text="— هر تغییری خودکار ذخیره می‌شود؛ دست شما برای هر کاری باز است"
+                                       FontSize="10.5" Foreground="#8D6E00" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </DockPanel>
+
+                    <!-- ۱) کارت‌های روی داشبورد -->
+                    <TextBlock Text="📊 کارت‌های آماری روی داشبورد" FontSize="12" FontWeight="Bold" Foreground="#5D4037" Margin="0,10,0,5" />
+                    <ItemsControl ItemsSource="{Binding MainCards}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="9" Background="White" BorderBrush="#FFE0B2" BorderThickness="1"
+                                        Padding="9,5" Margin="0,0,0,5">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="30" Height="30" CornerRadius="15" VerticalAlignment="Center"
+                                                Background="{Binding Accent, Converter={StaticResource HexToBrush}}">
+                                            <materialDesign:PackIcon Kind="{Binding IconKind, TargetNullValue=ViewDashboard, FallbackValue=ViewDashboard}"
+                                                                     Width="15" Height="15" Foreground="White"
+                                                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="9,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Label}" FontSize="11.5" FontWeight="SemiBold" Foreground="#37474F" />
+                                            <TextBlock Text="{Binding CompareText}" FontSize="9" Foreground="#90A4AE" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Command="{Binding DataContext.MoveCardUpCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Padding="3,1" ToolTip="جابه‌جایی به قبل">
+                                                <materialDesign:PackIcon Kind="ChevronUp" Width="14" Height="14" />
+                                            </Button>
+                                            <Button Command="{Binding DataContext.MoveCardDownCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Padding="3,1" ToolTip="جابه‌جایی به بعد">
+                                                <materialDesign:PackIcon Kind="ChevronDown" Width="14" Height="14" />
+                                            </Button>
+                                        </StackPanel>
+                                        <Button Grid.Column="3" Command="{Binding DataContext.CycleCardSpanCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}"
+                                                Padding="4,1" VerticalAlignment="Center"
+                                                ToolTip="پهنای ستونی کارت (۱ تا ۳ ستون) — کلیک برای تغییر">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="ViewColumnOutline" Width="13" Height="13" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Span, Converter={StaticResource PersianDigits}}" FontSize="10.5" FontWeight="Bold" Margin="3,0,0,0" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                        <ToggleButton Grid.Column="4" IsChecked="{Binding Visible}" VerticalAlignment="Center"
+                                                      Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0"
+                                                      ToolTip="نمایش/پنهان‌کردن موقت کارت (بدون حذف)" />
+                                        <Button Grid.Column="5" Command="{Binding DataContext.RemoveCardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}"
+                                                Padding="4,1" VerticalAlignment="Center" Foreground="#C62828"
+                                                ToolTip="حذف کارت از داشبورد (از کاتالوگ پایین دوباره می‌توانید اضافه‌اش کنید)">
+                                            <materialDesign:PackIcon Kind="CloseCircleOutline" Width="15" Height="15" />
+                                        </Button>
+                                        <materialDesign:PackIcon Grid.Column="6" Kind="DragVertical" Width="14" Height="14"
+                                                                 Foreground="#BCAAA4" VerticalAlignment="Center"
+                                                                 ToolTip="روی خود کارت هم می‌توانید بکشید و رها کنید" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- ۲) افزودن کارت تازه از کاتالوگ -->
+                    <TextBlock Text="➕ افزودن کارت تازه به داشبورد" FontSize="12" FontWeight="Bold" Foreground="#5D4037" Margin="0,12,0,5" />
+                    <TextBlock Text="همهٔ کارت‌های این فهرست همین حالا روی داشبورد نیستند؛ با «افزودن» به انتهای داشبورد می‌آیند و بعد از همان‌جا جابه‌جا و تنظیم‌شان کنید."
+                               FontSize="9.5" Foreground="#8D6E00" Margin="0,0,0,5" />
+                    <ItemsControl ItemsSource="{Binding AvailableCards}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="9" Background="#FFF8E1" BorderBrush="#FFCC80" BorderThickness="1"
+                                        Padding="8,5" Margin="0,0,6,6">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="26" Height="26" CornerRadius="13" VerticalAlignment="Center"
+                                                Background="{Binding Accent, Converter={StaticResource HexToBrush}}">
+                                            <materialDesign:PackIcon Kind="{Binding IconKind, TargetNullValue=ViewDashboard, FallbackValue=ViewDashboard}"
+                                                                     Width="13" Height="13" Foreground="White"
+                                                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <TextBlock Text="{Binding Label}" FontSize="10.5" FontWeight="SemiBold" Foreground="#4E342E"
+                                                   Margin="6,0" VerticalAlignment="Center" />
+                                        <Button Command="{Binding DataContext.AddCardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}"
+                                                Padding="5,1" ToolTip="افزودن این کارت به داشبورد">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="PlusCircle" Width="13" Height="13" VerticalAlignment="Center" Foreground="#2E7D32" />
+                                                <TextBlock Text="افزودن" FontSize="10" FontWeight="Bold" Foreground="#2E7D32" Margin="3,0,0,0" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="همهٔ کارت‌های کاتالوگ روی داشبورد هستند. 🎉" FontSize="10" Foreground="#2E7D32" FontWeight="SemiBold">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding AvailableCards.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <!-- ۳) بخش‌های داشبورد -->
+                    <TextBlock Text="🧩 بخش‌های داشبورد (نمودارها، ویزیت‌ها، فعالیت‌ها…)" FontSize="12" FontWeight="Bold" Foreground="#5D4037" Margin="0,12,0,5" />
+                    <ItemsControl ItemsSource="{Binding Sections}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="9" Background="White" BorderBrush="#FFE0B2" BorderThickness="1"
+                                        Padding="9,5" Margin="0,0,0,5">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="{Binding Icon}" Width="16" Height="16"
+                                                                 Foreground="#E65100" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="11.5" FontWeight="SemiBold"
+                                                   Foreground="#37474F" Margin="8,0" VerticalAlignment="Center" />
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Command="{Binding DataContext.MoveSectionUpCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Padding="3,1" ToolTip="جابه‌جایی بخش به بالا">
+                                                <materialDesign:PackIcon Kind="ChevronUp" Width="14" Height="14" />
+                                            </Button>
+                                            <Button Command="{Binding DataContext.MoveSectionDownCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Padding="3,1" ToolTip="جابه‌جایی بخش به پایین">
+                                                <materialDesign:PackIcon Kind="ChevronDown" Width="14" Height="14" />
+                                            </Button>
+                                        </StackPanel>
+                                        <Button Grid.Column="3" Command="{Binding DataContext.CycleSectionSpanCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}"
+                                                Padding="4,1" VerticalAlignment="Center"
+                                                ToolTip="پهنای بخش: نیم‌عرض / تمام‌عرض">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="ViewColumnOutline" Width="13" Height="13" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Span, Converter={StaticResource PersianDigits}}" FontSize="10.5" FontWeight="Bold" Margin="3,0,0,0" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                        <ToggleButton Grid.Column="4" IsChecked="{Binding Visible}" VerticalAlignment="Center"
+                                                      Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0"
+                                                      ToolTip="نمایش/پنهان‌کردن این بخش" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- ۴) نمایش کلی بلوک‌های ثابت -->
+                    <TextBlock Text="🎛 نمایش بلوک‌های ثابت داشبورد" FontSize="12" FontWeight="Bold" Foreground="#5D4037" Margin="0,12,0,5" />
+                    <WrapPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,3,16,3">
+                            <TextBlock Text="کارت‌های فرعی" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <ToggleButton IsChecked="{Binding ShowSecondaryCards}" Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,3,16,3">
+                            <TextBlock Text="نمودار درآمد" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <ToggleButton IsChecked="{Binding ShowRevenueChart}" Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,3,16,3">
+                            <TextBlock Text="نوبت‌های پیش‌رو" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <ToggleButton IsChecked="{Binding ShowUpcoming}" Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,3,16,3">
+                            <TextBlock Text="فعالیت‌های اخیر" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <ToggleButton IsChecked="{Binding ShowActivities}" Style="{StaticResource MaterialDesignSwitchToggleButton}" Padding="2,0" />
+                        </StackPanel>
                     </WrapPanel>
+
+                    <TextBlock Text="راهنما: روی خود کارت‌ها و دستگیرهٔ بخش‌ها هم می‌توانید بکشید و رها کنید. «پنهان‌کردن» با سوییچ با «حذف» فرق دارد — حذف‌شده‌ها از کاتالوگ بالا برمی‌گردند و پنهان‌شده‌ها در همین حالت مدیریت با سوییچ برمی‌گردند."
+                               FontSize="9.5" Foreground="#8D6E00" TextWrapping="Wrap" Margin="0,10,0,0" />
                 </StackPanel>
             </Border>
 
