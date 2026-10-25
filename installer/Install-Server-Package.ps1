@@ -40,6 +40,15 @@ if (Test-Path $installedExe) {
         try { $installedVersion = (Get-Item $installedExe).VersionInfo.ProductVersion } catch { }
     }
 }
+# پیش‌شرط به‌روزرسانی کم‌حجم: Runtime نصب موجود باید سر جایش باشد؛ اگر نیست،
+# این بسته به‌تنهایی کافی نیست و نصب کامل لازم است (پیام روشن به‌جای خرابی).
+if ($UpdateMode) {
+    $hostFxr = Join-Path $target 'hostfxr.dll'
+    $coreClr = Join-Path $target 'coreclr.dll'
+    if (-not (Test-Path $hostFxr) -or -not (Test-Path $coreClr)) {
+        throw 'Runtime نصب سرور (hostfxr.dll/coreclr.dll) در C:\SahandClinicPro\Server پیدا نشد. این بسته «به‌روزرسانی کم‌حجم» است و به نصب کاملِ موجود نیاز دارد؛ لطفاً بستهٔ کامل سرور همین نسخه را اجرا کنید.'
+    }
+}
 $effectiveUpdate = [bool]$UpdateMode
 if (-not $UpdateMode -and $installedVersion) {
     Write-Host "نسخهٔ $installedVersion از سرور روی این رایانه نصب است." -ForegroundColor Yellow
@@ -49,7 +58,39 @@ if (-not $UpdateMode -and $installedVersion) {
     if ($choice -eq '2') { $effectiveUpdate = $true }
 }
 if ($effectiveUpdate) {
-    & robocopy $source $target /E /COPY:DAT /R:2 /W:2 /XF appsettings.json /XD Logs /NFL /NDL /NJH /NJS
+    # ═══ قانون طلایی به‌روزرسانی کم‌حجم ═══
+    # runtimeconfig.json و deps.json نصب خودبسنده هرگز بازنویسی نمی‌شوند؛
+    # بازنویسی runtimeconfig با نسخهٔ وابسته به فریم‌ورک همان چیزی بود که در
+    # آپدیت ۲.۲۸.۲ سرور را با خطای «No frameworks were found» از کار انداخت.
+    # Runtime موجود (hostfxr/coreclr و همراهانش) میزبان فایل‌های تازه است.
+    & robocopy $source $target /E /COPY:DAT /R:2 /W:2 /XF appsettings.json Sahand.ClinicPro.API.runtimeconfig.json Sahand.ClinicPro.API.deps.json /XD Logs /NFL /NDL /NJH /NJS
+
+    # ترمیم نصب‌هایی که با آپدیت خراب ۲.۲۸.۲ آسیب دیده‌اند: اگر runtimeconfig
+    # فعلی «وابسته به فریم‌ورک» شده باشد، نسخهٔ خودبسندهٔ حداقلی برگردانده
+    # می‌شود تا API دوباره با Runtime کنار خودش بالا بیاید.
+    $rcPath = Join-Path $target 'Sahand.ClinicPro.API.runtimeconfig.json'
+    if (Test-Path $rcPath) {
+        try {
+            $rcText = Get-Content $rcPath -Raw
+            if ($rcText -match '"framework"\s*:\s*\{' -and $rcText -match 'Microsoft\.NETCore\.App') {
+                Copy-Item $rcPath "$rcPath.bak" -Force -ErrorAction SilentlyContinue
+                $selfContainedRc = @'
+{
+  "runtimeOptions": {
+    "tfm": "net8.0",
+    "rollForward": "LatestMinor",
+    "configProperties": {
+      "System.Reflection.Metadata.MetadataUpdater.IsSupported": false,
+      "System.Runtime.Serialization.EnableUnsafeBinaryFormatterSerialization": false
+    }
+  }
+}
+'@
+                Set-Content -Path $rcPath -Value $selfContainedRc -Encoding UTF8
+                Write-Host 'runtimeconfig خراب‌شدهٔ آپدیت قبلی ترمیم شد (نسخهٔ پشتیبان: runtimeconfig.json.bak)' -ForegroundColor Yellow
+            }
+        } catch { }
+    }
 } else {
     & robocopy $source $target /MIR /COPY:DAT /R:2 /W:2 /XF appsettings.json /XD Logs /NFL /NDL /NJH /NJS
 }
