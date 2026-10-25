@@ -789,7 +789,7 @@ public partial class PersianCalendarControl : UserControl
                     ? HatchBrush()
                     : Brushes.White,
             Opacity = isPast && !isSelected ? 0.45 : 1,
-            Cursor = isOff ? Cursors.No : Cursors.Hand,
+            Cursor = Cursors.Hand,
             ToolTip = isFull
                 ? $"{PersianDateHelper.ToShamsiFa(date)} — ظرفیت تکمیل است"
                 : isOff
@@ -800,16 +800,17 @@ public partial class PersianCalendarControl : UserControl
                         : PersianDateHelper.ToShamsiFa(date),
             Child = cellGrid,
         };
-        if (!isOff)
+        // همهٔ روزها همیشه قابل انتخاب‌اند — حتی تعطیل یا تکمیل‌ظرفیت:
+        // کلیک، روز را انتخاب می‌کند و پنل اسلات واقعیت همان روز را نشان
+        // می‌دهد؛ قفل‌کردن روزها به دادهٔ خلاصهٔ ماه وابسته بود و با هر
+        // نقص داده‌ای کل تقویم غیرقابل‌کلیک می‌شد (گزارش‌های مکرر مالک).
+        cell.MouseLeftButtonUp += (_, _) =>
         {
-            cell.MouseLeftButtonUp += (_, _) =>
-            {
-                SelectedDate = date;
-                SelectedShamsi = PersianDateHelper.ToShamsiFa(date);
-                DateSelected?.Invoke(this, date);
-                Render();
-            };
-        }
+            SelectedDate = date;
+            SelectedShamsi = PersianDateHelper.ToShamsiFa(date);
+            DateSelected?.Invoke(this, date);
+            Render();
+        };
         return cell;
     }
 
