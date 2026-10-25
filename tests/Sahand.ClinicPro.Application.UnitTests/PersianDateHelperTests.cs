@@ -165,4 +165,27 @@ public class PersianDateHelperTests
         act1.Should().Throw<ArgumentOutOfRangeException>(because: "ماه سیزدهم وجود ندارد");
         act2.Should().Throw<ArgumentOutOfRangeException>(because: "سال خارج از بازه معتبر");
     }
+
+    /// <summary>
+    /// رگرسیون باگ تقویم نوبت‌دهی: رشته‌ای که از قبل ارقام فارسی دارد
+    /// (خروجی ToShamsiFa) نباید با تبدیل دوبارهٔ ارقام خطا بدهد — پیش‌تر
+    /// char.IsDigit ارقام فارسی را هم رقم می‌دانست و ایندکس آرایه بیرون
+    /// می‌زد و خانه‌های تقویم بی‌صدا به حالت جایگزین بدون کلیک می‌افتادند.
+    /// </summary>
+    [Fact]
+    public void ToPersianDigits_AlreadyPersianDigits_Should_NotThrow_And_StayUnchanged()
+    {
+        var fa = PersianDateHelper.ToShamsiFa(new DateTime(2026, 10, 24));
+
+        var act = () => PersianDateHelper.ToPersianDigits(fa);
+        act.Should().NotThrow();
+        PersianDateHelper.ToPersianDigits(fa).Should().Be(fa);
+    }
+
+    [Fact]
+    public void ToPersianDigits_MixedLatinDigits_Should_Convert_OnlyLatin()
+    {
+        PersianDateHelper.ToPersianDigits("1405/08/03 — 2 نوبت از 21")
+            .Should().Be("۱۴۰۵/۰۸/۰۳ — ۲ نوبت از ۲۱");
+    }
 }
