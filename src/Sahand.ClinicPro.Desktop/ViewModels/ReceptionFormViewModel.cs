@@ -50,6 +50,39 @@ public partial class ReceptionFormViewModel : ObservableObject
     [ObservableProperty]
     private string? _notes;
 
+    /// <summary>گام فعلی فرم پذیرش (۰ بیمار، ۱ پزشک و بیمه، ۲ جزئیات) — گام‌ها کلیک‌پذیرند</summary>
+    [ObservableProperty] private int _currentStep;
+
+    /// <summary>نمایش بخش اختیاری «نوبت مرتبط» (چک‌باکس بالای فرم)</summary>
+    [ObservableProperty] private bool _showAppointmentSection;
+
+    /// <summary>نمایش بخش اختیاری «کد معرفی‌نامه»</summary>
+    [ObservableProperty] private bool _showReferralSection;
+
+    /// <summary>نمایش بخش اختیاری «یادداشت»</summary>
+    [ObservableProperty] private bool _showNotesSection;
+
+    /// <summary>آیا گام بیمار فعال است؟</summary>
+    public bool IsStepPatient => CurrentStep == 0;
+    /// <summary>آیا گام پزشک و بیمه فعال است؟</summary>
+    public bool IsStepDoctor => CurrentStep == 1;
+    /// <summary>آیا گام جزئیات فعال است؟</summary>
+    public bool IsStepDetails => CurrentStep == 2;
+
+    partial void OnCurrentStepChanged(int value)
+    {
+        OnPropertyChanged(nameof(IsStepPatient));
+        OnPropertyChanged(nameof(IsStepDoctor));
+        OnPropertyChanged(nameof(IsStepDetails));
+    }
+
+    /// <summary>رفتن به گام دلخواه با کلیک روی سربرگ گام</summary>
+    [RelayCommand]
+    private void GoToStep(string? step)
+    {
+        if (int.TryParse(step, out var i)) CurrentStep = Math.Clamp(i, 0, 2);
+    }
+
     /// <summary>پیام خطا</summary>
     [ObservableProperty]
     private string _errorMessage = string.Empty;

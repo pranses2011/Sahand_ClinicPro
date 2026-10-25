@@ -89,6 +89,10 @@
                                             <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OdVisionIndex}" />
                                             <TextBlock Text="فشار داخل چشم (IOP — mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <TextBox Text="{Binding OdIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
+                                            <Border Width="180" Height="10" CornerRadius="5" HorizontalAlignment="Left" Margin="0,5,0,0"
+                                                    Background="#C8E6C9" BorderBrush="#90A4AE" BorderThickness="0.5">
+                                                <Border Width="{Binding OdIopGaugeWidth, Mode=OneWay}" Height="10" CornerRadius="5" HorizontalAlignment="Left" Background="#3949AB" />
+                                            </Border>
                                             <TextBlock Text="{Binding OdIopWarning, Mode=OneWay}" Foreground="#C62828" FontWeight="Bold" FontSize="11.5" Margin="0,4,0,0"
                                                        Visibility="{Binding OdIopWarning, Converter={StaticResource StringToVisibility}}" />
                                         </StackPanel>
@@ -107,6 +111,10 @@
                                             <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OsVisionIndex}" />
                                             <TextBlock Text="فشار داخل چشم (IOP — mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <TextBox Text="{Binding OsIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
+                                            <Border Width="180" Height="10" CornerRadius="5" HorizontalAlignment="Left" Margin="0,5,0,0"
+                                                    Background="#C8E6C9" BorderBrush="#90A4AE" BorderThickness="0.5">
+                                                <Border Width="{Binding OsIopGaugeWidth, Mode=OneWay}" Height="10" CornerRadius="5" HorizontalAlignment="Left" Background="#3949AB" />
+                                            </Border>
                                             <TextBlock Text="{Binding OsIopWarning, Mode=OneWay}" Foreground="#C62828" FontWeight="Bold" FontSize="11.5" Margin="0,4,0,0"
                                                        Visibility="{Binding OsIopWarning, Converter={StaticResource StringToVisibility}}" />
                                         </StackPanel>
@@ -135,6 +143,62 @@
                                     </StackPanel>
                                 </Grid>
 
+                                <!-- نسخهٔ عینک زنده — طرح تأییدشدهٔ نسخهٔ ۲ -->
+                                <Border CornerRadius="12" BorderBrush="#9FA8DA" BorderThickness="1.4" Padding="12" Margin="0,12,0,0" Background="#E8EFFF">
+                                    <StackPanel>
+                                        <TextBlock Text="👓 نسخهٔ عینک (زنده — از عددهای رفرکشن بالا)" FontWeight="Bold" FontSize="12.5" Foreground="#1A237E" />
+                                        <TextBlock Text="{Binding GlassesPrescriptionText, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}"
+                                                   FontSize="12" Margin="0,6,0,0" Foreground="#1A237E" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- ماژول حرفه‌ای چشم‌پزشکی — طرح تأییدشدهٔ نسخهٔ ۲ -->
+                                <Expander Margin="0,12,0,0" Header="🔬 اسلیت‌لمپ و فوندوس + پاچیمتری">
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="راست (OD): پلک، ملتحمه، قرنیه، عدسی، مردمک/RAPD، زجاجیه، دیسک و ماکولا" FontSize="10" Opacity="0.6" TextWrapping="Wrap" />
+                                            <TextBox Text="{Binding SlitOd, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="52" />
+                                            <TextBlock Text="پاچیمتری راست (میکرون)" FontSize="10" Opacity="0.6" Margin="0,6,0,0" />
+                                            <TextBox Text="{Binding PachymetryOd, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="چپ (OS): همان ساختار قرینه" FontSize="10" Opacity="0.6" />
+                                            <TextBox Text="{Binding SlitOs, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="52" />
+                                            <TextBlock Text="پاچیمتری چپ (میکرون)" FontSize="10" Opacity="0.6" Margin="0,6,0,0" />
+                                            <TextBox Text="{Binding PachymetryOs, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Expander>
+                                <Expander Margin="0,8,0,0" Header="🧪 تست‌های تخصصی (میدان بینایی، آمسلر، ایشیهارا، شیرمر، کاور تست)">
+                                    <StackPanel Margin="0,8,0,0">
+                                        <TextBlock Text="میدان بینایی (پریمتری) — الگوی نقص و MD هر چشم" FontSize="10" Opacity="0.6" />
+                                        <TextBox Text="{Binding VisualFieldText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="40" />
+                                        <TextBlock Text="آمادگی/نتیجهٔ آمسلر، ایشیهارا، شیرمر، کاور تست و دید عمق" FontSize="10" Opacity="0.6" Margin="0,6,0,0" />
+                                        <TextBox Text="{Binding SpecialTestsText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="40" />
+                                    </StackPanel>
+                                </Expander>
+                                <Expander Margin="0,8,0,0" Header="📷 تصویربرداری چشم (OCT، عکس فوندوس، بیومتری)">
+                                    <TextBox Text="{Binding ImagingNote, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="44" Margin="0,8,0,0"
+                                             ToolTip="نتیجه و تاریخ OCT/فوندوس/بیومتری — تصاویر از بخش تصویربرداری وصل می‌شوند" />
+                                </Expander>
+                                <Expander Margin="0,8,0,0" Header="🩺 تشخیص و برنامهٔ درمان / جراحی / ارجاع">
+                                    <StackPanel Margin="0,8,0,0">
+                                        <TextBlock Text="تشخیص‌های این معاینه" FontSize="10" Opacity="0.6" />
+                                        <TextBox Text="{Binding DiagnosisText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="38" />
+                                        <TextBlock Text="برنامهٔ درمان، نامزدی جراحی (کاتراکت/لیزیک) و شرایط ارجاع" FontSize="10" Opacity="0.6" Margin="0,6,0,0" />
+                                        <TextBox Text="{Binding CarePlanText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="38" />
+                                    </StackPanel>
+                                </Expander>
+                                <Expander Margin="0,8,0,0" Header="💊 نسخهٔ دارویی چشمی">
+                                    <TextBox Text="{Binding DrugPrescriptionText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="48" Margin="0,8,0,0"
+                                             ToolTip="دارو، چشم، دستور مصرف و مدت — مثلاً: قطره تیمولول ۰٫۵٪، راست، هر شب ۱ قطره" />
+                                </Expander>
+                                <Expander Margin="0,8,0,0" Header="📅 پیگیری و یادآوری">
+                                    <TextBox Text="{Binding FollowUpText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="40" Margin="0,8,0,0"
+                                             ToolTip="کنترل فشار، تکرار تست‌ها و غربالگری‌های دوره‌ای با تاریخ" />
+                                </Expander>
+
                                 <Button Command="{Binding SaveEyeExamCommand}" Margin="0,14,0,0" HorizontalAlignment="Left"
                                         Style="{StaticResource MaterialDesignRaisedButton}">
                                     <StackPanel Orientation="Horizontal">
@@ -155,6 +219,9 @@
                                             <TextBlock Text="سابقهٔ معاینه‌های چشم (۲۰ مورد آخر — از پروندهٔ بیمار)" FontSize="13"
                                                        FontWeight="Bold" VerticalAlignment="Center" Margin="8,0,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                         </StackPanel>
+                                        <TextBlock Text="{Binding HistoryTrendText, Mode=OneWay}" FontSize="11" FontWeight="SemiBold" Foreground="#4A148C"
+                                                   Margin="0,0,0,6" TextWrapping="Wrap"
+                                                   Visibility="{Binding HistoryTrendText, Converter={StaticResource StringToVisibility}}" />
                                         <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="170">
                                             <ItemsControl ItemsSource="{Binding EyeHistory}">
                                                 <ItemsControl.ItemTemplate>

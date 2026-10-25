@@ -50,14 +50,63 @@ public partial class OphthalmologyViewModel : ViewModelBase
     /// <summary>یافته‌های بالینی</summary>
     [ObservableProperty] private string? _eyeFindings;
 
+    /* ── ماژول حرفه‌ای چشم‌پزشکی (طرح تأییدشدهٔ نسخهٔ ۲) ── */
+
+    /// <summary>معاینهٔ اسلیت‌لمپ و فوندوس چشم راست (ساخت‌یافته)</summary>
+    [ObservableProperty] private string? _slitOd;
+    /// <summary>معاینهٔ اسلیت‌لمپ و فوندوس چشم چپ (ساخت‌یافته)</summary>
+    [ObservableProperty] private string? _slitOs;
+    /// <summary>ضخامت قرنیه (پاچیمتری) راست — میکرون</summary>
+    [ObservableProperty] private string? _pachymetryOd;
+    /// <summary>ضخامت قرنیه (پاچیمتری) چپ — میکرون</summary>
+    [ObservableProperty] private string? _pachymetryOs;
+    /// <summary>میدان بینایی (پریمتری) — الگو و MD</summary>
+    [ObservableProperty] private string? _visualFieldText;
+    /// <summary>تست‌های تخصصی (آمادگی/نتیجهٔ آمسلر، شیرمر، کاور تست، استریوپسیس)</summary>
+    [ObservableProperty] private string? _specialTestsText;
+    /// <summary>تصویربرداری چشم (OCT، عکس فوندوس، بیومتری) پیوندخورده به این معاینه</summary>
+    [ObservableProperty] private string? _imagingNote;
+    /// <summary>تشخیص‌های این معاینه</summary>
+    [ObservableProperty] private string? _diagnosisText;
+    /// <summary>برنامهٔ درمان/جراحی/ارجاع</summary>
+    [ObservableProperty] private string? _carePlanText;
+    /// <summary>نسخهٔ دارویی چشمی</summary>
+    [ObservableProperty] private string? _drugPrescriptionText;
+    /// <summary>برنامهٔ پیگیری و یادآوری</summary>
+    [ObservableProperty] private string? _followUpText;
+
+    /// <summary>نسخهٔ عینک زنده — از عددهای رفرکشن و PD همان لحظه ساخته می‌شود</summary>
+    public string GlassesPrescriptionText =>
+        $"OD: SPH {OdSphere ?? "—"} · CYL {OdCylinder ?? "—"} · AXIS {OdAxis ?? "—"} · ADD {OdAdd ?? "—"}" + Environment.NewLine +
+        $"OS: SPH {OsSphere ?? "—"} · CYL {OsCylinder ?? "—"} · AXIS {OsAxis ?? "—"} · ADD {OsAdd ?? "—"}" + Environment.NewLine +
+        $"PD: {Pd ?? "—"} mm";
+
+    /// <summary>پهنای گیج فشار چشم راست (از ۴۰ مقیاس، ۱۸۰ پیکسل)</summary>
+    public double OdIopGaugeWidth => int.TryParse(OdIop, out var v) ? Math.Clamp(v, 0, 40) / 40d * 180 : 0;
+    /// <summary>پهنای گیج فشار چشم چپ</summary>
+    public double OsIopGaugeWidth => int.TryParse(OsIop, out var v) ? Math.Clamp(v, 0, 40) / 40d * 180 : 0;
+
+    /// <summary>روند فشار و نمره در سابقه — مقایسهٔ تازه‌ترین با قبلی</summary>
+    [ObservableProperty] private string _historyTrendText = string.Empty;
+
+    partial void OnOdSphereChanged(string? value) => OnPropertyChanged(nameof(GlassesPrescriptionText));
+    partial void OnOdCylinderChanged(string? value) => OnPropertyChanged(nameof(GlassesPrescriptionText));
+    partial void OnOdAxisChanged(string? value) => OnPropertyChanged(nameof(GlassesPrescriptionText));
+    partial void OnOdAddChanged(string? value) => OnPropertyChanged(nameof(GlassesPrescriptionText));
+    partial void OnOsSphereChanged(string? value) => OnPropertyChanged(nameof(GlassesPrescriptionText));
+    partial void OnOsCylinderChanged(string? value) => OnPropertyChanged(nameof(GlassesPrescriptionText));
+    partial void OnOsAxisChanged(string? value) => OnPropertyChanged(nameof(GlassesPrescriptionText));
+    partial void OnOsAddChanged(string? value) => OnPropertyChanged(nameof(GlassesPrescriptionText));
+    partial void OnPdChanged(string? value) => OnPropertyChanged(nameof(GlassesPrescriptionText));
+
     /// <summary>هشدار گلوکوم چشم راست</summary>
     public string? OdIopWarning => int.TryParse(OdIop, out var v) && v > 21 ? "⚠️ احتمال گلوکوم — IOP بالای ۲۱" : null;
 
     /// <summary>هشدار گلوکوم چشم چپ</summary>
     public string? OsIopWarning => int.TryParse(OsIop, out var v) && v > 21 ? "⚠️ احتمال گلوکوم — IOP بالای ۲۱" : null;
 
-    partial void OnOdIopChanged(string? value) => OnPropertyChanged(nameof(OdIopWarning));
-    partial void OnOsIopChanged(string? value) => OnPropertyChanged(nameof(OsIopWarning));
+    partial void OnOdIopChanged(string? value) { OnPropertyChanged(nameof(OdIopWarning)); OnPropertyChanged(nameof(OdIopGaugeWidth)); }
+    partial void OnOsIopChanged(string? value) { OnPropertyChanged(nameof(OsIopWarning)); OnPropertyChanged(nameof(OsIopGaugeWidth)); }
 
     /// <summary>گزینه‌های حدت بینایی</summary>
     public string[] VisionOptions { get; } =
@@ -125,6 +174,15 @@ public partial class OphthalmologyViewModel : ViewModelBase
         if (last.ColorVision is { } cv && ColorVisionOptions.Contains(cv))
             ColorVisionIndex = Array.IndexOf(ColorVisionOptions, cv);
 
+        // روند: مقایسهٔ تازه‌ترین معاینه با قبلی (فشار چشم و نمرهٔ عدسی راست)
+        if (exams.Count >= 2)
+        {
+            var (a, b) = (exams[0], exams[1]);
+            static string D(int? x, int? y) => x is null || y is null ? "—" : x > y ? $"📈 از {y} به {x}" : x < y ? $"📉 از {y} به {x}" : $"{x} (ثابت)";
+            HistoryTrendText = $"روند IOP راست: {D(a.Od?.Iop, b.Od?.Iop)} · IOP چپ: {D(a.Os?.Iop, b.Os?.Iop)} · عدسی راست: {a.Od?.Sphere} (قبل: {b.Od?.Sphere})";
+        }
+        else HistoryTrendText = string.Empty;
+
         // سابقه — نمایش خوانا برای مرور روند درمان
         foreach (var e in exams)
             EyeHistory.Add(new EyeExamRow(
@@ -173,14 +231,36 @@ public partial class OphthalmologyViewModel : ViewModelBase
             leftVisualAcuity = VisionOptions.ElementAtOrDefault(OsVisionIndex),
             pupilDistance = TryDec(Pd),
             colorVision = ColorVisionOptions.ElementAtOrDefault(ColorVisionIndex),
-            findings = EyeFindings,
-            // تجویز عینک — از مقادیر Add (نزدیک‌بین) ساخته می‌شود
-            eyewearPrescription = (string.IsNullOrWhiteSpace(OdAdd) && string.IsNullOrWhiteSpace(OsAdd))
-                ? null
-                : $"Add OD {OdAdd} / OS {OsAdd} — PD {Pd}"
+            visualField = string.IsNullOrWhiteSpace(VisualFieldText) ? null : VisualFieldText.Trim(),
+            findings = ComposeFindings(),
+            // تجویز عینک — نسخهٔ زندهٔ ساخته‌شده از رفرکشن و PD
+            eyewearPrescription = GlassesPrescriptionText
         });
         if (ok) _snackbar.Success($"معاینهٔ چشم برای «{EyePatient.FullName}» ثبت شد");
         else _snackbar.Error(_api.LastError ?? "ثبت معاینه ناموفق بود");
+    }
+
+    /// <summary>
+    /// ترکیب یافته‌های بالینی با بخش‌های ساخت‌یافتهٔ ماژول حرفه‌ای — همه در
+    /// همان ستون یافته‌های رکورد معاینه ذخیره می‌شوند تا بدون تغییر دیتابیس،
+    /// در سابقهٔ بیمار هم خوانا بمانند.
+    /// </summary>
+    private string? ComposeFindings()
+    {
+        var parts = new List<string>();
+        void Add(string title, string? text) { if (!string.IsNullOrWhiteSpace(text)) parts.Add($"{title}: {text.Trim()}"); }
+        Add("یافته‌ها", EyeFindings);
+        Add("اسلیت‌لمپ/فوندوس راست", SlitOd);
+        Add("اسلیت‌لمپ/فوندوس چپ", SlitOs);
+        if (!string.IsNullOrWhiteSpace(PachymetryOd) || !string.IsNullOrWhiteSpace(PachymetryOs))
+            parts.Add($"پاچیمتری: راست {PachymetryOd ?? "—"} · چپ {PachymetryOs ?? "—"} میکرون");
+        Add("تست‌های تخصصی", SpecialTestsText);
+        Add("تصویربرداری چشم", ImagingNote);
+        Add("تشخیص", DiagnosisText);
+        Add("برنامهٔ درمان", CarePlanText);
+        Add("نسخهٔ دارویی", DrugPrescriptionText);
+        Add("پیگیری", FollowUpText);
+        return parts.Count == 0 ? null : string.Join(Environment.NewLine, parts);
     }
 
     // ── مدل‌های پاسخ معاینهٔ چشم — چرخهٔ ۲۸ ──

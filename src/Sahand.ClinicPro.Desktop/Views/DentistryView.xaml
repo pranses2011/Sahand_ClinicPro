@@ -91,7 +91,11 @@
                             <Border Grid.Row="2" Grid.Column="0" CornerRadius="12" Padding="12"
                                     Background="{DynamicResource MaterialDesign.Brush.Background}">
                                 <StackPanel>
-                                    <TextBlock Text="ماگزیلا (فک بالا)" FontWeight="Bold" FontSize="12.5" Margin="2,0,2,6" />
+                                    <DockPanel Margin="2,0,2,6">
+                                        <TextBlock Text="ماگزیلا (فک بالا)" FontWeight="Bold" FontSize="12.5" />
+                                        <CheckBox IsChecked="{Binding IsChildChart}" Content="چارت کودک (شیری ۵۱–۸۵)" HorizontalAlignment="Left"
+                                                  FontSize="11" VerticalAlignment="Center" Margin="14,0,0,0" />
+                                    </DockPanel>
                                     <ItemsControl ItemsSource="{Binding UpperTeeth}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
@@ -197,6 +201,8 @@
                                                         <TextBlock Text="{Binding NumberFa}" FontSize="10.5" FontWeight="Bold"
                                                                    Foreground="#263238" FontFamily="{DynamicResource App.CodeFont}" />
                                                     </Border>
+                                                    <TextBlock Text="{Binding TypeName}" FontSize="7.5" Foreground="#546E7A"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,1" />
                                                     </Grid>
                                                 </Button>
                                             </DataTemplate>
@@ -300,6 +306,8 @@
                                                         <TextBlock Text="{Binding NumberFa}" FontSize="10.5" FontWeight="Bold"
                                                                    Foreground="#263238" FontFamily="{DynamicResource App.CodeFont}" />
                                                     </Border>
+                                                    <TextBlock Text="{Binding TypeName}" FontSize="7.5" Foreground="#546E7A"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,1" />
                                                     </Grid>
                                                 </Button>
                                             </DataTemplate>
@@ -430,6 +438,17 @@
                                         <ComboBox ItemsSource="{Binding SurfaceOptions}" SelectedItem="{Binding SelectedSurface}" />
                                         <TextBlock Text="نوبت پیشنهادی این قلم (روز و ساعت)" FontSize="10.5" Opacity="0.6" Margin="0,6,0,0" />
                                         <TextBox Text="{Binding PlanScheduleText, UpdateSourceTrigger=PropertyChanged}" ToolTip="مثلاً: شنبه ۱۰:۰۰" />
+                                        <TextBlock Text="اسلات‌های هفته (سبز خالی · قرمز رزرو · زرد استراحت) — کلیک، نوبت را می‌نشاند" FontSize="9.5" Opacity="0.6" Margin="0,6,0,3" />
+                                        <ListBox ItemsSource="{Binding ScheduleSlots}" SelectedItem="{Binding SelectedSlot}" BorderThickness="0" Background="Transparent">
+                                            <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ListBox.ItemsPanel>
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border CornerRadius="7" Padding="7,3" Margin="2" Background="{Binding Back}">
+                                                        <TextBlock Text="{Binding Display}" FontSize="10" FontWeight="SemiBold" />
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
                                         <TextBlock Text="یادداشت بالینی دندان" FontSize="10.5" Opacity="0.6" Margin="0,6,0,0" />
                                         <TextBox Text="{Binding ClinicalNote, UpdateSourceTrigger=PropertyChanged}" ToolTip="مثلاً: پوسیدگی سطح مزیال، حساس به سرما" />
                                         <Button Command="{Binding AddDentalPlanCommand}" Margin="0,10,0,0"

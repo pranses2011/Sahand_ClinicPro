@@ -173,6 +173,58 @@ public partial class DentistryViewModel : ViewModelBase
     /// <summary>جمع کل طرح با ارقام فارسی برای نمایش</summary>
     public string PlanTotalText => Helpers.Money.ToPersianDigits(PlanTotal.ToString("N0"));
 
+    /// <summary>اسلات نوبت‌دهی طرح درمان — روز و ساعت و وضعیت (خالی/رزرو/استراحت)</summary>
+    public record DentalSlot(string Day, string Time, string State)
+    {
+        /// <summary>متن نمایشی اسلات</summary>
+        public string Display => $"{Day} {Helpers.Money.ToPersianDigits(Time)}";
+        /// <summary>رنگ پس‌زمینه بر اساس وضعیت اسلات</summary>
+        public string Back => State switch { "رزرو" => "#FFCDD2", "استراحت" => "#FFE082", _ => "#C8E6C9" };
+    }
+
+    /// <summary>اسلات‌های هفتهٔ پیش رو برای نوبت‌دهی قلم طرح درمان</summary>
+    public DentalSlot[] ScheduleSlots { get; } =
+    {
+        new("شنبه", "09:00", "خالی"), new("شنبه", "10:00", "رزرو"), new("شنبه", "11:00", "خالی"),
+        new("یکشنبه", "09:00", "استراحت"), new("یکشنبه", "10:00", "خالی"), new("یکشنبه", "12:00", "خالی"),
+        new("دوشنبه", "09:00", "رزرو"), new("دوشنبه", "11:00", "خالی"), new("دوشنبه", "12:00", "خالی"),
+        new("سه‌شنبه", "10:00", "خالی"), new("چهارشنبه", "09:00", "خالی"), new("چهارشنبه", "11:00", "رزرو"),
+    };
+
+    /// <summary>اسلات برگزیدهٔ نوبت‌دهی — روی فیلد نوبت پیشنهادی می‌نشیند</summary>
+    [ObservableProperty] private DentalSlot? _selectedSlot;
+
+    partial void OnSelectedSlotChanged(DentalSlot? value)
+    {
+        if (value is not null && value.State == "خالی")
+            PlanScheduleText = value.Display;
+    }
+
+    /// <summary>چارت کودک (شیری ۵۱ تا ۸۵) فعال است؟</summary>
+    [ObservableProperty] private bool _isChildChart;
+
+    partial void OnIsChildChartChanged(bool value) => RebuildChart(value);
+
+    /// <summary>بازسازی چارت برای بزرگسال (FDI دائمی) یا کودک (شیری)</summary>
+    private void RebuildChart(bool child)
+    {
+        UpperTeeth.Clear(); LowerTeeth.Clear(); SelectedTooth = null;
+        if (child)
+        {
+            foreach (var n in new[] { 55, 54, 53, 52, 51 }) UpperTeeth.Add(new ToothVM { Number = n });
+            foreach (var n in new[] { 61, 62, 63, 64, 65 }) UpperTeeth.Add(new ToothVM { Number = n });
+            foreach (var n in new[] { 85, 84, 83, 82, 81 }) LowerTeeth.Add(new ToothVM { Number = n });
+            foreach (var n in new[] { 71, 72, 73, 74, 75 }) LowerTeeth.Add(new ToothVM { Number = n });
+        }
+        else
+        {
+            foreach (var n in new[] { 18, 17, 16, 15, 14, 13, 12, 11 }) UpperTeeth.Add(new ToothVM { Number = n });
+            foreach (var n in new[] { 21, 22, 23, 24, 25, 26, 27, 28 }) UpperTeeth.Add(new ToothVM { Number = n });
+            foreach (var n in new[] { 48, 47, 46, 45, 44, 43, 42, 41 }) LowerTeeth.Add(new ToothVM { Number = n });
+            foreach (var n in new[] { 31, 32, 33, 34, 35, 36, 37, 38 }) LowerTeeth.Add(new ToothVM { Number = n });
+        }
+    }
+
     /* ── بیمار و ماندگاری چارت (چرخهٔ ۲۸) ── */
 
     /// <summary>عبارت جستجوی بیمار دندانپزشکی</summary>

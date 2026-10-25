@@ -104,7 +104,7 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
-            <Border Grid.Column="4" CornerRadius="12" Padding="12,9"
+            <Border Grid.Column="4" CornerRadius="12" Padding="12,9" Cursor="Hand" MouseLeftButtonUp="OnStatSampledClick"
                     Background="#EDE7F6" BorderBrush="#B39DDB" BorderThickness="1">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="🧫" FontSize="17" VerticalAlignment="Center" Margin="0,0,8,0" />

@@ -43,6 +43,16 @@ public partial class LabView : UserControl
     private void OnStatOrderedClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         => MainTabs.SelectedIndex = 3;
 
+    /// <summary>کارت آمار «نمونه‌گیری‌شده» — فیلتر وضعیت ۲ (طرح تأییدشده: هر پنج کارت کلیک‌پذیر)</summary>
+    private void OnStatSampledClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (DataContext is not LabViewModel vm) return;
+        OrdersGrid.Visibility = Visibility.Visible;
+        InsightPanel.Visibility = Visibility.Visible;
+        vm.StatusFilterIndex = 2;
+        _ = vm.LoadAsync();
+    }
+
     /// <summary>کارت آمار «در حال انجام» — تب در حال انجام</summary>
     private void OnStatProgressClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         => MainTabs.SelectedIndex = 1;
