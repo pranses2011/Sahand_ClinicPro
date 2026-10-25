@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -22,6 +22,9 @@ public partial class LabTestOptionRow : ObservableObject
 
     /// <summary>واحد اندازه‌گیری — چرخهٔ ۷۹</summary>
     public string? Unit { get; init; }
+
+    /// <summary>قیمت تعرفه — طراحی نسخهٔ ۳ (جمع تعرفهٔ زنده در خلاصهٔ فرم)</summary>
+    public decimal Price { get; init; }
 
     /// <summary>انتخاب‌شده</summary>
     [ObservableProperty]
@@ -92,19 +95,46 @@ public partial class LabOrderFormViewModel : ObservableObject
         _ = LoadTestsAsync();
     }
 
+    /// <summary>
+    /// متن خلاصهٔ انتخاب آزمایش‌ها — طراحی نسخهٔ ۳ (تأیید مالک):
+    /// «۳ آزمایش انتخاب شد · جمع تعرفه: …»؛ با هر تیک، زنده به‌روز می‌شود.
+    /// </summary>
+    [ObservableProperty]
+    private string _selectedSummaryText = "هنوز آزمایشی انتخاب نشده است.";
+
+    /// <summary>به‌روزرسانی خلاصهٔ انتخاب — با تغییر تیک هر ردیف صدا زده می‌شود</summary>
+    private void RefreshSelectedSummary()
+    {
+        var picked = Tests.Where(t => t.IsSelected).ToList();
+        SelectedSummaryText = picked.Count == 0
+            ? "هنوز آزمایشی انتخاب نشده است."
+            : $"{Helpers.Money.ToPersianDigits(picked.Count.ToString())} آزمایش انتخاب شد: " +
+              string.Join("، ", picked.Select(t => t.Name)) +
+              $" · جمع تعرفه: {Helpers.Money.Format(picked.Sum(t => t.Price))}";
+    }
+
     /// <summary>بارگذاری آزمایش‌های فعال</summary>
     private async Task LoadTestsAsync()
     {
         var response = await _api.GetAsync<LabTestsResponse>("lookups/lab-tests");
         if (response?.Data is not null)
             foreach (var t in response.Data)
-                Tests.Add(new LabTestOptionRow
+            {
+                var row = new LabTestOptionRow
                 {
                     Id = t.Id, Name = t.Name, Category = t.Category,
                     // چرخهٔ ۷۹ — بازهٔ مرجع/واحد در فهرست انتخاب (گزارش مالک:
                     // «بازه‌ها موقع ثبت درخواست هم دیده بشن»)
-                    RangeText = t.RangeText, Unit = t.Unit,
-                });
+                    RangeText = t.RangeText, Unit = t.Unit, Price = t.Price,
+                };
+                // طراحی نسخهٔ ۳ — خلاصهٔ زندهٔ انتخاب (تعداد + جمع تعرفه)
+                row.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName == nameof(LabTestOptionRow.IsSelected))
+                        RefreshSelectedSummary();
+                };
+                Tests.Add(row);
+            }
     }
 
     /// <summary>جستجوی بیمار</summary>
