@@ -655,7 +655,7 @@ public partial class PersianCalendarControl : UserControl
 
     /// <summary>ساخت خانهٔ یک روز — عدد، نوار ظرفیت، برچسب امروز و کلیک انتخاب</summary>
     private Border? BuildDayCell(int day, DateTime today, HashSet<DateTime> disabled,
-        Dictionary<DateTime, CalendarDayStat> stats, Dictionary<DateTime, int> marked,
+        IDictionary<DateTime, CalendarDayStat> stats, IDictionary<DateTime, int> marked,
         ref int monthBooked, ref int monthTotal, ref int monthWorkDays)
     {
         var date = Persian.ToDateTime(DisplayYear, DisplayMonth, day, 0, 0, 0, 0);
