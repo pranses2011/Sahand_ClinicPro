@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.ReceptionsView"
+﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.ReceptionsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -68,7 +68,7 @@
             <StackPanel>
                 <!-- ═══ کارت‌های آماری — چرخهٔ ۴۶: هم‌الگو با زبان طراحی مشترک برنامه
                      (App.StatCard)؛ ایموجی‌های برچسب حذف شدند — رندر ناهماهنگ در ویندوز ═══ -->
-                <UniformGrid Columns="4" Margin="0,0,0,12">
+                <UniformGrid Columns="4" Margin="0,0,0,12" Visibility="{Binding ShowStatsPanel, Converter={StaticResource BoolToVisibility}}">
                     <!-- کارت ۱: بیماران در انتظار پذیرش — کهربایی فعال -->
                     <Border Style="{StaticResource App.StatCard}" Margin="0,0,6,0">
                         <DockPanel>
@@ -162,163 +162,186 @@
                              سه گام با دایرهٔ شماره و برچسب؛ وضعیت از WizardStep:
                              جاری = آبی برند، انجام‌شده = سبز، آینده = کم‌رنگ. خط اتصال
                              میان گام‌ها پس از گذر سبز می‌شود -->
-                        <Grid Margin="0,6,0,14">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="46" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="46" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
+                        <!-- ═══ بازطراحی مالک — بخش‌های اختیاری صفحه ═══
+                             با تیک هر گزینه، همان بخش به صفحه اضافه/حذف می‌شود؛
+                             انتخاب کاربر در تنظیمات محلی ذخیره می‌شود -->
+                        <Border CornerRadius="10" Padding="10,7" Margin="0,0,0,10"
+                                Background="#F5F9FC" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
+                            <WrapPanel VerticalAlignment="Center">
+                                <TextBlock Text="🧩 بخش‌های صفحه:" FontWeight="Bold" FontSize="11.5" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                <CheckBox Content="آمار امروز" IsChecked="{Binding ShowStatsPanel}" Margin="0,0,12,0" FontSize="11.5" />
+                                <CheckBox Content="صف پذیرش امروز" IsChecked="{Binding ShowQueuePanel}" Margin="0,0,12,0" FontSize="11.5" />
+                                <CheckBox Content="مراجعه‌کننده‌های اخیر" IsChecked="{Binding ShowRecentPanel}" Margin="0,0,12,0" FontSize="11.5" />
+                                <CheckBox Content="نوبت‌های امروز" IsChecked="{Binding ShowAppointmentsPanel}" Margin="0,0,12,0" FontSize="11.5" />
+                                <CheckBox Content="خلاصهٔ مالی امروز" IsChecked="{Binding ShowFinancePanel}" FontSize="11.5" />
+                            </WrapPanel>
+                        </Border>
 
-                            <!-- گام ۱ — بیمار (راست)؛ همیشه جاری یا انجام‌شده است -->
-                            <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
-                                <Border>
-                                    <Border.Style>
-                                        <Style TargetType="Border" BasedOn="{StaticResource App.WizardCircle}">
-                                            <Setter Property="Background" Value="#2E7D32" />
-                                            <Setter Property="BorderBrush" Value="#1B5E20" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding WizardStep}" Value="0">
-                                                    <Setter Property="Background" Value="#1565C0" />
-                                                    <Setter Property="BorderBrush" Value="#0D47A1" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <TextBlock Text="۱" Style="{StaticResource App.WizardNumber}" Foreground="White" />
-                                </Border>
-                                <TextBlock Text="انتخاب بیمار">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.WizardLabel}">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding WizardStep}" Value="0">
-                                                    <Setter Property="Opacity" Value="1" />
-                                                    <Setter Property="Foreground" Value="#1565C0" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                        <!-- مراجعه‌کننده‌های اخیر — انتخاب یک‌کلیکه -->
+                        <Border CornerRadius="10" Padding="10,8" Margin="0,0,0,10"
+                                Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
+                                Visibility="{Binding ShowRecentPanel, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <TextBlock Text="🕘 مراجعه‌کننده‌های اخیر (برای انتخاب، کلیک کنید)" FontWeight="Bold" FontSize="11.5" Margin="0,0,0,6" />
+                                <ItemsControl ItemsSource="{Binding RecentPatients}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{Binding}" Margin="0,0,6,6" Padding="10,4" FontSize="11.5"
+                                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                    Command="{Binding DataContext.SelectRecentPatientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
+                        </Border>
 
-                            <!-- اتصال گام ۱ → ۲ -->
-                            <Border Grid.Column="1">
-                                <Border.Style>
-                                    <Style TargetType="Border" BasedOn="{StaticResource App.WizardLink}">
+                        <!-- نوبت‌های امروز -->
+                        <Border CornerRadius="10" Padding="10,8" Margin="0,0,0,10"
+                                Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
+                                Visibility="{Binding ShowAppointmentsPanel, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <TextBlock Text="📅 نوبت‌های امروز" FontWeight="Bold" FontSize="11.5" Margin="0,0,0,6" />
+                                <ItemsControl ItemsSource="{Binding TodayAppointmentsMini}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <DockPanel Margin="0,2">
+                                                <TextBlock DockPanel.Dock="Left" Text="{Binding StatusText}" FontSize="11" Foreground="#2E7D32" />
+                                                <TextBlock FontSize="11.5">
+                                                    <Run Text="{Binding Time}" FontWeight="Bold" /><Run Text=" · " /><Run Text="{Binding PatientName}" /><Run Text=" — " /><Run Text="{Binding DoctorName}" />
+                                                </TextBlock>
+                                            </DockPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- خلاصهٔ مالی امروز -->
+                        <Border CornerRadius="10" Padding="10,8" Margin="0,0,0,10"
+                                Background="#F1F8E9"
+                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
+                                Visibility="{Binding ShowFinancePanel, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="💰 خلاصهٔ مالی امروز:" FontWeight="Bold" FontSize="11.5" Margin="0,0,12,0" />
+                                <TextBlock FontSize="11.5" Margin="0,0,12,0"><Run Text="فاکتورها: " /><Run Text="{Binding TodayInvoicedText, Mode=OneWay}" FontWeight="Bold" /></TextBlock>
+                                <TextBlock FontSize="11.5" Margin="0,0,12,0"><Run Text="پرداخت‌شده: " /><Run Text="{Binding TodayPaidText, Mode=OneWay}" FontWeight="Bold" /></TextBlock>
+                                <TextBlock FontSize="11.5"><Run Text="درآمد پذیرش: " /><Run Text="{Binding TodayRevenueDisplay, Mode=OneWay}" FontWeight="Bold" /></TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ═══ نوار گام‌های ویزارد — چهار گام، هر گام کلیک‌پذیر ═══
+                             کلیک روی هر گام مستقیم به همان گام می‌رود؛ اگر پیش‌نیاز
+                             کامل نباشد، منطق هوشمند کاربر را به اولین گام ناتمام
+                             می‌برد و پیام راهنما نشان می‌دهد -->
+                        <UniformGrid Columns="4" Margin="0,2,0,14">
+                            <Button Margin="0,0,6,0" Padding="10,8" Command="{Binding GoToStepCommand}" CommandParameter="0" ToolTip="گام نوع پذیرش">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="0">
+                                                <Setter Property="Background" Value="#E3F2FD" />
+                                                <Setter Property="FontWeight" Value="Bold" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <TextBlock Text="۱ · نوع پذیرش" FontSize="12" />
+                            </Button>
+                            <Button Margin="0,0,6,0" Padding="10,8" Command="{Binding GoToStepCommand}" CommandParameter="1" ToolTip="گام بیمار">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding WizardStep}" Value="1">
-                                                <Setter Property="Background" Value="#2E7D32" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding WizardStep}" Value="2">
-                                                <Setter Property="Background" Value="#2E7D32" />
+                                                <Setter Property="Background" Value="#E3F2FD" />
+                                                <Setter Property="FontWeight" Value="Bold" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </Border.Style>
-                            </Border>
-
-                            <!-- گام ۲ — خدمت -->
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center">
-                                <Border>
-                                    <Border.Style>
-                                        <Style TargetType="Border" BasedOn="{StaticResource App.WizardCircle}">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding WizardStep}" Value="1">
-                                                    <Setter Property="Background" Value="#1565C0" />
-                                                    <Setter Property="BorderBrush" Value="#0D47A1" />
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding WizardStep}" Value="2">
-                                                    <Setter Property="Background" Value="#2E7D32" />
-                                                    <Setter Property="BorderBrush" Value="#1B5E20" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <TextBlock Text="۲">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock" BasedOn="{StaticResource App.WizardNumber}">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding WizardStep}" Value="1">
-                                                        <Setter Property="Foreground" Value="White" />
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding WizardStep}" Value="2">
-                                                        <Setter Property="Foreground" Value="White" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </Border>
-                                <TextBlock Text="نوع خدمت / پزشک">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.WizardLabel}">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding WizardStep}" Value="1">
-                                                    <Setter Property="Opacity" Value="1" />
-                                                    <Setter Property="Foreground" Value="#1565C0" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </StackPanel>
-
-                            <!-- اتصال گام ۲ → ۳ -->
-                            <Border Grid.Column="3">
-                                <Border.Style>
-                                    <Style TargetType="Border" BasedOn="{StaticResource App.WizardLink}">
+                                </Button.Style>
+                                <TextBlock Text="۲ · بیمار" FontSize="12" />
+                            </Button>
+                            <Button Margin="0,0,6,0" Padding="10,8" Command="{Binding GoToStepCommand}" CommandParameter="2" ToolTip="گام پزشک یا خدمت">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding WizardStep}" Value="2">
-                                                <Setter Property="Background" Value="#2E7D32" />
+                                                <Setter Property="Background" Value="#E3F2FD" />
+                                                <Setter Property="FontWeight" Value="Bold" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </Border.Style>
-                            </Border>
+                                </Button.Style>
+                                <TextBlock Text="۳ · پزشک / خدمت" FontSize="12" />
+                            </Button>
+                            <Button Padding="10,8" Command="{Binding GoToStepCommand}" CommandParameter="3" ToolTip="گام ثبت">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="3">
+                                                <Setter Property="Background" Value="#E3F2FD" />
+                                                <Setter Property="FontWeight" Value="Bold" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <TextBlock Text="۴ · بیمه و ثبت" FontSize="12" />
+                            </Button>
+                        </UniformGrid>
 
-                            <!-- گام ۳ — ثبت (چپ) -->
-                            <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Center">
-                                <Border>
-                                    <Border.Style>
-                                        <Style TargetType="Border" BasedOn="{StaticResource App.WizardCircle}">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding WizardStep}" Value="2">
-                                                    <Setter Property="Background" Value="#1565C0" />
-                                                    <Setter Property="BorderBrush" Value="#0D47A1" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <TextBlock Text="۳">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock" BasedOn="{StaticResource App.WizardNumber}">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding WizardStep}" Value="2">
-                                                        <Setter Property="Foreground" Value="White" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </Border>
-                                <TextBlock Text="بیمه، هزینه و ثبت">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock" BasedOn="{StaticResource App.WizardLabel}">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding WizardStep}" Value="2">
-                                                    <Setter Property="Opacity" Value="1" />
-                                                    <Setter Property="Foreground" Value="#1565C0" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </StackPanel>
-                        </Grid>
-
-                        <!-- ═══ گام ۰ — بیمار: جستجوی هوشمند + نتایج + کارت پرونده ═══ -->
+                        <!-- ═══ گام ۰ — نوع پذیرش: دو دکمهٔ بزرگ ═══ -->
                         <StackPanel Visibility="{Binding WizardStep, Converter={StaticResource SectionToVisibility}, ConverterParameter=0}">
+                            <TextBlock Text="این پذیرش برای چیست؟" FontWeight="Bold" FontSize="15" Margin="0,2,0,4" />
+                            <TextBlock Text="یکی را انتخاب کنید تا به گام بعد بروید؛ بقیهٔ فرم دقیقاً بر همان اساس چیده می‌شود." FontSize="11.5" Opacity="0.7" Margin="0,0,0,12" />
+                            <UniformGrid Columns="2">
+                                <Button Command="{Binding SelectDoctorModeCommand}" Margin="0,0,8,0" MinHeight="118" Padding="16"
+                                        ToolTip="بیمار برای معاینه نزد پزشک می‌رود">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsDoctorMode}" Value="True">
+                                                    <Setter Property="Background" Value="#E3F2FD" />
+                                                    <Setter Property="BorderBrush" Value="#1565C0" />
+                                                    <Setter Property="BorderThickness" Value="2.4" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <materialDesign:PackIcon Kind="Stethoscope" Width="38" Height="38" HorizontalAlignment="Center" Foreground="#1565C0" />
+                                        <TextBlock Text="🩺 ویزیت پزشک" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,8,0,2" />
+                                        <TextBlock Text="معاینه نزد پزشک — پزشک و نوع ویزیت در گام سوم" FontSize="11" Opacity="0.7" HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding SelectServiceModeCommand}" Margin="8,0,0,0" MinHeight="118" Padding="16"
+                                        ToolTip="بیمار فقط برای یک خدمت درمانی آمده و پزشک لازم ندارد">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsServiceMode}" Value="True">
+                                                    <Setter Property="Background" Value="#FFF3E0" />
+                                                    <Setter Property="BorderBrush" Value="#E65100" />
+                                                    <Setter Property="BorderThickness" Value="2.4" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <materialDesign:PackIcon Kind="Needle" Width="38" Height="38" HorizontalAlignment="Center" Foreground="#E65100" />
+                                        <TextBlock Text="💉 خدمات درمانی" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,8,0,2" />
+                                        <TextBlock Text="تزریقات، پانسمان، آزمایش، تصویربرداری و…" FontSize="11" Opacity="0.7" HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </UniformGrid>
+                        </StackPanel>
+
+                        <!-- ═══ گام ۱ — بیمار: جستجوی هوشمند + نتایج + کارت پرونده ═══ -->
+                        <StackPanel Visibility="{Binding WizardStep, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}">
 
                         <!-- جستجوی هوشمند — چرخه بیست‌وسوم: برچسب و راهنما برای جستجوی
                              نام/نام‌خانوادگی و تطبیق جزئی (پیش‌تر فقط کد ملی کامل جواب می‌داد) -->
@@ -421,7 +444,7 @@
                         </StackPanel><!-- پایان گام ۰ — بیمار -->
 
                         <!-- ═══ گام ۱ — خدمت: نوع پذیرش + پزشک/خدمت + انجام‌دهنده/اتاق + لوازم مصرفی ═══ -->
-                        <StackPanel Visibility="{Binding WizardStep, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}">
+                        <StackPanel Visibility="{Binding WizardStep, Converter={StaticResource SectionToVisibility}, ConverterParameter=2}">
 
                         <!-- حالت پذیرش + پزشک/خدمت — چرخه ۲۴ -->
                         <StackPanel>
@@ -583,7 +606,7 @@
                         </StackPanel><!-- پایان گام ۱ — خدمت -->
 
                         <!-- ═══ گام ۲ — بیمه، هزینه و ثبت ═══ -->
-                        <StackPanel Visibility="{Binding WizardStep, Converter={StaticResource SectionToVisibility}, ConverterParameter=2}">
+                        <StackPanel Visibility="{Binding WizardStep, Converter={StaticResource SectionToVisibility}, ConverterParameter=3}">
 
                         <!-- بیمه + ارجاع + یادداشت — دو ستون (چرخهٔ ۷۶: از فرم قدیمی به گام ثبت منتقل شد) -->
                         <Grid>
@@ -760,7 +783,7 @@
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding WizardStep}" Value="2">
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="3">
                                                 <Setter Property="Visibility" Value="Collapsed" />
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -784,6 +807,9 @@
                                             <DataTrigger Binding="{Binding WizardStep}" Value="2">
                                                 <Setter Property="Visibility" Value="Visible" />
                                             </DataTrigger>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="3">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Button.Style>
@@ -797,8 +823,8 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ═══ صف پذیرش امروز ═══ -->
-                <Border CornerRadius="12" Padding="14"
+                <!-- ═══ صف پذیرش امروز — بخش اختیاری صفحه ═══ -->
+                <Border CornerRadius="12" Padding="14" Visibility="{Binding ShowQueuePanel, Converter={StaticResource BoolToVisibility}}"
                         Background="{DynamicResource MaterialDesign.Brush.Background}"
                         BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
                         BorderThickness="1">
