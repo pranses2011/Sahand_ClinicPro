@@ -678,9 +678,13 @@ public partial class AppointmentsViewModel : ViewModelBase
             var g = PersianDateHelper.ToGregorian(day.DateShamsi);
             if (g is null) continue;
             var date = g.Value.Date;
-            if (day.HasSchedule && !day.IsOff && day.TotalSlots > 0)
+            // آمار هر روزِ دارای برنامه نگه داشته می‌شود تا جزئیات (نوار
+            // ظرفیت و شمار نوبت) حتی برای روزهای پُر هم دیده شود.
+            if (day.HasSchedule && day.TotalSlots > 0)
                 stats[date] = new CalendarDayStat(day.BookedSlots, day.TotalSlots);
-            if (day.IsDisabled)
+            // غیرقابل‌کلیک فقط تعطیل/غیبت/بدون‌برنامه است؛ «پُر بودن» را خود
+            // کنترل با برچسب تکمیل نشان می‌دهد، نه با قفل‌کردن همهٔ روزها.
+            if (day.IsOff)
                 disabled.Add(date);
             else if (day.FreeSlots > 0)
                 marked[date] = day.FreeSlots;

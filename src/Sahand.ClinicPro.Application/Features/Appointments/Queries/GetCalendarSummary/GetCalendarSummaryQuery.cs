@@ -107,14 +107,19 @@ public class GetCalendarSummaryQueryHandler : IRequestHandler<GetCalendarSummary
             {
                 var shiftMinutes = GetShiftDurationMinutes(schedule);
                 var slotMinutes = Math.Max(10, schedule.SlotDuration);
-                total += schedule.MaxPatients ?? (shiftMinutes / slotMinutes);
+                // سقف بیمارِ صفر یعنی «ثبت نشده» — مثل خالی با مدت شیفت حساب
+                // می‌شود؛ صفرِ خام ظرفیت روز را صفر و همهٔ روزها را «تکمیل و
+                // غیرقابل‌کلیک» می‌کرد (گزارش مالک)
+                total += schedule.MaxPatients is int cap && cap > 0
+                    ? cap
+                    : (slotMinutes > 0 ? shiftMinutes / slotMinutes : 0);
             }
             if (previousSchedule is not null)
             {
                 var tailMinutes = (int)previousSchedule.EndTime.ToTimeSpan().TotalMinutes;
                 var fullMinutes = GetShiftDurationMinutes(previousSchedule);
                 var slotMinutes = Math.Max(10, previousSchedule.SlotDuration);
-                var tailCapacity = previousSchedule.MaxPatients is int maxPatients && fullMinutes > 0
+                var tailCapacity = previousSchedule.MaxPatients is int maxPatients && maxPatients > 0 && fullMinutes > 0
                     ? (int)Math.Ceiling(maxPatients * (double)tailMinutes / fullMinutes)
                     : tailMinutes / slotMinutes;
                 total += tailCapacity;
