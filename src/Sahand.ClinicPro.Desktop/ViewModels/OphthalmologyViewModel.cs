@@ -77,10 +77,8 @@ public partial class OphthalmologyViewModel : ViewModelBase
 
     /// <summary>نسخهٔ عینک زنده — از عددهای رفرکشن و PD همان لحظه ساخته می‌شود</summary>
     public string GlassesPrescriptionText =>
-        $"OD: SPH {OdSphere ?? "—"} · CYL {OdCylinder ?? "—"} · AXIS {OdAxis ?? "—"} · ADD {OdAdd ?? "—"}
-" +
-        $"OS: SPH {OsSphere ?? "—"} · CYL {OsCylinder ?? "—"} · AXIS {OsAxis ?? "—"} · ADD {OsAdd ?? "—"}
-" +
+        $"OD: SPH {OdSphere ?? "—"} · CYL {OdCylinder ?? "—"} · AXIS {OdAxis ?? "—"} · ADD {OdAdd ?? "—"}" + Environment.NewLine +
+        $"OS: SPH {OsSphere ?? "—"} · CYL {OsCylinder ?? "—"} · AXIS {OsAxis ?? "—"} · ADD {OsAdd ?? "—"}" + Environment.NewLine +
         $"PD: {Pd ?? "—"} mm";
 
     /// <summary>پهنای گیج فشار چشم راست (از ۴۰ مقیاس، ۱۸۰ پیکسل)</summary>
@@ -262,8 +260,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
         Add("برنامهٔ درمان", CarePlanText);
         Add("نسخهٔ دارویی", DrugPrescriptionText);
         Add("پیگیری", FollowUpText);
-        return parts.Count == 0 ? null : string.Join("
-", parts);
+        return parts.Count == 0 ? null : string.Join(Environment.NewLine, parts);
     }
 
     // ── مدل‌های پاسخ معاینهٔ چشم — چرخهٔ ۲۸ ──
