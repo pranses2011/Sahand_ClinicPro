@@ -634,6 +634,10 @@
                                                                                     </Style.Triggers>
                                                                                 </Style>
                                                                             </Border.Style>
+                                                                            <!-- برش گرد دور همهٔ محتوای کاشی — گوشه‌های
+                                                                                 روبان مورب دیگر از گوشهٔ گرد کارت بیرون
+                                                                                 نمی‌زنند (گزارش مالک) -->
+                                                                            <Border CornerRadius="11" ClipToBounds="True">
                                                                             <Grid>
                                                                                 <!-- هاشور -->
                                                                                 <Border Background="{StaticResource BookedHatch}" CornerRadius="11">
@@ -724,8 +728,8 @@
                                                                                     </TextBlock>
                                                                                 </StackPanel>
                                                                                 <!-- روبان مورب ۴۵ درجه در گوشهٔ کاشی -->
-                                                                                <Border HorizontalAlignment="Left" VerticalAlignment="Top" Width="86"
-                                                                                        Margin="-30,11,0,0" Padding="0,1.5" CornerRadius="0"
+                                                                                <Border HorizontalAlignment="Left" VerticalAlignment="Top" Width="74"
+                                                                                        Margin="-26,9,0,0" Padding="0,1.5" CornerRadius="0"
                                                                                         RenderTransformOrigin="0.5,0.5">
                                                                                     <Border.RenderTransform>
                                                                                         <RotateTransform Angle="-45" />
@@ -764,6 +768,7 @@
                                                                                     </TextBlock>
                                                                                 </Border>
                                                                             </Grid>
+                                                                            </Border>
                                                                         </Border>
                                                                         <!-- قاب متحرک اسلات سنجاق‌شده — دورِ کارت و بیرون
                                                                              مرز آن (گزارش مالک: انیمیشن داخل کارت می‌افتاد)؛

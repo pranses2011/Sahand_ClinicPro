@@ -106,6 +106,10 @@ public class GetCalendarSummaryQueryHandler : IRequestHandler<GetCalendarSummary
             if (schedule is not null)
             {
                 var shiftMinutes = GetShiftDurationMinutes(schedule);
+                // شیفتِ با مدت صفر (ساعت شروع و پایان یکسان ثبت شده) یعنی
+                // مدت مشخص نیست — ظرفیت با یک شیفت کاری معمول برآورد می‌شود
+                // تا روز «بدون جزئیات و تکمیل» نماند (گزارش مالک)
+                if (shiftMinutes <= 0) shiftMinutes = 480;
                 var slotMinutes = Math.Max(10, schedule.SlotDuration);
                 // سقف بیمارِ صفر یعنی «ثبت نشده» — مثل خالی با مدت شیفت حساب
                 // می‌شود؛ صفرِ خام ظرفیت روز را صفر و همهٔ روزها را «تکمیل و
