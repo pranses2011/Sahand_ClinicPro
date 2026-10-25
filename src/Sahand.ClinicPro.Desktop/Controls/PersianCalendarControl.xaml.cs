@@ -805,7 +805,7 @@ public partial class PersianCalendarControl : UserControl
                 : isOff
                     ? $"{PersianDateHelper.ToShamsiFa(date)} — تعطیل / عدم حضور"
                     : hasStat
-                        ? $"{PersianDateHelper.ToShamsiFa(date)} — {PersianDateHelper.ToPersianDigits(stat.Booked.ToString())} نوبت از {PersianDateHelper.ToPersianDigits(stat.Total.ToString())}
+                        ? $"{PersianDateHelper.ToShamsiFa(date)} — {PersianDateHelper.ToPersianDigits(stat.Booked.ToString())} نوبت از {PersianDateHelper.ToPersianDigits(stat.Total.ToString())}"
                         : PersianDateHelper.ToShamsiFa(date),
             Child = cellGrid,
         };
