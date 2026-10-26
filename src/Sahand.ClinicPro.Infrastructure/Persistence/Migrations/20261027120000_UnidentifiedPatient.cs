@@ -19,6 +19,13 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
         /// <summary>اجرای مهاجرت — افزودن ستون‌ها و اصلاح ایندکس کد ملی</summary>
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // ═══ نکتهٔ حیاتی SQL Server — رفع خطای نصب «Invalid column name
+            // 'TemporaryCode'» (گزارش مالک از نصب سرور) ═══ هر فراخوانیِ
+            // migrationBuilder.Sql یک بچِ مستقل است و SQL Server هر بچ را
+            // «پیش از اجرا» به‌طور کامل کامپایل می‌کند؛ پس ارجاع به ستونی که
+            // در همان بچ ساخته می‌شود (ایندکس فیلترشده روی TemporaryCode)
+            // حتی داخل گارد IF هم با خطای 207 می‌شکست. به همین دلیل هر گام
+            // در بچ جدا آمده است — هم‌سبک مهاجرت Cycle39ReceptionRoom.
             migrationBuilder.Sql(@"
 IF NOT EXISTS (
     SELECT 1 FROM sys.columns
@@ -26,14 +33,18 @@ IF NOT EXISTS (
 BEGIN
     ALTER TABLE [Patients] ADD [IsUnidentified] bit NOT NULL CONSTRAINT [DF_Patients_IsUnidentified] DEFAULT 0;
 END
+");
 
+            migrationBuilder.Sql(@"
 IF NOT EXISTS (
     SELECT 1 FROM sys.columns
     WHERE object_id = OBJECT_ID(N'Patients') AND name = N'TemporaryCode')
 BEGIN
     ALTER TABLE [Patients] ADD [TemporaryCode] nvarchar(20) NULL;
 END
+");
 
+            migrationBuilder.Sql(@"
 ALTER TABLE [Patients] ALTER COLUMN [NationalCode] nvarchar(10) NULL;
 
 IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Patient_NationalCode' AND object_id = OBJECT_ID(N'Patients'))
@@ -43,7 +54,11 @@ END
 
 CREATE UNIQUE INDEX [IX_Patient_NationalCode] ON [Patients] ([NationalCode])
     WHERE [IsDeleted] = 0 AND [NationalCode] IS NOT NULL;
+");
 
+            // این ایندکس روی ستون تازه‌ساختهٔ TemporaryCode فیلتر دارد؛ باید
+            // در بچی جدا و «پس از» ساخته‌شدن ستون اجرا شود (علت خطای نصب)
+            migrationBuilder.Sql(@"
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Patient_TemporaryCode' AND object_id = OBJECT_ID(N'Patients'))
 BEGIN
     CREATE UNIQUE INDEX [IX_Patient_TemporaryCode] ON [Patients] ([TemporaryCode])
@@ -68,7 +83,9 @@ END
 
 CREATE UNIQUE INDEX [IX_Patient_NationalCode] ON [Patients] ([NationalCode])
     WHERE [IsDeleted] = 0;
+");
 
+            migrationBuilder.Sql(@"
 IF EXISTS (
     SELECT 1 FROM sys.columns
     WHERE object_id = OBJECT_ID(N'Patients') AND name = N'TemporaryCode')
