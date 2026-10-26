@@ -5,13 +5,31 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
-             d:DesignHeight="640" d:DesignWidth="1080"
+             d:DesignHeight="900" d:DesignWidth="1200"
              FlowDirection="RightToLeft">
-    <!-- ═══ فیزیوتراپی — چرخهٔ چهل‌وسوم (گزارش مالک): «دندانپزشکی و چشم پزشکی و
-         تصویربرداری و فزیوتراپی در یک صفحه و تب‌های جداگانه هستند. برای هر
-         کدوم یک صفحه مستقل طراحی بکن تا با همدیگه تداخلی نداشته باشن» —
-         محتوای این تب از پاراکلینیکِ سابقِ تب‌دار جدا شد و اکنون صفحهٔ
-         اختصاصی مستقل خودش است؛ تمام منطق و اتصال‌ها بدون تغییر منتقل شدند. ═══ -->
+    <!-- ═══ فیزیوتراپی حرفه‌ای — طرح تأییدشدهٔ مالک (نسخهٔ ۱۵ پیش‌نمایش) ═══
+         نقشهٔ بدن مرد/زن با انتخاب ناحیه و شدت درد روی خودِ تصویر، تکنیک‌های
+         جلسه با مدت، غربالگری پرچم‌های قرمز، پروتکل‌های آماده، ارزیابی
+         ساخت‌یافته با درصد بهبود خودکار و میله‌های مقایسه، نمودار روند واقعی
+         دوره از روی سابقهٔ جلسات، تمرین خانگی قابل چاپ، گزارش ارجاع‌دهنده و
+         اهداف ICF و معیار ترخیص. نقشهٔ بدن در کدِ نما روی BodyMapHost ساخته
+         می‌شود (تصویر پایه + ماسک ناحیه‌ها + چندضلعی‌های کلیک). -->
+    <UserControl.Resources>
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="2,0,2,8" />
+        </Style>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DCE8E3" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+    </UserControl.Resources>
+
     <Grid Margin="16,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -22,81 +40,337 @@
             <materialDesign:PackIcon Kind="DirectionsRun" Width="26" Height="26"
                                      Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
             <TextBlock Text="فیزیوتراپی" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+            <TextBlock Text="— ماژول حرفه‌ای دورهٔ درمان" FontSize="12" Opacity="0.65" Margin="8,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
 
-        <!-- محتوای صفحه — عیناً از تب پاراکلینیک سابق (اتصال‌ها بدون تغییر) -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8">
-                            <StackPanel MaxWidth="760" HorizontalAlignment="Center">
-                                <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="3*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox Grid.Column="0" Text="{Binding PhysioPatientSearch, UpdateSourceTrigger=PropertyChanged}"
-                                             materialDesign:HintAssist.Hint="🔍 بیمار (کد ملی / موبایل)">
-                                        <!-- چرخه بیست‌وسوم: Enter = دکمهٔ جستجو -->
-                                        <TextBox.InputBindings>
-                                            <KeyBinding Key="Enter" Command="{Binding SearchPhysioPatientCommand}" />
-                                        </TextBox.InputBindings>
-                                    </TextBox>
-                                    <Button Grid.Column="1" Command="{Binding SearchPhysioPatientCommand}" Margin="8,0,0,0"
-                                            Style="{StaticResource MaterialDesignRaisedButton}">
-                                        <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />
-                                    </Button>
-                                </Grid>
-                                <Border Background="#E3F2FD" CornerRadius="8" Padding="10,5" Margin="0,0,0,10"
-                                        Visibility="{Binding PhysioPatient, Converter={StaticResource NullToVisibility}}">
-                                    <TextBlock Text="{Binding PhysioPatient.FullName, Mode=OneWay}" FontWeight="SemiBold"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                </Border>
-
-                                <TextBlock Text="تکنیک‌های درمانی" FontWeight="Bold" FontSize="13" Margin="2,0,2,6" />
-                                <ItemsControl ItemsSource="{Binding Techniques}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <CheckBox Content="{Binding}" Margin="4,3" FontSize="12"
-                                                      Checked="OnTechniqueChecked" Unchecked="OnTechniqueUnchecked" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                                <TextBox Text="{Binding PhysioOtherTechnique, UpdateSourceTrigger=PropertyChanged}"
-                                         materialDesign:HintAssist.Hint="سایر تکنیک‌ها…" Margin="0,8,0,0" />
-
-                                <TextBlock FontSize="13" FontWeight="Bold" Margin="2,14,2,4">
-                                    <Run Text="نمره درد (۰ تا ۱۰): " /><Run Text="{Binding PainScore, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" Foreground="{Binding PainColor, Mode=OneWay}" />
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="2">
+            <StackPanel>
+                <!-- ───── بیمار و پیشرفت دوره ───── -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="2*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" Text="{Binding PhysioPatientSearch, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="🔍 بیمار (کد ملی / موبایل)">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding SearchPhysioPatientCommand}" />
+                                </TextBox.InputBindings>
+                            </TextBox>
+                            <Button Grid.Column="1" Command="{Binding SearchPhysioPatientCommand}" Margin="8,0"
+                                    Style="{StaticResource MaterialDesignRaisedButton}">
+                                <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />
+                            </Button>
+                            <Border Grid.Column="2" Background="#E3F2FD" CornerRadius="8" Padding="10,5"
+                                    Visibility="{Binding PhysioPatient, Converter={StaticResource NullToVisibility}}">
+                                <TextBlock FontWeight="SemiBold">
+                                    <Run Text="بیمار: " /><Run Text="{Binding PhysioPatient.FullName, Mode=OneWay}" />
+                                    <Run Text=" — جلسهٔ " /><Run Text="{Binding SessionNumber, Mode=OneWay}" />
+                                    <Run Text=" از " /><Run Text="{Binding TotalSessions, Mode=OneWay}" />
                                 </TextBlock>
-                                <Slider Minimum="0" Maximum="10" Value="{Binding PainScore}"
-                                        TickFrequency="1" IsSnapToTickEnabled="True" />
-                                <!-- راهنمای رنگ نمرهٔ درد — چرخهٔ ۳۳: همان الگوی چیپ رنگی واقعی به‌جای
-                                     ایموجی (ایموجی‌ها در فونت فارسی رندر نمی‌شوند — رفع مشابه راهنمای
-                                     چارت دندان در همین نما). رنگ‌ها عیناً از PainColor ویژومدل:
-                                     ≤۳ #43A047 / ≤۶ #FDD835 / بقیه #E53935 -->
-                                <StackPanel Orientation="Horizontal" Margin="2,4,2,0">
-                                    <Border Width="13" Height="13" CornerRadius="4" Background="#43A047"
-                                            BorderThickness="1" BorderBrush="#90A4AE" VerticalAlignment="Center" />
-                                    <TextBlock Text="۰-۳ خفیف" FontSize="10.5" Opacity="0.85" VerticalAlignment="Center" Margin="5,0,14,0" />
-                                    <Border Width="13" Height="13" CornerRadius="4" Background="#FDD835"
-                                            BorderThickness="1" BorderBrush="#90A4AE" VerticalAlignment="Center" />
-                                    <TextBlock Text="۴-۶ متوسط" FontSize="10.5" Opacity="0.85" VerticalAlignment="Center" Margin="5,0,14,0" />
-                                    <Border Width="13" Height="13" CornerRadius="4" Background="#E53935"
-                                            BorderThickness="1" BorderBrush="#90A4AE" VerticalAlignment="Center" />
-                                    <TextBlock Text="۷-۱۰ شدید" FontSize="10.5" Opacity="0.85" VerticalAlignment="Center" Margin="5,0,0,0" />
-                                </StackPanel>
+                            </Border>
+                        </Grid>
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ProgressBar Grid.Column="0" Height="12" Minimum="0" Maximum="100"
+                                         Value="{Binding CourseProgress, Mode=OneWay}" Foreground="#00897B" Background="#E7F0ED" />
+                            <TextBlock Grid.Column="1" Margin="10,0,0,0" FontSize="11.5" Opacity="0.8">
+                                <Run Text="پیشرفت دوره — پروتکل فعال: " /><Run Text="{Binding ActiveProtocolName, Mode=OneWay}" />
+                            </TextBlock>
+                        </Grid>
+                        <TextBlock Text="{Binding ProtocolGoal, Mode=OneWay}" FontSize="11.5" Foreground="#2E7D32" Margin="2,6,2,0" />
+                    </StackPanel>
+                </Border>
 
-                                <TextBlock Text="یادداشت پیشرفت" FontSize="10.5" Opacity="0.6" Margin="2,10,2,2" />
-                                <TextBox Text="{Binding PhysioNotes, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
-                                         TextWrapping="Wrap" Height="66" />
+                <!-- ───── نقشهٔ بدن ───── -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="🗺 نقشهٔ بدن — روی ناحیهٔ دردناک کلیک کنید؛ همان ناحیه رنگ شدت درد می‌گیرد" Style="{StaticResource SectionTitle}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="پیکر بر اساس جنسیت بیمار:" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <Button Content="👨 مرد" Margin="8,0,0,0" Padding="10,3"
+                                    Command="{Binding SetGenderCommand}">
+                                <Button.CommandParameter><sys:Boolean xmlns:sys="clr-namespace:System;assembly=mscorlib">False</sys:Boolean></Button.CommandParameter>
+                            </Button>
+                            <Button Content="👩 زن" Margin="6,0,0,0" Padding="10,3"
+                                    Command="{Binding SetGenderCommand}">
+                                <Button.CommandParameter><sys:Boolean xmlns:sys="clr-namespace:System;assembly=mscorlib">True</sys:Boolean></Button.CommandParameter>
+                            </Button>
+                            <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#00695C">
+                                <Run Text="ناحیهٔ انتخابی: " /><Run Text="{Binding SelectedZone, Mode=OneWay}" />
+                                <Run Text=" — درد: " /><Run Text="{Binding SelectedZonePain, Mode=OneWay}" /><Run Text=" از ۱۰" />
+                            </TextBlock>
+                        </StackPanel>
+                        <Viewbox MaxHeight="430" HorizontalAlignment="Center">
+                            <Grid x:Name="BodyMapHost" Width="1408" Height="768" />
+                        </Viewbox>
+                        <TextBlock Text="شدت درد ناحیهٔ انتخابی (۰ تا ۱۰):" FontWeight="SemiBold" Margin="2,10,2,4" />
+                        <ItemsControl ItemsSource="{Binding PainScale}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding}" Width="38" Height="30" Margin="2" Padding="0"
+                                            Command="{Binding DataContext.SetZonePainCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <StackPanel Orientation="Horizontal" Margin="2,6,2,0">
+                            <Border Width="13" Height="13" CornerRadius="4" Background="#66BB6A" BorderThickness="1" BorderBrush="#90A4AE" VerticalAlignment="Center" />
+                            <TextBlock Text="۰-۲ خفیف" FontSize="10.5" Opacity="0.85" VerticalAlignment="Center" Margin="5,0,14,0" />
+                            <Border Width="13" Height="13" CornerRadius="4" Background="#FFA726" BorderThickness="1" BorderBrush="#90A4AE" VerticalAlignment="Center" />
+                            <TextBlock Text="۳-۵ متوسط" FontSize="10.5" Opacity="0.85" VerticalAlignment="Center" Margin="5,0,14,0" />
+                            <Border Width="13" Height="13" CornerRadius="4" Background="#EF5350" BorderThickness="1" BorderBrush="#90A4AE" VerticalAlignment="Center" />
+                            <TextBlock Text="۶-۱۰ شدید" FontSize="10.5" Opacity="0.85" VerticalAlignment="Center" Margin="5,0,14,0" />
+                            <Border Width="13" Height="13" CornerRadius="4" Background="#00897B" BorderThickness="1" BorderBrush="#90A4AE" VerticalAlignment="Center" />
+                            <TextBlock Text="ناحیهٔ انتخاب‌شده" FontSize="10.5" Opacity="0.85" VerticalAlignment="Center" Margin="5,0,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
-                                <Button Command="{Binding SavePhysioSessionCommand}" Margin="0,14,0,0" HorizontalAlignment="Left"
-                                        Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                                        <TextBlock Text="💾 ذخیره جلسه" Margin="8,0,0,0" />
+                <!-- ───── پرچم‌های قرمز ───── -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="🚨 غربالگری علائم هشدار (پرچم‌های قرمز) — پیش از شروع درمان" Style="{StaticResource SectionTitle}" />
+                        <ItemsControl ItemsSource="{Binding RedFlags}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Text}" IsChecked="{Binding IsChecked}" Margin="6,3" FontSize="12" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Border Background="#FFEBEE" BorderBrush="#EF9A9A" BorderThickness="1" CornerRadius="8" Padding="10,6" Margin="0,8,0,0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasRedFlag}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="⚠ پرچم قرمز فعال است — پیش از ادامهٔ درمان، ارجاع فوری پزشکی را بررسی کنید." Foreground="#B71C1C" FontWeight="SemiBold" FontSize="12" />
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ───── تکنیک‌های جلسه ───── -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="⚡ تکنیک‌های این جلسه و دوز درمان (دقیقه)" Style="{StaticResource SectionTitle}" />
+                        <ItemsControl ItemsSource="{Binding TechniqueItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="2,3">
+                                        <CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected}" Width="270" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBox Text="{Binding Minutes, UpdateSourceTrigger=PropertyChanged}" Width="52" HorizontalContentAlignment="Center"
+                                                 materialDesign:HintAssist.Hint="دقیقه" />
                                     </StackPanel>
-                                </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBox Text="{Binding PhysioOtherTechnique, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="سایر تکنیک‌ها…" Margin="0,8,0,0" />
+                        <StackPanel Orientation="Horizontal" Margin="2,10,2,0">
+                            <TextBlock Text="مدت کل جلسه: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding TotalDuration, Mode=OneWay}" FontWeight="Bold" Foreground="#00695C" />
+                            <TextBlock Text=" دقیقه" />
+                            <TextBlock Text="   |   نمرهٔ درد کلی: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding PainScore, Mode=OneWay}" FontWeight="Bold" Foreground="{Binding PainColor, Mode=OneWay}" />
+                        </StackPanel>
+                        <Slider Minimum="0" Maximum="10" Value="{Binding PainScore}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,4,0,0" />
+                        <TextBlock Text="یادداشت پیشرفت جلسه" FontSize="10.5" Opacity="0.6" Margin="2,8,2,2" />
+                        <TextBox Text="{Binding PhysioNotes, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" Height="60" />
+                    </StackPanel>
+                </Border>
+
+                <!-- ───── پروتکل‌های آماده ───── -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="📋 پروتکل‌های درمانی آماده — انتخاب عارضه، برنامهٔ کامل بارگذاری می‌شود" Style="{StaticResource SectionTitle}" />
+                        <ItemsControl ItemsSource="{Binding Protocols}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding Name}" Margin="3" Padding="12,5"
+                                            Command="{Binding DataContext.ApplyProtocolCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="{Binding ProtocolGoal, Mode=OneWay}" FontSize="11.5" Foreground="#2E7D32" Margin="2,6,2,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <!-- ───── ارزیابی ساخت‌یافته ───── -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="📐 ارزیابی ساخت‌یافتهٔ دوره — شروع در برابر امروز (درصد بهبود خودکار)" Style="{StaticResource SectionTitle}" />
+                        <Grid Margin="2,0,2,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2.2*" /><ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" /><ColumnDefinition Width="210" /><ColumnDefinition Width="70" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="شاخص / تست استاندارد" FontWeight="Bold" FontSize="11.5" />
+                            <TextBlock Grid.Column="1" Text="شروع دوره" FontWeight="Bold" FontSize="11.5" />
+                            <TextBlock Grid.Column="2" Text="امروز" FontWeight="Bold" FontSize="11.5" />
+                            <TextBlock Grid.Column="3" Text="مقایسه (خاکستری: شروع — سبزآبی: امروز)" FontWeight="Bold" FontSize="11.5" />
+                            <TextBlock Grid.Column="4" Text="بهبود" FontWeight="Bold" FontSize="11.5" />
+                        </Grid>
+                        <ItemsControl ItemsSource="{Binding Assessments}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="2,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="2.2*" /><ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" /><ColumnDefinition Width="210" /><ColumnDefinition Width="70" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBox Grid.Column="1" Text="{Binding BaseValue, UpdateSourceTrigger=PropertyChanged}" Margin="4,0" HorizontalContentAlignment="Center" />
+                                        <TextBox Grid.Column="2" Text="{Binding NowValue, UpdateSourceTrigger=PropertyChanged}" Margin="4,0" HorizontalContentAlignment="Center" />
+                                        <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="4,0">
+                                            <Border Background="#EEF4F2" Height="7" CornerRadius="4">
+                                                <Border HorizontalAlignment="Left" Background="#B0BEC5" CornerRadius="4" Width="{Binding BaseBar}" />
+                                            </Border>
+                                            <Border Background="#EEF4F2" Height="7" CornerRadius="4" Margin="0,2,0,0">
+                                                <Border HorizontalAlignment="Left" Background="#00897B" CornerRadius="4" Width="{Binding NowBar}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="4" Text="{Binding ImprovementText, Mode=OneWay}" FontWeight="Bold" Foreground="#2E7D32" VerticalAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <StackPanel Orientation="Horizontal" Margin="2,10,2,0">
+                            <TextBlock Text="میانگین بهبود همهٔ شاخص‌ها: " FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding TotalImprovementText, Mode=OneWay}" FontSize="20" FontWeight="Bold" Foreground="#2E7D32" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Text="دامنهٔ حرکت و عملکرد مفصل درگیر" FontWeight="Bold" FontSize="13" Margin="2,12,2,6" />
+                        <ItemsControl ItemsSource="{Binding RomBars}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="2,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="2.2*" /><ColumnDefinition Width="210" /><ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Label}" FontSize="12" VerticalAlignment="Center" />
+                                        <Border Grid.Column="1" Background="#EEF4F2" Height="10" CornerRadius="5" VerticalAlignment="Center">
+                                            <Border HorizontalAlignment="Left" Background="#26A69A" CornerRadius="5" Width="{Binding BarPx}" />
+                                        </Border>
+                                        <TextBlock Grid.Column="2" Text="{Binding Text}" FontSize="11.5" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- ───── نمودار روند ───── -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="📈 نمودار روند دوره — درد و خم‌شدن کمر در جلسه‌ها (از سابقهٔ واقعی بیمار)" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="{Binding TrendSummary, Mode=OneWay}" FontSize="11.5" Opacity="0.8" Margin="2,0,2,6" TextWrapping="Wrap" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="4">
+                                <TextBlock Text="روند درد (VAS) — هرچه پایین‌تر بهتر" FontSize="11.5" FontWeight="SemiBold" />
+                                <Border BorderBrush="#DCE8E3" BorderThickness="1" CornerRadius="10" Background="#FBFDFC">
+                                    <Canvas Width="600" Height="220">
+                                        <Line X1="40" Y1="20" X2="40" Y2="200" Stroke="#E3EEEA" />
+                                        <Line X1="40" Y1="200" X2="580" Y2="200" Stroke="#E3EEEA" />
+                                        <Line X1="40" Y1="164" X2="580" Y2="164" Stroke="#2E7D32" StrokeDashArray="6,4" />
+                                        <TextBlock Canvas.Left="500" Canvas.Top="146" Text="هدف: درد ≤ ۲" FontSize="10" Foreground="#2E7D32" />
+                                        <Polyline Points="{Binding PainTrendPoints}" Stroke="#C62828" StrokeThickness="3" />
+                                    </Canvas>
+                                </Border>
                             </StackPanel>
-                        </ScrollViewer>
+                            <StackPanel Grid.Column="1" Margin="4">
+                                <TextBlock Text="روند خم‌شدن کمر (درجه) — هرچه بالاتر بهتر" FontSize="11.5" FontWeight="SemiBold" />
+                                <Border BorderBrush="#DCE8E3" BorderThickness="1" CornerRadius="10" Background="#FBFDFC">
+                                    <Canvas Width="600" Height="220">
+                                        <Line X1="40" Y1="20" X2="40" Y2="200" Stroke="#E3EEEA" />
+                                        <Line X1="40" Y1="200" X2="580" Y2="200" Stroke="#E3EEEA" />
+                                        <Line X1="40" Y1="40" X2="580" Y2="40" Stroke="#2E7D32" StrokeDashArray="6,4" />
+                                        <TextBlock Canvas.Left="486" Canvas.Top="22" Text="هدف پایان دوره: ۸۰°" FontSize="10" Foreground="#2E7D32" />
+                                        <Polyline Points="{Binding RomTrendPoints}" Stroke="#00897B" StrokeThickness="3" />
+                                    </Canvas>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Text="سابقهٔ جلسات" FontWeight="Bold" FontSize="13" Margin="2,12,2,6" />
+                        <ItemsControl ItemsSource="{Binding History}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#F4F9F7" CornerRadius="8" Padding="10,6" Margin="0,3">
+                                        <TextBlock FontSize="11.5" TextWrapping="Wrap">
+                                            <Run Text="جلسهٔ " /><Run Text="{Binding SessionNumber}" />
+                                            <Run Text=" — " /><Run Text="{Binding DateShamsi}" />
+                                            <Run Text=" — درد: " /><Run Text="{Binding PainScore}" />
+                                            <Run Text=" — " /><Run Text="{Binding Treatments}" />
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- ───── تمرین خانگی ───── -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="🏠 تمرین خانگی بیمار (قابل چاپ)" Style="{StaticResource SectionTitle}" />
+                        <TextBox Text="{Binding HomeProgram, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" Height="70" />
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button Content="🖨 چاپ تمرین خانگی" Click="PrintHomeProgram_Click" Padding="12,5" />
+                            <Button Content="📄 ساخت گزارش ارجاع‌دهنده" Command="{Binding GenerateReportCommand}" Margin="8,0,0,0" Padding="12,5" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ───── گزارش، اهداف و ترخیص ───── -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="📄 گزارش پیشرفت برای پزشک ارجاع‌دهنده" Style="{StaticResource SectionTitle}" />
+                        <TextBox Text="{Binding ReferralReport, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Height="110" />
+                        <TextBlock Text="🎯 اهداف عملکردی (ICF)" FontWeight="Bold" FontSize="13" Margin="2,14,2,6" />
+                        <ItemsControl ItemsSource="{Binding IcfGoals}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Text}" IsChecked="{Binding IsChecked}" Margin="6,3" FontSize="12" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="✔ معیارهای ترخیص از دوره" FontWeight="Bold" FontSize="13" Margin="2,12,2,6" />
+                        <ItemsControl ItemsSource="{Binding DischargeCriteria}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Text}" IsChecked="{Binding IsChecked}" Margin="6,3" FontSize="12" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Button Command="{Binding SavePhysioSessionCommand}" Margin="0,2,0,10" HorizontalAlignment="Left"
+                        Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Padding="18,8">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                        <TextBlock Text="💾 ذخیرهٔ جلسه با نقشهٔ بدن و ارزیابی" Margin="8,0,0,0" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </UserControl>

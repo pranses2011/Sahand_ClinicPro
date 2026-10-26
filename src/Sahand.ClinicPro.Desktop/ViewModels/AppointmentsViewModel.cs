@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -148,7 +148,9 @@ public record QuickPatient(
     string? InsuranceName,
     string? Allergies,
     string? LastVisitDateShamsi,
-    long? InsuranceCompanyId = null);
+    long? InsuranceCompanyId = null,
+    // جنسیت بیمار (۱=مرد، ۲=زن) — ماژول فیزیوتراپی برای انتخاب خودکار پیکر نقشهٔ بدن
+    int Gender = 0);
 
 /// <summary>
 /// ViewModel نوبت‌دهی — دو تب رزرو و فهرست — گام U4 طبق پرامپت UI بخش ۲ (فرم ۸ و ۹)
