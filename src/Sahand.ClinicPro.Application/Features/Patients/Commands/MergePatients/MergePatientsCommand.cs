@@ -1,4 +1,5 @@
 using MediatR;
+using Sahand.ClinicPro.Domain.Common;
 
 namespace Sahand.ClinicPro.Application.Features.Patients.Commands.MergePatients;
 

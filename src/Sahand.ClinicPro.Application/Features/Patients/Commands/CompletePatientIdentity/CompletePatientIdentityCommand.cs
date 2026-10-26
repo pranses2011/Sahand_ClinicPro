@@ -1,4 +1,5 @@
 using MediatR;
+using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Application.DTOs.Patients;
 
 namespace Sahand.ClinicPro.Application.Features.Patients.Commands.CompletePatientIdentity;
