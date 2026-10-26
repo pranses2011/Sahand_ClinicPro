@@ -30,6 +30,16 @@ public partial class ReceptionsViewModel : ViewModelBase
     [ObservableProperty] private decimal _todayRevenue;
     [ObservableProperty] private string _todayRevenueDisplay = "۰";
 
+    /// <summary>ردیف انتخاب‌شدهٔ صف — برای عملیات ردیفی مثل چاپ مجدد قبض</summary>
+    [ObservableProperty] private ReceptionRow? _selectedReception;
+
+    /// <summary>تاریخ تاریخچهٔ پذیرش (شمسی) — برای چاپ مجدد قبض روزهای گذشته</summary>
+    [ObservableProperty] private string _historyDateShamsi =
+        Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.Now);
+
+    /// <summary>عنوان فهرست صف — «صف پذیرش امروز» یا تاریخچهٔ تاریخ انتخابی</summary>
+    [ObservableProperty] private string _queueTitle = "═══ صف پذیرش امروز ═══";
+
     /* ── جستجوی هوشمند ── */
     /// <summary>عبارت جستجو — نام/نام‌خانوادگی/کد ملی/کد پیگیری APT/موبایل</summary>
     [ObservableProperty]
@@ -784,6 +794,91 @@ public partial class ReceptionsViewModel : ViewModelBase
         1 => "پذیرش شده", 2 => "در صف", 3 => "در ویزیت", 4 => "ویزیت‌شده", 5 => "ترخیص‌شده", 6 => "لغوشده",
         _ => "نامشخص"
     };
+
+    /// <summary>
+    /// چاپ مجدد قبض یک پذیرش انجام‌شده (امروز یا گذشته) — قبض از دادهٔ
+    /// واقعی ذخیره‌شدهٔ همان پذیرش (فاکتور و اقلام و پرداخت) بازسازی و با
+    /// همان چاپگر قبض پذیرش چاپ می‌شود؛ پذیرش بدون فاکتور پیام صادقانه می‌گیرد
+    /// </summary>
+    [RelayCommand]
+    private async Task ReprintReceiptAsync(ReceptionRow? row)
+    {
+        row ??= SelectedReception;
+        if (row is null) { _snackbar.Error("ابتدا یک پذیرش را از فهرست انتخاب کنید"); return; }
+        var response = await _api.GetAsync<ReceptionReceiptResponse>($"receptions/{row.Id}/receipt");
+        var d = response?.Data;
+        if (d is null)
+        {
+            _snackbar.Error(_api.LastError ?? "دریافت اطلاعات قبض ناموفق بود");
+            return;
+        }
+        long queueNo = 0;
+        if (!string.IsNullOrWhiteSpace(d.ReceptionNumber))
+            long.TryParse(new string(d.ReceptionNumber.Where(char.IsDigit).ToArray()), out queueNo);
+        var receipt = new ReceptionReceipt(
+            QueueNumber: queueNo != 0 ? queueNo : d.ReceptionId,
+            InvoiceNumber: 0,
+            PatientName: d.PatientName,
+            NationalCode: d.NationalCode,
+            Mobile: d.Mobile,
+            DoctorName: d.DoctorName,
+            ServiceName: d.ServiceName,
+            RoomName: d.RoomName,
+            InsuranceName: d.InsuranceName,
+            DateText: d.DateText,
+            TimeText: d.TimeText,
+            Items: d.Items.Select(i => new ReceptionReceiptItem(i.Name, i.Quantity, i.UnitPrice)).ToList(),
+            ItemsTotal: d.ItemsTotal,
+            InsuranceShare: d.InsuranceShare,
+            PatientShare: d.PatientShare,
+            Payable: d.Payable,
+            Paid: d.Paid,
+            PaymentMethod: d.PaymentMethod,
+            ReferenceNumber: d.ReferenceNumber,
+            CardNumber: d.CardNumber,
+            ClinicName: await GetReceiptClinicNameAsync());
+        // شمارهٔ فاکتور در متن قبض از InvoiceNumbers می‌آید؛ برای سازگاری با
+        // سازندهٔ قبض، شمارهٔ نخست فاکتور به‌صورت عددی استخراج می‌شود
+        var firstInvoice = (d.InvoiceNumbers ?? string.Empty).Split('،')[0].Trim();
+        if (long.TryParse(new string(firstInvoice.Where(char.IsDigit).ToArray()), out var invNo) && invNo > 0)
+            receipt = receipt with { InvoiceNumber = invNo };
+        ReceptionReceiptPrinter.Print(receipt);
+        _snackbar.Success($"قبض پذیرش {d.PatientName} دوباره چاپ شد");
+    }
+
+    /// <summary>نمایش پذیرش‌های تاریخ شمسی انتخابی — تاریخچه برای چاپ مجدد قبض</summary>
+    [RelayCommand]
+    private async Task LoadHistoryAsync()
+    {
+        var gregorian = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper
+            .ToGregorian(HistoryDateShamsi?.Trim());
+        if (gregorian is null)
+        {
+            _snackbar.Error("تاریخ شمسی معتبر وارد کنید — مثال: ۱۴۰۵/۰۵/۱۸");
+            return;
+        }
+        IsBusy = true;
+        var dateText = gregorian.Value.ToString("yyyy-MM-dd");
+        var response = await _api.GetAsync<ReceptionsResponse>($"receptions/by-date?date={dateText}");
+        IsBusy = false;
+        if (response?.Data is null)
+        {
+            _snackbar.Error(_api.LastError ?? "دریافت پذیرش‌های آن تاریخ ناموفق بود");
+            return;
+        }
+        Receptions = new ObservableCollection<ReceptionRow>(response.Data.Select(MapRow));
+        QueueTitle = $"═══ پذیرش‌های {HistoryDateShamsi} (تاریخچه — برای چاپ مجدد قبض روی ردیف کلیک کنید) ═══";
+        _snackbar.Info($"{response.Data.Count} پذیرش برای {HistoryDateShamsi} یافت شد");
+    }
+
+    /// <summary>بازگشت فهرست صف به پذیرش‌های امروز</summary>
+    [RelayCommand]
+    private async Task BackToTodayAsync()
+    {
+        QueueTitle = "═══ صف پذیرش امروز ═══";
+        HistoryDateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.Now);
+        await LoadAsync();
+    }
 
     /* ═══════════ جستجوی هوشمند ═══════════ */
 
@@ -1837,6 +1932,47 @@ public partial class ReceptionsViewModel : ViewModelBase
         // چرخه سی‌ویکم — مبالغ مالی پذیرش (جمع فاکتورهای متصل + پرداخت‌شده)
         public decimal InvoiceTotal { get; set; }
         public decimal PaidAmount { get; set; }
+    }
+
+    /// <summary>پاکت پاسخ دادهٔ قبض پذیرش — چاپ مجدد</summary>
+    public sealed class ReceptionReceiptResponse
+    {
+        public bool IsSuccess { get; set; }
+        public ReceptionReceiptData? Data { get; set; }
+    }
+
+    /// <summary>دادهٔ قبض پذیرش از سرور — منطبق بر ReceptionReceiptDto</summary>
+    public sealed class ReceptionReceiptData
+    {
+        public long ReceptionId { get; set; }
+        public string? ReceptionNumber { get; set; }
+        public string? InvoiceNumbers { get; set; }
+        public string PatientName { get; set; } = string.Empty;
+        public string? NationalCode { get; set; }
+        public string? Mobile { get; set; }
+        public string DoctorName { get; set; } = string.Empty;
+        public string? ServiceName { get; set; }
+        public string? RoomName { get; set; }
+        public string InsuranceName { get; set; } = string.Empty;
+        public string DateText { get; set; } = string.Empty;
+        public string TimeText { get; set; } = string.Empty;
+        public List<ReceptionReceiptItemData> Items { get; set; } = new();
+        public decimal ItemsTotal { get; set; }
+        public decimal InsuranceShare { get; set; }
+        public decimal PatientShare { get; set; }
+        public decimal Payable { get; set; }
+        public decimal Paid { get; set; }
+        public int PaymentMethod { get; set; }
+        public string? ReferenceNumber { get; set; }
+        public string? CardNumber { get; set; }
+    }
+
+    /// <summary>قلم قبض — چاپ مجدد</summary>
+    public sealed class ReceptionReceiptItemData
+    {
+        public string Name { get; set; } = string.Empty;
+        public decimal Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
     }
 
     public sealed class ReceptionCreateResponse
