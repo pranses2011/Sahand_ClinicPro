@@ -590,6 +590,20 @@ public partial class ImagingViewModel : ViewModelBase
     /// <summary>بارگذاری فهرست درخواست‌های تصویر امروز</summary>
     private async Task LoadImagingOrdersCoreAsync(bool notifyWhenEmpty)
     {
+        try
+        {
+            await LoadImagingOrdersCoreInnerAsync(notifyWhenEmpty);
+        }
+        catch (Exception ex)
+        {
+            // بارگذاری صف تصویربرداری نباید برنامه را ببندد (گزارش مالک)
+            _snackbar.Error("بارگذاری صف تصویربرداری ناموفق بود: " + ex.Message);
+        }
+    }
+
+    /// <summary>هستهٔ بارگذاری صف — خطاهایش در پوشش بالا گرفته می‌شود</summary>
+    private async Task LoadImagingOrdersCoreInnerAsync(bool notifyWhenEmpty)
+    {
         var response = await _api.GetAsync<ImagingOrdersResponse>("imaging/orders");
         ImagingOrders = new ObservableCollection<ImagingOrderRow>((response?.Data ?? new List<ImagingOrderDto>())
             .Select(o => new ImagingOrderRow(o.Id, o.PatientId, o.PatientName, o.Modality, o.BodyPart,
@@ -630,6 +644,19 @@ public partial class ImagingViewModel : ViewModelBase
     partial void OnSelectedImagingOrderChanged(ImagingOrderRow? value)
     {
         if (value is null) return;
+        try
+        {
+            OnSelectedImagingOrderChangedCore(value);
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Error("بارگذاری جزئیات مطالعه ناموفق بود: " + ex.Message);
+        }
+    }
+
+    /// <summary>هستهٔ بازخورد انتخاب مطالعه — خطاهایش در پوشش بالا گرفته می‌شود</summary>
+    private void OnSelectedImagingOrderChangedCore(ImagingOrderRow value)
+    {
         ReportClinicalInfo = value.ClinicalInfo;
         ReportTechnique = value.Technique;
         ReportFindings = value.Findings;
