@@ -598,11 +598,23 @@ public partial class MainWindowViewModel : ObservableObject
             new() { Title = "گزارش‌ها", PageKey = "reports", Icon = "FileChart" },
 
             // ─── مدیریت و تنظیمات سامانه ───
-            // بازطراحی تأییدشده: یازده آیتم پراکنده و تکراری به یک آیتم تبدیل شد؛
-            // «مدیریت سامانه» صفحهٔ تب‌دار مرکز مدیریت (AdminHub) را باز می‌کند و
-            // هر بخش (تنظیمات/چاپ و قالب‌ها/کاربران/نقش‌ها/خدمات/اتاق‌ها/شعبه‌ها/
-            // پشتیبان‌گیری و آرشیو/لاگ/لایسنس) تب خودش را با همان صفحهٔ قبلی دارد.
-            new() { Title = "مدیریت سامانه", PageKey = "admin", Icon = "Cog" },
+            // بازگشت زیرمنوها (گزارش مالک): تجمیع قبلی در عمل چند صفحه (از
+            // جمله «پشتیبان‌گیری و بازیابی» و «تنظیمات چاپ») را از دسترس
+            // مستقیم خارج کرده بود. همهٔ آیتم‌های قبلی با همان صفحه‌ها و
+            // همان دسترسی‌ها برگشته‌اند؛ صفحهٔ تب‌دار یکپارچه هم به‌عنوان
+            // آیتم نخست گروه باقی ماند تا هر دو مسیر در دسترس باشد.
+            Group("مدیریت سامانه", "Cog",
+                new() { Title = "مدیریت سامانه (تب‌بندی کامل)", PageKey = "admin", Icon = "ViewDashboardOutline" },
+                new() { Title = "مدیریت خدمات", PageKey = "service-catalog", Icon = "ClipboardList" },
+                new() { Title = "کاربران", PageKey = "users", Icon = "AccountKey" },
+                new() { Title = "نقش‌ها", PageKey = "roles", Icon = "ShieldAccount" },
+                new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog" },
+                new() { Title = "شعبه‌ها", PageKey = "branches", Icon = "HomeGroup" },
+                new() { Title = "مدیریت اتاق‌ها", PageKey = "rooms", Icon = "Door" },
+                new() { Title = "پشتیبان‌گیری و بازیابی", PageKey = "backup", Icon = "DatabaseSync" },
+                new() { Title = "لاگ عملیات", PageKey = "audit", Icon = "FileDocumentEditOutline" },
+                new() { Title = "لایسنس", PageKey = "license", Icon = "KeyChain" },
+                new() { Title = "قالب چاپ و نظرسنجی", PageKey = "complementary", Icon = "TuneVertical" }),
 
             // ─── آموزش ───
             new() { Title = "🎓 مرکز آموزش", PageKey = "training", Icon = "School" }

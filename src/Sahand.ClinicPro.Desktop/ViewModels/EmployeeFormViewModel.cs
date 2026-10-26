@@ -436,9 +436,12 @@ public partial class EmployeeFormViewModel : FormViewModelBase
         _originalDepartmentName = d.DepartmentName;
         PositionIndex = FindLookupIndex(Positions, d.PositionId);
         DepartmentIndex = FindLookupIndex(Departments, d.DepartmentId);
-        if (PositionIndex < 0 && !string.IsNullOrWhiteSpace(d.PositionName))
+        // متن فعلی همیشه در فیلد تایپی می‌نشیند (ایندکس فقط برای حل در ذخیره
+        // از روی همان متن انجام می‌شود؛ بایندینگ دوگانهٔ SelectedIndex+Text
+        // روی ComboBox ویرایش‌پذیر خطای «Value could not be converted» می‌داد)
+        if (!string.IsNullOrWhiteSpace(d.PositionName))
             PositionText = d.PositionName;
-        if (DepartmentIndex < 0 && !string.IsNullOrWhiteSpace(d.DepartmentName))
+        if (!string.IsNullOrWhiteSpace(d.DepartmentName))
             DepartmentText = d.DepartmentName;
     }
 

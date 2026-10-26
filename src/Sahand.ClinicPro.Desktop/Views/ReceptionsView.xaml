@@ -1190,13 +1190,10 @@
                                         <DataTemplate>
                                             <Button Command="{Binding DataContext.ReprintReceiptCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                    Padding="8,3" FontSize="11" VerticalAlignment="Center"
-                                                    ToolTip="چاپ دوبارهٔ قبض این پذیرش — از فاکتور و پرداخت ثبت‌شده">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <materialDesign:PackIcon Kind="Printer" Width="13" Height="13" VerticalAlignment="Center" />
-                                                    <TextBlock Text="چاپ مجدد قبض" Margin="5,0,0,0" />
-                                                </StackPanel>
+                                                    Style="{StaticResource MaterialDesignIconButton}"
+                                                    Width="30" Height="30" Padding="0" VerticalAlignment="Center"
+                                                    ToolTip="چاپ مجدد قبض این پذیرش — از فاکتور و پرداخت ثبت‌شده">
+                                                <materialDesign:PackIcon Kind="Printer" Width="16" Height="16" />
                                             </Button>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
