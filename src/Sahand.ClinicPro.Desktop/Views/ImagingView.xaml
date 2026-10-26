@@ -65,31 +65,31 @@
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
             <Button Style="{StaticResource StatCard}" BorderBrush="#90CAF9" BorderThickness="2" Background="White" Command="{Binding SetWorkFilterCommand}" CommandParameter="all">
                 <StackPanel HorizontalAlignment="Center">
-                    <TextBlock Text="{Binding TotalToday, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="22" FontWeight="ExtraBold" Foreground="#1565C0" HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding TotalToday, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="30" FontWeight="ExtraBold" Foreground="#1565C0" HorizontalAlignment="Center" />
                     <TextBlock Text="درخواست امروز" FontSize="11" Opacity="0.7" />
                 </StackPanel>
             </Button>
             <Button Style="{StaticResource StatCard}" BorderBrush="#FFCC80" BorderThickness="2" Background="White" Command="{Binding SetWorkFilterCommand}" CommandParameter="wait">
                 <StackPanel HorizontalAlignment="Center">
-                    <TextBlock Text="{Binding WaitingCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="22" FontWeight="ExtraBold" Foreground="#E65100" HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding WaitingCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="30" FontWeight="ExtraBold" Foreground="#E65100" HorizontalAlignment="Center" />
                     <TextBlock Text="در انتظار انجام" FontSize="11" Opacity="0.7" />
                 </StackPanel>
             </Button>
             <Button Style="{StaticResource StatCard}" BorderBrush="#CE93D8" BorderThickness="2" Background="White" Command="{Binding SetWorkFilterCommand}" CommandParameter="rep">
                 <StackPanel HorizontalAlignment="Center">
-                    <TextBlock Text="{Binding UnreportedCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="22" FontWeight="ExtraBold" Foreground="#6A1B9A" HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding UnreportedCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="30" FontWeight="ExtraBold" Foreground="#6A1B9A" HorizontalAlignment="Center" />
                     <TextBlock Text="انجام‌شده · گزارش‌نشده" FontSize="11" Opacity="0.7" />
                 </StackPanel>
             </Button>
             <Button Style="{StaticResource StatCard}" BorderBrush="#EF9A9A" BorderThickness="2" Background="#FFF5F5" Command="{Binding SetWorkFilterCommand}" CommandParameter="stat">
                 <StackPanel HorizontalAlignment="Center">
-                    <TextBlock Text="{Binding StatCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="22" FontWeight="ExtraBold" Foreground="#C62828" HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding StatCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="30" FontWeight="ExtraBold" Foreground="#C62828" HorizontalAlignment="Center" />
                     <TextBlock Text="اورژانسی (STAT)" FontSize="11" Opacity="0.7" />
                 </StackPanel>
             </Button>
             <Button Style="{StaticResource StatCard}" BorderBrush="#A5D6A7" BorderThickness="2" Background="White" Command="{Binding SetWorkFilterCommand}" CommandParameter="done">
                 <StackPanel HorizontalAlignment="Center">
-                    <TextBlock Text="{Binding ReportedCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="22" FontWeight="ExtraBold" Foreground="#2E7D32" HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding ReportedCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="30" FontWeight="ExtraBold" Foreground="#2E7D32" HorizontalAlignment="Center" />
                     <TextBlock Text="گزارش نهایی امروز" FontSize="11" Opacity="0.7" />
                 </StackPanel>
             </Button>
@@ -234,8 +234,8 @@
                                     <Run Text=" — " /><Run Text="{Binding SelectedImagingOrder.PatientName, Mode=OneWay}" />
                                 </TextBlock>
                                 <TextBlock Grid.Column="1" Foreground="#9FB8AE" FontSize="11">
-                                    <Run Text="برش " /><Run Text="{Binding SliceIndex, Converter={StaticResource PersianDigits}}" />
-                                    <Run Text=" از " /><Run Text="{Binding SliceTotal, Converter={StaticResource PersianDigits}}" />
+                                    <Run Text="برش " /><Run Text="{Binding SliceIndex, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
+                                    <Run Text=" از " /><Run Text="{Binding SliceTotal, Mode=OneWay, Converter={StaticResource PersianDigits}}" />
                                 </TextBlock>
                             </Grid>
 
@@ -246,8 +246,8 @@
                                     <TextBlock x:Name="NoImageText" Text="{Binding ViewerMessage}" Foreground="#9FB8AE"
                                                HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Margin="20" TextAlignment="Center" />
                                     <TextBlock Foreground="#B9F6CA" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8">
-                                        <Run Text="W:" /><Run Text="{Binding WindowWidth, StringFormat={}{0:0}, Converter={StaticResource PersianDigits}}" />
-                                        <Run Text=" · L:" /><Run Text="{Binding WindowLevel, StringFormat={}{0:0}, Converter={StaticResource PersianDigits}}" />
+                                        <Run Text="W:" /><Run Text="{Binding WindowWidth, Mode=OneWay, StringFormat={}{0:0}, Converter={StaticResource PersianDigits}}" />
+                                        <Run Text=" · L:" /><Run Text="{Binding WindowLevel, Mode=OneWay, StringFormat={}{0:0}, Converter={StaticResource PersianDigits}}" />
                                     </TextBlock>
                                 </Grid>
                             </Border>
