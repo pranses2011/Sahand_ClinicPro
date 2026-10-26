@@ -38,3 +38,14 @@ jobs:
           name: imaging-screenshot
           path: shots/
           retention-days: 7
+
+      - name: بازگرداندن اسکرین‌شات روی همان شاخه
+        shell: pwsh
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          New-Item -ItemType Directory -Force docs/screenshots | Out-Null
+          Copy-Item shots/imaging.png docs/screenshots/imaging-real.png -Force
+          git add docs/screenshots/imaging-real.png
+          git commit -m "اسکرین‌شات واقعی تصویربرداری (رندر خودکار ویندوز)"
+          git push origin HEAD:${{ github.ref_name }}
