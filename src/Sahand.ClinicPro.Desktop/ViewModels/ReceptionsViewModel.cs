@@ -800,6 +800,47 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// واقعی ذخیره‌شدهٔ همان پذیرش (فاکتور و اقلام و پرداخت) بازسازی و با
     /// همان چاپگر قبض پذیرش چاپ می‌شود؛ پذیرش بدون فاکتور پیام صادقانه می‌گیرد
     /// </summary>
+
+    /// <summary>
+    /// چاپ قبض — قرارداد html_first (استودیو قالب): اول قالب پیش‌فرضِ فعالِ
+    /// «قبض پذیرش» سرور با دادهٔ همین پذیرش رندر و چاپ می‌شود؛ اگر قالبی
+    /// نبود یا سرور در دسترس نبود، قبض داخلیِ حرارتی دقیقاً مثل قبل چاپ
+    /// می‌شود — هیچ چاپی از دست نمی‌رود
+    /// </summary>
+    private async Task PrintReceiptAsync(ReceptionReceipt receipt)
+    {
+        var vars = new Dictionary<string, object?>
+        {
+            ["clinic_name"] = receipt.ClinicName,
+            ["clinic_phone"] = string.Empty,
+            ["patient_name"] = receipt.PatientName,
+            ["patient_national_code"] = receipt.NationalCode ?? string.Empty,
+            ["patient_mobile"] = receipt.Mobile ?? string.Empty,
+            ["queue_number"] = receipt.QueueNumber,
+            ["reception_date"] = receipt.DateText,
+            ["reception_time"] = receipt.TimeText,
+            ["service_name"] = receipt.ServiceName ?? receipt.DoctorName,
+            ["performer_name"] = receipt.DoctorName,
+            ["room_name"] = receipt.RoomName ?? string.Empty,
+            ["insurance_name"] = receipt.InsuranceName,
+            ["items_html"] = TemplatedPrintService.ItemsTableHtml(receipt.Items.Select(i =>
+                (i.Name,
+                 Sahand.ClinicPro.Desktop.Helpers.Money.ToPersianDigits(i.Quantity == Math.Truncate(i.Quantity) ? i.Quantity.ToString("0") : i.Quantity.ToString("0.##")),
+                 Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(i.Total)))),
+            ["items_total"] = Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(receipt.ItemsTotal),
+            ["insurance_share"] = Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(receipt.InsuranceShare),
+            ["patient_share"] = Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(receipt.PatientShare),
+            ["paid_amount"] = Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(receipt.Paid),
+            ["payment_method"] = receipt.PaymentMethod == 2 ? "کارتخوان" : receipt.PaymentMethod == 1 ? "نقدی" : "—",
+            ["invoice_number"] = receipt.InvoiceNumber == 0 ? string.Empty : receipt.InvoiceNumber.ToString(),
+            ["print_date"] = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(IranClock.Now)
+        };
+        if (await TemplatedPrintService.TryPrintAsync(_api, "ReceptionReceipt", vars,
+                $"قبض پذیرش — {receipt.PatientName}"))
+            return;
+        ReceptionReceiptPrinter.Print(receipt);
+    }
+
     [RelayCommand]
     private async Task ReprintReceiptAsync(ReceptionRow? row)
     {
@@ -842,7 +883,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         var firstInvoice = (d.InvoiceNumbers ?? string.Empty).Split('،')[0].Trim();
         if (long.TryParse(new string(firstInvoice.Where(char.IsDigit).ToArray()), out var invNo) && invNo > 0)
             receipt = receipt with { InvoiceNumber = invNo };
-        ReceptionReceiptPrinter.Print(receipt);
+        await PrintReceiptAsync(receipt);
         _snackbar.Success($"قبض پذیرش {d.PatientName} دوباره چاپ شد");
     }
 
@@ -1783,7 +1824,7 @@ public partial class ReceptionsViewModel : ViewModelBase
                     CardNumber: payment.CardNumber,
                     ClinicName: await GetReceiptClinicNameAsync());
 
-                ReceptionReceiptPrinter.Print(receipt);
+                await PrintReceiptAsync(receipt);
             }
             catch (Exception ex)
             {

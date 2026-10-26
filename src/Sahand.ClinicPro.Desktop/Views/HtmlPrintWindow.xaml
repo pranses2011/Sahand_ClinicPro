@@ -1,0 +1,32 @@
+<Window x:Class="Sahand.ClinicPro.Desktop.Views.HtmlPrintWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        FlowDirection="RightToLeft"
+        WindowStartupLocation="CenterOwner"
+        Width="860" Height="720" MinWidth="520" MinHeight="420">
+    <!-- چاپ قالبی (HTML) — سند رندرشده با قالب پیش‌فرض سرور این‌جا نمایش
+         داده می‌شود؛ دکمهٔ چاپ، دیالوگ چاپ سیستم را روی همان HTML باز می‌کند -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0" Margin="12,10">
+            <TextBlock x:Name="TitleText" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" />
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" HorizontalAlignment="Left">
+                <Button Click="OnPrintClick" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Printer" Width="15" Height="15" VerticalAlignment="Center" />
+                        <TextBlock Text="چاپ" Margin="7,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Click="OnCloseClick" Style="{StaticResource MaterialDesignOutlinedButton}" Content="بستن" />
+            </StackPanel>
+        </DockPanel>
+        <Border Grid.Row="1" Margin="12,0,12,12" CornerRadius="10" BorderThickness="1"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" ClipToBounds="True">
+            <WebBrowser x:Name="Browser" />
+        </Border>
+    </Grid>
+</Window>
