@@ -390,6 +390,7 @@ public partial class App : System.Windows.Application
             var view = new ImagingView { DataContext = vm };
             var window = new Window
             {
+                Background = (Brush)FindResource("MaterialDesign.Brush.Background"),
                 Content = view,
                 Width = 1600,
                 Height = 950,
@@ -462,20 +463,6 @@ public partial class App : System.Windows.Application
         ConfigureServices(services, configuration);
         Services = services.BuildServiceProvider();
 
-        // ═══ حالت اسکرین‌شات واقعی (ابزار راستی‌آزمایی طراحی) ═══
-        // با آرگومان --imaging-screenshot <مسیر> برنامه بدون ورود/سرور بالا می‌آید،
-        // صفحهٔ واقعی تصویربرداری را با دادهٔ نمونه روی پنجرهٔ ویندوزی رندر و از
-        // خودِ درخت بصری WPF عکس PNG می‌گیرد و خارج می‌شود؛ در CI ویندوزی برای
-        // مقایسهٔ عینیِ پیاده‌سازی با طرح تأییدی استفاده می‌شود و در اجرای عادی
-        // کاربران هرگز فعال نیست.
-        var shotIndex = Array.IndexOf(e.Args, "--imaging-screenshot");
-        if (shotIndex >= 0)
-        {
-            var shotPath = shotIndex + 1 < e.Args.Length ? e.Args[shotIndex + 1] : "imaging-screenshot.png";
-            _ = RenderImagingScreenshotAsync(shotPath);
-            return;
-        }
-
         // چرخه نوزدهم (گزارش سیزدهم مالک): تم رنگی انتخاب‌شدهٔ کاربر از اجرای
         // پیشین — پیش از باز شدن هر پنجره‌ای روی پوسته اعمال می‌شود تا برنامه
         // از همان لحظهٔ اول با پوستهٔ دلخواه بالا بیاید (پیش‌فرض: آبی/روشن)
@@ -491,6 +478,21 @@ public partial class App : System.Windows.Application
         // انتخاب فونت/سایز/واحد پول از اجرای قبل، از لحظهٔ اول برقرار باشد
         Services.GetRequiredService<IThemeService>()
             .ApplyAppearance(ThemeService.LoadSavedAppearance());
+
+        // ═══ حالت اسکرین‌شات واقعی (ابزار راستی‌آزمایی طراحی) ═══
+        // با آرگومان --imaging-screenshot <مسیر> برنامه بدون ورود/سرور بالا می‌آید،
+        // صفحهٔ واقعی تصویربرداری را با دادهٔ نمونه روی پنجرهٔ ویندوزی رندر و از
+        // خودِ درخت بصری WPF عکس PNG می‌گیرد و خارج می‌شود؛ در CI ویندوزی برای
+        // مقایسهٔ عینیِ پیاده‌سازی با طرح تأییدی استفاده می‌شود و در اجرای عادی
+        // کاربران هرگز فعال نیست.
+        var shotIndex = Array.IndexOf(e.Args, "--imaging-screenshot");
+        if (shotIndex >= 0)
+        {
+            var shotPath = shotIndex + 1 < e.Args.Length ? e.Args[shotIndex + 1] : "imaging-screenshot.png";
+            _ = RenderImagingScreenshotAsync(shotPath);
+            return;
+        }
+
 
         // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — اسپلش انیمیشنی ═══
         // «برنامه Splash با انیمیشن و نوار پیشرفت بساز که خیلی زیبا و با
