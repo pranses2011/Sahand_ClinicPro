@@ -11,6 +11,9 @@ namespace Sahand.ClinicPro.Desktop.ViewModels;
 /// </summary>
 public partial class AdminHubViewModel : ViewModelBase
 {
+    /// <summary>عنوان صفحه</summary>
+    public override string Title => "مدیریت سامانه";
+
     /// <summary>ساخت مرکز مدیریت با همهٔ ویومدل‌های مدیریتی موجود</summary>
     public AdminHubViewModel(
         SettingsViewModel settings,

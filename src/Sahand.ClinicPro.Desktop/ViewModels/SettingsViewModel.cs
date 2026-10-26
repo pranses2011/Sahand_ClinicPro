@@ -849,8 +849,6 @@ public partial class SettingsViewModel : ViewModelBase
         if (int.TryParse(copies, out var n) && n is >= 1 and <= 10) PrintCopies = n;
     }
 
-    /// <summary>تست چاپگر — ارسال صفحه آزمایشی به چاپگر پیش‌فرض ویندوز</summary>
-    [RelayCommand]
     /// <summary>چاپ آزمایشی یک سند از کاتالوگ — با چاپگر اختصاصی همان سند</summary>
     [RelayCommand]
     private void TestPrintJob(PrintJobRow? row)

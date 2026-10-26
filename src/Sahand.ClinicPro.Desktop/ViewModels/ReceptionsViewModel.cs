@@ -663,7 +663,6 @@ public partial class ReceptionsViewModel : ViewModelBase
 
     /// <summary>پذیرش انتخاب‌شده در صف</summary>
     [ObservableProperty]
-    private ReceptionRow? _selectedReception;
 
     /// <summary>سازنده</summary>
     public ReceptionsViewModel(IApiClient api, ISnackbarService snackbar)
