@@ -26,7 +26,7 @@ public partial class AttendanceViewModel : ViewModelBase
 
     /// <summary>سال‌های قابل انتخاب</summary>
     public static int[] Years { get; } = Enumerable.Range(
-        PersianDateHelper.ToJalali(DateTime.Today).Year - 3, 5).Reverse().ToArray();
+        PersianDateHelper.ToJalali(IranClock.Today).Year - 3, 5).Reverse().ToArray();
 
     /// <summary>برندهای قابل انتخاب</summary>
     public static string[] Brands { get; } = { "ZKTeco", "Hikvision", "Generic" };
@@ -37,7 +37,7 @@ public partial class AttendanceViewModel : ViewModelBase
         _api = api;
         _snackbar = snackbar;
 
-        var today = PersianDateHelper.ToJalali(DateTime.Today);
+        var today = PersianDateHelper.ToJalali(IranClock.Today);
         _selectedYear = today.Year;
         _selectedMonthIndex = today.Month - 1;
 

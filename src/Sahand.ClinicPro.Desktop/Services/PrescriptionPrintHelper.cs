@@ -607,6 +607,14 @@ public static class PrescriptionPrintHelper
             try
             {
                 var dlg = new System.Windows.Controls.PrintDialog();
+                // چاپگر اختصاصی «نسخه» از مرکز چاپ — پیش‌انتخاب در دیالوگ چاپ
+                var jobPrinter = PrintJobSettings.PrinterFor("Prescription");
+                if (!string.IsNullOrWhiteSpace(jobPrinter))
+                {
+                    var queue = new System.Printing.LocalPrintServer().GetPrintQueues()
+                        .FirstOrDefault(q => q.FullName == jobPrinter);
+                    if (queue is not null) dlg.PrintQueue = queue;
+                }
                 if (dlg.ShowDialog() == true)
                 {
                     // سند را مستقیم به پرینتر انتخابی ارسال می‌کنیم —

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Media;
@@ -172,6 +172,7 @@ public partial class MainWindowViewModel : ObservableObject
         ReportsViewModel reportsVm,
         ReportBrowserViewModel reportBrowserVm,
         AdminViewModel adminVm,
+        AdminHubViewModel adminHubVm,
         PersonnelViewModel personnelVm,
         UsersViewModel usersVm,
         RolesViewModel rolesVm,
@@ -242,13 +243,13 @@ public partial class MainWindowViewModel : ObservableObject
 
         CurrentUser = _tokens.DisplayName ?? _tokens.Username ?? "کاربر";
         // چرخه هجدهم (گزارش دوازدهم): تاریخ و ساعت نوار بالا با ارقام فارسی
-        CurrentDate = PersianDateHelper.ToShamsiFa(DateTime.Now);
+        CurrentDate = PersianDateHelper.ToShamsiFa(IranClock.Now);
 
         // ساعت لحظه‌ای — هر ثانیه به‌روزرسانی شمسی و ساعت (ارقام فارسی)
         _clock.Tick += (_, _) =>
-            ClockText = $"{PersianDateHelper.ToShamsiFa(DateTime.Now)} - {PersianDateHelper.ToClockFa(DateTime.Now)}";
+            ClockText = $"{PersianDateHelper.ToShamsiFa(IranClock.Now)} - {PersianDateHelper.ToClockFa(IranClock.Now)}";
         _clock.Start();
-        ClockText = $"{PersianDateHelper.ToShamsiFa(DateTime.Now)} - {PersianDateHelper.ToClockFa(DateTime.Now)}";
+        ClockText = $"{PersianDateHelper.ToShamsiFa(IranClock.Now)} - {PersianDateHelper.ToClockFa(IranClock.Now)}";
 
         // اتصال سرویس پیام شناور به میزبان کپسول‌های پوسته — چرخهٔ ۳۸
         _snackbar.MessagePosted += EnqueueToast;
@@ -299,7 +300,7 @@ public partial class MainWindowViewModel : ObservableObject
             // لاگ حسابرسی/پشتیبان‌گیری/آرشیو سالانه) — با جدا شدن پرسنل و
             // تنظیماتِ بخش‌بندی‌شده، این صفحه از منو حذف شده و تک‌افتاده بود؛
             // دوباره از منوی مدیریت سامانه در دسترس شد (گزارش هفدهم مالک)
-            ["admin"] = () => adminVm,
+            ["admin"] = () => adminHubVm,
             // چرخه بیستم (گزارش چهاردهم مالک): پرسنل صفحهٔ خودش را می‌گیرد —
             // پیش‌تر به adminVm (تنظیمات) نگاشت شده بود و زبانهٔ تنظیمات باز می‌شد
             ["personnel"] = () => personnelVm,
@@ -597,20 +598,11 @@ public partial class MainWindowViewModel : ObservableObject
             new() { Title = "گزارش‌ها", PageKey = "reports", Icon = "FileChart" },
 
             // ─── مدیریت و تنظیمات سامانه ───
-            Group("مدیریت سامانه", "Cog",
-                new() { Title = "مدیریت سامانه (تب‌بندی کامل)", PageKey = "admin", Icon = "ViewDashboardOutline" },
-                new() { Title = "مدیریت خدمات", PageKey = "service-catalog", Icon = "ClipboardList" },
-                new() { Title = "کاربران", PageKey = "users", Icon = "AccountKey" },
-                new() { Title = "نقش‌ها", PageKey = "roles", Icon = "ShieldAccount" },
-                new() { Title = "تنظیمات", PageKey = "settings", Icon = "Cog" },
-                new() { Title = "شعبه‌ها", PageKey = "branches", Icon = "HomeGroup" },
-                // چرخهٔ سی‌ونه‌م (گزارش مالک): «مدیریت اتاق ها رو در منوی کناری
-                // هم قرار بده» — پیش‌تر فقط از تب برنامهٔ کاری فرم پزشک باز می‌شد
-                new() { Title = "مدیریت اتاق‌ها", PageKey = "rooms", Icon = "Door" },
-                new() { Title = "پشتیبان‌گیری و بازیابی", PageKey = "backup", Icon = "DatabaseSync" },
-                new() { Title = "لاگ عملیات", PageKey = "audit", Icon = "FileDocumentEditOutline" },
-                new() { Title = "لایسنس", PageKey = "license", Icon = "KeyChain" },
-                new() { Title = "قالب چاپ و نظرسنجی", PageKey = "complementary", Icon = "TuneVertical" }),
+            // بازطراحی تأییدشده: یازده آیتم پراکنده و تکراری به یک آیتم تبدیل شد؛
+            // «مدیریت سامانه» صفحهٔ تب‌دار مرکز مدیریت (AdminHub) را باز می‌کند و
+            // هر بخش (تنظیمات/چاپ و قالب‌ها/کاربران/نقش‌ها/خدمات/اتاق‌ها/شعبه‌ها/
+            // پشتیبان‌گیری و آرشیو/لاگ/لایسنس) تب خودش را با همان صفحهٔ قبلی دارد.
+            new() { Title = "مدیریت سامانه", PageKey = "admin", Icon = "Cog" },
 
             // ─── آموزش ───
             new() { Title = "🎓 مرکز آموزش", PageKey = "training", Icon = "School" }
@@ -785,6 +777,10 @@ public partial class MainWindowViewModel : ObservableObject
     {
         try
         {
+            // بازطراحی مرکز مدیریت: «مدیریت خدمات» حالا تبِ صفحهٔ یکپارچهٔ
+            // مدیریت سامانه است و دیگر نباید به‌صورت آیتم جدا به منو برگردد
+            LocalSettingsStore.Set(ServiceCatalogMigrationKey, "done");
+            return false;
             if (LocalSettingsStore.Get(ServiceCatalogMigrationKey) == "done")
                 return false;
 

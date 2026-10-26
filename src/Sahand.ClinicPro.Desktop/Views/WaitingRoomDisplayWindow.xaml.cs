@@ -390,7 +390,7 @@ public partial class WaitingRoomDisplayWindow : Window
     /// <summary>به‌روزرسانی ساعت دیجیتال و تاریخ بلند شمسی</summary>
     private void UpdateClock()
     {
-        var now = DateTime.Now;
+        var now = IranClock.Now;
         DigitalClockText.Text = PersianDateHelper.ToPersianDigits(now.ToString("HH:mm:ss"));
         // تاریخ بلند — «تاریخ امروز : ۲۳ مهر ماه ۱۴۰۵»
         var (y, m, d) = PersianDateHelper.ToJalali(now);

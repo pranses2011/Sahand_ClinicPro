@@ -118,7 +118,7 @@ public partial class ReportBrowserView : UserControl
         {
             Filter = filter,
             FilterIndex = 1, // پیش‌فرض PNG — بدون افت کیفیت
-            FileName = $"{vm.SelectedReport?.Id ?? "report"}_{DateTime.Now:yyyyMMdd_HHmm}.{ImageFormats[0].Extension}"
+            FileName = $"{vm.SelectedReport?.Id ?? "report"}_{IranClock.Now:yyyyMMdd_HHmm}.{ImageFormats[0].Extension}"
         };
         if (dialog.ShowDialog() != true) return; // انصراف کاربر
 
@@ -192,7 +192,7 @@ public partial class ReportBrowserView : UserControl
             : "بازه: کل داده‌ها";
         panel.Children.Add(new TextBlock
         {
-            Text = $"{rangeText}    |    تاریخ خروجی: {PersianDateHelperToShamsiFa(DateTime.Now)} - {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(DateTime.Now)}",
+            Text = $"{rangeText}    |    تاریخ خروجی: {PersianDateHelperToShamsiFa(IranClock.Now)} - {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(IranClock.Now)}",
             FontFamily = faFont,
             FontSize = 11.5,
             Foreground = Brushes.Gray,

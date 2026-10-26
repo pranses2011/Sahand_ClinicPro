@@ -35,7 +35,7 @@ public static class LabResultPrinter
 
         var orderNo = detail.OrderNumber ?? orderId.ToString();
         return PrintFlow.Print(doc, $"برگهٔ نتیجهٔ آزمایش {orderNo}",
-            LocalSettingsStore.Get("Printer.DefaultPrinter"));
+            PrintJobSettings.PrinterFor("LabResult"));
     }
 
     /// <summary>ساخت سند برگهٔ نتیجه — جدول اقلام با رنگ‌بندی غیرعادی</summary>
@@ -66,7 +66,7 @@ public static class LabResultPrinter
             "تاریخ درخواست", Persian(d.DateShamsi));
         AddInfoRow(infoGroup, "بیمار", d.PatientName, "پزشک", d.DoctorName);
         AddInfoRow(infoGroup, "وضعیت", StatusTextOf(d.Status), "تاریخ چاپ",
-            PersianDateHelper.ToShamsiFa(DateTime.Now));
+            PersianDateHelper.ToShamsiFa(IranClock.Now));
         info.RowGroups.Add(infoGroup);
         doc.Blocks.Add(info);
 

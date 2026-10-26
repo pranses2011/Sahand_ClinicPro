@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -104,7 +104,7 @@ public class AutomaticBackupWorker : BackgroundService
             directory = "C:/Backups/SahandClinicPro";
 
         var today = DateTime.Today;
-        var now = DateTime.Now;
+        var now = PersianDateHelper.IranNow();
 
         // اگر ساعت مقرر نرسیده یا نسخهٔ خودکار امروز گرفته شده، کاری نکن
         if (now.Hour < hour)

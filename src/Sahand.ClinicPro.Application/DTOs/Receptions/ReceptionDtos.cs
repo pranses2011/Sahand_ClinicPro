@@ -1,4 +1,4 @@
-﻿using Sahand.ClinicPro.Domain.Enums;
+using Sahand.ClinicPro.Domain.Enums;
 
 namespace Sahand.ClinicPro.Application.DTOs.Receptions;
 
@@ -27,6 +27,36 @@ public record ReceptionListDto(
     // بخش «صف خدمت» نمایشگر، پذیرش‌های خدمتیِ امروز را با همین شناسه دسته‌بندی
     // می‌کند (مقدار پیش‌فرض تهی — سازگار با همهٔ مصرف‌کنندگان قبلی)
     long? ServiceId = null);
+
+/// <summary>یک قلم قبض پذیرش — برای چاپ مجدد از دادهٔ واقعی فاکتور</summary>
+public record ReceptionReceiptItemDto(string Name, decimal Quantity, decimal UnitPrice);
+
+/// <summary>
+/// دادهٔ کامل قبض پذیرش برای «چاپ مجدد» — از پذیرش + فاکتور(ها) + پرداخت‌های
+/// ذخیره‌شده بازسازی می‌شود تا قبض روزهای گذشته هم دقیقاً مثل روز ثبت چاپ شود
+/// </summary>
+public record ReceptionReceiptDto(
+    long ReceptionId,
+    string? ReceptionNumber,
+    string InvoiceNumbers,
+    string PatientName,
+    string? NationalCode,
+    string? Mobile,
+    string DoctorName,
+    string? ServiceName,
+    string? RoomName,
+    string InsuranceName,
+    string DateText,
+    string TimeText,
+    List<ReceptionReceiptItemDto> Items,
+    decimal ItemsTotal,
+    decimal InsuranceShare,
+    decimal PatientShare,
+    decimal Payable,
+    decimal Paid,
+    int PaymentMethod,
+    string? ReferenceNumber,
+    string? CardNumber);
 
 /// <summary>درخواست ثبت پذیرش</summary>
 public record CreateReceptionDto(

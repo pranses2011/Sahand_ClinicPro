@@ -458,7 +458,7 @@ public partial class ShiftsViewModel : ViewModelBase
 
         var ok = await _api.PostAsync($"attendance/shift-assignments/{row.Id}/end",
             // چرخهٔ ۷۹: قالب‌بندی صریح با فرهنگ خنثی — مقاوم در برابر تقویم فرهنگ جاری
-            new { endDate = DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) });
+            new { endDate = DateOnly.FromDateTime(IranClock.Today).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) });
         if (ok)
         {
             _snackbar.Success($"تخصیص شیفت «{row.ShiftName}» پایان یافت");

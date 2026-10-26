@@ -150,7 +150,7 @@ public partial class PayslipWindow : Window
 
         // ── تاریخ صدور ──
         doc.Blocks.Add(new Paragraph(new Run(
-            $"تاریخ صدور: {PersianDateHelper.ToShamsiFa(DateTime.Now)}"))
+            $"تاریخ صدور: {PersianDateHelper.ToShamsiFa(IranClock.Now)}"))
         {
             FontSize = 10,
             Foreground = Brushes.DimGray,

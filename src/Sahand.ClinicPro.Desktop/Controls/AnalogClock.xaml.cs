@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -13,7 +13,7 @@ namespace Sahand.ClinicPro.Desktop.Controls;
 /// خطیِ یک‌ثانیه‌ای بین دو tick حرکت می‌کند تا «سوپِ پیوسته» داشته باشد
 /// (نه پرش ثانیه‌ای). اعداد با ارقام فارسی‌اند و همهٔ رنگ‌ها برای پس‌زمینهٔ
 /// تیرهٔ کیوسک انتخاب شده‌اند (خوانا از فاصلهٔ چند متری).
-/// ساعتِ نمایش بر پایهٔ وقت محلی ایستگاه (DateTime.Now) است — کیوسک همان
+/// ساعتِ نمایش بر پایهٔ وقت محلی ایستگاه (IranClock.Now) است — کیوسک همان
 /// جایی است که بیمار ساعتش را با آن تطبیق می‌کند.
 /// </summary>
 public partial class AnalogClock : UserControl
@@ -309,7 +309,7 @@ public partial class AnalogClock : UserControl
     /// <param name="animate">false یعنی نخستین ترسیم (بدون انیمیشن)</param>
     private void UpdateHands(bool animate = true)
     {
-        var now = DateTime.Now;
+        var now = IranClock.Now;
 
         // عقربهٔ ساعت: هر ساعت ۳۰ درجه + سهم دقیقه/ثانیه برای پیوستگی
         HourRotation.Angle = (now.Hour % 12) * 30 + now.Minute * 0.5 + now.Second / 120.0;

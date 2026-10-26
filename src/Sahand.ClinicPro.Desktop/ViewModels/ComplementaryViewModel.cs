@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -153,6 +153,12 @@ public partial class ComplementaryViewModel : ViewModelBase
     /// </summary>
     public sealed record TemplateTypeOption(string Key, string Fa);
 
+    /// <summary>یک متغیر قالب — گروه، آیکون مرتبط، برچسب فارسی و کلید درج در متن</summary>
+    public sealed record TemplateVariable(string Group, string Icon, string Label, string Key);
+
+    /// <summary>یک طرح آمادهٔ قالب برای گالری «از بین طرح‌ها انتخاب کنید»</summary>
+    public sealed record PresetTemplate(string TypeKey, string Title, string Accent, string Paper, string Body);
+
     /// <summary>گزینه‌های نوع سند — ۹ نوع سند قابل طراحی در طراح (تک‌منبع انواع سند)</summary>
     public static TemplateTypeOption[] TemplateTypes { get; } =
     {
@@ -219,7 +225,7 @@ public partial class ComplementaryViewModel : ViewModelBase
 
     /// <summary>متغیرهای نوع فعال برای پالت</summary>
     [ObservableProperty]
-    private ObservableCollection<string> _activeVariables = new();
+    private ObservableCollection<TemplateVariable> _activeVariables = new();
 
     /// <summary>نمایه نوع در فرم ساخت سریع — اندیس داخل TemplateTypes (که در چرخهٔ سی‌وششم به بالای مصرف‌کننده‌های استاتیکش منتقل شد)</summary>
     [ObservableProperty]
@@ -394,23 +400,197 @@ public partial class ComplementaryViewModel : ViewModelBase
         RefreshPalette(template.Key);
     }
 
-    /// <summary>پالت متغیرهای نوع فعال</summary>
+    /// <summary>
+    /// پالت متغیرهای نوع فعال — گروه‌بندی‌شده (بیمار/سند/مالی/درمانگاه) و هر
+    /// متغیر با آیکون مرتبط خودش (بازطراحی تأییدشده: «متغیرهای کامل و مورد
+    /// نیاز هر بخش با آیکون‌های مرتبط؛ الان همه یک مدل هستند»)
+    /// </summary>
     private void RefreshPalette(string key)
     {
-        var map = new Dictionary<string, string[]>
+        var map = new Dictionary<string, TemplateVariable[]>
         {
-            ["Invoice"] = new[] { "invoice_code", "invoice_date", "patient_name", "insurance_name", "items_html", "subtotal", "discount", "insurance_share", "patient_share", "total" },
-            ["Prescription"] = new[] { "patient_name", "patient_age", "patient_national_code", "doctor_name", "visit_date", "prescription_code", "items_html", "notes" },
-            ["LabOrder"] = new[] { "patient_name", "doctor_name", "order_number", "order_date", "tests_html", "clinical_info" },
-            ["LabResult"] = new[] { "patient_name", "order_number", "result_date", "results_html", "verified_by" },
-            ["ImagingOrder"] = new[] { "patient_name", "modality", "order_number", "order_date", "clinical_info" },
-            ["AppointmentTicket"] = new[] { "patient_name", "doctor_name", "appointment_date", "appointment_time", "queue_number", "tracking_code" },
-            ["ReceptionReceipt"] = new[] { "patient_name", "reception_date", "reception_code", "service_name", "amount", "payment_method" },
-            ["MedicalCertificate"] = new[] { "patient_name", "doctor_name", "issue_date", "content", "duration" },
-            ["PayrollSlip"] = new[] { "employee_name", "period", "base_salary", "overtime_pay", "insurance", "tax", "net_pay" }
+            ["Invoice"] = new[]
+            {
+                new TemplateVariable("سند", "📄", "شماره فاکتور", "invoice_code"),
+                new TemplateVariable("سند", "📅", "تاریخ فاکتور", "invoice_date"),
+                new TemplateVariable("بیمار", "👤", "نام بیمار", "patient_name"),
+                new TemplateVariable("بیمار", "🛡️", "بیمه", "insurance_name"),
+                new TemplateVariable("مالی", "🧾", "اقلام (جدول)", "items_html"),
+                new TemplateVariable("مالی", "➕", "جمع جزء", "subtotal"),
+                new TemplateVariable("مالی", "🏷️", "تخفیف", "discount"),
+                new TemplateVariable("مالی", "🛡️", "سهم بیمه", "insurance_share"),
+                new TemplateVariable("مالی", "👛", "سهم بیمار", "patient_share"),
+                new TemplateVariable("مالی", "💰", "قابل پرداخت", "total"),
+                new TemplateVariable("درمانگاه", "🏥", "نام درمانگاه", "clinic_name"),
+                new TemplateVariable("درمانگاه", "🖨️", "تاریخ چاپ", "print_date")
+            },
+            ["Prescription"] = new[]
+            {
+                new TemplateVariable("بیمار", "👤", "نام بیمار", "patient_name"),
+                new TemplateVariable("بیمار", "🎂", "سن بیمار", "patient_age"),
+                new TemplateVariable("بیمار", "🪪", "کد ملی", "patient_national_code"),
+                new TemplateVariable("ویزیت", "🩺", "نام پزشک", "doctor_name"),
+                new TemplateVariable("ویزیت", "📅", "تاریخ ویزیت", "visit_date"),
+                new TemplateVariable("ویزیت", "🔖", "کد نسخه", "prescription_code"),
+                new TemplateVariable("دارو", "💊", "داروها (جدول)", "items_html"),
+                new TemplateVariable("دارو", "📝", "یادداشت پزشک", "notes"),
+                new TemplateVariable("درمانگاه", "🏥", "نام درمانگاه", "clinic_name")
+            },
+            ["LabOrder"] = new[]
+            {
+                new TemplateVariable("بیمار", "👤", "نام بیمار", "patient_name"),
+                new TemplateVariable("درخواست", "🩺", "پزشک", "doctor_name"),
+                new TemplateVariable("درخواست", "🔖", "شماره درخواست", "order_number"),
+                new TemplateVariable("درخواست", "📅", "تاریخ درخواست", "order_date"),
+                new TemplateVariable("آزمایش", "🧪", "آزمایش‌ها (جدول)", "tests_html"),
+                new TemplateVariable("آزمایش", "📋", "اطلاعات بالینی", "clinical_info")
+            },
+            ["LabResult"] = new[]
+            {
+                new TemplateVariable("بیمار", "👤", "نام بیمار", "patient_name"),
+                new TemplateVariable("بیمار", "🪪", "کد ملی", "patient_national_code"),
+                new TemplateVariable("درخواست", "🔖", "شماره درخواست", "order_number"),
+                new TemplateVariable("درخواست", "📅", "تاریخ جواب", "result_date"),
+                new TemplateVariable("نتایج", "📊", "جدول نتایج", "results_html"),
+                new TemplateVariable("نتایج", "✅", "تأییدکننده", "verified_by"),
+                new TemplateVariable("درمانگاه", "🏥", "نام درمانگاه", "clinic_name")
+            },
+            ["ImagingOrder"] = new[]
+            {
+                new TemplateVariable("بیمار", "👤", "نام بیمار", "patient_name"),
+                new TemplateVariable("مطالعه", "🩻", "مدالیته", "modality"),
+                new TemplateVariable("مطالعه", "🔖", "شماره درخواست", "order_number"),
+                new TemplateVariable("مطالعه", "📅", "تاریخ مطالعه", "order_date"),
+                new TemplateVariable("گزارش", "📝", "یافته‌ها", "findings"),
+                new TemplateVariable("گزارش", "🧾", "نتیجه‌گیری", "impression"),
+                new TemplateVariable("گزارش", "☢️", "دوز تابش", "dose_info")
+            },
+            ["AppointmentTicket"] = new[]
+            {
+                new TemplateVariable("بیمار", "👤", "نام بیمار", "patient_name"),
+                new TemplateVariable("بیمار", "📱", "موبایل", "patient_mobile"),
+                new TemplateVariable("نوبت", "🩺", "پزشک", "doctor_name"),
+                new TemplateVariable("نوبت", "📅", "تاریخ نوبت", "appointment_date"),
+                new TemplateVariable("نوبت", "⏰", "ساعت نوبت", "appointment_time"),
+                new TemplateVariable("نوبت", "🔢", "شماره صف", "queue_number"),
+                new TemplateVariable("نوبت", "🔖", "کد پیگیری", "tracking_code")
+            },
+            ["ReceptionReceipt"] = new[]
+            {
+                new TemplateVariable("بیمار", "👤", "نام بیمار", "patient_name"),
+                new TemplateVariable("بیمار", "🪪", "کد ملی", "patient_national_code"),
+                new TemplateVariable("بیمار", "📱", "موبایل", "patient_mobile"),
+                new TemplateVariable("پذیرش", "🔢", "شماره صف", "queue_number"),
+                new TemplateVariable("پذیرش", "📅", "تاریخ پذیرش", "reception_date"),
+                new TemplateVariable("پذیرش", "⏰", "ساعت پذیرش", "reception_time"),
+                new TemplateVariable("پذیرش", "🧾", "خدمت", "service_name"),
+                new TemplateVariable("پذیرش", "🩺", "انجام‌دهنده/پزشک", "performer_name"),
+                new TemplateVariable("پذیرش", "🚪", "اتاق", "room_name"),
+                new TemplateVariable("پذیرش", "🛡️", "بیمه", "insurance_name"),
+                new TemplateVariable("مالی", "🧾", "اقلام (جدول)", "items_html"),
+                new TemplateVariable("مالی", "💰", "جمع اقلام", "items_total"),
+                new TemplateVariable("مالی", "🛡️", "سهم بیمه", "insurance_share"),
+                new TemplateVariable("مالی", "👛", "سهم بیمار", "patient_share"),
+                new TemplateVariable("مالی", "✅", "پرداخت‌شده", "paid_amount"),
+                new TemplateVariable("مالی", "💳", "روش پرداخت", "payment_method"),
+                new TemplateVariable("مالی", "📄", "شماره فاکتور", "invoice_number"),
+                new TemplateVariable("درمانگاه", "🏥", "نام درمانگاه", "clinic_name"),
+                new TemplateVariable("درمانگاه", "📞", "تلفن درمانگاه", "clinic_phone"),
+                new TemplateVariable("درمانگاه", "🖨️", "تاریخ چاپ", "print_date")
+            },
+            ["MedicalCertificate"] = new[]
+            {
+                new TemplateVariable("بیمار", "👤", "نام بیمار", "patient_name"),
+                new TemplateVariable("بیمار", "🪪", "کد ملی", "patient_national_code"),
+                new TemplateVariable("گواهی", "🩺", "پزشک", "doctor_name"),
+                new TemplateVariable("گواهی", "📅", "تاریخ صدور", "issue_date"),
+                new TemplateVariable("گواهی", "📝", "متن گواهی", "content"),
+                new TemplateVariable("گواهی", "⏳", "مدت استراحت", "duration")
+            },
+            ["PayrollSlip"] = new[]
+            {
+                new TemplateVariable("پرسنل", "💼", "نام پرسنل", "employee_name"),
+                new TemplateVariable("پرسنل", "📅", "دورهٔ پرداخت", "period"),
+                new TemplateVariable("پرسنل", "🧭", "سمت", "position_name"),
+                new TemplateVariable("مالی", "💰", "حقوق پایه", "base_salary"),
+                new TemplateVariable("مالی", "⏰", "اضافه‌کار", "overtime_pay"),
+                new TemplateVariable("مالی", "🛡️", "بیمه", "insurance"),
+                new TemplateVariable("مالی", "🧮", "مالیات", "tax"),
+                new TemplateVariable("مالی", "✅", "خالص پرداختی", "net_pay")
+            }
         };
-        ActiveVariables = new ObservableCollection<string>(
-            map.TryGetValue(key, out var vars) ? vars : Array.Empty<string>());
+        ActiveVariables = new ObservableCollection<TemplateVariable>(
+            map.TryGetValue(key, out var vars) ? vars : Array.Empty<TemplateVariable>());
+    }
+
+    /// <summary>
+    /// قالب‌های آمادهٔ هر سند — چند طرح آماده برای هر نوع تا کاربر از بین
+    /// آن‌ها انتخاب کند (بازطراحی تأییدشده)؛ با یک کلیک به‌صورت قالب تازه
+    /// (ذخیره‌نشده) ساخته می‌شود تا کاربر نام بدهد و ذخیره/پیش‌فرض کند
+    /// </summary>
+    public static IReadOnlyList<PresetTemplate> PresetTemplates { get; } = new[]
+    {
+        new PresetTemplate("ReceptionReceipt", "حرارتی شیک (برند)", "#16355E", "Thermal80",
+            "<div style='text-align:center;font-weight:800;font-size:16px'>{{clinic_name}}</div><div style='text-align:center'>قبض پذیرش و پرداخت</div><div style='text-align:center;font-size:20px;font-weight:800;border:2px solid #16355E;border-radius:8px;padding:6px;margin:8px 0'>شماره صف: {{queue_number}}</div><div>بیمار: {{patient_name}} — {{reception_date}} {{reception_time}}</div><div>خدمت/پزشک: {{service_name}} {{performer_name}}</div>{{items_html}}<div>جمع: {{items_total}} | سهم بیمه: {{insurance_share}} | سهم بیمار: {{patient_share}}</div><div>پرداخت‌شده: {{paid_amount}} ({{payment_method}})</div>"),
+        new PresetTemplate("ReceptionReceipt", "حرارتی فشرده", "#0B7A63", "Thermal80",
+            "<div style='text-align:center;font-weight:800'>{{clinic_name}}</div><div>صف {{queue_number}} — {{patient_name}}</div>{{items_html}}<div>قابل پرداخت: {{patient_share}} — پرداخت‌شده: {{paid_amount}}</div>"),
+        new PresetTemplate("ReceptionReceipt", "A5 اداری", "#6A1B9A", "A5",
+            "<div style='text-align:center;font-weight:800;font-size:17px'>{{clinic_name}}</div><div style='text-align:center'>{{clinic_address}} — {{clinic_phone}}</div><hr/><div>بیمار: {{patient_name}} | کد ملی: {{patient_national_code}} | تاریخ: {{reception_date}}</div><div>بیمه: {{insurance_name}} | فاکتور: {{invoice_number}}</div>{{items_html}}<div>جمع: {{items_total}} | سهم بیمه: {{insurance_share}} | سهم بیمار: {{patient_share}}</div>"),
+        new PresetTemplate("Invoice", "فاکتور رسمی A4", "#16355E", "A4",
+            "<div style='text-align:center;font-weight:800;font-size:17px'>{{clinic_name}}</div><div>فاکتور {{invoice_code}} — {{invoice_date}}</div><div>بیمار: {{patient_name}} | بیمه: {{insurance_name}}</div>{{items_html}}<div>جمع جزء: {{subtotal}} | تخفیف: {{discount}} | سهم بیمه: {{insurance_share}} | قابل پرداخت: {{total}}</div>"),
+        new PresetTemplate("Invoice", "فاکتور A5 خلاصه", "#0B7A63", "A5",
+            "<div style='font-weight:800'>{{clinic_name}} — فاکتور {{invoice_code}}</div><div>{{patient_name}} — {{invoice_date}}</div>{{items_html}}<div>قابل پرداخت: {{total}}</div>"),
+        new PresetTemplate("Invoice", "فاکتور بیمه‌ای", "#E65100", "A4",
+            "<div style='text-align:center;font-weight:800'>{{clinic_name}}</div><div>فاکتور بیمه‌ای {{invoice_code}} — بیمه: {{insurance_name}}</div><div>بیمار: {{patient_name}}</div>{{items_html}}<div>سهم سازمان: {{insurance_share}} | سهم بیمار: {{patient_share}} | جمع: {{total}}</div>"),
+        new PresetTemplate("Prescription", "نسخهٔ کلاسیک پزشک", "#16355E", "A5",
+            "<div style='text-align:center;font-weight:800'>{{doctor_name}}</div><div>بیمار: {{patient_name}} — سن: {{patient_age}} — {{visit_date}}</div><div style='font-size:22px;font-weight:800'>℞</div>{{items_html}}<div>{{notes}}</div>"),
+        new PresetTemplate("Prescription", "نسخهٔ مدرن رنگی", "#0B7A63", "A5",
+            "<div style='background:#0B7A63;color:#fff;padding:8px;font-weight:800'>نسخه — {{doctor_name}}</div><div>{{patient_name}} | {{visit_date}} | کد نسخه: {{prescription_code}}</div>{{items_html}}<div>{{notes}}</div>"),
+        new PresetTemplate("LabResult", "گزارش استاندارد آزمایشگاه", "#00695C", "A4",
+            "<div style='text-align:center;font-weight:800'>{{clinic_name}} — آزمایشگاه</div><div>بیمار: {{patient_name}} | درخواست: {{order_number}} | تاریخ جواب: {{result_date}}</div>{{results_html}}<div>تأییدکننده: {{verified_by}}</div>"),
+        new PresetTemplate("LabResult", "گزارش فشرده", "#455A64", "A5",
+            "<div style='font-weight:800'>نتیجهٔ آزمایش — {{patient_name}}</div>{{results_html}}"),
+        new PresetTemplate("ImagingOrder", "گزارش رسمی رادیولوژی", "#37474F", "A4",
+            "<div style='text-align:center;font-weight:800'>{{clinic_name}} — تصویربرداری</div><div>بیمار: {{patient_name}} | {{modality}} | {{order_date}}</div><div><b>یافته‌ها:</b> {{findings}}</div><div><b>نتیجه‌گیری:</b> {{impression}}</div>"),
+        new PresetTemplate("AppointmentTicket", "قبض نوبت حرارتی", "#0B7A63", "Thermal80",
+            "<div style='text-align:center;font-weight:800'>{{clinic_name}}</div><div style='text-align:center;font-size:20px;font-weight:800'>صف {{queue_number}}</div><div>{{patient_name}} — {{doctor_name}}</div><div>{{appointment_date}} ساعت {{appointment_time}} — کد پیگیری: {{tracking_code}}</div>"),
+        new PresetTemplate("PayrollSlip", "فیش استاندارد", "#16355E", "A5",
+            "<div style='text-align:center;font-weight:800'>فیش حقوقی {{period}}</div><div>{{employee_name}} — {{position_name}}</div><div>حقوق پایه: {{base_salary}} | اضافه‌کار: {{overtime_pay}} | بیمه: {{insurance}} | مالیات: {{tax}}</div><div style='font-weight:800'>خالص پرداختی: {{net_pay}}</div>"),
+        new PresetTemplate("MedicalCertificate", "گواهی استراحت رسمی", "#37474F", "A5",
+            "<div style='text-align:center;font-weight:800'>گواهی پزشکی</div><div>گواهی می‌شود آقای/خانم {{patient_name}} در تاریخ {{issue_date}} معاینه شد. {{content}} مدت استراحت: {{duration}}</div><div>پزشک: {{doctor_name}}</div>")
+    };
+
+    /// <summary>قالب‌های آمادهٔ نوع فیلتر فعلی — برای گالری «طرح‌های آماده»</summary>
+    public IEnumerable<PresetTemplate> VisiblePresets =>
+        PresetTemplates.Where(p => TemplateFilterIndex <= 0
+            || p.TypeKey == TemplateTypes[Math.Max(0, TemplateFilterIndex - 1)].Key);
+
+    /// <summary>ساخت قالب تازه از روی یک طرح آماده</summary>
+    [RelayCommand]
+    private void AddPresetTemplate(PresetTemplate? preset)
+    {
+        if (preset is null) return;
+        var fa = TemplateTypes.FirstOrDefault(t => t.Key == preset.TypeKey).Fa ?? preset.TypeKey;
+        var row = new PrintTemplateRow
+        {
+            Id = 0,
+            Key = preset.TypeKey,
+            Title = preset.Title,
+            TypeFa = fa,
+            Icon = PrintTemplateRow.IconOf(preset.TypeKey),
+            Body = preset.Body,
+            PaperSize = preset.Paper,
+            AccentColor = preset.Accent,
+            IsActive = true,
+            IsDirty = true
+        };
+        row.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName != nameof(PrintTemplateRow.IsDirty)) row.IsDirty = true;
+        };
+        PrintTemplates.Add(row);
+        SelectedTemplate = row;
+        _snackbar.Info($"قالب آمادهٔ «{preset.Title}» ساخته شد — نام بدهید و ذخیره کنید");
     }
 
     /// <summary>ساخت قالب جدید از نوع انتخابی</summary>
@@ -548,10 +728,10 @@ public partial class ComplementaryViewModel : ViewModelBase
 
     /// <summary>درج متغیر در محل نشانگر — با پیام ساده (درج در انتها)</summary>
     [RelayCommand]
-    private void InsertVariable(string? variable)
+    private void InsertVariable(TemplateVariable? variable)
     {
-        if (SelectedTemplate is null || string.IsNullOrWhiteSpace(variable)) return;
-        SelectedTemplate.Body += $"{{{{{variable}}}}}";
+        if (SelectedTemplate is null || variable is null) return;
+        SelectedTemplate.Body += $"{{{{{variable.Key}}}}}";
         SelectedTemplate.IsDirty = true;
     }
 
@@ -781,7 +961,7 @@ public partial class ComplementaryViewModel : ViewModelBase
         if (ok)
         {
             SyncStatusText = "نقطه همگام‌سازی ایجاد شد";
-            LastSyncText = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsiFa(DateTime.Now); // چرخه هجدهم: ارقام فارسی
+            LastSyncText = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsiFa(IranClock.Now); // چرخه هجدهم: ارقام فارسی
             _snackbar.Success("همگام‌سازی آغاز شد — وضعیت در لاگ سیستم دنبال می‌شود");
         }
         else

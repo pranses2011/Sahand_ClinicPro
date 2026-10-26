@@ -28,7 +28,7 @@ public partial class CommissionReportViewModel : ViewModelBase
 
     /// <summary>سال‌های قابل انتخاب — از ۴ سال پیش تا سال جاری</summary>
     public static int[] Years { get; } = Enumerable.Range(
-        PersianDateHelper.ToJalali(DateTime.Today).Year - 4, 5).Reverse().ToArray();
+        PersianDateHelper.ToJalali(IranClock.Today).Year - 4, 5).Reverse().ToArray();
 
     /// <summary>سازنده</summary>
     public CommissionReportViewModel(IApiClient api, ISnackbarService snackbar)
@@ -37,7 +37,7 @@ public partial class CommissionReportViewModel : ViewModelBase
         _snackbar = snackbar;
 
         // دوره جاری به‌صورت پیش‌فرض
-        var today = PersianDateHelper.ToJalali(DateTime.Today);
+        var today = PersianDateHelper.ToJalali(IranClock.Today);
         _selectedYear = today.Year;
         _selectedMonthIndex = today.Month - 1;
     }

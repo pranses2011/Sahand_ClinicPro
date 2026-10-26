@@ -333,7 +333,7 @@ public partial class DashboardViewModel : ViewModelBase
     /// <summary>به‌روزرسانی ساعت دیجیتال، تاریخ‌های بلند و مناسبت‌های امروز</summary>
     private void RefreshDayCard()
     {
-        var now = DateTime.Now;
+        var now = IranClock.Now;
         DigitalClockText = Application.Common.Helpers.PersianDateHelper.ToPersianDigits(
             $"{now.Hour:D2}:{now.Minute:D2}:{now.Second:D2}");
         TodayJalaliLong = DayOccasions.JalaliLong(now);
@@ -1374,8 +1374,8 @@ public partial class DashboardViewModel : ViewModelBase
         }
 
         // چرخه هجدهم (گزارش دوازدهم): ساعت و تاریخ داشبورد با ارقام فارسی
-        WelcomeMessage = $"خوش آمدید! امروز {Application.Common.Helpers.PersianDateHelper.ToClockFa(DateTime.Now, withSeconds: false)} — وضعیت درمانگاه به‌روزرسانی شد.";
-        TodayDateShamsi = Application.Common.Helpers.PersianDateHelper.ToShamsiFa(DateTime.Now);
+        WelcomeMessage = $"خوش آمدید! امروز {Application.Common.Helpers.PersianDateHelper.ToClockFa(IranClock.Now, withSeconds: false)} — وضعیت درمانگاه به‌روزرسانی شد.";
+        TodayDateShamsi = Application.Common.Helpers.PersianDateHelper.ToShamsiFa(IranClock.Now);
         ErrorMessage = string.Empty;
 
         // ۰) چرخه دوازدهم — پیام‌های پشتیبانی دریافتی از سرور لایسنس (best-effort)

@@ -203,11 +203,11 @@ public partial class ReportBrowserViewModel : ViewModelBase
 
     /// <summary>از تاریخ</summary>
     [ObservableProperty]
-    private DateTime _fromDate = DateTime.Today.AddDays(-30);
+    private DateTime _fromDate = IranClock.Today.AddDays(-30);
 
     /// <summary>تا تاریخ</summary>
     [ObservableProperty]
-    private DateTime _toDate = DateTime.Today;
+    private DateTime _toDate = IranClock.Today;
 
     /// <summary>متن دکمه اجرا</summary>
     [ObservableProperty]
@@ -559,7 +559,7 @@ public partial class ReportBrowserViewModel : ViewModelBase
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "CSV UTF-8|*.csv",
-            FileName = $"{SelectedReport?.Id ?? "report"}_{DateTime.Now:yyyyMMdd_HHmm}.csv"
+            FileName = $"{SelectedReport?.Id ?? "report"}_{IranClock.Now:yyyyMMdd_HHmm}.csv"
         };
         if (dialog.ShowDialog() != true) return;
 
@@ -580,7 +580,7 @@ public partial class ReportBrowserViewModel : ViewModelBase
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "فایل PDF|*.pdf",
-            FileName = $"{SelectedReport?.Id ?? "report"}_{DateTime.Now:yyyyMMdd_HHmm}.pdf",
+            FileName = $"{SelectedReport?.Id ?? "report"}_{IranClock.Now:yyyyMMdd_HHmm}.pdf",
         };
         if (dialog.ShowDialog() != true) return;
 
@@ -658,7 +658,7 @@ public partial class ReportBrowserViewModel : ViewModelBase
             Margin = new System.Windows.Thickness(0, 0, 0, 10),
         };
         meta.Inlines.Add(new System.Windows.Documents.Run(
-            $"{rangeText}    |    تاریخ چاپ: {PersianDateHelper.ToShamsiFa(DateTime.Now)} - {PersianDateHelper.ToClockFa(DateTime.Now)}"));
+            $"{rangeText}    |    تاریخ چاپ: {PersianDateHelper.ToShamsiFa(IranClock.Now)} - {PersianDateHelper.ToClockFa(IranClock.Now)}"));
         doc.Blocks.Add(meta);
 
         // خط خلاصه‌ها — کارت‌ها به یک سطر خوانا فشرده می‌شوند
@@ -769,7 +769,7 @@ public partial class ReportBrowserViewModel : ViewModelBase
         doc.PageWidth = 793.7;   // A4 — 210 میلی‌متر در ۹۶dpi
         doc.PageHeight = 1122.5; // A4 — 297 میلی‌متر
         var printed = Services.PrintFlow.Print(doc, $"گزارش: {ReportTitle}",
-            Services.LocalSettingsStore.Get("Printer.DefaultPrinter"));
+            Services.PrintJobSettings.PrinterFor("Report"));
         if (printed)
             _snackbar.Success($"«{ReportTitle}» به چاپگر ارسال شد");
     }

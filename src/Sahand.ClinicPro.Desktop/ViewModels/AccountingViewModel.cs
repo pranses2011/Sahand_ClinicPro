@@ -79,8 +79,8 @@ public partial class AccountingViewModel : ViewModelBase
     /* ── تب ۲: دفتر کل ── */
     public ObservableCollection<AccountNodeVM> FlatAccounts { get; } = new();
     [ObservableProperty] private AccountNodeVM? _ledgerAccount;
-    [ObservableProperty] private string? _ledgerFrom = PersianDateHelper.ToShamsi(new DateTime(DateTime.Now.Year, 1, 1));
-    [ObservableProperty] private string? _ledgerTo = PersianDateHelper.ToShamsi(DateTime.Now);
+    [ObservableProperty] private string? _ledgerFrom = PersianDateHelper.ToShamsi(new DateTime(IranClock.Now.Year, 1, 1));
+    [ObservableProperty] private string? _ledgerTo = PersianDateHelper.ToShamsi(IranClock.Now);
     public ObservableCollection<LedgerRow> LedgerRows { get; } = new();
 
     /* ── تب ۳: سرفصل‌ها ── */
@@ -110,8 +110,8 @@ public partial class AccountingViewModel : ViewModelBase
 
     /* ── تب ۵: سود و زیان ── */
     public ObservableCollection<IncomeRow> IncomeRows { get; } = new();
-    [ObservableProperty] private string? _incomeFrom = PersianDateHelper.ToShamsi(new DateTime(DateTime.Now.Year, 1, 1));
-    [ObservableProperty] private string? _incomeTo = PersianDateHelper.ToShamsi(DateTime.Now);
+    [ObservableProperty] private string? _incomeFrom = PersianDateHelper.ToShamsi(new DateTime(IranClock.Now.Year, 1, 1));
+    [ObservableProperty] private string? _incomeTo = PersianDateHelper.ToShamsi(IranClock.Now);
 
     /// <summary>برچسب نوع حساب</summary>
     public string[] AccountTypeLabels { get; } = { "دارایی", "بدهی", "حقوق صاحبان سهام", "درآمد", "هزینه" };

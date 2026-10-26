@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -125,7 +125,7 @@ public partial class JalaliDatePicker : UserControl
     {
         InitializeComponent();
 
-        var today = JalaliCalendar.ToJalali(DateTime.Today);
+        var today = JalaliCalendar.ToJalali(IranClock.Today);
         _viewYear = today.Year;
         _viewMonth = today.Month;
         _monthViewYear = today.Year;
@@ -389,7 +389,7 @@ public partial class JalaliDatePicker : UserControl
         }
         else
         {
-            var today = JalaliCalendar.ToJalali(DateTime.Today);
+            var today = JalaliCalendar.ToJalali(IranClock.Today);
             _viewYear = today.Year;
             _viewMonth = today.Month;
         }
@@ -822,7 +822,7 @@ public partial class JalaliDatePicker : UserControl
             $"{JalaliCalendar.MonthNames[_viewMonth - 1]} {PersianDateHelper.ToPersianDigits(_viewYear.ToString())}";
         TitleSubText.Text = JalaliCalendar.MonthRangeLabel(_viewYear, _viewMonth);
 
-        var today = DateTime.Today;
+        var today = IranClock.Today;
         var monthLength = JalaliCalendar.GetMonthLength(_viewYear, _viewMonth);
         var firstOfMonth = JalaliCalendar.ToGregorian(_viewYear, _viewMonth, 1);
         var lead = JalaliCalendar.WeekColumn(firstOfMonth);
@@ -873,7 +873,7 @@ public partial class JalaliDatePicker : UserControl
         TitleMainText.Text = PersianDateHelper.ToPersianDigits(_monthViewYear.ToString());
         TitleSubText.Text = JalaliCalendar.YearRangeLabel(_monthViewYear);
 
-        var today = JalaliCalendar.ToJalali(DateTime.Today);
+        var today = JalaliCalendar.ToJalali(IranClock.Today);
 
         for (var month = 1; month <= 12; month++)
         {
@@ -922,7 +922,7 @@ public partial class JalaliDatePicker : UserControl
             $"{PersianDateHelper.ToPersianDigits(from.ToString())} – {PersianDateHelper.ToPersianDigits(to.ToString())}";
         TitleSubText.Text = JalaliCalendar.DecadeRangeLabel(from);
 
-        var today = JalaliCalendar.ToJalali(DateTime.Today);
+        var today = JalaliCalendar.ToJalali(IranClock.Today);
 
         for (var year = from; year <= to; year++)
         {

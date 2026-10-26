@@ -289,7 +289,7 @@ public partial class GuidedTourWindow : UserControl
             Directory.CreateDirectory(dir);
             var file = Path.Combine(dir, $"tour-done-{user}.marker");
             if (!File.Exists(file))
-                File.WriteAllText(file, DateTime.Now.ToString("O"));
+                File.WriteAllText(file, IranClock.Now.ToString("O"));
         }
         catch
         {

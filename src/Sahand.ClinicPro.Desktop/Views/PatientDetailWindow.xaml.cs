@@ -61,7 +61,7 @@ public partial class PatientDetailWindow : Window
             Margin = new System.Windows.Thickness(0, 0, 0, 2),
         });
         doc.Blocks.Add(new Paragraph(new Run(
-            $"تاریخ چاپ: {PersianDateHelper.ToShamsiFa(System.DateTime.Now)}"))
+            $"تاریخ چاپ: {PersianDateHelper.ToShamsiFa(IranClock.Now)}"))
         {
             FontSize = 10.5,
             Foreground = System.Windows.Media.Brushes.Gray,
@@ -121,7 +121,7 @@ public partial class PatientDetailWindow : Window
         doc.PageWidth = 793.7;   // A4 — 210 میلی‌متر در ۹۶dpi
         doc.PageHeight = 1122.5; // A4 — 297 میلی‌متر
         Services.PrintFlow.Print(doc, $"کارت بیمار: {vm.FullName}",
-            Services.LocalSettingsStore.Get("Printer.DefaultPrinter"));
+            Services.PrintJobSettings.PrinterFor("PatientCard"));
     }
 
     /// <summary>سلول «برچسب + مقدار» با قاب خاکستری — یک سلول از جدول کارت</summary>

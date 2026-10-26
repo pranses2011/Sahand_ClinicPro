@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Application.DTOs.Receptions;
 using Sahand.ClinicPro.Application.Features.Receptions.Commands.CreateReception;
 using Sahand.ClinicPro.Application.Features.Receptions.Commands.UpdateReceptionStatus;
+using Sahand.ClinicPro.Application.Features.Receptions.Queries.GetReceptionReceipt;
 using Sahand.ClinicPro.Application.Features.Receptions.Queries.GetTodayReceptions;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Enums;

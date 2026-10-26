@@ -158,7 +158,7 @@ public partial class AdvancedEmrViewModel : ViewModelBase
     private GrowthRow? _selectedGrowthRow;
 
     // ── فرم ثبت جدید ──
-    [ObservableProperty] private string _newDateShamsi = PersianDateHelper.ToShamsi(DateTime.Today);
+    [ObservableProperty] private string _newDateShamsi = PersianDateHelper.ToShamsi(IranClock.Today);
     [ObservableProperty] private string _newWeight = string.Empty;
     [ObservableProperty] private string _newHeight = string.Empty;
     [ObservableProperty] private string _newHeadCirc = string.Empty;
@@ -392,7 +392,7 @@ public partial class AdvancedEmrViewModel : ViewModelBase
     // ── فرم ثبت جدید ──
     [ObservableProperty] private string _diseaseTitle = string.Empty;
     [ObservableProperty] private string _careIcd10 = string.Empty;
-    [ObservableProperty] private string _startShamsi = PersianDateHelper.ToShamsi(DateTime.Today);
+    [ObservableProperty] private string _startShamsi = PersianDateHelper.ToShamsi(IranClock.Today);
     [ObservableProperty] private string _nextReviewShamsi = string.Empty;
     [ObservableProperty] private string _goals = string.Empty;
     [ObservableProperty] private string _actions = string.Empty;

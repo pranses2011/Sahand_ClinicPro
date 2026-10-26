@@ -95,6 +95,26 @@
                                 <materialDesign:PackIcon Kind="Refresh" Width="13" Height="13" />
                             </Button>
                         </WrapPanel>
+                        <!-- طرح‌های آمادهٔ همین سند — چند طرح برای انتخاب (بازطراحی تأییدشده) -->
+                        <StackPanel Grid.Row="3" Margin="0,6,0,0">
+                            <TextBlock Text="🎨 طرح‌های آمادهٔ این سند — با کلیک ساخته می‌شود:" FontSize="10.5" FontWeight="SemiBold" Opacity="0.75" Margin="2,0,0,4" />
+                            <ItemsControl ItemsSource="{Binding VisiblePresets}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.AddPresetTemplateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" HorizontalContentAlignment="Stretch"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                Margin="0,0,0,4" Padding="8,5" FontSize="11">
+                                            <DockPanel>
+                                                <Border DockPanel.Dock="Right" Width="12" Height="12" CornerRadius="3"
+                                                        Background="{Binding Accent}" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+                                            </DockPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
                         <!-- ردیف ۴: عملیات روی قالب انتخابی -->
                         <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,4,0,0">
                             <Button Command="{Binding DuplicateTemplateCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5" Margin="0,0,5,0"
@@ -192,12 +212,17 @@
                                 <DataTemplate>
                                     <!-- ═══ چرخه ۲۴ — رفع «دکمه‌های متغیرها نامفهوم و بدون
                                          متن/آیکون هستند»: برچسب فارسی + تولتیپِ توکن خام ═══ -->
-                                    <Button Command="{Binding DataContext.InsertVariableCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    <Button Command="{Binding DataContext.InsertVariableCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
-                                            Content="{Binding Converter={StaticResource VariableLabel}}"
-                                            ToolTip="افزودن متغیر {{توکن}} به انتهای قالب"
+                                            ToolTip="{Binding Key, StringFormat='افزودن {{{{{0}}}}} به انتهای قالب'}"
                                             Style="{StaticResource MaterialDesignOutlinedButton}"
-                                            FontSize="11" Margin="0,0,5,4" Padding="9,3" />
+                                            FontSize="11" Margin="0,0,5,4" Padding="9,4">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Icon}" FontSize="12.5" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Label}" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Group}" FontSize="9" Opacity="0.55" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

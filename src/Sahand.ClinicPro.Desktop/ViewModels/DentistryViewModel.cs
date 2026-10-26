@@ -402,7 +402,7 @@ public partial class DentistryViewModel : ViewModelBase
         if (ok)
         {
             _snackbar.Success($"چارت و طرح درمان برای «{DentalPatient.FullName}» ذخیره شد");
-            DentalChartInfo = $"آخرین ذخیرهٔ چارت: {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(System.DateTime.Now)}";
+            DentalChartInfo = $"آخرین ذخیرهٔ چارت: {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(IranClock.Now)}";
         }
         else _snackbar.Error(_api.LastError ?? "ذخیرهٔ چارت ناموفق بود");
     }

@@ -62,7 +62,7 @@ public class BackupManager
         // ساخت پوشهٔ مقصد در نبود — بازگشتی (گزارش پانزدهم مالک)
         Directory.CreateDirectory(directory);
 
-        var stamp = ShamsiFileStamp(DateTime.Now);
+        var stamp = ShamsiFileStamp(PersianDateHelper.IranNow());
         var bakName = $"SahandClinicPro_{(isAutomatic ? "Auto_" : "")}{stamp}.bak";
         var zipName = $"SahandClinicPro_{(isAutomatic ? "Auto_" : "")}{stamp}.zip";
         var bakPath = Path.Combine(directory, bakName);
@@ -76,7 +76,7 @@ public class BackupManager
         {
             BackupType = BackupType.Full,
             FilePath = finalPath, // چرخه ۲۴: بسته به فرمت انتخابی — ZIP یا BAK خام
-            StartedAt = DateTime.Now,
+            StartedAt = PersianDateHelper.IranNow(),
             IsAutomatic = isAutomatic,
             StorageType = StorageType.Local,
             Status = BackupStatus.InProgress,
@@ -115,7 +115,7 @@ public class BackupManager
 
             // ─── ۳) ثبت موفقیت — حجم نسخهٔ فشرده ملاک است ───
             record.Status = BackupStatus.Success;
-            record.CompletedAt = DateTime.Now;
+            record.CompletedAt = PersianDateHelper.IranNow();
             // چرخه ۲۴: در حالت BAK خام، حجم همان فایل اصلی است نه نسخهٔ فشرده
             record.FileSize = new FileInfo(finalPath).Exists ? new FileInfo(finalPath).Length : null;
             _logger.LogInformation("پشتیبان {Kind} موفق — {Path} (حجم: {Size} بایت)",
@@ -131,7 +131,7 @@ public class BackupManager
         catch (Exception ex)
         {
             record.Status = BackupStatus.Failed;
-            record.CompletedAt = DateTime.Now;
+            record.CompletedAt = PersianDateHelper.IranNow();
             record.ErrorMessage = ex.Message.Length > 900 ? ex.Message[..900] : ex.Message;
             _logger.LogError(ex, "پشتیبان {Kind} ناموفق — {File}",
                 isAutomatic ? "خودکار" : "دستی", bakPath);

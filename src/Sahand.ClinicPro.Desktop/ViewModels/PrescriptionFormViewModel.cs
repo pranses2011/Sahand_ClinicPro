@@ -774,7 +774,7 @@ public partial class PrescriptionFormViewModel : ObservableObject
                     patientName: Patient.FullName,
                     patientNationalCode: Patient.NationalCode,
                     doctorName: DoctorIndex >= 0 && DoctorIndex < Doctors.Count ? Doctors[DoctorIndex].Name : "—",
-                    dateShamsi: Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.Now),
+                    dateShamsi: Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(IranClock.Now),
                     trackingCode: ElectronicTrackingCode,
                     items: Items.Select(i => (
                         Name: i.Name,

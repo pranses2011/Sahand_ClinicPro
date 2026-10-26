@@ -191,11 +191,11 @@ public partial class AppointmentsViewModel : ViewModelBase
 
     /// <summary>تاریخ شروع بازه دلخواه</summary>
     [ObservableProperty]
-    private DateTime? _waitlistFromDate = DateTime.Today;
+    private DateTime? _waitlistFromDate = IranClock.Today;
 
     /// <summary>تاریخ پایان بازه دلخواه</summary>
     [ObservableProperty]
-    private DateTime? _waitlistToDate = DateTime.Today.AddDays(14);
+    private DateTime? _waitlistToDate = IranClock.Today.AddDays(14);
 
     /// <summary>نمایه بازه روز — 0=هر 1=صبح 2=عصر 3=شب</summary>
     [ObservableProperty]
@@ -275,11 +275,11 @@ public partial class AppointmentsViewModel : ViewModelBase
 
     /// <summary>تاریخ انتخابی تقویم — میلادی</summary>
     [ObservableProperty]
-    private DateTime? _selectedDate = DateTime.Today;
+    private DateTime? _selectedDate = IranClock.Today;
 
     /// <summary>تاریخ انتخابی شمسی</summary>
     [ObservableProperty]
-    private string _selectedDateShamsi = PersianDateHelper.ToShamsi(DateTime.Today);
+    private string _selectedDateShamsi = PersianDateHelper.ToShamsi(IranClock.Today);
 
     /// <summary>ماه نمایشی تقویم</summary>
     [ObservableProperty]
@@ -394,7 +394,7 @@ public partial class AppointmentsViewModel : ViewModelBase
     /// با انتخابگر تاریخ شمسی انتخاب می‌شود؛ پیش‌فرض = امروز.
     /// </summary>
     [ObservableProperty]
-    private string? _fromDateShamsi = PersianDateHelper.ToShamsi(DateTime.Today);
+    private string? _fromDateShamsi = PersianDateHelper.ToShamsi(IranClock.Today);
 
     /// <summary>
     /// تا تاریخ — فیلتر. پیش‌فرض یک هفته جلوتر تا فهرست هفتهٔ جاری خالی نماند
@@ -402,7 +402,7 @@ public partial class AppointmentsViewModel : ViewModelBase
     /// اغلب خالی بود و کاربر فکر می‌کرد لیست کار نمی‌کند).
     /// </summary>
     [ObservableProperty]
-    private string? _toDateShamsi = PersianDateHelper.ToShamsi(DateTime.Today.AddDays(7));
+    private string? _toDateShamsi = PersianDateHelper.ToShamsi(IranClock.Today.AddDays(7));
 
     /// <summary>نمایه فیلتر پزشک — صفر یعنی همه</summary>
     [ObservableProperty]
@@ -474,7 +474,7 @@ public partial class AppointmentsViewModel : ViewModelBase
         _api = api;
         _snackbar = snackbar;
         _navigation = navigation;
-        var today = PersianDateHelper.ToJalali(DateTime.Today);
+        var today = PersianDateHelper.ToJalali(IranClock.Today);
         DisplayYear = today.Year;
         DisplayMonth = today.Month;
         _ = InitializeAsync();
@@ -503,8 +503,8 @@ public partial class AppointmentsViewModel : ViewModelBase
             }
             if (SelectedDate is null)
             {
-                SelectedDate = DateTime.Today;
-                SelectedDateShamsi = PersianDateHelper.ToShamsi(DateTime.Today);
+                SelectedDate = IranClock.Today;
+                SelectedDateShamsi = PersianDateHelper.ToShamsi(IranClock.Today);
             }
             if (SelectedDoctor is not null)
             {
@@ -536,8 +536,8 @@ public partial class AppointmentsViewModel : ViewModelBase
         // بارگذاری‌ای رخ نمی‌داد).
         if (SelectedDate is null)
         {
-            SelectedDate = DateTime.Today;
-            SelectedDateShamsi = PersianDateHelper.ToShamsi(DateTime.Today);
+            SelectedDate = IranClock.Today;
+            SelectedDateShamsi = PersianDateHelper.ToShamsi(IranClock.Today);
         }
         if (SelectedDoctor is null && Doctors.Count > 0)
             SelectedDoctor = Doctors[0];
@@ -775,8 +775,8 @@ public partial class AppointmentsViewModel : ViewModelBase
         var response = await _api.GetAsync<SlotsResponse>(
             $"appointments/doctor/{SelectedDoctor.Id}/available-slots?date={Uri.EscapeDataString(SelectedDateShamsi)}");
         if (response?.Data is null) return;
-        var isToday = SelectedDate?.Date == DateTime.Today;
-        var nowTime = TimeOnly.FromDateTime(DateTime.Now);
+        var isToday = SelectedDate?.Date == IranClock.Today;
+        var nowTime = TimeOnly.FromDateTime(IranClock.Now);
         foreach (var s in response.Data)
         {
             var past = isToday && TimeOnly.TryParse(s.Time, out var st) && st < nowTime;
@@ -956,9 +956,9 @@ public partial class AppointmentsViewModel : ViewModelBase
         var ticketDate = SelectedDateShamsi;
         var ticketTime = SelectedSlot?.Time ?? string.Empty;
         var ticketType = VisitTypes.ElementAtOrDefault(Math.Clamp(SelectedTypeIndex, 0, VisitTypes.Length - 1));
-        if (LocalSettingsStore.Get("Printer.AutoPrintTicket") == "true")
+        if (LocalSettingsStore.Get("Printer.AutoPrintTicket") == "true" || PrintJobSettings.AutoFor("AppointmentTicket"))
         {
-            var ticketPrinter = LocalSettingsStore.Get("Printer.TicketPrinter");
+            var ticketPrinter = PrintJobSettings.PrinterFor("AppointmentTicket");
             var clinicTitle = LocalSettingsStore.Get("Printer.ClinicName") is { Length: > 0 } clinic
                 ? clinic : "درمانگاه سهند";
             System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>

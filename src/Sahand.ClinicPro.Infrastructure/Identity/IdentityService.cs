@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -406,7 +406,7 @@ public class IdentityService : IIdentityService
     private static string BuildRecoveryEmailBody(string displayName, string username,
         string temporaryPassword)
     {
-        var now = PersianDateHelper.ToShamsiWithTime(DateTime.Now);
+        var now = PersianDateHelper.ToShamsiWithTime(PersianDateHelper.IranNow());
         return $"""
         <div dir="rtl" style="font-family:Tahoma,Segoe UI,sans-serif;text-align:right;line-height:1.9;
                     color:#263238;background:#F7FAFD;padding:18px;border-radius:12px">
