@@ -369,6 +369,23 @@ public class BackupManager
             _logger.LogInformation("بازیابی از {File} با موفقیت انجام شد", zipOrBakPath);
             return (true, "بازیابی با موفقیت انجام شد — برنامه را ری‌استارت کنید تا داده‌های تازه بار شود");
         }
+        catch (Microsoft.Data.SqlClient.SqlException ex)
+            when (ex.Number == 3701 || ex.Message.Contains("RESTORE", StringComparison.OrdinalIgnoreCase)
+                                     && ex.Message.Contains("permission", StringComparison.OrdinalIgnoreCase))
+        {
+            // ═══ خطای مجوز بازیابی — اسکرین‌شات مالک ═══
+            // «User does not have permission to RESTORE database» — مجوز
+            // RESTORE سطح «سرور» است (نقش dbcreator یا sysadmin) و db_owner
+            // بودن روی خود دیتابیس کافی نیست. نصب‌های تازه را نصاب سرور
+            // خودکار اصلاح می‌کند؛ این پیام برای نصب‌های قدیمی راه‌حل دقیق
+            // را می‌دهد تا کاربر به‌جای خطای خام انگلیسی، اقدام درست را ببیند.
+            _logger.LogError(ex, "بازیابی از {File} — لاگین SQL مجوز RESTORE ندارد", zipOrBakPath);
+            return (false,
+                "لاگین SQLای که سرور API با آن وصل می‌شود، مجوز بازیابی (RESTORE) ندارد. " +
+                "یک‌بار بستهٔ سرور همین نسخه را دوباره نصب/به‌روز کنید تا نصاب، نقش dbcreator را خودکار بدهد؛ " +
+                "یا در SSMS با کاربر مدیر این دستور را اجرا کنید (به‌جای SahandLogin نام لاگین رشتهٔ اتصال سرور را بگذارید): " +
+                "ALTER SERVER ROLE [dbcreator] ADD MEMBER [SahandLogin];");
+        }
         catch (UnauthorizedAccessException ex)
         {
             // خطای دسترسی — پیام کاربردی فارسی با راهنمای رفع (چرخه ۲۶)
