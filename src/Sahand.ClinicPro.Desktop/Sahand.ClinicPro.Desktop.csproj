@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <!-- ═══════════════════════════════════════════════════════════════
        کلاینت دسکتاپ (Desktop) — WPF + Material Design با الگوی MVVM
        نکته: این پروژه به‌صورت دستی ساخته شده است زیرا قالب WPF
@@ -47,6 +47,8 @@
     <Resource Include="Assets\appicon.ico" />
     <!-- چرخه ۲۴: لوگوی بزرگ باکیفیت از docs/assets/ClinicPro.png — سایدبار/لاگین/اسپلش -->
     <Resource Include="Assets\Logo\ClinicPro-512.png" />
+    <!-- نقشهٔ بدن فیزیوتراپی (طرح تأییدشدهٔ مالک): تصویر پایهٔ مرد/زن + ماسک ۲۶ ناحیه برای هر پیکر -->
+    <Resource Include="Assets\Physio\*.png" />
     <Resource Include="Assets\Logo\ClinicPro-256.png" />
     <!-- فونت وزیرمتن (مجوز آزاد OFL) به‌عنوان Resource داخل exe جاسازی می‌شود تا
          بدون نصب فونت روی ویندوز کاربر، همه فرم‌ها با pack URI زیر آن را ببینند:
