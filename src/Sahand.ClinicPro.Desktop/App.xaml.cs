@@ -333,10 +333,52 @@ public partial class App : System.Windows.Application
         return answer2 == true;
     }
 
+    /// <summary>ثبت خطای گرفته‌شده در فایل crash.log کنار تنظیمات کاربر</summary>
+    private static void LogCrash(string source, Exception? exception)
+    {
+        try
+        {
+            var dir = System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "SahandClinicPro");
+            System.IO.Directory.CreateDirectory(dir);
+            System.IO.File.AppendAllText(
+                System.IO.Path.Combine(dir, "crash.log"),
+                $"[{System.DateTime.Now:yyyy-MM-dd HH:mm:ss}] ({source}) {exception}{Environment.NewLine}{Environment.NewLine}");
+        }
+        catch { /* ثبت خطا نباید خودش خطا بسازد */ }
+    }
+
     /// <summary>رویداد راه‌اندازی — ساخت کانتینر DI و انتخاب پنجره آغازین</summary>
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // ═══ سپر ضدبسته‌شدن برنامه (گزارش مالک: «تصویربرداری را باز می‌کنم
+        // برنامه بسته می‌شود») ═══ هیچ خطای یک صفحه نباید کل برنامه را ببندد:
+        // خطاهای رشتهٔ رابط کاربری این‌جا گرفته، در فایل crash.log کنار
+        // تنظیمات کاربر ثبت و با پیام فارسی به کاربر نشان داده می‌شوند و
+        // برنامه زنده می‌ماند؛ خطاهای تسک‌های پس‌زمینه هم فقط ثبت می‌شوند.
+        DispatcherUnhandledException += (_, args) =>
+        {
+            LogCrash("رابط کاربری", args.Exception);
+            args.Handled = true;
+            try
+            {
+                Views.AppDialog.Error("خطای غیرمنتظره",
+                    "در این بخش خطایی رخ داد و جلوی آن گرفته شد تا برنامه بسته نشود. " +
+                    "جزئیات در فایل crash.log (کنار تنظیمات برنامه) ثبت شد. " +
+                    "اگر خطا تکرار شد، همان بخش و کاری که می‌کردید را گزارش کنید.");
+            }
+            catch { /* خود دیالوگ نباید مسیر نجات را خراب کند */ }
+        };
+        System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            LogCrash("تسک پس‌زمینه", args.Exception);
+            args.SetObserved();
+        };
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+            LogCrash("دامنهٔ برنامه", args.ExceptionObject as Exception);
 
         // پیکربندی — appsettings.json کنار برنامه یا پوشه خروجی
         var configuration = new ConfigurationBuilder()

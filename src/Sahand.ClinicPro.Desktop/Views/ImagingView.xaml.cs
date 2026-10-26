@@ -107,6 +107,21 @@ public partial class ImagingView : UserControl
     /// </summary>
     private void RenderViewer()
     {
+        try
+        {
+            RenderViewerCore();
+        }
+        catch
+        {
+            // رندر نمایشگر نباید برنامه را ببندد — تصویر کنار گذاشته می‌شود
+            try { ViewerImage.Source = null; NoImageText.Visibility = Visibility.Visible; }
+            catch { /* در حال بسته‌شدن نما هستیم */ }
+        }
+    }
+
+    /// <summary>هستهٔ رندر نمایشگر PACS</summary>
+    private void RenderViewerCore()
+    {
         if (_vm is null) return;
         if (_source is null || _sourcePixels.Length == 0)
         {
