@@ -1,0 +1,38 @@
+name: 📸 اسکرین‌شات واقعی تصویربرداری
+
+# راستی‌آزمایی طراحی: صفحهٔ واقعی WPF روی ویندوز رندر و عکس آن آرتیفکت می‌شود
+on:
+  workflow_dispatch:
+
+jobs:
+  screenshot:
+    runs-on: windows-latest
+    steps:
+      - name: دریافت سورس
+        uses: actions/checkout@v4
+
+      - name: نصب .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: ساخت کلاینت دسکتاپ
+        run: dotnet build src/Sahand.ClinicPro.Desktop/Sahand.ClinicPro.Desktop.csproj -c Release
+
+      - name: رندر و اسکرین‌شات صفحهٔ تصویربرداری
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Recurse -Filter Sahand.ClinicPro.Desktop.exe src/Sahand.ClinicPro.Desktop/bin/Release | Select-Object -First 1
+          if ($null -eq $exe) { throw "exe not found" }
+          New-Item -ItemType Directory -Force shots | Out-Null
+          $p = Start-Process -FilePath $exe.FullName -ArgumentList '--imaging-screenshot', "$PWD/shots/imaging.png" -PassThru -Wait
+          Write-Host "exit=$($p.ExitCode)"
+          Get-ChildItem shots
+          if (-not (Test-Path shots/imaging.png)) { throw "screenshot missing" }
+
+      - name: بارگذاری اسکرین‌شات
+        uses: actions/upload-artifact@v4
+        with:
+          name: imaging-screenshot
+          path: shots/
+          retention-days: 7

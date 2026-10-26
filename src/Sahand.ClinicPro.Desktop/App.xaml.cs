@@ -1,5 +1,8 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sahand.ClinicPro.Desktop.Services;
@@ -349,6 +352,75 @@ public partial class App : System.Windows.Application
         catch { /* ثبت خطا نباید خودش خطا بسازد */ }
     }
 
+
+    /// <summary>رندر واقعی صفحهٔ تصویربرداری با دادهٔ نمونه و ذخیرهٔ اسکرین‌شات PNG</summary>
+    private async Task RenderImagingScreenshotAsync(string path)
+    {
+        try
+        {
+            var vm = Services.GetRequiredService<ImagingViewModel>();
+            var today = DateTime.Today;
+            ImagingViewModel.ImagingOrderRow Row(long id, string name, string modality, string part,
+                int status, int priority, double hour) =>
+                new(id, 1000 + id, name, modality, part, status, priority,
+                    "درد و محدودیت حرکت", null, null, null, null, null,
+                    today.AddHours(hour), status >= 3 ? today.AddHours(hour + 1) : null,
+                    status == 4 ? today.AddHours(hour + 2) : null, "زن", "۱۳۷۰/۰۵/۱۲");
+            vm.ImagingOrders.Add(Row(1, "زهرا محمدی", "CT", "مغز بدون تزریق", 1, 1, 8.1));
+            vm.ImagingOrders.Add(Row(2, "علی رضایی", "MRI", "ستون فقرات کمری", 1, 1, 8.4));
+            vm.ImagingOrders.Add(Row(3, "مریم کریمی", "Ultrasound", "شکم و لگن", 2, 3, 9.0));
+            vm.ImagingOrders.Add(Row(4, "حسن احمدی", "XRay", "قفسه سینه", 2, 3, 9.3));
+            vm.ImagingOrders.Add(Row(5, "سارا حسینی", "MRI", "زانوی راست", 1, 3, 10.0));
+            vm.ImagingOrders.Add(Row(6, "رضا صادقی", "CT", "سینوس‌ها", 2, 3, 10.5));
+            vm.ImagingOrders.Add(Row(7, "نگار عزیزی", "Mammography", "غربالگری دوطرفه", 1, 3, 11.0));
+            vm.ImagingOrders.Add(Row(8, "امیر جلالی", "CT", "شکم با تزریق", 3, 3, 8.2));
+            vm.ImagingOrders.Add(Row(9, "لیلا مرادی", "Ultrasound", "تیروئید", 3, 3, 9.1));
+            vm.ImagingOrders.Add(Row(10, "جواد نادری", "XRay", "مچ دست چپ", 3, 3, 10.2));
+            vm.ImagingOrders.Add(Row(11, "هانیه رستمی", "MRI", "مغز با تزریق", 3, 3, 11.2));
+            vm.ImagingOrders.Add(Row(12, "مهدی کاظمی", "CT", "قفسه سینه", 4, 3, 7.5));
+            vm.ImagingOrders.Add(Row(13, "فاطمه نجفی", "Ultrasound", "بارداری", 4, 3, 8.0));
+            vm.ImagingOrders.Add(Row(14, "داوود شریفی", "XRay", "شانه راست", 4, 3, 8.6));
+            vm.ImagingOrders.Add(Row(15, "الهه موسوی", "MRI", "شانه چپ", 4, 3, 9.6));
+            vm.ImagingOrders.Add(Row(16, "کاوه بهرامی", "CT", "گردن با تزریق", 4, 3, 10.6));
+            vm.ImagingOrders.Add(Row(17, "رؤیا صالحی", "Ultrasound", "کبد و کیسه صفرا", 5, 3, 7.8));
+            vm.ImagingOrders.Add(Row(18, "پارسا یوسفی", "XRay", "لگن", 5, 3, 8.8));
+            vm.WorkFilter = "wait";
+            vm.WorkFilter = "all";
+
+            var view = new ImagingView { DataContext = vm };
+            var window = new Window
+            {
+                Content = view,
+                Width = 1600,
+                Height = 950,
+                WindowStyle = WindowStyle.None,
+                ShowInTaskbar = false,
+                Left = 0,
+                Top = 0,
+                Title = "اسکرین‌شات راستی‌آزمایی تصویربرداری"
+            };
+            window.Show();
+            await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+            await Task.Delay(700);
+            var width = Math.Max(1, (int)Math.Ceiling(view.ActualWidth));
+            var height = Math.Max(1, (int)Math.Ceiling(view.ActualHeight));
+            var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+            bitmap.Render(view);
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bitmap));
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
+            using (var stream = File.Create(path)) encoder.Save(stream);
+            window.Close();
+            Shutdown(0);
+        }
+        catch (Exception ex)
+        {
+            LogCrash("اسکرین‌شات تصویربرداری", ex);
+            try { File.WriteAllText(path + ".error.txt", ex.ToString()); } catch { }
+            Shutdown(1);
+        }
+    }
+
     /// <summary>رویداد راه‌اندازی — ساخت کانتینر DI و انتخاب پنجره آغازین</summary>
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -389,6 +461,20 @@ public partial class App : System.Windows.Application
         var services = new ServiceCollection();
         ConfigureServices(services, configuration);
         Services = services.BuildServiceProvider();
+
+        // ═══ حالت اسکرین‌شات واقعی (ابزار راستی‌آزمایی طراحی) ═══
+        // با آرگومان --imaging-screenshot <مسیر> برنامه بدون ورود/سرور بالا می‌آید،
+        // صفحهٔ واقعی تصویربرداری را با دادهٔ نمونه روی پنجرهٔ ویندوزی رندر و از
+        // خودِ درخت بصری WPF عکس PNG می‌گیرد و خارج می‌شود؛ در CI ویندوزی برای
+        // مقایسهٔ عینیِ پیاده‌سازی با طرح تأییدی استفاده می‌شود و در اجرای عادی
+        // کاربران هرگز فعال نیست.
+        var shotIndex = Array.IndexOf(e.Args, "--imaging-screenshot");
+        if (shotIndex >= 0)
+        {
+            var shotPath = shotIndex + 1 < e.Args.Length ? e.Args[shotIndex + 1] : "imaging-screenshot.png";
+            _ = RenderImagingScreenshotAsync(shotPath);
+            return;
+        }
 
         // چرخه نوزدهم (گزارش سیزدهم مالک): تم رنگی انتخاب‌شدهٔ کاربر از اجرای
         // پیشین — پیش از باز شدن هر پنجره‌ای روی پوسته اعمال می‌شود تا برنامه

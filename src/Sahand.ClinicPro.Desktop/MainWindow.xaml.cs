@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Media.Animation;
 using Sahand.ClinicPro.Desktop.ViewModels;
 
 namespace Sahand.ClinicPro.Desktop;
@@ -56,6 +57,13 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContext = viewModel;
 
+        // آغاز/ازسرگیری چرخهٔ ضربان قلبِ پوشش بارگذاری — پیش‌تر BeginStoryboard
+        // داخل Style بود و WPF خطای «A Storyboard tree in a Style cannot specify
+        // a TargetName» می‌داد (ثبت‌شده در crash.log هنگام ورود)؛ اکنون استوری‌بورد
+        // از کد و روی خودِ میزبانِ درخت بصری آغاز می‌شود تا نیم‌اسپیس نام‌ها درست باشد.
+        HeartbeatHost.IsVisibleChanged += HeartbeatHost_IsVisibleChanged;
+        if (HeartbeatHost.IsVisible) StartHeartbeat();
+
         // مقیاس زوم فقط روی محتوای قابل‌اسکرول صفحه اعمال می‌شود؛ اعمال آن
         // به Grid ریشه، ToastLayer را هم مقیاس می‌کرد و اعلان پایین پنجره
         // را از ناحیهٔ قابل‌نمایش بیرون می‌راند.
@@ -110,6 +118,28 @@ public partial class MainWindow : Window
                 _exitConfirmInProgress = false;
             }
         };
+    }
+
+    /// <summary>آغاز چرخهٔ ضربان هنگام نمایان‌شدن پوشش بارگذاری و توقف هنگام پنهان‌شدن آن</summary>
+    private void HeartbeatHost_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if ((bool)e.NewValue) StartHeartbeat();
+        else
+        {
+            try { ((Storyboard)HeartbeatHost.FindResource("HeartbeatStoryboard")).Stop(HeartbeatHost); }
+            catch { /* توقف انیمیشن نباید خطا بسازد */ }
+        }
+    }
+
+    /// <summary>آغاز استوری‌بورد ضربان روی میزبانِ خودش (نیم‌اسپیس درست برای TargetNameها)</summary>
+    private void StartHeartbeat()
+    {
+        try
+        {
+            var storyboard = (Storyboard)HeartbeatHost.FindResource("HeartbeatStoryboard");
+            storyboard.Begin(HeartbeatHost, true);
+        }
+        catch { /* انیمیشن تزئینی است؛ شکست آن نباید ورود را مختل یا در لاگ خطا ثبت کند */ }
     }
 
     /// <summary>
