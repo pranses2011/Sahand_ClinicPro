@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -243,6 +243,40 @@ public class ParaclinicalController : ApiBaseController
             // چرخهٔ سی‌امین — «GetOrders» به nameof(GetTodayOrders) اصلاح شد (اکشنی با آن نام وجود نداشت)
             return CreatedResponse(result, nameof(GetTodayOrders), new { }, "جلسه ثبت شد");
         return ToResponse(result);
+    }
+
+    /// <summary>
+    /// سابقهٔ جلسه‌های فیزیوتراپی یک بیمار — ماژول حرفه‌ای فیزیوتراپی
+    /// (طرح تأییدشدهٔ مالک): ۲۰ جلسهٔ آخر بیمار (صعودی بر اساس شمارهٔ جلسه)
+    /// برای نوار پیشرفت دوره، نمودار روند درد/دامنهٔ حرکت و پیش‌پرکردن
+    /// ارزیابی ساخت‌یافته برگردانده می‌شود.
+    /// </summary>
+    /// <param name="patientId">شناسه بیمار</param>
+    [HttpGet("~/api/v1/physiotherapy/sessions")]
+    [HasPermission("physiotherapy.create")]
+    public async Task<IActionResult> GetPhysioSessions([FromQuery] long patientId)
+    {
+        if (patientId <= 0)
+            return BadRequest(ApiResponse<object>.Failure("شناسه بیمار نامعتبر است"));
+
+        var sessions = await _unitOfWork.Repository<Domain.Entities.Paraclinical.PhysiotherapySession>()
+            .QueryableNoTracking
+            .Where(e => e.PatientId == patientId && !e.IsDeleted)
+            .OrderByDescending(e => e.Id)
+            .Take(20)
+            .Select(e => new
+            {
+                e.Id,
+                dateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(e.CreatedAt),
+                e.SessionNumber,
+                e.PainScore,
+                e.Duration,
+                e.Treatments,
+                e.ProgressNote
+            })
+            .ToListAsync();
+        sessions.Reverse();
+        return Ok(ApiResponse<object>.Success(sessions));
     }
 
     // ═══════════════ فایل‌های تصویربرداری — گام R4 ═══════════════

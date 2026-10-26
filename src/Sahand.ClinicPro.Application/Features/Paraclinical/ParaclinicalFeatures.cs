@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Domain.Common;
@@ -127,10 +127,16 @@ public class CreateDentalPlanCommandHandler : IRequestHandler<CreateDentalPlanCo
     }
 }
 
-/// <summary>فرمان ثبت جلسه فیزیوتراپی</summary>
+/// <summary>
+/// فرمان ثبت جلسه فیزیوتراپی — ماژول حرفه‌ای فیزیوتراپی (طرح تأییدشدهٔ مالک):
+/// «یادداشت پیشرفت» ساخت‌یافته (JSON نقشهٔ بدن و شدت درد ناحیه‌ها، پرچم‌های
+/// قرمز، ارزیابی ساخت‌یافته، پروتکل فعال، تمرین خانگی و اهداف) هم‌اکنون
+/// همراه جلسه ذخیره می‌شود تا سابقه و نمودار روند دوره از روی آن ساخته شود.
+/// </summary>
 public record RecordPhysioSessionCommand(
     long PatientId, long? TherapistId, int SessionNumber,
-    string? Treatments, int? Duration, byte? PainScore) : IRequest<Result<long>>;
+    string? Treatments, int? Duration, byte? PainScore,
+    string? ProgressNote = null) : IRequest<Result<long>>;
 
 /// <summary>گرداننده ثبت جلسه فیزیوتراپی</summary>
 public class RecordPhysioSessionCommandHandler : IRequestHandler<RecordPhysioSessionCommand, Result<long>>
@@ -152,6 +158,7 @@ public class RecordPhysioSessionCommandHandler : IRequestHandler<RecordPhysioSes
             Treatments = request.Treatments,
             Duration = request.Duration,
             PainScore = request.PainScore,
+            ProgressNote = request.ProgressNote,
             Status = SessionStatus.Completed
         };
 
