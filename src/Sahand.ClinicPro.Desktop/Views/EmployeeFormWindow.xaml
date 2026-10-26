@@ -129,14 +129,12 @@
                       IsEditable="True" StaysOpenOnEdit="True"
                       controls:ComboBoxSearch.IsEnabled="False"
                       ItemsSource="{Binding PositionNames}"
-                      SelectedIndex="{Binding PositionIndex, TargetNullValue=-1}"
                       Text="{Binding PositionText, UpdateSourceTrigger=PropertyChanged}" />
             <ComboBox Grid.Row="3" Grid.Column="2" Margin="0,12,0,0"
                       materialDesign:HintAssist.Hint="دپارتمان / بخش (قابل تایپ مقدار جدید)"
                       IsEditable="True" StaysOpenOnEdit="True"
                       controls:ComboBoxSearch.IsEnabled="False"
                       ItemsSource="{Binding DepartmentNames}"
-                      SelectedIndex="{Binding DepartmentIndex, TargetNullValue=-1}"
                       Text="{Binding DepartmentText, UpdateSourceTrigger=PropertyChanged}" />
 
             <!-- ردیف ۵: تاریخ استخدام (راست) + تحصیلات (چپ) -->

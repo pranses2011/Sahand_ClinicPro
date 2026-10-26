@@ -41,6 +41,29 @@ public class ReceptionsController : ApiBaseController
         return ToResponse(result);
     }
 
+    /// <summary>
+    /// دادهٔ قبض یک پذیرش برای «چاپ مجدد قبض» — قبض از فاکتور/اقلام/پرداخت
+    /// واقعی همان پذیرش بازسازی می‌شود (پذیرش‌های امروز و روزهای گذشته)
+    /// </summary>
+    /// <param name="id">شناسه پذیرش</param>
+    [HttpGet("{id:long}/receipt")]
+    [HasPermission("receptions.view")]
+    public async Task<IActionResult> GetReceipt(long id)
+    {
+        var result = await _mediator.Send(new GetReceptionReceiptQuery(id));
+        return ToResponse(result);
+    }
+
+    /// <summary>پذیرش‌های یک تاریخ میلادی مشخص (yyyy-MM-dd) — تاریخچهٔ صف برای چاپ مجدد قبض</summary>
+    /// <param name="date">تاریخ روز به‌صورت yyyy-MM-dd</param>
+    [HttpGet("by-date")]
+    [HasPermission("receptions.view")]
+    public async Task<IActionResult> GetByDate([FromQuery] DateOnly date)
+    {
+        var result = await _mediator.Send(new GetReceptionsByDateQuery(date));
+        return ToResponse(result);
+    }
+
     /// <summary>ثبت پذیرش بیمار</summary>
     /// <param name="dto">داده پذیرش</param>
     [HttpPost]

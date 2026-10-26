@@ -1,5 +1,6 @@
-﻿using FluentValidation;
+using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Application.DTOs.Receptions;
@@ -97,6 +98,38 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
         // ساعت پذیرش باید عین ساعت دیواری درمانگاه باشد (گزارش مالک: ساعت
         // پذیرش GMT نشان داده می‌شد) — مُهر زمانی به وقت رسمی ایران ثبت می‌شود
         var now = PersianDateHelper.IranNow();
+
+        // ═══ اتاق پذیرش ویزیت از برنامهٔ کاری پزشک (گزارش مالک) ═══
+        // «در پذیرش پزشک، اتاق رو نمیندازه در حالی که باید از برنامه کاری
+        // پزشک برداره» — کلاینت برای حالت ویزیت اتاقی نمی‌فرستد؛ اگر اتاق
+        // صریح نیامده و پزشک برای امروز (روز هفتهٔ ایرانی: شنبه=۰) برنامهٔ
+        // فعالی با اتاق دارد، همان اتاق روی پذیرش می‌نشیند تا در صف و قبض
+        // چاپ مجدد دیده شود. برنامهٔ بدون اتاق یا خارج از بازهٔ اعتبار،
+        // اتاقی تحمیل نمی‌کند.
+        if (dto.RoomId is null && dto.DoctorId is not null)
+        {
+            var dayIndex = now.DayOfWeek switch
+            {
+                DayOfWeek.Saturday => 0,
+                DayOfWeek.Sunday => 1,
+                DayOfWeek.Monday => 2,
+                DayOfWeek.Tuesday => 3,
+                DayOfWeek.Wednesday => 4,
+                DayOfWeek.Thursday => 5,
+                DayOfWeek.Friday => 6,
+                _ => 0
+            };
+            var today = DateOnly.FromDateTime(now);
+            var schedule = await _unitOfWork.Repository<DoctorSchedule>().QueryableNoTracking
+                .Where(s => s.DoctorId == dto.DoctorId.Value && s.IsActive
+                            && s.DayOfWeek == dayIndex && s.RoomId != null
+                            && (s.ValidFrom == null || s.ValidFrom <= today)
+                            && (s.ValidTo == null || s.ValidTo >= today))
+                .OrderByDescending(s => s.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (schedule?.RoomId is not null)
+                dto = dto with { RoomId = schedule.RoomId };
+        }
         var reception = new Reception
         {
             PatientId = dto.PatientId,
