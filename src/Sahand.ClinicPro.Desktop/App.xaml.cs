@@ -396,7 +396,8 @@ public partial class App : System.Windows.Application
                 DataContext = vm,
                 Language = XmlLanguage.GetLanguage("fa-IR"),
                 Background = new SolidColorBrush(Color.FromRgb(0xEE, 0xF3, 0xF7)),
-                FontFamily = new FontFamily("Tahoma")
+                FontFamily = new FontFamily("Tahoma"),
+                FlowDirection = FlowDirection.RightToLeft
             };
             var window = new Window
             {
@@ -416,7 +417,7 @@ public partial class App : System.Windows.Application
             window.Content = null;
             view.Measure(new Size(1560, 920));
             view.Arrange(new Rect(0, 0, 1560, 920));
-            view.UpdateLayout();
+            // UpdateLayout صدا زده نمی‌شود؛ چیدمان دستیِ نما را به اندازهٔ پنجره برمی‌گرداند
             var width = 1560;
             var height = 920;
             var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
