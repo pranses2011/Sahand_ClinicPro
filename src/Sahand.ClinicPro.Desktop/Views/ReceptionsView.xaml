@@ -235,64 +235,220 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- ═══ نوار گام‌های ویزارد — چهار گام، هر گام کلیک‌پذیر ═══
-                             کلیک روی هر گام مستقیم به همان گام می‌رود؛ اگر پیش‌نیاز
-                             کامل نباشد، منطق هوشمند کاربر را به اولین گام ناتمام
-                             می‌برد و پیام راهنما نشان می‌دهد -->
-                        <UniformGrid Columns="4" Margin="0,2,0,14">
-                            <Button Margin="0,0,6,0" Padding="10,8" Command="{Binding GoToStepCommand}" CommandParameter="0" ToolTip="گام نوع پذیرش">
-                                <Button.Style>
-                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding WizardStep}" Value="0">
-                                                <Setter Property="Background" Value="#E3F2FD" />
-                                                <Setter Property="FontWeight" Value="Bold" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                                <TextBlock Text="۱ · نوع پذیرش" FontSize="12" />
-                            </Button>
-                            <Button Margin="0,0,6,0" Padding="10,8" Command="{Binding GoToStepCommand}" CommandParameter="1" ToolTip="گام بیمار">
-                                <Button.Style>
-                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
-                                        <Style.Triggers>
+                        <!-- ═══ نوار گام‌های ویزارد — استپر واقعی: دایره + خط اتصال ═══
+                             هر گام با کلیک روی دایره/عنوان قابل رفتن است (نه دکمه)؛
+                             جاری = آبی برند، انجام‌شده = سبز با خط اتصال سبز،
+                             آینده = خاکستری کم‌رنگ.
+                             اگر پیش‌نیاز کامل نباشد، منطق هوشمند اولین گام ناتمام
+                             را نشان می‌دهد و پیام راهنما می‌دهد -->
+                        <Grid Margin="4,2,4,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid Grid.Column="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <!-- دایرهٔ گام — کلیک‌پذیر (استپر واقعی، نه دکمه) -->
+                                <Border Grid.Column="0" Width="46" Height="46" CornerRadius="23" Cursor="Hand"
+                                        ToolTip="رفتن به گام «نوع پذیرش»" HorizontalAlignment="Left">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding GoToStepCommand}" CommandParameter="0" />
+                                    </Border.InputBindings>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#B0BEC5" />
+                                            <Setter Property="BorderBrush" Value="#B0BEC5" />
+                                            <Setter Property="BorderThickness" Value="2" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WizardStep}" Value="0">
+                                                    <Setter Property="Background" Value="#1565C0" />
+                                                    <Setter Property="BorderBrush" Value="#0D47A1" />
+                                                </DataTrigger>
                                             <DataTrigger Binding="{Binding WizardStep}" Value="1">
-                                                <Setter Property="Background" Value="#E3F2FD" />
-                                                <Setter Property="FontWeight" Value="Bold" />
+                                                <Setter Property="Background" Value="#2E7D32" />
+                                                <Setter Property="BorderBrush" Value="#2E7D32" />
                                             </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                                <TextBlock Text="۲ · بیمار" FontSize="12" />
-                            </Button>
-                            <Button Margin="0,0,6,0" Padding="10,8" Command="{Binding GoToStepCommand}" CommandParameter="2" ToolTip="گام پزشک یا خدمت">
-                                <Button.Style>
-                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
-                                        <Style.Triggers>
                                             <DataTrigger Binding="{Binding WizardStep}" Value="2">
-                                                <Setter Property="Background" Value="#E3F2FD" />
-                                                <Setter Property="FontWeight" Value="Bold" />
+                                                <Setter Property="Background" Value="#2E7D32" />
+                                                <Setter Property="BorderBrush" Value="#2E7D32" />
                                             </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                                <TextBlock Text="۳ · پزشک / خدمت" FontSize="12" />
-                            </Button>
-                            <Button Padding="10,8" Command="{Binding GoToStepCommand}" CommandParameter="3" ToolTip="گام ثبت">
-                                <Button.Style>
-                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
-                                        <Style.Triggers>
                                             <DataTrigger Binding="{Binding WizardStep}" Value="3">
-                                                <Setter Property="Background" Value="#E3F2FD" />
-                                                <Setter Property="FontWeight" Value="Bold" />
+                                                <Setter Property="Background" Value="#2E7D32" />
+                                                <Setter Property="BorderBrush" Value="#2E7D32" />
                                             </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="📋" Foreground="White" FontWeight="Bold" FontSize="15"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="9,0,0,0" VerticalAlignment="Center" Cursor="Hand">
+                                    <StackPanel.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding GoToStepCommand}" CommandParameter="0" />
+                                    </StackPanel.InputBindings>
+                                    <TextBlock Text="نوع پذیرش" FontSize="13" FontWeight="SemiBold" />
+                                    <TextBlock Text="گام 1 از ۴" FontSize="10" Opacity="0.6" />
+                                </StackPanel>
+                            </Grid>
+<Grid Grid.Column="1">
+                            <Border Height="3" CornerRadius="1.5" Margin="6,22,6,0" VerticalAlignment="Top">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#CFD8DC" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="1"><Setter Property="Background" Value="#2E7D32" /></DataTrigger>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="2"><Setter Property="Background" Value="#2E7D32" /></DataTrigger>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="3"><Setter Property="Background" Value="#2E7D32" /></DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </Button.Style>
-                                <TextBlock Text="۴ · بیمه و ثبت" FontSize="12" />
-                            </Button>
-                        </UniformGrid>
+                                </Border.Style>
+                            </Border></Grid>
+<Grid Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <!-- دایرهٔ گام — کلیک‌پذیر (استپر واقعی، نه دکمه) -->
+                                <Border Grid.Column="0" Width="46" Height="46" CornerRadius="23" Cursor="Hand"
+                                        ToolTip="رفتن به گام «بیمار»" HorizontalAlignment="Left">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding GoToStepCommand}" CommandParameter="1" />
+                                    </Border.InputBindings>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#B0BEC5" />
+                                            <Setter Property="BorderBrush" Value="#B0BEC5" />
+                                            <Setter Property="BorderThickness" Value="2" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WizardStep}" Value="1">
+                                                    <Setter Property="Background" Value="#1565C0" />
+                                                    <Setter Property="BorderBrush" Value="#0D47A1" />
+                                                </DataTrigger>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="2">
+                                                <Setter Property="Background" Value="#2E7D32" />
+                                                <Setter Property="BorderBrush" Value="#2E7D32" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="3">
+                                                <Setter Property="Background" Value="#2E7D32" />
+                                                <Setter Property="BorderBrush" Value="#2E7D32" />
+                                            </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="👤" Foreground="White" FontWeight="Bold" FontSize="15"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="9,0,0,0" VerticalAlignment="Center" Cursor="Hand">
+                                    <StackPanel.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding GoToStepCommand}" CommandParameter="1" />
+                                    </StackPanel.InputBindings>
+                                    <TextBlock Text="بیمار" FontSize="13" FontWeight="SemiBold" />
+                                    <TextBlock Text="گام 2 از ۴" FontSize="10" Opacity="0.6" />
+                                </StackPanel>
+                            </Grid>
+<Grid Grid.Column="3">
+                            <Border Height="3" CornerRadius="1.5" Margin="6,22,6,0" VerticalAlignment="Top">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#CFD8DC" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="2"><Setter Property="Background" Value="#2E7D32" /></DataTrigger>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="3"><Setter Property="Background" Value="#2E7D32" /></DataTrigger>
+                                            
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border></Grid>
+<Grid Grid.Column="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <!-- دایرهٔ گام — کلیک‌پذیر (استپر واقعی، نه دکمه) -->
+                                <Border Grid.Column="0" Width="46" Height="46" CornerRadius="23" Cursor="Hand"
+                                        ToolTip="رفتن به گام «پزشک / خدمت»" HorizontalAlignment="Left">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding GoToStepCommand}" CommandParameter="2" />
+                                    </Border.InputBindings>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#B0BEC5" />
+                                            <Setter Property="BorderBrush" Value="#B0BEC5" />
+                                            <Setter Property="BorderThickness" Value="2" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WizardStep}" Value="2">
+                                                    <Setter Property="Background" Value="#1565C0" />
+                                                    <Setter Property="BorderBrush" Value="#0D47A1" />
+                                                </DataTrigger>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="3">
+                                                <Setter Property="Background" Value="#2E7D32" />
+                                                <Setter Property="BorderBrush" Value="#2E7D32" />
+                                            </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="🩺" Foreground="White" FontWeight="Bold" FontSize="15"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="9,0,0,0" VerticalAlignment="Center" Cursor="Hand">
+                                    <StackPanel.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding GoToStepCommand}" CommandParameter="2" />
+                                    </StackPanel.InputBindings>
+                                    <TextBlock Text="پزشک / خدمت" FontSize="13" FontWeight="SemiBold" />
+                                    <TextBlock Text="گام 3 از ۴" FontSize="10" Opacity="0.6" />
+                                </StackPanel>
+                            </Grid>
+<Grid Grid.Column="5">
+                            <Border Height="3" CornerRadius="1.5" Margin="6,22,6,0" VerticalAlignment="Top">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#CFD8DC" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding WizardStep}" Value="3"><Setter Property="Background" Value="#2E7D32" /></DataTrigger>
+                                            
+                                            
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border></Grid>
+<Grid Grid.Column="6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <!-- دایرهٔ گام — کلیک‌پذیر (استپر واقعی، نه دکمه) -->
+                                <Border Grid.Column="0" Width="46" Height="46" CornerRadius="23" Cursor="Hand"
+                                        ToolTip="رفتن به گام «بیمه و ثبت»" HorizontalAlignment="Left">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding GoToStepCommand}" CommandParameter="3" />
+                                    </Border.InputBindings>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#B0BEC5" />
+                                            <Setter Property="BorderBrush" Value="#B0BEC5" />
+                                            <Setter Property="BorderThickness" Value="2" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WizardStep}" Value="3">
+                                                    <Setter Property="Background" Value="#1565C0" />
+                                                    <Setter Property="BorderBrush" Value="#0D47A1" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="✅" Foreground="White" FontWeight="Bold" FontSize="15"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="9,0,0,0" VerticalAlignment="Center" Cursor="Hand">
+                                    <StackPanel.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding GoToStepCommand}" CommandParameter="3" />
+                                    </StackPanel.InputBindings>
+                                    <TextBlock Text="بیمه و ثبت" FontSize="13" FontWeight="SemiBold" />
+                                    <TextBlock Text="گام 4 از ۴" FontSize="10" Opacity="0.6" />
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
 
                         <!-- ═══ گام ۰ — نوع پذیرش: دو دکمهٔ بزرگ ═══ -->
                         <StackPanel Visibility="{Binding WizardStep, Converter={StaticResource SectionToVisibility}, ConverterParameter=0}">
