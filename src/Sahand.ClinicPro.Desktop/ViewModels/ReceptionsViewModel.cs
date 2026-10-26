@@ -661,9 +661,6 @@ public partial class ReceptionsViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<ReceptionRow> _receptions = new();
 
-    /// <summary>پذیرش انتخاب‌شده در صف</summary>
-    [ObservableProperty]
-
     /// <summary>سازنده</summary>
     public ReceptionsViewModel(IApiClient api, ISnackbarService snackbar)
     {
