@@ -9,6 +9,8 @@ on:
 jobs:
   screenshot:
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - name: دریافت سورس
         uses: actions/checkout@v4
