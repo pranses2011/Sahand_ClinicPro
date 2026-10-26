@@ -17,6 +17,7 @@ public class ImagingOrderConfiguration : IEntityTypeConfiguration<ImagingOrder>
         builder.Property(x => x.BodyPart).HasMaxLength(200).HasComment("ناحیه بدن");
         builder.Property(x => x.Priority).HasConversion<byte>().HasComment("اولویت");
         builder.Property(x => x.Status).HasConversion<byte>().HasComment("وضعیت");
+        builder.Property(x => x.ReportDetails).HasComment("جزئیات ساخت‌یافته گزارش (JSON) — دوز/مقایسه/یافته بحرانی/ایمنی");
 
         builder.HasIndex(x => new { x.OrderNumber }).IsUnique().HasDatabaseName("IX_ImagingOrder_OrderNumber").HasFilter("[IsDeleted] = 0");
         builder.HasIndex(x => new { x.PatientId }).HasDatabaseName("IX_ImagingOrder_PatientId");

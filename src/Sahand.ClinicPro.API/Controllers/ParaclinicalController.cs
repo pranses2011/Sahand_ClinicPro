@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -60,13 +60,35 @@ public class ParaclinicalController : ApiBaseController
             .Select(o => new
             {
                 o.Id,
+                o.PatientId,
                 PatientName = o.Patient != null ? o.Patient.FirstName + " " + o.Patient.LastName : "",
+                PatientGender = o.Patient != null ? o.Patient.Gender.ToString() : "",
+                PatientBirthShamsi = o.Patient != null ? o.Patient.BirthDateShamsi : null,
                 Modality = o.Modality.ToString(),
                 o.BodyPart,
-                o.Status
+                Status = (int)o.Status,
+                Priority = (int)o.Priority,
+                o.ClinicalInfo,
+                o.Technique,
+                o.Findings,
+                o.Impression,
+                o.Recommendation,
+                o.ReportDetails,
+                o.CreatedAt,
+                o.PerformedAt,
+                o.ReportedAt
             })
             .ToListAsync();
         return Ok(ApiResponse<object>.Success(items));
+    }
+
+    /// <summary>تغییر وضعیت گردش کار درخواست (شروع انجام/انجام‌شده) — ماژول حرفه‌ای تصویربرداری</summary>
+    [HttpPost("~/api/v1/imaging/orders/status")]
+    [HasPermission("imaging.edit")]
+    public async Task<IActionResult> UpdateOrderStatus([FromBody] UpdateImagingOrderStatusCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return ToResponse(result, "وضعیت درخواست به‌روز شد");
     }
 
     /// <summary>ثبت گزارش رادیولوژی</summary>

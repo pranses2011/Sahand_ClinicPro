@@ -43,6 +43,14 @@ public class ImagingOrder : AuditableEntity, ISoftDeletable
     /// <summary>توصیه‌های تکمیلی</summary>
     public string? Recommendation { get; set; }
 
+    /// <summary>
+    /// جزئیات ساخت‌یافتهٔ گزارش (JSON) — ماژول حرفه‌ای تصویربرداری (طرح تأییدشدهٔ مالک، نسخهٔ ۲ پیش‌نمایش):
+    /// دوز تابش (CTDIvol/DLP)، مقایسه با مطالعهٔ قبلی، وضعیت گزارش (پیش‌نویس/اولیه/نهایی/الحاقیه)،
+    /// قالب استفاده‌شده، اندازه‌گیری‌های روی تصویر، چک‌لیست ایمنی انجام و اطلاع‌رسانی یافتهٔ بحرانی
+    /// (گیرنده/روش/زمان) در این متن نگه داشته می‌شود.
+    /// </summary>
+    public string? ReportDetails { get; set; }
+
     /// <summary>اولویت</summary>
     public Priority Priority { get; set; }
 
