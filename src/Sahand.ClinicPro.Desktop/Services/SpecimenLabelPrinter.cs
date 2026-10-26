@@ -39,7 +39,7 @@ public static class SpecimenLabelPrinter
 
         var orderNo = detail.OrderNumber ?? orderId.ToString();
         return PrintFlow.Print(doc, $"برچسب نمونه‌های آزمایش {orderNo}",
-            LocalSettingsStore.Get("Printer.DefaultPrinter"));
+            PrintJobSettings.PrinterFor("SpecimenLabel"));
     }
 
     /// <summary>ساخت سند برچسب‌ها — یک برچسب در هر صفحه (مرز برش)</summary>

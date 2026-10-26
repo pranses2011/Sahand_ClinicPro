@@ -64,8 +64,8 @@ public static class ShiftReceiptPrinter
         // چاپگر مقصد — اختصاصی رسید، یا قبض نوبت، یا پیش‌فرض
         // (Get هرگز null نمی‌دهد — تهی یعنی تنظیم نشده؛ برعکسِ ?? قبلی که
         // هرگز به چاپگر قبض نمی‌رسید چون رشتهٔ خالی تهی‌بودن را پنهان می‌کرد)
-        var receiptPrinter = LocalSettingsStore.Get("Printer.Receipt");
-        var ticketPrinter = LocalSettingsStore.Get("Printer.Ticket");
+        var receiptPrinter = PrintJobSettings.PrinterFor("ShiftReceipt");
+        var ticketPrinter = (string?)null;
         var printerName = !string.IsNullOrWhiteSpace(receiptPrinter)
             ? receiptPrinter
             : !string.IsNullOrWhiteSpace(ticketPrinter) ? ticketPrinter : null;

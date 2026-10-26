@@ -118,8 +118,8 @@ public static class ReceptionReceiptPrinter
 
         // چاپگر مقصد — اختصاصی رسید، وگرنه چاپگر قبض نوبت، وگرنه پیش‌فرض ویندوز
         // (Get هرگز null نمی‌دهد؛ رشتهٔ خالی یعنی تنظیم‌نشده)
-        var receiptPrinter = LocalSettingsStore.Get("Printer.Receipt");
-        var ticketPrinter = LocalSettingsStore.Get("Printer.Ticket");
+        var receiptPrinter = PrintJobSettings.PrinterFor("ReceptionReceipt");
+        var ticketPrinter = (string?)null;
         var printerName = !string.IsNullOrWhiteSpace(receiptPrinter)
             ? receiptPrinter
             : !string.IsNullOrWhiteSpace(ticketPrinter) ? ticketPrinter : null;

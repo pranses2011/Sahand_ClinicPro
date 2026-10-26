@@ -35,7 +35,7 @@ public static class LabResultPrinter
 
         var orderNo = detail.OrderNumber ?? orderId.ToString();
         return PrintFlow.Print(doc, $"برگهٔ نتیجهٔ آزمایش {orderNo}",
-            LocalSettingsStore.Get("Printer.DefaultPrinter"));
+            PrintJobSettings.PrinterFor("LabResult"));
     }
 
     /// <summary>ساخت سند برگهٔ نتیجه — جدول اقلام با رنگ‌بندی غیرعادی</summary>

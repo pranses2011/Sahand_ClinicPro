@@ -956,9 +956,9 @@ public partial class AppointmentsViewModel : ViewModelBase
         var ticketDate = SelectedDateShamsi;
         var ticketTime = SelectedSlot?.Time ?? string.Empty;
         var ticketType = VisitTypes.ElementAtOrDefault(Math.Clamp(SelectedTypeIndex, 0, VisitTypes.Length - 1));
-        if (LocalSettingsStore.Get("Printer.AutoPrintTicket") == "true")
+        if (LocalSettingsStore.Get("Printer.AutoPrintTicket") == "true" || PrintJobSettings.AutoFor("AppointmentTicket"))
         {
-            var ticketPrinter = LocalSettingsStore.Get("Printer.TicketPrinter");
+            var ticketPrinter = PrintJobSettings.PrinterFor("AppointmentTicket");
             var clinicTitle = LocalSettingsStore.Get("Printer.ClinicName") is { Length: > 0 } clinic
                 ? clinic : "درمانگاه سهند";
             System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>

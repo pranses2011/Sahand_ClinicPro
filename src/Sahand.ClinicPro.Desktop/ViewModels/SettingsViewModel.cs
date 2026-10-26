@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -133,6 +133,34 @@ public partial class SettingsViewModel : ViewModelBase
     /// <summary>تعداد نسخه چاپ</summary>
     [ObservableProperty]
     private int _printCopies = 1;
+
+    /// <summary>
+    /// کاتالوگ سندهای چاپی — بازطراحی تأییدشدهٔ «مرکز چاپ»: هر سند با
+    /// عنوان خودش، چاپگر اختصاصی، کاغذ، تعداد نسخه، پیش‌نمایش و چاپ
+    /// خودکار خودش را دارد (PrintJobSettings در ذخیرهٔ محلی نگه می‌دارد)
+    /// </summary>
+    public ObservableCollection<PrintJobRow> PrintJobs { get; } = new();
+
+    /// <summary>ساخت ردیف‌های کاتالوگ چاپ از مقادیر ذخیره‌شده</summary>
+    private void BuildPrintJobRows()
+    {
+        PrintJobs.Clear();
+        foreach (var job in PrintJobSettings.Jobs)
+        {
+            PrintJobs.Add(new PrintJobRow
+            {
+                Key = job.Key,
+                Title = job.Title,
+                Description = job.Description,
+                Icon = job.Icon,
+                Printer = PrintJobSettings.PrinterFor(job.Key) ?? string.Empty,
+                Paper = PrintJobSettings.PaperFor(job.Key),
+                Copies = PrintJobSettings.CopiesFor(job.Key),
+                Preview = PrintJobSettings.PreviewFor(job.Key) ?? true,
+                AutoPrint = PrintJobSettings.AutoFor(job.Key)
+            });
+        }
+    }
 
     /* ─── بخش تم ─── */
 
@@ -767,6 +795,16 @@ public partial class SettingsViewModel : ViewModelBase
             // همهٔ چاپ‌های عمومی (قبض/رسید/کارت/فیش/آزمایش) از PrintFlow
             // می‌گذرند و بی‌درنگ (بدون درخواست شبکه) این مقدار را می‌خوانند.
             LocalSettingsStore.Set("Printer.ShowPreview", ShowPreview ? "true" : "false");
+
+            // مرکز چاپ — چاپگر/کاغذ/نسخه/پیش‌نمایش/خودکار اختصاصی هر سند
+            foreach (var row in PrintJobs)
+            {
+                PrintJobSettings.SetPrinter(row.Key, row.Printer);
+                PrintJobSettings.SetPaper(row.Key, row.Paper);
+                PrintJobSettings.SetCopies(row.Key, row.Copies);
+                PrintJobSettings.SetPreview(row.Key, row.Preview);
+                PrintJobSettings.SetAuto(row.Key, row.AutoPrint);
+            }
         }
         catch
         {
@@ -794,6 +832,8 @@ public partial class SettingsViewModel : ViewModelBase
             // محیط بدون سرویس چاپ — فهرست خالی می‌ماند و ComboBox ویرایش‌پذیر است
         }
 
+        BuildPrintJobRows();
+
         // مقادیر ذخیره‌شدهٔ تنظیمات چاپگر از سرور
         var response = await _api.GetAsync<SettingsResponse>("settings?category=Printer");
         var map = response?.Data ?? new List<SettingDto>();
@@ -811,6 +851,26 @@ public partial class SettingsViewModel : ViewModelBase
 
     /// <summary>تست چاپگر — ارسال صفحه آزمایشی به چاپگر پیش‌فرض ویندوز</summary>
     [RelayCommand]
+    /// <summary>چاپ آزمایشی یک سند از کاتالوگ — با چاپگر اختصاصی همان سند</summary>
+    [RelayCommand]
+    private void TestPrintJob(PrintJobRow? row)
+    {
+        if (row is null) return;
+        var printer = string.IsNullOrWhiteSpace(row.Printer) ? null : row.Printer;
+        var doc = new System.Windows.Documents.FlowDocument
+        {
+            FlowDirection = System.Windows.FlowDirection.RightToLeft,
+            FontSize = 13
+        };
+        doc.Blocks.Add(new System.Windows.Documents.Paragraph(
+            new System.Windows.Documents.Run($"چاپ آزمایشی — {row.Title}")) { FontWeight = System.Windows.FontWeights.Bold });
+        doc.Blocks.Add(new System.Windows.Documents.Paragraph(
+            new System.Windows.Documents.Run("اگر این برگه را می‌بینید، چاپگر این سند درست تنظیم شده است.")));
+        doc.Blocks.Add(new System.Windows.Documents.Paragraph(
+            new System.Windows.Documents.Run($"زمان چاپ آزمایشی: {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsiWithTime(DateTime.UtcNow)}")));
+        PrintFlow.Print(doc, $"تست چاپ {row.Title}", printer);
+    }
+
     private void TestPrint()
     {
         try
@@ -1422,4 +1482,41 @@ public partial class ThemeOptionRow : ObservableObject
     /// <summary>انتخاب‌شده است؟</summary>
     [ObservableProperty]
     private bool _isSelected;
+
+}
+
+/// <summary>ردیف یک سند در «مرکز چاپ» — تنظیمات اختصاصی همان سند</summary>
+public partial class PrintJobRow : CommunityToolkit.Mvvm.ComponentModel.ObservableObject
+{
+    /// <summary>کلید پایدار سند</summary>
+    public string Key { get; set; } = string.Empty;
+
+    /// <summary>عنوان سند</summary>
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>این سند کجا چاپ می‌شود</summary>
+    public string Description { get; set; } = string.Empty;
+
+    /// <summary>ایموجی سند</summary>
+    public string Icon { get; set; } = "🖨";
+
+    /// <summary>چاپگر اختصاصی — خالی یعنی پیش‌فرض ویندوز</summary>
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private string _printer = string.Empty;
+
+    /// <summary>اندازهٔ کاغذ</summary>
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private string _paper = "A4";
+
+    /// <summary>تعداد نسخه</summary>
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private int _copies = 1;
+
+    /// <summary>پیش‌نمایش قبل از چاپ این سند</summary>
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private bool _preview = true;
+
+    /// <summary>چاپ خودکار (در نقاطی که سند خودکار چاپ می‌شود)</summary>
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private bool _autoPrint;
 }

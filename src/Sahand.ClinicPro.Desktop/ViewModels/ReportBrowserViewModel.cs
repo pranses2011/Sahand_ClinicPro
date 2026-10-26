@@ -769,7 +769,7 @@ public partial class ReportBrowserViewModel : ViewModelBase
         doc.PageWidth = 793.7;   // A4 — 210 میلی‌متر در ۹۶dpi
         doc.PageHeight = 1122.5; // A4 — 297 میلی‌متر
         var printed = Services.PrintFlow.Print(doc, $"گزارش: {ReportTitle}",
-            Services.LocalSettingsStore.Get("Printer.DefaultPrinter"));
+            Services.PrintJobSettings.PrinterFor("Report"));
         if (printed)
             _snackbar.Success($"«{ReportTitle}» به چاپگر ارسال شد");
     }
