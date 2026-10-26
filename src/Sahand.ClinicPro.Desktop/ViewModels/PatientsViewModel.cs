@@ -21,7 +21,9 @@ public record PatientRow(
     string? InsuranceName,
     int? Age,
     string? LastVisitDateShamsi,
-    bool IsSelected);
+    bool IsSelected,
+    bool IsUnidentified = false,
+    string? TemporaryCode = null);
 
 /// <summary>
 /// مدل کمکی بیمه در ComboBox
@@ -115,7 +117,7 @@ public partial class PatientsViewModel : ViewModelBase
         new(p.Id, p.MedicalRecordNo,
             $"{p.FirstName} {p.LastName}".Trim(),
             p.NationalCode, p.Mobile, p.InsuranceName,
-            p.Age, p.LastVisitDateShamsi, false);
+            p.Age, p.LastVisitDateShamsi, false, p.IsUnidentified, p.TemporaryCode);
 
     /// <summary>جستجو — بازگشت به صفحه اول (میانبر: Enter یا دکمه)</summary>
     [RelayCommand]
@@ -267,6 +269,8 @@ public partial class PatientsViewModel : ViewModelBase
 
         /// <summary>سن محاسبه‌شده از سمت سرور — چرخه بیست‌وسوم: ستون سن فهرست بیماران</summary>
         public int? Age { get; set; }
+        public bool IsUnidentified { get; set; }
+        public string? TemporaryCode { get; set; }
         public string? LastVisitDateShamsi { get; set; }
     }
 }
@@ -322,6 +326,12 @@ public partial class PatientFormViewModel : ObservableObject
     [ObservableProperty] private string _errorMessage = string.Empty;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _formTitle = "ثبت بیمار جدید";
+
+    /// <summary>پروندهٔ موقت بیمار ناشناس است؟ — ذخیره از مسیر «تکمیل هویت» می‌رود</summary>
+    [ObservableProperty] private bool _isUnidentified;
+
+    /// <summary>کد موقت بیمار ناشناس — نمایش در بنر تکمیل هویت</summary>
+    [ObservableProperty] private string _temporaryCode = string.Empty;
     [ObservableProperty] private bool _isNationalCodeValid;
 
     /// <summary>
@@ -415,6 +425,8 @@ public partial class PatientFormViewModel : ObservableObject
                     ProvinceOptions.Insert(0, Province);
                 if (!string.IsNullOrWhiteSpace(City) && !CityOptions.Contains(City))
                     CityOptions.Add(City);
+                IsUnidentified = patient.IsUnidentified;
+                TemporaryCode = patient.TemporaryCode ?? string.Empty;
                 InsuranceCompanyId = patient.InsuranceCompanyId;
                 InsuranceNumber = patient.InsuranceNumber;
                 FormTitle = $"ویرایش بیمار: {patient.FirstName} {patient.LastName}";
@@ -566,6 +578,46 @@ public partial class PatientFormViewModel : ObservableObject
         };
 
         IsBusy = true;
+        if (IsUnidentified && _patientId.HasValue)
+        {
+            // تکمیل هویت پروندهٔ موقت — کد ملی واقعی روی همان پرونده می‌نشیند
+            var identity = await _api.PutAsync<CompleteIdentityEnvelope>(
+                $"patients/{_patientId}/complete-identity", body);
+            if (identity?.Data?.Status == "Duplicate" && identity.Data.DuplicatePatientId is long dupId)
+            {
+                IsBusy = false;
+                var merge = Views.AppDialog.Confirm("پروندهٔ اصلی موجود است",
+                    $"بیماری با این کد ملی از قبل پرونده دارد: {identity.Data.DuplicatePatientName}" + Environment.NewLine + Environment.NewLine +
+                    "همهٔ سوابق این پروندهٔ موقت (پذیرش، ویزیت، فاکتور و…) به پروندهٔ اصلی منتقل و پروندهٔ موقت حذف شود؟",
+                    Views.AppDialogIcon.Warning);
+                if (merge != true)
+                {
+                    ErrorMessage = "تکمیل هویت انجام نشد — پروندهٔ اصلی با این کد ملی موجود است؛ برای انتقال سوابق، ادغام را تأیید کنید";
+                    return;
+                }
+                var merged = await _api.PostAsync("patients/merge",
+                    new { sourcePatientId = _patientId.Value, targetPatientId = dupId });
+                if (!merged)
+                {
+                    ErrorMessage = _api.LastError ?? "ادغام پرونده‌ها ناموفق بود";
+                    return;
+                }
+                _afterSave?.Invoke();
+                CloseRequested?.Invoke(this, EventArgs.Empty);
+                return;
+            }
+            IsBusy = false;
+            if (identity?.Data?.Status == "Completed")
+            {
+                _afterSave?.Invoke();
+                CloseRequested?.Invoke(this, EventArgs.Empty);
+            }
+            else
+            {
+                ErrorMessage = _api.LastError ?? "تکمیل هویت ناموفق بود";
+            }
+            return;
+        }
         var ok = _patientId.HasValue
             ? await _api.PutAsync($"patients/{_patientId}", body)
             : await _api.PostAsync("patients", body);
@@ -658,5 +710,23 @@ public partial class PatientFormViewModel : ObservableObject
         public string? Allergies { get; set; }
         public string? ChronicDiseases { get; set; }
         public string? CurrentMedications { get; set; }
+        public bool IsUnidentified { get; set; }
+        public string? TemporaryCode { get; set; }
+    }
+
+    /// <summary>پاکت نتیجهٔ تکمیل هویت</summary>
+    public sealed class CompleteIdentityEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public CompleteIdentityResult? Data { get; set; }
+    }
+
+    /// <summary>نتیجهٔ تکمیل هویت — Completed یا Duplicate (پروندهٔ اصلی موجود است)</summary>
+    public sealed class CompleteIdentityResult
+    {
+        public string Status { get; set; } = string.Empty;
+        public long PatientId { get; set; }
+        public long? DuplicatePatientId { get; set; }
+        public string? DuplicatePatientName { get; set; }
     }
 }

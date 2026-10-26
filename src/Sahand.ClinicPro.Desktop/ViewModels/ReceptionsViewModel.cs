@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -869,6 +869,50 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// دوربرداشته نمی‌شود؛ سرور خودش Contains روی نام/کدملی/موبایل/پرونده و
     /// مقایسهٔ فشردهٔ نیم‌فاصله انجام می‌دهد
     /// </summary>
+    /// <summary>جنسیت بیمار ناشناس — ۰=مرد، ۱=زن</summary>
+    [ObservableProperty] private int _unidentifiedGenderIndex;
+
+    /// <summary>سن تقریبی بیمار ناشناس (اختیاری)</summary>
+    [ObservableProperty] private string _unidentifiedAgeText = string.Empty;
+
+    /// <summary>
+    /// پذیرش فوری بیمار ناشناس (اورژانسی) — ساخت پروندهٔ موقت با کد یکتای
+    /// سیستمی بدون کد ملی؛ بیمار بلافاصله انتخاب می‌شود و تکمیل هویت
+    /// بعداً از پروندهٔ بیمار انجام می‌گردد
+    /// </summary>
+    [RelayCommand]
+    private async Task CreateUnidentifiedPatientAsync()
+    {
+        int? age = int.TryParse(UnidentifiedAgeText?.Trim(), out var a) ? a : null;
+        var response = await _api.PostAsync<UnidentifiedPatientEnvelope>("patients/unidentified",
+            new { gender = UnidentifiedGenderIndex + 1, approximateAge = age });
+        var dto = response?.Data;
+        if (dto is null)
+        {
+            _snackbar.Error(_api.LastError ?? "ساخت پروندهٔ موقت ناموفق بود");
+            return;
+        }
+        FoundPatient = new QuickPatient(dto.Id, "بیمار ناشناس", dto.TemporaryCode ?? string.Empty,
+            dto.Mobile ?? string.Empty, null, null, null, null, UnidentifiedGenderIndex + 1);
+        PatientResults = new ObservableCollection<QuickPatient>();
+        _snackbar.Success($"پروندهٔ موقت ساخته شد — کد موقت: {dto.TemporaryCode} (تکمیل هویت بعداً از پروندهٔ بیمار)");
+    }
+
+    /// <summary>پاکت پاسخ ساخت بیمار ناشناس</summary>
+    public sealed class UnidentifiedPatientEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public UnidentifiedPatientDto? Data { get; set; }
+    }
+
+    /// <summary>DTO بیمار ناشناس — منطبق بر PatientListDto سرور</summary>
+    public sealed class UnidentifiedPatientDto
+    {
+        public long Id { get; set; }
+        public string? TemporaryCode { get; set; }
+        public string? Mobile { get; set; }
+    }
+
     private async Task<List<QuickPatient>> FindPatientsAsync(string term)
     {
         var response = await _api.GetAsync<PatientFormViewModel.SearchResponse>(
@@ -876,8 +920,9 @@ public partial class ReceptionsViewModel : ViewModelBase
         if (response?.Data is null) return new List<QuickPatient>();
 
         return response.Data
-            .Select(p => new QuickPatient(p.Id, $"{p.FirstName} {p.LastName}", p.NationalCode, p.Mobile,
-                p.InsuranceName, p.Allergies, null, p.InsuranceCompanyId))
+            .Select(p => new QuickPatient(p.Id, $"{p.FirstName} {p.LastName}",
+                p.IsUnidentified && !string.IsNullOrWhiteSpace(p.TemporaryCode) ? p.TemporaryCode! : p.NationalCode,
+                p.Mobile, p.InsuranceName, p.Allergies, null, p.InsuranceCompanyId))
             .ToList();
     }
 
