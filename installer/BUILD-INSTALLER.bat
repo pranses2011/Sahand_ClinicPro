@@ -2,7 +2,7 @@
 chcp 65001 >nul
 setlocal
 title ساخت بسته نصب درمانگاه سهند
-set "APP_VERSION=2.28.26"
+set "APP_VERSION=2.28.27"
 if not "%CI%"=="" set "CI_MODE=1"
 
 echo ===========================================================
