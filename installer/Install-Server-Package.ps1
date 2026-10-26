@@ -138,6 +138,47 @@ if ($settings.PSObject.Properties.Name -notcontains 'Urls') {
 }
 $settings | ConvertTo-Json -Depth 100 | Set-Content -Path $settingsPath -Encoding UTF8
 
+# ═══ مجوز بازیابی پشتیبان برای لاگین سرور API (گزارش مالک با اسکرین‌شات) ═══
+# RESTORE DATABASE مجوز «سطح سرور» می‌خواهد (نقش dbcreator یا sysadmin) و
+# db_owner بودن روی دیتابیس کافی نیست؛ بدون آن، بازیابی از داخل برنامه با
+# «User does not have permission to RESTORE database» شکست می‌خورد. نصاب با
+# دسترسی مدیر ویندوز اجرا می‌شود و معمولاً روی SQL Server مدیر است، پس نقش
+# dbcreator را همین‌جا به لاگین رشتهٔ اتصال می‌دهد:
+#   - اتصال SQL Login → همان نام کاربری رشتهٔ اتصال
+#   - اتصال ویندوزی (Trusted) → حساب اجرای سرویس یعنی NT AUTHORITY\SYSTEM
+# خطا در این گام نصب را متوقف نمی‌کند (برنامه بدون بازیابی هم کار می‌کند)؛
+# فقط هشدار فارسی + دستور دستی SSMS چاپ می‌شود.
+try {
+    $csBuilder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder([string]$settings.ConnectionStrings.DefaultConnection)
+    $sqlLogin = if ($csBuilder.UserID) { [string]$csBuilder.UserID } else { 'NT AUTHORITY\SYSTEM' }
+    $grantBuilder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder
+    $grantBuilder.DataSource = $csBuilder.DataSource
+    $grantBuilder.InitialCatalog = 'master'
+    $grantBuilder.IntegratedSecurity = $true
+    $grantBuilder.TrustServerCertificate = $true
+    $grantBuilder.ConnectTimeout = 15
+    $loginLiteral = $sqlLogin.Replace("'", "''")
+    $loginBracket = $sqlLogin.Replace(']', ']]')
+    $grantSql = @"
+IF IS_SRVROLEMEMBER(N'dbcreator', N'$loginLiteral') <> 1
+BEGIN
+    ALTER SERVER ROLE [dbcreator] ADD MEMBER [$loginBracket];
+END
+"@
+    $grantConn = New-Object System.Data.SqlClient.SqlConnection($grantBuilder.ConnectionString)
+    try {
+        $grantConn.Open()
+        $grantCmd = $grantConn.CreateCommand()
+        $grantCmd.CommandText = $grantSql
+        [void]$grantCmd.ExecuteNonQuery()
+        Write-Host "مجوز بازیابی پشتیبان (نقش dbcreator) برای لاگین «$sqlLogin» برقرار شد." -ForegroundColor Green
+    } finally { $grantConn.Close() }
+} catch {
+    Write-Host "هشدار: اعطای خودکار مجوز بازیابی (dbcreator) موفق نشد: $($_.Exception.Message)" -ForegroundColor Yellow
+    Write-Host 'برای فعال شدن «بازیابی از فایل پشتیبان» داخل برنامه، در SSMS با کاربر مدیر این دستور را یک‌بار اجرا کنید (نام لاگین رشتهٔ اتصال سرور را جایگزین کنید):' -ForegroundColor Yellow
+    Write-Host '  ALTER SERVER ROLE [dbcreator] ADD MEMBER [SahandLogin];' -ForegroundColor Yellow
+}
+
 # این مرحله همان تمام تغییرهای schema را خودکار اعمال می‌کند؛ نیازی به نصب SDK،
 # ابزار dotnet-ef یا اجرای دستور دستی توسط درمانگاه نیست.
 Write-Host 'ساخت دیتابیس و اعمال خودکار تغییرهای لازم (اولین اجرا ممکن است چند دقیقه طول بکشد)...' -ForegroundColor Yellow
@@ -153,7 +194,7 @@ try {
         throw ("اعمال خودکار ساختار دیتابیس شکست خورد (کد $LASTEXITCODE). " +
                "علت دقیق در خطاهای بالا و فایل‌های C:\SahandClinicPro\Server\Logs آمده است. " +
                "اگر خطا درباره «MS_Description»، «Invalid column name» یا «migration» بود، مشکل از " +
-               "رشته اتصال یا مجوز CREATE DATABASE نیست؛ آخرین بستهٔ سرور (v2.28.22) را نصب کنید.")
+               "رشته اتصال یا مجوز CREATE DATABASE نیست؛ آخرین بستهٔ سرور (v2.28.23) را نصب کنید.")
     }
 }
 finally { Pop-Location }
