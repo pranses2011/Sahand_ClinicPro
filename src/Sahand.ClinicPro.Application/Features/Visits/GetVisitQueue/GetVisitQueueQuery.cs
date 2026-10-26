@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Clinical;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
@@ -63,11 +64,9 @@ public class GetVisitQueueQueryHandler : IRequestHandler<GetVisitQueueQuery, Res
     public async Task<Result<VisitQueueDto>> Handle(GetVisitQueueQuery request,
         CancellationToken cancellationToken)
     {
-        // چرخه بیست‌ویکم (گزارش پانزدهم مالک): «بعد از پذیرش، بیمار در لیست ویزیت و
-        // معاینه نمایش داده نمی‌شود» — مرز روز بر پایهٔ UTC همانند زمان ثبت پذیرش
-        // (DateTime.UtcNow) گرفته شد؛ پیش‌تر DateTime.Today (زمان محلی سرور) بود و
-        // هرگاه منطقهٔ زمانی سرور با UTC فرق می‌کرد پذیرش تازه در مرز روز گم می‌شد.
-        var today = DateTime.UtcNow.Date;
+        // مرز روز بر پایهٔ وقت رسمی ایران همانند زمان ثبت پذیرش (IranNow) —
+        // ثبت پذیرش با ساعت ایران انجام می‌شود تا ساعت پذیرش محلی دیده شود.
+        var today = PersianDateHelper.IranNow().Date;
         var tomorrow = today.AddDays(1);
 
         var receptions = await _unitOfWork.Repository<Reception>().QueryableNoTracking
@@ -126,7 +125,7 @@ public class GetVisitQueueQueryHandler : IRequestHandler<GetVisitQueueQuery, Res
             var patientName = $"{r.Patient?.FirstName} {r.Patient?.LastName}";
             var queueNumber = (int)(r.Id % 100);
             var appointmentTime = r.ReceptionDate.ToString("HH:mm");
-            var waitingMinutes = (int)(DateTime.UtcNow - r.ReceptionDate).TotalMinutes;
+            var waitingMinutes = (int)(PersianDateHelper.IranNow() - r.ReceptionDate).TotalMinutes;
             var visitTypeText = r.Appointment != null && r.Appointment.AppointmentType == AppointmentType.FollowUp ? "پیگیری" :
                 r.Appointment != null && r.Appointment.AppointmentType == AppointmentType.Emergency ? "اورژانس" : "اولیه";
 

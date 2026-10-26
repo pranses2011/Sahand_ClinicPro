@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Clinical;
@@ -43,8 +44,8 @@ public class CallNextPatientCommandHandler : IRequestHandler<CallNextPatientComm
         // InQueue (در صف اطلاحی) — هم‌تراز با منطق نمایش صف؛ به‌علاوه پذیرش‌های
         // «خدمتی بدون پزشک» از فراخوان ویزیت پزشک کنار گذاشته می‌شوند
         // (Visit.DoctorId صفر نامعتبر است — گارد پیش‌تر فقط در کامنت بود).
-        // مرز روز هم بر پایهٔ UTC همانند ثبت پذیرش و نمایش صف هم‌تراز شد.
-        var today = DateTime.UtcNow.Date;
+        // مرز روز هم بر پایهٔ وقت رسمی ایران همانند ثبت پذیرش و نمایش صف هم‌تراز شد.
+        var today = PersianDateHelper.IranNow().Date;
         var tomorrow = today.AddDays(1);
 
         var next = await _unitOfWork.Repository<Reception>().QueryableTracking

@@ -31,11 +31,10 @@ public class GetQueueStatsQueryHandler : IRequestHandler<GetQueueStatsQuery, Res
     public async Task<Result<QueueStatsDto>> Handle(GetQueueStatsQuery request,
         CancellationToken cancellationToken)
     {
-        // ═══ چرخهٔ ۷۴ — مرز روز بر پایهٔ UTC همانند صف ویزیت (GetVisitQueue) ═══
-        // پیش‌تر DateTime.Today (زمان محلی سرور) بود و در سرورهای با منطقهٔ
-        // زمانی متفاوت، پذیرش تازه در مرز روز در آمار گم می‌شد؛ ثبت پذیرش با
-        // DateTime.UtcNow انجام می‌شود پس مرز آمار هم همان است.
-        var today = DateTime.UtcNow.Date;
+        // ═══ مرز روز به وقت رسمی ایران ═══
+        // ثبت پذیرش با ساعت ایران انجام می‌شود (IranNow) پس مرز آمار روز هم
+        // باید همان باشد تا پذیرش‌های بامدادی در آمار روز گم نشوند.
+        var today = PersianDateHelper.IranNow().Date;
         var tomorrow = today.AddDays(1);
 
         var receptions = _unitOfWork.Repository<Reception>().QueryableNoTracking
