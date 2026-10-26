@@ -99,6 +99,51 @@ public class PatientsController : ApiBaseController
     }
 
     /// <summary>
+    /// ساخت پروندهٔ موقت بیمار ناشناس (اورژانسی) — بدون کد ملی، با کد
+    /// موقت یکتای سیستمی؛ بیمار بلافاصله قابل پذیرش است و بعداً از پرونده
+    /// «تکمیل هویت» می‌شود. کد ملی برای ثبت عادی همچنان الزامی است.
+    /// </summary>
+    /// <param name="dto">جنسیت و سن تقریبی اختیاری</param>
+    [HttpPost("unidentified")]
+    [HasPermission("patients.create")]
+    [ProducesResponseType(typeof(ApiResponse<PatientListDto>), StatusCodes.Status201Created)]
+    public async Task<IActionResult> CreateUnidentified([FromBody] CreateUnidentifiedPatientDto dto)
+    {
+        var result = await _mediator.Send(new CreateUnidentifiedPatientCommand(dto));
+        if (result.IsSuccess)
+            return CreatedResponse(result, nameof(GetById), new { id = result.Value.Id },
+                $"پروندهٔ موقت با کد {result.Value.TemporaryCode} ساخته شد");
+        return ToResponse(result);
+    }
+
+    /// <summary>
+    /// تکمیل هویت بیمار ناشناس — اگر کد ملی از قبل پروندهٔ اصلی داشته
+    /// باشد، نتیجه با وضعیت Duplicate برمی‌گردد تا کاربر ادغام را تأیید کند
+    /// </summary>
+    /// <param name="id">شناسهٔ پروندهٔ موقت</param>
+    /// <param name="dto">مشخصات واقعی بیمار</param>
+    [HttpPut("{id:long}/complete-identity")]
+    [HasPermission("patients.edit")]
+    public async Task<IActionResult> CompleteIdentity(long id, [FromBody] CompletePatientIdentityDto dto)
+    {
+        var result = await _mediator.Send(new CompletePatientIdentityCommand(id, dto));
+        return ToResponse(result, "هویت بیمار تکمیل شد");
+    }
+
+    /// <summary>
+    /// ادغام پروندهٔ موقت در پروندهٔ اصلی موجود — انتقال همهٔ سوابق
+    /// بالینی و مالی و حذف نرم پروندهٔ موقت
+    /// </summary>
+    /// <param name="dto">شناسهٔ مبدأ (موقت) و مقصد (اصلی)</param>
+    [HttpPost("merge")]
+    [HasPermission("patients.edit")]
+    public async Task<IActionResult> Merge([FromBody] MergePatientsDto dto)
+    {
+        var result = await _mediator.Send(new MergePatientsCommand(dto.SourcePatientId, dto.TargetPatientId));
+        return ToResponse(result, "پرونده‌ها ادغام شدند و همهٔ سوابق منتقل شد");
+    }
+
+    /// <summary>
     /// ویرایش اطلاعات بیمار
     /// </summary>
     /// <param name="id">شناسه بیمار</param>

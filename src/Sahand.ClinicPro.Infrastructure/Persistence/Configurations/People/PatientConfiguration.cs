@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sahand.ClinicPro.Domain.Entities.People;
 
@@ -13,7 +13,7 @@ public class PatientConfiguration : IEntityTypeConfiguration<Patient>
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.MedicalRecordNo).HasMaxLength(200).IsRequired().HasDefaultValueSql("CONCAT('MRN-', RIGHT('000000' + CAST(NEXT VALUE FOR SeqPatientMrn AS varchar(10)), 6))").HasComment("شماره پرونده پزشکی - تولید خودکار با فرمت MRN-XXXXXX");
-        builder.Property(x => x.NationalCode).HasMaxLength(10).IsRequired().HasComment("کد ملی ۱۰ رقمی - یکتا و با الگوریتم رقم کنترلی اعتبارسنجی می‌شود");
+        builder.Property(x => x.NationalCode).HasMaxLength(10).HasComment("کد ملی ۱۰ رقمی - یکتا و با الگوریتم رقم کنترلی اعتبارسنجی می‌شود؛ برای بیمار ناشناس تهی است");
         builder.Property(x => x.FirstName).HasMaxLength(50).IsRequired().HasComment("نام بیمار - حداکثر ۵۰ کاراکتر");
         builder.Property(x => x.LastName).HasMaxLength(50).IsRequired().HasComment("نام خانوادگی بیمار - ایندکس‌شده برای جستجو");
         builder.Property(x => x.FatherName).HasMaxLength(50).HasComment("نام پدر بیمار");
