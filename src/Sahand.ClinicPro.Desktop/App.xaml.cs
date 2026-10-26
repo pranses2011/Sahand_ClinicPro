@@ -592,6 +592,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<ReportsViewModel>();
         services.AddTransient<ReportBrowserViewModel>();
         services.AddTransient<AdminViewModel>();
+        services.AddTransient<AdminHubViewModel>();
         // چرخه بیستم (گزارش چهاردهم مالک): صفحهٔ مستقل «مدیریت پرسنل» —
         // آیتم منوی پرسنل پیش‌تر به صفحهٔ تنظیمات می‌رفت
         services.AddTransient<PersonnelViewModel>();

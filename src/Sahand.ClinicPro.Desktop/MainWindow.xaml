@@ -1,4 +1,4 @@
-﻿<Window x:Class="Sahand.ClinicPro.Desktop.MainWindow"
+<Window x:Class="Sahand.ClinicPro.Desktop.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -90,6 +90,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:AdminViewModel}">
             <views:AdminView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AdminHubViewModel}">
+            <views:AdminHubView />
         </DataTemplate>
         <!-- چرخه بیست‌وسوم (گزارش شانزدهم مالک): «گزینه پرسنل صفحهٔ تنظیمات را باز
              می‌کند... پرسنل باید یک صفحه جدا باشد» — قالب پیش‌تر روی AdminView بود؛
