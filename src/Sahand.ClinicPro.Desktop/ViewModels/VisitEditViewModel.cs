@@ -860,8 +860,8 @@ public partial class VisitEditViewModel : ObservableObject
             }
 
             SaveStateText = complete
-                ? $"✅ تکمیل شد — {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(System.IranClock.Now)}"
-                : $"💾 ذخیره خودکار — {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(System.IranClock.Now)}";
+                ? $"✅ تکمیل شد — {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(IranClock.Now)}"
+                : $"💾 ذخیره خودکار — {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(IranClock.Now)}";
             if (!silent && !complete)
                 _snackbar.Success("ویزیت ذخیره شد");
             return true;

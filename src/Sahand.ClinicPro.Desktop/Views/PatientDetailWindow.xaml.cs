@@ -61,7 +61,7 @@ public partial class PatientDetailWindow : Window
             Margin = new System.Windows.Thickness(0, 0, 0, 2),
         });
         doc.Blocks.Add(new Paragraph(new Run(
-            $"تاریخ چاپ: {PersianDateHelper.ToShamsiFa(System.IranClock.Now)}"))
+            $"تاریخ چاپ: {PersianDateHelper.ToShamsiFa(IranClock.Now)}"))
         {
             FontSize = 10.5,
             Foreground = System.Windows.Media.Brushes.Gray,
