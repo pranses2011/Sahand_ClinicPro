@@ -396,7 +396,7 @@ public partial class App : System.Windows.Application
                 DataContext = vm,
                 Language = XmlLanguage.GetLanguage("fa-IR"),
                 Background = new SolidColorBrush(Color.FromRgb(0xEE, 0xF3, 0xF7)),
-                FontFamily = new FontFamily("Vazirmatn")
+                FontFamily = new FontFamily("Tahoma")
             };
             var window = new Window
             {
@@ -413,6 +413,7 @@ public partial class App : System.Windows.Application
             window.Show();
             await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
             await Task.Delay(700);
+            window.Content = null;
             view.Measure(new Size(1560, 920));
             view.Arrange(new Rect(0, 0, 1560, 920));
             view.UpdateLayout();
