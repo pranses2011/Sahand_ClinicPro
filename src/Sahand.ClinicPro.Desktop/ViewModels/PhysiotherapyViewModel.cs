@@ -45,12 +45,23 @@ public partial class PhysioAssessmentRow : ObservableObject
     /// <summary>متن درصد بهبود</summary>
     public string ImprovementText => $"{Math.Round(Improvement)}٪";
     /// <summary>پهنای میلهٔ شروع (پیکسل، از ۲۰۰)</summary>
-    public double BaseBar => Math.Min(100, BaseValue / Max * 100);
+    public double BaseBar => Math.Min(200, BaseValue / Max * 200);
     /// <summary>پهنای میلهٔ امروز (پیکسل، از ۲۰۰)</summary>
-    public double NowBar => Math.Min(100, NowValue / Max * 100);
+    public double NowBar => Math.Min(200, NowValue / Max * 200);
 
     partial void OnBaseValueChanged(double value) { OnPropertyChanged(nameof(Improvement)); OnPropertyChanged(nameof(ImprovementText)); OnPropertyChanged(nameof(BaseBar)); }
     partial void OnNowValueChanged(double value) { OnPropertyChanged(nameof(Improvement)); OnPropertyChanged(nameof(ImprovementText)); OnPropertyChanged(nameof(NowBar)); }
+}
+
+/// <summary>یک میلهٔ دامنهٔ حرکت / قدرت در پنل ارزیابی</summary>
+public sealed class PhysioBar
+{
+    /// <summary>برچسب میله</summary>
+    public string Label { get; init; } = string.Empty;
+    /// <summary>پهنای میله (پیکسل از ۲۰۰)</summary>
+    public double BarPx { get; init; }
+    /// <summary>متن مقدار</summary>
+    public string Text { get; init; } = string.Empty;
 }
 
 /// <summary>پروتکل درمانی آماده</summary>
@@ -260,6 +271,21 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     /// <summary>متن میانگین بهبود</summary>
     public string TotalImprovementText => $"{Math.Round(TotalImprovement)}٪";
 
+    /// <summary>میله‌های دامنهٔ حرکت مفصل درگیر (از روی ارزیابی زنده)</summary>
+    public ObservableCollection<PhysioBar> RomBars { get; } = new();
+
+    /// <summary>تازه‌سازی میله‌های دامنهٔ حرکت از ردیف‌های ارزیابی</summary>
+    private void RefreshRomBars()
+    {
+        RomBars.Clear();
+        var flex = Assessments[2];
+        var slr = Assessments[3];
+        var plank = Assessments[4];
+        RomBars.Add(new() { Label = "فلکشن کمر", BarPx = Math.Min(200, flex.NowValue / 90 * 200), Text = $"{flex.NowValue}° از ۹۰°" });
+        RomBars.Add(new() { Label = "بلندکردن پای صاف (SLR)", BarPx = Math.Min(200, slr.NowValue / 90 * 200), Text = $"{slr.NowValue}° از ۹۰°" });
+        RomBars.Add(new() { Label = "استقامت عضلات مرکزی (پلانک)", BarPx = Math.Min(200, plank.NowValue / 60 * 200), Text = $"{plank.NowValue} ثانیه از ۶۰" });
+    }
+
     /// <summary>تمرین خانگی بیمار</summary>
     [ObservableProperty] private string? _homeProgram;
     /// <summary>اهداف عملکردی ICF</summary>
@@ -312,7 +338,8 @@ public partial class PhysiotherapyViewModel : ViewModelBase
         _api = api;
         _snackbar = snackbar;
         foreach (var row in Assessments)
-            row.PropertyChanged += (_, _) => { OnPropertyChanged(nameof(TotalImprovement)); OnPropertyChanged(nameof(TotalImprovementText)); };
+            row.PropertyChanged += (_, _) => { OnPropertyChanged(nameof(TotalImprovement)); OnPropertyChanged(nameof(TotalImprovementText)); RefreshRomBars(); };
+        RefreshRomBars();
         foreach (var t in TechniqueItems)
             t.PropertyChanged += (_, _) => OnPropertyChanged(nameof(TotalDuration));
         foreach (var f in RedFlags)
