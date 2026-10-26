@@ -543,7 +543,9 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border BorderBrush="#DCE8E3" BorderThickness="1" CornerRadius="10" Padding="10,7" Margin="0,0,0,6" Background="#FBFDFC">
-                                                <CheckBox Content="{Binding Text}" IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}" TextBlock.TextWrapping="Wrap" />
+                                                <CheckBox IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}">
+                                                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+                                                </CheckBox>
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
