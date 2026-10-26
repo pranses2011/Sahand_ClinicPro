@@ -49,6 +49,7 @@
     <Grid Margin="16,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -59,47 +60,49 @@
             <TextBlock Text="— صف کار، نمایشگر PACS و گزارش‌نویسی یکپارچه" FontSize="12" Opacity="0.65" Margin="8,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
 
-        <TabControl Grid.Row="1">
+                        <!-- کارت‌های آماری = فیلتر صف -->
+                        <!-- کارت‌های آماری بالای تب‌ها — مطابق طرح تأییدی: همیشه دیده می‌شوند و فیلتر صف‌اند -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+            <Button Style="{StaticResource StatCard}" BorderBrush="#90CAF9" BorderThickness="2" Background="White" Command="{Binding SetWorkFilterCommand}" CommandParameter="all">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding TotalToday, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="22" FontWeight="ExtraBold" Foreground="#1565C0" HorizontalAlignment="Center" />
+                    <TextBlock Text="درخواست امروز" FontSize="11" Opacity="0.7" />
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource StatCard}" BorderBrush="#FFCC80" BorderThickness="2" Background="White" Command="{Binding SetWorkFilterCommand}" CommandParameter="wait">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding WaitingCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="22" FontWeight="ExtraBold" Foreground="#E65100" HorizontalAlignment="Center" />
+                    <TextBlock Text="در انتظار انجام" FontSize="11" Opacity="0.7" />
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource StatCard}" BorderBrush="#CE93D8" BorderThickness="2" Background="White" Command="{Binding SetWorkFilterCommand}" CommandParameter="rep">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding UnreportedCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="22" FontWeight="ExtraBold" Foreground="#6A1B9A" HorizontalAlignment="Center" />
+                    <TextBlock Text="انجام‌شده · گزارش‌نشده" FontSize="11" Opacity="0.7" />
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource StatCard}" BorderBrush="#EF9A9A" BorderThickness="2" Background="#FFF5F5" Command="{Binding SetWorkFilterCommand}" CommandParameter="stat">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding StatCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="22" FontWeight="ExtraBold" Foreground="#C62828" HorizontalAlignment="Center" />
+                    <TextBlock Text="اورژانسی (STAT)" FontSize="11" Opacity="0.7" />
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource StatCard}" BorderBrush="#A5D6A7" BorderThickness="2" Background="White" Command="{Binding SetWorkFilterCommand}" CommandParameter="done">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding ReportedCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="22" FontWeight="ExtraBold" Foreground="#2E7D32" HorizontalAlignment="Center" />
+                    <TextBlock Text="گزارش نهایی امروز" FontSize="11" Opacity="0.7" />
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding LoadImagingOrdersCommand}" Margin="8,0,0,0" VerticalAlignment="Center"
+                                    Style="{StaticResource MaterialDesignRaisedButton}" Content="🔄 تازه‌سازی صف" />
+                        </StackPanel>
+
+
+        <TabControl Grid.Row="2">
             <!-- ═══════════ ۱) صف کار امروز ═══════════ -->
             <TabItem Header="📋 صف کار امروز">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8">
                     <StackPanel>
-                        <!-- کارت‌های آماری = فیلتر صف -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <Button Style="{StaticResource StatCard}" Command="{Binding SetWorkFilterCommand}" CommandParameter="all">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="{Binding TotalToday, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="20" FontWeight="ExtraBold" HorizontalAlignment="Center" />
-                                    <TextBlock Text="درخواست امروز" FontSize="11" Opacity="0.7" />
-                                </StackPanel>
-                            </Button>
-                            <Button Style="{StaticResource StatCard}" Command="{Binding SetWorkFilterCommand}" CommandParameter="wait">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="{Binding WaitingCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="20" FontWeight="ExtraBold" HorizontalAlignment="Center" />
-                                    <TextBlock Text="در انتظار انجام" FontSize="11" Opacity="0.7" />
-                                </StackPanel>
-                            </Button>
-                            <Button Style="{StaticResource StatCard}" Command="{Binding SetWorkFilterCommand}" CommandParameter="rep">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="{Binding UnreportedCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="20" FontWeight="ExtraBold" HorizontalAlignment="Center" />
-                                    <TextBlock Text="انجام‌شده · گزارش‌نشده" FontSize="11" Opacity="0.7" />
-                                </StackPanel>
-                            </Button>
-                            <Button Style="{StaticResource StatCard}" Command="{Binding SetWorkFilterCommand}" CommandParameter="stat">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="{Binding StatCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="20" FontWeight="ExtraBold" Foreground="#C62828" HorizontalAlignment="Center" />
-                                    <TextBlock Text="اورژانسی (STAT)" FontSize="11" Opacity="0.7" />
-                                </StackPanel>
-                            </Button>
-                            <Button Style="{StaticResource StatCard}" Command="{Binding SetWorkFilterCommand}" CommandParameter="done">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="{Binding ReportedCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="20" FontWeight="ExtraBold" HorizontalAlignment="Center" />
-                                    <TextBlock Text="گزارش نهایی امروز" FontSize="11" Opacity="0.7" />
-                                </StackPanel>
-                            </Button>
-                            <Button Command="{Binding LoadImagingOrdersCommand}" Margin="8,0,0,0" VerticalAlignment="Center"
-                                    Style="{StaticResource MaterialDesignRaisedButton}" Content="🔄 تازه‌سازی صف" />
-                        </StackPanel>
-
                         <!-- جست‌وجو و فیلتر مدالیته -->
                         <Grid Margin="0,4,0,8">
                             <Grid.ColumnDefinitions>
@@ -123,49 +126,51 @@
                         <Border Style="{StaticResource Card}">
                             <StackPanel>
                                 <TextBlock Text="➕ درخواست تصویربرداری تازه" Style="{StaticResource SectionTitle}" />
+                                <!-- فرم فشردهٔ سه‌ستونه — مطابق طرح تأییدی: بیمار | نوع | ناحیه در یک ردیف -->
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="3*" />
-                                        <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="2*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox Grid.Column="0" Text="{Binding ImagingPatientSearch, UpdateSourceTrigger=PropertyChanged}"
-                                             materialDesign:HintAssist.Hint="🔍 بیمار (کد ملی / موبایل)">
-                                        <TextBox.InputBindings>
-                                            <KeyBinding Key="Enter" Command="{Binding SearchImagingPatientCommand}" />
-                                        </TextBox.InputBindings>
-                                    </TextBox>
-                                    <Button Grid.Column="1" Command="{Binding SearchImagingPatientCommand}" Margin="8,0"
-                                            Style="{StaticResource MaterialDesignRaisedButton}">
-                                        <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />
-                                    </Button>
-                                    <Border Grid.Column="2" Background="#E3F2FD" CornerRadius="8" Padding="10,5"
-                                            Visibility="{Binding ImagingPatient, Converter={StaticResource NullToVisibility}}">
-                                        <TextBlock Text="{Binding ImagingPatient.FullName, Mode=OneWay}" FontWeight="SemiBold" Foreground="#1F2937" />
-                                    </Border>
-                                </Grid>
-                                <Grid Margin="0,6,0,0">
-                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="10" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="10" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="12" />
-                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0">
+                                    <Grid Grid.Column="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" Text="{Binding ImagingPatientSearch, UpdateSourceTrigger=PropertyChanged}"
+                                                 materialDesign:HintAssist.Hint="🔍 بیمار (کد ملی / موبایل)">
+                                            <TextBox.InputBindings>
+                                                <KeyBinding Key="Enter" Command="{Binding SearchImagingPatientCommand}" />
+                                            </TextBox.InputBindings>
+                                        </TextBox>
+                                        <Button Grid.Column="1" Command="{Binding SearchImagingPatientCommand}" Margin="6,0,0,0"
+                                                Style="{StaticResource MaterialDesignRaisedButton}">
+                                            <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />
+                                        </Button>
+                                    </Grid>
+                                    <StackPanel Grid.Column="2">
                                         <TextBlock Text="نوع تصویربرداری" Style="{StaticResource FieldLabel}" />
                                         <ComboBox ItemsSource="{Binding ImagingTypes}" SelectedIndex="{Binding ImagingTypeIndex}" />
                                     </StackPanel>
-                                    <StackPanel Grid.Column="2">
+                                    <StackPanel Grid.Column="4">
                                         <TextBlock Text="ناحیهٔ بدن" Style="{StaticResource FieldLabel}" />
                                         <ComboBox ItemsSource="{Binding BodyRegions}" SelectedItem="{Binding ImagingRegion}" IsEditable="True" Text="{Binding ImagingRegion}" />
                                     </StackPanel>
-                                    <CheckBox Grid.Column="4" Content="فوری (STAT)" IsChecked="{Binding ImagingUrgent}" FontWeight="SemiBold" VerticalAlignment="Bottom" Margin="0,0,0,6" />
                                 </Grid>
+                                <Border Background="#E3F2FD" CornerRadius="8" Padding="10,5" Margin="0,6,0,0"
+                                        Visibility="{Binding ImagingPatient, Converter={StaticResource NullToVisibility}}">
+                                    <TextBlock Text="{Binding ImagingPatient.FullName, Mode=OneWay}" FontWeight="SemiBold" Foreground="#1F2937" />
+                                </Border>
                                 <TextBlock Text="اطلاعات بالینی" Style="{StaticResource FieldLabel}" />
                                 <TextBox Text="{Binding ImagingClinicalInfo, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" Height="52" />
-                                <Button Command="{Binding SaveImagingOrderCommand}" Margin="0,10,0,0" HorizontalAlignment="Left"
-                                        Style="{StaticResource MaterialDesignRaisedButton}" Content="✅ ثبت درخواست" />
+                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                    <CheckBox Content="فوری (STAT)" IsChecked="{Binding ImagingUrgent}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <Button Command="{Binding SaveImagingOrderCommand}" Margin="12,0,0,0"
+                                            Style="{StaticResource MaterialDesignRaisedButton}" Content="✅ ثبت درخواست" />
+                                </StackPanel>
                             </StackPanel>
                         </Border>
 
