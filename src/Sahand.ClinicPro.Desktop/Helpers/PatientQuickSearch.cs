@@ -42,7 +42,7 @@ public static class PatientQuickSearch
         }
 
         var patient = new QuickPatient(p.Id, $"{p.FirstName} {p.LastName}", p.NationalCode, p.Mobile,
-            p.InsuranceName, p.Allergies, null);
+            p.InsuranceName, p.Allergies, null, null, p.Gender);
         snackbar.Success($"بیمار: {p.FirstName} {p.LastName}");
         return patient;
     }
