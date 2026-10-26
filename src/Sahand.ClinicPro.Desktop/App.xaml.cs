@@ -391,7 +391,13 @@ public partial class App : System.Windows.Application
 
             Thread.CurrentThread.CurrentCulture = new CultureInfo("fa-IR");
             Thread.CurrentThread.CurrentUICulture = new CultureInfo("fa-IR");
-            var view = new ImagingView { DataContext = vm, Language = XmlLanguage.GetLanguage("fa-IR") };
+            var view = new ImagingView
+            {
+                DataContext = vm,
+                Language = XmlLanguage.GetLanguage("fa-IR"),
+                Background = new SolidColorBrush(Color.FromRgb(0xEE, 0xF3, 0xF7)),
+                FontFamily = new FontFamily("Vazirmatn")
+            };
             var window = new Window
             {
                 Background = new SolidColorBrush(Color.FromRgb(0xEE, 0xF3, 0xF7)),
@@ -410,7 +416,6 @@ public partial class App : System.Windows.Application
             view.Measure(new Size(1560, 920));
             view.Arrange(new Rect(0, 0, 1560, 920));
             view.UpdateLayout();
-            await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
             var width = 1560;
             var height = 920;
             var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
