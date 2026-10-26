@@ -265,6 +265,7 @@ public class BackupManager
                 var currentFiles = new List<(string Name, string Physical, string Type)>();
                 using (var filesCmd = connection.CreateCommand())
                 {
+                    filesCmd.CommandTimeout = 0; // بدون مهلت — دیتابیس‌های بزرگ
                     filesCmd.CommandText =
                         "SELECT name, physical_name, CAST(type AS int) FROM sys.database_files ORDER BY file_id";
                     using var filesReader = await filesCmd.ExecuteReaderAsync(ct);
@@ -276,6 +277,7 @@ public class BackupManager
                 var backupFiles = new List<(string Logical, string Type)>();
                 using (var listCmd = connection.CreateCommand())
                 {
+                    listCmd.CommandTimeout = 0; // بدون مهلت — خواندن BAK بزرگ
                     listCmd.CommandText = "RESTORE FILELISTONLY FROM DISK = @path";
                     var listParam = listCmd.CreateParameter();
                     listParam.ParameterName = "@path";
@@ -307,23 +309,34 @@ public class BackupManager
                 }
                 var moveSql = moveClauses.Count == 0 ? "" : ", " + string.Join(", ", moveClauses);
 
-                // تک‌کاربر + قطع اتصال‌های دیگر — الزام بازیابی با REPLACE
-                using var singleUser = connection.CreateCommand();
-                singleUser.CommandText =
-                    "USE master; ALTER DATABASE [" + databaseName.Replace("]", "]]") +
-                    "] SET SINGLE_USER WITH ROLLBACK IMMEDIATE";
-                await singleUser.ExecuteNonQueryAsync(ct);
+                // ═══ بازیابی از اتصال اختصاصی master (مقاوم‌سازی بازیابی) ═══
+                // پیش‌تر SINGLE_USER/RESTORE روی همان اتصال EF به دیتابیس مقصد
+                // اجرا می‌شد؛ ROLLBACK IMMEDIATE اتصال‌های استخر EF را می‌کشد و
+                // روی دیتابیس‌های بزرگ هم مهلت پیش‌فرض ۳۰ ثانیهٔ فرمان، بازیابی
+                // را نیمه‌کاره قطع می‌کرد («Execution Timeout Expired»).
+                // اکنون: اتصال جدا به master + مهلت نامحدود برای هر سه فرمان.
+                var masterBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(
+                    connection.ConnectionString) { InitialCatalog = "master" };
+                await using var masterConnection = new Microsoft.Data.SqlClient.SqlConnection(
+                    masterBuilder.ConnectionString);
+                await masterConnection.OpenAsync(ct);
+
+                await using (var singleUser = new Microsoft.Data.SqlClient.SqlCommand(
+                    "ALTER DATABASE [" + databaseName.Replace("]", "]]") +
+                    "] SET SINGLE_USER WITH ROLLBACK IMMEDIATE", masterConnection))
+                {
+                    singleUser.CommandTimeout = 0;
+                    await singleUser.ExecuteNonQueryAsync(ct);
+                }
 
                 try
                 {
-                    using var restore = connection.CreateCommand();
-                    restore.CommandText =
-                        "USE master; RESTORE DATABASE [" + databaseName.Replace("]", "]]") + "] " +
-                        "FROM DISK = @path WITH REPLACE, RECOVERY" + moveSql + ", STATS = 25";
-                    var param = restore.CreateParameter();
-                    param.ParameterName = "@path";
-                    param.Value = bakPath;
-                    restore.Parameters.Add(param);
+                    await using var restore = new Microsoft.Data.SqlClient.SqlCommand(
+                        "RESTORE DATABASE [" + databaseName.Replace("]", "]]") + "] " +
+                        "FROM DISK = @path WITH REPLACE, RECOVERY" + moveSql + ", STATS = 25",
+                        masterConnection);
+                    restore.CommandTimeout = 0; // بازیابی دیتابیس بزرگ نباید با مهلت ۳۰ ثانیه بمیرد
+                    restore.Parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@path", bakPath));
                     await restore.ExecuteNonQueryAsync(ct);
                 }
                 finally
@@ -331,10 +344,10 @@ public class BackupManager
                     // بازگرداندن دسترسی چندکاربر — حتی پس از شکست بازیابی
                     try
                     {
-                        using var multiUser = connection.CreateCommand();
-                        multiUser.CommandText =
-                            "USE master; ALTER DATABASE [" + databaseName.Replace("]", "]]") +
-                            "] SET MULTI_USER";
+                        await using var multiUser = new Microsoft.Data.SqlClient.SqlCommand(
+                            "ALTER DATABASE [" + databaseName.Replace("]", "]]") +
+                            "] SET MULTI_USER", masterConnection);
+                        multiUser.CommandTimeout = 0;
                         await multiUser.ExecuteNonQueryAsync(ct);
                     }
                     catch
@@ -343,6 +356,10 @@ public class BackupManager
                         // این تنظیم ممکن است شکست بخورد — علت اصلی در پیام است
                     }
                 }
+
+                // استخر اتصال‌های EF به دیتابیس پیش از بازیابی وصل بوده‌اند؛ پاک
+                // شدنشان وادار می‌کند درخواست‌های بعدی روی دیتابیس تازه‌وصل شوند
+                Microsoft.Data.SqlClient.SqlConnection.ClearAllPools();
             }
             finally
             {
