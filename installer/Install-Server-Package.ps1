@@ -153,7 +153,7 @@ try {
         throw ("اعمال خودکار ساختار دیتابیس شکست خورد (کد $LASTEXITCODE). " +
                "علت دقیق در خطاهای بالا و فایل‌های C:\SahandClinicPro\Server\Logs آمده است. " +
                "اگر خطا درباره «MS_Description»، «Invalid column name» یا «migration» بود، مشکل از " +
-               "رشته اتصال یا مجوز CREATE DATABASE نیست؛ بستهٔ سرور v2.23.0 یا بالاتر را نصب کنید.")
+               "رشته اتصال یا مجوز CREATE DATABASE نیست؛ آخرین بستهٔ سرور (v2.28.22) را نصب کنید.")
     }
 }
 finally { Pop-Location }
