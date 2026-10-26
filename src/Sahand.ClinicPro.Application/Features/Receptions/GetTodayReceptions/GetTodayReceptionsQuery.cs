@@ -29,7 +29,7 @@ public class GetTodayReceptionsQueryHandler
     public async Task<Result<List<ReceptionListDto>>> Handle(GetTodayReceptionsQuery request,
         CancellationToken cancellationToken)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(PersianDateHelper.IranNow());
 
         // ═══ چرخه سی‌ویکم (گزارش مالک) — جمع مالی هر پذیرش ═══
         // «هیچ مبلغی در هیچ‌کجای برنامه نمایش داده نمیشود» — فاکتورهای صادرشدهٔ

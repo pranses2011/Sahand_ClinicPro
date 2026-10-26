@@ -1,4 +1,4 @@
-﻿using Riok.Mapperly.Abstractions;
+using Riok.Mapperly.Abstractions;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Application.DTOs.Patients;
 using Sahand.ClinicPro.Domain.Entities.People;
@@ -45,6 +45,8 @@ public partial class PatientMapper
     [MapperIgnoreTarget(nameof(Patient.RegistrationDate))]
     [MapperIgnoreTarget(nameof(Patient.LastVisitDate))]
     [MapperIgnoreTarget(nameof(Patient.InsuranceCompany))]
+    [MapperIgnoreTarget(nameof(Patient.IsUnidentified))]
+    [MapperIgnoreTarget(nameof(Patient.TemporaryCode))]
     [MapperIgnoreTarget(nameof(Patient.SupplementaryInsurance))]
     [MapperIgnoreTarget(nameof(Patient.Appointments))]
     [MapperIgnoreTarget(nameof(Patient.Receptions))]

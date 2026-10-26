@@ -1,4 +1,4 @@
-﻿using Sahand.ClinicPro.Application.Common.Mappings;
+using Sahand.ClinicPro.Application.Common.Mappings;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.Common.Models;
@@ -45,6 +45,7 @@ public class GetAllPatientsQueryHandler : IRequestHandler<GetAllPatientsQuery, R
                 p.LastName.Contains(term) ||
                 p.NationalCode.Contains(term) ||
                 p.Mobile.Contains(term) ||
+                (p.TemporaryCode != null && p.TemporaryCode.Contains(term)) ||
                 p.MedicalRecordNo.Contains(term));
         }
 

@@ -1,4 +1,4 @@
-﻿using Sahand.ClinicPro.Domain.Enums;
+using Sahand.ClinicPro.Domain.Enums;
 
 namespace Sahand.ClinicPro.Domain.Entities.People;
 
@@ -14,8 +14,8 @@ public class Patient : AuditableEntity, ISoftDeletable
     /// <summary>شماره پرونده پزشکی - تولید خودکار با فرمت MRN-XXXXXX</summary>
     public string MedicalRecordNo { get; set; } = null!;
 
-    /// <summary>کد ملی ۱۰ رقمی - یکتا و با الگوریتم رقم کنترلی اعتبارسنجی می‌شود</summary>
-    public string NationalCode { get; set; } = null!;
+    /// <summary>کد ملی ۱۰ رقمی - یکتا و با الگوریتم رقم کنترلی اعتبارسنجی می‌شود؛ برای بیمار ناشناس تهی است</summary>
+    public string? NationalCode { get; set; }
 
     /// <summary>نام بیمار - حداکثر ۵۰ کاراکتر</summary>
     public string FirstName { get; set; } = null!;
@@ -132,6 +132,12 @@ public class Patient : AuditableEntity, ISoftDeletable
     /// تهی = بدون برچسب. جستجو/فیلتر فهرست بر همین ستون می‌شود.
     /// </summary>
     public string? Tags { get; set; }
+
+    /// <summary>بیمار ناشناس (اورژانسی) — پروندهٔ موقت بدون کد ملی تا زمان تکمیل هویت</summary>
+    public bool IsUnidentified { get; set; }
+
+    /// <summary>کد موقت یکتای بیمار ناشناس — فرمت UNK-14050518-003؛ پس از تکمیل هویت برای سوابق نگه داشته می‌شود</summary>
+    public string? TemporaryCode { get; set; }
 
     /// <summary>شرکت بیمه اصلی بیمار</summary>
     public InsuranceCompany? InsuranceCompany { get; set; }

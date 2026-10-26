@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
@@ -44,7 +45,7 @@ public class UpdateReceptionStatusCommandHandler
         // محاسبه زمان انتظار و ساعت خروج هنگام ترخیص
         if (request.Status == ReceptionStatus.Discharged)
         {
-            reception.ExitTime = DateTime.UtcNow;
+            reception.ExitTime = PersianDateHelper.IranNow();
             if (reception.EnterTime.HasValue)
             {
                 reception.WaitingTime = (int)(reception.ExitTime.Value - reception.EnterTime.Value).TotalMinutes;

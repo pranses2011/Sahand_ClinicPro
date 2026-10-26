@@ -1,4 +1,4 @@
-﻿using Sahand.ClinicPro.Domain.Enums;
+using Sahand.ClinicPro.Domain.Enums;
 
 namespace Sahand.ClinicPro.Application.DTOs.Patients;
 
@@ -49,6 +49,12 @@ public class PatientListDto
 
     /// <summary>برچسب‌های بیمار (CSV) — چرخهٔ ۶۹ (فاز ۳ / F-18): چیپ‌های رنگی در فهرست/پرونده</summary>
     public string? Tags { get; set; }
+
+    /// <summary>بیمار ناشناس (اورژانسی) — پروندهٔ موقت بدون کد ملی</summary>
+    public bool IsUnidentified { get; set; }
+
+    /// <summary>کد موقت یکتای بیمار ناشناس — UNK-14050518-003</summary>
+    public string? TemporaryCode { get; set; }
 }
 
 /// <summary>
@@ -151,4 +157,65 @@ public class PatientDetailDto
 
     /// <summary>برچسب‌های بیمار (CSV مثل «VIP، دیابت») — چرخهٔ ۶۹ (فاز ۳ / F-18)</summary>
     public string? Tags { get; set; }
+
+    /// <summary>بیمار ناشناس (اورژانسی) — پروندهٔ موقت بدون کد ملی</summary>
+    public bool IsUnidentified { get; set; }
+
+    /// <summary>کد موقت یکتای بیمار ناشناس — UNK-14050518-003</summary>
+    public string? TemporaryCode { get; set; }
+}
+
+/// <summary>درخواست ساخت پروندهٔ موقت بیمار ناشناس — فقط جنسیت و سن تقریبی اختیاری</summary>
+public class CreateUnidentifiedPatientDto
+{
+    /// <summary>جنسیت: ۱=مرد، ۲=زن</summary>
+    public byte Gender { get; set; } = 1;
+
+    /// <summary>سن تقریبی (اختیاری) — برای برآورد تاریخ تولد</summary>
+    public int? ApproximateAge { get; set; }
+}
+
+/// <summary>درخواست تکمیل هویت بیمار ناشناس با مشخصات واقعی</summary>
+public class CompletePatientIdentityDto
+{
+    /// <summary>نام</summary>
+    public string FirstName { get; set; } = string.Empty;
+
+    /// <summary>نام خانوادگی</summary>
+    public string LastName { get; set; } = string.Empty;
+
+    /// <summary>کد ملی واقعی — با رقم کنترلی اعتبارسنجی می‌شود</summary>
+    public string NationalCode { get; set; } = string.Empty;
+
+    /// <summary>موبایل — الگوی 09XXXXXXXXX</summary>
+    public string Mobile { get; set; } = string.Empty;
+
+    /// <summary>جنسیت: ۱=مرد، ۲=زن</summary>
+    public byte Gender { get; set; } = 1;
+}
+
+/// <summary>درخواست ادغام پروندهٔ موقت در پروندهٔ اصلی موجود</summary>
+public class MergePatientsDto
+{
+    /// <summary>شناسهٔ پروندهٔ موقت (ناشناس) — منبع</summary>
+    public long SourcePatientId { get; set; }
+
+    /// <summary>شناسهٔ پروندهٔ اصلی موجود — مقصد</summary>
+    public long TargetPatientId { get; set; }
+}
+
+/// <summary>نتیجهٔ تکمیل هویت — Completed یا Duplicate (پروندهٔ اصلی از قبل وجود دارد)</summary>
+public class CompleteIdentityResultDto
+{
+    /// <summary>وضعیت: Completed / Duplicate</summary>
+    public string Status { get; set; } = string.Empty;
+
+    /// <summary>شناسهٔ بیمار</summary>
+    public long PatientId { get; set; }
+
+    /// <summary>در وضعیت Duplicate: شناسهٔ پروندهٔ اصلی موجود با همان کد ملی</summary>
+    public long? DuplicatePatientId { get; set; }
+
+    /// <summary>در وضعیت Duplicate: نام پروندهٔ اصلی موجود</summary>
+    public string? DuplicatePatientName { get; set; }
 }

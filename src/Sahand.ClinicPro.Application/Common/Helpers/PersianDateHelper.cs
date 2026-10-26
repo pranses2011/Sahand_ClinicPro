@@ -1,4 +1,4 @@
-﻿namespace Sahand.ClinicPro.Application.Common.Helpers;
+namespace Sahand.ClinicPro.Application.Common.Helpers;
 
 /// <summary>
 /// راهنمای تقویم شمسی جلالی — تبدیل دوطرفه میلادی و شمسی با الگوریتم استاندارد
@@ -39,6 +39,14 @@ public static class PersianDateHelper
     /// </summary>
     public static string ToShamsiFa(DateTime gregorianDate)
         => ToPersianDigits(ToShamsi(gregorianDate));
+
+    /// <summary>
+    /// همین حالا به وقت رسمی ایران — برای مُهرهای زمانی نمایشی کاربر (مثل ساعت
+    /// پذیرش) که باید عین ساعت دیواری درمانگاه ذخیره شوند، نه UTC. ذخیرهٔ UTC
+    /// در پذیرش باعث می‌شد ساعت پذیرش ۳:۳۰ عقب‌تر (GMT) دیده شود (گزارش مالک).
+    /// </summary>
+    public static DateTime IranNow()
+        => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Iran Standard Time");
 
     /// <summary>
     /// ساعت لحظه‌ای با ارقام فارسی — فرمت ۱۴:۳۵:۰۵ یا ۱۴:۳۵ (ثانیه‌دار وقتی ثانیه صفر نباشد).

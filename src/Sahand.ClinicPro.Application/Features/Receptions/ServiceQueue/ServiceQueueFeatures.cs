@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
@@ -68,7 +69,7 @@ public class GetServiceQueueQueryHandler : IRequestHandler<GetServiceQueueQuery,
     public async Task<Result<ServiceQueueDto>> Handle(GetServiceQueueQuery request,
         CancellationToken cancellationToken)
     {
-        var today = DateTime.UtcNow.Date;
+        var today = PersianDateHelper.IranNow().Date;
         var tomorrow = today.AddDays(1);
 
         // چرخهٔ ۷۸: پیش‌پردازش با Select سمت SQL — بدون dereference ناوبری
@@ -105,7 +106,7 @@ public class GetServiceQueueQueryHandler : IRequestHandler<GetServiceQueueQuery,
                 r.Id, r.PatientId, r.PatientName.Trim(), r.Mobile,
                 (int)(r.Id % 100), r.ServiceName, r.RoomName,
                 r.ReceptionDate.ToString("HH:mm"),
-                (int)(DateTime.UtcNow - r.ReceptionDate).TotalMinutes,
+                (int)(PersianDateHelper.IranNow() - r.ReceptionDate).TotalMinutes,
                 r.Notes);
 
             switch (r.Status)

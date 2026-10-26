@@ -208,6 +208,13 @@
                                            FontWeight="SemiBold"
                                            Margin="7,0,0,0"
                                            VerticalAlignment="Center" />
+                                <Border Background="#FFF3E0" CornerRadius="8" Padding="7,1" Margin="8,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding IsUnidentified, Converter={StaticResource BoolToVisibility}}">
+                                    <TextBlock FontSize="10.5" Foreground="#E65100">
+                                        <Run Text="هویت نامشخص — " /><Run Text="{Binding TemporaryCode, Mode=OneWay}" />
+                                    </TextBlock>
+                                </Border>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

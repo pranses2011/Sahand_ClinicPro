@@ -1,4 +1,4 @@
-﻿using Sahand.ClinicPro.Application.Common.Mappings;
+using Sahand.ClinicPro.Application.Common.Mappings;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.DTOs.Patients;
@@ -50,6 +50,7 @@ public class SearchPatientsQueryHandler : IRequestHandler<SearchPatientsQuery, R
                         || p.LastName.Contains(term)
                         || p.NationalCode.Contains(term)
                         || p.Mobile.Contains(term)
+                        || (p.TemporaryCode != null && p.TemporaryCode.Contains(term))
                         || p.MedicalRecordNo.Contains(term)
                         // مقایسهٔ فشردهٔ نام — چرخه بیست‌ویکم (فاصله/نیم‌فاصله نادیده)
                         || p.FirstName.Replace(" ", "").Replace("\u200C", "").Replace("\u200F", "").Replace("\u00A0", "").Contains(compactTerm)

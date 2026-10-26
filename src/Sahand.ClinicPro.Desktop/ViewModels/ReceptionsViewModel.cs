@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -174,7 +174,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             WizardStep = 2;
             return;
         }
-        if (step >= 3 && ReceptionModeIndex == 1 && SelectedService is null)
+        if (step >= 3 && ReceptionModeIndex == 1 && SelectedServices.Count == 0)
         {
             _snackbar.Error("ابتدا خدمت درمانی را انتخاب کنید");
             WizardStep = 2;
@@ -269,9 +269,9 @@ public partial class ReceptionsViewModel : ViewModelBase
         }
         if (WizardStep == 2)
         {
-            if (ReceptionModeIndex == 1 && SelectedService is null)
+            if (ReceptionModeIndex == 1 && SelectedServices.Count == 0)
             {
-                _snackbar.Error("ابتدا خدمت درمانی را انتخاب کنید");
+                _snackbar.Error("ابتدا دست‌کم یک خدمت درمانی انتخاب کنید");
                 return;
             }
             if (ReceptionModeIndex == 0 && SelectedDoctor is null)
@@ -334,6 +334,129 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// بی‌درنگ در بخش هزینه اعمال می‌شود.
     /// </summary>
     partial void OnSelectedServiceChanged(ServiceOption? value) => RecalculateCost();
+
+    // ═══ پذیرش چندخدمتی (تأیید مالک) — بیماری که هم‌زمان چند خدمت درمانی
+    // دارد (مثلاً تزریق عضلانی + تزریق وریدی + سرم‌تراپی) دیگر به چند پذیرش
+    // و چند قبض جدا نیاز ندارد: از کاتالوگ با جست‌وجو اضافه می‌کند، برای هر
+    // خدمت تعداد می‌گذارد و در پایان «یک» پذیرش، «یک» فاکتور و «یک» قبض دارد.
+
+    /// <summary>کاتالوگ خدماتِ پالایش‌شده با متن جست‌وجو</summary>
+    public ObservableCollection<ServiceOption> FilteredServices { get; } = new();
+
+    /// <summary>خدمات انتخاب‌شدهٔ این مراجعه (با تعداد هر خدمت)</summary>
+    public ObservableCollection<SelectedServiceLine> SelectedServices { get; } = new();
+
+    /// <summary>متن جست‌وجو در کاتالوگ خدمات</summary>
+    [ObservableProperty]
+    private string _serviceSearchText = string.Empty;
+
+    partial void OnServiceSearchTextChanged(string value) => RefreshFilteredServices();
+
+    /// <summary>خلاصهٔ خدمات انتخاب‌شده — تعداد کل و جمع تعرفه</summary>
+    public string SelectedServicesSummaryText => SelectedServices.Count == 0
+        ? "هنوز خدمتی انتخاب نشده است"
+        : $"{FaNum(SelectedServices.Sum(l => l.Quantity))} خدمت انتخاب شده — جمع تعرفه {Money.Format(SelectedServices.Sum(l => l.Service.Price * l.Quantity))}";
+
+    /// <summary>بازسازی فهرست کاتالوگ بر اساس متن جست‌وجو</summary>
+    private void RefreshFilteredServices()
+    {
+        FilteredServices.Clear();
+        var q = ServiceSearchText?.Trim();
+        foreach (var svc in Services)
+            if (string.IsNullOrEmpty(q) || svc.Name.Contains(q))
+                FilteredServices.Add(svc);
+    }
+
+    /// <summary>افزودن خدمت از کاتالوگ — افزودن دوبارهٔ همان خدمت، تعدادش را زیاد می‌کند</summary>
+    [RelayCommand]
+    private void AddService(ServiceOption? service)
+    {
+        if (service is null) return;
+        var line = SelectedServices.FirstOrDefault(l => l.Service.Id == service.Id);
+        if (line is not null) line.Quantity++;
+        else
+        {
+            line = new SelectedServiceLine(service);
+            line.Changed += OnSelectedServiceLineChanged;
+            SelectedServices.Add(line);
+        }
+        SyncPrimaryService();
+        RecalculateCost();
+    }
+
+    /// <summary>حذف یک ردیف خدمت انتخاب‌شده</summary>
+    [RelayCommand]
+    private void RemoveServiceLine(SelectedServiceLine? line)
+    {
+        if (line is null) return;
+        line.Changed -= OnSelectedServiceLineChanged;
+        SelectedServices.Remove(line);
+        SyncPrimaryService();
+        RecalculateCost();
+    }
+
+    /// <summary>زیادکردن تعداد یک خدمت</summary>
+    [RelayCommand]
+    private void IncreaseLineQty(SelectedServiceLine? line) { if (line is not null) line.Quantity++; }
+
+    /// <summary>کم‌کردن تعداد یک خدمت (کمینه ۱)</summary>
+    [RelayCommand]
+    private void DecreaseLineQty(SelectedServiceLine? line) { if (line is not null && line.Quantity > 1) line.Quantity--; }
+
+    private void OnSelectedServiceLineChanged() => RecalculateCost();
+
+    /// <summary>خدمت اصلی پذیرش = نخستین خدمت انتخاب‌شده (برای شناسهٔ خدمت پذیرش و صف)</summary>
+    private void SyncPrimaryService() => SelectedService = SelectedServices.FirstOrDefault()?.Service;
+
+    /// <summary>نام خلاصهٔ خدمات برای پذیرش/فاکتور — مثل «تزریق عضلانی + تزریق وریدی ×۲»</summary>
+    private string BuildServiceSummary() => string.Join(" + ",
+        SelectedServices.Select(l => l.Quantity > 1 ? $"{l.Service.Name} ×{FaNum(l.Quantity)}" : l.Service.Name));
+
+    /// <summary>ارقام لاتین ← فارسی برای نمایش</summary>
+    private static string FaNum(int n) => n.ToString()
+        .Replace("0", "۰").Replace("1", "۱").Replace("2", "۲").Replace("3", "۳").Replace("4", "۴")
+        .Replace("5", "۵").Replace("6", "۶").Replace("7", "۷").Replace("8", "۸").Replace("9", "۹");
+
+    /// <summary>یک ردیف خدمت انتخاب‌شده با تعداد</summary>
+    public partial class SelectedServiceLine : ObservableObject
+    {
+        /// <summary>رویداد تغییر تعداد/خدمت برای بازمحاسبهٔ هزینه</summary>
+        public event Action? Changed;
+
+        /// <summary>خدمت این ردیف</summary>
+        [ObservableProperty]
+        private ServiceOption _service;
+
+        /// <summary>تعداد این خدمت (مثلاً ۲ تزریق وریدی)</summary>
+        [ObservableProperty]
+        private int _quantity = 1;
+
+        public SelectedServiceLine(ServiceOption service) => _service = service;
+
+        partial void OnServiceChanged(ServiceOption value)
+        {
+            OnPropertyChanged(nameof(Name));
+            OnPropertyChanged(nameof(UnitPriceText));
+            OnPropertyChanged(nameof(LineTotalText));
+            Changed?.Invoke();
+        }
+
+        partial void OnQuantityChanged(int value)
+        {
+            if (value < 1) { Quantity = 1; return; }
+            OnPropertyChanged(nameof(LineTotalText));
+            Changed?.Invoke();
+        }
+
+        /// <summary>نام خدمت</summary>
+        public string Name => Service.Name;
+
+        /// <summary>قیمت واحد نمایشی</summary>
+        public string UnitPriceText => Money.Format(Service.Price);
+
+        /// <summary>جمع ردیف نمایشی</summary>
+        public string LineTotalText => Money.Format(Service.Price * Quantity);
+    }
 
     /// <summary>پرسنل فعال برای انتخاب انجام‌دهندهٔ خدمت</summary>
     public ObservableCollection<PerformerOption> Performers { get; } = new();
@@ -438,7 +561,11 @@ public partial class ReceptionsViewModel : ViewModelBase
 
     /// <summary>گزینهٔ خدمت تعرفه‌دار — چرخهٔ بیست‌وششم: سهم‌های تعرفه هم همراهش می‌آید</summary>
     public record ServiceOption(long Id, string Name, decimal Price,
-        decimal TariffInsuranceShare = 0m, decimal TariffPatientShare = 100m);
+        decimal TariffInsuranceShare = 0m, decimal TariffPatientShare = 100m)
+    {
+        /// <summary>قیمت نمایشی برای ردیف کاتالوگ</summary>
+        public string PriceText => Money.Format(Price);
+    }
 
     /// <summary>گزینهٔ پرسنل انجام‌دهنده</summary>
     public record PerformerOption(long Id, string FullName);
@@ -742,6 +869,50 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// دوربرداشته نمی‌شود؛ سرور خودش Contains روی نام/کدملی/موبایل/پرونده و
     /// مقایسهٔ فشردهٔ نیم‌فاصله انجام می‌دهد
     /// </summary>
+    /// <summary>جنسیت بیمار ناشناس — ۰=مرد، ۱=زن</summary>
+    [ObservableProperty] private int _unidentifiedGenderIndex;
+
+    /// <summary>سن تقریبی بیمار ناشناس (اختیاری)</summary>
+    [ObservableProperty] private string _unidentifiedAgeText = string.Empty;
+
+    /// <summary>
+    /// پذیرش فوری بیمار ناشناس (اورژانسی) — ساخت پروندهٔ موقت با کد یکتای
+    /// سیستمی بدون کد ملی؛ بیمار بلافاصله انتخاب می‌شود و تکمیل هویت
+    /// بعداً از پروندهٔ بیمار انجام می‌گردد
+    /// </summary>
+    [RelayCommand]
+    private async Task CreateUnidentifiedPatientAsync()
+    {
+        int? age = int.TryParse(UnidentifiedAgeText?.Trim(), out var a) ? a : null;
+        var response = await _api.PostAsync<UnidentifiedPatientEnvelope>("patients/unidentified",
+            new { gender = UnidentifiedGenderIndex + 1, approximateAge = age });
+        var dto = response?.Data;
+        if (dto is null)
+        {
+            _snackbar.Error(_api.LastError ?? "ساخت پروندهٔ موقت ناموفق بود");
+            return;
+        }
+        FoundPatient = new QuickPatient(dto.Id, "بیمار ناشناس", dto.TemporaryCode ?? string.Empty,
+            dto.Mobile ?? string.Empty, null, null, null, null, UnidentifiedGenderIndex + 1);
+        PatientResults = new ObservableCollection<QuickPatient>();
+        _snackbar.Success($"پروندهٔ موقت ساخته شد — کد موقت: {dto.TemporaryCode} (تکمیل هویت بعداً از پروندهٔ بیمار)");
+    }
+
+    /// <summary>پاکت پاسخ ساخت بیمار ناشناس</summary>
+    public sealed class UnidentifiedPatientEnvelope
+    {
+        public bool IsSuccess { get; set; }
+        public UnidentifiedPatientDto? Data { get; set; }
+    }
+
+    /// <summary>DTO بیمار ناشناس — منطبق بر PatientListDto سرور</summary>
+    public sealed class UnidentifiedPatientDto
+    {
+        public long Id { get; set; }
+        public string? TemporaryCode { get; set; }
+        public string? Mobile { get; set; }
+    }
+
     private async Task<List<QuickPatient>> FindPatientsAsync(string term)
     {
         var response = await _api.GetAsync<PatientFormViewModel.SearchResponse>(
@@ -749,8 +920,9 @@ public partial class ReceptionsViewModel : ViewModelBase
         if (response?.Data is null) return new List<QuickPatient>();
 
         return response.Data
-            .Select(p => new QuickPatient(p.Id, $"{p.FirstName} {p.LastName}", p.NationalCode, p.Mobile,
-                p.InsuranceName, p.Allergies, null, p.InsuranceCompanyId))
+            .Select(p => new QuickPatient(p.Id, $"{p.FirstName} {p.LastName}",
+                p.IsUnidentified && !string.IsNullOrWhiteSpace(p.TemporaryCode) ? p.TemporaryCode! : p.NationalCode,
+                p.Mobile, p.InsuranceName, p.Allergies, null, p.InsuranceCompanyId))
             .ToList();
     }
 
@@ -831,6 +1003,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         foreach (var s2 in services?.Data ?? new List<ServiceLookupDto>())
             Services.Add(new ServiceOption(s2.ServiceId, s2.ServiceName, s2.Price,
                 s2.InsuranceShare, s2.PatientShare));
+        RefreshFilteredServices();
 
         // پرسنل فعال برای انتخاب انجام‌دهنده — فقط یک بار لازم است
         if (Performers.Count == 0)
@@ -1094,13 +1267,22 @@ public partial class ReceptionsViewModel : ViewModelBase
         // موجود باشد دوباره انتخاب می‌شود تا قیمت‌ها بی‌درنگ درست بمانند.
         // (نمایهٔ صفر = آزاد → بیمهٔ تهی به سرور می‌رود)
         var companyId = GetEffectiveServiceInsuranceCompanyId(value);
-        var previousServiceName = SelectedService?.Name;
+        var previousLines = SelectedServices.Select(l => (l.Service.Id, l.Quantity)).ToList();
         _ = LoadServicesAndPerformersAsync(companyId).ContinueWith(_ =>
         {
-            if (previousServiceName is null) return;
-            var same = Services.FirstOrDefault(s => s.Name == previousServiceName);
-            if (same is not null)
-                System.Windows.Application.Current?.Dispatcher.BeginInvoke(() => SelectedService = same);
+            if (previousLines.Count == 0) return;
+            System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
+            {
+                foreach (var line in SelectedServices.ToList())
+                {
+                    var same = Services.FirstOrDefault(s => s.Id == line.Service.Id)
+                               ?? Services.FirstOrDefault(s => s.Name == line.Service.Name);
+                    if (same is not null) line.Service = same;
+                    else { line.Changed -= OnSelectedServiceLineChanged; SelectedServices.Remove(line); }
+                }
+                SyncPrimaryService();
+                RecalculateCost();
+            });
         });
     }
 
@@ -1211,9 +1393,12 @@ public partial class ReceptionsViewModel : ViewModelBase
             // ═══ حالت خدمت درمانی — تعرفهٔ خدمت منتخب ═══
             // قیمت = تعرفهٔ خدمت برای بیمهٔ منتخب؛ سهم‌ها از درصدهای تعرفهٔ همان
             // خدمت — مگر در حالت آزاد که کل مبلغ سهم بیمار است (۰٪ بیمه)
-            VisitFee = SelectedService?.Price ?? 0;
-            var insurancePercent = hasApplicableInsurance ? SelectedService?.TariffInsuranceShare ?? 0m : 0m;
-            InsuranceShare = Math.Round(VisitFee * insurancePercent / 100m);
+            // پذیرش چندخدمتی: جمع تعرفهٔ همهٔ ردیف‌ها (قیمت × تعداد) و سهم
+            // بیمهٔ هر ردیف با درصد تعرفهٔ خودش محاسبه می‌شود
+            VisitFee = SelectedServices.Sum(l => l.Service.Price * l.Quantity);
+            InsuranceShare = SelectedServices.Sum(l => Math.Round(
+                l.Service.Price * l.Quantity *
+                (hasApplicableInsurance ? l.Service.TariffInsuranceShare : 0m) / 100m));
             PatientShare = VisitFee - InsuranceShare;
         }
         else
@@ -1232,6 +1417,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         OnPropertyChanged(nameof(InsuranceShareDisplay));
         OnPropertyChanged(nameof(PatientShareDisplay));
         // چرخهٔ ۳۹ — سهم بیمار تغییر کرد ⇒ قابل پرداخت نهایی (با مصرفی‌ها) هم باید تازه شود
+        OnPropertyChanged(nameof(SelectedServicesSummaryText));
         OnPropertyChanged(nameof(PayableByPatient));
         OnPropertyChanged(nameof(PayableByPatientDisplay));
     }
@@ -1247,7 +1433,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         if (FoundPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return false; }
         if (ReceptionModeIndex == 1)
         {
-            if (SelectedService is null) { _snackbar.Error("ابتدا خدمت درمانی را انتخاب کنید"); return false; }
+            if (SelectedServices.Count == 0) { _snackbar.Error("ابتدا دست‌کم یک خدمت درمانی انتخاب کنید"); return false; }
         }
         else
         {
@@ -1321,7 +1507,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             notes = string.IsNullOrWhiteSpace(ReceptionNotes) ? null : ReceptionNotes.Trim(),
             // حالت خدمت درمانی — خدمت + انجام‌دهندهٔ اختیاری از پرسنل
             serviceId = isServiceMode ? SelectedService!.Id : (long?)null,
-            serviceName = isServiceMode ? SelectedService!.Name : null,
+            serviceName = isServiceMode ? BuildServiceSummary() : null,
             performedByEmployeeId = isServiceMode ? SelectedPerformer?.Id : (long?)null,
             // چرخهٔ ۳۹ — اتاق محل انجام خدمت؛ فقط پذیرش خدمتی (ویزیت پزشک: اتاق از
             // برنامهٔ کاری خود پزشک می‌آید و ارسال تهی معنای درست دارد)
@@ -1391,7 +1577,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             taxPercent = 0m,
             items = BuildInvoiceItems(isServiceMode, consumeResult),
             description = isServiceMode
-                ? $"پذیرش خدمت {SelectedService!.Name} — {FoundPatient.FullName}"
+                ? $"پذیرش خدمت {BuildServiceSummary()} — {FoundPatient.FullName}"
                 : $"پذیرش {FoundPatient.FullName}"
         });
         if (invoice?.Data is null || invoice.Data <= 0)
@@ -1464,7 +1650,8 @@ public partial class ReceptionsViewModel : ViewModelBase
                 // اقلام قبض — همان اقلام فاکتور (خدمت/ویزیت + لوازم مصرفی با قیمت بچ)
                 var lines = new List<ReceptionReceiptItem>();
                 if (isServiceMode)
-                    lines.Add(new ReceptionReceiptItem(SelectedService!.Name, 1m, SelectedService.Price));
+                    foreach (var line in SelectedServices)
+                        lines.Add(new ReceptionReceiptItem(line.Service.Name, line.Quantity, line.Service.Price));
                 else
                     lines.Add(new ReceptionReceiptItem($"ویزیت {SelectedDoctor!.Name}", 1m, VisitFee));
                 foreach (var consumed in consumeResult?.Items ?? new List<ConsumeItemResultDto>())
@@ -1484,7 +1671,7 @@ public partial class ReceptionsViewModel : ViewModelBase
                     DoctorName: isServiceMode
                         ? (SelectedPerformer?.FullName ?? "—")
                         : (SelectedDoctor?.Name ?? "—"),
-                    ServiceName: isServiceMode ? SelectedService?.Name : null,
+                    ServiceName: isServiceMode ? BuildServiceSummary() : null,
                     RoomName: SelectedRoom?.DisplayName,
                     InsuranceName: company?.Name ?? "آزاد (بدون بیمه)",
                     DateText: Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper
@@ -1528,7 +1715,9 @@ public partial class ReceptionsViewModel : ViewModelBase
         Inquiry = null;
         InsuranceIndex = 0;
         SelectedDoctor = null;
-        // چرخه ۲۴ — پاک‌سازی حالت خدمت
+        // چرخه ۲۴ — پاک‌سازی حالت خدمت (و خدمات انتخاب‌شدهٔ چندخدمتی)
+        SelectedServices.Clear();
+        ServiceSearchText = string.Empty;
         SelectedService = null;
         SelectedPerformer = null;
         // چرخهٔ ۳۹ — پاک‌سازی اتاق و اقلام مصرفی
@@ -1555,34 +1744,39 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// <param name="consumeResult">نتیجهٔ مصرف لوازم — تهی یعنی بدون مصرفی</param>
     private List<object> BuildInvoiceItems(bool isServiceMode, ConsumeResultDto? consumeResult)
     {
-        var items = new List<object>
+        var items = new List<object>();
+
+        // پذیرش چندخدمتی: هر خدمت انتخاب‌شده یک قلم فاکتور با تعداد خودش است
+        // تا یک فاکتور واحد برای کل مراجعه صادر شود (نه چند فاکتور جدا)
+        if (isServiceMode)
         {
-            // چرخه ۲۴ — قلم فاکتور: در حالت خدمتی، خودِ خدمت با قیمت تعرفه؛
-            // در حالت ویزیت، ویزیت پزشک (رفتار پیشین)
-            isServiceMode
-                ? new
+            foreach (var line in SelectedServices)
+                items.Add(new
                 {
-                    serviceId = (long?)SelectedService!.Id,
+                    serviceId = (long?)line.Service.Id,
                     doctorId = (long?)null,
                     performedById = SelectedPerformer?.Id,
                     medicationId = (long?)null,
-                    description = SelectedService.Name,
-                    quantity = 1m,
-                    unitPrice = SelectedService.Price,
+                    description = line.Service.Name,
+                    quantity = (decimal)line.Quantity,
+                    unitPrice = line.Service.Price,
                     discountPercent = 0m
-                }
-                : new
-                {
-                    serviceId = (long?)null,
-                    doctorId = (long?)SelectedDoctor!.Id,
-                    performedById = (long?)null,
-                    medicationId = (long?)null,
-                    description = $"ویزیت {SelectedDoctor!.Name}",
-                    quantity = 1m,
-                    unitPrice = VisitFee,
-                    discountPercent = 0m
-                }
-        };
+                });
+        }
+        else
+        {
+            items.Add(new
+            {
+                serviceId = (long?)null,
+                doctorId = (long?)SelectedDoctor!.Id,
+                performedById = (long?)null,
+                medicationId = (long?)null,
+                description = $"ویزیت {SelectedDoctor!.Name}",
+                quantity = 1m,
+                unitPrice = VisitFee,
+                discountPercent = 0m
+            });
+        }
 
         // چرخهٔ ۳۹ — اقلام مصرفی با قیمت واقعی برداشت از بچ‌ها؛ معاف از بیمه
         foreach (var consumed in consumeResult?.Items ?? new List<ConsumeItemResultDto>())

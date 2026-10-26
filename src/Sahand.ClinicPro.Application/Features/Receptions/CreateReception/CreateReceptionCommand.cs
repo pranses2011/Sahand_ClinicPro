@@ -94,7 +94,9 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
                 return Result<long>.Failure(Error.NotFound("اتاق", dto.RoomId.Value));
         }
 
-        var now = DateTime.UtcNow;
+        // ساعت پذیرش باید عین ساعت دیواری درمانگاه باشد (گزارش مالک: ساعت
+        // پذیرش GMT نشان داده می‌شد) — مُهر زمانی به وقت رسمی ایران ثبت می‌شود
+        var now = PersianDateHelper.IranNow();
         var reception = new Reception
         {
             PatientId = dto.PatientId,

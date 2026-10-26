@@ -140,6 +140,18 @@ public partial class EmployeeFormViewModel : FormViewModelBase
     /// <summary>فهرست سمت‌ها — از lookups/positions</summary>
     public ObservableCollection<LookupOption> Positions { get; } = new();
 
+    /// <summary>
+    /// نام‌های سمت‌ها (رشته‌ای، هم‌ترتیب با Positions) — کمبوباکس ویرایش‌پذیر به
+    /// این فهرست وصل می‌شود؛ وصل‌کردن مستقیم به اشیای LookupOption باعث می‌شد
+    /// WPF هنگام تایپِ مقدار تازه، متن را به شیء تبدیل کند و خطای
+    /// «Value could not be converted» بدهد (گزارش مالک). اندیس‌ها در هر دو
+    /// فهرست یکی است، پس حل شناسه با همان اندیس انتخابی انجام می‌شود.
+    /// </summary>
+    public ObservableCollection<string> PositionNames { get; } = new();
+
+    /// <summary>نام‌های دپارتمان‌ها (رشته‌ای، هم‌ترتیب با Departments)</summary>
+    public ObservableCollection<string> DepartmentNames { get; } = new();
+
     /// <summary>ایندکس دپارتمان انتخابی — -۱ یعنی هیچ</summary>
     [ObservableProperty]
     private int _departmentIndex = -1;
@@ -275,11 +287,17 @@ public partial class EmployeeFormViewModel : FormViewModelBase
     {
         var departments = await _api.GetAsync<LookupResponse>("lookups/departments");
         foreach (var d in departments?.Data ?? new List<LookupOption>())
+        {
             Departments.Add(d);
+            DepartmentNames.Add(d.Name);
+        }
 
         var positions = await _api.GetAsync<LookupResponse>("lookups/positions");
         foreach (var p in positions?.Data ?? new List<LookupOption>())
+        {
             Positions.Add(p);
+            PositionNames.Add(p.Name);
+        }
     }
 
     /// <summary>پاسخ فهرست مرجع — پاکت استاندارد ApiResponse</summary>

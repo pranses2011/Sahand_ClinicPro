@@ -30,6 +30,12 @@
 
         <!-- عنوان فرم -->
         <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <Border Background="#FFF3E0" CornerRadius="8" Padding="10,6" Margin="0,0,0,8"
+                    Visibility="{Binding IsUnidentified, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Foreground="#E65100" TextWrapping="Wrap">
+                    <Run Text="⚠ این پروندهٔ موقت بیمار ناشناس است — کد موقت: " FontWeight="SemiBold" /><Run Text="{Binding TemporaryCode, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" — با ذخیرهٔ این فرم (نام، کد ملی و موبایل واقعی) هویت بیمار تکمیل می‌شود؛ اگر کد ملی از قبل پرونده داشته باشد، ادغام سوابق پیشنهاد می‌شود." />
+                </TextBlock>
+            </Border>
             <StackPanel Orientation="Horizontal">
                 <materialDesign:PackIcon Kind="AccountPlus"
                                          Width="24" Height="24"
