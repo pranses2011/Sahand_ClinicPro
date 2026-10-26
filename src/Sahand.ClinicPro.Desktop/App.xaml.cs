@@ -2,6 +2,8 @@ using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Globalization;
+using System.Windows.Markup;
 using System.Windows.Threading;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -387,10 +389,12 @@ public partial class App : System.Windows.Application
             vm.WorkFilter = "wait";
             vm.WorkFilter = "all";
 
-            var view = new ImagingView { DataContext = vm };
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("fa-IR");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("fa-IR");
+            var view = new ImagingView { DataContext = vm, Language = XmlLanguage.GetLanguage("fa-IR") };
             var window = new Window
             {
-                Background = (Brush)FindResource("MaterialDesign.Brush.Background"),
+                Background = new SolidColorBrush(Color.FromRgb(0xEE, 0xF3, 0xF7)),
                 Content = view,
                 Width = 1600,
                 Height = 950,
@@ -403,8 +407,12 @@ public partial class App : System.Windows.Application
             window.Show();
             await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
             await Task.Delay(700);
-            var width = Math.Max(1, (int)Math.Ceiling(view.ActualWidth));
-            var height = Math.Max(1, (int)Math.Ceiling(view.ActualHeight));
+            view.Measure(new Size(1560, 920));
+            view.Arrange(new Rect(0, 0, 1560, 920));
+            view.UpdateLayout();
+            await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
+            var width = 1560;
+            var height = 920;
             var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
             bitmap.Render(view);
             var encoder = new PngBitmapEncoder();
