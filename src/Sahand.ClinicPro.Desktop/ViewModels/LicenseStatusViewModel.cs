@@ -282,7 +282,7 @@ public partial class LicenseStatusViewModel : ViewModelBase
         {
             Filter = "فایل درخواست فعال‌سازی|*.req|همه فایل‌ها|*.*",
             Title = "ذخیرهٔ فایل درخواست فعال‌سازی آفلاین",
-            FileName = $"activation-request-{DateTime.Now:yyyyMMdd-HHmm}.req"
+            FileName = $"activation-request-{IranClock.Now:yyyyMMdd-HHmm}.req"
         };
         if (dialog.ShowDialog() != true) return;
 
@@ -338,7 +338,7 @@ public partial class LicenseStatusViewModel : ViewModelBase
             {
                 // چرخه هجدهم: تاریخ انقضا با ارقام فارسی
                 ExpiryText = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsiFa(expiry);
-                var days = (int)(expiry.Date - DateTime.Now.Date).TotalDays;
+                var days = (int)(expiry.Date - IranClock.Now.Date).TotalDays;
                 RemainingText = days > 0
                     ? $"{Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToPersianDigits(days.ToString())} روز باقیمانده"
                     : "منقضی شده";

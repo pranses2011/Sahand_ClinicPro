@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.API.Filters;
@@ -247,7 +247,7 @@ public class BackupController : ApiBaseController
         var backupDir = await GetBackupDirectoryAsync(ct);
         Directory.CreateDirectory(backupDir);
         var savedPath = Path.Combine(backupDir,
-            "SahandClinicPro_ExternalRestore_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + extension);
+            "SahandClinicPro_ExternalRestore_" + Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.IranNow().ToString("yyyyMMdd_HHmmss") + extension);
 
         try
         {

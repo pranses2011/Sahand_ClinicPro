@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -781,7 +781,7 @@ public partial class ComplementaryViewModel : ViewModelBase
         if (ok)
         {
             SyncStatusText = "نقطه همگام‌سازی ایجاد شد";
-            LastSyncText = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsiFa(DateTime.Now); // چرخه هجدهم: ارقام فارسی
+            LastSyncText = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsiFa(IranClock.Now); // چرخه هجدهم: ارقام فارسی
             _snackbar.Success("همگام‌سازی آغاز شد — وضعیت در لاگ سیستم دنبال می‌شود");
         }
         else

@@ -82,7 +82,7 @@ public static class LicenseGate
     {
         /// <summary>شمار روزهای باقیمانده تا انقضا — تهی یعنی دائمی/نامعلوم</summary>
         public int? DaysRemaining => ExpiryDate is { } d
-            ? (int)(d.Date - DateTime.Now.Date).TotalDays
+            ? (int)(d.Date - IranClock.Now.Date).TotalDays
             : null;
     }
 

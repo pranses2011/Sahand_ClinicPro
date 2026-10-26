@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Documents;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Desktop.Helpers;
@@ -264,8 +264,8 @@ public static class ReceptionReceiptPrinter
         doc.Blocks.Add(Center("از پرداخت شما سپاسگزاریم", 10.5, FontWeights.SemiBold, "#37474F"));
         doc.Blocks.Add(Center("این قبض سند دریافت وجه است — آن را تا پایان مراجعه نگه دارید",
             8.5, FontWeights.Normal, "#78909C"));
-        doc.Blocks.Add(Center($"چاپ: {PersianDateHelper.ToShamsiFa(DateTime.Now)} — " +
-                              PersianDateHelper.ToClockFa(DateTime.Now, withSeconds: false),
+        doc.Blocks.Add(Center($"چاپ: {PersianDateHelper.ToShamsiFa(IranClock.Now)} — " +
+                              PersianDateHelper.ToClockFa(IranClock.Now, withSeconds: false),
             8.5, FontWeights.Normal, "#78909C"));
 
         return doc;

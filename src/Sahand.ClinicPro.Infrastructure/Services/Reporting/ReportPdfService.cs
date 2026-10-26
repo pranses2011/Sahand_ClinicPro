@@ -131,7 +131,7 @@ public sealed class ReportPdfService
                     col.Item().PaddingBottom(8).Column(c =>
                     {
                         c.Item().Text(model.Title).Bold().FontSize(14);
-                        c.Item().Text($"تاریخ چاپ: {Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.Now)}")
+                        c.Item().Text($"تاریخ چاپ: {Application.Common.Helpers.PersianDateHelper.ToShamsi(Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.IranNow())}")
                             .FontSize(8.5f).FontColor(Colors.Grey.Darken1);
                     });
 

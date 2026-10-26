@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -860,8 +860,8 @@ public partial class VisitEditViewModel : ObservableObject
             }
 
             SaveStateText = complete
-                ? $"✅ تکمیل شد — {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(System.DateTime.Now)}"
-                : $"💾 ذخیره خودکار — {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(System.DateTime.Now)}";
+                ? $"✅ تکمیل شد — {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(System.IranClock.Now)}"
+                : $"💾 ذخیره خودکار — {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(System.IranClock.Now)}";
             if (!silent && !complete)
                 _snackbar.Success("ویزیت ذخیره شد");
             return true;

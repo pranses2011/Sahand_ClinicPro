@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Media;
@@ -242,13 +242,13 @@ public partial class MainWindowViewModel : ObservableObject
 
         CurrentUser = _tokens.DisplayName ?? _tokens.Username ?? "کاربر";
         // چرخه هجدهم (گزارش دوازدهم): تاریخ و ساعت نوار بالا با ارقام فارسی
-        CurrentDate = PersianDateHelper.ToShamsiFa(DateTime.Now);
+        CurrentDate = PersianDateHelper.ToShamsiFa(IranClock.Now);
 
         // ساعت لحظه‌ای — هر ثانیه به‌روزرسانی شمسی و ساعت (ارقام فارسی)
         _clock.Tick += (_, _) =>
-            ClockText = $"{PersianDateHelper.ToShamsiFa(DateTime.Now)} - {PersianDateHelper.ToClockFa(DateTime.Now)}";
+            ClockText = $"{PersianDateHelper.ToShamsiFa(IranClock.Now)} - {PersianDateHelper.ToClockFa(IranClock.Now)}";
         _clock.Start();
-        ClockText = $"{PersianDateHelper.ToShamsiFa(DateTime.Now)} - {PersianDateHelper.ToClockFa(DateTime.Now)}";
+        ClockText = $"{PersianDateHelper.ToShamsiFa(IranClock.Now)} - {PersianDateHelper.ToClockFa(IranClock.Now)}";
 
         // اتصال سرویس پیام شناور به میزبان کپسول‌های پوسته — چرخهٔ ۳۸
         _snackbar.MessagePosted += EnqueueToast;

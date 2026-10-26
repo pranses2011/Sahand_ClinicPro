@@ -80,7 +80,7 @@ public partial class ReportsController
         try
         {
             var pdf = Pdf.Render(model);
-            var fileName = $"report_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+            var fileName = $"report_{Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.IranNow():yyyyMMdd_HHmm}.pdf";
             return File(pdf, "application/pdf", fileName);
         }
         catch (ArgumentException ex)

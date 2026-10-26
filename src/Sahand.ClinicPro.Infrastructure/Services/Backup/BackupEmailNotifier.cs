@@ -144,7 +144,7 @@ public class BackupEmailNotifier
             <tr><td style="color:#78909C">نام فایل</td><td><b>{file.Name}</b></td></tr>
             <tr><td style="color:#78909C">حجم</td><td>{sizeText}</td></tr>
             <tr><td style="color:#78909C">مسیر روی سرور</td><td dir="ltr" style="font-family:Consolas,monospace">{backupPath}</td></tr>
-            <tr><td style="color:#78909C">زمان</td><td>{PersianDateHelper.ToShamsiWithTime(DateTime.Now)}</td></tr>
+            <tr><td style="color:#78909C">زمان</td><td>{PersianDateHelper.ToShamsiWithTime(PersianDateHelper.IranNow())}</td></tr>
           </table>
           {identityBlock}
           {attachNote}

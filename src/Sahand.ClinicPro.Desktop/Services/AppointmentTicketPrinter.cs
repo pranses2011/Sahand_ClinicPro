@@ -94,7 +94,7 @@ public static class AppointmentTicketPrinter
 
         doc.Blocks.Add(Dashed());
         doc.Blocks.Add(Center("با سلامت همراهتان هستیم", 9.5, FontWeights.Normal, muted: true));
-        doc.Blocks.Add(Center(PersianDateHelper.ToShamsiFa(DateTime.Now), 9, FontWeights.Normal, muted: true));
+        doc.Blocks.Add(Center(PersianDateHelper.ToShamsiFa(IranClock.Now), 9, FontWeights.Normal, muted: true));
 
         return doc;
     }

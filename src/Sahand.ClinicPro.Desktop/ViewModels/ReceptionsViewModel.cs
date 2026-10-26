@@ -35,7 +35,7 @@ public partial class ReceptionsViewModel : ViewModelBase
 
     /// <summary>تاریخ تاریخچهٔ پذیرش (شمسی) — برای چاپ مجدد قبض روزهای گذشته</summary>
     [ObservableProperty] private string _historyDateShamsi =
-        Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.Now);
+        Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(IranClock.Now);
 
     /// <summary>عنوان فهرست صف — «صف پذیرش امروز» یا تاریخچهٔ تاریخ انتخابی</summary>
     [ObservableProperty] private string _queueTitle = "═══ صف پذیرش امروز ═══";
@@ -876,7 +876,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     private async Task BackToTodayAsync()
     {
         QueueTitle = "═══ صف پذیرش امروز ═══";
-        HistoryDateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(DateTime.Now);
+        HistoryDateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(IranClock.Now);
         await LoadAsync();
     }
 
@@ -1755,7 +1755,7 @@ public partial class ReceptionsViewModel : ViewModelBase
 
                 var paidNow = PatientShare + (consumeResult?.TotalCost ?? 0m);
                 var invoiceTotal = lines.Sum(l => l.Total);
-                var now = DateTime.Now;
+                var now = IranClock.Now;
 
                 var receipt = new ReceptionReceipt(
                     QueueNumber: queueNo ?? 0,

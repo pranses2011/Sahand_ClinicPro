@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -74,7 +74,7 @@ public partial class PersianCalendarControl : UserControl
     /// <summary>سال نمایشی شمسی</summary>
     public static readonly DependencyProperty DisplayYearProperty =
         DependencyProperty.Register(nameof(DisplayYear), typeof(int),
-            typeof(PersianCalendarControl), new PropertyMetadata(DateTime.Now.Year - 621, OnDisplayChanged));
+            typeof(PersianCalendarControl), new PropertyMetadata(IranClock.Now.Year - 621, OnDisplayChanged));
 
     /// <summary>خروجی: تاریخ شمسی انتخاب‌شده</summary>
     public static readonly DependencyProperty SelectedShamsiProperty =
@@ -274,14 +274,14 @@ public partial class PersianCalendarControl : UserControl
         try
         {
             _viewMode = CalendarViewMode.Days;
-            var (y, m, _) = PersianDateHelper.ToJalali(DateTime.Today);
+            var (y, m, _) = PersianDateHelper.ToJalali(IranClock.Today);
             if (DisplayYear != y) DisplayYear = y;
             if (DisplayMonth != m) DisplayMonth = m;
-            if (SelectedDate?.Date != DateTime.Today)
+            if (SelectedDate?.Date != IranClock.Today)
             {
-                SelectedDate = DateTime.Today;
-                SelectedShamsi = PersianDateHelper.ToShamsiFa(DateTime.Today);
-                DateSelected?.Invoke(this, DateTime.Today);
+                SelectedDate = IranClock.Today;
+                SelectedShamsi = PersianDateHelper.ToShamsiFa(IranClock.Today);
+                DateSelected?.Invoke(this, IranClock.Today);
             }
             Render();
         }
@@ -344,7 +344,7 @@ public partial class PersianCalendarControl : UserControl
     /// <summary>متن کامل امروز برای چیپ سربرگ</summary>
     private static string TodayFullTextValue()
     {
-        var now = DateTime.Today;
+        var now = IranClock.Today;
         var (y, m, d) = PersianDateHelper.ToJalali(now);
         var weekday = PersianDateHelper.DayNames[((int)now.DayOfWeek + 1) % 7];
         return "امروز: " + PersianDateHelper.ToPersianDigits(
@@ -597,7 +597,7 @@ public partial class PersianCalendarControl : UserControl
         // گارد تاریخ نامعتبر: نمای ماه/سال صفر یا بیرون از بازه یعنی «امروز»
         if (DisplayYear < 1300 || DisplayYear > 1500 || DisplayMonth is < 1 or > 12)
         {
-            var (ty, tm, _) = PersianDateHelper.ToJalali(DateTime.Today);
+            var (ty, tm, _) = PersianDateHelper.ToJalali(IranClock.Today);
             DisplayYear = ty;
             DisplayMonth = tm;
         }
@@ -605,7 +605,7 @@ public partial class PersianCalendarControl : UserControl
             $"{PersianDateHelper.MonthNames[DisplayMonth - 1]} {PersianDateHelper.ToPersianDigits(DisplayYear.ToString())}";
         DaysGrid.Children.Clear();
 
-        var today = DateTime.Today;
+        var today = IranClock.Today;
         var disabled = DisabledDates?.Select(d => d.Date).ToHashSet() ?? new HashSet<DateTime>();
         var stats = DayStats ?? new Dictionary<DateTime, CalendarDayStat>();
         var marked = MarkedDates ?? new Dictionary<DateTime, int>();

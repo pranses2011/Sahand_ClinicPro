@@ -528,7 +528,7 @@ public partial class AdhocReportViewModel : ViewModelBase
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "فایل PDF|*.pdf",
-            FileName = $"adhoc_{DateTime.Now:yyyyMMdd_HHmm}.pdf",
+            FileName = $"adhoc_{IranClock.Now:yyyyMMdd_HHmm}.pdf",
         };
         if (dialog.ShowDialog() != true) return;
 
@@ -563,7 +563,7 @@ public partial class AdhocReportViewModel : ViewModelBase
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "CSV UTF-8|*.csv",
-            FileName = $"adhoc_{DateTime.Now:yyyyMMdd_HHmm}.csv",
+            FileName = $"adhoc_{IranClock.Now:yyyyMMdd_HHmm}.csv",
         };
         if (dialog.ShowDialog() != true) return;
 
