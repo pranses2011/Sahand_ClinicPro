@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Domain.Common;
@@ -13,10 +13,10 @@ public record CreateImagingOrderDto(
     long PatientId, long? ReferringDoctorId, ImagingModality Modality,
     string? BodyPart, Priority Priority = Priority.Normal, string? ClinicalInfo = null);
 
-/// <summary>گزارش تصویربرداری</summary>
+/// <summary>گزارش تصویربرداری — ماژول حرفه‌ای (نسخهٔ ۲ تأییدشده): جزئیات ساخت‌یافته (JSON: دوز/مقایسه/قالب/اندازه‌گیری/ایمنی/اطلاع بحرانی) و پرچم نهایی‌بودن</summary>
 public record ImagingReportDto(
     long OrderId, string? Technique, string? Findings, string? Impression,
-    string? Recommendation);
+    string? Recommendation, string? ReportDetails = null, bool IsFinal = true);
 
 /// <summary>فرمان ثبت درخواست تصویربرداری</summary>
 public record CreateImagingOrderCommand(CreateImagingOrderDto Dto) : IRequest<Result<long>>;
@@ -86,8 +86,49 @@ public class SubmitImagingReportCommandHandler : IRequestHandler<SubmitImagingRe
         order.Findings = request.Dto.Findings;
         order.Impression = request.Dto.Impression;
         order.Recommendation = request.Dto.Recommendation;
-        order.Status = ImagingOrderStatus.Reported;
-        order.ReportedAt = DateTime.UtcNow;
+        order.ReportDetails = request.Dto.ReportDetails;
+        if (request.Dto.IsFinal)
+        {
+            order.Status = ImagingOrderStatus.Reported;
+            order.ReportedAt = DateTime.UtcNow;
+            order.PerformedAt ??= DateTime.UtcNow;
+        }
+        else if (order.Status is ImagingOrderStatus.Ordered or ImagingOrderStatus.Scheduled)
+        {
+            // پیش‌نویس/گزارش اولیه: مطالعه انجام‌شده محسوب می‌شود ولی هنوز نهایی نیست
+            order.Status = ImagingOrderStatus.Performed;
+            order.PerformedAt ??= DateTime.UtcNow;
+        }
+
+        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+        return Result.Success();
+    }
+}
+
+/// <summary>فرمان تغییر وضعیت گردش کار درخواست تصویربرداری (شروع انجام/انجام‌شده/لغو)</summary>
+public record UpdateImagingOrderStatusCommand(long OrderId, ImagingOrderStatus Status) : IRequest<Result>;
+
+/// <summary>گرداننده تغییر وضعیت درخواست تصویربرداری</summary>
+public class UpdateImagingOrderStatusCommandHandler : IRequestHandler<UpdateImagingOrderStatusCommand, Result>
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    /// <summary>سازنده با تزریق واحد کار</summary>
+    public UpdateImagingOrderStatusCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    /// <summary>اجرای تغییر وضعیت — زمان انجام هنگام «انجام‌شده» ثبت می‌شود</summary>
+    public async Task<Result> Handle(UpdateImagingOrderStatusCommand request, CancellationToken cancellationToken)
+    {
+        var order = await _unitOfWork.Repository<ImagingOrder>()
+            .GetByIdAsync(request.OrderId, cancellationToken);
+        if (order is null)
+            return Result.Failure(Error.NotFound("درخواست تصویربرداری", request.OrderId));
+
+        order.Status = request.Status;
+        if (request.Status == ImagingOrderStatus.Performed)
+            order.PerformedAt ??= DateTime.UtcNow;
+        if (request.Status == ImagingOrderStatus.Scheduled)
+            order.ScheduledAt ??= DateTime.UtcNow;
 
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
         return Result.Success();
