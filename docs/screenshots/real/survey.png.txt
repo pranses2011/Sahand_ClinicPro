@@ -1,1 +1,1 @@
-Page=survey Flow=RightToLeft Lang=fa-ir Actual=1030x774 Render=1030x774 Desired=1030x353٫78
+Page=survey Flow=RightToLeft Lang=fa-ir Actual=1044x788 Render=1044x788 Desired=913٫7058823529412x681٫6333333333333

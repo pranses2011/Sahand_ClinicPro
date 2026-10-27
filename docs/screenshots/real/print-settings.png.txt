@@ -1,1 +1,1 @@
-Page=print-settings Flow=RightToLeft Lang=fa-ir Actual=1030x774 Render=1030x774 Desired=1030x774
+Page=print-settings Flow=RightToLeft Lang=fa-ir Actual=1044x788 Render=1044x788 Desired=879٫4645454545455x713٫3166666666666
