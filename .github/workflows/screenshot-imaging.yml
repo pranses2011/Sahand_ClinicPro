@@ -58,6 +58,7 @@ jobs:
           git config user.email "actions@github.com"
           New-Item -ItemType Directory -Force docs/screenshots | Out-Null
           Copy-Item shots/imaging.png docs/screenshots/imaging-real.png -Force
-          git add docs/screenshots/imaging-real.png
+          Copy-Item shots/imaging.png.txt docs/screenshots/imaging-real.txt -Force
+          git add docs/screenshots/imaging-real.png docs/screenshots/imaging-real.txt
           git commit -m "اسکرین‌شات واقعی تصویربرداری (رندر خودکار ویندوز)"
           git push origin HEAD:${{ github.ref_name }}

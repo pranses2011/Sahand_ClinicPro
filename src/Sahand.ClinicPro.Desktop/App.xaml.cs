@@ -420,6 +420,8 @@ public partial class App : System.Windows.Application
             // UpdateLayout صدا زده نمی‌شود؛ چیدمان دستیِ نما را به اندازهٔ پنجره برمی‌گرداند
             var width = 1560;
             var height = 920;
+            File.WriteAllText(path + ".txt",
+                $"Flow={view.FlowDirection} Lang={view.Language} Actual={view.ActualWidth}x{view.ActualHeight} Render={view.RenderSize.Width}x{view.RenderSize.Height} Desired={view.DesiredSize.Width}x{view.DesiredSize.Height}");
             var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
             bitmap.Render(view);
             var encoder = new PngBitmapEncoder();
