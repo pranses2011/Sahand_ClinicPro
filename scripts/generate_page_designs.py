@@ -72,13 +72,13 @@ def teeth_row(numbers: list[int], colors: dict[int, str]) -> str:
         c = colors.get(n, "#FFFFFF")
         border = "#E53935" if c != "#FFFFFF" else "#C9D6E4"
         out.append(
-            f'<div style="width:46px;height:46px;border:1.5px solid {border};background:{c};'
-            f'border-radius:7px;display:flex;flex-direction:column;align-items:center;'
-            f'justify-content:center;font-size:11px;font-weight:800;color:#22364F">'
+            f'<div style="width:34px;height:42px;border:1.4px solid {border};background:{c};'
+            f'border-radius:6px;display:flex;flex-direction:column;align-items:center;'
+            f'justify-content:center;font-size:10px;font-weight:800;color:#22364F">'
             f'{str(n).translate(str.maketrans("0123456789","۰۱۲۳۴۵۶۷۸۹"))}'
-            f'<span style="font-size:7.5px;font-weight:500;color:#6B7C93">پیشین</span></div>'
+            f'<span style="font-size:6.5px;font-weight:500;color:#6B7C93">پیشین</span></div>'
         )
-    return '<div style="display:flex;gap:4px;justify-content:center">' + "".join(out) + "</div>"
+    return '<div style="display:flex;gap:3px;justify-content:center">' + "".join(out) + "</div>"
 
 
 upper1 = [18, 17, 16, 15, 14, 13, 12, 11]
@@ -122,9 +122,9 @@ PAGES["dentistry"] = page(
       '<div class="field col" style="max-width:190px">زهرا محمدی — کد ۰۰۱۲۳۴</div>'
       '<span class="btn primary sm">جستجو ⌕</span><div class="sp"></div>'
       '<span class="note">آخرین ویزیت: ۱۴۰۵/۰۸/۰۳</span></div></div>'
-    + '<div style="display:flex;gap:8px">'
-      f'<div style="flex:1.55">{tooth_chart}</div>'
-      '<div style="flex:1;display:flex;flex-direction:column;gap:8px">'
+    + '<div style="display:flex;gap:8px;align-items:flex-start">'
+      f'<div style="flex:1.5;min-width:0;overflow:hidden">{tooth_chart}</div>'
+      '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">'
         '<div class="panel"><h3>🔍 دندان انتخابی: ۱۶</h3>'
         '<div class="kv"><span>جنس دندان</span><b>آسیاب بزرگ اول · ۳ ریشه · ۴ کانال</b></div>'
         '<div class="kv"><span>وضعیت</span><b style="color:#D8514B">پوسیدگی عمیق</b></div>'
@@ -402,7 +402,7 @@ PAGES["print-template"] = page(
       '<div class="sp"></div><div class="field sm ico" style="width:210px">جستجوی قالب…</div></div></div>'
     + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' + cards + '</div>'
     + '<div class="panel" style="margin-top:8px;padding:8px 10px"><div class="row">'
-      '<span class="note">💡 قالب پیشفرض فعال هنگام چاپ همان سند اعمال میشود؛ با کلیک «انتخاب» میتوانید قالب دیگری را فعال کنید.</span>'
+      '<span class="note" style="flex:1;min-width:0">💡 قالب پیشفرض فعال هنگام چاپ همان سند اعمال میشود؛ با کلیک «انتخاب» میتوانید قالب دیگری را فعال کنید.</span>'
       '<div class="sp"></div><span class="btn ghost sm">کپی قالب</span><span class="btn dark sm">ذخیرهٔ تغییرات</span></div></div>'
 )
 
