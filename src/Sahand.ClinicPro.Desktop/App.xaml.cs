@@ -409,17 +409,14 @@ public partial class App : System.Windows.Application
                 ShowInTaskbar = false,
                 Left = 0,
                 Top = 0,
-                Title = "اسکرین‌شات راستی‌آزمایی تصویربرداری"
+                Title = "اسکرین‌شات راستی‌آزمایی تصویربرداری",
+                FlowDirection = FlowDirection.RightToLeft
             };
             window.Show();
             await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
             await Task.Delay(700);
-            window.Content = null;
-            view.Measure(new Size(1560, 920));
-            view.Arrange(new Rect(0, 0, 1560, 920));
-            // UpdateLayout صدا زده نمی‌شود؛ چیدمان دستیِ نما را به اندازهٔ پنجره برمی‌گرداند
-            var width = 1560;
-            var height = 920;
+            var width = Math.Max(1, (int)Math.Ceiling(view.ActualWidth));
+            var height = Math.Max(1, (int)Math.Ceiling(view.ActualHeight));
             File.WriteAllText(path + ".txt",
                 $"Flow={view.FlowDirection} Lang={view.Language} Actual={view.ActualWidth}x{view.ActualHeight} Render={view.RenderSize.Width}x{view.RenderSize.Height} Desired={view.DesiredSize.Width}x{view.DesiredSize.Height}");
             var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
