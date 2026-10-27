@@ -24,8 +24,8 @@
             <Setter Property="BorderBrush" Value="#DCE8E3" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="14" />
-            <Setter Property="Padding" Value="14" />
-            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Margin" Value="0,0,0,8" />
         </Style>
         <Style x:Key="FieldLabel" TargetType="TextBlock">
             <Setter Property="FontSize" Value="10.5" />
@@ -33,70 +33,172 @@
             <Setter Property="Margin" Value="2,8,2,2" />
         </Style>
         <Style x:Key="StatCard" TargetType="Button">
-            <Setter Property="Background" Value="#F4FAF7" />
+            <Setter Property="Background" Value="White" />
             <Setter Property="BorderBrush" Value="#DCE8E3" />
-            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderThickness" Value="1.6" />
             <Setter Property="Padding" Value="10,8" />
             <Setter Property="Margin" Value="0,0,8,0" />
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
+        <!-- فیلد فشردهٔ فرم — طرح تأییدی: ارتفاع ۳۸، بدون عنوان شناورِ جاگیر -->
+        <Style x:Key="CompactText" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="materialDesign:HintAssist.IsFloating" Value="False" />
+            <Setter Property="materialDesign:TextFieldAssist.TextFieldCornerRadius" Value="9" />
+        </Style>
+        <Style x:Key="CompactCombo" TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="materialDesign:HintAssist.IsFloating" Value="False" />
+            <Setter Property="materialDesign:TextFieldAssist.TextFieldCornerRadius" Value="9" />
+        </Style>
+        <!-- عدد کارت آمار — در فونت وزیرمتن «۰» نقطهٔ ریز است و در اسکرین‌شات واقعی
+             مالک دیده نمی‌شد؛ Tahoma صفرِ حلقه‌ایِ واضح دارد و عدد درشت و پررنگ می‌نشیند -->
+        <Style x:Key="StatNumber" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Tahoma" />
+            <Setter Property="FontSize" Value="26" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="LineHeight" Value="30" />
+        </Style>
+        <!-- دکمهٔ تخت اصلی — مرجع: آبی #1E88E5، گوشه ۹، بدون سایهٔ متریال -->
+        <Style x:Key="FlatPrimary" TargetType="Button">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="#1E88E5" CornerRadius="9" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- دکمهٔ شبح — مرجع: پس‌زمینهٔ آبی خیلی روشن و متن آبی -->
+        <Style x:Key="FlatGhost" TargetType="Button">
+            <Setter Property="Foreground" Value="#1565C0" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="#E3F0FB" CornerRadius="9" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- چیپ فیلتر کپسولی — مرجع: حاشیهٔ خاکستری-آبی و گوشهٔ کاملاً گرد -->
         <Style x:Key="ChipBtn" TargetType="Button">
-            <Setter Property="Padding" Value="10,4" />
-            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="Padding" Value="12,3" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="Foreground" Value="#41586C" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="White" BorderBrush="#B9C9D8" BorderThickness="1.2" CornerRadius="16" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ChipBtnActive" TargetType="Button" BasedOn="{StaticResource ChipBtn}">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="#1565C0" BorderBrush="#1565C0" BorderThickness="1.2" CornerRadius="16" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </UserControl.Resources>
 
-    <Grid Margin="16,12">
+    <Grid Margin="14,10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
             <materialDesign:PackIcon Kind="RadiologyBox" Width="26" Height="26"
                                      Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
-            <TextBlock Text="تصویربرداری پزشکی" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+            <TextBlock Text="تصویربرداری پزشکی" FontSize="18" FontWeight="Bold" Margin="8,0,0,0" VerticalAlignment="Center" />
             <TextBlock Text="— صف کار، نمایشگر PACS و گزارش‌نویسی یکپارچه" FontSize="12" Opacity="0.65" Margin="8,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
 
                         <!-- کارت‌های آماری = فیلتر صف -->
                         <!-- کارت‌های آماری بالای تب‌ها — مطابق طرح تأییدی: همیشه دیده می‌شوند و فیلتر صف‌اند -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
-            <Button Style="{StaticResource StatCard}" BorderBrush="#90CAF9" BorderThickness="2" Background="White" Command="{Binding SetWorkFilterCommand}" CommandParameter="all">
-                <StackPanel HorizontalAlignment="Center">
-                    <TextBlock Text="{Binding TotalToday, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="30" FontWeight="ExtraBold" Foreground="#1565C0" HorizontalAlignment="Center" />
-                    <TextBlock Text="درخواست امروز" FontSize="11" Opacity="0.7" />
+        <Grid Grid.Row="1" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Style="{StaticResource StatCard}" Margin="0" Height="76" BorderBrush="#64B5F6" BorderThickness="1.6" Background="#F5FAFF" Command="{Binding SetWorkFilterCommand}" CommandParameter="all">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding TotalToday, Mode=OneWay, Converter={StaticResource PersianDigits}}" Style="{StaticResource StatNumber}" Foreground="#1565C0" />
+                    <TextBlock Text="درخواست امروز" FontSize="11" Opacity="0.7" HorizontalAlignment="Center" />
                 </StackPanel>
             </Button>
-            <Button Style="{StaticResource StatCard}" BorderBrush="#FFCC80" BorderThickness="2" Background="White" Command="{Binding SetWorkFilterCommand}" CommandParameter="wait">
-                <StackPanel HorizontalAlignment="Center">
-                    <TextBlock Text="{Binding WaitingCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="30" FontWeight="ExtraBold" Foreground="#E65100" HorizontalAlignment="Center" />
-                    <TextBlock Text="در انتظار انجام" FontSize="11" Opacity="0.7" />
+            <Button Grid.Column="2" Style="{StaticResource StatCard}" Margin="0" Height="76" BorderBrush="#FFB74D" BorderThickness="1.6" Background="#FFFAF3" Command="{Binding SetWorkFilterCommand}" CommandParameter="wait">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding WaitingCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" Style="{StaticResource StatNumber}" Foreground="#E65100" />
+                    <TextBlock Text="در انتظار انجام" FontSize="11" Opacity="0.7" HorizontalAlignment="Center" />
                 </StackPanel>
             </Button>
-            <Button Style="{StaticResource StatCard}" BorderBrush="#CE93D8" BorderThickness="2" Background="White" Command="{Binding SetWorkFilterCommand}" CommandParameter="rep">
-                <StackPanel HorizontalAlignment="Center">
-                    <TextBlock Text="{Binding UnreportedCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="30" FontWeight="ExtraBold" Foreground="#6A1B9A" HorizontalAlignment="Center" />
-                    <TextBlock Text="انجام‌شده · گزارش‌نشده" FontSize="11" Opacity="0.7" />
+            <Button Grid.Column="4" Style="{StaticResource StatCard}" Margin="0" Height="76" BorderBrush="#BA68C8" BorderThickness="1.6" Background="#FDF7FF" Command="{Binding SetWorkFilterCommand}" CommandParameter="rep">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding UnreportedCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" Style="{StaticResource StatNumber}" Foreground="#6A1B9A" />
+                    <TextBlock Text="انجام‌شده · گزارش‌نشده" FontSize="11" Opacity="0.7" HorizontalAlignment="Center" />
                 </StackPanel>
             </Button>
-            <Button Style="{StaticResource StatCard}" BorderBrush="#EF9A9A" BorderThickness="2" Background="#FFF5F5" Command="{Binding SetWorkFilterCommand}" CommandParameter="stat">
-                <StackPanel HorizontalAlignment="Center">
-                    <TextBlock Text="{Binding StatCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="30" FontWeight="ExtraBold" Foreground="#C62828" HorizontalAlignment="Center" />
-                    <TextBlock Text="اورژانسی (STAT)" FontSize="11" Opacity="0.7" />
+            <Button Grid.Column="6" Style="{StaticResource StatCard}" Margin="0" Height="76" BorderBrush="#E57373" BorderThickness="1.6" Background="#FFF5F5" Command="{Binding SetWorkFilterCommand}" CommandParameter="stat">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" Style="{StaticResource StatNumber}" Foreground="#C62828" />
+                    <TextBlock Text="اورژانسی (STAT)" FontSize="11" Opacity="0.7" HorizontalAlignment="Center" />
                 </StackPanel>
             </Button>
-            <Button Style="{StaticResource StatCard}" BorderBrush="#A5D6A7" BorderThickness="2" Background="White" Command="{Binding SetWorkFilterCommand}" CommandParameter="done">
-                <StackPanel HorizontalAlignment="Center">
-                    <TextBlock Text="{Binding ReportedCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="30" FontWeight="ExtraBold" Foreground="#2E7D32" HorizontalAlignment="Center" />
-                    <TextBlock Text="گزارش نهایی امروز" FontSize="11" Opacity="0.7" />
+            <Button Grid.Column="8" Style="{StaticResource StatCard}" Margin="0" Height="76" BorderBrush="#81C784" BorderThickness="1.6" Background="#F4FBF4" Command="{Binding SetWorkFilterCommand}" CommandParameter="done">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding ReportedCount, Mode=OneWay, Converter={StaticResource PersianDigits}}" Style="{StaticResource StatNumber}" Foreground="#2E7D32" />
+                    <TextBlock Text="گزارش نهایی امروز" FontSize="11" Opacity="0.7" HorizontalAlignment="Center" />
                 </StackPanel>
             </Button>
-            <Button Command="{Binding LoadImagingOrdersCommand}" Margin="8,0,0,0" VerticalAlignment="Center"
-                                    Style="{StaticResource MaterialDesignRaisedButton}" Content="🔄 تازه‌سازی صف" />
-                        </StackPanel>
-
+        </Grid>
 
         <TabControl Grid.Row="2">
             <!-- ═══════════ ۱) صف کار امروز ═══════════ -->
@@ -104,16 +206,20 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8">
                     <StackPanel>
                         <!-- جست‌وجو و فیلتر مدالیته -->
-                        <Grid Margin="0,4,0,8">
+                        <Grid Margin="0,2,0,6">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="2*" />
-                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="10" />
                                 <ColumnDefinition Width="3*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" Text="{Binding WorkSearch, UpdateSourceTrigger=PropertyChanged}"
+                            <Button Grid.Column="4" Command="{Binding LoadImagingOrdersCommand}" Height="38" Padding="14,0"
+                                    Style="{StaticResource FlatGhost}" Content="🔄 تازه‌سازی صف" />
+                            <TextBox Grid.Column="0" Style="{StaticResource CompactText}" Text="{Binding WorkSearch, UpdateSourceTrigger=PropertyChanged}"
                                      materialDesign:HintAssist.Hint="🔎 جست‌وجوی نام بیمار یا ناحیه…" />
                             <WrapPanel Grid.Column="2" VerticalAlignment="Center">
-                                <Button Style="{StaticResource ChipBtn}" Content="همه" Command="{Binding SetModalityFilterCommand}" CommandParameter="all" />
+                                <Button Style="{StaticResource ChipBtnActive}" Content="همه" Command="{Binding SetModalityFilterCommand}" CommandParameter="all" />
                                 <Button Style="{StaticResource ChipBtn}" Content="CT" Command="{Binding SetModalityFilterCommand}" CommandParameter="CT" />
                                 <Button Style="{StaticResource ChipBtn}" Content="MRI" Command="{Binding SetModalityFilterCommand}" CommandParameter="MRI" />
                                 <Button Style="{StaticResource ChipBtn}" Content="رادیوگرافی" Command="{Binding SetModalityFilterCommand}" CommandParameter="رادیوگرافی" />
@@ -129,7 +235,7 @@
                                 <!-- فرم فشردهٔ سه‌ستونه — مطابق طرح تأییدی: بیمار | نوع | ناحیه در یک ردیف -->
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="2*" />
+                                        <ColumnDefinition Width="1.25*" />
                                         <ColumnDefinition Width="10" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="10" />
@@ -140,36 +246,33 @@
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        <TextBox Grid.Column="0" Text="{Binding ImagingPatientSearch, UpdateSourceTrigger=PropertyChanged}"
+                                        <TextBox Grid.Column="0" Style="{StaticResource CompactText}" Text="{Binding ImagingPatientSearch, UpdateSourceTrigger=PropertyChanged}"
                                                  materialDesign:HintAssist.Hint="🔍 بیمار (کد ملی / موبایل)">
                                             <TextBox.InputBindings>
                                                 <KeyBinding Key="Enter" Command="{Binding SearchImagingPatientCommand}" />
                                             </TextBox.InputBindings>
                                         </TextBox>
-                                        <Button Grid.Column="1" Command="{Binding SearchImagingPatientCommand}" Margin="6,0,0,0"
-                                                Style="{StaticResource MaterialDesignRaisedButton}">
+                                        <Button Grid.Column="1" Command="{Binding SearchImagingPatientCommand}" Margin="6,0,0,0" Height="38" Width="42" Padding="0"
+                                                Style="{StaticResource FlatPrimary}">
                                             <materialDesign:PackIcon Kind="Magnify" Width="14" Height="14" />
                                         </Button>
                                     </Grid>
-                                    <StackPanel Grid.Column="2">
-                                        <TextBlock Text="نوع تصویربرداری" Style="{StaticResource FieldLabel}" />
-                                        <ComboBox ItemsSource="{Binding ImagingTypes}" SelectedIndex="{Binding ImagingTypeIndex}" />
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <ComboBox Style="{StaticResource CompactCombo}" ItemsSource="{Binding ImagingTypes}" SelectedIndex="{Binding ImagingTypeIndex}" materialDesign:HintAssist.Hint="نوع تصویربرداری" />
                                     </StackPanel>
-                                    <StackPanel Grid.Column="4">
-                                        <TextBlock Text="ناحیهٔ بدن" Style="{StaticResource FieldLabel}" />
-                                        <ComboBox ItemsSource="{Binding BodyRegions}" SelectedItem="{Binding ImagingRegion}" IsEditable="True" Text="{Binding ImagingRegion}" />
+                                    <StackPanel Grid.Column="4" VerticalAlignment="Center">
+                                        <ComboBox Style="{StaticResource CompactCombo}" ItemsSource="{Binding BodyRegions}" SelectedItem="{Binding ImagingRegion}" IsEditable="True" Text="{Binding ImagingRegion}" materialDesign:HintAssist.Hint="ناحیهٔ بدن" />
                                     </StackPanel>
                                 </Grid>
                                 <Border Background="#E3F2FD" CornerRadius="8" Padding="10,5" Margin="0,6,0,0"
                                         Visibility="{Binding ImagingPatient, Converter={StaticResource NullToVisibility}}">
                                     <TextBlock Text="{Binding ImagingPatient.FullName, Mode=OneWay}" FontWeight="SemiBold" Foreground="#1F2937" />
                                 </Border>
-                                <TextBlock Text="اطلاعات بالینی" Style="{StaticResource FieldLabel}" />
-                                <TextBox Text="{Binding ImagingClinicalInfo, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" Height="52" />
-                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <TextBox Style="{StaticResource CompactText}" Margin="0,8,0,0" Text="{Binding ImagingClinicalInfo, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="اطلاعات بالینی (علت درخواست، علائم…)" AcceptsReturn="True" TextWrapping="Wrap" Height="38" />
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                     <CheckBox Content="فوری (STAT)" IsChecked="{Binding ImagingUrgent}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                    <Button Command="{Binding SaveImagingOrderCommand}" Margin="12,0,0,0"
-                                            Style="{StaticResource MaterialDesignRaisedButton}" Content="✅ ثبت درخواست" />
+                                    <Button Command="{Binding SaveImagingOrderCommand}" Margin="12,0,0,0" Height="38" Padding="16,0"
+                                            Style="{StaticResource FlatPrimary}" Content="✅ ثبت درخواست" />
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -179,7 +282,7 @@
                             <StackPanel>
                                 <TextBlock Text="📋 صف کار امروز — انتخاب هر ردیف، نمایشگر و فرم گزارش همان مطالعه را بار می‌کند" Style="{StaticResource SectionTitle}" />
                                 <DataGrid ItemsSource="{Binding FilteredOrders}" SelectedItem="{Binding SelectedImagingOrder}"
-                                          AutoGenerateColumns="False" IsReadOnly="True" MaxHeight="380"
+                                          AutoGenerateColumns="False" IsReadOnly="True" MaxHeight="300" MinHeight="110" RowHeight="34"
                                           Style="{StaticResource App.TableDataGrid}" HeadersVisibility="Column">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="ساعت" Binding="{Binding TimeText, Converter={StaticResource PersianDigits}}" ElementStyle="{StaticResource App.TableCellTextBlock}" />
@@ -197,7 +300,7 @@
                                         <DataGridTemplateColumn Header="اقدام">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Button Content="▶ شروع انجام" Padding="8,3"
+                                                    <Button Content="▶ شروع انجام" Style="{StaticResource FlatPrimary}" FontSize="11.5" Height="27" Padding="12,0"
                                                             Command="{Binding DataContext.StartStudyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                             CommandParameter="{Binding}" />
                                                 </DataTemplate>
@@ -205,6 +308,19 @@
                                         </DataGridTemplateColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
+                                <TextBlock Text="صف امروز خالی است — با فرم بالا نخستین درخواست را ثبت کنید."
+                                           FontSize="12" Opacity="0.55" HorizontalAlignment="Center" Margin="0,10,0,2">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding FilteredOrders.Count}" Value="0">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </StackPanel>
                         </Border>
                     </StackPanel>

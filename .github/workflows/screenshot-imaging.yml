@@ -1,0 +1,62 @@
+name: 📸 اسکرین‌شات واقعی تصویربرداری
+
+# راستی‌آزمایی طراحی: صفحهٔ واقعی WPF روی ویندوز رندر و عکس آن آرتیفکت می‌شود
+on:
+  workflow_dispatch:
+
+jobs:
+  screenshot:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: دریافت سورس
+        uses: actions/checkout@v4
+
+      - name: نصب .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: ساخت کلاینت دسکتاپ
+        run: dotnet build src/Sahand.ClinicPro.Desktop/Sahand.ClinicPro.Desktop.csproj -c Release
+
+      - name: نصب فونت وزیرمتن روی رانر
+        shell: pwsh
+        run: |
+          # روی ویندوز کاربر فونت برنامه نصب است؛ رانر آن را ندارد و بدون نصب،
+          # شکل‌دهی حروف فارسی در رندر گسسته می‌شود
+          Get-ChildItem src/Sahand.ClinicPro.Desktop/Assets/Fonts/*.ttf | ForEach-Object {
+            Copy-Item $_.FullName "$env:WINDIR\Fonts\" -Force
+            New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" -Name "$($_.BaseName) (TrueType)" -Value $_.Name -PropertyType String -Force | Out-Null
+          }
+
+      - name: رندر و اسکرین‌شات صفحهٔ تصویربرداری
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Recurse -Filter Sahand.ClinicPro.Desktop.exe src/Sahand.ClinicPro.Desktop/bin/Release | Select-Object -First 1
+          if ($null -eq $exe) { throw "exe not found" }
+          New-Item -ItemType Directory -Force shots | Out-Null
+          $p = Start-Process -FilePath $exe.FullName -ArgumentList '--imaging-screenshot', "$PWD/shots/imaging.png" -PassThru -Wait
+          Write-Host "exit=$($p.ExitCode)"
+          Get-ChildItem shots
+          if (-not (Test-Path shots/imaging.png)) { throw "screenshot missing" }
+
+      - name: بارگذاری اسکرین‌شات
+        uses: actions/upload-artifact@v4
+        with:
+          name: imaging-screenshot
+          path: shots/
+          retention-days: 7
+
+      - name: بازگرداندن اسکرین‌شات روی همان شاخه
+        shell: pwsh
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          New-Item -ItemType Directory -Force docs/screenshots | Out-Null
+          Copy-Item shots/imaging.png docs/screenshots/imaging-real.png -Force
+          Copy-Item shots/imaging.png.txt docs/screenshots/imaging-real.txt -Force
+          git add docs/screenshots/imaging-real.png docs/screenshots/imaging-real.txt
+          git commit -m "اسکرین‌شات واقعی تصویربرداری (رندر خودکار ویندوز)"
+          git push origin HEAD:${{ github.ref_name }}
