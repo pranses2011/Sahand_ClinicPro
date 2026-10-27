@@ -1,0 +1,1 @@
+Flow=RightToLeft Lang=fa-ir Actual=1030x774 Render=1030x774 Desired=1030x765٫8
