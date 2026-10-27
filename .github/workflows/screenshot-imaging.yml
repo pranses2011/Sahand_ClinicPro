@@ -3,8 +3,6 @@ name: 📸 اسکرین‌شات واقعی تصویربرداری
 # راستی‌آزمایی طراحی: صفحهٔ واقعی WPF روی ویندوز رندر و عکس آن آرتیفکت می‌شود
 on:
   workflow_dispatch:
-  push:
-    branches: ['arena/a033bd8b-sahand-clinicpro']
 
 jobs:
   screenshot:
