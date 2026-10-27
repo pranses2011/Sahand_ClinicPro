@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مقایسهٔ طرح تأییدی و اسکرینشات واقعی — سهند کلینیکپرو</title>
+<style>
+  :root{
+    --bg:#EEF3F8; --card:#FFFFFF; --ink:#172B4D; --ink2:#52647A;
+    --line:#D9E2EC; --brand:#1565C0; --brand2:#0D9488;
+    --ok:#0B7A63; --warn:#B45309; --bad:#C62828;
+    --sh:0 4px 18px rgba(23,43,77,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:"Vazirmatn","Segoe UI",Tahoma,sans-serif;font-size:14px;line-height:1.9}
+  header{background:linear-gradient(115deg,#0B2C54,#1565C0 55%,#0D9488);color:#fff;
+         padding:28px 34px;box-shadow:var(--sh)}
+  header h1{margin:0 0 6px;font-size:24px;font-weight:800}
+  header p{margin:0;opacity:.92;font-size:13px;max-width:1000px}
+  .wrap{max-width:1680px;margin:0 auto;padding:24px}
+  .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+           background:var(--card);border:1px solid var(--line);border-radius:14px;
+           padding:12px 18px;margin-bottom:22px;box-shadow:var(--sh)}
+  .toolbar a,.toolbar button{border:1px solid var(--line);background:#F7FAFD;color:var(--ink);
+           border-radius:9px;padding:7px 14px;font:inherit;font-size:12.5px;cursor:pointer;
+           text-decoration:none}
+  .toolbar a.on,.toolbar button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .toolbar .sp{flex:1}
+  .summary{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+  .pill{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:12px}
+  section{background:var(--card);border:1px solid var(--line);border-radius:16px;
+          margin-bottom:26px;overflow:hidden;box-shadow:var(--sh)}
+  .sechead{display:flex;align-items:center;gap:12px;padding:14px 20px;
+           border-bottom:1px solid var(--line);background:#F8FBFE}
+  .sechead h2{margin:0;font-size:17px;font-weight:800}
+  .sechead .key{font-size:11px;color:var(--ink2);direction:ltr}
+  .badge{margin-inline-start:auto;font-size:11.5px;font-weight:700;border-radius:999px;
+         padding:5px 14px;border:1px solid}
+  .badge.pending{color:var(--warn);border-color:#FCD34D;background:#FFFBEB}
+  .badge.doing{color:var(--brand);border-color:#93C5FD;background:#EFF6FF}
+  .badge.done{color:var(--ok);border-color:#6EE7B7;background:#ECFDF5}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .pane{padding:16px;border-inline-end:1px solid var(--line);min-width:0}
+  .pane:last-child{border-inline-end:0}
+  .pane h3{margin:0 0 10px;font-size:13px;color:var(--ink2);font-weight:700}
+  .shot{width:100%;height:430px;object-fit:contain;object-position:top center;
+        background:#F4F7FB;border:1px solid var(--line);border-radius:10px;display:block}
+  .missing{display:flex;align-items:center;justify-content:center;text-align:center;
+           height:430px;background:repeating-linear-gradient(45deg,#F8FAFC,#F8FAFC 12px,#F1F5F9 12px,#F1F5F9 24px);
+           border:1px dashed #B8C6D6;border-radius:10px;color:var(--ink2);font-size:12.5px;padding:20px}
+  .overlay{margin:16px 20px 0;border-top:1px dashed var(--line);padding-top:12px}
+  .overlay label{font-size:12px;color:var(--ink2)}
+  .overlay input[type=range]{width:100%;direction:ltr;accent-color:var(--brand)}
+  .cmp{position:relative;height:430px;background:#F4F7FB;border:1px solid var(--line);
+       border-radius:10px;overflow:hidden;margin-top:8px}
+  .cmp img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:top center}
+  .cmp .real{opacity:.5}
+  .notes{padding:12px 20px 20px;font-size:12.5px;color:var(--ink2)}
+  .notes ul{margin:6px 0 0;padding-inline-start:20px}
+  .foot{text-align:center;color:var(--ink2);font-size:11.5px;padding:18px}
+  @media(max-width:1100px){.pair{grid-template-columns:1fr}.pane{border-inline-end:0;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔍 مقایسهٔ «طرح تأییدی مالک» با «اسکرینشات واقعی برنامه»</h1>
+  <p>هر ردیف، همان صفحهای است که روی ویندوز با فونت وزیرمتن و جهت راستبهچپ رندر شده است
+     ( Workflow ویندوزی <span dir="ltr">screenshot-pages.yml</span> ) — طرح تأییدی شما در ستون راست و خروجی
+     واقعی WPF در ستون چپ. لغزندهٔ «همپوشانی» دو تصویر را روی هم میاندازد تا کوچکترین مغایرت
+     (جای کارت، رنگ، فاصله، اندازهٔ قلم، ترتیب تبها) دیده شود.</p>
+</header>
+<div class="wrap">
+  <div class="toolbar">
+    <strong>صفحه:</strong>
+    <button data-filter="all" class="on">همه</button>
+    <button data-filter="dentistry">دندانپزشکی</button>
+    <button data-filter="ophthalmology">چشمپزشکی</button>
+    <button data-filter="physiotherapy">فیزیوتراپی</button>
+    <button data-filter="survey">نظرسنجی</button>
+    <button data-filter="print-template">قالب چاپ</button>
+    <button data-filter="print-settings">تنظیمات چاپگر و چاپ</button>
+    <span class="sp"></span>
+    <a href="approved/README.md" target="_blank">📐 محل قرارگیری طرحهای تأییدی</a>
+  </div>
+
+  <div class="summary" id="summary"></div>
+  <div id="sections"></div>
+  <div class="foot">سهند کلینیکپرو — چرخهٔ راستیآزمایی تصویری · اسکرینشاتها خروجی واقعی WPF هستند، نه شبیهسازی HTML.</div>
+</div>
+
+<script>
+const PAGES = [
+  {key:'dentistry',       title:'🦷 صفحهٔ دندانپزشکی',      view:'DentistryView.xaml',      status:'pending', notes:['در انتظار طرح تأییدی مالک و اسکرینشات واقعی.']},
+  {key:'ophthalmology',   title:'👁️ صفحهٔ چشمپزشکی',        view:'OphthalmologyView.xaml',  status:'pending', notes:['در انتظار طرح تأییدی مالک و اسکرینشات واقعی.']},
+  {key:'physiotherapy',   title:'🏃 صفحهٔ فیزیوتراپی',       view:'PhysiotherapyView.xaml',  status:'pending', notes:['در انتظار طرح تأییدی مالک و اسکرینشات واقعی.']},
+  {key:'survey',          title:'📝 صفحهٔ نظرسنجی',          view:'SurveyView.xaml',         status:'pending', notes:['در انتظار طرح تأییدی مالک و اسکرینشات واقعی.']},
+  {key:'survey-results',  title:'📊 نظرسنجی — نتایج و آمار',  view:'SurveyView.xaml (تب ۲)',  status:'pending', notes:['در انتظار طرح تأییدی مالک و اسکرینشات واقعی.']},
+  {key:'print-template',  title:'🖨️ صفحهٔ قالب چاپ',         view:'ComplementaryView.xaml',  status:'pending', notes:['در انتظار طرح تأییدی مالک و اسکرینشات واقعی.']},
+  {key:'print-settings',  title:'⚙️ تنظیمات چاپگر و چاپ',    view:'SettingsView.xaml',       status:'pending', notes:['در انتظار طرح تأییدی مالک و اسکرینشات واقعی.']},
+];
+const BADGE = {pending:'⏳ در انتظار طرح تأییدی', doing:'🔧 در حال رفع مغایرتها', done:'✅ منطبق — آمادهٔ تأیید'};
+const sections = document.getElementById('sections');
+
+function imgWithFallback(img, candidates, alt){
+  let i = 0;
+  const tryNext = () => {
+    if (i >= candidates.length){ img.style.display='none'; return; }
+    img.src = candidates[i++];
+  };
+  img.addEventListener('error', tryNext);
+  img.alt = alt;
+  tryNext();
+}
+
+PAGES.forEach(p => {
+  const el = document.createElement('section');
+  el.dataset.key = p.key;
+  el.innerHTML = `
+    <div class="sechead">
+      <h2>${p.title}</h2>
+      <span class="key" dir="ltr">${p.view}</span>
+      <span class="badge ${p.status}">${BADGE[p.status]}</span>
+    </div>
+    <div class="pair">
+      <div class="pane">
+        <h3>🎨 طرح تأییدی مالک <span dir="ltr" style="font-size:11px;opacity:.7">approved/${p.key}.png</span></h3>
+        <img class="shot design" alt="طرح تأییدی ${p.key}">
+        <div class="missing" style="display:none">طرح تأییدی این صفحه در پوشهٔ <span dir="ltr">docs/design/approved/</span> قرار نگرفته است. لطفاً همان تصویری را که تأیید کردهاید با نام <b dir="ltr">${p.key}.png</b> در آن پوشه بگذارید یا دوباره در گفتگو ارسال کنید.</div>
+      </div>
+      <div class="pane">
+        <h3>📸 اسکرینشات واقعی WPF <span dir="ltr" style="font-size:11px;opacity:.7">docs/screenshots/real/${p.key}.png</span></h3>
+        <img class="shot real" alt="اسکرینشات واقعی ${p.key}">
+        <div class="missing" style="display:none">اسکرینشات واقعی هنوز ساخته نشده است — با اجرای workflow ویندوزی «📸 اسکرینشات واقعی صفحات» ساخته و به شاخه برگردانده میشود.</div>
+      </div>
+    </div>
+    <div class="overlay">
+      <label>🔀 همپوشانی برای یافتن مغایرت — شفافیت اسکرینشات واقعی: <b class="val">۵۰٪</b></label>
+      <input type="range" min="0" max="100" value="50">
+      <div class="cmp">
+        <img class="cmpdesign" alt="طرح"><img class="real cmpreal" alt="واقعی">
+      </div>
+    </div>
+    <div class="notes"><b>مغایرتها / اقدامات:</b><ul>${p.notes.map(n=>`<li>${n}</li>`).join('')}</ul></div>`;
+  sections.appendChild(el);
+
+  const design = el.querySelector('.design');
+  const real   = el.querySelector('.real:not(.cmpreal)');
+  const cmpD   = el.querySelector('.cmpdesign');
+  const cmpR   = el.querySelector('.cmpreal');
+  const missD  = el.querySelectorAll('.missing')[0];
+  const missR  = el.querySelectorAll('.missing')[1];
+
+  imgWithFallback(design, [`approved/${p.key}.png`,`approved/${p.key}.jpg`,`approved/${p.key}-design.png`], p.key);
+  imgWithFallback(cmpD,   [`approved/${p.key}.png`,`approved/${p.key}.jpg`,`approved/${p.key}-design.png`], p.key);
+  imgWithFallback(real,   [`../screenshots/real/${p.key}.png`], p.key);
+  imgWithFallback(cmpR,   [`../screenshots/real/${p.key}.png`], p.key);
+  design.addEventListener('error', ()=>{ if(design.style.display==='none') missD.style.display='flex'; });
+  real.addEventListener('error',   ()=>{ if(real.style.display==='none')   missR.style.display='flex'; });
+  design.addEventListener('load',  ()=>missD.style.display='none');
+  real.addEventListener('load',    ()=>missR.style.display='none');
+
+  const range = el.querySelector('input[type=range]');
+  const val   = el.querySelector('.val');
+  const apply = () => {
+    const o = range.value/100;
+    cmpR.style.opacity = o;
+    val.textContent = (o*100).toFixed(0).replace(/\d/g, d=>'۰۱۲۳۴۵۶۷۸۹'[d]) + '٪';
+  };
+  range.addEventListener('input', apply); apply();
+});
+
+// خلاصهٔ بالای صفحه
+const sum = document.getElementById('summary');
+sum.innerHTML = PAGES.map(p=>`<span class="pill">${p.title.split(' ')[0]} ${p.key} — ${BADGE[p.status]}</span>`).join('');
+
+// فیلتر صفحات
+document.querySelectorAll('.toolbar button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.toolbar button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    const f=b.dataset.filter;
+    document.querySelectorAll('section').forEach(s=>{
+      s.style.display = (f==='all' || s.dataset.key===f || (f==='survey'&&s.dataset.key==='survey-results')) ? '' : 'none';
+    });
+  });
+});
+</script>
+</body>
+</html>

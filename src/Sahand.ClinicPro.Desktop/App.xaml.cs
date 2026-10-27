@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Globalization;
@@ -440,6 +441,232 @@ public partial class App : System.Windows.Application
         }
     }
 
+    /// <summary>کلیدهای صفحاتی که حالت راستیآزمایی تصویری میتواند رندر کند.</summary>
+    internal static readonly string[] ScreenshotPageKeys =
+    {
+        "dentistry", "ophthalmology", "physiotherapy", "survey", "survey-results",
+        "print-template", "print-settings", "imaging"
+    };
+
+    /// <summary>
+    /// رندر **واقعی** یکی از صفحات برنامه (همان درخت بصری WPF که کاربر میبیند)
+    /// و ذخیرهٔ اسکرینشات PNG — ویژهٔ چرخهٔ مقایسه با طرح تأییدی مالک.
+    /// فقط با آرگومان صریح <c>--screenshot &lt;کلید&gt; &lt;مسیر&gt;</c> فعال
+    /// میشود؛ بدون ورود/سرور بالا میآید و دادهٔ نمونهٔ فارسی روی فرم مینشاند.
+    /// </summary>
+    private async Task RenderPageScreenshotAsync(string page, string path)
+    {
+        try
+        {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("fa-IR");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("fa-IR");
+
+            UserControl view;
+            object viewModel;
+            var winWidth = 1180;
+            var winHeight = 800;
+
+            switch (page.ToLowerInvariant())
+            {
+                case "dentistry":
+                {
+                    var m = Services.GetRequiredService<DentistryViewModel>();
+                    // دادهٔ نمونهٔ چارت — رنگها همان وضعیتهای واقعی برنامهد
+                    for (var i = 0; i < m.UpperTeeth.Count; i++)
+                        m.UpperTeeth[i].Condition = i switch { 2 => 1, 5 => 2, 9 => 3, 13 => 4, _ => 0 };
+                    for (var i = 0; i < m.LowerTeeth.Count; i++)
+                        m.LowerTeeth[i].Condition = i switch { 1 => 2, 4 => 1, 11 => 5, _ => 0 };
+                    m.SelectedTooth = m.UpperTeeth.Count > 2 ? m.UpperTeeth[2] : null;
+                    m.DentalPlan.Add(new DentalPlanRow(16, "درمان ریشه (۴ کانال)", 4500000m, "در انتظار", "#D97706", "O", "۱۴۰۵/۰۸/۱۲"));
+                    m.DentalPlan.Add(new DentalPlanRow(14, "ترمیم کامپوزیت", 1200000m, "انجامشده", "#059669", "M", "۱۴۰۵/۰۷/۲۸"));
+                    m.DentalPlan.Add(new DentalPlanRow(36, "روکش سرامیکی", 8000000m, "در انتظار", "#D97706", "—", "بدون نوبت"));
+                    viewModel = m;
+                    view = new DentistryView { DataContext = m };
+                    break;
+                }
+                case "ophthalmology":
+                {
+                    var m = Services.GetRequiredService<OphthalmologyViewModel>();
+                    m.OdSphere = "-2.50"; m.OdCylinder = "-0.75"; m.OdAxis = "180"; m.OdAdd = "+1.50"; m.OdIop = "۱۴";
+                    m.OsSphere = "-3.00"; m.OsCylinder = "-1.00"; m.OsAxis = "175"; m.OsAdd = "+1.50"; m.OsIop = "۲۳";
+                    m.Pd = "۶۲";
+                    m.EyeFindings = "حدت بینایی دو چشم با عینک کامل؛ فشار چشم چپ بالاتر از حد طبیعی — پیگیری گلوکوم.";
+                    m.SlitOd = "قرنیه شفاف، اتاق قدامی عمیق، عدسی شفاف.";
+                    m.SlitOs = "قرنیه شفاف، کاپ دیسک ۰٫۶ — نیازمند OCT.";
+                    m.PachymetryOd = "۵۴۲"; m.PachymetryOs = "۵۳۸";
+                    m.VisualFieldText = "میدان بینایی طبیعی";
+                    m.DiagnosisText = "آستیگماتیسم مرکب دوطرفه · مشکوک به گلوکوم چشم چپ";
+                    m.CarePlanText = "OCT عصب بینایی + تونومتری مجدد طی دو هفته";
+                    m.DrugPrescriptionText = "قطرهٔ تیمولول ۰٫۵٪ — یک قطره صبحگاهی چشم چپ";
+                    m.FollowUpText = "دو هفتهٔ دیگر";
+                    m.EyeHistory.Add(new EyeExamRow("۱۴۰۵/۰۸/۰۳", "OD: -2.50 / -0.75 × 180", "OS: -3.00 / -1.00 × 175", "IOP چپ ۲۳"));
+                    m.EyeHistory.Add(new EyeExamRow("۱۴۰۵/۰۵/۱۸", "OD: -2.25 / -0.50 × 180", "OS: -2.75 / -0.75 × 175", "طبیعی"));
+                    m.EyeHistory.Add(new EyeExamRow("۱۴۰۴/۱۱/۲۲", "OD: -2.00 / -0.50 × 180", "OS: -2.50 / -0.75 × 175", "طبیعی"));
+                    viewModel = m;
+                    view = new OphthalmologyView { DataContext = m };
+                    break;
+                }
+                case "physiotherapy":
+                {
+                    var m = Services.GetRequiredService<PhysiotherapyViewModel>();
+                    m.TotalSessions = 12;
+                    m.ActiveProtocolName = "کمردرد مزمن — پروتکل ۱۲ جلسهای";
+                    m.ProtocolGoal = "کاهش درد به زیر ۳ و بازگشت دامنهٔ حرکتی کمر";
+                    m.SelectedZone = "کمر (لومبار)";
+                    m.PainScore = 4;
+                    m.PhysioNotes = "بهبود قابل توجه در خمشدن به جلو؛ ادامهٔ تمرینات ثباتدهندهٔ مرکزی.";
+                    m.HomeProgram = "پلانک ۳×۳۰ ثانیه · کشش همسترینگ ۳×۳۰ ثانیه · پیادهروی ۲۰ دقیقه";
+                    m.History.Add(new PhysioSessionDto { Id = 5, DateShamsi = "۱۴۰۵/۰۸/۰۵", SessionNumber = 5, PainScore = 4, Duration = 45, Treatments = "TENS · اولتراسوند · تمرینات درمانی" });
+                    m.History.Add(new PhysioSessionDto { Id = 4, DateShamsi = "۱۴۰۵/۰۸/۰۱", SessionNumber = 4, PainScore = 5, Duration = 45, Treatments = "TENS · تمرینات درمانی" });
+                    m.History.Add(new PhysioSessionDto { Id = 3, DateShamsi = "۱۴۰۵/۰۷/۲۷", SessionNumber = 3, PainScore = 6, Duration = 40, Treatments = "لیزر درمانی · ماساژ" });
+                    m.History.Add(new PhysioSessionDto { Id = 2, DateShamsi = "۱۴۰۵/۰۷/۲۳", SessionNumber = 2, PainScore = 7, Duration = 40, Treatments = "اولتراسوند · تمرینات کششی" });
+                    m.History.Add(new PhysioSessionDto { Id = 1, DateShamsi = "۱۴۰۵/۰۷/۱۹", SessionNumber = 1, PainScore = 8, Duration = 35, Treatments = "ارزیابی اولیه · TENS" });
+                    viewModel = m;
+                    view = new PhysiotherapyView { DataContext = m };
+                    break;
+                }
+                case "survey":
+                case "survey-results":
+                {
+                    var m = Services.GetRequiredService<SurveyViewModel>();
+                    m.Surveys.Add(new SurveyListRow(1, "رضایت از ویزیت پزشک", "ارزیابی کیفیت ویزیت و برخورد پزشک", "رضایت بیماران", true, "فعال", 312, "۴٫۲/۵", null));
+                    m.Surveys.Add(new SurveyListRow(2, "کیفیت پذیرش و برخورد", "نظرسنجی کوتاه پس از پذیرش", "کیفیت خدمات", true, "فعال", 194, "۴٫۵/۵", null));
+                    m.Surveys.Add(new SurveyListRow(3, "نظرسنجی فصلی پاییز", "ویژهٔ بیماران مزمن", "ارزیابی پزشک", false, "پایان یافته", 428, "۴٫۳/۵", null));
+                    m.TotalResponsesText = "۳۱۲";
+                    m.AverageText = "۴٫۲/۵";
+                    m.Last30Text = "۴۸";
+                    m.Stars.Add(new StarBar(5, 148, 100, "★★★★★"));
+                    m.Stars.Add(new StarBar(4, 96, 65, "★★★★"));
+                    m.Stars.Add(new StarBar(3, 41, 28, "★★★"));
+                    m.Stars.Add(new StarBar(2, 17, 12, "★★"));
+                    m.Stars.Add(new StarBar(1, 10, 7, "★"));
+                    m.DoctorRatings.Add(new DoctorRatingRow(1, "دکتر رضایی", 96, "۴٫۸", 96));
+                    m.DoctorRatings.Add(new DoctorRatingRow(2, "دکتر کریمی", 64, "۴٫۶", 92));
+                    m.DoctorRatings.Add(new DoctorRatingRow(3, "دکتر بهادری", 81, "۴٫۳", 86));
+                    m.Comments.Add(new SurveyCommentRow(1, "زهرا محمدی", "دکتر رضایی", "۵ ستاره", "برخورد بسیار خوب و توضیحات کامل بود. ممنونم.", "۱۴۰۵/۰۸/۰۳"));
+                    m.Comments.Add(new SurveyCommentRow(2, "علی احمدی", "دکتر کریمی", "۴ ستاره", "زمان انتظار کمی طولانی بود ولی ویزیت عالی بود.", "۱۴۰۵/۰۸/۰۲"));
+                    m.Comments.Add(new SurveyCommentRow(3, "مریم حسینی", "دکتر بهادری", "۵ ستاره", "محیط تمیز و پرسنل مؤدب.", "۱۴۰۵/۰۷/۲۹"));
+                    m.TabIndex = page.Equals("survey-results", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+                    viewModel = m;
+                    view = new SurveyView { DataContext = m };
+                    winHeight = 830;
+                    break;
+                }
+                case "print-template":
+                {
+                    var m = Services.GetRequiredService<ComplementaryViewModel>();
+                    m.PrintTemplates.Add(new PrintTemplateRow { Id = 1, Key = "Invoice", Title = "فاکتور — سربرگ A5", TypeFa = "فاکتور و قبض پرداخت", PaperSize = "A5", IsActive = true, IsDefault = true, Body = "<div class=\"header\">درمانگاه سهند</div>" });
+                    m.PrintTemplates.Add(new PrintTemplateRow { Id = 2, Key = "Prescription", Title = "نسخه — سربرگ پزشک", TypeFa = "نسخه پزشکی", PaperSize = "A5", IsActive = false, Body = "" });
+                    m.PrintTemplates.Add(new PrintTemplateRow { Id = 3, Key = "ReceptionReceipt", Title = "رسید پذیرش کوتاه", TypeFa = "رسید پذیرش", PaperSize = "A6", IsActive = false, Body = "" });
+                    m.PrintTemplates.Add(new PrintTemplateRow { Id = 4, Key = "InsuranceForm", Title = "صورت حساب بیمه", TypeFa = "صورت حساب بیمه", PaperSize = "A4", IsActive = false, Body = "" });
+                    m.VisibleTemplates.Clear();
+                    foreach (var r in m.PrintTemplates) m.VisibleTemplates.Add(r);
+                    m.TabIndex = 0;
+                    viewModel = m;
+                    view = new ComplementaryView { DataContext = m };
+                    winWidth = 1240;
+                    break;
+                }
+                case "print-settings":
+                {
+                    var m = Services.GetRequiredService<SettingsViewModel>();
+                    if (m.PrintJobs.Count == 0)
+                    {
+                        // همان ۱۲ سند مرکز چاپ — بدون نیاز به سرور
+                        foreach (var (key, title, desc) in new[]
+                        {
+                            ("ReceptionReceipt", "قبض پذیرش", "رسید پذیرش بیمار"),
+                            ("AppointmentTicket", "قبض نوبت", "رسید نوبتدهی"),
+                            ("Invoice", "فاکتور", "فاکتور خدمات"),
+                            ("Prescription", "نسخه", "نسخهٔ پزشک"),
+                            ("LabResult", "نتیجه آزمایش", "جواب آزمایش"),
+                            ("LabLabel", "برچسب نمونه", "لیبل ظرف نمونه"),
+                            ("ImagingReport", "گزارش تصویربرداری", "گزارش رادیولوژی"),
+                            ("ShiftReceipt", "رسید شیفت", "گزارش صندوق"),
+                            ("Payslip", "فیش حقوقی", "فیش پرسنل"),
+                            ("Certificate", "گواهی پزشکی", "گواهی و استعلاجی"),
+                            ("PatientCard", "کارت بیمار", "کارت شناسایی"),
+                            ("Reports", "گزارشها", "چاپ گزارشها"),
+                        })
+                        {
+                            m.PrintJobs.Add(new PrintJobRow
+                            {
+                                Key = key, Title = title, Description = desc, Icon = "🖨",
+                                Printer = string.Empty, Paper = "A5", Copies = 1,
+                                Preview = true, AutoPrint = false
+                            });
+                        }
+                    }
+                    foreach (var n in new[] { "پیشفرض ویندوز", "HP LaserJet P1102", "EPSON LX-310", "چاپگر حرارتی ۸۰mm" })
+                        if (!m.PrinterNames.Contains(n)) m.PrinterNames.Add(n);
+                    m.ClinicName = "درمانگاه شبانهروزی سهند";
+                    m.SectionIndex = 3; // بخش «چاپگر و چاپ»
+                    viewModel = m;
+                    view = new SettingsView { DataContext = m };
+                    winWidth = 1240;
+                    winHeight = 850;
+                    break;
+                }
+                case "imaging":
+                {
+                    // همان مسیر قدیمی، با دادهٔ نمونهٔ کامل صف کار
+                    await RenderImagingScreenshotAsync(path);
+                    return;
+                }
+                default:
+                    throw new ArgumentException($"کلید ناشناختهٔ صفحه: {page}. کلیدهای مجاز: {string.Join(", ", ScreenshotPageKeys)}");
+            }
+
+            view.Language = XmlLanguage.GetLanguage("fa-IR");
+            view.FlowDirection = FlowDirection.RightToLeft;
+            view.Background = new SolidColorBrush(Color.FromRgb(0xEE, 0xF3, 0xF7));
+            view.FontFamily = new FontFamily("Tahoma");
+
+            var window = new Window
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0xEE, 0xF3, 0xF7)),
+                Content = view,
+                Width = winWidth,
+                Height = winHeight,
+                Topmost = true,
+                WindowStyle = WindowStyle.None,
+                ShowInTaskbar = false,
+                Left = 0,
+                Top = 0,
+                Title = $"اسکرینشات راستیآزمایی — {page}",
+                FlowDirection = FlowDirection.RightToLeft
+            };
+            window.Show();
+            await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+            // فرصت به بارگذاریهای آغازین (که در نبود سرور شکست میخورند) تا
+            // نشانگر «در حال بارگذاری» فروبنشیند و فرم روی وضعیت پایدار رندر شود.
+            await Task.Delay(1400);
+            if (viewModel is ViewModelBase busyVm) busyVm.IsBusy = false;
+
+            var width = Math.Max(1, (int)Math.Ceiling(view.ActualWidth));
+            var height = Math.Max(1, (int)Math.Ceiling(view.ActualHeight));
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
+            File.WriteAllText(path + ".txt",
+                $"Page={page} Flow={view.FlowDirection} Lang={view.Language} Actual={view.ActualWidth}x{view.ActualHeight} " +
+                $"Render={view.RenderSize.Width}x{view.RenderSize.Height} Desired={view.DesiredSize.Width}x{view.DesiredSize.Height}");
+
+            var left = (int)window.Left;
+            var top = (int)window.Top;
+            using var screen = new System.Drawing.Bitmap(width, height);
+            using (var g = System.Drawing.Graphics.FromImage(screen))
+                g.CopyFromScreen(left, top, 0, 0, new System.Drawing.Size(width, height));
+            screen.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+            window.Close();
+            Shutdown(0);
+        }
+        catch (Exception ex)
+        {
+            LogCrash($"اسکرینشات {page}", ex);
+            try { File.WriteAllText(path + ".error.txt", ex.ToString()); } catch { }
+            Shutdown(1);
+        }
+    }
+
     /// <summary>رویداد راه‌اندازی — ساخت کانتینر DI و انتخاب پنجره آغازین</summary>
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -503,6 +730,18 @@ public partial class App : System.Windows.Application
         // خودِ درخت بصری WPF عکس PNG می‌گیرد و خارج می‌شود؛ در CI ویندوزی برای
         // مقایسهٔ عینیِ پیاده‌سازی با طرح تأییدی استفاده می‌شود و در اجرای عادی
         // کاربران هرگز فعال نیست.
+        // ═══ حالت عمومی اسکرینشات واقعی (چرخهٔ مقایسه با طرح تأییدی مالک) ═══
+        // --screenshot <کلیدصفحه> <مسیر> — هر یک از شش صفحهٔ هدف (و تصویربرداری)
+        // را همانطور که کاربر میبیند رندر و PNG میکند؛ توضیحات کامل بالای متد.
+        var pageShotIndex = Array.IndexOf(e.Args, "--screenshot");
+        if (pageShotIndex >= 0)
+        {
+            var key = pageShotIndex + 1 < e.Args.Length ? e.Args[pageShotIndex + 1] : "dentistry";
+            var outPath = pageShotIndex + 2 < e.Args.Length ? e.Args[pageShotIndex + 2] : $"{key}-screenshot.png";
+            _ = RenderPageScreenshotAsync(key, outPath);
+            return;
+        }
+
         var shotIndex = Array.IndexOf(e.Args, "--imaging-screenshot");
         if (shotIndex >= 0)
         {

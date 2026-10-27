@@ -1,0 +1,94 @@
+name: 📸 اسکرینشات واقعی صفحات (مقایسه با طرح تأییدی)
+
+# رندر واقعی WPF روی ویندوز — همان خروجی ای که کاربر روی مانیتور میبیند.
+# خروجیها روی همان شاخه برگردانده میشوند تا کنار «طرح تأییدی مالک» در
+# docs/design/compare.html قرار گیرند و مغایرتها فرمبهفرم بررسی شوند.
+on:
+  workflow_dispatch:
+    inputs:
+      pages:
+        description: 'کلیدهای صفحات (جدا شده با کاما) — dentistry,ophthalmology,physiotherapy,survey,survey-results,print-template,print-settings,imaging'
+        required: false
+        default: 'dentistry,ophthalmology,physiotherapy,survey,survey-results,print-template,print-settings,imaging'
+
+permissions:
+  contents: write
+
+jobs:
+  real-screenshots:
+    runs-on: windows-latest
+    steps:
+      - name: دریافت سورس
+        uses: actions/checkout@v4
+
+      - name: نصب .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: ساخت کلاینت دسکتاپ
+        run: dotnet build src/Sahand.ClinicPro.Desktop/Sahand.ClinicPro.Desktop.csproj -c Release
+
+      - name: نصب فونت وزیرمتن روی رانر
+        shell: pwsh
+        run: |
+          Get-ChildItem src/Sahand.ClinicPro.Desktop/Assets/Fonts/*.ttf | ForEach-Object {
+            Copy-Item $_.FullName "$env:WINDIR\Fonts\" -Force
+            New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" -Name "$($_.BaseName) (TrueType)" -Value $_.Name -PropertyType String -Force | Out-Null
+          }
+
+      - name: رندر اسکرینشات واقعی صفحات
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Recurse -Filter Sahand.ClinicPro.Desktop.exe src/Sahand.ClinicPro.Desktop/bin/Release | Select-Object -First 1
+          if ($null -eq $exe) { throw "exe not found" }
+          New-Item -ItemType Directory -Force shots | Out-Null
+          $pages = '${{ inputs.pages }}' -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+          foreach ($page in $pages) {
+            Write-Host "::group::رندر $page"
+            $out = Join-Path $PWD "shots/$page.png"
+            $p = Start-Process -FilePath $exe.FullName -ArgumentList '--screenshot', $page, $out -PassThru -Wait
+            Write-Host "exit=$($p.ExitCode)"
+            if (Test-Path "$out.error.txt") { Get-Content "$out.error.txt" | Write-Host }
+            if (-not (Test-Path $out)) { throw "screenshot missing for $page" }
+            Write-Host "::endgroup::"
+          }
+          Get-ChildItem shots | Format-Table Name, Length
+
+      - name: رندر طرحهای تأییدی HTML (در صورت وجود)
+        shell: pwsh
+        run: |
+          # اگر طرح تأییدی بهصورت فایل HTML در docs/design/approved باشد،
+          # همانجا با مرورگر Edge headless به PNG تبدیل میشود تا مقایسه
+          # «طرح» و «واقعیت» دقیقاً پیکسلبهپیکسل انجام شود.
+          $dir = "docs/design/approved"
+          if (-not (Test-Path $dir)) { Write-Host 'طرح HTMLای وجود ندارد — فقط تصاویر PNG موجود استفاده میشود.'; exit 0 }
+          $edge = @(
+            "$env:ProgramFiles(x86)\Microsoft\Edge\Application\msedge.exe",
+            "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $edge) { Write-Host 'Edge یافت نشد — رندر HTML رد شد.'; exit 0 }
+          Get-ChildItem $dir -Filter *.html | ForEach-Object {
+            $out = Join-Path $PWD "shots/$($_.BaseName)-design.png"
+            & $edge --headless --disable-gpu --hide-scrollbars --window-size=1180,800 --screenshot="$out" "file:///$($_.FullName.Replace('\','/'))" | Out-Null
+            Write-Host "design: $($_.Name) -> $(Test-Path $out)"
+          }
+
+      - name: بارگذاری آرتیفکت
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-screenshots
+          path: shots/
+          retention-days: 14
+
+      - name: بازگرداندن اسکرینشاتها روی همان شاخه
+        shell: pwsh
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          New-Item -ItemType Directory -Force docs/screenshots/real | Out-Null
+          Copy-Item shots/* docs/screenshots/real/ -Force
+          git add docs/screenshots/real
+          if (git diff --cached --quiet) { Write-Host 'تغییر تازهای برای کامیت نیست.'; exit 0 }
+          git commit -m "اسکرینشات واقعی صفحات (رندر WPF روی ویندوز) — راستیآزمایی طرح"
+          git push origin HEAD:${{ github.ref_name }}
