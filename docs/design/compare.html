@@ -40,6 +40,7 @@
   .badge.pending{color:var(--warn);border-color:#FCD34D;background:#FFFBEB}
   .badge.doing{color:var(--brand);border-color:#93C5FD;background:#EFF6FF}
   .badge.done{color:var(--ok);border-color:#6EE7B7;background:#ECFDF5}
+  .badge.candidate{color:#9A3412;border-color:#FDBA74;background:#FFF7ED}
   .pair{display:grid;grid-template-columns:1fr 1fr;gap:0}
   .pane{padding:16px;border-inline-end:1px solid var(--line);min-width:0}
   .pane:last-child{border-inline-end:0}
@@ -59,6 +60,9 @@
   .notes{padding:12px 20px 20px;font-size:12.5px;color:var(--ink2)}
   .notes ul{margin:6px 0 0;padding-inline-start:20px}
   .foot{text-align:center;color:var(--ink2);font-size:11.5px;padding:18px}
+  .alert{background:#FFF7ED;border:1px solid #FDBA74;color:#7C2D12;border-radius:12px;
+         padding:12px 18px;margin-bottom:20px;font-size:12.5px;line-height:2}
+  .alert b{color:#9A3412}
   @media(max-width:1100px){.pair{grid-template-columns:1fr}.pane{border-inline-end:0;border-bottom:1px solid var(--line)}}
 </style>
 </head>
@@ -71,6 +75,17 @@
      (جای کارت، رنگ، فاصله، اندازهٔ قلم، ترتیب تبها) دیده شود.</p>
 </header>
 <div class="wrap">
+  <div class="alert">
+    ⚠️ <b>طرحهای ستون راست فعلاً «مراجع موجود در مخزن» هستند، نه لزوماً همان طرحهایی که شما تأیید کردهاید.</b>
+    سه تصویر <span dir="ltr">survey / survey-results / print-template</span> از پوشهٔ
+    <span dir="ltr">docs/screenshots/forms/</span> بریده شدهاند تا مقایسهٔ اولیه ممکن شود.
+    لطفاً تأیید کنید همان طرحهای شماست (یا فایلهای تأییدی را دوباره بفرستید / نام فایلشان را بگویید).
+    چهار صفحهٔ دیگر (دندانپزشکی، چشمپزشکی، فیزیوتراپی، تنظیمات چاپگر و چاپ) هنوز طرح تأییدی در مخزن
+    ندارند — تا زمانی که طرحشان دریافت شود، عمداً خالی گذاشته شدهاند تا چیزی را بهجای طرح شما جا نزنیم.
+    اسکرینشاتهای ستون چپ <b>واقعی</b>اند: خروجی همان اجرای WPF روی ویندوز (workflow
+    <span dir="ltr">screenshot-pages.yml</span>) — برای نمونه نگاه کنید به
+    <a href="../screenshots/real/survey-results.png" target="_blank">نتایج نظرسنجی</a>.
+  </div>
   <div class="toolbar">
     <strong>صفحه:</strong>
     <button data-filter="all" class="on">همه</button>
@@ -91,15 +106,39 @@
 
 <script>
 const PAGES = [
-  {key:'dentistry',       title:'🦷 صفحهٔ دندانپزشکی',      view:'DentistryView.xaml',      status:'pending', notes:['در انتظار طرح تأییدی مالک و اسکرینشات واقعی.']},
-  {key:'ophthalmology',   title:'👁️ صفحهٔ چشمپزشکی',        view:'OphthalmologyView.xaml',  status:'pending', notes:['در انتظار طرح تأییدی مالک و اسکرینشات واقعی.']},
-  {key:'physiotherapy',   title:'🏃 صفحهٔ فیزیوتراپی',       view:'PhysiotherapyView.xaml',  status:'pending', notes:['در انتظار طرح تأییدی مالک و اسکرینشات واقعی.']},
-  {key:'survey',          title:'📝 صفحهٔ نظرسنجی',          view:'SurveyView.xaml',         status:'pending', notes:['در انتظار طرح تأییدی مالک و اسکرینشات واقعی.']},
-  {key:'survey-results',  title:'📊 نظرسنجی — نتایج و آمار',  view:'SurveyView.xaml (تب ۲)',  status:'pending', notes:['در انتظار طرح تأییدی مالک و اسکرینشات واقعی.']},
-  {key:'print-template',  title:'🖨️ صفحهٔ قالب چاپ',         view:'ComplementaryView.xaml',  status:'pending', notes:['در انتظار طرح تأییدی مالک و اسکرینشات واقعی.']},
-  {key:'print-settings',  title:'⚙️ تنظیمات چاپگر و چاپ',    view:'SettingsView.xaml',       status:'pending', notes:['در انتظار طرح تأییدی مالک و اسکرینشات واقعی.']},
+  {key:'dentistry', title:'🦷 صفحهٔ دندانپزشکی', view:'DentistryView.xaml', status:'pending', notes:[
+    'طرح تأییدی این صفحه در مخزن پیدا نشد — منتظر فایل شما.',
+    'اسکرینشات واقعی فعلی: چارت FDI دو فک + رنگ وضعیت + جزئیات دندان و طرح درمان؛ کارت آماری بالای صفحه ندارد.',
+    'نوار آبی باریک در لبهٔ چپ تصویر، اثر برش پنجره روی رزولوشن رانر ویندوزی است (بعد از هماندازه کردن پنجره رفع میشود).']},
+  {key:'ophthalmology', title:'👁️ صفحهٔ چشمپزشکی', view:'OphthalmologyView.xaml', status:'pending', notes:[
+    'طرح تأییدی این صفحه در مخزن پیدا نشد — منتظر فایل شما.',
+    'اسکرینشات واقعی فعلی: معاینهٔ دو چشم، رفرکشن، فشار چشم، یافتهها و تشخیص؛ فاقد گیج/نمودار روند قابل مشاهده در بالای صفحه.']},
+  {key:'physiotherapy', title:'🏃 صفحهٔ فیزیوتراپی', view:'PhysiotherapyView.xaml', status:'pending', notes:[
+    'طرح تأییدی این صفحه در مخزن پیدا نشد — منتظر فایل شما.',
+    'اسکرینشات واقعی فعلی: نقشهٔ بدن، تکنیکها، پرچمهای قرمز و روند درمان؛ تراکم اطلاعات بالاست و ترتبیتبندی کارتها نیازمند مقایسه با طرح.']},
+  {key:'survey', title:'📝 صفحهٔ نظرسنجی', view:'SurveyView.xaml', status:'candidate', notes:[
+    'مرجع مخزن: <span dir="ltr">docs/screenshots/forms/22-surveys.png</span> — <b>نیازمند تأیید شما</b>.',
+    'مغایرت ۱: طرح، چهار کارت آماری (نرخ پاسخگویی / میانگین امتیاز / پاسخ ماه / نظرسنجیهای فعال) را بالای همان صفحه نشان میدهد؛ پیادهسازی فعلی آنها را در تب جدای «نتایج و آمار» پنهان کرده است.',
+    'مغایرت ۲: طرح، توزیع ستارگان و میانگین پزشکان را کنار جدول نظرسنجیها دارد؛ فعلاً هیچکدام در تب لیست دیده نمیشود.',
+    'مغایرت ۳: دکمههای طرح (نظرسنجی جدید / ویرایشی / فعالغیرفعال / ارسال لینک به ویزیتهای امروز / نتایج) با نوار ابزار فعلی، ترتیب و رنگبندی متفاوتی دارند.',
+    'مغایرت ۴: جدول طرح شامل ستونهای «سوالات، پاسخها، میانگین امتیاز، وضعیت» است؛ جدول فعلی فقط چهار ستون دارد.']},
+  {key:'survey-results', title:'📊 نظرسنجی — نتایج و آمار', view:'SurveyView.xaml (تب ۲)', status:'candidate', notes:[
+    'مرجع مخزن: همان <span dir="ltr">22-surveys.png</span> — <b>نیازمند تأیید شما</b>.',
+    'مغایرت ۱: کارتهای طرح، چهارمین کارت «نظرسنجیهای فعال» است؛ نسخهٔ فعلی کارت چهارم «پاسخ ۳۰ روز اخیر» است.',
+    'مغایرت ۲: توزیع ستارهها در طرح نوارهای سبز کوتاه با درصد کنارشان است؛ فعلاً نوارهای آبی تمامعرضاند.',
+    'مغایرت ۳: چیپهای پزشکان طرح بهصورت کپسول کوچک و امتیاز داخل چیپ است؛ فعلاً نوارهای ضخیم و امتیاز بیرون آنهاست.',
+    'مغایرت ۴: طرح، جدول نظرسنجیها را زیر همان نمودارها نگه داشته؛ نسخهٔ فعلی جدول را در تب دیگر دارد.']},
+  {key:'print-template', title:'🖨️ صفحهٔ قالب چاپ', view:'ComplementaryView.xaml', status:'candidate', notes:[
+    'مرجع مخزن: <span dir="ltr">docs/screenshots/forms/31-complementary.png</span> (شبکهٔ کارتهای قالب) و <span dir="ltr">60-print-designer-win.png</span> (پنجرهٔ طراح) — <b>نیازمند تأیید شما</b>.',
+    'مغایرت ۱: طرح، شش کارت قالب در دو ردیف سهتایی با پیشنمایش کاغذ و دکمههای «پیشفرض / انتخاب / ویرایش» دارد؛ پیادهسازی فعلی یک فهرست عمودی کنار ویرایشگر است.',
+    'مغایرت ۲: پنجرهٔ طراح طرح، ویرایشگر HTML تیره با متغیرهای چیپی و پیشنمایش زنده در سمت چپ دارد؛ فعلاً ویرایشگر سفید ساده و پیشنمایش خالی است.',
+    'مغایرت ۳ (نقص چیدمان): در گوشهٔ بالا-راست اسکرینشات واقعی، عنوان «نمایش قالبهای:» با نام قالب همپوشانی دارد و خوانا نیست — باید اصلاح شود.',
+    'مغایرت ۴: نوار بالای طرح شامل «قالب جدید / پیشنمایش / تنظیم پیشفرض» است؛ فعلاً دکمهها در ردیفهای پراکندهاند.']},
+  {key:'print-settings', title:'⚙️ تنظیمات چاپگر و چاپ', view:'SettingsView.xaml', status:'pending', notes:[
+    'طرح تأییدی این صفحه در مخزن پیدا نشد — منتظر فایل شما.',
+    'اسکرینشات واقعی فعلی: «مرکز چاپ» با فهرست اسناد و چاپگر اختصاصی هر سند؛ نیازمند مقایسهٔ ترتیب ستونها و کارتهای تنظیمات عمومی با طرح.']},
 ];
-const BADGE = {pending:'⏳ در انتظار طرح تأییدی', doing:'🔧 در حال رفع مغایرتها', done:'✅ منطبق — آمادهٔ تأیید'};
+const BADGE = {pending:'⏳ در انتظار طرح تأییدی', candidate:'🧩 مرجع مخزن — نیازمند تأیید', doing:'🔧 در حال رفع مغایرتها', done:'✅ منطبق — آمادهٔ تأیید'};
 const sections = document.getElementById('sections');
 
 function imgWithFallback(img, candidates, alt){
