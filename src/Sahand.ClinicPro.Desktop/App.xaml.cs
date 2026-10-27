@@ -403,8 +403,9 @@ public partial class App : System.Windows.Application
             {
                 Background = new SolidColorBrush(Color.FromRgb(0xEE, 0xF3, 0xF7)),
                 Content = view,
-                Width = 1600,
-                Height = 950,
+                Width = 1020,
+                Height = 745,
+                Topmost = true,
                 WindowStyle = WindowStyle.None,
                 ShowInTaskbar = false,
                 Left = 0,
@@ -419,12 +420,15 @@ public partial class App : System.Windows.Application
             var height = Math.Max(1, (int)Math.Ceiling(view.ActualHeight));
             File.WriteAllText(path + ".txt",
                 $"Flow={view.FlowDirection} Lang={view.Language} Actual={view.ActualWidth}x{view.ActualHeight} Render={view.RenderSize.Width}x{view.RenderSize.Height} Desired={view.DesiredSize.Width}x{view.DesiredSize.Height}");
-            var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
-            bitmap.Render(view);
-            var encoder = new PngBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(bitmap));
+            // اسکرین‌شات واقعی از روی صفحه (همان خروجی‌ای که کاربر روی مانیتور می‌بیند،
+            // با آینه‌ای‌شدن راست‌به‌چپِ سطح پنجره و شکل‌دهی حروف) — RenderTargetBitmap
+            // این دو را ندارد و خروجی‌اش با اجرای واقعی فرق می‌کرد.
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
-            using (var stream = File.Create(path)) encoder.Save(stream);
+            var left = (int)window.Left; var top = (int)window.Top;
+            using var screen = new System.Drawing.Bitmap(width, height);
+            using (var g = System.Drawing.Graphics.FromImage(screen))
+                g.CopyFromScreen(left, top, 0, 0, new System.Drawing.Size(width, height));
+            screen.Save(path, System.Drawing.Imaging.ImageFormat.Png);
             window.Close();
             Shutdown(0);
         }
