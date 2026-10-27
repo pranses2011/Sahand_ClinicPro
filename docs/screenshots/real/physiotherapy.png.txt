@@ -1,1 +1,1 @@
-Page=physiotherapy Flow=RightToLeft Lang=fa-ir Actual=1044x788 Render=1044x788 Desired=995٫5016666666667x731٫3199999999999
+Page=physiotherapy Flow=RightToLeft Lang=fa-ir Actual=1030x774 Render=1030x774 Desired=990٫9079166666667x731٫3199999999999
