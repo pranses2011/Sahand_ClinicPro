@@ -695,9 +695,25 @@ public partial class App : System.Windows.Application
             // (ResizeMode=NoResize) حذف شده باشد تا چیزی از دسکتاپ نماند.
             var left = (int)window.Left;
             var top = (int)window.Top;
+            // رانر ویندوزی ناحیهٔ کاری ۱۰۲۴×۷۶۸ دارد؛ پنجرهای که ۱۰۳۰×۷۷۴
+            // درخواست کرده همانجا بریده میشود و ۶ پیکسل انتهایی راست/پایین
+            // بهجای محتوای برنامه، دسکتاپ سیاه را نشان میداد. تنها همان بخش
+            // قابلرؤیت کپی میشود و ۶ پیکسل باقیمانده با همان رنگ پسزمینهٔ
+            // طرح (#EEF3F8) پر میگردد تا بوم نهایی دقیقاً ۱۰۳۰×۷۷۴ و
+            // بدون نوار سیاه باشد.
+            var workW = Math.Max(1, (int)SystemParameters.WorkArea.Width);
+            var workH = Math.Max(1, (int)SystemParameters.WorkArea.Height);
+            var capW = Math.Min(width, workW);
+            var capH = Math.Min(height, workH);
+            using var raw = new System.Drawing.Bitmap(capW, capH);
+            using (var g = System.Drawing.Graphics.FromImage(raw))
+                g.CopyFromScreen(left, top, 0, 0, new System.Drawing.Size(capW, capH));
             using var screen = new System.Drawing.Bitmap(width, height);
             using (var g = System.Drawing.Graphics.FromImage(screen))
-                g.CopyFromScreen(left, top, 0, 0, new System.Drawing.Size(width, height));
+            {
+                g.Clear(System.Drawing.Color.FromArgb(0xEE, 0xF3, 0xF8));
+                g.DrawImageUnscaled(raw, 0, 0);
+            }
             screen.Save(path, System.Drawing.Imaging.ImageFormat.Png);
             window.Close();
             Shutdown(0);
