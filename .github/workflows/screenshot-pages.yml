@@ -69,21 +69,48 @@ jobs:
         shell: pwsh
         run: |
           # اگر طرح تأییدی بهصورت فایل HTML در docs/design/approved باشد،
-          # همانجا با مرورگر Edge headless به PNG تبدیل میشود تا مقایسه
-          # «طرح» و «واقعیت» دقیقاً پیکسلبهپیکسل انجام شود.
+          # همانجا با مرورگر Edge headless به PNG تبدیل میشود تا مقایسهٔ
+          # «طرح» و «واقعیت» دقیقاً پیکسلبهپیکسل انجام شود. بوم دقیقاً
+          # ۱۰۳۰×۷۷۴ است — همان اندازهٔ اسکرینشات WPF.
           $dir = "docs/design/approved"
-          if (-not (Test-Path $dir)) { Write-Host 'طرح HTMLای وجود ندارد — فقط تصاویر PNG موجود استفاده میشود.'; exit 0 }
+          $report = @()
+          if (-not (Test-Path $dir)) {
+            Write-Host 'طرح HTMLای وجود ندارد.'
+            Set-Content -Path (Join-Path $PWD 'shots/design-render.log') -Value 'no approved dir' -Encoding UTF8
+            exit 0
+          }
+          # نکته: متغیر محیطی ProgramFiles(x86) حتماً با ${...} نوشته شود؛
+          # $env:ProgramFiles(x86) بهصورت «$env:ProgramFiles + متن (x86)»
+          # تعبیر میشود و مسیر اشتباهی میسازد (علت ردشدن بیرون اینکه دلیلش دیده شود).
           $edge = @(
-            "$env:ProgramFiles(x86)\Microsoft\Edge\Application\msedge.exe",
-            "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe"
-          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
-          if (-not $edge) { Write-Host 'Edge یافت نشد — رندر HTML رد شد.'; exit 0 }
-          # بوم طرحها دقیقاً ۱۰۳۰×۷۷۴ است — همان اندازهٔ اسکرینشات WPF —
-          # تا مقایسهٔ طرح/واقعیت تا حد امکان پیکسلبهپیکسل باشد.
-          Get-ChildItem $dir -Filter *.html | ForEach-Object {
-            $out = Join-Path $PWD "shots/$($_.BaseName)-design.png"
-            & $edge --headless --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --allow-file-access-from-files --window-size=1030,774 --screenshot="$out" "file:///$($_.FullName.Replace('\','/'))" | Out-Null
-            Write-Host "design: $($_.Name) -> $(Test-Path $out)"
+            "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe",
+            "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe",
+            "${env:LOCALAPPDATA}\Microsoft\Edge\Application\msedge.exe"
+          ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+          if (-not $edge) {
+            $cmd = Get-Command msedge.exe -ErrorAction SilentlyContinue
+            if ($cmd) { $edge = $cmd.Source }
+          }
+          if (-not $edge) {
+            Write-Host '::warning::Edge یافت نشد — رندر HTML رد شد.'
+            Set-Content -Path (Join-Path $PWD 'shots/design-render.log') -Value 'edge not found' -Encoding UTF8
+            exit 0
+          }
+          Write-Host "edge: $edge"
+          $files = @(Get-ChildItem $dir -Filter *.html)
+          Write-Host "design html files: $($files.Count)"
+          foreach ($f in $files) {
+            $out = Join-Path $PWD "shots/$($f.BaseName)-design.png"
+            $url = "file:///$($f.FullName.Replace('\','/'))"
+            & $edge --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --allow-file-access-from-files --window-size=1030,774 --screenshot="$out" $url 2>&1 | Out-Null
+            $ok = Test-Path $out
+            $size = if ($ok) { (Get-Item $out).Length } else { 0 }
+            Write-Host "design: $($f.Name) -> ok=$ok bytes=$size"
+            $report += "$($f.BaseName) ok=$ok bytes=$size"
+          }
+          Set-Content -Path (Join-Path $PWD 'shots/design-render.log') -Value $report -Encoding UTF8
+          if ($files.Count -gt 0 -and -not (Test-Path (Join-Path $PWD "shots/$($files[0].BaseName)-design.png"))) {
+            throw 'رندر هیچکدام از طرحهای HTML موفق نبود — خروجی PNG ساخته نشد.'
           }
 
       - name: بارگذاری آرتیفکت
@@ -105,7 +132,8 @@ jobs:
           Get-ChildItem shots -Filter '*-design.png' | ForEach-Object {
             Copy-Item $_.FullName (Join-Path 'docs/design/approved' $_.Name) -Force
           }
-          git add docs/screenshots/real docs/design/approved/*-design.png
+          git add docs/screenshots/real docs/design/approved/
+          git add -f docs/design/approved/*-design.png
           if (git diff --cached --quiet) { Write-Host 'تغییر تازهای برای کامیت نیست.'; exit 0 }
           git commit -m "اسکرینشات واقعی صفحات (رندر WPF روی ویندوز) — راستیآزمایی طرح"
           git push origin HEAD:${{ github.ref_name }}
