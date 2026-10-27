@@ -449,6 +449,16 @@ public partial class App : System.Windows.Application
     };
 
     /// <summary>
+    /// نشاندن همان پنج عدد نمونهای طرح تأییدی روی کارتهای آماری صفحه،
+    /// تا اسکرینشات WPF و رندر HTML طرح دقیقاً یکسان دیده شوند.
+    /// </summary>
+    private static void SetDesignKpis(ViewModels.DesignKpis k,
+        string v1, string v2, string v3, string v4, string v5)
+    {
+        k.V1 = v1; k.V2 = v2; k.V3 = v3; k.V4 = v4; k.V5 = v5;
+    }
+
+    /// <summary>
     /// رندر **واقعی** یکی از صفحات برنامه (همان درخت بصری WPF که کاربر میبیند)
     /// و ذخیرهٔ اسکرینشات PNG — ویژهٔ چرخهٔ مقایسه با طرح تأییدی مالک.
     /// فقط با آرگومان صریح <c>--screenshot &lt;کلید&gt; &lt;مسیر&gt;</c> فعال
@@ -471,6 +481,7 @@ public partial class App : System.Windows.Application
                 case "dentistry":
                 {
                     var m = Services.GetRequiredService<DentistryViewModel>();
+                    SetDesignKpis(m.Kpis, "۱۲۴", "۱۸", "۷", "۵", "۴۸٫۵M");
                     // دادهٔ نمونهٔ چارت — رنگها همان وضعیتهای واقعی برنامهد
                     for (var i = 0; i < m.UpperTeeth.Count; i++)
                         m.UpperTeeth[i].Condition = i switch { 2 => 1, 5 => 2, 9 => 3, 13 => 4, _ => 0 };
@@ -487,6 +498,7 @@ public partial class App : System.Windows.Application
                 case "ophthalmology":
                 {
                     var m = Services.GetRequiredService<OphthalmologyViewModel>();
+                    SetDesignKpis(m.Kpis, "۸", "۲", "۶", "۴", "۹۶");
                     m.OdSphere = "-2.50"; m.OdCylinder = "-0.75"; m.OdAxis = "180"; m.OdAdd = "+1.50"; m.OdIop = "۱۴";
                     m.OsSphere = "-3.00"; m.OsCylinder = "-1.00"; m.OsAxis = "175"; m.OsAdd = "+1.50"; m.OsIop = "۲۳";
                     m.Pd = "۶۲";
@@ -509,6 +521,7 @@ public partial class App : System.Windows.Application
                 case "physiotherapy":
                 {
                     var m = Services.GetRequiredService<PhysiotherapyViewModel>();
+                    SetDesignKpis(m.Kpis, "۹", "۲", "۲۴", "۴۱", "۶۸٪");
                     m.TotalSessions = 12;
                     m.ActiveProtocolName = "کمردرد مزمن — پروتکل ۱۲ جلسهای";
                     m.ProtocolGoal = "کاهش درد به زیر ۳ و بازگشت دامنهٔ حرکتی کمر";
@@ -529,6 +542,7 @@ public partial class App : System.Windows.Application
                 case "survey-results":
                 {
                     var m = Services.GetRequiredService<SurveyViewModel>();
+                    SetDesignKpis(m.Kpis, "۴۲٪", "۴٫۲/۵", "۳۱۲", "۲", "۱۸");
                     m.Surveys.Add(new SurveyListRow(1, "رضایت از ویزیت پزشک", "ارزیابی کیفیت ویزیت و برخورد پزشک", "رضایت بیماران", true, "فعال", 312, "۴٫۲/۵", null));
                     m.Surveys.Add(new SurveyListRow(2, "کیفیت پذیرش و برخورد", "نظرسنجی کوتاه پس از پذیرش", "کیفیت خدمات", true, "فعال", 194, "۴٫۵/۵", null));
                     m.Surveys.Add(new SurveyListRow(3, "نظرسنجی فصلی پاییز", "ویژهٔ بیماران مزمن", "ارزیابی پزشک", false, "پایان یافته", 428, "۴٫۳/۵", null));
@@ -555,6 +569,7 @@ public partial class App : System.Windows.Application
                 case "print-template":
                 {
                     var m = Services.GetRequiredService<ComplementaryViewModel>();
+                    SetDesignKpis(m.Kpis, "۳", "۶", "۲", "۹", "۱۴۰۵/۰۸/۰۳");
                     m.PrintTemplates.Add(new PrintTemplateRow { Id = 1, Key = "Invoice", Title = "فاکتور — سربرگ A5", TypeFa = "فاکتور و قبض پرداخت", PaperSize = "A5", IsActive = true, IsDefault = true, Body = "<div class=\"header\">درمانگاه سهند</div>" });
                     m.PrintTemplates.Add(new PrintTemplateRow { Id = 2, Key = "Prescription", Title = "نسخه — سربرگ پزشک", TypeFa = "نسخه پزشکی", PaperSize = "A5", IsActive = false, Body = "" });
                     m.PrintTemplates.Add(new PrintTemplateRow { Id = 3, Key = "ReceptionReceipt", Title = "رسید پذیرش کوتاه", TypeFa = "رسید پذیرش", PaperSize = "A6", IsActive = false, Body = "" });
@@ -570,6 +585,7 @@ public partial class App : System.Windows.Application
                 case "print-settings":
                 {
                     var m = Services.GetRequiredService<SettingsViewModel>();
+                    SetDesignKpis(m.Kpis, "۱۲", "۴", "۳", "۹", "۳۷");
                     if (m.PrintJobs.Count == 0)
                     {
                         // همان ۱۲ سند مرکز چاپ — بدون نیاز به سرور
@@ -620,7 +636,10 @@ public partial class App : System.Windows.Application
             view.Language = XmlLanguage.GetLanguage("fa-IR");
             view.FlowDirection = FlowDirection.RightToLeft;
             view.Background = new SolidColorBrush(Color.FromRgb(0xEE, 0xF3, 0xF7));
-            view.FontFamily = new FontFamily("Tahoma");
+            // همان قلمی که طرحهای HTML با آن رندر شدند (وزیرمتن جاسازی‌شده
+            // داخل exe) — تا مقایسهٔ پیکسلی با رندر Edge معنادار باشد.
+            view.FontFamily = (TryFindResource("App.FontFamily") as FontFamily)
+                              ?? new FontFamily("Tahoma");
 
             var window = new Window
             {
