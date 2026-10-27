@@ -4,6 +4,12 @@ name: 📸 اسکرینشات واقعی صفحات (مقایسه با طرح ت
 # خروجیها روی همان شاخه برگردانده میشوند تا کنار «طرح تأییدی مالک» در
 # docs/design/compare.html قرار گیرند و مغایرتها فرمبهفرم بررسی شوند.
 on:
+  # ثبت workflow در گیتهاپ نیازمند یک رویداد واقعی است؛ با تغییر همین فایل
+  # (یا فایل نشانگر) یک دور کامل اسکرینشاتها خودکار ساخته میشود.
+  push:
+    paths:
+      - '.github/workflows/screenshot-pages.yml'
+      - 'docs/screenshots/real/.trigger'
   workflow_dispatch:
     inputs:
       pages:
@@ -43,7 +49,11 @@ jobs:
           $exe = Get-ChildItem -Recurse -Filter Sahand.ClinicPro.Desktop.exe src/Sahand.ClinicPro.Desktop/bin/Release | Select-Object -First 1
           if ($null -eq $exe) { throw "exe not found" }
           New-Item -ItemType Directory -Force shots | Out-Null
-          $pages = '${{ inputs.pages }}' -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+          $pagesRaw = '${{ inputs.pages }}'
+          if ([string]::IsNullOrWhiteSpace($pagesRaw)) {
+            $pagesRaw = 'dentistry,ophthalmology,physiotherapy,survey,survey-results,print-template,print-settings,imaging'
+          }
+          $pages = $pagesRaw -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
           foreach ($page in $pages) {
             Write-Host "::group::رندر $page"
             $out = Join-Path $PWD "shots/$page.png"
