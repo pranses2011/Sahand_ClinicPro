@@ -138,46 +138,286 @@ if ($settings.PSObject.Properties.Name -notcontains 'Urls') {
 }
 $settings | ConvertTo-Json -Depth 100 | Set-Content -Path $settingsPath -Encoding UTF8
 
-# ═══ مجوز بازیابی پشتیبان برای لاگین سرور API (گزارش مالک با اسکرین‌شات) ═══
-# RESTORE DATABASE مجوز «سطح سرور» می‌خواهد (نقش dbcreator یا sysadmin) و
-# db_owner بودن روی دیتابیس کافی نیست؛ بدون آن، بازیابی از داخل برنامه با
-# «User does not have permission to RESTORE database» شکست می‌خورد. نصاب با
-# دسترسی مدیر ویندوز اجرا می‌شود و معمولاً روی SQL Server مدیر است، پس نقش
-# dbcreator را همین‌جا به لاگین رشتهٔ اتصال می‌دهد:
-#   - اتصال SQL Login → همان نام کاربری رشتهٔ اتصال
-#   - اتصال ویندوزی (Trusted) → حساب اجرای سرویس یعنی NT AUTHORITY\SYSTEM
-# خطا در این گام نصب را متوقف نمی‌کند (برنامه بدون بازیابی هم کار می‌کند)؛
-# فقط هشدار فارسی + دستور دستی SSMS چاپ می‌شود.
-try {
-    $csBuilder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder([string]$settings.ConnectionStrings.DefaultConnection)
-    $sqlLogin = if ($csBuilder.UserID) { [string]$csBuilder.UserID } else { 'NT AUTHORITY\SYSTEM' }
-    $grantBuilder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder
-    $grantBuilder.DataSource = $csBuilder.DataSource
-    $grantBuilder.InitialCatalog = 'master'
-    $grantBuilder.IntegratedSecurity = $true
-    $grantBuilder.TrustServerCertificate = $true
-    $grantBuilder.ConnectTimeout = 15
-    $loginLiteral = $sqlLogin.Replace("'", "''")
-    $loginBracket = $sqlLogin.Replace(']', ']]')
-    $grantSql = @"
-IF IS_SRVROLEMEMBER(N'dbcreator', N'$loginLiteral') <> 1
+# ═══════════════════════════════════════════════════════════════════════════
+#  اعطای خودکار نقش سروری dbcreator — رفع قطعی خطای «بازیابی اطلاعات از فایل
+#  پشتیبان» (درخواست مالک: «من نتونستم نقش کاربر رو روی SQL اعمال بکنم»)
+# ═══════════════════════════════════════════════════════════════════════════
+#  RESTORE DATABASE مجوز «سطح سرور» میخواهد (نقش dbcreator یا sysadmin)؛
+#  db_owner بودن روی خود دیتابیس کافی نیست. نسخهٔ پیشین فقط با Integrated
+#  Security به master وصل میشد و IS_SRVROLEMEMBER را چک میکرد؛ سه حالت رایج
+#  باعث میشد اعطا بیصدا رد شود و مالک مجبور شود دستی در SSMS نقش بدهد:
+#    • لاگین هدف اصلاً وجود نداشت ⇒ IS_SRVROLEMEMBER برمیگرداند NULL و
+#      شرط «NULL <> 1» نادرست میشود ⇒ هیچ ALTER SERVER ROLE اجرا نمیشد؛
+#    • رشتهٔ اتصال SQL Login (مثلاً sa) داشت ولی نصاب حتماً با Integrated
+#      Security وصل میشد (حسابی که روی SQL مدیر نبود) ⇒ دستور رد میشد؛
+#    • سرویس API با حسابی غیر از حساب جاری نصاب اجرا میشد (SYSTEM / حساب
+#      ماشین / حساب مجازی سرویس) ⇒ نقش به لاگین اشتباهی داده میشد.
+#  این نسخه:
+#    ۱) لاگین هدف دقیقاً همان لاگینی است که API با آن وصل میشود؛ در حالت
+#       ویندوزی همهٔ حسابهای محتمل سرویس پوشش داده میشوند؛
+#    ۲) لاگین ویندوزی در صورت نبود ساخته میشود و عضویت بهصورت بایدمنت
+#       (بدون خطای تکراری و بدون خطای «special principal sa») برقرار میشود؛
+#    ۳) اتصال مدیریتی با همان شناسههای رشتهٔ اتصال، سپس احراز ویندوزی و
+#       در نهایت — فقط در صورت نیاز — پرسش تعاملی یک حساب مدیر SQL امتحان
+#       میشود؛ اولین مسیر موفق، کار را تمام میکند؛
+#    ۴) نتیجه راستیآزمایی میشود؛ اگر هیچ مسیری موفق نشد، فایل .sql آمادهٔ
+#       اجرا کنار برنامه نوشته میشود تا در SSMS بدون جستوجو اجرا شود.
+#  خطای این گام نصب را متوقف نمیکند (برنامه بدون بازیابی هم کار میکند).
+# ═══════════════════════════════════════════════════════════════════════════
+
+function Get-CsValue {
+    param($Builder, [string[]]$Names)
+    foreach ($n in $Names) {
+        foreach ($k in @($Builder.Keys)) {
+            if ([string]$k -ieq $n) {
+                $v = [string]$Builder[$k]
+                if (-not [string]::IsNullOrWhiteSpace($v)) { return $v }
+            }
+        }
+    }
+    return ''
+}
+
+function New-MasterConnectionString {
+    param([string]$DataSource, [string]$User, [string]$Password, [string]$Encrypt)
+    # DbConnectionStringBuilder در همهٔ نسخههای PowerShell/.NET هست؛ برخلاف
+    # SqlConnectionStringBuilder نیازی به بارگذاری ارائهدهندهٔ SQL ندارد.
+    $b = New-Object System.Data.Common.DbConnectionStringBuilder
+    $b['Data Source'] = $DataSource
+    $b['Initial Catalog'] = 'master'
+    $b['Connect Timeout'] = '15'
+    $b['TrustServerCertificate'] = 'True'
+    if ($Encrypt) { $b['Encrypt'] = $Encrypt }
+    if ($User) {
+        $b['User ID'] = $User
+        $b['Password'] = $Password
+    } else {
+        $b['Integrated Security'] = 'True'
+    }
+    return $b.ConnectionString
+}
+
+function New-SqlConnectionObject {
+    param([string]$ConnectionString)
+    # Windows PowerShell 5.1 همیشه System.Data.SqlClient دارد؛ PowerShell 7
+    # گاهی فقط Microsoft.Data.SqlClient همراه بستهٔ سرور را دارد.
+    try { return New-Object System.Data.SqlClient.SqlConnection($ConnectionString) }
+    catch {
+        try {
+            $dll = Join-Path $target 'Microsoft.Data.SqlClient.dll'
+            if (Test-Path $dll) {
+                try { Add-Type -Path $dll -ErrorAction SilentlyContinue } catch { }
+                return New-Object Microsoft.Data.SqlClient.SqlConnection($ConnectionString)
+            }
+        } catch { }
+        throw 'هیچ ارائهدهندهٔ SQLای (System.Data.SqlClient / Microsoft.Data.SqlClient) در این PowerShell در دسترس نیست.'
+    }
+}
+
+# فرمان اعطا — پارامتری تا نام لاگین هرگز بهصورت رشتهٔ خام وارد SQL نشود.
+# خروجی: ۱ = لاگین عضو dbcreator یا sysadmin است (بازیابی مجاز)، ۰ = ناموفق.
+$grantRestoreSql = @'
+SET NOCOUNT ON;
+DECLARE @p nvarchar(128) = @Principal;
+DECLARE @cmd nvarchar(max);
+IF IS_SRVROLEMEMBER(N'sysadmin', @p) = 1
 BEGIN
-    ALTER SERVER ROLE [dbcreator] ADD MEMBER [$loginBracket];
+    SELECT CAST(1 AS int) AS Granted;
+    RETURN;
 END
-"@
-    $grantConn = New-Object System.Data.SqlClient.SqlConnection($grantBuilder.ConnectionString)
+IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = @p)
+BEGIN
+    IF CHARINDEX(N'\', @p) > 0
+    BEGIN
+        SET @cmd = N'CREATE LOGIN [' + REPLACE(@p, N']', N']]') + N'] FROM WINDOWS';
+        EXEC(@cmd);
+    END
+END
+IF EXISTS (SELECT 1 FROM sys.server_principals WHERE name = @p)
+   AND NOT EXISTS (SELECT 1
+                   FROM sys.server_role_members rm
+                   JOIN sys.server_principals r ON r.principal_id = rm.role_principal_id AND r.name = N'dbcreator'
+                   JOIN sys.server_principals m ON m.principal_id = rm.member_principal_id AND m.name = @p)
+BEGIN
+    SET @cmd = N'ALTER SERVER ROLE [dbcreator] ADD MEMBER [' + REPLACE(@p, N']', N']]') + N']';
+    BEGIN TRY
+        EXEC(@cmd);
+    END TRY
+    BEGIN CATCH
+        -- SQL Server 2008 R2 و قدیمیتر: ALTER SERVER ROLE وجود ندارد
+        EXEC sp_addsrvrolemember @loginame = @p, @rolename = N'dbcreator';
+    END CATCH
+END
+SELECT CASE WHEN IS_SRVROLEMEMBER(N'dbcreator', @p) = 1
+              OR IS_SRVROLEMEMBER(N'sysadmin',  @p) = 1
+            THEN CAST(1 AS int) ELSE CAST(0 AS int) END AS Granted;
+'@
+
+function Invoke-RestoreGrant {
+    param([string]$ConnectionString, [string[]]$Targets, [string]$Primary, [string]$Sql)
+    $ok = $false
+    $conn = New-SqlConnectionObject $ConnectionString
     try {
-        $grantConn.Open()
-        $grantCmd = $grantConn.CreateCommand()
-        $grantCmd.CommandText = $grantSql
-        [void]$grantCmd.ExecuteNonQuery()
-        Write-Host "مجوز بازیابی پشتیبان (نقش dbcreator) برای لاگین «$sqlLogin» برقرار شد." -ForegroundColor Green
-    } finally { $grantConn.Close() }
+        $conn.Open()
+        foreach ($t in $Targets) {
+            $cmd = $null
+            try {
+                $cmd = $conn.CreateCommand()
+                $cmd.CommandText = $Sql
+                $cmd.CommandTimeout = 30
+                $p = $cmd.CreateParameter()
+                $p.ParameterName = '@Principal'
+                $p.Value = $t
+                [void]$cmd.Parameters.Add($p)
+                $r = $cmd.ExecuteScalar()
+                if ($null -ne $r -and [int]$r -eq 1) {
+                    Write-Host "  ✓ نقش dbcreator برای «$t» برقرار/تأیید شد." -ForegroundColor DarkGreen
+                    if ($t -eq $Primary) { $ok = $true }
+                }
+            } catch {
+                Write-Host "  ! «$t»: $($_.Exception.Message)" -ForegroundColor DarkYellow
+            } finally {
+                if ($cmd) { $cmd.Dispose() }
+            }
+        }
+    } finally {
+        try { $conn.Close() } catch { }
+        $conn.Dispose()
+    }
+    return $ok
+}
+
+$restoreGranted = $false
+$lastGrantError = ''
+$restoreTargets = @()
+try {
+    $csParsed = New-Object System.Data.Common.DbConnectionStringBuilder
+    $csParsed.ConnectionString = [string]$settings.ConnectionStrings.DefaultConnection
+    $sqlDataSource = Get-CsValue $csParsed @('Data Source','Server','Address','Addr','Network Address')
+    $sqlUser       = Get-CsValue $csParsed @('User ID','UID','User')
+    $sqlPassword   = Get-CsValue $csParsed @('Password','PWD')
+    $sqlEncrypt    = Get-CsValue $csParsed @('Encrypt')
+    if (-not $sqlDataSource) { throw 'در رشتهٔ اتصال، آدرس SQL Server (Data Source) پیدا نشد.' }
+
+    if ($sqlUser) {
+        # SQL Login: دقیقاً همان نامی که سرور API با آن وصل میشود
+        $restoreTargets = @($sqlUser)
+    } else {
+        # Windows Auth: سرویس بهصورت پیشفرض LocalSystem است؛ اگر SQL روی
+        # رایانهٔ دیگری باشد، حساب ماشین (DOMAIN\PC$) وصل میشود. حساب جاری
+        # و حساب مجازی سرویس هم پوشش داده میشوند تا هیچ سناریویی جا نماند.
+        $restoreTargets = @('NT AUTHORITY\SYSTEM')
+        try {
+            $currentIdentity = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+            if ($currentIdentity) { $restoreTargets += $currentIdentity }
+        } catch { }
+        if ($env:USERDOMAIN -and $env:COMPUTERNAME) {
+            $restoreTargets += ('{0}\{1}$' -f $env:USERDOMAIN, $env:COMPUTERNAME)
+        }
+        $restoreTargets += 'NT SERVICE\SahandClinicPro.API'
+        $restoreTargets = @($restoreTargets | Select-Object -Unique)
+    }
+    $primaryRestoreTarget = [string]$restoreTargets[0]
+
+    # مسیرهای اتصال مدیریتی — به ترتیب شانس موفقیت
+    $grantAttempts = New-Object System.Collections.Generic.List[object]
+    $grantAttempts.Add([pscustomobject]@{
+        Label = 'همان شناسههای رشتهٔ اتصال'
+        ConnectionString = (New-MasterConnectionString -DataSource $sqlDataSource -User $sqlUser -Password $sqlPassword -Encrypt $sqlEncrypt)
+    })
+    $grantAttempts.Add([pscustomobject]@{
+        Label = 'احراز هویت ویندوزی حساب جاری'
+        ConnectionString = (New-MasterConnectionString -DataSource $sqlDataSource -Encrypt $sqlEncrypt)
+    })
+
+    foreach ($attempt in $grantAttempts) {
+        try {
+            if (Invoke-RestoreGrant -ConnectionString $attempt.ConnectionString -Targets $restoreTargets -Primary $primaryRestoreTarget -Sql $grantRestoreSql) {
+                $restoreGranted = $true
+                Write-Host "مجوز بازیابی پشتیبان (نقش سروری dbcreator) برای لاگین «$primaryRestoreTarget» بهصورت خودکار برقرار شد — با «$($attempt.Label)»." -ForegroundColor Green
+                break
+            }
+            $lastGrantError = "اتصال «$($attempt.Label)» برقرار شد ولی اجازهٔ اعطای نقش نداشت."
+        } catch {
+            $lastGrantError = $_.Exception.Message
+            Write-Host "  ! اتصال «$($attempt.Label)» ناموفق: $lastGrantError" -ForegroundColor DarkYellow
+        }
+    }
+
+    # مسیر سوم — فقط وقتی دو مسیر خودکار جواب نداد و نصاب تعاملی اجرا شده است.
+    # در نصبهایی که رشتهٔ اتصال یک SQL Login کمhandستفاده دارد، «sa» تنها
+    # حساب مدیر است؛ گرفتن نام/رمز همانجا مشکل را برای همیشه حل میکند.
+    $canPrompt = $false
+    try { $canPrompt = [Environment]::UserInteractive -and -not [Console]::IsInputRedirected }
+    catch { $canPrompt = [Environment]::UserInteractive }
+    if (-not $restoreGranted -and $canPrompt) {
+        try {
+            Write-Host ''
+            Write-Host 'هیچکدام از اتصالهای خودکار اجازهٔ اعطای نقش dbcreator را نداشتند.' -ForegroundColor Yellow
+            Write-Host 'اگر نام/رمز یک حساب مدیر SQL (مثلاً sa) را دارید همینجا وارد کنید؛ در غیر این صورت Enter بزنید.' -ForegroundColor Yellow
+            $adminLogin = Read-Host 'نام لاگین مدیر SQL (خالی = رد کردن)'
+            if ($adminLogin) {
+                $adminSecure = Read-Host 'رمز آن لاگین' -AsSecureString
+                $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($adminSecure)
+                try { $adminPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr) }
+                finally { [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }
+                $extraAttempt = New-MasterConnectionString -DataSource $sqlDataSource -User $adminLogin -Password $adminPassword -Encrypt $sqlEncrypt
+                if (Invoke-RestoreGrant -ConnectionString $extraAttempt -Targets $restoreTargets -Primary $primaryRestoreTarget -Sql $grantRestoreSql) {
+                    $restoreGranted = $true
+                    Write-Host "مجوز بازیابی پشتیبان (dbcreator) با حساب مدیر «$adminLogin» برقرار شد." -ForegroundColor Green
+                }
+            }
+        } catch {
+            $lastGrantError = $_.Exception.Message
+            Write-Host "  ! دریافت حساب مدیر ناموفق: $lastGrantError" -ForegroundColor DarkYellow
+        }
+    }
+
+    if (-not $restoreGranted) {
+        # فایل SQL آمادهٔ اجرا — مالک فقط کافی است آن را در SSMS با حساب
+        # مدیر باز و اجرا کند؛ دیگر نیازی به پیداکردن نام لاگین هم ندارد.
+        $manualSql = @()
+        $manualSql += '/* سهند کلینیکپرو — فعالسازی بازیابی پشتیبان (نقش dbcreator)
+           این فایل را در SQL Server Management Studio با حساب sysadmin اجرا کنید. */'
+        $manualSql += 'SET NOCOUNT ON;'
+        $idx = 0
+        foreach ($t in $restoreTargets) {
+            $idx++
+            $v = "@p$idx"
+            $lit = $t.Replace("'", "''")
+            $manualSql += "DECLARE $v nvarchar(128) = N'$lit';"
+            $manualSql += "IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = $v)"
+            $manualSql += "    AND CHARINDEX(N'\', $v) > 0"
+            $manualSql += "    EXEC(N'CREATE LOGIN [' + REPLACE($v, N']', N']]') + N'] FROM WINDOWS');"
+            $manualSql += "IF EXISTS (SELECT 1 FROM sys.server_principals WHERE name = $v)"
+            $manualSql += "    AND IS_SRVROLEMEMBER(N'dbcreator', $v) <> 1"
+            $manualSql += "    AND IS_SRVROLEMEMBER(N'sysadmin',  $v) <> 1"
+            $manualSql += "    EXEC(N'ALTER SERVER ROLE [dbcreator] ADD MEMBER [' + REPLACE($v, N']', N']]') + N']');"
+            $manualSql += ''
+        }
+        $manualPath = Join-Path $target 'Grant-RestorePermission.sql'
+        Set-Content -Path $manualPath -Value ($manualSql -join [Environment]::NewLine) -Encoding UTF8
+        Write-Host "هشدار: اعطای خودکار نقش dbcreator موفق نشد ($lastGrantError)." -ForegroundColor Yellow
+        Write-Host "فایل آمادهٔ اجرا ساخته شد: $manualPath" -ForegroundColor Yellow
+        Write-Host 'آن را یکبار در SSMS با حساب مدیر اجرا کنید تا «بازیابی از فایل پشتیبان» داخل برنامه فعال شود؛ سپس سرویس API را یکبار ریاستارت کنید.' -ForegroundColor Yellow
+    }
 } catch {
-    Write-Host "هشدار: اعطای خودکار مجوز بازیابی (dbcreator) موفق نشد: $($_.Exception.Message)" -ForegroundColor Yellow
-    Write-Host 'برای فعال شدن «بازیابی از فایل پشتیبان» داخل برنامه، در SSMS با کاربر مدیر این دستور را یک‌بار اجرا کنید (نام لاگین رشتهٔ اتصال سرور را جایگزین کنید):' -ForegroundColor Yellow
+    Write-Host "هشدار: پردازش خودکار مجوز بازیابی (dbcreator) با خطا روبهرو شد: $($_.Exception.Message)" -ForegroundColor Yellow
+    Write-Host 'در SSMS با کاربر مدیر این دستور را اجرا کنید (نام لاگین رشتهٔ اتصال سرور را جایگزین کنید):' -ForegroundColor Yellow
     Write-Host '  ALTER SERVER ROLE [dbcreator] ADD MEMBER [SahandLogin];' -ForegroundColor Yellow
 }
+
+# گزارش وضعیت مجوز بازیابی — برای پشتیبانی و عیبیابی نصبهای بعدی
+try {
+    $permReport = @(
+        "وضعیت مجوز بازیابی (dbcreator) — $(Get-Date -Format 'yyyy/MM/dd HH:mm:ss')",
+        "نتیجه: $(if ($restoreGranted) { 'اعطای خودکار موفق' } else { 'نیازمند اجرای دستی Grant-RestorePermission.sql' })",
+        "لاگین هدف اصلی: $primaryRestoreTarget",
+        "همهٔ لاگینهای هدف: $($restoreTargets -join '، ')",
+        "آخرین خطا: $lastGrantError"
+    )
+    Set-Content -Path (Join-Path $target 'restore-permission.status.txt') -Value $permReport -Encoding UTF8
+} catch { }
 
 # این مرحله همان تمام تغییرهای schema را خودکار اعمال می‌کند؛ نیازی به نصب SDK،
 # ابزار dotnet-ef یا اجرای دستور دستی توسط درمانگاه نیست.
@@ -194,7 +434,7 @@ try {
         throw ("اعمال خودکار ساختار دیتابیس شکست خورد (کد $LASTEXITCODE). " +
                "علت دقیق در خطاهای بالا و فایل‌های C:\SahandClinicPro\Server\Logs آمده است. " +
                "اگر خطا درباره «MS_Description»، «Invalid column name» یا «migration» بود، مشکل از " +
-               "رشته اتصال یا مجوز CREATE DATABASE نیست؛ آخرین بستهٔ سرور (v2.28.23) را نصب کنید.")
+               "رشته اتصال یا مجوز CREATE DATABASE نیست؛ آخرین بستهٔ سرور همین نسخه را نصب کنید.")
     }
 }
 finally { Pop-Location }
@@ -324,5 +564,31 @@ try {
     $newVersion = (Get-Item (Join-Path $target 'Sahand.ClinicPro.API.exe')).VersionInfo.ProductVersion
     if ($newVersion) { Set-Content -Path (Join-Path $target 'version.txt') -Value $newVersion -Encoding ASCII }
 } catch { }
+# ═══ تأیید نهایی مجوز بازیابی پس از نصب و بالا آمدن سرویس ═══
+# اگر SQL Server هنگام نصب در حال راهاندازی بوده یا حساب سرویس تازه ساخته
+# شده باشد، این بار دوم (بدون مزاحمت برای کاربر) همان اعطا را دوباره امتحان
+# میکند؛ نتیجهٔ نهایی در فایل وضعیت نوشته میشود.
+if (-not $restoreGranted -and $null -ne $grantAttempts -and $grantAttempts.Count -gt 0 -and $restoreTargets.Count -gt 0) {
+    try {
+        foreach ($attempt in $grantAttempts) {
+            try {
+                if (Invoke-RestoreGrant -ConnectionString $attempt.ConnectionString -Targets $restoreTargets -Primary $primaryRestoreTarget -Sql $grantRestoreSql) {
+                    $restoreGranted = $true
+                    Write-Host "مجوز بازیابی پشتیبان (dbcreator) در تأیید نهایی پس از نصب سرویس برقرار شد." -ForegroundColor Green
+                    break
+                }
+            } catch { }
+        }
+        $permReport = @(
+            "وضعیت مجوز بازیابی (dbcreator) — تأیید نهایی — $(Get-Date -Format 'yyyy/MM/dd HH:mm:ss')",
+            "نتیجه: $(if ($restoreGranted) { 'اعطای خودکار موفق' } else { 'نیازمند اجرای دستی Grant-RestorePermission.sql' })",
+            "لاگین هدف اصلی: $primaryRestoreTarget",
+            "همهٔ لاگینهای هدف: $($restoreTargets -join '، ')",
+            "آخرین خطا: $lastGrantError"
+        )
+        Set-Content -Path (Join-Path $target 'restore-permission.status.txt') -Value $permReport -Encoding UTF8
+    } catch { }
+}
+
 Write-Host "سرور آماده است: http://localhost:5000/health/ready" -ForegroundColor Green
 Write-Host 'برای کلاینت‌های دیگر، نشانی سرور را در appsettings.json کلاینت به‌صورت http://<IP-سرور>:5000/api/v1 وارد کنید.'

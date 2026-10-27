@@ -1,0 +1,49 @@
+name: 🧪 نگهبانهای نصاب و رابط
+
+# راستیآزمایی خودکار دو اصلاح اخیر:
+#   ۱) اسکریپت نصب سرور (PowerShell 5.1) از نظر نحوی و مؤلفههای اعطای
+#      نقش dbcreator — خطای «بازیابی اطلاعات از فایل پشتیبان»؛
+#   ۲) XAML پوشش بارگذاری — تپش پیوستهٔ قلب همگام با خط نوار قلب.
+on:
+  push:
+    paths:
+      - 'installer/Install-Server-Package.ps1'
+      - 'src/Sahand.ClinicPro.Desktop/MainWindow.xaml'
+      - 'scripts/validate_ui_guards.py'
+      - '.github/workflows/validate-ui-guards.yml'
+  pull_request:
+    paths:
+      - 'installer/Install-Server-Package.ps1'
+      - 'src/Sahand.ClinicPro.Desktop/MainWindow.xaml'
+      - 'scripts/validate_ui_guards.py'
+      - '.github/workflows/validate-ui-guards.yml'
+  workflow_dispatch:
+
+jobs:
+  guards:
+    runs-on: ubuntu-latest
+    steps:
+      - name: دریافت سورس
+        uses: actions/checkout@v4
+
+      - name: تجزیهٔ نحوی اسکریپت نصب سرور (Windows PowerShell 5.1)
+        shell: pwsh
+        run: |
+          $path = (Resolve-Path installer/Install-Server-Package.ps1).Path
+          $bytes = [System.IO.File]::ReadAllBytes($path)
+          if ($bytes.Length -lt 3 -or $bytes[0] -ne 0xEF -or $bytes[1] -ne 0xBB -or $bytes[2] -ne 0xBF) {
+            throw 'Install-Server-Package.ps1 must be UTF-8 with BOM for Windows PowerShell 5.1.'
+          }
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+          Write-Host '✅ نحو اسکریپت نصب سرور سالم است.'
+
+      - name: نگهبانهای رگرسیون (قلب + dbcreator) و سلامت XML
+        run: |
+          python3 scripts/validate_ui_guards.py
+          python3 scripts/validate_xaml.py
