@@ -78,9 +78,11 @@ jobs:
             "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe"
           ) | Where-Object { Test-Path $_ } | Select-Object -First 1
           if (-not $edge) { Write-Host 'Edge یافت نشد — رندر HTML رد شد.'; exit 0 }
+          # بوم طرحها دقیقاً ۱۰۳۰×۷۷۴ است — همان اندازهٔ اسکرینشات WPF —
+          # تا مقایسهٔ طرح/واقعیت تا حد امکان پیکسلبهپیکسل باشد.
           Get-ChildItem $dir -Filter *.html | ForEach-Object {
             $out = Join-Path $PWD "shots/$($_.BaseName)-design.png"
-            & $edge --headless --disable-gpu --hide-scrollbars --window-size=1180,800 --screenshot="$out" "file:///$($_.FullName.Replace('\','/'))" | Out-Null
+            & $edge --headless --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --allow-file-access-from-files --window-size=1030,774 --screenshot="$out" "file:///$($_.FullName.Replace('\','/'))" | Out-Null
             Write-Host "design: $($_.Name) -> $(Test-Path $out)"
           }
 
@@ -98,7 +100,12 @@ jobs:
           git config user.email "actions@github.com"
           New-Item -ItemType Directory -Force docs/screenshots/real | Out-Null
           Copy-Item shots/* docs/screenshots/real/ -Force
-          git add docs/screenshots/real
+          # تصاویر رندرشده از طرحهای HTML را کنار همان طرحها هم بگذار تا
+          # صفحهٔ مقایسه (compare.html) بتواند آنها را مستقیم نشان دهد.
+          Get-ChildItem shots -Filter '*-design.png' | ForEach-Object {
+            Copy-Item $_.FullName (Join-Path 'docs/design/approved' $_.Name) -Force
+          }
+          git add docs/screenshots/real docs/design/approved/*-design.png
           if (git diff --cached --quiet) { Write-Host 'تغییر تازهای برای کامیت نیست.'; exit 0 }
           git commit -m "اسکرینشات واقعی صفحات (رندر WPF روی ویندوز) — راستیآزمایی طرح"
           git push origin HEAD:${{ github.ref_name }}

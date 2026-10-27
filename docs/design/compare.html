@@ -41,6 +41,7 @@
   .badge.doing{color:var(--brand);border-color:#93C5FD;background:#EFF6FF}
   .badge.done{color:var(--ok);border-color:#6EE7B7;background:#ECFDF5}
   .badge.candidate{color:#9A3412;border-color:#FDBA74;background:#FFF7ED}
+  .badge.proposed{color:#0D47A1;border-color:#93C5FD;background:#EFF6FF}
   .pair{display:grid;grid-template-columns:1fr 1fr;gap:0}
   .pane{padding:16px;border-inline-end:1px solid var(--line);min-width:0}
   .pane:last-child{border-inline-end:0}
@@ -70,21 +71,21 @@
 <header>
   <h1>🔍 مقایسهٔ «طرح تأییدی مالک» با «اسکرینشات واقعی برنامه»</h1>
   <p>هر ردیف، همان صفحهای است که روی ویندوز با فونت وزیرمتن و جهت راستبهچپ رندر شده است
-     ( Workflow ویندوزی <span dir="ltr">screenshot-pages.yml</span> ) — طرح تأییدی شما در ستون راست و خروجی
+     ( Workflow ویندوزی <span dir="ltr">screenshot-pages.yml</span> ) — طرح پیشنهادی تازه در ستون راست و خروجی
      واقعی WPF در ستون چپ. لغزندهٔ «همپوشانی» دو تصویر را روی هم میاندازد تا کوچکترین مغایرت
      (جای کارت، رنگ، فاصله، اندازهٔ قلم، ترتیب تبها) دیده شود.</p>
 </header>
 <div class="wrap">
   <div class="alert">
-    ⚠️ <b>طرحهای ستون راست فعلاً «مراجع موجود در مخزن» هستند، نه لزوماً همان طرحهایی که شما تأیید کردهاید.</b>
-    سه تصویر <span dir="ltr">survey / survey-results / print-template</span> از پوشهٔ
-    <span dir="ltr">docs/screenshots/forms/</span> بریده شدهاند تا مقایسهٔ اولیه ممکن شود.
-    لطفاً تأیید کنید همان طرحهای شماست (یا فایلهای تأییدی را دوباره بفرستید / نام فایلشان را بگویید).
-    چهار صفحهٔ دیگر (دندانپزشکی، چشمپزشکی، فیزیوتراپی، تنظیمات چاپگر و چاپ) هنوز طرح تأییدی در مخزن
-    ندارند — تا زمانی که طرحشان دریافت شود، عمداً خالی گذاشته شدهاند تا چیزی را بهجای طرح شما جا نزنیم.
-    اسکرینشاتهای ستون چپ <b>واقعی</b>اند: خروجی همان اجرای WPF روی ویندوز (workflow
-    <span dir="ltr">screenshot-pages.yml</span>) — برای نمونه نگاه کنید به
-    <a href="../screenshots/real/survey-results.png" target="_blank">نتایج نظرسنجی</a>.
+    🆕 <b>شش طرح کاملاً تازه ساخته شدهاند — منتظر تأیید شما قبل از اعمال روی XAML.</b>
+    بنا به انتخاب شما، طرحها از نو و دقیقاً در همان سبک صفحهای تصویربرداری که قبلاً تأیید کردهاید
+    طراحی شدهاند: کارتهای آماری پنجگانهٔ رنگی تمامعرض، چیپهای کپسولی، دکمههای تخت، تبهای زیرخطدار،
+    جداول راهراه و پالت آبی/سبز/بنفش/نارنجی/قرمز. بوم هر طرح دقیقاً <b>۱۰۳۰×۷۷۴ پیکسل</b> است —
+    همان اندازهٔ اسکرینشات واقعی WPF — تا مقایسه تا حد امکان پیکسلبهپیکسل باشد.
+    فایلهای منبع: <span dir="ltr">docs/design/approved/*.html</span> و
+    <span dir="ltr">base.css</span>؛ گالری تعاملی: <a href="gallery.html" target="_blank">gallery.html</a>.
+    <b>ستون چپ اسکرینشات واقعی «وضعیت فعلی» برنامه است (قبل از اعمال طرحهای نو)</b> — مغایرتها در پایین
+    هر بخش نوشته شدهاند تا یکییکی رفع شوند.
   </div>
   <div class="toolbar">
     <strong>صفحه:</strong>
@@ -106,39 +107,39 @@
 
 <script>
 const PAGES = [
-  {key:'dentistry', title:'🦷 صفحهٔ دندانپزشکی', view:'DentistryView.xaml', status:'pending', notes:[
-    'طرح تأییدی این صفحه در مخزن پیدا نشد — منتظر فایل شما.',
+  {key:'dentistry', title:'🦷 صفحهٔ دندانپزشکی', view:'DentistryView.xaml', status:'proposed', notes:[
+    'طرح نو در همان سبک تصویربرداری ساخته شده — منتظر تأیید شما.',
     'اسکرینشات واقعی فعلی: چارت FDI دو فک + رنگ وضعیت + جزئیات دندان و طرح درمان؛ کارت آماری بالای صفحه ندارد.',
     'نوار آبی باریک در لبهٔ چپ تصویر، اثر برش پنجره روی رزولوشن رانر ویندوزی است (بعد از هماندازه کردن پنجره رفع میشود).']},
-  {key:'ophthalmology', title:'👁️ صفحهٔ چشمپزشکی', view:'OphthalmologyView.xaml', status:'pending', notes:[
-    'طرح تأییدی این صفحه در مخزن پیدا نشد — منتظر فایل شما.',
+  {key:'ophthalmology', title:'👁️ صفحهٔ چشمپزشکی', view:'OphthalmologyView.xaml', status:'proposed', notes:[
+    'طرح نو در همان سبک تصویربرداری ساخته شده — منتظر تأیید شما.',
     'اسکرینشات واقعی فعلی: معاینهٔ دو چشم، رفرکشن، فشار چشم، یافتهها و تشخیص؛ فاقد گیج/نمودار روند قابل مشاهده در بالای صفحه.']},
-  {key:'physiotherapy', title:'🏃 صفحهٔ فیزیوتراپی', view:'PhysiotherapyView.xaml', status:'pending', notes:[
-    'طرح تأییدی این صفحه در مخزن پیدا نشد — منتظر فایل شما.',
+  {key:'physiotherapy', title:'🏃 صفحهٔ فیزیوتراپی', view:'PhysiotherapyView.xaml', status:'proposed', notes:[
+    'طرح نو در همان سبک تصویربرداری ساخته شده — منتظر تأیید شما.',
     'اسکرینشات واقعی فعلی: نقشهٔ بدن، تکنیکها، پرچمهای قرمز و روند درمان؛ تراکم اطلاعات بالاست و ترتبیتبندی کارتها نیازمند مقایسه با طرح.']},
-  {key:'survey', title:'📝 صفحهٔ نظرسنجی', view:'SurveyView.xaml', status:'candidate', notes:[
-    'مرجع مخزن: <span dir="ltr">docs/screenshots/forms/22-surveys.png</span> — <b>نیازمند تأیید شما</b>.',
+  {key:'survey', title:'📝 صفحهٔ نظرسنجی', view:'SurveyView.xaml', status:'proposed', notes:[
+    'طرح نو: همان زبان تصویربرداری، با کارتهای آماری و جدول و نمودارها در یک صفحه — <b>منتظر تأیید شما</b>.',
     'مغایرت ۱: طرح، چهار کارت آماری (نرخ پاسخگویی / میانگین امتیاز / پاسخ ماه / نظرسنجیهای فعال) را بالای همان صفحه نشان میدهد؛ پیادهسازی فعلی آنها را در تب جدای «نتایج و آمار» پنهان کرده است.',
     'مغایرت ۲: طرح، توزیع ستارگان و میانگین پزشکان را کنار جدول نظرسنجیها دارد؛ فعلاً هیچکدام در تب لیست دیده نمیشود.',
     'مغایرت ۳: دکمههای طرح (نظرسنجی جدید / ویرایشی / فعالغیرفعال / ارسال لینک به ویزیتهای امروز / نتایج) با نوار ابزار فعلی، ترتیب و رنگبندی متفاوتی دارند.',
     'مغایرت ۴: جدول طرح شامل ستونهای «سوالات، پاسخها، میانگین امتیاز، وضعیت» است؛ جدول فعلی فقط چهار ستون دارد.']},
-  {key:'survey-results', title:'📊 نظرسنجی — نتایج و آمار', view:'SurveyView.xaml (تب ۲)', status:'candidate', notes:[
-    'مرجع مخزن: همان <span dir="ltr">22-surveys.png</span> — <b>نیازمند تأیید شما</b>.',
+  {key:'survey-results', title:'📊 نظرسنجی — نتایج و آمار', view:'SurveyView.xaml (تب ۲)', status:'proposed', notes:[
+    'طرح نوی تب «نتایج و آمار» — <b>منتظر تأیید شما</b>.',
     'مغایرت ۱: کارتهای طرح، چهارمین کارت «نظرسنجیهای فعال» است؛ نسخهٔ فعلی کارت چهارم «پاسخ ۳۰ روز اخیر» است.',
     'مغایرت ۲: توزیع ستارهها در طرح نوارهای سبز کوتاه با درصد کنارشان است؛ فعلاً نوارهای آبی تمامعرضاند.',
     'مغایرت ۳: چیپهای پزشکان طرح بهصورت کپسول کوچک و امتیاز داخل چیپ است؛ فعلاً نوارهای ضخیم و امتیاز بیرون آنهاست.',
     'مغایرت ۴: طرح، جدول نظرسنجیها را زیر همان نمودارها نگه داشته؛ نسخهٔ فعلی جدول را در تب دیگر دارد.']},
-  {key:'print-template', title:'🖨️ صفحهٔ قالب چاپ', view:'ComplementaryView.xaml', status:'candidate', notes:[
-    'مرجع مخزن: <span dir="ltr">docs/screenshots/forms/31-complementary.png</span> (شبکهٔ کارتهای قالب) و <span dir="ltr">60-print-designer-win.png</span> (پنجرهٔ طراح) — <b>نیازمند تأیید شما</b>.',
+  {key:'print-template', title:'🖨️ صفحهٔ قالب چاپ', view:'ComplementaryView.xaml', status:'proposed', notes:[
+    'طرح نو: کتابخانهٔ ششکارتهای قالب + پنجرهٔ طراح با ویرایشگر تیره (فایل <span dir="ltr">print-designer-window.html</span>) — <b>منتظر تأیید شما</b>.',
     'مغایرت ۱: طرح، شش کارت قالب در دو ردیف سهتایی با پیشنمایش کاغذ و دکمههای «پیشفرض / انتخاب / ویرایش» دارد؛ پیادهسازی فعلی یک فهرست عمودی کنار ویرایشگر است.',
     'مغایرت ۲: پنجرهٔ طراح طرح، ویرایشگر HTML تیره با متغیرهای چیپی و پیشنمایش زنده در سمت چپ دارد؛ فعلاً ویرایشگر سفید ساده و پیشنمایش خالی است.',
     'مغایرت ۳ (نقص چیدمان): در گوشهٔ بالا-راست اسکرینشات واقعی، عنوان «نمایش قالبهای:» با نام قالب همپوشانی دارد و خوانا نیست — باید اصلاح شود.',
     'مغایرت ۴: نوار بالای طرح شامل «قالب جدید / پیشنمایش / تنظیم پیشفرض» است؛ فعلاً دکمهها در ردیفهای پراکندهاند.']},
-  {key:'print-settings', title:'⚙️ تنظیمات چاپگر و چاپ', view:'SettingsView.xaml', status:'pending', notes:[
-    'طرح تأییدی این صفحه در مخزن پیدا نشد — منتظر فایل شما.',
+  {key:'print-settings', title:'⚙️ تنظیمات چاپگر و چاپ', view:'SettingsView.xaml', status:'proposed', notes:[
+    'طرح نو در همان سبک تصویربرداری ساخته شده — منتظر تأیید شما.',
     'اسکرینشات واقعی فعلی: «مرکز چاپ» با فهرست اسناد و چاپگر اختصاصی هر سند؛ نیازمند مقایسهٔ ترتیب ستونها و کارتهای تنظیمات عمومی با طرح.']},
 ];
-const BADGE = {pending:'⏳ در انتظار طرح تأییدی', candidate:'🧩 مرجع مخزن — نیازمند تأیید', doing:'🔧 در حال رفع مغایرتها', done:'✅ منطبق — آمادهٔ تأیید'};
+const BADGE = {pending:'⏳ در انتظار طرح', candidate:'🧩 مرجع مخزن', proposed:'🆕 طرح نو — منتظر تأیید', doing:'🔧 در حال رفع مغایرتها', done:'✅ منطبق — آمادهٔ تأیید'};
 const sections = document.getElementById('sections');
 
 function imgWithFallback(img, candidates, alt){
@@ -163,9 +164,9 @@ PAGES.forEach(p => {
     </div>
     <div class="pair">
       <div class="pane">
-        <h3>🎨 طرح تأییدی مالک <span dir="ltr" style="font-size:11px;opacity:.7">approved/${p.key}.png</span></h3>
+        <h3>🎨 طرح پیشنهادی (منتظر تأیید) <span dir="ltr" style="font-size:11px;opacity:.7">approved/${p.key}.html</span></h3>
         <img class="shot design" alt="طرح تأییدی ${p.key}">
-        <div class="missing" style="display:none">طرح تأییدی این صفحه در پوشهٔ <span dir="ltr">docs/design/approved/</span> قرار نگرفته است. لطفاً همان تصویری را که تأیید کردهاید با نام <b dir="ltr">${p.key}.png</b> در آن پوشه بگذارید یا دوباره در گفتگو ارسال کنید.</div>
+        <div class="missing" style="display:none">رندر PNG این طرح هنوز ساخته نشده است — با اجرای workflow ویندوزی، فایل <b dir="ltr">approved/${p.key}.html</b> به <b dir="ltr">${p.key}-design.png</b> تبدیل و همینجا نمایش داده میشود. خود طرح را میتوانید در <a href="gallery.html" target="_blank">گالری</a> ببینید.</div>
       </div>
       <div class="pane">
         <h3>📸 اسکرینشات واقعی WPF <span dir="ltr" style="font-size:11px;opacity:.7">docs/screenshots/real/${p.key}.png</span></h3>
@@ -190,8 +191,8 @@ PAGES.forEach(p => {
   const missD  = el.querySelectorAll('.missing')[0];
   const missR  = el.querySelectorAll('.missing')[1];
 
-  imgWithFallback(design, [`approved/${p.key}.png`,`approved/${p.key}.jpg`,`approved/${p.key}-design.png`], p.key);
-  imgWithFallback(cmpD,   [`approved/${p.key}.png`,`approved/${p.key}.jpg`,`approved/${p.key}-design.png`], p.key);
+  imgWithFallback(design, [`approved/${p.key}-design.png`,`approved/${p.key}.png`,`approved/${p.key}.jpg`], p.key);
+  imgWithFallback(cmpD,   [`approved/${p.key}-design.png`,`approved/${p.key}.png`,`approved/${p.key}.jpg`], p.key);
   imgWithFallback(real,   [`../screenshots/real/${p.key}.png`], p.key);
   imgWithFallback(cmpR,   [`../screenshots/real/${p.key}.png`], p.key);
   design.addEventListener('error', ()=>{ if(design.style.display==='none') missD.style.display='flex'; });
