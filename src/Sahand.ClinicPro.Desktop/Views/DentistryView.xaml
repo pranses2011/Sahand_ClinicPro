@@ -28,7 +28,7 @@
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock x:Name="Num" Text="{Binding NumberFa}" FontSize="10.5"
                                            FontWeight="Bold" HorizontalAlignment="Center" Foreground="White" />
-                                <TextBlock x:Name="Type" Text="{Binding TypeName}" FontSize="6.2"
+                                <TextBlock x:Name="Type" Text="{Binding TypeShort}" FontSize="6.5"
                                            HorizontalAlignment="Center" Foreground="#F0F4F8" />
                             </StackPanel>
                         </Border>
@@ -238,29 +238,50 @@
             <StackPanel Grid.Column="2">
                 <Border Style="{StaticResource Ds.Panel}" Margin="0,0,0,8">
                     <StackPanel>
-                        <TextBlock Text="دندان انتخابی 🔍" Style="{StaticResource Ds.PanelTitle}" />
-                        <TextBlock Text="جنس دندان" Style="{StaticResource Ds.FieldLabel}" />
-                        <Border Style="{StaticResource Ds.FieldValue}">
-                            <TextBlock Text="{Binding SelectedTooth.AnatomyText, FallbackValue='آسیاب بزرگ اول · ریشه ۳ · کانال ۴'}"
-                                       FontSize="10.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                        </Border>
-                        <TextBlock Text="وضعیت" Style="{StaticResource Ds.FieldLabel}" />
-                        <Border Style="{StaticResource Ds.FieldValue}">
-                            <TextBlock Text="{Binding SelectedTooth.ConditionText, FallbackValue='پوسیدگی سطح اکلوزال'}"
-                                       FontSize="10.5" VerticalAlignment="Center" Foreground="#C62828" />
-                        </Border>
-                        <TextBlock Text="سطح درگیر" Style="{StaticResource Ds.FieldLabel}" />
-                        <WrapPanel Margin="0,2,0,3">
-                            <Button Content="M" Style="{StaticResource Ds.Chip}" Margin="0,0,4,3" Padding="9,1" />
-                            <Button Content="O" Style="{StaticResource Ds.ChipActive}" Margin="0,0,4,3" Padding="9,1" />
-                            <Button Content="D" Style="{StaticResource Ds.Chip}" Margin="0,0,4,3" Padding="9,1" />
-                            <Button Content="B" Style="{StaticResource Ds.Chip}" Margin="0,0,4,3" Padding="9,1" />
-                            <Button Content="L" Style="{StaticResource Ds.Chip}" Margin="0,0,4,3" Padding="9,1" />
-                        </WrapPanel>
+                        <TextBlock Text="{Binding SelectedTooth.NumberFa, StringFormat='دندان انتخابی: {0} 🔍', FallbackValue='دندان انتخابی: ۱۶ 🔍'}"
+                                   Style="{StaticResource Ds.PanelTitle}" />
+                        <!-- جنس و وضعیت کنار هم — همان فشردگی طرح تأییدی -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="6" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="جنس دندان" Style="{StaticResource Ds.FieldLabel}" />
+                                <Border Style="{StaticResource Ds.FieldValue}">
+                                    <TextBlock Text="{Binding SelectedTooth.AnatomyText, FallbackValue='آسیاب بزرگ اول · ریشه ۳ · کانال ۴'}"
+                                               FontSize="9.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                </Border>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="وضعیت" Style="{StaticResource Ds.FieldLabel}" />
+                                <Border Style="{StaticResource Ds.FieldValue}">
+                                    <TextBlock Text="{Binding SelectedTooth.ConditionText, FallbackValue='پوسیدگی'}"
+                                               FontSize="10" VerticalAlignment="Center" Foreground="#C62828" />
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                        <Grid Margin="0,5,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="سطح درگیر:" Style="{StaticResource Ds.FieldLabel}"
+                                       VerticalAlignment="Center" Margin="0,0,5,0" />
+                            <WrapPanel Grid.Column="1">
+                                <Button Content="M" Style="{StaticResource Ds.Chip}" Margin="0,0,3,0" Padding="7,0" Height="23" />
+                                <Button Content="O" Style="{StaticResource Ds.ChipActive}" Margin="0,0,3,0" Padding="7,0" Height="23" />
+                                <Button Content="D" Style="{StaticResource Ds.Chip}" Margin="0,0,3,0" Padding="7,0" Height="23" />
+                                <Button Content="B" Style="{StaticResource Ds.Chip}" Margin="0,0,3,0" Padding="7,0" Height="23" />
+                                <Button Content="L" Style="{StaticResource Ds.Chip}" Margin="0,0,3,0" Padding="7,0" Height="23" />
+                            </WrapPanel>
+                        </Grid>
                         <TextBlock Text="انتخاب خدمت از کاتالوگ" Style="{StaticResource Ds.FieldLabel}" />
-                        <ComboBox Style="{StaticResource Ds.CompactCombo}" ItemsSource="{Binding CatalogItems}"
-                                  DisplayMemberPath="Display" SelectedItem="{Binding SelectedCatalogItem}" />
-                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <ComboBox Style="{StaticResource Ds.CompactCombo}" Height="32"
+                                  ItemsSource="{Binding CatalogItems}" DisplayMemberPath="Display"
+                                  SelectedItem="{Binding SelectedCatalogItem}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                             <Button Content="ثبت وضعیت" Style="{StaticResource Ds.OutlineButton}"
                                     Padding="12,0" Margin="0,0,6,0" Command="{Binding SaveDentalChartCommand}" />
                             <Button Content="+ افزودن به طرح درمان" Style="{StaticResource Ds.FlatPrimary}"
@@ -273,7 +294,8 @@
                     <StackPanel>
                         <TextBlock Text="طرح درمان 📋" Style="{StaticResource Ds.PanelTitle}" />
                         <DataGrid ItemsSource="{Binding DentalPlan}" Style="{StaticResource Ds.TableDataGrid}"
-                                  MaxHeight="180" RowHeight="30">
+                                  MaxHeight="170" RowHeight="30"
+                                  ColumnHeaderStyle="{StaticResource Ds.TableColumnHeader}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="دندان" Binding="{Binding Tooth}" Width="52"
                                                     ElementStyle="{StaticResource Ds.TableCellText}" />

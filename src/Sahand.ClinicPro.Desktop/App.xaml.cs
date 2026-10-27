@@ -408,6 +408,10 @@ public partial class App : System.Windows.Application
                 Height = 745,
                 Topmost = true,
                 WindowStyle = WindowStyle.None,
+                // حاشیهٔ تغییر اندازهٔ پیشفرض WPF (چند پیکسل از کاغذدیواری
+                // ویندوز را در لبهٔ چپ عکس نشان میداد) — حذف کامل.
+                ResizeMode = ResizeMode.NoResize,
+                BorderThickness = new Thickness(0),
                 ShowInTaskbar = false,
                 Left = 0,
                 Top = 0,
@@ -640,6 +644,9 @@ public partial class App : System.Windows.Application
             // داخل exe) — تا مقایسهٔ پیکسلی با رندر Edge معنادار باشد.
             view.FontFamily = (TryFindResource("App.FontFamily") as FontFamily)
                               ?? new FontFamily("Tahoma");
+            // تولتیپها هنگام CopyFromScreen ممکن است زیر نشانگر ماوس باز بمانند
+            // و یک کادر تیرهٔ اضافی وسط عکس بیندازند؛ مالک طرح را بدون آنها میبیند.
+            ToolTipService.SetIsEnabled(view, false);
 
             var window = new Window
             {
@@ -669,8 +676,12 @@ public partial class App : System.Windows.Application
                 $"Page={page} Flow={view.FlowDirection} Lang={view.Language} Actual={view.ActualWidth}x{view.ActualHeight} " +
                 $"Render={view.RenderSize.Width}x{view.RenderSize.Height} Desired={view.DesiredSize.Width}x{view.DesiredSize.Height}");
 
-            var left = (int)window.Left;
-            var top = (int)window.Top;
+            // مبدأ دقیق محتوای UserControl روی صفحه — نه گوشهٔ پنجره — تا
+            // هیچ نوار/حاشیهای از سیستمعامل وارد اسکرینشات نشود و تصویر
+            // دقیقاً همان ۱۰۳۰×۷۷۴ بوم طرح باشد.
+            var origin = view.PointToScreen(new Point(0, 0));
+            var left = (int)Math.Round(origin.X);
+            var top = (int)Math.Round(origin.Y);
             using var screen = new System.Drawing.Bitmap(width, height);
             using (var g = System.Drawing.Graphics.FromImage(screen))
                 g.CopyFromScreen(left, top, 0, 0, new System.Drawing.Size(width, height));

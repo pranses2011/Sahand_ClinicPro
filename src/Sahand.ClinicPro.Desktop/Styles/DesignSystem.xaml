@@ -193,26 +193,26 @@
         <Setter Property="BorderBrush" Value="#D9E2EC" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="9" />
-        <Setter Property="Padding" Value="11" />
+        <Setter Property="Padding" Value="9" />
     </Style>
     <Style x:Key="Ds.PanelTitle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="12.5" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="#123352" />
-        <Setter Property="Margin" Value="0,0,0,8" />
+        <Setter Property="Margin" Value="0,0,0,6" />
     </Style>
     <Style x:Key="Ds.FieldLabel" TargetType="TextBlock">
         <Setter Property="FontSize" Value="10" />
         <Setter Property="Foreground" Value="#6B7C93" />
-        <Setter Property="Margin" Value="2,5,2,1" />
+        <Setter Property="Margin" Value="2,3,2,0" />
     </Style>
     <Style x:Key="Ds.FieldValue" TargetType="Border">
         <Setter Property="Background" Value="#F8FBFE" />
         <Setter Property="BorderBrush" Value="#D9E2EC" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="7" />
-        <Setter Property="Padding" Value="7,4" />
-        <Setter Property="Height" Value="29" />
+        <Setter Property="Padding" Value="6,2" />
+        <Setter Property="Height" Value="26" />
     </Style>
 
     <!-- ── نوار تبهای زیرخطدار (طرح تأییدی) ── -->
@@ -277,6 +277,29 @@
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Padding" Value="4,4" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <!-- سرستون جدول — طرح تأییدی: تکخط، وسطچین، زمینهٔ آبی بسیار روشن.
+         استایل ضمنی MaterialDesign سرستونها را با الگوی App.TableHeaderContentTemplate
+         (TextWrapping=Wrap) چندخطی میکند و عنوانهای کوتاهی مثل «دندان» را
+         به دوخط میشکند؛ این استایل صریح آن الگو را بازنویسی میکند. -->
+    <Style x:Key="Ds.TableColumnHeader" TargetType="DataGridColumnHeader">
+        <Setter Property="Background" Value="#EDF3FA" />
+        <Setter Property="Foreground" Value="#123352" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="2,4" />
+        <Setter Property="BorderBrush" Value="#D9E2EC" />
+        <Setter Property="BorderThickness" Value="0,0,1,1" />
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Text="{Binding}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10.5" />
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
     <Style x:Key="Ds.TableHeaderRow" TargetType="Border">
         <Setter Property="Background" Value="#EDF3FA" />
