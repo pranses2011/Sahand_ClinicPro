@@ -578,6 +578,8 @@ public partial class App : System.Windows.Application
                     m.PrintTemplates.Add(new PrintTemplateRow { Id = 2, Key = "Prescription", Title = "نسخه — سربرگ پزشک", TypeFa = "نسخه پزشکی", PaperSize = "A5", IsActive = false, Body = "" });
                     m.PrintTemplates.Add(new PrintTemplateRow { Id = 3, Key = "ReceptionReceipt", Title = "رسید پذیرش کوتاه", TypeFa = "رسید پذیرش", PaperSize = "A6", IsActive = false, Body = "" });
                     m.PrintTemplates.Add(new PrintTemplateRow { Id = 4, Key = "InsuranceForm", Title = "صورت حساب بیمه", TypeFa = "صورت حساب بیمه", PaperSize = "A4", IsActive = false, Body = "" });
+                    m.PrintTemplates.Add(new PrintTemplateRow { Id = 5, Key = "LabResult", Title = "نتیجهٔ آزمایش", TypeFa = "آزمایشگاه", PaperSize = "A4", IsActive = true, Body = "" });
+                    m.PrintTemplates.Add(new PrintTemplateRow { Id = 6, Key = "ImagingReport", Title = "گزارش تصویربرداری", TypeFa = "تصویربرداری", PaperSize = "A4", IsActive = true, Body = "" });
                     m.VisibleTemplates.Clear();
                     foreach (var r in m.PrintTemplates) m.VisibleTemplates.Add(r);
                     m.TabIndex = 0;
@@ -656,6 +658,10 @@ public partial class App : System.Windows.Application
                 Height = winHeight,
                 Topmost = true,
                 WindowStyle = WindowStyle.None,
+                // حذف حاشیهٔ تغییر اندازهٔ WPF تا نوار باریک کاغذدیواری
+                // ویندوز در لبهٔ چپ اسکرینشات نیفتد (همان رفع مسیر تصویربرداری).
+                ResizeMode = ResizeMode.NoResize,
+                BorderThickness = new Thickness(0),
                 ShowInTaskbar = false,
                 Left = 0,
                 Top = 0,
@@ -676,12 +682,13 @@ public partial class App : System.Windows.Application
                 $"Page={page} Flow={view.FlowDirection} Lang={view.Language} Actual={view.ActualWidth}x{view.ActualHeight} " +
                 $"Render={view.RenderSize.Width}x{view.RenderSize.Height} Desired={view.DesiredSize.Width}x{view.DesiredSize.Height}");
 
-            // مبدأ دقیق محتوای UserControl روی صفحه — نه گوشهٔ پنجره — تا
-            // هیچ نوار/حاشیهای از سیستمعامل وارد اسکرینشات نشود و تصویر
-            // دقیقاً همان ۱۰۳۰×۷۷۴ بوم طرح باشد.
-            var origin = view.PointToScreen(new Point(0, 0));
-            var left = (int)Math.Round(origin.X);
-            var top = (int)Math.Round(origin.Y);
+            // هشدار فنی: PointToScreen(0,0) روی درخت بصری RTL، نقطهٔ لبهٔ
+            // **راست** ویو را برمیگرداند (WPF آینهٔ افقی روی ماتریس ریشه
+            // میگذارد) و CopyFromScreen از بیرون پنجره عکس سفید میگرفت.
+            // مبدأ درست همان گوشهٔ پنجره است — بهشرطی که حاشیهٔ تغییر اندازه
+            // (ResizeMode=NoResize) حذف شده باشد تا چیزی از دسکتاپ نماند.
+            var left = (int)window.Left;
+            var top = (int)window.Top;
             using var screen = new System.Drawing.Bitmap(width, height);
             using (var g = System.Drawing.Graphics.FromImage(screen))
                 g.CopyFromScreen(left, top, 0, 0, new System.Drawing.Size(width, height));

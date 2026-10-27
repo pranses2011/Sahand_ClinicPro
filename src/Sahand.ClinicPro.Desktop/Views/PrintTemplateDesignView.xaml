@@ -1,0 +1,138 @@
+<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.PrintTemplateDesignView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="774" d:DesignWidth="1030"
+             FlowDirection="RightToLeft">
+    <!-- کتابخانهٔ قالبهای چاپ — بازطراحی بر اساس print-template.html.
+         بهعنوان لایهٔ «نمای تأییدشده» داخل ComplementaryView قرار میگیرد؛
+         تمام تبها و امکانات قدیمی همان ویو در لایهٔ دوم زنده میمانند. -->
+    <UserControl.Resources>
+        <DataTemplate x:Key="Ds.TemplateCard">
+            <Border Width="326" Height="168" Margin="0,0,8,8" CornerRadius="9" Padding="9"
+                    Background="#FFFFFF" BorderBrush="#D9E2EC" BorderThickness="1.5">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
+                        <TextBlock Text="{Binding Title}" FontSize="11.5" FontWeight="Bold" TextTrimming="CharacterEllipsis" />
+                        <Border Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="9"
+                                Padding="7,1" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding TypeFa}" FontSize="8.5" Foreground="#52647A" />
+                        </Border>
+                    </Grid>
+                    <Border Grid.Row="1" Background="#F8FBFE" BorderBrush="#E1E8F0" BorderThickness="1"
+                            CornerRadius="6" Height="76" Margin="0,6,0,6" Padding="9,8">
+                        <StackPanel>
+                            <Border Height="8" Width="105" Background="#1565C0" CornerRadius="3" HorizontalAlignment="Right" />
+                            <Border Height="5" Background="#D9E2EC" CornerRadius="2" Margin="0,8,0,0" />
+                            <Border Height="5" Background="#D9E2EC" CornerRadius="2" Margin="0,5,0,0" Width="220" HorizontalAlignment="Right" />
+                            <Border Height="5" Background="#D9E2EC" CornerRadius="2" Margin="0,5,0,0" Width="180" HorizontalAlignment="Right" />
+                            <Border Height="5" Background="#0D9488" CornerRadius="2" Margin="0,5,0,0" Width="90" HorizontalAlignment="Right" />
+                        </StackPanel>
+                    </Border>
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Left">
+                        <TextBlock Text="{Binding PaperSize}" FontSize="9" Foreground="#6B7C93" VerticalAlignment="Center" Margin="0,0,7,0" />
+                        <Button Content="ویرایش" Style="{StaticResource Ds.OutlineButton}" Height="24" Padding="9,0" Margin="0,0,4,0" />
+                        <Button Content="انتخاب" Style="{StaticResource Ds.OutlineButton}" Height="24" Padding="9,0" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{StaticResource Ds.PageBackground}" Margin="14,11,14,6">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- سربرگ -->
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Width="30" Height="30" CornerRadius="8" Background="#1565C0" Margin="0,0,9,0">
+                <TextBlock Text="🖨" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Text="قالب چاپ و طب مکمل" Style="{StaticResource Ds.PageTitle}" />
+                <TextBlock Text="کتابخانهٔ قالبهای چاپ، طراحی HTML و ویرایشگر زنده" Style="{StaticResource Ds.Muted}" />
+            </StackPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="+ قالب جدید" Style="{StaticResource Ds.FlatPrimary}" Height="32" Padding="14,0" Margin="0,0,7,0" />
+                <Button Content="پیشنمایش" Style="{StaticResource Ds.OutlineButton}" Height="32" Padding="13,0" />
+            </StackPanel>
+        </Grid>
+
+        <!-- پنج کارت آماری -->
+        <Grid Grid.Row="1" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /><ColumnDefinition Width="8" />
+                <ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Style="{StaticResource Ds.StatCard}" Background="#F4FBF4" BorderBrush="#81C784">
+                <StackPanel><TextBlock Text="{Binding Kpis.V1}" Style="{StaticResource Ds.StatNumber}" Foreground="#2E7D32" FontSize="22" />
+                    <TextBlock Text="قالبهای فعال" Style="{StaticResource Ds.StatLabel}" /></StackPanel></Button>
+            <Button Grid.Column="2" Style="{StaticResource Ds.StatCard}" Background="#F5FAFF" BorderBrush="#64B5F6">
+                <StackPanel><TextBlock Text="{Binding Kpis.V2}" Style="{StaticResource Ds.StatNumber}" Foreground="#1565C0" />
+                    <TextBlock Text="همهٔ قالبها" Style="{StaticResource Ds.StatLabel}" /></StackPanel></Button>
+            <Button Grid.Column="4" Style="{StaticResource Ds.StatCard}" Background="#FDF7FF" BorderBrush="#BA68C8">
+                <StackPanel><TextBlock Text="{Binding Kpis.V3}" Style="{StaticResource Ds.StatNumber}" Foreground="#6A1B9A" />
+                    <TextBlock Text="قالبهای پیشفرض" Style="{StaticResource Ds.StatLabel}" /></StackPanel></Button>
+            <Button Grid.Column="6" Style="{StaticResource Ds.StatCard}" Background="#FFFAF3" BorderBrush="#FFB74D">
+                <StackPanel><TextBlock Text="{Binding Kpis.V4}" Style="{StaticResource Ds.StatNumber}" Foreground="#E65100" />
+                    <TextBlock Text="انواع سند" Style="{StaticResource Ds.StatLabel}" /></StackPanel></Button>
+            <Button Grid.Column="8" Style="{StaticResource Ds.StatCard}" Background="#F0FBFA" BorderBrush="#4DB6AC">
+                <StackPanel><TextBlock Text="{Binding Kpis.V5}" Style="{StaticResource Ds.StatNumber}" Foreground="#0D9488" FontSize="18" />
+                    <TextBlock Text="آخرین بروزرسانی" Style="{StaticResource Ds.StatLabel}" /></StackPanel></Button>
+        </Grid>
+
+        <!-- تبها -->
+        <Border Grid.Row="2" Style="{StaticResource Ds.TabBar}" Padding="0,2,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Border BorderBrush="#1565C0" BorderThickness="0,0,0,2" Margin="0,0,4,0">
+                    <TextBlock Text="کتابخانهٔ قالبها" Style="{StaticResource Ds.TabItemActiveText}" /></Border>
+                <TextBlock Text="طراح HTML" Style="{StaticResource Ds.TabItemText}" />
+                <TextBlock Text="متغیرها" Style="{StaticResource Ds.TabItemText}" />
+                <TextBlock Text="همگامسازی داده" Style="{StaticResource Ds.TabItemText}" />
+            </StackPanel>
+        </Border>
+
+        <!-- نوار فیلتر -->
+        <Border Grid.Row="3" Style="{StaticResource Ds.Toolbar}">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="270" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0" Style="{StaticResource Ds.CompactText}" />
+                <WrapPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
+                    <Button Content="همهٔ موجودیتها" Style="{StaticResource Ds.ChipActive}" />
+                    <Button Content="فاکتور" Style="{StaticResource Ds.Chip}" />
+                    <Button Content="نسخه" Style="{StaticResource Ds.Chip}" />
+                    <Button Content="پذیرش" Style="{StaticResource Ds.Chip}" />
+                    <Button Content="آزمایشگاه" Style="{StaticResource Ds.Chip}" />
+                    <Button Content="تصویربرداری" Style="{StaticResource Ds.Chip}" />
+                </WrapPanel>
+            </Grid>
+        </Border>
+
+        <!-- شبکهٔ کارتهای قالب -->
+        <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding VisibleTemplates}" ItemTemplate="{StaticResource Ds.TemplateCard}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- نوار پایین -->
+        <Border Grid.Row="5" Style="{StaticResource Ds.Toolbar}" Margin="0,6,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="💡 قالب پیشفرض فعال هنگام چاپ همان سند اعمال میشود؛ با «انتخاب» میتوانید قالب دیگری را فعال کنید."
+                           Style="{StaticResource Ds.Muted}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                <Button Grid.Column="1" Content="قالبها" Style="{StaticResource Ds.OutlineButton}" Padding="12,0" Margin="0,0,6,0" />
+                <Button Grid.Column="2" Content="ذخیرهٔ تغییرات" Style="{StaticResource Ds.FlatPrimary}" Height="30" Padding="14,0" />
+            </Grid>
+        </Border>
+
+        <TextBlock Grid.Row="6" Text="سهند کلینیکپرو — قالب چاپ و طب مکمل · کتابخانهٔ قالبها · نسخهٔ ۲٫۲۸٫۲۸"
+                   Style="{StaticResource Ds.Muted}" HorizontalAlignment="Center" Margin="0,5,0,0" />
+    </Grid>
+</UserControl>

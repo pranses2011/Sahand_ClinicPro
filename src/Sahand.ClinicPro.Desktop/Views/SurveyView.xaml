@@ -3,326 +3,269 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
-             xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
              mc:Ignorable="d"
-             d:DesignHeight="660" d:DesignWidth="1120"
+             d:DesignHeight="774" d:DesignWidth="1030"
              FlowDirection="RightToLeft">
-    <!-- ═══ نظرسنجی بیماران — گام V2 چرخه هفتم (فرم ۳۴): دو تب ═══ -->
-    <Grid Margin="16,12">
+    <!-- نظرسنجی بیماران — بازطراحی کامل بر اساس survey.html و survey-results.html.
+         دو نمای «فهرست نظرسنجیها» و «نتایج و آمار» با TabIndex ویومدل جابهجا میشوند. -->
+    <UserControl.Resources>
+        <Style x:Key="Ds.ShowOnList" TargetType="Grid">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding TabIndex}" Value="0"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="Ds.ShowOnResults" TargetType="Grid">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding TabIndex}" Value="1"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="Ds.TabActiveOnList" TargetType="Border">
+            <Setter Property="BorderBrush" Value="Transparent" /><Setter Property="BorderThickness" Value="0,0,0,2" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding TabIndex}" Value="0"><Setter Property="BorderBrush" Value="#1565C0" /></DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <!-- استایل مستقل (بدون BasedOn) — در غیراینصورت تریگر TabIndex=0
+             از استایل پایه بهارث میرسید و تب دوم در هر دو نما آبی میماند. -->
+        <Style x:Key="Ds.TabActiveOnResults" TargetType="Border">
+            <Setter Property="BorderBrush" Value="Transparent" /><Setter Property="BorderThickness" Value="0,0,0,2" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding TabIndex}" Value="1"><Setter Property="BorderBrush" Value="#1565C0" /></DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <!-- قالب سطرهای توزیع ستارگان و پزشکان — دادهها از همان ViewModel واقعی -->
+        <DataTemplate x:Key="Ds.StarRow">
+            <Grid Margin="0,4">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="66" /><ColumnDefinition Width="*" /><ColumnDefinition Width="72" /></Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{Binding StarText}" FontSize="10.5" Foreground="#D97706" VerticalAlignment="Center" />
+                <Border Grid.Column="1" Background="#E8EEF5" CornerRadius="5" Height="10" Margin="0,0,7,0">
+                    <Border Background="#0D9488" CornerRadius="5" HorizontalAlignment="Left"
+                            Width="{Binding BarHeight}" MinWidth="8" />
+                </Border>
+                <TextBlock Grid.Column="2" Text="{Binding Count, StringFormat='{}{0} پاسخ'}" Style="{StaticResource Ds.Muted}"
+                           FontSize="9.5" VerticalAlignment="Center" HorizontalAlignment="Left" />
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="Ds.DoctorRow">
+            <Grid Margin="0,6">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Width="24" Height="24" CornerRadius="12" Background="#E3F0FB" VerticalAlignment="Center">
+                    <TextBlock Text="👨‍⚕️" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel Grid.Column="1" Margin="7,0,7,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding DoctorName}" FontSize="10.5" FontWeight="Bold" />
+                    <Border Background="#E8EEF5" CornerRadius="5" Height="9" Margin="0,3,0,0">
+                        <Border Background="#1565C0" CornerRadius="5" HorizontalAlignment="Left"
+                                Width="{Binding BarHeight}" MinWidth="8" />
+                    </Border>
+                </StackPanel>
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <Border Style="{StaticResource Ds.Tag}" Background="#E3F0FB" BorderBrush="#BBDBFB">
+                        <TextBlock Text="{Binding AverageText}" FontSize="10" Foreground="#1565C0" FontWeight="Bold" /></Border>
+                    <TextBlock Text="{Binding ResponseCount, StringFormat='{}{0} پاسخ'}" Style="{StaticResource Ds.Muted}"
+                               FontSize="9" HorizontalAlignment="Center" Margin="0,3,0,0" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="Ds.CommentRow">
+            <Border Background="#F8FBFE" BorderBrush="#D9E2EC" BorderThickness="1" CornerRadius="8"
+                    Padding="9,7" Margin="0,0,0,6">
+                <StackPanel>
+                    <TextBlock Text="{Binding Comment}" FontSize="10" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding PatientName, StringFormat='{}{0} · نظر ثبتشده'}" Style="{StaticResource Ds.Muted}"
+                               FontSize="9" Margin="0,4,0,0" />
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{StaticResource Ds.PageBackground}" Margin="14,11,14,6">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- سربرگ -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <materialDesign:PackIcon Kind="CommentQuoteOutline" Width="26" Height="26"
-                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
-            <TextBlock Text="نظرسنجی بیماران" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
-            <TextBlock Text="سنجش رضایت بیماران پس از ویزیت — ارسال لینک پیامکی و تحلیل نتایج" 
-                       FontSize="11.5" Opacity="0.65" Margin="14,2,0,0" VerticalAlignment="Center" />
-        </StackPanel>
+        <!-- ══ سربرگ ══ -->
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Width="30" Height="30" CornerRadius="8" Background="#1565C0" Margin="0,0,9,0">
+                <TextBlock Text="📝" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Text="نظرسنجی بیماران" Style="{StaticResource Ds.PageTitle}" />
+                <TextBlock Text="ساخت نظرسنجی، تحلیل پاسخها و بایدهای پزشکان — یکپارچه" Style="{StaticResource Ds.Muted}" />
+            </StackPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="+ نظرسنجی جدید" Style="{StaticResource Ds.FlatPrimary}" Height="32" Padding="12,0" Margin="0,0,6,0" />
+                <Button Content="ویژهشهای امروز" Style="{StaticResource Ds.FlatGhost}" Height="32" Padding="11,0" Margin="0,0,6,0" />
+                <Button Content="ویرایش ✎" Style="{StaticResource Ds.FlatGhost}" Height="32" Padding="11,0" Margin="0,0,6,0" />
+                <Button Content="فعال/غیرفعال ⏻" Style="{StaticResource Ds.FlatGhost}" Height="32" Padding="11,0" Margin="0,0,6,0" />
+                <Button Content="📊 نتایج" Style="{StaticResource Ds.FlatGhost}" Height="32" Padding="11,0" />
+            </StackPanel>
+        </Grid>
 
-        <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="3" Margin="0,0,0,8"
-                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+        <!-- ══ پنج کارت آماری ══ -->
+        <Grid Grid.Row="1" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" /><ColumnDefinition Width="8" />
+                <ColumnDefinition Width="*" /><ColumnDefinition Width="8" />
+                <ColumnDefinition Width="*" /><ColumnDefinition Width="8" />
+                <ColumnDefinition Width="*" /><ColumnDefinition Width="8" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Style="{StaticResource Ds.StatCard}" Background="#F4FBF4" BorderBrush="#81C784">
+                <StackPanel><TextBlock Text="{Binding Kpis.V1}" Style="{StaticResource Ds.StatNumber}" Foreground="#2E7D32" />
+                    <TextBlock Text="نرخ پاسخگویی" Style="{StaticResource Ds.StatLabel}" /></StackPanel>
+            </Button>
+            <Button Grid.Column="2" Style="{StaticResource Ds.StatCard}" Background="#FFFAF3" BorderBrush="#FFB74D">
+                <StackPanel><TextBlock Text="{Binding Kpis.V2}" Style="{StaticResource Ds.StatNumber}" Foreground="#E65100" />
+                    <TextBlock Text="میانگین امتیاز" Style="{StaticResource Ds.StatLabel}" /></StackPanel>
+            </Button>
+            <Button Grid.Column="4" Style="{StaticResource Ds.StatCard}" Background="#F5FAFF" BorderBrush="#64B5F6">
+                <StackPanel><TextBlock Text="{Binding Kpis.V3}" Style="{StaticResource Ds.StatNumber}" Foreground="#1565C0" />
+                    <TextBlock Text="پاسخ این ماه" Style="{StaticResource Ds.StatLabel}" /></StackPanel>
+            </Button>
+            <Button Grid.Column="6" Style="{StaticResource Ds.StatCard}" Background="#FDF7FF" BorderBrush="#BA68C8">
+                <StackPanel><TextBlock Text="{Binding Kpis.V4}" Style="{StaticResource Ds.StatNumber}" Foreground="#6A1B9A" />
+                    <TextBlock Text="نظرسنجیهای فعال" Style="{StaticResource Ds.StatLabel}" /></StackPanel>
+            </Button>
+            <Button Grid.Column="8" Style="{StaticResource Ds.StatCard}" Background="#FFF5F5" BorderBrush="#E57373">
+                <StackPanel><TextBlock Text="{Binding Kpis.V5}" Style="{StaticResource Ds.StatNumber}" Foreground="#C62828" />
+                    <TextBlock Text="نظرات اخیر" Style="{StaticResource Ds.StatLabel}" /></StackPanel>
+            </Button>
+        </Grid>
 
-        <TabControl Grid.Row="2" SelectedIndex="{Binding TabIndex}" Style="{StaticResource MaterialDesignTabControl}">
+        <!-- ══ تبها ══ -->
+        <Border Grid.Row="2" Style="{StaticResource Ds.TabBar}" Padding="0,2,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Border Style="{StaticResource Ds.TabActiveOnList}">
+                    <TextBlock Text="فهرست نظرسنجیها" Style="{StaticResource Ds.TabItemText}" />
+                </Border>
+                <Border Style="{StaticResource Ds.TabActiveOnResults}">
+                    <TextBlock Text="نتایج و آمار" Style="{StaticResource Ds.TabItemText}" />
+                </Border>
+                <TextBlock Text="سازندهٔ سوالات" Style="{StaticResource Ds.TabItemText}" />
+            </StackPanel>
+        </Border>
 
-            <!-- ═══════════ تب ۱: لیست نظرسنجی‌ها ═══════════ -->
-            <TabItem Header="📋 لیست نظرسنجی‌ها">
-                <Grid Margin="4,12">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
+        <!-- ══ نوار ابزار ══ -->
+        <Border Grid.Row="3" Style="{StaticResource Ds.Toolbar}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="270" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0" Style="{StaticResource Ds.CompactText}" />
+                <WrapPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
+                    <Button Content="همه" Style="{StaticResource Ds.ChipActive}" />
+                    <Button Content="فعال" Style="{StaticResource Ds.Chip}" />
+                    <Button Content="پایان یافته" Style="{StaticResource Ds.Chip}" />
+                    <Button Content="پیشنویس" Style="{StaticResource Ds.Chip}" />
+                </WrapPanel>
+                <Button Grid.Column="2" Content="تازهمسازی" Style="{StaticResource Ds.OutlineButton}" Padding="11,0" />
+            </Grid>
+        </Border>
 
-                    <!-- نوار دکمه‌ها -->
-                    <WrapPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-                        <Button Content="➕ نظرسنجی جدید" Command="{Binding OpenCreateFormCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,4" />
-                        <Button Content="✏️ ویرایش" Command="{Binding OpenEditFormCommand}"
-                                Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,4" />
-                        <Button Content="⏯ فعال/غیرفعال" Command="{Binding ToggleActiveCommand}"
-                                Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,4" />
-                        <Button Content="📤 ارسال لینک به ویزیت‌های امروز" Command="{Binding SendLinksCommand}"
-                                ToolTip="لینک نظرسنجی برای همه بیماران ویزیت‌شده امروز پیامک می‌شود (از طریق صف ارسال)"
-                                Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,4"
-                                Background="#FB8C00" BorderBrush="#FB8C00" />
-                        <Button Content="🔄 بارگذاری مجدد" Command="{Binding LoadSurveysCommand}"
-                                Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,8,4" />
-                    </WrapPanel>
-
-                    <!-- فرم ایجاد/ویرایش با سازنده پویا سوالات -->
-                    <Border Grid.Row="1" CornerRadius="12" BorderBrush="#90CAF9" BorderThickness="1.2"
-                            Background="#F5FAFF" Padding="14" Margin="0,0,0,10"
-                            Visibility="{Binding IsFormOpen, Converter={StaticResource BoolToVisibility}}">
-                        <StackPanel MaxWidth="760" HorizontalAlignment="Stretch">
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                <materialDesign:PackIcon Kind="PlaylistEdit" Width="20" Height="20" Foreground="#1565C0" VerticalAlignment="Center" />
-                                <TextBlock FontSize="14.5" FontWeight="Bold" Foreground="#1565C0" VerticalAlignment="Center" Margin="8,0,0,0">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Text" Value="ایجاد نظرسنجی جدید" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsEditing}" Value="True">
-                                                    <Setter Property="Text" Value="ویرایش نظرسنجی" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </StackPanel>
-
-                            <!-- عنوان -->
-                            <TextBox materialDesign:HintAssist.Hint="عنوان نظرسنجی — مثال: نظرسنجی رضایت اردیبهشت"
-                                     Text="{Binding FormTitle, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10" />
-
-                            <!-- توضیح و نوع -->
-                            <Grid Margin="0,0,0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="2*" />
-                                    <ColumnDefinition Width="12" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="توضیح (اختیاری)"
-                                         Text="{Binding FormDescription, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource MaterialDesignOutlinedTextBox}" />
-                                <ComboBox Grid.Column="2" materialDesign:HintAssist.Hint="نوع نظرسنجی"
-                                          ItemsSource="{Binding TypeOptions}"
-                                          SelectedItem="{Binding FormType}"
-                                          Style="{StaticResource MaterialDesignOutlinedComboBox}" />
-                            </Grid>
-
-                            <!-- سازنده پویا سوالات -->
-                            <TextBlock Text="سوالات نظرسنجی (سازنده پویا):" FontSize="12.5" FontWeight="SemiBold" Margin="2,0,0,6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                            <ItemsControl ItemsSource="{Binding Questions}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border CornerRadius="8" Background="{DynamicResource MaterialDesign.Brush.Card.Background}" BorderBrush="#E3F2FD"
-                                                BorderThickness="1" Padding="8" Margin="0,0,0,6">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="2.1*" />
-                                                    <ColumnDefinition Width="8" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="8" />
-                                                    <ColumnDefinition Width="1.4*" />
-                                                    <ColumnDefinition Width="8" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="متن سوال"
-                                                         Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
-                                                         Style="{StaticResource MaterialDesignOutlinedTextBox}" FontSize="12" />
-                                                <ComboBox Grid.Column="2" ItemsSource="{x:Static vm:SurveyQuestionItem.TypeOptions}"
-                                                          SelectedItem="{Binding QuestionType}"
-                                                          materialDesign:HintAssist.Hint="نوع" FontSize="12"
-                                                          Style="{StaticResource MaterialDesignOutlinedComboBox}" />
-                                                <TextBox Grid.Column="4" materialDesign:HintAssist.Hint="گزینه‌ها با | جدا شود"
-                                                         Text="{Binding Choices, UpdateSourceTrigger=PropertyChanged}"
-                                                         FontSize="12">
-                                                    <TextBox.Style>
-                                                        <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
-                                                            <Setter Property="Visibility" Value="Collapsed" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding QuestionType}" Value="چندگزینه‌ای">
-                                                                    <Setter Property="Visibility" Value="Visible" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBox.Style>
-                                                </TextBox>
-                                                <Button Grid.Column="6" Command="{Binding DataContext.RemoveQuestionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource MaterialDesignIconButton}" ToolTip="حذف سوال" Foreground="#C62828">
-                                                    <materialDesign:PackIcon Kind="CloseCircleOutline" Width="22" Height="22" Foreground="#C62828" />
-                                                </Button>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                            <WrapPanel Orientation="Horizontal" Margin="0,4,0,12">
-                                <Button Content="➕ افزودن سوال" Command="{Binding AddQuestionCommand}"
-                                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#1565C0" />
-                            </WrapPanel>
-
-                            <!-- ذخیره/لغو -->
-                            <WrapPanel Orientation="Horizontal">
-                                <Button Content="💾 ذخیره نظرسنجی" Command="{Binding SaveFormCommand}"
-                                        Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0" />
-                                <Button Content="لغو" Command="{Binding CancelFormCommand}"
-                                        Style="{StaticResource MaterialDesignOutlinedButton}" />
-                            </WrapPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- جدول نظرسنجی‌ها -->
-                    <DataGrid Grid.Row="2" ItemsSource="{Binding Surveys}"
-                              SelectedItem="{Binding SelectedSurvey}"
-                              AutoGenerateColumns="False" IsReadOnly="True"
-                              Style="{StaticResource App.TableDataGrid}"
-                              HeadersVisibility="Column"
-                              FontSize="12.5" SelectionMode="Single">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="عنوان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
-                            <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
-                            <DataGridTextColumn Header="وضعیت" Binding="{Binding ActiveText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
-                            <DataGridTextColumn Header="پاسخ‌ها" Binding="{Binding ResponseCount, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
-                            <DataGridTextColumn Header="میانگین امتیاز" Binding="{Binding AverageText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Grid>
-            </TabItem>
-
-            <!-- ═══════════ تب ۲: نتایج و آمار ═══════════ -->
-            <TabItem Header="📊 نتایج و آمار">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,12">
+        <!-- ══ نمای ۱: فهرست نظرسنجیها ══ -->
+        <Grid Grid.Row="4" Style="{StaticResource Ds.ShowOnList}">
+            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+            <Grid Grid.Row="0" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="1.55*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="1*" /></Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource Ds.Panel}">
                     <StackPanel>
-
-                        <!-- انتخابگر نظرسنجی + بارگذاری -->
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2.4*" />
-                                <ColumnDefinition Width="12" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <ComboBox Grid.Column="0" materialDesign:HintAssist.Hint="انتخاب نظرسنجی"
-                                      ItemsSource="{Binding Surveys}"
-                                      SelectedItem="{Binding ResultsSurvey}"
-                                      DisplayMemberPath="Title"
-                                      Style="{StaticResource MaterialDesignOutlinedComboBox}" />
-                            <Button Grid.Column="2" Content="🔄 بارگذاری نتایج" Command="{Binding LoadResultsCommand}"
-                                    Style="{StaticResource MaterialDesignRaisedButton}" />
-                        </Grid>
-
-                        <!-- کارت‌های خلاصه -->
-                        <UniformGrid Columns="3" Rows="1" Margin="0,0,0,14">
-                            <controls:StatCard IconKind="CommentMultipleOutline"
-                                               Value="{Binding TotalResponsesText, Mode=OneWay}"
-                                               Label="کل پاسخ‌های ثبت‌شده"
-                                               CompareText="از ابتدای راه‌اندازی نظرسنجی"
-                                               AccentBrush="#1E88E5" />
-                            <controls:StatCard IconKind="StarCircleOutline"
-                                               Value="{Binding AverageText, Mode=OneWay}"
-                                               Label="میانگین امتیاز کل"
-                                               CompareText="بر پایه ستاره‌های ۱ تا ۵"
-                                               AccentBrush="#FB8C00" />
-                            <controls:StatCard IconKind="ClockFast"
-                                               Value="{Binding Last30Text, Mode=OneWay}"
-                                               Label="پاسخ ۳۰ روز اخیر"
-                                               CompareText="روند مشارکت اخیر بیماران"
-                                               AccentBrush="#43A047" />
-                        </UniformGrid>
-
-                        <!-- توزیع ستاره‌ها -->
-                        <Border CornerRadius="12" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1" Padding="14" Margin="0,0,0,12">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                    <materialDesign:PackIcon Kind="StarOutline" Width="20" Height="20" Foreground="#FB8C00" VerticalAlignment="Center" />
-                                    <TextBlock Text="توزیع امتیازها" FontSize="14" FontWeight="Bold" Margin="8,0,0,0" VerticalAlignment="Center" />
-                                </StackPanel>
-                                <ItemsControl ItemsSource="{Binding Stars}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid Margin="0,3">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="{Binding StarText}" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,10,0" />
-                                                <ProgressBar Grid.Column="1" Height="16" BorderThickness="0" Background="#F5F5F5"
-                                                             Value="{Binding BarHeight, Mode=OneWay}" Maximum="100" MinWidth="2" />
-                                                <TextBlock Grid.Column="2" Text="{Binding Count}" FontSize="12" FontWeight="SemiBold"
-                                                           VerticalAlignment="Center" Margin="10,0,0,0" MinWidth="34" TextAlignment="Left" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- میانگین امتیاز پزشکان -->
-                        <Border CornerRadius="12" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1" Padding="14" Margin="0,0,0,12">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                    <materialDesign:PackIcon Kind="Doctor" Width="20" Height="20" Foreground="#1565C0" VerticalAlignment="Center" />
-                                    <TextBlock Text="میانگین امتیاز به تفکیک پزشک" FontSize="14" FontWeight="Bold" Margin="8,0,0,0" VerticalAlignment="Center" />
-                                </StackPanel>
-                                <ItemsControl ItemsSource="{Binding DoctorRatings}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid Margin="0,4">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="1.6*" />
-                                                    <ColumnDefinition Width="2*" />
-                                                    <ColumnDefinition Width="0.7*" />
-                                                    <ColumnDefinition Width="0.9*" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="{Binding DoctorName}" FontSize="12.5" VerticalAlignment="Center" />
-                                                <ProgressBar Grid.Column="1" Height="14" BorderThickness="0" Background="#F5F5F5"
-                                                             Value="{Binding BarHeight, Mode=OneWay}" Maximum="100" MinWidth="2" />
-                                                <TextBlock Grid.Column="2" Text="{Binding ResponseCount}" FontSize="11.5" Opacity="0.7"
-                                                           VerticalAlignment="Center" TextAlignment="Center" />
-                                                <TextBlock Grid.Column="3" Text="{Binding AverageText}" FontSize="12.5" FontWeight="Bold"
-                                                           Foreground="#2E7D32" VerticalAlignment="Center" TextAlignment="Left" Margin="8,0,0,0" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                                <TextBlock Text="برای هر پزشک: نام | نوار مقایسه‌ای | تعداد پاسخ | میانگین"
-                                           FontSize="10.5" Opacity="0.55" Margin="0,8,0,0" />
-                            </StackPanel>
-                        </Border>
-
-                        <!-- نظرات آزاد اخیر -->
-                        <Border CornerRadius="12" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1" Padding="14">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                    <materialDesign:PackIcon Kind="CommentTextOutline" Width="20" Height="20" Foreground="#00897B" VerticalAlignment="Center" />
-                                    <TextBlock Text="نظرات آزاد بیماران (۲۰ مورد اخیر)" FontSize="14" FontWeight="Bold" Margin="8,0,0,0" VerticalAlignment="Center" />
-                                </StackPanel>
-                                <ItemsControl ItemsSource="{Binding Comments}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border CornerRadius="10" Background="{DynamicResource MaterialDesign.Brush.Background}" BorderBrush="#EEEEEE"
-                                                    BorderThickness="1" Padding="10" Margin="0,0,0,8">
-                                                <Grid>
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="Auto" />
-                                                        <RowDefinition Height="Auto" />
-                                                    </Grid.RowDefinitions>
-                                                    <Grid Grid.Row="0">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                                            <materialDesign:PackIcon Kind="AccountCircleOutline" Width="16" Height="16" Opacity="0.6" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                                            <TextBlock Text="{Binding PatientName}" FontSize="12" FontWeight="SemiBold" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                                            <TextBlock Text="{Binding RatingText}" FontSize="10.5" Margin="10,1,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                                        </StackPanel>
-                                                        <TextBlock Grid.Column="1" Text="{Binding SubmittedShamsi}" FontSize="10.5" Opacity="0.6" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                                    </Grid>
-                                                    <TextBlock Grid.Row="1" Text="{Binding Comment}" FontSize="12.5" TextWrapping="Wrap"
-                                                               Margin="0,6,0,0" LineHeight="22"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-
+                        <TextBlock Text="فهرست نظرسنجیها 📋" Style="{StaticResource Ds.PanelTitle}" />
+                        <DataGrid ItemsSource="{Binding Surveys}" Style="{StaticResource Ds.TableDataGrid}"
+                                  ColumnHeaderStyle="{StaticResource Ds.TableColumnHeader}" RowHeight="30" MaxHeight="150">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="عنوان" Binding="{Binding Title}" Width="1.3*"
+                                                    ElementStyle="{StaticResource Ds.TableCellText}" />
+                                <DataGridTextColumn Header="توضیح" Binding="{Binding Description}" Width="1.5*"
+                                                    ElementStyle="{StaticResource Ds.TableCellText}" />
+                                <DataGridTextColumn Header="سوالات" Binding="{Binding TypeText}" Width="*"
+                                                    ElementStyle="{StaticResource Ds.TableCellText}" />
+                                <DataGridTextColumn Header="پاسخها" Binding="{Binding ResponseCount}" Width="60"
+                                                    ElementStyle="{StaticResource Ds.TableCellText}" />
+                                <DataGridTextColumn Header="میانگین" Binding="{Binding AverageText}" Width="62"
+                                                    ElementStyle="{StaticResource Ds.TableCellText}" />
+                                <DataGridTextColumn Header="وضعیت" Binding="{Binding ActiveText}" Width="62"
+                                                    ElementStyle="{StaticResource Ds.TableCellText}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBlock Text="۴ نظرسنجی · ۲ فعال · ۱ پایانیافته · ۱ پیشنویس" Style="{StaticResource Ds.Muted}"
+                                   HorizontalAlignment="Left" Margin="0,5,0,0" />
                     </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-        </TabControl>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource Ds.Panel}">
+                    <StackPanel>
+                        <TextBlock Text="توزیع امتیازها ⭐" Style="{StaticResource Ds.PanelTitle}" />
+                        <ItemsControl ItemsSource="{Binding Stars}" ItemTemplate="{StaticResource Ds.StarRow}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="1.55*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="1*" /></Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource Ds.Panel}">
+                    <StackPanel>
+                        <TextBlock Text="میانگین امتیاز به تفکیک پزشک 👨‍⚕️" Style="{StaticResource Ds.PanelTitle}" />
+                        <ItemsControl ItemsSource="{Binding DoctorRatings}" ItemTemplate="{StaticResource Ds.DoctorRow}" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource Ds.Panel}">
+                    <StackPanel>
+                        <TextBlock Text="نظرات آزاد اخیر 💬" Style="{StaticResource Ds.PanelTitle}" />
+                        <ItemsControl ItemsSource="{Binding Comments}" ItemTemplate="{StaticResource Ds.CommentRow}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ══ نمای ۲: نتایج و آمار ══ -->
+        <Grid Grid.Row="4" Style="{StaticResource Ds.ShowOnResults}">
+            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+            <Grid Grid.Row="0" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource Ds.Panel}">
+                    <StackPanel>
+                        <TextBlock Text="توزیع امتیازها ⭐" Style="{StaticResource Ds.PanelTitle}" />
+                        <ItemsControl ItemsSource="{Binding Stars}" ItemTemplate="{StaticResource Ds.StarRow}" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource Ds.Panel}">
+                    <StackPanel>
+                        <TextBlock Text="میانگین پزشکان 👨‍⚕️" Style="{StaticResource Ds.PanelTitle}" />
+                        <ItemsControl ItemsSource="{Binding DoctorRatings}" ItemTemplate="{StaticResource Ds.DoctorRow}" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="4" Style="{StaticResource Ds.Panel}">
+                    <StackPanel>
+                        <TextBlock Text="روند رضایت 📈" Style="{StaticResource Ds.PanelTitle}" />
+                        <Grid Height="90">
+                            <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Bottom"><Border Height="38" Background="#93C5FD" CornerRadius="4,4,0,0" Margin="6,0" /></StackPanel>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Bottom"><Border Height="46" Background="#60A5FA" CornerRadius="4,4,0,0" Margin="6,0" /></StackPanel>
+                            <StackPanel Grid.Column="2" VerticalAlignment="Bottom"><Border Height="52" Background="#3B82F6" CornerRadius="4,4,0,0" Margin="6,0" /></StackPanel>
+                            <StackPanel Grid.Column="3" VerticalAlignment="Bottom"><Border Height="60" Background="#2563EB" CornerRadius="4,4,0,0" Margin="6,0" /></StackPanel>
+                            <StackPanel Grid.Column="4" VerticalAlignment="Bottom"><Border Height="68" Background="#1D4ED8" CornerRadius="4,4,0,0" Margin="6,0" /></StackPanel>
+                            <StackPanel Grid.Column="5" VerticalAlignment="Bottom"><Border Height="78" Background="#0D9488" CornerRadius="4,4,0,0" Margin="6,0" /></StackPanel>
+                        </Grid>
+                        <TextBlock Text="فروردین ← شهریور ← مهر" Style="{StaticResource Ds.Muted}" HorizontalAlignment="Center" Margin="0,6,0,0" FontSize="9" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+            <Border Grid.Row="1" Style="{StaticResource Ds.Panel}">
+                <StackPanel>
+                    <TextBlock Text="نظرات آزاد اخیر 💬" Style="{StaticResource Ds.PanelTitle}" />
+                    <ItemsControl ItemsSource="{Binding Comments}" ItemTemplate="{StaticResource Ds.CommentRow}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <TextBlock Grid.Row="5" Text="سهند کلینیکپرو — نظرسنجی بیماران · تحلیل پاسخها و رضایت · نسخهٔ ۲٫۲۸٫۲۸"
+                   Style="{StaticResource Ds.Muted}" HorizontalAlignment="Center" Margin="0,5,0,0" />
     </Grid>
 </UserControl>

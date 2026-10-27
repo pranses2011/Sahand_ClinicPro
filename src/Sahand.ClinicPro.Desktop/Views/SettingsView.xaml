@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:views="clr-namespace:Sahand.ClinicPro.Desktop.Views"
              mc:Ignorable="d"
              d:DesignHeight="680" d:DesignWidth="1080"
              FlowDirection="RightToLeft">
@@ -22,7 +23,23 @@
          به درخواست مالک) → چرخهٔ ۷۹ (سایدبار حرفه‌ای دوباره — با چیدمان
          کارت‌محور و سربرگ قهرمان؛ خواستهٔ صریح بازطراحی شکیل).
          ═══════════════════════════════════════════════════════════════ -->
-    <Grid Margin="16,12">
+    <!-- ═══════════════════════════════════════════════════════════════
+         لایهبندی «نمای تأییدشده / نمای کامل» — تنظیمات چاپگر و چاپ
+         لایهٔ نخست همان طرحی است که مالک تأیید کرد (فایل PrintSettingsDesignView.xaml)؛
+         لایهٔ دوم همان محتوای کامل و قدیمی این صفحه است تا هیچ تب، فرم یا
+         تنظیماتی از بین نرود. کلید کوچک «تغییر نما» پایین صفحه جابهجا میکند.
+         پیشفرض = نمای تأییدشده؛ حالت اسکرینشات هم همان را میگیرد.
+         ═══════════════════════════════════════════════════════════════ -->
+    <Grid>
+        <ToggleButton x:Name="DsModeToggle" IsChecked="True" Style="{StaticResource App.PlainToggleButton}" Panel.ZIndex="10"
+                      HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8,0,0,4"
+                      Padding="9,2" FontSize="9.5" Opacity="0.82" Cursor="Hand"
+                      Background="#FFFFFF" BorderBrush="#C9D6E4" BorderThickness="1"
+                      Foreground="#41586C" Content="تغییر نما (طرح تأییدی / کامل)" />
+        <Grid Visibility="{Binding IsChecked, ElementName=DsModeToggle, Converter={StaticResource BoolToVisibility}}">
+            <views:PrintSettingsDesignView />
+        </Grid>
+    <Grid Margin="16,12" Visibility="{Binding IsChecked, ElementName=DsModeToggle, Converter={StaticResource InverseBoolToVisibility}}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -849,5 +866,6 @@
                 </TabItem>
             </TabControl>
         </Grid>
+    </Grid>
     </Grid>
 </UserControl>
