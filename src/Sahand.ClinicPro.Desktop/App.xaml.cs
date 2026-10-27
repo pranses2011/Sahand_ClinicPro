@@ -639,6 +639,12 @@ public partial class App : System.Windows.Application
                     throw new ArgumentException($"کلید ناشناختهٔ صفحه: {page}. کلیدهای مجاز: {string.Join(", ", ScreenshotPageKeys)}");
             }
 
+            // بوم ثابت ۱۰۳۰×۷۷۴ = دقیقاً همان ابعاد رندر HTML طرحهای تأییدی.
+            // (پیشتر پنجرهٔ بزرگتر به اندازهٔ صفحهٔ رانر محدود میشد و عکس
+            // ۱۰۴۴×۷۸۸ میافتاد با نوار اضافی در لبهها.)
+            winWidth = 1030;
+            winHeight = 774;
+
             view.Language = XmlLanguage.GetLanguage("fa-IR");
             view.FlowDirection = FlowDirection.RightToLeft;
             view.Background = new SolidColorBrush(Color.FromRgb(0xEE, 0xF3, 0xF7));

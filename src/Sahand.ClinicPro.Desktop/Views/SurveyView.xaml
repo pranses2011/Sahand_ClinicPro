@@ -173,7 +173,10 @@
 
         <!-- ══ نمای ۱: فهرست نظرسنجیها ══ -->
         <Grid Grid.Row="4" Style="{StaticResource Ds.ShowOnList}">
-            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <!-- ردیف ۱: جدول سمت راست + توزیع امتیازها سمت چپ -->
             <Grid Grid.Row="0" Margin="0,0,0,8">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="1.55*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="1*" /></Grid.ColumnDefinitions>
                 <Border Grid.Column="0" Style="{StaticResource Ds.Panel}">
@@ -207,21 +210,28 @@
                     </StackPanel>
                 </Border>
             </Grid>
-            <Grid Grid.Row="1">
+            <!-- ردیف ۲: میانگین پزشکان فقط در ستون چپ (همان خالیبودن سمت راست در طرح) -->
+            <Grid Grid.Row="1" Margin="0,0,0,8">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="1.55*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="1*" /></Grid.ColumnDefinitions>
-                <Border Grid.Column="0" Style="{StaticResource Ds.Panel}">
+                <Border Grid.Column="2" Style="{StaticResource Ds.Panel}">
                     <StackPanel>
                         <TextBlock Text="میانگین امتیاز به تفکیک پزشک 👨‍⚕️" Style="{StaticResource Ds.PanelTitle}" />
                         <ItemsControl ItemsSource="{Binding DoctorRatings}" ItemTemplate="{StaticResource Ds.DoctorRow}" />
                     </StackPanel>
                 </Border>
-                <Border Grid.Column="2" Style="{StaticResource Ds.Panel}">
-                    <StackPanel>
-                        <TextBlock Text="نظرات آزاد اخیر 💬" Style="{StaticResource Ds.PanelTitle}" />
-                        <ItemsControl ItemsSource="{Binding Comments}" ItemTemplate="{StaticResource Ds.CommentRow}" />
-                    </StackPanel>
-                </Border>
             </Grid>
+            <!-- ردیف ۳: نظرات آزاد تمامعرض، دو جعبه کنار هم -->
+            <Border Grid.Row="2" Style="{StaticResource Ds.Panel}" ClipToBounds="True">
+                <StackPanel>
+                    <TextBlock Text="نظرات آزاد اخیر 💬" Style="{StaticResource Ds.PanelTitle}" />
+                    <ItemsControl ItemsSource="{Binding Comments}" ItemTemplate="{StaticResource Ds.CommentRow}"
+                                  Height="62" ClipToBounds="True">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel ItemWidth="490" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
         </Grid>
 
         <!-- ══ نمای ۲: نتایج و آمار ══ -->

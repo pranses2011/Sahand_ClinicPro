@@ -11,7 +11,7 @@
          تمام تبها و امکانات قدیمی همان ویو در لایهٔ دوم زنده میمانند. -->
     <UserControl.Resources>
         <DataTemplate x:Key="Ds.TemplateCard">
-            <Border Width="326" Height="168" Margin="0,0,8,8" CornerRadius="9" Padding="9"
+            <Border x:Name="Card" Width="326" Height="168" Margin="0,0,8,8" CornerRadius="9" Padding="9"
                     Background="#FFFFFF" BorderBrush="#D9E2EC" BorderThickness="1.5">
                 <Grid>
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
@@ -36,9 +36,20 @@
                         <TextBlock Text="{Binding PaperSize}" FontSize="9" Foreground="#6B7C93" VerticalAlignment="Center" Margin="0,0,7,0" />
                         <Button Content="ویرایش" Style="{StaticResource Ds.OutlineButton}" Height="24" Padding="9,0" Margin="0,0,4,0" />
                         <Button Content="انتخاب" Style="{StaticResource Ds.OutlineButton}" Height="24" Padding="9,0" />
+                        <Border x:Name="Badge" Visibility="Collapsed" Background="#1565C0" CornerRadius="8"
+                                Padding="9,2" Margin="4,0,0,0">
+                            <TextBlock Text="⭐ پیشفرض" FontSize="9" Foreground="White" />
+                        </Border>
                     </StackPanel>
                 </Grid>
             </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsDefault}" Value="True">
+                    <Setter TargetName="Card" Property="BorderBrush" Value="#1565C0" />
+                    <Setter TargetName="Card" Property="BorderThickness" Value="2" />
+                    <Setter TargetName="Badge" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
         </DataTemplate>
     </UserControl.Resources>
 
