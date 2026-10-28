@@ -2,9 +2,12 @@ name: 🔄 CI Build & Test
 
 on:
   push:
-    branches: [ main, 'feature/**' ]
+    # شاخههای کاری آرنا هم پیش از ادغام باید بیلد و تست شوند؛ پیشتر فقط
+    # main/feature پوشش داشتند و اصلاحهای C# روی شاخهٔ کار بیتأیید میماندند.
+    branches: [ main, 'feature/**', 'arena/**' ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-test:
