@@ -26,6 +26,13 @@ public partial class ReceptionsView : UserControl
         InitializeComponent();
     }
 
+    /// <summary>در عرض کم، جدول کامل صف پایین صفحه باقی می‌ماند و فرم فشرده نمی‌شود.</summary>
+    private void OnReceptionSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (QueueSidebarHost is not null)
+            QueueSidebarHost.Visibility = e.NewSize.Width >= 1050 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     /// <summary>رنگ پس‌زمینه ردیف صف بر اساس نمایه وضعیت</summary>
     private void OnQueueRowLoading(object sender, System.Windows.Controls.DataGridRowEventArgs e)
     {

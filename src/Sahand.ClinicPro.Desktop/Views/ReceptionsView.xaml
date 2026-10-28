@@ -7,7 +7,7 @@
              xmlns:controls="clr-namespace:Sahand.ClinicPro.Desktop.Controls"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1080"
-             FlowDirection="RightToLeft">
+             FlowDirection="RightToLeft" SizeChanged="OnReceptionSizeChanged">
     <!-- ═══ پذیرش بیمار — گام U5 طبق پرامپت UI بخش ۲ (فرم ۱۰) ═══ -->
     <UserControl.Resources>
         <Style x:Key="FieldCaption" TargetType="TextBlock">
@@ -121,105 +121,6 @@
 
                 <ProgressBar IsIndeterminate="True" Height="3" Margin="0,0,0,10"
                              Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
-
-                <!-- ═══ فرم پذیرش جدید ═══ -->
-                <Border CornerRadius="12" Padding="14" Margin="0,0,0,12"
-                        Background="{DynamicResource MaterialDesign.Brush.Background}"
-                        BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}"
-                        BorderThickness="1">
-                    <StackPanel>
-                        <!-- سربرگ فرم — چرخهٔ ۴۴: به‌جای جداکنندهٔ متنی «═══»،
-                             سربرگ ساختاریافته با نشان رنگی و خط زیرین -->
-                        <DockPanel Margin="0,0,0,10">
-                            <Border DockPanel.Dock="Right" Width="30" Height="30" CornerRadius="15"
-                                    Background="#E3F2FD" VerticalAlignment="Center" Margin="0,0,8,0">
-                                <materialDesign:PackIcon Kind="ClipboardPlusOutline" Width="16" Height="16"
-                                                         Foreground="#1565C0" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Border>
-                            <StackPanel>
-                                <TextBlock Text="فرم پذیرش جدید" FontWeight="Bold" FontSize="14" />
-                                <Border Height="2.5" CornerRadius="1.2" Width="52" HorizontalAlignment="Right"
-                                        Background="{DynamicResource MaterialDesign.Brush.Primary}" Margin="0,4,0,0" />
-                            </StackPanel>
-                        </DockPanel>
-
-                        <!-- ═══ چرخهٔ ۷۶ — نوار گام‌های ویزارد پذیرش ═══
-                             گزارش مالک چرخهٔ ۷۴: «ورود اطلاعات و ثبت به‌صورت مرحله‌ای (Wizard)».
-                             سه گام با دایرهٔ شماره و برچسب؛ وضعیت از WizardStep:
-                             جاری = آبی برند، انجام‌شده = سبز، آینده = کم‌رنگ. خط اتصال
-                             میان گام‌ها پس از گذر سبز می‌شود -->
-                        <!-- ═══ بازطراحی مالک — بخش‌های اختیاری صفحه ═══
-                             با تیک هر گزینه، همان بخش به صفحه اضافه/حذف می‌شود؛
-                             انتخاب کاربر در تنظیمات محلی ذخیره می‌شود -->
-                        <Border CornerRadius="10" Padding="10,7" Margin="0,0,0,10"
-                                Background="#F5F9FC" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
-                            <WrapPanel VerticalAlignment="Center">
-                                <TextBlock Text="🧩 بخش‌های صفحه:" FontWeight="Bold" FontSize="11.5" Margin="0,0,10,0" VerticalAlignment="Center" />
-                                <CheckBox Content="آمار امروز" IsChecked="{Binding ShowStatsPanel}" Margin="0,0,12,0" FontSize="11.5" />
-                                <CheckBox Content="صف پذیرش امروز" IsChecked="{Binding ShowQueuePanel}" Margin="0,0,12,0" FontSize="11.5" />
-                                <CheckBox Content="مراجعه‌کننده‌های اخیر" IsChecked="{Binding ShowRecentPanel}" Margin="0,0,12,0" FontSize="11.5" />
-                                <CheckBox Content="نوبت‌های امروز" IsChecked="{Binding ShowAppointmentsPanel}" Margin="0,0,12,0" FontSize="11.5" />
-                                <CheckBox Content="خلاصهٔ مالی امروز" IsChecked="{Binding ShowFinancePanel}" FontSize="11.5" />
-                            </WrapPanel>
-                        </Border>
-
-                        <!-- مراجعه‌کننده‌های اخیر — انتخاب یک‌کلیکه -->
-                        <Border CornerRadius="10" Padding="10,8" Margin="0,0,0,10"
-                                Background="{DynamicResource MaterialDesign.Brush.Background}"
-                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
-                                Visibility="{Binding ShowRecentPanel, Converter={StaticResource BoolToVisibility}}">
-                            <StackPanel>
-                                <TextBlock Text="🕘 مراجعه‌کننده‌های اخیر (برای انتخاب، کلیک کنید)" FontWeight="Bold" FontSize="11.5" Margin="0,0,0,6" />
-                                <ItemsControl ItemsSource="{Binding RecentPatients}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Button Content="{Binding}" Margin="0,0,6,6" Padding="10,4" FontSize="11.5"
-                                                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                    Command="{Binding DataContext.SelectRecentPatientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                    CommandParameter="{Binding}" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- نوبت‌های امروز -->
-                        <Border CornerRadius="10" Padding="10,8" Margin="0,0,0,10"
-                                Background="{DynamicResource MaterialDesign.Brush.Background}"
-                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
-                                Visibility="{Binding ShowAppointmentsPanel, Converter={StaticResource BoolToVisibility}}">
-                            <StackPanel>
-                                <TextBlock Text="📅 نوبت‌های امروز" FontWeight="Bold" FontSize="11.5" Margin="0,0,0,6" />
-                                <ItemsControl ItemsSource="{Binding TodayAppointmentsMini}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <DockPanel Margin="0,2">
-                                                <TextBlock DockPanel.Dock="Left" Text="{Binding StatusText}" FontSize="11" Foreground="#2E7D32" />
-                                                <TextBlock FontSize="11.5">
-                                                    <Run Text="{Binding Time}" FontWeight="Bold" /><Run Text=" · " /><Run Text="{Binding PatientName}" /><Run Text=" — " /><Run Text="{Binding DoctorName}" />
-                                                </TextBlock>
-                                            </DockPanel>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- خلاصهٔ مالی امروز -->
-                        <Border CornerRadius="10" Padding="10,8" Margin="0,0,0,10"
-                                Background="#F1F8E9"
-                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
-                                Visibility="{Binding ShowFinancePanel, Converter={StaticResource BoolToVisibility}}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="💰 خلاصهٔ مالی امروز:" FontWeight="Bold" FontSize="11.5" Margin="0,0,12,0" />
-                                <TextBlock FontSize="11.5" Margin="0,0,12,0"><Run Text="فاکتورها: " /><Run Text="{Binding TodayInvoicedText, Mode=OneWay}" FontWeight="Bold" /></TextBlock>
-                                <TextBlock FontSize="11.5" Margin="0,0,12,0"><Run Text="پرداخت‌شده: " /><Run Text="{Binding TodayPaidText, Mode=OneWay}" FontWeight="Bold" /></TextBlock>
-                                <TextBlock FontSize="11.5"><Run Text="درآمد پذیرش: " /><Run Text="{Binding TodayRevenueDisplay, Mode=OneWay}" FontWeight="Bold" /></TextBlock>
-                            </StackPanel>
-                        </Border>
 
                         <!-- ═══ نوار گام‌های ویزارد — استپر واقعی: دایره + خط اتصال ═══
                              هر گام با کلیک روی دایره/عنوان قابل رفتن است (نه دکمه)؛
@@ -436,6 +337,72 @@
                             </Grid>
                         </Grid>
 
+                <!-- ستون خلاصه در عرض کافی نمایش داده می‌شود؛ جدول کامل و تاریخچه پایین صفحه باقی است. -->
+                <DockPanel LastChildFill="True" Margin="0,0,0,12">
+                    <ContentPresenter x:Name="QueueSidebarHost" DockPanel.Dock="Left" Margin="12,0,0,0" Visibility="Collapsed">
+                        <ContentPresenter.Content>
+                        <Border Width="280" Background="White" BorderBrush="#DEE7F0" BorderThickness="1" CornerRadius="12" Padding="12"
+                                Visibility="{Binding ShowQueuePanel, Converter={StaticResource BoolToVisibility}}">
+                            <DockPanel LastChildFill="True">
+                                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                                    <Button DockPanel.Dock="Left" Command="{Binding LoadCommand}"
+                                            Style="{StaticResource MaterialDesignIconButton}" ToolTip="بارگذاری صف امروز"
+                                            Width="32" Height="32" Padding="0">
+                                        <materialDesign:PackIcon Kind="Refresh" Width="18" Height="18" />
+                                    </Button>
+                                    <TextBlock Text="{Binding QueueTitle}" FontWeight="Bold" FontSize="13"
+                                               TextWrapping="Wrap" VerticalAlignment="Center" />
+                                </DockPanel>
+                                <ListBox ItemsSource="{Binding Receptions}" SelectedItem="{Binding SelectedReception}"
+                                         MaxHeight="400" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                         VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                                         BorderThickness="0" Background="Transparent">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="#DEE7F0" BorderThickness="1" CornerRadius="8" Padding="8" Margin="0,2">
+                                                <DockPanel LastChildFill="True">
+                                                    <Border DockPanel.Dock="Left" Background="{Binding StatusColor}" CornerRadius="6" Padding="6,3" Margin="6,0,0,0" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding StatusText}" FontSize="10" />
+                                                    </Border>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding PatientName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Text="{Binding Time, Converter={StaticResource PersianDigits}}" FontSize="11" Foreground="#617992" />
+                                                    </StackPanel>
+                                                </DockPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </DockPanel>
+                        </Border>
+                        </ContentPresenter.Content>
+                    </ContentPresenter>
+                <!-- ═══ فرم پذیرش جدید ═══ -->
+                <Border CornerRadius="12" Padding="18" Margin="0"
+                        Background="White"
+                        BorderBrush="#DEE7F0"
+                        BorderThickness="1">
+                    <StackPanel>
+                        <!-- سربرگ فرم — چرخهٔ ۴۴: به‌جای جداکنندهٔ متنی «═══»،
+                             سربرگ ساختاریافته با نشان رنگی و خط زیرین -->
+                        <DockPanel Margin="0,0,0,10">
+                            <Border DockPanel.Dock="Right" Width="30" Height="30" CornerRadius="15"
+                                    Background="#E3F2FD" VerticalAlignment="Center" Margin="0,0,8,0">
+                                <materialDesign:PackIcon Kind="ClipboardPlusOutline" Width="16" Height="16"
+                                                         Foreground="#1565C0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel>
+                                <TextBlock Text="فرم پذیرش جدید" FontWeight="Bold" FontSize="15" Foreground="#173657" />
+                                <Border Height="2.5" CornerRadius="1.2" Width="52" HorizontalAlignment="Right"
+                                        Background="{DynamicResource MaterialDesign.Brush.Primary}" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </DockPanel>
+
+                        <!-- ═══ چرخهٔ ۷۶ — نوار گام‌های ویزارد پذیرش ═══
+                             گزارش مالک چرخهٔ ۷۴: «ورود اطلاعات و ثبت به‌صورت مرحله‌ای (Wizard)».
+                             سه گام با دایرهٔ شماره و برچسب؛ وضعیت از WizardStep:
+                             جاری = آبی برند، انجام‌شده = سبز، آینده = کم‌رنگ. خط اتصال
+                             میان گام‌ها پس از گذر سبز می‌شود -->
                         <!-- ═══ گام ۰ — نوع پذیرش: دو دکمهٔ بزرگ ═══ -->
                         <StackPanel Visibility="{Binding WizardStep, Converter={StaticResource SectionToVisibility}, ConverterParameter=0}">
                             <TextBlock Text="این پذیرش برای چیست؟" FontWeight="Bold" FontSize="15" Margin="0,2,0,4" />
@@ -487,25 +454,24 @@
 
                         <!-- جستجوی هوشمند — چرخه بیست‌وسوم: برچسب و راهنما برای جستجوی
                              نام/نام‌خانوادگی و تطبیق جزئی (پیش‌تر فقط کد ملی کامل جواب می‌داد) -->
-                        <Grid Margin="0,0,0,6">
+                        <TextBlock Text="جستجو و انتخاب بیمار" FontSize="15" FontWeight="Bold" Foreground="#173657" Margin="0,0,0,5" />
+                        <TextBlock Text="نام، کد ملی، شماره موبایل یا کد پیگیری نوبت" FontSize="12" Foreground="#617992" Margin="0,0,0,6" TextWrapping="Wrap" />
+                        <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="نام / کد ملی / موبایل / کد پیگیری (APT-…):"
-                                       VerticalAlignment="Center" Margin="0,0,10,0" FontSize="12.5" />
-                            <TextBox Grid.Column="1" Text="{Binding SmartSearch, UpdateSourceTrigger=PropertyChanged}"
-                                     materialDesign:HintAssist.Hint="مثلاً «علی رضایی» یا ۰۰۱۲۳ یا ۰۹۱۲ یا APT-1024">
+                            <TextBox Grid.Column="0" Text="{Binding SmartSearch, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="عبارت جستجو را وارد کنید">
                                 <TextBox.InputBindings>
                                     <KeyBinding Key="Enter" Command="{Binding SmartSearchCommand}" />
                                 </TextBox.InputBindings>
                             </TextBox>
-                            <Button Grid.Column="2" Command="{Binding SmartSearchCommand}"
+                            <Button Grid.Column="1" Command="{Binding SmartSearchCommand}"
                                     Style="{StaticResource MaterialDesignRaisedButton}" Margin="10,0,0,0">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="Magnify" Width="15" Height="15" VerticalAlignment="Center" />
-                                    <TextBlock Text="جستجو" Margin="6,0,0,0" />
+                                    <TextBlock Text="جستجوی بیمار" Margin="6,0,0,0" />
                                 </StackPanel>
                             </Button>
                         </Grid>
@@ -576,7 +542,7 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
-                                    <StackPanel Orientation="Horizontal">
+                                    <WrapPanel>
                                         <materialDesign:PackIcon Kind="Account" Width="18" Height="18" Foreground="#1565C0" VerticalAlignment="Center" />
                                         <TextBlock Text="{Binding FoundPatient.FullName, Mode=OneWay}" FontWeight="Bold" Margin="8,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                         <TextBlock Margin="18,0,0,0" VerticalAlignment="Center" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}"
@@ -588,7 +554,7 @@
                                                 <Run Text="" /><Run Text="{Binding FoundPatient.InsuranceName, Mode=OneWay, TargetNullValue=آزاد}" />
                                             </TextBlock>
                                         </Border>
-                                    </StackPanel>
+                                    </WrapPanel>
                                     <Border Background="#FFEBEE" CornerRadius="8" Padding="8,2" Margin="0,6,0,0"
                                             HorizontalAlignment="Left"
                                             Visibility="{Binding FoundPatient.Allergies, Converter={StaticResource NullToVisibility}}">
@@ -1043,6 +1009,87 @@
                                 </StackPanel>
                             </Button>
                         </DockPanel>
+                    </StackPanel>
+                </Border>
+
+                </DockPanel>
+
+                <!-- تنظیمات بخش‌های اختیاری و محتوای واقعی آن‌ها در دسترس می‌مانند. -->
+                <Border CornerRadius="12" Padding="12" Margin="0,0,0,12" Background="White" BorderBrush="#DEE7F0" BorderThickness="1">
+                    <StackPanel>
+                        <!-- ═══ بازطراحی مالک — بخش‌های اختیاری صفحه ═══
+                             با تیک هر گزینه، همان بخش به صفحه اضافه/حذف می‌شود؛
+                             انتخاب کاربر در تنظیمات محلی ذخیره می‌شود -->
+                        <Border CornerRadius="10" Padding="10,7" Margin="0,0,0,10"
+                                Background="#F5F9FC" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
+                            <WrapPanel VerticalAlignment="Center">
+                                <TextBlock Text="🧩 بخش‌های صفحه:" FontWeight="Bold" FontSize="11.5" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                <CheckBox Content="آمار امروز" IsChecked="{Binding ShowStatsPanel}" Margin="0,0,12,0" FontSize="11.5" />
+                                <CheckBox Content="صف پذیرش امروز" IsChecked="{Binding ShowQueuePanel}" Margin="0,0,12,0" FontSize="11.5" />
+                                <CheckBox Content="مراجعه‌کننده‌های اخیر" IsChecked="{Binding ShowRecentPanel}" Margin="0,0,12,0" FontSize="11.5" />
+                                <CheckBox Content="نوبت‌های امروز" IsChecked="{Binding ShowAppointmentsPanel}" Margin="0,0,12,0" FontSize="11.5" />
+                                <CheckBox Content="خلاصهٔ مالی امروز" IsChecked="{Binding ShowFinancePanel}" FontSize="11.5" />
+                            </WrapPanel>
+                        </Border>
+
+                        <!-- مراجعه‌کننده‌های اخیر — انتخاب یک‌کلیکه -->
+                        <Border CornerRadius="10" Padding="10,8" Margin="0,0,0,10"
+                                Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
+                                Visibility="{Binding ShowRecentPanel, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <TextBlock Text="🕘 مراجعه‌کننده‌های اخیر (برای انتخاب، کلیک کنید)" FontWeight="Bold" FontSize="11.5" Margin="0,0,0,6" />
+                                <ItemsControl ItemsSource="{Binding RecentPatients}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{Binding}" Margin="0,0,6,6" Padding="10,4" FontSize="11.5"
+                                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                    Command="{Binding DataContext.SelectRecentPatientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- نوبت‌های امروز -->
+                        <Border CornerRadius="10" Padding="10,8" Margin="0,0,0,10"
+                                Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
+                                Visibility="{Binding ShowAppointmentsPanel, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <TextBlock Text="📅 نوبت‌های امروز" FontWeight="Bold" FontSize="11.5" Margin="0,0,0,6" />
+                                <ItemsControl ItemsSource="{Binding TodayAppointmentsMini}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <DockPanel Margin="0,2">
+                                                <TextBlock DockPanel.Dock="Left" Text="{Binding StatusText}" FontSize="11" Foreground="#2E7D32" />
+                                                <TextBlock FontSize="11.5">
+                                                    <Run Text="{Binding Time}" FontWeight="Bold" /><Run Text=" · " /><Run Text="{Binding PatientName}" /><Run Text=" — " /><Run Text="{Binding DoctorName}" />
+                                                </TextBlock>
+                                            </DockPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- خلاصهٔ مالی امروز -->
+                        <Border CornerRadius="10" Padding="10,8" Margin="0,0,0,10"
+                                Background="#F1F8E9"
+                                BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1"
+                                Visibility="{Binding ShowFinancePanel, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="💰 خلاصهٔ مالی امروز:" FontWeight="Bold" FontSize="11.5" Margin="0,0,12,0" />
+                                <TextBlock FontSize="11.5" Margin="0,0,12,0"><Run Text="فاکتورها: " /><Run Text="{Binding TodayInvoicedText, Mode=OneWay}" FontWeight="Bold" /></TextBlock>
+                                <TextBlock FontSize="11.5" Margin="0,0,12,0"><Run Text="پرداخت‌شده: " /><Run Text="{Binding TodayPaidText, Mode=OneWay}" FontWeight="Bold" /></TextBlock>
+                                <TextBlock FontSize="11.5"><Run Text="درآمد پذیرش: " /><Run Text="{Binding TodayRevenueDisplay, Mode=OneWay}" FontWeight="Bold" /></TextBlock>
+                            </StackPanel>
+                        </Border>
+
                     </StackPanel>
                 </Border>
 

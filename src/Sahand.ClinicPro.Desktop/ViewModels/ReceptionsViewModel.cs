@@ -38,7 +38,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(IranClock.Now);
 
     /// <summary>عنوان فهرست صف — «صف پذیرش امروز» یا تاریخچهٔ تاریخ انتخابی</summary>
-    [ObservableProperty] private string _queueTitle = "═══ صف پذیرش امروز ═══";
+    [ObservableProperty] private string _queueTitle = "صف پذیرش امروز";
 
     /* ── جستجوی هوشمند ── */
     /// <summary>عبارت جستجو — نام/نام‌خانوادگی/کد ملی/کد پیگیری APT/موبایل</summary>
@@ -724,6 +724,8 @@ public partial class ReceptionsViewModel : ViewModelBase
         var response = await _api.GetAsync<ReceptionsResponse>("receptions/today");
         if (response?.Data is not null)
         {
+            // بارگذاری صف امروز نباید عنوان تاریخچهٔ قبلی را روی دادهٔ امروز نگه دارد.
+            QueueTitle = "صف پذیرش امروز";
             Receptions = new ObservableCollection<ReceptionRow>(response.Data.Select(MapRow));
             // مراجعه‌کننده‌های اخیر + جمع‌های مالی پنل‌های اختیاری
             RecentPatients.Clear();
@@ -904,7 +906,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             return;
         }
         Receptions = new ObservableCollection<ReceptionRow>(response.Data.Select(MapRow));
-        QueueTitle = $"═══ پذیرش‌های {HistoryDateShamsi} (تاریخچه — برای چاپ مجدد قبض روی ردیف کلیک کنید) ═══";
+        QueueTitle = $"پذیرش‌های {HistoryDateShamsi} (تاریخچه)";
         _snackbar.Info($"{response.Data.Count} پذیرش برای {HistoryDateShamsi} یافت شد");
     }
 
@@ -912,7 +914,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     [RelayCommand]
     private async Task BackToTodayAsync()
     {
-        QueueTitle = "═══ صف پذیرش امروز ═══";
+        QueueTitle = "صف پذیرش امروز";
         HistoryDateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(IranClock.Now);
         await LoadAsync();
     }
