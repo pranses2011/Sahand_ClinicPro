@@ -249,6 +249,7 @@ public class ParaclinicalController : ApiBaseController
                 pd = e.PupilDistance,
                 colorVision = e.ColorVision,
                 e.Findings,
+                e.VisualField,
                 e.EyewearPrescription
             })
             .ToListAsync();

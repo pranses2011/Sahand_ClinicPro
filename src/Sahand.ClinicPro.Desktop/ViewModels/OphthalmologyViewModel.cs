@@ -21,6 +21,12 @@ public partial class OphthalmologyViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
+    private int _patientRequestVersion;
+
+    [ObservableProperty] private bool _isEyeHistoryLoading;
+    /// <summary>تا پایان بارگذاری سابقه، ویرایش یا ثبت معاینه مجاز نیست.</summary>
+    public bool IsEyeExamEnabled => EyePatient is not null && !IsEyeHistoryLoading;
+    partial void OnIsEyeHistoryLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEyeExamEnabled));
 
     /// <summary>عنوان صفحه در هدر و منو</summary>
     public override string Title => "چشم‌پزشکی";
@@ -30,7 +36,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
     [ObservableProperty] private string? _odCylinder;
     [ObservableProperty] private string? _odAxis;
     [ObservableProperty] private string? _odAdd;
-    [ObservableProperty] private int _odVisionIndex = 2;
+    [ObservableProperty] private int _odVisionIndex = -1;
     [ObservableProperty] private string? _odIop;
 
     /* ── اندازه‌های چشم چپ (OS) ── */
@@ -38,14 +44,14 @@ public partial class OphthalmologyViewModel : ViewModelBase
     [ObservableProperty] private string? _osCylinder;
     [ObservableProperty] private string? _osAxis;
     [ObservableProperty] private string? _osAdd;
-    [ObservableProperty] private int _osVisionIndex = 2;
+    [ObservableProperty] private int _osVisionIndex = -1;
     [ObservableProperty] private string? _osIop;
 
     /// <summary>فاصلهٔ مردمک‌چشمی (PD)</summary>
     [ObservableProperty] private string? _pd;
 
     /// <summary>نمایهٔ دید رنگی</summary>
-    [ObservableProperty] private int _colorVisionIndex;
+    [ObservableProperty] private int _colorVisionIndex = -1;
 
     /// <summary>یافته‌های بالینی</summary>
     [ObservableProperty] private string? _eyeFindings;
@@ -81,10 +87,17 @@ public partial class OphthalmologyViewModel : ViewModelBase
         $"OS: SPH {OsSphere ?? "—"} · CYL {OsCylinder ?? "—"} · AXIS {OsAxis ?? "—"} · ADD {OsAdd ?? "—"}" + Environment.NewLine +
         $"PD: {Pd ?? "—"} mm";
 
+    private static string NormalizeEyeNumber(string? text) => string.Concat((text ?? "").Trim().Select(c => c switch
+    {
+        >= '۰' and <= '۹' => (char)('0' + c - '۰'),
+        >= '٠' and <= '٩' => (char)('0' + c - '٠'),
+        '٫' => '.', '−' => '-', _ => c
+    }));
+
     /// <summary>پهنای گیج فشار چشم راست (از ۴۰ مقیاس، ۱۸۰ پیکسل)</summary>
-    public double OdIopGaugeWidth => int.TryParse(OdIop, out var v) ? Math.Clamp(v, 0, 40) / 40d * 180 : 0;
+    public double OdIopGaugeWidth => int.TryParse(NormalizeEyeNumber(OdIop), out var v) ? Math.Clamp(v, 0, 40) / 40d * 180 : 0;
     /// <summary>پهنای گیج فشار چشم چپ</summary>
-    public double OsIopGaugeWidth => int.TryParse(OsIop, out var v) ? Math.Clamp(v, 0, 40) / 40d * 180 : 0;
+    public double OsIopGaugeWidth => int.TryParse(NormalizeEyeNumber(OsIop), out var v) ? Math.Clamp(v, 0, 40) / 40d * 180 : 0;
 
     /// <summary>روند فشار و نمره در سابقه — مقایسهٔ تازه‌ترین با قبلی</summary>
     [ObservableProperty] private string _historyTrendText = string.Empty;
@@ -100,10 +113,10 @@ public partial class OphthalmologyViewModel : ViewModelBase
     partial void OnPdChanged(string? value) => OnPropertyChanged(nameof(GlassesPrescriptionText));
 
     /// <summary>هشدار گلوکوم چشم راست</summary>
-    public string? OdIopWarning => int.TryParse(OdIop, out var v) && v > 21 ? "⚠️ احتمال گلوکوم — IOP بالای ۲۱" : null;
+    public string? OdIopWarning => int.TryParse(NormalizeEyeNumber(OdIop), out var v) && v > 21 ? "⚠️ احتمال گلوکوم — IOP بالای ۲۱" : null;
 
     /// <summary>هشدار گلوکوم چشم چپ</summary>
-    public string? OsIopWarning => int.TryParse(OsIop, out var v) && v > 21 ? "⚠️ احتمال گلوکوم — IOP بالای ۲۱" : null;
+    public string? OsIopWarning => int.TryParse(NormalizeEyeNumber(OsIop), out var v) && v > 21 ? "⚠️ احتمال گلوکوم — IOP بالای ۲۱" : null;
 
     partial void OnOdIopChanged(string? value) { OnPropertyChanged(nameof(OdIopWarning)); OnPropertyChanged(nameof(OdIopGaugeWidth)); }
     partial void OnOsIopChanged(string? value) { OnPropertyChanged(nameof(OsIopWarning)); OnPropertyChanged(nameof(OsIopGaugeWidth)); }
@@ -123,6 +136,23 @@ public partial class OphthalmologyViewModel : ViewModelBase
     /// <summary>بیمار منتخب</summary>
     [ObservableProperty] private QuickPatient? _eyePatient;
 
+    partial void OnEyePatientChanged(QuickPatient? value)
+    {
+        // دادهٔ بالینی و پاسخ‌های در حال پرواز هرگز به بیمار بعدی منتقل نشوند.
+        _patientRequestVersion++;
+        IsEyeHistoryLoading = false;
+        EyeHistory.Clear();
+        HistoryTrendText = string.Empty;
+        OdSphere = OdCylinder = OdAxis = OdAdd = OdIop = null;
+        OsSphere = OsCylinder = OsAxis = OsAdd = OsIop = null;
+        Pd = EyeFindings = null;
+        OdVisionIndex = OsVisionIndex = ColorVisionIndex = -1;
+        SlitOd = SlitOs = PachymetryOd = PachymetryOs = null;
+        VisualFieldText = SpecialTestsText = ImagingNote = DiagnosisText = null;
+        CarePlanText = DrugPrescriptionText = FollowUpText = null;
+        OnPropertyChanged(nameof(IsEyeExamEnabled));
+    }
+
     /// <summary>سابقهٔ معاینه‌های چشم بیمار منتخب — ۲۰ مورد آخر</summary>
     public ObservableCollection<EyeExamRow> EyeHistory { get; } = new();
 
@@ -140,20 +170,39 @@ public partial class OphthalmologyViewModel : ViewModelBase
     [RelayCommand]
     private async Task SearchEyePatientAsync()
     {
+        // هنگام جستجوی بیمار دیگر، فرم و ثبت بیمار قبلی فوراً غیرفعال شود.
+        EyePatient = null;
+        var searchVersion = ++_patientRequestVersion;
         var patient = await Helpers.PatientQuickSearch.FindAsync(_api, _snackbar, EyePatientSearch);
-        if (patient is null) return;
+        if (patient is null || searchVersion != _patientRequestVersion) return;
         EyePatient = patient;
-        _ = LoadEyeHistoryAsync();
+        await LoadEyeHistoryAsync();
     }
 
     /// <summary>بازیابی آخرین معاینهٔ چشم بیمار + سابقه — GET eye/exams</summary>
     private async Task LoadEyeHistoryAsync()
     {
-        EyeHistory.Clear();
         if (EyePatient is null) return;
-        var response = await _api.GetAsync<EyeExamsResponse>($"eye/exams?patientId={EyePatient.Id}");
+        var patientId = EyePatient.Id;
+        var requestVersion = _patientRequestVersion;
+        IsEyeHistoryLoading = true;
+        EyeExamsResponse? response;
+        try
+        {
+            response = await _api.GetAsync<EyeExamsResponse>($"eye/exams?patientId={patientId}");
+        }
+        finally
+        {
+            if (requestVersion == _patientRequestVersion) IsEyeHistoryLoading = false;
+        }
+        if (requestVersion != _patientRequestVersion || EyePatient?.Id != patientId) return;
         var exams = response?.Data;
-        if (exams is null || exams.Count == 0) return;
+        if (exams is null)
+        {
+            _snackbar.Error(_api.LastError ?? "دریافت سابقهٔ معاینه ناموفق بود");
+            return;
+        }
+        if (exams.Count == 0) return;
 
         // آخرین معاینه → پر کردن فرم برای ادامهٔ پرونده
         var last = exams[0];
@@ -166,7 +215,12 @@ public partial class OphthalmologyViewModel : ViewModelBase
         OdIop = last.Od?.Iop?.ToString();
         OsIop = last.Os?.Iop?.ToString();
         Pd = last.Pd?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        // Add به صورت متن نسخه در قرارداد فعلی ذخیره می‌شود؛ فقط قالب دقیق
+        // تولیدشده توسط همین برنامه خوانده می‌شود، نه نسخه‌های آزاد قدیمی.
+        OdAdd = ReadSavedAdd(last.EyewearPrescription, "OD");
+        OsAdd = ReadSavedAdd(last.EyewearPrescription, "OS");
         EyeFindings = last.Findings;
+        VisualFieldText = last.VisualField;
         if (last.Od?.Acuity is { } odAcuity && VisionOptions.Contains(odAcuity))
             OdVisionIndex = Array.IndexOf(VisionOptions, odAcuity);
         if (last.Os?.Acuity is { } osAcuity && VisionOptions.Contains(osAcuity))
@@ -192,10 +246,26 @@ public partial class OphthalmologyViewModel : ViewModelBase
                 e.Findings));
     }
 
+    private static string? ReadSavedAdd(string? prescription, string side)
+    {
+        if (string.IsNullOrEmpty(prescription)) return null;
+        var line = prescription.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None)
+            .FirstOrDefault(x => x.StartsWith(side + ": SPH ", StringComparison.Ordinal));
+        if (line is null || !line.Contains(" · CYL ", StringComparison.Ordinal) ||
+            !line.Contains(" · AXIS ", StringComparison.Ordinal)) return null;
+        var marker = " · ADD ";
+        var index = line.LastIndexOf(marker, StringComparison.Ordinal);
+        if (index < 0) return null;
+        var value = line[(index + marker.Length)..].Trim();
+        return value.Length == 0 || value == "—" ? null : value;
+    }
+
     /// <summary>پاک‌کردن بیمار چشم و سابقه — بیمار بعدی</summary>
     [RelayCommand]
     private void ClearEyePatient()
     {
+        // حتی در نبود بیمار منتخب، جستجوی در حال اجرا باید بی‌اثر شود.
+        _patientRequestVersion++;
         EyePatient = null;
         EyePatientSearch = string.Empty;
         EyeHistory.Clear();
@@ -210,33 +280,56 @@ public partial class OphthalmologyViewModel : ViewModelBase
     {
         if (EyePatient is null)
         { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return; }
+        if (IsEyeHistoryLoading)
+        { _snackbar.Error("تا پایان بارگذاری سابقه صبر کنید"); return; }
 
-        // پارس امن IOP و PD — ورودی خالی = تهی (ثبت نمی‌شود)
-        int? TryInt(string? s) => int.TryParse(s?.Trim(), out var v) ? v : null;
-        decimal? TryDec(string? s) => decimal.TryParse(s?.Trim(), System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : null;
+        // تبدیل ارقام فارسی/عربی و جلوگیری از ذخیرهٔ بی‌صدای مقدار نامعتبر به صورت null.
+        static bool IntValue(string? text, out int? value)
+        {
+            var normalized = NormalizeEyeNumber(text);
+            if (normalized.Length == 0) { value = null; return true; }
+            var ok = int.TryParse(normalized, System.Globalization.NumberStyles.AllowLeadingSign,
+                System.Globalization.CultureInfo.InvariantCulture, out var parsed);
+            value = ok ? parsed : null; return ok;
+        }
+        static bool DecimalValue(string? text, out decimal? value)
+        {
+            var normalized = NormalizeEyeNumber(text);
+            if (normalized.Length == 0) { value = null; return true; }
+            var ok = decimal.TryParse(normalized, System.Globalization.NumberStyles.AllowLeadingSign | System.Globalization.NumberStyles.AllowDecimalPoint,
+                System.Globalization.CultureInfo.InvariantCulture, out var parsed);
+            value = ok ? parsed : null; return ok;
+        }
+        if (!DecimalValue(OdSphere, out var rightSphere) || !DecimalValue(OdCylinder, out var rightCylinder) ||
+            !IntValue(OdAxis, out var rightAxis) || !DecimalValue(OsSphere, out var leftSphere) ||
+            !DecimalValue(OsCylinder, out var leftCylinder) || !IntValue(OsAxis, out var leftAxis) ||
+            !IntValue(OdIop, out var rightIop) || !IntValue(OsIop, out var leftIop) || !DecimalValue(Pd, out var pd) ||
+            !DecimalValue(OdAdd, out _) || !DecimalValue(OsAdd, out _))
+        { _snackbar.Error("مقدار عددی واردشده در اندازه‌های چشم معتبر نیست"); return; }
 
         // ═══ چرخهٔ ۴۸ — سازگاری کامل با قرارداد سرور SaveEyeExamCommand ═══
         // نام‌های قبلی odSphere/osCylinder/… با هیچ ویژگی‌ای از DTO سرور
         // (rightSphere/leftCylinder/…) بایند نمی‌شدند ⇒ عدسی/استوانه/محور هر دو
         // چشم بی‌صدا دور ریخته می‌شد و رکورد معاینهٔ چشم «ثبت‌شده» بدون نسخهٔ
         // عینک ذخیره می‌شد (گزارش مالک: قابلیت‌ها پیاده نشده‌اند).
+        var patient = EyePatient;
         var ok = await _api.PostAsync("eye/exams", new
         {
-            patientId = EyePatient.Id,
+            patientId = patient.Id,
             visitId = (long?)null,
-            rightSphere = TryDec(OdSphere), rightCylinder = TryDec(OdCylinder), rightAxis = TryInt(OdAxis),
-            leftSphere = TryDec(OsSphere), leftCylinder = TryDec(OsCylinder), leftAxis = TryInt(OsAxis),
-            rightIop = TryInt(OdIop), leftIop = TryInt(OsIop),
+            rightSphere, rightCylinder, rightAxis,
+            leftSphere, leftCylinder, leftAxis,
+            rightIop, leftIop,
             rightVisualAcuity = VisionOptions.ElementAtOrDefault(OdVisionIndex),
             leftVisualAcuity = VisionOptions.ElementAtOrDefault(OsVisionIndex),
-            pupilDistance = TryDec(Pd),
+            pupilDistance = pd,
             colorVision = ColorVisionOptions.ElementAtOrDefault(ColorVisionIndex),
             visualField = string.IsNullOrWhiteSpace(VisualFieldText) ? null : VisualFieldText.Trim(),
             findings = ComposeFindings(),
             // تجویز عینک — نسخهٔ زندهٔ ساخته‌شده از رفرکشن و PD
             eyewearPrescription = GlassesPrescriptionText
         });
-        if (ok) _snackbar.Success($"معاینهٔ چشم برای «{EyePatient.FullName}» ثبت شد");
+        if (ok) _snackbar.Success($"معاینهٔ چشم برای «{patient.FullName}» ثبت شد");
         else _snackbar.Error(_api.LastError ?? "ثبت معاینه ناموفق بود");
     }
 
@@ -281,6 +374,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
         public decimal? Pd { get; set; }
         public string? ColorVision { get; set; }
         public string? Findings { get; set; }
+        public string? VisualField { get; set; }
         public string? EyewearPrescription { get; set; }
     }
 

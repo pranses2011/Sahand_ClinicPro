@@ -18,20 +18,31 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <materialDesign:PackIcon Kind="EyeCircle" Width="26" Height="26"
-                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
-            <TextBlock Text="چشم‌پزشکی" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
-        </StackPanel>
+        <Border Grid.Row="0" Background="White" BorderBrush="#D3E2F0" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,10">
+            <DockPanel>
+                <Button DockPanel.Dock="Left" Command="{Binding SaveEyeExamCommand}" IsEnabled="{Binding IsEyeExamEnabled}"
+                        Style="{StaticResource MaterialDesignRaisedButton}" Padding="14,7" Content="ذخیره معاینه" />
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="38" Height="38" CornerRadius="9" Background="#E8F2FD" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="EyeCircle" Width="23" Height="23" Foreground="#176AC2" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="معاینه چشم‌پزشکی" Foreground="#173657" FontSize="18" FontWeight="Bold" />
+                        <TextBlock Text="رفرکشن، فشار چشم، یافته‌ها و سابقه بیمار" Foreground="#617992" FontSize="11" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
         <!-- محتوای صفحه — عیناً از تب پاراکلینیک سابق (اتصال‌ها بدون تغییر) -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="4,8">
                             <StackPanel>
                                 <!-- ═══ نوار بیمار تب چشم — چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک):
                                      پیش‌تر این تب بیمار خودش را نداشت و باید بیمار در تب
                                      فیزیوتراپی/تصویربرداری جستجو می‌شد؛ اکنون معاینه و سابقه
                                      به پروندهٔ همین بیمار وصل است ═══ -->
-                                <Grid Margin="0,0,0,12">
+                                <Border Background="White" BorderBrush="#D3E2F0" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,0,12">
+                                <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="2.4*" />
                                         <ColumnDefinition Width="Auto" />
@@ -68,7 +79,10 @@
                                         <materialDesign:PackIcon Kind="CloseCircleOutline" Width="18" Height="18" Foreground="#C62828" />
                                     </Button>
                                 </Grid>
-
+                                </Border>
+                                <TextBlock Text="در حال دریافت سابقهٔ بیمار…" Foreground="#176AC2" Margin="0,0,0,8"
+                                           Visibility="{Binding IsEyeHistoryLoading, Converter={StaticResource BoolToVisibility}}" />
+                                <StackPanel IsEnabled="{Binding IsEyeExamEnabled}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -76,7 +90,7 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <!-- OD -->
-                                    <Border Grid.Column="0" CornerRadius="12" Padding="14" Background="#E3F2FD">
+                                    <Border Grid.Column="0" CornerRadius="10" Padding="14" Background="White" BorderBrush="#D3E2F0" BorderThickness="1">
                                         <StackPanel>
                                             <TextBlock Text="چشم راست (OD)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <UniformGrid Columns="2">
@@ -98,7 +112,7 @@
                                         </StackPanel>
                                     </Border>
                                     <!-- OS -->
-                                    <Border Grid.Column="2" CornerRadius="12" Padding="14" Background="#F3E5F5">
+                                    <Border Grid.Column="2" CornerRadius="10" Padding="14" Background="White" BorderBrush="#D3E2F0" BorderThickness="1">
                                         <StackPanel>
                                             <TextBlock Text="چشم چپ (OS)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <UniformGrid Columns="2">
@@ -180,7 +194,7 @@
                                 </Expander>
                                 <Expander Margin="0,8,0,0" Header="📷 تصویربرداری چشم (OCT، عکس فوندوس، بیومتری)">
                                     <TextBox Text="{Binding ImagingNote, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="44" Margin="0,8,0,0"
-                                             ToolTip="نتیجه و تاریخ OCT/فوندوس/بیومتری — تصاویر از بخش تصویربرداری وصل می‌شوند" />
+                                             ToolTip="یادداشت نتیجه و تاریخ OCT/فوندوس/بیومتری" />
                                 </Expander>
                                 <Expander Margin="0,8,0,0" Header="🩺 تشخیص و برنامهٔ درمان / جراحی / ارجاع">
                                     <StackPanel Margin="0,8,0,0">
@@ -206,6 +220,8 @@
                                         <TextBlock Text="💾 ذخیره معاینهٔ چشم در پروندهٔ بیمار" Margin="8,0,0,0" />
                                     </StackPanel>
                                 </Button>
+
+                                </StackPanel>
 
                                 <!-- ═══ سابقهٔ معاینه‌های چشم بیمار منتخب — چرخهٔ ۲۸ ═══
                                      با انتخاب بیمار، ۲۰ معاینهٔ آخر او از پرونده خوانده می‌شود؛
