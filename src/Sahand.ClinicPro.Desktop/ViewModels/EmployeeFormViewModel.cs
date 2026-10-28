@@ -308,67 +308,55 @@ public partial class EmployeeFormViewModel : FormViewModelBase
     }
 
     /// <summary>
-    /// حل انتخاب/متن ComboBox سمت یا دپارتمان به شناسه — چرخهٔ چهل‌ودوم:
-    /// زنجیرهٔ پنج‌مرحله‌ای که سه عارضهٔ قدیمی را می‌بندد:
-    ///   ۱) انتخاب از فهرست → شناسهٔ همان گزینه
-    ///   ۲) متن تهی/«—» → تهی (پاک‌کردن آگاهانهٔ کاربر — در ویرایش، متن از
-    ///      ابتدا با نام فعلی پر شده است پس این حالت فقط با پاک‌کردن دستی رخ می‌دهد)
-    ///   ۳) متن برابر نامِ فعلی → شناسهٔ فعلی، بدون رفت‌وبرگشت سرور (حفاظت
-    ///      در برابر 403 کاربر غیرمدیر و رفع «هر ویرایش مقدار را صفر می‌کرد»)
-    ///   ۴) متن منطبق با گزینهٔ موجود فهرست → شناسهٔ همان (جستجوی کلایندی)
-    ///   ۵) مقدار تازه → ساخت سروری؛ شکست ساخت دیگر بی‌صدا تهی نمی‌شود بلکه
-    ///      ذخیره با پیام فارسی متوقف می‌شود تا کاربر بداند چه شده است
+    /// حل «متن تایپشده» ComboBox سمت/دپارتمان — چرخهٔ جاری (گزارش مالک:
+    /// «فیلد سمت رو که دستی تایپ میکنم در دیتابیس ذخیره نمیشه و همون مقدار
+    /// قبلی روش میمونه»).
+    ///
+    /// ریشهٔ دقیق: کامبوی ویرایشپذیر فقط <c>Text</c> را بایند کرده است، ولی
+    /// نسخهٔ پیشین نخست <c>selectedIndex</c> را بررسی میکرد؛ آن ایندکس هنگام
+    /// بارگذاری فرم ویرایش یکبار مقداردهی میشد و هنگام تایپ هرگز تغییر
+    /// نمیکرد. نتیجه: هر متن تازهای نادیده گرفته میشد و همان شناسهٔ قبلی
+    /// به سرور فرستاده میشد.
+    ///
+    /// قرارداد تازه: <b>متن تایپشده منبع حقیقت است.</b> شناسه فقط از روی
+    /// متن پیدا میشود؛ اگر مقداری در فهرست محلی نبود، شناسه تهی و «نام
+    /// نرمالشده» برگردانده میشود تا سرور خودش رکورد مرجع را بسازد. بدین
+    /// ترتیب دیگر نیازی به <c>POST lookups/positions</c> (که نقش
+    /// Admin/Manager میخواست) نیست و هر کاربری که اجازهٔ ویرایش پرسنل
+    /// دارد میتواند سمت تازه بنویسد.
     /// </summary>
-    /// <param name="items">فهرست گزینه‌های موجود</param>
-    /// <param name="selectedIndex">ایندکس انتخابی</param>
-    /// <param name="text">متن تایپی</param>
-    /// <param name="createEndpoint">اندپوینت ساخت مقدار تازه</param>
-    /// <param name="originalId">شناسهٔ مقدار فعلی پرسنل (ویرایش) یا تهی (ثبت جدید)</param>
-    /// <param name="originalName">نام مقدار فعلی پرسنل یا تهی</param>
-    /// <param name="fieldLabel">برچسب فارسی فیلد برای پیام خطا (سمت/دپارتمان)</param>
-    /// <returns>شناسهٔ حل‌شده + در صورت شکست ساخت، پیام خطای فارسی</returns>
-    private async Task<(long? Id, string? Error)> ResolveLookupIdAsync(
+    /// <returns>
+    /// Id = شناسهٔ حلشده (تهی = مقدار تازه یا پاکشده)؛
+    /// Name = نام نرمالشده برای ساخت سروری (رشتهٔ تهی = پاککردن صریح،
+    /// تهی = نامهای به سرور نرسد).
+    /// </returns>
+    public static (long? Id, string? Name) ResolveLookup(
         ObservableCollection<LookupOption> items, int selectedIndex, string? text,
-        string createEndpoint, long? originalId, string? originalName, string fieldLabel)
+        long? originalId, string? originalName)
     {
-        // ۱) مورد انتخابی از فهرست؟
-        if (selectedIndex >= 0 && selectedIndex < items.Count)
-            return (items[selectedIndex].Id, null);
+        var name = Helpers.LookupName.Normalize(text);
 
-        // ۲) متن تهی؟ (خالی یا نشان‌گر «بدون مقدار») — پاک‌کردن آگاهانه
-        var name = text?.Trim();
-        if (string.IsNullOrWhiteSpace(name) || name == "—")
-            return (null, null);
+        // ۱) متن خالی یا نشانگر «—» → پاککردن آگاهانهٔ مقدار
+        if (Helpers.LookupName.IsEmptyMarker(name))
+            return (null, string.Empty);
 
-        // ۳) همان نام فعلی؟ — حفظ مقدار جاری بدون هیچ تماس سروری؛ کاربر
-        //    فیلد را دست نزده است (متن اولیهٔ ویرایش) یا همان را دوباره تایپ کرده
-        if (originalId is not null
-            && string.Equals(name, originalName, StringComparison.OrdinalIgnoreCase))
-            return (originalId, null);
-
-        // ۴) منطبق با گزینهٔ موجود فهرست؟ — جستجوی کلایندی، بدون رفت‌وبرگشت
-        var match = items.FirstOrDefault(i =>
-            string.Equals(i.Name, name, StringComparison.OrdinalIgnoreCase));
+        // ۲) متن منطبق با یکی از گزینههای فهرست؟ (بدون رفتوبرگشت سرور)
+        var match = Helpers.LookupName.FindByName(items, i => i.Name, name);
         if (match is not null)
-            return (match.Id, null);
+            return (match.Id, name);
 
-        // ۵) مقدار تازه — ساخت از طریق سرور (اندپوینت‌های ساخت نقش
-        //    Admin/Manager را می‌خواهند؛ کاربر بدون نقش با پیام راهنما متوقف می‌شود)
-        var response = await _api.PostAsync<CreateLookupResponse>(createEndpoint,
-            new { name });
-        if (response?.Data is > 0)
-            return (response.Data, null);
+        // ۳) متن همان نام فعلی است ولی گزینهاش در فهرست محلی نیست
+        //    (سمت حذفشده / فهرست بارگذارینشده) — شناسهٔ فعلی حفظ شود
+        if (originalId is not null && Helpers.LookupName.AreEqual(originalName, name))
+            return (originalId, name);
 
-        return (null,
-            $"ذخیرهٔ {fieldLabel} جدید («{name}») ناموفق بود: {_api.LastError ?? "خطای ناشناخته"} — " +
-            "اگر نقش شما مدیر نیست، یکی از گزینه‌های موجود فهرست را انتخاب کنید");
-    }
+        // ۴) فقط وقتی هیچ متنی در کار نیست (انتخاب برنامهای)، ایندکس
+        //    انتخابی بهعنوان آخرین راهحل استفاده میشود — هرگز مقدم بر متن.
+        if (text is null && selectedIndex >= 0 && selectedIndex < items.Count)
+            return (items[selectedIndex].Id, items[selectedIndex].Name);
 
-    /// <summary>پاسخ ساخت مرجع — شناسهٔ رکورد ساخته‌شده/موجود</summary>
-    private sealed class CreateLookupResponse
-    {
-        public bool IsSuccess { get; set; }
-        public long? Data { get; set; }
+        // ۵) مقدار کاملاً تازه → سرور با همین نام میسازد
+        return (null, name);
     }
 
     /// <summary>انتخاب عکس پروفایل — JPG/PNG تا ۵ مگابایت</summary>
@@ -545,27 +533,17 @@ public partial class EmployeeFormViewModel : FormViewModelBase
 
         IsBusy = true;
 
-        // ═══ چرخهٔ ۴۲: حل سمت/دپارتمان با زنجیرهٔ مقاوم — انتخاب فهرستی، حفظ
-        // مقدار فعلی، تطبیق کلایندی نام، و ساخت سروریِ مقدار تازه؛ شکستِ ساخت
-        // ذخیره را با پیام فارسی متوقف می‌کند تا مقدار بی‌صدا پاک نشود ═══
-        var (positionId, positionError) = await ResolveLookupIdAsync(
-            Positions, PositionIndex, PositionText, "lookups/positions",
-            _originalPositionId, _originalPositionName, "سمت");
-        if (positionError is not null)
-        {
-            IsBusy = false;
-            ErrorMessage = positionError;
-            return;
-        }
-        var (departmentId, departmentError) = await ResolveLookupIdAsync(
-            Departments, DepartmentIndex, DepartmentText, "lookups/departments",
-            _originalDepartmentId, _originalDepartmentName, "دپارتمان");
-        if (departmentError is not null)
-        {
-            IsBusy = false;
-            ErrorMessage = departmentError;
-            return;
-        }
+        // ═══ چرخهٔ جاری: متن تایپشده منبع حقیقت سمت/دپارتمان است ═══
+        // پیشتر «ایندکس انتخابی» (که هنگام ویرایش یکبار مقداردهی میشد) بر متن
+        // تازه غلبه میکرد و همان مقدار قبلی در دیتابیس میماند. اکنون نام
+        // نرمالشده همراه شناسه به سرور میرود تا سرور — بدون نیاز به نقش
+        // Admin/Manager — رکورد مرجع تازه را بسازد و روی پرسنل بنشاند.
+        var (positionId, positionName) = ResolveLookup(
+            Positions, PositionIndex, PositionText,
+            _originalPositionId, _originalPositionName);
+        var (departmentId, departmentName) = ResolveLookup(
+            Departments, DepartmentIndex, DepartmentText,
+            _originalDepartmentId, _originalDepartmentName);
 
         // تاریخ استخدام شمسی → میلادی (خالی = امروز)
         DateOnly? hireDate = null;
@@ -582,6 +560,9 @@ public partial class EmployeeFormViewModel : FormViewModelBase
             mobile = Mobile.Trim(),
             departmentId,
             positionId,
+            // نام تایپشده — سرور در صورت نیاز سمت/دپارتمان تازه میسازد
+            positionName,
+            departmentName,
             employmentType = EmploymentTypeIndex + 1,
             baseSalary,
             commissionPercent,

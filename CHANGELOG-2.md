@@ -15,6 +15,20 @@
 
 <!-- سرچشمهٔ نسخه‌های جدید از اینجا به پایین اضافه می‌شود -->
 
+## [Unreleased] — اصلاحات چرخهٔ جاری (پس از v2.28.29)
+
+### Fixed — 🗄️ اعطای کاملاً خودکار نقش SQL برای RESTORE DATABASE
+- `installer/Enable-RestorePermission.ps1` بهعنوان کتابخانهٔ مشترک و ابزار مستقل ساخته شد؛ چهار لایه: شناسههای رشتهٔ اتصال، احراز ویندوزی، پرسش حساب مدیر SQL، و ریاستارت موقت SQL Server محلی در حالت تککاربره (`/m`) همراه `finally` تضمینکنندهٔ بازگشت به حالت چندکاربره.
+- `Install-Server-Package.ps1` لاگین دقیق API را (`SUSER_SNAME()`) و حساب سرویس نصب قبلی را پیش از حذف ثبت میکند؛ `CREATE LOGIN` در `TRY/CATCH` و `ISNULL(IS_SRVROLEMEMBER(...),0)` جایگزین الگوی `NULL <> 1` شد.
+- `BackupManager` پس از شکست `RESTORE` با اتصال تازه `MULTI_USER` را برمیگرداند تا دیتابیس در حالت تککاربره نماند؛ پیام خطا شمارههای ۲۶۲/۳۱۱۰/۳۱۶۹ و ابزار `Enable-RestorePermission.bat` را معرفی میکند.
+- فایل نجات `SQL-RECOVERY-Restart-Normal.bat` و گزارش `restore-permission.status.txt` برای عیبیابی نصب اضافه شد.
+
+### Fixed — 👤 سمت دستیتایپشده در تعریف/ویرایش پرسنل
+- `EmployeeFormViewModel` ایندکس کهنهٔ `ComboBox` ویرایشپذیر را بر متن تایپشده مقدم میداشت؛ اکنون متن منبع حقیقت است. `Helpers/LookupName.cs` نامها را نرمال میکند.
+- `CreateEmployeeDto` فیلدهای `PositionName`/`DepartmentName` گرفت و `EmployeeLookupResolver` در لایهٔ کاربرد رکورد مرجع تازه را میسازد؛ دیگر نیازی به نقش Admin/Manager برای ساخت سمت تازه نیست.
+- تستهای واحد و نگهبانهای رگرسیون (`scripts/validate_ui_guards.py`) هر دو مسیر را قفل میکنند.
+
+
 ## [v2.28.29] — 2026-10-28 (انتشار فایلهای نصب و آپدیت + بازطراحی شش صفحه)
 
 > نخستین انتشاری که اصلاحات چرخهٔ جاری (دسترسی خودکار `RESTORE DATABASE`، تپش پیوستهٔ

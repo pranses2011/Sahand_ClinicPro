@@ -30,17 +30,19 @@ jobs:
       - name: Validate server installer PowerShell encoding and syntax
         shell: powershell
         run: |
-          $path = (Resolve-Path installer/Install-Server-Package.ps1).Path
-          $bytes = [System.IO.File]::ReadAllBytes($path)
-          if ($bytes.Length -lt 3 -or $bytes[0] -ne 0xEF -or $bytes[1] -ne 0xBB -or $bytes[2] -ne 0xBF) {
-            throw 'Install-Server-Package.ps1 must be UTF-8 with BOM for Windows PowerShell 5.1.'
-          }
-          $tokens = $null
-          $errors = $null
-          [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors) | Out-Null
-          if ($errors.Count -gt 0) {
-            $errors | ForEach-Object { Write-Error $_.Message }
-            exit 1
+          foreach ($rel in @('installer/Install-Server-Package.ps1', 'installer/Enable-RestorePermission.ps1')) {
+            $path = (Resolve-Path $rel).Path
+            $bytes = [System.IO.File]::ReadAllBytes($path)
+            if ($bytes.Length -lt 3 -or $bytes[0] -ne 0xEF -or $bytes[1] -ne 0xBB -or $bytes[2] -ne 0xBF) {
+              throw "$rel must be UTF-8 with BOM for Windows PowerShell 5.1."
+            }
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Error "$rel — $($_.Message)" }
+              exit 1
+            }
           }
 
       - name: Publish self-contained desktop client
@@ -132,6 +134,8 @@ jobs:
           Copy-Item publish/server/* "$package/Server/" -Recurse -Force
           Copy-Item installer/Install-Server-Package.bat $package/ -Force
           Copy-Item installer/Install-Server-Package.ps1 $package/ -Force
+          Copy-Item installer/Enable-RestorePermission.ps1 $package/ -Force
+          Copy-Item installer/Enable-RestorePermission.bat $package/ -Force
           $guide = (Get-Content installer/RELEASE-INSTALL-GUIDE.txt -Raw).Replace('{VERSION}', $version)
           Set-Content -Path "$package/RELEASE-INSTALL-GUIDE.txt" -Value $guide -Encoding UTF8
           Compress-Archive -Path "$package/*" -DestinationPath "dist/SahandClinicPro-Server-v$version.zip" -Force
@@ -154,6 +158,8 @@ jobs:
           Remove-Item "$package/Server/Sahand.ClinicPro.API.runtimeconfig.json" -Force -ErrorAction SilentlyContinue
           Remove-Item "$package/Server/Sahand.ClinicPro.API.deps.json" -Force -ErrorAction SilentlyContinue
           Copy-Item installer/Install-Server-Package.ps1 $package/ -Force
+          Copy-Item installer/Enable-RestorePermission.ps1 $package/ -Force
+          Copy-Item installer/Enable-RestorePermission.bat $package/ -Force
           Copy-Item installer/Update-Server-Package.bat $package/ -Force
           Compress-Archive -Path "$package/*" -DestinationPath "dist/SahandClinicPro-Server-Update-v$version.zip" -Force
 

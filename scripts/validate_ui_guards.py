@@ -84,11 +84,23 @@ for tag in ecg:
     )
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ۲) نصاب سرور — اعطای خودکار و چندلایهٔ نقش dbcreator
+# ۲) نصاب سرور — اعطای خودکار و چهارلایهٔ نقش dbcreator
 # ─────────────────────────────────────────────────────────────────────────────
-raw = PS1.read_bytes()
-check(raw.startswith(b"\xef\xbb\xbf"), "installer/Install-Server-Package.ps1 باید UTF-8 همراه BOM باشد (Windows PowerShell 5.1).")
-ps = raw.decode("utf-8-sig")
+PS1 = ROOT / "installer" / "Install-Server-Package.ps1"
+PS_LIB = ROOT / "installer" / "Enable-RestorePermission.ps1"
+PS_BAT = ROOT / "installer" / "Enable-RestorePermission.bat"
+
+
+def read_ps(path: Path, label: str) -> str:
+    raw = path.read_bytes()
+    check(raw.startswith(b"\xef\xbb\xbf"),
+          f"{label} باید UTF-8 همراه BOM باشد (Windows PowerShell 5.1).")
+    return raw.decode("utf-8-sig")
+
+
+ps = read_ps(PS1, "installer/Install-Server-Package.ps1")
+lib = read_ps(PS_LIB, "installer/Enable-RestorePermission.ps1")
+check(PS_BAT.is_file(), "installer/Enable-RestorePermission.bat وجود ندارد.")
 
 required_markers = {
     "ساخت لاگین ویندوزی در صورت نبود": "CREATE LOGIN [",
@@ -106,39 +118,90 @@ required_markers = {
     "راستیآزمایی نتیجه": "AS Granted",
     "فایل SQL آمادهٔ اجرا در SSMS": "Grant-RestorePermission.sql",
     "گزارش وضعیت برای پشتیبانی": "restore-permission.status.txt",
-    "تلاش دوباره پس از نصب سرویس": "تأیید نهایی مجوز بازیابی پس از نصب",
+    "تشخیص لاگین واقعی API": "SUSER_SNAME()",
+    "استفاده از ISNULL بهجای NULL<>1": "ISNULL(IS_SRVROLEMEMBER",
+    "لایهٔ چهارم — حالت تککاربره": "'/m'",
+    "خاموشکردن عامل SQL پیش از تککاربره": "SQLAgent$",
+    "راستیآزمایی بازگشت به حالت عادی": "SERVERPROPERTY('IsSingleUser')",
+    "فایل نجات ریاستارت عادی": "SQL-RECOVERY-Restart-Normal.bat",
+    "سوئیچ غیرفعالسازی ریاستارت": "NoSqlSingleUserElevation",
+    "کتابخانه قابل اجرای مستقل": "-not $AsLibrary",
 }
-for label, marker in required_markers.items():
-    check(marker in ps, f"نگهبان نصاب سرور شکست — {label}: نشانهٔ «{marker}» پیدا نشد.")
+for label, needle in required_markers.items():
+    check(needle in lib, f"نگهبان نصاب سرور شکست — {label}: نشانهٔ «{needle}» پیدا نشد.")
+
+installer_markers = {
+    "ثبت حساب سرویس نصب قبلی": "existingServiceAccounts",
+    "بارگذاری کتابخانه مشترک": ". $restoreModule -AsLibrary",
+    "فراخوانی تابع چهارلایه": "Invoke-ClinicProRestorePermission",
+    "گزارش وضعیت": "restore-permission.status.txt",
+    "تلاش دوباره پس از نصب سرویس": "تأیید نهایی مجوز بازیابی پس از نصب",
+    "فایل SQL دستی": "Grant-RestorePermission.sql",
+}
+for label, needle in installer_markers.items():
+    check(needle in ps, f"نگهبان نصاب سرور شکست — {label}: نشانهٔ «{needle}» پیدا نشد.")
 
 # بایدمنت نباید دوباره به «IS_SRVROLEMEMBER <> 1» تنها متکی باشد
-check(
-    "IS_SRVROLEMEMBER(N'dbcreator', N'$loginLiteral') <> 1" not in ps,
-    "الگوی قدیمی IS_SRVROLEMEMBER <> 1 (که با NULL بیصدا رد میشد) هنوز در نصاب هست.",
-)
+check("IS_SRVROLEMEMBER(N'dbcreator', N'$loginLiteral') <> 1" not in lib,
+      "الگوی قدیمی IS_SRVROLEMEMBER <> 1 (که با NULL بیصدا رد میشد) هنوز در نصاب هست.")
 
-# تعادل ساختاری سادهای از اسکریپت PowerShell (کروشهها/پرانتزها بیرون از رشتهها)
-in_here = False
-braces = 0
-parens = 0
-for line in ps.splitlines():
-    if line.rstrip().endswith("@'"):
-        in_here = True
-    if in_here:
-        if line.strip() == "'@":
-            in_here = False
-        continue
-    stripped = re.sub(r"'([^']|'')*'", "''", line)
-    stripped = re.sub(r'"([^"]|"")*"', '""', stripped)
-    stripped = re.sub(r"#.*$", "", stripped)
-    braces += stripped.count("{") - stripped.count("}")
-    parens += stripped.count("(") - stripped.count(")")
-check(braces == 0, f"کروشههای اسکریپت نصب نامتعادلاند (اختلاف {braces}).")
-check(parens == 0, f"پرانتزهای اسکریپت نصب نامتعادلاند (اختلاف {parens}).")
-here_opens = sum(1 for line in ps.splitlines() if line.rstrip().endswith("@'"))
-here_closes = sum(1 for line in ps.splitlines() if line.strip() == "'@")
-check(here_opens == here_closes and here_opens >= 1,
-      f"چینش رشتههای چندخطی (here-string) اسکریپت نصب نامتعادل است ({here_opens} باز / {here_closes} بسته).")
+
+def check_ps_balance(text: str, label: str) -> None:
+    """تعادل ساختاری سادهای از اسکریپت PowerShell (کروشهها/پرانتزها بیرون از رشتهها)."""
+    in_here = False
+    braces = 0
+    parens = 0
+    for line in text.splitlines():
+        if line.rstrip().endswith("@'"):
+            in_here = True
+        if in_here:
+            if line.strip() == "'@":
+                in_here = False
+            continue
+        stripped = re.sub(r"'([^']|'')*'", "''", line)
+        stripped = re.sub(r'"([^"]|"")*"', '""', stripped)
+        stripped = re.sub(r"#.*$", "", stripped)
+        braces += stripped.count("{") - stripped.count("}")
+        parens += stripped.count("(") - stripped.count(")")
+    check(braces == 0, f"کروشههای {label} نامتعادلاند (اختلاف {braces}).")
+    check(parens == 0, f"پرانتزهای {label} نامتعادلاند (اختلاف {parens}).")
+    here_opens = sum(1 for line in text.splitlines() if line.rstrip().endswith("@'"))
+    here_closes = sum(1 for line in text.splitlines() if line.strip() == "'@")
+    check(here_opens == here_closes,
+          f"چینش رشتههای چندخطی {label} نامتعادل است ({here_opens} باز / {here_closes} بسته).")
+
+
+check_ps_balance(ps, "Install-Server-Package.ps1")
+check_ps_balance(lib, "Enable-RestorePermission.ps1")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ۳) فرم پرسنل — «سمت دستیتایپشده ذخیره نمیشود»
+# ─────────────────────────────────────────────────────────────────────────────
+DESKTOP = ROOT / "src" / "Sahand.ClinicPro.Desktop"
+APP = ROOT / "src" / "Sahand.ClinicPro.Application"
+vm = (DESKTOP / "ViewModels" / "EmployeeFormViewModel.cs").read_text(encoding="utf-8")
+lookup_helper = (DESKTOP / "Helpers" / "LookupName.cs").read_text(encoding="utf-8")
+hr = (APP / "Features" / "HR" / "HRFeatures.cs").read_text(encoding="utf-8")
+resolver = (APP / "Features" / "HR" / "EmployeeLookupResolver.cs").read_text(encoding="utf-8")
+
+check("positionName" in vm and "departmentName" in vm,
+      "بدنهٔ درخواست ذخیرهٔ پرسنل باید positionName/departmentName بفرستد.")
+check("public static (long? Id, string? Name) ResolveLookup(" in vm,
+      "تابع ResolveLookup (متنمحور) در EmployeeFormViewModel پیدا نشد.")
+check("ResolveLookupIdAsync" not in vm,
+      "تابع قدیمی ResolveLookupIdAsync (ایندکسمحور) هنوز در ViewModel هست.")
+check("public static string? Normalize(" in lookup_helper,
+      "کمککنندهٔ نرمالسازی نام مرجع LookupName پیدا نشد.")
+check("public enum Resolution" in resolver and "Resolution.FindOrCreate" in resolver,
+      "قانون تقدم نام بر شناسه در EmployeeLookupResolver پیدا نشد.")
+check("string? PositionName = null" in hr and "string? DepartmentName = null" in hr,
+      "CreateEmployeeDto باید فیلدهای PositionName/DepartmentName داشته باشد.")
+check(hr.count("EmployeeLookupResolver.ResolvePositionIdAsync") == 2,
+      "هر دو گردانندهٔ ثبت و ویرایش پرسنل باید از حلکنندهٔ سروری استفاده کنند.")
+check(hr.count("EmployeeLookupResolver.ResolveDepartmentIdAsync") == 2,
+      "هر دو گردانندهٔ ثبت و ویرایش پرسنل باید دپارتمان را حل کنند.")
+check("selectedIndex >= 0" in vm and "IsEmptyMarker(name)" in vm,
+      "نگهبان ترتیب حل مرجع شکست — متن باید پیش از ایندکس بررسی شود.")
 
 # ─────────────────────────────────────────────────────────────────────────────
 if errors:
@@ -146,4 +209,4 @@ if errors:
     for e in errors:
         print("   •", e)
     sys.exit(1)
-print("✅ نگهبانهای رگرسیون سبزند: تپش پیوستهٔ قلب + اعطای خودکار dbcreator.")
+print("✅ نگهبانهای رگرسیون سبزند: تپش پیوستهٔ قلب + dbcreator چهارلایه + سمت پرسنل.")
