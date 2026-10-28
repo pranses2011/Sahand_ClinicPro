@@ -28,7 +28,7 @@ jobs:
           "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: Validate server installer PowerShell encoding and syntax
-        shell: powershell
+        shell: pwsh
         run: |
           foreach ($rel in @('installer/Install-Server-Package.ps1', 'installer/Enable-RestorePermission.ps1')) {
             $path = (Resolve-Path $rel).Path
