@@ -832,7 +832,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             ["print_date"] = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(IranClock.Now)
         };
         if (await TemplatedPrintService.TryPrintAsync(_api, "ReceptionReceipt", vars,
-                $"قبض پذیرش — {receipt.PatientName}"))
+                $"قبض پذیرش — {receipt.PatientName}", () => ReceptionReceiptPrinter.Print(receipt)))
             return;
         ReceptionReceiptPrinter.Print(receipt);
     }

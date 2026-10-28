@@ -118,6 +118,16 @@ public class PrintTemplatesController : ApiBaseController
         if (template is null)
             return NotFound(ApiResponse<object>.Failure("قالب فعالی برای این نوع سند ثبت نشده است"));
 
+        // قبض اصلی دقیقاً با FlowDocument قبلی در کلاینت چاپ می‌شود، نه
+        // بازسازی تقریبی HTML. انتخاب قالب‌های دیگر همچنان HTML را رندر می‌کند.
+        if (tType == PrintTemplateType.ReceptionReceipt &&
+            template.HtmlBody == BuiltInPrintTemplates.ReceptionReceiptMarker)
+            return Ok(ApiResponse<object>.Success(new
+            {
+                html = "", templateId = template.Id, templateName = template.TemplateName,
+                useOriginalReceptionReceipt = true
+            }));
+
         var clinic = await ClinicInfoAsync();
         var body = PrintTemplateRenderer.Render(template.HtmlBody,
                 request.Variables ?? new Dictionary<string, object?>())
@@ -198,6 +208,11 @@ public class PrintTemplatesController : ApiBaseController
 
         var error = Validate(dto);
         if (error is not null) return BadRequest(ApiResponse<object>.Failure(error));
+
+        if (template.HtmlBody == BuiltInPrintTemplates.ReceptionReceiptMarker &&
+            (dto.HtmlBody != BuiltInPrintTemplates.ReceptionReceiptMarker || parsedType != PrintTemplateType.ReceptionReceipt))
+            return BadRequest(ApiResponse<object>.Failure(
+                "قبض اصلی با موتور داخلی چاپ می‌شود؛ برای طراحی HTML یک قالب جدید بسازید."));
 
         if (dto.IsDefault && !template.IsDefault)
             await ClearDefaultAsync(parsedType, id);

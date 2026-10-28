@@ -25,6 +25,8 @@ public static class TemplatedPrintService
         public string? Html { get; set; }
         public long TemplateId { get; set; }
         public string? TemplateName { get; set; }
+        /// <summary>استفاده از چاپگر داخلی قبض اصلی پذیرش.</summary>
+        public bool UseOriginalReceptionReceipt { get; set; }
     }
 
     /// <summary>
@@ -36,12 +38,18 @@ public static class TemplatedPrintService
     /// <param name="variables">متغیرهای واقعی سند (کلیدهای پالت قالب)</param>
     /// <param name="title">عنوان پنجرهٔ چاپ</param>
     public static async Task<bool> TryPrintAsync(IApiClient api, string templateType,
-        Dictionary<string, object?> variables, string title)
+        Dictionary<string, object?> variables, string title, Action? printOriginalReceipt = null)
     {
         try
         {
             var response = await api.PostAsync<RenderEnvelope>(
                 $"print-templates/render/{templateType}", new { variables });
+            if (response?.Data?.UseOriginalReceptionReceipt == true && printOriginalReceipt is not null)
+            {
+                // حتی انصراف از پیش‌نمایش هم نباید به چاپ دوم منجر شود.
+                printOriginalReceipt();
+                return true;
+            }
             var html = response?.Data?.Html;
             if (string.IsNullOrWhiteSpace(html)) return false;
 
