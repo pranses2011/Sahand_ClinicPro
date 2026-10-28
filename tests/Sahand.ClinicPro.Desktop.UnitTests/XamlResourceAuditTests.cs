@@ -135,8 +135,31 @@ public class XamlResourceAuditTests
             });
 
         var appKeys = keysPerFile.TryGetValue(Path.Combine(xamlDir, "App.xaml"), out var appSet)
-            ? appSet
-            : [];
+            ? new HashSet<string>(appSet)
+            : new HashSet<string>();
+
+        // ۳ب) دیکشنریهای ادغامشده در App.xaml (مثلاً Styles/DesignSystem.xaml)
+        //     WPF کلیدهای آنها را هم در سطح برنامه و همان InitializeComponent
+        //     در دسترس میگذارد. ممیزی پیشتر فقط x:Keyهای «خود فایل App.xaml»
+        //     را میدید و شش صفحهای را که از سیستم طراحی مشترک استفاده میکنند
+        //     بهاشتباه «خارج از محدوده» اعلام میکرد؛ در حالی که رندر واقعی WPF
+        //     همان صفحات روی ویندوز بدون XamlParseException انجام شده است.
+        var appPath = Path.Combine(xamlDir, "App.xaml");
+        if (File.Exists(appPath))
+        {
+            foreach (Match m in Regex.Matches(File.ReadAllText(appPath),
+                         @"Source=""pack://application:,,,/([^"";]+\.xaml)""",
+                         RegexOptions.IgnoreCase))
+            {
+                var rel = m.Groups[1].Value.TrimStart('/')
+                    .Replace('/', Path.DirectorySeparatorChar)
+                    .Replace('\\', Path.DirectorySeparatorChar);
+                var merged = Path.GetFullPath(Path.Combine(xamlDir, rel));
+                if (!File.Exists(merged)) continue;
+                foreach (Match k in KeyDefRegex.Matches(File.ReadAllText(merged)))
+                    appKeys.Add(k.Groups[1].Value);
+            }
+        }
 
         // ۴) هر ارجاع StaticResource باید در محدودهٔ خود فایل + App.xaml + پکیج حل شود —
         //    تعریف کلید در «فایل‌های دیگر» برای این فایل در parse-time قابل‌دسترس نیست

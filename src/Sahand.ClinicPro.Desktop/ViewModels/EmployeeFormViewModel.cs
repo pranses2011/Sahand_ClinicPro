@@ -336,6 +336,11 @@ public partial class EmployeeFormViewModel : FormViewModelBase
     {
         var name = Helpers.LookupName.Normalize(text);
 
+        // ۰) هیچ متنی ارسال نشده (انتخاب برنامهای) — ایندکس تنها در این
+        //    حالت معتبر است. «رشتهٔ خالی» فرق دارد: پاککردن آگاهانه است.
+        if (text is null && selectedIndex >= 0 && selectedIndex < items.Count)
+            return (items[selectedIndex].Id, items[selectedIndex].Name);
+
         // ۱) متن خالی یا نشانگر «—» → پاککردن آگاهانهٔ مقدار
         if (Helpers.LookupName.IsEmptyMarker(name))
             return (null, string.Empty);
@@ -350,12 +355,7 @@ public partial class EmployeeFormViewModel : FormViewModelBase
         if (originalId is not null && Helpers.LookupName.AreEqual(originalName, name))
             return (originalId, name);
 
-        // ۴) فقط وقتی هیچ متنی در کار نیست (انتخاب برنامهای)، ایندکس
-        //    انتخابی بهعنوان آخرین راهحل استفاده میشود — هرگز مقدم بر متن.
-        if (text is null && selectedIndex >= 0 && selectedIndex < items.Count)
-            return (items[selectedIndex].Id, items[selectedIndex].Name);
-
-        // ۵) مقدار کاملاً تازه → سرور با همین نام میسازد
+        // ۴) مقدار کاملاً تازه → سرور با همین نام میسازد
         return (null, name);
     }
 
