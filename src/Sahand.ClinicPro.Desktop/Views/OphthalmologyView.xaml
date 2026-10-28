@@ -3,240 +3,256 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
-             d:DesignHeight="774" d:DesignWidth="1030"
+             d:DesignHeight="640" d:DesignWidth="1080"
              FlowDirection="RightToLeft">
-    <!-- چشمپزشکی — بازطراحی کامل بر اساس docs/design/approved/ophthalmology.html -->
-    <Grid Background="{StaticResource Ds.PageBackground}" Margin="14,11,14,6">
+    <!-- ═══ چشم‌پزشکی — چرخهٔ چهل‌وسوم (گزارش مالک): «دندانپزشکی و چشم پزشکی و
+         تصویربرداری و فزیوتراپی در یک صفحه و تب‌های جداگانه هستند. برای هر
+         کدوم یک صفحه مستقل طراحی بکن تا با همدیگه تداخلی نداشته باشن» —
+         محتوای این تب از پاراکلینیکِ سابقِ تب‌دار جدا شد و اکنون صفحهٔ
+         اختصاصی مستقل خودش است؛ تمام منطق و اتصال‌ها بدون تغییر منتقل شدند. ═══ -->
+    <Grid Margin="16,12">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /><!-- سربرگ -->
-            <RowDefinition Height="Auto" /><!-- کارتها -->
-            <RowDefinition Height="Auto" /><!-- تبها -->
-            <RowDefinition Height="Auto" /><!-- نوار ابزار -->
-            <RowDefinition Height="Auto" /><!-- ردیف بالا: سه پنل -->
-            <RowDefinition Height="Auto" /><!-- ردیف پایین: نمودار + یافتهها -->
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" /><!-- پانوشت -->
         </Grid.RowDefinitions>
 
-        <!-- ══ سربرگ ══ -->
-        <Grid Grid.Row="0" Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <Border Grid.Column="0" Width="30" Height="30" CornerRadius="8" Background="#1565C0" Margin="0,0,9,0">
-                <TextBlock Text="👁" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
-            </Border>
-            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                <TextBlock Text="معاینهٔ چشمپزشکی" Style="{StaticResource Ds.PageTitle}" />
-                <TextBlock Text="رفرکشن، فشار چشم، اسلیتلمپ و نسخهٔ عینک — یکپارچه" Style="{StaticResource Ds.Muted}" />
-            </StackPanel>
-            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Content="معاینهٔ جدید" Style="{StaticResource Ds.FlatPrimary}" Height="32" Padding="14,0" Margin="0,0,7,0" />
-                <Button Content="چاپ نسخه" Style="{StaticResource Ds.OutlineButton}" Height="32" Padding="13,0" />
-            </StackPanel>
-        </Grid>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="EyeCircle" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="چشم‌پزشکی" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
 
-        <!-- ══ پنج کارت آماری ══ -->
-        <Grid Grid.Row="1" Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" /><ColumnDefinition Width="8" />
-                <ColumnDefinition Width="*" /><ColumnDefinition Width="8" />
-                <ColumnDefinition Width="*" /><ColumnDefinition Width="8" />
-                <ColumnDefinition Width="*" /><ColumnDefinition Width="8" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Style="{StaticResource Ds.StatCard}" Background="#F4FBF4" BorderBrush="#81C784">
-                <StackPanel><TextBlock Text="{Binding Kpis.V1}" Style="{StaticResource Ds.StatNumber}" Foreground="#2E7D32" />
-                    <TextBlock Text="معاینات امروز" Style="{StaticResource Ds.StatLabel}" /></StackPanel>
-            </Button>
-            <Button Grid.Column="2" Style="{StaticResource Ds.StatCard}" Background="#FFF5F5" BorderBrush="#E57373">
-                <StackPanel><TextBlock Text="{Binding Kpis.V2}" Style="{StaticResource Ds.StatNumber}" Foreground="#C62828" />
-                    <TextBlock Text="فشار چشم بالا" Style="{StaticResource Ds.StatLabel}" /></StackPanel>
-            </Button>
-            <Button Grid.Column="4" Style="{StaticResource Ds.StatCard}" Background="#FDF7FF" BorderBrush="#BA68C8">
-                <StackPanel><TextBlock Text="{Binding Kpis.V3}" Style="{StaticResource Ds.StatNumber}" Foreground="#6A1B9A" />
-                    <TextBlock Text="نسخهٔ عینک امروز" Style="{StaticResource Ds.StatLabel}" /></StackPanel>
-            </Button>
-            <Button Grid.Column="6" Style="{StaticResource Ds.StatCard}" Background="#FFFAF3" BorderBrush="#FFB74D">
-                <StackPanel><TextBlock Text="{Binding Kpis.V4}" Style="{StaticResource Ds.StatNumber}" Foreground="#E65100" />
-                    <TextBlock Text="پیگیریهای هفته" Style="{StaticResource Ds.StatLabel}" /></StackPanel>
-            </Button>
-            <Button Grid.Column="8" Style="{StaticResource Ds.StatCard}" Background="#F5FAFF" BorderBrush="#64B5F6">
-                <StackPanel><TextBlock Text="{Binding Kpis.V5}" Style="{StaticResource Ds.StatNumber}" Foreground="#1565C0" />
-                    <TextBlock Text="بیماران پروندهدار" Style="{StaticResource Ds.StatLabel}" /></StackPanel>
-            </Button>
-        </Grid>
+        <!-- محتوای صفحه — عیناً از تب پاراکلینیک سابق (اتصال‌ها بدون تغییر) -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8">
+                            <StackPanel>
+                                <!-- ═══ نوار بیمار تب چشم — چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک):
+                                     پیش‌تر این تب بیمار خودش را نداشت و باید بیمار در تب
+                                     فیزیوتراپی/تصویربرداری جستجو می‌شد؛ اکنون معاینه و سابقه
+                                     به پروندهٔ همین بیمار وصل است ═══ -->
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2.4*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding EyePatientSearch, UpdateSourceTrigger=PropertyChanged}"
+                                             materialDesign:HintAssist.Hint="🔍 بیمار چشم‌پزشکی — کد ملی / موبایل / نام">
+                                        <TextBox.InputBindings>
+                                            <KeyBinding Key="Enter" Command="{Binding SearchEyePatientCommand}" />
+                                        </TextBox.InputBindings>
+                                    </TextBox>
+                                    <Button Grid.Column="1" Command="{Binding SearchEyePatientCommand}" Margin="8,0,0,0"
+                                            Style="{StaticResource MaterialDesignRaisedButton}" Padding="12,4">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Magnify" Width="15" Height="15" VerticalAlignment="Center" />
+                                            <TextBlock Text="جستجو" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                    <!-- کارت بیمار — معاینه در پروندهٔ همین بیمار ثبت می‌شود -->
+                                    <Border Grid.Column="2" Background="#E8F5E9" BorderBrush="#A5D6A7" BorderThickness="1"
+                                            CornerRadius="8" Padding="10,5" Margin="8,0,8,0"
+                                            Visibility="{Binding EyePatient, Converter={StaticResource NullToVisibility}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="AccountCheck" Width="16" Height="16" Foreground="#2E7D32" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding EyePatient.FullName, Mode=OneWay}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                            <TextBlock Text="{Binding EyePatient.NationalCode, Mode=OneWay}" Opacity="0.7" FontSize="11"
+                                                       VerticalAlignment="Center" Margin="10,0,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Button Grid.Column="3" Command="{Binding ClearEyePatientCommand}"
+                                            Style="{StaticResource MaterialDesignFlatButton}" Padding="8,4" ToolTip="بستن پرونده و بیمار بعدی"
+                                            Visibility="{Binding EyePatient, Converter={StaticResource NullToVisibility}}">
+                                        <materialDesign:PackIcon Kind="CloseCircleOutline" Width="18" Height="18" Foreground="#C62828" />
+                                    </Button>
+                                </Grid>
 
-        <!-- ══ تبها ══ -->
-        <Border Grid.Row="2" Style="{StaticResource Ds.TabBar}" Padding="0,2,0,0">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Border BorderBrush="#1565C0" BorderThickness="0,0,0,2" Margin="0,0,4,0">
-                    <TextBlock Text="رفرکشن و حدت بینایی" Style="{StaticResource Ds.TabItemActiveText}" />
-                </Border>
-                <TextBlock Text="اسلیتلمپ و فوندوس" Style="{StaticResource Ds.TabItemText}" />
-                <TextBlock Text="تستهای تخصصی" Style="{StaticResource Ds.TabItemText}" />
-                <TextBlock Text="تصویربرداری چشم" Style="{StaticResource Ds.TabItemText}" />
-                <TextBlock Text="تشخیص و درمان" Style="{StaticResource Ds.TabItemText}" />
-            </StackPanel>
-        </Border>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="16" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <!-- OD -->
+                                    <Border Grid.Column="0" CornerRadius="12" Padding="14" Background="#E3F2FD">
+                                        <StackPanel>
+                                            <TextBlock Text="چشم راست (OD)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                            <UniformGrid Columns="2">
+                                                <StackPanel Margin="0,0,6,6"><TextBlock Text="عدسی (Sphere)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OdSphere, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,0,6"><TextBlock Text="استوانه (Cylinder)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OdCylinder, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,6,0"><TextBlock Text="محور (Axis)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OdAxis, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel><TextBlock Text="افزوده نزدیک‌بین (Add)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OdAdd, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                            </UniformGrid>
+                                            <TextBlock Text="حدت بینایی بدون اصلاح (Visual Acuity)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                            <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OdVisionIndex}" />
+                                            <TextBlock Text="فشار داخل چشم (IOP — mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                            <TextBox Text="{Binding OdIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
+                                            <Border Width="180" Height="10" CornerRadius="5" HorizontalAlignment="Left" Margin="0,5,0,0"
+                                                    Background="#C8E6C9" BorderBrush="#90A4AE" BorderThickness="0.5">
+                                                <Border Width="{Binding OdIopGaugeWidth, Mode=OneWay}" Height="10" CornerRadius="5" HorizontalAlignment="Left" Background="#3949AB" />
+                                            </Border>
+                                            <TextBlock Text="{Binding OdIopWarning, Mode=OneWay}" Foreground="#C62828" FontWeight="Bold" FontSize="11.5" Margin="0,4,0,0"
+                                                       Visibility="{Binding OdIopWarning, Converter={StaticResource StringToVisibility}}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <!-- OS -->
+                                    <Border Grid.Column="2" CornerRadius="12" Padding="14" Background="#F3E5F5">
+                                        <StackPanel>
+                                            <TextBlock Text="چشم چپ (OS)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                            <UniformGrid Columns="2">
+                                                <StackPanel Margin="0,0,6,6"><TextBlock Text="عدسی (Sphere)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OsSphere, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,0,6"><TextBlock Text="استوانه (Cylinder)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OsCylinder, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel Margin="0,0,6,0"><TextBlock Text="محور (Axis)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OsAxis, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                                <StackPanel><TextBlock Text="افزوده نزدیک‌بین (Add)" FontSize="10.5" Opacity="0.6"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBox Text="{Binding OsAdd, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" /></StackPanel>
+                                            </UniformGrid>
+                                            <TextBlock Text="حدت بینایی بدون اصلاح (Visual Acuity)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                            <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OsVisionIndex}" />
+                                            <TextBlock Text="فشار داخل چشم (IOP — mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                            <TextBox Text="{Binding OsIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
+                                            <Border Width="180" Height="10" CornerRadius="5" HorizontalAlignment="Left" Margin="0,5,0,0"
+                                                    Background="#C8E6C9" BorderBrush="#90A4AE" BorderThickness="0.5">
+                                                <Border Width="{Binding OsIopGaugeWidth, Mode=OneWay}" Height="10" CornerRadius="5" HorizontalAlignment="Left" Background="#3949AB" />
+                                            </Border>
+                                            <TextBlock Text="{Binding OsIopWarning, Mode=OneWay}" Foreground="#C62828" FontWeight="Bold" FontSize="11.5" Margin="0,4,0,0"
+                                                       Visibility="{Binding OsIopWarning, Converter={StaticResource StringToVisibility}}" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
 
-        <!-- ══ نوار ابزار ══ -->
-        <Border Grid.Row="3" Style="{StaticResource Ds.Toolbar}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="300" /><ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="200" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0" Style="{StaticResource Ds.CompactText}"
-                         Text="{Binding EyePatientSearch, UpdateSourceTrigger=PropertyChanged}" />
-                <Button Grid.Column="1" Content="جستجو ⌕" Style="{StaticResource Ds.FlatPrimary}" Height="30"
-                        Padding="13,0" Margin="7,0,0,0" />
-                <Border Grid.Column="2" Background="#EDF5FF" BorderBrush="#BBDBFB" BorderThickness="1"
-                        CornerRadius="7" Height="30" Margin="7,0,0,0" Padding="8,0">
-                    <TextBlock Text="{Binding EyePatient.FullName, FallbackValue='علی احمدی — کد ۰۰۱۲۳۴'}"
-                               FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                </Border>
-                <StackPanel Grid.Column="4" Orientation="Horizontal">
-                    <TextBlock Text="آخرین معاینه: ۱۴۰۵/۰۸/۰۳" Style="{StaticResource Ds.Muted}" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <Button Content="تازهمسازی" Style="{StaticResource Ds.OutlineButton}" Padding="10,0" />
-                </StackPanel>
-            </Grid>
-        </Border>
+                                <Grid Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="16" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="2*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="فاصله مردمک (PD — میلی‌متر)" FontSize="10.5" Opacity="0.6" />
+                                        <TextBox Text="{Binding Pd, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="دید رنگی (Color Vision)" FontSize="10.5" Opacity="0.6" />
+                                        <ComboBox ItemsSource="{Binding ColorVisionOptions}" SelectedIndex="{Binding ColorVisionIndex}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="3">
+                                        <TextBlock Text="یافته‌ها و تشخیص" FontSize="10.5" Opacity="0.6" />
+                                        <TextBox Text="{Binding EyeFindings, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
+                                                 TextWrapping="Wrap" Height="60" />
+                                    </StackPanel>
+                                </Grid>
 
-        <!-- ══ ردیف بالا: سه پنل چشمراست / چشمچپ / نسخه ══ -->
-        <Grid Grid.Row="4" Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.15*" /><ColumnDefinition Width="8" />
-                <ColumnDefinition Width="1.15*" /><ColumnDefinition Width="8" />
-                <ColumnDefinition Width="1*" />
-            </Grid.ColumnDefinitions>
+                                <!-- نسخهٔ عینک زنده — طرح تأییدشدهٔ نسخهٔ ۲ -->
+                                <Border CornerRadius="12" BorderBrush="#9FA8DA" BorderThickness="1.4" Padding="12" Margin="0,12,0,0" Background="#E8EFFF">
+                                    <StackPanel>
+                                        <TextBlock Text="👓 نسخهٔ عینک (زنده — از عددهای رفرکشن بالا)" FontWeight="Bold" FontSize="12.5" Foreground="#1A237E" />
+                                        <TextBlock Text="{Binding GlassesPrescriptionText, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}"
+                                                   FontSize="12" Margin="0,6,0,0" Foreground="#1A237E" />
+                                    </StackPanel>
+                                </Border>
 
-            <!-- چشم راست -->
-            <Border Grid.Column="0" Style="{StaticResource Ds.Panel}">
-                <StackPanel>
-                    <TextBlock Text="چشم راست (OD) 👁" Style="{StaticResource Ds.PanelTitle}" HorizontalAlignment="Center" />
-                    <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="5" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                        <StackPanel Grid.Row="0" Grid.Column="0"><TextBlock Text="Sphere" Style="{StaticResource Ds.FieldLabel}" />
-                            <Border Style="{StaticResource Ds.FieldValue}"><TextBlock Text="{Binding OdSphere, FallbackValue='+۳٫۰۰'}" FontSize="11" HorizontalAlignment="Center" /></Border></StackPanel>
-                        <StackPanel Grid.Row="0" Grid.Column="2"><TextBlock Text="Cylinder" Style="{StaticResource Ds.FieldLabel}" />
-                            <Border Style="{StaticResource Ds.FieldValue}"><TextBlock Text="{Binding OdCylinder, FallbackValue='-۰٫۷۵'}" FontSize="11" HorizontalAlignment="Center" /></Border></StackPanel>
-                        <StackPanel Grid.Row="1" Grid.Column="0"><TextBlock Text="Axis" Style="{StaticResource Ds.FieldLabel}" />
-                            <Border Style="{StaticResource Ds.FieldValue}"><TextBlock Text="{Binding OdAxis, FallbackValue='۱۸۰'}" FontSize="11" HorizontalAlignment="Center" /></Border></StackPanel>
-                        <StackPanel Grid.Row="1" Grid.Column="2"><TextBlock Text="Add" Style="{StaticResource Ds.FieldLabel}" />
-                            <Border Style="{StaticResource Ds.FieldValue}"><TextBlock Text="{Binding OdAdd, FallbackValue='+۱٫۵۰'}" FontSize="11" HorizontalAlignment="Center" /></Border></StackPanel>
-                    </Grid>
-                    <TextBlock Text="فشار چشم — (IOP) mmHg" Style="{StaticResource Ds.FieldLabel}" Margin="0,6,0,2" />
-                    <Grid>
-                        <ProgressBar Style="{StaticResource Ds.ProgressBar}" Value="14" Maximum="30" Foreground="#0D9488" />
-                        <TextBlock Text="{Binding OdIop, FallbackValue='۱۴', StringFormat='{}{0} mmHg'}" FontSize="9.5"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
-                    </Grid>
-                    <TextBlock Text="✅ در محدودهٔ طبیعی" Style="{StaticResource Ds.Muted}" Foreground="#2E7D32"
-                               HorizontalAlignment="Center" Margin="0,4,0,0" />
-                </StackPanel>
-            </Border>
+                                <!-- ماژول حرفه‌ای چشم‌پزشکی — طرح تأییدشدهٔ نسخهٔ ۲ -->
+                                <Expander Margin="0,12,0,0" Header="🔬 اسلیت‌لمپ و فوندوس + پاچیمتری">
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="راست (OD): پلک، ملتحمه، قرنیه، عدسی، مردمک/RAPD، زجاجیه، دیسک و ماکولا" FontSize="10" Opacity="0.6" TextWrapping="Wrap" />
+                                            <TextBox Text="{Binding SlitOd, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="52" />
+                                            <TextBlock Text="پاچیمتری راست (میکرون)" FontSize="10" Opacity="0.6" Margin="0,6,0,0" />
+                                            <TextBox Text="{Binding PachymetryOd, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="چپ (OS): همان ساختار قرینه" FontSize="10" Opacity="0.6" />
+                                            <TextBox Text="{Binding SlitOs, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="52" />
+                                            <TextBlock Text="پاچیمتری چپ (میکرون)" FontSize="10" Opacity="0.6" Margin="0,6,0,0" />
+                                            <TextBox Text="{Binding PachymetryOs, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Expander>
+                                <Expander Margin="0,8,0,0" Header="🧪 تست‌های تخصصی (میدان بینایی، آمسلر، ایشیهارا، شیرمر، کاور تست)">
+                                    <StackPanel Margin="0,8,0,0">
+                                        <TextBlock Text="میدان بینایی (پریمتری) — الگوی نقص و MD هر چشم" FontSize="10" Opacity="0.6" />
+                                        <TextBox Text="{Binding VisualFieldText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="40" />
+                                        <TextBlock Text="آمادگی/نتیجهٔ آمسلر، ایشیهارا، شیرمر، کاور تست و دید عمق" FontSize="10" Opacity="0.6" Margin="0,6,0,0" />
+                                        <TextBox Text="{Binding SpecialTestsText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="40" />
+                                    </StackPanel>
+                                </Expander>
+                                <Expander Margin="0,8,0,0" Header="📷 تصویربرداری چشم (OCT، عکس فوندوس، بیومتری)">
+                                    <TextBox Text="{Binding ImagingNote, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="44" Margin="0,8,0,0"
+                                             ToolTip="نتیجه و تاریخ OCT/فوندوس/بیومتری — تصاویر از بخش تصویربرداری وصل می‌شوند" />
+                                </Expander>
+                                <Expander Margin="0,8,0,0" Header="🩺 تشخیص و برنامهٔ درمان / جراحی / ارجاع">
+                                    <StackPanel Margin="0,8,0,0">
+                                        <TextBlock Text="تشخیص‌های این معاینه" FontSize="10" Opacity="0.6" />
+                                        <TextBox Text="{Binding DiagnosisText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="38" />
+                                        <TextBlock Text="برنامهٔ درمان، نامزدی جراحی (کاتراکت/لیزیک) و شرایط ارجاع" FontSize="10" Opacity="0.6" Margin="0,6,0,0" />
+                                        <TextBox Text="{Binding CarePlanText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="38" />
+                                    </StackPanel>
+                                </Expander>
+                                <Expander Margin="0,8,0,0" Header="💊 نسخهٔ دارویی چشمی">
+                                    <TextBox Text="{Binding DrugPrescriptionText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="48" Margin="0,8,0,0"
+                                             ToolTip="دارو، چشم، دستور مصرف و مدت — مثلاً: قطره تیمولول ۰٫۵٪، راست، هر شب ۱ قطره" />
+                                </Expander>
+                                <Expander Margin="0,8,0,0" Header="📅 پیگیری و یادآوری">
+                                    <TextBox Text="{Binding FollowUpText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="40" Margin="0,8,0,0"
+                                             ToolTip="کنترل فشار، تکرار تست‌ها و غربالگری‌های دوره‌ای با تاریخ" />
+                                </Expander>
 
-            <!-- چشم چپ -->
-            <Border Grid.Column="2" Style="{StaticResource Ds.Panel}">
-                <StackPanel>
-                    <TextBlock Text="چشم چپ (OS) 👁" Style="{StaticResource Ds.PanelTitle}" HorizontalAlignment="Center" />
-                    <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="5" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                        <StackPanel Grid.Row="0" Grid.Column="0"><TextBlock Text="Sphere" Style="{StaticResource Ds.FieldLabel}" />
-                            <Border Style="{StaticResource Ds.FieldValue}"><TextBlock Text="{Binding OsSphere, FallbackValue='+۲٫۵۰-'}" FontSize="11" HorizontalAlignment="Center" /></Border></StackPanel>
-                        <StackPanel Grid.Row="0" Grid.Column="2"><TextBlock Text="Cylinder" Style="{StaticResource Ds.FieldLabel}" />
-                            <Border Style="{StaticResource Ds.FieldValue}"><TextBlock Text="{Binding OsCylinder, FallbackValue='-۱٫۰۰'}" FontSize="11" HorizontalAlignment="Center" /></Border></StackPanel>
-                        <StackPanel Grid.Row="1" Grid.Column="0"><TextBlock Text="Axis" Style="{StaticResource Ds.FieldLabel}" />
-                            <Border Style="{StaticResource Ds.FieldValue}"><TextBlock Text="{Binding OsAxis, FallbackValue='۱۷۵'}" FontSize="11" HorizontalAlignment="Center" /></Border></StackPanel>
-                        <StackPanel Grid.Row="1" Grid.Column="2"><TextBlock Text="Add" Style="{StaticResource Ds.FieldLabel}" />
-                            <Border Style="{StaticResource Ds.FieldValue}"><TextBlock Text="{Binding OsAdd, FallbackValue='+۱٫۵۰'}" FontSize="11" HorizontalAlignment="Center" /></Border></StackPanel>
-                    </Grid>
-                    <TextBlock Text="فشار چشم — (IOP) mmHg" Style="{StaticResource Ds.FieldLabel}" Margin="0,6,0,2" />
-                    <Grid>
-                        <ProgressBar Style="{StaticResource Ds.ProgressBar}" Value="23" Maximum="30" Foreground="#EF4444" />
-                        <TextBlock Text="{Binding OsIop, FallbackValue='۲۳', StringFormat='{}{0} mmHg'}" FontSize="9.5"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
-                    </Grid>
-                    <TextBlock Text="⚠️ بالاتر از ۲۱ — احتمال گلوکوم" Style="{StaticResource Ds.Muted}" Foreground="#C62828"
-                               HorizontalAlignment="Center" Margin="0,4,0,0" />
-                </StackPanel>
-            </Border>
+                                <Button Command="{Binding SaveEyeExamCommand}" Margin="0,14,0,0" HorizontalAlignment="Left"
+                                        Style="{StaticResource MaterialDesignRaisedButton}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
+                                        <TextBlock Text="💾 ذخیره معاینهٔ چشم در پروندهٔ بیمار" Margin="8,0,0,0" />
+                                    </StackPanel>
+                                </Button>
 
-            <!-- نسخهٔ عینک زنده -->
-            <Border Grid.Column="4" Style="{StaticResource Ds.Panel}">
-                <StackPanel>
-                    <TextBlock Text="نسخهٔ عینک زنده 👓" Style="{StaticResource Ds.PanelTitle}" />
-                    <Border Background="#F8FBFE" BorderBrush="#D9E2EC" BorderThickness="1" CornerRadius="7" Padding="8,6">
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="OD" FontWeight="Bold" FontSize="11" Margin="0,0,8,3" />
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding OdSphere, FallbackValue='+۳٫۰۰ / -۰٫۷۵ × ۱۸۰'}" FontSize="10.5" Margin="0,0,0,3" />
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="OS" FontWeight="Bold" FontSize="11" Margin="0,0,8,3" />
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GlassesPrescriptionText, FallbackValue='+۲٫۵۰ / -۱٫۰۰ × ۱۷۵'}" FontSize="10.5" Margin="0,0,0,3" />
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Add" FontWeight="Bold" FontSize="11" Margin="0,0,8,3" />
-                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding OdAdd, FallbackValue='+۱٫۵۰'}" FontSize="10.5" Margin="0,0,0,3" />
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="PD" FontWeight="Bold" FontSize="11" Margin="0,0,8,0" />
-                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Pd, FallbackValue='mm ۶۲'}" FontSize="10.5" />
-                        </Grid>
-                    </Border>
-                    <TextBlock Text="نسخه بر اساس حدت بینایی و رفرکشن ساخته میشود." Style="{StaticResource Ds.Muted}" Margin="0,7,0,0" />
-                    <Button Content="چاپ نسخهٔ عینک" Style="{StaticResource Ds.FlatPrimary}" Height="32" Margin="0,9,0,0" />
-                </StackPanel>
-            </Border>
-        </Grid>
-
-        <!-- ══ ردیف پایین: روند فشار + یافتهها ══ -->
-        <Grid Grid.Row="5">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.4*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="1*" />
-            </Grid.ColumnDefinitions>
-            <Border Grid.Column="0" Style="{StaticResource Ds.Panel}">
-                <StackPanel>
-                    <TextBlock Text="روند فشار چشم 📈" Style="{StaticResource Ds.PanelTitle}" />
-                    <Grid Height="86">
-                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" VerticalAlignment="Bottom"><Border Height="40" Background="#EF4444" CornerRadius="4,4,0,0" Margin="8,0" /></StackPanel>
-                        <StackPanel Grid.Column="1" VerticalAlignment="Bottom"><Border Height="32" Background="#90CAF9" CornerRadius="4,4,0,0" Margin="8,0" /></StackPanel>
-                        <StackPanel Grid.Column="2" VerticalAlignment="Bottom"><Border Height="28" Background="#90CAF9" CornerRadius="4,4,0,0" Margin="8,0" /></StackPanel>
-                        <StackPanel Grid.Column="3" VerticalAlignment="Bottom"><Border Height="22" Background="#90CAF9" CornerRadius="4,4,0,0" Margin="8,0" /></StackPanel>
-                        <StackPanel Grid.Column="4" VerticalAlignment="Bottom"><Border Height="18" Background="#90CAF9" CornerRadius="4,4,0,0" Margin="8,0" /></StackPanel>
-                    </Grid>
-                    <Grid Margin="0,4,0,0">
-                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="۱۴۰۳/۰۸/۰۵" Style="{StaticResource Ds.Muted}" HorizontalAlignment="Center" FontSize="9" />
-                        <TextBlock Grid.Column="1" Text="۱۴۰۴/۰۲/۱۸" Style="{StaticResource Ds.Muted}" HorizontalAlignment="Center" FontSize="9" />
-                        <TextBlock Grid.Column="2" Text="۱۴۰۴/۰۸/۱۲" Style="{StaticResource Ds.Muted}" HorizontalAlignment="Center" FontSize="9" />
-                        <TextBlock Grid.Column="3" Text="۱۴۰۵/۰۲/۲۵" Style="{StaticResource Ds.Muted}" HorizontalAlignment="Center" FontSize="9" />
-                        <TextBlock Grid.Column="4" Text="۱۴۰۵/۰۸/۰۳" Style="{StaticResource Ds.Muted}" HorizontalAlignment="Center" FontSize="9" />
-                    </Grid>
-                    <TextBlock Text="آخرین معاینه: فشار چشم چپ ۲۳ — نیازمند پیگیری" Style="{StaticResource Ds.Muted}" HorizontalAlignment="Center" Margin="0,6,0,0" />
-                </StackPanel>
-            </Border>
-            <Border Grid.Column="2" Style="{StaticResource Ds.Panel}">
-                <StackPanel>
-                    <TextBlock Text="یافتهها و تشخیص ⚕️" Style="{StaticResource Ds.PanelTitle}" />
-                    <Border Background="#F8FBFE" BorderBrush="#D9E2EC" BorderThickness="1" CornerRadius="7" Padding="8,5" Margin="0,0,0,6">
-                        <TextBlock Text="{Binding EyeFindings, FallbackValue='حدت بینایی دو چشم با عینک کامل؛ فشار چشم چپ بالاتر از حد طبیعی — پیگیری گلوکوم.'}"
-                                   FontSize="10" TextWrapping="Wrap" />
-                    </Border>
-                    <TextBlock Text="تشخیص" Style="{StaticResource Ds.FieldLabel}" />
-                    <Border Style="{StaticResource Ds.FieldValue}" Height="27">
-                        <TextBlock Text="{Binding DiagnosisText, FallbackValue='آستیگماتیسم مرکب دوطرفه · مشکوک به گلوکوم'}" FontSize="9.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                    </Border>
-                    <TextBlock Text="برنامهٔ درمان" Style="{StaticResource Ds.FieldLabel}" />
-                    <Border Style="{StaticResource Ds.FieldValue}" Height="27">
-                        <TextBlock Text="{Binding CarePlanText, FallbackValue='OCT عصب بینایی + تونومتری مجدد'}" FontSize="9.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                    </Border>
-                </StackPanel>
-            </Border>
-        </Grid>
-
-        <TextBlock Grid.Row="7" Text="سهند کلینیکپرو — معاینهٔ چشمپزشکی · رفرکشن و حدت بینایی · نسخهٔ ۲٫۲۸٫۲۸"
-                   Style="{StaticResource Ds.Muted}" HorizontalAlignment="Center" Margin="0,5,0,0" />
+                                <!-- ═══ سابقهٔ معاینه‌های چشم بیمار منتخب — چرخهٔ ۲۸ ═══
+                                     با انتخاب بیمار، ۲۰ معاینهٔ آخر او از پرونده خوانده می‌شود؛
+                                     آخرین معاینه در فرم می‌نشیند و بقیه برای مرور روند درمان است -->
+                                <Border CornerRadius="12" BorderBrush="#B39DDB" BorderThickness="1" Padding="12" Margin="0,14,0,0"
+                                        Background="#F3E5F5"
+                                        Visibility="{Binding EyePatient, Converter={StaticResource NullToVisibility}}">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <materialDesign:PackIcon Kind="History" Width="18" Height="18" Foreground="#5E35B1" VerticalAlignment="Center" />
+                                            <TextBlock Text="سابقهٔ معاینه‌های چشم (۲۰ مورد آخر — از پروندهٔ بیمار)" FontSize="13"
+                                                       FontWeight="Bold" VerticalAlignment="Center" Margin="8,0,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding HistoryTrendText, Mode=OneWay}" FontSize="11" FontWeight="SemiBold" Foreground="#4A148C"
+                                                   Margin="0,0,0,6" TextWrapping="Wrap"
+                                                   Visibility="{Binding HistoryTrendText, Converter={StaticResource StringToVisibility}}" />
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="170">
+                                            <ItemsControl ItemsSource="{Binding EyeHistory}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border CornerRadius="8" Background="{DynamicResource MaterialDesign.Brush.Card.Background}" Padding="9,6" Margin="0,0,0,5">
+                                                            <StackPanel>
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                        <ColumnDefinition Width="*" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="0" Text="{Binding DateShamsi, Mode=OneWay}" FontWeight="SemiBold"
+                                                                               FontFamily="{DynamicResource App.CodeFont}" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                                                    <TextBlock Grid.Column="1" HorizontalAlignment="Left" FontSize="10.5" Opacity="0.8"
+                                                                               VerticalAlignment="Center" Margin="14,0,0,0" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
+                                                                        <Run Text="OD: " /><Run Text="{Binding OdSummary, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
+                                                                        <Run Text="   OS: " /><Run Text="{Binding OsSummary, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
+                                                                    </TextBlock>
+                                                                </Grid>
+                                                                <TextBlock Text="{Binding Findings, Mode=OneWay, TargetNullValue=''}" FontSize="10.5" Opacity="0.7"
+                                                                           TextWrapping="Wrap" Margin="0,3,0,0"
+                                                                           Visibility="{Binding Findings, Converter={StaticResource StringToVisibility}}"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
     </Grid>
 </UserControl>

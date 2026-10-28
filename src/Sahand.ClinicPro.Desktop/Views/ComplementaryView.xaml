@@ -18,11 +18,11 @@
          پیشفرض = نمای تأییدشده؛ حالت اسکرینشات هم همان را میگیرد.
          ═══════════════════════════════════════════════════════════════ -->
     <Grid>
-        <ToggleButton x:Name="DsModeToggle" IsChecked="True" Style="{StaticResource App.PlainToggleButton}" Panel.ZIndex="10"
+        <ToggleButton x:Name="DsModeToggle" IsChecked="False" Style="{StaticResource App.PlainToggleButton}" Panel.ZIndex="10"
                       HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="6,0,0,1"
                       Padding="2,0" FontSize="8" Opacity="0.55" Cursor="Hand"
                       Focusable="False" FocusVisualStyle="{x:Null}"
-                      Foreground="#8A9AAE" Content="نمای کامل ↗">
+                      Foreground="#8A9AAE" Content="طرح نمایشی (غیرعملیاتی) ↗">
             <ToggleButton.Template>
                 <ControlTemplate TargetType="ToggleButton">
                     <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"

@@ -3,328 +3,516 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
-             d:DesignHeight="774" d:DesignWidth="1030"
+             d:DesignHeight="640" d:DesignWidth="1080"
              FlowDirection="RightToLeft">
-    <!-- ═══════════════════════════════════════════════════════════════
-         دندانپزشکی — بازطراحی کامل بر اساس طرح تأییدشدهٔ مالک
-         (docs/design/approved/dentistry.html + dentistry-design.png).
-
-         همان زبان تصویری صفحهای تصویربرداری: سربرگ، پنج کارت آماری تمامعرض،
-         تبهای زیرخطدار، نوار ابزار، چارت FDI در پنل راست و «دندان انتخابی /
-         طرح درمان» در پنل چپ. همهٔ اتصالها و فرمانهای واقعی ViewModel حفظ
-         شدهاند؛ فقط چیدمان و رنگها از نو نوشته شد.
-         ═══════════════════════════════════════════════════════════════ -->
-    <UserControl.Resources>
-        <!-- جعبهٔ دندان ۳۴×۴۲ — همان اندازهای که در رندر HTML طرح دیده میشود -->
-        <DataTemplate x:Key="Ds.ToothBox">
-            <Button Width="34" Height="42" Margin="0,0,3,3" Cursor="Hand"
-                    Command="{Binding DataContext.SelectToothCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                    CommandParameter="{Binding}" ToolTip="{Binding ToolTip}">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Box" Background="{Binding Color}" BorderBrush="#C9D6E4"
-                                BorderThickness="1.3" CornerRadius="6">
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock x:Name="Num" Text="{Binding NumberFa}" FontSize="10.5"
-                                           FontWeight="Bold" HorizontalAlignment="Center" Foreground="White" />
-                                <TextBlock x:Name="Type" Text="{Binding TypeShort}" FontSize="6.5"
-                                           HorizontalAlignment="Center" Foreground="#F0F4F8" />
-                            </StackPanel>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <DataTrigger Binding="{Binding Condition}" Value="0">
-                                <Setter TargetName="Num" Property="Foreground" Value="#22364F" />
-                                <Setter TargetName="Type" Property="Foreground" Value="#6B7C93" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                <Setter TargetName="Box" Property="BorderBrush" Value="#1565C0" />
-                                <Setter TargetName="Box" Property="BorderThickness" Value="2" />
-                            </DataTrigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
-        </DataTemplate>
-    </UserControl.Resources>
-
-    <Grid Background="{StaticResource Ds.PageBackground}" Margin="14,11,14,6">
+    <!-- ═══ دندانپزشکی — چرخهٔ چهل‌وسوم (گزارش مالک): «دندانپزشکی و چشم پزشکی و
+         تصویربرداری و فزیوتراپی در یک صفحه و تب‌های جداگانه هستند. برای هر
+         کدوم یک صفحه مستقل طراحی بکن تا با همدیگه تداخلی نداشته باشن» —
+         محتوای این تب از پاراکلینیکِ سابقِ تب‌دار جدا شد و اکنون صفحهٔ
+         اختصاصی مستقل خودش است؛ تمام منطق و اتصال‌ها بدون تغییر منتقل شدند. ═══ -->
+    <Grid Margin="16,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- ══ ردیف ۱: سربرگ ══ -->
-        <Grid Grid.Row="0" Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <Border Grid.Column="0" Width="30" Height="30" CornerRadius="8" Background="#1565C0"
-                    VerticalAlignment="Center" Margin="0,0,9,0">
-                <TextBlock Text="🦷" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
-            </Border>
-            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                <TextBlock Text="پروندهٔ دندانپزشکی" Style="{StaticResource Ds.PageTitle}" />
-                <TextBlock Text="چارت دندان، طرح درمان و پیگیری پرونده — یکپارچه"
-                           Style="{StaticResource Ds.Muted}" />
-            </StackPanel>
-            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Content="پروندهٔ جدید" Style="{StaticResource Ds.FlatPrimary}" Height="32"
-                        Padding="14,0" Margin="0,0,7,0" Command="{Binding ClearDentalPatientCommand}" />
-                <Button Content="چاپ چارت" Style="{StaticResource Ds.OutlineButton}" Height="32"
-                        Padding="13,0" Command="{Binding SaveDentalChartCommand}" />
-            </StackPanel>
-        </Grid>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <materialDesign:PackIcon Kind="ToothOutline" Width="26" Height="26"
+                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
+            <TextBlock Text="دندانپزشکی" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
 
-        <!-- ══ ردیف ۲: پنج کارت آماری ══ -->
-        <Grid Grid.Row="1" Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" /><ColumnDefinition Width="8" />
-                <ColumnDefinition Width="*" /><ColumnDefinition Width="8" />
-                <ColumnDefinition Width="*" /><ColumnDefinition Width="8" />
-                <ColumnDefinition Width="*" /><ColumnDefinition Width="8" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Style="{StaticResource Ds.StatCard}" Background="#F4FBF4" BorderBrush="#81C784">
-                <StackPanel>
-                    <TextBlock Text="{Binding Kpis.V1}" Style="{StaticResource Ds.StatNumber}" Foreground="#2E7D32" />
-                    <TextBlock Text="بیماران دارای پرونده" Style="{StaticResource Ds.StatLabel}" />
-                </StackPanel>
-            </Button>
-            <Button Grid.Column="2" Style="{StaticResource Ds.StatCard}" Background="#FFF5F5" BorderBrush="#E57373">
-                <StackPanel>
-                    <TextBlock Text="{Binding Kpis.V2}" Style="{StaticResource Ds.StatNumber}" Foreground="#C62828" />
-                    <TextBlock Text="دندان نیازمند درمان" Style="{StaticResource Ds.StatLabel}" />
-                </StackPanel>
-            </Button>
-            <Button Grid.Column="4" Style="{StaticResource Ds.StatCard}" Background="#FDF7FF" BorderBrush="#BA68C8">
-                <StackPanel>
-                    <TextBlock Text="{Binding Kpis.V3}" Style="{StaticResource Ds.StatNumber}" Foreground="#6A1B9A" />
-                    <TextBlock Text="طرح درمان فعال" Style="{StaticResource Ds.StatLabel}" />
-                </StackPanel>
-            </Button>
-            <Button Grid.Column="6" Style="{StaticResource Ds.StatCard}" Background="#FFFAF3" BorderBrush="#FFB74D">
-                <StackPanel>
-                    <TextBlock Text="{Binding Kpis.V4}" Style="{StaticResource Ds.StatNumber}" Foreground="#E65100" />
-                    <TextBlock Text="جلسات امروز" Style="{StaticResource Ds.StatLabel}" />
-                </StackPanel>
-            </Button>
-            <Button Grid.Column="8" Style="{StaticResource Ds.StatCard}" Background="#F5FAFF" BorderBrush="#64B5F6">
-                <StackPanel>
-                    <TextBlock Text="{Binding Kpis.V5}" Style="{StaticResource Ds.StatNumber}" Foreground="#1565C0" />
-                    <TextBlock Text="درآمد ماه (ریال)" Style="{StaticResource Ds.StatLabel}" />
-                </StackPanel>
-            </Button>
-        </Grid>
-
-        <!-- ══ ردیف ۳: تبها ══ -->
-        <Border Grid.Row="2" Style="{StaticResource Ds.TabBar}" Padding="0,2,0,0">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Border BorderBrush="#1565C0" BorderThickness="0,0,0,2" Margin="0,0,4,0">
-                    <TextBlock Text="چارت دندان" Style="{StaticResource Ds.TabItemActiveText}" />
-                </Border>
-                <TextBlock Text="طرح درمان" Style="{StaticResource Ds.TabItemText}" />
-                <TextBlock Text="پرتونگاری" Style="{StaticResource Ds.TabItemText}" />
-                <TextBlock Text="نسخه و رضایتنامه" Style="{StaticResource Ds.TabItemText}" />
-            </StackPanel>
-        </Border>
-
-        <!-- ══ ردیف ۴: نوار ابزار ══ -->
-        <Border Grid.Row="3" Style="{StaticResource Ds.Toolbar}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="300" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="200" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0" Style="{StaticResource Ds.CompactText}"
-                         Text="{Binding DentalPatientSearch, UpdateSourceTrigger=PropertyChanged}">
-                    <TextBox.InputBindings>
-                        <KeyBinding Key="Enter" Command="{Binding SearchDentalPatientCommand}" />
-                    </TextBox.InputBindings>
-                </TextBox>
-                <Button Grid.Column="1" Content="جستجو ⌕" Style="{StaticResource Ds.FlatPrimary}" Height="30"
-                        Padding="13,0" Margin="7,0,0,0" Command="{Binding SearchDentalPatientCommand}" />
-                <Border Grid.Column="2" Background="#EDF5FF" BorderBrush="#BBDBFB" BorderThickness="1"
-                        CornerRadius="7" Height="30" Margin="7,0,0,0" Padding="8,0">
-                    <TextBlock Text="{Binding DentalPatient.FullName, FallbackValue='زهرا محمدی — کد ۰۰۱۲۳۴'}"
-                               FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Center"
-                               TextTrimming="CharacterEllipsis" />
-                </Border>
-                <StackPanel Grid.Column="4" Orientation="Horizontal">
-                    <TextBlock Text="آخرین ویزیت: ۱۴۰۵/۰۸/۰۳" Style="{StaticResource Ds.Muted}"
-                               VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <Button Content="تازهمسازی" Style="{StaticResource Ds.OutlineButton}" Padding="10,0"
-                            Command="{Binding SaveDentalChartCommand}" />
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- ══ ردیف ۵: محتوا ══ -->
-        <Grid Grid.Row="4">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.5*" />
-                <ColumnDefinition Width="8" />
-                <ColumnDefinition Width="1*" />
-            </Grid.ColumnDefinitions>
-
-            <!-- ستون راست: راهنما + چارت FDI -->
-            <Border Grid.Column="0" Style="{StaticResource Ds.Panel}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
-                        <Button Content="همه" Style="{StaticResource Ds.ChipActive}" />
-                        <Button Content="نیازمند درمان" Style="{StaticResource Ds.Chip}" />
-                        <TextBlock Text="راهنما:" Style="{StaticResource Ds.Muted}" VerticalAlignment="Center" Margin="8,0,4,0" />
-                        <Border Style="{StaticResource Ds.Tag}" Background="#FDECEA" BorderBrush="#F5C6C2">
-                            <TextBlock Text="پوسیدگی" FontSize="9.5" Foreground="#C62828" />
-                        </Border>
-                        <Border Style="{StaticResource Ds.Tag}" Background="#FFF8E1" BorderBrush="#FFE082" Margin="4,0,0,0">
-                            <TextBlock Text="ترمیمشده" FontSize="9.5" Foreground="#B26A00" />
-                        </Border>
-                        <Border Style="{StaticResource Ds.Tag}" Background="#E8F5E9" BorderBrush="#A5D6A7" Margin="4,0,0,0">
-                            <TextBlock Text="درمانشده" FontSize="9.5" Foreground="#2E7D32" />
-                        </Border>
-                        <Border Style="{StaticResource Ds.Tag}" Background="#E3F2FD" BorderBrush="#90CAF9" Margin="4,0,0,0">
-                            <TextBlock Text="روکش" FontSize="9.5" Foreground="#1565C0" />
-                        </Border>
-                    </StackPanel>
-                    <TextBlock Grid.Row="1" Text="FDI — چارت دندان — شمارهگذاری استاندارد"
-                               Style="{StaticResource Ds.Muted}" HorizontalAlignment="Left" Margin="0,0,0,4" />
-                    <Grid Grid.Row="2" VerticalAlignment="Top">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="10" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-                            <TextBlock Text="فک بالا — راست" Style="{StaticResource Ds.Muted}" HorizontalAlignment="Center" Margin="0,0,0,3" />
-                            <ItemsControl ItemsSource="{Binding UpperTeeth}" ItemTemplate="{StaticResource Ds.ToothBox}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel Width="296" ItemWidth="37" ItemHeight="45" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                            </ItemsControl>
-                        </StackPanel>
-                        <Border Grid.Column="1" Width="1" Background="#D9E2EC" Margin="4,18,4,4" />
-                        <StackPanel Grid.Column="2" HorizontalAlignment="Center">
-                            <TextBlock Text="فک پایین — چپ" Style="{StaticResource Ds.Muted}" HorizontalAlignment="Center" Margin="0,0,0,3" />
-                            <ItemsControl ItemsSource="{Binding LowerTeeth}" ItemTemplate="{StaticResource Ds.ToothBox}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel Width="296" ItemWidth="37" ItemHeight="45" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                            </ItemsControl>
-                        </StackPanel>
-                    </Grid>
-                </Grid>
-            </Border>
-
-            <!-- ستون چپ: دندان انتخابی + طرح درمان -->
-            <StackPanel Grid.Column="2">
-                <Border Style="{StaticResource Ds.Panel}" Margin="0,0,0,8">
-                    <StackPanel>
-                        <TextBlock Text="{Binding SelectedTooth.NumberFa, StringFormat='دندان انتخابی: {0} 🔍', FallbackValue='دندان انتخابی: ۱۶ 🔍'}"
-                                   Style="{StaticResource Ds.PanelTitle}" />
-                        <!-- جنس و وضعیت کنار هم — همان فشردگی طرح تأییدی -->
-                        <Grid>
+        <!-- محتوای صفحه — عیناً از تب پاراکلینیک سابق (اتصال‌ها بدون تغییر) -->
+        <Grid Margin="4,8">
+                            <Grid.RowDefinitions>
+                                <!-- نوار بیمار دندانپزشکی — چرخهٔ ۲۸ -->
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="10" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="6" />
-                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="2.6*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="1*" />
                             </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="جنس دندان" Style="{StaticResource Ds.FieldLabel}" />
-                                <Border Style="{StaticResource Ds.FieldValue}">
-                                    <TextBlock Text="{Binding SelectedTooth.AnatomyText, FallbackValue='آسیاب بزرگ اول · ریشه ۳ · کانال ۴'}"
-                                               FontSize="9.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                                </Border>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="وضعیت" Style="{StaticResource Ds.FieldLabel}" />
-                                <Border Style="{StaticResource Ds.FieldValue}">
-                                    <TextBlock Text="{Binding SelectedTooth.ConditionText, FallbackValue='پوسیدگی'}"
-                                               FontSize="10" VerticalAlignment="Center" Foreground="#C62828" />
-                                </Border>
-                            </StackPanel>
-                        </Grid>
-                        <Grid Margin="0,5,0,2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="سطح درگیر:" Style="{StaticResource Ds.FieldLabel}"
-                                       VerticalAlignment="Center" Margin="0,0,5,0" />
-                            <WrapPanel Grid.Column="1">
-                                <Button Content="M" Style="{StaticResource Ds.Chip}" Margin="0,0,3,0" Padding="7,0" Height="23" />
-                                <Button Content="O" Style="{StaticResource Ds.ChipActive}" Margin="0,0,3,0" Padding="7,0" Height="23" />
-                                <Button Content="D" Style="{StaticResource Ds.Chip}" Margin="0,0,3,0" Padding="7,0" Height="23" />
-                                <Button Content="B" Style="{StaticResource Ds.Chip}" Margin="0,0,3,0" Padding="7,0" Height="23" />
-                                <Button Content="L" Style="{StaticResource Ds.Chip}" Margin="0,0,3,0" Padding="7,0" Height="23" />
-                            </WrapPanel>
-                        </Grid>
-                        <TextBlock Text="انتخاب خدمت از کاتالوگ" Style="{StaticResource Ds.FieldLabel}" />
-                        <ComboBox Style="{StaticResource Ds.CompactCombo}" Height="32"
-                                  ItemsSource="{Binding CatalogItems}" DisplayMemberPath="Display"
-                                  SelectedItem="{Binding SelectedCatalogItem}" />
-                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                            <Button Content="ثبت وضعیت" Style="{StaticResource Ds.OutlineButton}"
-                                    Padding="12,0" Margin="0,0,6,0" Command="{Binding SaveDentalChartCommand}" />
-                            <Button Content="+ افزودن به طرح درمان" Style="{StaticResource Ds.FlatPrimary}"
-                                    Height="30" FontSize="11" Padding="12,0" Command="{Binding AddDentalPlanCommand}" />
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
 
-                <Border Style="{StaticResource Ds.Panel}">
-                    <StackPanel>
-                        <TextBlock Text="طرح درمان 📋" Style="{StaticResource Ds.PanelTitle}" />
-                        <DataGrid ItemsSource="{Binding DentalPlan}" Style="{StaticResource Ds.TableDataGrid}"
-                                  MaxHeight="170" RowHeight="30"
-                                  ColumnHeaderStyle="{StaticResource Ds.TableColumnHeader}">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="دندان" Binding="{Binding Tooth}" Width="52"
-                                                    ElementStyle="{StaticResource Ds.TableCellText}" />
-                                <DataGridTextColumn Header="خدمت" Binding="{Binding Procedure}" Width="*"
-                                                    ElementStyle="{StaticResource Ds.TableCellText}" />
-                                <DataGridTextColumn Header="سطح" Binding="{Binding Surface}" Width="46"
-                                                    ElementStyle="{StaticResource Ds.TableCellText}" />
-                                <DataGridTextColumn Header="هزینه" Binding="{Binding Price}" Width="70"
-                                                    ElementStyle="{StaticResource Ds.TableCellText}" />
-                                <DataGridTextColumn Header="وضعیت" Binding="{Binding StatusText}" Width="62"
-                                                    ElementStyle="{StaticResource Ds.TableCellText}" />
-                            </DataGrid.Columns>
-                        </DataGrid>
-                        <Grid Margin="0,7,0,7">
-                            <TextBlock Text="جمع کل طرح درمان" FontWeight="Bold" FontSize="11" HorizontalAlignment="Right" />
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                <TextBlock Text="{Binding PlanTotalText}" FontWeight="Bold" Foreground="#1565C0" />
-                                <TextBlock Text=" ریال" Style="{StaticResource Ds.Muted}" />
-                            </StackPanel>
-                        </Grid>
-                        <Button Content="ثبت و چاپ طرح درمان" Style="{StaticResource Ds.FlatPrimary}"
-                                Height="34" Command="{Binding SaveDentalChartCommand}" />
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </Grid>
+                            <!-- ═══ نوار بیمار تب دندانپزشکی — چرخهٔ بیست‌وهشتم (گزارش هجدهم
+                                 مالک): «نمی‌شود بیمار را انتخاب کرد و مشخص نیست اطلاعات
+                                 برای چه کسی ذخیره می‌شود» — چارت و طرح درمان اکنون به
+                                 پروندهٔ همین بیمار وصل است و با جستجو، آخرین چارتِ ذخیره‌شده
+                                 خودکار بازیابی می‌شود ═══ -->
+                            <Grid Grid.Row="0" Grid.ColumnSpan="3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2.4*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding DentalPatientSearch, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="🔍 بیمار دندانپزشکی — کد ملی / موبایل / نام">
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" Command="{Binding SearchDentalPatientCommand}" />
+                                    </TextBox.InputBindings>
+                                </TextBox>
+                                <Button Grid.Column="1" Command="{Binding SearchDentalPatientCommand}" Margin="8,0,0,0"
+                                        Style="{StaticResource MaterialDesignRaisedButton}" Padding="12,4">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Magnify" Width="15" Height="15" VerticalAlignment="Center" />
+                                        <TextBlock Text="جستجو" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <!-- کارت بیمار منتخب — محل ذخیره‌شدن داده‌ها همین پرونده است -->
+                                <Border Grid.Column="2" Background="#E8F5E9" BorderBrush="#A5D6A7" BorderThickness="1"
+                                        CornerRadius="8" Padding="10,5" Margin="8,0,8,0"
+                                        Visibility="{Binding DentalPatient, Converter={StaticResource NullToVisibility}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="AccountCheck" Width="16" Height="16" Foreground="#2E7D32" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding DentalPatient.FullName, Mode=OneWay}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                        <TextBlock Text="{Binding DentalPatient.NationalCode, Mode=OneWay}" Opacity="0.7" FontSize="11"
+                                                   VerticalAlignment="Center" Margin="10,0,0,0"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                        <TextBlock Text="{Binding DentalPatient.Allergies, Mode=OneWay, TargetNullValue='', FallbackValue=''}" Foreground="#C62828"
+                                                   FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0"
+                                                   Visibility="{Binding DentalPatient.Allergies, Converter={StaticResource StringToVisibility}}" />
+                                    </StackPanel>
+                                </Border>
+                                <Button Grid.Column="3" Command="{Binding ClearDentalPatientCommand}"
+                                        Style="{StaticResource MaterialDesignFlatButton}" Padding="8,4" ToolTip="بستن پرونده و بیمار بعدی"
+                                        Visibility="{Binding DentalPatient, Converter={StaticResource NullToVisibility}}">
+                                    <materialDesign:PackIcon Kind="CloseCircleOutline" Width="18" Height="18" Foreground="#C62828" />
+                                </Button>
+                            </Grid>
+                            <!-- راهنمای وضعیت ذخیره/بازیابی چارت — پاسخ «از کجا بازیابی می‌شود؟» -->
+                            <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Text="{Binding DentalChartInfo, Mode=OneWay}"
+                                       FontSize="10.5" Opacity="0.65" VerticalAlignment="Center" />
 
-        <!-- ══ ردیف ۶: پانوشت ══ -->
-        <TextBlock Grid.Row="5" Text="سهند کلینیکپرو — پروندهٔ دندانپزشکی · چارت FDI · نسخهٔ ۲٫۲۸٫۲۸"
-                   Style="{StaticResource Ds.Muted}" HorizontalAlignment="Center" Margin="0,5,0,0" />
+                            <!-- چارت FDI -->
+                            <Border Grid.Row="2" Grid.Column="0" CornerRadius="12" Padding="12"
+                                    Background="{DynamicResource MaterialDesign.Brush.Background}">
+                                <StackPanel>
+                                    <DockPanel Margin="2,0,2,6">
+                                        <TextBlock Text="ماگزیلا (فک بالا)" FontWeight="Bold" FontSize="12.5" />
+                                        <CheckBox IsChecked="{Binding IsChildChart}" Content="چارت کودک (شیری ۵۱–۸۵)" HorizontalAlignment="Left"
+                                                  FontSize="11" VerticalAlignment="Center" Margin="14,0,0,0" />
+                                    </DockPanel>
+                                    <ItemsControl ItemsSource="{Binding UpperTeeth}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <!-- ═══ چرخهٔ ۴۸ (گزارش مالک): نشانگر دندان‌شکل — جایگزین کادر مربع ═══
+                                                     هر نشانگر اکنون «خودِ دندان» است: هندسهٔ وکتوری بر اساس جنس واقعی
+                                                     دندان (آسیا/آسیای کوچک/نیش/پیش‌دندان) از مبدل ToothShape؛ رنگ داخل
+                                                     = وضعیت؛ شمارهٔ فارسی روی تاج با قلم خودتنظیف (روی سفیدِ سالم تیره و
+                                                     روی بقیهٔ رنگ‌ها سفید)؛ دندان‌های فک بالا با چرخش ۱۸۰ درجه ریشه‌ها را
+                                                     به بالا می‌برند — چیدمان استاندارد اودنتوگرام؛ انتخاب با هالهٔ آبی و
+                                                     دورخط ضخیم‌تر؛ دندان کشیده‌شده (وضعیت ۵) علامت × می‌گیرد. -->
+                                                <Button Width="46" Height="60" Margin="2,1" Padding="0"
+                                                        Cursor="Hand"
+                                                        Command="{Binding DataContext.SelectToothCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip="{Binding ToolTip}">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <!-- پس‌زمینهٔ شفاف + بدون افکت کلیک پیش‌فرض — شکل دندان خودش محتواست -->
+                                                            <ContentPresenter />
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                    <Grid>
+                                                    <Grid RenderTransformOrigin="0.5,0.5">
+                                                        <Grid.Style>
+                                                            <Style TargetType="Grid">
+                                                                <Style.Triggers>
+                                                                    <!-- فک بالا: ریشه‌ها به بالا (چرخش استاندارد اودنتوگرام) -->
+                                                                    <DataTrigger Binding="{Binding Quadrant, Mode=OneWay}" Value="بالا">
+                                                                        <Setter Property="RenderTransform">
+                                                                            <Setter.Value>
+                                                                                <RotateTransform Angle="180" />
+                                                                            </Setter.Value>
+                                                                        </Setter>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Grid.Style>
+                                                        <!-- هالهٔ انتخاب — دورخط آبی پهن و نیمه‌شفاف پشت دندان -->
+                                                        <Path Data="{Binding Number, Converter={StaticResource ToothShape}}"
+                                                              Stretch="Uniform" Margin="1"
+                                                              Fill="Transparent" Stroke="Transparent" StrokeThickness="5">
+                                                            <Path.Style>
+                                                                <Style TargetType="Path">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                            <Setter Property="Stroke" Value="#90CAF9" />
+                                                                            <Setter Property="StrokeThickness" Value="6" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                        <!-- بدنهٔ دندان — هندسهٔ جنس + رنگ وضعیت -->
+                                                        <Path Data="{Binding Number, Converter={StaticResource ToothShape}}"
+                                                              Stretch="Uniform" Margin="1"
+                                                              Fill="{Binding Color, Mode=OneWay}">
+                                                            <Path.Style>
+                                                                <Style TargetType="Path">
+                                                                    <Setter Property="Stroke" Value="#78909C" />
+                                                                    <Setter Property="StrokeThickness" Value="1.1" />
+                                                                    <Setter Property="StrokeLineJoin" Value="Round" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                            <Setter Property="Stroke" Value="#1565C0" />
+                                                                            <Setter Property="StrokeThickness" Value="2.4" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                        <!-- علامت × دندان کشیده‌شده (وضعیت ۵) — دو خط متقاطع سفید -->
+                                                        <Path Data="M0,0 L1,1 M1,0 L0,1" Stretch="Uniform" Margin="9,10,9,10"
+                                                              Stroke="#FFFFFF" StrokeThickness="2.6" StrokeLineJoin="Round"
+                                                              Visibility="Collapsed">
+                                                            <Path.Style>
+                                                                <Style TargetType="Path">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Condition}" Value="5">
+                                                                            <Setter Property="Visibility" Value="Visible" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                    </Grid>
+                                                    <!-- شمارهٔ دندان روی تاج — همیشه راست‌وقرار (خارج از چرخش) -->
+                                                    <Border Background="#B3FFFFFF" CornerRadius="7" Padding="5,1"
+                                                            HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,8,0,0">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Style.Triggers>
+                                                                    <!-- فک بالا: تاج پس از چرخش در پایین است → شماره هم پایین -->
+                                                                    <DataTrigger Binding="{Binding Quadrant, Mode=OneWay}" Value="بالا">
+                                                                        <Setter Property="VerticalAlignment" Value="Bottom" />
+                                                                        <Setter Property="Margin" Value="0,0,0,18" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <TextBlock Text="{Binding NumberFa}" FontSize="10.5" FontWeight="Bold"
+                                                                   Foreground="#263238" FontFamily="{DynamicResource App.CodeFont}" />
+                                                    </Border>
+                                                    <TextBlock Text="{Binding TypeName}" FontSize="7.5" Foreground="#546E7A"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,1" />
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <Separator Margin="0,10,0,10" />
+
+                                    <TextBlock Text="مندیبل (فک پایین)" FontWeight="Bold" FontSize="12.5" Margin="2,0,2,6" />
+                                    <ItemsControl ItemsSource="{Binding LowerTeeth}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <!-- فک پایین — همان نشانگر دندان‌شکل چرخهٔ ۴۸ (کپی قالب فک بالا؛
+                                                     اینجا چرخش اعمال نمی‌شود چون Quadrant=پایین است و ریشه‌ها
+                                                     به‌طور طبیعی پایین‌اند — چیدمان استاندارد اودنتوگرام). -->
+                                                <Button Width="46" Height="60" Margin="2,1" Padding="0"
+                                                        Cursor="Hand"
+                                                        Command="{Binding DataContext.SelectToothCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip="{Binding ToolTip}">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <ContentPresenter />
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                    <Grid>
+                                                    <Grid RenderTransformOrigin="0.5,0.5">
+                                                        <Grid.Style>
+                                                            <Style TargetType="Grid">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Quadrant, Mode=OneWay}" Value="بالا">
+                                                                        <Setter Property="RenderTransform">
+                                                                            <Setter.Value>
+                                                                                <RotateTransform Angle="180" />
+                                                                            </Setter.Value>
+                                                                        </Setter>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Grid.Style>
+                                                        <Path Data="{Binding Number, Converter={StaticResource ToothShape}}"
+                                                              Stretch="Uniform" Margin="1"
+                                                              Fill="Transparent" Stroke="Transparent" StrokeThickness="5">
+                                                            <Path.Style>
+                                                                <Style TargetType="Path">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                            <Setter Property="Stroke" Value="#90CAF9" />
+                                                                            <Setter Property="StrokeThickness" Value="6" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                        <Path Data="{Binding Number, Converter={StaticResource ToothShape}}"
+                                                              Stretch="Uniform" Margin="1"
+                                                              Fill="{Binding Color, Mode=OneWay}">
+                                                            <Path.Style>
+                                                                <Style TargetType="Path">
+                                                                    <Setter Property="Stroke" Value="#78909C" />
+                                                                    <Setter Property="StrokeThickness" Value="1.1" />
+                                                                    <Setter Property="StrokeLineJoin" Value="Round" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                            <Setter Property="Stroke" Value="#1565C0" />
+                                                                            <Setter Property="StrokeThickness" Value="2.4" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                        <Path Data="M0,0 L1,1 M1,0 L0,1" Stretch="Uniform" Margin="9,10,9,10"
+                                                              Stroke="#FFFFFF" StrokeThickness="2.6" StrokeLineJoin="Round"
+                                                              Visibility="Collapsed">
+                                                            <Path.Style>
+                                                                <Style TargetType="Path">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Condition}" Value="5">
+                                                                            <Setter Property="Visibility" Value="Visible" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                    </Grid>
+                                                    <Border Background="#B3FFFFFF" CornerRadius="7" Padding="5,1"
+                                                            HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,8,0,0">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Quadrant, Mode=OneWay}" Value="بالا">
+                                                                        <Setter Property="VerticalAlignment" Value="Bottom" />
+                                                                        <Setter Property="Margin" Value="0,0,0,18" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <TextBlock Text="{Binding NumberFa}" FontSize="10.5" FontWeight="Bold"
+                                                                   Foreground="#263238" FontFamily="{DynamicResource App.CodeFont}" />
+                                                    </Border>
+                                                    <TextBlock Text="{Binding TypeName}" FontSize="7.5" Foreground="#546E7A"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,1" />
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <!-- ═══ راهنمای رنگ‌های وضعیت دندان — چرخهٔ سی‌وسوم (گزارش نوزدهم مالک) ═══
+                                         «رنگ‌های وضعیت فک بالا/پایین درست نشان داده می‌شوند ولی راهنمای
+                                         تشخیص رنگ‌ها که زیرشان هست درست نمی‌آید و مشخص نیست»:
+                                         ریشه — راهنمای پیشین یک متن یگانه با نویسه‌های ایموجی (⬜🟥🟨…)
+                                         بود؛ این گلیف‌ها در فونت فارسی برنامه (وزیرمتن) وجود ندارند و
+                                         موتور رندر WPF آن‌ها را به‌صورت مربع تهی/علامت جایگزین می‌کشد —
+                                         دقیقاً همان «مشخص نیست»ی که مالک می‌دید. راه‌حل قطعی: به‌جای
+                                         نویسه، چیپ‌های رنگی واقعی (Border با Brush همان کد رنگ ViewModel
+                                         ToothVM.Color) + برچسب فارسی کنار هرکدام — رندر آن در هر فونت و
+                                         هر نسخهٔ ویندوز تضمینی است و رنگ‌ها با خود دکمه‌های چارت یکی‌اند.
+                                         چیپ سفیدِ «سالم» حاشیهٔ خاکستری می‌گیرد تا روی پس‌زمینهٔ روشن
+                                         دیده شود. WrapPanel در عرض کم می‌شکند و راهنما هرگز بیرون نمی‌زند. -->
+                                    <WrapPanel Margin="2,12,2,0">
+                                        <!-- آیتم راهنما: چیپ رنگ + برچسب — قالب مشترک با x:Shared و منبع -->
+                                        <WrapPanel.Resources>
+                                            <Style x:Key="LegendChip" TargetType="Border">
+                                                <Setter Property="Width" Value="15" />
+                                                <Setter Property="Height" Value="15" />
+                                                <Setter Property="CornerRadius" Value="4" />
+                                                <Setter Property="BorderThickness" Value="1" />
+                                                <Setter Property="BorderBrush" Value="#90A4AE" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="Margin" Value="0,0,5,0" />
+                                            </Style>
+                                            <Style x:Key="LegendLabel" TargetType="TextBlock">
+                                                <Setter Property="FontSize" Value="11" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="Margin" Value="0,0,12,2" />
+                                                <Setter Property="Opacity" Value="0.85" />
+                                            </Style>
+                                        </WrapPanel.Resources>
+                                        <!-- رنگ‌ها عیناً از ToothVM.Color (پوشهٔ ViewModelها):
+                                             ۰ سالم #FFFFFF / ۱ پوسیدگی #E53935 / ۲ ترمیم #FDD835 /
+                                             ۳ درمان #43A047 / ۴ روکش #1E88E5 / ۵ کشیده #37474F /
+                                             ۶ ایمپلنت #8E24AA -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="دندان بدون مشکل">
+                                            <Border Style="{StaticResource LegendChip}" Background="#FFFFFF" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="سالم" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="نیاز به ترمیم دارد">
+                                            <Border Style="{StaticResource LegendChip}" Background="#E53935" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="پوسیدگی" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="قبلاً پرکردگی شده">
+                                            <Border Style="{StaticResource LegendChip}" Background="#FDD835" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="ترمیم‌شده" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="درمان ریشه/کامل انجام شده">
+                                            <Border Style="{StaticResource LegendChip}" Background="#43A047" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="درمان‌شده" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="روکش نصب شده">
+                                            <Border Style="{StaticResource LegendChip}" Background="#1E88E5" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="روکش" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="دندان کشیده شده">
+                                            <Border Style="{StaticResource LegendChip}" Background="#37474F" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="کشیده‌شده" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="ایمپلنت کاشته شده">
+                                            <Border Style="{StaticResource LegendChip}" Background="#8E24AA" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="ایمپلنت" />
+                                        </StackPanel>
+                                    </WrapPanel>
+
+                                    <!-- ═══ قابلیت‌های تازهٔ ماژول کامل دندانپزشکی (تأیید مالک) ═══ -->
+                                    <Expander Margin="2,12,2,0" Header="📏 چارت پریودنتال (لثه)">
+                                        <TextBox Text="{Binding PerioSummary, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="52" Margin="0,6,0,0"
+                                                 ToolTip="عمق پاکت شش‌نقطه‌ای، خونریزی هنگام پروب (BOP)، لقی و تحلیل لثه — مثلاً: ۱۶: DL=۵، خونریزی دارد" />
+                                    </Expander>
+                                    <Expander Margin="2,6,2,0" Header="🩻 رادیوگرافی پیوندخورده به دندان">
+                                        <TextBox Text="{Binding RadioNote, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="44" Margin="0,6,0,0"
+                                                 ToolTip="مثلاً: پری‌اپیکال دندان ۱۶ در ۱۴۰۵/۰۷/۱۸ — از بخش تصویربرداری" />
+                                    </Expander>
+                                    <Expander Margin="2,6,2,0" Header="💊 نسخه و دستورات پس از درمان">
+                                        <TextBox Text="{Binding PrescriptionText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="52" Margin="0,6,0,0"
+                                                 ToolTip="داروها و دستورات پس از درمان این بیمار" />
+                                    </Expander>
+                                    <Expander Margin="2,6,2,0" Header="📄 فرم پزشکی و رضایت‌نامه">
+                                        <StackPanel Margin="0,6,0,0">
+                                            <TextBox Text="{Binding MedicalSummary, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="48"
+                                                     ToolTip="بیماری‌های زمینه‌ای، داروهای مصرفی و حساسیت‌ها" />
+                                            <CheckBox IsChecked="{Binding ConsentSigned}" Content="رضایت‌نامهٔ درمان امضا شده است" Margin="0,6,0,0" />
+                                        </StackPanel>
+                                    </Expander>
+                                    <Expander Margin="2,6,2,0" Header="📖 کاتالوگ خدمات و تعرفه‌ها">
+                                        <ItemsControl ItemsSource="{Binding CatalogItems}" Margin="0,6,0,0">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock FontSize="11" Margin="0,1">
+                                                        <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" · " /><Run Text="{Binding Category, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding DurationMin, Mode=OneWay}" /><Run Text=" دقیقه · " /><Run Text="{Binding Price, Mode=OneWay, Converter={StaticResource CurrencyRial}}" /><Run Text=" " /><Run Text="{DynamicResource App.CurrencyLabel}" />
+                                                    </TextBlock>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Expander>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- جزئیات و طرح درمان -->
+                            <Grid Grid.Row="2" Grid.Column="2">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Border Grid.Row="0" CornerRadius="12" Padding="12" Margin="0,0,0,8"
+                                        Background="{DynamicResource MaterialDesign.Brush.Background}">
+                                    <StackPanel>
+                                        <TextBlock FontSize="13" FontWeight="Bold" Margin="0,0,0,6">
+                                            <Run Text="دندان انتخابی: " /><Run Text="{Binding SelectedTooth.Number, Mode=OneWay, TargetNullValue=—, Converter={StaticResource PersianDigits}}" FontFamily="{DynamicResource App.CodeFont}" />
+                                        </TextBlock>
+                                        <TextBlock Text="وضعیت" FontSize="10.5" Opacity="0.6" />
+                                        <ComboBox ItemsSource="{Binding ToothConditions}" SelectedIndex="{Binding ToothConditionIndex}" />
+                                        <!-- آناتومی واقعی دندان انتخابی: جنس، تعداد ریشه و کانال -->
+                                        <Border Background="#E3F2FD" CornerRadius="6" Padding="8,4" Margin="0,8,0,0">
+                                            <TextBlock Text="{Binding SelectedTooth.AnatomyText, Mode=OneWay, TargetNullValue=—}" FontSize="11" FontWeight="SemiBold" Foreground="#0D47A1" />
+                                        </Border>
+                                        <TextBlock Text="خدمت از کاتالوگ دندانپزشکی" FontSize="10.5" Opacity="0.6" Margin="0,8,0,0" />
+                                        <ComboBox ItemsSource="{Binding CatalogItems}" SelectedItem="{Binding SelectedCatalogItem}" DisplayMemberPath="Display" />
+                                        <TextBlock Text="سطح درگیر" FontSize="10.5" Opacity="0.6" Margin="0,6,0,0" />
+                                        <ComboBox ItemsSource="{Binding SurfaceOptions}" SelectedItem="{Binding SelectedSurface}" />
+                                        <TextBlock Text="نوبت پیشنهادی این قلم (روز و ساعت)" FontSize="10.5" Opacity="0.6" Margin="0,6,0,0" />
+                                        <TextBox Text="{Binding PlanScheduleText, UpdateSourceTrigger=PropertyChanged}" ToolTip="مثلاً: شنبه ۱۰:۰۰" />
+                                        <TextBlock Text="اسلات‌های هفته (سبز خالی · قرمز رزرو · زرد استراحت) — کلیک، نوبت را می‌نشاند" FontSize="9.5" Opacity="0.6" Margin="0,6,0,3" />
+                                        <ListBox ItemsSource="{Binding ScheduleSlots}" SelectedItem="{Binding SelectedSlot}" BorderThickness="0" Background="Transparent">
+                                            <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ListBox.ItemsPanel>
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border CornerRadius="7" Padding="7,3" Margin="2" Background="{Binding Back}">
+                                                        <TextBlock Text="{Binding Display}" FontSize="10" FontWeight="SemiBold" />
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                        <TextBlock Text="یادداشت بالینی دندان" FontSize="10.5" Opacity="0.6" Margin="0,6,0,0" />
+                                        <TextBox Text="{Binding ClinicalNote, UpdateSourceTrigger=PropertyChanged}" ToolTip="مثلاً: پوسیدگی سطح مزیال، حساس به سرما" />
+                                        <Button Command="{Binding AddDentalPlanCommand}" Margin="0,10,0,0"
+                                                Style="{StaticResource MaterialDesignRaisedButton}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" />
+                                                <TextBlock Text="افزودن به طرح درمان" Margin="7,0,0,0" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Row="1" CornerRadius="12" Padding="10"
+                                        Background="{DynamicResource MaterialDesign.Brush.Background}">
+                                    <DockPanel>
+                                        <DockPanel DockPanel.Dock="Top" Margin="2,0,2,6">
+                                            <TextBlock Text="طرح درمان" FontWeight="Bold" FontSize="13" />
+                                            <TextBlock HorizontalAlignment="Right" FontSize="11.5" FontWeight="SemiBold" Foreground="#00695C">
+                                                <Run Text="جمع: " /><Run Text="{Binding PlanTotalText, Mode=OneWay}" /><Run Text=" " /><Run Text="{DynamicResource App.CurrencyLabel}" />
+                                            </TextBlock>
+                                        </DockPanel>
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                            <ItemsControl ItemsSource="{Binding DentalPlan}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border CornerRadius="8" Padding="9,6" Margin="0,0,0,5" Background="#FFF8E1">
+                                                            <StackPanel>
+                                                                <TextBlock FontSize="12" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
+                                                                    <Run Text="دندان " /><Run Text="{Binding Tooth, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" FontWeight="Bold" />
+                                                                    <Run Text=" — " /><Run Text="{Binding Procedure, Mode=OneWay}" FontWeight="SemiBold" />
+                                                                </TextBlock>
+                                                                <TextBlock FontSize="10.5" Opacity="0.75" FontFamily="{DynamicResource App.CodeFont}" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
+                                                                    <!-- چرخهٔ بیست‌وهفتم: واحد پول پویا از تنظیمات (ریال/تومان) — حذف هاردکد -->
+                                                                    <Run Text="{Binding Price, Mode=OneWay, Converter={StaticResource CurrencyRial}}" /><Run Text=" " /><Run Text="{DynamicResource App.CurrencyLabel}" />
+                                                                </TextBlock>
+                                                                <TextBlock FontSize="10.5" Opacity="0.75" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
+                                                                    <Run Text="سطح: " /><Run Text="{Binding Surface, Mode=OneWay}" /><Run Text=" · نوبت: " /><Run Text="{Binding Schedule, Mode=OneWay}" />
+                                                                </TextBlock>
+                                                                <Button Command="{Binding DataContext.RemoveDentalPlanCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                                                        Style="{StaticResource MaterialDesignFlatButton}" Padding="4,1" HorizontalAlignment="Left" Margin="0,2,0,0" ToolTip="حذف این ردیف از طرح درمان">
+                                                                    <TextBlock Text="✕ حذف ردیف" FontSize="10.5" Foreground="#C62828" />
+                                                                </Button>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </DockPanel>
+                                </Border>
+
+                                <!-- ═══ ذخیرهٔ چارت و طرح درمان در پروندهٔ بیمار — چرخهٔ ۲۸ ═══
+                                     وضعیت هر ۳۲ دندان + ردیف‌های طرح، در طرح درمان بیمارِ
+                                     جستجوشده ذخیره می‌شود و دفعهٔ بعد با جستجوی همان بیمار
+                                     بازیابی می‌گردد -->
+                                <Button Grid.Row="2" Command="{Binding SaveDentalChartCommand}" Margin="0,8,0,0"
+                                        Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32"
+                                        HorizontalAlignment="Stretch"
+                                        ToolTip="وضعیت همهٔ دندان‌ها و ردیف‌های طرح درمان در پروندهٔ بیمار ذخیره می‌شود">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ContentSave" Width="16" Height="16" VerticalAlignment="Center" />
+                                        <TextBlock Text="💾 ذخیرهٔ چارت و طرح درمان" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Grid>
     </Grid>
 </UserControl>
