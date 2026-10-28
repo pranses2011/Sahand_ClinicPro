@@ -26,39 +26,25 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- ═══ چرخهٔ ۴۴ (گزارش مالک: «ظاهر صفحه پذیرش رو خیلی حرفه ای تر و
-             زیباتر بکن») — سربرگ گرادیانی برند؛ هم‌الگوی صفحات بروزرساشده:
-             نشان شیشه‌ای + عنوان/زیرعنوان + چیپ راهنمای جریان در گوشهٔ چپ فیزیکی ═══ -->
-        <Border Grid.Row="0" CornerRadius="14" Padding="16,12" Margin="0,0,0,10">
-            <Border.Background>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                    <GradientStop Color="#1E88E5" Offset="0" />
-                    <GradientStop Color="#0D47A1" Offset="1" />
-                </LinearGradientBrush>
-            </Border.Background>
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Opacity="0.18" Color="#1E3A5F" />
-            </Border.Effect>
-            <DockPanel>
-                <!-- چیپ جریان کار — گوشهٔ چپ فیزیکی (RTL) -->
-                <Border DockPanel.Dock="Left" CornerRadius="9" Padding="10,3" VerticalAlignment="Center"
-                        Background="#26FFFFFF" BorderBrush="#59FFFFFF" BorderThickness="1">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="ArrowLeftBold" Width="12" Height="12" Foreground="White" VerticalAlignment="Center" />
-                        <TextBlock Text="بیمار ← خدمت ← بیمه و ثبت" Foreground="White" FontSize="10.5"
-                                   FontWeight="SemiBold" Margin="5,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
+        <!-- سربرگ طرح تأییدشده؛ فقط ظاهر تغییر می‌کند و هیچ دادهٔ نمونه‌ای در کار نیست. -->
+        <Border Grid.Row="0" Background="White" BorderBrush="#DEE7F0" BorderThickness="1"
+                CornerRadius="12" Padding="18,13" Margin="0,0,0,10">
+            <DockPanel LastChildFill="True">
+                <Border DockPanel.Dock="Left" CornerRadius="14" Padding="12,5" VerticalAlignment="Center"
+                        Background="#EFF6FF" BorderBrush="#D6E7FA" BorderThickness="1">
+                    <TextBlock Text="بیمار ← خدمت ← بیمه و ثبت" Foreground="#24578C"
+                               FontSize="11" FontWeight="SemiBold" />
                 </Border>
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="46" Height="46" CornerRadius="23" VerticalAlignment="Center" Margin="0,0,12,0"
-                            Background="#33FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1">
-                        <materialDesign:PackIcon Kind="ClipboardAccount" Width="24" Height="24"
-                                                 Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Border Width="44" Height="44" CornerRadius="11" VerticalAlignment="Center"
+                            Margin="0,0,12,0" Background="#E8F1FC">
+                        <materialDesign:PackIcon Kind="ClipboardAccount" Width="23" Height="23"
+                                                 Foreground="#1761A8" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="پذیرش بیمار" FontSize="18" FontWeight="Bold" Foreground="White" />
-                        <TextBlock Text="جستجوی هوشمند بیمار + استعلام بیمه + محاسبه خودکار هزینه + صف زنده"
-                                   FontSize="11" Foreground="#D9E7F5" Margin="0,3,0,0" />
+                        <TextBlock Text="پذیرش بیمار" FontSize="19" FontWeight="Bold" Foreground="#173657" />
+                        <TextBlock Text="جستجوی بیمار، ثبت خدمات و مدیریت صف پذیرش"
+                                   FontSize="11" Foreground="#617992" Margin="0,4,0,0" />
                     </StackPanel>
                 </StackPanel>
             </DockPanel>
