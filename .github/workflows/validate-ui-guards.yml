@@ -75,3 +75,20 @@ jobs:
         run: |
           python3 scripts/validate_ui_guards.py
           python3 scripts/validate_xaml.py
+  windows-powershell:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: بررسی نحو با Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          foreach ($rel in @('installer/Install-Server-Package.ps1', 'installer/Enable-RestorePermission.ps1')) {
+            $path = (Resolve-Path $rel).Path
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors) | Out-Null
+            foreach ($e in $errors) {
+              Write-Output "::error file=$rel,line=$($e.Extent.StartLineNumber)::$($e.Message)"
+            }
+            if ($errors.Count -gt 0) { exit 1 }
+          }
