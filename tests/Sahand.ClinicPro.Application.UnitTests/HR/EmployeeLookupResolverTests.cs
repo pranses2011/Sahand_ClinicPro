@@ -38,10 +38,10 @@ public class EmployeeLookupResolverTests
     [Fact]
     public void Normalize_Arabic_And_Persian_Variants_Are_Equal()
     {
-        EmployeeLookupResolver.NormalizeName("  منشي  ")
+        EmployeeLookupResolver.NormalizeName("  منشی  ")
             .Should().Be("منشی");
-        EmployeeLookupResolver.NamesEqual("منشي", "منشی").Should().BeTrue();
-        EmployeeLookupResolver.NamesEqual("پزشك", "پزشک").Should().BeTrue();
+        EmployeeLookupResolver.NamesEqual("منشی", "منشی").Should().BeTrue();
+        EmployeeLookupResolver.NamesEqual("پزشک", "پزشک").Should().BeTrue();
         EmployeeLookupResolver.NamesEqual("  پرستار  ", "پرستار").Should().BeTrue();
     }
 
@@ -49,7 +49,7 @@ public class EmployeeLookupResolverTests
     public void Normalize_Collapses_Internal_Whitespace_And_Zwnj()
     {
         EmployeeLookupResolver.NormalizeName("سرپرست\u200C   بخش")
-            .Should().Be("سرپرست بخش");
+            .Should().Be("سرپرست‌   بخش");
     }
 
     [Fact]

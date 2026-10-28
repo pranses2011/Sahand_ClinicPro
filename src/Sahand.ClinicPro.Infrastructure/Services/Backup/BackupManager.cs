@@ -405,7 +405,7 @@ public class BackupManager
             return (true, "بازیابی با موفقیت انجام شد — برنامه را ری‌استارت کنید تا داده‌های تازه بار شود");
         }
         catch (Microsoft.Data.SqlClient.SqlException ex)
-            when (ex.Number is 262 or 3701 or 3110 or 3013 or 3101 or 3169 or 3201 or 3634
+            when (ex.Number == 262
                   || (ex.Message.Contains("RESTORE", StringComparison.OrdinalIgnoreCase)
                       && (ex.Message.Contains("permission", StringComparison.OrdinalIgnoreCase)
                           || ex.Message.Contains("denied", StringComparison.OrdinalIgnoreCase))))
@@ -424,9 +424,8 @@ public class BackupManager
                 "لاگین SQLای که سرور API با آن وصل میشود، مجوز بازیابی (RESTORE) ندارد " +
                 $"(خطای SQL شمارهٔ {ex.Number}). " +
                 "راه حل خودکار: روی رایانهٔ سرور، فایل Enable-RestorePermission.bat را " +
-                "از پوشهٔ C:\\SahandClinicPro\\Server پیدا کرده و با Run as administrator اجرا کنید؛ " +
-                "این ابزار نقش dbcreator را خودکار میدهد، در صورت نیاز SQL Server را چند ثانیه " +
-                "موقتاً ریاستارت میکند و نتیجه را در restore-permission.status.txt مینویسد. " +
+                "از پوشهٔ بستهٔ نصب سرور پیدا کرده و با Run as administrator اجرا کنید؛ " +
+                "این ابزار با دسترسی مدیر SQL برای اعطای نقش تلاش میکند و نتیجه را در restore-permission.status.txt مینویسد. " +
                 "پس از آن سرویس SahandClinicPro.API را یکبار ریاستارت کنید و دوباره بازیابی را امتحان کنید. " +
                 "اگر ابزار را ندارید، بستهٔ کامل سرور همنسخه را دوباره نصب کنید. " +
                 "راه دستی: در SSMS با حساب sysadmin اجرا کنید " +

@@ -61,7 +61,6 @@ jobs:
           $ErrorActionPreference = 'Stop'
           . ./installer/Enable-RestorePermission.ps1 -AsLibrary
           foreach ($fn in @('Invoke-ClinicProRestorePermission', 'Invoke-CpRestoreGrant',
-                            'Get-CpLocalSqlServiceName', 'Invoke-CpSingleUserElevation',
                             'Write-CpManualSql')) {
             if (-not (Get-Command $fn -ErrorAction SilentlyContinue)) {
               throw "تابع $fn هنگام dot-source تعریف نشد."

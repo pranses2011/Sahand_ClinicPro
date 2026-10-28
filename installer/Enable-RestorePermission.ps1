@@ -19,19 +19,10 @@ $ErrorActionPreference = 'Stop'
 #  مدیر نبود، اعطای نقش بیصدا رد میشد — همان «من نتونستم نقش کاربر رو روی
 #  SQL اعمال بکنم» که مالک گزارش کرد.
 #
-#  این نسخه چهار لایه دارد و تا جایی که ممکن است بدون دخالت انسان جلو میرود:
-#    ۱) اتصال با همان شناسههای رشتهٔ اتصال API (اغلب همان sa/حساب مدیر)؛
-#    ۲) اتصال با احراز ویندوزی حساب جاری (اغلب نصبکنندهٔ SQL Express)؛
-#    ۳) پرسش نام/رمز یک حساب مدیر SQL (مثلاً sa) — فقط اگر لازم شد؛
-#    ۴) بالا آوردن موقت SQL Server محلی در «حالت تککاربره» (/m). مایکروسافت
-#       در این حالت هر عضو گروه Administrators محلی را sysadmin میداند؛
-#       بنابراین حتی وقتی رمز sa و حساب مدیر SQL در دسترس نیست، نصاب
-#       خودش نقش dbcreator را به لاگین API میدهد و سپس SQL را به حالت
-#       عادی برمیگرداند. پارامتر /m فقط برای همان استارت است و در رجیستری
-#       ذخیره نمیشود؛ با یک ریاستارت ساده همیشه وضع عادی برمیگردد.
-#
-#  در تمام لایهها لاگین دقیق، نتیجه و آخرین خطا در
-#  restore-permission.status.txt ثبت میشود. خطای این گام نصب را متوقف نمیکند.
+#  نصب با حساب اتصال API، حساب ویندوزی جاری یا حساب مدیر SQL تلاش می‌کند.
+#  اعطای نقش نیازمند مجوز مدیریتی SQL است؛ بدون آن موفقیت گزارش نمی‌شود.
+#  سرور SQL به طور خودکار متوقف یا در حالت تک‌کاربره اجرا نمی‌شود.
+#  نتیجه در restore-permission.status.txt ثبت می‌شود.
 #  فایل هم بهصورت مستقل (دابلکلیک Enable-RestorePermission.bat) و هم بهصورت
 #  dot-source از Install-Server-Package.ps1 قابل اجراست.
 # ═══════════════════════════════════════════════════════════════════════════
@@ -203,174 +194,6 @@ function Invoke-CpRestoreGrant {
     return $ok
 }
 
-function Get-CpLocalSqlServiceName {
-    param([string]$DataSource)
-    if ([string]::IsNullOrWhiteSpace($DataSource)) { return $null }
-    $ds = $DataSource.Trim()
-    foreach ($prefix in @('tcp:', 'np:', 'lpc:')) {
-        if ($ds.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) {
-            if ($prefix -ne 'tcp:') { return $null } # لولهٔ نامدار — سرویس استانداردی نیست
-            $ds = $ds.Substring($prefix.Length)
-            break
-        }
-    }
-    $comma = $ds.IndexOf(',')
-    if ($comma -gt 0) { $ds = $ds.Substring(0, $comma) }
-    $parts = $ds -split '\\'
-    $hostName = $parts[0]
-    $instance = if ($parts.Count -gt 1) { $parts[1] } else { '' }
-    if ($hostName -ieq '(localdb)') { return $null }
-    $localNames = @('', '.', '(local)', 'localhost', '127.0.0.1', '::1',
-                    [string]$env:COMPUTERNAME, "$env:COMPUTERNAME.$env:USERDNSDOMAIN")
-    if ($localNames -notcontains $hostName) {
-        Write-Host "  ! SQL Server ($DataSource) روی رایانهٔ دیگری است؛ ریاستارت تککاربره فقط محلی مجاز است." -ForegroundColor DarkYellow
-        return $null
-    }
-    $svc = if ([string]::IsNullOrEmpty($instance)) { 'MSSQLSERVER' } else { 'MSSQL$' + $instance }
-    if (-not (Get-Service -Name $svc -ErrorAction SilentlyContinue)) {
-        $candidate = Get-CimInstance Win32_Service -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -like 'MSSQL*' -and $_.PathName -like '*sqlservr.exe*' } |
-            Select-Object -First 1
-        if ($candidate) { $svc = [string]$candidate.Name }
-        else { return $null }
-    }
-    return $svc
-}
-
-function Invoke-CpNet {
-    param([string[]]$Arguments)
-    $winDir = if ($env:WINDIR) { $env:WINDIR } else { $env:SystemRoot }
-    $netExe = Join-Path $winDir 'System32\net.exe'
-    $tag = [Guid]::NewGuid().ToString('N').Substring(0, 8)
-    $out = Join-Path $env:TEMP "clinicpro_net_$tag.out"
-    $err = Join-Path $env:TEMP "clinicpro_net_$tag.err"
-    try {
-        $proc = Start-Process -FilePath $netExe -ArgumentList $Arguments -Wait -PassThru `
-            -RedirectStandardOutput $out -RedirectStandardError $err
-        $code = $proc.ExitCode
-    } catch {
-        return [pscustomobject]@{ ExitCode = -1; Output = $_.Exception.Message }
-    }
-    $text = ''
-    try { $text = ((Get-Content $out -Raw -ErrorAction SilentlyContinue) + (Get-Content $err -Raw -ErrorAction SilentlyContinue)) } catch { }
-    try { Remove-Item $out, $err -Force -ErrorAction SilentlyContinue } catch { }
-    return [pscustomobject]@{ ExitCode = $code; Output = [string]$text }
-}
-
-function Wait-CpServiceStatus {
-    param([string]$Name, [string]$Status, [int]$Seconds = 60)
-    $sw = [System.Diagnostics.Stopwatch]::StartNew()
-    while ($sw.Elapsed.TotalSeconds -lt $Seconds) {
-        try {
-            $svc = Get-Service -Name $Name -ErrorAction Stop
-            if ([string]$svc.Status -eq $Status) { return $true }
-        } catch { }
-        Start-Sleep -Milliseconds 500
-    }
-    return $false
-}
-
-function Invoke-CpSingleUserElevation {
-    param([string]$DataSource, [string]$Encrypt, [string[]]$Targets,
-          [string]$Primary, [string]$Sql, [string]$ReportDir, [object]$Report)
-
-    $svc = Get-CpLocalSqlServiceName -DataSource $DataSource
-    if (-not $svc) { return $false }
-
-    $agent = if ($svc -eq 'MSSQLSERVER') { 'SQLSERVERAGENT' }
-             else { 'SQLAgent$' + $svc.Substring(6) }
-    $agentWasRunning = $false
-    $recovery = Join-Path $ReportDir 'SQL-RECOVERY-Restart-Normal.bat'
-    $granted = $false
-
-    Write-Host '' 
-    Write-Host '── لایهٔ ۴: بالا آوردن موقت SQL Server در حالت تککاربره ──' -ForegroundColor Cyan
-    Write-Host 'هیچ حساب مدیر SQLای در دسترس نبود. SQL Server حداکثر حدود ۳۰ ثانیه ریاستارت موقت میشود تا نصاب' -ForegroundColor Yellow
-    Write-Host 'خودش نقش dbcreator را بدهد؛ سپس بدون استثنا به حالت عادی چندکاربره برگردانده میشود.' -ForegroundColor Yellow
-    if ($null -ne $Report) { $Report.Add("لایهٔ ۴: ریاستارت موقت سرویس $svc در حالت تککاربره") }
-
-    try {
-        # فایل نجات: اگر برق/پردازش وسط کار قطع شد، یک ریاستارت ساده SQL را عادی میکند
-        try {
-            $lines = @('@echo off', 'chcp 65001 >nul',
-                       ('net stop "' + $svc + '" /y'),
-                       ('net start "' + $svc + '"'),
-                       'echo SQL Server به حالت عادی برگشت.')
-            Set-Content -Path $recovery -Value $lines -Encoding UTF8
-        } catch { }
-
-        try {
-            $ag = Get-Service -Name $agent -ErrorAction SilentlyContinue
-            if ($ag -and [string]$ag.Status -eq 'Running') {
-                $agentWasRunning = $true
-                Stop-Service -Name $agent -Force -ErrorAction SilentlyContinue
-                Write-Host "  • عامل SQL Server ($agent) موقتاً متوقف شد تا تنها اتصال را نگیرد." -ForegroundColor DarkGray
-            }
-        } catch { }
-
-        Stop-Service -Name $svc -Force -ErrorAction Stop
-        if (-not (Wait-CpServiceStatus -Name $svc -Status 'Stopped' -Seconds 60)) {
-            throw "سرویس $svc در مهلت مقرر متوقف نشد."
-        }
-
-        $start = Invoke-CpNet -Arguments @('start', $svc, '/m')
-        if ($start.ExitCode -ne 0) {
-            throw "اجرای net start $svc /m ناموفق بود (کد $($start.ExitCode)): $($start.Output)"
-        }
-        Write-Host "  • SQL Server در حالت تککاربره بالا آمد ($svc)." -ForegroundColor DarkGray
-
-        $cs = New-CpMasterConnectionString -DataSource $DataSource -Encrypt $Encrypt -ConnectTimeout 8
-        for ($i = 0; $i -lt 15 -and -not $granted; $i++) {
-            try {
-                $granted = Invoke-CpRestoreGrant -ConnectionString $cs -Targets $Targets `
-                    -Primary $Primary -Sql $Sql -Report $Report
-            } catch {
-                if ($null -ne $Report) { $Report.Add("تلاش $($i + 1) ناموفق: $($_.Exception.Message)") }
-            }
-            if (-not $granted) { Start-Sleep -Seconds 2 }
-        }
-        return $granted
-    } catch {
-        $m = $_.Exception.Message
-        Write-Host "  ! ریاستارت تککاربره ناموفق: $m" -ForegroundColor DarkYellow
-        if ($null -ne $Report) { $Report.Add("خطای لایهٔ ۴: $m") }
-        return $false
-    } finally {
-        # بدون استثنا: بازگرداندن SQL Server به حالت عادی چندکاربره
-        try {
-            Stop-Service -Name $svc -Force -ErrorAction SilentlyContinue
-            [void](Wait-CpServiceStatus -Name $svc -Status 'Stopped' -Seconds 60)
-            $back = Invoke-CpNet -Arguments @('start', $svc)
-            if ($back.ExitCode -ne 0) {
-                Start-Service -Name $svc -ErrorAction SilentlyContinue
-            }
-            [void](Wait-CpServiceStatus -Name $svc -Status 'Running' -Seconds 60)
-            # راستیآزمایی:SERVERPROPERTY('IsSingleUser') باید ۰ باشد
-            try {
-                $check = Invoke-CpSqlRow -ConnectionString (
-                    New-CpMasterConnectionString -DataSource $DataSource -Encrypt $Encrypt -ConnectTimeout 8) `
-                    -Sql "SELECT ISNULL(CAST(SERVERPROPERTY('IsSingleUser') AS int), 0) AS IsSingleUser" -Timeout 10
-                if ($check -and [int]$check['IsSingleUser'] -eq 1) {
-                    Stop-Service -Name $svc -Force -ErrorAction SilentlyContinue
-                    Start-Service -Name $svc -ErrorAction SilentlyContinue
-                }
-            } catch { }
-            Write-Host '  • SQL Server به حالت عادی (چندکاربره) برگشت.' -ForegroundColor DarkGreen
-            if ($null -ne $Report) { $Report.Add('SQL Server به حالت عادی چندکاربره برگشت') }
-        } catch {
-            $m = $_.Exception.Message
-            Write-Host "  ! هشدار: بازگرداندن حالت عادی SQL نیازمند بررسی است: $m" -ForegroundColor Red
-            if ($null -ne $Report) { $Report.Add("هشدار بازگشت حالت عادی: $m — فایل SQL-RECOVERY-Restart-Normal.bat را اجرا کنید") }
-        }
-        if ($agentWasRunning) {
-            try { Start-Service -Name $agent -ErrorAction SilentlyContinue } catch { }
-        }
-        try {
-            if ($granted) { Remove-Item $recovery -Force -ErrorAction SilentlyContinue }
-        } catch { }
-    }
-}
-
 function Write-CpManualSql {
     param([string[]]$Targets, [string]$ReportDir)
     $sql = New-Object System.Collections.Generic.List[string]
@@ -439,21 +262,23 @@ function Invoke-ClinicProRestorePermission {
         } else {
             # احراز ویندوزی: سرویس API بهصورت پیشفرض LocalSystem است؛ برای SQL
             # راهدور حساب ماشین و برای حساب مجازی سرویس هم پوشش داده میشود.
-            $targets = @('NT AUTHORITY\SYSTEM')
-            try {
-                $me = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-                if ($me) { $targets += $me }
-            } catch { }
-            if ($env:USERDOMAIN -and $env:COMPUTERNAME) {
-                $targets += ('{0}\{1}$' -f $env:USERDOMAIN, $env:COMPUTERNAME)
+            $hostPart = ($dataSource -replace '^(?i:tcp:)', '' -split '[\\,]')[0]
+            if (@('.', '(local)', 'localhost', '127.0.0.1', $env:COMPUTERNAME) -notcontains $hostPart) {
+                throw 'SQL روی رایانهٔ دیگر است؛ حساب واقعی سرویس باید با مدیر SQL بررسی شود.'
             }
-            $targets += 'NT SERVICE\SahandClinicPro.API'
-        }
-        foreach ($extra in $ExtraTargets) {
-            if (-not [string]::IsNullOrWhiteSpace($extra)) { $targets += $extra }
+            # نصاب سرویس جدید را با LocalSystem ایجاد می‌کند. ابزار مستقل
+            # فقط در صورت اجرای سرویس با همان حساب این فرض را معتبر می‌داند.
+            if (-not $AsLibrary) {
+                $service = Get-CimInstance Win32_Service -Filter "Name='SahandClinicPro.API'" -ErrorAction Stop
+                if (-not $service -or @('LocalSystem', 'NT AUTHORITY\SYSTEM') -notcontains $service.StartName) {
+                    throw 'حساب سرویس API متفاوت است یا سرویس یافت نشد؛ هویت واقعی را با مدیر SQL بررسی کنید.'
+                }
+            }
+            $targets = @('NT AUTHORITY\SYSTEM')
         }
         $targets = @($targets | Where-Object { $_ } | Select-Object -Unique)
         $primary = [string]$targets[0]
+
 
         if ($apiLogin -and ($targets -notcontains $apiLogin)) {
             $targets = @($apiLogin) + $targets
@@ -478,12 +303,6 @@ function Invoke-ClinicProRestorePermission {
             Label = 'احراز هویت ویندوزی حساب جاری'
             ConnectionString = (New-CpMasterConnectionString -DataSource $dataSource -Encrypt $encrypt)
         })
-        if ($sqlUser -and $sqlPassword) {
-            $attempts.Add([pscustomobject]@{
-                Label = 'sa با همان رمز رشتهٔ اتصال'
-                ConnectionString = (New-CpMasterConnectionString -DataSource $dataSource -User 'sa' -Password $sqlPassword -Encrypt $encrypt)
-            })
-        }
         # حذف تکراریها بدون بههمزدن ترتیب اولویت (اولین مسیر موفق، کار را تمام میکند)
         $seen = @{}
         $ordered = New-Object System.Collections.Generic.List[object]
@@ -497,6 +316,7 @@ function Invoke-ClinicProRestorePermission {
     } catch {
         $lastError = $_.Exception.Message
         $report.Add("خطای آمادهسازی: $lastError")
+        $targets = @()
     }
 
     if ($targets.Count -gt 0) {
@@ -526,7 +346,7 @@ function Invoke-ClinicProRestorePermission {
         try {
             Write-Host ''
             Write-Host 'برای اعطای خودکار نقش، نام و رمز یک حساب مدیر SQL (مثلاً sa) را وارد کنید.' -ForegroundColor Yellow
-            Write-Host 'اگر رمز را نمیدانید Enter بزنید — نصاب خودش از مسیر بعدی (ریاستارت موقت SQL) استفاده میکند.' -ForegroundColor Yellow
+            Write-Host 'اگر رمز را نمیدانید Enter بزنید؛ بدون دسترسی مدیر SQL اعطای نقش امکان‌پذیر نیست.' -ForegroundColor Yellow
             $adminLogin = Read-Host 'نام لاگین مدیر SQL (خالی = رد کردن)'
             if ($adminLogin) {
                 $adminSecure = Read-Host 'رمز آن لاگین' -AsSecureString
@@ -545,13 +365,6 @@ function Invoke-ClinicProRestorePermission {
             $lastError = $_.Exception.Message
             $report.Add("دریافت حساب مدیر ناموفق: $lastError")
         }
-    }
-
-    # لایهٔ ۴ — ریاستارت موقت SQL Server محلی در حالت تککاربره
-    if (-not $granted -and $AllowSingleUserElevation -and $dataSource) {
-        $granted = Invoke-CpSingleUserElevation -DataSource $dataSource -Encrypt $encrypt `
-            -Targets $targets -Primary $primary -Sql $script:CpGrantSql `
-            -ReportDir $ReportDir -Report $report
     }
 
     if (-not $granted) {
@@ -599,7 +412,7 @@ if (-not $AsLibrary) {
             exit 1
         }
     }
-    Write-Host "رشتهٔ اتصال: $ConnectionString" -ForegroundColor DarkGray
+    Write-Host "بررسی مجوز SQL برای سرویس API" -ForegroundColor DarkGray
     $promptAllowed = -not $NoPrompt
     $elevationAllowed = -not $NoSqlSingleUserElevation
     $result = Invoke-ClinicProRestorePermission -ConnectionString $ConnectionString `

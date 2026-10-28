@@ -160,18 +160,20 @@ $settings | ConvertTo-Json -Depth 100 | Set-Content -Path $settingsPath -Encodin
 # ═══════════════════════════════════════════════════════════════════════════
 #  اعطای خودکار نقش سروری dbcreator — «بازیابی اطلاعات از فایل پشتیبان»
 # ═══════════════════════════════════════════════════════════════════════════
-#  نسخههای پیشین نصاب فقط با Integrated Security تلاش میکردند؛ اگر حساب
-#  ویندوزی نصاب روی SQL مدیر نبود، اعطا بیصدا رد میشد و مالک نمیتوانست نقش
-#  کاربر را روی SQL اعمال کند. اکنون همهٔ منطق چهارلایه (شناسههای رشتهٔ
-#  اتصال، احراز ویندوزی، حساب مدیر SQL، و در نهایت ریاستارت موقت SQL محلی
-#  در حالت تککاربره) در Enable-RestorePermission.ps1 است؛ همان فایل بهصورت
-#  مستقل هم برای تعمیر نصبهای قدیمی اجرا میشود.
-#  خطای این گام نصب را متوقف نمیکند — برنامه بدون بازیابی هم کار میکند.
+#  برای اعطای نقش از اتصال API، حساب ویندوزی یا حساب مدیر SQL استفاده می‌شود.
+#  در صورت نداشتن مجوز مدیریتی SQL، وضعیت ناموفق گزارش می‌شود.
 $restoreModule = Join-Path $PSScriptRoot 'Enable-RestorePermission.ps1'
 if (-not (Test-Path $restoreModule)) {
     throw 'فایل Enable-RestorePermission.ps1 کنار نصاب پیدا نشد. بستهٔ کامل سرور همنسخه را دوباره استخراج کنید.'
 }
+# پارامترهای کتابخانه هنگام dot-source در همین scope مقداردهی می‌شوند.
+$savedAdminUser = $SqlAdminUser
+$savedAdminPassword = $SqlAdminPassword
+$savedNoPrompt = $NoPrompt
 . $restoreModule -AsLibrary
+$SqlAdminUser = $savedAdminUser
+$SqlAdminPassword = $savedAdminPassword
+$NoPrompt = $savedNoPrompt
 
 $promptAllowed = -not $NoPrompt
 $elevationAllowed = -not $NoSqlSingleUserElevation

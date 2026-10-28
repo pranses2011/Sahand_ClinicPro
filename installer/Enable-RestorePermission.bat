@@ -12,8 +12,7 @@ if errorlevel 1 (
 
 echo.
 echo اين ابزار نقش dbcreator را به لاگين سرور API ميدهد تا بازيابي از فايل پشتيبان
-echo بدون دخالت دستي در SQL Server انجام شود. در صورت نياز SQL Server محلي براي
-echo چند ثانيه رياستارت موقت ميشود و سپس به حالت عادي برميگردد.
+echo با دسترسي مدير SQL انجام شود. سرور SQL به طور خودکار رياستارت نميشود.
 echo.
 
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Enable-RestorePermission.ps1" %*

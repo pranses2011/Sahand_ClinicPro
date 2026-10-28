@@ -31,44 +31,7 @@ public static class EmployeeLookupResolver
     /// نرمالسازی نام: یکدستکردن حروف عربی/فارسی، حذف نیمفاصلهٔ مجازی و
     /// کاراکترهای نامرئی، و فشردهسازی فاصلهها — همان قرارداد کلاینت WPF.
     /// </summary>
-    public static string? NormalizeName(string? value)
-    {
-        if (value is null) return null;
-        var sb = new StringBuilder(value.Length);
-        foreach (var ch in value)
-        {
-            if (ch == '\u200C' || ch == '\u200D' || ch == '\u200E' ||
-                ch == '\u200F' || ch == '\uFEFF' || char.IsControl(ch))
-                continue;
-
-            var c = ch switch
-            {
-                '\u0649' => '\u06CC',
-                '\u064A' => '\u06CC',
-                '\u0643' => '\u06A9',
-                '\u0629' => '\u0647',
-                '\u0623' => '\u0627',
-                '\u0625' => '\u0627',
-                '\u0622' => '\u0627',
-                '\u0660' => '\u06F0',
-                '\u0661' => '\u06F1',
-                '\u0662' => '\u06F2',
-                '\u0663' => '\u06F3',
-                '\u0664' => '\u06F4',
-                '\u0665' => '\u06F5',
-                '\u0666' => '\u06F6',
-                '\u0667' => '\u06F7',
-                '\u0668' => '\u06F8',
-                '\u0669' => '\u06F9',
-                _ => ch
-            };
-            sb.Append(c == '\u00A0' || c == '\u2007' || c == '\u202F' ? ' ' : c);
-        }
-
-        var parts = sb.ToString()
-            .Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-        return parts.Length == 0 ? string.Empty : string.Join(" ", parts);
-    }
+    public static string? NormalizeName(string? value) => value?.Trim();
 
     /// <summary>آیا نام نرمالشده نشانگر پاککردن مقدار است؟</summary>
     public static bool IsEmptyMarker(string? normalized)

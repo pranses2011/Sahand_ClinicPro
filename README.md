@@ -8,7 +8,7 @@
 
 **سامانهٔ یکپارچهٔ فارسی‌زبان مدیریت درمانگاه — از نوبت‌دهی و پذیرش تا پروندهٔ بالینی، آزمایشگاه، حسابداری و پشتیبانی زنده**
 
-[![نسخه](https://img.shields.io/badge/release-v2.28.29-blue)](https://github.com/pranses2011/Sahand_ClinicPro/releases)
+[![نسخه](https://img.shields.io/badge/release-v2.28.30-blue)](https://github.com/pranses2011/Sahand_ClinicPro/releases)
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com)
 [![C#](https://img.shields.io/badge/C%23-12-239120?logo=csharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp)
 [![WPF](https://img.shields.io/badge/WPF-Material%20Design-512BD4?logo=windows&logoColor=white)](https://materialdesigninxaml.net)

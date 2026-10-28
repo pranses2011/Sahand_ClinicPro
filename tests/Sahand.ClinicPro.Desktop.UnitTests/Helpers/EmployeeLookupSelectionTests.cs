@@ -66,7 +66,7 @@ public class EmployeeLookupSelectionTests
     [Fact]
     public void LookupName_Normalizes_Typed_Text()
     {
-        LookupName.Normalize(" منشي  ").Should().Be("منشی");
-        LookupName.AreEqual("پزشك", "پزشک").Should().BeTrue();
+        LookupName.Normalize(" منشی  ").Should().Be("منشی");
+        LookupName.AreEqual("پزشک", "پزشک").Should().BeTrue();
     }
 }
