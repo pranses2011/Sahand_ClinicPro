@@ -86,8 +86,10 @@
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="16" />
+                                        <ColumnDefinition Width="12" />
                                         <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="0.8*" />
                                     </Grid.ColumnDefinitions>
                                     <!-- OD -->
                                     <Border Grid.Column="0" CornerRadius="10" Padding="14" Background="White" BorderBrush="#D3E2F0" BorderThickness="1">
@@ -133,6 +135,16 @@
                                                        Visibility="{Binding OsIopWarning, Converter={StaticResource StringToVisibility}}" />
                                         </StackPanel>
                                     </Border>
+                                    <!-- خلاصهٔ زنده؛ بازتاب ورودی است، نه تأیید یا نسخهٔ چاپ‌شده. -->
+                                    <Border Grid.Column="4" CornerRadius="10" Padding="14" Background="White" BorderBrush="#D3E2F0" BorderThickness="1">
+                                        <StackPanel>
+                                            <TextBlock Text="👓 نسخهٔ عینک زنده" FontWeight="Bold" FontSize="14" Foreground="#173657" />
+                                            <TextBlock Text="{Binding GlassesPrescriptionText, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}"
+                                                       FontSize="12" Margin="0,12,0,0" TextWrapping="Wrap" Foreground="#173657" />
+                                            <TextBlock Text="خلاصه از ورودی‌های همین فرم ساخته می‌شود؛ برای ثبت در پرونده، معاینه را ذخیره کنید."
+                                                       TextWrapping="Wrap" FontSize="10.5" Margin="0,14,0,0" Foreground="#617992" />
+                                        </StackPanel>
+                                    </Border>
                                 </Grid>
 
                                 <Grid Margin="0,12,0,0">
@@ -158,15 +170,6 @@
                                                    TextWrapping="Wrap" FontSize="10" Opacity="0.7" Margin="0,3,0,0" />
                                     </StackPanel>
                                 </Grid>
-
-                                <!-- نسخهٔ عینک زنده — طرح تأییدشدهٔ نسخهٔ ۲ -->
-                                <Border CornerRadius="12" BorderBrush="#9FA8DA" BorderThickness="1.4" Padding="12" Margin="0,12,0,0" Background="#E8EFFF">
-                                    <StackPanel>
-                                        <TextBlock Text="👓 نسخهٔ عینک (زنده — از عددهای رفرکشن بالا)" FontWeight="Bold" FontSize="12.5" Foreground="#1A237E" />
-                                        <TextBlock Text="{Binding GlassesPrescriptionText, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}"
-                                                   FontSize="12" Margin="0,6,0,0" Foreground="#1A237E" />
-                                    </StackPanel>
-                                </Border>
 
                                 <!-- ماژول حرفه‌ای چشم‌پزشکی — طرح تأییدشدهٔ نسخهٔ ۲ -->
                                 <Expander Margin="0,12,0,0" Header="🔬 اسلیت‌لمپ و فوندوس + پاچیمتری">
