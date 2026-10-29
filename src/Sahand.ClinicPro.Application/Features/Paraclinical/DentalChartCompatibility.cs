@@ -25,8 +25,13 @@ public static class DentalChartCompatibility
     private static bool StringOrNull(JsonElement value) => value.ValueKind is JsonValueKind.String or JsonValueKind.Null;
 
     /// <summary>قالب ناشناخته، متن آزاد و ساختار ناقص قابل بازنویسی نیستند.</summary>
-    public static bool CanEdit(string? json)
+    public static bool CanEdit(string? json) => TryGetTotal(json, out _);
+
+    /// <summary>محاسبه مجموع ریالی قابل ذخیره بدون گردکردن یا سرریز.</summary>
+    public static bool TryGetTotal(string? json, out decimal total)
     {
+        total = 0m;
+        const decimal maxRial = 999_999_999_999_999_999m;
         if (string.IsNullOrWhiteSpace(json)) return false;
         try
         {
@@ -45,7 +50,9 @@ public static class DentalChartCompatibility
                     !row.TryGetProperty("tooth", out var tooth) || tooth.ValueKind != JsonValueKind.Number ||
                     !tooth.TryGetInt32(out var number) || !ToothNumber(number.ToString()) ||
                     !row.TryGetProperty("price", out var price) || price.ValueKind != JsonValueKind.Number ||
-                    !price.TryGetDecimal(out var amount) || amount < 0) return false;
+                    !price.TryGetDecimal(out var amount) || amount < 0 || amount != decimal.Truncate(amount) ||
+                    amount > maxRial - total) return false;
+                total += amount;
                 foreach (var name in new[] { "procedure", "status", "surface", "schedule" })
                     if (!row.TryGetProperty(name, out var field) || field.ValueKind != JsonValueKind.String) return false;
             }

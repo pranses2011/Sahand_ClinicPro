@@ -199,8 +199,10 @@ public class CreateDentalPlanCommandHandler : IRequestHandler<CreateDentalPlanCo
             return Result<long>.Failure(Error.NotFound("بیمار", request.PatientId));
         if (request.TotalCost < 0 || request.EstimatedSessions < 0)
             return Result<long>.Failure(new Error("INVALID_DENTAL_PLAN", "مبلغ و تعداد جلسات نمی‌توانند منفی باشند"));
-        if (!DentalChartCompatibility.CanEdit(request.PlanDetails))
-            return Result<long>.Failure(new Error("DENTAL_PLAN_UNSUPPORTED", "ساختار طرح ارسالی پشتیبانی نمی‌شود؛ برنامه را به‌روز کنید"));
+        if (!DentalChartCompatibility.TryGetTotal(request.PlanDetails, out var calculatedTotal))
+            return Result<long>.Failure(new Error("DENTAL_PLAN_UNSUPPORTED", "ساختار یا مبلغ طرح ارسالی پشتیبانی نمی‌شود؛ برنامه را به‌روز و مقادیر را بررسی کنید"));
+        if (calculatedTotal != request.TotalCost)
+            return Result<long>.Failure(new Error("DENTAL_PLAN_TOTAL_MISMATCH", "جمع طرح با مبلغ اقلام آن برابر نیست"));
         var previous = await _unitOfWork.Repository<DentalTreatmentPlan>().QueryableNoTracking
             .Where(p => p.PatientId == request.PatientId && !p.IsDeleted)
             .OrderByDescending(p => p.Id).FirstOrDefaultAsync(cancellationToken);

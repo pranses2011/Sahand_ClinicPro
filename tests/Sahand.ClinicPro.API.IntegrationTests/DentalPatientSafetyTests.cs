@@ -43,6 +43,8 @@ public class DentalPatientSafetyTests
     [InlineData("{\"teeth\":{\"11\":7},\"rows\":[]}")]
     [InlineData("{\"teeth\":{\"11\":1,\"11\":2},\"rows\":[]}")]
     [InlineData("{\"teeth\":{},\"rows\":[{\"tooth\":11,\"price\":10}]}")]
+    [InlineData("{\"teeth\":{},\"rows\":[{\"tooth\":11,\"procedure\":\"x\",\"price\":10.5,\"status\":\"x\",\"surface\":\"x\",\"schedule\":\"x\"}]}")]
+    [InlineData("{\"teeth\":{},\"rows\":[{\"tooth\":11,\"procedure\":\"x\",\"price\":1000000000000000000,\"status\":\"x\",\"surface\":\"x\",\"schedule\":\"x\"}]} ")]
     [InlineData("{\"teeth\":{},\"rows\":[],\"extras\":{\"future\":\"مهم\"}}")]
     public void Unsupported_dental_chart_is_not_safe_to_rewrite(string? details)
     {
@@ -132,6 +134,21 @@ public class DentalPatientSafetyTests
         repository.MarkPropertyModified(patient, p => p.UpdatedAt);
         db.Entry(patient).Property(p => p.UpdatedAt).IsModified.Should().BeTrue();
         db.Entry(patient).Property(p => p.FirstName).IsModified.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Server_rejects_total_that_does_not_match_item_prices()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "DENTAL-TOTAL", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Add(patient);
+        await db.SaveChangesAsync();
+        var handler = new CreateDentalPlanCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        const string json = "{\"teeth\":{},\"rows\":[{\"tooth\":11,\"procedure\":\"ترمیم\",\"price\":10,\"status\":\"پیشنهاد\",\"surface\":\"O\",\"schedule\":\"بدون نوبت\"}]}";
+        (await handler.Handle(new(patient.Id, null, 11, 1, json), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(patient.Id, null, 10, 1, json), default)).IsSuccess.Should().BeTrue();
     }
 
 }
