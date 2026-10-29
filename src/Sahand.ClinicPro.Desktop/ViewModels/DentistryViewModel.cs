@@ -306,7 +306,7 @@ public partial class DentistryViewModel : ViewModelBase
         if (row is not null) DentalPlan.Remove(row);
     }
 
-    partial void OnDentalPatientChanged(QuickPatient? patient)
+    partial void OnDentalPatientChanged(QuickPatient? value)
     {
         _patientVersion++;
         IsChartReady = false; IsChartLoading = false;
