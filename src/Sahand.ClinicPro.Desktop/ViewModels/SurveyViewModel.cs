@@ -458,7 +458,11 @@ public partial class SurveyViewModel : ViewModelBase
 
     /// <summary>افزودن سوال جدید به سازنده پویا</summary>
     [RelayCommand]
-    private void AddQuestion() => Questions.Add(new SurveyQuestionItem());
+    private void AddQuestion()
+    {
+        if (Questions.Count >= 100) { _snackbar.Error("حداکثر ۱۰۰ سؤال مجاز است"); return; }
+        Questions.Add(new SurveyQuestionItem());
+    }
 
     /// <summary>حذف سوال</summary>
     [RelayCommand]
@@ -476,6 +480,13 @@ public partial class SurveyViewModel : ViewModelBase
 
         if (FormTitle.Trim().Length > 150)
         { _snackbar.Error("عنوان نظرسنجی حداکثر ۱۵۰ نویسه است"); return; }
+        if (Questions.Count > 100)
+        { _snackbar.Error("حداکثر ۱۰۰ سؤال مجاز است"); return; }
+        if (Questions.Any(q => q.Text.Length > 2000))
+        { _snackbar.Error("متن هر سؤال حداکثر ۲۰۰۰ نویسه است"); return; }
+        if (Questions.Any(q => q.TypeKey == "choice" && q.Choices.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) is var choices &&
+            (choices.Length > 100 || choices.Any(c => c.Length > 2000))))
+        { _snackbar.Error("برای هر سؤال حداکثر ۱۰۰ گزینه و برای هر گزینه حداکثر ۲۰۰۰ نویسه مجاز است"); return; }
         if (Questions.Any(q => string.IsNullOrWhiteSpace(q.Text)))
         { _snackbar.Error("متن همهٔ سؤال‌ها را وارد کنید"); return; }
         if (Questions.Any(q => q.TypeKey == "choice" && q.Choices.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length < 2))
@@ -494,6 +505,9 @@ public partial class SurveyViewModel : ViewModelBase
             var questionsJson = Questions.Count == 0
                 ? null
                 : "[" + string.Join(",", Questions.Select(q => q.ToJson())) + "]";
+
+            if (questionsJson?.Length > 200_000)
+            { _snackbar.Error("حجم سؤال‌ها بیش از حد مجاز است؛ متن یا تعداد آن‌ها را کاهش دهید"); return; }
 
             var body = new
             {

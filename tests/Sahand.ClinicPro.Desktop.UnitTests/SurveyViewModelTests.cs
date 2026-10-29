@@ -131,4 +131,21 @@ public class SurveyViewModelTests
         vm.IsFormOpen.Should().BeTrue();
         vm.FormTitle.Should().Be("عنوان ویرایش‌شده");
     }
+    [Fact]
+    public async Task Survey_editor_limits_questions_and_does_not_submit_oversized_text()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["surveys"] = new { data = Array.Empty<object>() };
+        var vm = new SurveyViewModel(api, new FakeSnackbar());
+        vm.OpenCreateFormCommand.Execute(null);
+        vm.FormTitle = "نظرسنجی";
+        vm.Questions[0].Text = new string('x', 2001);
+        await vm.SaveFormCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "surveys");
+        vm.IsFormOpen.Should().BeTrue();
+        while (vm.Questions.Count < 100) vm.AddQuestionCommand.Execute(null);
+        vm.AddQuestionCommand.Execute(null);
+        vm.Questions.Should().HaveCount(100);
+    }
+
 }
