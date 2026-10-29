@@ -181,4 +181,29 @@ public class PhysiotherapyViewModelTests
         vm.Assessments.Should().OnlyContain(x => x.NowValue == null);
     }
 
+    [Fact]
+    public void Referral_report_uses_current_values_and_does_not_claim_a_history_average()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["physiotherapy/sessions?patientId=1"] = new { data = Array.Empty<object>() };
+        var vm = new PhysiotherapyViewModel(api, new FakeSnackbar()) { PhysioPatient = Patient(1) };
+        vm.Assessments[0].BaseValue = 8;
+        vm.Assessments[0].NowValue = 4;
+        vm.GenerateReportCommand.Execute(null);
+        vm.ReferralReport.Should().Contain("50٪").And.Contain("تعداد نامشخص").And.NotContain("میانگین تغییر");
+        vm.Assessments[0].NowValue = 3;
+        vm.ReferralReport.Should().BeNull();
+        vm.Assessments[0].NowValue = -1;
+        vm.GenerateReportCommand.Execute(null);
+        vm.ReferralReport.Should().BeNull();
+    }
+
+    [Fact]
+    public void Nonfinite_calculated_percentage_is_not_reported_as_a_number()
+    {
+        var row = new PhysioAssessmentRow { BaseValue = double.Epsilon, NowValue = 1, Reverse = true };
+        row.Improvement.Should().BeNull();
+        row.ImprovementText.Should().Be("—");
+    }
+
 }

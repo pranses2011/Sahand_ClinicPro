@@ -239,7 +239,7 @@
                             <TextBlock Grid.Column="1" Text="مبنا (۲۰ جلسهٔ اخیر)" FontWeight="Bold" FontSize="11.5" />
                             <TextBlock Grid.Column="2" Text="این جلسه" FontWeight="Bold" FontSize="11.5" />
                             <TextBlock Grid.Column="3" Text="مقایسه (خاکستری: مقدار نخست — سبزآبی: امروز)" FontWeight="Bold" FontSize="11.5" />
-                            <TextBlock Grid.Column="4" Text="بهبود" FontWeight="Bold" FontSize="11.5" />
+                            <TextBlock Grid.Column="4" Text="تغییر نسبی" FontWeight="Bold" FontSize="11.5" />
                         </Grid>
                         <ItemsControl ItemsSource="{Binding Assessments}">
                             <ItemsControl.ItemTemplate>
@@ -268,10 +268,8 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        <StackPanel Orientation="Horizontal" Margin="2,10,2,0">
-                            <TextBlock Text="میانگین بهبود همهٔ شاخص‌ها: " FontWeight="SemiBold" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding TotalImprovementText, Mode=OneWay}" FontSize="20" FontWeight="Bold" Foreground="#2E7D32" VerticalAlignment="Center" />
-                        </StackPanel>
+                        <TextBlock Text="درصد هر شاخص صرفاً تغییر نسبی نسبت به مبناست و باید توسط درمانگر تفسیر شود؛ میانگین شاخص‌های متفاوت معیار بالینی نیست."
+                                   Margin="2,10,2,0" FontSize="10.5" TextWrapping="Wrap" Opacity="0.7" />
                         <TextBlock Text="دامنهٔ حرکت و عملکرد مفصل درگیر" FontWeight="Bold" FontSize="13" Margin="2,12,2,6" />
                         <ItemsControl ItemsSource="{Binding RomBars}">
                             <ItemsControl.ItemTemplate>
