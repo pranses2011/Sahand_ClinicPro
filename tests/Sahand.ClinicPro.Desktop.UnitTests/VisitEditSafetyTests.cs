@@ -89,4 +89,16 @@ public class VisitEditSafetyTests
         vm.StopTimers();
     }
 
+    [Fact]
+    public void Vital_cards_do_not_claim_clinical_normality_or_divide_by_tiny_height()
+    {
+        var vm = new VisitEditViewModel(new FakeApiClient(), new FakeSnackbar(), 7, 8);
+        vm.HrText = "۷۲";
+        vm.WeightText = "۷۰";
+        vm.HeightText = "۰٫۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۱";
+        vm.VitalCards.Single(x => x.Title == "HR").StatusText.Should().Contain("نیازمند ارزیابی");
+        vm.BmiDisplay.Should().BeNull();
+        vm.StopTimers();
+    }
+
 }

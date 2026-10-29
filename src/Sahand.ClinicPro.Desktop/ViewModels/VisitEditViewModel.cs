@@ -427,82 +427,30 @@ public partial class VisitEditViewModel : ObservableObject
     private void RebuildVitalCards()
     {
         VitalWarnings.Clear();
+        static VitalCard Card(string key, string title, string? value, string unit) =>
+            new(key, title, value, unit, value is null ? "—" : "ثبت‌شده؛ نیازمند ارزیابی", "#546E7A");
         var cards = new List<VitalCard>();
-
-        // فشار خون
-        var (bp, bpColor) = ("—", "#78909C");
-        if (BpText is not null && BpText.Contains('/'))
+        var bpParts = (BpText ?? "").Split('/');
+        var validBp = bpParts.Length == 2 && TryInt(bpParts[0], out var systolic) && systolic is not null &&
+                      TryInt(bpParts[1], out _);
+        cards.Add(Card("BP", "فشار خون", validBp ? BpText : null, "mmHg"));
+        cards.Add(Card("HR", "ضربان قلب", TryInt(HrText, out var hr) ? hr?.ToString() : null, "bpm"));
+        cards.Add(Card("Temp", "دمای بدن", TryDecimal(TempText, out var temp) ? temp?.ToString() : null, "°C"));
+        cards.Add(Card("SpO2", "اکسیژن خون", TryInt(Spo2Text, out var spo2) ? spo2?.ToString() : null, "%"));
+        var hasWeight = TryDecimal(WeightText, out var weight);
+        var hasHeight = TryDecimal(HeightText, out var height);
+        cards.Add(Card("Weight", "وزن", hasWeight ? weight?.ToString() : null, "kg"));
+        cards.Add(Card("Height", "قد", hasHeight ? height?.ToString() : null, "cm"));
+        BmiDisplay = null;
+        if (hasWeight && hasHeight && weight is > 0 and <= 999.99m && height is >= 0.01m and <= 999.99m)
         {
-            var sys = ParseInt(BpText.Split('/')[0]);
-            if (sys > 0)
-            {
-                var (t, c) = sys < 90 ? ("🔴 پایین", "#C62828") :
-                    sys <= 120 ? ("🟢 طبیعی", "#2E7D32") :
-                    sys <= 130 ? ("🟡 بالا", "#F57C00") : ("🔴 خطر", "#C62828");
-                bp = BpText; bpColor = c;
-                if (sys > 140) VitalWarnings.Add("⚠️ هشدار: فشار خون بالاتر از حد نرمال");
-            }
-        }
-        cards.Add(new VitalCard("BP", "فشار خون", bp == "—" ? null : bp, "mmHg", t0(bpColor), bpColor));
-
-        // ضربان
-        var hr = ParseInt(HrText);
-        var (hrS, hrC) = hr == 0 ? ("—", "#78909C") : hr is < 60 or > 100 ? ("🟡 غیرطبیعی", "#F57C00") : ("🟢 طبیعی", "#2E7D32");
-        cards.Add(new VitalCard("HR", "ضربان قلب", hr == 0 ? null : hr.ToString(), "bpm", hrS, hrC));
-
-        // دما
-        var temp = ParseDec(TempText);
-        var (tS, tC) = temp == 0 ? ("—", "#78909C") : temp > 37.5m ? ("🟡 تب", "#F57C00") : temp < 35m ? ("🟡 پایین", "#F57C00") : ("🟢 طبیعی", "#2E7D32");
-        if (temp > 38) { tS = "🔴 تب بالا"; tC = "#C62828"; VitalWarnings.Add("⚠️ هشدار: تب بالاتر از حد نرمال"); }
-        cards.Add(new VitalCard("Temp", "دمای بدن", temp == 0 ? null : temp.ToString(), "°C", tS, tC));
-
-        // اکسیژن
-        var spo2 = ParseInt(Spo2Text);
-        var (oS, oC) = spo2 == 0 ? ("—", "#78909C") : spo2 < 92 ? ("🔴 خطر", "#C62828") : spo2 < 95 ? ("🟡 پایین", "#F57C00") : ("🟢 طبیعی", "#2E7D32");
-        if (spo2 is > 0 and < 92) VitalWarnings.Add("⚠️ هشدار: اشباع اکسیژن پایین‌تر از حد نرمال");
-        cards.Add(new VitalCard("SpO2", "اکسیژن خون", spo2 == 0 ? null : spo2.ToString(), "%", oS, oC));
-
-        // وزن و قد و BMI
-        var w = ParseDec(WeightText);
-        var h = ParseDec(HeightText);
-        cards.Add(new VitalCard("Weight", "وزن", w == 0 ? null : w.ToString(), "kg", "", "#78909C"));
-        cards.Add(new VitalCard("Height", "قد", h == 0 ? null : h.ToString(), "cm", "", "#78909C"));
-
-        if (w > 0 && h > 0)
-        {
-            var bmi = Math.Round(w / (h / 100m * (h / 100m)), 1);
+            var bmi = Math.Round(weight.Value / (height.Value / 100m) / (height.Value / 100m), 1);
             BmiDisplay = bmi.ToString("0.0");
-            var (bS, bC) = bmi < 18.5m ? ("🟡 کمبود وزن", "#F57C00") :
-                bmi < 25 ? ("🟢 طبیعی", "#2E7D32") :
-                bmi < 30 ? ("🟡 اضافه وزن", "#F57C00") : ("🔴 چاقی", "#C62828");
-            if (bmi >= 25) VitalWarnings.Add("⚠️ هشدار: BMI در محدوده اضافه وزن یا بالاتر");
-            cards.Add(new VitalCard("BMI", "شاخص توده", BmiDisplay, "kg/m²", bS, bC));
         }
-        else
-        {
-            BmiDisplay = null;
-            cards.Add(new VitalCard("BMI", "شاخص توده", null, "kg/m²", "—", "#78909C"));
-        }
-
-        // قند خون
-        var bs = ParseInt(BsText);
-        var (sS, sC) = bs == 0 ? ("—", "#78909C") : bs is >= 70 and <= 110 ? ("🟢 نرمال", "#2E7D32") : bs is > 110 and <= 140 ? ("🟡 بالا", "#F57C00") : ("🔴 خطر", "#C62828");
-        if (bs > 140) VitalWarnings.Add("⚠️ هشدار: قند خون بالاتر از حد نرمال");
-        cards.Add(new VitalCard("BS", "قند خون", bs == 0 ? null : bs.ToString(), "mg/dL", sS, sC));
-
+        cards.Add(Card("BMI", "شاخص توده", BmiDisplay, "kg/m²"));
+        cards.Add(Card("BS", "قند خون", TryInt(BsText, out var sugar) ? sugar?.ToString() : null, "mg/dL"));
         VitalCards = new ObservableCollection<VitalCard>(cards);
     }
-
-    private static string t0(string color) => color switch
-    {
-        "#2E7D32" => "🟢 طبیعی", "#F57C00" => "🟡 هشدار", "#C62828" => "🔴 خطر", _ => "—"
-    };
-
-    private static int ParseInt(string? text) =>
-        TryInt(text, out var value) ? value ?? 0 : 0;
-
-    private static decimal ParseDec(string? text) =>
-        TryDecimal(text, out var value) ? value ?? 0 : 0;
 
     private static bool TryDecimal(string? text, out decimal? value)
     {
