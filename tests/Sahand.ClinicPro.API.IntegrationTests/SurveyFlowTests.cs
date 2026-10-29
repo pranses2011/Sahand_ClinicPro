@@ -302,6 +302,58 @@ public class SurveyFlowTests
         snapshot.RootElement[2].GetProperty("answer").GetString().Should().Be("پاسخ آزاد");
     }
 
+    [Fact]
+    public async Task Survey_question_definitions_are_validated_before_create_or_change()
+    {
+        var client = await LoginAsync();
+        var invalidDefinitions = new[]
+        {
+            "{invalid", "{}", "[{\"text\":\"\",\"type\":\"text\"}]",
+            "[{\"text\":\"سؤال\",\"type\":\"unknown\"}]",
+            "[{\"text\":\"سؤال\",\"type\":\"choice\",\"options\":[\"تنها\"]}]",
+            "[{\"text\":\"سؤال\",\"q\":\"دیگر\"}]",
+            "[{\"text\":\"سؤال\",\"type\":\"rating\",\"options\":[\"x\",\"y\"]}]",
+            "[" + string.Join(",", Enumerable.Repeat("{\"text\":\"سؤال\",\"type\":\"text\"}", 101)) + "]"
+        };
+        foreach (var questions in invalidDefinitions)
+            (await client.PostAsJsonAsync("/api/v1/surveys", new { title = "فرم نامعتبر", questions }))
+                .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        const string valid = "[{\"q\":\"انتخاب؟\",\"type\":\"choice\",\"options\":\"الف|ب\"}]";
+        var create = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "فرم معتبر", questions = valid });
+        create.StatusCode.Should().Be(HttpStatusCode.OK);
+        var id = (await ReadAsync<JsonElementPacket>(create)).Data.GetProperty("surveyId").GetInt64();
+        var invalidUpdate = await client.PutAsJsonAsync($"/api/v1/surveys/{id}", new { title = "نباید ذخیره شود", questions = invalidDefinitions[0] });
+        invalidUpdate.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var stored = await db.Surveys.SingleAsync(s => s.Id == id);
+        stored.Title.Should().Be("فرم معتبر");
+        stored.Questions.Should().Be(valid);
+    }
+
+    [Fact]
+    public async Task Existing_invalid_questions_can_be_preserved_unchanged_when_disabling_survey()
+    {
+        var client = await LoginAsync();
+        long id;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+            var legacy = new Survey { Title = "فرم قدیمی", Questions = "invalid legacy", IsActive = true };
+            db.Surveys.Add(legacy);
+            await db.SaveChangesAsync();
+            id = legacy.Id;
+        }
+        var update = await client.PutAsJsonAsync($"/api/v1/surveys/{id}", new
+        { title = "فرم قدیمی", questions = "invalid legacy", isActive = false });
+        update.StatusCode.Should().Be(HttpStatusCode.OK);
+        using var verify = _factory.Services.CreateScope();
+        var saved = await verify.ServiceProvider.GetRequiredService<ClinicProDbContext>().Surveys.SingleAsync(s => s.Id == id);
+        saved.Questions.Should().Be("invalid legacy");
+        saved.IsActive.Should().BeFalse();
+    }
+
     /* ─── کمکی‌ها ─── */
 
     /// <summary>ورود ادمین و کلاینت احرازهویت‌شده</summary>

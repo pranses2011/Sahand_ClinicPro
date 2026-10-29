@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Domain.Common;
@@ -68,6 +69,9 @@ public class SurveysController : ApiBaseController
         if (string.IsNullOrWhiteSpace(title) || title.Length > 150)
             return BadRequest(ApiResponse<object>.Failure("عنوان نظرسنجی الزامی است و حداکثر ۱۵۰ نویسه"));
 
+        if (!ValidQuestions(request.Questions))
+            return BadRequest(ApiResponse<object>.Failure("سؤال‌های نظرسنجی نامعتبرند؛ نوع، متن و گزینه‌ها را بررسی کنید (حداکثر ۱۰۰ سؤال)"));
+
         var survey = new Survey
         {
             Title = title,
@@ -95,6 +99,11 @@ public class SurveysController : ApiBaseController
         var title = request.Title?.Trim();
         if (string.IsNullOrWhiteSpace(title) || title.Length > 150)
             return BadRequest(ApiResponse<object>.Failure("عنوان نظرسنجی الزامی است و حداکثر ۱۵۰ نویسه"));
+
+        // دادهٔ قدیمی ناسازگار را می‌توان بدون تغییر نگه داشت؛ ساخت یا تغییر
+        // سؤال ناسازگار مجاز نیست تا فرم غیرقابل پاسخ ساخته نشود.
+        if (!string.Equals(survey.Questions, request.Questions, StringComparison.Ordinal) && !ValidQuestions(request.Questions))
+            return BadRequest(ApiResponse<object>.Failure("سؤال‌های نظرسنجی نامعتبرند؛ نوع، متن و گزینه‌ها را بررسی کنید (حداکثر ۱۰۰ سؤال)"));
 
         // پاسخ‌های ثبت‌شده حفظ می‌شوند؛ ویرایش سوالات روی پاسخ‌های قبلی اثری ندارد
         survey.Title = title;
@@ -187,6 +196,55 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
         await _unitOfWork.Repository<SurveyResponse>().AddAsync(response);
         await _unitOfWork.SaveEntitiesAsync();
         return Ok(ApiResponse<object>.SuccessMessage("پاسخ شما ثبت شد — سپاس از همراهی"));
+    }
+
+    // با قالب خوانندهٔ دسکتاپ و اعتبار پاسخ‌ها سازگار است. نظرسنجی‌های
+    // قدیمی بدون سؤال ساختاریافته همچنان برای امتیاز و نظر قابل استفاده‌اند.
+    private static bool ValidQuestions(string? questions)
+    {
+        if (string.IsNullOrWhiteSpace(questions)) return true;
+        if (questions.Length > 200_000) return false;
+        try
+        {
+            using var doc = JsonDocument.Parse(questions);
+            if (doc.RootElement.ValueKind != JsonValueKind.Array || doc.RootElement.GetArrayLength() > 100) return false;
+            foreach (var q in doc.RootElement.EnumerateArray())
+            {
+                if (q.ValueKind != JsonValueKind.Object) return false;
+                var properties = q.EnumerateObject().ToList();
+                if (properties.Any(p => p.Name is not ("text" or "q" or "type" or "options")) ||
+                    properties.Select(p => p.Name).Distinct(StringComparer.Ordinal).Count() != properties.Count ||
+                    (q.TryGetProperty("text", out _) && q.TryGetProperty("q", out _))) return false;
+                if (!q.TryGetProperty("text", out var text) && !q.TryGetProperty("q", out text)) return false;
+                if (text.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(text.GetString()) || text.GetString()!.Length > 2000) return false;
+                var type = "rating";
+                if (q.TryGetProperty("type", out var ty))
+                {
+                    if (ty.ValueKind != JsonValueKind.String) return false;
+                    type = ty.GetString() ?? "";
+                }
+                if (type is not ("rating" or "text" or "choice")) return false;
+                if (!q.TryGetProperty("options", out var options) || options.ValueKind == JsonValueKind.Null)
+                {
+                    if (type == "choice") return false;
+                    continue;
+                }
+                if (type != "choice") return false;
+                string[] choices;
+                if (options.ValueKind == JsonValueKind.Array)
+                {
+                    var elements = options.EnumerateArray().ToList();
+                    if (elements.Any(o => o.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(o.GetString()) || o.GetString()!.Contains('|'))) return false;
+                    choices = elements.Select(o => o.GetString()!.Trim()).ToArray();
+                }
+                else if (options.ValueKind == JsonValueKind.String)
+                    choices = (options.GetString() ?? "").Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                else return false;
+                if (choices.Length < 2 || choices.Length > 100 || choices.Any(c => c.Length > 2000)) return false;
+            }
+            return true;
+        }
+        catch (JsonException) { return false; }
     }
 
     // عکس سؤال و پاسخ همراه هم ذخیره می‌شود؛ ویرایش بعدی فرم معنای
