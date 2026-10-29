@@ -206,7 +206,7 @@ public class CreateDentalPlanCommandHandler : IRequestHandler<CreateDentalPlanCo
         var previous = await _unitOfWork.Repository<DentalTreatmentPlan>().QueryableNoTracking
             .Where(p => p.PatientId == request.PatientId && !p.IsDeleted)
             .OrderByDescending(p => p.Id).FirstOrDefaultAsync(cancellationToken);
-        if (previous is not null && !DentalChartCompatibility.CanEdit(previous.PlanDetails))
+        if (previous is not null && !DentalChartCompatibility.IsConsistent(previous.PlanDetails, previous.TotalCost))
             return Result<long>.Failure(new Error("DENTAL_PLAN_LEGACY", "طرح قبلی ناسازگار است؛ برای جلوگیری از پنهان شدن آن ثبت متوقف شد"));
         if (previous?.Id != request.ExpectedPlanId)
             return Result<long>.Failure(new Error("DENTAL_PLAN_STALE", "چارت پس از بازشدن فرم تغییر کرده است؛ ابتدا پرونده را دوباره بارگذاری و بررسی کنید"));

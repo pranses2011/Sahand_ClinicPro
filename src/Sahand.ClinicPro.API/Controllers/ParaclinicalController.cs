@@ -168,12 +168,14 @@ public class ParaclinicalController : ApiBaseController
                 note = "چارتی برای این بیمار ثبت نشده است"
             }));
 
-        if (!DentalChartCompatibility.CanEdit(plan.PlanDetails))
+        if (!DentalChartCompatibility.IsConsistent(plan.PlanDetails, plan.TotalCost))
             return Ok(ApiResponse<object>.Success(new
             {
                 planId = (long?)plan.Id,
                 canEdit = false,
-                note = plan.PlanDetails,
+                note = DentalChartCompatibility.CanEdit(plan.PlanDetails)
+                    ? $"جمع ثبت‌شده (ریال): {plan.TotalCost} — با جمع اقلام متفاوت است.\n\n{plan.PlanDetails}"
+                    : plan.PlanDetails,
                 teeth = new Dictionary<string, int>(),
                 rows = Array.Empty<object>()
             }));

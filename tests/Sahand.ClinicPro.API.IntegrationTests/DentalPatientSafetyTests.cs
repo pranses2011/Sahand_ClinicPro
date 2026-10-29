@@ -151,4 +151,27 @@ public class DentalPatientSafetyTests
         (await handler.Handle(new(patient.Id, null, 10, 1, json), default)).IsSuccess.Should().BeTrue();
     }
 
+    [Fact]
+    public async Task Existing_mismatched_total_is_read_only_and_cannot_be_hidden()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "DENTAL-OLD-TOTAL", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Add(patient);
+        await db.SaveChangesAsync();
+        const string details = "{\"teeth\":{},\"rows\":[]}";
+        var plan = new DentalTreatmentPlan { PatientId = patient.Id, PlanDetails = details, TotalCost = 100 };
+        db.Add(plan);
+        await db.SaveChangesAsync();
+        var controller = new ParaclinicalController(Mock.Of<IMediator>(), scope.ServiceProvider.GetRequiredService<IUnitOfWork>(),
+            Mock.Of<IWebHostEnvironment>(), Mock.Of<IConfiguration>());
+        var response = (OkObjectResult)await controller.GetDentalChart(patient.Id);
+        var data = JsonSerializer.SerializeToElement(response.Value, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }).GetProperty("data");
+        data.GetProperty("canEdit").GetBoolean().Should().BeFalse();
+        data.GetProperty("note").GetString().Should().Contain("100").And.Contain(details);
+        var handler = new CreateDentalPlanCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        (await handler.Handle(new(patient.Id, null, 0, 0, details, plan.Id), default)).IsSuccess.Should().BeFalse();
+    }
+
 }

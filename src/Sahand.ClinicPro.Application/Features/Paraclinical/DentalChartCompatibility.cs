@@ -27,6 +27,10 @@ public static class DentalChartCompatibility
     /// <summary>قالب ناشناخته، متن آزاد و ساختار ناقص قابل بازنویسی نیستند.</summary>
     public static bool CanEdit(string? json) => TryGetTotal(json, out _);
 
+    /// <summary>جمع ثبت‌شده نیز باید با ردیف‌های قابل ویرایش سازگار باشد.</summary>
+    public static bool IsConsistent(string? json, decimal storedTotal) =>
+        TryGetTotal(json, out var total) && total == storedTotal;
+
     /// <summary>محاسبه مجموع ریالی قابل ذخیره بدون گردکردن یا سرریز.</summary>
     public static bool TryGetTotal(string? json, out decimal total)
     {
