@@ -202,5 +202,8 @@ public class BillingPatientSafetyTests
         var result = await handler.Handle(new Sahand.ClinicPro.Application.Features.Billing.Queries.GetInvoicesQuery(page), default);
         result.IsSuccess.Should().BeTrue();
         result.Value.Data.Should().Contain(x => x.Id == invoice.Id);
+        page.Search = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToPersianDigits(invoice.Id.ToString());
+        var persianResult = await handler.Handle(new Sahand.ClinicPro.Application.Features.Billing.Queries.GetInvoicesQuery(page), default);
+        persianResult.Value.Data.Should().Contain(x => x.Id == invoice.Id);
     }
 }

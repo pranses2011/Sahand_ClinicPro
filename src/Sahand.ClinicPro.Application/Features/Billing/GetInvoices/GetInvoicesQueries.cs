@@ -38,10 +38,17 @@ public class GetInvoicesQueryHandler : IRequestHandler<GetInvoicesQuery, Result<
         if (!string.IsNullOrWhiteSpace(page.Search))
         {
             var term = page.Search.Trim();
-            var isId = long.TryParse(term, out var searchedId) && searchedId > 0;
+            var normalizedNumber = new string(term.Select(c => c switch
+            {
+                >= '۰' and <= '۹' => (char)('0' + c - '۰'),
+                >= '٠' and <= '٩' => (char)('0' + c - '٠'),
+                _ => c
+            }).ToArray());
+            var isId = long.TryParse(normalizedNumber, System.Globalization.NumberStyles.None,
+                System.Globalization.CultureInfo.InvariantCulture, out var searchedId) && searchedId > 0;
             query = query.Where(i =>
                 (isId && i.Id == searchedId) ||
-                (i.InvoiceNumber != null && i.InvoiceNumber.Contains(term)) ||
+                (i.InvoiceNumber != null && i.InvoiceNumber.Contains(normalizedNumber)) ||
                 (i.Patient != null && i.Patient.LastName.Contains(term)));
         }
 
