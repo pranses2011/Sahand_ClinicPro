@@ -58,7 +58,9 @@ public class PublicSurveyController : ControllerBase
 
     /// <summary>ثبت پاسخ ناشناس و مصرف همزمان دعوت، در یک SaveChanges تراکنشی.</summary>
     [HttpPost("submit")]
-    [RequestSizeLimit(250_000)]
+    // JSON حاوی عکس سؤال‌ها و پاسخ‌های فارسی/Unicode ممکن است چند برابر
+    // تعداد نویسه بایت داشته باشد؛ سقف همچنان محدود است، نه ۲۵۰ هزار بایت.
+    [RequestSizeLimit(2_000_000)]
     public async Task<IActionResult> Submit([FromBody] PublicAnswerRequest request, CancellationToken ct)
     {
         if (!Enabled) return NotFound();
