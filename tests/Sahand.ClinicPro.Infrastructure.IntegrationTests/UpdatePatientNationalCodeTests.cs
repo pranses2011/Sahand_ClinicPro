@@ -195,6 +195,10 @@ public class UpdatePatientNationalCodeTests
         public void Update(Domain.Entities.People.Patient entity)
             => _uow.Repository<Domain.Entities.People.Patient>().Update(entity);
 
+        public void MarkPropertyModified<TProperty>(Domain.Entities.People.Patient entity,
+            System.Linq.Expressions.Expression<Func<Domain.Entities.People.Patient, TProperty>> property)
+            => _uow.Repository<Domain.Entities.People.Patient>().MarkPropertyModified(entity, property);
+
         public void Remove(Domain.Entities.People.Patient entity)
             => _uow.Repository<Domain.Entities.People.Patient>().Remove(entity);
     }
