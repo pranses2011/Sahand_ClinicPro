@@ -131,4 +131,14 @@ public class DentistryViewModelTests
         JsonSerializer.SerializeToElement(api.LastBody).GetProperty("expectedPlanId").GetInt64().Should().Be(42);
     }
 
+    [Fact]
+    public void Plan_total_uses_same_currency_conversion_as_individual_prices()
+    {
+        var vm = new DentistryViewModel(new FakeApiClient(), new FakeSnackbar());
+        vm.DentalPlan.Add(new DentalPlanRow(11, "ترمیم", 12340m, "پیشنهاد", "#FFF"));
+        vm.DentalPlan.Add(new DentalPlanRow(12, "معاینه", 10000m, "پیشنهاد", "#FFF"));
+        vm.PlanTotal.Should().Be(22340m);
+        vm.PlanTotalText.Should().Be(Sahand.ClinicPro.Desktop.Helpers.Money.Format(22340m));
+    }
+
 }

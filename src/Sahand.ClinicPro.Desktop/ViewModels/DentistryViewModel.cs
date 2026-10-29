@@ -178,7 +178,7 @@ public partial class DentistryViewModel : ViewModelBase
     public decimal PlanTotal => DentalPlan.Sum(r => r.Price);
 
     /// <summary>جمع کل طرح با ارقام فارسی برای نمایش</summary>
-    public string PlanTotalText => Helpers.Money.ToPersianDigits(PlanTotal.ToString("N0"));
+    public string PlanTotalText => Helpers.Money.Format(PlanTotal);
 
     /// <summary>چارت کودک (شیری ۵۱ تا ۸۵) فعال است؟</summary>
     [ObservableProperty] private bool _isChildChart;
