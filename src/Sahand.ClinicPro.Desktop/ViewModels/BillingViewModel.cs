@@ -96,6 +96,17 @@ public partial class BillingViewModel : ViewModelBase
     [ObservableProperty]
     private InvoiceRow? _selectedInvoice;
 
+    [ObservableProperty] private string _invoiceSearch = string.Empty;
+    [ObservableProperty] private string _invoiceSearchStatus = string.Empty;
+    private long _invoiceSearchVersion;
+    partial void OnInvoiceSearchChanged(string value)
+    {
+        _invoiceSearchVersion++;
+        SelectedInvoice = null;
+        Invoices.Clear();
+        InvoiceSearchStatus = "برای مشاهده نتیجه، جستجو را اجرا کنید.";
+    }
+
     /* ── تراکنش‌های امروز ── */
     public ObservableCollection<CashRow> Transactions { get; } = new();
 
@@ -126,9 +137,7 @@ public partial class BillingViewModel : ViewModelBase
             NetTotalDisplay = Format(NetTotal);
         }
 
-        var invoices = await _api.GetAsync<InvoicesResponse>("invoices?page=1&pageSize=15");
-        if (invoices?.Data is not null)
-            Invoices = new ObservableCollection<InvoiceRow>(invoices.Data.Select(MapInvoice));
+        await SearchInvoicesAsync();
 
         var tx = await _api.GetAsync<TransactionsResponse>("payments/today");
         Transactions.Clear();
@@ -138,6 +147,35 @@ public partial class BillingViewModel : ViewModelBase
                     t.InvoiceId, t.PatientName, t.Amount, t.MethodText));
 
         IsBusy = false;
+    }
+
+    /// <summary>جستجوی فاکتور با شماره، نام خانوادگی یا شناسه.</summary>
+    [RelayCommand]
+    public async Task SearchInvoicesAsync()
+    {
+        var version = ++_invoiceSearchVersion;
+        var term = InvoiceSearch.Trim();
+        SelectedInvoice = null;
+        var endpoint = "invoices?page=1&pageSize=15" +
+            (term.Length == 0 ? "" : "&search=" + Uri.EscapeDataString(term));
+        try
+        {
+            var response = await _api.GetAsync<InvoicesResponse>(endpoint);
+            if (version != _invoiceSearchVersion) return;
+            if (response?.Data is null)
+            {
+                Invoices.Clear();
+                InvoiceSearchStatus = _api.LastError ?? "دریافت فاکتورها ناموفق بود.";
+                return;
+            }
+            Invoices = new ObservableCollection<InvoiceRow>(response.Data.Select(MapInvoice));
+            InvoiceSearchStatus = Invoices.Count == 0 ? "فاکتوری یافت نشد." : "حداکثر ۱۵ فاکتور جدید نمایش داده می‌شود.";
+        }
+        catch (Exception)
+        {
+            if (version == _invoiceSearchVersion)
+            { Invoices.Clear(); InvoiceSearchStatus = "دریافت فاکتورها ناموفق بود."; }
+        }
     }
 
     /// <summary>قالب‌بندی فشرده مبالغ — ۳.۸M</summary>
