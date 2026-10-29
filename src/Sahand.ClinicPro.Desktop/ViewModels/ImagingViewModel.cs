@@ -997,14 +997,11 @@ public partial class ImagingViewModel : ViewModelBase
             return;
         }
 
-        var tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(),
-            $"sahand-dicom-{file.Id}.dcm");
-        await System.IO.File.WriteAllBytesAsync(tempPath, bytes);
-
-        var viewer = new Views.DicomViewerWindow(tempPath)
+        var viewer = new Views.DicomViewerWindow
         {
             Owner = System.Windows.Application.Current?.MainWindow
         };
+        viewer.LoadBytes(bytes, file.FileName);
         viewer.Show();
     }
 
