@@ -30,7 +30,31 @@ public sealed class PaymentRecoveryStore : IPaymentRecoveryStore
         return Path.Combine(_directory, key + ".dat");
     }
 
+    private IDisposable Lock(string server, long invoiceId)
+    {
+        var hash = Path.GetFileNameWithoutExtension(PathFor(server, invoiceId));
+        var mutex = new Mutex(false, @"Global\SahandClinicPro-Payment-" + hash);
+        try
+        {
+            try { if (!mutex.WaitOne(TimeSpan.FromSeconds(10))) throw new IOException("قفل بازیابی پرداخت در دسترس نیست."); }
+            catch (AbandonedMutexException) { /* قفل رهاشده اکنون در اختیار ماست. */ }
+            return new MutexLease(mutex);
+        }
+        catch { mutex.Dispose(); throw; }
+    }
+
+    private sealed class MutexLease(Mutex mutex) : IDisposable
+    {
+        public void Dispose() { mutex.ReleaseMutex(); mutex.Dispose(); }
+    }
+
     public PendingPayment? Load(string server, long invoiceId)
+    {
+        using var guard = Lock(server, invoiceId);
+        return LoadUnlocked(server, invoiceId);
+    }
+
+    private PendingPayment? LoadUnlocked(string server, long invoiceId)
     {
         var path = PathFor(server, invoiceId);
         if (!File.Exists(path)) return null;
@@ -44,6 +68,7 @@ public sealed class PaymentRecoveryStore : IPaymentRecoveryStore
 
     public void Reserve(PendingPayment payment)
     {
+        using var guard = Lock(payment.Server, payment.InvoiceId);
         Directory.CreateDirectory(_directory);
         var bytes = ProtectedData.Protect(JsonSerializer.SerializeToUtf8Bytes(payment), null, DataProtectionScope.CurrentUser);
         // CreateNew مانع جایگزینی درخواست حل‌نشده در پنجره یا فرایند دیگر می‌شود.
@@ -55,7 +80,8 @@ public sealed class PaymentRecoveryStore : IPaymentRecoveryStore
 
     public void Clear(PendingPayment payment)
     {
-        var current = Load(payment.Server, payment.InvoiceId);
+        using var guard = Lock(payment.Server, payment.InvoiceId);
+        var current = LoadUnlocked(payment.Server, payment.InvoiceId);
         if (current is null || current.RequestId != payment.RequestId)
             throw new InvalidDataException("درخواست پرداخت محلی تغییر کرده است.");
         File.Delete(PathFor(payment.Server, payment.InvoiceId));
