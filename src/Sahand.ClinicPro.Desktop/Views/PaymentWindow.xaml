@@ -75,9 +75,9 @@
 
         <Button Command="{Binding RetryPaymentCommand}" IsEnabled="{Binding CanRetryPayment}"
                 Visibility="{Binding IsPaymentOutcomeUnknown, Converter={StaticResource BoolToVis}}"
-                Style="{StaticResource MaterialDesignOutlinedButton}" Content="بررسی دوباره همان پرداخت" Height="42" Margin="4" />
+                Style="{StaticResource MaterialDesignOutlinedButton}" Content="ارسال دوباره همان درخواست" Height="42" Margin="4" />
         <TextBlock Visibility="{Binding IsPaymentOutcomeUnknown, Converter={StaticResource BoolToVis}}"
-                   Text="با بستن پنجره امکان بررسی دوباره همین درخواست از اینجا از بین می‌رود؛ قبل از پرداخت جدید سوابق را بررسی کنید."
+                   Text="ارسال دوباره ممکن است در صورت ثبت‌نشدن درخواست قبلی، پرداخت را ثبت کند؛ ابتدا دریافت وجه و سوابق را بررسی کنید. بازیابی فقط روی همین رایانه و حساب ویندوز است."
                    TextWrapping="Wrap" Foreground="#B00020" Margin="4" />
 
         <ProgressBar IsIndeterminate="True" Height="4" Margin="0,16,0,0"

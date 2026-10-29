@@ -57,8 +57,11 @@ public sealed class PaymentRecoveryStore : IPaymentRecoveryStore
     private PendingPayment? LoadUnlocked(string server, long invoiceId)
     {
         var path = PathFor(server, invoiceId);
-        if (!File.Exists(path)) return null;
-        var plain = ProtectedData.Unprotect(File.ReadAllBytes(path), null, DataProtectionScope.CurrentUser);
+        byte[] encrypted;
+        try { encrypted = File.ReadAllBytes(path); }
+        catch (FileNotFoundException) { return null; }
+        catch (DirectoryNotFoundException) { return null; }
+        var plain = ProtectedData.Unprotect(encrypted, null, DataProtectionScope.CurrentUser);
         var payment = JsonSerializer.Deserialize<PendingPayment>(plain) ?? throw new InvalidDataException("درخواست پرداخت خوانده نشد.");
         if (payment.Server != server || payment.InvoiceId != invoiceId || payment.RequestId == Guid.Empty ||
             payment.PatientId <= 0 || payment.Amount <= 0 || payment.Method is < 1 or > 5)
